@@ -18,7 +18,7 @@ mergeBugsData(x, bugsSummary, by.x = NULL, newcol = "mean", ...)
   \item{x}{spatial polygon object i.e population data set (popdata)}
   \item{bugsSummary}{ posterior distribution result from summaryChain function }
   \item{by.x}{ the common term from the spatial polygon object and the bugs function result  }
-  \item{newcol}{the summay statistic that to be merged back to the data frame  }
+  \item{newcol}{the summary statistic that to be merged back to the data frame  }
   \item{\dots}{ additional arguments }
 }
 
