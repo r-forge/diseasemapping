@@ -24,7 +24,7 @@ mergeBugsData.data.frame = function(x, bugsSummary,
   effects = grep("(^R|^Fitted)", names(bugsSummary), value=TRUE)
 
   if(is.null(by.x)) {
-    effectString = gsub("^Fitted", "", effects)
+    effectString = gsub("^FittedRate", "", effects)
     effectString = gsub("Spatial$", "", effectString)
     effectString = gsub("^R", "", effectString)
     effectString = unique(effectString)
