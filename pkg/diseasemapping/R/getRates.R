@@ -66,7 +66,7 @@ if(!length(casecol)) {
   cases[,casecol] = 1
 }
 
-cases<-aggregate(casedata$cases, casedata[,theterms], sum, na.rm=TRUE)
+cases<-aggregate(casedata[[casecol]], casedata[,theterms], sum, na.rm=TRUE)
 names(cases)[names(cases)=="x"] = "CASES"
 
 #find population per group
