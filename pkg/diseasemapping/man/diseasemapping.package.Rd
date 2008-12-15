@@ -28,6 +28,9 @@ data(casedata)
 # an example of a spatial model with glmmBUGS
 
 
-# an example with INLA
+
+# running the same thing with INLA
+
+
 
 }
