@@ -1,0 +1,34 @@
+library(diseasemapping)
+data(casedata)
+data(popdata)
+head(casedata)
+head(popdata@data)
+cancerRates = getRates(casedata, popdata, ~age*sex)
+summary(cancerRates)
+ontario = getSMR(cancerRates, popdata, casedata) 
+head(ontario@data)
+spplot(ontario, "SMR")
+
+library(glmmBUGS)
+data(popDataAdjMat)
+library(spdep)
+popDataAdjMat = poly2nb(ontario, row.names=as.character(ontario$CSDUID))
+
+forBugs = glmmBUGS(formula = Observed + logExpected ~ 1, effects= "CSDUID", 
+                   family="poisson", spatial =popDataAdjMat, data=ontario@data)
+names(forBugs$ragged)
+startingValues=forBugs$startingValues
+source("getInits.R")
+library(R2WinBUGS)
+ontarioResult = bugs(forBugs$ragged, getInits, parameters.to.save=names(getInits()), 
+                     model.file="model.bug", n.chain=3, n.iter=1000, n.burnin=100, 
+                     n.thin=10, program="winbugs")
+
+ontarioParams=restoreParams(ontarioResult, forBugs$ragged)
+ontarioSummary = summaryChain(ontarioParams)
+
+ontario = mergeBugsData(ontario, ontarioSummary)
+head(ontario@data)
+spplot(ontario, "RCSDUIDSpatial")
+
+Sweave("code.Rnw")

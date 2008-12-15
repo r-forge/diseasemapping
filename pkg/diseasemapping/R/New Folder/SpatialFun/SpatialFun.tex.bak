@@ -1,0 +1,293 @@
+\documentclass{article}
+\usepackage{graphicx}
+\textwidth 6.0 true in
+\textheight 9 true in
+\topmargin -1.0 true in
+\headsep 0.375 true in
+\oddsidemargin 0.0 true in
+\evensidemargin 0.5 true in
+
+\title{The Spatial Model Functions}
+\def\ffmc{\mbox{ffmc}}
+\def\wind{\mbox{wind}}
+\def\ROS{\mbox{ROS}}
+\def\ISI{\mbox{ISI}}
+\def\BUI{\mbox{BUI}}
+\begin{document}
+\maketitle
+
+\large
+\section{Introduction}
+
+\section{Method}
+\subsection{The Poisson Model}
+The followings are the theoretical functions:
+
+Let
+
+\begin{itemize}
+\item $Y_k$ = number of cancer cases in group k.
+\item $P_k$ = number of people (population size).
+\end{itemize}
+
+
+We have
+     \[Y_k \sim Poisson (\lambda_k),\]  we won't put time under our consideration at the beginning.  %or the function should be Y_k ~ Poisson(\lambda_i T)
+     \[\log(\lambda_k) = \log(P_k) + \mu + x_k\beta,\]
+     where $\mu$ is the average of the reference group;
+           $x_k$ is the age and sex group;
+           $\beta$ is the log relative risk.
+
+Therefore, we will fit a $glm$ (generalized linear model) as:
+    \[ model = glm ( cases \sim offset(logpop) + factor(age)\times factor(sex) ) \]
+
+
+
+\subsection{The R Functions}
+Currently the diseasemapping package contains $6$ functions:  
+
+\begin{enumerate}
+\item 
+
+\begin{verbatim}
+''formatCases'' <- function(casedata)
+\end{verbatim}
+
+
+
+We get the data sets from different kinds of sources. Therefore, we need to clean and format the data set
+for the future manipulation. The function dealing with two scenarios: when there is  \textit{group} column in the data set
+or when there is  \small \textit{AGE\_SEX\_GROUP} column in data set. Essentially, we want to add in two
+columns : sex and age.
+\large
+
+Group is usually a column looks like:
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+ $M0\_5$ \\
+ $M5\_9$ \\
+ $M10\_14$ \\
+  \vdots  \\
+ $M85PLUS$ \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+
+AGE\_SEX\_Group is usually a column of numbers composed with $3$ digits:
+Male are the numbers begin with $1$, the rest two digits are corresponding to the age.
+i.e:
+
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+$100$  &  $M0\_4$ \\
+$101$  &  $M5\_9$ \\
+$102$  &  $M10\_14$ \\
+\vdots  &  \vdots  \\
+$117$  &  $M85PLUS$ \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Female is the same, but starting at $200$.
+
+
+\item
+\begin{verbatim}
+''formatPopulation'' <- function(popdata)
+\end{verbatim}
+
+This function is similar to the formatCases function.
+In some of the population data set, there will be a group of the people who are
+age $85$ and plus, marked as: \small $M85PLUS$ or $F85PLUS$ \large for male and female respectively.
+The first part of the formatPopulation function is to change them to \small $M85\_89$ or $F85\_89$,
+\large so that they will have the same format as the other sex and age group, and that will
+simplifies our manipulation later.
+The second part of the function is to reshape the population data set using the function
+\textit{reshape}. So that it changes the population data set from the wide format
+to the long format, and it will have the same format as the case data set. This step make
+the merge of case data set and population data set easier in the future calculations.
+
+
+
+\item 
+\begin{verbatim}
+`getRates` <-
+function(casedata, popdata, formula, family=poisson,
+minimumAge=0, maximumAge=100, S=c("M", "F"))
+\end{verbatim}
+
+This is the function we constructed to fit a Generalized Linear Model (\textit{glm} function) to
+the case data set and the population data set. Then we get out estimated coefficients for the future
+prediction.
+The argument \textit{casedata} and \textit{popdata} are the places where we put case data set
+and population data set correspondingly. \textit{formula} is the place we fit a formula function
+in the \textit{glm} model. i.e : $~age*sex $. \textit{family} is the place we
+choose what distribution we want to fit in the \textit{glm} model. By default we set it to be Poisson model, it
+can be binomial as well.
+\textit{$minimumAge=0$} and \textit{$maximumAge=100$} are the arguments to control the sample's age range. 
+By default it is $age \in ($0, 100$)$ , which includes all the cases. You can change the range to ($0$, $10$) 
+for chose all the kids' data set.  \textit{S} is in charge of control what kind of sex group we want to choose. 
+By default it choose both the male and female.
+
+
+\item 
+\begin{verbatim}
+`getSMR` <-
+function(model, population, cases=NULL, regionCode="CSDUID",
+  regionCodeCases="CSD2006")
+\end{verbatim}
+
+Function \textit{getSMR} is used to do the prediction using the model we get from the
+\textit{getRates} function. Eventually, it returns a shape file (if the population data set
+we insert the function is a shape file) contains everything of the original population
+data set and several columns : expected, logExpected, cases, SMR. expected are the expected
+case numbers we estimated using the model we get from \textit{getRates} function. logExpected
+are the log values of the expected values. cases are the number of cases we got from the
+case data set (if we fit a poisson distribution it will be the aggregate number of cases by
+different Decent Areas. SMR is the rate of observed number of cases over expected number of cases.
+
+
+
+The argument \textit{model} is the glm model estimated coefficients we got from the \textit{getRates} function.
+\textit{population} is the population data set, it can be a shape file. \textit{cases} is the number of
+case data set. \textit{regionCodeCases} and \textit{regionCode} are used to indicate the region for case data and
+population data sets respectively.
+
+\item 
+\begin{verbatim}
+''area'' <- function(sp){
+  allareas=lapply(sp@polygons,function(x) x@area )
+  lapply(allareas,sum)
+}
+\end{verbatim}
+
+\item 
+\begin{verbatim}
+''mergeBugsDAta'' <- function(x, bugsSummary, by.x = NULL, newcol="mean", ...) {
+  UseMethod("mergeBugsData")
+}
+
+\end{verbatim}
+\end{enumerate}
+\subsection{The Examples}
+
+For example, we have a case data set as:
+
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{cccccc}
+Year& $CSD2006$ & $CD2006$ & $PR2006$ & AGE\_SEX\_GROUP & Cases \\
+$1999$&$3501005$&$3501$&$35$&$109$&$1$ \\
+$1999$&$3501005$&$3501$&$35$&$110$&$1$ \\
+$1999$&$3501005$&$3501$&$35$&$111$&$3$ \\
+$1999$&$3501005$&$3501$&$35$&$112$&$1$ \\
+$1999$&$3501005$&$3501$&$35$&$113$&$2$ \\
+\end{tabular}
+\end{center}
+\end{table}
+
+
+After applying the \textit{formatCases} function, it will be:
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{cccccccc}
+ Year& $CSD2006$ & $CD2006$ & $PR2006$ & AGE\_SEX\_GROUP &Cases &sex &age    \\
+ $1999$& $3501005 $ & $3501 $  &  $35 $     &     $109$   &  $1$ &  M  &$45$ \\
+ $1999$& $3501005 $ & $3501 $  &  $35 $     &     $110$   &  $1$ &  M  &$50$ \\
+ $1999$& $3501005 $ & $3501 $  &  $35 $     &     $111$   &  $3$ &  M  &$55$ \\
+ $1999$& $3501005 $ & $3501 $  &  $35 $     &     $112$   &  $1$ &  M  &$60$ \\
+ $1999$& $3501005 $ & $3501 $  &  $35 $     &     $113$   &  $2$ &  M  &$65$ \\
+ \end{tabular}
+\end{center}
+\end{table}
+
+So that we can see, there are two new columns: sex and age.
+
+Now let's look at the \textit{formatPopulation} function:
+
+For example, we have a population data set as:
+
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{cccccc}
+
+  CSDUID   &     CSDNAME  & CSDTYPE & PRUID  & PRNAME & CDUID \\
+ $3501005$ & South Glengarry  &    TP  & $35$ &Ontario & $3501$ \\
+ $3501011$ & South Stormont   &   TP   & $35$ &Ontario & $3501$  \\
+ $3501012$ &      Cornwall    &  CY    &$35$  &Ontario & $3501$  \\
+ $3501020$ &  South Dundas    &  TP    &$35$  &Ontario & $3501$  \\
+ $3501030$ &  North Dundas    &  TP    &$35$  &Ontario & $3501$  \\
+ $3501042$ &  North Stormont  &    TP  &  $35$& Ontario&  $3501$ \\
+
+\end{tabular}
+\end{center}
+\end{table}
+
+
+After applying the \textit{formatPopulation} function, it will be:
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{cccccccc}
+   CSDUID &    cases&\ldots & CDUID & \ldots &expected    &logExpected  &     SMR    \\
+ $3501005$&    $28$& \ldots & $3501$& \ldots &$8.433922$  &  $2.132262$ &$3.319926 $ \\
+ $3501007$&    $ 0$& \ldots & $3501$& \ldots &$      NA$  &  $      NA$ &$      NA $ \\
+ $3501011$&    $24$& \ldots & $3501$& \ldots &$7.143624$  &  $1.966220$ &$3.359639 $ \\
+ $3501012$&    $52$& \ldots & $3501$& \ldots &$28.673675$ &  $ 3.355979$&$ 1.813510$ \\
+ $3501020$&    $22$& \ldots & $3501$& \ldots &$6.654331$  &  $1.895268$ &$3.306117 $ \\
+ $3501030$&    $19$& \ldots & $3501$& \ldots &$5.855935$  &  $1.767456$ &$3.244572 $ \\
+ \end{tabular}
+ \end{center}
+ \end{table}
+
+There are four new columns added in: cases, this is the number we got from the case data set;
+expected, this is the predicted number of cases we calculated using the glm function;
+logexpected are the \mbox{log} values of the expected numbers; SMR is the rate of \[\frac {oberved(cases)}{expected(expected)}.\]
+
+if we ran the following code:
+\begin{verbatim}
+> model <- getRates( casedata, popdata, ~age*sex, S=c("M","F"))
+\end{verbatim}
+
+The result of model will be the predicted coefficients of different age and sex groups:
+\begin{verbatim}
+> model
+
+Call:  glm(formula = formula, family = family, data = newdata)
+
+Coefficients:
+(Intercept)         age5        age10        age15        age20        age25
+  -13.41885     -0.07403      0.52666      0.87985      1.62710      2.35525
+      age30        age35        age40        age45        age50        age55
+    3.49147      4.32618      5.12292      5.49001      5.96051      5.79087
+      age60        age65        age70        age75        age80         sexM
+    7.03365      7.11180      7.22133      7.24461      7.10451      0.67377
+  age5:sexM   age10:sexM   age15:sexM   age20:sexM   age25:sexM   age30:sexM
+         NA           NA           NA     -1.08827     -0.20732     -1.65308
+ age35:sexM   age40:sexM   age45:sexM   age50:sexM   age55:sexM   age60:sexM
+   -0.81485     -1.05938     -0.60803     -0.59874           NA     -0.73841
+ age65:sexM   age70:sexM   age75:sexM   age80:sexM
+   -0.38252     -0.25474     -0.20245           NA
+
+Degrees of Freedom: 28 Total (i.e. Null);  0 Residual
+Null Deviance:      10680
+Residual Deviance: -5.529e-14   AIC: 229.2
+
+
+\end{verbatim}
+
+
+
+
+
+
+\end{document}
+
+
+

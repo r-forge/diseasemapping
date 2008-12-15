@@ -1,0 +1,322 @@
+\documentclass{article}
+\usepackage{graphicx}
+\textwidth 6.0 true in
+\textheight 9 true in
+\topmargin -1.0 true in
+\headsep 0.375 true in
+\oddsidemargin 0.0 true in
+\evensidemargin 0.5 true in
+
+\title{The Spatial Model Functions}
+\def\ffmc{\mbox{ffmc}}
+\def\wind{\mbox{wind}}
+\def\ROS{\mbox{ROS}}
+\def\ISI{\mbox{ISI}}
+\def\BUI{\mbox{BUI}}
+\begin{document}
+\maketitle
+
+\large
+\section{Introduction}
+
+\section{Method}
+\subsection{The Poisson Model}
+The followings are the theoretical functions:
+
+Let $Y_k$ denotes the number of cancer cases in group k.
+$P_k$ denotes the number of people (population size).
+$\lambda_k$ denotes the rate of getting cancer.
+
+We have
+     \[Y_k \sim Poisson (P_k\lambda_k),\]  we won't put time under our consideration at the beginning.  %or the function should be Y_k ~ Poisson(\lambda_i T)
+     \[\log(\lambda_k) = \mu +  x_k\beta + U_k + V_k,\]
+where      $\mu$ is the intercept, it could be $\log(P_k)$;
+
+           $x_k$ is the covariates i.e income variable;
+           
+           $\beta$ is the log relative risk;
+           
+           $U_k$ is the spatial random variable and \[U_k \sim N(0, \sigma^2_u)\]
+           
+           $V_k$ is the non-spatial random variable and \[V_k \sim N(0, \sigma^2_v)\]
+
+Therefore, we will fit a $glm$ (generalized linear model) as:
+    \[model = glm( cases \sim offset(logpop) + factor(age) factor(sex) )\]
+
+
+
+\subsection{The R Functions}
+Currently the diseasemapping package contains $6$ functions:  
+
+\begin{enumerate}
+\item 
+
+\begin{verbatim}
+''formatCases'' <- function(casedata)
+\end{verbatim}
+
+
+
+We get the data sets from different kinds of sources. Therefore, we need to clean and format the data set
+for the future manipulation. The function dealing with two scenarios: when there is  \texttt{group} column in the data set
+or when there is  \small \texttt{AGE\_SEX\_GROUP} column in data set. Essentially, we want to add in two
+columns : sex and age.
+\large
+
+Group is usually a column looks like:
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+ $M0\_5$ \\
+ $M5\_9$ \\
+ $M10\_14$ \\
+  \vdots  \\
+ $M85PLUS$ \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+
+AGE\_SEX\_Group is usually a column of numbers composed with $3$ digits:
+Male are the numbers begin with $1$, the rest two digits are corresponding to the age.
+i.e:
+
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+$100$  &  $M0\_4$ \\
+$101$  &  $M5\_9$ \\
+$102$  &  $M10\_14$ \\
+\vdots  &  \vdots  \\
+$117$  &  $M85PLUS$ \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Female is the same, but starting at $200$.
+
+
+\item
+\begin{verbatim}
+''formatPopulation'' <- function(popdata)
+\end{verbatim}
+
+This function is similar to the formatCases function.
+In some of the population data set, there will be a group of the people who are
+age $85$ and plus, marked as: \small $M85PLUS$ or $F85PLUS$ \large for male and female respectively.
+The first part of the formatPopulation function is to change them to \small $M85\_89$ or $F85\_89$,
+\large so that they will have the same format as the other sex and age group, and that will
+simplifies our manipulation later.
+The second part of the function is to reshape the population data set using the function
+\texttt{reshape}. So that it changes the population data set from the wide format
+to the long format, and it will have the same format as the case data set. This step make
+the merge of case data set and population data set easier in the future calculations.
+
+
+
+\item 
+\begin{verbatim}
+''getRates'' <-
+function(casedata, popdata, formula, family=poisson,
+minimumAge=0, maximumAge=100, S=c("M", "F"))
+\end{verbatim}
+
+This is the function we constructed to fit a Generalized Linear Model (\texttt{glm} function) to
+the case data set and the population data set. Then we get out estimated coefficients for the future
+prediction.
+The argument \texttt{casedata} and \texttt{popdata} are the places where we put case data set
+and population data set correspondingly. \texttt{formula} is the place we fit a formula function
+in the \texttt{glm} model. i.e : $~age*sex $. \texttt{family} is the place we
+choose what distribution we want to fit in the \texttt{glm} model. By default we set it to be Poisson model, it
+can be binomial as well.
+\texttt{$minimumAge=0$} and \texttt{$maximumAge=100$} are the arguments to control the sample's age range. 
+By default it is $age \in ($0, 100$)$ , which includes all the cases. You can change the range to ($0$, $10$) 
+for chose all the kids' data set.  \texttt{S} is in charge of control what kind of sex group we want to choose. 
+By default it choose both the male and female.
+
+
+\item 
+\begin{verbatim}
+''getSMR'' <-
+function(model, population, cases=NULL, regionCode="CSDUID",
+  regionCodeCases="CSD2006")
+\end{verbatim}
+
+Function \texttt{getSMR} is used to do the prediction using the model we get from the
+\texttt{getRates} function. Eventually, it returns a shape file (if the population data set
+we insert the function is a shape file) contains everything of the original population
+data set and several columns : expected, logExpected, cases, SMR. expected are the expected
+case numbers we estimated using the model we get from \texttt{getRates} function. logExpected
+are the log values of the expected values. cases are the number of cases we got from the
+case data set (if we fit a poisson distribution it will be the aggregate number of cases by
+different Decent Areas. SMR is the rate of observed number of cases over expected number of cases.
+
+The argument \texttt{model} is the glm model estimated coefficients we got from the \texttt{getRates} function.
+\texttt{population} is the population data set, it can be a shape file. \texttt{cases} is the number of
+case data set. \texttt{regionCodeCases} and \texttt{regionCode} are used to indicate the region for case data and
+population data sets respectively.
+
+\item 
+\begin{verbatim}
+''area'' <- function(sp)
+\end{verbatim}
+Function \texttt{area} is used to calculate the area of each region, return a vector of areas. The argument \texttt{sp} is a single 
+spatial polygon object.
+\item 
+\begin{verbatim}
+''mergeBugsData'' <- function(x, bugsSummary, by.x = NULL, newcol="mean", ...) 
+\end{verbatim}
+Function \texttt{mergeBugsData} is used to merge the results from the \texttt{bugs} function to the other data set i.e population data set.
+
+The argument \texttt{x} is the data set we want the result from the \texttt{bugs} to merge to. \texttt{bugsSummary} is the simulation result
+get from the \texttt{bugs} function. \texttt{by.x} is the common column in both the {x} and {bugsSummary} data set. \texttt{newcol} is the summary statistic that to be merged back to the data frame.   
+\end{enumerate}
+
+
+\subsection{The Examples}
+We will take the ontario long cancer data set as an example. Due to confidential needs, we simulated the case (cancer) data set.  
+For example, we have a case data set as:
+
+> data(casedata)
+> head(casedata)
+
+library
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{cccccc}
+Year& $CSD2006$ & $CD2006$ & $PR2006$ & AGE\_SEX\_GROUP & Cases \\
+$1999$&$3501005$&$3501$&$35$&$210$&$3$ \\
+$1999$&$3501005$&$3501$&$35$&$213$&$1$ \\
+$1999$&$3501005$&$3501$&$35$&$214$&$6$ \\
+$1999$&$3501005$&$3501$&$35$&$215$&$1$ \\
+$1999$&$3501005$&$3501$&$35$&$216$&$3$ \\
+\end{tabular}
+\end{center}
+\end{table}
+
+> formatCases(casedata)
+> head(casedata)
+
+After applying the \texttt{formatCases} function, it will be:
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{cccccccc}
+ Year& $CSD2006$ & $CD2006$ & $PR2006$ & AGE\_SEX\_GROUP &Cases &sex &age    \\
+ $1999$& $3501005 $ & $3501 $  &  $35 $     &     $210$   &  $3$ &  F  &$50$ \\
+ $1999$& $3501005 $ & $3501 $  &  $35 $     &     $213$   &  $1$ &  F  &$65$ \\
+ $1999$& $3501005 $ & $3501 $  &  $35 $     &     $214$   &  $6$ &  F  &$70$ \\
+ $1999$& $3501005 $ & $3501 $  &  $35 $     &     $215$   &  $1$ &  F  &$75$ \\
+ $1999$& $3501005 $ & $3501 $  &  $35 $     &     $216$   &  $3$ &  F  &$80$ \\
+ \end{tabular}
+\end{center}
+\end{table}
+
+So that we can see, there are two new columns: sex and age.
+
+Now let's look at the \texttt{formatPopulation} function:
+
+For example, we have a population data set as:
+
+> data(popdata)
+> head(popdata@data)
+
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{ccccccc}
+
+  CSDUID   &     CSDNAME      & $M0\_4$& $M5\_9$ &\dots & $F0\_4$& $F5\_9$ \\
+ $3501005$ & South Glengarry  & $295$ & $355$  &\dots & $285$ & $320$  \\
+ $3501011$ & South Stormont   & $310$ & $380$  &\dots & $265$ & $345$  \\
+ $3501012$ &      Cornwall    & $1180$& $1295$ &\dots & $1080$& $1210$ \\
+ $3501020$ &  South Dundas    & $230$ & $285$  &\dots & $240$ & $300$  \\
+ $3501030$ &  North Dundas    & $295$ & $315$  &\dots & $310$ & $285$  \\
+ $3501042$ &  North Stormont  & $200$ & $220$  &\dots & $180$ & $220$  \\
+
+\end{tabular}
+\end{center}
+\end{table}
+
+
+After applying the \texttt{formatPopulation} function, it will be:
+
+> formatPopulation(popdata)
+
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{cccccccccc}
+  CSDUID   & CSDNAME  & $M0\_4$    &\dots &$F0\_4$  & \ldots  &  GROUP &POPULATION& AGE &SEX   \\
+ $3501005$ & South Glengarry  & $295$ &\dots & $285$ &\ldots & $M0\_4$& $295$ & $0\_4$ &  M \\
+ $3501011$ & South Stormont   & $310$ &\dots & $265$ &\ldots & $M0\_4$& $310$ & $0\_4$ &  M \\ 
+ $3501012$ &      Cornwall    & $1180$&\dots & $1080$&\ldots & $M0\_4$& $1180$& $0\_4$ &  M \\ 
+ $3501020$ &  South Dundas    & $230$ &\dots & $240$ &\ldots & $M0\_4$& $230$ & $0\_4$ &  M \\ 
+ $3501030$ &  North Dundas    & $295$ &\dots & $310$ &\ldots & $M0\_4$& $295$ & $0\_4$ &  M \\ 
+ $3501042$ &  North Stormont  & $200$ &\dots & $180$ &\ldots & $M0\_4$& $200$ & $0\_4$ &  M \\ 
+\end{tabular}
+\end{center}
+\end{table}
+
+There are four new columns added in: \texttt{Group}, \texttt{POPULATION}, \texttt{AGE} and \texttt{SEX}.
+
+If we ran the following code:
+
+cancerRates = getRates(casedata, popdata, ~age*sex)
+
+The result of model will be the predicted coefficients of different age and sex groups:
+
+cancerRates 
+
+\begin{verbatim}
+Call:  glm(formula = formula1, family = family, data = newdata) 
+
+Coefficients:
+  (Intercept)       age70_74       age60_64       age75_79       age80_84       age55_59       age85_89       age50_54  
+     -4.72155        0.18543       -0.38010        0.07425        0.44084       -0.86524        0.30266       -1.86916  
+     age45_49       age40_44       age35_39       age30_34       age25_29       age20_24       age15_19         age5_9  
+     -1.99423       -2.76184       -3.64470       -5.13532       -4.74062       -6.79155       -7.14367       -6.99895  
+     age10_14         age0_4           sexF  age70_74:sexF  age60_64:sexF  age75_79:sexF  age80_84:sexF  age55_59:sexF  
+     -7.16576       -8.02353       -0.31172       -0.17597        0.01024       -0.02530       -0.67770             NA  
+age85_89:sexF  age50_54:sexF  age45_49:sexF  age40_44:sexF  age35_39:sexF  age30_34:sexF  age25_29:sexF  age20_24:sexF  
+     -0.66813        0.42881        0.05375        0.81430        0.72865        1.25281       -0.30888        1.01391  
+age15_19:sexF    age5_9:sexF  age10_14:sexF    age0_4:sexF  
+           NA             NA             NA             NA  
+
+Degrees of Freedom: 30 Total (i.e. Null);  0 Residual
+Null Deviance:      38660 
+Residual Deviance: 3.535e-13    AIC: 278.9 
+\end{verbatim}
+The above is the typical result from running the \texttt{glm} model. The $0.18543$, $-0.38010$ etc are the \log of relative risk i.e \beta's.
+The base line is %%%%%%%%%
+
+After getting those estimated log relative risk, we can predict the expected number of cancer cases and calculate SMR using function 
+\texttt{getSMR}. 
+
+ontario = getSMR(cancerRates, popdata, casedata) 
+head(ontario@data)
+
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{cccccccccc}
+  CSDUID   & CSDNAME  & $M0\_4$    &\dots &$F0\_4$  & \ldots  &  GROUP &POPULATION& AGE &SEX   \\
+ $3501005$ & South Glengarry  & $295$ &\dots & $285$ &\ldots & $M0\_4$& $295$ & $0\_4$ &  M \\
+ $3501011$ & South Stormont   & $310$ &\dots & $265$ &\ldots & $M0\_4$& $310$ & $0\_4$ &  M \\ 
+ $3501012$ &      Cornwall    & $1180$&\dots & $1080$&\ldots & $M0\_4$& $1180$& $0\_4$ &  M \\ 
+ $3501020$ &  South Dundas    & $230$ &\dots & $240$ &\ldots & $M0\_4$& $230$ & $0\_4$ &  M \\ 
+ $3501030$ &  North Dundas    & $295$ &\dots & $310$ &\ldots & $M0\_4$& $295$ & $0\_4$ &  M \\ 
+ $3501042$ &  North Stormont  & $200$ &\dots & $180$ &\ldots & $M0\_4$& $200$ & $0\_4$ &  M \\ 
+\end{tabular}
+\end{center}
+\end{table} 
+
+\section{Summary and Future Development}
+
+\section{Bibliography}
+
+
+\end{document}
+
+
+
