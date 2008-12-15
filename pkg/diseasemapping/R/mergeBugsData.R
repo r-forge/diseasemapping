@@ -53,5 +53,8 @@ mergeBugsData.data.frame = function(x, bugsSummary,
     colnames(newcols) = gsub("^R\\.", "", colnames(newcols))
 
   x[,colnames(newcols)] = newcols
+  if(dim(newcols)[2]==1)
+    x[,colnames(newcols)] = as.vector(x[,colnames(newcols)])  
+  
   x
 }
