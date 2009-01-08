@@ -62,5 +62,10 @@ if(!is.null(aggregate.by)) {
 
 }
 
+if(is.null(aggregate.by) & !is.null(breaks) ) {
+  # do some aggregation
+
+}
+
 poplong
 }
