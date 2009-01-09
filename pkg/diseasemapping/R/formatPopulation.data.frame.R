@@ -29,7 +29,6 @@ poplong = reshape(popdata,  varying=ageBreaks$oldNames, direction="long",
     } else {breaks <- attributes(poplong)$breaks}
     if (length(breaks) == 0){
     breaks <- ageBreaks
-    attributes(poplong)$breaks <- breaks
     }
 
 # I used loop here, but took a long time, there should be an easy way to solve the problem.
