@@ -12,13 +12,14 @@ ageBreaks = getBreaks(names(popdata))
 poplong = reshape(popdata,  varying=ageBreaks$oldNames, direction="long",
 	v.names="POPULATION", timevar="GROUP", times = ageBreaks$newNames)
 	
-attributes(poplong)$breaks = ageBreaks$something	
+	    currentbreaks <- ageBreaks$something	
+
 	
 # check to see if the provided breaks are good
 ######## this is the part have the problem. 
 
     if (length(breaks) > 0) {      
-    currentbreaks <- attributes(poplong)$breaks    
+  
          if (length(currentbreaks) == 0){ 
               currentbreaks <- breaks}
          if (all(breaks %in% currentbreaks)) {
@@ -102,6 +103,8 @@ if(is.null(aggregate.by) & !is.null(breaks) ) {
   # do some aggregation
 
 }
+
+attributes(poplong)$breaks = something
 
 poplong
 }
