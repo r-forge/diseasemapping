@@ -1,19 +1,56 @@
-formatPopulation <- function(popdata, aggregate.by, ...) {
+formatPopulation <- function(popdata, aggregate.by,breaks=NULL, ...) {
   UseMethod("formatPopulation")
 }
 
 `formatPopulation.data.frame` <-
-function(popdata,aggregate.by=NULL, ...) {
+function(popdata, aggregate.by=NULL, breaks=NULL, ...) {
+
+#popdata <- popdata@data
+ageBreaks = getBreaks(names(popdata))
+
+####reshape the popdata:
+poplong = reshape(popdata,  varying=ageBreaks$oldNames, direction="long",
+	v.names="POPULATION", timevar="GROUP", times = ageBreaks$newNames)
+	
+# check to see if the provided breaks are good
+######## this is the part have the problem. 
+
+    if (length(breaks) > 0) {      
+    currentbreaks <- attributes(poplong)$breaks    
+         if (length(currentbreaks) == 0){ 
+              currentbreaks <- breaks}
+         if (all(breaks %in% currentbreaks)) {
+        attributes(poplong)$breaks = breaks
+        } else {
+        stop("population age breaks aren't nested in the breaks provided")}
+    } else {breaks <- attributes(poplong)$breaks}
+    if (length(breaks) == 0){
+    breaks <- ageBreaks
+    attributes(poplong)$breaks <- breaks
+    }
+
+# I used loop here, but took a long time, there should be an easy way to solve the problem.
+# apply cut function with the desired breaks
+
+#sex=factor(substr(poplong$GROUP, 1, 1))
+a <- numeric()
+age <- substr(poplong$GROUP, 3, 4)
+for(i in 1:length(age)){
+a[i] <- which(age[i] == unique(ageBreaks$age))
+poplong$cutAge[i] <- ageBreaks$names[a[i]]
+}
+
+# aggregate if necessary
+if(!breaks %in% ageBreaks){
+popa <- aggregate(poplong$POPULATION, list(age=poplong$cutAge), sum)
+names(popa)[names(popa)=="x"] = "POPULATION"
+poplong <- popa
+}else{poplong <- poplong}
+
+#attributes(poplong)$ageBreaks = ageBreaks$breaks
+#return(poplong)
 
  
-#if(class(popdata)== "SpatialPolygonsDataFrame"){
-#pdataframe = popdata@data
-#names(pdataframe)<-toupper(names(pdataframe))
-#popdata <- pdataframe
-#}
-
-names(popdata)<-toupper(names(popdata))      
-
 #### need to change M85plus to "M85_89" for the reshape step:
 if( all( c(grep("^M.*PLUS", names(popdata), value=TRUE),
     grep("^F.*PLUS", names(popdata), value=TRUE))  %in%
@@ -27,12 +64,9 @@ c2 <- paste("F", b2, sep="")
 names(popdata)[grep("^M.*PLUS", names(popdata))] <- c1
 names(popdata)[grep("^F.*PLUS", names(popdata))] <- c2
 }
-
-
-####reshape the popdata:
 thevarying = c(grep("^M.*_", names(popdata), value=TRUE), grep("^F.*_", names(popdata), value=TRUE))       
-poplong = reshape(popdata,  varying=thevarying, direction="long",
-	v.names="POPULATION", timevar="GROUP", times = thevarying)
+
+
 
 if(! all(c("AGE", "SEX") %in% names(poplong))) {
   if("GROUP" %in% names(poplong)) {
