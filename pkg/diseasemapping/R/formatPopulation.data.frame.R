@@ -12,6 +12,8 @@ ageBreaks = getBreaks(names(popdata))
 poplong = reshape(popdata,  varying=ageBreaks$oldNames, direction="long",
 	v.names="POPULATION", timevar="GROUP", times = ageBreaks$newNames)
 	
+attributes(poplong)$breaks = ageBreaks$something	
+	
 # check to see if the provided breaks are good
 ######## this is the part have the problem. 
 
