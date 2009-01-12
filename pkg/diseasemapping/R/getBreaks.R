@@ -1,4 +1,4 @@
-function (colNames, breaks=NULL) 
+function (colNames, Breaks=NULL) 
 {
     if (!length(breaks)){
     popColumns <- grep("^(m|f|male|female)[[:digit:]]+(_|-|plus|\\+)[[:digit:]]*$", 
@@ -21,10 +21,17 @@ function (colNames, breaks=NULL)
         times = ageBreaks$newNames)
     a <- numeric()
     age <- substr(poplong$GROUP, 3, 4)
+    breaksNames <- as.character(cut(Breaks, breaks=c(sort(Breaks), max(ageUpper)), right=F))
+    
     for (i in 1:length(age)) {
-        a[i] <- which(age[i] == unique(ageBreaks$age))
-        poplong$cutAge[i] <- ageBreaks$names[a[i]]
+        
+        a[i] <- which(age[i] == unique(Breaks))
+        ageCut[i] <- breaksNames[a[i]]
     }
-    popa <- aggregate(poplong$POPULATION, list(cutAge=poplong$cutAge), sum)
-    names(popa)[names(popa) == "x"] = "POPULATION"
+    
 }
+
+
+
+popa <- aggregate(poplong$POPULATION, list(cutAge=poplong$cutAge), sum)
+    names(popa)[names(popa) == "x"] = "POPULATION"
