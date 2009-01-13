@@ -1,6 +1,5 @@
-function (colNames, Breaks=NULL) 
+getBreaks <- function (colNames, breaks=NULL) 
 {
-    if (!length(breaks)){
     popColumns <- grep("^(m|f|male|female)[[:digit:]]+(_|-|plus|\\+)[[:digit:]]*$", 
         colNames, value = T, ignore.case = T)
     ageGroups <- gsub("^(m|f|male|female)", "", popColumns, ignore.case = TRUE)
@@ -10,28 +9,45 @@ function (colNames, Breaks=NULL)
     ageUpper <- as.numeric(gsub("^[[:digit:]]+(_|-)", "", ageGroups))
     currentbreaks <- c(sort(unique(ageLower)), max(ageUpper))
     sex <- substr(popColumns, 1, 1)
-    ageCut <- as.character(cut(ageLower, breaks = currentbreaks, 
-        right = F))
-    ageBreaks = list(breaks = currentbreaks, names = ageCut, age = ageLower, 
+
+    result = list(breaks = currentbreaks, age = ageLower, 
         sex = sex, oldNames = popColumns, newNames = paste(sex, 
-            ageLower, sep = "."))
-}else(
-    poplong = reshape(popdata, varying = ageBreaks$oldNames, 
-        direction = "long", v.names = "POPULATION", timevar = "GROUP", 
-        times = ageBreaks$newNames)
-    a <- numeric()
-    age <- substr(poplong$GROUP, 3, 4)
-    breaksNames <- as.character(cut(Breaks, breaks=c(sort(Breaks), max(ageUpper)), right=F))
-    
-    for (i in 1:length(age)) {
-        
-        a[i] <- which(age[i] == unique(Breaks))
-        ageCut[i] <- breaksNames[a[i]]
-    }
-    
+            ageLower, sep = "."), mustAggregate = F)
+
+
+if(length(breaks)) {
+ # check that the breaks are valid
+
+# make sure that the right end of the last bin is Inf
+	if(breaks[length(breaks)] != Inf) {
+	  if(breaks[length(breaks)] %in% currentbreaks) {
+		 breaks = c(breaks, Inf)
+	  } else {
+		breaks[length(breaks)] = Inf
+	  }
+	}
+
+# if the breaks don't include some younger age groups, keep those age groups as-is
+breaks = c(currentbreaks[currentbreaks < min(breaks)], breaks)
+
+# check that population breaks are nested within breaks
+if (all(breaks %in% currentbreaks)) {
+	
+# if the breaks are different from the population breaks
+if(any(breaks != currentbreaks)) {
+
+ result$breaks = breaks
+	result$mustAggregate = T
+	
 }
 
+} else {
 
+	warning("population data doesn't appear to be nested within breaks, ignoring breaks")
+}
 
-popa <- aggregate(poplong$POPULATION, list(cutAge=poplong$cutAge), sum)
-    names(popa)[names(popa) == "x"] = "POPULATION"
+ 
+return(result) 
+}
+}
+
