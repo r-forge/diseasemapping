@@ -14,7 +14,6 @@ getBreaks <- function (colNames, breaks=NULL)
         sex = sex, oldNames = popColumns, newNames = paste(sex, 
             ageLower, sep = "."), mustAggregate = F)
 
-
 if(length(breaks)) {
  # check that the breaks are valid
 
@@ -46,7 +45,8 @@ if(any(breaks != currentbreaks)) {
 	warning("population data doesn't appear to be nested within breaks, ignoring breaks")
 }
 
- 
+
+
 return(result) 
 }
 }

@@ -142,6 +142,9 @@ model = glm(formula1, family=family, data=newdata)
 
 model$sexSubset = S
 
+# model$years
+# model$breaks
+
 return(model)
 }
 
