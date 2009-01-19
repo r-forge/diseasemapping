@@ -14,7 +14,7 @@ getBreaks <- function (colNames, breaks=NULL)
         sex = sex, oldNames = popColumns, newNames = paste(sex, 
             ageLower, sep = "."), mustAggregate = F)
 
-if(length(breaks)) {
+if(length(breaks)> 0 ) {
  # check that the breaks are valid
 
 # make sure that the right end of the last bin is Inf
@@ -31,7 +31,7 @@ breaks = c(currentbreaks[currentbreaks < min(breaks)], breaks)
 
 # check that population breaks are nested within breaks
 if (all(breaks %in% currentbreaks)) {
-	
+
 # if the breaks are different from the population breaks
 if(any(breaks != currentbreaks)) {
 
@@ -45,9 +45,9 @@ if(any(breaks != currentbreaks)) {
 	warning("population data doesn't appear to be nested within breaks, ignoring breaks")
 }
 
-
-
-return(result) 
 }
+
+result
+
 }
 
