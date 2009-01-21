@@ -1,15 +1,25 @@
-`formatCases` <- function(casedata) {
+`formatCases` <- function(casedata, breaks=NULL, years=NULL) {
 
-
- groupvar = grep("^AGE_SEX_GROUP$", names(casedata), value=TRUE,
-    ignore.case=TRUE)
- if(length(groupvar))  {
+ ageBreaks = getBreaks(names(popdata), breaks)
+ 
+ groupvar = grep("^AGE_SEX_GROUP$", names(casedata), value=TRUE, ignore.case=TRUE)
+ if(length(groupvar) & ageBreaks$mustAggregate ==TRUE)  {
  # there is a group variable, use it to create age and sex
   # get rid of NA's
   casedata = casedata[!is.na(casedata[[groupvar]]),]
+  # change NA's in cases to zero
+ casedata$cases[which(is.na(casedata$cases))]= 0
 
- 
+   casedata$cutAge = cut(as.numeric(as.character(casedata$age)), ageBreaks$breaks, right=F)
+   popa = aggregate(casedata$cases, list(age=casedata$cutAge), sum)
+   names(popa)[names(popa)=="x"] = "CASES"
+   casedata <- popa
+}
  # check for underscores
+if(length(groupvar)& ageBreaks$mustAggregate == FALSE)  {
+ # there is a group variable, use it to create age and sex
+  # get rid of NA's
+  casedata = casedata[!is.na(casedata[[groupvar]]),]
  underscores = as.logical(length(grep("_", casedata[[groupvar]])))
  if(underscores) {
     n <- regexpr("_", casedata[[groupvar]], fixed = TRUE)
