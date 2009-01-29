@@ -13,8 +13,8 @@ mergeBugsData.data.frame = function(x, bugsSummary,
 
   if(!is.list(bugsSummary)) {
     if(is.vector(bugsSummary)  ) {
-      bugsSummary = matrix(bugsSummary, nrow=length(bugsSummary),
-        dimnames = list(names(bugsSummary), newcol))
+      bugsSummary = data.frame(bugsSummary)
+
     }
     bugsSummary = list( R= bugsSummary)
 
