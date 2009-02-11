@@ -83,5 +83,10 @@ for(Dtime in Stime) {
 }
 
 RtimeMean = Rtime[,,"mean"]
-ncFinal = mergeBugsData(pop2@data, RtimeMean, "CENTRACTID") 
-save.image(ncFinal, "ncResultsSpaceTime.RData")
+colnames(RtimeMean) = paste("mean", colnames(RtimeMean), sep="")
+
+ncFinal = pop2
+ncFinal@data = merge(pop2@data, RtimeMean, by.x="CENTRACTID", 
+  by.y="row.names", all.x=T) 
+save(ncFinal, file="ncResultsSpaceTime.RData")
+writePolyShape(ncFinal, "ncResultsSpaceTime")
