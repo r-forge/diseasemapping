@@ -1,5 +1,5 @@
 # the function body:
-getStdRate= function(relativeRate, model, referencePopulation="Canada1991",
+getStdRate= function(relativeRate, model, referencePopulation=referencepop,
   scale=100000) {
 
 # check for negatives
@@ -54,7 +54,7 @@ newpop$pred <- predict(model, newpop[,c("age","sex","logpop")], type = "response
 
 #referenceRate <- sum(predict(model, newpop[,c("age","sex","logpop")], type = "response"))
 
-return(relativeRate*referenceRate)
+#return(relativeRate*referenceRate)
 
 #names(newpop)<-c("age","sex", "pred")
 
@@ -66,6 +66,16 @@ newpop
 
 
 
-getstdRate.list()<-function(relativeRate, model, referencePopulation, scale=100000){
-lapply(referencePopulation,getstdRate,relativeRate=relativeRate, scale=scale, model=model)
-}
+#### function of list format: 
+
+#getstdRate.list()<-function(relativeRate, model, referencePopulation, scale=100000){
+#lapply(referencePopulation,getstdRate,relativeRate=relativeRate, scale=scale, model=model)
+#}
+
+
+#### the most original idea of the function: 
+#getStdRate= function(relativeRate, model, referencePopulation, scale=100000) {
+
+#relativeRate * sum(predict(model, referencePopulation)) * scale
+
+#}
