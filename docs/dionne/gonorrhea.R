@@ -44,6 +44,16 @@ poplong = reshape(newdata,  varying=list(ColPop, ColCase), direction="long",
 
 poplong$logPop = log(poplong$Population) - log(4)
 
+# centre some covariates
+for(Dcentre in c("PCT__30K", "FHH_CHILD", "PCT_RENTER", "PCT__HS", "PCT_UNEMP", "PCTBLACK"))
+  poplong[,Dcentre] = poplong[,Dcentre] - mean(poplong[,Dcentre])
+     
+poplong$pct30k = poplong$PCT__30K - mean(poplong$pCT__30K)
+poplong$fhhchild = poplong$FHH_CHILD - mean(poplong$FHH_CHILD)
+
+
+
+
 GONQragged <- glmmBUGS(Cases + logPop ~ time +  MFlog + 
     PCTBLACK+ FHH_CHILD+ PCT_RENTER+ PCT_NO_PLM +
     PCT__HS + RUCA * PCT__30K + PCT_UNEMP, 
