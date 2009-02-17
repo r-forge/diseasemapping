@@ -41,8 +41,10 @@ poplong = reshape(newdata,  varying=list(ColPop, ColCase), direction="long",
 
 poplong$logPop = log(poplong$Population) - log(4)
 
-GONQragged <- glmmBUGS(Cases + logPop ~ time + RUCA + MFlog + PCTBLACK+ FHH_CHILD+ PCT_RENTER+ PCT_NO_PLM +
-                      PCT__HS + PCT__30K + PCT_UNEMP, data=poplong,
+GONQragged <- glmmBUGS(Cases + logPop ~ time +  MFlog + 
+    PCTBLACK+ FHH_CHILD+ PCT_RENTER+ PCT_NO_PLM +
+    PCT__HS + RUCA * PCT__30K + PCT_UNEMP, 
+                        data=poplong,
                       effects = c("CENTRACTID", "time"), spatial=popAdjacency, spatialEffect= "CENTRACTID", family="poisson")
 
 startingValues = GONQragged$startingValues

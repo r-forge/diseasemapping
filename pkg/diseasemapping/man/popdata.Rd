@@ -1,22 +1,22 @@
 \name{popdata}
 \alias{popdata}
 \docType{data}
-\title{Data set contains the information of population}
+\title{Ontario 2006 population by census subdivision}
 \description{
- Data set contains the information of population. It could be a shape file.
+ Data set contains the information of population, by age, sex, and census subdivision.
 }
 \usage{data(popdata)}
 \format{
-data in shape file
- 
+A SpatialPolygonsDataFrame object, which needs the \code{sp} package for full functionality.  
 }
 \details{
- It is a shape file. 
+These data are from the 2006 Census of canada, from the Statistics Canada web site, \code{www12.statcan.gc.ca/english/census06/data/highlights/agesex/Index_PR.cfm?Lang=E&Geo=CSD&Table=1} 
 }
 
 
 \examples{
 data(popdata)
+head(popdata@data)
 ## maybe str(popdata) ; plot(popdata) ...
 }
 \keyword{datasets}
