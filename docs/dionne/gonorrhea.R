@@ -4,6 +4,9 @@ popdata <-  readShapePoly(fn="NC_gonorrhea_yearly_and_quarterly_with_covariates"
 
 
 popAdjacency = poly2nb(popdata, as.character(popdata[["CENTRACTID"]]))
+load("adds2.Rdata")
+
+
 adds2$CenTractID = as.character(adds2$CenTractID)
 popdata$CENTRACTID = as.character(popdata$CENTRACTID)
 
@@ -47,9 +50,13 @@ GONQragged <- glmmBUGS(Cases + logPop ~ time +  MFlog +
                         data=poplong,
                       effects = c("CENTRACTID", "time"), spatial=popAdjacency, spatialEffect= "CENTRACTID", family="poisson")
 
+save(GONQragged, file="GONQragged.RData")
+
+load("GONQragged.RData")
 startingValues = GONQragged$startingValues
 source("getInits.R") 
 library(R2WinBUGS)
+
 
 GONQResult = bugs(GONQragged$ragged, getInits, 
 	parameters.to.save = names(getInits()), 
