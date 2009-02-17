@@ -13,8 +13,6 @@ popdata$CENTRACTID = as.character(popdata$CENTRACTID)
 newdata <- merge(popdata, adds2, by.x="CENTRACTID", by.y="CenTractID", all.x=TRUE)
 
 
-library(glmmBUGS)
-
 newdata$RUCA = factor(newdata$RUCA)
 newdata$pctNotOwned = 1-newdata$PCT_OWNER
 
@@ -48,15 +46,13 @@ poplong$logPop = log(poplong$Population) - log(4)
 for(Dcentre in c("PCT__30K", "FHH_CHILD", "PCT_RENTER", "PCT__HS", "PCT_UNEMP", "PCTBLACK"))
   poplong[,Dcentre] = poplong[,Dcentre] - mean(poplong[,Dcentre])
      
-poplong$pct30k = poplong$PCT__30K - mean(poplong$pCT__30K)
-poplong$fhhchild = poplong$FHH_CHILD - mean(poplong$FHH_CHILD)
 
-
+library(glmmBUGS)
 
 
 GONQragged <- glmmBUGS(Cases + logPop ~ time +  MFlog + 
-    PCTBLACK+ FHH_CHILD+ PCT_RENTER+ PCT_NO_PLM +
-    PCT__HS + RUCA * PCT__30K + PCT_UNEMP, 
+    PCTBLACK+ FHH_CHILD+ PCT_NO_PLM +
+    PCT__HS + RUCA * (PCT_RENTER +PCT__30K) + PCT_UNEMP, 
                         data=poplong,
                       effects = c("CENTRACTID", "time"), spatial=popAdjacency, spatialEffect= "CENTRACTID", family="poisson")
 
