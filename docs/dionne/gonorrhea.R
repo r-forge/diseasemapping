@@ -1,6 +1,6 @@
 library(maptools)
 library(spdep)
-popdata <-  readShapePoly(fn="NC_gonorrhea_yearly_and_quarterly_with_covariates")
+popdata <-  readShapePoly(fn="NC_gonorrhea_yearly_and_quarterly_with_covariates",proj4string=CRS("+proj=lcc +lat_1=36.16666666666666 +lat_2=34.33333333333334 +lat_0=33.75 +lon_0=-79 +x_0=609601.22 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
 
 popAdjacency = poly2nb(popdata, as.character(popdata[["CENTRACTID"]]))
@@ -66,7 +66,7 @@ library(R2WinBUGS)
 
 GONQResult = bugs(GONQragged$ragged, getInits, 
 	parameters.to.save = names(getInits()), 
-	model.file="model.bug", n.chain=3, n.iter=30000, n.burnin=2000, n.thin=100, program="winbugs",useWINE = TRUE, debug=T,
+	model.file="model.bug", n.chain=3, n.iter=150000, n.burnin=5000, n.thin=500, program="winbugs",useWINE = TRUE, debug=T,
 bugs.directory="C:/Program Files/WinBUGS64/WinBUGS14/")   
 save(GONQResult, GONQragged, file="GONQResult.RData")
 
@@ -103,5 +103,9 @@ colnames(RtimeMean) = paste("mean", colnames(RtimeMean), sep="")
 ncFinal = pop2
 ncFinal@data = merge(pop2@data, RtimeMean, by.x="CENTRACTID", 
   by.y="row.names", all.x=T) 
+
+ncFinal = spTransform(ncFinal, CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"))
+  
+  
 save(ncFinal, file="ncResultsSpaceTime.RData")
 writePolyShape(ncFinal, "ncResultsSpaceTime")
