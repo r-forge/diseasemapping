@@ -1,32 +1,36 @@
 \name{formatCases}
 \alias{formatCases}
-\title{format the case data set}
+
+\title{ Format the case data set }
 \description{
-  The formatCases funtion cleans and formats the case data set. Changes the other format of age and sex group to two columns: age and sex.
+ The formatCases funtion cleans and formats the case data set. 
+ Changes the other format of age and sex group to two columns: age and sex.
 }
 \usage{
-formatCases(casedata)
+formatCases(casedata, breaks = NULL, years = NULL)
 }
-
 \arguments{
-  \item{casedata}{case data set in data frame format}
+  \item{casedata}{case data set in data.frame format }
+  \item{breaks}{ age breaks }
+  \item{years}{ number of years}
 }
 \details{
-Usually there are two format of age and sex group; 1. F5\_9 or FEMALE5\_9 means female in the age group 5 to 9 years old; 2.
-101 or 217 means male in the age group 5 to 9 and female with age 85 plus respectively.  
+  ~~ If necessary, more details than the description above ~~
 }
- 
 \value{
-  A dataframe object
+  
 }
-
-\author{Patrick Brown}
-
-
+\references{ }
+\author{  }
+\note{ 
+}
+\seealso{  }
 \examples{
-library(diseasemapping)
 data(casedata)
-casedataclean <- formatCases(casedata)
-head(casedataclean)
-}
+cases <- formatCases(casedata, breaks= c(5, 10, 15, 50))
 
+}
+% Add one or more standard keywords, see file 'KEYWORDS' in the
+% R documentation directory.
+\keyword{ ~kwd1 }
+\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
