@@ -17,6 +17,8 @@
   
    listpop<-lapply(popdata,formatPopulation,aggregate.by)
   
+   breaks = attributes(listpop[[1]])$breaks
+  
    listdataframe<-lapply(listpop,as.data.frame)
    pop<-NULL
    for (i in 1:length(listdataframe)){
@@ -24,6 +26,10 @@
     temp[,times]<-cyears[i]
     pop<-rbind(pop,temp)
    }
+   
+   attributes(pop)$breaks = breaks
+  
+   
    pop
    #if(byYear) {p<- aggregate(pop$POPULATION,pop[,agg,drop=FALSE],sum)}
    #names(p)[names(p)=="x"] = "POPULATION"

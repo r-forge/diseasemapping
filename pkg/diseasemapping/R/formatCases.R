@@ -1,6 +1,46 @@
-`formatCases` <- function(casedata, breaks=NULL, years=NULL) {
+`formatCases` <- function(casedata, ageBreaks=NULL, years=NULL, aggregate.by=NULL) {
 
- ageBreaks = getBreaks(names(popdata), breaks)
+# are there age and sex columns?
+haveAgeSex = ????
+
+# if not, is there an age_sex_group column, in rif format?  use it to create age and sex
+groupvar = grep("^AGE_SEX_GROUP$", names(casedata), value=TRUE, ignore.case=TRUE)
+ 
+if(length(groupvar) & !haveAgeSex) {
+
+# create age and sex columns
+ 
+ 
+ }
+
+
+# if there are underscores in age, take the number before the underscores
+if(there are underscores) {
+
+casedata$age = as.numeric(grep("(_[[:digit:]]+$|PLUS$)", "", casedata$age))
+
+}
+
+
+
+# use the cut function on age
+
+if(!is.null(ageBreaks)) {
+ casedata$cutAge = as.character(cut(as.numeric(as.character(casedata$age)), ageBreaks$breaks, right=F))
+}
+
+
+ # aggregate, if necessary
+if(!is.null(aggregate.by)) {
+
+
+}
+
+attributes(casedata)$breaks = ageBreaks
+
+casedata
+
+# this can probably go (?)
  
  groupvar = grep("^AGE_SEX_GROUP$", names(casedata), value=TRUE, ignore.case=TRUE)
  if(length(groupvar) & ageBreaks$mustAggregate ==TRUE)  {
@@ -23,7 +63,7 @@ if(length(groupvar)& ageBreaks$mustAggregate == FALSE)  {
  underscores = as.logical(length(grep("_", casedata[[groupvar]])))
  if(underscores) {
     n <- regexpr("_", casedata[[groupvar]], fixed = TRUE)
-    casedata$age = factor(substr(casedata[[groupvar]], n-2, 100))
+    casedata$age = cut(as.integer(substr(casedata[[groupvar]], n-2, 100)), breaks=ageBreaks$breaks)
     casedata$sex = factor(substr(casedata[[groupvar]], 1, 1))
     casedata$AGE_NUM= as.numeric(substring(casedata$age, 0, 2))
 

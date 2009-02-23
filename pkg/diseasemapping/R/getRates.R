@@ -8,25 +8,7 @@ function(casedata, popdata, formula, family=poisson, minimumAge=0,
    case.years=grep("^year$", names(casedata), ignore.case=TRUE, value=TRUE)[1], breaks=NULL){
 # check the formula is one sided
 
-      thevarying = c(grep("^M.*_", names(popdata), value=TRUE), grep("^F.*_", names(popdata), value=TRUE))       
-      poplong = reshape(popdata,  varying=thevarying, direction="long", v.names="POPULATION", timevar="GROUP", times = thevarying)
-
-
-    if (length(breaks) > 0) {      
-    currentbreaks <- attributes(poplong)$breaks    
-         if (length(currentbreaks) == 0){ 
-              currentbreaks <- getBreaks(popdata)}
-         if (all(breaks %in% currentbreaks)) {
-        attributes(poplong)$breaks = breaks
-        } else {
-        stop("population age breaks aren't nested in the breaks provided")}
-    } else {breaks <- attributes(poplong)$breaks}
-    if (length(breaks) == 0){
-    breaks <- getBreaks(popdata)
-    attributes(poplong)$breaks <- breaks
-    }
-
-
+  
 if(attributes(terms(formula))$response)
   warning("formula should be one sided")
 
@@ -48,19 +30,11 @@ if(is.null(cyears) & morethanoneyear ){
 #factors we need to aggregate by
 theterms = (rownames(attributes(terms(formula))$factors))
 
-#if more than one year, reshape bind them into dataframe,else reshape, the aggregate
-#if(morethanoneyear) {
-#pops<-formatPopulation.list(popdata,cyears,aggregate.by=theterms) 
-#}else{
-# #call diff functions if SP
-# if(isSP) {pops <- formatPopulation.SpatialPolygonsDataFrame(popdata,aggregate.by=theterms)
-# }else{pops <- formatPopulation.data.frame(popdata,aggregate.by=theterms)}
-#}
 
 pops <- formatPopulation(popdata,aggregate.by=theterms)
 
 #format case data
-casedata = formatCases(casedata)
+casedata = formatCases(casedata, ageBreaks=attributes(pops)$breaks)
 
 #if ranges not supplied, use the year ranges of case files
 if(is.null(year.range) & morethanoneyear){
@@ -87,6 +61,7 @@ if(!length(casecol)) {
   cases[,casecol] = 1
 }
 
+# do aggregation in formatCases instead of here.
 cases<-aggregate(casedata[[casecol]], casedata[,theterms], sum, na.rm=TRUE)
 names(cases)[names(cases)=="x"] = "CASES"
 

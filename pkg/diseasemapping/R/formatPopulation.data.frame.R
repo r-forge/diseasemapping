@@ -66,5 +66,9 @@ if(!is.null(aggregate.by)) {
 
 }
 
+attributes(poplong)$breaks = ageBreaks
+
 poplong
+
+
 }
