@@ -9,8 +9,7 @@ function (model, popdata, casedata = NULL, regionCode = "CSDUID",
     morethanoneyear = class(popdata) == "list"
     if (morethanoneyear) {
         isSP = (class(popdata[[1]]) == "SpatialPolygonsDataFrame")
-    }
-    else {
+    }else {
         isSP = (class(popdata) == "SpatialPolygonsDataFrame")
     }
     if (is.null(cyears) & morethanoneyear) {
@@ -22,12 +21,29 @@ function (model, popdata, casedata = NULL, regionCode = "CSDUID",
             for (i in 1:length(popdata)) {
                 popdata[[i]]$sqk <- areas[[i]] * area.scale
             }
-        }
-        else {
+        }else {
             popdata$sqk <- c(unlist(area(popdata))) * area.scale
         }
     }
     poplong <- formatPopulation(popdata, breaks = model$breaks, years = model$years)
+    
+    #changes poplong names to be consistent with model
+    agevar<-grep("^age$",names(model$xlevels),value=T,ignore.case=T)
+    sexvar<-grep("^sex$",names(model$xlevels),value=T,ignore.case=T)
+    yearvar<-grep("^year$",names(model$xlevels),value=T,ignore.case=T)
+    
+    agevar1<-grep("^age$",names(poplong),value=T,ignore.case=T)
+    sexvar1<-grep("^sex$",names(poplong),value=T,ignore.case=T)
+    yearvar1<-grep("^year$",names(poplong),value=T,ignore.case=T)
+    
+    oldnames<-c(agevar1,sexvar1,yearvar1)
+    newnames<-c(agevar,sexvar,yearvar)
+    tochange=which(names(poplong) %in% oldnames)
+    names(poplong)[tochange]<-newnames
+    
+  
+    
+    
     if (is.null(year.range) & morethanoneyear) {
         year.range = range(poplong$YEAR)
     }
@@ -47,10 +63,12 @@ function (model, popdata, casedata = NULL, regionCode = "CSDUID",
         poplong$YEAR = factor(poplong$YEAR)
     }
     poplong <- poplong[poplong$POPULATION > 0, ]
-    poplong$LOGPOP = log(poplong$POPULATION)
-    poplong$SEX = factor(poplong$SEX)
-    poplong$AGE = factor(poplong$AGE)
-    names(poplong) <- tolower(names(poplong))
+    
+    offsetvar<- grep("logpop",names(model$data) ,value=T,ignore.case=T)
+    poplong[[offsetvar]] = log(poplong$POPULATION)
+    poplong[[sexvar]]= factor(poplong[[sexvar]])
+    poplong[[agevar]] = factor(poplong[[agevar]])
+    #names(poplong) <- tolower(names(poplong))
     for (Dlevel in names(model$xlevels)) {
         alllevels = levels(poplong[[Dlevel]])
         if (!all(alllevels %in% model$xlevels[[Dlevel]])) {
@@ -67,34 +85,31 @@ function (model, popdata, casedata = NULL, regionCode = "CSDUID",
         poplong$param <- NULL
     }
     if (morethanoneyear) {
-        agg <- c("year", "age", "sex", "logpop")
-    }
-    else {
-        agg <- c("age", "sex", "logpop")
+        yearvar<-grep("^year$", names(poplong), value=TRUE, ignore.case=TRUE)
+        agg <- c(yearvar, agevar, sexvar, offsetvar)
+    }else {
+        agg <- c(agevar, sexvar, offsetvar)
     }
     poplong$expected <- predict(model, poplong[, agg], type = "response")
     if (area) {
         poplong$expected_sqk <- poplong$expected/poplong$sqk
     }
-    regionCode <- tolower(regionCode)
+    #regionCode <- tolower(regionCode)
     if (morethanoneyear) {
         if (area) {
             newpop <- aggregate(poplong[, c("expected", "expected_sqk")], 
                 list(Region = poplong[[regionCode]], Year = poplong$year), 
                 sum)
-        }
-        else {
+        }else {
             newpop <- aggregate(poplong[, "expected"], list(Region = poplong[[regionCode]], 
-                Year = poplong$year), sum)
+                Year = poplong[[yearvar]]), sum)
             names(newpop)[names(newpop) == "x"] = "expected"
         }
-    }
-    else {
+    }else {
         if (area) {
             newpop <- aggregate(poplong[, c("expected", "expected_sqk")], 
                 list(Region = poplong[[regionCode]]), sum)
-        }
-        else {
+        }else {
             newpop <- aggregate(poplong[, "expected"], list(Region = poplong[[regionCode]]), 
                 sum)
             names(newpop)[names(newpop) == "x"] = "expected"
@@ -115,8 +130,7 @@ function (model, popdata, casedata = NULL, regionCode = "CSDUID",
         if (morethanoneyear) {
             newcase <- aggregate(casedata[[casecol]], list(Region = casedata[[toupper(regionCodeCases)]], 
                 Year = casedata$YEAR), sum)
-        }
-        else {
+        }else {
             newcase <- aggregate(casedata[[casecol]], list(Region = casedata[[toupper(regionCodeCases)]]), 
                 sum)
         }
@@ -130,8 +144,8 @@ function (model, popdata, casedata = NULL, regionCode = "CSDUID",
     if (morethanoneyear) {
         listpop <- list()
         for (i in 1:length(cyears)) {
-            listpop[[i]] <- merge(popdata[[i]], populationData[populationData$Year == 
-                cyears[i], ], by.x = grep(regionCode, names(popdata[[i]]), 
+            listpop[[i]] <- merge(popdata[[i]]@data, populationData[populationData$Year == 
+                cyears[i], ], by.x = grep(regionCode, names(popdata[[i]]@data), 
                 ignore.case = TRUE, value = TRUE), by.y = "Region", 
                 all.x = TRUE)
         }
@@ -141,9 +155,7 @@ function (model, popdata, casedata = NULL, regionCode = "CSDUID",
             }
             listpop = popdata
         }
-    }
-    else {
-        listpop = merge(popdata@data, populationData, by.x = grep(paste("^", 
+    }else {listpop = merge(popdata@data, populationData, by.x = grep(paste("^", 
             regionCode, "$", sep = ""), names(popdata@data), 
             ignore.case = TRUE, value = TRUE), by.y = "Region", 
             all.x = TRUE)
