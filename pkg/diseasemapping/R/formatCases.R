@@ -1,5 +1,10 @@
 `formatCases` <- function(casedata, ageBreaks=NULL, years=NULL, aggregate.by=NULL) {
 
+# are there age and sex columns?
+haveAgeSex = length(grep("^age$", names(casedata), ignore.cases=T)) &
+    length(grep("^sex$", names(casedata), ignore.cases=T)) &
+
+# if not, is there an age_sex_group column, in rif format?  use it to create age and sex
 groupvar = grep("^AGE_SEX_GROUP$", names(casedata), value=TRUE, ignore.case=TRUE)
  
 if(length(groupvar)){
