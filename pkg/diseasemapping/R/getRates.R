@@ -3,9 +3,10 @@
 #case.years: the variable name that stores the year variable of case file
 
 `getRates` <-
-function(casedata, popdata, formula, family=poisson, minimumAge=0,
-   maximumAge=100, S=c("M", "F"),cyears=NULL,year.range=NULL,
-   case.years=grep("^year$", names(casedata), ignore.case=TRUE, value=TRUE)[1], breaks=NULL){
+function(casedata, popdata, formula, family=poisson, S=c("M", "F"),
+  cyears=NULL,year.range=NULL,
+   case.years=grep("^year$", names(casedata), ignore.case=TRUE, value=TRUE)[1], 
+   breaks=NULL){
 # check the formula is one sided
 
   
@@ -31,7 +32,7 @@ if(is.null(cyears) & morethanoneyear ){
 theterms = (rownames(attributes(terms(formula))$factors))
 
 
-pops <- formatPopulation(popdata,aggregate.by=theterms)
+pops <- formatPopulation(popdata,aggregate.by=theterms, breaks=breaks)
 
 #format case data
 casedata = formatCases(casedata, ageBreaks=attributes(pops)$breaks)
@@ -107,8 +108,7 @@ if(length(agevar)==1) {
   newdata[[agevar]] = factor(as.character(newdata[[agevar]]),
     levels= agetable)
 }
-sexvar = grep("^sex", theterms, ignore.case=TRUE)
-newdata[[sexvar]] = factor(newdata[[sexvar]])
+
 
 # add cases and logpop to formula
 formula1 = update.formula(formula, CASES ~ offset(logpop) + .)
@@ -118,15 +118,9 @@ model = glm(formula1, family=family, data=newdata)
 
 model$sexSubset = S
 
-# model$years
-# model$breaks
+model$breaks = attributes(pops)$breaks
+
 
 return(model)
 }
-
-
-
-
-
-
 
