@@ -34,20 +34,14 @@ if (all(breaks %in% currentbreaks)) {
 
 # if the breaks are different from the population breaks
 if(any(breaks != currentbreaks)) {
-
  result$breaks = breaks
-	result$mustAggregate = T
-	
+ result$mustAggregate = T
 }
 
 } else {
-
 	warning("population data doesn't appear to be nested within breaks, ignoring breaks")
 }
-
 }
-
 result
-
 }
 
