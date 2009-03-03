@@ -14,6 +14,7 @@ casedata$sex = casedata[[sexcol]]
 groupvar = grep("^AGE_SEX_GROUP$", names(casedata), value=TRUE, ignore.case=TRUE)
 #agecol = grep("^age$", names(casedata), value=TRUE, ignore.case=TRUE)
 #sexcol = grep("^sex$", names(casedata), value=TRUE, ignore.case=TRUE)
+
 if(length(groupvar)){
     if(length(grep("_", casedata[[groupvar]], ignore.case=TRUE ))){
 # if sex column is missing, creat it
@@ -24,6 +25,7 @@ if(length(groupvar)){
 # if age column is missing, creat it
         if(!length(agecol)){
             n <- regexpr("_", casedata[[groupvar]], fixed = TRUE)
+
             casedata$age = substr(casedata[[groupvar]], n-2, n-1)
             agecol = "age"
             }
@@ -54,8 +56,15 @@ if(!is.null(ageBreaks)){
 }
 
 # aggregate, if necessary
-if(!is.null(aggregate.by)) {
-   popa = aggregate(casedata$cases, list(age=casedata$cutAge), sum)
+if(!is.null(aggregate.by) & length(aggregate.by) == 1) {
+   popa = aggregate(casedata$cases, list(casedata[, aggregate.by]), sum)
+   names(popa)[names(popa)=="x"] = "CASES"
+   names(popa)[names(popa)=="Group.1"] = aggregate.by
+   casedata <- popa
+}
+
+if(!is.null(aggregate.by) & length(aggregate.by) >= 2) {
+   popa = aggregate(casedata$cases, casedata[, aggregate.by], sum)
    names(popa)[names(popa)=="x"] = "CASES"
    casedata <- popa
 }
