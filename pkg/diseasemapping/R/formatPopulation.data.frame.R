@@ -13,7 +13,7 @@ poplong = reshape(popdata,  varying=ageBreaks$oldNames, direction="long",
 	v.names="POPULATION", timevar="GROUP", times = ageBreaks$newNames)
 # create age and sex variables
 age = as.numeric(substr(poplong$GROUP, 3, 4))
-poplong$cutAge = cut(age, ageBreaks$breaks, right=F)
+poplong$age = cut(age, ageBreaks$breaks, right=F)
 sex = substr(poplong$GROUP, 1, 1)	
 
 # aggregate if necessary
@@ -33,21 +33,20 @@ if(length(years)) {
 
 #attributes(poplong)$ageBreaks = ageBreaks$breaks
 #return(poplong)
+agecol = grep("^age$", names(poplong), value=TRUE, ignore.case=TRUE)
+sexcol = grep("^sex$", names(poplong), value=TRUE, ignore.case=TRUE)
 
-
-
-if(! all(c("AGE", "SEX") %in% names(poplong))) {
-  if("GROUP" %in% names(poplong)) {
-
+if("GROUP" %in% names(poplong)) {
+      if(!length(sexcol)) {
  # n <- regexpr("_", poplong$GROUP, fixed = TRUE)
  # poplong$AGE = substr(poplong$GROUP, n-1, 100)
 
-  poplong$AGE = substr(poplong$GROUP, 3, 4)
-  poplong$SEX = factor(substr(poplong$GROUP, 1, 1))
+#  poplong$AGE = substr(poplong$GROUP, 3, 4)
+  poplong$sex = factor(substr(poplong$GROUP, 1, 1))
   #Get rid of M/F if age group has only one digit
-  ageterm <- c(grep("^M", poplong$AGE, value=TRUE), grep("^F", poplong$AGE, value=TRUE)) 
-  agetermIndex <- c(grep("^M", poplong$AGE), grep("^F", poplong$AGE))
-  poplong$AGE[agetermIndex]<- substr(ageterm,2,100)  
+#  ageterm <- c(grep("^M", poplong$AGE, value=TRUE), grep("^F", poplong$AGE, value=TRUE)) 
+#  agetermIndex <- c(grep("^M", poplong$AGE), grep("^F", poplong$AGE))
+#  poplong$AGE[agetermIndex]<- substr(ageterm,2,100)  
   }else {
   warning("no age and sex variables found or no group variable found in popdata")
   }
@@ -55,13 +54,15 @@ if(! all(c("AGE", "SEX") %in% names(poplong))) {
 
 poplong$id<-NULL
 row.names(poplong)<-NULL
-names(poplong)<-toupper(names(poplong))
+#names(poplong)<-toupper(names(poplong))
 
 if(!is.null(aggregate.by)) {
 
-  popa <- aggregate(poplong$POPULATION,poplong[,toupper(aggregate.by),drop=FALSE], sum)
+  popa <- aggregate(poplong$POPULATION, as.data.frame(poplong[, aggregate.by]), sum)
+  
   # change x column name to 'population'
   names(popa)[names(popa)=="x"] = "POPULATION"
+  names(popa)[names(popa)=="poplong[, aggregate.by]"] = aggregate.by
   poplong<-popa
 
 }
