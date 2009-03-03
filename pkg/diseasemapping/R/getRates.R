@@ -3,10 +3,16 @@
 #case.years: the variable name that stores the year variable of case file
 
 `getRates` <-
+<<<<<<< .mine
+function(casedata, popdata, formula, family=poisson, minimumAge=0,
+   maximumAge=100, S=c("M", "F"), cyears=NULL, year.range=NULL,
+   case.years=grep("^year$", names(casedata), ignore.case=TRUE, value=TRUE)[1], breaks=NULL){
+=======
 function(casedata, popdata, formula, family=poisson, S=c("M", "F"),
   cyears=NULL,year.range=NULL,
    case.years=grep("^year$", names(casedata), ignore.case=TRUE, value=TRUE)[1], 
    breaks=NULL){
+>>>>>>> .r68
 # check the formula is one sided
 
   
@@ -32,10 +38,14 @@ if(is.null(cyears) & morethanoneyear ){
 theterms = (rownames(attributes(terms(formula))$factors))
 
 
+<<<<<<< .mine
+pops <- formatPopulation(popdata, aggregate.by= theterms, breaks=breaks)
+=======
 pops <- formatPopulation(popdata,aggregate.by=theterms, breaks=breaks)
+>>>>>>> .r68
 
-#format case data
-casedata = formatCases(casedata, ageBreaks=attributes(pops)$breaks)
+##format case data
+#casedata = formatCases(casedata, ageBreaks=attributes(pops)$breaks, aggregate.by = theterms)
 
 #if ranges not supplied, use the year ranges of case files
 if(is.null(year.range) & morethanoneyear){
@@ -51,7 +61,11 @@ if(length(S)==1) {
   casedata=casedata[casedata[[
     grep("^sex$", names(casedata), value=TRUE, ignore.case=TRUE)
       ]]==S,]
- }
+}
+
+#format case data
+casedata = formatCases(casedata, ageBreaks=attributes(pops)$breaks, aggregate.by = theterms)
+
 
 
 #find number of cases per group
@@ -63,8 +77,9 @@ if(!length(casecol)) {
 }
 
 # do aggregation in formatCases instead of here.
-cases<-aggregate(casedata[[casecol]], casedata[,theterms], sum, na.rm=TRUE)
-names(cases)[names(cases)=="x"] = "CASES"
+#cases<-aggregate(casedata[[casecol]], casedata[,theterms], sum, na.rm=TRUE)
+#names(cases)[names(cases)=="x"] = "CASES"
+
 
 #find population per group
 #pops <- aggregate(poplong$POPULATION, poplong[,theterms,drop=FALSE], sum)
@@ -77,7 +92,7 @@ by.x = paste("(", by.x, ")", sep="")
 by.pop = grep(by.x, names(pops), ignore.case=TRUE, value=TRUE)
 
 
-newdata <- merge(cases, pops, by.x = theterms, by.y = by.pop)
+newdata <- merge(casedata, pops, by.x = theterms, by.y = by.pop)
 
 if (morethanoneyear){
 ####find Popoluation census year
@@ -89,7 +104,7 @@ nseq<-1:length(inter)-1
 mseq<-2:length(inter)
 interval<-inter[mseq] + inter[nseq]
 
-names(interval)<-names(table(newdata$YEAR))
+names(interval)<-names(table(newdata$YEAR))         
 newdata$yearsForCensus = interval[as.character(newdata$YEAR)]
 newdata$POPULATION = newdata$POPULATION  * newdata$yearsForCensus 
 newdata$YEAR= factor(newdata$YEAR, levels = unique(newdata$YEAR))
@@ -108,7 +123,14 @@ if(length(agevar)==1) {
   newdata[[agevar]] = factor(as.character(newdata[[agevar]]),
     levels= agetable)
 }
+<<<<<<< .mine
 
+sexvar = grep("^sex", theterms, ignore.case=TRUE)
+if(length(sexvar) == 1){
+newdata[[sexvar]] = factor(newdata[[sexvar]])
+=======
+>>>>>>> .r68
+}
 
 # add cases and logpop to formula
 formula1 = update.formula(formula, CASES ~ offset(logpop) + .)
@@ -119,7 +141,9 @@ model = glm(formula1, family=family, data=newdata)
 model$sexSubset = S
 
 model$breaks = attributes(pops)$breaks
-
+#attributes(model)$years = ageBreaks$breaks
+attributes(model)$breaks = breaks
+                                  
 
 return(model)
 }
