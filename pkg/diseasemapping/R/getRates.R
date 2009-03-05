@@ -3,22 +3,14 @@
 #case.years: the variable name that stores the year variable of case file
 
 `getRates` <-
-<<<<<<< .mine
 function(casedata, popdata, formula, family=poisson, minimumAge=0,
    maximumAge=100, S=c("M", "F"), cyears=NULL, year.range=NULL,
    case.years=grep("^year$", names(casedata), ignore.case=TRUE, value=TRUE)[1], breaks=NULL){
-=======
-function(casedata, popdata, formula, family=poisson, S=c("M", "F"),
-  cyears=NULL,year.range=NULL,
-   case.years=grep("^year$", names(casedata), ignore.case=TRUE, value=TRUE)[1], 
-   breaks=NULL){
->>>>>>> .r68
-# check the formula is one sided
 
+# check the formula is one sided
   
 if(attributes(terms(formula))$response)
   warning("formula should be one sided")
-
 
 morethanoneyear = class(popdata)=="list"
 
@@ -37,12 +29,7 @@ if(is.null(cyears) & morethanoneyear ){
 #factors we need to aggregate by
 theterms = (rownames(attributes(terms(formula))$factors))
 
-
-<<<<<<< .mine
 pops <- formatPopulation(popdata, aggregate.by= theterms, breaks=breaks)
-=======
-pops <- formatPopulation(popdata,aggregate.by=theterms, breaks=breaks)
->>>>>>> .r68
 
 ##format case data
 #casedata = formatCases(casedata, ageBreaks=attributes(pops)$breaks, aggregate.by = theterms)
@@ -116,20 +103,18 @@ newdata$logpop = log(newdata$POPULATION)
 	
 
 # make the age group with the most cases as the base line
-agevar =  grep("^age$", theterms, ignore.case=TRUE)
+agevar =  grep("^age$", theterms, ignore.case=TRUE, value=TRUE)
 if(length(agevar)==1) {
   agetable = tapply(newdata$CASES, newdata[[agevar]], sum)
   agetable = names(sort(agetable, decreasing=TRUE))
   newdata[[agevar]] = factor(as.character(newdata[[agevar]]),
     levels= agetable)
 }
-<<<<<<< .mine
 
-sexvar = grep("^sex", theterms, ignore.case=TRUE)
+
+sexvar = grep("^sex", theterms, ignore.case=TRUE, value=TRUE)
 if(length(sexvar) == 1){
 newdata[[sexvar]] = factor(newdata[[sexvar]])
-=======
->>>>>>> .r68
 }
 
 # add cases and logpop to formula
