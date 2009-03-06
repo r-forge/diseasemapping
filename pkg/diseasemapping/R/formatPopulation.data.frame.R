@@ -5,6 +5,7 @@ formatPopulation <- function(popdata, aggregate.by=NULL, breaks=NULL, ...) {
 `formatPopulation.data.frame` <-
 function(popdata, aggregate.by=NULL, breaks=NULL, ...) {
 
+#popdata <- popdata@data
 ageBreaks = getBreaks(names(popdata), breaks)
 
 ####reshape the popdata:
@@ -35,9 +36,9 @@ if("GROUP" %in% names(poplong)) {
 
 
 # aggregate if necessary
+#if(!breaks %in% ageBreaks$breaks){
 
-
-if( ageBreaks$mustAggregate == TRUE & is.null(aggregate.by) ){
+if(ageBreaks$mustAggregate == TRUE & is.null(aggregate.by) ){
 popa = aggregate(poplong$POPULATION, list(age= poplong$age), sum)
 names(popa)[names(popa)=="x"] = "POPULATION"
 poplong <- popa
@@ -45,7 +46,8 @@ poplong <- popa
 
 
 
-
+#attributes(poplong)$ageBreaks = ageBreaks$breaks
+#return(poplong)
 
 
 
