@@ -125,9 +125,8 @@ model = glm(formula1, family=family, data=newdata)
 
 model$sexSubset = S
 
-model$breaks = attributes(pops)$breaks
 #attributes(model)$years = ageBreaks$breaks
-attributes(model)$breaks = breaks
+attributes(model)$breaks = attributes(pops)$breaks
                                   
 
 return(model)
