@@ -1,4 +1,4 @@
-formatPopulation <- function(popdata, aggregate.by, breaks=NULL, years = NULL, ...) {
+formatPopulation <- function(popdata, aggregate.by=NULL, breaks=NULL, years = NULL,  ...) {
   UseMethod("formatPopulation")
 }
 
@@ -12,14 +12,15 @@ ageBreaks = getBreaks(names(popdata), breaks)
 poplong = reshape(popdata,  varying=ageBreaks$oldNames, direction="long",
 	v.names="POPULATION", timevar="GROUP", times = ageBreaks$newNames)
 # create age and sex variables
-age = as.numeric(substr(poplong$GROUP, 3, 4))
-poplong$age = cut(age, ageBreaks$breaks, right=F)
+ageNumeric = as.numeric(substr(poplong$GROUP, 3, 4))
+poplong$age = cut(ageNumeric, ageBreaks$breaks, right=F)
 sex = substr(poplong$GROUP, 1, 1)	
 
 # aggregate if necessary
 #if(!breaks %in% ageBreaks$breaks){
- if( ageBreaks$mustAggregate == TRUE & is.null(aggregate.by) ){
-popa = aggregate(poplong$POPULATION, list(age=poplong$cutAge), sum)
+
+if( ageBreaks$mustAggregate == TRUE & is.null(aggregate.by) ){
+popa = aggregate(poplong$POPULATION, list(age= poplong$age), sum)
 names(popa)[names(popa)=="x"] = "POPULATION"
 poplong <- popa
 }
