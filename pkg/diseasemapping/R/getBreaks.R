@@ -12,7 +12,7 @@ getBreaks <- function (colNames, breaks=NULL)
 
     result = list(breaks = currentbreaks, age = ageLower, 
         sex = sex, oldNames = popColumns, newNames = paste(sex, 
-            ageLower, sep = "."), mustAggregate = F)
+            ageLower, sep = "."), mustAggregate = T)
 
 if(length(breaks)> 0 ) {
  # check that the breaks are valid
@@ -35,7 +35,7 @@ if (all(breaks %in% currentbreaks)) {
 # if the breaks are different from the population breaks
 if(any(breaks != currentbreaks)) {
  result$breaks = breaks
- result$mustAggregate = T
+ result$mustAggregate = F
 }
 
 } else {
