@@ -16,14 +16,23 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
     agevar1<-grep("^age$",names(poplong),value=T,ignore.case=T)
     sexvar1<-grep("^sex$",names(poplong),value=T,ignore.case=T)
     yearvar1<-grep("^year$",names(poplong),value=T,ignore.case=T)
-
-    oldnames<-c(agevar1,sexvar1,yearvar1)
-    newnames<-c(agevar,sexvar,yearvar)
-
-    names(newnames) = oldnames
-
-    tochange=which(names(poplong) %in% oldnames)
-    names(poplong)[tochange]<-newnames[names(poplong)[tochange] ]
+    
+    if(length(agevar) & length(agevar1)){
+     names(poplong[[agevar1]])=agevar
+    }
+    if(length(sexvar) & length(sexvar1)){
+     names(poplong[[sexvar1]])=sexvar
+    }
+    if(length(yearvar) & length(yearvar1)){
+     names(poplong[[yearvar1]])=yearvar
+    }
+    #oldnames<-c(agevar1,sexvar1,yearvar1)
+#    newnames<-c(agevar,sexvar,yearvar)
+#
+#    #names(newnames) = oldnames
+#
+#    tochange=which(names(poplong) %in% oldnames)
+#    names(poplong)[tochange]<-newnames[names(poplong)[tochange] ]
     
     if (length(model$sexSubset) == 1) {
         poplong = poplong[poplong$sex == model$sexSubset, ]
@@ -33,8 +42,8 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
       
       offsetvar<- grep("logpop",names(model$data) ,value=T,ignore.case=T)
     poplong[[offsetvar]] = log(poplong$POPULATION)
-    poplong[[sexvar]]= factor(poplong[[sexvar]])
-    poplong[[agevar]] = factor(poplong[[agevar]])
+#    poplong[[sexvar]]= factor(poplong[[sexvar]])
+#    poplong[[agevar]] = factor(poplong[[agevar]])
     #names(poplong) <- tolower(names(poplong))
     for (Dlevel in names(model$xlevels)) {
         alllevels = levels(poplong[[Dlevel]])
