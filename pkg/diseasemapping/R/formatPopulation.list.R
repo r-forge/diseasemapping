@@ -1,4 +1,4 @@
-`formatPopulation.list`<-function(popdata, aggregate.by=NULL, cyears=as.integer(names(popdata)),  times="YEAR", ...) {
+`formatPopulation.list`<-function(popdata, aggregate.by=NULL, years=as.integer(names(popdata)),  times="YEAR", ...) {
     
     times<-toupper(times)
     
@@ -24,7 +24,7 @@
    pop<-NULL
    for (i in 1:length(listdataframe)){
     temp<-listdataframe[[i]]
-    temp[,times]<-cyears[i]
+    temp[,times]<-years[i]
     pop<-rbind(pop,temp)
    }
    
