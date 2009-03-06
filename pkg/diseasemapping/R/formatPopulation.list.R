@@ -4,7 +4,8 @@
     
    #If aggregate, then see if YEAR is there or not, if so, remove it
    if(!is.null(aggregate.by)){ 
-   agg<-aggregate.by<-toupper(aggregate.by)
+#   agg<-aggregate.by<-toupper(aggregate.by)
+   agg<-aggregate.by
    byYear<- times %in% aggregate.by
    if(byYear){aggregate.by<-aggregate.by[-which(aggregate.by==times)]}
    }
