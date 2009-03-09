@@ -46,7 +46,7 @@
         pop[,time] = factor(pop[,time], levels = unique(pop[,time]))
         pop[,time] = factor(pop[,time])
 
-         poplong <- poplong[poplong$POPULATION > 0,  ]
+         pop <- pop[pop$POPULATION > 0,  ]
     }
    
    
