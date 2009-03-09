@@ -1,10 +1,10 @@
-#cyears: a vector of census years, default will use the names of popdata list
+#years: a vector of census years, default will use the names of popdata list
 #year.range: A two-element numerical vector indicting the starting and ending year of study period, default set to range of casedata
 #case.years: the variable name that stores the year variable of case file
 
 `getRates` <-
 function(casedata, popdata, formula, family=poisson, minimumAge=0,
-   maximumAge=100, S=c("M", "F"), cyears=NULL, year.range=NULL,
+   maximumAge=100, S=c("M", "F"), years=NULL, year.range=NULL,
    case.years=grep("^year$", names(casedata), ignore.case=TRUE, value=TRUE)[1], breaks=NULL){
 
 # check the formula is one sided
@@ -22,14 +22,14 @@ if(morethanoneyear){
 }
 
 #if years not supplied, use the names of list
-if(is.null(cyears) & morethanoneyear ){
-  cyears = as.integer(names(popdata))
+if(is.null(years) & morethanoneyear ){
+  years = as.integer(names(popdata))
 } 
 
 #factors we need to aggregate by
 theterms = (rownames(attributes(terms(formula))$factors))
 
-pops <- formatPopulation(popdata, aggregate.by= theterms, breaks=breaks)
+pops <- formatPopulation(popdata, aggregate.by= theterms, breaks=breaks,getoff=F)             
 
 ##format case data
 #casedata = formatCases(casedata, ageBreaks=attributes(pops)$breaks, aggregate.by = theterms)
@@ -84,7 +84,7 @@ newdata <- merge(casedata, pops, by.x = theterms, by.y = by.pop)
 if (morethanoneyear){
 ####find Popoluation census year
 #a vector of all years
-times<-c(year.range[1],cyears,year.range[2])
+times<-c(year.range[1],years,year.range[2])
 inter<-diff(times)/2 #mid points
 #sum of consective mid points
 nseq<-1:length(inter)-1
