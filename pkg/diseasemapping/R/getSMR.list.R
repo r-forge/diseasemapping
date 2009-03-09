@@ -22,9 +22,9 @@ getSMR.list <- function(popdata, model, casedata = NULL, regionCode = "CSDUID",
     ll<-split(poplong,poplong$YEAR)     
          
     ##list if df
-    listpop<-lapply(ll, getSMR, casedata=casedata, model, regionCode =regionCode,
+    listpop<-lapply(popdata, getSMR, casedata=casedata, model, regionCode =regionCode,
                      regionCodeCases = regionCodeCases, years = years, year.range = year.range,
-                     area = area, area.scale = area.scale)
+                     area = area, area.scale = area.scale,formatPop=F)
                                 
          #if input is  list of sp, return list of sp
         if (isSP) {
