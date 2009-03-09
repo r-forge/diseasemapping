@@ -6,7 +6,7 @@
 getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
     regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, ...) {
 #  getSMR(popdata@data, ...)
-    poplong <- formatPopulation(popdata, breaks=attributes(model)$breaks$breaks)
+    poplong <- formatPopulation(popdata, breaks=attributes(model)$breaks$breaks, mustAggregate = FALSE)
  
     #changes poplong names to be consistent with model
     agevar<-grep("^age$",names(model$xlevels),value=T,ignore.case=T)
