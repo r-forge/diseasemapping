@@ -4,10 +4,11 @@
  }
  
 getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
-    regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, ...){
+    regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, formatPop=TRUE,...){
 #  getSMR(popdata@data, ...)
+    if(formatPop){
     poplong <- formatPopulation(popdata, breaks=attributes(model)$breaks$breaks, mustAggregate = FALSE)
- 
+     }
     #changes poplong names to be consistent with model
     agevar<-grep("^age$",names(model$xlevels),value=T,ignore.case=T)
     sexvar<-grep("^sex$",names(model$xlevels),value=T,ignore.case=T)
@@ -61,9 +62,9 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
         poplong$param <- NULL
     }
     if(length(yearvar)) {   
-           agg<-c("year","age","sex","logpop")
+           agg<-c(yearvar,agevar, sexvar,offsetvar)
            }else{
-                agg<-c("age","sex","logpop")
+                agg<-c(agevar, sexvar, offsetvar)
            }
 
     poplong$expected <- predict(model, poplong[, agg], type = "response")
