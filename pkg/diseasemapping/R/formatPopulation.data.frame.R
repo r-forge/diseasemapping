@@ -3,10 +3,10 @@ formatPopulation <- function(popdata, aggregate.by=NULL, breaks=NULL, ...) {
 }
 
 `formatPopulation.data.frame` <-
-function(popdata, aggregate.by=NULL, breaks=NULL, ...) {
+function(popdata, aggregate.by=NULL, breaks=NULL, mustAggregate = TRUE,...) {
 
 #popdata <- popdata@data
-ageBreaks = getBreaks(names(popdata), breaks)
+ageBreaks = getBreaks(names(popdata), breaks, mustAggregate = mustAggregate)
 
 ####reshape the popdata:
 poplong = reshape(popdata,  varying=ageBreaks$oldNames, direction="long",
