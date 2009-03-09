@@ -1,9 +1,11 @@
-getSMR.list <- function(popdata, model, casedata = NULL, regionCode = "CSDUID", regionCodeCases = "CSD2006", years = NULL, year.range = NULL, area = FALSE, area.scale = 1, ...){ 
+getSMR.list <- function(popdata, model, casedata = NULL, regionCode = "CSDUID", 
+              regionCodeCases = "CSD2006", years = NULL, year.range = NULL, 
+              area = FALSE, area.scale = 1, ...){ 
 #  lennon's stuff
         isSP = (class(popdata[[1]]) == "SpatialPolygonsDataFrame")
    
-    if (is.null(cyears)) {
-        cyears = as.integer(names(popdata))
+    if (is.null(years)) {
+        years = as.integer(names(popdata))
     }        
     if (area & isSP) {
        
@@ -13,14 +15,14 @@ getSMR.list <- function(popdata, model, casedata = NULL, regionCode = "CSDUID", 
             }
     }
     
-    poplong <- formatPopulation.list(popdata, breaks = attributes(model)$breaks$breaks,
+    poplong <- formatPopulation(popdata, breaks = attributes(model)$breaks$breaks,
       years = model$xlevels$YEAR, mustAggregate = FALSE, year.range=year.range)
 
        
     ll<-split(poplong,poplong$YEAR)     
          
     ##list if df
-    listpop<-apply(ll, getSMR, casedata=casedata, model, regionCode =regionCode,
+    listpop<-lapply(ll, getSMR, casedata=casedata, model, regionCode =regionCode,
                      regionCodeCases = regionCodeCases, years = years, year.range = year.range,
                      area = area, area.scale = area.scale)
                                 

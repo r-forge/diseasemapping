@@ -1,3 +1,3 @@
-getSMR.spatialPolygonsDataFrame(popdata, ...) {
+`getSMR.spatialPolygonsDataFrame` <- function(popdata, ...) {
   getSMR(popdata@data, ...)
 }
