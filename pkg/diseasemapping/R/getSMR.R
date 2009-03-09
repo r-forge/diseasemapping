@@ -1,10 +1,10 @@
 `getSMR` <- function(popdata, model, casedata, regionCode = "CSDUID",
-    regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, ...)    {
+    regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, ...){
        UseMethod("getSMR")
  }
  
 getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
-    regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, ...) {
+    regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, ...){
 #  getSMR(popdata@data, ...)
     poplong <- formatPopulation(popdata, breaks=attributes(model)$breaks$breaks, mustAggregate = FALSE)
  
