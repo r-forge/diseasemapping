@@ -1,8 +1,5 @@
-getSMR.list(popdata, model, casedata = NULL, regionCode = "CSDUID",regionCodeCases = "CSD2006", years = NULL, year.range = NULL,
-    area = FALSE, area.scale = 1, ...) {
+getSMR.list <- function(popdata, model, casedata = NULL, regionCode = "CSDUID", regionCodeCases = "CSD2006", years = NULL, year.range = NULL, area = FALSE, area.scale = 1, ...){ 
 #  lennon's stuff
-
-    
         isSP = (class(popdata[[1]]) == "SpatialPolygonsDataFrame")
    
     if (is.null(cyears)) {
@@ -17,19 +14,19 @@ getSMR.list(popdata, model, casedata = NULL, regionCode = "CSDUID",regionCodeCas
     }
     
     poplong <- formatPopulation.list(popdata, breaks = attributes(model)$breaks$breaks,
-      years = model$xlevels$YEAR, mustAggregate = FALSE,years=years,year.range=year.range)
+      years = model$xlevels$YEAR, mustAggregate = FALSE, year.range=year.range)
 
        
-         
+    ll<-split(poplong,poplong$YEAR)     
          
     ##list if df
-    listpop<-tapply(poplong,poplong$YEAR,getSMR,model, casedata = NULL, regionCode =regionCode,
-                     regionCodeCases = regionCodeCases, years = NULL, year.range = NULL,
-                     area = FALSE, area.scale = 1)
-
+    listpop<-apply(ll, getSMR, casedata=casedata, model, regionCode =regionCode,
+                     regionCodeCases = regionCodeCases, years = years, year.range = year.range,
+                     area = area, area.scale = area.scale)
+                                
          #if input is  list of sp, return list of sp
         if (isSP) {
-            for (i in 1:length(cyears)) {
+            for (i in 1:length(years)) {
                 popdata[[i]]@data = listpop[[i]]
             }
             listpop<-popdata
