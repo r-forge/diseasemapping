@@ -1,4 +1,4 @@
-getBreaks <- function (colNames, breaks=NULL) 
+getBreaks <- function (colNames, breaks=NULL, mustAggregate = TRUE) 
 {
     popColumns <- grep("^(m|f|male|female)[[:digit:]]+(_|-|plus|\\+)[[:digit:]]*$", 
         colNames, value = T, ignore.case = T)
@@ -12,7 +12,7 @@ getBreaks <- function (colNames, breaks=NULL)
 
     result = list(breaks = currentbreaks, age = ageLower, 
         sex = sex, oldNames = popColumns, newNames = paste(sex, 
-            ageLower, sep = "."), mustAggregate = T)
+            ageLower, sep = "."), mustAggregate = mustAggregate)
 
 if(length(breaks)> 0 ) {
  # check that the breaks are valid
