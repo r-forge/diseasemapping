@@ -1,4 +1,4 @@
-`formatPopulation.list`<-function(popdata, aggregate.by=NULL, years=as.integer(names(popdata)), year.range=NULL, breaks = NULL,  time="YEAR", mustAggregate = TRUE, getoff=TRUE,...) {
+`formatPopulation.list`<-function(popdata, aggregate.by=NULL,  breaks = NULL, years=as.integer(names(popdata)), year.range=NULL,  time="YEAR", getoff=TRUE,...) {
     
    time<-toupper(time)
     

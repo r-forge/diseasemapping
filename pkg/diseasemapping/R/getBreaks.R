@@ -1,4 +1,4 @@
-getBreaks <- function (colNames, breaks=NULL, mustAggregate = TRUE) 
+getBreaks <- function (colNames, breaks=NULL) 
 {
     popColumns <- grep("^(m|f|male|female)[[:digit:]]+(_|-|plus|\\+)[[:digit:]]*$", 
         colNames, value = T, ignore.case = T)
@@ -12,7 +12,7 @@ getBreaks <- function (colNames, breaks=NULL, mustAggregate = TRUE)
 
     result = list(breaks = currentbreaks, age = ageLower, 
         sex = sex, oldNames = popColumns, newNames = paste(sex, 
-            ageLower, sep = "."), mustAggregate = mustAggregate)
+            ageLower, sep = "."))
 
 if(length(breaks)> 0 ) {
  # check that the breaks are valid
@@ -27,18 +27,10 @@ if(length(breaks)> 0 ) {
 	}
 
 # if the breaks don't include some younger age groups, keep those age groups as-is
-breaks = c(currentbreaks[currentbreaks < min(breaks)], breaks)
+result$breaks = c(currentbreaks[currentbreaks < min(breaks)], breaks)
 
 # check that population breaks are nested within breaks
-if (all(breaks %in% currentbreaks)) {
-
-# if the breaks are different from the population breaks
-if(any(breaks != currentbreaks)) {
- result$breaks = breaks
- result$mustAggregate = F
-}
-
-} else {
+if (!all(breaks %in% currentbreaks)) {
 	warning("population data doesn't appear to be nested within breaks, ignoring breaks")
 }
 }

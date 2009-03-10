@@ -3,10 +3,10 @@ formatPopulation <- function(popdata, aggregate.by=NULL, breaks=NULL, ...) {
 }
 
 `formatPopulation.data.frame` <-
-function(popdata, aggregate.by=NULL, breaks=NULL, mustAggregate = TRUE,...) {
+function(popdata, aggregate.by=NULL, breaks=NULL,...) {
 
 #popdata <- popdata@data
-ageBreaks = getBreaks(names(popdata), breaks, mustAggregate = mustAggregate)
+ageBreaks = getBreaks(names(popdata), breaks)
 
 ####reshape the popdata:
 poplong = reshape(popdata,  varying=ageBreaks$oldNames, direction="long",
@@ -38,18 +38,21 @@ if("GROUP" %in% names(poplong)) {
 # aggregate if necessary
 #if(!breaks %in% ageBreaks$breaks){
 
-if(ageBreaks$mustAggregate == TRUE & is.null(aggregate.by) ){
-popa = aggregate(poplong$POPULATION, list(age= poplong$age), sum)
-names(popa)[names(popa)=="x"] = "POPULATION"
-poplong <- popa
-}
+# if there are some duplicate ageCut groups.
+#if(ageBreaks$mustAggregate  & is.null(aggregate.by) ){
+# get rid of ageNumeric column because we'll be combining some age groups
+#poplong = poplong[, - grep("^ageNumeric$", names(poplong), ignore.case=T)]
+
+#toAggregate = names(poplong)[- grep("POPULATION", names(poplong), ignore.case=T)]
 
 
+#popa = aggregate(poplong$POPULATION, as.list(poplong[,toAggregate]), sum)
+#names(popa)[names(popa)=="x"] = "POPULATION"
+#poplong <- popa
+#}
 
 #attributes(poplong)$ageBreaks = ageBreaks$breaks
 #return(poplong)
-
-
 
 poplong$id<-NULL
 row.names(poplong)<-NULL
