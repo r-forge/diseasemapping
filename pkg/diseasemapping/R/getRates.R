@@ -29,7 +29,8 @@ if(is.null(years) & morethanoneyear ){
 #factors we need to aggregate by
 theterms = (rownames(attributes(terms(formula))$factors))
 
-pops <- formatPopulation(popdata, aggregate.by= theterms, breaks=breaks,getoff=F)             
+pops <- formatPopulation(popdata, aggregate.by= theterms, breaks=breaks,getoff=F) 
+          
 
 ##format case data
 #casedata = formatCases(casedata, ageBreaks=attributes(pops)$breaks, aggregate.by = theterms)
@@ -51,9 +52,11 @@ if(length(S)==1) {
 }
 
 #format case data
+if(isSP){
+casedata = formatCases(casedata, ageBreaks=attributes(pops@data)$breaks, aggregate.by = theterms)
+}else{
 casedata = formatCases(casedata, ageBreaks=attributes(pops)$breaks, aggregate.by = theterms)
-
-
+}
 
 #find number of cases per group
 casecol = grep("^cases$", names(casedata), value=TRUE, ignore.case=TRUE)
@@ -80,6 +83,8 @@ by.pop = grep(by.x, names(pops), ignore.case=TRUE, value=TRUE)
 
 
 newdata <- merge(casedata, pops, by.x = theterms, by.y = by.pop)
+
+
 
 if (morethanoneyear){
 ####find Popoluation census year
