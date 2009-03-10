@@ -1,6 +1,6 @@
 `formatPopulation.SpatialPolygonsDataFrame` <-
 function(popdata, ...) {
 
-formatPopulation(popdata@data, ...)
-
-}
+ formatPopulation(popdata@data, ...)
+ 
+}                                                      
