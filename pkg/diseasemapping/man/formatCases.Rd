@@ -1,36 +1,45 @@
 \name{formatCases}
 \alias{formatCases}
-
-\title{ Format the case data set }
+\title{ Format the disease case data set}
 \description{
- The formatCases funtion cleans and formats the case data set. 
- Changes the other format of age and sex group to two columns: age and sex.
+ The formatCases funtion formats the case data set. 
+ Changes other formats of age and sex group to three columns: age, ageNumeric and sex. 
 }
 \usage{
-formatCases(casedata, breaks = NULL, years = NULL)
+formatCases(casedata, ageBreaks = NULL, years = NULL, aggregate.by = NULL)
 }
 \arguments{
-  \item{casedata}{case data set in data.frame format }
-  \item{breaks}{ age breaks }
-  \item{years}{ number of years}
+  \item{casedata}{disease cases data set, usually a data.frame contains age and sex and number of cases.}
+  \item{ageBreaks}{results from getBreaks function. }
+  \item{years}{if it contains multiple years, define which years will be included in. }
+  \item{aggregate.by}{if want to view the data set from a macro way, could aggregate the data set by age or sex or other variables. }
 }
 \details{
-  ~~ If necessary, more details than the description above ~~
+After using formatCases function, the age columns will be a "character" column contains ages in a cut format, i.e [50,55), denotes age 50. 
+The cut breaks will get from the breaks from population data set or define by user.  
+The original age column will changed to ageNumeric columns as factors. 
+The sex column will have two levels "M" and "F" as factors. 
+If "aggregate.by" is not NULL, the number of cases will be sum up by the groups define in aggregate.by. 
 }
 \value{
-  
+formatCases function will return a data frame. 
 }
 \references{ }
-\author{  }
+\author{Patrick Brown  }
 \note{ 
+
 }
 \seealso{  }
 \examples{
 data(casedata)
-cases <- formatCases(casedata, breaks= c(5, 10, 15, 50))
+data(popdata)
+head(casedata)
+caseformat <- formatCases(csaedata, ageBreaks = getBreaks(names(popdata)))
+head(caseformat)
+caseformatagg <- formatCases(csaedata, ageBreaks = getBreaks(names(popdata)), aggregate.by=c("age", "sex"))
+head(caseformatagg)
 
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
+
 \keyword{ }
 \keyword{ }% __ONLY ONE__ keyword per line

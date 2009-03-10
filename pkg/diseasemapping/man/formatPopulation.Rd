@@ -5,64 +5,48 @@
 \alias{formatPopulation.PostgreSQLConnection}
 \alias{formatPopulation.SpatialPolygonsDataFrame}
 
-\title{ Format and clean the population data set}
+\title{ Format the population data set }
 \description{
-The formatCases funtion cleans and formats the population data set. Changes the spatial polygon shape file to data frame 
-
+The formatCases funtion formats the population data set. 
+Reshape the population data set to "long" format, add in 4 columns : GROUP, POPULATION, sex and age. 
 }
 \usage{
-formatPopulation(popdata, aggregate.by, ...)
-formatPopulation.data.frame(popdata, aggregate.by = NULL, ...)
-formatPopulation.list(popdata, aggregate.by = NULL, cyears = as.integer(names(popdata)),  times = "YEAR", ...)
-formatPopulation.PostgreSQLConnection(popdata, aggregate.by = NULL, subset = NULL, ...)
-formatPopulation.SpatialPolygonsDataFrame(popdata, ...)
+formatPopulation(popdata, aggregate.by = NULL, breaks = NULL, ...)
 }
-%- maybe also 'usage' for other objects documented here.
-\arguments{
-  \item{popdata}{  population data set, either a list, data frame, sp object, or database connection.}
-  \item{aggregate.by}{the term that used to aggregate the number of people. i.e year }
-  \item{cyears}{vector of census year corresponding to the elements of the popdata list}
-  \item{subset}{argument for selecting a subset of the data}
 
-  \item{times}{ the variable name which stores time }
- \item{\dots}{ additinal infomation }
- }
+\arguments{
+  \item{popdata}{population data set. It can be a data frame, list, database connection, or spatial polygon data frame. }
+  \item{aggregate.by}{if want to view the data set from a macro way, could aggregate the data set by age or sex or other variables.}
+  \item{breaks}{age breaks the user want to use. i.e breaks = c(10, 20, 30 ,40, 60, Inf). }
+  \item{\dots}{additional arguments. }
+}
 \details{
- This function reshape the data frame in the function in "long" format which could aggregate the number of population according to the age and set group.
+After using the formatPopulation function, it will return the population data set in the same class as the original data set. 
+i.e if a spatial polygon data frame has been put into the formatPopulation function, it will return a spatial polygon data frame. 
+If "aggregate.by" is not NULL, the number of cases will be sum up by the groups define in aggregate.by. 
+The "Group" column contains information of sex and age groups,in the format of M.55, denotes male, year 55. 
+The "POPULATION" column is a numeric column, denotes the size of population for the particular age and sex group.
+The "age" column will be a "character" column contains ages in a cut format. i.e [50,55), denotes age 50. 
+The cut breaks will get from the breaks of population data set or define by user.   
+The sex column will have two levels "M" and "F" as factors. 
+ 
 }
 \value{
 
 }
-\references{  }
-\author{ }
+\references{ }                                        
+\author{Patrick Brown }
 \note{ 
+If not offer a breaks value, the function will aggregate by "age".
 }
-\seealso{\code{\link[pkg:diseasemapping]{formatPopulation.data.frame}} from the \code{diseasemapping} pagkage, 
-         \code{\link[pkg:diseasemapping]{formatPopulation.list}}, 
-         \code{\link[pkg:diseasemapping]{formatPopulation.PostgreSQLConnection}},
-         \code{\link[pkg:diseasemapping]{formatPopulation.SpatialPolygonsDataFrame}}. 
- }
+\seealso{  }
 \examples{
-# if population data set is a shape file.
 data(popdata)
 head(popdata@data)
-popdatatry <- formatPopulation(popdata)
-head(popdatatry)
-
-# if population data set is a data frame
-formatPopulation.data.frame(popdata@data)
-
-# if population data set is a list
-#formatPopulation.list(popdata@data)
-
-# if population data set is PostgreSQLConnection
-#formatPopulation.PostgreSQLConnection(popdata)
-
-# if population data set is SpatialPolygonsDataFrame
-formatPopulation.SpatialPolygonsDataFrame(popdata)
-
+poptry <- formatPopulation(popdata, breaks = c(seq(0, 80, by=10), Inf))
+head(poptry@data)
+poptryagg <- formatPopulation(popdata, breaks = c(seq(0, 80, by=10), Inf), aggregate.by=c("sex", "age"))
+head(poptryagg@data)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ }
-\keyword{ }% __ONLY ONE__ keyword per line
+\keyword{}
+\keyword{}% __ONLY ONE__ keyword per line
