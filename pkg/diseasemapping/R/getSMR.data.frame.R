@@ -1,5 +1,5 @@
 `getSMR` <- function(popdata, model, casedata, regionCode = "CSDUID",
-    regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, ...){
+    regionCodeCases = "CSD2006", area = FALSE, area.scale = 1,formatPop=TRUE, ...){
        UseMethod("getSMR")
  }
  
@@ -8,7 +8,9 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
 #  getSMR(popdata@data, ...)
     if(formatPop){
     poplong <- formatPopulation(popdata, breaks=attributes(model)$breaks$breaks, mustAggregate = FALSE)
-     }
+     }else{poplong<-popdata}
+     
+     
     #changes poplong names to be consistent with model
     agevar<-grep("^age$",names(model$xlevels),value=T,ignore.case=T)
     sexvar<-grep("^sex$",names(model$xlevels),value=T,ignore.case=T)

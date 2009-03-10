@@ -52,11 +52,9 @@ if(length(S)==1) {
 }
 
 #format case data
-if(isSP){
-casedata = formatCases(casedata, ageBreaks=attributes(pops@data)$breaks, aggregate.by = theterms)
-}else{
+
 casedata = formatCases(casedata, ageBreaks=attributes(pops)$breaks, aggregate.by = theterms)
-}
+
 
 #find number of cases per group
 casecol = grep("^cases$", names(casedata), value=TRUE, ignore.case=TRUE)
@@ -66,14 +64,6 @@ if(!length(casecol)) {
   cases[,casecol] = 1
 }
 
-# do aggregation in formatCases instead of here.
-#cases<-aggregate(casedata[[casecol]], casedata[,theterms], sum, na.rm=TRUE)
-#names(cases)[names(cases)=="x"] = "CASES"
-
-
-#find population per group
-#pops <- aggregate(poplong$POPULATION, poplong[,theterms,drop=FALSE], sum)
-#names(pops)[names(pops)=="x"] = "POPULATION"
 
 ##### merge case data set and shape data set according to the same Year and DA2001
 by.x =  paste("^", theterms, "$", sep="")
@@ -83,9 +73,6 @@ by.pop = grep(by.x, names(pops), ignore.case=TRUE, value=TRUE)
 
 
 newdata <- merge(casedata, pops, by.x = theterms, by.y = by.pop)
-
-
-
 if (morethanoneyear){
 ####find Popoluation census year
 #a vector of all years
