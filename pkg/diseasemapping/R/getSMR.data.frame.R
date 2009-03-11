@@ -7,8 +7,7 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
     regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, formatPop=TRUE,...){
 #  getSMR(popdata@data, ...)
     if(formatPop){
-    poplong <- formatPopulation(popdata, breaks=attributes(model)$breaks$breaks, 
-      mustAggregate = FALSE)
+    poplong <- formatPopulation(popdata, breaks=attributes(model)$breaks$breaks)
      }else{poplong<-popdata}
      
      
