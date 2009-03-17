@@ -45,5 +45,6 @@ data(popdata)
 therates = getRates(casedata, popdata, ~age*sex,breaks=c(seq(0, 80, by=10), Inf) )
 thesmr = getSMR(popdata, therates, casedata)
 head(thesmr@data)
+}
 \keyword{ }
 \keyword{ }% __ONLY ONE__ keyword per line
