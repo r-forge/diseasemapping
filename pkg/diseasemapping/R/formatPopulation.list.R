@@ -16,7 +16,7 @@
    #listpop<-lapply(popdata,formatPopulation.data.frame,aggregate.by)
    #}
   
-   listpop<-lapply(popdata,formatPopulation,aggregate.by, breaks= breaks, mustAggregate=mustAggregate)
+   listpop<-lapply(popdata,formatPopulation,aggregate.by, breaks= breaks)
   
    breaks = attributes(listpop[[1]])$breaks
   
