@@ -34,7 +34,7 @@ formatCases function will return a data frame.
 data(casedata)
 data(popdata)
 head(casedata)
-caseformat <- formatCases(csaedata, ageBreaks = getBreaks(names(popdata)))
+caseformat <- formatCases(casedata, ageBreaks = getBreaks(names(popdata)))
 head(caseformat)
 caseformatagg <- formatCases(csaedata, ageBreaks = getBreaks(names(popdata)), aggregate.by=c("age", "sex"))
 head(caseformatagg)
