@@ -1,7 +1,7 @@
 getBreaks <- function (colNames, breaks=NULL) 
 {
     popColumns <- grep("^(m|f|male|female)[[:digit:]]+(_|-|plus|\\+)[[:digit:]]*$", 
-        colNames, value = T, ignore.case = T)
+        colNames, value = TRUE, ignore.case = TRUE)
     ageGroups <- gsub("^(m|f|male|female)", "", popColumns, ignore.case = TRUE)
     ageGroups <- gsub("(\\+|plus)", "_Inf", ageGroups, ignore.case = TRUE)
     ageLower <- as.numeric(gsub("(_|-)([[:digit:]]+|Inf)$", "", 
