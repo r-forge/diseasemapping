@@ -7,8 +7,11 @@
 a glm model with poisson distribution by default.
 }
 \usage{
-getRates(casedata, popdata, formula, family = poisson, minimumAge = 0, maximumAge = 100, S = c("M", "F"), cyears = NULL, year.range = NULL, 
-case.years = grep("^year$", names(casedata), ignore.case = TRUE, value = TRUE)[1])
+getRates(casedata, popdata, formula, family = poisson, minimumAge = 0, 
+    maximumAge = 100, S = c("M", "F"), years = NULL, year.range = NULL, 
+    case.years = grep("^year$", names(casedata), ignore.case = TRUE, 
+        value = TRUE)[1], breaks = NULL) 
+
 }
 
 \arguments{
