@@ -18,6 +18,10 @@ formatPopulation(popdata, aggregate.by = NULL, breaks = NULL, ...)
   \item{popdata}{population data set. It can be a data frame, list, database connection, or spatial polygon data frame. }
   \item{aggregate.by}{if want to view the data set from a macro way, could aggregate the data set by age or sex or other variables.}
   \item{breaks}{age breaks the user want to use. i.e breaks = c(10, 20, 30 ,40, 60, Inf). }
+  \item{years}{the years vector}
+  \item{year.range}{the range of the year vector}
+  \item{time}{the time variable, i.e years}
+  \item{getoff}{if \code{TRUE} calculate the new offsets values.}
   \item{\dots}{additional arguments. }
 }
 \details{
