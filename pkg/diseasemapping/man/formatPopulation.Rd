@@ -21,7 +21,7 @@ formatPopulation(popdata, aggregate.by = NULL, breaks = NULL, ...)
   \item{years}{the years vector}
   \item{year.range}{the range of the year vector}
   \item{time}{the time variable, i.e years}
-  \item{getoff}{if \code{TRUE} calculate the new offsets values.}
+  \item{getoff}{compute offset using getRates, should be set to FALSE when population file is a list.}
   \item{\dots}{additional arguments. }
 }
 \details{
