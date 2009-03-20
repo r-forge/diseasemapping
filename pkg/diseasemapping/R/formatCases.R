@@ -44,7 +44,7 @@ if(length(groupvar)){
 if(!is.null(ageBreaks)){
   casedata$ageNumeric = casedata[[agecol]]
  casedata$age = as.character(cut(as.numeric(as.character(casedata$ageNumeric)),
-    ageBreaks$breaks, right=F))
+    ageBreaks$breaks, right=FALSE))
   attributes(casedata)$breaks = ageBreaks
 }else{
     casedata$ageNumeric = casedata[[agecol]]
