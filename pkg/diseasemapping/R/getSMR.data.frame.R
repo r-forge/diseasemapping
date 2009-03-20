@@ -7,18 +7,19 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
     regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, formatPop=TRUE,...){
 #  getSMR(popdata@data, ...)
     if(formatPop){
-    poplong <- formatPopulation(popdata, breaks=attributes(model)$breaks$breaks)
+    poplong <- formatPopulation(popdata, breaks=attributes(model)$breaks$breaks, 
+      mustAggregate = FALSE)
      }else{poplong<-popdata}
      
      
     #changes poplong names to be consistent with model
-    agevar<-grep("^age$",names(model$xlevels),value=T,ignore.case=T)
-    sexvar<-grep("^sex$",names(model$xlevels),value=T,ignore.case=T)
-    yearvar<-grep("^year$",names(model$xlevels),value=T,ignore.case=T)
+    agevar<-grep("^age$",names(model$xlevels),value=TRUE,ignore.case=TRUE)
+    sexvar<-grep("^sex$",names(model$xlevels),value=TRUE,ignore.case=TRUE)
+    yearvar<-grep("^year$",names(model$xlevels),value=TRUE,ignore.case=TRUE)
 
-    agevar1<-grep("^age$",names(poplong),value=T,ignore.case=T)
-    sexvar1<-grep("^sex$",names(poplong),value=T,ignore.case=T)
-    yearvar1<-grep("^year$",names(poplong),value=T,ignore.case=T)
+    agevar1<-grep("^age$",names(poplong),value=TRUE,ignore.case=TRUE)
+    sexvar1<-grep("^sex$",names(poplong),value=TRUE,ignore.case=TRUE)
+    yearvar1<-grep("^year$",names(poplong),value=TRUE,ignore.case=TRUE)
     
     if(length(agevar) & length(agevar1)){
      names(poplong[[agevar1]])=agevar
@@ -43,7 +44,7 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
     
       poplong <- poplong[poplong$POPULATION > 0, ]
       
-      offsetvar<- grep("logpop",names(model$data) ,value=T,ignore.case=T)
+      offsetvar<- grep("logpop",names(model$data) ,value=TRUE,ignore.case=TRUE)
     poplong[[offsetvar]] = log(poplong$POPULATION)
 #    poplong[[sexvar]]= factor(poplong[[sexvar]])
 #    poplong[[agevar]] = factor(poplong[[agevar]])
