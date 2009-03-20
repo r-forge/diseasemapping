@@ -24,7 +24,7 @@ if("GROUP" %in% names(poplong)) {
   poplong$sex = factor(substr(poplong$GROUP, 1, 1))}
      if(!length(agecol)){
    ageNumeric = as.numeric(substr(poplong$GROUP, 3, 4))
-   poplong$age = cut(ageNumeric, ageBreaks$breaks, right=F)
+   poplong$age = cut(ageNumeric, ageBreaks$breaks, right=FALSE)
   #Get rid of M/F if age group has only one digit
 #  ageterm <- c(grep("^M", poplong$AGE, value=TRUE), grep("^F", poplong$AGE, value=TRUE))
 #  agetermIndex <- c(grep("^M", poplong$AGE), grep("^F", poplong$AGE))
@@ -60,7 +60,7 @@ row.names(poplong)<-NULL
 
 if(!is.null(aggregate.by)) {
 
-  popa <- aggregate(poplong$POPULATION, poplong[, aggregate.by, drop=F], sum)
+  popa <- aggregate(poplong$POPULATION, poplong[, aggregate.by, drop=FALSE], sum)
 
   # change x column name to 'population'
   names(popa)[names(popa)=="x"] = "POPULATION"
