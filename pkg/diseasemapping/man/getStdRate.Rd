@@ -34,9 +34,10 @@ data(popdata)
 # get the age sex group rate:
 model = getRates(casedata, popdata, ~age*sex, S=c("M","F"))
 # calculate the relative rate using glmmBUGS:
-ontario = getSMR(model, popdata, casedata)
+ontario = getSMR(popdata, model, casedata)
 data(popDataAdjMat)
-forBugs = glmmBUGS(formula = Observed + logExpected ~ 1, effects= "CSDUID",
+library(glmmBUGS)
+forBugs = glmmBUGS(formula = observed + logExpected ~ 1, effects= "CSDUID",
                    family="poisson", spatial =popDataAdjMat, data=ontario@data)
 startingValues=forBugs$startingValues
 source("getInits.R")
