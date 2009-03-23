@@ -90,7 +90,7 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
         }
     casedata <- aggregate(casedata[[casecol]], list(casedata[[regionCodeCases]]), sum)
     names(casedata) = c(regionCodeCases, "observed")
-        populationData = merge(poplong, casedata, by.x=regionCode, by.y =regionCodeCases,  all.x = TRUE)
+        populationData = merge(poplong, casedata, by.x=regionCode, by.y =regionCodeCases, all.x = TRUE)
         populationData$expected[is.na(populationData$observed)] = 0  
         populationData$logExpected = log(populationData$expected)
         if (!is.null(populationData$observed)) {
