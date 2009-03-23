@@ -16,7 +16,7 @@ formatPopulation.PostgreSQLConnection <- function(dbname,user="postgres",driver=
   #result.agg <- formatPopulation.PostgreSQLConnection("spatial",aggregate=T)
 
   
-  require(RPostgreSQL)
+  library(RPostgreSQL)
 
   # should get this from the database!
   stuff = c("CSDUID","CSDNAME","CSDTYPE","PRUID","PRNAME","CDUID","CDNAME","CDTYPE","CMAUID","CMANAME","SACTYPE","ERUID","ERNAME","TotPop2001","TotPop2006","TotPopPerc","TotPop","AreaSqKm20","TotPop_x_A","MaleTot","FemaleTot")
