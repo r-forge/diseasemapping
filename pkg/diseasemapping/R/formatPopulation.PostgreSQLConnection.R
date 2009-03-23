@@ -49,9 +49,9 @@ formatPopulation.PostgreSQLConnection <- function(dbname,user="postgres",driver=
     # add sex and age columns
         two <-   paste(c('"',sex,age,'_',age+4,'" as population, \'',sex,age,'_',age+4,'\' as group, \'',sex,'\' as sex, \'',age,'_',age+4,'\' as age from "Ontario"."CSD2006"'),collapse="")
 
-        if (begin==T) { # turn loop start indicator off
+        if (begin==TRUE) { # turn loop start indicator off
           sql <- paste(one,two)
-          begin <- F
+          begin <- FALSE
         }
         else sql <- paste(sql,'union',one,two) # combine sql commands with 'union'
         
