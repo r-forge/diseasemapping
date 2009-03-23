@@ -18,11 +18,11 @@ getSMR(popdata, model, casedata, regionCode = "CSDUID", regionCodeCases = "CSD20
   \item{casedata}{ the name of case data set }
   \item{regionCode}{ the name of district area column in population data set}
   \item{regionCodeCases}{the name of district area column in case data set }
-  \item{years}{the vector of years}
-  \item{year.range}{the range of the year vector}
   \item{area}{ if \code{TRUE}, calculate the expected number of cases per area in each region }
   \item{area.scale}{  control the unit of area. e.g $10^6$: per square kilometers }
   \item{formatPop}{if \code{TRUE}, then format the population }
+  \item{years}{the vector of years}
+  \item{year.range}{the range of the year vector} 
   \item{\dots}{additional arguments}
 }
 \details{
