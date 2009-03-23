@@ -48,7 +48,7 @@ if(!is.null(ageBreaks)){
   attributes(casedata)$breaks = ageBreaks
 }else{
     casedata$ageNumeric = casedata[[agecol]]
-    casedata$age =  as.character(cut(as.numeric(as.character(casedata$ageNumeric)), sort(as.numeric(unique(casedata[[agecol]]))), right=F))
+    casedata$age =  as.character(cut(as.numeric(as.character(casedata$ageNumeric)), sort(as.numeric(unique(casedata[[agecol]]))), right=FALSE))
     attributes(casedata)$breaks = ageBreaks
 }
 
