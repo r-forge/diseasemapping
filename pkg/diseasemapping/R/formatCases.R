@@ -9,6 +9,7 @@ casedata$age = casedata[[agecol]]
 casedata$sex = casedata[[sexcol]]
 }else{
 # if not, is there an age_sex_group column, in rif format?  use it to create age and sex
+
 groupvar = grep("^AGE_SEX_GROUP$", names(casedata), value=TRUE, ignore.case=TRUE)
 #agecol = grep("^age$", names(casedata), value=TRUE, ignore.case=TRUE)
 #sexcol = grep("^sex$", names(casedata), value=TRUE, ignore.case=TRUE)
@@ -29,7 +30,7 @@ if(length(groupvar)){
             }else{
 # if groupvar is in rif format:
        if(!length(sexcol)) {
-            casedata$sex = factor(substring(casedata$AGE_SEX_GROUP, 1, 1), levels=c("1", "2"), labels=c("M", "F"))
+            casedata$sex = factor(substring(casedata[[groupvar]], 1, 1), levels=c("1", "2"), labels=c("M", "F"))
             sexcol = "sex"
             }
        if(!length(agecol)){
@@ -48,8 +49,8 @@ if(!is.null(ageBreaks)){
   attributes(casedata)$breaks = ageBreaks
 }else{
     casedata$ageNumeric = casedata[[agecol]]
-    casedata$age =  as.character(cut(as.numeric(as.character(casedata$ageNumeric)), 
-                                 sort(as.numeric(unique(casedata[[agecol]]))), right=FALSE))
+    casedata$age =  as.factor(as.character(cut(as.numeric(as.character(casedata$ageNumeric)), 
+                                 sort(as.numeric(unique(casedata[[agecol]]))), right=FALSE)))
     attributes(casedata)$breaks = ageBreaks
 }
 
