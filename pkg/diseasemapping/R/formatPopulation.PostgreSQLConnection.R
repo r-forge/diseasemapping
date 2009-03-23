@@ -1,4 +1,4 @@
-formatPopulation.PostgreSQLConnection <- function(dbname,user="postgres",driver="PostgreSQL",aggregate=F) {
+formatPopulation.PostgreSQLConnection <- function(dbname,user="postgres",driver="PostgreSQL",aggregate=FALSE) {
 
   # function to get data from a database
   # Input:
@@ -23,20 +23,20 @@ formatPopulation.PostgreSQLConnection <- function(dbname,user="postgres",driver=
   
   sql <- c()
 
-  begin <- T # start loop indicator
+  begin <- TRUE # start loop indicator
 
   for (sex in c("M","F")) { # over Males and Females
     
     for (age in seq(0,80,by=5)) { # need to handle M85plus and F85plus!
     
-      if (aggregate==T) {
+      if (aggregate==TRUE) {
 
         # sum things up for each category
         one <- paste('select sum("',sex,age,'_',age+4,'") as population,\'',sex,'\' as sex, \'',age,'_',age+4,'\' as age from "Ontario"."CSD2006"' ,sep="")
 
-        if (begin==T) { # turn loop start indicator off
+        if (begin==TRUE) { # turn loop start indicator off
           sql <- one
-          begin <- F
+          begin <- FALSE
         }
         else sql <- paste(sql,'union',one) # combine sql commands with 'union'
         
