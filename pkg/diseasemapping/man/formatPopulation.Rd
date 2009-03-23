@@ -22,7 +22,7 @@ formatPopulation(popdata, aggregate.by = NULL, breaks = NULL, ...)
   \item{year.range}{the range of the year vector}
   \item{time}{the time variable, i.e years}
   \item{getoff}{compute offset using getRates, should be set to FALSE when population file is a list.}
-  \item{\dots}{additional arguments. }
+  \item{\dots}{additional arguments.}
 }
 \details{
 After using the formatPopulation function, it will return the population data set in the same class as the original data set. 
@@ -32,9 +32,8 @@ The "Group" column contains information of sex and age groups,in the format of M
 The "POPULATION" column is a numeric column, denotes the size of population for the particular age and sex group.
 The "age" column will be a "character" column contains ages in a cut format. i.e [50,55), denotes age 50. 
 The cut breaks will get from the breaks of population data set or define by user.   
-The sex column will have two levels "M" and "F" as factors. 
- 
-}
+The sex column will have two levels "M" and "F" as factors.}
+
 \value{
 
 }
@@ -48,9 +47,9 @@ If not offer a breaks value, the function will aggregate by "age".
 data(popdata)
 head(popdata@data)
 poptry <- formatPopulation(popdata, breaks = c(seq(0, 80, by=10), Inf))
-head(poptry@data)
+head(poptry)
 poptryagg <- formatPopulation(popdata, breaks = c(seq(0, 80, by=10), Inf), aggregate.by=c("sex", "age"))
-head(poptryagg@data)
+head(poptryagg)
 }
 \keyword{}
 \keyword{}% __ONLY ONE__ keyword per line
