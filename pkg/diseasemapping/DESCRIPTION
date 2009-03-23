@@ -3,6 +3,7 @@ Type: Package
 Title: Calculat SMR's from population and case data 
 Version: 0.1
 Date: 2008-09-22
+Enhances: RPostgreSQL
 Author: Patrick Brown
 Maintainer: Lutong Zhou <carly_zhou@hotmail.com>
 Description: works with regular data set file and shape file.
