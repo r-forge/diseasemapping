@@ -10,8 +10,8 @@
 }
 \usage{
 mergeBugsData(x, bugsSummary, by.x = NULL, newcol = "mean", ...)
-\method{mergeBugsData}{SpatialPolygonsDataFrame}(x, bugsSummary, by.x=NULL, newcol="mean", ...)
-\method{mergeBugsData}{data.frame}(x, bugsSummary, by.x=NULL, newcol="mean", ...)
+mergeBugsData.SpatialPolygonsDataFrame(x, bugsSummary, by.x=NULL, newcol="mean", ...) 
+mergeBugsData.data.frame(x, bugsSummary, by.x=NULL, newcol="mean", ...)
 }
 
 \arguments{
@@ -26,9 +26,9 @@ mergeBugsData(x, bugsSummary, by.x = NULL, newcol = "mean", ...)
 
 
 \examples{
-data(popdata)
-newdata = c("3560102"=2, "3560104"=3)
-popdatatry = mergeBugsData(popdata, newdata, by.x="CSDUID")
+#data(popdata)
+#newdata = c("3560102"=2, "3560104"=3)
+#popdatatry = mergeBugsData(popdata, newdata, by.x="CSDUID")
 
 # if the data set is a spatial polygons data frame: 
 #popdatatry = mergeBugsData.SpatialPolygonsDataFrame(popdata, newdata, by.x="CSDUID")
@@ -43,7 +43,7 @@ data(casedata)
 
 model = getRates(casedata, popdata, ~age*sex)
 ontario = getSMR(model, popdata, casedata)
-ontario = ontario@data[,c("CSDUID","Observed","logExpected")]
+ontario = ontario@data[,c("CSDUID","observed","logExpected")]
 popDataAdjMat = poly2nb(ontario,row.names=as.character(ontario[["CDSUID"]]))
 data(popDataAdjMat)
 
