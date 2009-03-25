@@ -1,4 +1,4 @@
-rasterPopulation.list<-function(poplist,bbox=NULL,nrows=200, ncols=200, xmn=NULL, xmx=NULL, ymn=NULL, ymx=NULL, projs="NA"){
+rasterPopulation.list<-function(poplist,bbox=NULL,nrows=200, ncols=200, xmn=NULL, xmx=NULL, ymn=NULL, ymx=NULL, projs="NA",columns=c("expected","observed")){
 
 
 #find a bbox for all census
@@ -13,7 +13,7 @@ xlimits = c(min(x),max(x))
 ylimits = c(min(y),max(y))
 bbox<-extent(matrix(c(xlimits,ylimits),nrow=2,byrow=T))
 
-lapply(poplist,rasterPopulation,bbox=bbox,nrows=nrows, ncols=ncols, xmn=xmn, xmx=xmx, ymn=ymn, ymx=ymx, projs=projs)
+lapply(poplist,rasterPopulation,bbox=bbox,nrows=nrows, ncols=ncols, xmn=xmn, xmx=xmx, ymn=ymn, ymx=ymx, projs=projs,columns=columns)
 
 
 }

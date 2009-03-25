@@ -1,5 +1,6 @@
 
-rasterPopulation.SpatialPolygonsDataFrame<-function(popdata,bbox=NULL,nrows=200, ncols=200, xmn=NULL, xmx=NULL, ymn=NULL, ymx=NULL, projs="NA"){
+rasterPopulation.SpatialPolygonsDataFrame<-function(popdata,bbox=NULL,nrows=200, ncols=200,
+  xmn=NULL, xmx=NULL, ymn=NULL, ymx=NULL, columns=c("expected","observed"),projs="NA"){
 
 
 #if bbox is given, use it to create the raster,
@@ -12,14 +13,31 @@ if(!is.null(bbox)) {
   r <- raster(bbox,nrows=nrows,ncols=ncols,projs=projs)
 }
 
-#Grep the field we need
-field<-grep("^expected",names(popdata),ignore.case = TRUE)
-fieldname<-grep("^expected",names(popdata),ignore.case = TRUE,value=T)
-r <- polygonsToRaster(popdata, r,field=field)
+#Grep the columns we need
+
+
+#field<-grep("^expected",names(popdata),ignore.case = TRUE)
+#fieldname<-grep("^expected",names(popdata),ignore.case = TRUE,value=T)
+field<-NULL;d<-data.frame(ID=1:(ncols*nrows))
+for (i in 1:length(columns)){
+  f<-which(names(popdata) == columns[i])
+  k<-polygonsToRaster(popdata, r,field=f)
+  d[,i+1]<-values(k)
+  field<-c(field,f)
+}
+names(d)<-c("ID",names(popdata)[field])
+
+
+
+#trick the rasterToPoints function to keep NA values
+v<-values(k)
+v[is.na(v)] = 999
+rs <- setValues(k, v)
+
+SpatialPointsDataFrame(coords=rasterToPoints(rs)[,-3],data=d)
 
 #convert to a sp dataframe, NA excluded
-sp<-rasterToPoints(r,asSpatialPoints=T)
-names(sp)<-fieldname
-sp
-
+#sp<-rasterToPoints(k,asSpatialPoints=T)
+#sp@data<-d
+#sp
 }
