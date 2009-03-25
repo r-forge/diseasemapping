@@ -1,4 +1,4 @@
-rasterPopulation.list<-function(poplist,bbox=NULL,nrows=200, ncols=200, xmn=NULL, xmx=NULL, ymn=NULL, ymx=NULL, projs="NA",columns=c("expected","observed")){
+rasterPopulation.list<-function(poplist,bbox=NULL,nrows=200, ncols=200, xmn=NULL, xmx=NULL, ymn=NULL, ymx=NULL, projs="NA",columns=c("expected")){
 
 
 #find a bbox for all census
