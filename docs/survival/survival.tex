@@ -1,0 +1,27 @@
+\documentclass{article}
+\usepackage{amsmath}
+\begin{document}
+\section{The model}
+Person $i$ lives at location $s_i$, and is susceptible to cancer if $Y_i=1$.  If they are susceptible, they have a cancer incidence time $T_i$.
+
+\begin{align*}
+Y_i & \sim \text{Bernoulli}(\rho)\\
+[T_i | Y_i = 1] &\sim \text{Weibull}(\mu_i, \nu)\\
+[T_i | Y_i = 0] & = \infty \\
+\log(\mu_i) &= X_i \beta + U(s_i)\\
+\text{cov}[U(s_0 + s), U(s_0)] &= \sigma^2 M(s; \theta, \kappa) 
+\end{align*}
+
+\section{The Data}
+For each individual we observe an enrolment date $D_i$, an event date $E_i$, and an indicator variable $Z_i = 1$ if $E_i$ is a cancer incidence and 0 otherwise.
+
+\[
+pr(E_i, Z_i | D_i) = 
+\begin{cases}
+pr(T_i > E_i | T_i > D_i, Y_i =0) pr(T_i > D_i) pr(Y_i = 0) + pr(Y_i =1) & Z_i = 0 \\
+pr(T_i = E_i | T_i > D_i, Y_i =0) pr(T_i > D_i) pr(Y_i = 0) & Z_i = 1
+\end{cases}
+\]
+
+
+\end{document}
