@@ -1,27 +1,50 @@
 \documentclass{article}
 \usepackage{amsmath}
+\usepackage[margin=1in]{geometry}
+
 \begin{document}
 \section{The model}
-Person $i$ lives at location $s_i$, and is susceptible to cancer if $Y_i=1$.  If they are susceptible, they have a cancer incidence time $T_i$.
-
+Person $i, i=1\ldots N$ lives at location $s_i$, and is not susceptible to cancer (cured) if $Y_i=1$.  If they are susceptible, they have a cancer incidence time $T_i$.
 \begin{align*}
 Y_i & \sim \text{Bernoulli}(\rho)\\
-[T_i | Y_i = 1] &\sim \text{Weibull}(\mu_i, \nu)\\
-[T_i | Y_i = 0] & = \infty \\
+[T_i | Y_i = 0] &\sim \text{Weibull}(\mu_i, \nu)\\
+[T_i | Y_i = 1] & = \infty \\
 \log(\mu_i) &= X_i \beta + U(s_i)\\
 \text{cov}[U(s_0 + s), U(s_0)] &= \sigma^2 M(s; \theta, \kappa) 
 \end{align*}
+$\mu_i$ and $\nu$ are the scale and shape parameters of the Weibull respectively, and $\rho$ is the cure fraction.  $U(s)$ is a Gaussian random field with a Matern correlation function with scale parameter $\theta$ and roughness $\kappa$.  In practice $U(s)$ will be approximated by a Markov random field $\bar U$ on a grid $g_1 \ldots g_M$ with $U(g_k) \approx \bar U_k$.
 
-\section{The Data}
-For each individual we observe an enrolment date $D_i$, an event date $E_i$, and an indicator variable $Z_i = 1$ if $E_i$ is a cancer incidence and 0 otherwise.
-
+\section{The Likelihood}
+For each individual we observe an enrolment date $L_i$, an event (or death) date $R_i$, and an indicator variable $Z_i = 1$ if $R_i$ is a cancer incidence and 0 if it's a censoring time. The density of a Weibull with scale parameter $\mu$ and shape parameter $\nu$ is 
 \[
-pr(E_i, Z_i | D_i) = 
-\begin{cases}
-pr(T_i > E_i | T_i > D_i, Y_i =0) pr(T_i > D_i) pr(Y_i = 0) + pr(Y_i =1) & Z_i = 0 \\
-pr(T_i = E_i | T_i > D_i, Y_i =0) pr(T_i > D_i) pr(Y_i = 0) & Z_i = 1
-\end{cases}
+f(x;\mu,\nu) = \frac{\nu}{\mu} \left(\frac{x}{\mu}\right)^{\nu-1} \exp\left[-\left(\frac{x}{\mu}\right)^\nu\right],
 \]
+and
+\[
+\int_0^x f(u;\mu,\nu)du = 1-\exp\left[-\left(\frac{x}{\mu}\right)^\nu\right].
+\]
+using Wikipedia's parametrization.
+
+Censored observations:
+\begin{align*}
+pr(R_i, Z_i=0 | L_i) =& pr(T_i > R_i | T_i > L_i, Y_i =0) pr(Y_i =0)  + pr(Y_i =1)\\
+=&pr(T_i > R_i) pr(Y_i = 0)/pr(T_i > L_i) + pr(Y_i =1)\\
+=& \rho + (1-\rho) \left. \int_{R_i}^\infty f(x;\mu_i, \nu) dx \right/\int_{L_i}^\infty f(x;\mu_i, \nu) dx  \\
+= &  \rho + (1-\rho) \left. \exp\left[-\left(\frac{R_i}{\mu_i}\right)^\nu\right] \right/\exp\left[-\left(\frac{L_i}{\mu_i}\right)^\nu\right]\\
+= &  \rho + (1-\rho) \exp\left[\left(\frac{L_i}{\mu_i}\right)^\nu -\left(\frac{R_i}{\mu_i}\right)^\nu\right] \\
+\end{align*}
+
+Observed events:
+\begin{align*}
+pr(R_i, Z_i=1 | L_i) =& pr(T_i = R_i | T_i > L_i, Y_i =0)  pr(Y_i = 0) 
+\\
+=& 
+ pr(T_i = L_i) pr(Y_i = 0) /pr(T_i > L_i) \\
+=&
+ (1-\rho) f(L_i ; \mu_i, \nu) \left/ \int_{L_i}^\infty f(x;\mu_i, \nu) dx  \right.\\
+=&
+ (1-\rho) \frac{\nu}{\mu_i} \left(\frac{R_i}{\mu_i}\right)^{\nu-1} \exp\left[\left(\frac{L_i}{\mu_i}\right)^\nu-\left(\frac{R_i}{\mu_i}\right)^\nu\right]
+\end{align*}
 
 
 \end{document}
