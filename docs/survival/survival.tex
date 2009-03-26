@@ -15,7 +15,9 @@ Y_i & \sim \text{Bernoulli}(\rho)\\
 $\mu_i$ and $\nu$ are the scale and shape parameters of the Weibull respectively, and $\rho$ is the cure fraction.  $U(s)$ is a Gaussian random field with a Matern correlation function with scale parameter $\theta$ and roughness $\kappa$.  In practice $U(s)$ will be approximated by a Markov random field $\bar U$ on a grid $g_1 \ldots g_M$ with $U(g_k) \approx \bar U_k$.
 
 \section{The Likelihood}
-For each individual we observe an enrolment date $L_i$, an event (or death) date $R_i$, and an indicator variable $Z_i = 1$ if $R_i$ is a cancer incidence and 0 if it's a censoring time. The density of a Weibull with scale parameter $\mu$ and shape parameter $\nu$ is 
+For each individual we observe an enrolment date $L_i$, an event (or death) date $R_i$, and an indicator variable $Z_i = 1$ if $R_i$ is a cancer incidence and 0 if it's a censoring time. Anyone with $T_i < L_i$ is excluded from the study, so we're conditioning on $T_i > L_i$.  
+
+The density of a Weibull with scale parameter $\mu$ and shape parameter $\nu$ is 
 \[
 f(x;\mu,\nu) = \frac{\nu}{\mu} \left(\frac{x}{\mu}\right)^{\nu-1} \exp\left[-\left(\frac{x}{\mu}\right)^\nu\right],
 \]
