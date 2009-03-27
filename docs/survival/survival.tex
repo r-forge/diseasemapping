@@ -7,33 +7,37 @@
 Person $i, i=1\ldots N$ lives at location $s_i$, and is not susceptible to cancer (cured) if $Y_i=1$.  If they are susceptible, they have a cancer incidence time $T_i$.
 \begin{align*}
 Y_i & \sim \text{Bernoulli}(\rho)\\
-[T_i | Y_i = 0] &\sim \text{Weibull}(\mu_i, \nu)\\
+[T_i | Y_i = 0] &\sim \text{Weibull}(\gamma_i, \nu)\\
 [T_i | Y_i = 1] & = \infty \\
-\log(\mu_i) &= X_i \beta + U(s_i)\\
+\log(\gamma_i) &= X_i \beta + U(s_i)\\
 \text{cov}[U(s_0 + s), U(s_0)] &= \sigma^2 M(s; \theta, \kappa) 
 \end{align*}
-$\mu_i$ and $\nu$ are the scale and shape parameters of the Weibull respectively, and $\rho$ is the cure fraction.  $U(s)$ is a Gaussian random field with a Matern correlation function with scale parameter $\theta$ and roughness $\kappa$.  In practice $U(s)$ will be approximated by a Markov random field $\bar U$ on a grid $g_1 \ldots g_M$ with $U(g_k) \approx \bar U_k$.
+$\gamma_i$ and $\nu$ are the range and shape parameters of the Weibull respectively, and $\rho$ is the cure fraction.  $U(s)$ is a Gaussian random field with a Matern correlation function with scale parameter $\theta$ and roughness $\kappa$.  In practice $U(s)$ will be approximated by a Markov random field $\bar U$ on a grid $g_1 \ldots g_M$ with $U(g_k) \approx \bar U_k$.
 
-\section{The Likelihood}
-For each individual we observe an enrolment date $L_i$, an event (or death) date $R_i$, and an indicator variable $Z_i = 1$ if $R_i$ is a cancer incidence and 0 if it's a censoring time. Anyone with $T_i < L_i$ is excluded from the study, so we're conditioning on $T_i > L_i$.  
 
-The density of a Weibull with scale parameter $\mu$ and shape parameter $\nu$ is 
+
+The density of a Weibull with range parameter $\gamma$ and shape parameter $\nu$ is 
 \[
-f(x;\mu,\nu) = \frac{\nu}{\mu} \left(\frac{x}{\mu}\right)^{\nu-1} \exp\left[-\left(\frac{x}{\mu}\right)^\nu\right],
+f(x;\gamma,\nu) =  \gamma \nu x^{\nu-1} \exp\left[-	\gamma x^\nu\right],
 \]
 and
 \[
-\int_0^x f(u;\mu,\nu)du = 1-\exp\left[-\left(\frac{x}{\mu}\right)^\nu\right].
+\int_0^x f(u;\gamma,\nu)du = 1-\exp(-\gamma y^\nu).
 \]
-using Wikipedia's parametrization.
+If $\theta$ is the scale parameter in the parametrization of the Weibull in Wikipedia, then 
+$\log(\gamma) = -\alpha\log(\theta)$
 
-Censored observations:
+
+\section{Left truncated data}
+For each individual we observe an enrolment date $L_i$, an event (or death) date $R_i$, and an indicator variable $Z_i = 1$ if $R_i$ is a cancer incidence and 0 if it's a censoring time. Anyone with $T_i < L_i$ is excluded from the study, so we're conditioning on $T_i > L_i$.  
+
+Right censored observations:
 \begin{align*}
 pr(R_i, Z_i=0 | L_i) =& pr(T_i > R_i | T_i > L_i, Y_i =0) pr(Y_i =0)  + pr(Y_i =1)\\
 =&pr(T_i > R_i) pr(Y_i = 0)/pr(T_i > L_i) + pr(Y_i =1)\\
-=& \rho + (1-\rho) \left. \int_{R_i}^\infty f(x;\mu_i, \nu) dx \right/\int_{L_i}^\infty f(x;\mu_i, \nu) dx  \\
-= &  \rho + (1-\rho) \left. \exp\left[-\left(\frac{R_i}{\mu_i}\right)^\nu\right] \right/\exp\left[-\left(\frac{L_i}{\mu_i}\right)^\nu\right]\\
-= &  \rho + (1-\rho) \exp\left[\left(\frac{L_i}{\mu_i}\right)^\nu -\left(\frac{R_i}{\mu_i}\right)^\nu\right] \\
+=& \rho + (1-\rho) \left. \int_{R_i}^\infty f(x;\gamma_i, \nu) dx \right/\int_{L_i}^\infty f(x;\gamma_i, \nu) dx  \\
+= &  \rho + (1-\rho) \left. \exp\left[-\gamma_i R_i^\nu\right] \right/\exp\left[-\gamma_i L_i^\nu\right]\\
+= &  \rho + (1-\rho) \exp\left[-\gamma_i\left(L_i^\nu -R_i^\nu\right)\right] \\
 \end{align*}
 
 Observed events:
@@ -43,10 +47,28 @@ pr(R_i, Z_i=1 | L_i) =& pr(T_i = R_i | T_i > L_i, Y_i =0)  pr(Y_i = 0)
 =& 
  pr(T_i = L_i) pr(Y_i = 0) /pr(T_i > L_i) \\
 =&
- (1-\rho) f(L_i ; \mu_i, \nu) \left/ \int_{L_i}^\infty f(x;\mu_i, \nu) dx  \right.\\
+ (1-\rho) f(R_i ; \mu_i, \nu) \left/ \int_{L_i}^\infty f(x;\mu_i, \nu) dx  \right.\\
 =&
- (1-\rho) \frac{\nu}{\mu_i} \left(\frac{R_i}{\mu_i}\right)^{\nu-1} \exp\left[\left(\frac{L_i}{\mu_i}\right)^\nu-\left(\frac{R_i}{\mu_i}\right)^\nu\right]
+ (1-\rho) \gamma_i\nu R_i^{\nu-1} \exp\left[\gamma\left(L_i^\nu-R_i^\nu\right)\right]
 \end{align*}
 
+\section{Interval censored events}
+
+In this case the event occurs between $L_i$ and $R_i$, and since an event is known to have occurred, $Y_i$ must be 0.   
+
+\begin{align*}
+pr(L_i < T_i < R_i ) =& (1-\rho) \int_{L_i}^{R_i}f(u;\gamma_i, \nu) du 
+\\
+=& (1-\rho) \left[ \exp(-\gamma L_i^\nu) -  \exp(-\gamma R_i^\nu)\right]
+\\
+\end{align*}
+
+\section{Other observations}
+Untruncated right censored data or observed events can be seen as left truncated data with $L_i= 0$.  Left censored data can be regarded as interval censored data with $L_i = 0$.
+
+Truncated and interval censored data are not exclusive.  An event can have three times, $M_i$ is the left truncation time, $L_i$ is the left censoring time, and $R_i$ is the right censoring time. Sometimes $M_i$ or $L_i$ or both are zero, or $R_i = \infty$.  
+
+Users could specify all 3 times, with $L_i =R_i$ for observed events.  R's Surv function specifies 2 times, and an option to indicate if it's interval censoring or  truncation.  
+ 
 
 \end{document}
