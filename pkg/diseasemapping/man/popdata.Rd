@@ -10,7 +10,7 @@
 A SpatialPolygonsDataFrame object, which needs the \code{sp} package for full functionality.  
 }
 \details{
-These data are from the 2006 Census of canada, from the Statistics Canada web site, \code{www12.statcan.gc.ca/english/census06/data/highlights/agesex/Index_PR.cfm?Lang=E&Geo=CSD&Table=1} 
+This data is from the 2006 Census of canada offering by Statistics Canada web site, \code{www12.statcan.gc.ca/english/census06/data/highlights/agesex/Index_PR.cfm?Lang=E&Geo=CSD&Table=1} 
 }
 
 
