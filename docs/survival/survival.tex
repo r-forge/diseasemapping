@@ -37,7 +37,7 @@ pr(R_i, Z_i=0 | L_i) =& pr(T_i > R_i | T_i > L_i, Y_i =0) pr(Y_i =0)  + pr(Y_i =
 =&pr(T_i > R_i) pr(Y_i = 0)/pr(T_i > L_i) + pr(Y_i =1)\\
 =& \rho + (1-\rho) \left. \int_{R_i}^\infty f(x;\gamma_i, \nu) dx \right/\int_{L_i}^\infty f(x;\gamma_i, \nu) dx  \\
 = &  \rho + (1-\rho) \left. \exp\left[-\gamma_i R_i^\nu\right] \right/\exp\left[-\gamma_i L_i^\nu\right]\\
-= &  \rho + (1-\rho) \exp\left[-\gamma_i\left(L_i^\nu -R_i^\nu\right)\right] \\
+= &  \rho + (1-\rho) \exp\left[\gamma_i\left(L_i^\nu -R_i^\nu\right)\right] \\
 \end{align*}
 
 Observed events:
