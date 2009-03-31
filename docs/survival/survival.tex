@@ -22,7 +22,7 @@ f(x;\gamma,\nu) =  \gamma \nu x^{\nu-1} \exp\left[-	\gamma x^\nu\right],
 \]
 and
 \[
-\int_0^x f(u;\gamma,\nu)du = 1-\exp(-\gamma y^\nu).
+\int_x^\infty f(u;\gamma,\nu)du = \exp(-\gamma x^\nu).
 \]
 If $\theta$ is the scale parameter in the parametrization of the Weibull in Wikipedia, then 
 $\log(\gamma) = -\alpha\log(\theta)$
@@ -63,12 +63,15 @@ pr(L_i < T_i < R_i ) =& (1-\rho) \int_{L_i}^{R_i}f(u;\gamma_i, \nu) du
 \\
 \end{align*}
 
+
 \section{Other observations}
-Untruncated right censored data or observed events can be seen as left truncated data with $L_i= 0$.  Left censored data can be regarded as interval censored data with $L_i = 0$.
 
-Truncated and interval censored data are not exclusive.  An event can have three times, $M_i$ is the left truncation time, $L_i$ is the left censoring time, and $R_i$ is the right censoring time. Sometimes $M_i$ or $L_i$ or both are zero, or $R_i = \infty$.  
+Right censored data, is right-censored left truncated with $L_i= 0$
+\[
+pr(T_i> R_i) = \rho + (1-\rho) \exp\left[\gamma_i\left( -R_i^\nu\right)\right]
+\]
 
-Users could specify all 3 times, with $L_i =R_i$ for observed events.  R's Surv function specifies 2 times, and an option to indicate if it's interval censoring or  truncation.  
- 
+Left censored data is $pr(0<T_i < x)$ is interval censored data with $L_i=0$ and $R_i=x$.
+
 
 \end{document}
