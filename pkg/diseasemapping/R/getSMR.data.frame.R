@@ -42,7 +42,6 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
         poplong = poplong[poplong$sex == model$sexSubset, ]
     }
     
-      poplong <- poplong[poplong$POPULATION > 0, ]
       
       offsetvar<- grep("logpop",names(model$data) ,value=TRUE,ignore.case=TRUE)
     poplong[[offsetvar]] = log(poplong$POPULATION)
@@ -71,8 +70,12 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
            }
 
     poplong$expected <- predict(model, poplong[, agg], type = "response")
+
+    
     poplong <- aggregate(poplong$expected, list(poplong[[regionCode]]), sum)
     names(poplong) <- c(regionCode, "expected")
+
+
 
     if (area) {
         poplong$expected_sqk <- poplong$expected/poplong$sqk
@@ -91,7 +94,9 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
     casedata <- aggregate(casedata[[casecol]], list(casedata[[regionCodeCases]]), sum)
     names(casedata) = c(regionCodeCases, "observed")
         populationData = merge(poplong, casedata, by.x=regionCode, by.y =regionCodeCases, all.x = TRUE)
-        populationData$expected[is.na(populationData$observed)] = 0  
+ 
+        populationData$expected[populationData$expected==0] = NA
+        populationData$expected[is.na(populationData$observed)] = NA  
         populationData$logExpected = log(populationData$expected)
         if (!is.null(populationData$observed)) {
             populationData$SMR <- populationData$observed/populationData$expected
