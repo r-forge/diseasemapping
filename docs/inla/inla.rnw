@@ -235,11 +235,12 @@ summary(pql)
 \end{itemize}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Example:bacteria}
+{\scriptsize
 <<bacmcmc,fig=false,echo=true>>=
 library(glmmBUGS)
-bac = glmmBUGS(y ~ trt, effects='ID', family='binomial',data=bacteria, file='modelx.bug')
+bac = glmmBUGS(y ~ trt, effects='ID', family='bernoulli',data=bacteria, modelFile='modelx.bug')
 startingValues = bac$startingValues
 source("getInits.R")
 library(BRugs)
@@ -251,6 +252,7 @@ bacResult = bugs(bac$ragged, getInits,
 bacParams = restoreParams(bacResult, bac$ragged)
 
 @
+}
 \end{frame}
 
 \begin{frame}
