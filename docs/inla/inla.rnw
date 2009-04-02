@@ -1,0 +1,220 @@
+\documentclass[xcolor=dvipsnames]{beamer}
+
+\usetheme{Singapore}
+\usecolortheme[named=RawSienna]{structure}
+
+\usefonttheme{serif}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number] 
+
+\usepackage[nogin]{c:/brownpe/share/Sweave}
+\SweaveOpts{echo=FALSE,fig=true,prefix.string=Figures/G,height=2,width=3}
+
+\graphicspath{{Figures/}}
+\setkeys{Gin}{width=\textwidth}
+
+\usepackage{amsmath}
+\usepackage{c:/brownpe/share/Sweave}
+
+
+\newcommand{\comment}[1]{}
+
+\title{Generalized Linear Mixed Models}
+\author{Patrick Brown}
+\institute{Cancer Care Ontario, and \\ School of Public Health, University of Toronto}
+
+\begin{document}
+<<junk,fig=false>>=
+options(SweaveHooks=list(fig=function() par(mar=c(2.5,2.5,0.1,0.1), mgp=c(1.5, 0.5, 0), cex=0.6)))
+@
+
+\frame{\maketitle}
+
+
+\begin{frame}
+\frametitle{Outline}
+\begin{itemize}
+	\item The model and the problem
+	\item First generation of approximate methods and PQL
+	\item Bayesian inference and Markov Chain Monte Carlo
+	\item Integrated Nested Laplace Approximations --- the holy grail?
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{The model}
+$Y_{ij}$ is the disease status of person $i$ in family $j$.
+\begin{align*}
+Y_{ij} \sim  & \text{Bernoulli}(p_{ij})\\\
+logit(p_{ij}) = &x_{ij}\beta + V_{i}\\
+V_{i} \sim &\text{N}(0, \sigma^2)
+\end{align*}
+$V_i$ is a family-level random effect.
+
+\begin{itemize}
+	\item What are the parameter estimates $\hat\sigma^2$ and $\hat\beta$?
+	\item and their standard errors?
+	\item And what are the predictors of family-level random effects $E(V_i | data)$, and their conditional distributions $[V_i | data]$.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Example: }
+\begin{columns}
+\column{0.5\textwidth}
+\begin{itemize}
+	\item Repeated measurements on the presence of a bacteria in children
+	\item Placebo and two different treatments
+\end{itemize}
+
+<<thedata1,echo=true,fig=false>>=
+library(MASS)
+data(bacteria)
+head(bacteria)
+@
+
+\column{0.5\textwidth}
+\begin{itemize}
+	\item $Y_{ij}$ is the bacteria presence in child $i$ at time $j$
+	\item $X_{ij}$ is a vector of indicator variables for treatment
+	\item $V_i$ is each child's relative risk
+\end{itemize}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Example: lung cancer in Ontario}
+\begin{columns}
+\column{0.65\textwidth}
+\begin{itemize}
+	\item $Y_i$ and $E_i$ are the observed and expected lung cancer cases in region $i$
+	\item $X_i$ is income, a covariate
+	\item $U_i$ and $V_i$ are spatial and independent random effects
+\end{itemize}
+
+\begin{align*}
+Y_i \sim & \text{Posson}(\lambda_i E_i)\\
+\log(\lambda_i) = & \mu + X_i \beta + U_i + V_i\\
+U_i \sim &MRF(\sigma^2_u)\\
+V_i \sim & N(0, \sigma^2_v)
+\end{align*}
+
+\column{0.35\textwidth}
+
+Expected 
+\includegraphics{ontarioE.jpg}
+\comment{
+library(diseasemapping)
+library(sp)
+data(popdata)
+data(casedata)
+model = getRates(casedata, popdata, ~age*sex)
+ontario = getSMR(popdata,model,  casedata)
+jpeg('Figures/ontarioE.jpg', height=600, width=800)
+print(spplot(ontario, 'logExpected', lty=0))
+dev.off()
+}
+
+
+Observed
+\includegraphics{ontarioO.jpg}
+
+\comment{
+	jpeg('Figures/ontarioO.jpg', height=600, width=800)
+ print(spplot(ontario, 'observed',lty=0))
+dev.off()
+}
+
+
+\end{columns}
+
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Likelihood function?}
+\begin{itemize}
+	\item The $V_i$ are not parameters, and not observed, so they must be integrated out of the likelihood:
+\end{itemize}
+\[
+L(\beta, \sigma) = \prod_i \int pr(Y_{ij}|V_i) pr(V_i) dV_i 
+\]
+\begin{itemize}
+	\item The integral is intractable except in a few special cases
+	\item such as Normally-distributed $Y_{ij}$ 
+	\item or Gamma $Y_{ij}$ and $V_{i}$ with no covariates
+	\item Empirical Bayes methods are based on conjugate priors
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{First generation of approximations}
+\begin{block}{Can we use least squares?}
+\begin{itemize}
+	\item With no random effects, model fitting is done with Iterated Reweighted Least Squares, or Fisher Scoring
+	\item For Poisson data, pretend $Y_i \sim N(\lambda_i, \lambda_i)$ and use least squares.  Though you need to know the variance to do this.
+	\item Choose a starting value, then iterate between calculating the variances and estimating the parameters.
+\end{itemize}
+\end{block}
+
+\begin{block}{Penalized Quazi-likelihood}
+Start with initial values for $V_i$ and $\sigma$, then use normal-based likelihood and Fisher scores to:
+\begin{itemize}
+	\item estimate $\hat\beta$
+	\item update predictions of  $V_i$, 
+	\item Re-estimate $\sigma$
+	\item repeat
+\end{itemize}
+
+\end{block}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Example: Bacteria}
+
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Markov Chain Monte Carlo}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Example:}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Example: Lung cancer in Ontario}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Integrated Nested Laplace Approximations}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{How it works}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Example: }
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Example: Lung cancer in Ontario}
+
+\end{frame}
+
+\end{document}
