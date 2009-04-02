@@ -224,13 +224,33 @@ summary(pql)
 	\[
 	[\sigma|Y],\ [\beta|Y],\ [V|Y]
 	\]
-	\item 
+	\item Use $[V|Y] = [Y|V][V]/[Y]$, but $[Y]$ is impossible to evaluate.
+	\item Gibbs sampler: alternate between sampling from $[V|Y,\beta,\sigma]$ and $[\beta,\sigma|V,Y]$.
+	\item Random walk Metropolis: update $V_i^{(p)}$ to  $V_i^{(p+1)}~N(V_i^{(p)}, \nu^2)$, accept the move with probability
+	\[
+	\min[1, pr(Y|V_i^{(p+1)}) /  pr(Y|V_i^{(p)})) ]
+	\]
+	\item This is guaranteed to converge to a sample from $[V_i|Y]$\ldots
+	\item \ldots eventually
 \end{itemize}
 \end{frame}
 
 \begin{frame}
-\frametitle{Example:}
+\frametitle{Example:bacteria}
+<<bacmcmc,fig=false,echo=true>>=
+library(glmmBUGS)
+bac = glmmBUGS(y ~ trt, effects='ID', family='binomial',data=bacteria, file='modelx.bug')
+startingValues = bac$startingValues
+source("getInits.R")
+library(BRugs)
+library(R2WinBUGS)
+bacResult = bugs(bac$ragged, getInits, 
+	parameters.to.save = names(getInits()),
+  model.file="model.bug", n.chain=3, n.iter=1000, n.burnin=100, n.thin=10,
+                             program="openbugs") 
+bacParams = restoreParams(bacResult, bac$ragged)
 
+@
 \end{frame}
 
 \begin{frame}
@@ -260,6 +280,7 @@ summary(pql)
 \begin{frame}
 \frametitle{Example: Lung cancer in Ontario}
 <<cancerInla>>=
+if(F) {
 library(diseasemapping)
 library(sp)
 data(popdata)
@@ -268,11 +289,11 @@ model = getRates(casedata, popdata, ~age*sex)
 ontario = getSMR(popdata,model,  casedata)
 data(popDataAdjMat)
 
-# fit bym model 
+# fit bym model with inla, like
 #forBugs = glmmBUGS(formula=Observed + logExpected ~ 1,
 #  effects="CSDUID",   family="poisson", spatial=popDataAdjMat,
 #  data=ontario)
-
+}
 @
 \end{frame}
 
