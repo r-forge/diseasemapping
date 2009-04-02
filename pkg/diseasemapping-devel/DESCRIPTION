@@ -3,7 +3,7 @@ Type: Package
 Title: Functions to compliment diseasemapping 
 Version: 0.1
 Date: 2009-04-01
-Requires: RPostgreSQL, raster
+Requires: diseasemapping, RPostgreSQL, raster
 Author: Patrick Brown
 Maintainer: Lutong Zhou <carly_zhou@hotmail.com>
 Description: These functions require packages on r-forge, so they will not pass the tests necessary for submission to CRAN.
