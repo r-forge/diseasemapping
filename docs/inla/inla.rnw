@@ -247,17 +247,75 @@ library(BRugs)
 library(R2WinBUGS)
 bacResult = bugs(bac$ragged, getInits, 
 	parameters.to.save = names(getInits()),
-  model.file="model.bug", n.chain=3, n.iter=100, n.burnin=10, n.thin=2,
-                             program="openbugs") 
+  n.chain=3, n.iter=100, n.burnin=10, n.thin=2,
+  program="openbugs", model.file='modelBac.bug') 
 bacParams = restoreParams(bacResult, bac$ragged)
 
 @
 }
 \end{frame}
 
-\begin{frame}
-\frametitle{Example: Lung cancer in Ontario}
+\begin{frame}[fragile]
+\frametitle{Posterior samples}
+<<bacSample,echo=true>>=
+hist(bacParams$SDID)
+@
+\end{frame}
 
+\begin{frame}[fragile]
+\frametitle{Parameter estimates}
+<<bacpar,fig=false,echo=true>>=
+bacSummary = summaryChain(bacParams)
+bacSummary$scalars[,c(1:3,5,8)]
+bacSummary$RID[1:4,c(1:3,5,8)]
+
+@
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Did the chiain converge?}
+<<bacchain,echo=true>>=
+checkChain(bacParams)
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Example: Lung cancer in Ontario}
+\begin{verbatim}
+popDataAdjMat = poly2nb(ontario,row.names=as.character(ontario[["CSDUID"]]))
+
+forBugs = glmmBUGS(formula=observed + logExpected ~ 1,
+  effects="CSDUID",   family="poisson", 
+  spatial=popDataAdjMat,
+  data=ontario@data)
+startingValues = forBugs$startingValues
+source("getInits.R")
+
+ontarioResult = bugs(forBugs$ragged, getInits, 
+  parameters.to.save = names(getInits()),
+    model.file="model.bug", n.chain=3, n.iter=50, 
+    n.burnin=10, n.thin=2,
+      program="winbugs", debug=T)
+
+ontarioParams = restoreParams(ontarioResult, forBugs$ragged)
+\end{verbatim}
+\end{frame}
+
+\comment(
+
+\comment{
+	jpeg('Figures/ontarioCancer.jpg', height=600, width=800)
+}
+
+\begin{frame}[fragile]
+\frametitle{Predicted cancer rates $E(U_i + V_i|Y)$}
+\begin{verbatim}
+ontarioSummary = summaryChain(ontarioParams)
+ontario = mergeBugsData(popdata, ontarioSummary)
+spplot(ontario, "RCSDUID.mean")
+\end{verbatim}
+\includegraphics[width=0.8\textwidth]{ontarioCancer.jpg}
 \end{frame}
 
 \begin{frame}
@@ -306,3 +364,5 @@ data(popDataAdjMat)
 \end{frame}
 
 \end{document}
+
+
