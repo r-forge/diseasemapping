@@ -18,41 +18,15 @@ sexcol = grep("^sex$", names(poplong), value=TRUE, ignore.case=TRUE)
 
 if("GROUP" %in% names(poplong)) {
     if(!length(sexcol)){
- # n <- regexpr("_", poplong$GROUP, fixed = TRUE)
- # poplong$AGE = substr(poplong$GROUP, n-1, 100)
-#  poplong$AGE = substr(poplong$GROUP, 3, 4)
+ 
   poplong$sex = factor(substr(poplong$GROUP, 1, 1))}
      if(!length(agecol)){
    ageNumeric = as.numeric(substr(poplong$GROUP, 3, 4))
    poplong$age = cut(ageNumeric, ageBreaks$breaks, right=FALSE)
-  #Get rid of M/F if age group has only one digit
-#  ageterm <- c(grep("^M", poplong$AGE, value=TRUE), grep("^F", poplong$AGE, value=TRUE))
-#  agetermIndex <- c(grep("^M", poplong$AGE), grep("^F", poplong$AGE))
-#  poplong$AGE[agetermIndex]<- substr(ageterm,2,100)
   }else {
   warning("no age and sex variables found or no group variable found in popdata")
   }
 }
-
-
-# aggregate if necessary
-#if(!breaks %in% ageBreaks$breaks){
-
-# if there are some duplicate ageCut groups.
-#if(ageBreaks$mustAggregate  & is.null(aggregate.by) ){
-# get rid of ageNumeric column because we'll be combining some age groups
-#poplong = poplong[, - grep("^ageNumeric$", names(poplong), ignore.case=T)]
-
-#toAggregate = names(poplong)[- grep("POPULATION", names(poplong), ignore.case=T)]
-
-
-#popa = aggregate(poplong$POPULATION, as.list(poplong[,toAggregate]), sum)
-#names(popa)[names(popa)=="x"] = "POPULATION"
-#poplong <- popa
-#}
-
-#attributes(poplong)$ageBreaks = ageBreaks$breaks
-#return(poplong)
 
 poplong$id<-NULL
 row.names(poplong)<-NULL
@@ -60,7 +34,8 @@ row.names(poplong)<-NULL
 
 if(!is.null(aggregate.by)) {
 
-  popa <- aggregate(poplong$POPULATION, poplong[, aggregate.by, drop=FALSE], sum)
+  popa <- aggregate(poplong$POPULATION, poplong[, aggregate.by, drop=FALSE], 
+    sum, na.rm=T)
 
   # change x column name to 'population'
   names(popa)[names(popa)=="x"] = "POPULATION"

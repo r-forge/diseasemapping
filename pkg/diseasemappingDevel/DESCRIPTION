@@ -1,4 +1,4 @@
-Package: diseasemapping-devel
+Package: diseasemappingDevel
 Type: Package
 Title: Functions to compliment diseasemapping 
 Version: 0.1
