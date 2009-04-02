@@ -246,7 +246,7 @@ library(BRugs)
 library(R2WinBUGS)
 bacResult = bugs(bac$ragged, getInits, 
 	parameters.to.save = names(getInits()),
-  model.file="model.bug", n.chain=3, n.iter=1000, n.burnin=100, n.thin=10,
+  model.file="model.bug", n.chain=3, n.iter=100, n.burnin=10, n.thin=2,
                              program="openbugs") 
 bacParams = restoreParams(bacResult, bac$ragged)
 
@@ -270,7 +270,13 @@ bacParams = restoreParams(bacResult, bac$ragged)
 
 \begin{frame}
 \frametitle{Example: }
-<<bacteriaINlA>>=
+<<bacteriaINlA,fig=false>>=
+#library(MASS)
+#data(bacteria)
+#bacterianew <- bacteria[,-(2:3)]
+#bacterianew$y = as.integer(bacteria$y=="y")
+#levels(bacterianew$trt) <- c("placebo", "drug", "drugplus")
+#bacteria=bacterianew
 # do this pql = glmmPQL(y ~ trt, random = ~1|ID, family='binomial',data=bacteria)
 
 @
@@ -279,7 +285,7 @@ bacParams = restoreParams(bacResult, bac$ragged)
 
 \begin{frame}
 \frametitle{Example: Lung cancer in Ontario}
-<<cancerInla>>=
+<<cancerInla,fig=false>>=
 if(F) {
 library(diseasemapping)
 library(sp)
