@@ -10,8 +10,9 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
     poplong <- formatPopulation(popdata, breaks=attributes(model)$breaks$breaks, 
       mustAggregate = FALSE)
      }else{poplong<-popdata}
-     
-     
+     # get rid of zero populations,because they dont lead to rates of exactly zero
+     poplong=poplong[poplong[,
+      grep("^population$", names(poplong), value=T, ignore.case=T)]>0, ]     
     #changes poplong names to be consistent with model
     agevar<-grep("^age$",names(model$xlevels),value=TRUE,ignore.case=TRUE)
     sexvar<-grep("^sex$",names(model$xlevels),value=TRUE,ignore.case=TRUE)
@@ -30,13 +31,7 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
     if(length(yearvar) & length(yearvar1)){
      names(poplong[[yearvar1]])=yearvar
     }
-    #oldnames<-c(agevar1,sexvar1,yearvar1)
-#    newnames<-c(agevar,sexvar,yearvar)
-#
-#    #names(newnames) = oldnames
-#
-#    tochange=which(names(poplong) %in% oldnames)
-#    names(poplong)[tochange]<-newnames[names(poplong)[tochange] ]
+
     
     if (length(model$sexSubset) == 1) {
         poplong = poplong[poplong$sex == model$sexSubset, ]
@@ -75,35 +70,41 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
     poplong <- aggregate(poplong$expected, list(poplong[[regionCode]]), sum)
     names(poplong) <- c(regionCode, "expected")
 
+     # remove 'expected' column from population data before merging
+     popdata = popdata[,-grep("^observed|^expected", names(popdata))]
 
-
-    if (area) {
-        poplong$expected_sqk <- poplong$expected/poplong$sqk
+     # merge results back into original dataset
+     populationData = merge(popdata, poplong, by=regionCode, all.x=T)
+     populationData$expected[populationData$expected==0] = NA
+    if (area & ("sqk" %in% names(populationData) ) ) {
+        populationData$expected_sqk <- 
+          populationData$expected/populationData$sqk
     }
-    
+     populationData$logExpected = log(populationData$expected)
+
    
     if (!is.null(casedata)) {
        casedata = formatCases(casedata, ageBreaks=attributes(poplong)$breaks)
-        casedata = casedata[as.character(casedata[, regionCodeCases]) %in% as.character(poplong[, regionCode]), ]
-        casecol = grep("^cases$", names(casedata), value = TRUE,
+       casedata = casedata[
+          as.character(casedata[, regionCodeCases]) %in% 
+             as.character(poplong[, regionCode]), ]
+       casecol = grep("^cases$", names(casedata), value = TRUE,
             ignore.case = TRUE)
-        if (!length(casecol)) {
+       if (!length(casecol)) {
             casecol = "cases"
             cases[, casecol] = 1
-        }
-    casedata <- aggregate(casedata[[casecol]], list(casedata[[regionCodeCases]]), sum)
-    names(casedata) = c(regionCodeCases, "observed")
-        populationData = merge(poplong, casedata, by.x=regionCode, by.y =regionCodeCases, all.x = TRUE)
- 
-        populationData$expected[populationData$expected==0] = NA
-        populationData$expected[is.na(populationData$observed)] = NA  
-        populationData$logExpected = log(populationData$expected)
-        if (!is.null(populationData$observed)) {
-            populationData$SMR <- populationData$observed/populationData$expected
-        }
-    }
+       }
+       casedata <- aggregate(casedata[[casecol]], 
+         list(casedata[[regionCodeCases]]), sum)
+       names(casedata) = c(regionCodeCases, "observed")
+   
+       populationData = merge(populationData, casedata, 
+         by.x=regionCode, by.y =regionCodeCases, all.x = TRUE)
+        
+       populationData$SMR <- populationData$observed/populationData$expected
+   }
 
-populationData
-    }
+   populationData
+}
 
 
