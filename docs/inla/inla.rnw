@@ -72,15 +72,18 @@ $V_i$ is a family-level random effect.
 <<thedata1,fig=false>>=
 library(MASS)
 data(bacteria)
-bacterianew <- bacteria
-bacterianew$yInt = as.integer(bacteria$y=="y")
+bacterianew <- bacteria[,-(2:3)]
+bacterianew$y = as.integer(bacteria$y=="y")
 levels(bacterianew$trt) <- c("placebo", "drug", "drugplus")
-head(bacterianew)
+bacteria=bacterianew
+
+head(bacteria)
 #$
 @
 
 \column{0.5\textwidth}
 \begin{itemize}
+\item the ID column denotes repeated measurements on each child.
 	\item $Y_{ij}$ is the bacteria presence in child $i$ at time $j$
 	\item $X_{ij}$ is a vector of indicator variables for treatment
 	\item $V_i$ is each child's relative risk
@@ -158,13 +161,13 @@ L(\beta, \sigma) = \prod_i \int pr(Y_{ij}|V_i) pr(V_i) dV_i
 
 \begin{frame}
 \frametitle{First generation of approximations}
-\begin{block}{Can we use least squares?}
+
 \begin{itemize}
 	\item With no random effects, model fitting is done with Iterated Reweighted Least Squares, or Fisher Scoring
 	\item For Poisson data, pretend $Y_i \sim N(\lambda_i, \lambda_i)$ and use least squares.  Though you need to know the variance to do this.
 	\item Choose a starting value, then iterate between calculating the variances and estimating the parameters.
 \end{itemize}
-\end{block}
+
 
 \begin{block}{Penalized Quazi-likelihood}
 Start with initial values for $V_i$ and $\sigma$, then use normal-based likelihood and Fisher scores to:
@@ -179,8 +182,35 @@ Start with initial values for $V_i$ and $\sigma$, then use normal-based likeliho
 
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Example: Bacteria}
+{\scriptsize
+<<bacteriaPQL,fig=false,echo=true>>=
+library(MASS)
+pql = glmmPQL(y ~ trt, random = ~1|ID, family='binomial',data=bacteria)
+summary(pql)
+@
+}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Advantages/Disadvantages}
+
+\begin{block}{Advantages}
+\begin{itemize}
+	\item Quick and easy to use
+	\item It's better than ignoring dependence completely and using a glm.
+\end{itemize}
+\end{block}
+
+\begin{block}{Disadvantages}
+\begin{itemize}
+	\item It doesn't always produce good results
+	\item Especially if your data are very non-normal,  with small numbers in each group.
+	\item Theoretical justification isn't strong
+\end{itemize}
+\end{block}
 
 
 \end{frame}
@@ -188,7 +218,14 @@ Start with initial values for $V_i$ and $\sigma$, then use normal-based likeliho
 
 \begin{frame}
 \frametitle{Markov Chain Monte Carlo}
-
+\begin{itemize}
+	\item Put prior distributions on parameters $[\sigma]$, $[\beta]$.
+	\item Simulate from the posterior distributions
+	\[
+	[\sigma|Y],\ [\beta|Y],\ [V|Y]
+	\]
+	\item 
+\end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -213,12 +250,30 @@ Start with initial values for $V_i$ and $\sigma$, then use normal-based likeliho
 
 \begin{frame}
 \frametitle{Example: }
+<<bacteriaINlA>>=
+# do this pql = glmmPQL(y ~ trt, random = ~1|ID, family='binomial',data=bacteria)
+
+@
 
 \end{frame}
 
 \begin{frame}
 \frametitle{Example: Lung cancer in Ontario}
+<<cancerInla>>=
+library(diseasemapping)
+library(sp)
+data(popdata)
+data(casedata)
+model = getRates(casedata, popdata, ~age*sex)
+ontario = getSMR(popdata,model,  casedata)
+data(popDataAdjMat)
 
+# fit bym model 
+#forBugs = glmmBUGS(formula=Observed + logExpected ~ 1,
+#  effects="CSDUID",   family="poisson", spatial=popDataAdjMat,
+#  data=ontario)
+
+@
 \end{frame}
 
 \end{document}
