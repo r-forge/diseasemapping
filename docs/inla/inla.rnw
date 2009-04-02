@@ -69,10 +69,14 @@ $V_i$ is a family-level random effect.
 	\item Placebo and two different treatments
 \end{itemize}
 
-<<thedata1,echo=true,fig=false>>=
+<<thedata1,fig=false>>=
 library(MASS)
 data(bacteria)
-head(bacteria)
+bacterianew <- bacteria
+bacterianew$yInt = as.integer(bacteria$y=="y")
+levels(bacterianew$trt) <- c("placebo", "drug", "drugplus")
+head(bacterianew)
+#$
 @
 
 \column{0.5\textwidth}
