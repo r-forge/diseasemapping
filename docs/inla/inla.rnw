@@ -16,7 +16,7 @@
 \usepackage{amsmath}
 \usepackage{c:/brownpe/share/Sweave}
 
-
+\def\mm#1{\ensuremath{\boldsymbol{#1}}} % version: amsmath
 \newcommand{\comment}[1]{}
 
 \title{Generalized Linear Mixed Models}
@@ -267,8 +267,9 @@ hist(bacParams$SDID)
 <<bacpar,fig=false,echo=true>>=
 bacSummary = summaryChain(bacParams)
 bacSummary$scalars[,c(1:3,5,8)]
+bacSummary$betas[,c(1:3,5,8)]
 bacSummary$RID[1:4,c(1:3,5,8)]
-
+#$
 @
 \end{frame}
 
@@ -302,10 +303,9 @@ ontarioParams = restoreParams(ontarioResult, forBugs$ragged)
 \end{verbatim}
 \end{frame}
 
-\comment(
-
 \comment{
 	jpeg('Figures/ontarioCancer.jpg', height=600, width=800)
+
 }
 
 \begin{frame}[fragile]
@@ -320,47 +320,186 @@ spplot(ontario, "RCSDUID.mean")
 
 \begin{frame}
 \frametitle{Integrated Nested Laplace Approximations}
+\begin{itemize}
+\item Notice that
+\[
+\[
+\pi[\theta|Y] = \frac{\pi[U,\theta|Y]}{\pi[U|\theta,Y]}
+\]
+\item Laplace approximation
+\[
+\tilde\pi[\theta|Y] \propto \left. \frac{\pi[U,\theta|Y]}{\tilde\pi_G[U|\theta, Y]} \right| \theta=\theta^*
+\]
+where $\theta^*$ is the mode, and $\pi_G$ is a Gaussian approximation.
+	\item \[
+	\pi[U,\theta|Y] \propto \pi[\theta]\pi[U|\theta] \prod_{i} \pi[Y_i | U_i,\theta]
+	\]
 
+	
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\begin{itemize}
+	\item Do the following integrals numerically
+\end{itemize}
+\frametitle{Marginal posteriors}
+           \begin{align}
+                \widetilde{\pi}(U_{i}\mid\mm{y}) &= \int
+                \widetilde{\pi}(\mm{\theta} \mid \mm{y}) \;
+                \widetilde{\pi}(U_{i} \mid \mm{\theta}, \mm{y})\; d\mm{\theta}\nonumber\\
+                \widetilde{\pi}(\theta_{j} \mid \mm{y}) &= \int
+                \widetilde{\pi}(\mm{\theta} \mid \mm{y}) \;
+                d\mm{\theta}_{-j} \nonumber
+            \end{align}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Remarks}
+    \begin{enumerate}
+    \item Expect $\widetilde{\pi}(\mm{\theta} | \mm{y})$ to be
+        accurate, since
+        \begin{itemize}
+        \item $\mm{x}|\mm{\theta}$ is \emph{a priori} Gaussian
+        \item Likelihood models are `well-behaved' so
+            \begin{displaymath}
+                \pi(\mm{x} \mid \mm{\theta}, \mm{y})
+            \end{displaymath}
+            is \emph{almost} Gaussian.
+        \end{itemize}
+    \item There are no distributional assumptions on $\mm{\theta} |
+        \mm{y}$
+    \item Similar remarks are valid to
+        \begin{displaymath}
+            \widetilde{\pi}(x_{i}\mid\mm{\theta}, \mm{y})
+        \end{displaymath}
+    \end{enumerate}
 \end{frame}
 
 \begin{frame}
 \frametitle{How it works}
-
+\begin{enumerate}
+	\item Explore the space to find the model of $[\theta|Y]$
+	\item Then compute the Laplace approximation for $[U|Y,\theta]$
+	\item Then numerically integrate out the $\theta_i$.
+	\item Use polynomials in place of the Gaussian to approximate the $[U_i|\theta,Y]$.
+\end{enumerate}
 \end{frame}
 
-\begin{frame}
-\frametitle{Example: }
-<<bacteriaINlA,fig=false>>=
-#library(MASS)
-#data(bacteria)
-#bacterianew <- bacteria[,-(2:3)]
-#bacterianew$y = as.integer(bacteria$y=="y")
-#levels(bacterianew$trt) <- c("placebo", "drug", "drugplus")
-#bacteria=bacterianew
-# do this pql = glmmPQL(y ~ trt, random = ~1|ID, family='binomial',data=bacteria)
+\begin{frame}[fragile]
+\frametitle{Example: bacteria}
+{\small
+\begin{verbatim}
+bacteria$r<-bacteria$y=="y"
+bacteria$n<-1
+formula1<- r ~ trt + f(ID,model="iid",param=c(0.001,0.001))
+mod1 = inla(formula1,family="binomial",data=bacteria,Ntrials=n)
+summary(mod1) #This will give summaries of the posteriors
 
-@
+Fixed effects:
+                 mean        sd 0.025quant 0.975quant    kld dist
+(Intercept)  2.2955447 0.4747077   1.498364  3.3689509 0.155881406
+trtdrug     -1.2147419 0.5831969  -2.442864 -0.1223520 0.027425825
+trtdrug+    -0.7292562 0.5917214  -1.953683  0.3977671 0.008737907
 
-\end{frame}
-
-\begin{frame}
-\frametitle{Example: Lung cancer in Ontario}
-<<cancerInla,fig=false>>=
-if(F) {
-library(diseasemapping)
-library(sp)
-data(popdata)
-data(casedata)
-model = getRates(casedata, popdata, ~age*sex)
-ontario = getSMR(popdata,model,  casedata)
-data(popDataAdjMat)
-
-# fit bym model with inla, like
-#forBugs = glmmBUGS(formula=Observed + logExpected ~ 1,
-#  effects="CSDUID",   family="poisson", spatial=popDataAdjMat,
-#  data=ontario)
+Model hyperparameters:
+                mean   sd     0.025quant 0.975quant
+Precision for ID 0.9724 0.5651 0.2943     2.4230  
+Expected number of effective parameters(std dev) :18.03(7.335)
+Number of equivalent replicates : 12.20
+\end{verbatim}
 }
-@
+\end{frame}
+
+\begin{frame}
+\frametitle{Posterior distribution of precision}
+\includegraphics[width=0.7\textwidth]{Prec_BACTERIA.pdf}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Example: Lung cancer in Ontario}
+{\small
+\begin{verbatim}
+nb2inla("ontario.graph",popDataAdjMat)
+data$observed[is.na(data$logExpected)]<-NA
+data$logExpected[is.na(data$logExpected)]<- -100 
+data$region<-0:(length(data$CSDUID)-1)
+data$region.spatial<-data$region
+
+formula2<-observed ~ f(region.spatial,
+    model="besag", graph.file="ontario.graph", 
+    param=c(20,15),initial=2) + 
+  f(region,model="iid", param=c(1,0.01))
+
+mod2 <- inla(formula2,family="poisson",data=data,
+  offset=logExpected,verbose=TRUE)
+
+data$V<-mod2$summary.random$region[,2]
+data$U<-mod2$summary.random$region.spatial[,2]
+
+writePolyShape(ontario, "ontario")
+
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+\frametitle{Smoothed cancer risk}
+\includegraphics{Map_LINEAR.pdf}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Results}
+{\small
+
+\begin{verbatim}
+summary(mod2)
+
+Fixed effects:
+                mean       sd 0.025quant 0.975quant     kld dist
+(Intercept) 0.7209629 3.654778  -6.456466   7.888327 7.134535e-05
+
+Random effects:
+Name      Model         Max KLD
+region.spatial   Besags ICAR model   0.00083
+region   IID model   0.01849
+
+Model hyperparameters:
+                            mean   sd     0.025quant 0.975quant
+Precision for region.spatial 2.2255 0.3251 1.6469     2.9213  
+Precision for region         1.9612 0.1960 1.6005     2.3700  
+Expected number of effective parameters(std dev) :357.87(2.378)
+Number of equivalent replicates : 1.115
+\end{verbatim}
+
+}
+\end{frame}
+
+\begin{frame}
+\frametitle{Advantages/Disadvantanges}
+\begin{block}{Advantages}
+\begin{itemize}
+	\item It appears that this is a very good approximation, and is much less computationally intensive than MCMC
+	\item the code works in parallel, so is very fast on multi-core machines
+\end{itemize}
+\end{block}
+\begin{block}{Disadvantages}
+\begin{itemize}
+\item Only marginals, not joint posteriors, are produced.
+\item INLA is harder to modify than MCMC routines, though that might be only due to familiarity with MCMC
+\item There are some things which INLA can't do, though in theory MCMC can do anything.
+\item Starting values do have an effect, so INLA isn't fool-proof.
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}
+\frametitle{Conclusions:}
+\begin{itemize}
+	\item There's no excuse for avoiding GLMM's
+	\item or using PQL 
+	\item Good models and good tools are available for dependent non-Gaussian data.
+\end{itemize}
 \end{frame}
 
 \end{document}
