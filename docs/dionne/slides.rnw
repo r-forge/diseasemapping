@@ -1,0 +1,283 @@
+\documentclass[xcolor=dvipsnames]{beamer}
+
+\usetheme{Singapore}
+\usecolortheme[named=RawSienna]{structure}
+
+\usefonttheme{serif}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number] 
+\usepackage[nogin]{c:/brownpe/share/Sweave}
+\title{Modelling small-area disease incidence data in space and time }
+\author{Patrick Brown}
+\institute{Cancer Care Ontario, and \\ School of Public Health, University of Toronto}
+
+\usepackage{amsmath}
+\graphicspath{{Figures/}}
+\setkeys{Gin}{width=\textwidth}
+\SweaveOpts{echo=FALSE,fig=true,prefix.string=Figures/G,height=2,width=3}
+
+\begin{document}
+
+\frame{\maketitle}
+
+
+
+\begin{frame}
+\frametitle{Large v Small Area Maps}
+
+\begin{columns}
+\column{0.5\textwidth}
+
+\begin{block}{Coarse scale}
+
+\vspace{10pt}
+
+\includegraphics[width=0.9\textwidth]{lung.png}
+
+\vspace{10pt}
+
+Observed rate for Ontario, by Census sub-division
+
+\end{block}
+
+\column{0.5\textwidth}
+
+\begin{block}{Fine scale}
+
+\includegraphics[width=\textwidth]{torCTsmr.pdf}
+
+SMR's for Toronto, by census tract
+
+\end{block}
+
+
+\end{columns}
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Issues with small area maps}
+
+\begin{block}{Small counts}
+	mostly 0 or 1
+\begin{itemize}
+\item The usual estimates of incidence rates perform poorly
+	\item Methods based on the normal-distribution aren't appropriate
+\end{itemize}
+
+\end{block}
+\begin{block}{Spatial dependence}
+With regions close together being more similar than regions further apart
+\begin{itemize}
+	\item The usual regression models underestimate standard errors
+  \item but this helps us deal with small counts
+\end{itemize}
+
+\end{block}
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{This talk}
+Following this talk, those here will be able to:
+\begin{itemize}
+\item Understand a statistical model suitable for small-area disease incidence data with low counts;
+\item Use the results of this model to answer questions in social and environmental epidemiology;
+\item  Be aware of how to extend these models to problems in space and time.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Gonorrhoea in North Carolina}
+describe data
+map raw rates
+map covariates, \% black, unemp
+\end{frame}
+
+\begin{frame}
+\frametitle{The model (without equations)}
+
+\begin{itemize}
+	\item The true risk surface $\lambda(s)$ at location $s$ is unknown.  
+	\item It depends on some measured risk factors, such as income and unemployment rate $X(s)$.
+	\item And some residual spatial variation $W(s)$ which might be smoothly varying in space.  
+	
+\begin{itemize}
+	\item This might be caused by unmeasured risk factor such as air pollution
+	\item Or be the result of direct transmission creating areas of high risk
+\end{itemize}
+\item The number of cases $Y_i$ in region $i$ is random, but we'd expect it to be related to the population in the region and the risk $\lambda(s)$ there.
+\item In regions of small population we shouldn't be surprised to see zero cases, even if risk isn't zero.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Dealing with small counts}
+
+\begin{columns}
+\column{0.5\textwidth}
+\begin{block}{The Model}
+\[
+Y_i \sim \text{Poisson}(P_i\lambda_i)
+\]
+\begin{itemize}
+	\item $Y_i$ is the number of cases in region $i$
+	\item $P_i$ is the population
+	\item $\lambda_i$ is the risk
+\end{itemize}
+\end{block}
+\column{0.5\textwidth}
+\begin{block}{The Poisson Distriution}
+<<poisson,fig=true,echo=false>>=
+options(SweaveHooks=list(fig=function() par(mar=c(2.5,2.5,0.1,0.1), mgp=c(1.5, 0.5, 0), cex=0.6)))
+xseq = 0:14
+toplot = dpois(xseq, 0.5)
+names(toplot) = as.character(xseq)
+toplot2 = dpois(xseq, 1.5)
+barplot(toplot, width=0.4, xlim = range(xseq), space=4, xlab='count', ylab='pr(count)',
+	col='red',border=NA)
+barplot(toplot, width=0.21, add=T, space=8.8, col='white', xlim = range(xseq),border=NA, axes=F, axisnames=F)
+
+barplot(toplot2, width=0.2, add=T, space=9, col='blue', xlim = range(xseq),border=NA, axes=F)
+@
+
+mean = \textcolor{red}{0.5},  \textcolor{blue}{1.5} 
+\end{block}
+
+\end{columns}
+
+\begin{block}{Interpretation}
+\begin{itemize}
+	\item We don't observe the true rate $\lambda_i$
+	\item but rather a noisy version of it in the form of case counts
+	\item The Poisson distribution can cope with small counts and lots of zeros
+\end{itemize}
+\end{block}
+
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Modelling the rates}
+\begin{align*}
+Y_i \sim & \text{Poisson}(P_i\lambda_i)\\
+\log(\lambda_i) = & \mu + X_i \beta + U_i + V_i\\
+V_i \sim &\text{N}(0, \tau^2)\\
+U_i|U_{-i} \sim & \text{N}(\text{mean}\{U_j; j \sim i \}, \sigma^2/||\{j ; j \sim i\}||
+\end{align*}
+\begin{itemize}
+  \item Random effects model: Risks are usually close to the average --- shrinkage
+	\item Risk can depends on covariates $X_i$ (i.e.\ income)
+	\item $U_i$ is a spatially smooth random effect, $V_i$ is a rough non-spatial effect
+\item The spatial nature of $U_i$ results in regions neighbouring $i$ to influence risk estimation at $i$, somewhat mitigating the low counts problem.
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Model fitting}
+\begin{itemize}
+	\item The data are not Normally-distributed, and there is an unobserved random effect.
+	\item This makes the usual least squares or maximum likelihood methods problematic
+	\item Bayesian inference using Markov Chain Monte Carlo simulation
+	\item There are several implementations in the statistical package R.
+	\item and the ArcGIS add-on the Rapid Inquiry Facility
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Example: North Carolina}
+
+\begin{columns}
+\column{0.5\textwidth}
+\begin{block}{Where}
+Predicted risk E$(\lambda_i | data)$
+
+\end{block}
+\column{0.5\textwidth}
+\begin{block}{Why}
+Predicted risk minus known risk factors \\
+$E(\lambda_i - X_i \beta | data)= E(U_i + V_i)$
+
+
+\end{block}
+
+
+\end{columns}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Parameter estimates}
+<<parest,result=tex,figure=false>>=
+load("data\\GONQResult.RData")
+library(glmmBUGS)
+  gonpar = restoreParams(GONQResult, GONQragged$ragged)
+  save(gonpar, file="gonpar.RData")
+@
+load("gonpar.RData")
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Recap of spatial models:}
+\begin{itemize}
+	\item True risk is unobserved, use observed counts to predict risk
+	\item Risk is random and may vary smoothly in space
+\item Allow for known risk factors, as covariates
+\item Map residual spatial variation or predicted risk
+\item and look at parameter estimates
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Spatio-temporal models}
+\begin{itemize}
+	\item Risk changes in time as well as space
+	\item $Y_{ij}$ is the incidence count in region $i$ at time $j$
+	\begin{align*}
+Y_{ij} \sim & \text{Poisson}(P_{ij}\lambda_{ij})\\
+\log(\lambda_{ij}) = & \mu + X_{ij} \beta + U_i + V_i + W_{ij}\\
+V_i \sim &\text{N}(0, \tau^2)\\
+U_i|U_{-i} \sim & \text{N}(\text{mean}\{U_j; j \sim i \}, \sigma^2/||\{j ; j \sim i\}||\\
+W_{ij} \sim &\text{N}(0, \nu^2)
+	\end{align*}
+\item $W_{ij}$ is the variation in time from the long-term average for each region.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Parameter Estimates}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{E($W_{ij}$), time 1}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{E($W_{ij}$), time 2}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Conclusion}
+
+\begin{itemize}
+	\item Small area disease mapping in space and time is possible even when counts are low 
+	\item Include covariates in the model to estimate the effect of potential risk factors
+	\item There is software for implementing these models which is not terribly difficult to use.
+\end{itemize}
+\end{frame}
+
+
+\end{document}
