@@ -90,7 +90,7 @@ Following this talk, those here will be able to:
 \end{frame}
 
 \begin{frame}
-\frametitle{Gonorrhoea in North Carolina}
+\frametitle{ North Carolina}
 describe data
 map raw rates
 map covariates, \% black, unemp
@@ -195,36 +195,51 @@ U_i|U_{-i} \sim & \text{N}(\text{mean}\{U_j; j \sim i \}, \sigma^2/||\{j ; j \si
 \begin{frame}
 \frametitle{Example: North Carolina}
 
-\begin{columns}
-\column{0.5\textwidth}
-\begin{block}{Where}
-Predicted risk E$(\lambda_i | data)$
 
+\begin{block}{Where:
+Predicted risk E$(\lambda_i | data)$}
+
+\includegraphics[width=0.8\textwidth]{rate.png}
 \end{block}
-\column{0.5\textwidth}
-\begin{block}{Why}
-Predicted risk minus known risk factors \\
+
+\begin{block}{Why:
+Predicted risk minus known risk factors}
 $E(\lambda_i - X_i \beta | data)= E(U_i + V_i)$
 
+\includegraphics[width=0.8\textwidth]{relativeRate.png}
 
 \end{block}
 
 
-\end{columns}
+
 
 \end{frame}
 
 \begin{frame}
-\frametitle{Parameter estimates}
-<<parest,result=tex,figure=false>>=
+\vspace*{-15pt}
+Parameter estimates\\
+\vspace*{-5pt}
+{\small
+<<parest,results=tex,fig=false>>=
+if(F) {
 load("data\\GONQResult.RData")
 library(glmmBUGS)
   gonpar = restoreParams(GONQResult, GONQragged$ragged)
   save(gonpar, file="gonpar.RData")
-@
+}
 load("gonpar.RData")
+library(glmmBUGS)
+gonSummary = summaryChain(gonpar)
+par = rbind(gonSummary[[1]], gonSummary[[2]])
 
+toprint =par[c(1,3,4,16:32),c(1,2,5,9)]
+rownames(toprint) = gsub("_", "-" , rownames(toprint))
+colnames(toprint) = gsub("%", "pct",colnames(toprint))
+latex(toprint, file='', dec=2, rowlabel='Parameter')
+@
+}
 \end{frame}
+
 
 \begin{frame}
 \frametitle{Recap of spatial models:}
@@ -256,18 +271,70 @@ W_{ij} \sim &\text{N}(0, \nu^2)
 
 \begin{frame}
 \frametitle{Parameter Estimates}
+<<parestst,results=tex,fig=false>>=
+
+
+toprint =par[2:12,c(1,2,5,9)]
+rownames(toprint) = gsub("_", "-" , rownames(toprint))
+colnames(toprint) = gsub("%", "pct",colnames(toprint))
+latex(toprint, file='', dec=2, rowlabel='Parameter')
+@
 
 \end{frame}
 
 \begin{frame}
 \frametitle{E($W_{ij}$), time 1}
-
+\includegraphics[width=1.2\textwidth]{R05Q2.png}
 \end{frame}
 
 \begin{frame}
 \frametitle{E($W_{ij}$), time 2}
-
+\includegraphics[width=1.2\textwidth]{R05Q3.png}
 \end{frame}
+
+\begin{frame}
+\frametitle{E($W_{ij}$), time 3}
+\includegraphics[width=1.2\textwidth]{R05Q4.png}
+\end{frame}
+
+\begin{frame}
+\frametitle{E($W_{ij}$), time 4}
+\includegraphics[width=1.2\textwidth]{R06Q1.png}
+\end{frame}
+
+\begin{frame}
+\frametitle{E($W_{ij}$), time 5}
+\includegraphics[width=1.2\textwidth]{R06Q2.png}
+\end{frame}
+\begin{frame}
+\frametitle{E($W_{ij}$), time 6}
+\includegraphics[width=1.2\textwidth]{R06Q3.png}
+\end{frame}
+\begin{frame}
+\frametitle{E($W_{ij}$), time 7}
+\includegraphics[width=1.2\textwidth]{R06Q4.png}
+\end{frame}
+\begin{frame}
+\frametitle{E($W_{ij}$), time 8}
+\includegraphics[width=1.2\textwidth]{R07Q1.png}
+\end{frame}
+\begin{frame}
+\frametitle{E($W_{ij}$), time 9}
+\includegraphics[width=1.2\textwidth]{R07Q2.png}
+\end{frame}
+\begin{frame}
+\frametitle{E($W_{ij}$), time 10}
+\includegraphics[width=1.2\textwidth]{R07Q3.png}
+\end{frame}
+\begin{frame}
+\frametitle{E($W_{ij}$), time 11}
+\includegraphics[width=1.2\textwidth]{R07Q4.png}
+\end{frame}
+\begin{frame}
+\frametitle{E($W_{ij}$), time 12}
+\includegraphics[width=1.2\textwidth]{R08Q1.png}
+\end{frame}
+
 
 \begin{frame}
 \frametitle{Conclusion}
