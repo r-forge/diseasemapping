@@ -15,7 +15,7 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
      
      # get rid of zero populations,because they dont lead to rates of exactly zero
      poplong=poplong[poplong[,
-      grep("^population$", names(poplong), value=T, ignore.case=T)]>0, ]     
+      grep("^population$", names(poplong), value=TRUE, ignore.case=TRUE)]>0, ]     
     #changes poplong names to be consistent with model
     agevar<-grep("^age$",names(model$xlevels),value=TRUE,ignore.case=TRUE)
     sexvar<-grep("^sex$",names(model$xlevels),value=TRUE,ignore.case=TRUE)
@@ -41,7 +41,7 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
     }
     
       
-      offsetvar<- grep("logpop",names(model$data) ,value=TRUE,ignore.case=TRUE)
+      offsetvar<- grep("logpop",names(model$data) ,value=TRUE, ignore.case=TRUE)
     poplong[[offsetvar]] = log(poplong$POPULATION)
 #    poplong[[sexvar]]= factor(poplong[[sexvar]])
 #    poplong[[agevar]] = factor(poplong[[agevar]])
