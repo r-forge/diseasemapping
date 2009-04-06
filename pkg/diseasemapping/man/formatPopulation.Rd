@@ -2,7 +2,7 @@
 \alias{formatPopulation}
 \alias{formatPopulation.data.frame}
 \alias{formatPopulation.list}
-\alias{formatPopulation.PostgreSQLConnection}
+%\alias{formatPopulation.PostgreSQLConnection}
 \alias{formatPopulation.SpatialPolygonsDataFrame}
 \title{Format the population data set }
 \description{
@@ -14,7 +14,7 @@ add in 4 columns : GROUP, POPULATION, sex and age.
 formatPopulation(popdata, aggregate.by = NULL, breaks = NULL, ...)
 formatPopulation.data.frame(popdata, aggregate.by=NULL, breaks=NULL,...)
 formatPopulation.list(popdata, aggregate.by=NULL,  breaks = NULL, years=as.integer(names(popdata)), year.range=NULL,  time="YEAR", getoff=TRUE,...)
-formatPopulation.PostgreSQLConnection(dbname, user="postgres",driver="PostgreSQL",aggregate=FALSE)
+%formatPopulation.PostgreSQLConnection(dbname, user="postgres",driver="PostgreSQL",aggregate=FALSE)
 formatPopulation.SpatialPolygonsDataFrame(popdata, ...)
 }
 
@@ -23,9 +23,9 @@ formatPopulation.SpatialPolygonsDataFrame(popdata, ...)
   \item{dbname}{name of data base}
   \item{aggregate.by}{ if want to view the data set from a macro way, 
      could aggregate the data set by age or sex or other variables }
-  \item{user}{}
+%  \item{user}{}
   \item{breaks}{ age breaks the user want to use. i.e breaks = c(10, 20, 30 ,40, 60, Inf). }
-  \item{driver}{}
+%  \item{driver}{}
   \item{years}{the years vector}
   \item{aggregate}{if \code{TRUE} the aggregate the population data}
   \item{year.range}{the range of the year vector}
