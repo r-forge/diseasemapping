@@ -91,9 +91,13 @@ Following this talk, those here will be able to:
 
 \begin{frame}
 \frametitle{ North Carolina}
-describe data
-map raw rates
-map covariates, \% black, unemp
+\begin{block}{Population}
+\includegraphics{ncPop.png}
+\end{block}
+\begin{block}{Case count}
+\includegraphics{ncCaseNumbers.png}
+\end{block}
+
 \end{frame}
 
 \begin{frame}
