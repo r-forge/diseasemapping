@@ -35,7 +35,7 @@ row.names(poplong)<-NULL
 if(!is.null(aggregate.by)) {
 
   popa <- aggregate(poplong$POPULATION, poplong[, aggregate.by, drop=FALSE], 
-    sum, na.rm=T)
+    sum, na.rm=TRUE)
 
   # change x column name to 'population'
   names(popa)[names(popa)=="x"] = "POPULATION"
