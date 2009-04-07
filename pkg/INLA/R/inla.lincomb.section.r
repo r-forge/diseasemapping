@@ -33,3 +33,13 @@
       cat("\n", sep = " ", file = datafile, append = TRUE)
 
 }
+
+
+`BYMmidFunction` = function(inla.dir,n,struct,unstruct) {
+    cat("Writting Linear Combination Files to", inla.dir,"\n")
+
+     for (i in seq(0,n-1) ){
+      inla.lincomb.section(inla.dir, lincomb.spec=16,num=i,struct=struct,unstruct=unstruct)
+    }
+    cat("Done...\n")
+}
