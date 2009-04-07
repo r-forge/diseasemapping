@@ -28,50 +28,72 @@ If $\theta$ is the scale parameter in the parametrization of the Weibull in Wiki
 $\log(\gamma) = -\alpha\log(\theta)$
 
 
-\section{Left truncated data}
-For each individual we observe an enrolment date $L_i$, an event (or death) date $R_i$, and an indicator variable $Z_i = 1$ if $R_i$ is a cancer incidence and 0 if it's a censoring time. Anyone with $T_i < L_i$ is excluded from the study, so we're conditioning on $T_i > L_i$.  
+\subsection{Notation}
 
-Right censored observations:
+Each individual data for one or more of the following variables:
+\begin{itemize}
+\item Time of event $T_i$, often unobserved
+	\item left trunCation time $C_i$, with $C_i=0$ for untruncated observations
+\item Lower bound for the event time $L_i$
+\item Upper bound $U_i$
+\item Event type $E_i$ defined as
+\begin{itemize}
+	\item $E_i=1$: event observed at time $T_i$
+	\item $E_i=0$: event right censored at $L_i$, with $T_i$ unobserved but $T_i >L_i$.
+	\item $E_i=2$: left censored data at $U_i$, with $T_i < U_i$.
+	\item $E_i=3$: interval censored data with $L_i < T_i < U_i$. 
+\end{itemize}
+\end{itemize}
+The 'cure' indicator $Y_i$ is not part of the dataset.  Note that $E_i$ isnt strictly necessary since it can be worked out by which of $T_i$, $L_i$ and $U_i$ are specified.
+
+\section{Likelihood}
+
+\subsection{Right censored observations $E_i =0$}
+
 \begin{align*}
-pr(R_i, Z_i=0 | L_i) =& pr(T_i > R_i | T_i > L_i, Y_i =0) pr(Y_i =0)  + pr(Y_i =1)\\
-=&pr(T_i > R_i) pr(Y_i = 0)/pr(T_i > L_i) + pr(Y_i =1)\\
-=& \rho + (1-\rho) \left. \int_{R_i}^\infty f(x;\gamma_i, \nu) dx \right/\int_{L_i}^\infty f(x;\gamma_i, \nu) dx  \\
-= &  \rho + (1-\rho) \left. \exp\left[-\gamma_i R_i^\nu\right] \right/\exp\left[-\gamma_i L_i^\nu\right]\\
-= &  \rho + (1-\rho) \exp\left[\gamma_i\left(L_i^\nu -R_i^\nu\right)\right] \\
+pr(L_i, E_i=0 | C_i) =& pr(T_i > L_i | T_i > C_i, Y_i =0) pr(Y_i =0)  + pr(Y_i =1)\\
+=&pr(T_i > L_i) pr(Y_i = 0)/pr(T_i > C_i) + pr(Y_i =1)\\
+=& \rho + (1-\rho) \left. \int_{L_i}^\infty f(x;\gamma_i, \nu) dx \right/\int_{C_i}^\infty f(x;\gamma_i, \nu) dx  \\
+= &  \rho + (1-\rho) \left. \exp\left[-\gamma_i L_i^\nu\right] \right/\exp\left[-\gamma_i C_i^\nu\right]\\
+= &  \rho + (1-\rho) \exp\left[\gamma_i\left(C_i^\nu -L_i^\nu\right)\right] \\
 \end{align*}
+Note that $C_i=0$ implies the $C_i^\nu$ term can be omitted and the untruncated likelihood results.
 
-Observed events:
+\subsection{Observed events $E_i =1$}
 \begin{align*}
-pr(R_i, Z_i=1 | L_i) =& pr(T_i = R_i | T_i > L_i, Y_i =0)  pr(Y_i = 0) 
+pr(T_i, E_i=1 | C_i) =& pr(T_i  | T_i > C_i, Y_i =0)  pr(Y_i = 0) 
 \\
 =& 
- pr(T_i = L_i) pr(Y_i = 0) /pr(T_i > L_i) \\
+ pr(T_i ) pr(Y_i = 0) /pr(T_i > C_i) \\
 =&
- (1-\rho) f(R_i ; \mu_i, \nu) \left/ \int_{L_i}^\infty f(x;\mu_i, \nu) dx  \right.\\
+ (1-\rho) f(T_i ; \mu_i, \nu) \left/ \int_{C_i}^\infty f(x;\mu_i, \nu) dx  \right.\\
 =&
- (1-\rho) \gamma_i\nu R_i^{\nu-1} \exp\left[\gamma\left(L_i^\nu-R_i^\nu\right)\right]
+ (1-\rho) \gamma_i\nu T_i^{\nu-1} \exp\left[\gamma\left(C_i^\nu-T_i^\nu\right)\right]
 \end{align*}
 
-\section{Interval censored events}
+\subsection{Left censored observations $E_i =2$}
+I'm a bit confused about this one...  For completeness we should define the likelihood for left censoring with left truncation.
+\begin{align*}
+pr(U_i, E_i=2 | C_i) =& pr(C_i < T_i < U_i | T_i > C_i, Y_i =0) pr(Y_i =0) \\
+=&pr(C_i < T_i <U_i) pr(Y_i = 0)/pr(T_i > C_i) \\
+=& (1-\rho) \left. \int_{C_i}^{U_i} f(x;\gamma_i, \nu) dx \right/\int_{C_i}^\infty f(x;\gamma_i, \nu) dx  \\
+= &    (1-\rho) \left. \left[\exp(-\gamma_i C_i^\nu) - \exp(-\gamma_i U_i^\nu) \right] \right/\exp\left[-\gamma_i C_i^\nu\right]\\
+= &  (1-\rho)\left\{1 -  \exp\left[\gamma_i\left(C_i^\nu -U_i^\nu\right)\right] \right\} \\
+\end{align*}
 
-In this case the event occurs between $L_i$ and $R_i$, and since an event is known to have occurred, $Y_i$ must be 0.   
+
+
+\subsection{Interval censored events, $E_i =2$}
+
 
 \begin{align*}
-pr(L_i < T_i < R_i ) =& (1-\rho) \int_{L_i}^{R_i}f(u;\gamma_i, \nu) du 
+pr(L_i < T_i < U_i | T_i > C_i ) =& (1-\rho) \int_{L_i}^{U_i}f(u;\gamma_i, \nu) du 
 \\
-=& (1-\rho) \left[ \exp(-\gamma L_i^\nu) -  \exp(-\gamma R_i^\nu)\right]
+=& (1-\rho) \left[ \exp(-\gamma L_i^\nu) -  \exp(-\gamma U_i^\nu)\right] / \exp\left[-\gamma_i C_i^\nu\right]
 \\
 \end{align*}
+The denominator is 1 for untrancated $C_i =0$.
 
-
-\section{Other observations}
-
-Right censored data, is right-censored left truncated with $L_i= 0$
-\[
-pr(T_i> R_i) = \rho + (1-\rho) \exp\left[\gamma_i\left( -R_i^\nu\right)\right]
-\]
-
-Left censored data is $pr(0<T_i < x)$ is interval censored data with $L_i=0$ and $R_i=x$.
 
 
 \end{document}
