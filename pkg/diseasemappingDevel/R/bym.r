@@ -14,23 +14,9 @@
 
 
 
-    ret = inla(formula=formula1, family=family, data=data, offset=get(offset), control.results=list(return.marginals.random=TRUE), control.predictor = list(return.marginals=TRUE, compute = TRUE),
+    inla(formula=formula1, family=family, data=data, offset=get(offset), control.results=list(return.marginals.random=TRUE), control.predictor = list(return.marginals=TRUE, compute = TRUE),
           verbose=verbose, midFunction=BYMmidFunction, debug=debug,keep=TRUE)
           
-cat("Collecting Linear Combination Term...\n")
-qq<-inla.collect.lincomb(ret$results.dir)
-lin_names<-names(qq[[1]])
-lincomb<-data.frame(matrix(unlist(qq[[1]]),ncol=6,byrow=T))
-names(lincomb)<- names(qq[[1]][[1]])
-lincomb$ID<-as.integer(substr(lin_names,8,100))+1
-lincomb<-lincomb[order(lincomb$ID),]
-
-ret$summary.lincomb<-lincomb
-ret$marginals.lincomb<-qq[[2]]
-cat("Done...\n")
-
- if(!keep) unlink(ret$inla.dir,recursive=TRUE)
-ret
 
 }
 
