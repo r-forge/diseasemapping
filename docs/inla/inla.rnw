@@ -14,7 +14,7 @@
 \setkeys{Gin}{width=\textwidth}
 
 \usepackage{amsmath}
-\usepackage{c:/brownpe/share/Sweave}
+
 
 \def\mm#1{\ensuremath{\boldsymbol{#1}}} % version: amsmath
 \newcommand{\comment}[1]{}
