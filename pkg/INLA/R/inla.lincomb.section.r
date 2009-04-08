@@ -1,26 +1,22 @@
-`inla.lincomb.section`=function (dir, lincomb.spec,num,struct,unstruct)
+`inla.lincomb.section`=function (file.ini, data.dir,lincomb.spec,num,struct,unstruct)
 {
 
-     file = paste(dir,"Model.ini",sep="/")
+
     ############Modify ini file
     
-    cat(paste("[Lincomb",num,"]\n",sep=""), sep = " ", file = file, append = TRUE)
-    cat("type = lincomb\n", sep = " ", file = file, append = TRUE)
-    cat(paste("dir","=","fixed.effect","9999",num,"\n",sep=""),file = file, append = TRUE)
-    cat("filename = ", paste("$DATADIR/lincomb",num,".dat",sep=""), "\n", sep = " ", file = file,append = TRUE)
+    cat(paste("[Lincomb",num,"]\n",sep=""), sep = " ", file = file.ini, append = TRUE)
+    cat("type = lincomb\n", sep = " ", file = file.ini, append = TRUE)
+    cat(paste("dir","=","fixed.effect","9999",num,"\n",sep=""),file = file.ini, append = TRUE)
+    cat("filename = ", paste("$DATADIR/lincomb",num,".dat",sep=""), "\n", sep = " ", file = file.ini,append = TRUE)
     if (!is.null(lincomb.spec)) {
-        cat("precision = ", lincomb.spec, sep = " ", file = file,
+        cat("precision = ", lincomb.spec, sep = " ", file = file.ini,
             append = TRUE)
-        cat("\n", sep = " ", file = file, append = TRUE)
+        cat("\n", sep = " ", file = file.ini, append = TRUE)
     }
-   cat("\n", sep = " ", file = file, append = TRUE)
+   cat("\n", sep = " ", file = file.ini, append = TRUE)
 
-    ############Write Data files
-
-    ddir<-paste(dir, "data.files/",sep="/")
-    datafile<-paste(ddir,paste("lincomb",num,".dat",sep=""),sep="/")
-    
-     
+    ############Write Data files
+    datafile<-paste(data.dir,paste("lincomb",num,".dat",sep=""),sep="/")
 
       cat(struct, sep = " ", file = datafile)
         cat("\n", sep = " ", file = datafile, append = TRUE)
@@ -35,11 +31,3 @@
 }
 
 
-`BYMmidFunction` = function(inla.dir,n,struct,unstruct) {
-    cat("Writting Linear Combination Files to", inla.dir,"\n")
-
-     for (i in seq(0,n-1) ){
-      inla.lincomb.section(inla.dir, lincomb.spec=16,num=i,struct=struct,unstruct=unstruct)
-    }
-    cat("Done...\n")
-}
