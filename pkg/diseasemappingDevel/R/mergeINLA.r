@@ -6,9 +6,10 @@ mergeINLA<-function(data,INLA,spatial="region.struct",iid="region",exceed=1.2){
   data$linear<-INLA$summary.fitted.values[,1]
 
   #Get Joint
-  temp<-data.frame(bym=INLA$summary.fixed[-1,1],ID=as.integer(substr(names(temp),8,100))+1)
-  t<-temp[order(temp$ID),]
-  data$bym<-t$bym
+  #temp<-data.frame(bym=INLA$summary.fixed[-1,1],ID=as.integer(substr(names(temp),8,100))+1)
+  #t<-temp[order(temp$ID),]
+  #data$bym<-t$bym
+  data$bym<-INLA$summary.fixed[-1,1]
 
 
   #use predictos on the log scale to find out exceeding
