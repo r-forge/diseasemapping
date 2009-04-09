@@ -41,20 +41,20 @@ library(glmmBUGS)
 data(popdata)
 data(casedata)
 
-model = getRates(casedata, popdata, ~age*sex)
-ontario = getSMR(model, popdata, casedata)
-ontario = ontario@data[,c("CSDUID","observed","logExpected")]
-popDataAdjMat = poly2nb(ontario,row.names=as.character(ontario[["CDSUID"]]))
-data(popDataAdjMat)
-
-forBugs = glmmBUGS(formula=Observed + logExpected ~ 1,
-  effects="CSDUID",   family="poisson", spatial=popDataAdjMat,
-  data=ontario)
+therates = getRates(casedata, popdata, ~age*sex)
+ontario = getSMR(popdata, therates, casedata)
+ontario@data = ontario@data[,c("CSDUID","observed","logExpected")]
+library(spdep)
+popDataAdjMat = poly2nb(ontario, ontario[["CDSUID"]])
+library(glmmBUGS)
+forBugs = glmmBUGS(formula=observed + logExpected ~ 1,
+  effects="CSDUID", family="poisson", spatial=popDataAdjMat,
+  data=ontario@data)
 
 startingValues = forBugs$startingValues
 
 source("getInits.R")
-
+library(R2WinBUGS)
 ontarioResult = bugs(forBugs$ragged, getInits, parameters.to.save = names(getInits()),
     model.file="model.bug", n.chain=3, n.iter=100, n.burnin=10, n.thin=2,
       program="winbugs", debug=TRUE)
