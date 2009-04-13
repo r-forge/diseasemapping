@@ -1,13 +1,12 @@
 # the function body:
-getStdRate= function(relativeRate, model, referencePopulation=referencepop,
-  scale=100000) {
+getStdRate= function(relativeRate, model, referencePopulation, scale=100000) {
 
 # check for negatives
 if(any(relativeRate < 0 ))
   warning("negative numbers in rates, make sure they're not on the log scale")
 
 if(is.character(referencePopulation)) {
-  data(referencePopulations)
+  data(referencePopulation)
   referencePopulation = referencePopulations[[referencePopulation]]
 
 }
