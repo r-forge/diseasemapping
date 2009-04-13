@@ -20,7 +20,7 @@ formatPopulation.SpatialPolygonsDataFrame(popdata, ...)
 
 \arguments{
   \item{popdata}{ population data set. It can be a data frame, list, database connection, or spatial polygon data frame }
-  \item{dbname}{name of data base}
+%  \item{dbname}{name of data base}
   \item{aggregate.by}{ if want to view the data set from a macro way, 
      could aggregate the data set by age or sex or other variables }
 %  \item{user}{}
