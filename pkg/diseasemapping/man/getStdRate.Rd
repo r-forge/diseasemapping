@@ -5,7 +5,7 @@
  A function to calculate the standard rate according to the Canadian standard population data set from year 1991. 
 }
 \usage{
-getStdRate(relativeRate, model, referencePopulation = referencepop, scale = 1e+05)
+getStdRate(relativeRate, model, referencePopulation, scale = 1e+05)
 }
 \arguments{
   \item{relativeRate}{ the relateve cancer rate calculated by glmmBUGS of different sex and age group of people from ontario . }
@@ -35,7 +35,9 @@ data(popdata)
 model = getRates(casedata, popdata, ~age*sex, S=c("M","F"))
 # calculate the relative rate using glmmBUGS:
 ontario = getSMR(popdata, model, casedata)
-data(popDataAdjMat)
+
+library(spdep)
+popDataAdjMat <- poly2nb(popdata, popdata[["CSDUID"]])
 library(glmmBUGS)
 forBugs = glmmBUGS(formula = observed + logExpected ~ 1, effects= "CSDUID",
                    family="poisson", spatial =popDataAdjMat, data=ontario@data)
