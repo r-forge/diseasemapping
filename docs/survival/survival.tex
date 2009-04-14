@@ -70,11 +70,11 @@ pr(T_i, E_i=1 | C_i) =& pr(T_i  | T_i > C_i, Y_i =0)  pr(Y_i = 0)
 =&
  (1-\rho) \gamma_i\nu T_i^{\nu-1} \exp\left[\gamma\left(C_i^\nu-T_i^\nu\right)\right]
 \end{align*}
-
+ 
 \subsection{Left censored observations $E_i =2$}
-I'm a bit confused about this one...  For completeness we should define the likelihood for left censoring with left truncation.
+For completeness wedefine the likelihood for left censoring with left truncation.
 \begin{align*}
-pr(U_i, E_i=2 | C_i) =& pr(C_i < T_i < U_i | T_i > C_i, Y_i =0) pr(Y_i =0) \\
+pr(U_i, E_i=2 | C_i) =& pr(T_i < U_i | T_i > C_i, Y_i =0) pr(Y_i =0) \\
 =&pr(C_i < T_i <U_i) pr(Y_i = 0)/pr(T_i > C_i) \\
 =& (1-\rho) \left. \int_{C_i}^{U_i} f(x;\gamma_i, \nu) dx \right/\int_{C_i}^\infty f(x;\gamma_i, \nu) dx  \\
 = &    (1-\rho) \left. \left[\exp(-\gamma_i C_i^\nu) - \exp(-\gamma_i U_i^\nu) \right] \right/\exp\left[-\gamma_i C_i^\nu\right]\\

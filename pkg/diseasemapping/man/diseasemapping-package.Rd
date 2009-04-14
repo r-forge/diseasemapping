@@ -31,6 +31,13 @@ spplot(ontario, 'SMR')
 
 # an example of a spatial model with glmmBUGS
 
+\dontrun{
+library(glmmBUGS)
+# run the model
+
+
+# merge results back in to popdata
+}
 
 
 # running the same thing with INLA
