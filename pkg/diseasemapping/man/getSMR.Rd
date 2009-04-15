@@ -18,6 +18,7 @@ getSMR.SpatialPolygonsDataFrame(popdata, ...)
 \arguments{
   \item{popdata}{ the name of population data set  }
   \item{model}{ the estimated coefficients we calculated from getRates function. }
+  \item{\dots}{additional arguments}
   \item{casedata}{ the name of case data set }
   \item{regionCode}{ the name of district area column in population data set}
   \item{regionCodeCases}{the name of district area column in case data set }
@@ -26,7 +27,7 @@ getSMR.SpatialPolygonsDataFrame(popdata, ...)
   \item{formatPop}{if \code{TRUE}, then format the population }
   \item{years}{the vector of years}
   \item{year.range}{the range of the year vector} 
-  \item{\dots}{additional arguments}
+  
 }
 \details{
   
