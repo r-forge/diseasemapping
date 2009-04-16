@@ -25,17 +25,15 @@ getStdRate(relativeRate, model, referencePopulation, scale = 1e+05)
 }
 \seealso{ }
 \examples{
+
 data(referencepop)
-#referencepop <- read.table("CANADA_STANDARD_POPULATION.txt", sep=",", header = TRUE)
-#tot <- sum(referencepop$total)
-#referencepop$POPULATION <- referencepop$total/tot
 data(casedata)
 data(popdata)
 # get the age sex group rate:
 model = getRates(casedata, popdata, ~age*sex, S=c("M","F"))
 # calculate the relative rate using glmmBUGS:
 ontario = getSMR(popdata, model, casedata)
-
+\dontrun{
 library(spdep)
 popDataAdjMat <- poly2nb(popdata, popdata[["CSDUID"]])
 library(glmmBUGS)
@@ -53,6 +51,7 @@ ontario = mergeBugsData(ontario, ontarioSummary)
 ontario@data = ontario@data[!is.na(ontario$SMR),]
 relativeRate = ontario@data[,grep("Fitted", names(ontario), value=TRUE)]
 newpop <- getStdRate(relativeRate, model, referencepop, scale=100000)
+}
 }
 
 \keyword{}
