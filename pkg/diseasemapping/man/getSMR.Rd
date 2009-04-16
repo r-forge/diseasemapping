@@ -10,10 +10,10 @@ The getSMR function calculates the rate of observe value over expected value.
 It will also merge back the observed value, expected value and the ratio back to the population data set. 
 }
 \usage{
-getSMR(popdata, model, casedata, regionCode = "CSDUID", regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, formatPop = TRUE, ...)
-getSMR.data.frame(popdata, model, casedata, regionCode = "CSDUID", regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, formatPop=TRUE,...)
-getSMR.list(popdata, model, casedata = NULL, regionCode = "CSDUID", regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, years = NULL, year.range = NULL, ...)
-getSMR.SpatialPolygonsDataFrame(popdata, ...)
+getSMR(popdata, model, casedata, regionCode = "CSDUID", regionCodeCases = "CSD2006", area = FALSE, area.scale = 1,  ...)
+\method{getSMR}{data.frame}(popdata, model, casedata, regionCode = "CSDUID", regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, formatPop=TRUE,...)
+\method{getSMR}{list}(popdata, model, casedata = NULL, regionCode = "CSDUID", regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, years = NULL, year.range = NULL, ...)
+\method{getSMR}{SpatialPolygonsDataFrame}(popdata, ...)
 }
 \arguments{
   \item{popdata}{ the name of population data set  }

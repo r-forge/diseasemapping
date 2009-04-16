@@ -13,7 +13,7 @@
  This is a data set contains 36 rows and 3 columns. 
 }
 
-}
+
 \examples{
 data(referencepop)
 ## maybe str(referencepop) ; plot(referencepop) ...

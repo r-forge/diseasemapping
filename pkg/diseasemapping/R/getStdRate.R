@@ -7,7 +7,7 @@ if(any(relativeRate < 0 ))
 
 if(is.character(referencePopulation)) {
   data(referencePopulation)
-  referencePopulation = referencePopulations[[referencePopulation]]
+  referencePopulation = referencePopulation[[referencePopulation]]
 
 }
   

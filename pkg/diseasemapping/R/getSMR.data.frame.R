@@ -1,5 +1,5 @@
 `getSMR` <- function(popdata, model, casedata, regionCode = "CSDUID",
-    regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, formatPop=TRUE, ...){
+    regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, ...){
        UseMethod("getSMR")
  }
  
