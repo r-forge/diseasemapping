@@ -35,7 +35,7 @@ data(popdata)
 model = getRates(casedata, popdata, ~age*sex, S=c("M","F"))
 # calculate the relative rate using glmmBUGS:
 ontario = getSMR(popdata, model, casedata)
-
+\dontrun{
 library(spdep)
 popDataAdjMat <- poly2nb(popdata, popdata[["CSDUID"]])
 library(glmmBUGS)
@@ -54,6 +54,6 @@ ontario@data = ontario@data[!is.na(ontario$SMR),]
 relativeRate = ontario@data[,grep("Fitted", names(ontario), value=TRUE)]
 newpop <- getStdRate(relativeRate, model, referencepop, scale=100000)
 }
-
+}
 \keyword{}
 \keyword{}% __ONLY ONE__ keyword per line
