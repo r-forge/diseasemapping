@@ -26,9 +26,6 @@ getStdRate(relativeRate, model, referencePopulation, scale = 1e+05)
 \seealso{ }
 \examples{
 data(referencepop)
-#referencepop <- read.table("CANADA_STANDARD_POPULATION.txt", sep=",", header = TRUE)
-#tot <- sum(referencepop$total)
-#referencepop$POPULATION <- referencepop$total/tot
 data(casedata)
 data(popdata)
 # get the age sex group rate:
