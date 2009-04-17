@@ -31,10 +31,10 @@
    attributes(pop)$breaks = breaks
    
    if(getoff){
-   if (is.null(year.range)) {
-   year.range = range(pop[,time])
-   }
-        times <- c(year.range[1], years, year.range[2])
+    if (is.null(year.range)) {
+      year.range = range(pop[,time])
+    }
+        times <- c(year.range[1], sort(years), year.range[2])
         times <- as.numeric(times)
         inter <- diff(times)/2
         nseq <- 1:length(inter) - 1
