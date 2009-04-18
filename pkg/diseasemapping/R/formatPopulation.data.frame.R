@@ -19,7 +19,7 @@ sexcol = grep("^sex$", names(poplong), value=TRUE, ignore.case=TRUE)
 if("GROUP" %in% names(poplong)) {
     if(!length(sexcol)){
  
-  poplong$sex = toupper(factor(substr(poplong$GROUP, 1, 1)))}
+  poplong$sex = factor(toupper(substr(poplong$GROUP, 1, 1)))}
      if(!length(agecol)){
    ageNumeric = as.numeric(substr(poplong$GROUP, 3, 4))
    poplong$age = cut(ageNumeric, ageBreaks$breaks, right=FALSE)

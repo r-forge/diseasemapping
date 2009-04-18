@@ -10,17 +10,18 @@
    if(byYear){aggregate.by<-aggregate.by[-which(aggregate.by==time)]}
    }
 
-   #if(class(popdata[[1]])== "SpatialPolygonsDataFrame"){
-   #listpop<-lapply(popdata,formatPopulation.SpatialPolygonsDataFrame,aggregate.by)
-   #}else{
-   #listpop<-lapply(popdata,formatPopulation.data.frame,aggregate.by)
-   #}
+
   
    listpop<-lapply(popdata,formatPopulation,aggregate.by, breaks= breaks)
   
    breaks = attributes(listpop[[1]])$breaks
-  
+   
+   
    listdataframe<-lapply(listpop,as.data.frame)
+   #if did not aggregate, then the data frames will have differnt columns
+
+  
+
    pop<-NULL
    for (i in 1:length(listdataframe)){
     temp<-listdataframe[[i]]
@@ -46,7 +47,8 @@
         pop[,time] = factor(pop[,time], levels = unique(pop[,time]))
         pop[,time] = factor(pop[,time])
 
-         pop <- pop[pop$POPULATION > 0,  ]
+        pop <- pop[!is.na(pop$POPULATION),  ]
+        pop <- pop[pop$POPULATION > 0,  ]
     }
    
    
