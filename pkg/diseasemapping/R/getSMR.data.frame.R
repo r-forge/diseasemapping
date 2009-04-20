@@ -87,8 +87,8 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
     popdata[rownames(poplong), "expected"] = poplong[,2]
     
     if (area & ("sqk" %in% names(popdata) ) ) {
-        popdata$expected_sqk <- 
-          popdata$expected/popdata$sqk
+        popdata$expected_sqk <- popdata$expected/popdata$sqk
+        popdata$logExpected_sqk = log(popdata$expected_sqk)
     }
     popdata$logExpected = log(popdata$expected)
 
