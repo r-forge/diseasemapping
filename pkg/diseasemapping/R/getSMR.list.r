@@ -21,8 +21,8 @@ getSMR.list <- function(popdata, model, casedata = NULL, regionCode = "CSDUID",
        
     #ll<-split(poplong,poplong$YEAR)     
 
-  yearVar = ???  # find year var in the model
-  caseYearVar = ???
+  yearVar = NA  # find year var in the model
+  caseYearVar = NA
   
   result=list()
 
