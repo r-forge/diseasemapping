@@ -75,14 +75,14 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
     poplong$expected <- predict(model, poplong[, agg], type = "response")
     
      poplong <- aggregate(poplong$expected, list(poplong[[regionCode]]), sum)
-    rownames(poplong) = poplong[,1]
+    rownames(poplong) = as.character(poplong[,1])
     poplong=poplong[poplong[,2] > 0,]
 
 
     # merge results back in to the population data
     # the merge function changes the order, so can't use it.
     popdata$expected = NA
-    rownames(popdata) = popdata[,regionCode]
+    rownames(popdata) = as.character(popdata[,regionCode])
 
     popdata[rownames(poplong), "expected"] = poplong[,2]
     
@@ -108,7 +108,7 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
          list(casedata[[regionCodeCases]]), sum)
        names(casedata) = c(regionCodeCases, "observed")
 
-      popdata$observed = NA
+      popdata$observed = 0
       popdata[as.character(casedata[,1]),"observed"] = casedata[,2]
    
        popdata$SMR <- popdata$observed/popdata$expected

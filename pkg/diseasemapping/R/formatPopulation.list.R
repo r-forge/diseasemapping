@@ -1,4 +1,4 @@
-`formatPopulation.list`<-function(popdata, aggregate.by=NULL,  breaks = NULL, years=as.integer(names(popdata)), year.range=NULL,  time="YEAR", getoff=TRUE,...) {
+`formatPopulation.list`<-function(popdata, aggregate.by=NULL,  breaks = NULL, years=as.integer(names(popdata)), year.range=NULL,  time="YEAR",...) {
     
    time<-toupper(time)
     
@@ -19,9 +19,6 @@
    
    listdataframe<-lapply(listpop,as.data.frame)
    #if did not aggregate, then the data frames will have differnt columns
-
-  
-
    pop<-NULL
    for (i in 1:length(listdataframe)){
     temp<-listdataframe[[i]]
