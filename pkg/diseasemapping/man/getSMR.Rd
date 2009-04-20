@@ -11,7 +11,7 @@ It will also merge back the observed value, expected value and the ratio back to
 }
 \usage{
 getSMR(popdata, model, casedata, regionCode = "CSDUID", regionCodeCases = "CSD2006", area = FALSE, area.scale = 1,  ...)
-\method{getSMR}{data.frame}(popdata, model, casedata, regionCode = "CSDUID", regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, formatPop=TRUE,...)
+\method{getSMR}{data.frame}(popdata, model, casedata, regionCode = "CSDUID", regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, ...)
 \method{getSMR}{list}(popdata, model, casedata = NULL, regionCode = "CSDUID", regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, years = NULL, year.range = NULL, ...)
 \method{getSMR}{SpatialPolygonsDataFrame}(popdata, ...)
 }

@@ -38,7 +38,7 @@ getSMR.list <- function(popdata, model, casedata = NULL, regionCode = "CSDUID",
     attributes(popdata[[Dyear]])$popScale = 1
     # add year column
     popdata[[Dyear]][,yearVar] = 
-       factor(rep(as.character(years[Dyear]), length(popdata[[Dyear]][1]), 
+       factor(rep(as.character(years[Dyear]), length(popdata[[Dyear]][1])), 
     levels=levels(model$data[,yearVar])) 
     
     caseThisYear = NA # subset just this period's cases, find year col in casedata
