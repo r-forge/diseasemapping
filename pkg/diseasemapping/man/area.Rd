@@ -11,7 +11,7 @@ area(sp)
 }
 
 \arguments{
-  \item{sp}{name of spatial polygon file}
+  \item{sp}{name of a spatial polygon data frame.}
 }
 
 
