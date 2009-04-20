@@ -7,63 +7,52 @@ getSMR.list <- function(popdata, model, casedata = NULL, regionCode = "CSDUID",
     if (is.null(years)) {
         years = as.integer(names(popdata))
     }        
-   # if (area & isSP) {
-  #     
-  #          areas <- lapply(lapply(popdata, area), as.numeric)
-   #         for (i in 1:length(popdata)) {
-   #             popdata[[i]]$sqk <- areas[[i]] * area.scale
-   #         }
-   # }
-    
-   # poplong <- formatPopulation(popdata, breaks = attributes(model)$breaks$breaks,
-    #  years = model$xlevels$YEAR, mustAggregate = FALSE, year.range=year.range)
 
-       
-    #ll<-split(poplong,poplong$YEAR)     
 
-  yearVar = NA  # find year var in the model
-  caseYearVar = NA
+    year.range = range(names(popdata))
+    times <- c(year.range[1], sort(years), year.range[2])
+    times <- as.numeric(times)
+    inter <- diff(times)/2
+    nseq <- 1:length(inter) - 1
+    mseq <- 2:length(inter)
+    interval <- inter[mseq] + inter[nseq]
+    names(interval) <- names(popdata)
+
+  yearVar = grep("year",names(model$xlevels),value=T,ignore.case=T)  # find year var in the model
+  caseYearVar = grep("year",names(casedata),value=T,ignore.case=T)
   
   result=list()
 
-  for(Dyear in seq(1, length(popdata))) {
+  #for(Dyear in seq(1, length(popdata))) {
+  for(Dyear in names(popdata)) {
   
-    if(ares & class(popdata[[Dyear]]) == "SpatialPolygonsDataFrame") {
-      areas <- unlist(lapply(popdata[[Dyear]], area))
+    #Compute area
+    if(area & class(popdata[[Dyear]]) == "SpatialPolygonsDataFrame") {
+      areas <- unlist(computeArea(popdata[[Dyear]]))
       popdata[[Dyear]]$sqk <- areas * area.scale
     }
 
   
     # scaling factor to convert to person years
-    attributes(popdata[[Dyear]])$popScale = 1
-    # add year column
-    popdata[[Dyear]][,yearVar] = 
-       factor(rep(as.character(years[Dyear]), length(popdata[[Dyear]][1])), 
-    levels=levels(model$data[,yearVar])) 
+    attributes(popdata[[Dyear]])$popScale = interval[names(interval)==Dyear]
     
-    caseThisYear = NA # subset just this period's cases, find year col in casedata
-    result[[Dyear]] = getSMR(popdata[[Dyear]], caseThisYear,model,
-      ...)
+    # add year column
+    popdata[[Dyear]][[yearVar]] = factor(rep(as.character(names(popdata[Dyear])), length(popdata[[Dyear]][1]),
+    levels=levels(model$data[,yearVar])))
+    
+
+
+    caseThisYear = casedata[casedata[[caseYearVar]]==Dyear,]
+    
+    result[[Dyear]] = getSMR(popdata[[Dyear]], model, caseThisYear,regionCode =regionCode,
+                     regionCodeCases = regionCodeCases, years = years, year.range = year.range,
+                     area = area, area.scale = area.scale)
     
   }
   names(result) = years
+
          
   return(result)       
-         
-    ##list if df
-    listpop<-lapply(ll, getSMR, casedata=casedata, model, regionCode =regionCode,
-                     regionCodeCases = regionCodeCases, years = years, year.range = year.range,
-                     area = area, area.scale = area.scale,formatPop=FALSE)
-                                
-         #if input is  list of sp, return list of sp
-        if (isSP) {
-            for (i in 1:length(years)) {
-                popdata[[i]]@data = listpop[[i]]
-            }
-            listpop<-popdata
-         }   
-        #else return list of df
-  
-    listpop
+
 }
 
