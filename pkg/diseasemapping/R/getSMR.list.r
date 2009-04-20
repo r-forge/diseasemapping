@@ -18,8 +18,8 @@ getSMR.list <- function(popdata, model, casedata = NULL, regionCode = "CSDUID",
     interval <- inter[mseq] + inter[nseq]
     names(interval) <- names(popdata)
 
-  yearVar = grep("year",names(model$xlevels),value=T,ignore.case=T)  # find year var in the model
-  caseYearVar = grep("year",names(casedata),value=T,ignore.case=T)
+  yearVar = grep("year",names(model$xlevels),value=TRUE,ignore.case=TRUE)  # find year var in the model
+  caseYearVar = grep("year",names(casedata),value=TRUE,ignore.case=TRUE)
   
   result=list()
 
