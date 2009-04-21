@@ -91,6 +91,9 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
         popdata$logExpected_sqk = log(popdata$expected_sqk)
     }
     popdata$logExpected = log(popdata$expected)
+    
+    # change NA's in logExpected to zeros, so that it can be used in models
+    popdata$logExpected[is.na(popdata$logExpected)] = 0
 
     if (!is.null(casedata)) {
        casedata = formatCases(casedata, ageBreaks=popBreaks)
