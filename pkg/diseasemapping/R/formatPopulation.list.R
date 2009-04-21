@@ -1,4 +1,6 @@
-`formatPopulation.list`<-function(popdata, aggregate.by=NULL,  breaks = NULL, years=as.integer(names(popdata)), year.range=NULL,  time="YEAR",...) {
+`formatPopulation.list`<-function(popdata, aggregate.by=NULL,  breaks = NULL, 
+  years=as.integer(names(popdata)), year.range=NULL,  time="YEAR", 
+  personYears=TRUE, ...) {
     
    time<-toupper(time)
     
@@ -28,7 +30,7 @@
    
    attributes(pop)$breaks = breaks
    
-   if(getoff){
+   if(personYears){
     if (is.null(year.range)) {
       year.range = range(pop[,time])
     }
