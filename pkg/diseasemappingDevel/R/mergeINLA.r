@@ -1,4 +1,4 @@
-mergeINLA<-function(data,INLA,spatial="region.struct",iid="region",exceed=1.2){
+mergeINLA<-function(data,INLA,spatial="regionSP",iid="region",exceed=1.2){
 
   data$spatial<-INLA$summary.random[[spatial]][,2]
   data$iid<-INLA$summary.random[[iid]][,2]
