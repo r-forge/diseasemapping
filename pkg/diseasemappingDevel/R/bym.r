@@ -13,9 +13,11 @@
       }
 
 
-
-    inla(formula=formula1, family=family, data=data, offset=get(offset), control.results=list(return.marginals.random=TRUE), control.predictor = list(return.marginals=TRUE, compute = TRUE),
-          verbose=verbose, midFunction=BYMmidFunction, debug=debug,keep=TRUE)
+   if(is.character(offset))  {
+      offset = data[,offset]
+      }
+    inla(formula=formula1, family=family, data=data, offset=offset, control.results=list(return.marginals.random=TRUE), control.predictor = list(return.marginals=TRUE, compute = TRUE),
+          verbose=verbose, user.hook=inla.user.hook, debug=debug,keep=TRUE)
           
 
 }
