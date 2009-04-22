@@ -2,18 +2,24 @@
 writeBivariateModel <- function() { # need to write in the arguments!
 
 
+  sink(file)
+  
+  cat("model{\n\n")
+
 # write smoking model
-writeBugsModel()
+writeBugsModel(prefix="", file=NULL)
 
 # write cancer model
 
-writeBugsModel()
+writeBugsModel(prefix="smoking", file=NULL)
 
 
-# write the Vbig stuff
+# put smoking in cancer!
 
-# ?????
 
+  cat("\n} # model\n") 
+
+  sink()
 
 
 }
