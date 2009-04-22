@@ -35,6 +35,11 @@ data(Germany)
 Germany$logE = log(Germany$E)
 a<-bym(formula="Y ~ x",spatial="region",offset = "logE",graph.file="germany.graph",data=Germany)
 a$summary.fixed
+
+#To merge the result back to the data. This will add  7 additional columns in the dataset
+#Posterior means of spatial effects, iid effects, fitted values, fitted values on the log scale,
+#bym (the spatial and non-spatial effects), as well as the exceedance probability of fitted and bym values
+resultData<-mergeINLA(data=Germany,INLA=a,exceed=1.2)
 }
 
 \keyword{INLA}
