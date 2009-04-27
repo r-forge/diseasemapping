@@ -57,7 +57,7 @@ for (i in 1:length(columns)){
   k<-polygonsToRaster(popdata, r,field=f)
   #if need to be aggregated
   if(!all(cellFine==cellCoarse)){
-    k<-aggregate(k,fact,na.rm=F)
+    k<-aggregate(k,fact,na.rm=T)
    }
    #make them a stack
   if(i==1){sta<-stack(k)}else{sta<-addRasters(sta,k)}
