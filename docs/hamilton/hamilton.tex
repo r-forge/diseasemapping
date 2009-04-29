@@ -1,0 +1,86 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{subfigure,float}
+
+\title{Lung Cancer, Smoking, and Industrial Pollution in Hamilton, Ontario}
+
+\author{Patrick, Billy,  Susitha, Eric, ...}
+
+\usepackage{natbib}
+
+
+\begin{document}
+
+\maketitle
+
+\section*{Abstract}
+
+do this last
+
+
+\section{Introduction}
+
+The link between environmental  pollution and cancer is a question of great public interest.   In the city of Hamilton, Ontario, lung cancer is clearly elevated near steel and iron foundries.  However, it might be expected that the individuals living further from the foundries have higher incomes and therefore lower smoking rates, and the correlation between cancer and proximity to foundries could be due to or enhanced by spatial variations in tobacco usage.  Cite some other papers which state smoking is a possible cause of pollution/cancer correlations?
+
+This paper uses population-level data from the census  of Canada, the Ontario Cancer Registry (OCR), and the Canadian
+Community Household Survey (CCHS) to assess the effect of pollution on lung cancer after adjusting for spatial variations in smoking rates.  As the estimated pollution levels in Hamilton vary greatly depending on distance from the foundries, cancer risk and smoking rates are modelled at the finest possible spatial resolution, the census dissemination areas (DA).  At this resolution the number of cancer cases and CCHS respondents in each area is small, making spatial models necessary for predicting the spatial risk surfaces for smoking and cancer.  The smoking surface is included as a confounder in the cancer model, with the cancer and smoking models integrated to allow for uncertainty in the smoking surface to be reflected in the cancer model in a manner similar to that used by \cite{BILY ADD REFERENCE}.  An additional explanatory variable in the model is environmental air pollution, and the effect of pollution on cancer risk is a parameter estimated.  
+
+
+map of pollution surface, with foundries, and DA boundries. 
+
+
+\section{Methods}
+\subsection{Data}
+describe cancer registry, pollution surface, cchs.
+
+\subsection{Model}
+
+Billy, can you start filling this bit in?
+
+describe model
+
+Bayesian inference
+
+chain convergence assesed by examining trace plots, and we did thinning by ??, burnin?? chain length ??
+
+\section{Results}
+
+
+
+\begin{table}[H]
+
+\subfigure[Female]{\hspace{.6in}a table\hspace{.6in}}
+\subfigure[Male]{\hspace{.6in}a table\hspace{.6in}}
+
+\caption{Model parameter estimates, with 95\% posterior credible intervals for lung cancer in Hamilton, Ontario}
+\label{tab:parameters}
+\end{table}
+
+
+\begin{figure}[H]
+\subfigure[Cancer risk]{\hspace{.6in} a plot\hspace{.6in}}
+\subfigure[Smoking risk]{\hspace{.6in} a plot\hspace{.6in}}
+\subfigure[Probability of residual 20\% excess risk]{\hspace{.6in}a plot\hspace{.6in}}
+\caption{Predicted risk surfaces and exceedance probability plot for female lung cancer in Hamilton, Ontario.  Residual spatial variation is the predicted log cancer risk for each DA minus the predicted effects of smoking and pollution.}
+\label{fig:female}
+\end{figure}
+
+
+\begin{figure}[H]
+\subfigure[Cancer risk]{\hspace{.6in} a plot\hspace{.6in}}
+\subfigure[Smoking risk]{\hspace{.6in} a plot\hspace{.6in}}
+\subfigure[Probability of residual 20\% excess risk]{\hspace{.6in}a plot\hspace{.6in}}
+\caption{Predicted risk surfaces and exceedance probability plot for male lung cancer in Hamilton, Ontario.  Residual spatial variation is the predicted log cancer risk for each DA minus the predicted effects of smoking and pollution.}
+\label{fig:female}
+\end{figure}
+
+
+\section{Discussion}
+
+
+\section*{Acknowledgements}
+
+\bibliography{}
+
+\end{document}
