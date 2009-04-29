@@ -1,7 +1,22 @@
 #addCensus indicates if adding the values specified in columns argument over census
 #return a list of rasters stacks if addCensus is False, otherwise a single stack
+##Add up two vectors by element
+add<-function(x,y){
+xna = is.na(x)
+yna = is.na(y)
+result = x + y
+
+onlyY = yna & !xna
+result[onlyY] = x[onlyY]
+
+onlyX = !yna & xna
+result[onlyX] = y[onlyX]
+
+result
+}
+
 rasterSMR.list<-function(poplist,bbox=NULL,xmn=NULL, xmx=NULL, ymn=NULL, ymx=NULL,
-        cellFine=c(50,50), cellCoarse=NULL, fact=NULL,projs="NA",columns=c("expected"),addCensus=TRUE){
+        cellFine=c(50,50), cellCoarse=NULL, fact=NULL,projs="NA",columns=c("expected_sqk"),addCensus=TRUE){
 
 
 #find a bbox for all census
@@ -24,7 +39,7 @@ if(addCensus){
     for(j in 1:length(columns)){
       news<-a[[1]]@layers[[j]] #initialize
       for (i in 2:length(a)){
-        news<-overlay(news,a[[i]]@layers[[j]],fun="+")
+        news<-overlay(news,a[[i]]@layers[[j]],fun=add)
       }
      if(j==1){sta<-stack(news)}else{sta<-addRasters(sta,news)}
     }
@@ -34,3 +49,4 @@ if(addCensus){
 a
 
 }
+
