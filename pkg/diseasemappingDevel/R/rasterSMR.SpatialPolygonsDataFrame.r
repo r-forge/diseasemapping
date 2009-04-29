@@ -4,12 +4,12 @@
 #if cellCoarse and fact is null, then fine raster will be returned, otherwise the Coarse raster with fact
 #cellFine and cellCoarse are dimention of cells in the same unit as the unit of popdata
 
-rasterSMR.SpatialPolygonsDataFrame<-function(popdata,bbox=NULL,cellFine=c(50,50), fact=NULL, cellCoarse=cellFine*fact,
-  xmn=NULL, xmx=NULL, ymn=NULL, ymx=NULL, columns=c("expected"),projs="NA"){
+rasterSMR.SpatialPolygonsDataFrame<-function(popdata,bbox=NULL,cellFine=c(50,50), fact=NULL, cellCoarse=NULL,
+  xmn=NULL, xmx=NULL, ymn=NULL, ymx=NULL, columns=c("expected_sqk"),projs="NA"){
 
 #aggregation indicator, if either one is not NULL, aggregate
 #agg<-(!is.null(fact) | !is.null(cellCoarse))
-
+cellCoarse=cellFine*fact
 #if bbox is given, use it to create the raster,
 if(!is.null(bbox)) {
   xmn<-xmin(bbox); xmx<-xmax(bbox); ymn<-ymin(bbox); ymx<-ymax(bbox);
@@ -24,6 +24,7 @@ if(length(cellCoarse)==0){cellCoarse<-cellFine}
 
 #Make sure bbox is multiples of coarse, otherwise ajusted bbox
 xdis<-xmx-xmn; ydis<-ymx-ymn
+xmax<-xmx;xmin<-xmn;ymax<-ymx;ymin<-ymn
 #get reminders
 x=xdis %% cellCoarse[1]; y=ydis %% cellCoarse[2];
 if(x!=0){xmax<-xmx + (cellCoarse[1]-x)/2; xmin<-xmn - (cellCoarse[1]-x)/2
@@ -46,7 +47,7 @@ if(cy!=0){ cellFine[2] <- cellCoarse[2]/fact[2]; warning("Fine cell on Y directi
 
 }
 
-        
+
 ##Find number of row and cols base on fine cells
 ncols <-  (xmax-xmin) %/% cellFine[1];  nrows <-  (ymax-ymin) %/% cellFine[2]
 r <- raster(nrows=nrows,ncols=ncols,xmn=xmin, xmx=xmax, ymn=ymin, ymx=ymax, projs=projs)
@@ -56,6 +57,7 @@ for (i in 1:length(columns)){
   f<-which(names(popdata) == columns[i])
   k<-polygonsToRaster(popdata, r,field=f)
   #if need to be aggregated
+
   if(!all(cellFine==cellCoarse)){
     k<-aggregate(k,fact,na.rm=T)
    }

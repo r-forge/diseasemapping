@@ -18,7 +18,8 @@ result
 rasterSMR.list<-function(poplist,bbox=NULL,xmn=NULL, xmx=NULL, ymn=NULL, ymx=NULL,
         cellFine=c(50,50), cellCoarse=NULL, fact=NULL,projs="NA",columns=c("expected_sqk"),addCensus=TRUE){
 
-
+#if coordinates are not given, use bbox
+if(any(is.null(xmn),is.null(xmx),is.null(ymn),is.null(ymx))){
 #find a bbox for all census
 x<-NULL;y<-NULL
 
@@ -30,6 +31,8 @@ for (year in 1:length(poplist)){
 xlimits = c(min(x),max(x))
 ylimits = c(min(y),max(y))
 bbox<-extent(matrix(c(xlimits,ylimits),nrow=2,byrow=T))
+}
+
 
 a<-lapply(poplist,rasterSMR,bbox=bbox,fact=fact,cellFine=cellFine, cellCoarse=cellCoarse,xmn=xmn, xmx=xmx, ymn=ymn, ymx=ymx, projs=projs,columns=columns)
 
@@ -44,9 +47,9 @@ if(addCensus){
      if(j==1){sta<-stack(news)}else{sta<-addRasters(sta,news)}
     }
 
-  a<-sta
 }
-a
+if(addCensus) list(indivdidual=a,total=sta)
+else a
 
 }
 
