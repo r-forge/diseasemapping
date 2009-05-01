@@ -1,4 +1,4 @@
-`inla.user.hook` = function(file.ini = NULL, data.dir = NULL, results.dir = NULL, formula = NULL, data = NULL)
+`inla.user.hook` = function(file.ini = NULL, data.dir = NULL, results.dir = NULL, formula = NULL, data = NULL,args = NULL)
 {
     
     
