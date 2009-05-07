@@ -20,6 +20,8 @@ pandemicParams <- function(
 }
 
 
+
+
 addScaleParameters = function(params) {
 
   thenames = names(params)
