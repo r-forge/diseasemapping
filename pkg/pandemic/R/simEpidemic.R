@@ -32,8 +32,7 @@ simEpidemic <- function(params, N, days=10,
   Nmild = length(theMild)
   # lost to followup
   theLost = theMild[as.logical(rbinom(Nmild, 1, params[["MedRec"]]["lost"]))]
-  print((theLost))
-  result[theLost,"removed"] = NA
+  result[theLost,c("type", "removed")] = NA
   result[theLost,"censor"] = days
   result[theLost,"observedType"] = "med"
 
@@ -48,26 +47,31 @@ simEpidemic <- function(params, N, days=10,
   # censor if recovery time is past days of followup
     censored = (result$med + result$removed) > days
     censored[is.na(censored)] = FALSE
-    result[censored,"removed"] <- NA
+    result[censored,c("type","removed")] <- NA
     result[censored,"censor"] <- days
     result[censored,"observedType"] <- "med"
   }
-  
-  
+
   # serious and deadly infection
   # hospitalization
   theSerious = result$type=="S"
   theDeadly = result$type=="D"
+  theNA = is.na(result$type)
+  theSerious[theNA] = theDeadly[theNA] = FALSE
+  
   result[theSerious, "hospital"] = 
     rweibullRound(sum(theSerious), params[["MedHospS"]])
   result[theDeadly, "hospital"] = 
     rweibullRound(sum(theDeadly), params[["MedHospD"]])
+
   
   censored = (result$med + result$hospital) > days
   censored[is.na(censored)] = FALSE
-  result[censored,"hospital"] <- NA
+  result[censored,c("type", "hospital")] <- NA
   result[censored,"censor"] <- days
   result[censored,"observedType"] <- "med"
+
+  
 
   # recovery or death
   inHosp = !is.na(result$hospital)
@@ -81,7 +85,7 @@ simEpidemic <- function(params, N, days=10,
 
   censored = inHosp & ((result$med + result$hospital + result$removed > days) )
   censored[is.na(censored)] = FALSE
-  result[censored,"removed"] <- NA
+  result[censored,c("type","removed")] <- NA
   result[censored,"censor"] <- days
   result[censored,"observedType"] <- "hosp"
 
@@ -91,7 +95,4 @@ simEpidemic <- function(params, N, days=10,
 }
 
 
-rweibullRound = function(N, params) {
-  round(rweibull(N, shape=params[["shape"]], scale=params[["scale"]]))
-}
 

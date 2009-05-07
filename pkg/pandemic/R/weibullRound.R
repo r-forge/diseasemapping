@@ -1,5 +1,6 @@
 rweibullRound = function(N, params=c(shape=1, scale=1)) {
-  round(rweibull(N, shape=params[["shape"]], scale=params[["scale"]]))
+
+  round(rweibull(N, shape=params["shape"], scale=params["scale"]))
 }
 
 
