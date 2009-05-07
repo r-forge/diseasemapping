@@ -34,11 +34,13 @@ simEpidemic <- function(params, N, days=10,
     rweibullRound(Nmild, params[["MedRec"]])
     
   # censor and observedType
-  censored =     
-  result
-
-
-
+  censored = (result$med + result$recovered) > days
+  censored[is.na(censored)] = FALSE
+  result[censored,"recovered"] <- NA
+  result[censored,"observedType"] <- "med"
+  
+   result
+  
 }
 
 

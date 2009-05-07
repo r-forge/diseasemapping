@@ -14,6 +14,7 @@ pandemicParams <- function(
   result = list()
   for(D in names(theFormals))
      result[[D]] = eval(theFormals[[D]])
+   
    addScaleParameters(result)               
 
 }
