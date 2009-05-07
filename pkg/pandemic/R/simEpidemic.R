@@ -28,16 +28,30 @@ simEpidemic <- function(params, N, days=10,
   
   # mild infections, 
   # recovery date
-  theMild = result$type=="M"
-  result[theMild, "removed"] = 
-    rweibullRound(sum(theMild), params[["MedRec"]])
+  theMild = which(result$type=="M")
+  Nmild = length(theMild)
+  # lost to followup
+  theLost = theMild[as.logical(rbinom(Nmild, 1, params[["MedRec"]]["lost"]))]
+  print((theLost))
+  result[theLost,"removed"] = NA
+  result[theLost,"censor"] = days
+  result[theLost,"observedType"] = "med"
+
+  # if not lost, generate recovery times
+  theMild = theMild[!theLost]  
+  Nmild = length(theMild)
+
+  if(Nmild) {  
+    result[theMild, "removed"] = 
+      rweibullRound(length(theMild), params[["MedRec"]])
     
-  # censor and observedType
-  censored = (result$med + result$removed) > days
-  censored[is.na(censored)] = FALSE
-  result[censored,"removed"] <- NA
-  result[censored,"censor"] <- days
-  result[censored,"observedType"] <- "med"
+  # censor if recovery time is past days of followup
+    censored = (result$med + result$removed) > days
+    censored[is.na(censored)] = FALSE
+    result[censored,"removed"] <- NA
+    result[censored,"censor"] <- days
+    result[censored,"observedType"] <- "med"
+  }
   
   
   # serious and deadly infection
