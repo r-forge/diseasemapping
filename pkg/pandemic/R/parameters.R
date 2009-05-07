@@ -16,3 +16,20 @@ pandemicParams <- function(
    result               
 
 }
+
+
+addScaleParameters = function(params) {
+
+  for(D in names(params))
+    params[[D]]["scale"] = params[[D]]["mean"] / 
+      gamma(1 + 1/params[[D]]["shape"])
+  params
+}
+
+addMeanParameters = function(params) {
+
+  for(D in names(params))
+    params[[D]]["mean"] = params[[D]]["scale"] *
+      gamma(1 + 1/params[[D]]["shape"])
+  params
+}
