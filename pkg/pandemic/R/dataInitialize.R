@@ -12,6 +12,13 @@ weibull[i]=round(rweibull(1,a,b))
 weibull
 }
 
+  needtype=is.na(data$type)
+theTypes = c("M","S","D")   
+
+     data[needtype,"type"] = sample(factor(theTypes, levels=theTypes),
+    sum(needtype), replace=T, prob=params$probs)
+
+
   needOnset=is.na(data$onset)
 
   data[needOnset,"onset"]  = - round(rweibull(sum(needOnset),
@@ -58,10 +65,10 @@ weibull
 
    needremoved=((as.character(data$observedType)=="med")&(as.character(data$type)=="M"))
 
-   data[needremoved,"removed"]=censorweibull(
-getVecParams(params, "MedRec", "shape"),
- getVecParams(params, "MedRec", "scale"),(data[needremoved,"censor"]-data[needremoved,"med"])
-    ) 
+   data[needremoved,"removed"]=round(rweibull(sum(needremoved),
+  shape= getVecParams(params, "MedRec", "shape"),
+    scale= getVecParams(params, "MedRec", "scale")
+    ) )   
 
 
    needremoved=((as.character(data$observedType)=="hosp")&(as.character(data$type)=="S"))
