@@ -4,8 +4,8 @@ simEpidemic <- function(params, N, days=10,
   if(!any(names(params[["OnsMedM"]])=="scale"))
     warning("can't find scale parameter, use addScaleParameters")
   
-  colNames <- c("infect", "onset",  "med", "hospIn",
-     "hospOut", "death", "censor", "type","observedType")
+  colNames <- c("infect", "onset",  "med", "hospital",
+     "recovered", "death", "censor", "type","observedType")
   result <- matrix(NA, N, length(colNames), 
     dimnames = list(NULL, colNames))
   result <- as.data.frame(result)
@@ -15,6 +15,9 @@ simEpidemic <- function(params, N, days=10,
   result$type = sample(factor(theTypes, levels=theTypes),
     N, replace=T, prob=params$probs)
   
+  theTypes = c(theTypes, "med","hosp")
+  result$observedType = factor(result$type, levels=theTypes)
+  
   # onset times
   haveOnset = as.logical(rbinom(N, 1, 1-probOnsetMissing))
   
@@ -23,11 +26,23 @@ simEpidemic <- function(params, N, days=10,
     scale= getVecParams(params, "OnsMed", "scale")[as.character(result$type)]
     ) )   
   
+  # mild infections, 
+  # recovery date
+  theMild = result$type=="M"
+  Nmild = sum(theMild)
+  result[theMild, "recovered"] = 
+    rweibullRound(Nmild, params[["MedRec"]])
     
+  # censor and observedType
+  censored =     
   result
 
 
 
 }
 
+
+rweibullRound = function(N, params) {
+  round(rweibull(N, shape=params[["shape"]], scale=params[["scale"]]))
+}
 
