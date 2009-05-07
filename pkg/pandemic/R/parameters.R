@@ -3,10 +3,10 @@ pandemicParams <- function(
  OnsMedM = c(mean = 1, shape = 1, zeros = 0),
  OnsMedS = c(mean = 1, shape = 1, zeros = 0),
  OnsMedD = c(mean = 1, shape = 1, zeros = 0),
- MedRec = c(mean = 1, shape = 1, zeros = 0),
+ MedRec = c(mean = 2, shape = 1, zeros = 0),
  MedHospS = c(mean = 1, shape = 1, zeros = 0),
  MedHospD = c(mean = 1, shape = 1, zeros = 0),
- HospRec = c(mean = 1, shape = 1, zeros = 0),
+ HospRec = c(mean = 2, shape = 1, zeros = 0),
  HospDeath = c(mean = 1, shape = 1, zeros = 0),
  probs = c(M=0.6, S=0.3, D=0.1)
 ) {

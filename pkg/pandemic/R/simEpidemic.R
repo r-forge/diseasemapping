@@ -5,7 +5,7 @@ simEpidemic <- function(params, N, days=10,
     warning("can't find scale parameter, use addScaleParameters")
   
   colNames <- c("infect", "onset",  "med", "hospital",
-     "recovered", "death", "censor", "type","observedType")
+     "removed", "censor", "type","observedType")
   result <- matrix(NA, N, length(colNames), 
     dimnames = list(NULL, colNames))
   result <- as.data.frame(result)
@@ -29,17 +29,50 @@ simEpidemic <- function(params, N, days=10,
   # mild infections, 
   # recovery date
   theMild = result$type=="M"
-  Nmild = sum(theMild)
-  result[theMild, "recovered"] = 
-    rweibullRound(Nmild, params[["MedRec"]])
+  result[theMild, "removed"] = 
+    rweibullRound(sum(theMild), params[["MedRec"]])
     
   # censor and observedType
-  censored = (result$med + result$recovered) > days
+  censored = (result$med + result$removed) > days
   censored[is.na(censored)] = FALSE
-  result[censored,"recovered"] <- NA
+  result[censored,"removed"] <- NA
+  result[censored,"censor"] <- days
   result[censored,"observedType"] <- "med"
   
-   result
+  
+  # serious and deadly infection
+  # hospitalization
+  theSerious = result$type=="S"
+  theDeadly = result$type=="D"
+  result[theSerious, "hospital"] = 
+    rweibullRound(sum(theSerious), params[["MedHospS"]])
+  result[theDeadly, "hospital"] = 
+    rweibullRound(sum(theDeadly), params[["MedHospD"]])
+  
+  censored = (result$med + result$hospital) > days
+  censored[is.na(censored)] = FALSE
+  result[censored,"hospital"] <- NA
+  result[censored,"censor"] <- days
+  result[censored,"observedType"] <- "med"
+
+  # recovery or death
+  inHosp = !is.na(result$hospital)
+  seriousHosp = theSerious & inHosp
+  deadlyHosp = theDeadly & inHosp
+  result[seriousHosp,"removed"] =
+     rweibullRound(sum(seriousHosp), params[["HospRec"]])
+
+  result[deadlyHosp,"removed"] =
+     rweibullRound(sum(deadlyHosp), params[["HospDeath"]])
+
+  censored = inHosp & ((result$med + result$hospital + result$removed > days) )
+  censored[is.na(censored)] = FALSE
+  result[censored,"removed"] <- NA
+  result[censored,"censor"] <- days
+  result[censored,"observedType"] <- "hosp"
+
+  
+  result
   
 }
 
