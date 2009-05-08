@@ -1,0 +1,10 @@
+\documentclass{article}
+\usepackage{Sweave}
+\title{Priors for swine flu}
+
+\begin{document}
+
+\maketitle
+
+
+\end{document}
