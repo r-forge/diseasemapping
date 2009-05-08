@@ -29,6 +29,7 @@ dprior(2, priors$InfOns$mean, prefix="r")
 dprior(0.2, priors$InfOns$zeros)
 
 
-
+sampleProbs(data$type, priors$probs)
+  
   
   
