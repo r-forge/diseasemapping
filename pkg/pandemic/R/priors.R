@@ -1,4 +1,4 @@
-                                        pandemicPriors = function( 
+pandemicPriors = function( 
   InfOns = meanShapeZerosPrior(),
  OnsMedM = meanShapeZerosPrior(),
  OnsMedS = meanShapeZerosPrior(),
@@ -34,8 +34,11 @@ meanShapeZerosPrior = function(
 }
 
  meanShapeZerosLostPrior = function(lost=c(mean=1, sd=1), ...) {
-  list(???)
- 
+  
+  result = meanShapeZerosPrior(...)
+  result$lost = lost
+  priorShapeScale(result)
+  
  }
 
 
@@ -44,18 +47,35 @@ priorShapeScale = function(priorList) {
 # each element has "mean" and "sd"
 
   thenames = names(priorList)
-  for(D in thenames[thenames %in% c("mean","shape") ) {
+  for(D in thenames[thenames %in% c("mean","shape")] ) {
     priorList[[D]]["shape"] = priorList[[D]]["sd"]^2/priorList[[D]]["mean"]
     priorList[[D]]["scale"] = priorList[[D]]["mean"] /priorList[[D]]["shape"]
+    attributes(priorList[[D]])$distribution = "gamma"
   }
-  for(D in thenames[thenames %in% c("zeros","lost") ) {
+  for(D in 
+    thenames[thenames %in% c("zeros","lost","fatality","hosp")] ) {
      priorList[[D]]["shape2"] = 
       priorList[[D]]["sd"]^2 / priorList[[D]]["mean"] / (1-priorList[[D]]["mean"])*
         (1+1/(1-priorList[[D]]["mean"]))
      priorList[[D]]["shape1"] = priorList[[D]]["shape2"] * 
       priorList[[D]]["mean"] / (1-priorList[[D]]["mean"])
+    attributes(priorList[[D]])$distribution = "beta"      
   }
   priorList
 }
 
 
+probsPrior = function(
+  fatality = c(mean=0.1, sd=0.2),
+  hosp = c(mean=0.2, sd=0.2)  
+  ) {
+  
+   theFormals = formals()
+  result = list()
+  for(D in names(theFormals)) {
+     result[[D]] = eval(theFormals[[D]])
+   }
+   priorShapeScale(result)  
+  
+  
+  }
