@@ -22,15 +22,17 @@ mergeINLA<-function(data,INLA,spatial="regionSP",iid="region",exceed=1.2){
 
 
 #Computer exceedance proabilities
-getEx<-function(post,r){
+
+ getEx<-function(post,r){
         V<-NULL
 	for(i in 1:length(post)){
-
 		post1<-post[[i]]
 		colnames(post1) = c("x", "y")
-		V[i]<-sum(post1[post1[,"x"] > log(r), "y"])* unique(diff(post1[,"x"]))[1]
+                thediff = diff(post1[,"x"])
+                thediff = 0.5*c(0, thediff) + 0.5*c(thediff, 0)
+                above= post1[,"x"] > log(r)
+		V[i]<-sum(post1[above,"y"] * thediff[above])
 	}
        V
 
 }
-
