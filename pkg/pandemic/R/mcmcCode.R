@@ -1,15 +1,19 @@
-paramUpdate=function(param,x,sigma,periods)
+paramUpdate=function(params,data,name,x,sigma)
 {
-paramNew=param
-paramNew[x]=abs(rnorm(1,param[x],sigma))
-ratio=prod(dweibullRound(periods,paramNew))/prod(dweibullRound(periods,param))
-if(ratio>runif(1)) param=paramNew
-param
+paramsNew=params
+paramsNew[[name]][x]=abs(rnorm(1,paramsNew[[name]][x],sigma))
+paramsNew=addMeanParameters(paramsNew)
+if(Likelihood(data,data,params,paramsNew)>runif(1)) params=paramsNew
+params
 }
 
-
-
-
+name=names(params)
+for(i in name[name!="probs"]) 
+{
+params=paramUpdate(params,data,i,"shape",0.1)
+params=paramUpdate(params,data,i,"scale",0.1)
+}
+params
 
 Likelihood=function(data,dataNew,params,paramsNew)
 {
@@ -74,7 +78,7 @@ Likelihood(data,dataNew,params,paramsNew)
 
 
 
-#delta=rgamma(1,(nrow(data)+1),rate=ExpectedNoCases)
+
 
 
 
