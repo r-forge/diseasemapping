@@ -22,7 +22,7 @@ pandemicPriors = function(
 meanShapeZerosPrior = function(
   mean =  c(mean=1, sd=1),
   shape = c(mean=1, sd=1),
-  zeros =  c(mean=1, sd=1)
+  zeros =  c(mean=0.1, sd=0.1)
 ) {
 
   theFormals = formals()
@@ -79,3 +79,21 @@ probsPrior = function(
   
   
   }
+
+dprior = function(x, prior, prefix="d") {
+  argList = list(
+    gamma=c("shape","scale"),
+    beta = c("shape1", "shape2")
+  )[[attributes(prior)$distribution]]
+  
+  theFun = get(paste(prefix, attributes(prior)$distribution, sep=""))
+  
+  toCall = list(theFun, x)
+  for(D in argList)
+    toCall[[D]] = prior[D]
+
+  eval(as.call(toCall  ))
+       
+    
+  
+}
