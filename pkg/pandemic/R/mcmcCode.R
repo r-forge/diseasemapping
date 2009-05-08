@@ -7,13 +7,20 @@ if(Likelihood(data,data,params,paramsNew)>runif(1)) params=paramsNew
 params
 }
 
-name=names(params)
-for(i in name[name!="probs"]) 
+probsUpdate=function(params,data,sigma)
 {
-params=paramUpdate(params,data,i,"shape",0.1)
-params=paramUpdate(params,data,i,"scale",0.1)
+paramsNew=params
+probsNew=c(M=0,S=0,D=1)
+while(min(probsNew)<=0)
+{
+probsNew["M"]=rnorm(1,probs["M"],sigma)
+probsNew["S"]=rnorm(1,probs["S"],sigma)
+probsNew["D"]=1-probsNew["M"]-probsNew["S"]
 }
+paramsNew$probs=probsNew
+if(Likelihood(data,data,params,paramsNew)>runif(1)) params=paramsNew
 params
+}
 
 Likelihood=function(data,dataNew,params,paramsNew)
 {
@@ -47,12 +54,10 @@ params$probs["D"]^sum(data$type=="D"))
 
 Eprime=InfectionP(dataNew,paramsNew)
 E=InfectionP(data,params)
-like=(Eprime/E)^nrow(data)*exp(-delta*(Eprime-E))
+like=like*(Eprime/E)^nrow(data)*exp(-delta*(Eprime-E))
 
 like
 }
-
-
 
 
 InfectionP=function(data,params)
@@ -72,9 +77,7 @@ sumWeibull(i,params$InfOns,params$OnsMedD)*params$probs["D"]
 ExpectedNoCases
 }
 
-InfectionP(data,params)
 
-Likelihood(data,dataNew,params,paramsNew)
 
 
 
