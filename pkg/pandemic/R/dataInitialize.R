@@ -1,4 +1,4 @@
-censorweibull=function(a,b,cen)
+censorweibull=function(a,b,cen, params)
 {
 weibull=0
 for(i in 1:length(cen))
@@ -12,11 +12,53 @@ weibull[i]=round(rweibull(1,a,b))
 weibull
 }
 
-  needtype=is.na(data$type)
-theTypes = c("M","S","D")   
 
-     data[needtype,"type"] = sample(factor(theTypes, levels=theTypes),
-    sum(needtype), replace=T, prob=params$probs)
+
+
+# hosps
+inHosp = which(data$observedType == "hosp")
+inHospTimes = data[inHosp, "censor"] - data[inHosp, "hospital"]
+probCensorGivenDeadly = 1-pweibullRound(inHospTimes, params$HospDeath)
+probCensorGivenSerious = 1-pweibullRound(inHospTimes, params$HospRec)
+
+probDeadlyGivenCensor = probCensorGivenDeadly *params$probs["D"]
+
+probDeadlyGivenCensor = probDeadlyGivenCensor / 
+  (probDeadlyGivenCensor + probCensorGivenSerious)
+  
+data[inHosp,"type"] = c("S","D")[1+rbinom(length(inHosp), 1, probDeadlyGivenCensor)]  
+
+
+# meds
+inMed = which(data$observedType == "med")
+inMedTimes = data[inMed, "censor"] - data[inMed, "med"]
+
+probOf = data.frame(
+  "L" = 1* params$probs["M"] * params$MedRec["lost"], 
+  "M"= (1-pweibullRound(inMedTimes, params$MedRec)) *
+      (params$probs["M"] * (1- params$MedRec["lost"]) ) ,
+  "S"= params$probs["S"]*
+    (1-pweibullRound(inMedTimes, params$MedHospS)),
+  "D"= params$probs["D"]*
+    (1-pweibullRound(inMedTimes, params$MedHospD) )
+  )
+#sumProb = apply(probOf, 1, sum)  
+
+#probOf = apply(probOf, 2, function(qq) qq/sumProb)
+# generate states
+states = apply(probOf, 1, function(qq) {
+    sample(colnames(probOf), 1, prob=qq)
+} )
+
+theLost = states=="L" 
+states[theLost]="M"
+data$lost = FALSE
+data[inMed[theLost],"lost"] = T
+data[inMed,"type"] = states
+
+
+
+
 
 
   needOnset=is.na(data$onset)
@@ -64,11 +106,15 @@ theTypes = c("M","S","D")
 
 
    needremoved=((as.character(data$observedType)=="med")&(as.character(data$type)=="M"))
+   # depends if you're lost or not
 
-   data[needremoved,"removed"]=round(rweibull(sum(needremoved),
+   # if lost
+   data[data$lost,"removed"]=round(rweibull(sum(data$lost),
   shape= getVecParams(params, "MedRec", "shape"),
     scale= getVecParams(params, "MedRec", "scale")
     ) )   
+    #if not lost
+
 
 
    needremoved=((as.character(data$observedType)=="hosp")&(as.character(data$type)=="S"))

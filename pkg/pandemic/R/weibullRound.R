@@ -12,3 +12,7 @@ dweibullRound = function(x, params=c(shape=1, scale=1)) {
                                                                    
 
 }
+
+pweibullRound(x, params) {
+  pweibull(x+0.5, shape=params["shape"], scale=params["scale"])
+}

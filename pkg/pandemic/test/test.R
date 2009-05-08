@@ -1,8 +1,9 @@
 source("../R/parameters.R")
 source("../R/simEpidemic.R")
+source("../R/weibullRound.R")
 
 params = pandemicParams()
- data = simEpidemic(params, 10)
+ data = simEpidemic(params, 30)
  summary(data)
 
  xseq=0:20
