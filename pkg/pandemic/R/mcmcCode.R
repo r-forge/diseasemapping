@@ -3,24 +3,33 @@ paramUpdate=function(params,data,name,x,sigma)
 paramsNew=params
 paramsNew[[name]][x]=abs(rnorm(1,paramsNew[[name]][x],sigma))
 paramsNew=addMeanParameters(paramsNew)
-if(Likelihood(data,data,params,paramsNew)>runif(1)) params=paramsNew
+ratio=Like1(data,params,paramsNew,name)
+ratio=ratio*
+   dprior(paramsNew[[name]["mean"],prior[[name]]["mean"]$mean)/
+  dprior(params[[name]["mean"],prior[[name]]["mean"]$mean)
+ratio=ratio*
+  dprior(paramsNew[[name]["shape"],prior[[name]]["shape"]$shape)/
+  dprior(params[[name]["shape"],prior[[name]]["shape"]$shape)
+ratio= ratio*
+  dprior(paramsNew[[name]["zeros"],prior[[name]]["zeros"]$zeros)/
+  dprior(params[[name]["zeros"],prior[[name]]["zeros"]$zeros)
+if(ratio>runif(1)) params=paramsNew
 params
 }
 
-probsUpdate=function(params,data,sigma)
+probsUpdate=function(data,probs,prior)
 {
-paramsNew=params
-probsNew=c(M=0,S=0,D=1)
-while(min(probsNew)<=0)
-{
-probsNew["M"]=rnorm(1,probs["M"],sigma)
-probsNew["S"]=rnorm(1,probs["S"],sigma)
-probsNew["D"]=1-probsNew["M"]-probsNew["S"]
+probs["D"]=rbeta(1,sum(data$type=="D")+prior$probs$fatality["shape1"],
+    sum(data$type=="M")+sum(data$type=="S")+prior$probs$fatality["shape2"])
+
+probs["S"]=(1-probs["D"])*rbeta(1,sum(data$type=="S")+prior$probs$hosp["shape1"],
+    sum(data$type=="M")+prior$probs$hosp["shape2"])
+
+probs["M"]=1-probs["D"]-probs["S"]
+
+probs
 }
-paramsNew$probs=probsNew
-if(Likelihood(data,data,params,paramsNew)>runif(1)) params=paramsNew
-params
-}
+
 
 Likelihood=function(data,dataNew,params,paramsNew)
 {
@@ -130,8 +139,6 @@ like=like*(Eprime/E)^nrow(data)*exp(-delta*(Eprime-E))
 like
 }
 
-
-
 Like3=function(data,i)
 {
 like=1
@@ -155,3 +162,7 @@ like=like*dweibullzero(data[i,"removed"],params$HospDeath)
 }
 like
 }
+
+priorEval=function(params,prior,name)
+{
+prob=dprior(2.5,prior$name$shape)
