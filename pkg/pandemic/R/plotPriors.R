@@ -14,7 +14,7 @@ if(tex) {
 
 }
 
-params = list()
+params = paramRange = list()
      
 for(D in names(x)) {
   thedist = attributes(x[[D]])$distribution

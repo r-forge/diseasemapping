@@ -42,21 +42,3 @@ readPrior = function(file="priors.txt") {
 
 
 }
-
-plotPrior=function(x) {
-    if(length(x)==3)
-      par(mfrow=c(1,3))
-    if(length(x)==4)
-      par(mfrow=c(2,2))
-     
-for(D in names(x)) {
-  thedist = attributes(x[[D]])$distribution
-  if(thedist == "gamma")
-    xseq = seq(0, 5*x[[D]]["mean"], len=100)     
-  if(thedist == "beta")
-    xseq = seq(0, 1, len=100)      
-  plot(xseq, dprior(xseq, x[[D]]), type="l", main=D,
-    ylab='prob', xlab='value')
-}      
-
-}

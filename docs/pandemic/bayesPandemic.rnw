@@ -1,10 +1,168 @@
-\documentclass{article}
-\usepackage{Sweave}
-\title{Priors for swine flu}
+\documentclass{beamer}
+\usepackage[nogin]{Sweave}
+\title{Bayesian statistics and  swine flu}
+\author{Patrick Brown, Dionne Gesink Law, Peter Neal} 
+\usepackage{amsmath,subfigure}
+
+\SweaveOpts{echo=FALSE,fig=true,prefix.string=Figures/G,height=2,width=3}
 
 \begin{document}
-
+\begin{frame}
 \maketitle
 
+\end{frame}
+
+
+<<setup,fig=false>>=
+options(SweaveHooks=list(fig=function() par(mar=c(2.5,2.5,0.1,0.1), mgp=c(1.5, 0.5, 0), cex=0.6)))
+# source in all the R files
+Rfiles=system("CMD /K dir /B ..\\..\\pkg\\pandemic\\R\\*.R", intern=T)
+Rfiles = grep("\\.R$", Rfiles, value=T)
+for(D in Rfiles) {
+	source(paste("..\\..\\pkg\\pandemic\\R\\", D, sep=""))
+#$
+}
+@
+
+\begin{frame}
+\frametitle{The Problem}
+\begin{itemize}
+	\item Some people will get infected with swine flu
+	\item Some will get hospitalized, some will die
+	\item How do we fatality rate and the hospitalization rate?
+	\item Problem: censoring, some individuals in the dataset have not yet had their hospitalization and/or fatality
+	\item Crude rates underestimate the rates, and result in estimates increasing over time
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{The Model}
+
+\begin{block}{Mild}
+\begin{center}
+ Infection $\stackrel{f_I(t)}{\Longrightarrow}$ Onset $\stackrel{f_{OM}(t;)}{\Longrightarrow}$ \\ Medical  $\stackrel{f_{MR}(t)}{\Longrightarrow}$ Recovery
+\end{center}
+
+\end{block}
+
+\begin{block}{Serious} 
+\begin{center}
+Infection$\stackrel{f_I(t)}{\Longrightarrow}$ Onset $\stackrel{f_{OS}(t)}{\Longrightarrow}$ Medical $\stackrel{f_{SH}(t)}{\Longrightarrow}$\\ Hospitalization $\stackrel{f_{SR}(t;)}{\Longrightarrow}$ Recovery
+\end{center}\end{block}
+\begin{block}{Deadly} \begin{center}Infection $\stackrel{f_I(t)}{\Longrightarrow}$ Onset $\stackrel{f_{OD}(t)}{\Longrightarrow}$ Medical $\stackrel{f_{HD}(t)}{\Longrightarrow}$\\ Hospitalization $\stackrel{f_{D}(t)}{\Longrightarrow}$ Death 
+\end{center}
+\end{block}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Distributions}
+\begin{itemize}
+	\item $f(t;\mu,\nu,\delta)$ is the distribution for time to an event.  
+	\item \ldots a rounded, zero-inflated Weibull
+\begin{align*}
+Z\sim&\text{Bern}(\delta)\\
+[Y|Z=1] =& 0 \text{w.p.} 1\\
+pr(T=t|Z=0) =&  \text{pr}(\max(t-0.5,0) < y < t+0.5)\\
+y \sim & \text{Weibull}(\mu/\Gamma(1 + 1/\nu), \nu)
+\end{align*}
+\item $\delta$ is the probability of transitioning immediately for an administrative (not biological) reason, 
+\begin{itemize}
+	\item i.e.\ arriving dead at the hospital.
+\end{itemize}
+\item Barring administrative zeros, $\mu = E(T|Z=0)$ is the average time to an event
+\begin{itemize}
+	\item $\mu_I$ is average time to infection
+\end{itemize}
+\item $\nu$ is a Weibull shape parameter
+\begin{itemize}
+	\item $\nu=1$ is constant hazards
+	\item $\nu > 1$ results in more regular event times.
+\end{itemize}
+
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Priors}
+\begin{itemize}
+	\item What does expert opinion tell us these parameters should be?
+	\item Based on previous experience, not the current data.
+	\item We need a distribution, not a single value
+\begin{itemize}
+	\item If we `knew' the correct value, there would be no need for this model
+\end{itemize}
+\item Gamma or Beta priors, parametrized by mean and standard deviation
+\item Average time to onset of symptoms is expected to be 3.5 days, but the average time could be a day longer or shorter.
+\begin{itemize}
+	\item $E(\mu_I = 3.5)$ and $sd(\mu_I = 0.5$
+	\item $\mu_I \sim \text{Gamma}(3.5^2/0.5^2 , 3.5/0.5^2 )$
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Proportion parameters}
+
+\begin{itemize}
+	\item $\rho_D$ is the fatality ratio, or probability of a deadly infection
+	\item $\rho_S$ is the proportion of non-fatalities which are hospitalized
+	\item so the probability of being hospitalized is $\rho_D + (1-\rho_D)\rho_S$
+	\item parametrize this way to ensure the probabilities of being Mild, Severe, or Deadly add to 1.
+	\item beta priors on $\rho_D$ and $\rho_S$, parametrized by mean and standard deviation
+	\item i.e.\ $\rho_D$ is expected to be $0.1$, with $sd(\rho_D = 0.05)$
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{What we need}
+\begin{verbatim}
+transition parameter mean sd distribution
+InfOns	mean	1	1	gamma	
+InfOns	shape	1	1	gamma	
+InfOns	zeros	0.1	0.1	beta	
+OnsMedM	mean	1	1	gamma	
+OnsMedM	shape	1	1	gamma	
+OnsMedM	zeros	0.1	0.1	beta	
+OnsMedS	mean	1	1	gamma	
+OnsMedS	shape	1	1	gamma	
+OnsMedS	zeros	0.1	0.1	beta	
+OnsMedD	mean	1	1	gamma	
+OnsMedD	shape	1	1	gamma	
+OnsMedD	zeros	0.1	0.1	beta	
+\end{verbatim}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Prior graphs}
+<<priorGraph, fig=false,results=tex>>=
+priors= pandemicPriors()
+plotPrior(priors$InfOns, file="InfOns", tex=TRUE)
+@
+\end{frame}
+
+\begin{frame}
+\frametitle{Inference}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Simulated data}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{To do}
+\begin{itemize}
+	\item model the infection process
+	\item simulate hospital loads
+	\item covariates
+	\item spatial infection process
+\end{itemize}
+\end{frame}
 
 \end{document}
