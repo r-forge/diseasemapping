@@ -41,3 +41,15 @@ x=x+dweibullRound(j,params1)*dweibullRound(i,params2)
 }
 x
 }
+
+simWeibullzero=function(params)
+{
+u=runif(1)
+x=-1
+while(u>0)
+{
+x=x+1
+u=u-dweibullzero(x,params)
+}
+x
+}

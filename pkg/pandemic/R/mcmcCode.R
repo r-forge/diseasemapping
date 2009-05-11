@@ -30,6 +30,22 @@ probs["M"]=1-probs["D"]-probs["S"]
 probs
 }
 
+dataUpdate=function(data,xdata,params,i)
+{
+dataNew=data
+
+#if(is.na(data[i,"type"]==T) # Sample type taking into account lost!!
+
+if(dataNew[i,"type"]==M)
+{
+if(is.na(xdata[i,"onset"])==T) 
+dataNew[i,"onset"]=-simWeibullzero(params$OnsMedM)
+if(is.na(xdata[i,"onset"])==T)
+
+
+
+}
+
 
 Likelihood=function(data,dataNew,params,paramsNew)
 {
@@ -163,6 +179,3 @@ like=like*dweibullzero(data[i,"removed"],params$HospDeath)
 like
 }
 
-priorEval=function(params,prior,name)
-{
-prob=dprior(2.5,prior$name$shape)
