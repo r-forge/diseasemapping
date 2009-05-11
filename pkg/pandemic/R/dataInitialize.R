@@ -14,6 +14,7 @@ weibull
 
 
 
+dataAugment = function(data, params) {
 
 # hosps
 inHosp = which(data$observedType == "hosp")
@@ -135,6 +136,6 @@ getVecParams(params, "HospDeath", "shape"),
 
 data
 
-
+}
 
 

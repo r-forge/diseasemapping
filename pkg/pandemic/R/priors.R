@@ -80,7 +80,7 @@ probsPrior = function(
   
   }
 
-dprior = function(x, prior, prefix="d") {
+dprior = function(x, prior, prefix="d", ...) {
   argList = list(
     gamma=c("shape","scale"),
     beta = c("shape1", "shape2")
@@ -88,7 +88,7 @@ dprior = function(x, prior, prefix="d") {
   
   theFun = get(paste(prefix, attributes(prior)$distribution, sep=""))
   
-  toCall = list(theFun, x)
+  toCall = list(theFun, x, ...)
   for(D in argList)
     toCall[[D]] = prior[D]
 
