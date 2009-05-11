@@ -133,6 +133,10 @@ OnsMedS	zeros	0.1	0.1	beta
 OnsMedD	mean	1	1	gamma	
 OnsMedD	shape	1	1	gamma	
 OnsMedD	zeros	0.1	0.1	beta	
+MedRec	mean	1	1	gamma	
+MedRec	shape	1	1	gamma	
+MedRec	zeros	0.1	0.1	beta	
+MedRec	lost	1	1	beta	
 \end{verbatim}
 \end{frame}
 
@@ -142,17 +146,39 @@ OnsMedD	zeros	0.1	0.1	beta
 <<priorGraph, fig=false,results=tex>>=
 priors= pandemicPriors()
 plotPrior(priors$InfOns, file="InfOns", tex=TRUE)
+#$
 @
+
 \end{frame}
 
 \begin{frame}
 \frametitle{Inference}
+\begin{itemize}
+	\item We have data $Y$ and unknown parameters $\theta$.
+	\item The model specifies $[Y|\theta]$
+	\item Priors are $[\theta]$.
+	\item Posteriors: $[\theta|Y] \propto [Y|\theta][\theta]$
+	\item Posteriors show what we think the parameters could be, given the data and the prior distributions
+	\item There's no data on infection times, so the posterior for $\mu_{I}$ is the same as the prior.
+\end{itemize}
+\end{frame}
 
+\begin{frame}[fragile]
+\frametitle{Simulated data}
+<<simData,echo=true,fig=false>>=
+params = pandemicParams()
+ data = simEpidemic(params, 30)
+@
 \end{frame}
 
 \begin{frame}
 \frametitle{Simulated data}
-
+<<simDataTable,results=tex,fig=false>>=
+toPrint = data[1:12,]
+toPrint[is.na(toPrint)] = " "
+toPrint = as.matrix(toPrint)
+latex(toPrint, file="",center="none", title="", table.env=F)
+@
 \end{frame}
 
 \begin{frame}
