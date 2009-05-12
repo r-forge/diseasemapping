@@ -12,8 +12,6 @@ weibull[i]=round(rweibull(1,a,b))
 weibull
 }
 
-
-
 dataAugment = function(data, params) {
 
 # hosps
@@ -28,7 +26,6 @@ probDeadlyGivenCensor = probDeadlyGivenCensor /
   (probDeadlyGivenCensor + probCensorGivenSerious)
   
 data[inHosp,"type"] = c("S","D")[1+rbinom(length(inHosp), 1, probDeadlyGivenCensor)]  
-
 
 # meds
 inMed = which(data$observedType == "med")
@@ -57,11 +54,6 @@ data$lost = FALSE
 data[inMed[theLost],"lost"] = T
 data[inMed,"type"] = states
 
-
-
-
-
-
   needOnset=is.na(data$onset)
 
   data[needOnset,"onset"]  = - round(rweibull(sum(needOnset),
@@ -79,20 +71,24 @@ data[inMed,"type"] = states
  
    needhospital=((as.character(data$observedType)=="med")&(as.character(data$type)=="S"))
 
+if (sum(needhospital)>0)
+{
    data[needhospital,"hospital"]=censorweibull(
     getVecParams(params, "MedHospS", "shape"),
     getVecParams(params, "MedHospS", "scale"),
 (data[needhospital,"censor"]-data[needhospital,"med"])
     ) 
-
    
   data[needhospital,"removed"]  =  round(rweibull(sum(needhospital),
   shape= getVecParams(params, "HospRec", "shape"),
     scale= getVecParams(params, "HospRec", "scale")
     ) )   
+}
 
    needhospital=((as.character(data$observedType)=="med")&(as.character(data$type)=="D"))
 
+if (sum(needhospital)>0)
+{
    data[needhospital,"hospital"]=censorweibull(
      getVecParams(params, "MedHospD", "shape"),
     getVecParams(params, "MedHospD", "scale"),
@@ -104,22 +100,32 @@ data[inMed,"type"] = states
   shape= getVecParams(params, "HospDeath", "shape"),
     scale= getVecParams(params, "HospDeath", "scale")
     ) )   
-
+}
+ 
+# Ok to here
 
    needremoved=((as.character(data$observedType)=="med")&(as.character(data$type)=="M"))
    # depends if you're lost or not
 
-   # if lost
+if (sum(needremoved)>0)
    data[data$lost,"removed"]=round(rweibull(sum(data$lost),
   shape= getVecParams(params, "MedRec", "shape"),
     scale= getVecParams(params, "MedRec", "scale")
     ) )   
-    #if not lost
+    
 
-
+#if not lost
+    needremoved=((as.character(data$observedType)=="med")&(as.character(data$type)=="M")&(data$lost==F))
+if (sum(needremoved)>0)
+     data[needremoved,"removed"]=censorweibull(
+getVecParams(params, "MedRec", "shape"),
+ getVecParams(params, "MedRec", "scale"),
+(data[needremoved,"censor"]-data[needremoved,"med"])
+    )   
 
    needremoved=((as.character(data$observedType)=="hosp")&(as.character(data$type)=="S"))
 
+if (sum(needremoved)>0)
    data[needremoved,"removed"]=censorweibull(
 getVecParams(params, "HospRec", "shape"),
  getVecParams(params, "HospRec", "scale"),
@@ -128,14 +134,16 @@ getVecParams(params, "HospRec", "shape"),
 
    needremoved=((as.character(data$observedType)=="hosp")&(as.character(data$type)=="D"))
 
+if (sum(needremoved)>0)
    data[needremoved,"removed"]=censorweibull(
 getVecParams(params, "HospDeath", "shape"),
  getVecParams(params, "HospDeath", "scale"),
 (data[needremoved,"censor"]-data[needremoved,"hospital"]-data[needremoved,"med"])
     ) 
 
+
+
 data
 
 }
-
 

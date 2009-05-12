@@ -1,4 +1,4 @@
-simEpidemic <- function(params, delta=2, days=50,
+simEpidemic <- function(params, delta=5, days=20,
   probOnsetMissing=0.7) {
   
   if(!any(names(params[["OnsMedM"]])=="scale"))
@@ -132,5 +132,4 @@ result=result[result$med<=days,]
   
 }
 
-simEpidemic(params)
 

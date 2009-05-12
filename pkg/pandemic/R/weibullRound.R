@@ -21,7 +21,7 @@ dweibullzero= function(x, params=c(shape=1, scale=1,zeros=0)) {
  prob= pweibull(xHigh, shape=params["shape"], scale=params["scale"]) - 
     pweibull(xLow, shape=params["shape"], scale=params["scale"])
  prob=(1-params["zeros"])*prob
-  if(x==0) prob=params["zeros"]+prob                                                                  
+  prob[x==0]=params["zeros"]+prob [x==0]                                                                 
  prob
 }
 
