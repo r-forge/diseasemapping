@@ -1,10 +1,13 @@
 simEpidemic <- function(params, delta=5, days=20,
-  probOnsetMissing=0.7) {
+  probOnsetMissing=0.7, randomInfections = T) {
   
   if(!any(names(params[["OnsMedM"]])=="scale"))
     warning("can't find scale parameter, use addScaleParameters")
-  
-  infectionsPerDay=rpois(days,delta)
+  if(randomInfections) {
+    infectionsPerDay=rpois(days,delta)
+  } else {
+    infectionsPerDay=rep(delta,days)
+  }
 
   N=sum(infectionsPerDay)
 
