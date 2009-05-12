@@ -4,10 +4,9 @@ if(is.null(file)) {
     if(length(x)==3)
       par(mfrow=c(2,3))
     if(length(x)==4)
-      par(mfrow=c(2,2))
-} else {
-  
-}     
+      par(mfrow=c(2,3))
+}
+     
 
 if(tex) {
   cat("\\begin{figure} \n\n")
@@ -19,7 +18,7 @@ params = paramRange = list()
 for(D in names(x)) {
   thedist = attributes(x[[D]])$distribution
   if(thedist == "gamma")
-    xseq = seq(0, round(10*x[[D]]["mean"]), len=100)     
+    xseq = seq(0, round(5*x[[D]]["mean"]), len=100)     
   if(thedist == "beta")
     xseq = seq(0, 1, len=100)      
   
@@ -117,7 +116,8 @@ if(!is.null(file)) {
   par(mar=c(2,2,0,0))
 }    
 
-matplot(xseq, hazard, lwd=c(1,1,1,1,2), type="l" , col="black", lty=1,
+matplot(xseq, hazard, lwd=c(1,1,1,1,2), type="l" ,  
+col=c("grey","yellow","green","orange","black"),lty=1,
 ylim=c(0, max(hazard[,"mean"])))
 if(!is.null(file)) {
   dev.off()

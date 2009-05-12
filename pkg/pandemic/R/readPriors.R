@@ -42,3 +42,19 @@ readPrior = function(file="priors.txt") {
 
 
 }
+
+vecParamsToList = function(vecParams) {
+  thenames = names(vecParams)
+  matNames = matrix(unlist(strsplit( thenames, "\\.")) , ncol=2, byrow=T)
+  
+  Stransition = unique(matNames[,1])
+  
+  params = list()
+  for(D in Stransition) {
+  Dstring <- paste("^", D, "\\.", sep="")
+    forList = vecParams[grep(Dstring, thenames, value=T)]
+    names(forList) = gsub(Dstring, "", names(forList))
+    params[[D]] = forList
+  }
+
+}

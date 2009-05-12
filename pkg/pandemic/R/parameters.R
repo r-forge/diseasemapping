@@ -10,10 +10,10 @@ pandemicParams <- function(
  HospDeath = c(mean = 3, shape = 1, zeros = 0),
  probs = c(M=0.6, S=0.3, D=0.1)
 ) {
-  theFormals = formals()
+  theFormals = ls(-1)
   result = list()
-  for(D in names(theFormals))
-     result[[D]] = eval(theFormals[[D]])
+  for(D in theFormals)
+     result[[D]] = get(D, pos=-1)
    
    addScaleParameters(result)               
 

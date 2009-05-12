@@ -1,35 +1,33 @@
 source("../R/parameters.R")
 source("../R/simEpidemic.R")
 source("../R/weibullRound.R")
-
+source("../R/sampleProbs.R")
+source("../R/priors.R")
+source("../R/readPriors.R")
+  
 params = pandemicParams()
- data = simEpidemic(params, 30)
- summary(data)
-
- xseq=0:20
-
-plot(xseq, dweibullRound(xseq, params$HospRec))
-sum( dweibullRound(0:100, params$HospRec))
-
 priors = pandemicPriors()
-names(priors)
-names(priors$InfOns)
-priors$InfOns$mean
-attributes(priors$InfOns$mean)$distribution
+data = simEpidemic(params, 30)
+vecParams = unlist(params) 
+paramsPosteriorSample = matrix(NA, ncol=length(vecParams), nrow=0, 
+  dimnames = list(NULL, names(vecParams)) )
 
-xseq = seq(0, 10, len=100)
-plot(xseq, dgamma(xseq, 
-  shape=priors$InfOns$mean["shape"],
-  scale=priors$InfOns$mean["scale"])
-  )
+for(D in 1:2)  {                        
+  params$probs = sampleProbs(data$type, priors$probs)
 
-dprior(2, priors$InfOns$mean)
-dprior(2, priors$InfOns$mean, prefix="r")
+  paramsPosteriorSample = rbind(paramsPosteriorSample, 
+    unlist(params)[colnames(paramsPosteriorSample)])
+}
 
-dprior(0.2, priors$InfOns$zeros)
+listParams = vecParamsToList(vecParams)
 
-
-sampleProbs(data$type, priors$probs)
   
-  
+source("../R/plotPriors.R")
+source("../R/priors.R")
+plotPrior(
+x= meanShapeZerosPrior(
+ mean=c(mean=5, sd=0.5), 
+ shape=c(mean=1.5, sd=0.2), 
+ zeros = c(mean=0.2, sd=0.02))
+ )
   

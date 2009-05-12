@@ -4,7 +4,7 @@ sampleProbs <- function(latentTypes, probPrior) {
 # fatality
 latentTypes = latentTypes[!is.na(latentTypes)]
 
-fatal = latentType=="D"
+fatal = latentTypes=="D"
 Nfatal = sum(fatal)
 fatal = c("TRUE"=Nfatal, "FALSE"=length(fatal) - Nfatal)
 
@@ -15,7 +15,7 @@ shape2=probPrior$fatality["shape2"] + fatal["FALSE"])
 
 
 # hospital
-hosp = latentType[latentType!= "D"] == "S"
+hosp = latentTypes[latentTypes!= "D"] == "S"
 Nhosp = sum(hosp)
 hosp = c("TRUE"=Nhosp, "FALSE"=length(hosp)-Nhosp)
 

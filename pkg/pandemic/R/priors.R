@@ -11,10 +11,10 @@ pandemicPriors = function(
  probs = probsPrior()
 )
 {
-  theFormals = formals()
+    theFormals = ls(-1)
   result = list()
-  for(D in names(theFormals))
-     result[[D]] = eval(theFormals[[D]])
+  for(D in theFormals)
+     result[[D]] = get(D, pos=-1)
   result   
 }
 
@@ -25,10 +25,10 @@ meanShapeZerosPrior = function(
   zeros =  c(mean=0.1, sd=0.1)
 ) {
 
-  theFormals = formals()
+  theFormals = ls(-1)
   result = list()
-  for(D in names(theFormals)) {
-     result[[D]] = eval(theFormals[[D]])
+  for(D in theFormals) {
+     result[[D]] = get(D, pos=-1)
    }
    priorShapeScale(result)
 }
@@ -48,17 +48,20 @@ priorShapeScale = function(priorList) {
 
   thenames = names(priorList)
   for(D in thenames[thenames %in% c("mean","shape")] ) {
-    priorList[[D]]["shape"] = priorList[[D]]["sd"]^2/priorList[[D]]["mean"]
-    priorList[[D]]["scale"] = priorList[[D]]["mean"] /priorList[[D]]["shape"]
+    priorList[[D]]["scale"] = priorList[[D]]["sd"]^2/priorList[[D]]["mean"]
+    priorList[[D]]["shape"] = priorList[[D]]["mean"] /priorList[[D]]["scale"]
     attributes(priorList[[D]])$distribution = "gamma"
   }
   for(D in 
     thenames[thenames %in% c("zeros","lost","fatality","hosp")] ) {
-     priorList[[D]]["shape2"] = 
-      priorList[[D]]["sd"]^2 / priorList[[D]]["mean"] / (1-priorList[[D]]["mean"])*
-        (1+1/(1-priorList[[D]]["mean"]))
+    Var = priorList[[D]]["sd"]^2 
+    mu = priorList[[D]]["mean"]
+    mu1 = 1-mu
+    
+    
+    priorList[[D]]["shape2"] = (mu1/Var) * (mu * mu1 - Var)
      priorList[[D]]["shape1"] = priorList[[D]]["shape2"] * 
-      priorList[[D]]["mean"] / (1-priorList[[D]]["mean"])
+      (mu/mu1)
     attributes(priorList[[D]])$distribution = "beta"      
   }
   priorList
@@ -70,10 +73,10 @@ probsPrior = function(
   hosp = c(mean=0.2, sd=0.2)  
   ) {
   
-   theFormals = formals()
+  theFormals = ls(-1)
   result = list()
-  for(D in names(theFormals)) {
-     result[[D]] = eval(theFormals[[D]])
+  for(D in theFormals) {
+     result[[D]] = get(D, pos=-1)
    }
    priorShapeScale(result)  
   
