@@ -31,7 +31,10 @@ x= meanShapeZerosPrior(
 priors = readPrior("hyperparameters.txt")
 
 # fit the model
-paramSample = NA
+paramSample = mcmc(data,params,prior,0.1,100)
+# 0.1 - Standard deviation for random walk Metropolis algorithm
+# 100 - Number of iterations
+
 
 # summary statistics
 
