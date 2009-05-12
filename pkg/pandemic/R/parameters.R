@@ -1,13 +1,13 @@
 pandemicParams <- function(
- InfOns = c(mean=1,shape = 1, zeros = 0),
- OnsMedM = c(mean = 3, shape = 2, zeros = 0),
- OnsMedS = c(mean = 2.5, shape = 1, zeros = 0),
- OnsMedD = c(mean = 2, shape = 1, zeros = 0),
- MedRec = c(mean = 7, shape = 2, zeros = 0, lost=0.9),
- MedHospS = c(mean = 2.5, shape = 2, zeros = 0),
- MedHospD = c(mean = 1.5, shape = 1.5, zeros = 0),
- HospRec = c(mean = 4, shape = 1.5, zeros = 0),
- HospDeath = c(mean = 3, shape = 1, zeros = 0),
+ InfOns = c(mean=1,shape = 1, zeros = 0.1),
+ OnsMedM = c(mean = 3, shape = 2, zeros = 0.1),
+ OnsMedS = c(mean = 2.5, shape = 1, zeros = 0.1),
+ OnsMedD = c(mean = 2, shape = 1, zeros = 0.1),
+ MedRec = c(mean = 7, shape = 2, zeros = 0.1, lost=0.9),
+ MedHospS = c(mean = 2.5, shape = 2, zeros = 0.1),
+ MedHospD = c(mean = 1.5, shape = 1.5, zeros = 0.1),
+ HospRec = c(mean = 4, shape = 1.5, zeros = 0.1),
+ HospDeath = c(mean = 3, shape = 1, zeros = 0.1),
  probs = c(M=0.6, S=0.3, D=0.1)
 ) {
   theFormals = ls(-1)

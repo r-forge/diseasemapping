@@ -128,6 +128,11 @@ result=result[result$med<=days,]
  
   result=result[order(result$med),]
 
+  
+  result[,"onset"]=result[,"onset"]-result[,"med"]
+result[,"hospital"]=result[,"hospital"]-result[,"med"]
+result[,"removed"]=result[,"removed"]-result[,"med"]
+
   result
   
 }

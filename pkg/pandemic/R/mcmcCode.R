@@ -64,4 +64,26 @@ prod(dweibullzero(data[data$type=="D","removed"],params$HospDeath))
 like
 }
 
+#
+# Below required for mcmc2
+#
+
+InfectionP=function(data,params)
+{
+Infection=data[,"med"]+data[,"infect"]
+Removed=data[,"med"]+data[,"removed"]
+Removed[is.na(data[,"hospital"])==FALSE]=Removed[is.na(data[,"hospital"])==FALSE]+
+data[is.na(data[,"hospital"])==FALSE,"hospital"]
+timeLag=max(data[is.na(data[,"censor"])==F,"censor"])-min(Infection)
+ExpectedNoCases=0
+for(i in 0:timeLag)
+{
+ExpectedNoCases=ExpectedNoCases+sumWeibull(i,params$InfOns,params$OnsMedM)*params$probs["M"]+
+sumWeibull(i,params$InfOns,params$OnsMedS)*params$probs["S"]+
+sumWeibull(i,params$InfOns,params$OnsMedD)*params$probs["D"]
+}
+ExpectedNoCases
+}
+
+
 
