@@ -42,6 +42,19 @@ x=x+dweibullRound(j,params1)*dweibullRound(i,params2)
 x
 }
 
+sumWeibullzero=function(k,params1,params2)
+{
+x=0
+for(j in 0:k)
+{
+for(i in 0:(k-j))
+{
+x=x+dweibullzero(j,params1)*dweibullzero(i,params2)
+}
+}
+x
+}
+
 simWeibullzero=function(params)
 {
 u=runif(1)
