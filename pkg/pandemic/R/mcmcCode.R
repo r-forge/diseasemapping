@@ -1,4 +1,4 @@
-paramUpdate=function(params,data,name,x,sigma)
+paramUpdate=function(params,prior,data,name,x,sigma)
 {
 paramsNew=params
 paramsNew[[name]][x]=abs(rnorm(1,paramsNew[[name]][x],sigma))
