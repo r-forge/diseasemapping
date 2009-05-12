@@ -1,5 +1,7 @@
        
 plotPrior=function(x,file=NULL, quantiles =c(0.025, 0.975), tex=FALSE) {
+
+includeGraphicsString = "\\includegraphics[width=0.3\\textwidth]{"
 if(is.null(file)) {
     if(length(x)==3)
       par(mfrow=c(2,3))
@@ -35,7 +37,7 @@ if(!is.null(file)) {
 
 if(tex) {
   cat("\\subfigure[", D, 
-    "]{ \\includegraphics{", filename, "} }\n" )
+    "]{", includeGraphicsString, filename, "} }\n" , sep="" )
 
 }
 
@@ -94,7 +96,7 @@ hazard[hazard==Inf] = NA
 
 filename<- paste(file, "dist.pdf", sep="")
 if(!is.null(file)) {
-  pdf(filename)
+  pdf(filename, width=5,height=4)
   par(mar=c(2,2,0,0))
 }    
 
@@ -106,13 +108,13 @@ if(!is.null(file)) {
 }    
 
 if(tex) {
-  cat("\\subfigure[distribution ]{ \\includegraphics{", filename, "} }\n" )
+  cat("\\subfigure[distribution]{", includeGraphicsString,  filename, "} }\n", sep="" )
 
 }
 
 filename<- paste(file, "hazard.pdf", sep="")
 if(!is.null(file)) {
-  pdf(filename)
+  pdf(filename, width=5,height=4)
   par(mar=c(2,2,0,0))
 }    
 
@@ -123,7 +125,7 @@ if(!is.null(file)) {
   dev.off()
 }    
 if(tex) {
-  cat("\\subfigure[hazard]{ \\includegraphics{", filename, "} }\n" )
+  cat("\\subfigure[hazard]{", includeGraphicsString,  filename, "} }\n" , sep="" )
 
 }
 
