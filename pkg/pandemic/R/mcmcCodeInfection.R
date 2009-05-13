@@ -1,9 +1,12 @@
-paramUpdate=function(params,prior,data,name,x,sigma)
+paramUpdateInfection=function(params,prior,data,UInfX,name,x,sigma)
 {
 paramsNew=params
 paramsNew[[name]][x]=abs(rnorm(1,paramsNew[[name]][x],sigma))
 paramsNew=addMeanParameters(paramsNew)
 ratio=Like1(data,params,paramsNew,name)
+
+ratio=ratio*LikeUno(UInfX,params,paramsNew)
+
 ratio=ratio*
    dprior(paramsNew[[name]]["mean"],prior[[name]]["mean"]$mean)/
   dprior(params[[name]]["mean"],prior[[name]]["mean"]$mean)
@@ -141,7 +144,20 @@ UInfected
 # Column 4 -- Day
 
 
-
-
+LikeUno=function(UInfX,params,paramsNew)
+{
+ratio=1
+for(i in 1:nrow(UInfX))
+{
+bottom=1-(sumWeibull((timeLag-i),params$InfOns,params$OnsMedM)*params$probs["M"]+
+sumWeibull((timeLag-i),params$InfOns,params$OnsMedS)*params$probs["S"]+
+sumWeibull((timeLag-i),params$InfOns,params$OnsMedD)*params$probs["D"])
+top=1-(sumWeibull((timeLag-i),paramsNew$InfOns,params$OnsMedM)*paramsNew$probs["M"]+
+sumWeibull((timeLag-i),paramsNew$InfOns,params$OnsMedS)*paramsNew$probs["S"]+
+sumWeibull((timeLag-i),paramsNew$InfOns,params$OnsMedD)*paramsNew$probs["D"])
+ratio=ratio*(top/bottom)^UInfX[i,2]
+}
+ratio
+}
 
 

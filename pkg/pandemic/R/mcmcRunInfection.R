@@ -23,7 +23,7 @@ for(i in name)
 {
 for(j in name2)
 {
-params=paramUpdateInfection(params,prior,data,i,j,sigma)
+params=paramUpdateInfection(params,prior,data,UInfX,i,j,sigma)
 }
 }
 params$probs=probsUpdate(data,params$probs,prior)
@@ -133,4 +133,4 @@ betaPrior=c(
  global = c(shape = 10,scale=20),
  community=c(shape=10,scale=20))
 
-output2=mcmcInfection(data,params,betaParams=c(global=0.5,community=0.5),prior,0.1,1000,betaPrior)
+output2=mcmcInfection(data,params,betaParams=c(global=0.5,community=0.5),prior,0.1,10,betaPrior)
