@@ -12,8 +12,7 @@ data[,"removed"]=data[,"removed"]-data[,"med"]
 
 data=dataAugment(data,params)
 
-paramUpdate(params,data,"InfOns","shape",0.1)
-
+posterior=mcmc2(xdata,params,5,prior,0.2,10)
 
  xseq=0:20
 
