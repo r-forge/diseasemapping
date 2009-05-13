@@ -147,6 +147,7 @@ UInfected
 LikeUno=function(UInfX,params,paramsNew)
 {
 ratio=1
+timeLag=UInfX[nrow(UInfX),4]
 for(i in 1:nrow(UInfX))
 {
 bottom=1-(sumWeibull((timeLag-i),params$InfOns,params$OnsMedM)*params$probs["M"]+

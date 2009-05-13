@@ -32,7 +32,7 @@ paramsPosteriorSample = rbind(paramsPosteriorSample,
     unlist(params)[colnames(paramsPosteriorSample)])
 
 dataNew=data
-w=sample(nrow(data),10) # Could replace by 1 by a greater number if we want to update a number of rows.
+w=sample(nrow(data),1) # Could replace by 1 by a greater number if we want to update a number of rows.
 dataNew[w,]=xdata[w,]
 dataNew=dataAugment(dataNew,params)
 
