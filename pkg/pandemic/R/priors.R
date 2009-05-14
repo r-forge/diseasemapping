@@ -33,7 +33,7 @@ meanShapeZerosPrior = function(
    priorShapeScale(result)
 }
 
- meanShapeZerosLostPrior = function(lost=c(mean=1, sd=1), ...) {
+ meanShapeZerosLostPrior = function(lost=c(mean=0.5, sd=0.1), ...) {
   
   result = meanShapeZerosPrior(...)
   result$lost = lost

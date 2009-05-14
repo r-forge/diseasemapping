@@ -1,12 +1,9 @@
-mcmcInfection=function(xdata,params,betaParams,prior,sigma,runs,betaprior)
+mcmcInfection=function(xdata,params,betaParams,prior,betaprior,pop,sigma,sigma2,runs)
 {
 name=c("InfOns","OnsMedM","OnsMedS","OnsMedD","MedRec","MedHospS","MedHospD","HospRec","HospDeath")
 name2=c("scale","shape","zeros")
 name3=c("global","community")
 data=dataAugment(xdata,params)
-
-pop=100000
-sigma2=0.05
 
 InfX=InfectionNO(data,params)
 UInfX=InfectionUnobserved(data,params,betaParams,pop)
@@ -129,8 +126,4 @@ paramsPosteriorSample=cbind(paramsPosteriorSample,delta)
 paramsPosteriorSample
 }
 
-betaPrior=c(
- global = c(shape = 10,scale=20),
- community=c(shape=10,scale=20))
 
-output2=mcmcInfection(data,params,betaParams=c(global=0.5,community=0.5),prior,0.1,10,betaPrior)

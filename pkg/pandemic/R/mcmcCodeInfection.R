@@ -153,9 +153,9 @@ for(i in 1:nrow(UInfX))
 bottom=1-(sumWeibull((timeLag-i),params$InfOns,params$OnsMedM)*params$probs["M"]+
 sumWeibull((timeLag-i),params$InfOns,params$OnsMedS)*params$probs["S"]+
 sumWeibull((timeLag-i),params$InfOns,params$OnsMedD)*params$probs["D"])
-top=1-(sumWeibull((timeLag-i),paramsNew$InfOns,params$OnsMedM)*paramsNew$probs["M"]+
-sumWeibull((timeLag-i),paramsNew$InfOns,params$OnsMedS)*paramsNew$probs["S"]+
-sumWeibull((timeLag-i),paramsNew$InfOns,params$OnsMedD)*paramsNew$probs["D"])
+top=1-(sumWeibull((timeLag-i),paramsNew$InfOns,paramsNew$OnsMedM)*paramsNew$probs["M"]+
+sumWeibull((timeLag-i),paramsNew$InfOns,paramsNew$OnsMedS)*paramsNew$probs["S"]+
+sumWeibull((timeLag-i),paramsNew$InfOns,paramsNew$OnsMedD)*paramsNew$probs["D"])
 ratio=ratio*(top/bottom)^UInfX[i,2]
 }
 ratio

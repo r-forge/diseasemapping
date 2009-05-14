@@ -1,43 +1,22 @@
 source("../R/parameters.R")
-source("../R/simEpidemic2.R")
+source("../R/simEpidemicInfection.R")
 source("../R/weibullRound.R")
 source("../R/priors.R")
+source("../R/mcmcCodeInfection.R")
+source("../R/mcmcRunInfection.R")
 
 params = pandemicParams()
-data=simEpidemic(params)
 
-data[,"onset"]=data[,"onset"]-data[,"med"]
-data[,"hospital"]=data[,"hospital"]-data[,"med"]
-data[,"removed"]=data[,"removed"]-data[,"med"]
+betaPrior=c(
+ global = c(shape = 10,scale=20),
+ community=c(shape=10,scale=20))
 
-data=dataAugment(data,params)
+betaParams=c(global=0.5,community=0.1)
 
-posterior=mcmc2(xdata,params,5,prior,0.2,10)
+prior=pandemicPriors()
 
- xseq=0:20
+data=simEpidemicInfection(params)
 
-plot(xseq, dweibullRound(xseq, params$HospRec))
-sum( dweibullRound(0:100, params$HospRec))
-
-priors = pandemicPriors()
-names(priors)
-names(priors$InfOns)
-priors$InfOns$mean
-attributes(priors$InfOns$mean)$distribution
-
-xseq = seq(0, 10, len=100)
-plot(xseq, dgamma(xseq, 
-  shape=priors$InfOns$mean["shape"],
-  scale=priors$InfOns$mean["scale"])
-  )
-
-dprior(2, priors$InfOns$mean)
-dprior(2, priors$InfOns$mean, prefix="r")
-
-dprior(0.2, priors$InfOns$zeros)
-
-
-sampleProbs(data$type, priors$probs)
+output2=mcmcInfection(data,params,betaParams,prior,betaPrior,pop=10000,sigma=0.1,sigma2=0.05,runs=10)
   
-  
-  
+ 

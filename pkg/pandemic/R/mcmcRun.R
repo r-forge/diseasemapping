@@ -1,4 +1,4 @@
-mcmc=function(xdata,params,prior,sigma,runs)
+mcmcPandemic=function(xdata,params,prior,sigma,runs)
 {
 name=c("InfOns","OnsMedM","OnsMedS","OnsMedD","MedRec","MedHospS","MedHospD","HospRec","HospDeath")
 name2=c("scale","shape","zeros")
