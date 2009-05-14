@@ -204,7 +204,7 @@ if(tex) {
 }
 
 
-return(hazard)
+return(NULL)
 
 
 }

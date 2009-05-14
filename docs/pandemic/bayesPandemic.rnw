@@ -184,10 +184,11 @@ latex(toPrint, file="",center="none", title="", table.env=F)
 \begin{frame}
 \frametitle{To do}
 \begin{itemize}
-	\item model the infection process
 	\item simulate hospital loads
-	\item covariates
+	\item model the infection process
 	\item spatial infection process
+	\item covariates
+	
 \end{itemize}
 \end{frame}
 

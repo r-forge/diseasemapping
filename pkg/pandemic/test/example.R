@@ -13,6 +13,7 @@ params = pandemicParams(
   )
 
 # simulate data
+# delta is mean number of infections per day
 data = simEpidemic(params, delta=3, days=20)
 
 # get priors
@@ -32,7 +33,7 @@ x= meanShapeZerosPrior(
 priors = readPrior("hyperparameters.txt")
 
 # fit the model
-paramSample = mcmc(data,params,priors,0.1,100)
+paramSample = mcmcPandemic(data,params,priors,0.1,100)
 # 0.1 - Standard deviation for random walk Metropolis algorithm
 # 100 - Number of iterations
 
