@@ -2,6 +2,7 @@
 Rfiles=system("CMD /K dir /B ..\\R\\*.R", intern=T)
 Rfiles = grep("\\.R$", Rfiles, value=T)
 for(D in Rfiles) {
+  print(D)
 	source(paste("..\\R\\", D, sep=""))
 }	
 	
@@ -31,18 +32,25 @@ x= meanShapeZerosPrior(
 priors = readPrior("hyperparameters.txt")
 
 # fit the model
-paramSample = mcmc(data,params,prior,0.1,100)
+paramSample = mcmc(data,params,priors,0.1,100)
 # 0.1 - Standard deviation for random walk Metropolis algorithm
 # 100 - Number of iterations
 
-
 # summary statistics
+postSummary=t(apply(paramSample, 2, function(qq) 
+  c(mean=mean(qq), quantile(qq, prob=c(0.025, 0.5, 0.975)))))
+postSummary = cbind(true=unlist(params)[rownames(postSummary)], postSummary)  
+
+
+# graph of prior and posterior histogram
+plotPrior(priors, paramSample, transition="HospDeath")
+
 
 # get posterior mean of parameter values, transform to parameter list
-paramPosteriorMean = vecParamsToList(apply(paramSample, 1, mean))
+paramPosteriorMean = vecParamsToList(postSummary[,"mean"])
 
 # generate hospital times
-hospSample = simHospitals(paramsPosteriorSample, 100, 10)
+hospSample = simHospitals(paramSample , 100, 10)
 
 # graph hospital times
 plotHospitals(hospSample)

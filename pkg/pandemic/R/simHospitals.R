@@ -1,7 +1,7 @@
 simHospitals = function(paramSim, Ndays=100, NinfectionsPerDay=10) {
 
-  result = matrix(NA, Ndays,Nsim)
   Nsim = dim(paramSim)[1]
+  result = matrix(NA, Ndays,Nsim)
   for(Dsim in 1:Nsim) {
     params = vecParamsToList(paramSim[Dsim,])
     data = simEpidemic(params, delta=NinfectionsPerDay, days=Ndays,
