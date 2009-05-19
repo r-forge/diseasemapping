@@ -1,5 +1,5 @@
 simEpidemic <- function(params, delta=5, days=20,
-  probOnsetMissing=0.7, randomInfections = T) {
+  probOnsetMissing=0.7, randomInfections = TRUE) {
   
   if(!any(names(params[["OnsMedM"]])=="scale"))
     warning("can't find scale parameter, use addScaleParameters")
