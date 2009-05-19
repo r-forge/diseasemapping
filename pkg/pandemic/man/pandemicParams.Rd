@@ -16,7 +16,7 @@ pandemicParams(InfOns = c(mean = 1, shape = 1, zeros = 0.1), OnsMedM = c(mean = 
   \item{OnsMedM}{time from stage onsets to on medication for mild cases.}
   \item{OnsMedS}{time from onsets to on medication for serious cases.}
   \item{OnsMedD}{time from onsets to on medication for deadly cases.}
-  \item{MedRec}{time from on medication to recover}
+  \item{MedRec}{time from on medication to recover.}
   \item{MedHospS}{time from on medication to hospitalization for serious cases.}
   \item{MedHospD}{time from on medication to hospitalization for deadly cases.}
   \item{HospRec}{time from hospitalization to recover.}
@@ -27,7 +27,7 @@ pandemicParams(InfOns = c(mean = 1, shape = 1, zeros = 0.1), OnsMedM = c(mean = 
 We assume there are five stages for each patient: get infection (marked as Inf); get onset (marked as Ons); get medication (marked as Med); 
 get recover (marked as Rec); go to hospitalization (marked as Hosp);  or eventually dead (marked as Death). There are also three levels of disease cases: mild, serious or deadly marked as M, S and D seperately.
 }
-\value{The form of the value returned by \code{pandemicParams} is a list variable. Each list is for a stage movement. Each list contains 4 values: mean, shape, zeros, scale, which values are chosen defaultly.
+\value{The value returned by \code{pandemicParams} is a list. Each list is for a different stage movement. Each list contains 4 values: mean, shape, zeros, scale. These values are chosen defaultly.
 
 }
 \references{
