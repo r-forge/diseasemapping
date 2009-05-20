@@ -8,7 +8,7 @@ Data Simulation
 Using the parameters generated from the \code{pandemicParams} function, then simulate the number of patients for different stages and the case levels.
 }
 \usage{
-simEpidemic(params, delta = 5, days = 20, probOnsetMissing = 0.7, randomInfections = T)
+simEpidemic(params, delta = 5, days = 20, probOnsetMissing = 0.7, randomInfections = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
