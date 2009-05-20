@@ -6,7 +6,7 @@
 Generating Hopstial Times
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+\code{simHospitals} is a function used to simulate the hospital times. 
 }
 \usage{
 simHospitals(paramSim, Ndays = 100, NinfectionsPerDay = 10)
