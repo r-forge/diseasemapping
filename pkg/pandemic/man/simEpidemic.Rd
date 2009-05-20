@@ -40,8 +40,7 @@ Patrick Brown
 
 }
 \examples{
-data = simEpidemic(params, delta=3, days=20)
-head(data)
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
