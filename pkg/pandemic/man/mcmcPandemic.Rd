@@ -6,7 +6,7 @@
 MCMC simulation for Pandemic
 }
 \description{
-
+\code{mcmcPandemic} is a function for generating the parameters for different disease stages using the MCMC simulation.
 }
 \usage{
 mcmcPandemic(xdata, params, prior, sigma, runs)
