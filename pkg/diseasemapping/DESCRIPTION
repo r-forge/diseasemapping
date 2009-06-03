@@ -1,7 +1,7 @@
 Package: diseasemapping
 Type: Package
 Title: Calculate SMR's from population and case data 
-Version: 0.3
+Version: 0.4
 Date: 2009-04-21
 Enhances: diseasemappingDevel, glmmBUGS
 Author: Patrick Brown
