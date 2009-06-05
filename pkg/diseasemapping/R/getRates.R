@@ -71,8 +71,12 @@ by.x = paste(by.x, collapse="|")
 by.x = paste("(", by.x, ")", sep="")
 by.pop = grep(by.x, names(pops), ignore.case=TRUE, value=TRUE)
 
+##make them same order
+by.pop<-by.pop[order(by.pop)]
+theterms<-theterms[order(theterms)]
 
-newdata <- merge(casedata, pops, by.x = theterms, by.y = by.pop)
+
+newdata <- merge(casedata, pops, by.x = theterms, by.y = by.pop,all=T)
 if (morethanoneyear){
 ####find Popoluation census year
 #a vector of all years
@@ -93,6 +97,7 @@ newdata$YEAR= factor(newdata$YEAR, levels = unique(newdata$YEAR))
 }
 
 
+newdata = newdata[!is.na(newdata$POPULATION),]
 newdata = newdata[newdata$POPULATION>0,]
 newdata$logpop = log(newdata$POPULATION)
 	
@@ -100,10 +105,9 @@ newdata$logpop = log(newdata$POPULATION)
 # make the age group with the most cases as the base line
 agevar =  grep("^age$", theterms, ignore.case=TRUE, value=TRUE)
 if(length(agevar)==1) {
-  agetable = tapply(newdata$CASES, newdata[[agevar]], sum)
+  agetable = tapply(newdata$CASES, newdata[[agevar]], sum,na.rm=T)
   agetable = names(sort(agetable, decreasing=TRUE))
-  newdata[[agevar]] = factor(as.character(newdata[[agevar]]),
-    levels= agetable)
+  newdata[[agevar]] = factor(as.character(newdata[[agevar]]),levels= agetable)
 }
 
 
