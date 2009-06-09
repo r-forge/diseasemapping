@@ -120,8 +120,17 @@ newdata[[sexvar]] = factor(newdata[[sexvar]])
 formula1 = update.formula(formula, CASES ~ offset(logpop) + .)
 #return(newdata, formula1)
 
-model = glm(formula1, family=family, data=newdata)
 
+#fit model, if there is an error, return data only
+options(show.error.messages = FALSE)
+model<-try(glm(formula1, family=family, data=newdata))
+
+if(class(model)[1]=="try-error"){
+  warning(model[1],"Only Data will be returned")
+  return(newdata)
+}
+
+options(show.error.messages = TRUE)
 model$sexSubset = S
 
 #attributes(model)$years = ageBreaks$breaks
