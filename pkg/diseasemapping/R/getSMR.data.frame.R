@@ -1,10 +1,37 @@
-`getSMR` <- function(popdata, model, casedata=NULL, regionCode = "CSDUID",
+`getSMR` <- function(popdata, model, casedata, regionCode = "CSDUID",
     regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, ...){
        UseMethod("getSMR")
  }
  
-getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
+getSMR.data.frame <- function(popdata, model, casedata=NULL, regionCode = "CSDUID",
     regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, ...){
+
+
+    if(is.numeric(model)) {
+    # model is a vector of rates
+        # check breaks for groups, make sure they line up
+        rateBreaks =getBreaks(names(model))
+        popBreaks = getBreaks(names(popdata))
+        
+        noPop = ! popBreaks$newNames %in% rateBreaks$newNames
+        if(any(noPop))
+          warning(paste("population group(s)", toString(popBreaks$oldNames[noPop]),
+           "ignored") )
+        noRate = ! rateBreaks$newNames %in% popBreaks$newNames  
+        if(any(noRate))
+          warning(paste("rate group(s)", toString(rateBreaks$oldNames[noRate]),
+           "ignored\n") )
+  
+        popGroups = popBreaks$oldNames[!noPop]
+        names(popGroups) = popBreaks$newNames[!noPop]
+
+        rateGroups = rateBreaks$oldNames[!noRate]
+        names(rateGroups) = rateBreaks$newNames[!noRate]
+        
+        popdata$expected = 
+          as.matrix(popdata[,popGroups]) %*% model[rateGroups[names(popGroups)]]
+    } else {
+    # use the predict method on the model
 
     poplong <- formatPopulation(popdata, breaks=attributes(model)$breaks$breaks)
       
@@ -87,11 +114,16 @@ getSMR.data.frame <- function(popdata, model, casedata, regionCode = "CSDUID",
     rownames(popdata) = as.character(popdata[,regionCode])
 
     popdata[rownames(poplong), "expected"] = poplong[,2]
+
+    } # done predicting rates from model
+    
     
     if (area & ("sqk" %in% names(popdata) ) ) {
         popdata$expected_sqk <- popdata$expected/popdata$sqk
         popdata$logExpected_sqk = log(popdata$expected_sqk)
     }
+
+
     popdata$logExpected = log(popdata$expected)
     
     # change NA's in logExpected to zeros, so that it can be used in models

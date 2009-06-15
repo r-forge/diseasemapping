@@ -1,6 +1,11 @@
 
 CanadaCancerRates = function(area = "ontario",
-   years=2000:2005,   site="colon") {
+   years=2000:2005,   site="colon", sex=c("M", "F")) {
+
+  sexes = c("M"=1, "F"=2)[sex]
+  
+  
+
 
   areaCodes = 
   c("Canada"="00",
@@ -94,7 +99,6 @@ site = cancerCodes[grep(paste("^", site, sep=""), cancerCodes, ignore.case=T)]
 
 codes = names(site)
 
-  sexes = c("M", "F")
   
   result = NULL
   
@@ -102,17 +106,17 @@ codes = names(site)
   
   ratesThisYear=NULL
   
-  for(D in 1:2) {
+  for(Dsex in names(sexes)) {
     ratesD = 0
     for(Dsite in codes) {
   
   fromScan = read.table(paste("http://dsol-smed.phac-aspc.gc.ca/dsol-smed/cancer/cgi-bin/cancerchart2/chartdata.tsv?DATA_TYPE=R&AGE_GROUPS=A%3BB%3BC%3BD%3BE%3BF%3BG%3BH%3BI%3BJ%3BK%3BL%3BM%3BN%3BO%3BP%3BQ%3BR%3BS&CAUSE2=",
     Dsite, "&YEAR2=", 
-    substr(Dyear, 3, 4), "&AREA2=", area, "&SEX2=", D, 
+    substr(Dyear, 3, 4), "&AREA2=", area, "&SEX2=", sexes[Dsex], 
     "&CAGE2=View+Chart&SCALE=LINEAR&OUTPUT=DATA", sep=""), 
     sep="\t", quote="\"", as.is=T, na.string="r.d.")
 
-    ageGroups = paste(sexes[D], fromScan[1,-1], sep="" )
+    ageGroups = paste(Dsex, fromScan[1,-1], sep="" )
     ratesD = ratesD + as.numeric(fromScan[2,-1])
     names(ratesD) = ageGroups
       

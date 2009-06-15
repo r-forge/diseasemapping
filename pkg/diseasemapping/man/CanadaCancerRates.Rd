@@ -20,6 +20,8 @@ years to retrieve data from, must be after 1992
 }
   \item{site}{
 a vector of cancer sites, see details}
+  \item{sex}{
+\code{"M"} or \code{"F"} for male or female rates only, \code{c("M","F")} (the default) for both sexes.}
 }
 \details{
 \code{area} must be one of  Canada, Newfoundland and Labrador, Prince Edward Island, Nova Scotia,
@@ -97,5 +99,8 @@ Other, Ill-Defined/Unknown.
 \value{
 vector of cancer rates, by age and sex group}
 \examples{
-CanadaCancerRates("quebec", 2001:2003, "lung")
+qcLungF=CanadaCancerRates(area="quebec", years=2001:2003, site="lung", sex="F")
+data(popdata)
+qcLungExp = getSMR(popdata, qcLungF)
+spplot(qcLungExp, "logExpected")
 }
