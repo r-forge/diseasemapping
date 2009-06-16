@@ -9,7 +9,7 @@ Retreive cancer incidence rates from the Public Health Agency of Canada
 Rates by age and sex group are retreived from http://dsol-smed.phac-aspc.gc.ca/dsol-smed/cancer/c_age_e.html
 }
 \usage{
-CanadaCancerRates(area = "ontario", years = 2000:2005, site = "colon")
+CanadaCancerRates(area = "ontario", years = 2000:2005, site = "colon", sex=c("M", "F"))
 }
 \arguments{
   \item{area}{
@@ -102,5 +102,7 @@ vector of cancer rates, by age and sex group}
 qcLungF=CanadaCancerRates(area="quebec", years=2001:2003, site="lung", sex="F")
 data(popdata)
 qcLungExp = getSMR(popdata, qcLungF)
+\dontrun{
 spplot(qcLungExp, "logExpected")
+}
 }

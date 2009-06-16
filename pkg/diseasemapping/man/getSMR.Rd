@@ -37,7 +37,7 @@ Otherwise, \code{model} is passed to the \code{predict} function.
   Returns a new population data set contains expected number of cases, observed number of cases and SMR. 
   It has the same format as the population data set which put into the function.
 }
-}
+
 \seealso{}
 \examples{
 data(casedata)

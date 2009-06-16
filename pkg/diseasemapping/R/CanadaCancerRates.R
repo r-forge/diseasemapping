@@ -24,7 +24,7 @@ CanadaCancerRates = function(area = "ontario",
 "Nunavut"=62)
 
 
-area = areaCodes[grep(paste("^", area[1], sep=""), names(areaCodes), ignore.case=T)]
+area = areaCodes[grep(paste("^", area[1], sep=""), names(areaCodes), ignore.case=TRUE)]
 
 
 cancerCodes =   c(
@@ -95,7 +95,7 @@ cancerCodes =   c(
                "749"="Uterus, not Otherwise Specified",
                "787"="Other, Ill-Defined/Unknown")
 
-site = cancerCodes[grep(paste("^", site, sep=""), cancerCodes, ignore.case=T)]
+site = cancerCodes[grep(paste("^", site, sep=""), cancerCodes, ignore.case=TRUE)]
 
 codes = names(site)
 
@@ -114,7 +114,7 @@ codes = names(site)
     Dsite, "&YEAR2=", 
     substr(Dyear, 3, 4), "&AREA2=", area, "&SEX2=", sexes[Dsex], 
     "&CAGE2=View+Chart&SCALE=LINEAR&OUTPUT=DATA", sep=""), 
-    sep="\t", quote="\"", as.is=T, na.string="r.d.")
+    sep="\t", quote="\"", as.is=TRUE, na.string="r.d.")
 
     ageGroups = paste(Dsex, fromScan[1,-1], sep="" )
     ratesD = ratesD + as.numeric(fromScan[2,-1])
