@@ -5,7 +5,7 @@
 `getRates` <-
 function(casedata, popdata, formula, family=poisson, minimumAge=0,
    maximumAge=100, S=c("M", "F"), years=NULL, year.range=NULL,
-   case.years=grep("^year$", names(casedata), ignore.case=TRUE, value=TRUE)[1], breaks=NULL){
+   case.years=grep("^year$", names(casedata), ignore.case=TRUE, value=TRUE)[1],fit.numeric=NULL ,breaks=NULL){
 
 # check the formula is one sided
   
@@ -77,13 +77,11 @@ theterms<-theterms[order(theterms)]
 
 
 newdata <- merge(casedata, pops, by.x = theterms, by.y = by.pop,all=TRUE)
+
 if (morethanoneyear){
 ####find Popoluation census year
 #a vector of all years
-
-
 times<-c(year.range[1],sort(years),year.range[2])
-
 inter<-diff(times)/2 #mid points
 #sum of consective mid points
 nseq<-1:length(inter)-1
@@ -100,6 +98,8 @@ newdata$YEAR= factor(newdata$YEAR, levels = unique(newdata$YEAR))
 newdata = newdata[!is.na(newdata$POPULATION),]
 newdata = newdata[newdata$POPULATION>0,]
 newdata$logpop = log(newdata$POPULATION)
+
+newdata[is.na(newdata[,casecol]),casecol] <-0
 	
 
 # make the age group with the most cases as the base line
@@ -114,6 +114,14 @@ if(length(agevar)==1) {
 sexvar = grep("^sex", theterms, ignore.case=TRUE, value=TRUE)
 if(length(sexvar) == 1){
 newdata[[sexvar]] = factor(newdata[[sexvar]])
+}
+
+#change factor to numeric
+if(!is.null(fit.numeric)){
+    for (i in 1:length(fit.numeric)){
+    toChange = grep(paste("^",fit.numeric[i],"$",sep=""),names(newdata),value=T,ignore.case=T)
+    newdata[,toChange] = as.numeric(as.character(newdata[,toChange]))
+  }
 }
 
 # add cases and logpop to formula
