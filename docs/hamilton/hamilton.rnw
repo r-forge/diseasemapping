@@ -9,8 +9,14 @@
 
 \usepackage{natbib}
 
+\usepackage{Sweave}
+\SweaveOpts{echo=FALSE,fig=true,prefix.string=Figures/G,height=2,width=3}
 
 \begin{document}
+
+<<setup,fig=false>>=
+options(SweaveHooks=list(fig=function() par(mar=c(2.5,2.5,0.1,0.1), mgp=c(1.5, 0.5, 0), cex=0.6)))
+@
 
 \maketitle
 
@@ -47,6 +53,22 @@ chain convergence assesed by examining trace plots, and we did thinning by ??, b
 \section{Results}
 
 
+<<someResults,fig=false>>=
+
+x = matrix(1:9, 3,3)
+dimnames(x) = list(c("a","b","c"), c("t","q","r"))
+
+library(Hmisc)
+latex(x, file="")
+
+@
+
+
+<<aGraph>>=
+
+plot(1:10)
+
+@
 
 \begin{table}[H]
 
