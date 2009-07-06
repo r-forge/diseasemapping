@@ -53,7 +53,7 @@ chain convergence assesed by examining trace plots, and we did thinning by ??, b
 \section{Results}
 
 
-<<someResults,fig=false>>=
+<<someResults,fig=false, results=tex>>=
 
 x = matrix(1:9, 3,3)
 dimnames(x) = list(c("a","b","c"), c("t","q","r"))
@@ -63,12 +63,15 @@ latex(x, file="")
 
 @
 
-
+\begin{figure}
 <<aGraph>>=
 
 plot(1:10)
 
 @
+\caption{some stuff}
+\label{fig:stuff}
+\end{figure}
 
 \begin{table}[H]
 
