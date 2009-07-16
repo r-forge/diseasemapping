@@ -1,7 +1,7 @@
 #years: a vector of census years, default will use the names of popdata list
 #year.range: A two-element numerical vector indicting the starting and ending year of study period, default set to range of casedata
 #case.years: the variable name that stores the year variable of case file
-
+ library(mgcv)
 `getRates` <-
 function(casedata, popdata, formula, family=poisson, minimumAge=0,
    maximumAge=100, S=c("M", "F"), years=NULL, year.range=NULL,
@@ -27,11 +27,11 @@ if(is.null(years) & morethanoneyear ){
 }
 
 #factors we need to aggregate by
-theterms = (rownames(attributes(terms(formula))$factors))
+theterms=gsub("^s\\(|,([[:alnum:]]|=|[[:space:]]|,|\\$|\\[|\\])+\\)$|\\)$", "", rownames(attributes(terms(formula))$factors))
 
-pops <- formatPopulation(popdata, aggregate.by= theterms, breaks=breaks, personYears=FALSE)
+
+pops <- formatPopulation(popdata, aggregate.by= theterms, breaks=breaks, personYears=FALSE,S=S)
           
-
 ##format case data
 #casedata = formatCases(casedata, ageBreaks=attributes(pops)$breaks, aggregate.by = theterms)
 
@@ -49,6 +49,8 @@ if(length(S)==1) {
   casedata=casedata[casedata[[
     grep("^sex$", names(casedata), value=TRUE, ignore.case=TRUE)
       ]]==S,]
+      
+
 }
 
 #format case data
@@ -76,7 +78,7 @@ by.pop<-by.pop[order(by.pop)]
 theterms<-theterms[order(theterms)]
 
 
-newdata <- merge(casedata, pops, by.x = theterms, by.y = by.pop,all=TRUE)
+newdata <- merge(casedata, pops, by.x = theterms, by.y = by.pop,all.x=TRUE)
 
 if (morethanoneyear){
 ####find Popoluation census year
@@ -124,6 +126,10 @@ if(!is.null(fit.numeric)){
   }
 }
 
+
+todel <- as.formula(paste(".~.-",sexvar,"-",agevar,":",sexvar,sep=""))
+if(length(S)==1) formula=update.formula(formula, todel)
+
 # add cases and logpop to formula
 formula1 = update.formula(formula, CASES ~ offset(logpop) + .)
 #return(newdata, formula1)
@@ -131,7 +137,7 @@ formula1 = update.formula(formula, CASES ~ offset(logpop) + .)
 
 #fit model, if there is an error, return data only
 options(show.error.messages = FALSE)
-model<-try(glm(formula1, family=family, data=newdata))
+model<-try(gam(formula1, family=family, data=newdata))
 
 if(class(model)[1]=="try-error"){
   warning(model[1],"Only Data will be returned")

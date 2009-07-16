@@ -45,9 +45,9 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL, regionCode = "CSDUI
      poplong=poplong[poplong[,
       grep("^population$", names(poplong), value=TRUE, ignore.case=TRUE)]>0, ]     
     #changes poplong names to be consistent with model
-    agevar<-grep("^age$",names(model$xlevels),value=TRUE,ignore.case=TRUE)
-    sexvar<-grep("^sex$",names(model$xlevels),value=TRUE,ignore.case=TRUE)
-    yearvar<-grep("^year$",names(model$xlevels),value=TRUE,ignore.case=TRUE)
+    agevar<-grep("^age$",names(attributes((terms(model)))$dataClasses),value=TRUE,ignore.case=TRUE)
+    sexvar<-grep("^sex$",names(attributes((terms(model)))$dataClasses),value=TRUE,ignore.case=TRUE)
+    yearvar<-grep("^year$",names(attributes((terms(model)))$dataClasses),value=TRUE,ignore.case=TRUE)
 
     agevar1<-grep("^age$",names(poplong),value=TRUE,ignore.case=TRUE)
     sexvar1<-grep("^sex$",names(poplong),value=TRUE,ignore.case=TRUE)
@@ -63,13 +63,16 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL, regionCode = "CSDUI
      names(poplong[[yearvar1]])=yearvar
     }
 
-    
+      # get rid of a gender
     if (length(model$sexSubset) == 1) {
-        poplong = poplong[poplong$sex == model$sexSubset, ]
+        poplong = poplong[poplong[[sexvar1]] == model$sexSubset, ]
     }
     
       
-      offsetvar<- grep("logpop",names(model$data) ,value=TRUE, ignore.case=TRUE)
+      offsetvar<- grep("^offset",names(attributes((terms(model)))$dataClasses)  ,value=TRUE, ignore.case=TRUE)
+       offsetvar<- substr(offsetvar,8,nchar(offsetvar)-1)
+      
+      
     poplong[[offsetvar]] = log(poplong$POPULATION)
 #    poplong[[sexvar]]= factor(poplong[[sexvar]])
 #    poplong[[agevar]] = factor(poplong[[agevar]])
@@ -89,8 +92,8 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL, regionCode = "CSDUI
         poplong = poplong[!poplong$param %in% interact, ]
         poplong$param <- NULL
     }
-    if(length(yearvar)) {   
-           agg<-c(yearvar,agevar, sexvar,offsetvar)
+    if(length(yearvar1)) {
+           agg<-c(yearvar1,agevar, sexvar,offsetvar)
            }else{
                 agg<-c(agevar, sexvar, offsetvar)
            }

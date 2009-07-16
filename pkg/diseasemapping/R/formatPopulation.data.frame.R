@@ -1,9 +1,9 @@
-formatPopulation <- function(popdata, aggregate.by=NULL, breaks=NULL, ...) {
+formatPopulation <- function(popdata, aggregate.by=NULL,S=c("M", "F"), breaks=NULL, ...) {
   UseMethod("formatPopulation")
 }
 
 `formatPopulation.data.frame` <-
-function(popdata, aggregate.by=NULL, breaks=NULL,...) {
+function(popdata, aggregate.by=NULL,breaks=NULL,...) {
 
 #popdata <- popdata@data
 ageBreaks = getBreaks(names(popdata), breaks)
@@ -46,6 +46,9 @@ if(!is.null(aggregate.by)) {
 
 if(length(sexcol)) poplong[,sexcol] <- toupper(poplong[,sexcol])
 attributes(poplong)$breaks = ageBreaks
+
+
+
 
 
 #poplong <- poplong[!is.na(poplong$POPULATION),  ]
