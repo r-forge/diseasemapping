@@ -16,11 +16,6 @@ result
 }
 
 
-raster2DF<-function(raster){
-   data.frame(x=xyFromCell(raster,1:(attributes(raster)$nrow*attributes(raster)$ncols))[,1],
-    y=xyFromCell(raster,1:(attributes(raster)$nrow*attributes(raster)$ncols))[,2],
-    value = values(raster))
-}
 
 rasterSMR.list<-function(poplist,bbox=NULL,xmn=NULL, xmx=NULL, ymn=NULL, ymx=NULL,
         cellFine=c(50,50), cellCoarse=NULL, fact=NULL,projs="NA",columns=c("expected_sqk"),addCensus=TRUE){
