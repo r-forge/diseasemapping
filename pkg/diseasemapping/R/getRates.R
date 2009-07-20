@@ -146,7 +146,7 @@ if(class(model)[1]=="try-error"){
 
 options(show.error.messages = TRUE)
 model$sexSubset = S
-
+model$data<-newdata
 #attributes(model)$years = ageBreaks$breaks
 attributes(model)$breaks = attributes(pops)$breaks
                                   
