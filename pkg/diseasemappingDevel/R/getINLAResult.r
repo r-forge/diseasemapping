@@ -5,16 +5,16 @@ getINLAresult<-function(result,all,exceed=c(1.1,1.2),below=NULL,write.shape="sha
  all$linear<-result$summary.linear.predictor[,1]
 
  for (i in 1:length(exceed)){
- 	fitName <-paste("fitted",exceed[i],sep="ex"))
- 	UName <-paste("U",exceed[i],sep="ex"))
+ 	fitName <-paste("fitted",exceed[i],sep="ex")
+ 	UName <-paste("U",exceed[i],sep="ex")
  	all[[fitName]]<-getEx(result$marginals.linear.predictor,exceed[i])
  	all[[UName]]<-getEx(result$marginals.random[[1]],exceed[i])
  }
 
  if(!is.null(below)){
  	for (i in 1:length(below)){
- 		fitName <-paste("fitted",below[i],sep="_"))
- 		UName <-paste("U",below[i],sep="_"))
+ 		fitName <-paste("fitted",below[i],sep="_")
+ 		UName <-paste("U",below[i],sep="_")
  		all[[fitName]]<-getExx(result$marginals.linear.predictor,below[i])
  		all[[UName]]<-getExx(result$marginals.random[[1]],below[i])
 	 }
