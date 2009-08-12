@@ -3,6 +3,7 @@ Type: Package
 Title: Bayesian inference for data from the initial stages of a pandemic
 Version: 0.2
 Date: 2009-08-12
+Depends: ellipse
 Author: Patrick Brown, Peter Neal
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
 Description: Estimates model parameters from data and predicts hospital load given the number of infections.

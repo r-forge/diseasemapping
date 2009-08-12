@@ -1,2 +1,2 @@
 export(pandemicParams, simEpidemic, pandemicPriors, plotPrior, mcmcPandemic, 
-  simHospitals,readPrior,writePrior)
+  simHospitals,readPrior,writePrior,plotHospitals)
