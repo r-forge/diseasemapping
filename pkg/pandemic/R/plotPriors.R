@@ -2,7 +2,7 @@
 plotPrior=function(x, posteriorSample = NULL, 
   file=NULL, quantiles =c(0.025, 0.975), tex=FALSE,
   transition="HospDeath") {
-
+                                                           
 if(any(names(x)==transition)) {
   x = x[[transition]]
 }
@@ -38,6 +38,7 @@ Dvec = paste(transition, ".", D, sep="")
   
 filename = paste(file, D, ".pdf", sep="")  
 if(!is.null(file)) {
+  filename = paste(file, D, ".pdf", sep="")  
   pdf(filename, width=5,height=3)
   par(mar=c(2,2,0,0))
 }    
@@ -73,7 +74,6 @@ if(tex) {
 
 
 
-
 if(all(c("mean","shape")%in% names(paramRange))) {
 xseq <- 0:20
 
@@ -99,6 +99,9 @@ for(Dmean in c("upper","lower")) {
             
     hazard[,thisCol] =  distn[,thisCol] / 
       (1-pweibullRound(xseq,  theseParams))
+    hazard[is.na(hazard)]=NA
+     hazard[hazard==Inf]=NA
+     
 }
 }
 } else {
@@ -160,15 +163,21 @@ themean = apply(paramSample[,c("HospDeath.mean","HospDeath.shape")],2,mean)
 
 
 
-filename<- paste(file, "dist.pdf", sep="")
 if(!is.null(file)) {
+filename<- paste(file, "dist.pdf", sep="")
   pdf(filename, width=5,height=4)
   par(mar=c(2,2,0,0))
 }    
 
+if(!all(is.na(distn[,"mean"]))){ 
+    theylim = c(0, 1.2*max(distn[,"mean"], na.rm=T))
+} else {
+  theylim=c(0,max(distn, na.rm=T))
+}
+
 matplot(xseq, distn, lwd=c(1,1,1,1,2), type="l", 
   col=c("grey","yellow","green","orange","black"), lty=1,
-  ylim=c(0, 1.2*max(distn[,"mean"])))
+  ylim=theylim)
 if(!is.null(file)) {
   dev.off()
 }    
@@ -184,9 +193,16 @@ if(!is.null(file)) {
   par(mar=c(2,2,0,0))
 }    
 
+if(!all(is.na(hazard[,"mean"]))){ 
+    theylim = c(0, 1.2*max(hazard[,"mean"], na.rm=T))
+} else {
+  theylim=c(0,quantile(hazard, 0.95, na.rm=T))
+}
+
+
 matplot(xseq, hazard, lwd=c(1,1,1,1,2), type="l" ,  
 col=c("grey","yellow","green","orange","black"),lty=1,
-ylim=c(0, 1.2*max(hazard[,"mean"])))
+ylim=theylim)
 if(!is.null(file)) {
   dev.off()
 }    
@@ -203,8 +219,7 @@ if(tex) {
 
 }
 
-
-return(NULL)
+return(invisible())
 
 
 }

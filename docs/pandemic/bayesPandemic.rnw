@@ -1,7 +1,8 @@
 \documentclass{beamer}
 \usepackage[nogin]{Sweave}
 \title{Bayesian statistics and  swine flu}
-\author{Patrick Brown, Dionne Gesink Law, Peter Neal} 
+\author{Patrick Brown$^1$,  Peter Neal$^2$}
+\institute{1:Cancer Care Ontario and Dalla Lana School of Public Health, University of Toronto; 2: University of Manchester} 
 \usepackage{amsmath,subfigure}
 
 \SweaveOpts{echo=FALSE,fig=true,prefix.string=Figures/G,height=2,width=3}
@@ -16,13 +17,42 @@
 <<setup,fig=false>>=
 options(SweaveHooks=list(fig=function() par(mar=c(2.5,2.5,0.1,0.1), mgp=c(1.5, 0.5, 0), cex=0.6)))
 # source in all the R files
-Rfiles=system("CMD /K dir /B ..\\..\\pkg\\pandemic\\R\\*.R", intern=T)
-Rfiles = grep("\\.R$", Rfiles, value=T)
-for(D in Rfiles) {
-	source(paste("..\\..\\pkg\\pandemic\\R\\", D, sep=""))
-#$
-}
+library(pandemic)
 @
+
+\begin{frame}
+\frametitle{Swine Flu in Ontario}
+\begin{itemize}
+	\item Many Canadians holiday in Mexico during the winter and  spring
+	
+\begin{itemize}
+	\item Swine flu was probably established in Ontario before the outbreak was detected.
+\item Few control measures were adopted
+\end{itemize}
+\item Ontario's had recent public health crises
+\begin{itemize}
+	\item SARS, Walkerton water quality problems
+	\item Ontario Agency for Health Protection and Promotion created
+	\item Expert opinion abounds from mathematical modellers and infectious disease epidemiologists
+	\item Detailed models are used for the biological process, with largely ad-hoc inference and treatment of uncertainty. 
+\end{itemize}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{The Data}
+\begin{itemize}
+	\item During the first 6 weeks of the epidemic, we can assume most cases were identified.
+	
+\begin{itemize}
+	\item Ill individuals were encouraged to seek medical help
+	\item Practitioners were encouraged to send samples to labs for testing
+\end{itemize}
+	\item After 6 weeks, testing was discouraged to ease the burden on public health labs.
+	\item Roughly 1000 cases in the first 6 weeks? 
+\end{itemize}
+\end{frame}
 
 \begin{frame}
 \frametitle{The Problem}
@@ -35,13 +65,23 @@ for(D in Rfiles) {
 \end{itemize}
 \end{frame}
 
+\begin{frame}
+\frametitle{The Goal}
+\begin{itemize}
+	\item Provide good estimates (and inference) about hospitalization and fatality rates in the early stages of an epidemic
+	\item To cope with sparse data, allow for expert opinion.
+	\item Allow for variations in rates by age
+	\item and account for individual's previous medical conditions?
+\item Predict the number of hospital beds required for a given number of infections.
+\end{itemize}
+\end{frame}
 
 \begin{frame}
 \frametitle{The Model}
 
 \begin{block}{Mild}
 \begin{center}
- Infection $\stackrel{f_I(t)}{\Longrightarrow}$ Onset $\stackrel{f_{OM}(t;)}{\Longrightarrow}$ \\ Medical  $\stackrel{f_{MR}(t)}{\Longrightarrow}$ Recovery
+ Infection $\stackrel{f_I(t)}{\Longrightarrow}$ Onset $\stackrel{f_{OM}(t)}{\Longrightarrow}$ \\ Medical  $\stackrel{f_{MR}(t)}{\Longrightarrow}$ Recovery
 \end{center}
 
 \end{block}
@@ -57,13 +97,25 @@ Infection$\stackrel{f_I(t)}{\Longrightarrow}$ Onset $\stackrel{f_{OS}(t)}{\Longr
 \end{frame}
 
 \begin{frame}
+\frametitle{The Data (again)}
+\begin{itemize}
+	\item Everyone has a date of a medical visit
+	\item Some have date of onset of symptoms
+	\item Most infections are mild and no additional data results
+	\item Some end up in hospital, resulting in either recovery or death
+	\item Longitudinal data on each case can be assembled\ldots in theory
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
 \frametitle{Distributions}
 \begin{itemize}
 	\item $f(t;\mu,\nu,\delta)$ is the distribution for time to an event.  
 	\item \ldots a rounded, zero-inflated Weibull
 \begin{align*}
 Z\sim&\text{Bern}(\delta)\\
-[Y|Z=1] =& 0 \text{w.p.} 1\\
+[Y|Z=1] =& 0 \text{ w.p.} 1\\
 pr(T=t|Z=0) =&  \text{pr}(\max(t-0.5,0) < y < t+0.5)\\
 y \sim & \text{Weibull}(\mu/\Gamma(1 + 1/\nu), \nu)
 \end{align*}
@@ -144,7 +196,7 @@ MedRec	lost	1	1	beta
 \begin{frame}
 \frametitle{Prior graphs}
 <<priorGraph, fig=false,results=tex>>=
-priors= pandemicPriors()
+priors= readPrior("bayesPandemicPriors.txt")
 plotPrior(priors$InfOns, file="InfOns", tex=TRUE)
 #$
 @
