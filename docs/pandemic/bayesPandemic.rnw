@@ -2,7 +2,7 @@
 \usepackage[nogin]{Sweave}
 \title{Bayesian statistics and  swine flu}
 \author{Patrick Brown$^1$,  Peter Neal$^2$}
-\institute{1:Cancer Care Ontario and Dalla Lana School of Public Health, University of Toronto; 2: University of Manchester} 
+\institute{1:Cancer Care Ontario and Dalla Lana School of Public Health, University of Toronto; 2: School of Mathematics, University of Manchester} 
 \usepackage{amsmath,subfigure}
 
 \SweaveOpts{echo=FALSE,fig=true,prefix.string=Figures/G,height=2,width=3}
@@ -74,6 +74,11 @@ library(pandemic)
 	\item and account for individual's previous medical conditions?
 \item Predict the number of hospital beds required for a given number of infections.
 \end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Severity of infection}
+
 \end{frame}
 
 \begin{frame}
@@ -215,6 +220,14 @@ plotPrior(priors$InfOns, file="InfOns", tex=TRUE)
 \end{itemize}
 \end{frame}
 
+
+\begin{frame}
+\frametitle{The Algorithm}
+data augmentation
+
+random walk metropolis on parameters
+\end{frame}
+
 \begin{frame}[fragile]
 \frametitle{Simulated data}
 <<simData,echo=true,fig=false>>=
@@ -231,6 +244,24 @@ toPrint[is.na(toPrint)] = " "
 toPrint = as.matrix(toPrint)
 latex(toPrint, file="",center="none", title="", table.env=F)
 @
+\end{frame}
+
+\begin{frame}
+\frametitle{Results}
+
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Age?}
+
+piecewise constant 5yr?
+
+change points?
+
+note that after data augmentation it's a standard problem.
+
 \end{frame}
 
 \begin{frame}
