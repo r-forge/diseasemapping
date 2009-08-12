@@ -3,7 +3,7 @@
 \title{Bayesian statistics and  swine flu}
 \author{Patrick Brown$^1$,  Peter Neal$^2$}
 \institute{1:Cancer Care Ontario and Dalla Lana School of Public Health, University of Toronto; 2: School of Mathematics, University of Manchester} 
-\usepackage{amsmath,subfigure}
+\usepackage{amsmath,subfigure,alltt}
 
 \SweaveOpts{echo=FALSE,fig=true,prefix.string=Figures/G,height=2,width=3}
 
@@ -176,7 +176,9 @@ y \sim & \text{Weibull}(\mu/\Gamma(1 + 1/\nu), \nu)
 
 \begin{frame}[fragile]
 \frametitle{What we need}
+\begin{alltt}
 \input{bayesPandemicPriors.txt}
+\end{alltt}
 \end{frame}
 
 
@@ -245,14 +247,26 @@ colnames(paramSample)
 
 
 \begin{frame}
-\frametitle{}
+\frametitle{Fatality probability}
+\begin{columns}
+\column{0.5\textwidth}
 \begin{block}{trace plots}
-<<tracePlot>>=
+<<tracePlot,fig=true>>=
 plot(paramSample[,"probs.D"], type="l")
+abline(h=params$probs["D"], col="red")
 @
 \end{block}
+\column{0.5\textwidth}
 
+\begin{block}{Histogram}
+<<histPost>>=
+hist(paramSample[,"probs.D"], breaks=12)
+abline(v=params$probs["D"], col="red")
+@
+\end{block}
+\end{columns}
 \end{frame}
+\end{document}
 
 
 \begin{frame}
