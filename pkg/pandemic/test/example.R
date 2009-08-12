@@ -1,10 +1,4 @@
-# source in all the R files
-Rfiles=system("CMD /K dir /B ..\\R\\*.R", intern=T)
-Rfiles = grep("\\.R$", Rfiles, value=T)
-for(D in Rfiles) {
-  print(D)
-	source(paste("..\\R\\", D, sep=""))
-}	
+library(pandemic)
 	
 # get parameters
 # use the default except for hospital admission times for deadly infections
@@ -34,6 +28,7 @@ priors = readPrior("hyperparameters.txt")
 
 # fit the model
 paramSample = mcmcPandemic(data,params,priors,0.1,100)
+
 # 0.1 - Standard deviation for random walk Metropolis algorithm
 # 100 - Number of iterations
 
