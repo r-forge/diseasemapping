@@ -18,7 +18,7 @@
 
 
 <<setup,fig=false>>=
-options(SweaveHooks=list(fig=function() par(mar=c(2.5,2.5,0.1,0.1), mgp=c(1.5, 0.5, 0), cex=0.6)))
+options(SweaveHooks=list(fig=function() par(mar=c(2.5,2.5,0.1,0.1), mgp=c(1.5, 0.5, 0), cex=0.6)), width=58)
 # source in all the R files
 library(pandemic)
 @
@@ -62,7 +62,7 @@ library(pandemic)
 \begin{itemize}
 	\item Some people will get infected with swine flu
 	\item Some will get hospitalized, some will die
-	\item How do we fatality rate and the hospitalization rate?
+	\item How do we estimate the fatality and hospitalization rates?
 	\item Problem: censoring, some individuals in the dataset have not yet had their hospitalization and/or fatality
 	\item Crude rates underestimate the rates, and result in estimates increasing over time
 \end{itemize}
@@ -81,6 +81,14 @@ library(pandemic)
 
 \begin{frame}
 \frametitle{Types of infection}
+All infections are one of the following types:
+\begin{description}
+	\item[Mild:] The individual will recover without needing to be hospitalized
+	\item[Serious:] The infection is severe enough that hospitalization will be required before the individual recovers
+	\item[Deadly:] Following hospitalization, the patient dies of the infection.
+\end{description}
+When a case is first identified, it's not known what type it is.
+
 
 \end{frame}
 
@@ -119,11 +127,11 @@ Infection$\stackrel{f_I(t)}{\Longrightarrow}$ Onset $\stackrel{f_{OS}(t)}{\Longr
 \begin{frame}
 \frametitle{Distributions}
 \begin{itemize}
-	\item $f(t;\mu,\nu,\delta)$ is the distribution for time to an event.  
+	\item $ f(t;\mu,\nu,\delta) = pr(T=t)$ is the distribution for time to an event.  
 	\item \ldots a rounded, zero-inflated Weibull
 \begin{align*}
 Z\sim&\text{Bern}(\delta)\\
-[Y|Z=1] =& 0 \text{ w.p.} 1\\
+[T|Z=1] =& 0 \text{ w.p.} 1\\
 pr(T=t|Z=0) =&  \text{pr}(\max(t-0.5,0) < y < t+0.5)\\
 y \sim & \text{Weibull}(\mu/\Gamma(1 + 1/\nu), \nu)
 \end{align*}
@@ -157,7 +165,7 @@ y \sim & \text{Weibull}(\mu/\Gamma(1 + 1/\nu), \nu)
 \item Gamma or Beta priors, parametrized by mean and standard deviation
 \item Average time to onset of symptoms is expected to be 3.5 days, but the average time could be a day longer or shorter.
 \begin{itemize}
-	\item $E(\mu_I = 3.5)$ and $sd(\mu_I = 0.5$
+	\item $E(\mu_I = 3.5)$ and $sd(\mu_I)	 = 0.5$
 	\item $\mu_I \sim \text{Gamma}(3.5^2/0.5^2 , 3.5/0.5^2 )$
 \end{itemize}
 \end{itemize}
@@ -172,16 +180,18 @@ y \sim & \text{Weibull}(\mu/\Gamma(1 + 1/\nu), \nu)
 	\item so the probability of being hospitalized is $\rho_D + (1-\rho_D)\rho_S$
 	\item parametrize this way to ensure the probabilities of being Mild, Severe, or Deadly add to 1.
 	\item beta priors on $\rho_D$ and $\rho_S$, parametrized by mean and standard deviation
-	\item i.e.\ $\rho_D$ is expected to be $0.1$, with $sd(\rho_D = 0.05)$
+	\item i.e.\ $\rho_D$ is expected to be $0.1$, with $sd(\rho_D) = 0.05$
 \end{itemize}
 
 \end{frame}
 
 \begin{frame}[fragile]
 \frametitle{What we need}
+{\footnotesize
 \begin{alltt}
 \input{bayesPandemicPriors.txt}
 \end{alltt}
+}
 \end{frame}
 
 
@@ -210,22 +220,44 @@ plotPrior(priors$InfOns, file="InfOns", tex=TRUE)
 
 \begin{frame}
 \frametitle{The Algorithm}
-data augmentation
+\begin{block}{Data augmentation}
+\begin{itemize}
+	\item Fix the parameter values
+	\item Simulate the missing data: infection type, times of infection, onset, hospitalization, recovery, and/or death.
+	\item Can simulate directly, as conditioning is easy.
+\end{itemize}
+\end{block}
 
-random walk metropolis on parameters
+\begin{block}{Random walk metropolis}
+\begin{itemize}
+	\item With the full augmented data, the likelihood is simple as observations are independent.
+	\item Propose new parameters with a Gaussian random walk, accept with the appropriate probability.
+\end{itemize}
+\end{block}
+
+
 \end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Simulated data}
 <<simData,echo=true,fig=false>>=
 params = pandemicParams( 
-  MedHospD = c(mean = 1.5, shape = 2, zeros = 0.2)
+	InfOns = c(mean=1.5, shape=2, zeros=.1),
+	OnsMedM= c(mean=1, shape=1, zeros=.1 ),
+	OnsMedS= c(mean=1, shape=1, zeros=.1 ),
+	OnsMedD= c(mean=1, shape=1, zeros=.1 ),
+	MedRec = c(mean=3, shape=2, zeros=.1, lost=0.95 ),
+  MedHospS = c(mean = 2, shape = 2, zeros = 0.1),
+  MedHospD = c(mean = 2, shape = 2, zeros = 0.1),
+	HospRec = c(mean=2, shape=1.5, zeros=.01 ),
+	HospDeath = c(mean=2, shape=0.1, zeros=.05 ),
+ 	probs = c(M=0.7, S=0.25, D=0.05)
   )
 
-data = simEpidemic(params, delta=3, days=20)
+data = simEpidemic(params, delta=4, days=20)
 
 
-data[1:10,-1]
+data[1:8,-1]
 @
 
 
@@ -242,7 +274,8 @@ data[1:10,-1]
 \begin{frame}[fragile]
 \frametitle{Results}
 <<mcmcResults,echo=true,fig=false>>=
-paramSample = mcmcPandemic(data,params,priors,sigma=0.1,runs=100)
+paramSample = mcmcPandemic(data,params,priors,sigma=0.05,runs=600)
+paramSample = paramSample[seq(100,dim(paramSample)[1], by=5),]
 dim(paramSample)
 colnames(paramSample)
 @
@@ -277,16 +310,16 @@ postSummary=t(apply(paramSample, 2, function(qq)
   c(mean=mean(qq), quantile(qq, prob=c(0.025, 0.5, 0.975)))))
 postSummary = cbind(true=unlist(params)[rownames(postSummary)], postSummary)  
 
-postSummary[1:12,]
+postSummary[1:12,-4]
 @
 \end{frame}
 
 
 \begin{frame}
-\frametitle{Posterior and prior, fatality prob }
+\frametitle{Posterior and prior, Hosp $\Rightarrow$ Death }
 <<priorPost, fig=false,results=tex>>=
 library(ellipse)
-plotPrior(priors, paramSample, transition="HospDeath",file="postFatality", tex=TRUE)
+plotPrior(priors, paramSample, transition="MedHospS",file="MedHospS", tex=TRUE)
 @
 \end{frame}
 
@@ -294,34 +327,62 @@ plotPrior(priors, paramSample, transition="HospDeath",file="postFatality", tex=T
 \frametitle{Hospital demand}
 <<hospLoad,echo=T>>=
 # generate hospital times
-hospSample = simHospitals(paramSample , Ndays=20, NinfectionsPerDay=10)
+hospSample = simHospitals(paramSample , Ndays=20, NinfectionsPerDay=20)
 
 # graph hospital times
 plotHospitals(hospSample)
 @
 \end{frame}
 
+\begin{frame}[fragile]
+\frametitle{With rising and falling incidence}
+{\scrpitsize
+<<hospLoad2,echo=T,height=2,width=4>>=
+# generate hospital times
+hospSample2 = simHospitals(paramSample , Ndays=40, 
+	NinfectionsPerDay=c(seq(from=1,by=2, len=10), seq(from=20, len=10, by=2), rep(2, 20))) 
+
+# graph hospital times
+plotHospitals(hospSample2)
+@
+}
+\end{frame}
+
 
 \begin{frame}
 \frametitle{Age?}
-
-piecewise constant 5yr?
-
-change points?
-
-note that after data augmentation it's a standard problem.
-
+\begin{itemize}
+	\item Assume the fatality and hospitalization probabilities vary with age
+	\item After data augmentation, we have a binary response with a smoothly-varying probability
+	\item Use a canned Bayesian semi-parametric routine to generate a new age curve at every iteration.
+	\item {\tt DPpackage}?
+	\item Informative prior on the average or rate at a baseline age
+	\item Strong prior that the curve is flat.
+\end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{To do}
 \begin{itemize}
-	\item simulate hospital loads
+	\item more covariates	
 	\item model the infection process
 	\item spatial infection process
-	\item covariates
-	
 \end{itemize}
 \end{frame}
 
+\begin{frame}
+
+\frametitle{Conclusions}
+
+\begin{itemize}
+	\item Use the data even if there isn't much of it
+	\item If there are many cases and no fatalities, at least we can get an upper bound on the fatality rate
+	\item When data are plentiful and informative, there is a case to be made for non-parametric survival methods
+	\item But if rates change with age, sex, geography, or existing health conditions, even late stage epidemic data might not be sufficient for standard survival methods.
+\end{itemize}
+
+\end{frame}
+
 \end{document}
+
+D75A0BD6A6A1

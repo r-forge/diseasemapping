@@ -1,11 +1,65 @@
+rangeDistHazard=function(x, quantiles =c(0.025, 0.975), xseq=0:20) {
+
+paramRange =list()
+for(D in names(x)) {
+ paramRange[[D]] = dprior(quantiles, x[[D]], "q")
+  paramRange[[D]] =c(paramRange[[D]], x[[D]]["mean"])
+  names(paramRange[[D]]) =c("lower", "upper", "mean")
+}      
+
+
+hazard = distn = matrix(NA, length(xseq), 5, 
+ dimnames = list(NULL, 
+    c(outer(paste("m=",paramRange$mean[c("lower", "upper")] ,sep=""), 
+        paste("s=",paramRange$shape[c("lower", "upper")] ,sep=""),
+        FUN=paste), "mean") ) )
+
+for(Dmean in c("upper","lower")) {
+  for(Dshape in c("upper","lower")) {
+    thisCol = paste("m=",  paramRange$mean[Dmean], " s=",
+          paramRange$shape[Dshape], sep="")
+    theseParams = c(mean= paramRange$mean[Dmean],
+      shape= paramRange$shape[Dshape], 
+      scale = paramRange$mean[Dmean] / 
+        gamma(1 + 1/paramRange$shape[Dshape])  )
+      # get rid of the names suffixes which R adds for some reason  
+     names(theseParams) = gsub("\\.[[:alpha:]]+$", "", names(theseParams))
+    distn[,thisCol] =  dweibullRound(xseq,  theseParams)
+            
+    hazard[,thisCol] =  distn[,thisCol] / 
+      (1-pweibullRound(xseq,  theseParams))
+
+    }
+  }     
+
+  # the prior mean
+    theseParams = c(mean= paramRange$mean["mean"],
+      shape= paramRange$shape["mean"], 
+      scale = paramRange$mean["mean"] / 
+        gamma(1 + 1/paramRange$shape["mean"])  )
+     names(theseParams) = gsub("\\.[[:alpha:]]+$", "", names(theseParams))
+
+
+distn[,"mean"] =  dweibullRound(xseq,  theseParams)
+    hazard[,"mean"] =  distn[,"mean"] / 
+      (1-pweibullRound(xseq,  theseParams))
+
+    hazard[is.na(hazard)]=NA
+     hazard[hazard==Inf]=NA
+
+     return(list(dist=distn, hazard=hazard, paramRange=paramRange))
+}       
        
 plotPrior=function(x, posteriorSample = NULL, 
   file=NULL, quantiles =c(0.025, 0.975), tex=FALSE,
-  transition="HospDeath") {
+  transition=NULL) {
                                                            
 if(any(names(x)==transition)) {
   x = x[[transition]]
 }
+
+
+
 
 includeGraphicsString = "\\includegraphics[width=0.3\\textwidth]{"
 if(is.null(file)) {
@@ -36,7 +90,6 @@ Dvec = paste(transition, ".", D, sep="")
     xseq = seq(therange[1],  therange[2], len=100)
   }  
   
-filename = paste(file, D, ".pdf", sep="")  
 if(!is.null(file)) {
   filename = paste(file, D, ".pdf", sep="")  
   pdf(filename, width=5,height=3)
@@ -66,46 +119,30 @@ if(tex) {
 
 
 
- paramRange[[D]] = dprior(quantiles, x[[D]], "q")
-  paramRange[[D]] =c(paramRange[[D]], x[[D]]["mean"])
-  names(paramRange[[D]]) =c("lower", "upper", "mean")
-
 }      
 
 
 
 if(all(c("mean","shape")%in% names(paramRange))) {
-xseq <- 0:20
+  xseq <- 0:20
 
 
 if(is.null(posteriorSample)) {
-hazard = distn = matrix(NA, length(xseq), 5, 
- dimnames = list(NULL, 
-    c(outer(paste("m=",paramRange$mean[c("lower", "upper")] ,sep=""), 
-        paste("s=",paramRange$shape[c("lower", "upper")] ,sep=""),
-        FUN=paste), "mean") ) )
 
-for(Dmean in c("upper","lower")) {
-  for(Dshape in c("upper","lower")) {
-    thisCol = paste("m=",  paramRange$mean[Dmean], " s=",
-          paramRange$shape[Dshape], sep="")
-    theseParams = c(mean= paramRange$mean[Dmean],
-      shape= paramRange$shape[Dshape], 
-      scale = paramRange$mean[Dmean] / 
-        gamma(1 + 1/paramRange$shape[Dshape])  )
-      # get rid of the names suffixes which R adds for some reason  
-     names(theseParams) = gsub("\\.[[:alpha:]]+$", "", names(theseParams))
-    distn[,thisCol] =  dweibullRound(xseq,  theseParams)
+  distHazard = rangeDistHazard(x, quantiles, xseq)
+  hazard = distHazard$hazard
+  distn= distHazard$dist
+  paramRange= distHazard$paramRange
+  
             
-    hazard[,thisCol] =  distn[,thisCol] / 
-      (1-pweibullRound(xseq,  theseParams))
-    hazard[is.na(hazard)]=NA
-     hazard[hazard==Inf]=NA
-     
-}
-}
 } else {
-# bivariate normal based confidence region
+
+if(is.null(transition)) {
+  warning("not sure which transition to use from the posterior sample")  
+}
+meanName 
+
+# bivariate normal based posterior confidence region
 themean = apply(paramSample[,c("HospDeath.mean","HospDeath.shape")],2,mean)
     thecontour = ellipse(
       var(paramSample[,c("HospDeath.mean","HospDeath.shape")]),
@@ -159,6 +196,8 @@ themean = apply(paramSample[,c("HospDeath.mean","HospDeath.shape")],2,mean)
   }
 }
 
+    hazard[is.na(hazard)]=NA
+     hazard[hazard==Inf]=NA
 
 
 
@@ -168,6 +207,8 @@ filename<- paste(file, "dist.pdf", sep="")
   pdf(filename, width=5,height=4)
   par(mar=c(2,2,0,0))
 }    
+
+
 
 if(!all(is.na(distn[,"mean"]))){ 
     theylim = c(0, 1.2*max(distn[,"mean"], na.rm=T))
@@ -218,6 +259,7 @@ if(tex) {
     "\\end{figure}\n", sep="" )
 
 }
+
 
 return(invisible())
 
