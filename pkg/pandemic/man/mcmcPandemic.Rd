@@ -16,7 +16,7 @@ mcmcPandemic(xdata, params, prior, sigma, runs)
   \item{xdata}{the data set simulated using the \code{simEpidemic} function, which contains the informations of number of days in different disease stages for each patients.}
   \item{params}{the parameters simulated using the \code{pandemicParams} function, which contains the esitmated days be in different disease stages.}
   \item{prior}{the priors simualted using the \code{pandemicPriors} function.}
-  \item{sigma}{the standard deviation for random walk Metropolis algorithm.}
+  \item{sigma}{either a scalar or a list.  If a list, it's in the similar format as \code{params}, with each element containing the  standard deviation for random walk Metropolis algorithm for the corresponding parameter. If a scalar, the standard deviation is the starting value given in \code{params} times \code{sigma}.}
   \item{runs}{number of iterations.}
 }
 \details{

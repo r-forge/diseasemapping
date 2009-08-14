@@ -1,18 +1,22 @@
 paramUpdate=function(params,prior,data,name,x,sigma)
 {
 paramsNew=params
-paramsNew[[name]][x]=abs(rnorm(1,paramsNew[[name]][x],sigma))
+paramsNew[[name]][x]=abs(rnorm(1,paramsNew[[name]][x],sigma[[name]][x]))
 paramsNew=addMeanParameters(paramsNew)
-ratio=Like1(data,params,paramsNew,name)
-ratio=ratio*
+ratio1=Like1(data,params,paramsNew,name)
+ratio2=ratio1*
    dprior(paramsNew[[name]]["mean"],prior[[name]]["mean"]$mean)/
   dprior(params[[name]]["mean"],prior[[name]]["mean"]$mean)
-ratio=ratio*
+ratio3=ratio2*
   dprior(paramsNew[[name]]["shape"],prior[[name]]["shape"]$shape)/
   dprior(params[[name]]["shape"],prior[[name]]["shape"]$shape)
-ratio= ratio*
+ratio= ratio3*
   dprior(paramsNew[[name]]["zeros"],prior[[name]]["zeros"]$zeros)/
   dprior(params[[name]]["zeros"],prior[[name]]["zeros"]$zeros)
+if(is.na(ratio)){
+ cat(ratio1, ratio2, ratio3, ratio, "\n")
+}
+
 if(ratio>runif(1)) params=paramsNew
 params
 }

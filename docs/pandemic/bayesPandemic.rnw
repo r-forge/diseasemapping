@@ -250,8 +250,9 @@ params = pandemicParams(
   MedHospS = c(mean = 2, shape = 2, zeros = 0.1),
   MedHospD = c(mean = 2, shape = 2, zeros = 0.1),
 	HospRec = c(mean=2, shape=1.5, zeros=.01 ),
-	HospDeath = c(mean=2, shape=0.1, zeros=.05 ),
+	HospDeath = c(mean=2, shape=0.8, zeros=.05 ),
  	probs = c(M=0.7, S=0.25, D=0.05)
+# 	probs = c(M=0.979, S=0.02, D=0.001)
   )
 
 data = simEpidemic(params, delta=4, days=20)
@@ -274,7 +275,8 @@ data[1:8,-1]
 \begin{frame}[fragile]
 \frametitle{Results}
 <<mcmcResults,echo=true,fig=false>>=
-paramSample = mcmcPandemic(data,params,priors,sigma=0.05,runs=600)
+scale = mcmcScale(params, 0.075,minScale = 0.05 )
+paramSample = mcmcPandemic(data,params,priors,sigma=scale,runs=60)
 paramSample = paramSample[seq(100,dim(paramSample)[1], by=5),]
 dim(paramSample)
 colnames(paramSample)

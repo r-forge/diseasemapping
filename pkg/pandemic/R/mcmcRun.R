@@ -1,8 +1,34 @@
+mcmcScale = function(params, sigma, minScale = 0.01, maxScale = 0.2){
+
+  for(Dtrans in names(params)){
+    for(Dpar in names(params[[Dtrans]])){
+      params[[Dtrans]][Dpar] =
+        pmax(minScale,pmin(maxScale,params[[Dtrans]][Dpar] * sigma) )
+    }
+  }
+
+params
+}
+
+lostUpdate = function(data, prior) {
+    x = table(data[data$type=="M","lost"])
+    
+    rbeta(1, x["TRUE"] + prior["shape1"],x["FALSE"] + prior["shape2"])
+    
+}
+
+
 mcmcPandemic=function(xdata,params,prior,sigma,runs)
 {
 name=c("InfOns","OnsMedM","OnsMedS","OnsMedD","MedRec","MedHospS","MedHospD","HospRec","HospDeath")
 name2=c("scale","shape","zeros")
 data=dataAugment(xdata,params)
+
+
+
+if(!is.list(sigma)) {
+  sigma = mcmcScale(params, sigma)    
+}
 
 vecParams = unlist(params) 
 paramsPosteriorSample = matrix(NA, ncol=length(vecParams), nrow=0, 
@@ -18,6 +44,9 @@ params=paramUpdate(params,prior,data,i,j,sigma)
 }
 }
 params$probs=probsUpdate(data,params$probs,prior)
+
+# update lost
+params$MedRec["lost"] = lostUpdate(data, prior$MedRec$lost)
 
 paramsPosteriorSample = rbind(paramsPosteriorSample, 
     unlist(params)[colnames(paramsPosteriorSample)])
