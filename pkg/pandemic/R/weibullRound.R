@@ -1,3 +1,19 @@
+censorweibull=function(a,b,cen, params)
+{
+weibull=0
+for(i in 1:length(cen))
+{
+weibull[i]=0
+while(weibull[i]<=cen[i])
+{
+weibull[i]=round(rweibull(1,a,b))
+}
+}
+weibull
+}
+
+
+
 rweibullRound = function(N, params=c(shape=1, scale=1)) {
 
   round(rweibull(N, shape=params["shape"], scale=params["scale"]))

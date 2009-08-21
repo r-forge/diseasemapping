@@ -1,5 +1,5 @@
 pandemicPriors = function( 
-  InfOns = meanShapeZerosPrior(),
+ InfOns = meanShapeZerosPrior(),
  OnsMedM = meanShapeZerosPrior(),
  OnsMedS = meanShapeZerosPrior(),
  OnsMedD = meanShapeZerosPrior(),
@@ -64,24 +64,49 @@ priorShapeScale = function(priorList) {
       (mu/mu1)
     attributes(priorList[[D]])$distribution = "beta"      
   }
+  
+  
   priorList
 }
 
 
 probsPrior = function(
   fatality = c(mean=0.1, sd=0.2),
-  hosp = c(mean=0.2, sd=0.2)  
+  hosp = c(mean=0.2, sd=0.2)
   ) {
   
+  result = list(
+    fatality=fatality,
+    hosp=hosp
+  )
+
+  priorShapeScale(result)  
+}
+
+psProbPriors = function(
+  fatality=psPrior(),
+  hosp=psPrior()
+){
+  result = list(fatality=fatality, hosp=hosp)
+}
+
+psPrior = function(
+ taub1=0.01,
+               taub2=0.01,
+               beta0=rep(0,1),
+               Sbeta0=diag(100,1),
+               tau1=0.01,
+               tau2=0.01) {
+
   theFormals = ls(-1)
   result = list()
   for(D in theFormals) {
      result[[D]] = get(D, pos=-1)
    }
-   priorShapeScale(result)  
-  
-  
-  }
+   attributes(result)$distribution = "psPrior"
+   result
+}   
+
 
 dprior = function(x, prior, prefix="d", ...) {
   argList = list(

@@ -1,18 +1,14 @@
-censorweibull=function(a,b,cen, params)
-{
-weibull=0
-for(i in 1:length(cen))
-{
-weibull[i]=0
-while(weibull[i]<=cen[i])
-{
-weibull[i]=round(rweibull(1,a,b))
-}
-}
-weibull
-}
-
 dataAugment = function(data, params) {
+
+# create probD and probS columns
+for(Dprob in c("D","S") ) {
+  probCol = paste("prob", Dprob, sep="")
+  if(Dprob %in% names(params$probs)) {
+    data[,probCol] = params$probs["D"]
+  } else {
+    data[,probCol] = approx(params$ageProbs$D$age, params$ageProbs$D$prob, data[,"age"])
+  }
+}
 
 # hosps
 inHosp = which(data$observedType == "hosp")
@@ -20,7 +16,7 @@ inHospTimes = data[inHosp, "censor"] - data[inHosp, "hospital"]
 probCensorGivenDeadly = 1-pweibullRound(inHospTimes, params$HospDeath)
 probCensorGivenSerious = 1-pweibullRound(inHospTimes, params$HospRec)
 
-probDeadlyGivenCensor = probCensorGivenDeadly *params$probs["D"]
+probDeadlyGivenCensor = probCensorGivenDeadly *data[inHosp,"probD"]
 
 probDeadlyGivenCensor = probDeadlyGivenCensor / 
   (probDeadlyGivenCensor + probCensorGivenSerious)

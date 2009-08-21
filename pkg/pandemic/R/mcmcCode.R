@@ -23,15 +23,24 @@ params
 
 probsUpdate=function(data,probs,prior)
 {
+
+if(is.vector(probs)) {
+
 probs["D"]=rbeta(1,sum(data$type=="D")+prior$probs$fatality["shape1"],
     sum(data$type=="M")+sum(data$type=="S")+prior$probs$fatality["shape2"])
 
 probs["S"]=(1-probs["D"])*rbeta(1,sum(data$type=="S")+prior$probs$hosp["shape1"],
     sum(data$type=="M")+prior$probs$hosp["shape2"])
 
-probs["M"]=1-probs["D"]-probs["S"]
+probs["M"]=(1-probs["D"])*(1-probs["S"])
+
+} else { #DP stuff
+    # NEED TO DO THIS!
+
+}
 
 probs
+
 }
 
 

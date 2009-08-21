@@ -312,7 +312,7 @@ postSummary=t(apply(paramSample, 2, function(qq)
   c(mean=mean(qq), quantile(qq, prob=c(0.025, 0.5, 0.975)))))
 postSummary = cbind(true=unlist(params)[rownames(postSummary)], postSummary)  
 
-postSummary[1:12,-4]
+postSummary[1:12,-c(1,4)]
 @
 \end{frame}
 

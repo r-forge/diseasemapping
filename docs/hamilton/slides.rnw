@@ -1,0 +1,373 @@
+\documentclass[xcolor=dvipsnames]{beamer}
+
+\usetheme{Singapore}
+\usecolortheme[named=RawSienna]{structure}
+
+\usefonttheme{serif}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number] 
+\usepackage[nogin]{c:/brownpe/share/Sweave}
+\title{Beyond disease mapping: models for disease incidence data with spatial risk factors}
+\author{Patrick Brown\\ Billy Chang, Susitha Wanigaratne}
+\institute{Cancer Care Ontario\\ Dalla Lana School of Public Health, University of Toronto}
+
+\usepackage{amsmath,tikz}
+\graphicspath{{Figures/}}
+\setkeys{Gin}{width=\textwidth}
+\SweaveOpts{echo=FALSE,fig=true,prefix.string=Figures/G,height=2,width=3}
+
+\begin{document}
+
+\frame{\maketitle}
+
+
+\begin{frame}
+\frametitle{Hamilton, Canada}
+\includegraphics[trim=1cm 12cm 1cm 6cm,clip=true]{hamiltonMap.pdf}
+
+\includegraphics{YorkBlvdHamiltonA.JPG}
+\end{frame}
+
+
+
+\begin{frame}
+
+\frametitle{Lung cancer in Hamilton}
+% left bottom right top
+
+\includegraphics[trim=10cm 6cm 9cm 10cm,clip=true,width=0.75\textwidth]{Female-CancerExpected.pdf}
+~
+\includegraphics[trim=21cm 8cm 4cm 8cm,clip=true,width=0.18\textwidth]{Female-CancerExpected.pdf}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Smoking in Hamilton}
+\includegraphics[trim=10cm 6cm 9cm 10cm,clip=true,width=0.75\textwidth]{Female-eversmoking.pdf}
+~
+\includegraphics[trim=21cm 8cm 4cm 8cm,clip=true,width=0.18\textwidth]{Female-eversmoking.pdf}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{The Problem}
+\begin{itemize}
+	\item Create a model for predicting cancer rates in Hamilton, allowing for low counts in small areas
+	\item Allow explanatory variables (smoking)
+	\item But how do we get smoking rates?
+	
+\begin{itemize}
+	\item And how well can we predict them?
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+
+
+
+\begin{frame}
+\frametitle{Issues with small area maps}
+
+\begin{block}{Small counts}
+	mostly 0 or 1
+\begin{itemize}
+\item The usual estimates of incidence rates perform poorly
+	\item Methods based on the normal-distribution aren't appropriate
+\end{itemize}
+
+\end{block}
+\begin{block}{Spatial dependence}
+With regions close together being more similar than regions further apart
+\begin{itemize}
+	\item The usual regression models underestimate standard errors
+  \item but this helps us deal with small counts
+\end{itemize}
+
+\end{block}
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{This talk}
+will accomplish the following:
+\begin{itemize}
+\item  present a model for mapping disease risk in small areas with low case counts
+
+\item  show how to incorporate risk factors observed imprecisely, like smoking rates
+
+\item  apply these methods to mapping cancer risk in Hamilton at the DA level, adjusting for smoking rates.\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Cancer Data}
+For each census area $i$ we have
+\begin{itemize}
+	\item Expected cancer case count $E_i$
+	
+\begin{itemize}
+\item $E_i = C_i \theta$
+	\item $C_i$ is the (vector) of populations by 5-year age group
+	\item $\theta$ are the (assumed known) rates by age group
+\end{itemize}
+\item Count of cancer cases $Y_i$, often 0 or 1
+\item Estimated pollution levels $P_i$
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Smoking data}
+From the Canadian Community Household Survey (CCHS), we have
+\begin{itemize}
+	\item $N_i$ individuals surveyed in region $i$, often 0.
+	\item The age $A_{ij}$ and smoking status $Z_{ij}$ of individual $j$ in region $i$
+	\item The average household income $X_i$ in the region.
+\end{itemize}
+
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Smoking model}
+\vspace*{-0.5cm}
+\begin{align*}
+pr(Z_{ij} =1) = & \pi_{ij}\\
+ \text{logit}(\pi_{ij}) = & f(A_{ij};\psi) + \rho_i\\
+\rho_i = & X_i \alpha + W_i\\
+ W_i \sim & \text{BYM}(\sigma_1, \sigma_2)
+\end{align*}
+\vspace*{-0.5cm}
+\begin{itemize}
+\item $f(a;\psi)$ is a smoothly-varying function of age
+\begin{itemize}
+	\item $\psi$ are the coefficients on linear splines with fixed knots
+\end{itemize}
+	\item The smoking risk surface $\rho_i$  is unknown.  
+	\item It depends on income $X_i$ and residual spatial variation $W_i$
+	\item $W_i$ is a Besag, York and Mollie model, which is smoothly varying in space
+	
+\begin{itemize}
+	\item $W_i$ depends on the values $W_k$ in neighbouring regions $k$
+	\item Technically, it's the sum of a Markov random field and a spatially independent process
+	\item $\sigma_1$ is the variance of the spatially smooth part of $W_i$, and $\sigma_2$ is the variance of the rough part.
+\end{itemize}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Dealing with small cancer counts}
+
+\begin{columns}
+\column{0.5\textwidth}
+\begin{block}{The Model}
+\[
+Y_i \sim \text{Poisson}(E_i\lambda_i)
+\]
+\begin{itemize}
+	\item $Y_i$ is the number of cases in region $i$
+	\item $E_i$ is the expected count
+	\item $\lambda_i$ is the relative risk
+\end{itemize}
+\end{block}
+\column{0.5\textwidth}
+\begin{block}{The Poisson Distriution}
+<<poisson,fig=true,echo=false>>=
+options(SweaveHooks=list(fig=function() par(mar=c(2.5,2.5,0.1,0.1), mgp=c(1.5, 0.5, 0), cex=0.6)))
+xseq = 0:14
+toplot = dpois(xseq, 0.5)
+names(toplot) = as.character(xseq)
+toplot2 = dpois(xseq, 1.5)
+barplot(toplot, width=0.4, xlim = range(xseq), space=4, xlab='count', ylab='pr(count)',
+	col='red',border=NA)
+barplot(toplot, width=0.21, add=T, space=8.8, col='white', xlim = range(xseq),border=NA, axes=F, axisnames=F)
+
+barplot(toplot2, width=0.2, add=T, space=9, col='blue', xlim = range(xseq),border=NA, axes=F)
+@
+
+mean = \textcolor{red}{0.5},  \textcolor{blue}{1.5} 
+\end{block}
+
+\end{columns}
+
+\begin{block}{Interpretation}
+\begin{itemize}
+	\item We don't observe the true rate $\lambda_i$
+	\item but rather a noisy version of it in the form of case counts
+	\item The Poisson distribution can cope with small counts and lots of zeros
+\end{itemize}
+\end{block}
+
+\end{frame}
+
+
+
+
+\begin{frame}
+\frametitle{Cancer model}
+\begin{align*}
+Y_i \sim & \text{Poisson}(\lambda_i E_i)\\
+\log(\lambda_{i}) = &   P_i \beta + \rho_i \gamma + U_i\\
+ U_i \sim & \text{BYM}(\tau_1, \tau_2)
+\end{align*}
+\begin{itemize}
+	\item The cancer relative risk surface $\lambda_i$  is unknown.  
+	\item It depends on pollution $P_i$, smoking $\rho_i$ and residual spatial variation $U_i$
+	\item $U_i$ is a spatially-smooth Besag, York and Mollie process which depends on it's neighbours
+\item Similar models used by Haining et al (2007) and Best et al.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\hspace*{-1cm}\input{graph.tex}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Model fitting}
+\begin{itemize}
+	\item The data are not Normally-distributed, and there are  unobserved random effects.
+	\item Uncertainty in smoking should carry over into the cancer model
+	\item This makes the usual least squares or maximum likelihood methods problematic
+	\item Bayesian inference using Markov Chain Monte Carlo simulation
+	\item WinBUGS, with help from the R package R2WinBUGS and glmmBUGS
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Bayesian inference in a nutshell}
+\begin{itemize}
+	\item The models give the distributions
+	
+\begin{itemize}
+	\item Cancer: $[Y | P, \rho, U, \beta, \gamma]$
+	\item Smoking: $[Z  | X, W, \alpha]$
+	\item Spatial surfaces $[U|\tau]$, $[W|\sigma]$
+	\item Priors $[\gamma]$,$[\beta]$, $[\alpha]$ $[\sigma]$
+$[\tau]$
+\end{itemize}
+\item Given the data $Y$ and $Z$, what are the distributions of the surfaces
+\begin{itemize}
+	\item Smoking: $[W|Y,Z]$
+	\item Cancer: $[U|Y,Z]$
+\end{itemize}
+\item MCMC draws a number of equally likely values from these distributions
+\item The average of these values is our best guess at the risk surfaces
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Adjusted risk surfaces}
+\begin{enumerate}
+	\item Cancer relative risk surface:
+	\[\lambda_{i} =   \exp(P_i \beta) \exp( \rho_i \gamma)\exp( U_i)\]
+	a value of $\lambda_4=1.3$ means an individual living in region 4 has a 30\% higher risk than the Ontario average for their age group 
+	\item Remove the effect of smoking:
+	\[\lambda_{i}/ \exp( \rho_i \gamma) = \exp(P_i \beta) \exp( U_i)\]
+	A 1.3 means that compared to a typical region in Ontario with the same smoking rate region 4 but average pollution, risk is 30\% higher.
+
+	\item Remove the effect of smoking and pollution:
+	\[\lambda_{i}/ \exp( \rho_i \gamma)\exp(P_i \beta) =  \exp( U_i)\]
+	Compared to a typical region the same smoking rate and pollution as region 4, risk is 30\% higher.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}
+
+\frametitle{Cancer risk}
+% left bottom right top
+
+\includegraphics[trim=10cm 6cm 9cm 10cm,clip=true,width=0.75\textwidth]{Female-CancerExpected.pdf}
+~
+\includegraphics[trim=21cm 8cm 4cm 8cm,clip=true,width=0.18\textwidth]{Female-CancerExpected.pdf}
+\end{frame}
+
+
+
+
+\begin{frame} 
+\frametitle{Cancer risk, removing smoking effect}
+\includegraphics[trim=10cm 6cm 9cm 10cm,clip=true,width=0.75\textwidth]{FemalesCancerRandomEffectPolllution.pdf}
+~
+\includegraphics[trim=21cm 8cm 4cm 8cm,clip=true,width=0.18\textwidth]{FemalesCancerRandomEffectPolllution.pdf}
+\end{frame}
+
+\begin{frame}
+\frametitle{Cancer risk, removing smoking and pollution}
+\includegraphics[trim=10cm 6cm 9cm 10cm,clip=true,width=0.75\textwidth]{FemalesCancerRandomEffect.pdf}
+~
+\includegraphics[trim=21cm 8cm 4cm 8cm,clip=true,width=0.18\textwidth]{FemalesCancerRandomEffect.pdf}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Parameter estimates}
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Chain convergence}
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Limitations and Extensions}
+\begin{description}
+	\item[Continuous space]:  $\lambda(s)$ instead of $\lambda_i$
+\begin{itemize}
+	\item The real risk surface is continuous
+	\item We observed spatially aggregated counts.
+\end{itemize}
+	\item[Changes in time]: $\lambda(s,t)$
+	
+\begin{itemize}
+	\item To gain more power, use data from a long time period
+	\item Allow for possible changes in risk over time
+	\item Changing census boundaries are a problem!
+\end{itemize}
+\item[]
+\end{description}
+\end{frame}
+
+\begin{frame}
+\frametitle{Extensions continued}
+\begin{description}
+\item[Better smoking model]: make better use of survey data
+\begin{itemize}
+	\item Individuals are either current, former, or never smokers
+	\item Rates at which starting and quitting happens vary with age
+	\item We have cross-sectional, not longitudinal, information
+	\item Multi-state model with time varying rates
+	\item Spatially-varying start rate
+\end{itemize}
+
+\item[Uncertainty in pollution]:
+\begin{itemize}
+	\item Monitoring data are available
+	\item pollution is another indirectly observed covariate?
+\end{itemize}
+\end{description}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Conclusion}
+
+\begin{itemize}
+	\item Small area disease mapping in space and time is possible even when counts are low 
+	\item Include covariates in the model to estimate the effect of potential risk factors
+	\item It's possible to include covariates which are indirectly or imprecisely observed.
+	\item So always adjust for smoking when mapping diseases?
+\end{itemize}
+\end{frame}
+
+
+\end{document}

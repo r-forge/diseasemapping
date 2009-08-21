@@ -8,7 +8,8 @@ pandemicParams <- function(
  MedHospD = c(mean = 1.5, shape = 1.5, zeros = 0.1),
  HospRec = c(mean = 4, shape = 1.5, zeros = 0.1),
  HospDeath = c(mean = 3, shape = 1, zeros = 0.1),
- probs = c(M=0.6, S=0.3, D=0.1)
+ probs = c(M=0.6, S=0.3, D=0.1),
+ ageProbs=NULL
 ) {
   theFormals = ls(-1)
   result = list()
@@ -19,7 +20,9 @@ pandemicParams <- function(
 
 }
 
-
+addAgeProbs =function(age=0:100, prob=rep(0.5, length(age)) ) {
+     data.frame(age, prob)
+}
 
 
 addScaleParameters = function(params) {

@@ -5,6 +5,16 @@ source("../R/sampleProbs.R")
 source("../R/priors.R")
 source("../R/readPriors.R")
   
+  library(DPpackage)
+  ?PSgam
+     PSprior<-list(taub1=0.01,
+               taub2=0.01,
+               beta0=rep(0,1),
+               Sbeta0=diag(100,1),
+               tau1=0.01,
+               tau2=0.01)
+
+  
 params = pandemicParams()
 priors = pandemicPriors()
 data = simEpidemic(params, 30)
