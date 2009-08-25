@@ -20,4 +20,11 @@ A data frame with columns age and prob.
 }
 \examples{
 ageProbs = addAgeProbs(age=seq(10, 80, len=8), probs = seq(0.01, 0.1, len=9))
+params = pandemicParams(
+  probs=NULL,
+  ageProbs=list(
+    hosp=addAgeProbs(),
+    fatality=addAgeProbs()
+  )
+)
 }
