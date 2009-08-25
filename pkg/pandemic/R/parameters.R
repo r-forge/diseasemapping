@@ -20,7 +20,7 @@ pandemicParams <- function(
 
 }
 
-addAgeProbs =function(age=0:100, prob=rep(0.5, length(age)) ) {
+addAgeProbs =function(age=0:100, prob=rep(0.1, length(age)) ) {
      data.frame(age, prob)
 }
 
@@ -28,7 +28,7 @@ addAgeProbs =function(age=0:100, prob=rep(0.5, length(age)) ) {
 addScaleParameters = function(params) {
 
   thenames = names(params)
-  thenames = thenames[thenames != "probs"]
+  thenames = thenames[!thenames %in% c("probs","ageProbs")]
   for(D in thenames)
     params[[D]]["scale"] = params[[D]]["mean"] / 
       gamma(1 + 1/params[[D]]["shape"])

@@ -9,7 +9,7 @@ Plot Priors
 Plot the prior distributions to find better priors.
 }
 \usage{
-plotPrior(x, posteriorSample = NULL, file = NULL, quantiles = c(0.025, 0.975), tex = FALSE, transition = "HospDeath")
+plotPrior(x, posteriorSample = NULL, file = NULL, quantiles = c(0.025, 0.975), tex = FALSE, transition = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

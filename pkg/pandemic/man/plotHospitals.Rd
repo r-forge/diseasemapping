@@ -2,7 +2,10 @@
 \Rdversion{1.1}
 \alias{plotHospitals}
 \title{
-Plot simulated hospital loads}
+Plot simulated hospital loads
+}
+\description{
+Plots expected hospital loads and prediction intervals
 }
 \usage{
 plotHospitals(x)

@@ -140,12 +140,12 @@ if(is.null(posteriorSample)) {
 if(is.null(transition)) {
   warning("not sure which transition to use from the posterior sample")  
 }
-meanName 
+ 
 
 # bivariate normal based posterior confidence region
-themean = apply(paramSample[,c("HospDeath.mean","HospDeath.shape")],2,mean)
+themean = apply(posteriorSample[,c("HospDeath.mean","HospDeath.shape")],2,mean)
     thecontour = ellipse(
-      var(paramSample[,c("HospDeath.mean","HospDeath.shape")]),
+      var(posteriorSample[,c("HospDeath.mean","HospDeath.shape")]),
       centre=themean)
     Ncontour = dim(thecontour)[1]
     thecontour = thecontour[

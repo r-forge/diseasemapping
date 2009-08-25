@@ -37,7 +37,8 @@ PSgam parameter}
 \code{psProbPriors} returns a list with elements \code{fatality} and \code{hosp}, each of which are returned by \code{psPrior}.
 }
 \seealso{
-\code{\link{DPpackage:PSgam}}}
+\code{\link[DPpackage:PSgam]{PSgam}}
+}
 \examples{
 priors= pandemicPriors(probs=psProbPriors(hosp=psPrior(tau1=1)))
 priors$fatality

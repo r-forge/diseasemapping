@@ -19,7 +19,7 @@ vector of probabilities, of the same length as \code{age}}
 A data frame with columns age and prob.
 }
 \examples{
-ageProbs = addAgeProbs(age=seq(10, 80, len=8), probs = seq(0.01, 0.1, len=9))
+ageProbs = addAgeProbs(age=seq(10, 80, len=8), prob = seq(0.01, 0.1, len=8))
 params = pandemicParams(
   probs=NULL,
   ageProbs=list(

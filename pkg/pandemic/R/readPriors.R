@@ -1,6 +1,6 @@
 writePrior <- function(x, file="priors.txt") {
 
-SpsTrans = NULL
+SpsTrans = matrix(NA, nrow=2, ncol=0)
 
   
   sink(file)

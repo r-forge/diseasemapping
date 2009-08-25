@@ -1,13 +1,14 @@
 \name{readPrior}
 \Rdversion{1.1}
 \alias{readPrior}
-\aliad{writePrior}
+\alias{writePrior}
 \title{
-Read and write prior distributsions from files}
-\usage{
-x=readPrior(file = "priors.txt")
+Read and write prior distributions from files}
+\description{
+Hyperparameters are read from files and stored as an R list.
 }
 \usage{
+x=readPrior(file = "priors.txt")
 writePrior(x, file = "priors.txt")
 }
 %- maybe also 'usage' for other objects documented here.
@@ -17,10 +18,10 @@ writePrior(x, file = "priors.txt")
 a file name}
 }
 \seealso{
-\code{link{pandemicPriors}}
+\code{link[pandemicPriors]{pandemicPriors}}
 }
 \examples{
 x=pandemicPriors()
 writePrior(x,"myfile.txt")
-x=readPriors("myfile.txt")
+x=readPrior("myfile.txt")
 }
