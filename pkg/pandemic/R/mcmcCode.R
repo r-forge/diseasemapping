@@ -24,7 +24,7 @@ params
 probsUpdate=function(data,probs,prior)
 {
 
-if(is.vector(probs)) {
+if(!is.list(probs)) { # vector of D, S, M
 
 probs["D"]=rbeta(1,sum(data$type=="D")+prior$probs$fatality["shape1"],
     sum(data$type=="M")+sum(data$type=="S")+prior$probs$fatality["shape2"])
@@ -35,8 +35,51 @@ probs["S"]=(1-probs["D"])*rbeta(1,sum(data$type=="S")+prior$probs$hosp["shape1"]
 probs["M"]=(1-probs["D"])*(1-probs["S"])
 
 } else { #DP stuff
-    # NEED TO DO THIS!
+     PSmcmc <- list(nburn=10,
+                 nsave=1,
+                 nskip=0,
+                 ndisplay=20)
 
+# death
+ageUniqueIndex = duplicated(data$age)
+ageUnique = data$age[ageUniqueIndex]
+
+   data$death =data$type=="D"
+   
+   deathfit <-PSgam(formula=data$death~ps(data$age,k=7,degree=3,pord=1),
+                family=binomial(logit),prior=prior$fatality,
+                mcmc=PSmcmc,ngrid=50,
+                state=attributes(probs$fatality)$state,
+                status=TRUE)
+   pred = deathfit$z[ageUniqueIndex,] %*%  deathfit$state$b + deathfit$state$beta
+   pred = exp(pred) / (1+exp(pred))
+   
+   probs$D = data.frame(age=ageUnique, 
+    prob=pred)
+   attributes(probs$D)$state = deathfit$state
+   
+# hosp
+  data =data[!data$death,]
+ageUniqueIndex = duplicated(data$age)
+ageUnique = data$age[ageUniqueIndex]
+
+
+
+  data$hosp = data$type=="S"
+  hospfit <-PSgam(formula=data$hosp~ps(data$age,k=7,degree=3,pord=1),
+                family=binomial(logit),prior=prior$hosp,
+                mcmc=PSmcmc,ngrid=50,
+                state=attributes(probs$S)$state,
+                status=TRUE)
+
+   pred = hospfit$z[ageUniqueIndex,] %*%  hospfit$state$b + hospfit$state$beta
+   pred = exp(pred) / (1+exp(pred))
+   
+   probs$S = data.frame(age=ageUnique, 
+    prob=pred)
+
+   attributes(probs$S)$state = hospfit$state
+   
 }
 
 probs

@@ -15,6 +15,12 @@ pandemicParams <- function(
   result = list()
   for(D in theFormals)
      result[[D]] = get(D, pos=-1)
+  
+  if(!all(names(ageProbs) %in% c("S","D")) )
+  {
+    cat(names(ageProbs))
+   warning(" names of ageProbs must be either S or D")
+  }
    
    addScaleParameters(result)               
 

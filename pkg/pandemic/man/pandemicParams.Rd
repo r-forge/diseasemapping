@@ -23,7 +23,7 @@ pandemicParams(InfOns = c(mean = 1, shape = 1, zeros = 0.1), OnsMedM = c(mean = 
   \item{HospRec}{time from hospitalization to recover.}
   \item{HospDeath}{time from hospitalization to death.}
   \item{probs}{probabily of mild cases, serious cases and deadly cases.}
-\item{ageProbs}{probabilities which vary with age.  A probability can be included in only one of probs and ageProbs}
+\item{ageProbs}{probabilities which vary with age. A list with elements S and/or D. A probability can be included in only one of probs and ageProbs}
 }
 \details{
 We assume there are five stages for each patient: get infection (marked as Inf); get onset (marked as Ons); get medication (marked as Med); 
@@ -42,12 +42,19 @@ Patrick Brown
 }
 
 
-\seealso{
+\seealso{ \link[addAgeProbs]{addAgeProbs}
 }
 \examples{
 params = pandemicParams( 
   MedHospD = c(mean = 1.5, shape = 2, zeros = 0.2)
   )
+params = pandemicParams(
+  probs=NULL,
+  ageProbs=list(
+    S=addAgeProbs(),
+    D=addAgeProbs()
+  )
+)
 }
 
 \keyword{ }

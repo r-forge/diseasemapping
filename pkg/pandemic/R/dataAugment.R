@@ -6,9 +6,19 @@ for(Dprob in c("D","S") ) {
   if(Dprob %in% names(params$probs)) {
     data[,probCol] = params$probs["D"]
   } else {
-    data[,probCol] = approx(params$ageProbs$D$age, params$ageProbs$D$prob, data[,"age"])
+    data[,probCol] = approx(params$ageProbs[[Dprob]]$age, 
+      params$ageProbs[[Dprob]]$prob, data[,"age"])$y
   }
 }
+# unless three probabilities provided, convert 2 conditional probabilities
+# into 3 marginal probabilities
+if(!all(c("M","S","D") %in% names(params$probs))) {
+  data$probS = (1-data$probD)*data$probS
+  data$probM = 1 - (data$probD + data$probS)
+} else {
+  data$probM = params$probs["M"]
+}
+
 
 # hosps
 inHosp = which(data$observedType == "hosp")
@@ -27,18 +37,18 @@ data[inHosp,"type"] = c("S","D")[1+rbinom(length(inHosp), 1, probDeadlyGivenCens
 inMed = which(data$observedType == "med")
 inMedTimes = data[inMed, "censor"] - data[inMed, "med"]
 
+# note that these probabilities are only proportional
+# havent divided by pr(time)
 probOf = data.frame(
-  "L" = 1* params$probs["M"] * params$MedRec["lost"], 
-  "M"= (1-pweibullRound(inMedTimes, params$MedRec)) *
-      (params$probs["M"] * (1- params$MedRec["lost"]) ) ,
-  "S"= params$probs["S"]*
+  "L" = data[inMed,"probM"] * params$MedRec["lost"], # *1
+   M= (1-pweibullRound(inMedTimes, params$MedRec)) *
+      (data[inMed,"probM"]* (1- params$MedRec["lost"]) ) ,
+  "S"= data[inMed,"probS"]*
     (1-pweibullRound(inMedTimes, params$MedHospS)),
-  "D"= params$probs["D"]*
+  "D"= data[inMed,"probD"]*
     (1-pweibullRound(inMedTimes, params$MedHospD) )
   )
-#sumProb = apply(probOf, 1, sum)  
 
-#probOf = apply(probOf, 2, function(qq) qq/sumProb)
 # generate states
 states = apply(probOf, 1, function(qq) {
     sample(colnames(probOf), 1, prob=qq)

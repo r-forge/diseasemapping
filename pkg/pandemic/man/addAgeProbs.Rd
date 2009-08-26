@@ -23,8 +23,8 @@ ageProbs = addAgeProbs(age=seq(10, 80, len=8), prob = seq(0.01, 0.1, len=8))
 params = pandemicParams(
   probs=NULL,
   ageProbs=list(
-    hosp=addAgeProbs(),
-    fatality=addAgeProbs()
+    S=addAgeProbs(),
+    D=addAgeProbs()
   )
 )
 }

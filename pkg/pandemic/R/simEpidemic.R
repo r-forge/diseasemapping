@@ -26,16 +26,48 @@ result$infect[(j+1):(j+infectionsPerDay[i])]=i
 j=j+infectionsPerDay[i]
 }
 }
-#  result
 
-#}
-
-#simEpidemic(params)
-
-
+# if all 3 probabilities provided dont depend on age
+# assign states. 
   theTypes = c("M","S","D")
+
+if(all(theTypes %in% names(params$probs))) {
   result$type = sample(factor(theTypes, levels=theTypes),
     N, replace=T, prob=params$probs)
+ } else { # probs vary with age  
+
+# construct probabilities of being S or D, which might depend on age
+result$age = sample(0:80, dim(result)[1], replace=T)
+result$type=NA
+
+# create matrix to store probabilities
+probMat = data.frame(probS = result$type, probD=result$type)
+
+for(Dprob in c("S","D")) {
+  if(any(names(params$ageProbs)==Dprob))  {
+  # if probability corresponding to Dprob changes with age
+  # assign the approrpriate probability for the age group.
+  probMat[,paste("prob",Dprob,sep="")] = 
+    approx(params$ageProbs[[Dprob]]$age, params$ageProbs[[Dprob]]$prob, result$age)$y
+  } else {
+      # if it doesnt change with age, assign the probability provided to all observations
+      probMat[,paste("prob",Dprob,sep="")] = params$probs[Dprob]
+  }
+}
+# simluate deaths
+# note that now probS is prob of S conditional on not D
+result$type = rbinom(dim(result)[1], 1, probMat$probD)
+# convert 1's to D, 0's to NA
+result$type = c(NA, "D")[result$type + 1]
+#assign those which aren.t D as M or S
+theNA = is.na(result$type)
+theS = rbinom(sum(theNA), 1, probMat[theNA, "probS"])
+result[theNA,"type"] = c("M","S")[theS+1]
+
+} #end if probs vary with age
+ 
+
+  
   
   theTypes = c(theTypes, "med","hosp")
   result$observedType = factor(result$type, levels=theTypes)
@@ -52,6 +84,8 @@ j=j+infectionsPerDay[i]
 
 N=sum(result$med<=days)
 
+# get rid of observations which havent had their med event before the end of 
+# the study period
 result=result[result$med<=days,]
 
   # onset times
