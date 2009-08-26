@@ -34,7 +34,7 @@ addAgeProbs =function(age=0:100, prob=rep(0.1, length(age)) ) {
 addScaleParameters = function(params) {
 
   thenames = names(params)
-  thenames = thenames[!thenames %in% c("probs","ageProbs")]
+  thenames = thenames[-grep("(age)?[pP]robs$", thenames)]
   for(D in thenames)
     params[[D]]["scale"] = params[[D]]["mean"] / 
       gamma(1 + 1/params[[D]]["shape"])
@@ -44,7 +44,7 @@ addScaleParameters = function(params) {
 addMeanParameters = function(params) {
 
   thenames = names(params)
-  thenames = thenames[thenames != "probs"]
+  thenames = thenames[-grep("(age)?[pP]robs$", c("probs",thenames))]
   for(D in thenames)
     params[[D]]["mean"] = params[[D]]["scale"] *
       gamma(1 + 1/params[[D]]["shape"])

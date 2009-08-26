@@ -50,6 +50,13 @@ probOf = data.frame(
   )
 
 # generate states
+if(any(is.na(probOf))) {
+  warning("NA probabilities resulting from these parameters")
+  print(params)
+  }
+
+probOf[is.na(probOf)] = 0
+
 states = apply(probOf, 1, function(qq) {
     sample(colnames(probOf), 1, prob=qq)
 } )

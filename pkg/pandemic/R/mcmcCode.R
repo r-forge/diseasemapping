@@ -13,8 +13,11 @@ ratio3=ratio2*
 ratio= ratio3*
   dprior(paramsNew[[name]]["zeros"],prior[[name]]["zeros"]$zeros)/
   dprior(params[[name]]["zeros"],prior[[name]]["zeros"]$zeros)
+
 if(is.na(ratio)){
+  cat("problem with ratios in paramUpdate\n")
  cat(ratio1, ratio2, ratio3, ratio, "\n")
+ ratio = 0
 }
 
 if(ratio>runif(1)) params=paramsNew
@@ -26,57 +29,80 @@ probsUpdate=function(data,probs,prior)
 
 if(!is.list(probs)) { # vector of D, S, M
 
-probs["D"]=rbeta(1,sum(data$type=="D")+prior$probs$fatality["shape1"],
-    sum(data$type=="M")+sum(data$type=="S")+prior$probs$fatality["shape2"])
+probs["D"]=rbeta(1,sum(data$type=="D")+prior$fatality["shape1"],
+    sum(data$type=="M")+sum(data$type=="S")+prior$fatality["shape2"])
 
-probs["S"]=(1-probs["D"])*rbeta(1,sum(data$type=="S")+prior$probs$hosp["shape1"],
-    sum(data$type=="M")+prior$probs$hosp["shape2"])
+probs["S"]=(1-probs["D"])*rbeta(1,sum(data$type=="S")+prior$hosp["shape1"],
+    sum(data$type=="M")+prior$hosp["shape2"])
 
 probs["M"]=(1-probs["D"])*(1-probs["S"])
 
 } else { #DP stuff
-     PSmcmc <- list(nburn=10,
+     PSmcmc <- list(nburn=2,
                  nsave=1,
                  nskip=0,
-                 ndisplay=20)
+                 ndisplay=2)
 
+       Ngrid = 30
+       Nsplines = 6
+       degree=3
+       pord=1
 # death
-ageUniqueIndex = duplicated(data$age)
+ageUniqueIndex = which(!duplicated(data$age))
+ageUniqueIndex = ageUniqueIndex[order(data$age[ageUniqueIndex])]
 ageUnique = data$age[ageUniqueIndex]
 
    data$death =data$type=="D"
    
-   deathfit <-PSgam(formula=data$death~ps(data$age,k=7,degree=3,pord=1),
+   deathfit <-PSgam(formula=data$death~ps(data$age,k=Nsplines,degree=degree,pord=pord),
                 family=binomial(logit),prior=prior$fatality,
-                mcmc=PSmcmc,ngrid=50,
-                state=attributes(probs$fatality)$state,
-                status=TRUE)
-   pred = deathfit$z[ageUniqueIndex,] %*%  deathfit$state$b + deathfit$state$beta
+                mcmc=PSmcmc,ngrid=Ngrid,
+                state=attributes(probs$D)$state,
+                status=is.null(attributes(probs$D)$state) )
+# get basis functions evaluated at each of the ages in the dataset
+  pred = deathfit$z[ageUniqueIndex,] %*%  deathfit$state$b + deathfit$state$beta
+# or get smoothed fit evaluated on the grid?
+#   pred = deathfit$save.state$pssave[,1]  + deathfit$state$beta
    pred = exp(pred) / (1+exp(pred))
    
-   probs$D = data.frame(age=ageUnique, 
-    prob=pred)
+   probs$D = data.frame(age=ageUnique, prob=pred)
    attributes(probs$D)$state = deathfit$state
    
 # hosp
   data =data[!data$death,]
-ageUniqueIndex = duplicated(data$age)
-ageUnique = data$age[ageUniqueIndex]
-
-
+  ageUniqueIndex = which(!duplicated(data$age))
+  ageUniqueIndex = ageUniqueIndex[order(data$age[ageUniqueIndex])]
+  ageUnique = data$age[ageUniqueIndex]
 
   data$hosp = data$type=="S"
-  hospfit <-PSgam(formula=data$hosp~ps(data$age,k=7,degree=3,pord=1),
+  hospfit <-PSgam(formula=data$hosp~ps(data$age,k=Nsplines,degree=degree,pord=pord),
                 family=binomial(logit),prior=prior$hosp,
-                mcmc=PSmcmc,ngrid=50,
+                mcmc=PSmcmc,ngrid=Ngrid,
                 state=attributes(probs$S)$state,
-                status=TRUE)
+                status=is.null(attributes(probs$S)$state))
 
    pred = hospfit$z[ageUniqueIndex,] %*%  hospfit$state$b + hospfit$state$beta
+#   pred = hospfit$save.state$pssave[,1]  + hospfit$state$beta
    pred = exp(pred) / (1+exp(pred))
    
-   probs$S = data.frame(age=ageUnique, 
-    prob=pred)
+   if(length(ageUnique) != length(probs$D$age)) {
+   # some ages in the death model aren't included in the hosp model because
+   # everyone in that age group is dead
+   # in that case, use interpolation to find probs at these ages
+   allAges = c(ageUnique, hospfit$xreal)
+   
+   predFromPSgam = hospfit$save.state$pssave[,1] + hospfit$coef["(Intercept)"]
+   predFromPSgam = exp(predFromPSgam) / (1+exp(predFromPSgam))
+   
+   allpred = c(pred, predFromPSgam)
+   
+   probs$S = data.frame(
+    age=probs$D$age, 
+    prob=approx(allAges, allpred, probs$D$age)$y
+    )
+   } else {
+    probs$S = data.frame(age=ageUnique, prob=pred)
+   }
 
    attributes(probs$S)$state = hospfit$state
    

@@ -1,12 +1,17 @@
 mcmcScale = function(params, sigma, minScale = 0.01, maxScale = 0.2){
 
-  for(Dtrans in names(params)){
+# dont scale probabilities which change with age.
+paramsToScale = names(params)
+paramsToScale = paramsToScale[!paramsToScale %in% "ageProbs"]
+
+params=params[paramsToScale]
+
+  for(Dtrans in paramsToScale){
     for(Dpar in names(params[[Dtrans]])){
       params[[Dtrans]][Dpar] =
         pmax(minScale,pmin(maxScale,params[[Dtrans]][Dpar] * sigma) )
     }
   }
-
 params
 }
 
@@ -18,40 +23,52 @@ lostUpdate = function(data, prior) {
 }
 
 
-mcmcPandemic=function(xdata,params,prior,sigma,runs)
+mcmcPandemic=function(xdata,params,prior,sigma,runs, thin=1)
 {
 name=c("InfOns","OnsMedM","OnsMedS","OnsMedD","MedRec","MedHospS","MedHospD","HospRec","HospDeath")
 name2=c("scale","shape","zeros")
-data=dataAugment(xdata,params)
 
-
+if(any(names(params)=="probs")) {
+    probName <- "probs"
+} else {
+    probName <- "ageProbs"
+  # do one iteration to get ages at which probabilities are evaluated
+     data=dataAugment(xdata,params)
+     params[[probName]]=probsUpdate(data,params[[probName]],prior$probs)
+} 
 
 if(!is.list(sigma)) {
   sigma = mcmcScale(params, sigma)    
 }
 
-vecParams = unlist(params) 
+vecParams = unlist(params)
+vecParams = vecParams[-grep("^ageProbs[[:graph:]]+age[[:digit:]]+$", names(vecParams))] 
 paramsPosteriorSample = matrix(NA, ncol=length(vecParams), nrow=0, 
   dimnames = list(NULL, names(vecParams)) )
 
-for(k in 1:runs)
-{
-for(i in name)
-{
-for(j in name2)
-{
-params=paramUpdate(params,prior,data,i,j,sigma)
-}
-}
-params$probs=probsUpdate(data,params$probs,prior)
+Sthin = 1:thin
+
+for(k in 1:runs) {
+  for(Dthin in Sthin) {
+ 
+  data=dataAugment(xdata,params)
+    for(i in name) {
+      for(j in name2) {
+        params=paramUpdate(params,prior,data,i,j,sigma)
+      }
+    }
+  # update probabilities  
+  params[[probName]]=probsUpdate(data,params[[probName]],prior$probs)
 
 # update lost
-params$MedRec["lost"] = lostUpdate(data, prior$MedRec$lost)
+  params$MedRec["lost"] = lostUpdate(data, prior$MedRec$lost)
 
-paramsPosteriorSample = rbind(paramsPosteriorSample, 
+  } # end Dthin
+  # save parameters
+  paramsPosteriorSample = rbind(paramsPosteriorSample, 
     unlist(params)[colnames(paramsPosteriorSample)])
-
-data=dataAugment(xdata,params)
+  # save age dependent probabilities
+  
 }
 paramsPosteriorSample
 }
@@ -137,8 +154,8 @@ dataNew=dataAugment(dataNew,params)
 
 InfPNew=InfectionP(dataNew,params)
 
-ratio=(InfPNew/InfP)^nrow(data)*
-  exp(-delta[k]*(InfPNew-InfP))
+# commented out below because delta is undefined.
+ratio=(InfPNew/InfP)^nrow(data) #* exp(-delta[k]*(InfPNew-InfP))
 
 if(ratio>runif(1))
 {
@@ -147,7 +164,8 @@ InfP=InfPNew
 }
 
 }
-paramsPosteriorSample=cbind(paramsPosteriorSample,delta)
+#commented out this line because delta is undefined
+#paramsPosteriorSample=cbind(paramsPosteriorSample,delta)
 
 paramsPosteriorSample
 }

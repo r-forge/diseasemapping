@@ -3,9 +3,9 @@ library(pandemic)
 
   ?PSgam
 
-priors= pandemicPriors(probs=psProbPriors())
+prior= pandemicPriors(probs=psProbPriors())
 
-writePrior(priors)
+writePrior(prior)
 priors2 = readPrior("priors.txt")
 
 
@@ -17,29 +17,13 @@ params = pandemicParams(
   )
 )
 
+params2 = pandemicParams()
 
 
 # simulate an epidemic
-x =simEpidemic(params)
-
-# data augmentation
-xAug = dataAugment(x, params)
+#delta=5; days=20;  probOnsetMissing=0.7; randomInfections = TRUE
+x = simEpidemic(params)
 
 
+temp = mcmcPandemic(x,params, prior, sigma=0.5, runs=20, thin=10)
 
-data=xAug
-probs=params$ageProbs
-prior=priors$probs
-
-temp=probsUpdate(xAug, params$ageProbs, priors$probs)
-
-
-pred = temp$save.state$pssave[,1]+ temp$state$beta
-pred = exp(pred) / (1+exp(pred))
-plot(temp$xreal,pred )
-
-pred = temp$z %*%  temp$state$b + temp$state$beta
-pred = exp(pred) / (1+exp(pred))
-
-
-plot(xAug$age, pred )
