@@ -24,6 +24,8 @@ params2 = pandemicParams()
 #delta=5; days=20;  probOnsetMissing=0.7; randomInfections = TRUE
 x = simEpidemic(params)
 
+MCMCscaling = mcmcScale(params, sigma=0.5, minScale = 0.01, maxScale = 0.2)
+MCMCscaling$HospDeath["mean"] = 0.1
 
-temp = mcmcPandemic(x,params, prior, sigma=0.5, runs=20, thin=10)
+temp = mcmcPandemic(x,params, prior, sigma=MCMCscaling, runs=20, thin=10)
 

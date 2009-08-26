@@ -22,14 +22,21 @@ if(!all(c("M","S","D") %in% names(params$probs))) {
 
 # hosps
 inHosp = which(data$observedType == "hosp")
-inHospTimes = data[inHosp, "censor"] - data[inHosp, "hospital"]
+inHospTimes = data[inHosp, "censor"] - data[inHosp, "hospital"] - data[inHosp, "med"]
 probCensorGivenDeadly = 1-pweibullRound(inHospTimes, params$HospDeath)
 probCensorGivenSerious = 1-pweibullRound(inHospTimes, params$HospRec)
 
-probDeadlyGivenCensor = probCensorGivenDeadly *data[inHosp,"probD"]
+probDeadlyGivenCensor = probCensorGivenDeadly * data[inHosp,"probD"]
 
 probDeadlyGivenCensor = probDeadlyGivenCensor / 
   (probDeadlyGivenCensor + probCensorGivenSerious)
+  
+ if(any(is.na(probDeadlyGivenCensor))) {
+  warning("problem with data augmentation, saving data and params in debugstuff.RData")
+  save(params, data, file="debugstuff.RData")
+ } 
+  
+
   
 data[inHosp,"type"] = c("S","D")[1+rbinom(length(inHosp), 1, probDeadlyGivenCensor)]  
 
