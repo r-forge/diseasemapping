@@ -91,18 +91,31 @@ psProbPriors = function(
 }
 
 psPrior = function(
- taub1=0.01,
-               taub2=0.01,
-               beta0=rep(0,1),
-               Sbeta0=diag(100,1),
-               tau1=0.01,
-               tau2=0.01) {
+ taub1=2,
+ taub2=0.05,
+ priorMean=0.01,
+ upper95 = 0.02) {
 
-  theFormals = ls(-1)
-  result = list()
-  for(D in theFormals) {
-     result[[D]] = get(D, pos=-1)
-   }
+ # COMMENTS FROM PSGAM DOCUMENTATION BELOW
+     # mean =taub1 / taub2, var propto taub1/taub2^2
+ 
+#               taub1, taub2:  reals giving the hyperparameters of the prior 
+#                       distribution for the inverse of the
+#                       variances, 1/sigmab ~ Gamma(taub1/2,taub2/2).
+ #rgamma(alpha,beta)
+#c=======================================================================                  
+#c     This function generates a random gamma value.
+#c     The parametrization is such that E(X)=alpha/beta  
+# I think taub1=alpha is the shape, taub2=beta is range = 1/scale
+
+
+ result = list(taub1=taub1, taub2=taub2, priorMean=priorMean, upper95=upper95, 
+  beta0=log(priorMean / (1-priorMean)) )
+ 
+ upperLogit = log(upper95/(1-upper95))
+
+ result$Sbeta0 = ( (upperLogit - result$beta0)/2  ) 
+  
    attributes(result)$distribution = "psPrior"
    result
 }   

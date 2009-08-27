@@ -21,6 +21,9 @@ rweibullRound = function(N, params=c(shape=1, scale=1)) {
 
 
 dweibullRound = function(x, params=c(shape=1, scale=1)) {
+
+  if(length(x)==0) return(NULL)
+
   xLow = pmax(x-0.5, 0)
   xHigh = x+0.5
   pweibull(xHigh, shape=params["shape"], scale=params["scale"]) - 

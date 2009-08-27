@@ -75,7 +75,6 @@ if(tex) {
 
 }
 
-params = paramRange = list()
      
 for(D in names(x)) {
 Dvec = paste(transition, ".", D, sep="")
@@ -119,11 +118,11 @@ if(tex) {
 
 
 
-}      
+} # end loop through names of x     
 
 
 
-if(all(c("mean","shape")%in% names(paramRange))) {
+if(all(c("mean","shape")%in% names(x))) {
   xseq <- 0:20
 
 
@@ -135,7 +134,7 @@ if(is.null(posteriorSample)) {
   paramRange= distHazard$paramRange
   
             
-} else {
+} else { # have posterior sample
 
 if(is.null(transition)) {
   warning("not sure which transition to use from the posterior sample")  
@@ -193,9 +192,10 @@ themean = apply(posteriorSample[,c("HospDeath.mean","HospDeath.shape")],2,mean)
             
     hazard[,thisCol] =  distn[,thisCol] / 
       (1-pweibullRound(xseq,  theseParams))  
-  }
-}
+  } # end if have posterior sample
+} # end if mean and shape in x
 
+# change any NaN or Inf's to NA
     hazard[is.na(hazard)]=NA
      hazard[hazard==Inf]=NA
 

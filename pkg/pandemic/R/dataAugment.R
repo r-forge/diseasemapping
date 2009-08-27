@@ -58,7 +58,7 @@ probOf = data.frame(
 
 # generate states
 if(any(is.na(probOf))) {
-  warning("NA probabilities resulting from these parameters")
+  cat("NA probabilities resulting from these parameters")
   print(params)
   }
 

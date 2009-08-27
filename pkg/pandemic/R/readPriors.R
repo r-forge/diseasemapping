@@ -21,7 +21,7 @@ SpsTrans = matrix(NA, nrow=2, ncol=0)
   
   if(ncol(SpsTrans)) {
     # names ofthe hyperparameters
-    parNames = names(x[[SpsTrans[1,1] ]][[SpsTrans[2,1] ]])
+    parNames = c("taub1", "taub2", "priorMean", "upper95")
     cat("PS Priors\n")
     cat("transition","parameter", "distribution", parNames, sep ="\t")
     cat("\n")
@@ -81,7 +81,10 @@ readPrior = function(file="priors.txt") {
       thisPs = psPriorTable[psPriorTable$transition == Dtrans,]
       rownames(thisPs) = thisPs[,"parameter"]
       for(Dparameter in  unique(thisPs$parameter)) {
-        x[[Dtrans]][[Dparameter]] = as.list(thisPs[Dparameter,parNames])
+        foo = thisPs[Dparameter,]
+        x[[Dtrans]][[Dparameter]] = psPrior(
+           taub1=foo["taub1"],  taub2=foo["taub2"],
+           priorMean=foo["priorMean"], upper95=foo["upper95"]) 
     }
   }
   }
