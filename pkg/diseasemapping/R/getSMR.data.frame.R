@@ -30,6 +30,7 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL, regionCode = "CSDUI
         
         popdata$expected = 
           as.matrix(popdata[,popGroups]) %*% model[rateGroups[names(popGroups)]]
+        rownames(popdata) = as.character(popdata[,regionCode])  
     } else {
     # use the predict method on the model
 
@@ -126,7 +127,7 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL, regionCode = "CSDUI
         popdata$logExpected_sqk = log(popdata$expected_sqk)
     }
 
-
+    
     popdata$logExpected = log(popdata$expected)
     
     # change NA's in logExpected to zeros, so that it can be used in models
@@ -151,7 +152,11 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL, regionCode = "CSDUI
       popdata$observed = 0
       popdata[as.character(casedata[,1]),"observed"] = casedata[,2]
    
-       popdata$SMR <- popdata$observed/popdata$expected
+      # change 0's in expected to NA, so SMR is NA
+    theexpected = popdata$expected
+    theexpected[theexpected==0] = NA
+    
+     popdata$SMR <- popdata$observed/theexpected
    }
 
    popdata

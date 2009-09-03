@@ -49,7 +49,7 @@ if(Ncol==2) {
         result$truncation = x[,1]
         result$event = xevent
         result[hadEvent, "time"] = x[hadEvent,2]
-        result[!hadEvent, "lower"] = x[hadEvent,2]
+        result[!hadEvent, "lower"] = x[!hadEvent,2]
         
    } else {
       warning("type is ", type, ", should be interval or counting")
