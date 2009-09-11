@@ -53,8 +53,6 @@ The years that the census data are collected
 ##---- Should be DIRECTLY executable !! ----
 ##-- ==>  Define data, use random,
 ##--	or do  help(data=index)  for the standard data sets.
-newpop<-expandCensus(popdata,year.range=c(1965,2006))
-
 ## The function is currently defined as
 function(popdata,year.range=range(as.integer(names(popdata))),years=as.integer(names(popdata))){
 
