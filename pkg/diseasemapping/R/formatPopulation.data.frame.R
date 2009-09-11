@@ -1,9 +1,9 @@
-formatPopulation <- function(popdata, aggregate.by=NULL,S=c("M", "F"), breaks=NULL, ...) {
+formatPopulation <- function(popdata, aggregate.by=NULL, breaks=NULL, ...) {
   UseMethod("formatPopulation")
 }
 
 `formatPopulation.data.frame` <-
-function(popdata, aggregate.by=NULL, S=c("M", "F"),breaks=NULL,...) {
+function(popdata, aggregate.by=NULL, breaks=NULL,...) {
 
 #popdata <- popdata@data
 ageBreaks = getBreaks(names(popdata), breaks)
