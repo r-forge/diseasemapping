@@ -12,7 +12,7 @@ add in 4 columns : GROUP, POPULATION, sex and age.
 }
 \usage{
 formatPopulation(popdata, aggregate.by = NULL, breaks = NULL, ...)
-\method{formatPopulation}{data.frame}(popdata, aggregate.by=NULL, S=c("M", "F"), breaks=NULL,...)
+\method{formatPopulation}{data.frame}(popdata, aggregate.by=NULL, breaks=NULL,...)
 \method{formatPopulation}{list}(popdata, aggregate.by=NULL, breaks = NULL, years=as.integer(names(popdata)), year.range=NULL,  time="YEAR", personYears=TRUE, S=c("M", "F"),...)
 %formatPopulation.PostgreSQLConnection(dbname, user="postgres",driver="PostgreSQL",aggregate=FALSE)
 \method{formatPopulation}{SpatialPolygonsDataFrame}(popdata, ...)
