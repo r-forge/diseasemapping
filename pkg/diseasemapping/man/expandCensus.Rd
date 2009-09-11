@@ -3,10 +3,11 @@
 \alias{expandCensus}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Given population data at each census year and range of the years that the data spans, this function
+returns a new list of population data for each consective year assuming population is constant between two census years
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Use if census are not done at each year
 }
 \usage{
 expandCensus(popdata, year.range = range(as.integer(names(popdata))), years = as.integer(names(popdata)))
@@ -14,13 +15,13 @@ expandCensus(popdata, year.range = range(as.integer(names(popdata))), years = as
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{popdata}{
-%%     ~~Describe \code{popdata} here~~
+A list of population data at each census year
 }
   \item{year.range}{
-%%     ~~Describe \code{year.range} here~~
+The range of the years which the census covers
 }
   \item{years}{
-%%     ~~Describe \code{years} here~~
+The years that the census data are collected
 }
 }
 \details{
@@ -36,7 +37,7 @@ expandCensus(popdata, year.range = range(as.integer(names(popdata))), years = as
 \references{
 %% ~put references to the literature/web site here ~
 }
-\author{
+\author{  Patrick Brown
 %%  ~~who you are~~
 }
 \note{
@@ -52,6 +53,7 @@ expandCensus(popdata, year.range = range(as.integer(names(popdata))), years = as
 ##---- Should be DIRECTLY executable !! ----
 ##-- ==>  Define data, use random,
 ##--	or do  help(data=index)  for the standard data sets.
+newpop<-expandCensus(popdata,year.range=c(1965,2006))
 
 ## The function is currently defined as
 function(popdata,year.range=range(as.integer(names(popdata))),years=as.integer(names(popdata))){
