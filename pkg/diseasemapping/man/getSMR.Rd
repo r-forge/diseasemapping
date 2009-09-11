@@ -12,7 +12,7 @@ It will also merge back the observed value, expected value and the ratio back to
 \usage{
 getSMR(popdata, model, casedata, regionCode = "CSDUID", regionCodeCases = "CSD2006", area = FALSE, area.scale = 1,  ...)
 \method{getSMR}{data.frame}(popdata, model, casedata=NULL, regionCode = "CSDUID", regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, ...)
-\method{getSMR}{list}(popdata, model, casedata = NULL, regionCode = "CSDUID", regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, years = NULL, year.range = NULL, ...)
+\method{getSMR}{list}(popdata, model, casedata = NULL, regionCode = "CSDUID", regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, years = NULL, personYears= TRUE, year.range = NULL, ...)
 \method{getSMR}{SpatialPolygonsDataFrame}(popdata, ...)
 }
 \arguments{
@@ -25,6 +25,7 @@ getSMR(popdata, model, casedata, regionCode = "CSDUID", regionCodeCases = "CSD20
   \item{area}{ if \code{TRUE}, calculate the expected number of cases per area in each region }
   \item{area.scale}{  control the unit of area. e.g $10^6$: per square kilometers }
   \item{years}{the vector of years}
+  \item{personYears}{ a logic variable. If \code{TRUE}, it compute offset adding person years}
   \item{year.range}{the range of the year vector} 
   
 }
