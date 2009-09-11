@@ -99,7 +99,6 @@ Other, Ill-Defined/Unknown.
 \value{
 vector of cancer rates, by age and sex group}
 \examples{
-library(diseasemapping)
 qcLungF=CanadaCancerRates(area="quebec", years=2001:2003, site="lung", sex="F")
 data(popdata)
 qcLungExp = getSMR(popdata, qcLungF)
