@@ -11,9 +11,9 @@ Reshape the population data set to "long" format,
 add in 4 columns : GROUP, POPULATION, sex and age. 
 }
 \usage{
-formatPopulation(popdata, aggregate.by = NULL, breaks = NULL, ...)
-\method{formatPopulation}{data.frame}(popdata, aggregate.by=NULL, breaks=NULL,...)
-\method{formatPopulation}{list}(popdata, aggregate.by=NULL,  breaks = NULL, years=as.integer(names(popdata)), year.range=NULL,  time="YEAR", personYears=TRUE, ...)
+formatPopulation(popdata, aggregate.by = NULL, S=c("M", "F"), breaks = NULL, ...)
+\method{formatPopulation}{data.frame}(popdata, aggregate.by=NULL, S=c("M", "F"), breaks=NULL,...)
+\method{formatPopulation}{list}(popdata, aggregate.by=NULL, S=c("M", "F"), breaks = NULL, years=as.integer(names(popdata)), year.range=NULL,  time="YEAR", personYears=TRUE, ...)
 %formatPopulation.PostgreSQLConnection(dbname, user="postgres",driver="PostgreSQL",aggregate=FALSE)
 \method{formatPopulation}{SpatialPolygonsDataFrame}(popdata, ...)
 }
@@ -23,6 +23,7 @@ formatPopulation(popdata, aggregate.by = NULL, breaks = NULL, ...)
 %  \item{dbname}{name of data base}
   \item{aggregate.by}{ if want to view the data set from a macro way, 
      could aggregate the data set by age or sex or other variables }
+  \item{S}{ can choose both or either of each sex.}
 %  \item{user}{}
   \item{breaks}{ age breaks the user want to use. i.e breaks = c(10, 20, 30 ,40, 60, Inf). }
 %  \item{driver}{}
