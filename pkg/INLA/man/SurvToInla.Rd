@@ -20,7 +20,7 @@ A data frame with the following columns
   \item{lower}{For right censored or interval censored data, the lower bound for the event time}
   \item{upper}{For left censored or interval censored data, the upper bound for the event time}
 }
-As INLA does not allow NA's, -1 is used to denote values which are not applicable, such as event times for right censored events.
+As INLA does not allow NA's, 0 is used to denote values which are not applicable, such as event times for right censored events.
 \author{Patrick Brown}
 \seealso{\code{\link[survival:Surv]{Surv}}}
 \examples{

@@ -7,7 +7,7 @@ Ncol = dim(x)[2]
 Nobs = dim(x)[1]
 type = attributes(x)$type
 
-NAvec = rep(-1, Nobs)
+NAvec = rep(0, Nobs)
 result <- data.frame(truncation=rep(0,Nobs),
   lower=NAvec, upper=NAvec, event=NAvec, 
   time = NAvec) 
