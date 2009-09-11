@@ -3,7 +3,7 @@ formatPopulation <- function(popdata, aggregate.by=NULL,S=c("M", "F"), breaks=NU
 }
 
 `formatPopulation.data.frame` <-
-function(popdata, aggregate.by=NULL,breaks=NULL,...) {
+function(popdata, aggregate.by=NULL, S=c("M", "F"),breaks=NULL,...) {
 
 #popdata <- popdata@data
 ageBreaks = getBreaks(names(popdata), breaks)
