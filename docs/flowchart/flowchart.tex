@@ -1,0 +1,80 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{pdfsync}
+
+\title{Flow chart for spatial analysis}
+\author{Patrick, Todd, \ldots}
+
+
+\begin{document}
+\maketitle
+\section{Introduction}
+
+Question: What is the spatial distribution of cancer X in region Y?  This question could be interpreted in the following ways, some or all of which might be of interest:
+\begin{itemize}
+	\item It is known that income and the age-sex distribution of the population affects cancer rates.  Is there evidence further spatial variation in risk beyond what population and income would predict?  If so, can we predict and map it?
+	\item What is the spatial distribution of cancer risk in the region?  How much of this is explained by income?
+	\item What is the expected future incidence of cancer in each region, in absolute numbers and per person, incorporating (rather than adjusting for) the age distribution of each region?
+\end{itemize}
+
+
+This paper describes a step-by-step method for addressing the above questions.  A  statistical model for spatially varying disease incidence is presented, steps for fitting this model to disease data are explained, and results are derived to address each of the questions above.  
+
+\section{Methods}
+
+\subsection{A flow chart}
+
+The steps below will be followed:
+\begin{enumerate}
+	\item Estimating cancer rates in the reference population as a function of age, for each sex and income quintile
+	\item Testing for spatial randomness: do age, sex and income explain the distribution of cancer or is there evidence of residual spatial variation? 
+	\item If yes, a spatial model is fit to produce:
+\begin{enumerate}
+	\item A map of log relative risk by region, after subtracting the effect of income.  Answers the question of ``Does my region have cancer risk higher (or lower) than would be expected given it's income and the age-sex structure of the population?
+	\item The absolute risk for a reference age-sex group, including the effect of income.
+	\item The age-sex standardized incidence rate, based on the Canada 1991  population.
+	\item The incidence rate per inhabitant, irrespective of age and sex.
+	\item The expected number of future cases.
+	\end{enumerate}
+\end{enumerate}
+
+This is accomplished by 
+\begin{enumerate}
+	\item Using the RIF
+	\item Moran or Tango with parametric bootstrap
+	\item Use the BYM results to compute
+\begin{enumerate}
+	\item $E(U_i+V_i + \alpha | Y)$
+	\item $E(\exp(U_i+V_i + \alpha) \theta_{M,65}(X_i) | Y)$
+	\item $E(\exp(U_i+V_i + \alpha) \sum_j P_j \theta_j(X_i) | Y)$
+	\item $E(\exp(U_i+V_i + \alpha) \sum_j P_{ij} \theta_j(X_i)/P_i | Y)$
+	\item $E(\exp(U_i+V_i + \alpha) \sum_j P_{ij} \theta_j(X_i)| Y)$
+\end{enumerate}
+\end{enumerate}
+
+\section{Results}
+
+\subsection{Rates}
+
+show one cancer which depends on income, another which does not.
+
+\subsection{Testing for spatial variation}
+
+Show p-values from several cancers, pick one which shows significant variation
+
+\subsection{Mapping risk surfaces}
+
+show (some of) the five maps 
+
+
+
+
+\section{Discussion}
+
+Say how the maps are useful
+
+Note that we've only fit one model, and derived all the maps from it.  This is preferable than running the BYM model without using income to calculate expecteds as income is not spatially smooth and can also cause the data to be non-normal.  Running the model without income should be done if income is probably not a confounder but is correlated with an exposure.  
+
+
+
+\end{document}
