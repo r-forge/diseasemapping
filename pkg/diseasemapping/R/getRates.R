@@ -137,7 +137,7 @@ formula1 = update.formula(formula, CASES ~ offset(logpop) + .)
 
 #fit model, if there is an error, return data only
 options(show.error.messages = FALSE)
-model<-try(gam(formula1, family=family, data=newdata))
+model<-try(glm(formula1, family=family, data=newdata))
 
 if(class(model)[1]=="try-error"){
   warning(model[1],"Only Data will be returned")
