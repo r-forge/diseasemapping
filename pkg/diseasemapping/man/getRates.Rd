@@ -26,7 +26,7 @@ getRates(casedata, popdata, formula, family = poisson, minimumAge = 0,
   \item{years}{  a vector of census years  }
   \item{year.range}{study period: a vector of two elements, starting dates and ending dates  }
   \item{case.years}{ variable name in the case data which contains time  }
-  \item{fit.numric}{ the variables which needed to be changed from factor to numeric}
+  \item{fit.numeric}{ the variables which needed to be changed from factor to numeric}
   \item{breaks}{ the age breaks }
 }
 \details{
