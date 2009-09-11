@@ -121,7 +121,7 @@ newdata[[sexvar]] = factor(newdata[[sexvar]])
 #change factor to numeric
 if(!is.null(fit.numeric)){
     for (i in 1:length(fit.numeric)){
-    toChange = grep(paste("^",fit.numeric[i],"$",sep=""),names(newdata),value=T,ignore.case=T)
+    toChange = grep(paste("^",fit.numeric[i],"$",sep=""),names(newdata),value=TRUE,ignore.case=TRUE)
     newdata[,toChange] = as.numeric(as.character(newdata[,toChange]))
   }
 }
@@ -137,6 +137,7 @@ formula1 = update.formula(formula, CASES ~ offset(logpop) + .)
 
 #fit model, if there is an error, return data only
 options(show.error.messages = FALSE)
+library(mgcv)
 model<-try(gam(formula1, family=family, data=newdata))
 
 if(class(model)[1]=="try-error"){
