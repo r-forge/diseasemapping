@@ -25,7 +25,7 @@ The years that the census data are collected
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+
 }
 \value{
 
@@ -34,15 +34,16 @@ The years that the census data are collected
 %% ~put references to the literature/web site here ~
 }
 \author{  Patrick Brown
-%%  ~~who you are~~
+
 }
 \note{
-%%  ~~further notes~~
+
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
+
 
 \seealso{
+}
 
 \examples{
 
