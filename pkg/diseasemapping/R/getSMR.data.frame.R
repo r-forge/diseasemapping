@@ -28,8 +28,9 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL, regionCode = "CSDUI
         rateGroups = rateBreaks$oldNames[!noRate]
         names(rateGroups) = rateBreaks$newNames[!noRate]
         
-        popdata$expected = 
-          as.matrix(popdata[,popGroups]) %*% model[rateGroups[names(popGroups)]]
+        popdata$expected = as.vector(
+            as.matrix(popdata[,popGroups]) %*% model[rateGroups[names(popGroups)]]
+          )
         rownames(popdata) = as.character(popdata[,regionCode])  
     } else {
     # use the predict method on the model
