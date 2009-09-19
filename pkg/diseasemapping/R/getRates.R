@@ -1,11 +1,11 @@
 #years: a vector of census years, default will use the names of popdata list
 #year.range: A two-element numerical vector indicting the starting and ending year of study period, default set to range of casedata
 #case.years: the variable name that stores the year variable of case file
- library(mgcv)
 `getRates` <-
 function(casedata, popdata, formula, family=poisson, minimumAge=0,
    maximumAge=100, S=c("M", "F"), years=NULL, year.range=NULL,
-   case.years=grep("^year$", names(casedata), ignore.case=TRUE, value=TRUE)[1],fit.numeric=NULL ,breaks=NULL){
+   case.years=grep("^year$", names(casedata), ignore.case=TRUE, value=TRUE)[1],
+   fit.numeric=NULL ,breaks=NULL){
 
 # check the formula is one sided
   
@@ -54,6 +54,40 @@ if(length(S)==1) {
 }
 
 #format case data
+# add covariates to case data from the population data
+# if they are any missing from the case data.
+
+termsToAdd = theterms[!theterms %in% names(casedata)]
+
+if(length(termsToAdd) ) {
+  if(morethanoneyear)
+    warning("All covariates must be added to case data if popdata is a list")
+   colsToTry = popdata[,-grep("^(M|F)[[:digit:]]", names(popdata))]
+     if(isSP) colsToTry = colsToTry@data
+
+  # find column to merge on
+  commonCol = names(casedata)[(names(casedata) %in% names(popdata))]
+  if(!length(commonCol)) {
+     # no common columns, look for factors
+     # find columns with at least as many different entries as terms
+    Npop = dim(colsToTry)[1]
+    Nincases = apply(casedata, 2, function(qq) length(unique(qq)))   
+    Ninpop = apply(colsToTry, 2, function(qq) length(unique(qq)))
+    
+    colCase = names(Nincases)[order(abs(Nincases - Npop),decreasing=F)[1]]
+    colPop = names(Ninpop)[order(abs(Ninpop - Npop),decreasing=F)[1]]
+    
+     
+  } else {
+    colPop = colCase = commonCol[1]
+  }
+  cat("adding variable ", toString(termsToAdd), " to case data using \n",
+    "columns ", colPop, " and ", colCase, ".\n")
+  cat("add variable to casedata manually if this is not correct\n")
+    
+  casedata = merge(casedata, colsToTry[,c(colPop,termsToAdd)], by.x=colCase,by.y=colPop)
+
+}
 
 casedata = formatCases(casedata, ageBreaks=attributes(pops)$breaks, aggregate.by = theterms)
 
