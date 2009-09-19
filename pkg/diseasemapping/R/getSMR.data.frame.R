@@ -7,6 +7,8 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL, regionCode = "CSDUI
     regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, ...){
 
 
+
+
     if(is.numeric(model)) {
     # model is a vector of rates
         # check breaks for groups, make sure they line up
@@ -106,7 +108,8 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL, regionCode = "CSDUI
     }
     
 
-    poplong$expected <- predict(model, poplong[, agg], type = "response")
+    poplong$expected <- predict(model, poplong,#[,agg],
+     type = "response")
     
      poplong <- aggregate(poplong$expected, list(poplong[[regionCode]]), sum)
     rownames(poplong) = as.character(poplong[,1])
