@@ -1,5 +1,8 @@
 `formatCases` <- function(casedata, ageBreaks=NULL, years=NULL, aggregate.by=NULL) {
 
+if(class(casedata)!="data.frame")
+  warning("class of casedata should be data.frame, casedata provided is ", class(casedata))
+
 # are there age and sex columns?
 agecol = grep("^age$", names(casedata), value=TRUE, ignore.case=TRUE)
 sexcol = grep("^sex$", names(casedata), value=TRUE, ignore.case=TRUE)
