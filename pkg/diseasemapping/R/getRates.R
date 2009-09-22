@@ -14,6 +14,9 @@ if(attributes(terms(formula))$response)
 
 morethanoneyear = class(popdata)=="list"
 
+#if s() is in formula, use GAM
+usegam<-if(grep("s\\(","sex + s(age)"))
+
 #is SP or not
 if(morethanoneyear){
   isSP = (class(popdata[[1]])== "SpatialPolygonsDataFrame")
@@ -171,7 +174,8 @@ formula1 = update.formula(formula, CASES ~ offset(logpop) + .)
 
 #fit model, if there is an error, return data only
 options(show.error.messages = FALSE)
-model<-try(glm(formula1, family=family, data=newdata))
+if(usegam) model<-try(gam(formula1, family=family, data=newdata))
+else model<-try(glm(formula1, family=family, data=newdata))
 
 if(class(model)[1]=="try-error"){
   warning(model[1],"Only Data will be returned")
