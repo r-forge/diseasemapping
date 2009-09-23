@@ -28,7 +28,7 @@ getSMR.list <- function(popdata, model, casedata = NULL, regionCode = "CSDUID",
   if(length(yearVar)==0) yearVar="YEAR"
   
   caseYearVar = grep("year",names(casedata),value=TRUE,ignore.case=TRUE)
-  
+  caseSexVar =grep("^sex$",names(casedata),value=TRUE,ignore.case=TRUE)
   if (length(model$sexSubset) == 1) warning("only one sex is being used:",model$sexSubset)
 
 
@@ -56,8 +56,15 @@ getSMR.list <- function(popdata, model, casedata = NULL, regionCode = "CSDUID",
 
 
     caseThisYear = casedata[casedata[[caseYearVar]]==Dyear,]
-    
+
+    if (length(model$sexSubset) == 1) {      
+        caseThisYear = caseThisYear[caseThisYear[[caseSexVar]] == model$sexSubset, ]
+    }
+
+    if(dim(caseThisYear)[1]==0) caseThisYear<-NULL   
+
     cat("computing",Dyear,"\n")
+
     result[[Dyear]] = getSMR(popdata[[Dyear]], model, caseThisYear,regionCode =regionCode,
                      regionCodeCases = regionCodeCases, years = years, year.range = year.range,
                      area = area, area.scale = area.scale)
