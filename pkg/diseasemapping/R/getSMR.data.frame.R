@@ -133,7 +133,7 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL, regionCode = "CSDUI
 
     
     popdata$logExpected = log(popdata$expected)
-    
+    popdata$observed = 0
     # change NA's and -Inf in logExpected to zeros, so that it can be used in models
     popdata$logExpected[is.na(popdata$logExpected)] = 0
     popdata$logExpected[popdata$logExpected==-Inf] = 0
@@ -155,7 +155,7 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL, regionCode = "CSDUI
          list(casedata[[regionCodeCases]]), sum)
        names(casedata) = c(regionCodeCases, "observed")
 
-      popdata$observed = 0
+
       popdata[as.character(casedata[,1]),"observed"] = casedata[,2]
    
       # change 0's in expected to NA, so SMR is NA
