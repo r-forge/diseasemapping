@@ -428,8 +428,8 @@ Density and hazard curves are shown for combinations of the 2.5\% and 97.5\% qua
 \frametitle{Results}
 <<mcmcResults,echo=true,fig=false>>=
 scale = mcmcScale(params, 0.075,minScale = 0.05 )
-paramSample = mcmcPandemic(data,params,priors,sigma=scale,runs=60)
-paramSample = paramSample[seq(100,dim(paramSample)[1], by=5),]
+paramSample = mcmcPandemic(data,params,priors,sigma=scale,runs=60, thin = 5)
+
 dim(paramSample)
 colnames(paramSample)
 @
