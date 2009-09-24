@@ -1,5 +1,13 @@
-\documentclass{beamer}
+\documentclass[xcolor=dvipsnames]{beamer}
 \usepackage[nogin]{Sweave}
+
+\usetheme{Singapore}
+\usecolortheme[named=RawSienna]{structure}
+
+\usefonttheme{serif}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number] 
+
 \title{Bayesian statistics and  swine flu}
 \author{Patrick Brown$^1$,  Peter Neal$^2$}
 \institute{1:Cancer Care Ontario and Dalla Lana School of Public Health, University of Toronto; 2: School of Mathematics, University of Manchester} 
@@ -8,7 +16,7 @@
 
 
 \SweaveOpts{echo=FALSE,fig=true,prefix.string=Figures/G,height=2,width=3}
-
+\newcommand{\comment}[1]{}
 
 \begin{document}
 \begin{frame}
@@ -16,45 +24,54 @@
 
 \end{frame}
 
-
+\comment{
 <<setup,fig=false>>=
-options(SweaveHooks=list(fig=function() par(mar=c(2.5,2.5,0.1,0.1), mgp=c(1.5, 0.5, 0), cex=0.6)), width=58)
+options(SweaveHooks=list(fig=function() par(mar=c(2.5,2.5,0.1,0.1), mgp=c(1.5, 0.5, 0), cex=0.6)), width=54)
 # source in all the R files
 library(pandemic)
 @
+}
 
 \begin{frame}
 \frametitle{Swine Flu in Ontario}
+\begin{block}{The Flu}
 \begin{itemize}
 	\item Many Canadians holiday in Mexico during the winter and  spring
 	
-\begin{itemize}
 	\item Swine flu was probably established in Ontario before the outbreak was detected.
 \item Few control measures were adopted
+
 \end{itemize}
-\item Ontario's had recent public health crises
+\end{block}
+
+\begin{block}{The Science}
 \begin{itemize}
-	\item SARS, Walkerton water quality problems
-	\item Ontario Agency for Health Protection and Promotion created
 	\item Expert opinion abounds from mathematical modellers and infectious disease epidemiologists
-	\item Detailed models are used for the biological process, with largely ad-hoc inference and treatment of uncertainty. 
+	\item For the most part, very elaborate models are combined with largely ad-hoc inference and treatment of uncertainty
+	\item Prior knowledge + limited data = Bayesian statistics?
 \end{itemize}
-\end{itemize}
+
+\end{block}
 
 \end{frame}
 
 \begin{frame}
 \frametitle{The Data}
+\begin{block}{Early stages}
 \begin{itemize}
 	\item During the first 6 weeks of the epidemic, we can assume most cases were identified.
-	
-\begin{itemize}
+
 	\item Ill individuals were encouraged to seek medical help
 	\item Practitioners were encouraged to send samples to labs for testing
-\end{itemize}
-	\item After 6 weeks, testing was discouraged to ease the burden on public health labs.
 	\item Roughly 1000 cases in the first 6 weeks? 
 \end{itemize}
+\end{block}
+\begin{block}{Later stages}
+\begin{itemize}
+	\item After 6 weeks, testing was discouraged to ease the burden on public health labs.
+\item Data is more extensive but less complete
+\end{itemize}
+\end{block}
 \end{frame}
 
 \begin{frame}
@@ -65,6 +82,8 @@ library(pandemic)
 	\item How do we estimate the fatality and hospitalization rates?
 	\item Problem: censoring, some individuals in the dataset have not yet had their hospitalization and/or fatality
 	\item Crude rates underestimate the rates, and result in estimates increasing over time
+\item In early stages, data are sparse
+\item If data are divided into age groups, the problem is worse.
 \end{itemize}
 \end{frame}
 
@@ -85,10 +104,9 @@ All infections are one of the following types:
 \begin{description}
 	\item[Mild:] The individual will recover without needing to be hospitalized
 	\item[Serious:] The infection is severe enough that hospitalization will be required before the individual recovers
-	\item[Deadly:] Following hospitalization, the patient dies of the infection.
+	\item[Deadly:] Following hospitalization, the patient will die of the infection.
 \end{description}
-When a case is first identified, it's not known what type it is.
-
+Until a case recovers or dies, it's not known what type it is.
 
 \end{frame}
 
@@ -125,7 +143,7 @@ Infection$\stackrel{f_I(t)}{\Longrightarrow}$ Onset $\stackrel{f_{OS}(t)}{\Longr
 \end{frame}
 
 \begin{frame}
-\frametitle{Distributions}
+\frametitle{Event time distributions}
 \begin{itemize}
 	\item $ f(t;\mu,\nu,\delta) = pr(T=t)$ is the distribution for time to an event.  
 	\item \ldots a rounded, zero-inflated Weibull
@@ -133,7 +151,7 @@ Infection$\stackrel{f_I(t)}{\Longrightarrow}$ Onset $\stackrel{f_{OS}(t)}{\Longr
 Z\sim&\text{Bern}(\delta)\\
 [T|Z=1] =& 0 \text{ w.p.} 1\\
 pr(T=t|Z=0) =&  \text{pr}(\max(t-0.5,0) < y < t+0.5)\\
-y \sim & \text{Weibull}(\mu/\Gamma(1 + 1/\nu), \nu)
+y \sim & \text{Weibull}[\mu/\Gamma(1 + 1/\nu), \nu]
 \end{align*}
 \item $\delta$ is the probability of transitioning immediately for an administrative (not biological) reason, 
 \begin{itemize}
@@ -153,8 +171,122 @@ y \sim & \text{Weibull}(\mu/\Gamma(1 + 1/\nu), \nu)
 
 \end{frame}
 
+
 \begin{frame}
-\frametitle{Priors}
+\frametitle{Infection type probabilities}
+
+\begin{itemize}
+	\item For individual $i$,
+	\item $W_i \in \{M,S,D\}$ is infection type
+	\item $X_i$ is their age
+\end{itemize}
+\begin{block}{Fatality rate}
+\[
+Pr(W_i = D) = g_D(X_i)
+\]
+\end{block}
+
+\begin{block}{(non-fatal) Hospitalization rate}
+\[
+Pr(W_i = S| W_i \neq D) = g_S(X_i)
+\]
+\end{block}
+\begin{itemize}
+\item Parameterizing the probabilities this way ensures they sum to 1.
+	\item $g_D$ and $g_S$ are functions which vary smoothly with age
+	\item More specifically, log-linear cubic splines with fixed knots and random coefficients 
+\item As implemented in the DPpackage in R
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Parameters (for simulating data)}
+<<echo=false,fig=false>>=
+options(width=45)
+ageSeq = 0:100
+
+params = pandemicParams( 
+	InfOns = c(mean=1.5, shape=2, zeros=.1),
+	OnsMedM= c(mean=1, shape=1, zeros=.1 ),
+	OnsMedS= c(mean=1, shape=1, zeros=.1 ),
+	OnsMedD= c(mean=1, shape=1, zeros=.1 ),
+	MedRec = c(mean=3, shape=2, zeros=.1, lost=0.95 ),
+  MedHospS = c(mean = 2, shape = .5, zeros = 0.1),
+  MedHospD = c(mean = 2, shape = 2, zeros = 0.1),
+	HospRec = c(mean=3, shape=1.5, zeros=.01 ),
+	HospDeath = c(mean=5, shape=0.8, zeros=.05 ),
+ageProbs=list(
+	S=addAgeProbs(ageSeq, 0.02+0.8*dnorm(ageSeq, mean=20, sd=10)),
+	D=addAgeProbs(ageSeq, 0.01+0.5*dnorm(ageSeq, mean=30, sd=5))  ),
+	probs=NULL
+	)
+tempList = (params[c("InfOns","OnsMedM","OnsMedS", "OnsMedD", "MedRec","MedHospS","MedHospD","HospRec","HospDeath")])
+temp = unlist(tempList)
+temp = temp [-grep("lost",names(temp))]
+tempMat = matrix(temp, ncol=4, byrow=T)
+rownames(tempMat) = names(tempList)
+colnames(tempMat) = names(tempList[[1]])
+paramMat = tempMat[,c("mean","shape","zeros")]
+library(Hmisc)
+@
+
+<<parameters,echo=false,fig=false,results=tex>>=
+latex(paramMat, file="")
+@
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Hospitalization and Death probabilities}
+
+\begin{columns}
+
+\column{0.5\textwidth}
+\begin{block}{Hospitalization}
+<<probS>>=
+plot(params$age$S, type="l", ylim=c(0,0.06))
+@
+\end{block}
+
+\column{0.5\textwidth}
+\begin{block}{Death}
+<<probD>>=
+plot(params$age$D, type="l", ylim=c(0,0.06))
+@
+
+\end{block}
+
+\end{columns}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{Simulated data}
+<<echo=false,fig=false>>=
+options(width=60)
+@
+<<simData,echo=true,fig=false>>=
+
+data = simEpidemic(params, delta=20, days=28)
+
+table(data$observedType)
+@
+<<fig=false>>=
+toshow = NULL
+for(Dshow in levels(data$observedType))
+	toshow = c(toshow, which(data$observedType==Dshow)[1:2])
+toshow = na.omit(toshow)	
+@
+<<simData2,echo=true,fig=false>>=
+data[toshow,-c(1,7)]
+@
+
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Prior Distributions}
 \begin{itemize}
 	\item What does expert opinion tell us these parameters should be?
 	\item Based on previous experience, not the current data.
@@ -162,7 +294,9 @@ y \sim & \text{Weibull}(\mu/\Gamma(1 + 1/\nu), \nu)
 \begin{itemize}
 	\item If we `knew' the correct value, there would be no need for this model
 \end{itemize}
-\item Gamma or Beta priors, parametrized by mean and standard deviation
+\item Gamma priors for Weibull  mean and shape parameters
+\item Beta priors for zero-inflation parameters
+\item parametrized by mean and standard deviation
 \item Average time to onset of symptoms is expected to be 3.5 days, but the average time could be a day longer or shorter.
 \begin{itemize}
 	\item $E(\mu_I = 3.5)$ and $sd(\mu_I)	 = 0.5$
@@ -172,18 +306,24 @@ y \sim & \text{Weibull}(\mu/\Gamma(1 + 1/\nu), \nu)
 \end{frame}
 
 \begin{frame}
-\frametitle{Proportion parameters}
-
+\frametitle{Priors for infection types}
 \begin{itemize}
-	\item $\rho_D$ is the fatality ratio, or probability of a deadly infection
-	\item $\rho_S$ is the proportion of non-fatalities which are hospitalized
-	\item so the probability of being hospitalized is $\rho_D + (1-\rho_D)\rho_S$
-	\item parametrize this way to ensure the probabilities of being Mild, Severe, or Deadly add to 1.
-	\item beta priors on $\rho_D$ and $\rho_S$, parametrized by mean and standard deviation
-	\item i.e.\ $\rho_D$ is expected to be $0.1$, with $sd(\rho_D) = 0.05$
+	\item Specify prior mean for the probability an individual in some reference group is
+\begin{itemize}
+	\item Serious
+	\item Deadly
+\end{itemize}
+	and give upper 95\% prior quantile for each probability
+\begin{itemize}
+	\item i.e.\ for hospitalization rate, 0.001 and 0.005
+\end{itemize}
+	\item and Gamma shape and scale parameters for spline coefficients
+	\item i.e.\ shape=2, scale=10 would give fairly flat curves
 \end{itemize}
 
 \end{frame}
+
+
 
 \begin{frame}[fragile]
 \frametitle{What we need}
@@ -202,75 +342,75 @@ priors= readPrior("bayesPandemicPriors.txt")
 plotPrior(priors$InfOns, file="InfOns", tex=TRUE)
 #$
 @
-
+\vspace*{-0.8cm}
+Density and hazard curves are shown for combinations of the 2.5\% and 97.5\% quantiles of each parameter's prior distribution.
 \end{frame}
 
 \begin{frame}
-\frametitle{Inference}
+\frametitle{Bayesian Inference}
 \begin{itemize}
 	\item We have data $Y$ and unknown parameters $\theta$.
 	\item The model specifies $[Y|\theta]$
 	\item Priors are $[\theta]$.
 	\item Posteriors: $[\theta|Y] \propto [Y|\theta][\theta]$
 	\item Posteriors show what we think the parameters could be, given the data and the prior distributions
-	\item There's no data on infection times, so the posterior for $\mu_{I}$ is the same as the prior.
+	\item If there's no data (i.e.\ infection times), the posterior is the same as the prior.
+	\item More data will pull the posterior away from the prior to be ``more like'' the data.
 \end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Updating infection type probabilities}
+
+
+\begin{itemize}
+\item If we knew what would happen in the future, the problem would be easy
+\begin{itemize}
+	\item Fatality ratio = fatalities/cases
+	\item GAM or logistic regression with fatality v age
+\end{itemize}
+\item So, use the model to simulate a future.
+\end{itemize}
+
+\begin{block}{Data augmentation}
+\begin{itemize}
+\item Choose some starting values for the probabilities
+\item Use these probabilities to simulate infection types
+\begin{itemize}
+	\item Suppose person $i$ was hospitalized 3 days ago
+	\item compute $p_i = pr(W_i =D | T_i > 3;X_i)$ 
+	\item simulate $(W_i = D) \sim \text{Bern}(p_i)$
+\end{itemize}
+\item Use these simulated data to get better parameter values (which is easy because the data are complete)
+\begin{itemize}
+	\item $[g_D(x) | W_1 \ldots W_N]$
+	\item using the PSgam function in the DPpackage
+\end{itemize}
+\item Repeat
+\end{itemize}
+\end{block}
+
+
 \end{frame}
 
 
 \begin{frame}
-\frametitle{The Algorithm}
-\begin{block}{Data augmentation}
-\begin{itemize}
-	\item Fix the parameter values
-	\item Simulate the missing data: infection type, times of infection, onset, hospitalization, recovery, and/or death.
-	\item Can simulate directly, as conditioning is easy.
-\end{itemize}
-\end{block}
+\frametitle{Event time parameters}
 
 \begin{block}{Random walk metropolis}
 \begin{itemize}
 	\item With the full augmented data, the likelihood is simple as observations are independent.
+	\item We have a event times, and some censored event times
+	\item and because of the augmented data, we know which distribution each of these times come from
 	\item Propose new parameters with a Gaussian random walk, accept with the appropriate probability.
 \end{itemize}
 \end{block}
 
-
 \end{frame}
 
-\begin{frame}[fragile]
-\frametitle{Simulated data}
-<<simData,echo=true,fig=false>>=
-params = pandemicParams( 
-	InfOns = c(mean=1.5, shape=2, zeros=.1),
-	OnsMedM= c(mean=1, shape=1, zeros=.1 ),
-	OnsMedS= c(mean=1, shape=1, zeros=.1 ),
-	OnsMedD= c(mean=1, shape=1, zeros=.1 ),
-	MedRec = c(mean=3, shape=2, zeros=.1, lost=0.95 ),
-  MedHospS = c(mean = 2, shape = 2, zeros = 0.1),
-  MedHospD = c(mean = 2, shape = 2, zeros = 0.1),
-	HospRec = c(mean=2, shape=1.5, zeros=.01 ),
-	HospDeath = c(mean=2, shape=0.8, zeros=.05 ),
- 	probs = c(M=0.7, S=0.25, D=0.05)
-# 	probs = c(M=0.979, S=0.02, D=0.001)
-  )
-
-data = simEpidemic(params, delta=4, days=20)
 
 
-data[1:8,-1]
-@
-
-
-
-
-
-
-
-
-
-\end{frame}
-
+\end{document}
 
 \begin{frame}[fragile]
 \frametitle{Results}
