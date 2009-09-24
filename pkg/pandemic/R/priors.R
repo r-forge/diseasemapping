@@ -109,8 +109,9 @@ psPrior = function(
 # I think taub1=alpha is the shape, taub2=beta is range = 1/scale
 
 
- result = list(taub1=taub1, taub2=taub2, priorMean=priorMean, upper95=upper95, 
-  beta0=log(priorMean / (1-priorMean)) )
+ result = list(taub1=as.numeric(taub1), taub2=as.numeric(taub2), 
+ priorMean=as.numeric(priorMean), upper95=as.numeric(upper95), 
+  beta0=as.numeric(log(priorMean / (1-priorMean)) ))
  
  upperLogit = log(upper95/(1-upper95))
 

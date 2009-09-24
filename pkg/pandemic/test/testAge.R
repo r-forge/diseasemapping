@@ -25,9 +25,11 @@ MCMCscaling$HospDeath["mean"] = 0.1
 postSample = mcmcPandemic(x,params, prior, sigma=MCMCscaling, runs=20, thin=10)
 xdata=x
 runs=20
-nthin=1
+thin=1
 sigma=MCMCscaling
-
+oldprior = prior
+prior=prior$probs
+prior=oldprior
 
 
 plotAgeProbs(postSample, type="fatality", 
