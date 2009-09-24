@@ -38,7 +38,9 @@ probDeadlyGivenCensor = probDeadlyGivenCensor /
   
 
   
+if(length(inHosp)) { 
 data[inHosp,"type"] = c("S","D")[1+rbinom(length(inHosp), 1, probDeadlyGivenCensor)]  
+}
 
 # meds
 inMed = which(data$observedType == "med")

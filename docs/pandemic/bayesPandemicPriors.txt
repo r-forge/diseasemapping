@@ -27,5 +27,7 @@ HospRec	zeros	0.1	0.01	beta
 HospDeath	mean	3	.8	gamma	
 HospDeath	shape	.5	.2 gamma	
 HospDeath	zeros	0.1	0.01	beta	
-probs	fatality	0.002	0.01	beta	
-probs	hosp	0.02	0.01	beta	
+PS Priors
+transition	parameter	distribution	taub1	taub2	priorMean	upper95
+probs	fatality	psPrior	2	0.05	0.01	0.02
+probs	hosp	psPrior	2	0.05	0.01	0.02

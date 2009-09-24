@@ -34,7 +34,7 @@ if(any(names(params)=="probs")) {
     probName <- "ageProbs"
   # do one iteration to get ages at which probabilities are evaluated
      data=dataAugment(xdata,params)
-     cat("a great many blank lines are now being printed")
+#     cat("a great many blank lines are now being printed")
      params[[probName]]=probsUpdate(data,params[[probName]],prior$probs)
 } 
 

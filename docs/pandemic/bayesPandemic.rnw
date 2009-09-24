@@ -335,10 +335,22 @@ data[toshow,-c(1,7)]
 \end{frame}
 
 
+\begin{frame}[fragile]
+\frametitle{Infection type priors}
+
+\begin{verbatim}
+PS Priors
+transition	distribution	taub1	taub2	priorMean	upper95
+probs	fatality	psPrior	   2	   0.05	  0.01	   0.02
+probs	hosp    	psPrior	   2	   0.05	  0.01	   0.02
+\end{verbatim}
+
+\end{frame}
+
 \begin{frame}
 \frametitle{Prior graphs}
 <<priorGraph, fig=false,results=tex>>=
-priors= readPrior("bayesPandemicPriors.txt")
+priors = readPrior("bayesPandemicPriors.txt")
 plotPrior(priors$InfOns, file="InfOns", tex=TRUE)
 #$
 @
@@ -409,8 +421,8 @@ Density and hazard curves are shown for combinations of the 2.5\% and 97.5\% qua
 \end{frame}
 
 
-
 \end{document}
+
 
 \begin{frame}[fragile]
 \frametitle{Results}
