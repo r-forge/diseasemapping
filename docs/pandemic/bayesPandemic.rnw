@@ -26,7 +26,7 @@
 
 \comment{
 <<setup,fig=false>>=
-options(SweaveHooks=list(fig=function() par(mar=c(2.5,2.5,0.1,0.1), mgp=c(1.5, 0.5, 0), cex=0.6)), width=54)
+options(SweaveHooks=list(fig=function() par(mar=c(2.5,2.5,0.1,0.1), mgp=c(1.5, 0.5, 0), cex=0.6)), width=54, digits=3)
 # source in all the R files
 library(pandemic)
 @
@@ -214,10 +214,10 @@ params = pandemicParams(
   MedHospS = c(mean = 2, shape = .5, zeros = 0.1),
   MedHospD = c(mean = 2, shape = 2, zeros = 0.1),
 	HospRec = c(mean=3, shape=1.5, zeros=.01 ),
-	HospDeath = c(mean=5, shape=0.8, zeros=.05 ),
+	HospDeath = c(mean=5, shape=0.3, zeros=.05 ),
 ageProbs=list(
-	S=addAgeProbs(ageSeq, 0.02+0.8*dnorm(ageSeq, mean=20, sd=10)),
-	D=addAgeProbs(ageSeq, 0.01+0.5*dnorm(ageSeq, mean=30, sd=5))  ),
+	S=addAgeProbs(ageSeq, 0.02+1.5*dnorm(ageSeq, mean=20, sd=10)),
+	D=addAgeProbs(ageSeq, 0.01+dnorm(ageSeq, mean=30, sd=8))  ),
 	probs=NULL
 	)
 tempList = (params[c("InfOns","OnsMedM","OnsMedS", "OnsMedD", "MedRec","MedHospS","MedHospD","HospRec","HospDeath")])
@@ -268,7 +268,7 @@ options(width=60)
 @
 <<simData,echo=true,fig=false>>=
 
-data = simEpidemic(params, delta=20, days=28)
+data = simEpidemic(params, delta=50, days=42)
 
 table(data$observedType)
 @
@@ -277,6 +277,7 @@ toshow = NULL
 for(Dshow in levels(data$observedType))
 	toshow = c(toshow, which(data$observedType==Dshow)[1:2])
 toshow = na.omit(toshow)	
+#$
 @
 <<simData2,echo=true,fig=false>>=
 data[toshow,-c(1,7)]
@@ -421,14 +422,13 @@ Density and hazard curves are shown for combinations of the 2.5\% and 97.5\% qua
 \end{frame}
 
 
-\end{document}
-
 
 \begin{frame}[fragile]
-\frametitle{Results}
+\frametitle{Fitting the model}
+(to the simulated data)
 <<mcmcResults,echo=true,fig=false>>=
 scale = mcmcScale(params, 0.075,minScale = 0.05 )
-paramSample = mcmcPandemic(data,params,priors,sigma=scale,runs=60, thin = 5)
+paramSample = mcmcPandemic(data,params,priors,sigma=scale,runs=100, thin = 5)
 
 dim(paramSample)
 colnames(paramSample)
@@ -437,21 +437,22 @@ colnames(paramSample)
 
 
 \begin{frame}
-\frametitle{Fatality probability}
+\frametitle{Fatality probability, age 20}
 \begin{columns}
 \column{0.5\textwidth}
 \begin{block}{trace plots}
 <<tracePlot,fig=true>>=
-plot(paramSample[,"probs.D"], type="l")
-abline(h=params$probs["D"], col="red")
+toplot = "ageProbs.D.prob20"
+plot(paramSample[,toplot], type="l")
+abline(h=params$ageProbs$D[20,"prob"], col="red")
 @
 \end{block}
 \column{0.5\textwidth}
 
 \begin{block}{Histogram}
 <<histPost>>=
-hist(paramSample[,"probs.D"], breaks=12)
-abline(v=params$probs["D"], col="red")
+hist(paramSample[,toplot], breaks=12)
+abline(v=params$ageProbs$D[20,"prob"], col="red")
 @
 \end{block}
 \end{columns}
@@ -464,7 +465,9 @@ postSummary=t(apply(paramSample, 2, function(qq)
   c(mean=mean(qq), quantile(qq, prob=c(0.025, 0.5, 0.975)))))
 postSummary = cbind(true=unlist(params)[rownames(postSummary)], postSummary)  
 
-postSummary[1:12,-c(1,4)]
+postSummary[grep("^(OnsMed|MedHosp)(M|S|D).(mean|shape)$",#$ 
+
+rownames(postSummary)),-c(1,4)]
 @
 \end{frame}
 
@@ -477,11 +480,44 @@ plotPrior(priors, paramSample, transition="MedHospS",file="MedHospS", tex=TRUE)
 @
 \end{frame}
 
+\begin{frame}
+\frametitle{Fatality rate}
+<<fatalityAgeGraph>>=
+ageCols = grep("^ageProbs.D.prob.[[:digit:]]+$", colnames(paramSample), value=T)
+Sage= as.numeric(gsub("^ageProbs.D.prob", "", ageCols))
+
+matplot(Sage, t(paramSample[,ageCols]), type="l", col=2:8, ylim=quantile(paramSample[,ageCols], probs=c(0.01, 0.99))) 
+lines(Sage, apply(paramSample[,ageCols], 2, mean), lwd=3, col="black")
+#$
+@
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Hospitalization rate}
+<<fatalityAgeGraph>>=
+ageColsS = grep("^ageProbs.S.prob.[[:digit:]]+$", colnames(paramSample), value=T)
+
+theRate = paramSample[,ageCols] + (1-paramSample[,ageCols])*paramSample[,ageColsS]
+
+
+matplot(Sage, t(theRate), type="l", col=2:8, ylim=quantile(theRate, probs=c(0.01, 0.99))) 
+lines(Sage, apply(theRate, 2, mean), lwd=3, col="black")
+#$
+@
+
+
+\end{frame}
+
+
+\end{document}
+
 \begin{frame}[fragile]
 \frametitle{Hospital demand}
 <<hospLoad,echo=T>>=
 # generate hospital times
-hospSample = simHospitals(paramSample , Ndays=20, NinfectionsPerDay=20)
+hospSample = simHospitals(paramSample , Ndays=60, 
+	NinfectionsPerDay=c(seq(10, 100, len=30),seq(100, 10, len=30) ) )
 
 # graph hospital times
 plotHospitals(hospSample)

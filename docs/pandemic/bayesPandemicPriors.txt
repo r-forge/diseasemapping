@@ -11,8 +11,8 @@ OnsMedS	zeros	0.1	0.05	beta
 OnsMedD	mean	1	.5	gamma	
 OnsMedD	shape	1	.5	gamma	
 OnsMedD	zeros	0.1	0.01	beta	
-MedRec	mean	2	.5	gamma	
-MedRec	shape	1	.2	gamma	
+MedRec	mean	2	.2	gamma	
+MedRec	shape	1	.1	gamma	
 MedRec	zeros	0.1	0.01	beta	
 MedRec	lost	0.9	0.1	beta	
 MedHospS	mean	2	.5	gamma	

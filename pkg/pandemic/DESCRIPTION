@@ -1,8 +1,8 @@
 Package: pandemic
 Type: Package
 Title: Bayesian inference for data from the initial stages of a pandemic
-Version: 0.2
-Date: 2009-08-12
+Version: 0.3
+Date: 2009-09-24
 Depends: ellipse, DPpackage
 Author: Patrick Brown, Peter Neal
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>

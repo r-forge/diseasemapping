@@ -27,7 +27,7 @@ params
 probsUpdate=function(data,probs,prior)
 {
 
-if(!is.list(probs)) { # vector of D, S, M
+if(any(names(probs)=="M") )  { # vector of D, S, M
 
 probs["D"]=rbeta(1,sum(data$type=="D")+prior$fatality["shape1"],
     sum(data$type=="M")+sum(data$type=="S")+prior$fatality["shape2"])
@@ -55,7 +55,8 @@ ageUnique = data$age[ageUniqueIndex]
    data$death =data$type=="D"
    
    deathfit <-PSgam(formula=data$death~ps(data$age,k=Nsplines,degree=degree,pord=pord),
-                family=binomial(logit),prior=prior$fatality,
+                family=binomial(logit),
+                prior=prior$fatality[c("taub1","taub2","beta0","Sbeta0","tau1","tau2")],
                 mcmc=PSmcmc,ngrid=Ngrid,
                 state=attributes(probs$D)$state,
                 status=is.null(attributes(probs$D)$state) )

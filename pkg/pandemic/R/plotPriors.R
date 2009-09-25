@@ -98,9 +98,9 @@ if(!is.null(file)) {
   plot(xseq, dprior(xseq, x[[D]]), type="l", 
     ylab='prob', xlab=D, main="")
   } else {
-    hist(posteriorSample[,Dvec], breaks=20,    
+    hist(posteriorSample[,Dvec], breaks=seq(therange[1], therange[2], len=22),    
       ylab='prob', xlab=D, main="", xlim=therange,
-      probability=T)
+      freq=F)
 
     lines(xseq, dprior(xseq, x[[D]]), col="red")
     
