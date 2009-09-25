@@ -66,16 +66,35 @@ getVecParams = function(params, string="OnsMed", value="shape") {
 
 vecParamsToList = function(vecParams) {
   thenames = names(vecParams)
-  matNames = matrix(unlist(strsplit( thenames, "\\.")) , ncol=2, byrow=T)
+  
+  ageProbsIndex = grep("^ageProbs", thenames)
+  namesNotAgeProbs = thenames[-ageProbsIndex]
+    namesAgeProbs = thenames[ageProbsIndex]
+  
+  matNames = matrix(unlist(strsplit(namesNotAgeProbs, "\\.")) , ncol=2, byrow=T)
   
   Stransition = unique(matNames[,1])
   
   params = list()
   for(D in Stransition) {
   Dstring <- paste("^", D, "\\.", sep="")
-    forList = vecParams[grep(Dstring, thenames, value=T)]
+    forList = vecParams[grep(Dstring, namesNotAgeProbs, value=T)]
     names(forList) = gsub(Dstring, "", names(forList))
     params[[D]] = forList
+  }
+  
+  if(length(namesAgeProbs)) {
+    for(Dtrans in c("S", "D") ){
+      thisTrans = grep(paste("^ageProbs.",Dtrans,".prob[[:digit:]]+", sep=""),
+        namesAgeProbs, value=T)
+      thisAge = as.numeric(gsub( paste("^ageProbs.",Dtrans,".prob", sep=""), 
+        "", thisTrans))
+      theorder = order(thisAge)
+      params$ageProbs[[Dtrans]] = data.frame(
+       age = thisAge[theorder],
+       prob = vecParams[thisTrans[theorder]]
+      )  
+    }
   }
   params
 }

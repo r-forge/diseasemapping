@@ -9,6 +9,8 @@ simHospitals = function(paramSim, Ndays=100, NinfectionsPerDay=10) {
     data = data[data$observedType %in% c("D","S","hosp"),] 
     data$removed[is.na(data$removed)] = Inf
       
+      
+      
     data = data.frame(start=data$hospital+data$med, end=data$removed+data$med)
     data$end[is.na(data$end)] = Inf
     for(Dday in 1:Ndays) {

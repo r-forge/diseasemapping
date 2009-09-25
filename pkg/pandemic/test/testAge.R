@@ -13,7 +13,7 @@ params = pandemicParams(
   probs=NULL,
   ageProbs=list(
     S=addAgeProbs(),
-    D=addAgeProbs()
+    D=addAgeProbs()             
   )
 )
 

@@ -37,7 +37,7 @@ if(all(theTypes %in% names(params$probs))) {
  } else { # probs vary with age  
 
 # construct probabilities of being S or D, which might depend on age
-result$age = sample(0:80, dim(result)[1], replace=T)
+result$age = sample(1:80, dim(result)[1], replace=T)
 result$type=NA
 
 # create matrix to store probabilities
