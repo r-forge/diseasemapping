@@ -29,6 +29,7 @@
 options(SweaveHooks=list(fig=function() par(mar=c(2.5,2.5,0.1,0.1), mgp=c(1.5, 0.5, 0), cex=0.6)), width=54, digits=3)
 # source in all the R files
 library(pandemic)
+doSims=F
 @
 }
 
@@ -265,11 +266,14 @@ plot(params$age$D, type="l", ylim=c(0,0.1))
 \frametitle{Simulated data}
 <<echo=false,fig=false>>=
 options(width=60)
-@
-<<simData,echo=true,fig=false>>=
-
+if(doSims){
 data = simEpidemic(params, delta=50, days=42)
-
+} else{
+load("results.RData")
+}
+@
+\verb!data = simEpidemic(params, delta=50, days=42)!
+<<simData,echo=true,fig=false>>=
 table(data$observedType)
 @
 <<fig=false>>=
@@ -428,8 +432,9 @@ Density and hazard curves are shown for combinations of the 2.5\% and 97.5\% qua
 (to the simulated data)
 <<mcmcResults,echo=true,fig=false>>=
 scale = mcmcScale(params, 0.075,minScale = 0.05 )
-paramSample = mcmcPandemic(data,params,priors,sigma=scale,runs=500, thin = 10)
-
+if(doSims){
+	paramSample = mcmcPandemic(data,params,priors,sigma=scale,runs=500, thin = 10)
+}
 dim(paramSample)
 colnames(paramSample)
 @
@@ -495,7 +500,7 @@ lines(Sage, apply(paramSample[,ageCols], 2, mean), lwd=3, col="black")
 
 \begin{frame}
 \frametitle{Hospitalization rate}
-<<fatalityAgeGraph>>=
+<<hospitalAgeGraph>>=
 ageColsS = grep("^ageProbs.S.prob.[[:digit:]]+$", colnames(paramSample), value=T)
 
 theRate = paramSample[,ageCols] + (1-paramSample[,ageCols])*paramSample[,ageColsS]
@@ -515,12 +520,14 @@ lines(Sage, apply(theRate, 2, mean), lwd=3, col="black")
 \frametitle{Hospital demand}
 <<hospLoad,echo=T>>=
 # generate hospital times
+if(doSims) {
 hospSample = simHospitals(paramSample , Ndays=80, 
 	NinfectionsPerDay=20 )
+}
 
 # graph hospital times
 plotHospitals(hospSample)
-abline(h=20)
+abline(h=20/5)
 @
 \end{frame}
 
@@ -535,7 +542,7 @@ hospSample2 = simHospitals(paramSample , Ndays=80, NinfectionsPerDay=Ninfect)
 
 # graph hospital times
 plotHospitals(hospSample2)
-lines(Ninfect)
+lines(Ninfect/5)
 @
 }
 \end{frame}
