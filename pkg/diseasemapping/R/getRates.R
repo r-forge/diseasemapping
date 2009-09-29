@@ -15,7 +15,12 @@ if(attributes(terms(formula))$response)
 morethanoneyear = class(popdata)=="list"
 
 #if s() is in formula, use GAM
-usegam<-if(grep("s\\(","sex + s(age)"))
+useGam <- length(grep("s\\(",formula))>0
+if(useGam) {
+  modelFittingFunction = gam
+} else {
+  modelFittingFunction = glm
+}
 
 #is SP or not
 if(morethanoneyear){
@@ -77,8 +82,8 @@ if(length(termsToAdd) ) {
     Nincases = apply(casedata, 2, function(qq) length(unique(qq)))   
     Ninpop = apply(colsToTry, 2, function(qq) length(unique(qq)))
     
-    colCase = names(Nincases)[order(abs(Nincases - Npop),decreasing=F)[1]]
-    colPop = names(Ninpop)[order(abs(Ninpop - Npop),decreasing=F)[1]]
+    colCase = names(Nincases)[order(abs(Nincases - Npop),decreasing=FALSE)[1]]
+    colPop = names(Ninpop)[order(abs(Ninpop - Npop),decreasing=FALSE)[1]]
     
      
   } else {
@@ -88,11 +93,13 @@ if(length(termsToAdd) ) {
     "columns ", colPop, " and ", colCase, ".\n")
   cat("add variable to casedata manually if this is not correct\n")
     
-  casedata = merge(casedata, colsToTry[,c(colPop,termsToAdd)], by.x=colCase,by.y=colPop)
+  casedata = merge(casedata, colsToTry[,c(colPop,termsToAdd)], 
+    by.x=colCase, by.y=colPop)
 
 }
 
-casedata = formatCases(casedata, ageBreaks=attributes(pops)$breaks, aggregate.by = theterms)
+casedata = formatCases(casedata, ageBreaks=attributes(pops)$breaks, 
+  aggregate.by = theterms)
 
 
 #find number of cases per group
@@ -158,7 +165,8 @@ newdata[[sexvar]] = factor(newdata[[sexvar]])
 #change factor to numeric
 if(!is.null(fit.numeric)){
     for (i in 1:length(fit.numeric)){
-    toChange = grep(paste("^",fit.numeric[i],"$",sep=""),names(newdata),value=TRUE,ignore.case=TRUE)
+    toChange = grep(paste("^",fit.numeric[i],"$",sep=""),names(newdata),value=TRUE,
+      ignore.case=TRUE)
     newdata[,toChange] = as.numeric(as.character(newdata[,toChange]))
   }
 }
@@ -174,8 +182,8 @@ formula1 = update.formula(formula, CASES ~ offset(logpop) + .)
 
 #fit model, if there is an error, return data only
 options(show.error.messages = FALSE)
-if(usegam) model<-try(gam(formula1, family=family, data=newdata))
-else model<-try(glm(formula1, family=family, data=newdata))
+
+model <- modelFittingFunction(formula1, family=family, data=newdata)
 
 if(class(model)[1]=="try-error"){
   warning(model[1],"Only Data will be returned")
