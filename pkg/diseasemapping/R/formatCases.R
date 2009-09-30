@@ -9,7 +9,7 @@ sexcol = grep("^sex$", names(casedata), value=TRUE, ignore.case=TRUE)
 
 if(length(agecol) & length(sexcol)){
 casedata$age = casedata[[agecol]]
-casedata$sex = casedata[[sexcol]]
+casedata$sex = gsub("[[:space:]]", "", casedata[[sexcol]])
 }else{
 # if not, is there an age_sex_group column, in rif format?  use it to create age and sex
 
