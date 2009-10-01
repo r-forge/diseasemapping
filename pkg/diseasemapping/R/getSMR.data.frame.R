@@ -159,10 +159,10 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL, regionCode = "CSDUI
       popdata[as.character(casedata[,1]),"observed"] = casedata[,2]
    
       # change 0's in expected to NA, so SMR is NA
-    theexpected = popdata$expected
-    popdata$observed[theexpected==0] = NA
+
+    popdata$observed[is.na(popdata$expected)] = NA
     
-     popdata$SMR <- popdata$observed/theexpected
+     popdata$SMR <- popdata$observed/popdata$expected
    }
 
    popdata
