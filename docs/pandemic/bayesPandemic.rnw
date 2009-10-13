@@ -436,7 +436,7 @@ if(doSims){
 	paramSample = mcmcPandemic(data,params,priors,sigma=scale,runs=500, thin = 10)
 }
 dim(paramSample)
-colnames(paramSample)
+colnames(paramSample)[c(1, 100, 185, 197)]
 @
 \end{frame}
 
@@ -461,6 +461,7 @@ abline(v=params$ageProbs$D[20,"prob"], col="red")
 @
 \end{block}
 \end{columns}
+True value is in red
 \end{frame}
 
 \begin{frame}[fragile]
@@ -514,37 +515,66 @@ lines(Sage, apply(theRate, 2, mean), lwd=3, col="black")
 
 \end{frame}
 
+\begin{frame}
+\frametitle{Predicting hospital loads}
+
+\begin{itemize}
+	\item For a given proposed outbreak
+	
+\begin{itemize}
+	\item Either a hypothetical scenario
+	\item or projections from an infectious disease model
+\end{itemize}
+\item What will the hospital load be?
+\item \ldots depends on the parameters
+\item So, use each of the 1000 posterior samples to simulate 1000 hospital loads
+\item and graph the mean and quantiles for hospital demand
+\end{itemize}
+
+\end{frame}
+
 
 
 \begin{frame}[fragile]
 \frametitle{Hospital demand}
-<<hospLoad,echo=T>>=
-# generate hospital times
+<<fig=false>>=
 if(doSims) {
 hospSample = simHospitals(paramSample , Ndays=80, 
 	NinfectionsPerDay=20 )
+Ninfect=c(seq(1, 100, len=20),seq(100, 1, len=20), rep(2, 40) ) 
+hospSample2 = simHospitals(paramSample , Ndays=80, NinfectionsPerDay=Ninfect)
 }
+@
+\verb!# generate hospital times!
+\verb!hospSample = simHospitals(paramSample , Ndays=80, !\\
+\verb!	NinfectionsPerDay=20 )!
+
+\begin{minipage}{0.8\textwidth}
+<<hospLoad,echo=T>>=
 
 # graph hospital times
 plotHospitals(hospSample)
 abline(h=20/5)
 @
+
+\end{minipage}
 \end{frame}
 
 \begin{frame}[fragile]
 \frametitle{With rising and falling incidence}
-{\scriptsize
+\verb!hospSample2 = simHospitals(paramSample , Ndays=80,! \\
+\verb!  NinfectionsPerDay=Ninfect)!
+
+
+\begin{minipage}{0.8\textwidth}
 <<hospLoad2,echo=T,height=2,width=4>>=
-# generate hospital times
-Ninfect=c(seq(1, 100, len=20),seq(100, 1, len=20), rep(2, 40) ) 
+Ninfect=c(seq(1, 100, len=20),
+  seq(100, 1, len=20), rep(2, 40) ) 
 
-hospSample2 = simHospitals(paramSample , Ndays=80, NinfectionsPerDay=Ninfect)
-
-# graph hospital times
 plotHospitals(hospSample2)
 lines(Ninfect/5)
 @
-}
+\end{minipage}
 \end{frame}
 
 
@@ -552,18 +582,40 @@ lines(Ninfect/5)
 \begin{frame}
 \frametitle{To do}
 \begin{itemize}
-	\item more covariates	
+\item fine-tune the MCMC
+\begin{itemize}
+	\item check convergence
+	\item optimize scaling
+	\item look for more conjugacy?
+\end{itemize}
+	\item more covariates	--- prior health conditions?
 	\item model the infection process
 	\item spatial infection process
+\item use the real data?	
 \end{itemize}
 \end{frame}
 
 \begin{frame}
+\frametitle{Conclusions 1 (specific)}
+\begin{itemize}
+	\item This model can
+	
+\begin{enumerate}
+	\item Estimate fatality and hospitalization rates, allowing for censoring
+	\item Take infection trajectories from an infectious disease model and translate them into hospital loads
+\end{enumerate}
+\item If this is what you want, this model is much lighter than a full-blown infectious disease model
+\item and will require much less prior information.
+\end{itemize}
 
-\frametitle{Conclusions}
+\end{frame}
+
+\begin{frame}
+
+\frametitle{Conclusions (general)}
 
 \begin{itemize}
-	\item Use the data even if there isn't much of it
+	\item Use the data for estimating parameters even if there isn't much of it
 	\item If there are many cases and no fatalities, at least we can get an upper bound on the fatality rate
 	\item When data are plentiful and informative, there is a case to be made for non-parametric survival methods
 	\item But if rates change with age, sex, geography, or existing health conditions, even late stage epidemic data might not be sufficient for standard survival methods.

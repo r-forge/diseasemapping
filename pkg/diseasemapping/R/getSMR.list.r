@@ -8,8 +8,22 @@ getSMR.list <- function(popdata, model, casedata = NULL, regionCode = "CSDUID",
         years = as.integer(names(popdata))
     }        
 
+  yearVar = grep("year", names(attributes((terms(model)))$dataClasses) ,
+      value=TRUE,ignore.case=TRUE)  # find year var in the model
+  #If year is not in the model as factor
+  if(length(yearVar)==0) yearVar="YEAR"
+
+  caseYearVar = grep("year",names(casedata),value=TRUE,ignore.case=TRUE)
+
+
     if(personYears){
-    year.range = range(names(popdata))
+    # if year.range is missing, use year range of the cases
+    if(is.null(year.range)) {
+      if(!length(caseYearVar))
+        warning("year.range unspecified and no year column in case data")
+      year.range = range(as.numeric(as.character(casedata[,caseYearVar])), na.rm=T)
+    }
+    
     times <- c(year.range[1], sort(years), year.range[2])
     times <- as.numeric(times)
     inter <- diff(times)/2
@@ -23,11 +37,7 @@ getSMR.list <- function(popdata, model, casedata = NULL, regionCode = "CSDUID",
 
     names(interval) <- names(popdata)
       
-  yearVar = grep("year",names(attributes((terms(model)))$dataClasses) ,value=TRUE,ignore.case=TRUE)  # find year var in the model
-  #If year is not in the model as factor
-  if(length(yearVar)==0) yearVar="YEAR"
   
-  caseYearVar = grep("year",names(casedata),value=TRUE,ignore.case=TRUE)
   caseSexVar =grep("^sex$",names(casedata),value=TRUE,ignore.case=TRUE)
   if (length(model$sexSubset) == 1) warning("only one sex is being used:",model$sexSubset)
 
