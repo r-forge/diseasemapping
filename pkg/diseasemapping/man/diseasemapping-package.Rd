@@ -36,7 +36,11 @@ spplot(ontario, 'SMR')
 \dontrun{
 # run the model
 library(spdep)
+<<<<<<< .mine
+popDataAdjMat = poly2nb(ontario,row.names=as.character(ontario[["CSDUID"]]))
+=======
 popDataAdjMat = poly2nb(ontario, ontario[["CSDUID"]])
+>>>>>>> .r423
 library(glmmBUGS)
 forBugs = glmmBUGS(formula=observed + logExpected ~ 1,
   effects="CSDUID", family="poisson", spatial=popDataAdjMat,
