@@ -17,6 +17,21 @@ newpop <- newpop[newpop$POPULATION!=0,]
 
 newpop$logpop <- log(newpop$POPULATION) + log(scale)
 
+
+
+if(is.numeric(model)) {
+    # model is a vector of rates
+        # check breaks for groups, make sure they line up
+        rateBreaks =getBreaks(names(model))
+        names(model) = rateBreaks$newNames
+        newpop = formatCases(referencePopulation, ageBreaks=rateBreaks)
+        
+        newpop =sum(newpop$POPULATION * model[paste(newpop$sex, newpop$ageNumeric, sep=".")])
+
+        
+    } else {
+# model is a glm object
+
 # predict.glmZeros
 
 # find the ages used in the model and get rid of those that do not exist in model
@@ -60,6 +75,8 @@ newpop$pred <- predict(model, newpop[,c("age","sex","logpop")], type = "response
 for(i in 1:length(relativeRate)){
 newpop[,paste("Region",i,sep="")] = newpop$pred * relativeRate[i]
 }
+}
+
 newpop
 }
 
