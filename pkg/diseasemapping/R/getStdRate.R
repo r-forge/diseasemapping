@@ -26,7 +26,7 @@ if(is.numeric(model)) {
         names(model) = rateBreaks$newNames
         newpop = formatCases(referencePopulation, ageBreaks=rateBreaks)
         
-        newpop =sum(newpop$POPULATION * model[paste(newpop$sex, newpop$ageNumeric, sep=".")])
+        newpop =sum(newpop$POPULATION * model[paste(newpop$sex, newpop$ageNumeric, sep=".")]) * scale
 
         
     } else {

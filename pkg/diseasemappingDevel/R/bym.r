@@ -1,6 +1,8 @@
 `bym` = function(formula="observed ~ 1", family = "poisson", data,offset="logExpected", spatial="region", graph.file="graph",
       control.Spatial = "param=c(1,0.01),initial=4", control.iid="param=c(1,0.001),initial=4", debug = FALSE,verbose=TRUE,keep=TRUE){
       
+ 
+ 
       
       if(length(grep("besag",formula,value=T)) == 0){
       
@@ -11,13 +13,25 @@
       
       
       }
+      print(formula1)
+
+   theHook = function(file.ini = NULL, data.dir = NULL, results.dir = NULL, 
+    formula = NULL, data = NULL,args = NULL) {
+    
+         inla.lincomb.section(file.ini, data.dir,lincomb.spec=10,num=0,
+          struct=spatial.name,unstruct=spatial,D=NULL)
+
+    }
 
 
    if(is.character(offset))  {
       offset = data[,offset]
       }
-    inla(formula=formula1, family=family, data=data, offset=offset, control.results=list(return.marginals.random=TRUE), control.predictor = list(return.marginals=TRUE, compute = TRUE),
-          verbose=verbose, user.hook=inla.user.hook, debug=debug,keep=TRUE)
+    inla(formula=formula1, family=family, data=data, offset=offset, 
+     control.results=list(return.marginals.random=TRUE), 
+     control.predictor = list(compute = TRUE), # return.marginals=TRUE, 
+     verbose=verbose,  debug=debug,keep=TRUE,
+     user.hook=theHook)
           
 
 }
