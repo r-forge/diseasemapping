@@ -21,7 +21,7 @@ getSMR.list <- function(popdata, model, casedata = NULL, regionCode = "CSDUID",
     if(is.null(year.range)) {
       if(!length(caseYearVar))
         warning("year.range unspecified and no year column in case data")
-      year.range = range(as.numeric(as.character(casedata[,caseYearVar])), na.rm=T)
+      year.range = range(as.numeric(as.character(casedata[,caseYearVar])), na.rm=TRUE)
     }
     
     times <- c(year.range[1], sort(years), year.range[2])
