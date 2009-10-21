@@ -7,6 +7,8 @@ if(class(casedata)!="data.frame")
 agecol = grep("^age$", names(casedata), value=TRUE, ignore.case=TRUE)
 sexcol = grep("^sex$", names(casedata), value=TRUE, ignore.case=TRUE)
 
+
+
 if(length(agecol) & length(sexcol)){
 casedata$age = casedata[[agecol]]
 casedata$sex = gsub("[[:space:]]", "", casedata[[sexcol]])
@@ -43,6 +45,15 @@ if(length(groupvar)){
             }
 }
 }
+
+# give warning if no age or sex column found
+if(length(agecol) != 1) {
+ warning("cant find age column in popdata, found", toString(agecol))
+}
+if(length(sexcol) != 1) {
+ warning("cant find sex column in popdata, found", toString(sexcol))
+}
+
 
 
 if(!is.null(ageBreaks)){
