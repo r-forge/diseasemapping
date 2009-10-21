@@ -1,0 +1,10 @@
+Package: ECS
+Type: Package
+Title: ECS cancer dataset
+Version: 1.1
+Date: 2009-10-21
+Author: Patrick Brown
+Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
+Description: Data from the Ontario portion of the ECS case-control study. 
+License: Ask permission of the maintainer before disseminating or publishing using this data.
+LazyLoad: yes

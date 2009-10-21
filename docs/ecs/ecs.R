@@ -23,5 +23,14 @@ ECS$smk_now[ECS$smk_ever == "N"] = "N"
 for(D in c("smk_ever", "smk_now"))
   ECS[[D]] = ECS[[D]]=="Y"
 
+ECS$smoke = "never"
+ECS$smoke[ECS$smk_ever] = "former"
+ECS$smoke[ECS$smk_now] = "current"
+ECS$smoke = factor(ECS$smoke, levels=c("never","former","current")   )
+
+# integers
+for(D in c("diagage","smk_age","smk_avg","smk_quit","packyrs"))
+  ECS[[D]] = as.integer(ECS[[D]])
+
 save(ECS, file="ECS.RData")
 
