@@ -1,5 +1,7 @@
 \documentclass[xcolor=dvipsnames]{beamer}
+
 \usepackage[nogin]{Sweave}
+\usepackage{tikz,pgflibraryshapes}
 
 \usetheme{Singapore}
 \usecolortheme[named=RawSienna]{structure}
@@ -8,7 +10,7 @@
 \setbeamertemplate{navigation symbols}{}
 \setbeamertemplate{footline}[frame number] 
 
-\title{Bayesian statistics and  swine flu}
+\title{Applications of Time-Inhomogeneous Multi-State Models (including Bayesian statistics and swine flu)}
 \author{Patrick Brown$^1$,  Peter Neal$^2$}
 \institute{1:Cancer Care Ontario and Dalla Lana School of Public Health, University of Toronto; 2: School of Mathematics, University of Manchester} 
 \usepackage{amsmath,subfigure,alltt}
@@ -623,6 +625,331 @@ lines(Ninfect/5)
 
 \end{frame}
 
+
+\begin{frame}
+\frametitle{Multi-state models}
+\begin{itemize}
+	\item The Swin flu application was \emph{ordinal}
+	\item Once an individual makes a transtion they can't go back
+	\item but what if they can go back?
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Endemic diseases in Tanzanian cows}
+\begin{columns}
+\column{0.5\textwidth}
+\includegraphics{Figures/G-cowTS}
+\column{0.5\textwidth}
+\begin{itemize}
+	\item Sampled up to 11 different occasions
+	\item Approximately 6 weeks apart
+	\item 60 farms, 100 animals
+\end{itemize}
+\end{columns}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Questions}
+\begin{itemize}
+	\item How long does an episode last?
+	\item How does age affect infection probabilities?
+	\item Do cows located close together have similar infection probabilities?
+	
+\begin{itemize}
+	\item Transmission between animals?
+ \item A spatially varying risk factor (density of ticks)?
+\end{itemize}
+\item Note: We don't observe infection and recovery times.
+\item We only know infection status on certain days.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{A Susceptible-Infected-Susceptible model}
+\begin{tikzpicture}[fill=blue!20,line width=2pt,shorten >=5pt]
+\tikzstyle{every node}=[draw,fill,ellipse,minimum height=2cm,minimum width=3cm] 
+\path (0,0) node(S) {Susceptible}
+	 		(5,0) node(I)  {Infected};
+\draw[blue,->](S) .. controls +(2,2) and +(-2,2)  ..(I);
+\draw[blue,->](I) .. controls +(-2,-2) and +(2,-2)  ..  (S);
+\end{tikzpicture}
+\begin{itemize}
+	\item Every animal alternates between two states
+	\item Infections happen at rate $\delta$
+	\item Recoveries have rate $\rho$
+\end{itemize}
+\end{frame}
+\begin{frame}
+
+
+\frametitle{Infection probability changes with age}
+\begin{tikzpicture}[fill=white,font=\sffamily]
+
+\begin{scope}[line width=2pt,->]
+\draw(0,0) -- (0,5) node[pos=0.5,sloped,above=7pt]{$\delta$(age)};
+\draw(0,0) -- (8,0) node[pos=0.5,sloped,below=7pt]{age};
+\end{scope}
+
+\draw (0.5,4) -- (2.5,1) --  (8,1); 
+
+\begin{scope}[dotted,line width=0.5pt]
+\draw (2.5,0) -- (2.5, 1) node[below,pos=0]{$\tau_0$};
+\end{scope}
+
+\end{tikzpicture}
+\begin{itemize}
+	\item Recovery rate $\rho$ is constant
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{The Model}
+Animal $i$ located at $s_i$ has infection rate
+\[
+\delta_{i}(t) =\begin{cases} \exp(\delta_0 + X_{i}' \beta + w_i \gamma + A(s_i)) & w_i(t) < \tau_0\\
+\exp(\delta_0 + X_{i}' \beta + w_i \tau_0 +A(s_i)) & w_i(t) \geq \tau_0 \end{cases} 
+\]
+\begin{itemize}
+	\item $X_{i}$ is indicator variables denoting if the animal grazes, is sprayed, or eats grass
+	\item $w_i(t)$ is the age of animal $i$ at time $t$.
+	\item $A(\cdot)$ is a Gaussian random field with covariance function 
+	\[
+	\text{cov}(A(s_0), A(s_0+u)) = \sigma^2 \exp(-||u||/\phi)
+	\]
+	\item Recovery rate is $\rho$
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Inference with constant rates}
+\begin{itemize}
+	\item Alternating states model, see Grimmett and Stirzaker.
+	\item Transition model.
+	\item To construct the likelihood, we need the transition probability matrix:
+	\[
+	P_u = \left(\begin{array}{ll} Pr(Y_{t+u} = 0 | Y_t = 0) &  Pr(Y_{t+u} = 1 | Y_t = 0)\\
+ Pr(Y_{t+u} = 0 | Y_t = 1) &  Pr(Y_{t+u} = 1 | Y_t = 1) \end{array}\right) 
+	\]
+	\item Cow $i$ has infection rate $\delta_i$ and recovery rate $\rho$ 
+	\begin{align*}
+	G_i = &\left(\begin{array}{cc} -\delta_i & \delta_i \\ \rho & -\rho  \end{array}\right) \Leftarrow \text{Generating Matrix}
+\\
+P_u = &\exp(u G_i)
+\end{align*}
+\item This is a matrix exponential $\exp(X) = \sum_{n=1}^\infty X^n/n!$
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Probabilities}
+\begin{itemize}
+	\item Unconditional distribution
+	\[
+	 Pr(Y_{it} = 1) = \frac{\delta_i}{\delta_i + \rho} 
+	\]
+	\item Susceptible $\rightarrow$ infected
+	\[
+	  Pr(Y_{i,t+u} = 1 | Y_{it} = 0) = \frac{\delta_i}{\delta_i + \rho} \left( 1- \exp[-u(\delta_i + \rho)]\right)
+	\]
+	\item Infected $\rightarrow$ infected
+	\[
+	  Pr(Y_{i,t+u} = 1 | Y_{it} = 1) = \frac{\delta_i}{\delta_i + \rho} + 
+	  	\frac{\rho}{\delta_{i} + \rho} \exp[-u(\delta_{i} + \rho)]
+	  \]
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Notes}
+\begin{itemize}
+	\item The observations are Bernoulli random variables, with a peculiar formula for calculating the probabilities
+	\[
+	p_{it} = pr(Y_{it} = 1) = f(X_i, Y_{i,t-1})
+	\]
+	\item The likelihood function is a product of the probabilities (or 1 minus them).
+	\[
+	L(\delta_0, \rho, \beta ) =  \prod_{it : Y_{it}=1}p_{it} \prod_{it : Y_{it}=0}(1-p_{it} )
+	\]
+	\item  The Markov assumption is why this problem is tractable
+	\item Markov property: the future depends only on the present, not the past.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{More  Notes}
+\begin{itemize}
+\item Number of infections in an interval of length $u$ $\sim \text{Poisson}(u \delta)$
+\item Duration of a disease episode $\sim \text{Exponential}(1/\rho)$
+\item The Exponential-Poisson combination is a result of assuming the Markov property.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+
+\frametitle{Changing rates?}
+\begin{itemize}
+\item A surprisingly difficult problem
+	\item Peter Neal (University of Manchester) found the solution:
+\end{itemize}
+\begin{align*}
+G_i(t)= &\begin{pmatrix} -\exp(\delta_0 + \beta t) & \exp(\delta_0 + \beta t) \\ \rho &-\rho  \end{pmatrix}\\
+P(t, t+u) = & \exp\left( \int_0^{u}  G(t+x) dx\right)\\
+\end{align*}
+\pause
+Later, Peter says: \emph{The above expression is unfortunately wrong.  The problem being that matrix multiplication is non-commutative.  In other words $e^Ae^B \neq e^{A+B}$ unless $AB=BA$.  }
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Solutions}
+\begin{block}{Brute force}
+\begin{itemize}
+	\item Reversible jump MCMC, data augmentation
+	\item number of transitions is a latent variable, augmented
+	\item locations of those transitions is also augmented
+\end{itemize}
+\end{block}
+\begin{block}{Approximations}
+\begin{itemize}
+	\item Peter's found upper and lower bounds to the probabilities
+	\item When updating, check if proposal is above upper or below lower bound
+	\item If not, recalculate boundaries with greater precision
+\end{itemize}
+
+\end{block}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Local Likelihood}
+with Gerald Lebovic
+
+\begin{itemize}
+\item Write $Y_{ij}$ as the state of individual $i$ at time $T_{ij}$.
+	\item To estimate $\delta(t)$, use $\{Y_{ij} |t-h< T_{ij} < t+h \}$
+	\item or some weighted kernel kernel
+	\item suppose data are unbalanced?
+	\item There may be no observations in the interval
+	\item but observations just outside could be informative
+	\item with a kernel, observations might be in places of low weight, but be informative about the (missing) data with high weight.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Local EM}
+\begin{itemize}
+	\item Put the data on a fine grid, $\tilde Y_{ik}, \tilde T_{ik}$, $k=1 \ldots K$
+	\item Most of the $\tilde Y_{ik}$ are missing
+\item Start with an estimate $\hat\delta^{(0)}(t)$:
+\end{itemize}
+\begin{description}
+\item[E step]: compute $\text{E}[\tilde Y_{ik}|Y;\hat\delta^{(p)}(t)]$
+\item [M step]: use local likelihood to estimate $\hat\delta^{(p+1)}(t)$
+\end{description}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{What is $\tilde Y_{ik}$?}
+\begin{itemize}
+	\item If three states, $\tilde Y_{ik} = (p_{ik1}, p_{ik2}, p_{ik1})$, probability of being in each of the three states
+	\item No\ldots, not easy to calculate the likelihood from these data
+	\item $\tilde Y_{ik}$ is a 3x3 matrix:
+\[
+\tilde Y_{ik}(a,b) = pr(Y_{ik-1} = a, Y_{ik}=b)
+\] 
+\item If $Y_{ik}$ and $Y_{ik-1}$ are known, one ``1'' and zeros
+\item If one of $Y_{ik}$ and $Y_{ik-1}$ are known, one non-zero row or column
+\item then if $P_k$ is the transition matrix 
+\[
+\log[L(\tilde Y)] = \sum_{i,k} \tilde Y_{ik}' P \tilde Y_{ik}
+\]
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Another example: smoking}
+\includegraphics[width=2in]{Figures/G-ukDataCurrent.pdf}\includegraphics[width=2in]{Figures/G-ukDataFormer.pdf}
+
+Current smokers \hspace{1.5in} Never smoked
+\end{frame}
+
+\begin{frame}
+\frametitle{A simple model}
+\begin{tikzpicture}[fill=white,line width=2pt,shorten >=5pt,font=\sffamily\small]
+
+\begin{scope}
+\tikzstyle{every node}=[draw,fill,ellipse,minimum height=1.4cm,minimum width=1.5cm]
+
+% the nodes
+\node (N) at (0,0) {Never Smoked};
+\node (C)	at (4,0)  {Current Smoker};
+\node	(F) at (8,0)  {Former Smoker};
+
+\end{scope}
+
+% paths between the nodes
+\draw[black,->] (N) .. controls +(1.5,1.5) and +(-1.5,1.5)  .. node[below]{start} (C);
+\draw[black,->](C) .. controls +(1.5,1.5) and +(-1.5,1.5)  .. node[below]{quit}(F);
+
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}
+\frametitle{A more complicated model}
+
+\hspace*{-0.6in}\begin{tikzpicture}[fill=white,line width=2pt,shorten >=5pt,font=\sffamily]
+
+\begin{scope}
+\tikzstyle{every node}=[draw,fill,ellipse,minimum height=1.4cm,minimum width=1.5cm]
+
+% the nodes
+\node (N) at (0,0) {Never Smoked};
+\node (C)	at (5,0)  {Current Smoker};
+\node	(F) at (10,0)  {Former Smoker};
+\node	(D) at (5,3)  {Death};
+
+\end{scope}
+
+% paths between the nodes
+\draw[black,->] (N) .. controls +(1.5,1.5) and +(-1.5,1.5)  .. node[below]{start} (C);
+\draw[black,->](C) .. controls +(1.5,1.5) and +(-1.5,1.5)  .. node[below]{quit}(F);
+\draw[black,->](F) .. controls +(-1.5,-1.5) and +(1.5,-1.5)  .. node[above]{lapse}(C);
+\draw[black,->](F) .. controls +(-0.5,-2.5) and +(0.5,-2.5)  .. node[above]{reclassify}(N);
+\draw[black,->](N)..controls + (0, 1.5) .. (D);
+\draw[black,->](C)--(D);
+\draw[black,->](F).. controls + (0, 1.5) ..(D);
+
+\end{tikzpicture}
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Conclusions}
+\begin{itemize}
+\item Transition models can model complex correlation structures with a small number of parameters
+\item Extensions to time-varying rates are useful but non-trivial
+\item Since these models make scientific sense, they're easier to build and interpret
+\item Possible extensions
+\begin{itemize}
+\item Weibull distribution for disease episode length?
+\item Non-linear rate functions?
+\item Likely to be impossibly complicated.
+\end{itemize}
+\pause
+\item Don't dismiss stochastic processes as unnecessarily complex and of little use!
+\end{itemize}
+
+
+\end{frame}
 \end{document}
 
-D75A0BD6A6A1
