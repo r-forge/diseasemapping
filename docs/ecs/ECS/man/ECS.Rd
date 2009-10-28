@@ -24,12 +24,15 @@ Data from the Ontario portion of the ECS case-control study.
     \item{\code{smk_quit}}{the age the person quitted smoking.}
     \item{\code{packyrs}}{number of packs per year. Using 25 cigarettes as pack size. }
     \item{\code{post_code}}{a character vector of where they were living when they got the questionnaire.}
-    \item{\code{EA1996}}{an integer vector of EA cecus tract from 1996.} 
+    \item{\code{EA1996}}{an integer vector of EA cecus regions from 1996.} 
     \item{\code{LAT}}{an integer vector of lattitude. }
     \item{\code{LONG}}{an integer vector of longitude.}
     \item{\code{CD}}{census division code.}
     \item{\code{cancer}}{a factor of the cancer type, with levels \code{control}  \code{stomach} \code{lung} \code{breast}}
     \item{\code{smoke}}{a factor of smoking status with levels \code{current} \code{former} \code{never}}
+    \item{\code{CMA}}{  Census Metropolitan Area } 
+    \item{\code{CT1996}}{Census Tract  }  
+    \item{\code{CSD}}{ Census subdivision  }
 }
 }
 \details{
