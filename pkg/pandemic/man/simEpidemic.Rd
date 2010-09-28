@@ -40,9 +40,12 @@ Patrick Brown
 
 }
 \examples{
+someParams = pandemicParams()
+somedata = simEpidemic(someParams, delta=10)
 
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{  }
 \keyword{  }% __ONLY ONE__ keyword per line
+                                            

@@ -43,7 +43,9 @@ if(!is.list(sigma)) {
 }
 
 vecParams = unlist(params)
-vecParams = vecParams[-grep("^ageProbs[[:graph:]]+age[[:digit:]]+$", names(vecParams))] 
+toGetRid = grep("^ageProbs[[:graph:]]+age[[:digit:]]+$", names(vecParams))
+if(length(toGetRid))
+  vecParams = vecParams[-toGetRid] 
 paramsPosteriorSample = matrix(NA, ncol=length(vecParams), nrow=0, 
   dimnames = list(NULL, names(vecParams)) )
 

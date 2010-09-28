@@ -43,8 +43,8 @@ addScaleParameters = function(params) {
 
 addMeanParameters = function(params) {
 
-  thenames = names(params)
-  thenames = thenames[-grep("(age)?[pP]robs$", c("probs",thenames))]
+  thenames = c("probs",names(params))
+  thenames = thenames[-grep("(age)?[pP]robs$", thenames)]
   for(D in thenames)
     params[[D]]["mean"] = params[[D]]["scale"] *
       gamma(1 + 1/params[[D]]["shape"])
@@ -68,8 +68,13 @@ vecParamsToList = function(vecParams) {
   thenames = names(vecParams)
   
   ageProbsIndex = grep("^ageProbs", thenames)
-  namesNotAgeProbs = thenames[-ageProbsIndex]
+  if(length(ageProbsIndex)) {
+    namesNotAgeProbs = thenames[-ageProbsIndex]
     namesAgeProbs = thenames[ageProbsIndex]
+  } else {
+   namesNotAgeProbs = thenames
+   namesAgeProbs=NULL
+  }
   
   matNames = matrix(unlist(strsplit(namesNotAgeProbs, "\\.")) , ncol=2, byrow=T)
   

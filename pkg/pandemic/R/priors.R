@@ -15,7 +15,14 @@ pandemicPriors = function(
   result = list()
   for(D in theFormals)
      result[[D]] = get(D, pos=-1)
+# check that the probs have a suitable prior
+if(!all(c("fatality","hosp") %in% names(result$probs)))
+  warning("prior for probabilities needs to have 'fatality' and 'hosp' elements")
+
+
   result   
+
+
 }
 
 
