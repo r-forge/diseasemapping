@@ -44,7 +44,7 @@ if(!is.list(sigma)) {
 
 vecParams = unlist(params)
 toGetRid = grep("^ageProbs[[:graph:]]+age[[:digit:]]+$", names(vecParams))
-if(length(toGetRid))
+if(length(toGetRid))  # if toGetRid is a 0, that is equivalent to a FALSE
   vecParams = vecParams[-toGetRid] 
 paramsPosteriorSample = matrix(NA, ncol=length(vecParams), nrow=0, 
   dimnames = list(NULL, names(vecParams)) )
@@ -54,17 +54,18 @@ Sthin = 1:thin
 for(k in 1:runs) {
   for(Dthin in Sthin) {
  
-  data=dataAugment(xdata,params)
+  data=dataAugment(xdata,params)  
     for(i in name) {
       for(j in name2) {
-        params=paramUpdate(params,prior,data,i,j,sigma)
+    #     print(c(i,j))     #params,prior,data,name,x,sigma
+        params=paramUpdate(params,prior,data,name=i,x=j,sigma)
       }
     }
-  # update probabilities  
-  params[[probName]]=probsUpdate(data,params[[probName]],prior$probs)
+  # update probabilities        #(data,probs,prior
+  params[[probName]]=probsUpdate(data,probs=params[[probName]],prior=prior$probs)
 
 # update lost
-  params$MedRec["lost"] = lostUpdate(data, prior$MedRec$lost)
+  params$MedRec["lost"] = lostUpdate(data, prior$MedRec$lost)   ### PROBLEM WITH lostUpdate()
 
   } # end Dthin
   # save parameters

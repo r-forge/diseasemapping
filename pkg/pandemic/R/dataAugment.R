@@ -10,15 +10,17 @@ for(Dprob in c("D","S") ) {
       params$ageProbs[[Dprob]]$prob, data[,"age"])$y
   }
 }
-# unless three probabilities provided, convert 2 conditional probabilities
+#  convert 2 conditional probabilities
 # into 3 marginal probabilities
-if(!all(c("M","S","D") %in% names(params$probs))) {
-  data$probS = (1-data$probD)*data$probS
-  data$probM = 1 - (data$probD + data$probS)
-} else {
-  data$probM = params$probs["M"]
+if(!all(c("M","S","D") %in% names(params$probs))) {        # do this if given conditional probabilities of S and D, may need this because if probabilities vary with age (ageProbs), will only need S and D probs
+  data$probS = (1-data$probD)*data$probS   #marginal prob of being in serious state = (1-probD)*probS, where probD = marginal probabiliity of being in deadly state, probS = P(hospitalization|not dying)
+  data$probM = 1 - (data$probD + data$probS)   # marginal prob of being in mild state = 1 - (prob of being in deadly state + prob of being in serious state)
+} else {                                  # do this if we are given marginal probabilities of M, S, D
+  data$probM = params$probs["M"]  # define probM to be the marginal probability of being in the mild state
 }
-
+    # probD = marginal prob of dying
+    # probS = p(hospitalization|not dying)
+    # probM = mild infection type
 
 # hosps
 inHosp = which(data$observedType == "hosp")
@@ -26,10 +28,14 @@ inHospTimes = data[inHosp, "censor"] - data[inHosp, "hospital"] - data[inHosp, "
 probCensorGivenDeadly = 1-pweibullRound(inHospTimes, params$HospDeath)
 probCensorGivenSerious = 1-pweibullRound(inHospTimes, params$HospRec)
 
-probDeadlyGivenCensor = probCensorGivenDeadly * data[inHosp,"probD"]
+probCensorAndDeadly = probCensorGivenDeadly * data[inHosp,"probD"] 
 
-probDeadlyGivenCensor = probDeadlyGivenCensor / 
-  (probDeadlyGivenCensor + probCensorGivenSerious)
+probDeadlyGivenCensor = 
+probCensorAndDeadly / 
+  (probCensorAndDeadly + probCensorGivenSerious*data[inHosp,"probS"]) 
+# this is all conditional on being in hospital.
+# should divide each term by pr(in hospital) but they all cancel out.
+  
   
  if(any(is.na(probDeadlyGivenCensor))) {
   warning("problem with data augmentation, saving data and params in debugstuff.RData")
@@ -49,7 +55,7 @@ inMedTimes = data[inMed, "censor"] - data[inMed, "med"]
 # note that these probabilities are only proportional
 # havent divided by pr(time)
 probOf = data.frame(
-  "L" = data[inMed,"probM"] * params$MedRec["lost"], # *1
+  "L" = data[inMed,"probM"] * params$MedRec["lost"], # 
    M= (1-pweibullRound(inMedTimes, params$MedRec)) *
       (data[inMed,"probM"]* (1- params$MedRec["lost"]) ) ,
   "S"= data[inMed,"probS"]*
@@ -57,7 +63,7 @@ probOf = data.frame(
   "D"= data[inMed,"probD"]*
     (1-pweibullRound(inMedTimes, params$MedHospD) )
   )
-
+ 
 # generate states
 if(any(is.na(probOf))) {
   cat("NA probabilities resulting from these parameters")

@@ -19,6 +19,10 @@ pandemicPriors = function(
 if(!all(c("fatality","hosp") %in% names(result$probs)))
   warning("prior for probabilities needs to have 'fatality' and 'hosp' elements")
 
+# check for lost parameter
+if(!all( c( "mean",  "shape" ,"zeros", "lost" ) %in% names(result$MedRec))){
+  warning("some parameters are missing in MedRec, probably no prior for lost")
+}
 
   result   
 

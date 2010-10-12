@@ -17,6 +17,7 @@ ratio= ratio3*
 if(is.na(ratio)){
   cat("problem with ratios in paramUpdate\n")
  cat(ratio1, ratio2, ratio3, ratio, "\n")
+ save(params, prior, data, name, x, sigma, file="debugParamUpdate.RData")
  ratio = 0
 }
 
@@ -26,6 +27,10 @@ params
 
 probsUpdate=function(data,probs,prior)
 {
+
+if(any(names(prior)=="probs")) {
+  prior = prior$probs
+}
 
 if(any(names(probs)=="M") )  { # vector of D, S, M
 
@@ -107,6 +112,12 @@ ageUnique = data$age[ageUniqueIndex]
 
    attributes(probs$S)$state = hospfit$state
    
+}
+
+if(any(is.na(probs))) {
+warning("NA in probs, savedin debugProbs.RData")
+
+  save(data,probs,prior,file="debugProbs.RData")
 }
 
 probs

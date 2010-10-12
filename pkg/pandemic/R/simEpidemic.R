@@ -54,6 +54,8 @@ for(Dprob in c("S","D")) {
       probMat[,paste("prob",Dprob,sep="")] = params$probs[Dprob]
   }
 }
+
+
 # simluate deaths
 # note that now probS is prob of S conditional on not D
 result$type = rbinom(dim(result)[1], 1, probMat$probD)
@@ -93,6 +95,7 @@ result=result[result$med<=days,]
   
   result[haveOnset==F,"onset"]  = NA
   result[,"infect"]=NA
+ 
 
   # mild infections, 
   # recovery date
