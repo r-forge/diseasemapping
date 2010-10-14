@@ -47,23 +47,36 @@ for(Dprob in c("S","D")) {
   if(any(names(params$ageProbs)==Dprob))  {
   # if probability corresponding to Dprob changes with age
   # assign the approrpriate probability for the age group.
+
   probMat[,paste("prob",Dprob,sep="")] = 
-    approx(params$ageProbs[[Dprob]]$age, params$ageProbs[[Dprob]]$prob, result$age)$y
+    approx(params$ageProbs[[Dprob]]$age, params$ageProbs[[Dprob]]$prob, result$age)$y    
+       # any value where age > 60 is set to NA since age only goes from 1-59
+       # note approx(x,y)
   } else {
       # if it doesnt change with age, assign the probability provided to all observations
       probMat[,paste("prob",Dprob,sep="")] = params$probs[Dprob]
   }
 }
 
+### ADDED ###  - DOESN'T WORK 
+
+# probSNew <- probMat$probS[!is.na(probMat$probS)]
+# probDNew <- probMat$probD[!is.na(probMat$probD)]
+
+# Note that probSNew and probDnew are different lengths so we have to put them in a list!
+
+# probMat <- list("probS" = probSNew, "probD" = probDNew)
+
+##############
 
 # simluate deaths
 # note that now probS is prob of S conditional on not D
-result$type = rbinom(dim(result)[1], 1, probMat$probD)
+result$type = rbinom(dim(result)[1], 1, probMat$probD)   # WARNING with age varying probabilities (in simHospitals())! THERE ARE NA's in probMat$probD
 # convert 1's to D, 0's to NA
 result$type = c(NA, "D")[result$type + 1]
 #assign those which aren.t D as M or S
 theNA = is.na(result$type)
-theS = rbinom(sum(theNA), 1, probMat[theNA, "probS"])
+theS = rbinom(sum(theNA), 1, probMat[theNA, "probS"])     # WARNING with age varying probabilities (in simHospitals())!
 result[theNA,"type"] = c("M","S")[theS+1]
 
 } #end if probs vary with age
@@ -83,15 +96,16 @@ result[theNA,"type"] = c("M","S")[theS+1]
     shape= getVecParams(params, "OnsMed", "shape")[as.character(result$type)],
     scale= getVecParams(params, "OnsMed", "scale")[as.character(result$type)]
     ) )   
-
-N=sum(result$med<=days)
+    
+# here N is overwritten and it becomes NA (with age varying probabilities), since result$med has NA's
+N=sum(result$med<=days)  
 
 # get rid of observations which havent had their med event before the end of 
 # the study period
 result=result[result$med<=days,]
 
   # onset times
-  haveOnset = as.logical(rbinom(N, 1, 1-probOnsetMissing))
+  haveOnset = as.logical(rbinom(N, 1, 1-probOnsetMissing))   ### ERROR: invalid arguments, N is NA
   
   result[haveOnset==F,"onset"]  = NA
   result[,"infect"]=NA

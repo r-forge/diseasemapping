@@ -2,6 +2,7 @@ paramUpdate=function(params,prior,data,name,x,sigma)
 {
 paramsNew=params
 paramsNew[[name]][x]=abs(rnorm(1,paramsNew[[name]][x],sigma[[name]][x]))
+# metropolis step, propose new distributions from the normal, this is symmetric  
 paramsNew=addMeanParameters(paramsNew)
 ratio1=Like1(data,params,paramsNew,name)
 ratio2=ratio1*
@@ -14,6 +15,9 @@ ratio= ratio3*
   dprior(paramsNew[[name]]["zeros"],prior[[name]]["zeros"]$zeros)/
   dprior(params[[name]]["zeros"],prior[[name]]["zeros"]$zeros)
 
+  # ratio = Like1*(prior density with the new parameters/prior density with the old parameters)
+  # Like1 = likelihoods evaluated at the new parameters/likelihoods evaluated at the old parameters
+  
 if(is.na(ratio)){
   cat("problem with ratios in paramUpdate\n")
  cat(ratio1, ratio2, ratio3, ratio, "\n")
@@ -32,7 +36,11 @@ if(any(names(prior)=="probs")) {
   prior = prior$probs
 }
 
-if(any(names(probs)=="M") )  { # vector of D, S, M
+# don't do this for age varying probabilities
+if(any(names(probs)=="M") )  { # vector of D, S, M    
+
+# for probs["D"] and probs["S"], the formulas for the shape1 and shape2 parameters, 
+# come from the formula for the parameters from the binomial distribution
 
 probs["D"]=rbeta(1,sum(data$type=="D")+prior$fatality["shape1"],
     sum(data$type=="M")+sum(data$type=="S")+prior$fatality["shape2"])
@@ -42,7 +50,20 @@ probs["S"]=(1-probs["D"])*rbeta(1,sum(data$type=="S")+prior$hosp["shape1"],
 
 probs["M"]=(1-probs["D"])*(1-probs["S"])
 
-} else { #DP stuff
+# Note that here, probs["D"], probs["S"] and probs["M"] are marginal probabilities
+# there is a new individual infected infection, what is the probability that the individual infected is in the M, S or D infection type
+
+} else { #DP stuff    
+# run through this part of the loop when we have age varying probabilities
+
+### ADDED IN ###
+    
+priorAgeProbs <- psProbPriors(fatality = psPrior(), hosp = psPrior()) # prior for PSgam()
+
+# then changed prior = prior$fatality[...] to prior = priorAgeProbs$fatality[...] in PSgam input arguments
+
+################
+
      PSmcmc <- list(nburn=2,
                  nsave=1,
                  nskip=0,
@@ -59,11 +80,14 @@ ageUnique = data$age[ageUniqueIndex]
 
    data$death =data$type=="D"
    
+   # prior is that it's equally likely to peak anywhere
+   
+   
    deathfit <-PSgam(formula=data$death~ps(data$age,k=Nsplines,degree=degree,pord=pord),
                 family=binomial(logit),
-                prior=prior$fatality[c("taub1","taub2","beta0","Sbeta0","tau1","tau2")],
+                prior=priorAgeProbs$fatality[c("taub1","taub2","beta0","Sbeta0","tau1","tau2")],  # PROBLEM because taub1, taub2, beta0, Sbeta0, tau1, tau2 are NA's! (they should actually be priors)
                 mcmc=PSmcmc,ngrid=Ngrid,
-                state=attributes(probs$D)$state,
+                state=attributes(probs$D)$state, # PROBLEM because there is no "state" attribute...?  ... I don't think this is a problem
                 status=is.null(attributes(probs$D)$state) )
 # get basis functions evaluated at each of the ages in the dataset
   pred = deathfit$z[ageUniqueIndex,] %*%  deathfit$state$b + deathfit$state$beta
@@ -82,12 +106,12 @@ ageUnique = data$age[ageUniqueIndex]
 
   data$hosp = data$type=="S"
   hospfit <-PSgam(formula=data$hosp~ps(data$age,k=Nsplines,degree=degree,pord=pord),
-                family=binomial(logit),prior=prior$hosp,
+                family=binomial(logit),prior=priorAgeProbs$hosp,
                 mcmc=PSmcmc,ngrid=Ngrid,
                 state=attributes(probs$S)$state,
                 status=is.null(attributes(probs$S)$state))
 
-   pred = hospfit$z[ageUniqueIndex,] %*%  hospfit$state$b + hospfit$state$beta
+   pred = hospfit$z[ageUniqueIndex,] %*%  hospfit$state$b + hospfit$state$beta    # spline + coef + intercept
 #   pred = hospfit$save.state$pssave[,1]  + hospfit$state$beta
    pred = exp(pred) / (1+exp(pred))
    

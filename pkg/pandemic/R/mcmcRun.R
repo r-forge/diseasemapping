@@ -4,7 +4,7 @@ mcmcScale = function(params, sigma, minScale = 0.01, maxScale = 0.2){
 paramsToScale = names(params)
 paramsToScale = paramsToScale[!paramsToScale %in% "ageProbs"]
 
-params=params[paramsToScale]
+params=params[paramsToScale]  # don't scale parameters that vary with age
 
   for(Dtrans in paramsToScale){
     for(Dpar in names(params[[Dtrans]])){
@@ -12,8 +12,8 @@ params=params[paramsToScale]
         pmax(minScale,pmin(maxScale,params[[Dtrans]][Dpar] * sigma) )
     }
   }
-params
-}
+ params
+ }
 
 lostUpdate = function(data, prior) {
     x = table(data[data$type=="M","lost"])
@@ -35,15 +35,17 @@ if(any(names(params)=="probs")) {
   # do one iteration to get ages at which probabilities are evaluated
      data=dataAugment(xdata,params)
      cat("a great many blank lines are now being printed")
-     params[[probName]]=probsUpdate(data,params[[probName]],prior$probs)
+     params[[probName]]=probsUpdate(data,params[[probName]],prior$probs)  # getting an error here!
 } 
 
 if(!is.list(sigma)) {
   sigma = mcmcScale(params, sigma)    
 }
 
+ageParams = NULL
+
 vecParams = unlist(params)
-toGetRid = grep("^ageProbs[[:graph:]]+age[[:digit:]]+$", names(vecParams))
+toGetRid = grep("*(age|prob)[[:digit:]]+$", names(vecParams))
 if(length(toGetRid))  # if toGetRid is a 0, that is equivalent to a FALSE
   vecParams = vecParams[-toGetRid] 
 paramsPosteriorSample = matrix(NA, ncol=length(vecParams), nrow=0, 
@@ -71,9 +73,20 @@ for(k in 1:runs) {
   # save parameters
   paramsPosteriorSample = rbind(paramsPosteriorSample, 
     unlist(params)[colnames(paramsPosteriorSample)])
+
+  if(!is.null(params$ageProbs)) {
   # save age dependent probabilities
+
+  toAddS = params$ageProbs$S[,"prob"]
+  names(toAddS) = paste("prob.S.", params$ageProbs$S[,"age"], sep="")
+  toAddD = params$ageProbs$D[,"prob"]
+  names(toAddD) = paste("prob.D.", params$ageProbs$D[,"age"], sep="")
   
+  ageParams = rbind(ageParams, c(toAddS, toAddD) )
+  }
 }
+  paramsPosteriorSample = cbind(paramsPosteriorSample, ageParams)
+
 paramsPosteriorSample
 }
 

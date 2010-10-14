@@ -4,10 +4,10 @@ dataAugment = function(data, params) {
 for(Dprob in c("D","S") ) {
   probCol = paste("prob", Dprob, sep="")
   if(Dprob %in% names(params$probs)) {
-    data[,probCol] = params$probs["D"]
+    data[,probCol] = params$probs["D"] # why is this not Dprob???
   } else {
     data[,probCol] = approx(params$ageProbs[[Dprob]]$age, 
-      params$ageProbs[[Dprob]]$prob, data[,"age"])$y
+      params$ageProbs[[Dprob]]$prob, data[,"age"])$y  # for age varying probabilities
   }
 }
 #  convert 2 conditional probabilities
@@ -53,15 +53,16 @@ inMed = which(data$observedType == "med")
 inMedTimes = data[inMed, "censor"] - data[inMed, "med"]
 
 # note that these probabilities are only proportional
-# havent divided by pr(time)
+# havent divided by pr(being med at time X)
+# haven't divided by the probabililty given the time we're at (the data)
 probOf = data.frame(
-  "L" = data[inMed,"probM"] * params$MedRec["lost"], # 
+  "L" = data[inMed,"probM"] * params$MedRec["lost"], # prob of mild and lost | medical at time x
    M= (1-pweibullRound(inMedTimes, params$MedRec)) *
-      (data[inMed,"probM"]* (1- params$MedRec["lost"]) ) ,
+      (data[inMed,"probM"]* (1- params$MedRec["lost"]) ) , # prob of mild and not lost | medical at time x 
   "S"= data[inMed,"probS"]*
-    (1-pweibullRound(inMedTimes, params$MedHospS)),
+    (1-pweibullRound(inMedTimes, params$MedHospS)), # prob of serious | medical at time x
   "D"= data[inMed,"probD"]*
-    (1-pweibullRound(inMedTimes, params$MedHospD) )
+    (1-pweibullRound(inMedTimes, params$MedHospD) ) # prob of deadly | medical at time x
   )
  
 # generate states

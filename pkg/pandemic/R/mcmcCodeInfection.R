@@ -2,6 +2,7 @@ paramUpdateInfection=function(params,prior,data,UInfX,name,x,sigma)
 {
 paramsNew=params
 paramsNew[[name]][x]=abs(rnorm(1,paramsNew[[name]][x],sigma))
+# metropolis step, propose new distributions from the normal 
 paramsNew=addMeanParameters(paramsNew)
 ratio=Like1(data,params,paramsNew,name)
 
