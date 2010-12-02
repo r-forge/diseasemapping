@@ -49,6 +49,8 @@ probSumWeibulls = function(parameters, x, Nsim) {
 
    rWeibull1 <- rweibull(Nsim, shape = params[pasteShapeTransition1], scale = params[pasteScaleTransition1])
    
+   overSample = list()
+   
    for(Dtype in names(prob)) {
 
       trans = paste("OnsMed", Dtype, sep="")
@@ -57,11 +59,17 @@ probSumWeibulls = function(parameters, x, Nsim) {
       pasteScaleTransition2 <- paste(trans, "scale", sep = ".")
 
       rWeibull2 <- rweibull(Nsim, shape = params[pasteShapeTransition2], scale = params[pasteScaleTransition2])
-
-      prob[Dtype] <- sum((rWeibull1 + rWeibull2) < x)/Nsim
+	rWeibullSum = rWeibull1 + rWeibull2
+	  
+	  overX = rWeibullSum < x
+	  
+	  overSample[[Dtype]]] = cbind(InfOns=rWeibull1[x,], OnsMed=rWeibull2[x,],sum=rWeibullSum[x,])
+	  
+	  
+      prob[Dtype] <- mean(overX)
    }
 
-   list("prob" = prob, "rWeibull1" = rWeibull1, "rWeibull2" = rWeibull2)
+   list("prob" = prob, sample=overSample)
                                                              
 }
 
