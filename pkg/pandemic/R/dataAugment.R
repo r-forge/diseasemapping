@@ -4,14 +4,13 @@ dataAugment = function(data, params) {
 for(Dprob in c("D","S") ) {
   probCol = paste("prob", Dprob, sep="")
   if(Dprob %in% names(params$probs)) {
-    data[,probCol] = params$probs["D"] # why is this not Dprob???
+    data[,probCol] = params$probs[Dprob] 
   } else {
     data[,probCol] = approx(params$ageProbs[[Dprob]]$age, 
       params$ageProbs[[Dprob]]$prob, data[,"age"])$y  # for age varying probabilities
   }
 }
-#  convert 2 conditional probabilities
-# into 3 marginal probabilities
+#  convert 2 conditional probabilities                                             # into 3 marginal probabilities
 if(!all(c("M","S","D") %in% names(params$probs))) {        # do this if given conditional probabilities of S and D, may need this because if probabilities vary with age (ageProbs), will only need S and D probs
   data$probS = (1-data$probD)*data$probS   #marginal prob of being in serious state = (1-probD)*probS, where probD = marginal probabiliity of being in deadly state, probS = P(hospitalization|not dying)
   data$probM = 1 - (data$probD + data$probS)   # marginal prob of being in mild state = 1 - (prob of being in deadly state + prob of being in serious state)
@@ -24,6 +23,7 @@ if(!all(c("M","S","D") %in% names(params$probs))) {        # do this if given co
 
 # hosps
 inHosp = which(data$observedType == "hosp")
+if(length(inHosp)) {
 inHospTimes = data[inHosp, "censor"] - data[inHosp, "hospital"] - data[inHosp, "med"]
 probCensorGivenDeadly = 1-pweibullRound(inHospTimes, params$HospDeath)
 probCensorGivenSerious = 1-pweibullRound(inHospTimes, params$HospRec)
@@ -44,12 +44,13 @@ probCensorAndDeadly /
   
 
   
-if(length(inHosp)) { 
+#if(length(inHosp)) { 
 data[inHosp,"type"] = c("S","D")[1+rbinom(length(inHosp), 1, probDeadlyGivenCensor)]  
 }
 
 # meds
 inMed = which(data$observedType == "med")
+if(length(inMed)) {
 inMedTimes = data[inMed, "censor"] - data[inMed, "med"]
 
 # note that these probabilities are only proportional
@@ -73,7 +74,7 @@ if(any(is.na(probOf))) {
 
 probOf[is.na(probOf)] = 0
 
-states = apply(probOf, 1, function(qq) {
+states = apply(probOf, 1, function(qq) {   
     sample(colnames(probOf), 1, prob=qq)
 } )
 
@@ -83,38 +84,108 @@ data$lost = FALSE
 data[inMed[theLost],"lost"] = T
 data[inMed,"type"] = states
 
-  needOnset=is.na(data$onset)
+} # end if length(inMed)
 
+ #generate times of medical visits
+ 
+ needMed = is.na(data$med)
+if(any(needMed)) { 
+ if(any(is.na(data[needMed,"infect"])) ) {
+    warning("some subjects where infection times and medical visit time are both missing")
+ }
+
+ # simulate onset times   
+  needOnset=is.na(data$onset)& needMed  
+  if(any(needOnset)) {
+
+  data[needOnset,"onset"]  = data[needOnset, "infect"] + 
+    round(rweibull(sum(needOnset),
+        shape= getVecParams(params, "InfOns", "shape"),
+        scale= getVecParams(params, "InfOns", "scale")
+      ) )   
+
+    }   # end if any needOnset
+
+
+   needMedCensor = needMed & !is.na(data$censor)
+   for(Dtype in c("M","S","D")) {
+    needHere = needMedCensor & data$type==Dtype
+    if(any(needHere)) {
+  data[needHere,"med"] =    data[needHere, "onset"] + 
+   censorweibull(           # get caught in an infinite loop!
+    getVecParams(params, paste("OnsMed",Dtype, sep=""), "shape"),
+    getVecParams(params, paste("OnsMed",Dtype, sep=""), "scale"),
+(data[needHere,"censor"]-data[needHere,"onset"])
+    ) 
+    
+    }
+    
+    }
+   
+  needMedNotC = needMed & is.na(data$censor)
+  
+  data[needMedNotC,"med"]  = data[needMedNotC, "onset"] + 
+    round(rweibull(sum(needMedNotC),
+      shape= getVecParams(params, "OnsMed", "shape")[as.character(data[needMedNotC,"type"])],
+    scale= getVecParams(params, "OnsMed", "scale")[as.character(data[needMedNotC,"type"])]
+     ) )   
+   
+   data[needMed,"onset"] =      data[needMed,"onset"]-data[needMed,"med"] 
+   data[needMed,"infect"] =       data[needMed,"infect"] - data[needMed,"med"]  -   data[needMed,"onset"]
+   
+
+
+
+
+ } # end if length needMed
+ 
+  needOnset=is.na(data$onset)
+  if(any(needOnset)) {
   data[needOnset,"onset"]  = - round(rweibull(sum(needOnset),
     shape= getVecParams(params, "OnsMed", "shape")[as.character(data$type)],
     scale= getVecParams(params, "OnsMed", "scale")[as.character(data$type)]
     ) )   
+    }
 
   needInfect=is.na(data$infect)
-
+  if(any(needInfect)) {
   data[needInfect,"infect"]  = data[needInfect,"onset"]- round(rweibull(sum(needInfect),
     shape= getVecParams(params, "InfOns", "shape"),
     scale= getVecParams(params, "InfOns", "scale")
     ) ) 
+    }
 
  
-   needhospital=((as.character(data$observedType)=="med")&(as.character(data$type)=="S"))
+# serious, need hospital, censored 
 
-if (sum(needhospital)>0)
+   needhospital = (data$type =="S") & is.na(data$hospital) &(!is.na(data$censor))
+  # but for censoring timme to be relevant, medical visit is before censoring time
+   needhospital = needhospital & (data$med < data$censor)
+   needhospital[is.na(needhospital)] = F
+
+if (any(needhospital))
 {
    data[needhospital,"hospital"]=censorweibull(
     getVecParams(params, "MedHospS", "shape"),
     getVecParams(params, "MedHospS", "scale"),
 (data[needhospital,"censor"]-data[needhospital,"med"])
     ) 
+}   
+   # need hospital, serious, not censored.
+   needhospital = (data$type =="S") & is.na(data$hospital) & (!needhospital)
    
-  data[needhospital,"removed"]  =  round(rweibull(sum(needhospital),
-  shape= getVecParams(params, "HospRec", "shape"),
-    scale= getVecParams(params, "HospRec", "scale")
-    ) )   
-}
+    if (any(needhospital))
+{
+   data[needhospital,"hospital"]=rweibullRound( sum(needhospital),
+  params$MedHospS)
+     
+   
 
-   needhospital=((as.character(data$observedType)=="med")&(as.character(data$type)=="D"))
+}
+          # deadly, need hospotal, censored
+   needhospital = (data$type =="D") & is.na(data$hospital) &(!is.na(data$censor))
+     needhospital = needhospital & (data$med < data$censor)
+     needhospital[is.na(needhospital)] = F
 
 if (sum(needhospital)>0)
 {
@@ -125,34 +196,46 @@ if (sum(needhospital)>0)
     ) 
 
    
-  data[needhospital,"removed"]  =  round(rweibull(sum(needhospital),
-  shape= getVecParams(params, "HospDeath", "shape"),
-    scale= getVecParams(params, "HospDeath", "scale")
-    ) )   
 }
- 
-# Ok to here
+   # need hospital, deadly, not censored.
+   needhospital = (data$type =="D") & is.na(data$hospital) &(!needhospital)
+    if (any(needhospital)) {
+   data[needhospital,"hospital"]=rweibullRound( sum(needhospital),
+    params$MedHospD)
+}
 
-   needremoved=((as.character(data$observedType)=="med")&(as.character(data$type)=="M"))
+
+
+needremoved = data$type=="M" & is.na(data$removed)
    # depends if you're lost or not
 
-if (sum(needremoved)>0)
-   data[data$lost,"removed"]=round(rweibull(sum(data$lost),
+
+#if not lost but censored
+    needremovedC = !data[,"lost"]  & !is.na(data$censor)  & needremoved 
+
+
+if (sum(needremovedC)>0)
+     data[needremovedC,"removed"]=censorweibull(
+getVecParams(params, "MedRec", "shape"),
+ getVecParams(params, "MedRec", "scale"),
+(data[needremovedC,"censor"]-data[needremovedC,"med"])
+    )   
+
+
+#lost or uncensored and need removed
+lostNeedRemoved =  needremoved & ! needremovedC
+
+if (any(lostNeedRemoved) )
+   data[lostNeedRemoved,"removed"]=round(rweibull(sum(lostNeedRemoved),
   shape= getVecParams(params, "MedRec", "shape"),
     scale= getVecParams(params, "MedRec", "scale")
     ) )   
     
 
-#if not lost
-    needremoved=((as.character(data$observedType)=="med")&(as.character(data$type)=="M")&(data$lost==F))
-if (sum(needremoved)>0)
-     data[needremoved,"removed"]=censorweibull(
-getVecParams(params, "MedRec", "shape"),
- getVecParams(params, "MedRec", "scale"),
-(data[needremoved,"censor"]-data[needremoved,"med"])
-    )   
 
-   needremoved=((as.character(data$observedType)=="hosp")&(as.character(data$type)=="S"))
+    # recovery from hospital , censoring
+    
+   needremoved= data$type=="S" & is.na(data$removed) & (!is.na(data$censor))
 
 if (sum(needremoved)>0)
    data[needremoved,"removed"]=censorweibull(
@@ -161,7 +244,17 @@ getVecParams(params, "HospRec", "shape"),
 (data[needremoved,"censor"]-data[needremoved,"hospital"]-data[needremoved,"med"])
     ) 
 
-   needremoved=((as.character(data$observedType)=="hosp")&(as.character(data$type)=="D"))
+    # same but not censored
+   needremoved= data$type=="S" & is.na(data$removed) & is.na(data$censor)
+
+if (sum(needremoved)>0)
+   data[needremoved,"removed"]=rweibullRound(sum(needremoved),
+    params$HospRec)
+
+
+
+   # death dates, censoring
+   needremoved= data$type=="D" & is.na(data$removed) & (!is.na(data$censor))
 
 if (sum(needremoved)>0)
    data[needremoved,"removed"]=censorweibull(
@@ -170,6 +263,12 @@ getVecParams(params, "HospDeath", "shape"),
 (data[needremoved,"censor"]-data[needremoved,"hospital"]-data[needremoved,"med"])
     ) 
 
+    # same, not censored
+     needremoved= data$type=="D" & is.na(data$removed) & is.na(data$censor)
+
+if (sum(needremoved)>0)
+   data[needremoved,"removed"]=rweibullRound(sum(needremoved),
+    params$HospDeath)
 
 
 data
