@@ -1,29 +1,50 @@
+
                        # epidemic is growing by proposalOffset cases per day
-updateBinomialPoisson <- function(priorMean, YobsToday, probObs, N, runs, nthin, proposalOffset) { # we're never updating!
+updateBinomialPoisson <- function(priorMean, Y, prob, 
+  runs, nthin=runs, proposalOffset=.2,Nstart=floor(Y / prob)) { # we're never updating!
+
+  if (prob==1) {
+   Yunique = unique(Y)
+   if(length(Yunique)==1) {
+    return(rep(Y, ceiling(runs/nthin)))
+   } else {
+      warning("prob=1 but different values of Y given")
+   }
+  }
+  
+  if (prob==0) {
+  
+      return(rpois(ceiling(runs/nthin), lambda = priorMean))     #return(rep(Inf,ceiling(runs/nthin)))
+  
+  }
+
 
    vecN <- NULL
+
+   N = Nstart
 
    for (i in 1:runs) {
 
       newN <- N
       
-     
-      newN <- rpois(1, N + proposalOffset)  # proposal distribution
+      newN <- rpois(1, N + proposalOffset)  
 
-      # needs to be fixed, the code gets stopped here!
-         while (newN < YobsToday) { 
-            newN <- rpois(1, N)
+         while (newN < Y-0.5) { 
+            newN <- rpois(1, N + proposalOffset)
             # print(newN)
          }
              
-      like <- prod(dbinom(YobsToday, newN, probObs))/prod(dbinom(YobsToday, N, probObs))
+      like <- exp(sum(dbinom(Y, newN, prob, log=T)) - sum(dbinom(Y, N, prob, log=T)) )       # problem because N > Y
       priorN <- dpois(newN, priorMean)/dpois(N, priorMean)  
-      propose <- (dpois(newN, priorMean)/ppois(YobsToday - .1, priorMean, lower = F))/  # prob going from N to Nnew
-         (dpois(N, newN +  proposalOffset)/ppois(YobsToday - .1, newN + proposalOffset, lower = F))    # prob going from Nnew to N
+      propose <- (dpois(newN, priorMean)/ppois(Y - .1, priorMean, lower = F))/  # prob going from N to Nnew
+         (dpois(N, newN +  proposalOffset)/ppois(Y - .1, newN + proposalOffset, lower = F))    # prob going from Nnew to N
 
-      pi <- priorN*propose # posterior distribution
-      piPropose <- pi*propose
-      alpha <- min(1, piPropose)
+      PI <- priorN*like # posterior distribution
+      PIpropose <- PI*propose
+      alpha <- min(1, PIpropose)
+
+    #  cat(newN, " ", like, " ", priorN, " ",  alpha, "\n")
+
 
       if (alpha >= runif(1)) 
          {N <- newN}
@@ -37,9 +58,9 @@ updateBinomialPoisson <- function(priorMean, YobsToday, probObs, N, runs, nthin,
 }
   
                                                                                                                                       
-probSumWeibulls = function(parameters, x, Nsim) {
+probSumWeibulls = function(params, x, Nsim) {
 
-   params <- parameters[dim(parameters)[1],]  
+ #  params <- parameters[dim(parameters)[1],]  
    
    prob = rep(NA, 3)
    names(prob) = c("M","S","D")
@@ -59,6 +80,14 @@ probSumWeibulls = function(parameters, x, Nsim) {
       pasteScaleTransition2 <- paste(trans, "scale", sep = ".")
 
       rWeibull2 <- rweibull(Nsim, shape = params[pasteShapeTransition2], scale = params[pasteScaleTransition2])
+
+	rWeibullSum = rWeibull1 + rWeibull2
+	  
+	  overX = rWeibullSum > x
+	  
+	  overSample[[Dtype]] = cbind(InfOns=rWeibull1[overX], OnsMed=rWeibull2[overX], sum=rWeibullSum[overX])
+	 
+      prob[Dtype] <- mean(overX)
 	rWeibullSum = rWeibull1 + rWeibull2
 	  
 	  overX = rWeibullSum < x
@@ -67,11 +96,36 @@ probSumWeibulls = function(parameters, x, Nsim) {
 	  
 	  
       prob[Dtype] <- mean(overX)
+
    }
 
-   list("prob" = prob, sample=overSample)
-                                                             
+
+   list("prob" = prob, "sample" = overSample)
+
+                                                            
 }
 
-probSumWeibulls(mcmcPandemicRun, 5, 1000)
-    
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
