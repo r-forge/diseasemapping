@@ -165,7 +165,7 @@ if(any(needMed)) {
 
 if (any(needhospital))
 {
-   data[needhospital,"hospital"]=censorweibull(
+   data[needhospital,"hospital"]=censorweibull(  ##### PROBLEM HERE #####
     getVecParams(params, "MedHospS", "shape"),
     getVecParams(params, "MedHospS", "scale"),
 (data[needhospital,"censor"]-data[needhospital,"med"])
