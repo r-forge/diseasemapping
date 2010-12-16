@@ -342,6 +342,7 @@ plotTotalCases <- function(cases, byType) {
 
 }
 
+par(mfrow = c(2,1))
 plotTotalCases(cases = test, byType = TRUE)
 plotTotalCases(cases = test, byType = FALSE)
 
