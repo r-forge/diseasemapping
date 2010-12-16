@@ -1,7 +1,7 @@
 
                        # epidemic is growing by proposalOffset cases per day
 updateBinomialPoisson <- function(priorMean, Y, prob, 
-  runs, nthin=runs, proposalOffset=.2,Nstart=floor(Y / prob)) { # we're never updating!
+  runs, nthin=runs, proposalOffset=.2,Nstart=floor(Y / prob)) { 
 
   if (prob==1) {
    Yunique = unique(Y)
@@ -17,8 +17,7 @@ updateBinomialPoisson <- function(priorMean, Y, prob,
       return(rpois(ceiling(runs/nthin), lambda = priorMean))     #return(rep(Inf,ceiling(runs/nthin)))
   
   }
-
-
+            
    vecN <- NULL
 
    N = Nstart
@@ -34,13 +33,15 @@ updateBinomialPoisson <- function(priorMean, Y, prob,
             # print(newN)
          }
              
-      like <- exp(sum(dbinom(Y, newN, prob, log=T)) - sum(dbinom(Y, N, prob, log=T)) )       # problem because N > Y
-      priorN <- dpois(newN, priorMean)/dpois(N, priorMean)  
-      propose <- (dpois(newN, priorMean)/ppois(Y - .1, priorMean, lower = F))/  # prob going from N to Nnew
-         (dpois(N, newN +  proposalOffset)/ppois(Y - .1, newN + proposalOffset, lower = F))    # prob going from Nnew to N
+      like <- sum(dbinom(Y, newN, prob, log=T)) - sum(dbinom(Y, N, prob, log=T))        # problem because N > Y
+      priorN <- dpois(newN, priorMean, log=T) - dpois(N, priorMean, log=T)  
+      propose <- dpois(newN, N + proposalOffset, log=T) - ppois(Y - .1, N + proposalOffset, lower = F, log=T) -  # prob going from N to Nnew
+         dpois(N, newN +  proposalOffset, log=T) + ppois(Y - .1, newN + proposalOffset, lower = F, log=T)    # prob going from Nnew to N
 
-      PI <- priorN*like # posterior distribution
-      PIpropose <- PI*propose
+         # should this be the newN + proposalOffset instead of priorMean
+         # should this be N + proposalOffset instead of newN + proposalOffset
+
+      PIpropose <- exp(like + priorN + propose)
       alpha <- min(1, PIpropose)
 
     #  cat(newN, " ", like, " ", priorN, " ",  alpha, "\n")
@@ -87,14 +88,6 @@ probSumWeibulls = function(params, x, Nsim) {
 	  
 	  overSample[[Dtype]] = cbind(InfOns=rWeibull1[overX], OnsMed=rWeibull2[overX], sum=rWeibullSum[overX])
 	 
-      prob[Dtype] <- mean(overX)
-	rWeibullSum = rWeibull1 + rWeibull2
-	  
-	  overX = rWeibullSum < x
-	  
-	  overSample[[Dtype]]] = cbind(InfOns=rWeibull1[x,], OnsMed=rWeibull2[x,],sum=rWeibullSum[x,])
-	  
-	  
       prob[Dtype] <- mean(overX)
 
    }
