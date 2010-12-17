@@ -1,24 +1,5 @@
 
 
-pandemicParamsVary <- pandemicParams(InfOns = c(mean = 1, shape = 1, zeros = 0.1), OnsMedM = c(mean = 3, shape = 2, zeros = 0.1), OnsMedS = c(mean = 2.5, shape = 2, zeros = 0.1), 
-	OnsMedD = c(mean = 2, shape = 1, zeros = 0.1), MedRec = c(mean = 7, shape = 2, zeros = 0.1, lost = 0.9), MedHospS = c(mean = 2.5, shape = 2, zeros = 0.1), 
-	MedHospD = c(mean = 1.5, shape = 1.5, zeros = 0.1), HospRec = c(mean = 4, shape = 1.5, zeros = 0.1), HospDeath = c(mean = 3, shape = 1, zeros = 0.1), 
-	probs = NULL, ageProbs = list(S = addAgeProbs(), D = addAgeProbs()))
-simEpidemicVary <- simEpidemic(params = pandemicParamsVary, delta = 5, days = 20, probOnsetMissing = 0.7, randomInfections = TRUE)
-pandemicPriorsVary = pandemicPriors(probs=psProbPriors() ) 
-mcmcScaleVary <- mcmcScale(params = pandemicParamsVary, sigma = 0.075, minScale = 0.05, maxScale = 0.2)
-library(DPpackage)
-mcmcPandemicVary <- mcmcPandemic(xdata = simEpidemicVary, params = pandemicParamsVary, prior = pandemicPriorsVary, sigma = mcmcScaleVary, runs = 10, thin = 2, saveData = T)
-
-postSample = mcmcPandemicVary
-lengthOfEpidemic = simEpidemicVary
-infectParams = c(rate = 1, immigration = 0.5)
-data = NULL
-daysAhead = 2
-Nsim = 1000
-runs = 100
-nthin = 100
-proposalOffset = 0.2
 
 # description: this function runs a Binomial-Poisson MCMC to calculate the number of unobserved infections and 
      # forecases the number of unobserved infections beyond the simulated epidemic
@@ -280,32 +261,6 @@ simUnobservedInfections = function(postSample, lengthOfEpidemic, infectParams = 
  }
  
  
- 
-pandemicParamsVary <- pandemicParams(InfOns = c(mean = 1, shape = 1, zeros = 0.1), OnsMedM = c(mean = 3, shape = 2, zeros = 0.1), OnsMedS = c(mean = 2.5, shape = 2, zeros = 0.1), 
-	OnsMedD = c(mean = 2, shape = 1, zeros = 0.1), MedRec = c(mean = 7, shape = 2, zeros = 0.1, lost = 0.9), MedHospS = c(mean = 2.5, shape = 2, zeros = 0.1), 
-	MedHospD = c(mean = 1.5, shape = 1.5, zeros = 0.1), HospRec = c(mean = 4, shape = 1.5, zeros = 0.1), HospDeath = c(mean = 3, shape = 1, zeros = 0.1), 
-	probs = NULL, ageProbs = list(S = addAgeProbs(), D = addAgeProbs()))
-simEpidemicVary <- simEpidemic(params = pandemicParamsVary, delta = 5, days = 20, probOnsetMissing = 0.7, randomInfections = TRUE)
-pandemicPriorsVary = pandemicPriors(probs=psProbPriors() ) 
-mcmcScaleVary <- mcmcScale(params = pandemicParamsVary, sigma = 0.075, minScale = 0.05, maxScale = 0.2)
-library(DPpackage)
-mcmcPandemicVary <- mcmcPandemic(xdata = simEpidemicVary, params = pandemicParamsVary, prior = pandemicPriorsVary, sigma = mcmcScaleVary, runs = 10, thin = 2, saveData = T)
-        
-simUnobservedInfectionsVary <- simUnobservedInfections(postSample = mcmcPandemicVary, lengthOfEpidemic = simEpidemicVary, infectParams = c(rate = 0.25, immigration = 0.1),
-data = NULL, daysAhead = 2, Nsim = 1000, runs = 100, nthin = 100, proposalOffset = 0.2)
-
-pandemicParamsRun <- pandemicParams(InfOns = c(mean = 1, shape = 1, zeros = 0.1), OnsMedM = c(mean = 3, shape = 2, zeros = 0.1), OnsMedS = c(mean = 2.5, shape = 2, zeros = 0.1), 
-	OnsMedD = c(mean = 2, shape = 1, zeros = 0.1), MedRec = c(mean = 7, shape = 2, zeros = 0.1, lost = 0.9), MedHospS = c(mean = 2.5, shape = 2, zeros = 0.1), 
-	MedHospD = c(mean = 1.5, shape = 1.5, zeros = 0.1), HospRec = c(mean = 4, shape = 1.5, zeros = 0.1), HospDeath = c(mean = 3, shape = 1, zeros = 0.1), 
-	probs = c(M = 0.6, S = 0.3, D = 0.1), ageProbs = NULL)
-simEpidemicRun <- simEpidemic(params = pandemicParamsRun, delta = 5, days = 10, probOnsetMissing = 0.7, randomInfections = TRUE)
-pandemicPriorsRun <- pandemicPriors()
-mcmcScaleRun <- mcmcScale(params = pandemicParamsRun, sigma = 0.075, minScale = 0.05, maxScale = 0.2)
-mcmcPandemicRun <- mcmcPandemic(xdata = simEpidemicRun, params = pandemicParamsRun, prior = pandemicPriorsRun, sigma = mcmcScaleRun, runs = 5, thin = 2, saveData = T)	
-
-simUnobservedInfectionsRun <- simUnobservedInfections(postSample = mcmcPandemicRun, lengthOfEpidemic = simEpidemicRun, infectParams = c(rate = 0.25, immigration = 0.1),
-data = NULL, daysAhead = 2, Nsim = 1000, runs = 100, nthin = 100, proposalOffset = 0.2)
-   
 plotUnobservedCases <- function(cases, byType) {
   
      unobservedCases = cases$unobserved
@@ -359,15 +314,6 @@ plotUnobservedCases <- function(cases, byType) {
 
 }
 
-
-par(mfrow = c(2,1))
-plotUnobservedCases(cases = simUnobservedInfectionsVary, byType = TRUE)
-plotUnobservedCases(cases = simUnobservedInfectionsVary, byType = FALSE)
-
-par(mfrow = c(2,1))
-plotUnobservedCases(cases = simUnobservedInfectionsRun, byType = TRUE)
-plotUnobservedCases(cases = simUnobservedInfectionsRun, byType = FALSE)
-
 plotTotalCases <- function(cases, byType) {
   
      totalCases = cases$total
@@ -420,13 +366,3 @@ plotTotalCases <- function(cases, byType) {
      }
 
 }
-
-par(mfrow = c(2,1))
-plotTotalCases(cases = simUnobservedInfectionsVary, byType = TRUE)
-plotTotalCases(cases = simUnobservedInfectionsVary, byType = FALSE)
-
-par(mfrow = c(2,1))
-plotTotalCases(cases = simUnobservedInfectionsRun, byType = TRUE)
-plotTotalCases(cases = simUnobservedInfectionsRun, byType = FALSE)
-
-
