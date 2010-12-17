@@ -1,12 +1,38 @@
 
-pandemicParamsRun <- pandemicParams(InfOns = c(mean = 1, shape = 1, zeros = 0.1), OnsMedM = c(mean = 3, shape = 2, zeros = 0.1), OnsMedS = c(mean = 2.5, shape = 2, zeros = 0.1), 
+
+pandemicParamsVary <- pandemicParams(InfOns = c(mean = 1, shape = 1, zeros = 0.1), OnsMedM = c(mean = 3, shape = 2, zeros = 0.1), OnsMedS = c(mean = 2.5, shape = 2, zeros = 0.1), 
 	OnsMedD = c(mean = 2, shape = 1, zeros = 0.1), MedRec = c(mean = 7, shape = 2, zeros = 0.1, lost = 0.9), MedHospS = c(mean = 2.5, shape = 2, zeros = 0.1), 
 	MedHospD = c(mean = 1.5, shape = 1.5, zeros = 0.1), HospRec = c(mean = 4, shape = 1.5, zeros = 0.1), HospDeath = c(mean = 3, shape = 1, zeros = 0.1), 
-	probs = c(M = 0.6, S = 0.3, D = 0.1), ageProbs = NULL)   
-simEpidemicRun <- simEpidemic(params = pandemicParamsRun, delta = 5, days = 10, probOnsetMissing = 0.7, randomInfections = TRUE)
-pandemicPriorsRun <- pandemicPriors()   
-mcmcScaleRun <- mcmcScale(params = pandemicParamsRun, sigma = 0.075, minScale = 0.05, maxScale = 0.2)
-mcmcPandemicRun <- mcmcPandemic(xdata = simEpidemicRun, params = pandemicParamsRun, prior = pandemicPriorsRun, sigma = mcmcScaleRun, runs = 10, thin = 2, saveData = T)
+	probs = NULL, ageProbs = list(S = addAgeProbs(), D = addAgeProbs()))
+simEpidemicVary <- simEpidemic(params = pandemicParamsVary, delta = 5, days = 20, probOnsetMissing = 0.7, randomInfections = TRUE)
+pandemicPriorsVary = pandemicPriors(probs=psProbPriors() ) 
+mcmcScaleVary <- mcmcScale(params = pandemicParamsVary, sigma = 0.075, minScale = 0.05, maxScale = 0.2)
+library(DPpackage)
+mcmcPandemicVary <- mcmcPandemic(xdata = simEpidemicVary, params = pandemicParamsVary, prior = pandemicPriorsVary, sigma = mcmcScaleVary, runs = 10, thin = 2, saveData = T)
+
+postSample = mcmcPandemicVary
+lengthOfEpidemic = simEpidemicVary
+infectParams = c(rate = 1, immigration = 0.5)
+data = NULL
+daysAhead = 2
+Nsim = 1000
+runs = 100
+nthin = 100
+proposalOffset = 0.2
+
+# description: this function runs a Binomial-Poisson MCMC to calculate the number of unobserved infections and 
+     # forecases the number of unobserved infections beyond the simulated epidemic
+
+# input: 
+     # postSample: output from mcmcPandemic
+     # lengthOfEpidemic: output from simEpidemic
+     # infectParams: a vector with the rate and immigration parameters 
+     # data: NULL (if getting data from mcmcPandemic) or enter a data set to run through dataAugment function
+     # daysAhead: number of days beyond the end of the simulated epidemic that you want to forecast
+     # Nsim: number of random variables simulated to calculate the probability in the probSumWeibulls function
+     # runs: number of runs of the Binomial Poisson MCMC
+     # nthin: thinning parameter (when runs = nthin, we only retain the last run)
+     # proposalOffset: proposal offset for the MCMC simulation
 
 simUnobservedInfections = function(postSample, lengthOfEpidemic, infectParams = c(rate = 1, immigration = 0.5), data = NULL,
   daysAhead = 2, Nsim = 1000, runs = 100, nthin = 100, proposalOffset = 0.2) {
@@ -67,7 +93,7 @@ simUnobservedInfections = function(postSample, lengthOfEpidemic, infectParams = 
                     unobservedCases[Dsample,1,Dtype] = totalCases[Dsample,1,Dtype]  - YobsToday
                     NAvec = rep(NA, unobservedCases[Dsample, 1, Dtype])
 
-               if (unobservedCases[Dsample, 1, Dtype] > 0 & unobservedCases[Dsample, 1, Dtype] != "Inf") {
+               if (unobservedCases[Dsample, 1, Dtype] > 0) {
                     newCaseTimes = probObs$sample[[Dtype]][sample(dim(probObs$sample[[Dtype]])[1],
                     unobservedCases[Dsample, 1, Dtype], replace=T), ]
 
@@ -75,16 +101,16 @@ simUnobservedInfections = function(postSample, lengthOfEpidemic, infectParams = 
                          newCasesToday=data.frame(med= rep(Dday, unobservedCases[Dsample, 1, Dtype]) +
                               newCaseTimes["sum"], onset = -newCaseTimes["OnsMed"], infect = -newCaseTimes["InfOns"],
                               hospital = NAvec, removed = NAvec, censor =rep(days, unobservedCases[Dsample, 1, Dtype]),
-                              type = rep(Dtype,unobservedCases[Dsample, 1, Dtype]), observedType = NAvec,
-                              lost=rep(FALSE,unobservedCases[Dsample, 1, Dtype]))
+                              type = rep(Dtype,unobservedCases[Dsample, 1, Dtype]), observedType = rep(Dtype,unobservedCases[Dsample, Dday, Dtype]),
+                              lost=rep(FALSE,unobservedCases[Dsample, 1, Dtype]), age=NAvec)
                     }
 
                     if (unobservedCases[Dsample, Dday, Dtype] > 1) {
                          newCasesToday=data.frame(med = rep(Dday, unobservedCases[Dsample, 1, Dtype]) +
                               newCaseTimes[,"sum"], onset = -newCaseTimes[,"OnsMed"], infect = -newCaseTimes[,"InfOns"],
                               hospital = NAvec, removed = NAvec, censor =rep(days,unobservedCases[Dsample, 1, Dtype]),
-                              type = rep(Dtype,unobservedCases[Dsample, 1, Dtype]), observedType = NAvec,
-                              lost = rep(FALSE,unobservedCases[Dsample, 1, Dtype]))
+                              type = rep(Dtype,unobservedCases[Dsample, 1, Dtype]), observedType = rep(Dtype,unobservedCases[Dsample, Dday, Dtype]),
+                              lost = rep(FALSE,unobservedCases[Dsample, 1, Dtype]), age=NAvec)
                     }
 
                     newCases = rbind(newCases, newCasesToday[,names(newCasesToday)])
@@ -135,7 +161,7 @@ simUnobservedInfections = function(postSample, lengthOfEpidemic, infectParams = 
                     unobservedCases[Dsample, Dday, Dtype] = totalCases[Dsample, Dday, Dtype] - YobsToday
 
 
-                    if (unobservedCases[Dsample, Dday, Dtype] > 0 & unobservedCases[Dsample, Dday, Dtype] != "Inf") {
+                    if (unobservedCases[Dsample, Dday, Dtype] > 0) {
 
                          newCaseTimes = (probObs$sample[[Dtype]][sample(dim(probObs$sample[[Dtype]])[1],
                               unobservedCases[Dsample, Dday, Dtype], replace=T), ])
@@ -146,9 +172,11 @@ simUnobservedInfections = function(postSample, lengthOfEpidemic, infectParams = 
                               newCasesToday=data.frame(med = rep(Dday, unobservedCases[Dsample, Dday, Dtype]) + newCaseTimes["sum"],
                                    onset = -newCaseTimes["OnsMed"], infect = -newCaseTimes["InfOns"], hospital = NAvec, removed = NAvec,
                                    censor = rep(days,unobservedCases[Dsample, Dday, Dtype]), type = rep(Dtype,unobservedCases[Dsample, Dday, Dtype]),
-                                   observedType = NAvec, lost=rep(F,unobservedCases[Dsample, Dday, Dtype]))
+                                   observedType = rep(Dtype,unobservedCases[Dsample, Dday, Dtype]), 
+                                   lost=rep(F,unobservedCases[Dsample, Dday, Dtype]), age=NAvec)
 
-                              newCases = rbind(newCases, newCasesToday)
+
+                              #newCases = rbind(newCases, newCasesToday)
 
                          }
 
@@ -157,9 +185,10 @@ simUnobservedInfections = function(postSample, lengthOfEpidemic, infectParams = 
                               newCasesToday = data.frame(med = rep(Dday, unobservedCases[Dsample, Dday, Dtype]) + newCaseTimes[,"sum"],
                                    onset = -newCaseTimes[,"OnsMed"], infect = -newCaseTimes[,"InfOns"], hospital = NAvec, removed = NAvec,
                                    censor = rep(days,unobservedCases[Dsample, Dday, Dtype]), type = rep(Dtype,unobservedCases[Dsample, Dday, Dtype]),
-                                   observedType = NAvec, lost=rep(F,unobservedCases[Dsample, Dday, Dtype]))
+                                   observedType = rep(Dtype,unobservedCases[Dsample, Dday, Dtype]), 
+                                   lost=rep(F,unobservedCases[Dsample, Dday, Dtype]), age=NAvec)  
 
-                              newCases = rbind(newCases, newCasesToday)
+                              #newCases = rbind(newCases, newCasesToday)
 
                          }
 
@@ -205,19 +234,41 @@ simUnobservedInfections = function(postSample, lengthOfEpidemic, infectParams = 
 
                     totalCases[Dsample, Dday, Dtype] = rpois(1, (NinfectiveToday*infectParams["rate"] + infectParams["immigration"])*infectParams[Dtype])
                     unobservedCases[Dsample, Dday, Dtype] = totalCases[Dsample, Dday, Dtype]
+                    
+                      if (unobservedCases[Dsample, Dday, Dtype] > 0) {
+                    
+               
                     NAvec = rep(NA, unobservedCases[Dsample, Dday, Dtype])
-                    newCases = rbind(newCases, data.frame(infect= rep(Dday, unobservedCases[Dsample, Dday, Dtype]),
+                    newCasesToday = data.frame(infect= rep(Dday, unobservedCases[Dsample, Dday, Dtype]),
                          onset = NAvec, med = NAvec, hospital = NAvec, removed = NAvec, censor =NAvec,
-                         type = rep(Dtype,unobservedCases[Dsample, Dday, Dtype]) , observedType = NAvec,
-                         lost = rep(FALSE,unobservedCases[Dsample, Dday, Dtype])))
-                    newCases = rbind(newCases,	newCasesToday)
+                         type = rep(Dtype,unobservedCases[Dsample, Dday, Dtype]) , observedType = rep(Dtype,unobservedCases[Dsample, Dday, Dtype]),
+                         lost = rep(FALSE,unobservedCases[Dsample, Dday, Dtype]), age = NAvec)
+                    #newCases = rbind(newCases,	newCasesToday)
+         
+                    
+             
+
+                    } else {
+                    
+                      newCasesToday = NULL
+                    
+                    
+                    }
+
+                    newCases = rbind(newCases, newCasesToday)
 
                } #end loop through type
 
-               if (!is.null(newCases)) {
-                    newCases = dataAugment(newCases, paramsNew)
-                    dataAug = rbind(dataAug, newCases)
+                if (!is.null(newCases)) {
+                    newCases = try(dataAugment(newCases, paramsNew))
+                    dataAug = rbind(dataAug, newCases[,names(dataAug)])
                } # end loop through days ahead.
+
+
+               #if (!is.null(newCases)) {
+                #    newCases = dataAugment(newCases, paramsNew)
+                #    dataAug = rbind(dataAug, newCases)
+               #} # end loop through days ahead.
 
           }
 
@@ -228,8 +279,31 @@ simUnobservedInfections = function(postSample, lengthOfEpidemic, infectParams = 
      list("unobserved" = unobservedCases, "total" = totalCases, "sample" = result)
  }
  
-         
-test <- simUnobservedInfections(postSample = mcmcPandemicRun, lengthOfEpidemic = simEpidemicRun, infectParams = c(rate = 0.25, immigration = 0.1),
+ 
+ 
+pandemicParamsVary <- pandemicParams(InfOns = c(mean = 1, shape = 1, zeros = 0.1), OnsMedM = c(mean = 3, shape = 2, zeros = 0.1), OnsMedS = c(mean = 2.5, shape = 2, zeros = 0.1), 
+	OnsMedD = c(mean = 2, shape = 1, zeros = 0.1), MedRec = c(mean = 7, shape = 2, zeros = 0.1, lost = 0.9), MedHospS = c(mean = 2.5, shape = 2, zeros = 0.1), 
+	MedHospD = c(mean = 1.5, shape = 1.5, zeros = 0.1), HospRec = c(mean = 4, shape = 1.5, zeros = 0.1), HospDeath = c(mean = 3, shape = 1, zeros = 0.1), 
+	probs = NULL, ageProbs = list(S = addAgeProbs(), D = addAgeProbs()))
+simEpidemicVary <- simEpidemic(params = pandemicParamsVary, delta = 5, days = 20, probOnsetMissing = 0.7, randomInfections = TRUE)
+pandemicPriorsVary = pandemicPriors(probs=psProbPriors() ) 
+mcmcScaleVary <- mcmcScale(params = pandemicParamsVary, sigma = 0.075, minScale = 0.05, maxScale = 0.2)
+library(DPpackage)
+mcmcPandemicVary <- mcmcPandemic(xdata = simEpidemicVary, params = pandemicParamsVary, prior = pandemicPriorsVary, sigma = mcmcScaleVary, runs = 10, thin = 2, saveData = T)
+        
+simUnobservedInfectionsVary <- simUnobservedInfections(postSample = mcmcPandemicVary, lengthOfEpidemic = simEpidemicVary, infectParams = c(rate = 0.25, immigration = 0.1),
+data = NULL, daysAhead = 2, Nsim = 1000, runs = 100, nthin = 100, proposalOffset = 0.2)
+
+pandemicParamsRun <- pandemicParams(InfOns = c(mean = 1, shape = 1, zeros = 0.1), OnsMedM = c(mean = 3, shape = 2, zeros = 0.1), OnsMedS = c(mean = 2.5, shape = 2, zeros = 0.1), 
+	OnsMedD = c(mean = 2, shape = 1, zeros = 0.1), MedRec = c(mean = 7, shape = 2, zeros = 0.1, lost = 0.9), MedHospS = c(mean = 2.5, shape = 2, zeros = 0.1), 
+	MedHospD = c(mean = 1.5, shape = 1.5, zeros = 0.1), HospRec = c(mean = 4, shape = 1.5, zeros = 0.1), HospDeath = c(mean = 3, shape = 1, zeros = 0.1), 
+	probs = c(M = 0.6, S = 0.3, D = 0.1), ageProbs = NULL)
+simEpidemicRun <- simEpidemic(params = pandemicParamsRun, delta = 5, days = 10, probOnsetMissing = 0.7, randomInfections = TRUE)
+pandemicPriorsRun <- pandemicPriors()
+mcmcScaleRun <- mcmcScale(params = pandemicParamsRun, sigma = 0.075, minScale = 0.05, maxScale = 0.2)
+mcmcPandemicRun <- mcmcPandemic(xdata = simEpidemicRun, params = pandemicParamsRun, prior = pandemicPriorsRun, sigma = mcmcScaleRun, runs = 5, thin = 2, saveData = T)	
+
+simUnobservedInfectionsRun <- simUnobservedInfections(postSample = mcmcPandemicRun, lengthOfEpidemic = simEpidemicRun, infectParams = c(rate = 0.25, immigration = 0.1),
 data = NULL, daysAhead = 2, Nsim = 1000, runs = 100, nthin = 100, proposalOffset = 0.2)
    
 plotUnobservedCases <- function(cases, byType) {
@@ -272,7 +346,7 @@ plotUnobservedCases <- function(cases, byType) {
           lines(1:totalDays, apply(unobservedCasesDeadly, 1, function(x) quantile(x, probs = 0.025)), col = "pink", lwd = 1.5, lty = 2)
           lines(1:totalDays, apply(unobservedCasesDeadly, 1, function(x) quantile(x, probs = 0.975)), col = "pink", lwd = 1.5, lty = 2)
           
-          legend("topright", legend = c("Mild", "Serious", "Deadly"), col = c("grey", "blue", "black"), lty = c(1,1,1))
+          legend("topleft", legend = c("Mild", "Serious", "Deadly"), col = c("grey", "blue", "black"), lty = c(1,1,1))
          
      } else {
 
@@ -285,9 +359,14 @@ plotUnobservedCases <- function(cases, byType) {
 
 }
 
+
 par(mfrow = c(2,1))
-plotUnobservedCases(cases = test, byType = TRUE)
-plotUnobservedCases(cases = test, byType = FALSE)
+plotUnobservedCases(cases = simUnobservedInfectionsVary, byType = TRUE)
+plotUnobservedCases(cases = simUnobservedInfectionsVary, byType = FALSE)
+
+par(mfrow = c(2,1))
+plotUnobservedCases(cases = simUnobservedInfectionsRun, byType = TRUE)
+plotUnobservedCases(cases = simUnobservedInfectionsRun, byType = FALSE)
 
 plotTotalCases <- function(cases, byType) {
   
@@ -329,7 +408,7 @@ plotTotalCases <- function(cases, byType) {
           lines(1:totalDays, apply(totalCasesDeadly, 1, function(x) quantile(x, probs = 0.025)), col = "pink", lwd = 1.5, lty = 2)
           lines(1:totalDays, apply(totalCasesDeadly, 1, function(x) quantile(x, probs = 0.975)), col = "pink", lwd = 1.5, lty = 2)
           
-          legend("topright", legend = c("Mild", "Serious", "Deadly"), col = c("grey", "blue", "black"), lty = c(1,1,1))
+          legend("topleft", legend = c("Mild", "Serious", "Deadly"), col = c("grey", "blue", "black"), lty = c(1,1,1))
          
      } else {
 
@@ -343,13 +422,11 @@ plotTotalCases <- function(cases, byType) {
 }
 
 par(mfrow = c(2,1))
-plotTotalCases(cases = test, byType = TRUE)
-plotTotalCases(cases = test, byType = FALSE)
+plotTotalCases(cases = simUnobservedInfectionsVary, byType = TRUE)
+plotTotalCases(cases = simUnobservedInfectionsVary, byType = FALSE)
 
-
-
-
-
-
+par(mfrow = c(2,1))
+plotTotalCases(cases = simUnobservedInfectionsRun, byType = TRUE)
+plotTotalCases(cases = simUnobservedInfectionsRun, byType = FALSE)
 
 
