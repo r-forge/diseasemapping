@@ -1,0 +1,545 @@
+\documentclass[12pt]{article}
+\textwidth 6.5in \textheight 9.0in \topmargin -.5in \oddsidemargin
+0.0in \evensidemargin 0.0in
+
+\usepackage{graphicx}
+\usepackage[nogin]{Sweave}
+\usepackage{tikz,pgflibraryshapes}
+\usepackage{cite}
+\usepackage{subfigure}
+\usepackage[authoryear]{natbib}
+\bibliographystyle{newapa}
+
+
+
+\title{\textbf{Time-Inhomogeneous Multi-State Model for a Swine Flu Epidemic}}
+\date{\today}
+
+       \usepackage{amsmath,subfigure,alltt}
+\setkeys{Gin}{width=0.5\columnwidth}
+
+\SweaveOpts{echo=FALSE,fig=true,height=2,width=3,eps=FALSE, prefix.string=Figures/G }
+\newcommand{\comment}[1]{}
+
+\comment{
+<<setup,fig=false>>=
+options(SweaveHooks=list(fig=function() par(mar=c(2.5,2.5,0.1,0.1), cex=0.6)), digits=3)
+# source in all the R files
+library(pandemic)
+library(xtable)
+library(DPpackage)
+
+doSims=F
+@
+}
+
+\begin{document}
+
+\maketitle
+
+
+\section{Introduction}
+\label{sec:introduction}
+
+Epidemics, such as HINE (``swine flu'') or severe acute respiratory syndrome (SARS) , the major concern at the beginning or an epidemic is the severity of the illness,
+and the large number of individuals that have the potential to be hospitalized after being infected.  
+Accordingly, during the early stages of an epidemic
+we can assume that most cases were identified as ill individuals were encouraged to seek medical help and practitioners
+to send samples to the labs for testing.  After the first few
+weeks of an epidemic, testing of sick individuals is often discouraged to ease the burned on public health labs. 
+
+In infectious disease modelling, we are often interested in estimating the case fatality ratio.  
+That is, we are interesting in the proportion of cases
+that eventually die from the disease.  However, crude rates calculated
+throughout the epidemic often underestimate this quantity due to the large proportion of censoring present in the data.  The reason for this being that many 
+individuals have yet to reach the terminal state of their illness, either recovery or death.
+Additionally, these crude rates are often misleading due to shifts in case ascertainment which results as the epidemic progresses because 
+efforts from medical professionals become focussed on the more severe cases.  If these biases are not accounted, they result in underestimation 
+of the case fatality ratio (\cite{garske-bmj-2009}).  In fact, \cite{ghani-AmericanJournalEpi-2005}, even omit performing analyses during the first two months 
+of the SARS epidemic due to a lack of data. 
+
+We propose a Bayesian approach to this problem using time-inhomogeneous multi-state models.  This approach takes into account expert optinion which allows us to 
+get reasonable estimates at the beginning an epidemic when the data are sparse.  The use of survival analysis is
+a logical approach because this is the standard way of dealing with the large amounts of censoring present in the data.  We illustrate out approach using (swine?) flu data from Montreal, Canada
+with the aim of appropriately estimating the fatality rate, predicting the hospital load and predicting the number of unobserved cases over the course
+of the epidemic.  We are also interested in forecasting the number of
+cases beyond our epidemic.  The strength of this method is appropriately estimating these quantities at the 
+beginning of the epidemic while the data are sparse and censored, rather than just at the completion of an epidemic when the data are complete.
+
+We also compare our methods to similar analyses...
+
+
+This paper proceeds as follows.  Section \ref{sec:multiStateModel} goes into detail describing our multi-state model and Section \ref{sec:modelInference}
+discusses model inference.  The results of our simulation study are shown in Section \ref{sec:simStudyResults}.  Finally, our conclusions
+are given in Section \ref{sec:conclusions}.  
+
+
+\section{Time-Inhomogeneous Multi-State Models}
+\label{sec:multiStateModel}
+
+\subsection{Infection Types}
+\label{subsec:InfectionTypes}
+
+We assumed that all individuals had one of three infection types:
+mild, serious or deadly.  Individuals were classified as mild if
+they recovered without needing to be hospitalized.  If an infection
+was severe enough that hospitalization was required before recovery,
+they were classified as having a serious infection type. Individuals
+with a deadly infection, as the name suggests, were those that died
+following hospitalization. For mild, serious and deadly cases,
+respectively, we modelled the disease progression as follows:
+
+\begin{equation}
+\mbox{Infection} \stackrel{f_I(t)}{\Longrightarrow} \mbox{Onset} \stackrel{f_{OM}(t)}{\Longrightarrow} \mbox{Medical}  \stackrel{f_{MR}(t)}{\Longrightarrow} \mbox{Recovery} \label{eq:mildProgress}
+\end{equation}
+
+\begin{equation}
+\mbox{Infection} \stackrel{f_I(t)}{\Longrightarrow} \mbox{Onset} \stackrel{f_{OS}(t)}{\Longrightarrow} \mbox{Medical} \stackrel{f_{SH}(t)}{\Longrightarrow} \mbox{Hospitalization} \stackrel{f_{SR}(t)}{\Longrightarrow} \mbox{Recovery} \label{eq:seriousProgress}
+\end{equation}
+
+\begin{equation}
+\mbox{Infection} \stackrel{f_I(t)}{\Longrightarrow} \mbox{Onset} \stackrel{f_{OD}(t)}{\Longrightarrow} \mbox{Medical} \stackrel{f_{HD}(t)}{\Longrightarrow} \mbox{Hospitalization} \stackrel{f_{D}(t)}{\Longrightarrow} \mbox{Death}
+\label{eq:deadlyProgress}
+\end{equation}
+
+Regardless of an individual's infection type, progression from one
+stage to the next occurred according to a Weibull distribution with
+parameters that corresponded to the respective transition and
+infection type. Note that until an individual died or recovered
+their infection type was unknown.  We also assumed that a small
+proportion of mild cases were lost to follow up. That is, they
+received medical consultation, and were assumed to recover since no
+further information was available.
+
+In this analysis, we assumed that the infection type probabilities varied with respect to age.  We generated these using log-linear cubic splines.  
+Note that this will be discussed further in Section ???.
+
+\subsection{The Model}
+\label{subsec:theModel}
+
+We used a zero-inflated rounded Weibull for the time-to-event
+distribution, denoted $f(t)$.  We used a rounded distribution
+because the data only included the date the event took place. For
+example, if there was an event recorded as being on the first day of
+the epidemic, the event would actually have occurred at some point
+between day 0.5 and day 1.5. To account for the large number of
+administrative zeros recorded in the data, we used a zero-inflated
+distribution.  That is, we let $\delta$ be the probability of
+transitioning immediately to the death stage for an administrative
+reason, such as arriving dead at the hospital. Furthermore, if we
+let $Z$ denote the random variable for administrative zeros, we can
+assume $Z$ follows a Bernoulli distribution with probability
+$\delta$ and hence,
+
+\begin{align*}
+\text{Pr}(T=t|Z=1) =&\text{ }0 \text{ with probability } 1
+\end{align*}
+
+\noindent For the case where the individual was not an
+administrative zero
+
+\begin{align*}
+\text{Pr}(T=t|Z=0) =&  \text{Pr}[\max(t-0.5,0) < y < t+0.5]\\
+y \sim & \text{Weibull}\left [\frac{\mu}{\Gamma(1 + 1/\nu)}, \nu
+\right]
+\end{align*}
+
+\noindent where $\mu = \mbox{E}[T = t|Z = 0]$ is the average time to
+an event and $\nu$ is the Weibull shape parameter. We used beta
+priors for the zero-inflation parameters and gamma priors for the
+Weibull mean and shape parameters.
+\subsection{Infection Type Probabilties}
+\label{subsec:infectionTypeProbs}
+
+As mentioned above, in Section ???, we assumed the infection type probabilities varied wtih respect to age 
+and generated them using log-linear cubic splines.  For individual $i$ we let $W_i$ $\in$ \{$M$, $S$, $D$\}
+denote the infection type, where $M$, $S$ and $D$ represent mild,
+serious and deadly infections, respectively and $X_i$ represents the
+individual's age. The fatality rate is the marginal probability
+$\mbox{Pr}(W_i = D) = g_D(X_i)$ and the non-fatal hospitalization
+rate is the conditional probability $\mbox{Pr}(W_i = S|W_i \neq D)=
+g_S(X_i)$  where $g_D$ and $g_S$ are log-linear cubic splines with
+fixed knots and random coefficients that vary smoothly with age.  Note that this was done using the library, DPpackage, in R.
+
+<<echo=FALSE, fig = FALSE>>=
+options(width=45)
+ ageSeq = 0:100
+
+ params = pandemicParams( 
+ InfOns = c(mean=1.5, shape=2, zeros=.1),
+ OnsMedM= c(mean=1, shape=1, zeros=.1 ),
+ OnsMedS= c(mean=1, shape=1, zeros=.1 ),
+ OnsMedD= c(mean=1, shape=1, zeros=.1 ),
+ MedRec = c(mean=3, shape=2, zeros=.1, lost=0.95 ),
+ MedHospS = c(mean = 2, shape = .5, zeros = 0.1),
+ MedHospD = c(mean = 2, shape = 2, zeros = 0.1),
+ HospRec = c(mean=3, shape=1.5, zeros=.01 ),
+ HospDeath = c(mean=5, shape=0.3, zeros=.05 ),
+ ageProbs=list(
+ S=addAgeProbs(ageSeq, 0.02+1.5*dnorm(ageSeq, mean=20, sd=10)),
+ D=addAgeProbs(ageSeq, 0.01+dnorm(ageSeq, mean=30, sd=8))  ),
+ probs=NULL
+ )
+@	
+
+ \begin{figure}[!h]
+ \begin{center}
+<<ageVaryingDeadly,fig = TRUE, echo = FALSE>>=
+plot(params$age$D, type="l", ylim=c(0,0.11), ylab = "probability", xlab = "age")
+@ 
+ \end{center}
+ \caption{Death probabilities.}
+ \label{fig:ageVaryingDeadly}
+ \end{figure}
+   
+\subsection{Discussion of Prior Distributions}         
+        
+\section{Model Inference}
+\label{sec:modelInference}
+
+Inference for this model was done through data augmentation and
+random walk Metropolis simulations for calculating event time
+parameters and predicting the number of unobserved cases.  We also forecasted the number of cases.
+
+
+\subsection{Data Augmentation}
+\label{subsec:dataAugmentation}
+
+In order to deal with the censoring, we performed data augmentation
+to impute the lifetimes as follows:
+
+\begin{enumerate}
+
+\item choose starting values for the probabilities
+
+\item simulate $[W_i = D ] \sim \mbox{Bernoulli}(p_i)$, where $p_i = \mbox{Pr}(W_i = D | T_i > k_i; X_i)$,
+ $k_i$ is the number of days previous that individual $i$ was hospitalized and $X_i$ is the age of individual $i$
+
+\item simulate $[g_D|W_1, \ldots, W_n]$ to update
+the parameters
+
+\end{enumerate}
+
+\subsection{Event Time Parameters}
+\label{subsec:eventTimeParams}
+
+After the data augmentation step, the likelihood was straightforward
+to calculate since the observations were assumed to be independent.
+Moreover, we could easily use random walk Metropolis to calculate
+the event time parameters.
+ If we denote $\theta$ as the current step and $\phi$ as
+the proposed value, then $q(\theta, \phi)$ is the proposal
+distribution of moving from the current position $\theta$ to the
+proposed position $\phi$. For this simulation the proposal
+distribution was absolute normal. The acceptance probability for the
+random walk was:
+
+\begin{eqnarray*}
+\alpha(\theta, \phi) =  \mbox{min}\left\{1,
+\frac{\pi(\phi)}{\pi(\theta)}\right\}
+\end{eqnarray*}
+
+\noindent where $\pi(^.) \propto \ell(^.) p(^.)$.  Using this
+notation $p(^.)$ is the prior distribution, $\ell(^.)$ is the
+likelihood and
+ $\pi(^.)$ is the posterior distribution.  We accepted the move if $u \leq \alpha$ where $u \sim \mbox{Unif}(0, 1)$ and rejected otherwise.
+
+
+\subsection{Number of Unobserved Cases -- need to define the prior mean as the number of infective individuals*rate + immigration}
+
+Again, we used random walk Metropolis to calculate the number of
+unobserved infections.  We let $y_j$ denote the number of observed
+cases on day $j$ of an epidemic and we assumed that for each day of
+the simulation:
+
+\begin{eqnarray*}
+y_j \sim \mbox{Binomial} (N_j, p_j)
+\end{eqnarray*}
+
+\noindent where $N_j$ is the total number of cases (including both
+observed and unobserved) on the $j^{th}$ day of the epidemic and
+$p_j$ is the probability of observing a case on day $j$. A Poisson
+prior with mean $\lambda_{j-1}$ is used for $N_j$, where
+$\lambda_{j-1}$ is total number of cases on the $(j-1)^{st}$ day of
+the epidemic plus an offset term. Note that the offset term was the
+mean increase in the number of new cases each day of the epidemic.
+
+For this simulation, we accepted the proposed value with
+probability:
+
+\begin{eqnarray*}
+\alpha(\theta, \phi) = \mbox{min} \left\{1, \frac{\pi(\phi)q(\phi,
+\theta)}{\pi(\theta)q(\theta, \phi)} \right\}
+\end{eqnarray*}
+
+\noindent where $\pi(^.)$ is the posterior distribution and
+$q(\theta, \phi)$ is the Poisson proposal distribution.  Note that for this simulation $q(\theta, \phi)$ is the 
+conditional distribution, given $N_j$ is greater than $y_j - 0.5$.  Since $q(\phi, \theta)$ is the conditional distribution, in order for it to be a
+valid probability density function, we divided the conditional distribution by $P(Y_j > \lambda_j)$, where $\lambda_j$ is the prior mean
+on the $j^{th}$ day of the epidemic.  Similary, for $q(\theta, \phi)$, we divided by $P(Y > N_j + \mbox{proposal offset}\mbox{ - what was the symbol for this?})$.   
+Similar to
+the random walk Metropolis discussed in Section
+\ref{subsec:eventTimeParams}, we accepted the proposed value if $u
+\leq \alpha$ where $u \sim \mbox{Unif}(0,1)$.
+
+Once this was complete, we performed data augmentation t estimate the progression of the cases from stage to stage according to infection type as described in the 
+multi-state models shown in \ref{eq:mildProgress} - \ref{eq:deadlyProgress}.
+
+
+\subsection{Forecasting the Number of Cases}
+\label{subsec:forecasting}
+
+The final goal of this paper was to predict the number of cases for a number of days beyond the completion of a simulated epidemic.  For a $j$ day
+epidemic, if we denote $N_k$, $k$ = $j+1, \ldots, k$, as the number of cases on the $k^{th}$ day of the epidemic.  Then,
+
+\begin{eqnarray*}
+N_{k} \sim \mbox{Poisson}([N_{k_{\mbox{inf}}} \theta + \omega]\gamma), k = {j+1}, \ldots, K
+\end{eqnarray*}
+
+where $K$ is the last day we want to predict thenumber of cases, $N_k_{\mbox{inf}}$ are the number of infective individuals on the $k^{th}$ day, $\theta$
+is the rate parameter and $\omega$ is the immigration parameter and $\gamma$ is the probability of the case being mild, serious or deadly.  Note that these forecasts were done separately
+for each infection type.  Once this was complete, we performed data augmentation, as discussed in Section ??. 
+
+                                                                                                                                              
+\section{Results of the Swine Flu Simulation Study}
+\label{sec:simStudyResults}
+
+This section summarizes the results of a simulated 20 day epidemic and then forecasted the number of cases for the next 10 days beyond the end of the
+20 day epidemic. 
+
+
+\subsection{Fatality Rate}
+\label{subsec:fatalityRate}
+
+  
+\begin{figure}[!h]
+\begin{center}
+<<fatalityRate, fig = TRUE, results = tex>>=
+pandemicParamsVary <- pandemicParams(InfOns = c(mean = 1, shape = 1, zeros = 0.1), OnsMedM = c(mean = 3, shape = 2, zeros = 0.1), OnsMedS = c(mean = 2.5, shape = 2, zeros = 0.1), 
+OnsMedD = c(mean = 2, shape = 1, zeros = 0.1), MedRec = c(mean = 7, shape = 2, zeros = 0.1, lost = 0.9), MedHospS = c(mean = 2.5, shape = 2, zeros = 0.1), 
+MedHospD = c(mean = 1.5, shape = 1.5, zeros = 0.1), HospRec = c(mean = 4, shape = 1.5, zeros = 0.1), HospDeath = c(mean = 3, shape = 1, zeros = 0.1), 
+probs = NULL, ageProbs = list(S = addAgeProbs(), D = addAgeProbs()))
+simEpidemicVary <- simEpidemic(params = pandemicParamsVary, delta = 5, days = 20, probOnsetMissing = 0.7, randomInfections = TRUE)
+pandemicPriorsVary = pandemicPriors(probs=psProbPriors() )
+mcmcScaleVary <- mcmcScale(params = pandemicParamsVary, sigma = 0.075, minScale = 0.05, maxScale = 0.2)
+mcmcPandemicVary <- mcmcPandemic(xdata = simEpidemicVary, params = pandemicParamsVary, prior = pandemicPriorsVary, sigma = mcmcScaleVary, runs = 100, thin = 2, saveData = T)
+ageCols = grep("^ageProbs.D.prob.[[:digit:]]+$", colnames(mcmcPandemicVary), value=T)
+Dage= as.numeric(gsub("^ageProbs.D.prob", "", ageCols))
+matplot(Dage, t(mcmcPandemicVary[,ageCols]), type="l", col="grey", ylim=quantile(mcmcPandemicVary[,ageCols], probs=c(0.01, 0.99)), lty  = 1, xlab = "age", ylab = "fatality rate", pch = 1) 
+lines(Dage, apply(mcmcPandemicVary[,ageCols], 2, mean), lwd=3, col="black")
+lines(Dage, apply(mcmcPandemicVary[,ageCols], 2, function(x) quantile(x, probs = 0.025)), lty = 2, lwd = 3) 
+lines(Dage, apply(mcmcPandemicVary[,ageCols], 2, function(x) quantile(x, probs = 0.975)), lty = 2, lwd = 3) 
+@
+\end{center}
+\caption{Fatality rate from the simulations with the mean fatality rate (black line) overlayed.}
+\label{fig:fatalityRate}
+\end{figure}
+
+\subsection{Hospital Load}
+\label{subsec:hospitalLoad}
+
+\begin{figure}[!h]
+\begin{center}
+<<hospitalDemand, fig=TRUE, results = tex>>=
+hospSample = simHospitals(mcmcPandemicVary , Ndays=80, 
+NinfectionsPerDay=20 )
+plotHospitals(hospSample)
+@
+\end{center}
+\caption{Simulation of hospital demand.}
+\label{fig:hospitalDemand}
+\end{figure}
+
+
+
+\subsection{Predicting Number of Unobserved Cases and Forecasting Number of Cases}
+\label{subsec:unobservedAndForecasts}
+
+\setkeys{Gin}{width=0.4\columnwidth}
+\begin{figure}[!h]
+\centering
+\subfigure[Unobserved cases, by type.]{
+<<unobservedAndForecastingPlotByType, fig=TRUE, results = tex>>=
+simUnobservedInfectionsVary = simUnobservedInfections(postSample = mcmcPandemicVary, lengthOfEpidemic = simEpidemicVary, infectParams = c(rate = 0.25, immigration = 0.1),
+data = NULL, daysAhead = 10, Nsim = 1000, runs = 100, nthin = 100, proposalOffset = 0.2)
+plotUnobservedCases(cases = simUnobservedInfectionsVary, byType = TRUE)
+@
+}
+\subfigure[All unobserved cases.]{
+<<unobservedAndForecastingPlot, fig=TRUE, results = tex>>=
+plotUnobservedCases(cases = simUnobservedInfectionsVary, byType = FALSE)
+@
+}
+\caption{Unobserved cases for a 20 day epidemic and the number of cases when forecasting 10 days ahead.}
+\label{fig:unobservedAndForecaseting}
+\end{figure}
+
+\setkeys{Gin}{width=0.4\columnwidth}
+\begin{figure}[!h]
+\centering
+\subfigure[Total cases, by type.]{
+<<totalAndForecastingPlotByType, fig=TRUE, results = tex>>=
+plotTotalCases(cases = simUnobservedInfectionsVary, byType = TRUE)
+@
+}
+\subfigure[All cases.]{
+<<totalAndForecastingPlot, fig=TRUE, results = tex>>=
+plotTotalCases(cases = simUnobservedInfectionsVary, byType = FALSE)
+@
+}
+\caption{Total cases for a 20 day epidemic and the number of cases when forecasting 10 days ahead.}
+\label{fig:totalAndForecaseting}
+\end{figure}
+
+
+
+%\subsection{Simulation of a Swine Flu Epidemic}
+%\label{subsec:epidemicSim}
+
+%In order to simulate a swine flu epidemic, we set the mean number of infections per day and the number of study
+%days for an infection and then generate the number of individuals infected on each day of the epidemic as a Poisson
+%random variable.  The probability that an individual in the dataset had onset information was binomial, where we specify
+%the probability of having onset information.  Note that for individuals with a mild infection type, we assume that 
+%some random subset are lost to follow up (i.e. they are given medication and are assumed to recover).  The ``lost''
+%individuals are generated according to a Bernoulli distribution.  As the infection progresses, individuals go through
+%states according to a rounded Weibull distribution with state and infection specific parameters, which are given in Table \ref{table:pandemicParamsTable}.  
+
+%Individuals are censored if the simulated epidemic is completed before they read one of the two terminal states, recovery (for individuals mild or
+%serious infection types or death for deadly infection type).  
+
+
+%<<pandemicParamsTable, echo=FALSE, fig = FALSE, results = tex>>=
+
+
+% options(width=45)
+%ageSeq = 0:100
+
+%params = pandemicParams( 
+%InfOns = c(mean=1.5, shape=2, zeros=.1),
+%OnsMedM= c(mean=1, shape=1, zeros=.1 ),
+%OnsMedS= c(mean=1, shape=1, zeros=.1 ),
+%OnsMedD= c(mean=1, shape=1, zeros=.1 ),
+%MedRec = c(mean=3, shape=2, zeros=.1, lost=0.95 ),
+%MedHospS = c(mean = 2, shape = .5, zeros = 0.1),
+%MedHospD = c(mean = 2, shape = 2, zeros = 0.1),
+%HospRec = c(mean=3, shape=1.5, zeros=.01 ),
+%HospDeath = c(mean=5, shape=0.3, zeros=.05 ),
+%ageProbs=list(
+%S=addAgeProbs(ageSeq, 0.02+1.5*dnorm(ageSeq, mean=20, sd=10)),
+%D=addAgeProbs(ageSeq, 0.01+dnorm(ageSeq, mean=30, sd=8))  ),
+%probs=NULL
+%)
+%tempList = (params[c("InfOns","OnsMedM","OnsMedS", "OnsMedD", "MedRec","MedHospS","MedHospD","HospRec","HospDeath")])
+%temp = unlist(tempList)
+%temp = temp [-grep("lost",names(temp))]
+%tempMat = matrix(temp, ncol=4, byrow=T)
+%rownames(tempMat) = names(tempList)
+%colnames(tempMat) = names(tempList[[1]])
+%paramMat = tempMat[,c("mean","shape","zeros")]
+%library(Hmisc)
+%xtable(paramMat, caption = "Parameters used for simulating data. SHOULD CHANGE COLUMN NAMES.  NEED TO ADD IN THE OTHER ROWS THAT I'M TAKING OUT (MAYBE).", label = "table:pandemicParamsTable")
+%@
+
+%<<HospDeathPrior, fig = FALSE, results = tex>>=
+%priors = readPrior("bayesPandemicPriors.txt")
+%plotPrior(priors$HospDeath, file="HospDeath", tex=TRUE, figLab = "fig:HospDeathPrior", figCap = "Prior plots for the transition from hospitalization to death.")
+%@
+
+%\subsection{Results}
+%\label{subsec:results}
+
+
+
+%\subsection{Results}
+%\label{subsec:results}
+
+%\subsubsection{Posterior After Several Days}
+
+         
+%<<HospDeathPosterior, fig=FALSE,results=tex>>=
+%library(ellipse)
+
+%pandemicParamsVary <- pandemicParams(InfOns = c(mean = 1, shape = 1, zeros = 0.1), OnsMedM = c(mean = 3, shape = 2, zeros = 0.1), OnsMedS = c(mean = 2.5, shape = 2, zeros = 0.1), 
+%OnsMedD = c(mean = 2, shape = 1, zeros = 0.1), MedRec = c(mean = 7, shape = 2, zeros = 0.1, lost = 0.9), MedHospS = c(mean = 2.5, shape = 2, zeros = 0.1), 
+%MedHospD = c(mean = 1.5, shape = 1.5, zeros = 0.1), HospRec = c(mean = 4, shape = 1.5, zeros = 0.1), HospDeath = c(mean = 3, shape = 1, zeros = 0.1), 
+%probs = NULL, ageProbs = list(S = addAgeProbs(), D = addAgeProbs()))
+%simEpidemicVary <- simEpidemic(params = pandemicParamsVary, delta = 5, days = 20, probOnsetMissing = 0.7, randomInfections = TRUE)
+%pandemicPriorsVary = pandemicPriors(probs=psProbPriors() )
+%mcmcScaleVary <- mcmcScale(params = pandemicParamsVary, sigma = 0.075, minScale = 0.05, maxScale = 0.2)
+%mcmcPandemicVary <- mcmcPandemic(xdata = simEpidemicVary, params = pandemicParamsVary, prior = pandemicPriorsVary, sigma = mcmcScaleVary, runs = 10, thin = 2)       
+%plotPrior(priors, mcmcPandemicVary, transition="HospDeath",file="HospDeath", tex=TRUE, figLab = "fig:HospDeathPosterior", figCap = "Posterior plots for the transition from 
+%hospitalization to death")
+%@
+    
+
+
+%\begin{figure}[!h]
+%\begin{center}
+%<<fatalityRate, fig = TRUE, results = tex>>=
+%ageCols = grep("^ageProbs.D.prob.[[:digit:]]+$", colnames(mcmcPandemicVary), value=T)
+%Dage= as.numeric(gsub("^ageProbs.D.prob", "", ageCols))
+%matplot(Dage, t(mcmcPandemicVary[,ageCols]), type="l", col="grey", ylim=quantile(mcmcPandemicVary[,ageCols], probs=c(0.01, 0.99)), lty  = 1, xlab = "age", ylab = "fatality rate") 
+%lines(Dage, apply(mcmcPandemicVary[,ageCols], 2, mean), lwd=3, col="black")
+%lines(Dage, apply(mcmcPandemicVary[,ageCols], 2, function(x) quantile(x, probs = 0.025)), lty = 2, lwd = 3) 
+%lines(Dage, apply(mcmcPandemicVary[,ageCols], 2, function(x) quantile(x, probs = 0.975)), lty = 2, lwd = 3) 
+%@
+%\end{center}
+%\caption{Fatality rate from the simulations with the mean fatality rate (black line) overlayed.}
+%\label{fig:fatalityRate}
+%\end{figure}
+
+%\subsubsection{Number of Observed Cases and Predicted Number of Unobserved Cases}
+%\label{subsubsec:unobservedCases}
+
+
+%\subsubsection{Predicted Hospital Load}
+%\label{subsubsec:hospitalLoad}
+
+%\begin{figure}[!h]
+%\begin{center}
+%<<hospitalDemand, fig=TRUE, results = tex>>=
+%hospSample = simHospitals(mcmcPandemicVary , Ndays=80, 
+%NinfectionsPerDay=20 )
+%plotHospitals(hospSample)
+%@
+%\end{center}
+%\caption{Simulation of hospital demand.}
+%\label{fig:hospitalDemand}
+%\end{figure}
+
+
+\section{Application of Multi-State Model to (Swine?) Flu Data}
+
+\subsection{(Swine?) Flu Data from Montreal, Quebec}
+
+\subsection{Model Inference}
+
+\subsubsection{Posterior After Several Days}
+
+\subsubsection{Number of Observed Cases and Predicted Number of Unobserved Cases}
+
+\subsubsection{Predicted Hospital Load}
+
+\section{Conclusions}
+\label{sec:conclusions}
+
+\begin{itemize}
+
+\item this infectious disease model can estimate fatality and hospitalization rates, and take into account the censoring present in the data
+      
+\item take infection trajectories from an infectious disease model and translate them into hospital loads
+
+\item use data for estimated parameters even if there is not much data
+
+\item if there are many cases and no fatalities, we can get an upper bound on the fatality rate
+
+\item when the data are plentiful and informative, there is a case to be made for non-parametric survival methods
+
+\item if rages change with age, sex, geography, or existing health conditions, even late stage epidemic data might not be sufficient for standard survival methods
+
+\end{itemize}
+
+\bibliography{pandemicPaperBibtex}
+
+
+\end{document}
