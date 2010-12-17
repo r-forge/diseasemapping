@@ -260,6 +260,10 @@ simUnobservedInfections = function(postSample, lengthOfEpidemic, infectParams = 
      list("unobserved" = unobservedCases, "total" = totalCases, "sample" = result)
  }
  
+
+# input:
+      # cases: output from simUnobservedInfections
+      # byType: TRUE (if you want to plot the unobserved cases by type) and FALSE (if you want a plot of all unobserved cases) 
  
 plotUnobservedCases <- function(cases, byType) {
   
@@ -313,6 +317,10 @@ plotUnobservedCases <- function(cases, byType) {
      }
 
 }
+
+# input:
+      # cases: output from simUnobservedInfections
+      # byType: TRUE (if you want to plot the total cases by type) and FALSE (if you want a plot of all cases) 
 
 plotTotalCases <- function(cases, byType) {
   
