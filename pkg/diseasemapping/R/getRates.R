@@ -103,7 +103,12 @@ casedata = formatCases(casedata, ageBreaks=attributes(pops)$breaks,
 
 
 #find number of cases per group
-casecol = grep("^cases$", names(casedata), value=TRUE, ignore.case=TRUE)
+casecol = grep("^cases$|^count$|^y$", names(casedata), value=TRUE, ignore.case=TRUE)
+if(length(casecol)>1) {
+	casecol=casecol[1]
+	warning("more than one column which could be interpreted as case numbers, using ", casecol)
+}
+	
 if(!length(casecol)) {
   #there is no case col
   casecol = "cases"
