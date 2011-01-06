@@ -13,15 +13,7 @@ poplong = reshape(popdata,  varying=ageBreaks$oldNames, direction="long",
 	v.names="POPULATION", timevar="GROUP", times = ageBreaks$newNames)
 # create age and sex variables
 agecol = grep("^age$", names(poplong), value=TRUE, ignore.case=TRUE)
-if(length(agecol) != 1) {
- warning("cant find age column in popdata, found", toString(agecol))
-}
-
 sexcol = grep("^sex$", names(poplong), value=TRUE, ignore.case=TRUE)
-if(length(sexcol) != 1) {
- warning("cant find sex column in popdata, found", toString(sexcol))
-}
-
 
 
 if("GROUP" %in% names(poplong)) {
@@ -35,6 +27,7 @@ if("GROUP" %in% names(poplong)) {
   warning("no age and sex variables found or no group variable found in popdata")
   }
 }
+
 
 poplong$id<-NULL
 row.names(poplong)<-NULL
