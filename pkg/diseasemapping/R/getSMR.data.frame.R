@@ -51,9 +51,11 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL, regionCode = "CSDUI
      
      # get rid of zero populations,because they dont lead to rates of exactly zero
     ## check the class of the POPULATION column and make sure it is numeric: 
-    if(!class(poplong[,p]) == "numeric"){
-     poplong[,p] <- as.character(poplong[,p]
-     poplong[,p] <- as.numeric(poplong[,p])
+	# converted to character first in case it's a factor
+		# (convert factor names to integers, not factor levels)
+ 
+    if(class(poplong[,p]) != "numeric"){
+     poplong[,p] <- as.numeric(as.character(poplong[,p]))
     }
 
      poplong=poplong[poplong[,
@@ -151,17 +153,13 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL, regionCode = "CSDUI
 
     if (!is.null(casedata)) {
        casedata = formatCases(casedata, ageBreaks=popBreaks)
+       casecol = attributes(casedata)$casecol
+	   
        casedata = casedata[
           as.character(casedata[, regionCodeCases]) %in% 
              rownames(popdata), ]
-       casecol = grep("^cases$", names(casedata), value = TRUE,
-            ignore.case = TRUE)
-       if (!length(casecol)) {
-            casecol = "cases"
-            casedata[, casecol] = 1
-       }
-
-       casedata <- aggregate(casedata[[casecol]], 
+	   
+      casedata <- aggregate(casedata[[casecol]], 
          list(casedata[[regionCodeCases]]), sum)
        names(casedata) = c(regionCodeCases, "observed")
 
