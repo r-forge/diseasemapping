@@ -15,14 +15,15 @@ getRates(casedata, popdata, formula, family = poisson, minimumAge = 0,
 }
 
 \arguments{
-  \item{casedata}{ case data set name }
-  \item{popdata}{population data set name }
-  \item{formula}{ the glm model you want to fit. ie. $~age*sex$~ }
+  \item{casedata}{A data frame of case data, with columns corresponding to variables in \code{formula}.  
+  Assumed to be one row per case, unless a column called \code{y} or \code{cases} or \code{count} is
+  included, in which case this column gives the number of cases per row. }
+  \item{popdata}{population data set}
+  \item{formula}{ the glm model you want to fit. ie. \code{~age*sex} }
   \item{family}{the distribution to fit the model}
   \item{minimumAge}{ the lower boundry of the age, default is 0 }
   \item{maximumAge}{the higher boundry of the age, default is 100  }
-  \item{S}{the group of sex you want to choose, default is both male and female. 
-            "M" denotes male; "F" denotes female }
+  \item{S}{vector of sexes to include in the analysis.  Defaults to both "M" and "F" }
   \item{years}{  a vector of census years  }
   \item{year.range}{study period: a vector of two elements, starting dates and ending dates  }
   \item{case.years}{ variable name in the case data which contains time  }
