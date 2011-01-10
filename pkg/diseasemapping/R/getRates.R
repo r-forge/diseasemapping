@@ -101,20 +101,7 @@ if(length(termsToAdd) ) {
 casedata = formatCases(casedata, ageBreaks=attributes(pops)$breaks, 
   aggregate.by = theterms)
 
-
-#find number of cases per group
-casecol = grep("^cases$|^count$|^y$", names(casedata), value=TRUE, ignore.case=TRUE)
-if(length(casecol)>1) {
-	casecol=casecol[1]
-	warning("more than one column which could be interpreted as case numbers, using ", casecol)
-}
-	
-if(!length(casecol)) {
-  #there is no case col
-  casecol = "cases"
-  casedata[,casecol] = 1
-}
-
+casecol = attributes(casedata)$casecol
 
 ##### merge case data set and shape data set according to the same Year and DA2001
 by.x =  paste("^", theterms, "$", sep="")
