@@ -143,7 +143,7 @@ newdata[is.na(newdata[,casecol]),casecol] <-0
 # make the age group with the most cases as the base line
 agevar =  grep("^age$", theterms, ignore.case=TRUE, value=TRUE)
 if(length(agevar)==1) {
-  agetable = tapply(newdata$CASES, newdata[[agevar]], sum,na.rm=TRUE)
+  agetable = tapply(newdata[,casecol], newdata[[agevar]], sum,na.rm=TRUE)
   agetable = names(sort(agetable, decreasing=TRUE))
   newdata[[agevar]] = factor(as.character(newdata[[agevar]]),levels= agetable)
 }
@@ -168,7 +168,9 @@ todel <- as.formula(paste(".~.-",sexvar,"-",agevar,":",sexvar,sep=""))
 if(length(S)==1) formula=update.formula(formula, todel)
 
 # add cases and logpop to formula
-formula1 = update.formula(formula, CASES ~ offset(logpop) + .)
+formula1 = update.formula(formula, 
+		as.formula(paste(casecol," ~ offset(logpop) + ."))
+)
 #return(newdata, formula1)
 
 
