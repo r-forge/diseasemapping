@@ -96,7 +96,7 @@ plotWithTiles = function(x, attr=1, brks = NULL, prob = FALSE,
 	
 	
 	plot(x, xlim = xlim,ylim=ylim, type="n",xlab="longitude",ylab="latitude",
-			border="white",col="white")
+			col="white")
 
 	image(bgMap, add = TRUE)
 	
