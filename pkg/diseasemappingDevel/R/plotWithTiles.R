@@ -30,7 +30,6 @@ plotWithTiles = function(x, attr=1, brks = NULL, prob = FALSE,
 
 
 	if(class(x)%in%c("SpatialGridDataFrame","SpatialPixelsDataFrame")) {
-		if(.Platform$OS.type =="unix") {
 
 			library(rgdal)
 		#x@data = x@data[,attr,drop=F] 
@@ -55,7 +54,8 @@ plotWithTiles = function(x, attr=1, brks = NULL, prob = FALSE,
 		 newY = sort(thebbox@coords[,2])
 		 newY = newY[-c(1,length(newY))]
 		 
-		 
+		 if(.Platform$OS.type =="unix") {
+		     
 		system(
 				paste("gdalwarp -s_srs '", x@proj4string@projargs, 
 						"' -t_srs '+proj=longlat +datum=NAD83' -te",
@@ -63,13 +63,16 @@ plotWithTiles = function(x, attr=1, brks = NULL, prob = FALSE,
     					mytempfile, mytempfile2, sep = " ")
 		)
 		
+		
+		} else {
+		# put windows code in here.
+			warning("can't do this on windows yet")
+		}
+
 		x <- readGDAL(mytempfile2)
 		file.remove(mytempfile)
 		file.remove(mytempfile2)
 		
-		} else {
-				warning("can't do this on windows yet")
-		}
 	} else {
 		x <- spTransform(x, CRS("+proj=longlat +datum=NAD83"))
 	}
