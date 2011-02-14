@@ -98,7 +98,7 @@ plotWithTiles = function(x, attr=1, brks = NULL, prob = FALSE,
 	
 	
 	plot(x, xlim = xlim,ylim=ylim, xlab="longitude",ylab="latitude",
-			col="white")
+			col=NA,axes=F)
 
 	image(bgMap, add = TRUE)
 	
@@ -130,8 +130,9 @@ testPlotSurface= function() {
 	proj4string(popdata) = CRS("+proj=longlat +datum=NAD83")
 	install.packages("pixmap")
 	install.packages("webmaps", repos="http://R-Forge.R-project.org")
-	plotWithTiles(popdata, 0, zoom=6,
-    		trans=40,
+	plotWithTiles(popdata, "medIncome", zoom=6,
+    		trans=40)
+	,
 	xlim=c(-81.95318, -78.45677),
 	ylim=c(42.05731, 44.94908)	
 )
