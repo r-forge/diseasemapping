@@ -1,6 +1,6 @@
 plotWithTiles = function(x, attr=1, brks = NULL, prob = FALSE, 
 	Ncol = 5, trans = 50, zoom = 4, xlim=NULL,ylim=NULL,
-	filename = NULL, devOff = TRUE, width = 1200, height = 1200
+	filename = NULL, devOff = TRUE, width = 600, height = 600
 )
 {
 	library(classInt)
@@ -89,13 +89,15 @@ plotWithTiles = function(x, attr=1, brks = NULL, prob = FALSE,
 	
 	if(!is.null(filename))
 	{ 
-		png(paste(filename, ".png", sep = ""), width = width, height = height)
+		if(!length(grep("\\.png$", filename)))
+			paste(filename, ".png", sep = "")
+		png(filename, width = width, height = height)
 	}
 	
 	
 	
 	
-	plot(x, xlim = xlim,ylim=ylim, type="n",xlab="longitude",ylab="latitude",
+	plot(x, xlim = xlim,ylim=ylim, xlab="longitude",ylab="latitude",
 			col="white")
 
 	image(bgMap, add = TRUE)
@@ -135,14 +137,14 @@ testPlotSurface= function() {
 )
 
 
-yseq = seq(5500000, len=500,by=1000)
-xseq= seq(0,len=500,by=1000)
+yseq = seq(4500000, len=100,by=1000)
+xseq= seq(100000,len=100,by=1000)
 			
 stuff = SpatialPixelsDataFrame(expand.grid(xseq,yseq),
 		proj4string=CRS("+init=epsg:26917"), 
 		data=data.frame(z=rnorm(length(xseq)*length(yseq))))
 
 
-plotWithTiles(stuff,zoom=6)
+plotWithTiles(stuff,zoom=8,file="stuff.png")
 
 }
