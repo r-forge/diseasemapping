@@ -18,20 +18,22 @@ plotWithTiles = function(x, attr = 1, brks = NULL, prob = FALSE,
 		
 	}
 
-	if(is.null(brks))
+	if(!is.na(attr)) 
 	{
-		ci <- classInt::classIntervals(x@data[,attr], Ncol, style = "kmeans")
-		brks <- ci$brks * 100
-		brks <- c(floor(brks[1]), round(brks[-c(1,length(brks))]), ceiling(brks[length(brks)]))/100
-	} else{
-		breaksQQQ <<- brks
-		ci <- classInt::classIntervals(x@data[,attr], n = length(brks) - 1, fixedBreaks = breaksQQQ, 
-			style = "fixed")
-		rm(breaksQQQ, pos = 1)
+		if(is.null(brks))
+		{
+			ci <- classInt::classIntervals(x@data[,attr], Ncol, style = "kmeans")
+			brks <- ci$brks * 100
+			brks <- c(floor(brks[1]), round(brks[-c(1,length(brks))]), ceiling(brks[length(brks)]))/100
+		} else {
+			breaksQQQ <<- brks
+			ci <- classInt::classIntervals(x@data[,attr], n = length(brks) - 1, fixedBreaks = breaksQQQ, style = "fixed")
+			rm(breaksQQQ, pos = 1)
+		}
 	}
 
-	if(class(x)%in%c("SpatialGridDataFrame","SpatialPixelsDataFrame")) {
-
+	if(class(x)%in%c("SpatialGridDataFrame","SpatialPixelsDataFrame")) 
+	{
 		library(rgdal)
 		#x@data = x@data[,attr,drop=F] 
 
@@ -92,8 +94,7 @@ plotWithTiles = function(x, attr = 1, brks = NULL, prob = FALSE,
 	if(is.null(ylim))
 		ylim= x@bbox[2,]
 	
-	bgMap <- getTiles(xlim, ylim, zoom, path = "http://tile.openstreetmap.org/", 
-				maxTiles = 200)
+	bgMap <- getTiles(xlim, ylim, zoom, path = "http://tile.openstreetmap.org/", maxTiles = 200)
 	
 	
 	if(!is.null(filename))
@@ -102,8 +103,7 @@ plotWithTiles = function(x, attr = 1, brks = NULL, prob = FALSE,
 			png(paste(filename, ".png", sep = ""), width = width, height = height)
 	}
 	
-	plot(x, xlim = xlim,ylim=ylim, xlab="longitude",ylab="latitude",
-			col=NA,axes=F)
+	plot(x, lty = 0, xlim = xlim,ylim=ylim, xlab="longitude",ylab="latitude",col=NA,axes=F)
 
 	image(bgMap, add = TRUE)
 	
@@ -114,14 +114,25 @@ plotWithTiles = function(x, attr = 1, brks = NULL, prob = FALSE,
 						substring(hsv(alpha = as.numeric(trans)/100),8), sep = ""), 
 				breaks = brks, add = TRUE)
 	} else {
+		if(!is.na(attr)) 
+		{
 			colFac <- findColours(ci, colours)
 			colFac[!is.na(colFac)] = paste(colFac[!is.na(colFac)], trans,sep="")
-			
-			plot(x, col = colFac, add=T)
-	}
-	legend("bottomright", fill = colours, legend = brks[-1], bg = "white")
+			plot(x, lty = 0, col = colFac, add = TRUE)
+		} else {
+			colFac = "black"
+			plot(x, lty = 1, col = colFac, add = TRUE)
+		}  
 
-	if(!is.null(filename) & devOff )
+		
+	}
+	
+	if(!is.na(attr)) 
+	{
+		legend("bottomright", fill = colours, legend = brks[-1], bg = "white")
+    }
+
+	if(!is.null(filename) & devOff)
 	{
 		dev.off()
 	}
