@@ -6,18 +6,20 @@ getINLAData<-function(coarseRaster,casedata,location=NULL){
 
  expected<-raster2DF(coarseRaster)
  names(expected)[3] = "expected"
- observed <- data.frame(rasterToPoints(pointsToRaster(coarseRaster,xy=casedata$coords,val=casedata$one)))
+ observed <- data.frame(rasterToPoints(pointsToRaster(coarseRaster,xy=casedata$coords,val=casedata$one,background=0,fun=mean)))
  names(observed)[3] = "observed"
 
- all<-merge(expected, observed,all.x=T)
- all$observed[is.na(all$observed)] = 0
+ all<-merge(expected, observed,all=T,sort=F)
+ #all$observed[is.na(all$observed)] = 0
  all$observed[is.na(all$expected)] = NA
  all$observed[all$expected==0] = NA
- all$E = all$expected*xres(coarseRaster)*yres(coarseRaster)
+ #all$E = all$expected*xres(coarseRaster)*yres(coarseRaster)
+ all$E = all$expected*0.01^2
  all$logE = log(all$E)
  all$logE[all$logE == -Inf] = 0 #this could be any number
  all$logE[is.na(all$logE)] = 0
 
+ all = sort_df(all,c("y","x"))
  all$ID<-1:dim(all)[1]
 
  #get location and calculate distances 

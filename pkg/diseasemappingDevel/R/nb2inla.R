@@ -1,6 +1,6 @@
 #
 #Convert nb object into inla format
-#Written By Virgilio Gomez-Rubio
+#
 
 
 nb2inla <-function(file, nb)
@@ -18,9 +18,12 @@ nb2inla <-function(file, nb)
 
 	for(i in 1:length(nb))
 	{
-		txt<-paste(c(i-1, length(nb[[i]]), nb[[i]]-1), collapse=" ")
+                temp = nb[[i]]-1;ltemp=length(temp)
+                if(ltemp==1 & temp[1]==-1) {ltemp=0;temp = ""}
+		txt<-paste(c(i-1, ltemp, temp), collapse=" ")
 		txt<-paste(txt, "\n",sep="")
 		cat(txt, file=file, append = TRUE)
+                
 	}
 }
 
