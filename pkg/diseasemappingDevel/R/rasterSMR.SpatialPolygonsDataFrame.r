@@ -65,6 +65,8 @@ r <- raster(nrows=nrows,ncols=ncols,xmn=xmin, xmx=xmax,
 #Grep the columns we need
 for (i in 1:length(columns)){
   f<-which(names(popdata) == columns[i])
+  if(!length(f))
+	  warning("can't find column ", columns[i], "in polygon")
   k<-polygonsToRaster(popdata, r,field=f)
   #if need to be aggregated
 
