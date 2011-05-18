@@ -58,7 +58,8 @@ if(cy!=0){ cellFine[2] <- cellCoarse[2]/fact[2]; warning("Fine cell on Y directi
 
 
 ##Find number of row and cols base on fine cells
-ncols <-  (xmax-xmin) %/% cellFine[1];  nrows <-  (ymax-ymin) %/% cellFine[2]
+ncols <-  round( (xmax-xmin) / cellFine[1])
+nrows <-  round( (ymax-ymin) / cellFine[2])
 r <- raster(nrows=nrows,ncols=ncols,xmn=xmin, xmx=xmax, 
 		ymn=ymin, ymx=ymax, crs=proj4string)
 
