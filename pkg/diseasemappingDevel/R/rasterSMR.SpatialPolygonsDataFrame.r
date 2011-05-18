@@ -9,6 +9,13 @@ rasterSMR.SpatialPolygonsDataFrame<-function(popdata,bbox=NULL,
   xmn=NULL, xmx=NULL, ymn=NULL, ymx=NULL, 
   columns=c("expected_sqk"),proj4string=popdata@proj4string){
 
+if(length(cellFine)==1)
+	cellFine = c(cellFine,cellFine)
+
+if(length(cellCoarse)==1)
+	cellCoarse = c(cellCoarse,cellCoarse)
+
+
 #aggregation indicator, if either one is not NULL, aggregate
 #agg<-(!is.null(fact) | !is.null(cellCoarse))
 cellCoarse=cellFine*fact
@@ -30,9 +37,9 @@ xmax<-xmx;xmin<-xmn;ymax<-ymx;ymin<-ymn
 #get reminders
 x=xdis %% cellCoarse[1]; y=ydis %% cellCoarse[2];
 if(x!=0){xmax<-xmx + (cellCoarse[1]-x)/2; xmin<-xmn - (cellCoarse[1]-x)/2
-        warning("Bounding Box is adjusted on X direction to make it multiples of coarse cells: ",paste(xmin,xmax,sep=","))}
+        warning("Bounding Box is adjusted on X direction to make it multiples of  cells: ",paste(xmin,xmax,sep=","))}
 if(y!=0){ymax<-ymx + (cellCoarse[2]-y)/2; ymin<-ymn - (cellCoarse[2]-y)/2
-        warning("Bounding Box is adjusted on Y direction to make it multiples of coarse cells: ",paste(ymin,ymax,sep=","))}
+        warning("Bounding Box is adjusted on Y direction to make it multiples of  cells: ",paste(ymin,ymax,sep=","))}
         
         
 #check if Coarse is mutilples of fine
