@@ -4,8 +4,10 @@
 #if cellCoarse and fact is null, then fine raster will be returned, otherwise the Coarse raster with fact
 #cellFine and cellCoarse are dimention of cells in the same unit as the unit of popdata
 
-rasterSMR.SpatialPolygonsDataFrame<-function(popdata,bbox=NULL,cellFine=c(50,50), fact=NULL, cellCoarse=NULL,
-  xmn=NULL, xmx=NULL, ymn=NULL, ymx=NULL, columns=c("expected_sqk"),projs="NA"){
+rasterSMR.SpatialPolygonsDataFrame<-function(popdata,bbox=NULL,
+		cellFine=c(50,50), fact=NULL, cellCoarse=NULL,
+  xmn=NULL, xmx=NULL, ymn=NULL, ymx=NULL, 
+  columns=c("expected_sqk"),proj4string=popdata@proj4string){
 
 #aggregation indicator, if either one is not NULL, aggregate
 #agg<-(!is.null(fact) | !is.null(cellCoarse))
@@ -50,7 +52,8 @@ if(cy!=0){ cellFine[2] <- cellCoarse[2]/fact[2]; warning("Fine cell on Y directi
 
 ##Find number of row and cols base on fine cells
 ncols <-  (xmax-xmin) %/% cellFine[1];  nrows <-  (ymax-ymin) %/% cellFine[2]
-r <- raster(nrows=nrows,ncols=ncols,xmn=xmin, xmx=xmax, ymn=ymin, ymx=ymax, projs=projs)
+r <- raster(nrows=nrows,ncols=ncols,xmn=xmin, xmx=xmax, 
+		ymn=ymin, ymx=ymax, crs=proj4string)
 
 #Grep the columns we need
 for (i in 1:length(columns)){
