@@ -68,7 +68,7 @@ if(length(S)==1) {
 # check to see if any of the terms in the model aren't in the case data
 termsToAdd = NULL
 for(D in theterms) {
-	if(!length(grep(D, names(casedata), ignore.case=T)))
+	if(!length(grep(D, names(casedata), ignore.case=TRUE)))
 		termsToAdd = c(termsToAdd, D)
 }
 	

@@ -25,7 +25,7 @@ data(popdata)
 data(casedata)
 
 model = getRates(casedata, popdata, ~age*sex, breaks=seq(0, 90, by=10) )
-ontario = getSMR(popdata,model,  casedata)
+ontario = getSMR(popdata,model,  casedata,regionCode="CSDUID", regionCodeCases="CSD2006")
 \dontrun{
 spplot(ontario, 'SMR')
 }

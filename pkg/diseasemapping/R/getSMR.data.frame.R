@@ -1,10 +1,11 @@
-`getSMR` <- function(popdata, model, casedata, regionCode = "CSDUID",
-    regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, ...){
+`getSMR` <- function(popdata, model, casedata, regionCode,
+    regionCodeCases, area = FALSE, area.scale = 1, ...){
        UseMethod("getSMR")
  }
  
-getSMR.data.frame <- function(popdata, model, casedata=NULL, regionCode = "CSDUID",
-    regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, ...){
+getSMR.data.frame <- function(popdata, model, casedata=NULL, 
+		regionCode = intersect(names(popdata), names(casedata))[1],
+    regionCodeCases=regionCode, area=FALSE, area.scale=1, ...){
 
 
 

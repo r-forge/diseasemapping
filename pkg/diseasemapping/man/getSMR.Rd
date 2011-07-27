@@ -10,9 +10,9 @@ The getSMR function calculates the rate of observe value over expected value.
 It will also merge back the observed value, expected value and the ratio back to the population data set. 
 }
 \usage{
-getSMR(popdata, model, casedata, regionCode = "CSDUID", regionCodeCases = "CSD2006", area = FALSE, area.scale = 1,  ...)
-\method{getSMR}{data.frame}(popdata, model, casedata=NULL, regionCode = "CSDUID", regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, ...)
-\method{getSMR}{list}(popdata, model, casedata = NULL, regionCode = "CSDUID", regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, years = NULL, personYears= TRUE, year.range = NULL, ...)
+getSMR(popdata, model, casedata, regionCode , regionCodeCases , area = FALSE, area.scale = 1,  ...)
+\method{getSMR}{data.frame}(popdata, model, casedata=NULL, regionCode =  intersect(names(popdata), names(casedata))[1], regionCodeCases = regionCode, area=FALSE , area.scale=1, ...)
+\method{getSMR}{list}(popdata, model, casedata = NULL, regionCode , regionCodeCases, area , area.scale , years = NULL, personYears= TRUE, year.range = NULL, ...)
 \method{getSMR}{SpatialPolygonsDataFrame}(popdata, ...)
 }
 \arguments{
@@ -44,7 +44,7 @@ Otherwise, \code{model} is passed to the \code{predict} function.
 data(casedata)
 data(popdata)
 therates = getRates(casedata, popdata, ~age*sex,breaks=c(seq(0, 80, by=10), Inf) )
-thesmr = getSMR(popdata, therates, casedata)
+thesmr = getSMR(popdata, therates, casedata,regionCode="CSDUID", regionCodeCases="CSD2006")
 head(thesmr@data)
 }
 \keyword{ }

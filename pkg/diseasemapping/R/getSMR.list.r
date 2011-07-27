@@ -1,5 +1,5 @@
-getSMR.list <- function(popdata, model, casedata = NULL, regionCode = "CSDUID", 
-              regionCodeCases = "CSD2006", area = FALSE, area.scale = 1, 
+getSMR.list <- function(popdata, model, casedata = NULL, regionCode, 
+              regionCodeCases, area, area.scale , 
               years = NULL, personYears=TRUE,year.range = NULL,...){
 #  lennon's stuff
         #isSP = (class(popdata[[1]]) == "SpatialPolygonsDataFrame")
