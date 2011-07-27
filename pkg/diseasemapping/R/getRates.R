@@ -4,7 +4,7 @@
 `getRates` <-
 function(casedata, popdata, formula, family=poisson, minimumAge=0,
    maximumAge=100, S=c("M", "F"), years=NULL, year.range=NULL,
-   case.years=grep("^year$", names(casedata), ignore.case=TRUE, value=TRUE)[1],
+   case.years=grep("^year$", names(casedata), ignore.case=TRUE, value=TRUE),
    fit.numeric=NULL ,breaks=NULL){
 
 # check the formula is one sided
@@ -65,7 +65,13 @@ if(length(S)==1) {
 # add covariates to case data from the population data
 # if they are any missing from the case data.
 
-termsToAdd = theterms[!theterms %in% names(casedata)]
+# check to see if any of the terms in the model aren't in the case data
+termsToAdd = NULL
+for(D in theterms) {
+	if(!length(grep(D, names(casedata), ignore.case=T)))
+		termsToAdd = c(termsToAdd, D)
+}
+	
 
 if(length(termsToAdd) ) {
   if(morethanoneyear)
