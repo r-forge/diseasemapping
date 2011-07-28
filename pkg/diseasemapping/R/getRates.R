@@ -170,8 +170,8 @@ if(!is.null(fit.numeric)){
 }
 
 
-todel <- as.formula(paste(".~.-",sexvar,"-",agevar,":",sexvar,sep=""))
-if(length(S)==1) formula=update.formula(formula, todel)
+#todel <- as.formula(paste(".~.-",sexvar,"-",agevar,":",sexvar,sep=""))
+#if(length(S)==1) formula=update.formula(formula, todel)
 
 # add cases and logpop to formula
 formula1 = update.formula(formula, 
