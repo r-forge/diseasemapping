@@ -36,8 +36,10 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL,
         popdata$expected = as.vector(
             as.matrix(popdata[,popGroups]) %*% model[rateGroups[names(popGroups)]]
           )
-
-        rownames(popdata) = as.character(popdata[,regionCode])  
+	if(!is.null(regionCode)) {
+        rownames(popdata) = as.character(popdata[,regionCode])
+    }
+	
     } else {
     # use the predict method on the model
 

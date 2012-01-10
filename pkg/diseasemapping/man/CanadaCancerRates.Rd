@@ -3,17 +3,17 @@
 \alias{CanadaCancerRates}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Retreive cancer incidence rates from the Public Health Agency of Canada
+Retrieve cancer incidence rates from the Public Health Agency of Canada
 }
 \description{
-Rates by age and sex group are retreived from http://dsol-smed.phac-aspc.gc.ca/dsol-smed/cancer/c_age_e.html
+Rates by age and sex group are retrieved from http://dsol-smed.phac-aspc.gc.ca/dsol-smed/cancer/c_age_e.html
 }
 \usage{
 CanadaCancerRates(area = "ontario", years = 2000:2005, site = "colon", sex=c("M", "F"))
 }
 \arguments{
   \item{area}{
-Canadian province to retreive rates from 
+Canadian province to retrieve rates from 
 }
   \item{years}{
 years to retrieve data from, must be after 1992
