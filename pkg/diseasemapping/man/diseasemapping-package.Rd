@@ -9,9 +9,7 @@ Disease Mapping
 Functions for calculating observed and expected counts by region, and manipulating posterior 
 samples from Bayesian models produced by glmmBUGS.
 }
-\details{
 
-}
 
 \author{
 Patrick Brown

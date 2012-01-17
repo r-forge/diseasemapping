@@ -6,25 +6,44 @@ cancerRates = function(area = "canada",
 
 
   areaCodes =
-  c("Canada"="0099",
-  "Newfoundland"=0899,
-"Prince Edward Island"=0799,
-"Nova Scotia"=0699,
-"Ontario"=1199,
-"Manitoba"=0399,
-"Saskatchewan"=1399,
-"Alberta"=0199,
-"British Columbia"=0299)
-# add more countries!
-
+  c("Canada"=1240099,
+  "Newfoundland"=1240899,
+"Prince Edward Island"=1240799,
+"Nova Scotia"=1240699,
+"Ontario"=1241199,
+"Manitoba"=1240399,
+"Saskatchewan"=1241399,
+"Alberta"=1240199,
+"British Columbia"=1240299,
+"New Zeland"=5540099,
+"Sweden"=7520099,
+"Slovenia"=7050099,
+"Slovakia"=7030099,
+Norway=5780099,
+Latvia=4280099,
+Lithuania=4400099,
+Iceland=3520099,
+Finland=2460099,
+Estonia=2330099,
+Denmark=2080099,
+"Czech Republic"=2030099,
+"Costa Rica"=1880099,
+USA=8400199,
+Iowa=8400899,
+"New Mexico"=8401399
+)
+if(is.character(areaCodes)) {
 area = areaCodes[grep(paste("^", area[1], sep=""), names(areaCodes), ignore.case=TRUE)]
-
+} else {
+	area = areaCodes[1]
+	
+}
 
 result = list()
 
   rates=NULL
   for(Dsex in names(sexes)) {
-fs<-paste("http://ci5.iarc.fr/CI5plus/Table4r.asp?registry=124",area,(paste("&period=",year,sep="",collapse="")),"&sex=", sexes[Dsex],"&window=1&text=1&stat=0&submit=Execute",sep="")
+fs<-paste("http://ci5.iarc.fr/CI5plus/Table4r.asp?registry=",area,(paste("&period=",year,sep="",collapse="")),"&sex=", sexes[Dsex],"&window=1&text=1&stat=0&submit=Execute",sep="")
 tempn = scan(fs, what="a", quiet=T)
 theurl=(paste("http://ci5.iarc.fr/", gsub("^HREF=", "", grep("href=/data", tempn, value=T, ignore.case=T)), sep=""))
 result[[Dsex]]=read.table(url(theurl), header=T,skip=1, fill=T, sep="\t", as.is=T)

@@ -9,14 +9,14 @@ Download cancer incidence rates from the International Agency for Research on Ca
 Rates by age and sex group are retreived from http://ci5.iarc.fr/CI5plus/ci5plus.htm
 }
 \usage{
-cancerRates(area = "ontario", year = 2000:2002, site = "colon", sex=c("M", "F"))
+cancerRates(area = "canada", year=2000, sex=c("M", "F"), site="Lung") 
 }
 \arguments{
   \item{area}{
-Region to retreive rates from,  
+Region to retrieve rates from,  
 }
-  \item{years}{
-years to retrieve data from, must be from 1978 to 2002
+  \item{year}{
+year or sequence of years to retrieve data from, within the period 1978 to 2002
 }
   \item{site}{
 a vector of cancer sites, see details}
@@ -24,7 +24,18 @@ a vector of cancer sites, see details}
 \code{"M"} or \code{"F"} for male or female rates only, \code{c("M","F")} (the default) for both sexes.}
 }
 \details{
-\code{area} must be one of  Canada, France, Japan, ????
+\code{area} must be one of Camada, Norway,
+Latvia,
+Lithuania,
+Iceland,
+Finland,
+Estonia,
+Denmark,
+"Czech Republic",
+"Costa Rica",
+USA,
+Iowa,
+"New Mexico"
 or the Canadian provinces of
 Newfoundland, Prince Edward Island, 
 Nova Scotia,
@@ -32,7 +43,7 @@ Ontario,
 Manitoba,
 Saskatchewan,
 Alberta, and
-British Columbia.
+British Columbia.  Alternately an integer specifying a registry code from http://ci5.iarc.fr.
 
 \code{site} must be one or more of
 All Sites,

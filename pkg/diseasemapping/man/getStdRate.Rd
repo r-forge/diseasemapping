@@ -8,22 +8,14 @@
 getStdRate(relativeRate, model, referencePopulation, scale = 1e+05)
 }
 \arguments{
-  \item{relativeRate}{ the relateve cancer rate calculated by glmmBUGS of different sex and age group of people from ontario . }
+  \item{relativeRate}{ the relative cancer rate calculated by glmmBUGS of different sex and age group of people from ontario . }
   \item{model}{ the estimated cancer rate calculated by glm model of different sex and age group of people from ontario. }
   \item{referencePopulation}{the standard Canadian population from year 1991. }
   \item{scale}{ the unit of the population. }
 }
-\details{
-  
-}
-\value{
-  
-}
-\references{  }
+
 \author{Lutong Zhou }
-\note{ 
-}
-\seealso{ }
+
 \examples{
 data(referencepop)
 data(casedata)
@@ -35,5 +27,4 @@ ontario = getSMR(popdata, model, casedata,regionCode="CSDUID", regionCodeCases="
 newpop <- getStdRate(ontario$SMR, model, referencepop, scale=100000)
 
 }
-\keyword{}
-\keyword{}% __ONLY ONE__ keyword per line
+ 

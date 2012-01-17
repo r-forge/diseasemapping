@@ -4,7 +4,7 @@
 \alias{getSMR.list}
 %\alias{getSMR.PostgreSQLConnection}
 \alias{getSMR.SpatialPolygonsDataFrame}
-\title{Calculate the standardized mortality/morbility ratios   }
+\title{Calculate the standardized mortality/morbidity ratios   }
 \description{
 The getSMR function calculates the rate of observe value over expected value. 
 It will also merge back the observed value, expected value and the ratio back to the population data set. 
@@ -38,8 +38,7 @@ Otherwise, \code{model} is passed to the \code{predict} function.
   Returns a new population data set contains expected number of cases, observed number of cases and SMR. 
   It has the same format as the population data set which put into the function.
 }
-
-\seealso{}
+ 
 \examples{
 data(casedata)
 data(popdata)
@@ -47,5 +46,4 @@ therates = getRates(casedata, popdata, ~age*sex,breaks=c(seq(0, 80, by=10), Inf)
 thesmr = getSMR(popdata, therates, casedata,regionCode="CSDUID", regionCodeCases="CSD2006")
 head(thesmr@data)
 }
-\keyword{ }
-\keyword{ }% __ONLY ONE__ keyword per line
+ 
