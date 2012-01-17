@@ -5,24 +5,23 @@
 \arguments{
   \item{formula}{the formula used to specify the model, default is "observed ~ 1", intercept only model}
   \item{family}{Distribution of responses, default is "poisson" }
-  \item{data}{dataset name, containing observed and expected case per region}
+  \item{spPolygon}{name of spatial polygon, with data attribute, containing observed and expected case per region}
   \item{offset}{offest variable name in the dataset, default is "logExpected"}
-  \item{spatial}{Identification column of the regions, which follows GMRF, default is "region" }
-  \item{graph.file}{A file contains the neigbour structures, see INAL package}
-  \item{control.Spatial}{A string specify the prior distribution and starting values for spatail random effect,
-                          default is "param=c(1,0.01),initial=4"}
-  \item{control.iid}{A string specify the prior distribution and starting values for iid effect,
-                          default is "param=c(1,0.01),initial=4"}
+  \item{ID}{Identification column of the regions, which follows GMRF, default is "ID" }
+  \item{prior.Spatial}{A string specify the prior distribution  for spatail random effect,
+                          default is "c(1,0.01)"}
+  \item{prior.iid}{A string specify the prior distribution for iid effect,
+                          default is "c(1,0.01)"}
+  \item{exceed}{A number bigger than 1 for exceedance probability, default is 1.5, compute 50% exceedance probability}
   \item{debug}{Print Debug information, default is FALSE}
   \item{verbose}{Print program excution process, default is TRUE}
   \item{keep}{Keep the data and result files, default is TRUE}
 }
 \details{
-It calls INLA packages, obtain the joint distrbution of spatail term and non-spatail term
-using linear combinations.
+It calls INLA packages, obtain the marginal distribution of the spatial random effect and the iid+spatial random effects
 }
 \value{
- A INLA object
+ A list with a spatial polygon object and an INLA object
 }
 \references{  }
 \author{ Patrick Brown  }
@@ -30,17 +29,14 @@ using linear combinations.
 }
 \seealso{ }
 \examples{
-library(INLA)
-data(Germany)
-Germany$logE = log(Germany$E)
-a<-bym(formula="Y ~ x",spatial="region",offset = "logE",graph.file="germany.graph",data=Germany)
-a$summary.fixed
+ data(popdata)
+ data(casedata)
+ model = getRates(casedata, popdata, ~age*sex, breaks=seq(0, 90, by=10) )
+ ontario = getSMR(popdata,model,  casedata,regionCode="CSDUID", regionCodeCases="CSD2006")
+result =bym(formula=observed  ~ 1,ID="CSDUID", family="poisson", spPolygon=ontario@data,offset = "logExpected")
+)
 
 
-#To merge the result back to the data. This will add  7 additional columns in the dataset
-#Posterior means of spatial effects, iid effects, fitted values, fitted values on the log scale,
-#bym (the spatial and non-spatial effects), as well as the exceedance probability of fitted and bym values
-resultData<-mergeINLA(data=Germany,INLA=a,exceed=1.2)
 
 ###Run BYM on grid
 library(spdep)
