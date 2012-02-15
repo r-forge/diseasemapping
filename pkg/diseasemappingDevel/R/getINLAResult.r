@@ -137,14 +137,16 @@ if(length(offsetExp)==1 &offsetExp[1]==1) offsetExp =rep(1,length(post))
 
 
 
-getEx<-function(post,r){
+getEx<-function(post,r, logscale=T){
+		if(logscale) 
+			r = log(r)
         V<-NULL
 	for(i in 1:length(post)){
 		post1<-post[[i]]
 		colnames(post1) = c("x", "y")
                 thediff = diff(post1[,"x"])
                 thediff = 0.5*c(0, thediff) + 0.5*c(thediff, 0)
-                above= post1[,"x"] > log(r)
+                above= post1[,"x"] > r
 		V[i]<-sum(post1[above,"y"] * thediff[above])
 	}
        V
