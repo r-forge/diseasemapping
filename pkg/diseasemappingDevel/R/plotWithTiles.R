@@ -1,136 +1,149 @@
-plotWithTiles = function(x, attr = 1, brks = NULL, prob = FALSE, 
+plotNamesWithTiles = function(x, attr = 1, brks = NULL, prob = FALSE, 
 	Ncol = 5, trans = 50, zoom = 4, xlim = NULL, ylim = NULL,
-	filename = NULL, devOff = TRUE, width = 600, height = 600
+	filename = NULL, devOff = TRUE, width = 600, height = 600, label = 1
 )
 {
 	library(classInt)
 	library(webmaps)
-	library(spdep)
 
 	if(prob == TRUE)
 	{
 		brks <- c(0,0.2,0.8,0.95,1)
 		colours <- c("#00FF00","#FFFF00","#FF6600","#FF0000")
-		
 	} else{
 		library(RColorBrewer)
 		colours <- brewer.pal(Ncol, "YlOrRd")
-		
 	}
 
-	if(!is.na(attr)) 
+	if(is.null(brks))
 	{
-		if(is.null(brks))
-		{
-			ci <- classInt::classIntervals(x@data[,attr], Ncol, style = "kmeans")
-			brks <- ci$brks * 100
-			brks <- c(floor(brks[1]), round(brks[-c(1,length(brks))]), ceiling(brks[length(brks)]))/100
-		} else {
-			breaksQQQ <<- brks
-			ci <- classInt::classIntervals(x@data[,attr], n = length(brks) - 1, fixedBreaks = breaksQQQ, style = "fixed")
-			rm(breaksQQQ, pos = 1)
-		}
+		ci <- classInt::classIntervals(x@data[,attr], Ncol, style = "kmeans")
+		brks <- ci$brks * 100
+		brks <- c(floor(brks[1]), round(brks[-c(1,length(brks))]), ceiling(brks[length(brks)]))/100
 	}
 
-	if(class(x)%in%c("SpatialGridDataFrame","SpatialPixelsDataFrame")) 
+	if(class(x) %in% c("SpatialGridDataFrame","SpatialPixelsDataFrame"))
 	{
-		library(rgdal)
-		#x@data = x@data[,attr,drop=F] 
-
-
-		thebbox=x@bbox
-		
-		
-		thebbox = 	SpatialPoints(
-				expand.grid(thebbox[1,],thebbox[2,]),
-				 proj4string=x@proj4string)
-		
-		 thebbox = spTransform(thebbox, CRS("+proj=longlat +datum=NAD83"))
-		 
-		 newX = sort(thebbox@coords[,1])
-		 newX = newX[-c(1,length(newX))]
-		 newY = sort(thebbox@coords[,2])
-		 newY = newY[-c(1,length(newY))]
-		 
-		 if(.Platform$OS.type =="unix") {
-
-		 	mytempfile = paste(tempfile(), ".tif",sep="")
-			mytempfile2 = paste(tempfile(), ".tif",sep="")
-			writeGDAL(x[attr], mytempfile)
-		 
-		system(
-				paste("gdalwarp -s_srs '", x@proj4string@projargs, 
-						"' -t_srs '+proj=longlat +datum=NAD83' -te",
-						newX[1], newY[1], newX[2], newY[2],
-    					mytempfile, mytempfile2, sep = " ")
-		)
-		
-		
-		} else {
-	
-			mytempfile = "temporaryfile1.tif"
-			mytempfile2 = "temporaryfile2.tif"
-			writeGDAL(x[attr], mytempfile)
-			
-			system(
-			paste('cmd /c c:\\OSGeo4W\\bin\\gdalwarp.exe', 
-				mytempfile, mytempfile2, 
-				'-s_srs "', x@proj4string@projargs, 
-				'" -t_srs "+proj=longlat +datum=NAD83" -te',
-				newX[1], newY[1], newX[2], newY[2], 
-				sep = " "))
-			}
-
-		x <- readGDAL(mytempfile2)
-		file.remove(mytempfile)
-		file.remove(mytempfile2)
-		
+		library(raster)
+		x <- raster(x, layer = attr)
+		x <- projectRaster(x, crs = "+proj=longlat +datum=NAD83")
 	} else {
-		x <- spTransform(x, CRS("+proj=longlat +datum=NAD83"))
+		stop("x must be SpatialGridDataFrame or SpatialPixelsDataFrame object")
 	}
 	
 	if(is.null(xlim))
-		xlim= x@bbox[1,] 
+	{
+		xlim= bbox(x)[1,]
+	}
 	if(is.null(ylim))
-		ylim= x@bbox[2,]
+	{
+		ylim= bbox(x)[2,]
+	}
 	
-	bgMap <- getTiles(xlim, ylim, zoom, path = "http://tile.openstreetmap.org/", maxTiles = 200)
-	
-	
+	bgMap <- getTiles(xlim, ylim, zoom, path = "http://a.www.toolserver.org/tiles/osm-no-labels/", maxTiles = 400)
+		
 	if(!is.null(filename))
 	{ 
 		if(!length(grep("\\.png$", filename)))
+		{
 			png(paste(filename, ".png", sep = ""), width = width, height = height)
+		}	
 	}
 	
-	plot(x, lty = 0, xlim = xlim,ylim=ylim, xlab="longitude",ylab="latitude",col=NA,axes=F)
+	plot(1, type = "n", xlim = xlim,ylim=ylim, xlab=NA,ylab=NA,axes=F)
 
 	image(bgMap, add = TRUE)
 	
-	if(class(x) == "SpatialGridDataFrame")
-	{
-		image(x, "band1", 
-				col=paste(colours, 
-						substring(hsv(alpha = as.numeric(trans)/100),8), sep = ""), 
-				breaks = brks, add = TRUE)
-	} else {
-		if(!is.na(attr)) 
-		{
-			colFac <- findColours(ci, colours)
-			colFac[!is.na(colFac)] = paste(colFac[!is.na(colFac)], trans,sep="")
-			plot(x, lty = 0, col = colFac, add = TRUE)
-		} else {
-			colFac = "black"
-			plot(x, lty = 1, col = colFac, add = TRUE)
-		}  
+	brkstemp <- brks
+	brkstemp[length(brkstemp)] <- brkstemp[length(brkstemp)] + 0.01
+	plot(x, breaks = brkstemp, col = paste(colours, substring(hsv(alpha = as.numeric(trans)/100),8), sep = ""), 
+		legend = FALSE, horizontal = FALSE, add = TRUE)
 
-		
+	legend("bottomright", fill = colours, cex = label, 
+		legend = c(paste("[", brks[1:(length(brks) - 2)], ",", brks[-c(1,length(brks))], ")", sep = ""), 
+			paste("[", brks[length(brks) - 1], ",", brks[length(brks)], "]", sep = "")), bg = "white")
+	text(-81.23304, 42.98339, "London", cex = label)
+	text(-82.40407, 42.97866, "Sarnia", cex = label)
+	text(-82.13981, 42.87978, "Petrolia", cex = label)
+	lines(c(-82.21666,-81.97337), c(42.55,42.55), lwd = 4)
+	lines(c(-82.21666,-82.21666), c(42.54,42.56), lwd = 2)
+	lines(c(-81.97337,-81.97337), c(42.54,42.56), lwd = 2)
+	text(-82.095015, 42.52, "20km", cex = label)
+
+	if(!is.null(filename) & devOff)
+	{
+		dev.off()
+	}
+}
+
+plotNoNamesWithTiles = function(x, attr = 1, brks = NULL, prob = FALSE, 
+	Ncol = 5, trans = 50, zoom = 4, xlim = NULL, ylim = NULL,
+	filename = NULL, devOff = TRUE, width = 600, height = 600, label = 1
+)
+{
+	library(classInt)
+	library(webmaps)
+
+	if(prob == TRUE)
+	{
+		brks <- c(0,0.2,0.8,0.95,1)
+		colours <- c("#00FF00","#FFFF00","#FF6600","#FF0000")
+	} else{
+		library(RColorBrewer)
+		colours <- brewer.pal(Ncol, "YlOrRd")
+	}
+
+	if(is.null(brks))
+	{
+		ci <- classInt::classIntervals(x@data[,attr], Ncol, style = "kmeans")
+		brks <- ci$brks * 100
+		brks <- c(floor(brks[1]), round(brks[-c(1,length(brks))]), ceiling(brks[length(brks)]))/100
+	}
+
+	if(class(x) %in% c("SpatialGridDataFrame","SpatialPixelsDataFrame"))
+	{
+		library(raster)
+		x <- raster(x, layer = attr)
+		x <- projectRaster(x, crs = "+proj=longlat +datum=NAD83")
+	} else {
+		stop("x must be SpatialGridDataFrame or SpatialPixelsDataFrame object")
 	}
 	
-	if(!is.na(attr)) 
+	if(is.null(xlim))
 	{
-		legend("bottomright", fill = colours, legend = brks[-1], bg = "white")
-    }
+		xlim= bbox(x)[1,]
+	}
+	if(is.null(ylim))
+	{
+		ylim= bbox(x)[2,]
+	}
+	
+	bgMap <- getTiles(xlim, ylim, zoom, path = "http://a.www.toolserver.org/tiles/osm-no-labels/", maxTiles = 400)
+		
+	if(!is.null(filename))
+	{ 
+		if(!length(grep("\\.png$", filename)))
+		{
+			png(paste(filename, ".png", sep = ""), width = width, height = height)
+		}	
+	}
+	
+	plot(1, type = "n", xlim = xlim,ylim=ylim, xlab=NA,ylab=NA,axes=F)
+
+	image(bgMap, add = TRUE)
+	
+	brkstemp <- brks
+	brkstemp[length(brkstemp)] <- brkstemp[length(brkstemp)] + 0.01
+	plot(x, breaks = brkstemp, col = paste(colours, substring(hsv(alpha = as.numeric(trans)/100),8), sep = ""), 
+		legend = FALSE, horizontal = FALSE, add = TRUE)
+
+	legend("bottomright", fill = colours, cex = label, 
+		legend = c(paste("[", brks[1:(length(brks) - 2)], ",", brks[-c(1,length(brks))], ")", sep = ""), 
+			paste("[", brks[length(brks) - 1], ",", brks[length(brks)], "]", sep = "")), bg = "white")
+	lines(c(-82.21666,-81.97337), c(42.55,42.55), lwd = 4)
+	lines(c(-82.21666,-82.21666), c(42.54,42.56), lwd = 2)
+	lines(c(-81.97337,-81.97337), c(42.54,42.56), lwd = 2)
+	text(-82.095015, 42.52, "20km", cex = label)
 
 	if(!is.null(filename) & devOff)
 	{
