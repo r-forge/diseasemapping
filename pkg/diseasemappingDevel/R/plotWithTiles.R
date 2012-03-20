@@ -1,4 +1,4 @@
-plotWithTiles = function(x, attr = 1, brks = NULL, prob = FALSE, 
+plotWithTiles = function(x, attr = 1, breaks = NULL, prob = FALSE, 
 	Ncol = 5, trans = 50, zoom = 4, xlim = NULL, ylim = NULL,
 	filename = NULL, devOff = TRUE, width = 600, height = 600, label = 1,
 	withNames = T
@@ -15,11 +15,17 @@ plotWithTiles = function(x, attr = 1, brks = NULL, prob = FALSE,
 	}
 	
 	
-	if(is.null(brks) & !is.null(attr))
+	if(is.null(breaks) & !is.null(attr))
 	{		
 		ci <- classInt::classIntervals(x@data[,attr], Ncol, style = "kmeans")
-		brks <- ci$brks * 100
-		brks <- c(floor(brks[1]), round(brks[-c(1,length(brks))]), ceiling(brks[length(brks)]))/100
+		breaks = signif(ci$brks, 2)
+		theunder = min(x@data[,attr]) - breaks[1]
+		theover = max(x@data[,attr]) - breaks[length(breaks)]
+		if(theunder > 0)
+			breaks[1] = signif(breaks[1] - theunder, 2)
+		if(theover > 0)
+			breaks[length(breaks)] = signif(breaks[length(breaks)] + theover, 2)
+		
 	}
 	if(is.character(Ncol)){
 		colours=Ncol
@@ -30,7 +36,7 @@ plotWithTiles = function(x, attr = 1, brks = NULL, prob = FALSE,
 	
 	if(prob == TRUE)
 	{
-		brks <- c(0,0.2,0.8,0.95,1)
+		breaks <- c(0,0.2,0.8,0.95,1)
 		colours <- c("#00FF00","#FFFF00","#FF6600","#FF0000")
 	} 
 	
@@ -40,11 +46,12 @@ plotWithTiles = function(x, attr = 1, brks = NULL, prob = FALSE,
 		x <- raster(x, layer = attr)
 
 	} 
-	if (! class(x) %in% c("raster", "SpatialPointsDataFrame")  ){
+
+	if (! class(x) %in% c("RasterLayer","raster", "SpatialPointsDataFrame")  ){
 		stop("x must be raster or SpatialGridDataFrame or SpatialPixelsDataFrame or SpatialPointsDataFrame object")
 	}
 
-	if(class(x)=="raster") {
+	if(class(x) %in% c("raster","RasterLayer") ){
 		x <- projectRaster(x, crs = "+proj=longlat +datum=NAD83")
 	} else {
 		x = spTransform(x, CRS("+proj=longlat +datum=NAD83"))
@@ -68,20 +75,19 @@ plotWithTiles = function(x, attr = 1, brks = NULL, prob = FALSE,
 			png(paste(filename, ".png", sep = ""), width = width, height = height)
 		}	
 	}
-	
-	plot(x,  xlim = xlim,ylim=ylim, xlab=NA,ylab=NA,axes=F)
+
+	dummy=SpatialPoints(cbind(xlim, ylim), proj4string=CRS("+proj=longlat +datum=NAD83"))
+	plot(dummy,  xlim = xlim,ylim=ylim, xlab=NA,ylab=NA,axes=F)
 
 	image(bgMap, add = TRUE)
-	
-	brkstemp <- brks
-	brkstemp[length(brkstemp)] <- brkstemp[length(brkstemp)] + 0.01
+
 	if(!is.null(attr)) {
-	plot(x, breaks = brkstemp, col = paste(colours, substring(hsv(alpha = as.numeric(trans)/100),8), sep = ""), 
+	plot(x, breaks = breaks, col = paste(colours, substring(hsv(alpha = as.numeric(trans)/100),8), sep = ""), 
 		legend = FALSE, horizontal = FALSE, add = TRUE)
 
 	legend("bottomright", fill = colours, cex = label, 
-		legend = c(paste("[", brks[1:(length(brks) - 2)], ",", brks[-c(1,length(brks))], ")", sep = ""), 
-			paste("[", brks[length(brks) - 1], ",", brks[length(brks)], "]", sep = "")), bg = "white")
+		legend = c(paste("[", breaks[1:(length(breaks) - 2)], ",", breaks[-c(1,length(breaks))], ")", sep = ""), 
+			paste("[", breaks[length(breaks) - 1], ",", breaks[length(breaks)], "]", sep = "")), bg = "white")
 	} else {
 		plot(x, add=T, col=colours)		
 	}
