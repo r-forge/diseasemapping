@@ -1,36 +1,60 @@
-fittedLincomb = function(inlaResult){
+fittedLincomb = function(inlaResult, fixedValues = NULL){
 	
 	allterms = attributes(terms(inlaResult$formula))$term.labels
 	theterms = allterms[-grep("^f\\(", allterms)]
+	
+	
+	if(!is.null(fixedValues))
+		theterms = theterms[!theterms %in% names(fixedValues)]
+		
 	theRE = names(inlaResult$summary.random)
 	if(length(theRE)!=1)
 		warning("more than one random effect", theRE)
 	
 	theUnique = which(!duplicated(inlaResult$data[[theRE]]))
-	forCellID = matrix(NA, dim(inlaResult$summary.random[[theRE]])[1],length(theUnique))
+
 	
+
 	
-	for(D in seq(1, length(theUnique))) {
-    	forCellID[inlaResult$data[theUnique[D],theRE],D] = 1
+	for(D in names(fixedValues)) {
+		if(length(fixedValues[[D]])==1) {
+			forLincomb[[D]] = rep(fixedValues[[D]], length(theUnique))	
+		} else {
+			forLincomb[[D]] = fixedValues[[D]]
+		}
 	}
 	
 	
-	forLincomb = list(cellID=forCellID, "(Intercept)"=rep(1,length(theUnique)))
-	names(forLincomb)[1] = theRE
+	
 	
 	#return(list(theUnique, theterms, forLincomb,inla.uncbind(as.matrix(
 	#								inlaResult$data[theUnique,theterms]))))
 	
-	theMatrix = as.matrix(inlaResult$data[theUnique,theterms])
+	theDF = inlaResult$data[theUnique,theterms]
+	theDF = theDF[,lapply(theDF, class)=="numeric"]
+	theMatrix = as.matrix(theDF)
+	theMatrix = cbind(theMatrix, "(Intercept)" = 1)
 	theMatrix2 = inla.uncbind(theMatrix)
 	
 	assign("theMatrix2QQ", theMatrix2,pos=1)
 	
+
+	theLincomb = inla.make.lincombs(theMatrix2QQ)
+
+	idVec = inlaResult$data[theUnique,theRE]
 	
-	theLincomb = inla.make.lincombs(theMatrix2QQ, forLincomb)
+	for(Dcell in 1:length(theLincomb)) {
+	theLincomb[[Dcell]] = c(theLincomb[[Dcell]], 
+    		list(list(list(idx=idVec[Dcell], weight=1)))
+			)
+	Dre = length(theLincomb[[Dcell]])
+			
+	names(theLincomb[[Dcell]][[Dre]])=theRE		
 	
-	rm(theMatrix2QQ, pos=1)
-	
-	theLincomb
+	}
+ 
+	attr(theLincomb,"idx") = inlaResult$data[[theRE]][theUnique]
+ 
+	return(theLincomb)
 	
 }
