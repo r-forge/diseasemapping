@@ -1,8 +1,14 @@
-lincombRanef = function(x, ranefName = "cellID") {
+lincombRanef = function(x, ranefName = "cellID", intercept=T) {
 	
-	if(is.vector(x)) 
+	if(length(x)==1) {
+		x = 1:x
+	}
+	
+	if(is.vector(x)) {
 		x = as.data.frame(x)
-	
+		names(x) = ranefName
+	}
+		
 	if(! ranefName %in% names(x))
 	 x[,ranefName] = seq(1, nrow(x))
 
@@ -12,21 +18,31 @@ lincombRanef = function(x, ranefName = "cellID") {
 	
 	for(D in 1:nrow(x)){
 		result[[D]]=list()
-		result[[D]][[1]] = list(
-				'(Intercept)' = list(weight=1)
-				
-				)
 		for(Dcol in 1:ncol(x)) {
-			result[[D]][[Dcol+1]] = list(
+			result[[D]][[Dcol]] = list(
 					list(weight=
 							x[D,Dcol])
 					)
-			names(result[[D]][[Dcol+1]]) = colnames(x)[Dcol]		
+			names(result[[D]][[Dcol]]) = colnames(x)[Dcol]		
 		}
+	
+		
+
 		N = length(result[[D]])
 		
 		result[[D]][[N]][[ranefName]]$idx = result[[D]][[N]][[ranefName]]$weight 				
 		result[[D]][[N]][[ranefName]]$weight = 1
+		
+		
+		if(intercept) {
+			result[[D]] = c(result[[D]],
+				list(list(
+					'(Intercept)' = list(weight=1)
+			
+					) 
+				))
+		}
+		
 	}
 	result
 	

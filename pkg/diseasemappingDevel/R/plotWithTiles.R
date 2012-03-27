@@ -1,7 +1,7 @@
 plotWithTiles = function(x, attr = 1, breaks = NULL, prob = FALSE, 
 	Ncol = 5, trans = 50, zoom = 4, xlim = NULL, ylim = NULL,
 	filename = NULL, devOff = TRUE, width = 600, height = 600, label = 1,
-	withNames = T
+	withNames = T 
 )
 {
 	library(classInt)
@@ -18,26 +18,36 @@ plotWithTiles = function(x, attr = 1, breaks = NULL, prob = FALSE,
 	if(is.null(breaks) & !is.null(attr))
 	{		
 		ci <- classInt::classIntervals(x@data[,attr], Ncol, style = "kmeans")
-		breaks = signif(ci$brks, 2)
-		theunder = min(x@data[,attr]) - breaks[1]
-		theover = max(x@data[,attr]) - breaks[length(breaks)]
-		if(theunder > 0)
-			breaks[1] = signif(breaks[1] - theunder, 2)
-		if(theover > 0)
-			breaks[length(breaks)] = signif(breaks[length(breaks)] + theover, 2)
 		
+		D=2
+		breaks = signif(ci$brks, D)
+		
+		
+		while(length(unique(breaks)) < length(breaks)) {
+			D = D+1
+			breaks = signif(ci$brks, D)
+		}
+			
+		theunder = min(x@data[,attr], na.rm=T) - breaks[1]
+		theover = max(x@data[,attr], na.rm=T) - breaks[length(breaks)]
+ 
+		if(theunder > 0)
+			breaks[1] = signif(ci$brks[1] - theunder, D)
+		if(theover > 0)
+			breaks[length(breaks)] = signif(ci$brks[length(breaks)] + theover, D)
+ 
 	}
 	if(is.character(Ncol)){
 		colours=Ncol
 	} else {
 		library(RColorBrewer)
-		colours <- brewer.pal(Ncol, "YlOrRd")
+		colours <- rev(brewer.pal(Ncol, "RdYlGn"))
 	}
 	
 	if(prob == TRUE)
 	{
-		breaks <- c(0,0.2,0.8,0.95,1)
-		colours <- c("#00FF00","#FFFF00","#FF6600","#FF0000")
+		breaks <- c(0,0.2,0.5,0.8,0.95,1)
+		colours <- c("#00FF00","#CCEE00","#FFEE44", "#FF6600","#FF0000")
 	} 
 	
 	if(class(x) %in% c("SpatialGridDataFrame","SpatialPixelsDataFrame"))
@@ -85,7 +95,7 @@ plotWithTiles = function(x, attr = 1, breaks = NULL, prob = FALSE,
 	plot(x, breaks = breaks, col = paste(colours, substring(hsv(alpha = as.numeric(trans)/100),8), sep = ""), 
 		legend = FALSE, horizontal = FALSE, add = TRUE)
 
-	legend("bottomright", fill = colours, cex = label, 
+	legend("topleft", fill = colours, cex = label, 
 		legend = c(paste("[", breaks[1:(length(breaks) - 2)], ",", breaks[-c(1,length(breaks))], ")", sep = ""), 
 			paste("[", breaks[length(breaks) - 1], ",", breaks[length(breaks)], "]", sep = "")), bg = "white")
 	} else {
