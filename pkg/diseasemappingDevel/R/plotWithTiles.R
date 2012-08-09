@@ -1,6 +1,6 @@
 plotWithTiles = function(x, attr = 1, breaks = NULL, prob = FALSE, 
 	Ncol = 5, trans = 50, zoom = 4, xlim = NULL, ylim = NULL,
-	filename = NULL, devOff = TRUE, width = 600, height = 600, label = 1,
+	filename = NULL, devOff = TRUE, width = 6, height = 6, label = 1,
 	withNames = T 
 )
 {
@@ -19,7 +19,7 @@ plotWithTiles = function(x, attr = 1, breaks = NULL, prob = FALSE,
 	{		
 		ci <- classInt::classIntervals(x@data[,attr], Ncol, style = "kmeans")
 		
-		D=2
+		D=1
 		breaks = signif(ci$brks, D)
 		
 		
@@ -28,15 +28,18 @@ plotWithTiles = function(x, attr = 1, breaks = NULL, prob = FALSE,
 			breaks = signif(ci$brks, D)
 		}
 			
-		theunder = min(x@data[,attr], na.rm=T) - breaks[1]
-		theover = max(x@data[,attr], na.rm=T) - breaks[length(breaks)]
- 
-		if(theunder > 0)
-			breaks[1] = signif(ci$brks[1] - theunder, D)
-		if(theover > 0)
-			breaks[length(breaks)] = signif(ci$brks[length(breaks)] + theover, D)
- 
+		themin = min(x@data[,attr], na.rm=T)
+		themax = max(x@data[,attr], na.rm=T)
+		
+		if(themin < breaks[1]) {
+			 breaks[1] = breaks[1] - min(diff(breaks))
+		}
+		
+		if(themax > breaks[length(breaks)]) {
+			breaks[length(breaks)] = breaks[length(breaks)] + min(diff(breaks))
+		}
 	}
+		
 	if(is.character(Ncol)){
 		colours=Ncol
 	} else {
@@ -69,11 +72,22 @@ plotWithTiles = function(x, attr = 1, breaks = NULL, prob = FALSE,
 	
 	if(is.null(xlim))
 	{
-		xlim= bbox(x)[1,]
+		if(class(x)=='raster'|class(x)=='RasterLayer') {
+		xlim= apply(as.matrix(x), 2, function(qq) all(is.na(qq)))
+		xlim= seq(bbox(x)['s1','min'], bbox(x)['s1', 'max'], len=x@ncols)[!xlim]
+	    xlim = range(xlim)
+		} else
+			xlim = bbox(x)[1,] 
 	}
 	if(is.null(ylim))
 	{
-		ylim= bbox(x)[2,]
+		if(class(x)=='raster'|class(x)=='RasterLayer') {
+			ylim= apply(as.matrix(x), 1, function(qq) all(is.na(qq)))
+		ylim= seq(bbox(x)['s2','min'], bbox(x)['s2', 'max'], len=x@nrows)[!ylim]
+	    ylim = range(ylim)
+	} else
+		ylim = bbox(x)[2,] 
+	
 	}
 	
 	bgMap <- getTiles(xlim, ylim, zoom, path = tilepath, maxTiles = 400)
@@ -82,11 +96,14 @@ plotWithTiles = function(x, attr = 1, breaks = NULL, prob = FALSE,
 	{ 
 		if(!length(grep("\\.png$", filename)))
 		{
-			png(paste(filename, ".png", sep = ""), width = width, height = height)
+			filename = paste(filename, ".png", sep = "")
 		}	
+		png(filename, width = width, height = height,units='in',res=300)
+
 	}
 
 	dummy=SpatialPoints(cbind(xlim, ylim), proj4string=CRS("+proj=longlat +datum=NAD83"))
+	par(mar=c(0,0,0,0))
 	plot(dummy,  xlim = xlim,ylim=ylim, xlab=NA,ylab=NA,axes=F)
 
 	image(bgMap, add = TRUE)
@@ -95,9 +112,15 @@ plotWithTiles = function(x, attr = 1, breaks = NULL, prob = FALSE,
 	plot(x, breaks = breaks, col = paste(colours, substring(hsv(alpha = as.numeric(trans)/100),8), sep = ""), 
 		legend = FALSE, horizontal = FALSE, add = TRUE)
 
-	legend("topleft", fill = colours, cex = label, 
-		legend = c(paste("[", breaks[1:(length(breaks) - 2)], ",", breaks[-c(1,length(breaks))], ")", sep = ""), 
-			paste("[", breaks[length(breaks) - 1], ",", breaks[length(breaks)], "]", sep = "")), bg = "white")
+	
+	
+legend('topleft', pch=rep(NA, length(breaks)), legend=breaks, bg='white',
+		adj=c(0,-0.4), cex=label)
+
+legend("topleft", pch=15, col =  colours, pt.cex = 2.75*label, cex=label, 
+			legend=rep('    ', length(colours)), bty='n')
+	
+	
 	} else {
 		plot(x, add=T, col=colours)		
 	}

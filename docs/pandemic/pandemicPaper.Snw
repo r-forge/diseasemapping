@@ -321,7 +321,8 @@ probs = NULL, ageProbs = list(S = addAgeProbs(), D = addAgeProbs()))
 simEpidemicVary <- simEpidemic(params = pandemicParamsVary, delta = 5, days = 20, probOnsetMissing = 0.7, randomInfections = TRUE)
 pandemicPriorsVary = pandemicPriors(probs=psProbPriors() )
 mcmcScaleVary <- mcmcScale(params = pandemicParamsVary, sigma = 0.075, minScale = 0.05, maxScale = 0.2)
-mcmcPandemicVary <- mcmcPandemic(xdata = simEpidemicVary, params = pandemicParamsVary, prior = pandemicPriorsVary, sigma = mcmcScaleVary, runs = 100, thin = 2, saveData = T)
+mcmcPandemicVary <- mcmcPandemic(xdata = simEpidemicVary, params = pandemicParamsVary, 
+		prior = pandemicPriorsVary, sigma = mcmcScaleVary, runs = 100, thin = 2)
 @	
 }
   
