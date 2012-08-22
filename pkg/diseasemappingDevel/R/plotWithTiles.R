@@ -32,7 +32,7 @@ plotWithTiles = function(x, attr = 1, breaks = NULL, prob = FALSE,
 		themax = max(x@data[,attr], na.rm=T)
 		
 		if(themin < breaks[1]) {
-			 breaks[1] = breaks[1] - 10^(-D+1)
+			 breaks[1] = breaks[1] - 10^(-(D+1))
 		}
 		
 		if(themax > breaks[length(breaks)]) {
