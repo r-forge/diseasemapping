@@ -1,0 +1,12 @@
+Package: MRFraster
+Type: Package
+Title: Markov random fields as raster objects 
+Version: 0.0.1
+Date: 2012-10-02
+Depends: INLA, raster, RandomFields
+Enhances: spdep
+Author: Patrick Brown <patrick.brown@utoronto.ca>
+Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
+Description: Simulation and inference of geostatistical and point process data using the Markov random field approximation
+to the Matern covariance function.  Data and results are stored as raster objects.
+License: GPL
