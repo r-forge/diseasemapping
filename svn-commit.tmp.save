@@ -1,5 +1,0 @@
-changed d
---This line, and those below, will be ignored--
-
-M    pkg/diseasemapping/R/getSMR.data.frame.R
-M    pkg/diseasemapping/R/getSMR.list.r
