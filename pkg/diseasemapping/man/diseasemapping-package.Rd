@@ -70,7 +70,7 @@ ontario2$CSDUID = as.character(ontario2$CSDUID)
  
 prior.iid=prior.besag=c(.42,.00015)
 formula.bym = observed ~  f(CSDUID, 
-    model = "bym", graph.file = "nb.graph", values=CSDUID ,
+    model = "bym", graph = "nb.graph", values=CSDUID ,
     param = c(prior.iid, prior.besag))
  
 result1.bym = inla(formula.bym,family="poisson",data=ontario2@data,
@@ -85,7 +85,14 @@ rownames(tomerge) = tomerge$ID
 ontario2@data =   cbind(ontario2@data, 
 	tomerge[as.character(ontario2$CSDUID),] )   
 	
-spplot(ontario2, "mean")	
+spplot(ontario2, "mean")
+
+
+bivariate = inla.hyperpar(result1.bym)$joint.hyper
+colnames(bivariate) = c("iid","spatial","logDens")
+bivariate = SpatialPixelsDataFrame(bivariate[,1:2], bivariate)
+
+	
 }
 
 }
