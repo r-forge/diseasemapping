@@ -27,7 +27,7 @@ are Raster or SpatialPoints objects.
 \value{
 	If \code{x} is of class  \code{\link[raster]{raster}}, a random field is simulated on a grid and returned as a raster. 
 	 If \code{x} is of class Spatial
-	Points or SpatialPointsDataFrame, a random field is simulated at the points specified and a SpatialPointsDataFrame is returned.
+	Points or SpatialPointsDataFrame, a random field is simulated at the points specified and a vector is returned.
 }
 
 \examples{
@@ -41,12 +41,12 @@ myGRF=GaussRF(myraster, model="whittle",
 
 plot(myGRF)
 
-mypoints = SpatialPoints(cbind(runif(10), runif(10)))
+mypoints = SpatialPointsDataFrame(cbind(runif(10), runif(10)),data=data.frame(id=1:10))
 
-mysim=GaussRF(mypoints, model="whittle", 
-		param=mymodel)
+mypoints$rf= GaussRF(mypoints, model="whittle", 
+		param=mymodel) 
 
-spplot(mysim, "GaussRF")
+spplot(mypoints, "rf")
 
 
 x = cbind(1:4, 1:4)

@@ -22,23 +22,22 @@ GaussRF.Raster = function(x, ...){
 
 GaussRF.SpatialPointsDataFrame = function(x, ...){
 	
-	x$GaussRF =RandomFields::GaussRF(
+	result =RandomFields::GaussRF(
 		x@coords,
 		...
 	)
 
-	return(x)
+	return(result)
 }
 
 GaussRF.SpatialPoints= function(x, ...){
 	
-	x = SpatialPointsDataFrame(x, data=data.frame(GaussRF= rep(NA, length(x))))
-	x$GaussRF =RandomFields::GaussRF(
+	result =RandomFields::GaussRF(
 			x@coords,
 			...
 	)
 	
-	return(x)
+	return(result)
 }
 
 GaussRF.default = function(x,  ...){

@@ -1,15 +1,22 @@
 \name{anisoMatrix}
 \alias{anisoMatrix}
-Geometric Anisotropy Matrix
+
 \title{
 Calculates a 2-D matrix for geometric anisotropy
 }
+\description{
+Calculates a 2-D matrix for geometric anisotropy, for use with \code{\link{GaussRF}}
+}
+
 \usage{
-anisoMatrix(angle, scale)
+anisoMatrix(angle, range=NULL,scale=1/range)
 }
 \arguments{
   \item{angle}{
 	angle of rotaiton, in radians
+}
+  \item{range}{
+	range for x and y axes after rotation, ignored if scale is specified
 }
   \item{scale}{
 	scale for x and y axes after rotation
@@ -17,7 +24,7 @@ anisoMatrix(angle, scale)
 }
 \details{
 Produces matrix A such that
-	(xnew, ynew) = A (x,y)	
+	(xnew, ynew)' = A (x,y)'	
 }
 \value{
 A 2 by 2 matrix
@@ -32,7 +39,7 @@ Patrick Brown
 }
 \examples{
 
-myAnisoMat = anisoMatrix(-pi/8,c(2, 16))
+myAnisoMat = anisoMatrix(-pi/8,c(0.5, 0.1))
 
 mymodel=list("$", var=2,   
 		A=myAnisoMat,

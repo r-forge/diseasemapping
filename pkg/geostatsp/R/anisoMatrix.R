@@ -1,4 +1,4 @@
-anisoMatrix = function(angle, scale) {
+anisoMatrix = function(angle, range=NULL, scale=1/range) {
 	
 	if(length(scale)!= 2)
 		warning("scale should be length 2")

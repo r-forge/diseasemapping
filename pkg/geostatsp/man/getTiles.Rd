@@ -32,6 +32,7 @@ see \code{\link[webmaps]{getTiles}} in the webmaps package.}
 
 myraster = raster(nrows=11,ncols=11,xmn=0,xmx=10,ymn=0,ymx=10)
 
+\dontrun{
 mytiles = getTiles(myraster@extent, zoom=6,path = "http://tile.openstreetmap.org/")
 
 image(mytiles)
@@ -41,7 +42,7 @@ mypoints = SpatialPoints(10*cbind(runif(10), runif(10)))
 mytiles=getTiles(mypoints@bbox, zoom=6,path = "http://tile.openstreetmap.org/")
 
 image(mytiles)
-
+}
 
 
 }
