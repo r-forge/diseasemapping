@@ -6,18 +6,18 @@ Spatial prediction, or Kriging
 }
 \description{
 This function uses the  \code{\link[geoR]{krige.control}} and  \code{\link[geoR]{krige.conv}} functions
-in geoR to perform spatial prediction using a fitted model from \code\link{likfit}}.
+in geoR to perform spatial prediction using a fitted model from \code{\link{likfit}}.
 }
 \usage{
 krige(obj.model, geodata, locations, covariates, locations.mean = locations, factor.info = NULL, exp.pred = FALSE, rasterMethod = c("ngb", "bilinear"))
 }
-%- maybe also 'usage' for other objects documented here.
+ 
 \arguments{
   \item{obj.model}{
-A fitted model produced by \code\link{likfit}}
+A fitted model produced by \code{\link{likfit}}
 }
   \item{geodata}{
-A SpatialPointsDataFrame containing  the data used with \code\link{likfit}}.
+A SpatialPointsDataFrame containing  the data used with \code{\link{likfit}}.
 }
   \item{locations}{
 A \code{\link[raster]{raster}} on which the spatial random effects will be predicted
@@ -68,7 +68,7 @@ raster as \code{locations}}
 \seealso{
 \code{\link[geoR]{krige.conv}}
 }
-\examples{
+%\examples{
 
-}
+%}
 

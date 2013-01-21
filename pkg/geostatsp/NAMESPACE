@@ -4,7 +4,7 @@ GaussRF, GaussRF.Raster, GaussRF.SpatialPoints, GaussRF.SpatialPointsDataFrame,
 GaussRF.default, 
 getTiles, getTiles.matrix, getTiles.Extent, getTiles.default,
 likfit, likfit.default, likfit.SpatialPointsDataFrame,
- anisoMatrix
+ anisoMatrix,krige,stackRasterList
 )
 
 # Import all packages listed as Imports or Depends

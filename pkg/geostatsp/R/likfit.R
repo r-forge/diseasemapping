@@ -2,8 +2,11 @@ likfit = function(geodata, ...) {
 	UseMethod("likfit")
 	
 }
-likfit.SpatialPointsDataFrame <- function(geodata, formula, dist.rel.scale=20, ...){
+likfit.SpatialPointsDataFrame <- function(geodata, 
+		formula, dist.rel.scale=100, control, ...){
 
+
+	
 	theterms = strsplit(as.character(formula), "~")
 	
 	theCovs = attributes(terms(formula))$term.labels
@@ -14,16 +17,21 @@ likfit.SpatialPointsDataFrame <- function(geodata, formula, dist.rel.scale=20, .
 
 	trend = as.formula(paste("~", theterms[[3]]))
 	
-	maxdist = dist(t(geodata@bbox))
-	control=list(parscale=c(maxdist/dist.rel.scale,1))
 	
-	result = likfit.default(newdata, trend=trend, ...)
+	
+	maxdist = dist(t(geodata@bbox))
+	if(missing(control)) {
+		control=list(parscale=c(maxdist/dist.rel.scale,0.1))
+	}
+
+	result = likfit.default2(geodata=newdata, trend=trend, control=control, ...)
 	result$formula = formula
+	
 	
 	result
 }
 
-"likfit.default" <-
+"likfit.default2" <-
 		function (geodata, coords=geodata$coords, data=geodata$data,
 				trend = "cte", ini.cov.pars,
 				fix.nugget = FALSE, nugget = 0, 
@@ -34,12 +42,15 @@ likfit.SpatialPointsDataFrame <- function(geodata, formula, dist.rel.scale=20, .
 				components = TRUE, nospatial = TRUE, limits = pars.limits(), 
 				print.pars = FALSE, messages, ...) 
 {
+
 	name.geodata <- deparse(substitute(geodata))
 	##
 	## Checking input
 	##
 	call.fc <- match.call()
 	ldots <- list(...)
+
+	
 	temp.list <- list()
 	temp.list$print.pars <- print.pars
 	if(missing(messages))
@@ -102,14 +113,17 @@ likfit.SpatialPointsDataFrame <- function(geodata, formula, dist.rel.scale=20, .
 	##
 	## setting coordinates, data and covariate matrices
 	##
+
 	coords <- as.matrix(coords)
 	data <- as.vector(data)
 	n <- length(data)
+
+	
 	if((nrow(coords) != n) | (2*n) != length(coords))
 		stop("\nnumber of locations does not match with number of data")
 	if(missing(geodata))
-		xmat <- trend.spatial(trend=trend, geodata=list(coords = coords, data = data))
-	else xmat <- unclass(trend.spatial(trend=trend, geodata=geodata))
+		xmat <- geostatsp:::trend.spatial(trend=trend, geodata=list(coords = coords, data = data))
+	else xmat <- unclass(geostatsp:::trend.spatial(trend=trend, geodata=geodata))
 	xmat.contrasts  <- attr(xmat,"contrasts")
 	xmat <- unclass(xmat)
 	if(nrow(xmat) != n)
@@ -119,6 +133,7 @@ likfit.SpatialPointsDataFrame <- function(geodata, formula, dist.rel.scale=20, .
 	##
 	## setting a factor to indicate different realisations
 	##
+	
 	if(missing(realisations))
 		realisations <- as.factor(rep(1, n))
 	else{
@@ -402,6 +417,7 @@ likfit.SpatialPointsDataFrame <- function(geodata, formula, dist.rel.scale=20, .
 		##                         lower=lower.optim, upper=upper.optim,
 		##                         fp=fixed.values, ip=ip, temp.list = temp.list, ...)
 	}
+	lik.minim$control = ldots$control
 	##
 	if(messages.screen) cat("likfit: end of numerical maximisation.\n")
 	par.est <- lik.minim$par

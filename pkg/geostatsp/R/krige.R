@@ -17,6 +17,9 @@ if(class(covariates) == "list") {
 	
 	locations.mean = stackRasterList(covariates,locations.mean, themethod)	
 } else { # covariates must be a raster stack, use as-is
+	if(length(names(covariates))==1 & length(theCovs)==1) {
+		names(covariates) = theCovs
+	}
 	locations.mean = covariates
 }
 if(!all(names(locations.mean)%in% theCovs))
@@ -79,8 +82,8 @@ for(D in theCovs){
 	else
 		dummyDF[,D] = 0	
 }
-trend.d= trend.spatial(obj.model$trend, data)	
-trend.l = trend.spatial(obj.model$trend, dummyDF)
+trend.d= geostatsp:::trend.spatial(obj.model$trend, data)	
+trend.l = geostatsp:::trend.spatial(obj.model$trend, dummyDF)
 
 
 thecontrol = krige.control(obj.model=obj.model,
