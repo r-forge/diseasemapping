@@ -1,0 +1,148 @@
+maternGmrfPrec = function(Nx, Ny=Nx, range, scale=1/range, var=1, prec=1/var, kappa=2,cellSize=1) {
+	require(Matrix)
+	
+	scale = scale * cellSize
+	a = (scale^2 + 4) 
+	
+	if(kappa==1) {	
+		
+		precEntries = c("1" = 4 + a^2,
+					"2" = -2*a,
+					"3" = 2,
+					"4" = 1, 
+					"5" =  0,
+					"6" = 0)
+		} else if(kappa==2) {
+			precEntries = c("1" = a*(a*a+12),
+					"2" = -3*(a*a+3),
+					"3" = 6*a,
+					"4" = 3*a, 
+					"5" =  -3,
+					"6" = -1)
+		} else {
+			stop("kappa must be 1 or 2")			
+		}
+		
+		marginalPrec = 4*pi*kappa*scale^(2*kappa)
+	#	print(marginalPrec)
+		precEntries = 
+				precEntries*(prec /marginalPrec)
+		
+		theNNmat  = NNmat(Nx, Ny)
+		theN = theNNmat@x
+		theN = precEntries[as.character(theN)]
+		theNNmat@x = theN
+		return(prec=theNNmat)
+	}
+
+NNmat = function(Nx, Ny=Nx) {
+
+	
+	Ncol = Nx
+	Nrow=Ny
+	Ncell = Nrow*Ncol
+	
+#	result = Matrix(data=0,nrow=Ncell, ncol=Ncell, sparse=T)
+	Scell = 1:Ncell
+	result = sparseMatrix(Scell, Scell, x=rep(1, Ncell))
+#	diag(result) = 1
+	
+
+	
+	# interior points
+	oneN = c(1, -1, Ncol, -Ncol) # first neighbours up down right left
+	twoN = c(Ncol-1, Ncol+1, -Ncol-1, -Ncol+1)  # first neighbours diagonal
+	threeN = c(2, -2, 2*Ncol, -2*Ncol) # second neighbours up down right left
+
+	
+	fourN = c(3, -3, 3i, -3i) # square
+	fiveseq = c(-1, -2, 1, 2) # diagonals
+	fiveN = c(outer(fiveseq, fiveseq*1i, FUN="+"))
+	fiveN = fiveN[abs(Re(fiveN) )!= abs(Im(fiveN))]
+
+	fourNindex = Re(fourN) + Im(fourN)*Ncol
+	fiveNindex = Re(fiveN) + Im(fiveN)*Ncol
+	
+	if(all(c(Nrow,Ncol) > 7)) {
+		Scol = seq(4, Ncol-3)
+		
+		NeighbourIndexSeq = c(oneN, twoN, threeN, fourNindex,fiveNindex)
+		NeighbourSeq = c(rep(2,length(oneN)), 
+				rep(3 ,length(twoN)), 
+				rep(4,length(threeN)), 
+				rep(6 ,length(fourNindex)),
+				rep(5 ,length(fiveNindex))
+		)
+		
+
+	for(Drow in seq(4,Nrow-3)) {
+		Prow =  (Drow-1)*Ncol
+		for(Dcol in Scol){
+ 
+			Dcell =  Prow + Dcol
+			
+			result[Dcell + NeighbourIndexSeq,Dcell] = NeighbourSeq
+		}
+	}
+	}	
+
+	# the borders
+	
+	theNc = cbind(oneN = c(1, -1, 1i, -1i), # first neighbours up down right left
+	twoN = c(1-1i, -1+1i, -1i-1, 1i+1),  # first neighbours diagonal
+	threeN = c(2, -2, 2i, -2i), # second neighbours up down right left
+	fourN=fourN)	
+	theNcVec = c(theNc[,"oneN"],
+			theNc[,"twoN"],
+			theNc[,"threeN"],
+			theNc[,"fourN"],
+			fiveN)
+	theNcEntries = c(
+			rep(2, dim(theNc)[1]),
+			rep(3, dim(theNc)[1]),
+			rep(4, dim(theNc)[1]),
+			rep(6, dim(theNc)[1]),
+			rep(5, length(fiveN))			
+			)
+	
+
+
+			
+	Scol = unique(c(1,2,3,Ncol-2,Ncol-1, Ncol))
+	for(Drow in 1:Nrow) {
+		Prow =  (Drow-1)*Ncol
+		for(Dcol in Scol){
+			Dcell = Prow + Dcol
+			Ccell = Drow + 1i*Dcol
+			Nhere = theNcVec + Ccell
+			
+			outsideBox = Re(Nhere) < 1 | Re(Nhere)>Nrow | 
+					Im(Nhere) < 1 | Im(Nhere) > Ncol
+			inBox = !outsideBox
+			
+			NhereIndex = (Re(Nhere) -1)*Ncol + Im(Nhere)
+			
+			result[NhereIndex[inBox],Dcell ] = theNcEntries[inBox]
+		}			
+	}
+	Srow = unique(c(1,2,3,Nrow-2,Nrow-1, Nrow))
+	Scol = seq(4, Ncol-3)
+	for(Drow in Srow) {
+		Prow =  (Drow-1)*Ncol
+		for(Dcol in Scol){
+			Dcell = Prow + Dcol
+			Ccell = Drow + 1i*Dcol
+			Nhere = theNcVec + Ccell
+			
+			outsideBox = Re(Nhere) < 1 | Re(Nhere)>Nrow | 
+					Im(Nhere) < 1 | Im(Nhere) > Ncol
+			inBox = !outsideBox
+			
+			NhereIndex = (Re(Nhere) -1)*Ncol + Im(Nhere)
+			
+			result[NhereIndex[inBox],Dcell ] = theNcEntries[inBox]
+		}			
+	}
+
+	return(result)
+}

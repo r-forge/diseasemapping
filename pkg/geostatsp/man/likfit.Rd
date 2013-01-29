@@ -15,7 +15,7 @@
 
 \usage{
 likfit(geodata, ...)
-\method{likfit}{SpatialPointsDataFrame}(geodata, formula, dist.rel.scale=20,...)
+\method{likfit}{SpatialPointsDataFrame}(geodata, formula, dist.rel.scale=100,...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

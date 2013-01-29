@@ -3,7 +3,7 @@ likfit = function(geodata, ...) {
 	
 }
 likfit.SpatialPointsDataFrame <- function(geodata, 
-		formula, dist.rel.scale=100, control, ...){
+		formula, dist.rel.scale=100,  ...){
 
 
 	
@@ -20,20 +20,28 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 	
 	
 	maxdist = dist(t(geodata@bbox))
-	if(missing(control)) {
+	if(!"control" %in% names(list(...))) {
 		control=list(parscale=c(maxdist/dist.rel.scale,0.1))
 	}
 
-	result = likfit.default2(geodata=newdata, trend=trend, control=control, ...)
+	# for some reason this line is needed!
+	cov.model = list(...)$cov.model
+
+	if( !any( cov.model == 
+		c("matern", "exponential", "gaussian", "spherical", "circular", "cubic", "wave", "power", "powered.exponential", "cauchy", "gencauchy", "gneiting", "gneiting.matern", "pure.nugget")
+		)
+	) warning("cov.model not implemented in geoR")
+
+	result = likfit.default(geodata=newdata, trend=trend, control=control, ...)
 	result$formula = formula
 	
 	
 	result
 }
 
-"likfit.default2" <-
+"likfit.default" <-
 		function (geodata, coords=geodata$coords, data=geodata$data,
-				trend = "cte", ini.cov.pars,
+				trend = ~1, ini.cov.pars,
 				fix.nugget = FALSE, nugget = 0, 
 				fix.kappa = TRUE, kappa = 0.5, 
 				fix.lambda = TRUE, lambda = 1, 
@@ -244,8 +252,7 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 		if(abs(lambda - 1) < 0.0001) {
 			temp.list$log.jacobian <- 0
 			temp.list$z <- as.vector(data)
-		}
-		else {
+		} else {
 			if(any(data <= 0))
 				stop("Transformation option not allowed when there are zeros or negative data")
 			Jdata <- data^(lambda - 1)
@@ -257,8 +264,7 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 				temp.list$z <- log(data)
 			else temp.list$z <- ((data^lambda) - 1)/lambda
 		}
-	}
-	else{
+	}else{
 		temp.list$z <- as.vector(data)
 		temp.list$log.jacobian <- NULL
 	}
@@ -284,8 +290,7 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 	if(fix.nugget) {
 		##    fixed.pars <- c(fixed.pars, 0)
 		fixed.values$tausq <- nugget
-	}
-	else {
+	}	else {
 		ini <- c(ini, nugget/ini.cov.pars[1])
 		lower.optim <- c(lower.optim, limits$tausq.rel["lower"])
 		upper.optim <- c(upper.optim, limits$tausq.rel["upper"])
@@ -293,8 +298,7 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 	if(fix.kappa){
 		##    fixed.kappa <- c(fixed.pars, kappa)
 		fixed.values$kappa <- kappa
-	}
-	else {
+	}	else {
 		ini <- c(ini, kappa)
 		lower.optim <- c(lower.optim, limits$kappa["lower"])
 		upper.optim <- c(upper.optim, limits$kappa["upper"])
@@ -302,8 +306,7 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 	if(fix.lambda){
 		##    fixed.pars <- c(fixed.pars, lambda)
 		fixed.values$lambda <- lambda
-	}
-	else {
+	}	else {
 		ini <- c(ini, lambda)
 		lower.optim <- c(lower.optim, limits$lambda["lower"])
 		upper.optim <- c(upper.optim, limits$lambda["upper"])
@@ -311,8 +314,7 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 	if(fix.psiR){
 		##    fixed.pars <- c(fixed.pars, psiR)
 		fixed.values$psiR <- psiR
-	}
-	else {
+	}	else {
 		ini <- c(ini, psiR)
 		lower.optim <- c(lower.optim, limits$psiR["lower"])
 		upper.optim <- c(upper.optim, limits$psiR["upper"])
@@ -320,8 +322,7 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 	if(fix.psiA){
 		##    fixed.pars <- c(fixed.pars, psiA)
 		fixed.values$psiA <- psiA
-	}
-	else {
+	}	else {
 		ini <- c(ini, psiA)
 		lower.optim <- c(lower.optim, limits$psiA["lower"])
 		upper.optim <- c(upper.optim, limits$psiA["upper"])
@@ -337,8 +338,7 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 	}
 	##
 	names(ini) <- NULL
-	if(length(ini) == 1) justone <- TRUE
-	else justone <- FALSE
+	if(length(ini) == 1) justone <- TRUE	else justone <- FALSE
 	##
 	ip <- list(f.tausq = fix.nugget, f.kappa = fix.kappa,
 			f.lambda = fix.lambda,
@@ -411,6 +411,17 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 			ldots$lower <- lower.optim
 			ldots$upper <- upper.optim
 		}
+		
+	
+		if(!is.null(ldots$control$parscale)) {
+			
+			ldots$control$parscale = 
+					c(ldots$control$parscale,
+					rep(1, length(lower.optim)-
+									length(ldots$control$parscale)))			
+		}
+		
+		
 		lik.minim <- do.call("optim", c(list(par = ini, fn = geoR:::.negloglik.GRF,
 								fp=fixed.values, ip=ip, temp.list = temp.list), ldots))
 		##      lik.minim <- optim(par = ini, fn = .negloglik.GRF, method=optim.METHOD
@@ -859,12 +870,20 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 
 	# add names of covariates
 	names(lik.results$beta) = colnames(xmat)
-	dimnames(lik.results$beta.var) = list(colnames(xmat),colnames(xmat))
+	if(is.matrix(lik.results$beta.var)){
+		dimnames(lik.results$beta.var) = list(colnames(xmat),colnames(xmat))
 
-	beta.table = cbind(
+		beta.table = cbind(
 			est = lik.results$beta,
 			std.err = sqrt(diag(lik.results$beta.var))
 			)
+	 } else {
+		 beta.table = cbind(
+				 est = lik.results$beta,
+				 std.err = sqrt(lik.results$beta.var)
+		 )
+	 }
+		
 	beta.table= cbind(beta.table,
 			z = beta.table[,"est"]/beta.table[,"std.err"])
 	beta.table= cbind(beta.table,

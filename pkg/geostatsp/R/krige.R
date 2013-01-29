@@ -1,12 +1,14 @@
 krige = function(obj.model, geodata,  locations, covariates, locations.mean=locations,
-		factor.info=NULL, exp.pred=FALSE,rasterMethod = c("ngb", "bilinear")) {
+		factor.info=NULL, exp.pred=FALSE,rasterMethod = c("ngb", "bilinear"),
+		nugget.in.prediction=TRUE) {
+
+NsimBoxCox=40
 	
 data = geodata@data	
 theCovs = attributes(terms(obj.model$formula))$term.labels
 
 varTypes = unlist(lapply(data, class))[theCovs]
 thefactors = names(varTypes[varTypes=="factor"])
-
 
 # if necessary, turn covariates into a raster stack
 if(class(covariates) == "list") {
@@ -22,6 +24,8 @@ if(class(covariates) == "list") {
 	}
 	locations.mean = covariates
 }
+
+
 if(!all(names(locations.mean)%in% theCovs))
 	warning("some covariates in the model formula weren't supplied")
 
@@ -34,7 +38,9 @@ locationsDF = as.data.frame(locations, xy=TRUE)
 # construct the fixed effects component
 meanRaster = raster(locations.mean)
 meanRaster[] = obj.model$beta["(Intercept)"]
+
 for(D in theCovs){
+
 	if(varTypes[D] == "factor") {
 		if (D %in% names(factor.info)) {
 			tofac = factor.info[[D]]
@@ -58,22 +64,28 @@ for(D in theCovs){
 								locations.mean[[D]]@data@values
 						)]
 		)
-		
+
 		meanRaster = meanRaster + toAdd
 		
 	} else {
+
 		meanRaster = meanRaster + obj.model$beta[D]*locations.mean[[D]]
 	}
 }
 names(meanRaster) = "fixed"
-
 # do the kriging
 
 data.col = strsplit(as.character(obj.model$formula), "~")[[2]]
 geodataForKrige = as.geodata(geodata, 
 		data.col=data.col, 
 		covar.col=theCovs)
-
+if(obj.model$lambda != 1) {
+	if(obj.model$lambda == 0) {
+		geodataForKrige$data =log(geodataForKrige$data)
+	} else{
+		geodataForKrige$data =(geodataForKrige$data^obj.model$lambda -1)/obj.model$lambda
+	} 
+}
 dummyDF = locationsDF
 for(D in theCovs){
 	if(varTypes[D] == "factor") {
@@ -85,8 +97,9 @@ for(D in theCovs){
 trend.d= geostatsp:::trend.spatial(obj.model$trend, data)	
 trend.l = geostatsp:::trend.spatial(obj.model$trend, dummyDF)
 
-
-thecontrol = krige.control(obj.model=obj.model,
+obj.modelNoLambda = obj.model
+obj.modelNoLambda$lambda =1
+thecontrol = krige.control(obj.model=obj.modelNoLambda,
 		trend.d=trend.d, 
 		trend.l=trend.l) 
 
@@ -120,14 +133,53 @@ result = addLayer(result,
 names(result)[names(result)=="layer"] = "predict"
 
 
-if(exp.pred){
+if(exp.pred | obj.model$lambda==0){
 	names(result)[names(result)=="predict"] = "predict.log"
 	result = addLayer(result, 
-			exp(result[["predict.log"]]+ 0.5*result[["krige.var"]])
+			exp(result[["predict.log"]]+ 0.5*result[["krige.var"]] +
+							0.5* nugget.in.prediction * obj.model$nugget)
 	)
 	names(result)[names(result)=="layer"] = "predict"
 	
 }
+
+# box-cox
+if(!any(obj.model$lambda==c(0,1))){
+
+	names(result)[names(result)=="predict"] = "predict.boxcox"
+
+	
+	bcpred= 0
+	Ndata = length(result[["predict.boxcox"]][])
+
+	themean = result[["predict.boxcox"]][]
+	if(nugget.in.prediction){
+		thesd = sqrt(result[["predict.boxcox"]][] + obj.model$nugget)
+ 	} else {
+		thesd = sqrt(result[["predict.boxcox"]][])
+	}
+	thesd[is.na(thesd)] = 0 
+	themean[is.na(themean)] = 0 
+			
+	invlambda = 1/obj.model$lambda
+
+	for(D in 1:NsimBoxCox) {
+		bcpred = bcpred + (obj.model$lambda *rnorm(Ndata, themean, thesd)+1)^invlambda
+	}
+	bcpred = bcpred / NsimBoxCox
+	bcpred = raster(matrix(bcpred, ncol=result@ncols,byrow=T), 
+			result@extent@xmin,result@extent@xmax,
+			result@extent@ymin,result@extent@ymax,crs=result@crs)
+
+	result = addLayer(result, 
+			bcpred)
+
+
+	
+	names(result)[names(result)=="layer"] = "predict"
+	
+}
+
 
 if(as(result, 'BasicRaster')!=as(rastKrige, "BasicRaster")) {
 	result = list(random = rastKrige, prediction=result)			

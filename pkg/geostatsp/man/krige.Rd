@@ -9,7 +9,9 @@ This function uses the  \code{\link[geoR]{krige.control}} and  \code{\link[geoR]
 in geoR to perform spatial prediction using a fitted model from \code{\link{likfit}}.
 }
 \usage{
-krige(obj.model, geodata, locations, covariates, locations.mean = locations, factor.info = NULL, exp.pred = FALSE, rasterMethod = c("ngb", "bilinear"))
+krige(obj.model, geodata, locations, covariates, locations.mean = locations, factor.info = NULL, 
+	exp.pred = FALSE, rasterMethod = c("ngb", "bilinear"),
+	nugget.in.prediction=TRUE)
 }
  
 \arguments{
@@ -41,6 +43,8 @@ Should the predictions be exponentiated, defaults to false.
 Method for reprojecting or resampling rasters, either "bilinear" or "ngb". Any covariates which are factors
 will be reprojected with ngb even if bilinear is specified.
 }
+\item{nugget.in.prediction}{If TRUE, predict new observations by adding the nugget effect.  Otherwise
+predict fitted values.  Only relevant for Box-Cox or log transformed data.}
 }
 \details{
 This function is essentially a wrapper for   \code{\link[geoR]{krige.conv}}.
@@ -68,7 +72,32 @@ raster as \code{locations}}
 \seealso{
 \code{\link[geoR]{krige.conv}}
 }
-%\examples{
+\examples{
+data(swissRain)
+swissRain$lograin = log(swissRain$rain)
+swissRain$elevation = extract(swissAltitude, swissRain)
+swissFit =  likfit(swissRain, lograin ~ elevation, 
+	cov.model="matern", kappa = 2, fix.kappa=TRUE,
+	ini.cov.pars= c(0.6, 7000))
+swissRaster = raster(extent(swissRain@bbox), ncols=61, nrows=91, crs=swissRain@proj4string)	
+swissKrige = krige(swissFit, swissRain, swissRaster, swissAltitude)
 
-%}
+
+swissFit =  likfit(swissRain, rain ~ elevation, 
+	cov.model="matern", kappa = 2, fix.kappa=TRUE,
+	lambda=0.5, fix.lambda=TRUE,
+	ini.cov.pars= c(0.6, 7000))
+swissKrige = krige(obj.model=swissFit, geodata=swissRain, 
+	locations=swissRaster, covariates=swissAltitude)
+
+
+plot(swissKrige$prediction[["predict"]]) 
+\dontrun{
+load(url("http://www.filefactory.com/file/frd1mhownd9/n/CHE_adm0_RData"))
+plot(spTransform(gadm, swissRain@proj4string), add=T)
+}
+
+}
+
+ 
 
