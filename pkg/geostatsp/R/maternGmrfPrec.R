@@ -1,10 +1,56 @@
-maternGmrfPrec = function(Nx, Ny=Nx, range, scale=1/range, var=1, prec=1/var, kappa=2,cellSize=1) {
-	require(Matrix)
+
+maternGmrfPrec = function(N,...) {
+	UseMethod("maternGmrfPrec")	
+}
+
+maternGmrfPrec.default = function(N, Ny=N, ...) {
+
+	theNNmat  = NNmat(N, Ny)
+	
+	maternGmrfPrec(theNNmat, ...)
+	
+}
+
+maternGmrfPrec.matrix = function(N, ...) {
+	
+	N = as(N, "dgCMatrix")
+	maternGmrfPrec(N, ...)
+	
+}
+
+maternGmrfPrec.dgCMatrix = function(N, 	
+		params=c(var=1, range=1, kappa=1, cellSize=1),
+		adjust.edges=F) {
+
+	if(any(names(params)=="var") & !any(names(params)=="prec"))
+		params["prec"] = 1/params["var"]
+	if(any(names(params)=="range") & !any(names(params)=="scale"))
+		params["scale"] = 1/params["range"]
+
+	if(!all( c("prec","scale","kappa","cellSize")%in% names(params))) {
+		warning("params must have elements named kappa, cellSize, either prec or var, and either scale or range")
+	print(params)
+	}
+		
+	theNNmat = N
+	
+	scale=params["scale"]
+	prec=params["prec"]
+	kappa=params["kappa"]
+	cellSize=params["cellSize"]
 	
 	scale = scale * cellSize
 	a = (scale^2 + 4) 
 	
-	if(kappa==1) {	
+	if(kappa == 0){
+		precEntries = c(
+				"1" = a,
+				"2" = -1,
+				"3" = 0,
+				"4" = 0, 
+				"5" =  0,
+				"6" = 0)
+	} else if(kappa==1) {	
 		
 		precEntries = c("1" = 4 + a^2,
 					"2" = -2*a,
@@ -20,7 +66,7 @@ maternGmrfPrec = function(Nx, Ny=Nx, range, scale=1/range, var=1, prec=1/var, ka
 					"5" =  -3,
 					"6" = -1)
 		} else {
-			stop("kappa must be 1 or 2")			
+			stop("kappa must be 0, 1 or 2")			
 		}
 		
 		marginalPrec = 4*pi*kappa*scale^(2*kappa)
@@ -28,21 +74,27 @@ maternGmrfPrec = function(Nx, Ny=Nx, range, scale=1/range, var=1, prec=1/var, ka
 		precEntries = 
 				precEntries*(prec /marginalPrec)
 		
-		theNNmat  = NNmat(Nx, Ny)
 		theN = theNNmat@x
-		theN = precEntries[as.character(theN)]
+		theN = precEntries[theN]
 		theNNmat@x = theN
-		return(prec=theNNmat)
+		
+		attributes(theNNmat)$model =params
+
+		if(adjust.edges){
+			theNNmat = gmrfPrecUncond(theNNmat)
+		}
+		
+		return(theNNmat)
 	}
 
-NNmat = function(Nx, Ny=Nx) {
+NNmat = function(N, Ny=N) {
 
-	
+	Nx = N
 	Ncol = Nx
 	Nrow=Ny
 	Ncell = Nrow*Ncol
 	
-#	result = Matrix(data=0,nrow=Ncell, ncol=Ncell, sparse=T)
+#	images.bresult = Matrix(data=0,nrow=Ncell, ncol=Ncell, sparse=T)
 	Scell = 1:Ncell
 	result = sparseMatrix(Scell, Scell, x=rep(1, Ncell))
 #	diag(result) = 1
@@ -63,7 +115,7 @@ NNmat = function(Nx, Ny=Nx) {
 	fourNindex = Re(fourN) + Im(fourN)*Ncol
 	fiveNindex = Re(fiveN) + Im(fiveN)*Ncol
 	
-	if(all(c(Nrow,Ncol) > 7)) {
+	if(all(c(Nrow,Ncol) >= 7)) {
 		Scol = seq(4, Ncol-3)
 		
 		NeighbourIndexSeq = c(oneN, twoN, threeN, fourNindex,fiveNindex)
@@ -143,6 +195,8 @@ NNmat = function(Nx, Ny=Nx) {
 			result[NhereIndex[inBox],Dcell ] = theNcEntries[inBox]
 		}			
 	}
-
+	attributes(result)$Nx = Nx
+	attributes(result)$Ny = Ny
+	
 	return(result)
 }

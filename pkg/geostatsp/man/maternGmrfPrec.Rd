@@ -1,70 +1,120 @@
 \name{maternGmrfPrec}
 \alias{maternGmrfPrec}
+\alias{NNmat}
+\alias{gmrfPrecUncond}
 \title{Precision matrix for a Matern spatial correlation}
 \description{
 Produces the precision matrix for a Gaussian random field on a regular square lattice, using a Markov random field approximation. 
 }
 
 \usage{ 
-maternGmrfPrec(Nx, Ny=Nx, range, scale=1/range, var=1, prec=1/var, kappa=2,cellSize=1) 
+maternGmrfPrec(N, ...)
+\method{maternGmrfPrec}{dgCMatrix}(N, 
+	params=c(var=1, range=1, kappa=1, cellSize=1),
+  adjust.edges=F) 
+\method{maternGmrfPrec}{matrix}(N, ...)
+\method{maternGmrfPrec}{default}(N, Ny=N, ...)
+NNmat(N, Ny=N)
+gmrfPrecUncond(x, 
+			N = attributes(x)$Nx, Ny=attributes(x)$Ny,
+			params = attributes(x)$model,
+			border=params["kappa"]+1)
 }
 
 \arguments{
-\item{Nx}{Number of grid cells in the x direction}
-\item{Ny}{Grid cells in the y direction, defaults to \code{Nx} for a square grid}
-\item{range}{Range parameter for the correlation function, in units of distance rather than as grid cells.  Ignored if \code{scale} is specified}
-\item{scale}{Scale parameter for the correlation function.}
-\item{var}{Variance parameter, ignored if \code{predc} is specified}
-\item{prec}{Precision parameter}
-\item{kappa}{Roughness parameter of the Matern correlation}
-\item{cellSize}{The size of the grid cells.}
+\item{N}{Number of grid cells in the x direction, or a matrix denoting nearest neighbours.}
+\item{Ny}{Grid cells in the y direction, defaults to \code{N} for a square grid}
+\item{params}{Vector of model parameters, with named elements: \code{scale},
+scale parameter for the correlation function; \code{prec}, precision parameter; \code{kappa}, 
+Matern differentiability parameter (0, 1, or 2); and \code{cellSize}, the size of the grid cells.  Optionally, 
+\code{var} and \code{range} can be given in place of \code{prec} and \code{scale}, when the former 
+are present and the latter are missing the recripocal of the former are taken.}
+\item{border}{number of cells from the edge of the grid to adjust for edge effects.}
 }
 \value{
-A precision matrix, contained in a sparse matrix object. }
+A sparse matrix \code{dgCMatrix} object, containing a precision matrix for a 
+Gaussian random field or (from the \code{NNmat} function)  a matrix denoting neighbours.  
+ }
 \details{ The numbering of cells
 is consistent with INLA and the \code{raster} package.  Cell 1 is the top left cell, with cell 2 being the cell to the right and numbering
 continuing row-wise.
+
+The 
+nearest neighbour matrix \code{N} has: \code{N[i,j]=1} if \code{i=j}; 
+takes a value 2 if \code{i} and \code{j} are first `rook' neighbours; 
+3 if they are first `bishop' neighbours; 4 if they are second `rook' neighbours; 5 
+if `knight' neighbours; and 6 if third `rook' neighbours.
+\preformatted{
+     [,1] [,2] [,3] [,4] [,5] [,6] [,7]
+[1,]    0    0    0    6    0    0    0
+[2,]    0    0    5    4    5    0    0
+[3,]    0    5    3    2    3    5    0
+[4,]    6    4    2    1    2    4    6
+[5,]    0    5    3    2    3    5    0
+[6,]    0    0    5    4    5    0    0
+[7,]    0    0    0    6    0    0    0
+}
 }
 
 \examples{
-	range = 3
-	cellSize=2
-	#Nx = Ny = 60
-	Nx=20;Ny=25
-	kappa=1
-	var=2^2
-	precMat =maternGmrfPrec(Nx, Ny, range=range, var=var, 
-		kappa=kappa,cellSize=cellSize) 
+# produces the matrix above
+	matrix(NNmat(7, 7)[,25], 7, 7)
+
+
+	params=c(range = 10,
+	cellSize=2,
+	kappa=1,
+	var=2^2)
 	
-	mycell = Nx*(floor(Ny/2)-1) + floor(Nx/2) # the middle cell
-	a=matrix(precMat[,mycell], Ny, Nx, byrow=TRUE)
- 	a[seq(floor(Ny/2)-3, by=1, len=7), seq(floor(Nx/2)-3, by=1, len=7)]
+	data(nn32)
+	# precision matrix without adjusting for edge effects
+	precMat =maternGmrfPrec(nn32, params=params) 
+	# and with the adjustment
+	precMatCorr =maternGmrfPrec(nn32, params=params, adjust.edges=TRUE) 
 	
+	midcell = 32*16 + 16 # the middle cell
+	edgeCell = 32*5 + 5 # cell near corner
+
+# show precision of cell 32,32 
+	precMid=matrix(precMat[,midcell], 32, 32, byrow=TRUE)
+	precMid[seq(16-4, 16+4), seq(16-4, 16+4)]
+
+# variance matrices
 	varMat = solve(precMat)
-	b=matrix(varMat[,mycell], Ny, Nx, byrow=TRUE)
-	
-	xseq = seq(-(Nx-1)*(cellSize/2) + cellSize/2, by=cellSize, len=Nx)
-	plot(xseq, b[floor(Ny/2),], ylim=c(0, max(c(var, max(b)))))
-	xseq = seq(min(xseq), max(xseq), len=1000)
-	xseq2 = abs(xseq/range) 
-	lines(xseq, var*(2^(1-kappa)/gamma(kappa)) * xseq2^kappa * besselK(xseq2, nu=kappa), col='red')
-	
-\dontrun{	
-	cseq = seq(1,len=n,by=cellSize)
-	coords = c(outer(1i*cseq, cseq, FUN="+"))
-	distmat = outer(coords, coords, FUN="-") 
-	distmat = abs(distmat)/range
-	covmat = (2^(1-kappa)/gamma(kappa)) * distmat^kappa * besselK(distmat, nu=kappa)
-	diag(covmat) = 1
-	covmat = covmat * var
-	
-	exactPrecMat = solve(covmat)
+	varMatCorr = solve(precMatCorr)
 
-	c=matrix(exactPrecMat[,mycell], Ny, Nx, byrow=TRUE)[aseq, aseq]
-	round(c*100)/100
 
-	prodmat =  covmat %*% precMat
-	round(100*as.matrix(prodmat[seq(floor(Ny/2)-3, by=1, len=7), seq(floor(Nx/2)-3, by=1, len=7)]))/100	
-}
+# compare covariance matrix to the matern
+	xseq = seq(-20*params["cellSize"], 20*params["cellSize"], len=1000)
+	plot(xseq,
+		params["var"]*(2^(1-params["kappa"])/gamma(params["kappa"])) * 
+		(abs(xseq)/params["range"])^params["kappa"] * 
+		besselK(abs(xseq)/params["range"], nu=params["kappa"]), type = 'l',
+		ylab='cov', xlab='dist',ylim=c(0, params["var"]))
+
+
+
+	# middle cell
+	varMid=matrix(varMat[,midcell], 32, 32, byrow=TRUE)
+	varMidCorr=matrix(varMatCorr[,midcell], 32, 32, byrow=TRUE)
+	xseqMid = params["cellSize"] *seq(-16,15) 	
+	points(xseqMid, varMid[,16], col='red')
+	points(xseqMid, varMidCorr[,16], col='blue', cex=0.5)
+
+	# edge cells
+	varEdge=matrix(varMat[,edgeCell], 32, 32, byrow=TRUE)
+	varEdgeCorr=matrix(varMatCorr[,edgeCell], 32, 32, byrow=TRUE)
+	xseqEdge = params["cellSize"] *seq(-5, 26)
+	points(xseqEdge, varEdge[,5], pch=3,col='red')
+	points(xseqEdge, varEdgeCorr[,5], pch=3, col='blue')
+	
+	legend("topright", lty=c(1, NA, NA, NA, NA), pch=c(NA, 1, 3, 16, 16),
+		col=c('black','black','black','red','blue'),
+		legend=c('matern', 'middle','edge','unadj', 'adj')
+		)
+
+
+
+
 
 }

@@ -8,7 +8,8 @@ likfit, likfit.default, likfit.SpatialPointsDataFrame,
  variog, variog.SpatialPointsDataFrame, variog.default,
  variog.mc.env, variog.mc.env.SpatialPointsDataFrame, variog.mc.env.default,
  maternGmrfPrec, loglik.GRF, loglik.GRF, loglik.GRF.SpatialPointsDataFrame,
- grfConditional
+ grfConditional, maternGmrfPrec, maternGmrfPrec.default, maternGmrfPrec.dgCMatrix,
+ maternGmrfPrec.matrix, NNmat, gmrfPrecUncond
 )
 
 # Import all packages listed as Imports or Depends

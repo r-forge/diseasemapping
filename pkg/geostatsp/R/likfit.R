@@ -390,6 +390,8 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 	##
 	if(length(ini) == 1){
 		if(upper.optim == Inf) upper.optim <- 50*max.dist
+		# get rid of control arguments
+		ldots = ldots[names(ldots)!= "control"]
 		lik.minim <- do.call("optimize", c(list(geoR:::.negloglik.GRF,
 								lower=lower.optim,
 								upper=upper.optim,

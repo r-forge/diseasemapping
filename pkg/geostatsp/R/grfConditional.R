@@ -1,5 +1,5 @@
 grfConditional = function(data,  model.fit, locations, Nsim, covariates,rasterMethod = "ngb", 
-		fun, nugget.in.prediciton=T ) {
+		fun, nugget.in.prediction=T ) {
 	
  
 	
@@ -10,6 +10,7 @@ grfConditional = function(data,  model.fit, locations, Nsim, covariates,rasterMe
 	
 	U = data@data[,theterms[[2]]] -thefit
 	
+	if(!missing(covariates)) {
 	if(is.list(covariates)){
 		if(length(rasterMethod)!= length(covariates)) {
 			themethod = rep(rasterMethod[1], length(covariates))
@@ -19,9 +20,7 @@ grfConditional = function(data,  model.fit, locations, Nsim, covariates,rasterMe
 	}  else {
 		locations.mean = covariates
 	}
-	
-	
-	
+}	
 	if(missing(locations) & !missing(covariates))
 		locations = raster(covariates)
 
@@ -53,7 +52,7 @@ grfConditional = function(data,  model.fit, locations, Nsim, covariates,rasterMe
 	Ncoords = dim(allCoords)[1]
 	Sdata = seq(Npred+1, Ncoords)
 	sig11 = corMat[Spred,Spred]
-	if(nugget.in.prediciton)
+	if(nugget.in.prediction)
 		diag(sig11) = diag(sig11) + model.fit$nugget
 	sig12 = corMat[Spred, Sdata]
 	sig22 = corMat[Sdata, Sdata]
@@ -65,11 +64,14 @@ grfConditional = function(data,  model.fit, locations, Nsim, covariates,rasterMe
 	
 	pred = sig12 %*% sig22Inv %*% U
 
-	if(!is.null(covariates)) {
+	if(!missing(covariates)) {
 		covariates = as.data.frame(locations.mean)
 		covariates[,theterms[[2]]]=0
+		theNA = apply(covariates, 1, function(qq) any(is.na(qq)))
+		covariates[is.na(covariates)] = 0
 		xmat = 	 model.matrix(model.fit$formula, covariates)
 		thefitPred = xmat %*% model.fit$beta[colnames(xmat)]
+		thefitPred[theNA] = NA
 		predPLusFit = pred +thefitPred
 	} else {
 		predPLusFit = pred

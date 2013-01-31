@@ -9,7 +9,7 @@ Simulates a Gaussian random field conditional on observed values.
 }
 \usage{
 grfConditional(data,  model.fit, locations, Nsim, 
-	covariates, rasterMethod = "ngb", fun, nugget.in.prediciton=T) 
+	covariates, rasterMethod = "ngb", fun, nugget.in.prediction=T) 
 }
  
 \arguments{
@@ -25,7 +25,7 @@ The spatial covariates used in prediction, either a \code{\link[raster]{raster}}
 }
 \item{rasterMethod}{Method for reprojecting or resampling rasters, either "bilinear" or "ngb".}
 \item{fun}{A function applied to each realised surface and only the result saved.}
-\item{nugget.in.prediciton}{If TRUE, predict new observations by adding the nugget effect.  Otherwise
+\item{nugget.in.prediction}{If TRUE, predict new observations by adding the nugget effect.  Otherwise
 predict fitted values.  Only relevant for Box-Cox or log transformed data.}
 }
 
@@ -54,7 +54,7 @@ swissRaster = raster(extent(swissRain@bbox), ncols=30, nrows=30, crs=swissRain@p
 
 swissSim = grfConditional(data=swissRain,  model.fit=swissFit, 
 locations=swissRaster, Nsim=2, 
-covariates=swissAltitude, nugget.in.prediciton=FALSE) 
+covariates=swissAltitude, nugget.in.prediction=FALSE) 
 
 plot(swissSim[[2]]) 
 
