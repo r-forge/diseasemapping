@@ -20,7 +20,7 @@ maternGmrfPrec.matrix = function(N, ...) {
 
 maternGmrfPrec.dgCMatrix = function(N, 	
 		params=c(var=1, range=1, kappa=1, cellSize=1),
-		adjust.edges=F) {
+		adjust.edges=F,...) {
 
 	if(any(names(params)=="var") & !any(names(params)=="prec"))
 		params["prec"] = 1/params["var"]

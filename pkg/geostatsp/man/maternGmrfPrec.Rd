@@ -1,5 +1,8 @@
 \name{maternGmrfPrec}
 \alias{maternGmrfPrec}
+\alias{maternGmrfPrec.default}
+\alias{maternGmrfPrec.matrix}
+\alias{maternGmrfPrec.dgCMatrix}
 \alias{NNmat}
 \alias{gmrfPrecUncond}
 \title{Precision matrix for a Matern spatial correlation}
@@ -11,7 +14,7 @@ Produces the precision matrix for a Gaussian random field on a regular square la
 maternGmrfPrec(N, ...)
 \method{maternGmrfPrec}{dgCMatrix}(N, 
 	params=c(var=1, range=1, kappa=1, cellSize=1),
-  adjust.edges=F) 
+  adjust.edges=F,...) 
 \method{maternGmrfPrec}{matrix}(N, ...)
 \method{maternGmrfPrec}{default}(N, Ny=N, ...)
 NNmat(N, Ny=N)
@@ -30,6 +33,10 @@ Matern differentiability parameter (0, 1, or 2); and \code{cellSize}, the size o
 \code{var} and \code{range} can be given in place of \code{prec} and \code{scale}, when the former 
 are present and the latter are missing the recripocal of the former are taken.}
 \item{border}{number of cells from the edge of the grid to adjust for edge effects.}
+\item{adjust.edges}{If \code{TRUE}, adjust the precision matrix so it does not implicitly assume 
+the field takes values of zero outside the specified region.  Defaults to \code{FALSE}.}
+\item{x}{An MRF precision matrix produced by \code{maternGmrfPrec}}
+\item{...}{Additional arguments passed to \code{maternGmrfPrec.dgCMatrix}}
 }
 \value{
 A sparse matrix \code{dgCMatrix} object, containing a precision matrix for a 
