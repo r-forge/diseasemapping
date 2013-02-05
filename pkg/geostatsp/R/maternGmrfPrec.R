@@ -5,8 +5,9 @@ maternGmrfPrec = function(N,...) {
 
 maternGmrfPrec.default = function(N, Ny=N, ...) {
 
+
 	theNNmat  = NNmat(N, Ny)
-	
+
 	maternGmrfPrec(theNNmat, ...)
 	
 }
@@ -42,6 +43,8 @@ maternGmrfPrec.dgCMatrix = function(N,
 	scale = scale * cellSize
 	a = (scale^2 + 4) 
 	
+ 
+	
 	if(kappa == 0){
 		precEntries = c(
 				"1" = a,
@@ -69,9 +72,14 @@ maternGmrfPrec.dgCMatrix = function(N,
 			stop("kappa must be 0, 1 or 2")			
 		}
 		
-		marginalPrec = 4*pi*kappa*scale^(2*kappa)
-	#	print(marginalPrec)
-		precEntries = 
+ 
+		
+		if(kappa != 0) {
+			marginalPrec = 4*pi*kappa*scale^(2*kappa)
+		} else {
+			marginalPrec = 4*pi
+		}
+ 		precEntries = 
 				precEntries*(prec /marginalPrec)
 		
 		theN = theNNmat@x
@@ -83,6 +91,8 @@ maternGmrfPrec.dgCMatrix = function(N,
 		if(adjust.edges){
 			theNNmat = gmrfPrecUncond(theNNmat)
 		}
+		
+		theNNmat = forceSymmetric(theNNmat)
 		
 		return(theNNmat)
 	}
