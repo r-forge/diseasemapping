@@ -86,13 +86,23 @@ maternGmrfPrec.dgCMatrix = function(N,
 		theN = precEntries[theN]
 		theNNmat@x = theN
 		
-		attributes(theNNmat)$model =params
+	
 
-		if(adjust.edges){
-			theNNmat = gmrfPrecUncond(theNNmat)
-		}
+		Nx=attributes(theNNmat)$Nx 
+		Ny=attributes(theNNmat)$Ny 
 		
 		theNNmat = forceSymmetric(theNNmat)
+		attributes(theNNmat)$model =params
+		attributes(theNNmat)$Nx =Nx 
+		attributes(theNNmat)$Ny =Ny
+		
+		if(adjust.edges){
+			theNNmat = gmrfPrecUncond(theNNmat)
+			attributes(theNNmat)$model =params
+			attributes(theNNmat)$Nx =Nx 
+			attributes(theNNmat)$Ny =Ny
+		}
+		
 		
 		return(theNNmat)
 	}
