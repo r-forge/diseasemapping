@@ -68,10 +68,10 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 	matrix(NNmat(7, 7)[,25], 7, 7)
 
 
-	params=c(range = 10,
-	cellSize=2,
+	params=c(range = 1.5,
+	cellSize=0.5,
 	kappa=1,
-	var=2^2)
+	var=5^2)
 	
 	data(nn32)
 	# precision matrix without adjusting for edge effects
@@ -94,10 +94,10 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 # compare covariance matrix to the matern
 	xseq = seq(-20*params["cellSize"], 20*params["cellSize"], len=1000)
 	plot(xseq,
-		params["var"]*(2^(1-params["kappa"])/gamma(params["kappa"])) * 
+		(params["var"]*2^(1-params["kappa"])/gamma(params["kappa"])) * 
 		(abs(xseq)/params["range"])^params["kappa"] * 
 		besselK(abs(xseq)/params["range"], nu=params["kappa"]), type = 'l',
-		ylab='cov', xlab='dist',ylim=c(0, params["var"]))
+		ylab='cov', xlab='dist',ylim=c(0, 1.1*params["var"]))
 
 
 
@@ -121,6 +121,29 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 		)
 
 
+	# construct matern variance matrix
+	Nx = attributes(precMat)$Nx
+	Ny = attributes(precMat)$Ny
+	cellSize = params["cellSize"]
+	
+	coords = cbind(rep(cellSize*(1:Nx), Ny), 
+		rep(cellSize*(Ny:1), rep(Ny, Nx)))
+	distmat = as.matrix(dist(coords))
+	covMatMatern = distmat / 	  params["range"]	
+ 	covMatMatern  =  (params["var"]*2^(1-params["kappa"] )/gamma(params["kappa"])) * covMatMatern^params["kappa"] * besselK(covMatMatern  , nu=params["kappa"]) 
+ 	diag(covMatMatern) = params["var"]
+ 	
+ 	prodUncor = covMatMatern %*% precMat
+ 	prodCor = covMatMatern %*% precMatCorr
+ 	
+ 	quantile(diag(prodUncor))
+ 	quantile(diag(prodCor))
+ 	
+ 	quantile(prodUncor[lower.tri(prodUncor,diag=F)])	
+ 	quantile(prodCor[lower.tri(prodCor,diag=F)])	
+ 	
+ 	
+	
 
 
 
