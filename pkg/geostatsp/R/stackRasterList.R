@@ -1,17 +1,23 @@
 stackRasterList = function(x, template=x[[1]],method='ngb') {
 
+	if(is.list(x)) {
+		if(is.null(names(x)))
+			names(x) = paste("c", seq(1, length(x)),sep="")	
+	}
 	
-	if(length(method)==length(x)) {
+	Nlayers = length(names(x))
+	
+	if(length(method)==Nlayers) {
 		if(length(names(x)) & all( names(x)%in%names(method)))
 			method = method[names(x)]
 	} else {
-		method = rep(method, length(x))
+		method = rep(method, Nlayers)
 	}
  
 			
 	result = template
 	template = as(template, "BasicRaster")
-	for(D in 1:length(x)) {
+	for(D in 1:Nlayers) {
 		if(as(x[[D]], 'BasicRaster')==template) {
 			# same projectoin, same resolution
 			result = addLayer(result, x[[D]])			
@@ -29,7 +35,7 @@ stackRasterList = function(x, template=x[[1]],method='ngb') {
 		}
 		}
 	}
-	if(length(x) == (dim(result)[3]-1) )
+	if(Nlayers == (dim(result)[3]-1) )
 		result = result[[-1]]
 	names(result) = names(x)
 	result
