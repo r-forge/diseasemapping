@@ -8,7 +8,7 @@ Generalized Linear Geostatistical Models
 Fits a generalized linear geostatistical model
 using   \code{\link[inla]{inla}} }
 \usage{
-glgm(formula, data, cells, covariates, prior, ...)
+glgm(formula, data, cells, covariates=NULL, priorCI=NULL, ...)
 }
  
 \arguments{
@@ -20,60 +20,48 @@ can be overridden with a
 An object of class{\tt SpatialPointsDataFrame} containing the data.
 }
 \item{cells}{Either an integer giving the number of cells in the x direction, or a raster object which 
-will be used for the spatial random effect.}
-\item{covariates}{Either a list of rasters or a raster stack containing covariate values used when 
-making spatial predictions.  Names of the raster layers correspond to names in the formula.  If
+will be used for the spatial random effect.  If the cells in the raster are not square, the resolution in the y direction 
+will be adjusted to make it so.}
+\item{covariates}{Either a single raster, a list of rasters or a raster stack containing covariate values used when 
+making spatial predictions.  Names of the raster layers or list elements correspond to names in the formula.  If
 a covariate is missing from the data object it will be extracted from the rasters.}
 }
-\item{prior}{Prior distribution for the range parameter of the spatial random effect, in units of distance
-not numbers of cells.}
+\item{priorCI}{list with named elements of 0.025 and 0.975 quantiles of prior distributions, or a single 
+vector giving the prior quantiles for the range parameter.  List elements can be named: \code{range} for 
+the range parameter (not the scale); \code{sd} for the standard deviation (not the variance or precision); 
+\code{intercept} for the intercept; and \code{betas} for the regression coefficients.}
 }
 \details{
-This function is essentially a wrapper for   \code{\link[geoR]{krige.conv}}.
+This function performs Bayesian inference for generalized linear geostatistical models with INLA.  The Markov random field
+approximation on a regular lattice is used for the spatial random effect.
 }
 \value{
-If the prediction locations are identical for the fixed effects and random effects, a single raster stack is 
-returned with the following layers:
-\item{fixed}{Estimated means from the fixed effects portion of the model}
-\item{random}{Predicted random effect}
-\item{krige.var}{Conditional variance of predicted random effect}
-\item{predict}{Prediction of the response, sum of fixed and random effects.  If exp.pred is TRUE, gives predictions
-on the exponentated scale, and half of krige.var is added prior to exponentiating}
-\item{predict.log}{If exp.pred=TRUE, the prediction of the logged process.}
-If the prediction locations are different for fixed and random effects (typically coarser for the random 
-effects), a list with two raster stacks is returned.
-\item{prediction}{A raster stack as above, though the random effect prediction is resampled to the 
-same locations as the fixed effects.}
-\item{random}{the predictions and conditional variance of the random effects, on the same
-raster as \code{locations}}
-
-
+A list with two componnents named \code{raster} and \code{inla}.  \code{inla} contains the results of the call to the
+\code{\link[inla]{inla}} function.  \code{raster} is a raster stack with the following layers:
+\item{random.mean, random.sd,random.025quant, random.05quant, random.975quant, random.kld}{}
+\item{predict.mean, predict.sd,predict.025quant, predict.05quant, predict.975quant, predict.kld}{}
+\item{predict.exp}{}
+\item{predict.invlogit}{}
 }
 
 
 \seealso{
-\code{\link[geoR]{krige.conv}}
+\code{\link[inla]{inla}}
 }
 \examples{
 data(swissRain)
 swissRain$lograin = log(swissRain$rain)
-swissRain$elevation = extract(swissAltitude, swissRain)
-swissFit =  likfit(swissRain, lograin ~ elevation, 
-	cov.model="matern", kappa = 2, fix.kappa=TRUE,
-	ini.cov.pars= c(0.6, 7000))
-swissRaster = raster(extent(swissRain@bbox), ncols=61, nrows=91, crs=swissRain@proj4string)	
-swissKrige = krige(swissFit, swissRain, swissRaster, swissAltitude)
+swissFit =  glgm(lograin ~ elevation, swissRain, cells=20,
+	covariates=swissAltitude, family="gaussian",
+	priorCI=list(sd=c(0.05, 5), range=c(100,1000000),intercept=log(c(1, 1000)), 
+	control.mode=list(mode=c(1,1000))
+
+swissFit$inla$summary.fixed 
+
+plot(swissFit$raster[["predict.exp"]]) 
 
 
-swissFit =  likfit(swissRain, rain ~ elevation, 
-	cov.model="matern", kappa = 2, fix.kappa=TRUE,
-	lambda=0.5, fix.lambda=TRUE,
-	ini.cov.pars= c(0.6, 7000))
-swissKrige = krige(obj.model=swissFit, geodata=swissRain, 
-	locations=swissRaster, covariates=swissAltitude)
 
-
-plot(swissKrige$prediction[["predict"]]) 
 \dontrun{
 load(url("http://www.filefactory.com/file/frd1mhownd9/n/CHE_adm0_RData"))
 plot(spTransform(gadm, swissRain@proj4string), add=T)
