@@ -8,7 +8,7 @@ Generalized Linear Geostatistical Models
 }
 \description{
 Fits a generalized linear geostatistical model or a log-Gaussian Cox process
-using   \code{\link[inla]{inla}} }
+using   \code{\link[INLA]{inla}} }
 \usage{
 glgm(data,  cells, covariates=NULL, formula=NULL, priorCI=NULL, 
 maternRoughness=1, buffer = 0, mesh=F,...)
@@ -18,7 +18,7 @@ maternRoughness=1, buffer = 0, mesh=F,...)
  
 \arguments{
 \item{data}{
-An object of class {\tt SpatialPointsDataFrame} containing the data.
+An object of class \code{ SpatialPointsDataFrame} containing the data.
 }
 \item{cells}{Either an integer giving the number of cells in the x direction, or a raster object which 
 will be used for the spatial random effect.  If the cells in the raster are not square, the resolution in the y direction 
@@ -31,7 +31,7 @@ intercept-only model.
 \item{formula}{Model formula, defaults to a linear combination of each of the layers in the \code{covariates} object.   
 The spatial random effect should not be supplied but the default 
 can be overridden with a 
- {\tt f(space,..)} term. For \code{glgm} the response variable defaults to the first variable in the \code{data} object, and
+ \code{ f(space,..)} term. For \code{glgm} the response variable defaults to the first variable in the \code{data} object, and
  \code{formula} can be an integer or character string specifying the response variable.  For \code{lgcp}, the formula
  should be one-sided.
 }
@@ -39,10 +39,10 @@ can be overridden with a
 vector giving the prior quantiles for the range parameter.  List elements can be named: \code{range} for 
 the range parameter (not the scale); \code{sd} for the standard deviation (not the variance or precision); 
 \code{intercept} for the intercept; and \code{betas} for the regression coefficients.}
-\item{maternRougness}{roughness parameter for the Matern correlation function, must be 1 or 2.}
+\item{maternRoughness}{roughness parameter for the Matern correlation function, must be 1 or 2.}
 \item{buffer}{Extra space padded around the data bounding box to reduce edge effects.}
 \item{mesh}{Currently unimplemented options for using a mesh rather than a grid for the Markov random field approximation.}
-\item{...}{Additional options passed to  \code{\link[inla]{inla}}}
+\item{...}{Additional options passed to  \code{\link[INLA]{inla}}}
 }
 \details{
 This function performs Bayesian inference for generalized linear geostatistical models with INLA.  The Markov random field
@@ -50,7 +50,7 @@ approximation on a regular lattice is used for the spatial random effect.
 }
 \value{
 A list with two components named  \code{inla}, \code{raster}, and \code{parameters}.  \code{inla} contains the results of the call to the
-\code{\link[inla]{inla}} function.  \code{raster} is a raster stack with the following layers:
+\code{\link[INLA]{inla}} function.  \code{raster} is a raster stack with the following layers:
 \item{random.mean, random.sd,random.X0.025quant, random.X0.5quant, random.X0.975quant, random.kld}{}
 \item{predict.mean, predict.sd,predict.X0.025quant, predict.X0.5quant, predict.X0.975quant, predict.kld}{}
 \item{predict.exp}{}
@@ -64,7 +64,7 @@ for the range and standard deviation parameters respectively,
 }
 
 \seealso{
-\code{\link[inla]{inla}}
+\code{\link[INLA]{inla}}
 }
 \examples{
 # geostatistical model for the swiss rainfall data
@@ -72,37 +72,46 @@ library(geostatsp)
 data(swissRain)
 swissRain$lograin = log(swissRain$rain)
 library(INLA)
-swissFit =  glgm(swissRain, cells=50, formula="lograin",
-	covariates=swissAltitude, family="gaussian", buffer=10000,
-	priorCI=list(sd=c(0.9, 1.1), range=c(190000,210000)), 
-	control.mode=list(theta=c(1,1,1),restart=T),
-	control.family=list(hyper=list(prec=list(prior="loggamma", param=c(500, 500))))
+swissFit =  glgm(swissRain, cells=40, formula="lograin",
+	covariates=swissAltitude, family="gaussian", buffer=20000,
+	priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
+	control.mode=list(theta=c(1,2,-2),restart=TRUE),
+	control.family=list(hyper=list(prec=list(prior="loggamma", param=c(.1, .1))))
 	)
-
-swissFit$inla$summary.fixed
 
 swissFit$parameters$summary
 
-plot(swissFit$raster[["predict.mean"]]) 
-plot(swissFit$raster[["predict.exp"]]) 
 
-plot(swissFit$parameters$range$priorDist,type="l")
+plot(swissFit$parameters$range$prior,type="l",
+	ylim=c(0,max(swissFit$parameters$range$posterior[,"y"])),
+	xlim=c(0, swissFit$parameters$range$userPriorCI[2]*1.1))
 abline(v=swissFit$parameters$range$userPriorCI,col="yellow")
 abline(v=swissFit$parameters$range$priorCI,col="orange")
+lines(swissFit$parameters$range$posterior, col='blue')
 
+plot(swissFit$raster[["predict.exp"]]) 
 \dontrun{
 load(url("http://www.filefactory.com/file/frd1mhownd9/n/CHE_adm0_RData"))
-plot(spTransform(gadm, swissRain@proj4string), add=T)
+plot(spTransform(gadm, swissRain@proj4string), add=TRUE)
 }
 
 # a log-Gaussian Cox process example
 
 }
-
+%library(INLA)
+%source("/home/patrick/workspace/diseasemapping/pkg/geostatsp/R/stackRasterList.R")
+%data(swissRain)
+%swissRain$lograin = log(swissRain$rain)
  
-data=swissRain; cells=50; formula="lograin"
-	covariates=swissAltitude; family="gaussian"
-	priorCI=list(sd=c(0.9, 1.1), range=c(190000,210000),intercept=log(c(1, 1000)))
-	control.mode=list(theta=c(0.5,0.1,1.5),restart=T)
-	control.family=list(hyper=list(prec=list(prior="loggamma", param=c(50, 50))))
-	maternRoughness=2;buffer=1000
+%data=swissRain; cells=50; formula="lograin"
+%	covariates=swissAltitude; family="gaussian"
+%	priorCI=list(sd=c(0.9, 1.1), range=c(190000,210000),intercept=log(c(1, 1000)))
+%	control.mode=list(theta=c(0.5,0.1,1.5),restart=T)
+%	control.family=list(hyper=list(prec=list(prior="loggamma", param=c(500, 1))))
+%	maternRoughness=2;buffer=1000
+	
+%temp = data.frame(y=runif(10), a=1:10, b=rbinom(10, 1, 0.5))	
+%temp$b = factor(temp$b)
+%temp2 = inla(y~a*b, data=temp)
+%model.matrix(y~a*b, temp)
+	

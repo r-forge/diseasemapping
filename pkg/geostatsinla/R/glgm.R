@@ -1,5 +1,5 @@
 glgm=function(data,  cells, covariates=NULL, formula=NULL, 
-		priorCI=NULL, maternRoughness=2, buffer=0,
+		priorCI=NULL, maternRoughness=1, buffer=0,
 		mesh=F,...) {
 	
 	# create raster for prediction
@@ -149,23 +149,61 @@ if(F) {
 	formula = update.formula(formula,	as.formula(spaceFormula))
 	
 	
-	# lincombs argument for prediction
+	# create linear combinations object for prediction.
+	# create formula, strip out left variable and f(...) terms
+	formulaForLincombs = strsplit(as.character(formula), "~")[[3]]
+	formulaForLincombs =
+			gsub("\\+[[:space:]]*f\\([[:print:]]*\\)", "", formulaForLincombs)
+	formulaForLincombs=as.formula(paste("~", formulaForLincombs))
+
+	# model matrix from covariates	
 	thelincombs = as.data.frame(covariates)
-	thelincombs[,"(Intercept)"]=1
-	thelincombs = inla.make.lincombs(thelincombs)
-	cellIndex = length(thelincombs[[1]])+1
-	for(D in 1:length(thelincombs)) {
-		thelincombs[[D]][[cellIndex]] = 
-				list(
-					space=list(idx=D,weight=1))
+	# variables in the model but not in prediction rasters
+	thevars = rownames(attributes(terms(formulaForLincombs))$factors)
+	varsInPredict = thevars[thevars %in% names(thelincombs)]
+	cantPredict = thevars[! thevars %in% names(data)]
+	thelincombs[,cantPredict]= NA
+	thelincombs[thelincombs==0]=NA
+
+	# check for factors	
+	thefactors = apply(data@data[,varsInPredict,drop=F], 2,is.factor)
+	# convert raster data into factors using same levels as in points data
+	if(any(thefactors)) {
+		for(D in varsInPredict[thefactors]) {
+			thetable = table(data@data[,D])
+			dontHave = which(thetable == 0)
+			baseline = min(which(thetable > 0))
+			# levels not in the points data changed to NA
+			thelincombs[ thelincombs[,D] %in% dontHave   ,D] = baseline
+			thelincombs[,D] = factor(thelincombs[,D],
+					labels=levels(data@data[,D]))
+		}
+	}
+	thelincombs[is.na(thelincombs)] = 0
+	lincombMat = model.matrix(formulaForLincombs, thelincombs, na.action=NULL)
+#	return(list(lincombMat, thelincombs, covariates, formulaForLincombs))
+	
+	thelincombs=list()	
+
+	for(D in 1:(dim(lincombMat)[1])) {
+		thisrow = lincombMat[D,]
+		thisrow = as.list(thisrow[!is.na(thisrow)])
+		
+		thelincombs[[D]] = 
+			do.call(inla.make.lincomb, thisrow)$lc
+
+		thelincombs[[D]][[length(thelincombs[[D]])+1]] =
+				list(space=list(idx=D, weight=1))
 	}
 	names(thelincombs) = paste("c", 1:length(thelincombs),sep="")
+
 	
 	# call inla
 	inlaResult = inla(formula, data=data@data,
 			lincomb=thelincombs,
 	...
-	)
+#control.mode=control.mode, control.family=control.family
+		)
 
 	# parameter priors 
 	
@@ -197,15 +235,15 @@ if(F) {
 	rangeLim = xres(cells) /rateLim
 	rangeSeq = seq(min(rangeLim), max(rangeLim), len=1000)
 	rateSeq = xres(cells)/rangeSeq
-	params$range$priorDist=cbind(
+	params$range$prior=cbind(
 			x=rangeSeq,
 			y=dgamma(rateSeq, shape=ratePrior["shape"], 
 					rate=ratePrior["rate"]) * (rangeSeq)^(-2) * xres(cells)
 		)
 	if(F) {
-		plot(params$range$priorDist, type='l')
+		plot(params$range$prior, type='l')
 	
-		sum(params$range$priorDist[,"y"])*range(diff(params$range$priorDist[,"x"]))
+		sum(params$range$prior[,"y"])*range(diff(params$range$prior[,"x"]))
 	}	
 	
 	precLim = 	qgamma(c(0.999,0.001), 
@@ -214,19 +252,19 @@ if(F) {
 	sdLim = 1/sqrt(precLim)
 	sdSeq = seq(min(sdLim), max(sdLim), len=1000)
 	precSeq = sdSeq^(-2)
-	params$sd$priorDist=cbind(
+	params$sd$prior=cbind(
 			x=sdSeq,
 			y=dgamma(precSeq, shape=precPrior["shape"], 
 					rate=precPrior["rate"]) *2* (precSeq)^(3/2) 
 	)
 	if(F) {
-		plot(params$sd$priorDist, type='l')
+		plot(params$sd$prior, type='l')
 		
-		sum(params$sd$priorDist[,"y"])*range(diff(params$sd$priorDist[,"x"]))
+		sum(params$sd$prior[,"y"])*range(diff(params$sd$prior[,"x"]))
 	}	
 	
 	
-	
+
 	# random into raster
 	resRasterRandom = 
 			brick(cells,
@@ -239,16 +277,8 @@ if(F) {
 	}
 	
 
-	# E exp(lincombs)
-	temp=unlist(
-			lapply(inlaResult$marginals.lincomb.derived, function(qq) {
-						sum(
-								qq[,"x"]*c(0,diff(exp(qq[,"x"])))*qq[,"y"]	
-						)
-					})
-	)
-	inlaResult$summary.lincomb.derived[,"mean.exp"] = temp
-
+	
+	
 	# E exp(lincombs)
 	temp=unlist(
 			lapply(inlaResult$marginals.lincomb.derived, function(qq) {
@@ -271,8 +301,8 @@ if(F) {
 		)
 		inlaResult$summary.lincomb.derived[,"invlogit"] = temp		
 	}
+ 
 
-		
 	# lincombs into raster
 	resRasterFitted = 
 			brick(cells,
@@ -280,17 +310,84 @@ if(F) {
 	
 		resRasterFitted[] = as.matrix(inlaResult$summary.lincomb.derived[,-1])
 		names(resRasterFitted) = paste("predict.", names(resRasterFitted),sep="")
-	
+
+		
+		
 
 	# posterior distributions
-parameters$sd$posterior=NULL
-parameters$range$posterior=NULL
+params$sd$posterior=inlaResult$marginals.hyperpar[["Precision for space"]]
+params$sd$posterior[,"y"] = params$sd$posterior[,"y"] * 2*  
+		params$sd$posterior[,"x"]^(3/2) 
+params$sd$posterior[,"x"] = 1/sqrt(params$sd$posterior[,"x"])  
+params$sd$posterior = params$sd$posterior[seq(dim(params$sd$posterior)[1],1),]		
 
-parameters$summary = inlaResult$summary.fixed
-parameters$summary = rbind(parameters$summary,
-		sd=NA, range=NA)
+# sum(c(0,diff(params$sd$posterior[,"x"])) * params$sd$posterior[,"y"])
+# sum(c(0,diff(params$sd$prior[,"x"])) * params$sd$prior[,"y"])
+
+params$range$posterior=inlaResult$marginals.hyperpar[["Range for space"]]
+params$range$posterior[,"x"] =  xres(cells) /(params$range$posterior[,"x"])
+params$range$posterior[,"y"] = params$range$posterior[,"y"] *   
+		params$range$posterior[,"x"]^(-2) * xres(cells)
+params$range$posterior = params$range$posterior[seq(dim(params$range$posterior)[1],1),]		
+
+# sum(c(0,diff(params$range$posterior[,"x"])) * params$range$posterior[,"y"])
+# sum(c(0,diff(params$range$prior[,"x"])) * params$range$prior[,"y"])
+
+
+params$summary = inlaResult$summary.fixed
+params$summary = rbind(params$summary,
+		sd=c(NA, NA, 
+				1/sqrt(inlaResult$summary.hyperpar["Precision for space",
+								paste(c("0.975", "0.5","0.025"), "quant", sep="")
+								]), 
+								NA),
+				range=c(NA, NA, 
+						xres(cells)/inlaResult$summary.hyperpar["Range for space",
+										paste(c("0.975", "0.5","0.025"), "quant", sep="")
+		], 
+						NA)
+		)
 		
+params$summary["range","mean"] =xres(cells)*sum(
+  1/(inlaResult$marginals.hyperpar[["Range for space"]][,"x"])*
+	c(0,diff(inlaResult$marginals.hyperpar[["Range for space"]][,"x"]))*
+	inlaResult$marginals.hyperpar[["Range for space"]][,"y"]
+)
+params$summary["sd","mean"] =sum(
+		1/sqrt(inlaResult$marginals.hyperpar[["Precision for space"]][,"x"])*
+				c(0,diff(inlaResult$marginals.hyperpar[["Precision for space"]][,"x"]))*
+				inlaResult$marginals.hyperpar[["Precision for space"]][,"y"]
+)
+
+precGauName = "Precision for the Gaussian observations"
+if(precGauName %in% names(inlaResult$marginals.hyperpar)) {
+	params$summary = rbind(params$summary,
+			sdNugget=c(NA, NA, 
+					1/sqrt(inlaResult$summary.hyperpar[precGauName,
+									paste(c("0.975", "0.5","0.025"), "quant", sep="")
+							]), 
+					NA)
+			)
+	params$summary["sdNugget","mean"] =sum(
+				1/sqrt(inlaResult$marginals.hyperpar[[precGauName]][,"x"])*
+						c(0,diff(inlaResult$marginals.hyperpar[[precGauName]][,"x"]))*
+						inlaResult$marginals.hyperpar[[precGauName]][,"y"]
+	)
 	
+	params$sdNugget = list(posterior=
+					inlaResult$marginals.hyperpar[[precGauName]]
+	)
+	params$sdNugget$posterior[,"y"] = params$sdNugget$posterior[,"y"] * 2*  
+			params$sdNugget$posterior[,"x"]^(3/2) 
+	params$sdNugget$posterior[,"x"] = 1/sqrt(params$sdNugget$posterior[,"x"])  
+	params$sdNugget$posterior = 
+			params$sdNugget$posterior[seq(dim(params$sdNugget$posterior)[1],1),]		
+	
+	
+}
+		
+
+
 	result=list(inla=inlaResult,
 					raster=stack(resRasterRandom, resRasterFitted),
 					parameters=params
