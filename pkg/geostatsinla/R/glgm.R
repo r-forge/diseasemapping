@@ -64,8 +64,14 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 
 	
 	# convert covariates to raster stack with same resulution of prediction raster.
-	covariates = stackRasterList(covariates, cells)
+	if(!is.null(covariates)){
+
+		
+		method = rep("ngb", length(covariates))
+		covariates = stackRasterList(covariates, cells, method=method)
 	
+	} 
+		
 	# data frame for inla
 	cellsTemp = cells
 	values(cellsTemp ) = NA
@@ -129,7 +135,7 @@ if(F) {
 		xres(cells)/qgamma(c(0.975,0.025), shape=ratePrior["shape"], rate=ratePrior["rate"])
 	}
 	} else {
-		precPrior = c(shape=0.01, rate=0.01)
+		ratePrior = c(shape=0.01, rate=0.01)
 	}
 
 	spaceFormula = paste(".~.+ f(space, model='matern2d', ",
@@ -153,38 +159,63 @@ if(F) {
 	# create formula, strip out left variable and f(...) terms
 	formulaForLincombs = strsplit(as.character(formula), "~")[[3]]
 	formulaForLincombs =
-			gsub("\\+[[:space:]]*f\\([[:print:]]*\\)", "", formulaForLincombs)
-	formulaForLincombs=as.formula(paste("~", formulaForLincombs))
+			gsub("\\+?[[:space:]]*f\\([[:print:]]*\\)[[:space:]]?($|\\+)", "+", formulaForLincombs)
+	# strip out offsets
+formulaForLincombs =
+		gsub("\\+?[[:space:]]*offset\\([[:print:]]*\\)[[:space:]]?($|\\+)", "+", formulaForLincombs)
 
+	# convert multiple + to a single +
+	formulaForLincombs = gsub(
+			"\\+[[:space:]]?\\+([[:space:]]?\\+)?", "+",
+			formulaForLincombs)
+	# strip out trailing +
+formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
+
+	if(nchar(formulaForLincombs)) {
+		formulaForLincombs=as.formula(paste("~", formulaForLincombs))
+		
 	# model matrix from covariates	
 	thelincombs = as.data.frame(covariates)
 	# variables in the model but not in prediction rasters
 	thevars = rownames(attributes(terms(formulaForLincombs))$factors)
 	varsInPredict = thevars[thevars %in% names(thelincombs)]
 	cantPredict = thevars[! thevars %in% names(data)]
-	thelincombs[,cantPredict]= NA
-	thelincombs[thelincombs==0]=NA
+	thelincombs[,cantPredict]= 0
 
 	# check for factors	
-	thefactors = apply(data@data[,varsInPredict,drop=F], 2,is.factor)
+	thefactors = unlist(lapply(data@data[,varsInPredict,drop=F], is.factor))
 	# convert raster data into factors using same levels as in points data
 	if(any(thefactors)) {
 		for(D in varsInPredict[thefactors]) {
 			thetable = table(data@data[,D])
-			dontHave = which(thetable == 0)
-			baseline = min(which(thetable > 0))
-			# levels not in the points data changed to NA
-			thelincombs[ thelincombs[,D] %in% dontHave   ,D] = baseline
+
+			baseline = as.integer(names(thetable)[min(which(thetable > 0))])
+			# levels not in the points data changed to baseline
+
+			dontHave = ! (thelincombs[,D] %in% as.integer(names(thetable)))
+			
+			thelincombs[   dontHave   ,D] = baseline
+			
+			# replace NA's with baseline
+
+			thelincombs[ is.na(thelincombs[,D] )  ,D] = baseline
+			
 			thelincombs[,D] = factor(thelincombs[,D],
-					labels=levels(data@data[,D]))
+					levels=levels(data@data[,D]))
 		}
 	}
 	thelincombs[is.na(thelincombs)] = 0
 	lincombMat = model.matrix(formulaForLincombs, thelincombs, na.action=NULL)
 #	return(list(lincombMat, thelincombs, covariates, formulaForLincombs))
-	
-	thelincombs=list()	
 
+} else {
+	lincombMat = matrix(rep(1,ncell(cells)), ncell(cells),1,
+			dimnames=list(NULL, "(Intercept)"))
+}
+
+	thelincombs=list()	
+lincombMat[lincombMat==0] = NA
+	
 	for(D in 1:(dim(lincombMat)[1])) {
 		thisrow = lincombMat[D,]
 		thisrow = as.list(thisrow[!is.na(thisrow)])
@@ -199,11 +230,13 @@ if(F) {
 
 	
 	# call inla
-	inlaResult = inla(formula, data=data@data,
+	inlaResult = inla(formula, data=data@data, 
 			lincomb=thelincombs,
 	...
-#control.mode=control.mode, control.family=control.family
 		)
+		
+ 
+		
 
 	# parameter priors 
 	

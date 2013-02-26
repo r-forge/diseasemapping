@@ -25,7 +25,7 @@ stackRasterList = function(x, template=x[[1]],method='ngb') {
 			# same projection, different resolution
 			if(result@crs@projargs == x[[D]]@crs@projargs) {
 				result = addLayer(result,	
-						raster::resample(x[[D]], result[[1]])#,method=method[D])
+						raster::resample(x[[D]], result[[1]],method=method[D])
 				)
 			} else {
 				# different resolution

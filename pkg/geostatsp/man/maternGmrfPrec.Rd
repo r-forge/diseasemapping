@@ -139,8 +139,8 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
  	quantile(diag(prodUncor))
  	quantile(diag(prodCor))
  	
- 	quantile(prodUncor[lower.tri(prodUncor,diag=F)])	
- 	quantile(prodCor[lower.tri(prodCor,diag=F)])	
+ 	quantile(prodUncor[lower.tri(prodUncor,diag=FALSE)])	
+ 	quantile(prodCor[lower.tri(prodCor,diag=FALSE)])	
  	
  	
 	
