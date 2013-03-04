@@ -1,3 +1,27 @@
+simPoissonPP = function(intensity) {
+	
+	NperCell = intensity
+	values(NperCell) = rpois(ncell(intensity), 
+			values(intensity)*prod(res(intensity)))
+	
+	events = rep(1:ncell(NperCell), values(NperCell))
+	
+	events = as.data.frame(NperCell,xy=TRUE)[events, c("x","y")]
+	
+	events = events + cbind(
+			runif(dim(events)[1],-xres(intensity)/2, xres(intensity)/2),
+			runif(dim(events)[1],-yres(intensity)/2, yres(intensity)/2)
+	)
+	
+	events = SpatialPoints(events)
+	
+	if(!is.na(intensity@crs@projargs))
+		events@proj4string = intensity@crs
+	
+	events
+	
+}
+
 simLgcp = function(param, covariates=NULL, betas=NULL, 
 		rasterTemplate=covariates[[1]], model="whittle", ...) {
 	
@@ -21,23 +45,7 @@ simLgcp = function(param, covariates=NULL, betas=NULL,
 
 	intensity = exp(linearPredictor)
 	
-	NperCell = intensity
-	values(NperCell) = rpois(ncell(intensity), 
-			values(intensity)*prod(res(rasterTemplate)))
-	
-	events = rep(1:ncell(NperCell), values(NperCell))
-	
-	events = as.data.frame(NperCell,xy=TRUE)[events, c("x","y")]
-	
-	events = events + cbind(
-			runif(dim(events)[1],-xres(rasterTemplate)/2, xres(rasterTemplate)/2),
-			runif(dim(events)[1],-yres(rasterTemplate)/2, yres(rasterTemplate)/2)
-	)
-	
-	events = SpatialPoints(events)
-	
-	if(!is.na(rasterTemplate@crs@projargs))
-		events@proj4string = rasterTemplate@crs
+	events = simPoissonPP(intensity)
 	
 	names(linearPredictor) = "linearPredictor"
 	names(intensity) = "intensity"
