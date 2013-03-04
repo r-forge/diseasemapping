@@ -97,7 +97,24 @@ plot(spTransform(gadm, swissRain@proj4string), add=TRUE)
 
 # a log-Gaussian Cox process example
 
+myPoints = SpatialPoints(cbind(rbeta(100,2,2), rbeta(100,3,4)))
+myPoints@bbox = cbind(c(0,0), c(1,1))
+
+mycov = raster(matrix(rbinom(100, 1, 0.5), 10, 10), 0, 1, 0, 1)
+names(mycov)="x"
+
+res = lgcp(data=myPoints, cells=20, covariates=mycov,
+	formula=~factor(x),
+	priorCI=list(sd=c(0.9, 1.1), range=c(0.4, 0.41))
+)
+plot(res$raster[["predict.exp"]])
+plot(myPoints,add=T,col="#0000FF30",cex=0.5)
+
 }
+
+%data=myPoints; cells=20;buffer=0;covariates=mycov;formula=count~factor(x)
+%maternRoughness=1;control.predictor=list()
+
 %library(INLA)
 %source("/home/patrick/workspace/diseasemapping/pkg/geostatsp/R/stackRasterList.R")
 %data(swissRain)

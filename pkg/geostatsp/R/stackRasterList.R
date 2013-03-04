@@ -1,5 +1,8 @@
 stackRasterList = function(x, template=x[[1]],method='ngb') {
 
+	if(class(x)=="SpatialPolygonsDataFrame")
+		x = list(x)
+	
 	if(is.list(x)) {
 		if(is.null(names(x)))
 			names(x) = paste("c", seq(1, length(x)),sep="")	
@@ -18,12 +21,24 @@ stackRasterList = function(x, template=x[[1]],method='ngb') {
 	result = template
 	template = as(template, "BasicRaster")
 	for(D in 1:Nlayers) {
+		if(class(x[[D]])=="SpatialPolygonsDataFrame"){
+			if(length(names(x[[D]]))!=1)
+				warning("polygon ", D, "has more than one data column, using the first" )
+			result = addLayer(result,
+					rasterize(
+							spTransform(x[[D]], template@crs), 
+							raster(template), field=names(x[[D]][1])
+					)
+			)
+		} else {
 		if(as(x[[D]], 'BasicRaster')==template) {
 			# same projectoin, same resolution
 			result = addLayer(result, x[[D]])			
 		}	 else {
 			# same projection, different resolution
-			if(result@crs@projargs == x[[D]]@crs@projargs) {
+			testcrs =result@crs@projargs == x[[D]]@crs@projargs
+			if(is.na(testcrs)) testcrs = T
+			if(testcrs) {
 				result = addLayer(result,	
 						raster::resample(x[[D]], result[[1]],method=method[D])
 				)
@@ -34,6 +49,7 @@ stackRasterList = function(x, template=x[[1]],method='ngb') {
 			)
 		}
 		}
+	}
 	}
 	if(Nlayers == (dim(result)[3]-1) )
 		result = result[[-1]]

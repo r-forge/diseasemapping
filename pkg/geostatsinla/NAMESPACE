@@ -9,5 +9,6 @@ import(
   sp,
   raster,
   geostatsp,
-  INLA
+  INLA,
+  formula.tools
 )

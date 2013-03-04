@@ -1,7 +1,8 @@
 glgm=function(data,  cells, covariates=NULL, formula=NULL, 
 		priorCI=NULL, maternRoughness=1, buffer=0,
 		mesh=F,...) {
-	
+
+ 
 	# create raster for prediction
 	if(!length(grep("^Raster",class(cells)))) { 
 		# cells must be an integer
@@ -15,7 +16,7 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 		cells= raster(extent(thebbox), ncols=Nx, nrows=Ny, crs=data@proj4string)
 	} else {
 		# it's a raster, make sure it has square cells
-		if(xres(cells) != yres(cells)) 
+ 		if(diff(res(cells))>10^(-6))  {
 			res = xres(cells)
 			theextent = cells@extent
 			theylim = theextent@ymax - theextent@ymin
@@ -23,59 +24,74 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 			theextent@ymax = theextent@ymin + Ny * res
 			
 			cells = raster(theextent, ncols=cells@ncols, nrows=Ny,crs=cells@crs)
-		
+		}
 	}
-
- 	
-	if(cells@nrows * cells@ncols > 10^6) warning("there are lots of cells in the prediction raster,\n this might take a very long time")
+ 
+	
+ 	if(cells@nrows * cells@ncols > 10^6) warning("there are lots of cells in the prediction raster,\n this might take a very long time")
 	
 
-	# formula for inla
-
+	
+	# the formula
+	# get rid of special character is names of data
 	names(data) = gsub("[[:punct:]]|[[:space:]]","_", names(data))
 	
 	if(is.null(formula))
 		formula = names(data)[1]
 	if(is.integer(formula))
 		formula = names(data)[formula]
-
 	if(class(formula)!= "formula") {
 		if(!is.null(covariates)) {
 			if(!length(names(covariates)))
 				names(covariates) = paste("c", 1:length(covariates),sep="")			
 			names(covariates) = gsub("[[:punct:]]|[[:space:]]","_", names(covariates))
 			
-		formula = as.formula(
-				paste(formula, "~ ",
-				paste(names(covariates),collapse="+")
+			formula = as.formula(
+					paste(formula, "~ ",
+							paste(names(covariates),collapse="+")
+					)
 			)
-		)
-	} else {
-		formula = as.formula(paste(formula, "~1"))	
-	}
+		} else {
+			formula = as.formula(paste(formula, "~1"))	
+		}
 	}
 	allterms = rownames(attributes(terms(formula))$factors)
-	notInData = allterms[! allterms %in% names(data)]
-	
-	if(! all(notInData %in% names(covariates)))
-		warning("some terms in the model are missing from both the data and the covariates")
-	for(D in notInData)
-		data[[D]] = extract(covariates[[D]], data)
-
-	
 	# convert covariates to raster stack with same resulution of prediction raster.
 	if(!is.null(covariates)){
-
-		
 		method = rep("ngb", length(covariates))
 		covariates = stackRasterList(covariates, cells, method=method)
-	
-	} 
 		
-	# data frame for inla
-	cellsTemp = cells
-	values(cellsTemp ) = NA
-	data$space = extract(cellsTemp, data ,cellnumbers=T)[,"cells"]
+	} 
+
+	# create data frame for inla
+	# if data is a raster
+	if(length(grep("^Raster", class(data)))) {
+ 
+	data = stack(data, covariates)
+
+	data=as.data.frame(data)
+		data$space = seq(1, dim(data)[1])
+		
+		# get rid of any rows with -Inf or NA, 
+		# usually offset of zero on the natural scale
+		isMinusInf = apply(data, 1, function(qq) any(qq==-Inf | is.na(qq) ))
+		data = data[!isMinusInf,]
+		
+	}  else { # data is a SpatialPointsDataFrame
+		
+		notInData = allterms[! allterms %in% names(data)]
+		
+		if(! all(notInData %in% names(covariates)))
+			warning("some terms in the model are missing from both the data and the covariates")
+		for(D in notInData)
+			data[[D]] = extract(covariates[[D]], data)
+		
+		cellsTemp = cells
+		values(cellsTemp ) = NA
+		data$space = extract(cellsTemp, data ,cellnumbers=T)[,"cells"]
+		data = data@data
+	}
+	# data is now a data frame.
 	
 	# priors
 	if("sd" %in% names(priorCI)) {
@@ -106,7 +122,6 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 		precPrior = c(shape=0.01, rate=0.01)
 	}
 
-	
 	if("range" %in% names(priorCI)) {
 		if(priorCI$range[1] < xres(cells)/4) {
 			priorCI$range[1] = xres(cells)/4
@@ -137,7 +152,6 @@ if(F) {
 	} else {
 		ratePrior = c(shape=0.01, rate=0.01)
 	}
-
 	spaceFormula = paste(".~.+ f(space, model='matern2d', ",
 				"nrow=", nrow(cells), 
 				", ncol=", ncol(cells),
@@ -157,7 +171,7 @@ if(F) {
 	
 	# create linear combinations object for prediction.
 	# create formula, strip out left variable and f(...) terms
-	formulaForLincombs = strsplit(as.character(formula), "~")[[3]]
+	formulaForLincombs = strsplit(as.character(formula), "~")[[1]][2]
 	formulaForLincombs =
 			gsub("\\+?[[:space:]]*f\\([[:print:]]*\\)[[:space:]]?($|\\+)", "+", formulaForLincombs)
 	# strip out offsets
@@ -176,18 +190,25 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 		
 	# model matrix from covariates	
 	thelincombs = as.data.frame(covariates)
+	someMissing = apply(thelincombs, 1, function(qq) any(is.na(qq)))
 	# variables in the model but not in prediction rasters
 	thevars = rownames(attributes(terms(formulaForLincombs))$factors)
 	varsInPredict = thevars[thevars %in% names(thelincombs)]
 	cantPredict = thevars[! thevars %in% names(data)]
+	theFactors = grep("factor\\([[:print:]]*\\)", cantPredict)
+	if(length(theFactors)) {
+		temp = cantPredict
+		cantPredict = cantPredict[-theFactors]
+		theFactorsInFormula = temp[theFactors]
+	}
 	thelincombs[,cantPredict]= 0
 
 	# check for factors	
-	thefactors = unlist(lapply(data@data[,varsInPredict,drop=F], is.factor))
+	thefactors = unlist(lapply(data[,varsInPredict,drop=F], is.factor))
 	# convert raster data into factors using same levels as in points data
 	if(any(thefactors)) {
 		for(D in varsInPredict[thefactors]) {
-			thetable = table(data@data[,D])
+			thetable = table(data[,D])
 
 			baseline = as.integer(names(thetable)[min(which(thetable > 0))])
 			# levels not in the points data changed to baseline
@@ -201,9 +222,10 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 			thelincombs[ is.na(thelincombs[,D] )  ,D] = baseline
 			
 			thelincombs[,D] = factor(thelincombs[,D],
-					levels=levels(data@data[,D]))
+					levels=levels(data[,D]))
 		}
 	}
+	
 	thelincombs[is.na(thelincombs)] = 0
 	lincombMat = model.matrix(formulaForLincombs, thelincombs, na.action=NULL)
 #	return(list(lincombMat, thelincombs, covariates, formulaForLincombs))
@@ -215,8 +237,10 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 
 	thelincombs=list()	
 lincombMat[lincombMat==0] = NA
-	
-	for(D in 1:(dim(lincombMat)[1])) {
+
+
+	noMissing=which(!someMissing)
+	for(D in noMissing) {
 		thisrow = lincombMat[D,]
 		thisrow = as.list(thisrow[!is.na(thisrow)])
 		
@@ -226,19 +250,24 @@ lincombMat[lincombMat==0] = NA
 		thelincombs[[D]][[length(thelincombs[[D]])+1]] =
 				list(space=list(idx=D, weight=1))
 	}
+	for(D in which(someMissing)) {
+		thelincombs[[D]] = list(list("(Intercept)"=list(weight=1)))
+	}
+	
 	names(thelincombs) = paste("c", 1:length(thelincombs),sep="")
 
-	
+
 	# call inla
-	inlaResult = inla(formula, data=data@data, 
-			lincomb=thelincombs,
+	inlaResult = inla(formula, data=data, 
+			lincomb=thelincombs, 
+		#	family="poisson")
 	...
 		)
 		
  
 		
 
-	# parameter priors 
+	# parameter priors for result
 	
 	params = list(
 			range = list(userPriorCI=priorCI$range, 
@@ -340,11 +369,12 @@ lincombMat[lincombMat==0] = NA
 	resRasterFitted = 
 			brick(cells,
 					nl=dim(inlaResult$summary.lincomb.derived)[2]-1)
-	
-		resRasterFitted[] = as.matrix(inlaResult$summary.lincomb.derived[,-1])
+		fittedMat = as.matrix(inlaResult$summary.lincomb.derived[,-1])
+		fittedMat[someMissing,] = NA
+		resRasterFitted[] = fittedMat
 		names(resRasterFitted) = paste("predict.", names(resRasterFitted),sep="")
 
-		
+	# mask	
 		
 
 	# posterior distributions
