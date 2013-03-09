@@ -46,7 +46,12 @@ the range parameter (not the scale); \code{sd} for the standard deviation (not t
 }
 \details{
 This function performs Bayesian inference for generalized linear geostatistical models with INLA.  The Markov random field
-approximation on a regular lattice is used for the spatial random effect.
+approximation on a regular lattice is used for the spatial random effect.  The range parameter is the distance at which 
+the correlation is 0.13, or
+\deqn{cov[U(s+h), U(s)] = 
+		(2^(1-maternRoughness)/gamma(maternRoughness) )*d^maternRoughness*besselK(d, maternRoughness) } 
+\deqn{d= |h|*sqrt(8*maternRoughness)/range}
+The range parameter produced by \code{glgm} multiplies the range parameter from \code{INLA} by the cell size.
 }
 \value{
 A list with two components named  \code{inla}, \code{raster}, and \code{parameters}.  \code{inla} contains the results of the call to the
@@ -108,7 +113,7 @@ res = lgcp(data=myPoints, cells=20, covariates=mycov,
 	priorCI=list(sd=c(0.9, 1.1), range=c(0.4, 0.41))
 )
 plot(res$raster[["predict.exp"]])
-plot(myPoints,add=T,col="#0000FF30",cex=0.5)
+plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
 
 }
 

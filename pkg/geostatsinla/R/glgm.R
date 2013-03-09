@@ -8,7 +8,12 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 		# cells must be an integer
 		cells = as.integer(cells)
 		thebbox = data@bbox
-		thebbox = thebbox + buffer*cbind(-c(1,1),c(1,1))
+		if(buffer) {
+			smallBbox = thebbox
+			thebbox = thebbox + buffer*cbind(-c(1,1),c(1,1))
+		} else {
+			smallBbox = NULL
+		}
 		res = diff(thebbox[1,])/cells		
 		Nx = cells
 		Ny = ceiling(diff(thebbox[2,])/res)
@@ -25,6 +30,7 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 			
 			cells = raster(theextent, ncols=cells@ncols, nrows=Ny,crs=cells@crs)
 		}
+		smallBbox = NULL
 	}
  
 	
@@ -129,8 +135,8 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 			
 		}
 		
-		# rate parameter, in terms of cells, not km.
-		obj1=sort(xres(cells)/priorCI$range)
+		# rang parameter, in terms of cells, not km.
+		obj1=sort(priorCI$range/xres(cells))
 		
 		cifun = function(pars) {
 			theci = 		pgamma(obj1, shape=pars[1], rate=pars[2], log.p=T)
@@ -147,7 +153,7 @@ if(F) {
 		ratePrior
 		pgamma(obj1, shape=ratePrior["shape"], rate=ratePrior["rate"])
 		 qgamma(c(0.975,0.025), shape=ratePrior["shape"], rate=ratePrior["rate"])
-		xres(cells)/qgamma(c(0.975,0.025), shape=ratePrior["shape"], rate=ratePrior["rate"])
+		xres(cells)*qgamma(c(0.025,0.975), shape=ratePrior["shape"], rate=ratePrior["rate"])
 	}
 	} else {
 		ratePrior = c(shape=0.01, rate=0.01)
@@ -171,7 +177,9 @@ if(F) {
 	
 	# create linear combinations object for prediction.
 	# create formula, strip out left variable and f(...) terms
-	formulaForLincombs = strsplit(as.character(formula), "~")[[1]][2]
+library(formula.tools)
+	formulaForLincombs = unlist(strsplit(as.character(formula), "~"))
+	formulaForLincombs = formulaForLincombs[length(formulaForLincombs)]
 	formulaForLincombs =
 			gsub("\\+?[[:space:]]*f\\([[:print:]]*\\)[[:space:]]?($|\\+)", "+", formulaForLincombs)
 	# strip out offsets
@@ -185,16 +193,22 @@ formulaForLincombs =
 	# strip out trailing +
 formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 
+	someMissing=rep(F,ncell(cells))
 	if(nchar(formulaForLincombs)) {
 		formulaForLincombs=as.formula(paste("~", formulaForLincombs))
 		
 	# model matrix from covariates	
-	thelincombs = as.data.frame(covariates)
+	if(!is.null(covariates)) {
+		thelincombs = as.data.frame(covariates)
+	} else {
+		thelincombs = as.data.frame(matrix(nrow=ncell(cells), ncol=0))
+	}
+	
 	someMissing = apply(thelincombs, 1, function(qq) any(is.na(qq)))
 	# variables in the model but not in prediction rasters
 	thevars = rownames(attributes(terms(formulaForLincombs))$factors)
 	varsInPredict = thevars[thevars %in% names(thelincombs)]
-	cantPredict = thevars[! thevars %in% names(data)]
+	cantPredict = thevars[! thevars %in% names(thelincombs)]
 	theFactors = grep("factor\\([[:print:]]*\\)", cantPredict)
 	if(length(theFactors)) {
 		temp = cantPredict
@@ -240,6 +254,8 @@ lincombMat[lincombMat==0] = NA
 
 
 	noMissing=which(!someMissing)
+
+		
 	for(D in noMissing) {
 		thisrow = lincombMat[D,]
 		thisrow = as.list(thisrow[!is.na(thisrow)])
@@ -257,10 +273,21 @@ lincombMat[lincombMat==0] = NA
 	names(thelincombs) = paste("c", 1:length(thelincombs),sep="")
 
 
+if(F) {
+	data2 = data
+	missingSpace = which(!(seq(1, ncell(cells)) %in% data$space))
+	data2 = rbind(data[,c("count","space","grass")], data.frame(count=10, space=missingSpace, grass=0))
+	
+	
+		inlaResult = inla(formula, data=data2, 	family="poisson")
+				image(matrix(inlaResult$summary.random$space[,2],ncol(cells)))
+				
+	}
+	
 	# call inla
-	inlaResult = inla(formula, data=data, 
+	inlaResult = inla(formula, data=data, 	#family="poisson")
 			lincomb=thelincombs, 
-		#	family="poisson")
+#		 	family="poisson")
 	...
 		)
 		
@@ -272,12 +299,11 @@ lincombMat[lincombMat==0] = NA
 	params = list(
 			range = list(userPriorCI=priorCI$range, 
 					priorCI = 
-							xres(cells)/
-							qgamma(c(0.975,0.025), 
+							xres(cells)*
+							qgamma(c(0.025,0.975), 
 									shape=ratePrior["shape"], 
 									rate=ratePrior["rate"]),
 					priorCIcells = 
-							1/
 							qgamma(c(0.975,0.025), 
 									shape=ratePrior["shape"], 
 									rate=ratePrior["rate"]),
@@ -291,16 +317,16 @@ lincombMat[lincombMat==0] = NA
 					params.intern=precPrior)
 	)
 	
-	rateLim = 	qgamma(c(0.999,0.001), 
+	rangeLim = 	qgamma(c(0.001,0.999), 
 			shape=ratePrior["shape"], 
 			rate=ratePrior["rate"])
-	rangeLim = xres(cells) /rateLim
+	rangeLim = xres(cells) *rangeLim
 	rangeSeq = seq(min(rangeLim), max(rangeLim), len=1000)
-	rateSeq = xres(cells)/rangeSeq
+	rangeSeqCells = rangeSeq/xres(cells)
 	params$range$prior=cbind(
 			x=rangeSeq,
-			y=dgamma(rateSeq, shape=ratePrior["shape"], 
-					rate=ratePrior["rate"]) * (rangeSeq)^(-2) * xres(cells)
+			y=dgamma(rangeSeqCells, shape=ratePrior["shape"], 
+					rate=ratePrior["rate"])  / xres(cells)
 		)
 	if(F) {
 		plot(params$range$prior, type='l')
@@ -388,10 +414,9 @@ params$sd$posterior = params$sd$posterior[seq(dim(params$sd$posterior)[1],1),]
 # sum(c(0,diff(params$sd$prior[,"x"])) * params$sd$prior[,"y"])
 
 params$range$posterior=inlaResult$marginals.hyperpar[["Range for space"]]
-params$range$posterior[,"x"] =  xres(cells) /(params$range$posterior[,"x"])
-params$range$posterior[,"y"] = params$range$posterior[,"y"] *   
-		params$range$posterior[,"x"]^(-2) * xres(cells)
-params$range$posterior = params$range$posterior[seq(dim(params$range$posterior)[1],1),]		
+params$range$posterior[,"x"] =  xres(cells) * params$range$posterior[,"x"]
+params$range$posterior[,"y"] = params$range$posterior[,"y"] / xres(cells)
+
 
 # sum(c(0,diff(params$range$posterior[,"x"])) * params$range$posterior[,"y"])
 # sum(c(0,diff(params$range$prior[,"x"])) * params$range$prior[,"y"])
@@ -404,19 +429,17 @@ params$summary = rbind(params$summary,
 								paste(c("0.975", "0.5","0.025"), "quant", sep="")
 								]), 
 								NA),
-				range=c(NA, NA, 
-						xres(cells)/inlaResult$summary.hyperpar["Range for space",
-										paste(c("0.975", "0.5","0.025"), "quant", sep="")
+				range=c( 
+						xres(cells)*
+								inlaResult$summary.hyperpar["Range for space",
+										c("mean","sd",paste(c("0.025", "0.5","0.975"), 
+												"quant", sep=""))
 		], 
 						NA)
 		)
 		
-params$summary["range","mean"] =xres(cells)*sum(
-  1/(inlaResult$marginals.hyperpar[["Range for space"]][,"x"])*
-	c(0,diff(inlaResult$marginals.hyperpar[["Range for space"]][,"x"]))*
-	inlaResult$marginals.hyperpar[["Range for space"]][,"y"]
-)
-params$summary["sd","mean"] =sum(
+
+		params$summary["sd","mean"] =sum(
 		1/sqrt(inlaResult$marginals.hyperpar[["Precision for space"]][,"x"])*
 				c(0,diff(inlaResult$marginals.hyperpar[["Precision for space"]][,"x"]))*
 				inlaResult$marginals.hyperpar[["Precision for space"]][,"y"]
@@ -449,10 +472,13 @@ if(precGauName %in% names(inlaResult$marginals.hyperpar)) {
 	
 }
 		
+	resRaster=stack(resRasterRandom, resRasterFitted)
 
-
+	if(!is.null(smallBbox))
+		resRaster = crop(resRaster, extent(smallBbox))
+		
 	result=list(inla=inlaResult,
-					raster=stack(resRasterRandom, resRasterFitted),
+					raster=resRaster,
 					parameters=params
 			)
 
