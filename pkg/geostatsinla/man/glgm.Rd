@@ -115,25 +115,28 @@ res = lgcp(data=myPoints, cells=20, covariates=mycov,
 plot(res$raster[["predict.exp"]])
 plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
 
-}
+# a model with little data, posterior should be same as prior
 
-%data=myPoints; cells=20;buffer=0;covariates=mycov;formula=count~factor(x)
-%maternRoughness=1;control.predictor=list()
 
-%library(INLA)
-%source("/home/patrick/workspace/diseasemapping/pkg/geostatsp/R/stackRasterList.R")
-%data(swissRain)
-%swissRain$lograin = log(swissRain$rain)
+data2 = SpatialPointsDataFrame(cbind(c(1,1), c(0,0)), data=data.frame(y=c(NA,NA), offset=c(-100,-200)))
+
+res = glgm(data2, cells=20, formula=y~1, priorCI = list(sd=c(1,2), range=c(0.3, 2)),
+family="poisson",buffer=2)
+
+priorPrec = res$par$sd$params
+priorRange = res$par$range$params
+ par(mfrow=c(2,1))
+# sd
+plot(res$parameters$sd$prior,type='l', col='blue')
+lines(res$parameters$sd$post,col='red')
+
+
+# range
+plot(res$parameters$range$prior,type='l', col='blue')
+lines(res$parameters$range$post,col='red')
+legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
+
+
  
-%data=swissRain; cells=50; formula="lograin"
-%	covariates=swissAltitude; family="gaussian"
-%	priorCI=list(sd=c(0.9, 1.1), range=c(190000,210000),intercept=log(c(1, 1000)))
-%	control.mode=list(theta=c(0.5,0.1,1.5),restart=T)
-%	control.family=list(hyper=list(prec=list(prior="loggamma", param=c(500, 1))))
-%	maternRoughness=2;buffer=1000
-	
-%temp = data.frame(y=runif(10), a=1:10, b=rbinom(10, 1, 0.5))	
-%temp$b = factor(temp$b)
-%temp2 = inla(y~a*b, data=temp)
-%model.matrix(y~a*b, temp)
-	
+}
+ 	

@@ -474,8 +474,8 @@ if(precGauName %in% names(inlaResult$marginals.hyperpar)) {
 		
 	resRaster=stack(resRasterRandom, resRasterFitted)
 
-	if(!is.null(smallBbox))
-		resRaster = crop(resRaster, extent(smallBbox))
+#	if(!is.null(smallBbox))
+#		resRaster = crop(resRaster, extent(smallBbox))
 		
 	result=list(inla=inlaResult,
 					raster=resRaster,
