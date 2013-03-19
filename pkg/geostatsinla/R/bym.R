@@ -219,13 +219,19 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 			lincomb=inlaLincombs, ...)
 
 	thebym = inlaRes$summary.lincomb.derived[1:length(region.index),]
-	rownames(thebym) = names(region.index)
+	inlaRes$marginals.bym = inlaRes$marginals.lincomb.derived[1:length(region.index)]
+	names(inlaRes$marginals.bym) = 
+		rownames(thebym) = names(region.index)
 	thebym = thebym[,!names(thebym) %in% c("ID","kld")]
 	names(thebym) = paste("random.",names(thebym),sep="")
 	
 	theFitted = inlaRes$summary.lincomb.derived[-(1:length(region.index)),]
-	rownames(theFitted)= names(region.index[notDuplicated])
-	
+	inlaRes$marginals.fitted.bym = inlaRes$marginals.lincomb.derived[
+			-(1:length(region.index))
+			]
+			
+	names(inlaRes$marginals.fitted.bym)= 
+			rownames(theFitted)= names(region.index[notDuplicated])
 	theFitted$exp = 
 			unlist(
 					lapply(inlaRes$marginals.lincomb.derived[
@@ -236,6 +242,7 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 								)
 							})
 			)
+	theFitted$exp[theFitted$exp==Inf]=NA
 	# E inv logit(lincombs)
 	if(length(grep("binomial",inlaRes$.args$family))) {
 		temp=unlist(
