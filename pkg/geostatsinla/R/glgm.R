@@ -109,7 +109,9 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 				(2*(log(0.975) - theci[2]))^2		
 
 			}
-		
+	
+			
+			
 		precPrior2=optim(c(.5,.5/mean(obj1)), cifun, 
 				lower=c(0.000001,0.0000001),method="L-BFGS-B")
 		precPrior = precPrior2$par
@@ -283,6 +285,7 @@ if(F) {
 				image(matrix(inlaResult$summary.random$space[,2],ncol(cells)))
 				
 	}
+	
 	
 	# call inla
 	inlaResult = inla(formula, data=data, 	#family="poisson")

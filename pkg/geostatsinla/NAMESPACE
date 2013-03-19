@@ -2,7 +2,7 @@
 # Remove the previous line if you edit this file
 
 # Export all names
-exportPattern(".")
+export(bym,lgcp,glgm,bym.data.frame,bym.SpatialPolygonsDataFrame)
 
 # Import all packages listed as Imports or Depends
 import(
