@@ -1,8 +1,8 @@
 Package: geostatsinla
 Type: Package
 Title: Geostatistics with INLA 
-Version: 0.2.0
-Date: 2013-03-16
+Version: 0.2.1
+Date: 2013-03-19
 Depends: sp, raster, spdep, diseasemapping, geostatsp (>= 0.2.0), INLA, formula.tools
 Author: Patrick Brown <patrick.brown@utoronto.ca>
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
