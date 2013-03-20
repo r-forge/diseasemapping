@@ -246,14 +246,6 @@ startIndex = length(region.index)
 					)
 			
 					
-					c(thelincombs[notDuplicated[D] ][[1]],
-							list(list(region.indexS=
-													list(idx=data$region.indexS[notDuplicated[D]], 
-															weight=1))),
-							list(list(region.indexI=
-													list(idx=data$region.indexI[notDuplicated[D]], 
-															weight=1))) 
-					)
 			
 		}
 	}
