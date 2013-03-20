@@ -47,7 +47,8 @@ Additional arguments passed to  \code{\link[INLA]{inla}}
  
 \value{
 A list containing
-\item{inla}{results from the call to \code{\link[INLA]{inla}} }
+\item{inla}{results from the call to \code{\link[INLA]{inla}}.  Two additional elements are added: marginals.bym for the marginal distributions of the spatial random
+effects, and marginals.fitted.bym for the marginals of the fitted values.  }
 \item{data}{A data frame or SpatialPolygonsDataFrame containing posterior means
 and quantiles of the spatial random effect and fitted values.}
 \item{parameters}{summaries of posterior distributions, see \code{\link{glgm}}}

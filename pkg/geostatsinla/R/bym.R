@@ -129,7 +129,7 @@ bym.data.frame = function(data,   formula,
 		
 		
 		bymTerm = paste(
-				".~.+f(region.indexS, model='besag', graph.file='",
+				".~.+f(region.indexS, model='besag', graph='",
 				graphfile,
 				"', hyper = list(theta=list(param=c(",
 				paste(precPrior[["sdSpatial"]], collapse=","), ")))) ",
@@ -174,49 +174,100 @@ formulaForLincombs = gsub(
 formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 
 
+#check to see if some regions don't have data.  If so they'll have to be added so 
+# the independent random effect will be computed
+notInData = region.index[!region.index %in% data$region.indexI]
+if(length(notInData)) {
+	dataToAdd = data[rep(1,length(notInData)),]
+	dataToAdd[,"region.indexI"] = dataToAdd[,"region.indexS"]=notInData
+	dataToAdd[,as.character(lhs(formula))] = NA
+	data = rbind(data, dataToAdd)
+}
+
+
 # not done yet, strip out non-spatial variables
-	
-	if(nchar(formulaForLincombs)) {
+theDuplicated = duplicated(data$region.indexS)
+notDuplicated = which(!theDuplicated)
+startIndex = length(region.index)
+
+	if(nchar(formulaForLincombs) & formulaForLincombs != "1") {
 		formulaForLincombs=as.formula(
 			paste("~", paste(c("1",formulaForLincombs),collapse="+"))
 		)
-	} else {
-		formulaForLincombs = ~1
-	}
-	theDuplicated = duplicated(data$region.indexS)
-	notDuplicated = which(!theDuplicated)
-	lincombFrame = model.frame(formulaForLincombs, data[notDuplicated,],
-			na.action=NULL)
-	anyNA = apply(lincombFrame, 1, function(qq) any(is.na(qq)))
-	notDuplicated = notDuplicated[!anyNA]
- 
-	lincombMat = model.matrix(formulaForLincombs, lincombFrame[notDuplicated, ,drop=F], 
-			na.action=NULL)
- 
-	
-	lincombMat[lincombMat==0]= NA
-	
-	thelincombs = inla.make.lincombs(as.data.frame(lincombMat))
- 
-	startIndex = length(region.index)
-	for(D in seq(1,length(notDuplicated))) {	
+
+		
+		# reorder the matrix by region ID
+		dataOrder = data[notDuplicated,]
+		dataOrder = dataOrder[!dataOrder$region.indexI %in% notInData,]
+		dataOrder = dataOrder[order(dataOrder$region.indexI),]
+		SregionFitted = dataOrder$region.indexI
+		
+		lincombFrame = model.frame(formulaForLincombs, dataOrder,
+				na.action=NULL)
+
+		
+		
+		anyNA = apply(lincombFrame, 1, function(qq) any(is.na(qq)))
+		notDuplicated = notDuplicated[!anyNA]
+		SregionFitted =SregionFitted[!anyNA]
+		
+		lincombMat = model.matrix(formulaForLincombs, lincombFrame[notDuplicated, ,drop=F], 
+				na.action=NULL)
+		
+		
+		lincombMat[lincombMat==0]= NA
+
+		
+		thelincombs = inla.make.lincombs(as.data.frame(lincombMat))
+		for(D in seq(1,length(notDuplicated))) {	
 			inlaLincombs[[D+startIndex]] = 
 					c(thelincombs[notDuplicated[D] ][[1]],
-					list(list(region.indexS=
-							list(idx=data$region.indexS[notDuplicated[D]], 
-									weight=1))),
-					list(list(region.indexI=
-							list(idx=data$region.indexI[notDuplicated[D]], 
-									weight=1))) 
+							list(list(region.indexS=
+													list(idx=data$region.indexS[notDuplicated[D]], 
+															weight=1))),
+							list(list(region.indexI=
+													list(idx=data$region.indexI[notDuplicated[D]], 
+															weight=1))) 
 					)
 			
+		}
+	} else { # add only intercept to predictions
+		formulaForLincombs = ~1
+		lincombMat = data.frame(x=rep(1,length(region.index)))
+		SregionFitted = region.index
+		for(D in 1:length(region.index)) {	
+			inlaLincombs[[D+startIndex]] = 
+					 list(
+							list("(Intercept)" = list(weight=1)),
+							list(region.indexS=
+											list(idx=region.index[D], weight=1)),
+							list(region.indexI = 
+											list(idx=region.index[D], weight=1))
+					)
+			
+					
+					c(thelincombs[notDuplicated[D] ][[1]],
+							list(list(region.indexS=
+													list(idx=data$region.indexS[notDuplicated[D]], 
+															weight=1))),
+							list(list(region.indexI=
+													list(idx=data$region.indexI[notDuplicated[D]], 
+															weight=1))) 
+					)
+			
+		}
 	}
+ 
 
 
-	
+
 	# run inla!		
 	inlaRes = inla(formula, data=data , family=family,
 			lincomb=inlaLincombs, ...)
+	#save(inlaRes, inlaLincombs,theFitted, region.index, SregionFitted, notInData,file="temp.RData")
+	
+	if(all(names(inlaRes)=="logfile"))
+		return(inlaRes)
 
 	thebym = inlaRes$summary.lincomb.derived[1:length(region.index),]
 	inlaRes$marginals.bym = inlaRes$marginals.lincomb.derived[1:length(region.index)]
@@ -224,18 +275,17 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 		rownames(thebym) = names(region.index)
 	thebym = thebym[,!names(thebym) %in% c("ID","kld")]
 	names(thebym) = paste("random.",names(thebym),sep="")
-	
+
 	theFitted = inlaRes$summary.lincomb.derived[-(1:length(region.index)),]
 	inlaRes$marginals.fitted.bym = inlaRes$marginals.lincomb.derived[
 			-(1:length(region.index))
 			]
-			
+
 	names(inlaRes$marginals.fitted.bym)= 
-			rownames(theFitted)= names(region.index[notDuplicated])
+			rownames(theFitted)= names(region.index)[SregionFitted]
 	theFitted$exp = 
 			unlist(
-					lapply(inlaRes$marginals.lincomb.derived[
-									-(1:length(region.index))], 
+					lapply(inlaRes$marginals.fitted.bym, 
 							function(qq) {
 								sum(
 										exp(qq[,"x"])*c(0,diff(qq[,"x"]))*qq[,"y"]	
@@ -243,11 +293,13 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 							})
 			)
 	theFitted$exp[theFitted$exp==Inf]=NA
+
+	
 	# E inv logit(lincombs)
+
 	if(length(grep("binomial",inlaRes$.args$family))) {
 		temp=unlist(
-				lapply(inlaRes$marginals.lincomb.derived[
-								-(1:length(region.index))], 
+				lapply(inlaRes$marginals.fitted.bym, 
 						function(qq) {
 							eqqx = exp(qq[,"x"])
 							sum(
