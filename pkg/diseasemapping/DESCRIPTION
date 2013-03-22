@@ -1,8 +1,8 @@
 Package: diseasemapping
 Type: Package
 Title: Calculate observed and expected disease incidence counts from a case file and population data. 
-Version: 0.7.1
-Date: 2013-03-20
+Version: 0.7.2
+Date: 2013-03-21
 Depends: mgcv, sp
 Enhances: diseasemappingDevel, glmmBUGS, spdep, INLA
 Author: Patrick Brown <patrick.brown@utoronto.ca>
