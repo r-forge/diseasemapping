@@ -62,6 +62,12 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 		}
 	}
 	allterms = rownames(attributes(terms(formula))$factors)
+
+	# get rid of offset
+	allterms = gsub("^offset\\(", "", allterms)
+	allterms = gsub("\\)$", "", allterms)
+	
+	
 	# convert covariates to raster stack with same resulution of prediction raster.
 	if(!is.null(covariates)){
 		method = rep("ngb", length(covariates))

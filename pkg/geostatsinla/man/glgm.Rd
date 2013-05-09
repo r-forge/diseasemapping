@@ -136,7 +136,7 @@ plot(res$parameters$range$prior,type='l', col='blue')
 lines(res$parameters$range$post,col='red')
 legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
 
-
- 
 }
+
+
  	
