@@ -21,7 +21,7 @@ stackRasterList = function(x, template=x[[1]],method='ngb') {
 	result = template
 	template = as(template, "BasicRaster")
 	for(D in 1:Nlayers) {
-		if(class(x[[D]])=="SpatialPolygonsDataFrame"){
+ 		if(class(x[[D]])=="SpatialPolygonsDataFrame"){
 			if(length(names(x[[D]]))!=1)
 				warning("polygon ", D, "has more than one data column, using the first" )
 			result = addLayer(result,
@@ -30,13 +30,13 @@ stackRasterList = function(x, template=x[[1]],method='ngb') {
 							raster(template), field=names(x[[D]][1])
 					)
 			)
-		} else {
+		} else { # not a spdf
 		if(as(x[[D]], 'BasicRaster')==template) {
 			# same projectoin, same resolution
 			result = addLayer(result, x[[D]])			
 		}	 else {
 			# same projection, different resolution
-			testcrs =result@crs@projargs == x[[D]]@crs@projargs
+			testcrs =CRS(result@crs@projargs)@projargs == CRS(x[[D]]@crs@projargs)@projargs
 			if(is.na(testcrs)) testcrs = T
 			if(testcrs) {
 				result = addLayer(result,	

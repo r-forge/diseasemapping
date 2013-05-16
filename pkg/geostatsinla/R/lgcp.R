@@ -26,6 +26,8 @@ if(!length(grep("^Raster",class(cells)))) {
 }
 
 # create data
+
+
 	
 	data = rasterize(data, cells, fun="count")
 	names(data) = "count"
@@ -42,24 +44,25 @@ if(!length(grep("^Raster",class(cells)))) {
 			.~.+offset(logCellSize) 
 	)
 	lhs(formula) = as.name("count")
+
 	
 	# cell size offset
 	logCellSize = cells
 	names(logCellSize) = "logCellSize"
 	values(logCellSize) =  sum(log(res(cells)) )
 
-	# covariates stack
+ 	# covariates stack
 	if(!is.null(covariates)){
 		method = rep("ngb", length(covariates))
-		covariates = stackRasterList(covariates, cells, method=method)	
+ 		covariates = stackRasterList(covariates, cells, method=method)	
 	} 
-	if(!is.null(covariates)) {
+ 	if(!is.null(covariates)) {
 		covariates = stack( logCellSize, covariates)
 	} else {
 		covariates = logCellSize
 	}
-	
-result = glgm(data=data, cells=cells, covariates=covariates, 
+
+ result = glgm(data=data, cells=cells, covariates=covariates, 
 		formula=formula,priorCI=priorCI,maternRoughness=maternRoughness,
 		buffer=buffer, mesh=mesh, 
 		family="poisson",
