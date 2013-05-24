@@ -7,15 +7,17 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 
 
 	
-	theterms = strsplit(as.character(formula), "~")
+	theterms = unlist(strsplit(as.character(formula), "~"))
+	theterms = gsub("[[:space::]", "", theterms)
+	theterms = theterms[theterms != ""]
 	
 	theCovs = attributes(terms(formula))$term.labels
 	
 	newdata = as.geodata(geodata, 
-			data.col=theterms[[2]], 
+			data.col=theterms[1], 
 			covar.col=theCovs)
 
-	trend = as.formula(paste("~", theterms[[3]]))
+	trend = as.formula(paste("~", theterms[2]))
 	
 	
 	
@@ -75,7 +77,13 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 			cov.model <- ini.cov.pars$cov.model
 			kappa <- ini.cov.pars$kappa
 		}
+	} else {
+		# default initial values
+		# 
+		ini.cov.pars = c(var(data), sd(coords[,1]))	
 	}
+
+	
 	if(missing(cov.model)) cov.model <- "matern"
 	cov.model <- match.arg(cov.model, choices = geoR:::.geoR.cov.models)
 	if(cov.model == "stable") cov.model <- "powered.exponential"
@@ -894,3 +902,4 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 	lik.results$beta.table=beta.table
 	return(lik.results)
 }
+

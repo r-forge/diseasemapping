@@ -3,7 +3,27 @@ krige = function(obj.model, geodata,  locations, covariates, locations.mean=loca
 		nugget.in.prediction=TRUE) {
 
 NsimBoxCox=40
-	
+
+if(is.numeric(locations)){
+	# locations is number of cells in the x direction
+	Nx = locations
+	Ny = round(locations*diff(geodata@bbox[2,])/diff(geodata@bbox[1,]))
+	myExtent = 	extent(geodata@bbox)
+	myExtent@ymax = myExtent@ymin + Ny * diff(geodata@bbox[1,])/Nx
+	locations = raster(myExtent, Ny, Nx,
+			 geodata@proj4string)	
+}
+if(is.numeric(locations.mean)){
+	# locations is number of cells in the x direction
+		Nx = locations.mean
+		Ny = round(locations.mean*diff(geodata@bbox[2,])/diff(geodata@bbox[1,]))
+		myExtent = 	extent(geodata@bbox)
+		myExtent@ymax = myExtent@ymin + Ny * diff(geodata@bbox[1,])/Nx
+		locations.mean = raster(myExtent, Ny, Nx,
+				geodata@proj4string)	
+	}
+
+ 
 data = geodata@data	
 theCovs = attributes(terms(obj.model$formula))$term.labels
 
@@ -75,7 +95,10 @@ for(D in theCovs){
 names(meanRaster) = "fixed"
 # do the kriging
 
-data.col = strsplit(as.character(obj.model$formula), "~")[[2]]
+data.col = unlist(strsplit(as.character(obj.model$formula), "~"))
+data.col = gsub("[[:space:]]", "", data.col)
+data.col = data.col[data.col != ""]
+data.col = data.col[1]
 geodataForKrige = as.geodata(geodata, 
 		data.col=data.col, 
 		covar.col=theCovs)
@@ -149,34 +172,47 @@ if(!any(obj.model$lambda==c(0,1))){
 	names(result)[names(result)=="predict"] = "predict.boxcox"
 
 	
-	bcpred= 0
-	Ndata = length(result[["predict.boxcox"]][])
 
-	themean = result[["predict.boxcox"]][]
+	
+	themean = values(result[["predict.boxcox"]])
+
 	if(nugget.in.prediction){
-		thesd = sqrt(result[["predict.boxcox"]][] + obj.model$nugget)
+		thesd = sqrt(values(result[["krige.var"]]) + obj.model$nugget)
  	} else {
-		thesd = sqrt(result[["predict.boxcox"]][])
+		thesd = sqrt(values(result[["krige.var"]]))
 	}
+
+	theNA = is.na(themean)
 	thesd[is.na(thesd)] = 0 
 	themean[is.na(themean)] = 0 
 			
 	invlambda = 1/obj.model$lambda
-
-	for(D in 1:NsimBoxCox) {
-		bcpred = bcpred + (obj.model$lambda *rnorm(Ndata, themean, thesd)+1)^invlambda
-	}
-	bcpred = bcpred / NsimBoxCox
-	bcpred = raster(matrix(bcpred, ncol=result@ncols,byrow=T), 
-			result@extent@xmin,result@extent@xmax,
-			result@extent@ymin,result@extent@ymax,crs=result@crs)
-
-	result = addLayer(result, 
-			bcpred)
-
-
 	
-	names(result)[names(result)=="layer"] = "predict"
+	bcpred = 0
+	Ndata = length(themean)
+	
+	# if lambda is fractional, truncate transformed values at zero
+	if(is.nan((-1)^obj.model$lambda)) {
+		useMax=0
+	} else {
+		useMax = -Inf
+	}
+	
+	for(D in 1:NsimBoxCox) {
+		bcpred = bcpred + 
+				exp(invlambda*log(
+		pmax(obj.model$lambda *rnorm(Ndata, themean, thesd)+1,useMax)))
+	}
+	bcpred[is.na(themean)] = NA
+	bcpred = bcpred / NsimBoxCox
+	bcpred[theNA] = NA
+	
+	newraster=raster(result[["predict.boxcox"]])
+	names(newraster) = "predict"
+	values(newraster) = bcpred
+	
+	result = addLayer(result, 
+			newraster)
 	
 }
 

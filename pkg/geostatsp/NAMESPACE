@@ -10,7 +10,8 @@ likfit, likfit.default, likfit.SpatialPointsDataFrame,
  maternGmrfPrec, loglik.GRF, loglik.GRF, loglik.GRF.SpatialPointsDataFrame,
  grfConditional, maternGmrfPrec, maternGmrfPrec.default, maternGmrfPrec.dgCMatrix,
  maternGmrfPrec.matrix, NNmat, gmrfPrecUncond,simLgcp,simPoissonPP,
- as.im, as.im.default,as.im.RasterLayer
+ as.im, as.im.default,as.im.RasterLayer, 
+ GNcities, GNcities.matrix, GNcities.Extent, GNcities.default
 )
 
 # Import all packages listed as Imports or Depends
@@ -22,3 +23,4 @@ import(
 )
 
 importFrom(webmaps, getTiles)
+importFrom(geonames, GNcities)

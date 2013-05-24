@@ -1,6 +1,8 @@
 \name{swissRain}
 \alias{swissRain}
 \alias{swissAltitude}
+\alias{swissBorder}
+
 \docType{data}
 \title{
 Swiss rainfall data
@@ -22,12 +24,8 @@ being the rainfall values in millimetres.
 data(swissRain)
 plot(swissAltitude)
 points(swissRain)
+plot(swissBorder, add=TRUE)
 
-
-\dontrun{
-load(url("http://www.filefactory.com/file/frd1mhownd9/n/CHE_adm0_RData"))
-plot(spTransform(gadm, swissRain@proj4string), add=T)
-}
 
 
 }

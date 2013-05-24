@@ -22,7 +22,8 @@ A fitted model produced by \code{\link{likfit}}
 A SpatialPointsDataFrame containing  the data used with \code{\link{likfit}}.
 }
   \item{locations}{
-A \code{\link[raster]{raster}} on which the spatial random effects will be predicted
+A \code{\link[raster]{raster}} on which the spatial random effects will be predicted, or an integer specifying
+the number of cells in the x dimension for a raster with square cells covering \code{geodata}.
 }
   \item{covariates}{
 The spatial covariates used in prediction, either a \code{\link[raster]{raster}} stack or list of rasters.
@@ -54,10 +55,13 @@ If the prediction locations are identical for the fixed effects and random effec
 returned with the following layers:
 \item{fixed}{Estimated means from the fixed effects portion of the model}
 \item{random}{Predicted random effect}
-\item{krige.var}{Conditional variance of predicted random effect}
+\item{krige.var}{Conditional variance of predicted random effect (on the transformed scale if applicable)}
 \item{predict}{Prediction of the response, sum of fixed and random effects.  If exp.pred is TRUE, gives predictions
 on the exponentated scale, and half of krige.var is added prior to exponentiating}
 \item{predict.log}{If exp.pred=TRUE, the prediction of the logged process.}
+If the prediction locations are different for fixed and random effects (typically coarser for the random 
+effects), a list with two raster stacks is returned.
+\item{predict.boxcox}{If a box cox transformation was used, the prediction of the process on the transformed scale.}
 If the prediction locations are different for fixed and random effects (typically coarser for the random 
 effects), a list with two raster stacks is returned.
 \item{prediction}{A raster stack as above, though the random effect prediction is resampled to the 
@@ -77,13 +81,12 @@ data(swissRain)
 swissRain$lograin = log(swissRain$rain)
 swissRain$elevation = extract(swissAltitude, swissRain)
 swissFit =  likfit(swissRain, lograin ~ elevation, 
-	cov.model="matern", kappa = 2, fix.kappa=TRUE,
-	ini.cov.pars= c(0.6, 7000))
+	cov.model="matern", kappa = 2, fix.kappa=TRUE)
 swissRaster = raster(extent(swissRain@bbox), ncols=61, nrows=91, crs=swissRain@proj4string)	
 swissKrige = krige(swissFit, swissRain, swissRaster, swissAltitude)
 
 
-swissFit =  likfit(swissRain, rain ~ elevation, 
+swissFit =  likfit(swissRain, lograin ~ elevation, 
 	cov.model="matern", kappa = 2, fix.kappa=TRUE,
 	lambda=0.5, fix.lambda=TRUE,
 	ini.cov.pars= c(0.6, 7000))
@@ -92,10 +95,8 @@ swissKrige = krige(obj.model=swissFit, geodata=swissRain,
 
 
 plot(swissKrige$prediction[["predict"]]) 
-\dontrun{
-load(url("http://www.filefactory.com/file/frd1mhownd9/n/CHE_adm0_RData"))
-plot(spTransform(gadm, swissRain@proj4string), add=T)
-}
+plot(swissBorder, add=TRUE)
+
 
 }
 
