@@ -1,6 +1,8 @@
 \name{murder}
 \alias{murder}
-\alias{murderCovariates}
+\alias{torontoPdens}
+\alias{torontoIncome}
+\alias{torontoNight}
 \docType{data}
 \title{
 Murder locations
@@ -10,8 +12,11 @@ Murder locations
 }
 \usage{data(murder)}
 \format{
-  \code{murder} is a  SpatialPoints object of murder locations.  \code{murderCovariates} is a raster stack
-  containing income and light at night.
+  \code{murder} is a  SpatialPoints object of murder locations.  \code{torontoPdens}, 
+  \code{torontoIncome}, and \code{torontoNight} are rasters containing
+  population density (per hectare), median household income, and ambient light 
+  respectively.
+
 }
 
 \source{
@@ -20,7 +25,7 @@ www3.thestar.com/static/googlemaps/homicidemap.html
 
 \examples{
 data(murder)
-plot(murderCovariates[["income"]])
+plot(torontoIncome)
 points(murder, col="#0000FF40", cex=0.5)
 
 \dontrun{

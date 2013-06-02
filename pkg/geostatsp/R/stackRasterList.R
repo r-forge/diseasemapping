@@ -20,6 +20,8 @@ stackRasterList = function(x, template=x[[1]],method='ngb') {
 			
 	result = template
 	template = as(template, "BasicRaster")
+	template2 = raster(template)
+	
 	for(D in 1:Nlayers) {
  		if(class(x[[D]])=="SpatialPolygonsDataFrame"){
 			if(length(names(x[[D]]))!=1)
@@ -36,14 +38,17 @@ stackRasterList = function(x, template=x[[1]],method='ngb') {
 			result = addLayer(result, x[[D]])			
 		}	 else {
 			# same projection, different resolution
-			testcrs =CRS(result@crs@projargs)@projargs == CRS(x[[D]]@crs@projargs)@projargs
+			testcrs =CRS(template@crs@projargs)@projargs == CRS(x[[D]]@crs@projargs)@projargs
 			if(is.na(testcrs)) testcrs = T
 			if(testcrs) {
-				result = addLayer(result,	
-						raster::resample(x[[D]], result[[1]],method=method[D])
-				)
+				toAdd = raster::resample(x[[D]], template2, method=method[D])
+				if(!is.null(levels(x[[D]]))) {
+					levels(toAdd) = levels(x[[D]])
+				}
+				result = addLayer(result,	toAdd)
+				
 			} else {
-				# different resolution
+				# same resolution
 			result = addLayer(result,
 					projectRaster(x[[D]], template,method=method[D])
 			)

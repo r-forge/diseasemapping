@@ -899,6 +899,10 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 	beta.table= cbind(beta.table,
 		p = pnorm(abs(beta.table[,"z"]), lower.tail=FALSE)		
 	)
+	beta.table = rbind(beta.table, range = c(
+					lik.results$phi * sqrt(8*lik.results$kappa),
+					rep(NA, dim(beta.table)[2]-1)
+					))
 	lik.results$beta.table=beta.table
 	return(lik.results)
 }

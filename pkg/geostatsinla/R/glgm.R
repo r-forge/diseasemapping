@@ -67,7 +67,7 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 	# get rid of offset
 	allterms = gsub("^offset\\(", "", allterms)
 	allterms = gsub("\\)$", "", allterms)
-	
+
 	
 	# convert covariates to raster stack with same resulution of prediction raster.
 	if(!is.null(covariates)){
@@ -76,6 +76,7 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 		
 	} 
 
+ 	
 	# create data frame for inla
 	# if data is a raster
 	if(length(grep("^Raster", class(data)))) {
@@ -96,16 +97,23 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 		
 		if(! all(notInData %in% names(covariates)))
 			warning("some terms in the model are missing from both the data and the covariates")
-		for(D in notInData)
+		for(D in notInData) {
 			data[[D]] = extract(covariates[[D]], data)
-		
-		cellsTemp = cells
+			# check for factors
+ 
+			if(!is.null(levels(covariates[[D]]))){
+				data[[D]] = factor(data[[D]])
+			}
+		}	
+			
+ 		cellsTemp = cells
 		values(cellsTemp ) = NA
 		data$space = extract(cellsTemp, data ,cellnumbers=T)[,"cells"]
 		data = data@data
 	}
 	# data is now a data frame.
-	
+
+ 
 	# priors
 	if("sd" %in% names(priorCI)) {
 		obj1 = sort(priorCI$sd^-2)
