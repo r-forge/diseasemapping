@@ -10,23 +10,30 @@ names(murder) = c("long","lat")
 murder= na.omit(murder)
 murder = SpatialPoints(murder, proj4string = CRS("+init=epsg:4326"))
 
+murder = murder[!duplicated(murder@coords[,1]),]
 
 
 
 torontoCT = readOGR("/store/patrick/spatialData/","gct_000b06a_e")
 torontoCT = torontoCT[torontoCT$CMAUID==535,]
 
+
+
+
 #income = read.table("/store/patrick/spatialData/98-316-XWE2011001-401.CSV",#
 #		sep=",",header=T,skip=1, quote="\"",as.is=T,nrows=1500000)
 #income = income[income$CMA=="Toronto",]
 
 library(diseasemapping)
+data(popdata)
 toronto = popdata[popdata$CSDNAME=="Toronto",]
-murder=murder[!is.na(overlay(murder, toronto))]
+murder=murder[!is.na(over(murder, toronto))]
 
 murderUTM = spTransform(murder, 
 		CRS("+proj=utm +zone=19 +datum=WGS84 +units=m +no_defs +ellps=WGS84"))
 
+torontoBorder = spTransform(toronto,
+		CRS("+proj=utm +zone=19 +datum=WGS84 +units=m +no_defs +ellps=WGS84"))
 
 
 
@@ -46,19 +53,55 @@ torontoNight@extent@ymax = torontoNight@extent@ymax -down
 
 torontoNightUTM = projectRaster(torontoNight, 	
 		crs=murderUTM@proj4string)
-plot(torontoNightUTM)
+torontoNightUTM = crop(torontoNightUTM, extent(torontoBorder@bbox))
+plot(torontoNightUTM^2)
+plot(torontoBorder,add=T)
 
-load("../data/tor06.RData")
+load("/home/patrick/workspace/Admin/teaching/spatial4/data/tor06.RData")
+
 tor06@data[which(tor06$econ_fam_med_inc==0),"econ_fam_med_inc"] = NA
+tor06 = spTransform(tor06, murder@proj4string)
 
-murderCovariates = stackRasterList(list(night=torontoNightUTM, income=tor06[,"econ_fam_med_inc"]),
-		template=torontoNightUTM)
+myExtent = extent(tor06@bbox)
+therange = apply(tor06@bbox,1,diff)
+
+cellsX = 250
+dimX = therange["x"]/cellsX
+cellsY = ceiling(cellsX *therange["y"]/therange["x"])
+myExtent@ymax = myExtent@ymin + cellsY * dimX
+
+rasterTemplate = raster(myExtent, nrows=cellsY, ncols=cellsX,
+		crs= (murder@proj4string))
+
+torontoIncome = rasterize(tor06,rasterTemplate, "econ_fam_med_inc",
+		fun=mean, na.rm=T)
+
+
+tor06$area_sqk=sapply(slot(tor06, "polygons"), slot, "area")/(1000^2)
+
+tor06$pdens_hectare= tor06$pdens = (tor06$m_tot + tor06$f_tot)/
+		(sapply(slot(tor06, "polygons"), slot, "area")/10000)
+
+torontoPdens = rasterize(tor06,rasterTemplate, "pdens_hectare",
+		fun=mean, na.rm=T)
+
 
 plot(murderCovariates[["income"]])
 plot(murderUTM, add=T)
 
 murder=murderUTM
-save(murder,murderCovariates, 
+torontoNight= torontoNightUTM
+
+save(murder,torontoIncome, torontoNight, torontoPdens,
 		file="/home/patrick/workspace/diseasemapping/pkg/geostatsp/data/murder.RData",
 		compress="xz")
 
+ltLoa = crop(ltLoa, extent(loaloa@bbox))
+names(eviLoa) = "evi"
+
+
+eviLoa = aggregate(eviLoa, 2)
+elevationLoa = aggregate(elevationLoa, 2)
+save(elevationLoa,eviLoa, loaloa, ltLoa, 
+		file="/home/patrick/workspace/diseasemapping/pkg/geostatsp/data/loaloa.RData",
+		compress="xz")
