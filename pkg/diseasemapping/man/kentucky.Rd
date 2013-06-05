@@ -29,11 +29,11 @@ larynxRates= cancerRates("USA", year=1998:2002,site="Larynx")
 kentucky2 = getSMR(kentucky, larynxRates, larynx, 
 		regionCode="County")
 
-breaks = seq(0, ceiling(max(kentucky2$SMR)),by=2)
+breaks = c(0,1,seq(2, ceiling(max(kentucky2$SMR)),by=2))
 thecol = terrain.colors(length(breaks)-1)
 
 plot(kentucky2, col = thecol[cut(kentucky2$SMR, breaks,include.lowest=TRUE)] )
-legend("topleft", pch=15, pt.cex=2, adj=c(0,10), 
+legend("topleft", pch=15, pt.cex=2.5, adj=c(0,15), 
   legend=rev(breaks), col=c(NA, rev(thecol)))
 }
 \keyword{datasets}
