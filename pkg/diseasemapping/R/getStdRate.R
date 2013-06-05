@@ -5,11 +5,6 @@ getStdRate= function(relativeRate, model, referencePopulation, scale=100000) {
 if(any(relativeRate < -0.0001,na.rm=TRUE ))
   warning("negative numbers in rates, make sure they're not on the log scale")
 
-if(is.character(referencePopulation)) {
-  data(referencePopulation)
-  referencePopulation = referencePopulation[[referencePopulation]]
-
-}
   
 newpop <- formatCases(referencePopulation)
 
