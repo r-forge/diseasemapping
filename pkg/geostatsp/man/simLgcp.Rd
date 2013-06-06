@@ -8,7 +8,8 @@
 Give covariates and model parameters, simulates a log-Gaussian Cox process
 }
 \usage{
-	simLgcp(param, covariates=NULL, betas=NULL, rasterTemplate=covariates[[1]], model="whittle", ...)
+	simLgcp(param, covariates=NULL, betas=NULL, 
+	  rasterTemplate=covariates[[1]], model="whittle", ...)
 	simPoissonPP(intensity)
 }
 

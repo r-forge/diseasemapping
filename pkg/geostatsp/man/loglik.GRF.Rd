@@ -21,7 +21,8 @@ loglik.GRF(geodata, ...)
 %				cov.model, realisations, lik.method = "ML",
 %				components = TRUE, nospatial = TRUE, limits = pars.limits(), 
 %				print.pars = FALSE, messages, ...)
-\method{loglik.GRF}{SpatialPointsDataFrame}(geodata, formula, sigmasq, phi, psiA = 1, psiR = 1, kappa = 1, lambda = 1, nugget = 0, ...)
+\method{loglik.GRF}{SpatialPointsDataFrame}(geodata, formula, sigmasq, 
+  phi, psiA = 1, psiR = 1, kappa = 1, lambda = 1, nugget = 0, ...)
 }
 \arguments{
   \item{geodata}{

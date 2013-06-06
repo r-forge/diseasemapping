@@ -32,16 +32,20 @@ A raster stack.
 
 \examples{
 
-mylist = list(a=raster(matrix(1:9, 3, 3), 0,1,0,1, crs="+proj=utm +zone=17 +ellps=GRS80 +units=m +no_defs"),
-	b=raster(matrix(1:25, 5, 5), -1, 2, -1, 2,crs="+proj=utm +zone=17 +ellps=GRS80 +units=m +no_defs")
+mylist = list(a=raster(matrix(1:9, 3, 3), 0,1,0,1, 
+       crs="+proj=utm +zone=17 +ellps=GRS80 +units=m +no_defs"),
+	b=raster(matrix(1:25, 5, 5), -1, 2, -1, 2,
+	   crs="+proj=utm +zone=17 +ellps=GRS80 +units=m +no_defs")
 	)
 mystack = stackRasterList(mylist)
 mystack
 
 
 
-mylist = list(a=raster(matrix(1:9, 3, 3), 0,1000,0,1000, crs="+proj=utm +zone=17 +ellps=GRS80 +units=m +no_defs"),
-	b=raster(matrix(1:25, 5, 5), -85.49, -85.48, 0.003, 0.009,crs="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs ")
+mylist = list(a=raster(matrix(1:9, 3, 3), 0,1000,0,1000, 
+       crs="+proj=utm +zone=17 +ellps=GRS80 +units=m +no_defs"),
+	b=raster(matrix(1:25, 5, 5), -85.49, -85.48, 0.003, 0.009,
+	   crs="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs ")
 	)
 	
 mystack = stackRasterList(mylist)

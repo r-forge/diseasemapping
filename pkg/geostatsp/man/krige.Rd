@@ -9,7 +9,8 @@ This function uses the  \code{\link[geoR]{krige.control}} and  \code{\link[geoR]
 in geoR to perform spatial prediction using a fitted model from \code{\link{likfit}}.
 }
 \usage{
-krige(obj.model, geodata, locations, covariates, locations.mean = locations, factor.info = NULL, 
+krige(obj.model, geodata, locations, covariates, locations.mean = locations,
+   factor.info = NULL, 
 	exp.pred = FALSE, rasterMethod = c("ngb", "bilinear"),
 	nugget.in.prediction=TRUE)
 }
@@ -82,7 +83,8 @@ swissRain$lograin = log(swissRain$rain)
 swissRain$elevation = extract(swissAltitude, swissRain)
 swissFit =  likfit(swissRain, lograin ~ elevation, 
 	cov.model="matern", kappa = 2, fix.kappa=TRUE)
-swissRaster = raster(extent(swissRain@bbox), ncols=61, nrows=91, crs=swissRain@proj4string)	
+swissRaster = raster(extent(swissRain@bbox), ncols=61, nrows=91, 
+  crs=swissRain@proj4string)	
 swissKrige = krige(swissFit, swissRain, swissRaster, swissAltitude)
 
 

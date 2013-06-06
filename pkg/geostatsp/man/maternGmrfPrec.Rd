@@ -130,7 +130,9 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 		rep(cellSize*(Ny:1), rep(Ny, Nx)))
 	distmat = as.matrix(dist(coords))
 	covMatMatern = distmat / 	  params["range"]	
- 	covMatMatern  =  (params["var"]*2^(1-params["kappa"] )/gamma(params["kappa"])) * covMatMatern^params["kappa"] * besselK(covMatMatern  , nu=params["kappa"]) 
+ 	covMatMatern  =  (params["var"]*2^(1-params["kappa"] )/
+ 	  gamma(params["kappa"])) * covMatMatern^params["kappa"] * 
+ 	  besselK(covMatMatern  , nu=params["kappa"]) 
  	diag(covMatMatern) = params["var"]
  	
  	prodUncor = covMatMatern %*% precMat

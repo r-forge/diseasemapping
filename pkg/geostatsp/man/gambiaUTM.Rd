@@ -31,11 +31,13 @@ on the malaria data, see Thomson et al. (1999).
 \examples{
 gambiacoords=gambia[,c("x","y")]
 gambiadata=gambia[,c("pos","age","netuse","treated","green","phc")]
-gambiaUTM=SpatialPointsDataFrame(coords=gambiacoords,data=gambiadata,proj4string=CRS('+init=epsg:32628'))
+gambiaUTM=SpatialPointsDataFrame(coords=gambiacoords,
+  data=gambiadata,proj4string=CRS('+init=epsg:32628'))
 plot(gambiaUTM)
 
 \dontrun{
-download.file("http://thematicmapping.org/downloads/TM_WORLD_BORDERS-0.3.zip", "borders.zip")
+download.file("http://thematicmapping.org/downloads/TM_WORLD_BORDERS-0.3.zip", 
+  "borders.zip")
 unzip("borders.zip")
 worldBorders = readOGR(".", "TM_WORLD_BORDERS-0.3")
 africa = worldBorders[worldBorders$REGION ==2,]
