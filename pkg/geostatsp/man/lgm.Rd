@@ -55,7 +55,7 @@ for the range and standard deviation parameters respectively,
 \examples{
 
 data(swissRain)
-library(INLA)
+ 
 swissFit =  lgm(swissRain, cells=40, formula="lograin",
 	covariates=swissAltitude, lambda=0.5, fix.lambda=T, 
 	fix.psiR=F, fix.psiA=F)
