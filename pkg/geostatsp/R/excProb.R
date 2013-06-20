@@ -25,7 +25,7 @@ if(is.list(marginals)) {
 # make sure probabilities are between zero and 1
 excProbAll = pmax(0, pmin(excProbAll, 1))
 
-if(length(grep("Raster", class(template)))) {
+if(length(grep("^Raster", class(template)))) {
 	values(template) = excProbAll
 	excProbAll = template
 	names(excProbAll) = paste("exc", threshold, sep="")

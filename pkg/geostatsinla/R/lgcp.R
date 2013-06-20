@@ -5,7 +5,7 @@ maternRoughness=1, buffer = 0, mesh=F,...) {
 if(!length(grep("^Raster",class(cells)))) { 
 	# cells must be an integer
 	cells = as.integer(cells)
-	thebbox = data@bbox
+	smallBbox = thebbox = data@bbox
 	thebbox = thebbox + buffer*cbind(-c(1,1),c(1,1))
 	res = diff(thebbox[1,])/cells		
 	Nx = cells
@@ -22,6 +22,7 @@ if(!length(grep("^Raster",class(cells)))) {
 	theextent@ymax = theextent@ymin + Ny * res
 	
 	cells = raster(theextent, ncols=cells@ncols, nrows=Ny,crs=cells@crs)
+	smallBbox = bbox(cells)
 	
 }
 
@@ -51,15 +52,12 @@ if(!length(grep("^Raster",class(cells)))) {
 	names(logCellSize) = "logCellSize"
 	values(logCellSize) =  sum(log(res(cells)) )
 
- 	# covariates stack
-	if(!is.null(covariates)){
-		method = rep("ngb", length(covariates))
- 		covariates = stackRasterList(covariates, cells, method=method)	
-	} 
- 	if(!is.null(covariates)) {
-		covariates = stack( logCellSize, covariates)
+  	if(class(covariates)=="RasterLayer") {
+		covariates = list( logCellSize, covariates)
+		names(covariates) = unlist(lapply(covariates, names))
 	} else {
-		covariates = logCellSize
+		if(is.null(covariates)) covariates = list()
+		covariates = c(covariates, logCellSize=logCellSize)
 	}
 
  result = glgm(data=data, cells=cells, covariates=covariates, 

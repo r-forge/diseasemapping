@@ -85,8 +85,7 @@ swissFit =  glgm(swissRain, cells=40, formula="lograin",
 
 swissFit$parameters$summary
 
-swissExc = excProb(swissFit$inla$marginals.random$space, 0,
-	swissFit$raster[[1]])
+swissExc = excProb(swissFit$inla$marginals.random$space, 0)
 		
 plot(swissFit$parameters$range$prior,type="l",
 	ylim=c(0,max(swissFit$parameters$range$posterior[,"y"])),
@@ -107,10 +106,10 @@ myPoints = SpatialPoints(cbind(rbeta(100,2,2), rbeta(100,3,4)))
 myPoints@bbox = cbind(c(0,0), c(1,1))
 
 mycov = raster(matrix(rbinom(100, 1, 0.5), 10, 10), 0, 1, 0, 1)
-names(mycov)="x"
+names(mycov)="x1"
 
 res = lgcp(data=myPoints, cells=20, covariates=mycov,
-	formula=~factor(x),
+	formula=~factor(x1),
 	priorCI=list(sd=c(0.9, 1.1), range=c(0.4, 0.41))
 )
 plot(res$raster[["predict.exp"]])

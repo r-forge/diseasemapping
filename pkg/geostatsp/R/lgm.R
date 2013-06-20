@@ -43,12 +43,26 @@ lgm <- function(data,  cells, covariates=NULL, formula=NULL,
 			formula = as.formula(paste(formula, "~1"))	
 		}
 	}
-	allterms = rownames(attributes(terms(formula))$factors)
 	
 # extract covariates	
 	# convert covariates to raster stack with same resolution of prediction raster.
 	if(!is.null(covariates)){
-		method = rep("ngb", length(covariates))
+		method = rep("bilinear", length(covariates))
+		
+		# check for factors
+		allterms = rownames(attributes(terms(formula))$factors)
+		
+		allterms = gsub("^offset\\(", "", allterms)
+		alltermsWithF = gsub("\\)$", "", allterms)
+		theFactors = grep("^factor", alltermsWithF, value=T)
+		theFactors = gsub("^factor\\(", "", theFactors)
+		names(method)=names(covariates)
+		
+		if(!all(theFactors %in% c(names(covariates), names(data)))) {
+			warning("some covariates in the model aren't in the data")
+		}
+		method[names(method) %in% theFactors] = "ngb" 
+		
 		covariates = stackRasterList(covariates, cells, method=method)
 		
 	} 

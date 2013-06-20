@@ -3,6 +3,12 @@ stackRasterList = function(x, template=x[[1]],method='ngb') {
 	if(class(x)=="SpatialPolygonsDataFrame")
 		x = list(x)
 	
+	if(class(x)=="RasterLayer") {
+		x = list(x)
+		names(x) =names(x[[1]])
+	}
+	
+	
 	if(is.list(x)) {
 		if(is.null(names(x)))
 			names(x) = paste("c", seq(1, length(x)),sep="")	
@@ -22,6 +28,10 @@ stackRasterList = function(x, template=x[[1]],method='ngb') {
 	template = as(template, "BasicRaster")
 	template2 = raster(template)
 	
+	modefun = function(qq, na.rm=NULL) c(as.numeric(names(which.max(table(qq)))), NA)[1]
+	funList = list(ngb=modefun,
+			bilinear=mean)
+	
 	for(D in 1:Nlayers) {
  		if(class(x[[D]])=="SpatialPolygonsDataFrame"){
 			if(length(names(x[[D]]))!=1)
@@ -34,13 +44,29 @@ stackRasterList = function(x, template=x[[1]],method='ngb') {
 			)
 		} else { # not a spdf
 		if(as(x[[D]], 'BasicRaster')==template) {
-			# same projectoin, same resolution
+			# same projection, same resolution
 			result = addLayer(result, x[[D]])			
 		}	 else {
+			# check to see if it's a categorical variable
+			if(x[[D]]@data@isfactor) {
+				method[D] = "ngb"
+			} 
+			
 			# same projection, different resolution
 			testcrs =CRS(template@crs@projargs)@projargs == CRS(x[[D]]@crs@projargs)@projargs
 			if(is.na(testcrs)) testcrs = T
 			if(testcrs) {
+				# should we aggregate?
+				toAgg = floor(min((dim(x[[D]])/dim(template2))[1:2]))
+				if(toAgg > 1) {
+					aggFun = funList[[method[D]]]
+					thelevels = levels(x[[D]])
+					x[[D]] = aggregate(x[[D]], fact=toAgg,
+							fun=aggFun)
+					if(!is.null(thelevels))
+						levels(x[[D]]) = thelevels
+				}
+				
 				toAdd = raster::resample(x[[D]], template2, method=method[D])
 				if(!is.null(levels(x[[D]]))) {
 					levels(toAdd) = levels(x[[D]])
