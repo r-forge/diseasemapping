@@ -107,8 +107,12 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 		}	
 			
  		cellsTemp = cells
-		values(cellsTemp ) = NA
-		data$space = extract(cellsTemp, data ,cellnumbers=T)[,"cells"]
+		values(cellsTemp ) =  
+				matrix(seq(1,ncell(cellsTemp)), 
+						nrow=nrow(cellsTemp), ncol=ncol(cellsTemp), 
+						byrow=T)
+	 
+		data$space = extract(cellsTemp, data ) 
 		data = data@data
 	}
 	# data is now a data frame.
@@ -376,8 +380,16 @@ if(F) {
 			brick(cells,
 			nl=dim(inlaResult$summary.random[["space"]])[2]-1)
 	if("summary.random" %in% names(inlaResult)) {
-		resRasterRandom[] = as.matrix(inlaResult$summary.random[["space"]][,-1])
-		names(resRasterRandom) = paste("random.", names(resRasterRandom),sep="")
+		forRast = 	as.matrix(inlaResult$summary.random[["space"]][,-1])
+		forRastArray = array(forRast, 
+				c(nrow(resRasterRandom), ncol(resRasterRandom),
+						dim(forRast)[2]))
+		dimnames(forRastArray)[[3]] = 
+				colnames(forRast)
+		forRastArray = aperm(forRastArray, c(2,1,3))
+		
+		values(resRasterRandom) = forRastArray
+		names(resRasterRandom) = paste("random.", colnames(forRast),sep="")
 	} else {
 		return(list(inla=inlaResult, parameters=params))
 	}
@@ -415,8 +427,17 @@ if(F) {
 					nl=dim(inlaResult$summary.lincomb.derived)[2]-1)
 		fittedMat = as.matrix(inlaResult$summary.lincomb.derived[,-1])
 		fittedMat[someMissing,] = NA
-		resRasterFitted[] = fittedMat
-		names(resRasterFitted) = paste("predict.", names(resRasterFitted),sep="")
+		
+		forRastArray = array(fittedMat, 
+				c(nrow(resRasterFitted), ncol(resRasterFitted),
+						dim(fittedMat)[2]))
+		dimnames(forRastArray)[[3]] = 
+				colnames(fittedMat)
+		forRastArray = aperm(forRastArray, c(2,1,3))
+		
+		
+		values(resRasterFitted) = forRastArray
+		names(resRasterFitted) = paste("predict.", colnames(fittedMat),sep="")
 
 	# mask	
 		

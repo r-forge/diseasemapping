@@ -1,9 +1,9 @@
 Package: geostatsp
 Type: Package
 Title: Geostatistics using SpatialPoints and rasters 
-Version: 0.3.1
-Date: 2013-05-25
-Depends: sp, raster, RandomFields, geoR, webmaps,Matrix, geonames, spatstat, R (>= 2.10)
+Version: 0.3.2
+Date: 2013-06-19
+Depends: sp, raster, RandomFields, geoR, webmaps,Matrix, geonames, spatstat, pracma, R (>= 2.10)
 Enhances: spdep
 Author: Patrick Brown <patrick.brown@utoronto.ca>
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>

@@ -11,7 +11,8 @@ likfit, likfit.default, likfit.SpatialPointsDataFrame,
  grfConditional, maternGmrfPrec, maternGmrfPrec.default, maternGmrfPrec.dgCMatrix,
  maternGmrfPrec.matrix, NNmat, gmrfPrecUncond,simLgcp,simPoissonPP,
  as.im, as.im.default,as.im.RasterLayer, 
- GNcities, GNcities.matrix, GNcities.Extent, GNcities.default
+ GNcities, GNcities.matrix, GNcities.Extent, GNcities.default,
+ lgm, excProb
 )
 
 # Import all packages listed as Imports or Depends

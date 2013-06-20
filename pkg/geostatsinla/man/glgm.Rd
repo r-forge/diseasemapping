@@ -76,7 +76,6 @@ for the range and standard deviation parameters respectively,
 library(geostatsp)
 data(swissRain)
 swissRain$lograin = log(swissRain$rain)
-library(INLA)
 swissFit =  glgm(swissRain, cells=40, formula="lograin",
 	covariates=swissAltitude, family="gaussian", buffer=20000,
 	priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
@@ -86,7 +85,9 @@ swissFit =  glgm(swissRain, cells=40, formula="lograin",
 
 swissFit$parameters$summary
 
-
+swissExc = excProb(swissFit$inla$marginals.random$space, 0,
+	swissFit$raster[[1]])
+		
 plot(swissFit$parameters$range$prior,type="l",
 	ylim=c(0,max(swissFit$parameters$range$posterior[,"y"])),
 	xlim=c(0, swissFit$parameters$range$userPriorCI[2]*1.1))

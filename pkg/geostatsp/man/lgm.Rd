@@ -1,5 +1,5 @@
-\name{lglm}
-\alias{lglm}
+\name{lgm}
+\alias{lgm}
  
 
 \title{
@@ -8,7 +8,10 @@
 \description{
 Fits a   linear geostatistical model using Maximum Likelihood Estimation }
 \usage{
-lgm(data,  cells, covariates=NULL, formula=NULL, mesh=F,...)
+lgm(data,  cells, covariates=NULL, formula=NULL,
+maternRoughness=1,fixMaternRoughness=TRUE, 
+aniso=FALSE, boxcox=1, fixBoxcox=TRUE,
+ nugget = 0, fixNugget = FALSE,...)
 }
  
 \arguments{
@@ -23,47 +26,62 @@ making spatial predictions.  Names of the raster layers or list elements corresp
 a covariate is missing from the data object it will be extracted from the rasters.  Defaults to \code{NULL} for an 
 intercept-only model.
 }
-\item{formula}{Model formula, defaults to a linear combination of each of the layers in the \code{covariates} object.   
-The spatial random effect should not be supplied. The response variable defaults to the first variable in the \code{data} object, and
- \code{formula} can be an integer or character string specifying the response variable.  For \code{lgcp}, the formula
- should be one-sided.
+\item{formula}{Fixed effects formula, 
+defaults to a linear combination of each of the layers in the \code{covariates} object.   
+ The response variable defaults to the first variable in 
+ the \code{data} object, and
+ \code{formula} can be an integer or character string specifying the response variable. 
 }
+\item{maternRoughness}{Order of the Matern correlation}
+\item{fixMaternRoughness}{Set to \code{FALSE} to estimate the Matern order}
+\item{aniso}{Set to \code{TRUE} to use geometric anisotropy.}
+\item{boxcox}{Box-Cox transformation parameter, set to 1 for no transformation.}
+\item{fixBoxcox}{Set to \code{FALSE} to estimate the Box-Cox parameter.}
+\item{nugget}{Value for the nugget effect (observation error}
+\item{fixNugget}{Set to \code{FALSE} to estimate the nugget effect parameter.}
 \item{...}{Additional options passed to  \code{\link{likfit}}}
 }
 \details{
-
+Calls  \code{\link{likfit}} and  \code{\link{krige}}
 }
 \value{
-A list with two components named  \code{raster}, and \code{parameters}.  \code{inla} contains the results of the call to the
- \code{raster} is a raster stack with the following layers:
-\item{random.mean, random.sd,random.X0.025quant, random.X0.5quant, random.X0.975quant, random.kld}{}
-\item{predict.mean, predict.sd,predict.X0.025quant, predict.X0.5quant, predict.X0.975quant, predict.kld}{}
-\item{predict.exp}{}
-\item{predict.invlogit}{Only supplied if a binomial response variable was used.}
-\code{parameters} contains a list with element
-\item{summary}{}
-and \code{range} and \code{sd} elements containing, 
-for the range and standard deviation parameters respectively,
-\item{prior}{}
-\item{posterior}{}
+If the prediction locations are identical for the fixed effects and random effects, a single raster stack is 
+returned with the following layers:
+\item{fixed}{Estimated means from the fixed effects portion of the model}
+\item{random}{Predicted random effect}
+\item{krige.var}{Conditional variance of predicted random effect (on the transformed scale if applicable)}
+\item{predict}{Prediction of the response, sum of fixed and random effects.  If exp.pred is TRUE, gives predictions
+on the exponentated scale, and half of krige.var is added prior to exponentiating}
+\item{predict.log}{If exp.pred=TRUE, the prediction of the logged process.}
+If the prediction locations are different for fixed and random effects (typically coarser for the random 
+effects), a list with two raster stacks is returned.
+\item{predict.boxcox}{If a box cox transformation was used, the prediction of the process on the transformed scale.}
+If the prediction locations are different for fixed and random effects (typically coarser for the random 
+effects), a list with two raster stacks is returned.
+\item{prediction}{A raster stack as above, though the random effect prediction is resampled to the 
+same locations as the fixed effects.}
+\item{random}{the predictions and conditional variance of the random effects, on the same
+raster as \code{cells}}
+Additionally, returned are
+\item{parameters}{A data frame with parameter estimates, and standard errors of the fixed
+effects parameters}
+\item{likfit}{results from \code{\link{likfit}}}
 }
 
 \seealso{
 \code{\link{likfit}}, \code{\link{krige}}
-
 }
 \examples{
 
 data(swissRain)
  
-swissFit =  lgm(swissRain, cells=40, formula="lograin",
-	covariates=swissAltitude, lambda=0.5, fix.lambda=T, 
-	fix.psiR=F, fix.psiA=F)
+swissRes =  lgm(swissRain, cells=40, formula="rain",
+	covariates=swissAltitude, boxcox=0.5, fixBoxcox=TRUE, 
+	aniso=TRUE)
 
-swissFit$parameters$summary
+swissRes$parameters
 
-
-plot(swissFit$raster[["predict.exp"]]) 
+plot(swissRes$predict[["predict"]]) 
 \dontrun{
 load(url("http://www.filefactory.com/file/frd1mhownd9/n/CHE_adm0_RData"))
 plot(spTransform(gadm, swissRain@proj4string), add=TRUE)
