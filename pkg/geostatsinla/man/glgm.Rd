@@ -85,7 +85,8 @@ swissFit =  glgm(swissRain, cells=40, formula="lograin",
 
 swissFit$parameters$summary
 
-swissExc = excProb(swissFit$inla$marginals.random$space, 0)
+swissExc = excProb(swissFit$inla$marginals.random$space, 0, swissFit$raster)
+plot(swissExc, breaks = c(0, 0.2, 0.8, 0.95, 1), col=c('green','yellow','orange','red'))	
 		
 plot(swissFit$parameters$range$prior,type="l",
 	ylim=c(0,max(swissFit$parameters$range$posterior[,"y"])),
@@ -117,8 +118,7 @@ plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
 
 # a model with little data, posterior should be same as prior
 
-
-data2 = SpatialPointsDataFrame(cbind(c(1,1), c(0,0)), data=data.frame(y=c(NA,NA), offset=c(-100,-200)))
+data2 = SpatialPointsDataFrame(cbind(c(1,0), c(0,1)), data=data.frame(y=c(NA,NA), offset=c(-100,-200)))
 
 res = glgm(data2, cells=20, formula=y~1, priorCI = list(sd=c(1,2), range=c(0.3, 2)),
 family="poisson",buffer=2)

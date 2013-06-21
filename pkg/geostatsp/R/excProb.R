@@ -1,11 +1,10 @@
 
 excProb = function(marginals, threshold=0, template=NULL, templateIdCol=NULL) {
 	
-	if(!all(c("x","y") %in% colnames(marginals[[1]]))) {
-		warning("need x and y in column names of marginals")
-	}
 
+	
 excFunQQ = function(themat) {
+	if(length(themat)) {
 	over = themat[,"x"]>threshold
 	
 	toInt = rbind(c(threshold, approx(themat[,"x"], themat[,"y"], threshold)$x),
@@ -13,6 +12,9 @@ excFunQQ = function(themat) {
 			)
 	
 	prob = trapz(toInt[,"x"], toInt[,"y"])
+} else {
+	prob = NA
+}
 	
 	prob
 } 
@@ -26,6 +28,8 @@ if(is.list(marginals)) {
 excProbAll = pmax(0, pmin(excProbAll, 1))
 
 if(length(grep("^Raster", class(template)))) {
+	if(nlayers(template)>1)
+		template = template[[1]]
 	values(template) = excProbAll
 	excProbAll = template
 	names(excProbAll) = paste("exc", threshold, sep="")

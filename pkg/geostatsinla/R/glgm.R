@@ -31,7 +31,7 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 			
 			cells = raster(theextent, ncols=cells@ncols, nrows=Ny,crs=cells@crs)
 		}
-		smallBbox = thebbox
+		smallBbox = bbox(cells)
 	}
  
 	
@@ -71,7 +71,7 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 	alltermsWithF = gsub("\\)$", "", allterms)
 	allterms = gsub("^factor\\(", "", alltermsWithF)
 	
-	
+
 	
 	# convert covariates to raster stack with same resulution of prediction raster.
 	if(!is.null(covariates)){
@@ -99,15 +99,17 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 		method[names(method) %in% theFactors] = "ngb" 
 		
 		covariatesOrig = covariates
-		covariates = stackRasterList(covariates, cells, method=method)
 		
+		covariates = stackRasterList(covariates, cells, method=method)
+
 		# see if any factor variables aren't coded as factors in `covariates' raster
 		if(length(levels(covariates))) {
 			haveLevels = as.logical(unlist(lapply(levels(covariates), length)))
+			haveLevels = names(covariates)[haveLevels]
 		} else {
-			haveLevels = rep(F, nlayers(covariates))
+			haveLevels = NULL
 		}
-		needLevels = allterms[allterms[!haveLevels] %in% theFactors]
+		needLevels = theFactors[! theFactors%in%haveLevels]
 		for(D in needLevels) {
 			stuff = covariates[[D]]
 			theunique = unique(stuff)
@@ -115,6 +117,8 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 			covariates = stack(covariates[[-which(names(covariates)==D)]], stuff)
 		}
 	} 
+
+	
 	
 	# cell ID's for INLA
 	cellsInla = cells
@@ -144,8 +148,10 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 		
 		notInData = allterms[! allterms %in% names(data)]
 		
+		if(length(notInData)) {
 		if(! all(notInData %in% names(covariates)))
 			warning("some terms in the model are missing from both the data and the covariates")
+		}	
 		for(D in notInData) {
 			data[[D]] = extract(covariatesOrig[[D]], data)
 			# check for factors
@@ -337,8 +343,9 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 	lincombMat = model.matrix(formulaForLincombs, thelincombs, na.action=NULL)
 	
 } else { # no covariates
-	lincombMat = data.frame("(Intercept)"=rep(1,ncell(cells))
-			)
+	lincombMat = matrix(rep(1,ncell(covForLincomb)), ncol=1)
+			colnames(lincombMat) = "(Intercept)"
+# for some reason can't give name (Intercept) in the data.frame call.
 }
 
 lincombMatCells =  thelincombs[,c("inlaCells", "lincombCells")]
@@ -348,8 +355,8 @@ lincombMat[lincombMat==0] = NA
 
 		
 for(D in 1:nrow(lincombMat)) {
-		thisrow = lincombMat[D,]
-		thisrow = as.list(thisrow[!is.na(thisrow)])
+		thisrow = lincombMat[D, ]
+		thisrow = as.list(thisrow[!is.na(thisrow)  ])
 		
 		thelincombs[[D]] = 
 			do.call(inla.make.lincomb, thisrow)$lc
@@ -362,7 +369,7 @@ for(D in 1:nrow(lincombMat)) {
 	
 	names(thelincombs) = paste("c", lincombMatCells[,"lincombCells"],sep="")
 
-
+	
 	# call inla
 	inlaResult = inla(formula, data=data, 
 			lincomb=thelincombs, 
@@ -449,6 +456,11 @@ for(D in 1:nrow(lincombMat)) {
 		if(buffer) {
 			resRasterRandom =  
 				crop(resRasterRandom, extent(smallBbox))
+		# remove boundary cells from inla marginals 
+		cellsSmall = crop(cellsInla, extent(smallBbox))
+		cellIdSmall = values(cellsSmall)
+		inlaResult$marginals.random$space = 
+				inlaResult$marginals.random$space[cellIdSmall]	
 		}
 	} else {
 		return(list(inla=inlaResult, parameters=params))
@@ -482,7 +494,9 @@ for(D in 1:nrow(lincombMat)) {
  
 
 	# lincombs into raster
-	
+
+
+
 	linc = inlaResult$summary.lincomb.derived
 	linc$cell = as.integer(gsub("^c", "", rownames(linc)))
 	
@@ -495,14 +509,31 @@ for(D in 1:nrow(lincombMat)) {
 			
 #	linc = linc[,!colnames(linc)%in% c("ID","cell")]
 	
-	resRasterFitted = 
+
+resRasterFitted = 
 			brick(lincombCells,
 					nl=dim(linc)[2])
 
 	values(resRasterFitted) = as.matrix(linc)
 	names(resRasterFitted) = paste("predict.", colnames(linc),sep="")
 
- 
+	# Add in empty lists for the marginals of missing cells
+	missingNames = paste("c", missingCells, sep="")
+	missingMarginals = vector("list", length(missingNames))
+	names(missingMarginals) = missingNames
+
+	
+	inlaResult$marginals.lincomb.derived = c(	
+			inlaResult$marginals.lincomb.derived,
+			missingMarginals)
+	
+	inlaResult$marginals.lincomb.derived = 
+			inlaResult$marginals.lincomb.derived[
+					paste("c", seq(1,ncell(resRasterFitted)),sep="")
+					]
+			
+	
+	
 	# posterior distributions
 params$sd$posterior=inlaResult$marginals.hyperpar[["Precision for space"]]
 params$sd$posterior[,"y"] = params$sd$posterior[,"y"] * 2*  
