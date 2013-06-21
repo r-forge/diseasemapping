@@ -30,7 +30,8 @@ excProbAll = pmax(0, pmin(excProbAll, 1))
 if(length(grep("^Raster", class(template)))) {
 	if(nlayers(template)>1)
 		template = template[[1]]
-	values(template) = excProbAll
+	names(excProbAll) = names(marginals)
+	values(template) = c(t(matrix(excProbAll, nrow(template),ncol(template))))
 	excProbAll = template
 	names(excProbAll) = paste("exc", threshold, sep="")
 } 
