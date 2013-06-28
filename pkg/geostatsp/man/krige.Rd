@@ -12,7 +12,7 @@ in geoR to perform spatial prediction using a fitted model from \code{\link{likf
 krige(obj.model, geodata, locations, covariates, locations.mean = locations,
    factor.info = NULL, 
 	exp.pred = FALSE, rasterMethod = c("ngb", "bilinear"),
-	nugget.in.prediction=TRUE)
+	nugget.in.prediction=TRUE, ...)
 }
  
 \arguments{
@@ -46,10 +46,13 @@ Method for reprojecting or resampling rasters, either "bilinear" or "ngb". Any c
 will be reprojected with ngb even if bilinear is specified.
 }
 \item{nugget.in.prediction}{If TRUE, predict new observations by adding the nugget effect.  Otherwise
-predict fitted values.  Only relevant for Box-Cox or log transformed data.}
+predict fitted values.  Only relevant for Box-Cox or log transformed data.
+}
+\item{...}{Additional arguments, currently none
+}
 }
 \details{
-This function is essentially a wrapper for   \code{\link[geoR]{krige.conv}}.
+This function is essentially a wrapper for }.
 }
 \value{
 If the prediction locations are identical for the fixed effects and random effects, a single raster stack is 

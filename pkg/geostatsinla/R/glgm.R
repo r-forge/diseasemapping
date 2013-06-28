@@ -116,7 +116,10 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 			levels(stuff) = list(data.frame(ID=theunique, CLASSNAMES=as.character(theunique)))
 			covariates = stack(covariates[[-which(names(covariates)==D)]], stuff)
 		}
-	} 
+	} else { #all covariates should be in data
+		
+		theFactors=NULL
+	}
 
 	
 	

@@ -1,6 +1,6 @@
 krige = function(obj.model, geodata,  locations, covariates, locations.mean=locations,
 		factor.info=NULL, exp.pred=FALSE,rasterMethod = c("ngb", "bilinear"),
-		nugget.in.prediction=TRUE) {
+		nugget.in.prediction=TRUE, ...) {
 
 NsimBoxCox=40
 

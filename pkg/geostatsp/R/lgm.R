@@ -79,8 +79,19 @@ lgm <- function(data,  cells, covariates=NULL, formula=NULL,
 		}
 	}	
 	
+	dotdotnames = names(list(...))
+	# check for kappa and maternRoughness both specified
+	if(length(grep("^kappa$", dotdotnames)) )
+		warning("specify `maternRoughness' instead of `kappa'")
+	if(length(grep("^fix.kappa$", dotdotnames)) )
+		warning("specify `fixMaternRoughness' instead of `fix.kappa'")
+	if(length(grep("^cov.model$", dotdotnames)) )
+		warning("do not specify cov.model, `matern' will be used.")
+	if(length(grep("^(fix.psiA|fix.psiR)$", dotdotnames)) )
+		warning("do not psiA or psiR, use aniso=TRUE ")
 	
-# call likfit
+	
+	# call likfit
 	
 	likRes =  likfit(geodata=data, formula=formula, 
 			cov.model="matern", kappa = maternRoughness, 
@@ -97,6 +108,7 @@ lgm <- function(data,  cells, covariates=NULL, formula=NULL,
 			locations=cells, covariates=covariates,  ...
 			)
  
+	 
 # prepare results	
 	
 	if(is.list(krigeRes)) {
