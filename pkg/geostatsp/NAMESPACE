@@ -2,7 +2,7 @@
 export(
 GaussRF, GaussRF.Raster, GaussRF.SpatialPoints, GaussRF.SpatialPointsDataFrame,
 GaussRF.default, 
-getTiles, getTiles.matrix, getTiles.Extent, getTiles.default,
+openmap, openmap.matrix, openmap.Extent, openmap.default,
 likfit, likfit.default, likfit.SpatialPointsDataFrame,
  anisoMatrix,krige,stackRasterList,
  variog, variog.SpatialPointsDataFrame, variog.default,
@@ -20,8 +20,8 @@ import(
   sp,
   raster,
   RandomFields,
-  geoR,Matrix
+  geoR,Matrix,OpenStreetMap
 )
 
-importFrom(webmaps, getTiles)
+importFrom(OpenStreetMap, openmap)
 importFrom(geonames, GNcities)

@@ -52,7 +52,7 @@ predict fitted values.  Only relevant for Box-Cox or log transformed data.
 }
 }
 \details{
-This function is essentially a wrapper for }.
+This function is essentially a wrapper for \code{\link[geoR]{krige.conv}}.
 }
 \value{
 If the prediction locations are identical for the fixed effects and random effects, a single raster stack is 
