@@ -76,7 +76,7 @@ names(rates) = gsub("\\.", "_", names(rates))
 attributes(rates)$site = iarcSite
 forAttribute = strsplit(forAttribute, "\\(")[[1]]
 attributes(rates)$area = gsub("[[:space:]]+$", "", forAttribute[1])
-attributes(rates)$year = gsub("\\)$", "", forAttribute[2])
+attributes(rates)$year = gsub("\\)$", "", forAttribute[length(forAttribute)])
 
 return(rates)
 
