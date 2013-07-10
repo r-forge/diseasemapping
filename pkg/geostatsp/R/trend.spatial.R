@@ -5,9 +5,9 @@
 	if(!missing(geodata)){
 		if(any(class(geodata) %in% ls(pattern=glob2rx("Spatial*DataFrame"), pos="package:sp")))
 			geodata <- geodata@data
-		attach(geodata, pos=2, warn.conflicts=FALSE)
+		attach(geodata, pos=2)
 		if(!is.null(geodata$covariate)){
-			attach(geodata$covariate, pos=3, warn.conflicts=FALSE)
+			attach(geodata$covariate, pos=3)
 			on.exit(detach("geodata$covariate"), add=TRUE)
 		} 	
 		on.exit(detach("geodata"), add=TRUE)

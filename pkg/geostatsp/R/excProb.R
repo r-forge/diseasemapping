@@ -11,7 +11,7 @@ excFunQQ = function(themat) {
 			themat[over,]
 			)
 	
-	prob = trapz(toInt[,"x"], toInt[,"y"])
+	prob = pracma::trapz(toInt[,"x"], toInt[,"y"])
 } else {
 	prob = NA
 }

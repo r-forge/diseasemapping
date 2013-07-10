@@ -63,7 +63,7 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 			formula = as.formula(paste(formula, "~1"))	
 		}
 	}
-	allterms = rhs.vars(formula)
+	allterms = formula.tools::rhs.vars(formula)
 	
 	
 	# get rid of offset
@@ -362,7 +362,7 @@ for(D in 1:nrow(lincombMat)) {
 		thisrow = as.list(thisrow[!is.na(thisrow)  ])
 		
 		thelincombs[[D]] = 
-			do.call(inla.make.lincomb, thisrow)$lc
+			do.call(INLA::inla.make.lincomb, thisrow)$lc
 
 		thelincombs[[D]][[length(thelincombs[[D]])+1]] =
 				list(space=list(idx=lincombMatCells[D,"inlaCells"], 
@@ -374,7 +374,7 @@ for(D in 1:nrow(lincombMat)) {
 
 	
 	# call inla
-	inlaResult = inla(formula, data=data, 
+	inlaResult = INLA::inla(formula, data=data, 
 			lincomb=thelincombs, 
  	 #	family="poisson")
 	#	family="binomial",verbose=T, Ntrials=Ntrials)

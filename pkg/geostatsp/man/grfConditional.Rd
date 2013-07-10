@@ -49,7 +49,8 @@ swissFit =  likfit(swissRain, sqrtrain ~ elevation,
 	fix.psiA=FALSE, fix.psiR=FALSE,
 	ini.cov.pars= c(0.6, 7000))
 
-swissRaster = raster(extent(swissRain@bbox), ncols=30, nrows=30, crs=swissRain@proj4string)	
+swissRaster = raster(extent(swissRain@bbox), ncols=20, nrows=20, 
+	crs=swissRain@proj4string)	
 
 
 swissSim = grfConditional(data=swissRain,  model.fit=swissFit, 
@@ -60,7 +61,7 @@ plot(swissSim[[2]])
 
 # proportion the realisation above 200
 swissSim2 = grfConditional(data=swissRain,  model.fit=swissFit, 
-locations=swissRaster, Nsim=5, covariates=swissAltitude, 
+locations=swissRaster, Nsim=4, covariates=swissAltitude, 
 fun = function(x) mean(x^2>200)  )
 
 unlist(swissSim2) 

@@ -50,7 +50,7 @@ bym.SpatialPolygonsDataFrame = function(data,
 	}
 		
 	if(missing(adjMat))
-		adjMat=poly2nb(data, row.names =  data[[region.id]] )
+		adjMat=spdep::poly2nb(data, row.names =  data[[region.id]] )
  
 	result = bym.data.frame(data=data@data,
 			formula=formula, priorCI=priorCI, family=family,
@@ -78,6 +78,10 @@ bym.data.frame = function(data,   formula,
 		}
 		
 		graphfile=tempfile()
+		
+		# if using windows, replace back slashes with forward slashes...
+		graphfile = gsub("\\\\", "/", graphfile)
+		
 		region.index = inla.nb.to.graph(adjMat, graphfile)
 
 		# check for data regions missing from adj mat
@@ -157,7 +161,7 @@ bym.data.frame = function(data,   formula,
 
 		
 		# fitted values
-library(formula.tools)
+
 formulaForLincombs = unlist(strsplit(as.character(formula.fitted), "~"))
 formulaForLincombs = formulaForLincombs[length(formulaForLincombs)]
 formulaForLincombs =
@@ -180,7 +184,7 @@ notInData = region.index[!region.index %in% data$region.indexI]
 if(length(notInData)) {
 	dataToAdd = data[rep(1,length(notInData)),]
 	dataToAdd[,"region.indexI"] = dataToAdd[,"region.indexS"]=notInData
-	dataToAdd[,as.character(lhs(formula))] = NA
+	dataToAdd[,as.character(formula.tools::lhs(formula))] = NA
 	data = rbind(data, dataToAdd)
 }
 
@@ -218,7 +222,7 @@ startIndex = length(region.index)
 		lincombMat[lincombMat==0]= NA
 
 		
-		thelincombs = inla.make.lincombs(as.data.frame(lincombMat))
+		thelincombs = INLA::inla.make.lincombs(as.data.frame(lincombMat))
 		for(D in seq(1,length(notDuplicated))) {	
 			inlaLincombs[[D+startIndex]] = 
 					c(thelincombs[notDuplicated[D] ][[1]],
@@ -254,7 +258,7 @@ startIndex = length(region.index)
 
 
 	# run inla!		
-	inlaRes = inla(formula, data=data , family=family,
+	inlaRes = INLA::inla(formula, data=data , family=family,
 			lincomb=inlaLincombs, ...)
 	#save(inlaRes, inlaLincombs,theFitted, region.index, SregionFitted, notInData,file="temp.RData")
 	

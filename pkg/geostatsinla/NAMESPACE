@@ -2,13 +2,12 @@
 # Remove the previous line if you edit this file
 
 # Export all names
-export(bym,lgcp,glgm,bym.data.frame,bym.SpatialPolygonsDataFrame)
+export(bym,lgcp,glgm)
 
 # Import all packages listed as Imports or Depends
 import(
   sp,
   raster,
-  geostatsp,
-  INLA,
-  formula.tools
+  geostatsp
 )
+

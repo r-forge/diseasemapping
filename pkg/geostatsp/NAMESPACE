@@ -1,17 +1,16 @@
 # Export all names
 export(
-GaussRF, GaussRF.Raster, GaussRF.SpatialPoints, GaussRF.SpatialPointsDataFrame,
-GaussRF.default, 
-openmap, openmap.matrix, openmap.Extent, openmap.default,
-likfit, likfit.default, likfit.SpatialPointsDataFrame,
+GaussRF, 
+openmap,  
+likfit,  
  anisoMatrix,krige,stackRasterList,
- variog, variog.SpatialPointsDataFrame, variog.default,
- variog.mc.env, variog.mc.env.SpatialPointsDataFrame, variog.mc.env.default,
- maternGmrfPrec, loglik.GRF, loglik.GRF, loglik.GRF.SpatialPointsDataFrame,
- grfConditional, maternGmrfPrec, maternGmrfPrec.default, maternGmrfPrec.dgCMatrix,
- maternGmrfPrec.matrix, NNmat, gmrfPrecUncond,simLgcp,simPoissonPP,
- as.im, as.im.default,as.im.RasterLayer, 
- GNcities, GNcities.matrix, GNcities.Extent, GNcities.default,
+ variog, 
+ variog.mc.env,  
+ maternGmrfPrec, loglik.GRF,  
+ grfConditional, maternGmrfPrec,  
+NNmat, gmrfPrecUncond,simLgcp,simPoissonPP,
+ as.im ,
+ GNcities,  
  lgm, excProb
 )
 
@@ -19,9 +18,12 @@ likfit, likfit.default, likfit.SpatialPointsDataFrame,
 import(
   sp,
   raster,
-  RandomFields,
-  geoR,Matrix,OpenStreetMap
+  geoR,Matrix
 )
 
-importFrom(OpenStreetMap, openmap)
-importFrom(geonames, GNcities)
+# used :: so don't need
+# importFrom(OpenStreetMap, openmap,openproj)
+# importFrom(RandomFields, GaussRF)
+# importFrom(geonames, GNcities)
+# importFrom(spatstat, as.im)
+# importFrom(pracma, trapz)

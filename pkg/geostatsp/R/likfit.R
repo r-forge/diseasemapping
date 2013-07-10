@@ -59,6 +59,7 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 	##
 	call.fc <- match.call()
 	ldots <- list(...)
+	.likGRF.dists.vec=NULL
 
 	
 	temp.list <- list()
@@ -213,11 +214,15 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 	## Checking for multiple initial values for preliminar search of   
 	## best initial value
 	##
+	thePos=-1
+	
 	if(is.matrix(ini.cov.pars) | (length(nugget) > 1) | (length(kappa) > 1) | (length(lambda) > 1) | (length(psiR) > 1) | (length(psiA) > 1)){
 		if(messages.screen) cat("likfit: searching for best initial value ...")
 		ini.temp <- matrix(ini.cov.pars, ncol=2)
 		grid.ini <- as.matrix(expand.grid(sigmasq=unique(ini.temp[,1]), phi=unique(ini.temp[,2]), tausq=unique(nugget), kappa=unique(kappa), lambda=unique(lambda), psiR=unique(psiR), psiA=unique(psiA)))
-		assign(".likGRF.dists.vec",  lapply(split(as.data.frame(coords), realisations), vecdist), pos=1)
+		.likGRF.dists.vec= lapply(split(as.data.frame(coords), 
+								realisations), vecdist)
+				
 		temp.f <- function(parms, coords, data, temp.list)
 			return(loglik.GRF(geodata = geodata,
 							coords = coords, data = as.vector(data),
@@ -249,7 +254,7 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 		psiR <- ini.temp[6]
 		psiA <- ini.temp[7]
 		grid.ini <- NULL
-		remove(".likGRF.dists.vec", pos=1)
+		.likGRF.dists.vec=NULL
 	}
 	##
 	tausq <- nugget
@@ -282,8 +287,9 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 	if(fix.psiR & fix.psiA){
 		if(psiR != 1 | psiA != 0)
 			coords <- coords.aniso(coords, aniso.pars=c(psiA, psiR))
-		assign(".likGRF.dists.vec", lapply(split(as.data.frame(coords), realisations), vecdist), pos=1)
-		range.dist <- range(get(".likGRF.dists.vec", pos=1))
+		 .likGRF.dists.vec= lapply(split(as.data.frame(coords), 
+								realisations), vecdist) 
+		range.dist <- range( .likGRF.dists.vec )
 		max.dist <- max(range.dist)
 		min.dist <- min(range.dist)
 	}
@@ -400,11 +406,14 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 		if(upper.optim == Inf) upper.optim <- 50*max.dist
 		# get rid of control arguments
 		ldots = ldots[names(ldots)!= "control"]
-		lik.minim <- do.call("optimize", c(list(geoR:::.negloglik.GRF,
+		lik.minim <- do.call("optimize", c(list(.negloglik.GRF,
 								lower=lower.optim,
 								upper=upper.optim,
 								fp=fixed.values,
-								ip=ip, temp.list = temp.list), ldots))
+								ip=ip, temp.list = temp.list,
+								likGRF.dists.vec=
+										.likGRF.dists.vec), 
+						ldots))
 		lik.minim <- list(par = lik.minim$minimum,
 				value = lik.minim$objective,
 				convergence = 0,
@@ -431,9 +440,14 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 									length(ldots$control$parscale)))			
 		}
 		
-		
-		lik.minim <- do.call("optim", c(list(par = ini, fn = geoR:::.negloglik.GRF,
-								fp=fixed.values, ip=ip, temp.list = temp.list), ldots))
+ 
+	
+		lik.minim <- do.call("optim", 
+				c(list(par = ini, fn = .negloglik.GRF,
+								fp=fixed.values, ip=ip, temp.list = temp.list,
+								likGRF.dists.vec=
+										.likGRF.dists.vec), 
+						ldots))
 		##      lik.minim <- optim(par = ini, fn = .negloglik.GRF, method=optim.METHOD
 		##                         lower=lower.optim, upper=upper.optim,
 		##                         fp=fixed.values, ip=ip, temp.list = temp.list, ...)
@@ -628,7 +642,7 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 	## Transforming coords for estimated anisotropy (if the case)
 	##
 	if(fix.psiR & fix.psiA)
-		remove(".likGRF.dists.vec", pos=1)
+		 .likGRF.dists.vec=NULL
 	else{
 		if(round(psiR, digits=6) != 1 | round(psiA, digits=6) != 0)
 			coords <- coords.aniso(coords, aniso.pars=c(psiA, psiR))
@@ -762,6 +776,7 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 			lambda.ns <- lambda
 		}
 		else{
+			warning("this part hasn't been written in geostatsp, call geoR directly instead")
 			if(is.R())
 				lik.lambda.ns <- optim(par=1, fn = geoR:::.negloglik.boxcox,
 						method = "L-BFGS-B",

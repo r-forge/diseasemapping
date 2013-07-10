@@ -75,9 +75,12 @@ effects parameters}
 
 data(swissRain)
  
-swissRes =  lgm(swissRain, cells=40, formula="rain",
+swissRes =  lgm(swissRain, cells=30, formula="rain",
 	covariates=swissAltitude, boxcox=0.5, fixBoxcox=TRUE, 
-	aniso=TRUE)
+	aniso=TRUE, 
+	# starting values, arguments as in geoR::likfit
+	ini.cov.pars=c(70, 20000), psiA=0.65, psiR=8
+	)
 
 swissRes$parameters
 

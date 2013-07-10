@@ -44,7 +44,7 @@ if(!length(grep("^Raster",class(cells)))) {
 	formula	= update.formula(formula,
 			.~.+offset(logCellSize) 
 	)
-	lhs(formula) = as.name("count")
+	formula.tools::lhs(formula) = as.name("count")
 
 	
 	# cell size offset
