@@ -45,17 +45,34 @@ lgm <- function(data,  cells, covariates=NULL, formula=NULL,
 	}
 	
 # extract covariates	
+	
+	# check for factors
+	allterms = rownames(attributes(terms(formula))$factors)
+	
+	allterms = gsub("^offset\\(", "", allterms)
+	alltermsWithF = gsub("\\)$", "", allterms)
+	theFactors = grep("^factor", alltermsWithF, value=T)
+	theFactors = gsub("^factor\\(", "", theFactors)
+	
+	notInData = allterms[! allterms %in% names(data)]
+	
 	# convert covariates to raster stack with same resolution of prediction raster.
+
 	if(!is.null(covariates)){
+		# extract covariate values and put in the dataset
+		
+		for(D in notInData) {
+			data[[D]] = extract(covariates[[D]], data)
+			# check for factors
+			
+			if(!is.null(levels(covariates[[D]]))){
+				data[[D]] = factor(data[[D]])
+			}
+		}	
+		
+		
 		method = rep("bilinear", length(covariates))
 		
-		# check for factors
-		allterms = rownames(attributes(terms(formula))$factors)
-		
-		allterms = gsub("^offset\\(", "", allterms)
-		alltermsWithF = gsub("\\)$", "", allterms)
-		theFactors = grep("^factor", alltermsWithF, value=T)
-		theFactors = gsub("^factor\\(", "", theFactors)
 		names(method)=names(covariates)
 		
 		if(!all(theFactors %in% c(names(covariates), names(data)))) {
@@ -66,18 +83,9 @@ lgm <- function(data,  cells, covariates=NULL, formula=NULL,
 		covariates = stackRasterList(covariates, cells, method=method)
 		
 	} 
-	notInData = allterms[! allterms %in% names(data)]
 	
 	if(! all(notInData %in% names(covariates)))
 		warning("some terms in the model are missing from both the data and the covariates")
-	for(D in notInData) {
-		data[[D]] = extract(covariates[[D]], data)
-		# check for factors
-		
-		if(!is.null(levels(covariates[[D]]))){
-			data[[D]] = factor(data[[D]])
-		}
-	}	
 	
 	dotdotnames = names(list(...))
 	# check for kappa and maternRoughness both specified
