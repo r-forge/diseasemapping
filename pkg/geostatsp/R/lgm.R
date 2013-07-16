@@ -118,34 +118,45 @@ lgm <- function(data,  cells, covariates=NULL, formula=NULL,
 	}
 	
  	res$likfit = likRes
-	res$parameters = likRes$beta.table
+	res$parameters = as.data.frame(likRes$beta.table)
+	res$parameters$fixed=FALSE
 	
-	fill = rep(NA, dim(res$parameters)[2]-1)
+	fill = rep(NA, dim(res$parameters)[2]-2)
 	res$parameters = rbind(
 			res$parameters,
-			sd=c(sqrt(likRes$sigmasq), fill)
+			sd=c(sqrt(likRes$sigmasq), fill, 
+					FALSE)
 			)
-	if(!fixNugget) {
-		res$parameters = rbind(
+
+	res$parameters = rbind(
 				res$parameters,
-				nuggetSd=c(sqrt(likRes$nugget), fill)
-		)
-	}		
+				nuggetSd=c(sqrt(likRes$nugget), fill, fixNugget)
+	) 
 	
-	if(!fixMaternRoughness) {
-		res$parameters = rbind(
+	res$parameters = rbind(
 				res$parameters,
-				nuggetSd=c(likRes$kappa, fill)
-		)
-	}		
+				Matern=c(likRes$kappa, fill, fixMaternRoughness)
+	)
 	
 	if(aniso) {
 		res$parameters = rbind(
 				res$parameters,
-				angle=c(likRes$aniso.pars["psiA"], fill),
-				ratio = c(likRes$aniso.pars["psiR"], fill)
+				angle=c(likRes$aniso.pars["psiA"], fill, FALSE),
+				ratio = c(likRes$aniso.pars["psiR"], fill, FALSE)
 		)
 	}		
+	
+	if(likRes$lambda != 1) {
+		res$parameters = rbind(
+				res$parameters,
+				BoxCox=c(likRes$lambda, fill, fixBoxcox)
+		)
+		
+	}
+		
+
+	res$parameters$fixed = as.logical(res$parameters$fixed)
+	
 	return(res)
 
 

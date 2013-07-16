@@ -56,7 +56,7 @@ grfConditional = function(data,  model.fit, locations, Nsim, covariates,rasterMe
 	coordsTrans = allCoords %*% anisoMat
 	
 	distmat = as.matrix(dist(coordsTrans))
-	corMat = model.fit$sigmasq*matern(distmat,1,model.fit$kappa)
+	corMat = model.fit$sigmasq*geoR::matern(distmat,1,model.fit$kappa)
 	
 	
 	Npred = dim(coordsMat)[1]

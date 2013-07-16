@@ -102,6 +102,7 @@ swissKrige = krige(obj.model=swissFit, geodata=swissRain,
 plot(swissKrige$prediction[["predict"]]) 
 plot(swissBorder, add=TRUE)
 
+ 
 
 }
 

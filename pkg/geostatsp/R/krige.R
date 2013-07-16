@@ -1,4 +1,22 @@
-krige = function(obj.model, geodata,  locations, covariates, locations.mean=locations,
+krigeNew = function(geodata, cells, covariates, 
+		parameters = c(sd=1, nuggetSd=0, range=1, 
+				angle=0,ratio=0,boxcox=0, "(Intercept)"=0),
+		exp.pred=FALSE, nugget.in.prediction=TRUE){
+	
+
+	# if some covariance parameters are missing, add them 
+	# as default values
+	optionalPars = c(nuggetSD=0, angel=0, ratio=0, boxcox=0)
+	for(D in names(optionalPars))
+		if(!any(names(parameters)==D))
+			parameters = c(parameters, optionalPars[D])
+			
+	
+	
+}
+
+krige = function(obj.model, geodata,  locations, covariates, 
+		locations.mean=locations,
 		factor.info=NULL, exp.pred=FALSE,rasterMethod = c("ngb", "bilinear"),
 		nugget.in.prediction=TRUE, ...) {
 
@@ -99,7 +117,7 @@ data.col = unlist(strsplit(as.character(obj.model$formula), "~"))
 data.col = gsub("[[:space:]]", "", data.col)
 data.col = data.col[data.col != ""]
 data.col = data.col[1]
-geodataForKrige = as.geodata(geodata, 
+geodataForKrige = geoR::as.geodata(geodata, 
 		data.col=data.col, 
 		covar.col=theCovs)
 if(obj.model$lambda != 1) {
@@ -117,19 +135,19 @@ for(D in theCovs){
 	else
 		dummyDF[,D] = 0	
 }
-trend.d= geostatsp:::trend.spatial(obj.model$trend, data)	
-trend.l = geostatsp:::trend.spatial(obj.model$trend, dummyDF)
+trend.d=  trend.spatial(obj.model$trend, data)	
+trend.l =  trend.spatial(obj.model$trend, dummyDF)
 
 obj.modelNoLambda = obj.model
 obj.modelNoLambda$lambda =1
-thecontrol = krige.control(obj.model=obj.modelNoLambda,
+thecontrol = geoR::krige.control(obj.model=obj.modelNoLambda,
 		trend.d=trend.d, 
 		trend.l=trend.l) 
 
 
 krigeResult = krige.conv(
 		geodataForKrige, locations=	locationsDF[,1:2],
-		krige=thecontrol
+		krige=thecontrol, output = output.control(messages=FALSE)
 )
 
 rastKrige = setValues(locations[[1]], krigeResult$predict - obj.model$beta["(Intercept)"])

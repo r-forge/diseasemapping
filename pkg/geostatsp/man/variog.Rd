@@ -46,7 +46,7 @@ As \code{\link[geoR]{variog}} or \code{\link[geoR]{variog.mc.env}}
 \examples{
 data(swissRain)
 swissRain$lograin = log(swissRain$rain)
-swissv= geostatsp::variog(swissRain, formula=lograin ~ 1,option="bin")
+swissv= variog(swissRain, formula=lograin ~ 1,option="bin")
 swissEnv = variog.mc.env(swissRain, lograin ~ 1, obj.var=swissv,nsim=9) 
 plot(swissv, env=swissEnv)
 }

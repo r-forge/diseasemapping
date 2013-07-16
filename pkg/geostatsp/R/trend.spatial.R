@@ -1,22 +1,35 @@
 
-"trend.spatial" <-
+trend.spatial = function(trend, geodata) {
+	if(class(geodata) == "SpatialPointsDataFrame")
+		geodata = geodata@data
+	
+	result = model.matrix(trend, data=geodata)
+	
+	class(result) <- "trend.spatial"
+	result
+}
+
+
+"trend.spatialOld" <-
 		function (trend, geodata, add.to.trend) 
 {  
-	if(!missing(geodata)){
-		if(any(class(geodata) %in% ls(pattern=glob2rx("Spatial*DataFrame"), pos="package:sp")))
-			geodata <- geodata@data
-		attach(geodata, pos=2)
-		if(!is.null(geodata$covariate)){
-			attach(geodata$covariate, pos=3)
-			on.exit(detach("geodata$covariate"), add=TRUE)
-		} 	
-		on.exit(detach("geodata"), add=TRUE)
-	}
+#	if(!missing(geodata)){
+	#	if(any(class(geodata) %in% ls(pattern=glob2rx("Spatial*DataFrame"), pos="package:sp")))
+	#		geodata <- geodata@data
+#		attach(geodata, pos=2)
+#		if(!is.null(geodata$covariate)){
+	#		attach(geodata$covariate, pos=3)
+	#		on.exit(detach("geodata$covariate"), add=TRUE)
+#		} 	
+#		on.exit(detach("geodata"), add=TRUE)
+#	}
 	if(inherits(trend, "formula")) {
 		#    require(methods)
 		#    if(exists("trySilent")){
 		if(!missing(geodata)){
-			trend.mat <- try(model.matrix(trend, data=geodata),silent=TRUE) 
+			trend.mat <- try(
+					model.matrix(trend, data=geodata),
+					silent=TRUE) 
 	} else {
 		trend.mat <- try(model.matrix(trend),silent=TRUE)
 	}

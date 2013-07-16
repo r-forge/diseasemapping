@@ -23,7 +23,7 @@ variog.mc.env = function(geodata, formula, ...) {
 }
 
 variog.mc.env.default = function(geodata, ...) {
-	geoR::variog(geodata,...) 
+	geoR::variog.mc.env(geodata,...) 
 }
 
 variog.mc.env.SpatialPointsDataFrame = function(geodata,formula, ...) {

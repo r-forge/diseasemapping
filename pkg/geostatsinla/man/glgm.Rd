@@ -73,13 +73,13 @@ for the range and standard deviation parameters respectively,
 }
 \examples{
 # geostatistical model for the swiss rainfall data
-library(geostatsp)
+require(geostatsp)
 data(swissRain)
 swissRain$lograin = log(swissRain$rain)
 swissFit =  glgm(swissRain, cells=40, formula="lograin",
 	covariates=swissAltitude, family="gaussian", buffer=20000,
 	priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
-	control.mode=list(theta=c(1,2,-2),restart=TRUE),
+	control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
 	control.family=list(hyper=list(prec=list(prior="loggamma", param=c(.1, .1))))
 	)
 

@@ -29,10 +29,8 @@ on the malaria data, see Thomson et al. (1999).
 }
 
 \examples{
-gambiacoords=gambia[,c("x","y")]
-gambiadata=gambia[,c("pos","age","netuse","treated","green","phc")]
-gambiaUTM=SpatialPointsDataFrame(coords=gambiacoords,
-  data=gambiadata,proj4string=CRS('+init=epsg:32628'))
+data(gambiaUTM)
+
 plot(gambiaUTM)
 
 \dontrun{
@@ -41,7 +39,6 @@ download.file("http://thematicmapping.org/downloads/TM_WORLD_BORDERS-0.3.zip",
 unzip("borders.zip")
 worldBorders = readOGR(".", "TM_WORLD_BORDERS-0.3")
 africa = worldBorders[worldBorders$REGION ==2,]
-plot(gambiaUTM)
 plot(spTransform(africa, gambiaUTM@proj4string), add=T)
 
 }

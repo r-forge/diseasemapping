@@ -63,7 +63,7 @@ Patrick Brown
 \code{\link{glgm}},  \code{\link[INLA]{inla}}, \code{\link[diseasemapping]{getSMR}} 
 }
 \examples{
-library(diseasemapping)
+require(diseasemapping)
 data(popdata)
 data(casedata)
 
@@ -72,7 +72,8 @@ ontario = getSMR(popdata,model,  casedata,regionCode="CSDUID", regionCodeCases="
 
 res = bym(ontario, region.id="CSDUID", 
 formula= observed ~ medIncome + offset(logExpected),
-priorCI = list(sdSpatial = c(0.5, 2), sdIndep=c(0.1, 4))
+priorCI = list(sdSpatial = c(0.5, 2), sdIndep=c(0.1, 4)),
+control.mode=list(theta=c(0.38, 0.54),restart=TRUE),
 )
 
 res$par$summary

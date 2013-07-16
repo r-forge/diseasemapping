@@ -33,22 +33,25 @@ see \code{\link[OpenStreetMap]{openmap}} in the OpenStreetMap package.}
 }	
 
 \examples{
-\dontrun{
-myraster = raster(nrows=11,ncols=11,xmn=0,xmx=10,ymn=0,ymx=10)
 
+myraster = raster(matrix(0,10,10),xmn=0,xmx=10,ymn=0,ymx=10)
 
-mytiles = openmap(myraster@extent, zoom=4,  type="osm")
+plot(myraster)
 
-plot(mytiles)
+# only do the following if the the OpenStreetMap.org web site can be accessed
+#if(length(nsl("www.OpenStreetMap.org"))) {
+	mytiles = openmap(myraster@extent, zoom=4,  type="osm")
 
-mypoints = SpatialPoints(10*cbind(runif(10), runif(20)))
+	plot(myraster)
+	plot(mytiles, add=TRUE)
 
-mytiles=openmap(mypoints@bbox, zoom=4,  type="bing")
+#	mypoints = SpatialPoints(10*cbind(runif(10), runif(20)))
 
-plot(mypoints)
-plot(mytiles,add=T)
-points(mypoints, col='yellow')
-}
+#	mytiles=openmap(mypoints@bbox, zoom=4,  type="bing")
 
+#	plot(mypoints)
+#	plot(mytiles,add=T)
+#	points(mypoints, col='yellow')
+#}
 
 }

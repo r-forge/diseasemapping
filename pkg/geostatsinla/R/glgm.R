@@ -63,9 +63,9 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 			formula = as.formula(paste(formula, "~1"))	
 		}
 	}
-	allterms = formula.tools::rhs.vars(formula)
-	
-	
+
+	allterms = rhs.vars(formula)
+
 	# get rid of offset
 	allterms = gsub("^offset\\(", "", allterms)
 	alltermsWithF = gsub("\\)$", "", allterms)

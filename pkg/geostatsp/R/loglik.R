@@ -53,7 +53,7 @@ loglik.GRF.default =
 				cov.model="exp", cov.pars,
 				nugget=0, kappa=0.5, lambda=1, psiR=1, psiA=0,
 				trend="cte", method.lik="ML",
-				compute.dists = TRUE, realisations = NULL)
+				compute.dists = TRUE, realisations = NULL, ...)
 {
 	if(!is.null(obj.model)){
 		if(!is.null(obj.model$cov.model)) cov.model <- obj.model$cov.model
@@ -86,8 +86,8 @@ loglik.GRF.default =
 	## Trend matrix
 	##
 	if(missing(geodata))
-		xmat <- geostatsp:::trend.spatial(trend=trend, geodata=list(coords = coords, data = data))
-	else xmat <- unclass(geostatsp:::trend.spatial(trend=trend, geodata=geodata))
+		xmat <- trend.spatial(trend=trend, geodata=list(coords = coords, data = data))
+	else xmat <- unclass(trend.spatial(trend=trend, geodata=geodata))
 	if (nrow(xmat) != nrow(coords)) 
 		stop("coords and trend have incompatible sizes")
 	beta.size <- ncol(xmat)

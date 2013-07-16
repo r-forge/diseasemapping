@@ -139,8 +139,8 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 	if((nrow(coords) != n) | (2*n) != length(coords))
 		stop("\nnumber of locations does not match with number of data")
 	if(missing(geodata))
-		xmat <- geostatsp:::trend.spatial(trend=trend, geodata=list(coords = coords, data = data))
-	else xmat <- unclass(geostatsp:::trend.spatial(trend=trend, geodata=geodata))
+		xmat <- trend.spatial(trend=trend, geodata=list(coords = coords, data = data))
+	else xmat <- unclass(trend.spatial(trend=trend, geodata=geodata))
 	xmat.contrasts  <- attr(xmat,"contrasts")
 	xmat <- unclass(xmat)
 	if(nrow(xmat) != n)
@@ -387,20 +387,7 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 						((temp.list$n[i]-beta.size)/2) + 0.5 * sum(log(xx.eigen$values))
 		}
 	}
-	##  
-	if(messages.screen) {
-		cat("---------------------------------------------------------------\n")
-		cat("likfit: likelihood maximisation using the function ")
-		if(is.R()){if(justone) cat("optimize.\n") else cat("optim.\n")} else cat("nlminb.\n")
-		cat("likfit: Use control() to pass additional\n         arguments for the maximisation function.")
-		cat("\n        For further details see documentation for ")
-		if(is.R()){if(justone) cat("optimize.\n") else cat("optim.\n")} else cat("nlminb.\n")        
-		cat("likfit: It is highly advisable to run this function several\n        times with different initial values for the parameters.\n")
-		cat("likfit: WARNING: This step can be time demanding!\n")
-		cat("---------------------------------------------------------------\n")
-	}
-	##
-	## Numerical minimization of the -loglikelihood
+		## Numerical minimization of the -loglikelihood
 	##
 	if(length(ini) == 1){
 		if(upper.optim == Inf) upper.optim <- 50*max.dist
@@ -444,7 +431,8 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 	
 		lik.minim <- do.call("optim", 
 				c(list(par = ini, fn = .negloglik.GRF,
-								fp=fixed.values, ip=ip, temp.list = temp.list,
+								fp=fixed.values, ip=ip, 
+								temp.list = temp.list,
 								likGRF.dists.vec=
 										.likGRF.dists.vec), 
 						ldots))
@@ -776,18 +764,10 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 			lambda.ns <- lambda
 		}
 		else{
-			warning("this part hasn't been written in geostatsp, call geoR directly instead")
-			if(is.R())
 				lik.lambda.ns <- optim(par=1, fn = geoR:::.negloglik.boxcox,
 						method = "L-BFGS-B",
 						lower = limits$lambda["lower"],
 						upper = limits$lambda["upper"],
-						data = data, xmat = xmat,
-						lik.method = method.lik)
-			else
-				lik.lambda.ns <- nlminb(par=1, fn = geoR:::.negloglik.boxcox,
-						lower=limits$lambda["lower"],
-						upper=limits$lambda["upper"],
 						data = data, xmat = xmat,
 						lik.method = method.lik)
 			lambda.ns <- lik.lambda.ns$par
@@ -810,6 +790,7 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 			}      
 			npars.ns <- beta.size + 1 + !fix.lambda
 		}
+		
 		lik.results$nospatial <- list(beta.ns = beta.ns, variance.ns = nugget.ns,
 				loglik.ns = loglik.ns, npars.ns = npars.ns,
 				lambda.ns = lambda.ns, AIC.ns = -2 * (loglik.ns - npars.ns),
