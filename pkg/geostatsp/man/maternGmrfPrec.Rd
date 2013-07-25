@@ -135,8 +135,8 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
  	  besselK(covMatMatern  , nu=params["kappa"]) 
  	diag(covMatMatern) = params["var"]
  	
- 	prodUncor = covMatMatern %*% precMat
- 	prodCor = covMatMatern %*% precMatCorr
+ 	prodUncor = covMatMatern \%*\% precMat
+ 	prodCor = covMatMatern \%*\% precMatCorr
  	
  	quantile(diag(prodUncor))
  	quantile(diag(prodCor))
