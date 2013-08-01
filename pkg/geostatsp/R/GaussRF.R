@@ -1,9 +1,9 @@
-GaussRF = function(x, ...) {
+GaussRF = function(x,param, ...) {
 	UseMethod("GaussRF")
 	
 }
 
-GaussRF.Raster = function(x, ...){
+GaussRF.Raster = function(x,param, ...){
 
 	xseq = seq(x@extent@xmin, x@extent@xmax, len=x@ncols)
 	yseq = seq(x@extent@ymin, x@extent@ymax, len=x@nrows)
@@ -22,9 +22,8 @@ GaussRF.Raster = function(x, ...){
 	
 	
 	
-	res =RandomFields::GaussRF(
-			x=xseq, y=yseq,
-			grid=TRUE, 
+	res = GaussRF(x=xseq, param=param,
+			y=yseq,	grid=TRUE, 
 		...
 			)
 
@@ -36,32 +35,60 @@ GaussRF.Raster = function(x, ...){
 	return(resRast)
 }
 
-GaussRF.SpatialPointsDataFrame = function(x, ...){
+GaussRF.SpatialPointsDataFrame = function(x,param, ...){
 	
-	result =RandomFields::GaussRF(
-		x@coords,
-		...
-	)
-
-	return(result)
+	x=coordinates(x)
+	NextMethod("GaussRF")
 }
 
-GaussRF.SpatialPoints= function(x, ...){
+GaussRF.SpatialPoints= function(x,param, ...){
 	
-	result =RandomFields::GaussRF(
-			x@coords,
-			...
-	)
-	
-	return(result)
+	x=coordinates(x)
+	NextMethod("GaussRF")
 }
 
-GaussRF.default = function(x,  ...){
+GaussRF.default = function(x,param,  ...){
 	
+	
+ 	theArgs = list(...)
+	theArgs$x = x
+	
+	if(!any(names(theArgs)=="model")){
+		# param is for geostatsp, not RandomFields 
 
-	RandomFields::GaussRF(x,
-			...
-	)
+		requiredParams = c("variance","range","maternRoughness")
+		if(!all(requiredParams %in% names(param)))
+			warning("param has names", paste(names(param),collapse=","), 
+					" must have ", paste(requiredParams, collapse=","))
+
+		param["scale"] = 2*param["range"] 
+		
+		if(any(names(param)=="aniso.ratio")){
+			# geometric anisotropy
+			if(any(names(param)=="aniso.angle.degrees") & 
+					!any(names(param)=="aniso.angle.radians") ) {
+				param["aniso.angle.radians"] = param["aniso.angle.degrees"]*2*pi/360				
+		}
+			model=list("$", var=param["variance"],   
+					A=anisoMatrix(-param["aniso.angle.radians"],
+							param["scale"]*c(param["aniso.ratio"],1)
+				),
+				list("matern", nu=param["maternRoughness"]))	
+		} else {
+		
+			model=list("$", var=param["variance"],   
+					s=param["scale"],
+					list("matern", nu=param["maternRoughness"]))	
+			
+		}	
+		theArgs$model = model	
+	} else {
+		theArgs$param = param
+	}
+	
+	
+	do.call( RandomFields::GaussRF, theArgs) 
+	#(x, model=model, param=param,	...)
 	
 	
 }
