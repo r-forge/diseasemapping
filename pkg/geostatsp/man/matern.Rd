@@ -1,0 +1,145 @@
+\name{matern}
+\alias{matern}
+\alias{matern.default}
+\alias{matern.dist}
+\alias{matern.Raster}
+\alias{matern.SpatialPoints}
+\alias{matern.SpatialPointsDataFrame}
+
+\title{Evaluate the Matern correlation function}
+\description{
+Returns the Matern covariance for the distances supplied.
+}
+\usage{
+	matern( x, y=x, range, maternRoughness, variance=1, 
+		aniso.ratio=1, aniso.angle.degrees=0, 
+		aniso.angle.radians=aniso.angle.degrees*2*pi/360)
+	\method{matern}{SpatialPoints}( x, y=x, range, maternRoughness, variance=1, 
+		aniso.ratio=1, aniso.angle.degrees=0, 
+		aniso.angle.radians=aniso.angle.degrees*2*pi/360)
+	\method{matern}{default}( x, y=x, range, maternRoughness, variance=1, 
+		aniso.ratio=1, aniso.angle.degrees=0, 
+		aniso.angle.radians=aniso.angle.degrees*2*pi/360)
+	\method{matern}{dist}( x, y=x, range, maternRoughness, variance=1, 
+		aniso.ratio=1, aniso.angle.degrees=0, 
+		aniso.angle.radians=aniso.angle.degrees*2*pi/360)
+	\method{matern}{Raster}( x, y=x, range, maternRoughness, variance=1, 
+		aniso.ratio=1, aniso.angle.degrees=0, 
+		aniso.angle.radians=aniso.angle.degrees*2*pi/360)
+	\method{matern}{SpatialPointsDataFrame}(x, y=x, range, maternRoughness, variance=1, 
+		aniso.ratio=1, aniso.angle.degrees=0, 
+		aniso.angle.radians=aniso.angle.degrees*2*pi/360)
+}
+
+\arguments{
+	\item{x}{A vector or matrix of distances, or \code{Raster} or
+	 \code{SpatialPoints} of locations, see Details below.}
+	 \item{y}{Covariance is calculated for the distance between locations in 
+	 \code{x} and \code{y}.  However, if \code{x} is a matrix or vector it is assumed to 
+	 be a set of distances and \code{y} is ignored.}
+	\item{range}{The range parameter, see below}
+	\item{maternRoughness}{The roughness parameter, or order.}
+	\item{variance}{The variance of the random field.}
+	\item{aniso.ratio}{controls geometric anisotropy, ratio of the length of the contours on the y axis to the 
+	contours on the x axis, after rotation.}
+	\item{aniso.angle.degrees}{rotation angle for genometric anisotropy, in degrees.  Original coordinates are
+	rotated by \code{aniso.angle.degrees} to obtain new coordinates.}
+	\item{aniso.angle.radians}{As above, but specified in radians, takes precedence over the previous argument.}
+}
+
+\value{
+	When \code{x} is a vector or matrix or object of class \code{dist}, a vector or matrix
+	of covariances is returned.  
+	With \code{x} being \code{SpatialPoints},  \code{y} must also be \code{SpatialPoints} and 
+	a matrix of correlations between \code{x} and \code{y}
+	is returned.	
+	When \code{x} is a Raster, and \code{y} is a single location 
+	a Raster of covariances between each pixel centre of \code{x} and \code{y} is returned.
+}
+
+\details{		
+The formula for the Matern correlation function is
+\deqn{M(x) =  \frac{variance}{\Gamma(maternRoughness)} 2^{maternRoughness-1} 
+x (\sqrt{8 maternRoughness}/ range)^{maternRoughness}  
+besselK(x \sqrt{8 maternRoughness}/ range, maternRoughness) }{%
+             M(x) =   (variance / Gamma(maternRoughness)) 2^(maternRoughness-1) 
+x [sqrt(8 maternRoughness)/ range]^maternRoughness  
+besselK[x sqrt(8 maternRoughness)/ range, maternRoughness] 
+}
+
+The \code{range} argument is sqrt(8*maternRoughness)*phi.geoR, sqrt(8*maternRoughness)*scale.whittle.RandomFields, and
+2*scale.matern.RandomFields.
+
+Geometric anisotropy is only avaliable when 
+\code{x} is a \code{Raster} or \code{SpatialPoints}.
+
+When \code{x} or \code{y} are rasters, cells are indexed row-wise starting at the top left.
+
+}
+
+\examples{
+# example with raster
+myraster = raster(nrows=20,ncols=30,xmn=-3,xmx=3,ymn=-2,ymx=2)
+
+# plot correlation of each cell with the origin
+myMatern = matern(myraster, c(0,0),range=2,maternRoughness=1, 
+	aniso.ratio=0.5, aniso.angle.degrees=20)
+
+plot(myMatern)
+
+
+# correlation matrix for all cells with each other
+myraster = raster(nrows=4,ncols=6,xmn=-3,xmx=3,ymn=-2,ymx=2)
+myMatern = matern(myraster, range=2, maternRoughness=2)
+dim(myMatern)
+# plot the cell ID's
+values(myraster) = seq(1, ncell(myraster))
+mydf = as.data.frame(myraster, xy=TRUE)
+plot(mydf$x, mydf$y, type='n')
+text(mydf$x, mydf$y, mydf$layer)
+# correlation between bottom-right cell and top right cell is
+myMatern[6,24]
+
+
+# example with points
+mypoints = SpatialPointsDataFrame(cbind(runif(5), runif(5)),data=data.frame(id=1:5))
+matern(mypoints, range=1,maternRoughness=0.4, aniso.ratio=0.5, aniso.angle.degrees=20)
+
+# example with vector of distances
+range=3
+distVec = seq(0, 2*range, len=100)
+roughSeq = c(0.5, 1, 2,20)
+theCov = NULL
+for(D in roughSeq) {
+	theCov = cbind(theCov, matern(distVec, range=range, maternRoughness=D))
+}
+matplot(distVec, theCov, type='l', lty=1, xlab='distance', ylab='correlation')
+legend("topright", fill=1:length(roughSeq), legend=roughSeq,title='rough')
+# exponential
+distVec2 = seq(0, max(distVec), len=20)
+points(distVec2, exp(-2*(distVec2/range)),cex=0.5)
+# gaussian
+points(distVec2, exp(-2*(distVec2/range)^2), col='blue',cex=0.5)
+legend("right", pch=1, col=c('black','blue'), legend=c('exp','gau'))
+
+# comparing to geoR and RandomFields
+
+covGeoR = covRandomFields = NULL
+
+for(D in roughSeq) {
+	covGeoR = cbind(covGeoR, 
+		geoR::matern(distVec, phi=range/sqrt(8*D), kappa=D))
+	covRandomFields = cbind(covRandomFields,
+		RandomFields::CovarianceFct(distVec, model="matern", 
+			param = c(mean=0, variance=1, nugget=0, scale=range/2, nu=D) ))
+}
+
+matplot(distVec, theCov, type='l', lty=1, xlab='distance', ylab='correlation')
+matpoints(distVec, covGeoR, cex=0.5, pch=1)
+matpoints(distVec, covGeoR, cex=0.5, pch=2)
+
+
+ 
+}
+
+

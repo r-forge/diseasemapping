@@ -1,14 +1,13 @@
 gmrfPrecUncond = function(x, 
 			N = attributes(x)$Nx, Ny=attributes(x)$Ny,
 			params = attributes(x)$model,
-			border=params["kappa"]+1){
+			border=params["maternRoughness"]+1){
 		if(!length(N) | !length(Ny) | !length(border) | !length(params))	
 			warning("border, N, Ny, or params were not supplied")
 		if(border < 1) warning("border should be >1")
-
 		
-		if(!all(c("scale","prec","kappa","cellSize") %in% names(params))) {
-			warning("params needs scale, prec, kappa, cellSize")
+		if(!all(c("scale","prec","maternRoughness","cellSize") %in% names(params))) {
+			warning("params needs scale, prec, maternRoughness, cellSize")
 			print(params)
 		}
 		
@@ -43,8 +42,8 @@ gmrfPrecUncond = function(x,
 	scaleCell = params["scale"] * cellSize
 	distmat = distmat*scaleCell
 	covMat = distmat
-	covMat@x = (2^(1-params["kappa"])/(params["prec"]*gamma(params["kappa"]))) * 
-			covMat@x^params["kappa"] * besselK(covMat@x, nu=params["kappa"])
+	covMat@x = (2^(1-params["maternRoughness"])/(params["prec"]*gamma(params["maternRoughness"]))) * 
+			covMat@x^params["maternRoughness"] * besselK(covMat@x, nu=params["maternRoughness"])
 	diag(covMat) = 1/params["prec"]
 #	covChol = chol(covMat)
 #	covInvChol = solve(covChol)

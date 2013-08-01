@@ -18,7 +18,12 @@ S3method(openmap, Extent)
 S3method(openmap, default)
 
 
-
+export(matern)
+S3method(matern, Raster)
+S3method(matern, SpatialPointsDataFrame)
+S3method(matern, SpatialPoints)
+S3method(matern, dist)
+S3method(matern, default)
 
 export( as.im )
 S3method(as.im, RasterLayer)

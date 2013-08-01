@@ -20,16 +20,18 @@ maternGmrfPrec.matrix = function(N, ...) {
 }
 
 maternGmrfPrec.dgCMatrix = function(N, 	
-		params=c(var=1, range=1, kappa=1, cellSize=1),
+		params=c(var=1, range=1, maternRoughness=1, cellSize=1),
 		adjust.edges=F,...) {
 
+
+	
 	if(any(names(params)=="var") & !any(names(params)=="prec"))
 		params["prec"] = 1/params["var"]
 	if(any(names(params)=="range") & !any(names(params)=="scale"))
-		params["scale"] = 1/params["range"]
+		params["scale"] = sqrt(8*params['maternRoughness'])/params["range"]
 
-	if(!all( c("prec","scale","kappa","cellSize")%in% names(params))) {
-		warning("params must have elements named kappa, cellSize, either prec or var, and either scale or range")
+	if(!all( c("prec","scale","maternRoughness","cellSize")%in% names(params))) {
+		warning("params must have elements named maternRoughness, cellSize, either prec or var, and either scale or range")
 	print(params)
 	}
 		
@@ -37,7 +39,7 @@ maternGmrfPrec.dgCMatrix = function(N,
 	
 	scale=params["scale"]
 	prec=params["prec"]
-	kappa=params["kappa"]
+	kappa=params["maternRoughness"]
 	cellSize=params["cellSize"]
 	
 	scale = scale * cellSize
