@@ -13,25 +13,25 @@ Produces the precision matrix for a Gaussian random field on a regular square la
 \usage{ 
 maternGmrfPrec(N, ...)
 \method{maternGmrfPrec}{dgCMatrix}(N, 
-	params=c(var=1, range=1, maternRoughness=1, cellSize=1),
+	param=c(variance=1, range=1, rough=1, cellSize=1),
   adjust.edges=F,...) 
 \method{maternGmrfPrec}{matrix}(N, ...)
 \method{maternGmrfPrec}{default}(N, Ny=N, ...)
 NNmat(N, Ny=N)
 gmrfPrecUncond(x, 
 			N = attributes(x)$Nx, Ny=attributes(x)$Ny,
-			params = attributes(x)$model,
-			border=params["maternRoughness"]+1)
+			param = attributes(x)$model,
+			border=param["rough"]+1)
 }
 
 \arguments{
 \item{N}{Number of grid cells in the x direction, or a matrix denoting nearest neighbours.}
 \item{Ny}{Grid cells in the y direction, defaults to \code{N} for a square grid}
-\item{params}{Vector of model parameters, with named elements: \code{scale},
-scale parameter for the correlation function; \code{prec}, precision parameter; \code{maternRoughness}, 
+\item{param}{Vector of model parameters, with named elements: \code{scale},
+scale parameter for the correlation function; \code{prec}, precision parameter; \code{rough}, 
 Matern differentiability parameter (0, 1, or 2); and \code{cellSize}, the size of the grid cells.  Optionally, 
-\code{var} and \code{range} can be given in place of \code{prec} and \code{scale}, when the former 
-are present and the latter are missing the recripocal of the former are taken.}
+\code{variance} and \code{range} can be given in place of \code{prec} and \code{scale}, when the former 
+are present and the latter are missing the reciprocal of the former are taken.}
 \item{border}{number of cells from the edge of the grid to adjust for edge effects.}
 \item{adjust.edges}{If \code{TRUE}, adjust the precision matrix so it does not implicitly assume 
 the field takes values of zero outside the specified region.  Defaults to \code{FALSE}.}
@@ -70,14 +70,14 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 
 	params=c(range = 3,
 	cellSize=0.5,
-	maternRoughness=2,
-	var=5^2)
+	rough=2,
+	variance=5^2)
 	
 	data(nn32)
 	# precision matrix without adjusting for edge effects
-	precMat =maternGmrfPrec(nn32, params=params) 
+	precMat =maternGmrfPrec(nn32, param=params) 
 	# and with the adjustment
-	precMatCorr =maternGmrfPrec(nn32, params=params, adjust.edges=TRUE) 
+	precMatCorr =maternGmrfPrec(nn32, param=params, adjust.edges=TRUE) 
 	
 	midcell = 32*16 + 16 # the middle cell
 	edgeCell = 32*5 + 5 # cell near corner
@@ -93,9 +93,8 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 
 # compare covariance matrix to the matern
 	xseq = seq(-20*params["cellSize"], 20*params["cellSize"], len=1000)
-	plot(xseq, matern(xseq, maternRoughness=params["maternRoughness"], 
-		range=params["range"], var=params["var"]),
-	 type = 'l',ylab='cov', xlab='dist',ylim=c(0, params["var"]))
+	plot(xseq, matern(xseq, param=params),
+	 type = 'l',ylab='cov', xlab='dist',ylim=c(0, params["variance"]))
 
 
 
@@ -126,8 +125,7 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 
 	myraster = raster(nrows=Ny, ncols=Nx,
 		xmn=0,ymn=0, xmx=Nx*cellSize, ymx=Ny*cellSize)
-	covMatMatern = matern(myraster, variance = params["var"],
-		maternRoughness=params["maternRoughness"], range=params["range"])
+	covMatMatern = matern(myraster, param=params)
  
  	prodUncor = covMatMatern \%*\% precMat
  	prodCor = covMatMatern \%*\% precMatCorr
