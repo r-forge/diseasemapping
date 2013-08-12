@@ -39,19 +39,19 @@ myraster = raster(matrix(0,10,10),xmn=0,xmx=10,ymn=0,ymx=10)
 plot(myraster)
 
 # only do the following if the the OpenStreetMap.org web site can be accessed
-#if(length(nsl("www.OpenStreetMap.org"))) {
+if(length(nsl("www.OpenStreetMap.org"))) {
 	mytiles = openmap(myraster@extent, zoom=4,  type="osm")
 
 	plot(myraster)
 	plot(mytiles, add=TRUE)
 
-#	mypoints = SpatialPoints(10*cbind(runif(10), runif(20)))
+	mypoints = SpatialPoints(10*cbind(runif(10), runif(20)))
 
-#	mytiles=openmap(mypoints@bbox, zoom=4,  type="bing")
+	mytiles=openmap(mypoints@bbox, zoom=4,  type="bing")
 
-#	plot(mypoints)
-#	plot(mytiles,add=T)
-#	points(mypoints, col='yellow')
-#}
+	plot(mypoints)
+	plot(mytiles,add=TRUE)
+	points(mypoints, col='yellow')
+}
 
 }

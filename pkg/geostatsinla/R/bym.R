@@ -50,7 +50,7 @@ bym.SpatialPolygonsDataFrame = function(data,
 	}
 		
 	if(missing(adjMat))
-		adjMat=spdep::poly2nb(data, row.names =  data[[region.id]] )
+		adjMat=poly2nb(data, row.names =  data[[region.id]] )
  
 	result = bym.data.frame(data=data@data,
 			formula=formula, priorCI=priorCI, family=family,

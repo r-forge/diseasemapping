@@ -1,5 +1,5 @@
 lgcp = function(data,  cells, covariates=NULL, formula=NULL, priorCI=NULL, 
-maternRoughness=1, buffer = 0, mesh=F,...) {
+rough=1, buffer = 0, mesh=F,...) {
 
 # create raster for prediction
 if(!length(grep("^Raster",class(cells)))) { 
@@ -61,7 +61,7 @@ if(!length(grep("^Raster",class(cells)))) {
 	}
 
  result = glgm(data=data, cells=cells, covariates=covariates, 
-		formula=formula,priorCI=priorCI,maternRoughness=maternRoughness,
+		formula=formula,priorCI=priorCI,rough=rough,
 		buffer=buffer, mesh=mesh, 
 		family="poisson",
 		...)

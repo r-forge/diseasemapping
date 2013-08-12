@@ -1,5 +1,5 @@
 lgm <- function(data,  cells, covariates=NULL, formula=NULL,
-		maternRoughness=1, fixMaternRoughness=TRUE,
+		rough=1, fixRough=TRUE,
 		aniso=FALSE, boxcox=1, fixBoxcox=TRUE,
 		nugget = 0, fixNugget = FALSE, ...){
 
@@ -88,11 +88,11 @@ lgm <- function(data,  cells, covariates=NULL, formula=NULL,
 		warning("some terms in the model are missing from both the data and the covariates")
 	
 	dotdotnames = names(list(...))
-	# check for kappa and maternRoughness both specified
+	# check for kappa and rough both specified
 	if(length(grep("^kappa$", dotdotnames)) )
-		warning("specify `maternRoughness' instead of `kappa'")
+		warning("specify `rough' instead of `kappa'")
 	if(length(grep("^fix.kappa$", dotdotnames)) )
-		warning("specify `fixMaternRoughness' instead of `fix.kappa'")
+		warning("specify `fixRough' instead of `fix.kappa'")
 	if(length(grep("^cov.model$", dotdotnames)) )
 		warning("do not specify cov.model, `matern' will be used.")
 	if(length(grep("^(fix.psiA|fix.psiR)$", dotdotnames)) )
@@ -102,8 +102,8 @@ lgm <- function(data,  cells, covariates=NULL, formula=NULL,
 	# call likfit
 	
 	likRes =  likfit(geodata=data, formula=formula, 
-			cov.model="matern", kappa = maternRoughness, 
-		 	fix.kappa=fixMaternRoughness,
+			cov.model="matern", kappa = rough, 
+		 	fix.kappa=fixRough,
 			lambda=boxcox, fix.lambda=fixBoxcox,
 			fix.psiA=!aniso, fix.psiR=!aniso,
 			nugget=nugget, fix.nugget=fixNugget,
@@ -143,7 +143,7 @@ lgm <- function(data,  cells, covariates=NULL, formula=NULL,
 	
 	res$parameters = rbind(
 				res$parameters,
-				Matern=c(likRes$kappa, fill, fixMaternRoughness)
+				Matern=c(likRes$kappa, fill, fixRough)
 	)
 	
 	if(aniso) {

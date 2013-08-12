@@ -1,5 +1,5 @@
 glgm=function(data,  cells, covariates=NULL, formula=NULL, 
-		priorCI=NULL, maternRoughness=1, buffer=0,
+		priorCI=NULL, rough=1, buffer=0,
 		mesh=F,...) {
 
 
@@ -67,7 +67,11 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 	allterms = rhs.vars(formula)
 
 	# get rid of offset
-	allterms = gsub("^offset\\(", "", allterms)
+	theOffset = grep("^offset\\(", allterms)
+	if(length(theOffset)) allterms = allterms[-theOffset]
+	# get rid of other random effects
+	theOtherRE = grep("^f\\(", allterms)
+	if(length(theOtherRE)) allterms = allterms[-theOtherRE]
 	alltermsWithF = gsub("\\)$", "", allterms)
 	allterms = gsub("^factor\\(", "", alltermsWithF)
 	
@@ -255,7 +259,7 @@ if(F) {
 	spaceFormula = paste(".~.+ f(space, model='matern2d', ",
 				"nrow=", nrow(cells), 
 				", ncol=", ncol(cells),
-				", nu=", maternRoughness, 
+				", nu=", rough, 
 				", hyper = list(",
 				 "range=list( param=c(",
 				      paste(ratePrior, collapse=","),

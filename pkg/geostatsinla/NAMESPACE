@@ -1,18 +1,22 @@
-# Default NAMESPACE created by R
-# Remove the previous line if you edit this file
-
-# Export all names
 export(bym, 
 	lgcp,glgm)
 
 S3method(bym, SpatialPolygonsDataFrame)
 S3method(bym, data.frame)
 
-# Import all packages listed as Imports or Depends
+importFrom(spdep, poly2nb)
+
+# formula.tools will eventually move to Imports,
+# but at the moment it won't work unless it's Depends
+importFrom(formula.tools,  lhs, rhs.vars)
+
+importFrom(INLA, inla, inla.models, inla.make.lincombs)
+export(inla.models)
+
 import(
   sp,
-  raster,formula.tools,  
-  geostatsp, INLA 
+  raster,
+  geostatsp
 )
 
  
