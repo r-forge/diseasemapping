@@ -38,8 +38,10 @@ myraster = raster(matrix(0,10,10),xmn=0,xmx=10,ymn=0,ymx=10)
 
 plot(myraster)
 
-# only do the following if the the OpenStreetMap.org web site can be accessed
-if(length(nsl("www.OpenStreetMap.org"))) {
+# only do the following if running unix (because nsl is available)
+# and if the OpenStreetMap.org web site can be accessed
+if(.Platform$OS.type=="unix") {
+if(length(utils::nsl("www.OpenStreetMap.org"))) {
 	mytiles = openmap(myraster@extent, zoom=4,  type="osm")
 
 	plot(myraster)
@@ -53,5 +55,5 @@ if(length(nsl("www.OpenStreetMap.org"))) {
 	plot(mytiles,add=TRUE)
 	points(mypoints, col='yellow')
 }
-
+}
 }

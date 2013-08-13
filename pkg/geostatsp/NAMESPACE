@@ -80,4 +80,3 @@ import(
 
 importFrom(pracma, trapz)
 
-

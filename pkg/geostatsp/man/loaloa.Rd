@@ -27,15 +27,35 @@ of individuals tested and \code{y} being the number of positives.
 
 \examples{
 data(loaloa)
-plot(ltLoa, breaks = c(-0.5, levels(ltLoa)[[1]]$ID+0.5),
-col=levels(ltLoa)[[1]]$rgb, legend=FALSE)
 
-forLegend = as.numeric(names(sort(table(values(ltLoa)),decreasing=TRUE)))[1:4]
-forLegend = match(levels(ltLoa)[[1]]$ID , forLegend, nomatch = 0) > 0
+# elevation
+plot(elevationLoa)
+points(loaloa)
 
-legend("topright", fill=levels(ltLoa)[[1]][forLegend,"rgb"], 
-	legend=
-	substr(as.character(levels(ltLoa)[[1]][forLegend,"CLASSNAMES"]),1,24))
+# vegetation index
+plot(eviLoa)
+points(loaloa)
+
+# land type, a categorical variable
+commonValues  = sort(table(values(ltLoa)),decreasing=T)[1:7]
+commonValues=commonValues[!names(commonValues)==0]
+
+thelevels = levels(ltLoa)[[1]]$ID
+thebreaks = c(-0.5, 0.5+thelevels)
+thecol = rep(NA, length(thelevels))
+names(thecol) = as.character(thelevels)
+library(RColorBrewer)
+thecol[names(commonValues)] = 
+		brewer.pal(length(commonValues),
+		"Set3")
+plot(ltLoa, breaks=thebreaks, col=thecol,legend=F)
+legend("bottomleft",fill=thecol[names(commonValues)],
+		legend=levels(ltLoa)[[1]][
+						match(as.integer(names(commonValues)),
+								levels(ltLoa)[[1]]$ID),
+						"Category"],
+				bty='n'
+				)
 
 points(loaloa)
 
