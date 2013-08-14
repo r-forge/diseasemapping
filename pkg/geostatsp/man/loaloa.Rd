@@ -29,19 +29,23 @@ of individuals tested and \code{y} being the number of positives.
 
 \examples{
 data(loaloa)
+plot(loaloa)
 
 # elevation
+data(elevationLoa)
 plot(elevationLoa)
-
 points(loaloa)
 
 # vegetation index
+data(eviLoa)
 plot(eviLoa)
 points(loaloa)
 
+data(tempLoa)
 plot(tempLoa)
 points(loaloa)
 
+data(ltLoa)
 # land type, a categorical variable
 commonValues  = sort(table(values(ltLoa)),decreasing=T)[1:7]
 commonValues=commonValues[!names(commonValues)==0]
