@@ -3,6 +3,7 @@
 \alias{torontoPdens}
 \alias{torontoIncome}
 \alias{torontoNight}
+\alias{torontoBorder}
 \docType{data}
 \title{
 Murder locations
@@ -15,12 +16,16 @@ Murder locations
   \code{murder} is a  SpatialPoints object of murder locations.  \code{torontoPdens}, 
   \code{torontoIncome}, and \code{torontoNight} are rasters containing
   population density (per hectare), median household income, and ambient light 
-  respectively.
+  respectively.  \code{torontoBorder} is a SpatialPolygonsDataFrame of the boundary of
+  the city of Toronto.
 
 }
 
 \source{
-www3.thestar.com/static/googlemaps/homicidemap.html 
+http://www.thestar.com/news/crime/torontohomicidemap.html, 
+http://ngdc.noaa.gov/eog/viirs/download_viirs_ntl.html,
+http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/bound-limit-2011-eng.cfm,
+http://www12.statcan.gc.ca/census-recensement/2011/dp-pd/tbt-tt/Index-eng.cfm
 }
 
 \examples{
@@ -28,14 +33,10 @@ data(murder)
 plot(torontoIncome)
 points(murder, col="#0000FF40", cex=0.5)
 
-\dontrun{
-library(XML)
-murder = xmlTreeParse("http://www3.thestar.com/static/googlemaps/homicides.xml" )
-murder = as.data.frame(t(xmlSApply(murder, function(qq) as.numeric(xmlAttrs(qq[["point"]])))))
-names(murder) = c("long","lat")
-murder= na.omit(murder)
-murder = SpatialPoints(murder, proj4string = CRS("+init=epsg:4326"))
-}
+plot(torontoNight)
+plot(torontoBorder, add=T)
+points(murder, col="#0000FF40", cex=0.5)
+
 
 
 }

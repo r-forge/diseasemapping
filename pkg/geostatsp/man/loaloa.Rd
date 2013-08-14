@@ -3,6 +3,7 @@
 \alias{elevationLoa}
 \alias{eviLoa}
 \alias{ltLoa}
+\alias{tempLoa}
 \docType{data}
 \title{
 Loaloa prevalence data from 197 village surveys
@@ -17,6 +18,7 @@ of individuals tested and \code{y} being the number of positives.
 \code{elevationLoa} is a raster of elevation data.
 \code{eviLoa} is a raster of vegetation index for a specific date. \code{ltLoa} is land type.
 \code{ltLoa} is a raster of land types. 1     2     5     6     7     8     9    10    11    12    13    14    15
+\code{tempLoa} is a raster of average temperature in degrees C.
 }
 
 \source{
@@ -36,6 +38,9 @@ points(loaloa)
 plot(eviLoa)
 points(loaloa)
 
+plot(tempLoa)
+points(loaloa)
+
 # land type, a categorical variable
 commonValues  = sort(table(values(ltLoa)),decreasing=T)[1:7]
 commonValues=commonValues[!names(commonValues)==0]
@@ -44,10 +49,8 @@ thelevels = levels(ltLoa)[[1]]$ID
 thebreaks = c(-0.5, 0.5+thelevels)
 thecol = rep(NA, length(thelevels))
 names(thecol) = as.character(thelevels)
-library(RColorBrewer)
-thecol[names(commonValues)] = 
-		brewer.pal(length(commonValues),
-		"Set3")
+
+thecol[names(commonValues)] = rainbow(length(commonValues))
 plot(ltLoa, breaks=thebreaks, col=thecol,legend=F)
 legend("bottomleft",fill=thecol[names(commonValues)],
 		legend=levels(ltLoa)[[1]][
