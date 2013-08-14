@@ -32,6 +32,7 @@ data(loaloa)
 
 # elevation
 plot(elevationLoa)
+
 points(loaloa)
 
 # vegetation index
