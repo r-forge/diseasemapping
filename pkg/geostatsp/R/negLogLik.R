@@ -319,7 +319,7 @@
 		if(!is.null(v$crash.parms)) return(.Machine$double.xmax^0.5)
 		ivx <- solve(v$varcov,xmat)
 		xivx <- crossprod(ivx,xmat)
-		betahat <- try(geoR:::.solve.geoR(xivx,crossprod(ivx,z)), silent=TRUE)
+		betahat <- try(.solve.geoR(xivx,crossprod(ivx,z)), silent=TRUE)
 		if(inherits(betahat, "try-error")){
 			t.ei <- eigen(xivx, symmetric = TRUE)
 #      if(exists("trySilent"))
@@ -364,3 +364,45 @@
 		cat(paste("log-likelihood = ", -sumnegloglik, "\n"))
 	return(sumnegloglik) 
 }
+".solve.geoR" <-
+		function (a, b = NULL, ...) 
+{
+	a <- eval(a)
+	b <- eval(b)
+#  if(exists("trySilent")){
+	if (is.null(b)) res <- try(solve(a, ...), silent=TRUE)
+	else res <- try(solve(a, b, ...), silent=TRUE)
+#  }
+#  else{
+#    error.now <- options()$show.error.messages
+#    if (is.null(error.now) | error.now) 
+#      on.exit(options(show.error.messages = TRUE))
+#    options(show.error.messages = FALSE)
+#    if (is.null(b)) res <- try(solve(a, ...))
+#    else res <- try(solve(a, b, ...))
+#  }
+	if (inherits(res, "try-error")) {
+		test <- all.equal.numeric(a, t(a), 100 * .Machine$double.eps)
+		if(!(is.logical(test) && test)){
+			##      options(show.error.messages = TRUE)
+			stop("matrix `a' is not symmetric")
+		}
+		t.ei <- eigen(a, symmetric = TRUE)
+#    if(exists("trySilent")){
+		if (is.null(b))
+			res <- try(crossprod(t(t.ei$vec)/sqrt(t.ei$val)), silent=TRUE)
+		else
+			res <- try(crossprod(t(t.ei$vec)/sqrt(t.ei$val)) %*% b, silent=TRUE)
+#    }
+#    else{
+#      if (is.null(b)) res <- try(crossprod(t(t.ei$vec)/sqrt(t.ei$val)))
+#      else res <- try(crossprod(t(t.ei$vec)/sqrt(t.ei$val)) %*% b)
+#    }
+		if (any(is.na(res)) | any(is.nan(res)) | any(is.infinite(res))) 
+			oldClass(res) <- "try-error"
+	}
+	if (inherits(res, "try-error")) 
+		stop("Singular matrix. Covariates may have different orders of magnitude.")
+	return(res)
+}
+

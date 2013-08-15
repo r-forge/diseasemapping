@@ -47,7 +47,7 @@ points(loaloa)
 
 data(ltLoa)
 # land type, a categorical variable
-commonValues  = sort(table(values(ltLoa)),decreasing=T)[1:7]
+commonValues  = sort(table(values(ltLoa)),decreasing=TRUE)[1:7]
 commonValues=commonValues[!names(commonValues)==0]
 
 thelevels = levels(ltLoa)[[1]]$ID
@@ -56,7 +56,7 @@ thecol = rep(NA, length(thelevels))
 names(thecol) = as.character(thelevels)
 
 thecol[names(commonValues)] = rainbow(length(commonValues))
-plot(ltLoa, breaks=thebreaks, col=thecol,legend=F)
+plot(ltLoa, breaks=thebreaks, col=thecol,legend=FALSE)
 legend("bottomleft",fill=thecol[names(commonValues)],
 		legend=levels(ltLoa)[[1]][
 						match(as.integer(names(commonValues)),
