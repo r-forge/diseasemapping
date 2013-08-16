@@ -52,7 +52,9 @@ likfit.SpatialPointsDataFrame <- function(geodata,
 				components = TRUE, nospatial = TRUE, limits = pars.limits(), 
 				print.pars = FALSE, messages, ...) 
 {
-
+	# this function is a modified version of the function `likfit' 
+	# in the geoR package by Paulo Ribeiro and Peter Diggle
+	
 	name.geodata <- deparse(substitute(geodata))
 	##
 	## Checking input

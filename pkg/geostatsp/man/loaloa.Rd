@@ -28,12 +28,14 @@ of individuals tested and \code{y} being the number of positives.
 }
 
 \examples{
+
+
 data(loaloa)
 plot(loaloa)
 
 # elevation
 data(elevationLoa)
-plot(elevationLoa)
+plot(elevationLoa, col=terrain.colors(100))
 points(loaloa)
 
 # vegetation index

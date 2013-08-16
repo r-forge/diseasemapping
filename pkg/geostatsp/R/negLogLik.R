@@ -1,7 +1,11 @@
 
 ".negloglik.GRF" <-
 		function(pars, fp, ip, temp.list, likGRF.dists.vec)
-### pars : values for the parameters to be estimated
+	# this function is a modified version of the function of the same name 
+	# in the geoR package by Paulo Ribeiro and Peter Diggle
+	
+	
+	### pars : values for the parameters to be estimated
 ## sequence is c(phi, tausq, kappa, lambda, psiR, psiA, sigmasq)
 ### fixed pars: parameters considered fixed
 ### ind.pars : list indicating which are fixed and which are to be estimated
@@ -367,6 +371,10 @@
 ".solve.geoR" <-
 		function (a, b = NULL, ...) 
 {
+	# this function is a modified version of the function of the same name 
+	# in the geoR package by Paulo Ribeiro and Peter Diggle
+	
+	
 	a <- eval(a)
 	b <- eval(b)
 #  if(exists("trySilent")){
