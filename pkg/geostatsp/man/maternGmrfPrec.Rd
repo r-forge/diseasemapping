@@ -132,11 +132,11 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 
 
 
- 	quantile(Matrix::diag(prodUncor))
- 	quantile(Matrix::diag(prodCor))
+ 	quantile(Matrix::diag(prodUncor),na.rm=TRUE)
+ 	quantile(Matrix::diag(prodCor),na.rm=TRUE)
  	
- 	quantile(prodUncor[lower.tri(prodUncor,diag=FALSE)])	
- 	quantile(prodCor[lower.tri(prodCor,diag=FALSE)])	
+ 	quantile(prodUncor[lower.tri(prodUncor,diag=FALSE)],na.rm=TRUE)	
+ 	quantile(prodCor[lower.tri(prodCor,diag=FALSE)],na.rm=TRUE)	
  	
  	
 	

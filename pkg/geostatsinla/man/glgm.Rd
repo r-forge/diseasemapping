@@ -76,7 +76,7 @@ for the range and standard deviation parameters respectively,
 require(geostatsp)
 data(swissRain)
 swissRain$lograin = log(swissRain$rain)
-swissFit =  glgm(swissRain, cells=40, formula="lograin",
+swissFit =  glgm(swissRain, cells=30, formula="lograin",
 	covariates=swissAltitude, family="gaussian", buffer=20000,
 	priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
 	control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
@@ -86,8 +86,36 @@ swissFit =  glgm(swissRain, cells=40, formula="lograin",
 swissFit$parameters$summary
 
 swissExc = excProb(swissFit$inla$marginals.random$space, 0, swissFit$raster)
-plot(swissExc, breaks = c(0, 0.2, 0.8, 0.95, 1), col=c('green','yellow','orange','red'))	
+plot(swissExc, breaks = c(0, 0.2, 0.8, 0.95, 1.00001), 
+	col=c('green','yellow','orange','red'))	
+plot(swissBorder, add=T)		
 		
+
+\dontrun{
+load(url("http://www.filefactory.com/file/frd1mhownd9/n/CHE_adm0_RData"))
+thenames = GNcities(bbox(gadm),max=12)
+swissTiles = openmap(bbox(gadm),zoom=8,type="nps")
+
+par(mar=c(0,0,0,0))
+plot(gadm)
+plot(swissTiles, add=TRUE)
+library(RColorBrewer)
+mycol=rev(brewer.pal(4,"RdYlGn"))
+plot(mask(
+		projectRaster(swissExc, crs=proj4string(gadm)),
+		gadm), 
+	breaks = c(0, 0.2, 0.8, 0.95, 1.00001), 
+	col=mycol, alpha=0.5,add=TRUE)	
+plot(gadm, add=TRUE, lwd=2, border='blue')
+
+points(thenames,cex=0.5)
+text(thenames, labels=thenames$name,pos=3,
+  vfont=c("gothic german","plain"),cex=1.5)
+
+
+
+}
+
 plot(swissFit$parameters$range$prior,type="l",
 	ylim=c(0,max(swissFit$parameters$range$posterior[,"y"])),
 	xlim=c(0, swissFit$parameters$range$userPriorCI[2]*1.1))
@@ -96,11 +124,6 @@ abline(v=swissFit$parameters$range$priorCI,col="orange")
 lines(swissFit$parameters$range$posterior, col='blue')
 
 plot(swissFit$raster[["predict.exp"]]) 
-\dontrun{
-load(url("http://www.filefactory.com/file/frd1mhownd9/n/CHE_adm0_RData"))
-plot(spTransform(gadm, swissRain@proj4string), add=TRUE)
-}
-
 # a log-Gaussian Cox process example
 
 myPoints = SpatialPoints(cbind(rbeta(100,2,2), rbeta(100,3,4)))
