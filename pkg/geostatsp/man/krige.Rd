@@ -9,7 +9,7 @@ Perform spatial prediction, producing a raster of predictions and conditional st
 }
 \usage{
 krige(data, trend, coordinates = data, param, locations, 
-    covariates = list(), expPred = FALSE, nugget.in.prediction = TRUE,
+    covariates = NULL, expPred = FALSE, nugget.in.prediction = TRUE,
     conditionalVarianceMatrix=FALSE)
 }
  
@@ -74,6 +74,7 @@ data(swissRain)
 swissRain$lograin = log(swissRain$rain)
 swissRain$elevation = extract(swissAltitude, swissRain)
 
+\dontrun{
 swissFit = likfitLgm(data=swissRain, 
 			trend=lograin~ elevation,
 			param=c(range=46500, nugget=0.05,rough=1,  
@@ -83,19 +84,30 @@ swissFit = likfitLgm(data=swissRain,
 			parscale = c(range=5000,nugget=0.01, 
 				aniso.ratio=1,aniso.angle.degrees=5)
 )
+myTrend = swissFit$trend
+myParams = swissFit$param
+dput(myParams)
+# will give the following
+}
+myParams=structure(c(4.49732366951939, 0.000216147764497527, 46575.4897705083, 
+0.0918626121620231, 37.3640527963592, 11.9247798102433, 1, 0.686396444665454
+), .Names = c("(Intercept)", "elevation", "range", "nugget", 
+"aniso.angle.degrees", "aniso.ratio", "rough", "variance"))
+myTrend =lograin~ elevation
+
 
 # make sure krige can cope with missing values!
 swissAltitude[1:50,1:50] = NA
-swissKrige = krige(data=swissRain, trend = swissFit$trend,
+swissKrige = krige(data=swissRain, trend = myTrend,
 	covariates = swissAltitude,  
-	param=swissFit$param,
-	locations = 40)
+	param=myParams,
+	locations = 40, expPred=TRUE)
 
 plot(swissKrige[["predict"]])
 plot(swissBorder, add=TRUE)
 
-# now with box cox and provide a raster for prediction
-
+# now with box cox and provide a raster for prediction, no covariates
+\dontrun{
 swissFit2 = likfitLgm(data=swissRain, 
 			trend=rain~1,
 			param=c(range=52000, nugget=0.1,rough=1, boxcox=0.5,
@@ -105,89 +117,26 @@ swissFit2 = likfitLgm(data=swissRain,
 			parscale = c(range=5000,nugget=0.01, 
 				aniso.ratio=1,aniso.angle.degrees=5)
 )
+myTrend2 = swissFit2$trend
+myParams2 = swissFit2$param
+dput(myParams2)
+}
+myParams2=structure(c(20.7805835664033, 51161.049007108, 8.64565931800056, 
+37.0906650998427, 7.34077366178755, 1, 0.5, 79.3696192640485), .Names = c("(Intercept)", 
+"range", "nugget", "aniso.angle.degrees", "aniso.ratio", "rough", 
+"boxcox", "variance"))
+myTrend2=rain~1
+
 swissRaster = raster(extent(swissBorder), nrows=25, ncols=40)
 
 
-swissKrige2 = krige(data=swissRain, trend = swissFit2$trend,
-	  param=swissFit2$param,
-	locations = swissRaster, expPred=TRUE)
+swissKrige2 = krige(data=swissRain, trend = myTrend2,
+	  param=myParams2,
+	locations = swissRaster)
 
 plot(swissKrige2[["predict"]])
 plot(swissBorder, add=TRUE)
 
-
-# land type, categorical variable
-
-swissRain$land = extract(swissLandType, swissRain)
-# get rid of land types with few observations
-landTable = table(swissRain$land)
-landTable = as.numeric(names(landTable)[landTable > 5])
-swissRain2 = swissRain [swissRain$land \%in\% landTable, ]
-
-swissFit3 = likfitLgm(data=swissRain2, 
-			trend=lograin~ elevation + factor(land),
-			param=c(range=46500, nugget=0.05,rough=1,  
-					aniso.angle.degrees=35, aniso.ratio=12),
-			paramToEstimate = c("range","nugget", 
-				"aniso.angle.degrees", "aniso.ratio"),
-			parscale = c(range=5000,nugget=0.01, 
-				aniso.ratio=1,aniso.angle.degrees=5)
-)
-
-swissKrige3 = krige(data=swissRain2, trend = swissFit3$trend,
-	  param=swissFit3$param, 
-	  covariates = list(elevation = swissAltitude,land=swissLandType),
-	locations = swissRaster, expPred=TRUE)
-	
-plot(swissKrige3[["predict"]])	
-plot(swissBorder, add=TRUE)
-
-
-# now change land to a factor
-landTypes = swissLandType@data@attributes[[1]]
-# remove land types with no observations on them
-landTypes=landTypes[landTypes[,1] \%in\% unique(swissRain2$land),]
-
-swissRain2$landFac = factor(swissRain2$land, 
-	levels=landTypes[,1],
-	labels=landTypes[,2])
-	
-swissFit4 = likfitLgm(data=swissRain2, 
-			trend=lograin~ elevation + landFac,
-			param=c(range=46500, nugget=0.05,rough=1,  
-					aniso.angle.degrees=35, aniso.ratio=12),
-			paramToEstimate = c("range","nugget", 
-				"aniso.angle.degrees", "aniso.ratio"),
-			parscale = c(range=5000,nugget=0.01, 
-				aniso.ratio=1,aniso.angle.degrees=5)
-)
-swissKrige4 = krige(data=swissRain2, trend = swissFit4$trend,
-	  param=swissFit4$param, 
-	  covariates = list(elevation = swissAltitude,landFac=swissLandType),
-	locations = swissRaster,expPred=TRUE )
-plot(swissKrige4[["predict"]])	
-plot(swissBorder, add=TRUE)
-
-swissRain2$landFac2 = as.character(swissRain2$landFac)
-
-swissFit5= likfitLgm(data=swissRain2, 
-			trend=lograin~ elevation + factor(landFac2),
-			param=c(range=46500, nugget=0.05,rough=1,  
-					aniso.angle.degrees=35, aniso.ratio=12),
-			paramToEstimate = c("range","nugget", 
-				"aniso.angle.degrees", "aniso.ratio"),
-			parscale = c(range=5000,nugget=0.01, 
-				aniso.ratio=1,aniso.angle.degrees=5)
-)
-
-
-swissKrige5 = krige(data=swissRain2, trend = swissFit5$trend,
-	  param=swissFit5$param, 
-	  covariates = list(elevation = swissAltitude,landFac2=swissLandType),
-	locations = swissRaster,expPred=TRUE)
-	
-plot(swissKrige5[["predict"]])	
-plot(swissBorder, add=TRUE)
 
 
 

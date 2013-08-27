@@ -149,7 +149,7 @@ loglikLgm(param=myres$param,
 
 
 # an anisotropic example
- 
+\dontrun{ 
 
 trueParamAniso = param=c(variance=2^2, range=0.2, rough=2,
 	 nugget=0,aniso.ratio=4,aniso.angle.degrees=10, nugget=0)
@@ -189,6 +189,6 @@ plot(covEst, main="estimate")
 plot(covTrue, main="true")
 
 par(mfrow=c(1,1))
-
+}
 }
 

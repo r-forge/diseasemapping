@@ -2,7 +2,7 @@
 
 krige = function(data, trend, 
 		coordinates=data,
-		param,  locations, covariates=list(), 
+		param,  locations, covariates=NULL, 
 		expPred=FALSE,
 		nugget.in.prediction=TRUE,
 		conditionalVarianceMatrix=FALSE) {
@@ -22,25 +22,6 @@ krige = function(data, trend,
 			 data@proj4string)	
 	}
 	if(nrow(locations) * ncol(locations) > 10^7) warning("there are lots of cells in the prediction raster,\n this might take a very long time")
-	
-
-
-	# if there's only one covariate, make sure it has the correct name
-	if(!is.list(covariates)) {
-		covariates = list(covariates)
-		if(length(names(covariates[[1]]))==1) {
-			names(covariates) = names(covariates[[1]])
-		}
-	}
-	# if there's only variable in the model assign it's name to covariates
-	covariateNames = attributes(terms(trend))$term.labels
-	# in case there are interactions...
-	covariateNames = unlist(strsplit(covariateNames, ":"))
-	covariateNames = gsub("[[:alnum:]]+\\(|\\)", "", covariateNames)
-	if(length(covariateNames)==1){
-		# so far only one variable
-		names(covariates)= covariateNames
-	} 
 		
 		
 	
@@ -56,14 +37,22 @@ krige = function(data, trend,
 		if(is.vector(data)) {
 			observations = data
 		} else {
-			observations = unlist(strsplit( as.character(trend),"~"))[2]
+
+			observations = formulaLhs(trend)
+
 			observations = covariatesForData[,observations]
 		}
 		
-		factorsInData = unlist(lapply(
-						covariatesForData[,names(covariates)],
+		theVars = all.vars(formulaRhs(trendFormula))
+		
+		if(length(theVars)) {
+			factorsInData = unlist(lapply(
+						covariatesForData[,theVars,drop=FALSE],
 						is.factor))
-		factorsInData = names(factorsInData)[factorsInData]
+			factorsInData = names(factorsInData)[factorsInData]
+		} else {
+			factorsInData=NULL
+		}
 		
 		
 		allterms = rownames(attributes(terms(trend))$factors)
@@ -100,13 +89,20 @@ krige = function(data, trend,
 		
 	} # end trend not a formula
 
-	
-	
+		
 	# we know which variables factors
 	theFactors = unique(c(factorsInFormula, factorsInData, factorsInTrend))
 	theFactors = theFactors[theFactors %in% names(covariates) ]
 	
- 	
+	
+	# if there's only variable in the model assign it's name to covariates
+	covariateNames = all.vars(formulaRhs(trendFormula))
+	if(length(covariateNames)==1){
+		# so far only one variable
+		names(covariates)= covariateNames
+	} 
+	
+	
 	# loop through factors
 	# and make sure integer values in rasters get converted
 	# to things with parameter values!
@@ -193,49 +189,52 @@ krige = function(data, trend,
 	}
 	
 	
-	if(length(covariates)) {
+	if(!is.null(covariates)) {
 		# method for resampling covariate rasters
-		method = rep("bilinear", length(covariates))
+
+		method = rep("bilinear", length(names(covariates)))
 		names(method) = names(covariates)
 		method[theFactors] = "ngb"
 		
 		covariates = stackRasterList(covariates, locations, method=method)
+
+		theVars = all.vars(formulaRhs(trendFormula))
+		if(nlayers(covariates)==1 & length(theVars)==1) {
+			names(covariates) = theVars
+		}
 		
 		# construct the fixed effects component
 		covariatesDF = as.data.frame(covariates, xy=TRUE)
 		# get rid of trailing _ created by as.data.frame
 		names(covariatesDF) = gsub("_$", "", names(covariatesDF))
 	} else {
-		covariatesDF = as.data.frame(matrix(NA), ncol=0, nrow=ncell(locations))
+		covariatesDF = as.data.frame(matrix(NA, ncol=0, nrow=ncell(locations)))
 	}
 		
 
 	
 	# convert trend formula to LHS
-	trendFormula = as.character(trendFormula)
-	trendFormula = trendFormula[length(trendFormula)]
-	trendFormula = as.formula(paste("~",trendFormula))
-	
-	# find rows with missing values
-	anyNA = apply(covariatesDF, 1, function(qq) any(is.na(qq)))
-	
-	modelMatrixForRaster = model.matrix(trendFormula, covariatesDF)
+	trendFormula = formulaRhs(trendFormula)
+	meanRaster = raster(locations)
 
-	if(!all(colnames(modelMatrixForRaster)%in% names(param))){
-		warning("cant find coefficients",
-				paste(names(modelMatrixForRaster)[
-								!names(modelMatrixForRaster)%in% names(param)
-						], collapse=","),
-				"in param")
+	
+	missingVars = all.vars(trendFormula)%in% names(covariatesDF)
+	missingVars = all.vars(trendFormula)[!missingVars]
+	
+	# check if all variables are in covariates
+	if(length(missingVars)) {
+		cat("cant find covariates ",
+				paste(missingVars, collapse=","),
+				" for prediction, imputing zeros\n")		
+		
+		covariatesDF[,missingVars]=0	
 	}
+	modelMatrixForRaster = model.matrix(trendFormula, covariatesDF)
 
 	meanFixedEffects = 
 			modelMatrixForRaster %*% param[colnames(modelMatrixForRaster)]
-	meanRaster = raster(locations)
-	names(meanRaster) = "fixed"
-	
-	
-	
+
+	anyNA = apply(covariatesDF, 1, function(qq) any(is.na(qq)))
 	if(any(anyNA)) {
 		oldmm = rep(NA, ncell(meanRaster))
 		oldmm[!anyNA] = meanFixedEffects
@@ -243,6 +242,18 @@ krige = function(data, trend,
 	} else {
 		values(meanRaster) = meanFixedEffects
 	}
+	names(meanRaster) = "fixed"
+
+
+	if(!all(colnames(modelMatrixForRaster)%in% names(param))){
+		warning("cant find coefficients",
+				paste(names(modelMatrixForRaster)[
+								!names(modelMatrixForRaster)%in% names(param)
+						], collapse=","),
+				"in param\n")
+	}
+	
+	
 	
 	
 # subtract mean from data

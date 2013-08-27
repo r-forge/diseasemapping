@@ -22,7 +22,7 @@ the measurement was taken for.  A UTM coordinate reference system is used, where
 }
 
 \examples{
-data(rongelapUTM)
+data("rongelapUTM")
 plot(rongelapUTM)
 \dontrun{
 load(url("http://www.filefactory.com/file/54e8egxfddul/n/MHL_adm0_RData"))

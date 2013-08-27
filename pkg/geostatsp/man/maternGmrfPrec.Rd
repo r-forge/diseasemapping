@@ -73,7 +73,7 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 	rough=2,
 	variance=5^2)
 	
-	data(nn32)
+	data("nn32")
 	# precision matrix without adjusting for edge effects
 	precMat =maternGmrfPrec(nn32, param=params) 
 	# and with the adjustment
@@ -87,8 +87,8 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 	precMid[seq(16-4, 16+4), seq(16-4, 16+4)]
 
 # variance matrices
-	varMat = solve(precMat)
-	varMatCorr = solve(precMatCorr)
+	varMat = Matrix::solve(precMat)
+	varMatCorr = Matrix::solve(precMatCorr)
 
 
 # compare covariance matrix to the matern

@@ -8,7 +8,9 @@ loglikLgm = function(param,
 	
 	if(class(trend)=="formula") {
 		covariates = model.matrix(trend, as.data.frame(data))
-		observations = unlist(strsplit( as.character(trend),"~"))[2]
+		observations = formulaLhs(trend)
+		if(!any(names(data)==observations))
+			warning("can't find observations ", observations, "in data")
 		observations = data[[observations]]
 	} else {
 		# observations must be a vector and covariates a matrix
@@ -201,7 +203,7 @@ likfitLgm = function(
 			warning("variance is fixed and not estimated. If this isn't what you wanted remove variance from param")
 		}		
 	}
-	
+	 
 	# limits
 	lowerDefaults = c(nugget=0,range=0,aniso.ratio=0.0001,
 			aniso.angle.radians=-pi/2,aniso.angle.degrees=-90,
@@ -225,26 +227,7 @@ likfitLgm = function(
 			aniso.ratio=1,
 			variance=1)
 		
-	# check to see if it's worth storing box cox quantities
-	if(any(paramToEstimate=="boxcox")) {
-		if(abs(param["boxcox"]-1)>0.0001){
-			stored = list(
-					boxcox = param["boxcox"],
-					twoLogJacobian = 2*(param["boxcox"]-1)* 
-							sum(log(observations))	
-					)
-					if(abs(param["boxcox"])<0.001) {
-						stored$observations = log(observations) 
-					} else  { #boxcox far from 0 and 1
-						stored$observations <- 
-								((observations^param["boxcox"]) - 1)/
-								param["boxcox"]
-					}
-					
-		}
-	} else {
-		stored=NULL
-	}
+
 	
 	# if the model's isotropic, calculate distance matrix
 	if(!length(grep("^aniso", paramToEstimate)) &
@@ -280,15 +263,26 @@ likfitLgm = function(
 	
 	# convert input data to a model matrix
 	if(class(trend)=="formula") {
-		covariates = model.matrix(trend, as.data.frame(data))
-		observations = unlist(strsplit( as.character(trend),"~"))[2]
-		observations = data[[observations]]
+		data = as.data.frame(data)
+		noNA = !apply(
+				data[,all.vars(formulaRhs(trend)),drop=FALSE],
+				1, function(qq) any(is.na(qq)))
+		
+		covariates = model.matrix(trend, data[noNA,])
+		observations = formulaLhs(trend)
+		
+		if(!any(names(data)==observations))
+			warning("can't find observations ", observations, "in data")
+		observations = data[noNA,observations]
 	} else {
 		# observations must be a vector and covariates a matrix
 		observations=data
 		covariates=trend
 	}
 
+	
+	
+	
 	# default starting values for parameters
 	paramDefaults = c(nugget=0,aniso.ratio=0, aniso.angle.degrees=0,
 			aniso.angle.radians=0,rough=1, boxcox=1,
@@ -301,6 +295,30 @@ likfitLgm = function(
 	startingParam[naStarting]= paramDefaults[names(startingParam)[naStarting]]
 	
 	moreParams = param[!names(param) %in% paramToEstimate]
+	
+
+	# check to see if it's worth storing box cox quantities
+	if(any(names(param)=="boxcox") & !any(paramToEstimate=="boxcox")) {
+		if(abs(param["boxcox"]-1)>0.0001){ # boxcox not 1
+			stored = list(
+					boxcox = param["boxcox"],
+					twoLogJacobian = 2*(param["boxcox"]-1)* 
+							sum(log(observations))	
+			)
+			if(abs(param["boxcox"])<0.001) {
+				stored$observations = log(observations) 
+			} else  { #boxcox far from 0 and 1
+				stored$observations <- 
+						((observations^param["boxcox"]) - 1)/
+						param["boxcox"]
+			}
+			
+		} else { # boxcox is 1
+			stored=NULL
+		}
+	} else { # no box cox
+		stored=NULL
+	}
 	
 	fromOptim = optim(fn=loglikLgm, par=startingParam, 
 			lower=lowerDefaults[paramToEstimate], 

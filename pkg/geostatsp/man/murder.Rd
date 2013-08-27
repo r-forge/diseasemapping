@@ -11,7 +11,7 @@ Murder locations
 \description{
   Locations of murders in Toronto 2005-2010
 }
-\usage{data(murder)}
+\usage{data("murder")}
 \format{
   \code{murder} is a  SpatialPoints object of murder locations.  \code{torontoPdens}, 
   \code{torontoIncome}, and \code{torontoNight} are rasters containing
@@ -29,14 +29,14 @@ http://www12.statcan.gc.ca/census-recensement/2011/dp-pd/tbt-tt/Index-eng.cfm
 }
 
 \examples{
-data(murder)
+data("murder")
 plot(torontoNight)
 plot(torontoBorder, add=TRUE)
 points(murder, col="#0000FF40", cex=0.5)
 
 
 
-data(torontoPop)
+data("torontoPop")
 plot(torontoIncome)
 points(murder, col="#0000FF40", cex=0.5)
 

@@ -54,22 +54,24 @@ stackRasterList = function(x, template=x[[1]],method='ngb') {
 			
 			# same projection, different resolution
 			testcrs =CRS(template@crs@projargs)@projargs == CRS(x[[D]]@crs@projargs)@projargs
-			if(is.na(testcrs)) testcrs = T
+			if(is.na(testcrs)) testcrs = TRUE
 			if(testcrs) {
 				# should we aggregate?
 				toAgg = floor(min((dim(x[[D]])/dim(template2))[1:2]))
 				if(toAgg > 1) {
 					aggFun = funList[[method[D]]]
 					thelevels = levels(x[[D]])
-					x[[D]] = aggregate(x[[D]], fact=toAgg,
+					xagg = raster::aggregate(x[[D]], fact=toAgg,
 							fun=aggFun)
 					if(!is.null(thelevels))
-						levels(x[[D]]) = thelevels
+						levels(xagg) = thelevels
+				} else {
+					xagg = x[[D]]
 				}
 				
-				toAdd = raster::resample(x[[D]], template2, method=method[D])
-				if(!is.null(levels(x[[D]]))) {
-					levels(toAdd) = levels(x[[D]])
+				toAdd = raster::resample(xagg, template2, method=method[D])
+				if(!is.null(levels(xagg))) {
+					levels(toAdd) = levels(xagg)
 				}
 				result = addLayer(result,	toAdd)
 				

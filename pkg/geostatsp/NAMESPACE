@@ -66,7 +66,8 @@ S3method(variog.mc.env, default)
 import(
   sp,
   raster,
-  OpenStreetMap
+  OpenStreetMap,
+  Matrix
 )
 
 importFrom(pracma, trapz)

@@ -30,7 +30,7 @@ if(!length(grep("^Raster",class(cells)))) {
 
 
 	
-	data = rasterize(data, cells, fun="count")
+	data = rasterize(SpatialPoints(data), cells, fun="count")
 	names(data) = "count"
 	data[is.na(data)] = 0
 	

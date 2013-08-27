@@ -11,7 +11,7 @@ Swiss rainfall data
 \description{
 Data from the SIC-97 project: Spatial Interpolation Comparison.
 }
-\usage{data(swissRain)}
+\usage{data("swissRain")}
 \format{
 \code{swissRain} is a SpatialPolygonsDataFrame of the sic.100 data, with data column \code{rain}
 being the rainfall values in millimetres. 
@@ -24,7 +24,7 @@ of land cover types.
 }
 
 \examples{
-data(swissRain)
+data("swissRain")
 plot(swissAltitude)
 points(swissRain)
 plot(swissBorder, add=TRUE)

@@ -50,8 +50,15 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 		# extract covariate values and put in the dataset
 		
 		for(D in notInData) {
-			data[[D]] = extract(covariates[[D]], 
-					spTransform(data, CRS(proj4string(covariates[[D]]))))
+			
+			if(proj4string(covariates[[D]])!= "NA" & 
+					!is.na(proj4string(data)) ) {
+				data[[D]] = extract(covariates[[D]], 
+					spTransform(data, CRS(proj4string(covariates[[D]])))) 
+			} else {
+				data[[D]] = extract(covariates[[D]], 
+						 data) 
+			}
 			# check for factors
 			
 			if(!is.null(levels(covariates[[D]]))){
@@ -69,7 +76,7 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 		warning("some terms in the model are missing from both the data and the covariates")
 
 	
-	param = c(range=sd(data@coords[,1])/40,
+	param = c(range=sd(data@coords[,1]),
 				rough=rough, nugget=nugget,boxcox=boxcox
 				)
 	paramToEstimate	= c("range", "rough","nugget","boxcox")[
@@ -89,8 +96,7 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 	
  	
 	likRes = likfitLgm(data=data, trend=formula,
-			param=param, paramToEstimate=paramToEstimate,
-			
+			param=param, paramToEstimate=paramToEstimate
 	)
 	
 # call krige	

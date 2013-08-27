@@ -11,7 +11,7 @@ Loaloa prevalence data from 197 village surveys
 \description{
 Location and prevalence data from villages, elevation an vegetation index for the study region.
 }
-\usage{data(loaloa)}
+\usage{data("loaloa")}
 \format{
 \code{loaloa} is a SpatialPolygonsDataFrame of the data, with columns \code{N} being the number 
 of individuals tested and \code{y} being the number of positives.
@@ -30,24 +30,24 @@ of individuals tested and \code{y} being the number of positives.
 \examples{
 
 
-data(loaloa)
+data("loaloa")
 plot(loaloa)
 
 # elevation
-data(elevationLoa)
+data("elevationLoa")
 plot(elevationLoa, col=terrain.colors(100))
 points(loaloa)
 
 # vegetation index
-data(eviLoa)
+data("eviLoa")
 plot(eviLoa)
 points(loaloa)
 
-data(tempLoa)
+data("tempLoa")
 plot(tempLoa)
 points(loaloa)
 
-data(ltLoa)
+data("ltLoa")
 # land type, a categorical variable
 commonValues  = sort(table(values(ltLoa)),decreasing=TRUE)[1:7]
 commonValues=commonValues[!names(commonValues)==0]
