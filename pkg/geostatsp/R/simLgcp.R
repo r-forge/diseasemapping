@@ -1,8 +1,11 @@
 simPoissonPP = function(intensity) {
 	
+	ivec = values(intensity)
+	ivec[is.na(ivec)] = 0
+	ivec =  ivec*prod(res(intensity))
+	
 	NperCell = intensity
-	values(NperCell) = rpois(ncell(intensity), 
-			values(intensity)*prod(res(intensity)))
+	values(NperCell) = rpois(ncell(intensity), ivec)
 	
 	events = rep(1:ncell(NperCell), values(NperCell))
 	
