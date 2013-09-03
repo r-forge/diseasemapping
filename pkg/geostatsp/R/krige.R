@@ -189,7 +189,7 @@ krige = function(data, trend,
 	}
 	
 	
-	if(!is.null(covariates)) {
+	if(!is.null(covariates) & length(theVars)) {
 		# method for resampling covariate rasters
 
 		method = rep("bilinear", length(names(covariates)))
@@ -257,15 +257,34 @@ krige = function(data, trend,
 	
 	
 # subtract mean from data
-anyNAdata = apply(covariatesForData, 1, function(qq) any(is.na(qq)))
+theNAdata = apply(covariatesForData, 1, function(qq) any(is.na(qq))) | 
+		is.na(observations)
+
+
+if(any(theNAdata)) {
+	noNAdata = !theNAdata
+	if(length(grep("^SpatialPoints", class(coordinates)))) {
+		coordinates = SpatialPoints(coordinates)[noNAdata]	
+	} else if(class(coordinates)=="dist"){
+		coordinates = as.matrix(coordinates)
+		coordinates = coordinates[noNAdata,noNAdata]
+		coordinates = as.dist(coordinates)
+	} else {
+		warning("missing vlaues in data but unclear how to remove them from coordinates")
+	}
+	observations = observations[noNAdata]
+	covariatesForData = covariatesForData[noNAdata,,drop=FALSE]
+}
+
+
 modelMatrixForData = model.matrix(trendFormula, covariatesForData)
-meanForData = rep(NA, length(observations))
-meanForData[!anyNAdata] = 
+
+meanForData = 
 		modelMatrixForData %*% param[colnames(modelMatrixForData)]
 
 
 if(haveBoxCox) {
-	if(abs(haveBoxCox) < 0.001) {
+	if(abs(param["boxcox"]) < 0.001) {
 		observations = log(observations)
 		expPred = TRUE
 		haveBoxCox = FALSE

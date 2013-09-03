@@ -102,31 +102,68 @@ matern.SpatialPoints = function(x, y=NULL,param=c(range=1, variance=1, rough=1)
 
 matern.default = function( x, y=NULL,param=c(range=1, variance=1, rough=1))
 {
-	# x is distances, y is ignored	
+	# x is distances (matrix or vector), y is ignored	
 	names(param) = gsub("^var$", "variance", names(param))
 	
 	if(!any(names(param)=="variance") & any(names(param)=="sdSpatial"))
 		param["variance"]= param["sdSpatial"]^2
 	
+	haveVariance = any(names(param)=="variance")
+	if(!haveVariance) 
+		param["variance"]=1
 
+	if(is.data.frame(x))
+		x = as.matrix(x)	
+#	void matern(double *distance, long *N,
+#					double *range, double *rough, double *variance) {
+	resultFull = .C("matern", as.double(x), as.integer(length(x)),
+			as.double(param["range"]), as.double(param["rough"]),
+			as.double(param["variance"]))
+	result = resultFull[[1]]
+	if(is.matrix(x)) 
+		result = matrix(result, ncol=ncol(x), nrow=nrow(x))
+	
+	attributes(result)$param = param
+#	attributes(result)$xscale = resultFull[[3]]
+#	attributes(result)$varscale = exp(resultFull[[4]])
+	
+	result
+	
+}
+
+
+
+oldmatern = function( x, y=NULL,param=c(range=1, variance=1, rough=1))
+{
+	# R code instead of C
+	# x is distances (matrix or vector), y is ignored	
+	names(param) = gsub("^var$", "variance", names(param))
+	
+	if(!any(names(param)=="variance") & any(names(param)=="sdSpatial"))
+		param["variance"]= param["sdSpatial"]^2
 	
 	haveVariance = any(names(param)=="variance")
-
 	if(!haveVariance) 
 		param["variance"]=1
 	
-		
+	if(is.data.frame(x))
+		x = as.matrix(x)	
+	# do this bit in C?
 	xscale = abs(x)*(sqrt(8*param["rough"])/ param["range"])
 	result = ( param["variance"]/(gamma(param["rough"])* 2^(param["rough"]-1)  ) ) * 
 			( xscale^param["rough"] *
 				besselK(xscale , param["rough"]) )
-
 	result[xscale==0] = 
 			param["variance"] 
-	
 	result[xscale==Inf] = 0
 	
+	
+	
 	attributes(result)$param = param
+	attributes(result)$xscale = (sqrt(8*param["rough"])/ param["range"])
+	attributes(result)$varscale =  param["variance"]/(gamma(param["rough"])* 
+					2^(param["rough"]-1)  )
 	result
 	
 }
+

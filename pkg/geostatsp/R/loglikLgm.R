@@ -189,7 +189,9 @@ likfitLgm = function(
 		upper=NULL,lower=NULL, parscale=NULL,
 		paramToEstimate = c("range","nugget"),
 		reml=TRUE) {
-	
+
+	# for some reason thing break if I remove this next line...
+	stuff = (class(coordinates))
 	
 	# check for the variance parameter
 	estimateVariance = TRUE
@@ -226,10 +228,55 @@ likfitLgm = function(
 			aniso.angle.radians=2,
 			aniso.ratio=1,
 			variance=1)
-		
 
+#	if(length(grep("^SpatialPoints", class(coordinates))))
+#		print("wah")
+ 	
+	# convert input data to a model matrix
+	if(class(trend)=="formula") {
+ 
+		data = as.data.frame(data)
+		theNA = apply(
+				data[,all.vars(formulaRhs(trend)),drop=FALSE],
+				1, function(qq) any(is.na(qq)))
+		noNA = !theNA
+		
+		covariates = model.matrix(trend, data[noNA,])
+		observations = formulaLhs(trend)
+		
+		if(!any(names(data)==observations))
+			warning("can't find observations ", observations, "in data")
+		observations = data[noNA,observations]
+ 
+		
+	} else {
+		# observations must be a vector and covariates a matrix
+		trend = as.matrix(trend)
+		theNA = is.na(data) | apply(trend, 1, 
+					function(qq) any(is.na(qq))
+				)
+		noNA = !theNA
+				
+		observations=data[noNA]
+		covariates=trend[noNA,,drop=FALSE]
+	}
+
+	if(any(theNA)) {
+		if(length(grep("^SpatialPoints", class(coordinates)))) {
+			coordinates = SpatialPoints(coordinates)[noNA]	
+		} else if(class(coordinates)=="dist"){
+			coordinates = as.matrix(coordinates)
+			coordinates = coordinates[noNA,noNA]
+			coordinates = as.dist(coordinates)
+			
+		} else {
+			warning("missing vlaues in data but unclear how to remove them from coordinates")
+		}
+	}
 	
 	# if the model's isotropic, calculate distance matrix
+
+ 
 	if(!length(grep("^aniso", paramToEstimate)) &
 			length(grep("^SpatialPoints", class(coordinates)))) {
 
@@ -254,31 +301,13 @@ likfitLgm = function(
 		coordinates = dist(coordinates@coords)		
 		parscaleDefaults["range"] = sd(coordinates)/20
 	} else {
-		# doing geometric anisotropy
+ 		# doing geometric anisotropy
 		parscaleDefaults["range"] = dist(t(bbox(coordinates)))/100
 	}
 	
 	parscaleDefaults[names(parscale)] = parscale
 	
 	
-	# convert input data to a model matrix
-	if(class(trend)=="formula") {
-		data = as.data.frame(data)
-		noNA = !apply(
-				data[,all.vars(formulaRhs(trend)),drop=FALSE],
-				1, function(qq) any(is.na(qq)))
-		
-		covariates = model.matrix(trend, data[noNA,])
-		observations = formulaLhs(trend)
-		
-		if(!any(names(data)==observations))
-			warning("can't find observations ", observations, "in data")
-		observations = data[noNA,observations]
-	} else {
-		# observations must be a vector and covariates a matrix
-		observations=data
-		covariates=trend
-	}
 
 	
 	

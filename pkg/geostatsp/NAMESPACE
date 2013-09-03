@@ -6,6 +6,7 @@ NNmat, gmrfPrecUncond,simLgcp,simPoissonPP,
  lgm, excProb, likfitLgm, loglikLgm
 )
 
+useDynLib(geostatsp)
 export(matern)
 S3method(matern, Raster)
 S3method(matern, SpatialPointsDataFrame)
@@ -79,4 +80,3 @@ import(
 )
 
 importFrom(pracma, trapz)
-

@@ -79,7 +79,8 @@ myraster = raster(nrows=40,ncols=60,xmn=-3,xmx=3,ymn=-2,ymx=2)
 param = c(range=2, rough=2,	aniso.ratio=2, aniso.angle.degrees=-25)
 
 # plot correlation of each cell with the origin
-myMatern = matern(myraster, c(0,0), param)
+myMatern = matern(myraster, c(0,0), param=param)
+
 
 plot(myMatern)
 
