@@ -5,15 +5,15 @@ GaussRF = function(x,param=c(variance=1, range=1, rough=1), ...) {
 
 GaussRF.Raster = function(x,param=c(variance=1, range=1, rough=1), ...){
 
-	xseq = seq(x@extent@xmin, x@extent@xmax, len=x@ncols)
-	yseq = seq(x@extent@ymin, x@extent@ymax, len=x@nrows)
-
+	xseq = c(xmin(x), xmax(x), xres(x))
+	yseq = c(ymin(x), ymax(x), yres(x))
+	
  	
 	
 	
 	res = GaussRF(x=xseq, param=param,
-			y=yseq,	grid=TRUE, 
-		...
+			y=yseq,	grid=TRUE, gridtriple=TRUE,
+			...
 			)
 
 			
@@ -59,12 +59,12 @@ GaussRF.default = function(x,param=c(variance=1, range=1, rough=1),  ...){
 			if(any(names(param)=="aniso.angle.degrees") & 
 					!any(names(param)=="aniso.angle.radians") ) {
 				param["aniso.angle.radians"] = param["aniso.angle.degrees"]*2*pi/360				
-		}
+			}
 		
-		scaleTwoDirections = c(1/param["scaleRandomFields"],
+			scaleTwoDirections = c(1/param["scaleRandomFields"],
 				1/(param["aniso.ratio"]*param["scaleRandomFields"]))
-		angle = param["aniso.angle.radians"]
-		anisoMat = diag(scaleTwoDirections) %*% 
+			angle = param["aniso.angle.radians"]
+			anisoMat = diag(scaleTwoDirections) %*% 
 				matrix(c(cos(angle), sin(angle), 
 								-sin(angle), cos(angle)),2)
 		
@@ -84,6 +84,8 @@ GaussRF.default = function(x,param=c(variance=1, range=1, rough=1),  ...){
 		if(!is.list(theArgs$model)) # if model is a list, it's the extended model definition which doesnt need the param argument
 			theArgs$param = param
 	}
+	
+ 
 	
 	result = do.call( RandomFields::GaussRF, theArgs)
 

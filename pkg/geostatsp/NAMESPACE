@@ -46,7 +46,15 @@ S3method(GNcities, default)
 
 importFrom(geoR, as.geodata)
 
-
+export(squareRaster)
+S3method(squareRaster, matrix) 
+S3method(squareRaster, Extent) 
+S3method(squareRaster, RasterLayer) 
+S3method(squareRaster, BasicRaster) 
+S3method(squareRaster, SpatialPoints) 
+S3method(squareRaster, SpatialPointsDataFrame) 
+S3method(squareRaster, SpatialPolygons) 
+S3method(squareRaster, SpatialPolygonsDataFrame) 
 
 export(maternGmrfPrec)
 S3method(maternGmrfPrec, dgCMatrix)
