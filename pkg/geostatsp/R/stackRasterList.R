@@ -46,44 +46,46 @@ stackRasterList = function(x, template=x[[1]],method='ngb') {
 		if(as(x[[D]], 'BasicRaster')==template) {
 			# same projection, same resolution
 			result = addLayer(result, x[[D]])			
-		}	 else {
+		}	 else { # different projection or resolution
 			# check to see if it's a categorical variable
 			if(x[[D]]@data@isfactor) {
 				method[D] = "ngb"
 			} 
 			
+			thelevels = levels(x[[D]])
+			
 			# same projection, different resolution
 			testcrs =CRS(template@crs@projargs)@projargs == CRS(x[[D]]@crs@projargs)@projargs
 			if(is.na(testcrs)) testcrs = TRUE
-			if(testcrs) {
+			if(testcrs) { # same resolution
 				# should we aggregate?
 				toAgg = floor(min((dim(x[[D]])/dim(template2))[1:2]))
 				if(toAgg > 1) {
 					aggFun = funList[[method[D]]]
-					thelevels = levels(x[[D]])
 					xagg = raster::aggregate(x[[D]], fact=toAgg,
 							fun=aggFun)
-					if(!is.null(thelevels))
-						levels(xagg) = thelevels
 				} else {
 					xagg = x[[D]]
 				}
 				
 				toAdd = raster::resample(xagg, template2, method=method[D])
-				if(!is.null(levels(xagg))) {
-					levels(toAdd) = levels(xagg)
-				}
-				result = addLayer(result,	toAdd)
-				
-			} else {
-				# same resolution
-			result = addLayer(result,
-					projectRaster(x[[D]], template,method=method[D])
-			)
-		}
-		}
-	}
-	}
+			} else { # differenet resolution
+ # different resolution
+				toAdd = projectRaster(x[[D]], template,method=method[D])
+			} # end different resolution
+		
+		if(!is.null(thelevels))
+			levels(toAdd) = thelevels
+		
+		result = addLayer(result,	toAdd)
+		
+		} # end different projection or resolution
+	
+	} # end not SPDF
+	
+	
+	
+	} # end loop D
 	if(Nlayers == (dim(result)[3]-1) )
 		result = result[[-1]]
 	names(result) = names(x)

@@ -28,7 +28,9 @@ swissFit3 = likfitLgm(data=swissRain2,
 swissKrige3 = krige(data=swissRain2, trend = swissFit3$trend,
 		param=swissFit3$param, 
 		covariates = list(elevation = swissAltitude,land=swissLandType),
-		locations = swissRaster, expPred=TRUE)
+		locations = swissRaster, expPred=TRUE, conditional=TRUE)
+
+swissKrige3 = swissKrige3$raster
 
 plot(swissKrige3[["predict"]])	
 plot(swissBorder, add=TRUE)
@@ -58,6 +60,8 @@ swissKrige4 = krige(data=swissRain2, trend = swissFit4$trend,
 		locations = swissRaster,expPred=TRUE )
 plot(swissKrige4[["predict"]])	
 plot(swissBorder, add=TRUE)
+
+
 
 swissRain2$landFac2 = as.character(swissRain2$landFac)
 

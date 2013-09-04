@@ -119,6 +119,8 @@ krige = function(data, trend,
 				paste("factor\\(", D, "\\).+$", sep=""),
 				names(param), value=TRUE)
  		if(length(paramWithFactor)) {
+			# formula will convert to factor, don't 
+			# create factor beforehand
 			covariates[[D]]@data@isfactor = FALSE
 			theLevels = gsub(
 					paste("^factor\\(",D,"\\)",sep=""),
@@ -154,7 +156,7 @@ krige = function(data, trend,
 			levelsTable[1,2] = "0"
 			colnames(levelsTable)[2] = ""
 			covariates[[D]]@data@attributes[[1]] =  levelsTable			
-							 
+			covariates[[D]]@data@isfactor = TRUE
 			
 		} else if (length(paramFactorCharacter)) {
 			# stuff like factor(x)Trees and factor(x)Grassland for covariate x and levels Trees and Grassland
@@ -205,6 +207,7 @@ krige = function(data, trend,
 		
 		# construct the fixed effects component
 		covariatesDF = as.data.frame(covariates, xy=TRUE)
+		# convert to factors
 		# get rid of trailing _ created by as.data.frame
 		names(covariatesDF) = gsub("_$", "", names(covariatesDF))
 	} else {
@@ -396,11 +399,12 @@ if(expPred){
 } # end expPred
 
 if(conditionalVarianceMatrix) {
-	condVar = matern(result,  param=param)
-	condVar = condVar - Matrix::crossprod(cholVarDataInvCovDataPred)
+	condVarFull = matern(result,  param=param)
+	condVar = condVarFull - Matrix::crossprod(cholVarDataInvCovDataPred)
 	
 	result = list(raster=result,
-			condVar =  condVar)
+			condVar =  condVar)#, cholmat = cholVarDataInvCovDataPred,
+#			full=condVarFull)
 	
 }
 

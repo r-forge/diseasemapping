@@ -23,7 +23,6 @@ swissFitAgain = lgm(data=swissRain, formula=rain~ elev,
 names(swissFitAgain)
 swissFitAgain$param
 
-
 swissFitAgain = lgm(data=swissRain, formula="rain",
 		locations=80, covariates=swissAltitude,
 		rough=1,  fixRough=TRUE, 

@@ -5,7 +5,7 @@ loglikLgm = function(param,
 		stored=NULL, moreParams=NULL) {
 
 	# create 'covariates', and 'observations'
-	
+ 	
 	if(class(trend)=="formula") {
 		covariates = model.matrix(trend, as.data.frame(data))
 		observations = formulaLhs(trend)
