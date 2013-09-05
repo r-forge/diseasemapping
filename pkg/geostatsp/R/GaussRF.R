@@ -5,8 +5,8 @@ GaussRF = function(x,param=c(variance=1, range=1, rough=1), ...) {
 
 GaussRF.Raster = function(x,param=c(variance=1, range=1, rough=1), ...){
 
-	xseq = c(xmin(x), xmax(x), xres(x))
-	yseq = c(ymin(x), ymax(x), yres(x))
+	xseq = c(xmin(x)+xres(x)/2, xmax(x)-xres(x)/2, xres(x))
+	yseq = c(ymin(x)+yres(x)/2, ymax(x)-yres(x)/2, yres(x))
 	
  	
 	

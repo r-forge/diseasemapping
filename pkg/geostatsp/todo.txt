@@ -1,0 +1,15 @@
+1- fix up matern.c
+	- single function to evaluate besselk
+	- tidier checking for nan's
+	- cases for rough=0.5 and gaussian and range=0
+
+2- openmp
+	- divide outermost loop into 8 sections
+	
+3- matern for cov of raster with raster	
+	
+3- function for ROC's
+
+4- the mesh in geostatsinla	
+
+5- derivatives in likfigLgm, parallelized
