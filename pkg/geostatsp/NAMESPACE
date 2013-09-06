@@ -27,11 +27,6 @@ S3method(GaussRF, default)
 # since it doesn't seem to work well with Imports
 # importFrom(OpenStreetMap, openmap,openproj,plot.OpenStreetMap)
 export(openmap)
-S3method(openmap, matrix)
-S3method(openmap, Extent)
-S3method(openmap, default)
-#export(plot.OpenStreetMap)
-#S3method(plot, OpenStreetMap)
 
 # functions depending on spatstat
 importFrom(spatstat,as.im,as.im.matrix)

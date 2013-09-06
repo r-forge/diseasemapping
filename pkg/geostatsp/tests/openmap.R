@@ -1,6 +1,6 @@
 # only do the following if running unix (because nsl is available)
 # and if the OpenStreetMap.org web site can be accessed
-
+library(geostatsp)
 myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10, crs="+proj=longlat")
 values(myraster) = seq(0,1,len=ncell(myraster))
 myPoints = SpatialPoints(myraster, proj4string=CRS(proj4string(myraster)))[
