@@ -403,7 +403,7 @@ likfitLgm = function(
 	
 	parameterTable[,"Estimated"] = FALSE
 	parameterTable[paramToEstimate,"Estimated"] = TRUE
-	parameterTable[rownames(result$varBetaHat),"Estimated"] = TRUE
+	parameterTable[names(attributes(fromLogLik)$betaHat),"Estimated"] = TRUE
 	if(estimateVariance)
 		parameterTable["variance","Estimated"] = TRUE
 	
