@@ -326,11 +326,23 @@ names(predRaster) = "predict"
 
 
 krigeSd = raster(meanRaster)
+thesd = apply(cholVarDataInvCovDataPred, 2,function(qq) sum(qq*qq))
 
-values(krigeSd) = apply(cholVarDataInvCovDataPred, 2,function(qq) sum(qq*qq))
+# check for values bigger than the variance
+if(any(thesd > param["variance"])){
+	themax = max(thesd - param["variance"])
+	if(themax > 1e-6)
+		warning("converted variances of ", themax, " to zero")	
+	thesd = pmin(thesd, param["variance"])	
+}
+
+values(krigeSd) = thesd
+ # krigeSd is now a variance
+# transform to Standard Deviation
 
 if(nugget.in.prediction) {
-	values(krigeSd) = sqrt(sum(param[c("nugget","variance")]) - values(krigeSd))
+	values(krigeSd) = sqrt(sum(param[c("nugget","variance")]) - 
+					values(krigeSd))
 } else {
 	values(krigeSd) = sqrt(param["variance"] - values(krigeSd))
 }

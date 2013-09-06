@@ -382,10 +382,14 @@ likfitLgm = function(
 	
 	parameterTable = data.frame(estimate=result$param)
 	rownames(parameterTable) =  names(result$param)
+
 	parameterTable$stdErr = NA
-	parameterTable[colnames(result$varBetaHat), "stdErr"] = 
-			sqrt(diag(result$varBetaHat))
 	
+	stdErr = sqrt(diag(attributes(fromLogLik)$varBetaHat))
+	# sometimes varBetaHat doesn't have names
+	parameterTable[names(attributes(fromLogLik)$betaHat), "stdErr"] =
+			stdErr
+
 	thelims = c(0.01, 0.99, 0.025, 0.975, 0.1, 0.9)
 	for(D in thelims) {
 		theQ = qchisq(D, 1, lower.tail=FALSE)
