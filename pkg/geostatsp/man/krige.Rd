@@ -9,8 +9,7 @@ Perform spatial prediction, producing a raster of predictions and conditional st
 }
 \usage{
 krige(data, trend, coordinates = data, param, locations, 
-    covariates = NULL, expPred = FALSE, nugget.in.prediction = TRUE,
-    conditionalVarianceMatrix=FALSE)
+    covariates = NULL, expPred = FALSE, nugget.in.prediction = TRUE)
 }
  
 \arguments{
@@ -37,23 +36,20 @@ nugget effect.  The prediction variances will be adjusted accordingly, and the p
 on the natural scale for logged or Box Cox transformed data will be affected. 
 Otherwise predict fitted values. 
 }
-\item{conditionalVarianceMatrix}{Return the full conditional variance matrix.}
 }
 \details{
 Given the model parameters and observed data, conditional means and variances of the spatial random field
 are computed.
 }
 \value{
-If the prediction locations are identical for the fixed effects and random effects, a single raster stack is 
+A raster stack is 
 returned with the following layers:
 \item{fixed}{Estimated means from the fixed effects portion of the model}
 \item{random}{Predicted random effect}
 \item{krige.var}{Conditional variance of predicted random effect (on the transformed scale if applicable)}
 \item{predict}{Prediction of the response, sum of fixed and random effects.  If exp.pred is TRUE, gives predictions
-on the exponentated scale, and half of krige.var is added prior to exponentiating}
+on the exponentiated scale, and half of krige.var is added prior to exponentiating}
 \item{predict.log}{If exp.pred=TRUE, the prediction of the logged process.}
-If the prediction locations are different for fixed and random effects (typically coarser for the random 
-effects), a list with two raster stacks is returned.
 \item{predict.boxcox}{If a box cox transformation was used, the prediction of the process on the transformed scale.}
 If the prediction locations are different for fixed and random effects (typically coarser for the random 
 effects), a list with two raster stacks is returned.
@@ -61,7 +57,6 @@ effects), a list with two raster stacks is returned.
 same locations as the fixed effects.}
 \item{random}{the predictions and conditional variance of the random effects, on the same
 raster as \code{locations}}
-
 
 }
 
@@ -101,7 +96,9 @@ swissAltitude[1:50,1:50] = NA
 swissKrige = krige(data=swissRain, trend = myTrend,
 	covariates = swissAltitude,  
 	param=myParams,
-	locations = 40, expPred=TRUE)
+	locations = 400, expPred=TRUE)
+
+
 
 plot(swissKrige[["predict"]])
 plot(swissBorder, add=TRUE)
@@ -133,6 +130,10 @@ swissRaster = raster(extent(swissBorder), nrows=25, ncols=40)
 swissKrige2 = krige(data=swissRain, trend = myTrend2,
 	  param=myParams2,
 	locations = swissRaster)
+
+
+
+
 
 plot(swissKrige2[["predict"]])
 plot(swissBorder, add=TRUE)

@@ -1,10 +1,12 @@
 # functions that don't depend on other packages
 export(
  krige,stackRasterList,
- grfConditional,
 NNmat, gmrfPrecUncond,simLgcp,simPoissonPP,
  lgm, excProb, likfitLgm, loglikLgm
 )
+
+importFrom(RandomFields, CondSimu)
+export(grfConditional)
 
 useDynLib(geostatsp)
 export(matern)

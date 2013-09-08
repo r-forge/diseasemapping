@@ -176,6 +176,7 @@ loglikLgm = function(param,
 #	attributes(result)$reml=reml
 #		attributes(result)$twoLogJacobian = twoLogJacobian
 #		attributes(result)$choldet = as.vector(choldet)
+	attributes(result)$resid = resids
 	result
 }
 
@@ -371,7 +372,8 @@ likfitLgm = function(
 			param=c(attributes(fromLogLik)$betaHat,
 					attributes(fromLogLik)$param),
 			varBetaHat = attributes(fromLogLik)$varBetaHat,
-			optim=fromOptim
+			optim=fromOptim, 
+			resid = as.vector(attributes(fromLogLik)$resid)
 	)
 	if(class(trend)=="formula") {
 		result$trend = trend

@@ -76,7 +76,8 @@ Used for passing fixed parameters to \code{loglikLgm} from within \code{\link[st
 of the model matrix, depending on \code{trend} supplied.}
 \item{summary}{a table of parameter estimates, standard errors,  confidence intervals, p values, and 
   	a logical value indicating whether each parameter was estimated as opposed to fixed.}
-
+\item{resid}{residuals, being the observations minus the fixed effects, on the
+transformed scale.}
 \code{loglikLgm} returns a scalar value, either the log likelihood or -2 times the
 log likelihood.  Attributes of this result include the vector of
 parameters (including the MLE's computed for the variance and coefficients),
@@ -141,10 +142,10 @@ legend("bottomright", fill=c("black","red","blue","green"),
 
 	
 # calculate likelihood
-loglikLgm(param=myres$param, 
-					data=mydat, 
-					trend = Y ~ cov1 + cov2,
-					reml=FALSE, minustwotimes=FALSE)
+temp=loglikLgm(param=myres$param, 
+		data=mydat, 
+		trend = Y ~ cov1 + cov2,
+		reml=FALSE, minustwotimes=FALSE)
 
 
 

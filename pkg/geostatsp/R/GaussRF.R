@@ -1,3 +1,5 @@
+
+
 GaussRF = function(x,param=c(variance=1, range=1, rough=1), ...) {
 	UseMethod("GaussRF")
 	
@@ -52,33 +54,9 @@ GaussRF.default = function(x,param=c(variance=1, range=1, rough=1),  ...){
 			warning("param has names", paste(names(param),collapse=","), 
 					" must have ", paste(requiredParams, collapse=","))
 
-		param["scaleRandomFields"] = param["range"]/2 
 		
-		if(any(names(param)=="aniso.ratio")){
-			# geometric anisotropy
-			if(any(names(param)=="aniso.angle.degrees") & 
-					!any(names(param)=="aniso.angle.radians") ) {
-				param["aniso.angle.radians"] = param["aniso.angle.degrees"]*2*pi/360				
-			}
+		model  = modelRandomFields(param)
 		
-			scaleTwoDirections = c(1/param["scaleRandomFields"],
-				1/(param["aniso.ratio"]*param["scaleRandomFields"]))
-			angle = param["aniso.angle.radians"]
-			anisoMat = diag(scaleTwoDirections) %*% 
-				matrix(c(cos(angle), sin(angle), 
-								-sin(angle), cos(angle)),2)
-		
-		
-			model=list("$", var=param["variance"],   
-					A=anisoMat,
-				list("matern", nu=param["rough"]))	
-		} else {
-		
-			model=list("$", var=param["variance"],   
-					s=param["scaleRandomFields"],
-					list("matern", nu=param["rough"]))	
-			
-		}	
 		theArgs$model = model	
 	} else {
 		if(!is.list(theArgs$model)) # if model is a list, it's the extended model definition which doesnt need the param argument

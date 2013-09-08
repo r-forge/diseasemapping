@@ -1,27 +1,3 @@
-fillParam = function(param) {
-names(param) = gsub("^var$", "variance", names(param))
-
-if(!any(names(param)=="variance") & any(names(param)=="sdSpatial"))
-	param["variance"]= param["sdSpatial"]^2
-
-# if still no variance set it to 1.
-if(!any(names(param)=="variance")) {
-	param["variance"] = 1
-}
-
-# fill in anisotropy parameters	
-if(!any(names(param)=="aniso.ratio"))
-	param["aniso.ratio"] = 1
-if(!any(names(param)=="aniso.angle.radians")){
-	if(any(names(param)=="aniso.angle.degrees")) {
-		param["aniso.angle.radians"] = 
-				param["aniso.angle.degrees"]*2*pi/360 				
-	} else {
-		param["aniso.angle.radians"] = 0
-	}
-}
-param
-}
 
 matern = function(x, y=NULL, param=c(range=1, variance=1, rough=1)) {
 	UseMethod("matern")

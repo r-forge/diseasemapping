@@ -8,18 +8,21 @@ Conditional simulation of a Gaussian Random Field
 Simulates a Gaussian random field conditional on observed values.
 }
 \usage{
-grfConditional(data,  trend, param, locations, Nsim, 
-	covariates,   fun, nugget.in.prediction=TRUE) 
+grfConditional(data, ycol=1, 
+			param, locations, Nsim,
+		 	fun=NULL, nugget.in.prediction=TRUE) 
 }
  
 \arguments{
-\item{data}{ A SpatialPointsDataFrame object containing the data to be conditioned upon.
+\item{data}{ Either a SpatialPoints object of observation locations, or a 
+SpatialPointsDataFrame with locations and (residuals from) observed data
+ at these locations.
 }
-\item{trend}{Either a model formula, or a data frame of linear covariates.}
+\item{ycol}{Either a vector of (residuals from) observed data or name or number of 
+the column of \code{data} containing the observed data.}
 
 \item{param}{A vector of named model parameters, as produced by \code{\link{likfitLgm}}
 }
-
 \item{locations}{Either a \code{\link[raster]{raster}}, or a single integer giving the
 number of cells in the X direction which the field  will simulated on.  If the later
 the predictions will be a raster of square cells covering the bounding box of \code{locations}.}
@@ -33,8 +36,9 @@ predict fitted values.  Only relevant for Box-Cox or log transformed data.}
 }
 
 \value{
-\item{random}{the predictions and conditional variance of the random effects, on the same
-raster as \code{locations}}
+A raster of a Gaussian random field simulated conditional on the observed data.  Note the
+observed data and  simulated data both have mean zero, so residuals from a fitted model
+rather than the data themselves should be supplied.
 }
 
 
@@ -42,58 +46,52 @@ raster as \code{locations}}
 \code{\link{krige}}
 }
 \examples{
-data(swissRain)
+\dontrun{ # it's fairly time consuming
+data("swissRain")
 swissRain$elevation = extract(swissAltitude, swissRain)
 swissRain$sqrtrain = sqrt(swissRain$rain)
 
-\dontrun{
+# estimate parameters
 swissFit =  likfitLgm(swissRain, trend=sqrtrain ~ elevation, 
 		param=c(range=51700, nugget=0.11,rough=1,  
-					aniso.angle.degrees=37, aniso.ratio=7.6),
+				aniso.angle.degrees=37, aniso.ratio=7.6),
 		paramToEstimate = c("range","nugget", 
 				"aniso.angle.degrees", "aniso.ratio"))
-myTrend = swissFit$trend
-myParams = swissFit$param
-dput(myParams)
-# will give the following
+
+# simulate from the random effect conditional on
+#   the observed data
+swissSim = grfConditional(data=swissRain, ycol=swissFit$resid,
+		param=swissFit$param, locations=30, 
+		Nsim=1)
+
+# plot the simulated random effect
+plot(swissSim)
+plot(swissBorder, add=TRUE)
+
+
+# create a small raster of elevation data
+swissAltSmall = aggregate(swissAltitude,fact=5)
+# calculate the fixed effects portion of the rainfall process
+rainMean = swissFit$param["(Intercept)"] +
+			swissFit$param["elevation"] * swissAltSmall
+
+# define a function to identify the location of maximum rainfall	
+maxRainLocation = function(x) {
+	rain =  (rainMean + x)^2
+	xyFromCell(rain, which.max(rain))
 }
-myParams = structure(c(10.7374769969982, 0.000616297006488865, 51699.970779807, 
-2.21516194703958, 37.0590943154879, 7.60020213031755, 1, 19.4727274973351
-), .Names = c("(Intercept)", "elevation", "range", "nugget", 
-"aniso.angle.degrees", "aniso.ratio", "rough", "variance"))
-myTrend = sqrtrain ~ elevation
 
+# get a conditional sample of three locations of maximum rainfall
+swissRain$resid = swissFit$resid
+swissLocation = grfConditional2(data=swissRain, 
+		ycol="resid",
+		param=swissFit$param, locations=swissAltSmall, 
+		Nsim=3, fun = maxRainLocation)
 
-swissRaster = raster(extent(swissBorder), ncols=20, nrows=20, 
-	crs=swissRain@proj4string)	
+# convert result from a list to a matrix
+swissLocation = matrix(unlist(swissLocation), ncol=2,byrow=TRUE)
+# add the locations to the map
+points(swissLocation, pch=1:(dim(swissLocation)[1]),col='red')
 
-swissSim = grfConditional(data=swissRain, param=myParams,
-trend=myTrend, 
-locations=swissRaster, Nsim=2, 
-covariates=swissAltitude, nugget.in.prediction=TRUE) 
-
-plot(mask(swissSim[[2]], swissBorder)^2) 
-plot(swissBorder, add=TRUE)
-
-# now don't include nugget effect
-swissSimNoNugget = grfConditional(data=swissRain, param=myParams,
-trend=myTrend, 
-locations=swissRaster, Nsim=2, 
-covariates=swissAltitude, nugget.in.prediction=FALSE) 
-
-plot(mask(swissSimNoNugget[[2]], swissBorder)^2) 
-plot(swissBorder, add=TRUE)
-
-# proportion the realisation above 200
-swissSim2 = grfConditional(
-data=swissRain, param=myParams,
-trend=myTrend, 
-locations=swissRaster, Nsim=5, 
-covariates=swissAltitude, nugget.in.prediction=FALSE,
-fun = function(x) mean(x^2>200)  )
-
-
-unlist(swissSim2) 
-
-
+}
 }
