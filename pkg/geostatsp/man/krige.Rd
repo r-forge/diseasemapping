@@ -96,7 +96,7 @@ swissAltitude[1:50,1:50] = NA
 swissKrige = krige(data=swissRain, trend = myTrend,
 	covariates = swissAltitude,  
 	param=myParams,
-	locations = 400, expPred=TRUE)
+	locations = 40, expPred=TRUE)
 
 
 

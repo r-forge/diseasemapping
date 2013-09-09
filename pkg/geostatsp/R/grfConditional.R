@@ -29,14 +29,12 @@ if(nrow(locations) * ncol(locations) > 10^7) warning("there are lots of cells in
 		warning("param has names", paste(names(param),collapse=","), 
 				" must have ", paste(requiredParams, collapse=","))
 
-	param = fillParam(param)
-	
-	model = modelRandomFields(param)
-
-
 	if(length(ycol)==1 & length(data) > 1) {
 		ycol = data@data[,ycol]
 	}
+	
+	param = fillParam(param)
+	model = modelRandomFields(param)
 	
 	if(param["nugget"] > 0) {
 		err.model = "nugget"
@@ -48,6 +46,7 @@ if(nrow(locations) * ncol(locations) > 10^7) warning("there are lots of cells in
 	}
 
 	
+simFun = function(D) {
 	res = CondSimu(krige.method="O",
 			x=xseq, y = yseq, grid=TRUE, gridtriple=TRUE,
 			param=NULL, model=model,
@@ -55,41 +54,29 @@ if(nrow(locations) * ncol(locations) > 10^7) warning("there are lots of cells in
 			data=ycol, 
 			err.model=err.model,
 			err.param=err.param, method="direct decomp."
-			)		
+	)		
 	if(nugget.in.prediction){
 		res= res + rnorm(length(res), sd=nuggetSd)
 	}		
-		
 	values(locations) = as.vector((res[,seq(dim(res)[2], 1)]))
-	result = locations			
-	
-	if(!is.null(fun)) 
-		result = list(fun(result))
-	
-	if(Nsim > 1) {
-		for(Dsim in 2:Nsim){
-			res = CondSimu(krige.method="O",
-					x=xseq, y = yseq, grid=TRUE, gridtriple=TRUE,
-					param=NULL, model=model,
-					given=data@coords,
-					data=ycol, 
-					err.model=err.model,
-					err.param=err.param, method="direct decomp."
-			)		
-			if(nugget.in.prediction){
-				res= res + rnorm(length(res), sd=nuggetSd)
-			}		
-			values(locations) = as.vector((res[,seq(dim(res)[2], 1)]))
-			if(is.null(fun)) {
-				result = stack(result, locations)
-			} else {
-				result = c(result, list(fun(locations)))				
-			}
-		}
+	if(!is.null(fun)) {
+		locations = fun(locations)
 	}
-		
-		
-	result
+	locations
+}		
+
+	result = mapply(simFun, 1:Nsim)
+
+	if(is.null(fun)) {
+		resultRaster = result[[1]]
+		if(Nsim > 1) {
+			for(Dsim in 1:Nsim){
+				resultRaster = stack(resultRaster, result[[Dsim]])
+			}
+		} 
+		result = resultRaster			
+	}
+	result	
 }
 
 

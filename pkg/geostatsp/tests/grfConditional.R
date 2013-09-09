@@ -13,7 +13,7 @@ swissFit =  likfitLgm(swissRain, trend=sqrtrain ~ elevation,
 # simulate from the random effect conditional on
 #   the observed data
 swissSim = grfConditional(data=swissRain, ycol=swissFit$resid,
-		param=swissFit$param, locations=swissRaster, 
+		param=swissFit$param, locations=20, 
 		Nsim=1)
 
 # plot the simulated random effect
