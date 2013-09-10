@@ -35,7 +35,7 @@ maxRainLocation = function(x) {
 
 # get a conditional sample of three locations of maximum rainfall
 swissRain$resid = swissFit$resid
-swissLocation = grfConditional2(data=swissRain, 
+swissLocation = grfConditional(data=swissRain, 
 		ycol="resid",
 		param=swissFit$param, locations=swissAltSmall, 
 		Nsim=3, fun = maxRainLocation)

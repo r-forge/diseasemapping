@@ -12,7 +12,6 @@ grfConditional(data, ycol=1,
 			param, locations, Nsim,
 		 	fun=NULL, nugget.in.prediction=TRUE) 
 }
- 
 \arguments{
 \item{data}{ Either a SpatialPoints object of observation locations, or a 
 SpatialPointsDataFrame with locations and (residuals from) observed data
@@ -27,9 +26,6 @@ the column of \code{data} containing the observed data.}
 number of cells in the X direction which the field  will simulated on.  If the later
 the predictions will be a raster of square cells covering the bounding box of \code{locations}.}
 \item{Nsim}{Number of samples to simulate.}
-  \item{covariates}{
-The spatial covariates used in prediction, either a \code{\link[raster]{raster}} stack or list of rasters.
-}
  \item{fun}{A function applied to each realised surface and only the result saved.}
 \item{nugget.in.prediction}{If TRUE, predict new observations by adding the nugget effect.  Otherwise
 predict fitted values.  Only relevant for Box-Cox or log transformed data.}
@@ -83,7 +79,7 @@ maxRainLocation = function(x) {
 
 # get a conditional sample of three locations of maximum rainfall
 swissRain$resid = swissFit$resid
-swissLocation = grfConditional2(data=swissRain, 
+swissLocation = grfConditional(data=swissRain, 
 		ycol="resid",
 		param=swissFit$param, locations=swissAltSmall, 
 		Nsim=3, fun = maxRainLocation)
