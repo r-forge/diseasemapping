@@ -378,7 +378,7 @@ startIndex = length(region.index)
 }
 # sum(c(0,diff(params$sd$posterior[,"x"])) * params$sd$posterior[,"y"])
 # sum(c(0,diff(params$sd$prior[,"x"])) * params$sd$prior[,"y"])
-if(F) {
+if(FALSE) {
 	plot(params$sdSpatial$prior, type='l',lwd=4)
 	lines(params$sdSpatial$posterior,col='orange',lwd=2)
 	

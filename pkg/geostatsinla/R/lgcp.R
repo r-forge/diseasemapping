@@ -1,5 +1,5 @@
 lgcp = function(data,  cells, covariates=NULL, formula=NULL, priorCI=NULL, 
-rough=1, buffer = 0, mesh=F,...) {
+rough=1, buffer = 0, mesh=FALSE,...) {
 
 # create raster for prediction
 if(!length(grep("^Raster",class(cells)))) { 
@@ -70,10 +70,4 @@ result
 
 }
 
-if(F) {
-
-	mesh=F; 
-	family="poisson"
-	
-}
 

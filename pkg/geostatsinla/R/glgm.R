@@ -1,6 +1,6 @@
 glgm=function(data,  cells, covariates=NULL, formula=NULL, 
 		priorCI=NULL, rough=1, buffer=0,
-		mesh=F,...) {
+		mesh=FALSE,...) {
 
 
 	
@@ -247,7 +247,7 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 				lower=c(0.001,0.001),method="L-BFGS-B")
 		ratePrior = ratePrior2$par
 		names(ratePrior ) = c("shape","rate")
-if(F) {
+if(FALSE) {
 		ratePrior
 		pgamma(obj1, shape=ratePrior["shape"], rate=ratePrior["rate"])
 		 qgamma(c(0.975,0.025), shape=ratePrior["shape"], rate=ratePrior["rate"])
@@ -418,7 +418,7 @@ for(D in 1:nrow(lincombMat)) {
 			y=dgamma(rangeSeqCells, shape=ratePrior["shape"], 
 					rate=ratePrior["rate"])  / xres(cells)
 		)
-	if(F) {
+	if(FALSE) {
 		plot(params$range$prior, type='l')
 	
 		sum(params$range$prior[,"y"])*range(diff(params$range$prior[,"x"]))
@@ -435,7 +435,7 @@ for(D in 1:nrow(lincombMat)) {
 			y=dgamma(precSeq, shape=precPrior["shape"], 
 					rate=precPrior["rate"]) *2* (precSeq)^(3/2) 
 	)
-	if(F) {
+	if(FALSE) {
 		plot(params$sd$prior, type='l')
 		
 		sum(params$sd$prior[,"y"])*range(diff(params$sd$prior[,"x"]))
