@@ -88,7 +88,7 @@ swissFit$parameters$summary
 swissExc = excProb(swissFit$inla$marginals.random$space, 0, swissFit$raster)
 plot(swissExc, breaks = c(0, 0.2, 0.8, 0.95, 1.00001), 
 	col=c('green','yellow','orange','red'))	
-plot(swissBorder, add=T)		
+plot(swissBorder, add=TRUE)		
 		
 
 \dontrun{
