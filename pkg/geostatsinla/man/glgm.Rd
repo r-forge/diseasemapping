@@ -11,9 +11,9 @@ Fits a generalized linear geostatistical model or a log-Gaussian Cox process
 using   \code{\link[INLA]{inla}} }
 \usage{
 glgm(data,  cells, covariates=NULL, formula=NULL, priorCI=NULL, 
-rough=1, buffer = 0, mesh=F,...)
+rough=1, buffer = 0, mesh=FALSE,...)
 lgcp(data,  cells, covariates=NULL, formula=NULL, priorCI=NULL, 
-rough=1, buffer = 0, mesh=F,...)
+rough=1, buffer = 0, mesh=FALSE,...)
 }
  
 \arguments{

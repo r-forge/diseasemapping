@@ -3,7 +3,7 @@ Type: Package
 Title: Geostatistics with INLA 
 Version: 0.3.6
 Date: 2013-09-12
-Depends: sp, raster, geostatsp,formula.tools
+Depends: sp, raster, geostatsp 
 Imports:  INLA ,spdep 
 Suggests: diseasemapping
 Author: Patrick Brown <patrick.brown@utoronto.ca>

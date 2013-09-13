@@ -6,10 +6,6 @@ S3method(bym, data.frame)
 
 importFrom(spdep, poly2nb)
 
-# formula.tools will eventually move to Imports,
-# but at the moment it won't work unless it's Depends
-importFrom(formula.tools,  lhs, rhs.vars)
-
 importFrom(INLA, inla, inla.models, inla.make.lincombs)
 export(inla.models)
 

@@ -64,7 +64,7 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 		}
 	}
 
-	allterms = rhs.vars(formula)
+	allterms = all.vars(formula)[-1]
 
 	# get rid of offset
 	theOffset = grep("^offset\\(", allterms)

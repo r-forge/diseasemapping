@@ -146,7 +146,19 @@ bym.data.frame = function(data,   formula,
 		formula = update(formula, as.formula(bymTerm))
 
 		# linear combinations
-		theDup = duplicated(data$region.indexS)
+
+
+	#check to see if some regions don't have data.  If so they'll have to be added so 
+	# the independent random effect will be computed
+	notInData = region.index[!region.index %in% data$region.indexI]
+	if(length(notInData)) {
+		dataToAdd = matrix(NA, length(notInData),dim(data)[2],
+			dimnames=list(paste("missing",notInData,sep=""), colnames(data)))
+		dataToAdd[,"region.indexI"] = dataToAdd[,"region.indexS"]=notInData
+		data = rbind(data, dataToAdd)
+	}
+
+	#	theDup = duplicated(data$region.indexS)
 		
 		inlaLincombs = list()
 		# random effects
@@ -158,83 +170,69 @@ bym.data.frame = function(data,   formula,
 									list(idx=region.index[D], weight=1))
 							)
 		}
+		names(inlaLincombs) = paste("bym", names(region.index),sep="_")
 
 		
 		# fitted values
-
-formulaForLincombs = unlist(strsplit(as.character(formula.fitted), "~"))
-formulaForLincombs = formulaForLincombs[length(formulaForLincombs)]
+ 
+formulaForLincombs = formulaRhs(formula.fitted,char=TRUE)
+ 
+# get rid of f(stuff) in formula
 formulaForLincombs =
-		gsub("\\+?[[:space:]]*f\\([[:print:]]*\\)[[:space:]]?($|\\+)", "+", formulaForLincombs)
-# strip out offsets
+		gsub("f\\([[:print:]]*\\)", "", formulaForLincombs)
+# get rid of offset(stuff)
 formulaForLincombs =
-		gsub("\\+?[[:space:]]*offset\\([[:print:]]*\\)[[:space:]]?($|\\+)", "+", formulaForLincombs)
+		gsub("offset\\([[:print:]]*\\)[[:space:]]?($|\\+)", "", formulaForLincombs)
 
 # convert multiple + to a single +
 formulaForLincombs = gsub(
 		"\\+[[:space:]]?\\+([[:space:]]?\\+)?", "+",
 		formulaForLincombs)
-# strip out trailing +
-formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
+# strip out trailing or leading +
+formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", formulaForLincombs)
 
 
-#check to see if some regions don't have data.  If so they'll have to be added so 
-# the independent random effect will be computed
-notInData = region.index[!region.index %in% data$region.indexI]
-if(length(notInData)) {
-	dataToAdd = data[rep(1,length(notInData)),]
-	dataToAdd[,"region.indexI"] = dataToAdd[,"region.indexS"]=notInData
-	dataToAdd[,as.character(lhs(formula))] = NA
-	data = rbind(data, dataToAdd)
-}
-
-
-# not done yet, strip out non-spatial variables
-theDuplicated = duplicated(data$region.indexS)
-notDuplicated = which(!theDuplicated)
 startIndex = length(region.index)
-
-	if(nchar(formulaForLincombs) & formulaForLincombs != "1") {
+ 
+	if(nchar(formulaForLincombs) & formulaForLincombs != "1" &
+			!length(grep("^[[:space:]]+$", formulaForLincombs))) {
+ 
 		formulaForLincombs=as.formula(
 			paste("~", paste(c("1",formulaForLincombs),collapse="+"))
 		)
-
+ 
+		# remove regions in the data set twice
+		theDuplicated = duplicated(data$region.indexS)
+		notDuplicated = which(!theDuplicated)
 		
 		# reorder the matrix by region ID
 		dataOrder = data[notDuplicated,]
 		dataOrder = dataOrder[!dataOrder$region.indexI %in% notInData,]
 		dataOrder = dataOrder[order(dataOrder$region.indexI),]
-		SregionFitted = dataOrder$region.indexI
+
 		
 		lincombFrame = model.frame(formulaForLincombs, dataOrder,
-				na.action=NULL)
+				na.action=na.omit)
 
+		SregionFitted = dataOrder[rownames(lincombFrame),"region.indexI"]
+		names(SregionFitted) = dataOrder[rownames(lincombFrame),region.id]
 		
 		
-		anyNA = apply(lincombFrame, 1, function(qq) any(is.na(qq)))
-		notDuplicated = notDuplicated[!anyNA]
-		SregionFitted =SregionFitted[!anyNA]
-		
-		lincombMat = model.matrix(formulaForLincombs, lincombFrame[notDuplicated, ,drop=F], 
-				na.action=NULL)
-		
+		lincombMat = model.matrix(formulaForLincombs, lincombFrame)
 		
 		lincombMat[lincombMat==0]= NA
-
-		
 		thelincombs = inla.make.lincombs(as.data.frame(lincombMat))
-		for(D in seq(1,length(notDuplicated))) {	
+		for(D in seq(1,length(SregionFitted))) {	
 			inlaLincombs[[D+startIndex]] = 
-					c(thelincombs[notDuplicated[D] ][[1]],
-							list(list(region.indexS=
-													list(idx=data$region.indexS[notDuplicated[D]], 
-															weight=1))),
-							list(list(region.indexI=
-													list(idx=data$region.indexI[notDuplicated[D]], 
-															weight=1))) 
-					)
-			
+				c(thelincombs[[D]],
+					list(list(region.indexS=
+								list(idx=SregionFitted[D], weight=1))),
+					list(list(region.indexI= 
+								list(idx=SregionFitted[D], weight=1))) 
+				)
 		}
+		names(inlaLincombs)[seq(startIndex+1, len=length(SregionFitted))] =
+				paste("fitted",names(SregionFitted),sep="_")
 	} else { # add only intercept to predictions
 		formulaForLincombs = ~1
 		lincombMat = data.frame(x=rep(1,length(region.index)))
@@ -248,10 +246,9 @@ startIndex = length(region.index)
 							list(region.indexI = 
 											list(idx=region.index[D], weight=1))
 					)
-			
-					
-			
 		}
+		names(inlaLincombs)[seq(startIndex+1, len=length(region.index))] =
+				paste("fitted",names(region.index),sep="_")
 	}
  
 
@@ -260,41 +257,56 @@ startIndex = length(region.index)
 	# run inla!		
 	inlaRes = inla(formula, data=data , family=family,
 			lincomb=inlaLincombs, ...)
-	#save(inlaRes, inlaLincombs,theFitted, region.index, SregionFitted, notInData,file="temp.RData")
-	
+ 	
 	if(all(names(inlaRes)=="logfile"))
 		return(inlaRes)
 
-	thebym = inlaRes$summary.lincomb.derived[1:length(region.index),]
-	inlaRes$marginals.bym = inlaRes$marginals.lincomb.derived[1:length(region.index)]
-	names(inlaRes$marginals.bym) = 
-		rownames(thebym) = names(region.index)
-	thebym = thebym[,!names(thebym) %in% c("ID","kld")]
-	names(thebym) = paste("random.",names(thebym),sep="")
-
-	theFitted = inlaRes$summary.lincomb.derived[-(1:length(region.index)),]
-	inlaRes$marginals.fitted.bym = inlaRes$marginals.lincomb.derived[
-			-(1:length(region.index))
+	# posterior distributions of random effect (spatial + independent)
+	thebym = inlaRes$summary.lincomb.derived[
+			grep("^bym_", rownames(inlaRes$summary.lincomb.derived)),]
+ 	
+	inlaRes$marginals.bym = inlaRes$marginals.lincomb.derived[
+			grep("^bym_", names(inlaRes$marginals.lincomb.derived), value=TRUE)
 			]
+ 	
 
+	thebym = thebym[,!names(thebym) %in% c("ID","kld")]
+	colnames(thebym) = paste("random.",colnames(thebym),sep="")
+	rownames(thebym) = gsub("^bym_", "", rownames(thebym))	
+	names(inlaRes$marginals.bym) = gsub("^bym_", "", 
+			names(inlaRes$marginals.bym) )
+	# make sure they're in the correct order
+	thebym = thebym[names(region.index),]
+	inlaRes$marginals.bym = inlaRes$marginals.bym[names(region.index)] 
+
+	
+	# fitted values, some regions dont have them if covariates are missing
+	theFitted = inlaRes$summary.lincomb.derived[
+			grep("^fitted_", rownames(inlaRes$summary.lincomb.derived)),]
+	inlaRes$marginals.fitted.bym = inlaRes$marginals.lincomb.derived[
+			grep("^fitted_", names(inlaRes$marginals.lincomb.derived))
+			]
+			
 	names(inlaRes$marginals.fitted.bym)= 
-			rownames(theFitted)= names(region.index)[SregionFitted]
-	theFitted$exp = 
-			unlist(
+			gsub("^fitted_", "", names(inlaRes$marginals.fitted.bym))
+	rownames(theFitted) = gsub("^fitted_", "", rownames(theFitted))
+	
+	meanExp = unlist(
 					lapply(inlaRes$marginals.fitted.bym, 
 							function(qq) {
 								sum(
 										exp(qq[,"x"])*c(0,diff(qq[,"x"]))*qq[,"y"]	
 								)
 							})
-			)
-	theFitted$exp[theFitted$exp==Inf]=NA
+				) # end unlist
+	meanExp[meanExp==Inf]=NA
+	theFitted = cbind(theFitted, exp = meanExp[rownames(theFitted)])
 
 	
 	# E inv logit(lincombs)
 
 	if(length(grep("binomial",inlaRes$.args$family))) {
-		temp=unlist(
+		invlogit=unlist(
 				lapply(inlaRes$marginals.fitted.bym, 
 						function(qq) {
 							eqqx = exp(qq[,"x"])
@@ -303,16 +315,30 @@ startIndex = length(region.index)
 							)
 						})
 		)
-		theFitted$invlogit = temp		
+		theFitted = cbind(theFitted, invlogit = invlogit[rownames(theFitted)])
 	}
+
 	
 	theFitted = theFitted[,!names(theFitted) %in% c("ID","kld")]
-	names(theFitted) = paste("fitted.",names(theFitted),sep="")
+	colnames(theFitted) = paste("fitted.",colnames(theFitted),sep="")
 	
+	# merge fitted falue summary into BYM
 	thebym = cbind(thebym, matrix(NA, dim(thebym)[1], dim(theFitted)[2],
 					dimnames=list(NULL, names(theFitted))))
 	thebym[rownames(theFitted), colnames(theFitted)] = theFitted
 	
+	
+	# make fitted marginals list have same names and order as fitted radom
+	notInFitted = names(inlaRes$marginals.bym) [
+		!names(inlaRes$marginals.bym)%in%names(inlaRes$marginals.fitted.bym)]
+
+	toAdd = replicate(length(notInFitted),NULL,simplify=FALSE)
+	names(toAdd) = notInFitted
+	inlaRes$marginals.fitted.bym = c(inlaRes$marginals.fitted.bym, 
+			 toAdd)
+	 inlaRes$marginals.fitted.bym = inlaRes$marginals.fitted.bym[
+			 names(inlaRes$marginals.bym) 
+			 ]
 	
 	# the parameters
 	params=list()
@@ -357,14 +383,11 @@ startIndex = length(region.index)
 						rate=precPrior[[Dname]]["rate"]) *2* (precSeq)^(3/2) 
 		)
 		
+		params$summary = rbind(params$summary, sd=NA)
 		
-		params$summary = rbind(params$summary,
-				sd=c(NA, NA, 
+		params$summary[,paste(c("0.975", "0.5","0.025"), "quant", sep="")] = 
 						1/sqrt(inlaRes$summary.hyperpar[imname,
-										paste(c("0.975", "0.5","0.025"), "quant", sep="")
-								]), 
-						NA)
-		)
+										paste(c("0.975", "0.5","0.025"), "quant", sep="")])
 		
 		params$summary["sd","mean"] =sum(
 				1/sqrt(inlaRes$marginals.hyperpar[[imname]][,"x"])*
