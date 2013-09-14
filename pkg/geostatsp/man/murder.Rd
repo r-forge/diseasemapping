@@ -30,17 +30,17 @@ http://www12.statcan.gc.ca/census-recensement/2011/dp-pd/tbt-tt/Index-eng.cfm
 
 \examples{
 data("murder")
-plot(torontoNight)
+plot(torontoNight, main="Toronto ambient light")
 plot(torontoBorder, add=TRUE)
 points(murder, col="#0000FF40", cex=0.5)
 
 
 
 data("torontoPop")
-plot(torontoIncome)
+plot(torontoIncome, main="Toronto Income")
 points(murder, col="#0000FF40", cex=0.5)
 
-plot(torontoPdens)
+plot(torontoPdens, main="Toronto pop dens")
 points(murder, col="#0000FF40", cex=0.5)
 
 

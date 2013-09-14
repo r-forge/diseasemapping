@@ -17,9 +17,9 @@ swissSim = grfConditional(data=swissRain, ycol=swissFit$resid,
 		Nsim=1)
 
 # plot the simulated random effect
+pdf("grfConditional1.pdf")
 plot(swissSim)
 plot(swissBorder, add=TRUE)
-
 
 # create a small raster of elevation data
 swissAltSmall = aggregate(swissAltitude,fact=5)
@@ -44,3 +44,4 @@ swissLocation = grfConditional(data=swissRain,
 swissLocation = matrix(unlist(swissLocation), ncol=2,byrow=TRUE)
 # add the locations to the map
 points(swissLocation, pch=1:(dim(swissLocation)[1]),col='red')
+dev.off()

@@ -36,7 +36,7 @@ openmap = function(upperLeft, lowerRight=NULL, zoom = NULL,
 	result = OpenStreetMap::openmap(
 			upperLeft,lowerRight, 
 			zoom = NULL,
-			type = c("osm", "osm-bw", "maptoolkit-topo", "waze", "mapquest", "mapquest-aerial", "bing", "stamen-toner", "stamen-terrain", "stamen-watercolor", "osm-german", "osm-wanderreitkarte", "mapbox", "esri", "esri-topo", "nps", "apple-iphoto", "skobbler", "cloudmade-<id>", "hillshade", "opencyclemap", "osm-transport", "osm-public-transport", "osm-bbike", "osm-bbike-german"),
+			type = type,
 			minNumTiles = 9L, mergeTiles = TRUE)
 	
 	if(!is.null(theproj))

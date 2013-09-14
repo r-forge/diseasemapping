@@ -77,14 +77,14 @@ swissRes =  lgm(swissRain, locations=30, formula="rain",
 
 swissRes$summary
 
-plot(swissRes$predict[["predict"]]) 
+plot(swissRes$predict[["predict"]], main="predicted rain") 
 plot(swissBorder, add=TRUE)
 
 
 
 \dontrun{
 load(url("http://www.filefactory.com/file/frd1mhownd9/n/CHE_adm0_RData"))
-theMap = openmap(gadm@bbox,zoom=7, type="mapquest")#"osm-transport")
+theMap = openmap(gadm,zoom=7, type="mapquest")#"osm-transport")
 library(RColorBrewer)
 par(mar=c(0,0,0,3))
 plot(gadm) 

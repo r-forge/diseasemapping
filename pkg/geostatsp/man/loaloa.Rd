@@ -31,20 +31,20 @@ of individuals tested and \code{y} being the number of positives.
 
 
 data("loaloa")
-plot(loaloa)
+plot(loaloa, main="loaloa villages")
 
 # elevation
 data("elevationLoa")
-plot(elevationLoa, col=terrain.colors(100))
+plot(elevationLoa, col=terrain.colors(100), main="elevation")
 points(loaloa)
 
 # vegetation index
 data("eviLoa")
-plot(eviLoa)
+plot(eviLoa, main="evi")
 points(loaloa)
 
 data("tempLoa")
-plot(tempLoa)
+plot(tempLoa, main="temperature")
 points(loaloa)
 
 data("ltLoa")
@@ -58,7 +58,7 @@ thecol = rep(NA, length(thelevels))
 names(thecol) = as.character(thelevels)
 
 thecol[names(commonValues)] = rainbow(length(commonValues))
-plot(ltLoa, breaks=thebreaks, col=thecol,legend=FALSE)
+plot(ltLoa, breaks=thebreaks, col=thecol,legend=FALSE, main="land type")
 legend("bottomleft",fill=thecol[names(commonValues)],
 		legend=levels(ltLoa)[[1]][
 						match(as.integer(names(commonValues)),

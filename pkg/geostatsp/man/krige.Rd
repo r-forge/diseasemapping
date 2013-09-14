@@ -100,7 +100,7 @@ swissKrige = krige(data=swissRain, trend = myTrend,
 
 
 
-plot(swissKrige[["predict"]])
+plot(swissKrige[["predict"]], main="predicted rain")
 plot(swissBorder, add=TRUE)
 
 # now with box cox and provide a raster for prediction, no covariates
@@ -135,7 +135,7 @@ swissKrige2 = krige(data=swissRain, trend = myTrend2,
 
 
 
-plot(swissKrige2[["predict"]])
+plot(swissKrige2[["predict"]], main="predicted rain with box-cox")
 plot(swissBorder, add=TRUE)
 
 

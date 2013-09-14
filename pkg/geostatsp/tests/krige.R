@@ -30,10 +30,10 @@ swissKrige3 = krige(data=swissRain2, trend = swissFit3$trend,
 		covariates = list(elevation = swissAltitude,land=swissLandType),
 		locations = swissRaster, expPred=TRUE)
 
-
+pdf("krige3.pdf")
 plot(swissKrige3[["predict"]])	
 plot(swissBorder, add=TRUE)
-
+dev.off()
 
 # now change land to a factor
 landTypes = swissLandType@data@attributes[[1]]
@@ -57,8 +57,11 @@ swissKrige4 = krige(data=swissRain2, trend = swissFit4$trend,
 		param=swissFit4$param, 
 		covariates = list(elevation = swissAltitude,landFac=swissLandType),
 		locations = swissRaster,expPred=TRUE )
+
+pdf("krige4.pdf")
 plot(swissKrige4[["predict"]])	
 plot(swissBorder, add=TRUE)
+dev.off()
 
 
 
@@ -79,7 +82,7 @@ swissKrige5 = krige(data=swissRain2, trend = swissFit5$trend,
 		param=swissFit5$param, 
 		covariates = list(elevation = swissAltitude,landFac2=swissLandType),
 		locations = swissRaster,expPred=TRUE)
-
+pdf("krige5.pdf")
 plot(swissKrige5[["predict"]])	
 plot(swissBorder, add=TRUE)
-
+dev.off()

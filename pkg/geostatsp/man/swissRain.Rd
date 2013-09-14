@@ -25,11 +25,9 @@ of land cover types.
 
 \examples{
 data("swissRain")
-plot(swissAltitude)
+plot(swissAltitude, main="elevation")
 points(swissRain)
 plot(swissBorder, add=TRUE)
-
-plot(swissLandType)
 
 
 # land type, a categorical variable
@@ -43,7 +41,8 @@ names(thecol) = as.character(thelevels)
 
 thecol[names(commonValues)] = rainbow(length(commonValues))
 
-plot(swissLandType, breaks=thebreaks, col=thecol,legend=FALSE)
+plot(swissLandType, breaks=thebreaks, col=thecol,legend=FALSE,
+	main="land type")
 points(swissRain)
 plot(swissBorder, add=TRUE)
 

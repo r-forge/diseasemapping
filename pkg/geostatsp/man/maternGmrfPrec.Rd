@@ -94,7 +94,8 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 # compare covariance matrix to the matern
 	xseq = seq(-20*params["cellSize"], 20*params["cellSize"], len=1000)
 	plot(xseq, matern(xseq, param=params),
-	 type = 'l',ylab='cov', xlab='dist',ylim=c(0, params["variance"]))
+	 type = 'l',ylab='cov', xlab='dist',ylim=c(0, params["variance"]),
+	 main="matern v gmrf")
 
 
 

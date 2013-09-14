@@ -103,8 +103,11 @@ mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 +
 	mydat$U + rnorm(length(mydat), 0, sd=sqrt(trueParam["nugget"]))
 
 
-spplot(mydat, "U", col.regions=rainbow(10))
-spplot(mydat, "Y", col.regions=rainbow(10))
+par(mfrow=c(1,2))
+spplot(mydat, "U", col.regions=rainbow(10), main="U")
+spplot(mydat, "Y", col.regions=rainbow(10), main="Y")
+par(mfrow=c(1,1))
+
 
 myres = likfitLgm(mydat, Y ~ cov1 + cov2, 
 	param=c(range=0.1,nugget=0.1,rough=2), 
@@ -123,7 +126,8 @@ myresNoN$summary
 
 # plot variograms of data, true model, and estimated model
 myv = variog(mydat, formula=Y ~ cov1 + cov2,option="bin", max.dist=0.5)
-plot(myv, ylim=c(0, max(c(1.2*sum(trueParam[c("variance", "nugget")]),myv$v))))
+plot(myv, ylim=c(0, max(c(1.2*sum(trueParam[c("variance", "nugget")]),myv$v))),
+	main="variograms")
 distseq = seq(0, 0.5, len=50)
 lines(distseq, 
 	sum(myres$param[c("variance", "nugget")]) - matern(distseq, param=myres$param),

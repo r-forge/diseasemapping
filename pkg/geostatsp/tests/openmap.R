@@ -1,5 +1,4 @@
-# only do the following if running unix (because nsl is available)
-# and if the OpenStreetMap.org web site can be accessed
+
 library(geostatsp)
 myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10, crs="+proj=longlat")
 values(myraster) = seq(0,1,len=ncell(myraster))
@@ -19,40 +18,71 @@ myPointsMercator = spTransform(myPoints, CRS("+proj=merc +a=6378137 +b=6378137 +
 						+k=1.0 +units=m"))
 
 
-if(.Platform$OS.type=="unix") {
-	if(length(utils::nsl("www.OpenStreetMap.org"))) {
-		par(mar=c(0,0,0,0))
-		mytiles = openmap(myraster, minNumTiles=2,  type="osm")
-		plot(myraster)
-		plot(mytiles, add=TRUE)
-		points(myPoints,col='red')
+myplot = function(first,second=first) {
+	pdf(tempfile("osmplot", tmpdir=".", fileext=".pdf"))
+	par(mar=c(0,0,0,0))
+	plot(first)
+	plot(mytiles, add=TRUE)
+	plot(second,add=TRUE,col='blue')
+	points(mycities,col='red')
+	text(mycities, labels=mycities$name, col='red',pos=4)
+	dev.off()
+}
+
+# only do the following if running unix (because nsl is available)
+# and if the OpenStreetMap.org web site can be accessed
+if(exists("nsl", where="package:utils")) {
+	if(length(utils::nsl("www.OpenStreetMap.org"))& 
+			length(utils::nsl("ws.geonames.org"))) {
+
+
+		# raster, result will be in project of the raster (long-lat)
+		mytiles = openmap(extend(myraster,1), minNumTiles=2,  type="bing")
+		mycities = GNcities(extend(myraster,1),max=5)
+		myplot(myraster, myPoints)
 		
+		# extent, tiles will be mercator
 		mytiles = openmap(extent(myraster), minNumTiles=2,  type="osm")
-		plot(myPointsMercator)
-		plot(mytiles, add=TRUE)
-		points(myPointsMercator,col='red')
+		# cities will be long=lat
+		mycities = GNcities(extent(myraster),max=5,lang="fr")
+		# so change to mercator
+		mycities = spTransform(mycities, CRS(proj4string(myPointsMercator)))
+		myplot(myPointsMercator)
 		
-		mytiles = openmap(bbox(myraster), minNumTiles=2,   type="osm")
-		plot(myPointsMercator)
-		plot(mytiles, add=TRUE)
-		points(myPointsMercator,col='red')
+		# give the bbox, again tiles mercator, cities long lat
+		mytiles = openmap(bbox(myraster), minNumTiles=2,   type="mapquest-aerial")
+		mycities = GNcities(bbox(myraster),max=5)
+		mycities = spTransform(mycities, CRS(proj4string(myPointsMercator)))
+		myplot(myPointsMercator)
 		
-		mytiles = openmap(myPoints, minNumTiles=2,  type="osm")
-		plot(myPoints)
-		plot(mytiles, add=TRUE)
-		points(myPoints,col='red')
+		# give points, result is CRS of points (long-lat)
+		mytiles = openmap(myPoints, minNumTiles=2,  type="mapbox")
+		mycities = GNcities(myPoints,max=5,lang="es")
+		myplot(myPoints)
 		
+		# UTM raster
+		mytiles = openmap(myrasterUTM, minNumTiles=2,  type="nps")
+		mycities = GNcities(myrasterUTM,max=5)
+		myplot(myrasterUTM, myPointsUTM)
 		
-		mytiles = openmap(myrasterUTM, minNumTiles=2,  type="osm")
-		plot(myrasterUTM)
-		plot(mytiles, add=TRUE)
-		points(myPointsUTM,col='red')
+		# utm points
+		mytiles = openmap(myPointsUTM, minNumTiles=2,  type="apple-iphoto")
+		mycities = GNcities(myPointsUTM,max=5)
+		myplot(myPointsUTM)
 		
+		# and the old school way
+		thebbox = bbox(myraster)
+		north = thebbox[2,2]
+		south = thebbox[2,1]
+		east = thebbox[1,2]
+		west = thebbox[1,1]
+		upperleft = c(north, west)
+		lowerright = c(south, east)
 		
-		mytiles = openmap(myPointsUTM, minNumTiles=2,  type="osm")
-		plot(myPointsUTM)
-		plot(mytiles, add=TRUE)
-		points(myPointsUTM,col='red')
+		mytiles = openmap(upperleft, lowerright, minNumTiles=2,  type="apple-iphoto")
+		mycities = GNcities(north,east,south,west,max=5)
+		mycities = spTransform(mycities, CRS(proj4string(myPointsMercator)))
+		myplot(myPointsMercator)
 		
 	}
 }

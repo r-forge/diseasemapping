@@ -49,12 +49,12 @@ myCovariate = list(a=covA, b=covB)
 myLgcp=simLgcp(mymodel, myCovariate, betas=c(a=-0.1, b=0.25), 
 	rasterTemplate=myraster)
 
-plot(myLgcp$raster[["intensity"]])
+plot(myLgcp$raster[["intensity"]], main="lgcp")
 points(myLgcp$events)
 
 myIntensity = exp(-1+0.2*myCovariate[["a"]])
 myPoissonPP = simPoissonPP(myIntensity)
-plot(myIntensity)
+plot(myIntensity, main="Poisson pp")
 points(myPoissonPP)
 
 

@@ -38,9 +38,6 @@ S3method(as.im, RasterLayer)
 # functions depending on geonames
 importFrom(geonames, GNcities)
 export( GNcities)
-S3method(GNcities, matrix)
-S3method(GNcities, Extent)
-S3method(GNcities, default)
 
 importFrom(geoR, as.geodata)
 
