@@ -15,7 +15,7 @@ loglikLgm = function(param,
 	} else {
 		# observations must be a vector and covariates a matrix
 		observations=data
-		covariates=trend
+		covariates=as.matrix(trend)
 	}
 	
 		if(!length(grep("SpatialPoints", class(coordinates))) &
@@ -63,11 +63,7 @@ loglikLgm = function(param,
 			 # boxcox close to 1, don't transform
 				twoLogJacobian=0
 				
-			} else {loglikLgm = function(param, 
-						data, trend, coordinates=data,
-						reml=TRUE, 
-						minustwotimes=TRUE,
-						stored=NULL, moreParams=NULL)
+			} else { # box cox is not one.
 				twoLogJacobian = 2*(param["boxcox"]-1)* 
 					sum(log(observations))	
 			
