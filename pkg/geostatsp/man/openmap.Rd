@@ -8,7 +8,14 @@ function in the \link[OpenStreetMap]{openmap} package
 }
 \usage{
 	openmap(upperLeft, lowerRight=NULL, zoom = NULL,
-		type = c("osm", "osm-bw", "maptoolkit-topo", "waze", "mapquest", "mapquest-aerial", "bing", "stamen-toner", "stamen-terrain", "stamen-watercolor", "osm-german", "osm-wanderreitkarte", "mapbox", "esri", "esri-topo", "nps", "apple-iphoto", "skobbler", "cloudmade-<id>", "hillshade", "opencyclemap", "osm-transport", "osm-public-transport", "osm-bbike", "osm-bbike-german"),
+		type = c("osm", "osm-bw", "maptoolkit-topo", 
+		         "waze", "mapquest", "mapquest-aerial", 
+		         "bing", "stamen-toner", "stamen-terrain", 
+		         "stamen-watercolor", "osm-german", "osm-wanderreitkarte", 
+		         "mapbox", "esri", "esri-topo", "nps", "apple-iphoto", 
+		         "skobbler", "cloudmade-<id>", "hillshade", "opencyclemap", 
+		         "osm-transport", "osm-public-transport", "osm-bbike", 
+		         "osm-bbike-german"),
 		minNumTiles = 9L, mergeTiles = TRUE) 
 }
 

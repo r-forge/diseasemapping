@@ -69,9 +69,11 @@ For Box-Cox or log-transformed data on the natural (untransformed) scale.
 
 data("swissRain")
  
-swissRes =  lgm(swissRain, locations=30, formula="rain",
+swissRes =  lgm(swissRain, locations=20, formula="rain",
 	covariates=swissAltitude, boxcox=0.5, fixBoxcox=TRUE, 
-	aniso=TRUE
+	rough=1, fixRough=TRUE,
+	aniso=TRUE, nugget=0, fixNugget=TRUE,
+	nugget.in.prediction=FALSE
 	)
 	
 

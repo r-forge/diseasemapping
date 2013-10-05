@@ -38,7 +38,7 @@ logLikGradient = function(param,
 	if(useBoxCox) {
 		if(!estBoxCox) { # box cox is fixed, transformed data must be passed in.
 			if(any(names(stored)=="boxcox") ) {
-				if(abs(stored$boxcox-theBoxCox)>0.0001)
+				if(abs(stored$boxcox-moreParams["boxcox"])>0.0001)
 					warning("boxcox param and stored are ", moreParams["boxcox"],
 						" and ", stored$boxcox)
 

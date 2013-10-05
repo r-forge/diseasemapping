@@ -86,10 +86,10 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 	precMid=matrix(precMat[,midcell], 32, 32, byrow=TRUE)
 	precMid[seq(16-4, 16+4), seq(16-4, 16+4)]
 
+\dontrun{
 # variance matrices
 	varMat = Matrix::solve(precMat)
 	varMatCorr = Matrix::solve(precMatCorr)
-
 
 # compare covariance matrix to the matern
 	xseq = seq(-20*params["cellSize"], 20*params["cellSize"], len=1000)
@@ -138,10 +138,8 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
  	
  	quantile(prodUncor[lower.tri(prodUncor,diag=FALSE)],na.rm=TRUE)	
  	quantile(prodCor[lower.tri(prodCor,diag=FALSE)],na.rm=TRUE)	
+}
  	
- 	
-	
-
 
 
 }

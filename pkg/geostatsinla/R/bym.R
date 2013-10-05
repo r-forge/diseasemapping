@@ -344,9 +344,12 @@ startIndex = length(region.index)
 	params=list()
 	params$summary = inlaRes$summary.fixed
 	
+	quantNames = grep("quant$", colnames(params$summary), value=TRUE)
+	revQuant = rev(quantNames)	
+	
 	for(D in c("S","I")) {
 		
-		Dname = grep( paste("^sd",D,sep=""),names(priorCI),value=T)
+		Dname = grep( paste("^sd",D,sep=""),names(priorCI),value=TRUE)
 		
 		params[[Dname]] = list(
 				userPriorCI=priorCI[[Dname]], 
@@ -383,21 +386,29 @@ startIndex = length(region.index)
 						rate=precPrior[[Dname]]["rate"]) *2* (precSeq)^(3/2) 
 		)
 		
-		params$summary = rbind(params$summary, sd=NA)
 		
-		params$summary[,paste(c("0.975", "0.5","0.025"), "quant", sep="")] = 
-						1/sqrt(inlaRes$summary.hyperpar[imname,
-										paste(c("0.975", "0.5","0.025"), "quant", sep="")])
+		thesummary = inlaRes$summary.hyperpar[imname, ,drop=FALSE]
+		thesummary[,quantNames] = 1/sqrt(thesummary[,revQuant])
 		
-		params$summary["sd","mean"] =sum(
+		thesummary[,"mean"] =sum(
 				1/sqrt(inlaRes$marginals.hyperpar[[imname]][,"x"])*
 						c(0,diff(inlaRes$marginals.hyperpar[[imname]][,"x"]))*
 						inlaRes$marginals.hyperpar[[imname]][,"y"]
 		)
+		thesummary[,"sd"] = NA
+		rownames(thesummary) = Dname
+ 
 		
-		rownames(params$summary) = gsub("^sd$", Dname, rownames(params$summary))
-		
-				
+		donthave = colnames(params$summary)[
+				!colnames(params$summary) %in% colnames(thesummary)]
+
+		thesummary = cbind(thesummary, matrix(NA, nrow(thesummary), length(donthave),
+							dimnames=list(NULL, donthave)))
+ 
+			
+		params$summary = rbind(params$summary, 
+				thesummary[,colnames(params$summary),drop=FALSE]
+				)		
 }
 # sum(c(0,diff(params$sd$posterior[,"x"])) * params$sd$posterior[,"y"])
 # sum(c(0,diff(params$sd$prior[,"x"])) * params$sd$prior[,"y"])

@@ -1,20 +1,20 @@
 #include<R.h>
 #include<Rmath.h>
 
-void maternArasterBpoints(double *Axmin, double *Axres, long *AxN,
-		double *Aymax, double *Ayres, long *AyN,
-		double *Bx, double *By, long *BN,
+void maternArasterBpoints(double *Axmin, double *Axres, int *AxN,
+		double *Aymax, double *Ayres, int *AyN,
+		double *Bx, double *By, int *BN,
 		double *result,
 		double  *range, double*rough, double *variance,
 		double *anisoRatio, double *anisoAngleRadians) {
 
 int DB, DAx, DAy, AyN2, AxN2, BN2;
-long Dindex,Ncell;
+int Dindex,Ncell;
 double distCellRight[2], distCellDown[2], distTopLeft[2], distRowHead[2];
 double distTopLeftR[2], distHere[2];
 double costheta, sintheta, anisoRatioSq;
 double xscale, varscale,  thisx;
-long nb,  ize, Nzeros;
+int nb,  ize, Nzeros;
 double *bk, alpha,truncate;
 
 
@@ -45,7 +45,7 @@ truncate = *variance*1e-06; // count a zero if var < truncate
 ize = 1L;
 alpha = *rough;
 // code stolen from R's src/nmath/bessel_k.c
-	nb = 1+ (long)floor(alpha);/* nb-1 <= |alpha| < nb */
+	nb = 1+ (int)floor(alpha);/* nb-1 <= |alpha| < nb */
 	bk = (double *) calloc(nb, sizeof(double));
 
 
@@ -120,18 +120,18 @@ free(bk);
 
 }
 
-void maternAniso(double *x, double *y, long *N,
+void maternAniso(double *x, double *y, int *N,
 		double *result,
 		double  *range, double*rough, double *variance,
 		double *anisoRatio, double *anisoAngleRadians) {
 
 	int Drow, Dcol, Nm1, Dcolp1, N2;
-	long Dindex;
+	int Dindex;
 
 	double xscale, varscale,  thisx;
 	double anisoRatioSq, dist[2], distRotate[2], costheta, sintheta;
 
-    long nb,  ize, Nzeros;
+    int nb,  ize, Nzeros;
     double *bk, alpha,truncate;
 
     costheta = cos(*anisoAngleRadians);
@@ -148,7 +148,7 @@ void maternAniso(double *x, double *y, long *N,
 	ize = 1L;
 	alpha = *rough;
 	// code stolen from R's src/nmath/bessel_k.c
-		nb = 1+ (long)floor(alpha);/* nb-1 <= |alpha| < nb */
+		nb = 1+ (int)floor(alpha);/* nb-1 <= |alpha| < nb */
 		bk = (double *) calloc(nb, sizeof(double));
 
 
@@ -214,13 +214,13 @@ void maternAniso(double *x, double *y, long *N,
 }
 
 
-void matern(double *distance, long *N,
+void matern(double *distance, int *N,
 		double *range, double *rough, double *variance) {
 
 	int D, N2;
 	double xscale, varscale,  thisx;
 
-    long nb,  ize, Nzeros;
+    int nb,  ize, Nzeros;
     double *bk, alpha,truncate;
 
     truncate = *variance*1e-06; // count a zero if var < truncate
@@ -230,7 +230,7 @@ void matern(double *distance, long *N,
 	alpha = *rough;
 
 // code stolen from R's src/nmath/bessel_k.c
-	nb = 1+ (long)floor(alpha);/* nb-1 <= |alpha| < nb */
+	nb = 1+ (int)floor(alpha);/* nb-1 <= |alpha| < nb */
 
 	bk = (double *) calloc(nb, sizeof(double));
 

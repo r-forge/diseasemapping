@@ -37,12 +37,12 @@ if(exists("nsl", where="package:utils")) {
 
 
 		# raster, result will be in project of the raster (long-lat)
-		mytiles = openmap(extend(myraster,1), minNumTiles=2,  type="bing")
+		mytiles = openmap(extend(myraster,1), minNumTiles=2)
 		mycities = GNcities(extend(myraster,1),max=5)
 		myplot(myraster, myPoints)
 		
 		# extent, tiles will be mercator
-		mytiles = openmap(extent(myraster), minNumTiles=2,  type="osm")
+		mytiles = openmap(extent(myraster), minNumTiles=2)
 		# cities will be long=lat
 		mycities = GNcities(extent(myraster),max=5,lang="fr")
 		# so change to mercator
@@ -50,23 +50,23 @@ if(exists("nsl", where="package:utils")) {
 		myplot(myPointsMercator)
 		
 		# give the bbox, again tiles mercator, cities long lat
-		mytiles = openmap(bbox(myraster), minNumTiles=2,   type="mapquest-aerial")
+		mytiles = openmap(bbox(myraster), minNumTiles=2)
 		mycities = GNcities(bbox(myraster),max=5)
 		mycities = spTransform(mycities, CRS(proj4string(myPointsMercator)))
 		myplot(myPointsMercator)
 		
 		# give points, result is CRS of points (long-lat)
-		mytiles = openmap(myPoints, minNumTiles=2,  type="mapbox")
+		mytiles = openmap(myPoints, minNumTiles=2)
 		mycities = GNcities(myPoints,max=5,lang="es")
 		myplot(myPoints)
 		
 		# UTM raster
-		mytiles = openmap(myrasterUTM, minNumTiles=2,  type="nps")
+		mytiles = openmap(myrasterUTM, minNumTiles=2)
 		mycities = GNcities(myrasterUTM,max=5)
 		myplot(myrasterUTM, myPointsUTM)
 		
 		# utm points
-		mytiles = openmap(myPointsUTM, minNumTiles=2,  type="apple-iphoto")
+		mytiles = openmap(myPointsUTM, minNumTiles=2)
 		mycities = GNcities(myPointsUTM,max=5)
 		myplot(myPointsUTM)
 		
@@ -79,7 +79,7 @@ if(exists("nsl", where="package:utils")) {
 		upperleft = c(north, west)
 		lowerright = c(south, east)
 		
-		mytiles = openmap(upperleft, lowerright, minNumTiles=2,  type="apple-iphoto")
+		mytiles = openmap(upperleft, lowerright, minNumTiles=2)
 		mycities = GNcities(north,east,south,west,max=5)
 		mycities = spTransform(mycities, CRS(proj4string(myPointsMercator)))
 		myplot(myPointsMercator)

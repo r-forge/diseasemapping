@@ -1,8 +1,16 @@
+options(CBoundsCheck=TRUE)
 library("geostatsp")
 
 param = c(range=1, rough=1.5,	aniso.ratio=2, aniso.angle.degrees=-25)
 
 matern(c(0, 0.001, 100000), param=param)
+
+#x=c(0, 0.001, 100000);param=c(param, variance=1)
+
+#resultFull = .C("matern", as.double(x), as.integer(length(x)),
+#		as.double(param["range"]), as.double(param["rough"]),
+#		as.double(param["variance"]))
+
 
 # example with raster
 myraster = raster(nrows=40,ncols=60,xmn=-3,xmx=3,ymn=-2,ymx=2)
