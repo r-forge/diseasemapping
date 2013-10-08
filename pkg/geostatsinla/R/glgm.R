@@ -1,4 +1,4 @@
-glgm=function(data,  cells, covariates=NULL, formula=NULL, 
+glgm = function(data,  cells, covariates=NULL, formula=NULL, 
 		priorCI=NULL, rough=1, buffer=0,
 		mesh=FALSE,...) {
 
@@ -64,8 +64,12 @@ glgm=function(data,  cells, covariates=NULL, formula=NULL,
 		}
 	}
 
-	allterms = all.vars(formula)[-1]
 
+	allterms = formulaRhs(formula,char=TRUE)
+	allterms = unlist(strsplit(allterms, "\\+"))
+	allterms = gsub("[[:space:]]", "", allterms)
+	allterms = allterms[allterms != "1"]
+	
 	# get rid of offset
 	theOffset = grep("^offset\\(", allterms)
 	if(length(theOffset)) allterms = allterms[-theOffset]
@@ -376,7 +380,12 @@ for(D in 1:nrow(lincombMat)) {
 	
 	names(thelincombs) = paste("c", lincombMatCells[,"lincombCells"],sep="")
 
-	
+#	forInla = list(formula=formula, data=data, lincomb=thelincombs)
+#	forInla = c(forInla, list(...))
+
+#	if(any(names(forInla)=="Ntrials")) 	{
+#		forInla$Ntrials = forInla$Ntrials[]
+#	}
 	# call inla
 	inlaResult = INLA::inla(formula, data=data, 
 			lincomb=thelincombs, 
@@ -561,22 +570,25 @@ params$range$posterior[,"y"] = params$range$posterior[,"y"] / xres(cells)
 
 
 params$summary = inlaResult$summary.fixed
-params$summary = rbind(params$summary,
-		sd=c(NA, NA, 
-				1/sqrt(inlaResult$summary.hyperpar["Precision for space",
-								paste(c("0.975", "0.5","0.025"), "quant", sep="")
-								]), 
-								NA),
-				range=c( 
-						xres(cells)*
-								inlaResult$summary.hyperpar["Range for space",
-										c("mean","sd",paste(c("0.025", "0.5","0.975"), 
-												"quant", sep=""))
-		], 
-						NA)
-		)
-		
 
+thecols = paste(c("0.975", "0.5","0.025"), "quant", sep="")
+params$summary = rbind(params$summary,
+		sd=NA, range=NA)
+
+
+params$summary["sd", thecols] = 
+				1/sqrt(inlaResult$summary.hyperpar["Precision for space",
+								thecols
+								])
+
+				thecols =c("mean","sd",thecols,"mode") 
+		params$summary["range",thecols]=				
+						xres(cells)*
+								inlaResult$summary.hyperpar[
+										"Range for space",
+									thecols
+								]
+		
 		params$summary["sd","mean"] =sum(
 		1/sqrt(inlaResult$marginals.hyperpar[["Precision for space"]][,"x"])*
 				c(0,diff(inlaResult$marginals.hyperpar[["Precision for space"]][,"x"]))*
@@ -586,13 +598,14 @@ params$summary = rbind(params$summary,
 precGauName = "Precision for the Gaussian observations"
 if(precGauName %in% names(inlaResult$marginals.hyperpar)) {
 	params$summary = rbind(params$summary,
-			sdNugget=c(NA, NA, 
-					1/sqrt(inlaResult$summary.hyperpar[precGauName,
-									paste(c("0.975", "0.5","0.025"), "quant", sep="")
-							]), 
-					NA)
-			)
-	params$summary["sdNugget","mean"] =sum(
+			sdNugget=NA)
+
+	colnames = paste(c("0.975", "0.5","0.025"), "quant", sep="")
+	params$summary["sdNugget",colnames] = 
+					1/sqrt(inlaResult$summary.hyperpar[precGauName,colnames						
+							])
+
+			params$summary["sdNugget","mean"] =sum(
 				1/sqrt(inlaResult$marginals.hyperpar[[precGauName]][,"x"])*
 						c(0,diff(inlaResult$marginals.hyperpar[[precGauName]][,"x"]))*
 						inlaResult$marginals.hyperpar[[precGauName]][,"y"]

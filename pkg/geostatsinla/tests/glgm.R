@@ -82,6 +82,40 @@ swissFit =  glgm(swissRain, cells=30,
 								param=c(.1, .1))))
 )
 
+data("ltLoa")
+
+rcl = rbind(
+		# wedlands and mixed forests to forest
+		c(5,2),c(11,2),
+# savannas to woody savannas
+		c(9,8),
+		# croplands and urban changed to crop/natural mosaid
+		c(12,14),c(13,14))
+ltLoa = reclassify(ltLoa, rcl)
+
+data("elevationLoa")
+
+elevationLoa = elevationLoa - 750
+elevLow = reclassify(elevationLoa, c(0, Inf, 0))
+elevHigh = reclassify(elevationLoa, c(-Inf, 0, 0))
+
+data("eviLoa")
+covList = list(elLow = elevLow, elHigh = elevHigh, 
+		land = ltLoa, evi=eviLoa)
+
+data("loaloa")
+loaFit = glgm(loaloa,
+		formula=y ~ factor(land) + evi + elHigh + elLow, #+ f(villageID,model="iid"),
+		family="binomial", Ntrials = loaloa$N,cells=50, 
+		covariates=covList, rough=2, buffer=25000,
+		priorCI = list(sd=c(0.2, 4), range=c(20000,500000)))
+
+loaFit$par$summary
+
+png("loaFitted.png")
+plot(loaFit$raster[["predict.invlogit"]])
+dev.off()
+
 
 
 

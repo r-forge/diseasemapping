@@ -53,7 +53,6 @@ openmap = function(x, zoom,
 				maxTiles=maxTiles,verbose=verbose)
 			
 	
-	return(list(result=result, crs=crs))
 	resultProj = projectRaster(result, crs=crs, method="ngb")
 	# for some reason a  bunch of NA's around the edges
 	extras = (dim(resultProj) - dim(result))[1:2]/2
