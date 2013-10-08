@@ -14,7 +14,7 @@ openmap = function(x, zoom,
 	crsIn = try(proj4string(x),silent=TRUE)
 	if(missing(crs)) {
 		if(class(crsIn)=="try-error"){
-			crs =crsIn = "+proj=longlat"
+			crs =crsIn = CRS("+init=epsg:4326")
 		}else { # crs missing but we have crsIn
 			crs = crsIn
 		}
@@ -34,7 +34,7 @@ openmap = function(x, zoom,
 	# but bbox(extent(mybbox) = mybbox
 	x = bbox(extent(x))
 	x2 = x = SpatialPoints(t(x), crsIn)
-	x = bbox(spTransform(x, CRS("+proj=longlat")))
+	x = bbox(spTransform(x, CRS("+init=epsg:4326")))
 	
 	xlim= x[1,]
 	ylim = x[2,]
@@ -58,11 +58,11 @@ openmap = function(x, zoom,
 	} else {
 		resultProj = projectRaster(result, crs=crs, method="ngb")
 	# for some reason a  bunch of NA's around the edges
-		extras = (dim(resultProj) - dim(result))[1:2]/2
-		if(any(extras > 0.5)) {
-			newextent = extend(extent(resultProj), -extras*res(resultProj))
-			resultProj = crop(resultProj, newextent)
-		}
+	#	extras = (dim(resultProj) - dim(result))[1:2]/2
+	#	if(any(extras > 0.5)) {
+	#		newextent = extend(extent(resultProj), -extras*res(resultProj))
+	#		resultProj = crop(resultProj, newextent)
+	#	}
 		resultProj@legend@colortable = result@legend@colortable		
 	}
 	

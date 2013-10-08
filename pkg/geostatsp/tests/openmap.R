@@ -101,78 +101,19 @@ if(exists("nsl", where="package:utils")) {
 data("murder")
 data("torontoPop")
 
-# all long-lat, works
-rasterLL = projectRaster(torontoIncome, crs=CRS("+proj=longlat"))
-murderLL = spTransform(murder, CRS("+proj=longlat"))
-
-torTiles = openmap(rasterLL,verbose=TRUE)
-png("toronto1.png")
-plot(murderLL)
-plot(torTiles,add=TRUE)
-plot(murderLL,col='red', add=TRUE)
-dev.off()
-
-torTilesLL = openmap(murderLL)
-png("toronto2.png")
-plot(murderLL)
-plot(torTilesLL,add=TRUE)
-plot(murderLL,col='red', add=TRUE)
-dev.off()
-
-# pass in utm, convert ot LL, all works
-torTilesLL = openmap(torontoIncome, crs=CRS("+proj=longlat"))
-png("toronto3.png")
-plot(murderLL)
-plot(torTilesLL,add=TRUE)
-plot(murderLL,col='red', add=TRUE)
-dev.off()
-
-# pass in UTM, keep as mercator, transform points to mercator via long-lat
-torTiles = openmap(murder, crs="+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +a=6378137 +b=6378137 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-png("toronto4.png")
-plot(torTiles)
-plot(spTransform(
-				spTransform(murder, CRS("+proj=longlat")), 
-				CRS(proj4string(torTiles))),
-col='red', add=TRUE)
-dev.off()
-
-
-
-# now transform points to mercator directly
-png("toronto5.png")
-plot(torTiles)
-plot(spTransform(
-				murder, 
-				CRS(proj4string(torTiles))),
-		col='red', add=TRUE)
-dev.off()
-# doesn't work
-
-# so this doesn't work either
 torTiles = openmap(murder)
-png("toronto6.png")
+png("toronto1.png")
 plot(torTiles)
 plot(murder,
 		col='red', add=TRUE)
 dev.off()
 
-# herein lies the problem
-# create points in UTM zone 17
-myPoints = SpatialPoints(rbind(
-				c(631674,  4835013),
-				c(623370, 4834801)),
-		proj4string=CRS("+proj=utm +zone=17 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
-)
-
-# mercator project
-mercator = CRS("+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +a=6378137 +b=6378137 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-
-# transform utm to mercator
-spTransform(myPoints, mercator)
-# transform utm to long-lat to mercator
-spTransform(spTransform(myPoints, CRS("+proj=longlat")), mercator)
-
+torTiles = openmap(torontoIncome)
+png("toronto2.png")
+plot(torTiles)
+plot(murder,
+		col='red', add=TRUE)
+dev.off()
 
 }
 
