@@ -1,46 +1,69 @@
 
-openmap = function(upperLeft, lowerRight=NULL, zoom = NULL,
-		type = c("osm", "osm-bw", "maptoolkit-topo", "waze", "mapquest", "mapquest-aerial", "bing", "stamen-toner", "stamen-terrain", "stamen-watercolor", "osm-german", "osm-wanderreitkarte", "mapbox", "esri", "esri-topo", "nps", "apple-iphoto", "skobbler", "cloudmade-<id>", "hillshade", "opencyclemap", "osm-transport", "osm-public-transport", "osm-bbike", "osm-bbike-german"),
-		minNumTiles = 9L, mergeTiles = TRUE) {
+openmap = function(x, zoom, 
+	path="http://tile.openstreetmap.org/",
+	maxTiles = 9,
+	crs, cacheDir=tempdir(),
+	verbose=FALSE) {
 
-	if(is.vector(upperLeft) ) {
-		theproj = NULL
-		
-	} else {
-		
-		# do this because bbox(mybbox) != mybbox
-		# but bbox(extent(mybbox) = mybbox
-		theproj = try(proj4string(upperLeft),silent=TRUE)
-		upperLeft = bbox(extent(upperLeft))
-		
-		if(class(theproj)=="try-error")
-			theproj = NULL
- 
-		
-		if(!is.null(theproj)) {
-			# transform to long-lat
-			upperLeft = SpatialPoints(t(upperLeft),
-					proj4string=CRS(theproj))
- 
-			upperLeft = bbox(spTransform(
-							upperLeft, CRS("+proj=longlat")
-							))			
+	if(!length(grep("/$", path)))
+		path = paste(path, "/", sep="")
+
+	if(!length(grep("^http://", path)))
+		path = paste("http://", path, sep="")
+	
+	crsIn = try(proj4string(x),silent=TRUE)
+	if(missing(crs)) {
+		if(class(crsIn)=="try-error"){
+			crs =crsIn = "+proj=longlat"
+		}else { # crs missing but we have crsIn
+			crs = crsIn
 		}
-		
-		lowerRight = c(upperLeft[2,"min"],upperLeft[1,"max"])
-		upperLeft = c(upperLeft[2,"max"],upperLeft[1,"min"])
-		
+	} else { # have a crs
+		if(class(crsIn)=="try-error"){ # but no crsIn
+			crsIn = crs
+		}
 	}
- 
 	
-	result = OpenStreetMap::openmap(
-			upperLeft,lowerRight, 
-			zoom = NULL,
-			type = type,
-			minNumTiles = 9L, mergeTiles = TRUE)
+	if(is.character(crs))
+		crs = CRS(crs)
+	if(is.character(crsIn))
+		crsIn = CRS(crsIn)
+
 	
-	if(!is.null(theproj))
-		result = OpenStreetMap::openproj(
-				result, projection=theproj)
+	# do this because bbox(mybbox) != mybbox
+	# but bbox(extent(mybbox) = mybbox
+	x = bbox(extent(x))
+	x = SpatialPoints(t(x), crsIn)
+	x = bbox(spTransform(x, CRS("+proj=longlat")))
+	
+	xlim= x[1,]
+	ylim = x[2,]
+		
+	if(missing(zoom)) {
+	zoom = 1
+	while(nTiles(xlim, ylim, zoom) <= maxTiles) {
+		zoom = zoom + 1
+	}
+	zoom = max(c(1, zoom-1))
+	}
+
+	
+	result =  getTiles(xlim,ylim, zoom=zoom,
+				path=path[1],
+				maxTiles=maxTiles,verbose=verbose)
+			
+	
+
+	resultProj = projectRaster(result, crs=crs, method="ngb")
+	# for some reason a  bunch of NA's around the edges
+	extras = (dim(resultProj) - dim(result))[1:2]/2
+	if(any(extras > 0.5)) {
+		newextent = extend(extent(resultProj), -extras*res(resultProj))
+		resultProj = crop(resultProj, newextent)
+
+	}
+	resultProj@legend@colortable = result@legend@colortable		
+	
 	result
 }
+

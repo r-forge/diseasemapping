@@ -24,11 +24,7 @@ S3method(GaussRF, SpatialPointsDataFrame)
 S3method(GaussRF, SpatialPoints)
 S3method(GaussRF, default)
 
-# functions which depend on OpenStreetMap
-# OpenStreetMap is listed as Depends
-# since it doesn't seem to work well with Imports
-# importFrom(OpenStreetMap, openmap,openproj,plot.OpenStreetMap)
-export(openmap)
+export(openmap, getTiles)
 
 # functions depending on spatstat
 importFrom(spatstat,as.im,as.im.matrix)
@@ -69,8 +65,8 @@ S3method(variog.mc.env, default)
 import(
   sp,
   raster,
-  OpenStreetMap,
   Matrix
 )
 
 importFrom(pracma, trapz)
+import(rgdal)

@@ -29,6 +29,8 @@ myplot = function(first,second=first) {
 	dev.off()
 }
 
+thezoom=6
+
 # only do the following if running unix (because nsl is available)
 # and if the OpenStreetMap.org web site can be accessed
 if(exists("nsl", where="package:utils")) {
@@ -37,12 +39,23 @@ if(exists("nsl", where="package:utils")) {
 
 
 		# raster, result will be in project of the raster (long-lat)
-		mytiles = openmap(extend(myraster,1), minNumTiles=2)
+		mytiles = openmap(x=extend(myraster,1),zoom=thezoom, 
+				path="http://tile.openstreetmap.org")
+		mycities = GNcities(extend(myraster,1),max=5)
+		myplot(myraster, myPoints)
+
+		mytiles = openmap(extend(myraster,1),zoom=thezoom, path="http://tile.openstreetmap.org/")
 		mycities = GNcities(extend(myraster,1),max=5)
 		myplot(myraster, myPoints)
 		
+
+		mytiles = openmap(extend(myraster,1),path="tile.openstreetmap.org")
+		mycities = GNcities(extend(myraster,1),max=5)
+		myplot(myraster, myPoints)
+		
+		
 		# extent, tiles will be mercator
-		mytiles = openmap(extent(myraster), minNumTiles=2)
+		mytiles = openmap(extent(myraster),zoom=thezoom)
 		# cities will be long=lat
 		mycities = GNcities(extent(myraster),max=5,lang="fr")
 		# so change to mercator
@@ -50,39 +63,36 @@ if(exists("nsl", where="package:utils")) {
 		myplot(myPointsMercator)
 		
 		# give the bbox, again tiles mercator, cities long lat
-		mytiles = openmap(bbox(myraster), minNumTiles=2)
+		mytiles = openmap(bbox(myraster),zoom=thezoom)
 		mycities = GNcities(bbox(myraster),max=5)
 		mycities = spTransform(mycities, CRS(proj4string(myPointsMercator)))
 		myplot(myPointsMercator)
 		
 		# give points, result is CRS of points (long-lat)
-		mytiles = openmap(myPoints, minNumTiles=2)
+		mytiles = openmap(myPoints,zoom=thezoom)
 		mycities = GNcities(myPoints,max=5,lang="es")
 		myplot(myPoints)
 		
 		# UTM raster
-		mytiles = openmap(myrasterUTM, minNumTiles=2)
+		mytiles = openmap(myrasterUTM,zoom=thezoom)
+		mycities = GNcities(myrasterUTM,max=5)
+		myplot(myrasterUTM, myPointsUTM)
+		
+		mytiles = openmap(extent(myrasterUTM),zoom=thezoom, crs=proj4string(myrasterUTM))
 		mycities = GNcities(myrasterUTM,max=5)
 		myplot(myrasterUTM, myPointsUTM)
 		
 		# utm points
-		mytiles = openmap(myPointsUTM, minNumTiles=2)
+		mytiles = openmap(myPointsUTM,zoom=thezoom)
 		mycities = GNcities(myPointsUTM,max=5)
 		myplot(myPointsUTM)
 		
-		# and the old school way
-		thebbox = bbox(myraster)
-		north = thebbox[2,2]
-		south = thebbox[2,1]
-		east = thebbox[1,2]
-		west = thebbox[1,1]
-		upperleft = c(north, west)
-		lowerright = c(south, east)
+		# specify crs
+	mytiles = openmap(myPointsUTM, crs="+proj=longlat")
+	mycities = GNcities(myPoints,max=5)
+	myplot(myPoints)
+
 		
-		mytiles = openmap(upperleft, lowerright, minNumTiles=2)
-		mycities = GNcities(north,east,south,west,max=5)
-		mycities = spTransform(mycities, CRS(proj4string(myPointsMercator)))
-		myplot(myPointsMercator)
 		
 	}
 }
