@@ -95,4 +95,16 @@ if(exists("nsl", where="package:utils")) {
 		
 		
 	}
+	
+	# toronto
+data("murder")
+data("torontoPop")
+torTiles = openmap(torontoIncome)
+
+png("toronto.png")
+plot(murder)
+plot(torTiles,add=TRUE)
+plot(murder,col='red', add=TRUE)
+dev.off()
+
 }

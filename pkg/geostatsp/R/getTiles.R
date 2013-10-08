@@ -123,6 +123,7 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,cacheDir=tempdir(),
 	
 	}
 
+	rasters$tolerance = Inf
 	rasters = do.call(merge, rasters)
 	rasters@legend@colortable = names(colourtable)
 	

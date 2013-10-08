@@ -8,7 +8,7 @@ openmap = function(x, zoom,
 	if(!length(grep("/$", path)))
 		path = paste(path, "/", sep="")
 
-	if(!length(grep("^http://", path)))
+	if(!length(grep("^http[s]*://", path)))
 		path = paste("http://", path, sep="")
 	
 	crsIn = try(proj4string(x),silent=TRUE)
@@ -53,7 +53,7 @@ openmap = function(x, zoom,
 				maxTiles=maxTiles,verbose=verbose)
 			
 	
-
+	return(list(result=result, crs=crs))
 	resultProj = projectRaster(result, crs=crs, method="ngb")
 	# for some reason a  bunch of NA's around the edges
 	extras = (dim(resultProj) - dim(result))[1:2]/2
@@ -64,6 +64,6 @@ openmap = function(x, zoom,
 	}
 	resultProj@legend@colortable = result@legend@colortable		
 	
-	result
+	resultProj
 }
 
