@@ -44,29 +44,29 @@ if(exists("nsl", where="package:utils")) {
 		mycities = GNcities(extend(myraster,1),max=5)
 		myplot(myraster, myPoints)
 
-		mytiles = openmap(extend(myraster,1),zoom=thezoom, path="http://tile.openstreetmap.org/")
+		# slash at the end
+		mytiles = openmap(extend(myraster,1),zoom=thezoom, 
+				path="http://tile.openstreetmap.org/")
 		mycities = GNcities(extend(myraster,1),max=5)
 		myplot(myraster, myPoints)
 		
-
+		# no http at beginning
 		mytiles = openmap(extend(myraster,1),path="tile.openstreetmap.org")
 		mycities = GNcities(extend(myraster,1),max=5)
 		myplot(myraster, myPoints)
 		
 		
-		# extent, tiles will be mercator
+		# extent, tiles will be long-lat
 		mytiles = openmap(extent(myraster),zoom=thezoom)
 		# cities will be long=lat
 		mycities = GNcities(extent(myraster),max=5,lang="fr")
-		# so change to mercator
-		mycities = spTransform(mycities, CRS(proj4string(myPointsMercator)))
-		myplot(myPointsMercator)
+		myplot(mycities,myPoints)
 		
-		# give the bbox, again tiles mercator, cities long lat
+		# give the bbox, long lat
 		mytiles = openmap(bbox(myraster),zoom=thezoom)
 		mycities = GNcities(bbox(myraster),max=5)
-		mycities = spTransform(mycities, CRS(proj4string(myPointsMercator)))
-		myplot(myPointsMercator)
+		myplot(mycities,myPoints)
+		
 		
 		# give points, result is CRS of points (long-lat)
 		mytiles = openmap(myPoints,zoom=thezoom)
@@ -78,7 +78,9 @@ if(exists("nsl", where="package:utils")) {
 		mycities = GNcities(myrasterUTM,max=5)
 		myplot(myrasterUTM, myPointsUTM)
 		
-		mytiles = openmap(extent(myrasterUTM),zoom=thezoom, crs=proj4string(myrasterUTM))
+		# supply a crs
+		mytiles = openmap(extent(myrasterUTM),zoom=thezoom, 
+				crs=proj4string(myrasterUTM))
 		mycities = GNcities(myrasterUTM,max=5)
 		myplot(myrasterUTM, myPointsUTM)
 		
@@ -87,24 +89,91 @@ if(exists("nsl", where="package:utils")) {
 		mycities = GNcities(myPointsUTM,max=5)
 		myplot(myPointsUTM)
 		
-		# specify crs
+		# specify different output crs
 	mytiles = openmap(myPointsUTM, crs="+proj=longlat")
 	mycities = GNcities(myPoints,max=5)
 	myplot(myPoints)
 
 		
 		
-	}
 	
 	# toronto
 data("murder")
 data("torontoPop")
-torTiles = openmap(torontoIncome)
 
-png("toronto.png")
-plot(murder)
+# all long-lat, works
+rasterLL = projectRaster(torontoIncome, crs=CRS("+proj=longlat"))
+murderLL = spTransform(murder, CRS("+proj=longlat"))
+
+torTiles = openmap(rasterLL,verbose=TRUE)
+png("toronto1.png")
+plot(murderLL)
 plot(torTiles,add=TRUE)
-plot(murder,col='red', add=TRUE)
+plot(murderLL,col='red', add=TRUE)
 dev.off()
+
+torTilesLL = openmap(murderLL)
+png("toronto2.png")
+plot(murderLL)
+plot(torTilesLL,add=TRUE)
+plot(murderLL,col='red', add=TRUE)
+dev.off()
+
+# pass in utm, convert ot LL, all works
+torTilesLL = openmap(torontoIncome, crs=CRS("+proj=longlat"))
+png("toronto3.png")
+plot(murderLL)
+plot(torTilesLL,add=TRUE)
+plot(murderLL,col='red', add=TRUE)
+dev.off()
+
+# pass in UTM, keep as mercator, transform points to mercator via long-lat
+torTiles = openmap(murder, crs="+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +a=6378137 +b=6378137 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+png("toronto4.png")
+plot(torTiles)
+plot(spTransform(
+				spTransform(murder, CRS("+proj=longlat")), 
+				CRS(proj4string(torTiles))),
+col='red', add=TRUE)
+dev.off()
+
+
+
+# now transform points to mercator directly
+png("toronto5.png")
+plot(torTiles)
+plot(spTransform(
+				murder, 
+				CRS(proj4string(torTiles))),
+		col='red', add=TRUE)
+dev.off()
+# doesn't work
+
+# so this doesn't work either
+torTiles = openmap(murder)
+png("toronto6.png")
+plot(torTiles)
+plot(murder,
+		col='red', add=TRUE)
+dev.off()
+
+# herein lies the problem
+# create points in UTM zone 17
+myPoints = SpatialPoints(rbind(
+				c(631674,  4835013),
+				c(623370, 4834801)),
+		proj4string=CRS("+proj=utm +zone=17 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+)
+
+# mercator project
+mercator = CRS("+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +a=6378137 +b=6378137 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+
+# transform utm to mercator
+spTransform(myPoints, mercator)
+# transform utm to long-lat to mercator
+spTransform(spTransform(myPoints, CRS("+proj=longlat")), mercator)
+
+
+}
 
 }

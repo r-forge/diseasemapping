@@ -33,7 +33,7 @@ openmap = function(x, zoom,
 	# do this because bbox(mybbox) != mybbox
 	# but bbox(extent(mybbox) = mybbox
 	x = bbox(extent(x))
-	x = SpatialPoints(t(x), crsIn)
+	x2 = x = SpatialPoints(t(x), crsIn)
 	x = bbox(spTransform(x, CRS("+proj=longlat")))
 	
 	xlim= x[1,]
@@ -46,22 +46,25 @@ openmap = function(x, zoom,
 	}
 	zoom = max(c(1, zoom-1))
 	}
+	if(verbose) cat("zoom is ", zoom, ", ", nTiles(xlim, ylim, zoom), "tiles\n")
 
 	
 	result =  getTiles(xlim,ylim, zoom=zoom,
 				path=path[1],
 				maxTiles=maxTiles,verbose=verbose)
 			
-	
-	resultProj = projectRaster(result, crs=crs, method="ngb")
+	if(all.equal(CRS(proj4string(result)), crs)==TRUE) {
+		resultProj = result
+	} else {
+		resultProj = projectRaster(result, crs=crs, method="ngb")
 	# for some reason a  bunch of NA's around the edges
-	extras = (dim(resultProj) - dim(result))[1:2]/2
-	if(any(extras > 0.5)) {
-		newextent = extend(extent(resultProj), -extras*res(resultProj))
-		resultProj = crop(resultProj, newextent)
-
+		extras = (dim(resultProj) - dim(result))[1:2]/2
+		if(any(extras > 0.5)) {
+			newextent = extend(extent(resultProj), -extras*res(resultProj))
+			resultProj = crop(resultProj, newextent)
+		}
+		resultProj@legend@colortable = result@legend@colortable		
 	}
-	resultProj@legend@colortable = result@legend@colortable		
 	
 	resultProj
 }
