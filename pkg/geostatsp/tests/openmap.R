@@ -101,16 +101,22 @@ if(exists("nsl", where="package:utils")) {
 data("murder")
 data("torontoPop")
 
-torTiles = openmap(murder)
+path = c("osm-no-labels", "osm-labels-en")
+torTiles = openmap(murder, path=path)
 png("toronto1.png")
-plot(torTiles)
+plot(torTiles[[1]])
+plot(torTiles[[2]],add=TRUE)
+
 plot(murder,
 		col='red', add=TRUE)
 dev.off()
 
-torTiles = openmap(torontoIncome)
+path = c("stamen-watercolor", "osm-labels-en")
+torTiles = openmap(torontoIncome,path=path)
 png("toronto2.png")
-plot(torTiles)
+
+plot(torTiles[[1]])
+plot(torTiles[[2]],add=TRUE)
 plot(murder,
 		col='red', add=TRUE)
 dev.off()

@@ -105,14 +105,18 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,cacheDir=tempdir(),
     }
 	
 	thisimage = raster(where)
-	newcolours = thisimage@legend@colortable
-	newcolours = newcolours[!newcolours %in% names(colourtable)]
-	toadd = seq(length(colourtable), len=length(newcolours),by=1)
-	names(toadd) = newcolours
-	colourtable = c(colourtable, toadd)
-	newvalues = colourtable[thisimage@legend@colortable]
+
+	if(!is.null(thisimage@legend@colortable)) {
+		newcolours = thisimage@legend@colortable
+		newcolours = newcolours[!newcolours %in% names(colourtable)]
+		toadd = seq(length(colourtable), len=length(newcolours),by=1)
+		names(toadd) = newcolours
+		colourtable = c(colourtable, toadd)
+		newvalues = colourtable[thisimage@legend@colortable]
+		
+		values(thisimage) = newvalues[values(thisimage)+1]
+	}
 	
-	values(thisimage) = newvalues[values(thisimage)+1]
 	extent(thisimage) = tileData[[ip]]$extent
 	proj4string(thisimage) = thecrs
 	
@@ -121,11 +125,9 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,cacheDir=tempdir(),
 	
 	}
 
-	if(TRUE) {
 	rasters$tolerance = Inf
 	rasters = do.call(merge, rasters)
 	rasters@legend@colortable = names(colourtable)
-	}
 	return(rasters)	
 }
 	

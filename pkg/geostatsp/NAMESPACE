@@ -24,7 +24,7 @@ S3method(GaussRF, SpatialPointsDataFrame)
 S3method(GaussRF, SpatialPoints)
 S3method(GaussRF, default)
 
-export(openmap, getTiles)
+export(openmap, getTiles, osmTiles)
 
 # functions depending on spatstat
 importFrom(spatstat,as.im,as.im.matrix)

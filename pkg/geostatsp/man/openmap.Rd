@@ -11,9 +11,10 @@ function in the \link[OpenStreetMap]{openmap} package
 	openmap(x, zoom, 
 	path="http://tile.openstreetmap.org/",
 	maxTiles = 9,
-	crs, cacheDir=tempdir(), verbose=FALSE)
+	crs, verbose=FALSE)
 	getTiles(xlim,ylim,zoom,path,maxTiles = 16,cacheDir=tempdir(),
 		timeOut=5*24*60*60,verbose=FALSE)
+	osmTiles(name)
 }
 
 \arguments{
@@ -52,6 +53,9 @@ and \code{x} has no crs, long-lat is used.}
     If TRUE, give information on where tiles are coming from, cache
     hits, etc
   }
+  \item{name}{name of a tile path, if missing a vector of all available tile paths
+  is returned.  \code{name} can be any of the names of the vector returned when 
+  \code{name} is unspecified.}
 }
 
 \details{
@@ -103,7 +107,7 @@ values(myraster) = seq(0,1,len=ncell(myraster))
 myPoints = SpatialPoints(myraster, proj4string=CRS(proj4string(myraster)))[
 	seq(1,ncell(myraster),len=5)]
 
-
+names(osmTiles())
 
 
 \dontrun{
@@ -117,7 +121,7 @@ myPoints = SpatialPoints(myraster, proj4string=CRS(proj4string(myraster)))[
 
 
 	mytiles = openmap(myPoints,  
-		path="b.www.toolserver.org/tiles/bw-mapnik", verbose=TRUE)
+		path=osmTiles("bw-mapnik"), verbose=TRUE)
 	plot(myPoints)
 	plot(mytiles, add=TRUE)
 	points(myPoints,col='red')
