@@ -94,8 +94,14 @@ if(exists("nsl", where="package:utils")) {
 	mycities = GNcities(myPoints,max=5)
 	myplot(myPoints)
 
-		
-		
+	}
+}		
+
+if(exists("nsl", where="package:utils")) {
+		if(length(utils::nsl("www.OpenStreetMap.org")) *
+						length(utils::nsl("tile.stamen.com"))
+				) {
+			
 	
 	# toronto
 data("murder")
@@ -104,23 +110,32 @@ data("torontoPop")
 path = c("osm-no-labels", "osm-labels-en")
 torTiles = openmap(murder, path=path)
 png("toronto1.png")
-plot(torTiles[[1]])
-plot(torTiles[[2]],add=TRUE)
+plot(torTiles[[grep("osm.no.labels", names(torTiles))]])
+plot(torTiles[[grep("osm.labels.en", names(torTiles))]],add=TRUE)
 
 plot(murder,
 		col='red', add=TRUE)
 dev.off()
+
+path = "stamen-watercolor" 
+torTiles = openmap(torontoIncome,path=path)
+
+png("toronto2.png")
+plotRGB(torTiles)
+plot(murder,
+		col='red', add=TRUE)
+dev.off()
+
 
 path = c("stamen-watercolor", "osm-labels-en")
 torTiles = openmap(torontoIncome,path=path)
-png("toronto2.png")
+png("toronto3.png")
 
-plot(torTiles[[1]])
-plot(torTiles[[2]],add=TRUE)
+plotRGB(torTiles[[1:3]])
+plot(torTiles[[4]],add=TRUE)
 plot(murder,
 		col='red', add=TRUE)
 dev.off()
-
 }
 
 }

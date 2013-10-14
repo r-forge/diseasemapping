@@ -1,6 +1,7 @@
 \name{openmap}
 \alias{openmap}
 \alias{getTiles}
+\alias{osmTiles}
 \title{Get map from a server}
 \description{
 	This function is a wrapper for the 

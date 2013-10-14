@@ -104,18 +104,32 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,cacheDir=tempdir(),
 			  verbose=verbose)
     }
 	
-	thisimage = raster(where)
+	thisimage = brick(where)
 
-	if(!is.null(thisimage@legend@colortable)) {
+	# if only one layer
+	# this must be a raster of integers referring to colour indexes	
+	if(nlayers(thisimage)==1) {
+		thisimage=thisimage[[1]]
 		newcolours = thisimage@legend@colortable
-		newcolours = newcolours[!newcolours %in% names(colourtable)]
-		toadd = seq(length(colourtable), len=length(newcolours),by=1)
-		names(toadd) = newcolours
-		colourtable = c(colourtable, toadd)
-		newvalues = colourtable[thisimage@legend@colortable]
+		if(length(newcolours)) {
+			newcolours = newcolours[!newcolours %in% names(colourtable)]
+			toadd = seq(length(colourtable), len=length(newcolours),by=1)
+			names(toadd) = newcolours
+			colourtable = c(colourtable, toadd)
+			newvalues = colourtable[thisimage@legend@colortable]
 		
-		values(thisimage) = newvalues[values(thisimage)+1]
-	}
+			values(thisimage) = newvalues[values(thisimage)+1]
+		}
+		names(thisimage) = gsub("^http://|/$", "", path)
+	} else if (nlayers(thisimage)>3){
+		thisimage = thisimage[[1:3]]
+
+		names(thisimage) = paste(
+				gsub("^http://|/$", "", path),
+				c("Red","Green","Blue"),
+				sep="")
+	} 
+	
 	
 	extent(thisimage) = tileData[[ip]]$extent
 	proj4string(thisimage) = thecrs
@@ -126,8 +140,15 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,cacheDir=tempdir(),
 	}
 
 	rasters$tolerance = Inf
-	rasters = do.call(merge, rasters)
-	rasters@legend@colortable = names(colourtable)
+	if(length(rasters) > 1) {
+		thenames = names(rasters[[1]])
+		rasters = do.call(merge, rasters)
+		names(rasters) = thenames			
+	} else {
+		rasters = rasters[[1]]
+	}
+	if(!is.null(colourtable))
+		rasters@legend@colortable = names(colourtable)
 	return(rasters)	
 }
 	

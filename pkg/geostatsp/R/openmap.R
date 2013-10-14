@@ -89,13 +89,15 @@ openmap = function(x, zoom,
 	if(verbose) cat("zoom is ", zoom, ", ", nTiles(xlim, ylim, zoom), "tiles\n")
 
 	result = NULL
+	
+
+	
 	for(Dpath in path) {
 		thistile = getTiles(xlim,ylim, zoom=zoom,
 				path=Dpath,
 				maxTiles=maxTiles,verbose=verbose)
-		names(thistile) = gsub("^http://|/$", "", Dpath)
 		if(length(result)) {
-		result =  stack(result, thistile)	
+			result =  stack(result, thistile)	
 		} else {
 			result = thistile
 		}
@@ -105,24 +107,21 @@ openmap = function(x, zoom,
 	if(all.equal(CRS(proj4string(result)), crs)==TRUE) {
 		resultProj = result
 	} else {
-		resultProj = stack(projectRaster(result, crs=crs, method="ngb"))
-
-		
-	  
+		resultProj = projectRaster(result, crs=crs, method="ngb")
 	}
-	
-	result <<- result
-	resultProj <<- resultProj
-	
+
+	resultProj = stack(resultProj)
+
 	for(D in 1:nlayers(resultProj)) {
 		thelen = length(result[[D]]@legend@colortable)
-		resultProj[[D]] = calc(resultProj[[D]], function(qq) {
-					qq[is.na(qq)] = thelen
-					qq
-				})
-		
-		resultProj[[D]]@legend@colortable =
+		if(thelen) {
+			thevalues = values(resultProj[[D]])
+			thevalues[is.na(thevalues)] = thelen
+			values(resultProj[[D]]) = thevalues
+			
+			resultProj[[D]]@legend@colortable =
 				c(result[[D]]@legend@colortable, NA)
+		}
 	}
 	
 	names(resultProj) = names(result)
