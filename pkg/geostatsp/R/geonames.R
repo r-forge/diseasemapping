@@ -21,7 +21,7 @@ GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 					proj4string=CRS(theproj))
 			
 			north = bbox(spTransform(
-							north, CRS("+proj=longlat")
+							north, CRS("+init=epsg:4326")
 					))			
 		}
 		
