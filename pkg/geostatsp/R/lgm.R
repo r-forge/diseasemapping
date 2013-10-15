@@ -1,5 +1,5 @@
 lgm <- function(data,  locations, covariates=NULL, formula=NULL,
-		rough=1, fixRough=TRUE,
+		shape=1, fixShape=TRUE,
 		aniso=FALSE, boxcox=1, fixBoxcox=TRUE,
 		nugget = 0, fixNugget = FALSE,
 		expPred=FALSE, nugget.in.prediction=TRUE){
@@ -81,10 +81,10 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 
 	
 	param = c(range=sd(data@coords[,1]),
-				rough=rough, nugget=nugget,boxcox=boxcox
+				shape=shape, nugget=nugget,boxcox=boxcox
 				)
-	paramToEstimate	= c("range", "rough","nugget","boxcox")[
-			!c(FALSE,fixRough,fixNugget,fixBoxcox)]		
+	paramToEstimate	= c("range", "shape","nugget","boxcox")[
+			!c(FALSE,fixShape,fixNugget,fixBoxcox)]		
 	if(aniso) {
 		param = c(param, aniso.angle.degrees=0,aniso.ratio=1)
 		paramToEstimate = c(paramToEstimate,c("aniso.angle.degrees","aniso.ratio"))		

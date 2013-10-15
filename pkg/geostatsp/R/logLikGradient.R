@@ -180,7 +180,7 @@ if(FALSE) {
 			data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 0.5))
 	)
 	
-	trueParamAniso = param=c(variance=2^2, range=0.2, rough=2,
+	trueParamAniso = param=c(variance=2^2, range=0.2, shape=2,
 			nugget=0,aniso.ratio=4,aniso.angle.degrees=10, nugget=0)
 	
 	mydat$U = GaussRF(mydat, par=trueParamAniso)
@@ -189,7 +189,7 @@ if(FALSE) {
 	
 	
 	myres = likfitLgm(mydat, Y ~ cov1 + cov2, 
-			param=c(range=0.1,nugget=0.1,rough=2), 
+			param=c(range=0.1,nugget=0.1,shape=2), 
 			paramToEstimate = c("range","nugget", "aniso.ratio","aniso.angle.degrees")
 	)
 	
@@ -200,9 +200,9 @@ if(FALSE) {
 			reml=FALSE, minustwotimes=TRUE)
 	
 	
-	param = myres$param[c("range","nugget","aniso.ratio","aniso.angle.degrees","rough")]
-	lower = c(range=0,nugget=0,aniso.ratio = 0, aniso.angle.degrees=-90, rough=0)
-	upper = c(range=Inf,nugget=Inf,aniso.ratio = Inf, aniso.angle.degrees=90, rough=Inf)
+	param = myres$param[c("range","nugget","aniso.ratio","aniso.angle.degrees","shape")]
+	lower = c(range=0,nugget=0,aniso.ratio = 0, aniso.angle.degrees=-90, shape=0)
+	upper = c(range=Inf,nugget=Inf,aniso.ratio = Inf, aniso.angle.degrees=90, shape=Inf)
 	
 			logLikGradient( param, 
 				mydat$Y, trendmat, mydat,
@@ -238,7 +238,7 @@ logLikGradient( param2,
 		upper=upper2, lower=lower2, eps=rep(0.001, length( param2))
 )
 
-toFix = c("aniso.angle.degrees","rough")
+toFix = c("aniso.angle.degrees","shape")
 param2 = param[!names(param) %in% toFix]
 upper2 = upper[!names(upper) %in% toFix]
 lower2 = lower[!names(lower) %in% toFix]

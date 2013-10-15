@@ -5,7 +5,7 @@ mydat = SpatialPointsDataFrame(cbind(runif(n), runif(n)),
 )
 
 
- trueParamAniso = param=c(variance=2^2, range=0.2, rough=2,
+ trueParamAniso = param=c(variance=2^2, range=0.2, shape=2,
 		nugget=0,aniso.ratio=4,aniso.angle.degrees=10, nugget=0)
 
 mydat$U = GaussRF(mydat, par=trueParamAniso)
@@ -17,7 +17,7 @@ mydat$Ybc = (mydat$Y*0.5+1)^2
  
 
 myres = likfitLgm(mydat, Ybc ~ cov1 + cov2, 
-		param=c(range=0.1,nugget=0,rough=2, 
+		param=c(range=0.1,nugget=0,shape=2, 
 				aniso.angle.degrees=0, aniso.ratio=2,
 				boxcox=0.4), 
 		paramToEstimate = c("range","nugget",
@@ -47,7 +47,7 @@ sr2 = swissRain
 sr2$elev = raster::extract(swissAltitude, sr2)
 swissFitAgain = likfitLgm(data=sr2, 
 		trend=rain~ elev,
-		param=c(range=1000,rough=1,nugget=0,boxcox=0.5),
+		param=c(range=1000,shape=1,nugget=0,boxcox=0.5),
 		paramToEstimate = c("range","nugget")
 )
 swissFitAgain$par		

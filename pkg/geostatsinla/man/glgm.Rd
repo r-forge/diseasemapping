@@ -11,9 +11,9 @@ Fits a generalized linear geostatistical model or a log-Gaussian Cox process
 using   \code{\link[INLA]{inla}} }
 \usage{
 glgm(data,  cells, covariates=NULL, formula=NULL, priorCI=NULL, 
-rough=1, buffer = 0, mesh=FALSE,...)
+shape=1, buffer = 0, mesh=FALSE,...)
 lgcp(data,  cells, covariates=NULL, formula=NULL, priorCI=NULL, 
-rough=1, buffer = 0, mesh=FALSE,...)
+shape=1, buffer = 0, mesh=FALSE,...)
 }
  
 \arguments{
@@ -39,7 +39,7 @@ can be overridden with a
 vector giving the prior quantiles for the range parameter.  List elements can be named: \code{range} for 
 the range parameter (not the scale); \code{sd} for the standard deviation (not the variance or precision); 
 \code{intercept} for the intercept; and \code{betas} for the regression coefficients.}
-\item{rough}{roughness parameter for the Matern correlation function, must be 1 or 2.}
+\item{shape}{Shape parameter for the Matern correlation function, must be 1 or 2.}
 \item{buffer}{Extra space padded around the data bounding box to reduce edge effects.}
 \item{mesh}{Currently unimplemented options for using a mesh rather than a grid for the Markov random field approximation.}
 \item{...}{Additional options passed to  \code{\link[INLA]{inla}}}
@@ -49,8 +49,8 @@ This function performs Bayesian inference for generalized linear geostatistical 
 approximation on a regular lattice is used for the spatial random effect.  The range parameter is the distance at which 
 the correlation is 0.13, or
 \deqn{cov[U(s+h), U(s)] = 
-		(2^(1-rough)/gamma(rough) )*d^rough*besselK(d, rough) } 
-\deqn{d= |h|*sqrt(8*rough)/range}
+		(2^(1-shape)/gamma(shape) )*d^shape*besselK(d, shape) } 
+\deqn{d= |h|*sqrt(8*shape)/range}
 The range parameter produced by \code{glgm} multiplies the range parameter from \code{INLA} by the cell size.
 }
 \value{

@@ -17,11 +17,11 @@ if(abs(param["aniso.ratio"]) >  10^(-4)){
 							-sin(angle), cos(angle)),2)
 	model=list("$", var=param["variance"],   
 			A=anisoMat,
-			list("matern", nu=param["rough"]))	
+			list("matern", nu=param["shape"]))	
 } else {
 	model=list("$", var=param["variance"],   
 			s=param["scaleRandomFields"],
-			list("matern", nu=param["rough"]))	
+			list("matern", nu=param["shape"]))	
 }	
 
 model 

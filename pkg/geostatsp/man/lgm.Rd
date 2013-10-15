@@ -8,8 +8,8 @@
 \description{
 Calculate MLE's of model parameters and perform spatial prediction. }
 \usage{
-lgm(data, locations, covariates = NULL, formula = NULL, rough = 1, 
-    fixRough = TRUE, aniso = FALSE, boxcox = 1, fixBoxcox = TRUE, 
+lgm(data, locations, covariates = NULL, formula = NULL, shape = 1, 
+    fixShape = TRUE, aniso = FALSE, boxcox = 1, fixBoxcox = TRUE, 
     nugget = 0, fixNugget = FALSE, expPred = FALSE, nugget.in.prediction = TRUE) 
 
 }
@@ -29,8 +29,8 @@ Covariates in \code{formula} but not in \code{data} will be extracted from \code
 number of cells in the X direction which predictions will be made on.  If the later
 the predictions will be a raster of square cells covering the bounding box of \code{locations}.}
 \item{formula}{A model formula for the fixed effects.}
-\item{rough}{Order of the Matern correlation}
-\item{fixRough}{Set to \code{FALSE} to estimate the Matern order}
+\item{shape}{Order of the Matern correlation}
+\item{fixShape}{Set to \code{FALSE} to estimate the Matern order}
 \item{aniso}{Set to \code{TRUE} to use geometric anisotropy.}
 \item{boxcox}{Box-Cox transformation parameter, set to 1 for no transformation.}
 \item{fixBoxcox}{Set to \code{FALSE} to estimate the Box-Cox parameter.}
@@ -71,7 +71,7 @@ data("swissRain")
  
 swissRes =  lgm(swissRain, locations=20, formula="rain",
 	covariates=swissAltitude, boxcox=0.5, fixBoxcox=TRUE, 
-	rough=1, fixRough=TRUE,
+	shape=1, fixShape=TRUE,
 	aniso=TRUE, nugget=0, fixNugget=TRUE,
 	nugget.in.prediction=FALSE
 	)

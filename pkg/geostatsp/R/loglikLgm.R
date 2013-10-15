@@ -182,7 +182,7 @@ loglikLgm = function(param,
 likfitLgm = function(
 		data, trend, 
 		coordinates=data,
-		param=c(range=1,nugget=0,rough=1),
+		param=c(range=1,nugget=0,shape=1),
 		upper=NULL,lower=NULL, parscale=NULL,
 		paramToEstimate = c("range","nugget"),
 		reml=TRUE) {
@@ -206,11 +206,11 @@ likfitLgm = function(
 	# limits
 	lowerDefaults = c(nugget=0,range=0,aniso.ratio=0.0001,
 			aniso.angle.radians=-pi/2,aniso.angle.degrees=-90,
-			rough=0.01,boxcox=-3,variance=0)
+			shape=0.01,boxcox=-3,variance=0)
 	
 	upperDefaults= c(nugget=Inf,range=Inf,aniso.ratio=Inf,
 			aniso.angle.radians=pi/2,aniso.angle.degrees=90,
-			rough=0,boxcox=3,variance=Inf)
+			shape=0,boxcox=3,variance=Inf)
 	
 
 	lowerDefaults[names(lower)]=lower
@@ -311,7 +311,7 @@ likfitLgm = function(
 	
 	# default starting values for parameters
 	paramDefaults = c(nugget=0,aniso.ratio=0, aniso.angle.degrees=0,
-			aniso.angle.radians=0,rough=1, boxcox=1,
+			aniso.angle.radians=0,shape=1, boxcox=1,
 			parscaleDefaults["range"])
 	
 	startingParam = param[paramToEstimate]

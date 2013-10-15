@@ -1,5 +1,5 @@
 glgm = function(data,  cells, covariates=NULL, formula=NULL, 
-		priorCI=NULL, rough=1, buffer=0,
+		priorCI=NULL, shape=1, buffer=0,
 		mesh=FALSE,...) {
 
 
@@ -263,7 +263,7 @@ if(FALSE) {
 	spaceFormula = paste(".~.+ f(space, model='matern2d', ",
 				"nrow=", nrow(cells), 
 				", ncol=", ncol(cells),
-				", nu=", rough, 
+				", nu=", shape, 
 				", hyper = list(",
 				 "range=list( param=c(",
 				      paste(ratePrior, collapse=","),

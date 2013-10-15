@@ -49,7 +49,7 @@ swissRain$sqrtrain = sqrt(swissRain$rain)
 
 # estimate parameters
 swissFit =  likfitLgm(swissRain, trend=sqrtrain ~ elevation, 
-		param=c(range=51700, nugget=0.11,rough=1,  
+		param=c(range=51700, nugget=0.11,shape=1,  
 				aniso.angle.degrees=37, aniso.ratio=7.6),
 		paramToEstimate = c("range","nugget", 
 				"aniso.angle.degrees", "aniso.ratio"))

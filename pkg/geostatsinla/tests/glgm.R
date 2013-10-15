@@ -107,7 +107,7 @@ data("loaloa")
 loaFit = glgm(loaloa,
 		formula=y ~ factor(land) + evi + elHigh + elLow, #+ f(villageID,model="iid"),
 		family="binomial", Ntrials = loaloa$N,cells=50, 
-		covariates=covList, rough=2, buffer=25000,
+		covariates=covList, shape=2, buffer=25000,
 		priorCI = list(sd=c(0.2, 4), range=c(20000,500000)))
 
 loaFit$par$summary

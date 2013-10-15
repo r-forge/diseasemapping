@@ -17,7 +17,7 @@ swissRain2 = swissRain [swissRain$land %in% landTable, ]
 
 swissFit3 = likfitLgm(data=swissRain2, 
 		trend=lograin~ elevation + factor(land),
-		param=c(range=46500, nugget=0.05,rough=1,  
+		param=c(range=46500, nugget=0.05,shape=1,  
 				aniso.angle.degrees=35, aniso.ratio=12),
 		paramToEstimate = c("range","nugget", 
 				"aniso.angle.degrees", "aniso.ratio"),
@@ -46,7 +46,7 @@ swissRain2$landFac = factor(swissRain2$land,
 
 swissFit4 = likfitLgm(data=swissRain2, 
 		trend=lograin~ elevation + landFac,
-		param=c(range=46500, nugget=0.05,rough=1,  
+		param=c(range=46500, nugget=0.05,shape=1,  
 				aniso.angle.degrees=35, aniso.ratio=12),
 		paramToEstimate = c("range","nugget", 
 				"aniso.angle.degrees", "aniso.ratio"),
@@ -69,7 +69,7 @@ swissRain2$landFac2 = as.character(swissRain2$landFac)
 
 swissFit5= likfitLgm(data=swissRain2, 
 		trend=lograin~ elevation + factor(landFac2),
-		param=c(range=46500, nugget=0.05,rough=1,  
+		param=c(range=46500, nugget=0.05,shape=1,  
 				aniso.angle.degrees=35, aniso.ratio=12),
 		paramToEstimate = c("range","nugget", 
 				"aniso.angle.degrees", "aniso.ratio"),

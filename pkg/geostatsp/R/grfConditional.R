@@ -24,7 +24,7 @@ if(nrow(locations) * ncol(locations) > 10^7) warning("there are lots of cells in
 
 
 	# the model
-	requiredParams = c("variance","range","rough")
+	requiredParams = c("variance","range","shape")
 	if(!all(requiredParams %in% names(param)))
 		warning("param has names", paste(names(param),collapse=","), 
 				" must have ", paste(requiredParams, collapse=","))

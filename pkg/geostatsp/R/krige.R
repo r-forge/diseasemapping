@@ -328,7 +328,7 @@ krige = function(data, trend,
 				N=as.integer(Ny), 
 				result=as.double(matrix(0, ncol(locations), length(coordinates))),
 				as.double(param["range"]),
-				as.double(param["rough"]),
+				as.double(param["shape"]),
 				as.double(param["variance"]),
 				as.double(param["aniso.ratio"]),
 				as.double(param["aniso.angle.radians"])
@@ -349,7 +349,7 @@ krige = function(data, trend,
 		
 	}
 
-	sums = mapply(krigeOneRow,1:nrow(locations))
+	sums = mcmapply(krigeOneRow,1:nrow(locations))
 
 	# row sums of cholVarDataInvCovDataPred
 	forExpected = sums[1:ncol(locations),]

@@ -37,6 +37,8 @@ export( GNcities)
 
 importFrom(geoR, as.geodata)
 
+importFrom(parallel, mcmapply)
+
 export(squareRaster)
 S3method(squareRaster, matrix) 
 S3method(squareRaster, Extent) 
@@ -52,9 +54,11 @@ S3method(maternGmrfPrec, dgCMatrix)
 S3method(maternGmrfPrec, matrix)
 S3method(maternGmrfPrec, default)
 
+
 export(variog)
 S3method(variog, SpatialPointsDataFrame)
 S3method(variog, default)
+
 
 export(variog.mc.env)
 S3method(variog.mc.env, SpatialPointsDataFrame)

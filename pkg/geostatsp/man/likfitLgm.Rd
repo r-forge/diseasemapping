@@ -16,7 +16,7 @@
 
 likfitLgm(data, trend, 
 		coordinates=data,
-		param=c(range=1,nugget=0,rough=1),
+		param=c(range=1,nugget=0,shape=1),
 		upper=NULL,lower=NULL, parscale=NULL,
 		paramToEstimate = c("range","nugget"),
 		reml=TRUE)
@@ -44,7 +44,7 @@ reflecting the distance matrix of these coordinates (though this is only permitt
 model is isotropic).
 }
 \item{param}{A vector of model parameters, with named elements being amongst 
-\code{range, nugget, boxcox, rough, aniso.angle.degrees, aniso.angle.radians,
+\code{range, nugget, boxcox, shape, aniso.angle.degrees, aniso.angle.radians,
 aniso.ratio}, and possibly \code{variance} (see \code{link{matern}}). 
  When calling \code{likfitLgm} this vector is a 
 combination of starting values for parameters to be estiamated and fixed values of parameters
@@ -95,7 +95,7 @@ mydat = SpatialPointsDataFrame(cbind(runif(n), runif(n)),
 	)
 
 # simulate a random field
-trueParam = c(variance=2^2, range=0.15, rough=2, nugget=0.5^2)
+trueParam = c(variance=2^2, range=0.15, shape=2, nugget=0.5^2)
 mydat$U = GaussRF(mydat, param=trueParam)
 
 # add fixed effects
@@ -110,7 +110,7 @@ par(mfrow=c(1,1))
 
 
 myres = likfitLgm(mydat, Y ~ cov1 + cov2, 
-	param=c(range=0.1,nugget=0.1,rough=2), 
+	param=c(range=0.1,nugget=0.1,shape=2), 
 	paramToEstimate = c("range","nugget")
 	)
 
@@ -118,7 +118,7 @@ myres$summary
 
 # without a nugget
 myresNoN = likfitLgm(mydat, Y ~ cov1 + cov2, 
-	param=c(range=0.1,nugget=0,rough=1), paramToEstimate = c("range")	
+	param=c(range=0.1,nugget=0,shape=1), paramToEstimate = c("range")	
 	)
 
 myresNoN$summary
@@ -156,7 +156,7 @@ temp=loglikLgm(param=myres$param,
 # an anisotropic example
 \dontrun{ 
 
-trueParamAniso = param=c(variance=2^2, range=0.2, rough=2,
+trueParamAniso = param=c(variance=2^2, range=0.2, shape=2,
 	 nugget=0,aniso.ratio=4,aniso.angle.degrees=10, nugget=0)
 
 mydat$U = GaussRF(mydat, par=trueParamAniso)
@@ -178,7 +178,7 @@ par(mar=oldmar)
 
 
 myres = likfitLgm(mydat, Y ~ cov1 + cov2, 
-	param=c(range=0.1,nugget=0,rough=2, aniso.angle.degrees=0, aniso.ratio=2), 
+	param=c(range=0.1,nugget=0,shape=2, aniso.angle.degrees=0, aniso.ratio=2), 
 	paramToEstimate = c("range","nugget","aniso.ratio","aniso.angle.degrees") 
 	)
 

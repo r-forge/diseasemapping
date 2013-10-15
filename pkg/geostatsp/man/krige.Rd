@@ -72,7 +72,7 @@ swissRain$elevation = extract(swissAltitude, swissRain)
 \dontrun{
 swissFit = likfitLgm(data=swissRain, 
 			trend=lograin~ elevation,
-			param=c(range=46500, nugget=0.05,rough=1,  
+			param=c(range=46500, nugget=0.05,shape=1,  
 					aniso.angle.degrees=35, aniso.ratio=12),
 			paramToEstimate = c("range","nugget", 
 				"aniso.angle.degrees", "aniso.ratio"),
@@ -87,7 +87,7 @@ dput(myParams)
 myParams=structure(c(4.49732366951939, 0.000216147764497527, 46575.4897705083, 
 0.0918626121620231, 37.3640527963592, 11.9247798102433, 1, 0.686396444665454
 ), .Names = c("(Intercept)", "elevation", "range", "nugget", 
-"aniso.angle.degrees", "aniso.ratio", "rough", "variance"))
+"aniso.angle.degrees", "aniso.ratio", "shape", "variance"))
 myTrend =lograin~ elevation
 
 
@@ -107,7 +107,7 @@ plot(swissBorder, add=TRUE)
 \dontrun{
 swissFit2 = likfitLgm(data=swissRain, 
 			trend=rain~1,
-			param=c(range=52000, nugget=0.1,rough=1, boxcox=0.5,
+			param=c(range=52000, nugget=0.1,shape=1, boxcox=0.5,
 					aniso.angle.degrees=35, aniso.ratio=8),
 			paramToEstimate = c("range","nugget", 
 				"aniso.angle.degrees", "aniso.ratio"),
@@ -120,7 +120,7 @@ dput(myParams2)
 }
 myParams2=structure(c(20.7805835664033, 51161.049007108, 8.64565931800056, 
 37.0906650998427, 7.34077366178755, 1, 0.5, 79.3696192640485), .Names = c("(Intercept)", 
-"range", "nugget", "aniso.angle.degrees", "aniso.ratio", "rough", 
+"range", "nugget", "aniso.angle.degrees", "aniso.ratio", "shape", 
 "boxcox", "variance"))
 myTrend2=rain~1
 
