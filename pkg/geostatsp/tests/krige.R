@@ -86,3 +86,27 @@ pdf("krige5.pdf")
 plot(swissKrige5[["predict"]])	
 plot(swissBorder, add=TRUE)
 dev.off()
+
+
+# test parallel
+bigRaster = raster(extent(swissBorder), ncols=600, nrows=400, 
+		crs=swissRain@proj4string)	
+
+
+options(mc.cores = 1)
+unix.time(
+		krige(data=swissRain2, trend = swissFit3$trend,
+				param=swissFit3$param, 
+				covariates = list(elevation = swissAltitude,land=swissLandType),
+				locations = bigRaster, expPred=TRUE)
+
+)
+
+
+options(mc.cores = 4)
+
+unix.time(krige(data=swissRain2, trend = swissFit3$trend,
+				param=swissFit3$param, 
+				covariates = list(elevation = swissAltitude,land=swissLandType),
+				locations = bigRaster, expPred=TRUE)
+)

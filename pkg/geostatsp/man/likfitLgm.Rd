@@ -89,7 +89,7 @@ and the variance matrix of the coefficient MLE's.
 \code{\link{lgm}}
 }
 \examples{
-n=100
+n=200
 mydat = SpatialPointsDataFrame(cbind(runif(n), runif(n)), 
 	data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 0.5))
 	)
@@ -113,6 +113,8 @@ myres = likfitLgm(mydat, Y ~ cov1 + cov2,
 	param=c(range=0.1,nugget=0.1,shape=2), 
 	paramToEstimate = c("range","nugget")
 	)
+
+
 
 myres$summary
 

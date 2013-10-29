@@ -1,8 +1,8 @@
 Package: geostatsinla
 Type: Package
 Title: Geostatistics with INLA 
-Version: 0.4.1
-Date: 2013-10-15
+Version: 0.4.2
+Date: 2013-10-28
 Depends: sp, raster, geostatsp 
 Imports:  INLA ,spdep 
 Suggests: diseasemapping
