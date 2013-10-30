@@ -94,6 +94,10 @@ if(exists("nsl", where="package:utils")) {
 	mycities = GNcities(myPoints,max=5)
 	myplot(myPoints)
 
+	# one point only
+	mytiles = openmap(coordinates(myPoints)[1,], zoom=4)
+	myplot(myPoints)
+	
 	}
 }		
 

@@ -139,7 +139,6 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,cacheDir=tempdir(),
 	
 	}
 
-	rasters$tolerance = Inf
 	if(length(rasters) > 1) {
 		thenames = names(rasters[[1]])
 		rasters = do.call(merge, rasters)
@@ -147,8 +146,20 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,cacheDir=tempdir(),
 	} else {
 		rasters = rasters[[1]]
 	}
-	if(!is.null(colourtable))
-		rasters@legend@colortable = names(colourtable)
+	if(!is.null(colourtable)) {
+ 		# re-order colours so most common colours are first
+		thetable = sort(table(values(rasters)),decreasing=TRUE)
+		newvalues = rep(NA, length(colourtable))
+		names(newvalues) = as.character(seq(0,by=1,len= length(colourtable)))
+		newvalues[names(thetable)] = seq(0,by=1,len=length(thetable))
+			
+		values(rasters) = newvalues[values(rasters)+1]
+		newvalues = newvalues[!is.na(newvalues)]
+		
+		rasters@legend@colortable = names(colourtable)[
+				as.integer(names(thetable))+1]
+
+	}  
 	return(rasters)	
 }
 	
@@ -166,7 +177,10 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,cacheDir=tempdir(),
     if (age > timeOut){
       if(verbose)cat("Tile aged ",age," expired from cache\n")
       retrieve = TRUE
-    }else{
+    }else if(file.info(tilePath)$size<1) {
+		if(verbose)cat("Tile file is too small, retreiving again\n")
+		retrieve = TRUE
+	} else {
       if(verbose){cat("Tile found in cache\n")}
     }
   }

@@ -70,9 +70,27 @@ openmap = function(x, zoom,
 		crsIn = CRS(crsIn)
 
 	
+	# try to get an extent
+
+	xextent = try(extent(x), silent=TRUE)
+	if(class(xextent)=="try-error") {
+		# no extent. if it's a vector
+		# of length 2, assumit it's a point
+		if(is.vector(x)) {
+			if(length(x)==2) {
+				xextent = extent(x[c(1,1,2,2)])
+			} else {
+				 warning("if x is a vector extent(x[c(1,1,2,2)]")
+			}
+		} else {
+			warning("can't get an extent from x")
+		}
+		
+	}
+	
 	# do this because bbox(mybbox) != mybbox
 	# but bbox(extent(mybbox) = mybbox
-	x = bbox(extent(x))
+	x = bbox(xextent)
 	x2 = x = SpatialPoints(t(x), crsIn)
 	x = bbox(spTransform(x, CRS("+init=epsg:4326")))
 	
@@ -81,7 +99,7 @@ openmap = function(x, zoom,
 		
 	if(missing(zoom)) {
 	zoom = 1
-	while(nTiles(xlim, ylim, zoom) <= maxTiles) {
+	while(nTiles(xlim, ylim, zoom) <= maxTiles & zoom <= 18) {
 		zoom = zoom + 1
 	}
 	zoom = min(c(18,max(c(1, zoom-1))))
