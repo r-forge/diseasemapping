@@ -2,7 +2,8 @@ glgm = function(data,  cells, covariates=NULL, formula=NULL,
 		priorCI=NULL, shape=1, buffer=0,
 		mesh=FALSE,...) {
 
-
+	# list of additional arguments
+	thedots = list(...)
 	
 	# create raster for prediction
 	if(!length(grep("^Raster",class(cells)))) { 
@@ -79,7 +80,6 @@ glgm = function(data,  cells, covariates=NULL, formula=NULL,
 	alltermsWithF = gsub("\\)$", "", allterms)
 	allterms = gsub("^factor\\(", "", alltermsWithF)
 	
-
 	
 	# convert covariates to raster stack with same resulution of prediction raster.
 	if(!is.null(covariates)){
@@ -197,13 +197,24 @@ glgm = function(data,  cells, covariates=NULL, formula=NULL,
 	}
 	# data is now a data frame.
  
-
-
-	# priors
-	if("sd" %in% names(priorCI)) {
-		obj1 = sort(priorCI$sd^-2)
+	# priors for spatial standard deviation and nugget std dev.
+	sdNames = unique(c("sd",grep("^sd", names(priorCI), value=TRUE)))
+	# if model is Gaussian, look for prior for sdNugget
+	if(!any(names(thedots)=="family")) {
+		thedots$family =  "gassian"
+	}
+	if(thedots$family=="gaussian") {
+		sdNames = unique(c(sdNames, "sdNugget"))
+	}
+	
+	precPrior=list()
+	for(Dsd in sdNames) {
+			
+		if(any(names(priorCI)==Dsd)) {
+		obj1 = sort(priorCI[[Dsd]]^-2)
 		cifun = function(pars) {
-				theci = 	pgamma(obj1, shape=pars[1], rate=pars[2],log.p=T)
+				theci = 	pgamma(obj1, shape=pars[1], 
+						rate=pars[2],log.p=T)
 				
 				(log(0.025) - theci[1])^2 +
 				(2*(log(0.975) - theci[2]))^2		
@@ -214,9 +225,9 @@ glgm = function(data,  cells, covariates=NULL, formula=NULL,
 			
 		precPrior2=optim(c(.5,.5/mean(obj1)), cifun, 
 				lower=c(0.000001,0.0000001),method="L-BFGS-B")
-		precPrior = precPrior2$par
-		names(precPrior ) = c("shape","rate")
-		
+		names(precPrior2$par) = c("shape","rate")
+		precPrior[[Dsd]] = precPrior2$par 
+				
  		#pgamma(obj1, shape= precPrior["shape"], rate=precPrior["rate"],log.p=F)
 		#pgamma(obj1, shape= precPrior["shape"], rate=precPrior["rate"],log.p=T)
 		#log(c(0.025, 0.975))
@@ -226,10 +237,11 @@ glgm = function(data,  cells, covariates=NULL, formula=NULL,
  		#1/sqrt(qgamma(c(0.975,0.025), shape=precPrior["shape"], rate=precPrior["rate"]))
 		#priorCI$sd
 		
-	} else {
-		precPrior = c(shape=0.01, rate=0.01)
+		} else {
+			precPrior[[Dsd]] = c(shape=0.01, rate=0.01)
+		}
 	}
-
+		
 	if("range" %in% names(priorCI)) {
 		if(priorCI$range[1] < xres(cells)/4) {
 			priorCI$range[1] = xres(cells)/4
@@ -269,7 +281,7 @@ if(FALSE) {
 				      paste(ratePrior, collapse=","),
 				"), prior='loggamma'),",
 				"prec=list( param=c(",
-				paste(precPrior, collapse=","),
+				paste(precPrior$sd, collapse=","),
 				"),prior='loggamma')",
 				" ) )" 
 			)
@@ -387,14 +399,34 @@ for(D in 1:nrow(lincombMat)) {
 #		forInla$Ntrials = forInla$Ntrials[]
 #	}
 	# call inla
-	inlaResult = INLA::inla(formula, data=data, 
-			lincomb=thelincombs, 
+	
+	if(!is.null(thedots$lincomb))
+		thelincombs = c(thelincombs, thedots$lincomb)
+
+	forInla = list(formula=formula, data=data, 
+			lincomb=thelincombs)
+	forInla = c(forInla, thedots)
+	
+	# if model is gaussian, add prior for nugget
+	if(!is.null(precPrior$sdNugget)) {
+		forInla$control.family$hyper$prec =
+				list(prior="loggamma",
+						param=precPrior$sdNugget
+				) 
+	}
+
+	
+	
+	inlaResult = do.call(INLA::inla, forInla) #(formula, data=data, 
+#			lincomb=thelincombs, 
  	 #	family="poisson")
 	#	family="binomial",verbose=T, Ntrials=Ntrials)
-	... )
-		
+#	... )
+
+
  	# parameter priors for result
-	
+
+
 	params = list(
 			range = list(userPriorCI=priorCI$range, 
 					priorCI = 
@@ -406,16 +438,7 @@ for(D in 1:nrow(lincombMat)) {
 							qgamma(c(0.975,0.025), 
 									shape=ratePrior["shape"], 
 									rate=ratePrior["rate"]),
-					params.intern = ratePrior),
-			sd = list(userPriorCI=priorCI$sd, 
-					priorCI = 
-							1/sqrt(
-									qgamma(c(0.975,0.025), 
-											shape=precPrior["shape"], 
-											rate=precPrior["rate"])),
-					params.intern=precPrior)
-	)
-	
+					params.intern = ratePrior))
 	rangeLim = 	qgamma(c(0.001,0.999), 
 			shape=ratePrior["shape"], 
 			rate=ratePrior["rate"])
@@ -426,32 +449,39 @@ for(D in 1:nrow(lincombMat)) {
 			x=rangeSeq,
 			y=dgamma(rangeSeqCells, shape=ratePrior["shape"], 
 					rate=ratePrior["rate"])  / xres(cells)
-		)
+	)
 	if(FALSE) {
 		plot(params$range$prior, type='l')
-	
+		
 		sum(params$range$prior[,"y"])*range(diff(params$range$prior[,"x"]))
 	}	
 	
+
+	
+	for(Dsd in names(precPrior)) {
+		params[[Dsd]] = list(userPriorCI=priorCI[[Dsd]], 
+			priorCI = 1/sqrt(
+				qgamma(c(0.975,0.025), 
+						shape=precPrior[[Dsd]]["shape"], 
+						rate=precPrior[[Dsd]]["rate"])),
+					params.intern=precPrior[[Dsd]])
+	
 	precLim = 	qgamma(c(0.999,0.001), 
-			shape=precPrior["shape"], 
-			rate=precPrior["rate"])
+			shape=precPrior[[Dsd]]["shape"], 
+			rate=precPrior[[Dsd]]["rate"])
 	sdLim = 1/sqrt(precLim)
 	sdSeq = seq(min(sdLim), max(sdLim), len=1000)
 	precSeq = sdSeq^(-2)
-	params$sd$prior=cbind(
+	params[[Dsd]]$prior=cbind(
 			x=sdSeq,
-			y=dgamma(precSeq, shape=precPrior["shape"], 
-					rate=precPrior["rate"]) *2* (precSeq)^(3/2) 
+			y=dgamma(precSeq, shape=precPrior[[Dsd]]["shape"], 
+					rate=precPrior[[Dsd]]["rate"]) *2* (precSeq)^(3/2) 
 	)
-	if(FALSE) {
-		plot(params$sd$prior, type='l')
-		
-		sum(params$sd$prior[,"y"])*range(diff(params$sd$prior[,"x"]))
-	}	
-	
-	
 
+	}
+
+
+	
 	# random into raster
 	if("summary.random" %in% names(inlaResult)) {
 		forRast = 	as.matrix(inlaResult$summary.random[["space"]])#[,-1])
@@ -551,14 +581,9 @@ resRasterFitted =
 	
 	
 	# posterior distributions
-params$sd$posterior=inlaResult$marginals.hyperpar[["Precision for space"]]
-params$sd$posterior[,"y"] = params$sd$posterior[,"y"] * 2*  
-		params$sd$posterior[,"x"]^(3/2) 
-params$sd$posterior[,"x"] = 1/sqrt(params$sd$posterior[,"x"])  
-params$sd$posterior = params$sd$posterior[seq(dim(params$sd$posterior)[1],1),]		
 
-# sum(c(0,diff(params$sd$posterior[,"x"])) * params$sd$posterior[,"y"])
-# sum(c(0,diff(params$sd$prior[,"x"])) * params$sd$prior[,"y"])
+
+
 
 params$range$posterior=inlaResult$marginals.hyperpar[["Range for space"]]
 params$range$posterior[,"x"] =  xres(cells) * params$range$posterior[,"x"]
@@ -572,57 +597,54 @@ params$range$posterior[,"y"] = params$range$posterior[,"y"] / xres(cells)
 params$summary = inlaResult$summary.fixed
 
 thecols = paste(c("0.975", "0.5","0.025"), "quant", sep="")
-params$summary = rbind(params$summary,
-		sd=NA, range=NA)
 
-
-params$summary["sd", thecols] = 
-				1/sqrt(inlaResult$summary.hyperpar["Precision for space",
-								thecols
-								])
-
-				thecols =c("mean","sd",thecols,"mode") 
-		params$summary["range",thecols]=				
-						xres(cells)*
-								inlaResult$summary.hyperpar[
-										"Range for space",
-									thecols
-								]
-		
-		params$summary["sd","mean"] =sum(
-		1/sqrt(inlaResult$marginals.hyperpar[["Precision for space"]][,"x"])*
-				c(0,diff(inlaResult$marginals.hyperpar[["Precision for space"]][,"x"]))*
-				inlaResult$marginals.hyperpar[["Precision for space"]][,"y"]
+thesd = c(
+		sdNugget= grep("^Precision[[:print:]]*Gaussian observations$", 
+				names(inlaResult$marginals.hyperpar), value=TRUE),
+		sd = grep("^Precision[[:print:]]*space$", 
+				names(inlaResult$marginals.hyperpar), value=TRUE)
 )
 
-precGauName = "Precision for the Gaussian observations"
-if(precGauName %in% names(inlaResult$marginals.hyperpar)) {
-	params$summary = rbind(params$summary,
-			sdNugget=NA)
+params$summary = rbind(params$summary,
+		matrix(NA, nrow=length(thesd)+1, ncol=ncol(params$summary),
+				dimnames = list(c("range", names(thesd)), NULL))
+)
 
-	colnames = paste(c("0.975", "0.5","0.025"), "quant", sep="")
-	params$summary["sdNugget",colnames] = 
-					1/sqrt(inlaResult$summary.hyperpar[precGauName,colnames						
-							])
 
-			params$summary["sdNugget","mean"] =sum(
-				1/sqrt(inlaResult$marginals.hyperpar[[precGauName]][,"x"])*
-						c(0,diff(inlaResult$marginals.hyperpar[[precGauName]][,"x"]))*
-						inlaResult$marginals.hyperpar[[precGauName]][,"y"]
+# convert precisions to standard deviations
+for(Dsd in names(thesd)) {
+	
+	params[[Dsd]]$posterior=
+			inlaResult$marginals.hyperpar[[thesd[Dsd]]]
+	params[[Dsd]]$posterior[,"y"] = params[[Dsd]]$posterior[,"y"] * 2*  
+			params[[Dsd]]$posterior[,"x"]^(3/2) 
+	params[[Dsd]]$posterior[,"x"] = 1/sqrt(params[[Dsd]]$posterior[,"x"])  
+	params[[Dsd]]$posterior = params[[Dsd]]$posterior[
+			seq(dim(params[[Dsd]]$posterior)[1],1),]		
+
+	params$summary[Dsd, thecols] = 
+				1/sqrt(inlaResult$summary.hyperpar[
+								thesd[Dsd],thecols])
+
+		
+	params$summary[Dsd,"mean"] =sum(
+		1/sqrt(inlaResult$marginals.hyperpar[[thesd[Dsd]]][,"x"])*
+			c(0,diff(inlaResult$marginals.hyperpar[[thesd[Dsd]]][,"x"]))*
+				inlaResult$marginals.hyperpar[[thesd[Dsd]]][,"y"]
 	)
-	
-	params$sdNugget = list(posterior=
-					inlaResult$marginals.hyperpar[[precGauName]]
-	)
-	params$sdNugget$posterior[,"y"] = params$sdNugget$posterior[,"y"] * 2*  
-			params$sdNugget$posterior[,"x"]^(3/2) 
-	params$sdNugget$posterior[,"x"] = 1/sqrt(params$sdNugget$posterior[,"x"])  
-	params$sdNugget$posterior = 
-			params$sdNugget$posterior[seq(dim(params$sdNugget$posterior)[1],1),]		
-	
-	
 }
-	resRaster=stack(resRasterRandom, resRasterFitted)
+
+# put range in summary, in units of distance, not numbers of cells
+thecolsFull =c("mean","sd",thecols,"mode") 
+params$summary["range",thecolsFull]=				
+		xres(cells)*
+		inlaResult$summary.hyperpar[
+				"Range for space",
+				thecolsFull
+		]
+
+
+resRaster=stack(resRasterRandom, resRasterFitted)
 
 #	if(!is.null(smallBbox))
 #		resRaster = crop(resRaster, extent(smallBbox))

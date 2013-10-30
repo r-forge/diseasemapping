@@ -116,6 +116,12 @@ png("loaFitted.png")
 plot(loaFit$raster[["predict.invlogit"]])
 dev.off()
 
-
+# prior for observation standard deviation
+swissFit =  glgm(swissRain, cells=30, formula="lograin",
+		covariates=swissAltitude, family="gaussian", buffer=20000,
+		priorCI=list(sd=c(0.1, 2), range=c(50000,500000), 
+				sdNugget=c(0.1, 2)), 
+		control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE)
+)
 
 
