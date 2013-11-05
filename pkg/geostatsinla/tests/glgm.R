@@ -125,3 +125,22 @@ swissFit =  glgm(swissRain, cells=30, formula="lograin",
 )
 
 
+data(Germany)
+g = system.file("demodata/germany.graph", package="INLA")
+source(system.file("demodata/Bym-map.R", package="INLA"))
+summary(Germany)
+
+## just make a duplicated column
+Germany = cbind(Germany,region.struct=Germany$region)
+
+# standard BYM model (without covariates)
+formula1 = Y ~ f(region.struct,model="besag",graph=g) +
+		f(region,model="iid")
+
+result1  =  inla(formula1,family="poisson",data=Germany,E=E)
+
+result2 = inla(
+	data = data.frame(y=rnorm(1:12), space=1:12),
+	formula = y ~ f(space, model="matern2d", nrow=3, ncol=4, nu=2)
+)
+

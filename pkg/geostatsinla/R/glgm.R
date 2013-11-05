@@ -415,7 +415,7 @@ for(D in 1:nrow(lincombMat)) {
 				) 
 	}
 
-	
+ 
 	
 	inlaResult = do.call(INLA::inla, forInla) #(formula, data=data, 
 #			lincomb=thelincombs, 
@@ -624,7 +624,7 @@ for(Dsd in names(thesd)) {
 
 	params$summary[Dsd, thecols] = 
 				1/sqrt(inlaResult$summary.hyperpar[
-								thesd[Dsd],thecols])
+								thesd[Dsd],rev(thecols)])
 
 		
 	params$summary[Dsd,"mean"] =sum(

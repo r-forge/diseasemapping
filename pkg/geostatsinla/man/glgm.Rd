@@ -37,7 +37,8 @@ can be overridden with a
 }
 \item{priorCI}{list with named elements of 0.025 and 0.975 quantiles of prior distributions, or a single 
 vector giving the prior quantiles for the range parameter.  List elements can be named: \code{range} for 
-the range parameter (not the scale); \code{sd} for the standard deviation (not the variance or precision); 
+the range parameter (not the scale); \code{sd} for the standard deviation (not the variance or precision);
+\code{sdNugget} for the standard deviation of the observation error for Gaussian data; 
 \code{intercept} for the intercept; and \code{betas} for the regression coefficients.}
 \item{shape}{Shape parameter for the Matern correlation function, must be 1 or 2.}
 \item{buffer}{Extra space padded around the data bounding box to reduce edge effects.}
@@ -78,9 +79,9 @@ data(swissRain)
 swissRain$lograin = log(swissRain$rain)
 swissFit =  glgm(swissRain, cells=30, formula="lograin",
 	covariates=swissAltitude, family="gaussian", buffer=20000,
-	priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
-	control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
-	control.family=list(hyper=list(prec=list(prior="loggamma", param=c(.1, .1))))
+	priorCI=list(sd=c(0.01, 5), range=c(50000,500000),
+		sdNugget = c(0.01, 5)), 
+	control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE)
 	)
 
 swissFit$parameters$summary

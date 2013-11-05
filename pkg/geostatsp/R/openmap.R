@@ -87,7 +87,8 @@ openmap = function(x, zoom,
 
 	
 	# try to get an extent
-
+	
+	
 	xextent = try(extent(x), silent=TRUE)
 	if(class(xextent)=="try-error") {
 		# no extent. if it's a vector
@@ -153,6 +154,12 @@ openmap = function(x, zoom,
 		resultProj = result
 	} else {
 		resultProj = projectRaster(result, crs=crs, method="ngb")
+		# now trim to original bounding box
+		pointsOld = SpatialPoints(t(bbox(result)), 
+				proj4string=CRS(proj4string(result)))
+		pointsNew = spTransform(pointsOld, 
+				CRS(proj4string(resultProj)))
+		resultProj = crop(resultProj, pointsNew)
 	}
 
 	resultProj = stack(resultProj)

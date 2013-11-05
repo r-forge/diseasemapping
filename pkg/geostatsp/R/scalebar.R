@@ -11,12 +11,16 @@ scalebar = function(crs, pos="bottomright",scale.cex=1,...) {
 	
 	xpoints = t(bbox(extent(par("usr"))))
 	
+	#              " 2000 km "   	
+	dashTemplate = " 2000 km "
 	xpoints = rbind(xpoints, 
 			centre = apply(xpoints, 2, mean))
 	xpoints = rbind(xpoints, 
 			right = c(xpoints["max",1], xpoints["centre",2]),
-			dashright = xpoints["centre",]+c(strwidth("W"),0))
+			dashright = xpoints["centre",]+
+					c(strwidth(dashTemplate),0))
 	xpoints = SpatialPoints(xpoints, proj4string=crs)
+
 
 	
 	xll = spTransform(xpoints, CRS("+init=epsg:4326"))
@@ -37,14 +41,14 @@ scalebar = function(crs, pos="bottomright",scale.cex=1,...) {
 
 	dashdist = spDists(xll[c("centre","dashright"),], 
 			longlat=TRUE)[1,2]*1000 
-	bardist = 	dashdist*6*scale.cex
+	bardist = 	dashdist*scale.cex
 		
 	theb = log10(bardist)
 	candidates = 10^c(floor(theb), ceiling(theb))
 	candidates = c(candidates[1]*c(1,2,5), candidates[2])
 	segdist=candidates[order(abs(candidates - bardist))[1]]
 	
-	segscale = segdist / dashdist
+	segscale = ( strwidth(dashTemplate)/strwidth("W") ) *segdist / dashdist
 	
 
 
@@ -57,15 +61,25 @@ scalebar = function(crs, pos="bottomright",scale.cex=1,...) {
 	}
 
 	eps = 0.175
+	
+	dimIn = par("pin")
+	dimUser = par("usr")
+	dimUser = c(dimUser[2]-dimUser[1], dimUser[4]-dimUser[3])
+	InPerUnit = dimIn/dimUser
+	
 
 	theN = c(0, 0+1i, eps+1i, (1-eps)+1.5*eps*1i,
 			(1-eps)+1i, 1+1i, 1+0i,
 			(1-eps)+0i, eps+(1-1.5*eps)*1i,
-			eps) + 0.5+0.5*1i
-	theHat = c(-0.25+1.1i, 0.5+1.75i, 1.25+1.1i)
-	theHat = c(theHat, rev(theHat) + 2*eps*1i)+ 0.5+0.5*1i
-	theN =  strwidth("N")*theN
-	theHat =  strwidth("N") * theHat
+			eps) - 0.5 - 0.5*1i
+	theHat = c(-0.25+1i, 0.5+1.6i, 1.25+1i)
+	theHat = c(theHat, rev(theHat) + 1.5*eps*1i)- 0.5-0.5*1i
+	theN =  strwidth("N")*Re(theN) + 
+			1i*strwidth("N")*InPerUnit[1]/InPerUnit[2]*
+			Im(theN)
+	theHat =  strwidth("N") * Re(theHat)+ 
+			1i*strwidth("N")*InPerUnit[1]/InPerUnit[2]*
+			Im(theHat)
 	
 	theN = theN * exp(1i*north)
 	theHat = theHat * exp(1i*north)
@@ -75,30 +89,34 @@ scalebar = function(crs, pos="bottomright",scale.cex=1,...) {
 	thelabel = paste(segdist, lunits,sep="")
 	
 	forLegend = list(...)
-	if(is.null(forLegend$col)) {
-		forLegend$col="black"
-	} else {
-		forLegend$col= forLegend$col[1]
+
+	
+	defaults = list(col='black', cex=1,
+			xjust=0.7, inset=0.001,
+			x=pos, text.width=strwidth("I"))
+
+	for(D in names(defaults)) {
+		if(is.null(forLegend[[D]]))
+			forLegend[[D]] = defaults[[D]]			
 	}
-	if(is.null(forLegend$cex)) {
-		forLegend$cex = 1
-	}
-	if(is.null(forLegend$pt.cex)) {
-		forLegend$pt.cex = forLegend$cex
-	}
-	if(is.null(forLegend$text.col)) {
-		forLegend$text.col = forLegend$col
-	}
-	if(is.null(forLegend$title.adj)) {
-		forLegend$title.adj = 0.1
+
+	defaults = list(pt.cex=forLegend$cex,
+			text.col = forLegend$col,
+			title.adj = 0.5*(segscale*strwidth("W")/
+						(segscale*strwidth("W") + 
+							2*strwidth("W")+
+							forLegend$text.width)))
+	
+	for(D in names(defaults)) {
+		if(is.null(forLegend[[D]]))
+			forLegend[[D]] = defaults[[D]]			
 	}
 	
-	forLegend$x = pos
 	forLegend$lty = 1
 	forLegend$pch = NA
 	forLegend$seg.len = segscale
 	forLegend$title=thelabel
-	forLegend$legend = "       "
+	forLegend$legend = NA
 	forLegend$lwd=3
 		
 	
@@ -112,5 +130,5 @@ scalebar = function(crs, pos="bottomright",scale.cex=1,...) {
 	 
 
 	 
-	 return(invisible())	
+	 return(invisible(thelegend))	
 }
