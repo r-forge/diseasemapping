@@ -9,16 +9,23 @@ scalebar = function(crs, pos="bottomright",scale.cex=1,...) {
 
 #	dash = "\u2517\u2501\u2501\u2501\u2537\u2501\u2501\u2501\u251B"
 	
+	oldcex = par("cex")
+	forLegend = list(...)
+	if(length(forLegend$cex)){
+		par(cex=forLegend$cex)
+	} 
+	forLegend$cex=1
+	
+	
 	xpoints = t(bbox(extent(par("usr"))))
 	
-	#              " 2000 km "   	
 	dashTemplate = " 2000 km "
-	xpoints = rbind(xpoints, 
-			centre = apply(xpoints, 2, mean))
-	xpoints = rbind(xpoints, 
-			right = c(xpoints["max",1], xpoints["centre",2]),
-			dashright = xpoints["centre",]+
-					c(strwidth(dashTemplate),0))
+	xcentre = apply(xpoints, 2, mean)
+	xpoints = rbind(centre=xcentre, 
+			dashright = xcentre + c(strwidth(dashTemplate),0)
+	)
+
+	
 	xpoints = SpatialPoints(xpoints, proj4string=crs)
 
 
@@ -48,7 +55,7 @@ scalebar = function(crs, pos="bottomright",scale.cex=1,...) {
 	candidates = c(candidates[1]*c(1,2,5), candidates[2])
 	segdist=candidates[order(abs(candidates - bardist))[1]]
 	
-	segscale = ( strwidth(dashTemplate)/strwidth("W") ) *segdist / dashdist
+	segscale = ( strwidth(dashTemplate)/strwidth("m") ) *segdist / dashdist
 	
 
 
@@ -88,23 +95,21 @@ scalebar = function(crs, pos="bottomright",scale.cex=1,...) {
 	
 	thelabel = paste(segdist, lunits,sep="")
 	
-	forLegend = list(...)
 
 	
-	defaults = list(col='black', cex=1,
+	defaults = list(col='black', 
 			xjust=0.7, inset=0.001,
-			x=pos, text.width=strwidth("I"))
+			x=pos, text.width=strwidth("I"), pt.cex=1)
 
 	for(D in names(defaults)) {
 		if(is.null(forLegend[[D]]))
 			forLegend[[D]] = defaults[[D]]			
 	}
 
-	defaults = list(pt.cex=forLegend$cex,
-			text.col = forLegend$col,
-			title.adj = 0.5*(segscale*strwidth("W")/
-						(segscale*strwidth("W") + 
-							2*strwidth("W")+
+	defaults = list(text.col = forLegend$col,
+			title.adj = 0.5*(segscale*strwidth("m")/
+						(segscale*strwidth("m") + 
+							2*strwidth("m")+
 							forLegend$text.width)))
 	
 	for(D in names(defaults)) {
@@ -118,17 +123,27 @@ scalebar = function(crs, pos="bottomright",scale.cex=1,...) {
 	forLegend$title=thelabel
 	forLegend$legend = NA
 	forLegend$lwd=3
-		
+
 	
+	if(forLegend$seg.len*strwidth("m") < strwidth(forLegend$title)) {
+		forLegend$title=NA
+	}
+
+		
 	thelegend = do.call(legend, forLegend)
 			
+	if(is.na(forLegend$title))
+		text(thelegend$text$x - (2/3)*strwidth("m")*forLegend$seg.len,
+				thelegend$rect$top , 
+				label=thelabel, pos=1, cex=0.75, offset=1.25)
+		
 	thecentre =  thelegend$text$x + 1i*thelegend$text$y
 	 polygon(forLegend$pt.cex*theN +thecentre, 
 			 col=forLegend$text.col,border=NA)
 	 polygon(forLegend$pt.cex*theHat + thecentre, 
 			 col=forLegend$text.col,border=NA)
 	 
-
+	par(cex=oldcex)
 	 
-	 return(invisible(thelegend))	
+	 return(invisible(c(thelegend,forLegend))	)
 }
