@@ -75,9 +75,14 @@ getTilePaths <- function(xlim,ylim,zoom,path){
   return(tileData)
 }
 
-getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,cacheDir=tempdir(),
+getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
+		cacheDir=tempdir(),
 		timeOut=5*24*60*60,verbose=FALSE){
-  nt = nTiles(xlim,ylim,zoom)
+	if(verbose) {
+		cat(path, "\n")
+	}
+	
+	nt = nTiles(xlim,ylim,zoom)
   if(nt > maxTiles){
     stop("Cant get ",nt," tiles with maxTiles set to ",maxTiles)
   }
@@ -96,11 +101,12 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,cacheDir=tempdir(),
 
   colourtable = NULL
   for(ip in 1:length(tileData)){
-    p = tileData[[ip]]$path
+   p = tileData[[ip]]$path
     if(localStore){
       where = p
     }else{
-      where = .getTileCached(tileData[[ip]],cacheDir,timeOut=timeOut,
+       where = .getTileCached(tileData[[ip]],cacheDir,
+			   timeOut=timeOut,
 			  verbose=verbose)
     }
 	
@@ -121,7 +127,7 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,cacheDir=tempdir(),
 			values(thisimage) = newvalues[values(thisimage)+1]
 		}
 		names(thisimage) = gsub("^http://|/$", "", path)
-	} else if (nlayers(thisimage)>3){
+	} else if (nlayers(thisimage)>1){
 		thisimage = thisimage[[1:3]]
 
 		names(thisimage) = paste(
@@ -188,8 +194,11 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,cacheDir=tempdir(),
     if(verbose)cat("Downloading tile\n")
     dir.create(tileDir,recursive=TRUE,showWarnings=FALSE)
     p = tileData$path
-    download.file(p,tilePath,mode="wb",quiet=!verbose)
-  }
+    res=download.file(p,tilePath,mode="wb",quiet=!verbose)
+	if(res){
+		cat(p, "not accessible\n")
+	}
+}
   
   return(tilePath)
 }

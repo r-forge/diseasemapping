@@ -4,15 +4,30 @@ osmTiles = function(name) {
 			"osm-no-labels"="http://www.toolserver.org/tiles/osm-no-labels/",
 			"osm-transport"="http://tile2.opencyclemap.org/transport/",
 			"bw-mapnik"="www.toolserver.org/tiles/bw-mapnik",
-			mapquest="http://otile1.mqcdn.com/tiles/1.0.0/osm/"
+			mapquest="http://otile1.mqcdn.com/tiles/1.0.0/osm/",
+			"mapquest-sat"="http://mtile02.mqcdn.com/tiles/1.0.0/vy/sat/",
+#			hill="http://www.toolserver.org/~cmarqu/hill/",
+			landscape="http://tile.opencyclemap.org/landscape/",
+#		"osm-retina"="http://tile.geofabrik.de/osm_retina/",
+		"opentopomap" = "http://opentopomap.org/tiles/",
+#		"osm2world"="http://tiles.osm2world.org/osm/pngtiles/n/",
+#		bvg="http://mobil.bvg.de/tiles/",
+#	esri="http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/",
+#	"esri-sat"="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/",
+#	landshaded="http://tiles.openpistemap.org/landshaded/",
+	"maptoolkit"="http://tile2.maptoolkit.net/terrain/",
+#	skobbler="http://tiles.skobbler.net/osm_tiles2/",	
+	waze="http://tilesworld.waze.com/tiles/"
+#	eu="http://alpha.map1.eu/tiles/"#,
+#	mapbox="http://a.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/"
 	)
 	
-	languages = c("en","fr","de", "it")
+	languages = c("en","fr","de", "it","es","ru")
 	toadd =	paste("www.toolserver.org/tiles/osm-labels-", languages,"/", sep="")
 	names(toadd) = paste("osm-labels-", languages, sep="")
 	result = c(result, toadd)
 	
-	stamen = c("terrain","toner","watercolor")
+	stamen = c("toner","watercolor")#,"terrain","terrain-background")
 	toadd = paste("http://tile.stamen.com/", stamen, "/",sep="")
 	names(toadd) = paste("stamen-", stamen, sep="")
 	
@@ -38,6 +53,7 @@ openmap = function(x, zoom,
 	verbose=FALSE) {
 
 	alltiles = osmTiles()
+	pathOrig = path
 	pathisname = path %in% names(alltiles)
 	path[pathisname] = alltiles[path[pathisname]]
 	
@@ -49,7 +65,7 @@ openmap = function(x, zoom,
 		path[ grep("^http[s]*://", path, invert=TRUE)] = 
 				paste("http://", 
 						path[ grep("^http[s]*://", path, invert=TRUE)], sep="")
-	
+	names(pathOrig) = path
  	
 	crsIn = try(proj4string(x),silent=TRUE)
 	if(missing(crs)) {
@@ -91,7 +107,7 @@ openmap = function(x, zoom,
 	# do this because bbox(mybbox) != mybbox
 	# but bbox(extent(mybbox) = mybbox
 	x = bbox(xextent)
-	x2 = x = SpatialPoints(t(x), crsIn)
+	x2 = x = SpatialPoints(t(x), proj4string=crsIn)
 	x = bbox(spTransform(x, CRS("+init=epsg:4326")))
 	
 	xlim= x[1,]
@@ -111,16 +127,27 @@ openmap = function(x, zoom,
 
 	
 	for(Dpath in path) {
-		thistile = getTiles(xlim,ylim, zoom=zoom,
+		thistile = try(
+				getTiles(xlim,ylim, zoom=zoom,
 				path=Dpath,
-				maxTiles=maxTiles,verbose=verbose)
-		if(length(result)) {
+				maxTiles=maxTiles,verbose=verbose),
+		silent=TRUE	)
+
+		if(class(thistile)=="try-error"){
+			warning(paste(Dpath, "not accessible"))
+		}	else {
+		theprefix=strsplit(names(thistile), "([rR]ed|[gG]reen|[bB]lue)$",fixed=FALSE)[[1]]
+		names(thistile) = gsub(theprefix, paste(pathOrig[Dpath], "",sep=""), 
+				names(thistile),fixed=TRUE)		
+		if(length(result)) {			
 			result =  stack(result, thistile)	
 		} else {
 			result = thistile
 		}
+	} # end not try-error
 	}	
 
+	if(is.null(result)) return(thistile)
 
 	if(all.equal(CRS(proj4string(result)), crs)==TRUE) {
 		resultProj = result

@@ -2,7 +2,7 @@
 export(
  krige,stackRasterList,
 NNmat, gmrfPrecUncond,simLgcp,simPoissonPP,
- lgm, excProb, likfitLgm, loglikLgm
+ lgm, excProb, likfitLgm, loglikLgm,scalebar
 )
 
 importFrom(RandomFields, CondSimu)
