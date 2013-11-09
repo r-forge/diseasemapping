@@ -86,11 +86,10 @@ plot(swissBorder, add=TRUE)
 
 \dontrun{
 load(url("http://www.filefactory.com/file/frd1mhownd9/n/CHE_adm0_RData"))
-theMap = openmap(gadm,zoom=7, type="mapquest")#"osm-transport")
+
 library(RColorBrewer)
 par(mar=c(0,0,0,3))
 plot(gadm) 
-plot(theMap, add=TRUE)
 plot(mask(projectRaster(
 	swissRes$predict[["predict"]],  crs=gadm@proj4string),gadm), 
 add=T,alpha=0.6, col=brewer.pal(9, "Blues"))

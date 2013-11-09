@@ -10,3 +10,4 @@ Author: Patrick Brown <patrick.brown@utoronto.ca>
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
 Description: This package contains various utilities for producing nice looking maps in R.
 License: GPL
+VignetteBuilder: knitr

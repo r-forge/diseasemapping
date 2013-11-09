@@ -52,18 +52,25 @@ Patrick Brown
 
 \examples{
 
-data("swissRain")
-map.new(swissRain)
+Npoints = 20
+myPoints = SpatialPointsDataFrame(20*cbind(runif(Npoints), runif(Npoints)), 
+	data=data.frame(y1=c(NA, rnorm(Npoints-1)), 
+	y2=c(sample(1:4, Npoints-1,replace=TRUE), NA)),
+	proj4string=CRS("+init=epsg:4326")
+	)
+mymap = openmap(myPoints)
 
-mybreaks = c(0,  1000, 2000, 3000, 4500)
-mycol = c("lightgrey","yellow","orange","red")
+breaks = c(-100, -1, 1, Inf)
+thecol = c('red','orange','blue')
 
-plot(swissAltitude, col=mycol,breaks=mybreaks,add=TRUE,legend=FALSE)
-points(swissRain)
-plot(swissBorder, add=TRUE)
-scaleBar(swissRain, "bottomright",cex=1.25, scale.cex=2)
-legendBreaks("topleft", col=mycol, breaks=mybreaks,title='elevation')
 
+map.new(myPoints)
+plot(mymap,add=TRUE)
+plot(myPoints,col = as.character(cut(
+	myPoints$y1, breaks, thecol
+)),add=TRUE)
+scaleBar(myPoints, "bottomright",cex=1.25, scale.cex=2)
+legendBreaks("topleft", breaks=breaks, col=thecol)
 
 }
 

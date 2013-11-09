@@ -16,7 +16,7 @@
 
 <<setup,echo=FALSE,cache=TRUE,warning=FALSE,results='hide'>>=
 library(mapmisc)
-
+library(knitr)
 opts_chunk$set(echo=TRUE,message=FALSE,
 		dev='png', 
 		fig.align='center',fig.pos='H',width=80,

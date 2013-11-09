@@ -7,7 +7,7 @@ Produces a scale of colours for plotting maps an producing legends.  }
 \usage{
 	colourScale(x, breaks=5, style=c("quantile","equal","unique", "fixed"),
 	 col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
-	 transform=NULL, revCol=FALSE, exclude=NULL)
+	 transform=NULL, revCol=FALSE, exclude=NULL, ...)
 	}
 
 \arguments{
@@ -29,12 +29,20 @@ Produces a scale of colours for plotting maps an producing legends.  }
 \details{
 Produces intervals from \code{x}, each with a unique colour. Categories are determined with break points according to the following \code{style} options:
 \itemize{
-\item \code{quantile}: \code{quantile(x, prob=seq(0,1,len=breaks}, )} 
-\item \code{equal}: \code{seq(min(x), max(x), len=breaks)} 
-\item \code{unique}: \code{sort(table(unique(x)))[1:breaks]} 
-\item \code{fixed}: \code{breaks}
-\item any other string: is passed to \code{\link[classInt]{classIntervals}}
+\item \code{quantile}: \code{quantile(x, prob=seq(0,1,len=breaks), )} 
 }
+
+ \code{equal}: \code{seq(min(x), max(x), len=breaks)} 
+
+
+ \code{unique}: \code{sort(table(unique(x)))[1:breaks]} 
+
+
+ \code{fixed}: \code{breaks}
+
+
+ any other string: is passed to \code{\link[classInt]{classIntervals}}
+
 }
 
 \value{A list with elements
@@ -42,7 +50,8 @@ Produces intervals from \code{x}, each with a unique colour. Categories are dete
 \item{breaks}{vector of break points}
 \item{legendCol}{vector of unique colour values corrdsponding to \code{breaks}}
 }
-\seealso{\code{\link{legendBreaks}}, \code{\link[classInt]{classIntervals}}
+
+\seealso{\code{\link{legendBreaks}}, \code{\link[classInt]{classIntervals}}}
 
 \examples{
 Npoints = 20

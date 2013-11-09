@@ -47,10 +47,10 @@ Either a vector of exceedance probabilities or an object of the same class as \c
 	swissExc = excProb(swissFit, 300)
 	mycol = c("green","yellow","orange","red")
 	mybreaks = c(0, 0.2, 0.8, 0.95, 1)
-	map.new(swissBorder)
+	plot(swissBorder)
 	plot(swissExc, breaks=mybreaks, col=mycol,add=TRUE,legend=FALSE)
 	plot(swissBorder, add=TRUE)
-	legendBreaks("topleft",breaks=mybreaks, col=mycol)
+	legend("topleft",legend=mybreaks, col=c(NA,mycol))
 \dontrun{
 	swissRain$sqrtrain = sqrt(swissRain$rain)
 	swissFit2 =  glgm(swissRain, cells=40, formula="sqrtrain",

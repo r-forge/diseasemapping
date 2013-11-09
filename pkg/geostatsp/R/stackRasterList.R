@@ -56,7 +56,7 @@ stackRasterList = function(x, template=x[[1]],method='ngb') {
 				
 				# same projection, different resolution
 				testcrs =compareRaster(template, x[[D]],
-					extent=FALSE,rowcol=FALSE,crs=TRUE)				
+					extent=FALSE,rowcol=FALSE,crs=TRUE,stopiffalse=FALSE)				
 				if(is.na(testcrs)) testcrs = TRUE
 				if(testcrs) { # same resolution
 					# should we aggregate?
