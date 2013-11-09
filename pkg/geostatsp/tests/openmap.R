@@ -26,7 +26,7 @@ myplot = function(first,second=first) {
 	plot(second,add=TRUE,col='blue')
 	points(mycities,col='red')
 	text(mycities, labels=mycities$name, col='red',pos=4)
-	scalebar(first)
+	scaleBar(first)
 	dev.off()
 }
 

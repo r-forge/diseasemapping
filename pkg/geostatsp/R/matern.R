@@ -58,8 +58,8 @@ matern.Raster = function( x, y=NULL, param=c(range=1, variance=1, shape=1))
 			 xscale=as.double(param["range"]),
 			 varscale=as.double(param["shape"]),
 			 as.double(param["variance"]),
-			 as.double(param["aniso.ratio"]),
-			 as.double(param["aniso.angle.radians"])
+			 as.double(param["anisoRatio"]),
+			 as.double(param["anisoAngleRadians"])
 	 )
 	
 	if(Ny ==1) {
@@ -110,10 +110,10 @@ matern.SpatialPoints = function(x, y=NULL,param=c(range=1, variance=1, shape=1)
 		x = x@coords[,1] + 1i*x@coords[,2]
 		
 			
-		x = x * exp(1i*param["aniso.angle.radians"])
-		x = Re(x) +  (1i/ param["aniso.ratio"] )*Im(x)
-		y = y * exp(1i*param["aniso.angle.radians"])
-		y = Re(y) +  (1i/ param["aniso.ratio"] )*Im(y)
+		x = x * exp(1i*param["anisoAngleRadians"])
+		x = Re(x) +  (1i/ param["anisoRatio"] )*Im(x)
+		y = y * exp(1i*param["anisoAngleRadians"])
+		y = Re(y) +  (1i/ param["anisoRatio"] )*Im(y)
 				
 		thedist = Mod(outer(x, y, FUN="-"))
 		result= matern(x=thedist, y=NULL, param=param)
@@ -134,8 +134,8 @@ matern.SpatialPoints = function(x, y=NULL,param=c(range=1, variance=1, shape=1)
 				as.double(param["range"]),
 				as.double(param["shape"]),
 				as.double(param["variance"]),
-				as.double(param["aniso.ratio"]),
-				as.double(param["aniso.angle.radians"])
+				as.double(param["anisoRatio"]),
+				as.double(param["anisoAngleRadians"])
 			)
 	result = new("dsyMatrix", 
 				Dim = c(length(x), length(x)), uplo="L",

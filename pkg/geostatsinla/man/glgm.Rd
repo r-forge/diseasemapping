@@ -86,10 +86,23 @@ swissFit =  glgm(swissRain, cells=30, formula="lograin",
 
 swissFit$parameters$summary
 
-swissExc = excProb(swissFit$inla$marginals.random$space, 0, swissFit$raster)
-plot(swissExc, breaks = c(0, 0.2, 0.8, 0.95, 1.00001), 
-	col=c('green','yellow','orange','red'))	
-plot(swissBorder, add=TRUE)		
+	swissExc = excProb(swissFit, threshold=log(300))
+	mycol = c("green","yellow","orange","red")
+	mybreaks = c(0, 0.2, 0.8, 0.95, 1)
+	map.new(swissBorder)
+	plot(swissExc, breaks=mybreaks, col=mycol,add=TRUE,legend=FALSE)
+	plot(swissBorder, add=TRUE)
+	legendBreaks("topleft",breaks=mybreaks, col=mycol)
+
+
+	swissExc = excProb(swissFit$inla$marginals.random$space, 0,
+		template=swissFit$raster)
+	map.new(swissBorder)
+	plot(swissExc, breaks=mybreaks, col=mycol,add=TRUE,legend=FALSE)
+	plot(swissBorder, add=TRUE)
+	legendBreaks("topleft",breaks=mybreaks, col=mycol)
+
+
 		
 
 \dontrun{

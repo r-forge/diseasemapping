@@ -8,33 +8,14 @@ glgm = function(data,  cells, covariates=NULL, formula=NULL,
 	# create raster for prediction
 	if(!length(grep("^Raster",class(cells)))) { 
 		# cells must be an integer
-		cells = as.integer(cells)
-		thebbox = data@bbox
-		if(buffer) {
-			smallBbox = thebbox
-			thebbox = thebbox + buffer*cbind(-c(1,1),c(1,1))
-		} else {
-			smallBbox = thebbox
-		}
-		res = diff(thebbox[1,])/cells		
-		Nx = cells
-		Ny = ceiling(diff(thebbox[2,])/res)
-		thebbox[2,2] = thebbox[2,1] + res*Ny
-		cells= raster(extent(thebbox), ncols=Nx, nrows=Ny, crs=data@proj4string)
+		cells = squareRaster(data, cells)
 	} else {
-		# it's a raster, make sure it has square cells
- 		if(diff(res(cells))>10^(-6))  {
-			res = xres(cells)
-			theextent = cells@extent
-			theylim = theextent@ymax - theextent@ymin
-			Ny = ceiling(theylim/res)
-			theextent@ymax = theextent@ymin + Ny * res
-			
-			cells = raster(theextent, ncols=cells@ncols, nrows=Ny,crs=cells@crs)
-		}
-		smallBbox = bbox(cells)
+		cells = squareRaster(cells)
 	}
- 
+	smallBbox = bbox(cells)
+	buffer =  ceiling(buffer/xres(cells))
+	cells = extend(cells, c(buffer, buffer))
+	thebbox = bbox(cells)	
 	
  	if(cells@nrows * cells@ncols > 10^6) warning("there are lots of cells in the prediction raster,\n this might take a very long time")
 	
@@ -201,7 +182,7 @@ glgm = function(data,  cells, covariates=NULL, formula=NULL,
 	sdNames = unique(c("sd",grep("^sd", names(priorCI), value=TRUE)))
 	# if model is Gaussian, look for prior for sdNugget
 	if(!any(names(thedots)=="family")) {
-		thedots$family =  "gassian"
+		thedots$family =  "gaussian"
 	}
 	if(thedots$family=="gaussian") {
 		sdNames = unique(c(sdNames, "sdNugget"))
@@ -417,11 +398,8 @@ for(D in 1:nrow(lincombMat)) {
 
  
 	
-	inlaResult = do.call(INLA::inla, forInla) #(formula, data=data, 
-#			lincomb=thelincombs, 
- 	 #	family="poisson")
-	#	family="binomial",verbose=T, Ntrials=Ntrials)
-#	... )
+	inlaResult = do.call(INLA::inla, forInla) 
+	
 
 
  	# parameter priors for result

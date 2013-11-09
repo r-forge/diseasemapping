@@ -30,8 +30,8 @@ Returns the Matern covariance for the distances supplied.
 	\item{param}{A vector of named model parameters with, at a minimum names
  \code{range} and  \code{shape} (see Details), and optionally \code{variance} (defaults to 1).  
 	For Geometric Anisotropy add 
-	\code{aniso.ratio} and either \code{aniso.angle.degrees} or  
-		\code{aniso.angle.radians}
+	\code{anisoRatio} and either \code{anisoAngleDegrees} or  
+		\code{anisoAngleRadians}
 	}
 }
 
@@ -59,12 +59,12 @@ The \code{range} argument is sqrt(8*shape)*phi.geoR, sqrt(8*shape)*scale.whittle
 2*scale.matern.RandomFields.
 
 Geometric anisotropy is only available when 
-\code{x} is a \code{Raster} or \code{SpatialPoints}.  The parameter 'aniso.angle' refers to 
+\code{x} is a \code{Raster} or \code{SpatialPoints}.  The parameter 'anisoAngle' refers to 
 rotation of the coordinates anti-clockwise by the specified amount prior to 
 calculating distances, which has the effect that the contours of the correlation function
-are rotated clockwise by this amount. \code{aniso.ratio} is the amount the Y coordinates are 
+are rotated clockwise by this amount. \code{anisoRatio} is the amount the Y coordinates are 
 divided by
-by post rotation prior to calculating distances.  A large value of \code{aniso.ratio}
+by post rotation prior to calculating distances.  A large value of \code{anisoRatio}
 makes the Y coordinates smaller and increases the correlation in the
 Y direction.
 
@@ -76,7 +76,7 @@ starting at the top left.
 \examples{
 # example with raster
 myraster = raster(nrows=40,ncols=60,xmn=-3,xmx=3,ymn=-2,ymx=2)
-param = c(range=2, shape=2,	aniso.ratio=2, aniso.angle.degrees=-25)
+param = c(range=2, shape=2,	anisoRatio=2, anisoAngleDegrees=-25)
 
 # plot correlation of each cell with the origin
 myMatern = matern(myraster, c(0,0), param=param)

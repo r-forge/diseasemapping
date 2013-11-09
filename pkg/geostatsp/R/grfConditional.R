@@ -1,6 +1,6 @@
 grfConditional = function(data, ycol=1, 
 			param, locations, Nsim,
-		 	fun=NULL, nugget.in.prediction=TRUE){
+		 	fun=NULL, nuggetInPrediction=TRUE){
 		
 if(is.numeric(locations)){
 	# locations is number of cells in the x direction
@@ -42,7 +42,7 @@ if(nrow(locations) * ncol(locations) > 10^7) warning("there are lots of cells in
 		nuggetSd = sqrt(param["nugget"])
 	} else {
 		err.model = err.param = NULL
-		nugget.in.prediction=FALSE
+		nuggetInPrediction=FALSE
 	}
 
 	
@@ -55,7 +55,7 @@ simFun = function(D) {
 			err.model=err.model,
 			err.param=err.param, method="direct decomp."
 	)		
-	if(nugget.in.prediction){
+	if(nuggetInPrediction){
 		res= res + rnorm(length(res), sd=nuggetSd)
 	}		
 	values(locations) = as.vector((res[,seq(dim(res)[2], 1)]))

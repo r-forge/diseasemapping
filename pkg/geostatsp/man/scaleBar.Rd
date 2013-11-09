@@ -1,5 +1,5 @@
-\name{scalebar}
-\alias{scalebar}
+\name{scaleBar}
+\alias{scaleBar}
 \alias{map.new}
 \alias{legendBreaks}
 
@@ -11,7 +11,7 @@ Utilities for plotting a map, adding a scale bar and north arrow,
 and adding a legend of colour scales.
 }
 \usage{
-scalebar(crs, pos = "bottomright", scale.cex = 1, ...)
+scaleBar(crs, pos = "bottomright", scale.cex = 1, ...)
 legendBreaks(pos, col, breaks, ...)
 map.new(x)
 }
@@ -37,7 +37,7 @@ Additional arguments passed to \code{legend}, for examaple \code{bty='n'}
 }
 }
 \details{
-\code{scalebar} produces a scale bar reflecting the distance travelling on a great circle
+\code{scaleBar} produces a scale bar reflecting the distance travelling on a great circle
 from the centre of the plot and travelling to the right.  The length of the bar is the width 
 of 6 characters times \code{scale.cex}.  
 
@@ -61,7 +61,7 @@ mycol = c("lightgrey","yellow","orange","red")
 plot(swissAltitude, col=mycol,breaks=mybreaks,add=TRUE,legend=FALSE)
 points(swissRain)
 plot(swissBorder, add=TRUE)
-scalebar(swissRain, "bottomright",cex=1.25, scale.cex=2)
+scaleBar(swissRain, "bottomright",cex=1.25, scale.cex=2)
 legendBreaks("topleft", col=mycol, breaks=mybreaks,title='elevation')
 
 

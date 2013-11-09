@@ -10,7 +10,7 @@ Calculate MLE's of model parameters and perform spatial prediction. }
 \usage{
 lgm(data, locations, covariates = NULL, formula = NULL, shape = 1, 
     fixShape = TRUE, aniso = FALSE, boxcox = 1, fixBoxcox = TRUE, 
-    nugget = 0, fixNugget = FALSE, expPred = FALSE, nugget.in.prediction = TRUE) 
+    nugget = 0, fixNugget = FALSE, expPred = FALSE, nuggetInPrediction = TRUE) 
 
 }
  
@@ -40,7 +40,7 @@ the predictions will be a raster of square cells covering the bounding box of \c
  \item{expPred}{
 Should the predictions be exponentiated, defaults to \code{FALSE}.
 }
-\item{nugget.in.prediction}{If \code{TRUE}, predict new observations by adding the 
+\item{nuggetInPrediction}{If \code{TRUE}, predict new observations by adding the 
 nugget effect.  The prediction variances will be adjusted accordingly, and the predictions 
 on the natural scale for logged or Box Cox transformed data will be affected. 
 Otherwise predict fitted values. 
@@ -73,7 +73,7 @@ swissRes =  lgm(swissRain, locations=20, formula="rain",
 	covariates=swissAltitude, boxcox=0.5, fixBoxcox=TRUE, 
 	shape=1, fixShape=TRUE,
 	aniso=TRUE, nugget=0, fixNugget=TRUE,
-	nugget.in.prediction=FALSE
+	nuggetInPrediction=FALSE
 	)
 	
 

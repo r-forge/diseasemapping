@@ -2,7 +2,7 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 		shape=1, fixShape=TRUE,
 		aniso=FALSE, boxcox=1, fixBoxcox=TRUE,
 		nugget = 0, fixNugget = FALSE,
-		expPred=FALSE, nugget.in.prediction=TRUE){
+		expPred=FALSE, nuggetInPrediction=TRUE){
 	
 	
 # the formula
@@ -86,8 +86,8 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 	paramToEstimate	= c("range", "shape","nugget","boxcox")[
 			!c(FALSE,fixShape,fixNugget,fixBoxcox)]		
 	if(aniso) {
-		param = c(param, aniso.angle.degrees=0,aniso.ratio=1)
-		paramToEstimate = c(paramToEstimate,c("aniso.angle.degrees","aniso.ratio"))		
+		param = c(param, anisoAngleDegrees=0,anisoRatio=1)
+		paramToEstimate = c(paramToEstimate,c("anisoAngleDegrees","anisoRatio"))		
 	}
 				
 	
@@ -109,7 +109,7 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 	krigeRes =  krige(data=data,trend=formula,
 			param=likRes$param, locations=locations,
 			covariates=covariates, expPred=expPred,
-			nugget.in.prediction=nugget.in.prediction
+			nuggetInPrediction=nuggetInPrediction
 			)
 	 
 	res = c(predict=krigeRes, likRes)

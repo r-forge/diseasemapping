@@ -23,8 +23,8 @@ are Raster or SpatialPoints objects.
 	or an object of a class acceptable to the  \code{\link[RandomFields]{GaussRF}} .}
 	\item{param}{A vector of named model parameters with, at a minimum names
 	\code{variance},  \code{range} and \code{shape}.  For Geometric Anisotropy add 
-	\code{aniso.ratio} and either \code{aniso.angle.degrees} or  
-		\code{aniso.angle.radians}
+	\code{anisoRatio} and either \code{anisoAngleDegrees} or  
+		\code{anisoAngleRadians}
 	}
 	\item{...}{ additional arguments, see \code{\link[RandomFields]{GaussRF}} in the RandomFields package.}
 }
@@ -54,7 +54,7 @@ If an argument \code{model} is specified, parameters are passed directly to the 
 }
 
 \examples{
-mymodel = c(variance=1, range=2, shape=2, aniso.ratio=0.6, aniso.angle.degrees=30)
+mymodel = c(variance=1, range=2, shape=2, anisoRatio=0.6, anisoAngleDegrees=30)
 
 myraster = raster(nrows=40,ncols=40,xmn=-20,xmx=20,ymn=-15,ymx=15)
 

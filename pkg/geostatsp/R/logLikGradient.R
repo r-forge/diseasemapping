@@ -247,12 +247,12 @@ likfitLgmG = function(
 	}
 	
 	# limits
-	lowerDefaults = c(nugget=0,range=0,aniso.ratio=0.0001,
-			aniso.angle.radians=-pi/2,aniso.angle.degrees=-90,
+	lowerDefaults = c(nugget=0,range=0,anisoRatio=0.0001,
+			anisoAngleRadians=-pi/2,anisoAngleDegrees=-90,
 			shape=0.01,boxcox=-3,variance=0)
 	
-	upperDefaults= c(nugget=Inf,range=Inf,aniso.ratio=Inf,
-			aniso.angle.radians=pi/2,aniso.angle.degrees=90,
+	upperDefaults= c(nugget=Inf,range=Inf,anisoRatio=Inf,
+			anisoAngleRadians=pi/2,anisoAngleDegrees=90,
 			shape=0,boxcox=3,variance=Inf)
 	
 	
@@ -264,9 +264,9 @@ likfitLgmG = function(
 	parscaleDefaults = c(range=NA, #range is delt with below
 			nugget=1,
 			boxcox=1,
-			aniso.angle.degrees=10,
-			aniso.angle.radians=2,
-			aniso.ratio=1,
+			anisoAngleDegrees=10,
+			anisoAngleRadians=2,
+			anisoRatio=1,
 			variance=1)
 	
 #	if(length(grep("^SpatialPoints", class(coordinates))))
@@ -322,19 +322,19 @@ likfitLgmG = function(
 		
 		# see if there's anisotropy which is fixed, not estimated
 		# which would be odd but we'll test nonetheless
-		if(length(grep("^aniso.ratio", names(param)))){
+		if(length(grep("^anisoRatio", names(param)))){
 			if(abs(param["anosi.ratio"]- 1) > 0.0001){
 				# it is indeed anisotropic
 				
-				if(any(names(param)=="aniso.angle.degrees") & 
-						!any(names(param)=="aniso.angle.radians") ) {
-					param["aniso.angle.radians"] = param["aniso.angle.degrees"]*2*pi/360				
+				if(any(names(param)=="anisoAngleDegrees") & 
+						!any(names(param)=="anisoAngleRadians") ) {
+					param["anisoAngleRadians"] = param["anisoAngleDegrees"]*2*pi/360				
 				}
 				
 				x = coordinates@coords[,1] + 1i*coordinates@coords[,2]
 				
-				x = x * exp(-1i*param["aniso.angle.radians"])
-				x = Re(x) +  (1i/ param["aniso.ratio"] )*Im(x)
+				x = x * exp(-1i*param["anisoAngleRadians"])
+				x = Re(x) +  (1i/ param["anisoRatio"] )*Im(x)
 				coordinates = SpatialPoints(cbind(Re(x), Im(x)))
 			} # end is anisotripic		
 		} # end anisotropy params supplied
@@ -349,8 +349,8 @@ likfitLgmG = function(
 	
 	
 	# default starting values for parameters
-	paramDefaults = c(nugget=0,aniso.ratio=0, aniso.angle.degrees=0,
-			aniso.angle.radians=0,shape=1, boxcox=1,
+	paramDefaults = c(nugget=0,anisoRatio=0, anisoAngleDegrees=0,
+			anisoAngleRadians=0,shape=1, boxcox=1,
 			parscaleDefaults["range"])
 	
 	startingParam = param[paramToEstimate]

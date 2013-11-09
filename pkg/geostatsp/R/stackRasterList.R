@@ -55,7 +55,8 @@ stackRasterList = function(x, template=x[[1]],method='ngb') {
 				thelevels = levels(x[[D]])
 				
 				# same projection, different resolution
-				testcrs =CRS(template@crs@projargs)@projargs == CRS(x[[D]]@crs@projargs)@projargs
+				testcrs =compareRaster(template, x[[D]],
+					extent=FALSE,rowcol=FALSE,crs=TRUE)				
 				if(is.na(testcrs)) testcrs = TRUE
 				if(testcrs) { # same resolution
 					# should we aggregate?

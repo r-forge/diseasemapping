@@ -6,7 +6,7 @@ mydat = SpatialPointsDataFrame(cbind(runif(n), runif(n)),
 
 
  trueParamAniso = param=c(variance=2^2, range=0.2, shape=2,
-		nugget=0,aniso.ratio=4,aniso.angle.degrees=10, nugget=0)
+		nugget=0,anisoRatio=4,anisoAngleDegrees=10, nugget=0)
 
 mydat$U = GaussRF(mydat, par=trueParamAniso)
 mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + 
@@ -18,10 +18,10 @@ mydat$Ybc = (mydat$Y*0.5+1)^2
 
 myres = likfitLgm(mydat, Ybc ~ cov1 + cov2, 
 		param=c(range=0.1,nugget=0,shape=2, 
-				aniso.angle.degrees=0, aniso.ratio=2,
+				anisoAngleDegrees=0, anisoRatio=2,
 				boxcox=0.4), 
 		paramToEstimate = c("range","nugget",
-				"aniso.ratio","aniso.angle.degrees",
+				"anisoRatio","anisoAngleDegrees",
 				"boxcox") 
 )
 

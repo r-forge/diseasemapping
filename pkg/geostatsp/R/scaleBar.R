@@ -1,5 +1,5 @@
 
-scalebar = function(crs, pos="bottomright",scale.cex=1,...) {
+scaleBar = function(crs, pos="bottomright",scale.cex=1,...) {
 	
 	if(is.character(crs))
 		crs = CRS(crs)

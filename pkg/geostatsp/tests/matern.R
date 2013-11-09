@@ -1,7 +1,7 @@
 options(CBoundsCheck=TRUE)
 library("geostatsp")
 
-param = c(range=1, shape=1.5,	aniso.ratio=2, aniso.angle.degrees=-25)
+param = c(range=1, shape=1.5,	anisoRatio=2, anisoAngleDegrees=-25)
 
 matern(c(0, 0.001, 100000), param=param)
 
@@ -36,22 +36,22 @@ bob(myMatern)
 
 
 bob(matern(myraster, c(1,-0.5), 
-				param =	c(range=1, shape=1.5,	aniso.ratio=2, aniso.angle.degrees=25)			
+				param =	c(range=1, shape=1.5,	anisoRatio=2, anisoAngleDegrees=25)			
 						)
 )
 
 bob(matern(myraster, c(0,0), 
-				param =	c(range=1, shape=25.1,	aniso.ratio=2, aniso.angle.degrees=-25)			
+				param =	c(range=1, shape=25.1,	anisoRatio=2, anisoAngleDegrees=-25)			
 		)
 )
 
 bob(matern(myraster, c(0,0), 
-				param =	c(range=0, shape=1.5,	aniso.ratio=2, aniso.angle.degrees=-25)			
+				param =	c(range=0, shape=1.5,	anisoRatio=2, anisoAngleDegrees=-25)			
 		)
 )
 
 bob(matern(myraster, c(0,0), 
-				param =	c(range=100000, shape=1.5,	aniso.ratio=2, aniso.angle.degrees=-25)			
+				param =	c(range=100000, shape=1.5,	anisoRatio=2, anisoAngleDegrees=-25)			
 		)
 )
 

@@ -17,8 +17,8 @@ Give covariates and model parameters, simulates a log-Gaussian Cox process
 \item{param}{A vector of named model parameters with, at a minimum names
  \code{range} and  \code{shape} (see Details), and optionally \code{variance} (defaults to 1).  
 	For Geometric Anisotropy add 
-	\code{aniso.ratio} and either \code{aniso.angle.degrees} or  
-		\code{aniso.angle.radians}
+	\code{anisoRatio} and either \code{anisoAngleDegrees} or  
+		\code{anisoAngleRadians}
 	}
 	\item{covariates}{Either a raster stack or list of rasters and SpatialPolygonsDataFrames (with the latter having only a single data column).}
 \item{betas}{Coefficients for the covariates}

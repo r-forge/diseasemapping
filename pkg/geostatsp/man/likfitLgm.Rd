@@ -44,8 +44,8 @@ reflecting the distance matrix of these coordinates (though this is only permitt
 model is isotropic).
 }
 \item{param}{A vector of model parameters, with named elements being amongst 
-\code{range, nugget, boxcox, shape, aniso.angle.degrees, aniso.angle.radians,
-aniso.ratio}, and possibly \code{variance} (see \code{link{matern}}). 
+\code{range, nugget, boxcox, shape, anisoAngleDegrees, anisoAngleRadians,
+anisoRatio}, and possibly \code{variance} (see \code{link{matern}}). 
  When calling \code{likfitLgm} this vector is a 
 combination of starting values for parameters to be estiamated and fixed values of parameters
 which will not be estimated.  For \code{loglikLgm}, it is the covariance parameters 
@@ -159,7 +159,7 @@ temp=loglikLgm(param=myres$param,
 \dontrun{ 
 
 trueParamAniso = param=c(variance=2^2, range=0.2, shape=2,
-	 nugget=0,aniso.ratio=4,aniso.angle.degrees=10, nugget=0)
+	 nugget=0,anisoRatio=4,anisoAngleDegrees=10, nugget=0)
 
 mydat$U = GaussRF(mydat, par=trueParamAniso)
 mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + 
@@ -180,8 +180,8 @@ par(mar=oldmar)
 
 
 myres = likfitLgm(mydat, Y ~ cov1 + cov2, 
-	param=c(range=0.1,nugget=0,shape=2, aniso.angle.degrees=0, aniso.ratio=2), 
-	paramToEstimate = c("range","nugget","aniso.ratio","aniso.angle.degrees") 
+	param=c(range=0.1,nugget=0,shape=2, anisoAngleDegrees=0, anisoRatio=2), 
+	paramToEstimate = c("range","nugget","anisoRatio","anisoAngleDegrees") 
 	)
 
 myres$summary
