@@ -1,5 +1,5 @@
 
-library(geostatsp)
+library(mapmisc)
 myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10, crs="+proj=longlat")
 values(myraster) = seq(0,1,len=ncell(myraster))
 myPoints = SpatialPoints(myraster, proj4string=CRS(proj4string(myraster)))[
@@ -109,6 +109,7 @@ if(exists("nsl", where="package:utils")) {
 			
 	
 	# toronto
+library("geostatsp")
 data("murder")
 data("torontoPop")
 

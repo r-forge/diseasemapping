@@ -111,7 +111,6 @@ myPoints = SpatialPoints(myraster, proj4string=CRS(proj4string(myraster)))[
 names(osmTiles())
 
 
-\dontrun{
 	par(mar=c(0,0,0,0))
 	mytiles = openmap(myraster)
 
@@ -127,6 +126,6 @@ names(osmTiles())
 	plot(mytiles, add=TRUE)
 	points(myPoints,col='red')
 	
-}
+
 
 }

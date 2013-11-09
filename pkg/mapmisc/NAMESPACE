@@ -1,0 +1,18 @@
+export(scaleBar,map.new,legendBreaks)
+export(openmap, getTiles, osmTiles)
+# functions depending on geonames
+importFrom(geonames, GNcities)
+export( GNcities)
+
+
+importFrom(RColorBrewer, brewer.pal)
+importFrom(classInt, classIntervals)
+
+import(
+  sp,
+  raster,
+  rgdal
+  )
+
+ 
+

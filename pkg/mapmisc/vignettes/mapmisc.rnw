@@ -1,0 +1,128 @@
+%\VignetteEngine{knitr::knitr}
+\documentclass[12pt]{article}
+\usepackage[margin=1in,landscape]{geometry}
+\usepackage{graphicx}
+\DeclareGraphicsExtensions{.png}
+
+\usepackage{subcaption,float}
+\newcommand{\subfloat}[2][need a sub-caption]{\subcaptionbox{#1}{#2}}
+
+
+\title{The mapmisc package}
+\author{Patrick Brown}
+
+
+\begin{document}
+
+<<setup,echo=FALSE,cache=TRUE,warning=FALSE,results='hide'>>=
+library(mapmisc)
+
+opts_chunk$set(echo=TRUE,message=FALSE,
+		dev='png', 
+		fig.align='center',fig.pos='H',width=80,
+		fig.height=3,fig.width=5
+)
+
+
+@
+
+\section{Introduction}
+
+This package provides a few utilities for making nice maps in R, with an
+emphasis on enabling maps in short tidy code chunks which are suitable for
+Sweave and knitr documents.  The package duplicates the capabilities of
+packages such as classInt, geonames, and OpenStreetMap, and the price of having
+tidier code is much of the flexibility from these other packages has been lost
+here.
+
+\section{The {\tt openmap} function for map layers}
+
+<<openmapToronto>>=
+library("geostatsp")
+data("murder")
+class(murder)
+CRS(murder)
+torTiles = openmap(murder)
+CRS(torTiles)
+@
+
+<<openmapLoaloa>>=
+data("eviLoa")
+class(eviLoa)
+CRS(eviLoa)
+loaTiles = openmap(eviLoa)
+CRS(loaTiles)
+@
+
+{\tt GNcities} is a wrapper for the function of the same name in the geonames
+package.
+
+<<loaCities>>=
+loaCities = GNcities(eviLoa, maxRows=6)
+@
+
+
+\section{Making maps}
+
+The {\tt map.new} function sets up a map without margins or room for a legend on
+the right.
+
+{\tt scaleBar} adds a scale and north arrow.  It uses the map projection of the
+argument supplied to calculate distances and find north.
+
+
+<<simpleMap,fig.cap="simple map", fig.subcap=c("murder","ltLoa")>>=
+map.new(murder)
+plot(torTiles, add=TRUE)
+points(murder, col="#FF000060",add=TRUE)
+plot(torontoBorder,add=TRUE)
+scaleBar(murder)
+
+
+plot(eviLoa,legend=FALSE)
+plot(loaTiles,add=TRUE)
+plot(eviLoa,add=TRUE)
+points(loaCities)
+text(loaCities, labels=loaCities$name)
+scaleBar(CRS(loaTiles))
+@
+
+\section{Legends}
+
+<<murderAge>>=
+murderScale = colourScale(murder$age, breaks=6, style='equal', 
+		opacity=0.8, dec=0, firstBreak=0)
+@
+
+<<murderMap,fig.cap="Ages of Murder victims">>=
+map.new(murder)
+plot(torTiles, add=TRUE)
+points(murder, col=murderScale$col,add=TRUE)
+plot(torontoBorder,add=TRUE)
+scaleBar(murder, pos="bottomleft")
+legendBreaks("bottomright", col=murderScale$legend, breaks=murderScale$breaks,
+		title='years')
+@
+
+A categorical variable, murder type.
+<<murderType>>=
+table(murder$homicide.type)
+murderScale = colourScale(murder$homicide.type, breaks=4, style='unique', 
+		opacity=0.8)
+@
+
+Call the standard {\tt legend} function, because we have unique values instead
+of breaks.
+
+<<murderTypeMap,fig.cap="Murder types">>=
+map.new(murder)
+plot(torTiles, add=TRUE)
+points(murder, col=murderScale$col,add=TRUE)
+plot(torontoBorder,add=TRUE)
+scaleBar(murder, pos="bottomleft")
+legend("bottomright", col=murderScale$legend, legend=murderScale$breaks,
+		title='years')
+@
+
+
+\end{document}

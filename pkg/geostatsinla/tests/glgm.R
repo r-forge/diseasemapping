@@ -125,6 +125,7 @@ swissFit =  glgm(swissRain, cells=30, formula="lograin",
 )
 
 
+library("INLA")
 data(Germany)
 g = system.file("demodata/germany.graph", package="INLA")
 source(system.file("demodata/Bym-map.R", package="INLA"))
