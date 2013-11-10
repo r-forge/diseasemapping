@@ -43,7 +43,9 @@ echo $contents; } ?>
 
 <!-- end of project description -->
 
-<p> No content added. </p>
+<p> Web pages for geostatsp, geostatsinla, diseasemapping, and mapmisc </p>
+
+<a href="openmap">Examples of openmap tiles</a>
 
 <p> The <strong>project summary page</strong> you can find <a href="http://<?php echo $domain; ?>/projects/<?php echo $group_name; ?>/"><strong>here</strong></a>. </p>
 
