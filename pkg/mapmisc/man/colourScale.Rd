@@ -63,7 +63,8 @@ myPoints = SpatialPointsDataFrame(20*cbind(runif(Npoints), runif(Npoints)),
 mymap = openmap(myPoints)
 
 
-myscale = colourScale(myPoints$y1, breaks=4, col="RdYlBu", style="quantile", revCol=TRUE,dec=1)
+myscale = colourScale(myPoints$y1, breaks=4, col="RdYlBu",
+ style="quantile", revCol=TRUE,dec=1)
 
 
 

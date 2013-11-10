@@ -27,6 +27,7 @@
 \comment{
 <<setup,echo=FALSE,cache=TRUE,warning=FALSE,results='hide'>>=
 library(geostatsp)
+library(mapmisc)
 theNames = names(osmTiles())
  
 

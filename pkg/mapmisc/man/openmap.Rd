@@ -114,7 +114,7 @@ names(osmTiles())
 	par(mar=c(0,0,0,0))
 	mytiles = openmap(myraster)
 
-	plot(myraster)
+	map.new(myraster)
 	plot(mytiles, add=TRUE)
 	points(myPoints,col='red')
 
@@ -122,7 +122,7 @@ names(osmTiles())
 
 	mytiles = openmap(myPoints,  
 		path=osmTiles("bw-mapnik"), verbose=TRUE)
-	plot(myPoints)
+	map.new(myPoints)
 	plot(mytiles, add=TRUE)
 	points(myPoints,col='red')
 	
