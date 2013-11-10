@@ -30,20 +30,9 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
 </table>
 
 
-<!-- get project title  -->
-<!-- own website starts here, the following may be changed as you like -->
+<h1> Geostatsp and diseasemapping</h1>
 
-<?php if ($handle=fopen('http://'.$domain.'/export/projtitl.php?group_name='.$group_name,'r')){
-$contents = '';
-while (!feof($handle)) {
-	$contents .= fread($handle, 8192);
-}
-fclose($handle);
-echo $contents; } ?>
-
-<!-- end of project description -->
-
-<p> Web pages for geostatsp, geostatsinla, diseasemapping, and mapmisc </p>
+<p> Web pages for geostatsp, geostatsinla, diseasemapping, and mapmisc packages</p>
 
 <a href="openmap">Examples of openmap tiles</a>
 
