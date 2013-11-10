@@ -9,10 +9,17 @@
 \newcommand{\comment}[1]{}
 \title{Map tiles}
 \author{Patrick Brown}
+
+
+
 \begin{document}
+\ifdefined\HCode
 \Css{body{background-color:lightyellow;}}
 \Css{h3{text-align:center;font-size:200\%;}}
 \Css{div.tableofcontents{float:right;}}
+\else
+\comment{nothing to do here}
+\fi
 \maketitle
 
 

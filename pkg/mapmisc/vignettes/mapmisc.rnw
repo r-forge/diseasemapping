@@ -41,17 +41,17 @@ here.
 library("geostatsp")
 data("murder")
 class(murder)
-CRS(murder)
+proj4string(murder)
 torTiles = openmap(murder)
-CRS(torTiles)
+proj4string(torTiles)
 @
 
 <<openmapLoaloa>>=
 data("eviLoa")
 class(eviLoa)
-CRS(eviLoa)
+proj4string(eviLoa)
 loaTiles = openmap(eviLoa)
-CRS(loaTiles)
+proj4string(loaTiles)
 @
 
 {\tt GNcities} is a wrapper for the function of the same name in the geonames
@@ -84,7 +84,7 @@ plot(loaTiles,add=TRUE)
 plot(eviLoa,add=TRUE)
 points(loaCities)
 text(loaCities, labels=loaCities$name)
-scaleBar(CRS(loaTiles))
+scaleBar(proj4string(loaTiles))
 @
 
 \section{Legends}
