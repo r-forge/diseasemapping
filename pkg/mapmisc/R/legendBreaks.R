@@ -1,12 +1,21 @@
 
-legendBreaks = function(pos, col, breaks, ...){
+legendBreaks = function(pos, breaks, ...){
 	ldots = list(...)
-	defaults = list(pch=15,  x=pos,
-			inset=0.001,cex=1)
+	defaults = list(pch=15,  x=pos,bg="white",
+		inset=0.001,cex=1)
 	
-	if(length(breaks)-1 == length(col)) {
+	if(is.list(breaks)){
+		if(length(breaks$legendCol) ) {
+			ldots$col=breaks$legendCol
+		}
+		if( length(breaks$breaks)) {
+			breaks=breaks$breaks
+		}
+	}
+
+	if(length(breaks)-1 == length(ldots$col)) {
 		defaults$adj=c(0,0.5)
-		col = c(NA, col)
+		ldots$col = c(NA, ldots$col)
 	} 
 	
 	
@@ -21,7 +30,7 @@ legendBreaks = function(pos, col, breaks, ...){
 	
 	
 	ldots$legend = rev(breaks)
-	ldots$col = rev(col)
+	ldots$col = rev(ldots$col)
 	
 	
 	# get rid of transparency in col

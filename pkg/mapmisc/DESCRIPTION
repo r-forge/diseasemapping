@@ -3,7 +3,7 @@ Type: Package
 Title: Utilities for producing maps 
 Version: 0.0.1
 Date: 2013-11-09
-Depends: sp, raster  
+Depends: sp, raster, R (>= 3.0.0)  
 Imports: geonames, RColorBrewer, rgdal, classInt
 Suggests: geostatsp, knitr
 Author: Patrick Brown <patrick.brown@utoronto.ca>

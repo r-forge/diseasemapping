@@ -88,8 +88,8 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,...) {
 			1i*strwidth("N")*InPerUnit[1]/InPerUnit[2]*
 			Im(theHat)
 	
-	theN = theN * exp(1i*north)
-	theHat = theHat * exp(1i*north)
+	theN = theN * exp(-1i*north)
+	theHat = theHat * exp(-1i*north)
 	
 	
 	
@@ -98,7 +98,7 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,...) {
 
 	
 	defaults = list(col='black', 
-			xjust=0.7, inset=0.001,
+			xjust=0.7, inset=0.001, bg="white",
 			x=pos, text.width=strwidth("I"), pt.cex=1)
 
 	for(D in names(defaults)) {

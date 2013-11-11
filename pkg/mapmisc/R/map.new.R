@@ -1,4 +1,4 @@
-map.new = function(x) {
+map.new = function(x, rasterLegend=FALSE) {
 	
 
 	
@@ -10,7 +10,12 @@ map.new = function(x) {
 		proj4string(xpoints) = CRS(thecrs)
 
 	
-	par(mar=c(0,0,0,0))
+	if(rasterLegend) { 
+		par(mar=c(0,0,0,5))
+	} else {
+		par(mar=c(0,0,0,0))
+	}
+	
 	plot(xpoints,pch=NA)
 
 	

@@ -23,11 +23,11 @@ colourScale = function(x, breaks=5,
 	
 	# unique breaks	
 	if(is.character(x) | style=="unique" ) {
-		thetable = sort(table(x))[1:breaks]
+		thetable = sort(table(x),decreasing=TRUE)
+		thetable = thetable[seq(1, min(c(breaks,length(thetable) )))]
 		breaks = names(thetable)
 		colVec = col(length(breaks))
 		names(colVec) = breaks
-		x = colVec[as.character(x)]		
  
 	} else {
 		
@@ -88,10 +88,12 @@ colourScale = function(x, breaks=5,
 			if(style=="quantile"){
 				breaks = quantile(x, prob=seq(0,1,len=breaks), na.rm=TRUE)
 			} else if(style=="equal"){
-				if(is.null(firstBreak))
-					firstBreak = min(x, na.rm=TRUE)
-				breaks = seq(firstBreak, max(x, na.rm=TRUE),len=breaks)
-				firstBreak = NULL
+				startHere = min(x, na.rm=TRUE)
+				if(is.null(transform) & !is.null(firstBreak) )	{
+						startHere = firstBreak
+						firstBreak = NULL
+				}					
+				breaks = seq(startHere, max(x, na.rm=TRUE),len=breaks)
 			} else {
 				breaks = classIntervals(x, n=breaks, 
 						style=style, ...)$brks
@@ -101,6 +103,8 @@ colourScale = function(x, breaks=5,
 			
 			if(!is.null(transform)) {
 				breaks = transform[[2]](breaks)
+				if(!is.null(firstBreak))
+					breaks[1] = firstBreak
 				x = xOrig
 			}
 			# round
@@ -121,21 +125,49 @@ colourScale = function(x, breaks=5,
 		}
 		
 		colVec = col(length(breaks)-1)		
-		if(revCol) colVec = rev(colVec)
+	}
 		
-		if(any(opacity < 1-eps)) {
+
+	if(revCol) colVec = rev(colVec)
+		
+	if(any(opacity < 1-eps)) {
+			if(length(opacity)==1){
+				opacity = rep(opacity, length(colVec))
+			} else if(length(opacity)==2){
+				opacity = seq(opacity[1], opacity[2], len=length(colVec))
+			} else if(length(opacity)==3){
+				opacity = c(opacity[1], 
+						seq(opacity[2], opacity[3],
+								len=length(colVec)-1))
+			} else {
+				opacity = opacity[round(
+								seq(1,length(opacity), 
+										len=length(colVec)))]
+			}
+			opacity = as.hexmode(round(opacity*255))
+			hasOpacity = grep("^#[[:xdigit:]]{8}$", colVec)
+			colVec[hasOpacity] = substr(colVec, 1, 7)
 			
-		}
+			isRGB = grep("^#[[:xdigit:]]{6}$", colVec)
+			colForPlot = colVec
+			colForPlot[isRGB] = paste(colForPlot[isRGB], opacity[isRGB],sep="")
+			
+	} else {
+			colForPlot = colVec
+	}
 		
-		
+	if(style=="unique") {
+		x = colVec[as.character(x)]
+	} else {		
 		x = as.character(cut(
 						x, breaks=breaks,
-						labels=colVec,
+						labels=colForPlot,
 						include.lowest=TRUE
-						))
+			))
 	}
 	
-	result = list(col=x,breaks=breaks,legendCol=colVec)
+	
+	result = list(col=x,breaks=breaks,legendCol=colVec, withTrans=colForPlot)
 	
 		
 }

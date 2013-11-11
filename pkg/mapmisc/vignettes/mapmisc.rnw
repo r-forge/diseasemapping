@@ -14,16 +14,16 @@
 
 \begin{document}
 \maketitle 
-<<setup,echo=FALSE,cache=TRUE,warning=FALSE,results='hide'>>=
-library('mapmisc')
+
+<<setup,echo=FALSE,cache=FALSE,results='hide'>>=
 library('knitr')
 opts_chunk$set(echo=TRUE,message=FALSE,
 		dev='png', 
 		fig.align='center',fig.pos='H',width=80,
-		fig.height=3,fig.width=5
+		fig.height=4,fig.width=3,out.width="0.3\\textwidth",
+		dev.args=list(bg="white")		
 )
-
-
+par(bg="white")
 @
 
 \section{Introduction}
@@ -35,94 +35,178 @@ packages such as classInt, geonames, and OpenStreetMap, and the price of having
 tidier code is much of the flexibility from these other packages has been lost
 here.
 
-\section{The {\tt openmap} function for map layers}
-
-<<openmapToronto>>=
-library("geostatsp")
-data("murder")
-class(murder)
-proj4string(murder)
-torTiles = openmap(murder)
-proj4string(torTiles)
+The meuse data from the sp package
+<<meusedata,echo=TRUE>>=
+library('mapmisc')
+library(sp)
+data(meuse)
+coordinates(meuse) <- ~x+y
+proj4string(meuse) <- CRS("+init=epsg:28992")
+class(meuse)
 @
 
-<<openmapLoaloa>>=
-data("eviLoa")
-class(eviLoa)
-proj4string(eviLoa)
-loaTiles = openmap(eviLoa)
-proj4string(loaTiles)
+
+Get elevation data with
+<<elevation,eval=FALSE>>=
+meuseLL = spTransform(meuse, CRS("+init=epsg:4326"))
+getData("SRTM", lon=xmin(extent(meuseLL)), 
+	lat=ymin(extent(meuseLL)),path=tempdir())
+nldElev = raster(paste(tempdir(), "/", "srtm_38_02.tif", sep=""))
+nldElev = crop(nldElev, extent(meuseLL))
+nldElev = projectRaster(nldElev, crs=proj4string(meuse))
 @
+Or simply do
+<<dataneth>>=
+data(netherlands)
+@
+
+The elevation data is a Raster.
+<<classElev>>=
+class(nldElev)
+nldElev = crop(nldElev, extend(extent(meuse), 1000))
+@
+
+
+
+
+\section{Downloading background maps and city locations}
+
+Get a background map covering the extent of the meuse data
+<<openmap,eval=FALSE>>=
+nldTiles = openmap(meuse)
+@
+{\tt nldTiles} is a Raster with the sampe projection as {\tt meuse}
+<<openmapInfo>>=
+class(nldTiles)
+proj4string(nldTiles)
+proj4string(meuse)
+@
+
+
 
 {\tt GNcities} is a wrapper for the function of the same name in the geonames
 package.
 
-<<loaCities>>=
-loaCities = GNcities(eviLoa, maxRows=6)
+<<cities,eval=FALSE>>=
+nldCities = GNcities(meuse, maxRows=6)
+@
+A SpatialPointsDataFrame, with same map projection.
+<<citiesInfo>>=
+class(nldCities)
+names(nldCities)
+proj4string(nldCities)
 @
 
 
 \section{Making maps}
 
-The {\tt map.new} function sets up a map without margins or room for a legend on
-the right.
-
-{\tt scaleBar} adds a scale and north arrow.  It uses the map projection of the
-argument supplied to calculate distances and find north.
-
-
-<<simpleMap,fig.cap="simple map", fig.subcap=c("murder","ltLoa")>>=
-map.new(murder)
-plot(torTiles, add=TRUE)
-points(murder, col="#FF000060",add=TRUE)
-plot(torontoBorder,add=TRUE)
-scaleBar(murder)
+The {\tt map.new} function sets up a map in the current plot window with the
+correct limits and aspect ratio for the object supplied, and without margins or
+white space. {\tt scaleBar} adds a scale and north arrow.  It uses the map
+projection of the argument supplied to calculate distances and find north.
 
 
-plot(eviLoa,legend=FALSE)
-plot(loaTiles,add=TRUE)
-plot(eviLoa,add=TRUE)
-points(loaCities)
-text(loaCities, labels=loaCities$name)
-scaleBar(proj4string(loaTiles))
+<<simpleMap,fig.cap="simple map", fig.subcap=c("data locations","cities","elevation")>>=
+
+# plot the data locations
+map.new(meuse)
+plot(nldTiles, add=TRUE)
+points(meuse,col="red", cex=0.3)
+scaleBar(proj4string(meuse),pos="topleft", bg="white")
+
+# plot city names
+map.new(meuse)
+plot(nldTiles, add=TRUE)
+points(nldCities)
+text(nldCities, labels=nldCities$name, pos=3)
+
+
+# plot elevation
+map.new(meuse, rasterLegend=TRUE)
+plot(nldTiles, add=TRUE)
+plot(nldElev,add=TRUE,col=terrain.colors(8),alpha=0.6)
+scaleBar(meuse,pos="topleft",bg="white")
+
+
+
+@
+
+Reproject the data so it's roughly aligned with the x-axis.
+
+<<reproj,cache=TRUE>>=
+rotatedCRS = CRS("+proj=omerc +lat_0=51 +lonc=5.75 
+				+alpha=-50.0000000 +gamma=0.0 +k=1.000000 +x_0=500000.000 
+				+y_0=0.000 +ellps=WGS84	+units=m")
+meuseRot = spTransform(meuse, rotatedCRS)
+tilesRot = projectRaster(nldTiles, crs=rotatedCRS, method='ngb')
+tilesRot@legend@colortable = nldTiles@legend@colortable
+elevRot = projectRaster(nldElev, crs=rotatedCRS)
+@
+
+And create new plots
+
+<<rotatedMap,fig.cap="Rotated map", fig.subcap=c("elevation","data"), fig.height=3,fig.width=4,out.width="0.48\\textwidth">>=
+# first elevation
+map.new(meuseRot)
+plot(tilesRot, add=TRUE)
+plot(elevRot,add=TRUE,alpha=0.5,col=terrain.colors(8), legend=FALSE)
+points(nldCities)
+text(nldCities, labels=nldCities$name, pos=3)
+scaleBar(meuseRot,pos="topleft", bg="white")
+
+# then data locations
+map.new(meuseRot)
+plot(tilesRot, add=TRUE)
+points(meuseRot,col="red", cex=0.3)
+scaleBar(proj4string(meuseRot), bg="white")
 @
 
 \section{Legends}
 
-<<murderAge>>=
-murderScale = colourScale(murder$age, breaks=6, style='equal', 
-		opacity=0.8, dec=0, firstBreak=0)
+
+Create a colour scale for plotting copper  concentrations
+<<meuseScale>>=
+cuScale = colourScale(meuse$copper, breaks=5, style='equal', 
+		opacity=0.8, dec=-1, firstBreak=0)
+@
+and elevation, with transparency decreasing as elevation increases.
+<<elevScale>>=
+elevScale = colourScale(values(nldElev), breaks=6, col=terrain.colors,
+		firstBreak=0, dec=-1,opacity=c(0.2, 0.9))
+@
+Soil type is a categorical variable, create a factor and create a colour scale
+of unique values
+<<soilScale>>=
+meuse$soilFac = factor(meuse$soil, levels=c(1,2,3), 
+		labels=c("Calcareous","Non-Calc's","Red Brick"))
+soilScale = colourScale(meuse$soilFac, style="unique",
+		col="Set2")
 @
 
-<<murderMap,fig.cap="Ages of Murder victims">>=
-map.new(murder)
-plot(torTiles, add=TRUE)
-points(murder, col=murderScale$col,add=TRUE)
-plot(torontoBorder,add=TRUE)
-scaleBar(murder, pos="bottomleft")
-legendBreaks("bottomright", col=murderScale$legend, breaks=murderScale$breaks,
-		title='years')
+<<meuseLegends,fig.subcap=c("Copper","soil", "elevation"), fig.cap="Meuse data again">>=
+map.new(meuse)
+plot(nldTiles, add=TRUE)
+plot(meuse, col=cuScale$col,add=TRUE,pch=16)
+scaleBar(meuse, pos="topleft",bg="white")
+legendBreaks("bottomright",  breaks=cuScale,
+		title="gals/firkin",bg="white")
+
+
+map.new(meuse)
+plot(nldTiles, add=TRUE)
+plot(meuse, col=soilScale$col,add=TRUE,pch=16)
+scaleBar(meuse, pos="topleft",bg="white")
+legend("bottomright", fill=soilScale$legendCol, legend=soilScale$breaks,
+		title="soil type", cex=0.7,bg="white")
+
+map.new(meuse)
+plot(nldTiles, add=TRUE)
+image(nldElev, breaks=elevScale$breaks, col=elevScale$withTrans, legend=FALSE,add=TRUE)
+scaleBar(meuse, pos="topleft",bg="white")
+legendBreaks("left", breaks=elevScale, title='Metres',bg="white")
 @
 
-A categorical variable, murder type.
-<<murderType>>=
-table(murder$homicide.type)
-murderScale = colourScale(murder$homicide.type, breaks=4, style='unique', 
-		opacity=0.8)
-@
 
-Call the standard {\tt legend} function, because we have unique values instead
-of breaks.
-
-<<murderTypeMap,fig.cap="Murder types">>=
-map.new(murder)
-plot(torTiles, add=TRUE)
-points(murder, col=murderScale$col,add=TRUE)
-plot(torontoBorder,add=TRUE)
-scaleBar(murder, pos="bottomleft")
-legend("bottomright", col=murderScale$legend, legend=murderScale$breaks,
-		title='years')
-@
 
 
 \end{document}

@@ -72,7 +72,7 @@ data("swissRain")
 swissRes =  lgm(swissRain, locations=20, formula="rain",
 	covariates=swissAltitude, boxcox=0.5, fixBoxcox=TRUE, 
 	shape=1, fixShape=TRUE,
-	aniso=TRUE, nugget=0, fixNugget=TRUE,
+	aniso=FALSE, nugget=0, fixNugget=TRUE,
 	nuggetInPrediction=FALSE
 	)
 	

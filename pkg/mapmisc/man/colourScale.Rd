@@ -1,5 +1,6 @@
 \name{colourScale}
 \alias{colourScale}
+\alias{legendBreaks}
 
 \title{Create colour scales}
 \description{
@@ -8,11 +9,13 @@ Produces a scale of colours for plotting maps an producing legends.  }
 	colourScale(x, breaks=5, style=c("quantile","equal","unique", "fixed"),
 	 col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
 	 transform=NULL, revCol=FALSE, exclude=NULL, ...)
+legendBreaks(pos, breaks, ...)
 	}
 
 \arguments{
 	\item{x}{A vector or single-layer Raster, numeric or factor,  for which a colour scale will be created}
-	\item{breaks}{Either the number of breaks or a vector of breaks}
+	\item{breaks}{For \code{colourScale} either the number of or vector of breaks.
+	for \code{legendBreaks} usually the output of \code{colourScale}, or a vector of breaks}
 	\item{style}{Style for breaks, see Details}
 	\item{col}{Colours to use, either a function or 
 	argument for \code{\link[RColorBrewer]{brewer.pal}}}
@@ -23,11 +26,14 @@ Produces a scale of colours for plotting maps an producing legends.  }
 	\item{transform}{A list of two functions to transform \code{x} and inverse transform the breaks, or a numeric value specifying a Box-Cox parameter.}
 	\item{revCol}{Reverse the order of the colours.}
 	\item{exclude}{A vector of values to change to NA when they appear in \code{x}}
-	\item{...}{Additional arguments passed to \code{\link[classInt]{classIntervals}}}
+  \item{pos}{
+Position, as specified in the \code{legend} function.
+}
+	\item{...}{Additional arguments passed to \code{\link[classInt]{classIntervals}} or \code{legend}.}
 }
 
 \details{
-Produces intervals from \code{x}, each with a unique colour. Categories are determined with break points according to the following \code{style} options:
+\code{colourScale} produces intervals from \code{x}, each with a unique colour. Categories are determined with break points according to the following \code{style} options:
 \itemize{
 \item \code{quantile}: \code{quantile(x, prob=seq(0,1,len=breaks), )} 
 }
@@ -43,6 +49,9 @@ Produces intervals from \code{x}, each with a unique colour. Categories are dete
 
  any other string: is passed to \code{\link[classInt]{classIntervals}}
 
+\code{legendBreaks} produces a legend for 'z-axis' colour scales.
+
+
 }
 
 \value{A list with elements
@@ -51,7 +60,7 @@ Produces intervals from \code{x}, each with a unique colour. Categories are dete
 \item{legendCol}{vector of unique colour values corrdsponding to \code{breaks}}
 }
 
-\seealso{\code{\link{legendBreaks}}, \code{\link[classInt]{classIntervals}}}
+\seealso{\code{\link{scaleBar}}, \code{\link[classInt]{classIntervals}}}
 
 \examples{
 Npoints = 20
@@ -60,8 +69,10 @@ myPoints = SpatialPointsDataFrame(20*cbind(runif(Npoints), runif(Npoints)),
 	y2=c(sample(1:4, Npoints-1,replace=TRUE), NA)),
 	proj4string=CRS("+init=epsg:4326")
 	)
-mymap = openmap(myPoints)
 
+\dontrun{
+mymap = openmap(myPoints)
+}
 
 myscale = colourScale(myPoints$y1, breaks=4, col="RdYlBu",
  style="quantile", revCol=TRUE,dec=1)
@@ -69,34 +80,41 @@ myscale = colourScale(myPoints$y1, breaks=4, col="RdYlBu",
 
 
 map.new(myPoints)
+\dontrun{
 plot(mymap,add=TRUE)
+}
 plot(myPoints, col=myscale$col, pch=16,add=TRUE)
-legendBreaks("topleft", breaks=myscale$breaks, col=myscale$legendCol)
+legendBreaks("topleft", breaks=myscale)
 
 
 myscale2 = colourScale(myPoints$y1, breaks=8, col=rainbow, style="equal",
 opacity=0.8, dec=2, revCol=TRUE)
 
 map.new(myPoints)
+\dontrun{
 plot(mymap,add=TRUE)
+}
 plot(myPoints, col=myscale2$col, pch=16,add=TRUE)
-legendBreaks("topleft", breaks=myscale2$breaks, col=myscale2$legendCol)
-
+legendBreaks("topleft", breaks=myscale2)
 
 myscale3 = colourScale(myPoints$y2,  breaks=3,col="Set2", style="unique",
 	opacity=c(0.1, 0.9))
 
 map.new(myPoints)
+\dontrun{
 plot(mymap,add=TRUE)
+}
 plot(myPoints, col=myscale3$col, pch=16,add=TRUE)
-legendBreaks("topleft", breaks=myscale3$breaks, col=myscale3$legendCol)
+legendBreaks("topleft", breaks=myscale3)
 
 myPoints$y3 = exp(myPoints$y1)
 myscale4 = colourScale(myPoints$y3,  breaks=4, style="equal",
-	opacity=c(0.1, 0.9), transform=1.25,dec=3)
+	opacity=c(0.1, 0.9), transform=1.25,dec=0, firstBreak=0)
 
 map.new(myPoints)
+\dontrun{
 plot(mymap,add=TRUE)
+}
 plot(myPoints, col=myscale4$col, pch=16,add=TRUE)
 legendBreaks("topleft", breaks=myscale4$breaks, col=myscale4$legendCol)
 

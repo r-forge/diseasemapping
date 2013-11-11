@@ -17,10 +17,18 @@ osmTiles = function(name) {
 #	landshaded="http://tiles.openpistemap.org/landshaded/",
 	"maptoolkit"="http://tile2.maptoolkit.net/terrain/",
 #	skobbler="http://tiles.skobbler.net/osm_tiles2/",	
-	waze="http://tilesworld.waze.com/tiles/"
+	waze="http://tilesworld.waze.com/tiles/",
 #	eu="http://alpha.map1.eu/tiles/"#,
 #	mapbox="http://a.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/"
+	humanitarian="http://a.tile.openstreetmap.fr/hot/"
 	)
+	
+	
+	toolserver = c("parking-bw", "osm-locale-de","bw-noicons")
+	toadd =	paste("www.toolserver.org/tiles/", toolserver,"/", sep="")
+	names(toadd) = toolserver
+	result = c(result, toadd)
+	
 	
 	languages = c("en","fr","de", "it","es","ru")
 	toadd =	paste("www.toolserver.org/tiles/osm-labels-", languages,"/", sep="")
