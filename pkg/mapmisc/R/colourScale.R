@@ -169,5 +169,6 @@ colourScale = function(x, breaks=5,
 	
 	result = list(col=x,breaks=breaks,legendCol=colVec, withTrans=colForPlot)
 	
+	result
 		
 }
