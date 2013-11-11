@@ -14,10 +14,15 @@ colourScale = function(x, breaks=5,
 	}
 	eps=0.01
 	
+	if(missing(x))
+		x=NULL
+	
+	if(length(exclude) & length(x)) {
 	toexclude = x %in% exclude
 	toexclude[is.na(toexclude)] = FALSE
 	if(any(toexclude))
 		x=x[toexclude]	= NA
+	}
 	
 
 	
@@ -144,7 +149,7 @@ colourScale = function(x, breaks=5,
 								seq(1,length(opacity), 
 										len=length(colVec)))]
 			}
-			opacity = as.hexmode(round(opacity*255))
+			opacity = toupper(as.hexmode(round(opacity*255)))
 			hasOpacity = grep("^#[[:xdigit:]]{8}$", colVec)
 			colVec[hasOpacity] = substr(colVec, 1, 7)
 			
@@ -158,9 +163,10 @@ colourScale = function(x, breaks=5,
 		
 	if(style=="unique") {
 		x = colVec[as.character(x)]
-	} else {		
+	} else if (length(x)){		
 		x = as.character(cut(
-						x, breaks=breaks,
+						as.numeric(x), 
+						breaks=breaks,
 						labels=colForPlot,
 						include.lowest=TRUE
 			))
