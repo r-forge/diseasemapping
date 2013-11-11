@@ -4,6 +4,14 @@ mydat = SpatialPointsDataFrame(cbind(runif(n), runif(n)),
 		data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 0.5))
 )
 
+# get rid of points too close together
+thedist =spDists(mydat)
+thedist[lower.tri(thedist, diag=TRUE)] = NA
+thedist = thedist < 0.01
+thedist = apply(thedist, 1, any, na.rm=T)
+mydat = mydat[!thedist,]
+
+	
 
  trueParamAniso = param=c(variance=2^2, range=0.2, shape=2,
 		nugget=0,anisoRatio=4,anisoAngleDegrees=10, nugget=0)
