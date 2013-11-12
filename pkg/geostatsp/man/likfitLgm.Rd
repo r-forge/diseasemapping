@@ -89,7 +89,7 @@ and the variance matrix of the coefficient MLE's.
 \code{\link{lgm}}
 }
 \examples{
-n=200
+n=180
 mydat = SpatialPointsDataFrame(cbind(runif(n), runif(n)), 
 	data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 0.5))
 	)
@@ -102,12 +102,12 @@ mydat$U = GaussRF(mydat, param=trueParam)
 mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + 
 	mydat$U + rnorm(length(mydat), 0, sd=sqrt(trueParam["nugget"]))
 
-
+\dontrun{
 par(mfrow=c(1,2))
 spplot(mydat, "U", col.regions=rainbow(10), main="U")
 spplot(mydat, "Y", col.regions=rainbow(10), main="Y")
 par(mfrow=c(1,1))
-
+}
 
 myres = likfitLgm(mydat, Y ~ cov1 + cov2, 
 	param=c(range=0.1,nugget=0.1,shape=2), 
@@ -146,7 +146,7 @@ legend("bottomright", fill=c("black","red","blue","green"),
 	legend=c("data","true","MLE","no N"))
 
 
-	
+\dontrun{ 	
 # calculate likelihood
 temp=loglikLgm(param=myres$param, 
 		data=mydat, 
@@ -156,7 +156,7 @@ temp=loglikLgm(param=myres$param,
 
 
 # an anisotropic example
-\dontrun{ 
+
 
 trueParamAniso = param=c(variance=2^2, range=0.2, shape=2,
 	 nugget=0,anisoRatio=4,anisoAngleDegrees=10, nugget=0)

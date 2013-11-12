@@ -620,6 +620,15 @@ params$summary["range",thecolsFull]=
 				"Range for space",
 				thecolsFull
 		]
+dimnames(params$summary) = lapply(dimnames(params$summary),
+		function(qq) {
+			qq=gsub("_", "\\\\textunderscore ", qq)
+			qq=gsub("\\$", "\\\\textdollar ", qq)
+			qq=gsub("<", "\\\\textless ", qq)
+			qq=gsub(">", "\\\\textgreater ", qq)
+			qq
+		}
+)
 
 
 resRaster=stack(resRasterRandom, resRasterFitted)

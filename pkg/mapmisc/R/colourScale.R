@@ -35,7 +35,6 @@ colourScale = function(x, breaks=5,
 		names(colVec) = breaks
  
 	} else {
-		
 		if(style != "fixed") {
 			if(!is.null(transform)) {
 				if(is.numeric(transform)) {
@@ -65,6 +64,8 @@ colourScale = function(x, breaks=5,
 					
 					# assume it's a box=cox parameter
 				} 
+
+				
 				if(is.character(transform)){
 					if(transform=="exp") { 
 						tranform = list(exp, log)
@@ -72,7 +73,7 @@ colourScale = function(x, breaks=5,
 						if(any(x<=0) ) {
 							warning("negative or zero x's given with log transform")
 						}
-						tranform = list(log,exp)
+						transform = list(log,exp)
 					} else if(transform=="sqrt") {
 						if(any(x<=0) ) {
 							warning("negative or zero x's given with root transform")
@@ -85,6 +86,7 @@ colourScale = function(x, breaks=5,
 						transform = list(function(x) x^2, sqrt)						
 					}
 				} 
+
 				xOrig = x
 				x = transform[[1]](x)
 			}
@@ -103,8 +105,7 @@ colourScale = function(x, breaks=5,
 				breaks = classIntervals(x, n=breaks, 
 						style=style, ...)$brks
 			}
-			
-			
+		
 			
 			if(!is.null(transform)) {
 				breaks = transform[[2]](breaks)
