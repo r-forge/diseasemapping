@@ -1,5 +1,5 @@
 export(scaleBar,map.new,legendBreaks, colourScale)
-export(openmap, getTiles, osmTiles)
+export(openmap, getTiles, osmTiles,insetMap)
 # functions depending on geonames
 importFrom(geonames, GNcities)
 export( GNcities)

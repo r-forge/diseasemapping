@@ -1,6 +1,7 @@
 \name{scaleBar}
 \alias{scaleBar}
 \alias{map.new}
+\alias{insetMap}
 
 \title{
 Map with scale bar
@@ -12,6 +13,9 @@ and adding a legend of colour scales.
 \usage{
 scaleBar(crs, pos = "bottomright", scale.cex = 1, ...)
 map.new(x,rasterLegend=FALSE)
+insetMap(crs, pos="bottomright",map="osm",zoom=0, 
+		width=0.2, col="#00FF0060", borderSmall=NA, borderBig=NULL,
+			cropInset = extent(-170,xmax=170, ymin=-65, ymax=75)) 
 }
 
 \arguments{
@@ -30,6 +34,14 @@ A spatial object from which an extent can be extracted.
 }
 \item{rasterLegend}{Leave room to the right for 
 the legend produced by plotting a Raster object}
+\item{map}{Either a Raster for the inset map or a string 
+passed to \code{\link{openmap}}'s path argument}
+\item{zoom}{Zoom level if retreiving inset map from \code{\link{openmap}}}
+\item{width}{Width of the inset map, as a fraction of the plot window}
+\item{col}{Colour for shaded region of inset map}
+\item{borderSmall,borderBig}{border style for the inset map and shaded region, 
+passed as the \code{bg} argument to \code{\link[graphics]{polygon}}}
+\item{cropInset}{Crop the insert map to this extent}
 \item{\dots}{
 Additional arguments passed to \code{legend}, for examaple \code{bty='n'} 
 }
@@ -46,10 +58,13 @@ with no margins.
 Patrick Brown
 }
 
+\seealso{\code{\link[raster]{scalebar}}, \code{\link[sp]{spplot}}}
+
 \examples{
 
 Npoints = 20
-myPoints = SpatialPointsDataFrame(20*cbind(runif(Npoints), runif(Npoints)), 
+myPoints = SpatialPointsDataFrame(
+.20*cbind(runif(Npoints), runif(Npoints)), 
 	data=data.frame(y1=c(NA, rnorm(Npoints-1)), 
 	y2=c(sample(1:4, Npoints-1,replace=TRUE), NA)),
 	proj4string=CRS("+init=epsg:4326")
@@ -72,6 +87,6 @@ plot(myPoints,col = as.character(cut(
 )),add=TRUE)
 scaleBar(myPoints, "bottomright",cex=1.25, scale.cex=2)
 legendBreaks("topleft", breaks=breaks, col=thecol)
-
+insetMap(myPoints, "bottomleft",col='blue')
 }
 

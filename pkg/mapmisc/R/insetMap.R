@@ -1,0 +1,120 @@
+insetMap = function(crs, pos="bottomright",map="osm",zoom=0, 
+		width=0.2, col="#00FF0060", borderSmall=NA, borderBig=NULL,
+		cropInset = extent(-170,xmax=170, ymin=-65, ymax=75)) {
+
+	
+extentBig = extent(par("usr"))
+	
+extentSmall = try(extent(crs), silent=TRUE)
+
+if(class(extentSmall)=="try-error")
+	extentSmall = extentBig
+	
+if(is.character(crs))
+			crs = CRS(crs)
+if(class(crs) != "CRS")
+	crs = CRS(proj4string(crs))
+
+
+bboxSmall = t(bbox(extentSmall))
+
+xseq = seq(bboxSmall[1,1], bboxSmall[2,1],len=20)
+yseq = seq(bboxSmall[1,2], bboxSmall[2,2],len=20)
+
+polySmall = cbind( 
+		c(xseq, rep(bboxSmall[2,1], length(yseq)), 
+			rev(xseq), rep(bboxSmall[1,1], length(yseq))), 
+		c(rep(bboxSmall[1,2], length(xseq)), yseq,
+				rep(bboxSmall[2,2], length(xseq)), rev(yseq)
+				)
+)
+
+
+xsp = SpatialPoints(polySmall, 		proj4string = crs)
+
+
+
+if(is.character(map)) {
+	map = openmap(xsp, path=map, zoom=zoom,crs=CRS("+init=epsg:4326") )
+	crsCrop = try(proj4string(cropInset),silent=TRUE)
+	if(class(crsCrop)=="try-error")
+		crsCrop = "+init=epsg:4326"
+	tocrop = t(bbox(extent(cropInset)))
+	tocrop = SpatialPoints(tocrop,
+			proj4string=CRS(crsCrop))
+	tocrop = spTransform(tocrop, CRS(proj4string(map)))
+	map = crop(map, extent(tocrop))
+}
+
+
+xpoints = t(bbox(extentBig))
+
+
+boxsize = abs(apply(xpoints, 2, diff))	
+oldinsetbox = t(bbox(map))
+oldrange = apply(oldinsetbox, 2, diff)
+newxrange = boxsize[1]*width
+newyrange = newxrange * oldrange[2]/oldrange[1]
+
+
+	if(is.character(pos)) {
+x = apply(xpoints, 2, mean)
+if(length(grep("^top",pos)))
+	x[2] = xpoints[2,2]-newyrange
+if(length(grep("^bottom",pos)))
+	x[2] = xpoints[1,2]
+if(length(grep("right$",pos)))
+	x[1] = xpoints[2,1]-newxrange
+if(length(grep("left$",pos)))
+	x[1] = xpoints[1,1]
+} else x=pos
+
+
+
+
+mapOrig = map
+extent(map)= extent(c(x[1], x[1]+newxrange, x[2], 
+				x[2]+newyrange))
+proj4string(map) = CRS(NA)
+bbOrig = t(bbox(extent(mapOrig)))
+bbSmall = t(bbox(extent(map)))
+
+
+ 
+
+xsp = spTransform(xsp, 
+		CRSobj=CRS(proj4string(mapOrig)))
+
+ 
+
+
+scale =  apply(bbSmall, 2, diff)/ apply(bbOrig, 2, diff)
+
+N = length(xsp)
+xsp = coordinates(xsp)
+
+
+
+xsp = (xsp - bbOrig[rep(1,N),]) * matrix(scale, N, 2, byrow=TRUE) + 
+		bbSmall[rep(1,N),]
+
+
+
+
+if(nlayers(map)==3) {
+ plotRGB(map, add=TRUE)
+} else {
+	plot(map, add=TRUE)
+}
+bigpoly = t(bbox(map))
+bigpoly = cbind(bigpoly[c(1,2,2,1),1], bigpoly[c(1,1,2,2),2])
+polygon(bigpoly,border=borderBig)
+ 
+if( (diff(range(xsp[,1])))  < (oldrange[1]/200) ) {
+ 
+	points(xsp[1,1], xsp[1,2], pch=15, col=col)
+} else {
+	polygon(xsp, col=col,border=borderSmall)
+}
+return(invisible(mapOrig))
+}

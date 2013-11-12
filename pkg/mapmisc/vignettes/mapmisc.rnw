@@ -161,6 +161,28 @@ points(meuseRot,col="red", cex=0.3)
 scaleBar(proj4string(meuseRot), bg="white")
 @
 
+\section{Inset maps}
+
+
+<<inset,fig.cap="Inset map", fig.subcap=c("elevation","rotated"), fig.height=3,fig.width=4,out.width="0.48\\textwidth">>=
+# first elevation
+map.new(meuse, rasterLegend=TRUE)
+plot(nldTiles, add=TRUE)
+plot(nldElev,add=TRUE,col=terrain.colors(8),alpha=0.6)
+scaleBar(meuse,pos="topleft",bg="white")
+insetMap(meuse, "bottomleft",zoom=0)
+
+
+# then data locations
+map.new(meuseRot)
+plot(tilesRot, add=TRUE)
+points(meuseRot,col="red", cex=0.3)
+scaleBar(proj4string(meuseRot), bg="white")
+insetMap(meuseRot, "bottomleft",zoom=6)
+@
+
+
+
 \section{Legends}
 
 
@@ -182,6 +204,8 @@ meuse$soilFac = factor(meuse$soil, levels=c(1,2,3),
 soilScale = colourScale(meuse$soilFac, style="unique",
 		col="Set2")
 @
+
+
 
 <<meuseLegends,fig.subcap=c("Copper","soil", "elevation"), fig.cap="Meuse data again">>=
 map.new(meuse)
