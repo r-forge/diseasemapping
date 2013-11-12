@@ -11,11 +11,12 @@ Utilities for plotting a map, adding a scale bar and north arrow,
 and adding a legend of colour scales.
 }
 \usage{
-scaleBar(crs, pos = "bottomright", scale.cex = 1, ...)
-map.new(x,rasterLegend=FALSE)
+scaleBar(crs, pos = "bottomright", scale.cex = 1, outer=TRUE,...)
+map.new(x,legendRight=FALSE)
 insetMap(crs, pos="bottomright",map="osm",zoom=0, 
-		width=0.2, col="#00FF0060", borderSmall=NA, borderBig=NULL,
-			cropInset = extent(-170,xmax=170, ymin=-65, ymax=75)) 
+		width=0.2, col="#FF000060", borderSmall=NA, borderBig=NULL,
+			cropInset = extent(-170,xmax=170, ymin=-65, ymax=75),
+			outer=TRUE) 
 }
 
 \arguments{
@@ -32,7 +33,7 @@ Scaling factor for the scale bar.
 \item{x}{
 A spatial object from which an extent can be extracted.
 }
-\item{rasterLegend}{Leave room to the right for 
+\item{legendRight}{Leave room to the right for 
 the legend produced by plotting a Raster object}
 \item{map}{Either a Raster for the inset map or a string 
 passed to \code{\link{openmap}}'s path argument}
@@ -42,6 +43,7 @@ passed to \code{\link{openmap}}'s path argument}
 \item{borderSmall,borderBig}{border style for the inset map and shaded region, 
 passed as the \code{bg} argument to \code{\link[graphics]{polygon}}}
 \item{cropInset}{Crop the insert map to this extent}
+\item{outer}{If \code{TRUE}, put bar or map in the margin of the plot}
 \item{\dots}{
 Additional arguments passed to \code{legend}, for examaple \code{bty='n'} 
 }

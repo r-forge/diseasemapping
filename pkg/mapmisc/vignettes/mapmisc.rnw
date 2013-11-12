@@ -122,7 +122,7 @@ text(nldCities, labels=nldCities$name, pos=3)
 
 
 # plot elevation
-map.new(meuse, rasterLegend=TRUE)
+map.new(meuse, legendRight=TRUE)
 plot(nldTiles, add=TRUE)
 plot(nldElev,add=TRUE,col=terrain.colors(8),alpha=0.6)
 scaleBar(meuse,pos="topleft",bg="white")
@@ -166,7 +166,7 @@ scaleBar(proj4string(meuseRot), bg="white")
 
 <<inset,fig.cap="Inset map", fig.subcap=c("elevation","rotated"), fig.height=3,fig.width=4,out.width="0.48\\textwidth">>=
 # first elevation
-map.new(meuse, rasterLegend=TRUE)
+map.new(meuse, legendRight=TRUE)
 plot(nldTiles, add=TRUE)
 plot(nldElev,add=TRUE,col=terrain.colors(8),alpha=0.6)
 scaleBar(meuse,pos="topleft",bg="white")

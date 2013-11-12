@@ -1,5 +1,5 @@
 
-scaleBar = function(crs, pos="bottomright",scale.cex=1,...) {
+scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
 	
 	if(is.character(crs))
 		crs = CRS(crs)
@@ -98,8 +98,32 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,...) {
 
 	
 	defaults = list(col='black', 
-			xjust=0.7, inset=0.001, bg="white",
+			xjust=0.7, bg="white",
 			x=pos, text.width=strwidth("I"), pt.cex=1)
+	
+	if(outer){
+		par(xpd=TRUE)
+		fromEdge = matrix(par("plt"), 2, 2, 
+				dimnames=list(c("min","max"), c("x","y")))
+		propIn = apply(fromEdge, 2, diff)
+		if(is.character(pos)) {
+			inset = c(0,0)
+			if(length(grep("^bottom", pos))){
+				inset[2] = -fromEdge["min","y"]					
+			} else if(length(grep("^top", pos))){
+				inset[2] = fromEdge["max","y"]-1					
+			}
+			if(length(grep("left$", pos))){
+				inset[1] = -fromEdge["min","x"]					
+			} else if(length(grep("right$", pos))){
+				inset[1] = fromEdge["max","x"]-1					
+			}
+			inset = inset/propIn
+			defaults$inset = inset+ 0.01
+		}
+	} else {
+		defaults$inset = 0.01
+	}
 
 	for(D in names(defaults)) {
 		if(is.null(forLegend[[D]]))
@@ -111,7 +135,6 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,...) {
 						(segscale*strwidth("m") + 
 							2*strwidth("m")+
 							forLegend$text.width)))
-	
 	for(D in names(defaults)) {
 		if(is.null(forLegend[[D]]))
 			forLegend[[D]] = defaults[[D]]			
@@ -124,6 +147,7 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,...) {
 	forLegend$legend = NA
 	forLegend$lwd=3
 
+	
 	
 	if(forLegend$seg.len*strwidth("m") < strwidth(forLegend$title)) {
 		forLegend$title=NA
@@ -145,5 +169,5 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,...) {
 	 
 	par(cex=oldcex)
 	 
-	 return(invisible(c(thelegend,forLegend))	)
+	 return(invisible(thelegend)	)
 }

@@ -1,9 +1,35 @@
 
-legendBreaks = function(pos, breaks, ...){
+legendBreaks = function(pos, breaks, outer=TRUE,...){
 	ldots = list(...)
 	defaults = list(pch=15,  x=pos,bg="white",
 		inset=0.001,cex=1)
 	
+if(outer){
+	oldxpd = par("xpd")
+	par(xpd=TRUE)
+	fromEdge = matrix(par("plt"), 2, 2, 
+			dimnames=list(c("min","max"), c("x","y")))
+	propIn = apply(fromEdge, 2, diff)
+	if(is.character(pos)) {
+		inset = c(0,0)
+		if(length(grep("^bottom", pos))){
+			inset[2] = -fromEdge["min","y"]					
+		} else if(length(grep("^top", pos))){
+			inset[2] = fromEdge["max","y"]-1					
+		}
+		if(length(grep("left$", pos))){
+			inset[1] = -fromEdge["min","x"]					
+		} else if(length(grep("right$", pos))){
+			inset[1] = fromEdge["max","x"]-1					
+		}
+		inset = inset/propIn
+		defaults$inset = inset+ 0.01
+	}
+} else {
+	defaults$inset = 0.01
+}
+
+
 	if(is.list(breaks)){
 		if(length(breaks$legendCol) ) {
 			ldots$col=breaks$legendCol
@@ -39,6 +65,9 @@ legendBreaks = function(pos, breaks, ...){
 	
 	
 	
-	do.call(legend, ldots)
+	result=do.call(legend, ldots)
 	
+	par(xpd=oldxpd)
+	
+	return(invisible(result))
 }

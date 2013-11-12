@@ -9,7 +9,7 @@ Produces a scale of colours for plotting maps an producing legends.  }
 	colourScale(x, breaks=5, style=c("quantile","equal","unique", "fixed"),
 	 col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
 	 transform=NULL, revCol=FALSE, exclude=NULL, ...)
-legendBreaks(pos, breaks, ...)
+legendBreaks(pos, breaks, outer=TRUE,...)
 	}
 
 \arguments{
@@ -29,6 +29,7 @@ legendBreaks(pos, breaks, ...)
   \item{pos}{
 Position, as specified in the \code{legend} function.
 }
+\item{outer}{If \code{TRUE}, put legend in the margin of the plot}
 	\item{...}{Additional arguments passed to \code{\link[classInt]{classIntervals}} or \code{legend}.}
 }
 

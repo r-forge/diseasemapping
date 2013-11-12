@@ -26,7 +26,6 @@
 \tableofcontents
 \comment{
 <<setup,echo=FALSE,cache=TRUE,warning=FALSE,results='hide'>>=
-library(geostatsp)
 library(mapmisc)
 theNames = names(osmTiles())
  
@@ -38,17 +37,6 @@ trafalgarSquare=c(-0.128056,51.508056)
 londonTiles = openmap(trafalgarSquare,zoom=12,path=theNames)
 @
 
-
-
-<<afunction,echo=FALSE,results='hide',warning=FALSE>>=
-library(geostatsp)
-library(raster)
-startPlot = function(x) {
-	x = raster(extent(x), 1, 1, crs=proj4string(x))
-	values(x) = NA
-	plot(x,legend=FALSE)
-}
-@
 }
 The following are some examples of maps produced with
 {\tt mymap=openmap(x, path="something")}
@@ -60,7 +48,6 @@ The following are some examples of maps produced with
 
 mytiles = list(africaTiles, londonTiles)
 
-par(mar=c(0,0,0,0))
 for(D in theNames){
 	Dsub = gsub("-",".", D)
 
@@ -96,7 +83,7 @@ for(D in theNames){
 		
 	
 	} else if (length(oneTile)==1){
-		startPlot(mytiles[[Dplot]][[oneTile]])
+		map.new(mytiles[[Dplot]][[oneTile]])
 		plot(mytiles[[Dplot]][[oneTile]],add=TRUE)
 
 	} else {

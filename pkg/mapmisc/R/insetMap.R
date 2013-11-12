@@ -1,10 +1,26 @@
 insetMap = function(crs, pos="bottomright",map="osm",zoom=0, 
-		width=0.2, col="#00FF0060", borderSmall=NA, borderBig=NULL,
-		cropInset = extent(-170,xmax=170, ymin=-65, ymax=75)) {
+		width=0.2, col="#FF000090", borderSmall=NA, borderBig=NULL,
+		cropInset = extent(-170,xmax=170, ymin=-65, ymax=75),
+		outer=TRUE) {
 
 	
-extentBig = extent(par("usr"))
-	
+fromEdge = matrix(par("plt"), 2, 2, 
+		dimnames=list(c("min","max"), c("x","y")))
+extentUsr = matrix(par("usr"),2,2, dimnames=dimnames(fromEdge))
+dimUsr = abs(apply(extentUsr, 2, diff))
+fracUsr = abs(apply(fromEdge, 2, diff))
+dimFull = dimUsr/fracUsr
+
+extentFull = extentUsr
+extentFull[1,] = extentFull[1,] - dimFull*fromEdge[1,]
+extentFull[2,] = extentFull[2,] + dimFull*(1-fromEdge[2,])
+
+
+
+if(outer) {
+	extentBig = extentFull
+}
+
 extentSmall = try(extent(crs), silent=TRUE)
 
 if(class(extentSmall)=="try-error")
@@ -58,7 +74,8 @@ newyrange = newxrange * oldrange[2]/oldrange[1]
 
 
 	if(is.character(pos)) {
-x = apply(xpoints, 2, mean)
+x = apply(xpoints, 2, mean) - 0.5*c(newxrange, newyrange)
+
 if(length(grep("^top",pos)))
 	x[2] = xpoints[2,2]-newyrange
 if(length(grep("^bottom",pos)))
@@ -99,8 +116,10 @@ xsp = (xsp - bbOrig[rep(1,N),]) * matrix(scale, N, 2, byrow=TRUE) +
 		bbSmall[rep(1,N),]
 
 
-
-
+if(outer) {
+	oldxpd = par("xpd")
+	par(xpd=TRUE)
+}
 if(nlayers(map)==3) {
  plotRGB(map, add=TRUE)
 } else {
@@ -110,11 +129,18 @@ bigpoly = t(bbox(map))
 bigpoly = cbind(bigpoly[c(1,2,2,1),1], bigpoly[c(1,1,2,2),2])
 polygon(bigpoly,border=borderBig)
  
-if( (diff(range(xsp[,1])))  < (oldrange[1]/200) ) {
- 
+
+
+if( (diff(range(xsp[,1])))  < (dimFull[1]/20) ) {
+	
 	points(xsp[1,1], xsp[1,2], pch=15, col=col)
 } else {
 	polygon(xsp, col=col,border=borderSmall)
 }
+
+if(outer) {
+	par(xpd=oldxpd)
+}	
+
 return(invisible(mapOrig))
 }
