@@ -55,7 +55,8 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
 	candidates = c(candidates[1]*c(1,2,5), candidates[2])
 	segdist=candidates[order(abs(candidates - bardist))[1]]
 	
-	segscale = ( strwidth(dashTemplate)/strwidth("m") ) *segdist / dashdist
+	segscale = ( strwidth(dashTemplate)/par("cxy")[1] ) *
+			segdist / dashdist
 	
 
 
@@ -130,11 +131,14 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
 			forLegend[[D]] = defaults[[D]]			
 	}
 
+	onem = par("cxy")[1]
 	defaults = list(text.col = forLegend$col,
-			title.adj = 0.5*(segscale*strwidth("m")/
-						(segscale*strwidth("m") + 
-							2*strwidth("m")+
-							forLegend$text.width)))
+			title.adj = 
+					0.5*(segscale*onem/
+						(segscale*onem + 4*onem) 
+						)* 
+					(1-forLegend$text.width/(segscale*onem))
+						)
 	for(D in names(defaults)) {
 		if(is.null(forLegend[[D]]))
 			forLegend[[D]] = defaults[[D]]			
@@ -149,7 +153,7 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
 
 	
 	
-	if(forLegend$seg.len*strwidth("m") < strwidth(forLegend$title)) {
+	if(forLegend$seg.len*onem < strwidth(forLegend$title)) {
 		forLegend$title=NA
 	}
 

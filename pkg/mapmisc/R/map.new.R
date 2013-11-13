@@ -11,7 +11,12 @@ map.new = function(x, legendRight=FALSE) {
 
 	par(mar=c(0,0,0,0))
 	if(legendRight) { 
-		par(mar=c(0,0,0,0),plt=c(0,0.8, 0,1))
+		if(!is.logical(legendRight)) {
+			bob=legendRight
+		} else {
+			bob=0.8
+		}
+		par(mar=c(0,0,0,0),plt=c(0,bob, 0,1),xpd=FALSE)
 	} else {
 		par(mar=c(0,0,0,0),plt=c(0,1, 0,1))
 	}

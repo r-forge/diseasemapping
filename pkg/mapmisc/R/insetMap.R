@@ -52,15 +52,15 @@ xsp = SpatialPoints(polySmall, 		proj4string = crs)
 
 if(is.character(map)) {
 	map = openmap(xsp, path=map, zoom=zoom,crs=CRS("+init=epsg:4326") )
-	crsCrop = try(proj4string(cropInset),silent=TRUE)
-	if(class(crsCrop)=="try-error")
-		crsCrop = "+init=epsg:4326"
-	tocrop = t(bbox(extent(cropInset)))
-	tocrop = SpatialPoints(tocrop,
-			proj4string=CRS(crsCrop))
-	tocrop = spTransform(tocrop, CRS(proj4string(map)))
-	map = crop(map, extent(tocrop))
 }
+crsCrop = try(proj4string(cropInset),silent=TRUE)
+if(class(crsCrop)=="try-error")
+	crsCrop = "+init=epsg:4326"
+tocrop = t(bbox(extent(cropInset)))
+tocrop = SpatialPoints(tocrop,
+		proj4string=CRS(crsCrop))
+tocrop = spTransform(tocrop, CRS(proj4string(map)))
+map = crop(map, extent(tocrop))
 
 
 xpoints = t(bbox(extentBig))

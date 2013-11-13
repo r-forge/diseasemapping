@@ -1,5 +1,8 @@
-%\VignetteEngine{knitr::knitr}
 \documentclass[12pt]{article}
+
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Overview of mapping with mapmisc}
+
 \usepackage[margin=1in,landscape]{geometry}
 \usepackage{graphicx}
 \DeclareGraphicsExtensions{.png}
@@ -15,15 +18,16 @@
 \begin{document}
 \maketitle 
 
-<<setup,echo=FALSE,cache=FALSE,results='hide'>>=
+<<setup,echo=FALSE,cache=FALSE,results='hide',message=FALSE>>=
 library('knitr')
 opts_chunk$set(echo=TRUE,message=FALSE,
-		dev='png', 
+		dev='png',
 		fig.align='center',fig.pos='H',width=80,
-		fig.height=4,fig.width=3,out.width="0.3\\textwidth",
-		dev.args=list(bg="white")		
+		fig.height=6,fig.width=4,out.width="0.3\\textwidth"
 )
 par(bg="white")
+library(mapmisc)
+library(rgdal)
 @
 
 \section{Introduction}
@@ -119,24 +123,19 @@ map.new(meuse)
 plot(nldTiles, add=TRUE)
 points(nldCities)
 text(nldCities, labels=nldCities$name, pos=3)
-
+scaleBar(proj4string(meuse),pos="topleft", bg="white")
 
 # plot elevation
 map.new(meuse, legendRight=TRUE)
 plot(nldTiles, add=TRUE)
-plot(nldElev,add=TRUE,col=terrain.colors(8),alpha=0.6)
+plot(nldElev,add=TRUE,col=terrain.colors(8),alpha=0.6,legend.mar=2, legend.line=0,)
 scaleBar(meuse,pos="topleft",bg="white")
-
-
-
 @
 
 Reproject the data so it's roughly aligned with the x-axis.
 
 <<reproj,cache=TRUE>>=
-rotatedCRS = CRS("+proj=omerc +lat_0=51 +lonc=5.75 
-				+alpha=-50.0000000 +gamma=0.0 +k=1.000000 +x_0=500000.000 
-				+y_0=0.000 +ellps=WGS84	+units=m")
+rotatedCRS = CRS("+proj=omerc +lat_0=51 +lonc=5.75 +alpha=-50.0000000 +gamma=0.0 +k=1.000000 +x_0=500000.000 +y_0=0.000 +ellps=WGS84	+units=m")
 meuseRot = spTransform(meuse, rotatedCRS)
 tilesRot = projectRaster(nldTiles, crs=rotatedCRS, method='ngb')
 tilesRot@legend@colortable = nldTiles@legend@colortable
@@ -163,22 +162,27 @@ scaleBar(proj4string(meuseRot), bg="white")
 
 \section{Inset maps}
 
+<<world,eval=FALSE>>=
+world = openmap(extent(-10,30,40,60),path="osm-no-labels")
+@
+
 
 <<inset,fig.cap="Inset map", fig.subcap=c("elevation","rotated"), fig.height=3,fig.width=4,out.width="0.48\\textwidth">>=
-# first elevation
-map.new(meuse, legendRight=TRUE)
+
+# not rotated
+map.new(meuse)
 plot(nldTiles, add=TRUE)
-plot(nldElev,add=TRUE,col=terrain.colors(8),alpha=0.6)
-scaleBar(meuse,pos="topleft",bg="white")
-insetMap(meuse, "bottomleft",zoom=0)
+points(meuse)
+scaleBar(proj4string(meuse),pos="left", bg="white")
+insetMap(meuse, "topleft",map=world)
 
 
-# then data locations
+# rotated
 map.new(meuseRot)
 plot(tilesRot, add=TRUE)
 points(meuseRot,col="red", cex=0.3)
 scaleBar(proj4string(meuseRot), bg="white")
-insetMap(meuseRot, "bottomleft",zoom=6)
+insetMap(meuseRot, "bottomleft",map=world)
 @
 
 
@@ -213,7 +217,7 @@ plot(nldTiles, add=TRUE)
 plot(meuse, col=cuScale$col,add=TRUE,pch=16)
 scaleBar(meuse, pos="topleft",bg="white")
 legendBreaks("bottomright",  breaks=cuScale,
-		title="gals/firkin",bg="white")
+		title="gals/firkin",bg="white",adj=c(0,-2))
 
 
 map.new(meuse)

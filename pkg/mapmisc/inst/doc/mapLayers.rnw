@@ -1,5 +1,9 @@
-%\VignetteEngine{knitr::knitr}
 \documentclass[12pt]{article}
+
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Examples of map layers}
+
+
 \usepackage[margin=1in,landscape]{geometry}
 \usepackage{graphicx}
 \DeclareGraphicsExtensions{.png}
@@ -25,7 +29,7 @@
 
 \tableofcontents
 \comment{
-<<setup,echo=FALSE,cache=TRUE,warning=FALSE,results='hide'>>=
+<<setup,echo=FALSE,cache=TRUE,warning=FALSE,results='hide',message=FALSE>>=
 library(mapmisc)
 theNames = names(osmTiles())
  

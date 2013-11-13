@@ -39,10 +39,6 @@ if(outer){
 		}
 	}
 
-	if(length(breaks)-1 == length(ldots$col)) {
-		defaults$adj=c(0,0.5)
-		ldots$col = c(NA, ldots$col)
-	} 
 	
 	
 	for(D in names(defaults))
@@ -63,10 +59,22 @@ if(outer){
 	withTrans = grep("^#[[:xdigit:]]{8}$", ldots$col)
 	ldots$col[withTrans] = gsub("[[:xdigit:]]{2}$", "", ldots$col)
 	
-	
+	if(length(breaks)-1 == length(ldots$col)) {
+		ltext = ldots$legend
+		ldots$legend = rep(NA, length(ldots$col))
+		ldots$text.width = max(strwidth(ltext))
+	} 
 	
 	result=do.call(legend, ldots)
 	
+	if(length(breaks)-1 == length(ldots$col)) {
+		text(result$text$x[rep(1,length(breaks))]+
+						0.5*ldots$text.width, 
+			c(result$text$y[1]+par("cxy")[2], result$text$y)-
+					0.75*par("cxy")[2], 
+					label=ltext)
+	}
+
 	par(xpd=oldxpd)
 	
 	return(invisible(result))

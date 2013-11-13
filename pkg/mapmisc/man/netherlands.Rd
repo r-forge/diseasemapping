@@ -3,6 +3,7 @@
 \alias{nldElev}
 \alias{nldTiles}
 \alias{nldCities}
+\alias{world}
 
 \docType{data}
 \title{
@@ -57,8 +58,10 @@ nldElev = crop(nldElev, extent(nldTiles))
 # cities
 nldCities = GNcities(nldTiles, maxRows=25)
 
+# world
+world = openmap(extent(-10,30,40,60),path="osm-no-labels")
 # save the files where the package builder wants them
-save(nldElev, nldTiles, nldCities,
+save(nldElev, nldTiles, nldCities,world,
 file="~/workspace/diseasemapping/pkg/mapmisc/data/netherlands.RData",
 compress="xz")
 }
@@ -71,7 +74,7 @@ map.new(meuse)
 plot(nldTiles,add=TRUE)
 points(nldCities)
 text(nldCities,label=nldCities$name, pos=3)
-
+# insetMap(meuse, "bottomright",map=world)
 }
 
 
