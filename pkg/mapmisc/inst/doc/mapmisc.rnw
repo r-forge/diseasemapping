@@ -4,7 +4,7 @@
 %\VignetteIndexEntry{Overview of mapping with mapmisc}
 
 \usepackage[margin=1in,landscape]{geometry}
-\usepackage{graphicx}
+\usepackage{graphicx,hyperref}
 \DeclareGraphicsExtensions{.png}
 
 \usepackage{subcaption,float}
@@ -23,7 +23,7 @@ library('knitr')
 opts_chunk$set(echo=TRUE,message=FALSE,
 		dev='png',
 		fig.align='center',fig.pos='H',width=80,
-		fig.height=6,fig.width=4,out.width="0.3\\textwidth"
+		fig.height=5,fig.width=3,out.width="0.3\\textwidth"
 )
 par(bg="white")
 library(mapmisc)
@@ -85,7 +85,8 @@ class(nldTiles)
 proj4string(nldTiles)
 proj4string(meuse)
 @
-
+Maps which can be downloaded are shown at
+\url{http://diseasemapping.r-forge.r-project.org/openmap/}
 
 
 {\tt GNcities} is a wrapper for the function of the same name in the geonames
@@ -170,11 +171,11 @@ world = openmap(extent(-10,30,40,60),path="osm-no-labels")
 <<inset,fig.cap="Inset map", fig.subcap=c("elevation","rotated"), fig.height=3,fig.width=4,out.width="0.48\\textwidth">>=
 
 # not rotated
-map.new(meuse)
+map.new(meuse,legendRight=TRUE)
 plot(nldTiles, add=TRUE)
 points(meuse)
-scaleBar(proj4string(meuse),pos="left", bg="white")
-insetMap(meuse, "topleft",map=world)
+scaleBar(proj4string(meuse),pos="bottomright", bg="white")
+insetMap(meuse, "topright",map=world)
 
 
 # rotated

@@ -194,9 +194,9 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
     if(verbose)cat("Downloading tile\n")
     dir.create(tileDir,recursive=TRUE,showWarnings=FALSE)
     p = tileData$path
-    res=download.file(p,tilePath,mode="wb",quiet=!verbose)
-	if(res){
-		cat(p, "not accessible\n")
+    res=try(download.file(p,tilePath,mode="wb",quiet=!verbose),silent=TRUE)
+	if(class(res)=="try=error"){
+		message(p, "not accessible")
 	}
 }
   

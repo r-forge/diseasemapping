@@ -143,7 +143,7 @@ openmap = function(x, zoom,
 		silent=TRUE	)
 
 		if(class(thistile)=="try-error"){
-			warning(paste(Dpath, "not accessible"))
+			message(paste(Dpath, "not accessible"))
 		}	else {
 		theprefix=strsplit(names(thistile), "([rR]ed|[gG]reen|[bB]lue)$",fixed=FALSE)[[1]]
 		names(thistile) = gsub(theprefix, paste(pathOrig[Dpath], "",sep=""), 

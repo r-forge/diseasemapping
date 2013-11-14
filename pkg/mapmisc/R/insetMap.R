@@ -131,9 +131,8 @@ polygon(bigpoly,border=borderBig)
  
 
 
-if( (diff(range(xsp[,1])))  < (dimFull[1]/20) ) {
-	
-	points(xsp[1,1], xsp[1,2], pch=15, col=col)
+if( (diff(range(xsp[,1])))  < (width*dimFull[1]/20) ) {	
+	points(mean(xsp[,1]), mean(xsp[,2]), pch=4, col=col,cex=2)
 } else {
 	polygon(xsp, col=col,border=borderSmall)
 }

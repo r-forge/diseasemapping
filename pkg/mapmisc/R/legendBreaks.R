@@ -71,7 +71,7 @@ if(outer){
 		text(result$text$x[rep(1,length(breaks))]+
 						0.5*ldots$text.width, 
 			c(result$text$y[1]+par("cxy")[2], result$text$y)-
-					0.75*par("cxy")[2], 
+					0.5*par("cxy")[2], 
 					label=ltext)
 	}
 
