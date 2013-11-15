@@ -424,7 +424,7 @@ likfitLgm = function(
 	)
 	
 	
-	result$summary = parameterTable
+	result$summary = as.data.frame(parameterTable)
 	
 	result
 }

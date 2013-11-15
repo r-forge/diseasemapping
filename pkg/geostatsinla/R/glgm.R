@@ -629,7 +629,7 @@ dimnames(params$summary) = lapply(dimnames(params$summary),
 			qq
 		}
 )
-
+params$summary = as.data.frame(params$summary)
 
 resRaster=stack(resRasterRandom, resRasterFitted)
 

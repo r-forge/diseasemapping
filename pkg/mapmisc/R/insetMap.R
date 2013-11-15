@@ -129,10 +129,16 @@ bigpoly = t(bbox(map))
 bigpoly = cbind(bigpoly[c(1,2,2,1),1], bigpoly[c(1,1,2,2),2])
 polygon(bigpoly,border=borderBig)
  
-
+delta=0.3
+theX = anX = c(-delta + delta*1i, -delta + 1i, delta+1i, delta + delta*1i)
+for(D in 1:3)
+	theX = c(theX, anX*exp(-D*2*pi*1i/4))
+theX = theX*exp(-2*pi*1i/8)
 
 if( (diff(range(xsp[,1])))  < (width*dimFull[1]/20) ) {	
-	points(mean(xsp[,1]), mean(xsp[,2]), pch=4, col=col,cex=2)
+	
+	polygon((1.5*width*dimFull[1]/20) * theX +
+					mean(xsp[,1])+1i*mean(xsp[,2]), col=col,border=NA)
 } else {
 	polygon(xsp, col=col,border=borderSmall)
 }

@@ -1,4 +1,6 @@
 excFunQQ = function(themat, threshold) {
+
+	if(length(themat)) {
 	over = themat[,"x"]>threshold
 	
 	if(all(over)){
@@ -12,6 +14,9 @@ excFunQQ = function(themat, threshold) {
 		prob = trapz(toInt[,"x"], toInt[,"y"])
 	} else {
 		prob = 0
+	} 
+	} else { # matrix has length zero
+		prob = NA
 	}
 	
 	prob
@@ -99,6 +104,7 @@ if(length(grep("^Raster", class(template)))) {
 	}
 	excProbAll = template
 	names(excProbAll) = paste("exc","random"[random], threshold, sep="")
+	
 } 
 
 if(length(grep("(SpatialPolygonsDataFrame|SpatialPointsDataFrame)", class(template)))) {
