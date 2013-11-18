@@ -124,13 +124,13 @@ colourScale.numeric = function(x, breaks=5,
 						}
 						transform = list(log,exp)
 					} else if(transform=="sqrt") {
-						if(any(x<=0) ) {
-							warning("negative or zero x's given with root transform")
+						if(any(x<0) ) {
+							warning("negative x's given with root transform")
 						}
 						transform = list(sqrt, function(x) x^2)						
 					} else if(transform=="square") {
-						if(any(x<=0) ) {
-							warning("negative or zero x's given with square transform")
+						if(any(x<0) ) {
+							warning("negative x's given with square transform")
 						}
 						transform = list(function(x) x^2, sqrt)						
 					}
