@@ -2,7 +2,7 @@ ifndef R_HOME
 	R_HOME:=/usr
 endif
 
-PDFS:= mapmisc.pdf 
+PDFS:= mapmisc.pdf mapLayers.pdf
 HTML:= mapLayers.html
 
 all: $(PDFS) 

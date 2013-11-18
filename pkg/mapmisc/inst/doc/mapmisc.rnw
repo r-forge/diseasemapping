@@ -3,7 +3,7 @@
 %\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{Overview of mapping with mapmisc}
 
-\usepackage[margin=1in,landscape]{geometry}
+\usepackage[margin=1in]{geometry}
 \usepackage{graphicx,hyperref}
 \DeclareGraphicsExtensions{.png}
 
