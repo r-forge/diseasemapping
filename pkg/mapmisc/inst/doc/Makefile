@@ -8,7 +8,7 @@ HTML:= mapLayers.html
 all: $(PDFS) 
 
 clean:
-	rm -rf *.tex .toc *.bbl *.blg *.aux *.out *.log *.spl *tikzDictionary *.md figure/ cache/
+	rm -rf *.tex *.toc *.bbl *.blg *.aux *.out *.log *.spl *tikzDictionary *.md figure/ cache/
 
 %.tex: %.rnw
 	$(R_HOME)/bin/Rscript -e "knitr::knit('$<')" 

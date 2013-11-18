@@ -198,7 +198,8 @@ cuScale = colourScale(meuse$copper, breaks=5, style='equal',
 @
 and elevation, with transparency decreasing as elevation increases.
 <<elevScale>>=
-elevScale = colourScale(values(nldElev), breaks=6, col=terrain.colors,
+elevScale = colourScale(nldElev, style='equal',
+		breaks=6, col=terrain.colors,
 		firstBreak=0, dec=-1,opacity=c(0.2, 0.9))
 @
 Soil type is a categorical variable, create a factor and create a colour scale
@@ -215,7 +216,7 @@ soilScale = colourScale(meuse$soilFac, style="unique",
 <<meuseLegends,fig.subcap=c("Copper","soil", "elevation"), fig.cap="Meuse data again">>=
 map.new(meuse)
 plot(nldTiles, add=TRUE)
-plot(meuse, col=cuScale$col,add=TRUE,pch=16)
+plot(meuse, col=cuScale$plot,add=TRUE,pch=16)
 scaleBar(meuse, pos="topleft",bg="white")
 legendBreaks("bottomright",  breaks=cuScale,
 		title="gals/firkin",bg="white",adj=c(0,-2))
@@ -223,14 +224,15 @@ legendBreaks("bottomright",  breaks=cuScale,
 
 map.new(meuse)
 plot(nldTiles, add=TRUE)
-plot(meuse, col=soilScale$col,add=TRUE,pch=16)
+plot(meuse, col=soilScale$plot,add=TRUE,pch=16)
 scaleBar(meuse, pos="topleft",bg="white")
-legend("bottomright", fill=soilScale$legendCol, legend=soilScale$breaks,
+legendBreaks("bottomright", breaks=soilScale,
 		title="soil type", cex=0.7,bg="white")
 
 map.new(meuse)
 plot(nldTiles, add=TRUE)
-image(nldElev, breaks=elevScale$breaks, col=elevScale$withTrans, legend=FALSE,add=TRUE)
+image(nldElev, breaks=elevScale$breaks, col=elevScale$colOpacity, 
+		legend=FALSE,add=TRUE)
 scaleBar(meuse, pos="topleft",bg="white")
 legendBreaks("left", breaks=elevScale, title='Metres',bg="white")
 @

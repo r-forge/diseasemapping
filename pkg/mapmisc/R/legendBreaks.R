@@ -1,6 +1,7 @@
 
 legendBreaks = function(pos, breaks, outer=TRUE,...){
 	ldots = list(...)
+
 	defaults = list(pch=15,  x=pos,bg="white",
 		inset=0.001,cex=1)
 	
@@ -31,8 +32,8 @@ if(outer){
 
 
 	if(is.list(breaks)){
-		if(length(breaks$legendCol) ) {
-			ldots$col=breaks$legendCol
+		if(length(breaks$col) ) {
+			ldots$col=breaks$col
 		}
 		if( length(breaks$breaks)) {
 			breaks=breaks$breaks

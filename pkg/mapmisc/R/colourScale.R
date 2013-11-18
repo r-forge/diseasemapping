@@ -1,4 +1,52 @@
 colourScale = function(x, breaks=5, 
+style=c("quantile","equal","unique", "fixed"),
+col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
+transform=NULL, revCol=FALSE, exclude=NULL, ...) {
+
+UseMethod("colourScale")	
+
+}
+
+colourScale.factor = function(x, breaks=5, 
+		style=c("quantile","equal","unique", "fixed"),
+		col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
+		transform=NULL, revCol=FALSE, exclude=NULL, ...) {
+
+	x=x[x %in% exclude] = NA
+	labels = levels(x)
+	x = as.integer(x)
+	
+res=colourScale(x, breaks, 
+			style="unique",
+			col, opacity, dec, firstBreak, 
+			transform, revCol, exclude, ...) 		
+
+	res$breaks = labels[res$breaks]
+	res
+}
+colourScale.Raster = function(x, breaks=5, 
+style=c("quantile","equal","unique", "fixed"),
+col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
+transform=NULL, revCol=FALSE, exclude=NULL, ...) {
+
+style = style[1]
+	if(style %in% c("equal","fixed")) {
+		x = c(minValue(x), maxValue(x))
+	} else {
+		if(ncell(x)<4E+05) {
+			x = values(x)
+		} else {
+			stop("x has too many cells for method", style)
+		}
+	}
+	res=colourScale(x, breaks, 
+			style,
+			col, opacity, dec, firstBreak, 
+			transform, revCol, exclude, ...) 		
+	res
+}
+
+colourScale.numeric = function(x, breaks=5, 
 		style=c("quantile","equal","unique", "fixed"),
 		col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
 		transform=NULL, revCol=FALSE, exclude=NULL, ...) {
@@ -16,6 +64,7 @@ colourScale = function(x, breaks=5,
 	
 	if(missing(x))
 		x=NULL
+
 	
 	if(length(exclude) & length(x)) {
 	toexclude = x %in% exclude
@@ -174,7 +223,9 @@ colourScale = function(x, breaks=5,
 	}
 	
 	
-	result = list(col=x,breaks=breaks,legendCol=colVec, withTrans=colForPlot)
+	result = list(col=colVec, plot=x,
+			breaks=breaks, colOpacity=
+					colForPlot)
 	
 	result
 		

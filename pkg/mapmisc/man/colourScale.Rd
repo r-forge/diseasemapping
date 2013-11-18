@@ -56,9 +56,10 @@ Position, as specified in the \code{legend} function.
 }
 
 \value{A list with elements
-\item{col}{Vector of same length of \code{x} containing colours (RGB hex)}
+\item{plot}{Vector of same length of \code{x} containing colours (RGB hex)}
 \item{breaks}{vector of break points}
-\item{legendCol}{vector of unique colour values corrdsponding to \code{breaks}}
+\item{col}{vector of unique colour values corresponding to \code{breaks}}
+\item{colWithOpacity}{as \code{col}, but with two digit transparency values appended.}
 }
 
 \seealso{\code{\link{scaleBar}}, \code{\link[classInt]{classIntervals}}}
@@ -84,7 +85,7 @@ map.new(myPoints)
 \dontrun{
 plot(mymap,add=TRUE)
 }
-plot(myPoints, col=myscale$col, pch=16,add=TRUE)
+plot(myPoints, col=myscale$plot, pch=16,add=TRUE)
 legendBreaks("topleft", breaks=myscale)
 
 
@@ -95,7 +96,7 @@ map.new(myPoints)
 \dontrun{
 plot(mymap,add=TRUE)
 }
-plot(myPoints, col=myscale2$col, pch=16,add=TRUE)
+plot(myPoints, col=myscale2$plot, pch=16,add=TRUE)
 legendBreaks("topleft", breaks=myscale2)
 
 myscale3 = colourScale(myPoints$y2,  breaks=3,col="Set2", style="unique",
@@ -105,7 +106,7 @@ map.new(myPoints)
 \dontrun{
 plot(mymap,add=TRUE)
 }
-plot(myPoints, col=myscale3$col, pch=16,add=TRUE)
+plot(myPoints, col=myscale3$plot, pch=16,add=TRUE)
 legendBreaks("topleft", breaks=myscale3)
 
 myPoints$y3 = exp(myPoints$y1)
@@ -116,7 +117,7 @@ map.new(myPoints)
 \dontrun{
 plot(mymap,add=TRUE)
 }
-plot(myPoints, col=myscale4$col, pch=16,add=TRUE)
-legendBreaks("topleft", breaks=myscale4$breaks, col=myscale4$legendCol)
+plot(myPoints, col=myscale4$plot, pch=16,add=TRUE)
+legendBreaks("topleft", breaks=myscale4$breaks, col=myscale4$col)
 
 }
