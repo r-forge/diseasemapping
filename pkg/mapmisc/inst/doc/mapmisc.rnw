@@ -7,7 +7,7 @@
 \usepackage{graphicx,hyperref}
 \DeclareGraphicsExtensions{.png}
 
-\usepackage{subcaption,float}
+\usepackage{caption,subcaption,float}
 \newcommand{\subfloat}[2][need a sub-caption]{\subcaptionbox{#1}{#2}}
 
 
