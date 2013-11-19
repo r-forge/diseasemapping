@@ -118,6 +118,23 @@ myres = likfitLgm(mydat, Y ~ cov1 + cov2,
 
 myres$summary
 
+
+# plot variograms of data, true model, and estimated model
+myv = variog(mydat, formula=Y ~ cov1 + cov2,option="bin", max.dist=0.5)
+plot(myv, ylim=c(0, max(c(1.2*sum(trueParam[c("variance", "nugget")]),myv$v))),
+	main="variograms")
+distseq = seq(0, 0.5, len=50)
+lines(distseq, 
+	sum(myres$param[c("variance", "nugget")]) - matern(distseq, param=myres$param),
+	col='blue', lwd=3)
+lines(distseq, 
+	sum(trueParam[c("variance", "nugget")]) - matern(distseq, param=trueParam),
+	col='red')	
+
+legend("bottomright", fill=c("black","red","blue"), 
+	legend=c("data","true","MLE"))
+
+\dontrun{ 	
 # without a nugget
 myresNoN = likfitLgm(mydat, Y ~ cov1 + cov2, 
 	param=c(range=0.1,nugget=0,shape=1), paramToEstimate = c("range")	
@@ -146,7 +163,7 @@ legend("bottomright", fill=c("black","red","blue","green"),
 	legend=c("data","true","MLE","no N"))
 
 
-\dontrun{ 	
+
 # calculate likelihood
 temp=loglikLgm(param=myres$param, 
 		data=mydat, 
