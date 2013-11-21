@@ -21,7 +21,7 @@
 <<setup,echo=FALSE,cache=FALSE,results='hide',message=FALSE>>=
 library('knitr')
 opts_chunk$set(echo=TRUE,message=FALSE,
-		dev='png',
+		dev='png', res=36,
 		fig.align='center',fig.pos='H',width=80,
 		fig.height=5,fig.width=3,out.width="0.3\\textwidth"
 )

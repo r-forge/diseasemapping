@@ -14,7 +14,8 @@ clean:
 	$(R_HOME)/bin/Rscript -e "knitr::knit('$<')" 
 
 %.pdf: %.tex
-	xelatex $<
+	xelatex $<;
+	$(R_HOME)/bin/Rscript -e "tools::compactPDF('$<', gs_quality='ebook')" 
 
 %.html: %.rnw
 	$(R_HOME)/bin/Rscript -e "if (getRversion() < '3.0.0') knitr::knit2html('$<.rnw')"
