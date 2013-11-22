@@ -15,7 +15,7 @@ clean:
 
 %.pdf: %.tex
 	xelatex $<;
-	$(R_HOME)/bin/Rscript -e "tools::compactPDF('$<', gs_quality='ebook')" 
+	$(R_HOME)/bin/Rscript -e "tools::compactPDF('$@', gs_quality='ebook')" 
 
 %.html: %.rnw
 	$(R_HOME)/bin/Rscript -e "if (getRversion() < '3.0.0') knitr::knit2html('$<.rnw')"

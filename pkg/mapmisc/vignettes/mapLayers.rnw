@@ -30,6 +30,12 @@
 \tableofcontents
 \comment{
 <<setup,echo=FALSE,cache=TRUE,warning=FALSE,results='hide',message=FALSE>>=
+library(knitr)
+knit_hooks$set(
+				dev.args=list(res=36,bg='white')
+)
+
+
 library(mapmisc)
 theNames = names(osmTiles())
  
@@ -48,7 +54,7 @@ The following are some examples of maps produced with
 
 %<<someTiles,fig.cap="Various Tiles", fig.subcap=thesubcap, dev='png',
 % out.width="0.22\\textwidth",echo=FALSE>>= 
-<<someTiles,dev='png', out.width="\\textwidth",echo=FALSE,results='asis',fig.height=5,fig.width=7,res=36>>=
+<<someTiles,dev='png', out.width="\\textwidth",echo=FALSE,results='asis',fig.height=5,fig.width=7>>=
 
 mytiles = list(africaTiles, londonTiles)
 
