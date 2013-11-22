@@ -152,9 +152,11 @@ bym.data.frame = function(data,   formula,
 	# the independent random effect will be computed
 	notInData = region.index[!region.index %in% data$region.indexI]
 	if(length(notInData)) {
-		dataToAdd = matrix(NA, length(notInData),dim(data)[2],
-			dimnames=list(paste("missing",notInData,sep=""), colnames(data)))
+		dataToAdd = data[rep(1,length(notInData)),]
+		rownames(dataToAdd) = paste("missing",notInData,sep="")
 		dataToAdd[,"region.indexI"] = dataToAdd[,"region.indexS"]=notInData
+	# set response to missing
+		dataToAdd[,formulaLhs(formula)] = NA		
 		data = rbind(data, dataToAdd)
 	}
 
