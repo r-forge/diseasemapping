@@ -5,17 +5,33 @@ glgm = function(data,  cells, covariates=NULL, formula=NULL,
 	# list of additional arguments
 	thedots = list(...)
 	
-	# create raster for prediction
-	if(!length(grep("^Raster",class(cells)))) { 
+	# if data is a raster
+	if(length(grep("^Raster", class(data)))) {
+
+		smallBbox = bbox(data)
+		buffer =  ceiling(buffer/xres(data))
+		data = extend(data, c(buffer, buffer))
+		
+		cells = squareRaster(data)
+
+		if(!compareRaster(data, cells, res=TRUE,
+				stopiffalse=FALSE,showwarning=TRUE)) {
+			warning("if data is a raster, it must have square cells")
+		}
+	} else {	
+ 	# create raster for prediction
+		if(!length(grep("^Raster",class(cells)))) { 
 		# cells must be an integer
 		cells = squareRaster(data, cells)
-	} else {
+	 } else {
 		cells = squareRaster(cells)
-	}
+	 }
 	smallBbox = bbox(cells)
 	buffer =  ceiling(buffer/xres(cells))
 	cells = extend(cells, c(buffer, buffer))
+	}
 	thebbox = bbox(cells)	
+	
 	
  	if(cells@nrows * cells@ncols > 10^6) warning("there are lots of cells in the prediction raster,\n this might take a very long time")
 	
@@ -122,10 +138,11 @@ glgm = function(data,  cells, covariates=NULL, formula=NULL,
 	# create data frame for inla
 	# if data is a raster
 	if(length(grep("^Raster", class(data)))) {
- 
-	data = stack(data, covariates)
-	data = stack(data, cellsInla)
-
+		
+	# put data on same raster as cellsInla
+	cellsanddata = stack(cellsInla, data) 
+	data = stack(cellsanddata, covariates)
+	
 	thenames = names(data)
 	data=as.data.frame(data)
 	names(data) = thenames

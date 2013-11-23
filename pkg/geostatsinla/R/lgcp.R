@@ -1,4 +1,5 @@
-lgcp = function(data,  cells, covariates=NULL, formula=NULL, priorCI=NULL, 
+lgcp = function(data,  cells, covariates=NULL, 
+		formula=NULL, priorCI=NULL, 
 shape=1, buffer = 0, mesh=FALSE,...) {
 
 # create raster for prediction
