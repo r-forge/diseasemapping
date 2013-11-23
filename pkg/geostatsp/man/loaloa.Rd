@@ -34,38 +34,30 @@ data("loaloa")
 plot(loaloa, main="loaloa villages")
 
 # elevation
-data("elevationLoa")
 plot(elevationLoa, col=terrain.colors(100), main="elevation")
 points(loaloa)
 
 # vegetation index
-data("eviLoa")
 plot(eviLoa, main="evi")
 points(loaloa)
 
-data("tempLoa")
 plot(tempLoa, main="temperature")
 points(loaloa)
 
-data("ltLoa")
+
+
 # land type, a categorical variable
-commonValues  = sort(table(values(ltLoa)),decreasing=TRUE)[1:7]
-commonValues=commonValues[!names(commonValues)==0]
+plot(ltLoa)
+text(768000, 800000,"land type")
+commonValues  = order(levels(ltLoa)[[1]]$n,decreasing=TRUE)[1:7]
+# get rid of water
+commonValues = commonValues[commonValues != 1]
 
-thelevels = levels(ltLoa)[[1]]$ID
-thebreaks = c(-0.5, 0.5+thelevels)
-thecol = rep(NA, length(thelevels))
-names(thecol) = as.character(thelevels)
-
-thecol[names(commonValues)] = rainbow(length(commonValues))
-plot(ltLoa, breaks=thebreaks, col=thecol,legend=FALSE, main="land type")
-legend("bottomleft",fill=thecol[names(commonValues)],
-		legend=levels(ltLoa)[[1]][
-						match(as.integer(names(commonValues)),
-								levels(ltLoa)[[1]]$ID),
-						"Category"],
+legend("bottomleft",
+	fill=levels(ltLoa)[[1]][commonValues,"col"],
+		legend=levels(ltLoa)[[1]][commonValues,"Category"],
 				bty='n'
-				)
+)
 
 points(loaloa)
 
@@ -253,6 +245,7 @@ getCollection(myProduct)
 # download six tiles
 
 theTiles=c("3811","3911","3812","3912", "4011", "4012")
+if(FALSE) {
 for(D in theTiles) {
 	D2 = paste(substr(D,1,2), "_", substr(D,3,4),sep="")
 	print(D2)
@@ -260,8 +253,9 @@ for(D in theTiles) {
 	download.file(paste(
 		"ftp://srtm.csi.cgiar.org/SRTM_V41/SRTM_Data_GeoTiff/srtm_",
 		D2, ".zip",sep=""),
-		paste("/tmp/srtm_", D2, ".zip",sep="")
+		paste("/tmp/spatial/srtm_", D2, ".zip",sep="")
 )
+}
 }
 
 # extent to crop to
@@ -274,7 +268,7 @@ for(D in theTiles) {
 	D2 = paste(substr(D,1,2), "_", substr(D,3,4),sep="")
 	print(D2)
 	
-	unzip(paste("/tmp/srtm_", D2, ".zip",sep=""), exdir="/tmp/")
+	unzip(paste("/tmp/spatial/srtm_", D2, ".zip",sep=""), exdir="/tmp/")
 	elevUnc = raster(paste("/tmp/srtm_", D2, ".tif",sep=""))
 	
 	elevC = crop(elevUnc, forCrop)
@@ -286,19 +280,15 @@ for(D in theTiles) {
 	}
 }
 
-plot(result); plot(spTrasform(loaloa, CRS(proj4string(result))),add=T)
+plot(result)
 
 elevAgg=raster::aggregate(result, fact=30)
 
 
 elevationLoa = projectRaster(elevAgg, crs=loaloa@proj4string)
 
-plot(elevationLoa);points(loaloa)
-
-save(elevationLoa, 
-		file="/home/patrick/research/diseasemapping/pkg/geostatsp/data/elevationLoa.RData", 
-		compress="xz")
-
+ 
+ 
 #################
 # temperature
 ###################
@@ -345,21 +335,14 @@ tempLoa = tempAvg*0.02-273.15
 plot(tempLoa)
 points(loaloa)
 range(extract(tempLoa, loaloa))
-# save data as an R object
-save(tempLoa, 
-		file="/home/patrick/research/diseasemapping/pkg/geostatsp/data/tempLoa.RData", 
-		compress="xz")
+ 
 
 
+# save data
+save(loaloa, eviLoa, ltLoa, tempLoa, elevationLoa,
+	file="~/workspace/diseasemapping/pkg/geostatsp/data/loaloa.RData", 
+	compress="xz")
 
-# data
-save(loaloa, file="loaloa.RData", compress="xz")
-
-save(eviLoa, 
-		file="~/workspace/diseasemapping/pkg/geostatsp/data/eviLoa.RData", 
-		compress="xz")
-
-save(ltLoa, file="~/workspace/diseasemapping/pkg/geostatsp/data/ltLoa.RData", compress="xz")
 
 }
 

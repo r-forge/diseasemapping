@@ -69,7 +69,7 @@ colourScale.numeric = function(x, breaks=5,
 	if(length(exclude) & length(x)) {
 	toexclude = x %in% exclude
 	toexclude[is.na(toexclude)] = FALSE
-	if(any(toexclude))
+	if(any(toexclude,na.rm=TRUE))
 		x=x[toexclude]	= NA
 	}
 	
@@ -119,17 +119,17 @@ colourScale.numeric = function(x, breaks=5,
 					if(transform=="exp") { 
 						tranform = list(exp, log)
 					} else if(transform=="log") {
-						if(any(x<=0) ) {
+						if(any(x<=0,na.rm=TRUE) ) {
 							warning("negative or zero x's given with log transform")
 						}
 						transform = list(log,exp)
 					} else if(transform=="sqrt") {
-						if(any(x<0) ) {
+						if(any(x<0,na.rm=TRUE) ) {
 							warning("negative x's given with root transform")
 						}
 						transform = list(sqrt, function(x) x^2)						
 					} else if(transform=="square") {
-						if(any(x<0) ) {
+						if(any(x<0,na.rm=TRUE) ) {
 							warning("negative x's given with square transform")
 						}
 						transform = list(function(x) x^2, sqrt)						
