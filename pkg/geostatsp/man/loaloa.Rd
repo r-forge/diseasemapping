@@ -294,7 +294,7 @@ elevationLoa = projectRaster(elevAgg, crs=loaloa@proj4string)
 ###################
 
 myProduct = "MOD11C3"
-thehdf=getHdf(product=myProduct,begin="2002-01-01",end="2002-12-31",
+thehdf=getHdf(product=myProduct,begin="2002-01-01",end="2002-12-31", 
 		extent=extent(spTransform(loaloa, CRS("+proj=longlat"))))
 
 # the HDR files have multiple layers
