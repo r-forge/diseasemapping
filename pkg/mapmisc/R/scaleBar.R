@@ -1,6 +1,8 @@
 
 scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
-	
+
+	require(rgdal, quietly=TRUE )
+
 	if(is.character(crs))
 		crs = CRS(crs)
 	if(class(crs) != "CRS")
@@ -30,7 +32,7 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
 
 
 	
-	xll = spTransform(xpoints, CRS("+init=epsg:4326"))
+	xll = spTransform(xpoints, CRSobj=crsLL)
 	
 
 	up = matrix(coordinates(xll)["centre",]+c(0,0.1),ncol=2,
@@ -41,7 +43,8 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
 					proj4string=CRS(proj4string(xll))))
 	
 	
-	xpoints2 = spTransform(xll[c("up","centre")], CRS(proj4string(xpoints)))
+	xpoints2 = spTransform(xll[c("up","centre")], 
+			CRSobj=CRS(proj4string(xpoints)))
 	thediff=apply(coordinates(xpoints2), 2,diff)
 	north=atan(thediff[1]/thediff[2])
 	

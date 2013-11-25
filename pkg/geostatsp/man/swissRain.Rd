@@ -57,11 +57,11 @@ legend("topleft",fill=thecol[names(commonValues)],
 
 # code to assemble the dataset
 \dontrun{
-
+dataDir = "/store/patirck/spatialData/"
 download.file("http://mldata.org/repository/data/download/spat-interp-comparison-1997/",
-	destfile="/tmp/spatial/swiss.zip")
-unzip('/tmp//spatial/swiss.zip', exdir='/tmp/spatial')
-swissRain = read.table("/tmp/spatial/sic_obs.dat",sep=',', 
+	destfile=paste(dataDir, "swiss.zip",sep=""))
+unzip(paste(dataDir, 'swiss.zip',sep=""), exdir=dataDir)
+swissRain = read.table(paste(dataDir, "sic_obs.dat",sep=""),sep=',', 
 	col.names=c('ID','x','y','rain'))
 # the following seems to make the coordinates line up with epsg:2056
 swissRain$x = swissRain$x - 17791.29 + 2672591 
@@ -93,7 +93,8 @@ swissBorder = spTransform(gadm, CRS(proj4string(swissRain)))
 ############
 # see loaloa's help file for installation of the MODIS package
 library(MODIS)
-MODISoptions(gdalPath="/usr/bin/", localArcPath="/tmp/", outDirPath='/tmp/')
+MODISoptions(gdalPath="/usr/bin/", 
+	localArcPath=dataDir, outDirPath=dataDir)
 options()[grep("MODIS", names(options()), value=TRUE)]
 
 myProduct = "MCD12Q1"
@@ -152,9 +153,9 @@ table(extract(swissLandType, swissRain), exclude=NULL)
 ###
 library(raster)
 download.file('http://biogeo.ucdavis.edu/data/diva/alt/CHE_alt.zip',
-	destfile='/tmp/spatial/CHE_alt.zip')
-unzip('/tmp/spatial/CHE_alt.zip', exdir='/tmp/spatial/')
-swissAltitude = raster("/tmp/spatial/CHE_alt.gri")
+	destfile=paste(dataDir,'CHE_alt.zip',sep=""))
+unzip(paste(dataDir, 'CHE_alt.zip',sep=""), exdir=dataDir)
+swissAltitude = raster(paste(dataDir, "CHE_alt.gri",sep=""))
 swissAltitude = projectRaster(swissAltitude, 
 	crs=CRS(proj4string(swissRain)))
 swissAltitude = aggregate(swissAltitude,fact=2)

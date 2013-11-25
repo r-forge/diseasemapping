@@ -1,7 +1,9 @@
 
 library(mapmisc)
-myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10, crs="+proj=longlat")
+myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10, 
+		crs="+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 values(myraster) = seq(0,1,len=ncell(myraster))
+
 myPoints = SpatialPoints(myraster, proj4string=CRS(proj4string(myraster)))[
 		seq(1,ncell(myraster),len=5)]
 
@@ -14,8 +16,8 @@ myPointsUTM = spTransform(myPoints, CRS(utmproj))
 plot(myrasterUTM)
 points(myPointsUTM)
 
-myPointsMercator = spTransform(myPoints, CRS("+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0
-						+k=1.0 +units=m"))
+myPointsMercator = spTransform(myPoints, 
+		CRS("+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m"))
 
 
 myplot = function(first,second=first) {

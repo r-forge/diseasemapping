@@ -2,6 +2,11 @@
 ###  lancs =  getTiles(c(-2.842,-2.7579),c(54.0295,54.063),12,path="http://tile.openstreetmap.org/",maxTiles=60,verbose=TRUE)
 ###
 
+#  crsMerc =CRS("+init=epsg:3857") # mercator projection
+crsMerc = CRS("+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs")
+# crsLL = CRS("+epsg:4326")
+
+
 .tile2boundingBox <- function(x,y,zoom){
 
   n = .tile2lat(y,zoom)
@@ -21,8 +26,11 @@
 	lat_rad = atan(sinh(pi * (1 - 2 * c(J+1,J) / n)))
 	lat_deg = lat_rad * 180.0 / pi
 
-	thePoints = SpatialPoints(cbind(lon_deg, lat_deg), CRS("+init=epsg:4326"))
-	thePointsMerc = spTransform(thePoints, CRS("+init=epsg:3857")	)
+	eps=1e-8
+	thePoints = raster(extent(lon_deg[1], xmax=lon_deg[2],
+					ymin=lat_deg[1],ymax=lat_deg[2]), 
+				crs=crsLL)
+	thePointsMerc = projectExtent(thePoints, crsMerc	)
 
 	extent(thePointsMerc)			
 }
@@ -96,9 +104,8 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
     localStore = TRUE
   }
 
-  thecrs =CRS("+init=epsg:3857") # mercator projection
+  thecrs = crsMerc
   
-
   colourtable = NULL
   for(ip in 1:length(tileData)){
    p = tileData[[ip]]$path

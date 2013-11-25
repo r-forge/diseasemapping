@@ -30,6 +30,7 @@
 \tableofcontents
 \comment{
 <<setup,echo=FALSE,cache=TRUE,warning=FALSE,results='hide',message=FALSE>>=
+
 library(knitr)
 knit_hooks$set(
 				dev.args=list(res=36,bg='white')

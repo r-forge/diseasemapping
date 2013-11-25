@@ -3,6 +3,8 @@ insetMap = function(crs, pos="bottomright",map="osm",zoom=0,
 		cropInset = extent(-170,xmax=170, ymin=-65, ymax=75),
 		outer=TRUE) {
 
+crsLL = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0") 
+	
 	
 fromEdge = matrix(par("plt"), 2, 2, 
 		dimnames=list(c("min","max"), c("x","y")))
@@ -46,20 +48,20 @@ polySmall = cbind(
 )
 
 
-xsp = SpatialPoints(polySmall, 		proj4string = crs)
+xsp = SpatialPoints(polySmall, 	proj4string = crs)
 
 
 
 if(is.character(map)) {
-	map = openmap(xsp, path=map, zoom=zoom,crs=CRS("+init=epsg:4326") )
+	map = openmap(xsp, path=map, zoom=zoom,crs=crsLL )
 }
-crsCrop = try(proj4string(cropInset),silent=TRUE)
+crsCrop = try(CRS(proj4string(cropInset)),silent=TRUE)
 if(class(crsCrop)=="try-error")
-	crsCrop = "+init=epsg:4326"
+	crsCrop = crsLL
 tocrop = t(bbox(extent(cropInset)))
 tocrop = SpatialPoints(tocrop,
-		proj4string=CRS(crsCrop))
-tocrop = spTransform(tocrop, CRS(proj4string(map)))
+		proj4string=crsCrop)
+tocrop = spTransform(tocrop, CRSobj=CRS(proj4string(map)))
 map = crop(map, extent(tocrop))
 
 

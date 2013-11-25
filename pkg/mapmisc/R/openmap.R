@@ -57,8 +57,9 @@ osmTiles = function(name) {
 openmap = function(x, zoom, 
 	path="http://tile.openstreetmap.org/",
 	maxTiles = 9,
-	crs,  
+	crs=NULL,  
 	verbose=FALSE) {
+
 
 	alltiles = osmTiles()
 	pathOrig = path
@@ -74,53 +75,11 @@ openmap = function(x, zoom,
 				paste("http://", 
 						path[ grep("^http[s]*://", path, invert=TRUE)], sep="")
 	names(pathOrig) = path
- 	
-	crsIn = try(proj4string(x),silent=TRUE)
-	if(missing(crs)) {
-		if(class(crsIn)=="try-error"){
-			crs =crsIn = CRS("+init=epsg:4326")
-		}else { # crs missing but we have crsIn
-			crs = crsIn
-		}
-	} else { # have a crs
-		if(class(crsIn)=="try-error"){ # but no crsIn
-			crsIn = crs
-		}
-	}
-	
-	if(is.character(crs))
-		crs = CRS(crs)
-	if(is.character(crsIn))
-		crsIn = CRS(crsIn)
 
-	
-	# try to get an extent
-	
-	
-	xextent = try(extent(x), silent=TRUE)
-	if(class(xextent)=="try-error") {
-		# no extent. if it's a vector
-		# of length 2, assumit it's a point
-		if(is.vector(x)) {
-			if(length(x)==2) {
-				xextent = extent(x[c(1,1,2,2)])
-			} else {
-				 warning("if x is a vector extent(x[c(1,1,2,2)]")
-			}
-		} else {
-			warning("can't get an extent from x")
-		}
+	extLL = .extentLL(x,crs)
 		
-	}
-	
-	# do this because bbox(mybbox) != mybbox
-	# but bbox(extent(mybbox) = mybbox
-	x = bbox(xextent)
-	x2 = x = SpatialPoints(t(x), proj4string=crsIn)
-	x = bbox(spTransform(x, CRS("+init=epsg:4326")))
-	
-	xlim= x[1,]
-	ylim = x[2,]
+	xlim= c(xmin(extLL), xmax(extLL))
+	ylim = c(ymin(extLL), ymax(extLL))
 		
 	if(missing(zoom)) {
 	zoom = 1
@@ -158,16 +117,18 @@ openmap = function(x, zoom,
 
 	if(is.null(result)) return(thistile)
 
-	if(all.equal(CRS(proj4string(result)), crs)==TRUE) {
-		resultProj = result
-	} else {
-		resultProj = projectRaster(result, crs=crs, method="ngb")
+	crsOut=crs
+	if(!length(crsOut))
+		crsOut = projection(x)
+	
+	if(projection(crsOut) != "NA"){
+		resultProj = projectRaster(result, crs=crsOut, method="ngb")
 		# now trim to original bounding box
-		pointsOld = SpatialPoints(t(bbox(result)), 
-				proj4string=CRS(proj4string(result)))
-		pointsNew = spTransform(pointsOld, 
-				CRS(proj4string(resultProj)))
-		resultProj = crop(resultProj, pointsNew)
+		pointsNew = projectExtent(result, 
+					CRS(proj4string(resultProj)))
+		resultProj = crop(resultProj, extent(pointsNew))
+	} else {
+		resultProj = result
 	}
 
 	resultProj = stack(resultProj)

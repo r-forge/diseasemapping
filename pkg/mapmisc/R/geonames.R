@@ -1,43 +1,33 @@
 GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 	
-	
-	if(is.vector(north) ) {
-		theproj = NULL
-		
-	} else {
-		
-		theproj = try(proj4string(north),silent=TRUE)
-		if(class(theproj)=="try-error")
-			theproj = NULL
+	fourCoords=FALSE
+	if(is.numeric(north))
+		if(length(north)== 1)
+			fourCoords = TRUE
 
-		# do this because bbox(mybbox) != mybbox
-		# but bbox(extent(mybbox) = mybbox
-		north = bbox(extent(north))
+	theproj = projection(north)
+	if(!fourCoords) {
+		extLL = .extentLL(north)
 
 		
-		if(!is.null(theproj)) {
-			# transform to long-lat
-			north = SpatialPoints(t(north),
-					proj4string=CRS(theproj))
-			
-			north = bbox(spTransform(
-							north, CRS("+init=epsg:4326")
-					))			
-		}
-		
-		east = north[1,2]
-		west = north[1,1]
-		south = north[2,1]
-		north=north[2,2]
+		east = xmax(extLL)
+		west = xmin(extLL)
+		south = ymin(extLL)
+		north= ymax(extLL)
 		
 	}
 
-	result = geonames::GNcities(north,east,south,west,lang,maxRows)
-	result = SpatialPointsDataFrame(result[,c("lng","lat")], data=result, 
-			proj4string=CRS("+proj=longlat"))
+	result = geonames::GNcities(north=north,east=east,
+			south=south,west=west,lang,maxRows)
 
-	if(!is.null(theproj))
-		result = spTransform(result, CRS(theproj))
-	
+	result = SpatialPointsDataFrame(result[,c("lng","lat")], data=result, 
+			proj4string=crsLL)
+
+	if(projection(theproj)!= "NA") {
+		havegdal = require(rgdal, quietly=TRUE )
+		if(havegdal)
+			result = spTransform(result, CRSobj=CRS(theproj))
+	}
+		
 	result
 }

@@ -63,6 +63,7 @@ points(loaloa)
 
 # the following is the code for creating these datasets
 \dontrun{
+dataDir = "/store/patrick/spatialData/"
 
 loaloa = read.table(
 "http://www.leg.ufpr.br/lib/exe/fetch.php/pessoais:paulojus:mbgbook:datasets:loaloa.txt",
@@ -94,7 +95,7 @@ if(FALSE) {
 # load the package and set options
 
 library(MODIS)
-MODISoptions(gdalPath="/usr/bin/", localArcPath="/tmp/")
+MODISoptions(gdalPath="/usr/bin/", localArcPath=dataDir)
 options()[grep("MODIS", names(options()), value=T)]
 
 # EVI, get 12 month average for 2002
@@ -259,7 +260,7 @@ for(D in theTiles) {
 	download.file(paste(
 		"ftp://srtm.csi.cgiar.org/SRTM_V41/SRTM_Data_GeoTiff/srtm_",
 		D2, ".zip",sep=""),
-		paste("/tmp/spatial/srtm_", D2, ".zip",sep="")
+		paste(dataDir, "srtm_", D2, ".zip",sep="")
 )
 }
 }
@@ -274,8 +275,8 @@ for(D in theTiles) {
 	D2 = paste(substr(D,1,2), "_", substr(D,3,4),sep="")
 	print(D2)
 	
-	unzip(paste("/tmp/spatial/srtm_", D2, ".zip",sep=""), exdir="/tmp/")
-	elevUnc = raster(paste("/tmp/srtm_", D2, ".tif",sep=""))
+	unzip(paste(dataDir,"srtm_", D2, ".zip",sep=""), exdir=dataDir)
+	elevUnc = raster(paste(dataDir, "srtm_", D2, ".tif",sep=""))
 	
 	elevC = crop(elevUnc, forCrop)
 	
