@@ -7,7 +7,6 @@ S3method(bym, data.frame)
 importFrom(spdep, poly2nb)
 
 
-
 import(
   sp,
   raster,

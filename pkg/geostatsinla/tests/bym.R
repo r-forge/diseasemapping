@@ -47,7 +47,7 @@ spplot(kBYM$data, "exc1",at=c(0, 0.2, 0.8,0.9, 1),
 
 # and try passing a data frame and adjacency matrix
 
-library(spdep)
+library('spdep')
 adjMat = poly2nb(kentucky, row.names =as.character(kentucky$County) )
 kBYM = bym(kentucky@data, observed ~ offset(logExpected) + poverty,
 		adjMat = adjMat, region.id="County",

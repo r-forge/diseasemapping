@@ -74,19 +74,37 @@ for the range and standard deviation parameters respectively,
 }
 \examples{
 # geostatistical model for the swiss rainfall data
-require(geostatsp)
-data(swissRain)
+require("geostatsp")
+data("swissRain")
 swissRain$lograin = log(swissRain$rain)
 swissFit =  glgm(swissRain, cells=30, formula="lograin",
 	covariates=swissAltitude, family="gaussian", buffer=20000,
 	priorCI=list(sd=c(0.01, 5), range=c(50000,500000),
 		sdNugget = c(0.01, 5)), 
-	control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE)
+	control.mode=list(theta=c(1.6,-0.25,2.9),restart=TRUE)
 	)
+	
 
 swissFit$parameters$summary
 
-	swissExc = excProb(swissFit, threshold=log(300))
+plot(swissFit$parameters$range$prior,type="l",
+	ylim=c(0,max(swissFit$parameters$range$posterior[,"y"])),
+	xlim=c(0, swissFit$parameters$range$userPriorCI[2]*1.1))
+abline(v=swissFit$parameters$range$userPriorCI,col="yellow")
+abline(v=swissFit$parameters$range$priorCI,col="orange")
+lines(swissFit$parameters$range$posterior, col='blue')
+
+
+
+	swissExc = excProb(swissFit, threshold=log(25))
+
+	swissExcRE = excProb(swissFit$inla$marginals.random$space, 
+		log(1.5),template=swissFit$raster)
+
+\dontrun{
+plot(swissFit$raster[["predict.exp"]]) 
+
+
 	mycol = c("green","yellow","orange","red")
 	mybreaks = c(0, 0.2, 0.8, 0.95, 1)
 	plot(swissBorder)
@@ -95,13 +113,11 @@ swissFit$parameters$summary
 	legend("topleft",legend=mybreaks, fill=c(NA,mycol))
 
 
-	swissExc = excProb(swissFit$inla$marginals.random$space, 0,
-		template=swissFit$raster)
 	plot(swissBorder)
-	plot(swissExc, breaks=mybreaks, col=mycol,add=TRUE,legend=FALSE)
+	plot(swissExcRE, breaks=mybreaks, col=mycol,add=TRUE,legend=FALSE)
 	plot(swissBorder, add=TRUE)
 	legend("topleft",legend=mybreaks, fill=c(NA,mycol))
-
+}
 
 		
 
@@ -130,21 +146,14 @@ text(thenames, labels=thenames$name,pos=3,
 
 }
 
-plot(swissFit$parameters$range$prior,type="l",
-	ylim=c(0,max(swissFit$parameters$range$posterior[,"y"])),
-	xlim=c(0, swissFit$parameters$range$userPriorCI[2]*1.1))
-abline(v=swissFit$parameters$range$userPriorCI,col="yellow")
-abline(v=swissFit$parameters$range$priorCI,col="orange")
-lines(swissFit$parameters$range$posterior, col='blue')
-
-plot(swissFit$raster[["predict.exp"]]) 
 # a log-Gaussian Cox process example
-
+\dontrun{
 myPoints = SpatialPoints(cbind(rbeta(100,2,2), rbeta(100,3,4)))
 myPoints@bbox = cbind(c(0,0), c(1,1))
 
 mycov = raster(matrix(rbinom(100, 1, 0.5), 10, 10), 0, 1, 0, 1)
 names(mycov)="x1"
+
 
 res = lgcp(data=myPoints, cells=20, covariates=mycov,
 	formula=~factor(x1),
@@ -152,29 +161,8 @@ res = lgcp(data=myPoints, cells=20, covariates=mycov,
 )
 plot(res$raster[["predict.exp"]])
 plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
+}
 
-
-# a model with little data, posterior should be same as prior
-
-data2 = SpatialPointsDataFrame(cbind(c(1,0), c(0,1)),
-	data=data.frame(y=c(NA,NA), offset=c(-100,-200)))
-
-res = glgm(data2, cells=20, formula=y~1, 
-	priorCI = list(sd=c(1,2), range=c(0.3, 2)),
-	family="poisson",buffer=2)
-
-priorPrec = res$par$sd$params
-priorRange = res$par$range$params
- par(mfrow=c(2,1))
-# sd
-plot(res$parameters$sd$prior,type='l', col='blue')
-lines(res$parameters$sd$post,col='red')
-
-
-# range
-plot(res$parameters$range$prior,type='l', col='blue')
-lines(res$parameters$range$post,col='red')
-legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
 
 }
 

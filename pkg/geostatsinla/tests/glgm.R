@@ -82,8 +82,8 @@ swissFit =  glgm(swissRain, cells=30,
 								param=c(.1, .1))))
 )
 
-data("ltLoa")
-
+library('geostatsp')
+data('loaloa')
 rcl = rbind(
 		# wedlands and mixed forests to forest
 		c(5,2),c(11,2),
@@ -93,18 +93,15 @@ rcl = rbind(
 		c(12,14),c(13,14))
 ltLoa = reclassify(ltLoa, rcl)
 
-data("elevationLoa")
-
+ 
 elevationLoa = elevationLoa - 750
 elevLow = reclassify(elevationLoa, c(0, Inf, 0))
 elevHigh = reclassify(elevationLoa, c(-Inf, 0, 0))
 
-data("eviLoa")
-covList = list(elLow = elevLow, elHigh = elevHigh, 
+ covList = list(elLow = elevLow, elHigh = elevHigh, 
 		land = ltLoa, evi=eviLoa)
 
-data("loaloa")
-loaFit = glgm(loaloa,
+ loaFit = glgm(loaloa,
 		formula=y ~ factor(land) + evi + elHigh + elLow, #+ f(villageID,model="iid"),
 		family="binomial", Ntrials = loaloa$N,cells=50, 
 		covariates=covList, shape=2, buffer=25000,
@@ -125,23 +122,30 @@ swissFit =  glgm(swissRain, cells=30, formula="lograin",
 )
 
 
-library("INLA")
-data(Germany)
-g = system.file("demodata/germany.graph", package="INLA")
-source(system.file("demodata/Bym-map.R", package="INLA"))
-summary(Germany)
 
-## just make a duplicated column
-Germany = cbind(Germany,region.struct=Germany$region)
+# a model with little data, posterior should be same as prior
 
-# standard BYM model (without covariates)
-formula1 = Y ~ f(region.struct,model="besag",graph=g) +
-		f(region,model="iid")
+data2 = SpatialPointsDataFrame(cbind(c(1,0), c(0,1)),
+		data=data.frame(y=c(NA,NA), offset=c(-100,-200)))
 
-result1  =  inla(formula1,family="poisson",data=Germany,E=E)
+res = glgm(data2, cells=20, formula=y~1, 
+		priorCI = list(sd=c(1,2), range=c(0.3, 2)),
+		family="poisson",buffer=2)
 
-result2 = inla(
-	data = data.frame(y=rnorm(1:12), space=1:12),
-	formula = y ~ f(space, model="matern2d", nrow=3, ncol=4, nu=2)
-)
+priorPrec = res$par$sd$params
+priorRange = res$par$range$params
+pdf("nodata.pdf")
+
+par(mfrow=c(2,1))
+# sd
+plot(res$parameters$sd$prior,type='l', col='blue')
+lines(res$parameters$sd$post,col='red')
+
+
+# range
+plot(res$parameters$range$prior,type='l', col='blue')
+lines(res$parameters$range$post,col='red')
+legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
+dev.off()
+
 

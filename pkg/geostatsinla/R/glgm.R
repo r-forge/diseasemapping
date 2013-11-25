@@ -1,60 +1,3 @@
-# taken from the raster package
-#   the function isn't exported from raster so it must be replicated here
-# author Robert Hijmans
-# June 2010
-# version 1.0
-# license GPL3
-
-
-.compareCRS <- function(x, y, unknown=FALSE, verbatim=FALSE, verbose=FALSE) {
-	
-	x <- tolower(projection(x))
-	y <- tolower(projection(y))
-	
-	step1 <- function(z, verbatim) {
-		z <- gsub(' ', '', z)
-		if (!verbatim) {
-			z <- unlist( strsplit(z, '+', fixed=TRUE) )[-1]
-			z <- do.call(rbind, strsplit(z, '='))
-		}
-		z
-	}
-	
-	if (verbatim) {
-		return(x==y)
-	}
-	
-	x <- step1(x, verbatim)
-	y <- step1(y, verbatim)
-	
-	if (length(x) == 0 | length(y) == 0) {
-		if (unknown) {
-			return(TRUE)
-		} else {
-			if (verbose) {
-				cat('Unknown CRS\n')
-			}
-			return(FALSE) 
-		}
-	}
-	x <- x[x[,1] != 'towgs84', , drop=FALSE]
-	x <- x[which(x[,1] %in% y[,1]), ,drop=FALSE]
-	y <- y[which(y[,1] %in% x[,1]), ,drop=FALSE]
-	x <- x[order(x[,1]), ,drop=FALSE]
-	y <- y[order(y[,1]), ,drop=FALSE]
-	i <- x[,2] == y[,2]
-	
-	if (! all(i)) {
-		if (verbose) {
-			i <- which(!i)
-			for (j in i) {
-				cat('+',x[j,1], ':  ', x[j,2],' != ', y[j,2], '\n', sep='') 
-			}
-		}
-		return(FALSE)
-	}
-	return(TRUE)
-}
 
 
 glgm = function(data,  cells, covariates=NULL, formula=NULL, 
@@ -448,7 +391,7 @@ for(D in 1:nrow(lincombMat)) {
 		thisrow = as.list(thisrow[!is.na(thisrow)  ])
 		
 		thelincombs[[D]] = 
-			do.call(INLA::inla.make.lincomb, thisrow)$lc
+			do.call(inla.make.lincomb, thisrow)$lc
 
 		thelincombs[[D]][[length(thelincombs[[D]])+1]] =
 				list(space=list(idx=lincombMatCells[D,"inlaCells"], 
@@ -483,7 +426,7 @@ for(D in 1:nrow(lincombMat)) {
 
  
 	
-	inlaResult = do.call(INLA::inla, forInla) 
+	inlaResult = do.call(inla, forInla) 
 	
 
 
@@ -556,9 +499,11 @@ for(D in 1:nrow(lincombMat)) {
 		forRastArray = aperm(forRastArray, c(2,1,3))
 
 		resRasterRandom = 
-				brick(cells,
+				brick(extent(cells), nrows=nrow(cells),
+						ncols=ncol(cells), crs=projection(cells),
 						nl=dim(forRastArray)[3])
-		names(resRasterRandom) = paste("random.", colnames(forRast),sep="")
+		names(resRasterRandom) = 
+				paste("random.", colnames(forRast),sep="")
 		
 		values(resRasterRandom) = forRastArray
 		
@@ -707,10 +652,10 @@ params$summary["range",thecolsFull]=
 		]
 dimnames(params$summary) = lapply(dimnames(params$summary),
 		function(qq) {
-			qq=gsub("_", "\\\\textunderscore ", qq)
-			qq=gsub("\\$", "\\\\textdollar ", qq)
-			qq=gsub("<", "\\\\textless ", qq)
-			qq=gsub(">", "\\\\textgreater ", qq)
+			qq=gsub("_", "\\\\textunderscore~", qq)
+			qq=gsub("\\$", "\\\\textdollar~", qq)
+			qq=gsub("<", "\\\\textless~", qq)
+			qq=gsub(">", "\\\\textgreater~", qq)
 			qq
 		}
 )
