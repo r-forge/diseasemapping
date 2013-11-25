@@ -27,7 +27,7 @@ excProb = function(x, threshold=0, random=FALSE, template=NULL,
 	
 
 	
-elementsColumnwise = TRUE # default is indexes for x[[index]] refer to 
+elementsColumnwise = FALSE # default is indexes for x[[index]] refer to 
 # cells numbered columnwise
 	
 if(is.list(x))	{
@@ -74,7 +74,6 @@ if(is.list(x))	{
 		 template = raster(x$raster)
 		if(!random ) {
 			x = x$inla$marginals.lincomb.derived
-			elementsColumnwise = FALSE
 		} else {
 			x = x$inla$marginals.random$space
 		}

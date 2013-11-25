@@ -36,7 +36,7 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL,
         popdata$expected = as.vector(
             as.matrix(popdata[,popGroups]) %*% model[rateGroups[names(popGroups)]]
           )
-	if(!is.null(regionCode)) {
+	if(length(regionCode)) {
         rownames(popdata) = as.character(popdata[,regionCode])
     }
 	
