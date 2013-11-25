@@ -6,9 +6,6 @@ S3method(bym, data.frame)
 
 importFrom(spdep, poly2nb)
 
-importFrom(INLA, inla, inla.models, inla.make.lincombs)
-export(inla.models)
-
 
 
 import(

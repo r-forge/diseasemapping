@@ -1,11 +1,11 @@
 Package: geostatsinla
 Type: Package
 Title: Geostatistics with INLA 
-Version: 0.4.3
-Date: 2013-10-30
+Version: 0.5.0
+Date: 2013-11-25
 Depends: sp, raster, geostatsp 
-Imports:  INLA ,spdep 
-Suggests: diseasemapping
+Imports:  spdep 
+Enhances: diseasemapping, INLA
 Author: Patrick Brown <patrick.brown@utoronto.ca>
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
 Description: This package provides an interface to geostatistical routines in the RandomFields and geoR packages using raster and SpatialPoints objects.
