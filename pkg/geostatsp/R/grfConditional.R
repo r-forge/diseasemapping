@@ -47,7 +47,7 @@ if(nrow(locations) * ncol(locations) > 10^7) warning("there are lots of cells in
 
 	
 simFun = function(D) {
-	res = CondSimu(krige.method="O",
+	res = RandomFields::CondSimu(krige.method="O",
 			x=xseq, y = yseq, grid=TRUE, gridtriple=TRUE,
 			param=NULL, model=model,
 			given=data@coords,
@@ -65,7 +65,7 @@ simFun = function(D) {
 	locations
 }		
 
-	result = mapply(simFun, 1:Nsim)
+	result = mcmapply(simFun, 1:Nsim)
 
 	if(is.null(fun)) {
 		resultRaster = result[[1]]

@@ -70,10 +70,16 @@ skip=7)
 names(loaloa) = c("long","lat", "N","y","elevation","ndvi","sdndvi")
 library(sp)
 library(rgdal)
+
+# create projection without epsg code so rgdal doesn't need to be loaded
+theproj = CRSargs(CRS("+init=epsg:3064"))
+theproj = gsub("\\+init=epsg:[[:digit:]]+ ", "", theproj)
+theproj = CRS(theproj)
+
 loaloaLL = SpatialPointsDataFrame(loaloa[,c("long","lat")], 
 		data=loaloa[,c("N","y")], 
-		proj4string = CRS("+init=epsg:4268"))
-loaloa=spTransform(loaloaLL, CRS("+init=epsg:3064"))
+		proj4string = CRS("+init=epsg:4326"))
+loaloa=spTransform(loaloaLL, theproj)
 loaloa$villageID = seq(1, length(loaloa))
 
 
@@ -96,7 +102,7 @@ myProduct = "MOD13Q1"
 getProduct(myProduct)
 
 thehdf=getHdf(product=myProduct,begin="2002-01-01",end="2002-12-31",
-		extent=extent(spTransform(loaloa, CRS("+proj=longlat"))))
+		extent=extent(spTransform(loaloa, CRS("+init=epsg:4326"))))
 
 # the HDR files have multiple layers
 # find the layer with EVI data
@@ -112,7 +118,7 @@ runGdal(product=myProduct,begin="2002-01-01",end="2002-12-31",
 		outProj = proj4string(loaloa),
 		pixelSize=2000, job="loa",
 		SDSstring = theString,
-		extent=extent(spTransform(loaloa, CRS("+proj=longlat")))) 
+		extent=extent(spTransform(loaloa, CRS("+init=epsg:4326")))) 
 
 # find names of all the tiff files 
 thenames = preStack(
@@ -145,7 +151,7 @@ getProduct(myProduct)
 thehdf=getHdf(product=myProduct,
 		begin="2001-01-01",end="2010-12-30",
 		extent=extent(
-				spTransform(loaloa, CRS("+proj=longlat"))))
+				spTransform(loaloa, CRS("+init=epsg:4326"))))
 
 layerNames = getSds(thehdf[[1]][1])$SDSnames
 ltLayer = grep("Type_1$", layerNames)
@@ -158,7 +164,7 @@ runGdal(product=myProduct,
 		outProj = proj4string(loaloa),
 		pixelSize=2000, job="loa",
 		SDSstring = theString,
-		extent=extent(spTransform(loaloa, CRS("+proj=longlat"))))
+		extent=extent(spTransform(loaloa, CRS("+init=epsg:4326"))))
 
 # find file name 
 thenames = preStack(
@@ -260,7 +266,7 @@ for(D in theTiles) {
 
 # extent to crop to
 forCrop = extend(projectExtent(
-				loaloa,crs="+proj=longlat")@extent,
+				loaloa,crs="+init=epsg:4326")@extent,
 		0.5)
 
 for(D in theTiles) {
@@ -285,7 +291,7 @@ plot(result)
 elevAgg=raster::aggregate(result, fact=30)
 
 
-elevationLoa = projectRaster(elevAgg, crs=loaloa@proj4string)
+elevationLoa = projectRaster(elevAgg, crs=CRS(proj4string(loaloa)))
 
  
  
@@ -295,7 +301,7 @@ elevationLoa = projectRaster(elevAgg, crs=loaloa@proj4string)
 
 myProduct = "MOD11C3"
 thehdf=getHdf(product=myProduct,begin="2002-01-01",end="2002-12-31", 
-		extent=extent(spTransform(loaloa, CRS("+proj=longlat"))))
+		extent=extent(spTransform(loaloa, CRS("+init=epsg:4326"))))
 
 # the HDR files have multiple layers
 # find the layer with EVI data
@@ -319,7 +325,7 @@ thenames = preStack(
 tempLoa= stack(thenames)
 # crop out the study region (20km buffer around the loaloa data)
 tempLoa = crop(tempLoa, 
-		extend(extent(projectExtent(loaloa,crs="+proj=longlat")),0.5)
+		extend(extent(projectExtent(loaloa,crs="+init=epsg:4326")),0.5)
 	)
 tempLoa = projectRaster(tempLoa, crs=proj4string(loaloa))
 

@@ -47,7 +47,7 @@ Otherwise predict fitted values.
 }
 }
 \details{
-Calls  \code{\link{likfit}} and  \code{\link{krige}}
+Calls  \code{\link{likfitLgm}} and  \code{\link{krige}}
 }
 \value{
 A raster stack is 
@@ -63,7 +63,7 @@ For Box-Cox or log-transformed data on the natural (untransformed) scale.
 }
 
 \seealso{
-\code{\link{likfit}}, \code{\link{krige}}
+\code{\link{likfitLgm}}, \code{\link{krige}}
 }
 \examples{
 

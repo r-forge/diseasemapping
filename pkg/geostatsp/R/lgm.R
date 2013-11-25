@@ -55,10 +55,12 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 		
 		for(D in notInData) {
 			
-			if(proj4string(covariates[[D]])!= "NA" & 
-					!is.na(proj4string(data)) ) {
+			if(!.compareCRS(covariates[[D]], data,unknown=TRUE) ) {
+				
+				require(rgdal, quietly=TRUE ) 
+				
 				data[[D]] = extract(covariates[[D]], 
-					spTransform(data, CRS(proj4string(covariates[[D]])))) 
+					spTransform(data, CRSobj=CRS(projection(covariates[[D]])))) 
 			} else {
 				data[[D]] = extract(covariates[[D]], 
 						 data) 

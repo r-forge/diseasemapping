@@ -1,6 +1,6 @@
 library("geostatsp")
 data("swissRain")
-
+library("rgdal")
 
 
 
