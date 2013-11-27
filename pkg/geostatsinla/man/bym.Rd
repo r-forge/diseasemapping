@@ -94,7 +94,8 @@ kBYM = bym(kentucky, observed ~ offset(logExpected) + poverty,
 
 kBYM$par$summary
 
-kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
+if(!is.null(kBYM))
+	kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 
 \dontrun{
 spplot(kBYM$data, "fitted.exp",

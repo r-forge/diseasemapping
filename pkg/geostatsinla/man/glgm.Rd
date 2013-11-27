@@ -87,6 +87,7 @@ swissFit =  glgm(swissRain, cells=30, formula="lograin",
 
 swissFit$parameters$summary
 
+if(!is.null(swissFit)) {
 plot(swissFit$parameters$range$prior,type="l",
 	ylim=c(0,max(swissFit$parameters$range$posterior[,"y"])),
 	xlim=c(0, swissFit$parameters$range$userPriorCI[2]*1.1))
@@ -100,6 +101,7 @@ lines(swissFit$parameters$range$posterior, col='blue')
 
 	swissExcRE = excProb(swissFit$inla$marginals.random$space, 
 		log(1.5),template=swissFit$raster)
+}
 
 \dontrun{
 plot(swissFit$raster[["predict.exp"]]) 
