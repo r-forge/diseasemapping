@@ -4,8 +4,8 @@
 %\VignetteIndexEntry{Examples of map layers}
 
 
-\usepackage[margin=1in,landscape]{geometry}
-\usepackage{graphicx}
+\usepackage[right=1in,left=1in,top=0.5in,bottom=0.1in]{geometry}
+\usepackage{graphicx,hyperref}
 \DeclareGraphicsExtensions{.png}
 
 \renewcommand{\contentsname}{}
@@ -29,14 +29,21 @@
 
 \tableofcontents
 \comment{
+
+<<packages,messages=FALSE,echo=FALSE,results='hide'>>=
+library('mapmisc')
+library('raster')
+library('rgdal')
+@
+
 <<setup,echo=FALSE,cache=TRUE,warning=FALSE,results='hide',message=FALSE>>=
 
-library(knitr)
+library('knitr')
 knit_hooks$set(
 				dev.args=list(bg='white'))
 
 
-library(mapmisc)
+library('mapmisc')
 theNames = names(osmTiles())
  
 
@@ -45,16 +52,26 @@ africaTiles = openmap(africaExtent, path=theNames,zoom=2)
 
 trafalgarSquare=c(-0.128056,51.508056)
 londonTiles = openmap(trafalgarSquare,zoom=12,path=theNames)
+
+# make sure all data is stored in memory not on disk
+# so that caching will work
+for(D in names(africaTiles))
+	values(africaTiles[[D]]) = 	values(africaTiles[[D]])
+for(D in names(londonTiles))
+	values(londonTiles[[D]]) = 	values(londonTiles[[D]])
 @
 
 }
 The following are some examples of maps produced with
+
 {\tt mymap=openmap(x, path="something")}
+
 
 
 %<<someTiles,fig.cap="Various Tiles", fig.subcap=thesubcap, dev='png',
 % out.width="0.22\\textwidth",echo=FALSE>>= 
-<<someTiles,dev='png', out.width="\\textwidth",echo=FALSE,results='asis',fig.height=5,fig.width=7>>=
+<<someTiles,dev='png', out.width="\\textwidth",echo=FALSE,results='asis',fig.height=5,fig.width=5>>=
+
 
 mytiles = list(africaTiles, londonTiles)
 
@@ -74,29 +91,35 @@ for(D in theNames){
 		)>0
 
 	
-
-	cat("\n\\section[",D,"]{{\\tt plot","RGB"[threeTiles], 
-			"(openmap(x,path=\"", D, "\"))}}\n",sep="")
-	cat("\n\\label{", D, "}\n",sep="")
-	
-	cat("\n\\begin{tabular}{ccc}\n")
-	cat("\n\\begin{minipage}{0.3\\textwidth}\n")
+	cat("\\section[",D,"]{{\\tt plot","RGB"[threeTiles], 
+			"(openmap(x,path=\"", D, "\"))}}")
+	cat("\\label{", D, "}\n",sep="")
+	cat("\\nopagebreak[4]\\begin{tabular}{ccc}\n")
 	
 	
 	for(Dplot in 1:length(mytiles)) {
+		cat("\n\\begin{minipage}{0.4\\textwidth}\n")
+		cat("%", Dplot, "\n")
 		oneTile = grep(paste("^", Dsub, "$", sep=""), 
-				names(mytiles[[Dplot]]))
+				names(mytiles[[Dplot]]), value=TRUE)
 		threeTiles = grep(paste("^", Dsub, 
 						"([rR]ed|[gG]reen|[bB]lue)$", sep=""), 
-				names(mytiles[[Dplot]]))
+				names(mytiles[[Dplot]]),value=TRUE)
 		if(length(threeTiles)==3) {
-
-		plotRGB(mytiles[[Dplot]][[threeTiles]])
-		
+		map.new(mytiles[[Dplot]])
+			
+		thetry = try(plotRGB(mytiles[[Dplot]][[
+								paste(Dsub, c("Red","Green","Blue"),sep="")
+								]],add=TRUE))
+		if(class(thetry)=="try-error"){
+			print(paste(Dsub, c("Red","Green","Blue"),sep=""))
+			print(mytiles[[Dplot]][[paste(Dsub, c("Red","Green","Blue"),sep="")]])
+		}
+	
 	
 	} else if (length(oneTile)==1){
-		map.new(mytiles[[Dplot]][[oneTile]])
-		plot(mytiles[[Dplot]][[oneTile]],add=TRUE)
+		map.new(mytiles[[Dplot]])
+		try(plot(mytiles[[Dplot]][[oneTile]],add=TRUE))
 
 	} else {
 
