@@ -33,8 +33,7 @@
 
 library(knitr)
 knit_hooks$set(
-				dev.args=list(res=36,bg='white')
-)
+				dev.args=list(bg='white'))
 
 
 library(mapmisc)
@@ -85,8 +84,10 @@ for(D in theNames){
 	
 	
 	for(Dplot in 1:length(mytiles)) {
-		oneTile = grep(paste("^", Dsub, "$", sep=""), names(mytiles[[Dplot]]))
-		threeTiles = grep(paste("^", Dsub, "([rR]ed|[gG]reen|[bB]lue)$", sep=""), 
+		oneTile = grep(paste("^", Dsub, "$", sep=""), 
+				names(mytiles[[Dplot]]))
+		threeTiles = grep(paste("^", Dsub, 
+						"([rR]ed|[gG]reen|[bB]lue)$", sep=""), 
 				names(mytiles[[Dplot]]))
 		if(length(threeTiles)==3) {
 
@@ -104,10 +105,10 @@ for(D in theNames){
 
 		
 	}
-	cat("\n\\end{minipage}&\\begin{minipage}{0.3\\textwidth}\n")
-	
+	cat("\n\\end{minipage}&", #"\\begin{minipage}{0.3\\textwidth}",
+			"\n")	
 	}
-	cat("\n\\end{minipage}\n")
+#	cat("\n\\end{minipage}\n")
 	cat("\n\\end{tabular}\n")
 	
 	

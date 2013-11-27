@@ -12,16 +12,20 @@ colourScale.factor = function(x, breaks=5,
 		col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
 		transform=NULL, revCol=FALSE, exclude=NULL, ...) {
 
-	x=x[x %in% exclude] = NA
-	labels = levels(x)
+	toexclude = which(x %in% exclude)
+	if(length(toexclude)){	
+		x=x[toexclude] = NA
+	}
+	xlabels = levels(x)
+	names(xlabels) = as.character(seq(1:length(xlabels)))
 	x = as.integer(x)
 	
-res=colourScale(x, breaks, 
+res=colourScale(x, breaks=breaks,
 			style="unique",
 			col, opacity, dec, firstBreak, 
 			transform, revCol, exclude, ...) 		
 
-	res$breaks = labels[res$breaks]
+	res$breaks = xlabels[res$breaks]
 	res
 }
 colourScale.Raster = function(x, breaks=5, 
