@@ -1,80 +1,119 @@
-grfConditional = function(data, ycol=1, 
+grfConditional = function(data, y=1, 
 			param, locations, Nsim,
 		 	fun=NULL, nuggetInPrediction=TRUE){
 		
-if(is.numeric(locations)){
-	# locations is number of cells in the x direction
-	Nx = locations[1]
-	if(length(locations)<2) {
+		
+	if(is.numeric(locations)){
+		# locations is number of cells in the x direction
+		Nx = locations[1]
+		myExtent = 	extent(data@bbox)
 		Ny = round(locations*diff(data@bbox[2,])/diff(data@bbox[1,]))
-	} else {
-		Ny = locations[2]
-	} 
-	myExtent = 	extent(data)
-	myExtent@ymax = myExtent@ymin + Ny * diff(data@bbox[1,])/Nx
-	locations = raster(myExtent, Ny, Nx,
-			data@proj4string)	
-}
-if(nrow(locations) * ncol(locations) > 10^7) warning("there are lots of cells in the prediction raster,\n this might take a very long time")
-
+		myExtent@ymax = myExtent@ymin + Ny * diff(data@bbox[1,])/Nx
+		locations = raster(myExtent, Ny, Nx,
+				crs=projection(data))	
+	}
+	if(nrow(locations) * ncol(locations) > 10^7) warning("there are lots of cells in the prediction raster,\n this might take a very long time")
+	
 	xseq = c(xmin(locations)+xres(locations)/2, 
 			xmax(locations)-xres(locations)/2, xres(locations))
 	yseq = c(ymin(locations)+yres(locations)/2,
 			ymax(locations)-yres(locations)/2, yres(locations))
 
 
-	# the model
-	requiredParams = c("variance","range","shape")
-	if(!all(requiredParams %in% names(param)))
-		warning("param has names", paste(names(param),collapse=","), 
-				" must have ", paste(requiredParams, collapse=","))
-
-	if(length(ycol)==1 & length(data) > 1) {
-		ycol = data@data[,ycol]
+	if(length(y)==1 & length(names(data)) > 1) {
+		y = data.frame(data)[,y]
 	}
+
 	
+	if(length(dim(y))==3) {
+		y = matrix(y, nrow=prod(dim(y)[1:2]), ncol=dim(y)[3])
+	}
+
+	# convert param to a matrix if it's a list
+	# fill in missing parameters with defaults
 	param = fillParam(param)
-	model = modelRandomFields(param)
+	if(class(param)%in%c("integer","numeric"))
+		param = t(as.matrix(param))
+	if(class(y)%in%c("integer","numeric")) {
+		y = t(as.matrix(y))
 	
-	if(param["nugget"] > 0) {
+	Nsamples = unique(c(dim(param)[1], dim(y)[1]))
+	Nsamples = Nsamples[Nsamples!=1]
+	if(length(Nsamples)>1.5)
+		warning("number of samples in y and param is different")
+	if(!length(Nsamples))
+		Nsamples = 1
+	
+	param = param[round(seq(1,dim(param)[1], len=Nsim)),,drop=FALSE]
+	y = y[round(seq(1,dim(y)[1], len=Nsim)),,drop=FALSE]
+}	
+
+
+
+
+simFun = function(D) {
+
+	if(param[D,"nugget"] > 0) {
 		err.model = "nugget"
-		err.param=c(1,param["nugget"],0)
-		nuggetSd = sqrt(param["nugget"])
+		err.param=c(1,param[D,"nugget"],0)
 	} else {
 		err.model = err.param = NULL
-		nuggetInPrediction=FALSE
 	}
-
 	
-simFun = function(D) {
+	modelv = modelRandomFields(param[D,])
+	
 	res = RandomFields::CondSimu(krige.method="O",
 			x=xseq, y = yseq, grid=TRUE, gridtriple=TRUE,
-			param=NULL, model=model,
+			param=NULL, model=modelv,
 			given=data@coords,
-			data=ycol, 
+			data=y[D,],
 			err.model=err.model,
 			err.param=err.param, method="direct decomp."
 	)		
+	
+	
+#	CondSimu("S", given=locations.obs, 
+#			data=params[[theEffectR]][Siter[Diter],Dchain,], 
+#			x=xgrid, y=ygrid, grid=TRUE, model="exponential", 
+#			param=c(mean=0, 
+#					variance=params[[theSD]][Siter[Diter],Dchain]^2, 
+#					nugget=0, 
+#					scale=params[[thePhi]][Siter[Diter],Dchain]), 
+#			pch=" ")
+	
+	
 	if(nuggetInPrediction){
-		res= res + rnorm(length(res), sd=nuggetSd)
+		res= res + rnorm(length(res), sd=sqrt(param[,"nugget"]))
 	}		
-	values(locations) = as.vector((res[,seq(dim(res)[2], 1)]))
-	if(!is.null(fun)) {
-		locations = fun(locations)
-	}
-	locations
-}		
+	if(!is.null(fun)) 
+		res = fun(res)
+	res
+	}		
 
-	result = mcmapply(simFun, 1:Nsim)
-
+	result = mcmapply(simFun, 1:Nsim, SIMPLIFY=TRUE)
 	if(is.null(fun)) {
-		resultRaster = result[[1]]
-		if(Nsim > 1) {
-			for(Dsim in 1:Nsim){
-				resultRaster = stack(resultRaster, result[[Dsim]])
-			}
-		} 
-		result = resultRaster			
+	result = array(result, c(ncol(locations), nrow(locations), Nsim))
+	result = aperm(result, c(2,1,3))
+	result = result[dim(result)[1]:1, , ,drop=FALSE]
+	
+	if(dim(result)[3]==1) {
+		result = raster(result[,,1], 
+				xmn=xmin(extent(locations)),
+				xmx=xmax(extent(locations)),
+				ymn=ymin(extent(locations)),
+				ymx=ymax(extent(locations)),
+				crs=projection(locations)
+		)
+		
+	} else {
+	result = brick(result, 
+			xmn=xmin(extent(locations)),
+			xmx=xmax(extent(locations)),
+			ymn=ymin(extent(locations)),
+			ymx=ymax(extent(locations)),
+			crs=projection(locations)
+			)
+		}
 	}
 	result	
 }

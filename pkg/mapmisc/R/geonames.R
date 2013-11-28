@@ -31,3 +31,18 @@ GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 		
 	result
 }
+
+GNsearch = function(...) {
+	
+	result=geonames::GNsearch(...)
+	
+	if(all(c("lat","lng") %in% names(result))){
+		coords = result[,c("lng","lat"),drop=FALSE]
+		mode(coords) = 'numeric'
+		result = SpatialPointsDataFrame(
+				coords,
+				 data=result, 
+				proj4string=crsLL)
+	}
+	result
+}

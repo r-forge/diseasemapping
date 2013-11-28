@@ -1,6 +1,6 @@
 \name{GNcities}
 \alias{GNcities}
-
+\alias{GNsearch}
 \title{Retrieve city names and locations}
 \description{
  This function uses the geonames package to  provide city names and locations
@@ -8,6 +8,7 @@
   }
 \usage{
 	GNcities(north, east, south, west, lang = "en", maxRows = 10)
+	GNsearch(...)
 	}
 
 \arguments{
@@ -18,9 +19,10 @@
 	\item{east,south,west}{If \code{north} is numeric, decimal degree bounding box.}
 	\item{lang}{Language for internationalised returned text}
 	\item{maxRows}{Limit on returned rows}
+	\item{...}{Various search arguments}
 }
 
-\seealso{\code{\link[geonames]{GNcities}} in the geonames package.}
+\seealso{\code{\link[geonames]{GNcities}}, \code{\link[geonames]{GNsearch}}}
 
 
 \value{A SpatialPointsDataFrame with the sampe projection  \code{north} if it exists, otherwise in 
@@ -53,6 +55,7 @@ plot(mytiles, add=TRUE)
 points(cities, col='red')
 text(cities, labels=cities$name, col='red',pos=4)
 
+GNsearch(q="Toronto Ontario")
 
 }
 

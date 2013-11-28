@@ -12,8 +12,8 @@ swissFit =  likfitLgm(swissRain, trend=sqrtrain ~ elevation,
 
 # simulate from the random effect conditional on
 #   the observed data
-swissSim = grfConditional(data=swissRain, ycol=swissFit$resid,
-		param=swissFit$param, locations=20, 
+swissSim = grfConditional(data=swissRain, y=swissFit$resid,
+		param=swissFit$param, locations=30, 
 		Nsim=1)
 
 # plot the simulated random effect
@@ -36,7 +36,7 @@ maxRainLocation = function(x) {
 # get a conditional sample of three locations of maximum rainfall
 swissRain$resid = swissFit$resid
 swissLocation = grfConditional(data=swissRain, 
-		ycol="resid",
+		y="resid",
 		param=swissFit$param, locations=swissAltSmall, 
 		Nsim=3, fun = maxRainLocation)
 
@@ -45,3 +45,9 @@ swissLocation = matrix(unlist(swissLocation), ncol=2,byrow=TRUE)
 # add the locations to the map
 points(swissLocation, pch=1:(dim(swissLocation)[1]),col='red')
 dev.off()
+
+# more simulations
+swissSim = grfConditional(data=swissRain, y=swissFit$resid,
+		param=list(range = seq(20000, 50000, by=10000),
+				variance=1, shape=1), locations=20, 
+		Nsim=4)

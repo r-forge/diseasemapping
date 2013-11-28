@@ -8,7 +8,7 @@ Conditional simulation of a Gaussian Random Field
 Simulates a Gaussian random field conditional on observed values.
 }
 \usage{
-grfConditional(data, ycol=1, 
+grfConditional(data, y=1, 
 			param, locations, Nsim,
 		 	fun=NULL, nuggetInPrediction=TRUE) 
 }
@@ -17,7 +17,7 @@ grfConditional(data, ycol=1,
 SpatialPointsDataFrame with locations and (residuals from) observed data
  at these locations.
 }
-\item{ycol}{Either a vector of (residuals from) observed data or name or number of 
+\item{y}{Either a vector of (residuals from) observed data or name or number of 
 the column of \code{data} containing the observed data.}
 
 \item{param}{A vector of named model parameters, as produced by \code{\link{likfitLgm}}
@@ -56,7 +56,7 @@ swissFit =  likfitLgm(swissRain, trend=sqrtrain ~ elevation,
 
 # simulate from the random effect conditional on
 #   the observed data
-swissSim = grfConditional(data=swissRain, ycol=swissFit$resid,
+swissSim = grfConditional(data=swissRain, y=swissFit$resid,
 		param=swissFit$param, locations=30, 
 		Nsim=1)
 
@@ -80,7 +80,7 @@ maxRainLocation = function(x) {
 # get a conditional sample of three locations of maximum rainfall
 swissRain$resid = swissFit$resid
 swissLocation = grfConditional(data=swissRain, 
-		ycol="resid",
+		y="resid",
 		param=swissFit$param, locations=swissAltSmall, 
 		Nsim=3, fun = maxRainLocation)
 
