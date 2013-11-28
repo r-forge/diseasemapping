@@ -57,9 +57,11 @@ bym.SpatialPolygonsDataFrame = function(data,
 			region.id=region.id, adjMat=adjMat,formula.fitted=formula.fitted
 		, ...
 			)
+	if(any(names(result)=="data")) {		
  	# merge data back into SPDF
-	data@data = result$data[as.character(data[[region.id]]),]
-	result$data = data
+		data@data = result$data[as.character(data[[region.id]]),]
+		result$data = data
+	}
 	
 	result
 }
@@ -261,8 +263,12 @@ startIndex = length(region.index)
 			lincomb=inlaLincombs, ...)
  	
 	if(all(names(inlaRes)=="logfile"))
-		return(inlaRes)
-
+		return(list(formula=formula, data=data,
+						family=family, 
+						lincomb=inlalincombs, 
+						inlares=inlaRes)
+		)
+	
 	# posterior distributions of random effect (spatial + independent)
 	thebym = inlaRes$summary.lincomb.derived[
 			grep("^bym_", rownames(inlaRes$summary.lincomb.derived)),]
