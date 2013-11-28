@@ -49,10 +49,9 @@ theurl=(paste("http://ci5.iarc.fr/",
 									iconv(tempn,to="UTF-8"), value=TRUE, 
 									ignore.case=TRUE)), sep=""))
 theurl = url(theurl)
+forAttribute = scan(theurl, what="a", sep="\t", nmax=1, quiet=TRUE)
 result[[Dsex]]=read.table(theurl, header=TRUE,skip=1, 
 		fill=TRUE, sep="\t", as.is=TRUE)
-forAttribute = scan(theurl, what="a", sep="\t", nmax=1, quiet=TRUE)
-close(theurl)
 }
 
 iarcSite=NULL
