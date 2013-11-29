@@ -36,7 +36,7 @@ data("murder")
 torontoNight
 @
 
-<<rotateToronto,cache=TRUE>>=
+<<rotateToronto,cache=TRUE,result='hide'>>=
 rotatedCRS = CRS("+proj=omerc +lat_0=43.69762
  +lonc=-79.38751 +alpha=-18.0000000 +gamma=0.0
  +k=1.000000 +x_0=500000.000 +y_0=0.000
@@ -50,7 +50,7 @@ torontoNightR = mask(torontoNightR, torontoBorderR)
 <<torontoTiles,cache=TRUE>>=
 library("mapmisc") 
 torontoTiles = openmap(torontoBorder)
-torontTilesR = openmap(torontoBorderR)
+torontoTilesR = openmap(torontoBorderR)
 @
 
 <<plotToronto,fig.cap='Toronto ambient light', fig.subcap=c("UTM","rotated")>>=
@@ -68,26 +68,80 @@ plot(torontoBorderR,add=TRUE)
 
 
 @
-<<dataForSim>>=
 
-
-mymodel = c(mean=-0.5, variance=1, 
-		range=2, shape=2)
-
-myraster = raster(nrows=15,ncols=20,xmn=0,xmx=10,ymn=0,ymx=7.5)
-
-# some covariates, deliberately with a different resolution than myraster
-covA = covB = raster(extent(myraster), 10, 10)
-values(covA) = as.vector(matrix(1:10, 10, 10))
-values(covB) = as.vector(matrix(1:10, 10, 10, byrow=TRUE))
-
-myCovariate = list(a=covA, b=covB)
-
-myLgcp=simLgcp(mymodel, myCovariate, betas=c(a=-0.1, b=0.25), 
-		rasterTemplate=myraster)
-
+Raster to simulate the intensity on
+<<rasterForSim>>=
+myraster = raster(extent(torontoBorderR), crs=projection(torontoBorderR),
+		ncol=200)
+myraster = squareRaster(myraster)
 
 @
 
+Parameters.  Intensity is in number of cases per $m^2$.
+<<params>>=
+casesPerSqK = 0.1
+mymodel = c(mean=log(casesPerSqK)+log(1e-6), variance=1^2, 
+		range=20000, shape=2)
+@
+
+<<dataForSim,eval=!file.exists("myLgcp.RData")>>=
+myLgcp=simLgcp(mymodel, torontoNightR, betas=c(layer=0.025), 
+		rasterTemplate=myraster)
+save(myLgcp,  file="myLgcp.RData")
+@
+
+
+<<simres>>=
+load("myLgcp.RData")
+names(myLgcp)
+length(myLgcp$events)
+@
+
+\section{INLA}
+<<inla,eval=!file.exists("fit.RData")>>=
+library('geostatsinla')
+fit = lgcp(myLgcp$events, cell=40,covariates=torontoNightR,
+		formula = ~layer, shape=2, buffer=4000)
+save(fit,myLgcp,file="fit.RData")
+@
+
+<<inlaRes,results='asis',echo=FALSE>>=
+load("fit.RData")
+library('Hmisc')
+latex(fit$par$summary[,c("mean","0.025quant","0.975quant")],
+		file='', caption='INLA parameter estimates', where='H',
+		cap.location='below', dec=3)
+@
+
+<<inlaResPlot,fig.cap="Intensity surfaces",fig.subcap=c("true","posterior mean"),out.width="0.45\\textwidth">>=
+map.new(torontoBorderR,legendRight=TRUE)
+plot(myLgcp$raster[['intensity']],add=TRUE)
+points(myLgcp$events, col='#00000050')
+
+
+map.new(torontoBorderR,legendRight=TRUE)
+plot(fit$raster[['predict.exp']],add=TRUE)
+
+@
+
+<<inlaPostr,fig.cap='parameter distributions',fig.subcap=c('range','sd','night'),out.width='0.3\\textwidth',fig.height=4,fig.width=5,echo=FALSE>>=
+
+
+# range
+plot(fit$parameters$range$post,col='red', type='l', xlim=c(0, 3*10^5))
+lines(fit$parameters$range$prior,type='l', col='blue')
+legend("topright", col=c("blue","red","black"),lty=1,legend=c("prior","post'r","true"))
+abline(v=myLgcp$par$random["range"])
+
+# sd
+plot(fit$parameters$sd$post,col='red',type='l', xlim=c(0,50))
+lines(fit$parameters$sd$prior,type='l', col='blue')
+legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
+abline(v=sqrt(myLgcp$par$random["variance"]))
+
+
+plot(fit$inla$marginals.fixed$layer,type='l', col='red')
+abline(v=myLgcp$par$fixed["layer"])
+@
 
 \end{document}

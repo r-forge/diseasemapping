@@ -7,7 +7,13 @@ simPoissonPP = function(intensity) {
 	NperCell = intensity
 	values(NperCell) = rpois(ncell(intensity), ivec)
 	
+	if(maxValue(NperCell)>1000)
+		warning("A large number of events are being simulated, more than", maxValue(NperCell))
+	
 	events = rep(1:ncell(NperCell), values(NperCell))
+	
+	if(length(events)>1e6)
+		warning("more than 1,000,000 events being simulated")
 	
 	events = as.data.frame(NperCell,xy=TRUE)[events, c("x","y")]
 	
@@ -33,7 +39,7 @@ simLgcp = function(param, covariates=NULL, betas=NULL,
 	if(!is.null(covariates))
 		covariates = stackRasterList(covariates, randomEffect)
 
-	linearPredictor = randomEffect
+	linearPredictor = param['mean'] +randomEffect
 	
 	if(is.null(names(betas)))
 		names(betas) = names(covariates)

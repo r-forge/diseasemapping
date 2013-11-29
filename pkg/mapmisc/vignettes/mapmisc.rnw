@@ -26,8 +26,8 @@ opts_chunk$set(echo=TRUE,message=FALSE,
 		fig.height=5,fig.width=3,out.width="0.3\\textwidth"
 )
 par(bg="white")
-library(mapmisc)
-library(rgdal)
+library('mapmisc')
+library('rgdal')
 @
 
 \section{Introduction}
