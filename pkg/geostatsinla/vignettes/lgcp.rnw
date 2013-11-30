@@ -103,7 +103,7 @@ library('geostatsinla')
 fit = lgcp(myLgcp$events, cell=40,covariates=torontoNightR,
 		formula = ~layer, shape=2, buffer=20000,
 		priorCI = list(sd = c(0.1, 4), range = c(2000, 50000)))
-save(fit,myLgcp,file="fit.RData")
+save(fit,myLgcp,file="fit.RData",compress="xz")
 @
 <<loadResults,eval=file.exists("fit.RData"),echo=FALSE>>=
 load(file="fit.RData")
@@ -126,31 +126,32 @@ latex(fit$par$summary[,c("mean","0.025quant","0.975quant")],
 		file='', caption='INLA parameter estimates', where='H',
 		cap.location='below', dec=3)
 @
-
 <<inlaResPlot,fig.cap="Intensity surfaces",fig.subcap=c("intensity true","intensity posterior mean", "rand eff true","rand eff posterior mean"),out.width="0.45\\textwidth">>=
+mycol = rev(heat.colors(100))
 map.new(torontoBorderR,legendRight=TRUE)
 plot(torontoTilesR,add=TRUE)
-plot(myLgcp$raster[['intensity']],add=TRUE,alpha=0.8,col=heat.colors(10))
-points(myLgcp$events, col='#00000040',cex=0.25)
+plot(myLgcp$raster[['intensity']],add=TRUE,alpha=0.8,col=mycol)
+points(myLgcp$events, col='#00000060',cex=0.25)
 plot(torontoBorder,add=TRUE)
 
 
 map.new(torontoBorderR,legendRight=TRUE)
 plot(torontoTilesR,add=TRUE)
-plot(fit$raster[['predict.exp']],add=TRUE,alpha=0.8,col=heat.colors(10))
+plot(fit$raster[['predict.exp']],add=TRUE,alpha=0.8,col=mycol)
 plot(torontoBorder,add=TRUE)
 
 map.new(torontoBorderR,legendRight=TRUE)
 plot(torontoTilesR,add=TRUE)
-plot(myLgcp$raster[['random']],add=TRUE,alpha=0.8,col=heat.colors(10))
+plot(myLgcp$raster[['random']],add=TRUE,alpha=0.6,col=mycol)
 plot(torontoBorder,add=TRUE)
 
 
 map.new(torontoBorderR,legendRight=TRUE)
 plot(torontoTilesR,add=TRUE)
-plot(fit$raster[['random.mean']],add=TRUE,alpha=0.8,col=heat.colors(10))
+plot(fit$raster[['random.mean']],add=TRUE,alpha=0.6,col=mycol)
 plot(torontoBorder,add=TRUE)
 @
+
 
 <<inlaPostr,fig.cap='parameter distributions',fig.subcap=c('range','sd','night'),out.width='0.3\\textwidth',fig.height=4,fig.width=5,echo=FALSE>>=
 
