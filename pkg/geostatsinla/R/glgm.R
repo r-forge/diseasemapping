@@ -429,7 +429,7 @@ for(D in 1:nrow(lincombMat)) {
 	inlaResult = do.call(inla, forInla) 
 	
 	if(all(names(inlaResult)=="logfile"))
-		return(c(forInla, inlares=inlaRes))
+		return(c(forInla, inlares=inlaResult))
 	
 
  	# parameter priors for result

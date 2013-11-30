@@ -100,8 +100,8 @@ length(myLgcp$events)
 \section{INLA}
 <<inla,eval=!file.exists("fit.RData")>>=
 library('geostatsinla')
-fit = lgcp(myLgcp$events, cell=40,covariates=torontoNightR,
-		formula = ~layer, shape=2, buffer=20000,
+fit = lgcp(myLgcp$events, cell=30,covariates=torontoNightR,
+		formula = ~layer, shape=2, buffer=10000,
 		priorCI = list(sd = c(0.1, 4), range = c(2000, 50000)))
 save(fit,myLgcp,file="fit.RData",compress="xz")
 @

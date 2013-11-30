@@ -7,7 +7,7 @@ PDFS:= lgcp.pdf
 all: $(PDFS) 
 
 clean:
-	rm -rf *.tex *.toc *.bbl *.blg *.aux *.out *.log *.spl *tikzDictionary *.md figure/ cache/ *.dvi
+	rm -rf *.tex *.toc *.bbl *.blg *.aux *.out *.log *.spl *tikzDictionary *.md figure/ cache/ *.dvi *.lg *.RData
 
 %.tex: %.rnw
 	$(R_HOME)/bin/Rscript -e "knitr::knit('$<')" 

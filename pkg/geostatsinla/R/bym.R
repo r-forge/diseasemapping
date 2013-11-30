@@ -265,7 +265,7 @@ startIndex = length(region.index)
 	if(all(names(inlaRes)=="logfile"))
 		return(list(formula=formula, data=data,
 						family=family, 
-						lincomb=inlalincombs, 
+						lincomb=inlaLincombs, 
 						inlares=inlaRes)
 		)
 	
