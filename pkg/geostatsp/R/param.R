@@ -73,8 +73,9 @@ fillParam = function(param) {
 # fill in anisotropy parameters	
 	if(!any(colnames(param)=="anisoRatio"))
 		param = cbind(param, anisoRatio = 1)
+
 	if(!any(colnames(param)=="anisoAngleRadians")){
-		if(any(names(param)=="anisoAngleDegrees")) {
+		if(any(colnames(param)=="anisoAngleDegrees")) {
 			param = cbind(param, 
 					anisoAngleRadians=
 					param[,"anisoAngleDegrees"]*2*pi/360)
