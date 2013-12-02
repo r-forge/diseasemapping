@@ -389,11 +389,12 @@ likfitLgm = function(
 			stdErr
 
 	thelims = c(0.01, 0.99, 0.025, 0.975, 0.1, 0.9)
-	for(D in thelims) {
-		theQ = qchisq(D, 1, lower.tail=FALSE)
-		parameterTable[[paste("ci",D,sep="")]] =
-			parameterTable$estimate - sqrt(theQ) * parameterTable$stdErr
-	}
+	theQ = qnorm(thelims)
+	toadd = outer(parameterTable$stdErr, theQ)
+	toadd = toadd + matrix(parameterTable$estimate, 
+			ncol=length(thelims), nrow=dim(parameterTable)[1])
+	colnames(toadd)= paste("ci", thelims, sep="")
+	parameterTable = cbind(parameterTable, toadd)
 	
 	parameterTable[,"pr(est|par=0)"] = pchisq(
 			parameterTable$estimate^2  / parameterTable$stdErr^2,
