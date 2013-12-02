@@ -51,3 +51,9 @@ swissSim = grfConditional(data=swissRain, y=swissFit$resid,
 		param=list(range = seq(20000, 50000, by=10000),
 				variance=1, shape=1), locations=20, 
 		Nsim=4)
+
+
+data=swissRain; y=swissFit$resid
+param=list(range = seq(20000, 50000, by=10000),
+		variance=1, shape=1); locations=20
+Nsim=4;nuggetInPrediction=TRUE

@@ -54,7 +54,7 @@ If an argument \code{model} is specified, parameters are passed directly to the 
 }
 
 \examples{
-mymodel = c(variance=1, range=2, shape=2, anisoRatio=0.6, anisoAngleDegrees=30)
+mymodel = c(variance=1, range=8, shape=2, anisoRatio=0.6, anisoAngleDegrees=30)
 
 myraster = raster(nrows=40,ncols=40,xmn=-20,xmx=20,ymn=-15,ymx=15)
 

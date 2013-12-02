@@ -18,7 +18,7 @@ bob = function(x) {
 
 
 # specify formula name of raster layer
-swissFit = lgm(data=swissRain, formula=rain~ SRTM_1km,
+swissFit = lgm(data=swissRain, formula=rain~ CHE_alt,
 		locations=80, covariates=swissAltitude,
 		shape=1,  fixShape=TRUE, 
 		boxcox=0.5, fixBoxcox=TRUE, 

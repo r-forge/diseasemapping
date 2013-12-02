@@ -118,6 +118,7 @@ myres = likfitLgm(mydat, Y ~ cov1 + cov2,
 
 myres$summary
 
+\dontrun{ 	
 
 # plot variograms of data, true model, and estimated model
 myv = variog(mydat, formula=Y ~ cov1 + cov2,option="bin", max.dist=0.5)
@@ -134,7 +135,6 @@ lines(distseq,
 legend("bottomright", fill=c("black","red","blue"), 
 	legend=c("data","true","MLE"))
 
-\dontrun{ 	
 # without a nugget
 myresNoN = likfitLgm(mydat, Y ~ cov1 + cov2, 
 	param=c(range=0.1,nugget=0,shape=1), paramToEstimate = c("range")	

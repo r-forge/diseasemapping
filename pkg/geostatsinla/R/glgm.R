@@ -663,6 +663,21 @@ dimnames(params$summary) = lapply(dimnames(params$summary),
 )
 params$summary = as.data.frame(params$summary)
 
+for(Dvar in names(covariates)) {
+	theLevels =levels(covariates[[Dvar]])[[1]]
+	if(!is.null(nrow(theLevels))){
+	for(D in 1:nrow(theLevels)) {
+		rownames(params$summary) = gsub(
+			paste("(factor)?(\\()?", Dvar, "(\\))?:?", 
+					theLevels[D,1],"$",sep=""),
+			paste(Dvar, ":",theLevels[D,2],sep=""), 
+					rownames(params$summary))
+	}
+}
+}
+
+
+
 resRaster=stack(resRasterRandom, resRasterFitted)
 
 #	if(!is.null(smallBbox))
