@@ -98,6 +98,9 @@ length(myLgcp$events)
 @
 
 \section{INLA}
+<<fit,include=FALSE>>=
+fit=NULL
+@
 <<inla,eval=FALSE>>=
 library('geostatsinla')
 fit = lgcp(myLgcp$events, cell=30,covariates=torontoNightR,
@@ -110,17 +113,17 @@ load(file="fit.RData")
 @
 <<loadsystemresults,echo=FALSE>>=
 if(is.null(fit$raster)) {
-	resfile <- system.file("inst", "extdata", "fit.RData", package = "geostatsinla")
+	resfile <- system.file("extdata", "fit.RData", package = "geostatsinla")
 	load(resfile)
 }
 @
 <<saveSystemFile,eval=FALSE,echo=FALSE>>=
+# if a new version of fit.RData has been built
 file.copy("fit.RData", "../inst/extdata/fit.RData",overwrite=TRUE)
 @
 
 
 <<inlaRes,results='asis',echo=FALSE>>=
-load("fit.RData")
 library('Hmisc')
 latex(fit$par$summary[,c("mean","0.025quant","0.975quant")],
 		file='', caption='INLA parameter estimates', where='H',

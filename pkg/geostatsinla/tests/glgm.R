@@ -1,10 +1,12 @@
+# number of cells... smaller is faster but less interesting
+Ncell = 25
 
 # as in example
 require('geostatsinla')
 require('sp')
 data('swissRain')
 swissRain$lograin = log(swissRain$rain)
-swissFit =  glgm(swissRain, cells=30, formula="lograin",
+swissFit =  glgm(swissRain, cells=Ncell, formula="lograin",
 		covariates=swissAltitude, family="gaussian", buffer=20000,
 		priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
 		control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
@@ -20,7 +22,7 @@ plot(swissBorder, add=TRUE)
 
 
 # intercept only
-swissFit =  glgm(swissRain, cells=30, formula=lograin~1,
+swissFit =  glgm(swissRain, cells=Ncell, formula=lograin~1,
 		covariates=swissAltitude, family="gaussian", buffer=20000,
 		priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
 		control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
@@ -36,7 +38,7 @@ plot(swissBorder, add=TRUE)
 
 
 # now with formula
-swissFit =  glgm(swissRain, cells=30, 
+swissFit =  glgm(swissRain, cells=Ncell, 
 		formula=lograin~ SRTM_1km,
 		covariates=swissAltitude, family="gaussian", buffer=20000,
 		priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
@@ -46,7 +48,7 @@ swissFit =  glgm(swissRain, cells=30,
 )
 
 # formula, named list elements
-swissFit =  glgm(swissRain, cells=30, 
+swissFit =  glgm(swissRain, cells=Ncell, 
 		formula=lograin~ elev,
 		covariates=list(elev=swissAltitude), 
 		family="gaussian", buffer=20000,
@@ -57,7 +59,7 @@ swissFit =  glgm(swissRain, cells=30,
 )
 
 # categorical covariates
-swissFit =  glgm(swissRain, cells=30, 
+swissFit =  glgm(swissRain, cells=Ncell, 
 formula=rain ~ elev + factor(land),
 covariates=list(elev=swissAltitude,land=swissLandType), 
 family="gaussian", buffer=20000,
@@ -72,7 +74,7 @@ control.family=list(hyper=list(prec=list(prior="loggamma",
 temp = values(swissAltitude)
 temp[seq(10000,12000)] = NA
 values(swissAltitude) = temp
-swissFit =  glgm(swissRain, cells=30, 
+swissFit =  glgm(swissRain, cells=Ncell, 
 		formula=rain ~ elev + factor(land),
 		covariates=list(elev=swissAltitude,land=swissLandType), 
 		family="gaussian", buffer=20000,
@@ -103,7 +105,7 @@ elevHigh = reclassify(elevationLoa, c(-Inf, 0, 0))
 
  loaFit = glgm(loaloa,
 		formula=y ~ factor(land) + evi + elHigh + elLow, #+ f(villageID,model="iid"),
-		family="binomial", Ntrials = loaloa$N,cells=50, 
+		family="binomial", Ntrials = loaloa$N,cells=Ncell, 
 		covariates=covList, shape=2, buffer=25000,
 		priorCI = list(sd=c(0.2, 4), range=c(20000,500000)))
 
@@ -114,7 +116,7 @@ plot(loaFit$raster[["predict.invlogit"]])
 dev.off()
 
 # prior for observation standard deviation
-swissFit =  glgm(swissRain, cells=30, formula="lograin",
+swissFit =  glgm(swissRain, cells=Ncell, formula="lograin",
 		covariates=swissAltitude, family="gaussian", buffer=20000,
 		priorCI=list(sd=c(0.1, 2), range=c(50000,500000), 
 				sdNugget=c(0.1, 2)), 
