@@ -124,10 +124,10 @@ file.copy("fit.RData", "../inst/extdata/fit.RData",overwrite=TRUE)
 
 
 <<inlaRes,results='asis',echo=FALSE>>=
-library('Hmisc')
-latex(fit$par$summary[,c("mean","0.025quant","0.975quant")],
-		file='', caption='INLA parameter estimates', where='H',
-		cap.location='below', dec=3)
+library('xtable')
+xtable(fit$par$summary[,c("mean","0.025quant","0.975quant")],
+		caption='INLA parameter estimates',  
+		dec=3)
 @
 <<inlaResPlot,fig.cap="Intensity surfaces",fig.subcap=c("intensity true","intensity posterior mean", "rand eff true","rand eff posterior mean"),out.width="0.45\\textwidth">>=
 mycol = rev(heat.colors(100))
