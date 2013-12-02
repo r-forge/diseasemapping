@@ -117,9 +117,18 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 	res = c(predict=krigeRes, likRes)
 	
 	
+	for(Dvar in names(covariates)) {
+		theLevels =levels(covariates[[Dvar]])[[1]]
+		if(!is.null(nrow(theLevels))){
+			for(D in 1:nrow(theLevels)) {
+				rownames(res$summary) = gsub(
+						paste("(factor)?(\\()?", Dvar, "(\\))?:?", 
+								theLevels[D,1],"$",sep=""),
+						paste(Dvar, ":",theLevels[D,2],sep=""), 
+						rownames(res$summary))
+			}
+		}
+	}
 	return(res)
-
-
-	
 }
 

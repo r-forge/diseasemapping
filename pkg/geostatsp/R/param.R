@@ -82,6 +82,9 @@ fillParam = function(param) {
 		} else {
 			param = cbind(param,anisoAngleRadians = 0)
 		}
+	} else {
+		param[,"anisoAngleDegrees"] = 
+				param[,"anisoAngleRadians"] *360/(2*pi)
 	}
 	drop(param)
 }
