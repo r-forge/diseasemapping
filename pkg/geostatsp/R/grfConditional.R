@@ -51,6 +51,8 @@ grfConditional = function(data, y=1,
 
 
 
+resTemplate = raster(locations)
+
 simFun = function(D) {
 
 	if(param[D,"nugget"] > 0) {
@@ -81,41 +83,26 @@ simFun = function(D) {
 #					scale=params[[thePhi]][Siter[Diter],Dchain]), 
 #			pch=" ")
 	
+	values(resTemplate) = t(res[nrow(res):1,])
+	res = resTemplate	
 	
 	if(nuggetInPrediction){
-		res= res + rnorm(length(res), sd=sqrt(param[,"nugget"]))
+		values(resTemplate) = 
+				rnorm(ncell(res), sd=sqrt(param[,"nugget"]))
+		res = res + resTemplate
 	}		
-	if(!is.null(fun)) 
+	if(!is.null(fun)) {
 		res = fun(res)
+	}
+
 	res
 	}		
 
 	result = mcmapply(simFun, 1:Nsim, SIMPLIFY=TRUE)
-	if(is.null(fun)) {
-	result = array(result, c(ncol(locations), nrow(locations), Nsim))
-	result = aperm(result, c(2,1,3))
-	result = result[dim(result)[1]:1, , ,drop=FALSE]
-	
-	if(dim(result)[3]==1) {
-		result = raster(result[,,1], 
-				xmn=xmin(extent(locations)),
-				xmx=xmax(extent(locations)),
-				ymn=ymin(extent(locations)),
-				ymx=ymax(extent(locations)),
-				crs=projection(locations)
-		)
-		
-	} else {
-	result = brick(result, 
-			xmn=xmin(extent(locations)),
-			xmx=xmax(extent(locations)),
-			ymn=ymin(extent(locations)),
-			ymx=ymax(extent(locations)),
-			crs=projection(locations)
-			)
-		}
-	}
-	result	
+	if(all(sapply(result, class)=="RasterLayer"))
+		result = do.call(brick, result)
+
+result	
 }
 
 
