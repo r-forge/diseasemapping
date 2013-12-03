@@ -28,17 +28,16 @@
 
 
 \tableofcontents
-\comment{
 
-<<packages,messages=FALSE,echo=FALSE,results='hide'>>=
+
+
+<<setup,include=FALSE,cache=TRUE>>=
+
+library('knitr')
 library('mapmisc')
 library('raster')
 library('rgdal')
-@
 
-<<setup,echo=FALSE,cache=TRUE,warning=FALSE,results='hide',message=FALSE>>=
-
-library('knitr')
 knit_hooks$set(
 				dev.args=list(bg='white'))
 
@@ -61,7 +60,6 @@ for(D in names(londonTiles))
 	values(londonTiles[[D]]) = 	values(londonTiles[[D]])
 @
 
-}
 The following are some examples of maps produced with
 
 {\tt mymap=openmap(x, path="something")}

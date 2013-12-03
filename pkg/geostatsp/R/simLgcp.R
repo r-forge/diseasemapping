@@ -39,11 +39,23 @@ simLgcp = function(param, covariates=NULL, betas=NULL,
 	if(!is.null(covariates))
 		covariates = stackRasterList(covariates, randomEffect)
 
-	linearPredictor = param['mean'] +randomEffect
-	
 	if(is.null(names(betas)))
 		names(betas) = names(covariates)
+	
+	
+	themean = 0
+	if('mean' %in% names(param))
+		themean = themean + param['mean']
+	if('intercept' %in% names(betas))
+		themean = themean + betas['intercept']
+	betas['intercept'] = themean
+	param = param[! names(param) %in% "mean"]
 
+	
+	
+	
+	linearPredictor = themean +randomEffect
+	
 	for(D in names(covariates)) {
 		linearPredictor = linearPredictor + betas[D]* covariates[[D]]		
 	}

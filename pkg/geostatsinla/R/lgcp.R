@@ -2,30 +2,19 @@ lgcp = function(data,  cells, covariates=NULL,
 		formula=NULL, priorCI=NULL, 
 shape=1, buffer = 0, mesh=FALSE,...) {
 
-# create raster for prediction
-if(!length(grep("^Raster",class(cells)))) { 
-	# cells must be an integer
-	cells = as.integer(cells)
-	smallBbox = thebbox = data@bbox
-	thebbox = thebbox + buffer*cbind(-c(1,1),c(1,1))
-	res = diff(thebbox[1,])/cells		
-	Nx = cells
-	Ny = ceiling(diff(thebbox[2,])/res)
-	thebbox[2,2] = thebbox[2,1] + res*Ny
-	cells= raster(extent(thebbox), ncols=Nx, nrows=Ny, crs=data@proj4string)
-} else {
-	# it's a raster, make sure it has square cells
-	if(xres(cells) != yres(cells)) 
-		res = xres(cells)
-	theextent = cells@extent
-	theylim = theextent@ymax - theextent@ymin
-	Ny = ceiling(theylim/res)
-	theextent@ymax = theextent@ymin + Ny * res
 	
-	cells = raster(theextent, ncols=cells@ncols, nrows=Ny,crs=cells@crs)
+	# create raster for prediction
+	if(!length(grep("^Raster",class(cells)))) { 
+		# cells must be an integer
+		cells = squareRaster(data, cells)
+	} else {
+		cells = squareRaster(cells)
+	}
 	smallBbox = bbox(cells)
+	buffer =  ceiling(buffer/xres(cells))
+	cells = extend(cells, c(buffer, buffer))
+	thebbox = bbox(cells)	
 	
-}
 
 # create data
 

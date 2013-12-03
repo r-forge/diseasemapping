@@ -17,7 +17,7 @@
 \begin{document}
 \maketitle 
 
-<<setup,echo=FALSE,cache=FALSE,results='hide',message=FALSE>>=
+<<setup,include=FALSE>>=
 library('knitr')
 opts_chunk$set(echo=TRUE,message=FALSE,
 		dev='png', 
@@ -25,7 +25,23 @@ opts_chunk$set(echo=TRUE,message=FALSE,
 		fig.height=3,fig.width=5,out.width="0.45\\textwidth"
 )
 par(bg="white")
+
+theArgs = commandArgs(trailingOnly=TRUE)
+
+if("rerun" %in% theArgs) {
+		assign("rerun", TRUE, pos=1)
+} else {
+		assign("rerun", FALSE, pos=1)
+}
+
 library('rgdal')
+@
+
+If the following is {\tt TRUE}, the analysis was rerun to produce this vignette.
+Otherwise a previously analysis was used.
+
+<<wasrerun,echo=TRUE>>=
+rerun
 @
 
 \section{Simulate data}
@@ -36,7 +52,7 @@ data("murder")
 torontoNight
 @
 
-<<rotateToronto,cache=TRUE,result='hide'>>=
+<<rotateToronto,cache=TRUE,include=FALSE>>=
 rotatedCRS = CRS("+proj=omerc +lat_0=43.69762
  +lonc=-79.38751 +alpha=-18.0000000 +gamma=0.0
  +k=1.000000 +x_0=500000.000 +y_0=0.000
@@ -60,7 +76,6 @@ plot(torontoTiles,add=TRUE)
 plot(torontoNight,add=TRUE,alpha=0.8,col=heat.colors(10))
 plot(torontoBorder,add=TRUE)
 
-library('mapmisc')
 map.new(torontoBorderR)
 plot(torontoTilesR,add=TRUE)
 plot(torontoNightR,add=TRUE,alpha=0.8,col=heat.colors(10))
@@ -84,42 +99,33 @@ mymodel = c(mean=log(casesPerSqK)+log(1e-6), variance=1^2,
 		range=20000, shape=2)
 @
 
-<<dataForSim,eval=!file.exists("myLgcp.RData")>>=
+<<dataForSim,eval=rerun>>=
 myLgcp=simLgcp(mymodel, torontoNightR, betas=c(layer=0.01), 
 		rasterTemplate=myraster)
-save(myLgcp,  file="myLgcp.RData")
 @
 
 
 <<simres>>=
-load("myLgcp.RData")
 names(myLgcp)
 length(myLgcp$events)
 @
 
 \section{INLA}
-<<fit,include=FALSE>>=
-fit=NULL
-@
-<<inla,eval=FALSE>>=
+
+<<inla,eval=rerun>>=
 library('geostatsinla')
-fit = lgcp(myLgcp$events, cell=30,covariates=torontoNightR,
+fit = lgcp(myLgcp$events, cell=100,covariates=torontoNightR,
 		formula = ~layer, shape=2, buffer=1000,
 		priorCI = list(sd = c(0.1, 4), range = c(2000, 50000)))
-save(fit,myLgcp,file="fit.RData",compress="xz")
 @
-<<loadResults,eval=file.exists("fit.RData"),echo=FALSE>>=
-load(file="fit.RData")
+<<saveSystemFile,eval=rerun,echo=FALSE>>=
+# if a new version of fit.RData has been built
+save(myLgcp, fit, file="../inst/extdata/fit.RData")
 @
-<<loadsystemresults,echo=FALSE>>=
-if(is.null(fit$raster)) {
+
+<<loadsystemresults,echo=FALSE,eval=!rerun>>=
 	resfile <- system.file("extdata", "fit.RData", package = "geostatsinla")
 	load(resfile)
-}
-@
-<<saveSystemFile,eval=FALSE,echo=FALSE>>=
-# if a new version of fit.RData has been built
-file.copy("fit.RData", "../inst/extdata/fit.RData",overwrite=TRUE)
 @
 
 
@@ -129,7 +135,7 @@ xtable(fit$par$summary[,c("mean","0.025quant","0.975quant")],
 		caption='INLA parameter estimates',  
 		dec=3)
 @
-<<inlaResPlot,fig.cap="Intensity surfaces",fig.subcap=c("intensity true","intensity posterior mean", "rand eff true","rand eff posterior mean"),out.width="0.45\\textwidth">>=
+<<inlaResPlot,fig.cap="Intensity surfaces",fig.subcap=c("intensity true","intensity posterior mean", "rand eff true","rand eff posterior mean"),out.width="0.45\\textwidth",echo=FALSE>>=
 mycol = rev(heat.colors(100))
 map.new(torontoBorderR,legendRight=TRUE)
 plot(torontoTilesR,add=TRUE)
