@@ -31,12 +31,14 @@
 
 
 
-<<setup,include=FALSE,cache=TRUE>>=
+<<setup,include=FALSE>>=
 
 library('knitr')
 library('mapmisc')
 library('raster')
 library('rgdal')
+
+reRun=("reRun" %in% commandArgs())
 
 knit_hooks$set(
 				dev.args=list(bg='white'))
@@ -44,12 +46,14 @@ knit_hooks$set(
 
 library('mapmisc')
 theNames = names(osmTiles())
- 
-
 africaExtent = c(15, 25)
+trafalgarSquare=c(-0.128056,51.508056)
+@
+
+
+<<downloadTiles,eval=reRun,include=FALSE>>=
 africaTiles = openmap(africaExtent, path=theNames,zoom=2)
 
-trafalgarSquare=c(-0.128056,51.508056)
 londonTiles = openmap(trafalgarSquare,zoom=12,path=theNames)
 
 # make sure all data is stored in memory not on disk
@@ -58,6 +62,15 @@ for(D in names(africaTiles))
 	values(africaTiles[[D]]) = 	values(africaTiles[[D]])
 for(D in names(londonTiles))
 	values(londonTiles[[D]]) = 	values(londonTiles[[D]])
+
+if(file.exists("../inst/extdata"))
+	save(africaTiles, londonTiles,
+			file="../inst/extdata/tiles.RData",
+			compress="xz")
+@
+
+<<loadTiles,include=FALSE,eval=!reRun>>=
+load(system.file("extdata", "tiles.RData", package = "mapmisc"))
 @
 
 The following are some examples of maps produced with

@@ -5,13 +5,16 @@ endif
 PDFS:= mapmisc.pdf mapLayers.pdf
 HTML:= mapLayers.html
 
+Rargs? = ""
+
+
 all: $(PDFS) 
 
 clean:
 	rm -rf *.tex *.toc *.bbl *.blg *.aux *.out *.log *.spl *tikzDictionary *.md figure/ cache/ *.dvi
 
 %.tex: %.rnw
-	$(R_HOME)/bin/Rscript -e "knitr::knit('$<')" 
+	$(R_HOME)/bin/Rscript -e "knitr::knit('$<')" $(Rargs)
 
 %.pdf: %.tex
 	xelatex $<;

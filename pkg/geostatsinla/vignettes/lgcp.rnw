@@ -21,8 +21,10 @@
 library('knitr')
 opts_chunk$set(echo=TRUE,message=FALSE,
 		dev='png', 
-		fig.align='center',fig.pos='H',width=80,
-		fig.height=3,fig.width=5,out.width="0.45\\textwidth"
+		fig.align='center',fig.pos='H',
+		fig.height=3,fig.width=5,out.width="0.45\\textwidth",
+		tidy=TRUE,
+		tidy.opts=list(keep.blank.line=FALSE, width.cutoff=60)
 )
 par(bg="white")
 
@@ -80,12 +82,15 @@ plot(torontoBorderR,add=TRUE)
 @
 
 Raster to simulate the intensity on
-<<rasterForSim>>=
+<<Ncol,include=FALSE>>=
 if(smallMemory) {
 	Ncol = 50
 } else {
 	Ncol = 200
 }
+@
+<<rasterForSim>>=
+Ncol
 myraster = raster(extent(torontoBorderR), crs=projection(torontoBorderR),
 		ncol=Ncol)
 myraster = squareRaster(myraster)
@@ -104,6 +109,10 @@ myLgcp=simLgcp(mymodel, torontoNightR, betas=c(layer=0.01),
 		rasterTemplate=myraster)
 @
 
+<<loadSimData,include=FALSE,eval=!reRun>>=
+load(system.file("extdata", "fit.RData", package = "geostatsinla"))
+@
+
 
 <<simres>>=
 names(myLgcp)
@@ -112,21 +121,20 @@ length(myLgcp$events)
 
 \section{INLA}
 
-<<inla,eval=reRun>>=
-library('geostatsinla')
+<<NcolInla,include=FALSE>>=
 if(smallMemory) {
 	Ncol = 30
 } else {
-	Ncol = 100
+	Ncol = 75
 }
+@
 
+<<inla,eval=reRun>>=
+library('geostatsinla')
 fit = lgcp(myLgcp$events, cells=Ncol,
 		covariates=torontoNightR,
 		formula = ~layer, shape=2, buffer=1000,
 		priorCI = list(sd = c(0.1, 4), range = c(2000, 50000)))
-@
-<<notRerun,eval=!reRun,include=FALSE>>=
-fit = NULL
 @
 
 
@@ -137,10 +145,11 @@ if(is.null(fit$raster)) {
 }
 @
 
+
 <<saveSystemFile,eval=reSave,echo=FALSE>>=
 # if a new version of fit.RData has been built
 if(file.exists("../inst/extdata"))
-	save(myLgcp, fit, file="../inst/extdata/fit.RData")
+	save(myLgcp, fit, file="../inst/extdata/fit.RData",compress="xz")
 @
 
 
@@ -150,7 +159,7 @@ xtable(fit$par$summary[,c("mean","0.025quant","0.975quant")],
 		caption='INLA parameter estimates',  
 		dec=3)
 @
-<<inlaResPlot,fig.cap="Intensity surfaces",fig.subcap=c("intensity true","intensity posterior mean", "rand eff true","rand eff posterior mean"),out.width="0.45\\textwidth",echo=FALSE>>=
+<<inlaResPlot,fig.cap="Intensity surfaces",fig.subcap=c("intensity true","intensity posterior mean", "rand eff true","rand eff posterior mean"),out.width="0.45\\textwidth",echo=FALSE,message=FALSE>>=
 mycol = rev(heat.colors(100))
 map.new(torontoBorderR,legendRight=TRUE)
 plot(torontoTilesR,add=TRUE)
@@ -172,7 +181,10 @@ plot(torontoBorder,add=TRUE)
 
 map.new(torontoBorderR,legendRight=TRUE)
 plot(torontoTilesR,add=TRUE)
-plot(fit$raster[['random.mean']],add=TRUE,alpha=0.6,col=mycol)
+plot(raster::mask(
+				fit$raster[['random.mean']],
+				torontoBorderR),
+				add=TRUE,alpha=0.6,col=mycol)
 plot(torontoBorder,add=TRUE)
 @
 
@@ -212,10 +224,14 @@ If this last expression is FALSE, results were loaded with
 <<loadCode,echo=TRUE,eval=FALSE>>=
 load(system.file("extdata", "fit.RData", package = "geostatsinla"))
 @
-The tex file was built with
-<<cArgs,echo=TRUE>>=
-paste(commandArgs(),collapse=' ')
+The tex file was built with :
+
+{\tt
+<<cArgs,echo=FALSE,results='asis'>>=
+cat(commandArgs())
 @
+
+}
 Complete software information:
 <<sessionInfo,echo=TRUE>>=
 print(sessionInfo(),locale=FALSE)
