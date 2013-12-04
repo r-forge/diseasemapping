@@ -38,7 +38,7 @@ library('mapmisc')
 library('raster')
 library('rgdal')
 
-reRun=("reRun" %in% commandArgs())
+reRun=("reRun" %in% commandArgs(trailingOnly = TRUE))
 
 knit_hooks$set(
 				dev.args=list(bg='white'))
