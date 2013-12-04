@@ -83,11 +83,10 @@ swissFit =  glgm(swissRain, cells=30, formula="lograin",
 		sdNugget = c(0.01, 5)), 
 	control.mode=list(theta=c(1.6,-0.25,2.9),restart=TRUE)
 	)
-	
 
+
+if(!is.null(swissFit$parameters)) {
 swissFit$parameters$summary
-
-if(!is.null(swissFit)) {
 plot(swissFit$parameters$range$prior,type="l",
 	ylim=c(0,max(swissFit$parameters$range$posterior[,"y"])),
 	xlim=c(0, swissFit$parameters$range$userPriorCI[2]*1.1))

@@ -91,10 +91,10 @@ kBYM = bym(kentucky, observed ~ offset(logExpected) + poverty,
 	 priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)),
 	 control.mode=list(theta=c(3.52, 3.35),restart=TRUE))
 
+	
 
-kBYM$par$summary
-
-if(!is.null(kBYM))
+if(!is.null(kBYM$parameters))
+	kBYM$par$summary
 	kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 
 \dontrun{

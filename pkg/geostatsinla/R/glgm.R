@@ -10,12 +10,13 @@ glgm = function(data,  cells, covariates=NULL, formula=NULL,
 	# if data is a raster
 	if(length(grep("^Raster", class(data)))) {
 
-		smallBbox = bbox(data)
+		smallCells = raster(data)
+		
 		buffer =  ceiling(buffer/xres(data))
 		data = extend(data, c(buffer, buffer))
 		
 		cells = squareRaster(data)
-
+		
 		if(!compareRaster(data, cells, res=TRUE,
 				stopiffalse=FALSE,showwarning=TRUE)) {
 			warning("if data is a raster, it must have square cells")
@@ -23,16 +24,19 @@ glgm = function(data,  cells, covariates=NULL, formula=NULL,
 	} else {	
  	# create raster for prediction
 		if(!length(grep("^Raster",class(cells)))) { 
-		# cells must be an integer
-		cells = squareRaster(data, cells)
-	 } else {
-		cells = squareRaster(cells)
-	 }
-	smallBbox = bbox(cells)
+			# cells must be an integer
+			cells = squareRaster(data, cells)
+	 	} else {
+			cells = squareRaster(cells)
+	 	}
+	smallCells = cells 
 	buffer =  ceiling(buffer/xres(cells))
-	cells = extend(cells, c(buffer, buffer))
+	cells = raster::extend(cells, c(buffer, buffer))
 	}
-	thebbox = bbox(cells)	
+	# cells is the raster the model is defined on, including buffer
+	thebbox = bbox(cells)
+	# smallCells is the region without buffer, where data exists
+	smallBbox = bbox(smallCells)
 	
 	
  	if(cells@nrows * cells@ncols > 10^6) warning("there are lots of cells in the prediction raster,\n this might take a very long time")
@@ -123,6 +127,7 @@ glgm = function(data,  cells, covariates=NULL, formula=NULL,
 			levels(stuff) = list(data.frame(ID=theunique, CLASSNAMES=as.character(theunique)))
 			covariates = stack(covariates[[-which(names(covariates)==D)]], stuff)
 		}
+	
 	} else { #all covariates should be in data
 		
 		theFactors=NULL
@@ -323,11 +328,9 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 		covForLincomb = cellsInla
 	}
 
-	
-
 	if(!is.null(smallBbox)) {
 		covForLincomb =
-				crop(covForLincomb, extent(smallBbox))
+				raster::crop(covForLincomb, extent(smallBbox))
 	}
 	lincombCells = covForLincomb[['inlaCells']]
 	names(lincombCells) = "lincombCells"
@@ -348,55 +351,56 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 		formulaForLincombs=as.formula(paste("~", formulaForLincombs))
 	
 	
-	# variables in the model but not in prediction rasters
-	thevars = rownames(attributes(terms(formulaForLincombs))$factors)
-	varsInPredict = thevars[thevars %in% names(thelincombs)]
-	cantPredict = thevars[! thevars %in% names(thelincombs)]
-	theFactors2 = grep("factor\\([[:print:]]*\\)", cantPredict)
-	if(length(theFactors2)) {
-		temp = cantPredict
-		cantPredict = cantPredict[-theFactors2]
-		theFactorsInFormula = temp[theFactors2]
-	}
-	thelincombs[,cantPredict]= 0
+		# variables in the model but not in prediction rasters
+		thevars = rownames(attributes(terms(formulaForLincombs))$factors)
+		varsInPredict = thevars[thevars %in% names(thelincombs)]
+		cantPredict = thevars[! thevars %in% names(thelincombs)]
+		theFactors2 = grep("factor\\([[:print:]]*\\)", cantPredict)
+		if(length(theFactors2)) {
+			temp = cantPredict
+			cantPredict = cantPredict[-theFactors2]
+			theFactorsInFormula = temp[theFactors2]
+		}
+		thelincombs[,cantPredict]= 0
 
-	# check for factors	
+		# check for factors	
  
-	# convert raster data into factors using same levels as in points data
-	for(D in theFactors) {
+		# convert raster data into factors using same levels as in points data
+		for(D in theFactors) {
 			# convert columns in lincombs to factors
 			# get rid of levels not present in the observed data
 
 			thelincombs[,D] = factor(thelincombs[,D],
 					levels=levels(data[,D]))
-	}
-	thelincombs = na.omit(thelincombs)
+		}
+		thelincombs = na.omit(thelincombs)
 	
-	lincombMat = model.matrix(formulaForLincombs, thelincombs, na.action=NULL)
+		lincombMat = model.matrix(formulaForLincombs, thelincombs, na.action=NULL)
 	
-} else { # no covariates
-	lincombMat = matrix(rep(1,ncell(covForLincomb)), ncol=1)
+	} else { # no covariates
+		lincombMat = matrix(rep(1,ncell(covForLincomb)), ncol=1)
 			colnames(lincombMat) = "(Intercept)"
 # for some reason can't give name (Intercept) in the data.frame call.
-}
+	}
 
-lincombMatCells =  thelincombs[,c("inlaCells", "lincombCells")]
+	lincombMatCells =  thelincombs[,c("inlaCells", "lincombCells")]
 
-thelincombs=list()	
-lincombMat[lincombMat==0] = NA
+	thelincombs=list()	
+	lincombMat[lincombMat==0] = NA
 
 		
-for(D in 1:nrow(lincombMat)) {
+	for(D in 1:nrow(lincombMat)) {
 		thisrow = lincombMat[D, ]
 		thisrow = as.list(thisrow[!is.na(thisrow)  ])
 		
 		thelincombs[[D]] = 
 			do.call(inla.make.lincomb, thisrow)$lc
-
-		thelincombs[[D]][[length(thelincombs[[D]])+1]] =
+		if(length(thelincombs[[D]])) {
+			thelincombs[[D]][[length(thelincombs[[D]])+1]] =
 				list(space=list(idx=lincombMatCells[D,"inlaCells"], 
 								weight=1))
-}
+		}
+	}
 
 	
 	names(thelincombs) = paste("c", lincombMatCells[,"lincombCells"],sep="")

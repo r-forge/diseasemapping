@@ -50,9 +50,9 @@ bym.SpatialPolygonsDataFrame = function(data,
 	}
 		
 	if(missing(adjMat))
-		adjMat=poly2nb(data, row.names =  data[[region.id]] )
+		adjMat=spdep::poly2nb(data, row.names =  data[[region.id]] )
  
-	result = bym.data.frame(data=data@data,
+	result = bym.data.frame(data=data.frame(data),
 			formula=formula, priorCI=priorCI, family=family,
 			region.id=region.id, adjMat=adjMat,formula.fitted=formula.fitted
 		, ...
@@ -228,12 +228,15 @@ startIndex = length(region.index)
 		thelincombs = inla.make.lincombs(as.data.frame(lincombMat))
 		for(D in seq(1,length(SregionFitted))) {	
 			inlaLincombs[[D+startIndex]] = 
-				c(thelincombs[[D]],
+				c(
 					list(list(region.indexS=
 								list(idx=SregionFitted[D], weight=1))),
 					list(list(region.indexI= 
 								list(idx=SregionFitted[D], weight=1))) 
 				)
+			if(length(thelincombs)>=D)
+				inlaLincombs[[D+startIndex]] = c(thelincombs[[D]],
+					inlaLincombs[[D+startIndex]])
 		}
 		names(inlaLincombs)[seq(startIndex+1, len=length(SregionFitted))] =
 				paste("fitted",names(SregionFitted),sep="_")
@@ -263,12 +266,14 @@ startIndex = length(region.index)
 			lincomb=inlaLincombs, ...)
  	
 	if(all(names(inlaRes)=="logfile"))
-		return(list(formula=formula, data=data,
+		return(c(list(formula=formula, data=data,
 						family=family, 
 						lincomb=inlaLincombs, 
-						inlares=inlaRes)
-		)
+						ldots = list(...)),
+						inlaRes)
+	)
 	
+
 	# posterior distributions of random effect (spatial + independent)
 	thebym = inlaRes$summary.lincomb.derived[
 			grep("^bym_", rownames(inlaRes$summary.lincomb.derived)),]

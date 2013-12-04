@@ -10,8 +10,10 @@ res = lgcp(data=myPoints, cells=20, covariates=mycov,
 		formula=~factor(x1),
 		priorCI=list(sd=c(0.9, 1.1), range=c(0.4, 0.41))
 )
-plot(res$raster[["predict.exp"]])
-plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
+if(!is.null(res$raster)) {
+	plot(res$raster[["predict.exp"]])
+	plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
+}
 
 # intercept only
 
@@ -19,19 +21,20 @@ res = lgcp(data=myPoints, cells=20, covariates=mycov,
 		formula=~1,
 		priorCI=list(sd=c(0.9, 1.1), range=c(0.4, 0.41))
 )
-plot(res$raster[["predict.exp"]])
-plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
-
-
+if(!is.null(res$raster)) {
+	plot(res$raster[["predict.exp"]])
+	plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
+}
 # dodgy formula
 
 res = lgcp(data=myPoints, cells=20, covariates=mycov,
 		formula=shouldntBeHere~1,
 		priorCI=list(sd=c(0.9, 1.1), range=c(0.4, 0.41))
 )
-plot(res$raster[["predict.exp"]])
-plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
-
+if(!is.null(res$raster)) {
+	plot(res$raster[["predict.exp"]])
+	plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
+}
 
 # some missing values
 
@@ -43,5 +46,7 @@ res = lgcp(data=myPoints, cells=20, covariates=mycov,
 		formula=~factor(x1),
 		priorCI=list(sd=c(0.9, 1.1), range=c(0.4, 0.41))
 )
-plot(res$raster[["predict.exp"]])
-plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
+if(!is.null(res$raster)) {
+	plot(res$raster[["predict.exp"]])
+	plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
+}

@@ -2,10 +2,9 @@
 # importFrom(INLA, inla, inla.models, inla.make.lincombs)
 
 loadInla = function() {
-	res = require("INLA", quietly=TRUE,warn.conflicts=FALSE)
-	if(!res) {
-		warning("see www.r-inla.org to install INLA. \n First install:\n splines, numDeriv, Rgraphviz, graph, fields,\n rgl, mvtnorm, multicore, pixmap,\n splancs, orthopolynom")
-	}
+	res = "INLA" %in% rownames(installed.packages())
+	if(res) 
+		require("INLA", quietly=TRUE,warn.conflicts=FALSE)
 	res
 }
 
@@ -13,7 +12,7 @@ inla = function(...) {
 	if(loadInla()) {
 		INLA::inla(...)
 	} else {
-		return(NULL)
+		return(list(logfile="INLA is not installed. \n install splines, numDeriv, Rgraphviz, graph,\n fields, rgl, mvtnorm, multicore, pixmap,\n splancs, orthopolynom \n then see www.r-inla.org"))
 	}
 }
 
@@ -38,14 +37,14 @@ inla.make.lincombs = function(...) {
 	if(loadInla()) {
 		INLA::inla.make.lincombs(...)
 	} else {
-		return(NULL)
+		return(list())
 	}
 }
 inla.make.lincomb = function(...) {
 	if(loadInla()) {
 		INLA::inla.make.lincomb(...)
 	} else {
-		return(NULL)
+		return(list(lc=list()))
 	}
 }
 
