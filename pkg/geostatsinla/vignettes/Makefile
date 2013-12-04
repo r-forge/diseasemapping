@@ -6,14 +6,14 @@ PDFS:= lgcp.pdf
 
 all: $(PDFS) 
 
-rargs? = ""
+Rargs? = "reRun smallMemory"
 
 
 clean:
 	rm -rf *.tex *.toc *.bbl *.blg *.aux *.out *.log *.spl *tikzDictionary *.md figure/ cache/ *.dvi *.lg *.RData
 
 %.tex: %.rnw
-	$(R_HOME)/bin/Rscript -e "knitr::knit('$<')" $(rargs)
+	$(R_HOME)/bin/Rscript -e "knitr::knit('$<')" $(Rargs)
 
 %.pdf: %.tex
 	xelatex $<;

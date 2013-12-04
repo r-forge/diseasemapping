@@ -28,20 +28,15 @@ par(bg="white")
 
 theArgs = commandArgs(trailingOnly=TRUE)
 
-if("rerun" %in% theArgs) {
-		assign("rerun", TRUE, pos=1)
-} else {
-		assign("rerun", FALSE, pos=1)
+for(D in c("reRun","reSave","smallMemory")) {
+	if(D %in% theArgs) {
+		assign(D, TRUE, pos=1)
+	} else {
+		assign(D, FALSE, pos=1)
+	}
 }
 
 library('rgdal')
-@
-
-If the following is {\tt TRUE}, the analysis was rerun to produce this vignette.
-Otherwise a previously analysis was used.
-
-<<wasrerun,echo=TRUE>>=
-rerun
 @
 
 \section{Simulate data}
@@ -86,8 +81,13 @@ plot(torontoBorderR,add=TRUE)
 
 Raster to simulate the intensity on
 <<rasterForSim>>=
+if(smallMemory) {
+	Ncol = 50
+} else {
+	Ncol = 200
+}
 myraster = raster(extent(torontoBorderR), crs=projection(torontoBorderR),
-		ncol=200)
+		ncol=Ncol)
 myraster = squareRaster(myraster)
 
 @
@@ -99,7 +99,7 @@ mymodel = c(mean=log(casesPerSqK)+log(1e-6), variance=1^2,
 		range=20000, shape=2)
 @
 
-<<dataForSim,eval=rerun>>=
+<<dataForSim,eval=reRun>>=
 myLgcp=simLgcp(mymodel, torontoNightR, betas=c(layer=0.01), 
 		rasterTemplate=myraster)
 @
@@ -112,20 +112,35 @@ length(myLgcp$events)
 
 \section{INLA}
 
-<<inla,eval=rerun>>=
+<<inla,eval=reRun>>=
 library('geostatsinla')
-fit = lgcp(myLgcp$events, cell=100,covariates=torontoNightR,
+if(smallMemory) {
+	Ncol = 30
+} else {
+	Ncol = 100
+}
+
+fit = lgcp(myLgcp$events, cells=Ncol,
+		covariates=torontoNightR,
 		formula = ~layer, shape=2, buffer=1000,
 		priorCI = list(sd = c(0.1, 4), range = c(2000, 50000)))
 @
-<<saveSystemFile,eval=rerun,echo=FALSE>>=
-# if a new version of fit.RData has been built
-save(myLgcp, fit, file="../inst/extdata/fit.RData")
+<<notRerun,eval=!reRun,include=FALSE>>=
+fit = NULL
 @
 
-<<loadsystemresults,echo=FALSE,eval=!rerun>>=
+
+<<loadsystemresults,echo=FALSE>>=
+if(is.null(fit$raster)) {
 	resfile <- system.file("extdata", "fit.RData", package = "geostatsinla")
 	load(resfile)
+}
+@
+
+<<saveSystemFile,eval=reSave,echo=FALSE>>=
+# if a new version of fit.RData has been built
+if(file.exists("../inst/extdata"))
+	save(myLgcp, fit, file="../inst/extdata/fit.RData")
 @
 
 
@@ -183,6 +198,27 @@ abline(v=sqrt(myLgcp$par$random["variance"]))
 plot(fit$inla$marginals.fixed$layer,type='l', col='red',
 		xlab='beta', ylab='density')
 abline(v=myLgcp$par$fixed["layer"])
+@
+
+\section{Technical}
+This knitr script was built with the following options which 
+<<options,echo=TRUE>>=
+reRun
+reSave
+smallMemory
+any(installed.packages()=="INLA")
+@
+If this last expression is FALSE, results were loaded with
+<<loadCode,echo=TRUE,eval=FALSE>>=
+load(system.file("extdata", "fit.RData", package = "geostatsinla"))
+@
+The tex file was built with
+<<cArgs,echo=TRUE>>=
+paste(commandArgs(),collapse=' ')
+@
+Complete software information:
+<<sessionInfo,echo=TRUE>>=
+print(sessionInfo(),locale=FALSE)
 @
 
 \end{document}
