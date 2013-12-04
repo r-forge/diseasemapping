@@ -70,12 +70,12 @@ if(file.exists("../inst/extdata"))
 @
 
 <<loadTiles,include=FALSE,eval=!reRun>>=
-thefile = file.path("../inst/extdata", "tiles.RData")
-if(file.exists(thefile)) {
-	load(thefile)
-} else {
+#thefile = file.path("../inst/extdata", "tiles.RData")
+#if(file.exists(thefile)) {
+#	load(thefile)
+#} else {
 	load(system.file("extdata", "tiles.RData", package = "mapmisc"))
-}
+#}
 @
 
 The following are some examples of maps produced with
