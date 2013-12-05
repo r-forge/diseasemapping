@@ -6,7 +6,7 @@ PDFS:= lgcp.pdf
 
 all: $(PDFS) 
 
-Rargs? = "reRun smallMemory"
+Rargs? = "reCache smallMemory"
 
 
 clean:
@@ -14,6 +14,24 @@ clean:
 
 %.tex: %.rnw
 	$(R_HOME)/bin/Rscript -e "knitr::knit('$<')" $(Rargs)
+
+varioustex: lgcp.rnw
+	$(R_HOME)/bin/Rscript -e "knitr::knit('$<')" reRun reCache smallMemory;
+	xelatex lgcp.tex;
+	mv lgcp.pdf lgcpReRunReCachesmallMemory.pdf;
+	$(R_HOME)/bin/Rscript -e "knitr::knit('$<')" reRun smallMemory;
+	xelatex lgcp.tex;
+	mv lgcp.pdf lgcpReRunsmallMemory.pdf;
+	$(R_HOME)/bin/Rscript -e "knitr::knit('$<')" smallMemory;
+	xelatex lgcp.tex;
+	mv lgcp.pdf lgcpsmallMemory.pdf;
+	$(R_HOME)/bin/Rscript -e "knitr::knit('$<')" reCache smallMemory;
+	xelatex lgcp.tex;
+	mv lgcp.pdf lgcpreCachesmallMemory.pdf;
+	rm lgcp.tex
+ 
+resave: lgcp.rnw
+	$(R_HOME)/bin/Rscript -e "knitr::knit('$<')" reRun reCache reSave;
 
 %.pdf: %.tex
 	xelatex $<;
