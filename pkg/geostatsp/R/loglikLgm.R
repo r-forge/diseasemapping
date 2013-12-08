@@ -396,7 +396,7 @@ likfitLgm = function(
 	colnames(toadd)= paste("ci", thelims, sep="")
 	parameterTable = cbind(parameterTable, toadd)
 	
-	parameterTable[,"pr(est|par=0)"] = pchisq(
+	parameterTable[,"pval"] = pchisq(
 			parameterTable$estimate^2  / parameterTable$stdErr^2,
 			df=1,lower.tail=FALSE)
 	

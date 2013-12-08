@@ -9,7 +9,9 @@ crsLL = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 			x = extent(x[1], xmax=x[1]+eps, ymin=x[2], ymax=x[2]+eps)
 
 	crsUse = projection(x)
-	if(is.null(crs) | is.na(crs)) {
+	if(is.null(crs))
+		crs=crsLL
+	if(is.na(crs)) {
 		crs=crsLL
 	}
 	if(crsUse == "NA")

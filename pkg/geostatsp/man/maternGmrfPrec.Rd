@@ -14,7 +14,7 @@ Produces the precision matrix for a Gaussian random field on a regular square la
 maternGmrfPrec(N, ...)
 \method{maternGmrfPrec}{dgCMatrix}(N, 
 	param=c(variance=1, range=1, shape=1, cellSize=1),
-  adjust.edges=F,...) 
+  adjust.edges=FALSE,...) 
 \method{maternGmrfPrec}{matrix}(N, ...)
 \method{maternGmrfPrec}{default}(N, Ny=N, ...)
 NNmat(N, Ny=N)
