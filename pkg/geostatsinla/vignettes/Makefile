@@ -2,18 +2,16 @@ ifndef R_HOME
 	R_HOME:=/usr
 endif
 
-PDFS:= lgcp.pdf
 
-all: $(PDFS) 
+all: lgcp.pdf
 
 Rargs? = "reCache smallMemory"
-
 
 clean:
 	rm -rf *.tex *.toc *.bbl *.blg *.aux *.out *.log *.spl *tikzDictionary *.md figure/ cache/ *.dvi *.lg *.RData
 
-%.tex: %.rnw
-	$(R_HOME)/bin/Rscript -e "knitr::knit('$<')" $(Rargs)
+lgcp.tex: lgcp.rnw
+	$(R_HOME)/bin/Rscript -e "knitr::knit('lgcp.rnw')" $(Rargs)
 
 varioustex: lgcp.rnw
 	$(R_HOME)/bin/Rscript -e "knitr::knit('$<')" reRun reCache smallMemory;
@@ -33,7 +31,7 @@ varioustex: lgcp.rnw
 resave: lgcp.rnw
 	$(R_HOME)/bin/Rscript -e "knitr::knit('$<')" reRun reCache reSave;
 
-%.pdf: %.tex
-	xelatex $<;
-	$(R_HOME)/bin/Rscript -e "tools::compactPDF('$@', gs_quality='ebook')" 
+lgcp.pdf: lgcp.tex
+	xelatex lgcp;
+	$(R_HOME)/bin/Rscript -e "tools::compactPDF('lgcp.pdf', gs_quality='ebook')" 
 
