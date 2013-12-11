@@ -19,8 +19,11 @@
 
 
 <<setup,include=FALSE,cache=FALSE>>=
-theArgs = commandArgs(trailingOnly=TRUE)
+theArgs = c("",commandArgs(trailingOnly=TRUE))
+theArgs = theArgs[!is.na(theArgs)]
 reRun = any(theArgs=="reRun")
+opts_chunk$set(reRun=reRun)
+
 reSave = any(theArgs=="reSave")
 smallMemory = any(theArgs=="smallMemory")
 
@@ -33,7 +36,7 @@ opts_chunk$set(echo=TRUE,message=FALSE,
 		tidy.opts=list(keep.blank.line=FALSE, width.cutoff=60)
 )
 
-if(reRun) opts_chunk$set(reRun=TRUE)
+
 
 par(bg="white")
 
@@ -106,7 +109,7 @@ mymodel = c(mean=log(casesPerSqK)+log(1e-6), variance=1^2,
 		range=20000, shape=2)
 @
 
-<<dataForSim,eval=!is.null(opts_chunk$get("reRun"))>>=
+<<dataForSim,eval=opts_chunk$get("reRun"))>>=
 myLgcp=simLgcp(mymodel, torontoNightR, betas=c(layer=0.01), 
 		rasterTemplate=myraster)
 @
@@ -133,7 +136,7 @@ if(smallMemory) {
 }
 @
 
-<<inla,eval=!is.null(opts_chunk$get("reRun"))>>=
+<<inla,eval=opts_chunk$get("reRun")>>=
 library('geostatsinla')
 fit = lgcp(myLgcp$events, cells=Ncol,
 		covariates=torontoNightR,
