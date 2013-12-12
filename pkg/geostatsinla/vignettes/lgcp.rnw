@@ -109,7 +109,7 @@ mymodel = c(mean=log(casesPerSqK)+log(1e-6), variance=1^2,
 		range=20000, shape=2)
 @
 
-<<dataForSim,eval=opts_chunk$get("reRun"))>>=
+<<dataForSim,eval=opts_chunk$get("reRun")>>=
 myLgcp=simLgcp(mymodel, torontoNightR, betas=c(layer=0.01), 
 		rasterTemplate=myraster)
 @
