@@ -11,7 +11,8 @@ crsLL = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 	crsUse = projection(x)
 	if(is.null(crs))
 		crs=crsLL
-	if(is.na(crs)) {
+	if(is.logical(crs)) { # it's probably NA,
+#	if(is.na(crs)) {
 		crs=crsLL
 	}
 	if(crsUse == "NA")
