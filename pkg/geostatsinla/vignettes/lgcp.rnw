@@ -19,6 +19,7 @@
 
 
 <<setup,include=FALSE,cache=FALSE>>=
+library('knitr')
 theArgs = c("",commandArgs(trailingOnly=TRUE))
 theArgs = theArgs[!is.na(theArgs)]
 reRun = any(theArgs=="reRun")
@@ -27,7 +28,6 @@ opts_chunk$set(reRun=reRun)
 reSave = any(theArgs=="reSave")
 smallMemory = any(theArgs=="smallMemory")
 
-library('knitr')
 opts_chunk$set(echo=TRUE,message=FALSE,
 		dev='png', 
 		fig.align='center',fig.pos='H',
