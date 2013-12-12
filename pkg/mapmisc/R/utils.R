@@ -15,6 +15,11 @@ crsLL = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 #	if(is.na(crs)) {
 		crs=crsLL
 	}
+	if(is.logical(crsUse)) { # it's probably NA,
+#	if(is.na(crsUse)) {
+		crsUse=crs
+	}
+	
 	if(crsUse == "NA")
 		crsUse = crs
 	
