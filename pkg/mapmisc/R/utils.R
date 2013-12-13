@@ -20,7 +20,7 @@ crsLL = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 		crsUse=crs
 	}
 	
-	if(crsUse == "NA")
+	if(identical(crsUse ,"NA"))
 		crsUse = crs
 	
 	x = raster(extent(x), nrows=100,ncols=100, crs=crsUse)

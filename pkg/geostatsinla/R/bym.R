@@ -88,7 +88,7 @@ bym.data.frame = function(data,   formula,
 
 		# check for data regions missing from adj mat
 		data[[region.id]] = as.character(data[[region.id]])
-		if(!all(data[[region.id]] %in% names(region.index)))
+		if(!all(data[[region.id]] %in% names(region.index))  )
 			warning("regions in data missing from adjacency matrix")
 		data$region.indexS = data$region.indexI = region.index[data[[region.id]]]
 		
@@ -225,6 +225,8 @@ startIndex = length(region.index)
 		lincombMat = model.matrix(formulaForLincombs, lincombFrame)
 		
 		lincombMat[lincombMat==0]= NA
+		if(!dim(lincombMat)[1])
+			warning("the dataset appears to have no rows")
 		thelincombs = inla.make.lincombs(as.data.frame(lincombMat))
 		for(D in seq(1,length(SregionFitted))) {	
 			inlaLincombs[[D+startIndex]] = 
