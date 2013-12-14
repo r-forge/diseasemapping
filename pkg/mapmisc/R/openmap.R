@@ -121,7 +121,7 @@ openmap = function(x, zoom,
 	if(!length(crsOut))
 		crsOut = projection(x)
 	
-	if(!identical(projection(crsOut) , "NA")){
+	if(!identical(projection(crsOut) , "NA") & !identical(crsOut, NA)){
 		resultProj = projectRaster(result, crs=crsOut, method="ngb")
 		# now trim to original bounding box
 		pointsNew = projectExtent(result, 

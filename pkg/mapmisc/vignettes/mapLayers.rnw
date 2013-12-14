@@ -43,6 +43,7 @@ reRun=("reRun" %in% commandArgs(trailingOnly = TRUE))
 knit_hooks$set(
 				dev.args=list(bg='white'))
 
+opts_chunk$set(reRun=reRun)	
 
 library('mapmisc')
 theNames = names(osmTiles())
@@ -51,7 +52,8 @@ trafalgarSquare=c(-0.128056,51.508056)
 @
 
 
-<<downloadTiles,eval=reRun,include=FALSE>>=
+<<downloadTiles,include=FALSE>>=
+if(reRun) {
 africaTiles = openmap(africaExtent, path=theNames,zoom=2)
 
 londonTiles = openmap(trafalgarSquare,zoom=12,path=theNames)
@@ -67,15 +69,9 @@ if(file.exists("../inst/extdata"))
 	save(africaTiles, londonTiles,
 			file="../inst/extdata/tiles.RData",
 			compress="xz")
-@
-
-<<loadTiles,include=FALSE,eval=!reRun>>=
-#thefile = file.path("../inst/extdata", "tiles.RData")
-#if(file.exists(thefile)) {
-#	load(thefile)
-#} else {
+} else {
 	load(system.file("extdata", "tiles.RData", package = "mapmisc"))
-#}
+}
 @
 
 The following are some examples of maps produced with

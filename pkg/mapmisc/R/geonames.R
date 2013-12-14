@@ -23,7 +23,7 @@ GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 	result = SpatialPointsDataFrame(result[,c("lng","lat")], data=result, 
 			proj4string=crsLL)
 
-	if(projection(theproj)!= "NA") {
+	if( !identical(projection(theproj), "NA") & ! identical(projection(theproj), NA)) {
 		havegdal = require(rgdal, quietly=TRUE )
 		if(havegdal)
 			result = spTransform(result, CRSobj=CRS(theproj))
