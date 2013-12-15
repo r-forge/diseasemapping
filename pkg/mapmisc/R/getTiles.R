@@ -117,9 +117,10 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 			  verbose=verbose)
     }
 	
-	thisimage = brick(where)
+	thisimage = try(brick(where),silent=TRUE)
+	if(class(thisimage)!="try-error") {
 
-	# if only one layer
+		# if only one layer
 	# this must be a raster of integers referring to colour indexes	
 	if(nlayers(thisimage)==1) {
 		thisimage=thisimage[[1]]
@@ -143,11 +144,11 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 				sep="")
 	} 
 	
-	
 	extent(thisimage) = tileData[[ip]]$extent
 	proj4string(thisimage) = thecrs
 	
 	rasters[[ip]] = thisimage
+	} # end not rtry error
 
 	
 	}
@@ -156,8 +157,10 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 		thenames = names(rasters[[1]])
 		rasters = do.call(merge, rasters)
 		names(rasters) = thenames			
-	} else {
+	} else if(length(rasters)==1){
 		rasters = rasters[[1]]
+	} else { # no tiles found
+		rasters = NULL
 	}
 	if(!is.null(colourtable)) {
  		# re-order colours so most common colours are first
@@ -172,8 +175,10 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 		rasters@legend@colortable = names(colourtable)[
 				as.integer(names(thetable))+1]
 
-	}  
+	}
+	
 	return(rasters)	
+	
 }
 	
 
