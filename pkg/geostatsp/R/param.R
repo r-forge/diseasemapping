@@ -1,7 +1,9 @@
 
 
 modelRandomFields = function(param){
-	
+
+	if(class(param)=="RMmodel")
+		return(param)
 
 param = fillParam(param)
 
