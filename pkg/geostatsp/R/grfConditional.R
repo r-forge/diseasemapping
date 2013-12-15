@@ -6,7 +6,7 @@ grfConditional = function(data, y=1,
 	if(is.numeric(locations)){
 		# locations is number of cells in the x direction
 		Nx = locations[1]
-		myExtent = 	extent(data@bbox)
+		myExtent = 	extent(data)
 		Ny = round(locations*diff(data@bbox[2,])/diff(data@bbox[1,]))
 		myExtent@ymax = myExtent@ymin + Ny * diff(data@bbox[1,])/Nx
 		locations = raster(myExtent, Ny, Nx,
@@ -14,12 +14,6 @@ grfConditional = function(data, y=1,
 	}
 	if(nrow(locations) * ncol(locations) > 10^7) warning("there are lots of cells in the prediction raster,\n this might take a very long time")
 	
-	xseq = c(xmin(locations)+xres(locations)/2, 
-			xmax(locations)-xres(locations)/2, xres(locations))
-	yseq = c(ymin(locations)+yres(locations)/2,
-			ymax(locations)-yres(locations)/2, yres(locations))
-
-
 	if(length(y)==1 & length(names(data)) > 1) {
 		y = data.frame(data)[,y]
 	}
@@ -50,8 +44,7 @@ grfConditional = function(data, y=1,
 
 
 
-
-resTemplate = raster(locations)
+rasterCopy = raster(locations)
 
 simFun = function(D) {
 
@@ -64,32 +57,34 @@ simFun = function(D) {
 	
 	modelv = modelRandomFields(param[D,])
 	
-	res = RandomFields::CondSimu(krige.method="O",
-			x=xseq, y = yseq, grid=TRUE, gridtriple=TRUE,
-			param=NULL, model=modelv,
-			given=data@coords,
-			data=y[D,],
-			err.model=err.model,
-			err.param=err.param, method="direct decomp."
-	)		
+	given = SpatialPointsDataFrame(
+			data=data.frame(y=y[D,]),
+			coords=coordinates(data)
+	)
+	given = as(given, "RFspatialPointsDataFrame")
+	given@.RFparams = list(n=1, vdim=1)
 	
 	
-#	CondSimu("S", given=locations.obs, 
-#			data=params[[theEffectR]][Siter[Diter],Dchain,], 
-#			x=xgrid, y=ygrid, grid=TRUE, model="exponential", 
-#			param=c(mean=0, 
-#					variance=params[[theSD]][Siter[Diter],Dchain]^2, 
-#					nugget=0, 
-#					scale=params[[thePhi]][Siter[Diter],Dchain]), 
-#			pch=" ")
+	res = raster(RandomFields::RFsimulate(
+			model=modelv,
+			x=as(locations, "GridTopology"),
+			data=given			
+			))
 	
-	values(resTemplate) = t(res[nrow(res):1,])
-	res = resTemplate	
+#	res = RandomFields::CondSimu(krige.method="O",
+#			x=xseq, y = yseq, grid=TRUE, gridtriple=TRUE,
+#			param=NULL, model=modelv,
+#			given=data@coords,
+#			data=y[D,],
+#			err.model=err.model,
+#			err.param=err.param, method="direct decomp."
+#	)		
+	
 	
 	if(nuggetInPrediction){
-		values(resTemplate) = 
+		values(rasterCopy) =  
 				rnorm(ncell(res), sd=sqrt(param[,"nugget"]))
-		res = res + resTemplate
+		res = res + rasterCopy
 	}		
 	if(!is.null(fun)) {
 		res = fun(res)

@@ -26,7 +26,7 @@ are Raster or SpatialPoints objects.
 	\code{anisoRatio} and either \code{anisoAngleDegrees} or  
 		\code{anisoAngleRadians}
 	}
-	\item{...}{ additional arguments, see \code{\link[RandomFields]{GaussRF}} in the RandomFields package.}
+	\item{...}{ additional arguments, see \code{\link[RandomFields]{RFsimulate}} in the RandomFields package.}
 }
 
 \value{
@@ -62,11 +62,13 @@ myGRF=GaussRF(myraster, param=mymodel)
 
 plot(myGRF, main="a GRF")
 
-mypoints = SpatialPointsDataFrame(cbind(runif(10), runif(10)),data=data.frame(id=1:10))
+mypoints = SpatialPointsDataFrame(cbind(runif(10), runif(10)),
+	data=data.frame(id=1:10))
 
-mypoints$rf= GaussRF(mypoints, param=mymodel) 
+mypoints$y = GaussRF(mypoints, param=mymodel) 
 
-spplot(mypoints, "rf", col.regions=terrain.colors(5), main="GRF at points")
+spplot(mypoints, "y", col.regions=terrain.colors(5),
+	main="GRF at points")
 
 
 x = cbind(sample(1:50), sample(1:50))
@@ -74,9 +76,6 @@ temp=GaussRF(x,
 		param=c(variance=1,	range=6, shape=2))
 quantile(temp)
 
-# passing parameters straight to RandomFields
-fromRF = GaussRF(myraster, param=c(mean=0.5, variance=1, nugget=0, 
-				scale=4, alpha=2), model="matern")
-plot(fromRF, main="from RandomFields")
+
 
 }

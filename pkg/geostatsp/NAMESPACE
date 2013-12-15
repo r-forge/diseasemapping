@@ -63,8 +63,5 @@ import(
 # they're listed here for completeness
 #importFrom(geoR, variog, variog.mc.env)
 #importFrom(pracma, trapz)
-# functions which depend on RandomFields
-#importFrom(RandomFields, CondSimu)
-#importFrom(RandomFields, GaussRF)
 #importFrom(spatstat,as.im,as.im.matrix)
 

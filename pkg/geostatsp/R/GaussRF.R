@@ -7,38 +7,29 @@ GaussRF = function(x,param=c(variance=1, range=1, shape=1), ...) {
 
 GaussRF.Raster = function(x,param=c(variance=1, range=1, shape=1), ...){
 
-	xseq = c(xmin(x)+xres(x)/2, xmax(x)-xres(x)/2, xres(x))
-	yseq = c(ymin(x)+yres(x)/2, ymax(x)-yres(x)/2, yres(x))
-	
- 	
-	
-	
-	res = GaussRF(x=xseq, param=param,
-			y=yseq,	grid=TRUE, gridtriple=TRUE,
-			...
+
+	res = raster(
+			RandomFields::RFsimulate(
+					modelRandomFields(param),
+					as(x, "GridTopology"),
+					...
+					)
 			)
-
-			
-	resRast = raster(t(res[,seq(dim(res)[2], 1)]),
-			x@extent@xmin, x@extent@xmax,
-			x@extent@ymin, x@extent@ymax, crs=x@crs)
-	
-	#attributes(resRast)$param = attributes(res)$param
-	
-	return(resRast)
+	projection(res) = projection(x)			
+	res		
 }
 
-GaussRF.SpatialPointsDataFrame = function(x,param=c(variance=1, range=1, shape=1), ...){
+GaussRF.SpatialPoints= GaussRF.SpatialPointsDataFrame = 
+		function(x,param=c(variance=1, range=1, shape=1), ...){
 	
-	x=coordinates(x)
-	NextMethod("GaussRF")
+	res = GaussRF.default(
+			x=coordinates(x),
+			param=param, ...)
+
+	res
 }
 
-GaussRF.SpatialPoints= function(x,param=c(variance=1, range=1, shape=1), ...){
-	
-	x=coordinates(x)
-	NextMethod("GaussRF")
-}
+
 
 GaussRF.default = function(x,param=c(variance=1, range=1, shape=1),  ...){
 	
@@ -49,12 +40,6 @@ GaussRF.default = function(x,param=c(variance=1, range=1, shape=1),  ...){
 	if(!any(names(theArgs)=="model")){
 		# param is for geostatsp, not RandomFields 
 
-		requiredParams = c("variance","range","shape")
-		if(!all(requiredParams %in% names(param)))
-			warning("param has names", paste(names(param),collapse=","), 
-					" must have ", paste(requiredParams, collapse=","))
-
-		
 		model  = modelRandomFields(param)
 		
 		theArgs$model = model	
@@ -65,12 +50,13 @@ GaussRF.default = function(x,param=c(variance=1, range=1, shape=1),  ...){
 	
  
 	
-	result = do.call( RandomFields::GaussRF, theArgs)
+	result = do.call( RandomFields::RFsimulate, theArgs)
 
 	# some things break (such as spplot) if I add this as an attribute
 	#attributes(result)$param = param
 	
-	result	
+	res =data.frame(result)
+	res[,grep("^variable[[:digit:]]+$", colnames(res))]
 	
 }
 

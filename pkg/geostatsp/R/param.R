@@ -7,22 +7,22 @@ param = fillParam(param)
 
 param["scaleRandomFields"] = param["range"]/2 
 
-if(abs(param["anisoRatio"]) >  10^(-4)){
+model = RandomFields::RMmatern(
+		nu=param["shape"], 
+		scale=param["scaleRandomFields"],
+		var=param["variance"]
+)
+
+if(abs(param["anisoRatio"]-1) >  10^(-4)){
 	# geometric anisotropy
-	scaleTwoDirections = c(1/param["scaleRandomFields"],
-			1/(param["anisoRatio"]*param["scaleRandomFields"]))
+	scaleTwoDirections = c(1,
+			1/(param["anisoRatio"]))
 	angle = param["anisoAngleRadians"]
 	anisoMat = diag(scaleTwoDirections) %*% 
 			matrix(c(cos(angle), sin(angle), 
 							-sin(angle), cos(angle)),2)
-	model=list("$", var=param["variance"],   
-			A=anisoMat,
-			list("matern", nu=param["shape"]))	
-} else {
-	model=list("$", var=param["variance"],   
-			s=param["scaleRandomFields"],
-			list("matern", nu=param["shape"]))	
-}	
+	model@par.general$Aniso = anisoMat
+}
 
 model 
 }
