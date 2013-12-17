@@ -2,7 +2,7 @@
 
 modelRandomFields = function(param){
 
-	if(class(param)=="RMmodel")
+if(class(param)=="RMmodel")
 		return(param)
 
 param = fillParam(param)
@@ -12,19 +12,16 @@ param["scaleRandomFields"] = param["range"]/2
 model = RandomFields::RMmatern(
 		nu=param["shape"], 
 		scale=param["scaleRandomFields"],
+		Aniso=if (abs(param["anisoRatio"]-1) <=  10^(-4)){
+			NULL 
+		} else {
+			RandomFields::RMangle(
+					angle=param["anisoAngleRadians"],
+					ratio=param["anisoRatio"])
+				},
 		var=param["variance"]
 )
 
-if(abs(param["anisoRatio"]-1) >  10^(-4)){
-	# geometric anisotropy
-	scaleTwoDirections = c(1,
-			1/(param["anisoRatio"]))
-	angle = param["anisoAngleRadians"]
-	anisoMat = diag(scaleTwoDirections) %*% 
-			matrix(c(cos(angle), sin(angle), 
-							-sin(angle), cos(angle)),2)
-	model@par.general$Aniso = anisoMat
-}
 
 model 
 }

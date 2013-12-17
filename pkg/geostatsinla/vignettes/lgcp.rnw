@@ -23,7 +23,6 @@ library('knitr')
 theArgs = c("",commandArgs(trailingOnly=TRUE))
 theArgs = theArgs[!is.na(theArgs)]
 reRun = any(theArgs=="reRun")
-opts_chunk$set(reRun=reRun)
 
 reSave = any(theArgs=="reSave")
 smallMemory = any(theArgs=="smallMemory")
