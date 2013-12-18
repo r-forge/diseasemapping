@@ -86,7 +86,8 @@ Npoints = 40
 myPoints = SpatialPoints(cbind(runif(Npoints,0,10), runif(Npoints,0,10)))	
 myPoints = SpatialPointsDataFrame(myPoints, 
 		data=as.data.frame(extract(covariates, myPoints)))
-myPoints$U = GaussRF(myPoints, param=myModel) 
+library("RandomFields")
+myPoints$U = geostatsp::RFsimulate(myModel,myPoints)$variable1 
 myPoints$y= myModel["intercept"] +
 		as.matrix(myPoints@data[,names(covariates)]) %*% 
 		myModel[names(covariates)] +

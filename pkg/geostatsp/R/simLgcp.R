@@ -23,9 +23,7 @@ simPoissonPP = function(intensity) {
 	)
 	
 	events = SpatialPoints(events)
-	
-	if(!is.na(intensity@crs@projargs))
-		events@proj4string = intensity@crs
+	projection(events) = projection(intensity)
 	
 	events
 	
@@ -34,7 +32,7 @@ simPoissonPP = function(intensity) {
 simLgcp = function(param, covariates=NULL, betas=NULL, 
 		rasterTemplate=covariates[[1]],  ...) {
 	
-	randomEffect = GaussRF(rasterTemplate, param=param, ...)
+	randomEffect = RFsimulate(param, rasterTemplate,  ...)
 	
 	if(!is.null(covariates))
 		covariates = stackRasterList(covariates, randomEffect)

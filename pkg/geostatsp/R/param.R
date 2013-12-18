@@ -1,3 +1,4 @@
+setAs("numeric", "RMmodel", function(from) modelRandomFields(from))
 
 
 modelRandomFields = function(param){
@@ -6,21 +7,30 @@ if(class(param)=="RMmodel")
 		return(param)
 
 param = fillParam(param)
+if(!is.vector(param))
+	warning("param should be a vector if it's to be converted to an RMmodel")
 
 param["scaleRandomFields"] = param["range"]/2 
 
-model = RandomFields::RMmatern(
-		nu=param["shape"], 
-		scale=param["scaleRandomFields"],
-		Aniso=if (abs(param["anisoRatio"]-1) <=  10^(-4)){
-			NULL 
-		} else {
-			RandomFields::RMangle(
-					angle=param["anisoAngleRadians"],
-					ratio=param["anisoRatio"])
-				},
-		var=param["variance"]
+
+if (abs(param["anisoRatio"]-1) <=  10^(-4)){
+	model = RandomFields::RMmatern(
+			nu=param["shape"], 
+			scale=param["scaleRandomFields"],
+		var=param["variance"])
+
+} else {
+	model = RandomFields::RMmatern(
+			nu=param["shape"], 
+			Aniso=
+	RandomFields::RMangle(
+			angle=param["anisoAngleRadians"],
+			diag=c(1, 1/param["anisoRatio"]) * 
+					param["scaleRandomFields"]),
+	var=param["variance"]
 )
+
+}
 
 
 model 
@@ -69,7 +79,9 @@ fillParam = function(param) {
 	if(!any(colnames(param)=="shape"))
 		warning("shape parameter not supplied")
 	
-# fill in anisotropy parameters	
+	if(!any(colnames(param)=="range"))
+		warning("range parameter not supplied")
+	# fill in anisotropy parameters	
 	if(!any(colnames(param)=="anisoRatio"))
 		param = cbind(param, anisoRatio = 1)
 

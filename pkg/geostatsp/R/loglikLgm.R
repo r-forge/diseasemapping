@@ -189,6 +189,7 @@ likfitLgm = function(
 
 	# for some reason thing break if I remove this next line...
 	stuff = (class(coordinates))
+	theproj = projection(coordinates)
 	
 	# check for the variance parameter
 	estimateVariance = TRUE
@@ -273,7 +274,7 @@ likfitLgm = function(
 	
 	# if the model's isotropic, calculate distance matrix
 
- 
+ 	coordinatesOrig = coordinates
 	if(!length(grep("^aniso", paramToEstimate)) &
 			length(grep("^SpatialPoints", class(coordinates)))) {
 
@@ -371,6 +372,16 @@ likfitLgm = function(
 			optim=fromOptim, 
 			resid = as.vector(attributes(fromLogLik)$resid)
 	)
+
+	if(class(coordinatesOrig)!= "dist"){
+		# coordinates is not a distance matrix 
+	result$resid = SpatialPointsDataFrame(
+			coordinatesOrig, 
+			data.frame(resid=as.vector(attributes(fromLogLik)$resid))
+		)
+		projection(result$resid) = theproj
+	}
+	
 	if(class(trend)=="formula") {
 		result$trend = trend
 	} else {
