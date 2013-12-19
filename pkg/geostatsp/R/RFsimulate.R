@@ -45,13 +45,16 @@ RFsimulate.RMmodel =
 			model, x, y, z , T , grid, data, 
 			distances, dim, err.model, n , ...
 			)
-	proj4string(res2) = CRS(theProj)
-			
+	# can't assign a proj4string if res2 is numeric...
+	# so check if there's a proj4string slot
+	if(any(slotNames(res2)%in%c("crs","proj4string")))
+		proj4string(res2) = CRS(theProj)
 	
 	# if x is a raster and the raster package is available
 	# convert the results to a raster
 	if(isRaster & 
 			any(rownames(installed.packages())=="raster")) {
+
 		if(n==1) {
 			# one simulation, convert to raster 
 			res3 = raster::raster(res2)
@@ -66,11 +69,6 @@ RFsimulate.RMmodel =
 		}
 		res2 = res3
 	} 
-	# if SpatialPoints were provided for x, return SpatialPointsDataFrame
-	# instead of RF object
-	if(isSpatialPoints){
-		res2 = as(res2, "SpatialPointsDataFrame")
-	}
 	res2
 }
 
@@ -103,9 +101,16 @@ RFsimulate.numeric = function(model, x, y = NULL, z = NULL, T = NULL, grid, data
 	
 	
 	#RandomFields::
-	RFsimulate(model, x, y  , z  , T   , grid, 
+	res2=RFsimulate(model, x, y  , z  , T   , grid, 
 	data,
 	distances, dim, err.model, n  , ...)
+return(res2)
+# convert to non-RandomFields object
+if(length(grep("[Ss]patialPointsDataFrame", class(res2)))){
+	res2 = as(res2, "SpatialPointsDataFrame")
+res2
+}
+
 	
 }
 
