@@ -29,7 +29,7 @@ swissRain$sqrtrain = sqrt(swissRain$rain)
 swissRes =  lgm(swissRain, locations=20, formula="sqrtrain",
 		covariates=swissAltitude,   
 		shape=1, fixShape=TRUE,
-		aniso=TRUE, nugget=0, fixNugget=FALSE,
+		aniso=TRUE, fixNugget=FALSE,
 		nuggetInPrediction=FALSE
 )
 
@@ -49,6 +49,7 @@ swissSim = geostatsp::RFsimulate(
 		model=swissRes$param,
 		data=swissRes$resid,
 		x=swissRes$predict,
+		err.model=swissRes$param["nugget"],
 		n=3
 )
 
@@ -64,6 +65,7 @@ swissSim = geostatsp::RFsimulate(model=
 						swissRes$param*0.99),
 		data=swissRes$resid,
 		x=swissRes$predict,
+		err.model=c(1, 0.99)*swissRes$param["nugget"],
 		n=3
 )
 # plot the simulated random effect
@@ -71,13 +73,14 @@ plot(swissSim[[1]])
 plot(swissBorder, add=TRUE)
 
 # and multiple simulations
-# now with multiple parameter sets 
+# now with multiple datasets 
 swissSim = geostatsp::RFsimulate(model=
 				rbind(
 						swissRes$param,	
 						0.99*swissRes$param,
 						1.01*swissRes$param),
 		data=swissRes$resid[,c(1,1,1)],
+		err.model=c(1, 0.99, 1.01)*swissRes$param["nugget"],
 		x=swissRes$predict,
 		n=3
 )

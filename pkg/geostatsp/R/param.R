@@ -1,7 +1,4 @@
-setAs("numeric", "RMmodel", function(from) modelRandomFields(from))
-
-
-modelRandomFields = function(param){
+modelRandomFields = function(param, includeNugget=FALSE){
 
 if(class(param)=="RMmodel")
 		return(param)
@@ -31,7 +28,12 @@ if (abs(param["anisoRatio"]-1) <=  10^(-4)){
 )
 
 }
-
+# if nugget effect
+	if(includeNugget &
+			param["nugget"]>(param["variance"]/10000)) {
+		model = RandomFields::RMplus(model, 
+				RandomFields::RMnugget(var=param["nugget"]))
+	}
 
 model 
 }

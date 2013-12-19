@@ -35,10 +35,20 @@ RFsimulate.RMmodel =
 		x = getGridTopology(x)
 	}
 	
-	
+	# make sure data is an RFspdf (it might be a vanilla spdf)	
 	if(!missing(data)){
 		data=as(data, "RFspatialPointsDataFrame") 
 	}
+
+	# if err.model is numeric, assume it's a nugget variance
+	if(!missing(err.model)){
+		if(is.numeric(err.model)) {
+			err.model = 
+					RandomFields::RMnugget(
+							var=err.model)
+		}
+	}
+	
 	
 	res2=RandomFields::RFsimulate(
 			model, x, y, z , T , grid, data, 
@@ -76,7 +86,7 @@ RFsimulate.RMmodel =
 RFsimulate.numeric = function(model, x, y = NULL, z = NULL, T = NULL, grid, data, 
 		distances, dim, err.model, n = 1, ...)  {
 
-	model = as(model, "RMmodel")
+	model = modelRandomFields(model)
 	
 	if(!missing(data)) {
 		if(class(data)=="SpatialPointsDataFrame") {
@@ -128,7 +138,19 @@ RFsimulate.matrix = function(model, x, y = NULL, z = NULL, T = NULL, grid, data,
 		# do something so data[,D] doesn't break
 		data = NULL
 	}
-	
+	if(!missing(err.model)) {
+		if(is.numeric(err.model)){
+			if(length(err.model)==1) {
+				err.model = rep(err.model, length(Siter))
+			} else if(length(err.model)==nrow(model)){
+				err.model = err.model[Siter]
+			} else {
+				warning("number of values in err.model should be either 1 or equal to number of rows of model")
+			}
+		}
+	} else {
+		err.model= NULL
+	}
 
 	model= model[Siter,]
 	
@@ -140,7 +162,7 @@ RFsimulate.matrix = function(model, x, y = NULL, z = NULL, T = NULL, grid, data,
 	result[[D]] = RFsimulate(
 			model[D,], 
 			x, y  , z  , T   , grid, data[,D], 
-			distances, dim, err.model, n=1  , ...)
+			distances, dim, err.model[D], n=1  , ...)
 
 	}
 	
