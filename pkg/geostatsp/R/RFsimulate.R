@@ -40,15 +40,6 @@ RFsimulate.RMmodel =
 		data=as(data, "RFspatialPointsDataFrame") 
 	}
 
-	# if err.model is numeric, assume it's a nugget variance
-	if(!missing(err.model)){
-		if(is.numeric(err.model)) {
-			err.model = 
-					RandomFields::RMnugget(
-							var=err.model)
-		}
-	}
-	
 	
 	res2=RandomFields::RFsimulate(
 			model, x, y, z , T , grid, data, 
@@ -87,6 +78,16 @@ RFsimulate.numeric = function(model, x, y = NULL, z = NULL, T = NULL, grid, data
 		distances, dim, err.model, n = 1, ...)  {
 
 	model = modelRandomFields(model)
+
+	# if err.model is numeric, assume it's a nugget variance
+	if(!missing(err.model)){
+		if(is.numeric(err.model)) {
+			err.model = 
+					RandomFields::RMnugget(
+							var=err.model)
+		}
+	}
+	
 	
 	if(!missing(data)) {
 		if(class(data)=="SpatialPointsDataFrame") {
@@ -99,6 +100,8 @@ RFsimulate.numeric = function(model, x, y = NULL, z = NULL, T = NULL, grid, data
 			}
 		}
 	}
+	
+	
 	#RandomFields::
 	RFsimulate(model, x, y  , z  , T   , grid, 
 	data,
