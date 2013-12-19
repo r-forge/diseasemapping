@@ -21,7 +21,12 @@ if (abs(param["anisoRatio"]-1) <=  10^(-4)){
 			nu=param["shape"], 
 			Aniso=
 	RandomFields::RMangle(
-			angle=param["anisoAngleRadians"],
+			angle=
+					if(param["anisoAngleRadians"]>0) {
+						param["anisoAngleRadians"]
+					} else {
+						param["anisoAngleRadians"]+2*pi
+					},
 			diag=c(1, 1/param["anisoRatio"]) * 
 					param["scaleRandomFields"]),
 	var=param["variance"]
