@@ -10,7 +10,7 @@ if(!is.vector(param))
 param["scaleRandomFields"] = param["range"]/2 
 
 
-if (abs(param["anisoRatio"]-1) <=  10^(-4)){
+if (abs(param["anisoRatio"]-1) <=  10^(-4) ){
 	model = RandomFields::RMmatern(
 			nu=param["shape"], 
 			scale=param["scaleRandomFields"],
@@ -31,8 +31,8 @@ if (abs(param["anisoRatio"]-1) <=  10^(-4)){
 					param["scaleRandomFields"]),
 	var=param["variance"]
 )
-
 }
+
 # if nugget effect
 	if(includeNugget &
 			param["nugget"]>(param["variance"]/10000)) {

@@ -26,14 +26,27 @@ swissRain$sqrtrain = sqrt(swissRain$rain)
 
 # estimate parameters
 
+if(packageVersion("RandomFields") =='3.0.5') { 
+# isotropic
+	swissRes =  lgm(swissRain, locations=20, formula="sqrtrain",
+			covariates=swissAltitude,   
+			shape=1, fixShape=TRUE,
+			aniso=FALSE, fixNugget=FALSE,
+			nuggetInPrediction=FALSE
+	)
+	
+	
+} else {
 swissRes =  lgm(swissRain, locations=20, formula="sqrtrain",
 		covariates=swissAltitude,   
 		shape=1, fixShape=TRUE,
 		aniso=TRUE, fixNugget=FALSE,
 		nuggetInPrediction=FALSE
 )
+}
 
-# uncoinditional simulation
+
+	# uncoinditional simulation
 library("RandomFields")
 RFoptions(printlevel=0)
 swissSim = geostatsp::RFsimulate(
