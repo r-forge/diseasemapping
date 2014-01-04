@@ -26,7 +26,7 @@ swissRain$sqrtrain = sqrt(swissRain$rain)
 
 # estimate parameters
 
-if(packageVersion("RandomFields") =='3.0.5') { 
+
 # isotropic
 	swissRes =  lgm(swissRain, locations=20, formula="sqrtrain",
 			covariates=swissAltitude,   
@@ -36,7 +36,7 @@ if(packageVersion("RandomFields") =='3.0.5') {
 	)
 	
 	
-} else {
+if(FALSE) {
 swissRes =  lgm(swissRain, locations=20, formula="sqrtrain",
 		covariates=swissAltitude,   
 		shape=1, fixShape=TRUE,
