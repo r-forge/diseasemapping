@@ -104,9 +104,11 @@ openmap = function(x, zoom,
 		if(class(thistile)=="try-error"){
 			message(paste(Dpath, "not accessible"))
 		}	else {
-		theprefix=strsplit(names(thistile), "([rR]ed|[gG]reen|[bB]lue)$",fixed=FALSE)[[1]]
-		names(thistile) = gsub(theprefix, paste(pathOrig[Dpath], "",sep=""), 
-				names(thistile),fixed=TRUE)		
+			if(length(names(thistile))) {
+				theprefix=strsplit(names(thistile), "([rR]ed|[gG]reen|[bB]lue)$",fixed=FALSE)[[1]]
+				names(thistile) = gsub(theprefix, paste(pathOrig[Dpath], "",sep=""), 
+					names(thistile),fixed=TRUE)		
+			}
 		if(length(result)) {			
 			result =  stack(result, thistile)	
 		} else {
@@ -115,8 +117,12 @@ openmap = function(x, zoom,
 	} # end not try-error
 	}	
 
-	if(is.null(result)) return(thistile)
+	if(is.null(result)) {
+		result = raster(extLL,1,1,crs=crsLL)
+		values(result) = NA
+	} 
 
+	
 	crsOut=crs
 	if(!length(crsOut))
 		crsOut = projection(x)
@@ -131,6 +137,7 @@ openmap = function(x, zoom,
 		resultProj = result
 	}
 
+	
 	resultProj = stack(resultProj)
 
 	for(D in 1:nlayers(resultProj)) {

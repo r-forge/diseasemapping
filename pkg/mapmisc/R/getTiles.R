@@ -116,9 +116,12 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 			   timeOut=timeOut,
 			  verbose=verbose)
     }
-	
-	thisimage = try(brick(where),silent=TRUE)
-	if(class(thisimage)!="try-error") {
+	if(file.info(where)$size) {
+		thisimage = brick(where)
+	} else {
+		thisimage = NULL
+	}
+	if(!is.null(thisimage)) {
 
 		# if only one layer
 	# this must be a raster of integers referring to colour indexes	

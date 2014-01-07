@@ -13,10 +13,14 @@ mydat = mydat[!thedist,]
 
 	
 
- trueParamAniso = param=c(variance=2^2, range=0.2, shape=2,
+trueParamAniso = param=c(variance=2^2, range=0.2, shape=2,
 		nugget=0,anisoRatio=4,anisoAngleDegrees=10, nugget=0)
 
-library("RandomFields")
+# until RandomFields is updated to 2.0.6 on CRAN do
+trueParamAniso = param=c(variance=2^2, range=0.2, shape=2,
+		nugget=0, nugget=0)
+
+
 mydat$U = geostatsp::RFsimulate(trueParamAniso,mydat)$variable1
 mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + 
 		mydat$U + rnorm(length(mydat), 0, sd=sqrt(trueParamAniso["nugget"]))
