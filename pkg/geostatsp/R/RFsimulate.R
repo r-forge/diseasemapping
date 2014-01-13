@@ -60,8 +60,10 @@ RFsimulate.RMmodel =
 		if(n==1) {
 			# one simulation, convert to raster
 			if(is.matrix(res2)) {
-				res3 = raster::raster(res2,
-						template=xOrig)
+#				res3 = raster::raster(res2,
+#						template=xOrig)
+				res3 = xOrig
+				values(res3) = as.vector(res2)
 			} else  {
 				res3 = raster::raster(res2)
 			}
