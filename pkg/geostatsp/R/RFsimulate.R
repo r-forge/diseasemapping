@@ -40,15 +40,17 @@ RFsimulate.RMmodel =
 		data=as(data, "RFspatialPointsDataFrame") 
 	}
 
-	
+
 	res2=RandomFields::RFsimulate(
 			model, x, y, z , T , grid, data, 
 			distances, dim, err.model, n , ...
 			)
+		
 	# can't assign a proj4string if res2 is numeric...
 	# so check if there's a proj4string slot
 	if(any(slotNames(res2)%in%c("crs","proj4string")))
 		proj4string(res2) = CRS(theProj)
+	xOrig <<- xOrig
 	
 	# if x is a raster and the raster package is available
 	# convert the results to a raster
@@ -56,8 +58,13 @@ RFsimulate.RMmodel =
 			any(rownames(installed.packages())=="raster")) {
 
 		if(n==1) {
-			# one simulation, convert to raster 
-			res3 = raster::raster(res2)
+			# one simulation, convert to raster
+			if(is.matrix(res2)) {
+				res3 = raster::raster(res2,
+						template=xOrig)
+			} else  {
+				res3 = raster::raster(res2)
+			}
 		} else {
 			# more than one simulate, convert to raster brick
 			res3 = list()
@@ -101,15 +108,16 @@ RFsimulate.numeric = function(model, x, y = NULL, z = NULL, T = NULL, grid, data
 	
 	
 	#RandomFields::
-	res2=RFsimulate(model, x, y  , z  , T   , grid, 
-	data,
-	distances, dim, err.model, n  , ...)
-return(res2)
+	#
+	res2=geostatsp::RFsimulate(model, x, y  , z  , T   , grid, 
+		data,	distances, dim, err.model, n  , ...)
+
 # convert to non-RandomFields object
 if(length(grep("[Ss]patialPointsDataFrame", class(res2)))){
 	res2 = as(res2, "SpatialPointsDataFrame")
-res2
 }
+
+	return(res2)
 
 	
 }
@@ -117,7 +125,7 @@ res2
 RFsimulate.data.frame = function(model, x, y = NULL, z = NULL, T = NULL, grid, data, 
 		distances, dim, err.model, n = 1, ...)  {
 	model = as(model, "matrix")
-	RFsimulate(model, x, y  , z  , T   , grid, data, 
+	geostatsp::RFsimulate(model, x, y  , z  , T   , grid, data, 
 			distances, dim, err.model, n  , ...)
 }
 
@@ -167,7 +175,7 @@ RFsimulate.matrix = function(model, x, y = NULL, z = NULL, T = NULL, grid, data,
 	
 	for(D in 1:nrow(model)) {
 
-	result[[D]] = RFsimulate(
+	result[[D]] = geostatsp::RFsimulate(
 			model[D,], 
 			x, y  , z  , T   , grid, data[,D], 
 			distances, dim, err.model[D], n=1  , ...)
@@ -187,3 +195,4 @@ RFsimulate.matrix = function(model, x, y = NULL, z = NULL, T = NULL, grid, data,
 	
 	result
 }
+

@@ -51,7 +51,7 @@ The formula for the Matern correlation function is
 x (\sqrt{8 shape}/ range)^{shape}  
 besselK(x \sqrt{8 shape}/ range, shape) }{%
              M(x) =   (variance / Gamma(shape)) 2^(shape-1) 
-x [sqrt(8 shape)/ range]^shape  
+ [x sqrt(8 shape)/ range]^shape  
 besselK[x sqrt(8 shape)/ range, shape] 
 }
 
