@@ -46,11 +46,15 @@ RFsimulate.RMmodel =
 			distances, dim, err.model, n , ...
 			)
 		
-	# can't assign a proj4string if res2 is numeric...
-	# so check if there's a proj4string slot
-	if(any(slotNames(res2)%in%c("crs","proj4string")))
-		proj4string(res2) = CRS(theProj)
-	xOrig <<- xOrig
+	# assign a proj4string if necessary
+	if(class(try(proj4string(res2),silent=TRUE))!="try-error") {
+		if(identical(proj4string(res2), NA)) {
+			if(class(try(CRS(theProj), silent=TRUE))!= "try-error") {
+					proj4string(res2) = CRS(theProj)
+			}
+		}				
+	}
+
 	
 	# if x is a raster and the raster package is available
 	# convert the results to a raster
@@ -60,12 +64,11 @@ RFsimulate.RMmodel =
 		if(n==1) {
 			# one simulation, convert to raster
 			if(is.matrix(res2)) {
-#				res3 = raster::raster(res2,
-#						template=xOrig)
 				res3 = xOrig
 				values(res3) = as.vector(res2)
 			} else  {
 				res3 = raster::raster(res2)
+				res3 = res2
 			}
 		} else {
 			# more than one simulate, convert to raster brick

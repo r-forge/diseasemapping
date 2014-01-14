@@ -19,18 +19,27 @@ if (abs(param["anisoRatio"]-1) <=  10^(-4) ){
 } else {
 	model = RandomFields::RMmatern(
 			nu=param["shape"], 
-			Aniso=
-	RandomFields::RMangle(
-			angle=
-					if(param["anisoAngleRadians"]>0) {
-						param["anisoAngleRadians"]
-					} else {
-						param["anisoAngleRadians"]+2*pi
-					},
-			diag=c(1, 1/param["anisoRatio"]) * 
-					param["scaleRandomFields"]),
-	var=param["variance"]
+			var=param["variance"],
+	Aniso= 	diag(1/c(param['scaleRandomFields'], 
+							param["anisoRatio"]*param['scaleRandomFields']))%*%
+			cbind(c( cos(param["anisoAngleRadians"]),
+							-sin(param["anisoAngleRadians"])),
+					c(sin(param["anisoAngleRadians"]), 
+							cos(param["anisoAngleRadians"]))
+			)
 )
+
+#RandomFields::RMangle(
+#			angle=
+#					if(param["anisoAngleRadians"]>0) {
+#						param["anisoAngleRadians"]
+#					} else {
+#						param["anisoAngleRadians"]+2*pi
+#					},
+#			diag=c(1, 1/param["anisoRatio"]) * 
+#					param["scaleRandomFields"])
+
+
 }
 
 # if nugget effect
