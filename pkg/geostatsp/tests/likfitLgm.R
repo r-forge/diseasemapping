@@ -16,9 +16,6 @@ mydat = mydat[!thedist,]
 trueParamAniso = param=c(variance=2^2, range=0.2, shape=2,
 		nugget=1^2,anisoRatio=4,anisoAngleDegrees=10, nugget=0)
 
-# until RandomFields is updated to 2.0.6 on CRAN do
-trueParamAniso = param=c(variance=2^2, range=0.2, shape=2,
-		nugget=1^2, nugget=0)
 
 
 mydat$U = geostatsp::RFsimulate(trueParamAniso,mydat)$variable1

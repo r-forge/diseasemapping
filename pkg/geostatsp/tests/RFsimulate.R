@@ -36,14 +36,14 @@ swissRain$sqrtrain = sqrt(swissRain$rain)
 	)
 	
 	
-if(FALSE) {
+ # anisotropic
 swissRes =  lgm(swissRain, locations=20, formula="sqrtrain",
 		covariates=swissAltitude,   
 		shape=1, fixShape=TRUE,
 		aniso=TRUE, fixNugget=FALSE,
 		nuggetInPrediction=FALSE
 )
-}
+ 
 
 
 	# uncoinditional simulation
