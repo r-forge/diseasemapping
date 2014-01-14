@@ -68,7 +68,6 @@ RFsimulate.RMmodel =
 				values(res3) = as.vector(res2)
 			} else  {
 				res3 = raster::raster(res2)
-				res3 = res2
 			}
 		} else {
 			# more than one simulate, convert to raster brick

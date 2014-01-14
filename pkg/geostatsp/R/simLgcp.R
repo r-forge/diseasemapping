@@ -32,7 +32,7 @@ simPoissonPP = function(intensity) {
 simLgcp = function(param, covariates=NULL, betas=NULL, 
 		rasterTemplate=covariates[[1]],  ...) {
 	
-	randomEffect = RFsimulate(param, rasterTemplate,  ...)
+	randomEffect = geostatsp::RFsimulate(model=param, x=rasterTemplate,  ...)
 	
 	if(!is.null(covariates))
 		covariates = stackRasterList(covariates, randomEffect)
