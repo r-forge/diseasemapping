@@ -89,14 +89,14 @@ and the variance matrix of the coefficient MLE's.
 \code{\link{lgm}}
 }
 \examples{
-n=180
+n=40
 mydat = SpatialPointsDataFrame(cbind(runif(n), runif(n)), 
 	data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 0.5))
 	)
 
 # simulate a random field
 trueParam = c(variance=2^2, range=0.15, shape=2, nugget=0.5^2)
-library("RandomFields")
+
 mydat$U = geostatsp::RFsimulate(trueParam,mydat)$variable1
 
 # add fixed effects

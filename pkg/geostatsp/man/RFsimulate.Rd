@@ -92,18 +92,22 @@ If \code{x} is a raster, a \code{RasterLayer} or \code{RasterBrick} is returned.
 
 model <- c(var=5, range=1,shape=0.5)
 
-myraster = raster(nrows=100,ncols=100,xmn=0,ymn=0,xmx=10,ymx=10, 
+myraster = raster(nrows=60,ncols=60,xmn=0,ymn=0,xmx=10,ymx=10, 
 		crs="+init=epsg:2081")
 
 set.seed(0) 
-library("RandomFields")
+
 simu <- geostatsp::RFsimulate(model, x=myraster, n=3)
 
 
 plot(simu[[2]])
 
+
+
+\dontrun{
 data("swissRain")
 swissRain$sqrtrain = sqrt(swissRain$rain)
+
 
 # estimate parameters
 swissRes =  lgm(swissRain, locations=20, formula="sqrtrain",
@@ -112,6 +116,7 @@ swissRes =  lgm(swissRain, locations=20, formula="sqrtrain",
 	aniso=FALSE, nugget=0, fixNugget=TRUE,
 	nuggetInPrediction=FALSE
 	)
+
 
 # simulate from the random effect conditional on
 #   the observed data
@@ -125,7 +130,7 @@ swissSim = geostatsp::RFsimulate(model=swissRes$param,
 # plot the simulated random effect
 plot(swissSim[[1]])
 plot(swissBorder, add=TRUE)
-
+}
 
 }
 
