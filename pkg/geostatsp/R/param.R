@@ -23,8 +23,8 @@ if (abs(param["anisoRatio"]-1) <=  10^(-4) ){
 	Aniso= 	diag(1/c(param['scaleRandomFields'], 
 							param["anisoRatio"]*param['scaleRandomFields']))%*%
 			cbind(c( cos(param["anisoAngleRadians"]),
-							-sin(param["anisoAngleRadians"])),
-					c(sin(param["anisoAngleRadians"]), 
+							sin(param["anisoAngleRadians"])),
+					c(-sin(param["anisoAngleRadians"]), 
 							cos(param["anisoAngleRadians"]))
 			)
 )
