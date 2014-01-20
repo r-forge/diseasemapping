@@ -189,7 +189,7 @@ likfitLgm = function(
 
 	# for some reason thing break if I remove this next line...
 	stuff = (class(coordinates))
-	theproj = projection(coordinates)
+	theproj = raster::projection(coordinates)
 	
 	# check for the variance parameter
 	estimateVariance = TRUE
@@ -205,13 +205,13 @@ likfitLgm = function(
 	}
 	 
 	# limits
-	lowerDefaults = c(nugget=0,range=0,anisoRatioratio=0.0001,
+	lowerDefaults = c(nugget=0,range=0,anisoRatio=0.0001,
 			anisoAngleRadians=-pi/2,anisoAngleDegrees=-90,
 			shape=0.01,boxcox=-3,variance=0)
 	
 	upperDefaults= c(nugget=Inf,range=Inf,anisoRatio=Inf,
 			anisoAngleRadians=pi/2,anisoAngleDegrees=90,
-			shape=0,boxcox=3,variance=Inf)
+			shape=100,boxcox=3,variance=Inf)
 	
 
 	lowerDefaults[names(lower)]=lower
@@ -225,7 +225,8 @@ likfitLgm = function(
 			anisoAngleDegrees=10,
 			anisoAngleRadians=2,
 			anisoRatio=1,
-			variance=1)
+			variance=1,
+			shape=0.25)
 
 #	if(length(grep("^SpatialPoints", class(coordinates))))
 #		print("wah")
@@ -275,13 +276,14 @@ likfitLgm = function(
 	# if the model's isotropic, calculate distance matrix
 
  	coordinatesOrig = coordinates
-	if(!length(grep("^aniso", paramToEstimate)) &
+	  # not estimating aniso params and coordinates is SpatialPoints
+	if( (!length(grep("^aniso", paramToEstimate))) &
 			length(grep("^SpatialPoints", class(coordinates)))) {
 
 		# see if there's anisotropy which is fixed, not estimated
 	# which would be odd but we'll test nonetheless
 		if(length(grep("^anisoRatio", names(param)))){
-			if(abs(param["anosi.ratio"]- 1) > 0.0001){
+			if(abs(param["anisoRatio"]- 1) > 0.0001){
 				# it is indeed anisotropic
 			
 				if(any(names(param)=="anisoAngleDegrees") & 
