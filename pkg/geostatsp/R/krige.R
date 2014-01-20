@@ -137,8 +137,22 @@ krige = function(data, trend,
 			# see if these line up with 
 			theLevels = gsub(paste("^", D, sep=""),"",paramStartWithD)
 			levelsTable = covariates[[D]]@data@attributes[[1]]
-			levelsInTable = levelsTable[,2]%in% theLevels
-			if(mean(theLevels %in% levelsTable[,2]) < 0.4)
+			
+			inId = theLevels %in% as.character(levelsTable[,1])
+			inLabel = theLevels %in% levelsTable[,2]
+
+			if(mean(inId) > mean(inLabel)){
+				levelsTable$levelsInParams =  
+						as.character(levelsTable[,1])
+				labelCol = ncol(levelsTable)
+				levelsInTable = levelsTable[,1] %in% 
+						theLevels
+			} else {
+				levelsInTable = levelsTable[,2]%in% theLevels
+				labelCol=2
+			}
+			
+			if(mean(theLevels %in% levelsTable[,labelCol]) < 0.4)
 				warning("many levels appear missing in covariate", D)
 			valuesInParams = levelsTable[levelsInTable,1]
 
@@ -151,11 +165,11 @@ krige = function(data, trend,
 
 			
 			levelsTable = 
-					levelsTable[c(1, 1:nrow(levelsTable)),]
+					levelsTable[c(1, 1:nrow(levelsTable)),c(1,labelCol)]
 			levelsTable[1,1]= min(allValues)-1
-			levelsTable[1,2] = "0"
-			colnames(levelsTable)[2] = ""
-			covariates[[D]]@data@attributes[[1]] =  levelsTable			
+			levelsTable[1,2] = as.character(levelsTable[1,1])
+			colnames(levelsTable)[2] = "levels"
+			levels(covariates[[D]]) = levelsTable
 			covariates[[D]]@data@isfactor = TRUE
 			
 		} else if (length(paramFactorCharacter)) {
@@ -179,7 +193,7 @@ krige = function(data, trend,
 					levelsTable[c(1, 1:nrow(levelsTable)),]
 			levelsTable[1,1]= min(allValues)-1
 			levelsTable[1,2] = "0"
-			colnames(levelsTable)[2]=""
+			colnames(levelsTable)[2]="levels"
 			covariates[[D]]@data@attributes[[1]] =  levelsTable			
 			
 			
@@ -210,7 +224,7 @@ krige = function(data, trend,
 		covariatesDF = as.data.frame(covariates, xy=TRUE)
 
 		# get rid of trailing _ created by as.data.frame
-		names(covariatesDF) = gsub("_$", "", names(covariatesDF))
+		names(covariatesDF) = gsub("_levels$", "", names(covariatesDF))
 	} else {
 		covariatesDF = as.data.frame(matrix(NA, ncol=0, nrow=ncell(locations)))
 	}
