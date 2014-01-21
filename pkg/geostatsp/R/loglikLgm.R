@@ -200,7 +200,7 @@ likfitLgm = function(
 	} else {
 		if(any(names(param)=="variance")){
 			estimateVariance = FALSE
-			warning("variance is fixed and not estimated. If this isn't what you wanted remove variance from param")
+#			warning("variance is fixed and not estimated. If this isn't what you wanted remove variance from param")
 		}		
 	}
 	 
@@ -439,6 +439,8 @@ likfitLgm = function(
 	
 	
 	result$summary = as.data.frame(parameterTable)
+	
+	
 	
 	result
 }
