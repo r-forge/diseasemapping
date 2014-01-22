@@ -333,42 +333,6 @@ krige = function(data, trend,
 	Ny = length(observations)
 	param = fillParam(param)
 	
-	krigeOneRow = function(Drow){
-
-		# covariance of cells in row Drow with data points
-		resC =  .C("maternArasterBpoints", 
-				as.double(raster::xmin(locations)), 
-				as.double(raster::xres(locations)), 
-						as.integer(ncol(locations)), 
-				as.double(raster::yFromRow(locations, Drow)), 
-					as.double(0), as.integer(1),
-				as.double(coordinates@coords[,1]), 
-					as.double(coordinates@coords[,2]), 
-				N=as.integer(Ny), 
-				result=as.double(matrix(0, ncol(locations), 
-								length(coordinates))),
-				as.double(param["range"]),
-				as.double(param["shape"]),
-				as.double(param["variance"]),
-				as.double(param["anisoRatio"]),
-				as.double(param["anisoAngleRadians"])
-		) 
-		covDataPred = matrix(resC$result, nrow=ncol(locations), ncol=Ny)
-		
-		
-		cholVarDataInvCovDataPred = Matrix::solve(cholVarData, 
-				t(covDataPred))
-
-		c( # the conditional expectation
-			as.vector(Matrix::crossprod(cholVarDataInvCovDataPred, 
-						cholVarDatInvData)),
-		# part of the conditional variance
-			apply(cholVarDataInvCovDataPred, 2, function(qq) {
-					sumsq = sum(qq^2)
-				})
-		)
-		
-	}
 
 	krigeOneRowPar = function(Drow, yFromRowDrow, 
 			locations,
@@ -426,29 +390,10 @@ krige = function(data, trend,
 			
 		)
 	Srow = 1:nrow(locations)
-			
-	if(ncell(locations)>10^4) {
-		ncores = getOption("cl.cores", 2)
-		cl <- parallel::makeCluster(ncores)
-		parallel::clusterCall(cl,
-				function() 
-					dyn.load(system.file(
-						paste("libs/geostatsp",.Platform$dynlib.ext,sep=''),
-						package="geostatsp")
-		)
-		)
-
- 		sums=parallel::clusterMap(cl,
-				krigeOneRowPar,
-				Srow, 
+		
+	sums=mapply(krigeOneRowPar, Srow, 
 				yFromRow(locations,Srow),
 				MoreArgs=datForK,SIMPLIFY=TRUE)
- 		parallel::stopCluster(cl)
-	} else {
-		sums=mapply(krigeOneRowPar, Srow, 
-				yFromRow(locations,Srow),
-				MoreArgs=datForK,SIMPLIFY=TRUE)
-	}
 
 	
 #	sums <<- mapply(krigeOneRow,1:nrow(locations))

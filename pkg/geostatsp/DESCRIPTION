@@ -4,7 +4,6 @@ Title: Geostatistics using SpatialPoints and rasters
 Version: 0.9.2
 Date: 2014-01-21
 Depends: methods, Matrix, raster, sp, R (>= 3.0.0)
-Imports:  parallel
 Suggests:  pracma, geoR, RandomFields, rgdal
 Enhances: spatstat
 Author: Patrick Brown <patrick.brown@utoronto.ca>[aut, cre], Robert Hijmans [ctb]
