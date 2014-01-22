@@ -334,10 +334,7 @@ krige = function(data, trend,
 	param = fillParam(param)
 	
 	krigeOneRow = function(Drow){
-		dyn.load(system.file(
-						paste("libs/geostatsp",.Platform$dynlib.ext,sep=''),
-						package="geostatsp")
-		)
+
 		# covariance of cells in row Drow with data points
 		resC =  .C("maternArasterBpoints", 
 				as.double(raster::xmin(locations)), 
@@ -373,19 +370,84 @@ krige = function(data, trend,
 		
 	}
 
+	krigeOneRowPar = function(Drow, yFromRowDrow, 
+			locations,
+			param,coordinates,Ny,cholVarData,
+			cholVarDatInvData,
+			xminl,xresl,ncoll,
+			lengthc){
+		
+		# covariance of cells in row Drow with data points
+		resC =  .C("maternArasterBpoints", 
+				as.double(xminl), 
+				as.double(xresl), 
+				as.integer(ncoll), 
+				as.double(yFromRowDrow), 
+				as.double(0), as.integer(1),
+				as.double(coordinates@coords[,1]), 
+				as.double(coordinates@coords[,2]), 
+				N=as.integer(Ny), 
+				result=as.double(matrix(0, ncoll, 
+								lengthc)),
+				as.double(param["range"]),
+				as.double(param["shape"]),
+				as.double(param["variance"]),
+				as.double(param["anisoRatio"]),
+				as.double(param["anisoAngleRadians"])
+		) 
+		covDataPred = matrix(resC$result, nrow=ncoll, ncol=Ny)
+		
+		
+		cholVarDataInvCovDataPred = Matrix::solve(cholVarData, 
+				t(covDataPred))
+		
+		c( # the conditional expectation
+				as.vector(Matrix::crossprod(cholVarDataInvCovDataPred, 
+								cholVarDatInvData)),
+				# part of the conditional variance
+				apply(cholVarDataInvCovDataPred, 2, function(qq) {
+							sumsq = sum(qq^2)
+						})
+		)
+		
+	}
 	
+	
+
+	datForK = list(
+			locations=locations,param=param,
+			coordinates=coordinates,Ny=Ny,
+			cholVarData=cholVarData,
+			cholVarDatInvData = cholVarDatInvData,
+			xminl=xmin(locations),
+			xresl = xres(locations),
+			ncoll=ncol(locations),
+			lengthc=length(coordinates)
+			
+		)
+	Srow = 1:nrow(locations)
+			
 	if(ncell(locations)>10^4) {
 		ncores = getOption("cl.cores", 2)
 		cl <- parallel::makeCluster(ncores)
+		parallel::clusterCall(cl,
+				function() 
+					dyn.load(system.file(
+						paste("libs/geostatsp",.Platform$dynlib.ext,sep=''),
+						package="geostatsp")
+		)
+		)
 
-		parallel::clusterExport(cl, c("locations","param","coordinates",
-					"Ny","yFromRow", "cholVarData",
-					"cholVarDatInvData"),
-			environment())
- 		sums=parallel::parSapply(cl,1:nrow(locations), krigeOneRow)
+ 		sums=parallel::clusterMap(cl,
+				krigeOneRowPar,
+				Srow, 
+				yFromRow(locations,Srow),
+				MoreArgs=datForK,SIMPLIFY=TRUE)
  		parallel::stopCluster(cl)
 	} else {
-		sums=sapply(1:nrow(locations), krigeOneRow)
+		sums=mapply(krigeOneRowPar, Srow, 
+				yFromRow(locations,Srow),
+				MoreArgs=datForK,SIMPLIFY=TRUE)
 	}
 
 	
