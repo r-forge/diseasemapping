@@ -376,18 +376,18 @@ krige = function(data, trend,
 	
 	if(ncell(locations)>10^4) {
 		ncores = getOption("cl.cores", 2)
-	} else {
-		ncores = 1
-	}
-	cl <- parallel::makeCluster(ncores)
+		cl <- parallel::makeCluster(ncores)
 
-	parallel::clusterExport(cl, c("locations","param","coordinates",
+		parallel::clusterExport(cl, c("locations","param","coordinates",
 					"Ny","yFromRow", "cholVarData",
 					"cholVarDatInvData"),
 			environment())
- 	sums=parallel::parSapply(cl,1:nrow(locations), krigeOneRow)
- 	parallel::stopCluster(cl)
- 
+ 		sums=parallel::parSapply(cl,1:nrow(locations), krigeOneRow)
+ 		parallel::stopCluster(cl)
+	} else {
+		sums=sapply(1:nrow(locations), krigeOneRow)
+	}
+
 	
 #	sums <<- mapply(krigeOneRow,1:nrow(locations))
 	
