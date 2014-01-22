@@ -334,17 +334,22 @@ krige = function(data, trend,
 	param = fillParam(param)
 	
 	krigeOneRow = function(Drow){
-
+		dyn.load(system.file(
+						paste("libs/geostatsp",.Platform$dynlib.ext,sep=''),
+						package="geostatsp")
+		)
 		# covariance of cells in row Drow with data points
 		resC =  .C("maternArasterBpoints", 
-				as.double(xmin(locations)), as.double(xres(locations)), 
+				as.double(raster::xmin(locations)), 
+				as.double(raster::xres(locations)), 
 						as.integer(ncol(locations)), 
-				as.double(yFromRow(locations, Drow)), 
+				as.double(raster::yFromRow(locations, Drow)), 
 					as.double(0), as.integer(1),
 				as.double(coordinates@coords[,1]), 
 					as.double(coordinates@coords[,2]), 
 				N=as.integer(Ny), 
-				result=as.double(matrix(0, ncol(locations), length(coordinates))),
+				result=as.double(matrix(0, ncol(locations), 
+								length(coordinates))),
 				as.double(param["range"]),
 				as.double(param["shape"]),
 				as.double(param["variance"]),
@@ -354,7 +359,8 @@ krige = function(data, trend,
 		covDataPred = matrix(resC$result, nrow=ncol(locations), ncol=Ny)
 		
 		
-		cholVarDataInvCovDataPred = Matrix::solve(cholVarData, t(covDataPred))
+		cholVarDataInvCovDataPred = Matrix::solve(cholVarData, 
+				t(covDataPred))
 
 		c( # the conditional expectation
 			as.vector(Matrix::crossprod(cholVarDataInvCovDataPred, 
@@ -367,8 +373,24 @@ krige = function(data, trend,
 		
 	}
 
-	sums = mcmapply(krigeOneRow,1:nrow(locations))
+	
+#	sums = mcmapply(krigeOneRow,1:nrow(locations))
+	print("here!")
+	cl <- parallel::makeCluster(getOption("cl.cores", 2))
+	print("here1 !")
+	parallel::clusterExport(cl, c("locations","param","coordinates",
+					"Ny","yFromRow", "cholVarData",
+					"cholVarDatInvData"),
+			environment())
+	print("here2!")
+	sums=parallel::parSapply(cl,1:nrow(locations), krigeOneRow)
+	print("here3!")
+	parallel::stopCluster(cl)
+	print("here4!")
 
+	
+#	sums <<- mapply(krigeOneRow,1:nrow(locations))
+	
 	# row sums of cholVarDataInvCovDataPred
 	forExpected = sums[1:ncol(locations),]
 	# row sums of squares
