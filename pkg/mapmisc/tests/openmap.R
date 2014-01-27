@@ -26,8 +26,8 @@ myplot = function(first,second=first) {
 	plot(first)
 	plot(mytiles, add=TRUE)
 	plot(second,add=TRUE,col='blue')
-	points(mycities,col='red')
-	text(mycities, labels=mycities$name, col='red',pos=4)
+#	points(mycities,col='red')
+#	text(mycities, labels=mycities$name, col='red',pos=4)
 	scaleBar(first)
 	dev.off()
 }
@@ -37,64 +37,63 @@ thezoom=6
 # only do the following if running unix (because nsl is available)
 # and if the OpenStreetMap.org web site can be accessed
 if(exists("nsl", where="package:utils")) {
-	if(length(utils::nsl("www.OpenStreetMap.org"))& 
-			length(utils::nsl("ws.geonames.org"))) {
+	if(length(utils::nsl("www.OpenStreetMap.org"))) {
 
 
 		# raster, result will be in project of the raster (long-lat)
 		mytiles = openmap(x=extend(myraster,1),zoom=thezoom, 
 				path="http://tile.openstreetmap.org")
-		mycities = GNcities(extend(myraster,1),max=5)
+#		mycities = GNcities(extend(myraster,1),max=5)
 		myplot(myraster, myPoints)
 
 		# slash at the end
 		mytiles = openmap(extend(myraster,1),zoom=thezoom, 
 				path="http://tile.openstreetmap.org/")
-		mycities = GNcities(extend(myraster,1),max=5)
+#		mycities = GNcities(extend(myraster,1),max=5)
 		myplot(myraster, myPoints)
 		
 		# no http at beginning
 		mytiles = openmap(extend(myraster,1),path="tile.openstreetmap.org")
-		mycities = GNcities(extend(myraster,1),max=5)
+#		mycities = GNcities(extend(myraster,1),max=5)
 		myplot(myraster, myPoints)
 		
 		
 		# extent, tiles will be long-lat
 		mytiles = openmap(extent(myraster),zoom=thezoom)
 		# cities will be long=lat
-		mycities = GNcities(extent(myraster),max=5,lang="fr")
-		myplot(mycities,myPoints)
+#		mycities = GNcities(extent(myraster),max=5,lang="fr")
+#		myplot(mycities,myPoints)
 		
 		# give the bbox, long lat
 		mytiles = openmap(bbox(myraster),zoom=thezoom)
-		mycities = GNcities(bbox(myraster),max=5)
-		myplot(mycities,myPoints)
+#		mycities = GNcities(bbox(myraster),max=5)
+#		myplot(mycities,myPoints)
 		
 		
 		# give points, result is CRS of points (long-lat)
 		mytiles = openmap(myPoints,zoom=thezoom)
-		mycities = GNcities(myPoints,max=5,lang="es")
+#		mycities = GNcities(myPoints,max=5,lang="es")
 		myplot(myPoints)
 		
 		# UTM raster
 		mytiles = openmap(myrasterUTM,zoom=thezoom)
-		mycities = GNcities(myrasterUTM,max=5)
+#		mycities = GNcities(myrasterUTM,max=5)
 		myplot(myrasterUTM, myPointsUTM)
 		
 		# supply a crs
 		mytiles = openmap(extent(myrasterUTM),zoom=thezoom, 
 				crs=proj4string(myrasterUTM))
-		mycities = GNcities(myrasterUTM,max=5)
+#		mycities = GNcities(myrasterUTM,max=5)
 		myplot(myrasterUTM, myPointsUTM)
 		
 		# utm points
 		mytiles = openmap(myPointsUTM,zoom=thezoom)
-		mycities = GNcities(myPointsUTM,max=5)
+#		mycities = GNcities(myPointsUTM,max=5)
 		myplot(myPointsUTM)
 		
 		# specify different output crs
 	mytiles = openmap(myPointsUTM, crs="+proj=longlat")
-	mycities = GNcities(myPoints,max=5)
+#	mycities = GNcities(myPoints,max=5)
 	myplot(myPoints)
 
 	# one point only
