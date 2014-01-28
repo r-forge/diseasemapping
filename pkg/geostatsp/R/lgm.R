@@ -2,7 +2,7 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 		shape=1, fixShape=TRUE,
 		aniso=FALSE, boxcox=1, fixBoxcox=TRUE,
 		nugget = 0, fixNugget = FALSE,
-		expPred=FALSE, nuggetInPrediction=TRUE){
+		expPred=FALSE, nuggetInPrediction=TRUE,...){
 	
 	
 # the formula
@@ -81,10 +81,20 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 	if(! all(notInData %in% names(covariates)))
 		warning("some terms in the model are missing from both the data and the covariates")
 
+	dots <- list(...)  
+	if(any(names(dots)=='param')) {
+		param=dots$param	
+	} else {
+		param=c()
+	}
 	
-	param = c(range=sd(coordinates(data)[,1]),
-				shape=shape, nugget=nugget,boxcox=boxcox
-				)
+	param['shape']=shape
+	param['nugget']=nugget
+	param['boxcox']=boxcox
+
+	if(!any(names(param)=='range'))
+		param['range']=sd(coordinates(data)[,1])
+					
 	paramToEstimate	= c("range", "shape","nugget","boxcox")[
 			!c(FALSE,fixShape,fixNugget,fixBoxcox)]		
 	if(aniso) {
@@ -100,10 +110,12 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 	
 # call likfit
 	
+	dots$param = param
+	dots$trend=formula
+	dots$data=data
+	dots$paramToEstimate=paramToEstimate
  	
-	likRes = likfitLgm(data=data, trend=formula,
-			param=param, paramToEstimate=paramToEstimate
-	)
+	likRes = do.call(likfitLgm, dots)
 	
 # call krige	
 	
@@ -129,6 +141,9 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 			}
 		}
 	}
+	
+	res$data=data
+	
 	return(res)
 }
 
