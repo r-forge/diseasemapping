@@ -293,7 +293,7 @@ likfitLgm = function(
 	
 				x = coordinates@coords[,1] + 1i*coordinates@coords[,2]
 				
-				x = x * exp(-1i*param["anisoAngleRadians"])
+				x = x * exp(1i*param["anisoAngleRadians"])
 				x = Re(x) +  (1i/ param["anisoRatio"] )*Im(x)
 				coordinates = SpatialPoints(cbind(Re(x), Im(x)))
 			} # end is anisotripic		
