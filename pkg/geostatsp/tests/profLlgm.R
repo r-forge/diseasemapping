@@ -67,9 +67,9 @@ image(x2d[[1]],x2d[[2]],x2d[[3]],
 thisV = swissInf$information[
 		names(x2d)[1:2], names(x2d)[1:2]]
 
-
+library('ellipse')
 for(D in x2d$prob[x2d$prob>0&x2d$prob<1]) {
-	thisE = ellipse::ellipse(thisV, centre=x2d$MLE,
+	thisE = ellipse(thisV, centre=x2d$MLE,
 			level=D)
 	lines(thisE[,1],thisE[,2],lwd=4)
 	lines(thisE[,1],thisE[,2], col=x2d$col[as.character(D)],
