@@ -80,8 +80,8 @@ for(D in x2d$prob[x2d$prob>0&x2d$prob<1]) {
 points(x2d$MLE[1],x2d$MLE[2],pch=15) 
 
 
-
-mapmisc::legendBreaks("topleft",x2d$prob,
+library('mapmisc')
+legendBreaks("topleft",x2d$prob,
 		col=x2d$col)
 
 
