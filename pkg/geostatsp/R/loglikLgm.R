@@ -169,7 +169,7 @@ loglikLgm = function(param,
 #		attributes(result)$totalVarHat = totalVarHat
 	attributes(result)$betaHat = betaHat
 	attributes(result)$varBetaHat = as.matrix(varBetaHat)
-#	attributes(result)$reml=reml
+ 	attributes(result)$reml=reml
 #		attributes(result)$twoLogJacobian = twoLogJacobian
 #		attributes(result)$choldet = as.vector(choldet)
 	attributes(result)$resid = resids
@@ -358,7 +358,8 @@ likfitLgm = function(
 		reml=reml, moreParams=moreParams,
 		method = "L-BFGS-B", stored=stored
 		)
-	
+
+		
 		
 	fromLogLik = loglikLgm(param=fromOptim$par,
 			moreParams=moreParams, 
@@ -384,10 +385,11 @@ likfitLgm = function(
 		projection(result$resid) = theproj
 	}
 	
+	result$model = list(reml=reml)
 	if(class(trend)=="formula") {
-		result$trend = trend
+		result$model$trend = trend
 	} else {
-		result$trend= names(trend)
+		result$model$trend= names(trend)
 	}
 
 	
@@ -401,7 +403,9 @@ likfitLgm = function(
 	parameterTable[names(attributes(fromLogLik)$betaHat), "stdErr"] =
 			stdErr
 
-	thelims = c(0.01, 0.99, 0.025, 0.975, 0.1, 0.9)
+	thelims = c(0.005, 0.025, 0.05, 0.1)
+	thelims = c(rbind(thelims, 1-thelims))
+	
 	theQ = qnorm(thelims)
 	toadd = outer(parameterTable$stdErr, theQ)
 	toadd = toadd + matrix(parameterTable$estimate, 
