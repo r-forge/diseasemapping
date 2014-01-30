@@ -101,6 +101,7 @@ dev.off()
 
 
 # test parallel
+if(FALSE) {
 bigRaster = raster(extent(swissBorder), ncols=600, nrows=400, 
 		crs=swissRain@proj4string)	
 
@@ -122,3 +123,4 @@ unix.time(krige(data=swissRain2, trend = swissFit3$model$trend,
 				covariates = list(elevation = swissAltitude,land=swissLandType),
 				locations = bigRaster, expPred=TRUE)
 )
+}
