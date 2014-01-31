@@ -117,9 +117,10 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
  	
 	likRes = do.call(likfitLgm, dots)
 	
-# call krige	
+	# add confidence intervals for covariance parameters
+	likRes$summary = informationLgm(likRes)
 	
- 
+# call krige	
 	krigeRes =  krige(data=data,trend=formula,
 			param=likRes$param, locations=locations,
 			covariates=covariates, expPred=expPred,
@@ -141,6 +142,8 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 			}
 		}
 	}
+	
+	
 	
 	res$data=data
 	

@@ -116,39 +116,30 @@ loglikLgm = function(param,
 		
 		totalSsq = as.vector(Matrix::crossprod(cholCovInvResid))
 
-		totalVarHat = totalSsq/length(observations)
+		# if reml, use N-p in place of N
+		Nadj=length(observations) - reml*length(betaHat)
+		totalVarHat = totalSsq/Nadj
 		
-		if(!haveVariance) { # profile likelihood with optimal sigma
-		
-			minusTwoLogLik = length(observations) * log(2*pi) + 
-				length(observations) * log(totalVarHat) +
+	if(!haveVariance) { # profile likelihood with optimal sigma
+			minusTwoLogLik = Nadj * log(2*pi) + 
+				Nadj * log(totalVarHat) +
 				2*sum(log(Matrix::diag(cholCovMat))) +
-				length(observations) - twoLogJacobian
-		
-			if( reml ) {
-			# REML
-				choldet =  2*sum(log(Matrix::diag(chol(cholCovInvXcross)))) 
-		
-				minusTwoLogLik =  minusTwoLogLik + choldet
-		
-				}  # end reml
-			
-		param[c("variance","nugget")] = totalVarHat * param[c("variance","nugget")]
-
+				Nadj - twoLogJacobian		
+			param[c("variance","nugget")] = 
+					totalVarHat * param[c("variance","nugget")]
 	} else { # a variance was supplied
 		# calculate likelihood with the variance supplied
 		# -2 log lik = n log(2pi) + log(|V|) + resid' Vinv resid
-		
-		minusTwoLogLik = length(observations) * log(2*pi) +
+		minusTwoLogLik = Nadj * log(2*pi) +
 				2*sum(log(Matrix::diag(cholCovMat))) +
 					totalSsq - twoLogJacobian
 		totalVarHat = 1
-		if( reml ) {
-			reml=FALSE
-			warning("a variance was supplied by REML was requested.  doing ML instead.")		
-		}
 	}
-
+	if( reml ) {
+		minusTwoLogLik =  minusTwoLogLik + 
+			2*sum(log(Matrix::diag(chol(cholCovInvXcross))))
+	}
+	
 	# format the output
 	betaHat = as.vector(betaHat)
 	names(betaHat) = colnames(covariates)
@@ -172,7 +163,7 @@ loglikLgm = function(param,
  	attributes(result)$reml=reml
 #		attributes(result)$twoLogJacobian = twoLogJacobian
 #		attributes(result)$choldet = as.vector(choldet)
-	attributes(result)$resid = resids
+	attributes(result)$resid = as.numeric(resids)
 	result
 }
 

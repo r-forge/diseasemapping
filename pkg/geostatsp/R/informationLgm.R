@@ -17,10 +17,25 @@ informationLgm = function(fit, ...) {
 			!names(fit$param) %in% reEstimate &
 					names(fit$param) %in% nonLinearParams]
 	
-	hess = numDeriv::hessian(geostatsp::loglikLgm, baseParam,
+	parToLog = c("nugget","variance","anisoRatio","range")
+	parToLog = intersect(reEstimate, parToLog)
+	parToLog = parToLog[baseParam[parToLog]>0]
+	
+	oneL = function(param, ...) {
+		param[parToLog] = exp(param[parToLog])
+		geostatsp::loglikLgm(param, ...)
+	}
+	
+	baseParam[parToLog] = log(baseParam[parToLog])
+	
+	hess = numDeriv::hessian(oneL, baseParam,
 			data=fit$data,trend=fit$model$trend,
 			reml=fit$model$reml,
 			moreParams=moreParams, ...)
+	
+	whichLogged = which(names(baseParam)%in% parToLog)
+	names(baseParam)[whichLogged] = paste("log(", 
+			names(baseParam)[whichLogged], ")",sep="")
 	
 	dimnames(hess) = list(names(baseParam),names(baseParam))
 	infmat = solve(hess)*2
@@ -33,12 +48,14 @@ informationLgm = function(fit, ...) {
 	
 	stdErr = sqrt(diag(infmat))
 	toAdd = outer(stdErr, qvec, FUN="*")
-	
-	forSummary = fit$param[colnames(infmat)] + 
-			toAdd
-	
-	
-	
+
+	forSummary = baseParam[rownames(toAdd)] + toAdd
+	expAdd = exp(forSummary[
+					grep("^log\\(",rownames(forSummary))
+					,])
+	rownames(expAdd) = gsub("^log\\(|\\)$","",rownames(expAdd))
+	forSummary = rbind(forSummary, expAdd)	
+
 	summary = fit$summary
 	
 	if(any(rownames(forSummary)=='nugget'))

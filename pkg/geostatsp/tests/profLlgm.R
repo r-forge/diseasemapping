@@ -5,7 +5,7 @@ swissFit = lgm(data=swissRain, formula=rain~ SRTM_1km,
 		locations=150, covariates=swissAltitude,
 		shape=1,  fixShape=TRUE, 
 		boxcox=0.5, fixBoxcox=TRUE, 
-		aniso=TRUE,reml=FALSE,
+		aniso=TRUE,reml=TRUE,
 		param=c(anisoAngleDegrees=37,anisoRatio=10))
 
 
@@ -60,22 +60,27 @@ x2d=profLlgm(swissFit, mc.cores=2,
 pdf("profLswiss2d.pdf")
 image(x2d[[1]],x2d[[2]],x2d[[3]],
 		breaks=x2d$breaks,
-		col=x2d$col,
+		col=x2d$col,log='y',
 		xlab=names(x2d)[1],
 		ylab=names(x2d)[2])
- 
-thisV = swissInf$information[
-		names(x2d)[1:2], names(x2d)[1:2]]
 
-library('ellipse')
+thesevars = c("anisoAngleDegrees","log(anisoRatio)")
+thisV = swissInf$information[
+		thesevars,thesevars]
+thisMean= c(x2d$MLE["anisoAngleDegrees"],
+		log(x2d$MLE['anisoRatio']))
+
 for(D in x2d$prob[x2d$prob>0&x2d$prob<1]) {
-	thisE = ellipse(thisV, centre=x2d$MLE,
+	thisE = ellipse(thisV, centre=thisMean,
 			level=D)
-	lines(thisE[,1],thisE[,2],lwd=4)
-	lines(thisE[,1],thisE[,2], col=x2d$col[as.character(D)],
+	thisE = cbind(thisE,
+			anisoRatio = exp(thisE[,"log(anisoRatio)"]))
+	lines(thisE[,"anisoAngleDegrees"],
+			thisE[,"anisoRatio"],lwd=4)
+	lines(thisE[,"anisoAngleDegrees"],
+			thisE[,"anisoRatio"], col=x2d$col[as.character(D)],
 			lwd=3)
 }
-
 
 points(x2d$MLE[1],x2d$MLE[2],pch=15) 
 
