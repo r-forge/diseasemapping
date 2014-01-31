@@ -69,7 +69,7 @@ thisV = swissInf$information[
 		thesevars,thesevars]
 thisMean= c(x2d$MLE["anisoAngleDegrees"],
 		log(x2d$MLE['anisoRatio']))
-
+library('ellipse')
 for(D in x2d$prob[x2d$prob>0&x2d$prob<1]) {
 	thisE = ellipse(thisV, centre=thisMean,
 			level=D)
