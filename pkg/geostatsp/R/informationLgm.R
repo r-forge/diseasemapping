@@ -19,7 +19,12 @@ informationLgm = function(fit, ...) {
 	
 	parToLog = c("nugget","variance","anisoRatio","range")
 	parToLog = intersect(reEstimate, parToLog)
-	parToLog = parToLog[baseParam[parToLog]>0]
+	
+	if(!all(baseParam[parToLog]>0))
+		return(list(summary=fit$summary,information=NULL))
+
+	
+	
 	
 	oneL = function(param, ...) {
 		param[parToLog] = exp(param[parToLog])
@@ -46,7 +51,9 @@ informationLgm = function(fit, ...) {
 	qvec = qnorm(pvec)
 	names(qvec) = paste("ci", pvec, sep="")
 	
-	stdErr = sqrt(diag(infmat))
+	stdErr = diag(infmat)
+	if(any(stdErr<0))
+		return(list(summary=fit$summary,information=infmat))
 	toAdd = outer(stdErr, qvec, FUN="*")
 
 	forSummary = baseParam[rownames(toAdd)] + toAdd

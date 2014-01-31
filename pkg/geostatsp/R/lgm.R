@@ -15,10 +15,14 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 		formula = names(data)[formula]
 	if(class(formula)!= "formula") {
 		if(length(covariates)) {
-			if(!length(names(covariates)))
-				names(covariates) = paste("c", 1:length(covariates),sep="")			
-			names(covariates) = gsub("[[:punct:]]|[[:space:]]","_", names(covariates))
-			
+			if(!length(names(covariates))) {
+				names(covariates) = 
+						paste("c", 1:length(covariates),sep="")			
+			}
+			names(covariates) = 
+					gsub("[[:punct:]]|[[:space:]]",
+							"_", names(covariates))
+
 			formula = as.formula(
 					paste(formula, "~ ",
 							paste(names(covariates),collapse="+")
@@ -115,10 +119,13 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 	dots$data=data
 	dots$paramToEstimate=paramToEstimate
  	
-	likRes = do.call(likfitLgm, dots)
+
 	
-	# add confidence intervals for covariance parameters
-	likRes$summary = informationLgm(likRes)
+	likRes = do.call(likfitLgm, dots)
+
+
+	
+
 	
 # call krige	
 	krigeRes =  krige(data=data,trend=formula,
@@ -127,7 +134,10 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 			nuggetInPrediction=nuggetInPrediction
 			)
 	 
-	res = c(predict=krigeRes, likRes)
+	res = c(predict=krigeRes, likRes, list(data=data))
+	
+	# add confidence intervals for covariance parameters
+	res$summary = informationLgm(res)$summary
 	
 	
 	for(Dvar in names(covariates)) {
@@ -144,8 +154,7 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 	}
 	
 	
-	
-	res$data=data
+
 	
 	return(res)
 }
