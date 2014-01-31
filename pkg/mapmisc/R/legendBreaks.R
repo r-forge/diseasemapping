@@ -68,12 +68,12 @@ if(outer){
 	
 	result=do.call(legend, ldots)
 	
-	if(length(breaks)-1 == length(ldots$col)) {
-		text(result$text$x[rep(1,length(breaks))]+
-						0.5*ldots$text.width, 
-			c(result$text$y[1]+par("cxy")[2], result$text$y)-
-					0.5*par("cxy")[2], 
-					label=ltext)
+	if(all(is.na(ldots$legend))) {
+		x=ldots
+		x$legend=ltext
+		x$col=NA
+		x$bty='n'
+		do.call(legend,x)
 	}
 
 	par(xpd=oldxpd)
