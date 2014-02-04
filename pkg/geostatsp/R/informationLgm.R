@@ -51,7 +51,7 @@ informationLgm = function(fit, ...) {
 	qvec = qnorm(pvec)
 	names(qvec) = paste("ci", pvec, sep="")
 	
-	stdErr = diag(infmat)
+	stdErr = sqrt(diag(infmat))
 	if(any(stdErr<0))
 		return(list(summary=fit$summary,information=infmat))
 	toAdd = outer(stdErr, qvec, FUN="*")
