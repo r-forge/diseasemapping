@@ -269,10 +269,15 @@ krige = function(data, trend,
 	
 	
 # subtract mean from data
-	theNAdata = apply(covariatesForData, 1, function(qq) any(is.na(qq))) | 
+
+	theNAdata = apply(covariatesForData[,allterms], 1, function(qq) any(is.na(qq))) | 
 			is.na(observations)
 	
-	
+	if(all(theNAdata)) {
+		warning(
+				'it appears there are no observations without at least one covariate missing')
+	}
+		
 	if(any(theNAdata)) {
 		noNAdata = !theNAdata
 		if(length(grep("^SpatialPoints", class(coordinates)))) {
