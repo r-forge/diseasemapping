@@ -16,6 +16,8 @@ x=profLlgm(swissFit, mc.cores=2,
 
 swissInf = informationLgm(swissFit)
 
+
+
 pdf("profLswissAngle.pdf")
 
 plot(x[[1]],x[[2]], xlab=names(x)[1],
@@ -69,7 +71,11 @@ thisV = swissInf$information[
 		thesevars,thesevars]
 thisMean= c(x2d$MLE["anisoAngleDegrees"],
 		log(x2d$MLE['anisoRatio']))
+
+haveEllipse = 'ellipse' %in% installed.packages()[,'Package']
+if(haveEllipse) {
 library('ellipse')
+
 for(D in x2d$prob[x2d$prob>0&x2d$prob<1]) {
 	thisE = ellipse(thisV, centre=thisMean,
 			level=D)
@@ -80,6 +86,7 @@ for(D in x2d$prob[x2d$prob>0&x2d$prob<1]) {
 	lines(thisE[,"anisoAngleDegrees"],
 			thisE[,"anisoRatio"], col=x2d$col[as.character(D)],
 			lwd=3)
+}
 }
 
 points(x2d$MLE[1],x2d$MLE[2],pch=15) 

@@ -10,13 +10,7 @@ krige = function(data, trend,
 	NsimBoxCox=40
 	
 	if(is.numeric(locations)){
-		# locations is number of cells in the x direction
-		Nx = locations
-		Ny = round(locations*diff(data@bbox[2,])/diff(data@bbox[1,]))
-		myExtent = 	extent(data@bbox)
-		myExtent@ymax = myExtent@ymin + Ny * diff(data@bbox[1,])/Nx
-		locations = raster(myExtent, Ny, Nx,
-				data@proj4string)	
+		locations = squareRaster(data, locations)
 	}
 	if(nrow(locations) * ncol(locations) > 10^7) warning("there are lots of cells in the prediction raster,\n this might take a very long time")
 	
@@ -167,7 +161,7 @@ krige = function(data, trend,
 			levelsTable = 
 					levelsTable[c(1, 1:nrow(levelsTable)),c(1,labelCol)]
 			levelsTable[1,1]= min(allValues)-1
-			levelsTable[1,2] = as.character(levelsTable[1,1])
+			levelsTable[1,2] = ''
 			colnames(levelsTable)[2] = "levels"
 			levels(covariates[[D]]) = levelsTable
 			covariates[[D]]@data@isfactor = TRUE
@@ -194,7 +188,7 @@ krige = function(data, trend,
 			levelsTable[1,1]= min(allValues)-1
 			levelsTable[1,2] = "0"
 			colnames(levelsTable)[2]="levels"
-			covariates[[D]]@data@attributes[[1]] =  levelsTable			
+			levels(covariates[[D]])[[1]] =  levelsTable			
 			
 			
 		} else {
@@ -396,8 +390,7 @@ krige = function(data, trend,
 				MoreArgs=datForK,SIMPLIFY=TRUE)
 
 	
-#	sums <<- mapply(krigeOneRow,1:nrow(locations))
-	
+ 	
 	# row sums of cholVarDataInvCovDataPred
 	forExpected = sums[1:ncol(locations),]
 	# row sums of squares

@@ -30,8 +30,8 @@ bob(swissFit)
 
 # specify formula using name of list element
 
-swissFitAgain = lgm(data=swissRain, formula=rain~ elev,
-		locations=80, covariates=list(elev=swissAltitude),
+swissFitAgain = lgm(data=swissRain, formula=rain~ elev+land,
+		locations=80, covariates=list(elev=swissAltitude,land=swissLandType),
 		shape=1,  fixShape=TRUE, 
 		boxcox=0.5, fixBoxcox=TRUE, 
 		aniso=TRUE)	
@@ -50,7 +50,7 @@ bob(swissFitAgain)
 
 
 swissFitAgain = lgm(data=swissRain, formula="rain",
-		locations=80, covariates=list(elev=swissAltitude),
+		locations=80, covariates=list(elev=swissAltitude,land=swissLandType),
 		shape=1,  fixShape=TRUE, 
 		boxcox=0.5, fixBoxcox=TRUE, 
 		aniso=TRUE)	
