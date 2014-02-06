@@ -51,9 +51,11 @@ informationLgm = function(fit, ...) {
 	qvec = qnorm(pvec)
 	names(qvec) = paste("ci", pvec, sep="")
 	
-	stdErr = sqrt(diag(infmat))
+	stdErr = diag(infmat)
 	if(any(stdErr<0))
 		return(list(summary=fit$summary,information=infmat))
+	stdErr = sqrt(stdErr)
+	
 	toAdd = outer(stdErr, qvec, FUN="*")
 
 	forSummary = baseParam[rownames(toAdd)] + toAdd

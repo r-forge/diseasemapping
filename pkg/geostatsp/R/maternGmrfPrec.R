@@ -3,14 +3,20 @@ maternGmrfPrec = function(N,...) {
 	UseMethod("maternGmrfPrec")	
 }
 
-maternGmrfPrec.default = function(N, Ny=N, ...) {
+maternGmrfPrec.default = function(N, Ny=N,
+		param=c(variance=1, range=1, shape=1, cellSize=1),
+		 ...) {
 
-
-	theNNmat  = NNmat(N, Ny)
+	if(!'shape' %in% names(param)){
+		warning("shape parameter appears to be missing")
+	}
+	
+	theNNmat  = NNmat(N, Ny, nearest=param['shape']+1)
 
 	maternGmrfPrec(theNNmat, ...)
 	
 }
+
 
 maternGmrfPrec.matrix = function(N, ...) {
 	
@@ -109,7 +115,7 @@ maternGmrfPrec.dgCMatrix = function(N,
 		return(theNNmat)
 	}
 
-NNmat = function(N, Ny=N) {
+NNmat = function(N, Ny=N,nearest=3) {
 
 	Nx = N
 	Ncol = Nx
@@ -125,17 +131,23 @@ NNmat = function(N, Ny=N) {
 	
 	# interior points
 	oneN = c(1, -1, Ncol, -Ncol) # first neighbours up down right left
-	twoN = c(Ncol-1, Ncol+1, -Ncol-1, -Ncol+1)  # first neighbours diagonal
-	threeN = c(2, -2, 2*Ncol, -2*Ncol) # second neighbours up down right left
-
+	if(nearest>=2) {
+		twoN = c(Ncol-1, Ncol+1, -Ncol-1, -Ncol+1)  # first neighbours diagonal
+		threeN = c(2, -2, 2*Ncol, -2*Ncol) # second neighbours up down right left
+	} else {
+		twoN = threeN = c()
+	}
 	
 	fourN = c(3, -3, 3i, -3i) # square
 	fiveseq = c(-1, -2, 1, 2) # diagonals
 	fiveN = c(outer(fiveseq, fiveseq*1i, FUN="+"))
 	fiveN = fiveN[abs(Re(fiveN) )!= abs(Im(fiveN))]
-
-	fourNindex = Re(fourN) + Im(fourN)*Ncol
-	fiveNindex = Re(fiveN) + Im(fiveN)*Ncol
+	if(nearest>=3) {
+		fourNindex = Re(fourN) + Im(fourN)*Ncol
+		fiveNindex = Re(fiveN) + Im(fiveN)*Ncol
+	} else {
+		fourNindex = fiveNindex = c()
+	}
 	
 	if(all(c(Nrow,Ncol) >= 7)) {
 		Scol = seq(4, Ncol-3)
@@ -163,6 +175,7 @@ NNmat = function(N, Ny=N) {
 	# the borders
 	
 	theNc = cbind(oneN = c(1, -1, 1i, -1i), # first neighbours up down right left
+			
 	twoN = c(1-1i, -1+1i, -1i-1, 1i+1),  # first neighbours diagonal
 	threeN = c(2, -2, 2i, -2i), # second neighbours up down right left
 	fourN=fourN)	
@@ -178,8 +191,17 @@ NNmat = function(N, Ny=N) {
 			rep(6, dim(theNc)[1]),
 			rep(5, length(fiveN))			
 			)
+	if(nearest==1) {
+		whichTwo = theNcEntries==2
+		theNcVec = theNcVec[whichTwo]
+		theNcEntries = theNcEntries[whichTwo]
+	}	
+	if(nearest==2) {
+		whichTwo = theNcEntries<=4
+		theNcVec = theNcVec[whichTwo]
+		theNcEntries = theNcEntries[whichTwo]
+	}	
 	
-
 
 			
 	Scol = unique(c(1,2,3,Ncol-2,Ncol-1, Ncol))
@@ -219,6 +241,7 @@ NNmat = function(N, Ny=N) {
 	}
 	attributes(result)$Nx = Nx
 	attributes(result)$Ny = Ny
+
 	
 	return(result)
 }

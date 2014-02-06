@@ -16,8 +16,10 @@ maternGmrfPrec(N, ...)
 	param=c(variance=1, range=1, shape=1, cellSize=1),
   adjust.edges=FALSE,...) 
 \method{maternGmrfPrec}{matrix}(N, ...)
-\method{maternGmrfPrec}{default}(N, Ny=N, ...)
-NNmat(N, Ny=N)
+\method{maternGmrfPrec}{default}(N, Ny=N, 	
+param=c(variance=1, range=1, shape=1, cellSize=1),
+ ...)
+NNmat(N, Ny=N, nearest=3)
 gmrfPrecUncond(x, 
 			N = attributes(x)$Nx, Ny=attributes(x)$Ny,
 			param = attributes(x)$model,
@@ -36,6 +38,7 @@ are present and the latter are missing the reciprocal of the former are taken.}
 \item{adjust.edges}{If \code{TRUE}, adjust the precision matrix so it does not implicitly assume 
 the field takes values of zero outside the specified region.  Defaults to \code{FALSE}.}
 \item{x}{An MRF precision matrix produced by \code{maternGmrfPrec}}
+\item{nearest}{Number of nearest neighbours to compute}
 \item{...}{Additional arguments passed to \code{maternGmrfPrec.dgCMatrix}}
 }
 \value{
