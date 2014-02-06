@@ -23,9 +23,15 @@ library('knitr')
 opts_chunk$set(echo=TRUE,message=FALSE,
 		dev='png', 
 		fig.align='center',fig.pos='H',width=80,
-		fig.height=5,fig.width=3,out.width="0.3\\textwidth"
+		fig.height=5,fig.width=3,out.width="0.3\\textwidth",
+		dev.args=list(bg='white')
 )
-par(bg="white")
+if( Sys.info()['user'] =='patrick') {
+	opts_chunk$set(dpi=72)	
+}else{	
+	opts_chunk$set(dpi=24)	
+}
+
 library('mapmisc')
 library('rgdal')
 @

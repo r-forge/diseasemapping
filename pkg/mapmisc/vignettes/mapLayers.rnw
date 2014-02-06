@@ -40,11 +40,12 @@ library('rgdal')
 
 reRun=("reRun" %in% commandArgs(trailingOnly = TRUE))
 
-knit_hooks$set(
-				dev.args=list(bg='white'))
 
-opts_chunk$set(reRun=reRun)	
-
+if( Sys.info()['user'] =='patrick') {
+	opts_chunk$set(dpi=72,dev.args=list(bg='white'))	
+}else{	
+	opts_chunk$set(dpi=24,dev.args=list(bg='white'))	
+}
 library('mapmisc')
 theNames = names(osmTiles())
 africaExtent = c(15, 25)

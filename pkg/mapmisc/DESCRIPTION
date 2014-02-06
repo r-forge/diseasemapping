@@ -1,8 +1,8 @@
 Package: mapmisc
 Type: Package
 Title: Utilities for producing maps 
-Version: 0.9.2
-Date: 2014-01-27
+Version: 0.9.3
+Date: 2014-02-05
 Depends: sp, raster, R (>= 3.0.0)  
 Suggests: rgdal, geostatsp, knitr,geonames, RColorBrewer, classInt
 Author: Patrick Brown <patrick.brown@utoronto.ca> [aut, cre],  Barry Rowlingson [ctb]
