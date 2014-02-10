@@ -13,7 +13,7 @@ maternGmrfPrec.default = function(N, Ny=N,
 	
 	theNNmat  = NNmat(N, Ny, nearest=param['shape']+1)
 
-	maternGmrfPrec(theNNmat, ...)
+	maternGmrfPrec(theNNmat, param,...)
 	
 }
 
@@ -42,12 +42,15 @@ maternGmrfPrec.dgCMatrix = function(N,
 	}
 		
 	theNNmat = N
+
 	
 	scale=param["scale"]
 	prec=param["prec"]
 	kappa=param["shape"]
 	cellSize=param["cellSize"]
+
 	
+
 	scale = scale * cellSize
 	a = (scale^2 + 4) 
 	
@@ -100,17 +103,29 @@ maternGmrfPrec.dgCMatrix = function(N,
 		Ny=attributes(theNNmat)$Ny 
 		
 		theNNmat = forceSymmetric(theNNmat)
-		attributes(theNNmat)$model =param
+		attributes(theNNmat)$model =c(param, adjust=0)
 		attributes(theNNmat)$Nx =Nx 
 		attributes(theNNmat)$Ny =Ny
 		
 		if(adjust.edges){
 			theNNmat = gmrfPrecUncond(theNNmat)
-			attributes(theNNmat)$model =param
+			attributes(theNNmat)$model =c(param,adjust=1)
 			attributes(theNNmat)$Nx =Nx 
 			attributes(theNNmat)$Ny =Ny
 		}
+		attributes(theNNmat)$raster= list(
+				nrows=attributes(theNNmat)$Ny,
+				ncols=attributes(theNNmat)$Nx, 
+				xmn=0,xmx=attributes(theNNmat)$Nx*
+						param['cellSize'],
+				ymn=0, ymx=attributes(theNNmat)$Nx*
+						param['cellSize']
+		)
 		
+		if(any(installed.packages()[,'Package'] == 'raster')) {
+			attributes(theNNmat)$raster = 
+					do.call(raster::raster,attributes(theNNmat)$raster)
+		}
 		
 		return(theNNmat)
 	}
