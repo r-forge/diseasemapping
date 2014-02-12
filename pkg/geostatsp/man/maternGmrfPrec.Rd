@@ -4,6 +4,8 @@
 \alias{maternGmrfPrec.matrix}
 \alias{maternGmrfPrec.dgCMatrix}
 \alias{NNmat}
+\alias{NNmat.default}
+\alias{NNmat.Raster}
 \alias{gmrfPrecUncond}
 \title{Precision matrix for a Matern spatial correlation}
 \description{
@@ -20,6 +22,9 @@ maternGmrfPrec(N, ...)
 param=c(variance=1, range=1, shape=1, cellSize=1),
  ...)
 NNmat(N, Ny=N, nearest=3)
+\method{NNmat}{Raster}(N, Ny=N, nearest=3)
+\method{NNmat}{default}(N, Ny=N, nearest=3)
+
 gmrfPrecUncond(x, 
 			N = attributes(x)$Nx, Ny=attributes(x)$Ny,
 			param = attributes(x)$model,

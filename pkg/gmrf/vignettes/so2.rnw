@@ -1,0 +1,96 @@
+\documentclass[12pt]{article}
+\usepcakage[margin=1in]{geometry}
+
+<<setup,include=FALSE>>=
+library('knitr')
+
+chapter=''
+opts_chunk$set(echo=FALSE, 
+		dev='pdf', marginsp=1,  
+		fig.align='',fig.pos='H',
+		fig.width=4,fig.height=3,out.width='\\textwidth',
+		fig.path=file.path('Figures', chapter, ""),
+		cache.path=file.path('cache', chapter, ""),
+		tidy=TRUE,tidy.opts=list(reindent.spaces=2,code.width=45)
+)
+
+heavyCacheDate=NULL
+lightCacheDate=NULL
+
+knit_hooks$set(
+		marginsp = function(before, options, envir){	
+			if(!before) return()
+# use small margins				
+			par(mar=c(1.5+0.9*options$marginsp,
+							1.5+0.9*options$marginsp,0.2,0.2), 
+					mgp=c(1.45, 0.45, 0),cex=1.25)
+		}		
+)
+
+
+library('RandomFields')
+library('raster')
+library('rgdal')
+library('geostatsp')
+library('mapmisc')
+library('Hmisc')
+
+ 
+@
+
+
+\title{SO2 Analysis}
+\author{Patrick Brown}
+\begin{document}
+
+
+
+<<>>=
+load("blackCarbon.RData")
+@
+
+<< blackCarbonLm>>=
+		bcLm = lm(y ~ popHigh + popLow + nightLow + nightHigh,
+				data=bcAsiaDF)
+@
+
+<< bcLmSummary>>=
+		summary(bcLm)$coef
+@
+
+<< bcForGmrf>>=
+		bcForGmrf = list(Xmat = model.matrix(bcLm),
+				Yvec=bcLm$model$y,
+				maternShape=2
+		)
+		bcForGmrf$NN = 
+				NNmat(bcAsiaBrick,
+						nearest=bcForGmrf$maternShape+1)
+		
+@
+
+<<bcOneL>>=
+logLikGmrf(ar=0.8, Yvec=bcForGmrf$Yvec, Xmat=bcForGmrf$Xmat, 
+		NN=bcForGmrf$NN, maternShape=bcForGmrf$maternShape)
+ar=0.8; Yvec=bcForGmrf$Yvec; Xmat=bcForGmrf$Xmat 
+NN=bcForGmrf$NN; maternShape=bcForGmrf$maternShape
+@
+
+
+<< blackCarbonFitGmrf >>=
+arseq = seq(0.9,1,len=100)
+library(parallel)
+bcRes = mcmapply(logLikGmrf, arseq,
+		MoreArgs=bcForGmrf,
+		mc.cores=4,SIMPLIFY=TRUE)
+@
+		
+	
+<<>>=
+summaryGmrfFit(bcRes,bcForGmrf) 
+applyResult=bcRes;MoreArgs=bcForGmrf;fun=logLikGmrf
+@
+		
+ 
+
+\end{document}

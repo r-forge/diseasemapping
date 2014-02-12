@@ -1,0 +1,87 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{caption,subcaption,float,amsmath,filecontents}
+\newcommand{\subfloat}[2][need a sub-caption]{\subcaptionbox{#1}{#2}}
+
+\title{SO2 Data}
+
+<<setup,include=FALSE>>=
+library('knitr')
+
+chapter=''
+opts_chunk$set(echo=FALSE, 
+		dev='pdf', marginsp=1,  
+		fig.align='',fig.pos='H',
+		fig.width=4,fig.height=3,out.width='\\textwidth',
+		fig.path=file.path('Figures', chapter, ""),
+		cache.path=file.path('cache', chapter, ""),
+		tidy=TRUE,tidy.opts=list(reindent.spaces=2,code.width=45)
+)
+
+heavyCacheDate=NULL
+lightCacheDate=NULL
+
+knit_hooks$set(
+		marginsp = function(before, options, envir){	
+			if(!before) return()
+# use small margins				
+			par(mar=c(1.5+0.9*options$marginsp,
+							1.5+0.9*options$marginsp,0.2,0.2), 
+					mgp=c(1.45, 0.45, 0),cex=1.25)
+		}		
+)
+
+
+library('RandomFields')
+library('raster')
+library('rgdal')
+library('geostatsp')
+library('mapmisc')
+library('Hmisc')
+
+evalP = Sys.info()['user'] =='patrick'
+
+@
+
+\begin{document}
+
+
+ 
+<<child="/home/patrick/workspace/ssr/data/ozone.Rnw">>=
+@
+
+ 
+<<chinaDF
+chinaDF = as.data.frame(china, xy=TRUE)
+chinaDF[is.na(chinaDF$pop),'pop'] = 0
+chinaDF$logpop = log(chinaDF$pop+1)
+chinaDF$popLow = pmin(0,chinaDF$logpop-1)
+chinaDF$popHigh = pmax(0,chinaDF$logpop-1)
+chinaDF$popVeryHigh = pmax(0,chinaDF$logpop-4)
+chinaDF$latLow = pmin(0, chinaDF$y-45)
+chinaDF$latHigh = pmax(0, chinaDF$y-45)
+@
+<<NNchina,cache=TRUE
+NNchina=geostatsp::NNmat(ncol(china),
+		nrow(china),nearest=1) 
+@
+
+<<chinaSO2Lm
+chinaLm = lm(SO2.median ~ popLow + popHigh + popVeryHigh +
+				latLow + latHigh,
+		data=chinaDF)
+@
+
+<<chinaLmSummary
+summary(chinaLm)$coef
+@
+
+
+<<>>=
+save(bcAsiaDF,bcAsiaBrick,file="blackCarbon.RData")
+@
+
+<<>>=
+#plot(gam(y ~  s(lognight) + s(logpop,k=7,fx=T),data=bcAsiaDF))
+@
+\end{document}

@@ -129,8 +129,16 @@ maternGmrfPrec.dgCMatrix = function(N,
 		
 		return(theNNmat)
 	}
+	
+NNmat = function(N,Ny=N,nearest=3) {
+		UseMethod("NNmat")	
+}
+	
+NNmat.Raster = function(N,Ny=N,nearest=3) {
+	NNmat(ncol(N),nrow(N),nearest)
+}	
 
-NNmat = function(N, Ny=N,nearest=3) {
+NNmat.default = function(N, Ny=N,nearest=3) {
 
 	Nx = N
 	Ncol = Nx
