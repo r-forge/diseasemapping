@@ -37,10 +37,12 @@ logLikGmrf = function(ar, Yvec, Xmat, NN, maternShape=0) {
 	
 	result = c(
 			m2logL = as.numeric(length(Yvec) * log(Chat) - theDet ),
-			rangeInCells=sqrt(ar/(1-ar))*sqrt(2)^maternShape,
-			sigma=exp(-maternShape*log(16)+log(Chat)+
-							maternShape*(log(ar)-log(1-ar)) - 
-							log(pi)),
+			rangeInCells=sqrt(ar/(1-ar))*sqrt(2*maternShape),
+			sigma=exp(
+					log(Chat) - 
+							(maternShape+1)*log(4)+
+						maternShape*(log(ar)-log(1-ar)) - 
+						log(pi)),
 			beta=betahat,
 			maternShape=maternShape,
 			ar=ar,
@@ -67,8 +69,11 @@ summaryGmrfFit = function(applyResult,MoreArgs,fun=logLikGmrf) {
 	varBetaHat = attributes(do.call(fun,c(list(ar=MLErow["ar"]),MoreArgs)))$varbetahat
 	
 
-	
-	betaMLE = MLErow[grep("^beta",names(MLErow))]
+
+
+	thebetas = grep("^beta",names(MLErow), value=TRUE)
+		
+	betaMLE = MLErow[thebetas]
 	betamat = cbind(mle=betaMLE,
 			se = sqrt(diag(varBetaHat)),
 			q0.025=betaMLE - 2*sqrt(diag(varBetaHat)),
@@ -78,22 +83,25 @@ summaryGmrfFit = function(applyResult,MoreArgs,fun=logLikGmrf) {
 							sqrt(diag(varBetaHat)),
 					lower=FALSE)	
 	)
+	withinCI = which(applyResult[,'m2logL'] - 
+					MLErow['m2logL'] < qchisq(0.95, 1))
 	
-	withinCI = which(applyResult[,'m2logL'] - MLErow['m2logL'] < qchisq(0.95, 1))
-	
-	parCI= t(apply(applyResult[withinCI, ,drop=FALSE],2,range))
+	parCI= t(apply(
+					applyResult[withinCI, ,drop=FALSE],
+					2,range))
 	colnames(parCI) = c('q0.025', 'q0.975')
+	
+	
 	parMat = cbind(mle=MLErow,parCI,se=NA,pval=NA)
-	rownames(parMat) = colnames(applyResult)[-1]
-	parMat = parMat[,colnames(betamat),drop=FALSE]
-	parMat = rbind(parMat, xisq=NA)
-	parMat['xisq','mle'] = x$Chat
+	parMat[rownames(betamat),colnames(betamat)] = betamat
+
+
 	
 	return(list(
-					summaryMat=rbind(betamat,parMat),
+					summary=parMat,
 					profL = cbind(
-							applyResult[,-1,drop=FALSE], 
-							logL = -applyResult[,1]/2)
+							applyResult, 
+							logL = -applyResult[,'m2logL']/2)
 			)
 	)		
 }

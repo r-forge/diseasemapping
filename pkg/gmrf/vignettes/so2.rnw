@@ -1,17 +1,20 @@
 \documentclass[12pt]{article}
-\usepcakage[margin=1in]{geometry}
+\usepackage[margin=1in]{geometry}
+\usepackage{caption,subcaption,float,amsmath,filecontents}
+\newcommand{\subfloat}[2][need a sub-caption]{\subcaptionbox{#1}{#2}}
 
 <<setup,include=FALSE>>=
 library('knitr')
 
 chapter=''
-opts_chunk$set(echo=FALSE, 
+opts_chunk$set(echo=TRUE, 
 		dev='pdf', marginsp=1,  
 		fig.align='',fig.pos='H',
 		fig.width=4,fig.height=3,out.width='\\textwidth',
 		fig.path=file.path('Figures', chapter, ""),
 		cache.path=file.path('cache', chapter, ""),
-		tidy=TRUE,tidy.opts=list(reindent.spaces=2,code.width=45)
+		tidy=TRUE,tidy.opts=list(reindent.spaces=2,
+				code.width=45)
 )
 
 heavyCacheDate=NULL
@@ -35,21 +38,138 @@ library('geostatsp')
 library('mapmisc')
 library('Hmisc')
 
- 
+options(width=45)
 @
 
 
 \title{SO2 Analysis}
 \author{Patrick Brown}
 \begin{document}
+\maketitle
 
 
 
+
+<<world,cache=TRUE,echo=FALSE>>=
+worldShapeFile =  system(paste("find ", dataDir, 
+				" -name *countries*.shp", sep=""),TRUE)
+worldShapeFile = gsub("\\.shp$","",worldShapeFile)
+world = readOGR(dataDir,gsub("[[:print::]+/","",worldShapeFile),
+		stringsAsFactors=FALSE,verbose=FALSE)
+@
+
+\section{SO2}
+<<>>=
+load("chinaSo2.RData")
+@
+<<>>=
+china2
+@
+
+<<so2Plot,fig.cap='so2 data',out.width='0.5\\textwidth',fig.subcap=c('so2','population'),fig.height=4,fig.width=5,echo=FALSE>>=
+plot(china2[['SO2.median']])
+plot(world,add=TRUE)
+plot(china2[['pop']])
+plot(world,add=TRUE)
+
+@
+
+\subsection{Simplest model}
+
+\begin{align*}
+Y_i  =  & X_i\beta + U_i  \\
+[U_1 \ldots U_N] \sim \text{GMRF}
+\end{align*}
+
+<<chinaForGmrf,cache=TRUE,cache.extra=dim(china2)>>=
+chinaForGmrf = 
+		list(Xmat = 
+			model.matrix(
+  ~ popLow + popHigh + popVeryHigh + latLow,
+			chinaDF),
+			Yvec=chinaDF$SO2.median,
+				maternShape=2
+		)
+	chinaForGmrf$NN = 
+				NNmat(china2,
+						nearest=chinaForGmrf$maternShape+1)
+		
+@
+
+
+<<so2OneL,echo=TRUE>>=
+so2oneres = logLikGmrf(ar=0.8, Yvec=chinaForGmrf$Yvec, 
+		Xmat=chinaForGmrf$Xmat, 
+		NN=chinaForGmrf$NN, 
+		maternShape=chinaForGmrf$maternShape)
+as.vector(so2oneres)
+@
+
+
+<<so2CarbonFitGmrf,cache=TRUE,dependson='chinaForGmrf'>>=
+arseq = seq(0.5,1,len=200)[-length(arseq)]
+library(parallel)
+so2Res = mcmapply(logLikGmrf, arseq,
+		MoreArgs=chinaForGmrf,
+		mc.cores=4,SIMPLIFY=TRUE)
+@
+		
+
+<<>>=
+so2summary = summaryGmrfFit(so2Res,chinaForGmrf) 
+so2summary$summary
+@
+
+<<so2profLplot,fig.width=6,fig.height=4,out.width='0.6\\textwidth',fig.cap='SO2 profile l',echo=FALSE>>=
+plot(so2summary$profL[,'rangeInCells'], 
+		so2summary$profL[,'logL'], type='l',
+		xlab='range (in cells)',ylab='log L')
+abline(v=so2summary$summary['rangeInCells',
+				c('mle','q0.025','q0.975')])
+
+@
+
+
+\subsection{Model with nugget effect}
+\begin{align*}
+Y_i|U_i  \sim  & \text{N}(\mu_i, \tau^2)\\
+\mu_i = & X_i\beta + U_i  \\
+[U_1 \ldots U_N] \sim \text{GMRF}
+\end{align*}
+
+
+
+
+<<so2OneLnugget,echo=TRUE,cache=TRUE>>=
+so2oneNugget = logLikGmrfNugget(ar=0.95,
+		propNugget = seq(0, len=6,by=0.001),
+		Yvec=chinaForGmrf$Yvec, 
+		Xmat=chinaForGmrf$Xmat, 
+		NN=chinaForGmrf$NN, 
+		maternShape=chinaForGmrf$maternShape)
+so2oneNugget[c('logL','propNugget','sigmasq','tausq'),]
+@
+
+<<so2NuggetFit,cache=TRUE>>=
+arseqN = seq(0.5,1,len=40)
+arseqN=arseqN[-length(arseqN)]
+chinaForGmrf$propNugget = seq(0,len=20,by=0.001)
+library(parallel)
+so2ResN = mcmapply(logLikGmrfNugget, 
+		ar=arseqN,
+		MoreArgs=chinaForGmrf,
+		mc.cores=4,SIMPLIFY=FALSE)
+@
+
+
+
+
+\seciton{Black carbon}
 <<>>=
 load("blackCarbon.RData")
 @
 
-<< blackCarbonLm>>=
+<< blackCarbonLm,cache=TRUE>>=
 		bcLm = lm(y ~ popHigh + popLow + nightLow + nightHigh,
 				data=bcAsiaDF)
 @
@@ -58,7 +178,7 @@ load("blackCarbon.RData")
 		summary(bcLm)$coef
 @
 
-<< bcForGmrf>>=
+<< bcForGmrf,cache=TRUE>>=
 		bcForGmrf = list(Xmat = model.matrix(bcLm),
 				Yvec=bcLm$model$y,
 				maternShape=2
@@ -72,12 +192,10 @@ load("blackCarbon.RData")
 <<bcOneL>>=
 logLikGmrf(ar=0.8, Yvec=bcForGmrf$Yvec, Xmat=bcForGmrf$Xmat, 
 		NN=bcForGmrf$NN, maternShape=bcForGmrf$maternShape)
-ar=0.8; Yvec=bcForGmrf$Yvec; Xmat=bcForGmrf$Xmat 
-NN=bcForGmrf$NN; maternShape=bcForGmrf$maternShape
 @
 
 
-<< blackCarbonFitGmrf >>=
+<< blackCarbonFitGmrf,cache=TRUE>>=
 arseq = seq(0.9,1,len=100)
 library(parallel)
 bcRes = mcmapply(logLikGmrf, arseq,
@@ -87,10 +205,10 @@ bcRes = mcmapply(logLikGmrf, arseq,
 		
 	
 <<>>=
-summaryGmrfFit(bcRes,bcForGmrf) 
-applyResult=bcRes;MoreArgs=bcForGmrf;fun=logLikGmrf
+bcSummary = summaryGmrfFit(bcRes,bcForGmrf) 
+bcSummary$summary
 @
-		
- 
+
+
 
 \end{document}
