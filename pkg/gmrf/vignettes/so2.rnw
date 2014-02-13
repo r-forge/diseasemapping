@@ -39,7 +39,11 @@ library('mapmisc')
 library('Hmisc')
 
 options(width=45)
+
+
+
 @
+
 
 
 \title{SO2 Analysis}
@@ -47,6 +51,10 @@ options(width=45)
 \begin{document}
 \maketitle
 
+<<>>=
+source("../R/loglikGmrf.R")
+source("../R/loglikGmrfNugget.R")
+@
 
 
 
@@ -151,14 +159,14 @@ so2oneNugget[c('logL','propNugget','sigmasq','tausq'),]
 @
 
 <<so2NuggetFit,cache=TRUE>>=
-arseqN = seq(0.5,1,len=40)
+arseqN = seq(0.5,1,len=4)
 arseqN=arseqN[-length(arseqN)]
-chinaForGmrf$propNugget = seq(0,len=20,by=0.001)
+chinaForGmrf$propNugget = seq(0,len=3,by=0.001)
 library(parallel)
 so2ResN = mcmapply(logLikGmrfNugget, 
 		ar=arseqN,
 		MoreArgs=chinaForGmrf,
-		mc.cores=4,SIMPLIFY=FALSE)
+		mc.cores=4,SIMPLIFY='array')
 @
 
 
