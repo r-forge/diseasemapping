@@ -38,9 +38,9 @@ library('geostatsp')
 library('mapmisc')
 library('Hmisc')
 
-options(width=45)
+options(width=67)
 
-
+dataDir='/store/patrick/spatialData'
 
 @
 
@@ -58,7 +58,7 @@ source("../R/loglikGmrfNugget.R")
 
 
 
-<<world,cache=TRUE,echo=FALSE>>=
+<<world,cache=TRUE,echo=FALSE,cache.extra=1>>=
 worldShapeFile =  system(paste("find ", dataDir, 
 				" -name *countries*.shp", sep=""),TRUE)
 worldShapeFile = gsub("\\.shp$","",worldShapeFile)
@@ -74,10 +74,13 @@ load("chinaSo2.RData")
 china2
 @
 
-<<so2Plot,fig.cap='so2 data',out.width='0.5\\textwidth',fig.subcap=c('so2','population'),fig.height=4,fig.width=5,echo=FALSE>>=
-plot(china2[['SO2.median']])
+<<so2Plot,fig.cap='so2 data',out.width='0.5\\textwidth',fig.subcap=c('so2','population'),fig.height=4,fig.width=5,echo=FALSE,dev='png',cache=TRUE>>=
+library(mapmisc)
+map.new(china2)
+plot(china2[['SO2.median']],add=TRUE)
 plot(world,add=TRUE)
-plot(china2[['pop']])
+map.new(china2)
+plot(china2[['pop']],add=TRUE)
 plot(world,add=TRUE)
 
 @
@@ -86,10 +89,10 @@ plot(world,add=TRUE)
 
 \begin{align*}
 Y_i  =  & X_i\beta + U_i  \\
-[U_1 \ldots U_N] \sim \text{GMRF}
+[U_1 \ldots U_N] \sim &\text{GMRF}
 \end{align*}
 
-<<chinaForGmrf,cache=TRUE,cache.extra=dim(china2)>>=
+<<chinaForGmrf,cache=TRUE,cache.extra=1>>=
 chinaForGmrf = 
 		list(Xmat = 
 			model.matrix(
@@ -115,7 +118,8 @@ as.vector(so2oneres)
 
 
 <<so2CarbonFitGmrf,cache=TRUE,dependson='chinaForGmrf'>>=
-arseq = seq(0.5,1,len=200)[-length(arseq)]
+arseq = seq(0.5,1,len=200)
+arseq = arseq[-length(arseq)]
 library(parallel)
 so2Res = mcmapply(logLikGmrf, arseq,
 		MoreArgs=chinaForGmrf,
@@ -142,7 +146,7 @@ abline(v=so2summary$summary['rangeInCells',
 \begin{align*}
 Y_i|U_i  \sim  & \text{N}(\mu_i, \tau^2)\\
 \mu_i = & X_i\beta + U_i  \\
-[U_1 \ldots U_N] \sim \text{GMRF}
+[U_1 \ldots U_N] \sim &\text{GMRF}
 \end{align*}
 
 
@@ -150,18 +154,21 @@ Y_i|U_i  \sim  & \text{N}(\mu_i, \tau^2)\\
 
 <<so2OneLnugget,echo=TRUE,cache=TRUE>>=
 so2oneNugget = logLikGmrfNugget(ar=0.95,
-		propNugget = seq(0, len=6,by=0.001),
+		propNugget = seq(0, len=5,by=0.001),
 		Yvec=chinaForGmrf$Yvec, 
 		Xmat=chinaForGmrf$Xmat, 
 		NN=chinaForGmrf$NN, 
 		maternShape=chinaForGmrf$maternShape)
+@
+
+<<>>=
 so2oneNugget[c('logL','propNugget','sigmasq','tausq'),]
 @
 
-<<so2NuggetFit,cache=TRUE>>=
-arseqN = seq(0.5,1,len=4)
-arseqN=arseqN[-length(arseqN)]
-chinaForGmrf$propNugget = seq(0,len=3,by=0.001)
+<<so2NuggetFit,cache=TRUE >>=
+arseqN = seq(0.92,1,len=41)
+arseqN=arseqN[arseqN < 1]
+chinaForGmrf$propNugget = seq(0,0.004,len=21)
 library(parallel)
 so2ResN = mcmapply(logLikGmrfNugget, 
 		ar=arseqN,
@@ -170,9 +177,46 @@ so2ResN = mcmapply(logLikGmrfNugget,
 @
 
 
+<<so2NuggetProf,out.width='0.5\\textwidth',fig.cap='SO2 Prof L',fig.height=5,fig.width=7,fig.subcap=c('gmrf params','matern params')>>=
+Sprob = sort(unique(c(0, 0.5, 0.8,  0.95, 1-10^(-c(3,4,7,10)),1)))
+Schisq = qchisq(Sprob,df=2)
+Schisq[Schisq==Inf] = min(so2ResN['logL',,])-1
 
 
-\seciton{Black carbon}
+image(
+		so2ResN['propNugget',,1],
+		so2ResN['ar',1,],
+		so2ResN['logL',,],
+		breaks = max(so2ResN['logL',,]) - Schisq,
+		col=heat.colors(length(Sprob)-1)
+)
+
+image(
+		so2ResN['propNugget',,1],
+		so2ResN['rangeInCells',1,],
+		so2ResN['logL',,],
+		breaks = max(so2ResN['logL',,]) - Schisq,
+		col=heat.colors(length(Sprob)-1),
+		log='y',ylim=c(7,25)
+)
+@
+
+
+<<>>=
+summarySo2N = summaryGmrfFitNugget(so2ResN,chinaForGmrf)
+@
+
+<<so2NuggetProfUniv,out.width='0.3\\textwidth',fig.cap='univariate prof l', fig.subcap=names(summarySo2N$profL),fig.width=4,fig.height=5,echo=FALSE>>=
+for(D in names(summarySo2N$profL)) {
+	
+	plot(summarySo2N$profL[[D]],xlab=D,ylab='log L')
+	abline(v=summarySo2N$summary[D,c('mle','q0.025','q0.975')])
+	
+}
+
+@
+
+\section{Black carbon}
 <<>>=
 load("blackCarbon.RData")
 @

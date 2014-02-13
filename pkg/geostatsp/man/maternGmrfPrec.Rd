@@ -2,7 +2,7 @@
 \alias{maternGmrfPrec}
 \alias{maternGmrfPrec.default}
 \alias{maternGmrfPrec.matrix}
-\alias{maternGmrfPrec.dgCMatrix}
+\alias{maternGmrfPrec.dsCMatrix}
 \alias{NNmat}
 \alias{NNmat.default}
 \alias{NNmat.Raster}
@@ -14,7 +14,7 @@ Produces the precision matrix for a Gaussian random field on a regular square la
 
 \usage{ 
 maternGmrfPrec(N, ...)
-\method{maternGmrfPrec}{dgCMatrix}(N, 
+\method{maternGmrfPrec}{dsCMatrix}(N, 
 	param=c(variance=1, range=1, shape=1, cellSize=1),
   adjust.edges=FALSE,...) 
 \method{maternGmrfPrec}{matrix}(N, ...)

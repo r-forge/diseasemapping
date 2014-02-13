@@ -20,12 +20,12 @@ maternGmrfPrec.default = function(N, Ny=N,
 
 maternGmrfPrec.matrix = function(N, ...) {
 	
-	N = as(N, "dgCMatrix")
+	N = as(N, "dsCMatrix")
 	maternGmrfPrec(N, ...)
 	
 }
 
-maternGmrfPrec.dgCMatrix = function(N, 	
+maternGmrfPrec.dsCMatrix = function(N, 	
 		param=c(variance=1, range=1, shape=1, cellSize=1),
 		adjust.edges=FALSE,...) {
 
@@ -147,7 +147,7 @@ NNmat.default = function(N, Ny=N,nearest=3) {
 	
 #	images.bresult = Matrix(data=0,nrow=Ncell, ncol=Ncell, sparse=T)
 	Scell = 1:Ncell
-	result = sparseMatrix(Scell, Scell, x=rep(1, Ncell))
+	result = sparseMatrix(Scell, Scell, x=rep(1, Ncell),symmetric=TRUE)
 #	diag(result) = 1
 	
 
@@ -262,6 +262,9 @@ NNmat.default = function(N, Ny=N,nearest=3) {
 			result[NhereIndex[inBox],Dcell ] = theNcEntries[inBox]
 		}			
 	}
+	
+	result = forceSymmetric(result)
+	
 	attributes(result)$Nx = Nx
 	attributes(result)$Ny = Ny
 

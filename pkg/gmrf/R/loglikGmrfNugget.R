@@ -1,11 +1,15 @@
 logLikGmrfNugget = function(ar, propNugget=5, Yvec, Xmat, 
 		NN, maternShape=1) {
 	
-	if(round(propNugget)==propNugget & propNugget>1){
+
+	if(length(propNugget)==1) {
+	if(round(propNugget)==propNugget & propNugget>1 & propNugget>0){
+		# create a sequence
 		propNugget = seq(0,1,len=propNugget+1)[
 				-propNugget-1
 		]
 	}
+	}	
 	
 	varSpatialDivXisq = exp(
 			maternShape*(log(ar)-log(1-ar))-
@@ -38,22 +42,25 @@ logLikGmrfNugget = function(ar, propNugget=5, Yvec, Xmat,
 	argList = list(Ytilde=Ytilde,Xtilde=Xtilde,
 			Q=NN,detCholQ = detCholQ)
 	
-
-	res = mapply(logLikGmrfNuggetSingle,
+	if(length(nuggetDivXisq)==1) {
+		argList$nuggetDivXisq=nuggetDivXisq
+		res=do.call(
+				logLikGmrfNuggetSingle,
+				argList)
+	} else {
+		res = mapply(logLikGmrfNuggetSingle,
 			nuggetDivXisq=nuggetDivXisq,			
 			MoreArgs=argList,
 			SIMPLIFY=TRUE
-	)
+		)
 	
-
-	
-	res["sigmasq",] = res["xisq",] * varSpatialDivXisq
-	res["rangeInCells",]=sqrt(ar/(1-ar))*sqrt(2*maternShape)
-	res["ar",]=ar
-	res["propNugget",]=propNugget
-	res["maternShape",]=maternShape
-	res["logL",]=-res["m2logL",]/2
-	
+		res["sigmasq",] = res["xisq",] * varSpatialDivXisq
+		res["rangeInCells",]=sqrt(ar/(1-ar))*sqrt(2*maternShape)
+		res["ar",]=ar
+		res["propNugget",]=propNugget
+		res["maternShape",]=maternShape
+		res["logL",]=-res["m2logL",]/2
+	}
 	res
 	
 }
@@ -68,8 +75,10 @@ cholIcQ = chol(IcQ)
 Ybreve = solve(cholIcQ, Ytilde)	
 Xbreve = solve(cholIcQ, Xtilde)	
 
+XprecXinv = solve(Matrix::crossprod(Xbreve,Xbreve)) 
+
 betaHat = as.vector(
-		solve(Matrix::crossprod(Xbreve,Xbreve)) %*% 
+		XprecXinv %*% 
 		Matrix::crossprod(Xbreve,Ybreve) 
 )
 names(betaHat) = colnames(Xtilde)
@@ -87,10 +96,95 @@ m2logL = as.numeric(
 
 nuggetVarHat = xisqHat * nuggetDivXisq
 
-c(m2logL=m2logL, logL=NA,beta=betaHat, 
+
+result =c(m2logL=m2logL, logL=NA,beta=betaHat, 
 		sigmasq=NA, rangeInCells=NA,
 		tausq=nuggetVarHat,ar=NA,
 		propNugget=NA, maternShape=NA,
 		xisq=xisqHat)
 
+varbetahat = as.matrix(XprecXinv*xisqHat)
+dimnames(varbetahat) = list(names(betaHat),names(betaHat))
+attributes(result)$varbetahat = varbetahat
+
+
+result
+
+}
+
+
+
+
+
+summaryGmrfFitNugget = function(applyResult,MoreArgs,
+		fun=logLikGmrfNugget) {
+	
+	if(is.list(applyResult))
+		applyResult = simplify2array(applyResult)
+	
+	x = aperm(applyResult,3:1)
+	x = matrix(x, ncol=dim(x)[3])
+	colnames(x) = dimnames(applyResult)[[1]]
+	
+	mleRow = which.max(x[,'logL'])
+	mle = x[mleRow,]
+	
+
+	MoreArgs$ar = mle['ar']
+	MoreArgs$propNugget = mle['propNugget']
+	
+	varBetaHat = attributes(
+			do.call(fun, MoreArgs) 
+		)$varbetahat
+
+		
+	thebetas = grep("^beta",names(mle), value=TRUE)
+		
+	betaMLE = mle[thebetas]
+
+	
+	thebetas2 = gsub("^beta\\.","",thebetas)
+	
+	betase = sqrt(diag(varBetaHat[thebetas2,thebetas2]))
+	
+	betamat = cbind(mle=betaMLE,
+			se=betase,
+				q0.025=betaMLE - 2*betase,
+				q0.975=betaMLE + 2*betase,
+				pval = 2*pnorm(
+						abs(betaMLE)/
+								betase,
+						lower=FALSE)	
+		)
+		withinCI = which(x[,'m2logL'] - 
+						mle['m2logL'] < qchisq(0.95, 1))
+		
+		parCI= t(apply(
+						x[withinCI, ,drop=FALSE],
+						2,range))
+		colnames(parCI) = c('q0.025', 'q0.975')
+
+		
+		
+		parMat = cbind(mle=mle,parCI,se=NA,pval=NA)
+		parMat[rownames(betamat),colnames(betamat)] = betamat
+		
+		
+		
+		result = list(
+						summary=parMat,
+						profL = list(
+								)
+				)
+
+		for(D in c('rangeInCells','ar','propNugget')) {
+			theunique = sort(unique(x[,D]))
+			thefac = list(factor(x[,D],levels=theunique))
+			
+			result$profL[[D]] = 
+					aggregate(x[,'logL'], thefac, min)
+			colnames(result$profL[[D]]) = c('x','y')
+		}
+				
+		result
 }

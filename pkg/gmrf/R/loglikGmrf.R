@@ -56,9 +56,7 @@ logLikGmrf = function(ar, Yvec, Xmat, NN, maternShape=0) {
 
 	result
 }
-#'
-
-#+ summaryFunction
+ 
 summaryGmrfFit = function(applyResult,MoreArgs,fun=logLikGmrf) {
 	
 	
@@ -74,13 +72,15 @@ summaryGmrfFit = function(applyResult,MoreArgs,fun=logLikGmrf) {
 	thebetas = grep("^beta",names(MLErow), value=TRUE)
 		
 	betaMLE = MLErow[thebetas]
+	betase = sqrt(diag(varBetaHat[thebetas,thebetas]))
+	
 	betamat = cbind(mle=betaMLE,
-			se = sqrt(diag(varBetaHat)),
-			q0.025=betaMLE - 2*sqrt(diag(varBetaHat)),
-			q0.975=betaMLE + 2*sqrt(diag(varBetaHat)),
+			se=betase,
+			q0.025=betaMLE - 2*betase,
+			q0.975=betaMLE + 2*betase,
 			pval = 2*pnorm(
 					abs(betaMLE)/
-							sqrt(diag(varBetaHat)),
+							betase,
 					lower=FALSE)	
 	)
 	withinCI = which(applyResult[,'m2logL'] - 
@@ -105,4 +105,4 @@ summaryGmrfFit = function(applyResult,MoreArgs,fun=logLikGmrf) {
 			)
 	)		
 }
-#'
+ 

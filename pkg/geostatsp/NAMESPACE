@@ -36,7 +36,7 @@ S3method(squareRaster, SpatialPolygons)
 S3method(squareRaster, SpatialPolygonsDataFrame) 
 
 export(maternGmrfPrec)
-S3method(maternGmrfPrec, dgCMatrix)
+S3method(maternGmrfPrec, dsCMatrix)
 S3method(maternGmrfPrec, matrix)
 S3method(maternGmrfPrec, default)
 
