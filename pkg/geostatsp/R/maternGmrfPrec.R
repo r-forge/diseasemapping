@@ -27,7 +27,7 @@ maternGmrfPrec.matrix = function(N, ...) {
 
 maternGmrfPrec.dsCMatrix = function(N, 	
 		param=c(variance=1, range=1, shape=1, cellSize=1),
-		adjust.edges=FALSE,...) {
+		adjustEdges=FALSE,...) {
 
 	names(param) = gsub("^var$", "variance", names(param))
 	
@@ -97,28 +97,64 @@ maternGmrfPrec.dsCMatrix = function(N,
 		theN = precEntries[theN]
 		theNNmat@x = theN
 		
-	
-
 		Nx=attributes(theNNmat)$Nx 
 		Ny=attributes(theNNmat)$Ny 
 		
-		theNNmat = forceSymmetric(theNNmat)
-		attributes(theNNmat)$model =c(param, adjust=0)
-		attributes(theNNmat)$Nx =Nx 
-		attributes(theNNmat)$Ny =Ny
-		
-		if(adjust.edges){
-			theNNmat = gmrfPrecUncond(theNNmat)
-			attributes(theNNmat)$model =c(param,adjust=1)
-			attributes(theNNmat)$Nx =Nx 
-			attributes(theNNmat)$Ny =Ny
+		if(adjustEdges){
+			border=param["shape"]+1
+			
+			allCoords = as.vector( outer(1:Nx,1i*(1:Ny), '+'))
+			whichInner = (Re(allCoords)> border) & 
+					(Im(allCoords) > border) &
+					(Re(allCoords)< (Nx-border)) & 
+					(Im(allCoords) <	(Ny-border))
+			allCells = Re(allCoords) + (Im(allCoords)-1)*Nx
+			
+			innerCells = allCells[whichInner]
+			outerCells = allCells[!whichInner]
+			outerCoords = allCoords[!whichInner]
+			outerCoordsCartesian = SpatialPoints(
+					cbind(
+							Re(outerCoords), 
+						1+Ny-Im(outerCoords))
+				)				
+			covMat = matern(outerCoordsCartesian,
+					param=c(param[c('shape','variance')],
+							param['range']/param['cellSize'])
+			)
+			
+			InnerPrecision = theNNmat[innerCells, innerCells]
+			
+			#A = x[allCells,-allCells]
+			#InnerPrecInvChol = Matrix::solve(Matrix::chol(InnerPrecision))
+			#Aic = A %*% InnerPrecInvChol
+			# AQinvA = Aic %*% t(Aic)
+		A = theNNmat[innerCells,outerCells]
+		cholInnerPrec =Cholesky(InnerPrecision,LDL=FALSE,perm=TRUE)
+
+		Aic = solve(cholInnerPrec, 
+					solve(cholInnerPrec,A,system='P'),
+					system='L')
+
+		AQinvA = forceSymmetric(crossprod(Aic,Aic))
+
+		covMatInv = Matrix::solve(covMat)
+			
+		precOuter = forceSymmetric(covMatInv + AQinvA)
+
+			theNNmat[outerCells,outerCells] = precOuter
+			theNNmat = forceSymmetric(theNNmat)
+			attributes(theNNmat)$model =c(param, adjust=1)			
+		} else {
+			attributes(theNNmat)$model =c(param, adjust=0)			
 		}
+
 		attributes(theNNmat)$raster= list(
-				nrows=attributes(theNNmat)$Ny,
-				ncols=attributes(theNNmat)$Nx, 
-				xmn=0,xmx=attributes(theNNmat)$Nx*
+				nrows=Ny,
+				ncols=Nx, 
+				xmn=0,xmx=Nx*
 						param['cellSize'],
-				ymn=0, ymx=attributes(theNNmat)$Nx*
+				ymn=0, ymx=Ny*
 						param['cellSize']
 		)
 		

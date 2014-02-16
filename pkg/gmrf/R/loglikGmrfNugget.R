@@ -1,4 +1,4 @@
-logLikGmrfNugget = function(ar, propNugget=5, Yvec, Xmat, 
+loglikGmrfNugget = function(ar, propNugget=5, Yvec, Xmat, 
 		NN, maternShape=1) {
 	
 
@@ -17,7 +17,7 @@ logLikGmrfNugget = function(ar, propNugget=5, Yvec, Xmat,
 						(maternShape+1)*log(4)
 						)
 	
-	nuggetDivXisq = 1/( (1/propNugget)-1) * varSpatialDivXisq
+	nuggetDivXisq = (1/( (1/propNugget)-1)) * varSpatialDivXisq
 	
 	
 	if(maternShape==0) {
@@ -45,35 +45,47 @@ logLikGmrfNugget = function(ar, propNugget=5, Yvec, Xmat,
 	if(length(nuggetDivXisq)==1) {
 		argList$nuggetDivXisq=nuggetDivXisq
 		res=do.call(
-				logLikGmrfNuggetSingle,
+				loglikGmrfNuggetSingle,
 				argList)
+
+		res["sigmasq"] = res["xisq"] * varSpatialDivXisq
+		res["rangeInCells"]=sqrt(ar/(1-ar))*sqrt(2*maternShape)
+		res["ar"]=ar
+		res["propNugget"]=propNugget
+		res["maternShape"]=maternShape
+		
 	} else {
-		res = mapply(logLikGmrfNuggetSingle,
+		res = mapply(loglikGmrfNuggetSingle,
 			nuggetDivXisq=nuggetDivXisq,			
 			MoreArgs=argList,
 			SIMPLIFY=TRUE
 		)
 	
-		res["sigmasq",] = res["xisq",] * varSpatialDivXisq
-		res["rangeInCells",]=sqrt(ar/(1-ar))*sqrt(2*maternShape)
-		res["ar",]=ar
-		res["propNugget",]=propNugget
-		res["maternShape",]=maternShape
-		res["logL",]=-res["m2logL",]/2
-	}
+	
+	res["sigmasq",] = res["xisq",] * varSpatialDivXisq
+	res["rangeInCells",]=sqrt(ar/(1-ar))*sqrt(2*maternShape)
+	res["ar",]=ar
+	res["propNugget",]=propNugget
+	res["maternShape",]=maternShape
+}
+
+	
 	res
 	
 }
 
-logLikGmrfNuggetSingle = function(
-		nuggetDivXisq, Ytilde, 
-		Xtilde,Q, detCholQ) {
-IcQ = nuggetDivXisq * Q
-diag(IcQ) = diag(IcQ) +1 
-cholIcQ = chol(IcQ)
+loglikGmrfNuggetSingle = function(
+		propNugget, Yvec, YL, 
+		Xmat, XL,Q, Qdet) {
 
-Ybreve = solve(cholIcQ, Ytilde)	
-Xbreve = solve(cholIcQ, Xtilde)	
+	if(propNugget>0){
+		IcQ = Q
+		IcQ@x = IcQ@x * nuggetDivXisq 
+		diag(IcQ) = diag(IcQ) +1 
+		cholIcQ = chol(IcQ)
+
+		Ybreve = solve(cholIcQ, Ytilde)	
+		Xbreve = solve(cholIcQ, Xtilde)	
 
 XprecXinv = solve(Matrix::crossprod(Xbreve,Xbreve)) 
 
@@ -93,11 +105,38 @@ m2logL = as.numeric(
 		2*determinant(cholIcQ,logarithm=TRUE)$modulus -
 		2* detCholQ + length(Ytilde)*log(xisqHat) 
 	)
-
+} else {
+	
+	XprecX = Matrix::tcrossprod(XL,XL)
+	XprecXinv = solve(XprecX)
+	
+	betahat = as.numeric(XprecXinv %*% 
+					Matrix::tcrossprod(XL , YL))
+	names(betahat) = colnames(Xmat)
+	
+	# resids ~ N(0,sigsq*prec^(-1))
+	resids = as.vector(Yvec - Xmat %*% betahat)
+	residsL = Matrix::crossprod(
+			solve(cholPrec,resids,system="P"), 
+			cholPrec)
+	rpr = as.numeric(Matrix::tcrossprod(residsL,residsL))
+	sigsq = rpr/ length(Yvec)
+	
+	varbetahat = as.matrix(XprecXinv*sigsq)
+	dimnames(varbetahat) = list(names(betahat),names(betahat))
+	
+	m2logL = length(Yvec)*log(sigsq) - Qdet
+	
+	
+	
+}
+	
 nuggetVarHat = xisqHat * nuggetDivXisq
 
 
-result =c(m2logL=m2logL, logL=NA,beta=betaHat, 
+
+result =c(m2logL=m2logL, logL=-m2logL/2,
+		beta=betaHat, 
 		sigmasq=NA, rangeInCells=NA,
 		tausq=nuggetVarHat,ar=NA,
 		propNugget=NA, maternShape=NA,
@@ -116,9 +155,8 @@ result
 
 
 
-summaryGmrfFitNugget = function(applyResult,MoreArgs,
-		fun=logLikGmrfNugget) {
-	
+summaryGmrfFitNugget = function(applyResult,MoreArgs) {
+		fun=loglikGmrfNugget
 	if(is.list(applyResult))
 		applyResult = simplify2array(applyResult)
 	
@@ -181,9 +219,10 @@ summaryGmrfFitNugget = function(applyResult,MoreArgs,
 			theunique = sort(unique(x[,D]))
 			thefac = list(factor(x[,D],levels=theunique))
 			
-			result$profL[[D]] = 
-					aggregate(x[,'logL'], thefac, min)
-			colnames(result$profL[[D]]) = c('x','y')
+			result$profL[[D]] = data.frame(x=theunique,
+					y=aggregate(x[,'logL'], thefac, max)[,2]
+			)
+
 		}
 				
 		result

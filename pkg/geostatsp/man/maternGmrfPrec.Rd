@@ -16,7 +16,7 @@ Produces the precision matrix for a Gaussian random field on a regular square la
 maternGmrfPrec(N, ...)
 \method{maternGmrfPrec}{dsCMatrix}(N, 
 	param=c(variance=1, range=1, shape=1, cellSize=1),
-  adjust.edges=FALSE,...) 
+  adjustEdges=FALSE,...) 
 \method{maternGmrfPrec}{matrix}(N, ...)
 \method{maternGmrfPrec}{default}(N, Ny=N, 	
 param=c(variance=1, range=1, shape=1, cellSize=1),
@@ -40,7 +40,7 @@ Matern differentiability parameter (0, 1, or 2); and \code{cellSize}, the size o
 \code{variance} and \code{range} can be given in place of \code{prec} and \code{scale}, when the former 
 are present and the latter are missing the reciprocal of the former are taken.}
 \item{border}{number of cells from the edge of the grid to adjust for edge effects.}
-\item{adjust.edges}{If \code{TRUE}, adjust the precision matrix so it does not implicitly assume 
+\item{adjustEdges}{If \code{TRUE}, adjust the precision matrix so it does not implicitly assume 
 the field takes values of zero outside the specified region.  Defaults to \code{FALSE}.}
 \item{x}{An MRF precision matrix produced by \code{maternGmrfPrec}}
 \item{nearest}{Number of nearest neighbours to compute}
@@ -86,7 +86,7 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 	precMat =maternGmrfPrec(nn32, param=params) 
 \dontrun{
 	# and with the adjustment
-	precMatCorr =maternGmrfPrec(nn32, param=params, adjust.edges=TRUE) 
+	precMatCorr =maternGmrfPrec(nn32, param=params, adjustEdges=TRUE) 
 	
 	midcell = 32*16 + 16 # the middle cell
 	edgeCell = 32*5 + 5 # cell near corner

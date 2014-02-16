@@ -109,7 +109,7 @@ chinaForGmrf =
 
 
 <<so2OneL,echo=TRUE>>=
-so2oneres = logLikGmrf(ar=0.8, Yvec=chinaForGmrf$Yvec, 
+so2oneres = loglikGmrf(ar=0.8, Yvec=chinaForGmrf$Yvec, 
 		Xmat=chinaForGmrf$Xmat, 
 		NN=chinaForGmrf$NN, 
 		maternShape=chinaForGmrf$maternShape)
@@ -121,13 +121,13 @@ as.vector(so2oneres)
 arseq = seq(0.5,1,len=200)
 arseq = arseq[-length(arseq)]
 library(parallel)
-so2Res = mcmapply(logLikGmrf, arseq,
+so2Res = mcmapply(loglikGmrf, arseq,
 		MoreArgs=chinaForGmrf,
 		mc.cores=4,SIMPLIFY=TRUE)
 @
 		
 
-<<>>=
+<<so2summary>>=
 so2summary = summaryGmrfFit(so2Res,chinaForGmrf) 
 so2summary$summary
 @
@@ -153,7 +153,7 @@ Y_i|U_i  \sim  & \text{N}(\mu_i, \tau^2)\\
 
 
 <<so2OneLnugget,echo=TRUE,cache=TRUE>>=
-so2oneNugget = logLikGmrfNugget(ar=0.95,
+so2oneNugget = loglikGmrfNugget(ar=0.95,
 		propNugget = seq(0, len=5,by=0.001),
 		Yvec=chinaForGmrf$Yvec, 
 		Xmat=chinaForGmrf$Xmat, 
@@ -161,59 +161,75 @@ so2oneNugget = logLikGmrfNugget(ar=0.95,
 		maternShape=chinaForGmrf$maternShape)
 @
 
-<<>>=
+<<so2oneNuggetRes>>=
 so2oneNugget[c('logL','propNugget','sigmasq','tausq'),]
 @
 
 <<so2NuggetFit,cache=TRUE >>=
-arseqN = seq(0.92,1,len=41)
+arseqN = seq(0.94,0.99,len=41)
 arseqN=arseqN[arseqN < 1]
-chinaForGmrf$propNugget = seq(0,0.004,len=21)
+chinaForGmrf$propNugget = seq(0,0.003,len=21)
 library(parallel)
-so2ResN = mcmapply(logLikGmrfNugget, 
+so2ResN = mcmapply(loglikGmrfNugget, 
 		ar=arseqN,
 		MoreArgs=chinaForGmrf,
 		mc.cores=4,SIMPLIFY='array')
 @
 
 
-<<so2NuggetProf,out.width='0.5\\textwidth',fig.cap='SO2 Prof L',fig.height=5,fig.width=7,fig.subcap=c('gmrf params','matern params')>>=
-Sprob = sort(unique(c(0, 0.5, 0.8,  0.95, 1-10^(-c(3,4,7,10)),1)))
+<<so2NuggetProf,out.width='0.5\\textwidth',fig.cap='SO2 Prof L',fig.height=5,fig.width=7,fig.subcap=c('gmrf params','matern params'),echo=FALSE,warnings=FALSE>>=
+Sprob = c(1, 0.9999, 0.999, 0.99, 0.95, 0.8, 0.5,   0) 
 Schisq = qchisq(Sprob,df=2)
-Schisq[Schisq==Inf] = min(so2ResN['logL',,])-1
+thebreaks = max(so2ResN['logL',,]) - Schisq
 
+thebreaks[thebreaks==-Inf] = min(so2ResN['logL',,])-1
+
+thecol = rev(RColorBrewer::brewer.pal( length(Sprob)-1,"Spectral")) 
 
 image(
 		so2ResN['propNugget',,1],
 		so2ResN['ar',1,],
 		so2ResN['logL',,],
-		breaks = max(so2ResN['logL',,]) - Schisq,
-		col=heat.colors(length(Sprob)-1)
+		breaks = thebreaks,
+		col=thecol
 )
 
 image(
 		so2ResN['propNugget',,1],
 		so2ResN['rangeInCells',1,],
 		so2ResN['logL',,],
-		breaks = max(so2ResN['logL',,]) - Schisq,
-		col=heat.colors(length(Sprob)-1),
-		log='y',ylim=c(7,25)
+		breaks = thebreaks,
+		col=thecol,
+		log='y'
 )
+mapmisc::legendBreaks('right',breaks=Sprob,col=thecol)
 @
 
 
-<<>>=
+<<summarySo2N,cache=TRUE>>=
 summarySo2N = summaryGmrfFitNugget(so2ResN,chinaForGmrf)
 @
 
 <<so2NuggetProfUniv,out.width='0.3\\textwidth',fig.cap='univariate prof l', fig.subcap=names(summarySo2N$profL),fig.width=4,fig.height=5,echo=FALSE>>=
 for(D in names(summarySo2N$profL)) {
 	
-	plot(summarySo2N$profL[[D]],xlab=D,ylab='log L')
-	abline(v=summarySo2N$summary[D,c('mle','q0.025','q0.975')])
+	plot(summarySo2N$profL[[D]] ,xlab=D,ylab='log L',type='l')
+	abline(v=summarySo2N$summary[D,c('mle','q0.025','q0.975')],
+			col=c('red','orange','orange'))
 	
 }
 
+@
+
+
+<<condnlGmrf,cache=TRUE>>=
+so2cond=conditionalGmrf(summarySo2N$summary[,"mle"], 
+		chinaForGmrf,mc.cores=4)
+@
+<<so2map>>=
+so2map = brick(china2,nl=ncol(so2cond))
+values(so2map) = as.vector(so2cond)
+names(so2map) = colnames(so2cond)
 @
 
 \section{Black carbon}
@@ -242,7 +258,7 @@ load("blackCarbon.RData")
 @
 
 <<bcOneL>>=
-logLikGmrf(ar=0.8, Yvec=bcForGmrf$Yvec, Xmat=bcForGmrf$Xmat, 
+loglikGmrf(ar=0.8, Yvec=bcForGmrf$Yvec, Xmat=bcForGmrf$Xmat, 
 		NN=bcForGmrf$NN, maternShape=bcForGmrf$maternShape)
 @
 
@@ -250,7 +266,7 @@ logLikGmrf(ar=0.8, Yvec=bcForGmrf$Yvec, Xmat=bcForGmrf$Xmat,
 << blackCarbonFitGmrf,cache=TRUE>>=
 arseq = seq(0.9,1,len=100)
 library(parallel)
-bcRes = mcmapply(logLikGmrf, arseq,
+bcRes = mcmapply(loglikGmrf, arseq,
 		MoreArgs=bcForGmrf,
 		mc.cores=4,SIMPLIFY=TRUE)
 @
