@@ -2,36 +2,47 @@ library(geostatsp)
 
 myraster = raster(extent(0,8000,0,6000), ncols=40,nrows=30)
 theNN = NNmat(myraster)
-themodel = c(range=12*xres(myraster),shape=2,var=900)
-if(TRUE){
+themodel = c(range=6*xres(myraster),shape=2,var=900)
+if(T){
 	theU = RFsimulate(myraster,model=themodel)
 } else {
 	theVar = maternGmrfPrec(theNN, 
 		param=c(themodel,cellSize=xres(myraster)),
-		adjustEdges=FALSE)
+		adjustEdges=TRUE)
+
+
 
 	theChol = chol(theVar)
 	theU = as.vector(solve(theChol,rnorm(ncell(myraster))))
 }
+if(FALSE){
+	theV = matern(myraster, param=themodel)
+	theC = chol(theV)
+	theU = theC %*% rnorm(ncell(myraster))
+}
+
 thecov = myraster
 values(thecov) = c(rep(1,ncell(thecov)/2),
 		rep(4,ncell(thecov)/2))
 theY = theU + thecov
 
 theY = brick(theY,thecov)
+names(theY) = c("y","x")
 
 thedf = as.data.frame(theY)
 
 theArgs = list(
-		Yvec=thedf[,1],
-		Xmat=cbind(inter=1,x=thedf[,2]),
+		Yvec=thedf$y,
+		Xmat=cbind(inter=1,x=thedf$x),
 		NN=theNN,
 		maternShape=as.numeric(themodel['shape'])
 )
 
 SrangeInCells=themodel['range']*
-		exp(seq(log(0.5),log(2),len=12))/
+		seq(0.75,1.5,len=24)/
 		xres(myraster) 
+
+source("../R/loglikGmrf.R")
 
 res1 = parallel::mcmapply(loglikGmrf,
 		rangeInCells=SrangeInCells, 
@@ -40,8 +51,20 @@ res1 = parallel::mcmapply(loglikGmrf,
 
 thesummary = summaryGmrfFit(res1,theArgs)$summary
 
+# with edge correction
+theArgs2 = theArgs
+theArgs2$adjustEdges=TRUE
+
+res2 = parallel::mcmapply(loglikGmrf,
+		rangeInCells=SrangeInCells, 
+		MoreArgs=theArgs2,mc.cores=4)
+
+thesummary2 = summaryGmrfFit(res2,theArgs)$summary
+
+
 plot(res1['rangeInCells',],res1['logL',],type='o',log='x',
-		ylim=c(-20,0)+max(res1['logL',]))
+		ylim=c(-6,0)+max(res1['logL',]),
+		xlab='range (in cells)',ylab='logL')
 Nar = 6
 text(res1['rangeInCells',
 				round(seq(1,ncol(res1),len=Nar))],
@@ -51,21 +74,22 @@ text(res1['rangeInCells',
 abline(v=themodel['range']/xres(myraster),col='blue')
 abline(v=thesummary['rangeInCells',
 				c('mle','q0.025','q0.975')],
-		col=c('red','orange','orange'))
-thesummary
+		col=c('red','orange','orange'),lwd=2)
 
 
-# with edge correction
 
-theArgs$adjustEdges=TRUE
-res2 = parallel::mcmapply(loglikGmrf,
-		rangeInCells=SrangeInCells, 
-		MoreArgs=theArgs,mc.cores=4)
-lines(res2['rangeInCells',],res2['logL',],type='o',
+lines(res2['rangeInCells',],
+		res2['logL',]-max(res2['logL',])+
+				thesummary['logL','mle'],
+		type='o',
 		col='green')
-abline(v=thesummary['rangeInCells',
+abline(v=thesummary2['rangeInCells',
 				c('mle','q0.025','q0.975')],
 		col=c('green','yellow','yellow'))
+
+thesummary[c('rangeInCells','sigmasq'),]
+thesummary2[c('rangeInCells','sigmasq'),]
+
 
 
 # now with added noise

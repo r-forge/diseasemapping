@@ -1,3 +1,85 @@
+loglikGmrfSingle = function(
+		propNugget, Yvec, YL, 
+		Xmat, XL,Q, Qchol, detQ) {
+	
+	if(propNugget>0){
+		
+		# propNugget = tausq / (tausq + sigsq)
+		nuggetSigsq = 1/(1/propNugget -1)
+		
+		IcQ = Q
+		IcQ@x = IcQ@x * nuggetSigsq 
+		diag(IcQ) = diag(IcQ) +1 
+		cholIcQ = Cholesky(IcQ,LDL=FALSE)
+		
+		Ybreve = solve(cholIcQ, 
+				solve(cholIcQ,YL,system="P"),
+				system="L")
+		Xbreve = solve(cholIcQ, 
+				solve(cholIcQ,XL,system="P"),
+				system="L")	
+		
+		XprecXinv = solve(Matrix::crossprod(Xbreve,Xbreve)) 
+		
+		betaHat = as.vector(
+				XprecXinv %*% 
+						Matrix::crossprod(Xbreve,Ybreve) 
+		)
+		names(betaHat) = colnames(Xmat)
+		
+		resids =  Ybreve -  Xbreve %*% betaHat 
+		
+		sigsq = as.numeric(
+				Matrix::crossprod(resids)/length(Ytilde)
+		)
+		
+		nugget = sigsq * nuggetSigsq
+		
+		m2logL = as.numeric(
+				-2*determinant(cholIcQ,logarithm=TRUE)$modulus -
+						detQ + length(Yvec)*log(sigsq) 
+		)
+		varbetahat=NULL
+	} else { # no nugget 
+		
+		XprecX = Matrix::tcrossprod(XL,XL)
+		XprecXinv = solve(XprecX)
+		
+		betaHat = as.numeric(XprecXinv %*% 
+						Matrix::tcrossprod(XL , YL))
+		names(betaHat) = colnames(Xmat)
+		
+		# resids ~ N(0,sigsq*prec^(-1))
+		resids = as.vector(Yvec - Xmat %*% betaHat)
+		residsL = Matrix::crossprod(
+				solve(Qchol,resids,system="P"), 
+				expand(Qchol)$L)
+		rpr = as.numeric(Matrix::tcrossprod(residsL,residsL))
+		sigsq = rpr/ length(Yvec)
+		
+		varbetahat = as.matrix(XprecXinv*sigsq)
+		dimnames(varbetahat) = list(names(betaHat),names(betaHat))
+		
+		m2logL = length(Yvec)*log(sigsq) - detQ
+		nugget=0
+	}
+	
+	
+	
+	
+	result =c(m2logL=m2logL, logL=-m2logL/2,
+			beta=betaHat, 
+			sigmasq=sigsq, 
+			tausq=nugget, 
+			propNugget=propNugget)
+	
+	attributes(result)$varbetahat = varbetahat
+	
+	
+	result
+	
+}
+
 loglikGmrf = function(ar=NULL, rangeInCells=NULL,
 		Yvec, Xmat, NN, propNugget=0,
 		maternShape=1,
@@ -18,18 +100,57 @@ loglikGmrf = function(ar=NULL, rangeInCells=NULL,
 	
 	NN = geostatsp::maternGmrfPrec(NN,
 			param=c(variance=1,shape=maternShape,cellSize=1,
-					range=rangeInCells),
+					range=rangeInCells*(16/15)),
 			adjustEdges=adjustEdges)
+
 	cholPrec = Cholesky(NN,LDL=FALSE)
 	theDet = 2*as.numeric(determinant(cholPrec,
 					logarithm=TRUE)$modulus)
 	
 	# beta hat = (X'prec/C X)^{-1} X'prec/C y
+	LofQ = expand(cholPrec)$L
 	XL = Matrix::crossprod(solve(cholPrec,Xmat,system="P"),
-			cholPrec)
+			LofQ)
 	YL = Matrix::crossprod(
-			solve(cholPrec,Yvec,system="P"),cholPrec)
+			solve(cholPrec,Yvec,system="P"),LofQ)
 	
+	if(length(propNugget)==1) {
+		res = loglikGmrfSingle(
+				propNugget, Yvec, YL, 
+				Xmat, XL,Q, cholPrec, theDet) 	
+		res = c(res,
+				rangeInCells=
+						as.numeric(rangeInCells),
+				ar=as.numeric(ar),
+				maternShape=as.numeric(maternShape)
+			)
+		
+	} else {
+		
+
+	argList = list(Yvec=Yvec,YL=YL,
+			Xmat=Xmat,XL=XL,
+			Q=NN,Qchol=cholPrec,
+			detQ=theDet)
+
+	res = mapply(loglikGmrfSingle,
+			propNugget=propNugget,			
+			MoreArgs=argList,
+			SIMPLIFY=TRUE
+	)
+	res = rbind(res,
+		rangeInCells=as.numeric(rangeInCells),
+		ar=as.numeric(ar),
+		maternShape=as.numeric(maternShape)
+	)
+	
+}
+
+res 
+
+}
+
+bob=function(){
 	
 	XprecX = Matrix::tcrossprod(XL,XL)
 	XprecXinv = solve(XprecX)
@@ -75,11 +196,10 @@ summaryGmrfFit = function(applyResult,MoreArgs) {
 
 	MLErow = applyResult[which.max(applyResult[ ,'logL']),]	
 	
-	varBetaHat = attributes(do.call(fun,c(list(ar=MLErow["ar"]),MoreArgs)))$varbetahat
+	varBetaHat = attributes(
+			do.call(fun,c(list(ar=MLErow["ar"]),MoreArgs))
+	)$varbetahat
 	
-
-
-
 	thebetas = grep("^beta",names(MLErow), value=TRUE)
 		
 	betaMLE = MLErow[thebetas]	
@@ -104,12 +224,9 @@ summaryGmrfFit = function(applyResult,MoreArgs) {
 					2,range))
 	colnames(parCI) = c('q0.025', 'q0.975')
 	
-	
 	parMat = cbind(mle=MLErow,parCI,se=NA,pval=NA)
 	parMat[rownames(betamat),colnames(betamat)] = betamat
 
-
-	
 	return(list(
 					summary=parMat,
 					profL = cbind(

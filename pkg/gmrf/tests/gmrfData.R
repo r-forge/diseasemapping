@@ -42,8 +42,6 @@ download.file(
 )
 #'
 
-
-
 #' 'apb' is human-produced carbon
 
 #+ blackCarbonLoad,cache=TRUE
