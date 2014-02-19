@@ -318,7 +318,27 @@ likfitLgm = function(
 	
 
 	# check to see if it's worth storing box cox quantities
-	if(any(names(param)=="boxcox") & !any(paramToEstimate=="boxcox")) {
+if(any(paramToEstimate=="boxcox")) {
+	if(any(observations<=0)){
+		warning("box cox transform specified with negative observations")
+	}
+}
+
+if(any(names(param)=="boxcox") ) {
+	
+	if(param["boxcox"]!= 1)  {
+		
+		if(any(observations<=0)){
+			warning("box cox transform specified with negative observations")
+		}
+		
+	}		
+	
+	
+}		
+		
+if(any(names(param)=="boxcox") & !any(paramToEstimate=="boxcox")) {
+
 		if(abs(param["boxcox"]-1)>0.0001){ # boxcox not 1
 			stored = list(
 					boxcox = param["boxcox"],

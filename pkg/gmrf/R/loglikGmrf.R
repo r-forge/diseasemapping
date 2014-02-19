@@ -80,17 +80,29 @@ loglikGmrfSingle = function(
 	
 }
 
-loglikGmrf = function(ar=NULL, rangeInCells=NULL,
+loglikGmrf = function(oneminusar=NULL, rangeInCells=NULL,
 		Yvec, Xmat, NN, propNugget=0,
-		maternShape=1,
-		adjustEdges=FALSE) {
+		shape=1,
+		adjustEdges=FALSE,adjustParam=FALSE) {
 	
-	if(is.null(ar)){
-		aroveronemar = rangeInCells^2/(2*maternShape)
-		ar=aroveronemar/(1+aroveronemar)
+	if(is.null(oneminusar)){
+
+		NN = geostatsp::maternGmrfPrec(NN,
+				param=c(shape=shape,
+						range=oneminusar),
+				adjustEdges=adjustEdges,adjustParam=adjustParam)
 	} else {
-		aroveronemar = ar/(1-ar)
-		rangeInCells = sqrt(2*maternShape*aroveronemar)
+		aroveronemar = (1-oneminusar)/oneminusar
+		NN = geostatsp::maternGmrfPrec(NN,
+				param=c(variance=1,shape=maternShape,cellSize=1,
+						onemar=as.vector(1-ar)),
+				adjustEdges=adjustEdges,adjustParam=adjustParam)
+		
+		if(adjustParam) {
+			rangeInCells = 	attributes(NN)$param$sameShape['rangeInCells']
+		} else {
+			rangeInCells = attributes(NN)$param$theo['rangeInCells']
+		}
 	}
 
 	if(!any(maternShape==c(0,1,2))) {
@@ -98,11 +110,7 @@ loglikGmrf = function(ar=NULL, rangeInCells=NULL,
 	}
 	
 	
-	NN = geostatsp::maternGmrfPrec(NN,
-			param=c(variance=1,shape=maternShape,cellSize=1,
-					range=rangeInCells*(16/15)),
-			adjustEdges=adjustEdges)
-
+	
 	cholPrec = Cholesky(NN,LDL=FALSE)
 	theDet = 2*as.numeric(determinant(cholPrec,
 					logarithm=TRUE)$modulus)

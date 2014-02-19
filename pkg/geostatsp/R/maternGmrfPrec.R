@@ -1,3 +1,32 @@
+getPrec = function(kappa,a)	{
+	if(kappa == 0){
+		precEntries = c(
+				"1" = a,
+				"2" = -1,
+				"3" = 0,
+				"4" = 0, 
+				"5" =  0,
+				"6" = 0)
+	} else if(kappa==1) {	
+		
+		precEntries = c("1" = 4 + a^2,
+				"2" = -2*a,
+				"3" = 2,
+				"4" = 1, 
+				"5" =  0,
+				"6" = 0)
+	} else if(kappa==2) {
+		precEntries = c("1" = a*(a*a+12),
+				"2" = -3*(a*a+3),
+				"3" = 6*a,
+				"4" = 3*a, 
+				"5" =  -3,
+				"6" = -1)
+	} else {
+		stop("shape parameter must be 0, 1 or 2")			
+	}
+	precEntries
+}
 
 maternGmrfPrec = function(N,...) {
 	UseMethod("maternGmrfPrec")	
@@ -27,103 +56,360 @@ maternGmrfPrec.matrix = function(N, ...) {
 
 maternGmrfPrec.dsCMatrix = function(N, 	
 		param=c(variance=1, range=1, shape=1, cellSize=1),
-		adjustEdges=FALSE,...) {
+		adjustEdges=FALSE,adjustParam=adjustEdges,...) {
 
 	names(param) = gsub("^var$", "variance", names(param))
+	if(!any(names(param)=='variance'))
+		param['variance']=1
+	if(!any(names(param)=='cellSize'))
+		param['cellSize']=1
 	
-	if(any(names(param)=="variance") & !any(names(param)=="prec"))
-		param["prec"] = 1/param["variance"]
-	if(any(names(param)=="range") & !any(names(param)=="scale"))
-		param["scale"] = sqrt(8*param['shape'])/param["range"]
-
-	if(!all( c("prec","scale","shape","cellSize")%in% names(param))) {
-		warning("param must have elements named shape, cellSize, either prec or variance, and either scale or range")
-	print(param)
+	paramInfo = list(
+		original=param,
+		theo = NULL,
+		sameShape = NULL,
+		sameRange=NULL,
+		optimal = NULL,
+		oneminusar = NULL
+	)
+	
+	objfun = function(oparam,distVec,sqrtVar,range=NULL,shape=NULL){
+		
+		if(!is.null(range))
+			oparam['range'] = as.vector(range)
+		if(!is.null(shape))
+			oparam['shape'] = as.vector(shape)
+		
+		oparam['variance']=1
+		
+		theM = geostatsp::matern(
+				x=distVec, 
+				param=oparam,
+		)
+		sum( (sqrt(theM) - sqrtVar)^2)
 	}
+
+
+#	data('nn32')
+#	tryprec = nn64
+	tryprec = N
+	Nx = attributes(tryprec)$Nx
+	Ny = attributes(tryprec)$Ny
+	
+	midcellCoord = c(round(Nx*0.4),round(Ny*0.4)) # the middle cell
+	midcell = c(Nx*(Ny-midcellCoord[2]) + midcellCoord[1])
+	midVec = sparseMatrix(midcell,1,x=1,
+			dims=c(ncol(N),1))
+
+	distVecFull =  expand.grid(x=seq(1, Nx),
+			y=seq(Ny,1))
+	buffer = param['shape']+2
+	
+	cellVec = seq(1, nrow(distVecFull)) 
+	
+	isInner =  
+			distVecFull[,'x']> buffer & 
+					distVecFull[,'y']>buffer &
+							distVecFull[,'x']< (Nx-buffer) &
+							distVecFull[,'y'] < (Ny-buffer) 
+
+	distVecFull = t(distVecFull)-midcellCoord 
+	distVecFull = sqrt(apply(distVecFull^2,2,sum))	
 		
-	theNNmat = N
-
-	
-	scale=param["scale"]
-	prec=param["prec"]
-	kappa=param["shape"]
-	cellSize=param["cellSize"]
-
-	
-
-	scale = scale * cellSize
-	a = (scale^2 + 4) 
 	
  
 	
-	if(kappa == 0){
-		precEntries = c(
-				"1" = a,
-				"2" = -1,
-				"3" = 0,
-				"4" = 0, 
-				"5" =  0,
-				"6" = 0)
-	} else if(kappa==1) {	
-		
-		precEntries = c("1" = 4 + a^2,
-					"2" = -2*a,
-					"3" = 2,
-					"4" = 1, 
-					"5" =  0,
-					"6" = 0)
-		} else if(kappa==2) {
-			precEntries = c("1" = a*(a*a+12),
-					"2" = -3*(a*a+3),
-					"3" = 6*a,
-					"4" = 3*a, 
-					"5" =  -3,
-					"6" = -1)
-		} else {
-			stop("kappa must be 0, 1 or 2")			
-		}
-		
- 
-		
-		if(kappa != 0) {
-			marginalPrec = 4*pi*kappa*scale^(2*kappa)
-		} else {
-			marginalPrec = 4*pi
-		}
- 		precEntries = 
-				precEntries*(prec /marginalPrec)
-		
-		theN = theNNmat@x
-		theN = precEntries[theN]
-		theNNmat@x = theN
-		
-		Nx=attributes(theNNmat)$Nx 
-		Ny=attributes(theNNmat)$Ny 
-		
-		if(adjustEdges){
-			border=param["shape"]+1
-			
-			allCoords = as.vector( outer(1:Nx,1i*(1:Ny), '+'))
-			whichInner = (Re(allCoords)> border) & 
-					(Im(allCoords) > border) &
-					(Re(allCoords)< (Nx-border)) & 
-					(Im(allCoords) <	(Ny-border))
-			allCells = Re(allCoords) + (Im(allCoords)-1)*Nx
-			
-			innerCells = allCells[whichInner]
-			outerCells = allCells[!whichInner]
-			outerCoords = allCoords[!whichInner]
-			outerCoordsCartesian = SpatialPoints(
-					cbind(
-							Re(outerCoords), 
-						1+Ny-Im(outerCoords))
-				)				
-			covMat = matern(outerCoordsCartesian,
-					param=c(param[c('shape','variance')],
-							param['range']/param['cellSize'])
+	# if 1 - AR parameter supplied
+	if(all(c("oneminusar","shape") %in% names(param))){
+		a = 4/(1-param['oneminusar'])		
+
+		paramInfo$theo = c(param[c('shape','cellSize','variance')],
+				rangeInCells=as.numeric(sqrt(8*param['shape'])/sqrt(a-4))
 			)
 			
-			InnerPrecision = theNNmat[innerCells, innerCells]
+			
+		if(min(c(Nx,Ny)<3*paramInfo$theo['rangeInCells'])){
+				warning("grid is ", Nx, " by ", Ny,
+						"which may be too small for range ",
+						paramInfo$theo['rangeInCells'], " cells, 1- Ar param",
+						param['oneminusar'])
+			}
+			
+		paramInfo$theo['range'] = as.numeric(
+				paramInfo$theo['rangeInCells']*param['cellSize']
+			)
+		paramInfo$oneminusar = param['oneminusar']
+			
+		precEntries=getPrec(param['shape'],a)
+ 
+#	tryprec = nn64
+		tryprec = N
+		theN = tryprec@x
+		theN = precEntries[theN]
+		tryprec@x = theN
+		
+		varMid = solve(tryprec,midVec)
+		varHere = varMid[midcell]
+		
+		whichDist = which(
+				isInner &
+				(
+							distVecFull < (1.75*param['rangeInCells'])
+							) & 
+						( distVecFull > 0))
+		
+		distVec = distVecFull[whichDist]
+		varMid = varMid[whichDist]/varHere
+		sqrtVar = sqrt(varMid)
+				
+		varMid = varMid[whichDist]/varHere
+		sqrtVar = sqrt(varMid)
+		
+		
+		startparam = c(param['shape'],
+				range=as.vector(paramInfo$theo['rangeInCells'])
+		)
+		newPar = optim(
+				startparam, objfun,
+				lower=startparam/4,
+				upper=startparam*4,
+				distVec=distVec,sqrtVar=sqrtVar
+		)
+		paramInfo$optimal = c(
+				newPar$par['shape'],
+				param[c('variance','cellSize')],
+				rangeInCells=as.vector(newPar$par['range']),
+				newPar$par['range']*param['cellSize']
+		)
+
+		startparam=paramInfo$optimal['rangeInCells']
+		names(startparam)='range'
+		optSameShape = optim(
+				startparam, objfun,
+				lower=startparam/4,
+				upper=startparam*4,
+				shape=param['shape'],
+				distVec=distVec,sqrtVar=sqrtVar
+		)$par
+		
+		paramInfo$sameShape = paramInfo$theo
+		paramInfo$sameShape['rangeInCells']=
+				as.vector(optSameShape)
+		paramInfo$sameShape['range']=
+				as.vector(optSameShape*param['cellSize'])
+
+
+		
+		
+	} else if(all(c('range','shape') %in% names(param))){
+		param['rangeInCells'] = as.numeric(param['range']/param['cellSize'])
+
+		scale = as.numeric(
+				sqrt(8*param['shape'])/param["rangeInCells"]
+		)
+		
+		
+		a = (scale^2 + 4) 
+
+		precEntries=getPrec(param['shape'],a)
+#	data('nn32')
+#	tryprec = nn64
+		tryprec = N
+		theN = tryprec@x
+		theN = precEntries[theN]
+		tryprec@x = theN
+		
+		varMid = solve(tryprec,midVec)
+		varHere = varMid[midcell]
+		
+		
+		
+ 
+		
+		
+		if(min(c(Nx,Ny)<3*param['rangeInCells'])){
+			warning("grid is ", Nx, " by ", Ny,
+					"which may be too small for range ",
+					paramInfo$theo['rangeInCells'], " cells")
+		}
+		
+
+		
+		whichDist = which(isInner &
+				(
+							distVecFull < (1.75*param['rangeInCells'])
+							) & 
+						( distVecFull > 0))
+		
+		distVec = distVecFull[whichDist]
+		varMid = varMid[whichDist]/varHere
+		sqrtVar = sqrt(varMid)
+
+		
+		paramInfo$theo = param
+		
+		if(adjustParam){
+			startparam = c(param['shape'],
+				range=as.vector(param['rangeInCells'])
+			)
+			newPar = optim(
+				startparam, objfun,
+				lower=startparam/4,
+				upper=startparam*4,
+				distVec=distVec,sqrtVar=sqrtVar
+			)
+		
+			newRangeInCells = newPar$par['range']
+			rangeCorrection = param['rangeInCells']/newRangeInCells
+		
+			newscale = sqrt(8*param['shape'])/(param['rangeInCells'] * 
+					rangeCorrection)
+			a = newscale^2 + 4
+		
+			precEntries = getPrec(param['shape'], a)	  
+
+			tryprec = N
+			theN = tryprec@x
+			theN = precEntries[theN]
+			tryprec@x = theN
+		
+			varMid = solve(tryprec,midVec)
+			varHere = varMid[midcell]
+					
+			distVec = distVecFull[whichDist]
+			varMid = varMid[whichDist]/varHere
+			sqrtVar = sqrt(varMid)
+
+			paramInfo$theo['rangeInCells'] = as.vector(
+					param['rangeInCells'] * rangeCorrection )
+			paramInfo$theo['range'] = as.vector(
+					paramInfo$theo['rangeInCells']*
+							param['cellSize'])
+			
+		} 
+
+		
+		
+		startparam = c(param['shape'],
+				range=as.vector(param['rangeInCells']))
+
+		newPar = optim(
+				startparam, objfun,
+				lower=startparam/4,
+				upper=startparam*4,
+				distVec=distVec,sqrtVar=sqrtVar
+		)
+		paramInfo$optimal = c(
+				newPar$par['shape'],
+				param[c('variance','cellSize')],
+				rangeInCells=as.vector(newPar$par['range']),
+				newPar$par['range']*param['cellSize']
+		)
+		
+		startparam=paramInfo$optimal['rangeInCells']
+		names(startparam)='range'
+		optSameShape = optim(
+				startparam, objfun,
+				lower=startparam/4,
+				upper=startparam*4,
+				shape=param['shape'],
+				distVec=distVec,sqrtVar=sqrtVar
+		)$par
+		
+		paramInfo$sameShape = param 
+		paramInfo$sameShape['rangeInCells']=
+				as.vector(optSameShape)
+		paramInfo$sameShape['range']=
+				as.vector(optSameShape*param['cellSize'])
+		
+		
+		startparam=paramInfo$optimal['shape']
+		optSameRange = optim(
+				startparam, objfun,
+				lower=startparam/4,
+				upper=startparam*4,
+				range=param['rangeInCells'],
+				distVec=distVec,sqrtVar=sqrtVar
+		)$par
+		paramInfo$sameRange = param 
+		paramInfo$sameRange['shape']=
+				as.vector(optSameRange)
+
+		paramInfo$oneminusar = c(onemarinus=as.vector(1-4/a))
+		
+		
+	} else {
+		warning("param must have elements named shape  and either oneminusar or range")
+		print(param)
+	}
+
+	
+	
+	
+
+	if(adjustParam){
+		marginalPrec = 1/varHere
+	} else {
+		if(param['shape'] != 0) {
+			  marginalPrec = 4*pi*param['shape'] *(a-4)^(param['shape'] )
+		  } else {
+			  marginalPrec = 4*pi
+		  }
+	}
+		  
+		# precEntries = precEntries/marginalPrec
+ 		precEntries = 
+			precEntries/(param['variance']*marginalPrec)
+		
+	theNNmat = N
+	Nx=attributes(theNNmat)$Nx 
+	Ny=attributes(theNNmat)$Ny 
+	if(is.null(Nx)){
+		Nx = Ny = sqrt(ncol(theNNmat))
+		if(Nx!=round(Nx)){
+			warning("N should have Nx and Ny attributes")
+		}
+	}
+	theN = theNNmat@x
+	theN = precEntries[theN]
+	theNNmat@x = theN
+		
+		
+	if(adjustEdges){
+		
+		distVecFull =  expand.grid(x=seq(1, Nx),
+				y=seq(Ny,1))
+		buffer = param['shape']+1
+		
+		cellVec = seq(1, nrow(distVecFull)) 
+		
+		whichInner = 
+				distVecFull[,'x']> buffer & 
+						distVecFull[,'y']>buffer &
+						distVecFull[,'x']< (Nx-buffer) &
+						distVecFull[,'y'] < (Ny-buffer) 
+			
+		innerCells = cellVec[whichInner]
+		outerCells = cellVec[!whichInner]
+
+		outerCoordsCartesian = SpatialPoints(
+			distVecFull[outerCells,]*param['cellSize']
+		)				
+		if(adjustParam){
+			paramForM = paramInfo$optimal	
+		} else {
+			paramForM = paramInfo$original	
+			if(!any(names(paramForM)=='range')){
+				paramForM= c(paramForM,
+						paramInfo$theo['range']
+						)
+			}
+		}
+				
+		covMat = matern(outerCoordsCartesian,
+				param= paramForM)
+			
+		InnerPrecision = theNNmat[innerCells, innerCells]
 			
 			#A = x[allCells,-allCells]
 			#InnerPrecInvChol = Matrix::solve(Matrix::chol(InnerPrecision))
@@ -142,12 +428,15 @@ maternGmrfPrec.dsCMatrix = function(N,
 			
 		precOuter = forceSymmetric(covMatInv + AQinvA)
 
-			theNNmat[outerCells,outerCells] = precOuter
-			theNNmat = forceSymmetric(theNNmat)
-			attributes(theNNmat)$model =c(param, adjust=1)			
+		theNNmat[outerCells,outerCells] = precOuter
+		theNNmat = forceSymmetric(theNNmat)
+		paramInfo$edge=c(correction=TRUE,adjusted=adjustParam)
 		} else {
-			attributes(theNNmat)$model =c(param, adjust=0)			
+			paramInfo$edge=c(correction=FALSE,adjusted=adjustParam)
 		}
+
+		attributes(theNNmat)$param=
+				paramInfo
 
 		attributes(theNNmat)$raster= list(
 				nrows=Ny,
@@ -157,7 +446,8 @@ maternGmrfPrec.dsCMatrix = function(N,
 				ymn=0, ymx=Ny*
 						param['cellSize']
 		)
-		
+
+					
 		if(any(installed.packages()[,'Package'] == 'raster')) {
 			attributes(theNNmat)$raster = 
 					do.call(raster::raster,attributes(theNNmat)$raster)

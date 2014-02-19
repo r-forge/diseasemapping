@@ -39,7 +39,7 @@ theArgs = list(
 )
 
 SrangeInCells=themodel['range']*
-		seq(0.75,1.5,len=24)/
+		seq(0.85,1.75,len=24)/
 		xres(myraster) 
 
 source("../R/loglikGmrf.R")
@@ -54,6 +54,7 @@ thesummary = summaryGmrfFit(res1,theArgs)$summary
 # with edge correction
 theArgs2 = theArgs
 theArgs2$adjustEdges=TRUE
+theArgs2$adjustParam=TRUE
 
 res2 = parallel::mcmapply(loglikGmrf,
 		rangeInCells=SrangeInCells, 

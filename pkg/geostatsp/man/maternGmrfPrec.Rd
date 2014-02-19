@@ -16,7 +16,7 @@ Produces the precision matrix for a Gaussian random field on a regular square la
 maternGmrfPrec(N, ...)
 \method{maternGmrfPrec}{dsCMatrix}(N, 
 	param=c(variance=1, range=1, shape=1, cellSize=1),
-  adjustEdges=FALSE,...) 
+  adjustEdges=FALSE,adjustParam=adjustEdges,...) 
 \method{maternGmrfPrec}{matrix}(N, ...)
 \method{maternGmrfPrec}{default}(N, Ny=N, 	
 param=c(variance=1, range=1, shape=1, cellSize=1),
@@ -42,6 +42,8 @@ are present and the latter are missing the reciprocal of the former are taken.}
 \item{border}{number of cells from the edge of the grid to adjust for edge effects.}
 \item{adjustEdges}{If \code{TRUE}, adjust the precision matrix so it does not implicitly assume 
 the field takes values of zero outside the specified region.  Defaults to \code{FALSE}.}
+\item{adjustParam}{If \code{TRUE}, use a numerical optimizer to find a better entries for the precision matrix.  
+Defaults to \code{adjustEdges}.}
 \item{x}{An MRF precision matrix produced by \code{maternGmrfPrec}}
 \item{nearest}{Number of nearest neighbours to compute}
 \item{...}{Additional arguments passed to \code{maternGmrfPrec.dgCMatrix}}

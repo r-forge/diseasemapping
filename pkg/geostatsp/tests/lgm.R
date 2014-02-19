@@ -84,6 +84,13 @@ names(covariates) = c("cov1","cov2")
 
 Npoints = 40
 myPoints = SpatialPoints(cbind(runif(Npoints,0,10), runif(Npoints,0,10)))	
+# check for points too close together
+thedist = spDists(myPoints)
+thedist[lower.tri(thedist,diag=TRUE)]=NA
+thedist = apply(thedist<0.2,2, any,na.rm=TRUE)
+myPoints = myPoints[!thedist]
+
+
 myPoints = SpatialPointsDataFrame(myPoints, 
 		data=as.data.frame(extract(covariates, myPoints)))
 library("RandomFields")
@@ -127,6 +134,7 @@ dev.off()
 # run lgm without providing covariates
 fitMLE =  lgm(myPoints, locations=10, formula=y~ cov1 + cov2, 
 		shape=1, fixShape=TRUE)
+
 
 c(fitMLE$summary["range","estimate"], fitLikfit$summary["range","estimate"])
 bob(fitMLE)
