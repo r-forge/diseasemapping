@@ -126,9 +126,9 @@ resNoNuggetBoth = loglikGmrf(
 		a = (scale^2 + 4) 
 		oneminusar = 1-4/a
 		
+		par(mfrow=c(2,2))		
 		for(D in c('logL.ml','logL.reml')) { 
 		
-		par(mfrow=c(2,2))		
 		plot(resNoNuggetEdge['oneminusar',],
 				resNoNuggetEdge[D,],
 				xlab='1-ar',ylab=D,
@@ -164,14 +164,16 @@ lines(resNoNuggetVanilla['rangeInCells',]*xres(myraster),
 		type='o', col=col['vanilla'],lwd=3)
 
 lines(resNoNuggetAdj['rangeInCells',]*xres(myraster),
-		resNoNuggetAdj['logL',],
+		resNoNuggetAdj[D,],
 		type='o', col=col['adj'])		
 lines(resNoNuggetBoth['rangeInCells',]*xres(myraster),
-		resNoNuggetBoth['logL',],
+		resNoNuggetBoth[D,],
 		type='o', col=col['both'])		
 abline(v=themodel['range'])
  
-		
+
+
+}
  	
 # now with added noise
 nuggetSd = 10

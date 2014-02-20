@@ -32,7 +32,9 @@ length(nn128@x)
 nn32 = NNmat(32)
 nn64 = NNmat(64)
 nn128 = NNmat(128)
-#save(nn32,nn64,nn128, file="/home/patrick/workspace/diseasemapping/pkg/geostatsp/data/nn32.RData",compress='xz')
+#save(nn32,nn64,nn128, file=
+"/home/patrick/workspace/diseasemapping/pkg/geostatsp/data/nn32.RData",
+compress='xz')
 }
 
 }
