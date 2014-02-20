@@ -1,11 +1,12 @@
-loglikGmrfSingle = function(
+loglikGmrfGivenQ = function(
 		propNugget, Yvec, YL, 
-		Xmat, XL,Q, Qchol, detQ) {
+		Xmat, XL,Q, Qchol, detQ,
+		Qcentre) {
 	
 	if(propNugget>0){
 		
 		# propNugget = tausq / (tausq + sigsq)
-		nuggetSigsq = 1/(1/propNugget -1)
+		nuggetSigsq = 1/( (1/propNugget) -1)
 		
 		IcQ = Q
 		IcQ@x = IcQ@x * nuggetSigsq 
@@ -27,179 +28,260 @@ loglikGmrfSingle = function(
 		)
 		names(betaHat) = colnames(Xmat)
 		
-		resids =  Ybreve -  Xbreve %*% betaHat 
+		residsL =  Ybreve -  Xbreve %*% betaHat 
 		
-		sigsq = as.numeric(
-				Matrix::crossprod(resids)/length(Ytilde)
-		)
 		
-		nugget = sigsq * nuggetSigsq
-		
-		m2logL = as.numeric(
+		thedet = as.numeric(
 				-2*determinant(cholIcQ,logarithm=TRUE)$modulus -
-						detQ + length(Yvec)*log(sigsq) 
+						detQ 
 		)
-		varbetahat=NULL
-	} else { # no nugget 
 		
-		XprecX = Matrix::tcrossprod(XL,XL)
+		varbetahat=NULL
+		
+	
+	} else { # no nugget 
+		nuggetSigsq = 0
+		
+		XprecX = Matrix::crossprod(XL,XL)
 		XprecXinv = solve(XprecX)
 		
 		betaHat = as.numeric(XprecXinv %*% 
-						Matrix::tcrossprod(XL , YL))
+						Matrix::crossprod(XL , YL))
 		names(betaHat) = colnames(Xmat)
 		
 		# resids ~ N(0,sigsq*prec^(-1))
-		resids = as.vector(Yvec - Xmat %*% betaHat)
+		resids = as.vector(Yvec - as.vector(Xmat %*% betaHat))
 		residsL = Matrix::crossprod(
 				solve(Qchol,resids,system="P"), 
 				expand(Qchol)$L)
-		rpr = as.numeric(Matrix::tcrossprod(residsL,residsL))
-		sigsq = rpr/ length(Yvec)
 		
-		varbetahat = as.matrix(XprecXinv*sigsq)
-		dimnames(varbetahat) = list(names(betaHat),names(betaHat))
-		
-		m2logL = length(Yvec)*log(sigsq) - detQ
-		nugget=0
+		logDetVar=-detQ
+		# matrix operations
+		# Qchol, cholCovMat = Matrix::chol(covMat)
+		# XL, cholCovInvX = Matrix::solve(cholCovMat, covariates)
+		# XprecX, cholCovInvXcross = Matrix::crossprod(cholCovInvX)
+		# XprecXinv, cholCovInvXcrossInv = Matrix::solve(cholCovInvXcross)
 	}
+
+	rpr = as.numeric(Matrix::tcrossprod(residsL,residsL))
+
+	N=c(ml=0,reml=-ncol(Xmat))+length(Yvec)
+	# estimate of the constant 
+	constHat = rpr/N
+
+	m2logL = N*log(constHat) + logDetVar + 
+			c(ml=0,reml=determinant(
+							XprecXinv,logarithm=TRUE)$modulus
+	)
+	names(m2logL) = paste("m2logL.",names(m2logL),sep='')
+
+
+	variances = rep(c(
+					sigmasq = 1,
+					tausq = nuggetSigsq),2)*
+		rep(Qcentre*rpr/N,c(2,2)) 
+	names(variances) = paste(names(variances),
+			rep(names(N),c(2,2)),sep='.')
+
+	logL = -m2logL/2
+	names(logL) = gsub("^m2","",names(logL))
+
 	
+	varbetahat = as.matrix(XprecXinv)
+	sebeta = diag(varbetahat)
+	sebeta = rep(sebeta,2)*rep(constHat,rep(length(sebeta),2))
+	names(sebeta)= paste('se',colnames(Xmat), names(sebeta),sep='.')
 	
-	
-	
-	result =c(m2logL=m2logL, logL=-m2logL/2,
+	varbetahat = abind::abind(
+			varbetahat/constHat[1],
+			varbetahat/constHat[2],
+			along=3
+			)
+	dimnames(varbetahat) = 
+					list(names(betaHat),names(betaHat),
+							names(constHat))
+
+			
+	result =c(m2logL, logL,
+			variances,
+			propNugget=propNugget,			
 			beta=betaHat, 
-			sigmasq=sigsq, 
-			tausq=nugget, 
-			propNugget=propNugget)
+			sebeta)
 	
 	attributes(result)$varbetahat = varbetahat
 	
-	
 	result
-	
+
 }
 
-loglikGmrf = function(oneminusar=NULL, rangeInCells=NULL,
+loglikGmrfOneRange = function(
+		oneminusar=NULL, rangeInCells=NULL,
 		Yvec, Xmat, NN, propNugget=0,
 		shape=1,
-		adjustEdges=FALSE,adjustParam=FALSE) {
+		adjustEdges=FALSE,adjustParam=FALSE,
+		adjustShape=FALSE) {
+	
+	Nx=attributes(NN)$Nx;Ny=attributes(NN)$Ny
+	
 	
 	if(is.null(oneminusar)){
 
-		NN = geostatsp::maternGmrfPrec(NN,
+		NN = maternGmrfPrec(NN,
 				param=c(shape=shape,
-						range=oneminusar),
-				adjustEdges=adjustEdges,adjustParam=adjustParam)
+						range=as.vector(rangeInCells[1])),
+				adjustEdges=adjustEdges,adjustParam=adjustParam,
+				adjustShape=adjustShape)
+		oneminusar=NA
 	} else {
-		aroveronemar = (1-oneminusar)/oneminusar
-		NN = geostatsp::maternGmrfPrec(NN,
-				param=c(variance=1,shape=maternShape,cellSize=1,
-						onemar=as.vector(1-ar)),
-				adjustEdges=adjustEdges,adjustParam=adjustParam)
-		
+ 		NN =  maternGmrfPrec(NN,
+				param=c(shape=shape,
+						oneminusar=oneminusar[1]),
+				adjustEdges=adjustEdges,adjustParam=adjustParam,
+				adjustShape=adjustShape)
 		if(adjustParam) {
-			rangeInCells = 	attributes(NN)$param$sameShape['rangeInCells']
+				rangeInCells = 	
+					attributes(NN)$param$optimal['rangeInCells']
+				shape=attributes(NN)$param$optimal['shape']
 		} else {
-			rangeInCells = attributes(NN)$param$theo['rangeInCells']
+			rangeInCells = 
+					attributes(NN)$param$theo['rangeInCells']
 		}
-	}
+	}		
 
-	if(!any(maternShape==c(0,1,2))) {
-		warning("shape should be 0, 1, or 2")
-	}
-	
-	
-	
 	cholPrec = Cholesky(NN,LDL=FALSE)
 	theDet = 2*as.numeric(determinant(cholPrec,
 					logarithm=TRUE)$modulus)
 	
 	# beta hat = (X'prec/C X)^{-1} X'prec/C y
 	LofQ = expand(cholPrec)$L
-	XL = Matrix::crossprod(solve(cholPrec,Xmat,system="P"),
-			LofQ)
-	YL = Matrix::crossprod(
+	XL = t(Matrix::crossprod(solve(cholPrec,Xmat,system="P"),
+			LofQ))
+	YL = as.vector(Matrix::crossprod(
 			solve(cholPrec,Yvec,system="P"),LofQ)
+	)	
+
+	# variance of Q inverse
+	midcellCoord = c(round(Nx*.5),round(Ny*0.5)) # the middle cell
+	midcell = c(Nx*(Ny-midcellCoord[2]) + midcellCoord[1])
+	midVec = sparseMatrix(midcell,1,x=1,
+			dims=c(ncol(NN),1))
+	
+	Qcentre = max(
+			solve(cholPrec, 
+			solve(cholPrec,midVec,system="P"),
+			system="A")	
+	)
+	
+	argList = list(Yvec=Yvec,YL=YL,
+			Xmat=Xmat,XL=XL,
+			Q=NN,Qchol=cholPrec,
+			detQ=theDet,Qcentre=Qcentre)
 	
 	if(length(propNugget)==1) {
-		res = loglikGmrfSingle(
-				propNugget, Yvec, YL, 
-				Xmat, XL,Q, cholPrec, theDet) 	
+		
+		argList$propNugget=propNugget
+
+		res = do.call(loglikGmrfGivenQ,argList)
+
 		res = c(res,
 				rangeInCells=
 						as.numeric(rangeInCells),
-				ar=as.numeric(ar),
-				maternShape=as.numeric(maternShape)
+				oneminusar=as.numeric(oneminusar),
+				shape=as.numeric(shape)
 			)
 		
 	} else {
 		
 
-	argList = list(Yvec=Yvec,YL=YL,
+		argList = list(Yvec=Yvec,YL=YL,
 			Xmat=Xmat,XL=XL,
 			Q=NN,Qchol=cholPrec,
-			detQ=theDet)
+			detQ=theDet,Qcentre=Qcentre)
 
-	res = mapply(loglikGmrfSingle,
+		res = mapply(loglikGmrfGivenQ,
 			propNugget=propNugget,			
-			MoreArgs=argList,
-			SIMPLIFY=TRUE
-	)
-	res = rbind(res,
-		rangeInCells=as.numeric(rangeInCells),
-		ar=as.numeric(ar),
-		maternShape=as.numeric(maternShape)
-	)
+			MoreArgs=argList,SIMPLIFY=TRUE
+		)
+		res = rbind(res,
+			rangeInCells=as.numeric(rangeInCells),
+			oneminusar=as.numeric(oneminusar),
+			shape=as.numeric(shape)
+		)
 	
 }
 
-res 
+res
 
 }
 
-bob=function(){
-	
-	XprecX = Matrix::tcrossprod(XL,XL)
-	XprecXinv = solve(XprecX)
 
-	betahat = as.numeric(XprecXinv %*% 
-					Matrix::tcrossprod(XL , YL))
-	names(betahat) = colnames(Xmat)
-	
-	
-	# resids ~ N(0,sigsq*prec^(-1))
-	resids = as.vector(Yvec - Xmat %*% betahat)
-	residsL = Matrix::crossprod(
-			solve(cholPrec,resids,system="P"), 
-			cholPrec)
-	rpr = as.numeric(Matrix::tcrossprod(residsL,residsL))
-	sigsq = rpr/ length(Yvec)
 
-	varbetahat = as.matrix(XprecXinv*sigsq)
-	dimnames(varbetahat) = list(names(betahat),names(betahat))
-	
-	m2logL = length(Yvec)*log(sigsq) - theDet
-	
-	result = c(
-			m2logL = m2logL,
-			logL = -m2logL/2,
-			rangeInCells=rangeInCells,
-			sigmasq= sigsq,
-			beta=betahat,
-			maternShape=maternShape,
-			ar=ar,
-			logdet=theDet
-	)
-	
-	attributes(result)$varbetahat = varbetahat
+loglikGmrf = function(
+		oneminusar=NULL, rangeInCells=NULL,
+		Yvec, Xmat, NN, propNugget=0,
+		shape=1,
+		adjustEdges=FALSE,adjustParam=FALSE,
+		adjustShape=FALSE,
+		mc.cores=1) {
 
-	result
+	
+		argList = list(Yvec=Yvec, 
+			Xmat=Xmat, NN=NN,
+			propNugget=propNugget,
+			shape=shape,
+			adjustEdges=adjustEdges,
+			adjustParam=adjustParam,
+			adjustShape=adjustShape
+		)
+
+		
+		if(mc.cores>1) {
+			myapply= function(...){
+				parallel::mcmapply(...,
+						mc.cores=mc.cores)
+			}
+		} else {
+			myapply= mapply
+				}
+		
+		if(!is.null(oneminusar)){
+			res=myapply(loglikGmrfOneRange,
+				oneminusar=oneminusar,	
+				MoreArgs=argList,
+				SIMPLIFY=FALSE
+				)
+				names(res) = 
+						paste("oneminusar=",oneminusar,sep="")
+		} else {
+			res=myapply(loglikGmrfOneRange,
+					rangeInCells=rangeInCells,
+					MoreArgs=argList,SIMPLIFY=FALSE
+			)
+			names(res) = 
+					paste("rangeInCells=",rangeInCells,sep="")
+			
+		}
+		if(class(res[[1]])!= 'character'){
+			res= simplify2array(res)
+		}
+		res
+}
+
+ 
+
+
+summaryGmrfFit= function(applyResult,MoreArgs) {
+	UseMethod("summaryGmrfFit")	
 }
  
-summaryGmrfFit = function(applyResult,MoreArgs) {
+summaryGmrfFit.array = function() {
+	
+}
+
+summaryGmrfFit.matrix = function(applyResult,MoreArgs) {
 	
 	fun=loglikGmrf
+	
 	applyResult = t(applyResult)
 
 	MLErow = applyResult[which.max(applyResult[ ,'logL']),]	

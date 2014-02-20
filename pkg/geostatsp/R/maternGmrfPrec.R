@@ -56,7 +56,8 @@ maternGmrfPrec.matrix = function(N, ...) {
 
 maternGmrfPrec.dsCMatrix = function(N, 	
 		param=c(variance=1, range=1, shape=1, cellSize=1),
-		adjustEdges=FALSE,adjustParam=adjustEdges,...) {
+		adjustEdges=FALSE,adjustParam=FALSE,
+		adjustShape=FALSE,...) {
 
 	names(param) = gsub("^var$", "variance", names(param))
 	if(!any(names(param)=='variance'))
@@ -96,7 +97,7 @@ maternGmrfPrec.dsCMatrix = function(N,
 	Nx = attributes(tryprec)$Nx
 	Ny = attributes(tryprec)$Ny
 	
-	midcellCoord = c(round(Nx*0.4),round(Ny*0.4)) # the middle cell
+	midcellCoord = c(round(Nx*0.45),round(Ny*0.45)) # the middle cell
 	midcell = c(Nx*(Ny-midcellCoord[2]) + midcellCoord[1])
 	midVec = sparseMatrix(midcell,1,x=1,
 			dims=c(ncol(N),1))
@@ -121,7 +122,8 @@ maternGmrfPrec.dsCMatrix = function(N,
 	
 	# if 1 - AR parameter supplied
 	if(all(c("oneminusar","shape") %in% names(param))){
-		a = 4/(1-param['oneminusar'])		
+		a = 4/(1-param['oneminusar'])	
+		
 
 		paramInfo$theo = c(param[c('shape','cellSize','variance')],
 				rangeInCells=as.numeric(sqrt(8*param['shape'])/sqrt(a-4))
@@ -154,7 +156,7 @@ maternGmrfPrec.dsCMatrix = function(N,
 		whichDist = which(
 				isInner &
 				(
-							distVecFull < (1.75*param['rangeInCells'])
+							distVecFull < (1.75*paramInfo$theo['rangeInCells'])
 							) & 
 						( distVecFull > 0))
 		
@@ -162,8 +164,7 @@ maternGmrfPrec.dsCMatrix = function(N,
 		varMid = varMid[whichDist]/varHere
 		sqrtVar = sqrt(varMid)
 				
-		varMid = varMid[whichDist]/varHere
-		sqrtVar = sqrt(varMid)
+
 		
 		
 		startparam = c(param['shape'],
@@ -173,7 +174,8 @@ maternGmrfPrec.dsCMatrix = function(N,
 				startparam, objfun,
 				lower=startparam/4,
 				upper=startparam*4,
-				distVec=distVec,sqrtVar=sqrtVar
+				distVec=distVec,sqrtVar=sqrtVar,
+				method='L-BFGS-B'
 		)
 		paramInfo$optimal = c(
 				newPar$par['shape'],
@@ -189,7 +191,8 @@ maternGmrfPrec.dsCMatrix = function(N,
 				lower=startparam/4,
 				upper=startparam*4,
 				shape=param['shape'],
-				distVec=distVec,sqrtVar=sqrtVar
+				distVec=distVec,sqrtVar=sqrtVar,
+				method='L-BFGS-B'
 		)$par
 		
 		paramInfo$sameShape = paramInfo$theo
@@ -249,14 +252,16 @@ maternGmrfPrec.dsCMatrix = function(N,
 		paramInfo$theo = param
 		
 		if(adjustParam){
-			startparam = c(param['shape'],
+			startparam = c(#param['shape'],
 				range=as.vector(param['rangeInCells'])
 			)
 			newPar = optim(
 				startparam, objfun,
 				lower=startparam/4,
 				upper=startparam*4,
-				distVec=distVec,sqrtVar=sqrtVar
+				distVec=distVec,sqrtVar=sqrtVar,
+				shape=param['shape'],
+				method='L-BFGS-B'
 			)
 		
 			newRangeInCells = newPar$par['range']
@@ -297,7 +302,8 @@ maternGmrfPrec.dsCMatrix = function(N,
 				startparam, objfun,
 				lower=startparam/4,
 				upper=startparam*4,
-				distVec=distVec,sqrtVar=sqrtVar
+				distVec=distVec,sqrtVar=sqrtVar,
+				method='L-BFGS-B'
 		)
 		paramInfo$optimal = c(
 				newPar$par['shape'],
@@ -313,7 +319,8 @@ maternGmrfPrec.dsCMatrix = function(N,
 				lower=startparam/4,
 				upper=startparam*4,
 				shape=param['shape'],
-				distVec=distVec,sqrtVar=sqrtVar
+				distVec=distVec,sqrtVar=sqrtVar,
+				method='L-BFGS-B'
 		)$par
 		
 		paramInfo$sameShape = param 
@@ -329,7 +336,8 @@ maternGmrfPrec.dsCMatrix = function(N,
 				lower=startparam/4,
 				upper=startparam*4,
 				range=param['rangeInCells'],
-				distVec=distVec,sqrtVar=sqrtVar
+				distVec=distVec,sqrtVar=sqrtVar,
+				method='L-BFGS-B'
 		)$par
 		paramInfo$sameRange = param 
 		paramInfo$sameRange['shape']=
@@ -343,23 +351,43 @@ maternGmrfPrec.dsCMatrix = function(N,
 		print(param)
 	}
 
+	if(adjustParam & !adjustShape){
+		paramInfo$optimal = paramInfo$sameShape
+	} 
 	
 	
 	
-
+# marginal precision
 	if(adjustParam){
-		marginalPrec = 1/varHere
+		midQ = as(N[,midcell],'sparseVector')
+		midQ@x = precEntries[midQ@x]
+		
+
+		paramHere = paramInfo$optimal
+		
+		paramHere = paramHere[
+				c('shape','rangeInCells')]
+		names(paramHere) = gsub("^rangeInCells$", "range",
+				names(paramHere))
+		paramHere['variance']=1
+		midVar = matern(distVecFull,
+				param= paramHere
+						)	 
+				
+		marginalPrec =  sum(midQ@x * midVar[midQ@i])
+ 
+
 	} else {
 		if(param['shape'] != 0) {
-			  marginalPrec = 4*pi*param['shape'] *(a-4)^(param['shape'] )
+			  marginalPrec = (4*pi*param['shape'] *(a-4)^(param['shape'] ))
 		  } else {
-			  marginalPrec = 4*pi
+			  marginalPrec = (4*pi)
 		  }
 	}
 		  
 		# precEntries = precEntries/marginalPrec
  		precEntries = 
-			precEntries/(param['variance']*marginalPrec)
+			precEntries/(marginalPrec*param['variance'])
 		
 	theNNmat = N
 	Nx=attributes(theNNmat)$Nx 
@@ -396,7 +424,7 @@ maternGmrfPrec.dsCMatrix = function(N,
 			distVecFull[outerCells,]*param['cellSize']
 		)				
 		if(adjustParam){
-			paramForM = paramInfo$optimal	
+ 				paramForM = paramInfo$optimal
 		} else {
 			paramForM = paramInfo$original	
 			if(!any(names(paramForM)=='range')){
@@ -430,9 +458,13 @@ maternGmrfPrec.dsCMatrix = function(N,
 
 		theNNmat[outerCells,outerCells] = precOuter
 		theNNmat = forceSymmetric(theNNmat)
-		paramInfo$edge=c(correction=TRUE,adjusted=adjustParam)
+		paramInfo$adjustShape=c(edge=TRUE,
+				param=adjustParam,
+				shape=adjustShape)
 		} else {
-			paramInfo$edge=c(correction=FALSE,adjusted=adjustParam)
+			paramInfo$adjust=c(edge=FALSE,
+					param=adjustParam,
+				shape=adjustShape)
 		}
 
 		attributes(theNNmat)$param=
