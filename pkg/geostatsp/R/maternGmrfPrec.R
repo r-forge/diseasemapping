@@ -57,7 +57,8 @@ maternGmrfPrec.matrix = function(N, ...) {
 maternGmrfPrec.dsCMatrix = function(N, 	
 		param=c(variance=1, range=1, shape=1, cellSize=1),
 		adjustEdges=FALSE,adjustParam=FALSE,
-		adjustShape=FALSE,...) {
+		adjustShape=FALSE,
+		adjustMarginalVariance=FALSE,...) {
 
 	names(param) = gsub("^var$", "variance", names(param))
 	if(!any(names(param)=='variance'))
@@ -97,7 +98,7 @@ maternGmrfPrec.dsCMatrix = function(N,
 	Nx = attributes(tryprec)$Nx
 	Ny = attributes(tryprec)$Ny
 	
-	midcellCoord = c(round(Nx*0.45),round(Ny*0.45)) # the middle cell
+	midcellCoord = c(round(Nx*0.4),round(Ny*0.4)) # the middle cell
 	midcell = c(Nx*(Ny-midcellCoord[2]) + midcellCoord[1])
 	midVec = sparseMatrix(midcell,1,x=1,
 			dims=c(ncol(N),1))
@@ -351,15 +352,22 @@ maternGmrfPrec.dsCMatrix = function(N,
 		print(param)
 	}
 
-	if(adjustParam & !adjustShape){
-		paramInfo$optimal = paramInfo$sameShape
-	} 
+	if(adjustParam) {
+		if(adjustShape){
+			paramInfo$target = paramInfo$optimal
+			} else { 
+		paramInfo$target = paramInfo$sameShape
+		}
+	} else {
+		paramInfo$target = paramInfo$theo
+	}
 	
 	
 	
 # marginal precision
-	if(adjustParam){
-		midQ = as(N[,midcell],'sparseVector')
+#	if(adjustParam){
+if(adjustMarginalVariance){
+	midQ = as(N[,midcell],'sparseVector')
 		midQ@x = precEntries[midQ@x]
 		
 
@@ -370,25 +378,31 @@ maternGmrfPrec.dsCMatrix = function(N,
 		names(paramHere) = gsub("^rangeInCells$", "range",
 				names(paramHere))
 		paramHere['variance']=1
-		midVar = matern(distVecFull,
+		midVar = matern(distVecFull[midQ@i],
 				param= paramHere
 						)	 
 				
-		marginalPrec =  sum(midQ@x * midVar[midQ@i])
+		marginalPrec =  sum(midQ@x * midVar)
  
-
-	} else {
+} else {
 		if(param['shape'] != 0) {
 			  marginalPrec = (4*pi*param['shape'] *(a-4)^(param['shape'] ))
 		  } else {
 			  marginalPrec = (4*pi)
 		  }
-	}
-		  
+}
+
 		# precEntries = precEntries/marginalPrec
- 		precEntries = 
-			precEntries/(marginalPrec*param['variance'])
-		
+ 	#	precEntries = 
+	#		precEntries/(marginalPrec*param['variance'])
+#print(precEntries)
+	precEntries = precEntries*exp(  
+					 -log(marginalPrec) - 
+					log(param['variance'])
+	)
+#	print(precEntries)
+	
+	
 	theNNmat = N
 	Nx=attributes(theNNmat)$Nx 
 	Ny=attributes(theNNmat)$Ny 
@@ -458,7 +472,7 @@ maternGmrfPrec.dsCMatrix = function(N,
 
 		theNNmat[outerCells,outerCells] = precOuter
 		theNNmat = forceSymmetric(theNNmat)
-		paramInfo$adjustShape=c(edge=TRUE,
+		paramInfo$adjust=c(edge=TRUE,
 				param=adjustParam,
 				shape=adjustShape)
 		} else {
@@ -466,27 +480,34 @@ maternGmrfPrec.dsCMatrix = function(N,
 					param=adjustParam,
 				shape=adjustShape)
 		}
+		paramInfo$adjust['marginalVariance'] = 
+				adjustMarginalVariance
+		paramInfo$precisionEntries = precEntries
+		paramInfo$marginalPrec = as.vector(marginalPrec)
+		
+		theNNmat = drop0(theNNmat)
 
+		
 		attributes(theNNmat)$param=
 				paramInfo
 
-		attributes(theNNmat)$raster= list(
+	attributes(theNNmat)$raster= list(
 				nrows=Ny,
 				ncols=Nx, 
 				xmn=0,xmx=Nx*
 						param['cellSize'],
 				ymn=0, ymx=Ny*
 						param['cellSize']
-		)
+	)
 
 					
-		if(any(installed.packages()[,'Package'] == 'raster')) {
-			attributes(theNNmat)$raster = 
-					do.call(raster::raster,attributes(theNNmat)$raster)
-		}
-		
-		return(theNNmat)
+	if(any(installed.packages()[,'Package'] == 'raster')) {
+		attributes(theNNmat)$raster = 
+				do.call(raster::raster,attributes(theNNmat)$raster)
 	}
+		
+	return(theNNmat)
+}
 	
 NNmat = function(N,Ny=N,nearest=3) {
 		UseMethod("NNmat")	

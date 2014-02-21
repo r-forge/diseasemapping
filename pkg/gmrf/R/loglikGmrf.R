@@ -1,24 +1,36 @@
 loglikGmrfGivenQ = function(
-		propNugget, Yvec, YL, 
-		Xmat, XL,Q, Qchol, detQ,
-		Qcentre) {
+		propNugget, Yp, YL, 
+		Xp, XL,Qchol, detQ, 
+		QLL=NULL,cholQLL=NULL) {
 	
 	if(propNugget>0){
-		
+
 		# propNugget = tausq / (tausq + sigsq)
 		nuggetSigsq = 1/( (1/propNugget) -1)
+		# nuggetSigsq = tausq/sigsq
 		
-		IcQ = Q
-		IcQ@x = IcQ@x * nuggetSigsq 
-		diag(IcQ) = diag(IcQ) +1 
-		cholIcQ = Cholesky(IcQ,LDL=FALSE)
+		
+		if(is.null(QLL)) {
+			LofQ = expand(Qchol)$L
+			QLL = forceSymmetric(crossprod(LofQ,LofQ))
+			diag(QLL) = diag(QLL) + 1/nuggetSigsq
+			cholIcQ = Cholesky(QLL, LDL=FALSE)
+			YL = solve(cholIcQ, YL,
+					system='P')	
+			XL = solve(cholIcQ, XL,
+					system='P')	
+		} else {
+			# IcQ = (Q + I/c) c 
+			cholIcQ = update(cholQLL, QLL,mult=1/nuggetSigsq)
+		}
+		# should multiply cholIcQ by sqrt(nuggetSigsq)
+
 		
 		Ybreve = solve(cholIcQ, 
-				solve(cholIcQ,YL,system="P"),
-				system="L")
+				YL,	system='L')
 		Xbreve = solve(cholIcQ, 
-				solve(cholIcQ,XL,system="P"),
-				system="L")	
+				 XL, system='L')	
+		# should divide the above by sqrt(nuggetSigsq)
 		
 		XprecXinv = solve(Matrix::crossprod(Xbreve,Xbreve)) 
 		
@@ -28,17 +40,18 @@ loglikGmrfGivenQ = function(
 		)
 		names(betaHat) = colnames(Xmat)
 		
-		residsL =  Ybreve -  Xbreve %*% betaHat 
+		residsL =  as.vector(Ybreve -  Xbreve %*% betaHat )/ 
+				sqrt(nuggetSigsq)
 		
 		
-		thedet = as.numeric(
-				-2*determinant(cholIcQ,logarithm=TRUE)$modulus -
+		logDetVar = as.numeric(
+				length(YL) * log(nuggetSigsq) + 
+				2*determinant(cholIcQ,logarithm=TRUE)$modulus -
 						detQ 
 		)
 		
-		varbetahat=NULL
+
 		
-	
 	} else { # no nugget 
 		nuggetSigsq = 0
 		
@@ -50,10 +63,10 @@ loglikGmrfGivenQ = function(
 		names(betaHat) = colnames(Xmat)
 		
 		# resids ~ N(0,sigsq*prec^(-1))
-		resids = as.vector(Yvec - as.vector(Xmat %*% betaHat))
-		residsL = Matrix::crossprod(
-				solve(Qchol,resids,system="P"), 
-				expand(Qchol)$L)
+		resids = Yp - as.vector(Xp %*% betaHat)
+		residsL = as.numeric(Matrix::crossprod(
+				resids, 
+				expand(Qchol)$L))
 		
 		logDetVar=-detQ
 		# matrix operations
@@ -63,9 +76,9 @@ loglikGmrfGivenQ = function(
 		# XprecXinv, cholCovInvXcrossInv = Matrix::solve(cholCovInvXcross)
 	}
 
-	rpr = as.numeric(Matrix::tcrossprod(residsL,residsL))
+	rpr = as.numeric(crossprod(residsL,residsL))
 
-	N=c(ml=0,reml=-ncol(Xmat))+length(Yvec)
+	N=c(ml=0,reml=-ncol(Xp))+length(Yp)
 	# estimate of the constant 
 	constHat = rpr/N
 
@@ -79,7 +92,7 @@ loglikGmrfGivenQ = function(
 	variances = rep(c(
 					sigmasq = 1,
 					tausq = nuggetSigsq),2)*
-		rep(Qcentre*rpr/N,c(2,2)) 
+		rep(rpr/N,c(2,2)) 
 	names(variances) = paste(names(variances),
 			rep(names(N),c(2,2)),sep='.')
 
@@ -95,8 +108,8 @@ loglikGmrfGivenQ = function(
 	varbetahat = abind::abind(
 			varbetahat/constHat[1],
 			varbetahat/constHat[2],
-			along=3
-			)
+			along=3)
+			
 	dimnames(varbetahat) = 
 					list(names(betaHat),names(betaHat),
 							names(constHat))
@@ -106,7 +119,9 @@ loglikGmrfGivenQ = function(
 			variances,
 			propNugget=propNugget,			
 			beta=betaHat, 
-			sebeta)
+			sebeta,
+			logDetVar=as.numeric(logDetVar),
+			rpr=rpr)
 	
 	attributes(result)$varbetahat = varbetahat
 	
@@ -119,7 +134,7 @@ loglikGmrfOneRange = function(
 		Yvec, Xmat, NN, propNugget=0,
 		shape=1,
 		adjustEdges=FALSE,adjustParam=FALSE,
-		adjustShape=FALSE) {
+		adjustShape=FALSE,adjustMarginalVariance=FALSE) {
 	
 	Nx=attributes(NN)$Nx;Ny=attributes(NN)$Ny
 	
@@ -130,14 +145,16 @@ loglikGmrfOneRange = function(
 				param=c(shape=shape,
 						range=as.vector(rangeInCells[1])),
 				adjustEdges=adjustEdges,adjustParam=adjustParam,
-				adjustShape=adjustShape)
+				adjustShape=adjustShape,
+				adjustMarginalVariance=adjustMarginalVariance)
 		oneminusar=NA
 	} else {
  		NN =  maternGmrfPrec(NN,
-				param=c(shape=shape,
-						oneminusar=oneminusar[1]),
+				param=c(shape=as.vector(shape),
+						oneminusar=as.vector(oneminusar[1])),
 				adjustEdges=adjustEdges,adjustParam=adjustParam,
-				adjustShape=adjustShape)
+				adjustShape=adjustShape,
+				adjustMarginalVariance=adjustMarginalVariance)
 		if(adjustParam) {
 				rangeInCells = 	
 					attributes(NN)$param$optimal['rangeInCells']
@@ -152,31 +169,50 @@ loglikGmrfOneRange = function(
 	theDet = 2*as.numeric(determinant(cholPrec,
 					logarithm=TRUE)$modulus)
 	
-	# beta hat = (X'prec/C X)^{-1} X'prec/C y
-	LofQ = expand(cholPrec)$L
-	XL = t(Matrix::crossprod(solve(cholPrec,Xmat,system="P"),
-			LofQ))
-	YL = as.vector(Matrix::crossprod(
-			solve(cholPrec,Yvec,system="P"),LofQ)
-	)	
+	Xp = solve(cholPrec,Xmat,system="P")
+	Yp = solve(cholPrec,Yvec,system="P")
 
-	# variance of Q inverse
-	midcellCoord = c(round(Nx*.5),round(Ny*0.5)) # the middle cell
-	midcell = c(Nx*(Ny-midcellCoord[2]) + midcellCoord[1])
-	midVec = sparseMatrix(midcell,1,x=1,
-			dims=c(ncol(NN),1))
 	
-	Qcentre = max(
-			solve(cholPrec, 
-			solve(cholPrec,midVec,system="P"),
-			system="A")	
+	LofQ = expand(cholPrec)$L
+	XL = Matrix::crossprod(LofQ,Xp)
+	YL = as.vector(
+			Matrix::crossprod(LofQ,Yp)
 	)
+
+	argList = list(Yp=Yp,YL=YL,
+			Xp=Xp,XL=XL,
+			Qchol=cholPrec,
+			detQ=theDet)
+
+
+	if(!all(propNugget==0)) {
+		argList$QLL = forceSymmetric(crossprod(LofQ,LofQ))
+		argList$cholQLL = Cholesky(argList$QLL,LDL=FALSE)
+		argList$YL = solve(argList$cholQLL, argList$YL,
+				system='P')	
+		argList$XL = solve(argList$cholQLL, argList$XL,
+				system='P')	
+		
+	}
 	
-	argList = list(Yvec=Yvec,YL=YL,
-			Xmat=Xmat,XL=XL,
-			Q=NN,Qchol=cholPrec,
-			detQ=theDet,Qcentre=Qcentre)
+	#QLL=argList$QLL;cholQLL=argList$cholQLL;XL=argList$XL;YL=argList$YL
 	
+	# Q=NN;Qchol=cholPrec;detQ=theDet
+
+
+# variance of Q inverse
+midcellCoord = c(round(Nx*.5),round(Ny*0.5)) # the middle cell
+midcell = c(Nx*(Ny-midcellCoord[2]) + midcellCoord[1])
+midVec = sparseMatrix(midcell,1,x=1,
+		dims=c(ncol(NN),1))
+
+Qcentre = #max(
+		solve(cholPrec, 
+				solve(cholPrec,midVec,system="P"),
+				system="A")	
+#)
+
+
 	if(length(propNugget)==1) {
 		
 		argList$propNugget=propNugget
@@ -187,16 +223,11 @@ loglikGmrfOneRange = function(
 				rangeInCells=
 						as.numeric(rangeInCells),
 				oneminusar=as.numeric(oneminusar),
-				shape=as.numeric(shape)
+				shape=as.numeric(shape),
+				Qcentre=as.numeric(Qcentre)
 			)
 		
 	} else {
-		
-
-		argList = list(Yvec=Yvec,YL=YL,
-			Xmat=Xmat,XL=XL,
-			Q=NN,Qchol=cholPrec,
-			detQ=theDet,Qcentre=Qcentre)
 
 		res = mapply(loglikGmrfGivenQ,
 			propNugget=propNugget,			
@@ -205,10 +236,13 @@ loglikGmrfOneRange = function(
 		res = rbind(res,
 			rangeInCells=as.numeric(rangeInCells),
 			oneminusar=as.numeric(oneminusar),
-			shape=as.numeric(shape)
+			shape=as.numeric(shape),
+			Qcentre=as.numeric(Qcentre)
 		)
 	
 }
+
+attributes(res)$Qinfo = attributes(NN)$param
 
 res
 
@@ -221,7 +255,7 @@ loglikGmrf = function(
 		Yvec, Xmat, NN, propNugget=0,
 		shape=1,
 		adjustEdges=FALSE,adjustParam=FALSE,
-		adjustShape=FALSE,
+		adjustShape=FALSE, adjustMarginalVariance=FALSE,
 		mc.cores=1) {
 
 	

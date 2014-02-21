@@ -17,7 +17,7 @@ maternGmrfPrec(N, ...)
 \method{maternGmrfPrec}{dsCMatrix}(N, 
 	param=c(variance=1, range=1, shape=1, cellSize=1),
   adjustEdges=FALSE,adjustParam=FALSE,
-  adjustShape=FALSE,...) 
+  adjustShape=FALSE,adjustMarginalVariance=FALSE,...) 
 \method{maternGmrfPrec}{matrix}(N, ...)
 \method{maternGmrfPrec}{default}(N, Ny=N, 	
 param=c(variance=1, range=1, shape=1, cellSize=1),
@@ -47,6 +47,8 @@ the field takes values of zero outside the specified region.  Defaults to \code{
 Defaults to \code{FALSE}.}
 \item{adjustShape}{If \code{TRUE}, approximate a matern with the optimal shape parameter.  Otherwise
 find the best approximation to a matern with the supplied shape parameter.  Defaults to \code{FALSE}.}
+\item{adjustMarginalVariance}{If \code{TRUE}, use the numeric rather than theoretical values for the
+marginal variance to scale the precision matrix.  Defaults to \code{FALSE}.}
 \item{x}{An MRF precision matrix produced by \code{maternGmrfPrec}}
 \item{nearest}{Number of nearest neighbours to compute}
 \item{...}{Additional arguments passed to \code{maternGmrfPrec.dgCMatrix}}

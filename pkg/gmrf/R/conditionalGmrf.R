@@ -1,65 +1,55 @@
-conditionalGmrf = function(param, MoreArgs=NULL,
-		Yvec=MoreArgs$Yvec,Xmat=MoreArgs$Xmat,
-		NN=MoreArgs$NN,mc.cores=1) {
+conditionalGmrf = function(param,
+		Yvec,Xmat,
+		predRaster, NN=NNmat(predRaster),
+		mc.cores=1, ...) {
 	
-	ar = param['ar']
-	maternShape=param['maternShape']
-	tausq = param['tausq']
-	xisq = param['xisq']
+	ar = 1-param['oneminusar']
+	maternShape=param['shape']
+	tausq = param['tausq.ml']
+	sigsq = param['sigmasq.ml']
 	
-	
-	
-	if(maternShape==0) {
-		paramXX = c(1,-ar/4, rep(0,4))
-		NN@x = paramXX[NN@x]
-	} else if(maternShape==1){
-		paramXX = c(4 + (4/ar)^2, -8/ar, 2, 1, rep(0,2))
-		NN@x = paramXX[NN@x]
-	} else if(maternShape==2){
-		paramXX = c((4/ar)*(12+16/ar^2),-3*(3 +  16*ar^2), 24/ar,12/ar, -3, -1)
-		NN@x = paramXX[NN@x]
-	}else {
-		warning("shape should be 0, 1, or 2")
-	}
-	
-	IcQ=NN
-	IcQ@x = IcQ@x * (tausq/xisq)
-	diag(IcQ) = diag(IcQ) +1 
 	
 	fixed=as.vector(Xmat %*% 
-			param[paste("beta",colnames(Xmat), sep=".")]
-)
-	resids = Yvec -	fixed
-
+					param[paste("beta",colnames(Xmat), sep=".")]
+	)
 	
-	if(mc.cores==1) {
-		cIcQ = Cholesky(IcQ)
-		cQ = Cholesky(NN)
-	} else {
-		cIcQ = mcparallel(Cholesky(IcQ),name='cIcQ')
-		cQ = mcparallel(Cholesky(NN),name='cQ')
-		thec = mccollect(list(cIcQ, cQ))
-		cIcQ = thec[['cIcQ']]
-		cQ = thec[['cQ']]
-	}
+	Q = maternGmrfPrec(NN,param,...)
+	Qchol = Cholesky(Q, LDL=FALSE)
 
-	EUY = as.vector(solve(cIcQ, resids))
+	residsOrig = Yvec -	fixed
+	resids = solve(Qchol,
+			residsOrig,
+			system='P')
+	
+	nuggetSigsq = tausq/sigsq
+	# nuggetSigsq = tausq/sigsq
+
+	LofQ = expand(Qchol)$L
+	QLL = forceSymmetric(crossprod(LofQ,LofQ))
+	diag(QLL) = diag(QLL) + 1/nuggetSigsq
+	cholIcQ = Cholesky(QLL, LDL=FALSE)
+
+	residsP = solve(cIcQ, resids,system='P')
+	
+	
+	EUY = solve(Qchol,
+			solve(cIcQ,
+			as.vector(solve(cIcQ, residsP,system='A')),
+			system="Pt"),
+	system='Pt')
 	
 	varOneCell = function(D) {
 		thisD = sparseMatrix(D,1,x=1,dims=c(Ny,1))
-		solveQ = solve(cQ, thisD)
+		solveQ = solve(Qchol, thisD,system='A')
+		solveQp = solve(cIcQ, solveQ,system='P')
+		thisDp = solve(cIcQ, thisDp ,system='P')
 		as.vector(
-				solveQ[D] - sum(solve(cIcQ, thisD) * solveQ)
+				solveQ[D] - sum(solve(cIcQ, thisDp,
+								system='A') * solveQ)
 		)
 	}
-	newenv =new.env()
-	junk=eval(library("Matrix"),envir=newenv)
-	assign("Ny",length(resids),envir=newenv)
-	assign("cIcQ",cIcQ,envir=newenv)
-	assign("cQ",cQ,envir=newenv)
-	environment(varOneCell) = newenv
-	
 
+	
 	if(mc.cores==1) {
 		thediag = mapply(varOneCell, 1:length(resids))
 	} else {
@@ -67,10 +57,14 @@ conditionalGmrf = function(param, MoreArgs=NULL,
 				mc.cores=mc.cores,SIMPLIFY=TRUE)
 	}
 
-	VUY = xisq * thediag
+	VUY = sigsq * solve(
+			cIcQ,
+			thediag,
+			system='Pt'
+	)
 
 	result=cbind(random=EUY,krigeSd=sqrt(VUY),
-			fixed,fitted=fixed+EUY,resids)
+			fixed,fitted=fixed+EUY,residsOrig)
 	result
 }
 
