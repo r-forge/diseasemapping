@@ -206,11 +206,11 @@ midcell = c(Nx*(Ny-midcellCoord[2]) + midcellCoord[1])
 midVec = sparseMatrix(midcell,1,x=1,
 		dims=c(ncol(NN),1))
 
-Qcentre = #max(
+Qcentre = solve(cholPrec,
 		solve(cholPrec, 
 				solve(cholPrec,midVec,system="P"),
-				system="A")	
-#)
+				system="A")	,
+		system='Pt')[midcell]
 
 
 	if(length(propNugget)==1) {
@@ -255,7 +255,8 @@ loglikGmrf = function(
 		Yvec, Xmat, NN, propNugget=0,
 		shape=1,
 		adjustEdges=FALSE,adjustParam=FALSE,
-		adjustShape=FALSE, adjustMarginalVariance=FALSE,
+		adjustShape=FALSE, 
+		adjustMarginalVariance=FALSE,
 		mc.cores=1) {
 
 	
@@ -265,7 +266,8 @@ loglikGmrf = function(
 			shape=shape,
 			adjustEdges=adjustEdges,
 			adjustParam=adjustParam,
-			adjustShape=adjustShape
+			adjustShape=adjustShape,
+			adjustMarginalVariance=adjustMarginalVariance
 		)
 
 		
@@ -296,7 +298,12 @@ loglikGmrf = function(
 			
 		}
 		if(class(res[[1]])!= 'character'){
+			Qinfo = attributes(res[[1]])$Qinfo
+
 			res= simplify2array(res)
+			
+			attributes(res)$Qinfo = Qinfo
+			
 		}
 		res
 }
@@ -304,59 +311,93 @@ loglikGmrf = function(
  
 
 
-summaryGmrfFit= function(applyResult,MoreArgs) {
+summaryGmrfFit= function(x) {
 	UseMethod("summaryGmrfFit")	
 }
  
-summaryGmrfFit.array = function() {
+summaryGmrfFit.array = function(x) {
+	
+
+	x2 = aperm(x,c(3,2,1))
+	x2 = matrix(c(x2), ncol=dim(x2)[3])
+	colnames(x2) = dimnames(x)[[1]]
+	res = summaryGmrfFit.matrix(x2,npar=2)
+	
+	res$profL = list()
+	res$profL$propNugget = cbind(propNugget=x['propNugget',,1],
+			logL.ml=apply(x['logL.ml',,],1,max),
+			logL.reml = apply(x['logL.reml',,],1,max)
+			)
+	res$profL$oneminusar = cbind(
+			oneminusar = x['oneminusar',1,],
+			logL.ml=apply(x['logL.ml',,],2,max),
+			logL.reml=apply(x['logL.reml',,],2,max)
+	)
+	res$profL$rangeInCells = list(
+			ml = cbind(
+				rangeInCells=	x['rangeInCells',1, ],
+				logL=	apply(x['logL.ml',,],2,max)
+			),
+			reml = cbind(
+					rangeInCells=x['rangeInCells',, ],
+					logL=apply(x['logL.reml',,],2,max)
+			)
+	)
+			
+	res	
 	
 }
 
-summaryGmrfFit.matrix = function(applyResult,MoreArgs) {
+summaryGmrfFit.matrix = function(x,npar=1) {
 	
-	fun=loglikGmrf
-	
-	applyResult = t(applyResult)
-
-	MLErow = applyResult[which.max(applyResult[ ,'logL']),]	
-	
-	varBetaHat = attributes(
-			do.call(fun,c(list(ar=MLErow["ar"]),MoreArgs))
-	)$varbetahat
-	
+	if(any(rownames(x)=='logL.ml')){
+		x = t(x)
+	}
+result = list()
+someL = c('ml','reml')
+	for(D1 in someL) {
+	D=paste('logL.',D1,sep='')
+	MLErow = x[which.max(x[ ,D]),]	
 	thebetas = grep("^beta",names(MLErow), value=TRUE)
-		
 	betaMLE = MLErow[thebetas]	
+
 	thebetas2 = gsub("^beta\\.","",thebetas)
-	
-	betase = sqrt(diag(varBetaHat[thebetas2,thebetas2]))
+	betaSE = MLErow[paste("se.",thebetas2,".ml",sep="")]
 	
 	betamat = cbind(mle=betaMLE,
-			se=betase,
-			q0.025=betaMLE - 2*betase,
-			q0.975=betaMLE + 2*betase,
+			se=betaSE,
+			q0.025=betaMLE - 1.96*betaSE,
+			q0.975=betaMLE + 1.96*betaSE,
 			pval = 2*pnorm(
 					abs(betaMLE)/
-							betase,
+							betaSE,
 					lower=FALSE)	
 	)
-	withinCI = which(applyResult[,'m2logL'] - 
-					MLErow['m2logL'] < qchisq(0.95, 1))
 	
+	withinCI = which(-2*(x[,D] - 
+					MLErow[D]) < qchisq(0.95, 2))
+	
+xsub = x[,grep("^se\\.",colnames(x),invert=TRUE)]
 	parCI= t(apply(
-					applyResult[withinCI, ,drop=FALSE],
+					xsub[withinCI, ,drop=FALSE],
 					2,range))
 	colnames(parCI) = c('q0.025', 'q0.975')
 	
-	parMat = cbind(mle=MLErow,parCI,se=NA,pval=NA)
+	parMat = cbind(mle=MLErow[colnames(xsub)],parCI,se=NA,pval=NA)
 	parMat[rownames(betamat),colnames(betamat)] = betamat
-
-	return(list(
-					summary=parMat,
-					profL = cbind(
-							applyResult, 
-							logL = -applyResult[,'m2logL']/2)
-			)
-	)		
+	
+	notD = someL[someL != D1]
+	notD = grep(
+			paste("\\.",notD, "$",sep=''),
+			rownames(parMat), 
+			invert=TRUE,value=TRUE)
+	
+	parMat = parMat[notD,]
+	rownames(parMat) = gsub(paste("\\.", D1, "$",sep=""),
+			"",rownames(parMat))
+	
+	result[[D1]] = parMat
+	}
+	return(result)		
 }
  

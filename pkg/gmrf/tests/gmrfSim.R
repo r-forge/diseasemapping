@@ -317,11 +317,10 @@ thedf$yNoise = rnorm(nrow(thedf),
 		thedf$y,nuggetSd)
 
 
-
 source("../R/loglikGmrf.R")
 
-Sar2 = exp(seq(log(0.05),log(0.25),len=16))
-Snugget = seq(0.1, 0.4, by=0.025)
+Sar2 = exp(seq(log(0.075),log(0.2),len=12))
+Snugget = seq(0.1, 0.3, by=0.02)
 
 
 if(FALSE) {
@@ -383,7 +382,8 @@ resEdge = loglikGmrf(
 		Xmat=Xmat,
 		shape=maternShape,
 		NN=theNN,mc.cores=4,
-		adjustEdges=TRUE,	adjustParam=FALSE
+		adjustEdges=TRUE,	
+		adjustParam=FALSE
 )
 
 
@@ -415,7 +415,7 @@ names(forabline) = c('oneminusar', 'rangeInCells','propNugget')
 
 colType  = c('resVanilla'='black','resEdge'='blue','resAdj'='red')
 for(Dx in c('oneminusar','rangeInCells')) {
-	plot(range(resEdge[Dx,,]),c(-40,5) + max(resEdge[D,,]),
+	plot(range(resEdge[Dx,,]),c(-15,2) + max(resEdge[D,,]),
 			xlab=Dx,ylab=D,type='n')
 	for(Dtype in names(colType)) {
 		
@@ -464,21 +464,59 @@ legend('topright',fill=colType,legend=names(colType))
 
 
 
-	
+thesummary = summaryGmrfFit(resAdj) 
 
-thesummary = summaryGmrfFit(res1,theArgs)$summary
-thesummary
+themle = thesummary$ml[,'mle']
 
-plot(res1['rangeInCells',],res1['logL',],type='o',log='x',
-		ylim=c(-20,0)+max(res1['logL',]))
-Nar = 6
-text(res1['rangeInCells',
-				round(seq(1,ncol(res1),len=Nar))],
-		min(res1['logL',]),
-		signif(res1['ar',round(seq(1,ncol(res1),len=Nar))],3)
+
+
+myraster = raster(extent(0,8000,0,6000), ncols=40,nrows=30)
+myrasterBig = extend(myraster, 
+		extend(extent(myraster),6*xres(myraster))
 )
-abline(v=themodel['range']/xres(myraster),col='blue')
-abline(v=thesummary['rangeInCells',
-				c('mle','q0.025','q0.975')],
-		col=c('red','orange','orange'))
+
+theNN = NNmat(myraster)
+themodel = c(range=5*xres(myraster),shape=2,variance=900)
+
+theU = RFsimulate(myrasterBig,model=themodel)
+theU = raster::crop(theU, myraster)
+
+thecov = myraster
+values(thecov) = c(rep(1,ncell(thecov)/2),
+		rep(4,ncell(thecov)/2))
+beta.x=5
+theY = theU + beta.x*thecov
+
+theData = brick(theY,thecov)
+names(theData) = c("y","x")
+
+fracNugget = 1/4
+nuggetSd = sqrt(themodel['variance']*fracNugget)
+
+theData = brick(theY,thecov)
+names(theData) = c("y","x")
+yNoise = raster(theData)
+values(yNoise) = rnorm(ncell(yNoise),
+		values(theData[['y']]),nuggetSd)
+names(yNoise) = 'yNoise'
+theData2 = stack(theData, yNoise)
+temp = lgmrfm(theData2, formula = yNoise ~ x,
+		oneminusar=exp(seq(log(0.01), log(0.1),len=12)), 
+		nugget=seq(0.05, 0.4, len=16),
+		NN=theNN,adjustEdges=TRUE,mc.cores=4)
+tempV = lgmrfm(theData2, formula = yNoise ~ x,
+		oneminusar=exp(seq(log(0.01), log(0.1),len=12)), 
+		nugget=seq(0.05, 0.4, len=16),
+		NN=theNN,adjustEdges=TRUE,mc.cores=4,
+		adjustMarginalVariance=TRUE)
+
+tempA = lgmrfm(theData2, formula = yNoise ~ x,
+		oneminusar=exp(seq(log(0.01), log(0.1),len=24)), 
+		nugget=seq(0.05, 0.4, len=16),
+		NN=theNN,adjustEdges=TRUE,adjustShape=TRUE,
+		adjustParam=TRUE,adjustMarginalVariance=TRUE,
+		mc.cores=4)
+plotLgmrf(temp)
+plotLgmrf(tempA)
+plotLgmrf(tempV)
 
