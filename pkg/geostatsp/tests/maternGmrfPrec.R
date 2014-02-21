@@ -336,7 +336,8 @@ matlines(aseqe*diagdist, vlle[,theedg],col=thecol[theedg],
 	temp = attributes(precMat)$raster
 	values(temp) = diag(prodCor)
 	plot(temp,breaks=thebreaks,col=thecol,legend=F)
-	mapmisc::legendBreaks('right',breaks=thebreaks, col=thecol)
+#	mapmisc::legendBreaks('right',breaks=thebreaks, col=thecol)
+
 	temp = attributes(precMat)$raster
 	values(temp) = diag(prodUncor)
 	plot(temp,breaks=thebreaks,col=thecol,legend=FALSE)
