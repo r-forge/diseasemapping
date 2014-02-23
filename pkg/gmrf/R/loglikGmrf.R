@@ -407,15 +407,25 @@ whichL = apply(x['logL.ml',,],2,which.max)
 
 			res$profL$oneminusar = cbind(
 			oneminusar = x['oneminusar',1,],
-			range.postit = diag(
-					x['range.postfit',whichL
-					,]),
-	shape.postit = diag(
-			x['shape.postfit',whichL
-					,]),
 	logL.ml=apply(x['logL.ml',,],2,max),
 			logL.reml=apply(x['logL.reml',,],2,max)
 	)
+	
+	if(all(
+			c('range.postfit','shape.postfit') %in%
+					dimnames(x)[[1]])) {
+		res$profL$oneminusar  = cbind(
+				res$profL$oneminusar,
+	range.postit = diag(
+			x['range.postfit',whichL
+					,]),
+	shape.postit = diag(
+			x['shape.postfit',whichL
+					,])
+	)
+	}
+	
+	
 	res$profL$rangeInCells = list(
 			ml = cbind(
 				rangeInCells=	x['rangeInCells',1, ],

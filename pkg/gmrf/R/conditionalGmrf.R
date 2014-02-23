@@ -12,33 +12,37 @@ conditionalGmrf = function(param,
 	)
 	
 	
-	Q = maternGmrfPrec(NN,param[c('oneminusar','shape','variance')],...)
+	Q = maternGmrfPrec(NN,
+			param=c(param[c('oneminusar','shape')], variance=1),
+			...)
 	Qchol = Cholesky(Q, LDL=FALSE)
 
 	LofQ = expand(Qchol)$L
 	pRev = as(ncol(LofQ):1, "pMatrix")		
 	lQLL =  as( t(LofQ %*% pRev) %*% pRev,'dtCMatrix')
-	QLL = tcrossprod(lQLL)
-	diag(QLL) = diag(QLL) + param['nugget']
-	QLL = forceSymmetric(QLL)
-	
-	cholIcQ = Cholesky(QLL,LDL=FALSE,perm=TRUE)
+	QLL = forceSymmetric(tcrossprod(lQLL))
+
 	
 	# QLL = P' L  L' P 
 	# QLLorig = Prev P' L   L' P Prev'
-	
+	cholIcQ = Cholesky(QLL,LDL=FALSE,perm=TRUE,
+			Imult=param['variance']/param['nugget'])
+	# need to multiply by param['nugget']
 	ptwice =   as(expand(cholQLL)$P,'sparseMatrix') %*% 
-			t(as(pRev,'sparseMatrix'))
-	
+			t(as(pRev,'sparseMatrix')) %*% 
+			as(expand(Qchol)$P,'sparseMatrix')
 	ptwice2 = as(ptwice, 'pMatrix')
+
 	cholIcQ@perm = as.integer(ptwice2@perm-1)
 
+
 	residsOrig = Yvec -	fixed
-	
-	varyinvresid = as.vector(solve(cholIcQ, residsOrig,system='A'))
+	varyinvresid = 	as.vector(
+			solve(cholIcQ, residsOrig,system='A')
+	)/param['nugget']
 	
 	EUY = as.vector(solve(Qchol,
-					varyinvresid))
+					varyinvresid))*param['variance']
 	
 theidm=c(length(EUY),1)
 	varOneCell = function(D) {
@@ -48,8 +52,9 @@ theidm=c(length(EUY),1)
 #		thisDp = solve(cholIcQ, thisD ,system='P')
 		as.vector(
 				solveQ[D] - sum(solve(cholIcQ, thisD,
-								system='A') * solveQ)
-		)
+								system='A') * solveQ)/
+				param['nugget']
+		) 
 	}
 
 	
@@ -74,7 +79,7 @@ theidm=c(length(EUY),1)
 		resRast = raster::brick(raster(template), nl=ncol(result))
 		names(resRast) = colnames(result)
 		values(resRast) = as.vector(result)
-		result = list(df=result,rast=resRast)		
+		result = resRast		
 		
 	}
 	result

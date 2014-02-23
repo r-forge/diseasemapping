@@ -504,7 +504,9 @@ if(FALSE){
 	data=theData2
 	formula = yNoise ~x
 	oneminusar=0.2
+	oneminusar=Sar
 	nugget=0.2
+	nugget=Snugget
 	shape=themodel['shape']
 	NN=theNN;adjustEdges=TRUE
 	
@@ -551,6 +553,8 @@ tempA = lgmrfm(theData2, formula = yNoise ~ x,
 
 plotLgmrf(temp)
 
-par(mfrow=c(2,1))
+par(mfrow=c(2,2))
 plot(theU)
 plot(temp$predict[['random']])
+plot(temp$predict[['krigeSd']])
+plot(temp$predict[['fixed']])
