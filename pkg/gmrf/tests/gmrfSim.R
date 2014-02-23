@@ -359,8 +359,8 @@ Xmat=Xmat
 shape=maternShape
 NN=theNN
 mc.cores=4
-adjustEdges=TRUE
-adjustParam=TRUE
+adjustEdges=FALSE
+adjustParam=FALSE
 adjustShape=FALSE
 adjustMarginalVariance=FALSE
 }
@@ -490,7 +490,7 @@ theY = theU + beta.x*thecov
 theData = brick(theY,thecov)
 names(theData) = c("y","x")
 
-fracNugget = 1/4
+fracNugget = 1/10
 nuggetSd = sqrt(themodel['variance']*fracNugget)
 
 theData = brick(theY,thecov)
@@ -500,23 +500,57 @@ values(yNoise) = rnorm(ncell(yNoise),
 		values(theData[['y']]),nuggetSd)
 names(yNoise) = 'yNoise'
 theData2 = stack(theData, yNoise)
+if(FALSE){
+	data=theData2
+	formula = yNoise ~x
+	oneminusar=0.2
+	nugget=0.2
+	shape=themodel['shape']
+	NN=theNN;adjustEdges=TRUE
+	
+	dataOrig=data
+	data = as.data.frame(data)
+	Yvec = data[,
+			as.character(attributes(terms(formula))$variables)[2]
+	]
+	Xmat = model.matrix(formula,data=data)
+	
+	Yvec=Yvec
+	Xmat=Xmat 
+	NN=NN
+	propNugget=nugget  
+	shape=shape
+	
+	param=mleparam
+	template=dataOrig
+	
+	
+}
+
+
+source("../R/lgmrfm.R")
+source("../R/conditionalGmrf.R")
+Snugget = exp(seq(log(0.01), log(0.2), len=16))
+Sar = exp(seq(log(0.05), log(0.25),len=25))
 temp = lgmrfm(theData2, formula = yNoise ~ x,
-		oneminusar=exp(seq(log(0.01), log(0.1),len=12)), 
-		nugget=seq(0.05, 0.4, len=16),
+		oneminusar=Sar, 
+		nugget=Snugget,shape=themodel['shape'],
 		NN=theNN,adjustEdges=TRUE,mc.cores=4)
 tempV = lgmrfm(theData2, formula = yNoise ~ x,
-		oneminusar=exp(seq(log(0.01), log(0.1),len=12)), 
-		nugget=seq(0.05, 0.4, len=16),
+		oneminusar=Sar, 
+		nugget=Snugget,shape=themodel['shape'],
 		NN=theNN,adjustEdges=TRUE,mc.cores=4,
 		adjustMarginalVariance=TRUE)
 
 tempA = lgmrfm(theData2, formula = yNoise ~ x,
-		oneminusar=exp(seq(log(0.01), log(0.1),len=24)), 
-		nugget=seq(0.05, 0.4, len=16),
-		NN=theNN,adjustEdges=TRUE,adjustShape=TRUE,
+		oneminusar=Sar, 
+		nugget=Snugget,shape=themodel['shape'],
+		NN=theNN,adjustEdges=TRUE,adjustShape=FALSE,
 		adjustParam=TRUE,adjustMarginalVariance=TRUE,
 		mc.cores=4)
-plotLgmrf(temp)
-plotLgmrf(tempA)
-plotLgmrf(tempV)
 
+plotLgmrf(temp)
+
+par(mfrow=c(2,1))
+plot(theU)
+plot(temp$predict[['random']])

@@ -1,7 +1,33 @@
+objfunM = function(oparam,distVec,sqrtVar,
+		range=NULL,shape=NULL){
+	
+	if(!is.null(range))
+		oparam['range'] = as.vector(range)
+	if(!is.null(shape))
+		oparam['shape'] = as.vector(shape)
+	if(!any(names(oparam)=='variance')){	
+		oparam['variance']=1
+	}
+	if(!any(names(oparam)=='nugget')){	
+		oparam['nugget']=1
+	}
+	
+	theM =
+			geostatsp::matern(
+			x=distVec, 
+			param=oparam[c('range','shape','variance')]
+	)
+thezeros = which(distVec<=0)
+	theM[thezeros] = theM[thezeros] + oparam['nugget']
+	
+	sum( (sqrt(theM) - sqrtVar)^2)
+}
+
 loglikGmrfGivenQ = function(
 		propNugget, Yp, YL, 
 		Xp, XL,Qchol, detQ, 
-		QLL=NULL,cholQLL=NULL) {
+		QLL=NULL,cholQLL=NULL,
+		empirical=NULL) {
 	
 	if(propNugget>0){
 
@@ -9,12 +35,12 @@ loglikGmrfGivenQ = function(
 		nuggetSigsq = 1/( (1/propNugget) -1)
 		# nuggetSigsq = tausq/sigsq
 		
-		
 		if(is.null(QLL)) {
-			LofQ = expand(Qchol)$L
-			QLL = forceSymmetric(crossprod(LofQ,LofQ))
-			diag(QLL) = diag(QLL) + 1/nuggetSigsq
-			cholIcQ = Cholesky(QLL, LDL=FALSE)
+			LofQ = expand(cholPrec)$L
+			QLLorig = crossprod(LofQ)
+
+			cholIcQ = Cholesky(QLLorig, LDL=FALSE,
+					Imult=1/nuggetSigsq)
 			YL = solve(cholIcQ, YL,
 					system='P')	
 			XL = solve(cholIcQ, XL,
@@ -114,6 +140,33 @@ loglikGmrfGivenQ = function(
 					list(names(betaHat),names(betaHat),
 							names(constHat))
 
+	if(!is.null(empirical)){
+
+		empirical$yMult = empirical$yMult * variances['sigmasq.ml']	
+		empirical[empirical$x<=0,'yMult'] = 
+				empirical[empirical$x<=0,'yMult'] + 
+				variances['tausq.ml']
+		startparam = c(
+				shape=2,
+				range=2,
+				variance=as.vector(variances['sigmasq.ml']),
+				nugget=as.vector(variances['tausq.ml'])				
+				)
+		postfit=optim(fn=objfunM,par=startparam,
+				lower=c(shape=0.1,range=0.1,
+						variance=0,nugget=0)[names(startparam)],
+				upper=c(shape=3,range=12,
+						variance=Inf,nugget=Inf)[names(startparam)],
+				distVec=empirical$x, 
+				sqrtVar = sqrt(empirical$yMult))$par
+		
+		
+		
+		names(postfit) = paste(names(postfit), ".postfit",sep='')
+		
+	} else {
+		postfit=NULL
+	}		
 			
 	result =c(m2logL, logL,
 			variances,
@@ -121,7 +174,8 @@ loglikGmrfGivenQ = function(
 			beta=betaHat, 
 			sebeta,
 			logDetVar=as.numeric(logDetVar),
-			rpr=rpr)
+			rpr=rpr,postfit)
+	
 	
 	attributes(result)$varbetahat = varbetahat
 	
@@ -136,7 +190,6 @@ loglikGmrfOneRange = function(
 		adjustEdges=FALSE,adjustParam=FALSE,
 		adjustShape=FALSE,adjustMarginalVariance=FALSE) {
 	
-	Nx=attributes(NN)$Nx;Ny=attributes(NN)$Ny
 	
 	
 	if(is.null(oneminusar)){
@@ -155,17 +208,17 @@ loglikGmrfOneRange = function(
 				adjustEdges=adjustEdges,adjustParam=adjustParam,
 				adjustShape=adjustShape,
 				adjustMarginalVariance=adjustMarginalVariance)
-		if(adjustParam) {
-				rangeInCells = 	
-					attributes(NN)$param$optimal['rangeInCells']
-				shape=attributes(NN)$param$optimal['shape']
-		} else {
-			rangeInCells = 
-					attributes(NN)$param$theo['rangeInCells']
-		}
+
+		rangeInCells = 	
+			attributes(NN)$param$target['rangeInCells']
+		shape=attributes(NN)$param$target['shape']
+		
+				
 	}		
 
 	cholPrec = Cholesky(NN,LDL=FALSE)
+	LofQ = expand(cholPrec)$L
+	
 	theDet = 2*as.numeric(determinant(cholPrec,
 					logarithm=TRUE)$modulus)
 	
@@ -173,7 +226,6 @@ loglikGmrfOneRange = function(
 	Yp = solve(cholPrec,Yvec,system="P")
 
 	
-	LofQ = expand(cholPrec)$L
 	XL = Matrix::crossprod(LofQ,Xp)
 	YL = as.vector(
 			Matrix::crossprod(LofQ,Yp)
@@ -182,25 +234,48 @@ loglikGmrfOneRange = function(
 	argList = list(Yp=Yp,YL=YL,
 			Xp=Xp,XL=XL,
 			Qchol=cholPrec,
-			detQ=theDet)
-
+			detQ=theDet,
+			empirical=attributes(NN)$param$empirical)
 
 	if(!all(propNugget==0)) {
-		argList$QLL = forceSymmetric(crossprod(LofQ,LofQ))
-		argList$cholQLL = Cholesky(argList$QLL,LDL=FALSE)
+		# calculate t(LofQ) LofQ
+		pRev = as(ncol(LofQ):1, "pMatrix")		
+		lQLL =  as( t(LofQ %*% pRev) %*% pRev,'dtCMatrix')
+		QLL = tcrossprod(lQLL)
+		QLL = forceSymmetric(QLL)
+
+		
+		cholQLL = Cholesky(QLL,LDL=F,perm=T)
+		
+		# QLL = P' L  L' P 
+		# QLLorig = Prev P' L   L' P Prev'
+	
+		ptwice =   as(expand(cholQLL)$P,'sparseMatrix') %*% 
+				t(as(pRev,'sparseMatrix'))
+		
+		ptwice2 = as(ptwice, 'pMatrix')
+		cholQLL@perm = as.integer(ptwice2@perm-1)
+
+		argList$cholQLL = cholQLL
+		if(FALSE){
+			#prove that cholQLL is cholesky of QLLorig
+			QLLorig = crossprod(LofQ)
+			eye = solve(cholQLL,QLLorig)
+			range(diag(eye))
+			range(eye[which(lower.tri(eye,diag=FALSE))])
+		}
+
+		
 		argList$YL = solve(argList$cholQLL, argList$YL,
 				system='P')	
 		argList$XL = solve(argList$cholQLL, argList$XL,
 				system='P')	
-		
 	}
 	
-	#QLL=argList$QLL;cholQLL=argList$cholQLL;XL=argList$XL;YL=argList$YL
-	
-	# Q=NN;Qchol=cholPrec;detQ=theDet
-
-
 # variance of Q inverse
+theraster = attributes(NN)$raster
+Nx=ncol(theraster);Ny=nrow(theraster)
+
 midcellCoord = c(round(Nx*.5),round(Ny*0.5)) # the middle cell
 midcell = c(Nx*(Ny-midcellCoord[2]) + midcellCoord[1])
 midVec = sparseMatrix(midcell,1,x=1,
@@ -328,9 +403,17 @@ summaryGmrfFit.array = function(x) {
 			logL.ml=apply(x['logL.ml',,],1,max),
 			logL.reml = apply(x['logL.reml',,],1,max)
 			)
-	res$profL$oneminusar = cbind(
+whichL = apply(x['logL.ml',,],2,which.max)
+
+			res$profL$oneminusar = cbind(
 			oneminusar = x['oneminusar',1,],
-			logL.ml=apply(x['logL.ml',,],2,max),
+			range.postit = diag(
+					x['range.postfit',whichL
+					,]),
+	shape.postit = diag(
+			x['shape.postfit',whichL
+					,]),
+	logL.ml=apply(x['logL.ml',,],2,max),
 			logL.reml=apply(x['logL.reml',,],2,max)
 	)
 	res$profL$rangeInCells = list(
@@ -339,7 +422,7 @@ summaryGmrfFit.array = function(x) {
 				logL=	apply(x['logL.ml',,],2,max)
 			),
 			reml = cbind(
-					rangeInCells=x['rangeInCells',, ],
+					rangeInCells=x['rangeInCells',1, ],
 					logL=apply(x['logL.reml',,],2,max)
 			)
 	)
@@ -377,7 +460,7 @@ someL = c('ml','reml')
 	withinCI = which(-2*(x[,D] - 
 					MLErow[D]) < qchisq(0.95, 2))
 	
-xsub = x[,grep("^se\\.",colnames(x),invert=TRUE)]
+xsub = x[,grep("^se\\.",colnames(x),invert=TRUE),drop=FALSE]
 	parCI= t(apply(
 					xsub[withinCI, ,drop=FALSE],
 					2,range))

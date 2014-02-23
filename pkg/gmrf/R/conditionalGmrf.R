@@ -1,50 +1,53 @@
 conditionalGmrf = function(param,
-		Yvec,Xmat,
-		predRaster, NN=NNmat(predRaster),
+		Yvec,Xmat, NN,
+		template=NULL, 
 		mc.cores=1, ...) {
 	
-	ar = 1-param['oneminusar']
-	maternShape=param['shape']
-	tausq = param['tausq.ml']
-	sigsq = param['sigmasq.ml']
+	names(param) = gsub("sigmasq","variance",names(param))
+	names(param) = gsub("tausq","nugget",names(param))
 	
-	
+
 	fixed=as.vector(Xmat %*% 
 					param[paste("beta",colnames(Xmat), sep=".")]
 	)
 	
-	Q = maternGmrfPrec(NN,param,...)
+	
+	Q = maternGmrfPrec(NN,param[c('oneminusar','shape','variance')],...)
 	Qchol = Cholesky(Q, LDL=FALSE)
 
-	residsOrig = Yvec -	fixed
-	resids = solve(Qchol,
-			residsOrig,
-			system='P')
-	
-	nuggetSigsq = tausq/sigsq
-	# nuggetSigsq = tausq/sigsq
-
 	LofQ = expand(Qchol)$L
-	QLL = forceSymmetric(crossprod(LofQ,LofQ))
-	diag(QLL) = diag(QLL) + 1/nuggetSigsq
-	cholIcQ = Cholesky(QLL, LDL=FALSE)
+	pRev = as(ncol(LofQ):1, "pMatrix")		
+	lQLL =  as( t(LofQ %*% pRev) %*% pRev,'dtCMatrix')
+	QLL = tcrossprod(lQLL)
+	diag(QLL) = diag(QLL) + param['nugget']
+	QLL = forceSymmetric(QLL)
+	
+	cholIcQ = Cholesky(QLL,LDL=FALSE,perm=TRUE)
+	
+	# QLL = P' L  L' P 
+	# QLLorig = Prev P' L   L' P Prev'
+	
+	ptwice =   as(expand(cholQLL)$P,'sparseMatrix') %*% 
+			t(as(pRev,'sparseMatrix'))
+	
+	ptwice2 = as(ptwice, 'pMatrix')
+	cholIcQ@perm = as.integer(ptwice2@perm-1)
 
-	residsP = solve(cIcQ, resids,system='P')
+	residsOrig = Yvec -	fixed
 	
+	varyinvresid = as.vector(solve(cholIcQ, residsOrig,system='A'))
 	
-	EUY = solve(Qchol,
-			solve(cIcQ,
-			as.vector(solve(cIcQ, residsP,system='A')),
-			system="Pt"),
-	system='Pt')
+	EUY = as.vector(solve(Qchol,
+					varyinvresid))
 	
+theidm=c(length(EUY),1)
 	varOneCell = function(D) {
-		thisD = sparseMatrix(D,1,x=1,dims=c(Ny,1))
-		solveQ = solve(Qchol, thisD,system='A')
-		solveQp = solve(cIcQ, solveQ,system='P')
-		thisDp = solve(cIcQ, thisDp ,system='P')
+		thisD = sparseMatrix(D,1,x=1,dims=theidm)
+		solveQ = solve(Qchol, thisD)
+#		solveQp = solve(cholIcQ, solveQ,system='P')
+#		thisDp = solve(cholIcQ, thisD ,system='P')
 		as.vector(
-				solveQ[D] - sum(solve(cIcQ, thisDp,
+				solveQ[D] - sum(solve(cholIcQ, thisD,
 								system='A') * solveQ)
 		)
 	}
@@ -53,18 +56,27 @@ conditionalGmrf = function(param,
 	if(mc.cores==1) {
 		thediag = mapply(varOneCell, 1:length(resids))
 	} else {
-		thediag = mcmapply(varOneCell, 1:length(resids),
+		thediag = parallel::mcmapply(varOneCell, 1:length(EUY),
 				mc.cores=mc.cores,SIMPLIFY=TRUE)
 	}
 
-	VUY = sigsq * solve(
-			cIcQ,
-			thediag,
-			system='Pt'
+	
+	
+	VUY = as.vector(
+		param['variance'] * 
+			thediag
 	)
 
-	result=cbind(random=EUY,krigeSd=sqrt(VUY),
-			fixed,fitted=fixed+EUY,residsOrig)
+	
+	result=cbind(random=EUY,krigeSd= sqrt(VUY),
+			fixed=fixed,fitted=fixed+EUY,resids=residsOrig)
+	if(!is.null(template)){
+		resRast = raster::brick(raster(template), nl=ncol(result))
+		names(resRast) = colnames(result)
+		values(resRast) = as.vector(result)
+		result = list(df=result,rast=resRast)		
+		
+	}
 	result
 }
 

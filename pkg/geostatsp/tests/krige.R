@@ -116,7 +116,7 @@ unix.time(
 )
 
 
-options(mc.cores = 4)
+options(mc.cores = 2)
 
 unix.time(krige(data=swissRain2, trend = swissFit3$model$trend,
 				param=swissFit3$param, 

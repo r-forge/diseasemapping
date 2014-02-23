@@ -119,7 +119,6 @@ maternGmrfPrec.dsCMatrix = function(N,
 	distVecFull = sqrt(apply(distVecFull^2,2,sum))	
 		
 	
- 
 	
 	# if 1 - AR parameter supplied
 	if(all(c("oneminusar","shape") %in% names(param))){
@@ -162,11 +161,17 @@ maternGmrfPrec.dsCMatrix = function(N,
 						( distVecFull > 0))
 		
 		distVec = distVecFull[whichDist]
-		varMid = varMid[whichDist]/varHere
+		varMid = varMid[whichDist]
+		
+		
+		paramInfo$empirical = data.frame(x=c(0,distVec),
+				y=c(varHere,varMid))			
+		
+		varMid = varMid/varHere
+		
 		sqrtVar = sqrt(varMid)
 				
 
-		
 		
 		startparam = c(param['shape'],
 				range=as.vector(paramInfo$theo['rangeInCells'])
@@ -283,7 +288,16 @@ maternGmrfPrec.dsCMatrix = function(N,
 			varHere = varMid[midcell]
 					
 			distVec = distVecFull[whichDist]
-			varMid = varMid[whichDist]/varHere
+			
+			varMid = varMid[whichDist]
+			
+					
+			paramInfo$empirical = data.frame(x=c(0,distVec),
+					y=c(varHere,varMid))			
+			
+			
+			varMid = varMid/varHere
+			
 			sqrtVar = sqrt(varMid)
 
 			paramInfo$theo['rangeInCells'] = as.vector(
@@ -383,7 +397,8 @@ if(adjustMarginalVariance){
 						)	 
 				
 		marginalPrec =  sum(midQ@x * midVar)
- 
+		
+		
 } else {
 		if(param['shape'] != 0) {
 			  marginalPrec = (4*pi*param['shape'] *(a-4)^(param['shape'] ))
@@ -401,7 +416,12 @@ if(adjustMarginalVariance){
 					log(param['variance'])
 	)
 #	print(precEntries)
-	
+	paramInfo$empirical$yMult =
+		paramInfo$empirical$y*exp(  
+				log(marginalPrec) + 
+						log(param['variance'])
+	)
+		
 	
 	theNNmat = N
 	Nx=attributes(theNNmat)$Nx 
@@ -438,7 +458,7 @@ if(adjustMarginalVariance){
 			distVecFull[outerCells,]*param['cellSize']
 		)				
 		if(adjustParam){
- 				paramForM = paramInfo$optimal
+ 				paramForM = paramInfo$target
 		} else {
 			paramForM = paramInfo$original	
 			if(!any(names(paramForM)=='range')){
