@@ -15,13 +15,13 @@ lgmrfm = function(data,formula,covariates=NULL,
 			as.character(attributes(terms(formula))$variables)[2]
 	]
 	Xmat = model.matrix(formula,data=data)
-		
+ 		
 	thel = loglikGmrf(oneminusar=oneminusar, rangeInCells=NULL,
 			Yvec=Yvec,Xmat=Xmat,
 			NN=NN,propNugget=nugget,
 			shape=shape,mc.cores=mc.cores,...)
 
-	
+ 	
 	thesummary = summaryGmrfFit(thel)
 	thesummary$complete = thel
 	
@@ -33,7 +33,7 @@ lgmrfm = function(data,formula,covariates=NULL,
 			param=mleparam,
 			Yvec=Yvec,Xmat=Xmat,
 			template=dataOrig, NN=NN,
-			mc.cores=mc.cores)
+			mc.cores=mc.cores,...)
 	} else {
 		thesummary$predict = raster::brick(
 				raster(dataOrig), nl=2)

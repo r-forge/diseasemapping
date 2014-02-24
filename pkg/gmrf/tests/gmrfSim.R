@@ -537,12 +537,11 @@ Sar = exp(seq(log(0.05), log(0.25),len=25))
 temp = lgmrfm(theData2, formula = yNoise ~ x,
 		oneminusar=Sar, 
 		nugget=Snugget,shape=themodel['shape'],
-		NN=theNN,adjustEdges=TRUE,mc.cores=4)
+		NN=theNN,adjustEdges=FALSE,mc.cores=4)
 tempV = lgmrfm(theData2, formula = yNoise ~ x,
 		oneminusar=Sar, 
 		nugget=Snugget,shape=themodel['shape'],
-		NN=theNN,adjustEdges=TRUE,mc.cores=4,
-		adjustMarginalVariance=TRUE)
+		NN=theNN,adjustEdges=TRUE,mc.cores=4)
 
 tempA = lgmrfm(theData2, formula = yNoise ~ x,
 		oneminusar=Sar, 

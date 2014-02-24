@@ -29,6 +29,8 @@ loglikGmrfGivenQ = function(
 		QLL=NULL,cholQLL=NULL,
 		empirical=NULL) {
 	
+
+	
 	if(propNugget>0){
 
 		# propNugget = tausq / (tausq + sigsq)
@@ -36,7 +38,7 @@ loglikGmrfGivenQ = function(
 		# nuggetSigsq = tausq/sigsq
 		
 		if(is.null(QLL)) {
-			LofQ = expand(cholPrec)$L
+			LofQ = expand(Qchol)$L
 			QLLorig = crossprod(LofQ)
 
 			cholIcQ = Cholesky(QLLorig, LDL=FALSE,
@@ -58,13 +60,15 @@ loglikGmrfGivenQ = function(
 				 XL, system='L')	
 		# should divide the above by sqrt(nuggetSigsq)
 		
-		XprecXinv = solve(Matrix::crossprod(Xbreve,Xbreve)) 
+		XprecXinv = solve(Matrix::crossprod(Xbreve,Xbreve))
 		
 		betaHat = as.vector(
 				XprecXinv %*% 
 						Matrix::crossprod(Xbreve,Ybreve) 
 		)
-		names(betaHat) = colnames(Xmat)
+		names(betaHat) = colnames(XL)
+		
+		XprecXinv=XprecXinv*nuggetSigsq
 		
 		residsL =  as.vector(Ybreve -  Xbreve %*% betaHat )/ 
 				sqrt(nuggetSigsq)
@@ -80,20 +84,19 @@ loglikGmrfGivenQ = function(
 		
 	} else { # no nugget 
 		nuggetSigsq = 0
+
 		
 		XprecX = Matrix::crossprod(XL,XL)
 		XprecXinv = solve(XprecX)
 		
 		betaHat = as.numeric(XprecXinv %*% 
 						Matrix::crossprod(XL , YL))
-		names(betaHat) = colnames(Xmat)
+		names(betaHat) = colnames(XL)
+
 		
-		# resids ~ N(0,sigsq*prec^(-1))
-		resids = Yp - as.vector(Xp %*% betaHat)
-		residsL = as.numeric(Matrix::crossprod(
-				resids, 
-				expand(Qchol)$L))
-		
+		# residsL ~ N(0,sigsq*I)
+		residsL  = as.vector(YL - XL %*% betaHat)
+ 		
 		logDetVar=-detQ
 		# matrix operations
 		# Qchol, cholCovMat = Matrix::chol(covMat)
@@ -102,11 +105,14 @@ loglikGmrfGivenQ = function(
 		# XprecXinv, cholCovInvXcrossInv = Matrix::solve(cholCovInvXcross)
 	}
 
+ 
+	
 	rpr = as.numeric(crossprod(residsL,residsL))
 
 	N=c(ml=0,reml=-ncol(Xp))+length(Yp)
 	# estimate of the constant 
 	constHat = rpr/N
+
 
 	m2logL = N*log(constHat) + logDetVar + 
 			c(ml=0,reml=determinant(
@@ -118,22 +124,30 @@ loglikGmrfGivenQ = function(
 	variances = rep(c(
 					sigmasq = 1,
 					tausq = nuggetSigsq),2)*
-		rep(rpr/N,c(2,2)) 
+		rep(constHat,c(2,2)) 
 	names(variances) = paste(names(variances),
 			rep(names(N),c(2,2)),sep='.')
 
 	logL = -m2logL/2
 	names(logL) = gsub("^m2","",names(logL))
 
+
+
+
 	
-	varbetahat = as.matrix(XprecXinv)
-	sebeta = diag(varbetahat)
-	sebeta = rep(sebeta,2)*rep(constHat,rep(length(sebeta),2))
-	names(sebeta)= paste('se',colnames(Xmat), names(sebeta),sep='.')
+	sebeta = diag(XprecXinv)
+	sebeta = rep(sebeta,2)*
+			rep(constHat,
+				rep(length(sebeta),2))
+	
+#	print(sebeta)
+	
+	names(sebeta)= paste('se',rep(names(betaHat),2), 
+			names(sebeta),sep='.')
 	
 	varbetahat = abind::abind(
-			varbetahat/constHat[1],
-			varbetahat/constHat[2],
+			as.matrix(XprecXinv)/constHat[1],
+			as.matrix(XprecXinv)/constHat[2],
 			along=3)
 			
 	dimnames(varbetahat) = 
@@ -190,7 +204,7 @@ loglikGmrfOneRange = function(
 		adjustEdges=FALSE,adjustParam=FALSE,
 		adjustShape=FALSE,adjustMarginalVariance=FALSE) {
 	
-	
+
 	
 	if(is.null(oneminusar)){
 
@@ -224,6 +238,7 @@ loglikGmrfOneRange = function(
 	
 	Xp = solve(cholPrec,Xmat,system="P")
 	Yp = solve(cholPrec,Yvec,system="P")
+
 
 	
 	XL = Matrix::crossprod(LofQ,Xp)
@@ -345,8 +360,7 @@ loglikGmrf = function(
 			adjustMarginalVariance=adjustMarginalVariance
 		)
 
-		
-		if(mc.cores>1) {
+ 		if(mc.cores>1) {
 			myapply= function(...){
 				parallel::mcmapply(...,
 						mc.cores=mc.cores)
@@ -361,7 +375,7 @@ loglikGmrf = function(
 				MoreArgs=argList,
 				SIMPLIFY=FALSE
 				)
-				names(res) = 
+ 				names(res) = 
 						paste("oneminusar=",oneminusar,sep="")
 		} else {
 			res=myapply(loglikGmrfOneRange,

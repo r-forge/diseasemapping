@@ -6,7 +6,7 @@ conditionalGmrf = function(param,
 	names(param) = gsub("sigmasq","variance",names(param))
 	names(param) = gsub("tausq","nugget",names(param))
 	
-
+	
 	fixed=as.vector(Xmat %*% 
 					param[paste("beta",colnames(Xmat), sep=".")]
 	)
@@ -16,45 +16,51 @@ conditionalGmrf = function(param,
 			param=c(param[c('oneminusar','shape')], variance=1),
 			...)
 	Qchol = Cholesky(Q, LDL=FALSE)
+	# Q/sigmasq = var(U)^(-1)
 
-	LofQ = expand(Qchol)$L
-	pRev = as(ncol(LofQ):1, "pMatrix")		
-	lQLL =  as( t(LofQ %*% pRev) %*% pRev,'dtCMatrix')
-	QLL = forceSymmetric(tcrossprod(lQLL))
-
+	cholQptau = update(Qchol,parent=Q,mult=1/param['nugget'])
+	# Qptau = tausq (1/tausq + Q)
 	
+	
+#	LofQ = expand(Qchol)$L
+#	pRev = as(ncol(LofQ):1, "pMatrix")		
+#	lQLL =  as( t(LofQ %*% pRev) %*% pRev,'dtCMatrix')
+#	QLL = forceSymmetric(tcrossprod(lQLL))
+
 	# QLL = P' L  L' P 
 	# QLLorig = Prev P' L   L' P Prev'
-	cholIcQ = Cholesky(QLL,LDL=FALSE,perm=TRUE,
-			Imult=param['variance']/param['nugget'])
+	# tausq L^(-1) IcQ L^(-1 ') = var(Y)
+	
+#	cholIcQ = Cholesky(QLL,LDL=FALSE,perm=TRUE,
+#			Imult=param['variance']/param['nugget'])
 	# need to multiply by param['nugget']
-	ptwice =   as(expand(cholQLL)$P,'sparseMatrix') %*% 
-			t(as(pRev,'sparseMatrix')) %*% 
-			as(expand(Qchol)$P,'sparseMatrix')
-	ptwice2 = as(ptwice, 'pMatrix')
-
-	cholIcQ@perm = as.integer(ptwice2@perm-1)
+#	ptwice =   as(expand(cholQLL)$P,'sparseMatrix') %*% 
+#			t(as(pRev,'sparseMatrix')) %*% 
+#			as(expand(Qchol)$P,'sparseMatrix')
+#	ptwice2 = as(ptwice, 'pMatrix')
+#	cholIcQ@perm = as.integer(ptwice2@perm-1)
 
 
 	residsOrig = Yvec -	fixed
-	varyinvresid = 	as.vector(
-			solve(cholIcQ, residsOrig,system='A')
+	EUY = 	as.vector(
+			solve(cholQptau, residsOrig,system='A')
 	)/param['nugget']
 	
-	EUY = as.vector(solve(Qchol,
-					varyinvresid))*param['variance']
+
 	
 theidm=c(length(EUY),1)
 	varOneCell = function(D) {
 		thisD = sparseMatrix(D,1,x=1,dims=theidm)
-		solveQ = solve(Qchol, thisD)
+		solveQ = as.vector(solve(Qchol, thisD))
 #		solveQp = solve(cholIcQ, solveQ,system='P')
 #		thisDp = solve(cholIcQ, thisD ,system='P')
-		as.vector(
-				solveQ[D] - sum(solve(cholIcQ, thisD,
-								system='A') * solveQ)/
-				param['nugget']
-		) 
+		param['variance']*(
+				solveQ[D] - 
+					sum(
+					as.vector(solve(cholQptau, thisD)) * 
+							solveQ
+			)/param['nugget']
+		)
 	}
 
 	
@@ -68,7 +74,6 @@ theidm=c(length(EUY),1)
 	
 	
 	VUY = as.vector(
-		param['variance'] * 
 			thediag
 	)
 

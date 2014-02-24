@@ -360,22 +360,32 @@ matlines(aseqe*diagdist, vlle[,theedg],col=thecol[theedg],
 	hist(prodUncor[lower.tri(prodUncor,diag=FALSE)],breaks=60)	
 	abline(v=0)
 	
-	thebreaks = seq(0.4, 1.1, len=61)
+	thebreaks = c(-10,seq(0.4, 1.1, len=61),10)
 	
+	if(interactive()){
 	hist(Matrix::diag(prodCor),breaks=thebreaks,ylab='edge')
+	} else {
+		hist(Matrix::diag(prodCor),breaks=60,ylab='edge')
+	}
 	abline(v=1)
 	hist(prodCor[lower.tri(prodCor,diag=FALSE)],breaks=60)	
 	abline(v=0)
 
-	
+	if(interactive()){
 	hist(Matrix::diag(prodAdj),breaks=thebreaks,ylab='adj')
-	abline(v=1)
+} else {
+	hist(Matrix::diag(prodAdj),breaks=60,ylab='edge')
+}
+abline(v=1)
 	hist(prodAdj[lower.tri(prodAdj,diag=FALSE)],breaks=60)	
 	abline(v=0)
 
-	
+	if(interactive()){
 	hist(Matrix::diag(prodAdjOpt),breaks=thebreaks,ylab='adj optimal')
-	abline(v=1)
+} else {
+	hist(Matrix::diag(prodAdjOpt),breaks=60,ylab='edge')
+}
+abline(v=1)
 	hist(prodAdjOpt[lower.tri(prodAdjOpt,diag=FALSE)],breaks=60)	
 	abline(v=0)
 	
