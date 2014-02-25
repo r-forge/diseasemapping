@@ -9,6 +9,8 @@ map.new = function(x, legendRight=FALSE) {
 	if(class(thecrs)!="try-error")
 		proj4string(xpoints) = CRS(thecrs)
 
+	oldpar = par()
+	
 	par(mar=c(0,0,0,0))
 	if(legendRight) { 
 		if(!is.logical(legendRight)) {
@@ -23,6 +25,7 @@ map.new = function(x, legendRight=FALSE) {
 	
 	plot(xpoints,pch=NA)
 
+	par(oldpar)
 	
 	return(invisible())
 		

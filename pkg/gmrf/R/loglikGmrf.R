@@ -163,10 +163,14 @@ loglikGmrfGivenQ = function(
 		startparam = c(
 				shape=2,
 				range=2,
-				variance=as.vector(variances['sigmasq.ml']),
-				nugget=as.vector(variances['tausq.ml'])				
+				variance=as.vector(variances['sigmasq.ml'])
+		)
+		if(variances['tausq.ml']>0)
+				startparam = c(startparam,
+						nugget=as.vector(variances['tausq.ml'])				
 				)
-		postfit=optim(fn=objfunM,par=startparam,
+
+			postfit=optim(fn=objfunM,par=startparam,
 				lower=c(shape=0.1,range=0.1,
 						variance=0,nugget=0)[names(startparam)],
 				upper=c(shape=3,range=12,
@@ -297,10 +301,7 @@ midVec = sparseMatrix(midcell,1,x=1,
 		dims=c(ncol(NN),1))
 
 Qcentre = solve(cholPrec,
-		solve(cholPrec, 
-				solve(cholPrec,midVec,system="P"),
-				system="A")	,
-		system='Pt')[midcell]
+		midVec)[midcell]
 
 
 	if(length(propNugget)==1) {

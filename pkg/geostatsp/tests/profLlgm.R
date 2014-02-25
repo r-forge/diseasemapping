@@ -1,6 +1,8 @@
 library('geostatsp')
 data('swissRain')
 
+Ncores = c(1,2)[1+.Platform$OS.type=='unix']
+
 swissFit = lgm(data=swissRain, formula=rain~ SRTM_1km,
 		locations=150, covariates=swissAltitude,
 		shape=1,  fixShape=TRUE, 
@@ -9,7 +11,7 @@ swissFit = lgm(data=swissRain, formula=rain~ SRTM_1km,
 		param=c(anisoAngleDegrees=37,anisoRatio=10))
 
 
-x=profLlgm(swissFit, mc.cores=2,
+x=profLlgm(swissFit, mc.cores=Ncores,
 		anisoAngleDegrees=seq(30, 43 , len=12)
 )
 
@@ -55,7 +57,7 @@ lines(x[[1]],x[[2]])
 
 dev.off()
 
-x2d=profLlgm(swissFit, mc.cores=2,
+x2d=profLlgm(swissFit, mc.cores=Ncores,
 		anisoAngleDegrees=seq(30, 43 , len=6),
 		anisoRatio = exp(seq(log(3.5),log(18),len=8))
 )

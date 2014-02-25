@@ -5,127 +5,12 @@ myrasterBig = extend(myraster,
 		extend(extent(myraster),6*xres(myraster))
 )
 
-theNN = NNmat(myraster)
 themodel = c(range=5*xres(myraster),shape=2,variance=900)
-if(T){
-	theU = RFsimulate(myrasterBig,model=themodel)
-	theU = raster::crop(theU, myraster)
-} else {
-	thePrec = maternGmrfPrec(theNN, 
-		param=c(themodel,cellSize=xres(myraster)),
-		adjustEdges=TRUE,adjustParam=TRUE)
 
-thePrec2 = maternGmrfPrec(theNN, 
-		param=c(themodel,cellSize=xres(myraster)),
-		adjustEdges=TRUE,adjustParam=FALSE)
-
-	theVar = matern(myraster,param=themodel)
-	theprod = thePrec %*% theVar
-	par(mfrow=c(2,2))
-	hist(diag(theprod),breaks=60)
-	hist(theprod[lower.tri(theprod,diag=F)],breaks=60)
-	
-	theCholP = chol(thePrec)
-	theCholP2 = chol(thePrec2)
-	theCholV = chol(theVar)
-	
-	theprod = theCholV %*% theCholP2
-	hist(diag(theprod),breaks=60)
-	hist(theprod[upper.tri(theprod,diag=F)],breaks=60)
-	
-	
-	resM = NULL
-	myfun = function(qq) c(m=mean(qq), v=var(qq))
-	for(D in 1:40) {
-	theZ = rnorm(ncell(myraster))
-	resM = cbind(c(
-					p=myfun(as.vector(solve(theCholP,theZ))),
-					v=myfun(as.vector(theCholV%*%theZ)),
-					p2=myfun(as.vector(solve(theCholP2,theZ)))
-					),resM)	
-}
-
-apply(resM,1, quantile)
-apply(resM,1, sd)
-
-	theU =theUP= myraster
-	values(theUP) = as.vector(solve(theCholP, theZ))
-	values(theU) = as.vector(theCholV %*% theZ)
-	par(mfrow=c(2,2))
-	plot(theU)
-	plot(theUP)
-	plot(theU/theUP)
-	plot(theU-theUP)
-}
-
-
-if(FALSE) {
-	
-	myrasterH = raster(extent(0,40*1000,0,30*1000), 
-			ncols=ncol(myraster),nrows=nrow(myraster))
-	res(myrasterH)
-	theNNH = NNmat(myrasterH)
-	
-	paramH=c(range=4*xres(myrasterH),
-			shape=2,var=100,cellSize=xres(myrasterH))
-	paramH2 = c(range=4,
-			shape=2,var=100)
-	
-	varMat = matern(myrasterH,param=paramH)
-	
-	precNeither = maternGmrfPrec(theNNH,param=paramH2,
-			adjustEdges=FALSE,adjustParam=FALSE)
-	precEdge = maternGmrfPrec(theNNH,param=paramH2,
-			adjustEdges=TRUE,adjustParam=FALSE)
-
-	precAdj = maternGmrfPrec(theNNH,param=paramH2,
-			adjustEdges=FALSE,adjustParam=TRUE,adjustShape=FALSE)
-	
-	precBoth = maternGmrfPrec(theNNH,param=paramH2,
-			adjustEdges=TRUE,adjustParam=TRUE,adjustShape=FALSE)
-	
-	theZ = rnorm(ncell(myrasterH))
-	resM = NULL
-	for(D in c('Neither','Edge','Adj','Both')){
-		theChol = chol(get(paste('prec',D,sep='')))
-		resM = c(resM,
-				mean(as.vector(solve(theChol, theZ))))		
-	}
-	resM
-	
-	prodNeither = precNeither %*% varMat
-	prodEdge = precEdge %*% varMat
-	prodAdj = precAdj %*% varMat
-	prodBoth = precBoth %*% varMat
+theU = RFsimulate(myrasterBig,model=themodel)
+theU = raster::crop(theU, myraster)
 
 	
-	par(mfrow=c(4,2))
-	
-	hist(Matrix::diag(prodNeither),breaks=60,ylab='neither')
-	abline(v=1)
-	hist(prodNeither[lower.tri(prodNeither,diag=FALSE)],breaks=60)	
-	abline(v=0)
-	hist(Matrix::diag(prodEdge),breaks=60,ylab='edge')
-	abline(v=1)
-	hist(prodEdge[lower.tri(prodEdge,diag=FALSE)],breaks=60)	
-	abline(v=0)
-	
-	
-	hist(Matrix::diag(prodAdj),breaks=60,ylab='adj')
-	abline(v=1)
-	hist(prodAdj[lower.tri(prodAdj,diag=FALSE)],breaks=60)	
-	abline(v=0)
-	
-
-	hist(Matrix::diag(prodBoth),breaks=60,ylab='both')
-	abline(v=1)
-	hist(prodBoth[lower.tri(prodBoth,diag=FALSE)],breaks=60)	
-	abline(v=0)
-
-	
-}
-
-
 thecov = myraster
 values(thecov) = c(rep(1,ncell(thecov)/2),
 		rep(4,ncell(thecov)/2))
@@ -134,67 +19,47 @@ theY = theU + beta.x*thecov
 
 theData = brick(theY,thecov)
 names(theData) = c("y","x")
-
-thedf = as.data.frame(theData)
-
-Xmat=cbind(inter=1,x=thedf$x)
-maternShape=as.numeric(themodel['shape'])
-
-Sar = exp(seq(log(0.025),log(0.25),len=24))
+theNN = NNmat(theData)
 
 
-#oneminusar=0.2;shape=maternShape;Yvec=thedf$y;
+Sar = exp(seq(log(0.04),log(0.16),len=50))
+
 
 source("../R/loglikGmrf.R")
+source("../R/lgmrfm.R")
+source("../R/conditionalGmrf.R")
 
-resNoNuggetVanilla = loglikGmrf(
+resNoNugget  = lgmrfm(
+		data=theData,
+		formula = y ~ x,
 		oneminusar=Sar,
-		Yvec=thedf$y,
-		Xmat=Xmat,
-		shape=maternShape,
-		NN=theNN,mc.cores=4
+		shape=themodel['shape'],
+		mc.cores=2,
+		NN = theNN
 		)
 
-resNoNuggetEdge = loglikGmrf(
-		oneminusar=Sar,
-				Yvec=thedf$y,
-				Xmat=Xmat,
-				shape=maternShape,
-				NN=theNN,mc.cores=4,
-				adjustEdges=TRUE,	adjustParam=FALSE
-		)
-#		
-resNoNuggetAdj = loglikGmrf(
-		oneminusar=Sar,
-				Yvec=thedf$y,
-				Xmat=Xmat,
-				shape=maternShape,
-				NN=theNN,mc.cores=4,
-				adjustParam=TRUE,adjustEdges=FALSE,
-				adjustShape=FALSE
-		)
 		
 
-resNoNuggetBoth = loglikGmrf(
+resNoNuggetEdge = lgmrfm(
+		data=theData,
+		formula = y ~ x,
 		oneminusar=Sar,
-				Yvec=thedf$y,
-				Xmat=Xmat,
-				shape=maternShape,
-				NN=theNN,mc.cores=4,
-				adjustEdges=TRUE,	adjustParam=TRUE,
-				adjustShape=FALSE
+		shape=themodel['shape'],
+		mc.cores=2,
+		NN = theNN,
+				adjustEdges=TRUE
 		)
 
-resNoNuggetShape = loglikGmrf(
-			oneminusar=Sar,
-				Yvec=thedf$y,
-				Xmat=Xmat,
-				shape=maternShape,
-				NN=theNN,mc.cores=4,
-				adjustEdges=TRUE,	adjustParam=TRUE,
-				adjustShape=TRUE
+resNoNuggetAdj = lgmrfm(
+				data=theData,
+				formula = y ~ x,
+				oneminusar=Sar,
+				shape=themodel['shape'],
+				mc.cores=2,
+				NN = theNN,
+				adjustEdges=TRUE,
+				adjustMarginalVariance=TRUE
 		)
-		
 		
 		col = c(vanilla = 'black', adj='green',edge='blue',both='red',shape='orange')
 		
@@ -207,52 +72,71 @@ resNoNuggetShape = loglikGmrf(
 		par(mfrow=c(2,2))		
 		D ='logL.ml' 
 		
-		plot(resNoNuggetEdge['oneminusar',],
-				resNoNuggetEdge[D,],
+		matplot(
+				resNoNuggetEdge$complete['oneminusar',],
+				cbind(
+						resNoNuggetEdge$complete[D,],
+						resNoNugget$complete[D,]),
 				xlab='1-ar',ylab=D,
-	 			ylim=c(median(resNoNuggetVanilla[D,]),
-	 					max(resNoNuggetShape[D,])),
-				col=col['edge'],type='o',log='x',lwd=1)
-		legend('left',fill=col,legend=names(col))
-		lines(resNoNuggetVanilla['oneminusar',],
-				resNoNuggetVanilla[D,],
-				type='o', col=col['vanilla'],lwd=3)
-		lines(resNoNuggetAdj['oneminusar',],
-				resNoNuggetAdj[D,],
-				type='o', col=col['adj'])		
-		lines(resNoNuggetBoth['oneminusar',],
-				resNoNuggetBoth[D,],
-				type='o', col=col['both'])		
-		lines(resNoNuggetShape['oneminusar',],
-				resNoNuggetShape[D,],
-				type='o', col=col['shape'])		
+				col=col[c('edge','vanilla')],type='o',
+				log='x',lwd=1,pch=16)
+		legend('bottom',fill=col[c('vanilla','edge')],
+				legend=c('vanilla','edge'))
+		abline(v= oneminusar,col='red')
+		theci = c('mle'=1,'q0.025'=3,'q0.975'=3)
+		abline(v=resNoNuggetEdge$ml['oneminusar',names(theci)],
+				lty=theci,col=col['edge'])
+		abline(v=resNoNugget$ml['oneminusar',names(theci)],
+				lty=theci,col=col['vanilla'])
 		
-
-		abline(v= oneminusar)
-
-plot(resNoNuggetEdge['rangeInCells',]*xres(myraster),
-		resNoNuggetEdge[D,],
-		ylim=c(median(resNoNuggetVanilla[D,]),
-				max(resNoNuggetShape[D,])),
+		
+		matplot(
+				resNoNuggetEdge$complete['rangeInCells',],
+				cbind(
+						resNoNuggetEdge$complete[D,],
+						resNoNugget$complete[D,]),
 				xlab='range',ylab=D,
-				col=col['edge'],type='o',log='x',
-				lwd=1)
+				col=col[c('edge','vanilla')],type='o',
+				log='x',lwd=1,pch=16)
 
-lines(resNoNuggetVanilla['rangeInCells',]*xres(myraster),
-		resNoNuggetVanilla[D,],
-		type='o', col=col['vanilla'],lwd=3)
+abline(v=themodel['range']/xres(theData	),col='red')
 
-lines(resNoNuggetAdj['rangeInCells',]*xres(myraster),
-		resNoNuggetAdj[D,],
-		type='o', col=col['adj'])		
-lines(resNoNuggetBoth['rangeInCells',]*xres(myraster),
-		resNoNuggetBoth[D,],
-		type='o', col=col['both'])		
-lines(resNoNuggetShape['rangeInCells',]*xres(myraster),
-		resNoNuggetShape[D,],
-		type='o', col=col['shape'])		
-abline(v=themodel['range'])
+abline(v=resNoNuggetEdge$ml['rangeInCells',names(theci)],
+		lty=theci,col=col['edge'])
+abline(v=resNoNugget$ml['rangeInCells',names(theci)],
+		lty=theci,col=col['vanilla'])
+
+
+
+matplot(
+		resNoNuggetEdge$complete['rangeInCells',],
+		cbind(
+				resNoNuggetEdge$complete[D,],
+				resNoNugget$complete[D,]),
+		xlab='range post fit',ylab=D,
+		col=col[c('edge','vanilla')], 
+		log='x',lwd=1,pch=16,type='n')
  
+matlines(
+		resNoNuggetEdge$complete['range.postfit',],
+		resNoNuggetEdge$complete[D,],
+		col=col['edge'],
+		lty=2,pch=1,type='o'
+)
+matlines(
+		resNoNugget$complete['range.postfit',],
+		resNoNugget$complete[D,],
+		col=col['vanilla'],
+		lty=2,pch=1,type='o'
+)
+
+abline(v=themodel['range']/xres(theData	),col='red')
+
+abline(v=resNoNuggetEdge$ml['range.postfit',names(theci)],
+		lty=theci,col=col['edge'])
+abline(v=resNoNugget$ml['range.postfit',names(theci)],
+		lty=theci,col=col['vanilla'])
+
 
 Dx='sigmasq.ml'
 

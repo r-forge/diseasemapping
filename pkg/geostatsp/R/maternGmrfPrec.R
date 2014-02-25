@@ -126,7 +126,8 @@ maternGmrfPrec.dsCMatrix = function(N,
 		
 
 		paramInfo$theo = c(param[c('shape','cellSize','variance')],
-				rangeInCells=as.numeric(sqrt(8*param['shape'])/sqrt(a-4))
+				rangeInCells=as.numeric(sqrt(8*param['shape'])/sqrt(a-4)),
+				a=as.vector(a)
 			)
 			
 			
@@ -255,7 +256,7 @@ maternGmrfPrec.dsCMatrix = function(N,
 		sqrtVar = sqrt(varMid)
 
 		
-		paramInfo$theo = param
+		paramInfo$theo = c(param, 	a=as.vector(a))
 		
 		if(adjustParam){
 			startparam = c(#param['shape'],
