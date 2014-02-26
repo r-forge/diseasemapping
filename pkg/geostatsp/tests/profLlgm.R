@@ -1,7 +1,7 @@
 library('geostatsp')
 data('swissRain')
 
-Ncores = c(1,2)[1+.Platform$OS.type=='unix']
+Ncores = c(1,2)[1+(.Platform$OS.type=='unix')]
 
 swissFit = lgm(data=swissRain, formula=rain~ SRTM_1km,
 		locations=150, covariates=swissAltitude,
