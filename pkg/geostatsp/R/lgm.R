@@ -47,13 +47,13 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 	
 	
 	notInData = allterms[! allterms %in% names(data)]
-	
+
 	# convert covariates to raster stack with same resolution of prediction raster.
 
 	if(length(covariates)){
 		# extract covariate values and put in the dataset
 		
-		if(length(notInData)==1){
+		if(length(notInData)==1 & length(names(covariates))==1){
 			names(covariates) = notInData
 		}
 		
@@ -118,8 +118,9 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 	dots$trend=formula
 	dots$data=data
 	dots$paramToEstimate=paramToEstimate
- 	
 
+
+	
 	
 	likRes = do.call(likfitLgm, dots)
 

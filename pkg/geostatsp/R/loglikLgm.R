@@ -89,17 +89,18 @@ loglikLgm = function(param,
 			Matrix::diag(covMat) = Matrix::diag(covMat) + param["nugget"]
 
 		# matrix operations
-		cholCovMat = Matrix::chol(covMat)
-	
+		cholCovMat = chol(covMat)
+
+		
 		# cholCovMat %*% t(cholCovMat) = covMat
+		# cholCovInvX = cholCovMat^{-1} %*% covariates
 		cholCovInvX = Matrix::solve(cholCovMat, covariates)
+		# cholCovInvY = cholCovMat^{-1} %*% observations
+		cholCovInvY = Matrix::solve(cholCovMat, observations)
+		
 		cholCovInvXcross = Matrix::crossprod(cholCovInvX)
-	
 		cholCovInvXcrossInv = Matrix::solve(cholCovInvXcross)
 	
-		# cholCovInvX = cholCovMat^{-1} %*% covariates
-		cholCovInvY = Matrix::solve(cholCovMat, observations)
-		# cholCovInvY = cholCovMat^{-1} %*% observations
 		
 		# beta hat = (D'V^{-1}D)^{-1}D'V^{-1}y
 		# V = L L', V^{-1} = t(L^(-1)) %*% L^(-1)
@@ -107,7 +108,8 @@ loglikLgm = function(param,
 
 		# Covariates and likelihood
 	
-		betaHat = cholCovInvXcrossInv %*% Matrix::crossprod(cholCovInvX, cholCovInvY) 
+		betaHat = cholCovInvXcrossInv %*% 
+				Matrix::crossprod(cholCovInvX, cholCovInvY) 
 		
 		resids = observations - covariates %*% betaHat
 		# sigsqhat = resids' %*% Vinv %*% residsx
@@ -123,7 +125,7 @@ loglikLgm = function(param,
 	if(!haveVariance) { # profile likelihood with optimal sigma
 			minusTwoLogLik = Nadj * log(2*pi) + 
 				Nadj * log(totalVarHat) +
-				2*sum(log(Matrix::diag(cholCovMat))) +
+				2*determinant(cholCovMat)$modulus +
 				Nadj - twoLogJacobian		
 			param[c("variance","nugget")] = 
 					totalVarHat * param[c("variance","nugget")]
@@ -131,13 +133,13 @@ loglikLgm = function(param,
 		# calculate likelihood with the variance supplied
 		# -2 log lik = n log(2pi) + log(|V|) + resid' Vinv resid
 		minusTwoLogLik = Nadj * log(2*pi) +
-				2*sum(log(Matrix::diag(cholCovMat))) +
-					totalSsq - twoLogJacobian
+				2*determinant(cholCovMat)$modulus +
+				totalSsq - twoLogJacobian
 		totalVarHat = 1
 	}
 	if( reml ) {
 		minusTwoLogLik =  minusTwoLogLik + 
-			2*sum(log(Matrix::diag(chol(cholCovInvXcross))))
+			2*determinant(cholCovInvXcross)$modulus
 	}
 	
 	# format the output
@@ -179,8 +181,8 @@ likfitLgm = function(
 		reml=TRUE) {
 
 	# for some reason thing break if I remove this next line...
-	stuff = (class(coordinates))
-	theproj = raster::projection(coordinates)
+#	stuff = (class(coordinates))
+	theproj = proj4string(coordinates)
 	
 	# check for the variance parameter
 	estimateVariance = TRUE
@@ -225,7 +227,7 @@ likfitLgm = function(
 	# convert input data to a model matrix
 	if(class(trend)=="formula") {
  
-		data = as.data.frame(data)
+		data = data.frame(data)
 		theNA = apply(
 				data[,all.vars(formulaRhs(trend)),drop=FALSE],
 				1, function(qq) any(is.na(qq)))
@@ -289,11 +291,12 @@ likfitLgm = function(
 				coordinates = SpatialPoints(cbind(Re(x), Im(x)))
 			} # end is anisotripic		
 		} # end anisotropy params supplied
-		coordinates = dist(coordinates@coords)		
+		coordinates = dist(coordinates(coordinates))		
 		parscaleDefaults["range"] = sd(coordinates)/20
 	} else {
  		# doing geometric anisotropy
-		parscaleDefaults["range"] = dist(t(bbox(coordinates)))/100
+		parscaleDefaults["range"] = sd(dist(
+						coordinates(coordinates)))/20
 	}
 	
 	parscaleDefaults[names(parscale)] = parscale
@@ -393,7 +396,7 @@ if(any(names(param)=="boxcox") & !any(paramToEstimate=="boxcox")) {
 			coordinatesOrig, 
 			data.frame(resid=as.vector(attributes(fromLogLik)$resid))
 		)
-		projection(result$resid) = theproj
+		proj4string(result$resid) = CRS(theproj)
 	}
 	
 	result$model = list(reml=reml)
