@@ -97,12 +97,12 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 	param['boxcox']=boxcox
 
 	if(!any(names(param)=='range'))
-		param['range']=sd(coordinates(data)[,1])
+		param['range']=NA
 					
 	paramToEstimate	= c("range", "shape","nugget","boxcox")[
 			!c(FALSE,fixShape,fixNugget,fixBoxcox)]		
 	if(aniso) {
-		param = c(param, anisoAngleDegrees=0,anisoRatio=1)
+		param = c(param, anisoAngleDegrees=NA,anisoRatio=NA)
 		paramToEstimate = c(paramToEstimate,c("anisoAngleDegrees","anisoRatio"))		
 	}
 				

@@ -83,7 +83,7 @@ loglikLgm = function(param,
 		
 		
 		# variance matrix
-		covMat = matern(x=coordinates, param=param)	
+		covMat = geostatsp::matern(x=coordinates, param=param)	
 
 		if(haveNugget)
 			Matrix::diag(covMat) = Matrix::diag(covMat) + param["nugget"]
@@ -215,7 +215,7 @@ likfitLgm = function(
 	parscaleDefaults = c(range=NA, #range is delt with below
 			nugget=1,
 			boxcox=1,
-			anisoAngleDegrees=10,
+			anisoAngleDegrees=60,
 			anisoAngleRadians=2,
 			anisoRatio=1,
 			variance=1,
@@ -292,13 +292,9 @@ likfitLgm = function(
 			} # end is anisotripic		
 		} # end anisotropy params supplied
 		coordinates = dist(coordinates(coordinates))		
-		parscaleDefaults["range"] = sd(coordinates)/20
-	} else {
- 		# doing geometric anisotropy
-		parscaleDefaults["range"] = sd(dist(
-						coordinates(coordinates)))/20
-	}
-	
+ 
+	}  
+	parscaleDefaults["range"] = dist(t(bbox(coordinatesOrig)))/200
 	parscaleDefaults[names(parscale)] = parscale
 	
 	
@@ -307,9 +303,10 @@ likfitLgm = function(
 	
 	
 	# default starting values for parameters
-	paramDefaults = c(nugget=0,anisoRatio=0, anisoAngleDegrees=0,
+	paramDefaults = c(nugget=0,anisoRatio=1, anisoAngleDegrees=0,
 			anisoAngleRadians=0,shape=1, boxcox=1,
-			parscaleDefaults["range"])
+			range=as.numeric(parscaleDefaults["range"]*10))
+
 	
 	startingParam = param[paramToEstimate]
 	names(startingParam) = paramToEstimate # fixes names lost when no starting value provided
@@ -372,6 +369,8 @@ if(any(names(param)=="boxcox") & !any(paramToEstimate=="boxcox")) {
 		reml=reml, moreParams=moreParams,
 		method = "L-BFGS-B", stored=stored
 		)
+	fromOptim$start = startingParam
+	fromOptim$parscale = parscaleDefaults[paramToEstimate]
 
 		
 		

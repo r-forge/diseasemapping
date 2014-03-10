@@ -9,14 +9,14 @@ crsLL = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 			x = extent(x[1], xmax=x[1]+eps, ymin=x[2], ymax=x[2]+eps)
 
 	crsUse = projection(x)
-	if(is.null(crs))
-		crs=crsLL
-	if(is.logical(crs)) { # it's probably NA,
-#	if(is.na(crs)) {
+
+	
+#	if(is.logical(crs)) { # it's probably NA,
+	if(all(is.na(crs))) {
 		crs=crsLL
 	}
-	if(is.logical(crsUse)) { # it's probably NA,
-#	if(is.na(crsUse)) {
+#	if(is.logical(crsUse)) { # it's probably NA,
+	if(all(is.na(crsUse))) {
 		crsUse=crs
 	}
 	

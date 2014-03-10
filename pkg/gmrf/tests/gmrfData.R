@@ -1,7 +1,8 @@
 
 
 dataDir = '/store/patrick/spatialData'
-# distance from coast
+#' distance from coast
+#' http://worldgrids.org/doku.php
 
 download.file(
 		'http://worldgrids.org/lib/exe/fetch.php?media=dicgsh0a.tif.gz',

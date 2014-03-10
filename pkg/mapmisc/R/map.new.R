@@ -9,7 +9,8 @@ map.new = function(x, legendRight=FALSE) {
 	if(class(thecrs)!="try-error")
 		proj4string(xpoints) = CRS(thecrs)
 
-	oldpar = par()[c('mar','plt','xpd')]
+#	oldpar = par()[c('mar','plt','xpd')]
+#	oldpar = par()[c('mar')]
 	
 	par(mar=c(0,0,0,0))
 	if(legendRight) { 
@@ -25,7 +26,7 @@ map.new = function(x, legendRight=FALSE) {
 	
 	plot(xpoints,pch=NA)
 
-	par(oldpar)
+# 	par(oldpar)
 	
 	return(invisible())
 		

@@ -2,11 +2,9 @@
 \alias{openmap}
 \alias{getTiles}
 \alias{osmTiles}
-\title{Get map from a server}
+\title{Download map tiles}
 \description{
-	This function is a wrapper for the 
-	\code{\link[OpenStreetMap]{openmap}} 
-function in the \link[OpenStreetMap]{openmap} package
+Downloads map tiles from Openstreetmap.org and other servers.
 }
 \usage{
 	openmap(x, zoom, 
@@ -97,7 +95,7 @@ http://wiki.openstreetmap.org/index.php/Tile_usage_policy
 	of RasterBricks
 }	
 
-
+\seealso{\link[OpenStreetMap]{openmap} }
 
 \examples{
 

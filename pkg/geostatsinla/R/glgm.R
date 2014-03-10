@@ -169,14 +169,14 @@ glgm = function(data,  cells, covariates=NULL, formula=NULL,
 			warning("some terms in the model are missing from both the data and the covariates")
 		}	
 		for(D in notInData) {
-			if(!.compareCRS(covariates[[D]], data,unknown=TRUE) ) {
+			if(!.compareCRS(covariatesOrig[[D]], data,unknown=TRUE) ) {
 				
 				require(rgdal, quietly=TRUE ) 
 				
-				data[[D]] = extract(covariates[[D]], 
-						spTransform(data, CRSobj=CRS(projection(covariates[[D]])))) 
+				data[[D]] = raster::extract(covariatesOrig[[D]], 
+						spTransform(data, CRSobj=CRS(projection(covariatesOrig[[D]])))) 
 			} else {
-				data[[D]] = extract(covariates[[D]], 
+				data[[D]] = raster::extract(covariatesOrig[[D]], 
 						data) 
 			}
 			# check for factors

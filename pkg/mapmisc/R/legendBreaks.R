@@ -7,17 +7,18 @@ legendBreaks = function(pos, breaks, outer=TRUE,...){
 	
 if(outer){
 	oldxpd = par("xpd")
-	par(xpd=TRUE)
+	par(xpd=NA)
 	fromEdge = matrix(par("plt"), 2, 2, 
 			dimnames=list(c("min","max"), c("x","y")))
 	propIn = apply(fromEdge, 2, diff)
 	if(is.character(pos)) {
 		inset = c(0,0)
-		if(length(grep("^bottom", pos))){
-			inset[2] = -fromEdge["min","y"]					
-		} else if(length(grep("^top", pos))){
-			inset[2] = fromEdge["max","y"]-1					
-		}
+#		if(length(grep("^bottom", pos))){
+#			inset[2] = -fromEdge["min","y"]					
+#		} else if(length(grep("^top", pos))){
+#			inset[2] = fromEdge["max","y"]-1					
+#		}
+		
 		if(length(grep("left$", pos))){
 			inset[1] = -fromEdge["min","x"]					
 		} else if(length(grep("right$", pos))){
@@ -62,6 +63,7 @@ if(outer){
 	
 	if(length(breaks)-1 == length(ldots$col)) {
 		ltext = ldots$legend
+		ldots$col = c(NA, ldots$col)
 		ldots$legend = rep(NA, length(ldots$col))
 		ldots$text.width = max(strwidth(ltext))
 	} 
@@ -70,7 +72,10 @@ if(outer){
 	
 	if(all(is.na(ldots$legend))) {
 		x=ldots
+		if(!is.null(x$title))
+			x$title = NA
 		x$legend=ltext
+		x$adj = c(0, 1) 
 		x$col=NA
 		x$bty='n'
 		do.call(legend,x)
