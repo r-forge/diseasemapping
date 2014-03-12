@@ -124,7 +124,7 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 	
 	likRes = do.call(likfitLgm, dots)
 
-
+	
 	
 
 	
@@ -134,8 +134,12 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 			covariates=covariates, expPred=expPred,
 			nuggetInPrediction=nuggetInPrediction
 			)
-	 
-	res = c(predict=krigeRes, likRes, list(data=data))
+	
+	data$resid = likRes$resid$resid
+	likRes$data = data
+	likRes = likRes[names(likRes)!= 'resid']
+			
+	res = c(predict=krigeRes, likRes)
 	
 	# add confidence intervals for covariance parameters
 	res$summary = informationLgm(res)$summary
