@@ -124,8 +124,8 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 	
 	likRes = do.call(likfitLgm, dots)
 
-	
-	
+
+
 
 	
 # call krige	
@@ -135,11 +135,16 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 			nuggetInPrediction=nuggetInPrediction
 			)
 	
-	data$resid = likRes$resid$resid
+#	data$resid = likRes$resid$resid
+#	likRes$data = data
+
+	data@data = cbind(data.frame(data), 
+			likRes$data[rownames(data.frame(data)),])
 	likRes$data = data
-	likRes = likRes[names(likRes)!= 'resid']
-			
+		
+
 	res = c(predict=krigeRes, likRes)
+
 	
 	# add confidence intervals for covariance parameters
 	res$summary = informationLgm(res)$summary

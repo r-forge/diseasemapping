@@ -7,21 +7,42 @@ loglikLgm = function(param,
 	# create 'covariates', and 'observations'
  	
 	if(class(trend)=="formula") {
-		covariates = model.matrix(trend, as.data.frame(data))
 		observations = formulaLhs(trend)
 		if(!any(names(data)==observations))
 			warning("can't find observations ", observations, "in data")
-		observations = data[[observations]]
-	} else {
+		# frame first, so we see which row names have been omitted due to NA's
+		# sometimes model.matrix removes row names
+		covariates = model.frame(trend, data.frame(data))
+		observations = covariates[,	observations]
+		theRowNames = rownames(covariates)
+		covariates = model.matrix(trend,covariates)
+		rownames(covariates) = theRowNames
+		theNA = which(!rownames(data.frame(data)) %in% theRowNames)
+	} else if(!is.null(trend)){
 		# observations must be a vector and covariates a matrix
-		observations=data
-		covariates=as.matrix(trend)
+		covariates= as.matrix(trend)
+		theNA = apply(covariates, 1, function(qq) any(is.na(qq)))
+		observations=data[!theNA]
+		theNA = which(theNA)
+	} else {
+		theNA = NULL
 	}
 	
-		if(!length(grep("SpatialPoints", class(coordinates))) &
-				class(coordinates) != "dist")	{
-			warning("coordinates must be a SpatialPoints object\n or a dist object.  It's being assumed \n it's a matrix of coordinates")
-			coordinates = SpatialPoints(coordinates)
+		if(length(grep("SpatialPoints", class(coordinates)))) {
+			if(length(theNA))
+				coordinates = coordinates[-theNA,]
+			
+		}  else if(	class(coordinates) == "dist")	{
+			if(length(theNA))				
+				coordinates = as.dist(
+					as.matrix(coordinates)[-theNA,-theNA]
+				)
+			} else {
+				warning("coordinates must be a SpatialPoints object\n or a dist object.  It's being assumed \n it's a matrix of coordinates")
+				coordinates = SpatialPoints(coordinates)
+				if(length(theNA))				
+					coordinates = coordinates[-theNA,]
+				
 		}
 
 		# sort out the parameters
@@ -159,7 +180,7 @@ loglikLgm = function(param,
 		names(result) = gsub("Lik$", "RestrictedLik", names(result))
 	
 	attributes(result)$param = param
-#		attributes(result)$totalVarHat = totalVarHat
+		attributes(result)$totalVarHat = totalVarHat
 	attributes(result)$betaHat = betaHat
 	attributes(result)$varBetaHat = as.matrix(varBetaHat)
  	attributes(result)$reml=reml
@@ -213,13 +234,13 @@ likfitLgm = function(
 	
 	# par scale
 	parscaleDefaults = c(range=NA, #range is delt with below
-			nugget=1,
-			boxcox=1,
+			nugget=0.2,
+			boxcox=0.5,
 			anisoAngleDegrees=60,
 			anisoAngleRadians=2,
-			anisoRatio=1,
+			anisoRatio=2,
 			variance=1,
-			shape=0.25)
+			shape=0.1)
 
 #	if(length(grep("^SpatialPoints", class(coordinates))))
 #		print("wah")
@@ -251,19 +272,25 @@ likfitLgm = function(
 				
 		observations=data[noNA]
 		covariates=trend[noNA,,drop=FALSE]
+
 	}
 
 	if(any(theNA)) {
 		if(length(grep("^SpatialPoints", class(coordinates)))) {
+			theRowNames= rownames(data.frame(coordinates))[noNA]
 			coordinates = SpatialPoints(coordinates)[noNA]	
 		} else if(class(coordinates)=="dist"){
 			coordinates = as.matrix(coordinates)
 			coordinates = coordinates[noNA,noNA]
+			theRowNames = rownames(coordinates)
 			coordinates = as.dist(coordinates)
 			
 		} else {
+			theRowNames = NULL
 			warning("missing vlaues in data but unclear how to remove them from coordinates")
 		}
+	} else {
+		theRowNames = NULL
 	}
 	
 	# if the model's isotropic, calculate distance matrix
@@ -284,6 +311,8 @@ likfitLgm = function(
 					param["anisoAngleRadians"] = param["anisoAngleDegrees"]*2*pi/360				
 				}
 	
+				if(class(coordinates)=='dist')
+					warning("distance matrix supplied but anisotropic model is used.  Supply points instead.")
 				x = coordinates@coords[,1] + 1i*coordinates@coords[,2]
 				
 				x = x * exp(1i*param["anisoAngleRadians"])
@@ -291,7 +320,10 @@ likfitLgm = function(
 				coordinates = SpatialPoints(cbind(Re(x), Im(x)))
 			} # end is anisotripic		
 		} # end anisotropy params supplied
-		coordinates = dist(coordinates(coordinates))		
+		# need to assign names manually
+		theRowNames = rownames(data.frame(coordinates))
+		coordinates = dist(coordinates(coordinates))
+		attributes(coordinates)$Labels = theRowNames
  
 	}  
 	parscaleDefaults["range"] = dist(t(bbox(coordinatesOrig)))/200
@@ -386,17 +418,30 @@ if(any(names(param)=="boxcox") & !any(paramToEstimate=="boxcox")) {
 					attributes(fromLogLik)$param),
 			varBetaHat = attributes(fromLogLik)$varBetaHat,
 			optim=fromOptim, 
-			resid = as.vector(attributes(fromLogLik)$resid)
+			data = data.frame(
+					observations = observations,
+					resid=as.vector(attributes(fromLogLik)$resid)
+			)
 	)
+	rownames(result$data) = theRowNames
+	
+	if(any(names(result$param)=="boxcox") ) {
+		
+		if(abs(result$param["boxcox"]-1)>0.0001){ # boxcox not 1
 
-	if(class(coordinatesOrig)!= "dist"){
-		# coordinates is not a distance matrix 
-	result$resid = SpatialPointsDataFrame(
-			coordinatesOrig, 
-			data.frame(resid=as.vector(attributes(fromLogLik)$resid))
-		)
-		proj4string(result$resid) = CRS(theproj)
+			if(abs(result$param["boxcox"])<0.001) {
+				result$data$obsBC = log(observations) 
+			} else  { #boxcox far from 0 and 1
+				result$data$obsBC <- 
+						((observations^result$param["boxcox"]) - 1)/
+						result$param["boxcox"]
+			}
+		}
 	}
+			
+
+
+	
 	
 	result$model = list(reml=reml)
 	if(class(trend)=="formula") {
