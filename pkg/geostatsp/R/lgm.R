@@ -125,8 +125,6 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 	likRes = do.call(likfitLgm, dots)
 
 
-
-
 	
 # call krige	
 	krigeRes =  krige(data=data,trend=formula,
@@ -147,8 +145,11 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 
 	
 	# add confidence intervals for covariance parameters
-	res$summary = informationLgm(res)$summary
-	
+	theInf=informationLgm(res)
+	res$varBetaHat = list(beta=res$varBetaHat)
+	names(res) = gsub("varBetaHat", "varParam", names(res))
+	res$summary = 	theInf$summary
+	res$varParam$information = theInf$information
 	
 	for(Dvar in names(covariates)) {
 		theLevels =levels(covariates[[Dvar]])[[1]]
