@@ -19,7 +19,7 @@ osmTiles = function(name) {
 #	skobbler="http://tiles.skobbler.net/osm_tiles2/",	
 	waze="http://tilesworld.waze.com/tiles/",
 #	eu="http://alpha.map1.eu/tiles/"#,
-#	mapbox="http://a.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/"
+	mapbox="http://a.tiles.mapbox.com/v3/examples.map-vyofok3q/",
 	humanitarian="http://a.tile.openstreetmap.fr/hot/"
 	)
 	

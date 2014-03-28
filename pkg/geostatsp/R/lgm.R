@@ -92,20 +92,23 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 		param=c()
 	}
 	
-	param['shape']=shape
-	param['nugget']=nugget
-	param['boxcox']=boxcox
-
-	if(!any(names(param)=='range'))
-		param['range']=NA
 					
 	paramToEstimate	= c("range", "shape","nugget","boxcox")[
 			!c(FALSE,fixShape,fixNugget,fixBoxcox)]		
+	range=NA
+	Spar = c(shape=shape,nugget=nugget,range=NA,boxcox=boxcox)
+	
 	if(aniso) {
-		param = c(param, anisoAngleDegrees=NA,anisoRatio=NA)
-		paramToEstimate = c(paramToEstimate,c("anisoAngleDegrees","anisoRatio"))		
+		Spar = c(Spar, anisoAngleDegrees=NA,anisoRatio=NA)
+		paramToEstimate = c(paramToEstimate,
+				"anisoAngleDegrees","anisoRatio")		
 	}
-				
+
+	Spar = Spar[!names(Spar) %in% names(param)]
+	param = c(param, Spar)
+	
+	
+	
 	
 	# to do: make sure factors in rasters are set up correctly
 	# have baseline as first entry in cov@data@attributes,
@@ -163,9 +166,14 @@ lgm <- function(data,  locations, covariates=NULL, formula=NULL,
 			}
 		}
 	}
-	
-	
-
+	# if range is very big, it's probably in metres, convert to km
+	if(res$summary['range','estimate']>1000) {
+		logicalCol = names(res$summary) == "Estimated"
+		res$summary["range",!logicalCol] = 
+				res$summary["range",!logicalCol] /1000
+		rownames(res$summary) = gsub("^range$", "range/1000", 
+				rownames(res$summary))
+	}
 	
 	return(res)
 }

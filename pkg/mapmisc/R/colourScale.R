@@ -88,7 +88,7 @@ colourScale.numeric = function(x, breaks=5,
 		names(colVec) = breaks
  
 	} else {
-		if(style != "fixed") {
+		if(style != "fixed" & length(breaks)==1) {
 			if(!is.null(transform)) {
 				if(is.numeric(transform)) {
 					transform = transform[1]

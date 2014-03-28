@@ -65,15 +65,15 @@ tocrop = spTransform(tocrop, CRSobj=CRS(proj4string(map)))
 map = crop(map, extent(tocrop))
 
 
+
+
 xpoints = t(bbox(extentBig))
-
-
 boxsize = abs(apply(xpoints, 2, diff))	
 oldinsetbox = t(bbox(map))
 oldrange = apply(oldinsetbox, 2, diff)
 newxrange = boxsize[1]*width
-newyrange = newxrange * oldrange[2]/oldrange[1]
-
+cellRatio = res(area(map))
+newyrange = newxrange * (cellRatio[1]/cellRatio[2])*(oldrange[2]/oldrange[1])
 
 	if(is.character(pos)) {
 x = apply(xpoints, 2, mean) - 0.5*c(newxrange, newyrange)
