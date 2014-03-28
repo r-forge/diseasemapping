@@ -13,11 +13,11 @@ Uses inla to fit a Besag, York and Mollie disease mapping model
 bym(data, ...)
 	\method{bym}{SpatialPolygonsDataFrame}(data, 
 		formula=observed ~ offset(logExpected), 
-		priorCI=list(sdSpatial = c(0.01, 10), sdIndep = c(0.01, 10)), 
+		priorCI=list(sdSpatial = c(0.01, 2), sdIndep = c(0.01, 2)), 
 		family="poisson",
 		region.id, adjMat, formula.fitted=formula,...)
 	\method{bym}{data.frame}(data, formula, 
-		priorCI=list(sdSpatial = c(0.01, 10), sdIndep = c(0.01, 10)), 
+		priorCI=list(sdSpatial = c(0.01, 2), sdIndep = c(0.01, 2)), 
 		family="poisson",
 		region.id, adjMat, formula.fitted=formula,...)
 	}
