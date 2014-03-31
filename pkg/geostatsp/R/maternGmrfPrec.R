@@ -1,5 +1,5 @@
-getPrec = function(kappa,a)	{
-	if(kappa == 0){
+getPrec = function(shape,a)	{
+	if(shape == 0){
 		precEntries = c(
 				"1" = a,
 				"2" = -1,
@@ -7,7 +7,7 @@ getPrec = function(kappa,a)	{
 				"4" = 0, 
 				"5" =  0,
 				"6" = 0)
-	} else if(kappa==1) {	
+	} else if(shape==1) {	
 		
 		precEntries = c("1" = 4 + a^2,
 				"2" = -2*a,
@@ -15,7 +15,7 @@ getPrec = function(kappa,a)	{
 				"4" = 1, 
 				"5" =  0,
 				"6" = 0)
-	} else if(kappa==2) {
+	} else if(shape==2) {
 		precEntries = c("1" = a*(a*a+12),
 				"2" = -3*(a*a+3),
 				"3" = 6*a,
