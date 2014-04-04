@@ -94,7 +94,7 @@ if(length(grep("left$",pos)))
 mapOrig = map
 extent(map)= extent(c(x[1], x[1]+newxrange, x[2], 
 				x[2]+newyrange))
-proj4string(map) = CRS(NA)
+proj4string(map) = CRS()
 bbOrig = t(bbox(extent(mapOrig)))
 bbSmall = t(bbox(extent(map)))
 
