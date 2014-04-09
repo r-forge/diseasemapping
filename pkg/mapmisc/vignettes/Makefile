@@ -3,7 +3,6 @@ ifndef R_HOME
 endif
 
 PDFS:= mapmisc.pdf mapLayers.pdf
-HTML:= mapLayers.html
 
 Rargs? = ""
 
@@ -20,11 +19,11 @@ clean:
 	xelatex $<;
 	$(R_HOME)/bin/Rscript -e "tools::compactPDF('$@', gs_quality='ebook')" 
 
-%.html: %.tex
-	htlatex $<;
 
-web:	mapLayers.html
+web:	mapLayers.tex
+	cp mapLayers.tex mapWeb.tex
+	htlatex mapWeb.tex
 	cp -r figure ../../../www/openmap;
-	cp mapLayers.html ../../../www/openmap/index.html;
-	cp mapLayers.css ../../../www/openmap/
+	cp mapWeb.html ../../../www/openmap/index.html;
+	cp mapWeb.css ../../../www/openmap/
 
