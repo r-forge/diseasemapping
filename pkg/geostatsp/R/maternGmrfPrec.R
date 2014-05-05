@@ -61,8 +61,9 @@ maternGmrfPrec.dsCMatrix = function(N,
 		adjustMarginalVariance=FALSE,...) {
 
 	names(param) = gsub("^var$", "variance", names(param))
-	if(!any(names(param)=='variance'))
-		param['variance']=1
+	if(!any(names(param)=='variance')) {
+			param['variance']=1
+	}
 	if(!any(names(param)=='cellSize'))
 		param['cellSize']=1
 	
@@ -381,8 +382,16 @@ maternGmrfPrec.dsCMatrix = function(N,
 	
 # marginal precision
 #	if(adjustParam){
-if(adjustMarginalVariance){
-	midQ = as(N[,midcell],'sparseVector')
+if(all(c('conditionalVariance','oneminusar') %in% names(param))) {
+
+	precEntries =  precEntries /param['conditionalVariance']  
+	adjustEdges=FALSE
+	marginalPrec = NA
+	
+} else {
+	
+	if(adjustMarginalVariance){
+		midQ = as(N[,midcell],'sparseVector')
 		midQ@x = precEntries[midQ@x]
 		
 
@@ -400,13 +409,13 @@ if(adjustMarginalVariance){
 		marginalPrec =  sum(midQ@x * midVar)
 		
 		
-} else {
+	} else {
 		if(param['shape'] != 0) {
 			  marginalPrec = (4*pi*param['shape'] *(a-4)^(param['shape'] ))
 		  } else {
 			  marginalPrec = (4*pi)
 		  }
-}
+	 }
 
 		# precEntries = precEntries/marginalPrec
  	#	precEntries = 
@@ -422,7 +431,8 @@ if(adjustMarginalVariance){
 				log(marginalPrec) + 
 						log(param['variance'])
 	)
-		
+}
+
 	
 	theNNmat = N
 	Nx=attributes(theNNmat)$Nx 

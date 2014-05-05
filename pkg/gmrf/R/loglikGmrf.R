@@ -30,6 +30,7 @@ loglikGmrfGivenQ = function(
 		empirical=NULL) {
 	
 
+	# propNugget = tau^2 / xi^2
 	
 	if(propNugget>0){
 
@@ -42,7 +43,7 @@ loglikGmrfGivenQ = function(
 			QLLorig = crossprod(LofQ)
 
 			cholIcQ = Cholesky(QLLorig, LDL=FALSE,
-					Imult=1/nuggetSigsq)
+					Imult=propNugget)
 			YL = solve(cholIcQ, YL,
 					system='P')	
 			XL = solve(cholIcQ, XL,
@@ -214,7 +215,8 @@ loglikGmrfOneRange = function(
 
 		NN = maternGmrfPrec(NN,
 				param=c(shape=shape,
-						range=as.vector(rangeInCells[1])),
+						range=as.vector(rangeInCells[1]),
+						conditionalVariance=1),
 				adjustEdges=adjustEdges,adjustParam=adjustParam,
 				adjustShape=adjustShape,
 				adjustMarginalVariance=adjustMarginalVariance)
@@ -222,7 +224,8 @@ loglikGmrfOneRange = function(
 	} else {
  		NN =  maternGmrfPrec(NN,
 				param=c(shape=as.vector(shape),
-						oneminusar=as.vector(oneminusar[1])),
+						oneminusar=as.vector(oneminusar[1]),
+						conditionalVariance=1),
 				adjustEdges=adjustEdges,adjustParam=adjustParam,
 				adjustShape=adjustShape,
 				adjustMarginalVariance=adjustMarginalVariance)

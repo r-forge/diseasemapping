@@ -10,6 +10,122 @@
 \title{Likelihood for GMRF's}
 \author{Patrick Brown}
 \begin{document}
+
+\section{Notation}
+
+Matern
+\[
+\rho(h; \phi, \kappa) = \frac{1}{\Gamma(\kappa)2^{\kappa-1}}\left(\frac{\sqrt{8\kappa}||h||}{\phi}\right)^\kappa
+K_\kappa\left(\sqrt{8\kappa}||h||/\phi\right).
+\]
+
+\begin{itemize}
+  \item $\phi$ is range ($\rho$ in rue et al)
+  \item $\sqrt{8\kappa}/\phi$ is scale ($\kappa$ in rue et al)
+  \item $\kappa$ is shape ($\nu$ in rue)
+\end{itemize}
+
+
+First order CAR as
+\[
+V^{(0)}_i - \frac{\psi}{4}\sum_{j\sim i} V^{(0)}_j =  Z_i \ , \ \
+Z_i \sim  \text{i.i.d.\ N}(0, \xi^2\psi/4)
+\]
+Now define
+\begin{align*}
+V^{(1)}_i - \frac{\psi}{4}\sum_{j\sim i} V^{(1)}_j = & V^{(0)}_i\\
+V^{(2)}_i -\frac{\psi}{4}\sum_{j\sim i} V^{(2)}_j = & V^{(1)}_i
+\end{align*}
+
+
+\begin{itemize}
+  \item $\psi$ is the autoregressive parameter, $0\leq\psi < 1$, known as `ar' 
+  \item $a$ in rue et al is $4/\psi$
+  \item $a-4 = 4/\psi-1$ 
+  \item cell size $\delta$
+    \item range in cells $ = \phi/ \delta$
+  \item scale in cells $=\text{scale}\cdot\delta$
+\end{itemize}
+
+\[
+	4/\psi = a = (\delta^2\text{scale}^2 + 4) = 8 \kappa \delta^2 / \phi^2 + 4
+\]
+
+\[
+\psi = \phi^2/(2 \delta^2 \kappa + \phi^2)
+\]
+\[
+\phi =  \delta \sqrt{\frac{2\kappa\psi}{1-\psi}}
+\]
+
+
+$U_i = V^{(\kappa)}_i$
+
+
+\begin{itemize}
+  \item $\text{var}(V^{(0)}_i | V^{(0)}_{-i}) = \xi^2\psi/4$ , $\xi^2$ is conditional
+  variance (though strictly speaking conditional variance times 4 divided by
+  $\psi$)
+  \item $\text{var}(U_i) = \sigma^2$ = marginal variance
+\end{itemize}
+\[
+\sigma^2 =  \xi^2/[4\pi\kappa(a-4)^\kappa] = 
+\frac{\xi^2}{ 4^{\kappa+1}\pi\kappa} \left(\frac{\psi}{1-\psi}\right)^\kappa
+\]
+
+
+$Q(\psi,\kappa)$ is a precision matrix with $\xi^2=1$, entries as in rue et al
+
+\[
+Q(\psi, 1) = 
+\begin{pmatrix}
+1 & &  \\
+-8/\psi & 2 & \\
+4(1+4/\psi^2) & -8/\psi & 1 \\
+\end{pmatrix}
+\]
+
+\[
+Q(\psi, 2) = 
+\begin{pmatrix}
+-1 & & & \\
+12/\psi & -3 & &\\
+-3(3+16\psi^2) & 24/\psi & -3& \\
+(4/\psi)(12+16/\psi^2) &-3(3+16\psi^2) & 12/\psi & -1& \\
+\end{pmatrix}
+\]
+
+
+Precision matrix 
+\begin{verbatim}
+myraster = squareRaster(raster(extent(0,100,0,200), nrow=30, ncol=10))
+myPrec = maternGmrfPrec(myraster, param=
+	c(conditionalVariance=1, oneminusar=0.05, cellSize = xres(myraster),shape=1)
+)
+
+\end{verbatim}
+
+
+
+The Method
+\begin{itemize}
+  \item fix $\psi$ and $\kappa$, derive  $\phi$
+  \item For a range of values of $\alpha = \tau^2/\xi^2$, find 
+  $\hat\xi^2(\psi, \kappa, \alpha)$ and  $\hat\beta(\psi, \kappa, \alpha)$ . 
+  Note $Q$ does not change with $\alpha$
+  \begin{itemize}
+    \item ML
+    \item REML
+    \end{itemize}
+	\item Derive $\hat\sigma^2(\psi, \kappa, \alpha)$
+  \begin{itemize}
+    \item ML
+    \item REML
+    \end{itemize}
+	\item re-do for different $\psi$ and $\kappa$
+\end{itemize}
+
+
 \section*{The Model}
 $U$ is a Gaussian Markov random field with sparse precision matrix $Q$.  The MRF
 approximation to the Matern specifies the elements of $Q$ as functions of a
@@ -42,11 +158,18 @@ MLE  $\hat\phi, \hat\xi, \hat\tau,\hat\beta$  maximize $pr(Y ;
 
 Some tricks
 \begin{align*}
- Q(\phi) = L L',\   Q(\phi)^{-1} &=L^{\prime-1} L^{-1}, \ \  c = \tau^2/\xi^2 \\
+ Q(\phi) = L L',\   Q(\phi)^{-1} &=L^{\prime-1} L^{-1}, \ \  c = \xi^2/\tau^2 \\
 \tilde Y = L' Y,&  \  \tilde X = L' X
 \end{align*}
 \begin{align*}
-\var(\mathbf{Y}) = &  \xi^2  L^{\prime -1}(  I + c  Q(\phi)  ) L^{-1}\\
+\var(\mathbf{Y}) =& \xi^2 [c Q(\psi)^{-1} +  I] \\
+= &  \xi^2  L^{\prime -1}(  cI +   L'L  ) L^{-1}\\
+\end{align*}
+
+BELOW HERE IS A BIT WRONG!
+
+\begin{align*}
+
 \var(\mathbf{Y})^{-1} = &    L(  I + c  Q(\phi)  )^{-1} L' / \xi^2\\
 \log |\var(\mathbf{Y})| = & N \log(\xi^2) + \log |I + c Q(\phi)| - 
 2 \log |L|\\ 
