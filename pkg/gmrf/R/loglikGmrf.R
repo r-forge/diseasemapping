@@ -30,29 +30,26 @@ loglikGmrfGivenQ = function(
 		empirical=NULL) {
 	
 
-	# propNugget = tau^2 / xi^2
+	# propNugget =    tau^2/xi^2
+	
 	
 	if(propNugget>0){
 
-		# propNugget = tausq / (tausq + sigsq)
-		nuggetSigsq = 1/( (1/propNugget) -1)
-		# nuggetSigsq = tausq/sigsq
-		
-		if(is.null(QLL)) {
-			LofQ = expand(Qchol)$L
-			QLLorig = crossprod(LofQ)
 
-			cholIcQ = Cholesky(QLLorig, LDL=FALSE,
-					Imult=propNugget)
+		# Q = L L', QLL = L'L
+		# cholIcQ = chol of L'L + I xisq/tausq
+		if(is.null(QLL)) {
+			QLL = crossprod(expand(Qchol)$L)
+
+			cholIcQ = Cholesky(QLL, LDL=FALSE,
+					Imult=1/propNugget)
 			YL = solve(cholIcQ, YL,
 					system='P')	
 			XL = solve(cholIcQ, XL,
 					system='P')	
 		} else {
-			# IcQ = (Q + I/c) c 
-			cholIcQ = update(cholQLL, QLL,mult=1/nuggetSigsq)
+			cholIcQ = update(cholQLL, QLL,mult=1/propnugget)
 		}
-		# should multiply cholIcQ by sqrt(nuggetSigsq)
 
 		
 		Ybreve = solve(cholIcQ, 
