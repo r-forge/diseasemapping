@@ -32,6 +32,7 @@ loglikGmrfGivenQ = function(
 
 	# propNugget =    tau^2/xi^2
 	
+	N= length(Yp) + c(ml=0,reml=-ncol(Xp))
 	
 	if(propNugget>0){
 
@@ -48,7 +49,7 @@ loglikGmrfGivenQ = function(
 			XL = solve(cholIcQ, XL,
 					system='P')	
 		} else {
-			cholIcQ = update(cholQLL, QLL,mult=1/propnugget)
+			cholIcQ = update(cholQLL, QLL,mult=1/propNugget)
 		}
 
 		
@@ -56,7 +57,6 @@ loglikGmrfGivenQ = function(
 				YL,	system='L')
 		Xbreve = solve(cholIcQ, 
 				 XL, system='L')	
-		# should divide the above by sqrt(nuggetSigsq)
 		
 		XprecXinv = solve(Matrix::crossprod(Xbreve,Xbreve))
 		
@@ -66,17 +66,22 @@ loglikGmrfGivenQ = function(
 		)
 		names(betaHat) = colnames(XL)
 		
-		XprecXinv=XprecXinv*nuggetSigsq
+		residsL =  as.vector(Ybreve -  Xbreve %*% betaHat )
+		rpr = as.numeric(crossprod(residsL,residsL))
 		
-		residsL =  as.vector(Ybreve -  Xbreve %*% betaHat )/ 
-				sqrt(nuggetSigsq)
-		
+
 		
 		logDetVar = as.numeric(
-				length(YL) * log(nuggetSigsq) + 
 				2*determinant(cholIcQ,logarithm=TRUE)$modulus -
 						detQ 
 		)
+		
+
+
+		tausq = constHat= rpr/N
+		xisq = tausq/propNugget
+		
+		
 		
 
 		
@@ -94,8 +99,12 @@ loglikGmrfGivenQ = function(
 		
 		# residsL ~ N(0,sigsq*I)
 		residsL  = as.vector(YL - XL %*% betaHat)
- 		
+		rpr = as.numeric(crossprod(residsL,residsL))
+		
 		logDetVar=-detQ
+		tausq=0*N
+		xisq = constHat = rpr/N
+		
 		# matrix operations
 		# Qchol, cholCovMat = Matrix::chol(covMat)
 		# XL, cholCovInvX = Matrix::solve(cholCovMat, covariates)
@@ -103,42 +112,21 @@ loglikGmrfGivenQ = function(
 		# XprecXinv, cholCovInvXcrossInv = Matrix::solve(cholCovInvXcross)
 	}
 
- 
+	variances = c(tausq = tausq, xisq = xisq)
 	
-	rpr = as.numeric(crossprod(residsL,residsL))
+	m2logL = logDetVar - N*log(rpr)
+	m2logL['reml'] =	m2logL['reml'] +  determinant(
+			XprecXinv,logarithm=TRUE)$modulus
 
-	N=c(ml=0,reml=-ncol(Xp))+length(Yp)
-	# estimate of the constant 
-	constHat = rpr/N
-
-
-	m2logL = N*log(constHat) + logDetVar + 
-			c(ml=0,reml=determinant(
-							XprecXinv,logarithm=TRUE)$modulus
-	)
 	names(m2logL) = paste("m2logL.",names(m2logL),sep='')
-
-
-	variances = rep(c(
-					sigmasq = 1,
-					tausq = nuggetSigsq),2)*
-		rep(constHat,c(2,2)) 
-	names(variances) = paste(names(variances),
-			rep(names(N),c(2,2)),sep='.')
-
+	
 	logL = -m2logL/2
 	names(logL) = gsub("^m2","",names(logL))
 
-
-
-
-	
 	sebeta = diag(XprecXinv)
 	sebeta = rep(sebeta,2)*
 			rep(constHat,
 				rep(length(sebeta),2))
-	
-#	print(sebeta)
 	
 	names(sebeta)= paste('se',rep(names(betaHat),2), 
 			names(sebeta),sep='.')
@@ -152,7 +140,7 @@ loglikGmrfGivenQ = function(
 					list(names(betaHat),names(betaHat),
 							names(constHat))
 
-	if(!is.null(empirical)){
+	if(FALSE){#}!is.null(empirical)){
 
 		empirical$yMult = empirical$yMult * variances['sigmasq.ml']	
 		empirical[empirical$x<=0,'yMult'] = 
@@ -206,7 +194,7 @@ loglikGmrfOneRange = function(
 		adjustEdges=FALSE,adjustParam=FALSE,
 		adjustShape=FALSE,adjustMarginalVariance=FALSE) {
 	
-
+ 
 	
 	if(is.null(oneminusar)){
 
@@ -258,39 +246,17 @@ loglikGmrfOneRange = function(
 
 	if(!all(propNugget==0)) {
 		# calculate t(LofQ) LofQ
-		pRev = as(ncol(LofQ):1, "pMatrix")		
-		lQLL =  as( t(LofQ %*% pRev) %*% pRev,'dtCMatrix')
-		QLL = tcrossprod(lQLL)
-		QLL = forceSymmetric(QLL)
-
-		
-		cholQLL = Cholesky(QLL,LDL=F,perm=T)
-		
-		# QLL = P' L  L' P 
-		# QLLorig = Prev P' L   L' P Prev'
+	QLL = crossprod(expand(argList$Qchol)$L)
 	
-		ptwice =   as(expand(cholQLL)$P,'sparseMatrix') %*% 
-				t(as(pRev,'sparseMatrix'))
-		
-		ptwice2 = as(ptwice, 'pMatrix')
-		cholQLL@perm = as.integer(ptwice2@perm-1)
+	argList$cholQLL = Cholesky(QLL, LDL=FALSE)
+	argList$YL =   solve(argList$cholQLL , YL,
+			system='P')	
+	argList$XL = solve(argList$cholQLL , XL,
+			system='P')	
 
-		argList$cholQLL = cholQLL
-		if(FALSE){
-			#prove that cholQLL is cholesky of QLLorig
-			QLLorig = crossprod(LofQ)
-			eye = solve(cholQLL,QLLorig)
-			range(diag(eye))
-			range(eye[which(lower.tri(eye,diag=FALSE))])
-		}
-
-		
-		argList$YL = solve(argList$cholQLL, argList$YL,
-				system='P')	
-		argList$XL = solve(argList$cholQLL, argList$XL,
-				system='P')	
 	}
 	
+	if(FALSE) {
 # variance of Q inverse
 theraster = attributes(NN)$raster
 Nx=ncol(theraster);Ny=nrow(theraster)
@@ -303,6 +269,9 @@ midVec = sparseMatrix(midcell,1,x=1,
 Qcentre = solve(cholPrec,
 		midVec)[midcell]
 
+} else {
+	Qcentre = NULL
+}
 
 	if(length(propNugget)==1) {
 		
@@ -324,6 +293,8 @@ Qcentre = solve(cholPrec,
 			propNugget=propNugget,			
 			MoreArgs=argList,SIMPLIFY=TRUE
 		)
+		colnames(res) = paste("propNugget=", propNugget,sep="")
+
 		res = rbind(res,
 			rangeInCells=as.numeric(rangeInCells),
 			oneminusar=as.numeric(oneminusar),
@@ -370,6 +341,7 @@ loglikGmrf = function(
 			myapply= mapply
 				}
 		
+				
 		if(!is.null(oneminusar)){
 			res=myapply(loglikGmrfOneRange,
 				oneminusar=oneminusar,	

@@ -141,21 +141,6 @@ MLE  $\hat\phi, \hat\xi, \hat\tau,\hat\beta$  maximize $pr(Y ;
 \phi,\xi,\tau,\beta)$.
 
 \section*{Likelihood}
-\begin{multline*}
--2 \log pr(\mathbf{Y};\phi,\beta,\tau) = 
-| (\xi^2  Q(\phi)^{-1} + \tau^2 I  ) | + \\
-( \mathbf{Y} -\mathbf{X}\beta)  '   
-  (\xi^2  Q(\phi)^{-1} + \tau^2 I  )^{-1} 
-(\mathbf{Y} - \mathbf{X}\beta) 
-\end{multline*}
-
-\[
-\hat\beta = [ \mathbf{X}' 
-(  \xi^2  Q(\phi)^{-1} + \tau^2 I )^{-1}   \mathbf{X}]^{-1}  
-\mathbf{X}'(\xi^2  Q(\phi)^{-1} +
-\tau^2 I  )^{-1} \mathbf{Y}
-\]
-
 Some tricks
 \begin{align*}
  Q(\phi) = L L',\   Q(\phi)^{-1} &=L^{\prime-1} L^{-1}, \ \  c = \xi^2/\tau^2 \\
@@ -163,13 +148,53 @@ Some tricks
 \end{align*}
 \begin{align*}
 \var(\mathbf{Y}) =&  [ \xi^2 Q(\psi)^{-1} +  \tau^2 I] \\
-= &    L^{\prime -1}(  \xi^2I +   \tau^2 L'L  ) L^{-1}\\
+= &     \tau^2 L^{\prime -1}(  \xi^2/\tau^2 I +    L'L  ) L^{-1}\\
+(  \xi^2/\tau^2 I +    L'L  ) = & L_2L_2'\\
+\var(\mathbf{Y})^{-1} = &  \tau^2  L L_2^{-1\prime} L_2^{-1}   L' \\
 \end{align*}
+
+\begin{align*}
+\hat\beta(\phi, \xi^2/\tau^2) = &[ \mathbf{X}' 
+\var(\mathbf{Y})^{-1}  \mathbf{X}]^{-1}  
+\mathbf{X}'\var(\mathbf{Y})^{-1} \mathbf{Y}\\
+ = &[ \mathbf{X}' 
+  L  L_2^{-1\prime} L_2^{-1}  L'    \mathbf{X}]^{-1}  
+\mathbf{X}' L  L_2^{-1\prime} L_2^{-1}   L' \mathbf{Y}
+\\
+\breve Y =& L_2^{-2} L'  \mathbf{Y}\\
+\breve X =& L_2^{-2} L' \mathbf{X}\\
+\hat\beta(\phi, \xi^2/\tau^2) = & (\breve X' \breve X)^{-1} \breve X' \breve Y
+\\
+-2 \log pr(\mathbf{Y};\phi,\tau, \xi) = &
+\log |\var(\mathbf{Y})| + ( \mathbf{Y} -\mathbf{X}\hat\beta[\phi, \xi^2/\tau^2) ]  '   
+  \var(\mathbf{Y}) ^{-1} 
+[\mathbf{Y} - \mathbf{X}\hat\beta(\phi, \xi^2/\tau^2) ] \\
+R = & L_2^{-1}   L' [\mathbf{Y} - \mathbf{X}\hat\beta(\phi, \xi^2/\tau^2) ] \\
+= & \breve Y - \breve X \hat\beta(\phi, \xi^2/\tau^2) \\
+ = &  - \log|  \tau^2  L(
+L_2^{-1\prime} L_2^{-1} ) L'| +  \tau^2 R'R\\
+= & - N \log(\tau^2) + 2\log|L_2| - 2\log|L| +  \tau^2 R'R\\
+\hat\tau(\psi, \tau^2/\xi^2) = &  R'R/N  \\
+-2 \log pr(\mathbf{Y};\phi,\tau^2/\xi^2)+C = & - N \log (R'R)   + 2\log|L_2| -
+2\log|L|
+\end{align*}
+
+
+
+\begin{align*}
+-2 \log pr(\mathbf{Y};\phi,\beta,\xi,\tau) = &   - \log|  \tau^2  L(
+L_2^{-1\prime} L_2^{-1} ) L'|+ \tau^2  ( \mathbf{Y} -\mathbf{X}\beta)  '   
+  L( L_2^{-1\prime} L_2^{-1} ) L'
+(\mathbf{Y} - \mathbf{X}\beta)  \\
+-2 \log pr(\mathbf{Y};\phi,\xi/\tau,\tau)  = & N \log(\tau^2) - 2 \log(|L|)	 + 2
+\log(|L_2|) + \tau^2  \breve Y' \breve Y
+\end{align*}
+
+
 
 BELOW HERE IS A BIT WRONG!
 
 \begin{align*}
-
 \var(\mathbf{Y})^{-1} = &    L(  I + c  Q(\phi)  )^{-1} L' / \xi^2\\
 \log |\var(\mathbf{Y})| = & N \log(\xi^2) + \log |I + c Q(\phi)| - 
 2 \log |L|\\ 

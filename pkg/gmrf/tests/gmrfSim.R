@@ -1,11 +1,11 @@
 library(geostatsp)
 
-myraster = raster(extent(0,8000,0,6000), ncols=40,nrows=30)
+myraster = squareRaster(raster(extent(0,8000,0,6000), ncols=60,nrows=40))
 myrasterBig = extend(myraster, 
 		extend(extent(myraster),6*xres(myraster))
 )
 
-themodel = c(range=5*xres(myraster),shape=2,variance=900)
+themodel = c(range=3*xres(myraster),shape=2,variance=900)
 
 theU = RFsimulate(myrasterBig,model=themodel)
 theU = raster::crop(theU, myraster)
@@ -22,12 +22,15 @@ names(theData) = c("y","x")
 theNN = NNmat(theData)
 
 
-Sar = exp(seq(log(0.04),log(0.16),len=50))
+Sar = exp(seq(log(0.04),log(0.16),len=12))
 
 
 source("../R/loglikGmrf.R")
 source("../R/lgmrfm.R")
 source("../R/conditionalGmrf.R")
+
+
+ 
 
 resNoNugget  = lgmrfm(
 		data=theData,
@@ -45,12 +48,13 @@ resNoNuggetEdge = lgmrfm(
 		formula = y ~ x,
 		oneminusar=Sar,
 		shape=themodel['shape'],
-		mc.cores=2,
+		mc.cores=1,
 		NN = theNN,
 				adjustEdges=TRUE
 		)
 
-resNoNuggetAdj = lgmrfm(
+if(FALSE) {
+		resNoNuggetAdj = lgmrfm(
 				data=theData,
 				formula = y ~ x,
 				oneminusar=Sar,
@@ -60,6 +64,9 @@ resNoNuggetAdj = lgmrfm(
 				adjustEdges=TRUE,
 				adjustMarginalVariance=TRUE
 		)
+	} else{
+		resNoNuggetAdj = NULL
+	}
 		
 		col = c(vanilla = 'black', adj='green',edge='blue',both='red',shape='orange')
 		
@@ -194,18 +201,6 @@ lines(resNoNuggetShape[Dx,],
 abline(v=themodel['range']/xres(myraster))
 
 
-# now with added noise
-fracNugget = 1/4
-nuggetSd = sqrt(themodel['variance']*fracNugget)
-thedf$yNoise = rnorm(nrow(thedf),
-		thedf$y,nuggetSd)
-
-
-source("../R/loglikGmrf.R")
-
-Sar2 = exp(seq(log(0.075),log(0.2),len=12))
-Snugget = seq(0.1, 0.3, by=0.02)
-
 
 if(FALSE) {
 
@@ -248,7 +243,22 @@ adjustParam=FALSE
 adjustShape=FALSE
 adjustMarginalVariance=FALSE
 }
-		
+
+# now with added noise
+fracNugget = 1/10
+nuggetSd = sqrt(themodel['variance']*fracNugget)
+thedf = as.data.frame(theData)
+thedf$intercept = 1
+Xmat = as.matrix(thedf[,c("intercept","x")])
+thedf$yNoise = rnorm(nrow(thedf),
+		thedf$y,nuggetSd)
+
+
+Sar2 = exp(seq(log(0.01),log(0.05),len=12))
+Snugget = seq(5, 50,len=25)
+maternShape = themodel['shape']
+
+
 resVanilla = loglikGmrf(
 		oneminusar=Sar2 ,
 		propNugget = Snugget ,
@@ -257,6 +267,8 @@ resVanilla = loglikGmrf(
 		shape=maternShape,
 		NN=theNN,mc.cores=4
 )
+ 
+image(resVanilla['propNugget',,1], resVanilla['oneminusar',1,],resVanilla['logL.ml',,])
 
 
 resEdge = loglikGmrf(
