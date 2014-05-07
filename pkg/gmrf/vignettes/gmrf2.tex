@@ -1,0 +1,333 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, color}
+
+\DeclareMathOperator{\E}{E}
+\DeclareMathOperator{\var}{var}
+\DeclareMathOperator{\cov}{cov}
+\DeclareMathOperator{\cor}{cor}
+
+\title{Likelihood for GMRF's}
+\author{Patrick Brown}
+\begin{document}
+
+\section{Notation}
+
+Matern
+\[
+\rho(h; \phi, \kappa) = \frac{1}{\Gamma(\kappa)2^{\kappa-1}}\left(\frac{\sqrt{8\kappa}||h||}{\phi}\right)^\kappa
+K_\kappa\left(\sqrt{8\kappa}||h||/\phi\right).
+\]
+
+\begin{itemize}
+  \item $\phi$ is range ($\rho$ in \textit{Rue et al})
+  \item $\sqrt{8\kappa}/\phi$ is scale ($\kappa$ in \textit{Rue et al})
+  \item $\kappa$ is shape ($\nu$ in \textit{Rue et al})
+\end{itemize}
+
+
+First order CAR as
+\[
+V^{(0)}_i - \frac{\psi}{4}\sum_{j\sim i} V^{(0)}_j =  Z_i \ , \ \
+Z_i \sim  \text{i.i.d.\ N}(0, \xi^2\psi/4)
+\]
+Now define
+\begin{align*}
+V^{(1)}_i - \frac{\psi}{4}\sum_{j\sim i} V^{(1)}_j = & V^{(0)}_i\\
+V^{(2)}_i -\frac{\psi}{4}\sum_{j\sim i} V^{(2)}_j = & V^{(1)}_i
+\end{align*}
+
+
+\begin{itemize}
+  \item $\psi$ is the autoregressive parameter, $0\leq\psi < 1$, known as `ar'
+  \item $a$ in \textit{Rue et al} is $4/\psi$
+  \item $a-4 = 4/\psi-1$
+  \item cell size $\delta$
+    \item range in cells $ = \phi/ \delta$
+  \item scale in cells $=\text{scale}\cdot\delta$
+\end{itemize}
+
+\[
+	4/\psi = a = (\delta^2\text{scale}^2 + 4) = 8 \kappa \delta^2 / \phi^2 + 4
+\]
+
+\[
+\psi = \phi^2/(2 \delta^2 \kappa + \phi^2)
+\]
+\[
+\phi =  \delta \sqrt{\frac{2\kappa\psi}{1-\psi}}
+\]
+
+
+$U_i = V^{(\kappa)}_i$
+
+
+\begin{itemize}
+  \item $\text{var}(V^{(0)}_i | V^{(0)}_{-i}) = \xi^2\psi/4$ , $\xi^2$ is conditional
+  variance (though strictly speaking conditional variance times 4 divided by
+  $\psi$)
+  \item $\text{var}(U_i) = \sigma^2$ = marginal variance
+\end{itemize}
+\[
+\sigma^2 =  \xi^2/[4\pi\kappa(a-4)^\kappa] =
+\frac{\xi^2}{ 4^{\kappa+1}\pi\kappa} \left(\frac{\psi}{1-\psi}\right)^\kappa
+\]
+
+
+$Q(\psi,\kappa)$ is a precision matrix with $\xi^2=1$, entries as in \textit{Rue et al}
+
+\[
+Q(\psi, 1) =
+\begin{pmatrix}
+1 & &  \\
+-8/\psi & 2 & \\
+4(1+4/\psi^2) & -8/\psi & 1 \\
+\end{pmatrix}
+\]
+
+\[
+Q(\psi, 2) =
+\begin{pmatrix}
+-1 & & & \\
+12/\psi & -3 & &\\
+-3(3+16\psi^2) & 24/\psi & -3& \\
+(4/\psi)(12+16/\psi^2) &-3(3+16\psi^2) & 12/\psi & -1& \\
+\end{pmatrix}
+\]
+
+
+Precision matrix
+\begin{verbatim}
+myraster = squareRaster(raster(extent(0,100,0,200), nrow=30, ncol=10))
+myPrec = maternGmrfPrec(myraster, param=
+	c(conditionalVariance=1, oneminusar=0.05, cellSize = xres(myraster),shape=1)
+)
+
+\end{verbatim}
+
+
+
+The Method
+\begin{itemize}
+  \item fix $\psi$ and $\kappa$, derive  $\phi$
+  \item For a range of values of $\alpha = \tau^2/\xi^2$, find
+  $\hat\xi^2(\psi, \kappa, \alpha)$ and  $\hat\beta(\psi, \kappa, \alpha)$ .
+  Note $Q$ does not change with $\alpha$
+  \begin{itemize}
+    \item ML
+    \item REML
+    \end{itemize}
+	\item Derive $\hat\sigma^2(\psi, \kappa, \alpha)$
+  \begin{itemize}
+    \item ML
+    \item REML
+    \end{itemize}
+	\item re-do for different $\psi$ and $\kappa$
+\end{itemize}
+
+
+\section*{The Model}
+$U$ is a Gaussian Markov random field with sparse precision matrix $Q$.  The MRF
+approximation to the Matern specifies the elements of $Q$ as functions of a
+range parameter $\phi$.
+
+\begin{align*}
+Y_i| U_i \sim & \text{MVN}(X_i\beta + U_i, \tau^2 )\\
+[U_1 \ldots U_N]' \sim  & \text{MVN}(0, \xi^2 Q(\phi)^{-1})\\
+\var(\mathbf{Y})  = &  ( \xi^2 Q(\phi)^{-1} + \tau^2 I  )  \\
+\end{align*}
+
+MLE  $\hat\phi, \hat\xi, \hat\tau,\hat\beta$  maximize $pr(Y ;
+\phi,\xi,\tau,\beta)$.
+
+\section*{Likelihood}
+\begin{multline*}
+-2 \log pr(\mathbf{Y};\phi,\beta,\tau) =
+| (\xi^2  Q(\phi)^{-1} + \tau^2 I  ) | + \\
+( \mathbf{Y} -\mathbf{X}\beta)  '
+  (\xi^2  Q(\phi)^{-1} + \tau^2 I  )^{-1}
+(\mathbf{Y} - \mathbf{X}\beta)
+\end{multline*}
+
+\[
+\hat\beta = [ \mathbf{X}'
+(  \xi^2  Q(\phi)^{-1} + \tau^2 I )^{-1}   \mathbf{X}]^{-1}
+\mathbf{X}'(\xi^2  Q(\phi)^{-1} +
+\tau^2 I  )^{-1} \mathbf{Y}
+\]
+
+Some tricks
+\begin{align*}
+ Q(\phi) = L L',\   Q(\phi)^{-1} &=L^{\prime-1} L^{-1}, \ \  c = \xi^2/\tau^2 \\
+\tilde Y = L' Y,&  \  \tilde X = L' X\\
+\end{align*}
+\begin{align*}
+\var(\mathbf{Y}) =&  [ \xi^2 Q(\psi)^{-1} +  \tau^2 I] \\
+= &    L^{\prime -1}(  \xi^2I +   \tau^2 L'L  ) L^{-1}\\
+\end{align*}
+
+%BELOW HERE IS A BIT WRONG!
+
+\begin{align*}
+\var(\mathbf{Y})^{-1} = &    L(  I + c  L'L   )^{-1} L' / \xi^2\\
+\log |\var(\mathbf{Y})| = & \log(\xi^2) + \log |I + c L'L| -2 \log |L|\\
+%\log |\var(\mathbf{Y})| = & N\log(\xi^2) + \log |I + c L'L| -2 \log |L|\\
+\end{align*}
+\textcolor{green}{\textit{Not too sure why there is N there?}}\\
+Write $L_2 L_2' = I + c   L'L $
+
+
+\begin{align*}
+%-2 \log[L(Y;\phi,\beta,\xi,c)] = &
+%N \log(\xi^2) - 2 \log |L|  + 2 \log |I + cQ(\phi)| + \\
+%&(\tilde Y - \tilde X \beta)' (  I + cQ(\phi) )^{-1}
+% (\tilde Y - \tilde X \beta)/\xi^2\\
+%= & N \log(\xi^2) - 2 \log |L| + 2 \log |L_2| +  \\
+%&(\tilde Y - \tilde X \beta)' ( L_2 L_2' )^{-1}
+% (\tilde Y - \tilde X
+%\beta)/\xi^2\\
+%\hat\beta = &(\tilde X' (L_2 L_2' )^{-1} \tilde X)^{-1} \tilde X'(L_2 L_2'
+%)^{-1} \tilde Y\\
+-2 \log[L(Y;\phi,\beta,\xi,c)] = &
+\log(\xi^2) - 2 \log |L|  + 2 \log |I + cL'L| + \\
+&(\tilde Y - \tilde X \beta)' ( I + cL'L )^{-1}
+ (\tilde Y - \tilde X \beta)/\xi^2\\
+= & \log(\xi^2) - 2 \log |L| + 2 \log |L_2| +  \\
+&(\tilde Y - \tilde X \beta)' ( L_2 L_2' )^{-1}
+ (\tilde Y - \tilde X
+\beta)/\xi^2\\
+\hat\beta = &(\tilde X' (L_2 L_2' )^{-1} \tilde X)^{-1} \tilde X'(L_2 L_2'
+)^{-1} \tilde Y\\
+\end{align*}
+Write $\breve X = L_2^{-1} \tilde X$ and $\breve Y = L_2^{-1} \tilde Y$
+\begin{align*}
+\hat\beta = & (\breve X' \breve X)^{-1} \breve X' \breve Y\\
+\hat\xi =&    (\tilde Y - \tilde X \hat \beta)' ( L_2 L_2' )^{-1}%
+(\tilde Y - \tilde X \hat \beta)/N\\
+ = & (\breve Y' - \breve X' \hat\beta)'%
+  (\breve Y' - \breve X' \hat\beta) / N\\
+  -2 \log[L(Y;\phi,\beta,\xi,c)] =  &  2 \log |L_2| - 2 \log |L| + N
+  \log(\hat\xi)
+\end{align*}
+
+
+The algorithm
+\begin{itemize}
+  \item For an initial range parameter $\phi$, construct $Q(\phi)$, $LL'$,
+  $\tilde Y$ and $\tilde X$
+  \item For for each $\phi$, compute $L_2$, $\breve X$ and $\breve Y$ for a
+  range of $c$, find $\hat c(\phi)$
+  \item Repeat for multiple $\phi$ to get $\hat \phi$
+\end{itemize}
+
+\section*{Conditional distributions}
+Conditional
+\begin{align*}
+U|Y \sim & \text{MVN}\{\xi^2Q^{-1}(\xi^2 Q^{-1} + \tau^2 I)^{-1})
+(\mathbf{Y} - \mathbf{X}\beta), \\
+&\qquad
+\xi^2Q^{-1}- \xi^2Q^{-1}( \xi^2Q^{-1} + \tau^2 I  )^{-1})\xi^2 Q^{-1} \}\\
+\sim &\text{MVN}\left\{  ( I + c Q  )^{-1}  (\mathbf{Y} -
+\mathbf{X}\beta),\ \xi^2 Q^{-1}[I- ( I + cQ  )^{-1}	 ] \right\}\\
+\text{diag}\left[Q^{-1} ( I + c Q  )^{-1}\right]	= &
+\text{apply}(Q^{-1} \cdot
+( I + c Q  )^{-1}, 2,\text{sum})\\
+= & \text{apply}(L_2^{-1}\cdot L_2^{-1\prime}Q^{-1},2,\text{sum})
+\end{align*}
+
+\section*{EM}
+
+\subsection*{Profile likelihood for $\phi$ (fixed $Q$)}
+\begin{multline*}
+-2 \log L(U,Y;\xi,\tau,\beta,Q) =
+	N\log(\xi^2) + U'Q U/\xi^2 +
+	N\log(\tau^2) +\\
+	[Y-U-X\hat\beta]'[Y-U-X\hat\beta]/\tau^2
+	\end{multline*}
+$\hat\beta_{p+1}$ satisfies
+\[
+\E[ 2  X' X \hat\beta_{p+1} - 2 X'(Y - U) |Y ; p] = 0
+ \]
+ so
+\[
+ \hat\beta_{p+1} = (X'X)^{-1}(X'Y) - (X'X)^{-1}(X'\hat U_p)
+\]
+$\hat\xi^2_{p+1}$ satisfies
+\begin{gather*}
+N/\xi^2_{p+1} - \text{E}[ U'Q U |Y; p ]/\xi^4 = 0\\
+\xi^2_{p+1} = \text{E}[ U'L L' U |Y; p ]/N\\
+L'U|Y;p \sim  \text{MVN}\{
+	L^{-1}\hat U_p,
+\hat\xi_p^2[I - L^{-1}( Q^{-1} + \hat\tau_p^2 I  )^{-1}) L^{-1\prime}] \}\\
+\xi^2_{p+1} = (L' \hat U_p )'(L'\hat U_p) + \hat\xi_p^2\left\{N-
+\text{trace}\left[(I + \hat\tau_p^2 Q  )^{-1} \right]\right\}
+\end{gather*}
+
+$\hat\tau_{p+1}$ satisfies
+\begin{gather*}
+N /\hat\tau_{p+1} -
+\E\{[Y-U-X\hat\beta_{p+1}]'[Y-U-X\hat\beta_{p+1}]/\tau^4|Y;p\}=0\\
+\hat\tau_{p+1} = \E\{[Y-U-X\hat\beta_{p+1}]'[Y-U-X\hat\beta_{p+1}]|Y;p\}/N\\
+[Y-U-X\hat\beta_{p+1}]'[Y-U-X\hat\beta_{p+1}]=
+[Y-X\hat\beta_{p+1}]'[Y-X\hat\beta_{p+1}]
++ U'U -2 [Y-X\hat\beta_{p+1}]' U \\
+N \hat\tau_{p+1} = [Y-X\hat\beta_{p+1}]'[Y-X\hat\beta_{p+1}]+
+\E[U'U|Y;p] - 2 [Y-X\hat\beta_{p+1}]' \hat U_p\\
+\E[U'U|Y;p] = (\mathbf{Y} -
+\mathbf{X}\hat\beta_p)' ( I + \hat\tau^2_p/\hat\xi^2_p Q  )^{-2}  (\mathbf{Y} -
+\mathbf{X}\hat\beta_p) + \text{trace}\left\{ Q^{-1}\left[\hat\xi_p^2 I-
+(\hat\xi_p^2  I + \hat\tau_p^2Q )^{-1} \right]\right\}
+\end{gather*}
+For a given fixed $\phi$
+\begin{itemize}
+  \item Start with an initial values  $c_0$
+  \item At iteration $p$  do EM with fixed $\phi$ to get $c_{p+1}$
+  \item repeat to get $\hat c(\phi)$
+  \item Calculate likelihood
+  $L(Y;\phi,\hat c(\phi), \hat\beta[\phi,\hat c(\phi)) $
+\end{itemize}
+Note only one cholesky required per iteration when $\phi$ is fixed.
+
+\subsection*{MLE's only}
+For a given fixed $\phi$
+\begin{itemize}
+  \item Start with initial values  $\phi_0$, $c_0$
+  \item At iteration $p$  to get $\phi_{p+1}$, $c_{p+1}$
+  \item repeat to get $\hat c(\phi)$
+\end{itemize}
+Note two cholesky's per iteration. Need cholesky of $Q$ to get $\hat\beta$
+
+\section*{Missing values}
+
+\begin{align*}
+Y = & X \beta + Z U + Z\\
+Z \sim & \text{N}(0, \tau^2I )\\
+[U_1 \ldots U_M]' \sim  & \text{MVN}(0, \xi^2 Q(\phi)^{-1})\\
+\var(\mathbf{Y})  = &  ( \xi^2 Z' Q(\phi)^{-1}Z)  + \tau^2 I    \\
+\end{align*}
+
+\begin{itemize}
+\item First Cholesky  $Q = L_1 L_1'$ and backsolve $W = L_1^{-1}Z$
+\item Second Cholesky $\var(Y) = W'W + c I = L_2 L_2'$
+\item Backsolve $L_2^{-1}X$ and  $L_2^{-1}Y$ to get $\hat\beta$
+\end{itemize}
+
+\begin{align*}
+E(U|Y) = &  Q(\phi)^{-1}
+(\xi^2 Z' Q(\phi)^{-1}Z + c I)^{-1})
+(\mathbf{Y} - \mathbf{X}\hat\beta)\\
+E(Z|Y) = & \tau^2 I(\xi^2 Z' Q(\phi)^{-1}Z + c I)^{-1})
+(\mathbf{Y} - \mathbf{X}\hat\beta)
+\end{align*}
+
+\begin{itemize}
+  \item
+\end{itemize}
+\begin{align*}
+\var(\mathbf{Y}) = &  \xi^2  Z ' L^{\prime -1}(  I + c  Q(\phi)  ) L^{-1} Z\\
+\var(\mathbf{Y})^{-1} = &    L(  I + c  Q(\phi)  )^{-1} L' / \xi^2\\
+\log |\var(\mathbf{Y})| = & N \log(\xi^2) + \log |I + c Q(\phi)| -
+2 \log |L|\\
+\end{align*}
+
+\end{document}
