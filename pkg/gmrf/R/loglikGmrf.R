@@ -24,9 +24,12 @@ thezeros = which(distVec<=0)
 }
 
 loglikGmrfGivenQ = function(
-		propNugget, Yp, YL, 
-		Xp, XL,Qchol, detQ, 
+		propNugget, 
+		Yp, YL, 
+		Xp, XL,
+		Qchol, detQ, 
 		QLL=NULL,cholQLL=NULL,
+		XLp = NULL, YLp = NULL,
 		empirical=NULL) {
 	
 
@@ -44,9 +47,9 @@ loglikGmrfGivenQ = function(
 
 			cholIcQ = Cholesky(QLL, LDL=FALSE,
 					Imult=1/propNugget)
-			YL = solve(cholIcQ, YL,
+			YLp = solve(cholIcQ, YL,
 					system='P')	
-			XL = solve(cholIcQ, XL,
+			XLp = solve(cholIcQ, XL,
 					system='P')	
 		} else {
 			cholIcQ = update(cholQLL, QLL,mult=1/propNugget)
@@ -54,9 +57,9 @@ loglikGmrfGivenQ = function(
 
 		
 		Ybreve = solve(cholIcQ, 
-				YL,	system='L')
+				YLp,	system='L')
 		Xbreve = solve(cholIcQ, 
-				 XL, system='L')	
+				 XLp, system='L')	
 		
 		XprecXinv = solve(Matrix::crossprod(Xbreve,Xbreve))
 		
@@ -78,16 +81,14 @@ loglikGmrfGivenQ = function(
 		
 
 
-		tausq = constHat= rpr/N
+		tausq = constHat= N/rpr
 		xisq = tausq/propNugget
 		
-		
+		m2logL = logDetVar + N*log(rpr) 
 		
 
 		
 	} else { # no nugget 
-		nuggetSigsq = 0
-
 		
 		XprecX = Matrix::crossprod(XL,XL)
 		XprecXinv = solve(XprecX)
@@ -96,15 +97,13 @@ loglikGmrfGivenQ = function(
 						Matrix::crossprod(XL , YL))
 		names(betaHat) = colnames(XL)
 
-		
-		# residsL ~ N(0,sigsq*I)
 		residsL  = as.vector(YL - XL %*% betaHat)
 		rpr = as.numeric(crossprod(residsL,residsL))
 		
 		logDetVar=-detQ
 		tausq=0*N
 		xisq = constHat = rpr/N
-		
+		m2logL = logDetVar + N*log(rpr)
 		# matrix operations
 		# Qchol, cholCovMat = Matrix::chol(covMat)
 		# XL, cholCovInvX = Matrix::solve(cholCovMat, covariates)
@@ -114,7 +113,7 @@ loglikGmrfGivenQ = function(
 
 	variances = c(tausq = tausq, xisq = xisq)
 	
-	m2logL = logDetVar - N*log(rpr)
+
 	m2logL['reml'] =	m2logL['reml'] +  determinant(
 			XprecXinv,logarithm=TRUE)$modulus
 
@@ -246,12 +245,12 @@ loglikGmrfOneRange = function(
 
 	if(!all(propNugget==0)) {
 		# calculate t(LofQ) LofQ
-	QLL = crossprod(expand(argList$Qchol)$L)
+	argList$QLL = crossprod(expand(argList$Qchol)$L)
 	
-	argList$cholQLL = Cholesky(QLL, LDL=FALSE)
-	argList$YL =   solve(argList$cholQLL , YL,
+	argList$cholQLL = Cholesky(argList$QLL, LDL=FALSE)
+	argList$YLp =   solve(argList$cholQLL , YL,
 			system='P')	
-	argList$XL = solve(argList$cholQLL , XL,
+	argList$XLp = solve(argList$cholQLL , XL,
 			system='P')	
 
 	}

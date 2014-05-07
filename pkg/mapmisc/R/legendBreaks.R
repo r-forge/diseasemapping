@@ -69,15 +69,19 @@ if(outer){
 	} 
 	
 	result=do.call(legend, ldots)
+ 
 	
 	if(all(is.na(ldots$legend))) {
 		x=ldots
 		if(!is.null(x$title))
 			x$title = NA
 		x$legend=ltext
-		x$adj = c(0, 1) 
+		x$x = result$rect$left
+		x$y = result$rect$top - 0.75*par("cxy")[2]
+		x$adj = c(0, 0) 
 		x$col=NA
 		x$bty='n'
+ 
 		do.call(legend,x)
 	}
 

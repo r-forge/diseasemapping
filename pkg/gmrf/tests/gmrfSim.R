@@ -1,16 +1,13 @@
 library(geostatsp)
 
-myraster = squareRaster(raster(extent(0,8000,0,6000), ncols=60,nrows=40))
-myrasterBig = extend(myraster, 
-		extend(extent(myraster),6*xres(myraster))
-)
+myraster = squareRaster(raster(extent(0,8000,0,6000), ncols=40,nrows=30))
 
-themodel = c(range=3*xres(myraster),shape=2,variance=900)
 
-theU = RFsimulate(myrasterBig,model=themodel)
-theU = raster::crop(theU, myraster)
+themodel = c(range=6*xres(myraster),shape=2,variance=900)
 
-	
+theU = RFsimulate(myraster,model=themodel)
+
+
 thecov = myraster
 values(thecov) = c(rep(1,ncell(thecov)/2),
 		rep(4,ncell(thecov)/2))
@@ -22,7 +19,7 @@ names(theData) = c("y","x")
 theNN = NNmat(theData)
 
 
-Sar = exp(seq(log(0.04),log(0.16),len=12))
+Sar = exp(seq(log(0.01),log(0.1),len=24))
 
 
 source("../R/loglikGmrf.R")
@@ -37,10 +34,10 @@ resNoNugget  = lgmrfm(
 		formula = y ~ x,
 		oneminusar=Sar,
 		shape=themodel['shape'],
-		mc.cores=2,
+		mc.cores=4,
 		NN = theNN
 		)
-
+plot(resNoNugget["oneminusar",],resNoNugget["logL.ml",])
 		
 
 resNoNuggetEdge = lgmrfm(
@@ -48,7 +45,7 @@ resNoNuggetEdge = lgmrfm(
 		formula = y ~ x,
 		oneminusar=Sar,
 		shape=themodel['shape'],
-		mc.cores=1,
+		mc.cores=4,
 		NN = theNN,
 				adjustEdges=TRUE
 		)
@@ -245,7 +242,7 @@ adjustMarginalVariance=FALSE
 }
 
 # now with added noise
-fracNugget = 1/10
+fracNugget = 1/2
 nuggetSd = sqrt(themodel['variance']*fracNugget)
 thedf = as.data.frame(theData)
 thedf$intercept = 1
@@ -254,8 +251,8 @@ thedf$yNoise = rnorm(nrow(thedf),
 		thedf$y,nuggetSd)
 
 
-Sar2 = exp(seq(log(0.01),log(0.05),len=12))
-Snugget = seq(5, 50,len=25)
+Sar2 =  seq((0.05),(0.2),len=12)
+Snugget =  seq((0.1), (1),len=25)
 maternShape = themodel['shape']
 
 
@@ -268,7 +265,20 @@ resVanilla = loglikGmrf(
 		NN=theNN,mc.cores=4
 )
  
-image(resVanilla['propNugget',,1], resVanilla['oneminusar',1,],resVanilla['logL.ml',,])
+ 
+dseq = rev(c(0,0.5, 1,2,4,8,20,100))
+thecol = mapmisc::colourScale(resVanilla['logL.ml',,],
+		breaks=max(resVanilla['logL.ml',,]) - dseq, 
+		col='RdYlGn',style='fixed',rev=TRUE)
+
+plot(range(resVanilla['propNugget',,1]), 
+		range(resVanilla['oneminusar',1,]),type='n',
+		xlab='tausq/xisq',ylab='1-phi')
+.filled.contour(resVanilla['propNugget',,1], resVanilla['oneminusar',1,],resVanilla['logL.ml',,],
+		col=thecol$col,levels=thecol$breaks
+		)
+		
+legendBreaks("topright",col=thecol$col,breaks=dseq)
 
 
 resEdge = loglikGmrf(
