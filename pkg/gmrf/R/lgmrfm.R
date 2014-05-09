@@ -21,7 +21,7 @@ lgmrfm = function(data,formula,covariates=NULL,
 			NN=NN,propNugget=nugget,
 			shape=shape,mc.cores=mc.cores,...)
 
-	return(thel)
+
  	
 	thesummary = summaryGmrfFit(thel)
 	thesummary$complete = thel

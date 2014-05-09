@@ -173,7 +173,6 @@ loglikGmrfGivenQ = function(
 			
 	result =c(m2logL, logL,
 			variances,
-			propNugget=propNugget,			
 			beta=betaHat, 
 			sebeta,
 			logDetVar=as.numeric(logDetVar),
@@ -213,11 +212,6 @@ loglikGmrfOneRange = function(
 				adjustEdges=adjustEdges,adjustParam=adjustParam,
 				adjustShape=adjustShape,
 				adjustMarginalVariance=adjustMarginalVariance)
-
-		rangeInCells = 	
-			attributes(NN)$param$target['rangeInCells']
-		shape=attributes(NN)$param$target['shape']
-		
 				
 	}		
 
@@ -297,6 +291,7 @@ Qcentre = solve(cholPrec,
 		res = rbind(res,
 			rangeInCells=as.numeric(rangeInCells),
 			oneminusar=as.numeric(oneminusar),
+			propNugget=as.numeric(propNugget),
 			shape=as.numeric(shape),
 			Qcentre=as.numeric(Qcentre)
 		)
@@ -410,6 +405,12 @@ whichL = apply(x['logL.ml',,],2,which.max)
 					,])
 	)
 	}
+	
+	
+	#do something with the range and sigma squared
+	# from oneminusar and xisq and shape
+	
+	
 	
 	
 	res$profL$rangeInCells = list(

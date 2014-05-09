@@ -251,7 +251,7 @@ thedf$yNoise = rnorm(nrow(thedf),
 		thedf$y,nuggetSd)
 
 
-Sar2 =  seq((0.05),(0.2),len=12)
+Sar2 =  seq((0.05),(0.4),len=24)
 Snugget =  seq((0.1), (1),len=25)
 maternShape = themodel['shape']
 
@@ -278,7 +278,7 @@ plot(range(resVanilla['propNugget',,1]),
 		col=thecol$col,levels=thecol$breaks
 		)
 		
-legendBreaks("topright",col=thecol$col,breaks=dseq)
+mapmisc::legendBreaks("topright",col=thecol$col,breaks=dseq)
 
 
 resEdge = loglikGmrf(
