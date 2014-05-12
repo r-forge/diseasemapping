@@ -2,6 +2,7 @@ lgmrfm = function(data,formula,covariates=NULL,
 		shape=1,nugget=0,
 		oneminusar=seq(0.01, 0.4,len=4), 
 		rangeInCells=NULL,
+		range=NULL,
 		NN=NNmat(data),mc.cores=1,
 		...) {
 

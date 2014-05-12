@@ -186,26 +186,13 @@ loglikGmrfGivenQ = function(
 }
 
 loglikGmrfOneRange = function(
-		oneminusar=NULL, rangeInCells=NULL,
+		oneminusar=NULL,
 		Yvec, Xmat, NN, propNugget=0,
 		shape=1,
 		adjustEdges=FALSE,adjustParam=FALSE,
 		adjustShape=FALSE,adjustMarginalVariance=FALSE) {
 	
- 
-	
-	if(is.null(oneminusar)){
-
-		NN = maternGmrfPrec(NN,
-				param=c(shape=shape,
-						range=as.vector(rangeInCells[1]),
-						conditionalVariance=1),
-				adjustEdges=adjustEdges,adjustParam=adjustParam,
-				adjustShape=adjustShape,
-				adjustMarginalVariance=adjustMarginalVariance)
-		oneminusar=NA
-	} else {
- 		NN =  maternGmrfPrec(NN,
+   		NN =  maternGmrfPrec(NN,
 				param=c(shape=as.vector(shape),
 						oneminusar=as.vector(oneminusar[1]),
 						conditionalVariance=1),
@@ -213,8 +200,8 @@ loglikGmrfOneRange = function(
 				adjustShape=adjustShape,
 				adjustMarginalVariance=adjustMarginalVariance)
 				
-	}		
-
+ 		
+ 
 	cholPrec = Cholesky(NN,LDL=FALSE)
 	LofQ = expand(cholPrec)$L
 	
@@ -273,8 +260,7 @@ Qcentre = solve(cholPrec,
 		res = do.call(loglikGmrfGivenQ,argList)
 
 		res = c(res,
-				rangeInCells=
-						as.numeric(rangeInCells),
+
 				oneminusar=as.numeric(oneminusar),
 				shape=as.numeric(shape),
 				Qcentre=as.numeric(Qcentre)
@@ -289,7 +275,7 @@ Qcentre = solve(cholPrec,
 		colnames(res) = paste("propNugget=", propNugget,sep="")
 
 		res = rbind(res,
-			rangeInCells=as.numeric(rangeInCells),
+
 			oneminusar=as.numeric(oneminusar),
 			propNugget=as.numeric(propNugget),
 			shape=as.numeric(shape),
@@ -307,7 +293,7 @@ res
 
 
 loglikGmrf = function(
-		oneminusar=NULL, rangeInCells=NULL,
+		oneminusar=NULL,  
 		Yvec, Xmat, NN, propNugget=0,
 		shape=1,
 		adjustEdges=FALSE,adjustParam=FALSE,
@@ -336,7 +322,7 @@ loglikGmrf = function(
 				}
 		
 				
-		if(!is.null(oneminusar)){
+ 
 			res=myapply(loglikGmrfOneRange,
 				oneminusar=oneminusar,	
 				MoreArgs=argList,
@@ -344,16 +330,8 @@ loglikGmrf = function(
 				)
  				names(res) = 
 						paste("oneminusar=",oneminusar,sep="")
-		} else {
-			res=myapply(loglikGmrfOneRange,
-					rangeInCells=rangeInCells,
-					MoreArgs=argList,SIMPLIFY=FALSE
-			)
-			names(res) = 
-					paste("rangeInCells=",rangeInCells,sep="")
-			
-		}
-		if(class(res[[1]])!= 'character'){
+	 
+				if(class(res[[1]])!= 'character'){
 			Qinfo = attributes(res[[1]])$Qinfo
 
 			res= simplify2array(res)
