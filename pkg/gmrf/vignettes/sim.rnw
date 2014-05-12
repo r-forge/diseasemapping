@@ -1,0 +1,134 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{caption,subcaption,float,amsmath,filecontents}
+\newcommand{\subfloat}[2][need a sub-caption]{\subcaptionbox{#1}{#2}}
+
+
+<<setup,include=FALSE>>=
+library('knitr')
+
+chapter=''
+opts_chunk$set(echo=TRUE, 
+		dev='pdf', marginsp=1,  
+		fig.align='',fig.pos='H',
+		fig.width=5,fig.height=4,out.width='\\textwidth',
+		tidy=TRUE,tidy.opts=list(reindent.spaces=2,
+				width.cutoff=45)
+)
+
+ 
+
+knit_hooks$set(
+		marginsp = function(before, options, envir){	
+			if(!before) return()
+# use small margins				
+			par(mar=c(1.5+0.9*options$marginsp,
+							1.5+0.9*options$marginsp,0.2,0.2), 
+					mgp=c(1.45, 0.45, 0),cex=1.25)
+		}		
+)
+
+
+options(width=67)
+
+
+@
+
+
+
+\begin{document}
+
+Hello $1^5=1^6$ therefore $5=6$.
+
+Simulate some data
+<<simData,cache=TRUE>>=
+set.seed(0)
+library(geostatsp)
+
+myraster = squareRaster(raster(extent(0,8000,0,6000), ncols=40,nrows=30))
+
+
+themodel = c(range=6*xres(myraster),shape=2,variance=900)
+
+theU = RFsimulate(myraster,model=themodel)
+
+
+thecov = myraster
+values(thecov) = c(rep(1,ncell(thecov)/2),
+		rep(4,ncell(thecov)/2))
+beta.x=5
+theY = theU + beta.x*thecov
+
+theData = brick(theY,thecov)
+names(theData) = c("y","x")
+
+fracNugget = 1/2
+nuggetSd = sqrt(themodel['variance']*fracNugget)
+thedf = as.data.frame(theData)
+thedf$intercept = 1
+Xmat = as.matrix(thedf[,c("intercept","x")])
+thedf$yNoise = rnorm(nrow(thedf),
+		thedf$y,nuggetSd)
+
+
+@
+
+nearest neighbours
+<<nnmat,cache=TRUE>>=
+theNN = NNmat(theData)
+@
+
+fit the model
+<<fit,cache=TRUE>>=
+
+
+Sar = exp(seq(log(0.01),log(0.1),len=24))
+
+
+source("../R/loglikGmrf.R")
+source("../R/lgmrfm.R")
+#source("../R/conditionalGmrf.R")
+
+
+
+Sar2 =  seq((0.05),(0.4),len=24)
+Snugget =  seq((0.1), (1),len=25)
+maternShape = themodel['shape']
+
+
+resVanilla = loglikGmrf(
+		oneminusar=Sar2 ,
+		propNugget = Snugget ,
+		Yvec=thedf$yNoise,
+		Xmat=Xmat,
+		shape=maternShape,
+		NN=theNN,mc.cores=4
+)
+
+
+
+@
+
+make some plots
+<<plots,out.width='0.45\\textwidth',fig.cap='the results',fig.subcap=c('L','second'),echo=FALSE,marginsp=TRUE>>=
+
+dseq = rev(c(0,0.5, 1,2,4,8,20,100))
+thecol = mapmisc::colourScale(resVanilla['logL.ml',,],
+		breaks=max(resVanilla['logL.ml',,]) - dseq, 
+		col='RdYlGn',style='fixed',rev=TRUE)
+
+plot(range(resVanilla['propNugget',,1]), 
+		range(resVanilla['oneminusar',1,]),type='n',
+		xlab='tausq/xisq',ylab='1-phi')
+.filled.contour(resVanilla['propNugget',,1], resVanilla['oneminusar',1,],resVanilla['logL.ml',,],
+		col=thecol$col,levels=thecol$breaks
+)
+
+mapmisc::legendBreaks("topleft",col=thecol$col,breaks=dseq,
+		inset=0.025)
+
+plot(1:10)
+
+
+@
+\end{document}
