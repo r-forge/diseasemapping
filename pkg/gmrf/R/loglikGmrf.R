@@ -188,8 +188,7 @@ loglikGmrfGivenQ = function(
 loglikGmrfOneRange = function(
   oneminusar,
   Yvec, Xmat, NN, propNugget=0,
-  shape=1, 
-  #CellSize, 
+  shape=1,  
   adjustEdges=FALSE,adjustParam=FALSE,
   adjustShape=FALSE,adjustMarginalVariance=FALSE) {
     
@@ -343,11 +342,11 @@ loglikGmrf = function(
 
 
 
-summaryGmrfFit= function(x, CellSize=1) {
+summaryGmrfFit= function(x, cellSize=1) {
   UseMethod("summaryGmrfFit")	
 }
 
-summaryGmrfFit.array = function(x, CellSize=1) {
+summaryGmrfFit.array = function(x, cellSize=1) {
   
   
   x2 = aperm(x,c(3,2,1))
@@ -385,26 +384,26 @@ summaryGmrfFit.array = function(x, CellSize=1) {
   
   #do something with the range and sigma squared
   # from oneminusar and xisq and shape
-  rangge = CellSize*sqrt(2*x['shape',,1]*(1-x['oneminusar',1,])/x['oneminusar',1,])
+  rangge = cellSize*sqrt(2*x['shape',1,]*(1-x['oneminusar',1,])/x['oneminusar',1,])
     res$profL$range = list(
       ml = cbind(
         range =rangge, 
         logL=  apply(x['logL.ml',,],2,max)
         ),
       reml = cbind(
-        rangge, 
+        range = rangge, 
       logL=  apply(x['logL.reml',,],2,max)
     )
       ) 
   
   
-  res$profL$RangeInCells = list(
+  res$profL$rangeInCells = list(
     ml = cbind(
-      RangeInCells=	rangge/CellSize,
+      rangeInCells=	rangge/cellSize,
       logL=	apply(x['logL.ml',,],2,max)
     ),
     reml = cbind(
-      RangeInCells=rangge/CellSize,
+      rangeInCells=rangge/cellSize,
       logL=apply(x['logL.reml',,],2,max)
     )
   )
@@ -413,21 +412,21 @@ summaryGmrfFit.array = function(x, CellSize=1) {
   
   res$profL$sigmasq = list(
     ml = cbind(
-      sigmasq = x['xisq.ml',,1]/(4^(x['shape',,1]+1)*pi*x['shape',,1])
-        *(1-x['oneminusar',1,])^x['shape',,1]/(x['oneminusar',1,])^x['shape',,1],
+      sigmasq = x['xisq.ml',1,]/(4^(x['shape',1,]+1)*pi*x['shape',1,])
+        *(1-x['oneminusar',1,])^x['shape',1,]/(x['oneminusar',1,])^x['shape',1,],
       logL=  apply(x['logL.ml',,],2,max)
       ),
     reml = cbind(
-      sigmasq = x['xisq.reml',,1]/(4^(x['shape',,1]+1)*pi*x['shape',,1])
-      *(1-x['oneminusar',1,])^x['shape',,1]/(x['oneminusar',1,])^x['shape',,1],
+      sigmasq = x['xisq.reml',1,]/(4^(x['shape',1,]+1)*pi*x['shape',1,])
+      *(1-x['oneminusar',1,])^x['shape',1,]/(x['oneminusar',1,])^x['shape',1,],
       logL=  apply(x['logL.reml',,],2,max)
     )
   )
-  res	
+  return(res)	
   
 }
 
-summaryGmrfFit.matrix = function(x,npar=1, CellSize=1) {
+summaryGmrfFit.matrix = function(x,npar=1, cellSize=1) {
   
   if(any(rownames(x)=='logL.ml')){
     x = t(x)

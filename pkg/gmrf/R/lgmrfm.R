@@ -25,8 +25,14 @@ lgmrfm = function(data,formula,covariates=NULL,
   
   
   
-  thesummary = summaryGmrfFit(thel, CellSize= csiz)
-  thesummary$complete = thel
+  thesummary = summaryGmrfFit(thel, cellSize = csiz)
+  thesummary$complete = list()
+  thesummary$complete$array = thel
+  thesummary$complete$oneminusar = thel['oneminusar',1,]
+  thesummary$complete$propNugget = thel['propNugget',,1]
+  thesummary$complete$range = csiz*sqrt(2*shape*(1-thesummary$complete$oneminusar)/thesummary$complete$oneminusar)
+  thesummary$complete$rangeInCells = thesummary$complete$range / csiz
+ 
   
   mleparam = 
     thesummary$ml[ ,'mle']
