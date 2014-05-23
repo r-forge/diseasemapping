@@ -55,7 +55,7 @@ mystack = stackRasterList(mylist,mc.cores=2)
 mystack
 
 plot(mystack[["b"]], main="stack b")
-plot(mystack[['a']],add=TRUE,col=grey(seq(0,1,len=12)),alpha=0.8,legend=F)
+plot(mystack[['a']],add=TRUE,col=grey(seq(0,1,len=12)),alpha=0.8,legend=FALSE)
 
 }
 
