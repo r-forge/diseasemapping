@@ -51,8 +51,10 @@ mylist = list(a=raster(matrix(1:36, 6, 6,byrow=TRUE), 0,1000,0,1000,
        crs="+proj=utm +zone=17 +ellps=GRS80 +units=m +no_defs")
 	)
 	
-mystack = stackRasterList(mylist,mc.cores=2)
-mystack
+if(.Platform$OS.type=='unix') {	
+	mystack = stackRasterList(mylist,mc.cores=2)
+	mystack
+}
 
 plot(mystack[["b"]], main="stack b")
 plot(mystack[['a']],add=TRUE,col=grey(seq(0,1,len=12)),alpha=0.8,legend=FALSE)

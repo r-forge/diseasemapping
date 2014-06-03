@@ -42,7 +42,7 @@ result = list()
 
 rates=NULL
 for(Dsex in names(sexes)) {
-fs<-paste("http://ci5.iarc.fr/CI5plus/Table4r.asp?registry=",area,(paste("&period=",year,sep="",collapse="")),"&sex=", sexes[Dsex],"&window=1&text=1&stat=0&submit=Execute",sep="")
+fs<-paste("http://ci5.iarc.fr/CI5plus/old/Table4r.asp?registry=",area,(paste("&period=",year,sep="",collapse="")),"&sex=", sexes[Dsex],"&window=1&text=1&stat=0&submit=Execute",sep="")
 tempn = scan(fs, what="a", quiet=TRUE)
 theurl=(paste("http://ci5.iarc.fr/", 
 					gsub("^HREF=", "", grep("href=/data", 

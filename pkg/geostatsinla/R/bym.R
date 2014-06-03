@@ -306,6 +306,7 @@ startIndex = length(region.index)
 			gsub("^fitted_", "", names(inlaRes$marginals.fitted.bym))
 	rownames(theFitted) = gsub("^fitted_", "", rownames(theFitted))
 	
+	# E(exp(lambda)  | Y)
 	meanExp = unlist(
 					lapply(inlaRes$marginals.fitted.bym, 
 							function(qq) {
@@ -316,6 +317,7 @@ startIndex = length(region.index)
 				) # end unlist
 	meanExp[meanExp==Inf]=NA
 	theFitted = cbind(theFitted, exp = meanExp[rownames(theFitted)])
+	
 
 	
 	# E inv logit(lincombs)
@@ -336,6 +338,20 @@ startIndex = length(region.index)
 	
 	theFitted = theFitted[,!names(theFitted) %in% c("ID","kld")]
 	colnames(theFitted) = paste("fitted.",colnames(theFitted),sep="")
+
+	# E(exp(U)  | Y)
+	meanExp = unlist(
+			lapply(inlaRes$marginals.bym, 
+					function(qq) {
+						sum(
+								exp(qq[,"x"])*c(0,diff(qq[,"x"]))*qq[,"y"]	
+						)
+					})
+	) # end unlist
+	meanExp[meanExp==Inf]=NA
+	theFitted = cbind(theFitted, random.exp=meanExp)
+	
+	
 	
 	# merge fitted falue summary into BYM
 	thebym = cbind(thebym, matrix(NA, dim(thebym)[1], dim(theFitted)[2],
