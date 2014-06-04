@@ -62,6 +62,9 @@ kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 kBYM = bym(kentucky@data[-(1:4),], observed ~ offset(logExpected) + poverty,
 		adjMat = adjMat, region.id="County",
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
+
+
+
 if(!is.null(kBYM$parameters)) {
 kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 }

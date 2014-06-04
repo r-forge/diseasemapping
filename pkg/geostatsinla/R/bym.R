@@ -67,7 +67,7 @@ bym.SpatialPolygonsDataFrame = function(data,
 }
 
 bym.data.frame = function(data,   formula, 
-		priorCI=list(sdSpatial = c(0.01, 10), sdIndep = c(0.01, 10)), 
+		priorCI=list(sdSpatial = c(0.01, 2), sdIndep = c(0.01, 2)), 
 		family="poisson",
 		region.id, adjMat,
 		formula.fitted=formula,
@@ -280,14 +280,34 @@ startIndex = length(region.index)
 	thebym = inlaRes$summary.lincomb.derived[
 			grep("^bym_", rownames(inlaRes$summary.lincomb.derived)),]
  	
+	
+	
 	inlaRes$marginals.bym = inlaRes$marginals.lincomb.derived[
 			grep("^bym_", names(inlaRes$marginals.lincomb.derived), value=TRUE)
 			]
- 	
+
+		# E(exp(U)  | Y)
+		meanExp = unlist(
+				lapply(inlaRes$marginals.bym, 
+						function(qq) {
+							sum(
+									exp(qq[,"x"])*c(0,diff(qq[,"x"]))*qq[,"y"]	
+							)
+						})
+		) # end unlist
+		meanExp[meanExp==Inf]=NA
+		thebym = cbind(thebym, random.exp=meanExp)
+			
+			
+			
 
 	thebym = thebym[,!names(thebym) %in% c("ID","kld")]
 	colnames(thebym) = paste("random.",colnames(thebym),sep="")
 	rownames(thebym) = gsub("^bym_", "", rownames(thebym))	
+	
+	
+	
+	
 	names(inlaRes$marginals.bym) = gsub("^bym_", "", 
 			names(inlaRes$marginals.bym) )
 	# make sure they're in the correct order
@@ -339,18 +359,7 @@ startIndex = length(region.index)
 	theFitted = theFitted[,!names(theFitted) %in% c("ID","kld")]
 	colnames(theFitted) = paste("fitted.",colnames(theFitted),sep="")
 
-	# E(exp(U)  | Y)
-	meanExp = unlist(
-			lapply(inlaRes$marginals.bym, 
-					function(qq) {
-						sum(
-								exp(qq[,"x"])*c(0,diff(qq[,"x"]))*qq[,"y"]	
-						)
-					})
-	) # end unlist
-	meanExp[meanExp==Inf]=NA
-	theFitted = cbind(theFitted, random.exp=meanExp)
-	
+		
 	
 	
 	# merge fitted falue summary into BYM
