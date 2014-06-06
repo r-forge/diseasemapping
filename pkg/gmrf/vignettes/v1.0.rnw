@@ -1,0 +1,684 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{caption,float,amsmath,filecontents,subfig}
+
+<<setup,include=FALSE>>=
+library('knitr')
+
+chapter=''
+opts_chunk$set(echo=TRUE,
+  	dev='pdf', marginsp=1,
+		fig.align='',fig.pos='H',
+		fig.width=5,fig.height=4,out.width='\\textwidth',
+		tidy=TRUE,tidy.opts=list(reindent.spaces=2,
+				width.cutoff=45)
+)
+
+knit_hooks$set(
+		marginsp = function(before, options, envir){	
+			if(!before) return()
+# use small margins				
+			par(mar=c(1.5+0.9*options$marginsp,
+							1.5+0.9*options$marginsp,0.2,0.2),
+					mgp=c(1.45, 0.45, 0),cex=1.25)
+		}		
+)
+
+
+options(width=55)
+
+
+@
+
+
+\begin{document}
+Make 10 raster datas, fit lgmrfm function
+\begin{enumerate}
+
+\item The base raster
+<<Model1, cache=TRUE>>=
+themodel = c(range=4*xres(myraster),shape=1,variance=900,cellSize = xres(myraster))
+
+@
+<<Sim_data1, cache=TRUE,echo=FALSE>>=
+set.seed(1234)
+library(geostatsp)
+library(MASS)
+myraster = squareRaster(raster(extent(0,8000,0,6000), ncols=40,nrows=30))
+
+themodel = c(range=4*xres(myraster),shape=1,variance=900,cellSize = xres(myraster))
+
+tr_oneminusar = 1-(as.numeric(themodel['range']^2/(themodel['range']^2+2*xres(myraster)^2*themodel['shape'])))
+tr_xisq = themodel['variance']*4*pi*themodel['shape']*(4/(1-tr_oneminusar)-4)^(themodel['shape'])
+
+theU_mat = RFsimulate(myraster,model=themodel)
+
+myprec = maternGmrfPrec(myraster, param = themodel)
+theU_gmrf = mvrnorm(mu = rep(0, dim(myprec)[1]), Sigma = tr_xisq*solve(myprec))
+
+thecov = myraster
+values(thecov) = c(rep(1,ncell(thecov)/2),
+                   rep(4,ncell(thecov)/2))
+beta.x=5
+theY_mat = theU_mat + beta.x*thecov
+theY_gmrf = theU_gmrf + beta.x*thecov
+
+
+fracNugget = 1/3
+nuggetSd = sqrt(themodel['variance']*fracNugget)
+data_mat = brick(theY_mat,thecov)
+data_gmrf = brick(theY_gmrf, thecov)
+names(data_mat) = c("y","x")
+names(data_gmrf) = c('y','x')
+thedf = as.data.frame(data_mat)
+thedf$yNoise = rnorm(nrow(thedf),thedf$y,nuggetSd)
+theYN = myraster
+values(theYN) = thedf$yNoise
+theData_mat = brick(theYN,thecov)
+names(theData_mat) = c("y","x")
+theNN_mat = NNmat(theData_mat)
+
+thedf = as.data.frame(data_gmrf)
+thedf$yNoise = rnorm(nrow(thedf),thedf$y,nuggetSd)
+theYN = myraster
+values(theYN) = thedf$yNoise
+theData_gmrf = brick(theYN,thecov)
+names(theData_gmrf) = c("y","x")
+theNN_gmrf = NNmat(theData_gmrf)
+
+
+
+tr_propNugget = as.numeric(nuggetSd^2/tr_xisq)
+
+
+Sar = exp(seq(log(0.05),log(0.3),len=24))
+Snugget =  seq((0.01), (0.1),len=24)
+
+
+source('E:/xbw/my docs/PERSONAL/Research/2014Summer-P.Brown/R-code/loglikGmrf.R')
+source('E:/xbw/my docs/PERSONAL/Research/2014Summer-P.Brown/R-code/lgmrfm.R')
+source('E:/xbw/my docs/PERSONAL/Research/2014Summer-P.Brown/R-code/conditionalGmrf.R')
+
+resRangeNoEdge_mat  = lgmrfm(
+       data=theData_mat,
+       formula = y ~ x,
+      oneminusar = Sar, nugget = Snugget,
+       shape=themodel['shape'],
+       NN = theNN_mat
+)
+
+resRangeEdge_mat = lgmrfm(
+       data=theData_mat,
+       formula = y ~ x,
+      oneminusar = Sar, nugget = Snugget,
+       shape=themodel['shape'],
+       NN = theNN_mat,
+       adjustEdges=TRUE
+)
+
+resRangeNoEdge_gmrf  = lgmrfm(
+       data=theData_gmrf,
+       formula = y ~ x,
+      oneminusar = Sar, nugget = Snugget,
+       shape=themodel['shape'],
+       NN = theNN_gmrf
+)
+
+resRangeEdge_gmrf = lgmrfm(
+       data=theData_gmrf,
+       formula = y ~ x,
+      oneminusar = Sar, nugget = Snugget,
+       shape=themodel['shape'],
+       NN = theNN_gmrf,
+       adjustEdges=TRUE
+)
+ 
+
+@
+
+Plot the result with and without Edge corrections 
+<<plot1_mat,out.width='0.45\\textwidth',fig.cap='Model1 results using Matern simulation',fig.subcap=c('without Edge Correction','with Edge Correction'),echo=FALSE,marginsp=TRUE>>=
+dseq = rev(c(0,0.5, 1,2,4,8,10,30))
+thecol = mapmisc::colourScale(resRangeNoEdge_mat$complete$array['logL.ml',,],
+                              breaks=max(resRangeNoEdge_mat$complete$array['logL.ml',,]) - dseq,
+                              col='RdYlGn',style='fixed',rev=TRUE)
+
+plot(range(resRangeNoEdge_mat$complete$propNugget),
+     range(resRangeNoEdge_mat$complete$oneminusar),type='n',
+     xlab='tausq/xisq',ylab='1-ar')
+.filled.contour(sort(resRangeNoEdge_mat$complete$propNugget), 
+                sort(resRangeNoEdge_mat$complete$oneminusar),
+                resRangeNoEdge_mat$complete$array['logL.ml',,],
+                col=thecol$col,levels=thecol$breaks
+)
+points(tr_propNugget, tr_oneminusar,pch = 16)
+#mapmisc::legendBreaks("topleft",col=thecol$col,breaks=dseq)
+
+thecol = mapmisc::colourScale(resRangeEdge_mat$complete$array['logL.ml',,],
+                              breaks=max(resRangeEdge_mat$complete$array['logL.ml',,]) - dseq,
+                              col='RdYlGn',style='fixed',rev=TRUE)
+
+plot(range(resRangeEdge_mat$complete$propNugget),
+     range(resRangeEdge_mat$complete$oneminusar),type='n',
+     xlab='tausq/xisq',ylab='1-ar')
+.filled.contour(sort(resRangeEdge_mat$complete$propNugget), sort(resRangeEdge_mat$complete$oneminusar)
+,resRangeEdge_mat$complete$array['logL.ml',,],col=thecol$col,levels=thecol$breaks)
+points(tr_propNugget, tr_oneminusar,pch = 16)
+#mapmisc::legendBreaks("topleft",col=thecol$col,breaks=dseq)
+@
+
+
+<<plot1_gmrf,out.width='0.45\\textwidth',fig.cap='Model1 results using GMRF simulation',fig.subcap=c('without Edge Correction','with Edge Correction'),echo=FALSE,marginsp=TRUE>>=
+dseq = rev(c(0,0.5, 1,2,4,8,10,30))
+thecol = mapmisc::colourScale(resRangeNoEdge_gmrf$complete$array['logL.ml',,],
+                              breaks=max(resRangeNoEdge_gmrf$complete$array['logL.ml',,]) - dseq,
+                              col='RdYlGn',style='fixed',rev=TRUE)
+
+plot(range(resRangeNoEdge_gmrf$complete$propNugget),
+     range(resRangeNoEdge_gmrf$complete$oneminusar),type='n',
+     xlab='tausq/xisq',ylab='1-ar')
+.filled.contour(sort(resRangeNoEdge_gmrf$complete$propNugget), 
+                sort(resRangeNoEdge_gmrf$complete$oneminusar),
+                resRangeNoEdge_gmrf$complete$array['logL.ml',,],
+                col=thecol$col,levels=thecol$breaks
+)
+points(tr_propNugget, tr_oneminusar,pch = 16)
+#mapmisc::legendBreaks("topleft",col=thecol$col,breaks=dseq)
+
+thecol = mapmisc::colourScale(resRangeEdge_gmrf$complete$array['logL.ml',,],
+                              breaks=max(resRangeEdge_gmrf$complete$array['logL.ml',,]) - dseq,
+                              col='RdYlGn',style='fixed',rev=TRUE)
+
+plot(range(resRangeEdge_gmrf$complete$propNugget),
+     range(resRangeEdge_gmrf$complete$oneminusar),type='n',
+     xlab='tausq/xisq',ylab='1-ar')
+.filled.contour(sort(resRangeEdge_gmrf$complete$propNugget), sort(resRangeEdge_gmrf$complete$oneminusar)
+,resRangeEdge_gmrf$complete$array['logL.ml',,],col=thecol$col,levels=thecol$breaks)
+points(tr_propNugget, tr_oneminusar,pch = 16)
+#mapmisc::legendBreaks("topleft",col=thecol$col,breaks=dseq)
+
+@
+
+\item A bigger range
+<<Model2, cache=TRUE>>=
+themodel = c(range=8*xres(myraster),shape=1,variance=900,cellSize = xres(myraster))
+
+@
+
+ <<Sim_data2, cache=TRUE, echo=FALSE>>=
+set.seed(1234)
+library(geostatsp)
+library(MASS)
+myraster = squareRaster(raster(extent(0,8000,0,6000), ncols=40,nrows=30))
+
+themodel = c(range=8*xres(myraster),shape=1,variance=900,cellSize = xres(myraster))
+
+tr_oneminusar = 1-(as.numeric(themodel['range']^2/(themodel['range']^2+2*xres(myraster)^2*themodel['shape'])))
+tr_xisq = themodel['variance']*4*pi*themodel['shape']*(4/(1-tr_oneminusar)-4)^(themodel['shape'])
+
+theU_mat = RFsimulate(myraster,model=themodel)
+
+myprec = maternGmrfPrec(myraster, param = themodel)
+theU_gmrf = mvrnorm(mu = rep(0, dim(myprec)[1]), Sigma = tr_xisq*solve(myprec))
+
+thecov = myraster
+values(thecov) = c(rep(1,ncell(thecov)/2),
+                   rep(4,ncell(thecov)/2))
+beta.x=5
+theY_mat = theU_mat + beta.x*thecov
+theY_gmrf = theU_gmrf + beta.x*thecov
+
+
+fracNugget = 1/3
+nuggetSd = sqrt(themodel['variance']*fracNugget)
+data_mat = brick(theY_mat,thecov)
+data_gmrf = brick(theY_gmrf, thecov)
+names(data_mat) = c("y","x")
+names(data_gmrf) = c('y','x')
+thedf = as.data.frame(data_mat)
+thedf$yNoise = rnorm(nrow(thedf),thedf$y,nuggetSd)
+theYN = myraster
+values(theYN) = thedf$yNoise
+theData_mat = brick(theYN,thecov)
+names(theData_mat) = c("y","x")
+theNN_mat = NNmat(theData_mat)
+
+thedf = as.data.frame(data_gmrf)
+thedf$yNoise = rnorm(nrow(thedf),thedf$y,nuggetSd)
+theYN = myraster
+values(theYN) = thedf$yNoise
+theData_gmrf = brick(theYN,thecov)
+names(theData_gmrf) = c("y","x")
+theNN_gmrf = NNmat(theData_gmrf)
+
+
+
+tr_propNugget = as.numeric(nuggetSd^2/tr_xisq)
+
+
+Sar = exp(seq(log(0.01),log(0.07),len=24))
+Snugget =  seq((0.1), (0.4),len=24)
+
+
+source('E:/xbw/my docs/PERSONAL/Research/2014Summer-P.Brown/R-code/loglikGmrf.R')
+source('E:/xbw/my docs/PERSONAL/Research/2014Summer-P.Brown/R-code/lgmrfm.R')
+source('E:/xbw/my docs/PERSONAL/Research/2014Summer-P.Brown/R-code/conditionalGmrf.R')
+
+resRangeNoEdge_mat  = lgmrfm(
+       data=theData_mat,
+       formula = y ~ x,
+      oneminusar = Sar, nugget = Snugget,
+       shape=themodel['shape'],
+       NN = theNN_mat
+)
+
+resRangeEdge_mat = lgmrfm(
+       data=theData_mat,
+       formula = y ~ x,
+      oneminusar = Sar, nugget = Snugget,
+       shape=themodel['shape'],
+       NN = theNN_mat,
+       adjustEdges=TRUE
+)
+
+resRangeNoEdge_gmrf  = lgmrfm(
+       data=theData_gmrf,
+       formula = y ~ x,
+      oneminusar = Sar, nugget = Snugget,
+       shape=themodel['shape'],
+       NN = theNN_gmrf
+)
+
+resRangeEdge_gmrf = lgmrfm(
+       data=theData_gmrf,
+       formula = y ~ x,
+      oneminusar = Sar, nugget = Snugget,
+       shape=themodel['shape'],
+       NN = theNN_gmrf,
+       adjustEdges=TRUE
+)
+ @
+ 
+Plot the result with and without Edge corrections 
+<<plot2_mat,out.width='0.45\\textwidth',fig.cap='Model2 results using Matern simulation',fig.subcap=c('without Edge Correction','with Edge Correction'),echo=FALSE,marginsp=TRUE>>=
+dseq = rev(c(0,0.5, 1,2,4,8,10,30))
+thecol = mapmisc::colourScale(resRangeNoEdge_mat$complete$array['logL.ml',,],
+                              breaks=max(resRangeNoEdge_mat$complete$array['logL.ml',,]) - dseq,
+                              col='RdYlGn',style='fixed',rev=TRUE)
+
+plot(range(resRangeNoEdge_mat$complete$propNugget),
+     range(resRangeNoEdge_mat$complete$oneminusar),type='n',
+     xlab='tausq/xisq',ylab='1-ar')
+.filled.contour(sort(resRangeNoEdge_mat$complete$propNugget), 
+                sort(resRangeNoEdge_mat$complete$oneminusar),
+                resRangeNoEdge_mat$complete$array['logL.ml',,],
+                col=thecol$col,levels=thecol$breaks
+)
+points(tr_propNugget, tr_oneminusar,pch = 16)
+#mapmisc::legendBreaks("topleft",col=thecol$col,breaks=dseq)
+
+thecol = mapmisc::colourScale(resRangeEdge_mat$complete$array['logL.ml',,],
+                              breaks=max(resRangeEdge_mat$complete$array['logL.ml',,]) - dseq,
+                              col='RdYlGn',style='fixed',rev=TRUE)
+
+plot(range(resRangeEdge_mat$complete$propNugget),
+     range(resRangeEdge_mat$complete$oneminusar),type='n',
+     xlab='tausq/xisq',ylab='1-ar')
+.filled.contour(sort(resRangeEdge_mat$complete$propNugget), sort(resRangeEdge_mat$complete$oneminusar)
+,resRangeEdge_mat$complete$array['logL.ml',,],col=thecol$col,levels=thecol$breaks)
+points(tr_propNugget, tr_oneminusar,pch = 16)
+#mapmisc::legendBreaks("topleft",col=thecol$col,breaks=dseq)
+@
+
+
+<<plot2_gmrf,out.width='0.45\\textwidth',fig.cap='Model2 results using GMRF simulation',fig.subcap=c('without Edge Correction','with Edge Correction'),echo=FALSE,marginsp=TRUE>>=
+dseq = rev(c(0,0.5, 1,2,4,8,10,30))
+thecol = mapmisc::colourScale(resRangeNoEdge_gmrf$complete$array['logL.ml',,],
+                              breaks=max(resRangeNoEdge_gmrf$complete$array['logL.ml',,]) - dseq,
+                              col='RdYlGn',style='fixed',rev=TRUE)
+
+plot(range(resRangeNoEdge_gmrf$complete$propNugget),
+     range(resRangeNoEdge_gmrf$complete$oneminusar),type='n',
+     xlab='tausq/xisq',ylab='1-ar')
+.filled.contour(sort(resRangeNoEdge_gmrf$complete$propNugget), 
+                sort(resRangeNoEdge_gmrf$complete$oneminusar),
+                resRangeNoEdge_gmrf$complete$array['logL.ml',,],
+                col=thecol$col,levels=thecol$breaks
+)
+points(tr_propNugget, tr_oneminusar,pch = 16)
+#mapmisc::legendBreaks("topleft",col=thecol$col,breaks=dseq)
+
+thecol = mapmisc::colourScale(resRangeEdge_gmrf$complete$array['logL.ml',,],
+                              breaks=max(resRangeEdge_gmrf$complete$array['logL.ml',,]) - dseq,
+                              col='RdYlGn',style='fixed',rev=TRUE)
+
+plot(range(resRangeEdge_gmrf$complete$propNugget),
+     range(resRangeEdge_gmrf$complete$oneminusar),type='n',
+     xlab='tausq/xisq',ylab='1-ar')
+.filled.contour(sort(resRangeEdge_gmrf$complete$propNugget), sort(resRangeEdge_gmrf$complete$oneminusar)
+,resRangeEdge_gmrf$complete$array['logL.ml',,],col=thecol$col,levels=thecol$breaks)
+points(tr_propNugget, tr_oneminusar,pch = 16)
+#mapmisc::legendBreaks("topleft",col=thecol$col,breaks=dseq)
+
+@
+
+\item A smaller variance
+<<Model3, cache=TRUE>>=
+themodel = c(range=4*xres(myraster),shape=1,variance=9,cellSize = xres(myraster))
+
+@
+
+ <<Sim_data3, cache=TRUE, echo=FALSE, warning=FALSE>>=
+set.seed(1234)
+library(geostatsp)
+library(MASS)
+myraster = squareRaster(raster(extent(0,8000,0,6000), ncols=40,nrows=30))
+
+themodel = c(range=4*xres(myraster),shape=1,variance=9,cellSize = xres(myraster))
+
+tr_oneminusar = 1-(as.numeric(themodel['range']^2/(themodel['range']^2+2*xres(myraster)^2*themodel['shape'])))
+tr_xisq = themodel['variance']*4*pi*themodel['shape']*(4/(1-tr_oneminusar)-4)^(themodel['shape'])
+
+theU_mat = RFsimulate(myraster,model=themodel)
+
+myprec = maternGmrfPrec(myraster, param = themodel)
+theU_gmrf = mvrnorm(mu = rep(0, dim(myprec)[1]), Sigma = tr_xisq*solve(myprec))
+
+thecov = myraster
+values(thecov) = c(rep(1,ncell(thecov)/2),
+                   rep(4,ncell(thecov)/2))
+beta.x=5
+theY_mat = theU_mat + beta.x*thecov
+theY_gmrf = theU_gmrf + beta.x*thecov
+
+
+fracNugget = 1/3
+nuggetSd = sqrt(themodel['variance']*fracNugget)
+data_mat = brick(theY_mat,thecov)
+data_gmrf = brick(theY_gmrf, thecov)
+names(data_mat) = c("y","x")
+names(data_gmrf) = c('y','x')
+thedf = as.data.frame(data_mat)
+thedf$yNoise = rnorm(nrow(thedf),thedf$y,nuggetSd)
+theYN = myraster
+values(theYN) = thedf$yNoise
+theData_mat = brick(theYN,thecov)
+names(theData_mat) = c("y","x")
+theNN_mat = NNmat(theData_mat)
+
+thedf = as.data.frame(data_gmrf)
+thedf$yNoise = rnorm(nrow(thedf),thedf$y,nuggetSd)
+theYN = myraster
+values(theYN) = thedf$yNoise
+theData_gmrf = brick(theYN,thecov)
+names(theData_gmrf) = c("y","x")
+theNN_gmrf = NNmat(theData_gmrf)
+
+
+
+tr_propNugget = as.numeric(nuggetSd^2/tr_xisq)
+
+
+Sar = exp(seq(log(0.05),log(0.25),len=24))
+Snugget =  seq((0.025), (0.1),len=24)
+
+
+source('E:/xbw/my docs/PERSONAL/Research/2014Summer-P.Brown/R-code/loglikGmrf.R')
+source('E:/xbw/my docs/PERSONAL/Research/2014Summer-P.Brown/R-code/lgmrfm.R')
+source('E:/xbw/my docs/PERSONAL/Research/2014Summer-P.Brown/R-code/conditionalGmrf.R')
+
+resRangeNoEdge_mat  = lgmrfm(
+       data=theData_mat,
+       formula = y ~ x,
+      oneminusar = Sar, nugget = Snugget,
+       shape=themodel['shape'],
+       NN = theNN_mat
+)
+
+resRangeEdge_mat = lgmrfm(
+       data=theData_mat,
+       formula = y ~ x,
+      oneminusar = Sar, nugget = Snugget,
+       shape=themodel['shape'],
+       NN = theNN_mat,
+       adjustEdges=TRUE
+)
+
+resRangeNoEdge_gmrf  = lgmrfm(
+       data=theData_gmrf,
+       formula = y ~ x,
+      oneminusar = Sar, nugget = Snugget,
+       shape=themodel['shape'],
+       NN = theNN_gmrf
+)
+
+resRangeEdge_gmrf = lgmrfm(
+       data=theData_gmrf,
+       formula = y ~ x,
+      oneminusar = Sar, nugget = Snugget,
+       shape=themodel['shape'],
+       NN = theNN_gmrf,
+       adjustEdges=TRUE
+)
+ @
+ 
+Plot the result with and without Edge corrections 
+<<plot3_mat,out.width='0.45\\textwidth',fig.cap='Model3 results using Matern simulation',fig.subcap=c('without Edge Correction','with Edge Correction'),echo=FALSE,marginsp=TRUE>>=
+dseq = rev(c(0,0.5, 1,2,4,8,10,30))
+thecol = mapmisc::colourScale(resRangeNoEdge_mat$complete$array['logL.ml',,],
+                              breaks=max(resRangeNoEdge_mat$complete$array['logL.ml',,]) - dseq,
+                              col='RdYlGn',style='fixed',rev=TRUE)
+
+plot(range(resRangeNoEdge_mat$complete$propNugget),
+     range(resRangeNoEdge_mat$complete$oneminusar),type='n',
+     xlab='tausq/xisq',ylab='1-ar')
+.filled.contour(sort(resRangeNoEdge_mat$complete$propNugget), 
+                sort(resRangeNoEdge_mat$complete$oneminusar),
+                resRangeNoEdge_mat$complete$array['logL.ml',,],
+                col=thecol$col,levels=thecol$breaks
+)
+points(tr_propNugget, tr_oneminusar,pch = 16)
+#mapmisc::legendBreaks("topleft",col=thecol$col,breaks=dseq)
+
+thecol = mapmisc::colourScale(resRangeEdge_mat$complete$array['logL.ml',,],
+                              breaks=max(resRangeEdge_mat$complete$array['logL.ml',,]) - dseq,
+                              col='RdYlGn',style='fixed',rev=TRUE)
+
+plot(range(resRangeEdge_mat$complete$propNugget),
+     range(resRangeEdge_mat$complete$oneminusar),type='n',
+     xlab='tausq/xisq',ylab='1-ar')
+.filled.contour(sort(resRangeEdge_mat$complete$propNugget), sort(resRangeEdge_mat$complete$oneminusar)
+,resRangeEdge_mat$complete$array['logL.ml',,],col=thecol$col,levels=thecol$breaks)
+points(tr_propNugget, tr_oneminusar,pch = 16)
+#mapmisc::legendBreaks("topleft",col=thecol$col,breaks=dseq)
+@
+
+
+<<plot3_gmrf,out.width='0.45\\textwidth',fig.cap='Model3 results using GMRF simulation',fig.subcap=c('without Edge Correction','with Edge Correction'),echo=FALSE,marginsp=TRUE>>=
+dseq = rev(c(0,0.5, 1,2,4,8,10,30))
+thecol = mapmisc::colourScale(resRangeNoEdge_gmrf$complete$array['logL.ml',,],
+                              breaks=max(resRangeNoEdge_gmrf$complete$array['logL.ml',,]) - dseq,
+                              col='RdYlGn',style='fixed',rev=TRUE)
+
+plot(range(resRangeNoEdge_gmrf$complete$propNugget),
+     range(resRangeNoEdge_gmrf$complete$oneminusar),type='n',
+     xlab='tausq/xisq',ylab='1-ar')
+.filled.contour(sort(resRangeNoEdge_gmrf$complete$propNugget), 
+                sort(resRangeNoEdge_gmrf$complete$oneminusar),
+                resRangeNoEdge_gmrf$complete$array['logL.ml',,],
+                col=thecol$col,levels=thecol$breaks
+)
+points(tr_propNugget, tr_oneminusar,pch = 16)
+#mapmisc::legendBreaks("topleft",col=thecol$col,breaks=dseq)
+
+thecol = mapmisc::colourScale(resRangeEdge_gmrf$complete$array['logL.ml',,],
+                              breaks=max(resRangeEdge_gmrf$complete$array['logL.ml',,]) - dseq,
+                              col='RdYlGn',style='fixed',rev=TRUE)
+
+plot(range(resRangeEdge_gmrf$complete$propNugget),
+     range(resRangeEdge_gmrf$complete$oneminusar),type='n',
+     xlab='tausq/xisq',ylab='1-ar')
+.filled.contour(sort(resRangeEdge_gmrf$complete$propNugget), sort(resRangeEdge_gmrf$complete$oneminusar)
+,resRangeEdge_gmrf$complete$array['logL.ml',,],col=thecol$col,levels=thecol$breaks)
+points(tr_propNugget, tr_oneminusar,pch = 16)
+#mapmisc::legendBreaks("topleft",col=thecol$col,breaks=dseq)
+
+@
+\item A different cellSize
+<<Sim_data4, cache=TRUE, echo=FALSE, warning=FALSE>>=
+library(geostatsp)
+library(MASS)
+myraster = squareRaster(raster(extent(0,8000,0,6000), ncols=20,nrows=15))
+
+themodel = c(range=4*xres(myraster),shape=1,variance=900,cellSize = xres(myraster))
+
+tr_oneminusar = 1-(as.numeric(themodel['range']^2/(themodel['range']^2+2*xres(myraster)^2*themodel['shape'])))
+tr_xisq = themodel['variance']*4*pi*themodel['shape']*(4/(1-tr_oneminusar)-4)^(themodel['shape'])
+
+theU_mat = RFsimulate(myraster,model=themodel)
+
+myprec = maternGmrfPrec(myraster, param = themodel)
+theU_gmrf = mvrnorm(mu = rep(0, dim(myprec)[1]), Sigma = tr_xisq*solve(myprec))
+
+thecov = myraster
+values(thecov) = c(rep(1,ncell(thecov)/2),
+                   rep(4,ncell(thecov)/2))
+beta.x=5
+theY_mat = theU_mat + beta.x*thecov
+theY_gmrf = theU_gmrf + beta.x*thecov
+
+
+fracNugget = 1/3
+nuggetSd = sqrt(themodel['variance']*fracNugget)
+data_mat = brick(theY_mat,thecov)
+data_gmrf = brick(theY_gmrf, thecov)
+names(data_mat) = c("y","x")
+names(data_gmrf) = c('y','x')
+thedf = as.data.frame(data_mat)
+thedf$yNoise = rnorm(nrow(thedf),thedf$y,nuggetSd)
+theYN = myraster
+values(theYN) = thedf$yNoise
+theData_mat = brick(theYN,thecov)
+names(theData_mat) = c("y","x")
+theNN_mat = NNmat(theData_mat)
+
+thedf = as.data.frame(data_gmrf)
+thedf$yNoise = rnorm(nrow(thedf),thedf$y,nuggetSd)
+theYN = myraster
+values(theYN) = thedf$yNoise
+theData_gmrf = brick(theYN,thecov)
+names(theData_gmrf) = c("y","x")
+theNN_gmrf = NNmat(theData_gmrf)
+
+
+
+tr_propNugget = as.numeric(nuggetSd^2/tr_xisq)
+
+
+Sar = exp(seq(log(0.05),log(0.25),len=24))
+Snugget =  seq((0.025), (0.1),len=24)
+
+
+source('E:/xbw/my docs/PERSONAL/Research/2014Summer-P.Brown/R-code/loglikGmrf.R')
+source('E:/xbw/my docs/PERSONAL/Research/2014Summer-P.Brown/R-code/lgmrfm.R')
+source('E:/xbw/my docs/PERSONAL/Research/2014Summer-P.Brown/R-code/conditionalGmrf.R')
+
+resRangeNoEdge_mat  = lgmrfm(
+       data=theData_mat,
+       formula = y ~ x,
+      oneminusar = Sar, nugget = Snugget,
+       shape=themodel['shape'],
+       NN = theNN_mat
+)
+
+resRangeEdge_mat = lgmrfm(
+       data=theData_mat,
+       formula = y ~ x,
+      oneminusar = Sar, nugget = Snugget,
+       shape=themodel['shape'],
+       NN = theNN_mat,
+       adjustEdges=TRUE
+)
+
+resRangeNoEdge_gmrf  = lgmrfm(
+       data=theData_gmrf,
+       formula = y ~ x,
+      oneminusar = Sar, nugget = Snugget,
+       shape=themodel['shape'],
+       NN = theNN_gmrf
+)
+
+resRangeEdge_gmrf = lgmrfm(
+       data=theData_gmrf,
+       formula = y ~ x,
+      oneminusar = Sar, nugget = Snugget,
+       shape=themodel['shape'],
+       NN = theNN_gmrf,
+       adjustEdges=TRUE
+)
+ @
+ 
+Plot the result with and without Edge corrections 
+<<plot4_mat,out.width='0.45\\textwidth',fig.cap='Model4 results using Matern simulation',fig.subcap=c('without Edge Correction','with Edge Correction'),echo=FALSE,marginsp=TRUE>>=
+dseq = rev(c(0,0.5, 1,2,4,8,10,30))
+thecol = mapmisc::colourScale(resRangeNoEdge_mat$complete$array['logL.ml',,],
+                              breaks=max(resRangeNoEdge_mat$complete$array['logL.ml',,]) - dseq,
+                              col='RdYlGn',style='fixed',rev=TRUE)
+
+plot(range(resRangeNoEdge_mat$complete$propNugget),
+     range(resRangeNoEdge_mat$complete$oneminusar),type='n',
+     xlab='tausq/xisq',ylab='1-ar')
+.filled.contour(sort(resRangeNoEdge_mat$complete$propNugget), 
+                sort(resRangeNoEdge_mat$complete$oneminusar),
+                resRangeNoEdge_mat$complete$array['logL.ml',,],
+                col=thecol$col,levels=thecol$breaks
+)
+points(tr_propNugget, tr_oneminusar,pch = 16)
+#mapmisc::legendBreaks("topleft",col=thecol$col,breaks=dseq)
+
+thecol = mapmisc::colourScale(resRangeEdge_mat$complete$array['logL.ml',,],
+                              breaks=max(resRangeEdge_mat$complete$array['logL.ml',,]) - dseq,
+                              col='RdYlGn',style='fixed',rev=TRUE)
+
+plot(range(resRangeEdge_mat$complete$propNugget),
+     range(resRangeEdge_mat$complete$oneminusar),type='n',
+     xlab='tausq/xisq',ylab='1-ar')
+.filled.contour(sort(resRangeEdge_mat$complete$propNugget), sort(resRangeEdge_mat$complete$oneminusar)
+,resRangeEdge_mat$complete$array['logL.ml',,],col=thecol$col,levels=thecol$breaks)
+points(tr_propNugget, tr_oneminusar,pch = 16)
+#mapmisc::legendBreaks("topleft",col=thecol$col,breaks=dseq)
+@
+
+
+<<plot4_gmrf,out.width='0.45\\textwidth',fig.cap='Model4 results using GMRF simulation',fig.subcap=c('without Edge Correction','with Edge Correction'),echo=FALSE,marginsp=TRUE>>=
+dseq = rev(c(0,0.5, 1,2,4,8,10,30))
+thecol = mapmisc::colourScale(resRangeNoEdge_gmrf$complete$array['logL.ml',,],
+                              breaks=max(resRangeNoEdge_gmrf$complete$array['logL.ml',,]) - dseq,
+                              col='RdYlGn',style='fixed',rev=TRUE)
+
+plot(range(resRangeNoEdge_gmrf$complete$propNugget),
+     range(resRangeNoEdge_gmrf$complete$oneminusar),type='n',
+     xlab='tausq/xisq',ylab='1-ar')
+.filled.contour(sort(resRangeNoEdge_gmrf$complete$propNugget), 
+                sort(resRangeNoEdge_gmrf$complete$oneminusar),
+                resRangeNoEdge_gmrf$complete$array['logL.ml',,],
+                col=thecol$col,levels=thecol$breaks
+)
+points(tr_propNugget, tr_oneminusar,pch = 16)
+#mapmisc::legendBreaks("topleft",col=thecol$col,breaks=dseq)
+
+thecol = mapmisc::colourScale(resRangeEdge_gmrf$complete$array['logL.ml',,],
+                              breaks=max(resRangeEdge_gmrf$complete$array['logL.ml',,]) - dseq,
+                              col='RdYlGn',style='fixed',rev=TRUE)
+
+plot(range(resRangeEdge_gmrf$complete$propNugget),
+     range(resRangeEdge_gmrf$complete$oneminusar),type='n',
+     xlab='tausq/xisq',ylab='1-ar')
+.filled.contour(sort(resRangeEdge_gmrf$complete$propNugget), sort(resRangeEdge_gmrf$complete$oneminusar)
+,resRangeEdge_gmrf$complete$array['logL.ml',,],col=thecol$col,levels=thecol$breaks)
+points(tr_propNugget, tr_oneminusar,pch = 16)
+#mapmisc::legendBreaks("topleft",col=thecol$col,breaks=dseq)
+
+@
+\end{enumerate}
+\end{document}
