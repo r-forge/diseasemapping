@@ -61,9 +61,28 @@ maternGmrfPrec.dsCMatrix = function(N,
 		adjustMarginalVariance=FALSE,...) {
 
 	names(param) = gsub("^var$", "variance", names(param))
-	if(!any(names(param)=='variance')) {
+	if(!any(names(param)=='variance')) {		
+		if ('conditionalVariance' %in% names(param)){
+			param['variance']=NA
+		} else {
 			param['variance']=1
+		}
+	} else {
+		if ('conditionalVariance' %in% names(param)){
+			if(any(names(params)=='oneminusar')) {
+				warning(
+						"both conditionalVariance and variance were supplied, ignoring variance"
+				)	
+				param['variance']=NA
+			} else {
+				warning(
+						"both conditionalVariance and variance were supplied, ignoring conditionalVariance"
+				)	
+				param['conditionalVariance']=NA
+			}
+		}
 	}
+	
 	if(!any(names(param)=='cellSize'))
 		param['cellSize']=1
 	
@@ -125,11 +144,34 @@ maternGmrfPrec.dsCMatrix = function(N,
 	if(all(c("oneminusar","shape") %in% names(param))){
 		a = 4/(1-param['oneminusar'])	
 		
-
-		paramInfo$theo = c(param[c('shape','cellSize','variance')],
+		paramInfo$theo = c(param[c('shape','cellSize')],
 				rangeInCells=as.numeric(sqrt(8*param['shape'])/sqrt(a-4)),
 				a=as.vector(a)
 			)
+		if ('conditionalVariance' %in% names(param)){
+			if(param['shape'] != 0) {
+				paramInfo$theo['variance'] =   
+						param['conditionalVariance']/
+						(4*pi*param['shape'] *(a-4)^(param['shape'] ))
+			} else {
+				paramInfo$theo['variance'] =  
+						param['conditionalVariance']/(4*pi)
+			}
+			paramInfo$theo['conditionalVariance'] = 
+					param['conditionalVariance']	
+		} else {
+			paramInfo$theo['variance'] = param['variance']
+			if(param['shape'] != 0) {
+				paramInfo$theo['conditionalVariance']  =   
+					paramInfo$theo['variance']*
+						(4*pi*param['shape'] *(a-4)^(param['shape'] ))
+			} else {
+				paramInfo$theo['conditionalVariance'] =   
+					paramInfo$theo['variance']*(4*pi)
+			}
+			
+	 
+		}
 			
 			
 		if(min(c(Nx,Ny)<3*paramInfo$theo['rangeInCells'])){
@@ -221,6 +263,22 @@ maternGmrfPrec.dsCMatrix = function(N,
 		
 		
 		a = (scale^2 + 4) 
+		
+		paramInfo$theo = c(param, 	a=as.vector(a))
+		
+		if(param['shape'] != 0) {
+			paramInfo$theo['conditionalVariance']  =   
+					paramInfo$theo['variance']*
+					(4*pi*param['shape'] *(a-4)^(param['shape'] ))
+		} else {
+			paramInfo$theo['conditionalVariance'] =   
+					paramInfo$theo['variance']*(4*pi)
+		}
+		
+		
+		
+		
+		
 
 		precEntries=getPrec(param['shape'],a)
 #	data('nn32')
@@ -257,7 +315,7 @@ maternGmrfPrec.dsCMatrix = function(N,
 		sqrtVar = sqrt(varMid)
 
 		
-		paramInfo$theo = c(param, 	a=as.vector(a))
+
 		
 		if(adjustParam){
 			startparam = c(#param['shape'],
@@ -382,15 +440,8 @@ maternGmrfPrec.dsCMatrix = function(N,
 	
 # marginal precision
 #	if(adjustParam){
-if(all(c('conditionalVariance','oneminusar') %in% names(param))) {
-
-	precEntries =  precEntries /param['conditionalVariance']  
-	adjustEdges=FALSE
-	marginalPrec = NA
 	
-} else {
-	
-	if(adjustMarginalVariance){
+if(adjustMarginalVariance){
 		midQ = as(N[,midcell],'sparseVector')
 		midQ@x = precEntries[midQ@x]
 		
@@ -407,31 +458,20 @@ if(all(c('conditionalVariance','oneminusar') %in% names(param))) {
 						)	 
 				
 		marginalPrec =  sum(midQ@x * midVar)
+		precEntries = precEntries*marginalPrec
 		
+		paramInfo$empirical$yMult =
+				paramInfo$empirical$y*exp(  
+						log(marginalPrec) + 
+								log(param['variance'])
+				)
 		
-	} else {
-		if(param['shape'] != 0) {
-			  marginalPrec = (4*pi*param['shape'] *(a-4)^(param['shape'] ))
-		  } else {
-			  marginalPrec = (4*pi)
-		  }
-	 }
+} else {
+		precEntries =  precEntries /
+				paramInfo$theo['conditionalVariance'] 
+ }
 
-		# precEntries = precEntries/marginalPrec
- 	#	precEntries = 
-	#		precEntries/(marginalPrec*param['variance'])
-#print(precEntries)
-	precEntries = precEntries*exp(  
-					 -log(marginalPrec) - 
-					log(param['variance'])
-	)
-#	print(precEntries)
-	paramInfo$empirical$yMult =
-		paramInfo$empirical$y*exp(  
-				log(marginalPrec) + 
-						log(param['variance'])
-	)
-}
+
 
 	
 	theNNmat = N
@@ -471,12 +511,8 @@ if(all(c('conditionalVariance','oneminusar') %in% names(param))) {
 		if(adjustParam){
  				paramForM = paramInfo$target
 		} else {
-			paramForM = paramInfo$original	
-			if(!any(names(paramForM)=='range')){
-				paramForM= c(paramForM,
-						paramInfo$theo['range']
-						)
-			}
+			paramForM = paramInfo$theo	
+
 		}
 				
 		covMat = matern(outerCoordsCartesian,
@@ -514,7 +550,7 @@ if(all(c('conditionalVariance','oneminusar') %in% names(param))) {
 		paramInfo$adjust['marginalVariance'] = 
 				adjustMarginalVariance
 		paramInfo$precisionEntries = precEntries
-		paramInfo$marginalPrec = as.vector(marginalPrec)
+
 		
 		theNNmat = drop0(theNNmat)
 
