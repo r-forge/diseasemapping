@@ -9,7 +9,7 @@ theU = RFsimulate(myraster,model=themodel)
 
 
 thecov = myraster
-values(thecov) = c(rep(1,ncell(thecov)/2),
+values(thecov) = c(rep(0,ncell(thecov)/2),
 		rep(4,ncell(thecov)/2))
 beta.x=5
 theY = theU + beta.x*thecov
@@ -18,16 +18,45 @@ theData = brick(theY,thecov)
 names(theData) = c("y","x")
 theNN = NNmat(theData)
 
+myQ = maternGmrfPrec(myraster, param=themodel)
+matplot(attributes(myQ)$par$emp$x,
+		(attributes(myQ)$par$emp[,-1]) ,type='l',
+		log='y',#ylim=c(500, 1000),xlim=c(0,1000),
+		lty=1, lwd=5:2, col=5:2
+)
 
-Sar = exp(seq(log(0.01),log(0.1),len=24))
 
+Sar = exp(seq(log(0.025),log(0.15),len=24))
 
 source("../R/loglikGmrf.R")
 source("../R/lgmrfm.R")
 source("../R/conditionalGmrf.R")
 
 
+thedf = as.data.frame(theData)
+thedf$intercept = 1
  
+resNoNugget = loglikGmrf(
+		oneminusar=Sar ,
+		propNugget = 0 ,
+		Yvec=thedf$y,
+		Xmat=as.matrix(thedf[,c("intercept","x")]),
+		shape=themodel['shape'],
+		NN=theNN,mc.cores=4
+)
+plot(resNoNugget["oneminusar",], resNoNugget['logL.ml',]) 
+
+resNoNuggetEdge = loglikGmrf(
+		oneminusar=Sar ,
+		propNugget = 0 ,
+		Yvec=thedf$y,
+		Xmat=as.matrix(thedf[,c("intercept","x")]),
+		shape=themodel['shape'],
+		NN=theNN,mc.cores=4,
+		adjustEdge=TRUE
+)
+plot(resNoNuggetEdge["oneminusar",], resNoNuggetEdge['logL.ml',]) 
+
 
 resNoNugget  = lgmrfm(
 		data=theData,
@@ -251,8 +280,8 @@ thedf$yNoise = rnorm(nrow(thedf),
 		thedf$y,nuggetSd)
 
 
-Sar2 =  seq((0.05),(0.4),len=24)
-Snugget =  seq((0.1), (1),len=25)
+Sar2 =  seq((0.06),(0.2),len=24)
+Snugget =  seq((0.02), (0.2),len=25)
 maternShape = themodel['shape']
 
 
@@ -265,21 +294,23 @@ resVanilla = loglikGmrf(
 		NN=theNN,mc.cores=4
 )
  
- 
+bob = function(res) { 
 dseq = rev(c(0,0.5, 1,2,4,8,20,100))
-thecol = mapmisc::colourScale(resVanilla['logL.ml',,],
-		breaks=max(resVanilla['logL.ml',,]) - dseq, 
+thecol = mapmisc::colourScale(res['logL.ml',,],
+		breaks=max(res['logL.ml',,]) - dseq, 
 		col='RdYlGn',style='fixed',rev=TRUE)
 
-plot(range(resVanilla['propNugget',,1]), 
-		range(resVanilla['oneminusar',1,]),type='n',
-		xlab='tausq/xisq',ylab='1-phi')
-.filled.contour(resVanilla['propNugget',,1], resVanilla['oneminusar',1,],resVanilla['logL.ml',,],
+plot(range(res['propNugget',,1]), 
+		range(res['oneminusar',1,]),type='n',
+		xlab='tausq/xisq',ylab='1-phi',log='xy')
+.filled.contour(res['propNugget',,1], 
+		res['oneminusar',1,],res['logL.ml',,],
 		col=thecol$col,levels=thecol$breaks
 		)
 		
 mapmisc::legendBreaks("topright",col=thecol$col,breaks=dseq)
-
+}
+bob(resVanilla)
 
 resEdge = loglikGmrf(
 		oneminusar=Sar2,		
@@ -291,6 +322,7 @@ resEdge = loglikGmrf(
 		adjustEdges=TRUE,	
 		adjustParam=FALSE
 )
+bob(resEdge)
 
 
 resAdj = loglikGmrf(
@@ -300,10 +332,9 @@ resAdj = loglikGmrf(
 		shape=maternShape,
 		NN=theNN,mc.cores=4,
 		adjustEdges=TRUE,	
-		adjustParam=TRUE,
-		adjustMarginalVariance=TRUE
+		adjustParam=TRUE
 )
-
+bob(resAdj)
 
 par(mfrow=c(2,2))
 D='logL.ml'

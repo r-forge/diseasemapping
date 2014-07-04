@@ -296,7 +296,7 @@ startIndex = length(region.index)
 						})
 		) # end unlist
 		meanExp[meanExp==Inf]=NA
-		thebym = cbind(thebym, random.exp=meanExp)
+		thebym = cbind(thebym, exp=meanExp)
 			
 			
 			

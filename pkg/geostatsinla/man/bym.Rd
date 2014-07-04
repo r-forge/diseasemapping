@@ -98,6 +98,19 @@ if(!is.null(kBYM$parameters))
 	kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 
 \dontrun{
+
+library(mapmisc)
+
+kmap = openmap(kBYM$data, path=c("osm-no-labels", "osm-labels-en"))
+map.new(kBYM$data)
+plot(kmap[['osm.no.labels']],add=TRUE)
+thecol = colourScale(kBYM$data$fitted.exp, breaks=5, dec=1,
+opacity = 0.7)
+plot(kBYM$data, col=thecol$plot,add=TRUE)
+plot(kmap[['osm.labels.en']],add=TRUE)
+legendBreaks("topleft", thecol)
+
+
 spplot(kBYM$data, "fitted.exp",
 at=c(1, 1.1, 1.2, 1.35, 1.5, 1.75),
 	col.regions= terrain.colors(5))

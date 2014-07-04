@@ -202,7 +202,7 @@ L_2^{-1\prime} L_2^{-1} ) L'| +  \tau^2 R'R\\
 = & - N \log(\tau^2) + 2\log|L_2| - 2\log|L| +  \tau^2 R'R\\
 \hat\tau(\psi, \tau^2/\xi^2) = &  N/R'R \\
 -2 \log pr(\mathbf{Y};\phi,\tau^2/\xi^2)+C = & - N \log (R'R)   + 2\log|L_2| -
-2\log|L| + (R'R)^2/N
+2\log|L| 
 \end{align*}
 
 
@@ -219,6 +219,54 @@ The algorithm
   range of $c$, find $\hat c(\phi)$
   \item Repeat for multiple $\phi$ to get $\hat \phi$
 \end{itemize}
+
+
+\subsection{Another likelihood}
+
+
+
+\begin{align*}
+\var(\mathbf{Y})^{-1}  = &[\xi^2 Q^{-1} + \tau^2 I]^{-1}\\
+=&  \tau^2 Q [(\xi^2/\tau^2) + Q]^{-1}  \\
+\end{align*}
+
+\begin{align*}
+V = & (\xi^2/\tau^2) + Q\\
+R_X =& Q \mathbf{X}\\
+R_Y =& Q \mathbf{Y}\\
+V_X = &V^{-1} \mathbf{X}\\
+V_Y =& V^{-1} \mathbf{Y}\\
+\end{align*}
+
+
+\begin{align*}
+\hat\beta =  &[ \mathbf{X}'
+ Q [(\xi^2/\tau^2) + Q]^{-1}  \mathbf{X}]^{-1}
+\mathbf{X}' Q [(\xi^2/\tau^2) + Q]^{-1}  \mathbf{Y}\\
+= & [ R_X' V_X ]^{-1}  R_X' V_Y\\
+\end{align*}
+
+
+\begin{align*}
+-2 \log pr(\mathbf{Y};\phi,\tau, \xi) = &
+-\log |\var(\mathbf{Y})^{-1}| + \tau^2 ( \mathbf{Y} -\mathbf{X}\hat\beta) '
+  Q V^{-1} 
+ [\mathbf{Y} - \mathbf{X}\hat\beta ] \\
+=& -N \log (\tau^2) -\log|Q| + \log|V| +  \tau^2 R\\
+R=&  [R_Y' V_Y - R_Y' V_X \hat\beta - \hat\beta ' R_X' V_Y + \hat\beta 'R_X'
+V_X \hat\beta ] \\
+\hat\beta 'R_X'
+V_X \hat\beta = &  \hat\beta' R_X' V_X [ R_X' V_X ]^{-1}  R_X' V_Y =
+ \hat\beta ' R_X' V_Y   \\
+R = &[R_Y' V_Y - R_Y' V_X \hat\beta] = R_Y' V^{-1} ( \mathbf{Y} -
+\mathbf{X}\hat\beta)
+\end{align*}
+
+\begin{align*}
+\hat\tau^2(\psi, \tau^2/\xi^2) = &  N/R \\
+-2 \log pr(\mathbf{Y};\phi,\tau^2/\xi^2) = & -N\log(N) + N \log (R)   -\log|Q| +
+\log|V|+N
+\end{align*}
 
 \section*{Conditional distributions}
 Conditional
