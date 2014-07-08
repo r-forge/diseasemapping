@@ -10,7 +10,10 @@ loglikGmrfGivenQ = function(
   
   # propNugget =    tau^2/xi^2
   
-  N= length(Y) + c(ml=0,reml=-ncol(X))
+	if(is.vector(Y))	
+		Y = as.matrix(Y)
+	
+  N= nrow(Y) + c(ml=0,reml=-ncol(X))
 
   if(is.null(Qchol)) {
 	  Qchol = Cholesky(Q, LDL=FALSE)
@@ -31,20 +34,19 @@ loglikGmrfGivenQ = function(
     
     XprecXinv = solve(Matrix::crossprod(Rx,Vx))
     
-    betaHat = as.vector(
+    betaHat =  
       XprecXinv %*% 
         Matrix::crossprod(Rx,Vy) 
-    )
-    names(betaHat) = colnames(X)
+    
+    rownames(betaHat) = colnames(X)
 
-	R = as.numeric(
+	R = diag(
 			Matrix::crossprod(Ry,Vy) - 
 					Matrix::crossprod(Ry, Vx) %*% betaHat
 	)
-
  
 	
-	constHat=tausq = N/R
+	constHat=tausq = outer(N,R,"/")
 	xisq = tausq/propNugget
 	
     logDetVar = as.numeric(
@@ -57,17 +59,19 @@ loglikGmrfGivenQ = function(
     XprecX = Matrix::crossprod(X,Rx)
     XprecXinv = solve(XprecX)
     
-    betaHat = as.numeric(XprecXinv %*% 
-                           Matrix::crossprod(X , Ry))
-    names(betaHat) = colnames(X)
+    betaHat = XprecXinv %*% 
+                           Matrix::crossprod(X , Ry)
+    rownames(betaHat) = colnames(X)
     
-    resids  = as.vector(Y - X %*% betaHat)
-    R = as.numeric(crossprod(resids,Q) %*% resids)
-    
-    logDetVar=0
-    tausq=0
+    resids  =  Y - X %*% betaHat 
+    R =  t(Matrix::crossprod(resids,Q)) * resids
+	R = apply(R, 2,sum)
 	
-    constHat = xisq =R/N
+    logDetVar=0
+	
+    constHat = xisq = t(outer(R,N,"/"))
+	tausq=0*constHat
+	
     # matrix operations
     # Qchol, cholCovMat = Matrix::chol(covMat)
     # XL, cholCovInvX = Matrix::solve(cholCovMat, covariates)
@@ -76,46 +80,77 @@ loglikGmrfGivenQ = function(
   }
   
   logDetVar = logDetVar - detQ + N - N*log(N)
-  m2logL = logDetVar + N*log(R)
+  m2logL = logDetVar + outer(N,log(R), "*")
   
   
-  variances = c(tausq = tausq, xisq = xisq,
-		  sigmasq = xisq * attributes(Q)$param$theo['variance'])
+  variances = abind::abind(tausq = tausq, xisq = xisq,
+		  along=3)
+  
+  parInfo = attributes(Q)$param
+  for(D in c('theo', 
+		 grep("^optimal", names(parInfo),value=TRUE))) {
+
+	 sigmasq = xisq * parInfo[[D]]['variance']
+	 variances = abind::abind(variances, sigmasq, along=3)
+	 dimnames(variances)[[3]][dim(variances)[3]] = 
+			 paste('sigmasq_',D,sep='')
+ }
+  
+  variances = apply(variances, 2, function(x) {
+			  res = as.vector(x)
+			  names(res)=t(outer(
+					  colnames(x),rownames(x),
+					  paste,sep='.'))
+			  res})
+  
+
   
   
-  m2logL['reml'] =	m2logL['reml'] +  determinant(
+  
+  m2logL['reml',] =	m2logL['reml',] +  determinant(
     XprecXinv,logarithm=TRUE)$modulus
   
-  names(m2logL) = paste("m2logL.",names(m2logL),sep='')
+  rownames(m2logL) = paste("m2logL.",
+		  rownames(m2logL),sep='')
   
   logL = -m2logL/2
-  names(logL) = gsub("^m2","",names(logL))
+  rownames(logL) = gsub("^m2","",rownames(logL))
   
   sebeta = diag(XprecXinv)
-  sebeta = rep(sebeta,2)*
-    rep(constHat,
-        rep(length(sebeta),2))
+  sebeta = array(sebeta, 
+		  c(length(sebeta),dim(constHat)),		
+		  dimnames=c(
+				  list(rownames(betaHat)),
+				  dimnames(constHat)))
   
+  constHat2 = array(constHat, dim(sebeta)[c(2,3,1)],
+		  dimnames=dimnames(sebeta)[c(2,3,1)])
+  constHat2 = aperm(constHat2, c(3,1,2))
+  sebeta = sqrt(sebeta *constHat2)
+ 
   names(sebeta)= paste('se',rep(names(betaHat),2), 
                        names(sebeta),sep='.')
+
+  sebeta = apply(sebeta, 3, function(x) {res = as.vector(x);names(res)=outer(rownames(x),colnames(x),paste,sep='.se.');res})
+  									   
+#  varbetahat = abind::abind(
+#    as.matrix(XprecXinv)/constHat[1],
+#    as.matrix(XprecXinv)/constHat[2],
+#    along=3)
   
-  varbetahat = abind::abind(
-    as.matrix(XprecXinv)/constHat[1],
-    as.matrix(XprecXinv)/constHat[2],
-    along=3)
+#  dimnames(varbetahat) = 
+#    list(names(betaHat),names(betaHat),
+#         names(constHat))
   
-  dimnames(varbetahat) = 
-    list(names(betaHat),names(betaHat),
-         names(constHat))
-  
-   result =c(m2logL, logL,
+   result =rbind(m2logL, logL,
             variances,
-            beta=betaHat, 
+            as.matrix(betaHat), 
             sebeta,
-            logDetVar=as.numeric(logDetVar))
+			propNugget=propNugget)#,
+#            logDetVar=as.numeric(logDetVar))
   
   
-  attributes(result)$varbetahat = varbetahat
+#  attributes(result)$varbetahat = varbetahat
   
   result
   
@@ -125,13 +160,13 @@ loglikGmrfOneRange = function(
   oneminusar,
   Yvec, Xmat, NN, propNugget=0,
   shape=1,  
-  adjustEdges=FALSE,adjustParam=FALSE) {
+  adjustEdges=FALSE) {
     
     Q =  maternGmrfPrec(NN,
                          param=c(shape=as.vector(shape),
                                  oneminusar=as.vector(oneminusar[1]),
                                  conditionalVariance=1),
-		adjustEdges=adjustEdges,adjustParam=adjustParam)
+		adjustEdges=adjustEdges)
     
 	
   
@@ -142,15 +177,15 @@ loglikGmrfOneRange = function(
                                     logarithm=TRUE)$modulus)
   
   Rx = Q %*% Xmat
-  Ry = Q %*% Yvec
+  Ry = Q %*% as.matrix(Yvec)
   
   argList = list(
-  	Ry=Ry, Y=Yvec, 
+  	Ry=Ry, Y=as.matrix(Yvec), 
   	Rx=Rx, X=Xmat,
  	Q=Q, Qchol=Qchol, 
   detQ=detQ)  
   
-thepar=attributes(Q)$paramInfo
+thepar=attributes(Q)$param
    
   if(length(propNugget)==1) {
     
@@ -158,41 +193,74 @@ thepar=attributes(Q)$paramInfo
     
     res = do.call(loglikGmrfGivenQ,argList)
     
-    res = c(res,
-            oneminusar=as.numeric(oneminusar),
-            propNugget=as.numeric(propNugget),
-			shape = thepar$theo['shape'],
-			shapeOpt = thepar$optimal['shape'],
-			range = thepar$theo['range'],
-			rangeOpt = thepar$optimal['range']
-	)
+    res = as.matrix(res)
     
   } else {
     
     res = mapply(loglikGmrfGivenQ,
                  propNugget=propNugget,			
-                 MoreArgs=argList,SIMPLIFY=TRUE
+                 MoreArgs=argList,SIMPLIFY=FALSE
     )
-    colnames(res) = paste("propNugget=", propNugget,sep="")
-    
+    names(res) = paste("propNugget=", propNugget,sep="")
+	res = simplify2array(res)    
 
-	
-    res = rbind(res,
-                oneminusar=as.numeric(oneminusar),
-                propNugget=as.numeric(propNugget),
-				shape = thepar$theo['shape'],
-				shapeOpt = thepar$optimal['shape'],
-				range = thepar$theo['range'],
-				rangeOpt = thepar$optimal['range']
-    )
-    
+}	  
+
+
+
+
+res = abind::abind(res, 
+		oneminusar=array(oneminusar, dim=dim(res)[-1]), 
+		range = array(thepar$theo['range'],dim=dim(res)[-1]), 
+		shape = array(thepar$theo['shape'],dim=dim(res)[-1]), 
+		shape_optimal = array(thepar$optimal['shape'],dim=dim(res)[-1]), 
+		along=1)
+
+res = drop(res)
+
+attributes(res)$Qinfo = thepar
+
+res
+
+}
+
+#  for(D in c("theo", "optimal")#,"optimalSameShape",
+	if(F
+#		  "optimalInverse", "optimalInverseSameShape",
+#		  "optimalInverseSameRange", 'optimalWithNugget',
+#		  'optimalInverseShape', 'optimalShape')
+  ) {
+	  
+  
+	newres = rbind(range=
+					thepar[[D]]['range'],
+			shape=thepar[[D]]['shape'],
+			sigmasq.ml = res['xisq.ml',] * 
+					thepar[[D]]['variance'],
+			sigmasq.reml = res['xisq.reml',] * 
+					thepar[[D]]['variance']
+	)
+
+	rownames(newres) = paste(rownames(newres),
+			D, sep="_")	
+	  
+	res = rbind(res, newres)
+	  
   }
   
-  attributes(res)$Qinfo = thepar
+if(F){	res = rbind(res,
+		  tausq.ml_optimalWithNugget = res['tausq.ml',] + 
+				  thepar$optimalWithNugget['nugget'],
+		  tausq.reml_optimalWithNugget = 
+				  res['tausq.reml',] + 
+				  thepar$optimalWithNugget['nugget']
+		  )
   
-  res
-  
+	rownames(res) = gsub("_theo$", "", 
+			rownames(res))		  
+		  
 }
+
 
 
 
@@ -200,18 +268,16 @@ loglikGmrf = function(
   oneminusar,
   Yvec, Xmat, NN, propNugget=0,
   shape=1, 
-  adjustEdges=FALSE,adjustParam=FALSE,
-  adjustShape=FALSE, 
-  adjustMarginalVariance=FALSE,
+  adjustEdges=FALSE,
   mc.cores=1) {
   
   
-  argList = list(Yvec=Yvec, 
-                 Xmat=Xmat, NN=NN,
+  argList = list(Yvec=as.matrix(Yvec), 
+                 Xmat=as.matrix(Xmat), 
+				 NN=NN,
                  propNugget=propNugget,
                  shape=shape,
-                 adjustEdges=adjustEdges,
-                 adjustParam=adjustParam
+                 adjustEdges=adjustEdges
   )
   
   if(mc.cores>1) {
