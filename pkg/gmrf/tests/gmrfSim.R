@@ -1,4 +1,9 @@
 
+parMethod = c('theo','optimal','optimalShape')[2]
+bigRaster = FALSE
+
+
+
 if(Sys.info()['nodename'] == 'darjeeling') {
 	ncores = 20
 } else if(Sys.info()['nodename'] == 'mud'){
@@ -8,9 +13,18 @@ if(Sys.info()['nodename'] == 'darjeeling') {
 }
 
 
-library(geostatsp)
+library('RandomFields')
+library('mapmisc')
+library('raster')
+library('geostatsp')
+library('RColorBrewer')
+library('denstrip')
 
-myraster = squareRaster(raster(extent(0,8000,0,6000), ncols=60,nrows=45))
+if(bigRaster) {
+	myraster = squareRaster(raster(extent(0,8000,0,6000), ncols=80,nrows=60))
+} else {
+	myraster = squareRaster(raster(extent(0,8000,0,6000), ncols=40,nrows=30))
+}
 
 
 
@@ -18,7 +32,6 @@ myQ = maternGmrfPrec(myraster,
 		param=c(shape=2, oneminusar=0.1,
 				conditionalVariance=100),
 		adjustEdges=FALSE)
-library(RColorBrewer)
 thecol = c('#000000', 
 		brewer.pal(ncol(attributes(myQ)$par$emp)-2,'Set2')
 	)
@@ -33,20 +46,22 @@ legend('topright',lty=1, col=thecol,
 		legend=colnames(attributes(myQ)$par$emp)[-1])
 
 
-themodel = attributes(myQ)$param$optimal #Shape
+
+themodel = attributes(myQ)$param[[parMethod]]
 maternShape = attributes(myQ)$param$theo['shape']
 
 theU = RFsimulate(myraster, model=themodel, n=250)
+
  
 
 if(FALSE){
-	stuff='optimal'
+ 
 	temp = (maternGmrfPrec(myraster, 
 						param=c(shape=2, oneminusar=0.1,
 								conditionalVariance=100),
-						adjustEdges=stuff) %*% matern(
+						adjustEdges=parMethod) %*% matern(
 						myraster, 
-						param= attributes(myQ)$param[[stuff]]))
+						param= attributes(myQ)$param[[parMethod]]))
 	par(mfrow=c(1,2))
 	hist(diag(temp),breaks=100)
 	hist(temp[lower.tri(temp,diag=F)],breaks=100)
@@ -128,7 +143,7 @@ resNoNuggetEdge = loglikGmrf(
 		Xmat=cbind(intercept=1,as.data.frame(thecov)),
 		shape=maternShape,
 		NN=theNN,mc.cores=ncores,
-		adjustEdges='optimal'
+		adjustEdges=parMethod
 )
 pdf("resNoNuggetEdge.pdf")
 plotres(resNoNuggetEdge)
@@ -282,7 +297,7 @@ resEdge = loglikGmrf(
 		Xmat=cbind(intercept=1,as.data.frame(thecov)),
 		shape=maternShape,
 		NN=theNN,mc.cores=ncores,
-		adjustEdges='optimal'
+		adjustEdges=parMethod
 )
 pdf("resEdge1.pdf")
 par(mfrow=c(4,4),mar=c(2.2,2.2,0,0), oma=c(1,1,0,0))
