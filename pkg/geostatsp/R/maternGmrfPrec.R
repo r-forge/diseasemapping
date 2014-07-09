@@ -70,7 +70,7 @@ maternGmrfPrec.dsCMatrix = function(N,
 		}
 	} else {
 		if ('conditionalVariance' %in% names(param)){
-			if(any(names(params)=='oneminusar')) {
+			if(any(names(param)=='oneminusar')) {
 				warning(
 						"both conditionalVariance and variance were supplied, ignoring variance"
 				)	
