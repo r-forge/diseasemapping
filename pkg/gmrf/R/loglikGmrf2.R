@@ -40,11 +40,13 @@ loglikGmrfGivenQ = function(
     
     rownames(betaHat) = colnames(X)
 
-	R = diag(
-			Matrix::crossprod(Ry,Vy) - 
-					Matrix::crossprod(Ry, Vx) %*% betaHat
-	)
+#	R = diag(
+#			Matrix::crossprod(Ry,Vy) - 
+#					Matrix::crossprod(Ry, Vx) %*% betaHat
+#	)
  
+	R = apply(t(Rv) * Vy,2,sum) -
+				apply(t(Ry) * Vx,2,sum)
 	
 	constHat=tausq = outer(N,R,"/")
 	xisq = tausq/propNugget

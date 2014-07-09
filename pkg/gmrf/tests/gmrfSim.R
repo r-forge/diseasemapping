@@ -1,7 +1,16 @@
+
+if(Sys.info()['nodename'] == 'darjeeling') {
+	ncores = 20
+} else if(Sys.info()['nodename'] == 'mud'){
+	ncores = 4
+} else {
+	ncores = 1
+}
+
+
 library(geostatsp)
 
-myraster = squareRaster(raster(extent(0,8000,0,6000), ncols=40,nrows=30))
-
+myraster = squareRaster(raster(extent(0,8000,0,6000), ncols=60,nrows=45))
 
 
 
@@ -27,19 +36,8 @@ legend('topright',lty=1, col=thecol,
 themodel = attributes(myQ)$param$optimal #Shape
 maternShape = attributes(myQ)$param$theo['shape']
 
- theU = RFsimulate(myraster, model=themodel, n=100)
+theU = RFsimulate(myraster, model=themodel, n=250)
  
-if(FALSE){
-	maternmat = matern(myraster, #param=themodel)
-			param=attributes(myQ)$param$theo)
-#	diag(maternmat)= sum(attributes(myQ)$param$optimalWithNugget[
-#					c('variance','nugget')])
-	maternchol = chol(maternmat, LDL=FALSE,pivot=FALSE)
-	for(D in 1:nlayers(theU))
-	values(theU[[D]]) = 
-			as.numeric(crossprod(maternchol,
-			rnorm(ncol(maternmat))))
-}
 
 if(FALSE){
 	stuff='optimal'
@@ -66,18 +64,13 @@ theY = theU + beta.x*thecov
 theNN = NNmat(theY)
 
 
-
-Sar = exp(seq(log(0.05),log(0.15),len=32))
-
-source("../R/loglikGmrf.R")
-source("../R/lgmrfm.R")
-source("../R/conditionalGmrf.R")
+#source("../R/loglikGmrf.R")
+#source("../R/lgmrfm.R")
+#source("../R/conditionalGmrf.R")
 source("../R/loglikGmrf2.R")
 
-
  
-
- 
+Sar = exp(seq(log(0.05),log(0.15),len=40))
 
 resNoNugget = 
 		loglikGmrf(
@@ -86,7 +79,7 @@ resNoNugget =
 		Yvec=as.data.frame(theY),
 		Xmat=cbind(intercept=1,as.data.frame(thecov)),
 		shape=maternShape,
-		NN=theNN,mc.cores=4
+		NN=theNN,mc.cores=ncores
 )
 
 plotres = function(res) {
@@ -123,8 +116,9 @@ hist(toplot, main='', prob=TRUE,
 abline(v=thetrue,col='red')
 }
 
+pdf("resNoNugget.pdf")
 plotres(resNoNugget)
-
+dev.off()
 
 
 resNoNuggetEdge = loglikGmrf(
@@ -133,11 +127,12 @@ resNoNuggetEdge = loglikGmrf(
 		Yvec=as.data.frame(theY),
 		Xmat=cbind(intercept=1,as.data.frame(thecov)),
 		shape=maternShape,
-		NN=theNN,mc.cores=4,
+		NN=theNN,mc.cores=ncores,
 		adjustEdges='optimal'
 )
+pdf("resNoNuggetEdge.pdf")
 plotres(resNoNuggetEdge)
-
+dev.off()
  
 
 if(FALSE){
@@ -153,20 +148,19 @@ adjustEdges=FALSE
 
 # now with added noise
  
-nuggetSd =  4  #sqrt(themodel['variance']*fracNugget)
+nuggetSd =  4  
+nuggetSd^2/
+		attributes(myQ)$par$theo['conditionalVariance']
 yNoise = theY
 values(yNoise) = values(yNoise) + 
 		rnorm(nlayers(yNoise)*ncell(yNoise),
 				mean=0, sd=nuggetSd)
 
 
-nuggetSd^2/
-		attributes(myQ)$par$theo['conditionalVariance']
+
 
 Sar2 =  seq((0.05),(0.25),by=0.005)
 Snugget =  seq((0.01), (0.3),by=0.005)
- 
-
 
 resVanilla = loglikGmrf(
 		oneminusar=Sar2 ,
@@ -174,7 +168,7 @@ resVanilla = loglikGmrf(
 		Yvec=as.data.frame(yNoise),
 		Xmat=cbind(intercept=1,as.data.frame(thecov)),
 		shape=maternShape,
-		NN=theNN,mc.cores=4
+		NN=theNN,mc.cores=ncores
 )
  
 bob = function(res) { 
@@ -265,6 +259,7 @@ bob2 = function(res) {
 	
 }
 
+pdf("resVanilla1.pdf")
 par(mfrow=c(4,4),mar=c(2.2,2.2,0,0), oma=c(1,1,0,0))
 for(D in 1:prod(par('mfrow')))
 	forlegend = bob(resVanilla[,D,,])
@@ -272,19 +267,24 @@ mapmisc::legendBreaks("bottomright",
 		col=forlegend$col,breaks=forlegend$dseq)
 mtext('oneminusar', side=2, outer=T)
 mtext('tausq/xisq', side=1, outer=T)
+dev.off()
 
+pdf("resVanilla2.pdf")
 bob2(resVanilla)
+dev.off()
 
+Sar2 =  seq((0.025),(0.175),by=0.005)
+Snugget =  seq((0.025), (0.5),by=0.005)
 resEdge = loglikGmrf(
 		oneminusar=Sar2,		
 		propNugget = Snugget,
 		Yvec=as.data.frame(yNoise),
 		Xmat=cbind(intercept=1,as.data.frame(thecov)),
 		shape=maternShape,
-		NN=theNN,mc.cores=4,
+		NN=theNN,mc.cores=ncores,
 		adjustEdges='optimal'
 )
-#pdf("/tmp/stuff.pdf")
+pdf("resEdge1.pdf")
 par(mfrow=c(4,4),mar=c(2.2,2.2,0,0), oma=c(1,1,0,0))
 for(D in 1:prod(par('mfrow')))
 	forlegend = bob(resEdge[,D,,])
@@ -292,8 +292,11 @@ mapmisc::legendBreaks("topleft",
 		col=forlegend$col,breaks=forlegend$dseq)
 mtext('oneminusar', side=2, outer=T)
 mtext('tausq/xisq', side=1, outer=T)
-#dev.off()
+dev.off()
+
+pdf("resEdge2.pdf")
 bob2(resEdge)
+dev.off()
 
 
 if(FALSE ) {
