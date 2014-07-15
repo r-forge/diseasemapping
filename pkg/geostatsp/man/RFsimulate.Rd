@@ -119,7 +119,7 @@ swissRain$sqrtrain = sqrt(swissRain$rain)
 
 
 # estimate parameters
-swissRes =  lgm(swissRain, locations=20, formula="sqrtrain",
+swissRes =  lgm(data=swissRain, newdata=20, formula="sqrtrain",
 	covariates=swissAltitude,  
 	shape=1, fixShape=TRUE,
 	aniso=FALSE, nugget=0, fixNugget=TRUE,
@@ -131,7 +131,7 @@ swissRes =  lgm(swissRain, locations=20, formula="sqrtrain",
 #   the observed data
 
 swissSim = geostatsp::RFsimulate(model=swissRes$param,
-	data=swissRes$resid,
+	data=swissRes[,'resid'],
 	x=swissRes$predict,
 	n=3
 )
