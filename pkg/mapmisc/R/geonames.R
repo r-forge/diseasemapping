@@ -20,7 +20,10 @@ GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 	result = geonames::GNcities(north=north,east=east,
 			south=south,west=west,lang,maxRows)
 
-	result = SpatialPointsDataFrame(result[,c("lng","lat")], data=result, 
+	result = SpatialPointsDataFrame(cbind(
+					as.numeric(result[,'lng']),
+					as.numeric(result[,'lat'])
+					), data=result, 
 			proj4string=crsLL)
 
 	if( !identical(projection(theproj), "NA") & ! identical(projection(theproj), NA)) {

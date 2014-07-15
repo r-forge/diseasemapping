@@ -62,7 +62,8 @@ if(outer){
 	ldots$col[withTrans] = gsub("[[:xdigit:]]{2}$", "", ldots$col)
 	
 	if(length(breaks)-1 == length(ldots$col)) {
-		ltext = ldots$legend
+		ltext = format(ldots$legend,
+				width=max(nchar(ldots$legend)))
 		ldots$col = c(NA, ldots$col)
 		ldots$legend = rep(NA, length(ldots$col))
 		ldots$text.width = max(strwidth(ltext))
@@ -78,7 +79,7 @@ if(outer){
 		x$legend=ltext
 		x$x = result$rect$left
 		x$y = result$rect$top - 0.75*par("cxy")[2]
-		x$adj = c(0, 0) 
+		x$adj = c(-0.2, 0) 
 		x$col=NA
 		x$bty='n'
  

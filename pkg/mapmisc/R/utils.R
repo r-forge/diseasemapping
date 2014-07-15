@@ -1,7 +1,7 @@
 # crsLL = CRS("+epsg:4326")
 crsLL = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0") 
 
-.extentLL = function(x, crs=NULL) {
+.extentLL = function(x, crs=NA) {
 
 	eps = 1e-5
 	if(is.numeric(x))
