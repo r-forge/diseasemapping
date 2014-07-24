@@ -65,17 +65,28 @@ tocrop = spTransform(tocrop, CRSobj=CRS(proj4string(map)))
 map = crop(map, extent(tocrop))
 
 
-
-
-xpoints = t(bbox(extentBig))
-boxsize = abs(apply(xpoints, 2, diff))	
 oldinsetbox = t(bbox(map))
 oldrange = apply(oldinsetbox, 2, diff)
-newxrange = boxsize[1]*width
+oldYoverX = oldrange[2]/oldrange[1]
+
+
+newxrange = diff(par("usr")[1:2])*width
+
+
+plotFracYcoords = exp(diff(log(apply(matrix(par("usr"),2),2,diff))))
+
+plotFracYinches= exp(diff(log(par('pin'))))
+
+
 cellRatio = res(area(map))
-newyrange = newxrange * (cellRatio[1]/cellRatio[2])*(oldrange[2]/oldrange[1])
+cellRatio = cellRatio[1]/cellRatio[2]
+
+newyrange = newxrange * cellRatio* oldYoverX * plotFracYcoords / plotFracYinches 
+
 
 	if(is.character(pos)) {
+		xpoints = t(bbox(extentBig))
+
 x = apply(xpoints, 2, mean) - 0.5*c(newxrange, newyrange)
 
 if(length(grep("^top",pos)))
@@ -87,6 +98,7 @@ if(length(grep("right$",pos)))
 if(length(grep("left$",pos)))
 	x[1] = xpoints[1,1]
 } else x=pos
+
 
 
 

@@ -57,7 +57,7 @@ RFsimulate.RMmodel =
 		
 	# assign a proj4string if necessary
 	if(class(try(proj4string(res2),silent=TRUE))!="try-error") {
-		if(identical(proj4string(res2), NA)) {
+		if(is.na(proj4string(res2))) {
 			if(class(try(CRS(theProj), silent=TRUE))!= "try-error") {
 					proj4string(res2) = CRS(theProj)
 			}

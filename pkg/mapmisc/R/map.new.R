@@ -6,9 +6,11 @@ map.new = function(x, legendRight=FALSE) {
 
 	xpoints = SpatialPoints(xpoints)
 	thecrs = try(proj4string(x), silent=TRUE) 
-	if(class(thecrs)!="try-error")
-		proj4string(xpoints) = CRS(thecrs)
-
+	if(class(thecrs)!="try-error") {
+		if(!is.na(thecrs))
+			proj4string(xpoints) = CRS(thecrs)
+	}
+		
 #	oldpar = par()[c('mar','plt','xpd')]
 #	oldpar = par()[c('mar')]
 	

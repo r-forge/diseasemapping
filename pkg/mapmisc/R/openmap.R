@@ -57,7 +57,7 @@ osmTiles = function(name) {
 openmap = function(x, zoom, 
 	path="http://tile.openstreetmap.org/",
 	maxTiles = 9,
-	crs=NULL,  
+	crs=NA,  
 	verbose=FALSE) {
 
 
@@ -77,6 +77,8 @@ openmap = function(x, zoom,
 	names(pathOrig) = path
 
 	extLL = .extentLL(x,crs)
+	if(any(abs(as.vector(extLL))>181))
+		warning("no CRS supplied and coordinates do not appear to be long-lat")
 		
 	xlim= c(xmin(extLL), xmax(extLL))
 	ylim = c(ymin(extLL), ymax(extLL))
@@ -124,10 +126,10 @@ openmap = function(x, zoom,
 
 	
 	crsOut=crs
-	if(!length(crsOut))
+	if(is.na(crsOut))
 		crsOut = projection(x)
 	
-	if(!identical(projection(crsOut) , "NA") & !identical(crsOut, NA)){
+	if(!is.na(crsOut)  ){
 		resultProj = projectRaster(result, crs=crsOut, method="ngb")
 		# now trim to original bounding box
 		pointsNew = projectExtent(result, 

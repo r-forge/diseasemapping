@@ -10,7 +10,7 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	openmap(x, zoom, 
 	path="http://tile.openstreetmap.org/",
 	maxTiles = 9,
-	crs=NULL, verbose=FALSE)
+	crs=NA, verbose=FALSE)
 	getTiles(xlim,ylim,zoom,path,maxTiles = 16,cacheDir=tempdir(),
 		timeOut=5*24*60*60,verbose=FALSE)
 	osmTiles(name)
