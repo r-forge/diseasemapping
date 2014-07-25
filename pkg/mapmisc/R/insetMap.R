@@ -77,10 +77,12 @@ plotFracYcoords = exp(diff(log(apply(matrix(par("usr"),2),2,diff))))
 
 plotFracYinches= exp(diff(log(par('pin'))))
 
-
-cellRatio = res(area(map))
-cellRatio = cellRatio[1]/cellRatio[2]
-
+if(length(grep("longlat", projection(map)))) {
+	cellRatio = res(area(map))
+	cellRatio = cellRatio[1]/cellRatio[2]
+} else {
+	cellRatio = 1
+}
 newyrange = newxrange * cellRatio* oldYoverX * plotFracYcoords / plotFracYinches 
 
 
