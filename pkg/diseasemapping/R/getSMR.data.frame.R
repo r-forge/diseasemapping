@@ -34,10 +34,6 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL,
 		poplong$expected = poplong$POPULATION *  
 				newModel[paste(poplong$sex, poplong$age, sep='.')
 						,'x']
-		
-	if(length(regionCode)) {
-        rownames(popdata) = as.character(popdata[,regionCode])
-    }
 	
     } else {
     # use the predict method on the model
@@ -126,7 +122,7 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL,
      type = "response")
 	} # done predicting rates from model
 	
-     poplong <- aggregate(poplong$expected, list(poplong[[regionCode]]), sum)
+    poplong <- aggregate(poplong$expected, list(poplong[[regionCode]]), sum)
     rownames(poplong) = as.character(poplong[,1])
     poplong=poplong[poplong[,2] > 0,]
 
