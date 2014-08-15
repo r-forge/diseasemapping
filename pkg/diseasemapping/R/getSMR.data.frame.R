@@ -9,7 +9,6 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL,
 
 
 
-
     if(is.numeric(model)) {
     # model is a vector of rates
         # check breaks for groups, make sure they line up
@@ -34,6 +33,14 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL,
 		poplong$expected = poplong$POPULATION *  
 				newModel[paste(poplong$sex, poplong$age, sep='.')
 						,'x']
+		
+		if(any(names(list(...))=='sex')){
+			if(length(sex)==1){
+				if(toupper(sex)%in% c('M','F')){
+					poplong= poplong[poplong$sex==toupper(sex),]
+				}
+			}
+		}
 	
     } else {
     # use the predict method on the model
@@ -167,7 +174,7 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL,
 		
        casedata = casedata[
           as.character(casedata[, regionCodeCases]) %in% 
-             rownames(popdata), ]
+				  as.character(unique(poplong[,regionCode])), ]
 	   
       casedata <- aggregate(casedata[[casecol]], 
          list(casedata[[regionCodeCases]]), sum)
