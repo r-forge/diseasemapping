@@ -1,12 +1,12 @@
 
-parMethod = c('theo','optimal','optimalShape')[2]
+parMethod = c('theo','optimal','optimalShape')[3]
 bigRaster = FALSE
 
 
 
 if(Sys.info()['nodename'] == 'darjeeling') {
 	ncores = 20
-} else if(Sys.info()['nodename'] == 'mud'){
+} else if(Sys.info()['nodename'] == 'lapsangsoushon'){
 	ncores = 4
 } else {
 	ncores = 1
@@ -55,7 +55,7 @@ theU = RFsimulate(myraster, model=themodel, n=250)
  
 
 if(FALSE){
- 
+	parMethod = c('theo','optimal','optimalShape')[3]
 	temp = (maternGmrfPrec(myraster, 
 						param=c(shape=2, oneminusar=0.1,
 								conditionalVariance=100),

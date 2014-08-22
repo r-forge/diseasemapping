@@ -181,8 +181,8 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL,
           as.character(casedata[, regionCodeCases]) %in% 
 				  rownames(popdata), ]
 	   
-      casedata <- aggregate(casedata[[casecol]], 
-         list(casedata[[regionCodeCases]]), sum)
+      casedata <- aggregate(casedata[,casecol], 
+         list(casedata[,regionCodeCases]), sum)
        names(casedata) = c(regionCodeCases, "observed")
 
 
