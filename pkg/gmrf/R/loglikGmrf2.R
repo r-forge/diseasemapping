@@ -40,13 +40,11 @@ loglikGmrfGivenQ = function(
     
     rownames(betaHat) = colnames(X)
 
-#	R = diag(
-#			Matrix::crossprod(Ry,Vy) - 
-#					Matrix::crossprod(Ry, Vx) %*% betaHat
-#	)
+	R = diag(
+			Matrix::crossprod(Ry,Vy) - 
+					Matrix::crossprod(Ry, Vx) %*% betaHat
+	)
  
-	R = apply(t(Rv) * Vy,2,sum) -
-				apply(t(Ry) * Vx,2,sum)
 	
 	constHat=tausq = outer(N,R,"/")
 	xisq = tausq/propNugget
@@ -129,7 +127,6 @@ loglikGmrfGivenQ = function(
 		  dimnames=dimnames(sebeta)[c(2,3,1)])
   constHat2 = aperm(constHat2, c(3,1,2))
   sebeta = sqrt(sebeta *constHat2)
- 
   names(sebeta)= paste('se',rep(names(betaHat),2), 
                        names(sebeta),sep='.')
 
@@ -144,6 +141,10 @@ loglikGmrfGivenQ = function(
 #    list(names(betaHat),names(betaHat),
 #         names(constHat))
   
+
+  betaHat = as.matrix(betaHat)
+  rownames(betaHat) = paste(rownames(betaHat), "betaHat", sep=".")
+
    result =rbind(m2logL, logL,
             variances,
             as.matrix(betaHat), 
@@ -309,3 +310,71 @@ loglikGmrf = function(
   }
   res
 }
+
+
+
+summaryGmrfFit= function(x) {
+  UseMethod("summaryGmrfFit")  
+}
+
+summaryGmrfFit.array = function(x) {
+  
+  
+  x2 = aperm(x,c(3,2,1))
+  x2 = matrix(c(x2), ncol=dim(x2)[3])
+  colnames(x2) = dimnames(x)[[1]]
+  res = summaryGmrfFit.matrix(x2,npar=2)
+  return(res)
+}
+
+
+summaryGmrfFit.matrix = function(x,npar=1) {
+  
+  if(any(rownames(x)=='logL.ml')){
+    x = t(x)
+  }
+  result = list()
+  someL = c('ml','reml')
+  for(D1 in someL) {
+    D=paste('logL.',D1,sep='')
+    MLErow = x[which.max(x[ ,D]),]  
+    withinCI = which(-2*(x[,D] - MLErow[D]) < qchisq(0.95, 2))
+    
+    xsub = x[,grep("^se\\.",colnames(x),invert=TRUE),drop=FALSE]
+    parCI= t(apply(
+      xsub[withinCI, ,drop=FALSE],
+      2,range))
+    colnames(parCI) = c('q0.025', 'q0.975')
+    
+    parMat = cbind(mle=MLErow[colnames(xsub)],parCI,se=NA) 
+    notD = someL[someL != D1]
+    notD = grep(
+      paste("\\.",notD, "$",sep=''),
+      rownames(parMat), 
+      invert=TRUE,value=TRUE)
+    
+    parMat = parMat[notD,]
+    rownames(parMat) = gsub(paste("\\.", D1, "$",sep=""),
+                            "",rownames(parMat))
+    
+    se = grep("\\.se$", rownames(parMat), value=TRUE)
+    seInt = parMat[grep('^\\(', se, value = T),1]
+    seX = parMat[grep('^x', se, value = T),1]
+    parMat['(Intercept).betaHat',4] = seInt
+    parMat['x.betaHat',4] = seX
+    parMat['x.betaHat',2] = as.numeric(parMat['x.betaHat',1]-2*seX)
+    parMat['x.betaHat',3] = as.numeric(parMat['x.betaHat',1]+2*seX)
+    parMat['(Intercept).betaHat',2] = as.numeric(parMat['(Intercept).betaHat',1]-2*seInt)
+    parMat['(Intercept).betaHat',3] = as.numeric(parMat['(Intercept).betaHat',1]+2*seInt)
+    parRid = parMat[which(rownames(parMat) %in% se),]
+    judgRid = !(rownames(parMat) %in% rownames(parRid))
+    parKeep = parMat[which(judgRid == T),]
+    dele = c(grep("^shape",rownames(parKeep)), grep("^sigmasq",rownames(parKeep)))
+    parKeep[dele,2] = NA
+    parKeep[dele,3] = NA
+    result[[D1]] = parKeep
+    
+  }
+  return(result)		
+}
+
