@@ -67,5 +67,6 @@ import(
 # they're listed here for completeness
 #importFrom(geoR, variog, variog.mc.env)
 #importFrom(pracma, trapz)
+#importFrom(abind, abind)
 #importFrom(spatstat,as.im,as.im.matrix)
 
