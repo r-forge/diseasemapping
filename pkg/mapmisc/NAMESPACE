@@ -15,5 +15,5 @@ import(
   raster
   )
 
- 
+ # brewer.pal from RColorBrewer referenced by ::
 

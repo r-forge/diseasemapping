@@ -7,7 +7,20 @@ UseMethod("colourScale")
 
 }
 
-colourScale.factor = function(x, breaks=5, 
+colourScale.character =   function(x, breaks=5, 
+		style=c("quantile","equal","unique", "fixed"),
+		col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
+		transform=NULL, revCol=FALSE, exclude=NULL, ...) {
+
+	x = factor(x)
+	
+	colourScale(x, breaks=5, 
+	style=c("quantile","equal","unique", "fixed"),
+	col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
+	transform=NULL, revCol=FALSE, exclude=NULL, ...)
+}
+
+ colourScale.factor = function(x, breaks=5, 
 		style=c("quantile","equal","unique", "fixed"),
 		col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
 		transform=NULL, revCol=FALSE, exclude=NULL, ...) {

@@ -119,7 +119,7 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 			  verbose=verbose)
     }
 	if(file.info(where)$size) {
-		thisimage = brick(where)
+		thisimage = raster::brick(where)
 	} else {
 		thisimage = NULL
 	}
@@ -128,14 +128,15 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 		# if only one layer
 	# this must be a raster of integers referring to colour indexes	
 	if(nlayers(thisimage)==1) {
-		thisimage=thisimage[[1]]
 		newcolours = thisimage@legend@colortable
+		thisimage=thisimage[[1]]
 		if(length(newcolours)) {
+			newcoloursOrig = newcolours
 			newcolours = newcolours[!newcolours %in% names(colourtable)]
 			toadd = seq(length(colourtable), len=length(newcolours),by=1)
 			names(toadd) = newcolours
 			colourtable = c(colourtable, toadd)
-			newvalues = colourtable[thisimage@legend@colortable]
+			newvalues = colourtable[newcoloursOrig]
 		
 			values(thisimage) = newvalues[values(thisimage)+1]
 		}
@@ -160,7 +161,7 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 
 	if(length(rasters) > 1) {
 		thenames = names(rasters[[1]])
-		rasters = do.call(merge, rasters)
+		rasters = do.call(raster::merge, rasters)
 		names(rasters) = thenames			
 	} else if(length(rasters)==1){
 		rasters = rasters[[1]]

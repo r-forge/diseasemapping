@@ -135,6 +135,7 @@ openmap = function(x, zoom,
 		pointsNew = projectExtent(result, 
 					CRS(proj4string(resultProj)))
 		resultProj = crop(resultProj, extent(pointsNew))
+		resultProj@legend@colortable = result@legend@colortable
 	} else {
 		resultProj = result
 	}
@@ -142,6 +143,7 @@ openmap = function(x, zoom,
 	
 	resultProj = stack(resultProj)
 
+	if(FALSE) {
 	for(D in 1:nlayers(resultProj)) {
 		thelen = length(result[[D]]@legend@colortable)
 		if(thelen) {
@@ -153,11 +155,14 @@ openmap = function(x, zoom,
 				c(result[[D]]@legend@colortable, NA)
 		}
 	}
+}
 	
 	names(resultProj) = names(result)
 	
 	if(nlayers(resultProj)==1) {
 		resultProj = resultProj[[1]]
+		resultProj@legend@colortable = result@legend@colortable
+		
 	}
 	
 	
