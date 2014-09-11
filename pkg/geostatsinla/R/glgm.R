@@ -495,6 +495,16 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 
 	
 	# random into raster
+# E exp(random)
+temp=unlist(
+		lapply(inlaResult$marginals.random$space, function(qq) {
+					sum(
+							exp(qq[,"x"])*c(0,diff(qq[,"x"]))*qq[,"y"]	
+					)
+				})
+)
+inlaResult$summary.random[['space']][,"exp"] = temp
+
 	if("summary.random" %in% names(inlaResult)) {
 		forRast = 	as.matrix(inlaResult$summary.random[["space"]])#[,-1])
 		forRastArray = array(forRast, 
@@ -538,6 +548,10 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 					})
 	)
 	inlaResult$summary.lincomb.derived[,"exp"] = temp
+
+	
+
+	
 	
 	# E inv logit(lincombs)
 	if(length(grep("binomial",inlaResult$.args$family))) {
@@ -609,6 +623,31 @@ params$range$posterior[,"y"] = params$range$posterior[,"y"] / xres(cells)
 
 
 params$summary = inlaResult$summary.fixed
+
+params$summary = cbind(params$summary, 
+		meanExp = unlist(
+				lapply(inlaResult$marginals.fixed,
+						function(qq) {
+							sum(
+									exp(qq[,"x"])*c(0,diff(qq[,"x"]))*qq[,"y"]	
+							)
+						}
+				))
+)
+
+if(length(grep("binomial",inlaResult$.args$family))) {
+	params$summary = cbind(params$summary, 
+			meanInvLogit = unlist(
+					lapply(inlaResult$marginals.fixed, function(qq) {
+								eqqx = exp(qq[,"x"])
+								sum(
+										eqqx/(1+eqqx)*c(0,diff(qq[,"x"]))*qq[,"y"]	
+								)
+							}
+							)
+	))
+}
+
 
 thecols = paste(c("0.975", "0.5","0.025"), "quant", sep="")
 

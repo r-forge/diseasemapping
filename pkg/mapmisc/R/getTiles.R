@@ -97,7 +97,6 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
     stop("Cant get ",nt," tiles with maxTiles set to ",maxTiles)
   }
   tileData = getTilePaths(xlim,ylim,zoom,path)
-  rasters = list()
   localStore = FALSE
   if(file.exists(path)){
     if(!file.info(path)$isdir){
@@ -108,6 +107,7 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 
   thecrs = crsMerc
   
+  rasters = list()
   colourtable = NULL
   for(ip in 1:length(tileData)){
    p = tileData[[ip]]$path
@@ -131,14 +131,11 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 		newcolours = thisimage@legend@colortable
 		thisimage=thisimage[[1]]
 		if(length(newcolours)) {
-			newcoloursOrig = newcolours
-			newcolours = newcolours[!newcolours %in% names(colourtable)]
-			toadd = seq(length(colourtable), len=length(newcolours),by=1)
-			names(toadd) = newcolours
-			colourtable = c(colourtable, toadd)
-			newvalues = colourtable[newcoloursOrig]
-		
-			values(thisimage) = newvalues[values(thisimage)+1]
+			if(any(is.na(values(thisimage)))) {
+				newcolours[1] = NA
+			}
+			thisimage = thisimage + length(colourtable)
+			colourtable = c(colourtable, newcolours)
 		}
 		names(thisimage) = gsub("^http://|/$", "", path)
 	} else if (nlayers(thisimage)>1){
@@ -152,7 +149,9 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 	
 	extent(thisimage) = tileData[[ip]]$extent
 	proj4string(thisimage) = thecrs
-	
+	if(length(colourtable)) {
+		thisimage@legend@colortable = colourtable
+	}
 	rasters[[ip]] = thisimage
 	} # end not rtry error
 
@@ -168,19 +167,12 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 	} else { # no tiles found
 		rasters = NULL
 	}
-	if(!is.null(colourtable)) {
+	if( !is.null(colourtable)) {
  		# re-order colours so most common colours are first
-		thetable = sort(table(values(rasters)),decreasing=TRUE)
-		newvalues = rep(NA, length(colourtable))
-		names(newvalues) = as.character(seq(0,by=1,len= length(colourtable)))
-		newvalues[names(thetable)] = seq(0,by=1,len=length(thetable))
-			
-		values(rasters) = newvalues[values(rasters)+1]
-		newvalues = newvalues[!is.na(newvalues)]
-		
-		rasters@legend@colortable = names(colourtable)[
-				as.integer(names(thetable))+1]
-
+		newtable = unique(colourtable)
+		tomatch = match(colourtable,newtable)
+		rasters@legend@colortable = newtable
+		values(rasters) = tomatch[values(rasters)+1]-1
 	}
 	
 	return(rasters)	

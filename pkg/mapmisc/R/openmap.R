@@ -93,10 +93,7 @@ openmap = function(x, zoom,
 	if(verbose) cat("zoom is ", zoom, ", ", nTiles(xlim, ylim, zoom), "tiles\n")
 
 	result = NULL
-	
-
-	
-	for(Dpath in path) {
+	for(Dpath in rev(path)) {
 		thistile = try(
 				getTiles(xlim,ylim, zoom=zoom,
 				path=Dpath,
@@ -111,20 +108,26 @@ openmap = function(x, zoom,
 				names(thistile) = gsub(theprefix, paste(pathOrig[Dpath], "",sep=""), 
 					names(thistile),fixed=TRUE)		
 			}
-		if(length(result)) {			
-			result =  stack(result, thistile)	
-		} else {
-			result = thistile
-		}
-	} # end not try-error
-	}	
 
+		ctable = NULL
+		if(!is.null(thistile)) {
+			if(nlayers(thistile)==1)
+				ctable = thistile@legend@colortable
+		}
+		
+		result =  stack(thistile, result)	
+		if(length(ctable))
+			result[[1]]@legend@colortable = ctable
+		
+		} # end not try-error
+	} # end loop through path	
+
+	
 	if(is.null(result)) {
 		result = raster(extLL,1,1,crs=crsLL)
 		values(result) = NA
 	} 
 
-	
 	crsOut=crs
 	if(is.na(crsOut))
 		crsOut = projection(x)
@@ -135,36 +138,22 @@ openmap = function(x, zoom,
 		pointsNew = projectExtent(result, 
 					CRS(proj4string(resultProj)))
 		resultProj = crop(resultProj, extent(pointsNew))
-		resultProj@legend@colortable = result@legend@colortable
 	} else {
 		resultProj = result
 	}
 
 	
 	resultProj = stack(resultProj)
+#	resultProj@legend@colortable = result@legend@colortable
 
-	if(FALSE) {
-	for(D in 1:nlayers(resultProj)) {
-		thelen = length(result[[D]]@legend@colortable)
-		if(thelen) {
-			thevalues = values(resultProj[[D]])
-			thevalues[is.na(thevalues)] = thelen
-			values(resultProj[[D]]) = thevalues
-			
+
+	for(D in names(resultProj)) {
 			resultProj[[D]]@legend@colortable =
-				c(result[[D]]@legend@colortable, NA)
-		}
+					result[[D]]@legend@colortable
 	}
-}
+
 	
-	names(resultProj) = names(result)
-	
-	if(nlayers(resultProj)==1) {
-		resultProj = resultProj[[1]]
-		resultProj@legend@colortable = result@legend@colortable
-		
-	}
-	
+
 	
 	resultProj
 }

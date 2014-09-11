@@ -384,6 +384,19 @@ startIndex = length(region.index)
 	params=list()
 	params$summary = inlaRes$summary.fixed
 	
+	params$summary = cbind(params$summary, 
+			meanExp = unlist(
+					lapply(inlaRes$marginals.fixed,
+							function(qq) {
+								sum(
+										exp(qq[,"x"])*c(0,diff(qq[,"x"]))*qq[,"y"]	
+								)
+							}
+					)
+	))
+	
+	
+	
 	quantNames = grep("quant$", colnames(params$summary), value=TRUE)
 	revQuant = rev(quantNames)	
 	
