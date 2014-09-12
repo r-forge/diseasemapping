@@ -25,13 +25,13 @@ osmTiles = function(name) {
 	
 	
 	toolserver = c("parking-bw", "osm-locale-de","bw-noicons")
-	toadd =	paste("www.toolserver.org/tiles/", toolserver,"/", sep="")
+	toadd =	paste("http://www.toolserver.org/tiles/", toolserver,"/", sep="")
 	names(toadd) = toolserver
 	result = c(result, toadd)
 	
 	
 	languages = c("en","fr","de", "it","es","ru")
-	toadd =	paste("www.toolserver.org/tiles/osm-labels-", languages,"/", sep="")
+	toadd =	paste("http://www.toolserver.org/tiles/osm-labels-", languages,"/", sep="")
 	names(toadd) = paste("osm-labels-", languages, sep="")
 	result = c(result, toadd)
 	
