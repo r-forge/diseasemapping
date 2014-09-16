@@ -102,13 +102,13 @@ output from the call to the  \code{\link[stats]{optim}} function.
 
 data("swissRain")
  
-swissRes =  lgm( formula="rain", data=swissRain, newdata=20,
+swissRes =  lgm( formula="rain", 
+	data=swissRain, newdata=20,
 	covariates=swissAltitude, boxcox=0.5, fixBoxcox=TRUE, 
 	shape=1, fixShape=TRUE,
 	aniso=FALSE, nugget=0, fixNugget=TRUE,
 	nuggetInPrediction=FALSE
-	)
-	
+)
 
 swissRes$summary
 
@@ -120,9 +120,9 @@ swissRainR2 = brick(swissRainR[['alt']],
 	 sqrt(swissRainR[['prec1']]))
 	 
 swissResR =  lgm( formula=layer ~ alt, 
-	data=swissRainR2, shape=2,
-	oneminusar=seq(0.06, 0.09, len=3),
-	nugget =  seq(0,0.0001,len=4)
+	data=swissRainR2, shape=1,
+	oneminusar=seq(0.06, 0.09, len=2),
+	nugget =  seq(0,0.0001,len=2)
 	)
 
 swissResR$summary[c('oneminusar','range','propNugget','(Intercept).betaHat', 'x.betaHat'),]
@@ -132,7 +132,7 @@ swissResR$summary[c('oneminusar','range','propNugget','(Intercept).betaHat', 'x.
 \dontrun{
 load(url("http://www.filefactory.com/file/frd1mhownd9/n/CHE_adm0_RData"))
 
-library(RColorBrewer)
+library('RColorBrewer')
 par(mar=c(0,0,0,3))
 plot(gadm) 
 plot(mask(projectRaster(
