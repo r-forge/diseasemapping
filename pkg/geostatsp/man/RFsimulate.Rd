@@ -26,16 +26,26 @@
 }
 
 \usage{
-\S4method{RFsimulate}{numeric,Raster}(model, x,	data=NULL, err.model=NULL, n = 1, ...)
-\S4method{RFsimulate}{numeric,SpatialGrid}(model, x,data=NULL, 			err.model=NULL, n = 1, ...)
-\S4method{RFsimulate}{numeric,SpatialPixels}(model, x,			data=NULL, 			err.model=NULL, n = 1, ...)
-\S4method{RFsimulate}{numeric,SpatialPoints}(model, x,			data=NULL, 				err.model=NULL, n = 1, ...)
-\S4method{RFsimulate}{numeric,GridTopology}(model, x,			data=NULL, 			err.model=NULL, n = 1, ...)
-\S4method{RFsimulate}{RMmodel,GridTopology}(model, x,			data=NULL, 			err.model=NULL, n = 1, ...)
-\S4method{RFsimulate}{RMmodel,SpatialPoints}(model, x,			data=NULL, 			err.model=NULL, n = 1, ...)
-\S4method{RFsimulate}{matrix,Raster}(model, x,				data=NULL, 			err.model=NULL, n = nrow(model), ...)
-\S4method{RFsimulate}{matrix,Spatial}(model, x,				data=NULL, 				err.model=NULL, n = nrow(model), ...)
-\S4method{RFsimulate}{data.frame,ANY}(model, x,				data=NULL, 				err.model=NULL, n = nrow(model), ...)
+\S4method{RFsimulate}{numeric,Raster}(model, x,	data=NULL,
+ err.model=NULL, n = 1, ...)
+\S4method{RFsimulate}{numeric,SpatialGrid}(model, x,data=NULL,
+ err.model=NULL, n = 1, ...)
+\S4method{RFsimulate}{numeric,SpatialPixels}(model, x, data=NULL, 
+err.model=NULL, n = 1, ...)
+\S4method{RFsimulate}{numeric,SpatialPoints}(model, x, data=NULL, 
+ 	err.model=NULL, n = 1, ...)
+\S4method{RFsimulate}{numeric,GridTopology}(model, x, data=NULL, 
+ err.model=NULL, n = 1, ...)
+\S4method{RFsimulate}{RMmodel,GridTopology}(model, x, data=NULL, 
+ err.model=NULL, n = 1, ...)
+\S4method{RFsimulate}{RMmodel,SpatialPoints}(model, x, data=NULL, 
+ err.model=NULL, n = 1, ...)
+\S4method{RFsimulate}{matrix,Raster}(model, x, 	data=NULL, 
+ err.model=NULL, n = nrow(model), ...)
+\S4method{RFsimulate}{matrix,Spatial}(model, x,	data=NULL, 
+	err.model=NULL, n = nrow(model), ...)
+\S4method{RFsimulate}{data.frame,ANY}(model, x,	data=NULL, 
+	err.model=NULL, n = nrow(model), ...)
 modelRandomFields(param, includeNugget=FALSE)
 }
 
