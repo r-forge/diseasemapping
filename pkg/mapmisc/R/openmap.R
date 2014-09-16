@@ -1,7 +1,7 @@
 osmTiles = function(name) {
 	result = c(
 			osm = "http://tile.openstreetmap.org",
-			"osm-no-labels"="http://www.toolserver.org/tiles/osm-no-labels/",
+#			"osm-no-labels"="http://a.www.toolserver.org/tiles/osm-no-labels/",
 			"osm-transport"="http://tile2.opencyclemap.org/transport/",
 			"bw-mapnik"="www.toolserver.org/tiles/bw-mapnik",
 			mapquest="http://otile1.mqcdn.com/tiles/1.0.0/osm/",
@@ -29,11 +29,12 @@ osmTiles = function(name) {
 	names(toadd) = toolserver
 	result = c(result, toadd)
 	
-	
+
+	# language labels don't appear to be working
 	languages = c("en","fr","de", "it","es","ru")
-	toadd =	paste("http://www.toolserver.org/tiles/osm-labels-", languages,"/", sep="")
+	toadd =	paste("http://a.www.toolserver.org/tiles/osm-labels-", languages,"/", sep="")
 	names(toadd) = paste("osm-labels-", languages, sep="")
-	result = c(result, toadd)
+#	result = c(result, toadd)
 	
 	stamen = c("toner","watercolor")#,"terrain","terrain-background")
 	toadd = paste("http://tile.stamen.com/", stamen, "/",sep="")
