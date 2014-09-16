@@ -134,7 +134,8 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL,
      type = "response")
 	} # done predicting rates from model
 	
-    poplong <- aggregate(poplong$expected, list(poplong[[regionCode]]), sum)
+    poplong <- aggregate(poplong$expected, list(poplong[[regionCode]]), 
+			sum, na.rm=TRUE)
     rownames(poplong) = as.character(poplong[,1])
     poplong=poplong[poplong[,2] > 0,]
 

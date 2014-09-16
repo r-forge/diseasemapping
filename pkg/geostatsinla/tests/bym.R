@@ -23,7 +23,7 @@ if(FALSE) {
 kentucky = getSMR(kentucky, larynxRates, larynx,
 		regionCode="County")
 
-library(geostatsinla)
+library('geostatsinla')
 # this is in the examples
 
 kBYM = bym(kentucky, observed ~ offset(logExpected) + poverty,

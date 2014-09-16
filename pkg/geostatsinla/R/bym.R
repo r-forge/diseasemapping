@@ -46,7 +46,7 @@ bym.SpatialPolygonsDataFrame = function(data,
 	
 	if(missing(region.id)) {
 		region.id="region.id"
-		data[[region.id]] = seq(1,dim(data)[1])
+		data[[region.id]] = 1:length(data)
 	}
 		
 	if(missing(adjMat))

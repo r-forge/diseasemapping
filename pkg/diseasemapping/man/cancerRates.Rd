@@ -79,12 +79,35 @@ Leukaemia.
 \value{
 vector of cancer rates, by age and sex group}
 \examples{
-\dontrun{
+
 # won't work if offline or if the iarc web site is down
-qcLungF=cancerRates(area="canada", year=2001:2002, site="lung", sex="F")
-data(popdata)
-qcLungExp = getSMR(popdata, qcLungF)
-spplot(qcLungExp, "logExpected")
+qcLungF=try(cancerRates(area="canada", year=2001:2002, site="lung", sex="F"))
+
+if(class(qcLungF)=='try-error'){
+	warnings("IARC web site looks to be down")
+	qcLungF = structure(c(0, 5e-06, 0, 0, 5e-06, 1e-05, 0, 3.4e-05, 9.6e-05, 
+0.000211, 0.000559, 0.001289, 0.002003, 0.002508, 0.002728, 0.003189, 
+0.002792, 0.001905), .Names = c("F_0", "F_5", "F_10", "F_15", 
+"F_20", "F_25", "F_30", "F_35", "F_40", "F_45", "F_50", "F_55", 
+"F_60", "F_65", "F_70", "F_75", "F_80", "F_85"), site = "Lung", 
+area = "Canada", year = "2001-2002")
+}
+
+data('popdata')
+qcLungExp = getSMR(popdata, qcLungF, regionCode='CSDUID')
+
+if(require('mapmisc', quietly=TRUE)) {
+	mycol = colourScale(qcLungExp$expected, 
+		breaks=12, dec=0, transform='log', style='equal')
+	map.new(
+		SpatialPoints(cbind(c(-90.67247, -74.28296),c(42.22769, 49.60522)),
+		proj4string = CRS(proj4string(popdata))
+	))
+	plot(qcLungExp, col=mycol$plot, border='#00000040',add=TRUE)
+	legendBreaks('topright', mycol)
+	scaleBar(qcLungExp,"bottomleft")
+}
+
 }
 }
                                                        
