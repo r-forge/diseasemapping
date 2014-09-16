@@ -134,7 +134,7 @@ openmap = function(x, zoom,
 		crsOut = projection(x)
 	
 	if(!is.na(crsOut)  ){
-		require("rgdal", quietly = TRUE)) 
+		require("rgdal", quietly = TRUE)
 		resultProj = projectRaster(result, crs=crsOut, method="ngb")
 		# now trim to original bounding box
 		pointsNew = projectExtent(result, 
