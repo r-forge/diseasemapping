@@ -38,6 +38,7 @@ myPoints = SpatialPoints(myraster, proj4string=CRS(proj4string(myraster)))[
 
 \dontrun{
 
+if (requireNamespace("geonames", quietly = TRUE)) { 
 cities=GNcities(myPoints, max=5)
 mytiles = openmap(myraster,  type="bing")
 
@@ -56,7 +57,7 @@ points(cities, col='red')
 text(cities, labels=cities$name, col='red',pos=4)
 
 GNsearch(q="Toronto Ontario")
-
+}
 }
 
 

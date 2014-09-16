@@ -17,6 +17,8 @@ GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 		
 	}
 
+	if (requireNamespace("geonames", quietly = TRUE)) { 
+		
 	result = geonames::GNcities(north=north,east=east,
 			south=south,west=west,lang,maxRows)
 
@@ -25,6 +27,10 @@ GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 					as.numeric(result[,'lat'])
 					), data=result, 
 			proj4string=crsLL)
+} else {
+	warning("install the geonames package to use GNcities")
+	result = NULL
+}
 
 	if( !identical(projection(theproj), "NA") & ! identical(projection(theproj), NA)) {
 		havegdal = require(rgdal, quietly=TRUE )
@@ -37,6 +43,8 @@ GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 
 GNsearch = function(...) {
 	
+	
+	if (requireNamespace("geonames", quietly = TRUE)) { 
 	result=geonames::GNsearch(...)
 	
 	if(all(c("lat","lng") %in% names(result))){
@@ -47,5 +55,10 @@ GNsearch = function(...) {
 				 data=result, 
 				proj4string=crsLL)
 	}
+} else {
+	warning("install the geonames package to use GNsearch")
+	result = NULL
+	
+}
 	result
 }

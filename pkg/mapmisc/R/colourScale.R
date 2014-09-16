@@ -168,8 +168,12 @@ colourScale.numeric = function(x, breaks=5,
 				}					
 				breaks = seq(startHere, max(x, na.rm=TRUE),len=breaks)
 			} else {
+				if (requireNamespace("classInt", quietly = TRUE)) { 
 				breaks = classInt::classIntervals(x, n=breaks, 
 						style=style, ...)$brks
+				} else {
+					warning("Install the classInt package to use style=", style)
+				}
 			}
 		
 			
