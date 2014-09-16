@@ -61,6 +61,7 @@ if(class(crsCrop)=="try-error")
 tocrop = t(bbox(extent(cropInset)))
 tocrop = SpatialPoints(tocrop,
 		proj4string=crsCrop)
+require("rgdal", quietly = TRUE) 
 tocrop = spTransform(tocrop, CRSobj=CRS(proj4string(map)))
 map = crop(map, extent(tocrop))
 

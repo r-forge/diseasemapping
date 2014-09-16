@@ -31,7 +31,7 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
 	xpoints = SpatialPoints(xpoints, proj4string=crs)
 
 
-	
+	require("rgdal", quietly = TRUE) 
 	xll = spTransform(xpoints, CRSobj=crsLL)
 	
 
