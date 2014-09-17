@@ -30,7 +30,7 @@ crsMerc = CRS("+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 
 	thePoints = raster(extent(lon_deg[1], xmax=lon_deg[2],
 					ymin=lat_deg[1],ymax=lat_deg[2]), 
 				crs=crsLL)
-	thePointsMerc = projectExtent(thePoints, crsMerc	)
+	thePointsMerc = projectExtent(thePoints, crsMerc)
 
 	extent(thePointsMerc)			
 }

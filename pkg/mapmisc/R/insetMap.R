@@ -3,9 +3,6 @@ insetMap = function(crs, pos="bottomright",map="osm",zoom=0,
 		cropInset = extent(-170,xmax=170, ymin=-65, ymax=75),
 		outer=TRUE) {
 
-crsLL = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0") 
-	
-	
 fromEdge = matrix(par("plt"), 2, 2, 
 		dimnames=list(c("min","max"), c("x","y")))
 extentUsr = matrix(par("usr"),2,2, dimnames=dimnames(fromEdge))
@@ -61,9 +58,10 @@ if(class(crsCrop)=="try-error")
 tocrop = t(bbox(extent(cropInset)))
 tocrop = SpatialPoints(tocrop,
 		proj4string=crsCrop)
-require("rgdal", quietly = TRUE) 
-tocrop = spTransform(tocrop, CRSobj=CRS(proj4string(map)))
-map = crop(map, extent(tocrop))
+if(requireNamespace('rgdal', quietly=TRUE)) {
+	tocrop = spTransform(tocrop, CRSobj=CRS(proj4string(map)))
+	map = crop(map, extent(tocrop))
+}
 
 
 oldinsetbox = t(bbox(map))
@@ -115,12 +113,11 @@ bbSmall = t(bbox(extent(map)))
 
 
  
-
+if(requireNamespace('rgdal', quietly=TRUE)) {
+	
 xsp = spTransform(xsp, 
 		CRSobj=CRS(proj4string(mapOrig)))
-
- 
-
+}
 
 scale =  apply(bbSmall, 2, diff)/ apply(bbOrig, 2, diff)
 

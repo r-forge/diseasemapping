@@ -69,14 +69,20 @@ Npoints = 20
 myPoints = SpatialPointsDataFrame(20*cbind(runif(Npoints), runif(Npoints)), 
 	data=data.frame(y1=c(NA, rnorm(Npoints-1)), 
 	y2=c(sample(1:4, Npoints-1,replace=TRUE), NA)),
-	proj4string=CRS("+init=epsg:4326")
+	proj4string=CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 	)
 
 \dontrun{
 mymap = openmap(myPoints)
 }
 
-myscale = colourScale(myPoints$y1, breaks=4, col="RdYlBu",
+if(require('RColorBrewer', quietly=TRUE)) {
+	theCol = 'RdYlBu'
+} else {
+	theCol = heat.colors
+}
+
+myscale = colourScale(myPoints$y1, breaks=4, col=theCol,
  style="quantile", revCol=TRUE,dec=1)
 
 
@@ -99,7 +105,13 @@ plot(mymap,add=TRUE)
 plot(myPoints, col=myscale2$plot, pch=16,add=TRUE)
 legendBreaks("topleft", breaks=myscale2)
 
-myscale3 = colourScale(myPoints$y2,  breaks=3,col="Set2", style="unique",
+if(require('RColorBrewer', quietly=TRUE)) {
+	theCol = 'Set2'
+} else {
+	theCol = heat.colors
+}
+
+myscale3 = colourScale(myPoints$y2,  breaks=3,col=theCol, style="unique",
 	opacity=c(0.1, 0.9))
 
 map.new(myPoints)

@@ -36,7 +36,6 @@
 library('knitr')
 library('mapmisc')
 library('raster')
-library('rgdal')
 
 reRun=("reRun" %in% commandArgs(trailingOnly = TRUE))
 

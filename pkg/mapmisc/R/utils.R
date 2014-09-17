@@ -24,7 +24,11 @@ crsLL = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 		crsUse = crs
 	
 	x = raster(extent(x), nrows=100,ncols=100, crs=crsUse)
-	require("rgdal", quietly = TRUE) 
-	extent(projectExtent(x, crsLL))
-	
+
+	if(requireNamespace('rgdal', quietly=TRUE)) {
+		result = extent(projectExtent(x, crsLL))
+	} else {
+		result = extent(x)
+	}	
+	result
 }

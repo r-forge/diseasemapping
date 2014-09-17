@@ -36,7 +36,10 @@ library("sp")
 data("meuse")
 data(meuse)
 coordinates(meuse) <- ~x+y
-proj4string(meuse) <- CRS("+init=epsg:28992")
+proj4string(meuse) <- CRS(
+ "+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +units=m +no_defs"
+ )
+# CRS("+init=epsg:28992")
 meuse$soilFac = factor(meuse$soil, levels=c(1,2,3), 
 	labels=c("Calcareous","Non-Calc's","Red Brick"))
 

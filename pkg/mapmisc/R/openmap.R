@@ -78,6 +78,8 @@ openmap = function(x, zoom,
 	names(pathOrig) = path
 
 	extLL = .extentLL(x,crs)
+
+		
 	if(any(abs(as.vector(extLL))>181))
 		warning("no CRS supplied and coordinates do not appear to be long-lat")
 		
@@ -134,7 +136,7 @@ openmap = function(x, zoom,
 		crsOut = projection(x)
 	
 	if(!is.na(crsOut)  ){
-		require("rgdal", quietly = TRUE)
+
 		resultProj = projectRaster(result, crs=crsOut, method="ngb")
 		# now trim to original bounding box
 		pointsNew = projectExtent(result, 

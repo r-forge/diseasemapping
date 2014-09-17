@@ -31,7 +31,8 @@ long-lat.}
 
 \examples{
 
-myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10, crs="+proj=longlat")
+myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10, 
+	crs="+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 values(myraster) = seq(0,1,len=ncell(myraster))
 myPoints = SpatialPoints(myraster, proj4string=CRS(proj4string(myraster)))[
 	seq(1,ncell(myraster),len=5)]
@@ -42,8 +43,7 @@ if (requireNamespace("geonames", quietly = TRUE)) {
 cities=GNcities(myPoints, max=5)
 mytiles = openmap(myraster,  type="bing")
 
-par(mar=c(0,0,0,0))
-plot(cities)
+map.new(cities)
 plot(mytiles, add=TRUE)
 points(cities, col='red')
 text(cities, labels=cities$name, col='red',pos=4)
@@ -51,7 +51,7 @@ text(cities, labels=cities$name, col='red',pos=4)
 
 cities=GNcities(myraster, max=5)
 
-plot(cities)
+map.new(cities)
 plot(mytiles, add=TRUE)
 points(cities, col='red')
 text(cities, labels=cities$name, col='red',pos=4)

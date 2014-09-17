@@ -8,7 +8,6 @@ GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 	theproj = projection(north)
 	if(!fourCoords) {
 		extLL = .extentLL(north)
-
 		
 		east = xmax(extLL)
 		west = xmin(extLL)

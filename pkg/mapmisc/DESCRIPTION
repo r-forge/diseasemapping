@@ -4,8 +4,7 @@ Title: Utilities for producing maps
 Version: 1.0.0
 Date: 2014-07-24
 Depends: sp, raster, R (>= 3.0.0)
-Imports: RColorBrewer  
-Suggests: rgdal, knitr, geonames, classInt
+Suggests: rgdal, RColorBrewer, knitr, geonames, classInt
 Author: Patrick Brown <patrick.brown@utoronto.ca> [aut, cre],  Barry Rowlingson [ctb]
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
 Description: This package contains various utilities for producing nice looking maps in R.

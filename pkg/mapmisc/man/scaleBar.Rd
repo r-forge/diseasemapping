@@ -69,7 +69,7 @@ myPoints = SpatialPointsDataFrame(
 .20*cbind(runif(Npoints), runif(Npoints)), 
 	data=data.frame(y1=c(NA, rnorm(Npoints-1)), 
 	y2=c(sample(1:4, Npoints-1,replace=TRUE), NA)),
-	proj4string=CRS("+init=epsg:4326")
+	proj4string=CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 	)
 
 \dontrun{
@@ -89,6 +89,9 @@ plot(myPoints,col = as.character(cut(
 )),add=TRUE)
 scaleBar(myPoints, "bottomright",cex=1.25, scale.cex=2)
 legendBreaks("topleft", breaks=breaks, col=thecol)
+
+\dontrun{
 insetMap(myPoints, "bottomleft",col='blue')
+}
 }
 

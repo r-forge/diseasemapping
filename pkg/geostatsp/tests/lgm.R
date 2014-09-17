@@ -1,8 +1,5 @@
 library("geostatsp")
 data("swissRain")
-library("rgdal")
-
-
 
 bob = function(x) {
 	thepar = x$param

@@ -72,7 +72,11 @@ colourScale.numeric = function(x, breaks=5,
 	if(!is.function(col)){		
 		colString = col
 		if(length(colString)==1){
-			col = function(n) RColorBrewer::brewer.pal(n, colString)[1:n]
+			if(requireNamespace('RColorBrewer',quietly=TRUE)) {
+				col = function(n) RColorBrewer::brewer.pal(n, colString)[1:n]
+			} else {
+				col = function(n) heat.colors(n, colString)[1:n]
+			}
 		} else {
 			col = function(n) colString[1:n]
 		}
@@ -169,7 +173,7 @@ colourScale.numeric = function(x, breaks=5,
 				breaks = seq(startHere, max(x, na.rm=TRUE),len=breaks)
 			} else {
 				if (requireNamespace("classInt", quietly = TRUE)) { 
-				breaks = classInt::classIntervals(x, n=breaks, 
+					breaks = classInt::classIntervals(x, n=breaks, 
 						style=style, ...)$brks
 				} else {
 					warning("Install the classInt package to use style=", style)
