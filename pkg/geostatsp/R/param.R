@@ -1,3 +1,5 @@
+
+
 modelRandomFields = function(param, includeNugget=FALSE){
 
 if(class(param)=="RMmodel")

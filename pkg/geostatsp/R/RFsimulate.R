@@ -1,3 +1,19 @@
+setClass('RMmodel', 
+		representation(
+				# call='RMexp(var=1, sclae=1, Aniso=id, proj=id)
+				call = "language",
+				# name='RMexp'
+				name = "character",
+				# submodels=NULL, submodels=list(RMmodel1, RMmodel2)
+				submodels = "list",
+				# model specific parameter 
+				par.model = "list",
+				# var=1, scale=1, Aniso=id, proj=id 
+				par.general = "list"
+		)
+)
+
+
 setGeneric('RFsimulate', function(model,x, data=NULL, err.model=NULL, n=1, ...) 
 			standardGeneric("RFsimulate")
 )
