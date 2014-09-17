@@ -36,24 +36,44 @@ library("sp")
 data("meuse")
 data(meuse)
 coordinates(meuse) <- ~x+y
-if(require('rgdal', quietly=TRUE)) {
+
+\dontrun{
 	 proj4string(meuse) <- CRS("+init=epsg:28992")
- } else {
-  proj4string(meuse) <- CRS(
+}
+
+proj4string(meuse) <- CRS(
 	 paste("+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889",
   		"+k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +units=m +no_defs"
   	 )
-  )
-}
+)
 
 meuse$soilFac = factor(meuse$soil, levels=c(1,2,3), 
 	labels=c("Calcareous","Non-Calc's","Red Brick"))
+soilCol = colourScale(meuse$soilFac)
+	
+data("netherlands")
+
+map.new(meuse)
+plot(nldTiles,add=TRUE)
+points(nldCities)
+text(nldCities,label=nldCities$name, pos=2)
+points(meuse, pch=16, col=soilCol$plot)
+legendBreaks('topleft', soilCol)
+insetMap(meuse, "bottomright",map=world)
+
+# location won't be marked on the inset map unless rgdal is available
 
 \dontrun{
 # this is how the data were obtained
 
 # map tiles
 nldTiles = openmap(meuse, path="osm-no-labels", zoom=12)
+
+# cities
+nldCities = GNcities(nldTiles, maxRows=25)
+
+# world
+world = openmap(extent(-10,30,40,60),path="osm-no-labels")
 
 # elevation data
 require('rgdal')
@@ -65,27 +85,10 @@ nldElev = crop(nldElev, extend(extent(meuseLL), 0.1))
 nldElev = projectRaster(nldElev, crs=proj4string(meuse))
 nldElev = crop(nldElev, extent(nldTiles))
 
-# cities
-nldCities = GNcities(nldTiles, maxRows=25)
-
-# world
-world = openmap(extent(-10,30,40,60),path="osm-no-labels")
 # save the files where the package builder wants them
-save(nldElev, nldTiles, nldCities,world,
-file="~/workspace/diseasemapping/pkg/mapmisc/data/netherlands.RData",
-compress="xz")
-}
-data("netherlands")
-
-plot(nldElev)
-points(meuse)
-
-map.new(meuse)
-plot(nldTiles,add=TRUE)
-points(nldCities)
-text(nldCities,label=nldCities$name, pos=3)
-if(require('rgdal', quietly=TRUE)) {
-	insetMap(meuse, "bottomright",map=world)
+# save(nldElev, nldTiles, nldCities,world,
+#   file="~/workspace/diseasemapping/pkg/mapmisc/data/netherlands.RData",
+#   compress="xz")
 }
 }
 
