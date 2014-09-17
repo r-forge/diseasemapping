@@ -34,7 +34,6 @@ See examples.
 # soil data
 library("sp")
 data("meuse")
-data(meuse)
 coordinates(meuse) <- ~x+y
 
 \dontrun{
