@@ -16,7 +16,7 @@ morethanoneyear = class(popdata)=="list"
 
 #if s() is in formula, use GAM
 useGam <- length(grep("s\\(",formula))>0
-if(useGam & requireNamespace("gam", quietly = TRUE)) {
+if(useGam & requireNamespace("mgcv", quietly = TRUE)) {
   modelFittingFunction = mgcv::gam
 } else {
   modelFittingFunction = glm
