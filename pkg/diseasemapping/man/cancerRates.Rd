@@ -103,15 +103,12 @@ qcLungExp = getSMR(popdata, qcLungF, regionCode='CSDUID')
 names(qcLungExp)
 
 if(require('mapmisc', quietly=TRUE)) {
-	print(range(qcLungExp$expected, na.rm=TRUE))
-	print(table(is.na(qcLungExp$expected)))
-	mycol = colourScale(qcLungExp$expected, col=rainbow,
+
+	mycol = colourScale(qcLungExp$expected, 
 		breaks=9, dec=0, transform='log', style='equal')
-	print(mycol$col)
 	map.new(
-		SpatialPoints(cbind(c(-90.67247, -74.28296),c(42.22769, 49.60522)),
-		proj4string = CRS(proj4string(popdata))
-	))
+		popdata[grep("Stormont|Thunder Bay|Lambton", popdata$CDNAME),]
+	)
 	plot(qcLungExp, col=mycol$plot, border='#00000040',add=TRUE)
 	legendBreaks('topright', mycol)
 	scaleBar(qcLungExp,"bottomleft")

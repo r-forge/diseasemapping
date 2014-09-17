@@ -64,7 +64,7 @@ Patrick Brown
 }
 \examples{
 
-if(require('diseasemapping', quietly=TRUE) {
+if(require('diseasemapping', quietly=TRUE)) {
 data('kentucky')
 
 if(FALSE) {
@@ -110,13 +110,6 @@ plot(kBYM$data, col=thecol$plot,add=TRUE)
 legendBreaks("topleft", thecol)
 
 
-spplot(kBYM$data, "fitted.exp",
-at=c(1, 1.1, 1.2, 1.35, 1.5, 1.75),
-	col.regions= terrain.colors(5))
-
-
-spplot(kBYM$data, "exc1",at=c(0, 0.2, 0.8,0.9, 1),
-col.regions=c('green','yellow','orange','red'))
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
