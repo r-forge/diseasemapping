@@ -1,4 +1,3 @@
-crsLL = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0") 
 
 scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
 
@@ -29,7 +28,7 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
 	xpoints = SpatialPoints(xpoints, proj4string=crs)
 
 	if(requireNamespace('rgdal', quietly=TRUE)) {	
-		xll = spTransform(xpoints, CRS(crsLL))
+		xll = spTransform(xpoints, crsLL)
 	} else {
 		xll= xpoints
 		if(!length(grep("longlat", projection(xpoints))))
