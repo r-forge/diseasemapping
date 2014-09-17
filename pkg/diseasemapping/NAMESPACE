@@ -8,5 +8,3 @@ exportPattern(".")
 import(
   sp
 )
-
-# also needs mgcv::gam

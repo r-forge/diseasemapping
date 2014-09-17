@@ -24,7 +24,7 @@ a vector of cancer sites, see details}
 \code{"M"} or \code{"F"} for male or female rates only, \code{c("M","F")} (the default) for both sexes.}
 }
 \details{
-\code{area} must be one of Camada, Norway,
+\code{area} must be one of Canada, Norway,
 Latvia,
 Lithuania,
 Iceland,
@@ -74,10 +74,12 @@ Non-Hodgkin Lymphoma,
 Hodgkin Lymphoma,
 Multiple myeloma,
 Leukaemia.
-
 }
+
 \value{
-vector of cancer rates, by age and sex group}
+vector of cancer rates, by age and sex group
+}
+
 \examples{
 
 # won't work if offline or if the iarc web site is down
@@ -92,13 +94,20 @@ if(interactive() | Sys.info()['user'] =='patrick') {
 "F_60", "F_65", "F_70", "F_75", "F_80", "F_85"), site = "Lung", 
 area = "Canada", year = "2001-2002")
 }
+qcLungF
 
 data('popdata')
+
 qcLungExp = getSMR(popdata, qcLungF, regionCode='CSDUID')
 
+names(qcLungExp)
+
 if(require('mapmisc', quietly=TRUE)) {
-	mycol = colourScale(qcLungExp$expected, 
-		breaks=12, dec=0, transform='log', style='equal')
+	print(range(qcLungExp$expected, na.rm=TRUE))
+	print(table(is.na(qcLungExp$expected)))
+	mycol = colourScale(qcLungExp$expected, col=rainbow,
+		breaks=9, dec=0, transform='log', style='equal')
+	print(mycol$col)
 	map.new(
 		SpatialPoints(cbind(c(-90.67247, -74.28296),c(42.22769, 49.60522)),
 		proj4string = CRS(proj4string(popdata))

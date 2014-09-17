@@ -1,6 +1,8 @@
-require('diseasemapping')
+if(require('diseasemapping', quietly=TRUE) & 
+		require('spdep', quietly=TRUE)& 
+		require('INLA', quietly=TRUE)){
+
 data('kentucky')
-require('sp')
 
 if(FALSE) {
 	# must have an internet connection to do the following
@@ -33,29 +35,42 @@ kBYM = bym(kentucky, observed ~ offset(logExpected) + poverty,
 
 kBYM = bym(kentucky, observed ~ offset(logExpected))
  
-if(!is.null(kBYM$parameters)) {
-kBYM$par$summary
 
-spplot(kBYM$data, "fitted.exp",
-		at=seq(1.29, 1.36, len=6),
-		col.regions= terrain.colors(5))
+kBYM$par$summary
 
 kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 
 
-spplot(kBYM$data, "exc1",at=c(0, 0.2, 0.8,0.9, 1),
-		col.regions=c('green','yellow','orange','red'))
+if(require('mapmisc', quietly=TRUE)) {
+
+colFit = colourScale(kBYM$data$fitted.exp,
+		breaks=6, dec=2)
+	
+plot(kBYM$data, col=colFit$plot)
+legendBreaks('toleft', colFit)
+
+colExc = colourScale(kBYM$data$fitted.exp,
+		style='fixed',
+		breaks=c(0, 0.2, 0.8,0.9, 1), 
+		col=rainbow
+)
+
+plot(kBYM$data, col=colExc$plot)
+legendBreaks('toleft', colExc)
+
+
 }
+
 # and try passing a data frame and adjacency matrix
 
-library('spdep')
+	
 adjMat = poly2nb(kentucky, row.names =as.character(kentucky$County) )
 kBYM = bym(kentucky@data, observed ~ offset(logExpected) + poverty,
 		adjMat = adjMat, region.id="County",
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
-if(!is.null(kBYM$parameters)) {
+
 kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
-}
+
 
 # add subtract a few regions
 
@@ -64,23 +79,28 @@ kBYM = bym(kentucky@data[-(1:4),], observed ~ offset(logExpected) + poverty,
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
 
 
-
-if(!is.null(kBYM$parameters)) {
 kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
-}
+
 
 # intercept only, no offset
 
 
 kBYM = bym(kentucky, observed ~ 1,
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
-if(!is.null(kBYM$parameters)) {
-spplot(kBYM$data, "fitted.exp",
-		at=c(0.8, 1.1, 1.2, 2, 4, 35),
-		col.regions= terrain.colors(5))
+
+
+if(require('mapmisc', quietly=TRUE)) {
+	
+	colFit = colourScale(kBYM$data$fitted.exp,
+			breaks=6, dec=1)
+	
+	plot(kBYM$data, col=colFit$plot)
+	legendBreaks('toleft', colFit)
+	
+}
 
 kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
-}
+
 
 # give spdf but some regions have no data
 # but keep the 'county' column as is
@@ -89,7 +109,8 @@ kentucky@data[1:2,-grep("County", names(kentucky))] = NA
 kBYM = bym(kentucky, observed ~ offset(logExpected) + poverty,
 		region.id="County",
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
-if(!is.null(kBYM$parameters)) {
-kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
-}
 
+kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
+
+
+}

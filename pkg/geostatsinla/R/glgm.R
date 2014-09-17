@@ -171,7 +171,7 @@ glgm = function(data,  cells, covariates=NULL, formula=NULL,
 		for(D in notInData) {
 			if(!.compareCRS(covariatesOrig[[D]], data,unknown=TRUE) ) {
 				
-				require(rgdal, quietly=TRUE ) 
+				require('rgdal', quietly=TRUE ) 
 				
 				data[[D]] = raster::extract(covariatesOrig[[D]], 
 						spTransform(data, CRSobj=CRS(projection(covariatesOrig[[D]])))) 

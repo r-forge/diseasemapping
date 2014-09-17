@@ -85,26 +85,30 @@ swissFit =  glgm(swissRain, cells=30, formula="lograin",
 	)
 
 
+
+
+
 if(!is.null(swissFit$parameters)) {
-swissFit$parameters$summary
-plot(swissFit$parameters$range$prior,type="l",
-	ylim=c(0,max(swissFit$parameters$range$posterior[,"y"])),
-	xlim=c(0, swissFit$parameters$range$userPriorCI[2]*1.1))
-abline(v=swissFit$parameters$range$userPriorCI,col="yellow")
-abline(v=swissFit$parameters$range$priorCI,col="orange")
-lines(swissFit$parameters$range$posterior, col='blue')
-
-
-
 	swissExc = excProb(swissFit, threshold=log(25))
 
 	swissExcRE = excProb(swissFit$inla$marginals.random$space, 
 		log(1.5),template=swissFit$raster)
+
+
+	swissFit$parameters$summary
+
+	plot(swissFit$parameters$range$prior,type="l",
+		ylim=c(0,max(swissFit$parameters$range$posterior[,"y"])),
+		xlim=c(0, swissFit$parameters$range$userPriorCI[2]*1.1))
+	abline(v=swissFit$parameters$range$userPriorCI,col="yellow")
+	abline(v=swissFit$parameters$range$priorCI,col="orange")
+	lines(swissFit$parameters$range$posterior, col='blue')
+
+
 }
 
 \dontrun{
-plot(swissFit$raster[["predict.exp"]]) 
-
+	plot(swissFit$raster[["predict.exp"]]) 
 
 	mycol = c("green","yellow","orange","red")
 	mybreaks = c(0, 0.2, 0.8, 0.95, 1)
@@ -130,7 +134,7 @@ swissTiles = openmap(bbox(gadm),zoom=8,type="nps")
 par(mar=c(0,0,0,0))
 plot(gadm)
 plot(swissTiles, add=TRUE)
-library(RColorBrewer)
+library('RColorBrewer')
 mycol=rev(brewer.pal(4,"RdYlGn"))
 plot(mask(
 		projectRaster(swissExc, crs=proj4string(gadm)),

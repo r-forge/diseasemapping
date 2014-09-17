@@ -36,10 +36,17 @@ library("sp")
 data("meuse")
 data(meuse)
 coordinates(meuse) <- ~x+y
-proj4string(meuse) <- CRS(
- "+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +units=m +no_defs"
- )
-# CRS("+init=epsg:28992")
+if(require('rgdal', quietly=TRUE)) {
+	 proj4string(meuse) <- CRS("+init=epsg:28992")
+ } else {
+  proj4string(meuse) <- CRS(
+	 paste("+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889",
+  		"+k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +units=m +no_defs",
+  		sep=""
+  	 )
+  )
+}
+
 meuse$soilFac = factor(meuse$soil, levels=c(1,2,3), 
 	labels=c("Calcareous","Non-Calc's","Red Brick"))
 
@@ -50,6 +57,7 @@ meuse$soilFac = factor(meuse$soil, levels=c(1,2,3),
 nldTiles = openmap(meuse, path="osm-no-labels", zoom=12)
 
 # elevation data
+require('rgdal')
 meuseLL = spTransform(meuse, CRS("+init=epsg:4326"))
 getData("SRTM", lon=xmin(extent(meuseLL)), 
 	lat=ymin(extent(meuseLL)),path=tempdir())
@@ -77,7 +85,9 @@ map.new(meuse)
 plot(nldTiles,add=TRUE)
 points(nldCities)
 text(nldCities,label=nldCities$name, pos=3)
-# insetMap(meuse, "bottomright",map=world)
+if(require('rgdal', quietly=TRUE)) {
+	insetMap(meuse, "bottomright",map=world)
+}
 }
 
 

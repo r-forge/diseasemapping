@@ -3,8 +3,8 @@ Ncell = 25
 
 # as in example
 require('geostatsinla')
-require('sp')
 data('swissRain')
+if(require("INLA", quietly=TRUE)) {
 swissRain$lograin = log(swissRain$rain)
 swissFit =  glgm(swissRain, cells=Ncell, formula="lograin",
 		covariates=swissAltitude, family="gaussian", buffer=20000,
@@ -13,14 +13,13 @@ swissFit =  glgm(swissRain, cells=Ncell, formula="lograin",
 		control.family=list(hyper=list(prec=list(prior="loggamma", param=c(.1, .1))))
 )
 
-if(!is.null(swissFit$parameters)) {
 swissFit$parameters$summary
 
 swissExc = excProb(swissFit$inla$marginals.random$space, 0, swissFit$raster)
 plot(swissExc, breaks = c(0, 0.2, 0.8, 0.95, 1.00001), 
 		col=c('green','yellow','orange','red'))	
 plot(swissBorder, add=TRUE)		
-}
+
 
 # intercept only
 swissFit =  glgm(swissRain, cells=Ncell, formula=lograin~1,
@@ -29,14 +28,14 @@ swissFit =  glgm(swissRain, cells=Ncell, formula=lograin~1,
 		control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
 		control.family=list(hyper=list(prec=list(prior="loggamma", param=c(.1, .1))))
 )
-if(!is.null(swissFit$parameters)) {
+
 swissFit$parameters$summary
 
 swissExc = excProb(swissFit$inla$marginals.random$space, 0, swissFit$raster)
 plot(swissExc, breaks = c(0, 0.2, 0.8, 0.95, 1.00001), 
 		col=c('green','yellow','orange','red'))	
 plot(swissBorder, add=TRUE)		
-}
+
 
 # now with formula
 swissFit =  glgm(swissRain, cells=Ncell, 
@@ -85,7 +84,6 @@ swissFit =  glgm(swissRain, cells=Ncell,
 								param=c(.1, .1))))
 )
 
-library('geostatsp')
 data('loaloa')
 rcl = rbind(
 		# wedlands and mixed forests to forest
@@ -109,13 +107,13 @@ elevHigh = reclassify(elevationLoa, c(-Inf, 0, 0))
 		family="binomial", Ntrials = loaloa$N,cells=Ncell, 
 		covariates=covList, shape=2, buffer=25000,
 		priorCI = list(sd=c(0.2, 4), range=c(20000,500000)))
-if(!is.null(loaFit$parameters)) {
+
 loaFit$par$summary
 
 png("loaFitted.png")
 plot(loaFit$raster[["predict.invlogit"]])
 dev.off()
-}
+
 # prior for observation standard deviation
 swissFit =  glgm(swissRain, cells=Ncell, formula="lograin",
 		covariates=swissAltitude, family="gaussian", buffer=20000,
@@ -134,7 +132,7 @@ data2 = SpatialPointsDataFrame(cbind(c(1,0), c(0,1)),
 res = glgm(data2, cells=20, formula=y~1, 
 		priorCI = list(sd=c(1,2), range=c(0.3, 2)),
 		family="poisson",buffer=2)
-if(!is.null(res$parameters)) {
+
 priorPrec = res$par$sd$params
 priorRange = res$par$range$params
 pdf("nodata.pdf")
@@ -150,6 +148,7 @@ plot(res$parameters$range$prior,type='l', col='blue')
 lines(res$parameters$range$post,col='red')
 legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
 dev.off()
+
 }
 
 

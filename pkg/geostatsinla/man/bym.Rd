@@ -63,7 +63,8 @@ Patrick Brown
 \code{\link{glgm}},  \code{\link[INLA]{inla}}, \code{\link[diseasemapping]{getSMR}} 
 }
 \examples{
-require('diseasemapping')
+
+if(require('diseasemapping', quietly=TRUE) {
 data('kentucky')
 
 if(FALSE) {
@@ -91,23 +92,21 @@ kBYM = bym(kentucky, observed ~ offset(logExpected) + poverty,
 	 priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)),
 	 control.mode=list(theta=c(3.52, 3.35),restart=TRUE))
 
-	
-
-if(!is.null(kBYM$parameters))
 	kBYM$par$summary
 	kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
+}
+
 
 \dontrun{
 
-library(mapmisc)
+library('mapmisc')
 
-kmap = openmap(kBYM$data, path=c("osm-no-labels", "osm-labels-en"))
+kmap = openmap(kBYM$data,)
 map.new(kBYM$data)
-plot(kmap[['osm.no.labels']],add=TRUE)
+plot(kmap,add=TRUE)
 thecol = colourScale(kBYM$data$fitted.exp, breaks=5, dec=1,
 opacity = 0.7)
 plot(kBYM$data, col=thecol$plot,add=TRUE)
-plot(kmap[['osm.labels.en']],add=TRUE)
 legendBreaks("topleft", thecol)
 
 

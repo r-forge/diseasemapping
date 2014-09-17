@@ -54,21 +54,20 @@ if(require('mapmisc', quietly=TRUE)) {
 
 \dontrun{
 # run the model
-library(spdep)
+library('spdep')
 popDataAdjMat = poly2nb(ontario,row.names=as.character(ontario[["CSDUID"]]))
 
-library(glmmBUGS)
+library('glmmBUGS')
 forBugs = glmmBUGS(formula=observed + logExpected ~ 1,
   effects="CSDUID", family="poisson", spatial=popDataAdjMat,
   data=ontario@data)
 startingValues = forBugs$startingValues
 source("getInits.R")
-library(R2WinBUGS)
+library('R2WinBUGS')
 ontarioResult = bugs(forBugs$ragged, getInits, parameters.to.save = names(getInits()),
     model.file="model.bug", n.chain=3, n.iter=100, n.burnin=10, n.thin=2,
       program="winbugs", debug=TRUE)
 
-data(ontarioResult)
 ontarioParams = restoreParams(ontarioResult, forBugs$ragged)
 ontarioSummary = summaryChain(ontarioParams)
 
@@ -79,7 +78,7 @@ ontario = mergeBugsData(ontario, ontarioSummary)
 
 # running the same thing with INLA
 \dontrun{
-library(INLA)
+library('INLA')
 # get rid of regions with no neighbours
 ontario2 = ontario[! as.character(ontario$CSDUID) %in% 
 c("3510005" ,"3501007", "3537001", "3551031", "3560065", "3560062"),]
@@ -106,12 +105,13 @@ rownames(tomerge) = tomerge$ID
 ontario2@data =   cbind(ontario2@data, 
 	tomerge[as.character(ontario2$CSDUID),] )   
 	
-spplot(ontario2, "mean")
+require('mapmisc') 
+mycol = colourScale(ontario2$mean, breaks=9, 
+	dec=1, style='equal', transform='sqrt')
+plot(ontario2, col=mycol$plot)
+legendBreaks('topleft', mycol)
+scaleBar(ontario2,"topright")
 
-
-bivariate = inla.hyperpar(result1.bym)$joint.hyper
-colnames(bivariate) = c("iid","spatial","logDens")
-bivariate = SpatialPixelsDataFrame(bivariate[,1:2], bivariate)
 
 	
 }
