@@ -5,7 +5,7 @@ Version: 0.6.0
 Date: 2014-09-17
 Depends: sp, raster, geostatsp
 Imports: spdep
-Suggests: rgdal, diseasemapping (>= 1.0.0), mapmisc (>= 1.0.0), knitr
+Suggests: rgdal, diseasemapping (>= 1.0.1), mapmisc (>= 1.0.0), knitr
 Enhances: INLA 
 Author: Patrick Brown <patrick.brown@utoronto.ca>
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
