@@ -1,10 +1,8 @@
-ifndef R_HOME
-	R_HOME:=/usr
-endif
+R_HOME ?= /usr
 
-PDFS:= mapmisc.pdf mapLayers.pdf
+PDFS := mapmisc.pdf mapLayers.pdf
 
-Rargs? = ""
+Rargs ?= ""
 
 
 all: $(PDFS) 
@@ -17,6 +15,7 @@ clean:
 	$(R_HOME)/bin/Rscript -e "knitr::knit('$<')" $(Rargs)
 
 %.pdf: %.tex
+	xelatex $<;
 	xelatex $<;
 	$(R_HOME)/bin/Rscript -e "tools::compactPDF('$@', gs_quality='ebook')" 
 
