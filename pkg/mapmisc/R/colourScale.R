@@ -75,7 +75,7 @@ colourScale.numeric = function(x, breaks=5,
 			if(requireNamespace('RColorBrewer',quietly=TRUE)) {
 				col = function(n) RColorBrewer::brewer.pal(n, colString)[1:n]
 			} else {
-				col = function(n) heat.colors(n)[1:n]
+				col = function(n) heat.colors(n)
 			}
 		} else {
 			col = function(n) colString[1:n]

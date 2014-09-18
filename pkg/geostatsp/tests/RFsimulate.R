@@ -122,7 +122,7 @@ swissSim = RFsimulate(model=
 						swissRes$param,	
 						0.99*swissRes$param,
 						1.01*swissRes$param),
-		data=swissRes$data[,'resid'][,c(1,1,1)],
+		data=swissRes$data[,rep('resid',3)],
 		err.model=c(1, 0.99, 1.01)*swissRes$param["nugget"],
 		x=swissRes$predict,
 		n=3
