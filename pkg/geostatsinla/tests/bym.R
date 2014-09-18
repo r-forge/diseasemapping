@@ -1,5 +1,7 @@
 if(require('diseasemapping', quietly=TRUE) & 
-		require('INLA', quietly=TRUE)){
+		require("spdep", quiet=TRUE) &
+		require('INLA', quietly=TRUE)
+		){
 
 data('kentucky')
 
@@ -37,9 +39,6 @@ kBYM = bym(kentucky, observed ~ offset(logExpected))
 
 kBYM$par$summary
 
-kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
-
-
 if(require('mapmisc', quietly=TRUE)) {
 
 colFit = colourScale(kBYM$data$fitted.exp,
@@ -48,27 +47,29 @@ colFit = colourScale(kBYM$data$fitted.exp,
 plot(kBYM$data, col=colFit$plot)
 legendBreaks('topleft', colFit)
 
-colExc = colourScale(kBYM$data$fitted.exp,
+if(require('geostatsp', quietly=TRUE)){
+	kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
+
+	colExc = colourScale(kBYM$data$exc1 ,
 		style='fixed',
 		breaks=c(0, 0.2, 0.8,0.9, 1), 
 		col=rainbow
-)
+	)
 
-plot(kBYM$data, col=colExc$plot)
-legendBreaks('topleft', colExc)
-
-
+	plot(kBYM$data, col=colExc$plot)
+	legendBreaks('topleft', colExc)
+	}		
 }
-
 # and try passing a data frame and adjacency matrix
 
 	
-adjMat = spdep::poly2nb(kentucky, row.names =as.character(kentucky$County) )
+adjMat = poly2nb(kentucky, row.names =as.character(kentucky$County) )
 kBYM = bym(kentucky@data, observed ~ offset(logExpected) + poverty,
 		adjMat = adjMat, region.id="County",
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
 
-kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
+if(require('geostatsp', quietly=TRUE))
+	kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 
 
 # add subtract a few regions
@@ -78,7 +79,8 @@ kBYM = bym(kentucky@data[-(1:4),], observed ~ offset(logExpected) + poverty,
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
 
 
-kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
+if(require('geostatsp', quietly=TRUE))
+	kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 
 
 # intercept only, no offset
@@ -98,7 +100,8 @@ if(require('mapmisc', quietly=TRUE)) {
 	
 }
 
-kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
+if(require('geostatsp', quietly=TRUE))
+	kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 
 
 # give spdf but some regions have no data
@@ -109,7 +112,8 @@ kBYM = bym(kentucky, observed ~ offset(logExpected) + poverty,
 		region.id="County",
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
 
-kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
+if(require('geostatsp', quietly=TRUE))
+	kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 
 
 }

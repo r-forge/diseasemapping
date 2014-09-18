@@ -4,14 +4,12 @@ export(bym,
 S3method(bym, SpatialPolygonsDataFrame)
 S3method(bym, data.frame)
 
-importFrom(spdep, poly2nb)
-
 
 import(
   sp,
-  raster,
-  geostatsp
+  raster
 )
 
  
 
+# also need spdep::poly2nb, geostatsp::stackRasterList

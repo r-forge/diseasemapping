@@ -3,8 +3,8 @@ Ncell = 25
 
 # as in example
 require('geostatsinla')
+if(require('geostatsp', quietly=TRUE) & require("INLA", quietly=TRUE)) {
 data('swissRain')
-if(require("INLA", quietly=TRUE)) {
 swissRain$lograin = log(swissRain$rain)
 swissFit =  glgm(swissRain, cells=Ncell, formula="lograin",
 		covariates=swissAltitude, family="gaussian", buffer=20000,
@@ -14,13 +14,11 @@ swissFit =  glgm(swissRain, cells=Ncell, formula="lograin",
 )
 
 swissFit$parameters$summary
-
-swissExc = excProb(swissFit$inla$marginals.random$space, 0, swissFit$raster)
+ swissExc = excProb(swissFit$inla$marginals.random$space, 0, swissFit$raster)
 plot(swissExc, breaks = c(0, 0.2, 0.8, 0.95, 1.00001), 
 		col=c('green','yellow','orange','red'))	
 plot(swissBorder, add=TRUE)		
-
-
+ 
 # intercept only
 swissFit =  glgm(swissRain, cells=Ncell, formula=lograin~1,
 		covariates=swissAltitude, family="gaussian", buffer=20000,
@@ -31,10 +29,12 @@ swissFit =  glgm(swissRain, cells=Ncell, formula=lograin~1,
 
 swissFit$parameters$summary
 
-swissExc = excProb(swissFit$inla$marginals.random$space, 0, swissFit$raster)
-plot(swissExc, breaks = c(0, 0.2, 0.8, 0.95, 1.00001), 
+
+	swissExc = excProb(swissFit$inla$marginals.random$space, 0, swissFit$raster)
+	plot(swissExc, breaks = c(0, 0.2, 0.8, 0.95, 1.00001), 
 		col=c('green','yellow','orange','red'))	
-plot(swissBorder, add=TRUE)		
+	plot(swissBorder, add=TRUE)		
+ 
 
 
 # now with formula
@@ -150,5 +150,6 @@ legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
 dev.off()
 
 }
+ 
 
 

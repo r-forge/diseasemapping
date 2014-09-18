@@ -111,8 +111,16 @@ glgm = function(data,  cells, covariates=NULL, formula=NULL,
 		
 		covariatesOrig = covariates
 		
-		covariates = stackRasterList(covariates, cells, method=method)
-
+		if(!compareRaster(covariates, cells, res=TRUE, stopiffalse=FALSE)) {
+		
+			if(requireNamespace('geostatsp', quietly=TRUE)) {
+				covariates = geostatsp::stackRasterList(covariates, cells, method=method)
+			} else {
+				warning("geostatsp package must be available if covariates need reprojecting")
+				covariates = NULL
+			}
+		}
+			
 		# see if any factor variables aren't coded as factors in `covariates' raster
 		if(length(levels(covariates))) {
 			haveLevels = as.logical(unlist(lapply(levels(covariates), length)))

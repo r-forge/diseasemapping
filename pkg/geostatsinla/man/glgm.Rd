@@ -88,12 +88,14 @@ swissFit =  glgm(swissRain, cells=30, formula="lograin",
 
 
 
-if(!is.null(swissFit$parameters)) {
-	swissExc = excProb(swissFit, threshold=log(25))
+if(!is.null(swissFit$parameters) ) {
+	
+	if( require('geostatsp', quietly=TRUE)){
+		swissExc = excProb(swissFit, threshold=log(25))
 
-	swissExcRE = excProb(swissFit$inla$marginals.random$space, 
-		log(1.5),template=swissFit$raster)
-
+		swissExcRE = excProb(swissFit$inla$marginals.random$space, 
+			log(1.5),template=swissFit$raster)
+	}
 
 	swissFit$parameters$summary
 

@@ -49,11 +49,14 @@ bym.SpatialPolygonsDataFrame = function(data,
 		data[[region.id]] = 1:length(data)
 	}
 		
-	if(missing(adjMat) ) {
-		adjMat=spdep::poly2nb(data, row.names =  data[[region.id]] )
-	} else {
-		adjMat = NULL
-		warning('spdep package is required for bym if adjMat is missing')
+	if(missing(adjMat)) {
+		if(requireNamespace("spdep", quiet=TRUE)) {
+			adjMat=spdep::poly2nb(data, row.names =  data[[region.id]] )
+		} else {
+			adjMat = NULL
+			warning('spdep package is required for bym if adjMat is missing')
+			return(NULL)
+		}
 	}
 		
 		

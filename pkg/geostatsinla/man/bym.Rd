@@ -64,7 +64,7 @@ Patrick Brown
 }
 \examples{
 
-if(require('diseasemapping', quietly=TRUE)) {
+if(require('diseasemapping', quietly=TRUE) & require("spdep", quietly=TRUE)) {
 data('kentucky')
 
 if(FALSE) {
@@ -93,7 +93,9 @@ kBYM = bym(kentucky, observed ~ offset(logExpected) + poverty,
 	 control.mode=list(theta=c(3.52, 3.35),restart=TRUE))
 
 	kBYM$par$summary
-	kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
+	
+	if(require('geostatsp', quietly=TRUE))
+		kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 }
 
 
