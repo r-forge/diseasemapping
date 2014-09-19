@@ -1,7 +1,7 @@
 
 setMethod("lgm", 
 		signature("ANY", "Raster"), 
-function(formula,data,
+function(formula, data,
 				covariates=NULL,
                   shape=1,boxcox=1,nugget=0,
 				  newdata=data,
@@ -9,16 +9,15 @@ function(formula,data,
 				  reml = TRUE,
 				  mc.cores=1,		
 				  oneminusar=seq(0.01, 0.4,len=4), 
-                  range=NULL, 
+                  range=NULL, rangeInCells=NULL,
                   ...) {
   
-
-			  
-			  
+	  
   if(!is.null(covariates)){
     covariates = stackRasterList(covariates,template=data)
     data = stack(data,covariates)
   }
+  dataOrig = data
   NN=NNmat(data)
   csiz = xres(data)
   data = as.data.frame(data)
@@ -33,51 +32,51 @@ function(formula,data,
   
   thesummary = list()
   if (reml){
-  chooseLike = 'logL.reml'
-  m2Like = 'm2logL.reml'
+    chooseLike = 'logL.reml'
+    m2Like = 'm2logL.reml'
   }else{
-  chooseLike = 'logL.ml'
-  m2Like = 'm2logL.ml'
+    chooseLike = 'logL.ml'
+    m2Like = 'm2logL.ml'
   }
   
-
   
-  if (all(nugget == 0)){
-  thesummary$profL$propNugget = 0
-  propNug = 0
-  omar = thel['oneminusar',]
-  rangeValue = csiz*sqrt(2*shape*(1-omar)/omar)
-  rangeInCellsValue = rangeValue/csiz
-  rangeLike = thel[chooseLike,]
-  rangem2Like = thel[m2Like,]
-  rangePack = cbind(omar, rangeValue, rangeInCellsValue, rangeLike, rangem2Like)
-  rownames(rangePack) = NULL
-  colnames(rangePack) = c('oneminusar', 'range', 'rangeInCells',chooseLike, m2Like)
-  
-  thesummary$profL$range = as.data.frame(rangePack)
-  }  else {
-  # $propNugget
-
-  propNug = thel['propNugget',,1]
-  propLike =  thel[chooseLike,,1]
-  propm2Like =  thel[m2Like,,1]
-  propPack = cbind(propNug, propLike, propm2Like)
-  rownames(propPack) = NULL
-  colnames(propPack) = c('propNugget', chooseLike, m2Like)
-  
-  thesummary$profL$propNugget = as.data.frame(propPack)
-
-  #$range
-  omar = thel['oneminusar',1,]
-  rangeValue = csiz*sqrt(2*shape*(1-omar)/omar)
-  rangeInCellsValue = rangeValue/csiz
-  rangeLike = thel[chooseLike,1,]
-  rangem2Like = thel[m2Like,1,]
-  rangePack = cbind(omar, rangeValue, rangeInCellsValue, rangeLike, rangem2Like)
-  rownames(rangePack) = NULL
-  colnames(rangePack) = c('oneminusar', 'range', 'rangeInCells',chooseLike, m2Like)
-  
-  thesummary$profL$range = as.data.frame(rangePack)
+  if (nugget == 0){
+    thesummary$profL$propNugget = 0
+    propNug = 0
+    omar = thel['oneminusar',]
+    rangeValue = csiz*sqrt(2*shape*(1-omar)/omar)
+    rangeInCellsValue = rangeValue/csiz
+    rangeLike = thel[chooseLike,]
+    rangem2Like = thel[m2Like,]
+    rangePack = cbind(omar, rangeValue, rangeInCellsValue, rangeLike, rangem2Like)
+    rownames(rangePack) = NULL
+    colnames(rangePack) = c('oneminusar', 'range', 'rangeInCells',chooseLike, m2Like)
+    
+    thesummary$profL$range = as.data.frame(rangePack)
+  }
+  else{
+    # $propNugget
+    propNug = thel['propNugget',,1]
+    propLike =  thel[chooseLike,,1]
+    propm2Like =  thel[m2Like,,1]
+    propPack = cbind(propNug, propLike, propm2Like)
+    rownames(propPack) = NULL
+    colnames(propPack) = c('propNugget', chooseLike, m2Like)
+    
+    thesummary$profL$propNugget = as.data.frame(propPack)
+    
+    
+    #$range
+    omar = thel['oneminusar',1,]
+    rangeValue = csiz*sqrt(2*shape*(1-omar)/omar)
+    rangeInCellsValue = rangeValue/csiz
+    rangeLike = thel[chooseLike,1,]
+    rangem2Like = thel[m2Like,1,]
+    rangePack = cbind(omar, rangeValue, rangeInCellsValue, rangeLike, rangem2Like)
+    rownames(rangePack) = NULL
+    colnames(rangePack) = c('oneminusar', 'range', 'rangeInCells',chooseLike, m2Like)
+    
+    thesummary$profL$range = as.data.frame(rangePack)
   }
   
   #$twoDim
@@ -89,20 +88,43 @@ function(formula,data,
   thesummary$profL$twoDim$array = thel
   
   
-
-
-  thesummary$data = data
+  thesummary$data = dataOrig
   thesummary$model$reml = reml
   thesummary$model$trend = formula
   if (reml){
-  thesummary$summary = summaryGmrfFit(thel)$reml
+    thesummary$summary = summaryGmrfFit(thel)$reml
   }else{
     thesummary$summary = summaryGmrfFit(thel)$ml  
   }
-
+  
   thesummary$param = thesummary$summary[,'mle']
+  
+  mleparam = thesummary$param
+  
+  
+  if(mleparam['propNugget']>0) {
+    thesummary$predict = conditionalGmrf(
+      param=mleparam,
+      Yvec=Yvec,Xmat=reXmat,
+      template=dataOrig, NN=NN,
+      mc.cores=mc.cores,...)
+  } else {
+    thesummary$predict = raster::brick(
+      raster(dataOrig), nl=2)
+    names(thesummary$predict) = c('fixed','random')
+    values(thesummary$predict)=NA
+    values(thesummary$predict[[1]]) =
+      reXmat %*% mleparam[
+        paste(colnames(reXmat),".betaHat",sep='')]
+    values(thesummary$predict[['random']]) =
+      Yvec -values(thesummary$predict[['fixed']])
+    
+  }
+  
+  
   return(thesummary)
 }
+
 
 )
 
