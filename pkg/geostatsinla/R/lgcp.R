@@ -6,9 +6,20 @@ shape=1, buffer = 0, mesh=FALSE,...) {
 	# create raster for prediction
 	if(!length(grep("^Raster",class(cells)))) { 
 		# cells must be an integer
-		cells = squareRaster(data, cells)
+		if(require('geostatsp', quietly=TRUE)) {
+			cells = geostatsp::squareRaster(data, cells)
+		} else {
+			warning("install geostatsp if you wish to supply cells as an integer")
+			return(NULL)
+		}
 	} else {
-		cells = squareRaster(cells)
+		if( abs(1-xres(cells)/yres(cells))>0.001)
+			if(require('geostatsp', quietly=TRUE)) {
+				cells = geostatsp::squareRaster(cells)
+			} else {
+				warning("cells are not square, install geostatsp")
+				return(NULL)
+			}
 	}
 	smallBbox = bbox(cells)
 	buffer =  ceiling(buffer/xres(cells))

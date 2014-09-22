@@ -1,224 +1,252 @@
-
-
-glgm = function(data,  cells, covariates=NULL, formula=NULL, 
-		priorCI=NULL, shape=1, buffer=0,
-		mesh=FALSE,...) {
-
-	# list of additional arguments
-	thedots = list(...)
-	
-	# if data is a raster
-	if(length(grep("^Raster", class(data)))) {
-
-		smallCells = raster(data)
-		
-		buffer =  ceiling(buffer/xres(data))
-		data = extend(data, c(buffer, buffer))
-		
-		cells = squareRaster(data)
-		
-		if(!compareRaster(data, cells, res=TRUE,
-				stopiffalse=FALSE,showwarning=TRUE)) {
-			warning("if data is a raster, it must have square cells")
+setGeneric('glgm', 
+		function(
+				formula, data, cells, 
+				covariates, 
+				priorCI=NULL, shape=1, buffer=0,
+				mesh=FALSE,...) {
+			standardGeneric("glgm")
 		}
-	} else {	
- 	# create raster for prediction
-		if(!length(grep("^Raster",class(cells)))) { 
-			# cells must be an integer
-			cells = squareRaster(data, cells)
-	 	} else {
-			cells = squareRaster(cells)
-	 	}
-	smallCells = cells 
-	buffer =  ceiling(buffer/xres(cells))
-	cells = raster::extend(cells, c(buffer, buffer))
-	}
-	# cells is the raster the model is defined on, including buffer
-	thebbox = bbox(cells)
-	# smallCells is the region without buffer, where data exists
-	smallBbox = bbox(smallCells)
-	
-	
- 	if(cells@nrows * cells@ncols > 10^6) warning("there are lots of cells in the prediction raster,\n this might take a very long time")
-	
+)
 
-	
-	# the formula
-	# get rid of special character is names of data
-	if(!is.null(names(data)))
-		names(data) = gsub("[[:punct:]]|[[:space:]]","_", names(data))
-	
-	if(is.null(formula))
-		formula = names(data)[1]
-	if(is.integer(formula))
-		formula = names(data)[formula]
-	if(class(formula)!= "formula") {
-		if(!is.null(covariates)) {
-			if(!length(names(covariates)))
-				names(covariates) = paste("c", 1:length(covariates),sep="")			
-			names(covariates) = gsub("[[:punct:]]|[[:space:]]","_", names(covariates))
-			
-			formula = as.formula(
-					paste(formula, "~ ",
-							paste(names(covariates),collapse="+")
+ # sort out formula
+# null formula
+setMethod("glgm", 
+		signature("NULL"), 
+		function(formula=NULL, data,  cells, 
+				covariates=NULL, 
+				priorCI=NULL, shape=1, buffer=0,
+				mesh=FALSE,...) {
+		formula =  1 
+		callGeneric(
+				formula=formula, data=data,
+				cells = cells,
+				covariates=covariates, 
+				priorCI=priorCI,
+				shape=shape,buffer=buffer,
+				mesh=mesh, ...
+		)	
+	}
+)
+
+
+setMethod("glgm", 
+		signature("numeric"),  
+		function(formula, data,  cells, 
+				covariates=NULL, 
+				priorCI=NULL, shape=1, buffer=0,
+				mesh=FALSE,...) {
+formula = names(data)[formula]
+callGeneric(
+		formula=formula, data=data,
+		cells = cells,
+		covariates=covariates, 
+		priorCI=priorCI,
+		shape=shape,buffer=buffer,
+		mesh=mesh, ...
+)	
+}
+)
+
+# change character to formula
+setMethod("glgm", 
+		signature(formula="character"),  
+		function(formula, data,  
+				cells, 
+				covariates=NULL, 
+				priorCI=NULL, 
+				shape=1, buffer=0,
+				mesh=FALSE,...) {
+			if(length(names(covariates)))
+				names(covariates) = gsub("[[:punct:]]|[[:space:]]","_", names(covariates))
+			if(length(covariates) & !length(names(covariates))) 
+					names(covariates) = paste("c", 1:length(covariates),sep="")			
+
+			formula = unique(c(formula, names(covariates)))
+				
+			if(length(formula)==1)
+				formula = c(formula, 1)
+			formula = paste(formula[1] , "~",
+					paste(formula[-1], collapse=" + ")
 					)
+			formula = as.formula(formula)
+					
+			callGeneric(
+					formula=formula, data=data,
+					cells = cells,
+					covariates=covariates, 
+					priorCI=priorCI,
+					shape=shape,buffer=buffer,
+					mesh=mesh, ...
+			)	
+		}
+)
+		
+
+# numeric cells, create raster from data bounding box
+
+setMethod("glgm", 
+		signature("formula", "ANY", "numeric"),
+		function(formula, data,  
+				cells, 
+				covariates=NULL, 
+				priorCI, shape=1, buffer=0,
+				mesh=FALSE,...) {
+			
+			cells = squareRaster(data, cells)
+			
+			callGeneric(
+					formula=formula, data=data,
+					cells = cells,
+					covariates=covariates, 
+					priorCI=priorCI,
+					shape=shape,buffer=buffer,
+					mesh=mesh, ...
 			)
-		} else {
-			formula = as.formula(paste(formula, "~1"))	
+			
 		}
-	}
+)
 
 
-	allterms = formulaRhs(formula,char=TRUE)
-	allterms = unlist(strsplit(allterms, "\\+"))
-	allterms = gsub("[[:space:]]", "", allterms)
-	allterms = allterms[allterms != "1"]
-	
-	# get rid of offset
-	theOffset = grep("^offset\\(", allterms)
-	if(length(theOffset)) allterms = allterms[-theOffset]
-	# get rid of other random effects
-	theOtherRE = grep("^f\\(", allterms)
-	if(length(theOtherRE)) allterms = allterms[-theOtherRE]
-	alltermsWithF = gsub("\\)$", "", allterms)
-	allterms = gsub("^factor\\(", "", alltermsWithF)
-	
-	
-	# convert covariates to raster stack with same resulution of prediction raster.
-	if(!is.null(covariates)){
-		# find out which variables are factors
-		theFactors = grep("^factor", alltermsWithF, value=T)
-		theFactors = gsub("^factor\\(", "", theFactors)
-		
-		# check to see if any rasters are stored as factors
-		notFactors = allterms[!allterms %in% theFactors]
-		for(D in notFactors) {
-			if(any(slotNames(covariates[[D]])=="data")) {
-				if(any(slotNames(covariates[[D]]@data)=="isfactor")) {
-					if(covariates[[D]]@data@isfactor)					
-						theFactors = c(theFactors, D)
+
+# extrat covariates for data, convert covariates to a stack
+setMethod("glgm", 
+		signature("formula", "Raster", "Raster"),
+		function(formula, data,  cells=data, 
+				covariates=NULL, 
+				priorCI=NULL, shape=1, buffer=0,
+				mesh=FALSE,...) {
+
+			cellsBoth = cellsBuffer(cells, buffer)			
+			cells = cellsBoth$small
+			
+			method = resampleMethods(formula, covariates)
+			
+			if(!is.null(covariates)) {
+				covariates = stackRasterList(covariates, cells, method=method)
+				notInData = which(! (names(covariatesData) %in% names(data)))
+				if(length(notInData)) {
+					covariatesData = covaraites[[notInData]]
+					if(!compareRaster(data, cells, res=TRUE)) {
+						covariatesData = stackRasterList(covariatesData, data, 
+								method=method[names(covariatesData)])
+					}
+					data = stack(data, covariatesData)
 				}
+
 			}
-		}
-		
-		method = rep("bilinear", length(covariates))
-		names(method)=names(covariates)
-		
-		if(!all(theFactors %in% c(names(covariates), names(data)))) {
-			warning("some covariates in the model aren't in the data")
-		}
-		method[names(method) %in% theFactors] = "ngb" 
-		
-		covariatesOrig = covariates
-		
-		if(!compareRaster(covariates, cells, res=TRUE, stopiffalse=FALSE)) {
-		
-			if(requireNamespace('geostatsp', quietly=TRUE)) {
-				covariates = geostatsp::stackRasterList(covariates, cells, method=method)
-			} else {
-				warning("geostatsp package must be available if covariates need reprojecting")
-				covariates = NULL
-			}
-		}
 			
-		# see if any factor variables aren't coded as factors in `covariates' raster
-		if(length(levels(covariates))) {
-			haveLevels = as.logical(unlist(lapply(levels(covariates), length)))
-			haveLevels = names(covariates)[haveLevels]
+			covariates = stack(cells, covariates)
+			covariates = as(covariates, "data.frame")
+			
+			if(any(res(data)>1.5*res(cells)))
+				warning("data is coarser than cells")
+
+			data = stack(data, resample(cells, data, method='ngb'))	
+			data = as(data, "data.frame")
+
+			callGeneric(
+					formula=formula, data=data,
+					cells = cells,
+					covariates=covariates, 
+					priorCI=priorCI,
+					shape=shape,buffer=buffer,
+					mesh=mesh, ...
+			)
+			
+			
+		}
+)
+
+
+
+setMethod("glgm", 
+		signature("formula", "Spatial", "Raster"),
+		function(formula, data,  cells=data, 
+				covariates=NULL, 
+				priorCI=NULL, shape=1, buffer=0,
+				mesh=FALSE,...) {
+
+			cellsBoth = cellsBuffer(cells, buffer)			
+			cells = cellsBoth$small
+
+			if(!is.null(covariates)) {
+				# extract covariates
+					notInData = names(covariates)[
+							!(names(covariates) %in% names(data))
+					]
+					for(D in notInData) {
+						if(!.compareCRS(covariates[[D]], data, unknown=TRUE) ) {
+							if(require('rgdal', quietly=TRUE ) ) { 
+							data[[D]] = raster::extract(covariates[[D]], 
+									spTransform(data, CRSobj=CRS(projection(covariates[[D]]))))
+						} else warning("need rgdal if covariates and data are different projections")
+					} else {
+							data[[D]] = raster::extract(covariates[[D]], 
+									data) 
+					}
+			} # end covariate not null
+
+
+			rmethod = resampleMethods(formula, covariates)
+			covariates = stackRasterList(covariates, cells, method=rmethod)
+			covariates = stack(cells, covariates)
+			covariates = as(covariates, "SpatialPointsDataFrame")
+			covariates = covariates@data
 		} else {
-			haveLevels = NULL
+			covariates = data.frame()
 		}
-		needLevels = theFactors[! theFactors%in%haveLevels]
-		for(D in needLevels) {
-			stuff = covariates[[D]]
-			theunique = unique(stuff)
-			levels(stuff) = list(data.frame(ID=theunique, CLASSNAMES=as.character(theunique)))
-			covariates = stack(covariates[[-which(names(covariates)==D)]], stuff)
+
+		data$space = extract(cells, data) 
+			data = data@data
+
+			callGeneric(
+					formula=formula, data=data,
+					cells = cells,
+					covariates=covariates, 
+					priorCI=priorCI,
+					shape=shape,buffer=buffer,
+					mesh=mesh, ...
+			)
+			
+			
 		}
-	
-	} else { #all covariates should be in data
-		
-		theFactors=NULL
-	}
+)
 
-	
-	
-	# cell ID's for INLA
-	cellsInla = cells
-	values(cellsInla ) =  
-			c(t(matrix(seq(1,ncell(cellsInla)), 
-									nrow=nrow(cellsInla), ncol=ncol(cellsInla))))
-	names(cellsInla) = "inlaCells"
 
-	# create data frame for inla
-	# if data is a raster
-	if(length(grep("^Raster", class(data)))) {
-		
-	# put data on same raster as cellsInla
-	cellsanddata = stack(cellsInla, data) 
-	data = stack(cellsanddata, covariates)
-	
-	thenames = names(data)
-	data=as.data.frame(data)
-	names(data) = thenames
-		data$space = data$inlaCells
-		
-		# get rid of any rows with -Inf or NA, 
-		# usually offset of zero on the natural scale
-		isMinusInf = apply(data, 1, function(qq) any(qq==-Inf | is.na(qq) ))
-		data = data[!isMinusInf,]
-		
-	}  else { # data is a SpatialPointsDataFrame
-		
-		notInData = allterms[! allterms %in% names(data)]
-		
-		if(length(notInData)) {
-		if(! all(notInData %in% names(covariates)))
-			warning("some terms in the model are missing from both the data and the covariates")
-		}	
-		for(D in notInData) {
-			if(!.compareCRS(covariatesOrig[[D]], data,unknown=TRUE) ) {
-				
-				require('rgdal', quietly=TRUE ) 
-				
-				data[[D]] = raster::extract(covariatesOrig[[D]], 
-						spTransform(data, CRSobj=CRS(projection(covariatesOrig[[D]])))) 
-			} else {
-				data[[D]] = raster::extract(covariatesOrig[[D]], 
-						data) 
-			}
-			# check for factors
+#################
+#### the real work
+##################
 
-		
-		theNA = which(is.na(data[[D]]))
-		
-		if(any(D == theFactors)){
-				data[[D]] = factor(data[[D]])
-				if(length(theNA)) {
-					warning("NA's in covariate ", D, " element ",
-							paste(theNA, collapse=","), "\n replacing with baseline")
-					data[[D]][theNA]=levels(data[[D]])[1]
-				}
-				
-			} else {
+
+setMethod("glgm", 
+		signature("formula", "data.frame", "Raster", "data.frame"), 
+		function(formula, data,  cells, 
+				covariates=data.frame(), 
+				priorCI=NULL, shape=1, 
+				mesh=FALSE,...) {
+
 			
-				if(length(theNA)) {
-					warning("NA's in covariate ", D, " elements ",
-						paste(theNA, collapse=","), "\n replacing with zero")
-					data[[D]][theNA]=0
-			}
-		}
 			
-				
-		}	
+			if(!any(names(cells)=='space'))
+				warning("cells must have a layer called space with inla cell ID's")
+
+
+			if(!all(all.vars(formula)%in% names(data)))
+				warning("some covariates seem to be missing: formula ", paste(all.vars(formula), collapse=" "), ", data: ", paste(names(data), collapse=" "))
 			
- 	
-	 
-		data$space = extract(cellsInla, data ) 
-		data = data@data
-	}
-	# data is now a data frame.
- 
+			cells = trim(cells[['space']])
+			firstCell = values(cells)[1]
+			cellDim = dim(cells)[1:2]
+			# first cell = 2 * buffer^2 + ncolSmall * buffer + buffer
+			# buffer = -(nrowSmall+1) + sqrt (  (nrowSmall+1)^2 + 8 firstCell / 4
+			buffer = (-(cellDim[1]+1) + sqrt(  (cellDim[1]+1)^2 + 8* (firstCell-1) ))/4
+
+			
+			
+	# data, cells, and covariates must have varilable called 'space'		
+	# values of cells must be index numbers, and cells shouldnt include the buffer		
+	thedots = list(...)
+			
 	# priors for spatial standard deviation and nugget std dev.
 	sdNames = unique(c("sd",grep("^sd", names(priorCI), value=TRUE)))
 	# if model is Gaussian, look for prior for sdNugget
@@ -295,8 +323,8 @@ if(FALSE) {
 		ratePrior = c(shape=0.01, rate=0.01)
 	}
 	spaceFormula = paste(".~.+ f(space, model='matern2d', ",
-				"nrow=", nrow(cells), 
-				", ncol=", ncol(cells),
+				"nrow=", nrow(cells)+2*buffer, 
+				", ncol=", ncol(cells)+2*buffer,
 				", nu=", shape, 
 				", hyper = list(",
 				 "range=list( param=c(",
@@ -309,7 +337,32 @@ if(FALSE) {
 			)
 	
 	formula = update.formula(formula,	as.formula(spaceFormula))
+
+
 	
+	# sort out factors
+	thevars = rownames(attributes(terms(formula))$factors)
+	thevars = grep("^factor\\(", thevars, value=TRUE)
+	varsInData = apply(data, 2, is.factor)
+	varsInData = names(data)[varsInData]
+	thevars = c(varsInData, thevars)
+	
+	if(length(thevars)){
+		thevars = gsub("^factor\\(|\\)", "", thevars)
+		# loop through factors
+		for(D in thevars){
+			# biggest category is baseline
+			thetable = table(data[,D])
+			thebase = names(sort(thetable,decreasing=TRUE))[1]
+			newLevels = unique(c(thebase, levels(factor(data[,D]))))
+			data[,D] = factor(data[,D], levels=newLevels)
+			covariates[,D] = factor(covariates[,D],
+					levels=levels(data[,D]))
+			
+		}
+	}
+	theFactors = thevars
+
 	
 	# create linear combinations object for prediction.
 	# create formula, strip out left variable and f(...) terms
@@ -328,106 +381,88 @@ formulaForLincombs =
 	# strip out trailing +
 formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 
-	
-
-	if(!is.null(covariates)) {
-		covForLincomb = stack(cellsInla, covariates)
-	} else{
-		covForLincomb = cellsInla
-	}
-
-	if(!is.null(smallBbox)) {
-		covForLincomb =
-				raster::crop(covForLincomb, extent(smallBbox))
-	}
-	lincombCells = covForLincomb[['inlaCells']]
-	names(lincombCells) = "lincombCells"
-	values(lincombCells) = seq(1, ncell(lincombCells))
-	covForLincomb = stack(covForLincomb, lincombCells)
-
-	thelincombs = matrix(values(covForLincomb), 
-			nrow=ncell(covForLincomb), ncol=nlayers(covForLincomb),
-			dimnames = list(values(covForLincomb[['lincombCells']]),
-					names(covForLincomb) ) )
-	
-	thelincombs = na.omit(thelincombs)
-	thelincombs = as.data.frame(thelincombs)
-	
-	
 	# if we have covariates
 	if(nchar(formulaForLincombs)) {
+
 		formulaForLincombs=as.formula(paste("~", formulaForLincombs))
 	
 	
 		# variables in the model but not in prediction rasters
 		thevars = rownames(attributes(terms(formulaForLincombs))$factors)
-		varsInPredict = thevars[thevars %in% names(thelincombs)]
-		cantPredict = thevars[! thevars %in% names(thelincombs)]
+		thevars = gsub("^factor\\(|\\)", "", thevars)
+		varsInPredict = thevars[thevars %in% names(covariates)]
+		cantPredict = thevars[! thevars %in% names(covariates)]
 		theFactors2 = grep("factor\\([[:print:]]*\\)", cantPredict)
 		if(length(theFactors2)) {
 			temp = cantPredict
 			cantPredict = cantPredict[-theFactors2]
 			theFactorsInFormula = temp[theFactors2]
 		}
-		thelincombs[,cantPredict]= 0
+		if(length(cantPredict))
+			covariates[,cantPredict]= 0
 
+		if(FALSE){
 		# check for factors	
  
+		facData = apply(data, 2, is.factor)
+		facData = names(facData[which(facData)])
+		facCovariates = apply(covariates, 2, is.factor)
+		facCovariates = names(facCovariates[which(facCovariates)])
+		theFactors = unique(c(facData, facCovariates))
+		theFactors = match(theFactors, names(covariates))
+		
 		# convert raster data into factors using same levels as in points data
 		for(D in theFactors) {
 			# convert columns in lincombs to factors
 			# get rid of levels not present in the observed data
 
-			thelincombs[,D] = factor(thelincombs[,D],
+		covariates[,D] = factor(covariates[,D],
 					levels=levels(data[,D]))
 		}
-		thelincombs = na.omit(thelincombs)
-	
-		lincombMat = model.matrix(formulaForLincombs, thelincombs, na.action=NULL)
+	}
+		covariates = covariates[,c("space", varsInPredict),drop=FALSE]
+		lincombMat = model.matrix(update.formula(
+						formulaForLincombs, ~.+space),
+						covariates, na.action=NULL)
 	
 	} else { # no covariates
-		lincombMat = matrix(rep(1,ncell(covForLincomb)), ncol=1)
-			colnames(lincombMat) = "(Intercept)"
-# for some reason can't give name (Intercept) in the data.frame call.
+		lincombMat = cbind("(Intercept)"=rep(1, ncell(cells)), space=values(cells))
+	# for some reason can't give name (Intercept) in the data.frame call.
 	}
 
-	lincombMatCells =  thelincombs[,c("inlaCells", "lincombCells")]
-
+	
+	
 	thelincombs=list()	
 	lincombMat[lincombMat==0] = NA
 
-		
+	data <<- data
+	lincombMat <<- lincombMat
+	
 	for(D in 1:nrow(lincombMat)) {
 		thisrow = lincombMat[D, ]
 		thisrow = as.list(thisrow[!is.na(thisrow)  ])
 		
 		thelincombs[[D]] = 
 			do.call(inla.make.lincomb, thisrow)$lc
-		if(length(thelincombs[[D]])) {
-			thelincombs[[D]][[length(thelincombs[[D]])+1]] =
-				list(space=list(idx=lincombMatCells[D,"inlaCells"], 
-								weight=1))
-		}
-	}
-
+		spaceCol = which(unlist(lapply(thelincombs[[D]],names))=='space')
 	
-	names(thelincombs) = paste("c", lincombMatCells[,"lincombCells"],sep="")
+		thelincombs[[D]][[spaceCol]]$space = list(
+				weight=1, 
+				idx=thelincombs[[D]][[spaceCol]]$space$weight)
+}
 
-#	forInla = list(formula=formula, data=data, lincomb=thelincombs)
-#	forInla = c(forInla, list(...))
 
-#	if(any(names(forInla)=="Ntrials")) 	{
-#		forInla$Ntrials = forInla$Ntrials[]
-#	}
-	# call inla
+names(thelincombs) = paste("c", lincombMat[,"space"],sep="")
+
+
+	forInla = thedots
+	forInla$lincomb = c(thelincombs, forInla$lincomb)
+	forInla$data = data
+	forInla$formula = formula
 	
-	if(!is.null(thedots$lincomb))
-		thelincombs = c(thelincombs, thedots$lincomb)
-
-	forInla = list(formula=formula, data=data, 
-			lincomb=thelincombs)
-	forInla = c(forInla, thedots)
 	
+
+		
 	# if model is gaussian, add prior for nugget
 	if(!is.null(precPrior$sdNugget)) {
 		forInla$control.family$hyper$prec =
@@ -436,9 +471,9 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 				) 
 	}
 
- 
-	
+#	return(forInla)
 	inlaResult = do.call(inla, forInla) 
+
 	
 	if(all(names(inlaResult)=="logfile"))
 		return(c(forInla, inlares=inlaResult))
@@ -500,10 +535,12 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 
 	}
 
-
 	
 	# random into raster
 # E exp(random)
+
+if("summary.random" %in% names(inlaResult)) {
+
 temp=unlist(
 		lapply(inlaResult$marginals.random$space, function(qq) {
 					sum(
@@ -513,39 +550,23 @@ temp=unlist(
 )
 inlaResult$summary.random[['space']][,"exp"] = temp
 
-	if("summary.random" %in% names(inlaResult)) {
-		forRast = 	as.matrix(inlaResult$summary.random[["space"]])#[,-1])
-		forRastArray = array(forRast, 
-				c(nrow(cells), ncol(cells),
-						dim(forRast)[2]))
-		dimnames(forRastArray)[[3]] = 
-				colnames(forRast)
-		forRastArray = aperm(forRastArray, c(2,1,3))
 
+
+		forRast = 	as.matrix(inlaResult$summary.random[["space"]][values(cells),])
 		resRasterRandom = 
 				brick(extent(cells), nrows=nrow(cells),
 						ncols=ncol(cells), crs=projection(cells),
-						nl=dim(forRastArray)[3])
+						nl=dim(forRast)[2])
 		names(resRasterRandom) = 
 				paste("random.", colnames(forRast),sep="")
 		
-		values(resRasterRandom) = forRastArray
+		values(resRasterRandom) = as.vector(forRast)
 		
-		if(buffer) {
-			resRasterRandom =  
-				crop(resRasterRandom, extent(smallBbox))
-		# remove boundary cells from inla marginals 
-		cellsSmall = crop(cellsInla, extent(smallBbox))
-		cellIdSmall = values(cellsSmall)
-		inlaResult$marginals.random$space = 
-				inlaResult$marginals.random$space[cellIdSmall]	
-		}
 	} else {
 		return(list(inla=inlaResult, parameters=params))
 	}
-	
 
-	
+	inlaResult$marginals.random$space = inlaResult$marginals.random$space[values(cells)]
 	
 	# E exp(lincombs)
 	temp=unlist(
@@ -556,10 +577,6 @@ inlaResult$summary.random[['space']][,"exp"] = temp
 					})
 	)
 	inlaResult$summary.lincomb.derived[,"exp"] = temp
-
-	
-
-	
 	
 	# E inv logit(lincombs)
 	if(length(grep("binomial",inlaResult$.args$family))) {
@@ -576,42 +593,51 @@ inlaResult$summary.random[['space']][,"exp"] = temp
  
 
 	# lincombs into raster
+theSpaceName = grep("^c[[:digit:]]+$", names(inlaResult$marginals.lincomb.derived), value=TRUE)
+theSpace = as.integer(gsub("^c", "", theSpaceName))
 
+	linc = inlaResult$summary.lincomb.derived[theSpaceName,]
+	linc$space = theSpace
 
+	missingCells = values(cells)[! values(cells) %in% theSpace]
 
-	linc = inlaResult$summary.lincomb.derived
-	linc$cell = as.integer(gsub("^c", "", rownames(linc)))
+	if(length(missingCells)) {
+		toadd = matrix(NA, length(missingCells), dim(linc)[2], 
+					dimnames=list(
+							paste("c", missingCells, sep=""), 
+							colnames(linc)
+			)
+			)
+		toadd[,"space"] = missingCells
 	
-	missingCells = which(! seq(1, ncell(lincombCells)) %in% linc$cell)
-	toadd = matrix(NA, length(missingCells), dim(linc)[2], 
-					dimnames=list(NULL, colnames(linc)))
-	toadd[,"cell"] = missingCells
-	linc = rbind(linc, toadd)
-	linc = linc[order(linc[,"cell"]),]
-			
-#	linc = linc[,!colnames(linc)%in% c("ID","cell")]
+		linc = rbind(linc, toadd)
+
+		missingNames = rownames(toadd)
+		missingMarginals = vector("list", length(missingNames))
+		names(missingMarginals) = missingNames
+		
+		inlaResult$marginals.lincomb.derived = c(	
+				inlaResult$marginals.lincomb.derived,
+				missingMarginals)
+		
+	}
+	linc = as.matrix(linc[paste("c", values(cells), sep=""),])
+
+	resRasterFitted = 
+			brick(extent(cells), nrows=nrow(cells),
+					ncols=ncol(cells), crs=projection(cells),
+					nl=ncol(linc))
+	names(resRasterFitted) = 
+			paste("predict.", colnames(linc),sep="")
 	
-
-resRasterFitted = 
-			brick(lincombCells,
-					nl=dim(linc)[2])
-
-	values(resRasterFitted) = as.matrix(linc)
-	names(resRasterFitted) = paste("predict.", colnames(linc),sep="")
-
+	values(resRasterFitted) = as.vector(linc)
+	
+	
 	# Add in empty lists for the marginals of missing cells
-	missingNames = paste("c", missingCells, sep="")
-	missingMarginals = vector("list", length(missingNames))
-	names(missingMarginals) = missingNames
-
 	
-	inlaResult$marginals.lincomb.derived = c(	
-			inlaResult$marginals.lincomb.derived,
-			missingMarginals)
-	
-	inlaResult$marginals.lincomb.derived = 
+	inlaResult$marginals.predict = 
 			inlaResult$marginals.lincomb.derived[
-					paste("c", seq(1,ncell(resRasterFitted)),sep="")
+					paste("c", values(cells), sep="")
 					]
 			
 	
@@ -729,7 +755,7 @@ for(Dvar in names(covariates)) {
 
 
 
-resRaster=stack(resRasterRandom, resRasterFitted)
+resRaster=stack(resRasterRandom, resRasterFitted, cells)
 
 #	if(!is.null(smallBbox))
 #		resRaster = crop(resRaster, extent(smallBbox))
@@ -742,3 +768,4 @@ resRaster=stack(resRasterRandom, resRasterFitted)
 	result
 	
 }
+)

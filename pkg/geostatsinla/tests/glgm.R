@@ -6,7 +6,7 @@ require('geostatsinla')
 if(require('geostatsp', quietly=TRUE) & require("INLA", quietly=TRUE)) {
 data('swissRain')
 swissRain$lograin = log(swissRain$rain)
-swissFit =  glgm(swissRain, cells=Ncell, formula="lograin",
+swissFit =  glgm(formula="lograin", data=swissRain, cells=Ncell, 
 		covariates=swissAltitude, family="gaussian", buffer=20000,
 		priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
 		control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
@@ -14,13 +14,17 @@ swissFit =  glgm(swissRain, cells=Ncell, formula="lograin",
 )
 
 swissFit$parameters$summary
- swissExc = excProb(swissFit$inla$marginals.random$space, 0, swissFit$raster)
+swissExc = excProb(swissFit$inla$marginals.random$space, 0, template=swissFit$raster)
 plot(swissExc, breaks = c(0, 0.2, 0.8, 0.95, 1.00001), 
 		col=c('green','yellow','orange','red'))	
 plot(swissBorder, add=TRUE)		
- 
+swissExcP = excProb(swissFit$inla$marginals.predict, 3, template=swissFit$raster)
+plot(swissExcP, breaks = c(0, 0.2, 0.8, 0.95, 1.00001), 
+		col=c('green','yellow','orange','red'))	
+plot(swissBorder, add=TRUE)		
+
 # intercept only
-swissFit =  glgm(swissRain, cells=Ncell, formula=lograin~1,
+swissFit =  glgm(lograin~1,swissRain, cells=Ncell, 
 		covariates=swissAltitude, family="gaussian", buffer=20000,
 		priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
 		control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
@@ -30,7 +34,7 @@ swissFit =  glgm(swissRain, cells=Ncell, formula=lograin~1,
 swissFit$parameters$summary
 
 
-	swissExc = excProb(swissFit$inla$marginals.random$space, 0, swissFit$raster)
+	swissExc = excProb(swissFit$inla$marginals.random$space, 0, template=swissFit$raster)
 	plot(swissExc, breaks = c(0, 0.2, 0.8, 0.95, 1.00001), 
 		col=c('green','yellow','orange','red'))	
 	plot(swissBorder, add=TRUE)		
@@ -38,18 +42,20 @@ swissFit$parameters$summary
 
 
 # now with formula
-swissFit =  glgm(swissRain, cells=Ncell, 
-		formula=lograin~ SRTM_1km,
+swissFit =  glgm(lograin~ CHE_alt,
+		swissRain, 
+		cells=Ncell, 
 		covariates=swissAltitude, family="gaussian", buffer=20000,
 		priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
 		control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
 		control.family=list(hyper=list(prec=list(prior="loggamma", 
 								param=c(.1, .1))))
 )
+swissFit$parameters$summary
 
 # formula, named list elements
-swissFit =  glgm(swissRain, cells=Ncell, 
-		formula=lograin~ elev,
+swissFit =  glgm(lograin~ elev,
+		swissRain, cells=Ncell, 
 		covariates=list(elev=swissAltitude), 
 		family="gaussian", buffer=20000,
 		priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
@@ -57,10 +63,11 @@ swissFit =  glgm(swissRain, cells=Ncell,
 		control.family=list(hyper=list(prec=list(prior="loggamma", 
 								param=c(.1, .1))))
 )
+swissFit$parameters$summary
 
 # categorical covariates
 swissFit =  glgm(swissRain, cells=Ncell, 
-formula=rain ~ elev + factor(land),
+formula=lograin ~ elev + factor(land),
 covariates=list(elev=swissAltitude,land=swissLandType), 
 family="gaussian", buffer=20000,
 priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
@@ -68,7 +75,8 @@ control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
 control.family=list(hyper=list(prec=list(prior="loggamma", 
 						param=c(.1, .1))))
 )
-
+swissFit$parameters$summary
+plot(swissFit$raster[['predict.mean']])
 
 # put some missing values in covaritates
 temp = values(swissAltitude)
