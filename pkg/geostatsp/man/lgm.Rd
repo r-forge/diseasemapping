@@ -7,6 +7,7 @@
 \alias{lgm,character,ANY,ANY,ANY-method}
 \alias{lgm,formula,ANY,numeric,ANY-method}
 \alias{lgm,formula,Raster,Raster,ANY-method}
+\alias{lgm,formula,Raster,missing,missing-method}
 \alias{lgm,formula,Spatial,Raster,Raster-method}
 \alias{lgm,formula,Spatial,Raster,list-method}
 \alias{lgm,formula,Spatial,Raster,data.frame-method}
@@ -41,6 +42,11 @@ Calculate MLE's of model parameters and perform spatial prediction. }
 \S4method{lgm}{formula,Raster,Raster,ANY}(formula, data,
 		grid,
 		covariates=list(), buffer=0,
+		...) 
+\S4method{lgm}{formula,Raster,missing,missing}(
+		formula, data,
+		grid,
+		covariates, 
 		...) 
 \S4method{lgm}{formula,Spatial,Raster,Raster}(formula, data,
 		grid,

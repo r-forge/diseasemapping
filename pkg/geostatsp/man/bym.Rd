@@ -2,7 +2,7 @@
 \docType{methods}
 \alias{bym}
 \alias{bym-methods}
-\alias{bym,formula,ANY,ANY,ANY,missing-method}
+\alias{bym,formula,ANY,ANY,missing-method}
 \alias{bym,formula,SpatialPolygonsDataFrame,NULL,character-method}
 \alias{bym,formula,SpatialPolygonsDataFrame,nb,character-method}
 \alias{bym,formula,data.frame,nb,character-method}

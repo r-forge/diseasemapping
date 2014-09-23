@@ -8,7 +8,7 @@ setMethod("lgm",
 				  reml = TRUE,
 				  mc.cores=1,		
 				  oneminusar=seq(0.01, 0.4,len=4), 
-                  range=NULL, rangeInCells=NULL,
+                  range=NULL,  
                   ...) {
 
 	Xmat = model.matrix(formula, data)		  
