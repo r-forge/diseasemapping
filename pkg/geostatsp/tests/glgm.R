@@ -144,9 +144,10 @@ swissFit =  glgm( formula="lograin",data=swissRain, grid=Ncell,
 data2 = SpatialPointsDataFrame(cbind(c(1,0), c(0,1)),
 		data=data.frame(y=c(NA,NA), offset=c(-100,-200)))
 
-res = glgm(data2, grid=20, formula=y~1, 
+res = glgm(data=data2, grid=20, formula=y~1, 
+covariates=NULL,
 		priorCI = list(sd=c(1,2), range=c(0.3, 2)),
-		family="poisson",buffer=2)
+		family="poisson",buffer=0.5)
 
 priorPrec = res$par$sd$params
 priorRange = res$par$range$params
@@ -164,7 +165,6 @@ lines(res$parameters$range$post,col='red')
 legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
 dev.off()
 
-}
  
 
 

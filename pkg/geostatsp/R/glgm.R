@@ -43,6 +43,10 @@ setMethod("glgm",
 		)
 
 
+		setMethod("glgm", 
+				signature("formula", "Spatial", "Raster", "NULL"),
+				gm.dataSpatial
+		)
 
 setMethod("glgm", 
 		signature("formula", "Spatial", "Raster", "list"),

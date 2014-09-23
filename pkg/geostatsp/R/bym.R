@@ -63,10 +63,9 @@ setMethod("bym",
 )
 
 
-setMethod("bym", 
-		signature("formula", "SpatialPolygonsDataFrame", "NULL","character"),
-		function(
-		formula, data, adjMat=NULL, region.id,
+
+bym.needAdjmat = function(
+			formula, data, adjMat=NULL, region.id,
 		...) {	
  	
 	if(requireNamespace("spdep", quiet=TRUE)) {
@@ -85,8 +84,15 @@ setMethod("bym",
 	)
 	
 	}	
-)
-
+	setMethod("bym", 
+			signature("formula", "SpatialPolygonsDataFrame", "missing","character"),
+			bym.needAdjmat		
+	)
+	
+	setMethod("bym", 
+			signature("formula", "SpatialPolygonsDataFrame", "NULL","character"),
+			bym.needAdjmat		
+	)
 setMethod("bym", 
 		signature("formula", "SpatialPolygonsDataFrame", "nb","character"),
 		function(

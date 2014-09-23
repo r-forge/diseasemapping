@@ -9,6 +9,7 @@
 \alias{glgm,formula,Raster,Raster,ANY-method}
 \alias{glgm,formula,Spatial,Raster,Raster-method}
 \alias{glgm,formula,Spatial,Raster,list-method}
+\alias{glgm,formula,Spatial,Raster,NULL-method}
 \alias{glgm,formula,Spatial,Raster,data.frame-method}
 \alias{glgm,formula,data.frame,Raster,data.frame-method}
 
@@ -40,6 +41,9 @@ using   \code{\link[INLA]{inla}} }
 				...)
 \S4method{glgm}{formula,Spatial,Raster,list}(formula, data,  grid, 
 				covariates=list(), buffer=0,
+				...)
+\S4method{glgm}{formula,Spatial,Raster,NULL}(formula, data,  grid, 
+				covariates=NULL, buffer=0,
 				...)
 \S4method{glgm}{formula,Spatial,Raster,Raster}(formula, data,  grid, 
 				covariates=list(), buffer=0,

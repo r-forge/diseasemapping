@@ -35,7 +35,8 @@ kBYM = bym(observed ~ offset(logExpected) + poverty,kentucky,
 # also try no covariate or prior
 
 kBYM = bym( observed ~ offset(logExpected),kentucky)
- 
+kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
+
 
 kBYM$par$summary
 
@@ -48,7 +49,6 @@ plot(kBYM$data, col=colFit$plot)
 legendBreaks('topleft', colFit)
 
  
-	kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 
 	colExc = colourScale(kBYM$data$exc1 ,
 		style='fixed',
@@ -68,8 +68,7 @@ kBYM = bym(data=kentucky@data, formula=observed ~ offset(logExpected) + poverty,
 		adjMat = adjMat, region.id="County",
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
 
-if(require('geostatsp', quietly=TRUE))
-	kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
+kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 
 
 # add subtract a few regions
@@ -77,10 +76,8 @@ if(require('geostatsp', quietly=TRUE))
 kBYM = bym(data=kentucky@data[-(1:4),],  formula=observed ~ offset(logExpected) + poverty,
 		adjMat = adjMat, region.id="County",
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
-
-
  
-	kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
+kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 
 
 # intercept only, no offset
@@ -88,6 +85,8 @@ kBYM = bym(data=kentucky@data[-(1:4),],  formula=observed ~ offset(logExpected) 
 
 kBYM = bym(data=kentucky,  formula=observed ~ 1,
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
+
+kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 
 
 if(require('mapmisc', quietly=TRUE)) {
@@ -101,14 +100,13 @@ if(require('mapmisc', quietly=TRUE)) {
 }
 
  
-	kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
-
 
 # give spdf but some regions have no data
 # but keep the 'county' column as is
 kentucky@data[1:2,-grep("County", names(kentucky))] = NA 
 
-kBYM = bym(observed ~ offset(logExpected) + poverty,kentucky, 
+kBYM = bym(observed ~ offset(logExpected) + poverty,
+		kentucky, 
 		region.id="County",
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
 
