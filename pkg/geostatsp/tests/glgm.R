@@ -2,8 +2,8 @@
 Ncell = 25
 
 # as in example
-require('geostatsinla')
-if(require('geostatsp', quietly=TRUE) & require("INLA", quietly=TRUE)) {
+require('geostatsp')
+ 
 data('swissRain')
 swissRain$lograin = log(swissRain$rain)
 swissFit =  glgm("lograin", swissRain, Ncell, 
@@ -130,7 +130,7 @@ plot(loaFit$raster[["predict.invlogit"]])
 dev.off()
 
 # prior for observation standard deviation
-swissFit =  glgm( formula="lograin",data=swissRain, cells=Ncell,
+swissFit =  glgm( formula="lograin",data=swissRain, grid=Ncell,
 		covariates=swissAltitude, family="gaussian", buffer=20000,
 		priorCI=list(sd=c(0.1, 2), range=c(50000,500000), 
 				sdNugget=c(0.1, 2)), 
@@ -144,7 +144,7 @@ swissFit =  glgm( formula="lograin",data=swissRain, cells=Ncell,
 data2 = SpatialPointsDataFrame(cbind(c(1,0), c(0,1)),
 		data=data.frame(y=c(NA,NA), offset=c(-100,-200)))
 
-res = glgm(data2, cells=20, formula=y~1, 
+res = glgm(data2, grid=20, formula=y~1, 
 		priorCI = list(sd=c(1,2), range=c(0.3, 2)),
 		family="poisson",buffer=2)
 

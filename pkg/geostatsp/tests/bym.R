@@ -26,15 +26,15 @@ if(FALSE) {
 kentucky = getSMR(kentucky, larynxRates, larynx,
 		regionCode="County")
 
-library('geostatsinla')
+library('geostatsp')
 # this is in the examples
 
-kBYM = bym(kentucky, observed ~ offset(logExpected) + poverty,
+kBYM = bym(observed ~ offset(logExpected) + poverty,kentucky, 
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
 
 # also try no covariate or prior
 
-kBYM = bym(kentucky, observed ~ offset(logExpected))
+kBYM = bym( observed ~ offset(logExpected),kentucky)
  
 
 kBYM$par$summary
@@ -47,7 +47,7 @@ colFit = colourScale(kBYM$data$fitted.exp,
 plot(kBYM$data, col=colFit$plot)
 legendBreaks('topleft', colFit)
 
-if(require('geostatsp', quietly=TRUE)){
+ 
 	kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 
 	colExc = colourScale(kBYM$data$exc1 ,
@@ -58,13 +58,13 @@ if(require('geostatsp', quietly=TRUE)){
 
 	plot(kBYM$data, col=colExc$plot)
 	legendBreaks('topleft', colExc)
-	}		
+ 		
 }
 # and try passing a data frame and adjacency matrix
 
 	
 adjMat = poly2nb(kentucky, row.names =as.character(kentucky$County) )
-kBYM = bym(kentucky@data, observed ~ offset(logExpected) + poverty,
+kBYM = bym(data=kentucky@data, formula=observed ~ offset(logExpected) + poverty,
 		adjMat = adjMat, region.id="County",
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
 
@@ -74,19 +74,19 @@ if(require('geostatsp', quietly=TRUE))
 
 # add subtract a few regions
 
-kBYM = bym(kentucky@data[-(1:4),], observed ~ offset(logExpected) + poverty,
+kBYM = bym(data=kentucky@data[-(1:4),],  formula=observed ~ offset(logExpected) + poverty,
 		adjMat = adjMat, region.id="County",
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
 
 
-if(require('geostatsp', quietly=TRUE))
+ 
 	kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 
 
 # intercept only, no offset
 
 
-kBYM = bym(kentucky, observed ~ 1,
+kBYM = bym(data=kentucky,  formula=observed ~ 1,
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
 
 
@@ -100,7 +100,7 @@ if(require('mapmisc', quietly=TRUE)) {
 	
 }
 
-if(require('geostatsp', quietly=TRUE))
+ 
 	kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 
 
@@ -108,11 +108,11 @@ if(require('geostatsp', quietly=TRUE))
 # but keep the 'county' column as is
 kentucky@data[1:2,-grep("County", names(kentucky))] = NA 
 
-kBYM = bym(kentucky, observed ~ offset(logExpected) + poverty,
+kBYM = bym(observed ~ offset(logExpected) + poverty,kentucky, 
 		region.id="County",
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
 
-if(require('geostatsp', quietly=TRUE))
+ 
 	kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 
 

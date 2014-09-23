@@ -169,7 +169,7 @@ swissResR =  lgm( formula=layer ~ alt,
 	nugget =  seq(0,0.0001,len=2)
 	)
 
-swissResR$summary[c('oneminusar','range','propNugget','(Intercept).betaHat', 'x.betaHat'),]
+swissResR$summary[c('oneminusar','range','propNugget','(Intercept).betaHat', 'alt.betaHat'),]
 }
 
 
