@@ -3,8 +3,11 @@ lgcp = function(formula=NULL, data,  grid, covariates=list(),
 		...) {
 
 
-	cells = squareRaster(grid, data)
-
+	if(is.numeric(grid)) {
+		cells = squareRaster(data,grid)
+	} else {
+		cells = squareRaster(grid)
+	}
 	
 # create data
 	

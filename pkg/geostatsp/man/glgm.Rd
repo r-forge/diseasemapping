@@ -43,7 +43,7 @@ using   \code{\link[INLA]{inla}} }
 				covariates=list(), buffer=0,
 				...)
 \S4method{glgm}{formula,Spatial,Raster,NULL}(formula, data,  grid, 
-				covariates=NULL, buffer=0,
+				covariates=list(), buffer=0,
 				...)
 \S4method{glgm}{formula,Spatial,Raster,Raster}(formula, data,  grid, 
 				covariates=list(), buffer=0,

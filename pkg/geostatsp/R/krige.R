@@ -78,7 +78,8 @@ krigeLgm = function(
 	if(class(data)=="SpatialPointsDataFrame"&class(formula)=="formula") {
 		if(all(names(covariates)%in% names(data))) {
 			modelMatrixForData = model.matrix(formula, data@data)
-
+			meanForData = rep(NA, length(data))
+			names(meanForData) = rownames(data@data)
 			
 		theParams = intersect(colnames(modelMatrixForData), names(param))
  
@@ -86,8 +87,7 @@ krigeLgm = function(
 						param[colnames(modelMatrixForData)],modelMatrixForData[,theParams]))
  
 		
-		meanForData = rep(NA, length(data))
-		meanForData[as.integer(rownames(modelMatrixForData))] = forMeanForData
+		meanForData[rownames(modelMatrixForData)] = forMeanForData
 		
 
 		
@@ -113,7 +113,6 @@ krigeLgm = function(
 		observations = observations[!is.na(observations)]
 		}
 	} # end data is spdf	
-		
 
 	
 	if(!length(observations) | is.null(meanRaster)) {
@@ -124,14 +123,16 @@ krigeLgm = function(
 	# the correct method.
 	# search for factors in the data supplied
  
+
+	
 	# look for factors in the model formula
 	if(class(trend)=="formula"){
  
 		trendFormula = trend		
-		covariatesForData = as.data.frame(data)
+		covariatesForData = data@data
 		
  
-		
+ 		
 		if(is.vector(data)) {
 			observations = data
 		} else {
@@ -195,10 +196,8 @@ krigeLgm = function(
 	theFactors = unique(c(factorsInFormula, factorsInData, factorsInTrend))
 	theFactors = theFactors[theFactors %in% names(covariates) ]
 
-
-	if(length(grep("^Raster", class(covariates)))) { 
-
-	# if there's only variable in the model assign it's name to covariates
+ 	if(length(grep("^Raster|^list", class(covariates)))) { 
+ 	# if there's only variable in the model assign it's name to covariates
 	covariateNames = all.vars(trendFormula)[-1]
 	if(length(covariateNames)==1){
 		# so far only one variable
@@ -309,7 +308,7 @@ krigeLgm = function(
 		
 	}
 	
-	if(length(grep("^Raster", class(covariates))) & length(theVars)) {
+	if(length(grep("^Raster|^list", class(covariates))) & length(theVars)) {
 		# method for resampling covariate rasters
  
 		method = resampleMethods(formula, covariates)
@@ -320,10 +319,12 @@ krigeLgm = function(
 		if(nlayers(covariates)==1 & length(theVars)==1) {
 			names(covariates) = theVars
 		}
+ 
 		
 		# construct the fixed effects component
 		covariatesDF = raster::as.data.frame(covariates, xy=TRUE)
 
+ 
 		# get rid of trailing _ created by as.data.frame
 		names(covariatesDF) = gsub("_levels$", "", names(covariatesDF))
 	} else {
@@ -334,8 +335,7 @@ krigeLgm = function(
 		covariatesDF=covariates
 		
 	} 
-	
-	
+ 	
 	# convert trend formula to LHS
 	trendFormula = formulaRhs(trendFormula)
 	meanRaster = raster(locations)
@@ -344,6 +344,7 @@ krigeLgm = function(
 	missingVars = all.vars(trendFormula)%in% names(covariatesDF)
 	missingVars = all.vars(trendFormula)[!missingVars]
 	
+ 	
 	# check if all variables are in covariates
 	if(length(missingVars)) {
 		cat("cant find covariates ",
@@ -352,8 +353,9 @@ krigeLgm = function(
 		
 		covariatesDF[,missingVars]=0	
 	}
+ 
 	modelMatrixForRaster = model.matrix(trendFormula, covariatesDF)
-	
+ 
 	meanFixedEffects = 
 			modelMatrixForRaster %*% param[colnames(modelMatrixForRaster)]
 	
@@ -376,7 +378,7 @@ krigeLgm = function(
 				"in param\n")
 	}
 	
-	
+ 
 	
 	
 # subtract mean from data
@@ -389,6 +391,8 @@ krigeLgm = function(
 				'it appears there are no observations without at least one covariate missing')
 	}
 		
+ 
+	
 	if(any(theNAdata)) {
 		noNAdata = !theNAdata
 		if(length(grep("^SpatialPoints", class(coordinates)))) {

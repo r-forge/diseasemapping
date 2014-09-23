@@ -98,7 +98,7 @@ gm.dataRaster = function(formula,data,grid, covariates=list(), buffer=0,...){
 	covFactors = intersect(Sfactor,names(covariates))
 	dataFactors = intersect(Sfactor,names(data))
 	
-	if(!length(covariates)) {
+	if(length(covariates)) {
 		dataFactors = intersect(Sfactor, names(data))
 		
 		rmethod = rep("bilinear", length(names(covariates)))
@@ -106,14 +106,15 @@ gm.dataRaster = function(formula,data,grid, covariates=list(), buffer=0,...){
 		rmethod[covFactors] = "ngb"
 		
 		covariatesStack = stackRasterList(covariates, cellsSmall, method=rmethod)
-		covariatesStack = stack(cellsSmall, covariatesStack)
-		covariatesSP = as(covariates, "SpatialPointsDataFrame")
+		
+ 		covariatesStack = stack(cellsSmall, covariatesStack)
+		covariatesSP = as(covariatesStack, "SpatialPointsDataFrame")
 		covariatesDF = covariatesSP@data
 		
 		notInData = setdiff(names(covariates), names(data))
 		covData = stackRasterList(covariates, data, method=rmethod[notInData])
-		data = stack(data, covData)				
-		
+		data = stack(data, covData)			
+ 		
 	} else {
 		covariatesDF = data.frame()
 	}

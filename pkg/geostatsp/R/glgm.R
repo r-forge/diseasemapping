@@ -314,6 +314,11 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 names(thelincombs) = paste("c", lincombMat[,"space"],sep="")
 
 
+	# get rid of observations with NA's in covariates
+	allVars = all.vars(formula)
+	theNA = apply(data[,allVars], 1, function(qq) any(is.na(qq)))
+	data = data[!theNA,]
+
 	forInla = thedots
 	forInla$lincomb = c(thelincombs, forInla$lincomb)
 	forInla$data = data
@@ -329,6 +334,10 @@ names(thelincombs) = paste("c", lincombMat[,"space"],sep="")
 						param=precPrior$sdNugget
 				) 
 	}
+	
+	
+	# get rid of some elements of forInla that aren't required
+	forInla = forInla[grep("^buffer$", names(forInla), invert=TRUE)]
 
 #	return(forInla)
 	inlaResult = do.call(inla, forInla) 
