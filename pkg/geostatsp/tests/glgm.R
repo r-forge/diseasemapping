@@ -119,8 +119,9 @@ elevHigh = reclassify(elevationLoa, c(-Inf, 0, 0))
 		 y ~ land + evi + elHigh + elLow, #+ f(villageID,model="iid"),
 		 loaloa,
 		  Ncell, 
+		  covariates=covList, 
 		family="binomial", Ntrials = loaloa$N,
-		covariates=covList, shape=2, buffer=25000,
+		shape=2, buffer=25000,
 		priorCI = list(sd=c(0.2, 4), range=c(20000,500000)))
 
 loaFit$par$summary

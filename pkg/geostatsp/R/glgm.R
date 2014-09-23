@@ -317,7 +317,10 @@ names(thelincombs) = paste("c", lincombMat[,"space"],sep="")
 	# get rid of observations with NA's in covariates
 	allVars = all.vars(formula)
 	theNA = apply(data[,allVars], 1, function(qq) any(is.na(qq)))
+ 
 	data = data[!theNA,]
+	if(any(names(thedots)=='Ntrials'))
+		thedots$Ntrials = thedots$Ntrials[!theNA]
 
 	forInla = thedots
 	forInla$lincomb = c(thelincombs, forInla$lincomb)
@@ -340,8 +343,9 @@ names(thelincombs) = paste("c", lincombMat[,"space"],sep="")
 	forInla = forInla[grep("^buffer$", names(forInla), invert=TRUE)]
 
 #	return(forInla)
+ 
 	inlaResult = do.call(inla, forInla) 
-
+ 
 	
 	if(all(names(inlaResult)=="logfile"))
 		return(c(forInla, inlares=inlaResult))
