@@ -31,12 +31,12 @@ using   \code{\link[INLA]{inla}} }
 				...)
 \S4method{glgm}{character,ANY,ANY,ANY}(formula, data,  grid, 
 				covariates, 
-				p...)
+				...)
 \S4method{glgm}{formula,ANY,numeric,ANY}(formula, data,  grid, 
 				covariates, 
 				...)
 \S4method{glgm}{formula,Raster,Raster,ANY}(formula, data,  grid, 
-				covariates=NULL, buffer=0,
+				covariates=list(), buffer=0,
 				...)
 \S4method{glgm}{formula,Spatial,Raster,list}(formula, data,  grid, 
 				covariates=list(), buffer=0,
@@ -48,15 +48,15 @@ using   \code{\link[INLA]{inla}} }
 				covariates=data.frame(), 
 				shape=1, priorCI=NULL, 
 				mesh=FALSE,...) 
-lgcp(data,  grid, covariates=NULL, formula=NULL, priorCI=NULL, 
-shape=1, buffer = 0, mesh=FALSE,...)
+lgcp(formula=NULL, data,  grid, covariates=list(), border,
+	...)
 }
  
 \arguments{
 \item{data}{
 An object of class \code{ SpatialPointsDataFrame} containing the data.
 }
-\item{cells}{Either an integer giving the number of cells in the x direction, or a raster object which 
+\item{grid}{Either an integer giving the number of cells in the x direction, or a raster object which 
 will be used for the spatial random effect.  If the cells in the raster are not square, the resolution in the y direction 
 will be adjusted to make it so.}
 \item{covariates}{Either a single raster, a list of rasters or a raster stack containing covariate values used when 
@@ -79,6 +79,7 @@ the range parameter (not the scale); \code{sd} for the standard deviation (not t
 \item{shape}{Shape parameter for the Matern correlation function, must be 1 or 2.}
 \item{buffer}{Extra space padded around the data bounding box to reduce edge effects.}
 \item{mesh}{Currently unimplemented options for using a mesh rather than a grid for the Markov random field approximation.}
+\item{border}{boundary of the region on which an LGCP is defined, passed to \code{\link[raster]{mask}}}
 \item{...}{Additional options passed to  \code{\link[INLA]{inla}}}
 }
 \details{
@@ -113,7 +114,7 @@ for the range and standard deviation parameters respectively,
 require("geostatsp")
 data("swissRain")
 swissRain$lograin = log(swissRain$rain)
-swissFit =  glgm(formula="lograin", data=swissRain, cells=30, 
+swissFit =  glgm(formula="lograin", data=swissRain, grid=30, 
 	covariates=swissAltitude, family="gaussian", buffer=20000,
 	priorCI=list(sd=c(0.01, 5), range=c(50000,500000),
 		sdNugget = c(0.01, 5)), 

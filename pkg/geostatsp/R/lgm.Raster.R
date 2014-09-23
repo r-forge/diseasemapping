@@ -1,32 +1,31 @@
 
 setMethod("lgm", 
-		signature("ANY", "Raster"), 
-function(formula, data,
-				covariates=NULL,
+		signature("formula", "data.frame", "Raster", "data.frame"), 
+	function(formula,data, grid,
+				covariates=data.frame(),
                   shape=1,boxcox=1,nugget=0,
-				  newdata=data,
 				  expPred=FALSE, nuggetInPrediction=TRUE,
 				  reml = TRUE,
 				  mc.cores=1,		
 				  oneminusar=seq(0.01, 0.4,len=4), 
                   range=NULL, rangeInCells=NULL,
                   ...) {
+
+	Xmat = model.matrix(formula, data)		  
+
+	if(ncol(Xmat) != ncell(grid))
+		warning("dimensions of data and grid are not compatible")
+	
+  NN=NNmat(grid)
+  csiz = xres(grid)
+
+  Yvar = all.vars(formula)[1]
+  allYvar = grep(paste("^", Yvar, "[[:digit:]]*$"), names(data), value=TRUE)
   
-	  
-  if(!is.null(covariates)){
-    covariates = stackRasterList(covariates,template=data)
-    data = stack(data,covariates)
-  }
-  dataOrig = data
-  NN=NNmat(data)
-  csiz = xres(data)
-  data = as.data.frame(data)
-  Yvec = data[,as.character(attributes(terms(formula))$variables)[2]]
-  Xmat = model.matrix(formula,data=data)
-  reXmat = Xmat
-  colnames(reXmat) = c('(Intercept)', 'x') 
+  Yvec = as.matrix(data[,allYvar])
+
   thel = loglikGmrf(oneminusar=oneminusar,
-                    Yvec=Yvec,Xmat=reXmat,
+                    Yvec=Yvec,Xmat=Xmat,
                     NN=NN,propNugget=nugget,
                     shape=shape,mc.cores=mc.cores,...)
   

@@ -1,3 +1,54 @@
+# used to have
+# importFrom(INLA, inla, inla.models, inla.make.lincombs)
+
+loadInla = function() {
+	res = "INLA" %in% rownames(installed.packages())
+	if(res) 
+		require("INLA", quietly=TRUE,warn.conflicts=FALSE)
+	res
+}
+
+inla = function(...) {
+	if(loadInla()) {
+		INLA::inla(...)
+	} else {
+		return(list(logfile="INLA is not installed. \n install splines, numDeriv, Rgraphviz, graph,\n fields, rgl, mvtnorm, multicore, pixmap,\n splancs, orthopolynom \n then see www.r-inla.org"))
+	}
+}
+
+inla.models = function(...) {
+	if(loadInla()) {
+		INLA::inla.models(...)
+	} else {
+		return(NULL)
+	}
+}
+
+#inla.model.properties = function(...) {
+#	if(loadInla()) {
+#		INLA::inla.model.properties(...)
+#	} else {
+#		return(NULL)
+#	}
+#}
+
+
+inla.make.lincombs = function(...) {
+	if(loadInla()) {
+		INLA::inla.make.lincombs(...)
+	} else {
+		return(list())
+	}
+}
+inla.make.lincomb = function(...) {
+	if(loadInla()) {
+		INLA::inla.make.lincomb(...)
+	} else {
+		return(list(lc=list()))
+	}
+}
+
+
 # taken from the raster package
 #   the function isn't exported from raster so it must be replicated here
 # author Robert Hijmans
@@ -55,3 +106,19 @@
 	}
 	return(TRUE)
 }
+
+cellsBuffer = function(cells, buffer) {
+	
+	cells = squareRaster(cells)
+	buffer =  ceiling(buffer/xres(cells))
+	
+	cellsInla = raster::extend(cells, c(buffer, buffer))
+	values(cellsInla ) =  
+			c(t(matrix(seq(1,ncell(cellsInla)), 
+									nrow=nrow(cellsInla), ncol=ncol(cellsInla))))
+	names(cellsInla) = "space"
+	
+	
+	result = list(small=crop(cellsInla, cells), big=cellsInla)
+}
+

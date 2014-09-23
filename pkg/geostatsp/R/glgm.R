@@ -1,7 +1,7 @@
 setGeneric('glgm', 
 		function(
 				formula, data, grid, 
-				covariates=NULL, 
+				covariates, 
 				...) {
 			standardGeneric("glgm")
 		}
@@ -11,7 +11,7 @@ setGeneric('glgm',
 # null formula
 setMethod("glgm", 
 		signature("NULL"), 
- 	gm.nullFormula
+		gm.nullFormula
 		)
 
 
@@ -80,7 +80,7 @@ setMethod("glgm",
 		signature("formula", "data.frame", "Raster", "data.frame"), 
 		function(formula, data,  grid, 
 				covariates=data.frame(), 
-				priorCI=NULL, shape=1, 
+				shape=1, priorCI=NULL, 
 				mesh=FALSE,...) {
 
 			

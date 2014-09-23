@@ -4,7 +4,7 @@ Title: Geostatistics with INLA
 Version: 0.6.1
 Date: 2014-09-18
 Depends: sp, raster
-Imports: geostatsp
+Imports: geostatsp, methods
 Suggests: spdep, rgdal, diseasemapping (>= 1.0.1), mapmisc (>= 1.0), knitr
 Enhances: INLA
 Author: Patrick Brown <patrick.brown@utoronto.ca>
