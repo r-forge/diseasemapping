@@ -18,24 +18,18 @@ Uses inla to fit a Besag, York and Mollie disease mapping model
 \usage{
 \S4method{bym}{ANY,ANY,ANY, missing}(
 		formula, data, adjMat, region.id,
-				...
-				)
-
+				...)
 \S4method{bym}{formula,SpatialPolygonsDataFrame,NULL, character}(
 		formula, data, adjMat, region.id,
-				...
-				)
+				...)
 \S4method{bym}{formula,SpatialPolygonsDataFrame,nb, character}(
 		formula, data, adjMat, region.id,
-				...
-				)
+				...)
 \S4method{bym}{formula,data.frame,nb, character}(
 		formula, data.frame, adjMat, region.id,
 				priorCI=list(sdSpatial = c(0.01, 2), sdIndep = c(0.01, 2)), 
 		family="poisson",
-		formula.fitted=formula,
-		...	 
-				)
+		formula.fitted=formula, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

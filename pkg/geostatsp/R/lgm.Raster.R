@@ -13,22 +13,22 @@ setMethod("lgm",
 
 	Xmat = model.matrix(formula, data)		  
 
-	if(ncol(Xmat) != ncell(grid))
+	if(nrow(Xmat) != ncell(grid))
 		warning("dimensions of data and grid are not compatible")
 	
   NN=NNmat(grid)
   csiz = xres(grid)
 
   Yvar = all.vars(formula)[1]
-  allYvar = grep(paste("^", Yvar, "[[:digit:]]*$"), names(data), value=TRUE)
+  allYvar = grep(paste("^", Yvar, "[[:digit:]]*$",sep=""), names(data), value=TRUE)
   
-  Yvec = as.matrix(data[,allYvar])
+  Yvec = as.matrix(data[,allYvar, drop=FALSE], drop=FALSE)
 
   thel = loglikGmrf(oneminusar=oneminusar,
                     Yvec=Yvec,Xmat=Xmat,
                     NN=NN,propNugget=nugget,
                     shape=shape,mc.cores=mc.cores,...)
-  
+
   thesummary = list()
   if (reml){
     chooseLike = 'logL.reml'
@@ -38,8 +38,9 @@ setMethod("lgm",
     m2Like = 'm2logL.ml'
   }
   
-  
-  if (nugget == 0){
+
+
+  if (all(nugget == 0)) {
     thesummary$profL$propNugget = 0
     propNug = 0
     omar = thel['oneminusar',]
@@ -77,7 +78,6 @@ setMethod("lgm",
     
     thesummary$profL$range = as.data.frame(rangePack)
   }
-  
   #$twoDim
   thesummary$profL$twoDim = list()
   thesummary$profL$twoDim$oneminusar = omar
@@ -86,10 +86,11 @@ setMethod("lgm",
   thesummary$profL$twoDim$propNugget = propNug
   thesummary$profL$twoDim$array = thel
   
-  
-  thesummary$data = dataOrig
+ 
+  thesummary$data = data
   thesummary$model$reml = reml
   thesummary$model$trend = formula
+ 
   if (reml){
     thesummary$summary = summaryGmrfFit(thel)$reml
   }else{
@@ -100,26 +101,29 @@ setMethod("lgm",
   
   mleparam = thesummary$param
   
+
   
   if(mleparam['propNugget']>0) {
     thesummary$predict = conditionalGmrf(
       param=mleparam,
-      Yvec=Yvec,Xmat=reXmat,
-      template=dataOrig, NN=NN,
+      Yvec=Yvec,Xmat=Xmat,
+      template=grid, NN=NN,
       mc.cores=mc.cores,...)
   } else {
     thesummary$predict = raster::brick(
-      raster(dataOrig), nl=2)
-    names(thesummary$predict) = c('fixed','random')
-    values(thesummary$predict)=NA
-    values(thesummary$predict[[1]]) =
-      reXmat %*% mleparam[
-        paste(colnames(reXmat),".betaHat",sep='')]
-    values(thesummary$predict[['random']]) =
-      Yvec -values(thesummary$predict[['fixed']])
-    
+      raster(grid), nl=ncol(Yvec)+1)
+    names(thesummary$predict) = c('fixed',paste('random', colnames(Yvec), sep="."))
+	values(thesummary$predict) = NA
+    values(thesummary$predict[['fixed']]) =
+      Xmat %*% mleparam[
+        paste(colnames(Xmat),".betaHat",sep='')]
+	for(D in colnames(Yvec)) {
+    values(thesummary$predict[[paste('random', D, sep=".")]]) =
+      Yvec[,D] - values(thesummary$predict[['fixed']])
+	}
   }
-  
+  if(nlayers(thesummary$predict)==2)
+	  names(thesummary$predict) = c("fixed","random")
   
   return(thesummary)
 }
