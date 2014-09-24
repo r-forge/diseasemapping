@@ -304,8 +304,9 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 		thelincombs[[D]] = 
 			do.call(inla.make.lincomb, thisrow)$lc
 		spaceCol = which(unlist(lapply(thelincombs[[D]],names))=='space')
-	
-		thelincombs[[D]][[spaceCol]]$space = list(
+
+		if(length(spaceCol))
+			thelincombs[[D]][[spaceCol]]$space = list(
 				weight=1, 
 				idx=thelincombs[[D]][[spaceCol]]$space$weight)
 }

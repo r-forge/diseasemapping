@@ -35,6 +35,13 @@ setMethod("lgm",
 		gm.dataRaster
 )
 
+#setMethod("lgm", 
+#		signature("formula", "Raster", "missing", "ANY"),
+# aggregate the covariates to data, merge covariates into data, call formula, Raster, missing, missing)
+#		gm.dataRaster
+#				
+#)
+
 setMethod("lgm", 
 		signature("formula", "Raster", "missing", "missing"),
 		function(formula, 

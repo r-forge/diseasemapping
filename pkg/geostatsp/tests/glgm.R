@@ -6,6 +6,8 @@ require('geostatsp')
  
 data('swissRain')
 swissRain$lograin = log(swissRain$rain)
+
+if(require('INLA', quietly=TRUE)) {
 swissFit =  glgm("lograin", swissRain, Ncell, 
 		covariates=swissAltitude, family="gaussian", buffer=20000,
 		priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
@@ -168,4 +170,4 @@ dev.off()
 
  
 
-
+}
