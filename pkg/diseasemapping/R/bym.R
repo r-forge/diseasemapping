@@ -68,7 +68,7 @@ bym.needAdjmat = function(
 			formula, data, adjMat=NULL, region.id,
 		...) {	
  	
-	if(requireNamespace("spdep", quiet=TRUE)) {
+	if(requireNamespace("spdep", quietly=TRUE)) {
 		adjMatNB=spdep::poly2nb(data, row.names =  data[[region.id]] )
 	} else {
 		adjMatNB = NULL
