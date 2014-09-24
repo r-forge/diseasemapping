@@ -57,7 +57,7 @@ A list containing
 effects, and marginals.fitted.bym for the marginals of the fitted values.  }
 \item{data}{A data frame or SpatialPolygonsDataFrame containing posterior means
 and quantiles of the spatial random effect and fitted values.}
-\item{parameters}{summaries of posterior distributions, see \code{\link{glgm}}}
+\item{parameters}{summaries of posterior distributions, see \code{\link[geostatsp]{glgm}}}
 }
 
 \author{
@@ -66,11 +66,11 @@ Patrick Brown
 
 
 \seealso{
-\code{\link{glgm}},  \code{\link[INLA]{inla}}, \code{\link[diseasemapping]{getSMR}} 
+\code{\link[geostatsp]{glgm}},  \code{\link[INLA]{inla}}, \code{\link[diseasemapping]{getSMR}} 
 }
 \examples{
 
-if(require('diseasemapping', quietly=TRUE) & require("spdep", quietly=TRUE)) {
+if( require("spdep", quietly=TRUE)) {
 data('kentucky')
 
 if(FALSE) {

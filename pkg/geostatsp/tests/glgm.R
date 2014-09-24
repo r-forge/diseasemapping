@@ -143,7 +143,7 @@ swissFit =  glgm( formula="lograin",data=swissRain, grid=Ncell,
 # a model with little data, posterior should be same as prior
 
 data2 = SpatialPointsDataFrame(cbind(c(1,0), c(0,1)),
-		data=data.frame(y=c(NA,NA), offset=c(-100,-200)))
+		data=data.frame(y=c(0,0), offset=c(-100,-200)))
 
 res = glgm(data=data2, grid=20, formula=y~1, 
 covariates=NULL,

@@ -35,7 +35,7 @@ krigeLgm = function(
 	
 	if(!length(names(covariates))) {
 		# no coariates, mean is intercept
-		if(any(names(param)=='(Intercept')) {
+		if(any(names(param)=='(Intercept)')) {
 			meanForRaster = param['(Intercept)']		
 		} else {
 			meanForRaster = 0
@@ -43,15 +43,14 @@ krigeLgm = function(
 		meanFixedEffects = 
 				rep(meanForRaster, ncell(locations))
 		meanRaster = locations
-		values(meanRaster) = meanFixedEffects
-		
+		values(meanRaster) = meanFixedEffects	
 	}
 	
- 
 	
-	if(is.data.frame(covariates) & class(formula)=="formula")  {
- 
-		if(nrow(covariates)!= ncell(locations))
+	if( is.data.frame(covariates) & class(formula)=="formula")  {
+
+		if(nrow(covariates)){		
+		if(nrow(covariates) !=  ncell(locations)) 
 			warning("covariates and grid aren't compatible")
 		
 		# put zeros for covariates not included in the data frame
@@ -71,9 +70,9 @@ krigeLgm = function(
 		meanRaster = locations
 		values(meanRaster) = meanFixedEffects
 
+
+		}	
 	}
-	
- 
 	
 	if(class(data)=="SpatialPointsDataFrame"&class(formula)=="formula") {
 		if(all(names(covariates)%in% names(data))) {
@@ -91,7 +90,7 @@ krigeLgm = function(
 		
 
 		
-		observations = data[[ all.vars(formula)[1]] ] 
+		observations = drop(data[[ all.vars(formula)[1]] ] )
 		
 
 		

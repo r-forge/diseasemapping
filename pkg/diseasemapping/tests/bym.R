@@ -1,7 +1,5 @@
-if(require('diseasemapping', quietly=TRUE) & 
-		require("spdep", quiet=TRUE) &
-		require('INLA', quietly=TRUE)
-		){
+
+library('diseasemapping')
 
 data('kentucky')
 
@@ -26,17 +24,22 @@ if(FALSE) {
 kentucky = getSMR(kentucky, larynxRates, larynx,
 		regionCode="County")
 
-library('geostatsp')
-# this is in the examples
-
+if( 	require("spdep", quiet=TRUE) &
+		require('INLA', quietly=TRUE)
+		){
+	
 kBYM = bym(observed ~ offset(logExpected) + poverty,kentucky, 
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
 
 # also try no covariate or prior
 
 kBYM = bym( observed ~ offset(logExpected),kentucky)
-kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 
+if(require('geostatsp', quietly=TRUE)) {
+ 	kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
+} else {
+	kBYM$data$exc1 = rep(NA, length(kBYM$data))
+}
 
 kBYM$par$summary
 
@@ -68,8 +71,7 @@ kBYM = bym(data=kentucky@data, formula=observed ~ offset(logExpected) + poverty,
 		adjMat = adjMat, region.id="County",
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
 
-kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
-
+kBYM$par$summary
 
 # add subtract a few regions
 
@@ -77,7 +79,6 @@ kBYM = bym(data=kentucky@data[-(1:4),],  formula=observed ~ offset(logExpected) 
 		adjMat = adjMat, region.id="County",
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
  
-kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 
 
 # intercept only, no offset
@@ -86,7 +87,7 @@ kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 kBYM = bym(data=kentucky,  formula=observed ~ 1,
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
 
-kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
+kBYM$par$summary
 
 
 if(require('mapmisc', quietly=TRUE)) {
@@ -111,7 +112,7 @@ kBYM = bym(observed ~ offset(logExpected) + poverty,
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
 
  
-	kBYM$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
+kBYM$par$summary
 
 
 }

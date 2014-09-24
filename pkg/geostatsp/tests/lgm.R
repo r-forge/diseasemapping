@@ -131,7 +131,7 @@ dev.off()
 
 
 # run lgm without providing covariates
-fitMLE =  lgm(y~ cov1+cov2, myPoints, newdata=10,  
+fitMLE =  lgm(y~ cov1+cov2, myPoints, grid=10,  
 		shape=1, fixShape=TRUE)
 
 

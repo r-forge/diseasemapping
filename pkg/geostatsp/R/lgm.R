@@ -58,10 +58,16 @@ setMethod("lgm",
 
 
 setMethod("lgm", 
-		signature("formula", "Spatial", "Raster", "list"),
-		gm.dataSpatial
-)
+			signature("formula", "Spatial", "Raster", "list"),
+			gm.dataSpatial
+	)
 
+	setMethod("lgm", 
+			signature("formula", "Spatial", "Raster", "NULL"),
+			gm.dataSpatial
+	)
+	
+	
 setMethod("lgm", 
 		signature("formula", "Spatial", "Raster", "Raster"),
 		gm.dataSpatial
@@ -127,7 +133,8 @@ setMethod("lgm",
 
  	likRes = do.call(likfitLgm, dots)
  
-	
+#	stuff <<- list(formula=formula, data=data, grid=grid, covariates=covariates,
+#			param=likRes$param,expPred=expPred,nuggetInPrediction=nuggetInPrediction)	
 	
 # call krige	
 	krigeRes =  krigeLgm(

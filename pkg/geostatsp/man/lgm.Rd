@@ -10,6 +10,7 @@
 \alias{lgm,formula,Raster,missing,missing-method}
 \alias{lgm,formula,Spatial,Raster,Raster-method}
 \alias{lgm,formula,Spatial,Raster,list-method}
+\alias{lgm,formula,Spatial,Raster,NULL-method}
 \alias{lgm,formula,Spatial,Raster,data.frame-method}
 \alias{lgm,formula,data.frame,Raster,data.frame-method}
 
@@ -53,6 +54,10 @@ Calculate MLE's of model parameters and perform spatial prediction. }
 		covariates=list(), buffer=0,
 		...) 
 \S4method{lgm}{formula,Spatial,Raster,list}(formula, data,
+		grid,
+		covariates=list(), buffer=0,
+		...) 
+\S4method{lgm}{formula,Spatial,Raster,NULL}(formula, data,
 		grid,
 		covariates=list(), buffer=0,
 		...) 

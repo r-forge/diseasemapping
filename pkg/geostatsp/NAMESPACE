@@ -1,5 +1,5 @@
 # functions that don't depend on other packages
-export( lgm, glgm, bym, lgcp,
+export( lgm, glgm, lgcp,
  krigeLgm,stackRasterList,
   gmrfPrecUncond,simLgcp,simPoissonPP,
  excProb, likfitLgm, loglikLgm,
