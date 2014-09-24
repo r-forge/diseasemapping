@@ -78,7 +78,7 @@ bym.needAdjmat = function(
 
 	
 	callGeneric(
-			formula=formula, data=data@data,
+			formula=formula, data=data,
 			adjMat=adjMatNB, region.id=region.id,
 			...
 	)
@@ -93,7 +93,8 @@ bym.needAdjmat = function(
 			signature("formula", "SpatialPolygonsDataFrame", "NULL","character"),
 			bym.needAdjmat		
 	)
-setMethod("bym", 
+
+	setMethod("bym", 
 		signature("formula", "SpatialPolygonsDataFrame", "nb","character"),
 		function(
 				formula, data, adjMat,region.id,
