@@ -45,24 +45,31 @@ setGeneric('bym',
 		}
 )
 
+bym.spartan = function(
+		formula, data, adjMat=NULL, region.id,
+		...) {	
+	
+	region.idX="region.id"
+	data[[region.idX]] = 1:length(data)
+	
+	callGeneric(
+			formula , data ,
+			adjMat , region.idX,
+			...
+	)
+}
+
+
 setMethod("bym", 
 		signature("formula","ANY","ANY", "missing"),
-		function(
-				formula, data, adjMat=NULL, region.id,
-				...) {	
-			
-		region.idX="region.id"
-		data[[region.idX]] = 1:length(data)
-		
-		callGeneric(
-				formula , data ,
-				adjMat , region.idX,
-				...
+	bym.spartan
 		)
-}
-)
 
-
+	setMethod("bym", 
+				signature("formula","ANY","missing", "missing"),
+				bym.spartan
+	)
+		
 
 bym.needAdjmat = function(
 			formula, data, adjMat=NULL, region.id,

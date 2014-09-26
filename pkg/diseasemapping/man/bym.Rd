@@ -3,6 +3,7 @@
 \alias{bym}
 \alias{bym-methods}
 \alias{bym,formula,ANY,ANY,missing-method}
+\alias{bym,formula,ANY,missing,missing-method}
 \alias{bym,formula,SpatialPolygonsDataFrame,NULL,character-method}
 \alias{bym,formula,SpatialPolygonsDataFrame,missing,character-method}
 \alias{bym,formula,SpatialPolygonsDataFrame,nb,character-method}
@@ -18,6 +19,7 @@ Uses inla to fit a Besag, York and Mollie disease mapping model
 }
 \usage{
 \S4method{bym}{formula,ANY,ANY,missing}(formula,data,adjMat,region.id,...)
+\S4method{bym}{formula,ANY,missing,missing}(formula,data,adjMat,region.id,...)
 \S4method{bym}{formula,SpatialPolygonsDataFrame,NULL,character}(formula, data, adjMat, region.id, ...)
 \S4method{bym}{formula,SpatialPolygonsDataFrame,missing,character}(formula, data, adjMat, region.id, ...)
 \S4method{bym}{formula,SpatialPolygonsDataFrame,nb,character}(formula,data,adjMat,region.id,...)

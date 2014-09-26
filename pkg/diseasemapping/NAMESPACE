@@ -4,7 +4,10 @@
 # Export all names
 export(
 bym, cancerRates,  formatCases, formatPopulation,
-getRates, getSMR, getStdRate, mergeBugsData,
+getRates, getSMR, getStdRate, 
+mergeBugsData,
+mergeBugsData.SpatialPolygonsDataFrame, 
+mergeBugsData.data.frame, 
 getBreaks,
 getSMR.data.frame, 
 getSMR.list,
