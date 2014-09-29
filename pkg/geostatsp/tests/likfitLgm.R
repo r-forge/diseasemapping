@@ -1,5 +1,7 @@
 library('geostatsp')
 n=100
+
+set.seed(0)
 mydat = SpatialPointsDataFrame(cbind(runif(n), runif(n)), 
 		data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 0.5))
 )
@@ -26,6 +28,7 @@ mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 +
 mydat$Ybc = (mydat$Y*0.5+1)^2
 
  
+print(range(mydat$Ybc))
 
 myres = likfitLgm(Ybc ~ cov1 + cov2, mydat, 
 		param=c(range=0.1,nugget=0,shape=2, 
