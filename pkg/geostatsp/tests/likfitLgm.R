@@ -2,7 +2,7 @@ library('geostatsp')
 n=100
 
 set.seed(0)
-mydat = SpatialPointsDataFrame(cbind(runif(n), runif(n)), 
+mydat = SpatialPointsDataFrame(cbind(seq(0,1,len=n), runif(n)), 
 		data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 0.5))
 )
 

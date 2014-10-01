@@ -16,15 +16,18 @@ swissFit =  glgm("lograin", swissRain, Ncell,
 )
 
 swissFit$parameters$summary
+pdf("swissGlgmExc.pdf")
 swissExc = excProb(swissFit$inla$marginals.random$space, 0, template=swissFit$raster)
 plot(swissExc, breaks = c(0, 0.2, 0.8, 0.95, 1.00001), 
 		col=c('green','yellow','orange','red'))	
 plot(swissBorder, add=TRUE)		
+dev.off()
+pdf("swissGlgmExc2.pdf")
 swissExcP = excProb(swissFit$inla$marginals.predict, 3, template=swissFit$raster)
 plot(swissExcP, breaks = c(0, 0.2, 0.8, 0.95, 1.00001), 
 		col=c('green','yellow','orange','red'))	
 plot(swissBorder, add=TRUE)		
-
+dev.off()
 # intercept only
 swissFit =  glgm(lograin~1,swissRain, Ncell, 
 		covariates=swissAltitude, family="gaussian", buffer=20000,
