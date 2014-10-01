@@ -255,7 +255,9 @@ formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", f
 startIndex = length(region.index)
  
 	if(nchar(formulaForLincombs) & formulaForLincombs != "1" &
-			!length(grep("^[[:space:]]+$", formulaForLincombs))) {
+			!length(grep("^[[:space:]]+$", formulaForLincombs))&
+			requireNamespace("INLA", quietly=TRUE)
+			) { #make linear combinations
  
 		formulaForLincombs=as.formula(
 			paste("~", paste(c("1",formulaForLincombs),collapse="+"))
@@ -283,7 +285,25 @@ startIndex = length(region.index)
 		lincombMat[lincombMat==0]= NA
 		if(!dim(lincombMat)[1])
 			warning("the dataset appears to have no rows")
-		thelincombs = inla.make.lincombs(as.data.frame(lincombMat))
+
+		stuff <<- lincombMat
+		
+		lcOneRow = function(thisrow, spaceCol) {
+			thisrow = thisrow[!is.na(thisrow)]
+			thisrow = sapply(thisrow, function(qq) list(list(weight=qq)))	
+			thisrow[[spaceCol]] = list(
+					weight=1, 
+					idx=thisrow[[spaceCol]]$weight
+			)
+			for(D in names(thisrow))
+				thisrow[[D]] = thisrow[D]
+			names(thisrow) = paste("v", 1:length(thisrow), sep="")
+			thisrow
+		}
+		
+		
+		thelincombs = apply(lincombMat, 1, lcOneRow)
+	
 		for(D in seq(1,length(SregionFitted))) {	
 			inlaLincombs[[D+startIndex]] = 
 				c(
@@ -298,7 +318,7 @@ startIndex = length(region.index)
 		}
 		names(inlaLincombs)[seq(startIndex+1, len=length(SregionFitted))] =
 				paste("fitted",names(SregionFitted),sep="_")
-	} else { # add only intercept to predictions
+	} else { # add only intercept to predictions because no inla or no covariates
 		formulaForLincombs = ~1
 		lincombMat = data.frame(x=rep(1,length(region.index)))
 		SregionFitted = region.index
@@ -320,8 +340,13 @@ startIndex = length(region.index)
 
 
 	# run inla!		
-	inlaRes = inla(formula, data=data , family=family,
+	if(require("INLA", quietly=TRUE)) { # not enough to have requireNamespace
+		inlaRes = INLA::inla(formula, data=data , family=family,
 			lincomb=inlaLincombs, ...)
+	} else{
+		inlaRes = 
+				list(logfile="INLA is not installed.  \n see www.r-inla.org")
+	}
  	
 	if(all(names(inlaRes)=="logfile"))
 		return(c(list(formula=formula, data=data,
