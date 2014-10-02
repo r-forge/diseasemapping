@@ -9,5 +9,5 @@ Suggests: mgcv, spdep, geostatsp, mapmisc (>= 1.0)
 Enhances: INLA
 Author: Patrick Brown <patrick.brown@utoronto.ca>
 Maintainer:  Patrick Brown <patrick.brown@utoronto.ca>
-Description: Tools for calculating rates and Standardized Incidence Ratios from case and population data.
+Description: Tools for calculating rates and Standardized Incidence Ratios from case and population data.  The BYM model is fit using INLA, obtainable from http://www.r-inla.org.
 License: GPL
