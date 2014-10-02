@@ -22,7 +22,7 @@ Generalized Linear Geostatistical Models
 }
 \description{
 Fits a generalized linear geostatistical model or a log-Gaussian Cox process
-using   \code{\link[INLA]{inla}} }
+using \code{inla} }
 \usage{
 \S4method{glgm}{NULL,ANY,ANY,ANY}(formula=NULL, data,  grid, 
 				covariates, 
@@ -97,7 +97,7 @@ The range parameter produced by \code{glgm} multiplies the range parameter from 
 }
 \value{
 A list with two components named  \code{inla}, \code{raster}, and \code{parameters}.  \code{inla} contains the results of the call to the
-\code{\link[INLA]{inla}} function.  \code{raster} is a raster stack with the following layers:
+\code{inla} function.  \code{raster} is a raster stack with the following layers:
 \item{random.mean, random.sd,random.X0.025quant, random.X0.5quant, random.X0.975quant, random.kld}{}
 \item{predict.mean, predict.sd,predict.X0.025quant, predict.X0.5quant, predict.X0.975quant, predict.kld}{}
 \item{predict.exp}{}
