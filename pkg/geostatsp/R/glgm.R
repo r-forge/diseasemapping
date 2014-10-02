@@ -259,7 +259,6 @@ formulaForLincombs =
 	# strip out trailing +
 formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 
-	thelincombs=list()	
 	# if we have covariates and inla is available
 	if(nchar(formulaForLincombs) ) {
 
@@ -291,18 +290,19 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 		names(thelincombs) = paste("c", lincombMat[,spaceCol],sep="")
 		
 	} else { # no covariates or no INLA
-		for(D in 1:nrow(data)) {
+		thelincombs=list()	
+		for(D in 1:ncell(cells)) {
 			thelincombs[[D]] = list(
 					list(
 							"(Intercept)"=list(weight=1)
 					),
 					list(
-							space=list(weight=1, idx=data[D,'space'])
+							space=list(weight=1, idx=values(cells)[D])
 					)
 			)
 		}
-		names(thelincombs) = paste("c", data$space,sep="")
-	}
+		names(thelincombs) = paste("c", values(cells),sep="")
+		}
 
 	# get rid of observations with NA's in covariates
 	allVars = all.vars(formula)
