@@ -49,13 +49,13 @@ independent random effects.
 \item{formula.fitted}{formula to use to compute the fitted values, defaults to the model 
 formula but may, for example, exclude individual-level covariates.}
   \item{\dots}{
-Additional arguments passed to  \code{\link[INLA]{inla}}
+Additional arguments passed to  \code{inla} 
 }
 }
  
 \value{
 A list containing
-\item{inla}{results from the call to \code{\link[INLA]{inla}}.  Two additional elements are added: marginals.bym for the marginal distributions of the spatial random
+\item{inla}{results from the call to \code{inla}.  Two additional elements are added: marginals.bym for the marginal distributions of the spatial random
 effects, and marginals.fitted.bym for the marginals of the fitted values.  }
 \item{data}{A data frame or SpatialPolygonsDataFrame containing posterior means
 and quantiles of the spatial random effect and fitted values.}
@@ -68,7 +68,7 @@ Patrick Brown
 
 
 \seealso{
-\code{\link[geostatsp]{glgm}},  \code{\link[INLA]{inla}}, \code{\link[diseasemapping]{getSMR}} 
+http://r-inla.org, \code{\link[geostatsp]{glgm}}, \code{\link[diseasemapping]{getSMR}} 
 }
 \examples{
 
