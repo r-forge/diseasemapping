@@ -120,7 +120,7 @@ openmap = function(x, zoom,
 		
 		result =  stack(thistile, result)	
 		if(length(ctable))
-			result[[1]]@legend@colortable = ctable
+				result[[1]]@legend@colortable = ctable
 		
 		} # end not try-error
 	} # end loop through path	
@@ -146,9 +146,9 @@ openmap = function(x, zoom,
 		resultProj = result
 	}
 
-	
-	resultProj = stack(resultProj)
-#	resultProj@legend@colortable = result@legend@colortable
+		resultProj = stack(resultProj)
+
+		#	resultProj@legend@colortable = result@legend@colortable
 
 
 	for(D in names(resultProj)) {
@@ -156,7 +156,9 @@ openmap = function(x, zoom,
 					result[[D]]@legend@colortable
 	}
 
-	
+	if(nlayers(resultProj)==1) 
+		resultProj = resultProj[[1]]
+		
 
 	
 	resultProj

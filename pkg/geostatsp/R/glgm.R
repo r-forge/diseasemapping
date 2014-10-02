@@ -1,3 +1,19 @@
+lcOneRow = function(thisrow, idxCol=NULL) {
+	thisrow = thisrow[!is.na(thisrow)]
+	if(length(thisrow)) {
+		thisrow = sapply(thisrow, function(qq) list(list(weight=qq)))
+		for(D  in idxCol)
+			thisrow[[D]] = list(
+				weight=1, 
+				idx=thisrow[[D]]$weight
+		)
+		for(D in names(thisrow))
+			thisrow[[D]] = thisrow[D]
+		names(thisrow) = paste("v", 1:length(thisrow), sep="")
+	}
+	thisrow
+}
+
 setGeneric('glgm', 
 		function(
 				formula, data, grid, 
@@ -243,8 +259,9 @@ formulaForLincombs =
 	# strip out trailing +
 formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 
-	# if we have covariates
-	if(nchar(formulaForLincombs)) {
+	thelincombs=list()	
+	# if we have covariates and inla is available
+	if(nchar(formulaForLincombs) ) {
 
 		formulaForLincombs=as.formula(paste("~", formulaForLincombs))
 	
@@ -262,58 +279,30 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 		}
 		if(length(cantPredict))
 			covariates[,cantPredict]= 0
-
-		if(FALSE){
-		# check for factors	
- 
-		facData = apply(data, 2, is.factor)
-		facData = names(facData[which(facData)])
-		facCovariates = apply(covariates, 2, is.factor)
-		facCovariates = names(facCovariates[which(facCovariates)])
-		theFactors = unique(c(facData, facCovariates))
-		theFactors = match(theFactors, names(covariates))
-		
-		# convert raster data into factors using same levels as in points data
-		for(D in theFactors) {
-			# convert columns in lincombs to factors
-			# get rid of levels not present in the observed data
-
-		covariates[,D] = factor(covariates[,D],
-					levels=levels(data[,D]))
-		}
-	}
 		covariates = covariates[,c("space", varsInPredict),drop=FALSE]
 		lincombMat = model.matrix(update.formula(
 						formulaForLincombs, ~.+space),
-						covariates, na.action=NULL)
-	
-	} else { # no covariates
-		lincombMat = cbind("(Intercept)"=rep(1, ncell(cells)), space=values(cells))
-	# for some reason can't give name (Intercept) in the data.frame call.
-	}
-
-	
-	
-	thelincombs=list()	
-	lincombMat[lincombMat==0] = NA
-
-	for(D in 1:nrow(lincombMat)) {
-		thisrow = lincombMat[D, ]
-		thisrow = as.list(thisrow[!is.na(thisrow)  ])
+					covariates, na.action=NULL)
+		lincombMat[lincombMat==0] = NA
 		
-		thelincombs[[D]] = 
-			do.call(inla.make.lincomb, thisrow)$lc
-		spaceCol = which(unlist(lapply(thelincombs[[D]],names))=='space')
-
-		if(length(spaceCol))
-			thelincombs[[D]][[spaceCol]]$space = list(
-				weight=1, 
-				idx=thelincombs[[D]][[spaceCol]]$space$weight)
-}
-
-
-names(thelincombs) = paste("c", lincombMat[,"space"],sep="")
-
+		spaceCol = grep("^space$", colnames(lincombMat), value=TRUE, ignore.case=TRUE)
+	
+		thelincombs <- apply(lincombMat, 1, lcOneRow, idxCol=spaceCol)
+		names(thelincombs) = paste("c", lincombMat[,spaceCol],sep="")
+		
+	} else { # no covariates or no INLA
+		for(D in 1:nrow(data)) {
+			thelincombs[[D]] = list(
+					list(
+							"(Intercept)"=list(weight=1)
+					),
+					list(
+							space=list(weight=1, idx=data[D,'space'])
+					)
+			)
+		}
+		names(thelincombs) = paste("c", data$space,sep="")
+	}
 
 	# get rid of observations with NA's in covariates
 	allVars = all.vars(formula)
@@ -345,7 +334,14 @@ names(thelincombs) = paste("c", lincombMat[,"space"],sep="")
 
 #	return(forInla)
  
-	inlaResult = do.call(inla, forInla) 
+
+	if(require("INLA", quietly=TRUE)) {
+		inlaResult = do.call(INLA::inla, forInla) 
+	} else {
+		inlaResult = 
+			list(logfile="INLA is not installed. \n install splines, numDeriv, Rgraphviz, graph,\n fields, rgl, mvtnorm, multicore, pixmap,\n splancs, orthopolynom \n then see www.r-inla.org")
+	}
+
  
 	
 	if(all(names(inlaResult)=="logfile"))

@@ -46,17 +46,17 @@ kBYM$par$summary
 if(require('mapmisc', quietly=TRUE)) {
 
 colFit = colourScale(kBYM$data$fitted.exp,
-		breaks=6, dec=2)
+		breaks=6, dec=3)
 	
 plot(kBYM$data, col=colFit$plot)
 legendBreaks('topleft', colFit)
 
  
 
-	colExc = colourScale(kBYM$data$exc1 ,
+colExc = colourScale(kBYM$data$exc1 ,
 		style='fixed',
 		breaks=c(0, 0.2, 0.8,0.9, 1), 
-		col=rainbow
+		col=rainbow, rev=TRUE
 	)
 
 	plot(kBYM$data, col=colExc$plot)

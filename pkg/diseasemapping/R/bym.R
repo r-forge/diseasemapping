@@ -1,3 +1,18 @@
+lcOneRow = function(thisrow, idxCol=NULL) {
+	thisrow = thisrow[!is.na(thisrow)]
+	if(length(thisrow)) {
+		thisrow = sapply(thisrow, function(qq) list(list(weight=qq)))
+		for(D  in idxCol)
+			thisrow[[D]] = list(
+					weight=1, 
+					idx=thisrow[[D]]$weight
+			)
+		for(D in names(thisrow))
+			thisrow[[D]] = thisrow[D]
+		names(thisrow) = paste("v", 1:length(thisrow), sep="")
+	}
+	thisrow
+}
 
 setClass('nb', 
 		representation(
@@ -219,7 +234,7 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 	}
 
 	#	theDup = duplicated(data$region.indexS)
-		
+
 		inlaLincombs = list()
 		# random effects
 		for(D in 1:length(region.index)) {
@@ -252,12 +267,11 @@ formulaForLincombs = gsub(
 formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", formulaForLincombs)
 
 
-startIndex = length(region.index)
+	startIndex = length(region.index)
  
 	if(nchar(formulaForLincombs) & formulaForLincombs != "1" &
-			!length(grep("^[[:space:]]+$", formulaForLincombs))&
-			requireNamespace("INLA", quietly=TRUE)
-			) { #make linear combinations
+			!length(grep("^[[:space:]]+$", formulaForLincombs))
+		) { #make linear combinations
  
 		formulaForLincombs=as.formula(
 			paste("~", paste(c("1",formulaForLincombs),collapse="+"))
@@ -283,41 +297,18 @@ startIndex = length(region.index)
 		lincombMat = model.matrix(formulaForLincombs, lincombFrame)
 		
 		lincombMat[lincombMat==0]= NA
+		lincombMat = cbind(lincombMat, as.matrix(dataOrder[rownames(lincombMat),c("region.indexI", "region.indexS")]))
+		
 		if(!dim(lincombMat)[1])
 			warning("the dataset appears to have no rows")
 
-		stuff <<- lincombMat
+		lcFitted <- apply(lincombMat, 1, lcOneRow, idxCol=c("region.indexI","region.indexS"))
+		names(lcFitted) = paste("fitted_", lincombMat[,"region.indexS"],sep="")
+
+
+		inlaLincombs = c(inlaLincombs, lcFitted)
 		
-		lcOneRow = function(thisrow, spaceCol) {
-			thisrow = thisrow[!is.na(thisrow)]
-			thisrow = sapply(thisrow, function(qq) list(list(weight=qq)))	
-			thisrow[[spaceCol]] = list(
-					weight=1, 
-					idx=thisrow[[spaceCol]]$weight
-			)
-			for(D in names(thisrow))
-				thisrow[[D]] = thisrow[D]
-			names(thisrow) = paste("v", 1:length(thisrow), sep="")
-			thisrow
-		}
-		
-		
-		thelincombs = apply(lincombMat, 1, lcOneRow)
-	
-		for(D in seq(1,length(SregionFitted))) {	
-			inlaLincombs[[D+startIndex]] = 
-				c(
-					list(list(region.indexS=
-								list(idx=SregionFitted[D], weight=1))),
-					list(list(region.indexI= 
-								list(idx=SregionFitted[D], weight=1))) 
-				)
-			if(length(thelincombs)>=D)
-				inlaLincombs[[D+startIndex]] = c(thelincombs[[D]],
-					inlaLincombs[[D+startIndex]])
-		}
-		names(inlaLincombs)[seq(startIndex+1, len=length(SregionFitted))] =
-				paste("fitted",names(SregionFitted),sep="_")
+
 	} else { # add only intercept to predictions because no inla or no covariates
 		formulaForLincombs = ~1
 		lincombMat = data.frame(x=rep(1,length(region.index)))

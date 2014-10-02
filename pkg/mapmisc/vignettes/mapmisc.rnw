@@ -382,8 +382,8 @@ nldTiles = openmap(meuse)
 {\tt nldTiles} is a Raster with the same projection as {\tt meuse}
 <<openmapInfo>>=
 class(nldTiles)
-proj4string(nldTiles)
-proj4string(meuse)
+projection(nldTiles)
+projection(meuse)
 @
 Maps which can be downloaded are shown at
 \url{http://diseasemapping.r-forge.r-project.org/openmap/}
@@ -399,7 +399,7 @@ A SpatialPointsDataFrame, with same map projection.
 <<citiesInfo>>=
 class(nldCities)
 names(nldCities)
-proj4string(nldCities)
+projection(nldCities)
 @
 
 
