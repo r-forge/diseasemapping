@@ -1,7 +1,7 @@
-
-setMethod("lgm", 
-		signature("formula", "data.frame", "Raster", "data.frame"), 
-	function(formula,data, grid,
+# 
+# setMethod("lgm", 
+# 		signature("formula", "data.frame", "Raster", "data.frame"), 
+lgm.Raster=	function(formula,data, grid,
 				covariates=data.frame(),
                   shape=1,boxcox=1,nugget=0,
 				  expPred=FALSE, nuggetInPrediction=TRUE,
@@ -23,9 +23,10 @@ setMethod("lgm",
   allYvar = grep(paste("^", Yvar, "[[:digit:]]*$",sep=""), names(data), value=TRUE)
   
   Yvec = as.matrix(data[,allYvar, drop=FALSE], drop=FALSE)
-
+  reXmat = Xmat
+	colnames(reXmat) = c('(Intercept)', 'x') 
   thel = loglikGmrf(oneminusar=oneminusar,
-                    Yvec=Yvec,Xmat=Xmat,
+                    Yvec=Yvec,Xmat=reXmat,
                     NN=NN,propNugget=nugget,
                     shape=shape,mc.cores=mc.cores,...)
 
@@ -129,6 +130,6 @@ setMethod("lgm",
 }
 
 
-)
+
 
 
