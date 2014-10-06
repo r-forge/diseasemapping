@@ -72,6 +72,7 @@ loglikGmrfGivenQ = function(
 		# Y is now box-cox transfomed
 		twoLogJacobian = as.numeric(2*(boxcox-1)*sumLogY) 
 	} else { # no boxcox
+		boxcox=NULL
 		twoLogJacobian=0
 	}
 	Vy = solve(Vchol, Y)
@@ -92,10 +93,10 @@ loglikGmrfGivenQ = function(
 	) 
         
   } else { # no nugget 
-    
-  	if(length(boxcoxInterval)==2){ # run an optimizer
 	  XprecX = Matrix::crossprod(X,Rx)
 	  XprecXinv = solve(XprecX)
+	  
+  	if(length(boxcoxInterval)==2){ # run an optimizer
 	  oneL = function(onebc, Y, sumLogY) {
 		  if(abs(onebc)<0.001) {
 				  Ybc = log(Y) 
@@ -132,6 +133,8 @@ loglikGmrfGivenQ = function(
 	Ry = Q %*% Ybc
 	twoLogJacobian = as.numeric(2*(boxcox-1)*sumLogY) 	
   } else {
+	  boxcox=NULL
+	  
 	twoLogJacobian=0  
   } # end box cox
   

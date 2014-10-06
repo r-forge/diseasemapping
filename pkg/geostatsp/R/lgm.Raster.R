@@ -29,7 +29,6 @@ lgm.Raster=	function(formula,data, grid,
                     Yvec=Yvec,Xmat=reXmat,
                     NN=NN,propNugget=nugget,
                     shape=shape,mc.cores=mc.cores,...)
-thel <<- thel
   thesummary = list()
   if (reml){
     chooseLike = 'logL.reml'
@@ -93,7 +92,6 @@ thel <<- thel
   thesummary$model$reml = reml
   thesummary$model$trend = formula
  
-  print(dim(summaryGmrfFit(thel)))
   thesummary$summary = summaryGmrfFit(thel)[,,c('ml','reml')[reml+1]]
 
 	

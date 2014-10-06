@@ -12,7 +12,7 @@ swissRainR2 = brick(swissRainR[['alt']],
 swissResR =  lgm( formula=layer ~ alt+ myvar, 
 		data=swissRainR2, shape=2,
 		oneminusar=seq(0.05, 0.1, len=6),
-		nugget =  seq(0,0.01,len=20),
+		nugget =  seq(0.0,0.01,len=20),
 		adjustEdges=FALSE,
 		mc.cores=c(1,2)[1+(.Platform$OS.type=='unix')]
 )
