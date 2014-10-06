@@ -63,9 +63,6 @@ setMethod("lgm",
 		}
 )
 
-setMethod("lgm", 
-          signature("formula", "data.frame", "Raster", "data.frame"), 
-          lgm.Raster)
 
 setMethod("lgm", 
 			signature("formula", "Spatial", "Raster", "list"),

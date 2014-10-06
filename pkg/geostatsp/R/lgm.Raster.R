@@ -24,7 +24,7 @@ lgm.Raster=	function(formula,data, grid,
   
   Yvec = as.matrix(data[,allYvar, drop=FALSE], drop=FALSE)
   reXmat = Xmat
-	colnames(reXmat) = c('(Intercept)', 'x') 
+#	colnames(reXmat) = c('(Intercept)', 'x') 
   thel = loglikGmrf(oneminusar=oneminusar,
                     Yvec=Yvec,Xmat=reXmat,
                     NN=NN,propNugget=nugget,
@@ -117,7 +117,7 @@ lgm.Raster=	function(formula,data, grid,
 	values(thesummary$predict) = NA
     values(thesummary$predict[['fixed']]) =
       Xmat %*% mleparam[
-        paste(colnames(Xmat),".betaHat",sep='')]
+        paste(colnames(reXmat),".betaHat",sep='')]
 	for(D in colnames(Yvec)) {
     values(thesummary$predict[[paste('random', D, sep=".")]]) =
       Yvec[,D] - values(thesummary$predict[['fixed']])
@@ -130,6 +130,9 @@ lgm.Raster=	function(formula,data, grid,
 }
 
 
+setMethod("lgm", 
+		signature("formula", "data.frame", "Raster", "data.frame"), 
+		lgm.Raster)
 
 
 
