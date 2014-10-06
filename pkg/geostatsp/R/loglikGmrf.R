@@ -130,7 +130,7 @@ loglikGmrfGivenQ = function(
 			  Y[,Dvar] <- ((Y[,Dvar]^bchere) - 1)/ bchere 
 		  }
 	}
-	Ry = Q %*% Ybc
+	Ry = Q %*% Y
 	twoLogJacobian = as.numeric(2*(boxcox-1)*sumLogY) 	
   } else {
 	  boxcox=NULL
