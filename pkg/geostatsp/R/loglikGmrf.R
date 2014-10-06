@@ -34,7 +34,7 @@ loglikGmrfGivenQ = function(
    	XprecXinv = solve(Matrix::crossprod(Rx,Vx))
 
 	if(length(boxcoxInterval)==2){ # run an optimizer
-		oneL = function(onebc) {
+		oneL = function(onebc, Y) {
 				if(abs(onebc)<0.001) {
 					Ybc = log(Y) 
 				} else  { #boxcox far from 0 and 1
@@ -56,12 +56,17 @@ loglikGmrfGivenQ = function(
 				m2logL = logDetVar + outer(N,log(R), "*") - twoLogJacobian
 				m2logL[ c('ml','reml')[1+reml] ]
 		}
-		boxcox = optimize(oneL, range(boxcox),maximum=TRUE)$maximum
+		boxcox = rep(NA, ncol(Y))
+		for(Dvar in 1:ncol(Y)) {
+			bchere = optimize(oneL, range(boxcox),
+					maximum=TRUE, Y=Y[,Dvar])$maximum
+			boxcox[Dvar] = bchere
 		 #found boxcox
-		if(abs(boxcox)<0.001) {
-				Y = log(Y) 
-		} else  { #boxcox far from 0 and 1
-				Y <- ((Y^boxcox) - 1)/ boxcox 
+			if(abs(bchere)<0.001) {
+				Y[,Dvar] = log(Y[,Dvar]) 
+			} else  { #boxcox far from 0 and 1
+				Y[,Dvar] <- ((Y[,Dvar]^bchere) - 1)/ bchere 
+			}
 		}
 		Ry = Q %*% Ybc
 	# Y is now box-cox transfomed
@@ -88,7 +93,7 @@ loglikGmrfGivenQ = function(
         
   } else { # no nugget 
     
-  if(length(boxcoxInterval)==2){ # run an optimizer
+  	if(length(boxcoxInterval)==2){ # run an optimizer
 	  XprecX = Matrix::crossprod(X,Rx)
 	  XprecXinv = solve(XprecX)
 	  oneL = function(onebc) {
@@ -112,20 +117,21 @@ loglikGmrfGivenQ = function(
 			  m2logL = logDetVar + outer(N,log(R), "*") - twoLogJacobian
 			  m2logL[ c('ml','reml')[1+reml] ]
 	  }
-	  boxcox = optimize(oneL, range(boxcox),maximum=TRUE)$maximum
-	  #found boxcox
-	  if(abs(boxcox)<0.001) {
-			  Y = log(Y) 
-	  } else  { #boxcox far from 0 and 1
-			  Y <- ((Y^boxcox) - 1)/ boxcox 
-	  }
-	  Ry = Q %*% Ybc
-	  # Y is now box-cox transfomed
-	  }  else { # no boxcox
-		  twoLogJacobian=0
-		  boxcox=1
-	  }
-    
+	boxcox = rep(NA, ncol(Y))
+	for(Dvar in 1:ncol(Y)) {
+		  bchere = optimize(oneL, range(boxcox),
+				  maximum=TRUE, Y=Y[,Dvar])$maximum
+		  boxcox[Dvar] = bchere
+		  #found boxcox
+		  if(abs(bchere)<0.001) {
+			  Y[,Dvar] = log(Y[,Dvar]) 
+		  } else  { #boxcox far from 0 and 1
+			  Y[,Dvar] <- ((Y[,Dvar]^bchere) - 1)/ bchere 
+		  }
+	}
+  }
+ 
+	  
     betaHat = XprecXinv %*% 
                            Matrix::crossprod(X , Ry)
     rownames(betaHat) = colnames(X)
@@ -144,7 +150,7 @@ loglikGmrfGivenQ = function(
     # XL, cholCovInvX = Matrix::solve(cholCovMat, covariates)
     # XprecX, cholCovInvXcross = Matrix::crossprod(cholCovInvX)
     # XprecXinv, cholCovInvXcrossInv = Matrix::solve(cholCovInvXcross)
-  }
+  } # end no nugget
   
   logDetVar = logDetVar - detQ + N - N*log(N)
   m2logL = logDetVar + outer(N,log(R), "*") - twoLogJacobian
@@ -170,9 +176,7 @@ loglikGmrfGivenQ = function(
 					  paste,sep='.'))
 			  res})
   
-
-  
-  
+   
   
   m2logL['reml',] =	m2logL['reml',] +  determinant(
     XprecXinv,logarithm=TRUE)$modulus
