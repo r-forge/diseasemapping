@@ -5,12 +5,14 @@ loglikGmrfGivenQ = function(
   Ry, Y, 
   Rx, X,
   Q, Qchol=NULL, 
-  detQ=NULL) {
-  
+  detQ=NULL, 
+  boxcoxInterval=NULL, 
+  reml=TRUE,
+  sumLogY = NULL) {
   
   # propNugget =    tau^2/xi^2
   
-	if(is.vector(Y))	
+  if(is.vector(Y))	
 		Y = as.matrix(Y)
 	
   N= nrow(Y) + c(ml=0,reml=-ncol(X))
@@ -24,40 +26,105 @@ loglikGmrfGivenQ = function(
   
   if(propNugget>0){
 
-	  xisqtausq = 1/propNugget
+	xisqtausq = 1/propNugget
   
-	  Vchol = update(Qchol, Q, mult=xisqtausq)
+	Vchol = update(Qchol, Q, mult=xisqtausq)
 	  
-	  Vy = solve(Vchol, Y)
-	  Vx = solve(Vchol, X)
-	  
-    
-    XprecXinv = solve(Matrix::crossprod(Rx,Vx))
-    
+	Vx = solve(Vchol, X)
+   	XprecXinv = solve(Matrix::crossprod(Rx,Vx))
+
+	if(length(boxcoxInterval)==2){ # run an optimizer
+		oneL = function(onebc) {
+				if(abs(onebc)<0.001) {
+					Ybc = log(Y) 
+				} else  { #boxcox far from 0 and 1
+					Ybc <- ((Y^onebc) - 1)/ onebc 
+				}
+				twoLogJacobian = as.numeric(2*(onebc-1)*sumLogY) 
+				Vy = solve(Vchol, Ybc)
+				betaHat = XprecXinv %*% 
+						Matrix::crossprod(Rx,Vy)
+				Rybc = Q %*% Ybc
+				R = diag(
+						Matrix::crossprod(Rybc,Vy) - 
+								Matrix::crossprod(Rybc, Vx) %*% betaHat
+				)
+				logDetVar = as.numeric(
+						2*determinant(Vchol,logarithm=TRUE)$modulus
+				) 
+				logDetVar = logDetVar - detQ + N - N*log(N)
+				m2logL = logDetVar + outer(N,log(R), "*") - twoLogJacobian
+				m2logL[ c('ml','reml')[1+reml] ]
+		}
+		boxcox = optimize(oneL, range(boxcox),maximum=TRUE)$maximum
+		 #found boxcox
+		if(abs(boxcox)<0.001) {
+				Y = log(Y) 
+		} else  { #boxcox far from 0 and 1
+				Y <- ((Y^boxcox) - 1)/ boxcox 
+		}
+		Ry = Q %*% Ybc
+	# Y is now box-cox transfomed
+	}  else { # no boxcox
+		twoLogJacobian=0
+		boxcox=1
+	}
+	Vy = solve(Vchol, Y)
     betaHat =  
       XprecXinv %*% 
         Matrix::crossprod(Rx,Vy) 
-    
     rownames(betaHat) = colnames(X)
 
 	R = diag(
 			Matrix::crossprod(Ry,Vy) - 
 					Matrix::crossprod(Ry, Vx) %*% betaHat
 	)
- 
-	
 	constHat=tausq = outer(N,R,"/")
 	xisq = tausq/propNugget
 	
     logDetVar = as.numeric(
       2*determinant(Vchol,logarithm=TRUE)$modulus
-	)
+	) 
         
   } else { # no nugget 
     
-	  
-    XprecX = Matrix::crossprod(X,Rx)
-    XprecXinv = solve(XprecX)
+  if(length(boxcoxInterval)==2){ # run an optimizer
+	  XprecX = Matrix::crossprod(X,Rx)
+	  XprecXinv = solve(XprecX)
+	  oneL = function(onebc) {
+			  if(abs(onebc)<0.001) {
+				  Ybc = log(Y) 
+			  } else  { #boxcox far from 0 and 1
+				  Ybc <- ((Y^onebc) - 1)/ onebc 
+			  }
+			  twoLogJacobian = as.numeric(2*(onebc-1)*sumLogY) 
+			  
+			  Rybc = Q %*% Ybc
+			  
+			  betaHat = XprecXinv %*% 
+					  Matrix::crossprod(X , Rybc)
+			  
+			  resids  =  Ybc - X %*% betaHat 
+			  R =  t(Matrix::crossprod(resids,Q)) * resids
+			  R = apply(R, 2,sum)
+			  
+			  logDetVar = - detQ + N - N*log(N)
+			  m2logL = logDetVar + outer(N,log(R), "*") - twoLogJacobian
+			  m2logL[ c('ml','reml')[1+reml] ]
+	  }
+	  boxcox = optimize(oneL, range(boxcox),maximum=TRUE)$maximum
+	  #found boxcox
+	  if(abs(boxcox)<0.001) {
+			  Y = log(Y) 
+	  } else  { #boxcox far from 0 and 1
+			  Y <- ((Y^boxcox) - 1)/ boxcox 
+	  }
+	  Ry = Q %*% Ybc
+	  # Y is now box-cox transfomed
+	  }  else { # no boxcox
+		  twoLogJacobian=0
+		  boxcox=1
+	  }
     
     betaHat = XprecXinv %*% 
                            Matrix::crossprod(X , Ry)
@@ -80,7 +147,7 @@ loglikGmrfGivenQ = function(
   }
   
   logDetVar = logDetVar - detQ + N - N*log(N)
-  m2logL = logDetVar + outer(N,log(R), "*")
+  m2logL = logDetVar + outer(N,log(R), "*") - twoLogJacobian
   
   
   variances = abind::abind(tausq = tausq, xisq = xisq,
@@ -149,7 +216,7 @@ loglikGmrfGivenQ = function(
             variances,
             as.matrix(betaHat), 
             sebeta,
-			propNugget=propNugget)#,
+			propNugget=propNugget, boxcox=rep(boxcox,2))#,
 #            logDetVar=as.numeric(logDetVar))
   
   
@@ -162,7 +229,9 @@ loglikGmrfGivenQ = function(
 loglikGmrfOneRange = function(
   oneminusar,
   Yvec, Xmat, NN, propNugget=0,
-  shape=1,  
+  shape=1,  boxcoxInterval=NULL,
+  reml=TRUE,
+  sumLogY = NULL,
   adjustEdges=FALSE) {
     
     Q =  maternGmrfPrec(NN,
@@ -186,7 +255,9 @@ loglikGmrfOneRange = function(
   	Ry=Ry, Y=as.matrix(Yvec), 
   	Rx=Rx, X=Xmat,
  	Q=Q, Qchol=Qchol, 
-  detQ=detQ)  
+  detQ=detQ,
+  boxcoxInterval = boxcoxInterval,
+  reml=reml, sumLogY=sumLogY)  
   
 thepar=attributes(Q)$param
    
@@ -270,17 +341,36 @@ if(F){	res = rbind(res,
 loglikGmrf = function(
   oneminusar,
   Yvec, Xmat, NN, propNugget=0,
-  shape=1, 
+  shape=1, boxcox=1,
+  reml=TRUE,
   adjustEdges=FALSE,
   mc.cores=1) {
-  
-  
-  argList = list(Yvec=as.matrix(Yvec), 
+  	
+	if(length(boxcox)>1) {
+		boxcoxInterval = range(boxcox)
+		sumLogY = apply(as.matrix(Yvec), 2, function(qq) sum(log(qq)))	
+		if(is.nan(sumLogY))
+			warning("boxcox shouldnt be used with negative data")
+	} else { # a single boxcox parameter (perhaps 1)
+		boxcoxInterval=NULL
+		sumLogY=NULL
+		if(abs(boxcox-  1 ) > 0.001) {
+			if(abs(boxcox<0.001)) {
+				Yvec = log(Yvec) 
+			} else  { #boxcox far from 0 and 1
+				Yvec <- ((Yvec^boxcox) - 1)/boxcox
+			}
+		}
+	}
+	
+  	argList = list(Yvec=as.matrix(Yvec), 
                  Xmat=as.matrix(Xmat), 
 				 NN=NN,
                  propNugget=propNugget,
                  shape=shape,
-                 adjustEdges=adjustEdges
+                 adjustEdges=adjustEdges,
+		 boxcoxInterval=boxcoxInterval, sumLogY=sumLogY,
+		 reml=reml
   )
   
   if(mc.cores>1) {
