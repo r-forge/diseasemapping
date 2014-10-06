@@ -34,7 +34,7 @@ loglikGmrfGivenQ = function(
    	XprecXinv = solve(Matrix::crossprod(Rx,Vx))
 
 	if(length(boxcoxInterval)==2){ # run an optimizer
-		oneL = function(onebc, Y) {
+		oneL = function(onebc, Y, sumLogY) {
 				if(abs(onebc)<0.001) {
 					Ybc = log(Y) 
 				} else  { #boxcox far from 0 and 1
@@ -59,7 +59,7 @@ loglikGmrfGivenQ = function(
 		boxcox = rep(NA, ncol(Y))
 		for(Dvar in 1:ncol(Y)) {
 			bchere = optimize(oneL, range(boxcox),
-					maximum=TRUE, Y=Y[,Dvar])$maximum
+					maximum=TRUE, Y=Y[,Dvar], sumLogY=sumLogY[Dvar])$maximum
 			boxcox[Dvar] = bchere
 		 #found boxcox
 			if(abs(bchere)<0.001) {
@@ -69,10 +69,10 @@ loglikGmrfGivenQ = function(
 			}
 		}
 		Ry = Q %*% Ybc
-	# Y is now box-cox transfomed
-	}  else { # no boxcox
+		# Y is now box-cox transfomed
+		twoLogJacobian = as.numeric(2*(boxcox-1)*sumLogY) 
+	} else { # no boxcox
 		twoLogJacobian=0
-		boxcox=1
 	}
 	Vy = solve(Vchol, Y)
     betaHat =  
@@ -96,8 +96,8 @@ loglikGmrfGivenQ = function(
   	if(length(boxcoxInterval)==2){ # run an optimizer
 	  XprecX = Matrix::crossprod(X,Rx)
 	  XprecXinv = solve(XprecX)
-	  oneL = function(onebc) {
-			  if(abs(onebc)<0.001) {
+	  oneL = function(onebc, Y, sumLogY) {
+		  if(abs(onebc)<0.001) {
 				  Ybc = log(Y) 
 			  } else  { #boxcox far from 0 and 1
 				  Ybc <- ((Y^onebc) - 1)/ onebc 
@@ -119,9 +119,9 @@ loglikGmrfGivenQ = function(
 	  }
 	boxcox = rep(NA, ncol(Y))
 	for(Dvar in 1:ncol(Y)) {
-		  bchere = optimize(oneL, range(boxcox),
-				  maximum=TRUE, Y=Y[,Dvar])$maximum
-		  boxcox[Dvar] = bchere
+		bchere = optimize(oneL, range(boxcox),
+				maximum=TRUE, Y=Y[,Dvar], sumLogY=sumLogY[Dvar])$maximum
+		boxcox[Dvar] = bchere
 		  #found boxcox
 		  if(abs(bchere)<0.001) {
 			  Y[,Dvar] = log(Y[,Dvar]) 
@@ -129,8 +129,12 @@ loglikGmrfGivenQ = function(
 			  Y[,Dvar] <- ((Y[,Dvar]^bchere) - 1)/ bchere 
 		  }
 	}
-  }
- 
+	Ry = Q %*% Ybc
+	twoLogJacobian = as.numeric(2*(boxcox-1)*sumLogY) 	
+  } else {
+	twoLogJacobian=0  
+  } # end box cox
+  
 	  
     betaHat = XprecXinv %*% 
                            Matrix::crossprod(X , Ry)
@@ -153,8 +157,7 @@ loglikGmrfGivenQ = function(
   } # end no nugget
   
   logDetVar = logDetVar - detQ + N - N*log(N)
-  m2logL = logDetVar + outer(N,log(R), "*") - twoLogJacobian
-  
+  m2logL = logDetVar + outer(N,log(R), "*") - rbind(twoLogJacobian,twoLogJacobian)
   
   variances = abind::abind(tausq = tausq, xisq = xisq,
 		  along=3)
@@ -414,11 +417,22 @@ summaryGmrfFit= function(x) {
 summaryGmrfFit.array = function(x) {
   
   
-  x2 = aperm(x,c(3,2,1))
-  x2 = matrix(c(x2), ncol=dim(x2)[3])
-  colnames(x2) = dimnames(x)[[1]]
-  res = summaryGmrfFit.matrix(x2,npar=2)
-  return(res)
+  x2 = aperm(x,seq(length(dim(x)),1))
+  x3 = array(x2, c(prod(dim(x2)[1:2]),dim(x2)[-(1:2)]),
+		  dimnames=c(
+				  list(as.vector(outer(dimnames(x2)[[1]], dimnames(x2)[[2]], paste))),
+				  dimnames(x2)[-(1:2)]))
+  if(length(dim(x3))==2){
+	  res = summaryGmrfFit.matrix(x3,npar=2)
+  } else if(length(dim(x3))==3){
+	res=NULL
+	for(D  in seq(dim(x3)[2],1)){
+		res = abind::abind(summaryGmrfFit.matrix(x3[,D,]), 
+				res, along=4)
+	}
+	dimnames(res)[[4]]=dimnames(x3)[[2]]
+  }
+	return(res)
 }
 
 
@@ -468,6 +482,8 @@ summaryGmrfFit.matrix = function(x,npar=1) {
     result[[D1]] = parKeep
     
   }
+  result = abind::abind(result[[1]], result[[2]], along=3)
+  dimnames(result)[[3]] = someL
   return(result)		
 }
 

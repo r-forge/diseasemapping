@@ -29,7 +29,7 @@ lgm.Raster=	function(formula,data, grid,
                     Yvec=Yvec,Xmat=reXmat,
                     NN=NN,propNugget=nugget,
                     shape=shape,mc.cores=mc.cores,...)
-
+thel <<- thel
   thesummary = list()
   if (reml){
     chooseLike = 'logL.reml'
@@ -57,6 +57,7 @@ lgm.Raster=	function(formula,data, grid,
   }
   else{
     # $propNugget
+		print(dimnames(thel))
     propNug = thel['propNugget',,1]
     propLike =  thel[chooseLike,,1]
     propm2Like =  thel[m2Like,,1]
@@ -92,12 +93,10 @@ lgm.Raster=	function(formula,data, grid,
   thesummary$model$reml = reml
   thesummary$model$trend = formula
  
-  if (reml){
-    thesummary$summary = summaryGmrfFit(thel)$reml
-  }else{
-    thesummary$summary = summaryGmrfFit(thel)$ml  
-  }
-  
+  print(dim(summaryGmrfFit(thel)))
+  thesummary$summary = summaryGmrfFit(thel)[,,c('ml','reml')[reml+1]]
+
+	
   thesummary$param = thesummary$summary[,'mle']
   
   mleparam = thesummary$param

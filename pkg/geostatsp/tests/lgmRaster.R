@@ -48,9 +48,13 @@ if(FALSE) {
 	
 	myModel = c(intercept=0,variance=2^2,nugget=0.5^2, range=2.5,shape=2, 
 			cov1=0.2, cov2=-0.5)
+	data('nn32')
+	theNN=nn128
 	covariates = brick(
 			xmn=0,ymn=0,xmx=10,ymx=10,
-			ncols=200,nrows=200,nl=2)
+			ncols=attributes(theNN)$Nx,
+			nrows=attributes(theNN)$Ny,
+			nl=2)
 	values(covariates)[,1] = rep(seq(0,1,len=nrow(covariates)), ncol(covariates))
 	values(covariates)[,2] = rep(seq(0,1,len=nrow(covariates)), 
 			rep(nrow(covariates), ncol(covariates)))
@@ -59,8 +63,19 @@ if(FALSE) {
 	myMean = myModel["intercept"] 
 	for(D in names(covariates))
 		myMean = myMean + covariates[[D]]*myModel[D]
-	myY = myU
-	for(D in names(myY)) {
-		myY[[D]] = myY[[D]] + myMean
-	}	
+	myY = myU + myMean
+	values(myY) = values(myY)+ rnorm(ncell(myY), 0, sqrt(myModel['nugget']))
+
+	res = loglikGmrf(
+			oneminusar=seq(0.01, 0.1, len=4),
+			as.data.frame(myY), 
+			as.data.frame(covariates), 
+			NN=theNN, 
+			propNugget=seq(0,2,len=5),
+			shape=1, 
+			adjustEdges=FALSE,
+			mc.cores=c(1,2)[1+(.Platform$OS.type=='unix')]
+	)
+		
+		
 }
