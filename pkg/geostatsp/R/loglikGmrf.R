@@ -39,9 +39,9 @@ loglikGmrfGivenQ = function(
 					Ybc = log(Y) 
 				} else  { #boxcox far from 0 and 1
 					Ybc <- ((Y^onebc) - 1)/ onebc 
-				}
-				twoLogJacobian = as.numeric(2*(onebc-1)*sumLogY) 
-				Vy = solve(Vchol, Ybc)
+			}
+			twoLogJacobian = as.numeric(2*(onebc-1)*sumLogY) 
+			Vy = solve(Vchol, Ybc)
 				betaHat = XprecXinv %*% 
 						Matrix::crossprod(Rx,Vy)
 				Rybc = Q %*% Ybc
@@ -68,7 +68,7 @@ loglikGmrfGivenQ = function(
 				Y[,Dvar] <- ((Y[,Dvar]^bchere) - 1)/ bchere 
 			}
 		}
-		Ry = Q %*% Ybc
+		Ry = Q %*% Y
 		# Y is now box-cox transfomed
 		twoLogJacobian = as.numeric(2*(boxcox-1)*sumLogY) 
 	} else { # no boxcox
@@ -100,9 +100,9 @@ loglikGmrfGivenQ = function(
 	  oneL = function(onebc, Y, sumLogY) {
 		  if(abs(onebc)<0.001) {
 				  Ybc = log(Y) 
-			  } else  { #boxcox far from 0 and 1
+		  } else  { #boxcox far from 0 and 1
 				  Ybc <- ((Y^onebc) - 1)/ onebc 
-			  }
+		  }
 			  twoLogJacobian = as.numeric(2*(onebc-1)*sumLogY) 
 			  
 			  Rybc = Q %*% Ybc
