@@ -19,12 +19,13 @@ setClass('nb',
 		)
 )
 
-`inla.nb.to.graph` = function(adjMat, graph.file="graph.dat")
+`nbToInlaGraph` = function(adjMat, graphFile="graph.dat")
 {
 	## A function for converting GeoBUGS adjacency data into the INLA
 	## graph format. Kindly provided by Aki Havunlinna tkk.fi; thanks.
+	# edited by Patrick Brown to allow for some regions having no neighbours
 	
-	fd = file(graph.file,  "w")
+	fd = file(graphFile,  "w")
 	len <- length(adjMat)
 
 	cat(len, '\n', file=fd)
@@ -155,7 +156,7 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 		# if using windows, replace back slashes with forward slashes...
 		graphfile = gsub("\\\\", "/", graphfile)
 		
-		region.index = inla.nb.to.graph(adjMat, graphfile)
+		region.index = nbToInlaGraph(adjMat, graphfile)
 
 		# check for data regions missing from adj mat
 		data[[region.id]] = as.character(data[[region.id]])
@@ -303,7 +304,7 @@ formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", f
 			warning("the dataset appears to have no rows")
 
 		lcFitted <- apply(lincombMat, 1, lcOneRow, idxCol=c("region.indexI","region.indexS"))
-		names(lcFitted) = paste("fitted_", lincombMat[,"region.indexS"],sep="")
+		names(lcFitted) = paste("fitted_", names(region.index)[lincombMat[,"region.indexS"]],sep="")
 
 
 		inlaLincombs = c(inlaLincombs, lcFitted)
