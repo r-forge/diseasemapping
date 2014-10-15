@@ -141,6 +141,166 @@ MLE  $\hat\phi, \hat\xi, \hat\tau,\hat\beta$  maximize $pr(Y ;
 \phi,\xi,\tau,\beta)$.
 
 \section*{Likelihood}
+
+
+
+\begin{multline*}
+-2 \log pr(\mathbf{Y};\phi,\beta,\tau,\xi) =
+\log| (\xi^2  Q(\phi)^{-1} + \tau^2 I  ) | + \\
+( \mathbf{Y} -\mathbf{X}\beta)  '
+  (\xi^2  Q(\phi)^{-1} + \tau^2 I  )^{-1}
+(\mathbf{Y} - \mathbf{X}\beta)
+\end{multline*}
+
+\[
+\hat\beta = [ \mathbf{X}'
+(  \xi^2  Q(\phi)^{-1} + \tau^2 I )^{-1}   \mathbf{X}]^{-1}
+\mathbf{X}'(\xi^2  Q(\phi)^{-1} +
+\tau^2 I  )^{-1} \mathbf{Y}
+\]
+
+
+
+\begin{align*}
+V = & (\xi^2/\tau^2) + Q\\
+[\xi^2 Q^{-1} + \tau^2 I]^{-1}= & \tau^2 Q [(\xi^2/\tau^2) + Q]^{-1} \\
+= & \tau^2 Q V^{-1}\\
+R_X =& Q \mathbf{X}\\
+R_Y =& Q \mathbf{Y}\\
+V_X = &V^{-1} \mathbf{X}\\
+V_Y =& V^{-1} \mathbf{Y}\\
+\end{align*}
+
+
+\begin{align*}
+\hat\beta =  &[ \mathbf{X}'
+ Q [(\xi^2/\tau^2) + Q]^{-1}  \mathbf{X}]^{-1}
+\mathbf{X}' Q [(\xi^2/\tau^2) + Q]^{-1}  \mathbf{Y}\\
+= & [ R_X' V_X ]^{-1}  R_X' V_Y\\
+\end{align*}
+
+
+\begin{align*}
+-2 \log pr[\mathbf{Y};\phi,\tau, \xi ,\hat\beta(\phi, \xi/\tau)] = &
+-\log |\var(\mathbf{Y})^{-1}| + \tau^2 ( \mathbf{Y} -\mathbf{X}\hat\beta) '
+  Q V^{-1} 
+ [\mathbf{Y} - \mathbf{X}\hat\beta ] \\
+R=&  [R_Y' V_Y - R_Y' V_X \hat\beta - \hat\beta ' R_X' V_Y + \hat\beta 'R_X'
+V_X \hat\beta ] \\
+\hat\beta 'R_X'
+V_X \hat\beta = &  \hat\beta' R_X' V_X [ R_X' V_X ]^{-1}  R_X' V_Y =
+ \hat\beta ' R_X' V_Y   \\
+R = &[R_Y' V_Y - R_Y' V_X \hat\beta] = R_Y' V^{-1} ( \mathbf{Y} -
+\mathbf{X}\hat\beta)\\
+-2 \log pr[\mathbf{Y};\phi,\tau, \xi ,\hat\beta(\phi, \xi/\tau)] =& -N \log (\tau^2) -\log|Q| + \log|V| +  \tau^2 R\\
+\end{align*}
+
+now find $\hat\tau(\tau/\xi, \psi)$
+\begin{align*}
+\hat\tau^2(\psi, \tau^2/\xi^2) = &  N/R \\
+-2 \log pr[\mathbf{Y};\phi,\tau^2/\xi^2, \hat\tau^2(\phi, \tau^2/\xi^2), \hat\beta(\phi, \xi/\tau)] = & -N\log(N) + N \log (R)   -\log|Q| +
+\log|V|+N
+\end{align*}
+
+\section*{Conditional distributions}
+
+$c = \tau^2/\xi^2$
+
+\begin{align*}
+U|Y \sim & \text{MVN}\{\xi^2Q^{-1}(\xi^2 Q^{-1} + \tau^2 I)^{-1})
+(\mathbf{Y} - \mathbf{X}\beta), \\
+&\qquad
+\xi^2Q^{-1}- \xi^2Q^{-1}( \xi^2Q^{-1} + \tau^2 I  )^{-1})\xi^2 Q^{-1} \}\\
+\sim &\text{MVN}\left\{  ( I + c Q  )^{-1}  (\mathbf{Y} -
+\mathbf{X}\beta),\ \xi^2 Q^{-1}[I- ( I + cQ  )^{-1}	 ] \right\}\\
+\end{align*}
+
+getting just the diagonal elements in R
+\begin{align*}
+\text{diag}\left[Q^{-1} ( I + c Q  )^{-1}\right]	= &
+\text{apply}(Q^{-1} \cdot
+( I + c Q  )^{-1}, 2,\text{sum})\\
+= & \text{apply}(L_2^{-1}\cdot L_2^{-1\prime}Q^{-1},2,\text{sum})
+\end{align*}
+
+
+\section*{Missing values}
+
+\subsection{edge correction}
+to do
+
+\subsection{something else}
+
+\appendix
+
+\section{stuff that didnt' work}
+
+
+\subsection{EM}
+
+\subsubsection{Profile likelihood for $\phi$ (fixed $Q$)}
+\begin{multline*}
+-2 \log L(U,Y;\xi,\tau,\beta,Q) =
+	N\log(\xi^2) + U'Q U/\xi^2 +
+	N\log(\tau^2) +\\
+	[Y-U-X\hat\beta]'[Y-U-X\hat\beta]/\tau^2
+	\end{multline*}
+$\hat\beta_{p+1}$ satisfies
+\[
+\E[ 2  X' X \hat\beta_{p+1} - 2 X'(Y - U) |Y ; p] = 0
+ \]
+ so
+\[
+ \hat\beta_{p+1} = (X'X)^{-1}(X'Y) - (X'X)^{-1}(X'\hat U_p)
+\]
+$\hat\xi^2_{p+1}$ satisfies
+\begin{gather*}
+N/\xi^2_{p+1} - \text{E}[ U'Q U |Y; p ]/\xi^4 = 0\\
+\xi^2_{p+1} = \text{E}[ U'L L' U |Y; p ]/N\\
+L'U|Y;p \sim  \text{MVN}\{
+	L^{-1}\hat U_p,
+\hat\xi_p^2[I - L^{-1}( Q^{-1} + \hat\tau_p^2 I  )^{-1}) L^{-1\prime}] \}\\
+\xi^2_{p+1} = (L' \hat U_p )'(L'\hat U_p) + \hat\xi_p^2\left\{N-
+\text{trace}\left[(I + \hat\tau_p^2 Q  )^{-1} \right]\right\}
+\end{gather*}
+
+$\hat\tau_{p+1}$ satisfies
+\begin{gather*}
+N /\hat\tau_{p+1} -
+\E\{[Y-U-X\hat\beta_{p+1}]'[Y-U-X\hat\beta_{p+1}]/\tau^4|Y;p\}=0\\
+\hat\tau_{p+1} = \E\{[Y-U-X\hat\beta_{p+1}]'[Y-U-X\hat\beta_{p+1}]|Y;p\}/N\\
+[Y-U-X\hat\beta_{p+1}]'[Y-U-X\hat\beta_{p+1}]=
+[Y-X\hat\beta_{p+1}]'[Y-X\hat\beta_{p+1}]
++ U'U -2 [Y-X\hat\beta_{p+1}]' U \\
+N \hat\tau_{p+1} = [Y-X\hat\beta_{p+1}]'[Y-X\hat\beta_{p+1}]+
+\E[U'U|Y;p] - 2 [Y-X\hat\beta_{p+1}]' \hat U_p\\
+\E[U'U|Y;p] = (\mathbf{Y} -
+\mathbf{X}\hat\beta_p)' ( I + \hat\tau^2_p/\hat\xi^2_p Q  )^{-2}  (\mathbf{Y} -
+\mathbf{X}\hat\beta_p) + \text{trace}\left\{ Q^{-1}\left[\hat\xi_p^2 I-
+(\hat\xi_p^2  I + \hat\tau_p^2Q )^{-1} \right]\right\}
+\end{gather*}
+For a given fixed $\phi$
+\begin{itemize}
+  \item Start with an initial values  $c_0$
+  \item At iteration $p$  do EM with fixed $\phi$ to get $c_{p+1}$
+  \item repeat to get $\hat c(\phi)$
+  \item Calculate likelihood
+  $L(Y;\phi,\hat c(\phi), \hat\beta[\phi,\hat c(\phi)) $
+\end{itemize}
+Note only one cholesky required per iteration when $\phi$ is fixed.
+
+\subsubsection*{MLE's only}
+For a given fixed $\phi$
+\begin{itemize}
+  \item Start with initial values  $\phi_0$, $c_0$
+  \item At iteration $p$  to get $\phi_{p+1}$, $c_{p+1}$
+  \item repeat to get $\hat c(\phi)$
+\end{itemize}
+Note two cholesky's per iteration. Need cholesky of $Q$ to get $\hat\beta$
+
+
+
+\section*{The old likelihood}
 \begin{multline*}
 -2 \log pr(\mathbf{Y};\phi,\beta,\tau) =
 | (\xi^2  Q(\phi)^{-1} + \tau^2 I  ) | + \\
@@ -220,132 +380,6 @@ The algorithm
   \item Repeat for multiple $\phi$ to get $\hat \phi$
 \end{itemize}
 
-
-\subsection{Another likelihood}
-
-
-
-\begin{align*}
-\var(\mathbf{Y})^{-1}  = &[\xi^2 Q^{-1} + \tau^2 I]^{-1}\\
-=&  \tau^2 Q [(\xi^2/\tau^2) + Q]^{-1}  \\
-\end{align*}
-
-\begin{align*}
-V = & (\xi^2/\tau^2) + Q\\
-R_X =& Q \mathbf{X}\\
-R_Y =& Q \mathbf{Y}\\
-V_X = &V^{-1} \mathbf{X}\\
-V_Y =& V^{-1} \mathbf{Y}\\
-\end{align*}
-
-
-\begin{align*}
-\hat\beta =  &[ \mathbf{X}'
- Q [(\xi^2/\tau^2) + Q]^{-1}  \mathbf{X}]^{-1}
-\mathbf{X}' Q [(\xi^2/\tau^2) + Q]^{-1}  \mathbf{Y}\\
-= & [ R_X' V_X ]^{-1}  R_X' V_Y\\
-\end{align*}
-
-
-\begin{align*}
--2 \log pr(\mathbf{Y};\phi,\tau, \xi) = &
--\log |\var(\mathbf{Y})^{-1}| + \tau^2 ( \mathbf{Y} -\mathbf{X}\hat\beta) '
-  Q V^{-1} 
- [\mathbf{Y} - \mathbf{X}\hat\beta ] \\
-=& -N \log (\tau^2) -\log|Q| + \log|V| +  \tau^2 R\\
-R=&  [R_Y' V_Y - R_Y' V_X \hat\beta - \hat\beta ' R_X' V_Y + \hat\beta 'R_X'
-V_X \hat\beta ] \\
-\hat\beta 'R_X'
-V_X \hat\beta = &  \hat\beta' R_X' V_X [ R_X' V_X ]^{-1}  R_X' V_Y =
- \hat\beta ' R_X' V_Y   \\
-R = &[R_Y' V_Y - R_Y' V_X \hat\beta] = R_Y' V^{-1} ( \mathbf{Y} -
-\mathbf{X}\hat\beta)
-\end{align*}
-
-\begin{align*}
-\hat\tau^2(\psi, \tau^2/\xi^2) = &  N/R \\
--2 \log pr(\mathbf{Y};\phi,\tau^2/\xi^2) = & -N\log(N) + N \log (R)   -\log|Q| +
-\log|V|+N
-\end{align*}
-
-\section*{Conditional distributions}
-Conditional
-\begin{align*}
-U|Y \sim & \text{MVN}\{\xi^2Q^{-1}(\xi^2 Q^{-1} + \tau^2 I)^{-1})
-(\mathbf{Y} - \mathbf{X}\beta), \\
-&\qquad
-\xi^2Q^{-1}- \xi^2Q^{-1}( \xi^2Q^{-1} + \tau^2 I  )^{-1})\xi^2 Q^{-1} \}\\
-\sim &\text{MVN}\left\{  ( I + c Q  )^{-1}  (\mathbf{Y} -
-\mathbf{X}\beta),\ \xi^2 Q^{-1}[I- ( I + cQ  )^{-1}	 ] \right\}\\
-\text{diag}\left[Q^{-1} ( I + c Q  )^{-1}\right]	= &
-\text{apply}(Q^{-1} \cdot
-( I + c Q  )^{-1}, 2,\text{sum})\\
-= & \text{apply}(L_2^{-1}\cdot L_2^{-1\prime}Q^{-1},2,\text{sum})
-\end{align*}
-
-\section*{EM}
-
-\subsection*{Profile likelihood for $\phi$ (fixed $Q$)}
-\begin{multline*}
--2 \log L(U,Y;\xi,\tau,\beta,Q) =
-	N\log(\xi^2) + U'Q U/\xi^2 +
-	N\log(\tau^2) +\\
-	[Y-U-X\hat\beta]'[Y-U-X\hat\beta]/\tau^2
-	\end{multline*}
-$\hat\beta_{p+1}$ satisfies
-\[
-\E[ 2  X' X \hat\beta_{p+1} - 2 X'(Y - U) |Y ; p] = 0
- \]
- so
-\[
- \hat\beta_{p+1} = (X'X)^{-1}(X'Y) - (X'X)^{-1}(X'\hat U_p)
-\]
-$\hat\xi^2_{p+1}$ satisfies
-\begin{gather*}
-N/\xi^2_{p+1} - \text{E}[ U'Q U |Y; p ]/\xi^4 = 0\\
-\xi^2_{p+1} = \text{E}[ U'L L' U |Y; p ]/N\\
-L'U|Y;p \sim  \text{MVN}\{
-	L^{-1}\hat U_p,
-\hat\xi_p^2[I - L^{-1}( Q^{-1} + \hat\tau_p^2 I  )^{-1}) L^{-1\prime}] \}\\
-\xi^2_{p+1} = (L' \hat U_p )'(L'\hat U_p) + \hat\xi_p^2\left\{N-
-\text{trace}\left[(I + \hat\tau_p^2 Q  )^{-1} \right]\right\}
-\end{gather*}
-
-$\hat\tau_{p+1}$ satisfies
-\begin{gather*}
-N /\hat\tau_{p+1} -
-\E\{[Y-U-X\hat\beta_{p+1}]'[Y-U-X\hat\beta_{p+1}]/\tau^4|Y;p\}=0\\
-\hat\tau_{p+1} = \E\{[Y-U-X\hat\beta_{p+1}]'[Y-U-X\hat\beta_{p+1}]|Y;p\}/N\\
-[Y-U-X\hat\beta_{p+1}]'[Y-U-X\hat\beta_{p+1}]=
-[Y-X\hat\beta_{p+1}]'[Y-X\hat\beta_{p+1}]
-+ U'U -2 [Y-X\hat\beta_{p+1}]' U \\
-N \hat\tau_{p+1} = [Y-X\hat\beta_{p+1}]'[Y-X\hat\beta_{p+1}]+
-\E[U'U|Y;p] - 2 [Y-X\hat\beta_{p+1}]' \hat U_p\\
-\E[U'U|Y;p] = (\mathbf{Y} -
-\mathbf{X}\hat\beta_p)' ( I + \hat\tau^2_p/\hat\xi^2_p Q  )^{-2}  (\mathbf{Y} -
-\mathbf{X}\hat\beta_p) + \text{trace}\left\{ Q^{-1}\left[\hat\xi_p^2 I-
-(\hat\xi_p^2  I + \hat\tau_p^2Q )^{-1} \right]\right\}
-\end{gather*}
-For a given fixed $\phi$
-\begin{itemize}
-  \item Start with an initial values  $c_0$
-  \item At iteration $p$  do EM with fixed $\phi$ to get $c_{p+1}$
-  \item repeat to get $\hat c(\phi)$
-  \item Calculate likelihood
-  $L(Y;\phi,\hat c(\phi), \hat\beta[\phi,\hat c(\phi)) $
-\end{itemize}
-Note only one cholesky required per iteration when $\phi$ is fixed.
-
-\subsection*{MLE's only}
-For a given fixed $\phi$
-\begin{itemize}
-  \item Start with initial values  $\phi_0$, $c_0$
-  \item At iteration $p$  to get $\phi_{p+1}$, $c_{p+1}$
-  \item repeat to get $\hat c(\phi)$
-\end{itemize}
-Note two cholesky's per iteration. Need cholesky of $Q$ to get $\hat\beta$
-
-\section*{Missing values}
 
 \begin{align*}
 Y = & X \beta + Z U + Z\\
