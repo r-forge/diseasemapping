@@ -510,8 +510,7 @@ krigeLgm = function(
 		x
 		
 	}
-	print(5)	
-	
+
 
 	datForK = list(
 			locations=locations,param=param,
@@ -550,8 +549,6 @@ krigeLgm = function(
 	
 	predRaster = meanRaster + randomRaster
 	names(predRaster) = "predict"
-
-	print(6)
 	
 	
 	if(any(forVar > param["variance"])){
