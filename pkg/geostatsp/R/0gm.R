@@ -181,11 +181,13 @@ function(formula, data,  grid,
 			covFactors = c(D, covFactors)
 	}
 
+	
 	Sfactors = c(
 			names(data)[apply(data@data,2,is.factor)],
 			covFactors,
 			theFactors
 	)
+	Sfactors = unique(Sfactors)
 	covFactors = intersect(Sfactors,names(covariates))
 	
 	cantFind = setdiff(Sfactors, c(names(data), names(covariates)))
@@ -242,9 +244,14 @@ function(formula, data,  grid,
 		if(is.null(theLevels)) {
 			theLabels = paste("l", names(theTable),sep="")
 		} else {
+			idCol = grep("^id$", names(theLevels), ignore.case=TRUE)[1]
+			if(!length(idCol)) idCol = 1
+			labelCol = grep("^category$|^label$", names(theLevels), ignore.case=TRUE)[1]
+			if(!length(labelCol)) labelCol = 2
+			
 			theLabels = theLevels[
-				match(as.integer(names(theTable)), theLevels$ID)
-				,"Category"]
+				match(as.integer(names(theTable)), theLevels[,idCol])
+				,labelCol]
 		}
 		data[[D]] = factor(data[[D]], levels=as.integer(names(theTable)),
 				labels=theLabels)			

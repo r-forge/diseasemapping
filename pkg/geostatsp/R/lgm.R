@@ -137,12 +137,15 @@ setMethod("lgm",
 	dots$data=data
 	dots$paramToEstimate=paramToEstimate
 
-
  	likRes = do.call(likfitLgm, dots)
  
 #	stuff <<- list(formula=formula, data=data, grid=grid, covariates=covariates,
 #			param=likRes$param,expPred=expPred,nuggetInPrediction=nuggetInPrediction)	
-	
+
+
+
+
+
 # call krige	
 	krigeRes =  krigeLgm(
 			formula=formula,data=data,
@@ -151,7 +154,7 @@ setMethod("lgm",
 			expPred=expPred,
 			nuggetInPrediction=nuggetInPrediction
 			)
-
+			
 		#	data$resid = likRes$resid$resid
 #	likRes$data = data
 
