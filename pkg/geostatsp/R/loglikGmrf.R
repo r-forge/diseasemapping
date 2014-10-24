@@ -160,7 +160,8 @@ loglikGmrfGivenQ = function(
   } # end no nugget
   
   logDetVar = logDetVar - detQ + N - N*log(N)
-  m2logL = logDetVar + outer(N,log(R), "*") - rbind(twoLogJacobian,twoLogJacobian)
+  m2logL = outer(N,log(R), "*")
+  m2logL =  m2logL  + (logDetVar  - c(twoLogJacobian,twoLogJacobian))
   
   variances = abind::abind(tausq = tausq, xisq = xisq,
 		  along=3)
