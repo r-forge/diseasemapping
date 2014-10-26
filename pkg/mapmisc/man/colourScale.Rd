@@ -8,7 +8,7 @@ Produces a scale of colours for plotting maps an producing legends.  }
 \usage{
 	colourScale(x, breaks=5, style=c("quantile","equal","unique", "fixed"),
 	 col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
-	 transform=NULL, revCol=FALSE, exclude=NULL, ...)
+	 transform=NULL, revCol=FALSE, exclude=NULL, levels=NULL,...)
 legendBreaks(pos, breaks, outer=TRUE,...)
 	}
 
@@ -26,6 +26,7 @@ legendBreaks(pos, breaks, outer=TRUE,...)
 	\item{transform}{A list of two functions to transform \code{x} and inverse transform the breaks, or a numeric value specifying a Box-Cox parameter.}
 	\item{revCol}{Reverse the order of the colours.}
 	\item{exclude}{A vector of values to change to NA when they appear in \code{x}}
+	\item{levels}{Vector of names of levels, useful when \code{style='unique'}}
   \item{pos}{
 Position, as specified in the \code{legend} function.
 }
