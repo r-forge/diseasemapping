@@ -1,75 +1,92 @@
-colourScale = function(x, breaks=5, 
+colourScale = function(x=NULL, breaks=5, 
 style=c("quantile","equal","unique", "fixed"),
 col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
-transform=NULL, revCol=FALSE, exclude=NULL, ...) {
+transform=NULL, revCol=FALSE, exclude=NULL, 
+labels=NULL,...) {
 
 UseMethod("colourScale")	
 
 }
 
-colourScale.character =   function(x, breaks=5, 
+colourScale.character =   function(x=NULL, breaks=5, 
 		style=c("quantile","equal","unique", "fixed"),
 		col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
-		transform=NULL, revCol=FALSE, exclude=NULL, ...) {
+		transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL,...) {
 
-	x = factor(x)
-	
-	colourScale(x, breaks=5, 
-	style=c("quantile","equal","unique", "fixed"),
-	col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
-	transform=NULL, revCol=FALSE, exclude=NULL, ...)
+	colourScale(factor(x), breaks=breaks, 
+	style=style,
+	col=col, opacity=opacity, dec=dec, firstBreak=firstBreak, 
+	transform=transform, revCol=revCol, exclude=exclude, labels=labels,...)
 }
 
- colourScale.factor = function(x, breaks=5, 
+colourScale.factor = function(x=NULL, breaks=5, 
 		style=c("quantile","equal","unique", "fixed"),
 		col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
-		transform=NULL, revCol=FALSE, exclude=NULL, ...) {
+		transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL,...) {
 
-	toexclude = which(x %in% exclude)
-	if(length(toexclude)){	
-		x=x[toexclude] = NA
-	}
-	xlabels = levels(x)
-	names(xlabels) = as.character(seq(1:length(xlabels)))
-	x = as.integer(x)
-	
-res=colourScale(x, breaks=breaks,
+	res=colourScale(as.integer(x), 
+			breaks=breaks,
 			style="unique",
-			col, opacity, dec, firstBreak, 
-			transform, revCol, exclude, ...) 		
-
-	res$breaks = xlabels[res$breaks]
+			col=col, opacity=opacity, dec=dec, firstBreak=firstBreak, 
+			transform=transform, revCol=revCol, exclude=exclude, labels=as.character(x),
+			...)
+	
 	res
 }
-colourScale.Raster = function(x, breaks=5, 
+
+colourScale.Raster = function(x=NULL, breaks=5, 
 style=c("quantile","equal","unique", "fixed"),
 col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
-transform=NULL, revCol=FALSE, exclude=NULL, ...) {
+transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL,...) {
 
 style = style[1]
-	if(style %in% c("equal","fixed")) {
-		x = c(minValue(x), maxValue(x))
-	} else {
-		if(ncell(x)<4E+05) {
-			x = values(x)
+	if(style == "equal") {
+		if(length(exclude)) {
+			x = unique(x)
 		} else {
-			stop("x has too many cells for method", style)
+			x = c(minValue(x), maxValue(x))
 		}
+	} else if(style=='fixed') {
+		x = NULL
+	} else if(style=='unique') {
+		x = unique(x)
+	} else {
+		x = sampleRegular(x, min(c(ncell(x),10000)))
 	}
 	res=colourScale(x, breaks, 
 			style,
-			col, opacity, dec, firstBreak, 
-			transform, revCol, exclude, ...) 		
-	res
+			col=col, opacity=opacity, dec=dec, firstBreak=firstBreak, 
+			transform=transform, revCol=revCol, exclude=exclude, labels=labels,...)
+	res[!names(res)%in% 'plot']
 }
 
-colourScale.numeric = function(x, breaks=5, 
+
+
+colourScale.numeric = function(x=NULL, breaks=5, 
 		style=c("quantile","equal","unique", "fixed"),
 		col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
-		transform=NULL, revCol=FALSE, exclude=NULL, ...) {
+		transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL, ...) {
+
+	xOrig = x
 	
 	style = style[1]
 	if(!is.function(col)){		
+		if(is.matrix(col)| is.data.frame(col)) {
+			redCol = grep("^[[:space:]]*r(ed)?[[:space:]]*$", colnames(col), value=TRUE,ignore.case=TRUE)
+			greenCol = grep("^[[:space:]]*b(lue)?[[:space:]]*$", colnames(col), value=TRUE,ignore.case=TRUE)
+			blueCol = grep("^[[:space:]]*g(reen)?[[:space:]]*$", colnames(col), value=TRUE,ignore.case=TRUE)
+			if(!all(c(length(redCol),length(greenCol), length(blueCol))==1)) {
+				warning("col is a matrix but it's not clear which columns are red, green and blue")
+			}		
+			col = col[,c(redCol,greenCol,blueCol)]
+			if(all(round(col)==col)) {
+				theMax = 255
+			} else{
+				theMax = 1
+			}
+			col = rgb(col[,1], col[,2], col[,3], max=theMax)
+		}
+		
 		colString = col
 		if(length(colString)==1){
 			if(requireNamespace('RColorBrewer',quietly=TRUE)) {
@@ -81,134 +98,155 @@ colourScale.numeric = function(x, breaks=5,
 			col = function(n) colString[1:n]
 		}
 	}
+
 	eps=0.01
 	
-	if(missing(x))
-		x=NULL
-
 	
-	if(length(exclude) & length(x)) {
-	toexclude = x %in% exclude
-	toexclude[is.na(toexclude)] = FALSE
-	if(any(toexclude,na.rm=TRUE))
-		x=x[toexclude]	= NA
-	}
-	
-
-	
-	# unique breaks	
-	if(is.character(x) | style=="unique" ) {
-		thetable = sort(table(x),decreasing=TRUE)
-		thetable = thetable[seq(1, min(c(breaks,length(thetable) )))]
-		breaks = names(thetable)
-		colVec = col(length(breaks))
-		names(colVec) = breaks
- 
-	} else {
-		if(style != "fixed" & length(breaks)==1) {
-			if(!is.null(transform)) {
-				if(is.numeric(transform)) {
-					transform = transform[1]
-					if(abs(transform)<eps){
-						transform="log"
-					} else if(abs(transform-1)<eps) {
-						transform=NULL
-					} else if(abs(transform-0.5)<eps) {
-						transform = "sqrt"
-					} else if(abs(transform-2)<eps) {
-						transform = "square"
-					} else {
-						if(any(x<0,na.rm=TRUE) ) {
-							warning("negative x's given with Box-Cox parameter")
-						}
-						boxcox = transform		
-						transform = list(
-								function(x) {
-									(-1)^(boxcox<0)*(x^boxcox - 1)/boxcox
-								},
-								function(x) {
-									((-1)^(boxcox<0)*x*boxcox+1)^(1/boxcox)									
-								}
-								)						
-					}
-					
-					# assume it's a box=cox parameter
-				} 
-
-				
-				if(is.character(transform)){
-					if(transform=="exp") { 
-						tranform = list(exp, log)
-					} else if(transform=="log") {
-						if(any(x<=0,na.rm=TRUE) ) {
-							warning("negative or zero x's given with log transform")
-						}
-						transform = list(log,exp)
-					} else if(transform=="sqrt") {
-						if(any(x<0,na.rm=TRUE) ) {
-							warning("negative x's given with root transform")
-						}
-						transform = list(sqrt, function(x) x^2)						
-					} else if(transform=="square") {
-						if(any(x<0,na.rm=TRUE) ) {
-							warning("negative x's given with square transform")
-						}
-						transform = list(function(x) x^2, sqrt)						
-					}
-				} 
-
-				xOrig = x
-				x = transform[[1]](x)
-			}
-			
-			
-			if(style=="quantile"){
-				breaks = quantile(x, prob=seq(0,1,len=breaks), na.rm=TRUE)
-			} else if(style=="equal"){
-				startHere = min(x, na.rm=TRUE)
-				if(is.null(transform) & !is.null(firstBreak) )	{
-						startHere = firstBreak
-						firstBreak = NULL
-				}					
-				breaks = seq(startHere, max(x, na.rm=TRUE),len=breaks)
-			} else {
-				if (requireNamespace("classInt", quietly = TRUE)) { 
-					breaks = classInt::classIntervals(x, n=breaks, 
-						style=style, ...)$brks
-				} else {
-					warning("Install the classInt package to use style=", style)
-				}
-			}
+	if(style=='unique'){
+		# unique breaks	
 		
-			
-			if(!is.null(transform)) {
-				breaks = transform[[2]](breaks)
-				if(!is.null(firstBreak))
-					breaks[1] = firstBreak
-				x = xOrig
+		thetable = as.data.frame(table(ID=x))
+		thetable$ID = as.numeric(as.character(thetable$ID)) 
+		
+		notInX = which(! breaks %in% x)
+		if(length(notInX))
+			thetable = rbind(thetable,
+				data.frame(ID=breaks[notInX],
+						Freq=rep(0,length(notInX)))
+				)
+				
+		if(length(labels)== length(breaks)) {
+			thetable$label = labels[match(thetable$ID,breaks)]
+		} else {
+			if(length(labels)== length(xOrig)) {
+				thetable$label = labels[match(thetable$ID,xOrig)]
+			} else if(length(labels)==nrow(thetable)){
+				thetable$label = labels[order(thetable$ID)]
+			} else {
+				thetable$label = as.character(thetable$ID)
 			}
-			# round
-			if(!is.null(dec)) {
-				dec = 10^dec
-				breaks = breaks * dec
-				breaks = c(floor(breaks[1]), 
-						round(breaks[seq(2,by=1,len=length(breaks)-2)]),
-						ceiling(breaks[length(breaks)]))
-				breaks = breaks / dec
-			}
-			if(!is.null(firstBreak))
-				breaks[1] = firstBreak
-			
-			# unique and sort
-			 breaks = sort(unique(breaks))			
-			 
+		}	
+
+		if(length(breaks)==1) { 
+			# assume breaks is the number of unique values to assign colours to
+			thetableExc = thetable[!( thetable$ID %in% exclude |
+										thetable$label %in% exclude),]
+			ncol = min(c(breaks, nrow(thetableExc)))
+			breaks = thetableExc[order(thetableExc$Freq,decreasing=TRUE)[1:ncol] , 'ID']
+		}  else {
+			breaks = breaks[! ( breaks %in% exclude | 
+								breaks %in% thetable[thetable$label %in% exclude,'ID']
+								) ]
 		}
 		
-		colVec = col(length(breaks)-1)		
-	}
+		thetable[match( breaks, thetable$ID),'col'] = col(length(breaks))
+		thetable = thetable[order(thetable$ID),]
 		
+		colVec = thetable$col
+		names(colVec) =as.character(thetable$ID)
+		breaks = thetable$ID
+		breaks = c(breaks[1]-1/2, breaks+c(diff(breaks)/2,1/2))
+	} else {
+		if(length(exclude) & length(x)) {
+			toexclude = which(x %in% exclude)
+			x[toexclude]	= NA
+		}
+		
+		
+		thetable=NULL
+		if(!is.null(transform)) {
+			if(is.numeric(transform)) {
+				# assume it's a box=cox parameter
+				transform = transform[1]
+				if(abs(transform)<eps){
+					transform="log"
+				} else if(abs(transform-1)<eps) {
+					transform=NULL
+				} else if(abs(transform-0.5)<eps) {
+					transform = "sqrt"
+				} else if(abs(transform-2)<eps) {
+					transform = "square"
+				} else {
+					if(any(x<0,na.rm=TRUE) ) {
+						warning("negative x's given with Box-Cox parameter")
+					}
+					boxcox = transform		
+					transform = list(
+							function(x) {
+								(-1)^(boxcox<0)*(x^boxcox - 1)/boxcox
+							},
+							function(x) {
+								((-1)^(boxcox<0)*x*boxcox+1)^(1/boxcox)									
+							}
+					)						
+				}
+			} # end transform numeric 
+			if(is.character(transform)){
+				if(transform=="exp") { 
+					tranform = list(exp, log)
+				} else if(transform=="log") {
+					if(any(x<=0,na.rm=TRUE) ) {
+						warning("negative or zero x's given with log transform")
+					}
+					transform = list(log,exp)
+				} else if(transform=="sqrt") {
+					if(any(x<0,na.rm=TRUE) ) {
+						warning("negative x's given with root transform")
+					}
+					transform = list(sqrt, function(x) x^2)						
+				} else if(transform=="square") {
+					if(any(x<0,na.rm=TRUE) ) {
+						warning("negative x's given with square transform")
+					}
+					transform = list(function(x) x^2, sqrt)						
+				}
+			} # end transform character 	
+		} else {# end transform not null
+			transform = list(function(x) x)[c(1,1)]		
+		}
+		xOrig = x
+		x = transform[[1]](xOrig)
+		
+		if(style=="quantile"){
+			breaks = quantile(x, prob=seq(0,1,len=breaks[1]), na.rm=TRUE)
+		} else if(style=="equal"){
+			startHere = min(x, na.rm=TRUE)
+			if(is.null(transform) & !is.null(firstBreak) )	{
+				startHere = firstBreak
+				firstBreak = NULL
+			}					
+			breaks = seq(startHere, max(x, na.rm=TRUE),len=breaks[1])
+		} else if(style!='fixed') {
+		 # style is passed to classInt
+			if (requireNamespace("classInt", quietly = TRUE)) { 
+				if(length(x)>2100)
+					x = sample(length(x), 2000)
+				breaks = classInt::classIntervals(x, n=breaks, 
+					style=style, ...)$brks
+			} else {
+				warning("Install the classInt package to use style=", style)
+			}
+		} # end classint
+		
+		breaks = transform[[2]](breaks)
+		
+		# round
+		if(!is.null(dec)) {
+			dec = 10^dec
+			breaks = breaks * dec
+			breaks = c(floor(breaks[1]), 
+					round(breaks[seq(2,by=1,len=length(breaks)-2)]),
+					ceiling(breaks[length(breaks)]))
+			breaks = breaks / dec
+		} # end rounding
+		if(!is.null(firstBreak))
+			breaks[1] = firstBreak
+		breaks = sort(unique(breaks))			
+		
+		colVec = col(length(breaks)-1)		
+		if(revCol) colVec = rev(colVec)
+	} # end style not unique
 
-	if(revCol) colVec = rev(colVec)
 		
 	if(any(opacity < 1-eps)) {
 			if(length(opacity)==1){
@@ -235,23 +273,49 @@ colourScale.numeric = function(x, breaks=5,
 	} else {
 			colForPlot = colVec
 	}
-		
+	
+	result = list(col=colVec, breaks=breaks, colOpacity=colForPlot)
 	if(style=="unique") {
-		x = colVec[as.character(x)]
+		thetable$colOpacity = colForPlot
+		
+		result$colourtable = rep(NA, max(thetable$ID)+1)
+		result$colourtable[1+thetable$ID] = thetable$col
+		result$colortable = result$colourtable
+
+		if(length(xOrig))
+			result$plot = thetable[match(xOrig, thetable$ID),'colOpacity']
+		result$levels = thetable
+		if(length(thetable$label))
+			result$legend = thetable$label
 	} else if (length(x)){		
-		x = as.character(cut(
-						as.numeric(x), 
+		result$plot = as.character(cut(
+						x, 
 						breaks=breaks,
 						labels=colForPlot,
 						include.lowest=TRUE
 			))
+		if(length(labels)==length(result$col))
+			result$legend = labels
 	}
-	
-	
-	result = list(col=colVec, plot=x,
-			breaks=breaks, colOpacity=
-					colForPlot)
 	
 	result
 		
 }
+
+colourScale.NULL = colourScale.numeric
+
+
+
+
+colourScale.logical = function(x=NULL, breaks=5, 
+		style=c("quantile","equal","unique", "fixed"),
+		col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
+		transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL, ...) {
+
+	colourScale(as.numeric(x), breaks=breaks, 
+			style=style,
+			col=col, opacity=opacity, dec=dec, firstBreak=firstBreak, 
+			transform=transform, revCol=revCol, exclude=exclude, labels=labels,...)
+	
+}
+		
