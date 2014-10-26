@@ -1,4 +1,4 @@
-
+library('mapmisc')
 colourScale(NA,breaks=1:4,style='fixed',labels=c('a','b','c'))
 
 colourScale(NA,breaks=1:4,style='fixed')
