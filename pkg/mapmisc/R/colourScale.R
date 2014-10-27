@@ -315,9 +315,9 @@ colourScale.numeric = function(x=NULL, breaks=5,
 		result$levels = thetable
 		if(length(thetable$label))
 			result$legend = thetable$label
-	} else if (length(x)){		
+	} else if (length(xOrig)){		
 		result$plot = as.character(cut(
-						x, 
+						xOrig, 
 						breaks=breaks,
 						labels=colForPlot,
 						include.lowest=TRUE
