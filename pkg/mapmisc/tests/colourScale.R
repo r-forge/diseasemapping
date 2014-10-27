@@ -35,7 +35,7 @@ colourScale(x=seq(0,10),breaks=4,style='equal',exclude=0)
 colourScale(x=seq(0,10),breaks=4,style='equal',exclude=c(0,10))
 colourScale(x=seq(0,10),breaks=4,style='equal',exclude='nothing')
 
-myraster = raster(matrix(0:8, 3, 3))
+myraster = raster(matrix(c(0:7,2), 3, 3))
 colourScale(x=myraster,breaks=4,style='equal')
 colourScale(x=myraster,breaks=4,style='quantile')
 colourScale(x=myraster,breaks=4,style='unique')

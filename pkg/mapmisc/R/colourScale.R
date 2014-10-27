@@ -40,6 +40,7 @@ col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL,
 transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL,...) {
 
 style = style[1]
+weights=NULL
 	if(style == "equal") {
 		if(length(exclude)) {
 			x = unique(x)
@@ -49,14 +50,35 @@ style = style[1]
 	} else if(style=='fixed') {
 		x = NULL
 	} else if(style=='unique') {
-		x = unique(x)
+		levelsx = levels(x)[[1]]
+		if(!is.null(levelsx)) {
+			if(all(c("col","ID","label")%in% names(levelsx))) {
+				breaks = levelsx$ID
+				col=levelsx$col
+				labels=levelsx$labels
+			}
+				
+		}
+		
+		if(ncell(x)<10^6) {
+			x = freq(x)
+			weights = x[,2]
+			x=x[,1]
+		} else {
+			x = table(sampleRegular(x, 50000))
+			weights = x
+			x = as.numeric(names(x))
+		}
+		
+		
 	} else {
 		x = sampleRegular(x, min(c(ncell(x),10000)))
 	}
 	res=colourScale(x, breaks, 
 			style,
 			col=col, opacity=opacity, dec=dec, firstBreak=firstBreak, 
-			transform=transform, revCol=revCol, exclude=exclude, labels=labels,...)
+			transform=transform, revCol=revCol, exclude=exclude, labels=labels,
+			weights=weights,...)
 	res[!names(res)%in% 'plot']
 }
 
@@ -65,7 +87,8 @@ style = style[1]
 colourScale.numeric = function(x=NULL, breaks=5, 
 		style=c("quantile","equal","unique", "fixed"),
 		col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
-		transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL, ...) {
+		transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL, 
+		weights=NULL,...) {
 
 	xOrig = x
 	
@@ -73,18 +96,17 @@ colourScale.numeric = function(x=NULL, breaks=5,
 	if(!is.function(col)){		
 		if(is.matrix(col)| is.data.frame(col)) {
 			redCol = grep("^[[:space:]]*r(ed)?[[:space:]]*$", colnames(col), value=TRUE,ignore.case=TRUE)
-			greenCol = grep("^[[:space:]]*b(lue)?[[:space:]]*$", colnames(col), value=TRUE,ignore.case=TRUE)
-			blueCol = grep("^[[:space:]]*g(reen)?[[:space:]]*$", colnames(col), value=TRUE,ignore.case=TRUE)
+			blueCol = grep("^[[:space:]]*b(lue)?[[:space:]]*$", colnames(col), value=TRUE,ignore.case=TRUE)
+			greenCol = grep("^[[:space:]]*g(reen)?[[:space:]]*$", colnames(col), value=TRUE,ignore.case=TRUE)
 			if(!all(c(length(redCol),length(greenCol), length(blueCol))==1)) {
 				warning("col is a matrix but it's not clear which columns are red, green and blue")
 			}		
-			col = col[,c(redCol,greenCol,blueCol)]
-			if(all(round(col)==col)) {
+			if(any(col[,c(redCol,greenCol,blueCol)] > 2 )) {
 				theMax = 255
 			} else{
 				theMax = 1
 			}
-			col = rgb(col[,1], col[,2], col[,3], max=theMax)
+			col = rgb(col[,redCol], col[,greenCol], col[,blueCol], max=theMax)
 		}
 		
 		colString = col
@@ -104,10 +126,16 @@ colourScale.numeric = function(x=NULL, breaks=5,
 	
 	if(style=='unique'){
 		# unique breaks	
-		
-		thetable = as.data.frame(table(ID=x))
-		thetable$ID = as.numeric(as.character(thetable$ID)) 
-		
+
+		if(length(weights)!=length(x)) {
+			thetable = as.data.frame(table(ID=x))
+			thetable$ID = as.numeric(as.character(thetable$ID)) 
+		} else {
+			thetable = tapply(weights, x,sum)
+			thetable = data.frame(ID=as.numeric(names(thetable)),
+					Freq=thetable)
+		}
+			
 		notInX = which(! breaks %in% x)
 		if(length(notInX))
 			thetable = rbind(thetable,

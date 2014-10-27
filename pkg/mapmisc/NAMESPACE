@@ -3,6 +3,8 @@ export(colourScale)
 S3method(colourScale, Raster)
 S3method(colourScale, numeric)
 S3method(colourScale, factor)
+S3method(colourScale, NULL)
+S3method(colourScale, logical)
 
 export(openmap, getTiles, osmTiles,insetMap)
 
