@@ -9,7 +9,7 @@ Give covariates and model parameters, simulates a log-Gaussian Cox process
 }
 \usage{
 	simLgcp(param, covariates=NULL, betas=NULL, 
-	  rasterTemplate=covariates[[1]],  ...)
+	  rasterTemplate=covariates[[1]], n=1, ...)
 	simPoissonPP(intensity)
 }
 
@@ -24,6 +24,7 @@ Give covariates and model parameters, simulates a log-Gaussian Cox process
 \item{betas}{Coefficients for the covariates}
 \item{rasterTemplate}{Raster on which the latent surface is simulated,
 defaults to the first covariate.}
+\item{n}{number of realisations to simulate}
 \item{...}{ additional arguments, see \code{\link[RandomFields]{GaussRF}} in the RandomFields package.}
 \item{intensity}{Raster of the intensity of a Poisson point process.}
 }
@@ -53,7 +54,7 @@ plot(myLgcp$raster[["intensity"]], main="lgcp")
 points(myLgcp$events)
 
 myIntensity = exp(-1+0.2*myCovariate[["a"]])
-myPoissonPP = simPoissonPP(myIntensity)
+myPoissonPP = simPoissonPP(myIntensity)[[1]]
 plot(myIntensity, main="Poisson pp")
 points(myPoissonPP)
 
