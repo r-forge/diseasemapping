@@ -1,0 +1,151 @@
+
+spatialRoc = function(fit, 
+		rr=c(1,1.2, 1.5,2), truth, 
+		border=NULL, random=FALSE){
+	
+	prob= 1-exp(seq(0,-10,len=100))
+	
+	if(any(names(fit)=='inla')){
+		fit = list(fit)
+	}
+	
+	
+	breaks = c(-Inf, rr, Inf)
+	
+	if('raster'%in% names(truth))
+		truth = truth$raster
+	
+	if(random) {
+		truthVariable = 'random'
+		truth = truth[[
+				intersect(
+						paste(truthVariable, c('',1:length(fit)), sep=''),
+						names(truth)
+				)
+		]]
+		truth = exp(truth)	
+	} else { 
+		truthVariable = 'relativeIntensity'
+		
+		truth = truth[[
+				intersect(
+						paste(truthVariable, c('',1:length(fit)), sep=''),
+						names(truth)
+				)
+		]]
+	}
+
+	
+	if(any(names(fit[[1]])=='raster')){
+		
+		template = raster(fit[[1]]$raster)
+		values(template) = 1:ncell(template)
+		if(!is.null(border))
+			template = mask(template, border)
+		
+		Srow= rowFromY(template, seq(ymin(truth), ymax(truth),
+						len=nrow(truth)))
+		Scol= colFromX(template, seq(xmin(truth), xmax(truth), 
+						len=ncol(truth)))
+		Scell = cellFromRowColCombine(template, rownr=Srow, colnr=Scol)
+		
+		toKeep = which(!is.na(values(template)[Scell]))
+		
+		
+	} else {
+		regionRaster = rasterize(fit$data, truth, field=1:length(fit$data))
+		Scell = values(regionRaster)
+		toKeep = which(!is.na(Scell))
+	}
+
+	Nlevels = length(breaks)-1
+	truthOver = cut(truth, breaks=breaks)
+	names(truthOver) = gsub(
+			paste("^",truthVariable, "$", sep=''),
+			paste(truthVariable, 1, sep=''),
+			names(truth))
+
+	
+	truthOver = as.data.frame(truthOver)[toKeep,,drop=FALSE]	
+	truthOver$cell = Scell[toKeep]
+	truthOver = na.omit(truthOver)	
+	
+	SlevelsC = as.character(1:Nlevels)
+	
+	result = NULL
+	for(Dsim in 1:length(fit)) {
+		
+		if(random) {
+			marginals = fit[[Dsim]]$inla$marginals.random$space 
+		} else { 
+			marginals = fit[[Dsim]]$inla$marginals.predict
+		}
+		
+		
+		truthFreq = tapply(truthOver[,paste(truthVariable,Dsim,sep='')], 
+				truthOver[,'cell'],
+				function(qq) 
+					table(qq)[SlevelsC]
+		)
+		truthFreq = matrix(unlist(truthFreq), ncol=Nlevels, byrow=TRUE,
+				dimnames = list(names(truthFreq), 
+						paste("level", 1:Nlevels, sep="")))
+		truthFreq[is.na(truthFreq)]=0
+		truthCusum = t(apply(truthFreq, 1, cumsum))
+		truthCusum = cbind(truthCusum, 
+				id=as.numeric(rownames(truthFreq))
+		)
+		colnames(truthCusum) = gsub(paste("^level", Nlevels	, sep=''), "n",
+				colnames(truthCusum))
+		
+		x=NULL	
+		for(Drr in rr ) {
+			x = cbind(x,excProb(marginals, log(Drr)))
+		}
+		excCols = colnames(x) = paste('exc', 1:(Nlevels-1), sep='')		
+		
+		x = cbind(truthCusum, x[truthCusum[,'id'],])	
+		colnames(x) = gsub("^level", "below", colnames(x))
+		
+		belowCols = grep("^below", colnames(x),value=TRUE)
+		aboveMat = x[,rep('n', length(belowCols))] - x[,belowCols]
+		aboveCols = colnames(aboveMat) = gsub("^below","above", belowCols)
+		x = cbind(x, aboveMat)
+		
+		freqMat = NULL
+		for(Dprob in rev(prob)) {
+			
+			aboveP = x[,excCols]>Dprob
+			
+			freqMat = abind::abind(cbind(
+							fp = apply(aboveP * x[,belowCols], 2, sum,na.rm=TRUE), 
+							tp = apply(aboveP * x[,aboveCols],2,sum,na.rm=TRUE),
+							fn = apply(!aboveP * x[,aboveCols],2,sum,na.rm=TRUE),	
+							tn = apply(!aboveP * x[,belowCols],2,sum,na.rm=TRUE)	
+					), freqMat, along=3)
+		}
+		
+		resD=
+				abind::abind(
+						sens = t(freqMat[, 'tp', ] / (freqMat[,'tp',] + freqMat[,'fn',])),
+						onemspec = t(1-freqMat[, 'tn', ] / (freqMat[,'fp',] + freqMat[,'tn',])),
+						along=3)
+		dimnames(resD)[[1]]=as.character(prob)
+		dimnames(resD)[[2]] = paste("exc", rr, sep='')
+		
+		result = abind::abind(result, resD, along=length(dim(resD))+1)
+		
+	}
+	if(length(fit)>1) {
+		dimnames(result)[[length(dim(result))]] = 
+				paste('sim', 1:length(fit),sep='') 
+		result = abind::abind(result,
+				mean=apply(result, seq(1,length(dim(result))-1), 
+						mean),
+				along=length(dim(result))
+		)	
+	} else {
+		result = drop(result)
+	}
+	result
+}

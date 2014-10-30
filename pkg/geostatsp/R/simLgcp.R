@@ -38,7 +38,9 @@ simPoissonPP = function(intensity) {
 }
 
 simLgcp = function(param, covariates=NULL, betas=NULL, 
-		rasterTemplate=covariates[[1]],  n=1, ...) {
+		offset=NULL, 
+		rasterTemplate=covariates[[1]],  n=1, 
+		...) {
 	
 	randomEffect = RFsimulate(model=param, x=rasterTemplate, n=n, ...)
 	
@@ -48,10 +50,12 @@ simLgcp = function(param, covariates=NULL, betas=NULL,
 	if(is.null(names(betas)))
 		names(betas) = names(covariates)
 	
-	
+	betas = c(rep(1, length(offset)), betas)
+	names(betas)[seq(1, len=length(offset))] = offset
+
+		
 	covariates = covariates[[intersect(names(covariates), 
 					names(betas))]]
-	
 	
 	themean = 0
 	if('mean' %in% names(param))
@@ -70,6 +74,14 @@ simLgcp = function(param, covariates=NULL, betas=NULL,
 	
 	intensity = exp(linearPredictor)
 	names(intensity) = gsub("^sim", "intensity", names(randomEffect))
+
+
+	intSansOffset = linearPredictor
+	for(Doffset in offset){
+		intSansOffset = intSansOffset - covariates[[Doffset]]
+	}
+	intSansOffset = exp(intSansOffset)
+	names(intSansOffset) = gsub("^sim", "relativeIntensity", names(randomEffect))
 	
 	events = simPoissonPP(intensity)
 	
@@ -79,7 +91,9 @@ simLgcp = function(param, covariates=NULL, betas=NULL,
 			events, 
 			list(
 				raster = stack(randomEffect,
-						linearPredictor, intensity,covariates),
+						linearPredictor, intensity,
+						intSansOffset,
+						covariates),
 				parameters=list(random=param, fixed=betas)
 			)
 		)

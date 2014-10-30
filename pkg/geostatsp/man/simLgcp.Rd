@@ -9,6 +9,7 @@ Give covariates and model parameters, simulates a log-Gaussian Cox process
 }
 \usage{
 	simLgcp(param, covariates=NULL, betas=NULL, 
+	offset=NULL,
 	  rasterTemplate=covariates[[1]], n=1, ...)
 	simPoissonPP(intensity)
 }
@@ -22,6 +23,7 @@ Give covariates and model parameters, simulates a log-Gaussian Cox process
 	}
 	\item{covariates}{Either a raster stack or list of rasters and SpatialPolygonsDataFrames (with the latter having only a single data column).}
 \item{betas}{Coefficients for the covariates}
+\item{offset}{Vector of character strings corresponding to elements of \code{covariates} which are offsets}
 \item{rasterTemplate}{Raster on which the latent surface is simulated,
 defaults to the first covariate.}
 \item{n}{number of realisations to simulate}
@@ -41,13 +43,15 @@ mymodel = c(mean=-0.5, variance=1,
 myraster = raster(nrows=15,ncols=20,xmn=0,xmx=10,ymn=0,ymx=7.5)
 
 # some covariates, deliberately with a different resolution than myraster
-covA = covB = raster(extent(myraster), 10, 10)
+covA = covB = myoffset = raster(extent(myraster), 10, 10)
 values(covA) = as.vector(matrix(1:10, 10, 10))
 values(covB) = as.vector(matrix(1:10, 10, 10, byrow=TRUE))
+values(myoffset) = round(seq(-1, 1, len=ncell(myoffset)))
 
-myCovariate = list(a=covA, b=covB)
+myCovariate = list(a=covA, b=covB, offsetFooBar = myoffset)
 
 myLgcp=simLgcp(mymodel, myCovariate, betas=c(a=-0.1, b=0.25), 
+	offset='offsetFooBar',
 	rasterTemplate=myraster)
 
 plot(myLgcp$raster[["intensity"]], main="lgcp")
