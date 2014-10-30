@@ -7,7 +7,9 @@ Conditional distribution of GMRF
 Distribution of Gaussian Markov Random Field conditional on data observed with noise on the same grid.
 }
 \usage{
-conditionalGmrf(param, Yvec, Xmat, NN, template = NULL, mc.cores = 1, cellsPerLoop = 10, ...)
+conditionalGmrf(param, Yvec, Xmat, NN, 
+	template = NULL, mc.cores = 1, 
+	cellsPerLoop = 10, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
