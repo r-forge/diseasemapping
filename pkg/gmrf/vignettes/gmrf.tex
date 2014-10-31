@@ -7,11 +7,83 @@
 \DeclareMathOperator{\cov}{cov}
 \DeclareMathOperator{\cor}{cor}
 
+\usepackage{filecontents}
+\begin{filecontents}{gmrf.bib}
+@book{rue2005gaussian,
+  title={Gaussian Markov random fields: theory and applications},
+  author={Rue, Havard and Held, Leonhard},
+  year={2005},
+  publisher={CRC Press}
+}
+@article{offgrid, 
+author = {Simpson, D  and Illian, J and  Lindgren, F and S{\o}rbye, S H and
+Rue, H},
+title={Going off grid:
+Computationally efficient inference for log-{G}aussian {C}ox processes.},
+note={NTNU Technical report 10/2011 (version 2)},
+year={2013},
+url={http://arxiv.org/abs/1111.0641v2}
+}
+@article {mrf,  
+author = {Lindgren, Finn and Rue, H{\aa}vard and Lindstr\"{o}m, Johan},
+title = {An explicit link between {G}aussian fields and {G}aussian {M}arkov random fields: the stochastic partial differential equation approach},
+journal = {Journal of the Royal Statistical Society B },
+volume = {73},
+number = {4},
+publisher = {Blackwell Publishing Ltd},
+doi = {10.1111/j.1467-9868.2011.00777.x},
+pages = {423--498},
+year = {2011}
+}
+
+  @BOOK{stein,
+  title = {Interpolation of spatial data : some theory for {K}riging},
+  publisher = {Springer-Verlag},
+  year = {1999},
+  author = {Michael Leonard Stein},
+  pages = {247},
+  address = {New York}
+}
+  @BOOK{geostats,
+  title = {Model-based Geostatistics },
+  publisher = {Springer-Verlag},
+  year = {2006},
+  author = {Peter J Diggle and Paulo Justiniano Ribeiro},
+  pages = {230},
+  address = {New York},
+  isbn = {0387329072}
+}
+  @misc{wikimatern,
+   author = "Wikipedia",
+   title = "Mat\'ern covariance function --- {W}ikipedia{,} {T}he {F}ree
+   {E}ncyclopedia", 
+   year = "2013",
+   url =
+   "http://en.wikipedia.org/wiki/Matérn_covariance_function",
+   note = "[Online; accessed 16-July-2014]"
+ }
+ @book{cressie,
+  title={Statistics for spatial data},
+  author={Cressie, Noel},
+  year={1993},
+  publisher={John Wiley \& Sons}
+}
+ 
+
+\end{filecontents}
+
+\usepackage[authoryear]{natbib}
+\bibliographystyle{newapa}
+
 \title{Likelihood for GMRF's}
 \author{Patrick Brown}
 \begin{document}
 
 \section{Notation}
+
+\citet{rue2005gaussian} wrote an important book, as did \citet{geostats}.
+
+1 is an important number \citep{rue2005gaussian}.
 
 Matern
 \[
@@ -412,4 +484,7 @@ E(Z|Y) = & \tau^2 I(\xi^2 Z' Q(\phi)^{-1}Z + c I)^{-1})
 2 \log |L|\\
 \end{align*}
 
+\bibliography{gmrf}
+
 \end{document}
+
