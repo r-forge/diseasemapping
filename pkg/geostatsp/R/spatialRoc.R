@@ -52,9 +52,14 @@ spatialRoc = function(fit,
 		toKeep = which(!is.na(values(template)[Scell]))
 		
 	} else {
-		regionRaster = rasterize(fit$data, truth, field=1:length(fit$data))
-		Scell = values(regionRaster)
+		regionRaster = rasterize(fit[[1]]$data, truth, 
+				field=1:length(fit[[1]]$data))
+		if(!is.null(border))
+			regionRaster = mask(regionRaster, border)
+		
+		Sregion = values(regionRaster)
 		toKeep = which(!is.na(Scell))
+		Sregion = Sregion[toKeep]
 	}
 
 	Nlevels = length(breaks)-1
@@ -75,9 +80,13 @@ spatialRoc = function(fit,
 	for(Dsim in 1:length(fit)) {
 		
 		if(random) {
-			marginals = fit[[Dsim]]$inla$marginals.random$space 
+			marginals = fit[[Dsim]]$inla$marginals.bym 
+			if(!length(marginals))
+				marginals = fit[[Dsim]]$inla$marginals.random$space 
 		} else { 
-			marginals = fit[[Dsim]]$inla$marginals.predict
+			marginals = fit[[Dsim]]$inla$marginals.fitted.bym 
+			if(!length(marginals))
+				marginals = fit[[Dsim]]$inla$marginals.predict
 		}
 		
 		
