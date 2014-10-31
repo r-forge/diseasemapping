@@ -43,14 +43,13 @@ spatialRoc = function(fit,
 		if(!is.null(border))
 			template = mask(template, border)
 		
-		Srow= rowFromY(template, seq(ymin(truth), ymax(truth),
+		Srow= rowFromY(template, seq(ymax(truth), ymin(truth),
 						len=nrow(truth)))
 		Scol= colFromX(template, seq(xmin(truth), xmax(truth), 
 						len=ncol(truth)))
 		Scell = cellFromRowColCombine(template, rownr=Srow, colnr=Scol)
 		
 		toKeep = which(!is.na(values(template)[Scell]))
-		
 		
 	} else {
 		regionRaster = rasterize(fit$data, truth, field=1:length(fit$data))
@@ -82,13 +81,13 @@ spatialRoc = function(fit,
 		}
 		
 		
-		truthFreq = tapply(truthOver[,paste(truthVariable,Dsim,sep='')], 
+		truthFreqList = tapply(truthOver[,paste(truthVariable,Dsim,sep='')], 
 				truthOver[,'cell'],
 				function(qq) 
 					table(qq)[SlevelsC]
 		)
-		truthFreq = matrix(unlist(truthFreq), ncol=Nlevels, byrow=TRUE,
-				dimnames = list(names(truthFreq), 
+		truthFreq = matrix(unlist(truthFreqList), ncol=Nlevels, byrow=TRUE,
+				dimnames = list(names(truthFreqList), 
 						paste("level", 1:Nlevels, sep="")))
 		truthFreq[is.na(truthFreq)]=0
 		truthCusum = t(apply(truthFreq, 1, cumsum))
@@ -97,6 +96,15 @@ spatialRoc = function(fit,
 		)
 		colnames(truthCusum) = gsub(paste("^level", Nlevels	, sep=''), "n",
 				colnames(truthCusum))
+		colnames(truthCusum) = gsub("^level", "under", colnames(truthCusum))
+		
+		underCols = grep("^under", colnames(truthCusum), value=TRUE)
+		overCusum = NULL
+		for(D in underCols){
+			overCusum = cbind(overCusum, truthCusum[,'n'] - truthCusum[,D])
+		}
+		colnames(overCusum) = gsub("^under", "over", underCols)
+		truthCusum = cbind(truthCusum, overCusum)
 		
 		x=NULL	
 		for(Drr in rr ) {
@@ -107,10 +115,8 @@ spatialRoc = function(fit,
 		x = cbind(truthCusum, x[truthCusum[,'id'],])	
 		colnames(x) = gsub("^level", "below", colnames(x))
 		
-		belowCols = grep("^below", colnames(x),value=TRUE)
-		aboveMat = x[,rep('n', length(belowCols))] - x[,belowCols]
-		aboveCols = colnames(aboveMat) = gsub("^below","above", belowCols)
-		x = cbind(x, aboveMat)
+		belowCols = grep("^under", colnames(x),value=TRUE)
+		aboveCols = grep("^over", colnames(x),value=TRUE)
 		
 		freqMat = NULL
 		for(Dprob in rev(prob)) {
