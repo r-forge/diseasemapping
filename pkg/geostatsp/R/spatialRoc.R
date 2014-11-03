@@ -38,8 +38,7 @@ spatialRoc = function(fit,
 	
 	if(any(names(fit[[1]])=='raster')){
 		
-		template = raster(fit[[1]]$raster)
-		values(template) = 1:ncell(template)
+		template = fit[[1]]$raster[['space']]
 		if(!is.null(border))
 			template = mask(template, border)
 		
@@ -48,18 +47,21 @@ spatialRoc = function(fit,
 		Scol= colFromX(template, seq(xmin(truth), xmax(truth), 
 						len=ncol(truth)))
 		Scell = cellFromRowColCombine(template, rownr=Srow, colnr=Scol)
+		Scell= values(template)[Scell]
 		
-		toKeep = which(!is.na(values(template)[Scell]))
+		toKeep = which(!is.na(Scell))
+	
+		Sregion = na.omit(values(template))
 		
-	} else {
+	} else { # bym model
+		Sregion = 1:length(fit[[1]]$data)
 		regionRaster = rasterize(fit[[1]]$data, truth, 
-				field=1:length(fit[[1]]$data))
+				field=Sregion)
 		if(!is.null(border))
 			regionRaster = mask(regionRaster, border)
-		
-		Sregion = values(regionRaster)
+		Scell = values(regionRaster)
 		toKeep = which(!is.na(Scell))
-		Sregion = Sregion[toKeep]
+	
 	}
 
 	Nlevels = length(breaks)-1
@@ -71,7 +73,7 @@ spatialRoc = function(fit,
 
 	
 	truthOver = as.data.frame(truthOver)[toKeep,,drop=FALSE]	
-	truthOver$cell = Scell[toKeep]
+	truthOver$fitId = Scell[toKeep]
 	truthOver = na.omit(truthOver)	
 	
 	SlevelsC = as.character(1:Nlevels)
@@ -81,17 +83,25 @@ spatialRoc = function(fit,
 		
 		if(random) {
 			marginals = fit[[Dsim]]$inla$marginals.bym 
-			if(!length(marginals))
+			if(!length(marginals)) { # lgcp
 				marginals = fit[[Dsim]]$inla$marginals.random$space 
+			} else { # bym
+				names(marginals) = paste("bym.", Sregion, sep="")
+			}
 		} else { 
 			marginals = fit[[Dsim]]$inla$marginals.fitted.bym 
-			if(!length(marginals))
+			if(!length(marginals)) {
 				marginals = fit[[Dsim]]$inla$marginals.predict
+			} else { # bym
+				names(marginals) = paste("bym.", Sregion, sep="")
+			}
+			
 		}
 		
 		
-		truthFreqList = tapply(truthOver[,paste(truthVariable,Dsim,sep='')], 
-				truthOver[,'cell'],
+		truthFreqList = tapply(
+				truthOver[,paste(truthVariable,Dsim,sep='')], 
+				truthOver[,'fitId'],
 				function(qq) 
 					table(qq)[SlevelsC]
 		)
@@ -101,7 +111,7 @@ spatialRoc = function(fit,
 		truthFreq[is.na(truthFreq)]=0
 		truthCusum = t(apply(truthFreq, 1, cumsum))
 		truthCusum = cbind(truthCusum, 
-				id=as.numeric(rownames(truthFreq))
+				fitId=as.numeric(rownames(truthFreq))
 		)
 		colnames(truthCusum) = gsub(paste("^level", Nlevels	, sep=''), "n",
 				colnames(truthCusum))
@@ -116,12 +126,17 @@ spatialRoc = function(fit,
 		truthCusum = cbind(truthCusum, overCusum)
 		
 		x=NULL	
+
 		for(Drr in rr ) {
 			x = cbind(x,excProb(marginals, log(Drr)))
 		}
+
 		excCols = colnames(x) = paste('exc', 1:(Nlevels-1), sep='')		
-		
-		x = cbind(truthCusum, x[truthCusum[,'id'],])	
+		x = cbind(x, fitId = as.numeric(
+						gsub("^[[:alpha:]]+\\.?", "", 
+								names(marginals)))
+		)
+		x = merge(truthCusum, x, by='fitId')	
 		colnames(x) = gsub("^level", "below", colnames(x))
 		
 		belowCols = grep("^under", colnames(x),value=TRUE)
@@ -150,7 +165,7 @@ spatialRoc = function(fit,
 		
 		result = abind::abind(result, resD, along=length(dim(resD))+1)
 		
-	}
+	} # end loop through fits
 	if(length(fit)>1) {
 		dimnames(result)[[length(dim(result))]] = 
 				paste('sim', 1:length(fit),sep='') 
