@@ -107,17 +107,17 @@ bym.needAdjmat = function(
 	)
 	
 	}	
-	setMethod("bym", 
+setMethod("bym", 
 			signature("formula", "SpatialPolygonsDataFrame", "missing","character"),
 			bym.needAdjmat		
-	)
+)
 	
-	setMethod("bym", 
+setMethod("bym", 
 			signature("formula", "SpatialPolygonsDataFrame", "NULL","character"),
 			bym.needAdjmat		
-	)
+)
 
-	setMethod("bym", 
+setMethod("bym", 
 		signature("formula", "SpatialPolygonsDataFrame", "nb","character"),
 		function(
 				formula, data, adjMat,region.id,
@@ -536,16 +536,8 @@ formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", f
 				thesummary[,colnames(params$summary),drop=FALSE]
 				)		
 }
-# sum(c(0,diff(params$sd$posterior[,"x"])) * params$sd$posterior[,"y"])
-# sum(c(0,diff(params$sd$prior[,"x"])) * params$sd$prior[,"y"])
-if(FALSE) {
-	plot(params$sdSpatial$prior, type='l',lwd=4)
-	lines(params$sdSpatial$posterior,col='orange',lwd=2)
-	
-	sum(params$sdSpatial$prior[,"y"])*range(diff(params$sdSpatial$prior[,"x"]))
-}	
 
- 
+
 
 
 
