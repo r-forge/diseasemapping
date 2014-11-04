@@ -1,10 +1,18 @@
 lgcp = function(formula=NULL, data,  grid, covariates=list(), 
 		border,
 		...) {
-
-
+	
+	if(!missing(boder)){
+		if(!.compareCRS(data, border))
+			border = spTransform(border, CRS(proj4string(data)))
+	}
+	
 	if(is.numeric(grid)) {
-		cells = squareRaster(data,grid)
+		if(!missing(boder)){
+			cells = squareRaster(border,grid)
+		} else {
+			cells = squareRaster(data,grid)
+		}
 	} else {
 		cells = squareRaster(grid)
 	}

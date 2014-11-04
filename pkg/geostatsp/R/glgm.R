@@ -467,6 +467,8 @@ theSpace = as.integer(gsub("^c", "", theSpaceName))
 
 	linc = inlaResult$summary.lincomb.derived[theSpaceName,]
 	linc$space = theSpace
+	inlaResult$marginals.predict = 
+			inlaResult$marginals.lincomb.derived
 
 	missingCells = values(cells)[! values(cells) %in% theSpace]
 
@@ -481,17 +483,23 @@ theSpace = as.integer(gsub("^c", "", theSpaceName))
 	
 		linc = rbind(linc, toadd)
 
-		missingNames = rownames(toadd)
-		missingMarginals = vector("list", length(missingNames))
-		names(missingMarginals) = missingNames
+		# Add in empty lists for the marginals of missing cells
 		
-		inlaResult$marginals.lincomb.derived = c(	
-				inlaResult$marginals.lincomb.derived,
+		missingMarginals = vector("list", length(missingCells))
+		names(missingMarginals) = rownames(toadd)
+		
+		inlaResult$marginals.predict = c(	
+				inlaResult$marginals.predict,
 				missingMarginals)
 		
 	}
-	linc = as.matrix(linc[paste("c", values(cells), sep=""),])
-
+	linc = as.matrix(linc[match( values(cells), linc$space),])
+	inlaResult$marginals.predict = 
+			inlaResult$marginals.predict[
+					paste("c", values(cells), sep="")
+			]
+	
+	
 	resRasterFitted = 
 			brick(extent(cells), nrows=nrow(cells),
 					ncols=ncol(cells), crs=projection(cells),
@@ -502,12 +510,7 @@ theSpace = as.integer(gsub("^c", "", theSpaceName))
 	values(resRasterFitted) = as.vector(linc)
 	
 	
-	# Add in empty lists for the marginals of missing cells
 	
-	inlaResult$marginals.predict = 
-			inlaResult$marginals.lincomb.derived[
-					paste("c", values(cells), sep="")
-					]
 			
 	
 	
@@ -632,7 +635,7 @@ resRaster=stack(resRasterRandom, resRasterFitted, cells)
 	result=list(inla=inlaResult,
 					raster=resRaster,
 					parameters=params
-			)
+			)nlaInl
 
 	result
 	
