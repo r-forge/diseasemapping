@@ -1,4 +1,4 @@
-lgcp = function(formula=NULL, data,  grid, covariates=list(), 
+lgcp = function(formula=NULL, data,  grid, covariates=NULL, 
 		border,
 		...) {
 	

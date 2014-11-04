@@ -17,7 +17,7 @@ lcOneRow = function(thisrow, idxCol=NULL) {
 setGeneric('glgm', 
 		function(
 				formula, data, grid, 
-				covariates, 
+				covariates=NULL, 
 				...) {
 			standardGeneric("glgm")
 		}
@@ -59,11 +59,11 @@ setMethod("glgm",
 		)
 
 
-		setMethod("glgm", 
+setMethod("glgm", 
 				signature("formula", "Spatial", "Raster", "NULL"),
 				gm.dataSpatial
 		)
-
+		
 setMethod("glgm", 
 		signature("formula", "Spatial", "Raster", "list"),
 		gm.dataSpatial
@@ -77,7 +77,7 @@ setMethod("glgm",
 setMethod("glgm", 
 		
 				signature("formula", "Spatial", "Raster", "data.frame"),
-				function(formula, data, grid, covariates, ...) {
+				function(formula, data, grid, covariates=NULL, ...) {
 
 		dataDF = data@data
 
@@ -99,7 +99,7 @@ setMethod("glgm",
 setMethod("glgm", 
 		signature("formula", "data.frame", "Raster", "data.frame"), 
 		function(formula, data,  grid, 
-				covariates=data.frame(), 
+				covariates=NULL, 
 				shape=1, priorCI=NULL, 
 				mesh=FALSE,...) {
 
@@ -259,8 +259,8 @@ formulaForLincombs =
 	# strip out trailing +
 formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 
-	# if we have covariates and inla is available
-	if(nchar(formulaForLincombs) ) {
+	# if we have covariates in the formula and in the data
+	if(nchar(formulaForLincombs) & nrow(covariates) ) {
 
 		formulaForLincombs=as.formula(paste("~", formulaForLincombs))
 	
@@ -276,8 +276,9 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 			cantPredict = cantPredict[-theFactors2]
 			theFactorsInFormula = temp[theFactors2]
 		}
-		if(length(cantPredict))
-			covariates[,cantPredict]= 0
+		if(length(cantPredict)){
+				covariates[,cantPredict]= 0
+		}
 		covariates = covariates[,c("space", varsInPredict),drop=FALSE]
 		lincombMat = model.matrix(update.formula(
 						formulaForLincombs, ~.+space),

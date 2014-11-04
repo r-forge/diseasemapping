@@ -2,7 +2,7 @@
 # setMethod("lgm", 
 # 		signature("formula", "data.frame", "Raster", "data.frame"), 
 lgm.Raster=	function(formula,data, grid,
-				covariates=data.frame(),
+				covariates=NULL,
                   shape=1,boxcox=1,nugget=0,
 				  expPred=FALSE, nuggetInPrediction=TRUE,
 				  reml = TRUE,

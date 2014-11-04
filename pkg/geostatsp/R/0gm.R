@@ -1,7 +1,7 @@
 
 gm.nullFormula = 
 		function(formula=NULL, data, grid, 
-		covariates, ...) {
+		covariates=NULL, ...) {
 	formula =  1 
 	callGeneric(
 			formula=formula, data=data,
@@ -13,7 +13,7 @@ gm.nullFormula =
 
 gm.numericFormula = 
 		function(formula, data, grid, 
-				covariates, ...) {
+				covariates=NULL, ...) {
 	
 formula = names(data)[formula]
 callGeneric(
@@ -26,7 +26,7 @@ callGeneric(
 
 gm.characterFormula = 
 		function(formula, data, grid, 
-				covariates, ...) {
+				covariates=NULL, ...) {
 
 
 	if(length(names(covariates)))
@@ -50,7 +50,7 @@ callGeneric(
 }		
 
 
-gm.gridNumeric = function(formula, data, grid, covariates, ...) {
+gm.gridNumeric = function(formula, data, grid, covariates=NULL, ...) {
 		
 
 	gridRaster = squareRaster(data, grid)
@@ -63,7 +63,7 @@ gm.gridNumeric = function(formula, data, grid, covariates, ...) {
 	)	
 }
 
-gm.dataRaster = function(formula,data,grid, covariates=list(), buffer=0,...){
+gm.dataRaster = function(formula,data,grid, covariates=NULL, buffer=0,...){
 
 	
 	cellsBoth = cellsBuffer(grid, buffer)			
@@ -159,7 +159,7 @@ for(D in intersect(Sfactor, names(covariatesDF))) {
 
 gm.dataSpatial = 
 function(formula, data,  grid, 
-		covariates=list(), 
+		covariates=NULL, 
 		buffer=0,
 		...) {
 
