@@ -635,7 +635,7 @@ resRaster=stack(resRasterRandom, resRasterFitted, cells)
 	result=list(inla=inlaResult,
 					raster=resRaster,
 					parameters=params
-			)nlaInl
+			)
 
 	result
 	
