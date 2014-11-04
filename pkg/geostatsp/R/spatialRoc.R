@@ -3,7 +3,7 @@ spatialRoc = function(fit,
 		rr=c(1,1.2, 1.5,2), truth, 
 		border=NULL, random=FALSE){
 	
-	prob= 1-exp(seq(0,-10,len=100))
+	prob= 1-exp(seq(0,-12,len=200))
 	
 	if(any(names(fit)=='inla')){
 		fit = list(fit)
