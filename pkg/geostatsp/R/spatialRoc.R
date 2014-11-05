@@ -35,6 +35,9 @@ spatialRoc = function(fit,
 		]]
 	}
 
+	if(!is.null(border))
+		truth = mask(truth, border)
+	
 	
 	if(any(names(fit[[1]])=='raster')){
 		
@@ -49,7 +52,7 @@ spatialRoc = function(fit,
 		Scell = cellFromRowColCombine(template, rownr=Srow, colnr=Scol)
 		Scell= values(template)[Scell]
 		
-		toKeep = which(!is.na(Scell))
+		toKeep = which(!is.na(Scell) & !is.na(values(truth[[1]])))
 	
 		Sregion = na.omit(values(template))
 		
@@ -145,13 +148,14 @@ spatialRoc = function(fit,
 		freqMat = NULL
 		for(Dprob in rev(prob)) {
 			
-			aboveP = x[,excCols]>Dprob
+			aboveP = x[,excCols]>=Dprob
+			naboveP = !aboveP
 			
 			freqMat = abind::abind(cbind(
 							fp = apply(aboveP * x[,belowCols], 2, sum,na.rm=TRUE), 
 							tp = apply(aboveP * x[,aboveCols],2,sum,na.rm=TRUE),
-							fn = apply(!aboveP * x[,aboveCols],2,sum,na.rm=TRUE),	
-							tn = apply(!aboveP * x[,belowCols],2,sum,na.rm=TRUE)	
+							fn = apply(naboveP * x[,aboveCols],2,sum,na.rm=TRUE),	
+							tn = apply(naboveP * x[,belowCols],2,sum,na.rm=TRUE)	
 					), freqMat, along=3)
 		}
 		
