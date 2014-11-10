@@ -66,7 +66,7 @@ newdat$elev = extract(swissAltitude, swissRain)
 swissFit =  glgm(lograin~ elev + land,
 		newdat, Ncell, 
 		covariates=list(land=swissLandType),
-		family="gaussian", buffer=20000,
+		family="gaussian", buffer=40000,
 		priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
 		control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
 		control.family=list(hyper=list(prec=list(prior="loggamma", 
