@@ -279,7 +279,7 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 		if(length(cantPredict)){
 				covariates[,cantPredict]= 0
 		}
-		covariates = covariates[,c("space", varsInPredict),drop=FALSE]
+		covariates = covariates[,c("space", thevars),drop=FALSE]
 		lincombMat = model.matrix(update.formula(
 						formulaForLincombs, ~.+space),
 					covariates, na.action=NULL)
