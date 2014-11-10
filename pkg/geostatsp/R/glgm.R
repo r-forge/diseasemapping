@@ -567,7 +567,8 @@ thesd = c(
 
 params$summary = rbind(params$summary,
 		matrix(NA, nrow=length(thesd)+1, ncol=ncol(params$summary),
-				dimnames = list(c("range", names(thesd)), NULL))
+				dimnames = list(c("range", names(thesd)), 
+						colnames(params$summary)))
 )
 
 

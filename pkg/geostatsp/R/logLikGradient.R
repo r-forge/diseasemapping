@@ -1,78 +1,21 @@
-# the function to get gradients
-grFun = function(parname, right=TRUE, 
-		allParam, paramsRight, paramsLeft, observations,
-		covMatOrig, covariates, obsBC,twoLogJacobian,
-		coordinates, fixedVariance,reml,
-		minustwotimes) {
-	
-	if(right) {
-		allParam[parname] = paramsRight[parname]		
-	} else {
-		allParam[parname] = paramsLeft[parname]
-	}
-	
-	if(parname=="boxcox") {
-		obsBC =	((observations^allParam["boxcox"]) - 1)/
-				allParam["boxcox"]
-		twoLogJacobian = 2*(allParam["boxcox"]-1)* 
-				sum(log(observations))					
-	} else if(parname=="nugget") {
-		covMat =covMatOrig
-		Matrix::diag(covMat) = Matrix::diag(covMat) + allParam["nugget"]
-	} else {
-		covMat = matern(x=coordinates, param=allParam)	
-		Matrix::diag(covMat) = Matrix::diag(covMat) + allParam["nugget"]
-	}
-	
+forL = function(covMat, covariates, obsBC) {
 	cholCovMat = Matrix::chol(covMat)
+	logDet = 2*sum(log(Matrix::diag(cholCovMat)))
 	cholCovInvX = Matrix::solve(cholCovMat, covariates)
 	cholCovInvXcross = Matrix::crossprod(cholCovInvX)
 	cholCovInvXcrossInv = Matrix::solve(cholCovInvXcross)
+
 	cholCovInvY = Matrix::solve(cholCovMat, obsBC)
 	betaHat = cholCovInvXcrossInv %*% Matrix::crossprod(cholCovInvX, cholCovInvY) 
 	resids = obsBC - covariates %*% betaHat
 	cholCovInvResid = Matrix::solve(cholCovMat, resids)
 	totalSsq = as.vector(Matrix::crossprod(cholCovInvResid))
 	totalVarHat = totalSsq/length(observations)
-	
-	if(!fixedVariance) { # profile likelihood with optimal sigma
-		
-		minusTwoLogLik = length(observations) * log(2*pi) + 
-				length(observations) * log(totalVarHat) +
-				2*sum(log(Matrix::diag(cholCovMat))) +
-				length(observations) - twoLogJacobian
-		
-		if( reml ) {
-			# REML
-			choldet =  2*sum(log(Matrix::diag(chol(cholCovInvXcross)))) 
-			
-			minusTwoLogLik =  minusTwoLogLik + choldet
-			
-		}  # end reml
-		
-	} else { # a variance was supplied
-		
-		minusTwoLogLik = length(observations) * log(2*pi) +
-				2*sum(log(Matrix::diag(cholCovMat))) +
-				totalSsq - twoLogJacobian
-		totalVarHat = 1
-		if( reml ) {
-			reml=FALSE
-			warning("a variance was supplied by REML was requested.  doing ML instead.")		
-		}
-	}
-	
-	result = minusTwoLogLik
-	if(minustwotimes) {
-		names(result) = "minusTwoLogLik"
-	} else {
-		result = -0.5*result
-		
-		names(result)="logLik"
-	} 
-	if(reml)
-		names(result) = gsub("Lik$", "RestrictedLik", names(result))
-	result
+	return(list(
+					totalVarHat=totalVarHat, logDet = logDet, 
+					betaHat = betaHat,
+					cholDet =  2*sum(log(Matrix::diag(chol(cholCovInvXcross)))) 
+	))
 }
 
 
@@ -85,7 +28,9 @@ logLikGradient = function(param,
 		lowerG = rep(-Inf, length(param)), 
 		upperG=rep(Inf, length(param)), 
 		eps=rep(0.001, length(param)),
-		mc.cores=getOption("mc.cores", 1L)
+		mc.cores=getOption("mc.cores", 1L),
+		logObs = log(observations),
+		sumLogObs = sum(logObs)
 	){
 		upper = upperG
 		lower = lowerG
@@ -109,7 +54,7 @@ logLikGradient = function(param,
 		fixedVariance = any(names(moreParams)=="variance")	
 
 # store box-cox if necessary
-
+	
 	estBoxCox = any(names(param)=="boxcox")
 	if(any(names(moreParams)=="boxcox")) { 
 		if(abs(moreParams["boxcox"]-1) < 0.001) {
@@ -133,21 +78,20 @@ logLikGradient = function(param,
 							moreParams["boxcox"]
 				} else {
 					moreParams["boxcox"] = 0
-					obsBC = log(observations)					
+					obsBC = logObs					
 				}
 				
 				twoLogJacobian = 2*(moreParams["boxcox"]-1)* 
-						sum(log(observations))					
+						sumLogObs					
 			}
 		} else { # box cox is estimated, must compute
 			if(abs(param["boxcox"]) > 0.00001) { 
 			obsBC =	((observations^param["boxcox"]) - 1)/
 							param["boxcox"]
 				} else {
-					obsBC = log(observations)
+					obsBC = logObs
 				}
-			twoLogJacobian = 2*(param["boxcox"]-1)* 
-					sum(log(observations))					
+			twoLogJacobian = 2*(param["boxcox"]-1)*  sumLogObs					
 		}
 	} else { # not useing box cox
 		obsBC = observations
@@ -155,6 +99,7 @@ logLikGradient = function(param,
 	}		
 		
 	allParam = c(param, moreParams[!names(moreParams) %in% names(param)])
+
 	
 	# variance matrix
 	covMatOrig = covMat = matern(x=coordinates, param=allParam)	
@@ -163,8 +108,90 @@ logLikGradient = function(param,
 
 	paramsRight = pmin(param + eps, upper[names(param)])
 	paramsLeft = pmax(param - eps, lower[names(param)])
+	paramsMat = rbind(paramsRight, paramsLeft)
 	
+	##########
+	
+	# logLik base params
+	
+		
+	if(any(names(param)=='boxcox')) {
+		bc = paramsMat[,'boxcox']
+		bcGr = NULL
+		for(Dbc in bc) {
+			if(abs(bc> 0.001)) {
+				bcGr =	cbind(bcGr,
+								((observations^Dbc) - 1)/Dbc
+							)
+			} else {
+				bcGr = cbind(bcGr, logObs)					
+			}
+		}
+		bcGr = cbind(bcGr, obsBC)
+		fromL = forL(covMat, covariates, bcGr) 
+			
+		dLogJ = 2*(diff(bc))*  sumLogObs					
+		
+		grBoxCox =  
+				length(observations) * diff(log(fromL$totalVarHat[1:2])) +
+				dLogJ
+		minusTwoLogLik = length(observations) * log(2*pi) + 
+				length(observations) * log(fromL$totalVarHat[3]) +
+				fromL$logDet +
+				length(observations) - twoLogJacobian
+		
+	} else {
+		fromL = forL(covMat, covariates, bcGr) 
+		
+		minusTwoLogLik = length(observations) * log(2*pi) + 
+				length(observations) * log(fromL$totalVarHat) +
+				fromL$logDet +
+				length(observations) - twoLogJacobian
+		
+		
+		grBoxCox = NULL
+	}
+	if( reml ) {
+		minusTwoLogLik =  minusTwoLogLik + fromL$cholDet
+	}  # end reml
+	
+	if(any(names(param)=='nugget')) {
+		Snugget = paramsMat[,'nugget']
+		diagOrig = diag(covMatOrig)
+		grNugget = NULL
+		for(Dnugget in Snugget) {
+			Matrix::diag(covMat) = diagOrig + Dnugget
+			fromL = forL(covMat, covariates, obsBC)
+			
+			minusTwoLogLikN = length(observations) * log(fromL$totalVarHat) +
+					fromL$logDet 	
+			if( reml ) {
+				# REML
+				minusTwoLogLikN =  minusTwoLogLikN + fromL$cholDet
+			}		
+			grNugget =  c(grNugget, minusTwoLogLikN)
+		}
+		grNugget = diff(grNugget)			
+		# restore original covariance matrix
+		Matrix::diag(covMat) = diagOrig + allParam["nugget"]
+			
+	} else {
+		grNugget = NULL
+	}
+	rangePars = grep("^range$|^aniso", names(param))
+	if(length(rangePars)) {
+		for(Dparam in rangePars) {
+			allParamD
 
+		}
+		
+	} else {
+		grRange = NULL
+	}
+	
+	
+	#########3
+	
 
 
 	# calcluate the gradient
@@ -185,7 +212,8 @@ logLikGradient = function(param,
 	coordinates=coordinates, fixedVariance=fixedVariance,
 	reml=reml, covariates=covariates,
 	minustwotimes=minustwotimes)
-	
+
+
 if(ncores>1 & requireNamespace("parallel", quietly=TRUE)) {
 	thegrad = parallel::mcmapply(grFun, parname=parForMapply, right=rightForMapply,
 			MoreArgs=moreArgs,
@@ -324,7 +352,7 @@ likfitLgmG = function(
 		# see if there's anisotropy which is fixed, not estimated
 		# which would be odd but we'll test nonetheless
 		if(length(grep("^anisoRatio", names(param)))){
-			if(abs(param["anosi.ratio"]- 1) > 0.0001){
+			if(abs(param["anosiRatio"]- 1) > 0.0001){
 				# it is indeed anisotropic
 				
 				if(any(names(param)=="anisoAngleDegrees") & 
@@ -481,3 +509,28 @@ return(fromOptim)
 }
 
 
+if(FALSE) {
+#	sr2 = swissRain
+#	sr2$elev = raster::extract(swissAltitude, sr2)
+#	data=sr2 
+#			trend=rain~ elev
+#			param=c(range=1000,shape=1,nugget=0,boxcox=0.5)
+#			paramToEstimate = c("range","nugget")
+#			coordinates=data
+#			upper=NULL
+#			lower=NULL 
+#			parscale=NULL
+#
+#			reml=TRUE
+#			
+#			observations, 
+#			covariates, coordinates,
+#			reml=TRUE, 
+#			minustwotimes=TRUE,
+#			stored=NULL, moreParams=NULL,
+#			lowerG = rep(-Inf, length(param)), 
+#			upperG=rep(Inf, length(param)), 
+#			eps=rep(0.001, length(param)),
+#			mc.cores	
+	
+}
