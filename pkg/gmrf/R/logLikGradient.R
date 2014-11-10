@@ -181,7 +181,7 @@ logLikGradient = function(param,
 	rangePars = grep("^range$|^aniso", names(param))
 	if(length(rangePars)) {
 		for(Dparam in rangePars) {
-			allParamD
+	#		allParamD
 
 		}
 		
