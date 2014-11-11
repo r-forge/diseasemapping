@@ -305,7 +305,7 @@ formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", f
 			warning("the dataset appears to have no rows")
 
 		lcFitted <- apply(lincombMat, 1, lcOneRow, idxCol=c("region.indexI","region.indexS"))
-		names(lcFitted) = paste("fitted_", rownames(lincombMat),sep="")
+		names(lcFitted) = paste("fitted_", dataOrder[rownames(lincombMat), region.id],sep="")
 
 		inlaLincombs = c(inlaLincombs, lcFitted)
 		
