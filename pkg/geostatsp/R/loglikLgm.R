@@ -493,15 +493,15 @@ if(any(names(param)=="boxcox") & !any(paramToEstimate=="boxcox")) {
 	parameterTable[c("sdSpatial", "sdNugget"),"estimate"] = 
 			sqrt(parameterTable[c("sdSpatial", "sdNugget"),"estimate"])
 	
-	dimnames(parameterTable) = unlist(lapply(dimnames(parameterTable),
-			function(qq) {
-				qq=gsub("_", "\\\\textunderscore ", qq)
-				qq=gsub("\\$", "\\\\textdollar ", qq)
-				qq=gsub("<", "\\\\textless ", qq)
-				qq=gsub(">", "\\\\textgreater ", qq)
-				qq
-			}
-	))
+#	dimnames(parameterTable) = unlist(lapply(dimnames(parameterTable),
+#			function(qq) {
+#				qq=gsub("_", "\\\\textunderscore ", qq)
+#				qq=gsub("\\$", "\\\\textdollar ", qq)
+#				qq=gsub("<", "\\\\textless ", qq)
+#				qq=gsub(">", "\\\\textgreater ", qq)
+#				qq
+#			}
+#	))
 	
 	
 	result$summary = as.data.frame(parameterTable)
