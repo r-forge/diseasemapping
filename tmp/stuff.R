@@ -41,8 +41,7 @@ debug(glgm)
 			boxcox=0.5, fixBoxcox=TRUE, 
 			aniso=TRUE)	
 	
-	
-	list(mal_data)
+	load("/home/patrick/Downloads/malaria_Tz.RData")
 	
 	names(mal)
 	
@@ -53,26 +52,7 @@ debug(glgm)
 	plot(malmap,add=TRUE)
 	plot(mal,add=TRUE)
 	
-	
-#altitude
-	map.new(mal)
-	plot(malmap,add=TRUE)
-	plot(ALT, col=terrain.colors(100), main="elevation", alpha=0.5, add=TRUE)
-	points(mal)
-	
-	
-#NDVI
-map.new(mal)
-plot(malmap,add=TRUE)
-	plot(NDVI, main="mean ndvi",alpha=0.5,col=terrain.colors(100), add=TRUE)
-	points(mal)
-	
-#Population
-map.new(mal)
-plot(malmap,add=TRUE)
-plot(POP, main="Population Density",alpha=0.5,col=terrain.colors(100), add=TRUE)
-	points(mal)
-	
+		
 	
 	
 #Prepare data for modeling
@@ -99,10 +79,16 @@ for(D in names(covList)) {
 			formula = POS ~ alt + maxtempwmq + precwetmn + 
 					precdrm + #precwetq + 
 					preccoldq + ndvi + pop, 
-			data = mal, grid = 50,
+			data = mal, grid = 70,
 			covariates = covList, family = "binomial", 
 			Ntrials = mal$TOT, shape = 1,buffer = 50000, 
 			priorCI = list(sd = c(0.2, 4), range = c(20000, 5e+05)))
+
+	map.new(mal)
+	plot(malmap,add=TRUE)
+	plot(malFit$raster[['random.mean']], alpha=0.5,col=terrain.colors(100), add=TRUE)
+	
+	
 	
 	grid=50;data=mal;buffer=50000;covariates=covList
 	grid=gridRaster = squareRaster(data, grid)

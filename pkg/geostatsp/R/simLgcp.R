@@ -4,9 +4,15 @@ simPoissonPP = function(intensity) {
 	
 	tosub = data.frame(id=NA,v=0)
 	intensity = subs(intensity, tosub, subsWithNA=FALSE)
-	
+
+  if(any(maxValue(intensity)>1000))
+    warning("A large number of events are being simulated, more than", maxValue(intensity))
+  
+  
 	NperCell = intensity
-	values(NperCell) = rpois(ncell(intensity)*nlayers(intensity), values(intensity))
+	values(NperCell)= rpois(
+      ncell(intensity)*nlayers(intensity), 
+      values(intensity))
 	
 	if(any(maxValue(NperCell)>1000))
 		warning("A large number of events are being simulated, more than", maxValue(NperCell))
