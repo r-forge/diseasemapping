@@ -112,7 +112,7 @@ loglikLgm = function(param,
 			Matrix::diag(covMat) = Matrix::diag(covMat) + param["nugget"]
 
 		# matrix operations
-		cholCovMat = chol(covMat)
+		cholCovMat = Matrix::chol(covMat)
 
 		
 		# cholCovMat %*% t(cholCovMat) = covMat
@@ -131,10 +131,12 @@ loglikLgm = function(param,
 
 		# Covariates and likelihood
 	
-		betaHat = cholCovInvXcrossInv %*% 
-				Matrix::crossprod(cholCovInvX, cholCovInvY) 
+		betaHat = as.vector(
+        cholCovInvXcrossInv %*% 
+				Matrix::crossprod(cholCovInvX, cholCovInvY)
+    ) 
 		
-		resids = observations - covariates %*% betaHat
+		resids = observations - as.vector(covariates %*% betaHat)
 		# sigsqhat = resids' %*% Vinv %*% residsx
 		#    =   resids' Linv' Linv resids
 		cholCovInvResid = Matrix::solve(cholCovMat, resids)
@@ -148,7 +150,7 @@ loglikLgm = function(param,
 	if(!haveVariance) { # profile likelihood with optimal sigma
 			minusTwoLogLik = Nadj * log(2*pi) + 
 				Nadj * log(totalVarHat) +
-				2*determinant(cholCovMat)$modulus +
+				2*Matrix::determinant(cholCovMat)$modulus +
 				Nadj - twoLogJacobian		
 			param[c("variance","nugget")] = 
 					totalVarHat * param[c("variance","nugget")]
@@ -156,19 +158,19 @@ loglikLgm = function(param,
 		# calculate likelihood with the variance supplied
 		# -2 log lik = n log(2pi) + log(|V|) + resid' Vinv resid
 		minusTwoLogLik = Nadj * log(2*pi) +
-				2*determinant(cholCovMat)$modulus +
+				2*Matrix::determinant(cholCovMat)$modulus +
 				totalSsq - twoLogJacobian
 		totalVarHat = 1
 	}
 	if( reml ) {
 		minusTwoLogLik =  minusTwoLogLik + 
-			2*determinant(cholCovInvXcross)$modulus
+			2*Matrix::determinant(cholCovInvXcross)$modulus
 	}
 	
 	# format the output
-	betaHat = as.vector(betaHat)
 	names(betaHat) = colnames(covariates)
-	varBetaHat = totalVarHat * cholCovInvXcrossInv 
+	varBetaHat = totalVarHat * as.matrix(cholCovInvXcrossInv) 
+  dimnames(varBetaHat) = list(names(betaHat), names(betaHat))
 
 	result = minusTwoLogLik
 	if(minustwotimes) {
@@ -182,13 +184,13 @@ loglikLgm = function(param,
 		names(result) = gsub("Lik$", "RestrictedLik", names(result))
 	
 	attributes(result)$param = param
-		attributes(result)$totalVarHat = totalVarHat
+	attributes(result)$totalVarHat = totalVarHat
 	attributes(result)$betaHat = betaHat
-	attributes(result)$varBetaHat = as.matrix(varBetaHat)
+	attributes(result)$varBetaHat = varBetaHat
  	attributes(result)$reml=reml
 #		attributes(result)$twoLogJacobian = twoLogJacobian
 #		attributes(result)$choldet = as.vector(choldet)
-	attributes(result)$resid = as.numeric(resids)
+	attributes(result)$resid = resids
 	result
 }
 
