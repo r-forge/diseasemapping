@@ -54,9 +54,9 @@ trafalgarSquare=c(-0.128056,51.508056)
 
 <<downloadTiles,include=FALSE>>=
 if(reRun) {
-africaTiles = openmap(africaExtent, path=theNames,zoom=2)
+africaTiles = openmap(africaExtent, path=theNames,zoom=2, verbose=TRUE)
 
-londonTiles = openmap(trafalgarSquare,zoom=12,path=theNames)
+londonTiles = openmap(trafalgarSquare,zoom=12,path=theNames,verbose=TRUE)
 
 # make sure all data is stored in memory not on disk
 # so that caching will work
@@ -104,7 +104,7 @@ for(D in theNames){
 
 	
 	cat("\\section[",D,"]{{\\tt plot","RGB"[threeTiles], 
-			"(openmap(x,path=\"", D, "\"))}}")
+			"(openmap(x,path=\"", D, "\"))}}", sep='')
 	cat("\\label{", D, "}\n",sep="")
 	cat("\\nopagebreak[4]\\begin{tabular}{ccc}\n")
 	

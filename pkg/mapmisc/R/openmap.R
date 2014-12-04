@@ -1,11 +1,13 @@
 osmTiles = function(name) {
 	result = c(
 			osm = "http://tile.openstreetmap.org",
-#			"osm-no-labels"="http://a.www.toolserver.org/tiles/osm-no-labels/",
+			"osm-no-labels"="http://a.tiles.wmflabs.org/osm-no-labels/",
+      "osm-de"="http://c.tile.openstreetmap.de/tiles/osmde",
 			"osm-transport"="http://tile2.opencyclemap.org/transport/",
-			"bw-mapnik"="www.toolserver.org/tiles/bw-mapnik",
+			"bw-mapnik"="http://b.tiles.wmflabs.org/bw-mapnik2",
 			mapquest="http://otile1.mqcdn.com/tiles/1.0.0/osm/",
-			"mapquest-sat"="http://mtile02.mqcdn.com/tiles/1.0.0/vy/sat/",
+			"mapquest-sat"="http://otile1.mqcdn.com/tiles/1.0.0/sat",
+      "mapquest-labels"='http://otile3.mqcdn.com/tiles/1.0.0/hyb/',
 #			hill="http://www.toolserver.org/~cmarqu/hill/",
 			landscape="http://tile.opencyclemap.org/landscape/",
 #		"osm-retina"="http://tile.geofabrik.de/osm_retina/",
@@ -19,16 +21,15 @@ osmTiles = function(name) {
 #	skobbler="http://tiles.skobbler.net/osm_tiles2/",	
 	waze="http://tilesworld.waze.com/tiles/",
 #	eu="http://alpha.map1.eu/tiles/"#,
-	mapbox="http://a.tiles.mapbox.com/v3/examples.map-vyofok3q/",
-	humanitarian="http://a.tile.openstreetmap.fr/hot/"
+#	mapbox="http://a.tiles.mapbox.com/v3/examples.map-vyofok3q/",
+	humanitarian="http://a.tile.openstreetmap.fr/hot/",
+cartodb='http://c.basemaps.cartocdn.com/light_all/',
+'cartodb-dark'='http://c.basemaps.cartocdn.com/dark_all/'
 	)
 	
 	
-	toolserver = c("parking-bw", "osm-locale-de","bw-noicons")
-	toadd =	paste("http://www.toolserver.org/tiles/", toolserver,"/", sep="")
-	names(toadd) = toolserver
-	result = c(result, toadd)
-	
+
+  
 
 	# language labels don't appear to be working
 	languages = c("en","fr","de", "it","es","ru")
@@ -116,9 +117,9 @@ openmap = function(x, zoom,
 		if(!is.null(thistile)) {
 			if(nlayers(thistile)==1)
 				ctable = thistile@legend@colortable
+      result =  stack(thistile, result)	
 		}
 		
-		result =  stack(thistile, result)	
 		if(length(ctable))
 				result[[1]]@legend@colortable = ctable
 		

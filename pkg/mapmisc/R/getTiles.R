@@ -91,7 +91,8 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 	if(verbose) {
 		cat(path, "\n")
 	}
-	
+  
+   
 	nt = nTiles(xlim,ylim,zoom)
   if(nt > maxTiles){
     stop("Cant get ",nt," tiles with maxTiles set to ",maxTiles)
@@ -118,11 +119,11 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 			   timeOut=timeOut,
 			  verbose=verbose)
     }
-	if(file.info(where)$size) {
-		thisimage = raster::brick(where)
-	} else {
+	thisimage = try( raster::brick(where), silent=TRUE)
+	if(class(thisimage)=='try-error') {
+    if(verbose) warning("tile ", path, " cannot be loaded")
 		thisimage = NULL
-	}
+  }
 	if(!is.null(thisimage)) {
 
 		# if only one layer
@@ -139,12 +140,21 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 		}
 		names(thisimage) = gsub("^http://|/$", "", path)
 	} else if (nlayers(thisimage)>1){
-		thisimage = thisimage[[1:3]]
 
+    cnames = c('Red','Green','Blue','Trans')[1:min(c(4,nlayers(thisimage)))]
+    
 		names(thisimage) = paste(
 				gsub("^http://|/$", "", path),
-				c("Red","Green","Blue"),
+				cnames,
 				sep="")
+    
+    transLayer = grep("Trans$", names(thisimage), value=TRUE)
+    colLayer = grep("Trans$", names(thisimage), value=TRUE,invert=TRUE)
+    if(length(transLayer)) {
+      # convert transparent to NA
+      transLayer = reclassify(thisimage[[transLayer]], data.frame(-Inf, 10, NA))  
+      thisimage = raster::mask(thisimage, transLayer)
+    }
 	} 
 	
 	extent(thisimage) = tileData[[ip]]$extent
@@ -193,10 +203,10 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
     if (age > timeOut){
       if(verbose)cat("Tile aged ",age," expired from cache\n")
       retrieve = TRUE
-    }else if(file.info(tilePath)$size<1) {
-		if(verbose)cat("Tile file is too small, retreiving again\n")
-		retrieve = TRUE
-	} else {
+    } else if(file.info(tilePath)$size<1) {
+		  if(verbose)cat("Tile file is too small, retreiving again\n")
+		    retrieve = TRUE
+	  } else {
       if(verbose){cat("Tile found in cache\n")}
     }
   }
