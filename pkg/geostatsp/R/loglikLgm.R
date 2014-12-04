@@ -9,7 +9,7 @@ loglikLgm = function(param,
 	trend = formula
 	
 	if(class(trend)=="formula") {
-		observations = formulaLhs(trend)
+		observations = all.vars(trend)[1]
 		if(!any(names(data)==observations))
 			warning("can't find observations ", observations, "in data")
 		# frame first, so we see which row names have been omitted due to NA's
@@ -188,10 +188,9 @@ loglikLgm = function(param,
 	attributes(result)$betaHat = betaHat
 	attributes(result)$varBetaHat = varBetaHat
  	attributes(result)$reml=reml
-#		attributes(result)$twoLogJacobian = twoLogJacobian
-#		attributes(result)$choldet = as.vector(choldet)
 	attributes(result)$resid = resids
-	result
+
+  result
 }
 
  
@@ -256,12 +255,12 @@ likfitLgm = function(
  
 		data = data.frame(data)
 		theNA = apply(
-				data[,all.vars(formulaRhs(trend)),drop=FALSE],
+				data[,all.vars(trend)[-1],drop=FALSE],
 				1, function(qq) any(is.na(qq)))
 		noNA = !theNA
 		
 		covariates = model.matrix(trend, data[noNA,])
-		observations = formulaLhs(trend)
+		observations = all.vars(trend)[1]
 		
 		if(!any(names(data)==observations))
 			warning("can't find observations ", observations, "in data")

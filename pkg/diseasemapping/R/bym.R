@@ -230,7 +230,7 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 		rownames(dataToAdd) = paste("missing",notInData,sep="")
 		dataToAdd[,"region.indexI"] = dataToAdd[,"region.indexS"]=notInData
 	# set response to missing
-		dataToAdd[,formulaLhs(formula)] = NA		
+		dataToAdd[,all.vars(formula)[1]] = NA		
 		data = rbind(data, dataToAdd)
 	}
 
@@ -250,8 +250,14 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 
 		
 		# fitted values
- 
-formulaForLincombs = formulaRhs(formula.fitted,char=TRUE)
+
+ # get rid of left side of formula
+#  formulaForLincombs =  formulaRhs(formula.fitted,char=TRUE)
+formulaForLincombs = base::format(formula.fitted)
+# if there is a line break in the formula, 
+# format(formula) will create a vector
+formulaForLincombs = paste(formulaForLincombs, collapse="")
+formulaForLincombs = gsub("^.*~", "", toString(formulaForLincombs))
  
 # get rid of f(stuff) in formula
 formulaForLincombs =
