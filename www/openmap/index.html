@@ -7,7 +7,7 @@
 <meta name="originator" content="TeX4ht (http://www.tug.org/tex4ht/)"> 
 <!-- html --> 
 <meta name="src" content="mapWeb.tex"> 
-<meta name="date" content="2014-09-18 09:52:00"> 
+<meta name="date" content="2014-12-04 09:46:00"> 
 <link rel="stylesheet" type="text/css" href="mapWeb.css"> 
 </head><body 
 >
@@ -21,43 +21,45 @@
 <div class="author" ><span 
 class="cmr-12x-x-120">Patrick Brown</span></div><br />
 <div class="date" ><span 
-class="cmr-12x-x-120">September 18, 2014</span></div>
+class="cmr-12x-x-120">December 4, 2014</span></div>
    </div>
    <h3 class="likesectionHead"><a 
  id="x1-1000"></a></h3>
    <div class="tableofcontents">
    <span class="sectionToc" >1 <a 
-href="#x1-20001" id="QQ2-1-2"> osm </a></span>
+href="#x1-20001" id="QQ2-1-2">osm</a></span>
 <br />   <span class="sectionToc" >2 <a 
-href="#x1-30002" id="QQ2-1-3"> osm-transport </a></span>
+href="#x1-30002" id="QQ2-1-3">osm-no-labels</a></span>
 <br />   <span class="sectionToc" >3 <a 
-href="#x1-40003" id="QQ2-1-4"> bw-mapnik </a></span>
+href="#x1-40003" id="QQ2-1-4">osm-de</a></span>
 <br />   <span class="sectionToc" >4 <a 
-href="#x1-50004" id="QQ2-1-5"> mapquest </a></span>
+href="#x1-50004" id="QQ2-1-5">osm-transport</a></span>
 <br />   <span class="sectionToc" >5 <a 
-href="#x1-60005" id="QQ2-1-6"> mapquest-sat </a></span>
+href="#x1-60005" id="QQ2-1-6">bw-mapnik</a></span>
 <br />   <span class="sectionToc" >6 <a 
-href="#x1-70006" id="QQ2-1-7"> landscape </a></span>
+href="#x1-70006" id="QQ2-1-7">mapquest</a></span>
 <br />   <span class="sectionToc" >7 <a 
-href="#x1-80007" id="QQ2-1-8"> opentopomap </a></span>
+href="#x1-80007" id="QQ2-1-8">mapquest-sat</a></span>
 <br />   <span class="sectionToc" >8 <a 
-href="#x1-90008" id="QQ2-1-9"> maptoolkit </a></span>
+href="#x1-90008" id="QQ2-1-9">mapquest-labels</a></span>
 <br />   <span class="sectionToc" >9 <a 
-href="#x1-100009" id="QQ2-1-10"> waze </a></span>
+href="#x1-100009" id="QQ2-1-10">landscape</a></span>
 <br />   <span class="sectionToc" >10 <a 
-href="#x1-1100010" id="QQ2-1-11"> mapbox </a></span>
+href="#x1-1100010" id="QQ2-1-11">opentopomap</a></span>
 <br />   <span class="sectionToc" >11 <a 
-href="#x1-1200011" id="QQ2-1-12"> humanitarian </a></span>
+href="#x1-1200011" id="QQ2-1-12">maptoolkit</a></span>
 <br />   <span class="sectionToc" >12 <a 
-href="#x1-1300012" id="QQ2-1-13"> parking-bw </a></span>
+href="#x1-1300012" id="QQ2-1-13">waze</a></span>
 <br />   <span class="sectionToc" >13 <a 
-href="#x1-1400013" id="QQ2-1-14"> osm-locale-de </a></span>
+href="#x1-1400013" id="QQ2-1-14">humanitarian</a></span>
 <br />   <span class="sectionToc" >14 <a 
-href="#x1-1500014" id="QQ2-1-15"> bw-noicons </a></span>
+href="#x1-1500014" id="QQ2-1-15">cartodb</a></span>
 <br />   <span class="sectionToc" >15 <a 
-href="#x1-1600015" id="QQ2-1-16"> stamen-toner </a></span>
+href="#x1-1600015" id="QQ2-1-16">cartodb-dark</a></span>
 <br />   <span class="sectionToc" >16 <a 
-href="#x1-1700016" id="QQ2-1-17"> stamen-watercolor </a></span>
+href="#x1-1700016" id="QQ2-1-17">stamen-toner</a></span>
+<br />   <span class="sectionToc" >17 <a 
+href="#x1-1800017" id="QQ2-1-18">stamen-watercolor</a></span>
    </div>
 <!--l. 86--><p class="indent" >   The following are some examples of maps produced with
 <!--l. 88--><p class="indent" >   <span 
@@ -65,7 +67,7 @@ class="cmtt-12">mymap=openmap(x, path="something")</span>
 <!--l. 94--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">1   </span> <a 
  id="x1-20001"></a><span 
-class="cmtt-12">plot (openmap(x,path=" osm "))</span></h3>
+class="cmtt-12">plot(openmap(x,path="osm"))</span></h3>
    <div class="tabular"> <table id="TBL-2" class="tabular" 
 cellspacing="0" cellpadding="0"  
 ><colgroup id="TBL-2-1g"><col 
@@ -74,10 +76,10 @@ id="TBL-2-2"><col
 id="TBL-2-3"></colgroup><tr  
  style="vertical-align:baseline;" id="TBL-2-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-2-1-1"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles1.png" alt="PIC"  
+src="figure/someTiles-1.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-2-1-2"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles2.png" alt="PIC"  
+src="figure/someTiles-2.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-2-1-3"  
 class="td11"></td> </tr></table>
 </div>
@@ -85,7 +87,7 @@ class="td11"></td> </tr></table>
                                                                                          
    <h3 class="sectionHead"><span class="titlemark">2   </span> <a 
  id="x1-30002"></a><span 
-class="cmtt-12">plot (openmap(x,path=" osm-transport "))</span></h3>
+class="cmtt-12">plot(openmap(x,path="osm-no-labels"))</span></h3>
    <div class="tabular"> <table id="TBL-3" class="tabular" 
 cellspacing="0" cellpadding="0"  
 ><colgroup id="TBL-3-1g"><col 
@@ -94,16 +96,16 @@ id="TBL-3-2"><col
 id="TBL-3-3"></colgroup><tr  
  style="vertical-align:baseline;" id="TBL-3-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-3-1-1"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles3.png" alt="PIC"  
+src="figure/someTiles-3.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-3-1-2"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles4.png" alt="PIC"  
+src="figure/someTiles-4.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-3-1-3"  
 class="td11"></td> </tr></table>
 </div>
    <h3 class="sectionHead"><span class="titlemark">3   </span> <a 
  id="x1-40003"></a><span 
-class="cmtt-12">plot (openmap(x,path=" bw-mapnik "))</span></h3>
+class="cmtt-12">plot(openmap(x,path="osm-de"))</span></h3>
    <div class="tabular"> <table id="TBL-4" class="tabular" 
 cellspacing="0" cellpadding="0"  
 ><colgroup id="TBL-4-1g"><col 
@@ -112,16 +114,16 @@ id="TBL-4-2"><col
 id="TBL-4-3"></colgroup><tr  
  style="vertical-align:baseline;" id="TBL-4-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-4-1-1"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles5.png" alt="PIC"  
+src="figure/someTiles-5.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-4-1-2"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles6.png" alt="PIC"  
+src="figure/someTiles-6.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-4-1-3"  
 class="td11"></td> </tr></table>
 </div>
    <h3 class="sectionHead"><span class="titlemark">4   </span> <a 
  id="x1-50004"></a><span 
-class="cmtt-12">plot RGB (openmap(x,path=" mapquest "))</span></h3>
+class="cmtt-12">plot(openmap(x,path="osm-transport"))</span></h3>
    <div class="tabular"> <table id="TBL-5" class="tabular" 
 cellspacing="0" cellpadding="0"  
 ><colgroup id="TBL-5-1g"><col 
@@ -130,16 +132,16 @@ id="TBL-5-2"><col
 id="TBL-5-3"></colgroup><tr  
  style="vertical-align:baseline;" id="TBL-5-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-5-1-1"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles7.png" alt="PIC"  
+src="figure/someTiles-7.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-5-1-2"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles8.png" alt="PIC"  
+src="figure/someTiles-8.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-5-1-3"  
 class="td11"></td> </tr></table>
 </div>
    <h3 class="sectionHead"><span class="titlemark">5   </span> <a 
  id="x1-60005"></a><span 
-class="cmtt-12">plot (openmap(x,path=" mapquest-sat "))</span></h3>
+class="cmtt-12">plot(openmap(x,path="bw-mapnik"))</span></h3>
    <div class="tabular"> <table id="TBL-6" class="tabular" 
 cellspacing="0" cellpadding="0"  
 ><colgroup id="TBL-6-1g"><col 
@@ -148,14 +150,16 @@ id="TBL-6-2"><col
 id="TBL-6-3"></colgroup><tr  
  style="vertical-align:baseline;" id="TBL-6-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-6-1-1"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles9.png" alt="PIC"  
+src="figure/someTiles-9.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-6-1-2"  
-class="td11"><div class="minipage"></div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-6-1-3"  
+class="td11"><div class="minipage"><img 
+src="figure/someTiles-10.png" alt="PIC"  
+>                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-6-1-3"  
 class="td11"></td> </tr></table>
 </div>
    <h3 class="sectionHead"><span class="titlemark">6   </span> <a 
  id="x1-70006"></a><span 
-class="cmtt-12">plot (openmap(x,path=" landscape "))</span></h3>
+class="cmtt-12">plotRGB(openmap(x,path="mapquest"))</span></h3>
    <div class="tabular"> <table id="TBL-7" class="tabular" 
 cellspacing="0" cellpadding="0"  
 ><colgroup id="TBL-7-1g"><col 
@@ -164,16 +168,16 @@ id="TBL-7-2"><col
 id="TBL-7-3"></colgroup><tr  
  style="vertical-align:baseline;" id="TBL-7-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-7-1-1"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles10.png" alt="PIC"  
+src="figure/someTiles-11.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-7-1-2"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles11.png" alt="PIC"  
+src="figure/someTiles-12.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-7-1-3"  
 class="td11"></td> </tr></table>
 </div>
    <h3 class="sectionHead"><span class="titlemark">7   </span> <a 
  id="x1-80007"></a><span 
-class="cmtt-12">plot RGB (openmap(x,path=" opentopomap "))</span></h3>
+class="cmtt-12">plotRGB(openmap(x,path="mapquest-sat"))</span></h3>
    <div class="tabular"> <table id="TBL-8" class="tabular" 
 cellspacing="0" cellpadding="0"  
 ><colgroup id="TBL-8-1g"><col 
@@ -182,16 +186,16 @@ id="TBL-8-2"><col
 id="TBL-8-3"></colgroup><tr  
  style="vertical-align:baseline;" id="TBL-8-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-8-1-1"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles12.png" alt="PIC"  
+src="figure/someTiles-13.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-8-1-2"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles13.png" alt="PIC"  
+src="figure/someTiles-14.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-8-1-3"  
 class="td11"></td> </tr></table>
 </div>
    <h3 class="sectionHead"><span class="titlemark">8   </span> <a 
  id="x1-90008"></a><span 
-class="cmtt-12">plot (openmap(x,path=" maptoolkit "))</span></h3>
+class="cmtt-12">plotRGB(openmap(x,path="mapquest-labels"))</span></h3>
    <div class="tabular"> <table id="TBL-9" class="tabular" 
 cellspacing="0" cellpadding="0"  
 ><colgroup id="TBL-9-1g"><col 
@@ -200,16 +204,16 @@ id="TBL-9-2"><col
 id="TBL-9-3"></colgroup><tr  
  style="vertical-align:baseline;" id="TBL-9-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-9-1-1"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles14.png" alt="PIC"  
+src="figure/someTiles-15.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-9-1-2"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles15.png" alt="PIC"  
+src="figure/someTiles-16.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-9-1-3"  
 class="td11"></td> </tr></table>
 </div>
    <h3 class="sectionHead"><span class="titlemark">9   </span> <a 
  id="x1-100009"></a><span 
-class="cmtt-12">plot (openmap(x,path=" waze "))</span></h3>
+class="cmtt-12">plot(openmap(x,path="landscape"))</span></h3>
    <div class="tabular"> <table id="TBL-10" class="tabular" 
 cellspacing="0" cellpadding="0"  
 ><colgroup id="TBL-10-1g"><col 
@@ -218,16 +222,16 @@ id="TBL-10-2"><col
 id="TBL-10-3"></colgroup><tr  
  style="vertical-align:baseline;" id="TBL-10-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-10-1-1"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles16.png" alt="PIC"  
+src="figure/someTiles-17.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-10-1-2"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles17.png" alt="PIC"  
+src="figure/someTiles-18.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-10-1-3"  
 class="td11"></td> </tr></table>
 </div>
    <h3 class="sectionHead"><span class="titlemark">10   </span> <a 
  id="x1-1100010"></a><span 
-class="cmtt-12">plot (openmap(x,path=" mapbox "))</span></h3>
+class="cmtt-12">plot(openmap(x,path="opentopomap"))</span></h3>
    <div class="tabular"> <table id="TBL-11" class="tabular" 
 cellspacing="0" cellpadding="0"  
 ><colgroup id="TBL-11-1g"><col 
@@ -236,16 +240,18 @@ id="TBL-11-2"><col
 id="TBL-11-3"></colgroup><tr  
  style="vertical-align:baseline;" id="TBL-11-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-11-1-1"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles18.png" alt="PIC"  
+src="figure/someTiles-19.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-11-1-2"  
-class="td11"><div class="minipage"></div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-11-1-3"  
+class="td11"><div class="minipage"><img 
+src="figure/someTiles-20.png" alt="PIC"  
+>                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-11-1-3"  
 class="td11"></td> </tr></table>
 </div>
                                                                                          
                                                                                          
    <h3 class="sectionHead"><span class="titlemark">11   </span> <a 
  id="x1-1200011"></a><span 
-class="cmtt-12">plot (openmap(x,path=" humanitarian "))</span></h3>
+class="cmtt-12">plot(openmap(x,path="maptoolkit"))</span></h3>
    <div class="tabular"> <table id="TBL-12" class="tabular" 
 cellspacing="0" cellpadding="0"  
 ><colgroup id="TBL-12-1g"><col 
@@ -254,16 +260,16 @@ id="TBL-12-2"><col
 id="TBL-12-3"></colgroup><tr  
  style="vertical-align:baseline;" id="TBL-12-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-12-1-1"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles19.png" alt="PIC"  
+src="figure/someTiles-21.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-12-1-2"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles20.png" alt="PIC"  
+src="figure/someTiles-22.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-12-1-3"  
 class="td11"></td> </tr></table>
 </div>
    <h3 class="sectionHead"><span class="titlemark">12   </span> <a 
  id="x1-1300012"></a><span 
-class="cmtt-12">plot (openmap(x,path=" parking-bw "))</span></h3>
+class="cmtt-12">plotRGB(openmap(x,path="waze"))</span></h3>
    <div class="tabular"> <table id="TBL-13" class="tabular" 
 cellspacing="0" cellpadding="0"  
 ><colgroup id="TBL-13-1g"><col 
@@ -272,16 +278,16 @@ id="TBL-13-2"><col
 id="TBL-13-3"></colgroup><tr  
  style="vertical-align:baseline;" id="TBL-13-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-13-1-1"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles21.png" alt="PIC"  
+src="figure/someTiles-23.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-13-1-2"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles22.png" alt="PIC"  
+src="figure/someTiles-24.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-13-1-3"  
 class="td11"></td> </tr></table>
 </div>
    <h3 class="sectionHead"><span class="titlemark">13   </span> <a 
  id="x1-1400013"></a><span 
-class="cmtt-12">plot (openmap(x,path=" osm-locale-de "))</span></h3>
+class="cmtt-12">plot(openmap(x,path="humanitarian"))</span></h3>
    <div class="tabular"> <table id="TBL-14" class="tabular" 
 cellspacing="0" cellpadding="0"  
 ><colgroup id="TBL-14-1g"><col 
@@ -290,16 +296,16 @@ id="TBL-14-2"><col
 id="TBL-14-3"></colgroup><tr  
  style="vertical-align:baseline;" id="TBL-14-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-14-1-1"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles23.png" alt="PIC"  
+src="figure/someTiles-25.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-14-1-2"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles24.png" alt="PIC"  
+src="figure/someTiles-26.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-14-1-3"  
 class="td11"></td> </tr></table>
 </div>
    <h3 class="sectionHead"><span class="titlemark">14   </span> <a 
  id="x1-1500014"></a><span 
-class="cmtt-12">plot (openmap(x,path=" bw-noicons "))</span></h3>
+class="cmtt-12">plot(openmap(x,path="cartodb"))</span></h3>
    <div class="tabular"> <table id="TBL-15" class="tabular" 
 cellspacing="0" cellpadding="0"  
 ><colgroup id="TBL-15-1g"><col 
@@ -308,16 +314,16 @@ id="TBL-15-2"><col
 id="TBL-15-3"></colgroup><tr  
  style="vertical-align:baseline;" id="TBL-15-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-15-1-1"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles25.png" alt="PIC"  
+src="figure/someTiles-27.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-15-1-2"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles26.png" alt="PIC"  
+src="figure/someTiles-28.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-15-1-3"  
 class="td11"></td> </tr></table>
 </div>
    <h3 class="sectionHead"><span class="titlemark">15   </span> <a 
  id="x1-1600015"></a><span 
-class="cmtt-12">plot (openmap(x,path=" stamen-toner "))</span></h3>
+class="cmtt-12">plot(openmap(x,path="cartodb-dark"))</span></h3>
    <div class="tabular"> <table id="TBL-16" class="tabular" 
 cellspacing="0" cellpadding="0"  
 ><colgroup id="TBL-16-1g"><col 
@@ -326,16 +332,16 @@ id="TBL-16-2"><col
 id="TBL-16-3"></colgroup><tr  
  style="vertical-align:baseline;" id="TBL-16-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-16-1-1"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles27.png" alt="PIC"  
+src="figure/someTiles-29.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-16-1-2"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles28.png" alt="PIC"  
+src="figure/someTiles-30.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-16-1-3"  
 class="td11"></td> </tr></table>
 </div>
    <h3 class="sectionHead"><span class="titlemark">16   </span> <a 
  id="x1-1700016"></a><span 
-class="cmtt-12">plot RGB (openmap(x,path=" stamen-watercolor "))</span></h3>
+class="cmtt-12">plotRGB(openmap(x,path="stamen-toner"))</span></h3>
    <div class="tabular"> <table id="TBL-17" class="tabular" 
 cellspacing="0" cellpadding="0"  
 ><colgroup id="TBL-17-1g"><col 
@@ -344,11 +350,29 @@ id="TBL-17-2"><col
 id="TBL-17-3"></colgroup><tr  
  style="vertical-align:baseline;" id="TBL-17-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-17-1-1"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles29.png" alt="PIC"  
+src="figure/someTiles-31.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-17-1-2"  
 class="td11"><div class="minipage"><img 
-src="figure/someTiles30.png" alt="PIC"  
+src="figure/someTiles-32.png" alt="PIC"  
 >                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-17-1-3"  
+class="td11"></td> </tr></table>
+</div>
+   <h3 class="sectionHead"><span class="titlemark">17   </span> <a 
+ id="x1-1800017"></a><span 
+class="cmtt-12">plotRGB(openmap(x,path="stamen-watercolor"))</span></h3>
+   <div class="tabular"> <table id="TBL-18" class="tabular" 
+cellspacing="0" cellpadding="0"  
+><colgroup id="TBL-18-1g"><col 
+id="TBL-18-1"><col 
+id="TBL-18-2"><col 
+id="TBL-18-3"></colgroup><tr  
+ style="vertical-align:baseline;" id="TBL-18-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-18-1-1"  
+class="td11"><div class="minipage"><img 
+src="figure/someTiles-33.png" alt="PIC"  
+>                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-18-1-2"  
+class="td11"><div class="minipage"><img 
+src="figure/someTiles-34.png" alt="PIC"  
+>                                           </div></td><td  style="white-space:nowrap; text-align:center;" id="TBL-18-1-3"  
 class="td11"></td> </tr></table>
 </div>
     
