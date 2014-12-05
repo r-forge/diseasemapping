@@ -24,7 +24,8 @@ osmTiles = function(name) {
 #	mapbox="http://a.tiles.mapbox.com/v3/examples.map-vyofok3q/",
 	humanitarian="http://a.tile.openstreetmap.fr/hot/",
 cartodb='http://c.basemaps.cartocdn.com/light_all/',
-'cartodb-dark'='http://c.basemaps.cartocdn.com/dark_all/'
+'cartodb-dark'='http://c.basemaps.cartocdn.com/dark_all/',
+historical='http://www.openhistoricalmap.org/ohm_tiles/'
 	)
 	
 	

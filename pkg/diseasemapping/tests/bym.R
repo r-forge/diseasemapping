@@ -28,7 +28,15 @@ if( 	require("spdep", quiet=TRUE) &
 		require('INLA', quietly=TRUE)
 		){
 	
-kBYM = bym(observed ~ offset(logExpected) + poverty,kentucky, 
+  
+  kBYM = bym(observed ~ offset(logExpected) + poverty,
+      kentucky,
+      priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5))
+  )
+
+  kBYM = bym(observed ~ offset(logExpected) + poverty,
+    kentucky,
+    region.id='County',
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
 
 # also try no covariate or prior
