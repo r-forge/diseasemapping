@@ -45,6 +45,9 @@ passed as the \code{bg} argument to \code{\link[graphics]{polygon}}}
 \item{cropInset}{Crop the insert map to this extent}
 \item{outer}{If \code{TRUE}, put bar or map in the margin of the plot}
 \item{\dots}{
+breaks = c(-100, -1, 1, Inf)
+thecol = c('red','orange','blue')
+
 Additional arguments passed to \code{legend}, for examaple \code{bty='n'} 
 }
 }
@@ -66,11 +69,13 @@ Patrick Brown
 
 Npoints = 20
 myPoints = SpatialPointsDataFrame(
-.20*cbind(runif(Npoints), runif(Npoints)), 
+	cbind(runif(Npoints), 51+runif(Npoints)), 
 	data=data.frame(y1=c(NA, rnorm(Npoints-1)), 
-	y2=c(sample(1:4, Npoints-1,replace=TRUE), NA)),
-	proj4string=CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+	y2=c(sample(0:5, Npoints-1,replace=TRUE), NA)),
+	proj4string=CRS(
+	"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 	)
+)
 
 \dontrun{
 mymap = openmap(myPoints)
@@ -84,7 +89,7 @@ map.new(myPoints)
 \dontrun{
 plot(mymap,add=TRUE)
 }
-plot(myPoints,col = as.character(cut(
+mplot(myPoints,col = as.character(cut(
 	myPoints$y1, breaks, thecol
 )),add=TRUE)
 scaleBar(myPoints, "bottomright",cex=1.25, scale.cex=2)

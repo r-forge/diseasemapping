@@ -47,30 +47,31 @@ polySmall = cbind(
 
 xsp = SpatialPoints(polySmall, 	proj4string = crs)
 
-
-
-if(is.character(map)) {
-	map = openmap(xsp, path=map, zoom=zoom,crs=crsLL )
-}
 crsCrop = try(CRS(proj4string(cropInset)),silent=TRUE)
 if(class(crsCrop)=="try-error")
 	crsCrop = crsLL
 tocrop = t(bbox(extent(cropInset)))
 tocrop = SpatialPoints(tocrop,
 		proj4string=crsCrop)
+
+if(is.character(map)) {
+  map = openmap(xsp, path=map, zoom=zoom,crs=crsLL)
+}
+# make sure map is a raster
+if(!length(grep("^Raster", class(map)))) {
+  warning('map is not a Raster')
+}
+
 if(requireNamespace('rgdal', quietly=TRUE)) {
 	tocrop = spTransform(tocrop, CRSobj=CRS(proj4string(map)))
 	map = crop(map, extent(tocrop))
 }
 
-
 oldinsetbox = t(bbox(map))
 oldrange = apply(oldinsetbox, 2, diff)
 oldYoverX = oldrange[2]/oldrange[1]
 
-
 newxrange = diff(par("usr")[1:2])*width
-
 
 plotFracYcoords = exp(diff(log(apply(matrix(par("usr"),2),2,diff))))
 
@@ -101,21 +102,15 @@ if(length(grep("left$",pos)))
 } else x=pos
 
 
-
-
-
 mapOrig = map
-extent(map)= extent(c(x[1], x[1]+newxrange, x[2], 
+extent(map)= extent(c(x[1], x[1]+newxrange, x[2],
 				x[2]+newyrange))
 proj4string(map) = CRS()
 bbOrig = t(bbox(extent(mapOrig)))
 bbSmall = t(bbox(extent(map)))
 
-
- 
 if(requireNamespace('rgdal', quietly=TRUE)) {
-	
-xsp = spTransform(xsp, 
+  xsp = spTransform(xsp,
 		CRSobj=CRS(proj4string(mapOrig)))
 }
 
@@ -124,18 +119,15 @@ scale =  apply(bbSmall, 2, diff)/ apply(bbOrig, 2, diff)
 N = length(xsp)
 xsp = coordinates(xsp)
 
-
-
 xsp = (xsp - bbOrig[rep(1,N),]) * matrix(scale, N, 2, byrow=TRUE) + 
 		bbSmall[rep(1,N),]
-
 
 if(outer) {
 	oldxpd = par("xpd")
 	par(xpd=TRUE)
 }
-if(nlayers(map)==3) {
- plotRGB(map, add=TRUE)
+if(nlayers(map)>=3) {
+ plotRGB(map[[1:3]], add=TRUE)
 } else {
 	plot(map, add=TRUE)
 }

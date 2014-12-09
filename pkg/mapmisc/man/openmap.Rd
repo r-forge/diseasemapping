@@ -119,10 +119,10 @@ names(osmTiles())
 
 
 
-	mytiles = openmap(myPoints,  
-		path=osmTiles("bw-mapnik"), verbose=TRUE)
+	mytiles = openmap(myPoints,
+		path=osmTiles("mapquest-sat"), verbose=TRUE)
 	map.new(myPoints)
-	plot(mytiles, add=TRUE)
+	plotRGB(mytiles, add=TRUE)
 	points(myPoints,col='red')
 }
 

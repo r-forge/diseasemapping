@@ -41,7 +41,7 @@ myPoints = SpatialPoints(myraster, proj4string=CRS(proj4string(myraster)))[
 
 if (requireNamespace("geonames", quietly = TRUE)) { 
 cities=GNcities(myPoints, max=5)
-mytiles = openmap(myraster,  type="bing")
+mytiles = openmap(myraster)
 
 map.new(cities)
 plot(mytiles, add=TRUE)
