@@ -89,7 +89,7 @@ map.new(myPoints)
 \dontrun{
 plot(mymap,add=TRUE)
 }
-mplot(myPoints,col = as.character(cut(
+plot(myPoints,col = as.character(cut(
 	myPoints$y1, breaks, thecol
 )),add=TRUE)
 scaleBar(myPoints, "bottomright",cex=1.25, scale.cex=2)
