@@ -1,8 +1,7 @@
-havePackages = c('INLA'=NA, "spdep"=NA)
-
-for(D in names(havePackages)){
-  havePackages[D] = require(D, quietly=TRUE)
-}
+havePackages = c(
+  'INLA' = require('INLA', quietly=TRUE),
+  "spdep" = require('spdep', quietly=TRUE)
+)
 
 print(havePackages)
 
