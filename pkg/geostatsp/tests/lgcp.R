@@ -1,3 +1,10 @@
+havePackages = c('INLA'=NA)
+for(D in names(havePackages)){
+  havePackages[D] = require(D, quietly=TRUE)
+}
+
+print(havePackages)
+
 # as in example
 require('geostatsp')
 myPoints = SpatialPoints(cbind(rbeta(100,2,2), rbeta(100,3,4)))
@@ -6,8 +13,8 @@ myPoints@bbox = cbind(c(0,0), c(1,1))
 mycov = raster(matrix(rbinom(100, 1, 0.5), 10, 10), 0, 1, 0, 1)
 names(mycov)="x1"
 
-if(require("INLA", quietly=TRUE)) {
-
+if(all(havePackages)) {
+  
 res = lgcp(data=myPoints, grid=20, covariates=mycov,
 		formula=~factor(x1),
 		priorCI=list(sd=c(0.9, 1.1), range=c(0.4, 0.41))

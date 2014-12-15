@@ -1,6 +1,12 @@
+havePackages = c('INLA'=NA, "spdep"=NA)
+
+for(D in names(havePackages)){
+  havePackages[D] = require(D, quietly=TRUE)
+}
+
+print(havePackages)
 
 library('diseasemapping')
-
 data('kentucky')
 
 if(FALSE) {
@@ -24,11 +30,8 @@ if(FALSE) {
 kentucky = getSMR(kentucky, larynxRates, larynx,
 		regionCode="County")
 
-if( 	require("spdep", quiet=TRUE) &
-		require('INLA', quietly=TRUE)
-		){
-	
-  
+if(all(havePackages)){
+
   kBYM = bym(observed ~ offset(logExpected) + poverty,
       kentucky,
       priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5))

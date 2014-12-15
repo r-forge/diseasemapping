@@ -1,3 +1,10 @@
+havePackages = c('INLA'=NA)
+for(D in names(havePackages)){
+  havePackages[D] = require(D, quietly=TRUE)
+}
+
+print(havePackages)
+
 # number of cells... smaller is faster but less interesting
 Ncell = 25
 
@@ -7,8 +14,8 @@ require('geostatsp')
 data('swissRain')
 swissRain$lograin = log(swissRain$rain)
 
-if(require('INLA', quietly=TRUE)) {
-swissFit =  glgm("lograin", swissRain, Ncell, 
+if(all(havePackages)) {
+  swissFit =  glgm("lograin", swissRain, Ncell, 
 		covariates=swissAltitude, family="gaussian", buffer=20000,
 		priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
 		control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
