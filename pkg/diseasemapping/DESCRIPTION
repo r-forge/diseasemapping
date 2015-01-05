@@ -10,5 +10,5 @@ Enhances: INLA
 Additional_repositories: http://www.math.ntnu.no/inla/R/stable/
 Author: Patrick Brown <patrick.brown@utoronto.ca>
 Maintainer:  Patrick Brown <patrick.brown@utoronto.ca>
-Description: Formating of population and case data, calculation of Standardized Incidence Ratios, and fitting the BYM model using INLA, obtainable from http://www.r-inla.org.
+Description: Formating of population and case data, calculation of Standardized Incidence Ratios, and fitting the BYM model using INLA.
 License: GPL
