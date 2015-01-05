@@ -227,7 +227,7 @@ function(formula, data,  grid,
 		if(is.null(covariates[[D]]))
 			warning("cant find covariate '", D, "' in covariates or data")
 		if(!.compareCRS(covariates[[D]], data, unknown=TRUE) ) {
-			if(require('rgdal', quietly=TRUE ) ) { 
+			if(requireNamespace('rgdal', quietly=TRUE ) ) { 
 				data[[D]] = raster::extract(covariates[[D]], 
 						spTransform(data, CRSobj=CRS(projection(covariates[[D]]))))
 			} else warning("need rgdal if covariates and data are different projections")
