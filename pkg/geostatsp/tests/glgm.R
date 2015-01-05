@@ -1,5 +1,5 @@
 havePackages = c(
-    'INLA' = require('INLA', quietly=TRUE)
+    'INLA' = requireNamespace('INLA', quietly=TRUE)
 )
 
 print(havePackages)

@@ -338,7 +338,7 @@ formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", f
 
 
 	# run inla!		
-	if(require("INLA", quietly=TRUE)) { # not enough to have requireNamespace
+	if(requireNamespace("INLA", quietly=TRUE)) { # not enough to have requireNamespace
 		inlaRes = INLA::inla(formula, data=data , family=family,
 			lincomb=inlaLincombs, ...)
 	} else{
