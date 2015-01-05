@@ -1,11 +1,3 @@
-ifndef R_HOME
-R_HOME=/usr
-endif
-
-ifndef Rargs
-Rargs=""
-endif
-
 all: mapLayers.pdf mapmisc.pdf 
 
 clean:
