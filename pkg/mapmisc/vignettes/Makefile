@@ -1,11 +1,10 @@
-ifdef R_HOME
-	R_HOME=/usr
+ifndef R_HOME
+R_HOME=/usr
 endif
 
-ifdef Rargs
-	Rargs = ""
+ifndef Rargs
+Rargs=""
 endif
-
 
 all: mapLayers.pdf mapmisc.pdf 
 
