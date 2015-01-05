@@ -32,7 +32,7 @@ GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 }
 
 	if( !identical(projection(theproj), "NA") & ! identical(projection(theproj), NA)) {
-		if(require('rgdal', quietly=TRUE ))
+		if(requireNamespace('rgdal', quietly=TRUE ))
 			result = spTransform(result, CRSobj=CRS(theproj))
 	}
 		
