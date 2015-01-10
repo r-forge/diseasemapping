@@ -15,7 +15,7 @@ bob = function(x) {
 
 
 # specify formula name of raster layer
-swissFit = lgm(data=swissRain, formula=rain~ CHE_alt,
+swissFit = lgm(data=swissRain[1:60,], formula=rain~ CHE_alt,
 		grid=80, covariates=swissAltitude,
 		shape=1,  fixShape=TRUE, 
 		boxcox=0.5, fixBoxcox=TRUE, 
@@ -27,7 +27,7 @@ bob(swissFit)
 
 # specify formula using name of list element
 
-swissFitAgain = lgm(data=swissRain, formula=rain~ elev+land,
+swissFitAgain = lgm(data=swissRain[1:60,], formula=rain~ elev+land,
 		grid=80, covariates=list(elev=swissAltitude,land=swissLandType),
 		shape=1,  fixShape=TRUE, 
 		boxcox=0.5, fixBoxcox=TRUE, 
@@ -36,7 +36,7 @@ names(swissFitAgain)
 swissFitAgain$param
 bob(swissFitAgain)
 
-swissFitAgain = lgm(data=swissRain, formula="rain",
+swissFitAgain = lgm(data=swissRain[1:60,], formula="rain",
 		grid=80, covariates=swissAltitude,
 		shape=1,  fixShape=TRUE, 
 		boxcox=0.5, fixBoxcox=TRUE, 
@@ -46,7 +46,7 @@ swissFitAgain$param
 bob(swissFitAgain)
 
 
-swissFitAgain = lgm(data=swissRain, formula="rain",
+swissFitAgain = lgm(data=swissRain[1:60,], formula="rain",
 		grid=80, covariates=list(elev=swissAltitude,land=swissLandType),
 		shape=1,  fixShape=TRUE, 
 		boxcox=0.5, fixBoxcox=TRUE, 
@@ -57,7 +57,7 @@ bob(swissFitAgain)
 
 
 # land type, factor covariate
-swissRes2 =  lgm(rain ~ elev + factor(land), swissRain, 
+swissRes2 =  lgm(rain ~ elev + factor(land), swissRain[1:60,], 
 		grid=30, 
 		covariates=list(elev=swissAltitude,land=swissLandType), 
 		boxcox=0.5, fixBoxcox=TRUE, 
@@ -80,7 +80,7 @@ values(covariates)[,2] = rep(seq(0,1,len=nrow(covariates)),
 		rep(nrow(covariates), ncol(covariates)))
 names(covariates) = c("cov1","cov2")
 
-Npoints = 40
+Npoints = 30
 set.seed(0)
 myPoints = SpatialPoints(cbind(runif(Npoints,0,10), runif(Npoints,0,10)))	
 # check for points too close together

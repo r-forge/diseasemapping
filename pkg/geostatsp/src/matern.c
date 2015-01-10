@@ -216,7 +216,7 @@ void matern(double *distance, int *N,
 		double *range, double *shape, double *variance) {
 
 	int D, N2;
-	double xscale, varscale,  thisx;
+	double xscale, varscale,  thisx, logthisx, logxscale;
 
     int nb,  Nzeros;
     double *bk, alpha,truncate;
@@ -228,7 +228,7 @@ void matern(double *distance, int *N,
 
 // code stolen from R's src/nmath/bessel_k.c
 	nb = 1+ (int)floor(alpha);/* nb-1 <= |alpha| < nb */
-
+	alpha -= (double)(nb-1);
 	bk = (double *) calloc(nb, sizeof(double));
 
 	N2 = *N;// for some reason need D to be int, not long.
@@ -240,14 +240,18 @@ void matern(double *distance, int *N,
 			( xscale^param["shape"] *
 				besselK(xscale , param["shape"]) )
 */
-
 	xscale = sqrt(8 * (*shape)) / *range;
+	logxscale  = 0.5*(log(8) + log(*shape) ) - log(*range);
 	varscale =  log(*variance)  - lgammafn(*shape ) -  (*shape -1)*M_LN2;
+
 // #ifdef SUPPORT_OPENMP
 // #pragma omp parallel for private(thisx)
 // #endif
 	for(D=0; D < N2; D++) {
-		thisx = fabs(distance[D])*xscale;
+//		thisx = fabs(distance[D])*xscale;
+		thisx = fabs(distance[D]);
+		logthisx = log(thisx) + logxscale;
+		thisx *=xscale;
 
 		if(isnan(thisx)) {
 //			warning("%f %f", thisx, xscale);
@@ -262,8 +266,9 @@ void matern(double *distance, int *N,
 				distance[D] = 0;
 			}
 		} else { // thisx not nan
-			distance[D] = exp(varscale + *shape * log(thisx) )*
-					bessel_k_ex(thisx, alpha, 1.0, bk);
+			distance[D] = exp(varscale + *shape * logthisx )*
+    K_bessel(&x, &alpha, &nb, &ize, bk, &ncalc);
+//					bessel_k_ex(thisx, alpha, 1.0, bk);
 		}
 		if(isnan(distance[D])) {
 			// assume distance is very small

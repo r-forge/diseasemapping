@@ -151,7 +151,7 @@ output from the call to the  \code{\link[stats]{optim}} function.
 data("swissRain")
  
 swissRes =  lgm( formula="rain", 
-	data=swissRain, grid=20,
+	data=swissRain[1:60,], grid=20,
 	covariates=swissAltitude, boxcox=0.5, fixBoxcox=TRUE, 
 	shape=1, fixShape=TRUE,
 	aniso=FALSE, nugget=0, fixNugget=FALSE,
