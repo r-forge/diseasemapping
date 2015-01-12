@@ -13,7 +13,7 @@ int Dindex,Ncell;
 double distCellRight[2], distCellDown[2], distTopLeft[2], distRowHead[2];
 double distTopLeftR[2], distHere[2];
 double costheta, sintheta, anisoRatioSq;
-double xscale, varscale,  thisx;
+double logxscale, xscale, varscale,  thisx, logthisx;
 int nb, Nzeros;
 double *bk, alpha,truncate;
 
@@ -38,6 +38,7 @@ distCellDown[1] =  - costheta * (*Ayres);
 
 
 xscale = sqrt(8 * (*shape)) / *range;
+logxscale  = 0.5*(log(8) + log(*shape) ) - log(*range);
 varscale =  log(*variance)  - lgammafn(*shape ) -  (*shape -1)*M_LN2;
 
 truncate = *variance*1e-06; // count a zero if var < truncate
@@ -67,8 +68,14 @@ for(DB=0;DB<BN2;++DB){ // loop through points
 		distHere[1] = distRowHead[1];
 		for(DAx=0;DAx<AxN2;++DAx){ // loop through x of raster
 
-			thisx =  sqrt(distHere[0]*distHere[0] +
-	      			distHere[1]*distHere[1]/anisoRatioSq)*xscale;
+//			thisx =  sqrt(distHere[0]*distHere[0] +
+//	      			distHere[1]*distHere[1]/anisoRatioSq)*xscale;
+
+		thisx = distHere[0]*distHere[0] +
+      			distHere[1]*distHere[1]/anisoRatioSq;
+		logthisx = 0.5*log(thisx) + logxscale;
+		thisx =sqrt(thisx) * xscale;
+
 
 // if thiex is nan assume it's infinity
 			if(isnan(thisx)) {
@@ -84,7 +91,7 @@ for(DB=0;DB<BN2;++DB){ // loop through points
 					result[Dindex] = 0;
 				}
 			} else {
-			result[Dindex] = exp(varscale + *shape * log(thisx) )*
+			result[Dindex] = exp(varscale + *shape * logthisx)*
     				bessel_k_ex(thisx, alpha, 1.0, bk);
 			}
 
@@ -127,7 +134,7 @@ void maternAniso(double *x, double *y, int *N,
 	int Drow, Dcol, Nm1, Dcolp1, N2;
 	int Dindex;
 
-	double xscale, varscale,  thisx;
+	double logxscale, xscale, varscale,  logthisx, thisx;
 	double anisoRatioSq, dist[2], distRotate[2], costheta, sintheta;
 
     int nb, Nzeros;
@@ -140,6 +147,7 @@ void maternAniso(double *x, double *y, int *N,
     anisoRatioSq = (*anisoRatio)*(*anisoRatio);
 
 	xscale = sqrt(8 * (*shape)) / *range;
+	logxscale  = 0.5*(log(8) + log(*shape) ) - log(*range);
 	varscale =  log(*variance)  - lgammafn(*shape ) -  (*shape -1)*M_LN2;
 
     truncate = *variance*1e-06; // count a zero if var < truncate
@@ -171,14 +179,19 @@ void maternAniso(double *x, double *y, int *N,
     		distRotate[0] = costheta *dist[0] - sintheta * dist[1];
     		distRotate[1] = sintheta *dist[0] + costheta * dist[1];
 
-    		thisx =  sqrt(distRotate[0]*distRotate[0] +
-      			distRotate[1]*distRotate[1]/anisoRatioSq)*xscale;
+//    		thisx =  sqrt(distRotate[0]*distRotate[0] +
+  //    			distRotate[1]*distRotate[1]/anisoRatioSq)*xscale;
 
-			if(isnan(thisx)) {
-				if(isinf(xscale)) {
+		thisx = distRotate[0]*distRotate[0] +
+      			distRotate[1]*distRotate[1]/anisoRatioSq;
+		logthisx = 0.5*log(thisx) + logxscale;
+		thisx =sqrt(thisx) * xscale;
+
+		if(isnan(thisx)) {
+			if(isinf(xscale)) {
 	// range is probably zero.
 					// if distance is zero set result to variance
-					if(distRotate[0]*distRotate[0] +
+				if(distRotate[0]*distRotate[0] +
 							distRotate[1]*distRotate[1] < truncate){
 						result[Dindex]= *variance;
 					}
@@ -187,7 +200,7 @@ void maternAniso(double *x, double *y, int *N,
 						result[Dindex] = 0;
 				}
 			} else { // thisx not nan
-    		result[Dindex] = exp(varscale + *shape * log(thisx) )*
+    		result[Dindex] = exp(varscale + *shape * logthisx )*
     				bessel_k_ex(thisx, alpha, 1.0, bk);
 			}
 
@@ -244,9 +257,6 @@ void matern(double *distance, int *N,
 	logxscale  = 0.5*(log(8) + log(*shape) ) - log(*range);
 	varscale =  log(*variance)  - lgammafn(*shape ) -  (*shape -1)*M_LN2;
 
-// #ifdef SUPPORT_OPENMP
-// #pragma omp parallel for private(thisx)
-// #endif
 	for(D=0; D < N2; D++) {
 //		thisx = fabs(distance[D])*xscale;
 		thisx = fabs(distance[D]);
@@ -267,8 +277,7 @@ void matern(double *distance, int *N,
 			}
 		} else { // thisx not nan
 			distance[D] = exp(varscale + *shape * logthisx )*
-    K_bessel(&x, &alpha, &nb, &ize, bk, &ncalc);
-//					bessel_k_ex(thisx, alpha, 1.0, bk);
+					bessel_k_ex(thisx, alpha, 1.0, bk);
 		}
 		if(isnan(distance[D])) {
 			// assume distance is very small
@@ -278,7 +287,6 @@ void matern(double *distance, int *N,
 				distance[D]= 0;
 			}
 		}
-
 
 		if(distance[D] <  truncate) ++Nzeros;
 	}
