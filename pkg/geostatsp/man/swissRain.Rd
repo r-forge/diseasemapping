@@ -84,9 +84,18 @@ swissRain = SpatialPointsDataFrame(swissRain[,c('x','y')], data=swissRain[,c('ID
 # Swiss Border
 #######
 
-load(url("http://biogeo.ucdavis.edu/data/gadm2/R/CHE_adm0.RData"))
+
+library('raster')
+swissBorder = getData('GADM', country='CHE', level=0)
+isChar = which(unlist(lapply(swissBorder@data, is.character)))
+isUtf = which(
+	unlist(lapply(swissBorder@data[,isChar], 
+		Encoding)) == 'UTF-8')
+swissBorder = swissBorder[,
+	!match(names(swissBorder), names(isUtf), nomatch=0)
+	]
 library(rgdal)
-swissBorder = spTransform(gadm, CRS(proj4string(swissRain)))
+swissBorder = spTransform(swissBorder, CRS(proj4string(swissRain)))
 
 ############
 # land type

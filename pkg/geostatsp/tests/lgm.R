@@ -82,13 +82,8 @@ names(covariates) = c("cov1","cov2")
 
 Npoints = 30
 set.seed(0)
-myPoints = SpatialPoints(cbind(runif(Npoints,0,10), runif(Npoints,0,10)))	
-# check for points too close together
-thedist = spDists(myPoints)
-thedist[lower.tri(thedist,diag=TRUE)]=NA
-thedist = apply(thedist<0.2,2, any,na.rm=TRUE)
-myPoints = myPoints[!thedist]
-
+myPoints = SpatialPoints(cbind(runif(Npoints,0,10), 
+        seq(0,10, len=Npoints)))
 
 myPoints = SpatialPointsDataFrame(myPoints, 
 		data=as.data.frame(extract(covariates, myPoints)))
@@ -104,30 +99,6 @@ fitLikfit = likfitLgm(y~cov1+cov2, myPoints,
 		param=c(range=1,nugget=0,shape=1)) 
 
 
-Srange = exp(seq(log(0.75), log(6), len=20))
-
-Slik = NULL
-SlikWithN=NULL
-Snugget=NULL
-for(D in Srange) {
-	Slik = c(Slik,
-			loglikLgm(param=c(range=D,nugget=0,shape=1),
-					data=myPoints, formula=y~cov1+cov2))
-	temp = likfitLgm(paramToEstimate = "nugget",
-			param=c(range=D,nugget=5,shape=1),
-			data=myPoints, formula=y~cov1+cov2)
-	SlikWithN = c(SlikWithN,
-			temp$opt$value
-			)	
-	Snugget = c(Snugget, temp$opt$par["nugget"])		
-}
-
-pdf("profileL.pdf",height=4,width=12)
-par(mfcol=c(1,3))
-plot(Srange, Slik, ylab="-log lik", main="nugget=0")
-plot(Srange, SlikWithN, ylab="-log lik", main="estimate nugget")
-plot(Srange, Snugget, ylab="optimal nugget", main="the nugget")
-dev.off()
 
 
 # run lgm without providing covariates

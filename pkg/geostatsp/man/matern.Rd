@@ -74,14 +74,24 @@ starting at the top left.
 }
 
 \examples{
-param=c(shape=1,range=2)
-u=1:4
+param=c(shape=1,range=1,variance=1)
+u=seq(0,4,len=20)
 	uscale = sqrt(8*param['shape'])* u / param['range']
-cbind(dist=u, 
-manual=	( 1/(gamma(param['shape']) * 2^(param['shape']-1)  ) ) * 
+theMaterns = cbind(
+	dist=u, 
+	manual=	param['variance']*
+			( 1/(gamma(param['shape']) * 2^(param['shape']-1)  ) ) * 
 			uscale^param['shape'] * besselK( uscale , param['shape']),
-geostatsp=matern(u, param=param)
+	geostatsp=matern(u, param=param)
 )
+head(theMaterns)
+matplot(theMaterns[,'dist'], 
+	theMaterns[,c('manual','geostatsp')],
+	col=c('red','blue'), type='l')
+legend('topright', fill=c('red','blue'),
+	legend=c('manual','geostatsp'))
+
+
 
 # example with raster
 myraster = raster(nrows=40,ncols=60,xmn=-3,xmx=3,ymn=-2,ymx=2)
@@ -122,14 +132,14 @@ for(D in shapeSeq) {
 }
 matplot(distVec, theCov, type='l', lty=1, xlab='distance', ylab='correlation',
 	main="matern correlations")
-legend("topright", fill=1:length(shapeSeq), legend=shapeSeq,title='shape')
+legend("right", fill=1:length(shapeSeq), legend=shapeSeq,title='shape')
 # exponential
 
 distVec2 = seq(0, max(distVec), len=20)
-points(distVec2, exp(-2*(distVec2/range)),cex=0.5)
+points(distVec2, exp(-2*(distVec2/range)),cex=1.5, pch=5)
 # gaussian
-points(distVec2, exp(-2*(distVec2/range)^2), col='blue',cex=0.5)
-legend("right", pch=1, col=c('black','blue'), legend=c('exp','gau'))
+points(distVec2, exp(-2*(distVec2/range)^2), col='blue',cex=1.5, pch=5)
+legend("bottomleft", pch=5, col=c('black','blue'), legend=c('exp','gau'))
 
 # comparing to geoR and RandomFields
 
@@ -143,9 +153,9 @@ for(D in shapeSeq) {
 	covGeoR = cbind(covGeoR, 
 		geoR::matern(distVec, phi=range/sqrt(8*D), kappa=D))
 	covRandomFields = cbind(covRandomFields,
-		RandomFields::CovarianceFct(distVec, model="matern", 
-			param = c(mean=0, variance=1, nugget=0, 
-			scale=range/2, nu=D) ))
+		RandomFields::RFcov(x=distVec, 
+		model=RandomFields::RMmatern(nu=D, var=1,
+				scale=range/2) ))
 }
 
 
@@ -153,7 +163,7 @@ for(D in shapeSeq) {
 matpoints(distVec, covGeoR, cex=0.5, pch=1)
 matpoints(distVec, covRandomFields, cex=0.5, pch=2)
 
-legend("top", lty=c(1,NA,NA), pch=c(NA, 1, 2), 
+legend("topright", lty=c(1,NA,NA), pch=c(NA, 1, 2), 
 	legend=c("geostatsp","geoR","RandomFields"))
 }
  

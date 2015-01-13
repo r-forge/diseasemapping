@@ -36,9 +36,8 @@ distCellRight[1] = sintheta * (*Axres);
 distCellDown[0] =  sintheta * (*Ayres);
 distCellDown[1] =  - costheta * (*Ayres);
 
-
-xscale = sqrt(8 * (*shape)) / *range;
-logxscale  = 0.5*(log(8) + log(*shape) ) - log(*range);
+xscale = 2 * M_SQRT2 * sqrt( *shape ) / *range;
+logxscale  =  1.5 * M_LN2 +   0.5 * log(*shape)  - log(*range);
 varscale =  log(*variance)  - lgammafn(*shape ) -  (*shape -1)*M_LN2;
 
 truncate = *variance*1e-06; // count a zero if var < truncate
@@ -146,9 +145,12 @@ void maternAniso(double *x, double *y, int *N,
 
     anisoRatioSq = (*anisoRatio)*(*anisoRatio);
 
-	xscale = sqrt(8 * (*shape)) / *range;
-	logxscale  = 0.5*(log(8) + log(*shape) ) - log(*range);
+//	xscale = sqrt(8 * (*shape)) / *range;
+//	logxscale  = 0.5*(log(8) + log(*shape) ) - log(*range);
 	varscale =  log(*variance)  - lgammafn(*shape ) -  (*shape -1)*M_LN2;
+	xscale = 2 * M_SQRT2 * sqrt( *shape ) / *range;
+	logxscale  =  1.5 * M_LN2 +   0.5 * log(*shape)  - log(*range);
+
 
     truncate = *variance*1e-06; // count a zero if var < truncate
 
@@ -232,7 +234,7 @@ void matern(double *distance, int *N,
 	double xscale, varscale,  thisx, logthisx, logxscale;
 
     int nb,  Nzeros;
-    double *bk, alpha,truncate;
+    double *bk, alpha, truncate;
 
     truncate = *variance*1e-06; // count a zero if var < truncate
     Nzeros = 0;
@@ -241,27 +243,32 @@ void matern(double *distance, int *N,
 
 // code stolen from R's src/nmath/bessel_k.c
 	nb = 1+ (int)floor(alpha);/* nb-1 <= |alpha| < nb */
-	alpha -= (double)(nb-1);
 	bk = (double *) calloc(nb, sizeof(double));
 
 	N2 = *N;// for some reason need D to be int, not long.
 // evaluate the matern!
 
 	/*
-	xscale = abs(x)*(sqrt(8*param["shape"])/ param["range"])
+	thisx = abs(x)*(sqrt(8*param["shape"])/ param["range"])
 	result = ( param["variance"]/(gamma(param["shape"])* 2^(param["shape"]-1)  ) ) *
-			( xscale^param["shape"] *
-				besselK(xscale , param["shape"]) )
+			( thisx^param["shape"] *
+				besselK(thisx , param["shape"]) )
 */
-	xscale = sqrt(8 * (*shape)) / *range;
-	logxscale  = 0.5*(log(8) + log(*shape) ) - log(*range);
+	// xscale = sqrt(8*shape)/range
+	// thisx = xscale * abs(x)
+	// varscale = log[   param["variance"]/(gamma(param["shape"])* 2^(param["shape"]-1)  )   ]
+	// result = exp(varscale) * (thisx)^nu K(thisx, nu)
+	// result = exp(varscale + nu * log(thisx)) K(thisx, nu)
+	// result = exp(varscale + nu * logthisx) K(thisx, nu)
+	xscale = 2 * M_SQRT2 * sqrt( *shape ) / *range;
+	logxscale  =  1.5 * M_LN2 +   0.5 * log(*shape)  - log(*range);
 	varscale =  log(*variance)  - lgammafn(*shape ) -  (*shape -1)*M_LN2;
 
 	for(D=0; D < N2; D++) {
 //		thisx = fabs(distance[D])*xscale;
 		thisx = fabs(distance[D]);
 		logthisx = log(thisx) + logxscale;
-		thisx *=xscale;
+		thisx = thisx * xscale;
 
 		if(isnan(thisx)) {
 //			warning("%f %f", thisx, xscale);
