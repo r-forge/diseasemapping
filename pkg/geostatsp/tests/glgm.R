@@ -160,7 +160,7 @@ elevHigh = reclassify(elevationLoa, c(-Inf, 0, 0))
 loaFit$par$summary
 
 png("loaFitted.png")
-plot(loaFit$raster[["predict.invlogit"]])
+plot(loaFit$raster[['predict.exp']])
 dev.off()
 
 # prior for observation standard deviation
