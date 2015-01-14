@@ -81,7 +81,7 @@ setMethod("glgm",
 
 		data = data@data
 
-		callGeneric()
+		callGeneric(formula,data,grid,covariates,...)
 }
 )
 

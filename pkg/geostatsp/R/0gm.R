@@ -3,12 +3,12 @@ gm.nullFormula =
 		function(formula=NULL, data, grid, 
 		covariates=NULL, ...) {
 	formula =  1 
-	callGeneric()
-#			formula=formula, data=data,
-#			grid=grid,
-#			covariates=covariates, 
-#			...
-#	)	
+	callGeneric(
+			formula=formula, data=data,
+			grid=grid,
+			covariates=covariates, 
+			...
+	)	
 }
 
 gm.numericFormula = 
@@ -16,12 +16,12 @@ gm.numericFormula =
 				covariates=NULL, ...) {
 	
 formula = names(data)[formula]
-callGeneric()
-#		formula=formula, data=data,
-#		grid=grid,
-#		covariates=covariates, 
-#		...
-#)	
+callGeneric(
+		formula=formula, data=data,
+		grid=grid,
+		covariates=covariates, 
+		...
+)	
 }
 
 gm.characterFormula = 
@@ -44,11 +44,11 @@ formula = paste(formula[1] , "~",
 )
 formula = as.formula(formula)
 
-callGeneric()
-#		formula=formulaAsFormula, data=data,
-#		grid=grid,
-#		covariates=covariates, 
-#		...)
+callGeneric(
+		formula, data,
+		grid=grid,
+		covariates=covariates, 
+		...)
 }		
 
 
@@ -57,12 +57,12 @@ gm.gridNumeric = function(formula, data, grid, covariates=NULL, ...) {
 
 	grid = squareRaster(data, grid)
 
-	callGeneric()
-#			formula=formula, data=data,
-#			grid = gridRaster,
-#			covariates=covariates, 
-#			...
-#	)	
+	callGeneric(
+			formula=formula, data=data,
+			grid = grid,
+			covariates=covariates, 
+			...
+	)	
 }
 
 gm.dataRaster = function(formula,data,grid, covariates=NULL, buffer=0,...){
@@ -151,13 +151,8 @@ for(D in intersect(Sfactor, names(covariatesDF))) {
   grid=cellsSmall
   covariates=covariatesDF
 
-	callGeneric()
-#			formula=formula, data=dataDF,
-##			grid = cellsSmall,
-#			covariates=covariatesDF, 
-#			buffer=buffer,
-#			...
-#	)
+	callGeneric(
+      formula, data,grid,covariates,buffer,...)
 }
 
 gm.dataSpatial = 
