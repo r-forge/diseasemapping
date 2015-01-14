@@ -131,18 +131,16 @@ swissFit =  glgm(formula="lograin", data=swissRain, grid=30,
 
 if(!is.null(swissFit$parameters) ) {
 	
-	if( require('geostatsp', quietly=TRUE)){
-		swissExc = excProb(swissFit, threshold=log(25))
+	swissExc = excProb(swissFit, threshold=log(25))
 
-		swissExcRE = excProb(swissFit$inla$marginals.random$space, 
-			log(1.5),template=swissFit$raster)
-	}
+	swissExcRE = excProb(swissFit$inla$marginals.random$space, 
+		log(1.5),template=swissFit$raster)
 
 	swissFit$parameters$summary
 
 	plot(swissFit$parameters$range$prior,type="l",
 		ylim=c(0,max(swissFit$parameters$range$posterior[,"y"])),
-		xlim=c(0, swissFit$parameters$range$userPriorCI[2]*1.1))
+		xlim=c(0, 500000))
 	abline(v=swissFit$parameters$range$userPriorCI,col="yellow")
 	abline(v=swissFit$parameters$range$priorCI,col="orange")
 	lines(swissFit$parameters$range$posterior, col='blue')
