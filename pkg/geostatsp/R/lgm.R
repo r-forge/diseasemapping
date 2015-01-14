@@ -46,23 +46,20 @@ setMethod("lgm",
 
 setMethod("lgm", 
 		signature("formula", "Raster", "missing", "missing"),
-		function(formula, 
+	function(formula, 
 				data,  
 				grid,
 				covariates=NULL, ...) {
-		gridHere = raster(data)
-		if(abs(diff(res(gridHere)))>0.000001 )
+
+    if(abs(diff(res(data)))>0.000001 )
 			warning("data is not on a square grid")
-		dataSP = as(data, "SpatialPointsDataFrame")
-		dataDF = dataSP@data
-		
-		callGeneric(
-				formula=formula, data=dataDF,
-				grid=gridHere,
-				covariates=data.frame(), 
-				...
-		)	
-		}
+
+    callGeneric(formula, 
+        data= as(data, "SpatialPointsDataFrame")@data, 
+        grid= raster(data), 
+        covariates=data.frame(), 
+        ...)
+  }
 )
 
 
@@ -71,17 +68,31 @@ setMethod("lgm",
 			gm.dataSpatial
 	)
 
-	setMethod("lgm", 
-			signature("formula", "Spatial", "Raster", "NULL"),
-			gm.dataSpatial
-	)
-	
+
 	
 setMethod("lgm", 
 		signature("formula", "Spatial", "Raster", "Raster"),
 		gm.dataSpatial
 )
 
+setMethod("lgm", 
+    signature("formula", "Spatial", "Raster", "NULL"),
+    gm.dataSpatial
+)
+setMethod("lgm", 
+    signature("formula", "Spatial", "Raster", "missing"),
+    function(formula, 
+        data,  
+        grid,
+        covariates=NULL,
+        buffer=0, ...) {
+      
+      callGeneric(formula, data, 
+          grid, covariates=NULL,
+          buffer=buffer,
+          ...)
+    }
+)
 
 
 setMethod("lgm", 
@@ -98,7 +109,7 @@ setMethod("lgm",
 		fixBoxcox=TRUE,
 		fixNugget = FALSE,
 		...){
-	
+  
 	locations = grid
 	
 	

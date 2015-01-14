@@ -3,12 +3,12 @@ gm.nullFormula =
 		function(formula=NULL, data, grid, 
 		covariates=NULL, ...) {
 	formula =  1 
-	callGeneric(
-			formula=formula, data=data,
-			grid=grid,
-			covariates=covariates, 
-			...
-	)	
+	callGeneric()
+#			formula=formula, data=data,
+#			grid=grid,
+#			covariates=covariates, 
+#			...
+#	)	
 }
 
 gm.numericFormula = 
@@ -16,12 +16,12 @@ gm.numericFormula =
 				covariates=NULL, ...) {
 	
 formula = names(data)[formula]
-callGeneric(
-		formula=formula, data=data,
-		grid=grid,
-		covariates=covariates, 
-		...
-)	
+callGeneric()
+#		formula=formula, data=data,
+#		grid=grid,
+#		covariates=covariates, 
+#		...
+#)	
 }
 
 gm.characterFormula = 
@@ -42,27 +42,27 @@ if(length(formula)==1)
 formula = paste(formula[1] , "~",
 		paste(formula[-1], collapse=" + ")
 )
-formulaAsFormula = as.formula(formula)
+formula = as.formula(formula)
 
-callGeneric(
-		formula=formulaAsFormula, data=data,
-		grid=grid,
-		covariates=covariates, 
-		...)
+callGeneric()
+#		formula=formulaAsFormula, data=data,
+#		grid=grid,
+#		covariates=covariates, 
+#		...)
 }		
 
 
 gm.gridNumeric = function(formula, data, grid, covariates=NULL, ...) {
 		
 
-	gridRaster = squareRaster(data, grid)
-	
-	callGeneric(
-			formula=formula, data=data,
-			grid = gridRaster,
-			covariates=covariates, 
-			...
-	)	
+	grid = squareRaster(data, grid)
+
+	callGeneric()
+#			formula=formula, data=data,
+#			grid = gridRaster,
+#			covariates=covariates, 
+#			...
+#	)	
 }
 
 gm.dataRaster = function(formula,data,grid, covariates=NULL, buffer=0,...){
@@ -147,16 +147,17 @@ for(D in intersect(Sfactor, names(covariatesDF))) {
 	
 }
 
-	
-	callGeneric(
-			formula=formula, data=dataDF,
-			grid = cellsSmall,
-			covariates=covariatesDF, 
-			buffer=buffer,
-			...
-	)
-	
-	
+  data=dataDF
+  grid=cellsSmall
+  covariates=covariatesDF
+
+	callGeneric()
+#			formula=formula, data=dataDF,
+##			grid = cellsSmall,
+#			covariates=covariatesDF, 
+#			buffer=buffer,
+#			...
+#	)
 }
 
 gm.dataSpatial = 
@@ -164,8 +165,6 @@ function(formula, data,  grid,
 		covariates=NULL, 
 		buffer=0,
 		...) {
-
- 
 
 # find factors
 	allterms = colnames(attributes(terms(formula))$factors)
@@ -262,13 +261,13 @@ function(formula, data,  grid,
 		
 	}
 
+  grid=cellsSmall
+  covariates=covariatesDF
 
-	callGeneric(
-			formula=formula, data=data,
-			grid = cellsSmall,
-			covariates=covariatesDF, 
-			...
-	)
-	
-	
+	callGeneric()
+#			formula=formula, data=data,
+#			grid = cellsSmall,
+##			covariates=covariatesDF, 
+#			...
+#	)
 }

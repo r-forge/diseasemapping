@@ -92,28 +92,3 @@ plot(swissKrige5[["predict"]])
 plot(swissBorder, add=TRUE)
 dev.off()
 
-
-# test parallel
-if(FALSE) {
-bigRaster = raster(extent(swissBorder), ncols=600, nrows=400, 
-		crs=swissRain@proj4string)	
-
-
-options(mc.cores = 1)
-unix.time(
-		krigeLgm(data=swissRain2[1:60,], formula = swissFit3$model$formula,
-				param=swissFit3$param, 
-				covariates = list(elevation = swissAltitude,land=swissLandType),
-				grid = bigRaster, expPred=TRUE)
-
-)
-
-
-options(mc.cores = 2)
-
-unix.time(krigeLgm(data=swissRain2[1:60,], formula = swissFit3$model$formula,
-				param=swissFit3$param, 
-				covariates = list(elevation = swissAltitude,land=swissLandType),
-				grid = bigRaster, expPred=TRUE)
-)
-}

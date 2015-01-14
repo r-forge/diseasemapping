@@ -90,27 +90,29 @@ and the variance matrix of the coefficient MLE's.
 }
 \examples{
 n=40
-mydat = SpatialPointsDataFrame(cbind(runif(n), runif(n)), 
+mydat = SpatialPointsDataFrame(
+	cbind(runif(n), seq(0,1,len=n)), 
 	data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 0.5))
 	)
 
 # simulate a random field
-trueParam = c(variance=2^2, range=0.15, shape=2, nugget=0.5^2)
+trueParam = c(variance=2^2, range=0.35, shape=2, nugget=0.5^2)
 set.seed(1)
-mydat$U = RFsimulate(trueParam,mydat)$sim1
 
+mydat@data= cbind(mydat@data , RFsimulate(model=trueParam,x=mydat)@data)
 
 # add fixed effects
 mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + 
-	mydat$U + rnorm(length(mydat), 0, sd=sqrt(trueParam["nugget"]))
+	mydat$sim1 + rnorm(length(mydat), 0, sd=sqrt(trueParam["nugget"]))
 
 \dontrun{
-spplot(mydat, "U", col.regions=rainbow(10), main="U")
+spplot(mydat, "sim1", col.regions=rainbow(10), main="U")
 spplot(mydat, "Y", col.regions=rainbow(10), main="Y")
 }
 
-myres = likfitLgm(Y ~ cov1 + cov2, 
-	mydat, 
+myres = likfitLgm(
+	formula=Y ~ cov1 + cov2, 
+	data=mydat, 
 	param=c(range=0.1,nugget=0.1,shape=2), 
 	paramToEstimate = c("range","nugget")
 	)

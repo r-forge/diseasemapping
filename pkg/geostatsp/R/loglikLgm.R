@@ -105,6 +105,30 @@ loglikLgm = function(param,
 		} # end have box cox
 		
 		
+    if(TRUE) {
+    obsCov = cbind(observations, covariates)
+    fromC = maternCholSolve(param, obsCov, coordinates)
+    fromC = fromC$R
+
+    resids=fromC$resids
+    betaHat = fromC$betaHat
+    
+    useMl = c('ml', 'reml')[1+reml]
+    useVariance = c('estimatedVariance','fixedVariance')[1+haveVariance]
+    minusTwoLogLik = 
+        (fromC$minusTwoLogLik - twoLogJacobian)[useMl,useVariance]
+    varBetaHat = fromC$varBetaHat[,,useVariance, useMl]
+    totalVarHat = fromC$totalVarHat[useMl]
+    
+    if(haveVariance) {
+      varMle = fromC$varMle[useMl,]
+    } else {
+      varMle = param[colnames(fromC$varMle)]
+      param[c("variance","nugget")] = 
+          totalVarHat * param[c("variance","nugget")]
+    }
+    
+    } else { # original code
 		# variance matrix
 		covMat = geostatsp::matern(x=coordinates, param=param)	
 
@@ -142,37 +166,46 @@ loglikLgm = function(param,
 		cholCovInvResid = Matrix::solve(cholCovMat, resids)
 		
 		totalSsq = as.vector(Matrix::crossprod(cholCovInvResid))
+    
+    detCholCovMat = Matrix::determinant(cholCovMat)$modulus 
+    detCholCovInvXcross = Matrix::determinant(cholCovInvXcross)$modulus
 
-		# if reml, use N-p in place of N
-		Nadj=length(observations) - reml*length(betaHat)
-		totalVarHat = totalSsq/Nadj
+    # if reml, use N-p in place of N
+    Nadj=length(observations) - reml*length(betaHat)
+    totalVarHat = totalSsq/Nadj
+    
 		
 	if(!haveVariance) { # profile likelihood with optimal sigma
 			minusTwoLogLik = Nadj * log(2*pi) + 
 				Nadj * log(totalVarHat) +
-				2*Matrix::determinant(cholCovMat)$modulus +
+				2*detCholCovMat+
 				Nadj - twoLogJacobian		
-			param[c("variance","nugget")] = 
+
+    param[c("variance","nugget")] = 
 					totalVarHat * param[c("variance","nugget")]
 	} else { # a variance was supplied
 		# calculate likelihood with the variance supplied
 		# -2 log lik = n log(2pi) + log(|V|) + resid' Vinv resid
 		minusTwoLogLik = Nadj * log(2*pi) +
-				2*Matrix::determinant(cholCovMat)$modulus +
+				2*detCholCovMat +
 				totalSsq - twoLogJacobian
 		totalVarHat = 1
 	}
 	if( reml ) {
 		minusTwoLogLik =  minusTwoLogLik + 
-			2*Matrix::determinant(cholCovInvXcross)$modulus
+			2*detCholCovInvXcross
+  
 	}
-	
-	# format the output
+  
 	names(betaHat) = colnames(covariates)
 	varBetaHat = totalVarHat * as.matrix(cholCovInvXcrossInv) 
   dimnames(varBetaHat) = list(names(betaHat), names(betaHat))
-
-	result = minusTwoLogLik
+  
+  } # end original code
+  
+  
+  # format the output
+  result = minusTwoLogLik
 	if(minustwotimes) {
 			names(result) = "minusTwoLogLik"
 	} else {
@@ -295,7 +328,7 @@ likfitLgm = function(
 			warning("missing vlaues in data but unclear how to remove them from coordinates")
 		}
 	} else {
-		theRowNames = NULL
+		theRowNames = rownames(data.frame(coordinates))
 	}
 	
 	# if the model's isotropic, calculate distance matrix

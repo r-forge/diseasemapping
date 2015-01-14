@@ -70,7 +70,7 @@ bob(swissRes2)
 
 # simulated data (without a CRS)
 # and all covariates are in 'data' object
-myModel = c(intercept=0,variance=2^2,nugget=0.5^2, range=2.5,shape=2, 
+myModel = c(intercept=0,variance=2^2,nugget=0.5^2, range=4.5,shape=2, 
 		cov1=0.2, cov2=-0.5)
 covariates = brick(
 		xmn=0,ymn=0,xmx=10,ymx=10,
@@ -85,14 +85,17 @@ set.seed(0)
 myPoints = SpatialPoints(cbind(runif(Npoints,0,10), 
         seq(0,10, len=Npoints)))
 
-myPoints = SpatialPointsDataFrame(myPoints, 
-		data=as.data.frame(extract(covariates, myPoints)))
+myPoints = RFsimulate(myModel,myPoints)
 
-myPoints$U = RFsimulate(myModel,myPoints)$sim1
+myPoints@data = cbind(
+    myPoints@data, 
+  as.data.frame(extract(covariates, myPoints))
+)
+
 myPoints$y= myModel["intercept"] +
 		as.matrix(myPoints@data[,names(covariates)]) %*% 
 		myModel[names(covariates)] +
-		myPoints$U+
+		myPoints$sim1+
 		rnorm(length(myPoints), 0, sqrt(myModel["nugget"]))
 
 fitLikfit = likfitLgm(y~cov1+cov2, myPoints,  
@@ -102,11 +105,11 @@ fitLikfit = likfitLgm(y~cov1+cov2, myPoints,
 
 
 # run lgm without providing covariates
-fitMLE =  lgm(y~ cov1+cov2, myPoints, grid=10,  
+fitMLE =  lgm(
+    formula=y~ cov1+cov2, 
+    data=myPoints, 
+    grid=10,  
 		shape=1, fixShape=TRUE)
-
-
-
 
 c(fitMLE$summary["range","estimate"], fitLikfit$summary["range","estimate"])
 bob(fitMLE)

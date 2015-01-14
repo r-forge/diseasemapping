@@ -79,17 +79,11 @@ setMethod("glgm",
 				signature("formula", "Spatial", "Raster", "data.frame"),
 				function(formula, data, grid, covariates=NULL, ...) {
 
-		dataDF = data@data
+		data = data@data
 
-		callGeneric(
-			formula=formula, data=dataDF,
-			grid = grid,
-			covariates=covariates, 
-			...
-	)
+		callGeneric()
 }
-	)
-		
+)
 
 #################
 #### the real work

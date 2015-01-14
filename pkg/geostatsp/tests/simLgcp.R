@@ -17,7 +17,7 @@ myLgcp=simLgcp(mymodel, myCovariate, betas=c(a=-0.1, b=0.25),
 	offset='offsetFooBar',
 	rasterTemplate=myraster)
 
-if(require("INLA", quietly=TRUE)) {
+if(requireNamespace("INLA", quietly=TRUE)) {
 res = lgcp(data=myLgcp$events, 
 		formula = ~ a + b + offset(offsetFooBar),
 		grid=40, 
