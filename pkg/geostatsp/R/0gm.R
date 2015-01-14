@@ -261,13 +261,11 @@ function(formula, data,  grid,
 		
 	}
 
-  grid=cellsSmall
-  covariates=covariatesDF
 
-	callGeneric()
-#			formula=formula, data=data,
-#			grid = cellsSmall,
-##			covariates=covariatesDF, 
-#			...
-#	)
+	callGeneric(
+			formula=formula, data=data,
+			grid = cellsSmall,
+			covariates=covariatesDF, 
+			...
+	)
 }
