@@ -34,7 +34,7 @@ formula=NULL, data,
 		grid,
 		covariates=NULL, 
 		...) 
-\S4method{lgm}{formula,ANY,ANY,missing}(formula, data,
+\S4method{lgm}{formula,Spatial,ANY,missing}(formula, data,
 		grid=NULL,
 		covariates=NULL, 
 		...) 
