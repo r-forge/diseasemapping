@@ -39,7 +39,7 @@ gm.dataRaster = function(
 	covFactors = intersect(Sfactor,names(covariates))
 	dataFactors = intersect(Sfactor,names(data))
 	
-	if(length(covariates)) {
+	if(length(names(covariates))) {
 		dataFactors = intersect(Sfactor, names(data))
 		
 		rmethod = rep("bilinear", length(names(covariates)))

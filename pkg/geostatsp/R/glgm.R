@@ -117,9 +117,8 @@ setMethod("glgm",
           dataCov = gm.dataSpatial(
               formula, data, 
               grid, covariates, buffer)
-          
           callGeneric(formula, 
-              dataCov$data, dataCov$grid, 
+              dataCov$data@data, dataCov$grid, 
               dataCov$covariates, ...)
         }
     )
@@ -142,16 +141,13 @@ setMethod("glgm",
 
 			if(!all(all.vars(formula)%in% names(data)))
 				warning("some covariates seem to be missing: formula ", paste(all.vars(formula), collapse=" "), ", data: ", paste(names(data), collapse=" "))
-			
-			cells = trim(grid[['space']])
+
+      cells = trim(grid[['space']])
 			firstCell = values(cells)[1]
 			cellDim = dim(cells)[1:2]
 			# first cell = 2 * buffer^2 + ncolSmall * buffer + buffer
 			# buffer = -(nrowSmall+1) + sqrt (  (nrowSmall+1)^2 + 8 firstCell / 4
 			buffer = (-(cellDim[1]+1) + sqrt(  (cellDim[1]+1)^2 + 8* (firstCell-1) ))/4
-
-			
-			
 	# data, cells, and covariates must have varilable called 'space'		
 	# values of cells must be index numbers, and cells shouldnt include the buffer		
 	thedots = list(...)
@@ -247,9 +243,7 @@ if(FALSE) {
 	
 	formula = update.formula(formula,	as.formula(spaceFormula))
 
-
-	
-	# sort out factors
+  # sort out factors
 	thevars = rownames(attributes(terms(formula))$factors)
 	thevars = grep("^factor\\(", thevars, value=TRUE)
 	varsInData = apply(data, 2, is.factor)

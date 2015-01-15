@@ -119,9 +119,6 @@ swissFit =  glgm(formula="lograin", data=swissRain, grid=30,
 	)
 
 
-
-
-
 if(!is.null(swissFit$parameters) ) {
 	
 	swissExc = excProb(swissFit, threshold=log(25))
