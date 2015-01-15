@@ -5,7 +5,7 @@
 \alias{lgm,NULL,ANY,ANY,ANY-method}
 \alias{lgm,numeric,ANY,ANY,ANY-method}
 \alias{lgm,character,ANY,ANY,ANY-method}
-\alias{lgm,formula,ANY,ANY,missing-method}
+\alias{lgm,formula,Spatial,ANY,missing-method}
 \alias{lgm,formula,Raster,ANY,ANY-method}
 \alias{lgm,formula,Spatial,numeric,ANY-method}
 \alias{lgm,formula,Spatial,Raster,ANY-method}

@@ -53,7 +53,7 @@ setMethod("lgm",
 
 # missing covariates, create empty list
 setMethod("lgm", 
-    signature("formula", "ANY", "ANY", "missing"),
+    signature("formula", "Spatial", "ANY", "missing"),
     function(formula, data, grid=NULL, covariates=NULL, ...) {
       callGeneric(formula, data, grid, 
           covariates=list(), 

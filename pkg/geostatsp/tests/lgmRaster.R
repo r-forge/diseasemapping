@@ -9,7 +9,8 @@ swissRainR2 = brick(swissRainR[['alt']],
 		sqrt(swissRainR[['prec1']]),
 		anotherx)
 
-swissResR =  lgm( formula=layer ~ alt+ myvar, 
+swissResR =  lgm(
+    formula=layer ~ alt+ myvar, 
 		data=swissRainR2, shape=2,
 		oneminusar=seq(0.05, 0.1, len=4),
 		nugget =  seq(0.0,0.01,len=6),
