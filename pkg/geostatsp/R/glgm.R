@@ -27,63 +27,103 @@ setGeneric('glgm',
 # null formula
 setMethod("glgm", 
 		signature("NULL"), 
-		gm.nullFormula
-		)
+    function(formula=NULL, data, grid, 
+        covariates=NULL, ...) {
+      formula =  1 
+      callGeneric(formula, data, grid, covariates, ...)
+    }
+)
 
 
 setMethod("glgm", 
 		signature("numeric"),  
-		gm.numericFormula
-		)
+    function(formula, data, grid, 
+        covariates=NULL, ...) {
+
+      formula = names(data)[formula]
+      callGeneric(formula, data, grid, covariates, ...)
+    }
+)
 
 # change character to formula
 setMethod("glgm", 
 		signature("character"),  
-	gm.characterFormula
-		)
-		
+    function(formula, data, grid, 
+        covariates=NULL, ...) {
+      
+      if(length(names(covariates)))
+        names(covariates) = gsub("[[:punct:]]|[[:space:]]","_", names(covariates))
+      if(length(covariates) & !length(names(covariates))) 
+        names(covariates) = paste("c", 1:length(covariates),sep="")			
+      
+      if(length(formula)==1)
+        formula = unique(c(formula, names(covariates)))
+      if(length(formula)==1)
+        formula = c(formula, '1')
+      
+      formula = paste(formula[1] , "~",
+          paste(formula[-1], collapse=" + ")
+      )
+      formula = as.formula(formula)
+      
+      callGeneric(formula, data, grid, covariates, ...)
+    }
+)
+
 
 # numeric cells, create raster from data bounding box
 
 setMethod("glgm", 
-		signature("formula", "ANY", "numeric"),
-		gm.gridNumeric
-		)
+		signature("formula", "ANY", "numeric", "ANY"),
+    function(formula, data, grid, covariates=NULL, ...) {
+      grid = squareRaster(data, grid)
+      callGeneric(formula, data, grid, covariates, ...)
+    }
+)
 
 
 
 # extrat covariates for data, convert covariates to a stack
 setMethod("glgm", 
-		signature("formula", "Raster", "Raster"),
-		gm.dataRaster
-		)
-
-
-setMethod("glgm", 
-				signature("formula", "Spatial", "Raster", "NULL"),
-				gm.dataSpatial
-		)
-		
-setMethod("glgm", 
-		signature("formula", "Spatial", "Raster", "list"),
-		gm.dataSpatial
-		)
-
-setMethod("glgm", 
-				signature("formula", "Spatial", "Raster", "Raster"),
-				gm.dataSpatial
-		)
-		
-setMethod("glgm", 
-		
-				signature("formula", "Spatial", "Raster", "data.frame"),
-				function(formula, data, grid, covariates=NULL, ...) {
-
-		data = data@data
-
-		callGeneric(formula,data,grid,covariates,...)
-}
+		signature("formula", "Raster", "Raster", "ANY"),
+    function(
+        formula, 
+        data,  
+        grid,
+        covariates=NULL,
+        buffer=0,
+        ...) {
+      
+      dataCov = gm.dataRaster(
+          formula, data,
+          grid,
+          covariates,
+          buffer=0)
+      
+      callGeneric(formula, 
+          dataCov$data, dataCov$grid, 
+          dataCov$covariates, ...)
+    }
 )
+
+
+setMethod("glgm", 
+				signature("formula", "Spatial", "Raster", "ANY"),
+        function(formula, 
+            data, grid, 
+            covariates=NULL, 
+            buffer=0,...) {
+          
+          dataCov = gm.dataSpatial(
+              formula, data, 
+              grid, covariates, buffer)
+          
+          callGeneric(formula, 
+              dataCov$data, dataCov$grid, 
+              dataCov$covariates, ...)
+        }
+    )
+
 
 #################
 #### the real work
@@ -97,11 +137,8 @@ setMethod("glgm",
 				shape=1, priorCI=NULL, 
 				mesh=FALSE,...) {
 
-			
-			
-			if(!any(names(grid)=='space'))
+      if(!any(names(grid)=='space'))
 				warning("grid must have a layer called space with inla cell ID's")
-
 
 			if(!all(all.vars(formula)%in% names(data)))
 				warning("some covariates seem to be missing: formula ", paste(all.vars(formula), collapse=" "), ", data: ", paste(names(data), collapse=" "))

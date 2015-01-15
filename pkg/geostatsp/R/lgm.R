@@ -1,4 +1,5 @@
-setGeneric('lgm', function(formula,data,grid,covariates=NULL, ...) 
+setGeneric('lgm', function(
+        formula,data,grid,covariates=NULL, ...) 
 			standardGeneric("lgm")
 )
 
@@ -15,7 +16,7 @@ setMethod("lgm",
 
 
 setMethod("lgm", 
-		signature("numeric"),  
+		signature("numeric"),
     function(formula, data, grid, 
         covariates=NULL, ...) {
       
