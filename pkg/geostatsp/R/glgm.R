@@ -123,11 +123,9 @@ setMethod("glgm",
         }
     )
 
-
 #################
 #### the real work
 ##################
-
 
 setMethod("glgm", 
 		signature("formula", "data.frame", "Raster", "data.frame"), 

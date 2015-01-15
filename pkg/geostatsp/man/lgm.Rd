@@ -35,16 +35,16 @@ formula=NULL, data,
 		covariates=NULL, 
 		...) 
 \S4method{lgm}{formula,ANY,ANY,missing}(formula, data,
-		grid,
+		grid=NULL,
 		covariates=NULL, 
 		...) 
 \S4method{lgm}{formula,Raster,ANY,ANY}(formula, data,
 		grid,
-		covariates=NULL, buffer=0,
+		covariates=NULL, 
 		...) 
 \S4method{lgm}{formula,Raster,ANY,ANY}(
 		formula, data,
-		grid,
+		grid=NULL,
 		covariates=NULL, 
 		...) 
 \S4method{lgm}{formula,Spatial,numeric,ANY}(formula, data,
@@ -52,14 +52,6 @@ formula=NULL, data,
 		covariates=NULL, 
 		...) 
 \S4method{lgm}{formula,Spatial,Raster,ANY}(formula, data,
-		grid,
-		covariates=NULL, buffer=0,
-		...) 
-\S4method{lgm}{formula,Spatial,Raster,NULL}(formula, data,
-		grid,
-		covariates=NULL, buffer=0,
-		...) 
-\S4method{lgm}{formula,Spatial,Raster,missing}(formula, data,
 		grid,
 		covariates=NULL, buffer=0,
 		...) 

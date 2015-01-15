@@ -1,5 +1,5 @@
 setGeneric('lgm', function(
-        formula,data,grid,covariates=NULL, ...) 
+        formula,data,grid=NULL,covariates=NULL, ...) 
 			standardGeneric("lgm")
 )
 
@@ -54,7 +54,7 @@ setMethod("lgm",
 # missing covariates, create empty list
 setMethod("lgm", 
     signature("formula", "ANY", "ANY", "missing"),
-    function(formula, data, grid, covariates=NULL, ...) {
+    function(formula, data, grid=NULL, covariates=NULL, ...) {
       callGeneric(formula, data, grid, 
           covariates=list(), 
           ...)
@@ -67,7 +67,7 @@ setMethod("lgm",
     function(
         formula, 
         data,  
-        grid,
+        grid=NULL,
         covariates=NULL, ...) {
       
       dataCov = gm.dataRaster(
