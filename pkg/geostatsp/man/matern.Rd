@@ -11,28 +11,45 @@
 Returns the Matern covariance for the distances supplied.
 }
 \usage{
-	matern( x, y=NULL, param=c(range=1, variance=1, shape=1))
-	\method{matern}{SpatialPoints}(x,  y=NULL, param)
-	\method{matern}{default}( x, y=NULL, param)
-	\method{matern}{dist}( x, y=NULL, param)
-	\method{matern}{Raster}( x, y=NULL, param)
-	\method{matern}{SpatialPointsDataFrame}(x, y=NULL, param)
+	matern( x, param=c(range=1, variance=1, shape=1),
+	type=c('variance','cholesky','precision', 'inverseCholesky'),
+	y=NULL)
+	\method{matern}{SpatialPoints}(x,  param,
+	type=c('variance','cholesky','precision', 'inverseCholesky'),
+	y=NULL)
+	\method{matern}{default}( x, param,
+	type=c('variance','cholesky','precision', 'inverseCholesky'),
+	y=NULL)
+	\method{matern}{dist}( x, param,
+	type=c('variance','cholesky','precision', 'inverseCholesky'),
+	y=NULL)
+	\method{matern}{Raster}( x,  param,
+	type=c('variance','cholesky','precision', 'inverseCholesky'),
+	y=NULL)
+	\method{matern}{SpatialPointsDataFrame}(x, param,
+	type=c('variance','cholesky','precision', 'inverseCholesky'),
+	y=NULL)
 }
 
 \arguments{
 	\item{x}{A vector or matrix of distances, or \code{Raster} or
 	 \code{SpatialPoints} of locations, see Details below.}
-	 \item{y}{Covariance is calculated for the distance between locations in 
-	 \code{x} and \code{y}. If \code{y=NULL}, covariance 
-	 of \code{x} with itself is produced. 
-	 However, if \code{x} is a matrix or vector it is assumed to 
-	 be a set of distances and \code{y} is ignored.}
 	\item{param}{A vector of named model parameters with, at a minimum names
- \code{range} and  \code{shape} (see Details), and optionally \code{variance} (defaults to 1).  
+ \code{range} and  \code{shape} (see Details), and optionally \code{variance} (defaults to 1) and
+ \code{nugget} (defaults to zero).  
 	For Geometric Anisotropy add 
 	\code{anisoRatio} and either \code{anisoAngleDegrees} or  
 		\code{anisoAngleRadians}
 	}
+	\item{type}{specifies if the variance matrix, 
+	the Cholesky decomposition of the variance matrix, 
+	the precision matrix, or the inverse
+	of the Cholesky L matrix is returned.}
+\item{y}{Covariance is calculated for the distance between locations in 
+	 \code{x} and \code{y}. If \code{y=NULL}, covariance 
+	 of \code{x} with itself is produced. 
+	 However, if \code{x} is a matrix or vector it is assumed to 
+	 be a set of distances and \code{y} is ignored.}
 }
 
 \value{
@@ -95,10 +112,11 @@ legend('topright', fill=c('red','blue'),
 
 # example with raster
 myraster = raster(nrows=40,ncols=60,xmn=-3,xmx=3,ymn=-2,ymx=2)
-param = c(range=2, shape=2,	anisoRatio=2, anisoAngleDegrees=-25)
+param = c(range=2, shape=2,	anisoRatio=2, 
+	anisoAngleDegrees=-25,variance=20)
 
 # plot correlation of each cell with the origin
-myMatern = matern(myraster, c(0,0), param=param)
+myMatern = matern(myraster, y=c(0,0), param=param)
 
 
 plot(myMatern, main="anisortopic matern")
@@ -118,10 +136,17 @@ text(mydf$x, mydf$y, mydf$layer)
 myMatern[6,24]
 
 # example with points
-mypoints = SpatialPointsDataFrame(cbind(runif(5), runif(5)),data=data.frame(id=1:5))
-matern(mypoints, param=param)
+mypoints = SpatialPoints(
+	cbind(runif(8), runif(8))
+	)
+# variance matrix from points
+m1=matern(mypoints, param=c(range=2,shape=1.4,variance=4,nugget=1))
+# cholesky of variance from distances
+c2=matern(dist(mypoints@coords), param=c(range=2,shape=1.4,variance=4,nugget=1),type='cholesky')
 
- 
+# check it's correct
+quantile(m1- tcrossprod(c2))
+
 # example with vector of distances
 range=3
 distVec = seq(0, 2*range, len=100)

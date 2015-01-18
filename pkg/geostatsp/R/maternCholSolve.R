@@ -2,9 +2,12 @@ maternCholSolve = function(param, obsCov, coordinates){
   
 
   if(TRUE){ # do this in R
-  covMat = geostatsp::matern(x=coordinates, param=param)	
-  Matrix::diag(covMat) = Matrix::diag(covMat) + param["nugget"]
-  cholCovMat = Matrix::chol(covMat)
+#  covMat = geostatsp::matern(x=coordinates, param=param)	
+#  cholCovMat = Matrix::chol(covMat)
+    
+    cholCovMat = geostatsp::matern(x=coordinates, 
+        param=param, type='cholesky')
+    
   # cholCovMat %*% t(cholCovMat) = covMat
   
   # cholCovInvX = cholCovMat^{-1} %*% covariates

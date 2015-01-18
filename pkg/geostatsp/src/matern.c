@@ -1,5 +1,22 @@
+/* type = 0, distances is a vector
+ type = 1, distances is a symmetric matrix,
+ only lower triangle is used
+ type = 2, as type=1 but return the cholesky
+ type = 3, as type=1, but return inverse
+ nugget is only used if type >1
+ and added to the diagonals
+
+If the cholkesy is performed (type > 1):
+ shape is the log determinant if the cholesky matrix
+ type is info from dpotrf
+if the precision is computed, 100*info from dpotrfi is added to type
+*/
+
+
+
 #include<R.h>
 #include<Rmath.h>
+#include<R_ext/Lapack.h>
 
 void maternArasterBpoints(double *Axmin, double *Axres, int *AxN,
 		double *Aymax, double *Ayres, int *AyN,
@@ -128,8 +145,10 @@ free(bk);
 void maternAniso(double *x, double *y, int *N,
 		double *result,
 		double  *range, double*shape, double *variance,
-		double *anisoRatio, double *anisoAngleRadians) {
-
+		double *anisoRatio, double *anisoAngleRadians,
+		double *nugget, int *type
+		) {
+	// type=2 return cholesky
 	int Drow, Dcol, Nm1, Dcolp1, N2;
 	int Dindex;
 
@@ -141,37 +160,28 @@ void maternAniso(double *x, double *y, int *N,
 
     costheta = cos(*anisoAngleRadians);
     sintheta = sin(*anisoAngleRadians);
-
-
     anisoRatioSq = (*anisoRatio)*(*anisoRatio);
 
 //	xscale = sqrt(8 * (*shape)) / *range;
 //	logxscale  = 0.5*(log(8) + log(*shape) ) - log(*range);
-	varscale =  log(*variance)  - lgammafn(*shape ) -  (*shape -1)*M_LN2;
-	xscale = 2 * M_SQRT2 * sqrt( *shape ) / *range;
 	logxscale  =  1.5 * M_LN2 +   0.5 * log(*shape)  - log(*range);
-
-
-    truncate = *variance*1e-06; // count a zero if var < truncate
+	varscale =  log(*variance)  - lgammafn(*shape ) -  (*shape -1)*M_LN2;
 
 	alpha = *shape;
 	// code stolen from R's src/nmath/bessel_k.c
 		nb = 1+ (int)floor(alpha);/* nb-1 <= |alpha| < nb */
 		bk = (double *) calloc(nb, sizeof(double));
 
-
     Nm1 = *N-1;
     N2 = *N;
-    Dindex = 0;
-    Nzeros = 0;
 
+	result[N2*N2-1] = *variance + *nugget;
     for(Dcol=0;Dcol < Nm1;++Dcol) {
     	Dcolp1 = Dcol + 1;
-    	Dindex += Dcol;
-
-    	for(Drow=Dcolp1;Drow < N2; ++Drow) {
-    		Dindex += 1;
-
+    	Dindex = Dcol*N2+Dcol;
+    	result[Dindex] = *variance + *nugget;
+    	for(Drow=Dcolp1; Drow < N2; ++Drow) {
+    		Dindex++;
     		dist[0] = x[Dcol] - x[Drow];
     		dist[1] = y[Dcol] - y[Drow];
 
@@ -184,13 +194,13 @@ void maternAniso(double *x, double *y, int *N,
 //    		thisx =  sqrt(distRotate[0]*distRotate[0] +
   //    			distRotate[1]*distRotate[1]/anisoRatioSq)*xscale;
 
-		thisx = distRotate[0]*distRotate[0] +
+    		thisx = distRotate[0]*distRotate[0] +
       			distRotate[1]*distRotate[1]/anisoRatioSq;
-		logthisx = 0.5*log(thisx) + logxscale;
-		thisx =sqrt(thisx) * xscale;
+    		logthisx = 0.5*log(thisx) + logxscale;
+    		thisx =exp(logthisx);
 
-		if(isnan(thisx)) {
-			if(isinf(xscale)) {
+		  if(isnan(thisx)) {
+			if(isinf(logxscale)) {
 	// range is probably zero.
 					// if distance is zero set result to variance
 				if(distRotate[0]*distRotate[0] +
@@ -200,44 +210,55 @@ void maternAniso(double *x, double *y, int *N,
 				} else {
 	// range is finite, distance must be zero
 						result[Dindex] = 0;
-				}
-			} else { // thisx not nan
+				}// end else from isinf logscale
+		  } else { // thisx not nan
     		result[Dindex] = exp(varscale + *shape * logthisx )*
     				bessel_k_ex(thisx, alpha, 1.0, bk);
-			}
+			}// end else thisx not nan
 
 			if(isnan(result[Dindex]))  {
-					// assume distance is very small
-					if(thisx < 1) {
+				// assume distance is very small
+				if(thisx < 1) {
 						result[Dindex]= *variance;
-					} else {
+				} else {
 						result[Dindex]= 0;
-					}
 				}
+		  } // end if isnan
+    	} // end for Drow
+    }// end for Dcol
 
 
+	if(*type >1 ){ // cholesky
+		F77_CALL(dpotrf)("L", N, result, N, &Dcol);
+		*shape=0;  // the log determinant
+		for(Drow = 0; Drow < N2; Drow++)
+			*shape += log(result[Drow*N2+Drow]);
+		if(*type == 3){ // precision
+			F77_NAME(dpotri)("L", N,
+				 result, N,&Drow);
+		} else if (*type==4) {// cholkesy of precision
+			F77_NAME(dtrtri)("L", "N",N,
+					result, N,&Drow);
+		} else {
+			Drow = 0;
+		}
+		*type = Dcol + 100*Drow;
+	}
 
-    		if(result[Dindex]  <  truncate) ++Nzeros;
-
-    	}
-		Dindex += 1;
-    }
-	*N = Nzeros;
     free(bk);
 }
 
-
 void matern(double *distance, int *N,
-		double *range, double *shape, double *variance) {
+		double *result,
+		double *range, double *shape,
+		double *variance,
+		double *nugget, int *type) {
+	int D, Dcol, Ncol, Nrow, rowEnd, addToRowStart;
+	double varscale,  thisx, //xscale,
+		logthisx, logxscale;
 
-	int D, N2;
-	double xscale, varscale,  thisx, logthisx, logxscale;
-
-    int nb,  Nzeros;
+    int nb;
     double *bk, alpha, truncate;
-
-    truncate = *variance*1e-06; // count a zero if var < truncate
-    Nzeros = 0;
 
 	alpha = *shape;
 
@@ -245,9 +266,7 @@ void matern(double *distance, int *N,
 	nb = 1+ (int)floor(alpha);/* nb-1 <= |alpha| < nb */
 	bk = (double *) calloc(nb, sizeof(double));
 
-	N2 = *N;// for some reason need D to be int, not long.
 // evaluate the matern!
-
 	/*
 	thisx = abs(x)*(sqrt(8*param["shape"])/ param["range"])
 	result = ( param["variance"]/(gamma(param["shape"])* 2^(param["shape"]-1)  ) ) *
@@ -260,49 +279,70 @@ void matern(double *distance, int *N,
 	// result = exp(varscale) * (thisx)^nu K(thisx, nu)
 	// result = exp(varscale + nu * log(thisx)) K(thisx, nu)
 	// result = exp(varscale + nu * logthisx) K(thisx, nu)
-	xscale = 2 * M_SQRT2 * sqrt( *shape ) / *range;
+//	xscale = 2 * M_SQRT2 * sqrt( *shape ) / *range;
 	logxscale  =  1.5 * M_LN2 +   0.5 * log(*shape)  - log(*range);
 	varscale =  log(*variance)  - lgammafn(*shape ) -  (*shape -1)*M_LN2;
 
-	for(D=0; D < N2; D++) {
+	Nrow = *N;
+	if(*type){ // lower triangle
+		for(Dcol=0;Dcol<Nrow;++Dcol){
+			// diagonals
+			result[Dcol*Nrow+Dcol] =
+					*variance + *nugget;
+		}
+		Ncol = *N-1; // the last column isn't done
+		addToRowStart = 1; // the diagonals aren't done with materns
+	} else {
+		Ncol=1;
+		addToRowStart=0;
+	}
+
+	for(Dcol=0;Dcol<Ncol;++Dcol) {
+	  rowEnd = Nrow*Dcol+Nrow;
+	  for(D=Dcol*Nrow+Dcol+addToRowStart; D < rowEnd; D++) {
 //		thisx = fabs(distance[D])*xscale;
-		thisx = fabs(distance[D]);
-		logthisx = log(thisx) + logxscale;
-		thisx = thisx * xscale;
+		logthisx = log(distance[D]) + logxscale;
+		thisx = exp(logthisx);
 
 		if(isnan(thisx)) {
 //			warning("%f %f", thisx, xscale);
-			if(isinf(xscale)) {
-// range is probably zero.
-				// if distance is zero set result to variance
-				if(fabs(distance[D]) < truncate){
-					distance[D]= *variance;
-				}
-			} else {
-// range is finite, distance must be zero
-				distance[D] = 0;
+			if(isinf(logxscale)) {
+				// range is probably zero.
+				result[D] = 0;
 			}
 		} else { // thisx not nan
-			distance[D] = exp(varscale + *shape * logthisx )*
+			result[D] = exp(varscale + *shape * logthisx )*
 					bessel_k_ex(thisx, alpha, 1.0, bk);
 		}
-		if(isnan(distance[D])) {
+		if(isnan(result[D])) {
 			// assume distance is very small
 			if(thisx < 1) {
-				distance[D]= *variance;
+				result[D]= *variance;
 			} else {
-				distance[D]= 0;
+				result[D]= 0;
 			}
 		}
+	  } //D
+	} // Dcol
 
-		if(distance[D] <  truncate) ++Nzeros;
-	}
-	*range = xscale;
+	*range = logxscale;
 	*shape=varscale;
-	*N = Nzeros;
 
+	if(*type >1 ){ // cholesky
+		F77_CALL(dpotrf)("L", N, result, N, &Dcol);
+		*shape=0;  // the log determinant
+		for(D = 0; D < Nrow; D++)
+			*shape += log(result[D*Nrow+D]);
+		if(*type == 3){//precision
+			F77_NAME(dpotri)("L", N,
+				 result, N,&D);
+		} else if (*type==4) {// cholesky of precision
+			F77_NAME(dtrtri)("L", "N",N,
+				result, N,&D);
+		} else {
+			D = 0;
+		}
+		*type = Dcol + 100*D;
+	}
     free(bk);
-
 }
-
-

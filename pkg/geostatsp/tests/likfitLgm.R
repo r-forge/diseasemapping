@@ -45,8 +45,8 @@ pdf("ligfitLgm.pdf")
 par(mfrow=c(1,2))
 
 myraster = raster(nrows=30,ncols=30,xmn=0,xmx=1,ymn=0,ymx=1)
-covEst = matern(myraster, c(0.5, 0.5), par=myres$param)
-covTrue = matern(myraster, c(0.5, 0.5), par=trueParamAniso)
+covEst = matern(myraster, y=c(0.5, 0.5), par=myres$param)
+covTrue = matern(myraster, y=c(0.5, 0.5), par=trueParamAniso)
 
 plot(covEst, main="estimate")
 plot(covTrue, main="true")

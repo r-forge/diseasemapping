@@ -93,8 +93,8 @@ if(!interactive()){
 }
 par(mfrow=c(7,2))
 
-mMid = matern(varRast[[1]],xyFromCell(varRast,midcell),param=params)
-mEdge = matern(varRast[[1]],xyFromCell(varRast,edgecell),param=params)
+mMid = matern(varRast[[1]],y=xyFromCell(varRast,midcell),param=params)
+mEdge = matern(varRast[[1]],y=xyFromCell(varRast,edgecell),param=params)
 plot(mMid)
 plot(mEdge)
 

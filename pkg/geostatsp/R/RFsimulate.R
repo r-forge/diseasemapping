@@ -132,7 +132,7 @@ if (requireNamespace("RandomFields", quietly = TRUE)) {
 	names(theSim) = gsub("^variable1(\\.n)?","sim", names(theSim))
 	
 } else { #RandomFields not available
- 
+    param['nugget']=0
 		theCov = matern(x, param=model)
 		if(!is.null(data)) {
 			covd = matern(data, param=model)
