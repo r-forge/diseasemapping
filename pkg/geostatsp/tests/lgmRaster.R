@@ -15,7 +15,7 @@ swissResR =  lgm(
 		oneminusar=seq(0.05, 0.1, len=4),
 		nugget =  seq(0.0,0.01,len=6),
 		adjustEdges=FALSE,
-		mc.cores=c(1,4)[1+(.Platform$OS.type=='unix')]
+		mc.cores=c(1,2)[1+(.Platform$OS.type=='unix')]
 )
 
 swissResR$summary[c('oneminusar','range','propNugget',
