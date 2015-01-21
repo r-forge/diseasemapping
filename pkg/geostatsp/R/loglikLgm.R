@@ -136,7 +136,7 @@ loglikLgm = function(param,
   Ncov = ncol(obsCov)-1
   Nrep = 1
   
-  paramFull = geostatsp:::fillParam(param)
+  paramFull = fillParam(param)
   Ltype = c(ml=0, reml=1, mlFixed=2, remlFixed=3)
   Ltype = reml + 2*haveVariance
 
