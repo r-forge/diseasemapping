@@ -132,19 +132,25 @@ if (requireNamespace("RandomFields", quietly = TRUE)) {
 	names(theSim) = gsub("^variable1(\\.n)?","sim", names(theSim))
 	
 } else { #RandomFields not available
-    param['nugget']=0
-		theCov = matern(x, param=model)
+    model['nugget']=0
 		if(!is.null(data)) {
-			covd = matern(data, param=model)
-			covpreddata = matern(x, y=data, param=model)
-			if(!is.null(err.model))
-				diag(covd) = diag(covd) + err.model
-			Linv = solve(chol(covd))
-			xcov =  tcrossprod( covpreddata,Linv)
+      theCov = matern(x, param=model)
+			#covd = matern(data, param=model)
+			#if(!is.null(err.model))
+			#	diag(covd) = diag(covd) + err.model
+			#Linv = solve(chol(covd))
+      paramForData = model
+      if(!is.null(err.model))
+        paramForData['nugget']=as.numeric(err.model)
+      Linv = matern(data, param=paramForData, type='inverseCholesky')
+      covpreddata = matern(x, y=data, param=model)
+      xcov =  tcrossprod( covpreddata,Linv)
 			theCov  =theCov - tcrossprod(xcov)
-		}
-		theChol = chol(theCov)
-		theRandom = matrix(rnorm(n*nrow(theCov)), nrow=nrow(theCov), ncol=n)
+      theChol = chol(theCov)
+		} else {
+      theChol = matern(x, param=model, type='cholesky')
+    }
+		theRandom = matrix(rnorm(n*nrow(theChol)), nrow=nrow(theChol), ncol=n)
 		theSim = theChol %*% theRandom
 		if(!is.null(data)) {
 			theSim = theSim + xcov %*% 
@@ -152,8 +158,11 @@ if (requireNamespace("RandomFields", quietly = TRUE)) {
 		}
 		theSim = as.data.frame(as.matrix(theSim))
 	} # end no RandomFields	
-	
-	names(theSim) = paste("sim", 1:n, sep="")
+  if(n>1) {
+    names(theSim) = paste("sim", 1:n,sep="")
+  } else {
+    names(theSim) = 'sim'
+  }
 	
 	res = SpatialPointsDataFrame(SpatialPoints(x),
 			data=theSim,
@@ -192,18 +201,38 @@ setMethod("RFsimulate",
 			if(n>1) {
 					res2 = brick(res2, nl=n)
 			}
-			theCov = matern(res2, param=model)
+
 			if(!is.null(data)) {
-				 covd = matern(data, param=model)
-				 covpreddata = matern(res2, y=data, param=model)
-				 if(!is.null(err.model))
-					 diag(covd) = diag(covd) + err.model
-				 Linv = solve(chol(covd))
+        theCov = matern(res2, param=model)
+        #covd = matern(data, param=model)
+        #if(!is.null(err.model))
+        #	diag(covd) = diag(covd) + err.model
+        #Linv = solve(chol(covd))
+        paramForData = model
+        if(!is.null(err.model))
+         theCov = matern(res2, param=model)
+         
+         paramForData = model
+         if(!is.null(err.model))
+           paramForData['nugget']=as.numeric(err.model)
+         Linv = matern(data, param=paramForData, type='inverseCholesky')
+         
+         
+				 #covd = matern(data, param=model)
+
+				 #if(!is.null(err.model))
+				# diag(covd) = diag(covd) + err.model
+				 #Linv = solve(chol(covd))
+         
+         covpreddata = matern(res2, y=data, param=model)
 				 xcov =  tcrossprod( covpreddata,Linv)
 				 theCov  =theCov - tcrossprod(xcov)
-			}
-			theChol = chol(theCov)
-			theRandom = matrix(rnorm(n*nrow(theCov)), nrow=nrow(theCov), 
+         theChol = chol(theCov)
+			} else {
+        theChol = matern(res2, param=model, type='cholesky')
+      }
+
+			theRandom = matrix(rnorm(n*nrow(theChol)), nrow=nrow(theChol), 
 							ncol=n)
 			theSim = crossprod(theChol , theRandom)
 			if(!is.null(data)) {
@@ -211,7 +240,11 @@ setMethod("RFsimulate",
 							(Linv %*% data.frame(data)[,1])	
 			}
 			theSim = as.data.frame(as.matrix(theSim))
-			names(theSim) = paste("sim", 1:ncol(theSim),sep="")
+			if(ncol(theSim)>1) {
+        names(theSim) = paste("sim", 1:ncol(theSim),sep="")
+      } else {
+        names(theSim) = 'sim'
+      }
 		}
 		res = SpatialGridDataFrame(x,theSim)
 			

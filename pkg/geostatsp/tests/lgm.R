@@ -95,7 +95,7 @@ myPoints@data = cbind(
 myPoints$y= myModel["intercept"] +
 		as.matrix(myPoints@data[,names(covariates)]) %*% 
 		myModel[names(covariates)] +
-		myPoints$sim1+
+		myPoints$sim+
 		rnorm(length(myPoints), 0, sqrt(myModel["nugget"]))
 
 fitLikfit = likfitLgm(y~cov1+cov2, myPoints,  
@@ -108,7 +108,7 @@ fitLikfit = likfitLgm(y~cov1+cov2, myPoints,
 fitMLE =  lgm(
     formula=y~ cov1+cov2, 
     data=myPoints, 
-    grid=10,  
+    grid=10, covariates=list(), 
 		shape=1, fixShape=TRUE)
 
 c(fitMLE$summary["range","estimate"], fitLikfit$summary["range","estimate"])

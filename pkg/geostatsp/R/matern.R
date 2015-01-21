@@ -118,7 +118,7 @@ matern.SpatialPoints = function(x,
 		){
 
   type = gsub("iance$|esky$|ision", "", tolower(type)[1])
-  type = c(var=1,chol=2,prec=3,inverseCholesky=4)[type]    
+  type = c(var=1,chol=2,prec=3,inversechol=4)[type]    
   
 	param = fillParam(param)		
 			

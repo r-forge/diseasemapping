@@ -44,8 +44,8 @@ simu2 = RFsimulate(rbind(a=model, b=model+0.1),
 		)
 		
 		
-		par(mfrow=c(nlayers(simu),2))
-		for(D in 1:nlayers(simu)) {
+		par(mfrow=c(length(names(simu2)),2))
+		for(D in 1:length(names(simu2))) {
 			plot(simu[[D]])
 			plot(raster(simu2,layer=D))
 		}

@@ -103,10 +103,10 @@ mydat@data= cbind(mydat@data , RFsimulate(model=trueParam,x=mydat)@data)
 
 # add fixed effects
 mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + 
-	mydat$sim1 + rnorm(length(mydat), 0, sd=sqrt(trueParam["nugget"]))
+	mydat$sim + rnorm(length(mydat), 0, sd=sqrt(trueParam["nugget"]))
 
 \dontrun{
-spplot(mydat, "sim1", col.regions=rainbow(10), main="U")
+spplot(mydat, "sim", col.regions=rainbow(10), main="U")
 spplot(mydat, "Y", col.regions=rainbow(10), main="Y")
 }
 
@@ -181,7 +181,7 @@ temp=loglikLgm(param=myres$param,
 trueParamAniso = param=c(variance=2^2, range=0.2, shape=2,
 	 nugget=0,anisoRatio=4,anisoAngleDegrees=10, nugget=0)
 
-mydat$U = geostatsp::RFsimulate(trueParamAniso,mydat)$sim1
+mydat$U = geostatsp::RFsimulate(trueParamAniso,mydat)$sim
 
 mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + 
 	mydat$U + rnorm(length(mydat), 0, sd=sqrt(trueParamAniso["nugget"]))
@@ -210,8 +210,8 @@ myres$summary
 par(mfrow=c(1,2))
 
 myraster = raster(nrows=30,ncols=30,xmn=0,xmx=1,ymn=0,ymx=1)
-covEst = matern(myraster, c(0.5, 0.5), par=myres$param)
-covTrue = matern(myraster, c(0.5, 0.5), par=trueParamAniso)
+covEst = matern(myraster, y=c(0.5, 0.5), par=myres$param)
+covTrue = matern(myraster, y=c(0.5, 0.5), par=trueParamAniso)
 
 plot(covEst, main="estimate")
 plot(covTrue, main="true")
