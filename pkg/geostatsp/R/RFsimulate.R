@@ -157,11 +157,13 @@ if (requireNamespace("RandomFields", quietly = TRUE)) {
 					(Linv %*% data.frame(data)[,1])	
 		}
 		theSim = as.data.frame(as.matrix(theSim))
-	} # end no RandomFields	
-  if(n>1) {
     names(theSim) = paste("sim", 1:n,sep="")
-  } else {
-    names(theSim) = 'sim'
+	} # end no RandomFields	
+
+
+ 
+  if(n==1){
+    names(theSim) = gsub("1$", "", names(theSim)) 
   }
 	
 	res = SpatialPointsDataFrame(SpatialPoints(x),
@@ -240,12 +242,16 @@ setMethod("RFsimulate",
 							(Linv %*% data.frame(data)[,1])	
 			}
 			theSim = as.data.frame(as.matrix(theSim))
-			if(ncol(theSim)>1) {
+ 
         names(theSim) = paste("sim", 1:ncol(theSim),sep="")
-      } else {
-        names(theSim) = 'sim'
-      }
+ 
 		}
+    
+    if(n==1){
+      names(theSim) = gsub("1$", "", names(theSim)) 
+    }
+    
+    
 		res = SpatialGridDataFrame(x,theSim)
 			
 		res
