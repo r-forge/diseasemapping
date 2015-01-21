@@ -21,9 +21,9 @@ myLgcp=simLgcp(mymodel, myCovariate,
 if(requireNamespace("INLA", quietly=TRUE)) {
 res = lgcp(data=myLgcp$events, 
 		formula = ~ a + b + offset(offsetFooBar),
-		grid=30, 
+		grid=25, 
 		covariates=myCovariate,
-		buffer=1,
+		buffer=0.5,
 		priorCI=list(sd=c(0.9, 1.1), range=c(0.4, 0.41)),
 		control.mode=list(theta=c(0.104, 0.207),restart=TRUE)
 )
