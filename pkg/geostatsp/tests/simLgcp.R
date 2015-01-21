@@ -2,7 +2,7 @@ library('geostatsp')
 mymodel = c(mean=-1.5, variance=1, 
 				range=2, shape=2)
 
-myraster = raster(nrows=15,ncols=20,xmn=0,xmx=10,ymn=0,ymx=7.5)
+myraster = raster(nrows=15,ncols=15,xmn=0,xmx=10,ymn=0,ymx=10)
 
 # some covariates, deliberately with a different resolution than myraster
 covA = covB = myoffset = raster(extent(myraster), 10, 10)
