@@ -31,7 +31,7 @@ res = lgcp(data=myLgcp$events,
 res$parameters$summary[,c(1,3,5)]
 
 lgcpRoc =  spatialRoc(res, 
-	rr=c(1.5,2), 
+	rr=1.5, 
 	truth=myLgcp, 
 	random=FALSE)
 	
