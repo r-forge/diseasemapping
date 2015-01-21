@@ -21,29 +21,28 @@ myLgcp=simLgcp(mymodel, myCovariate,
 if(requireNamespace("INLA", quietly=TRUE)) {
 res = lgcp(data=myLgcp$events, 
 		formula = ~ a + b + offset(offsetFooBar),
-		grid=25, 
+		grid=squareRaster(myoffset, 15), 
 		covariates=myCovariate,
-		buffer=0.5,
 		priorCI=list(sd=c(0.9, 1.1), range=c(0.4, 0.41)),
-		control.mode=list(theta=c(0.104, 0.207),restart=TRUE)
+		control.mode=list(theta=c(0.022, -0.5),restart=TRUE)
 )
 
 res$parameters$summary[,c(1,3,5)]
 
-lgcpRoc =  spatialRoc(res, 
-	rr=1.5, 
+lgcpRoc =  spatialRoc(
+    res, 
+	rr=log(10), 
 	truth=myLgcp, 
 	random=FALSE)
-	
-dimnames(lgcpRoc)[-1]	
-	
-plot(lgcpRoc[,1,'onemspec'] , 
-	lgcpRoc[,1,'sens'], 
+
+head(lgcpRoc)
+
+plot(lgcpRoc[,'onemspec'] , 
+	lgcpRoc[,'sens'], 
 	type='l', 
 	xlim=c(0,1), ylim=c(0,1),
-	ylab='sensitivity', xlab='1-specificity')
-	
-
+	ylab='sensitivity', xlab='1-specificity'
+)
 
 }
 
