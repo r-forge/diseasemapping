@@ -1,4 +1,3 @@
-
 loglikLgm = function(param,
 		data, formula, coordinates=data,
 		reml=TRUE, 
@@ -35,17 +34,22 @@ loglikLgm = function(param,
 			if(length(theNA))
 				coordinates = coordinates[-theNA,]
 			
-		}  else if(	class(coordinates) == "dist")	{
-			if(length(theNA))				
-				coordinates = as.dist(
+		} else if(	class(coordinates) == "dist")	{
+			if(length(theNA)) {
+				coordinates = 
 					as.matrix(coordinates)[-theNA,-theNA]
-				)
-			} else {
-				warning("coordinates must be a SpatialPoints object\n or a dist object.  It's being assumed \n it's a matrix of coordinates")
+      } else {
+        coordinates= as.matrix(coordinates)
+      } 
+    } else if(class(coordinates) == "matrix")	{
+      if(length(theNA)) {
+        coordinates = coordinates[-theNA,-theNA]
+      }
+    } else {
+				warning("coordinates must be a SpatialPoints object\n or matrix a dist object.  It's being assumed \n it's a matrix of coordinates")
 				coordinates = SpatialPoints(coordinates)
 				if(length(theNA))				
 					coordinates = coordinates[-theNA,]
-				
 		}
 
 		# sort out the parameters
@@ -140,23 +144,18 @@ loglikLgm = function(param,
   Ltype = c(ml=0, reml=1, mlFixed=2, remlFixed=3)
   Ltype = reml + 2*haveVariance
 
-  if(class(coordinates)=='dist'){
-    xcoord = coordinates
+  if(class(coordinates)=='matrix'){
+    xcoord = as.vector(coordinates)
     ycoord = -99
     aniso=FALSE
   } else if(length(grep("^SpatialPoints", class(coordinates)))){
     xcoord=coordinates@coords[,1] 
     ycoord=coordinates@coords[,2]
     aniso=TRUE
-  } else if(is.matrix(coordinates)|is.data.frame(coordinates)){
-    xcoord=coordinates[,1] 
-    ycoord=coordinates[,2]
-    aniso=TRUE
   } else {
-    warning('coordinates should be SpatialPoints or dist or matrix')
+    warning('coordinates should be SpatialPoints or matrix')
     xcoord=ycoord=aniso=NULL
   }
-  
   
   resultC = .C("maternLogL",
       xcoord=as.double(xcoord), 
@@ -175,7 +174,7 @@ loglikLgm = function(param,
       varBetaHat = as.double(rep(-9.9, Ncov* Ncov)),
       Ltype=as.integer(Ltype)
   )
-  
+
   totalVarHat = resultC$totalVarHat
   betaHat = resultC$betaHat
   names(betaHat) = colnames(obsCov)[-1]
@@ -215,7 +214,7 @@ attributes(result)$varBetaHat = varBetaHat
 attributes(result)$reml=reml
 
   
-  result
+result
 }
 
  

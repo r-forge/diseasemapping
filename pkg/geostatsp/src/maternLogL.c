@@ -6,13 +6,15 @@ void maternAniso(double *x, double *y, int *N,
 		double *result,
 		double  *range, double*shape, double *variance,
 		double *anisoRatio, double *anisoAngleRadians,
-		double *nugget, int *type
+		double *nugget, int *type, double *halfLogDet
 		);
 void matern(double *distance, int *N,
 		double *result,
 		double *range, double *shape,
 		double *variance,
-		double *nugget, int *type);
+		double *nugget, int *type, double *halfLogDet
+		);
+
 
 void computeBoxCox(double *obsCov,
 		// number of observations, number of datasets
@@ -259,8 +261,8 @@ void maternLogLGivenVarU(
 	}
 
 	F77_CALL(dpotrf)("L", N, varMat, N, &infoCholVarmat);
-	determinants[0]=0;  // the log determinant
 
+	determinants[0]=0.0;  // the log determinant
 	for(D = 0; D < N[0]; D++)
 		determinants[0] += log(varMat[D*N[0]+D]);
 
@@ -305,8 +307,8 @@ void maternLogLcomponents(
 		) {
 
 
-  int info, oneI=1, zeroI=0;
-  double *corMat, logDet, one=1.0, zero=0.0;
+  int oneI=1, zeroI=0,D;
+  double *corMat, logDet, one=1.0, zero=0.0, junk;
   double *nugget, *variance, *range, *shape;
   double *anisoRatio, *anisoAngleRadians, varDiag;
 
@@ -315,6 +317,7 @@ void maternLogLcomponents(
   range= &param[2];
   shape= &param[3];
   varDiag = *nugget + *variance;
+
 
 
 	computeBoxCox(obsCov,
@@ -333,11 +336,14 @@ void maternLogLcomponents(
 			  range,shape,
 			  variance,
 			  anisoRatio,
-			  anisoAngleRadians,&zero,&oneI);
+			  anisoAngleRadians,&zero,
+			  &oneI,
+			  &junk);
   } else {
 	  matern(xcoord,N,corMat,
 			range,shape,
-			variance,&zero,&oneI);
+			variance,&zero,&oneI,
+			&junk);
   }
 
   maternLogLGivenVarU(

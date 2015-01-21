@@ -31,7 +31,7 @@ double distCellRight[2], distCellDown[2], distTopLeft[2], distRowHead[2];
 double distTopLeftR[2], distHere[2];
 double costheta, sintheta, anisoRatioSq;
 double logxscale, xscale, varscale,  thisx, logthisx;
-int nb, Nzeros;
+int nb;
 double *bk, alpha,truncate;
 
 
@@ -65,7 +65,7 @@ alpha = *shape;
 	bk = (double *) calloc(nb, sizeof(double));
 
 
-Nzeros=0;
+//Nzeros=0;
 //#pragma omp parallel for private(distTopLeft,distTopLeftR,distRowHead,DAy,distHere,thisx,Dindex)
 for(DB=0;DB<BN2;++DB){ // loop through points
 	Dindex = DB*Ncell;
@@ -121,7 +121,7 @@ for(DB=0;DB<BN2;++DB){ // loop through points
 			}
 
 
-    		if(result[Dindex]  <  truncate) ++Nzeros;
+//    		if(result[Dindex]  <  truncate) ++Nzeros;
 
 			++Dindex;
 			distHere[0] -= distCellRight[0];
@@ -134,10 +134,10 @@ for(DB=0;DB<BN2;++DB){ // loop through points
 	}
 
 }
-*BN = Nzeros;
-*range = xscale;
-*shape=varscale;
-*anisoRatio = anisoRatioSq;
+//*BN = Nzeros;
+//*range = xscale;
+//*shape=varscale;
+//*anisoRatio = anisoRatioSq;
 free(bk);
 
 }
@@ -146,7 +146,7 @@ void maternAniso(double *x, double *y, int *N,
 		double *result,
 		double  *range, double*shape, double *variance,
 		double *anisoRatio, double *anisoAngleRadians,
-		double *nugget, int *type
+		double *nugget, int *type, double *halfLogDet
 		) {
 	// type=2 return cholesky
 	int Drow, Dcol, Nm1, Dcolp1, N2;
@@ -155,7 +155,7 @@ void maternAniso(double *x, double *y, int *N,
 	double logxscale, xscale, varscale,  logthisx, thisx;
 	double anisoRatioSq, dist[2], distRotate[2], costheta, sintheta;
 
-    int nb, Nzeros;
+    int nb;
     double *bk, alpha,truncate;
 
     costheta = cos(*anisoAngleRadians);
@@ -230,9 +230,9 @@ void maternAniso(double *x, double *y, int *N,
 
 	if(*type >1 ){ // cholesky
 		F77_CALL(dpotrf)("L", N, result, N, &Dcol);
-		*shape=0;  // the log determinant
+		*halfLogDet=0;  // the log determinant
 		for(Drow = 0; Drow < N2; Drow++)
-			*shape += log(result[Drow*N2+Drow]);
+			*halfLogDet += log(result[Drow*N2+Drow]);
 		if(*type == 3){ // precision
 			F77_NAME(dpotri)("L", N,
 				 result, N,&Drow);
@@ -252,13 +252,14 @@ void matern(double *distance, int *N,
 		double *result,
 		double *range, double *shape,
 		double *variance,
-		double *nugget, int *type) {
+		double *nugget, int *type, double *halfLogDet) {
 	int D, Dcol, Ncol, Nrow, rowEnd, addToRowStart;
 	double varscale,  thisx, //xscale,
 		logthisx, logxscale;
 
     int nb;
     double *bk, alpha, truncate;
+    double minDist = 1e-10;
 
 	alpha = *shape;
 
@@ -304,11 +305,13 @@ void matern(double *distance, int *N,
 		logthisx = log(distance[D]) + logxscale;
 		thisx = exp(logthisx);
 
-		if(isnan(thisx)) {
+		if(isnan(thisx) ) {
 //			warning("%f %f", thisx, xscale);
 			if(isinf(logxscale)) {
 				// range is probably zero.
 				result[D] = 0;
+			} else {
+				result[D] = *variance;
 			}
 		} else { // thisx not nan
 			result[D] = exp(varscale + *shape * logthisx )*
@@ -325,14 +328,11 @@ void matern(double *distance, int *N,
 	  } //D
 	} // Dcol
 
-	*range = logxscale;
-	*shape=varscale;
-
 	if(*type >1 ){ // cholesky
 		F77_CALL(dpotrf)("L", N, result, N, &Dcol);
-		*shape=0;  // the log determinant
+		*halfLogDet=0;  // the log determinant
 		for(D = 0; D < Nrow; D++)
-			*shape += log(result[D*Nrow+D]);
+			*halfLogDet += log(result[D*Nrow+D]);
 		if(*type == 3){//precision
 			F77_NAME(dpotri)("L", N,
 				 result, N,&D);

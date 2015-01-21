@@ -22,7 +22,8 @@ matern.dist = function(x,
       shape=as.double(param["shape"]),
       as.double(param["variance"]),
       as.double(param["nugget"]),
-      type=as.integer(type))
+      type=as.integer(type),
+      halfLogDet=as.double(-9.9))
   
 	
   if (type==2 | type==4){
@@ -32,7 +33,9 @@ matern.dist = function(x,
             uplo="L",
             x=cres$result),
         "Cholesky")
-    attributes(result)$logDetHalf = cres$shape	
+    attributes(result)$logDetHalf = cres$halfLogDet	
+    attributes(result)$cholInfo = cres$type
+    
   } else {
     result = new("dsyMatrix", 
         Dim = dim(x), 
@@ -163,7 +166,8 @@ matern.SpatialPoints = function(x,
 				as.double(param["anisoRatio"]),
 				as.double(param["anisoAngleRadians"]),
         as.double(param["nugget"]),
-        type=as.integer(type)
+        type=as.integer(type),
+        halfLogDet=as.double(-9.9)
 			)
   if(type==2 | type==4){
     result = as(
@@ -172,7 +176,8 @@ matern.SpatialPoints = function(x,
         uplo="L",
         x=resC$result),
     "Cholesky")
-      attributes(result)$logDetHalf = resC$shape	
+      attributes(result)$logDetHalf = resC$halfLogDet
+      attributes(result)$cholInfo = resC$type
   } else {
     result = new("dsyMatrix", 
       Dim = c(length(x), length(x)), 
@@ -212,7 +217,8 @@ matern.default = function(x,
       as.double(param["shape"]),
 			as.double(param["variance"]),
       as.double(0), # nugget
-      type=as.integer(0)
+      type=as.integer(0),
+      halfLogDet=as.double(-9.9)
   )
 	result = resultFull$result
 	if(is.matrix(x)) 
