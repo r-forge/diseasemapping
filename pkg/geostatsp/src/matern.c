@@ -7,9 +7,10 @@
  and added to the diagonals
 
 If the cholkesy is performed (type > 1):
- shape is the log determinant if the cholesky matrix
+ halfLogDet is the log determinant if the cholesky matrix
  type is info from dpotrf
-if the precision is computed, 100*info from dpotrfi is added to type
+if the precision is computed type is info from dpotrfi
+... and if chol of precision is computed, type is from dtrtri
 */
 
 
@@ -235,14 +236,14 @@ void maternAniso(double *x, double *y, int *N,
 			*halfLogDet += log(result[Drow*N2+Drow]);
 		if(*type == 3){ // precision
 			F77_NAME(dpotri)("L", N,
-				 result, N,&Drow);
+				 result, N,&Dcol);
 		} else if (*type==4) {// cholkesy of precision
 			F77_NAME(dtrtri)("L", "N",N,
-					result, N,&Drow);
+					result, N,&Dcol);
 		} else {
 			Drow = 0;
 		}
-		*type = Dcol + 100*Drow;
+		*type = Dcol;
 	}
 
     free(bk);
@@ -335,14 +336,14 @@ void matern(double *distance, int *N,
 			*halfLogDet += log(result[D*Nrow+D]);
 		if(*type == 3){//precision
 			F77_NAME(dpotri)("L", N,
-				 result, N,&D);
+				 result, N,&Dcol);
 		} else if (*type==4) {// cholesky of precision
 			F77_NAME(dtrtri)("L", "N",N,
-				result, N,&D);
+				result, N,&Dcol);
 		} else {
 			D = 0;
 		}
-		*type = Dcol + 100*D;
+		*type = Dcol;
 	}
     free(bk);
 }

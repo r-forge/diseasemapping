@@ -307,7 +307,7 @@ void maternLogLcomponents(
 		) {
 
 
-  int oneI=1, zeroI=0,D;
+  int oneI, zeroI=0,D;
   double *corMat, logDet, one=1.0, zero=0.0, junk;
   double *nugget, *variance, *range, *shape;
   double *anisoRatio, *anisoAngleRadians, varDiag;
@@ -330,6 +330,7 @@ void maternLogLcomponents(
   if(*aniso) {
 	  anisoRatio = &param[4];
 	  anisoAngleRadians = &param[5];
+	  oneI=1;
 	  maternAniso(xcoord,ycoord,
 			  N,
 			  corMat,
@@ -340,6 +341,7 @@ void maternLogLcomponents(
 			  &oneI,
 			  &junk);
   } else {
+	  oneI=1;
 	  matern(xcoord,N,corMat,
 			range,shape,
 			variance,&zero,&oneI,
