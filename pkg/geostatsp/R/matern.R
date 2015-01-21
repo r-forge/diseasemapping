@@ -19,7 +19,7 @@ matern.dist = function(x,
       N=as.integer(ncol(x)),
       result = as.double(rep(-99.9, prod(dim(x)))),
       as.double(param["range"]), 
-      as.double(param["shape"]),
+      shape=as.double(param["shape"]),
       as.double(param["variance"]),
       as.double(param["nugget"]),
       type=as.integer(type))
@@ -32,7 +32,7 @@ matern.dist = function(x,
             uplo="L",
             x=cres$result),
         "Cholesky")
-    attributes(result)$logDetHalf = attributes(cres)$shape	
+    attributes(result)$logDetHalf = cres$shape	
   } else {
     result = new("dsyMatrix", 
         Dim = dim(x), 
@@ -158,7 +158,7 @@ matern.SpatialPoints = function(x,
 				N= as.integer(length(x)),
 				result=as.double(rep(-99.9, length(x)^2)),
 				as.double(param["range"]),
-				as.double(param["shape"]),
+				shape=as.double(param["shape"]),
 				as.double(param["variance"]),
 				as.double(param["anisoRatio"]),
 				as.double(param["anisoAngleRadians"]),
@@ -172,7 +172,7 @@ matern.SpatialPoints = function(x,
         uplo="L",
         x=resC$result),
     "Cholesky")
-      attributes(result)$logDetHalf = attributes(resC)$shape	
+      attributes(result)$logDetHalf = resC$shape	
   } else {
     result = new("dsyMatrix", 
       Dim = c(length(x), length(x)), 

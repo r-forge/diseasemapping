@@ -105,18 +105,15 @@ loglikLgm = function(param,
 		} # end have box cox
 		
 		
-    if(TRUE) {
     obsCov = cbind(observations, covariates)
-    fromC = maternCholSolve(param, obsCov, coordinates)
-    fromC = fromC$R
+    fromC = maternCholSolve(param, obsCov, coordinates)$C
 
-    resids=fromC$resids
     betaHat = fromC$betaHat
     
     useMl = c('ml', 'reml')[1+reml]
     useVariance = c('estimatedVariance','fixedVariance')[1+haveVariance]
     minusTwoLogLik = 
-        (fromC$minusTwoLogLik - twoLogJacobian)[useMl,useVariance]
+        (fromC$minusTwoLogLik[useMl,useVariance] - twoLogJacobian)
     varBetaHat = fromC$varBetaHat[,,useVariance, useMl]
     totalVarHat = fromC$totalVarHat[useMl]
     
@@ -128,82 +125,6 @@ loglikLgm = function(param,
           totalVarHat * param[c("variance","nugget")]
     }
     
-    } else { # original code
-		# variance matrix
-		covMat = geostatsp::matern(x=coordinates, param=param)	
-
-		if(haveNugget)
-			Matrix::diag(covMat) = Matrix::diag(covMat) + param["nugget"]
-
-		# matrix operations
-		cholCovMat = Matrix::chol(covMat)
-
-		
-		# cholCovMat %*% t(cholCovMat) = covMat
-		# cholCovInvX = cholCovMat^{-1} %*% covariates
-		cholCovInvX = Matrix::solve(cholCovMat, covariates)
-		# cholCovInvY = cholCovMat^{-1} %*% observations
-		cholCovInvY = Matrix::solve(cholCovMat, observations)
-		
-		cholCovInvXcross = Matrix::crossprod(cholCovInvX)
-		cholCovInvXcrossInv = Matrix::solve(cholCovInvXcross)
-	
-		
-		# beta hat = (D'V^{-1}D)^{-1}D'V^{-1}y
-		# V = L L', V^{-1} = t(L^(-1)) %*% L^(-1)
-		# beta hat = (D' Linv' Linv D)^{-1}D'Linv' L y
-
-		# Covariates and likelihood
-	
-		betaHat = as.vector(
-        cholCovInvXcrossInv %*% 
-				Matrix::crossprod(cholCovInvX, cholCovInvY)
-    ) 
-		
-		resids = observations - as.vector(covariates %*% betaHat)
-		# sigsqhat = resids' %*% Vinv %*% residsx
-		#    =   resids' Linv' Linv resids
-		cholCovInvResid = Matrix::solve(cholCovMat, resids)
-		
-		totalSsq = as.vector(Matrix::crossprod(cholCovInvResid))
-    
-    detCholCovMat = Matrix::determinant(cholCovMat)$modulus 
-    detCholCovInvXcross = Matrix::determinant(cholCovInvXcross)$modulus
-
-    # if reml, use N-p in place of N
-    Nadj=length(observations) - reml*length(betaHat)
-    totalVarHat = totalSsq/Nadj
-    
-		
-	if(!haveVariance) { # profile likelihood with optimal sigma
-			minusTwoLogLik = Nadj * log(2*pi) + 
-				Nadj * log(totalVarHat) +
-				2*detCholCovMat+
-				Nadj - twoLogJacobian		
-
-    param[c("variance","nugget")] = 
-					totalVarHat * param[c("variance","nugget")]
-	} else { # a variance was supplied
-		# calculate likelihood with the variance supplied
-		# -2 log lik = n log(2pi) + log(|V|) + resid' Vinv resid
-		minusTwoLogLik = Nadj * log(2*pi) +
-				2*detCholCovMat +
-				totalSsq - twoLogJacobian
-		totalVarHat = 1
-	}
-	if( reml ) {
-		minusTwoLogLik =  minusTwoLogLik + 
-			2*detCholCovInvXcross
-  
-	}
-  
-	names(betaHat) = colnames(covariates)
-	varBetaHat = totalVarHat * as.matrix(cholCovInvXcrossInv) 
-  dimnames(varBetaHat) = list(names(betaHat), names(betaHat))
-  
-  } # end original code
-  
-  
   # format the output
   result = minusTwoLogLik
 	if(minustwotimes) {
@@ -221,8 +142,8 @@ loglikLgm = function(param,
 	attributes(result)$betaHat = betaHat
 	attributes(result)$varBetaHat = varBetaHat
  	attributes(result)$reml=reml
-	attributes(result)$resid = resids
 
+  
   result
 }
 
@@ -458,7 +379,8 @@ if(any(names(param)=="boxcox") & !any(paramToEstimate=="boxcox")) {
 			optim=fromOptim, 
 			data = data.frame(
 					observations = observations,
-					resid=as.vector(attributes(fromLogLik)$resid)
+					resid=observations -
+              covariates %*% attributes(fromLogLik)$betaHat
 			)
 	)
 	rownames(result$data) = theRowNames

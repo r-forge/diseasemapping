@@ -65,3 +65,22 @@ swissFitAgain = likfitLgm(data=sr2,
 		paramToEstimate = c("range","nugget")
 )
 swissFitAgain$par		
+
+if(FALSE){
+  dyn.unload("/home/patrick/workspace/diseasemapping/pkg/geostatsp/src/matern.so")
+  dyn.load("/home/patrick/workspace/diseasemapping/pkg/geostatsp/src/matern.so")
+  
+  obsCov = mydat@data[,c('Y', 'cov1', 'cov2')]
+  obsCov = cbind(obsCov, intercept = 1)
+  obsCov = as.matrix(obsCov)
+  
+  coordinates = mydat
+  
+  res=maternCholSolve(param,obsCov, coordinates)
+  
+  for(D in names(res$C)){
+    print(D)
+    print(range(res$C[[D]] - res$R[[D]]))
+  }
+  
+}

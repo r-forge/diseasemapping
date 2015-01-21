@@ -441,10 +441,10 @@ krigeLgm = function(
 	} # end old code not called from LGM
 
 	
-	varData = geostatsp::matern(coordinates, param=param)
-	if(haveNugget) Matrix::diag(varData) = Matrix::diag(varData) + param["nugget"]
+  cholVarData = geostatsp::matern(coordinates, param=param, type='chol')
+#	if(haveNugget) Matrix::diag(varData) = Matrix::diag(varData) + param["nugget"]
 	
-	cholVarData = Matrix::chol(varData)
+#	cholVarData = Matrix::chol(varData)
 
 	cholVarDatInvData = Matrix::solve(cholVarData, observations)
 

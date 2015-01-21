@@ -1,16 +1,17 @@
 maternCholSolve = function(param, obsCov, coordinates){
   
+  cholCovMat = geostatsp::matern(x=coordinates, 
+      param=param, type='cholesky')
+  detCholCovMat =  attributes(cholCovMat)$logDetHalf
 
-  if(TRUE){ # do this in R
+  if(FALSE){ # do this in R
 #  covMat = geostatsp::matern(x=coordinates, param=param)	
 #  cholCovMat = Matrix::chol(covMat)
     
-    cholCovMat = geostatsp::matern(x=coordinates, 
-        param=param, type='cholesky')
     
   # cholCovMat %*% t(cholCovMat) = covMat
   
-  # cholCovInvX = cholCovMat^{-1} %*% covariates
+  # cholCovInvXY = cholCovMat^{-1} %*% cbind(obs, covariates)
   cholCovInvXY = Matrix::solve(cholCovMat, obsCov)
 #  cholCovInvX = Matrix::solve(cholCovMat, covariates)
   cholCovInvX = cholCovInvXY[,-1]
@@ -49,7 +50,7 @@ maternCholSolve = function(param, obsCov, coordinates){
            minusTwoLogLik + Nadj + Nadj * log(totalVarHat)
   )
   
-  minusTwoLogLik['reml',] = minusTwoLogLik['reml',] + 2*detCholCovInvXcross
+  minusTwoLogLik['reml',] = minusTwoLogLik['reml',] + detCholCovInvXcross
   
   varMle = outer(totalVarHat, param[c("variance","nugget")])
   
@@ -75,7 +76,7 @@ maternCholSolve = function(param, obsCov, coordinates){
       cholCovInvXcrossInv*totalVarHat['ml']
   varBetaHat[,,'estimatedVariance','reml'] =
       cholCovInvXcrossInv*totalVarHat['reml']
-      
+
   resultR = list(
           minusTwoLogLik = minusTwoLogLik,
           varMle = varMle,
@@ -83,51 +84,87 @@ maternCholSolve = function(param, obsCov, coordinates){
           varBetaHat = varBetaHat,
           totalVarHat = totalVarHat,
           resids=resids,
-          detCholCovMat=detCholCovMat
+          detCholCovInvX=detCholCovInvXcross
           )
   } else { # don't use R
     resultR = NULL
   }
-  if(FALSE){ # use C
-    Nobs = nrow(obCov)
+  if(TRUE){ # use C
+    Nobs = nrow(obsCov)
     Ncov = ncol(obsCov)-1
-    resultC = #.C("maternCholSolve",
-        list(
-        obsCov = as.double(obsCov),
-        Nobs = as.integer(Nobs),
-        Ncov = as.integer(Ncov),
-        coordinates = as.double(coordinates),
-        Ncoordinates = as.integer(length(coordinates)),
-        coordsDist = as.integer(class(coordinates)=='dist'),
-        nugget=as.double(param['nugget']),
-        haveNugget = as.integer(param['nugget']>0),
-        range=as.double(param["range"]),
-        shape=as.double(param["shape"]),
-        variance=as.double(param["variance"]),
-        anisoRatio = as.double(param["anisoRatio"]),
-        anisoAngle = as.double(param["anisoAngleRadians"]),
-        betaHat = as.double(rep(0, Ncov)),
-        cholCovInvXcrossInv = as.double(rep(0, Ncov*Ncov)),
-        totalSsq = as.double(0),
-        detCholCovMat= as.double(0),
-        detCholCovInvXcross= as.double(0)
-      )
-    resultC$cholCovInvXcrossInv = matrix(
-          resultC$cholCovInvXcrossInv, Ncov, Ncov
-          )
-    resultC$resids = resultC$obsCov[1:Nobs]
+    Nrep = 1
+    boxcox=1
+    boxcoxType=0
     
-    resultC$diff = NULL
-    for(D in names(resultR)){
-      resultC$diff = cbind(
-          resultC$diff,
-          range(resultC[[D]] - resultR[[D]])
+    resultC = .C('maternLogLGivenChol',
+     as.double(obsCov),
+     as.integer(Nobs), 
+     as.integer(Nrep),
+     as.integer(Ncov),
+     as.double(cholCovMat),
+     as.double(boxcox),
+     as.integer(boxcoxType),
+     totalSsq = as.double(-9.9),
+     betaHat = as.double(rep(-9.9, Ncov)), 
+     varBetaHat = as.double(rep(-9.9, Ncov* Ncov)),
+     detCholCovInvXcrossHalf=as.double(-9.9),
+     sumLogY=as.double(-9.9)
+  ) 
+
+  Nadj = c(ml=Nobs, reml=Nobs-Ncov)
+  totalSsq = resultC$totalSsq
+  totalVarHat = totalSsq/Nadj
+  
+  minusTwoLogLik =  
+      Nadj * log(2*pi) +
+      2*detCholCovMat
+  
+  minusTwoLogLik = cbind(
+      fixedVariance = minusTwoLogLik+ totalSsq,
+      estimatedVariance = 
+          minusTwoLogLik + Nadj + Nadj * log(totalVarHat)
+  )
+  
+  minusTwoLogLik['reml',] = minusTwoLogLik['reml',] +
+      2*resultC$detCholCovInvXcrossHalf
+  
+  varMle = outer(totalVarHat, param[c("variance","nugget")])
+  
+  betaHat = resultC$betaHat
+  names(betaHat) = colnames(obsCov)[-1]
+  
+  varBetaHat = new("dsyMatrix", 
+      Dim = as.integer(c(Ncov, Ncov)), 
+      uplo="L",
+      x=resultC$varBetaHat)
+  
+  varBetaHat = array(as.matrix(varBetaHat), 
+      c(length(betaHat),length(betaHat),2,2),
+      dimnames = list(
+              names(betaHat), names(betaHat),
+              c('fixedVariance','estimatedVariance'), 
+              c('ml','reml')
+          )
       )
-    }
-    colnames(resultC$diff) = names(resultR)
+
+      varBetaHat[,,'estimatedVariance','ml'] =
+      varBetaHat[,,'estimatedVariance','ml']*totalVarHat['ml']
+  varBetaHat[,,'estimatedVariance','reml'] =
+      varBetaHat[,,'estimatedVariance','reml']*totalVarHat['reml']
+  
+  resultC = list(
+      minusTwoLogLik = minusTwoLogLik,
+      varMle = varMle,
+      betaHat = betaHat,
+      varBetaHat = varBetaHat,
+      totalVarHat = totalVarHat,
+      detCholCovInvX=2*resultC$detCholCovInvXcrossHalf
+  )
+  
+  
   } else {# don't use C
     resultC = NULL
   }
-  
+
   return(list(R=resultR, C=resultC))
 }
