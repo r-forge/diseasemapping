@@ -86,30 +86,21 @@ maternCholSolve = function(param, obsCov, coordinates){
           resids=resids,
           detCholCovInvX=detCholCovInvXcross
           )
-  } else { # don't use R
-    resultR = NULL
-  }
-  if(TRUE){ # use C
+  } else { # use C
     Nobs = nrow(obsCov)
     Ncov = ncol(obsCov)-1
     Nrep = 1
-    boxcox=1
-    boxcoxType=0
     
-    resultC = .C('maternLogLGivenChol',
-     as.double(obsCov),
-     as.integer(Nobs), 
-     as.integer(Nrep),
-     as.integer(Ncov),
-     as.double(cholCovMat),
-     as.double(boxcox),
-     as.integer(boxcoxType),
+    temp = resultC = .C('maternLogLGivenChol',
+     obsCov = as.double(obsCov),
+     N= as.integer(c(Nobs,Nrep,Ncov)),
+     cholCovMat = as.double(cholCovMat),
      totalSsq = as.double(-9.9),
      betaHat = as.double(rep(-9.9, Ncov)), 
      varBetaHat = as.double(rep(-9.9, Ncov* Ncov)),
-     detCholCovInvXcrossHalf=as.double(-9.9),
-     sumLogY=as.double(-9.9)
-  ) 
+     determinants=as.double(c(-9.9,-9.9))
+  )
+  resultC$detCholCovInvXcrossHalf = resultC$determinants[2]
 
   Nadj = c(ml=Nobs, reml=Nobs-Ncov)
   totalSsq = resultC$totalSsq
@@ -152,7 +143,7 @@ maternCholSolve = function(param, obsCov, coordinates){
   varBetaHat[,,'estimatedVariance','reml'] =
       varBetaHat[,,'estimatedVariance','reml']*totalVarHat['reml']
   
-  resultC = list(
+  resultR = list(
       minusTwoLogLik = minusTwoLogLik,
       varMle = varMle,
       betaHat = betaHat,
@@ -161,10 +152,10 @@ maternCholSolve = function(param, obsCov, coordinates){
       detCholCovInvX=2*resultC$detCholCovInvXcrossHalf
   )
   
-  
-  } else {# don't use C
-    resultC = NULL
-  }
 
-  return(list(R=resultR, C=resultC))
+  
+  } 
+  
+
+  return(resultR)
 }

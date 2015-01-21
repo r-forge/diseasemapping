@@ -1,3 +1,4 @@
+
 loglikLgm = function(param,
 		data, formula, coordinates=data,
 		reml=TRUE, 
@@ -106,7 +107,8 @@ loglikLgm = function(param,
 		
 		
     obsCov = cbind(observations, covariates)
-    fromC = maternCholSolve(param, obsCov, coordinates)$C
+    if(FALSE){ # old code
+    fromC = maternCholSolve(param, obsCov, coordinates)
 
     betaHat = fromC$betaHat
     
@@ -127,21 +129,90 @@ loglikLgm = function(param,
     
   # format the output
   result = minusTwoLogLik
-	if(minustwotimes) {
-			names(result) = "minusTwoLogLik"
-	} else {
-			result = -0.5*result
-
-			names(result)="logLik"
-	} 
-	if(reml)
-		names(result) = gsub("Lik$", "RestrictedLik", names(result))
 	
-	attributes(result)$param = param
-	attributes(result)$totalVarHat = totalVarHat
-	attributes(result)$betaHat = betaHat
-	attributes(result)$varBetaHat = varBetaHat
- 	attributes(result)$reml=reml
+} else {
+  
+  Nobs = nrow(obsCov)
+  Ncov = ncol(obsCov)-1
+  Nrep = 1
+  
+  paramFull = geostatsp:::fillParam(param)
+  Ltype = c(ml=0, reml=1, mlFixed=2, remlFixed=3)
+  Ltype = reml + 2*haveVariance
+
+  if(class(coordinates)=='dist'){
+    xcoord = coordinates
+    ycoord = -99
+    aniso=FALSE
+  } else if(length(grep("^SpatialPoints", class(coordinates)))){
+    xcoord=coordinates@coords[,1] 
+    ycoord=coordinates@coords[,2]
+    aniso=TRUE
+  } else if(is.matrix(coordinates)|is.data.frame(coordinates)){
+    xcoord=coordinates[,1] 
+    ycoord=coordinates[,2]
+    aniso=TRUE
+  } else {
+    warning('coordinates should be SpatialPoints or dist or matrix')
+    xcoord=ycoord=aniso=NULL
+  }
+  
+  
+  resultC = .C("maternLogL",
+      xcoord=as.double(xcoord), 
+      ycoord=as.double(ycoord),
+      param=as.double(paramFull[
+              c('nugget','variance','range',
+                  'shape','anisoRatio', 'anisoAngleRadians')]),
+      aniso=as.integer(aniso),
+      obsCov = as.double(obsCov),
+      N= as.integer(c(Nobs,Nrep,Ncov)),
+      boxcox=as.double(-9,9),
+      boxcoxType=as.integer(0),
+      logL=as.double(rep(-9.9, Nrep+1)),
+      totalVarHat=as.double(rep(-9.9, Nrep)),
+      betaHat = as.double(rep(-9.9, Ncov)), 
+      varBetaHat = as.double(rep(-9.9, Ncov* Ncov)),
+      Ltype=as.integer(Ltype)
+  )
+  
+  totalVarHat = resultC$totalVarHat
+  betaHat = resultC$betaHat
+  names(betaHat) = colnames(obsCov)[-1]
+  
+  varBetaHat = new("dsyMatrix", 
+      Dim = as.integer(c(Ncov, Ncov)), 
+      uplo="L",
+      x=resultC$varBetaHat)
+  dimnames(varBetaHat) = list(names(betaHat),names(betaHat))
+  varBetaHat = varBetaHat*totalVarHat
+
+  
+  result = resultC$logL[Nrep+1]- twoLogJacobian
+      
+}
+
+param[c("variance","nugget")] = 
+    totalVarHat * param[c("variance","nugget")]
+
+
+
+if(minustwotimes) {
+  names(result) = "minusTwoLogLik"
+} else {
+  result = -0.5*result
+  
+  names(result)="logLik"
+} 
+
+if(reml)
+  names(result) = gsub("Lik$", "RestrictedLik", names(result))
+
+attributes(result)$param = param
+attributes(result)$totalVarHat = totalVarHat
+attributes(result)$betaHat = betaHat
+attributes(result)$varBetaHat = varBetaHat
+attributes(result)$reml=reml
 
   
   result

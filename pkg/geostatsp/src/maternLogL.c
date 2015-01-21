@@ -18,7 +18,7 @@ void computeBoxCox(double *obsCov,
 		// number of observations, number of datasets
 		int *N, // Nobs, Nrep
 		double *boxcox, //  Nrep by 3
-		// c 1: boxcox par; c 2: sum log(Y), c 3: log jacobian
+		// c 1: boxcox par; c 2: sum log(Y), c 3: two log jacobian
 		int *boxcoxType
 		// 0= do nothing
 		// 1= do box-cox
@@ -29,7 +29,7 @@ void computeBoxCox(double *obsCov,
 ) {
 //
 	int D, Dbc, *Nobs, *Nrep, Nend;
-	double *pLogY, *pRep, bcHere, bcEps, *sumLogY, *halfLogJacobian;
+	double *pLogY, *pRep, bcHere, bcEps, *sumLogY, *twoLogJacobian;
 	if(*boxcoxType==0 | *boxcoxType==4){
 
 		return;
@@ -39,9 +39,7 @@ void computeBoxCox(double *obsCov,
 	Nrep = &N[1];
 	bcEps = 0.01;
 	sumLogY = &boxcox[*Nrep];
-	halfLogJacobian = &boxcox[*Nrep*2];
-
-
+	twoLogJacobian = &boxcox[*Nrep*2];
 
 	if(*boxcoxType == 1){
 		pLogY = obsCov; // logs go in first column
@@ -52,13 +50,13 @@ void computeBoxCox(double *obsCov,
 	}
 	if(*boxcoxType < 3){
 		*sumLogY = 0.0;
-		for(D=0;D<N;++D) {
+		for(D=0;D<*Nobs;++D) {
 			pLogY[D] = log(obsCov[D]);
 			*sumLogY += pLogY[D];
 		}
-		for(D=0;D<*Nrep,++D){
+		for(D=0;D<*Nrep;++D){
 			sumLogY[D] = sumLogY[0];
-			halfLogJacobian[D] =
+			twoLogJacobian[D] = 2*
 					(boxcox[D]-1)*sumLogY[D];
 		}
 	}
@@ -68,7 +66,7 @@ void computeBoxCox(double *obsCov,
 		pRep = &obsCov[Dbc*(*Nobs)];
 		bcHere = boxcox[Dbc];
 		if(abs(bcHere) > bcEps) {
-			for(D=0;D<N;++D) {
+			for(D=0;D<*Nobs;++D) {
 				pRep[D] = (exp(bcHere*pLogY[D]) - 1) /
 					bcHere;
 			}
@@ -90,7 +88,7 @@ void maternLogLGivenChol(
 		double *totalSsq, // a 1 by Nrep matrix
 		double *betaHat, // an Ncov by Nrep matrix
 		double *varBetaHat, // an Ncov by Ncov by Nrep array
-		double *determinants, // detVarHalf, detCholCovInvXcrossHalf
+		double *determinants // detVarHalf, detCholCovInvXcrossHalf
 		) {
 
 	int *Nobs, *Nrep, *Ncov;
@@ -101,7 +99,7 @@ void maternLogLGivenChol(
 
 	Nobs = &N[0];
 	Nrep = &N[1];
-	Nobs = &N[2];
+	Ncov = &N[2];
 	detCholCovInvXcrossHalf = &determinants[1];
 	oneInt = 1;
 	one=1.0;
@@ -248,44 +246,34 @@ void maternLogLGivenVarU(
 		double *obsCov, // Y, X
 		int *N, // Nobs, Nrep, Ncov,
 		double *totalSsq, // length Nrep
-		double *determiants, // detVarHalf, detCholCovInvXcrossHalf
 		double *betaHat, // an Ncov by Nrep matrix
 		double *varBetaHat, // an Ncov by Ncov by Nrep array
+		double *determinants // detVarHalf, detCholCovInvXcrossHalf
 		) {
 
-	int D, infoCholVarmat, zeroI;
+	int D, infoCholVarmat, zeroI=0;
 
-	zeroI=0;
-	if(*boxcoxType){
-		computeBoxCox(obsCov,
-				N,
-				boxcox,
-				boxcoxType);
-	}
-
-	for(D=0;D<*Nobs;++D){
+	for(D=0;D<N[0];++D){
 		// diagonals
-		varMat[D*(*Nobs)+D] = *varDiag;
+		varMat[D*N[0]+D] = *varDiag;
 	}
 
-	F77_CALL(dpotrf)("L", Nobs, varMat, Nobs, &infoCholVarmat);
-	determiants[0]=0;  // the log determinant
-	for(D = 0; D < *Nobs; D++)
-		determiants[0] += log(result[D*(*Nobs)+D]);
+	F77_CALL(dpotrf)("L", N, varMat, N, &infoCholVarmat);
+	determinants[0]=0;  // the log determinant
+
+	for(D = 0; D < N[0]; D++)
+		determinants[0] += log(varMat[D*N[0]+D]);
 
 	maternLogLGivenChol(
 			obsCov,
 			N,
 			varMat,
-			boxcox,
-			&zeroI,// already did box-cox
 			totalSsq,
-			determinants,
 			betaHat, // an Ncov by Nrep matrix
-			varBetaHat // an Ncov by Ncov matrix
+			varBetaHat, // an Ncov by Ncov matrix
+			determinants
 			);
 }
-
 
 
 void maternLogLcomponents(
@@ -317,15 +305,11 @@ void maternLogLcomponents(
 		) {
 
 
-  int Nobs;
-  int info, two, zeroI;
-  double *corMat, logDet, one;
+  int info, oneI=1, zeroI=0;
+  double *corMat, logDet, one=1.0, zero=0.0;
   double *nugget, *variance, *range, *shape;
-  double *anisoRatio, *ansoAngleRadians, varDiag;
+  double *anisoRatio, *anisoAngleRadians, varDiag;
 
-  Nobs = &N[0];
-  zero = 0.0;
-  zeroI = 0;
   nugget = &param[0];
   variance= &param[1];
   range= &param[2];
@@ -338,46 +322,54 @@ void maternLogLcomponents(
 		boxcox,
 		boxcoxType);
 
-  two=2;
-  corMat = (double *) calloc(*Nobs*(*Nobs),sizeof(double));
+  corMat = (double *) calloc(N[0]*N[0],sizeof(double));
 
   if(*aniso) {
 	  anisoRatio = &param[4];
-	  ansoAngleRadians = &param[5];
-	  maternAniso(xcoord,ycoord,Nobs,
+	  anisoAngleRadians = &param[5];
+	  maternAniso(xcoord,ycoord,
+			  N,
 			  corMat,
 			  range,shape,
-			  variance,anisoRatio,
-			  anisoAngleRadians,&zero,&two);
+			  variance,
+			  anisoRatio,
+			  anisoAngleRadians,&zero,&oneI);
   } else {
-	  matern(xcoord,Nobs,corMat,
+	  matern(xcoord,N,corMat,
 			range,shape,
-			variance,&zero,&two);
+			variance,&zero,&oneI);
   }
 
   maternLogLGivenVarU(
   		corMat, // variance matrix
-  		varDiag, // new entries for diagnoal
+  		&varDiag, // new entries for diagnoal
   		obsCov, // Y, X
   		N, // Nobs, Nrep, Ncov,
   		totalSsq, // length Nrep
-  		determiants, // detVarHalf, detCholCovInvXcrossHalf
   		betaHat, // an Ncov by Nrep matrix
   		varBetaHat, // an Ncov by Ncov by Nrep array
-  		)
+  		determinants // detVarHalf, detCholCovInvXcrossHalf
+  		);
+
 
  free(corMat);
 }
 
+// computes the likelihood
+// if there is more than one Y supplied
+// the minimum
 void maternLogL(
 		double *xcoord, double *ycoord,
-		double *param,
+		double *param,// nugget, variance,
+        // range, shape,
+        // anisoRatio, ansioAngleRadians
 		int *aniso,
 		double *obsCov,
 		int *N,
 		double *boxcox,
 		int *boxcoxType,
-		double *logL,
+		double *logL,// length N[1] + 1
+		// last element is the minimum
 		double *totalVarHat,
 		double *betaHat,
 		double *varBetaHat,
@@ -389,10 +381,8 @@ void maternLogL(
 ) {
 
 	double *totalSsq, determinants[2],
-		*totalVarHat,
 		Lstart, *pBoxCox;
-	int *Nadj, *Nrep, *Ncov, D;
-
+	int Nadj, *Nrep, *Ncov, D, one=1;
 
 
 	Nadj = N[0];
@@ -402,18 +392,18 @@ void maternLogL(
 	totalSsq = logL;
 
 	maternLogLcomponents(
-			*xcoord, *ycoord,
-			*param,
-			*aniso,
-			*obsCov,
-			*N,
-			*boxcox,
-			*boxcoxType,
-			*totalSsq, // a 1 by Nrep matrix
-			*betaHat, // an Ncov by Nrep matrix
-			*varBetaHat, // an Ncov by Ncov matrix
-			*determinants // detVarHalf, detCholCovInvXcrossHalf
-	)
+			xcoord, ycoord,
+			param,
+			aniso,
+			obsCov,
+			N,
+			boxcox,
+			boxcoxType,
+			totalSsq, // a 1 by Nrep matrix
+			betaHat, // an Ncov by Nrep matrix
+			varBetaHat, // an Ncov by Ncov matrix
+			determinants // detVarHalf, detCholCovInvXcrossHalf
+	);
 
 	if(*Ltype==1 | *Ltype == 3){// reml
 		Nadj -= *Ncov;
@@ -422,7 +412,7 @@ void maternLogL(
 	}
 
 	Lstart =
-	      2 ( Nadj * M_LN_SQRT_2PI +
+	      2 * ( Nadj * M_LN_SQRT_2PI +
 	    		determinants[0] + determinants[1]);
 
 	if(*Ltype < 2 ){// var estimated
@@ -438,8 +428,14 @@ void maternLogL(
 		}
 	}
 	if(*boxcoxType){
-		pBoxCox= &boxcox[*Nrep*2]; // jacobians in 3rd row
-		for(D=0;D<*Nrep;++D) logL[D] += pBoxCox[D]
+		pBoxCox= &boxcox[*Nrep*2]; // two log jacobians in 3rd row
+		for(D=0;D<*Nrep;++D) logL[D] += pBoxCox[D];
+	}
+
+	// find the minimum lf all the likelihoods calculated
+	pBoxCox = &logL[*Nrep];
+	*pBoxCox = logL[0];
+	for(D=1;D<*Nrep;++D){
+		*pBoxCox = fmin2(*pBoxCox, logL[D]);
 	}
 }
-

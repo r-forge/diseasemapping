@@ -16,7 +16,7 @@ mydat = mydat[!thedist,]
 	
 
 trueParamAniso = param=c(variance=2^2, range=0.2, shape=2,
-		nugget=1^2,anisoRatio=4,anisoAngleDegrees=10, nugget=0)
+		nugget=1^2,anisoRatio=4,anisoAngleDegrees=10)
 
 
 
@@ -30,16 +30,24 @@ mydat$Ybc = (mydat$Y*0.5+1)^2
  
 print(range(mydat$Ybc))
 
+date()
 myres = likfitLgm(Ybc ~ cov1 + cov2, mydat, 
 		param=c(range=0.1,nugget=0,shape=2, 
 				anisoAngleDegrees=20, anisoRatio=2,
 				boxcox=0.4), 
 		paramToEstimate = c("range","nugget",
 				"anisoRatio","anisoAngleDegrees",
-				"boxcox") 
+				"boxcox","shape") 
+)
+date()
+
+myres$summary[,grep("^ci", colnames(myres$summary),invert=TRUE)]
+
+loglikLgm(formula=Ybc ~ cov1 + cov2, 
+    data=mydat, 
+    param=myres$param
 )
 
-myres$summary
 
 pdf("ligfitLgm.pdf")
 par(mfrow=c(1,2))
@@ -75,6 +83,9 @@ if(FALSE){
   obsCov = as.matrix(obsCov)
   
   coordinates = mydat
+  cholCovMat = geostatsp::matern(x=coordinates, 
+      param=param, type='cholesky')
+  detCholCovMat =  attributes(cholCovMat)$logDetHalf
   
   res=maternCholSolve(param,obsCov, coordinates)
   
