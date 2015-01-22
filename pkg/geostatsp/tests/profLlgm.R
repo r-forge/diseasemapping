@@ -5,11 +5,11 @@ Ncores = c(1,2)[1+(.Platform$OS.type=='unix')]
 
 swissFit = lgm(data=swissRain, 
     formula=rain~ SRTM_1km,
-		grid=150, covariates=swissAltitude,
-		shape=1,  fixShape=TRUE, 
+		grid=20, covariates=swissAltitude,
+		shape=2,  fixShape=TRUE, 
 		boxcox=0.5, fixBoxcox=TRUE, 
 		aniso=TRUE,reml=TRUE,
-		param=c(anisoAngleDegrees=37,anisoRatio=10))
+		param=c(anisoAngleDegrees=37,anisoRatio=10,nugget=0.5))
 
 
 x=profLlgm(swissFit, mc.cores=Ncores,

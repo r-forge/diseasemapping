@@ -378,9 +378,9 @@ void maternForL(
 	double nugget;
 
 	if(*withoutNugget){
-		nugget = param[0];
-	} else {
 		nugget = 0.0;
+	} else {
+		nugget = param[0];
 	}
 
 	if(*aniso) {
