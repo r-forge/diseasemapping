@@ -138,7 +138,8 @@ if(!is.null(swissFit$parameters) ) {
 
 }
 
-\dontrun{
+
+if(interactive()  | Sys.info()['user'] =='patrick') {
 	plot(swissFit$raster[["predict.exp"]]) 
 
 	mycol = c("green","yellow","orange","red")
@@ -183,7 +184,8 @@ text(thenames, labels=thenames$name,pos=3,
 }
 
 # a log-Gaussian Cox process example
-\dontrun{
+
+if(interactive()  | Sys.info()['user'] =='patrick') {
 myPoints = SpatialPoints(cbind(rbeta(100,2,2), rbeta(100,3,4)))
 myPoints@bbox = cbind(c(0,0), c(1,1))
 

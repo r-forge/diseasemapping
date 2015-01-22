@@ -109,7 +109,7 @@ where a Raster is returned.
 
 model <- c(var=5, range=1,shape=0.5)
 
-\dontrun{
+if(requireNamespace('RandomFields', quietly=TRUE)) {
 	RandomFields::plot(modelRandomFields(model))
 }
 

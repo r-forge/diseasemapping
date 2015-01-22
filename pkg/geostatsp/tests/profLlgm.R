@@ -58,6 +58,8 @@ lines(x[[1]],x[[2]])
 
 dev.off()
 
+
+if(interactive()  | Sys.info()['user'] =='patrick') {
 x2d=profLlgm(swissFit, mc.cores=Ncores,
 		anisoAngleDegrees=seq(30, 43 , len=6),
 		anisoRatio = exp(seq(log(3.5),log(18),len=8))
@@ -100,3 +102,4 @@ mapmisc::legendBreaks("topleft",x2d$prob,
 }
 
 dev.off()
+}

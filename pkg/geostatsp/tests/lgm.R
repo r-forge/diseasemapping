@@ -103,6 +103,7 @@ fitLikfit = likfitLgm(y~cov1+cov2, myPoints,
 
 
 
+if(interactive()  | Sys.info()['user'] =='patrick') {
 
 # run lgm without providing covariates
 fitMLE =  lgm(
@@ -138,4 +139,4 @@ fitMLE =  lgm(y~ cov1 + cov2,  myPoints, grid=10,
 		shape=1, fixShape=TRUE)
 c(fitMLE$summary["range","estimate"], fitLikfit$summary["range","estimate"])
 bob(fitMLE)
-
+}

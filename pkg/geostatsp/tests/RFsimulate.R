@@ -50,6 +50,8 @@ simu2 = RFsimulate(rbind(a=model, b=model+0.1),
 			plot(raster(simu2,layer=D))
 		}
 		
+    
+if(interactive()  | Sys.info()['user'] =='patrick') {
 		
 data("swissRain")
 swissRain$sqrtrain = sqrt(swissRain$rain)
@@ -154,3 +156,4 @@ swissLocation = xyFromCell(swissSim, swissLocation)
 plot(swissRes$predict[["predict"]])
 plot(swissBorder, add=TRUE)
 points(swissLocation)
+}

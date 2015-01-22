@@ -105,9 +105,9 @@ mydat@data= cbind(mydat@data , RFsimulate(model=trueParam,x=mydat)@data)
 mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + 
 	mydat$sim + rnorm(length(mydat), 0, sd=sqrt(trueParam["nugget"]))
 
-\dontrun{
-spplot(mydat, "sim", col.regions=rainbow(10), main="U")
-spplot(mydat, "Y", col.regions=rainbow(10), main="Y")
+if(require('spdep', quietly=TRUE)) {
+	spplot(mydat, "sim", col.regions=rainbow(10), main="U")
+	spplot(mydat, "Y", col.regions=rainbow(10), main="Y")
 }
 
 myres = likfitLgm(
@@ -121,7 +121,7 @@ myres = likfitLgm(
 
 myres$summary
 
-\dontrun{ 	
+if(interactive()  | Sys.info()['user'] =='patrick') {
 
 # plot variograms of data, true model, and estimated model
 myv = variog(mydat, formula=Y ~ cov1 + cov2,option="bin", max.dist=0.5)

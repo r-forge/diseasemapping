@@ -65,6 +65,7 @@ library("geostatsp")
 data("swissRain")
 
 
+if(interactive()  | Sys.info()['user'] =='patrick') {
 sr2 = swissRain
 sr2$elev = raster::extract(swissAltitude, sr2)
 swissFitAgain = likfitLgm(data=sr2, 
@@ -73,3 +74,4 @@ swissFitAgain = likfitLgm(data=sr2,
 		paramToEstimate = c("range","nugget")
 )
 swissFitAgain$par		
+}
