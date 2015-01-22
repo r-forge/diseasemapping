@@ -124,6 +124,8 @@ if(interactive()  | Sys.info()['user'] =='patrick') {
 
 # plot variograms of data, true model, and estimated model
 myv = variog(mydat, formula=Y ~ cov1 + cov2,option="bin", max.dist=0.5)
+# myv will be NULL if geoR isn't installed
+if(!is.null(myv)){
 plot(myv, ylim=c(0, max(c(1.2*sum(trueParam[c("variance", "nugget")]),myv$v))),
 	main="variograms")
 distseq = seq(0, 0.5, len=50)
@@ -136,6 +138,7 @@ lines(distseq,
 
 legend("bottomright", fill=c("black","red","blue"), 
 	legend=c("data","true","MLE"))
+}
 
 # without a nugget
 myresNoN = likfitLgm(Y ~ cov1 + cov2, mydat, 
@@ -147,8 +150,11 @@ myresNoN$summary
 
 # plot variograms of data, true model, and estimated model
 myv = variog(mydat, formula=Y ~ cov1 + cov2,option="bin", max.dist=0.5)
+
+if(!is.null(myv)){
 plot(myv, ylim=c(0, max(c(1.2*sum(trueParam[c("variance", "nugget")]),myv$v))),
 	main="variograms")
+	
 distseq = seq(0, 0.5, len=50)
 lines(distseq, 
 	sum(myres$param[c("variance", "nugget")]) - matern(distseq, param=myres$param),
@@ -163,7 +169,7 @@ lines(distseq,
 	col='green', lty=2, lwd=3)	
 legend("bottomright", fill=c("black","red","blue","green"), 
 	legend=c("data","true","MLE","no N"))
-
+}
 
 
 # calculate likelihood
