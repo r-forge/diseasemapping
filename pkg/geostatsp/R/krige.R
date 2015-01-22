@@ -12,7 +12,7 @@ krigeLgm = function(
 	trend = formula
 	locations = grid
 	coordinates=data
-	
+	theVars = NULL
 	
 	haveBoxCox = any(names(param)=="boxcox")
 	if(haveBoxCox)
