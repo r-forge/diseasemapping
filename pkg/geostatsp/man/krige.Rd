@@ -94,7 +94,8 @@ myTrend =lograin~ CHE_alt
 
 # make sure krige can cope with missing values!
 swissAltitude[1:50,1:50] = NA
-swissKrige = krigeLgm(data=swissRain, formula = myTrend,
+swissKrige = krigeLgm(data=swissRain, 
+	formula = myTrend,
 	covariates = swissAltitude,  
 	param=myParams,
 	grid = 40, expPred=TRUE)
