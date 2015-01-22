@@ -105,10 +105,9 @@ mydat@data= cbind(mydat@data , RFsimulate(model=trueParam,x=mydat)@data)
 mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + 
 	mydat$sim + rnorm(length(mydat), 0, sd=sqrt(trueParam["nugget"]))
 
-if(require('spdep', quietly=TRUE)) {
-	spplot(mydat, "sim", col.regions=rainbow(10), main="U")
-	spplot(mydat, "Y", col.regions=rainbow(10), main="Y")
-}
+spplot(mydat, "sim", col.regions=rainbow(10), main="U")
+spplot(mydat, "Y", col.regions=rainbow(10), main="Y")
+
 
 myres = likfitLgm(
 	formula=Y ~ cov1 + cov2, 

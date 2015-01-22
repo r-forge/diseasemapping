@@ -193,7 +193,7 @@ mycov = raster(matrix(rbinom(100, 1, 0.5), 10, 10), 0, 1, 0, 1)
 names(mycov)="x1"
 
 
-res = lgcp(data=myPoints, cells=20, covariates=mycov,
+res = lgcp(data=myPoints, grid=20, covariates=mycov,
 	formula=~factor(x1),
 	priorCI=list(sd=c(0.9, 1.1), range=c(0.4, 0.41))
 )
