@@ -447,7 +447,7 @@ setMethod("RFsimulate",
 
 
 	resHere = 	callGeneric(
-			model[D,], 
+			model=model[D,], 
 			x, data= data[,D], 
 			err.model= err.model[D], n=1,
 			...)

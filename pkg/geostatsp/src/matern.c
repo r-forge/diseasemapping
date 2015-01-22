@@ -13,11 +13,7 @@ if the precision is computed type is info from dpotrfi
 ... and if chol of precision is computed, type is from dtrtri
 */
 
-
-
-#include<R.h>
-#include<Rmath.h>
-#include<R_ext/Lapack.h>
+#include"geostatsp.h"
 
 void maternArasterBpoints(double *Axmin, double *Axres, int *AxN,
 		double *Aymax, double *Ayres, int *AyN,
@@ -143,11 +139,19 @@ free(bk);
 
 }
 
-void maternAniso(double *x, double *y, int *N,
+void maternAniso(
+		const double *x,
+		const double *y,
+		const int *N,
 		double *result,
-		double  *range, double*shape, double *variance,
-		double *anisoRatio, double *anisoAngleRadians,
-		double *nugget, int *type, double *halfLogDet
+		const double *range,
+		const double *shape,
+		const double *variance,
+		const double *anisoRatio,
+		const double *anisoAngleRadians,
+		const double *nugget,
+		int *type,
+		double *halfLogDet
 		) {
 	// type=2 return cholesky
 	int Drow, Dcol, Nm1, Dcolp1, N2;
@@ -249,11 +253,16 @@ void maternAniso(double *x, double *y, int *N,
     free(bk);
 }
 
-void matern(double *distance, int *N,
+void matern(
+		const double *distance,
+		const int *N,
 		double *result,
-		double *range, double *shape,
-		double *variance,
-		double *nugget, int *type, double *halfLogDet) {
+		const double *range,
+		const double *shape,
+		const double *variance,
+		const double *nugget,
+		int *type,
+		double *halfLogDet) {
 	int D, Dcol, Ncol, Nrow, rowEnd, addToRowStart;
 	double varscale,  thisx, //xscale,
 		logthisx, logxscale;
@@ -346,4 +355,57 @@ void matern(double *distance, int *N,
 		*type = Dcol;
 	}
     free(bk);
+}
+
+// matern for a vector of parameters
+void maternForL(
+		const double *xcoord,
+		const double *ycoord,
+		const int *N,
+		double *corMat,
+		const double *param,
+		// nugget, variance,
+        // range, shape,
+        // anisoRatio, ansioAngleRadians
+		const int *aniso,
+		const int *withoutNugget,
+		int *type,
+		double *halfLogDet
+		){
+
+	int zeroI=0;
+	double zero=0.0;
+	double nugget;
+
+	if(*withoutNugget){
+		nugget = param[0];
+	} else {
+		nugget = 0.0;
+	}
+
+	if(*aniso) {
+	  maternAniso(
+			  xcoord,ycoord,
+			  N,
+			  corMat,
+			  &param[2],
+			  &param[3],
+			  &param[1],
+			  &param[4],
+			  &param[5],
+			  &nugget,
+			  type,
+			  halfLogDet);
+	} else {
+	  matern(xcoord,
+			  N,
+			  corMat,
+			  &param[2],
+			  &param[3],
+			  &param[1],
+			  &nugget,
+			  type,
+			  halfLogDet);
+	}
+
 }

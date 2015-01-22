@@ -10,7 +10,7 @@ matern.dist = function(x,
     type=c('variance','cholesky','precision','inverseCholesky'), y=NULL) {
 
   type = gsub("iance$|esky$|ision", "", tolower(type)[1])    
-  type = c(var=1,chol=2,prec=3,inverseCholesky=4)[type]    
+  type = c(var=1,chol=2,prec=3,inversechol=4)[type]    
   
 	param=fillParam(param)
   x = as.matrix(x)
@@ -62,7 +62,7 @@ matern.Raster = function(x,
     y=NULL) {
   
   type = gsub("iance$|esky$|ision", "", tolower(type)[1])    
-  type = c(var=1,chol=2,prec=3,inverseCholesky=4)[type]    
+  type = c(var=1,chol=2,prec=3,inversechol=4)[type]    
 
 	param = fillParam(param)
 	 if(is.null(y)) {
@@ -94,9 +94,11 @@ matern.Raster = function(x,
 	if(Ny ==1) {
 		values(x) = resC$result		
 	} else {
-		x = matrix(resC$result, nrow=ncell(x), ncol=Ny)
 		if(symm){
-			x = as(x, "dsyMatrix")
+      x = new("dsyMatrix", 
+          Dim = as.integer(rep(Ny,2)), 
+          uplo="L",
+          x=resC$result)
       if((type==2)){
         x = chol(x)
         attributes(x)$logDetHalf = sum(log(diag(x)))
@@ -104,7 +106,9 @@ matern.Raster = function(x,
       if(type==3){
         x = solve(x)
       }
-		} # end symm
+		} else { # end symm
+      x = matrix(resC$result, nrow=ncell(x), ncol=Ny)
+    }
 	}
 	attributes(x)$param = param
 	x
