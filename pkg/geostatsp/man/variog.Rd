@@ -47,7 +47,7 @@ As \code{\link[geoR]{variog}} or \code{\link[geoR]{variog.mc.env}}
 data("swissRain")
 swissRain$lograin = log(swissRain$rain)
 swissv= variog(swissRain, formula=lograin ~ 1,option="bin")
-swissEnv = vvariogMcEnv(swissRain, lograin ~ 1, obj.var=swissv,nsim=9) 
+swissEnv = variogMcEnv(swissRain, lograin ~ 1, obj.var=swissv,nsim=9) 
 if(!is.null(swissv)){
 	plot(swissv, env=swissEnv, main = "Swiss variogram")
 }
