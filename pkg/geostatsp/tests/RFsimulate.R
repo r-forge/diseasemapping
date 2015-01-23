@@ -5,9 +5,8 @@ model <- c(var=5, range=20,shape=0.5)
 if (requireNamespace("RandomFields", quietly = TRUE)) { 
 	myraster = raster(nrows=100,ncols=100,xmn=100,ymn=100,xmx=110,ymx=110, 
 			crs="+init=epsg:2081")
-	
 } else {
-myraster = raster(nrows=20,ncols=20,xmn=100,ymn=100,xmx=110,ymx=110, 
+  myraster = raster(nrows=20,ncols=20,xmn=100,ymn=100,xmx=110,ymx=110, 
 		crs="+init=epsg:2081")
 }
 
@@ -21,14 +20,7 @@ simu2 = RFsimulate(rbind(a=model, b=model+0.1),
 						,]
 )
 
-simu2 = RFsimulate(rbind(a=model, b=model+0.1), 
-		x=as(myraster,"SpatialPixels")
-		)
 
-simu2 = RFsimulate(rbind(a=model, b=model+0.1), 
-				x=as(myraster,"SpatialGrid")
-		)
-		
 par(mfrow=c(length(names(simu2)),2))
 for(D in 1:length(names(simu2))) {
 			plot(simu[[D]])
@@ -37,7 +29,14 @@ for(D in 1:length(names(simu2))) {
 
 
 if(interactive()  | Sys.info()['user'] =='patrick') {
-
+  simu2 = RFsimulate(rbind(a=model, b=model+0.1), 
+      x=as(myraster,"SpatialPixels")
+  )
+  
+  simu2 = RFsimulate(rbind(a=model, b=model+0.1), 
+      x=as(myraster,"SpatialGrid")
+  )
+  
   for(Dn in c(1,3)) {
     set.seed(0) 
     simu <- RFsimulate(model, x=myraster, n=Dn)

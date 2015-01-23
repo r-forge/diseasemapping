@@ -36,6 +36,8 @@ plot(swissKrige3[["predict"]])
 plot(swissBorder, add=TRUE)
 dev.off()
 
+if(interactive()  | Sys.info()['user'] =='patrick') {
+
 # now change land to a factor
 landTypes = swissLandType@data@attributes[[1]]
 # remove land types with no observations on them
@@ -67,7 +69,7 @@ plot(swissKrige4[["predict"]])
 plot(swissBorder, add=TRUE)
 dev.off()
 
-
+  
 
 swissRain2$landFac2 = as.character(swissRain2$landFac)
 
@@ -92,3 +94,4 @@ plot(swissKrige5[["predict"]])
 plot(swissBorder, add=TRUE)
 dev.off()
 
+}

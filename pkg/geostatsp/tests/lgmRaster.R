@@ -38,13 +38,11 @@ swissResR$summary[c('oneminusar','range','propNugget',
 
 # range in km
 swissResR$summary[ 'range' ,] * sqrt(mean(values(area(swissRainR))))/mean(res(swissRainR))
-}
 
 
 # a simulation
-if(FALSE) {
-	
-	myModel = c(intercept=0,variance=2^2,nugget=3^2, range=2.5,shape=2, 
+
+myModel = c(intercept=0,variance=2^2,nugget=3^2, range=2.5,shape=2, 
 			cov1=0.2, cov2=-0.5)
 	data('nn32')
 	theNN=nn64
