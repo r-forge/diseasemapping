@@ -30,6 +30,18 @@ mydat$Ybc = (mydat$Y*0.5+1)^2
  
 print(range(mydat$Ybc))
 
+date()
+myres = likfitLgm(Ybc ~ cov1 + cov2, mydat, 
+    param=c(range=0.1,nugget=0,shape=2, 
+        anisoAngleDegrees=20, anisoRatio=2,
+        boxcox=0.4), 
+    paramToEstimate = c("range","nugget",
+        "anisoRatio","anisoAngleDegrees",
+        "boxcox","shape") 
+)
+date()
+
+myres$summary[,grep("^ci", colnames(myres$summary),invert=TRUE)]
 
 loglikLgm(formula=Ybc ~ cov1 + cov2, 
     data=mydat, 
@@ -51,18 +63,6 @@ dev.off()
 
 if(interactive()  | Sys.info()['user'] =='patrick') {
   
-  date()
-  myres = likfitLgm(Ybc ~ cov1 + cov2, mydat, 
-      param=c(range=0.1,nugget=0,shape=2, 
-          anisoAngleDegrees=20, anisoRatio=2,
-          boxcox=0.4), 
-      paramToEstimate = c("range","nugget",
-          "anisoRatio","anisoAngleDegrees",
-          "boxcox","shape") 
-  )
-  date()
-  
-  myres$summary[,grep("^ci", colnames(myres$summary),invert=TRUE)]
   
   
 library("geostatsp")
