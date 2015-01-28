@@ -274,6 +274,65 @@ now find $\hat\tau(\tau/\xi, \psi)$
 \log|V|+N
 \end{align*}
 
+
+\section*{Likelihood again}
+
+Use $(C^{-1} + I)^{-1} = I-(C+i)^{-1}$ 
+\begin{align*}
+V^{-1} = &[\xi^2 Q^{-1} + \tau^2 I]^{-1}\\
+=& \tau^2 Q [(\xi^2/\tau^2)I + Q]^{-1}\\
+ = & \frac{1}{\tau^2} \left[ I -  \frac{\xi^2 }{\tau^2} \left(Q +  \frac{\xi^2 }{\tau^2}  I\right)^{-1}  \right]\\
+ =& \frac{1}{\tau^2} \left[ I -  \frac{\xi^2 }{\tau^2}\left(L L'  \right)^{-1}  \right]\\
+L L'= &  Q +  \frac{\xi^2 }{\tau^2}  I
+\end{align*}
+
+
+
+\[
+\hat\beta = [ \mathbf{X}'
+ V^{-1}   \mathbf{X}]^{-1}
+\mathbf{X}'V^{-1} \mathbf{Y}
+\]
+
+\begin{align*}
+V^{-1} \mathbf{X} \hat\beta =& 
+V^{-1} \mathbf{X} [ \mathbf{X}' V^{-1}   \mathbf{X}]^{-1}
+\mathbf{X}' V^{-1} \mathbf{Y}\\
+\mathbf{X}' V^{-1} \mathbf{X}  \hat\beta= &\mathbf{X}' V^{-1} \mathbf{Y}\\
+\hat\beta' \mathbf{X}' V^{-1} \mathbf{X}  \hat\beta = & \mathbf{Y}'  V^{-1}   \mathbf{X}[ \mathbf{X}'
+ V^{-1}   \mathbf{X}]^{-1}\mathbf{X}' V^{-1} \mathbf{Y}\\
+ \mathbf{Y}' V^{-1} \mathbf{X}  \hat\beta = &\hat\beta' \mathbf{X}' V^{-1} \mathbf{X}  \hat\beta \\
+\end{align*}
+
+
+\begin{align*}
+-2 \log pr(\mathbf{Y};\phi,\beta,\tau,\xi) =&
+\log| V| + 
+( \mathbf{Y} -\mathbf{X}\beta)  '
+  V^{-1}
+(\mathbf{Y} - \mathbf{X}\beta)\\
+= & \log| V| + 
+ \mathbf{Y}' V^{-1} \mathbf{Y}  -  \mathbf{Y}'  V^{-1}   \mathbf{X}[ \mathbf{X}'
+ V^{-1}   \mathbf{X}]^{-1}\mathbf{X}' V^{-1} \mathbf{Y}
+\end{align*}
+
+\begin{align*}
+L_x = L^{-1} X, & L_y = L^{-1}_y\\
+ \mathbf{A}' V^{-1} \mathbf{B}  = &  \frac{1}{\tau^2} \left[ \mathbf{A}' \mathbf{B} + \frac{\xi^2 }{\tau^2}  L_A' L_B \right] \\
+\tau^2 L=& \tau^2 \log| V| +   \mathbf{Y}' \mathbf{Y} + \frac{\xi^2 }{\tau^2}  L_Y' L_Y  +\\
+& \left[  \mathbf{Y}' \mathbf{X} + \frac{\xi^2 }{\tau^2}  L_Y' L_X\right]  
+\left[  \mathbf{X}' \mathbf{X} + \frac{\xi^2 }{\tau^2}  L_X' L_X \right]^{-1}
+\left[ \mathbf{X}' \mathbf{Y} + \frac{\xi^2 }{\tau^2}  L_X' L_Y \right]\\
+L_b L_b^T = &\left[  \mathbf{X}' \mathbf{X} + \frac{\xi^2 }{\tau^2} L_X' L_X \right] \\
+L_c = & L_b^{-1} \left[  \mathbf{X}' \mathbf{Y} +\frac{\xi^2 }{\tau^2}  L_X' L_Y \right]\\
+L = & \log| V| +	(1/\tau^2) \left[\mathbf{Y}' \mathbf{Y} + \xi^2   L_Y' L_Y  +L_c L_c^T\right] \\
+ \log| V| = &- \log| \tau^2 Q (L L ')^{-1} |\\
+ = & -N \log(\tau^2) - \log |Q| + 2 \log |L| \\
+ \widehat{\log(\tau^2)} =& - \log N	 +\log\left[\mathbf{Y}' \mathbf{Y} + \xi^2   L_Y' L_Y  +L_c L_c^T\right] \\
+L = &N \log\left[\mathbf{Y}' \mathbf{Y} + \xi^2   L_Y' L_Y  +L_c L_c^T\right]  - \log |Q| + 2 \log |L|
+ \end{align*}
+
+
 \section*{Conditional distributions}
 
 $c = \tau^2/\xi^2$
@@ -482,6 +541,20 @@ E(Z|Y) = & \tau^2 I(\xi^2 Z' Q(\phi)^{-1}Z + c I)^{-1})
 \var(\mathbf{Y})^{-1} = &    L(  I + c  Q(\phi)  )^{-1} L' / \xi^2\\
 \log |\var(\mathbf{Y})| = & N \log(\xi^2) + \log |I + c Q(\phi)| -
 2 \log |L|\\
+\end{align*}
+
+
+\section{Schur complement}
+
+\begin{align*}
+Q = & P^T L L^T P\\
+\left[ A Q^{-1} A^T   \right]^{-1}= &A Q A^T - A Q A_c^T ( A_c Q^{-1} A_c^T )^{-1}  A_c Q A^T\\
+ A_c Q^{-1} A_c^T
+ = &A_c P^T L^{-1 T} L^{-1} P A_c^T\\
+ C = & L^{-1} P A_c^T\\
+ A_c Q^{-1} A_c^T =& C^T C\\
+W_c = & C A_c Q A^T\\
+\left[A Q^{-1} A^T  \right]^{-1} = &A Q A^T - W_c^T W_c 
 \end{align*}
 
 \bibliography{gmrf}

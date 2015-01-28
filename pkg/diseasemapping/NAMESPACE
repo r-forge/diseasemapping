@@ -3,20 +3,25 @@
 
 # Export all names
 export(
-bym, cancerRates,  formatCases, formatPopulation,
-getRates, getSMR, getStdRate, 
-mergeBugsData,
-mergeBugsData.SpatialPolygonsDataFrame, 
-mergeBugsData.data.frame, 
+bym, cancerRates,  formatCases, 
+getRates,  getStdRate, 
 getBreaks,
-getSMR.data.frame, 
-getSMR.list,
-getSMR.SpatialPolygonsDataFrame,
-formatPopulation.data.frame,
-formatPopulation.list,
-formatPopulation.SpatialPolygonsDataFrame,
 excProb, nbToInlaGraph
 )
+
+export(getSMR)
+S3method(getSMR,data.frame)
+S3method(getSMR,list)
+S3method(getSMR,SpatialPolygonsDataFrame)
+
+export(formatPopulation)
+S3method(formatPopulation,data.frame)
+S3method(formatPopulation,list)
+S3method(formatPopulation,SpatialPolygonsDataFrame)
+
+export(mergeBugsData)
+S3method(mergeBugsData,SpatialPolygonsDataFrame) 
+S3method(mergeBugsData,data.frame)
 
 # only needed because INLA is requireNamespace instead of require
 export(inla.models)
