@@ -581,7 +581,7 @@ loglikGmrfGivenQ2 = function(
               c(ml=0,
                 reml = -2*detXXhalf
                 ),
-            betaHat = Lc,
+            betaHat = solve(cholXXLxLx,Lc),
             cholXX = cholXXLxLx,
             ssq = ssq
         )
