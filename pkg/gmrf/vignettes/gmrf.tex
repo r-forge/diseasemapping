@@ -277,10 +277,10 @@ now find $\hat\tau(\tau/\xi, \psi)$
 
 \section*{Likelihood again}
 
-Use $(C^{-1} + I)^{-1} = I-(C+i)^{-1}$ 
+Use $(C^{-1} + I)^{-1} = I-(C+I)^{-1}$ 
 \begin{align*}
 V^{-1} = &[\xi^2 Q^{-1} + \tau^2 I]^{-1}\\
-=& \tau^2 Q [(\xi^2/\tau^2)I + Q]^{-1}\\
+=& (1/\tau^2) Q [(\xi^2/\tau^2)I + Q]^{-1}\\
  = & \frac{1}{\tau^2} \left[ I -  \frac{\xi^2 }{\tau^2} \left(Q +  \frac{\xi^2 }{\tau^2}  I\right)^{-1}  \right]\\
  =& \frac{1}{\tau^2} \left[ I -  \frac{\xi^2 }{\tau^2}\left(L L'  \right)^{-1}  \right]\\
 L L'= &  Q +  \frac{\xi^2 }{\tau^2}  I
@@ -301,7 +301,9 @@ V^{-1} \mathbf{X} [ \mathbf{X}' V^{-1}   \mathbf{X}]^{-1}
 \mathbf{X}' V^{-1} \mathbf{X}  \hat\beta= &\mathbf{X}' V^{-1} \mathbf{Y}\\
 \hat\beta' \mathbf{X}' V^{-1} \mathbf{X}  \hat\beta = & \mathbf{Y}'  V^{-1}   \mathbf{X}[ \mathbf{X}'
  V^{-1}   \mathbf{X}]^{-1}\mathbf{X}' V^{-1} \mathbf{Y}\\
- \mathbf{Y}' V^{-1} \mathbf{X}  \hat\beta = &\hat\beta' \mathbf{X}' V^{-1} \mathbf{X}  \hat\beta \\
+ \mathbf{Y}' V^{-1} \mathbf{X}  \hat\beta = & \mathbf{Y}'V^{-1} \mathbf{X} [ \mathbf{X}' V^{-1}   \mathbf{X}]^{-1}
+\mathbf{X}' V^{-1} \mathbf{Y}\\
+= & \hat\beta' \mathbf{X}' V^{-1} \mathbf{X}  \hat\beta
 \end{align*}
 
 
@@ -311,25 +313,28 @@ V^{-1} \mathbf{X} [ \mathbf{X}' V^{-1}   \mathbf{X}]^{-1}
 ( \mathbf{Y} -\mathbf{X}\beta)  '
   V^{-1}
 (\mathbf{Y} - \mathbf{X}\beta)\\
-= & \log| V| + 
+=&\log| V| +  \mathbf{Y}' V^{-1} \mathbf{Y} -\beta' \mathbf{X}' V^{-1} \mathbf{Y} - \mathbf{Y}' V^{-1} \mathbf{X}\beta +  \beta'\mathbf{X}'
+ V^{-1}   \mathbf{X}\beta
+\\
+= & \log| V| +
  \mathbf{Y}' V^{-1} \mathbf{Y}  -  \mathbf{Y}'  V^{-1}   \mathbf{X}[ \mathbf{X}'
  V^{-1}   \mathbf{X}]^{-1}\mathbf{X}' V^{-1} \mathbf{Y}
 \end{align*}
 
 \begin{align*}
-L_x = L^{-1} X, & L_y = L^{-1}_y\\
- \mathbf{A}' V^{-1} \mathbf{B}  = &  \frac{1}{\tau^2} \left[ \mathbf{A}' \mathbf{B} + \frac{\xi^2 }{\tau^2}  L_A' L_B \right] \\
-\tau^2 L=& \tau^2 \log| V| +   \mathbf{Y}' \mathbf{Y} + \frac{\xi^2 }{\tau^2}  L_Y' L_Y  +\\
-& \left[  \mathbf{Y}' \mathbf{X} + \frac{\xi^2 }{\tau^2}  L_Y' L_X\right]  
-\left[  \mathbf{X}' \mathbf{X} + \frac{\xi^2 }{\tau^2}  L_X' L_X \right]^{-1}
-\left[ \mathbf{X}' \mathbf{Y} + \frac{\xi^2 }{\tau^2}  L_X' L_Y \right]\\
-L_b L_b^T = &\left[  \mathbf{X}' \mathbf{X} + \frac{\xi^2 }{\tau^2} L_X' L_X \right] \\
-L_c = & L_b^{-1} \left[  \mathbf{X}' \mathbf{Y} +\frac{\xi^2 }{\tau^2}  L_X' L_Y \right]\\
-L = & \log| V| +	(1/\tau^2) \left[\mathbf{Y}' \mathbf{Y} + \xi^2   L_Y' L_Y  +L_c L_c^T\right] \\
- \log| V| = &- \log| \tau^2 Q (L L ')^{-1} |\\
- = & -N \log(\tau^2) - \log |Q| + 2 \log |L| \\
- \widehat{\log(\tau^2)} =& - \log N	 +\log\left[\mathbf{Y}' \mathbf{Y} + \xi^2   L_Y' L_Y  +L_c L_c^T\right] \\
-L = &N \log\left[\mathbf{Y}' \mathbf{Y} + \xi^2   L_Y' L_Y  +L_c L_c^T\right]  - \log |Q| + 2 \log |L|
+L_x = L^{-1} \mathbf{X}, & L_y = L^{-1}\mathbf{Y}\\
+ \mathbf{A}' V^{-1} \mathbf{B}  = &  \frac{1}{\tau^2} \left[ \mathbf{A}' \mathbf{B} - \frac{\xi^2 }{\tau^2}  L_A' L_B \right] \\
+ L=&  \log| V| + \frac{1}{\tau^2}\left( \mathbf{Y}' \mathbf{Y} - \frac{\xi^2 }{\tau^2}  L_Y' L_Y \right) -\\ 
+&\frac{1}{\tau^2} \left( \mathbf{Y}' \mathbf{X} - \frac{\xi^2 }{\tau^2}  L_Y' L_X\right)  
+\left(  \mathbf{X}' \mathbf{X} - \frac{\xi^2 }{\tau^2}  L_X' L_X \right)^{-1}
+\left( \mathbf{X}' \mathbf{Y} - \frac{\xi^2 }{\tau^2}  L_X' L_Y \right)\\
+L_b L_b^T = &\left[  \mathbf{X}' \mathbf{X} - \frac{\xi^2 }{\tau^2} L_X' L_X \right] \\
+L_c = & L_b^{-1} \left[  \mathbf{X}' \mathbf{Y} -\frac{\xi^2 }{\tau^2}  L_X' L_Y \right]\\
+-2 \log L = & \log| V| +	\frac{1}{\tau^2} \left[\mathbf{Y}' \mathbf{Y}- \frac{\xi^2 }{\tau^2}  L_Y' L_Y-L_c L_c^T\right]   \\
+|V^{-1}| = & ( \tau^2 )^{-N} |Q|  |L|^{-2} \\
+ \log| V| = & N \log(\tau^2) - \log |Q| + 2 \log |L| \\
+ \widehat{\tau^2} =&\left. \left[\mathbf{Y}' \mathbf{Y}- \frac{\xi^2 }{\tau^2}  L_Y' L_Y-L_c L_c^T\right]\right/N \\
+-2 \log L (\xi^2/\sigma^2,Q;\mathbf{Y})= &N \log\left[\mathbf{Y}' \mathbf{Y}- \frac{\xi^2 }{\tau^2}  L_Y' L_Y-L_c L_c^T\right]  - \log |Q| + 2 \log |L|
  \end{align*}
 
 
@@ -542,6 +547,7 @@ E(Z|Y) = & \tau^2 I(\xi^2 Z' Q(\phi)^{-1}Z + c I)^{-1})
 \log |\var(\mathbf{Y})| = & N \log(\xi^2) + \log |I + c Q(\phi)| -
 2 \log |L|\\
 \end{align*}
+
 
 
 \section{Schur complement}

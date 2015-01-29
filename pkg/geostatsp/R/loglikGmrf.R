@@ -485,3 +485,105 @@ summaryGmrfFit.matrix = function(x,npar=1) {
   return(result)
 }
 
+loglikGmrfGivenQ2 = function(
+    Y,X,
+    propNugget,
+    Q, 
+    Qchol=NULL, 
+    YprimeY=NULL,
+    XprimeX=NULL,
+    YprimeX = NULL,
+    detQ=NULL
+) {
+  
+  # propNugget =    tau^2/xi^2
+  if(is.vector(Y))	
+    Y = as.matrix(Y)
+  
+  if(is.null(Qchol)) {
+    Qchol = Cholesky(Q, LDL=FALSE)
+    Y=solve(Qchol, Y, system='P')
+    X=solve(Qchol, X, system='P')
+  }
+  if(is.null(detQ)) {
+    detQ= 2*determinant(Qchol,logarithm=TRUE)$modulus
+  }
+  
+  
+  if(propNugget>0){
+    if(is.null(XprimeX)){
+      XprimeX = crossprod(X)
+    }
+    if(is.null(YprimeY)){
+      YprimeY = crossprod(Y)
+    }
+    if(is.null(YprimeX)){
+      YprimeX = crossprod(Y,X)
+    }
+    
+    xisqtausq = 1/propNugget
+    
+    if(FALSE){
+      Nnugget=length(xisqtausq)
+      Nobs = nrow(X)
+      Ncov = ncol(X)
+      Ny = ncol(Y)
+      resC=.C(
+          'logLikGmrfNewNugget',
+          xisqtausq, Nnugget,
+          Y, X, 
+          Nobs, Ny, Ncov,
+          Qchol, Q,
+          YprimeY, XprimeY, XprimeX,
+          betaHat = rep(0.0, Ncov*Ny*Nnugget),
+          cholXVX = rep(0.0, Ncov*Ncov*Nnugget),
+          determinants = rep(0.0,2*Nnugget),
+          ssq = rep(0.0, Ny*Nnugget)
+          )
+    }
+    
+    Vchol = update(Qchol, Q, mult=xisqtausq)
+    
+    Vx = solve(Vchol, X,system='L')
+    Vy = solve(Vchol, Y,system='L')
+
+    XXLxLx = XprimeX - xisqtausq * crossprod(Vx) 
+    XYLxLy = XprimeY - xisqtausq * crossprod(Vx,Vy) 
+    
+    cholXXLxLx = chol(XXLxLx)
+    Lc = solve(cholXXLxLx, XYLxLy)
+    
+    ssq = YprimeY - xisqtausq * crossprod(Vy,Vy) - crossprod(Lc)
+    detLhalf = determinant(Vchol,logarithm=TRUE)$modulus
+    
+  } else { # no nugget 
+
+    Lq = expand(Qchol)$L
+    Vx = Lq %*% X
+    Vy = Lq %*% Y
+    
+    XXLxLx = crossprod(Vx)
+    XYLxLy = crossprod(Vx,Vy)
+    
+    cholXXLxLx=chol(XXLxLx)
+    Lc = solve(cholXXLxLx, XYLxLy)
+    
+    ssq = crossprod(Yv) - crossprod(Lc)
+    detLhalf = 0
+
+  }
+  
+  detXXhalf = Matrix::determinant(cholXXLxLx,logarithm=TRUE)$modulus
+  
+  result  = list(
+          m2LogL - (nrow(Q)-c(ml=0,reml=2)) * log(ssq) + 
+              2*detLhalf - detQ - 
+              c(ml=0,
+                reml = -2*detXXhalf
+                ),
+            betaHat = Lc,
+            cholXX = cholXXLxLx,
+            ssq = ssq
+        )
+  
+}
