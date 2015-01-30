@@ -9,7 +9,7 @@ swissFit = lgm(data=swissRain,
 		shape=2,  fixShape=TRUE, 
 		boxcox=0.5, fixBoxcox=TRUE, 
 		aniso=TRUE,reml=TRUE,
-		param=c(anisoAngleDegrees=30,anisoRatio=10,nugget=0.5))
+		param=c(anisoAngleDegrees=20,anisoRatio=8,nugget=0.5))
 
 
 x=profLlgm(swissFit, mc.cores=Ncores,
@@ -65,7 +65,7 @@ if(!interactive())
 
 if(interactive()  | Sys.info()['user'] =='patrick') {
 x2d=profLlgm(swissFit, mc.cores=Ncores,
-		anisoAngleDegrees=seq(30, 43 , len=6),
+		anisoAngleDegrees=seq(25, 30 , len=6),
 		anisoRatio = exp(seq(log(3.5),log(18),len=8))
 )
 if(!interactive()) 
@@ -88,12 +88,13 @@ if(requireNamespace("ellipse", quietly=TRUE)) {
 for(D in x2d$prob[x2d$prob>0&x2d$prob<1]) {
 	thisE = ellipse::ellipse(thisV, centre=thisMean,
 			level=D)
+  colnames(thisE) = names(thisMean)
 	thisE = cbind(thisE,
-			anisoRatio = exp(thisE[,"log(anisoRatio)"]))
+			anisoRatioExp = exp(thisE[,"anisoRatio"]))
 	lines(thisE[,"anisoAngleDegrees"],
-			thisE[,"anisoRatio"],lwd=4)
+			thisE[,"anisoRatioExp"],lwd=4)
 	lines(thisE[,"anisoAngleDegrees"],
-			thisE[,"anisoRatio"], col=x2d$col[as.character(D)],
+			thisE[,"anisoRatioExp"], col=x2d$col[as.character(D)],
 			lwd=3)
 }
 }
