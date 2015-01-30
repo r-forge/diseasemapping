@@ -13,7 +13,6 @@ if(Sys.info()['nodename'] == 'darjeeling') {
 }
 
 
-library('RandomFields')
 library('mapmisc')
 library('raster')
 library('geostatsp')
@@ -50,7 +49,7 @@ legend('topright',lty=1, col=thecol,
 themodel = attributes(myQ)$param[[parMethod]]
 maternShape = attributes(myQ)$param$theo['shape']
 
-theU = RFsimulate(myraster, model=themodel, n=250)
+theU = geostatsp::RFsimulate(myraster, model=themodel, n=25)
 
  
 
@@ -78,17 +77,11 @@ theY = theU + beta.x*thecov
  
 theNN = NNmat(theY)
 
-
-#source("../R/loglikGmrf.R")
-#source("../R/lgmrfm.R")
-#source("../R/conditionalGmrf.R")
-source("../R/loglikGmrf2.R")
-
  
 Sar = exp(seq(log(0.05),log(0.15),len=40))
 
 resNoNugget = 
-		loglikGmrf(
+		geostatsp:::loglikGmrf(
 		oneminusar=Sar ,
 		propNugget = 0 ,
 		Yvec=as.data.frame(theY),
@@ -164,7 +157,7 @@ adjustEdges=FALSE
 # now with added noise
  
 nuggetSd =  4  
-nuggetSd^2/
+propNugget=nuggetSd^2/
 		attributes(myQ)$par$theo['conditionalVariance']
 yNoise = theY
 values(yNoise) = values(yNoise) + 
@@ -172,19 +165,51 @@ values(yNoise) = values(yNoise) +
 				mean=0, sd=nuggetSd)
 
 
+res1 = loglikGmrfGivenQ(
+    propNugget=propNugget,
+    Y=as.matrix(as.data.frame(yNoise)),
+    X=as.matrix(Xmat),
+    Q=myQ) 
+    
+res2 = loglikGmrfGivenQold(
+    propNugget,
+    myQ %*% as.matrix(as.data.frame(yNoise)), as.matrix(as.data.frame(yNoise)), 
+    Rx = myQ %*% as.matrix(Xmat), as.matrix(Xmat),
+    Q=myQ, Qchol=NULL, 
+    detQ=NULL, 
+    boxcoxInterval=NULL, 
+    reml=TRUE,
+    sumLogY = NULL) 
+
+cbind(
+    res1[,1],
+    res2[rownames(res1),1]
+    )
+# different, but 1 (new code) looks better!
+    
+loglikGmrfGivenQ(
+    propNugget=0),
+    Y=as.matrix(as.data.frame(yNoise)),
+    X=as.matrix(Xmat),
+    Q=myQ)[,1:2] 
 
 
-Sar2 =  seq((0.05),(0.25),by=0.005)
-Snugget =  seq((0.01), (0.3),by=0.005)
 
-resVanilla = loglikGmrf(
-		oneminusar=Sar2 ,
-		propNugget = Snugget ,
-		Yvec=as.data.frame(yNoise),
-		Xmat=cbind(intercept=1,as.data.frame(thecov)),
-		shape=maternShape,
-		NN=theNN,mc.cores=ncores
-)
+Sar2 =  seq((0.05),(0.25),by=0.025)
+Snugget =  seq((0.01), (0.3),by=0.01)
+
+res3=loglikGmrf(
+    oneminusar=Sar2,
+    Yvec=as.matrix(as.data.frame(yNoise)), 
+    Xmat=as.matrix(Xmat), NN=theNN, 
+    propNugget=Snugget,
+    shape=2, boxcox=1,
+    reml=TRUE,
+    adjustEdges=FALSE,
+    optimizer=FALSE,
+    mc.cores=4)
+  
+
  
 bob = function(res) { 
 dseq = rev(c(0,0.5, 1,2,4,8,20))
@@ -209,6 +234,8 @@ points(nuggetSd^2/
 		attributes(myQ)$param$theo['oneminusar'], cex=2)		
 return(list(dseq=dseq, col=thecol$col))		
 }
+
+bob(res3[,1,,])
 
 bob2 = function(res) {
 	

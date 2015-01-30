@@ -9,11 +9,11 @@ swissFit = lgm(data=swissRain,
 		shape=2,  fixShape=TRUE, 
 		boxcox=0.5, fixBoxcox=TRUE, 
 		aniso=TRUE,reml=TRUE,
-		param=c(anisoAngleDegrees=37,anisoRatio=10,nugget=0.5))
+		param=c(anisoAngleDegrees=30,anisoRatio=10,nugget=0.5))
 
 
 x=profLlgm(swissFit, mc.cores=Ncores,
-		anisoAngleDegrees=seq(30, 43 , len=6)
+		anisoAngleDegrees=seq(25, 35 , len=8)
 )
 
 
@@ -21,7 +21,8 @@ swissInf = informationLgm(swissFit)
 
 
 
-pdf("profLswissAngle.pdf")
+if(!interactive()) 
+  pdf("profLswissAngle.pdf")
 
 plot(x[[1]],x[[2]], xlab=names(x)[1],
 #		yaxt='n',
@@ -47,7 +48,10 @@ axis(1,at=x$ciLong$par,
 
 ciCols = grep("^ci", colnames(swissInf$summary),
 		value=TRUE)
-axis(1,at=swissInf$summary[names(x)[[1]],ciCols],
+
+ciValues = unlist(swissInf$summary[names(x)[[1]],ciCols])
+if(any(!is.na(ciValues)))
+  axis(1,at=ciValues,
 		labels=gsub("^ci","",ciCols),
 		padj= 2,hadj=0.5, 
 		tcl=-2,cex.axis=0.7,
@@ -55,8 +59,8 @@ axis(1,at=swissInf$summary[names(x)[[1]],ciCols],
 
 lines(x[[1]],x[[2]])
 
-
-dev.off()
+if(!interactive()) 
+  dev.off()
 
 
 if(interactive()  | Sys.info()['user'] =='patrick') {
@@ -64,7 +68,8 @@ x2d=profLlgm(swissFit, mc.cores=Ncores,
 		anisoAngleDegrees=seq(30, 43 , len=6),
 		anisoRatio = exp(seq(log(3.5),log(18),len=8))
 )
-pdf("profLswiss2d.pdf")
+if(!interactive()) 
+  pdf("profLswiss2d.pdf")
 image(x2d[[1]],x2d[[2]],x2d[[3]],
 		breaks=x2d$breaks,
 		col=x2d$col,log='y',
@@ -95,11 +100,8 @@ for(D in x2d$prob[x2d$prob>0&x2d$prob<1]) {
 
 points(x2d$MLE[1],x2d$MLE[2],pch=15) 
 
+legend("topleft", fill=x2d$col, legend=x2d$prob[-length(x2d$prob)])
 
-if(requireNamespace('mapmisc', quietly=TRUE)) {
-mapmisc::legendBreaks("topleft",x2d$prob,
-		col=x2d$col)
-}
-
-dev.off()
+if(!interactive()) 
+  dev.off()
 }
