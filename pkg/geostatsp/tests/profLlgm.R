@@ -8,12 +8,16 @@ swissFit = lgm(data=swissRain,
 		grid=20, covariates=swissAltitude,
 		shape=2,  fixShape=TRUE, 
 		boxcox=0.5, fixBoxcox=TRUE, 
-		aniso=TRUE,reml=TRUE,
-		param=c(anisoAngleDegrees=20,anisoRatio=8,nugget=0.5))
+		aniso=TRUE,reml=FALSE,
+		param=c(
+        anisoAngleDegrees=30,
+        anisoRatio=8),
+    nugget=0,fixNugget=TRUE
+  )
 
 
 x=profLlgm(swissFit, mc.cores=Ncores,
-		anisoAngleDegrees=seq(25, 35 , len=8)
+		anisoAngleDegrees=seq(25, 35 , len=6)
 )
 
 
@@ -65,8 +69,8 @@ if(!interactive())
 
 if(interactive()  | Sys.info()['user'] =='patrick') {
 x2d=profLlgm(swissFit, mc.cores=Ncores,
-		anisoAngleDegrees=seq(25, 30 , len=6),
-		anisoRatio = exp(seq(log(3.5),log(18),len=8))
+		anisoAngleDegrees=seq(25, 35 , len=6),
+		anisoRatio = exp(seq(log(4),log(16),len=8))
 )
 if(!interactive()) 
   pdf("profLswiss2d.pdf")
