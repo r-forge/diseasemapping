@@ -359,10 +359,6 @@ likfitLgm = function(
 	parscaleDefaults[names(parscale)] = parscale
 	
 	
-
-	
-	
-	
 	# default starting values for parameters
 	paramDefaults = c(nugget=0,anisoRatio=1, anisoAngleDegrees=0,
 			anisoAngleRadians=0,shape=1, boxcox=1,
@@ -421,6 +417,134 @@ if(any(names(param)=="boxcox") & !any(paramToEstimate=="boxcox")) {
 		stored=NULL
 	}
 	
+  if(FALSE){
+    
+  allParams = c(startingParam, moreParams)
+  allParams = geostatsp:::fillParam(allParams)
+  paramsForC = allParams[c('nugget','variance','range','shape','anisoRatio','anisoAngleRadians','boxcox')]
+
+  Sparam = names(paramsForC) %in% gsub("AngleDegrees$","AngleRadians", paramToEstimate)
+  names(Sparam) = names(paramsForC)
+  Sparam['boxcox'] = FALSE
+
+  
+  if(class(coordinates)=='matrix'){
+    xcoord = as.vector(coordinates)
+    ycoord = -99
+    aniso=FALSE
+  } else if(length(grep("^SpatialPoints", class(coordinates)))){
+    xcoord=coordinates@coords[,1] 
+    ycoord=coordinates@coords[,2]
+    aniso=TRUE
+  }
+  
+  obsCov = cbind(y1=observations, y2=observations, y3=observations, covariates)
+
+    dyn.unload("/home/patrick/workspace/diseasemapping/pkg/geostatsp/src/matern.so")
+  dyn.load("/home/patrick/workspace/diseasemapping/pkg/geostatsp/src/matern.so")
+
+  parToEstC = gsub("AngleDegrees$",
+      "AngleRadians", paramToEstimate)
+  
+  forO = list(
+      scalarF = c(fnscale=NA, 
+          abstol=NA,
+          reltol = NA,
+          alpha=NA, beta=NA,gamma=NA,
+          factr= 1e7,pgtol=0),
+      scalarInt=c(trace=0,
+          maxit=100,
+          REPORT=10,
+          type=NA,lmm=5,
+          tmax=NA,temp=NA
+      ),
+      pars = cbind(
+          lower=geostatsp:::fillParam(
+              lowerDefaults)[parToEstC], 
+          upper=geostatsp:::fillParam(
+              upperDefaults)[parToEstC],
+          parscale = geostatsp:::fillParam(
+              parscaleDefaults)[parToEstC],
+          ndeps=rep(0.001, length(parToEstC))
+    )
+  )
+  
+  forO$parsInt = rep(0, ncol(forO$pars))
+  forO$parsInt[
+      forO$pars[,'lower'] == -Inf &
+          forO$pars[,'upper'] == Inf
+      ] = 2
+
+  forO$parsInt[
+          forO$pars[,'lower'] != -Inf & 
+              forO$pars[,'upper'] == Inf
+  ] = 1
+
+  forO$parsInt[
+      forO$pars[,'lower'] == -Inf & 
+          forO$pars[,'upper'] != Inf
+  ] = 3
+  
+  
+  temp = .C(
+          "maternLogLOpt",
+      params=paramsForC,    
+      as.integer(Sparam),
+      obsCov=obsCov, 
+      xcoord,
+      ycoord,
+      as.integer(aniso),
+      as.integer(c(nrow(obsCov), 3, ncol(covariates))),
+    logL=as.double(rep(-9.9,4)),
+    betaHat=as.double(rep(-9.9, ncol(covariates)*3)),
+    varBetaHat=as.double(rep(-9.9, 3*ncol(covariates)^2)),
+    Ltype=as.integer(reml),
+    optInt = as.integer(forO$scalarInt),
+    as.double(forO$scalarF),
+    as.double(forO$pars),
+    limType = as.integer(forO$parsInt),
+    format(" ",width=60)
+  # 0=ml, var estimated
+  # 1=reml, var estimated
+  # 2=ml, var fixed
+  # 3=reml, var fixed
+  # on exit, info from chol of matern
+  )
+  
+  temp2 = .C("maternLogL",
+      xcoord=as.double(xcoord), 
+      ycoord=as.double(ycoord),
+      param=paramsForC,
+      aniso=as.integer(aniso),
+      obsCov = as.double(obsCov),
+      N= as.integer(c(nrow(obsCov), 3, ncol(covariates))),
+      boxcox=as.double(rep(-9.9,9)),
+      boxcoxType=as.integer(0),
+      logL=as.double(rep(-9.9, 3+1)),
+      totalVarHat=as.double(rep(-9.9, 3)),
+      betaHat = as.double(rep(-9.9, ncol(covariates))), 
+      varBetaHat = as.double(rep(-9.9, ncol(covariates)* ncol(covariates))),
+      Ltype=as.integer(reml)
+  )
+  
+  list(temp2$betaHat, temp$betaHat)
+  list(temp2$logL, temp$logL)
+
+  
+
+      
+  
+  tempo=o2(fn=loglikLgm, par=startingParam, 
+			lower=lowerDefaults[paramToEstimate], 
+			upper=upperDefaults[paramToEstimate],
+			control = list(parscale=parscaleDefaults[paramToEstimate]),
+			data=observations, 
+			formula=covariates, coordinates=coordinates,
+		reml=reml, moreParams=moreParams,
+		method = "L-BFGS-B")
+  
+  }
+  
 	fromOptim = optim(fn=loglikLgm, par=startingParam, 
 			lower=lowerDefaults[paramToEstimate], 
 			upper=upperDefaults[paramToEstimate],
@@ -430,6 +554,8 @@ if(any(names(param)=="boxcox") & !any(paramToEstimate=="boxcox")) {
 		reml=reml, moreParams=moreParams,
 		method = "L-BFGS-B", stored=stored
 		)
+    
+    
 	fromOptim$start = startingParam
 	fromOptim$parscale = parscaleDefaults[paramToEstimate]
 

@@ -74,14 +74,14 @@ void maternLogLGivenChol(
 		double *totalSsq, // a 1 by Nrep matrix
 		double *betaHat, // an Ncov by Nrep matrix
 		double *varBetaHat, // an Ncov by Ncov by Nrep array
-		double *determinants // detVarHalf, detCholCovInvXcrossHalf
-		) {
+		double *determinants, // detVarHalf, detCholCovInvXcrossHalf
+		double *LxLy) {
 
 	const int *Nobs= &N[0], *Nrep= &N[1], *Ncov= &N[2];
 	int D, Ncol, infoCholCovInvXcross, infoInvCholCovInvXcross,
 		NobsRep, NobsCovObs, oneInt;
 	double zero, minusone, one, *pCov, *cholCovInvXY;
-	double *cholCovInvXcross, detLx, *LxLy, detCholCovInvXcrossHalf;
+	double *cholCovInvXcross, detLx, detCholCovInvXcrossHalf;
 
 	detCholCovInvXcrossHalf = determinants[1];
 	oneInt = 1;
@@ -96,8 +96,6 @@ void maternLogLGivenChol(
 
 	cholCovInvXcross = varBetaHat;
 	cholCovInvXY = obsCov;
-	LxLy = (double *) calloc(*Ncov*(*Nrep),sizeof(double));
-
 	// cholCovInvXY = cholCovMat^{-1} %*% cbind(obs, covariates)
 
 
@@ -219,7 +217,6 @@ void maternLogLGivenChol(
 	}
 
 
-	free(LxLy);
 }
 
 // add addToDiag to varMat then compute likelihood
@@ -235,6 +232,7 @@ void maternLogLGivenVarU(
 		) {
 
 	int D, infoCholVarmat, zeroI=0;
+	double *LxLy;
 
 	for(D=0;D<N[0];++D){
 		// diagonals
@@ -247,6 +245,8 @@ void maternLogLGivenVarU(
 	for(D = 0; D < N[0]; D++)
 		determinants[0] += log(varMat[D*N[0]+D]);
 
+	LxLy = (double *) calloc(N[0]*(N[1]),sizeof(double));
+
 	maternLogLGivenChol(
 			obsCov,
 			N,
@@ -254,8 +254,9 @@ void maternLogLGivenVarU(
 			totalSsq,
 			betaHat, // an Ncov by Nrep matrix
 			varBetaHat, // an Ncov by Ncov matrix
-			determinants
+			determinants, LxLy
 			);
+	free(LxLy);
 }
 
 // computes the -2 log likelihood
@@ -349,7 +350,7 @@ void maternLogL(
 		// on exit, info from chol of matern
 ) {
 
-	double determinants[2], *pBoxCox, *corMat;
+	double determinants[2], *pBoxCox, *corMat, *LxLy;
 	int maternType=2, zero=0;
 
 	computeBoxCox(obsCov,
@@ -358,6 +359,7 @@ void maternLogL(
 		boxcoxType);
 
 	corMat = (double *) calloc(N[0]*N[0],sizeof(double));
+	LxLy = (double *) calloc(N[0]*(N[1]),sizeof(double));
 
 	maternForL(
 			xcoord, ycoord,
@@ -374,10 +376,11 @@ void maternLogL(
 		logL, // a 1 by Nrep matrix
 		betaHat, // an Ncov by Nrep matrix
 		varBetaHat, // an Ncov by Ncov by Nrep array
-		determinants // detVarHalf, detCholCovInvXcrossHalf
-		);
+		determinants, // detVarHalf, detCholCovInvXcrossHalf
+		LxLy);
 
 	free(corMat);
+	free(LxLy);
 
 	logLfromComponents(
 			N,boxcox,boxcoxType,

@@ -28,11 +28,14 @@ void maternLogLmultipleParams(
 	double *corMat,*corMatCopy, *obsCovCopy;
 	const double *dParam;
 	double varDiag,determinants[2];
-	double *pLogL, *betaHat, *varBetaHat;
+	double *pLogL, *betaHat, *varBetaHat, *LxLy;
 	const int NrowParam=6, Nrep=N[1], Ncov=N[2], Npar = N[3], NsameVar=N[4];
 	int Dpar,Nsq, NobsCov;
 	int NrepP1;
 	int zeroI=0,oneI=1, maternType;
+
+	LxLy = (double *) calloc(N[0]*(N[1]),sizeof(double));
+
 
 	NrepP1 = Nrep+1;
 	Nsq = N[0]*N[0];
@@ -125,8 +128,8 @@ void maternLogLmultipleParams(
 			pLogL, // a 1 by Nrep matrix
 			betaHat, // an Ncov by Nrep matrix
 			varBetaHat, // an Ncov by Ncov by Nrep array
-			determinants // detVarHalf, detCholCovInvXcrossHalf
-			);
+			determinants, // detVarHalf, detCholCovInvXcrossHalf
+			LxLy);
 
 		logLfromComponents(
 				N,boxcox,boxcoxType,
@@ -140,5 +143,5 @@ void maternLogLmultipleParams(
 	free(obsCovCopy);
 	free(varBetaHat);
 	free(betaHat);
-
+	free(LxLy);
 }

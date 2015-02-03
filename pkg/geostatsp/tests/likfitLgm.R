@@ -30,14 +30,30 @@ mydat$Ybc = (mydat$Y*0.5+1)^2
  
 print(range(mydat$Ybc))
 
+if(FALSE){
+  formula=Ybc ~ cov1 + cov2
+  data=mydat
+  coordinates=mydat
+  param=c(range=0.1,nugget=0,shape=2, 
+      anisoAngleDegrees=20, anisoRatio=2,
+      boxcox=1) 
+  paramToEstimate = c("range","nugget",
+      "anisoRatio","anisoAngleDegrees")
+  reml=TRUE
+}
+
 date()
-myres = likfitLgm(Ybc ~ cov1 + cov2, mydat, 
+myres = likfitLgm(
+    formula=Ybc ~ cov1 + cov2, 
+    data=mydat,
+    coordinates=mydat,
     param=c(range=0.1,nugget=0,shape=2, 
         anisoAngleDegrees=20, anisoRatio=2,
-        boxcox=0.4), 
+        boxcox=1), 
     paramToEstimate = c("range","nugget",
         "anisoRatio","anisoAngleDegrees",
-        "boxcox","shape") 
+        "boxcox","shape"),
+    reml=TRUE
 )
 date()
 

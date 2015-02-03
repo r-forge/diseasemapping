@@ -1,6 +1,8 @@
 #include<R.h>
 #include<Rmath.h>
 #include<R_ext/Lapack.h>
+
+
 /* type = 0, distances is a vector
  type = 1, distances is a symmetric matrix,
  only lower triangle is used
@@ -79,8 +81,8 @@ void maternLogLGivenChol(
 		double *totalSsq, // a 1 by Nrep matrix
 		double *betaHat, // an Ncov by Nrep matrix
 		double *varBetaHat, // an Ncov by Ncov by Nrep array
-		double *determinants // detVarHalf, detCholCovInvXcrossHalf
-		);
+		double *determinants, // detVarHalf, detCholCovInvXcrossHalf
+		double *LxLy);
 
 void maternLogLGivenVarU(
 		double *varMat, // variance matrix
