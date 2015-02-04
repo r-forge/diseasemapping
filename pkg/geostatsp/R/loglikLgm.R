@@ -263,13 +263,13 @@ likfitLgm = function(
 	
 	# par scale
 	parscaleDefaults = c(range=NA, #range is delt with below
-			nugget=0.2,
-			boxcox=0.5,
+			nugget=1,
+			boxcox=1,
 			anisoAngleDegrees=60,
-			anisoAngleRadians=2,
-			anisoRatio=2,
+			anisoAngleRadians=1,
+			anisoRatio=1,
 			variance=1,
-			shape=0.1)
+			shape=1)
 
 #	if(length(grep("^SpatialPoints", class(coordinates))))
 #		print("wah")
@@ -355,14 +355,14 @@ likfitLgm = function(
 		attributes(coordinates)$Labels = theRowNames
  
 	}  
-	parscaleDefaults["range"] = dist(t(bbox(coordinatesOrig)))/200
+	parscaleDefaults["range"] = dist(t(bbox(coordinatesOrig)))/2
 	parscaleDefaults[names(parscale)] = parscale
 	
 	
 	# default starting values for parameters
 	paramDefaults = c(nugget=0,anisoRatio=1, anisoAngleDegrees=0,
 			anisoAngleRadians=0,shape=1, boxcox=1,
-			range=as.numeric(parscaleDefaults["range"]*10))
+			range=as.numeric(parscaleDefaults["range"]/2))
 
 	
 	startingParam = param[paramToEstimate]
@@ -438,25 +438,24 @@ if(any(names(param)=="boxcox") & !any(paramToEstimate=="boxcox")) {
     aniso=TRUE
   }
   
-  obsCov = cbind(y1=observations, y2=observations, y3=observations, covariates)
-
-    dyn.unload("/home/patrick/workspace/diseasemapping/pkg/geostatsp/src/matern.so")
-  dyn.load("/home/patrick/workspace/diseasemapping/pkg/geostatsp/src/matern.so")
+  obsCov = cbind(y1=observations, y2=0, y3=0, covariates)
 
   parToEstC = gsub("AngleDegrees$",
       "AngleRadians", paramToEstimate)
+  parToEstC = names(Sparam)[names(Sparam) %in% parToEstC]
   
   forO = list(
-      scalarF = c(fnscale=NA, 
-          abstol=NA,
-          reltol = NA,
-          alpha=NA, beta=NA,gamma=NA,
-          factr= 1e7,pgtol=0),
+      scalarF = c(fnscale=-1, 
+          abstol=-1,
+          reltol = -1,
+          alpha=-1, beta=-1,gamma=-1,
+          factr= 1e7,
+          pgtol=0.1),
       scalarInt=c(trace=0,
-          maxit=100,
-          REPORT=10,
-          type=NA,lmm=5,
-          tmax=NA,temp=NA
+          maxit=200,
+          REPORT=1,
+          type=-1,lmm=12,
+          tmax=-1,temp=-1
       ),
       pars = cbind(
           lower=geostatsp:::fillParam(
@@ -469,10 +468,11 @@ if(any(names(param)=="boxcox") & !any(paramToEstimate=="boxcox")) {
     )
   )
   
-  forO$parsInt = rep(0, ncol(forO$pars))
+  forO$parsInt = rep(0, nrow(forO$pars))
+  names(forO$parsInt) = rownames(forO$pars)
   forO$parsInt[
-      forO$pars[,'lower'] == -Inf &
-          forO$pars[,'upper'] == Inf
+      forO$pars[,'lower'] != -Inf &
+          forO$pars[,'upper'] != Inf
       ] = 2
 
   forO$parsInt[
@@ -485,33 +485,56 @@ if(any(names(param)=="boxcox") & !any(paramToEstimate=="boxcox")) {
           forO$pars[,'upper'] != Inf
   ] = 3
   
+  forO$pars[!is.finite(forO$pars)]=-1
+  forO$pars = c(forO$pars, rep(0.0, nrow(forO$pars)^2))
   
-  temp = .C(
+  fromOptim = .C(
           "maternLogLOpt",
-      params=paramsForC,    
-      as.integer(Sparam),
+      start=paramsForC,    
+      Sparam=as.integer(Sparam),
       obsCov=obsCov, 
       xcoord,
       ycoord,
       as.integer(aniso),
       as.integer(c(nrow(obsCov), 3, ncol(covariates))),
-    logL=as.double(rep(-9.9,4)),
-    betaHat=as.double(rep(-9.9, ncol(covariates)*3)),
-    varBetaHat=as.double(rep(-9.9, 3*ncol(covariates)^2)),
     Ltype=as.integer(reml),
     optInt = as.integer(forO$scalarInt),
-    as.double(forO$scalarF),
-    as.double(forO$pars),
+    optF = as.double(forO$scalarF),
+    betas=cbind(forO$pars),
     limType = as.integer(forO$parsInt),
-    format(" ",width=60)
-  # 0=ml, var estimated
-  # 1=reml, var estimated
-  # 2=ml, var fixed
-  # 3=reml, var fixed
-  # on exit, info from chol of matern
+    message=format(" ",width=80)
+  )
+
+  fromOptim = list(
+    mle=fromOptim$start,
+    betaHat = fromOptim$betas[1:ncol(covariates)],
+    m2logL = fromOptim$optF[1],
+    totalVarHat = fromOptim$optF[2],
+    message = fromOptim$message,
+    detail = fromOptim$optInt[1:3],
+    varBetaHat =  
+        new("dsyMatrix", 
+            Dim = as.integer(rep(ncol(covariates),2)), 
+            uplo="L",
+            x=fromOptim$betas[
+                seq(1+ncol(covariates), len=ncol(covariates)^2)]
+        )
   )
   
-  temp2 = .C("maternLogL",
+  fromOptim$totalVarHat = 
+      fromOptim$totalVarHat * fromOptim$totalVarHat
+  names(fromOptim$detail)  = c(
+      "fail","fncount","grcount"
+        )
+ names(fromOptim$betaHat) = colnames(covariates)
+ dimnames(fromOptim$varBetaHat) = list(
+     names(fromOptim$betaHat),names(fromOptim$betaHat)
+     )
+     
+  fromOptim$mle[c('nugget', 'variance')] = 
+      fromOptim$mle[c('nugget', 'variance')] * fromOptim$totalVarHat  
+  
+p1=.C("maternLogL",
       xcoord=as.double(xcoord), 
       ycoord=as.double(ycoord),
       param=paramsForC,
@@ -521,11 +544,31 @@ if(any(names(param)=="boxcox") & !any(paramToEstimate=="boxcox")) {
       boxcox=as.double(rep(-9.9,9)),
       boxcoxType=as.integer(0),
       logL=as.double(rep(-9.9, 3+1)),
-      totalVarHat=as.double(rep(-9.9, 3)),
-      betaHat = as.double(rep(-9.9, ncol(covariates))), 
+      totalVarHat=as.double(rep(-9.9, 3+1)),
+      betaHat = as.double(rep(-9.9, ncol(covariates)*3) ), 
       varBetaHat = as.double(rep(-9.9, ncol(covariates)* ncol(covariates))),
       Ltype=as.integer(reml)
   )
+  
+  p2 = paramsForC
+  p2['nugget']=0.01
+  p2=.C("maternLogL",
+      xcoord=as.double(xcoord), 
+      ycoord=as.double(ycoord),
+      param=p2,
+      aniso=as.integer(aniso),
+      obsCov = as.double(obsCov),
+      N= as.integer(c(nrow(obsCov), 3, ncol(covariates))),
+      boxcox=as.double(rep(-9.9,9)),
+      boxcoxType=as.integer(0),
+      logL=as.double(rep(-9.9, 3+1)),
+      totalVarHat=as.double(rep(-9.9, 3+1)),
+      betaHat = as.double(rep(-9.9, ncol(covariates)*3)), 
+      varBetaHat = as.double(rep(-9.9, ncol(covariates)* ncol(covariates))),
+      Ltype=as.integer(reml)
+  )
+  cbind(p1$logL,p2$logL)
+  apply(cbind(p1$logL,p2$logL),1,diff)
   
   list(temp2$betaHat, temp$betaHat)
   list(temp2$logL, temp$logL)

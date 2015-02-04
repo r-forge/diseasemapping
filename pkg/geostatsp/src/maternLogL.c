@@ -245,7 +245,7 @@ void maternLogLGivenVarU(
 	for(D = 0; D < N[0]; D++)
 		determinants[0] += log(varMat[D*N[0]+D]);
 
-	LxLy = (double *) calloc(N[0]*(N[1]),sizeof(double));
+	LxLy = (double *) calloc(N[1]*(N[2]),sizeof(double));
 
 	maternLogLGivenChol(
 			obsCov,
@@ -359,7 +359,7 @@ void maternLogL(
 		boxcoxType);
 
 	corMat = (double *) calloc(N[0]*N[0],sizeof(double));
-	LxLy = (double *) calloc(N[0]*(N[1]),sizeof(double));
+	LxLy = (double *) calloc(N[1]*(N[2]),sizeof(double));
 
 	maternForL(
 			xcoord, ycoord,
