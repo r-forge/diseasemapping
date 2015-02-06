@@ -5,53 +5,53 @@ void computeBoxCox(
 		double *obsCov,
 		// number of observations, number of datasets
 		const int *N, // Nobs, Nrep
-		double *boxcox, //  Nrep by 3
+		double *boxcox, //   3 by Nrep
 		// c 1: boxcox par; c 2: sum log(Y), c 3: two log jacobian
-		int *boxcoxType
+		const int boxcoxType
 		// 0= do nothing
 		// 1= do box-cox
 		// 2= put y in 1st column and log(y) in 2nd column of obscov
 		// 3= same as 2 but 2nd column of Y and
-		//    rows 2,3 of boxcox already computed
+		//    cols 2,3 of boxcox already computed
 		// 4= everything's pre-computed
 ) {
 //
 	int D, Dbc, Nend;
 	const int Nobs= N[0], Nrep= N[1];
-	double *pLogY, *pRep, bcHere, bcEps, *sumLogY, *twoLogJacobian;
-	if(*boxcoxType==0 | *boxcoxType==4){
+	double *pLogY, *pRep, bcHere, bcEps, sumLogY;
+	if(boxcoxType==0 | boxcoxType==4){
 		return;
 	}
 
 	bcEps = 0.01;
-	sumLogY = &boxcox[Nrep];
-	twoLogJacobian = &boxcox[Nrep*2];
 
-	if(*boxcoxType == 1){
+	if(boxcoxType == 1){
 		pLogY = obsCov; // logs go in first column
 		Nend=-1;
 	} else {
 		pLogY = &obsCov[Nobs]; // logs go in 2nd col
 		Nend = 1;
 	}
-	if(*boxcoxType < 3){
-		*sumLogY = 0.0;
+
+	if(boxcoxType < 3){
+		sumLogY = 0.0;
 		for(D=0;D<Nobs;++D) {
 			pLogY[D] = log(obsCov[D]);
-			*sumLogY += pLogY[D];
+			sumLogY += pLogY[D];
 		}
 		for(D=0;D<Nrep;++D){
-			sumLogY[D] = sumLogY[0];
-			twoLogJacobian[D] = 2*
-					(boxcox[D]-1)*sumLogY[D];
+			boxcox[D*3+1] = sumLogY;
+			boxcox[D*3+2] = 2*
+					(boxcox[D]-1)*sumLogY;
 		}
 	}
 
 	Dbc = Nrep-1;
 	while(Dbc>Nend){
-		pRep = &obsCov[Dbc*(Nobs)];
-		bcHere = boxcox[Dbc];
-		if(abs(bcHere) > bcEps) {
+		pRep = &obsCov[Dbc*Nobs];
+		bcHere = boxcox[Dbc*3];
+
+		if(fabs(bcHere) > bcEps) {
 			for(D=0;D<Nobs;++D) {
 				pRep[D] = (exp(bcHere*pLogY[D]) - 1) /
 					bcHere;
@@ -60,10 +60,9 @@ void computeBoxCox(
 			for(D=0;D<Nobs;++D) {
 				pRep[D] = pLogY[D];
 			}
-
 		}
+		Dbc--;
 	}
-	*boxcoxType = 4;
 } // end box-cox
 
 
@@ -264,8 +263,9 @@ void maternLogLGivenVarU(
 // with the minimum is the last element
 void logLfromComponents(
 		const int *N,
+		// matrix with three rows, boxcox par, sum log L, and jacobian
 		const double *boxcox,
-		const int *boxcoxType,
+		const int boxcoxType,
 		double *totalSsq,// length Nrep+1, logL on exit
 		double *totalVarHat,// length Nrep
 		// can be the same as totalSsq
@@ -308,13 +308,9 @@ void logLfromComponents(
 			logL[D] = Lstart + totalSsq[D];
 		}
 	}
-	if(*boxcoxType){
-		if(*boxcoxType != 4)
-			warning(
-"Box-Cox log jacobians should be computed prior to calling logLfromComponents"
-					);
-		pBoxCox= &boxcox[Nrep*2]; // two log jacobians in 3rd row
-		for(D=0;D<Nrep;++D) logL[D] += pBoxCox[D];
+	if(boxcoxType){
+		// two log jacobians in 3rd row
+		for(D=0;D<Nrep;++D) logL[D] += boxcox[D*Nrep+2];
 	}
 
 	// find the minimum lf all the likelihoods calculated
@@ -356,7 +352,7 @@ void maternLogL(
 	computeBoxCox(obsCov,
 		N,
 		boxcox,
-		boxcoxType);
+		*boxcoxType);
 
 	corMat = (double *) calloc(N[0]*N[0],sizeof(double));
 	LxLy = (double *) calloc(N[1]*(N[2]),sizeof(double));
@@ -383,7 +379,8 @@ void maternLogL(
 	free(LxLy);
 
 	logLfromComponents(
-			N,boxcox,boxcoxType,
+			N,boxcox,
+			*boxcoxType,
 			logL,totalVarHat,
 			determinants,
 			Ltype

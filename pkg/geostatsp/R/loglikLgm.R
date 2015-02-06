@@ -140,7 +140,7 @@ loglikLgm = function(param,
   Ncov = ncol(obsCov)-1
   Nrep = 1
   
-  paramFull = fillParam(param)
+  paramFull = geostatsp:::fillParam(param)
   Ltype = c(ml=0, reml=1, mlFixed=2, remlFixed=3)
   Ltype = reml + 2*haveVariance
 
@@ -222,62 +222,45 @@ result
 
 likfitLgm = function(
 		formula, data,
-		coordinates=data,
-		param=c(range=1,nugget=0,shape=1),
-		upper=NULL,lower=NULL, parscale=NULL,
-		paramToEstimate = c("range","nugget"),
-		reml=TRUE) {
+    paramToEstimate = c("range","nugget"),
+    reml=TRUE, 
+    coordinates=data,
+		param=NULL,
+		upper=NULL,
+    lower=NULL, 
+    parscale=NULL,
+    verbose=FALSE) {
 
-	trend = formula
-	
-	# for some reason thing break if I remove this next line...
-#	stuff = (class(coordinates))
-	theproj = proj4string(coordinates)
-	
-	# check for the variance parameter
-	estimateVariance = TRUE
-	if(any(paramToEstimate=="variance")) {
-		# remove varinace, it's estimated by profile likelihood
-		paramToEstimate = paramToEstimate[paramToEstimate != "variance"]
-		param = param[names(param)!="variance"]
-	} else {
-		if(any(names(param)=="variance")){
-			estimateVariance = FALSE
-#			warning("variance is fixed and not estimated. If this isn't what you wanted remove variance from param")
-		}		
-	}
-	 
-	# limits
-	lowerDefaults = c(nugget=0,range=0,anisoRatio=0.0001,
-			anisoAngleRadians=-pi/2,anisoAngleDegrees=-90,
-			shape=0.01,boxcox=-3,variance=0)
-	
-	upperDefaults= c(nugget=Inf,range=Inf,anisoRatio=Inf,
-			anisoAngleRadians=pi/2,anisoAngleDegrees=90,
-			shape=100,boxcox=3,variance=Inf)
-	
+  # check if model is isotropic
+  # if it is coordinates will be a distance matrix
+  # if not coordinates will be SpatialPoints
+  aniso = as.logical(length(grep("^aniso", c(names(param), paramToEstimate))))
+  if(aniso){
+    if(is.matrix(coordinates)){
+      if(ncol(coordinates)!= 2 | nrow(coordinates) != nrow(data))
+        stop("anisotropic model requested but coordinates appears to be a distance matrix")
+    }
+    coordinates = SpatialPoints(coordinates)
+    maxDist = dist(t(bbox(coordinates)))
+  } else { # isotropic
+    if(is.matrix(coordinates)){
+      if(ncol(coordinates)== 2) {# assume the columns are x and y coordinates
+        coordinates = dist(coordinates)
+      } else {
+        coordinates = as(coordinates, 'dsyMatrix')
+      }
+    }
+    if(class(coordinates)=='dist')
+      coordinates = as(as.matrix(coordinates), 'dsyMatrix')
+    if(grep("^Spatial", class(coordinates)))
+      coordinates = as(spDists(coordinates), 'dsyMatrix')
+    maxDist = max(coordinates)
+  }
 
-	lowerDefaults[names(lower)]=lower
-	
-	upperDefaults[names(upper)] = upper
-	
-	# par scale
-	parscaleDefaults = c(range=NA, #range is delt with below
-			nugget=1,
-			boxcox=1,
-			anisoAngleDegrees=60,
-			anisoAngleRadians=1,
-			anisoRatio=1,
-			variance=1,
-			shape=1)
-
-#	if(length(grep("^SpatialPoints", class(coordinates))))
-#		print("wah")
- 	
-	# convert input data to a model matrix
+  trend = formula
 	if(class(trend)=="formula") {
- 
-		data = data.frame(data)
+    # convert input data to a model matrix
+		data = as.data.frame(data)
 		theNA = apply(
 				data[,all.vars(trend)[-1],drop=FALSE],
 				1, function(qq) any(is.na(qq)))
@@ -289,8 +272,6 @@ likfitLgm = function(
 		if(!any(names(data)==observations))
 			warning("can't find observations ", observations, "in data")
 		observations = data[noNA,observations]
- 
-		
 	} else {
 		# observations must be a vector and covariates a matrix
 		trend = as.matrix(trend)
@@ -301,172 +282,130 @@ likfitLgm = function(
 				
 		observations=data[noNA]
 		covariates=trend[noNA,,drop=FALSE]
-
 	}
 
 	if(any(theNA)) {
 		if(length(grep("^SpatialPoints", class(coordinates)))) {
-			theRowNames= rownames(data.frame(coordinates))[noNA]
-			coordinates = SpatialPoints(coordinates)[noNA]	
-		} else if(class(coordinates)=="dist"){
-			coordinates = as.matrix(coordinates)
-			coordinates = coordinates[noNA,noNA]
-			theRowNames = rownames(coordinates)
-			coordinates = as.dist(coordinates)
-			
+			coordinates = coordinates[noNA]	
 		} else {
-			theRowNames = NULL
-			warning("missing vlaues in data but unclear how to remove them from coordinates")
+			coordinates = coordinates[noNA,noNA]
 		}
-	} else {
-		theRowNames = rownames(data.frame(coordinates))
 	}
-	
-	# if the model's isotropic, calculate distance matrix
-
- 	coordinatesOrig = coordinates
-	  # not estimating aniso params and coordinates is SpatialPoints
-	if( (!length(grep("^aniso", paramToEstimate))) &
-			length(grep("^SpatialPoints", class(coordinates)))) {
-
-		# see if there's anisotropy which is fixed, not estimated
-	# which would be odd but we'll test nonetheless
-		if(length(grep("^anisoRatio", names(param)))){
-			if(abs(param["anisoRatio"]- 1) > 0.0001){
-				# it is indeed anisotropic
-			
-				if(any(names(param)=="anisoAngleDegrees") & 
-						!any(names(param)=="anisoAngleRadians") ) {
-					param["anisoAngleRadians"] = param["anisoAngleDegrees"]*2*pi/360				
-				}
-	
-				if(class(coordinates)=='dist')
-					warning("distance matrix supplied but anisotropic model is used.  Supply points instead.")
-				x = coordinates@coords[,1] + 1i*coordinates@coords[,2]
-				
-				x = x * exp(1i*param["anisoAngleRadians"])
-				x = Re(x) +  (1i/ param["anisoRatio"] )*Im(x)
-				coordinates = SpatialPoints(cbind(Re(x), Im(x)))
-			} # end is anisotripic		
-		} # end anisotropy params supplied
-		# need to assign names manually
-		theRowNames = rownames(data.frame(coordinates))
-		coordinates = dist(coordinates(coordinates))
-		attributes(coordinates)$Labels = theRowNames
- 
-	}  
-	parscaleDefaults["range"] = dist(t(bbox(coordinatesOrig)))/2
-	parscaleDefaults[names(parscale)] = parscale
-	
-	
-	# default starting values for parameters
-	paramDefaults = c(nugget=0,anisoRatio=1, anisoAngleDegrees=0,
-			anisoAngleRadians=0,shape=1, boxcox=1,
-			range=as.numeric(parscaleDefaults["range"]/2))
-
-	
-	startingParam = param[paramToEstimate]
-	names(startingParam) = paramToEstimate # fixes names lost when no starting value provided
-
-	naStarting = is.na(startingParam)
-	startingParam[naStarting]= paramDefaults[names(startingParam)[naStarting]]
-	
-	moreParams = param[!names(param) %in% paramToEstimate]
-	
-
-	# check to see if it's worth storing box cox quantities
-if(any(paramToEstimate=="boxcox")) {
-	if(any(observations<=0)){
-		warning("box cox transform specified with negative observations")
-	}
-}
-
-if(any(names(param)=="boxcox") ) {
-	
-	if(param["boxcox"]!= 1)  {
-		
-		if(any(observations<=0)){
-			warning("box cox transform specified with negative observations")
-		}
-		
-	}		
-	
-	
-}		
-		
-if(any(names(param)=="boxcox") & !any(paramToEstimate=="boxcox")) {
-
-		if(abs(param["boxcox"]-1)>0.0001){ # boxcox not 1
-			stored = list(
-					boxcox = param["boxcox"],
-					twoLogJacobian = 2*(param["boxcox"]-1)* 
-							sum(log(observations))	
-			)
-			if(abs(param["boxcox"])<0.001) {
-				stored$observations = log(observations) 
-			} else  { #boxcox far from 0 and 1
-				stored$observations <- 
-						((observations^param["boxcox"]) - 1)/
-						param["boxcox"]
-			}
-			
-		} else { # boxcox is 1
-			stored=NULL
-		}
-	} else { # no box cox
-		stored=NULL
-	}
-	
-  if(FALSE){
-    
-  allParams = c(startingParam, moreParams)
-  allParams = geostatsp:::fillParam(allParams)
-  paramsForC = allParams[c('nugget','variance','range','shape','anisoRatio','anisoAngleRadians','boxcox')]
-
-  Sparam = names(paramsForC) %in% gsub("AngleDegrees$","AngleRadians", paramToEstimate)
-  names(Sparam) = names(paramsForC)
-  Sparam['boxcox'] = FALSE
-
   
-  if(class(coordinates)=='matrix'){
-    xcoord = as.vector(coordinates)
-    ycoord = -99
-    aniso=FALSE
-  } else if(length(grep("^SpatialPoints", class(coordinates)))){
-    xcoord=coordinates@coords[,1] 
-    ycoord=coordinates@coords[,2]
-    aniso=TRUE
+
+  # check for the variance parameter
+  estimateVariance = TRUE
+  if(any(paramToEstimate=="variance")) {
+    # remove varinace, it's estimated by profile likelihood
+    paramToEstimate = paramToEstimate[paramToEstimate != "variance"]
+    param = param[names(param)!="variance"]
+  } else {
+    if(any(names(param)=="variance")){
+      estimateVariance = FALSE
+    }		
   }
   
-  obsCov = cbind(y1=observations, y2=0, y3=0, covariates)
-
-  parToEstC = gsub("AngleDegrees$",
-      "AngleRadians", paramToEstimate)
-  parToEstC = names(Sparam)[names(Sparam) %in% parToEstC]
   
+  # make sure angle is radians
+  paramToEstimate = gsub("anisoAngleDegrees","anisoAngleRadians", paramToEstimate)
+  
+  degToRad = function(par) {
+  if(length(grep("anisoAngleDegrees", names(par)))){
+    if(!length(grep("anisoAngleRadians", names(par))))
+      par['anisoAngleRadians'] = 2*pi*par['anisoAngleDegrees']/360
+    par = par[grep("anisoAngleDegrees",names(par),invert=TRUE)]
+  }
+   par
+  }
+  param = degToRad(param)
+  lower = degToRad(lower)
+  upper = degToRad(upper)
+  parscale = degToRad(parscale)
+  
+  # parameter defaults
+  lowerDefaults = c(
+      nugget=0.001,
+      range=maxDist/10000,
+      anisoRatio=0.01,
+      anisoAngleRadians=-pi/2,
+      shape=0.1,boxcox=-1,variance=0)
+  
+  upperDefaults= c(
+      nugget=Inf,
+      range=5*maxDist,
+      anisoRatio=100,
+      anisoAngleRadians=pi/2,
+      shape=4,boxcox=2.5,variance=Inf)
+  
+  paramDefaults = c(
+      nugget=1,
+      anisoRatio=1, 
+      anisoAngleRadians=0,
+      shape=1.5, boxcox=1,
+      range=maxDist/20
+  )
+  
+  parscaleDefaults = c(
+      range=maxDist/20,
+      nugget=0.5,
+      boxcox=0.1,
+      anisoAngleRadians=1,
+      anisoRatio=1,
+      variance=1,
+      shape=0.2)
+  
+  # replace defaults with user supplied values
+  paramDefaults[names(param)] = param
+  parscaleDefaults[names(parscale)] = parscale
+  lowerDefaults[names(lower)]=lower
+  upperDefaults[names(upper)] = upper
+  
+  startingParam = paramDefaults[paramToEstimate]
+  names(startingParam) = paramToEstimate # fixes names lost when no starting value provided
+  
+  naStarting = is.na(startingParam)
+  startingParam[naStarting]= paramDefaults[names(startingParam)[naStarting]]
+  
+  moreParams = paramDefaults[!names(paramDefaults) %in% paramToEstimate]
+  
+  allParams = c(startingParam, moreParams)
+  allParams = fillParam(allParams)
+  paramsForC = allParams[c('nugget','variance','range','shape','anisoRatio','anisoAngleRadians','boxcox')]
+  
+  Sparam = names(paramsForC) %in% paramToEstimate
+  names(Sparam) = names(paramsForC)
+  paramToEstimate = names(Sparam)[Sparam]
+
+  parOptions = cbind(
+      lower=lowerDefaults[paramToEstimate], 
+      upper=upperDefaults[paramToEstimate],
+      parscale = parscaleDefaults[paramToEstimate],
+      ndeps=rep(0.001, length(paramToEstimate)) # for derivatives
+  )
+
+  # parameters for l-bfgs-b
   forO = list(
-      scalarF = c(fnscale=-1, 
+      scalarF = c(
+          fnscale=-1, 
           abstol=-1,
           reltol = -1,
           alpha=-1, beta=-1,gamma=-1,
-          factr= 1e7,
-          pgtol=0.1),
-      scalarInt=c(trace=0,
+          factr= 1e6,
+          pgtol=0),
+      scalarInt=c(
+          trace=0,
           maxit=200,
           REPORT=1,
-          type=-1,lmm=12,
+          type=-1,lmm=25,
           tmax=-1,temp=-1
       ),
-      pars = cbind(
-          lower=geostatsp:::fillParam(
-              lowerDefaults)[parToEstC], 
-          upper=geostatsp:::fillParam(
-              upperDefaults)[parToEstC],
-          parscale = geostatsp:::fillParam(
-              parscaleDefaults)[parToEstC],
-          ndeps=rep(0.001, length(parToEstC))
-    )
+      pars = parOptions
   )
+  
+  if(verbose){
+    forO$scalarInt['trace']=6
+    forO$scalarInt['REPORT']=200
+  }
   
   forO$parsInt = rep(0, nrow(forO$pars))
   names(forO$parsInt) = rownames(forO$pars)
@@ -488,10 +427,21 @@ if(any(names(param)=="boxcox") & !any(paramToEstimate=="boxcox")) {
   forO$pars[!is.finite(forO$pars)]=-1
   forO$pars = c(forO$pars, rep(0.0, nrow(forO$pars)^2))
   
+
+  if(aniso){
+    xcoord=coordinates@coords[,1] 
+    ycoord=coordinates@coords[,2]
+  } else {
+    xcoord = as.vector(coordinates)
+    ycoord = -99
+  }
+  
+  obsCov = cbind(y1=observations, y2=0, y3=0, covariates)
+  
   fromOptim = .C(
           "maternLogLOpt",
       start=paramsForC,    
-      Sparam=as.integer(Sparam),
+      Sparam=Sparam,
       obsCov=obsCov, 
       xcoord,
       ycoord,
@@ -505,13 +455,21 @@ if(any(names(param)=="boxcox") & !any(paramToEstimate=="boxcox")) {
     message=format(" ",width=80)
   )
 
-  fromOptim = list(
-    mle=fromOptim$start,
+
+  result = list(
+      optim = list(
+        mle=fromOptim$start,
+        logL = c(m2logL = fromOptim$optF[1],
+          logL = - fromOptim$optF[1]/2),
+        totalVarHat = fromOptim$optF[2],
+        message = fromOptim$message,
+        options=cbind(
+            start=paramsForC[Sparam],
+            opt = fromOptim$start[Sparam],
+            parOptions),
+        detail = fromOptim$optInt[1:3]
+      ),
     betaHat = fromOptim$betas[1:ncol(covariates)],
-    m2logL = fromOptim$optF[1],
-    totalVarHat = fromOptim$optF[2],
-    message = fromOptim$message,
-    detail = fromOptim$optInt[1:3],
     varBetaHat =  
         new("dsyMatrix", 
             Dim = as.integer(rep(ncol(covariates),2)), 
@@ -521,126 +479,47 @@ if(any(names(param)=="boxcox") & !any(paramToEstimate=="boxcox")) {
         )
   )
   
-  fromOptim$totalVarHat = 
-      fromOptim$totalVarHat * fromOptim$totalVarHat
-  names(fromOptim$detail)  = c(
+  names(result$optim$detail)  = c(
       "fail","fncount","grcount"
         )
- names(fromOptim$betaHat) = colnames(covariates)
- dimnames(fromOptim$varBetaHat) = list(
-     names(fromOptim$betaHat),names(fromOptim$betaHat)
+ names(result$betaHat) = colnames(covariates)
+ dimnames(result$varBetaHat) = list(
+     names(result$betaHat),names(result$betaHat)
      )
      
-  fromOptim$mle[c('nugget', 'variance')] = 
-      fromOptim$mle[c('nugget', 'variance')] * fromOptim$totalVarHat  
-  
-p1=.C("maternLogL",
-      xcoord=as.double(xcoord), 
-      ycoord=as.double(ycoord),
-      param=paramsForC,
-      aniso=as.integer(aniso),
-      obsCov = as.double(obsCov),
-      N= as.integer(c(nrow(obsCov), 3, ncol(covariates))),
-      boxcox=as.double(rep(-9.9,9)),
-      boxcoxType=as.integer(0),
-      logL=as.double(rep(-9.9, 3+1)),
-      totalVarHat=as.double(rep(-9.9, 3+1)),
-      betaHat = as.double(rep(-9.9, ncol(covariates)*3) ), 
-      varBetaHat = as.double(rep(-9.9, ncol(covariates)* ncol(covariates))),
-      Ltype=as.integer(reml)
-  )
-  
-  p2 = paramsForC
-  p2['nugget']=0.01
-  p2=.C("maternLogL",
-      xcoord=as.double(xcoord), 
-      ycoord=as.double(ycoord),
-      param=p2,
-      aniso=as.integer(aniso),
-      obsCov = as.double(obsCov),
-      N= as.integer(c(nrow(obsCov), 3, ncol(covariates))),
-      boxcox=as.double(rep(-9.9,9)),
-      boxcoxType=as.integer(0),
-      logL=as.double(rep(-9.9, 3+1)),
-      totalVarHat=as.double(rep(-9.9, 3+1)),
-      betaHat = as.double(rep(-9.9, ncol(covariates)*3)), 
-      varBetaHat = as.double(rep(-9.9, ncol(covariates)* ncol(covariates))),
-      Ltype=as.integer(reml)
-  )
-  cbind(p1$logL,p2$logL)
-  apply(cbind(p1$logL,p2$logL),1,diff)
-  
-  list(temp2$betaHat, temp$betaHat)
-  list(temp2$logL, temp$logL)
-
-  
-
+  result$parameters = c(
+      result$optim$mle, result$betaHat
+      )
       
-  
-  tempo=o2(fn=loglikLgm, par=startingParam, 
-			lower=lowerDefaults[paramToEstimate], 
-			upper=upperDefaults[paramToEstimate],
-			control = list(parscale=parscaleDefaults[paramToEstimate]),
-			data=observations, 
-			formula=covariates, coordinates=coordinates,
-		reml=reml, moreParams=moreParams,
-		method = "L-BFGS-B")
-  
-  }
-  
-	fromOptim = optim(fn=loglikLgm, par=startingParam, 
-			lower=lowerDefaults[paramToEstimate], 
-			upper=upperDefaults[paramToEstimate],
-			control = list(parscale=parscaleDefaults[paramToEstimate]),
-			data=observations, 
-			formula=covariates, coordinates=coordinates,
-		reml=reml, moreParams=moreParams,
-		method = "L-BFGS-B", stored=stored
-		)
-    
-    
-	fromOptim$start = startingParam
-	fromOptim$parscale = parscaleDefaults[paramToEstimate]
+   result$parameters[c('nugget', 'variance')] = 
+       result$parameters[c('nugget', 'variance')] * 
+       result$optim$totalVarHat  
 
-		
-		
-	fromLogLik = loglikLgm(param=fromOptim$par,
-			moreParams=moreParams, 
-			data=observations, 
-			formula=covariates, coordinates=coordinates,
-			reml=reml
-			)
-			
-	result = list(
-			param=c(attributes(fromLogLik)$betaHat,
-					attributes(fromLogLik)$param),
-			varBetaHat = attributes(fromLogLik)$varBetaHat,
-			optim=fromOptim, 
-			data = data.frame(
-					observations = observations,
-					resid=observations -
-              covariates %*% attributes(fromLogLik)$betaHat
-			)
-	)
-	rownames(result$data) = theRowNames
-	
-	if(any(names(result$param)=="boxcox") ) {
-		
-		if(abs(result$param["boxcox"]-1)>0.0001){ # boxcox not 1
+   names(result$optim$logL) = paste(
+       names(result$optim$logL),
+   c('.ml', '.reml')[reml+1],
+   sep=''
+   )
 
-			if(abs(result$param["boxcox"])<0.001) {
-				result$data$obsBC = log(observations) 
-			} else  { #boxcox far from 0 and 1
-				result$data$obsBC <- 
-						((observations^result$param["boxcox"]) - 1)/
-						result$param["boxcox"]
-			}
-		}
-	}
-			
-
-
-	
+   result$data = data.frame(
+       observations = observations,
+       fitted=
+           covariates %*% result$parameters[colnames(covariates)]
+   )
+   
+   if(abs(result$parameters["boxcox"]-1)>0.0001){ # boxcox not 1
+     
+     if(abs(result$parameters["boxcox"])<0.001) {
+       result$data$obsBC = log(observations) 
+     } else  { #boxcox far from 0 and 1
+       result$data$obsBC <- 
+           ((observations^result$parameters["boxcox"]) - 1)/
+           result$parameters["boxcox"]
+     }
+     result$data$resid = result$data$obsBC - result$data$fitted
+   } else {
+     result$data$resid = result$data$observation - result$data$fitted
+   }
 	
 	result$model = list(reml=reml)
 	if(class(trend)=="formula") {
@@ -650,14 +529,14 @@ p1=.C("maternLogL",
 	}
 
 	
-	parameterTable = data.frame(estimate=result$param)
-	rownames(parameterTable) =  names(result$param)
+	parameterTable = data.frame(estimate=result$parameters)
+	rownames(parameterTable) =  names(result$parameters)
 
 	parameterTable$stdErr = NA
 	
-	stdErr = sqrt(diag(attributes(fromLogLik)$varBetaHat))
+	stdErr = sqrt(Matrix::diag(result$varBetaHat))
 	# sometimes varBetaHat doesn't have names
-	parameterTable[names(attributes(fromLogLik)$betaHat), "stdErr"] =
+	parameterTable[rownames(result$varBetaHat), "stdErr"] =
 			stdErr
 
 	thelims = c(0.005, 0.025, 0.05, 0.1)
@@ -676,7 +555,7 @@ p1=.C("maternLogL",
 	
 	parameterTable[,"Estimated"] = FALSE
 	parameterTable[paramToEstimate,"Estimated"] = TRUE
-	parameterTable[names(attributes(fromLogLik)$betaHat),"Estimated"] = TRUE
+	parameterTable[rownames(result$varBetaHat),"Estimated"] = TRUE
 	if(estimateVariance)
 		parameterTable["variance","Estimated"] = TRUE
 	
@@ -698,12 +577,7 @@ p1=.C("maternLogL",
 #			}
 #	))
 	
-	
 	result$summary = as.data.frame(parameterTable)
-	
-	
 	
 	result
 }
-
-

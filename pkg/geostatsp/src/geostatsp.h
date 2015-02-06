@@ -65,7 +65,7 @@ void computeBoxCox(
 		const int *N, // Nobs, Nrep
 		double *boxcox, //  Nrep by 3
 		// c 1: boxcox par; c 2: sum log(Y), c 3: two log jacobian
-		int *boxcoxType
+		const int boxcoxType
 		// 0= do nothing
 		// 1= do box-cox
 		// 2= put y in 1st column and log(y) in 2nd column of obscov
@@ -98,7 +98,7 @@ void maternLogLGivenVarU(
 void logLfromComponents(
 		const int *N,
 		const double *boxcox,
-		const int *boxcoxType,
+		const int boxcoxType,
 		double *totalSsq,// length Nrep+1 logL on exit
 		double *totalVarHat,// length Nrep
 		const double *determinants,

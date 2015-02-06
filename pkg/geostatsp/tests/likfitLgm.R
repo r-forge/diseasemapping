@@ -1,53 +1,54 @@
 library('geostatsp')
-n=100
+
+if(interactive()  | Sys.info()['user'] =='patrick') {
+  n=500
+} else {
+  n=100
+}
 
 set.seed(0)
 mydat = SpatialPointsDataFrame(cbind(seq(0,1,len=n), runif(n)), 
 		data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 0.5))
 )
 
-# get rid of points too close together
-thedist =spDists(mydat)
-thedist[lower.tri(thedist, diag=TRUE)] = NA
-thedist = thedist < 0.01
-thedist = apply(thedist, 1, any, na.rm=T)
-mydat = mydat[!thedist,]
 
 	
 
-trueParamAniso = param=c(variance=2^2, range=0.2, shape=2,
+trueParamAniso = c(
+    variance=2^2, range=0.2, shape=2,
 		nugget=1^2,anisoRatio=4,anisoAngleDegrees=10)
 
+trueParamIso = c(
+    variance=2^2, range=0.2, shape=2,
+    nugget=1^2)
 
 
-mydat$U = RFsimulate(trueParamAniso,mydat)$sim
+mydat$U = geostatsp::RFsimulate(trueParamAniso,mydat)$sim
+mydat$Uiso = geostatsp::RFsimulate(trueParamIso,mydat)$sim
 
 mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + 
 		mydat$U + rnorm(length(mydat), 0, sd=sqrt(trueParamAniso["nugget"]))
 
+mydat$Yiso = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + 
+    mydat$Uiso + rnorm(length(mydat), 0, sd=sqrt(trueParamIso["nugget"]))
+
 mydat$Ybc = (mydat$Y*0.5+1)^2
 
- 
-print(range(mydat$Ybc))
+mydat$YbcIso = (mydat$Yiso*0.5+1)^2
 
-if(FALSE){
-  formula=Ybc ~ cov1 + cov2
-  data=mydat
-  coordinates=mydat
-  param=c(range=0.1,nugget=0,shape=2, 
-      anisoAngleDegrees=20, anisoRatio=2,
-      boxcox=1) 
-  paramToEstimate = c("range","nugget",
-      "anisoRatio","anisoAngleDegrees")
-  reml=TRUE
-}
+print(range(mydat$Ybc))
+print(range(mydat$YbcIso))
+
+#dyn.unload("/home/patrick/workspace/diseasemapping/pkg/geostatsp/src/matern.so")
+#dyn.load("/home/patrick/workspace/diseasemapping/pkg/geostatsp/src/matern.so")
+
 
 date()
 myres = likfitLgm(
     formula=Ybc ~ cov1 + cov2, 
     data=mydat,
     coordinates=mydat,
-    param=c(range=0.1,nugget=0,shape=2, 
+    param=c(range=0.01,nugget=2,shape=2, 
         anisoAngleDegrees=20, anisoRatio=2,
         boxcox=1), 
     paramToEstimate = c("range","nugget",
@@ -56,6 +57,22 @@ myres = likfitLgm(
     reml=TRUE
 )
 date()
+myres$opt
+myres$par
+
+date()
+myresIso = likfitLgm(
+    formula=YbcIso ~ cov1 + cov2, 
+    data=mydat,
+    param=c(shape=2,boxcox=0.4),
+    paramToEstimate = c(
+        "range","nugget",
+        "boxcox","shape"),
+    reml=TRUE
+)
+date()
+myresIso$opt
+myresIso$par
 
 myres$summary[,grep("^ci", colnames(myres$summary),invert=TRUE)]
 

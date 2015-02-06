@@ -16,7 +16,7 @@ double *obsForBoxcoxOpt; // pointer three column matrix of Y, logY and boxcox Y
 const double *xcoordOpt, *ycoordOpt;
 double *corMatOpt;
 
-double boxcoxParamOpt[9] = {1,0,1,-9,-9,-9,-9,-9,-9};
+double boxcoxParamOpt[9] = {1,-9,-9,0,-9,-9,-9,-9,-9};
 int anisoOpt, LtypeOpt, boxcoxTypeOpt;
 int Nopt[3];// Nobs, 1, Ncov
 int NboxcoxOpt[2], doBoxcoxOpt; // Nobs, 3
@@ -32,7 +32,7 @@ double maternLogLObj(
 		double *paramArg,
 		void *ex
 		) {
-	int zero=0, oneI=1, three=3, maternType = 2, Dparam;
+	int zero=0, oneI=1,  maternType = 2, Dparam;
 	int NforCopy;
 	double determinants[2], logL[4];
 	// copy param to fullParam
@@ -44,12 +44,12 @@ double maternLogLObj(
 	}
 
 	if(doBoxcoxOpt){
-		boxcoxParamOpt[2] = paramOpt[6];
+		boxcoxParamOpt[6] = paramOpt[6];
 		computeBoxCox(
 			obsForBoxcoxOpt,
 			NboxcoxOpt,
 			boxcoxParamOpt,
-			&three
+			3
 			);
 	}
 
@@ -79,8 +79,8 @@ double maternLogLObj(
 
 	logLfromComponents(
 				Nopt,
-				boxcoxParamOpt,
-				&doBoxcoxOpt,
+				&boxcoxParamOpt[6],
+				doBoxcoxOpt,
 				logL,
 				totalVarHatOpt,
 				determinants,
@@ -93,6 +93,16 @@ double maternLogLObj(
 //	for(Dparam=0;Dparam<7;++Dparam)
 //		Rprintf(" %f ", paramOpt[Dparam] );
 //	Rprintf("l %f ", logL[0]);
+
+	if(ISNAN(logL[0])){
+			Rprintf("\n p ");
+			for(Dparam=0;Dparam<SparamOpt[0];++Dparam)
+				Rprintf(" %f ", paramArg[Dparam] );
+			Rprintf("\n pf ");
+			for(Dparam=0;Dparam<7;++Dparam)
+				Rprintf(" %f ", paramOpt[Dparam] );
+			Rprintf("l %f ", logL[0]);
+	}
 
 	return logL[0];
 }
@@ -150,12 +160,11 @@ void maternLogLgr(
 		result[Dpar] = fullGr[Dpar+5*Nparam]/
 				(fullGr[Dpar+3*Nparam] - fullGr[Dpar+1*Nparam]);
 
-		/*
-  		Rprintf(" l%f u%f d%f ",
+/*  		Rprintf(" l%f u%f d%f ",
 				fullGr[Dpar+2*Nparam],
 				fullGr[Dpar+4*Nparam],
 				result[Dpar] );
-		*/
+*/
 	}
 
 //	Rprintf("  \n");
@@ -191,7 +200,7 @@ void maternLogLOpt(
 		// on exit, info from chol of matern
 ) {
 
-	double *paramArg, result;
+	double *paramArg, result, *resultGr;
 	int two=2, oneI=1,Dparam, DparamForOpt, optimFail;
 	int fncount, grcount, junk;
 	void *optimEx;
@@ -213,7 +222,7 @@ void maternLogLOpt(
 
 	// create a vector of indices of parameters to estimate
 	DparamForOpt = 1;
-	for(Dparam=0;Dparam<6;++Dparam){
+	for(Dparam=0;Dparam<7;++Dparam){
 		if(Sparam[Dparam]){
 			SparamOpt[DparamForOpt] = Dparam;
 			++DparamForOpt;
@@ -249,31 +258,33 @@ void maternLogLOpt(
 	// but they are used for computing box-cox transform
 	obsForBoxcoxOpt = obsCov;
 	// are we doing box-cox?
+
 	if(Sparam[6]){ // yes, it's being optimized
 		doBoxcoxOpt=1;
 		// put log(y) in position 2
 		NboxcoxOpt[0] = N[0];
 		NboxcoxOpt[1] = 3;
-		boxcoxTypeOpt=2;
 		computeBoxCox(
 				obsCov,
 				NboxcoxOpt,
 				boxcoxParamOpt,
-				&boxcoxTypeOpt
+				2
 		);
 		boxcoxTypeOpt=3;
 	} else { // not being optimized
 		doBoxcoxOpt=0;
 		// but check if it's not 1
 		if(fabs(fullParam[6]-1)>0.001){
+			boxcoxParamOpt[6]=fullParam[6];
 			NboxcoxOpt[0] = N[0];
 			NboxcoxOpt[1] = 3;
-			boxcoxTypeOpt=1;
+			boxcoxTypeOpt=2;
+
 			computeBoxCox(
 				obsCov,
 				NboxcoxOpt,
 				boxcoxParamOpt,
-				&boxcoxTypeOpt
+				2
 				);
 			boxcoxTypeOpt=4;
 		} else {
@@ -298,8 +309,9 @@ void maternLogLOpt(
 	resultGr = (double *) calloc(SparamOpt[0]*6,sizeof(double));
 
 	result = maternLogLObj(junk,paramArg, optimEx);
-	totalVarHat[3] = result;
-	totalVarHat[1] =maternLogLObj(junk,paramArg, optimEx);
+	scalarsF[0] = result;
+	scalarsF[1] = totalVarHatOpt[0];
+	scalarsF[2] =maternLogLObj(junk,paramArg, optimEx);
 
 	maternLogLgr(
 			junk,
@@ -310,7 +322,10 @@ void maternLogLOpt(
 	for(Dparam=0;Dparam<SparamOpt[0]*6;++Dparam){
 		parLim[Dparam] = resultGr[Dparam];
 	}
+	free(resultGr);
 # endif
+
+//#ifdef UNDEF
 
 	lbfgsb(
 			SparamOpt[0],//int n,
@@ -356,7 +371,7 @@ void maternLogLOpt(
 	F77_NAME(dcopy)(&Dparam,
 			varBetaHatOpt, &oneI,
 			&parLim[N[2]], &oneI);
-
+//# endif
 	free(corMatOpt);
 	free(obsCovCopy);
 	free(LxLyOpt);
