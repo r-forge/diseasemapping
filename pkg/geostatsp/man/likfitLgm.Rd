@@ -15,11 +15,13 @@
 
 
 likfitLgm(formula, data, 
-		coordinates=data,
-		param=c(range=1,nugget=0,shape=1),
-		upper=NULL,lower=NULL, parscale=NULL,
 		paramToEstimate = c("range","nugget"),
-		reml=TRUE)
+		reml=TRUE,
+		coordinates=data,
+		param=NULL,
+		upper=NULL,lower=NULL, parscale=NULL,
+		verbose=FALSE)
+
 		
 loglikLgm(param, 
 		data, formula, coordinates=data,

@@ -169,9 +169,8 @@ setMethod("lgm",
 
  	likRes = do.call(likfitLgm, dots)
  
-#	stuff <<- list(formula=formula, data=data, grid=grid, covariates=covariates,
-#			param=likRes$param,expPred=expPred,nuggetInPrediction=nuggetInPrediction)	
 
+  
 
 # call krige	
 	krigeRes =  krigeLgm(
@@ -191,9 +190,9 @@ setMethod("lgm",
 		
 
 	res = c(predict=krigeRes, likRes)
-
-	
-	# add confidence intervals for covariance parameters
+#  stuff <<- res
+  
+  # add confidence intervals for covariance parameters
 	theInf=informationLgm(res)
 	res$varBetaHat = list(beta=res$varBetaHat)
 	names(res) = gsub("varBetaHat", "varParam", names(res))

@@ -2,7 +2,7 @@
 
 informationLgm = function(fit, ...) {
 	nonLinearParams = c('boxcox','shape','nugget','variance',
-			'anisoAngleDegrees','anisoRatio','range')
+			'anisoAngleRadians','anisoRatio','range')
 	
 	reEstimate = rownames(fit$summary)[
 			fit$summary[,"Estimated"]
@@ -12,10 +12,10 @@ informationLgm = function(fit, ...) {
 	reEstimate = gsub("range \\(km\\)", "range", reEstimate)
 	reEstimate = intersect(reEstimate, nonLinearParams)
 	
-	baseParam = fit$param[reEstimate]
-	moreParams = fit$param[
-			!names(fit$param) %in% reEstimate &
-					names(fit$param) %in% nonLinearParams]
+	baseParam = fit$parameters[reEstimate]
+	moreParams = fit$parameters[
+			!names(fit$parameters) %in% reEstimate &
+					names(fit$parameters) %in% nonLinearParams]
 	
 	parToLog = c("nugget","variance","anisoRatio","range")
 	parToLog = intersect(reEstimate, parToLog)
@@ -63,7 +63,10 @@ informationLgm = function(fit, ...) {
 	names(qvec) = paste("ci", pvec, sep="")
 	
 	stdErr = diag(infmat)
-	if(any(stdErr<0))
+  if(any(is.na(stdErr)))
+    return(list(summary=fit$summary,information=infmat))
+    
+	if(!all(stdErr>0))
 		return(list(summary=fit$summary,information=infmat))
 	stdErr = sqrt(stdErr)
 	

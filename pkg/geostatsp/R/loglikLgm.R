@@ -140,7 +140,7 @@ loglikLgm = function(param,
   Ncov = ncol(obsCov)-1
   Nrep = 1
   
-  paramFull = geostatsp:::fillParam(param)
+  paramFull = fillParam(param)
   Ltype = c(ml=0, reml=1, mlFixed=2, remlFixed=3)
   Ltype = reml + 2*haveVariance
 
@@ -231,6 +231,8 @@ likfitLgm = function(
     parscale=NULL,
     verbose=FALSE) {
 
+  param = param[!is.na(param)]
+  
   # check if model is isotropic
   # if it is coordinates will be a distance matrix
   # if not coordinates will be SpatialPoints
@@ -254,7 +256,7 @@ likfitLgm = function(
       coordinates = as(as.matrix(coordinates), 'dsyMatrix')
     if(grep("^Spatial", class(coordinates)))
       coordinates = as(spDists(coordinates), 'dsyMatrix')
-    maxDist = max(coordinates)
+    maxDist = max(coordinates,na.rm=TRUE)
   }
 
   trend = formula
@@ -447,7 +449,7 @@ likfitLgm = function(
       ycoord,
       as.integer(aniso),
       as.integer(c(nrow(obsCov), 3, ncol(covariates))),
-    Ltype=as.integer(reml),
+    Ltype=as.integer(reml+!estimateVariance),
     optInt = as.integer(forO$scalarInt),
     optF = as.double(forO$scalarF),
     betas=cbind(forO$pars),
@@ -455,7 +457,7 @@ likfitLgm = function(
     message=format(" ",width=80)
   )
 
-
+ 
   result = list(
       optim = list(
         mle=fromOptim$start,
@@ -506,6 +508,8 @@ likfitLgm = function(
        fitted=
            covariates %*% result$parameters[colnames(covariates)]
    )
+
+
    
    if(abs(result$parameters["boxcox"]-1)>0.0001){ # boxcox not 1
      
@@ -521,7 +525,8 @@ likfitLgm = function(
      result$data$resid = result$data$observation - result$data$fitted
    }
 	
-	result$model = list(reml=reml)
+
+   result$model = list(reml=reml)
 	if(class(trend)=="formula") {
 		result$model$formula = trend
 	} else {
@@ -533,23 +538,23 @@ likfitLgm = function(
 	rownames(parameterTable) =  names(result$parameters)
 
 	parameterTable$stdErr = NA
-	
-	stdErr = sqrt(Matrix::diag(result$varBetaHat))
+
+  stdErr = sqrt(Matrix::diag(result$varBetaHat))
 	# sometimes varBetaHat doesn't have names
 	parameterTable[rownames(result$varBetaHat), "stdErr"] =
 			stdErr
 
 	thelims = c(0.005, 0.025, 0.05, 0.1)
 	thelims = c(rbind(thelims, 1-thelims))
-	
-	theQ = qnorm(thelims)
+
+  theQ = qnorm(thelims)
 	toadd = outer(parameterTable$stdErr, theQ)
 	toadd = toadd + matrix(parameterTable$estimate, 
 			ncol=length(thelims), nrow=dim(parameterTable)[1])
 	colnames(toadd)= paste("ci", thelims, sep="")
 	parameterTable = cbind(parameterTable, toadd)
-	
-	parameterTable[,"pval"] = pchisq(
+
+  parameterTable[,"pval"] = pchisq(
 			parameterTable$estimate^2  / parameterTable$stdErr^2,
 			df=1,lower.tail=FALSE)
 	
@@ -559,15 +564,20 @@ likfitLgm = function(
 	if(estimateVariance)
 		parameterTable["variance","Estimated"] = TRUE
 	
-	
 	rownames(parameterTable)=gsub("^variance$", "sdSpatial", 
 			rownames(parameterTable))	
 	rownames(parameterTable)=gsub("^nugget$", "sdNugget", 
 			rownames(parameterTable))	
 	parameterTable[c("sdSpatial", "sdNugget"),"estimate"] = 
 			sqrt(parameterTable[c("sdSpatial", "sdNugget"),"estimate"])
-	
-#	dimnames(parameterTable) = unlist(lapply(dimnames(parameterTable),
+  
+  parameterTable = rbind(parameterTable,
+      anisoAngleDegrees = (360/2*pi)*parameterTable['anisoAngleRadians',])
+  dontscale = c('pval','Estimated')
+  parameterTable['anisoAngleDegrees',dontscale] = 
+      parameterTable['anisoAngleRadians',dontscale] 
+
+  #	dimnames(parameterTable) = unlist(lapply(dimnames(parameterTable),
 #			function(qq) {
 #				qq=gsub("_", "\\\\textunderscore ", qq)
 #				qq=gsub("\\$", "\\\\textdollar ", qq)
@@ -576,8 +586,9 @@ likfitLgm = function(
 #				qq
 #			}
 #	))
-	
+
 	result$summary = as.data.frame(parameterTable)
-	
-	result
+  result$summary$Estimated = as.logical(result$summary$Estimated)
+
+  result
 }
