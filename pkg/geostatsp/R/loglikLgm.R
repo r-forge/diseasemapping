@@ -427,7 +427,7 @@ likfitLgm = function(
   ] = 3
   
   forO$pars[!is.finite(forO$pars)]=-1
-  forO$pars = c(forO$pars, rep(0.0, nrow(forO$pars)^2))
+  forO$pars = c(forO$pars, rep(0.0, ncol(covariates)^2))
   
 
   if(aniso){
@@ -448,7 +448,7 @@ likfitLgm = function(
       xcoord,
       ycoord,
       as.integer(aniso),
-      as.integer(c(nrow(obsCov), 3, ncol(covariates))),
+      N=as.integer(c(nrow(obsCov), 3, ncol(covariates))),
     Ltype=as.integer(reml+!estimateVariance),
     optInt = as.integer(forO$scalarInt),
     optF = as.double(forO$scalarF),

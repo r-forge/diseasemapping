@@ -176,7 +176,7 @@ matern.SpatialPoints = function(x,
   if(type==2 | type==4){
     result = as(
         new("dtrMatrix", 
-        Dim = c(length(x), length(x)), 
+        Dim = as.integer(c(length(x), length(x))), 
         uplo="L",
         x=resC$result),
     "Cholesky")
@@ -184,7 +184,7 @@ matern.SpatialPoints = function(x,
       attributes(result)$cholInfo = resC$type
   } else {
     result = new("dsyMatrix", 
-      Dim = c(length(x), length(x)), 
+      Dim = as.integer(c(length(x), length(x))), 
       uplo="L",
       x=resC$result)
   }

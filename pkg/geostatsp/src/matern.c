@@ -15,7 +15,9 @@ if the precision is computed type is info from dpotrfi
 
 #include"geostatsp.h"
 
-void maternArasterBpoints(double *Axmin, double *Axres, int *AxN,
+void maternArasterBpoints(
+		double *Axmin, double *Axres,
+		int *AxN,
 		double *Aymax, double *Ayres, int *AyN,
 		double *Bx, double *By, int *BN,
 		double *result,
@@ -139,6 +141,10 @@ free(bk);
 
 }
 
+// returns an N by N matrix for matern correlation
+// for N points with vectors of coordinates x and y
+// type = 0 or 1 return correlation,
+// type=2 chol, type=3 precision, type 4 chol of precsion
 void maternAniso(
 		const double *x,
 		const double *y,

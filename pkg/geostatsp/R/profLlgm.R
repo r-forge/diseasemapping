@@ -1,8 +1,6 @@
 profLlgm = function(fit,mc.cores=NULL, ...) {
 	
 	dots = list(...)
-#  if(any(names(dots)=='anisoAngleDegrees'))
-#    dots$anisoAngleRadians=dots$anisoAngleDegrees*(2*pi/360)
   fit$parameters = fillParam(fit$parameters)
 	varying = intersect(names(dots), names(fit$parameters))
 
@@ -20,8 +18,14 @@ profLlgm = function(fit,mc.cores=NULL, ...) {
 	
   if(length(grep("^anisoAngle", varying))){
     reEstimate = grep("^anisoAngle", reEstimate, value=TRUE,invert=TRUE)
+    varying = gsub("anisoAngleDegrees", "anisoAngleRadians",varying)
+    dots$anisoAngleRadians=dots$anisoAngleDegrees*(2*pi/360)
+    radiansToDegrees=TRUE
+  } else {
+    radiansToDegrees=FALSE
   }
   reEstimate = gsub("/1000", "", reEstimate)
+
   
 	parValues = do.call(expand.grid, dots[varying])
 	
@@ -52,7 +56,7 @@ profLlgm = function(fit,mc.cores=NULL, ...) {
 	forCall = c(
 			as.list(parValues),
 			FUN=oneL,
-			SIMPLIFY=TRUE)
+			SIMPLIFY=FALSE)
 	
 	if(!is.null(mc.cores)) {
 		resL = do.call(parallel::mcmapply,
@@ -61,6 +65,7 @@ profLlgm = function(fit,mc.cores=NULL, ...) {
 	} else {
 		resL = do.call(mapply,forCall)
 	}
+  resL = simplify2array(resL)
 
 	
 	if(length(varying)==1) {
@@ -78,10 +83,14 @@ profLlgm = function(fit,mc.cores=NULL, ...) {
 		dots[[varying]] = dots[[varying]][theorder]
 		
 	} else {
+   if(radiansToDegrees){
+     varying =  gsub("anisoAngleRadians","anisoAngleDegrees", varying)
+   }
 		thedimnames=dots[varying]
-		for(D in names(thedimnames))
+		for(D in names(thedimnames)) {
 			thedimnames[[D]] = paste(
 					D, thedimnames[[D]],sep='_')
+    }
 		L = array(resL[grep("^m2logL",rownames(resL)),], 
 				unlist(lapply(thedimnames, length)),
 				dimnames=thedimnames)	

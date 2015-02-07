@@ -87,7 +87,7 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 	# precision matrix without adjusting for edge effects
 	precMat =maternGmrfPrec(nn32, param=params) 
 	
-#	if(interactive() | Sys.info()['user'] =='patrick') {	
+	if(interactive() | Sys.info()['user'] =='patrick') {	
 	# and with the adjustment
 	precMatCorr =maternGmrfPrec(nn32, param=params, adjustEdges=TRUE) 
 	
@@ -145,7 +145,7 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
  	
  	quantile(prodUncor[lower.tri(prodUncor,diag=FALSE)],na.rm=TRUE)	
  	quantile(prodCor[lower.tri(prodCor,diag=FALSE)],na.rm=TRUE)	
-#}
+}
  	
 
 

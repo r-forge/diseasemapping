@@ -26,7 +26,7 @@ int NforBoxCoxOpt[3];
 double  *betaHatOpt, *varBetaHatOpt;
 double *LxLyOpt;
 
-
+// objective function for minimizing -2 logL
 double maternLogLObj(
 		int junk,
 		double *paramArg,
@@ -300,10 +300,10 @@ void maternLogLOpt(
 
 // allocate memory
 
-	obsCovCopy = (double *) calloc(N[0]*(1+N[2]),sizeof(double));
+	obsCovCopy = (double *) calloc(N[0]*(N[1]+N[2]),sizeof(double));
 	// enough memory for covariates and one vector of observations
 	corMatOpt = (double *) calloc(N[0]*N[0],sizeof(double));
-	LxLyOpt = (double *) calloc(100+N[1]*N[2],sizeof(double));
+	LxLyOpt = (double *) calloc(N[1]*N[2],sizeof(double));
 
 #ifdef UNDEF
 	resultGr = (double *) calloc(SparamOpt[0]*6,sizeof(double));
