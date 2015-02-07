@@ -702,6 +702,7 @@ paramInfo$empirical$optimalShape =
     
     precOuter = covMatInv + AQinvA
     precOuter = forceSymmetric(precOuter)
+    precOuter = as.matrix(precOuter)
     
 		theNNmat[outerCells,outerCells] = precOuter
 		theNNmat = forceSymmetric(theNNmat)
