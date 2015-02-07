@@ -312,7 +312,7 @@ void matern(
 	  rowEnd = Nrow*Dcol+Nrow;
 	  for(D=Dcol*Nrow+Dcol+addToRowStart; D < rowEnd; D++) {
 //		thisx = fabs(distance[D])*xscale;
-		logthisx = log(distance[D]) + logxscale;
+		logthisx = log(fabs(distance[D])) + logxscale;
 		thisx = exp(logthisx);
 
 		if(isnan(thisx) ) {

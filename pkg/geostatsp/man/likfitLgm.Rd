@@ -41,7 +41,8 @@ a model matrix.
 	or a data frame containing observations and covariates.
 }
 \item{coordinates}{A \code{SpatialPoints} object containing the locations of each observation, 
-which defaults to \code{data}.  Alternately, \code{coordinates} can be a \code{dist} object 
+which defaults to \code{data}.  Alternately, \code{coordinates} can be a
+ \code{link[Matrix]{SymmetricMatrix-class} or \code{dist} object 
 reflecting the distance matrix of these coordinates (though this is only permitted if the 
 model is isotropic).
 }
@@ -67,11 +68,12 @@ to  \code{\link[stats]{optim}}.}
 \item{moreParams}{Vector of additional parameters, combined with \code{param}.  
 Used for passing fixed parameters to \code{loglikLgm} from within \code{\link[stats]{optim}}.
 }
+\item{verbose}{if \code{TRUE} information is printed by \code{optim}.}
 }
 
 \value{
 \code{likfitLgm} produces list with elements
-\item{param}{Maximum Likelihood Estimates of model parameters}
+\item{parameters}{Maximum Likelihood Estimates of model parameters}
 \item{varBetaHat}{Variance matrix of the estimated regression parameters}
 \item{optim}{results from \code{\link[stats]{optim}} }
 \item{trend}{Either formula for the fixed effects or names of the columns
