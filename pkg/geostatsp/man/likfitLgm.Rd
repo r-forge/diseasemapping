@@ -42,13 +42,12 @@ a model matrix.
 }
 \item{coordinates}{A \code{SpatialPoints} object containing the locations of each observation, 
 which defaults to \code{data}.  Alternately, \code{coordinates} can be a
- \code{link[Matrix]{SymmetricMatrix-class} or \code{dist} object 
+ \code{\link[Matrix]{symmetricMatrix-class}} or \code{dist} object 
 reflecting the distance matrix of these coordinates (though this is only permitted if the 
-model is isotropic).
-}
+model is isotropic).}
 \item{param}{A vector of model parameters, with named elements being amongst 
 \code{range, nugget, boxcox, shape, anisoAngleDegrees, anisoAngleRadians,
-anisoRatio}, and possibly \code{variance} (see \code{link{matern}}). 
+anisoRatio}, and possibly \code{variance} (see \code{\link{matern}}). 
  When calling \code{likfitLgm} this vector is a 
 combination of starting values for parameters to be estiamated and fixed values of parameters
 which will not be estimated.  For \code{loglikLgm}, it is the covariance parameters 
@@ -68,7 +67,7 @@ to  \code{\link[stats]{optim}}.}
 \item{moreParams}{Vector of additional parameters, combined with \code{param}.  
 Used for passing fixed parameters to \code{loglikLgm} from within \code{\link[stats]{optim}}.
 }
-\item{verbose}{if \code{TRUE} information is printed by \code{optim}.}
+\item{verbose}{if \code{TRUE} information is printed by \code{\link[stats]{optim}}.}
 }
 
 \value{

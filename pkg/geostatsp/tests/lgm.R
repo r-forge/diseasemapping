@@ -27,7 +27,9 @@ bob(swissFit)
 
 # specify formula using name of list element
 
-swissFitAgain = lgm(data=swissRain[1:60,], formula=rain~ elev+land,
+swissFitAgain = lgm(
+    data=swissRain[1:60,], 
+    formula=rain~ elev+land,
 		grid=80, covariates=list(elev=swissAltitude,land=swissLandType),
 		shape=1,  fixShape=TRUE, 
 		boxcox=0.5, fixBoxcox=TRUE, 

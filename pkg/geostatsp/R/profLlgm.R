@@ -1,10 +1,13 @@
 profLlgm = function(fit,mc.cores=NULL, ...) {
 	
 	dots = list(...)
-	varying = intersect(names(dots), names(fit$param))
+#  if(any(names(dots)=='anisoAngleDegrees'))
+#    dots$anisoAngleRadians=dots$anisoAngleDegrees*(2*pi/360)
+  fit$parameters = fillParam(fit$parameters)
+	varying = intersect(names(dots), names(fit$parameters))
 
 	nonLinearParams = c('boxcox','shape','nugget','variance',
-			'anisoAngleDegrees','anisoRatio','range')
+			'anisoAngleRadians','anisoAngleDegrees','anisoRatio','range')
 	
 	reEstimate = rownames(fit$summary)[
 			fit$summary[,"Estimated"]
@@ -15,16 +18,25 @@ profLlgm = function(fit,mc.cores=NULL, ...) {
 	reEstimate = intersect(reEstimate, nonLinearParams)
 	reEstimate = reEstimate[!reEstimate %in% varying]
 	
+  if(length(grep("^anisoAngle", varying))){
+    reEstimate = grep("^anisoAngle", reEstimate, value=TRUE,invert=TRUE)
+  }
+  reEstimate = gsub("/1000", "", reEstimate)
+  
 	parValues = do.call(expand.grid, dots[varying])
 	
-	baseParams = fit$param
+	baseParams = fit$parameters
 	baseParams = baseParams[names(baseParams)%in%
 					nonLinearParams]
 	
 	baseParams=baseParams[!names(baseParams)%in% varying]
 	baseParams=baseParams[names(baseParams) != 'variance']
 	
-	
+  if(length(grep("^anisoAngle", varying))){
+    baseParams = baseParams[grep("^anisoAngle", 
+            names(baseParams), invert=TRUE)]
+  }
+  
 	
 	oneL = function(...){
 		res=geostatsp::likfitLgm(data=fit$data, 
@@ -33,8 +45,8 @@ profLlgm = function(fit,mc.cores=NULL, ...) {
 						baseParams),
 				paramToEstimate=reEstimate,
 				reml=fit$model$reml)
-		c(..., L = 	res$opt$val,
-				res$param[reEstimate])
+		c(..., res$optim$logL,
+				res$parameters[reEstimate])
 	}
 	
 	forCall = c(
@@ -57,7 +69,12 @@ profLlgm = function(fit,mc.cores=NULL, ...) {
 				fit$param[varying]
 		)
 		theorder = order(dots[[varying]])
-		L = c(resL["L",],fit$opt$val)[theorder]
+		L = c(
+        resL[grep("^m2logL",rownames(resL)),],
+        fit$optim$logL[
+            grep("^m2logL",
+            names(fit$optim$logL))]
+    )[theorder]
 		dots[[varying]] = dots[[varying]][theorder]
 		
 	} else {
@@ -65,14 +82,14 @@ profLlgm = function(fit,mc.cores=NULL, ...) {
 		for(D in names(thedimnames))
 			thedimnames[[D]] = paste(
 					D, thedimnames[[D]],sep='_')
-		L = array(resL["L",], 
+		L = array(resL[grep("^m2logL",rownames(resL)),], 
 				unlist(lapply(thedimnames, length)),
 				dimnames=thedimnames)	
 	} 
 	
 	Sprob = c(1, 0.999, 0.99, 0.95, 0.9, 0.8, 0.5, 0)
 	Squant = qchisq(Sprob, df=length(varying))
-	Scontour = -fit$opt$val/2 -Squant/2 	
+	Scontour = -fit$optim$logL[1]/2 -Squant/2 	
 	
 	
 	res = list(logL=-L/2,
@@ -80,7 +97,7 @@ profLlgm = function(fit,mc.cores=NULL, ...) {
 			prob=Sprob,
 			breaks=Scontour,
 			MLE=fit$param[varying],
-			maxLogL = -fit$opt$val/2,
+			maxLogL = -fit$opt$logL[1]/2,
 			basepars=baseParams
 	)
 

@@ -144,7 +144,7 @@ setMethod("lgm",
 	Spar = c(shape=shape,nugget=nugget,range=NA,boxcox=boxcox)
 	
 	if(aniso) {
-		Spar = c(Spar, anisoAngleDegrees=NA,anisoRatio=NA)
+		Spar = c(Spar, anisoAngleRadians=NA,anisoRatio=NA)
 		paramToEstimate = c(paramToEstimate,
 				"anisoAngleDegrees","anisoRatio")		
 	}
