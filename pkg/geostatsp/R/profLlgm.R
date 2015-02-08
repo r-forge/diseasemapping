@@ -1,4 +1,4 @@
-profLlgm = function(fit,mc.cores=NULL, ...) {
+profLlgm = function(fit,mc.cores=1, ...) {
 	
 	dots = list(...)
   fit$parameters = fillParam(fit$parameters)
@@ -42,22 +42,10 @@ profLlgm = function(fit,mc.cores=NULL, ...) {
   }
   
 	
-	oneL = function(newpars){
-		res=likfitLgm(
-        data=fit$data, 
-				formula=fit$model$formula,
-				param=c(unlist(newpars), 
-						baseParams),
-				paramToEstimate=reEstimate,
-				reml=fit$model$reml)
-		c(..., res$optim$logL,
-				res$parameters[reEstimate])
-	}
-	
   parList = apply(parValues,1,list)
   parList = lapply(parList, function(qq) c(unlist(qq), baseParams))
   
-	if(!is.null(mc.cores)) {
+	if(mc.cores>1) {
 		resL = parallel::mcmapply(
         likfitLgm, 
         parList,
@@ -70,8 +58,18 @@ profLlgm = function(fit,mc.cores=NULL, ...) {
 				mc.cores=mc.cores
 		)
 	} else {
-		resL = do.call(mapply,forCall)
-	}
+    resL = mapply(
+        likfitLgm, 
+        parList,
+        MoreArgs=list(
+            data=fit$data, 
+            formula=fit$model$formula,
+            paramToEstimate=reEstimate,
+            reml=fit$model$reml,
+            coordinates=fit$data),
+        mc.cores=mc.cores
+    )
+  }
   resL = simplify2array(resL)
 
 	
