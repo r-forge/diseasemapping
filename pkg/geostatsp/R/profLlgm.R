@@ -55,7 +55,8 @@ profLlgm = function(fit,mc.cores=1, ...) {
         paramToEstimate=reEstimate,
         reml=fit$model$reml,
         coordinates=fit$data),
-				mc.cores=mc.cores
+				mc.cores=mc.cores,
+        SIMPLIFY=FALSE
 		)
 	} else {
     resL = mapply(
@@ -67,30 +68,31 @@ profLlgm = function(fit,mc.cores=1, ...) {
             paramToEstimate=reEstimate,
             reml=fit$model$reml,
             coordinates=fit$data),
-        mc.cores=mc.cores
+        SIMPLIFY=FALSE
     )
   }
+  resL = lapply(resL, function(qq) qq$optim$logL)
   resL = simplify2array(resL)
 
-	
+  if(radiansToDegrees){
+    varying =  gsub("anisoAngleRadians","anisoAngleDegrees", varying)
+  }
+  
 	if(length(varying)==1) {
-		dots[[varying]] = c(
+    forNames =  c(
 				dots[[varying]],
 				fit$param[varying]
 		)
-		theorder = order(dots[[varying]])
+		theorder = order(forNames)
 		L = c(
         resL[grep("^m2logL",rownames(resL)),],
         fit$optim$logL[
             grep("^m2logL",
             names(fit$optim$logL))]
     )[theorder]
-		dots[[varying]] = dots[[varying]][theorder]
-		
+    dots[[varying]] = forNames = forNames[theorder]
+    names(L) = paste(varying, forNames,sep="")
 	} else {
-   if(radiansToDegrees){
-     varying =  gsub("anisoAngleRadians","anisoAngleDegrees", varying)
-   }
 		thedimnames=dots[varying]
 		for(D in names(thedimnames)) {
 			thedimnames[[D]] = paste(
@@ -136,9 +138,10 @@ profLlgm = function(fit,mc.cores=1, ...) {
 		Skeep = seq(2, length(Sprob)-1)
 		res$ci = cbind(
 				prob=Sprob[Skeep],
-				lower= approx(res$logL[smaller], 
-						dots[[varying]][smaller],
-						Scontour[Skeep])$y,
+				lower= approx(
+            x=res$logL[smaller], 
+						y=dots[[varying]][smaller],
+						xout=Scontour[Skeep])$y,
 				upper=approx(res$logL[bigger], 
 						dots[[varying]][bigger], 
 						Scontour[Skeep])$y
