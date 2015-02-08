@@ -11,9 +11,8 @@ swissFit = lgm(data=swissRain,
 		aniso=TRUE,reml=FALSE,
 		param=c(
         anisoAngleDegrees=30,
-        anisoRatio=8),
-    nugget=0,fixNugget=TRUE
-  )
+        anisoRatio=8)
+)
 
 
 x=profLlgm(swissFit, mc.cores=Ncores,

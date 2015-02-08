@@ -42,10 +42,11 @@ profLlgm = function(fit,mc.cores=NULL, ...) {
   }
   
 	
-	oneL = function(...){
-		res=geostatsp::likfitLgm(data=fit$data, 
+	oneL = function(newpars){
+		res=likfitLgm(
+        data=fit$data, 
 				formula=fit$model$formula,
-				param=c(..., 
+				param=c(unlist(newpars), 
 						baseParams),
 				paramToEstimate=reEstimate,
 				reml=fit$model$reml)
@@ -53,14 +54,20 @@ profLlgm = function(fit,mc.cores=NULL, ...) {
 				res$parameters[reEstimate])
 	}
 	
-	forCall = c(
-			as.list(parValues),
-			FUN=oneL,
-			SIMPLIFY=FALSE)
-	
+  parList = apply(parValues,1,list)
+  parList = lapply(parList, function(qq) c(unlist(qq), baseParams))
+  
 	if(!is.null(mc.cores)) {
-		resL = do.call(parallel::mcmapply,
-				c(forCall, mc.cores=mc.cores)
+		resL = parallel::mcmapply(
+        likfitLgm, 
+        parList,
+        MoreArgs=list(
+        data=fit$data, 
+        formula=fit$model$formula,
+        paramToEstimate=reEstimate,
+        reml=fit$model$reml,
+        coordinates=fit$data),
+				mc.cores=mc.cores
 		)
 	} else {
 		resL = do.call(mapply,forCall)

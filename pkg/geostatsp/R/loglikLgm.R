@@ -111,30 +111,6 @@ loglikLgm = function(param,
 		
 		
     obsCov = cbind(observations, covariates)
-    if(FALSE){ # old code
-    fromC = maternCholSolve(param, obsCov, coordinates)
-
-    betaHat = fromC$betaHat
-    
-    useMl = c('ml', 'reml')[1+reml]
-    useVariance = c('estimatedVariance','fixedVariance')[1+haveVariance]
-    minusTwoLogLik = 
-        (fromC$minusTwoLogLik[useMl,useVariance] - twoLogJacobian)
-    varBetaHat = fromC$varBetaHat[,,useVariance, useMl]
-    totalVarHat = fromC$totalVarHat[useMl]
-    
-    if(haveVariance) {
-      varMle = fromC$varMle[useMl,]
-    } else {
-      varMle = param[colnames(fromC$varMle)]
-      param[c("variance","nugget")] = 
-          totalVarHat * param[c("variance","nugget")]
-    }
-    
-  # format the output
-  result = minusTwoLogLik
-	
-} else {
   
   Nobs = nrow(obsCov)
   Ncov = ncol(obsCov)-1
@@ -156,6 +132,7 @@ loglikLgm = function(param,
     warning('coordinates should be SpatialPoints or matrix')
     xcoord=ycoord=aniso=NULL
   }
+  
   
   resultC = .C("maternLogL",
       xcoord=as.double(xcoord), 
@@ -188,12 +165,9 @@ loglikLgm = function(param,
 
   
   result = resultC$logL[Nrep+1]- twoLogJacobian
-      
-}
 
-param[c("variance","nugget")] = 
+  param[c("variance","nugget")] = 
     totalVarHat * param[c("variance","nugget")]
-
 
 
 if(minustwotimes) {
@@ -440,6 +414,32 @@ likfitLgm = function(
   
   obsCov = cbind(y1=observations, y2=0, y3=0, covariates)
   
+  if(all(paramToEstimate=='variance')){
+    
+    theL = loglikLgm(param,
+        data=observations, 
+        formula=covariates, 
+        coordinates=coordinates,
+        reml=reml)
+    fromOptim = attributes(theL)
+    
+    result = list(
+        optim = list(
+            mle=fillParam(fromOptim$param(),
+            logL = c(m2logL = as.numeric(theL),
+                logL = - as.numeric(theL)/2),
+            totalVarHat = fromOptim$totalVarHat,
+            message = 'numerical optimization not needed',
+            options=NULL,
+            detail = NULL
+        ),
+        betaHat = fromOptim$betaHat,
+        varBetaHat =  
+            fromOptim$varBetaHat
+    ))
+
+} else {
+  
   fromOptim = .C(
           "maternLogLOpt",
       start=paramsForC,    
@@ -503,6 +503,8 @@ likfitLgm = function(
    sep=''
    )
 
+   } # end not only variance to estimate
+   
    result$data = data.frame(
        observations = observations,
        fitted=
