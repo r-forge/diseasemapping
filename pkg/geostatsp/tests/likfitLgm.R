@@ -81,6 +81,18 @@ loglikLgm(formula=Ybc ~ cov1 + cov2,
     param=myres$param
 )
 
+# only estimate variance
+myres = likfitLgm(
+    formula=Ybc ~ cov1 + cov2, 
+    data=mydat,
+    coordinates=mydat,
+    param=c(range=0.01,nugget=2,shape=2, 
+        anisoAngleDegrees=20, anisoRatio=2,
+        boxcox=1), 
+    paramToEstimate = c("variance"),
+    reml=TRUE
+)
+
 
 pdf("ligfitLgm.pdf")
 par(mfrow=c(1,2))

@@ -425,7 +425,7 @@ likfitLgm = function(
     
     result = list(
         optim = list(
-            mle=fillParam(fromOptim$param(),
+            mle=fillParam(fromOptim$param),
             logL = c(m2logL = as.numeric(theL),
                 logL = - as.numeric(theL)/2),
             totalVarHat = fromOptim$totalVarHat,
@@ -436,7 +436,7 @@ likfitLgm = function(
         betaHat = fromOptim$betaHat,
         varBetaHat =  
             fromOptim$varBetaHat
-    ))
+    )
 
 } else {
   
@@ -489,21 +489,23 @@ likfitLgm = function(
      names(result$betaHat),names(result$betaHat)
      )
      
-  result$parameters = c(
-      result$optim$mle, result$betaHat
-      )
-      
+
+   } # end not only variance to estimate
+
+   result$parameters = c(
+       result$optim$mle, result$betaHat
+   )
+   
    result$parameters[c('nugget', 'variance')] = 
        result$parameters[c('nugget', 'variance')] * 
        result$optim$totalVarHat  
-
+   
    names(result$optim$logL) = paste(
        names(result$optim$logL),
-   c('.ml', '.reml')[reml+1],
-   sep=''
+       c('.ml', '.reml')[reml+1],
+       sep=''
    )
-
-   } # end not only variance to estimate
+   
    
    result$data = data.frame(
        observations = observations,
