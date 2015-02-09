@@ -54,8 +54,20 @@ informationLgm = function(fit, ...) {
 #    stuff <<- fit
     return(list(summary=fit$summary,information=NULL, error=infmat))
   } 
-    infmat = infmat*2
+  infmat = infmat*2
 	
+  if(length(grep("anisoAngleRadians", colnames(infmat))) & 
+      length(grep("anisoAngleRadians", colnames(infmat)))) {
+    
+    anisoAngleDegrees = (360/(2*pi))*infmat[,'anisoAngleRadians']
+  infmat = rbind(infmat, anisoAngleDegrees=anisoAngleDegrees)
+  anisoAngleDegrees = c(anisoAngleDegrees,
+      anisoAngleDegrees = (360/(2*pi))*
+          as.numeric(anisoAngleDegrees['anisoAngleRadians'])
+  )
+  infmat = cbind(infmat, anisoAngleDegrees=anisoAngleDegrees)  
+  }
+  
 	pvec = grep("^ci([[:digit:]]|\\.)+$", colnames(fit$summary),
 			value=TRUE)
 	pvec = as.numeric(gsub("^ci","", pvec))
@@ -91,7 +103,11 @@ informationLgm = function(fit, ...) {
 				sdSpatial = sqrt(
 						pmax(0,forSummary["variance",]))
 		)
-	
+
+  if(any(rownames(forSummary)=='anisoAngleRadians'))
+    forSummary = rbind(forSummary,
+        anisoAngleDegrees = forSummary['anisoAngleRadians',]*360/(2*pi)
+    )
 	
 	inBoth = intersect(rownames(summary), rownames(forSummary))
 	

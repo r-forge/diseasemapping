@@ -99,8 +99,7 @@ void logLfromComponents(
 		const int *N,
 		const double *boxcox,
 		const int boxcoxType,
-		double *totalSsq,// length Nrep+1 logL on exit
-		double *totalVarHat,// length Nrep
+		double *totalSsq,// matrix Nrep by 2
 		const double *determinants,
 		const int *Ltype
 		// 0=ml, var estimated

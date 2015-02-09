@@ -15,16 +15,11 @@ profLlgm = function(fit,mc.cores=1, ...) {
 	reEstimate = gsub("range \\(km\\)", "range", reEstimate)
 	reEstimate = intersect(reEstimate, nonLinearParams)
 	reEstimate = reEstimate[!reEstimate %in% varying]
-	
-  if(length(grep("^anisoAngle", varying))){
-    reEstimate = grep("^anisoAngle", reEstimate, value=TRUE,invert=TRUE)
-    varying = gsub("anisoAngleDegrees", "anisoAngleRadians",varying)
-    dots$anisoAngleRadians=dots$anisoAngleDegrees*(2*pi/360)
-    radiansToDegrees=TRUE
-  } else {
-    radiansToDegrees=FALSE
-  }
   reEstimate = gsub("/1000", "", reEstimate)
+  
+  if(length(grep("^anisoAngle", reEstimate))>1)
+    reEstimate = grep("^anisoAngleDegrees", reEstimate,value=TRUE,invert=TRUE)
+  
 
   
 	parValues = do.call(expand.grid, dots[varying])
@@ -138,14 +133,19 @@ profLlgm = function(fit,mc.cores=1, ...) {
 		Skeep = seq(2, length(Sprob)-1)
 		res$ci = cbind(
 				prob=Sprob[Skeep],
-				lower= approx(
+        lower=NA, upper=NA)
+    if(sum(smaller)>1) 
+				res$ci[,'lower'] =
+             approx(
             x=res$logL[smaller], 
 						y=dots[[varying]][smaller],
-						xout=Scontour[Skeep])$y,
-				upper=approx(res$logL[bigger], 
+						xout=Scontour[Skeep])$y
+  if(sum(bigger)>1)
+    res$ci[,'upper']=approx(
+        res$logL[bigger], 
 						dots[[varying]][bigger], 
 						Scontour[Skeep])$y
-		)
+ 
 		
 		res$ciLong = na.omit(
 				reshape(as.data.frame(res$ci), 

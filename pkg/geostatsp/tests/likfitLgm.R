@@ -39,10 +39,6 @@ mydat$YbcIso = (mydat$Yiso*0.5+1)^2
 print(range(mydat$Ybc))
 print(range(mydat$YbcIso))
 
-#dyn.unload("/home/patrick/workspace/diseasemapping/pkg/geostatsp/src/matern.so")
-#dyn.load("/home/patrick/workspace/diseasemapping/pkg/geostatsp/src/matern.so")
-
-
 date()
 myres = likfitLgm(
     formula=Ybc ~ cov1 + cov2, 

@@ -213,9 +213,48 @@ MLE  $\hat\phi, \hat\xi, \hat\tau,\hat\beta$  maximize $pr(Y ;
 \phi,\xi,\tau,\beta)$.
 
 \section*{Likelihood}
+\subsection{bog-standard}
+\[
+-2 \log pr(\mathbf{Y};\phi,\beta,\tau,\xi) = N \log(2\pi) + 
+\log| \var(\mathbf{Y})  | + \\
+( \mathbf{Y} -\mathbf{X}\beta)  '
+  \var(\mathbf{Y})^{-1}
+(\mathbf{Y} - \mathbf{X}\beta)
+\]
+
+\[	
+\var(\mathbf{Y}) = L L^T,\ L_C = L^{-1}C 
+\]
+
+\begin{align*}
+\hat\beta = &[\mathbf{X}^T
+  \var(\mathbf{Y})^{-1} \mathbf{X}^{-1}
+  [\mathbf{X}^T
+  \var(\mathbf{Y})^{-1} \mathbf{Y}]\\
+  = & (L_X^TL_X)^{-1} L_X^TL_Y\\
+-2 \log pr(\mathbf{Y};\phi,\beta,\tau,\xi) = &N \log(2\pi) +
+2\log| L  | + L_Y^TL_Y -2L_Y^TL_X\hat\beta + \hat\beta^T L_X^TL_X\hat\beta\\
+\hat\beta^T  L_X^TL_X\hat\beta = & L_Y^TL_X (L_X^TL_X)^{-1}  L_X^TL_X (L_X^TL_X)^{-1} L_X^TL_Y \\
+ = &   L_Y^TL_X (L_X^TL_X)^{-1} L_X^TL_Y \\
+= & L_Y^TL_X\hat\beta\\
+-2 \log pr(\mathbf{Y};\phi,\beta,\tau,\xi) = &N \log(2\pi) +
+2\log| L  | + L_Y^TL_Y -L_Y^TL_X(L_X^TL_X)^{-1} L_X^TL_Y \\
+-2 \log pr(\mathbf{Y};\phi,\beta,\tau,\xi) = &N \log(2\pi) +
+2\log| L  | + L_Y^TL_Y- L_Y^TL_X\hat\beta\\
+\end{align*}
+
+if $\var(Y) = \xi^2 \Sigma$, $\Sigma = L L^T$
+\begin{align*}
+-2 \log pr(\mathbf{Y};\phi,\beta,\tau,\xi) = &N \log(2\pi) +
+N \log(\xi^2) + 2\log| L  | + L_Y^TL_Y/\xi^2 -L_Y^TL_X\hat\beta/\xi^2 \\
+N/\hat\xi^2 = &L_Y^TL_Y(\hat\xi^2)^{-2} - L_Y^TL_X\hat\beta(\hat\xi^2)^{-2}\\
+\hat\xi^2 = &(L_Y^TL_Y - L_Y^TL_X\hat\beta)/N\\
+-2 \log pr(\mathbf{Y};\phi,\beta,\tau,\xi) = &N \log(2\pi) +N- N \log(N) 	+ 2\log| L  | +
+N\log(L_Y^TL_Y - L_Y^TL_X(L_X^TL_X)^{-1} L_X^TL_Y)
+\end{align*}
 
 
-
+\subsection{for GMRF}
 \begin{multline*}
 -2 \log pr(\mathbf{Y};\phi,\beta,\tau,\xi) =
 \log| (\xi^2  Q(\phi)^{-1} + \tau^2 I  ) | + \\
@@ -275,7 +314,7 @@ now find $\hat\tau(\tau/\xi, \psi)$
 \end{align*}
 
 
-\section*{Likelihood again}
+\section*{GMRF more efficient}
 
 Use $(C^{-1} + I)^{-1} = I-(C+I)^{-1}$ 
 \begin{align*}

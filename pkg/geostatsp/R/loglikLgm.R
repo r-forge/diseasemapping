@@ -133,7 +133,6 @@ loglikLgm = function(param,
     xcoord=ycoord=aniso=NULL
   }
   
-  
   resultC = .C("maternLogL",
       xcoord=as.double(xcoord), 
       ycoord=as.double(ycoord),
@@ -145,7 +144,7 @@ loglikLgm = function(param,
       N= as.integer(c(Nobs,Nrep,Ncov)),
       boxcox=as.double(-9.9),
       boxcoxType=as.integer(0),
-      logL=as.double(rep(-9.9, Nrep+1)),
+      logL=as.double(rep(-9.9, Nrep)),
       totalVarHat=as.double(rep(-9.9, Nrep)),
       betaHat = as.double(rep(-9.9, Ncov)), 
       varBetaHat = as.double(rep(-9.9, Ncov* Ncov)),
@@ -164,8 +163,9 @@ loglikLgm = function(param,
   varBetaHat = varBetaHat*totalVarHat
 
   
-  result = resultC$logL[Nrep+1]- twoLogJacobian
+  result = resultC$logL[1]- twoLogJacobian
 
+  if(!haveVariance)
   param[c("variance","nugget")] = 
     totalVarHat * param[c("variance","nugget")]
 
@@ -182,12 +182,14 @@ if(reml)
   names(result) = gsub("Lik$", "RestrictedLik", names(result))
 
 attributes(result)$param = param
-attributes(result)$totalVarHat = totalVarHat
+attributes(result)$totalVarHat = resultC$totalVarHat
 attributes(result)$betaHat = betaHat
 attributes(result)$varBetaHat = varBetaHat
 attributes(result)$reml=reml
-
-  
+attributes(result)$twoLogJacobian = twoLogJacobian
+attributes(result)$Ltype = as.integer(Ltype)
+attributes(result)$Lorig = resultC$logL
+attributes(result)$determinants = resultC$obsCov[1:2]
 result
 }
 
@@ -300,7 +302,7 @@ likfitLgm = function(
   
   # parameter defaults
   lowerDefaults = c(
-      nugget=0.001,
+      nugget=0,
       range=maxDist/10000,
       anisoRatio=0.01,
       anisoAngleRadians=-pi/2,
@@ -323,9 +325,9 @@ likfitLgm = function(
   
   parscaleDefaults = c(
       range=maxDist/20,
-      nugget=0.5,
+      nugget=0.1,
       boxcox=0.1,
-      anisoAngleRadians=1,
+      anisoAngleRadians=0.2,
       anisoRatio=1,
       variance=1,
       shape=0.2)
@@ -345,8 +347,9 @@ likfitLgm = function(
   moreParams = paramDefaults[!names(paramDefaults) %in% paramToEstimate]
   
   allParams = c(startingParam, moreParams)
-  allParams = fillParam(allParams)
-  paramsForC = allParams[c('nugget','variance','range','shape','anisoRatio','anisoAngleRadians','boxcox')]
+  allParams = geostatsp:::fillParam(allParams)
+  paramsForC = allParams[c('nugget','variance','range','shape',
+          'anisoRatio','anisoAngleRadians','boxcox')]
   
   Sparam = names(paramsForC) %in% paramToEstimate
   names(Sparam) = names(paramsForC)
@@ -457,13 +460,15 @@ likfitLgm = function(
     message=format(" ",width=80)
   )
 
- 
+  stuff2 <<- fromOptim
   result = list(
       optim = list(
         mle=fromOptim$start,
         logL = c(m2logL = fromOptim$optF[1],
           logL = - fromOptim$optF[1]/2),
         totalVarHat = fromOptim$optF[2],
+        boxcox = fromOptim$optF[3:5],
+        determinants=fromOptim$optF[6:7],
         message = fromOptim$message,
         options=cbind(
             start=paramsForC[Sparam],
@@ -492,9 +497,11 @@ likfitLgm = function(
 
    } # end not only variance to estimate
 
-   result$parameters = c(
+   result$parameters = fillParam(
+       c(
        result$optim$mle, result$betaHat
    )
+)
    
    result$parameters[c('nugget', 'variance')] = 
        result$parameters[c('nugget', 'variance')] * 
@@ -507,11 +514,15 @@ likfitLgm = function(
    )
    
    
-   result$data = data.frame(
+   result$data = cbind(
+       data.frame(
        observations = observations,
        fitted=
            covariates %*% result$parameters[colnames(covariates)]
+        ),
+       covariates
    )
+   
 
 
    
@@ -530,9 +541,13 @@ likfitLgm = function(
    }
 	
 
+ 
+   
    result$model = list(reml=reml)
 	if(class(trend)=="formula") {
 		result$model$formula = trend
+    result$data[[all.vars(formula)[1]]] =
+        result$data$observations
 	} else {
 		result$model$formula= names(trend)
 	}
@@ -574,12 +589,6 @@ likfitLgm = function(
 			rownames(parameterTable))	
 	parameterTable[c("sdSpatial", "sdNugget"),"estimate"] = 
 			sqrt(parameterTable[c("sdSpatial", "sdNugget"),"estimate"])
-  
-  parameterTable = rbind(parameterTable,
-      anisoAngleDegrees = (360/2*pi)*parameterTable['anisoAngleRadians',])
-  dontscale = c('pval','Estimated')
-  parameterTable['anisoAngleDegrees',dontscale] = 
-      parameterTable['anisoAngleRadians',dontscale] 
 
   #	dimnames(parameterTable) = unlist(lapply(dimnames(parameterTable),
 #			function(qq) {

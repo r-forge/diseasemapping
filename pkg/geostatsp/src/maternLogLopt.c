@@ -14,14 +14,13 @@ double *obsCovOpt, *obsCovCopy; // pointer to the data
 double *obsForBoxcoxOpt; // pointer three column matrix of Y, logY and boxcox Y
 
 const double *xcoordOpt, *ycoordOpt;
-double *corMatOpt;
-
+double *corMatOpt, determinants[2];
 double boxcoxParamOpt[9] = {1,-9,-9,0,-9,-9,-9,-9,-9};
 int anisoOpt, LtypeOpt, boxcoxTypeOpt;
 int Nopt[3];// Nobs, 1, Ncov
 int NboxcoxOpt[2], doBoxcoxOpt; // Nobs, 3
 
-double *totalVarHatOpt;
+double *totalSsqOpt;
 int NforBoxCoxOpt[3];
 double  *betaHatOpt, *varBetaHatOpt;
 double *LxLyOpt;
@@ -34,7 +33,6 @@ double maternLogLObj(
 		) {
 	int zero=0, oneI=1,  maternType = 2, Dparam;
 	int NforCopy;
-	double determinants[2], logL[4];
 	// copy param to fullParam
 
 	NforCopy = Nopt[0]*(Nopt[1]+Nopt[2]);
@@ -71,7 +69,7 @@ double maternLogLObj(
 		obsCovCopy,
 		Nopt,  // Nobs, 1, Ncov,
 		corMatOpt,
-		logL, // a 1 by Nrep matrix
+		totalSsqOpt, // a Nrep  by 2 matrix
 		betaHatOpt, // an Ncov by Nrep matrix
 		varBetaHatOpt, // an Ncov by Ncov by Nrep array
 		determinants, // detVarHalf, detCholCovInvXcrossHalf
@@ -80,9 +78,8 @@ double maternLogLObj(
 	logLfromComponents(
 				Nopt,
 				&boxcoxParamOpt[6],
-				doBoxcoxOpt,
-				logL,
-				totalVarHatOpt,
+				1,
+				totalSsqOpt,
 				determinants,
 				&LtypeOpt
 		);
@@ -94,17 +91,17 @@ double maternLogLObj(
 //		Rprintf(" %f ", paramOpt[Dparam] );
 //	Rprintf("l %f ", logL[0]);
 
-	if(ISNAN(logL[0])){
+	if(ISNAN(totalSsqOpt[0])){
 			Rprintf("\n p ");
 			for(Dparam=0;Dparam<SparamOpt[0];++Dparam)
 				Rprintf(" %f ", paramArg[Dparam] );
 			Rprintf("\n pf ");
 			for(Dparam=0;Dparam<7;++Dparam)
 				Rprintf(" %f ", paramOpt[Dparam] );
-			Rprintf("l %f ", logL[0]);
+			Rprintf("l %f ", totalSsqOpt[0]);
 	}
 
-	return logL[0];
+	return totalSsqOpt[0];
 }
 
 void maternLogLgr(
@@ -232,10 +229,6 @@ void maternLogLOpt(
 	SparamOpt[0]=DparamForOpt-1;
 
 	paramArg = (double *) calloc(SparamOpt[0],sizeof(double));
-	totalVarHatOpt = (double *) calloc(4,sizeof(double));
-	betaHatOpt= (double *) calloc(N[2],sizeof(double));
-	varBetaHatOpt = (double *) calloc(N[2]*N[2],sizeof(double));
-	LtypeOpt = *Ltype;
 
 
 	// create vector of values for parameters to be estimated
@@ -300,10 +293,15 @@ void maternLogLOpt(
 
 // allocate memory
 
+	betaHatOpt= (double *) calloc(N[2],sizeof(double));
+	varBetaHatOpt = (double *) calloc(N[2]*N[2],sizeof(double));
+	LtypeOpt = *Ltype;
 	obsCovCopy = (double *) calloc(N[0]*(N[1]+N[2]),sizeof(double));
 	// enough memory for covariates and one vector of observations
 	corMatOpt = (double *) calloc(N[0]*N[0],sizeof(double));
 	LxLyOpt = (double *) calloc(N[1]*N[2],sizeof(double));
+	totalSsqOpt = (double *) calloc(2*N[1],sizeof(double));
+
 
 #ifdef UNDEF
 	resultGr = (double *) calloc(SparamOpt[0]*6,sizeof(double));
@@ -349,18 +347,24 @@ void maternLogLOpt(
 			scalarsInt[2]//int nREP
 		  );
 
+
+// run once again to ensure the global objects
+	// reflect the optimal parameters
+	maternLogLObj(*N,paramArg, optimEx);
+
 	strcpy(*msg, themsg);
 
 	scalarsInt[0] = optimFail;
 	scalarsInt[1] = fncount;
 	scalarsInt[2] = grcount;
 	scalarsF[0] = result;
-	scalarsF[1] = totalVarHatOpt[0];
+	scalarsF[1] = totalSsqOpt[1];
+	scalarsF[2] = boxcoxParamOpt[6];
+	scalarsF[3] = boxcoxParamOpt[7];
+	scalarsF[4] = boxcoxParamOpt[8];
+	scalarsF[5] = determinants[0];
+	scalarsF[6] = determinants[1];
 
-
-	for(Dparam=0;Dparam<SparamOpt[0];++Dparam){
-		paramOpt[SparamOpt[Dparam+1]]=paramArg[Dparam];
-	}
 
 	// make a copy of betahat
 	F77_NAME(dcopy)(&N[2],
@@ -377,7 +381,7 @@ void maternLogLOpt(
 	free(LxLyOpt);
 	free(paramArg);
 	free(SparamOpt);
-	free(totalVarHatOpt);
+	free(totalSsqOpt);
 	free(betaHatOpt);
 	free(varBetaHatOpt);
 }
