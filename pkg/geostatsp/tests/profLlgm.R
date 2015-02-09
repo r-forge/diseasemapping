@@ -5,11 +5,6 @@ Ncores = c(1,2)[1+(.Platform$OS.type=='unix')]
 
 
 
-if(FALSE){
-  dyn.unload("/home/patrick/workspace/diseasemapping/pkg/geostatsp/src/matern.so")
-  dyn.load("/home/patrick/workspace/diseasemapping/pkg/geostatsp/src/matern.so")
-}
-
 sr2 = swissRain
 sr2$elev = raster::extract(swissAltitude, sr2)
 swissFit = likfitLgm(
@@ -110,7 +105,7 @@ if(!interactive())
 
 
 if(interactive()  | Sys.info()['user'] =='patrick') {
-  Ncores = c(1,4)[1+(.Platform$OS.type=='unix')]
+  Ncores = c(1,2)[1+(.Platform$OS.type=='unix')]
   date()
   x2d=profLlgm(swissFit, mc.cores=Ncores,
       anisoAngleRadians=seq(22, 60 , len=24)*(2*pi/360),
