@@ -348,7 +348,7 @@ likfitLgm = function(
   moreParams = paramDefaults[!names(paramDefaults) %in% paramToEstimate]
   
   allParams = c(startingParam, moreParams)
-  allParams = geostatsp:::fillParam(allParams)
+  allParams = fillParam(allParams)
   paramsForC = allParams[c('nugget','variance','range','shape',
           'anisoRatio','anisoAngleRadians','boxcox')]
   

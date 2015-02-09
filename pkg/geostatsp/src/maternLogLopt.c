@@ -423,7 +423,7 @@ void maternLogLOpt(
 			varBetaHatOpt, &oneI,
 			&parLim[N[2]], &oneI);
 	// and gradient
-	F77_NAME(dcopy)(&Dparam,
+	F77_NAME(dcopy)(&SparamOpt[0],
 			resultGr, &oneI,
 			&parLim[N[2]+Dparam], &oneI);
 

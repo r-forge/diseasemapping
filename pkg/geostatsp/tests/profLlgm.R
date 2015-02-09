@@ -110,10 +110,11 @@ if(!interactive())
 
 
 if(interactive()  | Sys.info()['user'] =='patrick') {
+  Ncores = c(1,4)[1+(.Platform$OS.type=='unix')]
   date()
   x2d=profLlgm(swissFit, mc.cores=Ncores,
-      anisoAngleRadians=seq(20, 40 , len=24)*(2*pi/360),
-		anisoRatio =exp(seq(log(2),log(15),len=36))
+      anisoAngleRadians=seq(22, 60 , len=24)*(2*pi/360),
+		anisoRatio =exp(seq(log(1.5),log(20),len=36))
   )
   date()
 if(!interactive()) 
@@ -149,7 +150,7 @@ for(D in x2d$prob[x2d$prob>0&x2d$prob<1]) {
 
 points(x2d$MLE[1],x2d$MLE[2],pch=15) 
 
-legend("topleft", fill=x2d$col, legend=x2d$prob[-length(x2d$prob)])
+legend("topright", fill=x2d$col, legend=x2d$prob[-length(x2d$prob)])
 
 if(!interactive()) 
   dev.off()

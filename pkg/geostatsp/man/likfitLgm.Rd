@@ -121,7 +121,7 @@ myres = likfitLgm(
 
 
 
-myres$summary
+myres$summary[,1:4]
 
 if(interactive()  | Sys.info()['user'] =='patrick') {
 
@@ -144,11 +144,14 @@ legend("bottomright", fill=c("black","red","blue"),
 }
 
 # without a nugget
-myresNoN = likfitLgm(Y ~ cov1 + cov2, mydat, 
-	param=c(range=0.1,nugget=0,shape=1), paramToEstimate = c("range")	
+myresNoN = likfitLgm(
+	formula=Y ~ cov1 + cov2, 
+	data=mydat, 
+	param=c(range=0.1,nugget=0,shape=1), 
+	paramToEstimate = c("range")
 	)
 
-myresNoN$summary
+myresNoN$summary[,1:4]
 
 
 # plot variograms of data, true model, and estimated model
@@ -208,7 +211,9 @@ plot(mydat, col=as.character(cut(mydat$Y, breaks=50, labels=heat.colors(50))),
 par(mar=oldmar)
 
 
-myres = likfitLgm( Y ~ cov1 + cov2, mydat,
+myres = likfitLgm( 
+	formula=Y ~ cov1 + cov2, 
+	data=mydat,
 	param=c(range=0.1,nugget=0,shape=2, anisoAngleDegrees=0, anisoRatio=2), 
 	paramToEstimate = c("range","nugget","anisoRatio","anisoAngleDegrees") 
 	)

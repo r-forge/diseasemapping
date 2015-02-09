@@ -145,12 +145,12 @@ profLlgm = function(fit,mc.cores=1, ...) {
              approx(
             x=res$logL[smaller], 
 						y=dots[[varying]][smaller],
-						xout=Scontour[Skeep])$y
+						xout=res$breaks[Skeep])$y
   if(sum(bigger)>1)
     res$ci[,'upper']=approx(
         res$logL[bigger], 
 						dots[[varying]][bigger], 
-						Scontour[Skeep])$y
+            res$breaks[Skeep])$y
  
 		
 		res$ciLong = na.omit(

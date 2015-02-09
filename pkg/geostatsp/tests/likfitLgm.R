@@ -1,7 +1,7 @@
 library('geostatsp')
 
 if(interactive()  | Sys.info()['user'] =='patrick') {
-  n=500
+  n=300
 } else {
   n=100
 }
@@ -53,7 +53,7 @@ myres = likfitLgm(
     reml=TRUE
 )
 date()
-myres$opt
+myres$opt$logL
 myres$par
 
 date()
@@ -67,7 +67,7 @@ myresIso = likfitLgm(
     reml=TRUE
 )
 date()
-myresIso$opt
+myresIso$opt$logL
 myresIso$par
 
 myres$summary[,grep("^ci", colnames(myres$summary),invert=TRUE)]
