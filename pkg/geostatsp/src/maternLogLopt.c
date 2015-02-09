@@ -25,6 +25,8 @@ int NforBoxCoxOpt[3];
 double  *betaHatOpt, *varBetaHatOpt;
 double *LxLyOpt;
 
+int verboseOpt=0;
+
 // objective function for minimizing -2 logL
 double maternLogLObj(
 		int junk,
@@ -38,7 +40,7 @@ double maternLogLObj(
 	NforCopy = Nopt[0]*(Nopt[1]+Nopt[2]);
 
 	for(Dparam=0;Dparam<SparamOpt[0];++Dparam){
-		paramOpt[SparamOpt[Dparam+1]]=paramArg[Dparam];
+		paramOpt[SparamOpt[Dparam+1]]=parscale[Dparam]*paramArg[Dparam];
 	}
 
 	if(doBoxcoxOpt){
@@ -119,10 +121,29 @@ void maternLogLgr(
 	fullGr = (double *) calloc(6*Nparam,sizeof(double));
 
 
-	for(Dpar=0;Dpar < Nparam;++Dpar){
-//		Rprintf(" %d %d ", Dpar, Nparam);
-		deltaPar = parscale[Dpar]* ndeps[Dpar];
+	if(verboseOpt) {
+		Rprintf("\nGr npars=%d\nopt scale ", Nparam);
+		for(Dpar=0;Dpar < Nparam;++Dpar){
+			Rprintf("%f ", paramArg[Dpar]);
+		}
+		Rprintf("\nnatural scale ");
+		for(Dpar=0;Dpar < Nparam;++Dpar){
+			Rprintf("%f ", paramArg[Dpar]* parscale[Dpar]);
+		}
+		Rprintf("\n");
+	}
 
+	for(Dpar=0;Dpar < Nparam;++Dpar){
+		deltaPar = ndeps[Dpar];
+
+		if(verboseOpt){
+	  		Rprintf("p%d=%f delta=%f bnd=%d lb=%f ub=%f\n",
+					Dpar,
+					paramArg[Dpar],
+					deltaPar,
+					limTypeOpt[Dpar],
+					lower[Dpar], upper[Dpar]);
+		}
 		//lower
 		F77_NAME(dcopy)(&Nparam,
 				paramArg, &oneI,
@@ -130,10 +151,10 @@ void maternLogLgr(
 
 		parHere[Dpar]= paramArg[Dpar]-deltaPar;
 		if(limTypeOpt[Dpar] == 1 | limTypeOpt[Dpar] == 2){
-			parHere[Dpar]=fmax(
-					parHere[Dpar],
-					lower[Dpar]
-			);
+			parHere[Dpar] = fmax(
+								parHere[Dpar],
+								lower[Dpar]
+						);
 		}
 		fullGr[Dpar+1*Nparam]=parHere[Dpar];
 
@@ -157,14 +178,15 @@ void maternLogLgr(
 		result[Dpar] = fullGr[Dpar+5*Nparam]/
 				(fullGr[Dpar+3*Nparam] - fullGr[Dpar+1*Nparam]);
 
-/*  		Rprintf(" l%f u%f d%f ",
+		if(verboseOpt){
+  		Rprintf("lf=%f uf=%f gr=%f\n",
 				fullGr[Dpar+2*Nparam],
 				fullGr[Dpar+4*Nparam],
 				result[Dpar] );
-*/
+		}
 	}
 
-//	Rprintf("  \n");
+	if(verboseOpt)	Rprintf("\n");
 
 	free(parHere);
 	free(fullGr);
@@ -325,6 +347,19 @@ void maternLogLOpt(
 
 //#ifdef UNDEF
 
+	if(scalarsInt[0]){
+		verboseOpt=1;
+	} else {
+		verboseOpt = 0;
+	}
+
+// scale everything by parscale
+	for(Dparam=0;Dparam<SparamOpt[0];++Dparam){
+		paramArg[Dparam] = paramArg[Dparam]/parscale[Dparam];
+		lower[Dparam] = lower[Dparam]/parscale[Dparam];
+		upper[Dparam] = upper[Dparam]/parscale[Dparam];
+	}
+
 	lbfgsb(
 			SparamOpt[0],//int n,
 			scalarsInt[4],//int lmm,
@@ -350,7 +385,19 @@ void maternLogLOpt(
 
 // run once again to ensure the global objects
 	// reflect the optimal parameters
+	resultGr = (double *) calloc(SparamOpt[0],sizeof(double));
+	maternLogLgr(
+			*N,
+			paramArg,
+			resultGr,
+			optimEx
+	);
+
 	maternLogLObj(*N,paramArg, optimEx);
+
+	for(Dparam=0;Dparam<SparamOpt[0];++Dparam){
+		paramArg[Dparam] = paramArg[Dparam]*parscale[Dparam];
+	}
 
 	strcpy(*msg, themsg);
 
@@ -375,7 +422,14 @@ void maternLogLOpt(
 	F77_NAME(dcopy)(&Dparam,
 			varBetaHatOpt, &oneI,
 			&parLim[N[2]], &oneI);
+	// and gradient
+	F77_NAME(dcopy)(&Dparam,
+			resultGr, &oneI,
+			&parLim[N[2]+Dparam], &oneI);
+
+
 //# endif
+	free(resultGr);
 	free(corMatOpt);
 	free(obsCovCopy);
 	free(LxLyOpt);

@@ -208,6 +208,7 @@ likfitLgm = function(
     verbose=FALSE) {
 
   param = param[!is.na(param)]
+  coordinatesOrig = coordinates
   
   # check if model is isotropic
   # if it is coordinates will be a distance matrix
@@ -303,7 +304,7 @@ likfitLgm = function(
   # parameter defaults
   lowerDefaults = c(
       nugget=0,
-      range=maxDist/10000,
+      range=maxDist/100,
       anisoRatio=0.01,
       anisoAngleRadians=-pi/2,
       shape=0.1,boxcox=-1,variance=0)
@@ -316,15 +317,15 @@ likfitLgm = function(
       shape=4,boxcox=2.5,variance=Inf)
   
   paramDefaults = c(
-      nugget=1,
+      nugget=0,
       anisoRatio=1, 
       anisoAngleRadians=0,
       shape=1.5, boxcox=1,
-      range=maxDist/20
+      range=maxDist/10
   )
   
   parscaleDefaults = c(
-      range=maxDist/20,
+      range=maxDist/5,
       nugget=0.1,
       boxcox=0.1,
       anisoAngleRadians=0.2,
@@ -404,7 +405,7 @@ likfitLgm = function(
   ] = 3
   
   forO$pars[!is.finite(forO$pars)]=-1
-  forO$pars = c(forO$pars, rep(0.0, ncol(covariates)^2))
+  forO$pars = c(forO$pars, rep(0.0, ncol(covariates)+ncol(covariates)^2))
   
 
   if(aniso){
@@ -455,7 +456,7 @@ likfitLgm = function(
     Ltype=as.integer(reml+!estimateVariance),
     optInt = as.integer(forO$scalarInt),
     optF = as.double(forO$scalarF),
-    betas=cbind(forO$pars),
+    betas=as.double(forO$pars),
     limType = as.integer(forO$parsInt),
     message=format(" ",width=80)
   )
@@ -474,7 +475,8 @@ likfitLgm = function(
             start=paramsForC[Sparam],
             opt = fromOptim$start[Sparam],
             parOptions),
-        detail = fromOptim$optInt[1:3]
+        detail = fromOptim$optInt[1:3],
+        originalParameters = paramsForC
       ),
     betaHat = fromOptim$betas[1:ncol(covariates)],
     varBetaHat =  
@@ -485,6 +487,13 @@ likfitLgm = function(
                 seq(1+ncol(covariates), len=ncol(covariates)^2)]
         )
   )
+  
+ 
+  result$optim$options = cbind(result$optim$options,
+      gradient=fromOptim$betas[
+      seq(ncol(covariates)^2+ncol(covariates)+1, 
+          len=sum(Sparam))
+  ])
   
   names(result$optim$detail)  = c(
       "fail","fncount","grcount"
@@ -541,7 +550,16 @@ likfitLgm = function(
    }
 	
 
- 
+ if(length(grep("^Spatial", class(coordinatesOrig)))){
+   
+   result$data = SpatialPointsDataFrame(
+       coords=SpatialPoints(coordinatesOrig),
+       data=result$data)
+   
+   projection(result$data) = projection(coordinatesOrig)
+   
+ }
+   
    
    result$model = list(reml=reml)
 	if(class(trend)=="formula") {

@@ -127,7 +127,8 @@ fillParam = function(param) {
 		}
 	} else {
     # radians were supplied
-		param = cbind(param, 
+		param = cbind(param[,grep("^anisoAngleDegrees$", 
+                colnames(param),invert=TRUE),drop=FALSE], 
 				anisoAngleDegrees= param[,"anisoAngleRadians"] *360/(2*pi)
     )
 	}

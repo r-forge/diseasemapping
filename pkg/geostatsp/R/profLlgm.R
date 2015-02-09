@@ -17,9 +17,12 @@ profLlgm = function(fit,mc.cores=1, ...) {
 	reEstimate = reEstimate[!reEstimate %in% varying]
   reEstimate = gsub("/1000", "", reEstimate)
   
-  if(length(grep("^anisoAngle", reEstimate))>1)
+  if(length(grep("^anisoAngle", reEstimate))>1){
     reEstimate = grep("^anisoAngleDegrees", reEstimate,value=TRUE,invert=TRUE)
-  
+    radiansToDegrees=TRUE
+  } else {
+    radiansToDegrees=FALSE
+  }
 
   
 	parValues = do.call(expand.grid, dots[varying])
@@ -40,10 +43,11 @@ profLlgm = function(fit,mc.cores=1, ...) {
   parList = apply(parValues,1,list)
   parList = lapply(parList, function(qq) c(unlist(qq), baseParams))
   
+ 
 	if(mc.cores>1) {
 		resL = parallel::mcmapply(
         likfitLgm, 
-        parList,
+        param=parList,
         MoreArgs=list(
         data=fit$data, 
         formula=fit$model$formula,
@@ -56,7 +60,7 @@ profLlgm = function(fit,mc.cores=1, ...) {
 	} else {
     resL = mapply(
         likfitLgm, 
-        parList,
+        param=parList,
         MoreArgs=list(
             data=fit$data, 
             formula=fit$model$formula,
@@ -98,21 +102,22 @@ profLlgm = function(fit,mc.cores=1, ...) {
 				dimnames=thedimnames)	
 	} 
 	
-	Sprob = c(1, 0.999, 0.99, 0.95, 0.9, 0.8, 0.5, 0)
-	Squant = qchisq(Sprob, df=length(varying))
-	Scontour = -fit$optim$logL[1]/2 -Squant/2 	
-	
-	
-	res = list(logL=-L/2,
-			full=t(resL),
-			prob=Sprob,
-			breaks=Scontour,
-			MLE=fit$param[varying],
-			maxLogL = -fit$opt$logL[1]/2,
-			basepars=baseParams
-	)
 
+  Sprob = c(1, 0.999, 0.99, 0.95, 0.9, 0.8, 0.5, 0)
+  Squant = qchisq(Sprob, df=length(varying))
+  
+  res = list(logL=-L/2,
+      full=t(L),
+      prob=Sprob,
+      quant=Squant,
+      MLE=fit$param[varying],
+      basepars=baseParams
+  )
+  res$maxLogL = max(res$logL)
 
+  res$breaks= res$maxLogL -res$quant/2 	
+ 
+   
 #	dput( rev(
 #			RColorBrewer::brewer.pal(
 #					length(Scontour)-1,
@@ -120,9 +125,10 @@ profLlgm = function(fit,mc.cores=1, ...) {
 	res$col=c("#3288BD", "#99D594", 
 			"#E6F598", "#FFFFBF", "#FEE08B", "#FC8D59", 
 			"#D53E4F")
+
+ 
 	
-	
-	res$breaks[1] = res$breaks[2]-abs(min(res$logL))
+	res$breaks[1] = min(c(res$breaks[2],min(res$logL)))-1
 	names(res$col) = as.character(res$prob[-length(res$prob)])
 	
 	res = c(dots[varying],res)

@@ -15,108 +15,53 @@ sr2$elev = raster::extract(swissAltitude, sr2)
 swissFit = likfitLgm(
     data=sr2, 
     formula=rain~ elev,
-    param=c(range=10000,shape=1,nugget=0,boxcox=0.5,anisoRatio=5,anisoAngleDegrees=30),
+    param=c(range=10000,shape=1,nugget=0,boxcox=0.5,anisoRatio=2,anisoAngleDegrees=45),
     paramToEstimate = c("range",'anisoAngleDegrees','anisoRatio'),
-    reml=TRUE
+    reml=FALSE,
+    verbose=FALSE
 )
 
-swissFit$param
-swissFit$opt$boxcox
-swissFit$opt$logL
-swissFit$opt$total
-swissFit$betaHat
 
-
+# calculate log-likelihood at the MLE's, but re-estimate variance
 sl = loglikLgm(
     swissFit$param[c('range','shape','boxcox', 'anisoRatio', 'anisoAngleRadians')],
     data=sr2, 
     formula=rain~ elev,
-    reml=FALSE)  
+    reml=swissFit$model$reml)  
 
-attributes(sl)$totalVarHat
 
-#sigSqHat =   (attributes(sl)$Lorig - attributes(sl)$totalVarHat) /100
+# calculate log-likelihood without re-estimating variance
 sigSqHat = attributes(sl)$totalVarHat
 sl1 = loglikLgm(
-    c(attributes(sl)$param[c('boxcox','anisoRatio','anisoAngleRadians','shape', 'range')], variance=sigSqHat),
+    c(attributes(sl)$param[
+            c('boxcox','anisoRatio','anisoAngleRadians','shape', 'range')], 
+        variance=sigSqHat),
     data=sr2, 
     formula=rain~ elev,
-    reml=FALSE)  
-
-attributes(sl1)$totalVarHat
-
-attributes(sl1)$Lorig
-attributes(sl)$Lorig
-
-
-
-
-2*attributes(sl1)$determinants[1]
-2*attributes(sl)$determinants[1] + 100*log(sigSqHat)
-
-2*attributes(sl1)$determinants[1] + attributes(sl1)$Lorig - attributes(sl1)$totalVarHat 
-
-2*attributes(sl)$determinants[1] + 100*log(sigSqHat) + 100
-
-
-
-as.numeric(sl) 
-as.numeric(sl1)
-
-attributes(sl)$Ltype
-attributes(sl1)$Ltype
-
-attributes(sl)$Lorig
-attributes(sl1)$Lorig
-attributes(sl)$totalVarHat
-attributes(sl1)$totalVarHat
-attributes(sl)$determinants
-attributes(sl1)$determinants
-
-attributes(sl)$param['variance']
-
-
-mydet = c(
-determinant(matern(sr2, param=attributes(sl)$param[c('anisoRatio','anisoAngleRadians','shape', 'range')]))$mod,
-determinant(matern(sr2, param=
-            c(attributes(sl)$param[c('anisoRatio','anisoAngleRadians','shape', 'range')],
-                variance=sigSqHat)
-    ))$mod
-)
- c(mydet, mydet[1]+100*log(sigSqHat))
-
-sigSqHat =   (attributes(sl)$Lorig - attributes(sl)$totalVarHat) /100
-100*log(sigSqHat) + 2*attributes(sl)$determinants[1] + 100
-
-
-2*attributes(sl1)$determinants[1]
-2*attributes(sl)$determinants[1] + 100*log(sigSqHat)
-
-attributes(sl)$betaHat
-attributes(sl1)$betaHat
-
-rbind(
-    attributes(sl)$param,
-attributes(sl1)$param)
-
-
-as.numeric(sl)
-attributes(sl)$twoLogJacobian
-attributes(sl)$total
-attributes(sl)$param
-attributes(sl1)$varBetaHat
-as.numeric(sl)+attributes(sl)$twoLogJacobian
+    reml=swissFit$model$reml)  
  
 
+# re=estimate the anisotropy parameters but not the range
+sf2 = likfitLgm(
+    data=swissFit$data, 
+    formula=swissFit$model$formula,
+    param= swissFit$param[c('range','nugget','shape','boxcox', 'anisoRatio', 'anisoAngleRadians')],
+    paramToEstimate = c('variance','anisoAngleRadians','anisoRatio'),
+    reml=swissFit$model$reml)  
+
+# these should all be the same
+as.numeric(sl1)
+as.numeric(sl) 
+swissFit$optim$logL
+sf2$optim$logL
+
+date()
 x=profLlgm(swissFit, mc.cores=Ncores,
-    boxcox=seq(0, 1 , len=6)
+    range=seq(15000, 55000 , len=12)
 )
-dots=list(    boxcox=seq(0, 1 , len=6));fit=swissFit
+date()
 
-
-dots=list(		anisoAngleDegrees=seq(-20, 20 , len=6)+swissFit$param['anisoAngleDegrees'])
-
-
+ 
 swissInf = informationLgm(swissFit)
 
 
@@ -129,6 +74,7 @@ plot(x[[1]],x[[2]], xlab=names(x)[1],
 		ylab='log L',
 		ylim=c(min(x[[2]]),x$maxLogL),
 		type='n')
+lines(x[[1]],x[[2]])
 abline(h=x$breaks[-1],
 		col=x$col,
 		lwd=1.5)
@@ -157,17 +103,19 @@ if(any(!is.na(ciValues)))
 		tcl=-2,cex.axis=0.7,
 		col=NA,col.ticks='blue',col.axis='blue')
 
-lines(x[[1]],x[[2]])
+lines(x[[1]],x[[2]], type='o')
 
 if(!interactive()) 
   dev.off()
 
 
 if(interactive()  | Sys.info()['user'] =='patrick') {
-x2d=profLlgm(swissFit, mc.cores=Ncores,
-		anisoAngleDegrees=seq(25, 35 , len=6),
-		anisoRatio = exp(seq(log(4),log(16),len=8))
-)
+  date()
+  x2d=profLlgm(swissFit, mc.cores=Ncores,
+      anisoAngleRadians=seq(20, 40 , len=24)*(2*pi/360),
+		anisoRatio =exp(seq(log(2),log(15),len=36))
+  )
+  date()
 if(!interactive()) 
   pdf("profLswiss2d.pdf")
 image(x2d[[1]],x2d[[2]],x2d[[3]],
@@ -179,7 +127,7 @@ image(x2d[[1]],x2d[[2]],x2d[[3]],
 thesevars = c("anisoAngleRadians","log(anisoRatio)")
 thisV = swissInf$information[
 		thesevars,thesevars]
-thisMean= c(x2d$MLE["anisoAngleDegrees"],
+thisMean= c(x2d$MLE["anisoAngleRadians"],
 		log(x2d$MLE['anisoRatio']))
 
 
@@ -191,9 +139,9 @@ for(D in x2d$prob[x2d$prob>0&x2d$prob<1]) {
   colnames(thisE) = names(thisMean)
 	thisE = cbind(thisE,
 			anisoRatioExp = exp(thisE[,"anisoRatio"]))
-	lines(thisE[,"anisoAngleDegrees"],
+	lines(thisE[,"anisoAngleRadians"],
 			thisE[,"anisoRatioExp"],lwd=4)
-	lines(thisE[,"anisoAngleDegrees"],
+	lines(thisE[,"anisoAngleRadians"],
 			thisE[,"anisoRatioExp"], col=x2d$col[as.character(D)],
 			lwd=3)
 }
