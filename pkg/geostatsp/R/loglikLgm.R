@@ -460,7 +460,7 @@ likfitLgm = function(
     message=format(" ",width=80)
   )
 
-  stuff2 <<- fromOptim
+
   result = list(
       optim = list(
         mle=fromOptim$start,
