@@ -1,6 +1,4 @@
 #include"geostatsp.h"
-#include<R_ext/Applic.h>
-#include<R_ext/Print.h>
 
 int *SparamOpt, *limTypeOpt; // number of params, followed by indices of params to be optimized
 double *paramOpt;
@@ -114,6 +112,8 @@ void maternLogLgr(
 ) {
 	int Dpar, oneI=1, Nparam;
 	double *parHere, deltaPar, *fullGr;
+
+	R_CheckUserInterrupt();
 
 	Nparam = SparamOpt[0];
 
