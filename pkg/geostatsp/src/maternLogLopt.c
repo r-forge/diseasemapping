@@ -222,7 +222,7 @@ void maternLogLOpt(
 	double *paramArg, result, *resultGr;
 	int two=2, oneI=1,Dparam, DparamForOpt, optimFail;
 	int fncount, grcount, junk;
-	void *optimEx;
+	void *optimEx = &oneI;
 	char themsg[100];
 
 	// assign the global variables (which end in Opt)
