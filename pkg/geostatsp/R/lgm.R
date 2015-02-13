@@ -106,8 +106,9 @@ setMethod("lgm",
             grid, covariates, buffer)
 
         callGeneric(formula, 
-            dataCov$data, dataCov$grid, 
-            dataCov$covariates, ...)
+            data=dataCov$data, 
+            grid=dataCov$grid, 
+            covariates=dataCov$covariates, ...)
       }
 )
 
@@ -152,10 +153,7 @@ setMethod("lgm",
 	Spar = Spar[!names(Spar) %in% names(param)]
 	param = c(param, Spar)
 	
-	
-	
-	
-	# to do: make sure factors in rasters are set up correctly
+# to do: make sure factors in rasters are set up correctly
 	# have baseline as first entry in cov@data@attributes,
 	# NA's for levels without data
 	# have most common level the baseline
@@ -181,13 +179,6 @@ setMethod("lgm",
 			nuggetInPrediction=nuggetInPrediction
 			)
 			
-		#	data$resid = likRes$resid$resid
-#	likRes$data = data
-
-	data@data = cbind(data.frame(data), 
-			likRes$data[rownames(data.frame(data)),])
-	likRes$data = data
-		
 
 	res = c(predict=krigeRes, likRes)
 #  stuff <<- res

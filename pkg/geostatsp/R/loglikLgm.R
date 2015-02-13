@@ -551,13 +551,15 @@ likfitLgm = function(
 	
 
  if(length(grep("^Spatial", class(coordinatesOrig)))){
-   
+   theDf = matrix(NA, length(coordinatesOrig), ncol(result$data),
+       dimnames=list(NULL, colnames(result$data)))
+   theDf = as.data.frame(theDf)
+   theDf[noNA,] = result$data
    result$data = SpatialPointsDataFrame(
        coords=SpatialPoints(coordinatesOrig),
-       data=result$data)
+       data=theDf)
    
    projection(result$data) = projection(coordinatesOrig)
-   
  }
    
    
