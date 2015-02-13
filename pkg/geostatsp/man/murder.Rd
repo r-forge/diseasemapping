@@ -142,7 +142,8 @@ save(murder, torontoBorder,
 # census tract boundaries
 zipfileCT = file.path(tempdir(),'toCt.zip')
 download.file(
-'http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/gct_000b06a_e.zip',
+	paste('http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/',
+	'files-fichiers/gct_000b06a_e.zip', sep=''),
 		zipfileCT
 		) 
 		
@@ -163,7 +164,8 @@ toCt2006 = spTransform(toCt2006,
 # income
 zipfileI = paste(tempfile(), ".zip", sep="")
 download.file(
-'http://www12.statcan.gc.ca/census-recensement/2006/dp-pd/tbt/OpenDataDownload.cfm?PID=96273',
+paste('http://www12.statcan.gc.ca/census-recensement/2006/dp-pd/tbt/',
+'OpenDataDownload.cfm?PID=96273', sep=""),
 zipfileI)
 
 	unzip(zipfileI, exdir=tempdir())
@@ -186,7 +188,9 @@ torontoIncome = rasterize(toCt2006,
 
 nightFile = paste(tempfile(), ".tif.gz", sep="")
 download.file(
-'http://mapserver.ngdc.noaa.gov/viirs_data/monthly_mos/npp_20140501_20140531.zero_li_on.cl2.75N180W.cf_cvg.tif.gz',
+paste('http://mapserver.ngdc.noaa.gov/viirs_data/monthly_mos/',
+'npp_20140501_20140531.zero_li_on.cl2.75N180W.cf_cvg.tif.gz',
+sep=''),
 nightFile)
 library("R.utils")
 gunzip(nightFile,overwrite=TRUE)
