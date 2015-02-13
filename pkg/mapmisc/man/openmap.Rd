@@ -10,7 +10,7 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	openmap(x, zoom, 
 	path="http://tile.openstreetmap.org/",
 	maxTiles = 9,
-	crs=NA, verbose=FALSE)
+	crs=NA,   extend=0, verbose=FALSE)
 	getTiles(xlim,ylim,zoom,path,maxTiles = 16,cacheDir=tempdir(),
 		timeOut=5*24*60*60,verbose=FALSE)
 	osmTiles(name)
@@ -32,7 +32,9 @@ number of map tiles is less than or equl to this number.}
 for instance when \code{x} is a matrix or extent, 
 \code{crs} is also used as the projection of \code{x}.  If \code{crs} is missing
 and \code{x} has no crs, long-lat is used.}
-
+\item{extend}{Extend the extent for which the map is requested, in units
+of \code{x}.  Can be negative, or a vector of lenght 2 for different x and y 
+extensions}
   \item{cacheDir}{
     A directory for caching tiles retrieved over the web. Not used if
     tiles are coming from a local directory.
