@@ -205,13 +205,13 @@ setMethod("lgm",
 	}
 	}
 	# if range is very big, it's probably in metres, convert to km
-	if(res$summary['range','estimate']>1000) {
-		logicalCol = names(res$summary) == "Estimated"
-		res$summary["range",!logicalCol] = 
-				res$summary["range",!logicalCol] /1000
-		rownames(res$summary) = gsub("^range$", "range/1000", 
-				rownames(res$summary))
-	}
+  	if(res$summary['range','estimate']>1000) {
+  		logicalCol = names(res$summary) == "Estimated"
+  		res$summary["range",!logicalCol] = 
+  				res$summary["range",!logicalCol] /1000
+  		rownames(res$summary) = gsub("^range$", "range/1000", 
+  				rownames(res$summary))
+  	}
 	
 	return(res)
 }

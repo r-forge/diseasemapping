@@ -110,7 +110,8 @@ murder = spTransform(murder, utm)
 # boundary of toronto
 zipfileB = paste(tempfile(), ".zip", sep="")
 download.file(
-	'http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/gcd_000b06a_e.zip',
+	paste('http://www12.statcan.gc.ca/census-recensement/2011/geo/',
+	'bound-limit/files-fichiers/gcd_000b06a_e.zip',sep=''),
 	zipfileB)
 unzip(zipfileB, exdir=tempdir())
 theshpB = grep("shp$",unzip(zipfileB,list=TRUE)$Name,  value=TRUE)
