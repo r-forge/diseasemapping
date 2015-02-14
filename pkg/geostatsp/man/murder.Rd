@@ -188,10 +188,13 @@ torontoIncome = rasterize(toCt2006,
 
 
 nightFile = paste(tempfile(), ".tif.gz", sep="")
+
+# higher resolution at 
+paste('http://mapserver.ngdc.noaa.gov/viirs_data/viirs_composite/'
+'npp_20120418to20120426_20121011to20121023_sloff_15asec.'
+'x2y1.75N180W.c20121120.avg_dnb.tif.gz',sep='')
 download.file(
-paste('http://mapserver.ngdc.noaa.gov/viirs_data/monthly_mos/',
-'npp_20140501_20140531.zero_li_on.cl2.75N180W.cf_cvg.tif.gz',
-sep=''),
+'http://www.worldgrids.org/lib/exe/fetch.php?media=lnmdms3a.tif.gz',
 nightFile)
 library("R.utils")
 gunzip(nightFile,overwrite=TRUE)
@@ -200,12 +203,7 @@ nightFull = raster(gsub("\\.gz$", "", nightFile))
 border2 = spTransform(torontoBorder, CRS(projection(nightFull)))
 toMap2 = openmap(border2)
 
-map.new(border2)
-plot(toMap2,add=TRUE)
-plot(nightFull,add=TRUE)
-plot(border2,add=TRUE)
-
-torontoNight = crop(nightFull, raster::extend(extent(border2),1))
+torontoNight = crop(nightFull, raster::extend(extent(border2),0.1))
 torontoNight = projectRaster(torontoNight, crs=CRS(proj4string(murder)))
 cscaleNight = colourScale(torontoNight,breaks=9,style='equal',dec=0)
 

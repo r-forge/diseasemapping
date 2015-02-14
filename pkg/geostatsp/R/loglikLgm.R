@@ -33,7 +33,6 @@ loglikLgm = function(param,
 		if(length(grep("SpatialPoints", class(coordinates)))) {
 			if(length(theNA))
 				coordinates = coordinates[-theNA,]
-			
 		} else if(	class(coordinates) == "dist")	{
 			if(length(theNA)) {
 				coordinates = 
@@ -529,14 +528,14 @@ likfitLgm = function(
        fitted=
            covariates %*% result$parameters[colnames(covariates)]
         ),
-       covariates
+       data.frame(data)[noNA,]
    )
    
 
 
    
    if(abs(result$parameters["boxcox"]-1)>0.0001){ # boxcox not 1
-     
+       
      if(abs(result$parameters["boxcox"])<0.001) {
        result$data$obsBC = log(observations) 
      } else  { #boxcox far from 0 and 1
