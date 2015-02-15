@@ -17,16 +17,7 @@ profLlgm = function(fit,mc.cores=1, ...) {
 	reEstimate = reEstimate[!reEstimate %in% varying]
   reEstimate = gsub("/1000", "", reEstimate)
   
-  if(length(grep("^anisoAngle", reEstimate))>1){
-    reEstimate = grep("^anisoAngleDegrees", reEstimate,value=TRUE,invert=TRUE)
-    radiansToDegrees=TRUE
-  } else {
-    radiansToDegrees=FALSE
-  }
-
   
-	parValues = do.call(expand.grid, dots[varying])
-	
 	baseParams = fit$parameters
 	baseParams = baseParams[names(baseParams)%in%
 					nonLinearParams]
@@ -34,12 +25,16 @@ profLlgm = function(fit,mc.cores=1, ...) {
 	baseParams=baseParams[!names(baseParams)%in% varying]
 	baseParams=baseParams[names(baseParams) != 'variance']
 	
-  if(length(grep("^anisoAngle", varying))){
-    baseParams = baseParams[grep("^anisoAngle", 
-            names(baseParams), invert=TRUE)]
-  }
-  
 	
+  if(length(grep("^anisoAngle", varying))){
+    reEstimate = grep("^anisoAngle", reEstimate,value=TRUE,invert=TRUE)
+    baseParams = baseParams[
+        grep("^anisoAngle", names(baseParams),value=TRUE,invert=TRUE)
+    ]
+  } 
+  
+  parValues = do.call(expand.grid, dots[varying])
+  
   parList = apply(parValues,1,list)
   parList = lapply(parList, function(qq) c(unlist(qq), baseParams))
   
@@ -73,10 +68,6 @@ profLlgm = function(fit,mc.cores=1, ...) {
   resL = lapply(resL, function(qq) qq$optim$logL)
   resL = simplify2array(resL)
 
-  if(radiansToDegrees){
-    varying =  gsub("anisoAngleRadians","anisoAngleDegrees", varying)
-  }
-  
 	if(length(varying)==1) {
     forNames =  c(
 				dots[[varying]],
