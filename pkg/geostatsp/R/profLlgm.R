@@ -23,6 +23,9 @@ profLlgm = function(fit,mc.cores=1, ...) {
 					nonLinearParams]
 	
 	baseParams=baseParams[!names(baseParams)%in% varying]
+  if(any(reEstimate=='variance')){
+    baseParams['nugget'] = baseParams['nugget'] / baseParams['variance']
+  }
 	baseParams=baseParams[names(baseParams) != 'variance']
 	
 	
@@ -136,12 +139,12 @@ profLlgm = function(fit,mc.cores=1, ...) {
              approx(
             x=res$logL[smaller], 
 						y=dots[[varying]][smaller],
-						xout=res$breaks[Skeep])$y
+						xout=res$breaks[Skeep],rule=2)$y
   if(sum(bigger)>1)
     res$ci[,'upper']=approx(
         res$logL[bigger], 
 						dots[[varying]][bigger], 
-            res$breaks[Skeep])$y
+            res$breaks[Skeep],rule=2)$y
  
 		
 		res$ciLong = na.omit(
