@@ -2,7 +2,7 @@ loglikLgm = function(param,
 		data, formula, coordinates=data,
 		reml=TRUE, 
 		minustwotimes=TRUE,
-		stored=NULL, moreParams=NULL) {
+		moreParams=NULL) {
 
 	# create 'covariates', and 'observations'
  	
@@ -75,37 +75,29 @@ loglikLgm = function(param,
 		}
 			
 		# box cox transform
-		twoLogJacobian = 0
+		jacobian = 0
 		if(any(names(param)=="boxcox")) {
 			
-			if(any(names(stored)=="boxcox")) {
-				if(abs(stored$boxcox-param["boxcox"])>0.0001)
-					warning("boxcox param and stored are ", param["boxcox"],
-							" and ", stored$boxcox)
-				twoLogJacobian = stored$twoLogJacobian
-				observations = stored$observations
-			} else { # need to compute boxcox stuff
 			
 			if(abs(param["boxcox"]-  1 ) < 0.001) {
 			 # boxcox close to 1, don't transform
-				twoLogJacobian=0
+				jacobian=0
 				
 			} else { # box cox is not one.
-				twoLogJacobian = 2*(param["boxcox"]-1)* 
+				jacobian = -2*(param["boxcox"]-1)* 
 					sum(log(observations))	
 			
-				if(is.nan(twoLogJacobian))
+				if(is.nan(jacobian))
 					warning("boxcox shouldnt be used with negative data")
 
 				if(abs(param["boxcox"])<0.001) {
 					observations = log(observations) 
-				} else  { #boxcox far from 0 and 1
-				observations <- 
+				} else if(abs(param["boxcox"]-1)>0.001) {
+  				observations <- 
 						((observations^param["boxcox"]) - 1)/
 							param["boxcox"]
 				}
 			} # end boxcox param far from 1
-		} # end need to compute boxcox
 		} # end have box cox
 		
 		
@@ -162,7 +154,7 @@ loglikLgm = function(param,
   varBetaHat = varBetaHat*totalVarHat
 
   
-  result = resultC$logL[1]- twoLogJacobian
+  result = resultC$logL[1] + jacobian
 
   if(!haveVariance)
   param[c("variance","nugget")] = 
@@ -185,7 +177,7 @@ attributes(result)$totalVarHat = resultC$totalVarHat
 attributes(result)$betaHat = betaHat
 attributes(result)$varBetaHat = varBetaHat
 attributes(result)$reml=reml
-attributes(result)$twoLogJacobian = twoLogJacobian
+attributes(result)$jacobian = jacobian
 attributes(result)$Ltype = as.integer(Ltype)
 attributes(result)$Lorig = resultC$logL
 attributes(result)$determinants = resultC$obsCov[1:2]
@@ -306,7 +298,7 @@ likfitLgm = function(
       range=maxDist/100,
       anisoRatio=0.01,
       anisoAngleRadians=-pi/2,
-      shape=0.1,boxcox=-1,variance=0)
+      shape=0.1,boxcox=-1.5,variance=0)
   
   upperDefaults= c(
       nugget=Inf,
@@ -326,7 +318,7 @@ likfitLgm = function(
   parscaleDefaults = c(
       range=maxDist/5,
       nugget=0.1,
-      boxcox=0.1,
+      boxcox=0.5,
       anisoAngleRadians=0.2,
       anisoRatio=1,
       variance=1,
@@ -521,7 +513,6 @@ likfitLgm = function(
        sep=''
    )
    
-   
    result$data = cbind(
        data.frame(
        observations = observations,
@@ -543,11 +534,12 @@ likfitLgm = function(
            ((observations^result$parameters["boxcox"]) - 1)/
            result$parameters["boxcox"]
      }
-     result$data$resid = result$data$obsBC - result$data$fitted
    } else {
-     result$data$resid = result$data$observation - result$data$fitted
+     result$data$obsBC <- 
+         result$data$observations 
    }
-	
+   result$data$resid = result$data$obsBC - result$data$fitted
+   
 
  if(length(grep("^Spatial", class(coordinatesOrig)))){
    theDf = matrix(NA, length(coordinatesOrig), ncol(result$data),

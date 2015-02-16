@@ -13,10 +13,10 @@ double *obsForBoxcoxOpt; // pointer three column matrix of Y, logY and boxcox Y
 
 const double *xcoordOpt, *ycoordOpt;
 double *corMatOpt, determinants[2];
-double boxcoxParamOpt[9] = {1,-9,-9,0,-9,-9,-9,-9,-9};
+double boxcoxParamOpt[9] = {1,0,-9,-9,-9,-9,-9,-9,-9};
 int anisoOpt, LtypeOpt, boxcoxTypeOpt;
 int Nopt[3];// Nobs, 1, Ncov
-int NboxcoxOpt[2], doBoxcoxOpt; // Nobs, 3
+int NboxcoxOpt[2]; // Nobs, 3
 
 double *totalSsqOpt;
 int NforBoxCoxOpt[3];
@@ -41,15 +41,13 @@ double maternLogLObj(
 		paramOpt[SparamOpt[Dparam+1]]=parscale[Dparam]*paramArg[Dparam];
 	}
 
-	if(doBoxcoxOpt){
-		boxcoxParamOpt[6] = paramOpt[6];
-		computeBoxCox(
-			obsForBoxcoxOpt,
-			NboxcoxOpt,
-			boxcoxParamOpt,
-			3
-			);
-	}
+	boxcoxParamOpt[2] = paramOpt[6];
+	computeBoxCox(
+		obsForBoxcoxOpt,
+		NboxcoxOpt,
+		boxcoxParamOpt,
+		boxcoxTypeOpt
+	);
 
 	// make a copy of the data
 	F77_NAME(dcopy)(&NforCopy,
@@ -160,6 +158,11 @@ void maternLogLgr(
 
 		fullGr[Dpar+2*Nparam] = maternLogLObj(
 				junk,parHere, ex);
+		if(verboseOpt){
+  		Rprintf("lp=%f lf=%f ",
+  				parHere[Dpar],
+				fullGr[Dpar+2*Nparam]);
+		}
 
 		//upper
 		parHere[Dpar]=paramArg[Dpar]+deltaPar;
@@ -179,8 +182,8 @@ void maternLogLgr(
 				(fullGr[Dpar+3*Nparam] - fullGr[Dpar+1*Nparam]);
 
 		if(verboseOpt){
-  		Rprintf("lf=%f uf=%f gr=%f\n",
-				fullGr[Dpar+2*Nparam],
+  		Rprintf("up=%f uf=%f gr=%f\n",
+  				parHere[Dpar],
 				fullGr[Dpar+4*Nparam],
 				result[Dpar] );
 		}
@@ -274,42 +277,24 @@ void maternLogLOpt(
 	obsForBoxcoxOpt = obsCov;
 	// are we doing box-cox?
 
+
+	boxcoxParamOpt[0] = 1;
+	boxcoxParamOpt[1] = 0;
+	boxcoxParamOpt[2] = fullParam[6];
+	NboxcoxOpt[0] = N[0];
+	NboxcoxOpt[1] = 3;
+	// put log(y) in position 2
+	computeBoxCox(
+			obsCov,
+			NboxcoxOpt,
+			boxcoxParamOpt,
+			2
+	);
+
 	if(Sparam[6]){ // yes, it's being optimized
-		doBoxcoxOpt=1;
-		// put log(y) in position 2
-		NboxcoxOpt[0] = N[0];
-		NboxcoxOpt[1] = 3;
-		computeBoxCox(
-				obsCov,
-				NboxcoxOpt,
-				boxcoxParamOpt,
-				2
-		);
 		boxcoxTypeOpt=3;
 	} else { // not being optimized
-		doBoxcoxOpt=0;
-		// but check if it's not 1
-		if(fabs(fullParam[6]-1)>0.001){
-			boxcoxParamOpt[6]=fullParam[6];
-			NboxcoxOpt[0] = N[0];
-			NboxcoxOpt[1] = 3;
-			boxcoxTypeOpt=2;
-
-			computeBoxCox(
-				obsCov,
-				NboxcoxOpt,
-				boxcoxParamOpt,
-				2
-				);
-			boxcoxTypeOpt=4;
-		} else {
-			boxcoxTypeOpt=0;
-			// put observations in column 3
-			F77_NAME(dcopy)(N,
-					obsCov, &oneI,
-					obsCovOpt, &oneI);
-			boxcoxParamOpt[8]=0.0;
-		}
+		boxcoxTypeOpt=4;
 	}
 
 

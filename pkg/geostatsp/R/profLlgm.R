@@ -65,8 +65,8 @@ profLlgm = function(fit,mc.cores=1, ...) {
         SIMPLIFY=FALSE
     )
   }
-  resL = lapply(resL, function(qq) qq$optim$logL)
-  resL = simplify2array(resL)
+  resL2 = lapply(resL, function(qq) qq$optim$logL)
+  resL = simplify2array(resL2)
 
 	if(length(varying)==1) {
     forNames =  c(

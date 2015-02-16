@@ -23,7 +23,7 @@ void computeBoxCox(
 		return;
 	}
 
-	bcEps = 0.01;
+	bcEps = 0.0005;
 
 	if(boxcoxType == 1){
 		pLogY = obsCov; // logs go in first column
@@ -33,7 +33,7 @@ void computeBoxCox(
 		Nend = 1;
 	}
 
-	if(boxcoxType < 3){
+	if(boxcoxType < 3){ // haven't precomputed log Y , sum log Y
 		sumLogY = 0.0;
 		for(D=0;D<Nobs;++D) {
 			pLogY[D] = log(obsCov[D]);
@@ -42,18 +42,27 @@ void computeBoxCox(
 		// two log jacobian
 		// to be subtracted from likelihood
 		for(D=0;D<Nrep;++D){
-			boxcox[D*3+1] = sumLogY;
-			boxcox[D*3+2] = 2*
-					(boxcox[D*3]-1)*sumLogY;
+			boxcox[D+Nrep] = sumLogY;
+			boxcox[D+2*Nrep] = 2*(boxcox[D]-1)*sumLogY;
+		}
+	} else {
+		sumLogY = boxcox[Nrep+1];
+		for(D=2;D<Nrep;++D){
+			boxcox[D+Nrep] = sumLogY;
+			boxcox[D+2*Nrep] = -2*(boxcox[D]-1)*sumLogY;
 		}
 	}
 
 	Dbc = Nrep-1;
 	while(Dbc>Nend){
 		pRep = &obsCov[Dbc*Nobs];
-		bcHere = boxcox[Dbc*3];
+		bcHere = boxcox[Dbc];
 
-		if(fabs(bcHere) > bcEps) {
+		if(fabs(bcHere-1) < bcEps) {
+			for(D=0;D<Nobs;++D) {
+				pRep[D] = obsCov[D];
+			}
+		} else if(fabs(bcHere) > bcEps) {
 			for(D=0;D<Nobs;++D) {
 				pRep[D] = (exp(bcHere*pLogY[D]) - 1) /
 					bcHere;
@@ -309,7 +318,7 @@ void logLfromComponents(
 	}
 	if(boxcoxType){
 		// two log jacobians in 3rd row
-		for(D=0;D<Nrep;++D) logL[D] -= boxcox[D*Nrep+2];
+		for(D=0;D<Nrep;++D) logL[D] += boxcox[D+(2*Nrep)];
 	}
 
 }
