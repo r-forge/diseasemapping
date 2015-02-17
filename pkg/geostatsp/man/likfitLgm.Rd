@@ -27,7 +27,7 @@ loglikLgm(param,
 		data, formula, coordinates=data,
 		reml=TRUE, 
 		minustwotimes=TRUE,
-		stored=NULL, moreParams=NULL)
+		moreParams=NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -63,7 +63,6 @@ used for parameters not specified.}
 \item{parscale}{Named vector of scaling of parameters passed as \code{control=list(parscale=parscale)} 
 to  \code{\link[stats]{optim}}.}
 \item{minustwotimes}{Return -2 times the log likelihood rather than the likelihood}
-\item{stored}{A list of Box-Cox transformed observations and their Jacobian.}
 \item{moreParams}{Vector of additional parameters, combined with \code{param}.  
 Used for passing fixed parameters to \code{loglikLgm} from within \code{\link[stats]{optim}}.
 }
