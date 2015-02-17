@@ -447,7 +447,7 @@ likfitLgm = function(
   
   fromOptim = .C(
           "maternLogLOpt",
-      start=as.double(paramsForC),    
+      start=paramsForC,    
       Sparam=as.integer(Sparam),
       obsCov=as.double(obsCov), 
       as.double(xcoord),
@@ -620,6 +620,14 @@ likfitLgm = function(
 #				qq
 #			}
 #	))
+
+#  if(is.na(result$summary['anisoAngleDegrees','ci0.05']) &
+#      !is.na(result$summary['anisoAngleRadians','ci0.05']) ){
+#    ciCols = grep(colnames("^ci0\\.[[:digit:]]+$", result$summary))
+#    result$summary['anisoAngleDegrees',ciCols] =
+#      (360/(2*pi))*result$summary['anisoAngleRadians',ciCols]
+#  }
+  
 
 	result$summary = as.data.frame(parameterTable)
   result$summary$Estimated = as.logical(result$summary$Estimated)
