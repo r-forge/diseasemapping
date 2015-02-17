@@ -187,9 +187,20 @@ setMethod("lgm",
 	theInf=informationLgm(res)
 	res$varBetaHat = list(beta=res$varBetaHat)
 	names(res) = gsub("varBetaHat", "varParam", names(res))
-	res$summary = 	theInf$summary
 	res$varParam$information = theInf$information
 
+  
+  res$summary = 	theInf$summary
+  
+  if(is.na(res$summary ['anisoAngleDegrees','ci0.05']) &
+      !is.na(res$summary ['anisoAngleRadians','ci0.05']) ){
+    ciCols = grep("^ci0\\.[[:digit:]]+$", colnames(res$summary ))
+    res$summary ['anisoAngleDegrees',ciCols] =
+        (360/(2*pi))*res$summary ['anisoAngleRadians',ciCols]
+  }
+  
+  
+  
 	if(FALSE){
 	for(Dvar in names(covariates)) {
 		theLevels =levels(covariates[[Dvar]])[[1]]

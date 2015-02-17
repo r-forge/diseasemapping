@@ -1,15 +1,14 @@
 \name{colourScale}
 \alias{colourScale}
-\alias{legendBreaks}
+\alias{colorScale}
 
 \title{Create colour scales}
 \description{
-Produces a scale of colours for plotting maps an producing legends.  }
+Produces a scale of colours for plotting maps}
 \usage{
 	colourScale(x, breaks=5, style=c("quantile","equal","unique", "fixed"),
 	 col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
 	 transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL,...)
-legendBreaks(pos, breaks, outer=TRUE,...)
 	}
 
 \arguments{
@@ -27,11 +26,7 @@ legendBreaks(pos, breaks, outer=TRUE,...)
 	\item{revCol}{Reverse the order of the colours.}
 	\item{exclude}{A vector of values to change to NA when they appear in \code{x}}
 	\item{labels}{Vector of names of levels, useful when \code{style='unique'}}
-  \item{pos}{
-Position, as specified in the \code{legend} function.
-}
-\item{outer}{If \code{TRUE}, put legend in the margin of the plot}
-	\item{...}{Additional arguments passed to \code{\link[classInt]{classIntervals}} or \code{legend}.}
+	\item{...}{Additional arguments passed to \code{\link[classInt]{classIntervals}}.}
 }
 
 \details{
@@ -51,7 +46,6 @@ Position, as specified in the \code{legend} function.
 
  any other string: is passed to \code{\link[classInt]{classIntervals}}
 
-\code{legendBreaks} produces a legend for 'z-axis' colour scales.
 
 
 }
@@ -63,7 +57,7 @@ Position, as specified in the \code{legend} function.
 \item{colWithOpacity}{as \code{col}, but with two digit transparency values appended.}
 }
 
-\seealso{\code{\link{scaleBar}}, \code{\link[classInt]{classIntervals}}}
+\seealso{\code{\link{legendBreaks}},\code{\link{scaleBar}}, \code{\link[classInt]{classIntervals}}}
 
 \examples{
 Npoints = 20

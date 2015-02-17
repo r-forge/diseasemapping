@@ -1,5 +1,76 @@
 
-legendBreaks = function(pos, breaks, outer=TRUE,...){
+legendBreaks = function(pos,
+    breaks,
+    col=breaks$col,
+    legend=breaks$breaks,
+    rev=TRUE,
+    outer=TRUE,
+    pch=15,
+    cex=par('cex'),
+    pt.cex=2*cex,
+    adj=c(0,0.75)*par('cra')*cex,
+    y.intersp=0.75,
+    inset=0.05,
+    ...){
+  
+  if(rev){
+    col=rev(col)
+    legend=rev(legend)
+  }
+  
+  if(length(col) == (length(legend)-1)) {
+    col = c(NA, col)
+  }
+  
+  pch = c(NA,
+      pch[round(seq(1, length(pch), len=length(legend)-1))]
+  )
+  
+  # get rid of transparency in col
+  withTrans = grep("^#[[:xdigit:]]{8}$", col)
+  col[withTrans] = gsub("[[:xdigit:]]{2}$", "", col)
+
+  if(outer){
+    oldxpd = par("xpd")
+    par(xpd=NA)
+    fromEdge = matrix(par("plt"), 2, 2, 
+        dimnames=list(c("min","max"), c("x","y")))
+    propIn = apply(fromEdge, 2, diff)
+    if(is.character(pos)) {
+      forInset = c(0,0)
+      if(length(grep("left$", pos))){
+        forInset[1] = -fromEdge["min","x"]					
+      } else if(length(grep("right$", pos))){
+        forInset[1] = fromEdge["max","x"]-1					
+      }
+      if(length(grep("^top", pos))){
+        forInset[2] = -fromEdge["min","y"]					
+      } else if(length(grep("^bottom", pos))){
+        forInset[2] = fromEdge["max","y"]-1					
+      }
+      
+      inset = forInset/propIn + inset
+    }
+  }
+  
+  result=legend(
+      pos,
+      legend=legend,
+      col=col,
+      pch=pch,
+      pt.cex=pt.cex,
+      adj=adj,
+      y.intersp=y.intersp,
+      inset=inset,
+      cex=cex,
+      ...
+      )
+      par(xpd=oldxpd)
+      
+      return(invisible(result))
+}
+
+legendBreaksOld = function(pos, breaks, outer=TRUE,...){
 	ldots = list(...)
 
 	defaults = list(pch=15,  x=pos,bg="white",

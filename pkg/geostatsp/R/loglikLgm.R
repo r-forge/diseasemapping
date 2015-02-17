@@ -315,9 +315,13 @@ likfitLgm = function(
       range=maxDist/10
   )
   
+  if(any(names(paramToEstimate)=='nugget')) {
+    paramDefaults['nugget'] = 1
+  }
+  
   parscaleDefaults = c(
       range=maxDist/5,
-      nugget=0.1,
+      nugget=0.01,
       boxcox=0.5,
       anisoAngleRadians=0.2,
       anisoRatio=1,
@@ -329,6 +333,12 @@ likfitLgm = function(
   parscaleDefaults[names(parscale)] = parscale
   lowerDefaults[names(lower)]=lower
   upperDefaults[names(upper)] = upper
+  
+  
+  # don't let nugget start on the boundary
+  if(paramDefaults['nugget'] == lowerDefaults['nugget']){
+    paramDefaults['nugget'] = min(c(0.5, upperDefaults['nugget']))
+  }
   
   startingParam = paramDefaults[paramToEstimate]
   names(startingParam) = paramToEstimate # fixes names lost when no starting value provided
