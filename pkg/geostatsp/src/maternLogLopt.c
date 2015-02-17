@@ -96,7 +96,10 @@ double maternLogLObj(
 			Rprintf("\n pf ");
 			for(Dparam=0;Dparam<7;++Dparam)
 				Rprintf(" %f ", paramOpt[Dparam] );
-			Rprintf("l %f ", totalSsqOpt[0]);
+			Rprintf("\nb %f ", boxcoxParamOpt[8]);
+			Rprintf("d %f %f\n", determinants[0], determinants[1]	);
+
+			Rprintf("l %f \n", totalSsqOpt[0]);
 	}
 
 	return totalSsqOpt[0];

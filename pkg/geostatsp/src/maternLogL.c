@@ -59,9 +59,12 @@ void computeBoxCox(
 		bcHere = boxcox[Dbc];
 
 		if(fabs(bcHere-1) < bcEps) {
+			// bc is 1, no transform
 			for(D=0;D<Nobs;++D) {
 				pRep[D] = obsCov[D];
 			}
+			// set jacobian to zero
+			boxcox[Dbc+2*Nrep] = 0.0;
 		} else if(fabs(bcHere) > bcEps) {
 			for(D=0;D<Nobs;++D) {
 				pRep[D] = (exp(bcHere*pLogY[D]) - 1) /

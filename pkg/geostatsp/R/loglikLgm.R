@@ -447,11 +447,11 @@ likfitLgm = function(
   
   fromOptim = .C(
           "maternLogLOpt",
-      start=paramsForC,    
-      Sparam=Sparam,
-      obsCov=obsCov, 
-      xcoord,
-      ycoord,
+      start=as.double(paramsForC),    
+      Sparam=as.integer(Sparam),
+      obsCov=as.double(obsCov), 
+      as.double(xcoord),
+      as.double(ycoord),
       as.integer(aniso),
       N=as.integer(c(nrow(obsCov), 3, ncol(covariates))),
     Ltype=as.integer(reml+!estimateVariance),
