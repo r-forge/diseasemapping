@@ -135,7 +135,16 @@ colourScale.numeric = function(x=NULL, breaks=5,
 			thetable = data.frame(ID=as.numeric(names(thetable)),
 					Freq=thetable)
 		}
-			
+    
+    if(length(breaks)==1){
+      # breaks is the maximum number of breaks
+      thetable = thetable[order(thetable$Freq, decreasing=TRUE),]
+      breaks = thetable[
+          seq(1,min(breaks,nrow(thetable))),'ID'
+          ]
+      
+    }
+    
 		notInX = which(! breaks %in% x)
 		if(length(notInX))
 			thetable = rbind(thetable,

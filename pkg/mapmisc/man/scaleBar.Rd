@@ -93,7 +93,7 @@ plot(myPoints,col = as.character(cut(
 	myPoints$y1, breaks, thecol
 )),add=TRUE)
 scaleBar(myPoints, "bottomright",cex=1.25, scale.cex=2)
-legendBreaks("topleft", breaks=breaks, col=thecol)
+temp=legendBreaks("topleft", legend=breaks, col=thecol)
 
 \dontrun{
 insetMap(myPoints, "bottomleft",col='blue')

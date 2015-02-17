@@ -125,6 +125,6 @@ map.new(myPoints)
 plot(mymap,add=TRUE)
 }
 plot(myPoints, col=myscale4$plot, pch=16,add=TRUE)
-legendBreaks("topleft", breaks=myscale4$breaks, col=myscale4$col)
+legendBreaks("topleft", legend=myscale4$breaks, col=myscale4$col)
 
 }

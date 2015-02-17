@@ -14,11 +14,12 @@ legendBreaks(pos,
     outer=TRUE,
     pch=15,
     cex=par('cex'),
-    pt.cex=2*cex,
-    adj=c(0,0.75)*par('cra')*cex,
-    y.intersp=0.75,
+    pt.cex=2.5*cex,
     inset=0.05,
-...)
+    text.col=par('fg'),
+    title.col=text.col,
+    adj=0,
+	...)
 	}
 
 \arguments{
@@ -35,9 +36,10 @@ Position, as specified in the \code{\link[graphics]{legend}} function.
 \item{pch}{see \code{\link[graphics]{legend}}}
 \item{cex}{see \code{\link[graphics]{legend}}}
 \item{pt.cex}{see \code{\link[graphics]{legend}}}
-\item{adj}{see \code{\link[graphics]{legend}}}
-\item{y.intersp}{see \code{\link[graphics]{legend}}}
 \item{inset}{see \code{\link[graphics]{legend}}}
+\item{text.col}{see \code{\link[graphics]{legend}}}
+\item{title.col}{see \code{\link[graphics]{legend}}}
+\item{adj}{Adjustment of the legend labels relative to plotting symbols.}
 \item{...}{Additional arguments passed to \code{\link[graphics]{legend}}.}
 }
 

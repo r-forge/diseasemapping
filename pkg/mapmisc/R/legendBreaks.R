@@ -7,10 +7,11 @@ legendBreaks = function(pos,
     outer=TRUE,
     pch=15,
     cex=par('cex'),
-    pt.cex=2*cex,
-    adj=c(0,0.75)*par('cra')*cex,
-    y.intersp=0.75,
+    pt.cex=2.5*cex,
     inset=0.05,
+    text.col=par('fg'),
+    title.col=text.col,
+    adj=0,
     ...){
   
   if(rev){
@@ -59,12 +60,23 @@ legendBreaks = function(pos,
       col=col,
       pch=pch,
       pt.cex=pt.cex,
-      adj=adj,
-      y.intersp=y.intersp,
       inset=inset,
       cex=cex,
+      text.col='#FFFFFF00',
       ...
       )
+      
+      diffy = diff(result$text$y)/2
+      diffy = c(diffy,diffy[length(diffy)])
+      result$text$y = result$text$y + diffy
+      
+      if(par("xlog")) result$text$x = 10^result$text$x
+      if(par("ylog")) result$text$y = 10^result$text$y
+      
+      
+      text(result$text$x, result$text$y,
+          legend, col=text.col,adj=adj)   
+      
       par(xpd=oldxpd)
       
       return(invisible(result))

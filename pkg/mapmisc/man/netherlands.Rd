@@ -57,7 +57,7 @@ plot(nldTiles,add=TRUE)
 points(nldCities)
 text(nldCities,label=nldCities$name, pos=2)
 points(meuse, pch=16, col=soilCol$plot)
-legendBreaks('topleft', soilCol)
+legend('topleft', fill=soilCol$col,legend=soilCol$legend)
 insetMap(meuse, "bottomright",map=world)
 
 # location won't be marked on the inset map unless rgdal is available
