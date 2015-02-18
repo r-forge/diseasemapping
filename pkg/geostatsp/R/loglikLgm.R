@@ -40,7 +40,8 @@ loglikLgm = function(param,
       } else {
         coordinates= as.matrix(coordinates)
       } 
-    } else if(class(coordinates) == "matrix")	{
+    } else if(class(coordinates) == "matrix" |
+        class(coordinates) == 'dsyMatrix')	{
       if(length(theNA)) {
         coordinates = coordinates[-theNA,-theNA]
       }
@@ -111,7 +112,8 @@ loglikLgm = function(param,
   Ltype = c(ml=0, reml=1, mlFixed=2, remlFixed=3)
   Ltype = reml + 2*haveVariance
 
-  if(class(coordinates)=='matrix'){
+  if(class(coordinates)=='matrix'|
+      class(coordinates) == 'dsyMatrix'){
     xcoord = as.vector(coordinates)
     ycoord = -99
     aniso=FALSE
@@ -180,6 +182,7 @@ attributes(result)$reml=reml
 attributes(result)$jacobian = jacobian
 attributes(result)$Ltype = as.integer(Ltype)
 attributes(result)$Lorig = resultC$logL
+attributes(result)$aniso = aniso
 attributes(result)$determinants = resultC$obsCov[1:2]
 result
 }
@@ -204,7 +207,8 @@ likfitLgm = function(
   # check if model is isotropic
   # if it is coordinates will be a distance matrix
   # if not coordinates will be SpatialPoints
-  aniso = as.logical(length(grep("^aniso", c(names(param), paramToEstimate))))
+  aniso = as.logical(length(grep("^aniso", c(names(param), paramToEstimate)))) |
+      any(abs(param['anisoRatio']-1) > 0.00001,na.rm=TRUE)
   if(aniso){
     if(is.matrix(coordinates)){
       if(ncol(coordinates)!= 2 | nrow(coordinates) != nrow(data))
@@ -222,7 +226,7 @@ likfitLgm = function(
     }
     if(class(coordinates)=='dist')
       coordinates = as(as.matrix(coordinates), 'dsyMatrix')
-    if(grep("^Spatial", class(coordinates)))
+    if(length(grep("^Spatial", class(coordinates))))
       coordinates = as(spDists(coordinates), 'dsyMatrix')
     maxDist = max(coordinates,na.rm=TRUE)
   }
@@ -230,7 +234,7 @@ likfitLgm = function(
   trend = formula
 	if(class(trend)=="formula") {
     # convert input data to a model matrix
-		data = as.data.frame(data)
+		data = data.frame(data)
 		theNA = apply(
 				data[,all.vars(trend)[-1],drop=FALSE],
 				1, function(qq) any(is.na(qq)))
@@ -302,7 +306,7 @@ likfitLgm = function(
   
   upperDefaults= c(
       nugget=Inf,
-      range=5*maxDist,
+      range=2*maxDist,
       anisoRatio=100,
       anisoAngleRadians=pi/2,
       shape=4,boxcox=2.5,variance=Inf)
@@ -321,7 +325,7 @@ likfitLgm = function(
   
   parscaleDefaults = c(
       range=maxDist/5,
-      nugget=0.01,
+      nugget=0.02,
       boxcox=0.5,
       anisoAngleRadians=0.2,
       anisoRatio=1,
@@ -405,6 +409,8 @@ likfitLgm = function(
           forO$pars[,'upper'] != Inf
   ] = 3
   
+  forOparsOrig = forO$pars
+  
   forO$pars[!is.finite(forO$pars)]=-1
   forO$pars = c(forO$pars, rep(0.0, ncol(covariates)+ncol(covariates)^2))
   
@@ -419,7 +425,8 @@ likfitLgm = function(
   
   obsCov = cbind(y1=observations, y2=0, y3=0, covariates)
   
-  if(all(paramToEstimate=='variance')){
+  if(all(paramToEstimate=='variance') &
+      param['nugget']==0){
     
     theL = loglikLgm(param,
         data=observations, 

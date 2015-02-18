@@ -23,43 +23,52 @@ informationLgm = function(fit, ...) {
 	if(!all(baseParam[parToLog]>0))
 		return(list(summary=fit$summary,information=NULL))
 
-	
-	
-	
-	oneL = function(param, ...) {
+  # get rid of NA's
+  fit$data = na.omit(fit$data)
+  
+	aniso = length(grep("^aniso", reEstimate)) |
+      any(abs(moreParams['anisoRatio']-1) > 0.00001,na.rm=TRUE)
+  if(!aniso) {
+    coordinates = as(spDists(fit$data), 'dsyMatrix')  
+  } else{
+    coordinates=fit$data
+  }
+  
+	oneL = function(param) {
 #    parToExp = grep("^log\\(", names(param))
 #		param[parToExp] = exp(param[parToExp])
 #    names(param) = gsub("^log\\(|\\)$", "", names(param))
     param[parToLog] = exp(param[parToLog])
-		loglikLgm(param, ...)
+		loglikLgm(param, 
+        data=fit$data,
+        formula=fit$model$formula,
+        coordinates=coordinates,
+        reml=fit$model$reml,
+        moreParams=moreParams,
+        minustwotimes=FALSE)
 	}
 	
 	baseParam[parToLog] = log(baseParam[parToLog])
 	
-	# get rid of NA's
-	fit$data = na.omit(fit$data)
-	
-	hess = numDeriv::hessian(oneL, baseParam,
-			data=fit$data,formula=fit$model$formula,
-			reml=fit$model$reml,
-			moreParams=moreParams, ...)
+
+	hess = numDeriv::hessian(oneL, baseParam, ...)
 	
 	whichLogged = which(names(baseParam)%in% parToLog)
 	names(baseParam)[whichLogged] = paste("log(", 
 			names(baseParam)[whichLogged], ")",sep="")
 	
 	dimnames(hess) = list(names(baseParam),names(baseParam))
-	infmat = try(solve(hess), silent=TRUE)
+  
+  infmat = -hess
+  infmat = try(solve(infmat), silent=TRUE)
   if(class(infmat)=='try-error') {
 #    stuff <<- fit
     return(list(summary=fit$summary,information=NULL, error=infmat))
   } 
-  infmat = infmat*2
-	
-  if(length(grep("anisoAngleRadians", colnames(infmat))) & 
-      length(grep("anisoAngleRadians", colnames(infmat)))) {
-    
-    anisoAngleDegrees = (360/(2*pi))*infmat[,'anisoAngleRadians']
+
+  
+  if(length(grep("anisoAngleRadians", colnames(infmat))) ) {
+  anisoAngleDegrees = (360/(2*pi))*infmat[,'anisoAngleRadians']
   infmat = rbind(infmat, anisoAngleDegrees=anisoAngleDegrees)
   anisoAngleDegrees = c(anisoAngleDegrees,
       anisoAngleDegrees = (360/(2*pi))*
