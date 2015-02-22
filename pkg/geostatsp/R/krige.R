@@ -15,10 +15,13 @@ krigeLgm = function(
 	theVars = NULL
 	
 	haveBoxCox = any(names(param)=="boxcox")
-	if(haveBoxCox)
-		haveBoxCox = abs(param["boxcox"]-1) > 0.001
-	NsimBoxCox=40
-	
+	NsimBoxCox=50
+  if(haveBoxCox) {
+    haveBoxCox = abs(param["boxcox"]-1) > 0.001
+    if(param['boxcox']<0) NsimBoxCox=100
+    if(param['boxcox']< -0.2) NsimBoxCox=200
+    if(param['boxcox']< -0.5) NsimBoxCox=400
+  }
 	
 	haveNugget = any(names(param)=="nugget")
 	if(haveNugget) { 
