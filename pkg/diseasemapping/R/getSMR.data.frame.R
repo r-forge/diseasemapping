@@ -8,6 +8,12 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL,
     regionCodeCases=regionCode, area=FALSE, area.scale=1, ...){
 
 
+  if(!length(regionCode)) {
+    
+    regionCode='id'
+    popdata$id = 1:nrow(popdata)
+    
+  }
 
     if(is.numeric(model)) {
     # model is a vector of rates
@@ -31,7 +37,7 @@ getSMR.data.frame <- function(popdata, model, casedata=NULL,
 	poplong = formatPopulation(popdata, breaks=newBreaks$breaks)
 		
 	poplong$expected = poplong$POPULATION *  
-			newModel[paste(poplong$sex, poplong$age, sep='.')
+    newModel[paste(poplong$sex, poplong$age, sep='.')
 						,'x']
 		
 	if(any(names(list(...))=='sex')){
