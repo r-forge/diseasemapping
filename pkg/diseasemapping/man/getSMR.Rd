@@ -16,8 +16,9 @@ area = FALSE, area.scale = 1,  ...)
   \item{casedata}{ the name of case data set }
   \item{regionCode}{ the name of district area column in population data set}
   \item{regionCodeCases}{the name of district area column in case data set }
-  \item{area}{ if \code{TRUE}, calculate the expected number of cases per area in each region }
-  \item{area.scale}{  control the unit of area. e.g $10^6$: per square kilometers }
+  \item{area}{ if \code{TRUE}, calculate the expected number of cases per unit area in each region }
+  \item{area.scale}{ scale the unit of area. e.g $10^6$: if your spatial coordinates are metres 
+  and you want intensity in cases per km2 }
   \item{years}{the vector of years}
   \item{personYears}{ a logic variable. If \code{TRUE}, it compute offset adding person years}
   \item{year.range}{the range of the year vector} 

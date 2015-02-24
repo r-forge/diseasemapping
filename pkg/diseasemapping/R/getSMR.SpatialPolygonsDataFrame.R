@@ -3,10 +3,10 @@ getSMR_SpatialPolygonsDataFrame <- function(popdata, model, casedata=NULL,
 		regionCodeCases=regionCode, area=FALSE,  ...) {
 
 	
-	if (area & !("sqk" %in% names(popdata) ) ) {
+	if (area & !("surfaceArea" %in% names(popdata) ) ) {
 		if(length(grep("longlat", popdata@proj4string@projargs)))
 			warning("computing areas of polygons in long-lat projection")
-		popdata$sqk = sapply(slot(popdata, "polygons"), slot, "area")
+		popdata$surfaceArea = sapply(slot(popdata, "polygons"), slot, "area")
 	}	
 	
 popdata@data <- getSMR(popdata@data, model, casedata, regionCode,

@@ -155,9 +155,9 @@ getSMR_data_frame <- function(popdata, model, casedata=NULL,
 
     
     
-    if (area & ("sqk" %in% names(popdata) ) ) {
-        popdata$expected_sqk <- area.scale *popdata$expected/popdata$sqk
-        popdata$logExpected_sqk = log(popdata$expected_sqk)
+    if (area & ("surfaceArea" %in% names(popdata) ) ) {
+        popdata$expected_surfaceArea <- area.scale *popdata$expected/popdata$surfaceArea
+        popdata$logExpected_surfaceArea = log(popdata$expected_surfaceArea)
 		
     }
 
