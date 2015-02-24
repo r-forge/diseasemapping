@@ -1,13 +1,30 @@
-\name{formatPopulation}
+\name{formatPopulation-methods}
+\docType{methods}
 \alias{formatPopulation}
-\title{Format the population data set }
+\alias{formatPopulation-methods}
+\alias{formatPopulation,data.frame-method}
+\alias{formatPopulation,SpatialPolygonsDataFrame-method}
+\alias{formatPopulation,list-method}
+
+\title{Format a population data set }
 \description{
  The formatCases funtion formats the population data set. 
 Reshape the population data set to "long" format, 
 add in 4 columns : GROUP, POPULATION, sex and age. 
 }
 \usage{
-formatPopulation(popdata, aggregate.by = NULL, breaks = NULL, ...)
+\S4method{formatPopulation}{data.frame}(
+popdata, aggregate.by = NULL, breaks = NULL, ...
+)
+\S4method{formatPopulation}{SpatialPolygonsDataFrame}(
+popdata, aggregate.by = NULL, breaks = NULL, ...
+)
+\S4method{formatPopulation}{list}(
+popdata, aggregate.by = NULL, breaks = NULL,  
+	years=as.integer(names(popdata)), year.range=NULL, 
+	 time="YEAR", 
+        personYears=TRUE,...
+)
 }
 
 \arguments{
@@ -18,14 +35,11 @@ formatPopulation(popdata, aggregate.by = NULL, breaks = NULL, ...)
 %  \item{user}{}
   \item{breaks}{ age breaks the user want to use. i.e breaks = c(10, 20, 30 ,40, 60, Inf). }
 %  \item{driver}{}
-  \item{years}{the years vector}
-  \item{year.range}{the range of the year vector}
   \item{time}{the time variable, i.e years}
   \item{personYears}{convert populations to person-years}
-  \item{\dots}{ additional arguments if \code{popdata} is a list of populations from different years.
-  these could include \code{years} (a vector with the year of each dataset), \code{year.range} (two dimensional
-  vector with first and last year), \code{time}(character string giving name of time variable), 
-  and \code{personYears} (logical, if \code{TRUE} expected counts are per person year).}
+  \item{years}{a vector with the year of each dataset}
+  \item{year.range}{two dimensional vector with first and last year}
+  \item{\dots}{ additional arguments }
 }
 \details{
   After using the \code{formatPopulation} function, it will return the population data set in the same class as the original data set. 

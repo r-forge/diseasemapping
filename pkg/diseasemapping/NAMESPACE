@@ -10,19 +10,10 @@ excProb, nbToInlaGraph
 )
 
 export(getSMR)
-S3method(getSMR,'data.frame','getSMR_data_frame')
-S3method(getSMR,'list', 'getSMR_list')
-S3method(getSMR,'SpatialPolygonsDataFrame', 'getSMR_SpatialPolygonsDataFrame')
 
 export(formatPopulation)
-S3method(formatPopulation,'data.frame','formatPopulation_data_frame')
-S3method(formatPopulation,'list','formatPopulation_list')
-S3method(formatPopulation,'SpatialPolygonsDataFrame',
-	'formatPopulation_SpatialPolygonsDataFrame')
 
 export(mergeBugsData)
-S3method(mergeBugsData,'SpatialPolygonsDataFrame','mergeBugsData_SpatialPolygonsDataFrame') 
-S3method(mergeBugsData,'data.frame','mergeBugsData_data_frame')
 
 # only needed because INLA is requireNamespace instead of require
 export(inla.models)
