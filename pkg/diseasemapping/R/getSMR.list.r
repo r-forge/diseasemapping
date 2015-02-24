@@ -1,4 +1,4 @@
-getSMR.list <- function(popdata, model, casedata = NULL, regionCode, 
+getSMR_list <- function(popdata, model, casedata = NULL, regionCode,
               regionCodeCases, area, area.scale , 
               years = NULL, personYears=TRUE,year.range = NULL,...){
 #  lennon's stuff

@@ -1,9 +1,5 @@
 \name{getSMR}
 \alias{getSMR}
-\alias{getSMR.data.frame}
-\alias{getSMR.list}
-%\alias{getSMR.PostgreSQLConnection}
-\alias{getSMR.SpatialPolygonsDataFrame}
 \title{Calculate the standardized mortality/morbidity ratios   }
 \description{
 The getSMR function calculates the rate of observe value over expected value. 
@@ -12,15 +8,6 @@ It will also merge back the observed value, expected value and the ratio back to
 \usage{
 getSMR(popdata, model, casedata, regionCode , regionCodeCases , 
 area = FALSE, area.scale = 1,  ...)
-\method{getSMR}{data.frame}(popdata, model, casedata=NULL, 
-regionCode =  intersect(names(popdata), names(casedata))[1], 
-regionCodeCases = regionCode, area=FALSE , area.scale=1, ...)
-\method{getSMR}{list}(popdata, model, casedata = NULL, regionCode , 
-regionCodeCases, area , area.scale , years = NULL, 
-personYears= TRUE, year.range = NULL, ...)
-\method{getSMR}{SpatialPolygonsDataFrame}(popdata, model, casedata=NULL, 
-		regionCode = intersect(names(popdata), names(casedata))[1],
-		regionCodeCases=regionCode, area=FALSE,  ...)
 }
 \arguments{
   \item{popdata}{ the name of population data set  }

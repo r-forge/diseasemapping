@@ -10,8 +10,6 @@
 }
 \usage{
 mergeBugsData(x, bugsSummary, by.x = NULL, newcol = "mean", ...)
-\method{mergeBugsData}{SpatialPolygonsDataFrame}(x, bugsSummary, by.x=NULL, newcol="mean", ...) 
-\method{mergeBugsData}{data.frame}(x, bugsSummary, by.x=NULL, newcol="mean", ...)
 }
 
 \arguments{

@@ -2,13 +2,13 @@ mergeBugsData = function(x, bugsSummary, by.x = NULL, newcol="mean", ...) {
   UseMethod("mergeBugsData")
 }
 
-mergeBugsData.SpatialPolygonsDataFrame =
+mergeBugsData_SpatialPolygonsDataFrame =
   function(x, bugsSummary, by.x=NULL, newcol="mean", ...) {
     x@data = mergeBugsData(x@data, bugsSummary, by.x, newcol, ...)
     x
 }
 
-mergeBugsData.data.frame = function(x, bugsSummary,
+mergeBugsData_data_frame = function(x, bugsSummary,
    by.x=NULL, newcol="mean", ...) {
 
   if(!is.list(bugsSummary)) {

@@ -1,4 +1,4 @@
-`getSMR.SpatialPolygonsDataFrame` <- function(popdata, model, casedata=NULL, 
+getSMR_SpatialPolygonsDataFrame <- function(popdata, model, casedata=NULL, 
 		regionCode = intersect(names(popdata), names(casedata))[1],
 		regionCodeCases=regionCode, area=FALSE,  ...) {
 

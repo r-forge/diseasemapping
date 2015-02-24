@@ -2,7 +2,7 @@ formatPopulation <- function(popdata, aggregate.by=NULL, breaks=NULL, ...) {
   UseMethod("formatPopulation")
 }
 
-`formatPopulation.data.frame` <-
+formatPopulation_data_frame <-
 function(popdata, aggregate.by=NULL, breaks=NULL,...) {
 
 #popdata <- popdata@data

@@ -1,4 +1,4 @@
-`formatPopulation.list`<-function(popdata, aggregate.by=NULL, breaks = NULL, 
+formatPopulation_list <-function(popdata, aggregate.by=NULL, breaks = NULL, 
   years=as.integer(names(popdata)), year.range=NULL,  time="YEAR", 
   personYears=TRUE, S=c("M", "F"),...) {
     
