@@ -19,12 +19,13 @@ formatPopulation(popdata, aggregate.by = NULL, breaks = NULL, ...)
   \item{breaks}{ age breaks the user want to use. i.e breaks = c(10, 20, 30 ,40, 60, Inf). }
 %  \item{driver}{}
   \item{years}{the years vector}
-  \item{aggregate}{if \code{TRUE} then aggregate the population data}
   \item{year.range}{the range of the year vector}
   \item{time}{the time variable, i.e years}
   \item{personYears}{convert populations to person-years}
-  \item{S}{ can choose both or either of each sex.}
-  \item{\dots}{ additional arguments. }
+  \item{\dots}{ additional arguments if \code{popdata} is a list of populations from different years.
+  these could include \code{years} (a vector with the year of each dataset), \code{year.range} (two dimensional
+  vector with first and last year), \code{time}(character string giving name of time variable), 
+  and \code{personYears} (logical, if \code{TRUE} expected counts are per person year).}
 }
 \details{
   After using the \code{formatPopulation} function, it will return the population data set in the same class as the original data set. 

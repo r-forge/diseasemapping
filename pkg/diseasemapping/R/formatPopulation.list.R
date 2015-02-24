@@ -1,6 +1,6 @@
 formatPopulation_list <-function(popdata, aggregate.by=NULL, breaks = NULL, 
   years=as.integer(names(popdata)), year.range=NULL,  time="YEAR", 
-  personYears=TRUE, S=c("M", "F"),...) {
+  personYears=TRUE,...) {
     
    time<-toupper(time)
     
@@ -50,10 +50,6 @@ formatPopulation_list <-function(popdata, aggregate.by=NULL, breaks = NULL,
         pop <- pop[pop$POPULATION > 0,  ]
     }
    
-   
-   #keep desired sex in the data
-sexcol = grep("^sex$", names(pop), value=TRUE, ignore.case=TRUE)
-if(length(S)==1)  pop=pop[as.character(pop[[sexcol]]) %in% S,]
   
    
    pop

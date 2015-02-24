@@ -12,17 +12,17 @@ area = FALSE, area.scale = 1,  ...)
 \arguments{
   \item{popdata}{ the name of population data set  }
   \item{model}{rates, either fitted model (usually a \code{glm} object), or a vector of rates. }
-  \item{\dots}{additional arguments}
   \item{casedata}{ the name of case data set }
   \item{regionCode}{ the name of district area column in population data set}
   \item{regionCodeCases}{the name of district area column in case data set }
   \item{area}{ if \code{TRUE}, calculate the expected number of cases per unit area in each region }
   \item{area.scale}{ scale the unit of area. e.g $10^6$: if your spatial coordinates are metres 
   and you want intensity in cases per km2 }
-  \item{years}{the vector of years}
-  \item{personYears}{ a logic variable. If \code{TRUE}, it compute offset adding person years}
-  \item{year.range}{the range of the year vector} 
-  
+ \item{\dots}{ additional arguments if \code{popdata} is a list of populations from different years.
+  these could include \code{years} (a vector with the year of each dataset), \code{year.range} (two dimensional
+  vector with first and last year),  
+  and \code{personYears} (logical, if \code{TRUE} expected counts are per person year).}
+
 }
 \details{
 If \code{model} is numeric, it's assumed to be a vector of rates, with the names of the elements corresponding to columns of the population data set.  Names do not need to match exactly (can have M in one set of names, male in another for instance).

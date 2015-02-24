@@ -1,4 +1,6 @@
-formatPopulation <- function(popdata, aggregate.by=NULL, breaks=NULL, ...) {
+formatPopulation <- function(popdata, 
+    aggregate.by=NULL, 
+    breaks=NULL, ...) {
   UseMethod("formatPopulation")
 }
 
