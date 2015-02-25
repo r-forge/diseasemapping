@@ -25,6 +25,7 @@ data('kentucky')
 head(larynx)
 10^5*larynxRates[paste(c("M","F"), 50, sep="_")]
 
+
 kentucky2 = getSMR(kentucky, larynxRates, larynx, 
 		regionCode="County")
 
