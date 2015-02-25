@@ -349,7 +349,24 @@ setMethod("getSMR",
     }
 )
 
+setMethod("getSMR", 
+    signature("list", 'list', 'missing', 'ANY'),
+    function(popdata, model, casedata, 
+        regionCode,
+        regionCodeCases, area.scale=1, 
+        sex=c('m','f'), ...){
 
+    Nmax = max(c(length(popdata),length(model)))
+
+    if(!length(names(model))){
+      names(model) = as.character(round(seq(from=1,to=Nmax, len=length(model)))
+    }
+    if(!length(names(popdata))){
+      names(popdata) = as.character(round(seq(from=1,to=Nmax, len=length(popdata)))
+    }
+    
+    }
+)
 
 setMethod("getSMR", 
     signature("list", 'ANY', 'data.frame'),
