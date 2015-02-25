@@ -25,7 +25,7 @@ spdfToBrick = function(x,
   
   forRaster = NULL
   
-  haveRgdal = require('rgdal', quietly=TRUE)
+  haveRgdal = requireNamespace('rgdal', quietly=TRUE)
   
   for(Dcensus in rev(names(x))){
     
