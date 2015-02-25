@@ -9,6 +9,7 @@
 \alias{getSMR,data.frame,ANY,data.frame,character,character-method}
 \alias{getSMR,SpatialPolygonsDataFrame,ANY,ANY,ANY,ANY-method}
 \alias{getSMR,data.frame,list,missing,ANY,ANY-method}
+\alias{getSMR,list,list,missing,ANY,ANY-method}
 \alias{getSMR,list,ANY,data.frame,ANY,ANY-method}
 
 
@@ -40,6 +41,10 @@ popdata, model, casedata, regionCode , regionCodeCases ,
 area.scale = 1,  sex=c('m','f'),...
 )
 \S4method{getSMR}{data.frame,list,missing,ANY,ANY}(
+popdata, model, casedata, regionCode , regionCodeCases , 
+area.scale = 1,  sex=c('m','f'),...
+)
+\S4method{getSMR}{list,list,missing,ANY,ANY}(
 popdata, model, casedata, regionCode , regionCodeCases , 
 area.scale = 1,  sex=c('m','f'),...
 )
