@@ -359,12 +359,42 @@ setMethod("getSMR",
     Nmax = max(c(length(popdata),length(model)))
 
     if(!length(names(model))){
-      names(model) = as.character(round(seq(from=1,to=Nmax, len=length(model)))
+      names(model) = as.character(round(seq(from=1,to=Nmax, len=length(model))))
     }
     if(!length(names(popdata))){
-      names(popdata) = as.character(round(seq(from=1,to=Nmax, len=length(popdata)))
+      names(popdata) = as.character(round(seq(from=1,to=Nmax, len=length(popdata))))
     }
     
+    Scensus = as.numeric(names(popdata))
+    Srates = as.numeric(names(model))
+    if(any(is.na(Scensus)) | any(is.na(Srates)))
+      warning("can't turn names of popdata or model into numbers")
+    
+    yearBreaks = c(
+        -Inf,
+        Scensus[-1] - diff(Scensus)/2,
+        Inf
+        )
+    
+    rateCut = Scensus[
+        as.integer(cut(Srates, breaks=yearBreaks))
+      ]
+
+      popDataFull = popdata
+      modelFull = model
+      
+      
+    result = list()
+    for(Dcensus in Scensus){
+      popdata = popDataFull[[as.character(Dcensus)]]
+      model = modelFull[
+          rateCut==Dcensus
+          ]
+      result[[
+          as.character(Dcensus)
+      ]] = callGeneric()
+    }
+    result
     }
 )
 
