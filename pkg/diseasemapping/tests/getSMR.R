@@ -11,7 +11,7 @@ kentucky1 = getSMR(kentucky, larynxRates)
 kentucky1@data[1:4,c(1,2,grep("expected", names(kentucky1),ignore.case=TRUE))]
 
 if(require('mapmisc', quietly=TRUE)) {
-  kmap = openmap(kentucky)
+#  kmap = openmap(kentucky)
   col = colourScale(
       kentucky1$expected_surfaceArea,
       style='quantile', 
@@ -19,7 +19,7 @@ if(require('mapmisc', quietly=TRUE)) {
   )
 
   map.new(kentucky)
-  plot(kmap,add=TRUE)
+#  plot(kmap,add=TRUE)
   plot(kentucky1, col=col$plot,add=TRUE)
   legendBreaks('topleft', col)
 }
@@ -51,7 +51,7 @@ if(require('mapmisc', quietly=TRUE)) {
     )
     
     map.new(kentucky)
-    plot(kmap,add=TRUE)
+ #   plot(kmap,add=TRUE)
     plot(kentucky1, col=col$plot,add=TRUE)
     legendBreaks('topleft', col)
 
@@ -64,7 +64,7 @@ if(require('mapmisc', quietly=TRUE)) {
   )
   
   map.new(kentucky)
-  plot(kmap,add=TRUE)
+#  plot(kmap,add=TRUE)
   plot(kentucky2, col=col$plot,add=TRUE)
   legendBreaks('topleft', col)
   
@@ -113,7 +113,7 @@ if(require('mapmisc', quietly=TRUE)) {
   )
   
   map.new(kentucky)
-  plot(kmap,add=TRUE)
+#  plot(kmap,add=TRUE)
   plot(kentucky4[[1]], col=col$plot,add=TRUE)
   legendBreaks('topleft', col)
   
@@ -127,7 +127,7 @@ if(require('mapmisc', quietly=TRUE)) {
   )
   
   map.new(kentucky)
-  plot(kmap,add=TRUE)
+#  plot(kmap,add=TRUE)
   plot(kentucky4[[2]], col=col$plot,add=TRUE)
   legendBreaks('topleft', col)
   
