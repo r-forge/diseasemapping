@@ -352,7 +352,7 @@ setMethod("getSMR",
 
 
 setMethod("getSMR", 
-    signature("list", 'ANY', 'ANY'),
+    signature("list", 'ANY', 'data.frame'),
 function(popdata, model, casedata, regionCode,
     regionCodeCases, area.scale=1 , 
     years = NULL, personYears=TRUE,year.range = NULL,...){
