@@ -315,12 +315,46 @@ setMethod("getSMR",
     }
 )
 
+setMethod("getSMR", 
+    signature("data.frame", 'list', 'missing', 'ANY'),
+    function(popdata, model, casedata, 
+        regionCode,
+        regionCodeCases, area.scale=1, 
+        sex=c('m','f'), ...){
+      
+      keepCols = c(
+          'expected','expected_surfaceArea',
+          'logExpected_surfaceArea', 'logExpected'
+          )
+      
+      
+      if(!length(names(model))){
+        names(model) = as.character(1:length(model))
+      }
+      
+      result =  as.data.frame(matrix(NA, nrow(popdata), 0))
+      
+      for(Drate in names(model)){
+        toBind = callGeneric(popdata, model[[Drate]],
+            area.scale=area.scale, sex=sex)
+        toBind = toBind[,intersect(colnames(toBind), keepCols)]
+        names(toBind) = paste(
+            names(toBind), Drate, sep="_"
+        )
+        result = cbind(result,toBind)
+      }
+ 
+      popdata = cbind(popdata, result)
+      popdata
+    }
+)
+
 
 
 setMethod("getSMR", 
     signature("list", 'ANY', 'ANY'),
 function(popdata, model, casedata, regionCode,
-    regionCodeCases, area.scale , 
+    regionCodeCases, area.scale=1 , 
     years = NULL, personYears=TRUE,year.range = NULL,...){
 #  lennon's stuff
   #isSP = (class(popdata[[1]]) == "SpatialPolygonsDataFrame")
