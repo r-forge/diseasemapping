@@ -19,7 +19,7 @@ void computeBoxCox(
 	int D, Dbc, Nend;
 	const int Nobs= N[0], Nrep= N[1];
 	double *pLogY, *pRep, bcHere, bcEps, sumLogY;
-	if(boxcoxType==0 | boxcoxType==4){
+	if( (boxcoxType==0) | (boxcoxType==4) ){
 		return;
 	}
 
@@ -94,19 +94,17 @@ void maternLogLGivenChol(
 
 	const int *Nobs= &N[0], *Nrep= &N[1], *Ncov= &N[2];
 	int D, Ncol, infoCholCovInvXcross, infoInvCholCovInvXcross,
-		NobsRep, NobsCovObs, oneInt;
-	double zero, minusone, one, *pCov, *cholCovInvXY;
-	double *cholCovInvXcross, detLx, detCholCovInvXcrossHalf;
+		oneInt;
+	double zero, one, *pCov, *cholCovInvXY;
+	double *cholCovInvXcross;
 
 	oneInt = 1;
 	one=1.0;
-	minusone = -1.0;
 	zero = 0.0;
 
 
 	Ncol = *Ncov + *Nrep;
-	NobsCovObs = *Nobs*Ncol;
-	NobsRep = *Nobs*(*Nrep);
+
 
 	cholCovInvXcross = varBetaHat;
 	cholCovInvXY = obsCov;
@@ -237,7 +235,7 @@ void maternLogLGivenVarU(
 		double *determinants // detVarHalf, detCholCovInvXcrossHalf
 		) {
 
-	int D, infoCholVarmat, zeroI=0;
+	int D, infoCholVarmat;
 	double *LxLy;
 
 	for(D=0;D<N[0];++D){
@@ -287,13 +285,12 @@ void logLfromComponents(
 ){
 	const int Nrep = N[1], Ncov= N[2];
 	int Nadj, D;
-	const double *pBoxCox;
 	double *logL, detOne, Lstart, *totalVarHat, ssqXY;
 
 	logL = totalSsq;
 	totalVarHat = &totalSsq[Nrep];
 
-	if(*Ltype==1 | *Ltype == 3){// reml
+	if( (*Ltype==1) | (*Ltype == 3) ){// reml
 		Nadj = N[0]-Ncov;
 		detOne = determinants[1];
 	} else {  // ml
@@ -350,7 +347,7 @@ void maternLogL(
 		// on exit, info from chol of matern
 ) {
 
-	double determinants[2], *pBoxCox, *corMat, *LxLy, *totalSsq;
+	double determinants[2], *corMat, *LxLy, *totalSsq;
 	int maternType=2, zero=0, oneI=1;
 
 	computeBoxCox(obsCov,

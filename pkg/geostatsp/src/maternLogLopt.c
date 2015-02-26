@@ -151,7 +151,7 @@ void maternLogLgr(
 				parHere, &oneI);
 
 		parHere[Dpar]= paramArg[Dpar]-deltaPar;
-		if(limTypeOpt[Dpar] == 1 | limTypeOpt[Dpar] == 2){
+		if( (limTypeOpt[Dpar] == 1) | (limTypeOpt[Dpar] == 2)){
 			parHere[Dpar] = fmax(
 								parHere[Dpar],
 								lower[Dpar]
@@ -169,7 +169,7 @@ void maternLogLgr(
 
 		//upper
 		parHere[Dpar]=paramArg[Dpar]+deltaPar;
-		if(limTypeOpt[Dpar] == 3 | limTypeOpt[Dpar] == 2){
+		if( (limTypeOpt[Dpar] == 3) | (limTypeOpt[Dpar] == 2) ){
 			parHere[Dpar] = fmin(
 					parHere[Dpar],
 					upper[Dpar]
@@ -226,8 +226,8 @@ void maternLogLOpt(
 ) {
 
 	double *paramArg, result, *resultGr;
-	int two=2, oneI=1,Dparam, DparamForOpt, optimFail;
-	int fncount, grcount, junk;
+	int oneI=1,Dparam, DparamForOpt, optimFail;
+	int fncount, grcount;
 	void *optimEx = &oneI;
 	char themsg[100];
 

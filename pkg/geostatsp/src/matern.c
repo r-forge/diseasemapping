@@ -163,7 +163,7 @@ void maternAniso(
 	int Drow, Dcol, Nm1, Dcolp1, N2;
 	int Dindex;
 
-	double logxscale, xscale, varscale,  logthisx, thisx;
+	double logxscale, varscale,  logthisx, thisx;
 	double anisoRatioSq, dist[2], distRotate[2], costheta, sintheta;
 
     int nb;
@@ -274,8 +274,7 @@ void matern(
 		logthisx, logxscale;
 
     int nb;
-    double *bk, alpha, truncate;
-    double minDist = 1e-10;
+    double *bk, alpha;
 
 	alpha = *shape;
 
@@ -379,8 +378,7 @@ void maternForL(
 		double *halfLogDet
 		){
 
-	int zeroI=0;
-	double zero=0.0;
+
 	double nugget;
 
 	if(*withoutNugget){
