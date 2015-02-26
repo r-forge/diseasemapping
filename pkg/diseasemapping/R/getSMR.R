@@ -294,7 +294,7 @@ setMethod("getSMR",
         sex=c('m','f'), ...
     ) {
       
-      area = length(grep("longlat", popdata@proj4string@projargs))
+      area = !length(grep("longlat", popdata@proj4string@projargs))
       
       if (area & !("surfaceArea" %in% names(popdata) ) ) {
         popdata$surfaceArea = sapply(slot(popdata, "polygons"), slot, "area")
