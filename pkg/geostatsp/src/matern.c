@@ -167,7 +167,7 @@ void maternAniso(
 	double anisoRatioSq, dist[2], distRotate[2], costheta, sintheta;
 
     int nb;
-    double *bk, alpha,truncate;
+    double *bk, alpha,truncate=0.00001;
 
     costheta = cos(*anisoAngleRadians);
     sintheta = sin(*anisoAngleRadians);
