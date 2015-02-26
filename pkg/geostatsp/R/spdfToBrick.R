@@ -10,10 +10,6 @@ spdfToBrick = function(x,
     pattern = gsub("\\^logE", "e", pattern)
   }
   
-  if(is.numeric(template)) {
-    template = squareRaster(
-        x, template[1])
-  }
   
   
   if(class(x)=='SpatialPolygonsDataFrame'){
@@ -22,6 +18,10 @@ spdfToBrick = function(x,
   if(is.null(names(x)))
     names(x) = as.character(1:length(x))
   
+  if(is.numeric(template)) {
+    template = squareRaster(
+        x[[1]], template[1])
+  }
   
   forRaster = NULL
   
