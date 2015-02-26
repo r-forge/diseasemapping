@@ -19,6 +19,7 @@ legendBreaks(pos,
     text.col=par('fg'),
     title.col=text.col,
     adj=0,
+    title=NULL,
 	...)
 	}
 
@@ -40,6 +41,7 @@ Position, as specified in the \code{\link[graphics]{legend}} function.
 \item{text.col}{see \code{\link[graphics]{legend}}}
 \item{title.col}{see \code{\link[graphics]{legend}}}
 \item{adj}{Adjustment of the legend labels relative to plotting symbols.}
+\item{title}{see \code{\link[graphics]{legend}}}
 \item{...}{Additional arguments passed to \code{\link[graphics]{legend}}.}
 }
 

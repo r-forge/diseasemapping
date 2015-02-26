@@ -12,6 +12,7 @@ legendBreaks = function(pos,
     text.col=par('fg'),
     title.col=text.col,
     adj=0,
+    title=NULL,
     ...){
   
   if(rev){
@@ -63,6 +64,8 @@ legendBreaks = function(pos,
       inset=inset,
       cex=cex,
       text.col='#FFFFFF00',
+      title.col=title.col,
+      title=title,
       ...
       )
       
