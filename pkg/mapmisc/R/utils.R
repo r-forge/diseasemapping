@@ -19,7 +19,7 @@ crsLL = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
     crsUse = crs
   
   # if x is numeric, transform to extent  
-  eps = 1e-3
+  eps = 1e-5
 	if(is.numeric(x))
 		if(length(x)==2)
 			x = extent(x[1]-eps, xmax=x[1]+eps, ymin=x[2]-eps, ymax=x[2]+eps)
