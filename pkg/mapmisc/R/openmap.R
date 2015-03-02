@@ -60,7 +60,7 @@ historical='http://www.openhistoricalmap.org/ohm_tiles/'
 openmap = function(x, zoom, 
 	path="http://tile.openstreetmap.org/",
 	maxTiles = 9,
-	crs=NA,
+	crs=projection(x),
   extend=0,
 	verbose=FALSE) {
 
@@ -139,9 +139,8 @@ openmap = function(x, zoom,
 		crsOut = projection(x)
 	
 	if(!is.na(crsOut)  ){
-
+    
 		resultProj = projectRaster(result, crs=crsOut, method="ngb")
-
     
 	} else {
 		resultProj = result
@@ -155,10 +154,15 @@ openmap = function(x, zoom,
 	for(D in names(resultProj)) {
 			resultProj[[D]]@legend@colortable =
 					result[[D]]@legend@colortable
+      if(any(values(resultProj[[D]])==0)) {
       # set NA's to transparent
-      resultProj[[D]]@legend@colortable[1] =
-          '#FFFFFF00'
+      resultProj[[D]]@legend@colortable =
+          c('#FFFFFF00',
+              resultProj[[D]]@legend@colortable 
+          )
+      values(resultProj[[D]]) = 1+values(resultProj[[D]])
 	}
+}
 
 	if(nlayers(resultProj)==1) 
 		resultProj = resultProj[[1]]
