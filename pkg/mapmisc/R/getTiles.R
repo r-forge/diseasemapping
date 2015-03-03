@@ -85,7 +85,7 @@ getTilePaths <- function(xlim,ylim,zoom,path){
   return(tileData)
 }
 
-getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
+getTiles <- function(xlim,ylim,zoom,path,
 		cacheDir=tempdir(),
 		timeOut=5*24*60*60,verbose=FALSE){
 	if(verbose) {
@@ -93,10 +93,6 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 	}
   
    
-	nt = nTiles(xlim,ylim,zoom)
-  if(nt > maxTiles){
-    stop("Cant get ",nt," tiles with maxTiles set to ",maxTiles)
-  }
   tileData = getTilePaths(xlim,ylim,zoom,path)
   localStore = FALSE
   if(file.exists(path)){
@@ -166,7 +162,7 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 	} # end not rtry error
 
 	
-	}
+	} # end loop ip
 
 	if(length(rasters) > 1) {
 		thenames = names(rasters[[1]])
@@ -184,6 +180,10 @@ getTiles <- function(xlim,ylim,zoom,path,maxTiles = 16,
 		rasters@legend@colortable = newtable
 		values(rasters) = tomatch[values(rasters)+1]-1
 	}
+  attributes(rasters)$tiles = 
+      list(tiles = length(tileData), 
+          zoom=zoom,
+          path=path)
 	
 	return(rasters)	
 	

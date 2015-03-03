@@ -103,7 +103,7 @@ openmap = function(x, zoom,
 		thistile = try(
 				getTiles(xlim,ylim, zoom=zoom,
 				path=Dpath,
-				maxTiles=maxTiles,verbose=verbose),
+				verbose=verbose),
 		silent=TRUE	)
 
 		if(class(thistile)=="try-error"){
@@ -132,6 +132,12 @@ openmap = function(x, zoom,
 	if(is.null(result)) {
 		result = raster(extLL,1,1,crs=crsLL)
 		values(result) = NA
+    attributes(result)$openmap = list(
+        tiles=NA,
+        message=thistile,
+        path=path,
+        zoom=zoom
+        )
 	} 
 
 	crsOut=crs
@@ -167,7 +173,8 @@ openmap = function(x, zoom,
 	if(nlayers(resultProj)==1) 
 		resultProj = resultProj[[1]]
 		
-
+  attributes(resultProj)$tiles = attributes(thistile)$tiles
+  attributes(resultProj)$tiles$path = path
 	
 	resultProj
 }
