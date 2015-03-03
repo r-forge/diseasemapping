@@ -10,22 +10,22 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	openmap(x, zoom, 
 	path="http://tile.openstreetmap.org/",
 	maxTiles = 9,
-	crs=NA,   extend=0, verbose=FALSE)
-	getTiles(xlim,ylim,zoom,path,maxTiles = 16,cacheDir=tempdir(),
+	crs=projection(x),   extend=0, verbose=FALSE)
+	getTiles(xlim,ylim,zoom,path,cacheDir=tempdir(),
 		timeOut=5*24*60*60,verbose=FALSE)
 	osmTiles(name)
 }
 
 \arguments{
 	\item{x}{
-	Either	 raster, SPDF, matrix corresponding to a bounding box or an Extent.  }
+	An \code{\link[raster]{extent}} or any spatial object (raster, Spatial*)
+	from which an extent can be obtained.  }
 \item{zoom	}{
 the zoom level, when missing it will be determined by maxTiles.}
 \item{path}{	
 the tile server from which to get the map, see \url{http://wiki.openstreetmap.org/wiki/Tiles#Servers}.}
-\item{
-maxTiles}{	
-If zoom is null, zoom will be chosen such that the 
+\item{maxTiles}{	
+If zoom is missing, zoom will be chosen such that the 
 number of map tiles is less than or equl to this number.}
 \item{crs}{Projection for the output, defaulting to the same projection as
 \code{x}.  If \code{x} has no projection, 
@@ -33,11 +33,10 @@ for instance when \code{x} is a matrix or extent,
 \code{crs} is also used as the projection of \code{x}.  If \code{crs} is missing
 and \code{x} has no crs, long-lat is used.}
 \item{extend}{Extend the extent for which the map is requested, in units
-of \code{x}.  Can be negative, or a vector of lenght 2 for different x and y 
+of \code{x}.  Can be negative, or a vector of length 2 for different x and y 
 extensions}
   \item{cacheDir}{
-    A directory for caching tiles retrieved over the web. Not used if
-    tiles are coming from a local directory.
+    A directory for caching tiles retrieved over the web. 
   }
 \item{xlim}{
     Length-2 vector of min and max X coordinate (latitude)
@@ -64,8 +63,7 @@ These functions download, display, and manipulate map tiles stored in a
 standard way either on a web server or a local folder.
 
 Map tiles are a set of PNG images that span the world at a set of zoom
-levels. Zoom level 0 has one tile that covers the whole world at a
-resolution of 256x256 pixels. Zoom level 1 has four 256x256 pixel tiles
+levels. Zoom level 1 has four 256x256 pixel tiles
 in a 2x2 pattern over the whole world. In general, zoom level n has 2^n
 by 2^n tiles. Zoom levels go up to about 17 or 18 depending on the tile
 server.
@@ -76,17 +74,7 @@ generated at a fixed set of lat-long ranges the returned tiles will
 overlap the requested area. There may be some way of clipping to the
 requested area in a future revision.
 
-The getTilePaths() function returns information about tiles in a region
-at a zoom level. The tile source path is given but tiles are not
-requested. A list is returned with one element per tile giving the path,
-the I and J coordinates, the zoom level, and the geographic bounds for
-the tile. 
-
-The tileBbox() function returns the bounds of the tiles by simply
-constructing the bounding box of all the constitutent
-SpatialGridDataFrame objects.
-
-http://wiki.openstreetmap.org/index.php/Tile_usage_policy
+\url{http://wiki.openstreetmap.org/index.php/Tile_usage_policy}
 
 }
 
