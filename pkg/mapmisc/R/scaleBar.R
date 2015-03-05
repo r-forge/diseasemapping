@@ -101,9 +101,11 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
 	theHat = theHat * exp(-1i*north)
 	
 	
-	
+if(scale.cex>0) {	
 	thelabel = paste(segdist, lunits,sep="")
-	
+} else {
+  thelabel=''
+}
 
 	
 	defaults = list(col='black', 
