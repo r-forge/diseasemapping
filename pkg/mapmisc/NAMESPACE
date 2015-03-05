@@ -6,7 +6,7 @@ S3method(colourScale, factor)
 S3method(colourScale, NULL)
 S3method(colourScale, logical)
 
-export(openmap, getTiles, osmTiles,insetMap)
+export(openmap, getTiles, osmTiles,insetMap, omerc)
 
 export( GNcities, GNsearch)
 
