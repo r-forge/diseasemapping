@@ -154,7 +154,7 @@ if(scale.cex>0) {
 			forLegend[[D]] = defaults[[D]]			
 	}
 	
-	forLegend$lty = 1
+	forLegend$lty = as.integer(segscale>0)
 	forLegend$pch = NA
 	forLegend$seg.len = segscale
 	forLegend$title=thelabel
