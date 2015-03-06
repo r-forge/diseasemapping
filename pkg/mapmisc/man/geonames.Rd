@@ -56,7 +56,7 @@ plot(mytiles, add=TRUE)
 points(cities, col='red')
 text(cities, labels=cities$name, col='red',pos=4)
 
-GNsearch(q="Toronto Ontario")
+mapmisc::GNsearch(q="Toronto Ontario")
 }
 }
 

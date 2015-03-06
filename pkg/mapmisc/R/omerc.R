@@ -1,38 +1,49 @@
-
-omercCrs = function(lat, lon, angle) {
+omercProj4string = function(
+    lon, lat, angle, 
+    x=0,y=0, inverseAngle=0,
+    scale=1,
+    ellps='WGS84', units='m') {
   
-  if(angle<0)
-    angle = 360-angle
-  if(angle==90)
-    angle = 89
-  if(angle==0){
-    result = CRS(paste(
-            "+proj=tmerc +lat_0=",
-        lat,
-        " +lon_0=",
-        lon,
-            " +k=1",
-            " +x_0=0 +y_0=0 +ellps=WGS84 +units=m",
-            sep=""))
-  } else {
-    result = CRS(paste(
-        "+proj=omerc +lat_0=",
-        lat,
-        " +lonc=",
-        lon,
-        " +gamma=0.0 +k=1 +alpha=",
-        angle, 
-        " +x_0=0 +y_0=0 +ellps=WGS84 +units=m",
-          sep=""))
-  }	 
+  negAngle = angle<0
+  angle[negAngle] = 360 - angle[negAngle]
+  angle[angle==90]=89
+
+  whichZeros = angle==0
+  
+  result = paste(
+      "+proj=omerc",
+      " +lat_0=", lat,
+      " +lonc=", lon,
+      " +gamma=", inverseAngle,
+      " +k=", scale, 
+      " +alpha=", angle, 
+      " +x_0=", x,
+      " +y_0=", y,
+      " +ellps=", ellps,
+      " +units=", units,
+      sep="")
+  
+  if(any(whichZeros)) {
+    result[whichZeros] = 
+        gsub("omerc","tmerc", result[whichZeros])
+    result[whichZeros] = 
+        gsub(" \\+(alpha|gamma)=([[:digit:]]|\\.)+","", 
+            result[whichZeros])
+    result[whichZeros] = 
+        gsub("lonc=","lon_0=", 
+            result[whichZeros])
+    
+  }
+  
   result
 }
 
 omerc = function(
-    x, angle=0, crs=projection(x)
+    x, angle=0, undo=FALSE
 ) {
   
   
+  crs = projection(x)
   if(is.na(crs)){
     crs = crsLL
   }
@@ -49,7 +60,7 @@ omerc = function(
   } else {
     theCentre = x[1:2]
   }
-  
+   
   if(!isLonLat(crs)) {
       theCentre = SpatialPoints(
           t(theCentre[1:2]),
@@ -63,34 +74,57 @@ omerc = function(
       theCentre = as.vector(theCentre@coords)
   } # crs not LL
 
-  rotatedCrs = mapply(
-      omercCrs,
-      angle=angle,
-      MoreArgs=list(
-      lat=theCentre[2], lon=theCentre[1])
-  )
+  if(undo){
+    inverseAngle = -angle
+  } else {
+    inverseAngle = 0
+  }
   
-    if(is.numeric(x) | !haveRgdal) {
-      if(length(rotatedCrs)==1)
-        rotatedCrs = rotatedCrs[[1]]
-      return(rotatedCrs)
-    }
+  rotatedProj4string = 
+      omercProj4string(
+      lon=theCentre[1],
+      lat=theCentre[2], 
+      angle=angle,
+      inverseAngle = inverseAngle
+      )
+
+  rotatedCRS = lapply(rotatedProj4string, CRS)
+  
+  if(is.numeric(x) | !haveRgdal) {
+      if(length(rotatedCRS)==1)
+        rotatedCRS = rotatedCRS[[1]]
+      return(rotatedCRS)
+  }
+
+  # if we're undoing the rotation
+  # find the optimal rotatino
+  # for a small bounding box
+  # before the rotation is undone
+  if(undo){
+    rp2 = gsub("gamma=([[:digit:]]|\\.)+", 
+        "gamma=0", rotatedProj4string)
+    rc2 = lapply(rp2, CRS)
+  } else {
+    rc2 = rotatedCRS
+  }
     
     xTrans = mapply(
-        spTransform,
-        CRSobj=rotatedCrs,
-        MoreArgs=list(x=x)
-        )
-    
-    bbArea = mapply(
-        function(stuff){
-          abs(prod(apply(bbox(stuff),1,diff)))
+        function(CRSobj) {
+          abs(prod(apply(bbox(
+               spTransform(x, CRSobj)           
+                          ), 1, diff)
+              ))
         },
-        stuff=xTrans
+        CRSobj=rc2
         )
-    
-    return(xTrans[[which.min(bbArea)]])
-    
+    rotatedCRS = rotatedCRS[[
+        which.min(xTrans)
+        ]]
+        
+  result = spTransform(x, rotatedCRS)
+        
+  result
+  
 }
   
   

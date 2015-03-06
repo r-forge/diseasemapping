@@ -5,14 +5,14 @@
 Defines an appropriate oblique mercator projection for a spatial object
 }
 \usage{
-	omerc(x, angle, crs=projection(x))
+	omerc(x, angle, undo=FALSE)
 }
 
 \arguments{
 	\item{x}{A SpatialP* object or a vector of length 2 giving the 
 	centroid of the projection. }
 \item{angle}{angle of rotation or vector of angles}
-\item{crs}{coordinate reference system of \code{x}.}
+\item{undo}{perform an inverse rotation so north is preserved}
 }
 
 \details{
