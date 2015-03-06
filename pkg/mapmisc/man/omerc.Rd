@@ -5,7 +5,7 @@
 Defines an appropriate oblique mercator projection for a spatial object
 }
 \usage{
-	omerc(x, angle, undo=FALSE)
+	omerc(x, angle, undo=FALSE,preserve=NULL)
 }
 
 \arguments{
@@ -13,6 +13,8 @@ Defines an appropriate oblique mercator projection for a spatial object
 	centroid of the projection. }
 \item{angle}{angle of rotation or vector of angles}
 \item{undo}{perform an inverse rotation so north is preserved}
+\item{preserve}{A \code{SpatialPoints} object, the resulting projection is scaled
+so as to preserve the distances between these points as best as possible. }
 }
 
 \details{
@@ -24,8 +26,7 @@ of the bounding box is returned.
 
 
 \value{
-	If \code{x} is numeric, the result is of class \code{\link[sp]{CRS}}.  Otherwise
-	\code{x} is reprojected and returned.
+	An object of class \code{\link[sp]{CRS}}.
 }	
 
 \references{
@@ -40,14 +41,17 @@ omerc(c(10,50), angle=c(0,45,80))
 
 data('netherlands')
 
-nldUtm = omerc(nldCities, angle=0)
+nldUtm = spTransform(nldCities,
+	omerc(nldCities, angle=0))
 projection(nldUtm)
 
 map.new(nldUtm)
 text(nldUtm,labels=nldUtm$name)
 scaleBar(nldUtm, 'topright')
 
-nldRot = omerc(nldCities, angle=seq(25,45,by=1))
+nldRot = spTransform(nldCities,
+omerc(nldCities, angle=seq(25,45,by=1))
+)
 projection(nldRot)
 
 map.new(nldRot)

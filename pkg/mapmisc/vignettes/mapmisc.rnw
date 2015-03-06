@@ -488,7 +488,7 @@ Rotate the data 50 degrees clockwise with an oblique mercator projection.
 
 <<reproj,echo=TRUE>>=
 if(require('rgdal', quietly=TRUE)) {
-  meuseRot = omerc(meuse, -50)
+  meuseRot = spTransform(meuse, omerc(meuse, -50))
 	tilesRot = openmap(meuseRot)
 	elevRot = projectRaster(nldElev, crs=projection(meuseRot))
   nldCitiesRot = spTransform(nldCities, CRS(projection(meuseRot)))
