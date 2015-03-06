@@ -5,7 +5,7 @@ omercProj4string = function(
     ellps='WGS84', units='m') {
   
   negAngle = angle<0
-  angle[negAngle] = 360 - angle[negAngle]
+  angle[negAngle] = 360 + angle[negAngle]
   angle[angle==90]=89
 
   whichZeros = angle==0
@@ -74,40 +74,58 @@ omerc = function(
       theCentre = as.vector(theCentre@coords)
   } # crs not LL
 
-  if(undo){
-    inverseAngle = -angle
-  } else {
-    inverseAngle = 0
-  }
   
   rotatedProj4string = 
       omercProj4string(
       lon=theCentre[1],
       lat=theCentre[2], 
-      angle=angle,
-      inverseAngle = inverseAngle
-      )
+      angle=angle)
 
   rotatedCRS = lapply(rotatedProj4string, CRS)
   
+  if(undo & haveRgdal) {
+    pointNorth = SpatialPoints(
+        rbind(
+            theCentre,
+            theCentre + c(0, 1)
+        ), proj4string=crsLL
+    )
+    adjust = mapply(
+        function(crs){
+          pn2 = spTransform(
+              pointNorth,
+              crs
+              )
+          pnDist =apply(pn2@coords,2,diff)
+          -atan(pnDist[1]/pnDist[2])*360/(2*pi)
+        },
+        crs=rotatedCRS
+    )
+
+    adjust[adjust<0] =
+        360+adjust[adjust<0]
+    
+    rotatedProj4stringAdj = 
+        omercProj4string(
+            lon=theCentre[1],
+            lat=theCentre[2], 
+            angle=angle,
+            inverseAngle=adjust
+    )
+    rotatedCrsAdj = lapply(rotatedProj4stringAdj, CRS)
+  } else {
+    rotatedCrsAdj = rotatedCRS
+  }
+  
+  
   if(is.numeric(x) | !haveRgdal) {
-      if(length(rotatedCRS)==1)
-        rotatedCRS = rotatedCRS[[1]]
-      return(rotatedCRS)
+      if(length(rotatedCrsAdj)==1)
+        rotatedCrsAdj = rotatedCrsAdj[[1]]
+      return(rotatedCrsAdj)
   }
 
-  # if we're undoing the rotation
   # find the optimal rotatino
   # for a small bounding box
-  # before the rotation is undone
-  if(undo){
-    rp2 = gsub("gamma=([[:digit:]]|\\.)+", 
-        "gamma=0", rotatedProj4string)
-    rc2 = lapply(rp2, CRS)
-  } else {
-    rc2 = rotatedCRS
-  }
-    
     xTrans = mapply(
         function(CRSobj) {
           abs(prod(apply(bbox(
@@ -115,13 +133,14 @@ omerc = function(
                           ), 1, diff)
               ))
         },
-        CRSobj=rc2
+        CRSobj=rotatedCRS
         )
-    rotatedCRS = rotatedCRS[[
+    rotatedCrsAdj = rotatedCrsAdj[[
         which.min(xTrans)
         ]]
         
-  result = spTransform(x, rotatedCRS)
+        
+  result = spTransform(x, rotatedCrsAdj)
         
   result
   
