@@ -160,7 +160,7 @@ openmap = function(x, zoom,
 	for(D in names(resultProj)) {
 			resultProj[[D]]@legend@colortable =
 					result[[D]]@legend@colortable
-      if(any(values(resultProj[[D]])==0)) {
+      if(any(values(resultProj[[D]])==0,na.rm=TRUE)) {
       # set NA's to transparent
       resultProj[[D]]@legend@colortable =
           c('#FFFFFF00',
