@@ -2,7 +2,8 @@ omercProj4string = function(
     lon, lat, angle, 
     x=0,y=0, inverseAngle=0,
     scale=1,
-    ellps='WGS84', units='m') {
+    ellps='WGS84', units='m',
+    crs=TRUE) {
   
 #  negAngle = angle<0
 #  angle[negAngle] = 360 + angle[negAngle]
@@ -34,6 +35,8 @@ omercProj4string = function(
             result[whichZeros])
     
   }
+  if(crs) 
+    result = lapply(result, CRS)
   
   result
 }
@@ -43,7 +46,7 @@ omerc = function(
     preserve=NULL
 ) {
   
-  digits=3
+  digits=3 # for rounding coordinates
   angle = round(angle, digits)
   
   crs = projection(x)
@@ -56,7 +59,9 @@ omerc = function(
   
   haveRgdal = requireNamespace('rgdal', quietly=TRUE)
 
+  # create the centre point
   if(!is.numeric(x)){
+    # centre of the bounding box
     theCentre = bbox(x)
     theCentre = theCentre[,'min'] +
       apply(theCentre, 1, diff)/2
@@ -64,7 +69,8 @@ omerc = function(
     theCentre = x[1:2]
   }
   theCentre = round(theCentre, digits)
-   
+
+  # convert the centre to LL if necessary
   if(!isLonLat(crs)) {
       theCentre = SpatialPoints(
           t(theCentre[1:2]),
@@ -78,34 +84,36 @@ omerc = function(
       theCentre = as.vector(theCentre@coords)
   } # crs not LL
 
-  
-  rotatedProj4string = 
+  # create strings for projections
+  rotatedCRS = 
       omercProj4string(
       lon=theCentre[1],
       lat=theCentre[2], 
       angle=angle)
-
-  rotatedCRS = lapply(rotatedProj4string, CRS)
   
-  # make sure theCentre is at the origin
+  # some refinements if gdal is available
   if(haveRgdal) {
+    # make sure theCentre is at the origin
    theCentreSp = SpatialPoints(t(theCentre), proj4string=crsLL)
    newxy = simplify2array(lapply(rotatedCRS, function(qq){
           drop(spTransform(theCentreSp, qq)@coords)
         }))
     newxy = round(newxy)
-    rotatedProj4string = 
-    omercProj4string(
+    rotatedCRS = omercProj4string(
         lon=theCentre[1],
         lat=theCentre[2], 
         angle=angle,
         x=-newxy[1,],
         y=-newxy[2,])
-    rotatedCRS = lapply(rotatedProj4string, CRS)
   } else{
+    # no gdal, don't re-centre
     newxy = matrix(0,2,1)
   }
+  
+  # find an inverse rotation to preserve north
   if(undo & haveRgdal) {
+    # a pair of points which should be 
+  # north-south of each other
     pointNorth = SpatialPoints(
         rbind(
             theCentre,
@@ -120,28 +128,24 @@ omerc = function(
               )
           pn2@coords = round(pn2@coords)
               
+          # find their distance in new projection
           pnDist =apply(pn2@coords,2,diff)
+          # and the angle they are from North-South
           -atan(pnDist[1]/pnDist[2])*360/(2*pi)
         },
         crs=rotatedCRS
     )
-
-#    adjust[adjust<0] =
+    adjust = round(adjust, digits)
+    #    adjust[adjust<0] =
 #        360+adjust[adjust<0]
     
-    rotatedProj4stringAdj = 
-        omercProj4string(
-            lon=theCentre[1],
-            lat=theCentre[2], 
-            angle=angle,
-            inverseAngle=adjust,
-            x=-newxy[1,],
-            y=-newxy[2,]
-    )
-    rotatedCrsAdj = lapply(rotatedProj4stringAdj, CRS)
-    
-      # redo the adjustment
-    rotatedProj4stringAdj = 
+    # make sure the centre is still correct
+    # redo the adjustment
+
+# create new proj4strings 
+# with inverse rotation
+# but no centering
+  rotatedCrsAdj = 
         omercProj4string(
             lon=theCentre[1],
             lat=theCentre[2], 
@@ -150,13 +154,16 @@ omerc = function(
             x=0,
             y=0
         )
-    rotatedCrsAdj = lapply(rotatedProj4stringAdj, CRS)
     
+    # find coordinates of centre point
       newxy = simplify2array(lapply(rotatedCrsAdj, function(qq){
                 drop(spTransform(theCentreSp, qq)@coords)
               }))
       newxy = round(newxy)
-      rotatedProj4stringAdj = 
+      
+    # create new proj4string
+# with xy offset and inverse rotation
+  rotatedCrsAdj = 
           omercProj4string(
               lon=theCentre[1],
               lat=theCentre[2], 
@@ -164,60 +171,82 @@ omerc = function(
               inverseAngle=adjust,
               x=-newxy[1,],
               y=-newxy[2,])
-      rotatedCrsAdj = lapply(rotatedProj4stringAdj, CRS)
    } else {
+     # no gdal or no undo, 
+  # set adjusted CRS to unadjusted CRS
     rotatedCrsAdj = rotatedCRS
   }
   
+  # preserve distances between points
   if(haveRgdal & !is.null(preserve)) {
+    # convert to LL
     if(!isLonLat(projection(preserve))){
       preserve = spTransform(preserve, crsLL)
     }
+    # great circle distance
     distGS = spDists(preserve, longlat=TRUE)*1000
-    
-    distEu = lapply(rotatedCRS,
+    theLower = lower.tri(distGS, diag=FALSE)
+    distGS = distGS[theLower]
+    # euclidean distance for each projection
+    distEu = unlist(lapply(rotatedCrsAdj,
         function(crs){
           mean(
-              spDists(spTransform(preserve, crs), longlat=FALSE)/distGS,
+              spDists(spTransform(preserve, crs), 
+                  longlat=FALSE)[theLower]/distGS,
               na.rm=TRUE)
         }
-    )
-  rotatedCrsAdj = mapply( 
-      function(crs,scale){
-        CRS(gsub(
-                "\\+k=1", 
-                paste("+k=", round(1/scale,digits),sep=''),
-                as.character(crs)))
-        
-      },
-      crs=rotatedProj4stringAdj,
-      scale=distEu)
-}
-  
-  if(is.numeric(x) | !haveRgdal) {
-      if(length(rotatedCrsAdj)==1)
-        rotatedCrsAdj = rotatedCrsAdj[[1]]
-      return(rotatedCrsAdj)
-  }
+    ))
+    # add scaling to CRS
+  rotatedCrsAdj = 
+      omercProj4string(
+          lon=theCentre[1],
+          lat=theCentre[2], 
+          angle=angle,
+          inverseAngle=adjust,
+          x=-newxy[1,],
+          y=-newxy[2,],
+          scale=round(1/distEu, digits))
 
+    # find ratio of Euclidean to great circle distances
+    distEu = unlist(
+      lapply(rotatedCrsAdj,
+      function(crs){
+        mean(
+            (spDists(spTransform(preserve, crs), 
+                longlat=FALSE)[theLower]/distGS
+            -1)^2,
+            na.rm=TRUE)
+        }
+      )
+    )
+    # plot(angle, distEu, log='y')
+  # select CRS with best preserved distances
+  rotatedCrsAdj = rotatedCrsAdj[
+      which.min(distEu)
+  ]
+  
+  } # end preserve
+  
   # find the optimal rotatino
   # for a small bounding box
+  # if x is not numeric, have gdal, and more than one crs
+  if(!is.numeric(x) & haveRgdal & (length(rotatedCrsAdj)>1)){
     xTrans = mapply(
-        function(CRSobj) {
-          abs(prod(apply(bbox(
-               spTransform(x, CRSobj)           
-                          ), 1, diff)
-              ))
-        },
-        CRSobj=rotatedCRS
-        )
-    rotatedCrsAdj = rotatedCrsAdj[[
-        which.min(xTrans)
-        ]]
-        
+      function(CRSobj) {
+        abs(prod(apply(bbox(
+                        spTransform(x, CRSobj)           
+                    ), 1, diff)
+            ))
+      },
+      CRSobj=rotatedCRS
+    )
+    rotatedCrsAdj = rotatedCrsAdj[
+      which.min(xTrans)
+    ]
+  } # end smallest bounding box
 
-        rotatedCrsAdj
+  if(length(rotatedCrsAdj)==1)
+     rotatedCrsAdj = rotatedCrsAdj[[1]]
 
+  rotatedCrsAdj
 }
-  
-  
