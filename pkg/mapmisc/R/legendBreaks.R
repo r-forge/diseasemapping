@@ -31,7 +31,7 @@ legendBreaks = function(pos,
   
   # get rid of transparency in col
   withTrans = grep("^#[[:xdigit:]]{8}$", col)
-  col[withTrans] = gsub("[[:xdigit:]]{2}$", "", col)
+  col[withTrans] = gsub("[[:xdigit:]]{2}$", "", col[withTrans])
 
   if(outer){
     oldxpd = par("xpd")
