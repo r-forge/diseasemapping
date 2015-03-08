@@ -42,7 +42,7 @@ GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 GNsearch = function(...) {
 	
 	
-	if (requireNamespace("geonames", quietly = TRUE)) { 
+	if(requireNamespace("geonames", quietly = TRUE)) { 
 	result=geonames::GNsearch(...)
 	
 	if(all(c("lat","lng") %in% names(result))){

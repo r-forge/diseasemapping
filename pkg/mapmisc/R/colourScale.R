@@ -50,28 +50,71 @@ weights=NULL
 	} else if(style=='fixed') {
 		x = NULL
 	} else if(style=='unique') {
-		levelsx = levels(x)[[1]]
-		if(!is.null(levelsx)) {
-			if(all(c("col","ID","label")%in% names(levelsx))) {
-				breaks = levelsx$ID
-				col=levelsx$col
-				labels=levelsx$labels
-			}
-				
-		}
+
+    if(is.data.frame(labels)) {
+      levelsx = labels
+    } else {
+      levelsx = levels(x)[[1]]
+    }
+    
+    if(ncell(x)<1e+06) {
+      x = freq(x)
+      weights = x[,2]
+      x=x[,1]
+    } else {
+      x = table(sampleRegular(x, 5e+05))
+      weights = x
+      x = as.numeric(names(x))
+    }
+    
+    if(is.null(levelsx)){
+      levelsx = data.frame(
+          ID=sort(x))
+    }
+    notInLevels = which(! x %in% levelsx$ID)
+    if(length(notInLevels)){
+      # add more values to ID
+      toAdd = matrix(NA,
+          length(notInLevels),ncol(levelsx), 
+          dimnames=list(NULL, colnames(levelsx)))
+      toAdd[,1] = x[notInLevels]
+    levelsx = rbind(levelsx, toAdd)
+    levelsx = levelsx[order(levelsx$ID),]
+    } # end add more ID in levels
+    if(is.vector(labels)){
+      if(length(labels)==nrow(levelsx))
+        levelsx$label = labels
+      if(length(labels)==length(breaks)){
+        levelsx$label = labels[match(breaks,levelsx$ID)]
+      }
+    } # end labels are vector
+    if(is.null(levelsx$label))
+      levelsx$label = as.character(levelsx$ID)
+    
+    levelsx$freq = weights[match(
+            levelsx$ID,
+            x
+            )]
+  # if more breaks than ID's have been requested
+  # set breaks to all ID's
+  if(length(breaks)==1 & all(breaks > nrow(levelsx)))
+    breaks = levelsx$ID
+  
+  if((
+        length(breaks)==nrow(levelsx)
+        ) & (
+        'col' %in% names(levelsx)
+        )
+  ){
+   # colours have been provided 
+    col = levelsx$col
+  }
+  
+  weights = levelsx$freq
+  x=levelsx$ID
+  labels = levelsx$label
 		
-		if(ncell(x)<10^6) {
-			x = freq(x)
-			weights = x[,2]
-			x=x[,1]
-		} else {
-			x = table(sampleRegular(x, 50000))
-			weights = x
-			x = as.numeric(names(x))
-		}
-		
-		
-	} else {
+	} else { # not unique or equal or fixed, take a sample
 		x = sampleRegular(x, min(c(ncell(x),10000)))
 	}
 	res=colourScale(x, breaks, 
@@ -139,6 +182,13 @@ colourScale.numeric = function(x=NULL, breaks=5,
     if(length(breaks)==1){
       # breaks is the maximum number of breaks
       thetable = thetable[order(thetable$Freq, decreasing=TRUE),]
+      
+      shouldExclude = which(thetable$ID %in% exclude)
+      if(length(shouldExclude))
+        thetable = rbind(
+          thetable[-shouldExclude,],
+          thetable[shouldExclude,]
+          )
       breaks = thetable[
           seq(1,min(breaks,nrow(thetable))),'ID'
           ]
@@ -152,10 +202,10 @@ colourScale.numeric = function(x=NULL, breaks=5,
 						Freq=rep(0,length(notInX)))
 				)
 				
-		if(length(labels)== length(breaks)) {
+		if(length(labels) == length(breaks)) {
 			thetable$label = labels[match(thetable$ID,breaks)]
 		} else {
-			if(length(labels)== length(xOrig)) {
+			if(length(labels) == length(xOrig)) {
 				thetable$label = labels[match(thetable$ID,xOrig)]
 			} else if(length(labels)==nrow(thetable)){
 				thetable$label = labels[order(thetable$ID)]
