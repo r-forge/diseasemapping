@@ -53,7 +53,7 @@ y.intersp=max(
     unlist(lapply(y.intersp, function(qq) sum(qq>0)))
 )
 if(y.intersp>0){
-  y.intersp = y.intersp+1.5
+  y.intersp = y.intersp+0.25
 } else {
   y.intersp=1
 }
