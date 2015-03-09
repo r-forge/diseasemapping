@@ -158,6 +158,7 @@ openmap = function(x, zoom,
 
 
 	for(D in names(resultProj)) {
+      if(length(result[[D]]@legend@colortable)) {
 			resultProj[[D]]@legend@colortable =
 					result[[D]]@legend@colortable
       if(any(values(resultProj[[D]])==0,na.rm=TRUE)) {
@@ -168,6 +169,7 @@ openmap = function(x, zoom,
           )
       values(resultProj[[D]]) = 1+values(resultProj[[D]])
 	}
+}
 }
 
 	if(nlayers(resultProj)==1) 
