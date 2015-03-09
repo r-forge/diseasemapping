@@ -9,7 +9,11 @@ Legends where N+1 labels are supplied as the limits of N bins.
 legendBreaks(pos, 
 	breaks,     
 	col=breaks$col,
-    legend=breaks$breaks,
+    legend=breaks[[
+        intersect(c('legend','breaks'),
+            names(breaks)
+        )[1]
+            ]],
     rev=TRUE,
     outer=TRUE,
     pch=15,
@@ -21,6 +25,7 @@ legendBreaks(pos,
     inset=0.05,
     title.col=text.col,
     adj=0,
+    y.intersp,
 	...)
 	}
 

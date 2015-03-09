@@ -1,5 +1,6 @@
 
-scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
+scaleBar = function(crs, pos="bottomright",
+    scale.cex=1,outer=TRUE,...) {
 
 	if(is.character(crs))
 		crs = CRS(crs)
@@ -58,8 +59,6 @@ scaleBar = function(crs, pos="bottomright",scale.cex=1,outer=TRUE,...) {
 	segscale = ( strwidth(dashTemplate)/par("cxy")[1] ) *
 			segdist / dashdist
 	
-
-
 	
 	if(segdist >900) {
 		lunits="km"
@@ -158,7 +157,7 @@ if(scale.cex>0) {
 	}
 
 		
-	thelegend = do.call(legend, forLegend)
+	thelegend = do.call(graphics::legend, forLegend)
 			
 	if(is.na(forLegend$title))
 		text(thelegend$text$x - (2/3)*strwidth("m")*forLegend$seg.len,

@@ -373,7 +373,7 @@ colourScale.numeric = function(x=NULL, breaks=5,
 			result$plot = thetable[match(xOrig, thetable$ID),'colOpacity']
 		result$levels = thetable
 		if(length(thetable$label))
-			result$legend = thetable$label
+			result$legend = as.character(thetable$label)
 	} else if (length(xOrig)){		
 		result$plot = as.character(cut(
 						xOrig, 
