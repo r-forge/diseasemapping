@@ -233,7 +233,7 @@ colourScale.numeric = function(x=NULL, breaks=5,
     thetable$latexCol = paste(
         '\\colorbox[HTML]{',
         substr(thetable$col,2,7),
-        '}{\\hspace{2em}}',
+        '}{\\strut \\hspace{2em}}',
         sep=''
         )
     thetable$latexCol[is.na(thetable$col)] = ''
