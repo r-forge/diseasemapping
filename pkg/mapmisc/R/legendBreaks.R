@@ -1,12 +1,8 @@
 
 legendBreaks = function(pos,
     breaks,
-    col=breaks$col,
-    legend=breaks[[
-        intersect(c('legend','breaks'),
-            names(breaks)
-        )[1]
-            ]],
+    col,
+    legend,
     rev=TRUE,
     outer=TRUE,
     pch=15,
@@ -20,14 +16,52 @@ legendBreaks = function(pos,
     adj=0,
     y.intersp,
     ...){
+
+  if(!missing(breaks)){
+    if(is.factor(breaks)){
+      # if it's a raster
+      if(length(grep("^Raster",class(breaks)))){
+        breaks = levels(breaks)[[1]]
+      } else {
+        breaks=list(legend=levels(breaks))
+      }
+    }
+  }
   
+  if( missing(legend) & missing(breaks))
+    warning("legend or breaks must be supplied")
+  if(missing(legend)&!missing(breaks)) {
+    if(is.list(breaks)){
+        legendCol = intersect(
+            c('legend','label','level','breaks','ID'),
+              names(breaks)
+          )
+          if(!length(legendCol)){
+            warning("can't find legend in breaks")
+          }
+          legend = breaks[[ legendCol[1] ]]
+    } else { # breaks isn't a list (or df)
+      legend=breaks
+    }
+  }
   
+  if(missing(col)){
+    col='black'
+      if(!missing(breaks)) {
+        if(is.list(breaks)) {
+          if(any(names(breaks)=='col'))
+            col = breaks[['col']]
+        }
+      }
+  }
+    
   if(rev){
     col=rev(col)
     legend=rev(legend)
   }
   
   if(length(col) == (length(legend)-1)) {
+    # one more legend item than colours
     col = c(NA, col)
     pch = c(NA,
         pch[round(seq(1, length(pch), len=length(legend)-1))]
@@ -53,7 +87,7 @@ y.intersp=max(
     unlist(lapply(y.intersp, function(qq) sum(qq>0)))
 )
 if(y.intersp>0){
-  y.intersp = y.intersp+0.25
+  y.intersp = 1.5
 } else {
   y.intersp=1
 }

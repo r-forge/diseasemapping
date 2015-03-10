@@ -228,6 +228,16 @@ colourScale.numeric = function(x=NULL, breaks=5,
 		
 		thetable[match( breaks, thetable$ID),'col'] = col(length(breaks))
 		thetable = thetable[order(thetable$ID),]
+    #\colorbox[HTML]{FF00FF}{\hspace{2em}}
+    
+    thetable$latexCol = paste(
+        '\\colorbox[HTML]{',
+        substr(thetable$col,2,7),
+        '}{\\hspace{2em}}',
+        sep=''
+        )
+    thetable$latexCol[is.na(thetable$col)] = ''
+    thetable$latexLabel = gsub("\\%", "pct", thetable$label)
 		
 		colVec = thetable$col
 		names(colVec) =as.character(thetable$ID)
