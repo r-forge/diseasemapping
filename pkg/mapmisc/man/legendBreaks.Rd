@@ -8,12 +8,7 @@ Legends where N+1 labels are supplied as the limits of N bins.
 \usage{
 legendBreaks(pos, 
 	breaks,     
-	col=breaks$col,
-    legend=breaks[[
-        intersect(c('legend','breaks'),
-            names(breaks)
-        )[1]
-            ]],
+	col,    legend,
     rev=TRUE,
     outer=TRUE,
     pch=15,
