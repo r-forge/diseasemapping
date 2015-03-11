@@ -609,7 +609,10 @@ for(Dsd in names(thesd)) {
 	params$summary[Dsd, thecols] = 
 				1/sqrt(inlaResult$summary.hyperpar[
 								thesd[Dsd],rev(thecols)])
-
+    params$summary[Dsd,"mode"] = 
+        1/sqrt(inlaResult$summary.hyperpar[
+            thesd[Dsd],'mode'])
+    
 		
 	params$summary[Dsd,"mean"] =sum(
 		1/sqrt(inlaResult$marginals.hyperpar[[thesd[Dsd]]][,"x"])*
