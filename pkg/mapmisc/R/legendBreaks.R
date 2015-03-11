@@ -68,7 +68,7 @@ legendBreaks = function(pos,
     )
     diffyMult=1
     theTextCol = '#FFFFFF00'
-  } else {
+  } else { # same number of colours as legend entries
     theTextCol = text.col
     # get rid of entries where col is NA
     theNA = is.na(col)
@@ -86,6 +86,9 @@ if(missing(y.intersp)){
 y.intersp=max(
     unlist(lapply(y.intersp, function(qq) sum(qq>0)))
 )
+if(all(is.na(y.intersp))){
+  y.intersp=0
+}
 if(y.intersp>0){
   y.intersp = 1.5
 } else {

@@ -51,11 +51,32 @@ weights=NULL
 		x = NULL
 	} else if(style=='unique') {
 
-    if(is.data.frame(labels)) {
-      levelsx = labels
-    } else {
+    if(is.null(labels)){
       levelsx = levels(x)[[1]]
-    }
+    } else {
+      # if labels is a data frame, use it
+      if(is.data.frame(labels)) {
+        levelsx = labels
+      } else if(
+          length(labels) == length(breaks)
+          ){
+        levelsx = data.frame(
+            ID=breaks,
+            label=as.character(labels)
+            )
+      } else { # different number of labels and breaks
+        levelsx = data.frame(
+            ID=sort(unique(x))
+            )
+        if(ncol(levelsx)==length(labels)) {
+          levelsx$label = as.character(labels)
+        } else {
+          warning('labels must be same length as either breaks or unique(x)')
+          levelsx$label = as.character(levelsx$ID)
+        }
+      } # end different numbers of levels and breaks
+      
+  } # labels is not null
     
     if(ncell(x)<1e+06) {
       x = freq(x)
@@ -84,9 +105,6 @@ weights=NULL
     if(is.vector(labels)){
       if(length(labels)==nrow(levelsx))
         levelsx$label = labels
-      if(length(labels)==length(breaks)){
-        levelsx$label = labels[match(breaks,levelsx$ID)]
-      }
     } # end labels are vector
     if(is.null(levelsx$label))
       levelsx$label = as.character(levelsx$ID)
