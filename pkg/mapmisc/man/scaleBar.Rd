@@ -15,7 +15,7 @@ scaleBar(crs, pos = "bottomright", scale.cex = 1, outer=TRUE,...)
 map.new(x,legendRight=FALSE)
 insetMap(crs, pos="bottomright",map="osm",zoom=0, 
 		width=0.2, col="#FF000090", borderSmall=NA, borderBig=NULL,
-			cropInset = extent(-170,xmax=170, ymin=-65, ymax=75),
+			cropInset = extent(-180,xmax=180, ymin=-47, ymax=71),
 			outer=TRUE) 
 }
 
