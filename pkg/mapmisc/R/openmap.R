@@ -141,8 +141,6 @@ openmap = function(x, zoom,
 	} 
 
 	crsOut=crs
-	if(is.na(crsOut))
-		crsOut = projection(x)
 	
 	if(!is.na(crsOut)  ){
     
