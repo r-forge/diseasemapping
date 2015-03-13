@@ -1,7 +1,7 @@
 \name{openmap}
 \alias{openmap}
-\alias{getTiles}
 \alias{osmTiles}
+\alias{osmAttribution}
 \title{Download map tiles}
 \description{
 Downloads map tiles from Openstreetmap.org and other servers.
@@ -11,9 +11,8 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	path="http://tile.openstreetmap.org/",
 	maxTiles = 9,
 	crs=projection(x),   extend=0, verbose=FALSE)
-	getTiles(xlim,ylim,zoom,path,cacheDir=tempdir(),
-		timeOut=5*24*60*60,verbose=FALSE)
 	osmTiles(name)
+	osmAttribution(name, type=c('text','latex','markdown','html'), short=FALSE)
 }
 
 \arguments{
@@ -35,20 +34,6 @@ and \code{x} has no crs, long-lat is used.}
 \item{extend}{Extend the extent for which the map is requested, in units
 of \code{x}.  Can be negative, or a vector of length 2 for different x and y 
 extensions}
-  \item{cacheDir}{
-    A directory for caching tiles retrieved over the web. 
-  }
-\item{xlim}{
-    Length-2 vector of min and max X coordinate (latitude)
-  }
-  \item{ylim}{
-    Length-2 vector of min and max Y coordinate (longitude)
-  }
-
-  \item{timeOut}{
-    Tiles in the cache directory older than this (in minutes) are
-    re-retrieved.
-  }
   \item{verbose}{
     If TRUE, give information on where tiles are coming from, cache
     hits, etc
@@ -56,6 +41,8 @@ extensions}
   \item{name}{name of a tile path, if missing a vector of all available tile paths
   is returned.  \code{name} can be any of the names of the vector returned when 
   \code{name} is unspecified.}
+  \item{type}{format for the attribution}
+  \item{short}{short or long attribution}
 }
 
 \details{
@@ -68,21 +55,14 @@ in a 2x2 pattern over the whole world. In general, zoom level n has 2^n
 by 2^n tiles. Zoom levels go up to about 17 or 18 depending on the tile
 server.
 
-The function getTiles() retrieves tiles to cover a given latitude and
-longitude range at a given zoom level. Note that since tiles are
-generated at a fixed set of lat-long ranges the returned tiles will
-overlap the requested area. There may be some way of clipping to the
-requested area in a future revision.
 
-\url{http://wiki.openstreetmap.org/index.php/Tile_usage_policy}
-
+Be sure to attribute any maps you publish, the osmAttribution function will assist.
 }
 
 
 \value{
 	\code{openmap} returns a RasterBrick 
-	\code{\link[raster]{brick}}, with 'red', 'green' and 'blue' layers. \code{getTiles} returns a list
-	of RasterBricks
+	\code{\link[raster]{brick}}, with 'red', 'green' and 'blue' layers. 
 }	
 
 \seealso{\link[OpenStreetMap]{openmap} }
@@ -114,7 +94,9 @@ names(osmTiles())
 	map.new(myPoints)
 	plotRGB(mytiles, add=TRUE)
 	points(myPoints,col='red')
+	openmapAttribution(mytiles)
 }
 
+openmapAttribution("osm", type='markdown')
 
 }

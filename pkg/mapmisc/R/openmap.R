@@ -29,7 +29,6 @@ historical='http://www.openhistoricalmap.org/ohm_tiles/'
 	)
 	
 	
-
   
 
 	# language labels don't appear to be working
