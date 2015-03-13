@@ -1,7 +1,7 @@
 \name{openmap}
 \alias{openmap}
 \alias{osmTiles}
-\alias{osmAttribution}
+\alias{openmapAttribution}
 \title{Download map tiles}
 \description{
 Downloads map tiles from Openstreetmap.org and other servers.

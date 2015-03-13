@@ -106,7 +106,8 @@ for(D in theNames){
 	cat("\\section[",D,"]{{\\tt plot","RGB"[threeTiles], 
 			"(openmap(x,path=\"", D, "\"))}}", sep='')
 	cat("\\label{", D, "}\n",sep="")
-	cat("\\nopagebreak[4]\\begin{tabular}{ccc}\n")
+  cat(openmapAttribution(D, 'latex'))
+	cat("\n\n\\nopagebreak[4]\\begin{tabular}{ccc}\n")
 	
 	
 	for(Dplot in 1:length(mytiles)) {
