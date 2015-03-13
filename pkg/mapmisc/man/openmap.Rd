@@ -12,7 +12,7 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	maxTiles = 9,
 	crs=projection(x),   extend=0, verbose=FALSE)
 	osmTiles(name)
-	osmAttribution(name, type=c('text','latex','markdown','html'), short=FALSE)
+	openmapAttribution(name, type=c('text','latex','markdown','html'), short=FALSE)
 }
 
 \arguments{
