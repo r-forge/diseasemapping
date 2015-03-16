@@ -83,7 +83,9 @@ weights=NULL
       weights = x[,2]
       x=x[,1]
     } else {
-      x = table(sampleRegular(x, 5e+05))
+      x = table(
+              sampleRegular(x, 5e+05)
+      )
       weights = x
       x = as.numeric(names(x))
     }
@@ -133,7 +135,16 @@ weights=NULL
   labels = levelsx$label
 		
 	} else { # not unique or equal or fixed, take a sample
-		x = sampleRegular(x, min(c(ncell(x),10000)))
+    Nsample = 20000
+    xVec= c()
+    Diter = 0
+    while(length(xVec)<Nsample & Diter < 5){
+      xVec = c(xVec,
+          na.omit(sampleRegular(x, min(c(ncell(x),Nsample))))
+      )
+      Diter = Diter + 1
+    }
+    x = c(xVec, maxValue(x), minValue(x))
 	}
 	res=colourScale(x, breaks, 
 			style,
