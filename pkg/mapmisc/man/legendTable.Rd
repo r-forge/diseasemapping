@@ -9,7 +9,7 @@ A table in html or Latex showing values associated with colours
 legendTable(x,
     type=c('latex',  'html'),
     box = c(-0.3, 1, 2),
-    unit = c(latex='\\baselineskip', html='em'),
+    unit = c(latex='\\\\baselineskip', html='em'),
     collapse=NULL)
 }
 
