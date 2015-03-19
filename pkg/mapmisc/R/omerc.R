@@ -15,11 +15,11 @@ omercProj4string = function(
       "+proj=omerc",
       " +lat_0=", lat,
       " +lonc=", lon,
-      " +gamma=", inverseAngle,
-      " +k=", scale, 
       " +alpha=", angle, 
+      " +k=", scale, 
       " +x_0=", x,
       " +y_0=", y,
+      " +gamma=", inverseAngle,
       " +ellps=", ellps,
       " +units=", units,
       sep="")
@@ -48,6 +48,12 @@ omerc = function(
   
   digits=3 # for rounding coordinates
   angle = round(angle, digits)
+  
+  angle = angle[! (angle %in% (90*c(-1,1,2)))]
+  if(!length(angle)){
+    warning('angle cant be -90, 90 or 120')
+  }
+  
   
   crs = projection(x)
   if(is.na(crs)){
@@ -211,11 +217,11 @@ omerc = function(
     distEu = unlist(
       lapply(rotatedCrsAdj,
       function(crs){
-        mean(
+        sqrt(mean(
             (spDists(spTransform(preserve, crs), 
                 longlat=FALSE)[theLower]/distGS
             -1)^2,
-            na.rm=TRUE)
+            na.rm=TRUE))
         }
       )
     )
@@ -224,6 +230,10 @@ omerc = function(
   rotatedCrsAdj = rotatedCrsAdj[
       which.min(distEu)
   ]
+  attributes(rotatedCrsAdj[[1]])$obj=list(
+      x = angle,
+      y = distEu
+      )
   
   } # end preserve
   
@@ -243,6 +253,11 @@ omerc = function(
     rotatedCrsAdj = rotatedCrsAdj[
       which.min(xTrans)
     ]
+    attributes(rotatedCrsAdj[[1]])$obj=list(
+        x = angle,
+        y = xTrans
+    )
+
   } # end smallest bounding box
 
   if(length(rotatedCrsAdj)==1)

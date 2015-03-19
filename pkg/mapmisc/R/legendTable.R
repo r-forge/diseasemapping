@@ -1,7 +1,7 @@
 legendTable = function(x,
     type=c('latex', 'html'),
-    box = c(-0.3, 1, 2),
-    unit = c(latex='\\baselineskip', html='em'),
+    box = c(0, 1, 2),
+    unit = 'em',
     collapse=NULL) {
   
   type = type[1]
@@ -49,7 +49,7 @@ legendTableLatex = function(x, rule, ruleUnit, collapse){
       '}{\\rule[',
       rule[1],']{',
       rule[3],'}{',
-      rule[2],'} }',
+      rule[2],'}}',
       sep=''
   )
   

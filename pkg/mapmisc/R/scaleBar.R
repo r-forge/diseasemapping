@@ -164,7 +164,14 @@ if(scale.cex>0) {
 				thelegend$rect$top , 
 				label=thelabel, pos=1, cex=0.75, offset=1.25)
 		
-	thecentre =  c(thelegend$text$x,thelegend$text$y)
+  # if there's no scale bar or box and pos is numeric,
+# put the N at the point spcified
+  if(scale.cex<=0 & !nchar(forLegend$title) & all(forLegend$bty=='n') & is.numeric(forLegend$x)) {	
+    thecentre =  c(forLegend$x,forLegend$y)[1:2]
+  } else {
+    thecentre =  c(thelegend$text$x,thelegend$text$y)
+  }
+  
   xpoints = SpatialPoints(t(thecentre),
       proj4string=crs)
   
@@ -200,5 +207,9 @@ if(scale.cex>0) {
 	 
 	par(cex=oldcex)
 	 
-	 return(invisible(thelegend)	)
+	return(invisible(list(
+              out=thelegend, 
+              call=forLegend, 
+              centre=c(Re(thecentre),Im(thecentre))
+  )))
 }
