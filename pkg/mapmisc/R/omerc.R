@@ -8,7 +8,13 @@ omercProj4string = function(
 #  negAngle = angle<0
 #  angle[negAngle] = 360 + angle[negAngle]
 #  angle[angle==90]=89
-  inverseAngle = rep.int(inverseAngle, length(angle))
+
+  x = rep_len(x, length(angle))
+  y = rep_len(y, length(angle))
+  scale = rep_len(scale, length(angle))
+  lat = rep_len(lat, length(angle))
+  lon = rep_len(lon, length(angle))
+
   
   whichZeros = (angle==0) 
   which90 = abs(angle)==90
@@ -30,11 +36,11 @@ omercProj4string = function(
   if(any(whichZeros)) {
     result[whichZeros] = paste(
         "+proj=tmerc",
-        " +lat_0=", lat,
-        " +lon_0=", lon,
-        " +k=", scale, 
-        " +x_0=", x,
-        " +y_0=", y,
+        " +lat_0=", lat[whichZeros] ,
+        " +lon_0=", lon[whichZeros] ,
+        " +k=", scale[whichZeros] , 
+        " +x_0=", x[whichZeros] ,
+        " +y_0=", y[whichZeros] ,
         " +ellps=", ellps,
         " +units=", units,
         sep="")
@@ -42,11 +48,11 @@ omercProj4string = function(
   if(any(which90)) {
     result[which90] = paste(
         "+proj=lcc",
-        " +lat_0=", lat,
-        " +lon_0=", lon,
-        " +k_0=", scale, 
-        " +x_0=", x,
-        " +y_0=", y,
+        " +lat_0=", lat[which90],
+        " +lon_0=", lon[which90],
+        " +k_0=", scale[which90], 
+        " +x_0=", x[which90],
+        " +y_0=", y[which90],
         " +ellps=", ellps,
         " +units=", units,
         sep="")
@@ -68,7 +74,7 @@ omerc = function(
   angleOrig = angle
   
   if(is.numeric(post)){
-    inverseAngle = rep.int(post, length(angle))
+    inverseAngle = rep_len(post, length(angle))
     post='none'
   } else {
     inverseAngle=rep(0, length(angle))
@@ -210,17 +216,17 @@ omerc = function(
       )
 
       minDist= which.min(distEuSsq)
-
+      objectiveResult=list(
+          x = angle,
+          y = distEuSsq
+      )
+      
       angle=angle[minDist]
       scale=round(1/distEu[minDist], digits)
       inverseAngle = inverseAngle[minDist]
       newxy = newxy[,minDist,drop=FALSE]
       
       
-      objectiveResult=list(
-          x = angle,
-          y = distEuSsq
-      )
       
      } # end preserve
     
