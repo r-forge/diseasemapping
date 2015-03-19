@@ -5,14 +5,16 @@
 Defines an appropriate oblique mercator projection for a spatial object
 }
 \usage{
-	omerc(x, angle, undo=FALSE,preserve=NULL)
+	omerc(x, angle,  
+	post=c('none', 'north', 'wide','tall'),
+    preserve=NULL) 
 }
 
 \arguments{
 	\item{x}{A SpatialP* object or a vector of length 2 giving the 
 	centroid of the projection. }
 \item{angle}{angle of rotation or vector of angles}
-\item{undo}{perform an inverse rotation so north is preserved}
+\item{post}{post-projection angle rotation}
 \item{preserve}{A \code{SpatialPoints} object, the resulting projection is scaled
 so as to preserve the distances between these points as best as possible. }
 }
@@ -22,6 +24,16 @@ A map projection is produced which warps the world onto a cylinder, with the nor
 rotated by the specified angle.  If \code{angle} is a vector, the optimal 
 angle for reducing the size
 of the bounding box is returned.   
+
+If \code{post = 'north'}, an inverse rotation will preserve the north direction at the origin.
+
+If \code{post = 'wide'}, an inverse rotation
+makes the smallest possible bounding box which is wider than tall.  
+
+If \code{post = 'tall'}, the bounding box is taller than it is wide
+
+If \code{post} is numeric, it specifies an angle for inverse rotation.
+
 }
 
 

@@ -194,7 +194,7 @@ if(scale.cex>0) {
     xpoints2 = xll
   }
   thediff=apply(coordinates(xpoints2), 2,diff)
-  north=atan(thediff[1]/thediff[2])
+  north=atan(thediff[1]/thediff[2])+pi*(thediff[2]<0)
   
   theN = theN * exp(-1i*north)
   theHat = theHat * exp(-1i*north)

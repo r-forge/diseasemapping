@@ -25,8 +25,20 @@ crsLL = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 			x = extent(x[1]-eps, xmax=x[1]+eps, ymin=x[2]-eps, ymax=x[2]+eps)
 
 
-  x = raster(extent(x), nrows=100,ncols=100, crs=crsUse)
-  x = raster::extend(x, extend(extent(x), extend))
-  result = extent(projectExtent(x, crsLL))
+  if(requireNamespace('rgdal', quietly=TRUE)) {
+  x = as(
+      extend(extent(x), extend),
+      'SpatialPoints'
+      )
+  crs(x) = crsUse
+  result = extent(spTransform(x, crsLL))
+} else {
+  # no rgdal, try to use raster, doesn't always work
+    x = raster(extent(x), nrows=100,ncols=100, crs=crsUse)
+    x = raster::extend(x, extend(extent(x), extend))
+    result = extent(projectExtent(x, crsLL))
+    
+  }
+  
 	result
 }
