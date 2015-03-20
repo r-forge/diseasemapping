@@ -1,6 +1,6 @@
 legendTable = function(x,
     type=c('latex', 'html'),
-    box = c(0, 1, 2),
+    box = c(-0.2, 1, 2),
     unit = 'em',
     collapse=NULL) {
   

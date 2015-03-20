@@ -8,7 +8,7 @@ A table in html or Latex showing values associated with colours
 \usage{
 legendTable(x,
     type=c('latex',  'html'),
-    box = c(0, 1, 2),
+    box = c(-0.2, 1, 2),
     unit = 'em',
     collapse=NULL)
 }

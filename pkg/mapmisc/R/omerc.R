@@ -72,6 +72,7 @@ omerc = function(
   
   digits=3
   angleOrig = angle
+  post = post[1]
   
   if(is.numeric(post)){
     inverseAngle = rep_len(post, length(angle))
