@@ -1,7 +1,5 @@
 \name{cancerRates}
-\Rdversion{1.1}
 \alias{cancerRates}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Download cancer incidence rates from the International Agency for Research on Cancer (IARC)
 }
