@@ -104,7 +104,7 @@ if(require('mapmisc', quietly=TRUE)) {
 
 	mycol = colourScale(qcLungExp$expected, 
 		breaks=9, dec=0, transform='log', style='equal')
-	map.new(
+	plot(
 		popdata[grep("Stormont|Thunder Bay|Lambton", popdata$CDNAME),]
 	)
 	plot(qcLungExp, col=mycol$plot, border='#00000040',add=TRUE)

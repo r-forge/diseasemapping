@@ -53,6 +53,7 @@ omerc(c(10,50), angle=c(0,45,80))
 
 data('netherlands')
 
+if(require('rgdal', quietly=TRUE)){
 nldUtm = spTransform(nldCities,
 	omerc(nldCities, angle=0))
 projection(nldUtm)
@@ -70,7 +71,7 @@ map.new(nldRot)
 text(nldRot,labels=nldRot$name)
 scaleBar(nldRot, 'topright')
 insetMap(nldRot, 'bottomright',map=world)
-
+}
 \dontrun{
 
 	map.new(nldCities)

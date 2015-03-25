@@ -21,10 +21,11 @@ head(popdata@data)
 library(sp)
 spplot(popdata, zcol='F.50_54', breaks=9, col=rainbow(8))
 }
-\notrun{
+\dontrun{
 
-
-bfile = tempfile(fileext='zip')
+library('raster')
+library('sp')
+bfile = tempfile(fileext='.zip')
 download.file(
 paste('http://www12.statcan.gc.ca/census-recensement/',
 '2011/geo/bound-limit/files-fichiers/gcsd000a06a_e.zip',
@@ -35,6 +36,8 @@ sfile = grep('shp$',unzip(bfile, list=TRUE)$Name, value=TRUE)
 popdata = shapefile(file.path(tempdir(),sfile))
 popdata$PRNAME = iconv(popdata$PRNAME, 'UTF-8', 'latin1')
 popdata = popdata[grep("^Ont", popdata$PRNAME),]
+popdataS= rgeos::gSimplify(popdata, 0.01, topologyPreserve=TRUE)
+popdata = SpatialPolygonsDataFrame(popdataS, popdata@data)
 projection(popdata) = CRS('+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0')
 
 pfile = tempfile(fileext='zip')
@@ -60,20 +63,15 @@ opop2 = reshape(opop, direction='wide',
 idvar=c('id','name'),
 timevar='var', v.names=c('M','F'))
 
-noPop = opop2$name[
-
-temp = pmatch(popdata$NAME_3,opop2$name )
-opop2$stuff = NA
-opop2[na.omit(temp),'stuff'] = popdata$NAME_3[na.omit(temp)]
-
-opop2[is.na(opop2$stuff), c('id','name','stuff')]
-popdata@data[is.na(temp),c('NAME_3','ID_3','ID_2')]
-
 
 popdata = sp::merge(popdata, opop2, by.x='CSDUID', by.y='id')
-# save(popdata, file=
-#'/home/patrick/workspace/diseasemapping/pkg/diseasemapping/data/popdata.RData',
-#compress='xz')
+popdata=popdata[,c('CSDUID', grep("^(M|F)", names(popdata), value=TRUE))]
+
+
+
+save(popdata, file=
+'/home/patrick/workspace/diseasemapping/pkg/diseasemapping/data/popdata.RData',
+compress='xz')
 }
 }
 \keyword{datasets}
