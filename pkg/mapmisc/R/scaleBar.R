@@ -185,7 +185,7 @@ if(scale.cex>0) {
   xll = rbind(xll,
       SpatialPoints(
           xll@coords+c(0,1),
-      proj4string=crsLL)
+      proj4string=crs(xll))
   )
   
   if(requireNamespace('rgdal', quietly=TRUE)) {	

@@ -57,7 +57,7 @@ for(D in names(osm$long)){
 
 osmHumanitarian = osm
 osmHumanitarian$long$latex = gsub("cartography",
-    "cartography by \\href{http://hot.openstreetmap.org/about}{Humanitarian OSM team}",
+    "cartography by \\\\href{http://hot.openstreetmap.org/about}{Humanitarian OSM team}",
     osmHumanitarian$long$latex)
 osmHumanitarian$long$markdown = gsub("cartography",
     "cartography by [Humanitarian OSM team](http://hot.openstreetmap.org/about)",
