@@ -55,6 +55,21 @@ for(D in names(osm$long)){
   )
 }
 
+osmHumanitarian = osm
+osmHumanitarian$long$latex = gsub("cartography",
+    "cartography by \\href{http://hot.openstreetmap.org/about}{Humanitarian OSM team}",
+    osmHumanitarian$long$latex)
+osmHumanitarian$long$markdown = gsub("cartography",
+    "cartography by [Humanitarian OSM team](http://hot.openstreetmap.org/about)",
+    osmHumanitarian$long$markdown)
+osmHumanitarian$long$text = gsub("cartography",
+    "cartography by [Humanitarian OSM team](http://hot.openstreetmap.org/about)",
+    osmHumanitarian$long$text)
+osmHumanitarian$long$html = gsub("cartography",
+    "cartography by <a href=\"http://hot.openstreetmap.org/about\">Humanitarian OSM team</a>",
+    osmHumanitarian$long$html)
+
+
 
 mapquest = mapquestSat = list(
       short=list(
@@ -174,9 +189,12 @@ openmapAttribution = function(name, type=c('text','latex','markdown','html'), sh
   result = c()
   for(D in name){
         if(length(grep(
-                "^osm|landscape|opentopomap|openstreetmap|humanitarian|historical|bw.mapnik", 
+                "^osm|landscape|opentopomap|openstreetmap|historical|bw.mapnik", 
                 D))){        # openstreetmap
           result[D] = osm[[shortlong]][[type]]
+        } else if(length(grep("humanitarian",D))){
+          result[D] = osmHumanitarian[[shortlong]][[type]]
+          
       } else if(length(grep("mapquest|mqcdn",D))){ # mapquest
         if(length(grep("sat/?$",D))){
           result[D] = mapquestSat[[shortlong]][[type]]
