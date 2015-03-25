@@ -104,12 +104,9 @@ if(require('mapmisc', quietly=TRUE)) {
 
 	mycol = colourScale(qcLungExp$expected, 
 		breaks=9, dec=0, transform='log', style='equal')
-	plot(
-		popdata[grep("Stormont|Thunder Bay|Lambton", popdata$CDNAME),]
-	)
+	plot(popdata[1:400,])
 	plot(qcLungExp, col=mycol$plot, border='#00000040',add=TRUE)
 	legendBreaks('topright', mycol)
-	scaleBar(qcLungExp,"bottomleft")
 }
 
 }
