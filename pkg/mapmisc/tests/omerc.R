@@ -103,12 +103,12 @@ somePoints = SpatialPointsDataFrame(
   
   bob(seq(-170,-190), preserve=x)
   
-  scaleBar(bob((-10):10, preserve=x, post='north'), c(0,0), scale.cex=0)
+  scaleBar(bob((-10):10, preserve=x, post='north'), c(0,0), seg.len=0)
 
   
-  scaleBar(bob((-10):10, preserve=x, post='tall'), c(0,0), scale.cex=0)
+  scaleBar(bob((-10):10, preserve=x, post='tall'), c(0,0), seg.len=0)
   
-  scaleBar(bob((-10):10, preserve=x, post='wide'), c(0,0), scale.cex=0)
+  scaleBar(bob((-10):10, preserve=x, post='wide'), c(0,0), seg.len=0)
   
  
 if(!interactive())

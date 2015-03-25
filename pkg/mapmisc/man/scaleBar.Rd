@@ -11,10 +11,16 @@ Utilities for plotting a map, adding a scale bar and north arrow,
 and adding a legend of colour scales.
 }
 \usage{
-scaleBar(crs, pos = "bottomright", scale.cex = 1, outer=TRUE,...)
+scaleBar(crs, pos = "bottomright",   
+	cex=par('cex'),
+    pt.cex = 1.25*cex,
+    seg.len=8*cex,
+    title.cex=cex,
+    outer=TRUE,...)
 map.new(x,legendRight=FALSE)
 insetMap(crs, pos="bottomright",map="osm",zoom=0, 
-		width=0.2, col="#FF000090", borderSmall=NA, borderBig=NULL,
+		width=max(c(0.2, 1-par('plt')[2])), 
+		col="#FF000090", borderSmall=NA, borderBig=NULL,
 			cropInset = extent(-180,xmax=180, ymin=-47, ymax=71),
 			outer=TRUE) 
 }
@@ -27,9 +33,13 @@ can be extracted with \code{proj4string(crs)}
   \item{pos}{
 Position, as specified in the \code{legend} function.
 }
-  \item{scale.cex}{
-Scaling factor for the scale bar.
+\item{cex}{scaling factor for the legend}
+\item{pt.cex}{
+Scaling factor north arrow (can be zero).
 }
+\item{seg.len}{approximate length (in character units) of the scale bar.  can be zero.}
+\item{title.cex}{scaling for the distance text}
+\item{outer}{If \code{TRUE}, put bar or map in the margin of the plot}
 \item{x}{
 A spatial object from which an extent can be extracted.
 }
@@ -43,7 +53,6 @@ passed to \code{\link{openmap}}'s path argument}
 \item{borderSmall,borderBig}{border style for the inset map and shaded region, 
 passed as the \code{bg} argument to \code{\link[graphics]{polygon}}}
 \item{cropInset}{Crop the insert map to this extent}
-\item{outer}{If \code{TRUE}, put bar or map in the margin of the plot}
 \item{\dots}{
 breaks = c(-100, -1, 1, Inf)
 thecol = c('red','orange','blue')

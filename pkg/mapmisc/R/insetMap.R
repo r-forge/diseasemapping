@@ -1,5 +1,7 @@
-insetMap = function(crs, pos="bottomright",map="osm",zoom=0, 
-		width=0.2, col="#FF000090", borderSmall=NA, borderBig=NULL,
+insetMap = function(crs, 
+    pos="bottomright",map="osm",zoom=0, 
+    width=max(c(0.2, 1-par('plt')[2])), 
+col="#FF000090", borderSmall=NA, borderBig=NULL,
 		cropInset = extent(-180,xmax=180, ymin=-47, ymax=71),
 		outer=TRUE) {
 

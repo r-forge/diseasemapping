@@ -1,6 +1,41 @@
 
-scaleBar = function(crs, pos="bottomright",
-    scale.cex=1,outer=TRUE,...) {
+scaleBar = function(crs, 
+    pos="bottomright",
+    cex=par('cex'),
+    pt.cex = 1.25*cex,
+    seg.len=8*cex,
+    title.cex=cex,
+    outer=TRUE, ...) {
+
+  forLegend = list(cex=cex,pt.cex=pt.cex,seg.len=seg.len,...)
+  
+
+  if(length(forLegend$scale.cex)){
+    warning('use seg.len instead of scale.cex')
+    forLegend$seg.len = forLegend$scale.cex
+    forLegend$scale.cex=NULL
+  }
+
+  
+  
+  # if text.width=0, no north arrow
+  if(pt.cex==0) {
+    forLegend$pt.cex = 0.1*forLegend$cex
+    noArrow=TRUE
+  } else {
+    noArrow=FALSE
+  }
+  if(seg.len==0){
+    forLegend$seg.len = 0.1
+    noScale = TRUE
+  } else {
+    noScale = FALSE
+  }
+
+  if(!length(forLegend$text.width)){
+    forLegend$text.width = 2*strwidth('m', cex=forLegend$pt.cex)
+  }
+  
 
 	if(is.character(crs))
 		crs = CRS(crs)
@@ -9,22 +44,16 @@ scaleBar = function(crs, pos="bottomright",
 	
 
 #	dash = "\u2517\u2501\u2501\u2501\u2537\u2501\u2501\u2501\u251B"
-	
-	oldcex = par("cex")
-	forLegend = list(...)
-	if(length(forLegend$cex)){
-		par(cex=forLegend$cex)
-	} 
-	forLegend$cex=1
 
+  # we'll target a label this wide
+  widthTargetUsr = strwidth('m', cex=forLegend$cex)*forLegend$seg.len
+  
+  
 	xpoints = t(bbox(extent(par("usr"))))
-	
-	dashTemplate = " 2000 km "
 	xcentre = apply(xpoints, 2, mean)
 	xpoints = rbind(centre=xcentre, 
-			dashright = xcentre + c(strwidth(dashTemplate),0)
+			dashright = xcentre + c(widthTargetUsr,0)
 	)
-
 	
 	xpoints = SpatialPoints(xpoints, proj4string=crs)
 
@@ -32,10 +61,9 @@ scaleBar = function(crs, pos="bottomright",
 		xll = spTransform(xpoints, crsLL)
 	} else {
 		xll= xpoints
-		if(!length(grep("longlat", projection(xpoints))))
+		if(!isLonLat(crs))
 			warning('rgdal not intalled, assuming the plot is long-lat')
 	}
-	
 
 	up = matrix(coordinates(xll)["centre",]+c(0,0.1),ncol=2,
 			dimnames=list("up",NULL))
@@ -44,27 +72,24 @@ scaleBar = function(crs, pos="bottomright",
 	xll=rbind(xll, SpatialPoints(up, 
 					proj4string=CRS(proj4string(xll))))
 	
-	
-	
-
+# how long (in m) is our dashtemplate
 	dashdist = spDists(xll[c("centre","dashright"),], 
-			longlat=TRUE)[1,2]*1000 
-	bardist = 	dashdist*scale.cex
-		
-	theb = log10(bardist)
+			longlat=TRUE)[1,2]*1000
+
+	theb = log10(dashdist)
 	candidates = 10^c(floor(theb), ceiling(theb))
 	candidates = c(candidates[1]*c(1,2,5), candidates[2])
-	segdist=candidates[order(abs(candidates - bardist))[1]]
+	segdist=candidates[order(abs(candidates - dashdist))[1]]
 	
-	segscale = ( strwidth(dashTemplate)/par("cxy")[1] ) *
-			segdist / dashdist
+	forLegend$seg.len = forLegend$seg.len *segdist / dashdist
 	
 	
-	if(segdist >900) {
+	if(segdist >1100) {
 		lunits="km"
-		segdist = segdist / 1000
+		segdistPrint = segdist / 1000
 	} else {
 		lunits="m"
+    segdistPrint = segdist
 	}
 
 	eps = 0.175
@@ -80,26 +105,28 @@ scaleBar = function(crs, pos="bottomright",
 			(1-eps)+0i, eps+(1-1.5*eps)*1i,
 			eps) - 0.5 - 0.5*1i
 	theHat = c(-0.25+1i, 0.5+1.6i, 1.25+1i)
+  
+  Nwidth = strwidth('N', cex=forLegend$pt.cex)
 	theHat = c(theHat, rev(theHat) + 1.5*eps*1i)- 0.5-0.5*1i
-	theN =  strwidth("N")*Re(theN) + 
-			1i*strwidth("N")*InPerUnit[1]/InPerUnit[2]*
+	theN =  Nwidth*Re(theN) + 
+			1i*Nwidth*InPerUnit[1]/InPerUnit[2]*
 			Im(theN)
-	theHat =  strwidth("N") * Re(theHat)+ 
-			1i*strwidth("N")*InPerUnit[1]/InPerUnit[2]*
+	theHat =  Nwidth* Re(theHat)+ 
+			1i*Nwidth*InPerUnit[1]/InPerUnit[2]*
 			Im(theHat)
 	
 	
 	
-if(scale.cex>0) {	
-	thelabel = paste(segdist, lunits,sep="")
+if(!noScale) {	
+	thelabel = paste(segdistPrint, lunits,sep="")
 } else {
   thelabel=''
 }
 
 	
 	defaults = list(col='black', 
-			xjust=0.7, bg="white",
-			x=pos, text.width=strwidth("I"), pt.cex=1)
+			xjust=0.7, 
+			x=pos)
 	
 	if(outer){
 		par(xpd=TRUE)
@@ -129,47 +156,39 @@ if(scale.cex>0) {
 		if(is.null(forLegend[[D]]))
 			forLegend[[D]] = defaults[[D]]			
 	}
+  if(!length(forLegend$text.col))
+    forLegend$text.col = forLegend$col
 
 	onem = par("cxy")[1]
-	defaults = list(text.col = forLegend$col,
-			title.adj = 
-					0.5*(segscale*onem/
-						(segscale*onem + 4*onem) 
-						)* 
-					(1-forLegend$text.width/(segscale*onem))
-						)
-	for(D in names(defaults)) {
-		if(is.null(forLegend[[D]]))
-			forLegend[[D]] = defaults[[D]]			
-	}
 	
-	forLegend$lty = as.integer(segscale>0)
-	forLegend$pch = NA
-	forLegend$seg.len = segscale
-	forLegend$title=thelabel
-	forLegend$legend = NA
+	forLegend$lty = as.integer(!noScale)
+	forLegend$title=' '
+	forLegend$legend = ' '
 	forLegend$lwd=3
 
 	
 	
-	if(forLegend$seg.len*onem < strwidth(forLegend$title)) {
-		forLegend$title=NA
-	}
-
-		
 	thelegend = do.call(graphics::legend, forLegend)
+  
+  thelegend$title = thelabel
+  
+  thelegend$textxy =  
+       thelegend$rect$left + 
+       max(c(segdist, sum(strwidth(c('n',thelabel), cex=cex))))/2 + 
+          1i*mean(c(thelegend$text$y, thelegend$rect$top))
 			
-	if(is.na(forLegend$title))
-		text(thelegend$text$x - (2/3)*strwidth("m")*forLegend$seg.len,
-				thelegend$rect$top , 
-				label=thelabel, pos=1, cex=0.75, offset=1.25)
+	if(forLegend$lty)
+		text(thelegend$textxy, 
+				label=thelegend$title,  
+        pos=1, offset=0.25, cex=title.cex,
+        col=forLegend$text.col)
 		
   # if there's no scale bar or box and pos is numeric,
 # put the N at the point spcified
-  if(scale.cex<=0 & !nchar(forLegend$title) & all(forLegend$bty=='n') & is.numeric(forLegend$x)) {	
+  if(noScale & !nchar(forLegend$title) & all(forLegend$bty=='n') & is.numeric(forLegend$x)) {	
     thecentre =  c(forLegend$x,forLegend$y)[1:2]
   } else {
-    thecentre =  c(thelegend$text$x,thelegend$text$y)
+    thecentre =  c(thelegend$text$x + forLegend$text.width/2, thelegend$text$y)
   }
   
   xpoints = SpatialPoints(t(thecentre),
@@ -200,16 +219,18 @@ if(scale.cex>0) {
   theHat = theHat * exp(-1i*north)
   
   thecentre = thecentre[1] + 1i*thecentre[2]
+  
+  if(!noArrow){
 	 polygon(forLegend$pt.cex*theN +thecentre, 
 			 col=forLegend$text.col,border=NA)
 	 polygon(forLegend$pt.cex*theHat + thecentre, 
 			 col=forLegend$text.col,border=NA)
-	 
-	par(cex=oldcex)
-	 
+  }
+ 
+ 
 	return(invisible(list(
               out=thelegend, 
-              call=forLegend, 
+              call=c(forLegend, list(label=thelabel)), 
               centre=c(Re(thecentre),Im(thecentre))
   )))
 }
