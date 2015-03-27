@@ -9,26 +9,11 @@
 #include<Matrix.h>
 #include<Matrix_stubs.c>
 
-
-
-int cholmod_solve2         /* returns TRUE on success, FALSE on failure */
-(
-    /* ---- input ---- */
-    int sys,		            /* system to solve */
-    cholmod_factor *L,	            /* factorization to use */
-    cholmod_dense *B,               /* right-hand-side */
-    cholmod_sparse *Bset,
-    /* ---- output --- */
-    cholmod_dense **X_Handle,       /* solution, allocated if need be */
-    cholmod_sparse **Xset_Handle,
-    /* ---- workspace  */
-    cholmod_dense **Y_Handle,       /* workspace, or NULL */
-    cholmod_dense **E_Handle,       /* workspace, or NULL */
-    /* --------------- */
-    cholmod_common *Common
-);
-
-int attribute_hidden Mbob_cholmod_solve2(
+/*
+	a function for interfacing to the Matrix package
+	hopefully this will be in Matrix_stubs.c soon
+		*/
+attribute_hidden int M_cholmod_solve2(
 		int sys,
 		CHM_FR L,
 		CHM_DN B,//right
@@ -70,7 +55,9 @@ int attribute_hidden Mbob_cholmod_solve2(
 			c);
 }
 
-// global variables, for when this is in an optimizer
+/*
+ *  global variables, so that an optimizer can be build eventually
+ */
 CHM_SP Q;
 CHM_FR L;
 CHM_DN obsCovRot, Lx, DLx;
@@ -80,7 +67,10 @@ double logLtwo[2], detTwo[2], *YXVYXglobal, *YXYX, detQ;
 int Nxy, Nobs, Ncov, Nxysq;
 int Ltype;
 
-// compute sums of squares from cross products
+/*
+ * compute sums of squares from cross products
+ *
+ */
 void ssqFromXprod(
 		double *YXVinvYX, // N by N
 		double *detXVinvX,
@@ -148,11 +138,14 @@ YXVinvYX[0] -= xybeta;
 
 }
 
-// logL given xisqTausq
+/*
+ * logL given xisqTausq
 // needs global variables
 // Q, L, c, detTwo
 // obsCovRot, Lx, YwkL, EwkL, DLx, YwkD, EwkD
 // YXVYXglobal, YXYX, Nxy, Nobs,
+ */
+
 double logLoneNugget(double xisqTausq){
 
 	double minusXisqTausq, zeroD=0.0, moneD=-1.0;
@@ -170,19 +163,19 @@ double logLoneNugget(double xisqTausq){
 
 	detTwo[0] = M_chm_factor_ldetL2(L);
 //Lx =
-cholmod_solve2(
+M_cholmod_solve2(
 		CHOLMOD_L,
 		L,
-		obsCovRot, NULL,
-		&Lx, NULL,
+		obsCovRot,
+		&Lx,
 		&YwkL, &EwkL,
 		&c);
 //DLx =
-cholmod_solve2(
+M_cholmod_solve2(
 		CHOLMOD_D,
 		L,
-		Lx, NULL,
-		&DLx, NULL,
+		Lx,
+		&DLx,
 		&YwkD, &EwkD,
 		&c);
 
@@ -235,6 +228,9 @@ return result;
 
 }
 
+/*
+ * callable function from R
+ */
 SEXP gmrfLik(
 		SEXP QR,
 		SEXP obsCovR,
@@ -257,7 +253,7 @@ SEXP gmrfLik(
 
 
 
-	resultR = PROTECT(allocVector(REALSXP, (4+Nxysq)*NxisqTausq));
+	resultR = PROTECT(allocVector(REALSXP, Nxysq*NxisqTausq + 4*NxisqTausq);
 	YXVYX = REAL(resultR);
 	YXYX = (double *) calloc(Nxysq,sizeof(double));
 	determinant = &YXVYX[Nxysq*NxisqTausq];

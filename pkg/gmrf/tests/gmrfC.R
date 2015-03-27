@@ -26,12 +26,15 @@ obsCov = cbind(as.data.frame(theY), intercept=1, as.data.frame(thecov))
 dyn.unload('../src/gmrfLik.so')
 dyn.load('../src/gmrfLik.so')
 
-stuff = .Call('gmrfLik',myQ, as.matrix(obsCov), c(0,0.5))
+Snugget = c(0,0.5,1)
+stuff = .Call('gmrfLik',myQ, as.matrix(obsCov), Snugget)
 
+Nxy = ncol(obsCov)
+Nnugget = length(Snugget)
 
-sofile = '../src/simple.so'
-    
-dyn.unload(sofile)
-dyn.load(sofile)
+array(stuff[seq(1, Nnugget*Nxy^2)], dim=c(Nxy,Nxy,Nnugget),
+  dimnames=list(colnames(obsCov), colnames(obsCov), Snugget))
 
-stuff = .Call('simple',myQ, as.matrix(obsCov), c(0,0.5))
+matrix(stuff[-seq(1, Nnugget*Nxy^2)], ncol=4, 
+    dimnames=list(Snugget, c('det','detreml','logL', 'logReL')))
+ 
