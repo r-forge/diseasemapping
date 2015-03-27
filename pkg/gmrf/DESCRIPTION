@@ -1,0 +1,10 @@
+Package: gmrf
+Version: 0.0
+Date: 2015-03-01
+Title: gmrf
+Description: stuff
+Author: Patrick Brown <patrick.brown@utoronto.ca>
+Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
+Depends: R (>= 2.15.0), geostatsp, Matrix
+LinkingTo: Matrix
+License: GPL (>=2)
