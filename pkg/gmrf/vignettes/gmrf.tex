@@ -213,7 +213,7 @@ MLE  $\hat\phi, \hat\xi, \hat\tau,\hat\beta$  maximize $pr(Y ;
 \phi,\xi,\tau,\beta)$.
 
 \section*{Likelihood}
-\subsection{bog-standard}
+\subsection{No nugget}
 \[
 -2 \log pr(\mathbf{Y};\phi,\beta,\tau,\xi) = N \log(2\pi) + 
 \log| \var(\mathbf{Y})  | + \\
@@ -222,110 +222,56 @@ MLE  $\hat\phi, \hat\xi, \hat\tau,\hat\beta$  maximize $pr(Y ;
 (\mathbf{Y} - \mathbf{X}\beta)
 \]
 
-\[	
-\var(\mathbf{Y}) = L L^T,\ L_C = L^{-1}C 
-\]
-
 \begin{align*}
+\var(\mathbf{Y}) = &\xi^2 Q^{-1} \\
+\var(\mathbf{Y})^{-1} = &Q/\xi^2 = L L'/\xi^2\\
 \hat\beta = &[\mathbf{X}^T
-  \var(\mathbf{Y})^{-1} \mathbf{X}^{-1}
+  Q \mathbf{X}]^{-1}
   [\mathbf{X}^T
-  \var(\mathbf{Y})^{-1} \mathbf{Y}]\\
-  = & (L_X^TL_X)^{-1} L_X^TL_Y\\
--2 \log pr(\mathbf{Y};\phi,\beta,\tau,\xi) = &N \log(2\pi) +
-2\log| L  | + L_Y^TL_Y -2L_Y^TL_X\hat\beta + \hat\beta^T L_X^TL_X\hat\beta\\
-\hat\beta^T  L_X^TL_X\hat\beta = & L_Y^TL_X (L_X^TL_X)^{-1}  L_X^TL_X (L_X^TL_X)^{-1} L_X^TL_Y \\
- = &   L_Y^TL_X (L_X^TL_X)^{-1} L_X^TL_Y \\
-= & L_Y^TL_X\hat\beta\\
--2 \log pr(\mathbf{Y};\phi,\beta,\tau,\xi) = &N \log(2\pi) +
-2\log| L  | + L_Y^TL_Y -L_Y^TL_X(L_X^TL_X)^{-1} L_X^TL_Y \\
--2 \log pr(\mathbf{Y};\phi,\beta,\tau,\xi) = &N \log(2\pi) +
-2\log| L  | + L_Y^TL_Y- L_Y^TL_X\hat\beta\\
-\end{align*}
-
-if $\var(Y) = \xi^2 \Sigma$, $\Sigma = L L^T$
-\begin{align*}
--2 \log pr(\mathbf{Y};\phi,\beta,\tau,\xi) = &N \log(2\pi) +
-N \log(\xi^2) + 2\log| L  | + L_Y^TL_Y/\xi^2 -L_Y^TL_X\hat\beta/\xi^2 \\
-N/\hat\xi^2 = &L_Y^TL_Y(\hat\xi^2)^{-2} - L_Y^TL_X\hat\beta(\hat\xi^2)^{-2}\\
-\hat\xi^2 = &(L_Y^TL_Y - L_Y^TL_X\hat\beta)/N\\
--2 \log pr(\mathbf{Y};\phi,\beta,\tau,\xi) = &N \log(2\pi) +N- N \log(N) 	+ 2\log| L  | +
-N\log(L_Y^TL_Y - L_Y^TL_X(L_X^TL_X)^{-1} L_X^TL_Y)
-\end{align*}
-
-
-\subsection{for GMRF}
-\begin{multline*}
--2 \log pr(\mathbf{Y};\phi,\beta,\tau,\xi) =
-\log| (\xi^2  Q(\phi)^{-1} + \tau^2 I  ) | + \\
-( \mathbf{Y} -\mathbf{X}\beta)  '
-  (\xi^2  Q(\phi)^{-1} + \tau^2 I  )^{-1}
-(\mathbf{Y} - \mathbf{X}\beta)
-\end{multline*}
-
-\[
-\hat\beta = [ \mathbf{X}'
-(  \xi^2  Q(\phi)^{-1} + \tau^2 I )^{-1}   \mathbf{X}]^{-1}
-\mathbf{X}'(\xi^2  Q(\phi)^{-1} +
-\tau^2 I  )^{-1} \mathbf{Y}
-\]
-
-
-
-\begin{align*}
-V = & (\xi^2/\tau^2) + Q\\
-[\xi^2 Q^{-1} + \tau^2 I]^{-1}= & \tau^2 Q [(\xi^2/\tau^2) + Q]^{-1} \\
-= & \tau^2 Q V^{-1}\\
-R_X =& Q \mathbf{X}\\
-R_Y =& Q \mathbf{Y}\\
-V_X = &V^{-1} \mathbf{X}\\
-V_Y =& V^{-1} \mathbf{Y}\\
+  Q \mathbf{Y}]\\
+   = & [(L\mathbf{X})'L\mathbf{X}]^{-1}L\mathbf{X}L\mathbf{Y}\\
+\var(\hat\beta) = & \tau^2 [\mathbf{X}^T  Q \mathbf{X}]^{-1}\\
+-2 \log pr(\mathbf{Y};Q, \xi^2) = &
+N \log(2\pi) +
+\log| V| + 
+( \mathbf{Y} -\mathbf{X}\hat\beta)  '
+  V^{-1}
+(\mathbf{Y} - \mathbf{X}\hat\beta)\\
+= & N \log(2\pi) + N \log(\xi^2) - \log|Q| + (1/\xi^2)( \mathbf{Y} -\mathbf{X}\hat\beta)  '
+  Q
+(\mathbf{Y} - \mathbf{X}\hat\beta)\\
+= & N \log(2\pi) + N \log(\xi^2) - 2\log|L| +
+(1/\xi^2)( \mathbf{Y}'
+  Q \mathbf{Y} - \mathbf{Y}'
+  Q \mathbf{X}\hat\beta)\\
+\hat\xi^2 = & ( \mathbf{Y}'
+  Q \mathbf{Y} - \mathbf{Y}'
+  Q \mathbf{X}\hat\beta)/N\\
+  = & [(L\mathbf{Y})'L\mathbf{Y} - (L\mathbf{Y})'L\mathbf{X}\hat\beta]/N\\
+ \var(\hat\beta) = & \hat\tau^2 [\mathbf{X}^T  Q \mathbf{X}]^{-1}\\ 
+ -2 \log pr(\mathbf{Y};Q)=&  N + N \log(2\pi)  - 2\log|L|+N \log(\hat\xi^2)
 \end{align*}
 
 
-\begin{align*}
-\hat\beta =  &[ \mathbf{X}'
- Q [(\xi^2/\tau^2) + Q]^{-1}  \mathbf{X}]^{-1}
-\mathbf{X}' Q [(\xi^2/\tau^2) + Q]^{-1}  \mathbf{Y}\\
-= & [ R_X' V_X ]^{-1}  R_X' V_Y\\
-\end{align*}
 
-
-\begin{align*}
--2 \log pr[\mathbf{Y};\phi,\tau, \xi ,\hat\beta(\phi, \xi/\tau)] = &
--\log |\var(\mathbf{Y})^{-1}| + \tau^2 ( \mathbf{Y} -\mathbf{X}\hat\beta) '
-  Q V^{-1} 
- [\mathbf{Y} - \mathbf{X}\hat\beta ] \\
-R=&  [R_Y' V_Y - R_Y' V_X \hat\beta - \hat\beta ' R_X' V_Y + \hat\beta 'R_X'
-V_X \hat\beta ] \\
-\hat\beta 'R_X'
-V_X \hat\beta = &  \hat\beta' R_X' V_X [ R_X' V_X ]^{-1}  R_X' V_Y =
- \hat\beta ' R_X' V_Y   \\
-R = &[R_Y' V_Y - R_Y' V_X \hat\beta] = R_Y' V^{-1} ( \mathbf{Y} -
-\mathbf{X}\hat\beta)\\
--2 \log pr[\mathbf{Y};\phi,\tau, \xi ,\hat\beta(\phi, \xi/\tau)] =& -N \log (\tau^2) -\log|Q| + \log|V| +  \tau^2 R\\
-\end{align*}
-
-now find $\hat\tau(\tau/\xi, \psi)$
-\begin{align*}
-\hat\tau^2(\psi, \tau^2/\xi^2) = &  N/R \\
--2 \log pr[\mathbf{Y};\phi,\tau^2/\xi^2, \hat\tau^2(\phi, \tau^2/\xi^2), \hat\beta(\phi, \xi/\tau)] = & -N\log(N) + N \log (R)   -\log|Q| +
-\log|V|+N
-\end{align*}
-
-
-\section*{GMRF more efficient}
+\subsection*{with nugget}
 
 Use $(C^{-1} + I)^{-1} = I-(C+I)^{-1}$ 
 \begin{align*}
 V^{-1} = &[\xi^2 Q^{-1} + \tau^2 I]^{-1}\\
-=& (1/\tau^2) Q [(\xi^2/\tau^2)I + Q]^{-1}\\
+=& (1/\tau^2)  [(\xi^2/\tau^2)Q^{-1} + I]^{-1}\\
+ = & \frac{1}{\tau^2} \left[ I -   \left(\frac{\tau^2 }{\xi^2} Q +    I\right)^{-1}  \right]\\
  = & \frac{1}{\tau^2} \left[ I -  \frac{\xi^2 }{\tau^2} \left(Q +  \frac{\xi^2 }{\tau^2}  I\right)^{-1}  \right]\\
- =& \frac{1}{\tau^2} \left[ I -  \frac{\xi^2 }{\tau^2}\left(L L'  \right)^{-1}  \right]\\
-L L'= &  Q +  \frac{\xi^2 }{\tau^2}  I
+L L'= &  Q +  \frac{\xi^2 }{\tau^2}  I\\
+V^{-1} =& \frac{1}{\tau^2} \left[ I -  \frac{\xi^2 }{\tau^2}\left(L L'  \right)^{-1}  \right]\\
 \end{align*}
 
-
+\begin{align*}
+V^{-1} =& Q (\xi^2 I + \tau^2 Q)^{-1}\\
+V = & \tau^2 Q^{-1} L L'\\
+|V| = &(\tau^2)^N |Q|^{-1} |L|^2\\
+\log|V| = & N \log(\tau^2) - \log |Q| + 2 \log |L|
+\end{align*}
 
 \[
 \hat\beta = [ \mathbf{X}'
@@ -357,24 +303,27 @@ V^{-1} \mathbf{X} [ \mathbf{X}' V^{-1}   \mathbf{X}]^{-1}
 \\
 = & \log| V| +
  \mathbf{Y}' V^{-1} \mathbf{Y}  -  \mathbf{Y}'  V^{-1}   \mathbf{X}[ \mathbf{X}'
- V^{-1}   \mathbf{X}]^{-1}\mathbf{X}' V^{-1} \mathbf{Y}
+ V^{-1}   \mathbf{X}]^{-1}\mathbf{X}' V^{-1} \mathbf{Y}\\
+= & \log| V| +
+ \mathbf{Y}' V^{-1} \mathbf{Y}  -  \mathbf{Y}'  V^{-1}   \mathbf{X}\hat\beta
 \end{align*}
 
 \begin{align*}
 L_x = L^{-1} \mathbf{X}, & L_y = L^{-1}\mathbf{Y}\\
  \mathbf{A}' V^{-1} \mathbf{B}  = &  \frac{1}{\tau^2} \left[ \mathbf{A}' \mathbf{B} - \frac{\xi^2 }{\tau^2}  L_A' L_B \right] \\
- L=&  \log| V| + \frac{1}{\tau^2}\left( \mathbf{Y}' \mathbf{Y} - \frac{\xi^2 }{\tau^2}  L_Y' L_Y \right) -\\ 
-&\frac{1}{\tau^2} \left( \mathbf{Y}' \mathbf{X} - \frac{\xi^2 }{\tau^2}  L_Y' L_X\right)  
-\left(  \mathbf{X}' \mathbf{X} - \frac{\xi^2 }{\tau^2}  L_X' L_X \right)^{-1}
-\left( \mathbf{X}' \mathbf{Y} - \frac{\xi^2 }{\tau^2}  L_X' L_Y \right)\\
-L_b L_b^T = &\left[  \mathbf{X}' \mathbf{X} - \frac{\xi^2 }{\tau^2} L_X' L_X \right] \\
-L_c = & L_b^{-1} \left[  \mathbf{X}' \mathbf{Y} -\frac{\xi^2 }{\tau^2}  L_X' L_Y \right]\\
--2 \log L = & \log| V| +	\frac{1}{\tau^2} \left[\mathbf{Y}' \mathbf{Y}- \frac{\xi^2 }{\tau^2}  L_Y' L_Y-L_c L_c^T\right]   \\
-|V^{-1}| = & ( \tau^2 )^{-N} |Q|  |L|^{-2} \\
- \log| V| = & N \log(\tau^2) - \log |Q| + 2 \log |L| \\
- \widehat{\tau^2} =&\left. \left[\mathbf{Y}' \mathbf{Y}- \frac{\xi^2 }{\tau^2}  L_Y' L_Y-L_c L_c^T\right]\right/N \\
--2 \log L (\xi^2/\sigma^2,Q;\mathbf{Y})= &N \log\left[\mathbf{Y}' \mathbf{Y}- \frac{\xi^2 }{\tau^2}  L_Y' L_Y-L_c L_c^T\right]  - \log |Q| + 2 \log |L|
+ \hat\beta = & \left[ \mathbf{X}' \mathbf{X} - \frac{\xi^2 }{\tau^2}  L_X' L_X \right]^{-1} 
+ \left[ \mathbf{X}' \mathbf{Y} - \frac{\xi^2 }{\tau^2}  L_X' L_Y \right]\\
+-2 \log L (\xi^2/\sigma^2,Q;\mathbf{Y}) =& 
+ \log| V| + \frac{1}{\tau^2}\left[ \mathbf{Y}' \mathbf{Y} - \frac{\xi^2 }{\tau^2}  L_Y' L_Y - 
+\left( \mathbf{Y}' \mathbf{X} - \frac{\xi^2 }{\tau^2}  L_Y' L_X\right)
+\hat\beta\right]  \\
+= & N \log(\tau^2) - \log |Q| + 2 \log |L| + (1/\tau^2) SSQ \\
+\hat\tau = & \left.\left[ \mathbf{Y}' \mathbf{Y} - \frac{\xi^2 }{\tau^2}  L_Y' L_Y - 
+ \left(\mathbf{Y}' \mathbf{X}  - \frac{\xi^2 }{\tau^2}  L_Y' L_X\right)\hat\beta\right] \right/ N\\
+-2 \log L (\xi^2/\sigma^2,Q;\mathbf{Y}) =& N \log(\hat\tau^2) - \log |Q| + 2 \log |L| + N\\
+\var(\hat\beta) = & \hat\tau^2\left[\mathbf{X}' \mathbf{X} - (\xi^2 /\tau^2)  L_X' L_X \right]^{-1}
  \end{align*}
+ 
 
 
 \section*{Conditional distributions}
