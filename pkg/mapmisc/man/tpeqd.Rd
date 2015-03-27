@@ -37,7 +37,7 @@ data('netherlands')
 tcrs = tpeqd(nldCities[1:2,])
 tcrs
 
-
+if(require('rgdal', quietly=TRUE)) {
 nldT = spTransform(nldCities, tcrs)
 projection(nldT)
 
@@ -45,6 +45,6 @@ map.new(nldT)
 text(nldT,labels=nldT$name)
 scaleBar(nldT, 'topright')
 
-
+}
 
 }
