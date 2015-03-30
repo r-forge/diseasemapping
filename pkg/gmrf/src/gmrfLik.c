@@ -1,10 +1,16 @@
+/*
+ * needs modified matrix package
+ * svn checkout svn://svn.r-forge.r-project.org/svnroot/matrix/pkg/Matrix_1.1-5-branch
+ * add line     RREGDEF(cholmod_solve2);
+ *  to  Matrix_1.1-5-branch/src/init.c
+ */
+
 #include<R.h>
 #include<Rmath.h>
 #include<R_ext/Lapack.h>
 #include<R_ext/Applic.h>
 #include<R_ext/Print.h>
 #include<R_ext/Utils.h>
-//#include"/usr/lib/R/library/Matrix/include/Matrix.h"
 #include<R_ext/Rdynload.h>
 #include<Matrix.h>
 #include<Matrix_stubs.c>
@@ -60,11 +66,12 @@ attribute_hidden int M_cholmod_solve2(
  */
 CHM_SP Q;
 CHM_FR L;
-CHM_DN obsCovRot, Lx, DLx;
+CHM_DN obsCovRot, Lx;
 CHM_DN YwkL, EwkL, YwkD, EwkD; // workspaces
 cholmod_common c;
-double logLtwo[2], detTwo[2], *YXVYXglobal, *YXYX, detQ;
-int Nxy, Nobs, Ncov, Nxysq;
+double *logLtwo, detTwo[2], *YXVYXglobal, *YXYX, *YrepAdd;
+double *copyLx;
+int Nxy, Nobs, Ncov, Nrep, Nxysq;
 int Ltype;
 
 /*
@@ -74,69 +81,76 @@ int Ltype;
 void ssqFromXprod(
 		double *YXVinvYX, // N by N
 		double *detXVinvX,
-		int N
+		const int N, const int Nrep,
+		double *copyLx
 ){
 
-	int oneI=1, infoCholXX, infoInvXX, Np1, Nm1;
+	int oneI=1, infoCholXX, infoInvXX, Ncov;
 	int D;
-	double	oneD=1.0, zeroD=0.0;
-	double xybeta;
+	double	oneD=1.0, moneD = -1.0,zeroD=0.0;
+	double xybeta, *xvx;
 
-	Np1 = N+1;
-	Nm1 = N-1;
+	/// copy of LyLx
+	Ncov = N*Nrep;
+	F77_CALL(dcopy)(&Ncov,
+			YXVinvYX, &oneI,
+			copyLx, &oneI);
+
+	// xvinvx submatrix
+	xvx = &YXVinvYX[N*Nrep+Nrep];
+	Ncov = N-Nrep;
 
 	// invert X Vinv X
 	// first cholesky
 
 	//  cholesky X Vinv X
 	F77_CALL(dpotrf)("L",
-		&Nm1, &YXVinvYX[Np1],
-		&N, // NcolM1 by NcolM1 submatrix of Ncol by Ncol matrix
+		&Ncov, xvx,
+		&N, // Ncov by Ncov submatrix of N by N matrix
 		&infoCholXX);
 
 	*detXVinvX  = 0.0;
-	for(D=1;D<N;++D){
-		*detXVinvX  += log(YXVinvYX[D*N+D]);
+	for(D=0;D<Ncov;++D){
+		*detXVinvX  += log(xvx[D*N+D]);
 	}
 // then invert
 F77_NAME(dpotri)("L",
-		&Nm1,
-		&YXVinvYX[Np1],
+		&Ncov,
+		xvx,
 		&N,
 		&infoInvXX);
 
-// put beta hat in first column (first row still has LyLx)
+// put beta hat in first rows (first Nrep cols still have LyLx)
+// C= A B, A=xvx, B=LxLy
 F77_NAME(dsymm)(
-		"R", "L", // A on right, A in lower
-		&oneI, &Nm1, // C has one row, Ncov columns
+		"L", "L", // A on left, A in lower
+		&Ncov, &Nrep, // C has Nrep rows, Ncov columns
 		&oneD,
-		&YXVinvYX[Np1], &N,// XVinvX^(-1)
-		&YXVinvYX[N],&N, // Lx
+		xvx, &N,// XVinvX^(-1)
+		&copyLx[Nrep],&N, // Lx
 		&zeroD,
-		&YXVinvYX[1], &oneI //betahat
+		&YXVinvYX[Nrep], &N //betahat, ldc
 		);
 
-// LxLy beta
+//  blasBeta  C     alpha A     B
+//     (1)  LyLy + (-1)  LxLy beta
 F77_NAME(dgemm)(
 		//	op(A), op(B),
-		"N", "N",
+		"T", "N",
 		// nrows of op(A), ncol ob(B), ncol op(A) = nrow(opB)
-  		&oneI, &oneI, &Nm1,
+  		&Nrep, &Nrep, &Ncov,
 		// alpha
-		&oneD,
-		// A, lda(A)
-		&YXVinvYX[Np1], &N,
-		// B, lda(B)
-		&YXVinvYX[1], &Nm1,
-		// beta
-  		&zeroD,
+		&moneD,
+		// A, lda(A), betahat
+		&copyLx[Nrep], &N,
+		// B, lda(B), LxLy
+		&YXVinvYX[Nrep], &N, // betaHat
+		// blasBeta
+  		&oneD,
 		// C, nrow(c)
-		&xybeta, &oneI);
-
-// total ssq
-YXVinvYX[0] -= xybeta;
-
+		YXVinvYX, &N);
 }
+
 
 /*
  * logL given xisqTausq
@@ -148,9 +162,9 @@ YXVinvYX[0] -= xybeta;
 
 double logLoneNugget(double xisqTausq){
 
-	double minusXisqTausq, zeroD=0.0, moneD=-1.0;
+	double minusXisqTausq, zeroD=0.0, oneD=1.0;
 	double *DYXVYX, result;
-	int oneI=1;
+	int oneI=1, D;
 
 	DYXVYX=YXVYXglobal;
 
@@ -161,7 +175,7 @@ double logLoneNugget(double xisqTausq){
 		L, &c
 	);
 
-	detTwo[0] = M_chm_factor_ldetL2(L);
+
 //Lx =
 M_cholmod_solve2(
 		CHOLMOD_L,
@@ -171,6 +185,7 @@ M_cholmod_solve2(
 		&YwkL, &EwkL,
 		&c);
 //DLx =
+/*
 M_cholmod_solve2(
 		CHOLMOD_D,
 		L,
@@ -178,10 +193,13 @@ M_cholmod_solve2(
 		&DLx,
 		&YwkD, &EwkD,
 		&c);
+DLx =	M_cholmod_copy_dense(Lx,&c);
+*/
 
 // cross product
 minusXisqTausq = -xisqTausq;
 
+// - LxLx
 // C := alpha*op( A )*op( B ) + beta*C,
 F77_NAME(dgemm)(
 		//	op(A), op(B),
@@ -193,7 +211,7 @@ F77_NAME(dgemm)(
 		// A, nrow(A)
   		Lx->x, &Nobs,
 		// B, nrow(B)
-		DLx->x, &Nobs,
+		Lx->x, &Nobs,
 		// beta
   		&zeroD,
 		// C, nrow(c)
@@ -202,28 +220,42 @@ F77_NAME(dgemm)(
 // add the cross prod of data
 F77_NAME(daxpy)(
 		&Nxysq,
-		&moneD,
+		&oneD,
 		YXYX,
 		&oneI,
 		DYXVYX,
 		&oneI);
 
+detTwo[0] = M_chm_factor_ldetL2(L);
+
 ssqFromXprod(
-		DYXVYX, // N by N
+		DYXVYX, // Nxy by Nxy
 		&detTwo[1],
-		Nxy);
+		Nxy, Nrep, copyLx);
 
+for(D=0;D<Nrep;++D){
+	// using result as temporary variable
+	result = log(DYXVYX[D*Nxy+D]);
 // ml
-logLtwo[0] = Nobs*log(DYXVYX[0]/Nobs) - detQ + 2*detTwo[0];
+logLtwo[D] = Nobs*result - Nobs*log(Nobs) + 2*detTwo[0] + YrepAdd[D];
 // reml
-logLtwo[1] = (Nobs-Nxy+1)*log(DYXVYX[0]/(Nobs-Nxy+1)) -
-		detQ + 2*detTwo[0] - 2*detTwo[1];
-
-if(Ltype){
-	result = logLtwo[1];
-} else {
-	result = logLtwo[0];
+logLtwo[Nrep+D] = (Nobs-Ncov)*result -
+		(Nobs-Ncov)*log(Nobs-Ncov) +
+		2*detTwo[0] - 2*detTwo[1]+ YrepAdd[D];
 }
+
+
+//  now using DYXVYX as temporary variable
+if(Ltype){
+	DYXVYX = &logLtwo[Nxy];
+} else {
+	DYXVYX = &logLtwo[0];
+}
+
+// find minimum element
+R_max_col(DYXVYX,&oneI, &Nrep,&D,&oneI);
+result = DYXVYX[D];
+
 return result;
 
 }
@@ -234,57 +266,109 @@ return result;
 SEXP gmrfLik(
 		SEXP QR,
 		SEXP obsCovR,
-		SEXP xisqTausq
+		SEXP xisqTausq,
+		SEXP YrepAddR
 		){
 
-	int DxisqTausq, NxisqTausq; // length(xisqTausq)
+	int DxisqTausq, NxisqTausq, Drep; // length(xisqTausq)
 	double	oneD=1.0, zeroD=0.0;
 	double *YXVYX, *determinant, *determinantForReml;
-	double *m2logL, *m2logReL;
+	double *m2logL, *m2logReL, *varHatMl, *varHatReml;
 	SEXP resultR;
 	CHM_DN obsCov;
 
 	Ltype=0; // set to 1 for reml
 
+	Nrep =length(YrepAddR);
+	YrepAdd = REAL(YrepAddR);
+
 	Nobs = INTEGER(GET_DIM(obsCovR))[0];
 	Nxy = INTEGER(GET_DIM(obsCovR))[1];
+	Ncov = Nxy - Nrep;
 	NxisqTausq = LENGTH(xisqTausq);
 	Nxysq = Nxy*Nxy;
 
+	resultR = PROTECT(allocVector(REALSXP, Nxysq*NxisqTausq + 6*Nrep*NxisqTausq));
 
 
-	resultR = PROTECT(allocVector(REALSXP, Nxysq*NxisqTausq + 4*NxisqTausq);
 	YXVYX = REAL(resultR);
+	determinant = &REAL(resultR)[Nxysq*NxisqTausq];
+	determinantForReml = &REAL(resultR)[Nxysq*NxisqTausq + Nrep*NxisqTausq];
+	m2logL = &REAL(resultR)[Nxysq*NxisqTausq + 2*Nrep*NxisqTausq];
+	m2logReL = &REAL(resultR)[Nxysq*NxisqTausq + 3*Nrep*NxisqTausq];
+	varHatMl = &REAL(resultR)[Nxysq*NxisqTausq + 4*Nrep*NxisqTausq];
+	varHatReml = &REAL(resultR)[Nxysq*NxisqTausq + 5*Nrep*NxisqTausq];
+
 	YXYX = (double *) calloc(Nxysq,sizeof(double));
-	determinant = &YXVYX[Nxysq*NxisqTausq];
-	determinantForReml = &YXVYX[(1+Nxysq)*NxisqTausq];
-	m2logL = &YXVYX[(2+Nxysq)*NxisqTausq];
-	m2logReL = &YXVYX[(3+Nxysq)*NxisqTausq];
+	logLtwo = (double *) calloc(2*Nrep,sizeof(double));
+	copyLx = (double *) calloc(Nxy*Nrep,sizeof(double));
 
 	Q = AS_CHM_SP(QR);
 	obsCov = AS_CHM_DN(obsCovR);
-
-
 	M_R_cholmod_start(&c);
 
 	// get some stuff ready
+
+	// allocate Lx
+	Lx = M_cholmod_copy_dense(obsCov,&c);
+
+	// likelihood without nugget
+
+	// YX Vinv YX
+	M_cholmod_sdmult(
+			Q,
+			0, &oneD, &zeroD, // transpose, scale, scale
+			obsCov,Lx,// in, out
+			&c);
+
+	// put t(obscov) Q obscov in result
+	F77_NAME(dgemm)(
+			//	op(A), op(B),
+			"T", "N",
+			// nrows of op(A), ncol ob(B), ncol op(A) = nrow(opB)
+	  		&Nxy, &Nxy, &Nobs,
+			// alpha
+			&oneD,
+			// A, nrow(A)
+			obsCov->x, &Nobs,
+			// B, nrow(B)
+	  		Lx->x, &Nobs,
+			// beta
+	  		&zeroD,
+			// C, nrow(c)
+			YXVYX, &Nxy);
+
+
 	// Q = P' L D L' P
 	L = M_cholmod_analyze(Q, &c);
 	M_cholmod_factorize(Q,L, &c);
 
-	obsCovRot = M_cholmod_solve(CHOLMOD_Pt, L,obsCov,&c);
-
-
-
-
-	// likelihood without nugget
-
 	// determinant
 	determinant[0] = M_chm_factor_ldetL2(L);
-	detQ = determinant[0];
+
+	ssqFromXprod(
+			YXVYX, // N by N
+			determinantForReml,
+			Nxy, Nrep,
+			copyLx);
+	for(Drep=0;Drep<Nrep;++Drep){
+		determinant[Drep] = determinant[0];
+		determinantForReml[Drep] = determinantForReml[0];
+
+	m2logL[Drep] = Nobs*log(YXVYX[Drep*Nxy+Drep]) - Nobs*log(Nobs) - determinant[0];
+
+	m2logReL[Drep] = (Nobs-Ncov)*log(YXVYX[Drep*Nxy+Drep]/(Nobs-Ncov)) +
+			determinantForReml[0] - determinant[0];
+
+	varHatMl[Drep] = YXVYX[Drep*Nxy+Drep]/Nobs;
+	varHatReml[Drep] = YXVYX[Drep*Nxy+Drep]/(Nobs-Ncov);
+	}
+	// now with xisqTausq
 
 
-	// cross product of data
+	obsCovRot = M_cholmod_solve(CHOLMOD_P, L,obsCov,&c);
+
+	// YXYX cross product of data
 	F77_NAME(dgemm)(
 			//	op(A), op(B),
 			"T", "N",
@@ -302,48 +386,12 @@ SEXP gmrfLik(
 			YXYX, &Nxy);
 
 
-	// allocate Lx
-	Lx = M_cholmod_copy_dense(obsCovRot,&c);
+// don't free Q because it's from an R object
+//	M_cholmod_free_sparse(&Q, &c);
 
-	// YX Vinv YX
-		M_cholmod_sdmult(
-				Q,
-				0, &oneD, &zeroD, // transpose, scale, scale
-				obsCov,Lx,// in, out
-				&c);
+// don't free obsCov because it's from an R object
+//	M_cholmod_free_dense(&obsCov, &c);
 
-
-
-
-	// put t(obscov) Q obscov in result
-	F77_NAME(dgemm)(
-			//	op(A), op(B),
-			"T", "N",
-			// nrows of op(A), ncol ob(B), ncol op(A) = nrow(opB)
-	  		&Nxy, &Nxy, &Nobs,
-			// alpha
-			&oneD,
-			// A, nrow(A)
-	  		Lx->x, &Nobs,
-			// B, nrow(B)
-			obsCov->x, &Nobs,
-			// beta
-	  		&zeroD,
-			// C, nrow(c)
-			YXVYX, &Nxy);
-
-	ssqFromXprod(
-			YXVYX, // N by N
-			determinantForReml,
-			Nxy);
-
-	m2logL[0] = Nobs*log(YXVYX[0]/Nobs) - determinant[0];
-
-	m2logReL[0] = (Nobs-Ncov)*log(YXVYX[0]/(Nobs-Ncov)) +
-			determinantForReml[0]- determinant[0];
-
-
-	// now with xisqTausq
 	for(DxisqTausq=1;DxisqTausq < NxisqTausq;++DxisqTausq){
 
 		YXVYXglobal = &YXVYX[DxisqTausq*Nxysq];
@@ -351,10 +399,17 @@ SEXP gmrfLik(
 		logLoneNugget(REAL(xisqTausq)[DxisqTausq]);
 
 		// assign global values into their correct spot
-		determinant[DxisqTausq]=detTwo[0];
-		determinantForReml[DxisqTausq]=detTwo[1];
-		m2logL[DxisqTausq] = logLtwo[0];
-		m2logReL[DxisqTausq] = logLtwo[1];
+
+		for(Drep=0;Drep<Nrep;++Drep){
+			determinant[DxisqTausq*Nrep+Drep]=detTwo[0];
+			determinantForReml[DxisqTausq*Nrep+Drep]=detTwo[1];
+
+		m2logL[DxisqTausq*Nrep+Drep]  =  logLtwo[Drep] - determinant[0];
+		m2logReL[DxisqTausq*Nrep+Drep] = logLtwo[Nrep+Drep] - determinant[0];
+
+		varHatMl[DxisqTausq*Nrep + Drep] = YXVYXglobal[Drep*Nxy+Drep]/Nobs;
+		varHatReml[DxisqTausq*Nrep + Drep] = YXVYXglobal[Drep*Nxy+Drep]/(Nobs-Ncov);
+		}
 
 	}
 
@@ -362,7 +417,7 @@ SEXP gmrfLik(
 	M_cholmod_free_dense(&obsCovRot, &c);
 
 	M_cholmod_free_dense(&Lx, &c);
-	M_cholmod_free_dense(&DLx, &c);
+
 
 // don't free Q because it's from an R object
 //	M_cholmod_free_sparse(&Q, &c);
@@ -370,7 +425,9 @@ SEXP gmrfLik(
 // don't free obsCov because it's from an R object
 //	M_cholmod_free_dense(&obsCov, &c);
 
+	free(copyLx);
 	free(YXYX);
+	free(logLtwo);
 	M_cholmod_free_dense(&YwkL, &c);
 	M_cholmod_free_dense(&YwkD, &c);
 	M_cholmod_free_dense(&EwkL, &c);
