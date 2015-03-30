@@ -100,8 +100,9 @@ loglikGmrfGivenQ = function(
         Vchol = update(Qchol, Q, mult=xisqtausq)
         detLhalf = determinant(Vchol,logarithm=TRUE)$modulus
         Vx = solve(Vchol, X,system='L')
-        
+#        print(crossprod(Vx))
         XXLxLx = XprimeX - xisqtausq * crossprod(Vx) 
+#        print(XXLxLx)
       } else { # no nugget 
         Vchol = NULL
         detLhalf = 0

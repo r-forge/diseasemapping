@@ -2,12 +2,12 @@ library('geostatsp')
 
 
 
-myraster = squareRaster(raster(extent(0,8000,0,6000), ncols=20,nrows=30))
+myraster = squareRaster(raster(extent(0,8000,0,6000), ncols=120,nrows=180))
 myNN = NNmat(myraster)
 myQ = maternGmrfPrec(myNN, 
     param=c(shape=2, oneminusar=0.1,
         conditionalVariance=1),
-    adjustEdges=FALSE)
+    adjustEdges=TRUE)
 
 themodel = attributes(myQ)$param[['theo']]
 maternShape = attributes(myQ)$param$theo['shape']
@@ -22,13 +22,74 @@ names(thecov)='x'
 beta.x=5
 theY = theU + beta.x*thecov
 
+
+
+
+
 obsCov = as.matrix(cbind(as.data.frame(theY), intercept=1, as.data.frame(thecov)))
 Nrep = 2
 obsCov = obsCov[,c(rep(1,Nrep), 2:ncol(obsCov))]
 
+Snugget = c(Inf,10^seq(3,-3,len=81))
+
+
+date()
+old=geostatsp:::loglikGmrfOneRange(
+    oneminusar=themodel['oneminusar'],
+    Yvec=obsCov[,(1:2)], Xmat=obsCov[,-(1:2)], 
+    NN=myNN, 
+    propNugget=1/Snugget,
+    shape=2,  boxcoxInterval=NULL,
+    reml=TRUE,
+    sumLogY = NULL,
+    adjustEdges=FALSE,
+    optimizer=FALSE)
+date()
+new= loglikGmrfOneRange(
+    oneminusar=themodel['oneminusar'],
+    Yvec=obsCov[,(1:2)], Xmat=obsCov[,-(1:2)], 
+    NN=myNN, 
+    propNugget=1/Snugget,
+    shape=2,
+    reml=TRUE,
+    sumLogY = NULL,
+    adjustEdges=FALSE,
+    optimizer=FALSE)
+date()
+
+
+
+newBc = loglikGmrfOneRange(
+    oneminusar=themodel['oneminusar'],
+    Yvec=obsCov[,1], Xmat=obsCov[,-(1:2)], 
+    NN=myNN, 
+    propNugget=1/Snugget,
+    fix.boxcox=FALSE,
+    shape=2,
+    reml=TRUE,
+    sumLogY = NULL,
+    adjustEdges=FALSE,
+    optimizer=FALSE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 YrepAdd = rep(0, Nrep)
 
-Snugget = c(Inf,10^seq(3,-3))
 Nnugget= length(Snugget)
 Nxy = ncol(obsCov)
 
@@ -165,14 +226,3 @@ ssq[-1,1,]
 
 
 
-
-old=geostatsp:::loglikGmrfOneRange(
-    oneminusar=themodel['oneminusar'],
-    Yvec=obsCov[,(1:2)], Xmat=obsCov[,-(1:2)], 
-    NN=myNN, 
-    propNugget=1/Snugget,
-    shape=2,  boxcoxInterval=NULL,
-    reml=TRUE,
-    sumLogY = NULL,
-    adjustEdges=FALSE,
-    optimizer=FALSE)

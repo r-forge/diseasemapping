@@ -1,12 +1,39 @@
+bceps = 0.01
+
+logLbc = function(bc, y, x, 
+    logy=log(y), 
+    xvx = crossprod(x),     
+    xvxinv = solve(xvx),
+    sumlogy = sum(logy)
+){
+
+  if(abs(bc)< bceps){
+    y = logy
+  } else if (abs(bc-1)>bceps){
+     y = exp(bc*logy)-1
+  }
+  twologj = -2*(sumlogy)*(bc-1)
+
+  
+  betaHat = xvxinv %*% crossprod(x, y)
+  ssq = y - x %*% betaHat
+  sum(ssq^2) + twologj
+  
+}
+
 loglikGmrfOneRange = function(
     oneminusar,
     Yvec, Xmat, NN, propNugget=0,
-    shape=1,  Nboxcox=NULL,
+    shape=1,
+    boxcox=1,
+    fix.boxcox=TRUE,
+    Nboxcox=5,
     reml=TRUE,
     sumLogY = NULL,
     adjustEdges=FALSE,
     optimizer=FALSE) {
   
+
   Q =  maternGmrfPrec(NN,
       param=c(shape=as.vector(shape),
           oneminusar=as.vector(oneminusar[1]),
@@ -20,8 +47,49 @@ loglikGmrfOneRange = function(
   Ny = ncol(Yvec)
   if(is.null(Ny))
     Ny = 1
+  
+  if(!fix.boxcox){
+    if(Ny != 1) warning('cant do box-cox with more than one dataset')
+    if(any(Yvec)<0) warning('cant do box-cox with negatives')
+    logy = log(Yvec)
+    xvx = crossprod(Xmat)
+    boxcox = optimize(
+        logLbc, interval=c(-1.5, 2.5),
+        y=Yvec, x=Xmat,
+        logy = logy, xvx = xvx, 
+        xvxinv=solve(xvx),
+        sumlogy = sum(logy)
+    )$min
+    boxcox = round(boxcox, 1)
+    Sboxcox = seq(from= boxcox -0.1*Nboxcox, by=0.1, len=2*Nboxcox+1 )
+  } else {
+    Sboxcox = boxcox
+  }
+  
+  if(length(Sboxcox) == 1 | Ny > 1) {
+    YrepAdd = rep(0, Ny)
+  } else {
+    YrepAdd = rep(NA, Ny)
+    theOnes = abs(Sboxcox-1) < bceps
+    logy = log(Yvec)
+    sumlogy = sum(logy)
+    YrepAdd[theOnes] = 1
+    YrepAdd[!theOnes] = -2*(sumlogy)*(
+          Sboxcox[!theOnes]-1
+          )
+    Yorig = Yvec
+    Yvec = NULL
+    for(D in Sboxcox)
+      Yvec = cbind(Yvec, exp(bc*logy)-1)
+    
+    theZeros = abs(Sboxcox) < bceps
+    Yvec[,theZeros] = logy
+    YrepAdd[theZeros] = 2*(sumlogy)
+    Yvec[,theOnes] = Yorig
+  }
+  
+  
 
-  YrepAdd = rep(0, Ny)
   obsCov = as.matrix(cbind(Yvec, Xmat))
 
   fromC = .Call('gmrfLik',
@@ -102,7 +170,7 @@ loglikGmrfOneRange = function(
     
     res = drop(res)
     
-  }
+
   attributes(res)$Qinfo = thepar
   
   res
