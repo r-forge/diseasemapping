@@ -1,3 +1,4 @@
+
 bceps = 0.01
 
 logLbc = function(bc, y, x, 
@@ -44,13 +45,13 @@ loglikGmrfOneRange = function(
   
   propNugget = sort(unique(c(0, propNugget)))
   
+  Yvec = as.matrix(Yvec)
   Ny = ncol(Yvec)
-  if(is.null(Ny))
-    Ny = 1
+  Nobs = nrow(Yvec)
   
   if(!fix.boxcox){
     if(Ny != 1) warning('cant do box-cox with more than one dataset')
-    if(any(Yvec)<0) warning('cant do box-cox with negatives')
+    if(any(Yvec<0)) warning('cant do box-cox with negatives')
     logy = log(Yvec)
     xvx = crossprod(Xmat)
     boxcox = optimize(
@@ -69,7 +70,7 @@ loglikGmrfOneRange = function(
   if(length(Sboxcox) == 1 | Ny > 1) {
     YrepAdd = rep(0, Ny)
   } else {
-    YrepAdd = rep(NA, Ny)
+    YrepAdd = rep(NA, length(Sboxcox))
     theOnes = abs(Sboxcox-1) < bceps
     logy = log(Yvec)
     sumlogy = sum(logy)
@@ -77,15 +78,16 @@ loglikGmrfOneRange = function(
     YrepAdd[!theOnes] = -2*(sumlogy)*(
           Sboxcox[!theOnes]-1
           )
-    Yorig = Yvec
-    Yvec = NULL
+    Ymat = matrix(NA, nrow(Yvec), length(Sboxcox))
+    colnames(Ymat) = as.character(Sboxcox)
     for(D in Sboxcox)
-      Yvec = cbind(Yvec, exp(bc*logy)-1)
+      Ymat[,as.character(D)] = exp(D*logy)-1
     
     theZeros = abs(Sboxcox) < bceps
-    Yvec[,theZeros] = logy
+    Ymat[,theZeros] = logy
     YrepAdd[theZeros] = 2*(sumlogy)
-    Yvec[,theOnes] = Yorig
+    Ymat[,theOnes] = Yvec
+    Yvec = Ymat
   }
   
   

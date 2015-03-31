@@ -391,7 +391,31 @@ SEXP gmrfLik(
 
 // don't free obsCov because it's from an R object
 //	M_cholmod_free_dense(&obsCov, &c);
+	M_cholmod_free_factor(&L, &c);
+	M_cholmod_free_dense(&obsCovRot, &c);
 
+	M_cholmod_free_dense(&Lx, &c);
+
+
+// don't free Q because it's from an R object
+//	M_cholmod_free_sparse(&Q, &c);
+
+// don't free obsCov because it's from an R object
+//	M_cholmod_free_dense(&obsCov, &c);
+
+	free(copyLx);
+	free(YXYX);
+	free(logLtwo);
+	M_cholmod_free_dense(&YwkL, &c);
+	M_cholmod_free_dense(&YwkD, &c);
+	M_cholmod_free_dense(&EwkL, &c);
+	M_cholmod_free_dense(&EwkD, &c);
+
+	M_cholmod_finish(&c);
+
+	UNPROTECT(1);
+	return resultR;
+}
 	for(DxisqTausq=1;DxisqTausq < NxisqTausq;++DxisqTausq){
 
 		YXVYXglobal = &YXVYX[DxisqTausq*Nxysq];

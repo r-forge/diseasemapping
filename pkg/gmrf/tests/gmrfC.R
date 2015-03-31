@@ -2,12 +2,12 @@ library('geostatsp')
 
 
 
-myraster = squareRaster(raster(extent(0,8000,0,6000), ncols=120,nrows=180))
+myraster = squareRaster(raster(extent(0,8000,0,6000), ncols=80,nrows=120))
 myNN = NNmat(myraster)
 myQ = maternGmrfPrec(myNN, 
     param=c(shape=2, oneminusar=0.1,
         conditionalVariance=1),
-    adjustEdges=TRUE)
+    adjustEdges=FALSE)
 
 themodel = attributes(myQ)$param[['theo']]
 maternShape = attributes(myQ)$param$theo['shape']
@@ -23,7 +23,8 @@ beta.x=5
 theY = theU + beta.x*thecov
 
 
-
+dyn.unload('../src/gmrfLik.so')
+dyn.load('../src/gmrfLik.so')
 
 
 obsCov = as.matrix(cbind(as.data.frame(theY), intercept=1, as.data.frame(thecov)))
@@ -61,7 +62,8 @@ date()
 
 newBc = loglikGmrfOneRange(
     oneminusar=themodel['oneminusar'],
-    Yvec=obsCov[,1], Xmat=obsCov[,-(1:2)], 
+    Yvec=exp(obsCov[,1]),  
+  Xmat=obsCov[,-(1:2)], 
     NN=myNN, 
     propNugget=1/Snugget,
     fix.boxcox=FALSE,
@@ -94,8 +96,7 @@ Nnugget= length(Snugget)
 Nxy = ncol(obsCov)
 
 obsCov = as.matrix(obsCov)
-dyn.unload('../src/gmrfLik.so')
-dyn.load('../src/gmrfLik.so')
+
 
 stuff1 = .Call('gmrfLik',myQ, obsCov[,-2], Snugget, as.double(YrepAdd[-2]))
 
