@@ -1,8 +1,8 @@
 /*
  * needs modified matrix package
- * svn checkout svn://svn.r-forge.r-project.org/svnroot/matrix/pkg/Matrix_1.1-5-branch
- * add line     RREGDEF(cholmod_solve2);
- *  to  Matrix_1.1-5-branch/src/init.c
+ * svn checkout svn://svn.r-forge.r-project.org/svnroot/matrix/pkg/Matrix
+ R CMD build --no-build-vignettes Matrix
+  because I don't have texi2pdf
  */
 
 #include<R.h>
@@ -12,54 +12,19 @@
 #include<R_ext/Print.h>
 #include<R_ext/Utils.h>
 #include<R_ext/Rdynload.h>
-#include<Matrix.h>
+//#include<Matrix.h>
 #include<Matrix_stubs.c>
+
+static
+double Brent_fmin(double ax, double bx, double (*f)(double, void *),
+		  void *info, double tol);
+
 
 /*
 	a function for interfacing to the Matrix package
 	hopefully this will be in Matrix_stubs.c soon
 		*/
-attribute_hidden int M_cholmod_solve2(
-		int sys,
-		CHM_FR L,
-		CHM_DN B,//right
-		CHM_DN *X,//solution
-		CHM_DN *Yworkspace,
-		CHM_DN *Eworkspace,
-		cholmod_common *c)
-{
-    static int(*fun)(
-    		int,
-    		const_CHM_FR, // L
-    		const_CHM_DN, // B
-    		CHM_SP, // Bset
-			CHM_DN*, // X
-			CHM_DN*, // Xset
-			CHM_DN*, // Y
-			CHM_DN*, // E
-			cholmod_common*) = NULL;
 
-    if (fun == NULL)
-    	fun = (int(*)(int,
-    		const_CHM_FR, // L
-    		const_CHM_DN, // B
-    		CHM_SP, // Bset
-			CHM_DN*, // X
-			CHM_DN*, // Xset
-			CHM_DN*, // Y
-			CHM_DN*, // E
-			cholmod_common*)
-	    )R_GetCCallable("Matrix", "cholmod_solve2");
-
-    return fun(
-    		sys,
-    		L,
-			B,NULL,
-			X, NULL,
-			Yworkspace,
-			Eworkspace,
-			c);
-}
 
 /*
  *  global variables, so that an optimizer can be build eventually
@@ -69,10 +34,11 @@ CHM_FR L;
 CHM_DN obsCovRot, Lx;
 CHM_DN YwkL, EwkL, YwkD, EwkD; // workspaces
 cholmod_common c;
-double *logLtwo, detTwo[2], *YXVYXglobal, *YXYX, *YrepAdd;
+double *logLtwo, detTwo[2], *YXVYXglobal, *YXVYXstart, *YXYX, *YrepAdd;
 double *copyLx;
 int Nxy, Nobs, Ncov, Nrep, Nxysq;
 int Ltype;
+int DxisqTausq, NxisqTausq;
 
 /*
  * compute sums of squares from cross products
@@ -251,6 +217,29 @@ return result;
 
 }
 
+// logL for calling form Brent_fmin
+// this needs YXVYXstart as well as the previous
+// function's global arguments
+double logLoneLoggedNugget(double logXisqTausq){
+
+	double result;
+
+	if(DxisqTausq>=NxisqTausq){
+		DxisqTausq=1;
+	}
+	YXVYXglobal = &YXVYXstart[DxisqTausq*Nxysq];
+	result = logLoneNugget(exp(logXisqTausq));
+
+	// copy over determinants
+	YXVYXstart[Nxysq*NxisqTausq+DxisqTausq]=detTwo[0];
+	YXVYXstart[Nxysq*NxisqTausq + Nrep*NxisqTausq+DxisqTausq] = detTwo[1];
+
+	// put xisqTausq in 7th column
+	YXVYXstart[Nxysq*NxisqTausq + 6*Nrep*NxisqTausq+DxisqTausq] = exp(logXisqTausq);
+
+	return(result);
+}
+
 /*
  * callable function from R
  */
@@ -261,13 +250,14 @@ SEXP gmrfLik(
 		SEXP YrepAddR
 		){
 
-	int DxisqTausq, NxisqTausq, Drep; // length(xisqTausq)
+	int Drep, dooptim; // length(xisqTausq)
 	double	oneD=1.0, zeroD=0.0;
 	double *YXVYX, *determinant, *determinantForReml;
-	double *m2logL, *m2logReL, *varHatMl, *varHatReml;
+	double *m2logL, *m2logReL, *varHatMl, *varHatReml, *resultXisqTausq;
 	SEXP resultR;
 	CHM_DN obsCov;
 
+	dooptim=0; // set to 1 for optimization
 	Ltype=0; // set to 1 for reml
 
 	Nrep =LENGTH(YrepAddR);
@@ -279,7 +269,7 @@ SEXP gmrfLik(
 	NxisqTausq = LENGTH(xisqTausq);
 	Nxysq = Nxy*Nxy;
 
-	resultR = PROTECT(allocVector(REALSXP, Nxysq*NxisqTausq + 7*Nrep*NxisqTausq));
+	resultR = PROTECT(allocVector(REALSXP, Nxysq*NxisqTausq + 8*Nrep*NxisqTausq));
 
 
 	YXVYX = REAL(resultR);
@@ -289,6 +279,7 @@ SEXP gmrfLik(
 	m2logReL = &REAL(resultR)[Nxysq*NxisqTausq + 3*Nrep*NxisqTausq];
 	varHatMl = &REAL(resultR)[Nxysq*NxisqTausq + 4*Nrep*NxisqTausq];
 	varHatReml = &REAL(resultR)[Nxysq*NxisqTausq + 5*Nrep*NxisqTausq];
+	resultXisqTausq = &REAL(resultR)[Nxysq*NxisqTausq + 6*Nrep*NxisqTausq];
 
 	YXYX = (double *) calloc(Nxysq,sizeof(double));
 	logLtwo = (double *) calloc(2*Nrep,sizeof(double));
@@ -376,7 +367,12 @@ SEXP gmrfLik(
 			// C, nrow(&c)
 			YXYX, &Nxy);
 
+	if(dooptim){
+		YXVYXstart = YXVYX;
+		DxisqTausq=1;
+// do optimizer
 
+	} else {
 
 	for(DxisqTausq=1;DxisqTausq < NxisqTausq;++DxisqTausq){
 
@@ -397,6 +393,7 @@ SEXP gmrfLik(
 		varHatReml[DxisqTausq*Nrep + Drep] = YXVYXglobal[Drep*Nxy+Drep]/(Nobs-Ncov);
 		}
 
+	}
 	}
 
 	M_cholmod_free_factor(&L, &c);

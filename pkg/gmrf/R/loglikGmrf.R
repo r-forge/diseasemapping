@@ -116,13 +116,15 @@ loglikGmrfOneRange = function(
       dim=c(ncol(obsCov),ncol(obsCov),length(propNugget)),
       dimnames=list(colnames(obsCov), colnames(obsCov), propNugget))
    
+  mlColNames = c('det','detreml','m2logL.ml', 'm2logL.reml', 
+      'varMl', 'varReml', 'xisqTausq')
   ml = array(
       fromC[-xyseq], 
-      dim=c(Ny, length(propNugget), 6),
+      dim=c(Ny, length(propNugget), length(mlColNames)),
       dimnames=list(
           colnames(obsCov)[1:Ny], 
-          propNugget, 
-          c('det','detreml','m2logL.ml', 'm2logL.reml', 'varMl', 'varReml'))
+          propNugget, mlColNames
+          )
   )
   ml = abind::abind(ml, 
       propNugget = matrix(propNugget, Ny, length(propNugget), byrow=TRUE), 
