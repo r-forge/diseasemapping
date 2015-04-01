@@ -113,6 +113,7 @@ void ssqFromXprod(
 	for(D=0;D<Ncov;++D){
 		*detXVinvX  += log(xvx[D*N+D]);
 	}
+	*detXVinvX *= 2;
 // then invert
 F77_NAME(dpotri)("L",
 		&Ncov,
@@ -184,17 +185,7 @@ M_cholmod_solve2(
 		&Lx,
 		&YwkL, &EwkL,
 		&c);
-//DLx =
-/*
-M_cholmod_solve2(
-		CHOLMOD_D,
-		L,
-		Lx,
-		&DLx,
-		&YwkD, &EwkD,
-		&c);
-DLx =	M_cholmod_copy_dense(Lx,&c);
-*/
+
 
 // cross product
 minusXisqTausq = -xisqTausq;
@@ -237,24 +228,24 @@ for(D=0;D<Nrep;++D){
 	// using result as temporary variable
 	result = log(DYXVYX[D*Nxy+D]);
 // ml
-logLtwo[D] = Nobs*result - Nobs*log(Nobs) + 2*detTwo[0] + YrepAdd[D];
+logLtwo[D] = Nobs*result - Nobs*log(Nobs) + detTwo[0] - YrepAdd[D];
 // reml
 logLtwo[Nrep+D] = (Nobs-Ncov)*result -
 		(Nobs-Ncov)*log(Nobs-Ncov) +
-		2*detTwo[0] - 2*detTwo[1]+ YrepAdd[D];
+		detTwo[0] - detTwo[1] - YrepAdd[D];
 }
 
 
 //  now using DYXVYX as temporary variable
-if(Ltype){
-	DYXVYX = &logLtwo[Nxy];
-} else {
-	DYXVYX = &logLtwo[0];
-}
+//if(Ltype){
+//	DYXVYX = &logLtwo[Nxy];
+//} else {
+//	DYXVYX = &logLtwo[0];
+//}
 
 // find minimum element
-R_max_col(DYXVYX,&oneI, &Nrep,&D,&oneI);
-result = DYXVYX[D];
+//R_max_col(DYXVYX,&oneI, &Nrep,&D,&oneI);
+//result = DYXVYX[D];
 
 return result;
 
@@ -279,7 +270,7 @@ SEXP gmrfLik(
 
 	Ltype=0; // set to 1 for reml
 
-	Nrep =length(YrepAddR);
+	Nrep =LENGTH(YrepAddR);
 	YrepAdd = REAL(YrepAddR);
 
 	Nobs = INTEGER(GET_DIM(obsCovR))[0];
@@ -288,7 +279,7 @@ SEXP gmrfLik(
 	NxisqTausq = LENGTH(xisqTausq);
 	Nxysq = Nxy*Nxy;
 
-	resultR = PROTECT(allocVector(REALSXP, Nxysq*NxisqTausq + 6*Nrep*NxisqTausq));
+	resultR = PROTECT(allocVector(REALSXP, Nxysq*NxisqTausq + 7*Nrep*NxisqTausq));
 
 
 	YXVYX = REAL(resultR);
@@ -351,21 +342,21 @@ SEXP gmrfLik(
 			determinantForReml,
 			Nxy, Nrep,
 			copyLx);
+
 	for(Drep=0;Drep<Nrep;++Drep){
 		determinant[Drep] = determinant[0];
 		determinantForReml[Drep] = determinantForReml[0];
 
-	m2logL[Drep] = Nobs*log(YXVYX[Drep*Nxy+Drep]) - Nobs*log(Nobs) - determinant[0];
+	m2logL[Drep] = Nobs*log(YXVYX[Drep*Nxy+Drep]) - Nobs*log(Nobs) -
+			determinant[0] - YrepAdd[Drep];
 
 	m2logReL[Drep] = (Nobs-Ncov)*log(YXVYX[Drep*Nxy+Drep]/(Nobs-Ncov)) +
-			determinantForReml[0] - determinant[0];
+			determinantForReml[0] - determinant[0] - YrepAdd[Drep];
 
 	varHatMl[Drep] = YXVYX[Drep*Nxy+Drep]/Nobs;
 	varHatReml[Drep] = YXVYX[Drep*Nxy+Drep]/(Nobs-Ncov);
 	}
 	// now with xisqTausq
-
-
 	obsCovRot = M_cholmod_solve(CHOLMOD_P, L,obsCov,&c);
 
 	// YXYX cross product of data
@@ -386,36 +377,7 @@ SEXP gmrfLik(
 			YXYX, &Nxy);
 
 
-// don't free Q because it's from an R object
-//	M_cholmod_free_sparse(&Q, &c);
 
-// don't free obsCov because it's from an R object
-//	M_cholmod_free_dense(&obsCov, &c);
-	M_cholmod_free_factor(&L, &c);
-	M_cholmod_free_dense(&obsCovRot, &c);
-
-	M_cholmod_free_dense(&Lx, &c);
-
-
-// don't free Q because it's from an R object
-//	M_cholmod_free_sparse(&Q, &c);
-
-// don't free obsCov because it's from an R object
-//	M_cholmod_free_dense(&obsCov, &c);
-
-	free(copyLx);
-	free(YXYX);
-	free(logLtwo);
-	M_cholmod_free_dense(&YwkL, &c);
-	M_cholmod_free_dense(&YwkD, &c);
-	M_cholmod_free_dense(&EwkL, &c);
-	M_cholmod_free_dense(&EwkD, &c);
-
-	M_cholmod_finish(&c);
-
-	UNPROTECT(1);
-	return resultR;
-}
 	for(DxisqTausq=1;DxisqTausq < NxisqTausq;++DxisqTausq){
 
 		YXVYXglobal = &YXVYX[DxisqTausq*Nxysq];

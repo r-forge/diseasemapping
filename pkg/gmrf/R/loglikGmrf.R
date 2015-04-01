@@ -9,16 +9,19 @@ logLbc = function(bc, y, x,
 ){
 
   if(abs(bc)< bceps){
-    y = logy
+    ybc = logy
   } else if (abs(bc-1)>bceps){
-     y = exp(bc*logy)-1
+     ybc = (exp(bc*logy)-1)/bc
+  } else {
+    ybc = y
   }
-  twologj = -2*(sumlogy)*(bc-1)
+  twologj = 2*(sumlogy)*(bc-1)
 
   
-  betaHat = xvxinv %*% crossprod(x, y)
-  ssq = y - x %*% betaHat
-  sum(ssq^2) + twologj
+  betaHat = xvxinv %*% crossprod(x, ybc)
+  ssq = ybc - x %*% betaHat
+
+  length(y)*log(sum(ssq^2)) - twologj
   
 }
 
@@ -34,7 +37,8 @@ loglikGmrfOneRange = function(
     adjustEdges=FALSE,
     optimizer=FALSE) {
   
-
+  boxcoxStep = 0.05
+  
   Q =  maternGmrfPrec(NN,
       param=c(shape=as.vector(shape),
           oneminusar=as.vector(oneminusar[1]),
@@ -62,7 +66,7 @@ loglikGmrfOneRange = function(
         sumlogy = sum(logy)
     )$min
     boxcox = round(boxcox, 1)
-    Sboxcox = seq(from= boxcox -0.1*Nboxcox, by=0.1, len=2*Nboxcox+1 )
+    Sboxcox = seq(from= boxcox -boxcoxStep*Nboxcox, by=boxcoxStep, len=2*Nboxcox+1 )
   } else {
     Sboxcox = boxcox
   }
@@ -70,34 +74,40 @@ loglikGmrfOneRange = function(
   if(length(Sboxcox) == 1 | Ny > 1) {
     YrepAdd = rep(0, Ny)
   } else {
-    YrepAdd = rep(NA, length(Sboxcox))
     theOnes = abs(Sboxcox-1) < bceps
+    theZeros = abs(Sboxcox) < bceps
+    
     logy = log(Yvec)
-    sumlogy = sum(logy)
-    YrepAdd[theOnes] = 1
-    YrepAdd[!theOnes] = -2*(sumlogy)*(
-          Sboxcox[!theOnes]-1
-          )
+
     Ymat = matrix(NA, nrow(Yvec), length(Sboxcox))
     colnames(Ymat) = as.character(Sboxcox)
+
     for(D in Sboxcox)
-      Ymat[,as.character(D)] = exp(D*logy)-1
+      Ymat[,as.character(D)] = (exp(D*logy)-1)/D
     
-    theZeros = abs(Sboxcox) < bceps
     Ymat[,theZeros] = logy
-    YrepAdd[theZeros] = 2*(sumlogy)
+    Ymat[,theOnes] = Yvec
+    
+    sumlogy = sum(logy)
+    
+    YrepAdd = 2*(sumlogy)*(
+          Sboxcox -1
+          )
+
     Ymat[,theOnes] = Yvec
     Yvec = Ymat
+    Ny = ncol(Yvec)
   }
   
   
 
   obsCov = as.matrix(cbind(Yvec, Xmat))
 
+  xisqTausq = 1/propNugget 
   fromC = .Call('gmrfLik',
       Q, 
       obsCov, 
-      1/propNugget, 
+      xisqTausq, 
       as.double(YrepAdd))
 
   xyseq = seq(1, length(propNugget)*ncol(obsCov)^2)
