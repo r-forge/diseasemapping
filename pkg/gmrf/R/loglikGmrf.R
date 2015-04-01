@@ -1,5 +1,5 @@
 
-bceps = 0.01
+bceps = 0.0001
 
 logLbc = function(bc, y, x, 
     logy=log(y), 
@@ -30,14 +30,13 @@ loglikGmrfOneRange = function(
     Yvec, Xmat, NN, propNugget=0,
     shape=1,
     boxcox=1,
-    fix.boxcox=TRUE,
-    Nboxcox=5,
+    fixBoxcox=TRUE,
+    boxcoxSeq=c(len=11, by=0.01),
     reml=TRUE,
     sumLogY = NULL,
     adjustEdges=FALSE,
     optimizer=FALSE) {
   
-  boxcoxStep = 0.05
   
   Q =  maternGmrfPrec(NN,
       param=c(shape=as.vector(shape),
@@ -53,7 +52,7 @@ loglikGmrfOneRange = function(
   Ny = ncol(Yvec)
   Nobs = nrow(Yvec)
   
-  if(!fix.boxcox){
+  if(!fixBoxcox){
     if(Ny != 1) warning('cant do box-cox with more than one dataset')
     if(any(Yvec<0)) warning('cant do box-cox with negatives')
     logy = log(Yvec)
@@ -65,8 +64,10 @@ loglikGmrfOneRange = function(
         xvxinv=solve(xvx),
         sumlogy = sum(logy)
     )$min
-    boxcox = round(boxcox, 1)
-    Sboxcox = seq(from= boxcox -boxcoxStep*Nboxcox, by=boxcoxStep, len=2*Nboxcox+1 )
+    Nboxcox = ceiling(boxcoxSeq['len']-1)/2
+    Sboxcox = seq(from= boxcox - boxcoxSeq['by']*Nboxcox, by=boxcoxSeq['by'], len=2*Nboxcox+1 )
+    Sboxcox = round(Sboxcox/boxcoxSeq['by'])*boxcoxSeq['by']
+    Sboxcox = sort(unique(Sboxcox))
   } else {
     Sboxcox = boxcox
   }
@@ -114,7 +115,7 @@ loglikGmrfOneRange = function(
   ssq=array(fromC[xyseq], 
       dim=c(ncol(obsCov),ncol(obsCov),length(propNugget)),
       dimnames=list(colnames(obsCov), colnames(obsCov), propNugget))
-
+   
   ml = array(
       fromC[-xyseq], 
       dim=c(Ny, length(propNugget), 6),
@@ -123,6 +124,30 @@ loglikGmrfOneRange = function(
           propNugget, 
           c('det','detreml','m2logL.ml', 'm2logL.reml', 'varMl', 'varReml'))
   )
+  ml = abind::abind(ml, 
+      propNugget = matrix(propNugget, Ny, length(propNugget), byrow=TRUE), 
+          along=3)
+  
+  if(length(Sboxcox)>1){
+    
+
+    bestBC = apply(ml[,,'m2logL.ml'], 2, which.min )
+    newml = NULL
+    newssq = NULL
+    
+    Scov = c(NA,seq(Ny+1, ncol(obsCov)))
+    
+    for(Dbc in 1:length(bestBC)){
+      
+      newml = rbind(newml, ml[bestBC[Dbc],Dbc,])
+      
+      Scov[1] = bestBC[Dbc]
+      newssq = abind::abind(newssq, ssq[Scov, Scov,Dbc],along=3)
+    }
+    dimnames(newssq)[[3]] = rownames(newml) = dimnames(ml)[[2]]
+    newml = cbind(newml, boxcox=Sboxcox[bestBC])
+    
+  }
   
   pnMat = matrix(
       propNugget, Ny, length(propNugget),

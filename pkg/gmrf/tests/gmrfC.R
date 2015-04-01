@@ -21,6 +21,7 @@ values(thecov) = c(rep(0,ncell(thecov)/2),
 names(thecov)='x'
 beta.x=5
 theY = theU + beta.x*thecov+4
+values(theY) = rnorm(ncell(theY), mean=values(theY), sd=sqrt(0.1))
 
 
 dyn.unload('../src/gmrfLik.so')
@@ -46,6 +47,8 @@ old=geostatsp:::loglikGmrfOneRange(
     adjustEdges=FALSE,
     optimizer=FALSE)
 date()
+
+
 new= loglikGmrfOneRange(
     oneminusar=themodel['oneminusar'],
     Yvec=obsCov[,(1:2)], Xmat=obsCov[,-(1:2)], 
@@ -57,17 +60,22 @@ new= loglikGmrfOneRange(
     adjustEdges=FALSE,
     optimizer=FALSE)
 date()
+plot(log10(new['propNugget',1,-1]), new['m2logL.ml',1,-1])
+lines(log10(old['propNugget',1,-1]), old['m2logL.ml',1,-1]-ncell(theY),col='blue')
 
 
 
+
+dyn.unload('../src/gmrfLik.so')
+dyn.load('../src/gmrfLik.so')
+obsCov = as.matrix(cbind(as.data.frame(theY), intercept=1, as.data.frame(thecov)))
 newBc = loglikGmrfOneRange(
     oneminusar=themodel['oneminusar'],
-    Yvec=exp(obsCov[,1]),  
+    Yvec=exp(as.data.frame(theY)[,1]),  
   Xmat=as.matrix(cbind( intercept=1, as.data.frame(thecov))), 
     NN=myNN, 
     propNugget=1/Snugget,
-    fix.boxcox=FALSE,
-    Nboxcox=5,
+    fixBoxcox=FALSE,
     shape=2,
     reml=TRUE,
     sumLogY = NULL,
@@ -75,10 +83,9 @@ newBc = loglikGmrfOneRange(
     optimizer=FALSE)
 
 
+plot(log10(newBc['propNugget',1,-1]), newBc['m2logL.ml',1,-1])
 
 
-dyn.unload('../src/gmrfLik.so')
-dyn.load('../src/gmrfLik.so')
 
  
 

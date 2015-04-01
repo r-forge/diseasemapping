@@ -237,15 +237,15 @@ logLtwo[Nrep+D] = (Nobs-Ncov)*result -
 
 
 //  now using DYXVYX as temporary variable
-//if(Ltype){
-//	DYXVYX = &logLtwo[Nxy];
-//} else {
-//	DYXVYX = &logLtwo[0];
-//}
+if(Ltype){
+	DYXVYX = &logLtwo[Nxy];
+} else {
+	DYXVYX = &logLtwo[0];
+}
 
 // find minimum element
-//R_max_col(DYXVYX,&oneI, &Nrep,&D,&oneI);
-//result = DYXVYX[D];
+R_max_col(DYXVYX,&oneI, &Nrep,&D,&oneI);
+result = DYXVYX[D];
 
 return result;
 
