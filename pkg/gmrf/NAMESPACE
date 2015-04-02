@@ -2,3 +2,4 @@ import(
   geostatsp,
   Matrix
 )
+useDynLib("gmrf")
