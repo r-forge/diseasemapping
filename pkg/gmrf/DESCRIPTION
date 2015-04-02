@@ -5,6 +5,7 @@ Title: gmrf
 Description: stuff
 Author: Patrick Brown <patrick.brown@utoronto.ca>
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
-Depends: R (>= 2.15.0), geostatsp, Matrix (>= 1.2.0)
-LinkingTo: Matrix
+Depends: R (>= 2.15.0), Matrix (>= 1.2.0), geostatsp
+Imports:  abind, raster
+LinkingTo: Matrix (>= 1.2.0)
 License: GPL (>=2)
