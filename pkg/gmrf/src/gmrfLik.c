@@ -53,7 +53,7 @@ void ssqFromXprod(
 	int oneI=1, infoCholXX, infoInvXX, Ncov;
 	int D;
 	double	oneD=1.0, moneD = -1.0,zeroD=0.0;
-	double xybeta, *xvx;
+	double *xvx;
 
 	/// copy of LyLx
 	Ncov = N*Nrep;
@@ -132,7 +132,7 @@ double logLoneNugget(double xisqTausq, void *nothing){
 	double *DYXVYX, result;
 	int oneI=1, D;
 	double *determinant, *determinantForReml,
-		*m2logL, *m2logReL, resultXisqTausq;
+		*m2logL, *m2logReL;
 
 	determinant = &YXVYXglobal[Nxysq*NxisqTausq+DxisqTausq*Nrep];
 	determinantForReml = &YXVYXglobal[Nxysq*NxisqTausq + Nrep*NxisqTausq+DxisqTausq*Nrep];
