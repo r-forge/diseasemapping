@@ -1,8 +1,8 @@
 /*
  * needs modified matrix package
- * svn checkout svn://svn.r-forge.r-project.org/svnroot/matrix/pkg/Matrix
+ * svn checkout svn://svn.r-forge.r-project.org/svnroot/matrix/pkg/Matrix Matrix
  R CMD build --no-build-vignettes Matrix
-  because I don't have texi2pdf
+ no vignettes  because I don't have texi2pdf
  */
 
 #include<R.h>
@@ -12,10 +12,9 @@
 #include<R_ext/Print.h>
 #include<R_ext/Utils.h>
 #include<R_ext/Rdynload.h>
-//#include<Matrix.h>
+//#include<Matrix.h> it's in matrix_stubs.c
 #include<Matrix_stubs.c>
 
-static
 double Brent_fmin(double ax, double bx, double (*f)(double, void *),
 		  void *info, double tol);
 
@@ -34,7 +33,7 @@ CHM_FR L;
 CHM_DN obsCovRot, Lx;
 CHM_DN YwkL, EwkL, YwkD, EwkD; // workspaces
 cholmod_common c;
-double *logLtwo, detTwo[2], *YXVYXglobal, *YXVYXstart, *YXYX, *YrepAdd;
+double *YXVYXglobal,  *YXYX, *YrepAdd;
 double *copyLx;
 int Nxy, Nobs, Ncov, Nrep, Nxysq;
 int Ltype;
@@ -127,13 +126,22 @@ F77_NAME(dgemm)(
 // YXVYXglobal, YXYX, Nxy, Nobs,
  */
 
-double logLoneNugget(double xisqTausq){
+double logLoneNugget(double xisqTausq, void *nothing){
 
 	double minusXisqTausq, zeroD=0.0, oneD=1.0;
 	double *DYXVYX, result;
 	int oneI=1, D;
+	double *determinant, *determinantForReml,
+		*m2logL, *m2logReL, resultXisqTausq;
 
-	DYXVYX=YXVYXglobal;
+	determinant = &YXVYXglobal[Nxysq*NxisqTausq+DxisqTausq*Nrep];
+	determinantForReml = &YXVYXglobal[Nxysq*NxisqTausq + Nrep*NxisqTausq+DxisqTausq*Nrep];
+	m2logL = &YXVYXglobal[Nxysq*NxisqTausq + 2*Nrep*NxisqTausq+DxisqTausq*Nrep];
+	m2logReL = &YXVYXglobal[Nxysq*NxisqTausq + 3*Nrep*NxisqTausq+DxisqTausq*Nrep];
+
+	YXVYXglobal[Nxysq*NxisqTausq + 6*Nrep*NxisqTausq+DxisqTausq*Nrep] = xisqTausq;
+
+	DYXVYX= &YXVYXglobal[DxisqTausq*Nxysq];
 
 	M_cholmod_factorize_p(
 		Q,
@@ -183,30 +191,30 @@ F77_NAME(daxpy)(
 		DYXVYX,
 		&oneI);
 
-detTwo[0] = M_chm_factor_ldetL2(L);
+*determinant = M_chm_factor_ldetL2(L);
 
 ssqFromXprod(
 		DYXVYX, // Nxy by Nxy
-		&detTwo[1],
+		determinantForReml,
 		Nxy, Nrep, copyLx);
 
 for(D=0;D<Nrep;++D){
 	// using result as temporary variable
 	result = log(DYXVYX[D*Nxy+D]);
 // ml
-logLtwo[D] = Nobs*result - Nobs*log(Nobs) + detTwo[0] - YrepAdd[D];
+m2logL[D] = Nobs*result - Nobs*log(Nobs) + *determinant - YrepAdd[D];
 // reml
-logLtwo[Nrep+D] = (Nobs-Ncov)*result -
+m2logReL[D] = (Nobs-Ncov)*result -
 		(Nobs-Ncov)*log(Nobs-Ncov) +
-		detTwo[0] - detTwo[1] - YrepAdd[D];
+		*determinant - *determinantForReml - YrepAdd[D];
 }
 
 
 //  now using DYXVYX as temporary variable
 if(Ltype){
-	DYXVYX = &logLtwo[Nxy];
+	DYXVYX = m2logReL;
 } else {
-	DYXVYX = &logLtwo[0];
+	DYXVYX = m2logL;
 }
 
 // find minimum element
@@ -220,22 +228,16 @@ return result;
 // logL for calling form Brent_fmin
 // this needs YXVYXstart as well as the previous
 // function's global arguments
-double logLoneLoggedNugget(double logXisqTausq){
+double logLoneLogNugget(double logXisqTausq, void* nothing){
 
 	double result;
 
 	if(DxisqTausq>=NxisqTausq){
 		DxisqTausq=1;
 	}
-	YXVYXglobal = &YXVYXstart[DxisqTausq*Nxysq];
-	result = logLoneNugget(exp(logXisqTausq));
 
-	// copy over determinants
-	YXVYXstart[Nxysq*NxisqTausq+DxisqTausq]=detTwo[0];
-	YXVYXstart[Nxysq*NxisqTausq + Nrep*NxisqTausq+DxisqTausq] = detTwo[1];
-
-	// put xisqTausq in 7th column
-	YXVYXstart[Nxysq*NxisqTausq + 6*Nrep*NxisqTausq+DxisqTausq] = exp(logXisqTausq);
+	result = logLoneNugget(exp(logXisqTausq), nothing);
+	DxisqTausq++;
 
 	return(result);
 }
@@ -250,14 +252,17 @@ SEXP gmrfLik(
 		SEXP YrepAddR
 		){
 
-	int Drep, dooptim; // length(xisqTausq)
+	int Drep, dooptim, DxisqAgain; // length(xisqTausq)
 	double	oneD=1.0, zeroD=0.0;
+	double optTol = pow(DBL_EPSILON, 0.25); // tolerence for fmin_brent
+	double optMin  = log(0.01), optMax = log(100); // default interval for optimizer
+	int NxisqMax = 100; // number of xisqTausq's to retain when optimizing
 	double *YXVYX, *determinant, *determinantForReml;
 	double *m2logL, *m2logReL, *varHatMl, *varHatReml, *resultXisqTausq;
+	void *nothing;
 	SEXP resultR;
 	CHM_DN obsCov;
 
-	dooptim=0; // set to 1 for optimization
 	Ltype=0; // set to 1 for reml
 
 	Nrep =LENGTH(YrepAddR);
@@ -266,11 +271,18 @@ SEXP gmrfLik(
 	Nobs = INTEGER(GET_DIM(obsCovR))[0];
 	Nxy = INTEGER(GET_DIM(obsCovR))[1];
 	Ncov = Nxy - Nrep;
-	NxisqTausq = LENGTH(xisqTausq);
 	Nxysq = Nxy*Nxy;
 
-	resultR = PROTECT(allocVector(REALSXP, Nxysq*NxisqTausq + 8*Nrep*NxisqTausq));
+	NxisqTausq = LENGTH(xisqTausq);
+	// if length zero, do optimization
+	dooptim=!NxisqTausq;
 
+	if(dooptim){
+		NxisqTausq = NxisqMax;
+	}
+//	Rprintf("d %d %d", dooptim, NxisqTausq);
+
+	resultR = PROTECT(allocVector(REALSXP, Nxysq*NxisqTausq + 8*Nrep*NxisqTausq));
 
 	YXVYX = REAL(resultR);
 	determinant = &REAL(resultR)[Nxysq*NxisqTausq];
@@ -282,7 +294,6 @@ SEXP gmrfLik(
 	resultXisqTausq = &REAL(resultR)[Nxysq*NxisqTausq + 6*Nrep*NxisqTausq];
 
 	YXYX = (double *) calloc(Nxysq,sizeof(double));
-	logLtwo = (double *) calloc(2*Nrep,sizeof(double));
 	copyLx = (double *) calloc(Nxy*Nrep,sizeof(double));
 
 	Q = AS_CHM_SP(QR);
@@ -327,6 +338,7 @@ SEXP gmrfLik(
 
 	// determinant
 	determinant[0] = M_chm_factor_ldetL2(L);
+	resultXisqTausq[0]= R_PosInf;
 
 	ssqFromXprod(
 			YXVYX, // N by N
@@ -367,33 +379,70 @@ SEXP gmrfLik(
 			// C, nrow(&c)
 			YXYX, &Nxy);
 
+	YXVYXglobal = YXVYX;
+
+
+//	Rprintf("done zero ", dooptim);
+
 	if(dooptim){
-		YXVYXstart = YXVYX;
+
+		// put NA's where DxisqTausq hasnt been used
+		for(DxisqAgain=1;DxisqAgain < NxisqTausq; ++DxisqAgain){
+				determinant[DxisqAgain*Nrep] = NA_REAL;
+				determinantForReml[DxisqAgain*Nrep] = NA_REAL;
+				m2logL[DxisqAgain*Nrep]  = NA_REAL;
+				m2logReL[DxisqAgain*Nrep] = NA_REAL;
+				varHatMl[DxisqAgain*Nrep] = NA_REAL;
+				varHatReml[DxisqAgain*Nrep] = NA_REAL;
+		}
+
+
 		DxisqTausq=1;
 // do optimizer
+		Brent_fmin(
+				optMin, optMax,
+				logLoneLogNugget,
+				nothing, optTol);
+//		Rprintf("done opt ", dooptim);
+
+
+		NxisqTausq = DxisqTausq;
 
 	} else {
 
+		for(DxisqTausq=1;DxisqTausq < NxisqTausq;++DxisqTausq){
+
+			logLoneNugget(REAL(xisqTausq)[DxisqTausq], nothing);
+
+		}
+	}
+	// assign global values into their correct spot
+
 	for(DxisqTausq=1;DxisqTausq < NxisqTausq;++DxisqTausq){
 
-		YXVYXglobal = &YXVYX[DxisqTausq*Nxysq];
-
-		logLoneNugget(REAL(xisqTausq)[DxisqTausq]);
-
-		// assign global values into their correct spot
-
 		for(Drep=0;Drep<Nrep;++Drep){
-			determinant[DxisqTausq*Nrep+Drep]=detTwo[0];
-			determinantForReml[DxisqTausq*Nrep+Drep]=detTwo[1];
 
-		m2logL[DxisqTausq*Nrep+Drep]  =  logLtwo[Drep] - determinant[0];
-		m2logReL[DxisqTausq*Nrep+Drep] = logLtwo[Nrep+Drep] - determinant[0];
+			determinant[DxisqTausq*Nrep+Drep] =
+					determinant[DxisqTausq*Nrep];
 
-		varHatMl[DxisqTausq*Nrep + Drep] = YXVYXglobal[Drep*Nxy+Drep]/Nobs;
-		varHatReml[DxisqTausq*Nrep + Drep] = YXVYXglobal[Drep*Nxy+Drep]/(Nobs-Ncov);
+			determinantForReml[DxisqTausq*Nrep+Drep]=
+					determinantForReml[DxisqTausq*Nrep];
+
+			m2logL[DxisqTausq*Nrep+Drep]  -=
+					determinant[0];
+
+			m2logReL[DxisqTausq*Nrep+Drep] -=
+					determinant[0];
+
+			varHatMl[DxisqTausq*Nrep + Drep] =
+					YXVYXglobal[DxisqTausq*Nxysq+Drep*Nxy+Drep]/Nobs;
+
+			varHatReml[DxisqTausq*Nrep + Drep] =
+					YXVYXglobal[DxisqTausq*Nxysq+Drep*Nxy+Drep]/(Nobs-Ncov);
+			resultXisqTausq[DxisqTausq*Nrep + Drep] =
+					resultXisqTausq[DxisqTausq*Nrep];
 		}
 
-	}
 	}
 
 	M_cholmod_free_factor(&L, &c);
@@ -410,7 +459,6 @@ SEXP gmrfLik(
 
 	free(copyLx);
 	free(YXYX);
-	free(logLtwo);
 	M_cholmod_free_dense(&YwkL, &c);
 	M_cholmod_free_dense(&YwkD, &c);
 	M_cholmod_free_dense(&EwkL, &c);

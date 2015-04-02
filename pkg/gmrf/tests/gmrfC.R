@@ -32,7 +32,7 @@ obsCov = as.matrix(cbind(as.data.frame(theY), intercept=1, as.data.frame(thecov)
 Nrep = 2
 obsCov = obsCov[,c(rep(1,Nrep), 2:ncol(obsCov))]
 
-Snugget = c(Inf,10^seq(3,-3,len=81))
+Snugget = c(Inf,10^seq(3,-3,len=201))
 
 
 date()
@@ -44,8 +44,7 @@ old=geostatsp:::loglikGmrfOneRange(
     shape=2,  boxcoxInterval=NULL,
     reml=TRUE,
     sumLogY = NULL,
-    adjustEdges=FALSE,
-    optimizer=FALSE)
+    adjustEdges=FALSE)
 date()
 
 
@@ -56,9 +55,7 @@ new= loglikGmrfOneRange(
     propNugget=1/Snugget,
     shape=2,
     reml=TRUE,
-    sumLogY = NULL,
-    adjustEdges=FALSE,
-    optimizer=FALSE)
+    adjustEdges=FALSE)
 date()
 plot(log10(new['propNugget',1,-1]), new['m2logL.ml',1,-1])
 lines(log10(old['propNugget',1,-1]), old['m2logL.ml',1,-1]-ncell(theY),col='blue')
@@ -68,8 +65,7 @@ lines(log10(old['propNugget',1,-1]), old['m2logL.ml',1,-1]-ncell(theY),col='blue
 
 dyn.unload('../src/gmrfLik.so')
 dyn.load('../src/gmrfLik.so')
-obsCov = as.matrix(cbind(as.data.frame(theY), intercept=1, as.data.frame(thecov)))
-newBc = loglikGmrfOneRange(
+ newBc = loglikGmrfOneRange(
     oneminusar=themodel['oneminusar'],
     Yvec=exp(as.data.frame(theY)[,1]),  
   Xmat=as.matrix(cbind( intercept=1, as.data.frame(thecov))), 
@@ -77,17 +73,40 @@ newBc = loglikGmrfOneRange(
     propNugget=1/Snugget,
     fixBoxcox=FALSE,
     shape=2,
-    reml=TRUE,
-    sumLogY = NULL,
-    adjustEdges=FALSE,
-    optimizer=FALSE)
+    reml=FALSE,
+    adjustEdges=FALSE)
 
 
-plot(log10(newBc['propNugget',1,-1]), newBc['m2logL.ml',1,-1])
+plot((newBc[,'propNugget']), newBc[,'m2logL.ml'], log='x')
+abline(v=newBc[1,'propNugget'], col='red')
 
 
 
- 
+dyn.unload('../src/gmrfLik.so')
+dyn.load('../src/gmrfLik.so')
+
+newOpt = loglikGmrfOneRange(
+    oneminusar=themodel['oneminusar'],
+    Yvec=exp(as.data.frame(theY)[,1]),  
+    Xmat=as.matrix(cbind( intercept=1, as.data.frame(thecov))), 
+    NN=myNN, 
+    propNugget=NULL,
+    fixBoxcox=FALSE,
+    shape=2,
+    reml=FALSE,
+    adjustEdges=FALSE)
+
+xcol = 'xisqTausq'
+nearMin = which(newBc[,'m2logL.ml'] - min(newBc[,'m2logL.ml'] ) < 12)
+plot((newBc[nearMin,xcol]), newBc[nearMin,'m2logL.ml'], 
+    log='x', col='red', 
+    ylim=range(
+        c(newBc[nearMin,'m2logL.ml'],min(newOpt[,'m2logL.ml']))
+  ))
+abline(v=newBc[1,xcol], col='red')
+points(newOpt[,xcol], newOpt[,'m2logL.ml'],
+    col='blue')
+abline(v=newOpt[1,xcol], col='blue', lty=3)
 
 V =  xisqTausq[2]*solve(myQ) + diag(ncol(myQ))
 Vchol = t(chol(V))
