@@ -7,20 +7,20 @@ logLbc = function(bc, y, x,
     xvxinv = solve(xvx),
     sumlogy = sum(logy)
 ){
-
+  
   if(abs(bc)< bceps){
     ybc = logy
   } else if (abs(bc-1)>bceps){
-     ybc = (exp(bc*logy)-1)/bc
+    ybc = (exp(bc*logy)-1)/bc
   } else {
     ybc = y
   }
   twologj = 2*(sumlogy)*(bc-1)
-
+  
   
   betaHat = xvxinv %*% crossprod(x, ybc)
   ssq = ybc - x %*% betaHat
-
+  
   length(y)*log(sum(ssq^2)) - twologj
   
 }

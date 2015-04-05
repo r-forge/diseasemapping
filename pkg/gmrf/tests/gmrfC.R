@@ -24,8 +24,29 @@ theY = theU + beta.x*thecov+4
 values(theY) = rnorm(ncell(theY), mean=values(theY), sd=sqrt(0.1))
 
 
-dyn.unload('../src/gmrfLik.so')
-dyn.load('../src/gmrfLik.so')
+dyn.unload('../pkg/geostatspDevel/src/gmrfLik.so')
+dyn.load('../pkg/geostatspDevel/src/gmrfLik.so')
+
+
+Yvec=exp(as.data.frame(theY)[,1])
+Xmat=as.matrix(cbind( intercept=1, as.data.frame(thecov)))
+NN=myNN
+propNugget=NULL
+#propNugget=c(0, 0.25, 0.5)
+fixBoxcox=FALSE
+shape=2
+reml=FALSE
+adjustEdges=FALSE
+oneminusar = NULL
+#oneminusar = c(0.1, 0.2, 0.3)
+boxcox=1
+fixBoxcox=FALSE
+seqBoxcox=outer(c(0.01, 0.02), c(-1,1))
+jacobian = 0
+control=list(
+    oneminusar = c(lower=1e-3, upper=0.8, tol= .Machine$double.eps^0.25),
+    propNugget = c(lower=1e-3, upper=1e3, tol= .Machine$double.eps^0.25)
+)
 
 
 obsCov = as.matrix(cbind(as.data.frame(theY), intercept=1, as.data.frame(thecov)))
