@@ -77,8 +77,9 @@ setMethod("lgm",
           buffer=0)
       
       callGeneric(formula, 
-          dataCov$data, dataCov$grid, 
-          dataCov$covariates, ...)
+          data=dataCov$data, 
+          grid=dataCov$grid, 
+          covariates=dataCov$covariates, ...)
     }
 )
 

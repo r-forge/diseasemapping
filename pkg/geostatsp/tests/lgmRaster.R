@@ -14,9 +14,16 @@ swissResR =  lgm(
 		data=swissRainR2, shape=2,
 		oneminusar=seq(0.05, 0.1, len=4),
 		nugget =  seq(0.0,0.01,len=6),
-		adjustEdges=FALSE,
+		adjustEdges=FALSE,fixNugget=TRUE,
 		mc.cores=c(1,2)[1+(.Platform$OS.type=='unix')]
 )
+
+swissResRopt =  lgm(
+    formula=layer ~ alt+ myvar, 
+    data=swissRainR2, shape=2,
+    adjustEdges=FALSE
+)
+
 
 swissResR$summary[c('oneminusar','range','propNugget',
 				grep("\\.betaHat$", rownames(swissResR$summary), value=TRUE)),]
@@ -41,3 +48,8 @@ swissResR$summary[ 'range' ,] * sqrt(mean(values(area(swissRainR))))/mean(res(sw
 
 
 }
+#dataCov = geostatsp:::gm.dataRaster(
+#    formula, data,
+#    grid=raster(data),
+#    covariates=covariates,
+#    buffer=0)

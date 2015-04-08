@@ -418,15 +418,13 @@ loglikGmrf = function(
   ]]
   
   res = list(
-      param=c(mle, betaHat, seBetaHat),
+      mle=c(mle[names(mle)!='junk'], betaHat, se=seBetaHat),
       mlMat = mlMat,
       Qinfo = thepar
   )
 
   
 }
-  
-  
   res
   
 }
