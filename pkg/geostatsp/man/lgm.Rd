@@ -66,15 +66,15 @@ formula=NULL, data,
 		fixBoxcox=TRUE,
 		fixNugget = FALSE,
 		...) 
-\S4method{lgm}{formula,data.frame,Raster,data.frame}(formula, data,
+\S4method{lgm}{formula,data.frame,Raster,data.frame}(
+formula, data,
 		grid,
 		covariates=NULL, 
 		            shape=1,boxcox=1,nugget=0,
 				  expPred=FALSE, nuggetInPrediction=TRUE,
 				  reml = TRUE,
 				  mc.cores=1,		
-				  oneminusar=seq(0.01, 0.4,len=4), 
-                  range=NULL, 
+fixBoxcox=TRUE,fixNugget=FALSE, 
 		...) 
 }
  

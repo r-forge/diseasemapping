@@ -21,7 +21,7 @@ logLbc = function(bc, y, x,
   betaHat = xvxinv %*% crossprod(x, ybc)
   ssq = ybc - x %*% betaHat
   
-  length(y)*log(sum(ssq^2),na.rm=TRUE) - twologj
+  length(y)*log(sum(ssq^2,na.rm=TRUE)) - twologj
   
 }
 
