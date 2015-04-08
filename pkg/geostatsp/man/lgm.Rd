@@ -108,8 +108,6 @@ done in parallel where possible. }
 \item{fixShape}{Set to \code{FALSE} to estimate the Matern order}
 \item{fixBoxcox}{Set to \code{FALSE} to estimate the Box-Cox parameter.}
 \item{fixNugget}{Set to \code{FALSE} to estimate the nugget effect parameter.}
-\item{oneminusar}{Vector of GMRF autoregressive parameters over which the likelihood is computed.}
-\item{range}{Vector of range parameters over which the likelihood is computed, ignored if \code{oneminusar} is non-NULL}
 \item{buffer}{Extra distance to add around \code{grid}.}
 \item{...}{Additional arguments passed to \code{\link{likfitLgm}}.  Starting values can be
 specified with a vector \code{param} of named elements}
