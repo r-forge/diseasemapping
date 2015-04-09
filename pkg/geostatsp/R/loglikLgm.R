@@ -332,6 +332,16 @@ likfitLgm = function(
       variance=1,
       shape=0.2)
   
+  ndepsDefault = c(
+      range=0.001,
+      nugget=0.005,
+      boxcox=0.005,
+      anisoAngleRadians=0.01,
+      anisoRatio=0.01,
+      variance=0.005,
+      shape=0.01
+      )
+  
   # replace defaults with user supplied values
   paramDefaults[names(param)] = param
   parscaleDefaults[names(parscale)] = parscale
@@ -361,11 +371,13 @@ likfitLgm = function(
   names(Sparam) = names(paramsForC)
   paramToEstimate = names(Sparam)[Sparam]
 
+  
+  
   parOptions = cbind(
       lower=lowerDefaults[paramToEstimate], 
       upper=upperDefaults[paramToEstimate],
       parscale = parscaleDefaults[paramToEstimate],
-      ndeps=rep(0.001, length(paramToEstimate)) # for derivatives
+      ndeps=ndepsDefault[paramToEstimate] # for derivatives
   )
 
   # parameters for l-bfgs-b
