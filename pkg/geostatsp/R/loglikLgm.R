@@ -299,14 +299,14 @@ likfitLgm = function(
   # parameter defaults
   lowerDefaults = c(
       nugget=0,
-      range=maxDist/100,
+      range=maxDist/1000,
       anisoRatio=0.01,
       anisoAngleRadians=-pi/2,
       shape=0.1,boxcox=-1.5,variance=0)
   
   upperDefaults= c(
       nugget=Inf,
-      range=2*maxDist,
+      range=10*maxDist,
       anisoRatio=100,
       anisoAngleRadians=pi/2,
       shape=4,boxcox=2.5,variance=Inf)

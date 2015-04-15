@@ -226,7 +226,7 @@ krigeLgm = function(
 			observations = all.vars(trend)[1]
 			observations = covariatesForData[,observations]
 		}
-		
+  
 		theVars = all.vars(trendFormula)[-1]
   
 		if(length(theVars)) {
@@ -417,7 +417,8 @@ krigeLgm = function(
 	} 
  
 	# get rid of response variable in trend formula
-	meanRaster = raster(locations)
+meanRaster = raster(locations)
+names(meanRaster) = "fixed"
 
 	
 	if(length(all.vars(trendFormula))>1){ # if have covariates
@@ -478,7 +479,6 @@ krigeLgm = function(
 		meanForData = rep(values(meanRaster)[1], length(observations))
 	}
 	
-	names(meanRaster) = "fixed"
 
 	
 # subtract mean from data
@@ -635,6 +635,9 @@ krigeLgm = function(
 		values(krigeSd) = sqrt(param["variance"] - as.vector(forVar))
 	}
 	
+  names(meanRaster) = "fixed"
+  
+  
 	result = stack(meanRaster, randomRaster, predRaster,
 			krigeSd)
 
