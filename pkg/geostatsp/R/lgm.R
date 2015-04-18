@@ -51,16 +51,6 @@ setMethod("lgm",
 )
 
 
-# missing covariates, create empty list
-setMethod("lgm", 
-    signature("formula", "Spatial", "ANY", "missing"),
-    function(formula, data, grid=NULL, covariates=NULL, ...) {
-      callGeneric(formula, data, grid, 
-          covariates=list(), 
-          ...)
-    }
-)
-
 # data is a raster.  grid is ignored
 setMethod("lgm", 
     signature("formula", "Raster", "ANY", "ANY"),
@@ -84,6 +74,8 @@ setMethod("lgm",
 )
 
 
+
+
 # numeric cells, create raster from data bounding box
 
 setMethod("lgm", 
@@ -94,9 +86,20 @@ setMethod("lgm",
     }
 )
 
+# missing covariates, create empty list
+setMethod("lgm", 
+    signature("formula", "Spatial", "Raster", "missing"),
+    function(formula, data, grid=NULL, covariates=NULL, ...) {
+      callGeneric(formula, data, grid, 
+          covariates=list(), 
+          ...)
+    }
+)
+
+
 
 setMethod("lgm",
-			signature("formula", "Spatial", "Raster", "ANY"),
+			signature("formula", "Spatial", "Raster", "list"),
       function(formula, 
           data, grid, 
           covariates=NULL, 
@@ -105,12 +108,30 @@ setMethod("lgm",
         dataCov = gm.dataSpatial(
             formula, data, 
             grid, covariates, buffer)
-
+        
         callGeneric(formula, 
             data=dataCov$data, 
             grid=dataCov$grid, 
             covariates=dataCov$covariates, ...)
       }
+)
+
+setMethod("lgm",
+    signature("formula", "Spatial", "Raster", "Raster"),
+    function(formula, 
+        data, grid, 
+        covariates=NULL, 
+        buffer=0,...) {
+      
+      dataCov = gm.dataSpatial(
+          formula, data, 
+          grid, covariates, buffer)
+      
+      callGeneric(formula, 
+          data=dataCov$data, 
+          grid=dataCov$grid, 
+          covariates=dataCov$covariates, ...)
+    }
 )
 
 # the real work
@@ -236,8 +257,32 @@ setMethod("lgm",
   				rownames(res$summary))
   	}
 	
-    
+  class(res) = c('lgm',class(res))    
 	return(res)
 }
 
 )
+
+logLik.lgm = function(object, ...){
+  res = object$opt$logL
+  res = res[grep('^logL', names(res))]
+  
+  srows = rownames(object$summary)
+  df = sum(
+      object$summary[
+          grep("^anisoAngle", srows, invert=TRUE),
+          'Estimated']
+      ) + any(
+          object$summary[
+              grep("^anisoAngle", srows, invert=FALSE),
+              'Estimated']
+  )
+  attributes(res)$df = df
+  attributes(res)$nobs = nrow(data.frame(object$data))
+  class(res)= 'logLik'
+  res
+}
+
+summary.lgm = function(object, ...) {
+  object$summary
+}

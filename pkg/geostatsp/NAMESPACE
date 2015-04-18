@@ -40,7 +40,7 @@ S3method(maternGmrfPrec, default)
 
 export(NNmat)
 S3method(NNmat, default)
-S3method(NNmat,Raster)
+S3method(NNmat,Raster)	
 
 export(variog)
 S3method(variog, SpatialPointsDataFrame)
@@ -72,3 +72,8 @@ importFrom(pracma, trapz)
 
 # only needed because INLA is requireNamespace instead of require
 export(inla.models)
+
+
+importFrom(stats, logLik)
+S3method(logLik, 'lgm')
+S3method(summary	, 'lgm')

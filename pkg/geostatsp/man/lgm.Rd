@@ -5,10 +5,11 @@
 \alias{lgm,NULL,ANY,ANY,ANY-method}
 \alias{lgm,numeric,ANY,ANY,ANY-method}
 \alias{lgm,character,ANY,ANY,ANY-method}
-\alias{lgm,formula,Spatial,ANY,missing-method}
 \alias{lgm,formula,Raster,ANY,ANY-method}
 \alias{lgm,formula,Spatial,numeric,ANY-method}
-\alias{lgm,formula,Spatial,Raster,ANY-method}
+\alias{lgm,formula,Spatial,Raster,missing-method}
+\alias{lgm,formula,Spatial,Raster,list-method}
+\alias{lgm,formula,Spatial,Raster,Raster-method}
 \alias{lgm,formula,Spatial,Raster,data.frame-method}
 \alias{lgm,formula,data.frame,Raster,data.frame-method}
 
@@ -34,24 +35,23 @@ formula=NULL, data,
 		grid,
 		covariates=NULL, 
 		...) 
-\S4method{lgm}{formula,Spatial,ANY,missing}(formula, data,
-		grid=NULL,
-		covariates=NULL, 
-		...) 
 \S4method{lgm}{formula,Raster,ANY,ANY}(formula, data,
 		grid,
-		covariates=NULL, 
-		...) 
-\S4method{lgm}{formula,Raster,ANY,ANY}(
-		formula, data,
-		grid=NULL,
 		covariates=NULL, 
 		...) 
 \S4method{lgm}{formula,Spatial,numeric,ANY}(formula, data,
 		grid,
 		covariates=NULL, 
 		...) 
-\S4method{lgm}{formula,Spatial,Raster,ANY}(formula, data,
+\S4method{lgm}{formula,Spatial,Raster,missing}(formula, data,
+		grid=NULL,
+		covariates=NULL, 
+		...) 
+\S4method{lgm}{formula,Spatial,Raster,list}(formula, data,
+		grid,
+		covariates=NULL, buffer=0,
+		...) 
+\S4method{lgm}{formula,Spatial,Raster,Raster}(formula, data,
 		grid,
 		covariates=NULL, buffer=0,
 		...) 

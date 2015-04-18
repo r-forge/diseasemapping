@@ -657,10 +657,10 @@ names(meanRaster) = "fixed"
       values(newraster) = bcpred[,'predict']
       result = addLayer(result, 
           newraster)
-      names(newraster) = 'probComplex.boxcox'
-      values(newraster) = bcpred[,'probComplex.boxcox']
-      result = addLayer(result, 
-          newraster)
+#      names(newraster) = 'probComplex.boxcox'
+#      values(newraster) = bcpred[,'probComplex.boxcox']
+#      result = addLayer(result, 
+#          newraster)
     } else {
       values(newraster) = bcpred
       result = addLayer(result, 

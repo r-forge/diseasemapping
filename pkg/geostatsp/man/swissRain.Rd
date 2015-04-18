@@ -13,8 +13,9 @@ Data from the SIC-97 project: Spatial Interpolation Comparison.
 }
 \usage{data("swissRain")}
 \format{
-\code{swissRain} is a SpatialPolygonsDataFrame of the sic.100 data, with data column \code{rain}
-being the rainfall values in millimetres. 
+\code{swissRain} is a SpatialPolygonsDataFrame 
+100 daily rainfall
+measurements made in Switzerland on the 8th of May 1986.
 \code{swissAltitude} is a raster of elevation data, and \code{swissLandType} is a raster
 of land cover types.
 }

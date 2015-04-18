@@ -396,7 +396,7 @@ likfitLgm = function(
           type=-1,lmm=25,
           tmax=-1,temp=-1
       ),
-      pars = parOptions
+      pars = parOptions[,c('lower','upper','parscale','ndeps'),drop=FALSE]
   )
   
   if(verbose){
@@ -494,10 +494,8 @@ likfitLgm = function(
         options=cbind(
             start=paramsForC[Sparam],
             opt = fromOptim$start[Sparam],
-            parOptions),
-        detail = fromOptim$optInt[1:3],
-        originalParameters = paramsForC
-      ),
+            parOptions[,c('parscale','lower','upper','ndeps')]),
+        detail = fromOptim$optInt[1:3]      ),
     betaHat = fromOptim$betas[1:ncol(covariates)],
     varBetaHat =  
         new("dsyMatrix", 
@@ -508,8 +506,10 @@ likfitLgm = function(
         )
   )
   
+# names(result$optim$boxcox) = c('param','sumLogY','twoLogJacobian')
+# names(result$optim$determinants) = c('variance','reml')
  
-  result$optim$options = cbind(result$optim$options,
+ result$optim$options = cbind(result$optim$options,
       gradient=fromOptim$betas[
       seq(ncol(covariates)^2+ncol(covariates)+1, 
           len=sum(Sparam))

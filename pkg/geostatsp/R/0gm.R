@@ -130,7 +130,7 @@ gm.dataSpatial = function(
 	# the grid
 	cellsBoth = cellsBuffer(grid, buffer)			
 	cellsSmall = cellsBoth$small
-
+  
 	# 
 	if(length(names(covariates))) {
  
@@ -167,7 +167,6 @@ gm.dataSpatial = function(
 	}
 	data$space = extract(cellsSmall, data) 
 
-	
 	# loop through spatial covariates which are factors
 	for(D in intersect(Sfactors, names(covariatesDF))) {
 		theTable = sort(table(data[[D]]), decreasing=TRUE)
