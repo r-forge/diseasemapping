@@ -236,7 +236,7 @@ likfitLgm = function(
     # convert input data to a model matrix
 		data = data.frame(data)
 		theNA = apply(
-				data[,all.vars(trend)[-1],drop=FALSE],
+				data[,all.vars(trend),drop=FALSE],
 				1, function(qq) any(is.na(qq)))
 		noNA = !theNA
 		
