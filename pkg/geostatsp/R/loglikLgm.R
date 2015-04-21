@@ -325,7 +325,7 @@ likfitLgm = function(
   
   parscaleDefaults = c(
       range=maxDist/5,
-      nugget=0.02,
+      nugget=0.2,
       boxcox=0.5,
       anisoAngleRadians=0.2,
       anisoRatio=1,
@@ -333,12 +333,12 @@ likfitLgm = function(
       shape=0.2)
   
   ndepsDefault = c(
-      range=0.001,
-      nugget=0.005,
+      range=0.01,
+      nugget=0.01,
       boxcox=0.005,
       anisoAngleRadians=0.01,
       anisoRatio=0.01,
-      variance=0.005,
+      variance=0.01,
       shape=0.01
       )
   
