@@ -24,6 +24,10 @@ theY = theU + beta.x*thecov+4
 values(theY) = rnorm(ncell(theY), mean=values(theY), sd=sqrt(0.1))
 
 
+
+
+
+
 dyn.unload('../pkg/geostatspDevel/src/gmrfLik.so')
 dyn.load('../pkg/geostatspDevel/src/gmrfLik.so')
 

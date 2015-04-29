@@ -107,7 +107,42 @@ setMethod("lgm",
   res$model$reml = reml
   res$model$trend = formula
  
-  res$summary = NULL#summaryGmrfFit(thel)
+  # summary table
+  scovariates = gsub(
+      'stdErr\\.','',
+      grep("^stdErr\\.", names(mle), value=TRUE)
+  )
+  
+  srownames = c('sdNugget','sdSpatial','range','shape')
+  scolnames = c("estimate", "stdErr", "ci0.005", "ci0.995", "ci0.025", "ci0.975", 
+      "ci0.05", "ci0.95", "ci0.1", "ci0.9", "pval", "Estimated")
+  ress = as.data.frame(
+      matrix(
+          NA,
+          length(scovariates) + length(srownames),
+          length(scolnames),
+          dimnames = list(
+              c(scovariates, srownames),
+              scolnames
+              )
+          )
+      )
+   ress[c('sdNugget','sdSpatial','range','shape'),'estimate'] = 
+       c(sqrt(mle[c('nugget','variance')]),
+        mle[c('range','optimalShape.shape')]   
+       )
+   ress[c('sdNugget','sdSpatial','range','shape'),'Estimated'] =
+       c(
+           fixNugget, TRUE, TRUE, FALSE
+           
+           )
+   ress[scovariates,'Estimated']  = TRUE   
+   ress[scovariates,'estimate']  = mle[scovariates]   
+   ress[scovariates,'stdErr']  = mle[paste("stdErr.",scovariates,sep="")]   
+   
+       
+  
+  res$summary = ress
 
 	
   return(res)

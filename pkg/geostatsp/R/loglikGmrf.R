@@ -411,11 +411,20 @@ loglikGmrf = function(
   
   parMat =
         c(
-            Qinfo$theo[c('range','shape','variance')], 
-            optimalShape=Qinfo$optimalShape['shape'],
-            optimal=Qinfo$optimal[c('shape','variance')]
+            thepar$theo[c('range','shape','variance')], 
+            optimalShape=thepar$optimalShape['shape'],
+            optimal=thepar$optimal[c('shape','variance')]
         )
-  mle = c(mle, parMat)       
+  
+  varMat =   parMat[grep('variance', names(parMat))]
+  varMle = varMat * mle[c('varMl','varReml')[1+reml]]
+  nuggetMle = c(nugget=as.numeric(
+          mle['propNugget'] * mle[c('varMl','varReml')[1+reml]]
+      ))
+  
+  mle = c(mle, 
+      varMle, nuggetMle,
+      parMat[grep('variance', names(parMat), invert=TRUE)])       
   
   
   
@@ -433,7 +442,7 @@ loglikGmrf = function(
   betaHat = mleSsq[,'mle']
   seBetaHat = diag(mleSsq[,-1])
   seBetaHat = seBetaHat * mle[c('varMl','varReml')[1+reml]]
-  
+  names(seBetaHat) = paste('stdErr',names(seBetaHat), sep='.')
   
   res = list(
       mle=c(mle[names(mle)!='junk'], 
