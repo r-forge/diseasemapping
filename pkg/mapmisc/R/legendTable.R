@@ -13,6 +13,15 @@ legendTable = function(x,
     unit = unit[type]
   }
   
+  if(!length(x$label))
+    x$label = paste(
+      '[',
+      x$breaks[-length(x$breaks)],
+        ', ',
+        x$breaks[-1],
+    ']'
+        )
+  
   if(type=='latex'){
     res = legendTableLatex(x, box, unit, collapse)
   }
@@ -28,10 +37,10 @@ legendTableHtml = function(x, box, unit) {
   
   thetable=data.frame(
   col = paste(
-      '<span style="background:',
-      substr(x$col,1,7),
-      'padding-right:', box,
-      '"></span>'
+      '<span style="background-color: ',
+      substr(x$col,1,7), '; ',
+      'padding-right: ', box, 
+      'em"></span>', sep=''
   ))
   thetable$label = x$label
   thetable
