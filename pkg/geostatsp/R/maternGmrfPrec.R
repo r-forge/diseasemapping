@@ -655,7 +655,7 @@ paramInfo$empirical$optimalShape =
 		
 	if(adjustEdges!=FALSE){
 		if(is.logical(adjustEdges)) {
-			adjustEdges='theo'
+			adjustEdges='optimalShape'
 		}
 		
 		distVecFull =  expand.grid(x=seq(1, Nx),

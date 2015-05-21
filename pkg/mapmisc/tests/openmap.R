@@ -2,10 +2,12 @@
 library('mapmisc')
 
 myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10, 
-		crs="+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+		crs=CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+)
 values(myraster) = seq(0,1,len=ncell(myraster))
 
-myPoints = SpatialPoints(myraster, proj4string=CRS(proj4string(myraster)))[
+myPoints = SpatialPoints(myraster, 
+    proj4string=CRS(proj4string(myraster)))[
 		seq(1,ncell(myraster),len=5)]
 
 plot(myraster)
@@ -16,9 +18,9 @@ if(require('rgdal', quietly=TRUE)) {
 	
 
   # utm zone 32
-utmproj = "+init=epsg:3064" 
+utmproj = CRS("+init=epsg:3064") 
 myrasterUTM = projectRaster(myraster, crs=utmproj)
-myPointsUTM = spTransform(myPoints, CRS(utmproj))
+myPointsUTM = spTransform(myPoints, utmproj)
 plot(myrasterUTM)
 points(myPointsUTM)
 
@@ -27,7 +29,7 @@ myPointsMercator = spTransform(myPoints,
 
 
 myplot = function(first,second=first) {
-	pdf(tempfile("osmplot", tmpdir=".", fileext=".pdf"))
+	if(!interactive()) pdf(tempfile("osmplot", tmpdir=".", fileext=".pdf"))
 	par(mar=c(0,0,0,0))
 	plot(first)
 	plot(mytiles, add=TRUE)
@@ -35,7 +37,7 @@ myplot = function(first,second=first) {
 #	points(mycities,col='red')
 #	text(mycities, labels=mycities$name, col='red',pos=4)
 	scaleBar(first)
-	dev.off()
+  if(!interactive()) dev.off()
 }
 
 thezoom=6
@@ -98,7 +100,7 @@ if(exists("nsl", where="package:utils")) {
 		myplot(myPointsUTM)
 		
 		# specify different output crs
-	mytiles = openmap(myPointsUTM, crs="+init=epsg:4326")
+	mytiles = openmap(myPointsUTM, crs=CRS("+init=epsg:4326"))
 #	mycities = GNcities(myPoints,max=5)
 	myplot(myPoints)
 
