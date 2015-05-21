@@ -21,7 +21,7 @@ of land cover types.
 }
 \source{
 \url{http://www.ai-geostats.org/bin/view/AI_GEOSTATS/EventsSIC97} and  \url{http://srtm.csi.cgiar.org} and
-\url{https://lpdaac.usgs.gov/products/modis_products_table/mcd12q1}
+\url{https://catalog.data.gov/dataset/modis-combined-mcd12q1-land-cover-type-yearly-l3-global-500-m-sin-grid}
 }
 
 \examples{
