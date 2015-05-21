@@ -29,17 +29,16 @@ bob=function(angle, ...){
  }
 
 
-
+}
 
 if(!interactive())
   pdf("omerc.pdf")
-par(mfrow=c(3,3))
-
 
   par(mfrow=c(3,3))
+  if(require('rgdal', quietly=TRUE)) {
   bob(0)
   
-  bob(90)
+  bob(89)
   
   bob(45)
   
@@ -53,7 +52,7 @@ par(mfrow=c(3,3))
   bob(45, post='north')
   bob(45, post='wide')
   bob(45, post='tall')
-  
+}
   
   
  
@@ -64,10 +63,9 @@ if(!interactive())
 
 if(!interactive())
   pdf("omercBbox.pdf")
-par(mfrow=c(3,3))
 
- 
   par(mfrow=c(3,2))
+  if(require('rgdal', quietly=TRUE)) {
   bob((-10):10)
   
   bob(seq(-170,-190))
@@ -77,7 +75,7 @@ par(mfrow=c(3,3))
   bob((-10):10, post='long')
   
   bob((-10):10, post=90)
-  
+}
  
 if(!interactive())
   dev.off()
@@ -85,7 +83,7 @@ if(!interactive())
 
 if(!interactive())
   pdf("omercDist.pdf")
-par(mfrow=c(3,3))
+ 
 
 N = 12
 somePoints = SpatialPointsDataFrame(
@@ -98,6 +96,9 @@ somePoints = SpatialPointsDataFrame(
     crs(xbox) = crs(x)
  
   par(mfrow=c(3,2))
+  
+  if(require('rgdal', quietly=TRUE)) {
+  
   bob((-10):10, preserve=x, post=10)
   bob((-10):10, preserve=x, post='none')
   
@@ -110,7 +111,7 @@ somePoints = SpatialPointsDataFrame(
   
   scaleBar(bob((-10):10, preserve=x, post='wide'), c(0,0), seg.len=0)
   
- 
+}
 if(!interactive())
   dev.off()
-}
+
