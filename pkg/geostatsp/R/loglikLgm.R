@@ -350,7 +350,7 @@ likfitLgm = function(
   
   
   # don't let nugget start on the boundary
-  if(paramDefaults['nugget'] == lowerDefaults['nugget']){
+  if(any(paramToEstimate=='nugget') & paramDefaults['nugget'] == lowerDefaults['nugget']){
     paramDefaults['nugget'] = min(c(0.5, upperDefaults['nugget']))
   }
   
@@ -361,9 +361,10 @@ likfitLgm = function(
   startingParam[naStarting]= paramDefaults[names(startingParam)[naStarting]]
   
   moreParams = paramDefaults[!names(paramDefaults) %in% paramToEstimate]
-  
+
   allParams = c(startingParam, moreParams)
   allParams = fillParam(allParams)
+  
   paramsForC = allParams[c('nugget','variance','range','shape',
           'anisoRatio','anisoAngleRadians','boxcox')]
   

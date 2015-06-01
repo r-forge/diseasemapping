@@ -164,7 +164,10 @@ setMethod("lgm",
 	paramToEstimate	= c("range", "shape","nugget","boxcox")[
 			!c(FALSE,fixShape,fixNugget,fixBoxcox)]		
 	range=NA
-	Spar = c(shape=shape,nugget=nugget,range=NA,boxcox=boxcox)
+	Spar = c(shape=as.numeric(shape),
+      nugget=as.numeric(nugget),
+      range=NA,
+      boxcox=as.numeric(boxcox))
 	
 	if(aniso) {
 		Spar = c(Spar, anisoAngleRadians=NA,anisoRatio=NA)
