@@ -189,6 +189,7 @@ setMethod("lgm",
 	dots$formula=formula
 	dots$data=data
 	dots$paramToEstimate=paramToEstimate
+  dots$reml = reml
 
  	likRes = do.call(likfitLgm, dots)
  

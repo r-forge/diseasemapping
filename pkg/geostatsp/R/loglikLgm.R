@@ -533,9 +533,11 @@ likfitLgm = function(
    )
 )
    
+if(estimateVariance) {
    result$parameters[c('nugget', 'variance')] = 
        result$parameters[c('nugget', 'variance')] * 
        result$optim$totalVarHat  
+ }
    
    names(result$optim$logL) = paste(
        names(result$optim$logL),
