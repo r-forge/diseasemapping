@@ -153,15 +153,17 @@ loglikLgm = function(param,
       uplo="L",
       x=resultC$varBetaHat)
   dimnames(varBetaHat) = list(names(betaHat),names(betaHat))
-  varBetaHat = varBetaHat*totalVarHat
-
   
+
+    if(!haveVariance) {
+    varBetaHat = varBetaHat*totalVarHat
+    param[c("variance","nugget")] = 
+        totalVarHat * param[c("variance","nugget")]
+  }
+
   result = resultC$logL[1] + jacobian
-
-  if(!haveVariance)
-  param[c("variance","nugget")] = 
-    totalVarHat * param[c("variance","nugget")]
-
+  
+  
 
 if(minustwotimes) {
   names(result) = "minusTwoLogLik"
