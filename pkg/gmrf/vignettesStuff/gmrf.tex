@@ -213,14 +213,53 @@ MLE  $\hat\phi, \hat\xi, \hat\tau,\hat\beta$  maximize $pr(Y ;
 \phi,\xi,\tau,\beta)$.
 
 \section*{Likelihood}
-\subsection{No nugget}
+
+Any model with 
 \[
--2 \log pr(\mathbf{Y};\phi,\beta,\tau,\xi) = N \log(2\pi) + 
-\log| \var(\mathbf{Y})  | + \\
-( \mathbf{Y} -\mathbf{X}\beta)  '
-  \var(\mathbf{Y})^{-1}
+Y \sim \text{MVN}\left(X \beta, \Sigma   \right) 
+\]
+has
+\[
+-2 \log pr(\mathbf{Y};\Sigma,\beta) = N \log(2\pi) + 
+\log| \Sigma | +  
+( \mathbf{Y} -\mathbf{X}\beta)^T
+   \Sigma^{-1}
 (\mathbf{Y} - \mathbf{X}\beta)
 \]
+covariates
+\[
+\hat\beta(\Sigma) = (X^T \Sigma^{-1} X)^{-1} (X^T \Sigma^{-1} \mathbf{Y})
+\]
+profile likelihood
+\begin{align*}
+-2 \log \tilde L[\mathbf{Y};\Sigma, \hat\beta(\Sigma)] = &
+N \log(2\pi) +  \log| \Sigma | +
+ \mathbf{Y}^T \Sigma^{-1} \mathbf{Y} - \\
+&\hat\beta' \mathbf{X}'\Sigma^{-1} \mathbf{Y} - \mathbf{Y}' \Sigma^{-1} \mathbf{X}\hat\beta +  \hat\beta'\mathbf{X}'
+ \Sigma^{-1}   \mathbf{X}\hat\beta\\
+ = & N \log(2\pi) +  \log| \Sigma | +
+S(\mathbf{Y},\mathbf{X},\Sigma) \\
+S(\mathbf{Y},\mathbf{X},\Sigma) = & \mathbf{Y}^T \Sigma^{-1} \mathbf{Y} -  \mathbf{Y}^T \Sigma^{-1} \mathbf{X} \hat\beta
+\end{align*}
+if $\Sigma = \xi^2 V$ then
+\[
+-2 \log \tilde L[\mathbf{Y};\xi^2, V, \hat\beta(V)] =  N \log(2\pi) + N \log(\xi^2) +  \log| V| + (1/\xi^2) S(\mathbf{Y},\mathbf{X},V)
+\]
+variance
+\begin{align*}
+-2 \log \tilde L[\mathbf{Y};\hat\xi^2(V), V, \hat\beta(V)] =&
+N \log(2\pi) + N  +  \log| V| + N\log(\hat\xi^2)\\
+\hat\xi^2(V) =&S(\mathbf{Y},\mathbf{X},V)/N
+\end{align*}
+reml
+\begin{align*}
+-2 \log \tilde L[\mathbf{Y};\hat\xi^2(V), V, \hat\beta(V)] =&
+(N-p)\log(2\pi) + (N-p)  +  \log| V| + (N-p)\log(\hat\xi^2) + \log | \mathbf{X}^T  V^{-1} \mathbf{X}|  \\
+\hat\xi^2(V) =&S(\mathbf{Y},\mathbf{X},V)/(N-p)
+\end{align*}
+
+
+\subsection{No nugget}
 
 \begin{align*}
 \var(\mathbf{Y}) = &\xi^2 Q^{-1} \\

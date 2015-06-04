@@ -476,7 +476,7 @@ likfitLgm = function(
       as.double(ycoord),
       as.integer(aniso),
       N=as.integer(c(nrow(obsCov), 3, ncol(covariates))),
-    Ltype=as.integer(reml+!estimateVariance),
+    Ltype=as.integer(reml+2*!estimateVariance),
     optInt = as.integer(forO$scalarInt),
     optF = as.double(forO$scalarF),
     betas=as.double(forO$pars),
