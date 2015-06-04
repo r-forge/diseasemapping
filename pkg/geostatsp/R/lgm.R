@@ -154,15 +154,17 @@ setMethod("lgm",
 	
 	
 	dots <- list(...)  
-	if(any(names(dots)=='param')) {
-		param=dots$param	
-	} else {
+  param=dots$param	
+  if(!length(param)) {
 		param=c()
 	}
 	
 
-	paramToEstimate	= c("range", "shape","nugget","boxcox")[
-			!c(FALSE,fixShape,fixNugget,fixBoxcox)]		
+	paramToEstimate	= c(
+      "variance", "range", "shape","nugget","boxcox"
+          )[c(
+                  TRUE, TRUE, !fixShape, !fixNugget, !fixBoxcox
+          )]		
 	range=NA
 	Spar = c(shape=as.numeric(shape),
       nugget=as.numeric(nugget),
