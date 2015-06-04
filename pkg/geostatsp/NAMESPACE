@@ -74,6 +74,7 @@ importFrom(pracma, trapz)
 export(inla.models)
 
 
-importFrom(stats, logLik)
+importFrom(stats, logLik, AIC)
+S3method(AIC, 'lgm')
 S3method(logLik, 'lgm')
-S3method(summary	, 'lgm')
+S3method(summary, 'lgm')

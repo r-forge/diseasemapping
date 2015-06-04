@@ -268,6 +268,12 @@ setMethod("lgm",
 }
 
 )
+AIC.lgm = function(object, ..., k = 2) {
+  
+  AIC(logLik(object, ..., k))
+  
+}
+
 
 logLik.lgm = function(object, ...){
   res = object$opt$logL
