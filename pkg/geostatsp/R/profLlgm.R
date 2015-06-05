@@ -13,9 +13,9 @@ profLlgm = function(fit,mc.cores=1, ...) {
 	reEstimate = gsub("sdNugget", "nugget", reEstimate)
 	reEstimate = gsub("sdSpatial", "variance", reEstimate)
 	reEstimate = gsub("range \\(km\\)", "range", reEstimate)
-	reEstimate = intersect(reEstimate, nonLinearParams)
-	reEstimate = reEstimate[!reEstimate %in% varying]
   reEstimate = gsub("/1000", "", reEstimate)
+  reEstimate = intersect(reEstimate, nonLinearParams)
+	reEstimate = reEstimate[!reEstimate %in% varying]
   
   
 	baseParams = fit$parameters
@@ -139,12 +139,12 @@ profLlgm = function(fit,mc.cores=1, ...) {
              approx(
             x=res$logL[smaller], 
 						y=dots[[varying]][smaller],
-						xout=res$breaks[Skeep],rule=2)$y
+						xout=res$breaks[Skeep],rule=1)$y
   if(sum(bigger)>1)
     res$ci[,'upper']=approx(
         res$logL[bigger], 
 						dots[[varying]][bigger], 
-            res$breaks[Skeep],rule=2)$y
+            res$breaks[Skeep],rule=1)$y
  
 		
 		res$ciLong = na.omit(

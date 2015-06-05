@@ -43,7 +43,7 @@ void computeBoxCox(
 		// to be subtracted from likelihood
 		for(D=0;D<Nrep;++D){
 			boxcox[D+Nrep] = sumLogY;
-			boxcox[D+2*Nrep] = 2*(boxcox[D]-1)*sumLogY;
+			boxcox[D+2*Nrep] = -2*(boxcox[D]-1)*sumLogY;
 		}
 	} else {
 		sumLogY = boxcox[Nrep+1];
