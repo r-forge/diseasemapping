@@ -136,15 +136,15 @@ profLlgm = function(fit,mc.cores=1, ...) {
         lower=NA, upper=NA)
     if(sum(smaller)>1) 
 				res$ci[,'lower'] =
-             approx(
+             stats::spline(
             x=res$logL[smaller], 
 						y=dots[[varying]][smaller],
-						xout=res$breaks[Skeep],rule=1)$y
+						xout=res$breaks[Skeep])$y
   if(sum(bigger)>1)
-    res$ci[,'upper']=approx(
-        res$logL[bigger], 
-						dots[[varying]][bigger], 
-            res$breaks[Skeep],rule=1)$y
+    res$ci[,'upper']=stats::spline(
+        x=res$logL[bigger], 
+			  y=dots[[varying]][bigger], 
+        xout=res$breaks[Skeep])$y
  
 		
 		res$ciLong = na.omit(
