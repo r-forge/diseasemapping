@@ -15,7 +15,7 @@ excFunQQ = function(themat, threshold) {
 		toInt = rbind(c(threshold, approx(themat[,"x"], themat[,"y"], threshold)$y),
 				themat[over,]
 		)
-		if(requireNamespace('trapz', quietly=TRUE)){
+		if(requireNamespace('pracma', quietly=TRUE)){
 	  	prob = pracma::trapz(toInt[,"x"], toInt[,"y"])
     } else {
       theDiff = diff(toInt[,'x'])/2
