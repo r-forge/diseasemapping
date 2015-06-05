@@ -60,7 +60,7 @@ import(
 
 importFrom(numDeriv,hessian)
 importFrom(abind, abind)
-importFrom(pracma, trapz)
+#importFrom(pracma, trapz)
 
 # the following are imports from packages listed as Suggests
 # calls to these functions are made with ::
