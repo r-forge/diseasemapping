@@ -181,15 +181,16 @@ omerc = function(
         preserve = spTransform(preserve, crsLL)
       }
       # great circle distance
-      distGS = spDists(preserve, longlat=TRUE)*1000
+      distGS = spDists(preserve)*1000
       theLower = lower.tri(distGS, diag=FALSE)
       distGS = distGS[theLower]
       # euclidean distance for each projection
       distEu = unlist(lapply(rotatedCRS,
               function(crs){
                 mean(
-                    spDists(spTransform(preserve, crs), 
-                        longlat=FALSE)[theLower]/distGS,
+                    spDists(
+                        spTransform(preserve, crs)
+                )[theLower]/distGS,
                     na.rm=TRUE)
               }
           ))
@@ -208,8 +209,8 @@ omerc = function(
           lapply(rotatedCRS,
               function(crs){
                 sqrt(mean(
-                        (spDists(spTransform(preserve, crs), 
-                                  longlat=FALSE)[theLower]/distGS
+                        (spDists(spTransform(preserve, crs)
+                              )[theLower]/distGS
                               -1)^2,
                         na.rm=TRUE))
               }
