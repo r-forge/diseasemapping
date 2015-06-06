@@ -128,21 +128,34 @@ profLlgm = function(fit,mc.cores=1, ...) {
 	res = c(dots[varying],res)
 	
 	if(length(varying)==1) {
-		smaller = dots[[varying]] <= res$MLE
-		bigger = dots[[varying]] >= res$MLE
-		Skeep = seq(2, length(Sprob)-1)
-		res$ci = cbind(
-				prob=Sprob[Skeep],
+    Skeep = seq(2, length(Sprob)-1)
+    res$ci = cbind(
+        prob=Sprob[Skeep],
         lower=NA, upper=NA)
-    if(sum(smaller)>1) 
-				res$ci[,'lower'] =
+    
+    
+    smaller = seq(1,which.min(res$MLE))
+		bigger = seq(which.min(res$MLE), length(res$MLE))
+    
+    # make the likelihood unimodal
+    monotoneLik = res$logL
+    
+    if(length(smaller)>1) 
+      for(D in 2:length(smaller)){
+        motononeLik[D] = min(monotoneLik[c(D-1,D)])
+      }
+			res$ci[,'lower'] =
           stats::spline(
-            x=res$logL[smaller], 
+            x=monotoneLik[smaller], 
 						y=dots[[varying]][smaller],
 						xout=res$breaks[Skeep],
             method= "hyman")$y
 
   if(sum(bigger)>1)
+    for(D in seq(length(smaller)+1, max(bigger))){
+      motononeLik[D] = max(monotoneLik[c(D-1,D)])
+    }
+  
     res$ci[,'upper']=stats::spline(
         x=res$logL[bigger], 
 			  y=dots[[varying]][bigger], 
