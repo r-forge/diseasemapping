@@ -6,7 +6,7 @@ export(
 bym, cancerRates,  formatCases, 
 getRates,  getStdRate, 
 getBreaks,
-excProb, nbToInlaGraph
+nbToInlaGraph
 )
 
 export(getSMR)
