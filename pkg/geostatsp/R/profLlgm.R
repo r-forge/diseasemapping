@@ -134,8 +134,8 @@ profLlgm = function(fit,mc.cores=1, ...) {
         lower=NA, upper=NA)
     
     
-    smaller = seq(1,which.min(res$MLE))
-		bigger = seq(which.min(res$MLE), length(res$MLE))
+    smaller = seq(1,which.max(res$logL))
+		bigger = seq(which.max(res$logL), length(res$logL))
     
     # make the likelihood unimodal
     monotoneLik = res$logL
