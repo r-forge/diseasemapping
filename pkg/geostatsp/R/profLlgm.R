@@ -140,9 +140,9 @@ profLlgm = function(fit,mc.cores=1, ...) {
     # make the likelihood unimodal
     monotoneLik = res$logL
     
-    if(length(smaller)>1) 
+    if(length(smaller)>1) {
       for(D in 2:length(smaller)){
-        motononeLik[D] = min(monotoneLik[c(D-1,D)])
+        monotoneLik[D] = min(monotoneLik[c(D-1,D)])
       }
 			res$ci[,'lower'] =
           stats::spline(
@@ -150,17 +150,18 @@ profLlgm = function(fit,mc.cores=1, ...) {
 						y=dots[[varying]][smaller],
 						xout=res$breaks[Skeep],
             method= "hyman")$y
+  }
 
-  if(sum(bigger)>1)
+  if(sum(bigger)>1) {
     for(D in seq(length(smaller)+1, max(bigger))){
-      motononeLik[D] = max(monotoneLik[c(D-1,D)])
+      monotoneLik[D] = max(monotoneLik[c(D-1,D)])
     }
   
     res$ci[,'upper']=stats::spline(
         x=res$logL[bigger], 
 			  y=dots[[varying]][bigger], 
         xout=res$breaks[Skeep], method='hyman')$y
- 
+  }
 		
 		res$ciLong = na.omit(
 				reshape(as.data.frame(res$ci), 
