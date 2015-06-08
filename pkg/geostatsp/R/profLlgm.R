@@ -153,8 +153,8 @@ profLlgm = function(fit,mc.cores=1, ...) {
   }
 
   if(sum(bigger)>1) {
-    for(D in seq(length(smaller)+1, max(bigger))){
-      monotoneLik[D] = min(monotoneLik[c(D-1,D)])
+    for(D in seq(1, length(bigger)-1)){
+      monotoneLik[D] = min(monotoneLik[c(D,D+1)])
     }
   
     res$ci[,'upper']=stats::spline(

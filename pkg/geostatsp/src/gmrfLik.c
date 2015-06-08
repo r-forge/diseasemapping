@@ -254,7 +254,7 @@ SEXP gmrfLik(
 		SEXP optParam
 		){
 
-	int Drep, dooptim, DxisqAgain; // length(xisqTausq)
+	int Drep, dooptim; // length(xisqTausq)
 	double	oneD=1.0, zeroD=0.0;
 	double optTol, optMin, optMax; // default interval for optimizer
 	int NxisqMax = 100; // number of xisqTausq's to retain when optimizing
