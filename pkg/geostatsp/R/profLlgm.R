@@ -157,7 +157,7 @@ profLlgm = function(fit,mc.cores=1, ...) {
   }
 
   if(sum(bigger)>1) {
-    for(D in seq(1, length(bigger)-1)){
+    for(D in seq(length(smaller)+1, length(monotoneLik)-1)){
       monotoneLik[D] = min(monotoneLik[c(D,D+1)])
     }
   
