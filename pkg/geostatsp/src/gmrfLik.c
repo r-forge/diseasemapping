@@ -260,7 +260,7 @@ SEXP gmrfLik(
 	int NxisqMax = 100; // number of xisqTausq's to retain when optimizing
 	double *YXVYX, *determinant, *determinantForReml;
 	double *m2logL, *m2logReL, *varHatMl, *varHatReml, *resultXisqTausq;
-	void *nothing;
+	double *nothing;
 	SEXP resultR;
 	CHM_DN obsCov;
 

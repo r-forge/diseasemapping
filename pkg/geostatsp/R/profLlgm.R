@@ -3,6 +3,7 @@ profLlgm = function(fit,mc.cores=1, ...) {
 	dots = list(...)
   fit$parameters = fillParam(fit$parameters)
 	varying = intersect(names(dots), names(fit$parameters))
+  varying = lapply(varying, sort)
 
 	nonLinearParams = c('boxcox','shape','nugget','variance',
 			'anisoAngleRadians','anisoAngleDegrees','anisoRatio','range')
