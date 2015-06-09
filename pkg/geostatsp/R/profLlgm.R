@@ -155,7 +155,7 @@ profLlgm = function(fit,mc.cores=1, ...) {
           xout=res$breaks[Skeep],
           method= "hyman"), silent=TRUE)
       
-      if(class(resCI)!='try-error')
+      if(class(resCi)!='try-error')
   			res$ci[,'lower'] = resCi$y
   }
 
@@ -170,7 +170,7 @@ profLlgm = function(fit,mc.cores=1, ...) {
         xout=res$breaks[Skeep], method='hyman'),
     silent=TRUE)
     
-    if(class(resCI)!='try-error')
+    if(class(resCi)!='try-error')
       res$ci[,'upper']= resCi$y     
   }
 		
