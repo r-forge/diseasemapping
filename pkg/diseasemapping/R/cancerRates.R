@@ -309,7 +309,7 @@ x = reshape(x, direction='wide',
     idvar=c('REGISTRY','age','sex','group','ETHNIC_GROUP')
 )
 
-x = x[as.chracter(x$sex) %in% sex,]
+x = x[as.character(x$sex) %in% sex,]
 
 
 Scancers = grep("^rate\\.[[:digit:]]+$", names(x), value=TRUE)
@@ -329,7 +329,7 @@ if(!any(duplicated(x$group))){
 }
 
 
-attributes(rates)$site = sSite
+
 attributes(rates)$area = Sregistry
 attributes(rates)$year = year
 
