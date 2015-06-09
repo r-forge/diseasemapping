@@ -162,7 +162,7 @@ profLlgm = function(fit,mc.cores=1, ...) {
     }
   
     res$ci[,'upper']=stats::spline(
-        x=res$logL[bigger], 
+        x=monotoneLik[bigger], 
 			  y=dots[[varying]][bigger], 
         xout=res$breaks[Skeep], method='hyman')$y
   }
