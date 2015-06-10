@@ -150,7 +150,7 @@ profLlgm = function(fit,mc.cores=1, ...) {
       
       resCi = try(stats::spline(
           x=monotoneLik[smaller], 
-          y=dots[[varying]][smaller],
+          y=res[[1]][smaller],
           xout=res$breaks[Skeep],
           method= "hyman"), silent=TRUE)
       
@@ -160,12 +160,12 @@ profLlgm = function(fit,mc.cores=1, ...) {
 
   if(sum(bigger)>1) {
     for(D in seq(length(smaller)+1, length(monotoneLik)-1)){
-      monotoneLik[D] = min(monotoneLik[c(D,D+1)])
+      monotoneLik[D] = min(monotoneLik[c(D-1,D)])
     }
 
     resCi = try(stats::spline(
         x=monotoneLik[bigger], 
-        y=dots[[varying]][bigger], 
+        y=res[[1]][bigger], 
         xout=res$breaks[Skeep], method='hyman'),
     silent=TRUE)
     
@@ -178,7 +178,7 @@ profLlgm = function(fit,mc.cores=1, ...) {
       logL = res$breaks[match(res$ci[,'prob'], res$prob)]
   )
 		res$ciLong = na.omit(
-				reshape(as.data.frame(res$ci), 
+				reshape(as.data.frame(res$ci[,c('prob','upper','lower')]), 
 						direction="long",
 						varying=list(par=c('upper','lower')),
 						v.names='par',
