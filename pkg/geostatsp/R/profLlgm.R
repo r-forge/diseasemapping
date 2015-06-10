@@ -105,7 +105,6 @@ profLlgm = function(fit,mc.cores=1, ...) {
   Squant = qchisq(Sprob, df=length(varying))
   
   res = list(logL=-L/2,
-      full=t(L),
       prob=Sprob,
       quant=Squant,
       MLE=fit$param[varying],
@@ -174,6 +173,10 @@ profLlgm = function(fit,mc.cores=1, ...) {
       res$ci[,'upper']= resCi$y     
   }
 		
+  res$ci = cbind(
+      res$ci, 
+      logL = res$breaks[match(res$ci[,'prob'], res$prob)]
+  )
 		res$ciLong = na.omit(
 				reshape(as.data.frame(res$ci), 
 						direction="long",
