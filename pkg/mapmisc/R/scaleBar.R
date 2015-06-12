@@ -174,7 +174,7 @@ if(!noScale) {
   
   thelegend$textxy =  
        thelegend$rect$left + 
-       max(c(segdist, sum(strwidth(c('n',thelabel), cex=cex))))/2 + 
+       max(c(widthTargetUsr, sum(strwidth(c('n',thelabel), cex=cex))))/2 + 
           1i*mean(c(thelegend$text$y, thelegend$rect$top))
 			
 	if(forLegend$lty)
