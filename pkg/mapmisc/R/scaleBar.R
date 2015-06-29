@@ -174,7 +174,7 @@ if(!noScale) {
   thelegend$textxy =  
        mean(c(thelegend$rect$left, thelegend$text$x)) + 
 #       max(c(dashdist, sum(strwidth(c('n',thelabel), cex=cex))))/2 + 
-          1i*(c(thelegend$text$y, thelegend$rect$top))
+          1i*mean(c(thelegend$text$y, thelegend$rect$top))
 			
       
       
