@@ -69,23 +69,29 @@ if(requireNamespace('rgdal', quietly=TRUE)) {
 	map = crop(map, extent(tocrop))
 }
 
-oldinsetbox = t(bbox(map))
-oldrange = apply(oldinsetbox, 2, diff)
+
+oldrange = apply(extentFull, 2, diff)
 oldYoverX = oldrange[2]/oldrange[1]
 
-newxrange = diff(par("usr")[1:2])*width
+newxrange = diff(extentFull[,'x'])*width
+plotFracYcoords = oldrange['y']/oldrange['x']
+plotFracYinches= par('pin')[2]/par('pin')[1]
+    
+#plotFracYcoords = exp(diff(log(apply(matrix(par("usr"),2),2,diff))))
 
-plotFracYcoords = exp(diff(log(apply(matrix(par("usr"),2),2,diff))))
+#plotFracYinches= exp(diff(log(par('pin'))))
 
-plotFracYinches= exp(diff(log(par('pin'))))
-
-if(length(grep("longlat", projection(map)))) {
-	cellRatio = res(area(map))
-	cellRatio = cellRatio[1]/cellRatio[2]
-} else {
+#if(length(grep("longlat", projection(map)))) {
+#	cellRatio = res(area(map))
+#	cellRatio = cellRatio[1]/cellRatio[2]
+#} else {
 	cellRatio = 1
-}
-newyrange = newxrange * cellRatio* oldYoverX * plotFracYcoords / plotFracYinches 
+#}
+
+insetMapRatio = abs(apply(bbox(map),1,diff))
+insetMapRatio = insetMapRatio[2]/insetMapRatio[1]
+  
+newyrange = newxrange * cellRatio* insetMapRatio * plotFracYcoords / plotFracYinches 
 
 
 	if(is.character(pos)) {

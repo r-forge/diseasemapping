@@ -116,7 +116,7 @@ gm.dataSpatial = function(
 
 	
 	Sfactors = c(
-			names(data)[apply(data@data,2,is.factor)],
+			names(data)[unlist(lapply(data@data, is.factor))],
 			covFactors,
 			theFactors
 	)

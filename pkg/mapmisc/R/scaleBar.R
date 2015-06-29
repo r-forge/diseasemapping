@@ -2,8 +2,8 @@
 scaleBar = function(crs, 
     pos="bottomright",
     cex=par('cex'),
-    pt.cex = 1.25*cex,
-    seg.len=8*cex,
+    pt.cex = 1.1*cex,
+    seg.len=5*cex,
     title.cex=cex,
     outer=TRUE, ...) {
 
@@ -73,8 +73,7 @@ scaleBar = function(crs,
 					proj4string=CRS(proj4string(xll))))
 	
 # how long (in m) is our dashtemplate
-	dashdist = spDists(xll[c("centre","dashright"),], 
-			longlat=TRUE)[1,2]*1000
+	dashdist = spDists(xll[c("centre","dashright"),])[1,2]*1000
 
 	theb = log10(dashdist)
 	candidates = 10^c(floor(theb), ceiling(theb))
@@ -173,9 +172,9 @@ if(!noScale) {
   thelegend$title = thelabel
   
   thelegend$textxy =  
-       thelegend$rect$left + 
-       max(c(widthTargetUsr, sum(strwidth(c('n',thelabel), cex=cex))))/2 + 
-          1i*mean(c(thelegend$text$y, thelegend$rect$top))
+       mean(c(thelegend$rect$left, thelegend$text$x)) + 
+#       max(c(dashdist, sum(strwidth(c('n',thelabel), cex=cex))))/2 + 
+          1i*(c(thelegend$text$y, thelegend$rect$top))
 			
 	if(forLegend$lty)
 		text(thelegend$textxy, 
