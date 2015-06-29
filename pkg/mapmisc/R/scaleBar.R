@@ -176,10 +176,13 @@ if(!noScale) {
 #       max(c(dashdist, sum(strwidth(c('n',thelabel), cex=cex))))/2 + 
           1i*(c(thelegend$text$y, thelegend$rect$top))
 			
+      
+      
 	if(forLegend$lty)
-		text(thelegend$textxy, 
+		text(Re(thelegend$textxy),
+        Im(thelegend$textxy),
 				label=thelegend$title,  
-        pos=1, offset=0.25, cex=title.cex,
+        pos=3, cex=title.cex,
         col=forLegend$text.col)
 		
   # if there's no scale bar or box and pos is numeric,
