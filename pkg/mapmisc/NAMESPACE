@@ -11,6 +11,7 @@ export(tpeqd)
 
 export( GNcities, GNsearch)
 
+export(crsLL, crsMerc)
 
 
 import(

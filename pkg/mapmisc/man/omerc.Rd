@@ -1,8 +1,8 @@
 \name{omerc}
 \alias{omerc}
-\title{Oblique mercator projections}
+\title{Oblique Mercator projections}
 \description{
-Defines an appropriate oblique mercator projection for a spatial object
+Defines an appropriate oblique Mercator projection for a spatial object
 }
 \usage{
 	omerc(x, angle,  
