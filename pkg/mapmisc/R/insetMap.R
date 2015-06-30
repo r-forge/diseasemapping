@@ -5,6 +5,8 @@ col="#FF000090", borderSmall=NA, borderBig=NULL,
 		cropInset = extent(-180,xmax=180, ymin=-47, ymax=71),
 		outer=TRUE) {
 
+  
+  
 fromEdge = matrix(par("plt"), 2, 2, 
 		dimnames=list(c("min","max"), c("x","y")))
 extentUsr = matrix(par("usr"),2,2, dimnames=dimnames(fromEdge))
@@ -32,6 +34,16 @@ if(is.character(crs))
 if(class(crs) != "CRS")
 	crs = CRS(proj4string(crs))
 
+# if cropInset is numeric
+  # use it to extend the extent of the plot region
+  # and crop the inset map
+if(is.numeric(cropInset)) {
+  
+  cropInset = raster(extend(extentSmall, cropInset), crs=crs)
+  
+}
+
+  
 
 bboxSmall = t(bbox(extentSmall))
 
@@ -49,6 +61,7 @@ polySmall = cbind(
 
 xsp = SpatialPoints(polySmall, 	proj4string = crs)
 
+
 crsCrop = try(CRS(proj4string(cropInset)),silent=TRUE)
 if(class(crsCrop)=="try-error")
 	crsCrop = crsLL
@@ -57,7 +70,7 @@ tocrop = SpatialPoints(tocrop,
 		proj4string=crsCrop)
 
 if(is.character(map)) {
-  map = openmap(xsp, path=map, zoom=zoom,crs=crsLL)
+  map = openmap(cropInset, path=map, zoom=zoom,crs=crsLL)
 }
 # make sure map is a raster
 if(!length(grep("^Raster", class(map)))) {
