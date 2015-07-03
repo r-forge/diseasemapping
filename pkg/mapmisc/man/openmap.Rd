@@ -10,7 +10,7 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	openmap(x, zoom, 
 	path="http://tile.openstreetmap.org/",
 	maxTiles = 9,
-	crs=projection(x),   extend=0, verbose=FALSE)
+	crs=projection(x),   buffer=0, verbose=FALSE)
 	osmTiles(name)
 	openmapAttribution(name, type=c('text','latex','markdown','html'), short=FALSE)
 }
@@ -31,7 +31,7 @@ number of map tiles is less than or equl to this number.}
 for instance when \code{x} is a matrix or extent, 
 \code{crs} is also used as the projection of \code{x}.  If \code{crs} is missing
 and \code{x} has no crs, long-lat is used.}
-\item{extend}{Extend the extent for which the map is requested, in units
+\item{buffer}{Extend the extent for which the map is requested, in units
 of \code{x}.  Can be negative, or a vector of length 2 for different x and y 
 extensions}
   \item{verbose}{

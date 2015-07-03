@@ -13,11 +13,11 @@ and adding a legend of colour scales.
 \usage{
 scaleBar(crs, pos = "bottomright",   
 	cex=par('cex'),
-    pt.cex = 1.25*cex,
-    seg.len=8*cex,
+    pt.cex = 1.1*cex,
+    seg.len=5*cex,
     title.cex=cex,
     outer=TRUE,...)
-map.new(x,legendRight=FALSE)
+map.new(x,legendRight=FALSE, buffer=0)
 insetMap(crs, pos="bottomright",map="osm",zoom=0, 
 		width=max(c(0.2, 1-par('plt')[2])), 
 		col="#FF000090", borderSmall=NA, borderBig=NULL,
@@ -45,6 +45,7 @@ A spatial object from which an extent can be extracted.
 }
 \item{legendRight}{Leave room to the right for 
 the legend produced by plotting a Raster object}
+\item{buffer}{passed to \code{\link[raster]{extend}} to increase the plotting area}
 \item{map}{Either a Raster for the inset map or a string 
 passed to \code{\link{openmap}}'s path argument}
 \item{zoom}{Zoom level if retreiving inset map from \code{\link{openmap}}}

@@ -1,10 +1,7 @@
-map.new = function(x, legendRight=FALSE) {
+map.new = function(x, legendRight=FALSE, buffer=0) {
 	
+  xpoints = as(extend(extent(x), buffer), 'SpatialPoints')
 
-	
-	xpoints = t(bbox(extent(x)))
-
-	xpoints = SpatialPoints(xpoints)
 	thecrs = try(proj4string(x), silent=TRUE) 
 	if(class(thecrs)!="try-error") {
 		if(!is.na(thecrs))

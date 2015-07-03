@@ -1,4 +1,5 @@
-GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
+GNcities = function(north, east, south, west, lang = "en", 
+    maxRows = 10, buffer=0) {
 	
 	fourCoords=FALSE
 	if(is.numeric(north))
@@ -7,7 +8,7 @@ GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 
 	theproj = projection(north)
 	if(!fourCoords) {
-		extLL = .extentLL(north)
+		extLL = .getExtentLL(north, extend=buffer)
 		
 		east = xmax(extLL)
 		west = xmin(extLL)
@@ -39,7 +40,7 @@ GNcities = function(north, east, south, west, lang = "en", maxRows = 10) {
 	result
 }
 
-GNsearch = function(...) {
+GNsearch = function(..., crs=crsLL) {
 	
 	
 	if(requireNamespace("geonames", quietly = TRUE)) { 
@@ -56,6 +57,9 @@ GNsearch = function(...) {
 				 data=result, 
 				proj4string=crsLL)
 	}
+  if(requireNamespace('rgdal', quietly=TRUE ))
+    result = spTransform(result, CRSobj=crs(crs))
+
 } else {
 	warning("install the geonames package to use GNsearch")
 	result = NULL

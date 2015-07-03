@@ -60,7 +60,7 @@ openmap = function(x, zoom,
 	path="http://tile.openstreetmap.org/",
 	maxTiles = 9,
 	crs=projection(x),
-  extend=0,
+  buffer=0,
 	verbose=FALSE) {
 
 
@@ -79,28 +79,23 @@ openmap = function(x, zoom,
 						path[ grep("^http[s]*://", path, invert=TRUE)], sep="")
 	names(pathOrig) = path
 
-	extLL = .extentLL(x,crs, extend)
-
-		
-	if(any(abs(as.vector(extLL))>181))
-		warning("no CRS supplied and coordinates do not appear to be long-lat")
-		
-	xlim= c(xmin(extLL), xmax(extLL))
-	ylim = c(ymin(extLL), ymax(extLL))
-		
+	extLL = .getExtentLL(x,crs, buffer)
+ 
 	if(missing(zoom)) {
 	zoom = 1
-	while(nTiles(xlim, ylim, zoom) <= maxTiles & zoom <= 18) {
+	while(nTiles(extLL, zoom) <= maxTiles & zoom <= 18) {
 		zoom = zoom + 1
 	}
 	zoom = min(c(18,max(c(1, zoom-1))))
 	}
-	if(verbose) cat("zoom is ", zoom, ", ", nTiles(xlim, ylim, zoom), "tiles\n")
+	if(verbose) cat("zoom is ", zoom, ", ", nTiles(extLL, zoom), "tiles\n")
 
 	result = NULL
+
+  
 	for(Dpath in rev(path)) {
 		thistile = try(
-				getTiles(xlim,ylim, zoom=zoom,
+				getTiles(extLL, zoom=zoom,
 				path=Dpath,
 				verbose=verbose),
 		silent=TRUE	)
@@ -129,7 +124,7 @@ openmap = function(x, zoom,
 
 	
 	if(is.null(result)) {
-		result = raster(extLL,1,1,crs=crsLL)
+		result = raster(openmapExtentMerc,1,1,crs=crsMerc)
 		values(result) = NA
     attributes(result)$openmap = list(
         tiles=NA,
@@ -167,7 +162,7 @@ openmap = function(x, zoom,
       values(resultProj[[D]]) = 1+values(resultProj[[D]])
 	}
 }
-}
+} # end D in names(resultProj)
 
 	if(nlayers(resultProj)==1) 
 		resultProj = resultProj[[1]]

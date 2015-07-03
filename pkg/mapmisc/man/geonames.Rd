@@ -7,8 +7,8 @@
  from  www.geonames.org.
   }
 \usage{
-	GNcities(north, east, south, west, lang = "en", maxRows = 10)
-	GNsearch(...)
+	GNcities(north, east, south, west, lang = "en", maxRows = 10, buffer=0)
+	GNsearch(..., crs=crsLL)
 	}
 
 \arguments{
@@ -19,7 +19,9 @@
 	\item{east,south,west}{If \code{north} is numeric, decimal degree bounding box.}
 	\item{lang}{Language for internationalised returned text}
 	\item{maxRows}{Limit on returned rows}
+	\item{buffer}{passed to code{\link[raster]{extend}}}
 	\item{...}{Various search arguments}
+	\item{crs}{projection for the output}
 }
 
 \seealso{\code{\link[geonames]{GNcities}}, \code{\link[geonames]{GNsearch}}}

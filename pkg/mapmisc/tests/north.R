@@ -1,0 +1,66 @@
+library('mapmisc')
+
+
+coords = rbind(Alert = c(-62.338889, 82.501389),
+    Qaanaaq = c(-69.230556, 77.466667),
+    'Alex Fjord' = c(-75.999722, 78.9),
+    'Hans island' = c(-66.459722, 80.828056)
+)
+
+x = SpatialPointsDataFrame(
+    coords, 
+    data=data.frame(name=rownames(coords)),
+    proj4string=crsLL
+    )
+        
+if(require('rgdal', quietly=TRUE)) {
+
+map = openmap(x, path='osm', verbose=TRUE, maxTiles=20, buffer=c(30,3))    
+
+map.new(map)
+plot(map,add=TRUE)
+points(x)
+text(x, label=x$name, pos=4)
+scaleBar(x, 'bottom')
+scaleBar(x, 'left', seg.len=0, bty='n')
+
+
+mapSat = openmap(x, path='mapquest', verbose=TRUE, maxTiles=20, buffer=c(30,3))    
+
+map.new(mapSat)
+plotRGB(mapSat,add=TRUE)
+points(x)
+text(x, label=x$name, pos=4)
+scaleBar(x, 'bottom')
+scaleBar(x, 'left', seg.len=0, bty='n')
+
+xMerc = spTransform(x, omerc(x))
+mapMerc = openmap(xMerc, path='osm', verbose=TRUE, 
+    maxTiles=20, buffer=c(100,400)*1000)    
+
+map.new(mapMerc)
+plot(mapMerc,add=TRUE)
+points(xMerc)
+text(xMerc, label=xMerc$name, pos=4)
+scaleBar(xMerc, 'bottom')
+scaleBar(xMerc, 'left', seg.len=0, bty='n')
+
+}
+
+if( FALSE) {
+  # this takes too long
+  xRot = spTransform(x, omerc(x, angle=-80))
+  mapRot = openmap(xRot, path='osm', verbose=TRUE, 
+    maxTiles=16, buffer=c(100,20,20,100)*1000)    
+
+map.new(xRot, buffer=50000)
+plot(mapRot,add=TRUE)
+points(xRot)
+text(xRot, label=xRot$name, pos=2+2*(xRot$name=='Qaanaaq'))
+scaleBar(xRot, 'bottom')
+scaleBar(xRot, 'left', seg.len=0, bty='n')
+scaleBar(xRot, 'top', seg.len=0, bty='n')
+scaleBar(xRot, 'topright', seg.len=0, bty='n')
+scaleBar(xRot, 'bottomright', seg.len=0, bty='n')
+
+}
