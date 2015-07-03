@@ -43,8 +43,25 @@ GNcities = function(north, east, south, west, lang = "en",
 GNsearch = function(..., crs=crsLL) {
 	
 	
-	if(requireNamespace("geonames", quietly = TRUE)) { 
-	result=geonames::GNsearch(...)
+	if(requireNamespace("geonames", quietly = TRUE)) {
+
+  theDots = list(...)
+  isVector = unlist(lapply(theDots, length))
+  isVector = isVector[isVector > 1]
+  
+  
+  
+  if(length(isVector)) {
+    result = mapply(
+        geonames::GNsearch,
+        ...,
+        SIMPLIFY=FALSE
+        )
+    result = do.call(rbind, result)    
+    result = as.data.frame(result)
+  } else {
+    result=geonames::GNsearch(...)
+  }
 	
 	if(all(c("lat","lng") %in% names(result))){
 		coords = as.matrix(result[,c("lng","lat"),drop=FALSE])
@@ -56,9 +73,9 @@ GNsearch = function(..., crs=crsLL) {
 				coords,
 				 data=result, 
 				proj4string=crsLL)
-	}
-  if(requireNamespace('rgdal', quietly=TRUE ))
-    result = spTransform(result, CRSobj=crs(crs))
+    if(requireNamespace('rgdal', quietly=TRUE ))
+      result = spTransform(result, CRSobj=crs(crs))
+  }
 
 } else {
 	warning("install the geonames package to use GNsearch")
