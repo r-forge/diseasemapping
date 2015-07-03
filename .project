@@ -6,13 +6,23 @@
 	</projects>
 	<buildSpec>
 		<buildCommand>
-			<name>de.walware.statet.r.builders.RSupport</name>
+			<name>org.eclipse.ui.externaltools.ExternalToolBuilder</name>
+			<triggers>full,incremental,</triggers>
 			<arguments>
+				<dictionary>
+					<key>LaunchConfigHandle</key>
+					<value>&lt;project&gt;/.externalToolBuilders/de.walware.statet.r.builders.RSupport (2).launch</value>
+				</dictionary>
 			</arguments>
 		</buildCommand>
 		<buildCommand>
-			<name>de.walware.docmlet.tex.builders.Tex</name>
+			<name>org.eclipse.ui.externaltools.ExternalToolBuilder</name>
+			<triggers>full,incremental,</triggers>
 			<arguments>
+				<dictionary>
+					<key>LaunchConfigHandle</key>
+					<value>&lt;project&gt;/.externalToolBuilders/de.walware.docmlet.tex.builders.Tex.launch</value>
+				</dictionary>
 			</arguments>
 		</buildCommand>
 	</buildSpec>
