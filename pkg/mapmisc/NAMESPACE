@@ -13,11 +13,21 @@ export( GNcities, GNsearch)
 
 export(crsLL, crsMerc)
 
-
 import(
   sp,
-  raster
+  raster 
   )
+  
+importFrom(grDevices, rgb, col2rgb, heat.colors)
+
+importFrom(methods, as)
+
+importFrom(stats, na.omit)
+
+importFrom(graphics, par, strwidth, polygon, legend)
+
+importFrom(utils, download.file)
+
 
  # brewer.pal from RColorBrewer referenced by ::
 
