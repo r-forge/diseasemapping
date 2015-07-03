@@ -36,13 +36,13 @@ scaleBar(x, 'left', seg.len=0, bty='n')
 
 xMerc = spTransform(x, omerc(x))
 mapMerc = openmap(xMerc, path='osm', verbose=TRUE, 
-    maxTiles=20, buffer=c(100,400)*1000)    
+    maxTiles=20, buffer=c(50,200)*1000)    
 
-map.new(mapMerc)
+map.new(xMerc, buffer=50000)
 plot(mapMerc,add=TRUE)
 points(xMerc)
 text(xMerc, label=xMerc$name, pos=4)
-scaleBar(xMerc, 'bottom')
+scaleBar(xMerc, 'bottomleft')
 scaleBar(xMerc, 'left', seg.len=0, bty='n')
 
 }
