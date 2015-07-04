@@ -38,12 +38,9 @@ if(class(crs) != "CRS")
   # use it to extend the extent of the plot region
   # and crop the inset map
 if(is.numeric(cropInset)) {
-  
-  cropInset = raster(extend(extentSmall, cropInset), crs=crs)
-  
+  cropInset = raster(raster::extend(extentSmall, cropInset), crs=crs)
+  cropInset = projectExtent(cropInset, crsLL)
 }
-
-  
 
 bboxSmall = t(bbox(extentSmall))
 
@@ -70,7 +67,7 @@ tocrop = SpatialPoints(tocrop,
 		proj4string=crsCrop)
 
 if(is.character(map)) {
-  map = openmap(cropInset, path=map, zoom=zoom,crs=crsLL)
+  map = openmap(xsp, path=map, zoom=zoom,crs=crsMerc)
 }
 # make sure map is a raster
 if(!length(grep("^Raster", class(map)))) {
@@ -107,7 +104,7 @@ insetMapRatio = insetMapRatio[2]/insetMapRatio[1]
 newyrange = newxrange * cellRatio* insetMapRatio * plotFracYcoords / plotFracYinches 
 
 
-	if(is.character(pos)) {
+if(is.character(pos)) {
 		xpoints = t(bbox(extentBig))
 
 x = apply(xpoints, 2, mean) - 0.5*c(newxrange, newyrange)
