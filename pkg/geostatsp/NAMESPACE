@@ -55,7 +55,7 @@ S3method(variogMcEnv, default)
 import(
   sp,
   raster,
-  Matrix, methods
+  Matrix, methods, stats
 )
 
 importFrom(numDeriv,hessian)
