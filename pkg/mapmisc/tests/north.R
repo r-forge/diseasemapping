@@ -34,6 +34,26 @@ text(x, label=x$name, pos=4)
 scaleBar(x, 'bottom')
 scaleBar(x, 'left', seg.len=0, bty='n')
 
+mapSat = openmap(x[x$name=='Hans island',], path='mapquest', 
+    verbose=TRUE, buffer=c(0.03,0.01), maxTiles=20)    
+
+map.new(mapSat)
+plotRGB(mapSat,add=TRUE)
+points(x)
+text(x, label=x$name, pos=4)
+scaleBar(x, 'bottom')
+
+mapSat = openmap(x[x$name=='Qaanaaq',], path='mapquest', 
+    verbose=TRUE, buffer=c(0.01,0.002), maxTiles=12)    
+
+map.new(mapSat)
+plotRGB(mapSat,add=TRUE)
+points(x)
+text(x, label=x$name, pos=4)
+scaleBar(x, 'bottomleft')
+
+
+
 xMerc = spTransform(x, omerc(x))
 mapMerc = openmap(xMerc, path='osm', verbose=TRUE, 
     maxTiles=20, buffer=c(50,200)*1000)    

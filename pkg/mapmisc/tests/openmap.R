@@ -25,7 +25,7 @@ plot(myrasterUTM)
 points(myPointsUTM)
 
 myPointsMercator = spTransform(myPoints, 
-		CRS("+init=epsg:3857"))
+		crsMerc)
 
 
 myplot = function(first,second=first) {
@@ -107,7 +107,12 @@ if(exists("nsl", where="package:utils")) {
 	# one point only
 	mytiles = openmap(coordinates(myPoints)[1,], zoom=4)
 	myplot(myPoints)
-	
+
+  # toronto city hall
+  cityHall = c( -79.383889, 43.653333)
+  mytiles = openmap(cityHall, crs=crsLL, buffer=c(0.001,0.0005), verbose=TRUE)
+  plot(mytiles)
+  points(cityHall[1], cityHall[2], pch=3, col='blue',cex=4)
 	}
 }		
 }

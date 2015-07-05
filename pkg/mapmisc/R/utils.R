@@ -8,16 +8,7 @@ crsMercSimple = CRS("+proj=merc +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +u
 crsMerc = crsMercWeb
 
 
-openmapExtentLL = extent(-180, 180,-85.0511,85.0511)
 
-if(FALSE) {
-  worldLimsLL = SpatialPoints(
-      t(bbox(openmapExtentLL)), 
-      proj4string=crsLL)
-  as.vector(extent(spTransform(worldLimsLL, crsMerc)))
-} 
-
-openmapExtentMerc = extent(-20037508,  20037508, -19994838,  19994838)
 
 
 .getExtentLL = function(x, crs=NA, extend=0) {

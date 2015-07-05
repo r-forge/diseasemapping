@@ -1,10 +1,29 @@
-### sample usage:
-###  lancs =  getTiles(c(-2.842,-2.7579),c(54.0295,54.063),12,path="http://tile.openstreetmap.org/",maxTiles=60,verbose=TRUE)
-###
-.lonlat2tile <- function(lon,lat,zoom){
-  xtile = floor(((lon + 180) / 360) * 2^zoom)
-  ytile = floor((1 - log(tan(lat*pi/180) + 1 / cos(lat*pi/180)) / pi) /2 * 2^zoom)
-  return(c(xtile,ytile))
+
+openmapExtentLL = extent(-180, 180,-85.05113,85.05113)
+crsSphere = CRS("+proj=longlat +ellps=sphere")
+crsMercSphere = CRS("+proj=merc +ellps=sphere +units=m")
+
+if(FALSE) {
+  worldLimsLL = SpatialPoints(
+      t(bbox(openmapExtentLL)), 
+      proj4string=crsLL)
+  as.vector(extent(spTransform(worldLimsLL, crsMerc)))
+  as.vector(extent(spTransform(worldLimsLL, crsMercSphere)))
+} 
+openmapExtentMercSphere = extent(-20015077,  20015077, -20015079,  20015079)
+
+getRasterSphere = function(zoom) {
+  N = 2^zoom 
+  raster(openmapExtentMercSphere, nrow = N, ncol=N, crs=crsMercSphere)
+}
+
+.tile2extentMercator <- function(I, J, zoom) {
+  
+  rastSphere = getRasterSphere(zoom)
+  
+  extent(
+      c(xFromCol(rastSphere, I+1) + c(-1,1)*xres(rastSphere)/2,
+          yFromRow(rastSphere, J+1) + c(-1,1)*yres(rastSphere)/2))
 }
 
 tileEps = sqrt(.Machine$double.neg.eps)
@@ -12,10 +31,18 @@ tileEps = sqrt(.Machine$double.neg.eps)
 .getTileBounds <- function(xlim,ylim,zoom){
   LL = .lonlat2tile(xlim[1],ylim[1],zoom)
   UR = .lonlat2tile(
-      xlim[2]- tileEps,
-      ylim[2]- tileEps,zoom)
+      lon=xlim[2]- tileEps,
+      lat=ylim[2]- tileEps,
+      zoom)
   return(list(LL,UR))
 }
+
+.lonlat2tile <- function(lon,lat,zoom){
+  xtile = pmax(0,floor(((lon + 180) / 360) * 2^zoom))
+  ytile = pmax(0,floor((1 - log(tan(lat*pi/180) + 1 / cos(lat*pi/180)) / pi) /2 * 2^zoom))
+  return(c(xtile,ytile))
+}
+
 
 getTileRowCol <- function(extLL,zoom){
   
@@ -34,22 +61,13 @@ getTileRowCol <- function(extLL,zoom){
   return(Sxy)
 }
 
-.tile2extentMercator <- function(I, J, zoom) {
-  
-  # formula from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
-  n = 2 ^ zoom
-  lon_rad = c(I, I+1) / n * 2*pi - pi
-  lon_deg = lon_rad *180/pi
-  lat_rad = atan(sinh(pi * (1 - 2 * c(J+1,J) / n)))
-  lat_deg = lat_rad * 180.0 / pi
-  
-  eps=1e-8
-  thePoints = raster(extent(lon_deg[1], xmax=lon_deg[2],
-          ymin=lat_deg[1],ymax=lat_deg[2]), 
-      crs=crsLL)
-  thePointsMerc = projectExtent(thePoints, crsMerc)
-  
-  extent(thePointsMerc)			
+
+
+
+openmapExtentMerc = extent(-20037508,  20037508, -19994877,  19994877)
+getRasterMerc = function(zoom) {
+  N = 2^zoom 
+  raster(openmapExtentMerc, nrow = N, ncol=N, crs=crsMerc)
 }
 
 nTiles <- function(extLL,zoom){
@@ -162,7 +180,7 @@ nTiles <- function(extLL,zoom){
 	} # end no colortable 
 	
 	extent(thisimage) = .tile2extentMercator(Dx, Dy, zoom) 
-	proj4string(thisimage) = crsMerc
+	proj4string(thisimage) = crsMercSphere
 	if(length(colourtable)) {
 		thisimage@legend@colortable = colourtable
 	}
