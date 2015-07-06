@@ -39,25 +39,25 @@ scaleBar(x, 'left', seg.len=0, bty='n')
 if(!interactive()) dev.off()
 
 mapSat = openmap(x[x$name=='Hans island',], path='mapquest', 
-    verbose=TRUE, buffer=c(0.03,0.01), maxTiles=20)    
+    verbose=TRUE, buffer=c(4,0.01), zoom=6)    
 
 if(!interactive()) pdf(tempfile("osmplot", tmpdir=".", fileext=".pdf"))
-map.new(mapSat)
+map.new(x[x$name=='Hans island',], buffer=0.3)
 plotRGB(mapSat,add=TRUE)
-points(x)
+points(x, pch=4, col='#FF000040', cex=5)
 text(x, label=x$name, pos=4)
-scaleBar(x, 'top')
+scaleBar(x, 'bottomright')
 if(!interactive()) dev.off()
 
 
 mapSat = openmap(x[x$name=='Qaanaaq',], path='mapquest', 
-    verbose=TRUE, buffer=c(0.002,0.0002), maxTiles=12)    
+    verbose=TRUE, buffer=c(2,0.1), zoom=4)    
 
 if(!interactive()) pdf(tempfile("osmplot", tmpdir=".", fileext=".pdf"))
-map.new(mapSat)
+map.new(x[x$name=='Qaanaaq',], buffer=0.5)
 plotRGB(mapSat,add=TRUE)
-points(x)
-text(x, label=x$name, pos=4)
+points(x, pch=4, col='red', cex=5)
+text(x, label=x$name, pos=4, col='red')
 scaleBar(x, 'bottomleft')
 if(!interactive()) dev.off()
 

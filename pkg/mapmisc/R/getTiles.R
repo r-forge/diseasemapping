@@ -35,7 +35,7 @@ getTilesMerc = function(
     extMerc=openmapExtentMercSphere, 
     zoom=1, 
     path="http://tile.openstreetmap.org/",
-    cacheDir=paste("X",make.names(path),sep=""),
+    cacheDir=file.path(tempdir(), paste("X",make.names(path),sep="")),
     verbose=FALSE){
   
   rasterSphere = getRasterSphere(zoom)  
@@ -62,7 +62,7 @@ getTilesMerc = function(
       
       Dsize = file.info(Dfile)['size']
       if(!any(Dsize > 0,na.rm=TRUE)) {
-        utils::download.file(Durl, Dfile, quiet=!verbose)
+        try(utils::download.file(Durl, Dfile, quiet=!verbose), silent=TRUE)
       } else {
         if(verbose) cat("tile ", Dfile, " cached\n")
       }
@@ -75,7 +75,7 @@ getTilesMerc = function(
         thisimage = raster(
             Dextent, nrows=256, ncols=256, crs=crsMercSphere
             )
-
+        values(thisimage) = NA
       } else {
         crs(thisimage) = crsMercSphere
         extent(thisimage) = Dextent
@@ -98,7 +98,7 @@ getTilesMerc = function(
         
         cnames = c('Red','Green','Blue','Trans')[1:min(c(4,nlayers(thisimage)))]
         
-        names(thisimage) = paste(
+        names(thisimage)[1:length(cnames)] = paste(
             gsub("^http://|/$", "", path),
             cnames,
             sep="")
@@ -107,7 +107,7 @@ getTilesMerc = function(
         colLayer = grep("Trans$", names(thisimage), value=TRUE,invert=TRUE)
         if(length(transLayer)) {
           # convert transparent to NA
-          transLayer = reclassify(thisimage[[transLayer]], data.frame(-Inf, 10, NA))  
+          transLayer = reclassify(thisimage[[transLayer]], data.frame(-Inf, 10, NA))
           thisimage = raster::mask(thisimage, transLayer)
         }
       } # end more than one layer 
@@ -120,6 +120,8 @@ getTilesMerc = function(
       rasters[[paste('x',Dx,sep='')]] = do.call(
           raster::merge, rasterCol
       )
+      names(rasters[[paste('x',Dx,sep='')]]) = 
+          names( rasterCol[[1]])
     } else {
       rasters[[paste('x',Dx,sep='')]] = rasterCol[[1]]
     }
@@ -133,6 +135,9 @@ getTilesMerc = function(
       rastersMerged = do.call(
               raster::merge, rasters
           )
+          names(rastersMerged) = names(rasters[[1]])
+    } else {
+      rastersMerged = rasters[[1]]
     }
     
     # add the colortable

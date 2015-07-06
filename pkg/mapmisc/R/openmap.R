@@ -103,6 +103,7 @@ openmap = function(x, zoom,
 
 		if(class(thistile)=="try-error"){
 			message(paste(Dpath, "not accessible"))
+      thistile=NULL
 		}	else {
 			if(length(names(thistile))) {
 				theprefix=strsplit(names(thistile), "([rR]ed|[gG]reen|[bB]lue)$",fixed=FALSE)[[1]]
@@ -138,8 +139,10 @@ openmap = function(x, zoom,
 	crsOut=crs
 	
 	if(!is.na(crsOut)  ){
+    if(verbose) cat("reprojecting ", ncell(result), " cells...")
     
 		resultProj = projectRaster(result, crs=crsOut, method="ngb")
+    if(verbose) cat("done\n")
     
 	} else {
 		resultProj = result

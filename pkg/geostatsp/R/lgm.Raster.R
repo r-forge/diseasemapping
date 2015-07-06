@@ -147,34 +147,7 @@ setMethod("lgm",
 	
   return(res)
   
-  mleparam = res$param
-  
 
-  
-  if(mleparam['propNugget']>0) {
-    res$predict = conditionalGmrf(
-      param=mleparam,
-      Yvec=Yvec,Xmat=Xmat,
-      template=grid, NN=NN,
-      mc.cores=mc.cores,...)
-  } else {
-    res$predict = raster::brick(
-      raster(grid), nl=ncol(Yvec)+1)
-    names(res$predict) = c('fixed',
-        paste('random', colnames(Yvec), sep="."))
-	values(res$predict) = NA
-    values(res$predict[['fixed']]) =
-      Xmat %*% mleparam[
-        paste(colnames(reXmat),".betaHat",sep='')]
-	for(D in colnames(Yvec)) {
-    values(res$predict[[paste('random', D, sep=".")]]) =
-      Yvec[,D] - values(res$predict[['fixed']])
-	}
-  }
-  if(nlayers(res$predict)==2)
-	  names(res$predict) = c("fixed","random")
-  
-  return(res)
 }
 )
 

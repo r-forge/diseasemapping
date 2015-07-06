@@ -15,6 +15,8 @@ fracUsr = abs(apply(fromEdge, 2, diff))
 dimFull = dimUsr/fracUsr
 
 extentFull = extentUsr
+extentFull['max',] = extentFull['max',] * (2-fromEdge['max',])
+extentFull['min',] = extentFull['min',] * (1+fromEdge['min',])
 extentFull[1,] = extentFull[1,] - dimFull*fromEdge[1,]
 extentFull[2,] = extentFull[2,] + dimFull*(1-fromEdge[2,])
 
@@ -101,7 +103,7 @@ plotFracYinches= par('pin')[2]/par('pin')[1]
 insetMapRatio = abs(apply(bbox(map),1,diff))
 insetMapRatio = insetMapRatio[2]/insetMapRatio[1]
   
-newyrange = newxrange * cellRatio* insetMapRatio * plotFracYcoords / plotFracYinches 
+newyrange = newxrange * cellRatio* insetMapRatio# * plotFracYcoords / plotFracYinches 
 
 
 if(is.character(pos)) {
