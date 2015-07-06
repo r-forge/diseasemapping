@@ -77,7 +77,7 @@ importFrom(utils, installed.packages)
 
 importFrom(stats, logLik, AIC, approx, pnorm, terms, rnorm, qnorm, na.omit,model.matrix,
 update.formula, as.dist,pchisq,optimize,model.frame, optim, reshape, rpois,
-runif, lm, as.formula, pgamma, )
+runif, lm, as.formula, pgamma)
 S3method(AIC, 'lgm')
 S3method(logLik, 'lgm')
 S3method(summary, 'lgm')
