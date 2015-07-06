@@ -79,23 +79,24 @@ openmap = function(x, zoom,
 						path[ grep("^http[s]*://", path, invert=TRUE)], sep="")
 	names(pathOrig) = path
 
-	extLL = .getExtentLL(x,crs, buffer)
- 
+	extMerc = .getExtent(x,crs, buffer, crsMercSphere)
+  extMerc = cropExtent(extMerc, openmapExtentMercSphere)
+  
 	if(missing(zoom)) {
 	zoom = 1
-	while(nTiles(extLL, zoom) <= maxTiles & zoom <= 18) {
+	while(nTilesMerc(extMerc, zoom) <= maxTiles & zoom <= 18) {
 		zoom = zoom + 1
 	}
 	zoom = min(c(18,max(c(1, zoom-1))))
 	}
-	if(verbose) cat("zoom is ", zoom, ", ", nTiles(extLL, zoom), "tiles\n")
+	if(verbose) cat("zoom is ", zoom, ", ", nTilesMerc(extMerc, zoom), "tiles\n")
 
 	result = NULL
 
   
 	for(Dpath in rev(path)) {
 		thistile = try(
-				getTiles(extLL, zoom=zoom,
+				getTilesMerc(extMerc, zoom=zoom,
 				path=Dpath,
 				verbose=verbose),
 		silent=TRUE	)

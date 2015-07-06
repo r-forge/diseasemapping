@@ -44,9 +44,6 @@ thezoom=6
 
 # only do the following if running unix (because nsl is available)
 # and if the OpenStreetMap.org web site can be accessed
-if(exists("nsl", where="package:utils")) {
-	if(length(utils::nsl("www.OpenStreetMap.org"))) {
-
 
 		# raster, result will be in project of the raster (long-lat)
 		mytiles = openmap(x=extend(myraster,1),zoom=thezoom, 
@@ -109,10 +106,13 @@ if(exists("nsl", where="package:utils")) {
 	myplot(myPoints)
 
   # toronto city hall
-  cityHall = c( -79.383889, 43.653333)
-  mytiles = openmap(cityHall, crs=crsLL, buffer=c(0.001,0.0005), verbose=TRUE)
+  cityHall = SpatialPoints(cbind( -79.383889, 43.653333), proj4string=crsLL)
+  cityHall = spTransform(cityHall, CRS('+init=epsg:2958'))
+  mytiles = openmap(cityHall, buffer=50, verbose=TRUE)
+  if(!interactive()) pdf(tempfile("osmplot", tmpdir=".", fileext=".pdf"))
   plot(mytiles)
-  points(cityHall[1], cityHall[2], pch=3, col='blue',cex=4)
-	}
-}		
-}
+  points(cityHall, pch=3, col='blue',cex=4)
+  if(!interactive()) dev.off()
+
+  
+  } # end have rgdal
