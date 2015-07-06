@@ -55,7 +55,7 @@ S3method(variogMcEnv, default)
 import(
   sp,
   raster,
-  Matrix, methods, stats
+  Matrix, methods
 )
 
 importFrom(numDeriv,hessian)
@@ -74,7 +74,9 @@ importFrom(abind, abind)
 export(inla.models)
 
 
-importFrom(stats, logLik, AIC)
+importFrom(stats, logLik, AIC, approx, pnorm, terms, rnorm, qnorm, na.omit,model.matrix,
+update.formula, as.dist,pchisq,optimize,model.frame,installed.packages, optim, reshape, rpois,
+runif, lm, as.formula)
 S3method(AIC, 'lgm')
 S3method(logLik, 'lgm')
 S3method(summary, 'lgm')
