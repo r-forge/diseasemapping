@@ -13,4 +13,5 @@ inla.models()
 a list
 }
 \seealso{
+\url{http://r-inla.org}
 }
