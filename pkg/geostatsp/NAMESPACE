@@ -73,9 +73,10 @@ importFrom(abind, abind)
 # only needed because INLA is requireNamespace instead of require
 export(inla.models)
 
+importFrom(utils, installed.packages)
 
 importFrom(stats, logLik, AIC, approx, pnorm, terms, rnorm, qnorm, na.omit,model.matrix,
-update.formula, as.dist,pchisq,optimize,model.frame,installed.packages, optim, reshape, rpois,
+update.formula, as.dist,pchisq,optimize,model.frame, optim, reshape, rpois,
 runif, lm, as.formula, pgamma, )
 S3method(AIC, 'lgm')
 S3method(logLik, 'lgm')
