@@ -16,10 +16,18 @@ openmapExtentMercSphere = extent(projectExtent(raster(openmapExtentLL, crs=crsSp
 openmapExtentMercSphere = extent(round(as.vector(openmapExtentMercSphere)))
 openmapExtentMercSphere = as.vector(openmapExtentMercSphere)
 dump('openmapExtentMercSphere', file='')
+
+openmapExtentMerc = extent(projectExtent(raster(openmapExtentLL, crs=crsSphere), crsMerc))
+openmapExtentMerc = extent(round(as.vector(openmapExtentMerc)))
+openmapExtentMerc = as.vector(openmapExtentMerc)
+dump('openmapExtentMerc', file='')
+
 }
 openmapExtentMercSphere <-
     extent(c(-20015077, 20015077, -20015077, 20015077))
 
+openmapExtentMerc <-
+   extent( c(-20037508, 20037508, -19994875, 19994875))
 
 .getExtent = function(x, crs=NA, extend=0, crsOut = crsMercSphere) {
   
