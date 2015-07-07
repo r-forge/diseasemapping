@@ -13,6 +13,11 @@ gm.dataRaster = function(
 	# find factors
 	
 	alltermsFull = rownames(attributes(terms(formula))$factors)[-1]
+  if(!length(alltermsFull)){
+    # maybe there's offsets
+    # this thing works if that's the case
+    alltermsFull = as.character(attributes(terms(formula))$variables)[-(1:2)]
+  }
 	allterms = grep(":", alltermsFull, invert=TRUE, value=TRUE)
 	allterms = gsub("[[:space:]]", "", allterms)
 	
