@@ -198,8 +198,8 @@ res = lgcp(data=myPoints, grid=20, covariates=mycov,
 )
 plot(res$raster[["predict.exp"]])
 plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
-}
 
+}
 
 }
 

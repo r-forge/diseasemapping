@@ -47,16 +47,19 @@ if( Sys.info()['user'] =='patrick') {
 }
 
 theNames = names(osmTiles())
-africaExtent = c(15, 25)
+africaExtent = c(25, 25)
 trafalgarSquare=c(-0.128056,51.508056)
 @
 
 
 <<downloadTiles,include=FALSE>>=
 if(reRun) {
-africaTiles = openmap(africaExtent, path=theNames,zoom=2, verbose=TRUE)
+africaTiles = openmap(africaExtent, path=theNames,zoom=2,
+    verbose=TRUE, 
+    buffer=c(1,1))
 
 londonTiles = openmap(trafalgarSquare,zoom=12,path=theNames,verbose=TRUE)
+
 
 # make sure all data is stored in memory not on disk
 # so that caching will work

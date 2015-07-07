@@ -46,6 +46,8 @@ osm = list(long=list(
       )
 )
 
+
+
 for(D in names(osm$long)){
   osm$long[[D]] = paste(
       osm$short[[D]], 
@@ -63,13 +65,25 @@ osmHumanitarian$long$markdown = gsub("cartography",
     "cartography by [Humanitarian OSM team](http://hot.openstreetmap.org/about)",
     osmHumanitarian$long$markdown)
 osmHumanitarian$long$text = gsub("cartography",
-    "cartography by [Humanitarian OSM team](http://hot.openstreetmap.org/about)",
+    "cartography by Humanitarian OSM team (hot.openstreetmap.org)",
     osmHumanitarian$long$text)
 osmHumanitarian$long$html = gsub("cartography",
     "cartography by <a href=\"http://hot.openstreetmap.org/about\">Humanitarian OSM team</a>",
     osmHumanitarian$long$html)
 
-
+osmLandscape = osm
+osmLandscape$long$latex = gsub("cartography[[:print:]]+$",
+    "cartography by \\\\href{http://www.thunderforest.com/}{Thunderforest}",
+    osmLandscape$long$latex)
+osmLandscape$long$markdown = gsub("cartography[[:print:]]+$",
+    "cartography by [Thunderforest](http://www.thunderforest.com/)",
+    osmLandscape$long$markdown)
+osmLandscape$long$text = gsub("cartography[[:print:]]+$",
+    "cartography by Thunderforest.com",
+    osmLandscape$long$text)
+osmLandscape$long$html = gsub("cartography[[:print:]]+$",
+    "cartography by <a href=\"http://www.thunderforest.com/\">Thunderforest</a>",
+    osmLandscape$long$html)
 
 mapquest = mapquestSat = list(
       short=list(
@@ -173,7 +187,82 @@ for(D in names(cartodb$long)){
 }
 
 
+esriAttribution = function(name) {
+  
+  #'http://downloads2.esri.com/ArcGISOnline/docs/tou_summary.pdf'
 
+  long=list(
+      'esri'='Esri, HERE, DeLorme, USGS, Intermap, increment P Corp., NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, MapmyIndia, copyright OpenStreetMap contributors, and the GIS User Community',
+      'esri-grey' = 'Esri, HERE, DeLorme, MapmyIndia, copyright OpenStreetMap contributors, and the GIS user community',
+      'esri-topo' = 'Esri, HERE, DeLorme, TomTom, Intermap, increment P Corp., GEBCO, USGS, FAO, NPS, NRCAN, GeoBase, IGN, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), swisstopo, MapmyIndia, copyright OpenStreetMap contributors, and the GIS User Community',
+      'esri-transport' = 'Esri, HERE, DeLorme, MapmyIndia, copyright OpenStreetMap contributors'
+  )
+  
+  short = 'Esri, OpenStreetMap, and others'
+  
+  if(!length(grep("^http", name))){
+    name = gsub("esri\\.", "esri-", name)
+    if(! all(name %in% names(long))){
+      warning('name not an esri tile', name)
+      return(list())
+    }
+    name = osmTiles(name)
+  }
+  
+  if(! all(names(name) %in% names(long))){
+    warning('name not an esri tile', names(name))
+    return(list())
+  }
+  
+  if(!length(grep("esri", names(name)))){
+    return(list()) 
+  }
+  
+  weburl = gsub("/tile/?$", '', name)
+  
+
+
+
+long = long[names(name)]
+
+  list(long=list(
+          latex=paste(
+              gsub("copyright", "\\\\copyright", long), 
+              ' see \\href{',weburl,
+              '}{arcgisonline.com}.',
+              sep=''
+          ),
+          markdown=paste(
+              gsub("copyright", '&copy;', long), 
+              ' see [arcgisonline.com](',
+              weburl, ').',
+              sep=''
+          ),
+          html=paste(
+              gsub("copyright", '&copy;', long), 
+              ' see <a href=\"',
+              weburl,
+              '\">arcgisonline.com</a>',
+              sep=''
+          ),
+          text =paste(
+              long, 
+              ' see arcgisonline.com',
+              sep=''
+          )
+      ),
+      short=list(
+          latex = paste('\\copyright \\href{', weburl,
+              '}{', short,'}',sep=''),
+          markdown = paste('&copy;','[', short,'](',
+              weburl, ')',sep=''),
+          html = paste('&copy; <a href=\"', weburl, 
+          '\">', short , '</a>',sep=''),
+          text=paste('copyright', short)
+      )
+  )
+  
+}
 
 openmapAttribution = function(name, type=c('text','latex','markdown','html'), short=FALSE) {
 
@@ -185,23 +274,26 @@ openmapAttribution = function(name, type=c('text','latex','markdown','html'), sh
   
   shortlong = c('long','short')[short+1]
   
-  name = unique(gsub("Red$|Green$|Blue$", "", name))
+  name = unique(gsub("Red$|Green$|Blue$|Trans$", "", name))
   result = c()
   for(D in name){
         if(length(grep(
-                "^osm|landscape|opentopomap|openstreetmap|historical|bw.mapnik", 
+                "^osm|opentopomap|openstreetmap|historical|bw.mapnik", 
                 D))){        # openstreetmap
           result[D] = osm[[shortlong]][[type]]
         } else if(length(grep("humanitarian",D))){
           result[D] = osmHumanitarian[[shortlong]][[type]]
           
-      } else if(length(grep("mapquest|mqcdn",D))){ # mapquest
+     } else if(length(grep("landscape",D))){
+      result[D] = osmLandscape[[shortlong]][[type]]
+      
+    } else if(length(grep("mapquest|mqcdn",D))){ # mapquest
         if(length(grep("sat/?$",D))){
           result[D] = mapquestSat[[shortlong]][[type]]
         } else {
           result[D] = mapquest[[shortlong]][[type]]
         }
-      } else if(length(grep("^waze$|waze.com",D))){ # waze
+      } else if(length(grep("^waze",D))){ # waze
         result[D] = waze[[shortlong]][[type]]
       } else if(length(grep("maptoolkit",D))){ 
         result[D] = maptoolkit[[shortlong]][[type]]
@@ -213,6 +305,8 @@ openmapAttribution = function(name, type=c('text','latex','markdown','html'), sh
         }
     } else if(length(grep("cartodb",D))){ 
       result[D] = cartodb[[shortlong]][[type]]
+    } else if(length(grep("^esri",D))){
+      result[[D]] =  esriAttribution(D)[[shortlong]][[type]]    
     } else {
       result[D] = NA
     }
