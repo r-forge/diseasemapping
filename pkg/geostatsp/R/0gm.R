@@ -42,10 +42,11 @@ gm.dataRaster = function(
       "^offset\\([[:print:]]+,log=TRUE\\)$", 
       gsub("[[:space:]]+", "", alltermsFull))
   offsetToLogOrig = alltermsFull[offsetToLogOrig]
+  if(length(offsetToLogOrig)) {
   names(offsetToLogOrig) = gsub(
       "^[[:space:]]?offset\\(|,[[:space:]]?log[[:space:]]?=[[:space:]]?TRUE[[:space:]]?\\)[[:space:]]?$",
       '', offsetToLogOrig)
-  
+  }
   
 	Sfactor = c(
 		dataFactors,
