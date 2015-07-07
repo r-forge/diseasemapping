@@ -218,6 +218,26 @@ lines(res$parameters$range$post,col='red',lty=2,lwd=3)
 legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
 dev.off()
 
- 
+
+# covariates are in data, interactions
+newdat = swissRain
+newdat$elev = extract(swissAltitude, swissRain)
+swissFit =  glgm(
+    formula = lograin~ elev : land,
+    data=newdat, 
+    grid=squareRaster(swissRain,50), 
+    covariates=list(land=swissLandType),
+    family="gaussian", buffer=0,
+    priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
+    control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
+    control.family=list(hyper=list(prec=list(prior="loggamma", 
+                param=c(.1, .1))))
+)
+swissFit$parameters$summary
+pdf("swissCovInDataInteraction.pdf")
+plot(swissFit$raster[['predict.mean']])
+dev.off()
+
+
 
 }

@@ -15,10 +15,12 @@ fracUsr = abs(apply(fromEdge, 2, diff))
 dimFull = dimUsr/fracUsr
 
 extentFull = extentUsr
-extentFull['max',] = extentFull['max',] * (2-fromEdge['max',])
-extentFull['min',] = extentFull['min',] * (1+fromEdge['min',])
-extentFull[1,] = extentFull[1,] - dimFull*fromEdge[1,]
-extentFull[2,] = extentFull[2,] + dimFull*(1-fromEdge[2,])
+extentFull['max',] = extentFull['max',] +
+    apply(extentUsr,2,diff)* (1-fromEdge['max',])
+extentFull['min',] = extentFull['min',]+
+    apply(extentUsr,2,diff)*  fromEdge['min',]
+
+
 
 
 
@@ -69,7 +71,7 @@ tocrop = SpatialPoints(tocrop,
 		proj4string=crsCrop)
 
 if(is.character(map)) {
-  map = openmap(xsp, path=map, zoom=zoom,crs=crsMerc)
+  map = openmap(xsp, path=map, zoom=zoom,crs=NA)
 }
 # make sure map is a raster
 if(!length(grep("^Raster", class(map)))) {

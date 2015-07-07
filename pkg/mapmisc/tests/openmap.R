@@ -105,13 +105,15 @@ thezoom=6
 	mytiles = openmap(coordinates(myPoints)[1,], zoom=4)
 	myplot(myPoints)
 
-  # toronto city hall
-  cityHall = SpatialPoints(cbind( -79.383889, 43.653333), proj4string=crsLL)
-  cityHall = spTransform(cityHall, CRS('+init=epsg:2958'))
+  # ams city hall
+  cityHall = SpatialPoints(cbind( 4.891111, 52.373056), proj4string=crsLL)
+#  cityHall = spTransform(cityHall,CRS("+init=epsg:28992"))
+  cityHall = spTransform(cityHall,CRS("+init=epsg:32631"))
   mytiles = openmap(cityHall, buffer=50, verbose=TRUE)
   if(!interactive()) pdf(tempfile("osmplot", tmpdir=".", fileext=".pdf"))
   plot(mytiles)
   points(cityHall, pch=3, col='blue',cex=4)
+  scaleBar(mytiles, 'topleft')
   if(!interactive()) dev.off()
 
   

@@ -12,7 +12,7 @@ gm.dataRaster = function(
 	
 	# find factors
 	
-	allterms = colnames(attributes(terms(formula))$factors)
+	allterms = rownames(attributes(terms(formula))$factors)[-1]
 	allterms = grep(":", allterms, invert=TRUE, value=TRUE)
 	allterms = gsub("[[:space:]]", "", allterms)
 	
