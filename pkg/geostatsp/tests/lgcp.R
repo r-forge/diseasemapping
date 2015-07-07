@@ -68,10 +68,19 @@ myCov = list(
 
 formula = ~ inc + offset(pop, log=TRUE)
 
-lgcp(formula, data=murder, 
+resL=lgcp(formula, data=murder, 
     grid=squareRaster(murder, 30),
     covariates=myCov,
     border=torontoBorder)
+
+resO = lgcp( ~ inc + pop, 
+    data=murder, 
+    grid=squareRaster(murder, 30),
+    covariates=list(inc=myCov$inc, pop=log(myCov$pop)),
+    border=torontoBorder)
+
+rbind(resL$param$summary, resO$param$summary)
+
 
 }	
 }
