@@ -116,7 +116,9 @@ gm.dataRaster = function(
         offsetToLogAgg = aggregate(offsetToLogCrop, fact=toAggregate, fun=sum)
       }
       offsetToLogAgg = projectRaster(offsetToLogAgg, covariatesStack)
-      offsetToLogLogged = log(offsetToLogAgg)
+      offsetToLogLogged = log(offsetToLogAgg) + 
+          sum(log(res(covariatesStack))) -
+          sum(log(res(offsetToLogCrop)))
       names(offsetToLogLogged) = paste('log',D,sep='')
       covariatesStack = stack(covariatesStack, offsetToLogLogged)
       toDrop = which(alltermsFull==offsetToLogOrig[D])
@@ -135,7 +137,9 @@ toAggregateData = floor(min(res(data)/res(offsetToLogCrop)))
 if(toAggregateData != toAggregate & toAggregateData > 1 ){
   offsetToLogAgg = aggregate(offsetToLogCrop, fact=toAggregateData, fun=sum)
   offsetToLogAgg = projectRaster(offsetToLogAgg, covariatesStack)
-  offsetToLogLogged = log(offsetToLogAgg)
+  offsetToLogLogged = log(offsetToLogAgg) + 
+      sum(log(res(covariatesStack))) -
+      sum(log(res(offsetToLogCrop)))
   names(offsetToLogLogged) = paste('log',D,sep='')
 }
 
