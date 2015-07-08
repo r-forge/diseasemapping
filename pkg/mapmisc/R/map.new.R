@@ -18,7 +18,7 @@ map.new = function(x, legendRight=FALSE, buffer=0) {
 		} else {
 			bob=0.8
 		}
-		par(mar=c(0,0,0,0),plt=c(0,bob, 0,1),xpd=FALSE)
+		par(mar=c(0,0,0,0),plt=c(0,bob, 0,1),xaxs='i',yaxs='i',xpd=FALSE)
 	} else {
 		par(mar=c(0,0,0,0),plt=c(0,1, 0,1))
 	}

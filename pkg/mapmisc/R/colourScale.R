@@ -41,11 +41,16 @@ transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL,...) {
 
 style = style[1]
 weights=NULL
+
+NforSample = 5e+05
+
 	if(style == "equal") {
 		if(length(exclude)) {
 			x = unique(x)
 		} else {
-			x = c(minValue(x), maxValue(x))
+			x = try(c(minValue(x), maxValue(x)), silent=TRUE)
+      if(class(x)=='try-error')
+        x = range(quantile(sampleRegular(night, size=NforSample)))
 		}
 	} else if(style=='fixed') {
 		x = NULL
@@ -84,7 +89,7 @@ weights=NULL
       x=x[,1]
     } else {
       x = table(
-              sampleRegular(x, 5e+05)
+              sampleRegular(x, NforSample)
       )
       weights = x
       x = as.numeric(names(x))
