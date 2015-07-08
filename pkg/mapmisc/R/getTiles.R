@@ -47,6 +47,7 @@ getTilesMerc = function(
   
   
   for(Dx in SrowCol$col){
+
     rasterCol= list()
     Dcache = file.path(cacheDir, zoom, Dx-1)
     Dpath = paste(path,zoom,'/',Dx-1,'/',sep='')
@@ -62,7 +63,10 @@ getTilesMerc = function(
       
       Dsize = file.info(Dfile)['size']
       if(!any(Dsize > 0,na.rm=TRUE)) {
-        try(utils::download.file(Durl, Dfile, quiet=!verbose), silent=TRUE)
+        try(utils::download.file(
+						Durl, Dfile, quiet=!verbose, 
+						method='internal', mode = 'wb'
+		), silent=TRUE)
       } else {
         if(verbose) cat("tile ", Dfile, " cached\n")
       }
