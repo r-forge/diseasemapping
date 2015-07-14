@@ -15,10 +15,10 @@ fracUsr = abs(apply(fromEdge, 2, diff))
 dimFull = dimUsr/fracUsr
 
 extentFull = extentUsr
-extentFull['max',] = extentFull['max',] +
-    apply(extentUsr,2,diff)* (1-fromEdge['max',])
-extentFull['min',] = extentFull['min',]+
-    apply(extentUsr,2,diff)*  fromEdge['min',]
+extentFull['max',] = extentFull['min',] +
+    apply(extentUsr,2,diff) / (fromEdge['max',])
+extentFull['min',] = extentFull['min',] -
+    apply(extentUsr,2,diff) *(  fromEdge['min',])/ (1 -  fromEdge['min',])
 
 
 
