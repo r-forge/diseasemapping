@@ -50,7 +50,7 @@ NforSample = 5e+05
 		} else {
 			x = try(c(minValue(x), maxValue(x)), silent=TRUE)
       if(class(x)=='try-error')
-        x = range(quantile(sampleRegular(night, size=NforSample)))
+        x = range(quantile(sampleRegular(x, size=NforSample)))
 		}
 	} else if(style=='fixed') {
 		x = NULL

@@ -1,4 +1,4 @@
-map.new = function(x, legendRight=FALSE, buffer=0) {
+map.new = function(x, legendRight=FALSE, buffer=0, mar=c(0,0,0,0), ...) {
 	
   xpoints = as(extend(extent(x), buffer), 'SpatialPoints')
 
@@ -8,25 +8,19 @@ map.new = function(x, legendRight=FALSE, buffer=0) {
 			proj4string(xpoints) = CRS(thecrs)
 	}
 		
-#	oldpar = par()[c('mar','plt','xpd')]
-#	oldpar = par()[c('mar')]
-	
-	par(mar=c(0,0,0,0))
-	if(legendRight) { 
-		if(!is.logical(legendRight)) {
-			bob=legendRight
-		} else {
-			bob=0.8
-		}
-		par(mar=c(0,0,0,0),plt=c(0,bob, 0,1),xaxs='i',yaxs='i',xpd=FALSE)
-	} else {
-		par(mar=c(0,0,0,0),plt=c(0,1, 0,1))
-	}
-	
-	plot(xpoints,pch=NA)
+  oldpar = par(c('mar','xaxs','yaxs'))
 
-# 	par(oldpar)
-	
-	return(invisible())
+  if(is.logical(legendRight))
+    legendRight = c(1,0.8)[1+ legendRight ]
+  
+  if(!is.na(legendRight))
+    mar[4] = (1-legendRight) * par('fin')[1]/par('csi')
+
+  par(mar=mar, xaxs='i',yaxs='i',xpd=FALSE)
+  
+	plot(xpoints,pch=NA, axes=TRUE, ...)
+  
+
+  return(invisible(oldpar))
 		
 }

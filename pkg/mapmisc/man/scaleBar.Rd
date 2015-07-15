@@ -1,10 +1,9 @@
 \name{scaleBar}
 \alias{scaleBar}
-\alias{map.new}
 \alias{insetMap}
 
 \title{
-Map with scale bar
+Scale bar and inset map
 }
 \description{
 Utilities for plotting a map, adding a scale bar and north arrow, 
@@ -17,7 +16,6 @@ scaleBar(crs, pos = "bottomright",
     seg.len=5*cex,
     title.cex=cex,
     outer=TRUE,...)
-map.new(x,legendRight=FALSE, buffer=0)
 insetMap(crs, pos="bottomright",map="osm",zoom=0, 
 		width=max(c(0.2, 1-par('plt')[2])), 
 		col="#FF000090", borderSmall=NA, borderBig=NULL,
@@ -40,12 +38,6 @@ Scaling factor north arrow (can be zero).
 \item{seg.len}{approximate length (in character units) of the scale bar.  can be zero.}
 \item{title.cex}{scaling for the distance text}
 \item{outer}{If \code{TRUE}, put bar or map in the margin of the plot}
-\item{x}{
-A spatial object from which an extent can be extracted.
-}
-\item{legendRight}{Leave room to the right for 
-the legend produced by plotting a Raster object}
-\item{buffer}{passed to \code{\link[raster]{extend}} to increase the plotting area}
 \item{map}{Either a Raster for the inset map or a string 
 passed to \code{\link{openmap}}'s path argument}
 \item{zoom}{Zoom level if retreiving inset map from \code{\link{openmap}}}
@@ -66,8 +58,6 @@ Additional arguments passed to \code{legend}, for examaple \code{bty='n'}
 from the centre of the plot and travelling to the right.  The length of the bar is the width 
 of 6 characters times \code{scale.cex}.  
 
-\code{map.new} initiates a plot intended to contain a map covering the extent of \code{x}, 
-with no margins.
 }
 \author{
 Patrick Brown
