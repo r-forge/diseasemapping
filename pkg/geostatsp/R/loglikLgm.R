@@ -576,11 +576,13 @@ if(estimateVariance) {
    
 
  if(length(grep("^Spatial", class(coordinatesOrig)))){
-   theDf = matrix(NA, length(coordinatesOrig), ncol(result$data),
-       dimnames=list(NULL, colnames(result$data)))
-   theDf = as.data.frame(theDf)
-   theDf[noNA,] = result$data
-   result$data = SpatialPointsDataFrame(
+	 
+	forDf = rep(NA, length(noNA))
+	forDf[noNA] = seq(1, sum(noNA))
+
+	theDf = result$data[forDf,] 
+
+	result$data = SpatialPointsDataFrame(
        coords=SpatialPoints(coordinatesOrig),
        data=theDf)
    
