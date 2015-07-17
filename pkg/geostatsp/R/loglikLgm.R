@@ -607,6 +607,36 @@ if(estimateVariance) {
 	}
 
 	
+	if(length(result$model$baseline)){
+		
+		rparams = result$parameters
+		
+		baseParams =data.frame(
+				var = names(result$model$baseline),
+				base = result$model$baseline,
+				pasted = paste(names(result$model$baseline), result$model$baseline, sep='')
+				)
+				
+		for(D in which(! baseParams$pasted %in% names(rparams)) ) {
+			
+			sameFac = grep(paste("^",baseParams[D,'var'],sep=""),
+					names(rparams))
+			pseq = 1:length(rparams)
+			if(length(sameFac)){
+				
+				minFac = min(sameFac)
+				toAdd = 0
+				names(toAdd) = baseParams[D,'pasted']
+				rparams = c(
+						rparams[pseq < minFac],
+						toAdd,
+						rparams[pseq >= minFac]
+						)
+			}
+		}
+		result$parameters = rparams
+	}
+	
 	parameterTable = data.frame(estimate=result$parameters)
 	rownames(parameterTable) =  names(result$parameters)
 
