@@ -234,6 +234,7 @@ likfitLgm = function(
   }
 
   trend = formula
+  theFactors = NULL
 	if(class(trend)=="formula") {
     # convert input data to a model matrix
 		data = data.frame(data)
@@ -241,6 +242,12 @@ likfitLgm = function(
 				data[,all.vars(trend),drop=FALSE],
 				1, function(qq) any(is.na(qq)))
 		noNA = !theNA
+	
+		theFactors = model.frame(trend, data[noNA,])
+		whichFactors = unlist(lapply(theFactors, is.factor))
+		theFactors = theFactors[,whichFactors,drop=FALSE]
+		theFactors = lapply(theFactors, levels)
+		theFactors = unlist(lapply(theFactors, function(qq) qq[1]))
 		
 		covariates = model.matrix(trend, data[noNA,])
 		observations = all.vars(trend)[1]
@@ -590,7 +597,7 @@ if(estimateVariance) {
  }
    
    
-   result$model = list(reml=reml)
+   result$model = list(reml=reml, baseline=theFactors)
 	if(class(trend)=="formula") {
 		result$model$formula = trend
     result$data[[all.vars(formula)[1]]] =
