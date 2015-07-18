@@ -31,7 +31,7 @@ mapSat = openmap(x, path='mapquest', verbose=TRUE, maxTiles=20, buffer=c(30,3))
 
 if(!interactive()) pdf(tempfile("osmplot", tmpdir=".", fileext=".pdf"))
 map.new(mapSat)
-plotRGB(mapSat,add=TRUE)
+if(nlayers(mapSat) > 2) plotRGB(mapSat,add=TRUE)
 points(x)
 text(x, label=x$name, pos=4)
 scaleBar(x, 'bottom')
@@ -43,7 +43,7 @@ mapSat = openmap(x[x$name=='Hans island',], path='mapquest',
 
 if(!interactive()) pdf(tempfile("osmplot", tmpdir=".", fileext=".pdf"))
 map.new(x[x$name=='Hans island',], buffer=0.3)
-plotRGB(mapSat,add=TRUE)
+if(nlayers(mapSat) > 2) plotRGB(mapSat,add=TRUE)
 points(x, pch=4, col='#FF000040', cex=5)
 text(x, label=x$name, pos=4)
 scaleBar(x, 'bottomright')
@@ -55,7 +55,7 @@ mapSat = openmap(x[x$name=='Qaanaaq',], path='mapquest',
 
 if(!interactive()) pdf(tempfile("osmplot", tmpdir=".", fileext=".pdf"))
 map.new(x[x$name=='Qaanaaq',], buffer=0.5)
-plotRGB(mapSat,add=TRUE)
+if(nlayers(mapSat) > 2) plotRGB(mapSat,add=TRUE)
 points(x, pch=4, col='red', cex=5)
 text(x, label=x$name, pos=4, col='red')
 scaleBar(x, 'bottomleft')

@@ -92,10 +92,10 @@ if(requireNamespace('rgdal', quietly=TRUE)) {
 }
 
 
-oldrange = apply(extentFull, 2, diff)
+oldrange = apply(bbox(extentFull), 2, diff)
 oldYoverX = oldrange[2]/oldrange[1]
 
-newxrange = diff(extentFull[,'x'])*width
+newxrange = (xmax(extentFull)-xmin(extentFull))*width
 plotFracYcoords = oldrange['y']/oldrange['x']
 plotFracYinches= par('pin')[2]/par('pin')[1]
     
