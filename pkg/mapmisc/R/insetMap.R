@@ -36,7 +36,7 @@ extentUsr = extent(
 		
 
 if(outer) {
-	extentBig = extentUsr
+	extentBig = extentFull
 }
 
 extentSmall = extentUsr
