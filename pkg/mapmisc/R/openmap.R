@@ -68,7 +68,7 @@ openmap = function(x, zoom,
 	path="http://tile.openstreetmap.org/",
 	maxTiles = 9,
 	crs=projection(x),
-  buffer=0,
+  buffer=0, fact=1,
 	verbose=FALSE) {
 
 
@@ -147,7 +147,14 @@ openmap = function(x, zoom,
 	crsOut=crs
 	
 	if(!is.na(crsOut)  ){
-    if(verbose) cat("reprojecting ", ncell(result), " cells...")
+		if(fact > 1){
+			if(verbose) cat("disaggregating by ", fact, "...")
+			result = disaggregate(
+						result, fact=fact
+					)
+		}
+		
+		if(verbose) cat("reprojecting ", ncell(result), " cells...")
     
 		resultProj = projectRaster(result, crs=crsOut, method="ngb")
     if(verbose) cat("done\n")

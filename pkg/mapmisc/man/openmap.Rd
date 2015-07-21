@@ -10,7 +10,8 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	openmap(x, zoom, 
 	path="http://tile.openstreetmap.org/",
 	maxTiles = 9,
-	crs=projection(x),   buffer=0, verbose=FALSE)
+	crs=projection(x),   buffer=0, ,
+	fact=1, verbose=FALSE)
 	osmTiles(name)
 	openmapAttribution(name, type=c('text','latex','markdown','html'), short=FALSE)
 }
@@ -34,6 +35,9 @@ and \code{x} has no crs, long-lat is used.}
 \item{buffer}{Extend the extent for which the map is requested, in units
 of \code{x}.  Can be negative, or a vector of length 2 for different x and y 
 extensions}
+\item{fact}{Passed to \code{\link[raster]{disaggregate}} before 
+	reprojecting if \code{fact>1}, 
+	helps to produce a clearer image.}
   \item{verbose}{
     If TRUE, give information on where tiles are coming from, cache
     hits, etc
