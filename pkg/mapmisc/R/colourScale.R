@@ -1,10 +1,24 @@
-colourScale = function(x=NULL, breaks=5, 
-style=c("quantile","equal","unique", "fixed"),
-col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
-transform=NULL, revCol=FALSE, exclude=NULL, 
-labels=NULL,...) {
+roundForBreaks = function(breaks, dec){
+dec = 10^dec
+breaks = breaks * dec
+breaks = c(floor(breaks[1]), 
+		round(breaks[seq(2,by=1,len=length(breaks)-2)]),
+		ceiling(breaks[length(breaks)]))
+breaks / dec
+}
 
-UseMethod("colourScale")	
+radarCol <- c("#FFFFFF", "#99CCFF", "#0099FF", "#00FF66", "#00CC00", "#009900", 
+				"#006600", "#FFFF33", "#FFCC00", "#FF9900", "#FF6600", "#FF0000", 
+				"#FF0299", "#9933CC", "#660099")
+
+colourScale = function(x=NULL, breaks=5, 
+	style=c("quantile","equal","unique", "fixed"),
+	col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
+	transform=NULL, revCol=FALSE, exclude=NULL, 
+	labels=NULL,...) {
+
+
+	UseMethod("colourScale")	
 
 }
 
@@ -44,11 +58,16 @@ weights=NULL
 
 NforSample = 5e+05
 
+if(col[1]=='radar'){
+	col = radarCol
+}
+
+
 	if(style == "equal") {
 		if(length(exclude)) {
 			x = unique(x)
 		} else {
-			x = try(c(minValue(x), maxValue(x)), silent=TRUE)
+			x = try(roundForBreaks(range(c(minValue(x), maxValue(x))),dec), silent=TRUE)
       if(class(x)=='try-error')
         x = range(quantile(sampleRegular(x, size=NforSample)))
 		}
@@ -168,6 +187,11 @@ colourScale.numeric = function(x=NULL, breaks=5,
 		weights=NULL,...) {
 
 	xOrig = x
+
+	if(col[1]=='radar'){
+		col = radarCol
+	}
+	
 	
 	style = style[1]
 	if(!is.function(col)){		
@@ -354,12 +378,7 @@ colourScale.numeric = function(x=NULL, breaks=5,
 		
 		# round
 		if(!is.null(dec)) {
-			dec = 10^dec
-			breaks = breaks * dec
-			breaks = c(floor(breaks[1]), 
-					round(breaks[seq(2,by=1,len=length(breaks)-2)]),
-					ceiling(breaks[length(breaks)]))
-			breaks = breaks / dec
+			breaks = roundForBreaks(breaks, dec)
 		} # end rounding
 		if(!is.null(firstBreak))
 			breaks[1] = firstBreak
