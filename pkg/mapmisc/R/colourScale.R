@@ -58,8 +58,10 @@ weights=NULL
 
 NforSample = 5e+05
 
+if(is.character(col)){
 if(col[1]=='radar'){
 	col = radarCol
+}
 }
 
 
@@ -188,8 +190,10 @@ colourScale.numeric = function(x=NULL, breaks=5,
 
 	xOrig = x
 
-	if(col[1]=='radar'){
-		col = radarCol
+	if(is.character(col)){
+		if(col[1]=='radar'){
+			col = radarCol
+		}
 	}
 	
 	
