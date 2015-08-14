@@ -70,13 +70,13 @@ if(col[1]=='radar'){
 		if(length(exclude)) {
 			x = unique(x)
 		} else {
-			x = try(roundForBreaks(range(c(minValue(x), maxValue(x))),dec), silent=TRUE)
+			x = try(range(c(minValue(x), maxValue(x))), silent=TRUE)
       if(class(x)=='try-error')
         x = range(quantile(sampleRegular(x, size=NforSample)))
 		}
 	} else if(style=='fixed') {
 		x = NULL
-	} else if(style=='unique') {
+} else if(style=='unique') {
 
     if(is.null(labels)){
       levelsx = levels(x)[[1]]
@@ -103,7 +103,7 @@ if(col[1]=='radar'){
         }
       } # end different numbers of levels and breaks
       
-  } # labels is not null
+  	} # labels is not null
     
     if(ncell(x)<1e+06) {
       x = freq(x)
@@ -161,7 +161,7 @@ if(col[1]=='radar'){
   x=levelsx$ID
   labels = levelsx$label
 		
-	} else { # not unique or equal or fixed, take a sample
+} else { # not unique or equal or fixed, take a sample
     Nsample = 20000
     xVec= c()
     Diter = 0
@@ -172,7 +172,8 @@ if(col[1]=='radar'){
       Diter = Diter + 1
     }
     x = c(xVec, maxValue(x), minValue(x))
-	}
+} # end if style== stuff
+
 	res=colourScale(x, breaks, 
 			style,
 			col=col, opacity=opacity, dec=dec, firstBreak=firstBreak, 
@@ -297,7 +298,7 @@ colourScale.numeric = function(x=NULL, breaks=5,
 		names(colVec) =as.character(thetable$ID)
 		breaks = thetable$ID
 		breaks = c(breaks[1]-1/2, breaks+c(diff(breaks)/2,1/2))
-	} else {
+	} else { # not unique breaks
 		if(length(exclude) & length(x)) {
 			toexclude = which(x %in% exclude)
 			x[toexclude]	= NA
