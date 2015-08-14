@@ -100,7 +100,6 @@ openmap = function(x, zoom,
 	if(verbose) cat("zoom is ", zoom, ", ", nTilesMerc(extMerc, zoom), "tiles\n")
 
 	result = NULL
-
   
 	for(Dpath in rev(path)) {
 		thistile = try(
@@ -147,23 +146,31 @@ openmap = function(x, zoom,
 	crsOut=crs
 	
 	if(!is.na(crsOut)  ){
+		oldColorTable = list()
+		for(D in names(result))
+			oldColorTable[[D]] = result[[D]]@legend@colortable
 		if(fact > 1){
 			if(verbose) cat("disaggregating by ", fact, "...")
 			result = disaggregate(
 						result, fact=fact
 					)
+					
 		}
 		
 		if(verbose) cat("reprojecting ", ncell(result), " cells...")
     
-		resultProj = projectRaster(result, crs=crsOut, method="ngb")
+		resultProj = stack(projectRaster(result, crs=crsOut, method="ngb"))
+
+		for(D in names(resultProj))
+			resultProj[[D]]@legend@colortable = oldColorTable[[D]]
+
+		
     if(verbose) cat("done\n")
     
 	} else {
-		resultProj = result
+		resultProj = stack(result)
 	}
 
-		resultProj = stack(resultProj)
 
 		#	resultProj@legend@colortable = result@legend@colortable
 

@@ -1,4 +1,5 @@
 roundForBreaks = function(breaks, dec){
+	if(is.null(dec)) return(breaks)
 dec = 10^dec
 breaks = breaks * dec
 breaks = c(floor(breaks[1]), 
