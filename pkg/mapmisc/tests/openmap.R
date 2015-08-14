@@ -86,7 +86,7 @@ thezoom=6
 		myplot(myrasterUTM, myPointsUTM)
 		
 		# supply a crs
-		mytiles = openmap(extent(myrasterUTM),zoom=thezoom, 
+		mytiles = openmap(x=extent(myrasterUTM),zoom=thezoom, 
 				crs=proj4string(myrasterUTM))
 #		mycities = GNcities(myrasterUTM,max=5)
 		myplot(myrasterUTM, myPointsUTM)

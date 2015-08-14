@@ -53,11 +53,11 @@ openmapExtentMerc <-
       x = extent(x[1]-tileEps, xmax=x[1]+tileEps, ymin=x[2]-tileEps, ymax=x[2]+tileEps)
   if(requireNamespace('rgdal', quietly=TRUE)) {
     x = as(
-        extend(extent(x), extend),
+        extent(x), 
         'SpatialPoints'
     )
     crs(x) = crsUse
-    result =  extent(spTransform(x, crsOut))
+    result =  raster::extend(extent(spTransform(x, crsOut)), extend)
   } else {
     # no rgdal, try to use raster, doesn't always work
     x = raster(extent(x), nrows=100,ncols=100, crs=crsUse)

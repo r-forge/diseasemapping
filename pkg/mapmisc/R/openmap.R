@@ -87,7 +87,18 @@ openmap = function(x, zoom,
 						path[ grep("^http[s]*://", path, invert=TRUE)], sep="")
 	names(pathOrig) = path
 
-	extMerc = .getExtent(x,crs, buffer, crsMercSphere)
+	crsOut=crs
+	crsIn = crs(x)
+	if(all(is.na(crsIn))) {
+		if(is.vector(x)){
+			crsIn=crsLL
+		} else{
+			crsIn = crs	
+		}
+	}
+	
+	
+	extMerc = .getExtent(x,crsIn, buffer, crsMercSphere)
   extMerc = cropExtent(extMerc, openmapExtentMercSphere)
   
 	if(missing(zoom)) {
@@ -143,7 +154,6 @@ openmap = function(x, zoom,
         )
 	} 
 
-	crsOut=crs
 	
 	if(!is.na(crsOut)  ){
 		oldColorTable = list()
