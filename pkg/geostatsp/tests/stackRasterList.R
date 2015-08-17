@@ -18,7 +18,7 @@ template = squareRaster(xpoly, 100)
 thebrick = spdfToBrick(
     x=xpoly,
     template=template,
-    pattern='^stuff[[:print:]]?[[:digit:]]$'
+    pattern='^stuff[[:digit:]]$'
     )
     
 plot(thebrick[[1]])    
