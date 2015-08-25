@@ -206,15 +206,22 @@ gm.dataSpatial = function(
 
 # find factors
 	allterms = colnames(attributes(terms(formula))$factors)
-	allterms = grep(":", allterms, invert=TRUE, value=TRUE)
+	if(length(allterms)) allterms = unique(unlist(strsplit(allterms, ":")))
 	allterms = gsub("[[:space:]]", "", allterms)
+	# remove offset( or factor(
+	alltermsPlain = gsub("^[[:alpha:]]+\\(|\\)$", "", allterms)
+	
 
 	# remove covariates not in the model
-	keepCovariates = intersect(allterms, names(covariates))
+	keepCovariates = intersect(alltermsPlain, names(covariates))
 	if(is.list(covariates)) {
 		covariates = covariates[keepCovariates]
 	} else {
-		covariates = covariates[[keepCovariates]]	
+		if(length(keepCovariates)) {
+			covariates = covariates[[keepCovariates]]	
+		} else {
+			covariates = list()
+		}
 	}
 	
 	theFactors = grep("^factor", allterms, value=T)
