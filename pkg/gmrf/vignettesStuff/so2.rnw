@@ -60,7 +60,7 @@ source("../R/loglikGmrfNugget.R")
 
 <<world,cache=TRUE,echo=FALSE,cache.extra=1>>=
 worldShapeFile =  system(paste("find ", dataDir, 
-				" -name *countries*.shp", sep=""),TRUE)
+				" -name *countries*.shp", sep=""),TRUE)[1]
 worldShapeFile = gsub("\\.shp$","",worldShapeFile)
 world = readOGR(dataDir,gsub("[[:print::]+/","",worldShapeFile),
 		stringsAsFactors=FALSE,verbose=FALSE)

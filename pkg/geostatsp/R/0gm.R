@@ -194,6 +194,11 @@ for(D in intersect(Sfactor, names(covariatesDF))) {
     )
 }
 
+
+#############
+# data is a SpatialPointsDataFrame
+#############
+
 gm.dataSpatial = function(
     formula, data,  grid, 
 		covariates=NULL, 
@@ -204,7 +209,13 @@ gm.dataSpatial = function(
 	allterms = grep(":", allterms, invert=TRUE, value=TRUE)
 	allterms = gsub("[[:space:]]", "", allterms)
 
-
+	# remove covariates not in the model
+	keepCovariates = intersect(allterms, names(covariates))
+	if(is.list(covariates)) {
+		covariates = covariates[keepCovariates]
+	} else {
+		covariates = covariates[[keepCovariates]]	
+	}
 	
 	theFactors = grep("^factor", allterms, value=T)
 	theFactors = gsub("^factor\\(|\\)$", "", theFactors)
@@ -242,7 +253,9 @@ gm.dataSpatial = function(
 		rmethod[covFactors] = "ngb"
 		
 		
-		covariatesStack = stackRasterList(covariates, template=cellsSmall, method=rmethod)
+		covariatesStack = stackRasterList(covariates, 
+				template=cellsSmall, 
+				method=rmethod)
 		covariatesStack = stack(cellsSmall, covariatesStack)
  
 		

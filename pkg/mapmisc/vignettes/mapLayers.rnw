@@ -1,8 +1,7 @@
-\documentclass[12pt]{article}
-
 %\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{Examples of map layers}
 
+\documentclass[12pt]{article}
 
 \usepackage[right=1in,left=1in,top=0.5in,bottom=0.1in]{geometry}
 \usepackage{graphicx,hyperref}
