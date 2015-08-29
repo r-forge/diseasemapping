@@ -1,3 +1,27 @@
+
+# data is a raster.  grid is ignored
+setMethod("lgm", 
+    signature("formula", "Raster", "ANY", "ANY"),
+    function(
+        formula, 
+        data,  
+        grid=NULL,
+        covariates=NULL, ...) {
+      
+      dataCov = gm.dataRaster(
+          formula, data,
+          grid=raster(data),
+          covariates=covariates,
+          buffer=0)
+      
+      callGeneric(formula, 
+          data=dataCov$data, 
+          grid=dataCov$grid, 
+          covariates=dataCov$covariates, ...)
+    }
+)
+
+
 setMethod("lgm", 
     signature("formula", "data.frame", "Raster", "data.frame"), 
     function(formula,
@@ -13,49 +37,53 @@ setMethod("lgm",
   NN=NNmat(grid)
   csiz = xres(grid)
         
-        
+	Yvar = all.vars(formula)[1]
+	if(!length(grep('[[:digit:]]$', Yvar))) {
+	  allYvar = grep(paste("^", Yvar, "[[:digit:]]*$",sep=""), names(data), value=TRUE)
+  } else {
+		allYvar = Yvar
+	}
+  Yvec = as.matrix(data[,allYvar, drop=FALSE])
+	
+	if(!Yvar %in% colnames(data)) {
+		data[,Yvar] = 0
+	}
   Xmat = model.matrix(formula, data)		  
 
 	if(nrow(Xmat) != ncell(grid))
 		warning("dimensions of data and grid are not compatible")
-	
-  Yvar = all.vars(formula)[1]
-  allYvar = grep(paste("^", Yvar, "[[:digit:]]*$",sep=""), names(data), value=TRUE)
   
-  Yvec = as.matrix(data[,allYvar, drop=FALSE], drop=FALSE)
-
-  oneminusar = NULL
-  if(!fixNugget)
+  if(!fixNugget & (length(nugget)<2))
     nugget = NULL
   
   thel = loglikGmrf(Yvec=Yvec,Xmat=Xmat,
-                    NN=NN,
+                    NN=NN, 
                     propNugget=nugget,
                     boxcox=boxcox, fixBoxcox=fixBoxcox,
                     shape=shape,mc.cores=mc.cores,
-                    reml=reml,...)
-  mle = thel$mle             
+                    reml=reml, ...)
+  mle = thel$mle   
   lArray = thel$mlArray
   lMat = thel$mlMat
   
 
   if (reml){
     chooseLike = 'logLreml'
-    m2Like = 'm2logLreml'
+		varInMle = c('tausqReml', 'varReml')
   }else{
     chooseLike = 'logLml'
-    m2Like = 'm2logLml'
+		varInMle = c('tausqMl', 'varMl')
   }
   
 
-  res = list(param = mle)
+  res = list(param = drop(mle))
   if(!is.null(lArray)){
     res$array = lArray
     res$profL = list()
     # nugget
     if(dim(lArray)[2]>1){ # have nugget
-      best = apply(lArray[,,m2Like,,drop=FALSE],
-          2, which.min) 
+      best = apply(lArray[,,chooseLike,,drop=FALSE],
+          2, which.max) 
       best=arrayInd(best, dim(lArray)[-(2:3)])
       res$profL$propNugget = NULL
       for(D in 1:nrow(best)){
@@ -68,8 +96,8 @@ setMethod("lgm",
     } # end have nugget
      
     if(dim(lArray)[4]>1){ # have oneminusar
-      best = apply(lArray[,,m2Like,,drop=FALSE],
-          4, which.min) 
+      best = apply(lArray[,,chooseLike,,drop=FALSE],
+          4, which.max) 
       best=arrayInd(best, dim(lArray)[-(3:4)])
       
       res$profL$oneminusar = NULL
@@ -100,7 +128,7 @@ setMethod("lgm",
     )
  
     } # end have both
-  }
+  } # end lArray not null
 
   
   res$data = data
@@ -108,15 +136,19 @@ setMethod("lgm",
   res$model$trend = formula
  
   # summary table
+	covInMle = grep("Se$", rownames(mle), value=TRUE)
+
   scovariates = gsub(
-      'stdErr\\.','',
-      grep("^stdErr\\.", names(mle), value=TRUE)
+      'Se$','', covInMle
   )
   
   srownames = c('sdNugget','sdSpatial','range','shape')
+
   scolnames = c("estimate", "stdErr", "ci0.005", "ci0.995", "ci0.025", "ci0.975", 
       "ci0.05", "ci0.95", "ci0.1", "ci0.9", "pval", "Estimated")
-  ress = as.data.frame(
+	ress = list()
+	for(D in 1:ncol(mle)){
+    ress[[D]] = as.data.frame(
       matrix(
           NA,
           length(scovariates) + length(srownames),
@@ -127,22 +159,19 @@ setMethod("lgm",
               )
           )
       )
-   ress[c('sdNugget','sdSpatial','range','shape'),'estimate'] = 
-       c(sqrt(mle[c('nugget','variance')]),
-        mle[c('range','optimalShape.shape')]   
+   ress[[D]][c('sdNugget','sdSpatial','range','shape'),'estimate'] = 
+       c(sqrt(mle[c('tausq','sigmasq'),D]),
+        mle[c('range','optimalShape'),D]   
        )
-   ress[c('sdNugget','sdSpatial','range','shape'),'Estimated'] =
-       c(
-           fixNugget, TRUE, TRUE, FALSE
-           
-           )
-   ress[scovariates,'Estimated']  = TRUE   
-   ress[scovariates,'estimate']  = mle[scovariates]   
-   ress[scovariates,'stdErr']  = mle[paste("stdErr.",scovariates,sep="")]   
-   
+   ress[[D]][c('sdNugget','sdSpatial','range','shape'),'Estimated'] =
+       c(fixNugget, TRUE, TRUE, FALSE)
+   ress[[D]][scovariates,'Estimated']  = TRUE   
+   ress[[D]][scovariates,'estimate']  = mle[covInMle,D]   
+   ress[[D]][scovariates,'stdErr']  = mle[covInMle,D]   
+ } # for D
        
-  
-  res$summary = ress
+  if(length(ress)==1) ress = ress[[1]]
+	  res$summary = ress
 
 	
   return(res)

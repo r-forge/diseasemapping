@@ -47,7 +47,13 @@ loglikGmrf = function(
 ) {
 
   Yvec = as.matrix(Yvec)
+	if(is.null(colnames(Yvec)))
+		colnames(Yvec) = paste("y", 1:ncol(Yvec), sep='')
   Ny = ncol(Yvec)
+	
+	if(Ny > 1 & !(length(oneminusar) & length(propNugget)))
+		stop("specify oneminusar and propNugget if there is more than one dataset in Y")
+	
   Nobs = nrow(Yvec)
   Lcol = c('m2logLml', 'm2logLreml')[reml+1]
   
@@ -81,7 +87,7 @@ loglikGmrf = function(
   Nxysq = ncol(obsCov)^2
   mlColNames = c(
       'det','detReml','m2logLml', 'm2logLreml',
-      'varMl', 'varReml', 'xisqTausq','junk')
+      'profiledVarianceHatMl', 'profiledVarianceHatReml', 'xisqTausq','junk')
   Ncols = length(mlColNames)*Ny+Nxysq
   
   if(!length(control$xisqTausq)){
@@ -135,7 +141,8 @@ loglikGmrf = function(
           NULL, mlColNames, oneminusar
       )
   )
-  dimnames(ml)[[2]] = as.character(1/ml[1,,'xisqTausq',1])
+	if(length(xisqTausq))
+	  dimnames(ml)[[2]] = paste('propNugget=',as.character(1/xisqTausq),sep='')
   
   ssq = fromC[Lseq,]
   ssq=array(ssq, 
@@ -194,7 +201,7 @@ loglikGmrf = function(
     newml = array(NA, 
         c(dim(ml)[1],1,dim(ml)[-(1:2)]),
           dimnames=c(dimnames(ml)[1],
-              list('y'),dimnames(ml)[-(1:2)])
+              list('propNugget'),dimnames(ml)[-(1:2)])
       )
 
       newssq =array(NA, 
@@ -224,18 +231,18 @@ loglikGmrf = function(
     
     forml = abind::abind(
         propNugget = 1/ml[,,'xisqTausq',,drop=FALSE],
-        tausqMl=ml[,,'varMl',,drop=FALSE]*theInf,
-        tausqReml=ml[,,'varReml',,drop=FALSE]*theInf,
-        xisq.ml = theInf*ml[,,'varMl',,drop=FALSE]*ml[,,'xisqTausq',,drop=FALSE],
-        xisq.reml = theInf*ml[,,'varMl',,drop=FALSE]*ml[,,'xisqTausq',,drop=FALSE],
+        tausqHatMl=ml[,,'profiledVarianceHatMl',,drop=FALSE]*theInf,
+        tausqHatReml=ml[,,'profiledVarianceHatReml',,drop=FALSE]*theInf,
+        xisqHatMl = theInf*ml[,,'profiledVarianceHatMl',,drop=FALSE]*ml[,,'xisqTausq',,drop=FALSE],
+        xisqHatReml = theInf*ml[,,'profiledVarianceHatReml',,drop=FALSE]*ml[,,'xisqTausq',,drop=FALSE],
         oneminusar = aperm(
             array(oneminusar, dim(ml)[c(4,2,1)]),3:1
     ),
         along=3
     )
     dimnames(forml)[[3]] = c(
-        'propNugget','tausqMl', 'tausqReml', 
-        'xisqMl','xisqReml', 'oneminusar')
+        'propNugget','tausqHatMl', 'tausqHatReml', 
+        'xisqHatMl','xisqHatReml', 'oneminusar')
     
     Ny = dim(ml)[1]
     betaHat = ssq[-(1:Ny),1:Ny,,,drop=FALSE]
@@ -256,11 +263,11 @@ loglikGmrf = function(
     
     for(D in dimnames(seBetaHat)[[3]]){
       seBetaHatMl[,,D,] = seBetaHatMl[,,D,,drop=FALSE] * 
-          ml[,,'varMl',,drop=FALSE]
+          ml[,,'profiledVarianceHatMl',,drop=FALSE]
       seBetaHatReml[,,D,] = seBetaHatReml[,,D,,drop=FALSE] * 
-          ml[,,'varReml',,drop=FALSE]
+          ml[,,'profiledVarianceHatReml',,drop=FALSE]
     }
-    dimnames(betaHat)[[3]] = paste(dimnames(seBetaHatMl)[[3]],'BetaHat',sep='')
+
     dimnames(seBetaHatMl)[[3]] = paste(dimnames(seBetaHatMl)[[3]],'SeMl',sep='')
     dimnames(seBetaHatReml)[[3]] = paste(dimnames(seBetaHatReml)[[3]],'SeReml',sep='')
     
@@ -270,9 +277,10 @@ loglikGmrf = function(
     
     parMat = lapply(parInfo, function(qq){
           c(
-          qq$theo[c('range','shape','variance')], 
-          optimalShape=qq$optimalShape['shape'],
-          optimal=qq$optimal[c('shape','variance')]
+          qq$theo[c('range','shape')],
+					sigmasqXisq = as.numeric(qq$theo['variance']), 
+          optimalShape=as.numeric(qq$optimalShape['shape']),
+          optimalVarianceAndShape=qq$optimal[c('shape','variance')]
       )
         })
     parMat = simplify2array(parMat)
@@ -281,21 +289,33 @@ loglikGmrf = function(
         c(length(dim(parMat))+c(1,2), 1:length(dim(parMat))))
     dimnames(parArray)[[3]] = rownames(parMat)
 
-    res = abind::abind(ml, logLml,forml, betaHat, seBetaHatMl, seBetaHatReml, parArray,
+		sigmasqHat = forml[,,c('xisqHatMl', 'xisqHatReml'),,drop=FALSE] *
+				parArray[,,rep('sigmasqXisq',2),,drop=FALSE]
+		dimnames(sigmasqHat)[[3]] = gsub("^xi", "sigma", 
+				dimnames(sigmasqHat)[[3]])
+		
+    res = abind::abind(logLml, forml, sigmasqHat,
+				betaHat, seBetaHatMl, seBetaHatReml, parArray,
         along=3)
-    
-    mleIndex = arrayInd(
-        which.min(res[,,Lcol,,drop=FALSE]),
-        dim(res)[-3])
-    mle = res[mleIndex[1],mleIndex[2],,mleIndex[3]]
-    
 
-    getRid = paste('(^det|logL|^var|tausq|xisq|Se)',
-        c('[Mm]l$','[Rr]eml$'),sep='')[1+reml]
-    mle = mle[grep(getRid,names(mle),invert=TRUE)]
+
+		theMle = apply(res[,,gsub("^m2","",Lcol),,drop=FALSE], 
+				1, which.max)
+		mleIndex = arrayInd(theMle, dim(res)[-c(1,3)])
+		
+		mle = NULL
+		for(D in 1:nrow(mleIndex))
+	    mle = cbind(mle, res[D,mleIndex[D,1],,mleIndex[D,2]])
+    
+		colsToKeep = grep(paste(c('Reml','Ml')[1+reml],'$',sep=''),
+				rownames(mle), invert=TRUE)
+		mle = mle[colsToKeep,,drop=FALSE]
+		mle = mle[grep("^logL", rownames(mle), invert=TRUE),,drop=FALSE]
+		rownames(mle) = gsub("(Beta)?(Hat)?(Reml|Ml)?$", "", rownames(mle))
+
     
     res = list(
-        mle=mle[names(mle)!='junk'], 
+        mle=mle, 
         mlArray = res
     )
     
@@ -409,12 +429,23 @@ loglikGmrf = function(
       which.min(abs(oneminusarRes-mle['oneminusar']))
   ]]
   
-  parMat =
+
+  parMat = lapply(parInfo, function(qq){
         c(
-            thepar$theo[c('range','shape','variance')], 
-            optimalShape=thepar$optimalShape['shape'],
-            optimal=thepar$optimal[c('shape','variance')]
-        )
+          	qq$theo[c('range','shape')],
+						sigmasqXisq = as.numeric(qq$theo['variance']), 
+          	optimalShape=as.numeric(qq$optimalShape['shape']),
+          	optimalVarianceAndShape=qq$optimal[c('shape','variance')]
+      	)
+      })
+	
+	parMat =
+        c(
+            thepar$theo[c('range','shape')], 
+						sigmasqXisq = as.numeric(thepar$theo['variance']), 
+          	optimalShape=as.numeric(thepar$optimalShape['shape']),
+          	optimalVarianceAndShape=thepar$optimal[c('shape','variance')]
+		)
   
   varMat =   parMat[grep('variance', names(parMat))]
   varMle = varMat * mle[c('varMl','varReml')[1+reml]]
