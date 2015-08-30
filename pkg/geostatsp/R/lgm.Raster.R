@@ -69,10 +69,8 @@ setMethod("lgm",
 
   if (reml){
     chooseLike = 'logLreml'
-		varInMle = c('tausqReml', 'varReml')
   }else{
     chooseLike = 'logLml'
-		varInMle = c('tausqMl', 'varMl')
   }
   
 
@@ -80,10 +78,68 @@ setMethod("lgm",
   if(!is.null(lArray)){
     res$array = lArray
     res$profL = list()
+		if(ncol(Yvec)>1){
+			# multiple datasets
+     		forProfRange = apply(lArray[,,chooseLike,,drop=FALSE],
+         		c(1,4), which.max) 
+				forProfNugget =  apply(lArray[,,chooseLike,,drop=FALSE],
+         		c(1,2), which.max) 
+				
+				res$profL$range = lArray[,1,,,drop=FALSE]
+				res$profL$nugget = lArray[,,,1,drop=FALSE]
+				
+				for(Dy in 1:dim(lArray)[1]){
+					for(Drange in 1:dim(lArray)[4]){
+						res$profL$range[Dy,1,,Drange] = 
+							lArray[Dy,forProfRange[Dy,Drange],,Drange]
+					}
+					for(Dnugget in 1:dim(lArray)[2]){
+						res$profL$nugget[Dy,Dnugget,,1] = 
+							lArray[Dy,Dnugget,,forProfNugget[Dy,Dnugget] ]
+					}
+				}
+				
+				# subtract best L, range
+				maxL = apply(res$profL$range[,,c('logLreml', 'logLml'),,drop=FALSE],1:3,max)
+				deviance = array(maxL, c(dim(maxL), dim(lArray)[4]),
+					dimnames = c(
+							dimnames(maxL),
+							dimnames(lArray)[4]
+							)
+					)
+				dimnames(deviance)[[3]] = gsub("^logL","deviance",dimnames(deviance)[[3]])
+				deviance = - deviance + res$profL$range[,,c('logLreml','logLml'),,drop=FALSE]
+
+				res$profL$range = abind(res$profL$range, deviance, along=3)				
+				res$profL$range = drop(res$profL$range)
+				
+				# subtract best L, nugget	
+				# aperm to put the nugget variable last
+		res$profL$nugget = aperm(
+				res$profL$nugget[,,c('logLreml', 'logLml'),,drop=FALSE],
+				c(1,4,3,2))
+				maxL = apply(res$profL$nugget, 1:3, max)
+		
+		deviance = array(maxL, c(dim(maxL), dim(lArray)[2]),
+				dimnames = c(
+						dimnames(maxL),
+						dimnames(lArray)[2]
+				)
+		)
+		dimnames(deviance)[[3]] = gsub("^logL","deviance",dimnames(deviance)[[3]])
+		
+		deviance = - deviance + res$profL$nugget[,,c('logLreml','logLml'),,drop=FALSE]
+		res$profL$nugget = drop(res$profL$nugget)				
+				
+				
+				
+		} else {
+			# dimension 1 of the array is box-cox
     # nugget
     if(dim(lArray)[2]>1){ # have nugget
+			# find best range and boxcox for this nugget
       best = apply(lArray[,,chooseLike,,drop=FALSE],
-          2, which.max) 
+          4, which.max) 
       best=arrayInd(best, dim(lArray)[-(2:3)])
       res$profL$propNugget = NULL
       for(D in 1:nrow(best)){
@@ -128,6 +184,7 @@ setMethod("lgm",
     )
  
     } # end have both
+		} # end box-cox
   } # end lArray not null
 
   
