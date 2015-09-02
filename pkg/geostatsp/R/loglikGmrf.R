@@ -104,10 +104,7 @@ loglikGmrf = function(
         control$xisqTausq['tol']
     )
   }
-  
 
-#  dyn.unload('../src/gmrfLik.so')
-#  dyn.load('../src/gmrfLik.so')
   
   if(length(oneminusar)){
     # not optimizing
@@ -321,8 +318,10 @@ loglikGmrf = function(
     
   } else {
     #oneminusar is NULL
+	########################
     # optimizing
-    resEnv = new.env()
+	######################################################
+	resEnv = new.env()
     assign('allPar', list(), envir=resEnv)
     assign('allFromC',  NULL, envir=resEnv)
     assign('oneminusar',  NULL, envir=resEnv)
@@ -347,6 +346,7 @@ loglikGmrf = function(
                   c('lower','upper','tol')]
           )
       )
+			
       
       assign('allFromC',
           cbind(get('allFromC', resEnv), fromC),
