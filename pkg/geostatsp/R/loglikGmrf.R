@@ -430,7 +430,7 @@ loglikGmrf = function(
   ]]
   
 
-  parMat = lapply(parInfo, function(qq){
+  parMat = lapply(Qinfo, function(qq){
         c(
           	qq$theo[c('range','shape')],
 						sigmasqXisq = as.numeric(qq$theo['variance']), 
