@@ -34,7 +34,7 @@ loglikGmrf = function(
     propNugget=NULL,
     boxcox=1,
     fixBoxcox=TRUE,
-    seqBoxcox=outer(c(0.01, 0.02, 0.05, 0.1), c(-1,1)),
+    seqBoxcox=outer(c(0.01, 0.02, 0.05, 0.1, 0.2, 0.5), c(-1,1)),
     shape=1,
     reml=TRUE,
     adjustEdges=FALSE,
@@ -61,7 +61,7 @@ loglikGmrf = function(
   if(!fixBoxcox){
     seqBoxcox = sort(unique(c(0, seqBoxcox)))
     if(Ny>1) warning("need fixBoxcox=TRUE if Y has more than one column")
-    bcStuff = forBoxCox(Yvec,Xmat,seqBoxcox)
+    bcStuff = forBoxCox(y=Yvec,x=Xmat,seqBoxCox=seqBoxcox)
     Ny = ncol(bcStuff$y)
     Yvec = bcStuff$y
     jacobian = bcStuff$jacobian
