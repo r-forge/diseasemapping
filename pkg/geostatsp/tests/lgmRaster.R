@@ -4,9 +4,9 @@ library('geostatsp')
 myRaster = squareRaster(extent(0,8000,0,6000), 50)
 myParam=c(oneminusar=0.1, conditionalVariance=100,shape=2)
 myQ = maternGmrfPrec(myRaster, param=myParam)
-
+attributes(myQ)$param$optimalShape
 set.seed(0)
-mySim = RFsimulate(attributes(myQ)$param$theo, myRaster)
+mySim = RFsimulate(attributes(myQ)$param$optimalShape, myRaster)
 
 otherPar = c(intercept=1, beta = 2, tau=10)
 myCov = myRaster
@@ -23,40 +23,72 @@ names(myY) = gsub("^layer\\.","sim", names(mySim))
 
 if(Sys.info()['user'] =='patrick') {
 
+	Sbreaks = c(-50,-20, -5,  -2, -0.5,0)
+	
 # grid search	
-myResR = lgm(formula = sim ~ x, 
+	myResR = lgm(formula = sim ~ x, 
   	data=raster::stack(myY, myCov), 
-  	oneminusar = seq(0.05, 0.2,len=12),
-  	nugget = seq(0.25, 4,len=12), shape=2, mc.cores=1)		
+  	oneminusar = seq(0.02, 0.25,len=24),
+  	nugget = seq(0, 2,len=40), shape=2, mc.cores=4)		
 
-image(	myResR$array[,-1,'propNugget',1], 
+	myCol = mapmisc::colourScale(
+		breaks = Sbreaks,
+		style='fixed',
+		col=terrain.colors
+		)
+
+	image(	myResR$array[,-1,'propNugget',1], 
 		myResR$array[,1,'oneminusar',], 
-		myResR$array[,-1,'logLreml',])
+		myResR$array[,-1,'logLreml',],
+		col=myCol$col, breaks=myCol$breaks+max(myResR$array[,,'logLreml',]))
+	mapmisc::legendBreaks("topright",  myCol)
+	points(myResR$param['propNugget'], myResR$param['oneminusar'])
 
 # boxcox
 	yBC = sqrt(myY + 50)
 	names(yBC) = names(myY)
-	myResBC = lgm(formula = sim ~ x, 
+	myResBC = lgm(
+			formula = sim ~ x, 
   		data=raster::stack(yBC, myCov), 
-  		oneminusar = seq(0.05, 0.2,len=12),
-  		nugget = seq(0.25, 4,len=12), shape=2, mc.cores=1, 
+  		oneminusar = seq(0.02, 0.3,len=24),
+  		nugget = seq(0, 2,len=40), 
+			shape=2, 
+			mc.cores=4, 
 			fixBoxcox=FALSE,
 			adjustEdges=FALSE)
 	
-	image(	myResR$array[,-1,'propNugget',1], 
-			myResR$array[,1,'oneminusar',], 
-			myResR$array[,-1,'logLreml',])
 	
-
+	if(!interactive()) pdf("profLboxcox.pdf")
+	plot(myResBC$profL$boxcox,type='o', ylim=max(myResBC$profL$boxcox[,2])-c(3,0))
+	if(!interactive()) dev.off()
+	
+	myResBC$param
+	
+	myCol = mapmisc::colourScale(
+			breaks = Sbreaks,
+			style='fixed',
+			col=terrain.colors
+	)
+	
+	if(!interactive()) pdf("profLwithboxcox.pdf")
+	image(	myResBC$array[,-1,'propNugget',1], 
+			myResBC$array[,1,'oneminusar',], 
+			myResBC$array[,-1,'logLreml',],
+			col=myCol$col, breaks=myCol$breaks+max(myResBC$array[,,'logLreml',]))
+	mapmisc::legendBreaks("topright",  myCol)
+	points(myResBC$param['propNugget'], myResBC$param['oneminusar'])
+	if(!interactive()) dev.off()
+	
+	
 # optimize propNugget
 	myResRopt = lgm(
 			formula = sim ~ x, 
   		data=raster::stack(myY, myCov), 
   		oneminusar = seq(0.05, 0.2,len=12),
 			shape=2)		
-	pdf("doesntwork.pdf")
+	if(!interactive()) pdf("doesntwork.pdf")
 	plot(myResRopt$array[,,'oneminusar',], myResRopt$array[,,'propNugget',])
-	dev.off()	
+	if(!interactive()) dev.off()	
 }
 
 

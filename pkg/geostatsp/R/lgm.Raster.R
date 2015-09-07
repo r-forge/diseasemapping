@@ -132,7 +132,6 @@ setMethod("lgm",
 		res$profL$nugget = drop(res$profL$nugget)				
 				
 				
-				
 		} else {
 			# dimension 1 of the array is box-cox
     # nugget
@@ -186,7 +185,11 @@ setMethod("lgm",
     } # end have both
 		} # end box-cox
   } # end lArray not null
-
+	
+	if(!is.null(thel$profileBoxCox)){
+		res$profL$boxcox = thel$profileBoxCox
+	}		
+	
   
   res$data = data
   res$model$reml = reml
