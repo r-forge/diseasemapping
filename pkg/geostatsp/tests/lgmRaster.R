@@ -128,7 +128,7 @@ swissResRoptAr =  lgm(
     adjustEdges=FALSE
 )
 
-
+if(FALSE){
 swissResRopt =  lgm(
     formula=layer ~ alt+ myvar, 
     data=swissRainR2, shape=2,
@@ -138,11 +138,10 @@ swissResRopt =  lgm(
 
 swissResRopt$summary
 
-
 # with edge correction.  
 # time consuming, only run this if Patrick is checking
-if(Sys.info()['user'] =='patrick') {
 
+	
 
 # optimize only nugget
 swissResROptNug =  lgm(
@@ -154,6 +153,7 @@ swissResROptNug =  lgm(
 )
 
 plot(swissResROptNug$profL$range, type='l')
+}
 
 }
 
