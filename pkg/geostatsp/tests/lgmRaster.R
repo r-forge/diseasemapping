@@ -155,6 +155,5 @@ swissResROptNug =  lgm(
 plot(swissResROptNug$profL$range, type='l')
 }
 
-}
 
 
