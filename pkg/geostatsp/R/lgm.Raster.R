@@ -138,7 +138,7 @@ setMethod("lgm",
     if(dim(lArray)[2]>1){ # have nugget
 			# find best range and boxcox for this nugget
       best = apply(lArray[,,chooseLike,,drop=FALSE],
-          4, which.max) 
+          2, which.max) 
       best=arrayInd(best, dim(lArray)[-(2:3)])
       res$profL$propNugget = NULL
       for(D in 1:nrow(best)){
