@@ -90,6 +90,8 @@ if(is.list(x))	{
 	 }
 	 excProbAll = unlist(lapply(x, excFunQQ, threshold=threshold))
 	 names(excProbAll) = names(x)
+	 
+	 
 	 } # end not from lgm	
 		
 	} else { # not a list, must be a matrix or data frame with two columns.
@@ -103,6 +105,10 @@ excProbAll = pmax(0, pmin(excProbAll, 1))
 
 if(length(grep("^Raster", class(template)))) {
 	template = raster(template)
+	# fill in NA's for cells with no predictions
+	allNames = paste(substring(names(x)[1], 1, 1),
+			1:ncell(template), sep='')
+	excProbAll = excProbAll[allNames]
 	if(elementsColumnwise) {
 		values(template) = matrix(excProbAll, 
 							nrow=nrow(template),ncol=ncol(template),
