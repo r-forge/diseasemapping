@@ -80,7 +80,7 @@ if(is.list(x))	{
 	
 	# check if it's from glgm
 	 if(all(c("inla", "raster","parameters") %in% names(x))) {
-		 template = raster(x$raster)
+		template = x$raster[['space']]
 		if(!random ) {
 			x = x$inla$marginals.lincomb.derived
 		} else {
@@ -101,14 +101,20 @@ if(is.list(x))	{
 
 
 	# make sure probabilities are between zero and 1
-excProbAll = pmax(0, pmin(excProbAll, 1))
+excProbAll = pmax(pmin(excProbAll, 1),0)
 
 if(length(grep("^Raster", class(template)))) {
-	template = raster(template)
 	# fill in NA's for cells with no predictions
-	allNames = paste(substring(names(x)[1], 1, 1),
-			1:ncell(template), sep='')
-	excProbAll = excProbAll[allNames]
+	if(any(names(template)=='space')){
+		# names of excProbAll should refer to space ID's
+		allNames = paste(
+				gsub("[[:digit:]]+$", "", 
+						names(excProbAll)[1]),
+				values(template[['space']]), 
+				sep='')
+		excProbAll = excProbAll[allNames]
+	}
+	template = raster(template)
 	if(elementsColumnwise) {
 		values(template) = matrix(excProbAll, 
 							nrow=nrow(template),ncol=ncol(template),
