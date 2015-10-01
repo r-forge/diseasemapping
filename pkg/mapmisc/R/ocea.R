@@ -83,13 +83,29 @@ ocea = function(x, angle=0, flip=FALSE) {
 	myCrs
 }
 
-moll = function(x) {
+moll = function(x, northShift=0, eastShift=0, twistShift=0) {
 	
+	
+	
+	northShiftS = -60*60*northShift
+	eastShiftS = 60*60*eastShift
+	twistShiftS = 60*60*twistShift
+	
+	if(any(c(northShiftS, eastShiftS, twistShiftS)!= 0)){
+		resSphere	= CRS(paste(
+						"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0,",
+						northShiftS, ",",
+						twistShiftS, ",",
+						eastShiftS, ",0",
+						sep=''))
+	} else {
+		resSphere = mapmisc::crsLL
+	}
 	
 	if(class(x)=='Extent'){
-		xExtent = x
+		xExtent = projectExtent(raster(x,crs=mapmisc::crsLL))
 	} else {
-		xExtent = projectExtent(x, mapmisc::crsLL)
+		xExtent = projectExtent(x, resSphere)
 	}
 	
 	midX = mean(c(xmin(xExtent),xmax(xExtent)))
@@ -97,10 +113,17 @@ moll = function(x) {
 	res = CRS(paste("+proj=moll +lon_wrap=",
 					midX, " +lon_0=",
 					midX,
-					" +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs +towgs84=0,0,0",
+					" +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 ",
+					"+units=m +no_defs +towgs84=0,0,0,",
+					northShiftS, ",",
+					twistShiftS, ",",
+					eastShiftS, ",0",
 					sep=''))
+
 	
-	attributes(res)$crop = llCropBox(res)
+	attributes(res)$crop = llCropBox(res, 
+			crsSphere=resSphere, 
+			keepInner=TRUE)
 	
 	res
 }
