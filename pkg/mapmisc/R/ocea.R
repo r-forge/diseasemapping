@@ -1,25 +1,26 @@
-ocea = function(x, angle=0, flip=FALSE) {
+ocea = function(x, angle=0, flip=FALSE, northShift=0, eastShift=0, twistShift=0) {
 
 	if(!requireNamespace('geosphere', quietly=TRUE) | 
 			!requireNamespace('rgdal', quietly=TRUE)) {	
 		warning("install geosphere and rgdal and to use ocea")
 	}	
 	
-	xshift = 0
 	
-	crsSphere = CRS(paste(
-					"+proj=longlat",
-					" +ellps=WGS84 +datum=WGS84", 
-					" +no_defs",
-					" +towgs84=0,0,0,",  
-					0, # up shift
-					',',
-					xshift, # clockwise shift
-					',',
-					0, # right shift 
-					',0',sep='')
-	)
 	
+	northShiftS = -60*60*northShift
+	eastShiftS = 60*60*eastShift
+	twistShiftS = 60*60*twistShift
+	
+	if(any(c(northShiftS, eastShiftS, twistShiftS)!= 0)){
+		crsSphere	= CRS(paste(
+						"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0,",
+						northShiftS, ",",
+						twistShiftS, ",",
+						eastShiftS, ",0",
+						sep=''))
+	} else {
+		crsSphere = mapmisc::crsLL
+	}
 	
 	if(class(x)=='Extent'){
 		xExtent = projectExtent(raster(x, crs=mapmisc::crsLL), crsSphere)
@@ -49,12 +50,10 @@ ocea = function(x, angle=0, flip=FALSE) {
 					" +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84", 
 					" +units=m +no_defs",
 					" +towgs84=0,0,0,",  
-					0, # up shift
-					',',
-					xshift, # clockwise shift
-					',',
-					0, # right shift 
-					',0',sep='')
+					northShiftS, ",",
+					twistShiftS, ",",
+					eastShiftS, ",0",
+					sep='') 
 	)
 	
 	if(flip){
@@ -65,7 +64,9 @@ ocea = function(x, angle=0, flip=FALSE) {
 		}
 	}
 	
-	attributes(myCrs)$crop = llCropBox(myCrs)
+	attributes(myCrs)$crop = llCropBox(myCrs,
+			crsSphere=crsSphere, keepInner=FALSE,
+			N=100)
 	
 	circleLLp = SpatialPoints(
 			geosphere::greatCircle(
@@ -83,7 +84,7 @@ ocea = function(x, angle=0, flip=FALSE) {
 	myCrs
 }
 
-moll = function(x, northShift=0, eastShift=0, twistShift=0) {
+moll = function(x, flip=FALSE, northShift=0, eastShift=0, twistShift=0) {
 	
 	
 	
@@ -103,7 +104,7 @@ moll = function(x, northShift=0, eastShift=0, twistShift=0) {
 	}
 	
 	if(class(x)=='Extent'){
-		xExtent = projectExtent(raster(x,crs=mapmisc::crsLL))
+		xExtent = projectExtent(raster(x,crs=mapmisc::crsLL), resSphere)
 	} else {
 		xExtent = projectExtent(x, resSphere)
 	}
@@ -123,7 +124,13 @@ moll = function(x, northShift=0, eastShift=0, twistShift=0) {
 	
 	attributes(res)$crop = llCropBox(res, 
 			crsSphere=resSphere, 
-			keepInner=TRUE)
+			keepInner=TRUE, N=400)
+	
+	
+	if(flip){
+			res = CRS(paste(as.character(res), "+axis=nwu"))
+	}
+
 	
 	res
 }

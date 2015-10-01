@@ -11,8 +11,8 @@ for a supplied Spatial object
 	omerc(x, angle,  
 	post=c('none', 'north', 'wide','tall'),
     preserve=NULL) 
-    ocea(x, angle, flip=FALSE)
-    moll(x)
+    ocea(x, angle, flip=FALSE, northShift=0, eastShift=0, twistShift=0)
+    moll(x, flip=FALSE, northShift=0, eastShift=0, twistShift=0)
 }
 
 \arguments{
@@ -23,6 +23,9 @@ for a supplied Spatial object
 \item{flip}{post-projection flipping of coordinates}
 \item{preserve}{A \code{SpatialPoints} object, the resulting projection is scaled
 so as to preserve the distances between these points as best as possible. }
+\item{northShift}{Rotate the earth prior to projection}
+\item{eastShift}{Rotate the earth prior to projection}
+\item{twistShift}{Rotate the earth prior to projection}
 }
 
 \details{

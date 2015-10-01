@@ -22,7 +22,7 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
 			norths=seq(-90,90,by=30))
 	plot(attributes(myCrs45)$circleTrans, add=TRUE, col='#00FF0020', pch=1)
 	
-	myCrsMoll = moll(x, northShift = -50, eastShift=0, twistShift=0)
+	myCrsMoll = moll(x, northShift = 0, eastShift=90, twistShift=0)
 	xTcrop = wrapPoly(wrld_simpl, myCrsMoll)
 	DcountryT  = grep(country, xTcrop$NAME)
 	
