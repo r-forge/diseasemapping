@@ -66,7 +66,7 @@ ocea = function(x, angle=0, flip=FALSE, northShift=0, eastShift=0, twistShift=0)
 	
 	attributes(myCrs)$crop = llCropBox(myCrs,
 			crsSphere=crsSphere, keepInner=FALSE,
-			N=100)
+			N=200)
 	
 	circleLLp = SpatialPoints(
 			geosphere::greatCircle(

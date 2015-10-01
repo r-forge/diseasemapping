@@ -93,7 +93,7 @@ llCropBox = function(crs,
 	
 	if(requireNamespace('rgeos', quietly=TRUE)) {
 		crs(borderLL) = NA
-		toCropLL = rgeos::gBuffer(borderLL, width=max(res(rasterLL)*2))
+		toCropLL = rgeos::gBuffer(borderLL, width=mean(res(rasterLL)*2))
 		crs(toCropLL) = mapmisc::crsLL
 	} else {
 		toCropLL = NULL
