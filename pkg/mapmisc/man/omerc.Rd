@@ -89,15 +89,16 @@ if(require('rgeos', quietly=TRUE) & require('geosphere', quietly=TRUE)){
 	text(nldMoll,labels=nldMoll$name)
 	scaleBar(nldMoll, 'topright')
 	
+	
+}
+}
+\dontrun{
+
 	nldOceaCrs = ocea(nldCities)
 	nldOcea = spTransform(nldCities, nldOceaCrs)
 	map.new(nldOcea, buffer=2000)
 	text(nldOcea,labels=nldOcea$name)
 	scaleBar(nldOcea, 'topright')
-	
-}
-}
-\dontrun{
 
 	map.new(nldCities)
 	plot(nldTiles,add=TRUE)

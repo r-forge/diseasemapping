@@ -67,7 +67,7 @@ llCropBox = function(crs,
 				)
 		rasterLL = projectRaster(rasterSphere, crs=mapmisc::crsLL, method='ngb')		
 		values(rasterLL)[is.na(values(rasterLL))] = 1
-	} else {
+	} else { # not proj=moll
 	
 	Ny = N
 	
@@ -75,13 +75,16 @@ llCropBox = function(crs,
   		extentLL,
 			ncol=Ny, nrow=Ny, crs=crsSphere
 	)
-	rasterT = projectExtent(rasterLL, crs)
+	rasterTorig = projectExtent(rasterLL, crs)
 	
-	rasterTsmall = raster::crop(rasterT, extend(extent(rasterT), -2*res(rasterT)))
+	# put 0's around the border
+	rasterTsmall = raster::crop(rasterTorig, 
+			extend(extent(rasterTorig), -2*res(rasterTorig)))
 	values(rasterTsmall) = 1
-	rasterT = extend(rasterTsmall, extent(rasterT), value=0)
-	
-	rasterLL = projectRaster(rasterT, crs=mapmisc::crsLL, method='ngb')
+	rasterT = extend(rasterTsmall, extent(rasterTorig), value=0)
+
+	rasterLL = projectRaster(from=rasterT, crs=mapmisc::crsLL, 
+			res = 360/Ny, method='ngb')
 	if(keepInner){
 		values(rasterLL)[is.na(values(rasterLL))] = 1
 	} else {

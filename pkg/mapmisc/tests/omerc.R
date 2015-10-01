@@ -8,7 +8,11 @@ x=nldCities
 xbox = as(extent(nldCities), 'SpatialPolygons')
 crs(xbox) = crs(nldCities)
 
- 
+nldOceaCrs = ocea(nldCities)
+nldOcea = spTransform(nldCities, nldOceaCrs)
+map.new(nldOcea, buffer=2000)
+text(nldOcea,labels=nldOcea$name)
+scaleBar(nldOcea, 'topright') 
 
 bob=function(angle, ...){
   y = spTransform(x, omerc(x, angle, ...))
