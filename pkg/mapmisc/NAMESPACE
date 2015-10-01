@@ -9,7 +9,7 @@ S3method(colourScale, logical)
 export(openmap, osmTiles,insetMap, omerc,openmapAttribution, legendTable)
 export(tpeqd)
 
-export(ocea, moll)
+export(ocea, moll, wrapPoly)
 
 export( GNcities, GNsearch)
 
