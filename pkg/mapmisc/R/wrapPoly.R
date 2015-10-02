@@ -29,75 +29,72 @@ wrapPoly = function(x, crs){
 }
 
 llCropBox = function(crs, 
-		crsSphere = mapmisc::crsLL, 
-		keepInner=FALSE, N=200) {
-
+		res=0.5, keepInner=FALSE) {
+	
 	polarLimit = 90
 	extentLL = extent(-180,180,-polarLimit,polarLimit)
+	
+	
+	
 	if(length(grep("proj=moll", as.character(crs)))){
 		
-		buffer = 360/N
+		projMoll = CRS("+proj=moll +ellps=WGS84 +datum=WGS84 +units=m +no_defs +towgs84=0,0,0,0,0,0,0 ")
 		
-		lon0 = as.numeric(gsub(
-						"lon_wrap=", "", 
-						regmatches(
-								as.character(crs),
-								regexpr("lon_wrap=([[:digit:]]|\\.)+ ", 
-										as.character(crs))
-			)
-		))
-
-		lonSplit = Arg(exp(2i*pi*lon0/360 + 1i*pi))*360/(2*pi) 
-
-		lonSeq = exp(seq(0, log(polarLimit), len=N))
+		N = round(180/res)
+		buffer = 1
+		
+		lonSeq = exp(seq(0, log(polarLimit-1), len=N))
 		lonSeq = sort(unique(c(lonSeq, -lonSeq)))
-		lonMat = rbind(
-				cbind(pmax(-180,lonSplit-buffer), lonSeq),
-				cbind(pmin(lonSplit+buffer),rev(lonSeq))
-				)
-		toCropPoly = SpatialPolygons(list(
-						Polygons(list(
-										Polygon(lonMat, hole=FALSE)
-										), 1)
-						),
-						proj4string = crsSphere)  	
-		rasterSphere = rasterize(toCropPoly,
-				raster(extentLL, ncol=N, nrow=N, crs=crsSphere),
-				field=0
-				)
-		rasterLL = projectRaster(rasterSphere, crs=mapmisc::crsLL, method='ngb')		
-		values(rasterLL)[is.na(values(rasterLL))] = 1
-	} else { # not proj=moll
-	
-	Ny = N
-	
-	rasterLL = raster(
-  		extentLL,
-			ncol=2*Ny, nrow=Ny, crs=crsSphere
-	)
-	rasterTorig = projectExtent(rasterLL, crs)
-	
-	# put 0's around the border
-	rasterTsmall = raster::crop(rasterTorig, 
-			extend(extent(rasterTorig), -2*res(rasterTorig)))
-	values(rasterTsmall) = 1
-	rasterT = extend(rasterTsmall, extent(rasterTorig), value=0)
 
-	rasterLL = projectRaster(from=rasterT, 
+		lonMat = rbind(
+				cbind(-180+1, lonSeq),
+				cbind(180-1,rev(lonSeq))
+		)
+		edgePoints = SpatialPoints(lonMat, proj4string=crsLL)
+		edgePointsT = spTransform(edgePoints, projMoll)
+		
+		toCropPoly = SpatialPolygons(list(
+				Polygons(list(
+								Polygon(edgePointsT@coords*0.99, hole=FALSE)
+						), 1)
+		), proj4string = crs)
+		rasterT = rasterize(toCropPoly, 
+				raster(extent(edgePointsT), nrows=N, ncols=2*N), 
+				value=1)
+		values(rasterT)[is.na(values(rasterT))]=0
+	} else {
+		
+		rasterLLorig = raster(
+  			extentLL,
+				res=res, crs=mapmisc::crsLL
+		)
+		
+		rasterTorig = projectExtent(rasterLLorig, crs)
+		rasterTorig = disaggregate(rasterTorig, 2)
+		
+		# put 0's around the border
+		rasterTsmall = crop(rasterTorig, extend(extent(rasterTorig), -6*res(rasterTorig)))
+		values(rasterTsmall) = 1
+		rasterT = extend(rasterTsmall, extend(extent(rasterTsmall), 5*res(rasterTsmall)), value=0)
+		
+	}
+	
+	
+	rasterLL = projectRaster(
+			from=rasterT, 
 			crs=mapmisc::crsLL, 
-			res = res(rasterLL), method='ngb')
+			res = res, method='ngb')
+	rasterLL = crop(rasterLL, extentLL)
 	if(keepInner){
 		values(rasterLL)[is.na(values(rasterLL))] = 1
 	} else {
 		values(rasterLL)[is.na(values(rasterLL))] = 0
 	}
-	}
-	
+ 
 	borderLL = rasterToPoints(rasterLL, fun=function(x) {x<1}, spatial=TRUE)
-	
 	if(requireNamespace('rgeos', quietly=TRUE)) {
 		crs(borderLL) = NA
-		toCropLL = rgeos::gBuffer(borderLL, width=mean(res(rasterLL)*1.5))
+		toCropLL = rgeos::gBuffer(borderLL, width=mean(res*1.5))
 		crs(toCropLL) = mapmisc::crsLL
 	} else {
 		toCropLL = NULL
