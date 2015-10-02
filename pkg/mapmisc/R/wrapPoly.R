@@ -73,7 +73,7 @@ llCropBox = function(crs,
 	
 	rasterLL = raster(
   		extentLL,
-			ncol=Ny, nrow=Ny, crs=crsSphere
+			ncol=2*Ny, nrow=Ny, crs=crsSphere
 	)
 	rasterTorig = projectExtent(rasterLL, crs)
 	
@@ -83,8 +83,9 @@ llCropBox = function(crs,
 	values(rasterTsmall) = 1
 	rasterT = extend(rasterTsmall, extent(rasterTorig), value=0)
 
-	rasterLL = projectRaster(from=rasterT, crs=mapmisc::crsLL, 
-			res = 360/Ny, method='ngb')
+	rasterLL = projectRaster(from=rasterT, 
+			crs=mapmisc::crsLL, 
+			res = res(rasterLL), method='ngb')
 	if(keepInner){
 		values(rasterLL)[is.na(values(rasterLL))] = 1
 	} else {
@@ -96,7 +97,7 @@ llCropBox = function(crs,
 	
 	if(requireNamespace('rgeos', quietly=TRUE)) {
 		crs(borderLL) = NA
-		toCropLL = rgeos::gBuffer(borderLL, width=mean(res(rasterLL)*2))
+		toCropLL = rgeos::gBuffer(borderLL, width=mean(res(rasterLL)*1.5))
 		crs(toCropLL) = mapmisc::crsLL
 	} else {
 		toCropLL = NULL

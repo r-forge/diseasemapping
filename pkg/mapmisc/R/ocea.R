@@ -21,10 +21,19 @@ ocea = function(x, angle=0, flip=FALSE, northShift=0, eastShift=0, twistShift=0)
 	} else {
 		crsSphere = mapmisc::crsLL
 	}
-	
+
+	if(is.numeric(x)){
+		if(length(x)==2) x = c(x,x+10^(-4))
+		x = extent(x)
+	}
 	if(class(x)=='Extent'){
 		xExtent = projectExtent(raster(x, crs=mapmisc::crsLL), crsSphere)
 	} else {
+		if(length(grep("^SpatialPoints", class(x)))){
+			if(length(x)==1){
+				x = raster(extend(extent(x), 10^(-4)), crs=crs(x))
+			}
+		}
 		xExtent = projectExtent(x, crsSphere)
 	}
 	
@@ -104,14 +113,30 @@ moll = function(x, flip=FALSE, northShift=0, eastShift=0, twistShift=0) {
 		resSphere = mapmisc::crsLL
 	}
 	
+	if(is.numeric(x)){
+		midX = x[1]	
+	} else {
+
+		if(is.numeric(x)){
+			if(length(x)==2) x = c(x,x+10^(-4))
+			x = extent(x)
+		}
+		
 	if(class(x)=='Extent'){
 		xExtent = projectExtent(raster(x,crs=mapmisc::crsLL), resSphere)
 	} else {
+		if(length(grep("^SpatialPoints", class(x)))){
+			if(length(x)==1){
+				x = raster(extend(extent(x), 10^(-4)), crs=crs(x))
+			}
+		}
+		
 		xExtent = projectExtent(x, resSphere)
 	}
 	
 	midX = mean(c(xmin(xExtent),xmax(xExtent)))
-	
+	}
+
 	res = CRS(paste("+proj=moll +lon_wrap=",
 					midX, " +lon_0=",
 					midX,
