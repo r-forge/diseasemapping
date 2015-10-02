@@ -1,4 +1,4 @@
-ocea = function(x, angle=0, flip=FALSE, northShift=0, eastShift=0, twistShift=0) {
+ocea = function(x, angle=0, flip=FALSE) {
 
 	if(!requireNamespace('geosphere', quietly=TRUE) | 
 			!requireNamespace('rgdal', quietly=TRUE)) {	
@@ -6,7 +6,7 @@ ocea = function(x, angle=0, flip=FALSE, northShift=0, eastShift=0, twistShift=0)
 	}	
 	
 	
-	
+	northShift=0; eastShift=0; twistShift=0
 	northShiftS = -60*60*northShift
 	eastShiftS = 60*60*eastShift
 	twistShiftS = 60*60*twistShift
@@ -75,8 +75,7 @@ ocea = function(x, angle=0, flip=FALSE, northShift=0, eastShift=0, twistShift=0)
 	
 	attributes(myCrs)$crop = llCropBox(
 			crs=myCrs,
-			crsSphere=crsSphere, keepInner=FALSE,
-			N=200)
+			keepInner=FALSE)
 	
 	circleLLp = SpatialPoints(
 			geosphere::greatCircle(

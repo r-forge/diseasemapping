@@ -26,7 +26,7 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
 	Dcountry  = grep(country, wrld_simpl$NAME)
 	x=wrld_simpl[Dcountry,]
 	
-	myCrsMoll = moll(x, northShift = 0, eastShift=0, twistShift=40)
+	myCrsMoll = moll(x, oblique=TRUE)
 	xTcrop = wrapPoly(wrld_simpl, myCrsMoll)
 	DcountryT  = grep(country, xTcrop$NAME)
 	
