@@ -12,7 +12,7 @@ for a supplied Spatial object
 	post=c('none', 'north', 'wide','tall'),
     preserve=NULL) 
     ocea(x, angle, flip=FALSE)
-    moll(x, oblique=FALSE, flip=FALSE)
+    moll(x, angle=0, flip=FALSE)
 }
 
 \arguments{
@@ -23,7 +23,6 @@ for a supplied Spatial object
 \item{flip}{post-projection flipping of coordinates}
 \item{preserve}{A \code{SpatialPoints} object, the resulting projection is scaled
 so as to preserve the distances between these points as best as possible. }
-\item{oblique}{Rotate to put \code{x} at the origin.}
 }
 
 \details{
