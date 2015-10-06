@@ -24,7 +24,7 @@ lgcp = function(formula=NULL, data,  grid, covariates=NULL,
 	counts[is.na(counts)] = 0
 	
 	if(!missing(border)) {
-		counts = mask(counts, border)
+		counts = raster::mask(counts, border)
 	}
 	
 # the formula	

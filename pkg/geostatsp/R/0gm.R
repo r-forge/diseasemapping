@@ -48,9 +48,10 @@ gm.dataRaster = function(
       gsub("[[:space:]]+", "", alltermsFull))
   offsetToLogOrig = alltermsFull[offsetToLogOrig]
   if(length(offsetToLogOrig)) {
-  names(offsetToLogOrig) = gsub(
+  	names(offsetToLogOrig) = gsub(
       "^[[:space:]]?offset\\(|,[[:space:]]?log[[:space:]]?=[[:space:]]?TRUE[[:space:]]?\\)[[:space:]]?$",
-      '', offsetToLogOrig)
+      '', offsetToLogOrig
+	)
   }
   
 	Sfactor = c(
@@ -122,13 +123,30 @@ gm.dataRaster = function(
       names(offsetToLogLogged) = paste('log',D,sep='')
       covariatesStack = stack(covariatesStack, offsetToLogLogged)
       toDrop = which(alltermsFull==offsetToLogOrig[D])
-#      drop.terms(terms(formula), toDrop, keep.response=TRUE)
-    # doesn't work, will drop other offsets
 
-    formula = as.formula(gsub(offsetToLogOrig[D],
-        paste("offset(log",D,")",sep=''),
-        format(formula),
-        fixed=TRUE))
+	  # the offsets
+	  allOffsets = grep(
+			  "^offset\\([[:print:]]+\\)$", 
+			  gsub("[[:space:]]+", "", alltermsFull), value=TRUE)
+	  offsetNotLogged = grep(
+			  "^offset\\([[:print:]]+,log=TRUE\\)$", 
+			  gsub("[[:space:]]+", "", allOffsets), 
+			  invert=TRUE, value=TRUE)
+	  
+	  
+	  # any other offsets would also have been removed
+	  # by drop.terms
+
+	  formula = update.formula(
+			drop.terms(terms(formula), dropx=toDrop, keep.response=TRUE),
+			as.formula(
+					paste(".~.", 
+							paste("offset(log", D, ")", sep=''),
+							offsetNotLogged, 
+							sep = '+')
+	) 	
+	)
+	
     
     rmethod[paste('log',D,sep='')] = 'bilinear'
 
