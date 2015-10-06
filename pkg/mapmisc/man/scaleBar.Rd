@@ -40,17 +40,14 @@ Scaling factor north arrow (can be zero).
 \item{outer}{If \code{TRUE}, put bar or map in the margin of the plot}
 \item{map}{Either a Raster for the inset map or a string 
 passed to \code{\link{openmap}}'s path argument}
-\item{zoom}{Zoom level if retreiving inset map from \code{\link{openmap}}}
+\item{zoom}{Zoom level if retrieving inset map from \code{\link{openmap}}}
 \item{width}{Width of the inset map, as a fraction of the plot window}
 \item{col}{Colour for shaded region of inset map}
 \item{borderSmall,borderBig}{border style for the inset map and shaded region, 
 passed as the \code{bg} argument to \code{\link[graphics]{polygon}}}
 \item{cropInset}{Crop the insert map to this extent}
 \item{\dots}{
-breaks = c(-100, -1, 1, Inf)
-thecol = c('red','orange','blue')
-
-Additional arguments passed to \code{legend}, for examaple \code{bty='n'} 
+Additional arguments passed to \code{legend}, for example \code{bty='n'} 
 }
 }
 \details{

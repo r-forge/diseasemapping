@@ -1,13 +1,16 @@
 wrapPoly = function(x, crs){
 	
 	if(is.null(attributes(crs)$crop)) {
-		attributes(crs)$crop = llCropBox(crs)
+		attributes(crs)$crop = llCropBox(crs)$crop
 	}
 	
 	if(requireNamespace('rgeos', quietly=TRUE) & 
 			requireNamespace('rgdal', quietly=TRUE)) {	
 		toCropX = spTransform(attributes(crs)$crop, crs(x))
 		xCrop = rgeos::gDifference(x, toCropX, byid=TRUE)
+		
+		if(any(slotNames(x)=='data')) {
+		
 		xCropData = x@data[match(
 						gsub(" [[:digit:]]+$","", names(xCrop)),
 						rownames(x@data)
@@ -19,6 +22,8 @@ wrapPoly = function(x, crs){
 				data=xCropData
 		)
 		
+	}
+	
 		xTcrop = spTransform(xCrop, crs)
 		
 	} else {
@@ -63,6 +68,8 @@ llCropBox = function(crs,
 				value=1)
 		values(rasterT)[is.na(values(rasterT))]=0
 	} else {
+
+		toCropPoly = NULL
 		
 		rasterLLorig = raster(
   			extentLL,
@@ -104,5 +111,5 @@ llCropBox = function(crs,
 		toCropLL = raster::crop(toCropLL, extentLL)
 	}
 
-	toCropLL
+	list(crop=toCropLL, poly=toCropPoly)
 }
