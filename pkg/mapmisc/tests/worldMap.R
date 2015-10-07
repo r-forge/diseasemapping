@@ -43,7 +43,5 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
 	plot(xTcrop[DcountryT,], col='green', add=TRUE)
 	
 	gridlinesWrap(crs=xTcrop, lty=2, col='red')
-	
-	
-	
+
 }

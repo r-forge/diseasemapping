@@ -8,13 +8,16 @@ wrapPoly = function(x, crs){
 			requireNamespace('rgdal', quietly=TRUE)) {	
 		toCropX = spTransform(attributes(crs)$crop, crs(x))
 		xCrop = rgeos::gDifference(x, toCropX, byid=TRUE)
+
+		row.names(xCrop) = gsub(" (buffer|[[:digit:]]+)$","", row.names(xCrop))
 		
 		if(any(slotNames(x)=='data')) {
 		
-		xCropData = x@data[match(
-						gsub(" (buffer|[[:digit:]]+)$","", names(xCrop)),
+			xCropData = x@data[match(
+						row.names(xCrop),
 						rownames(x@data)
 				),]
+
 		rownames(xCropData) = names(xCrop)
 		
 		xCrop = SpatialPolygonsDataFrame(
@@ -36,19 +39,17 @@ wrapPoly = function(x, crs){
 llCropBox = function(crs, 
 		res=0.5, keepInner=FALSE) {
 	
-	polarLimit = 90
+	polarLimit = 90-res
 	extentLL = extent(-180,180,-polarLimit,polarLimit)
-	
-	
 	
 	if(length(grep("proj=moll", as.character(crs)))){
 		
 		projMoll = CRS("+proj=moll +ellps=WGS84 +datum=WGS84 +units=m +no_defs +towgs84=0,0,0,0,0,0,0 ")
 		
-		N = round(180/res)
+		N = 2*round(180/res)
 		buffer = res
 		
-		lonSeq = exp(seq(0, log(polarLimit-1), len=N))
+		lonSeq = exp(seq(0, log(90), len=N))
 		lonSeq = sort(unique(c(lonSeq, -lonSeq)))
 
 		N=100
@@ -79,50 +80,11 @@ llCropBox = function(crs,
 	edgePointsLL = spTransform(
 			SpatialPoints(edgeCoords, proj4string=crs),
 			crsLL)
+	edgePointsLL = raster::crop(edgePointsLL, extentLL)
 	crs(edgePointsLL) = NA
 	toCropLL = rgeos::gBuffer(edgePointsLL, width=res)
 	crs(toCropLL) = crsLL
 
-	if(FALSE){
-	# clip some of the extreme points because they can loop around
-	edgeCoords = edgeCoords[
-			abs(edgeCoords[,1]) < 0.999*max(abs(edgeCoords[,1])) &
-					abs(edgeCoords[,2]) < 0.999*max(abs(edgeCoords[,2])), 			
-	]
-	
-  edgeCoords = edgeCoords[edgeCoords[,1]> 0,]
-	
-	
-	edgePoints = SpatialLines(list(Lines(
-			Line(edgeCoords),
-			ID = "border"
-	)), proj4string=crs)
-		
-		edgePointsLL = spTransform(edgePoints, crsLL)
-		
-		edgePointsLL = raster::crop(edgePointsLL, 
-				extent(-180+buffer, 180-buffer, -90, 90))
-		
-		edgePointsLL = edgePointsLL@lines[[1]]@Lines
-
-		toCropLL = rgeos::gBuffer(borderLL, width=mean(res*1.5))
-		
-		toCropLL = SpatialPolygons(
-				list(Polygons(
-								lapply(edgePointsLL, 
-										function(qq){
-							Polygon(
-								rbind(
-										qq@coords[1,],
-										cbind(qq@coords[,1], qq@coords[,2] + buffer),
-										cbind(rev(qq@coords[,1]), rev(qq@coords[,2])-buffer),
-										qq@coords[1,]), 
-								hole=FALSE)
-				}), ID="border")),
-			proj4string=crsLL)
-		
-	toCropLL = rgeos::gUnionCascaded(toCropLL)
-}
 } else {
 
 		toCropPoly = NULL
@@ -161,12 +123,12 @@ llCropBox = function(crs,
 			toCropLL = NULL
 		}
 		
-		if(!is.null(toCropLL)){
-			toCropLL = raster::crop(toCropLL, extentLL)
-		}
 		
 	}
 	
-
+	if(!is.null(toCropLL)){
+		toCropLL = raster::crop(toCropLL, extentLL)
+	}
+	
 	list(crop=toCropLL, poly=toCropPoly)
 }
