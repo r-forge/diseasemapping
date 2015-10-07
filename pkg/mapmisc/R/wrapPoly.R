@@ -11,6 +11,23 @@ wrapPoly = function(x, crs){
 
 		row.names(xCrop) = gsub(" (buffer|[[:digit:]]+)$","", row.names(xCrop))
 		
+		
+		# remove short line segments
+		if(length(grep("^SpatialLines", class(xCrop)))){
+		
+		NsegPerLine = unlist(lapply(xCrop@lines, 
+				function(qq) length(qq@Lines)))
+
+		for(D in which(NsegPerLine > 3)) {
+			# retain only three biggest segments
+			lineD = xCrop@lines[[D]]@Lines
+			NpointsPerSeg = unlist(lapply(lineD, 
+					function(qq) nrow(qq@coords)))
+			lineD = lineD[which(NpointsPerSeg > 2)]
+			xCrop@lines[[D]]@Lines = lineD
+		}
+	}
+		
 		if(any(slotNames(x)=='data')) {
 		
 			xCropData = x@data[match(
@@ -52,7 +69,7 @@ llCropBox = function(crs,
 		lonSeq = exp(seq(0, log(90), len=N))
 		lonSeq = sort(unique(c(lonSeq, -lonSeq)))
 
-		N=100
+
 		lonMat = cbind(
 				rep(180, N),
 				90-c(0, exp(seq(0,log(90),len=N-1)))
@@ -80,7 +97,8 @@ llCropBox = function(crs,
 	edgePointsLL = spTransform(
 			SpatialPoints(edgeCoords, proj4string=crs),
 			crsLL)
-	edgePointsLL = raster::crop(edgePointsLL, extentLL)
+	edgePointsLL = raster::crop(edgePointsLL, 
+			extent(-181, 181, -polarLimit,polarLimit))
 	crs(edgePointsLL) = NA
 	toCropLL = rgeos::gBuffer(edgePointsLL, width=res)
 	crs(toCropLL) = crsLL

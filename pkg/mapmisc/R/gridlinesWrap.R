@@ -17,13 +17,13 @@ gridlinesWrap = function(crs,
 			mapply(function(qq, len){
 						Lines(
 								Line(cbind(qq, 
-												seq(-90,90,len=len))),
+												seq(-89,89,len=len))),
 								ID=paste("E",qq,sep=''))
 					}, qq=easts, len=ndiscr), 
 			mapply(function(qq, len){
 						Lines(
 								Line(cbind(
-												seq(-180,180,len=len), 
+												seq(-179,179,len=len), 
 												qq)
 								),
 								ID=paste("N",qq,sep='')
@@ -34,6 +34,7 @@ gridlinesWrap = function(crs,
 	glines = SpatialLines(glines,
 			proj4string = crsLL
 	)
+	
 	
 	glinesT = wrapPoly(glines, crsT)
 	
