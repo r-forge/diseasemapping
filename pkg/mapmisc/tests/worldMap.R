@@ -11,7 +11,8 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
 	x=wrld_simpl[Dcountry,]
 
 	myCrsO = moll(x, angle=25)
-	xTcrop = wrapPoly(wrld_simpl, myCrsO)
+	
+	xTcrop = wrapPoly(x=wrld_simpl, crs=myCrsO)
 	DcountryT  = grep(country, xTcrop$NAME)
 	
 	map.new(xTcrop)
