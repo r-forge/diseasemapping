@@ -44,8 +44,8 @@ objFunAngle = function(param, start, target) {
 						)^2
 	)
 	
-	resAngle = apply(startT@coords, 2, diff)
-	resAngle = 90-atan(resAngle[2]/resAngle[1])*360/(2*pi)
+	resAngle = startT@coords[2,] - startT@coords[1,]
+	resAngle = 90 - Arg(resAngle[1] + 1i * resAngle[2])*360/(2*pi) 
 	
 	resDist + resAngle^2
 	
