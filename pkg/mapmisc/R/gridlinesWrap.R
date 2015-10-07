@@ -39,7 +39,7 @@ gridlinesWrap = function(crs,
 	glinesData=data.frame(
 			direction = substr(names(glinesT), 1,1),
 			degrees = as.numeric(gsub(
-							"^(E|N)|( [[:digit:]]+)$", "",
+							"^(E|N)|( (buffer|[[:digit:]]+))$", "",
 							names(glinesT))
 			),
 			stringsAsFactors=FALSE

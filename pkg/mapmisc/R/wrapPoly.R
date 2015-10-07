@@ -12,7 +12,7 @@ wrapPoly = function(x, crs){
 		if(any(slotNames(x)=='data')) {
 		
 		xCropData = x@data[match(
-						gsub(" border$","", names(xCrop)),
+						gsub(" (buffer|[[:digit:]]+)$","", names(xCrop)),
 						rownames(x@data)
 				),]
 		rownames(xCropData) = names(xCrop)
@@ -76,24 +76,37 @@ llCropBox = function(crs,
 						), 1)
 		), proj4string = crs)
 
+	edgePointsLL = spTransform(
+			SpatialPoints(edgeCoords, proj4string=crs),
+			crsLL)
+	crs(edgePointsLL) = NA
+	toCropLL = rgeos::gBuffer(edgePointsLL, width=res)
+	crs(toCropLL) = crsLL
+
+	if(FALSE){
 	# clip some of the extreme points because they can loop around
 	edgeCoords = edgeCoords[
 			abs(edgeCoords[,1]) < 0.999*max(abs(edgeCoords[,1])) &
 					abs(edgeCoords[,2]) < 0.999*max(abs(edgeCoords[,2])), 			
-			]
-
-
+	]
+	
+  edgeCoords = edgeCoords[edgeCoords[,1]> 0,]
+	
+	
 	edgePoints = SpatialLines(list(Lines(
-			Line(edgeCoords[1:floor(nrow(edgeCoords)/2),]),
+			Line(edgeCoords),
 			ID = "border"
 	)), proj4string=crs)
 		
 		edgePointsLL = spTransform(edgePoints, crsLL)
 		
-		edgePointsLL = raster::crop(edgePointsLL, extent(-180+buffer, 180-buffer, -90, 90))
+		edgePointsLL = raster::crop(edgePointsLL, 
+				extent(-180+buffer, 180-buffer, -90, 90))
 		
 		edgePointsLL = edgePointsLL@lines[[1]]@Lines
 
+		toCropLL = rgeos::gBuffer(borderLL, width=mean(res*1.5))
+		
 		toCropLL = SpatialPolygons(
 				list(Polygons(
 								lapply(edgePointsLL, 
@@ -108,6 +121,8 @@ llCropBox = function(crs,
 				}), ID="border")),
 			proj4string=crsLL)
 		
+	toCropLL = rgeos::gUnionCascaded(toCropLL)
+}
 } else {
 
 		toCropPoly = NULL

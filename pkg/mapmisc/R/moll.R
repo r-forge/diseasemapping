@@ -151,8 +151,7 @@ moll = function(x, angle=NULL, flip=FALSE) {
 	}
 	
 	theBox = llCropBox(
-			result, 
-			keepInner=FALSE, res=1)
+			crs=result, res=1)
 
 	if(is.character(flip)) {
 		result = CRS(paste(as.character(result), " +axis=", flip, sep=''))
