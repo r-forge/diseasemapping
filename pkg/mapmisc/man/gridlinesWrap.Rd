@@ -9,7 +9,7 @@ long-lat grid lines are added to a map in the coordinate system specified,
 allowing for map projections wrapped differently from the 180 meridian.
 }
 \usage{
-gridlinesWrapcrs, 
+gridlinesWrapcrs( 
 		easts=seq(-180,180,by=60),
 		norths=seq(-90,90,by=30),
 		ndiscr=40, plotLines=TRUE, 
