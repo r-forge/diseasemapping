@@ -128,6 +128,23 @@ kBYM = bym(observed ~ offset(logExpected) + poverty,
 kBYM$par$summary
 
 
+# missing value in a categorical variable
+
+pCuts = quantile(kentucky$poverty)
+kentucky$povertyFac = cut(kentucky$poverty, 
+		breaks = pCuts,
+		labels = letters[seq(1,length(pCuts)-1)])
+kentucky$povertyFac[c(2,34,100)] = NA
+
+kBYM = bym(
+		formula = observed ~ offset(logExpected) + povertyFac,
+		data = kentucky, 
+		region.id="County",
+		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5))
+)
+
+
+kBYM$par$summary
 }
 if(FALSE){
 	

@@ -216,10 +216,11 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 				paste(precPrior[["sdIndep"]], collapse=","),
 				"))))",
 			sep="")
-		
-		formula = update(formula, as.formula(bymTerm))
 
-		# linear combinations
+	
+	allVars = all.vars(formula)
+	formula = update(formula, as.formula(bymTerm))
+
 
 
 	#check to see if some regions don't have data.  If so they'll have to be added so 
@@ -234,8 +235,26 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 		data = rbind(data, dataToAdd)
 	}
 
-	#	theDup = duplicated(data$region.indexS)
+	# INLA doesn't like missing values in categorical covariates
+	# set NA covariates to some arbitrary value and set response to NA
+	anyNA = which(apply(data[,allVars], 1, function(qq) any(is.na(qq))))
+	if(length(anyNA)) {
+		# response to NA
+		baseData = data[1,allVars[-1], drop=FALSE]
+		baseNA = which(is.na(baseData))
+		for(D in baseNA){
+			baseNA[1,D] = unique(data[,allVars[-1][D]])[1]
+		}
+		for(D in anyNA) {
+			naHere = is.na(data[D,allVars[-1]])
+			data[D, allVars[1]] = NA
+			data[anyNA, allVars[-1][naHere]] = baseData[naHere]
+		}
+	}
 
+	##################
+	# linear combinations
+	###################
 		inlaLincombs = list()
 		# random effects
 		for(D in 1:length(region.index)) {
@@ -276,6 +295,7 @@ formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", f
 
 	startIndex = length(region.index)
  
+	# if there are covariates
 	if(nchar(formulaForLincombs) & formulaForLincombs != "1" &
 			!length(grep("^[[:space:]]+$", formulaForLincombs))
 		) { #make linear combinations
@@ -336,8 +356,9 @@ formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", f
  
 
 
-
+	##########################
 	# run inla!		
+	########################
 	if(requireNamespace("INLA", quietly=TRUE)) { # not enough to have requireNamespace
 		inlaRes = INLA::inla(formula, data=data , family=family,
 			lincomb=inlaLincombs, ...)
