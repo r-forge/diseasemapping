@@ -55,7 +55,7 @@ legendTableLatex = function(x, rule, ruleUnit, collapse){
   latexCol = paste(
       '\\textcolor[HTML]{',
       substr(x$col,2,7),
-      '}{\\rule[',
+      '}{\\protect\\rule[',
       rule[1],']{',
       rule[3],'}{',
       rule[2],'}}',
