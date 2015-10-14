@@ -20,6 +20,8 @@ legendBreaks(pos,
     inset=0.05,
     title.col=text.col,
     adj=0,
+    width=Inf,
+    lines=Inf,
     y.intersp,
 	...)
 	}
@@ -44,6 +46,8 @@ Position, as specified in the \code{\link[graphics]{legend}} function.
 \item{inset}{see \code{\link[graphics]{legend}}}
 \item{title.col}{see \code{\link[graphics]{legend}}}
 \item{adj}{Adjustment of the legend labels relative to plotting symbols.}
+\item{width}{Maximum number of characters before a line break is added to the legend labels}
+\item{lines}{Maximum number of lines in each legend label}
 \item{y.intersp}{see \code{\link[graphics]{legend}}}
 \item{...}{Additional arguments passed to \code{\link[graphics]{legend}}.}
 }

@@ -14,6 +14,7 @@ legendBreaks = function(pos,
     inset=0.05,
     title.col=text.col,
     adj=0,
+		width=Inf, lines=Inf,
     y.intersp,
     ...){
 
@@ -60,6 +61,7 @@ legendBreaks = function(pos,
     legend=rev(legend)
   }
   
+	diffYmult = 0
   if(length(col) == (length(legend)-1)) {
     # one more legend item than colours
     col = c(NA, col)
@@ -78,23 +80,42 @@ legendBreaks = function(pos,
     }
   }
   
-
-if(missing(y.intersp)){
-  y.intersp = gregexpr("\n", 
-              as.character(legend)
-          )
-y.intersp=max(
-    unlist(lapply(y.intersp, function(qq) sum(qq>0)))
-)
-if(all(is.na(y.intersp))){
-  y.intersp=0
-}
-if(y.intersp>0){
-  y.intersp = 1.5
-} else {
-  y.intersp=1
-}
-} 
+# line wrapping for legend labels
+	if(any(nchar(as.character(legend)) > width)) {
+		legend =  trim(
+  	  	gsub(
+    			paste('(.{1,', width, '})(\\s|/|$)' ,sep=''), 
+					'\\1\n ', 
+    			as.character(legend)
+				)
+		)
+	}
+	
+	# remove excess lines
+	theNewLines = gregexpr('\n', as.character(legend))
+	toCrop = which(unlist(lapply(theNewLines, length)) >= lines)
+	if(any(toCrop)) {
+		cropPos = unlist(lapply(theNewLines[toCrop], function(qq) qq[2]))
+		legend = as.character(legend)
+		legend[toCrop] = 
+			trim(substr(legend[toCrop], 1, cropPos))
+	}
+	
+	if(missing(y.intersp)){
+		
+	theNewLines = gregexpr('\n', as.character(legend))
+	y.intersp=max(
+    unlist(lapply(theNewLines, function(qq) sum(qq>0)))
+	) + 1.25
+	if(all(is.na(y.intersp))){
+  	y.intersp=0
+	}
+	if(y.intersp<0){
+  	y.intersp=1
+	}
+	adj = rep_len(adj, 2)
+	adj[2] = adj[2] + y.intersp/3
+	} 
 
 
   # get rid of transparency in col
@@ -137,6 +158,7 @@ if(y.intersp>0){
       title.col=title.col,
       title=title,
       y.intersp=y.intersp,
+			adj=adj,
       ...
       )
       
