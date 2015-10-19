@@ -92,6 +92,8 @@ geocode = function(...) {
 		result = dismo::geocode(...)		
 		
 		if(is.data.frame(result)) {
+		result$name = gsub(", [[:print:]]+$", "", 
+				as.character(result$interpretedPlace))	
 		result = SpatialPointsDataFrame(
 				result[,c('longitude','latitude')],
 				data = result,
