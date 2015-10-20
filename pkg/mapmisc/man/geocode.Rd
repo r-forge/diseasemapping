@@ -9,7 +9,7 @@ Uses the dismo package to geocode with Google
 	}
 
 \arguments{
-	\item{...}{arguments passed to \code{\link[geonames]{geocode}}}
+	\item{...}{arguments passed to \code{\link[dismo]{geocode}}}
 }
 
 \seealso{\code{\link[dismo]{geocode}}}
