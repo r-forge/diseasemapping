@@ -93,9 +93,10 @@ geocode = function(...) {
 		
 		if(is.data.frame(result)) {
 		result$name = gsub(", [[:print:]]+$", "", 
-				as.character(result$interpretedPlace))	
+				as.character(result$interpretedPlace))
+		resultCoords = as.matrix(result[,c('longitude','latitude')])
 		result = SpatialPointsDataFrame(
-				result[,c('longitude','latitude')],
+				resultCoords,
 				data = result,
 				proj4string = mapmisc::crsLL
 				)
