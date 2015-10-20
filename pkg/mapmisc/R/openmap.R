@@ -159,17 +159,19 @@ openmap = function(x, zoom,
 		oldColorTable = list()
 		for(D in names(result))
 			oldColorTable[[D]] = result[[D]]@legend@colortable
-		if(fact > 1){
-			if(verbose) cat("disaggregating by ", fact, "...")
-			result = disaggregate(
-						result, fact=fact
-					)
-					
-		}
 		
 		if(verbose) cat("reprojecting ", ncell(result), " cells...")
-    
-		resultProj = stack(projectRaster(result, crs=crsOut, method="ngb"))
+
+    toRaster = projectExtent(result, crsOut)
+		
+		
+		if(any(fact > 1)){
+	
+			toRaster = disaggregate(toRaster, fact=fact)
+			
+		}
+		
+		resultProj = stack(projectRaster(result, toRaster, method="ngb"))
 
 		for(D in names(resultProj))
 			resultProj[[D]]@legend@colortable = oldColorTable[[D]]
