@@ -94,8 +94,8 @@ legendBreaks = function(pos,
 	# remove excess lines
 	theNewLines = gregexpr('\n', as.character(legend))
 	toCrop = which(unlist(lapply(theNewLines, length)) >= lines)
-	if(any(toCrop)) {
-		cropPos = unlist(lapply(theNewLines[toCrop], function(qq) qq[2]))
+	if(length(toCrop)) {
+		cropPos = unlist(lapply(theNewLines[toCrop], function(qq) qq[lines]))
 		legend = as.character(legend)
 		legend[toCrop] = 
 			trim(substr(legend[toCrop], 1, cropPos))
