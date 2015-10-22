@@ -1,4 +1,5 @@
 export(scaleBar,map.new,legendBreaks, col2html)
+export(colorScale)
 export(colourScale)
 S3method(colourScale, Raster)
 S3method(colourScale, numeric)

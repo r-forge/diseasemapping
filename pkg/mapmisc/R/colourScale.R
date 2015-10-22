@@ -23,6 +23,10 @@ colourScale = function(x=NULL, breaks=5,
 
 }
 
+colorScale = function(...) {
+	colourScale(...)
+}
+
 colourScale.character =   function(x=NULL, breaks=5, 
 		style=c("quantile","equal","unique", "fixed"),
 		col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 

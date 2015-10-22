@@ -9,6 +9,7 @@ Produces a scale of colours for plotting maps}
 	colourScale(x, breaks=5, style=c("quantile","equal","unique", "fixed"),
 	 col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
 	 transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL,...)
+	colorScale(...)
 	}
 
 \arguments{
@@ -46,7 +47,7 @@ Produces a scale of colours for plotting maps}
 
  any other string: is passed to \code{\link[classInt]{classIntervals}}
 
-
+\code{colorScale} passes all it's arguments to \code{colourScale}
 
 }
 
