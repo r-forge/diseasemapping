@@ -106,8 +106,8 @@ legendBreaks = function(pos,
 		if(is.character(legend)) {	
 			theNewLines = gregexpr('\n', as.character(legend))
 			y.intersp=max(
-    		c(1, unlist(lapply(theNewLines, function(qq) sum(qq>0))))
-			) + 0.25
+    		c(0.5, unlist(lapply(theNewLines, function(qq) sum(qq>0))))
+			) - 0.25
 		} else {
 			y.intersp = 1
 		}
