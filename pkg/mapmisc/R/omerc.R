@@ -45,18 +45,7 @@ omercProj4string = function(
         " +units=", units,
         sep="")
   }
-  if(any(which90)) {
-    result[which90] = paste(
-        "+proj=lcc",
-        " +lat_0=", lat[which90],
-        " +lon_0=", lon[which90],
-        " +k_0=", scale[which90], 
-        " +x_0=", x[which90],
-        " +y_0=", y[which90],
-        " +ellps=", ellps,
-        " +units=", units,
-        sep="")
-  }
+
   
   if(crs) 
     result = lapply(result, CRS)
@@ -181,10 +170,10 @@ omerc = function(
         preserve = spTransform(preserve, crsLL)
       }
       # great circle distance
-      distGS = spDists(preserve)*1000
+	      distGS = spDists(preserve)*1000
       theLower = lower.tri(distGS, diag=FALSE)
       distGS = distGS[theLower]
-      # euclidean distance for each projection
+       # euclidean distance for each projection
       distEu = unlist(lapply(rotatedCRS,
               function(crs){
                 mean(
