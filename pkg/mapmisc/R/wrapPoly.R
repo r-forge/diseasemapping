@@ -79,7 +79,7 @@ llCropBox = function(crs,
 		
 		edgeCoords = abs(edgePointsT@coords)
 		edgeCoords = approx(edgeCoords[,1], edgeCoords[,2], 
-				xout = max(edgeCoords[,1]) * sin(seq(0, pi/2, len=N)),
+				xout = max(edgeCoords[,1]) * sin(seq(0, pi/2, len=N)[-N]),
 				rule=2)
 		
 		edgeCoords = cbind(
