@@ -36,10 +36,18 @@ if(all(havePackages)){
       priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5))
   )
 
+	pdf("priorPostKentucky.pdf")
+	plot(kBYM$parameters$sdSpatial$posterior, type='l', 
+			xlim=c(0,max(kBYM$parameters$sdSpatial$priorCI)))
+	lines(kBYM$parameters$sdSpatial$prior, col='blue')
+	dev.off()
+	
   kBYM = bym(observed ~ offset(logExpected) + poverty,
     kentucky,
     region.id='County',
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
+
+
 
 # also try no covariate or prior
 
