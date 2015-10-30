@@ -166,9 +166,7 @@ openmap = function(x, zoom,
 		
 		
 		if(any(fact > 1)){
-	
-			toRaster = disaggregate(toRaster, fact=fact)
-			
+			res(toRaster) = res(toRaster) / rep_len(fact,2)
 		}
 		
 		resultProj = stack(projectRaster(result, toRaster, method="ngb"))
