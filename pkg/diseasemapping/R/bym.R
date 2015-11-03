@@ -227,7 +227,7 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 	# the independent random effect will be computed
 	notInData = region.index[!region.index %in% data$region.indexI]
 	if(length(notInData)) {
-		dataToAdd = data[rep(1,length(notInData)),]
+		dataToAdd = data[rep(1,length(notInData)),,drop=FALSE]
 		rownames(dataToAdd) = paste("missing",notInData,sep="")
 		dataToAdd[,"region.indexI"] = dataToAdd[,"region.indexS"]=notInData
 	# set response to missing
@@ -243,12 +243,12 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 		baseData = data[1,allVars[-1], drop=FALSE]
 		baseNA = which(is.na(baseData))
 		for(D in baseNA){
-			baseNA[1,D] = unique(data[,allVars[-1][D]])[1]
+			baseData[1,D] = unique(data[,allVars[-1][D]])[1]
 		}
 		for(D in anyNA) {
 			naHere = is.na(data[D,allVars[-1]])
 			data[D, allVars[1]] = NA
-			data[anyNA, allVars[-1][naHere]] = baseData[naHere]
+			data[anyNA, allVars[-1][naHere]] = baseData[1,naHere,drop=FALSE]
 		}
 	}
 
@@ -360,7 +360,10 @@ formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", f
 	# run inla!		
 	########################
 	if(requireNamespace("INLA", quietly=TRUE)) { # not enough to have requireNamespace
-		inlaRes = INLA::inla(formula, data=data , family=family,
+ 
+			
+		inlaRes = INLA::inla(formula, data=data, 
+				family=family,
 			lincomb=inlaLincombs, ...)
 	} else{
 		inlaRes = 
