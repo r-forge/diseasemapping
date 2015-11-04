@@ -112,10 +112,14 @@ gm.dataRaster = function(
           crs=crs(covariatesStack))
 
       # aggregate for covariates
+		toAggregate = floor(min(res(covariatesStack)/res(offsetToLogCrop)))
+	
       if(any(toAggregate > 1)){
         offsetToLogAgg = aggregate(offsetToLogCrop, fact=toAggregate, 
 				fun=sum, na.rm=TRUE)
-      }
+      } else {
+		  toAggregate = 1
+	  }
       offsetToLogAgg = projectRaster(offsetToLogAgg, covariatesStack)
       offsetToLogLogged = log(offsetToLogAgg) - 
 			  sum(log(rep_len(toAggregate,2)))
