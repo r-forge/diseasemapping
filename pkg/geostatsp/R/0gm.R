@@ -64,7 +64,7 @@ gm.dataRaster = function(
 	
   inModel = intersect(inModel, names(covariates))
   covariates = covariates[inModel]
-	if(length(inModel)) {		
+  if(length(inModel)) {		
     dataFactors = intersect(Sfactor, names(data))
     notInData = setdiff(names(covariates), names(data))
     
@@ -81,10 +81,10 @@ gm.dataRaster = function(
     covariatesStack = stack(cellsSmall, covariatesStack)
     covData = stackRasterList(covariates[notInData], data, method=rmethod)
     
-  } else {
-    covariatesStack = cellsSmall
-    covData = NULL
-  }
+    } else {
+      covariatesStack = cellsSmall
+      covData = NULL
+    }
   
     
     for(D in names(offsetToLogOrig)) {
@@ -112,14 +112,13 @@ gm.dataRaster = function(
           crs=crs(covariatesStack))
 
       # aggregate for covariates
-      toAggregate = floor(min(res(covariatesStack)/res(offsetToLogCrop)))
-      if(toAggregate > 1){
-        offsetToLogAgg = aggregate(offsetToLogCrop, fact=toAggregate, fun=sum)
+      if(any(toAggregate > 1)){
+        offsetToLogAgg = aggregate(offsetToLogCrop, fact=toAggregate, 
+				fun=sum, na.rm=TRUE)
       }
       offsetToLogAgg = projectRaster(offsetToLogAgg, covariatesStack)
-      offsetToLogLogged = log(offsetToLogAgg) + 
-          sum(log(res(covariatesStack))) -
-          sum(log(res(offsetToLogCrop)))
+      offsetToLogLogged = log(offsetToLogAgg) - 
+			  sum(log(rep_len(toAggregate,2)))
       names(offsetToLogLogged) = paste('log',D,sep='')
       covariatesStack = stack(covariatesStack, offsetToLogLogged)
       toDrop = which(alltermsFull==offsetToLogOrig[D])

@@ -19,7 +19,17 @@ lgcp = function(formula=NULL, data,  grid, covariates=NULL,
 	
 # create data
 	
-	counts = rasterize(SpatialPoints(data), cells, fun="count")
+	if(!missing(border)) {
+		inBorder = over(
+				data, 
+				as(border, 'SpatialPolygons')
+		)
+		data = data[!is.na(inBorder),]
+	}
+	
+	counts = rasterize(
+			SpatialPoints(data), 
+			cells, fun="count")
 	names(counts) = "count"
 	counts[is.na(counts)] = 0
 	
