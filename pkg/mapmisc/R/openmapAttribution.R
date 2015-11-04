@@ -88,7 +88,7 @@ osmLandscape$long$html = gsub("cartography[[:print:]]+$",
 mapquest = mapquestSat = list(
       short=list(
       latex='Tiles courtesy of \\href{http://www.mapquest.com}{MapQuest}',
-      text='Tiles courtesy of MapQuest(http://www.mapquest.com)',
+      text='Tiles courtesy of MapQuest(www.mapquest.com)',
       markdown='Tiles courtesy of [MapQuest](http://www.mapquest.com)',
       html='Tiles courtesy of <a href="http://www.mapquest.com">MapQuest</a>'
     ),
@@ -128,7 +128,7 @@ mapquest = mapquestSat = list(
               ),
       text=paste(
           'Map tiles by Stamen Design',
-          'under CC BY 3.0 (http://creativecommons.org/licenses/by/3.0).'
+          'under CC BY 3.0 (creativecommons.org/licenses/by/3.0).'
               )
   )
 )
