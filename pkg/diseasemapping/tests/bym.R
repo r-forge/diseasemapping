@@ -141,7 +141,7 @@ kBYM$par$summary
 
 # missing value in a categorical variable
 
-pCuts = quantile(kentucky$poverty)
+pCuts = quantile(kentucky$poverty, na.rm=TRUE)
 kentucky$povertyFac = cut(kentucky$poverty, 
 		breaks = pCuts,
 		labels = letters[seq(1,length(pCuts)-1)])
