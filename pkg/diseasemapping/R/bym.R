@@ -224,7 +224,7 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 
 	# INLA doesn't like missing values in categorical covariates
 	# remove rows with NA's 
-	anyNA = which(apply(data[,allVars], 1, function(qq) any(is.na(qq))))
+	anyNA = which(apply(data[,allVars, drop=FALSE], 1, function(qq) any(is.na(qq))))
 	if(length(anyNA)) {
 		data = data[-anyNA, ]
 	}
@@ -274,7 +274,6 @@ formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", f
 		
 		# reorder the matrix by region ID
 		dataOrder = data[notDuplicated,]
-		dataOrder = dataOrder[!dataOrder$region.indexS %in% notInData,]
 		dataOrder = dataOrder[order(dataOrder$region.indexS),]
 
 		
