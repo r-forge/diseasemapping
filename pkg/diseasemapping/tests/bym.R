@@ -31,30 +31,35 @@ kentucky = getSMR(kentucky, larynxRates, larynx,
 
 if(all(havePackages)){
 
-  kBYM = bym(observed ~ offset(logExpected) + poverty,
-      kentucky,
-      priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5))
+  kBYM = bym(
+			formula = observed ~ offset(logExpected) + poverty,
+      data=kentucky,
+      priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)),
+			region.id="County"
   )
 
 	pdf("priorPostKentucky.pdf")
 	plot(kBYM$parameters$sdSpatial$posterior, type='l', 
 			xlim=c(0,max(kBYM$parameters$sdSpatial$priorCI)))
 	lines(kBYM$parameters$sdSpatial$prior, col='blue')
+	legend('topright', lty=1, col=c('black','blue'), legend=c('posterior','prior'))
 	dev.off()
 	
   kBYM = bym(observed ~ offset(logExpected) + poverty,
     kentucky,
-    region.id='County',
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
 
 
 
 # also try no covariate or prior
 
-kBYM = bym( observed ~ offset(logExpected),kentucky)
+kBYM = bym(
+		formula = observed ~ offset(logExpected),
+		data=kentucky)
+
 
 if(require('geostatsp', quietly=TRUE)) {
- 	kBYM$data$exc1 = excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
+ 	kBYM$data$exc1 = geostatsp::excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
 } else {
 	kBYM$data$exc1 = rep(NA, length(kBYM$data))
 }
@@ -68,8 +73,6 @@ colFit = colourScale(kBYM$data$fitted.exp,
 	
 plot(kBYM$data, col=colFit$plot)
 legendBreaks('topleft', colFit)
-
- 
 
 colExc = colourScale(kBYM$data$exc1 ,
 		style='fixed',
@@ -91,7 +94,7 @@ kBYM = bym(data=kentucky@data, formula=observed ~ offset(logExpected) + poverty,
 
 kBYM$par$summary
 
-# add subtract a few regions
+# subtract a few regions
 
 kBYM = bym(
     formula=observed ~ offset(logExpected) + poverty,

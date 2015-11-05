@@ -206,68 +206,32 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 		#		+     param = c(prior.iid, prior.besag), values = CSDUID)
 		
 		
-		bymTerm = paste(
-				".~.+f(region.indexS, model='besag', graph='",
-				graphfile,
-				"', hyper = list(theta=list(param=c(",
-				paste(precPrior[["sdSpatial"]], collapse=","), ")))) ",
-				"+ f(region.indexI, model='iid',",
-				"hyper=list(theta=list(param=c(", 		
-				paste(precPrior[["sdIndep"]], collapse=","),
-				"))))",
+	bymTerm = paste(
+			".~.+f(region.indexS, model='bym', graph='",
+			graphfile,
+			"', hyper = list(theta2=list(param=c(",
+			paste(precPrior[["sdSpatial"]], collapse=","), 
+			")), theta1=list(param=c(", 		
+			paste(precPrior[["sdIndep"]], collapse=","),
+			"))))",
 			sep="")
-
 	
 	allVars = all.vars(formula)
 	formula = update(formula, as.formula(bymTerm))
 
 
 
-	#check to see if some regions don't have data.  If so they'll have to be added so 
-	# the independent random effect will be computed
-	notInData = region.index[!region.index %in% data$region.indexI]
-	if(length(notInData)) {
-		dataToAdd = data[rep(1,length(notInData)),,drop=FALSE]
-		rownames(dataToAdd) = paste("missing",notInData,sep="")
-		dataToAdd[,"region.indexI"] = dataToAdd[,"region.indexS"]=notInData
-	# set response to missing
-		dataToAdd[,all.vars(formula)[1]] = NA		
-		data = rbind(data, dataToAdd)
-	}
 
 	# INLA doesn't like missing values in categorical covariates
-	# set NA covariates to some arbitrary value and set response to NA
+	# remove rows with NA's 
 	anyNA = which(apply(data[,allVars], 1, function(qq) any(is.na(qq))))
 	if(length(anyNA)) {
-		# response to NA
-		baseData = data[1,allVars[-1], drop=FALSE]
-		baseNA = which(is.na(baseData))
-		for(D in baseNA){
-			baseData[1,D] = unique(data[,allVars[-1][D]])[1]
-		}
-		for(D in anyNA) {
-			naHere = is.na(data[D,allVars[-1]])
-			data[D, allVars[1]] = NA
-			data[anyNA, allVars[-1][naHere]] = baseData[1,naHere,drop=FALSE]
-		}
+		data = data[-anyNA, ]
 	}
 
 	##################
 	# linear combinations
 	###################
-		inlaLincombs = list()
-		# random effects
-		for(D in 1:length(region.index)) {
-			inlaLincombs[[D]] = list(
-					list(region.indexS=
-									list(idx=region.index[D], weight=1)),
-					list(region.indexI = 
-									list(idx=region.index[D], weight=1))
-							)
-		}
-		names(inlaLincombs) = paste("bym", names(region.index),sep="_")
-
-		
 		# fitted values
 
  # get rid of left side of formula
@@ -296,7 +260,7 @@ formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", f
 	startIndex = length(region.index)
  
 	# if there are covariates
-	if(nchar(formulaForLincombs) & formulaForLincombs != "1" &
+	if(nchar(trimws(formulaForLincombs)) & formulaForLincombs != "1" &
 			!length(grep("^[[:space:]]+$", formulaForLincombs))
 		) { #make linear combinations
  
@@ -310,47 +274,46 @@ formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", f
 		
 		# reorder the matrix by region ID
 		dataOrder = data[notDuplicated,]
-		dataOrder = dataOrder[!dataOrder$region.indexI %in% notInData,]
-		dataOrder = dataOrder[order(dataOrder$region.indexI),]
+		dataOrder = dataOrder[!dataOrder$region.indexS %in% notInData,]
+		dataOrder = dataOrder[order(dataOrder$region.indexS),]
 
 		
 		lincombFrame = model.frame(formulaForLincombs, dataOrder,
 				na.action=na.omit)
 
 		
-		SregionFitted = dataOrder[rownames(lincombFrame),"region.indexI"]
+		SregionFitted = dataOrder[rownames(lincombFrame),"region.indexS"]
 		names(SregionFitted) = dataOrder[rownames(lincombFrame),region.id]
 		
 		
 		lincombMat = model.matrix(formulaForLincombs, lincombFrame)
 		
 		lincombMat[lincombMat==0]= NA
-		lincombMat = cbind(lincombMat, as.matrix(dataOrder[rownames(lincombMat),c("region.indexI", "region.indexS")]))
+		lincombMat = cbind(lincombMat, region.indexS = dataOrder[rownames(lincombMat),"region.indexS"])
 		
 		if(!dim(lincombMat)[1])
 			warning("the dataset appears to have no rows")
 
-		lcFitted <- apply(lincombMat, 1, lcOneRow, idxCol=c("region.indexI","region.indexS"))
+		lcFitted <- apply(lincombMat, 1, lcOneRow, idxCol="region.indexS")
 		names(lcFitted) = paste("fitted_", dataOrder[rownames(lincombMat), region.id],sep="")
 
-		inlaLincombs = c(inlaLincombs, lcFitted)
+		inlaLincombs = lcFitted
 		
 
 	} else { # add only intercept to predictions because no inla or no covariates
 		formulaForLincombs = ~1
 		lincombMat = data.frame(x=rep(1,length(region.index)))
 		SregionFitted = region.index
+		inlaLincombs = list()
 		for(D in 1:length(region.index)) {	
-			inlaLincombs[[D+startIndex]] = 
+			inlaLincombs[[D]] = 
 					 list(
 							list("(Intercept)" = list(weight=1)),
 							list(region.indexS=
-											list(idx=region.index[D], weight=1)),
-							list(region.indexI = 
 											list(idx=region.index[D], weight=1))
 					)
 		}
-		names(inlaLincombs)[seq(startIndex+1, len=length(region.index))] =
+		names(inlaLincombs) =
 				paste("fitted",names(region.index),sep="_")
 	}
  
@@ -380,14 +343,13 @@ formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", f
 	
 
 	# posterior distributions of random effect (spatial + independent)
-	thebym = inlaRes$summary.lincomb.derived[
-			grep("^bym_", rownames(inlaRes$summary.lincomb.derived)),]
- 	
+	Sbym = seq(1, length(adjMat))
+	thebym = inlaRes$summary.random$region.indexS[Sbym,]
 	
-	
-	inlaRes$marginals.bym = inlaRes$marginals.lincomb.derived[
-			grep("^bym_", names(inlaRes$marginals.lincomb.derived), value=TRUE)
+	inlaRes$marginals.bym = inlaRes$marginals.random$region.indexS[
+			Sbym
 			]
+	
 
 		# E(exp(U)  | Y)
 		meanExp = unlist(
@@ -401,23 +363,16 @@ formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", f
 		meanExp[meanExp==Inf]=NA
 		thebym = cbind(thebym, exp=meanExp)
 			
-			
-			
-
 	thebym = thebym[,!names(thebym) %in% c("ID","kld")]
 	colnames(thebym) = paste("random.",colnames(thebym),sep="")
-	rownames(thebym) = gsub("^bym_", "", rownames(thebym))	
+	names(inlaRes$marginals.bym) = rownames(thebym) = 
+			attributes(adjMat)$region.id
 	
-	
-	
-	
-	names(inlaRes$marginals.bym) = gsub("^bym_", "", 
-			names(inlaRes$marginals.bym) )
+
 	# make sure they're in the correct order
 	thebym = thebym[names(region.index),]
 	inlaRes$marginals.bym = inlaRes$marginals.bym[names(region.index)] 
 
-	
 	# fitted values, some regions dont have them if covariates are missing
 	theFitted = inlaRes$summary.lincomb.derived[
 			grep("^fitted_", rownames(inlaRes$summary.lincomb.derived)),]
@@ -441,8 +396,6 @@ formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", f
 	meanExp[meanExp==Inf]=NA
 	theFitted = cbind(theFitted, exp = meanExp[rownames(theFitted)])
 	
-
-	
 	# E inv logit(lincombs)
 
 	if(length(grep("binomial",inlaRes$.args$family))) {
@@ -462,9 +415,6 @@ formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", f
 	theFitted = theFitted[,!names(theFitted) %in% c("ID","kld")]
 	colnames(theFitted) = paste("fitted.",colnames(theFitted),sep="")
 
-		
-	
-	
 	# merge fitted falue summary into BYM
 	thebym = cbind(thebym, matrix(NA, dim(thebym)[1], dim(theFitted)[2],
 					dimnames=list(NULL, names(theFitted))))
@@ -503,6 +453,7 @@ formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", f
 	quantNames = grep("quant$", colnames(params$summary), value=TRUE)
 	revQuant = rev(quantNames)	
 	
+	sdNames = c(S='spatial', I='iid')
 	for(D in c("S","I")) {
 		
 		Dname = grep( paste("^sd",D,sep=""),names(priorCI),value=TRUE)
@@ -517,7 +468,12 @@ formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", f
 				params.intern=precPrior[[Dname]])
 	
 		
-		imname = paste("Precision for region.index",D,sep="")
+		imname = grep(
+				paste("Precision.*region.indexS.*", sdNames[D], ' component',sep=""),
+				rownames(inlaRes$summary.hyperpar),
+				value=TRUE
+		)
+		
 		params[[Dname]]$posterior=
 				inlaRes$marginals.hyperpar[[
 					imname	
@@ -530,18 +486,17 @@ formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", f
 		
 		
 		precLim = range( inlaRes$marginals.hyperpar[[
-								paste("Precision for region.index",D,sep="")
+								imname
 						]][,1] ) 
 		precLim = precLim * c(0.8, 1.2)		
 		sdLim = 1/sqrt(precLim)
-		sdSeq = seq(min(sdLim), max(sdLim), len=100)
+		sdSeq = seq(min(sdLim), max(sdLim), len=1000)
 		precSeq = sdSeq^(-2)
 		params[[Dname]]$prior=cbind(
 				x=sdSeq,
 				y=dgamma(precSeq, shape=precPrior[[Dname]]["shape"], 
 						rate=precPrior[[Dname]]["rate"]) *2* (precSeq)^(3/2) 
 		)
-		
 		
 		thesummary = inlaRes$summary.hyperpar[imname, ,drop=FALSE]
 		thesummary[,quantNames] = 1/sqrt(thesummary[,revQuant])
