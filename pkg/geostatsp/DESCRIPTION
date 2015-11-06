@@ -6,7 +6,7 @@ Date: 2015-11-04
 Depends: Matrix  (>= 1.2.0), raster, sp, R (>= 3.0.0)
 Imports: abind, numDeriv, methods, stats
 Suggests: geoR, RandomFields, rgdal, parallel, mapmisc, ellipse, pracma
-Enhances: spatstat, INLA
+Enhances: spatstat, INLA, diseasemapping
 LinkingTo: Matrix
 Additional_repositories: http://www.math.ntnu.no/inla/R/stable/
 Author: Patrick Brown <patrick.brown@utoronto.ca>[aut, cre], Robert Hijmans [ctb]
