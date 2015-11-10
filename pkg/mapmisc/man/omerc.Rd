@@ -12,7 +12,7 @@ for a supplied Spatial object
 	post=c('none', 'north', 'wide','tall'),
     preserve=NULL) 
     ocea(x, angle, flip=FALSE)
-    moll(x, angle=NULL, flip=FALSE)
+    moll(x=0, angle=NULL, flip=FALSE)
 }
 
 \arguments{

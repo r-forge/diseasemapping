@@ -51,7 +51,7 @@ objFunAngle = function(param, start, target) {
 	
 }
 
-moll = function(x, angle=NULL, flip=FALSE) {
+moll = function(x=0, angle=NULL, flip=FALSE) {
 	
 	
 	if(is.numeric(x)){
