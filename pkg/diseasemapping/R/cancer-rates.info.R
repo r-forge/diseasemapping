@@ -130,6 +130,12 @@ usCancer = function(
 				
 			}		
 			
+			getRid = grep("^[[:space:]]?(Note|Data|~|The population estimates):?[[:space:]]", allCases$County)
+			getRidState = grep("^[[:space:]]?(STATE|\\*\\*\\*Counts|Unknown)[[:space:]]?$", allCases$County)
+			getRid = c(getRid, getRidState)
+			if(length(getRid))
+				allCases = allCases[-getRid,]
+			
 			allCases$Cases = as.numeric(gsub("~", "0", allCases$Cases))
 	
 			allCases
