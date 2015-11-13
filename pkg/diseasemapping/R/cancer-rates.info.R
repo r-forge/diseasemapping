@@ -14,7 +14,8 @@ cancerCodes = list(
 				'Liver and Intrahepatic Bile Duct'=2,'Liver'=21071,'Intrahepatic Bile Duct'=21072,
 				'Gallbladder'=21080,'Other Biliary'=21090,'Pancreas'=21100,'Retroperitoneum'=21110,
 				'Peritoneum, Omentum, and Mesentery'=21120,'Other Digestive Organs'=21130,
-				'Respiratory System'=22000,'Nose, Nasal Cavity, and Middle Ear'=22010,'Larynx'=22020,
+				'Respiratory System'=22000,'Nose, Nasal Cavity, and Middle Ear'=22010,
+				'Larynx'=22020,
 				'Lung and Bronchus'=22030,'Pleura'=22050,
 				'Trachea, Mediastinum and Other Respiratory Organs'=22060,'Bones and Joints'=23000,
 				'Soft Tissue including Heart'=24000,'Skin excluding Basal and Squamous'=25000,
@@ -41,7 +42,7 @@ cancerCodes = list(
 				'Aleukemic, Subleukemic and NOS Leukemia'=35043,
 				'Mesothelioma'=36010,'Kaposi Sarcoma'=36020,'Miscellaneous'=37000),
 		state = c(Texas='tx', Georgia='ga', Kentucky = 'ky',
-				Michigan='mi', Arkansas='as', Mississippi='ms',
+				Michigan='mi', Arkansas='ar', Mississippi='ms',
 				Wisconsin='wi', Iowa='ia', 'New Mexico' ='nm',
 				Utah='ut', California='ca', Seattle='se',
 				Conneticut = 'ct', 'New Jersey' = 'nj'),
@@ -85,10 +86,12 @@ usCancer = function(
 					warning('site, sex or state not found')
 				}
 				
-				if(forUrl[D, 'stateCode'] %in% c('as')) {
+				if(forUrl[D, 'stateCode'] %in% c('ar')) {
 					middleUrl = 'beta/common/v1'
+          depth=5
 				} else {
 					middleUrl = 'common'
+					depth=5
 				}
 				
 				kUrl = paste(
@@ -103,7 +106,7 @@ usCancer = function(
 				
 				myDir = file.path(tempdir(), gsub("[[:space:]]+", "_", paste(c("cfiles",as.character(namesHere)), collapse='_')))
 				
-				myCommand = paste("httrack --depth=5 --priority=1 -N1 -O ", myDir, " \'",  kUrl,  "\'", sep='')
+				myCommand = paste("httrack --depth=",depth, " --priority=1 -N1 -O ", myDir, " \'",  kUrl,  "\'", sep='')
 				cat('\ndownloading', paste(namesHere, collapse=" "))
 				sRes = try(system(myCommand))
 				cat(' done\n')
@@ -136,7 +139,7 @@ usCancer = function(
 			if(length(getRid))
 				allCases = allCases[-getRid,]
 			
-			allCases$Cases = as.numeric(gsub("~", "0", allCases$Cases))
+			allCases$Cases = as.numeric(gsub("~", "1", allCases$Cases))
 	
 			allCases
 			
