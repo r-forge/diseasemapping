@@ -157,9 +157,5 @@ kBYM = bym(
 
 kBYM$par$summary
 }
-if(FALSE){
-	
-	
-	
-	
-}
+
+

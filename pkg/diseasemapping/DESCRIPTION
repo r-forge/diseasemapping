@@ -5,7 +5,7 @@ Version: 1.2.7
 Date: 2015-11-04
 Depends: sp, R (>= 3.2)
 Imports: methods, stats, utils
-Suggests: mgcv, spdep, geostatsp, mapmisc (>= 1.0)
+Suggests: mgcv, spdep, geostatsp, XML, mapmisc (>= 1.0)
 Enhances: INLA
 Additional_repositories: http://www.math.ntnu.no/inla/R/stable/
 Author: Patrick Brown <patrick.brown@utoronto.ca>
