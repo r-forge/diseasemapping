@@ -98,7 +98,7 @@ setMethod("glgm",
           formula, data,
           grid,
           covariates,
-          buffer=0)
+          buffer)
       
       callGeneric(
 			  formula = dataCov$formula, 
