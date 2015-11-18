@@ -114,23 +114,58 @@ usCancer = function(
 					stop("install httrack from www.httrack.com")
 				}
 				
-				fname = system(paste("find ", myDir, "/web -name newalldetails*.html", sep=''), TRUE)
+
+				fname = system(paste("ls ", myDir, "/web/newalldetails*.html", sep=''), TRUE)
+				
 				
 				fname = grep('newalldetails[[:alnum:]]+\\.html$', fname, value=TRUE)
-				
-				if(length(fname)){
-				
-				dat = XML::readHTMLTable(fname[1], isUrl=FALSE, 
-						which=2, skip.rows=1,
-						stringsAsFactors=FALSE)
+
 				datHeader = XML::readHTMLTable(fname[1], isUrl=FALSE, which=2)[1,]
-				colnames(dat) = unlist(datHeader)
-				cases = dat[nchar(dat$County)> 0,c('County','Cases')]
 				
-				cases = cbind(cases, namesHere, stateCode=forUrl[D,'stateCode'])
-				allCases = rbind(allCases, cases)
-			}				
+				datText = scan(fname[1], what=character(), quiet=TRUE)
 				
+				startTable = grep("<TABLE", datText)
+				startTable = startTable[length(startTable)]
+
+				endTable = grep("</TABLE", datText)
+				endTable = endTable[length(endTable)]
+				
+				datText = datText[startTable:endTable]
+				
+				startTr = grep("<TR", datText)
+				if(min(startTr)>1)
+					datText = datText[-seq(1,min(startTr)-1)]
+				startTr = grep("<TR", datText)
+				startTd = grep("<TD", datText)
+				
+				earlyTr = max(which(startTr <= startTd[1]))
+				startTr = startTr[seq(earlyTr, length(startTr))]
+				
+				datText = paste(datText, collapse='')
+				datText = unlist(strsplit(datText, "<TR>"))
+				datText = grep("^[[:space:]]?$|^<TH", datText, invert=TRUE, value=TRUE)
+
+				datSplit = strsplit(datText, "<TD")
+				datLen = unlist(lapply(datSplit, length))
+				datSplit = unlist(datSplit[which(datLen ==6)])
+				datSplit = gsub("</A>$", "", datSplit)
+				datSplit = gsub("^[[:print:]]+>", "", datSplit)
+				datSplit = gsub("~", "1", datSplit)
+				
+				dat  = as.data.frame(matrix(datSplit, ncol=6, byrow=TRUE),
+						stringsAsFactors=FALSE)[,-1]
+				colnames(dat) = as.character(unlist(datHeader))
+				dat = dat[grep("^$", dat$County, invert=TRUE),]
+				for(Dcol in grep("County", colnames(dat), invert=TRUE)) {
+					dat[,Dcol] = as.numeric(as.character(dat[,Dcol]))
+				}
+				
+				cases = dat[,c('County','Cases')]
+				
+				if(nrow(cases)){
+					cases = cbind(cases, namesHere, stateCode=forUrl[D,'stateCode'])
+					allCases = rbind(allCases, cases)
+				}
 			}		
 			
 			getRid = grep("^[[:space:]]?(Note|Data|~|The population estimates):?[[:space:]]", allCases$County)
