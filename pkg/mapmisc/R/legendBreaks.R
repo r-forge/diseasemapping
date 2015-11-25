@@ -174,7 +174,7 @@ legendBreaks = function(pos,
       
       
       text(result$text$x, result$text$y,
-          legend, col=text.col,adj=adj)   
+          legend, col=text.col,adj=adj, cex=cex)   
     }      
       par(xpd=oldxpd)
       
