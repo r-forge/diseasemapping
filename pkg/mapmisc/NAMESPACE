@@ -23,9 +23,11 @@ import(
   
 importFrom(grDevices, rgb, col2rgb, heat.colors)
 
-importFrom(methods, as)
+importFrom('methods', 'as')
+importFrom("methods", "slotNames")
 
-importFrom(stats, na.omit)
+importFrom('stats', 'na.omit')
+importFrom("stats", "approx", "optim")
 
 importFrom(graphics, par, strwidth, polygon, legend)
 
