@@ -47,7 +47,14 @@ cancerCodes = list(
 				Utah='ut', California='ca', Seattle='se',
 				Conneticut = 'ct', 'New Jersey' = 'nj'),
 		sex = c(M=1, F=2, both=0)
+
 )	
+
+
+# minnisota
+# https://apps.health.state.mn.us/mndata/cancer_query?p_auth=Wy7tICix&p_p_id=springQueryPortlet_WAR_mndataspringQueryportlet_INSTANCE_TQg4MoZMNm0w&p_p_lifecycle=1&p_p_state=normal&p_p_mode=view&p_p_col_id=column-1&p_p_col_count=2&p_p_col_pos=1&_springQueryPortlet_WAR_mndataspringQueryportlet_INSTANCE_TQg4MoZMNm0w__facesViewIdRender=%2Fpages%2Findex.xhtml
+# https://apps.health.state.mn.us/mndata/cancer_query?p_auth=Wy7tICix&p_p_id=springQueryPortlet_WAR_mndataspringQueryportlet_INSTANCE_TQg4MoZMNm0w&p_p_lifecycle=1&p_p_state=normal&p_p_mode=view&p_p_col_id=column-1&p_p_col_count=2&p_p_col_pos=1&_springQueryPortlet_WAR_mndataspringQueryportlet_INSTANCE_TQg4MoZMNm0w__facesViewIdRender=%2Fpages%2Findex.xhtml
+# https://apps.health.state.mn.us/mndata/cancer_query?p_auth=Wy7tICix&p_p_id=springQueryPortlet_WAR_mndataspringQueryportlet_INSTANCE_TQg4MoZMNm0w&p_p_lifecycle=1&p_p_state=normal&p_p_mode=view&p_p_col_id=column-1&p_p_col_count=2&p_p_col_pos=1&_springQueryPortlet_WAR_mndataspringQueryportlet_INSTANCE_TQg4MoZMNm0w__facesViewIdRender=%2Fpages%2Findex.xhtml
 
 usCancer = function(
 		state='Kentucky',
