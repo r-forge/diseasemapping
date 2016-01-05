@@ -511,7 +511,7 @@ inlaResult$summary.random[['space']][,"exp"] = temp
 	inlaResult$summary.lincomb.derived[,"exp"] = temp
 	
 	# E inv logit(lincombs)
-	if(length(grep("logit",inlaResult$linkfunctions$names))) {
+	if(length(grep("logit",inlaResult$misc$linkfunctions$names))) {
 		temp=unlist(
 				lapply(inlaResult$marginals.lincomb.derived, function(qq) {
 							eqqx = exp(qq[,"x"])
@@ -604,7 +604,7 @@ params$summary = cbind(params$summary,
 				))
 )
 
-if(length(grep("binomial",inlaResult$.args$family))) {
+if(length(grep("logit",inlaResult$misc$linkfunctions$names))) {
 	params$summary = cbind(params$summary, 
 			meanInvLogit = unlist(
 					lapply(inlaResult$marginals.fixed, function(qq) {
