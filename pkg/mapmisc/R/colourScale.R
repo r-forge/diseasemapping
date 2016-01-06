@@ -61,7 +61,7 @@ transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL,...) {
 style = style[1]
 weights=NULL
 
-NforSample = 5e+05
+NforSample = 1e+05
 
 if(is.character(col)){
 if(col[1]=='radar'){
@@ -84,7 +84,7 @@ if(col[1]=='radar'){
 
 	# if labels is missing, take labels from the raster
     if(is.null(labels)){
-      levelsx = levels(x)[[1]]
+      labels = levels(x)[[1]]
     }
 		
     # if labels is a data frame, use it
@@ -145,11 +145,18 @@ if(col[1]=='radar'){
       weights = x[,2]
       x=x[,1]
     } else {
-      x = table(
+      weights = table(
               sampleRegular(x, NforSample)
       )
-      weights = x
-      x = as.numeric(names(x))
+      x = as.numeric(names(weights))
+			if(!is.null(levelsx)) {
+				# check for values which are missing
+				toAdd = setdiff(levelsx$ID, x)
+				toAddWeights = rep(0, length(toAdd))
+				names(toAddWeights) = as.character(toAdd)
+				x = c(x, toAdd)
+				weights = c(weights, toAddWeights)
+			}
     }
     
     if(is.null(levelsx)){
@@ -166,13 +173,16 @@ if(col[1]=='radar'){
     levelsx = rbind(levelsx, toAdd)
     levelsx = levelsx[order(levelsx$ID),]
     } # end add more ID in levels
-    if(is.vector(labels)){
-      if(length(labels)==nrow(levelsx))
-        levelsx$label = labels
-    } # end labels are vector
-    if(is.null(levelsx$label))
-      levelsx$label = as.character(levelsx$ID)
-    
+    if(is.null(levelsx$label)) {
+    	if(is.vector(labels)){
+      	if(length(labels)==nrow(levelsx))
+        	levelsx$label = labels
+    	} # end labels are vector
+  	}
+	  if(is.null(levelsx$label)) {
+  		levelsx$label = as.character(levelsx$ID)
+		}
+	
     levelsx$freq = weights[match(
             levelsx$ID,
             x
@@ -181,16 +191,6 @@ if(col[1]=='radar'){
   # set breaks to all ID's
   if(length(breaks)==1 & all(breaks > nrow(levelsx)))
     breaks = levelsx$ID
-  
-  if((
-        length(breaks)==nrow(levelsx)
-        ) & (
-        'col' %in% names(levelsx)
-        )
-  ){
-   # colours have been provided 
-    col = levelsx$col
-  }
   
   weights = levelsx$freq
   x=levelsx$ID
@@ -226,44 +226,51 @@ colourScale.numeric = function(x=NULL, breaks=5,
 		weights=NULL,...) {
 
 	xOrig = x
-
+	style = style[1]
+	
+	# radar colours
 	if(is.character(col)){
 		if(col[1]=='radar'){
 			col = radarCol
 		}
 	}
 	
-	
-	style = style[1]
-	if(!is.function(col)){		
-		if(is.matrix(col)| is.data.frame(col)) {
-			redCol = grep("^[[:space:]]*r(ed)?[[:space:]]*$", colnames(col), value=TRUE,ignore.case=TRUE)
-			blueCol = grep("^[[:space:]]*b(lue)?[[:space:]]*$", colnames(col), value=TRUE,ignore.case=TRUE)
-			greenCol = grep("^[[:space:]]*g(reen)?[[:space:]]*$", colnames(col), value=TRUE,ignore.case=TRUE)
-			if(!all(c(length(redCol),length(greenCol), length(blueCol))==1)) {
-				warning("col is a matrix but it's not clear which columns are red, green and blue")
-			}		
-			if(any(col[,c(redCol,greenCol,blueCol)] > 2 )) {
-				theMax = 255
-			} else{
-				theMax = 1
-			}
-			col = rgb(col[,redCol], col[,greenCol], col[,blueCol], maxColorValue=theMax)
+	# convert rgb colours to character string
+	if(is.matrix(col)| is.data.frame(col)) {
+		redCol = grep("^[[:space:]]*r(ed)?[[:space:]]*$", colnames(col), value=TRUE,ignore.case=TRUE)
+		blueCol = grep("^[[:space:]]*b(lue)?[[:space:]]*$", colnames(col), value=TRUE,ignore.case=TRUE)
+		greenCol = grep("^[[:space:]]*g(reen)?[[:space:]]*$", colnames(col), value=TRUE,ignore.case=TRUE)
+		if(!all(c(length(redCol),length(greenCol), length(blueCol))==1)) {
+			warning("col is a matrix but it's not clear which columns are red, green and blue")
+		}		
+		if(any(col[,c(redCol,greenCol,blueCol)] > 2 )) {
+			theMax = 255
+		} else{
+			theMax = 1
 		}
-		
-		colString = col
-		if(length(colString)==1){
+		col = rgb(col[,redCol], col[,greenCol], col[,blueCol], maxColorValue=theMax)
+	}
+	
+	
+	if(!is.function(col)){		
+		colName = col
+		colString = NULL
+		if(length(col)==1){
 			if(requireNamespace('RColorBrewer',quietly=TRUE)) {
-				col = function(n) RColorBrewer::brewer.pal(n, colString)[1:n]
+				col = function(n) RColorBrewer::brewer.pal(n, colName)[1:n]
 			} else {
 				col = function(n) heat.colors(n)
 			}
 		} else {
+			colString = col
+			colName = NULL
 			col = function(n) colString[1:n]
 		}
+	} else {
+		colString = NULL
+		colName = NULL
 	}
-
-	eps=0.01
+	
 	
 	
 	if(style=='unique'){
@@ -271,69 +278,83 @@ colourScale.numeric = function(x=NULL, breaks=5,
 
 		if(length(weights)!=length(x)) {
 			thetable = as.data.frame(table(ID=x))
-			thetable$ID = as.numeric(as.character(thetable$ID)) 
+			thetable$ID = as.numeric(as.character(thetable$ID))
 		} else {
 			thetable = tapply(weights, x,sum)
 			thetable = data.frame(ID=as.numeric(names(thetable)),
 					Freq=thetable)
 		}
-    
+		
+		# put labels in table
+		if(length(labels) == length(breaks)) {
+			# labels are assigned to breaks
+			thetable$label = labels[match(thetable$ID,breaks)]
+		} else if(length(labels) == nrow(thetable)) {
+			# labels are assigned to x
+				thetable$label = labels
+		} else {
+			# don't use labels
+			thetable$label = as.character(thetable$ID)
+		}
+
+		if(length(breaks) > 1) {
+
+		# breaks not in the table
+		notInX = which(! breaks %in% thetable$ID)
+		if(length(notInX))
+			thetable = rbind(thetable,
+					data.frame(ID=breaks[notInX],
+							Freq=rep(0,length(notInX)),
+							label = as.character(breaks[notInX]))
+			)
+		}
+		
+		# if colours is a vector see if it can be put into table
+		if (length(breaks) == length(colString)) {
+			thetable$col = colString[match(thetable$ID,breaks)]
+		} else if(nrow(thetable) == length(colString)) {
+			thetable$col = colString
+		} 
+		
+    shouldExclude = which(thetable$ID %in% exclude)
+    if(length(shouldExclude))
+      thetable[shouldExclude,'Freq'] = NA
+		
+		
     if(length(breaks)==1){
       # breaks is the maximum number of breaks
       thetable = thetable[order(thetable$Freq, decreasing=TRUE),]
       
-      shouldExclude = which(thetable$ID %in% exclude)
-      if(length(shouldExclude))
-        thetable = rbind(
-          thetable[-shouldExclude,],
-          thetable[shouldExclude,]
-          )
-      breaks = thetable[
-          seq(1,min(breaks,nrow(thetable))),'ID'
-          ]
-      
-    }
-    
-		notInX = which(! breaks %in% x)
-		if(length(notInX))
-			thetable = rbind(thetable,
-				data.frame(ID=breaks[notInX],
-						Freq=rep(0,length(notInX)))
-				)
-				
-		if(length(labels) == length(breaks)) {
-			thetable$label = labels[match(thetable$ID,breaks)]
-		} else {
-			if(length(labels) == length(xOrig)) {
-				thetable$label = labels[match(thetable$ID,xOrig)]
-			} else if(length(labels)==nrow(thetable)){
-				thetable$label = labels[order(thetable$ID)]
-			} else {
-				thetable$label = as.character(thetable$ID)
-			}
-		}	
-
-		if(length(breaks)==1) { 
-			# assume breaks is the number of unique values to assign colours to
-			thetableExc = thetable[!( thetable$ID %in% exclude |
-										thetable$label %in% exclude),]
-			ncol = min(c(breaks, nrow(thetableExc)))
-			breaks = thetableExc[order(thetableExc$Freq,decreasing=TRUE)[1:ncol] , 'ID']
+			ncol = min(
+					breaks,sum(!is.na(thetable$Freq)) 
+			) 
+     	breaks = thetable[which(!is.na(thetable$Freq))[1:ncol],	'ID']
 		}  else {
-			breaks = breaks[! ( breaks %in% exclude | 
-								breaks %in% thetable[thetable$label %in% exclude,'ID']
-								) ]
+			breaks = breaks[! ( breaks %in% exclude) ]
 		}
-		
-		thetable[match( breaks, thetable$ID),'col'] = col(length(breaks))
+
+		# assign colours if they're not yet in the table
+		if(!length(thetable$col)) {
+			thetable$col = NA
+			colString = col(length(breaks))
+			thetable[match( breaks, thetable$ID),'col'] = colString
+		} else {
+			# remove colours from excluded categories
+			thetable[is.na(thetable$Freq), 'col'] = NA
+		}
+
 		thetable = thetable[order(thetable$ID),]
 
-		
 		colVec = thetable$col
 		names(colVec) =as.character(thetable$ID)
 		breaks = thetable$ID
 		breaks = c(breaks[1]-1/2, breaks+c(diff(breaks)/2,1/2))
 	} else { # not unique breaks
+		
+			
+		eps=0.01
+		
+		
 		if(length(exclude) & length(x)) {
 			toexclude = which(x %in% exclude)
 			x[toexclude]	= NA
