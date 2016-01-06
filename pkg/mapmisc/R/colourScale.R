@@ -227,6 +227,7 @@ colourScale.numeric = function(x=NULL, breaks=5,
 
 	xOrig = x
 	style = style[1]
+	eps=0.01
 	
 	# radar colours
 	if(is.character(col)){
@@ -318,7 +319,7 @@ colourScale.numeric = function(x=NULL, breaks=5,
 		
     shouldExclude = which(thetable$ID %in% exclude)
     if(length(shouldExclude))
-      thetable[shouldExclude,'Freq'] = NA
+      thetable[shouldExclude,'Freq'] = -1
 		
 		
     if(length(breaks)==1){
@@ -326,9 +327,9 @@ colourScale.numeric = function(x=NULL, breaks=5,
       thetable = thetable[order(thetable$Freq, decreasing=TRUE),]
       
 			ncol = min(
-					breaks,sum(!is.na(thetable$Freq)) 
+					breaks,sum(thetable$Freq>=0) 
 			) 
-     	breaks = thetable[which(!is.na(thetable$Freq))[1:ncol],	'ID']
+     	breaks = thetable[which(thetable$Freq>0)[1:ncol],	'ID']
 		}  else {
 			breaks = breaks[! ( breaks %in% exclude) ]
 		}
@@ -340,7 +341,7 @@ colourScale.numeric = function(x=NULL, breaks=5,
 			thetable[match( breaks, thetable$ID),'col'] = colString
 		} else {
 			# remove colours from excluded categories
-			thetable[is.na(thetable$Freq), 'col'] = NA
+			thetable[thetable$Freq<0, 'col'] = NA
 		}
 
 		thetable = thetable[order(thetable$ID),]
@@ -352,7 +353,6 @@ colourScale.numeric = function(x=NULL, breaks=5,
 	} else { # not unique breaks
 		
 			
-		eps=0.01
 		
 		
 		if(length(exclude) & length(x)) {

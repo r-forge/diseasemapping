@@ -82,7 +82,7 @@ legendBreaks = function(pos,
   
 # line wrapping for legend labels
 	if(any(nchar(as.character(legend)) > width)) {
-		legend =  trim(
+		legend =  trimws(
   	  	gsub(
     			paste('(.{1,', width, '})(\\s|/|$)' ,sep=''), 
 					'\\1\n ', 
@@ -107,7 +107,7 @@ legendBreaks = function(pos,
 			theNewLines = gregexpr('\n', as.character(legend))
 			y.intersp=max(
     		c(1.25, 
-						unlist(
+						0.5+unlist(
 								lapply(theNewLines, function(qq) sum(qq>0))
 						)
 				) 
@@ -120,7 +120,7 @@ legendBreaks = function(pos,
   	y.intersp=1
 	}
 	adj = rep_len(adj, 2)
-	adj[2] = adj[2] + y.intersp/2
+	adj[2] = adj[2] + y.intersp/4
 
   # get rid of transparency in col
   withTrans = grep("^#[[:xdigit:]]{8}$", col)
