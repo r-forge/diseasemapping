@@ -82,12 +82,44 @@ if(col[1]=='radar'){
 		x = NULL
 } else if(style=='unique') {
 
+	# if labels is missing, take labels from the raster
     if(is.null(labels)){
       levelsx = levels(x)[[1]]
-    } else {
-      # if labels is a data frame, use it
-      if(is.data.frame(labels)) {
+    }
+		
+    # if labels is a data frame, use it
+    if(is.data.frame(labels)) {
         levelsx = labels
+				# ID variable is first column if it's missing
+				if(!any(colnames(levelsx)=='ID')){
+					colnames(levelsx)[1] = 'ID'
+				}
+				# different spellings of 'label'
+				if(!any(colnames(levelsx)=='label')){
+					labelCol = grep("^label(s?)([[:space:]]?)", names(levelsx), ignore.case=TRUE)
+					if(length(labelCol)){
+						labelCol = labelCol[1]
+					} else {
+						labelCol = 2
+					}
+					colnames(levelsx)[labelCol] = 'label'
+				}
+				
+				rgbCols = mapply(grep, 
+						pattern=paste('^', c("red",'green','blue'), '$', sep=''),
+						MoreArgs = list(x=names(levelsx), ignore.case=TRUE)
+				)
+				# if all three (rgb) are found
+				if(is.numeric(rgbCols)){
+					col = levelsx[,rgbCols, drop=FALSE]
+					breaks = nrow(col)
+				}
+				
+				colCol = grep("^col$", colnames(levelsx), ignore.case=TRUE)
+				if(length(colCol)) {
+					col = levelsx[,colCol]
+					breaks = length(col)
+				}
       } else if(
           length(labels) == length(breaks)
           ){
@@ -105,9 +137,8 @@ if(col[1]=='radar'){
           warning('labels must be same length as either breaks or unique(x)')
           levelsx$label = as.character(levelsx$ID)
         }
-      } # end different numbers of levels and breaks
+    } # end different numbers of levels and breaks
       
-  	} # labels is not null
     
     if(ncell(x)<1e+06) {
       x = freq(x)
