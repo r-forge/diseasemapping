@@ -46,6 +46,23 @@ if(is.character(crs))
 if(class(crs) != "CRS")
 	crs = CRS(proj4string(crs))
 
+bboxSmall = t(bbox(extentSmall))
+
+xseq = seq(bboxSmall[1,1], bboxSmall[2,1],len=20)
+yseq = seq(bboxSmall[1,2], bboxSmall[2,2],len=20)
+
+polySmall = cbind( 
+		c(xseq, rep(bboxSmall[2,1], length(yseq)), 
+				rev(xseq), rep(bboxSmall[1,1], length(yseq))), 
+		c(rep(bboxSmall[1,2], length(xseq)), yseq,
+				rep(bboxSmall[2,2], length(xseq)), rev(yseq)
+		)
+)
+
+
+xsp = SpatialPoints(polySmall, 	proj4string = crs)
+
+
 # if cropInset is numeric
   # use it to extend the extent of the plot region
   # and crop the inset map
@@ -55,10 +72,13 @@ if(is.numeric(cropInset)) {
 
 if(all(class(cropInset)=='Extent')){
 	cropInset = raster(cropInset, crs=crsLL)
+	mapExtent = xsp
+} else {
+	mapExtent = cropInset
 }
 
 if(is.character(map)) {
-  map = openmap(cropInset, path=map, zoom=zoom,crs=NA)
+  map = openmap(mapExtent, path=map, zoom=zoom,crs=NA)
 }
 # make sure map is a raster
 if(!length(grep("^Raster", class(map)))) {
@@ -69,21 +89,6 @@ tocrop = projectExtent(cropInset, CRS(proj4string(map)))
 map = crop(map, extent(tocrop))
 
 
-bboxSmall = t(bbox(extentSmall))
-
-xseq = seq(bboxSmall[1,1], bboxSmall[2,1],len=20)
-yseq = seq(bboxSmall[1,2], bboxSmall[2,2],len=20)
-
-polySmall = cbind( 
-		c(xseq, rep(bboxSmall[2,1], length(yseq)), 
-			rev(xseq), rep(bboxSmall[1,1], length(yseq))), 
-		c(rep(bboxSmall[1,2], length(xseq)), yseq,
-				rep(bboxSmall[2,2], length(xseq)), rev(yseq)
-				)
-)
-
-
-xsp = SpatialPoints(polySmall, 	proj4string = crs)
 
 
 
