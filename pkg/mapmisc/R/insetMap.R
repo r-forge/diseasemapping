@@ -51,8 +51,23 @@ if(class(crs) != "CRS")
   # and crop the inset map
 if(is.numeric(cropInset)) {
   cropInset = raster(raster::extend(extentSmall, cropInset), crs=crs)
-  cropInset = projectExtent(cropInset, crsLL)
 }
+
+if(all(class(cropInset)=='Extent')){
+	cropInset = raster(cropInset, crs=crsLL)
+}
+
+if(is.character(map)) {
+  map = openmap(cropInset, path=map, zoom=zoom,crs=NA)
+}
+# make sure map is a raster
+if(!length(grep("^Raster", class(map)))) {
+  warning('map is not a Raster')
+}
+
+tocrop = projectExtent(cropInset, CRS(proj4string(map)))
+map = crop(map, extent(tocrop))
+
 
 bboxSmall = t(bbox(extentSmall))
 
@@ -71,25 +86,6 @@ polySmall = cbind(
 xsp = SpatialPoints(polySmall, 	proj4string = crs)
 
 
-crsCrop = try(CRS(proj4string(cropInset)),silent=TRUE)
-if(class(crsCrop)=="try-error")
-	crsCrop = crsLL
-tocrop = t(bbox(extent(cropInset)))
-tocrop = SpatialPoints(tocrop,
-		proj4string=crsCrop)
-
-if(is.character(map)) {
-  map = openmap(xsp, path=map, zoom=zoom,crs=NA)
-}
-# make sure map is a raster
-if(!length(grep("^Raster", class(map)))) {
-  warning('map is not a Raster')
-}
-
-if(requireNamespace('rgdal', quietly=TRUE)) {
-	tocrop = spTransform(tocrop, CRSobj=CRS(proj4string(map)))
-	map = crop(map, extent(tocrop))
-}
 
 
 oldrange = apply(bbox(extentFull), 2, diff)
