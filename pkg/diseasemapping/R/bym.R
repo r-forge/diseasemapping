@@ -254,7 +254,7 @@ formulaForLincombs = gsub(
 		"\\+[[:space:]]?\\+([[:space:]]?\\+)?", "+",
 		formulaForLincombs)
 # strip out trailing or leading +
-formulaForLincombs = gsub("\\+[[:space:]]?$|^[[:space:]]?\\+[[:space:]]+", "", formulaForLincombs)
+formulaForLincombs = gsub("\\+[[:space:]]+?$|^[[:space:]]?\\+[[:space:]]+", "", formulaForLincombs)
 
 
 	startIndex = length(region.index)
