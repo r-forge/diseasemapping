@@ -94,9 +94,18 @@ if(col[1]=='radar'){
 				if(!any(colnames(levelsx)=='ID')){
 					colnames(levelsx)[1] = 'ID'
 				}
+				
+				# if a factor or characters, convert to numeric
+				if(!is.numeric(levelsx$ID)) {
+					levelsx$ID = as.numeric(gsub(
+									"^[[:alpha:]]+", "", as.character(levelsx$ID)
+							))
+				}
+					
+				
 				# different spellings of 'label'
 				if(!any(colnames(levelsx)=='label')){
-					labelCol = grep("^label(s?)([[:space:]]?)", names(levelsx), ignore.case=TRUE)
+					labelCol = grep("^label(s?)([[:space:]]?)|^NAME$", names(levelsx), ignore.case=TRUE)
 					if(length(labelCol)){
 						labelCol = labelCol[1]
 					} else {
@@ -104,6 +113,8 @@ if(col[1]=='radar'){
 					}
 					colnames(levelsx)[labelCol] = 'label'
 				}
+				# convert factor or numbers to character
+				levelsx$label = as.character(levelsx$label)
 				
 				rgbCols = mapply(grep, 
 						pattern=paste('^', c("red",'green','blue'), '$', sep=''),
@@ -120,7 +131,7 @@ if(col[1]=='radar'){
 					col = levelsx[,colCol]
 					breaks = length(col)
 				}
-      } else if(
+      } else if( # labels not a data frame
           length(labels) == length(breaks)
           ){
         levelsx = data.frame(
@@ -141,7 +152,7 @@ if(col[1]=='radar'){
       
     
     if(ncell(x)<1e+06) {
-      x = freq(x)
+      x = freq(x, useNA='no')
       weights = x[,2]
       x=x[,1]
     } else {
@@ -281,7 +292,7 @@ colourScale.numeric = function(x=NULL, breaks=5,
 			thetable = as.data.frame(table(ID=x))
 			thetable$ID = as.numeric(as.character(thetable$ID))
 		} else {
-			thetable = tapply(weights, x,sum)
+			thetable = tapply(weights, x,sum, na.rm=TRUE)
 			thetable = data.frame(ID=as.numeric(names(thetable)),
 					Freq=thetable)
 		}
