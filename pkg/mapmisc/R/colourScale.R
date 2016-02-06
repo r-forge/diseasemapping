@@ -43,7 +43,7 @@ colourScale.factor = function(x=NULL, breaks=5,
 		col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
 		transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL,...) {
 
-	res=colourScale(as.integer(x), 
+	res=colourScale(x=as.integer(x), 
 			breaks=breaks,
 			style="unique",
 			col=col, opacity=opacity, dec=dec, firstBreak=firstBreak, 
@@ -304,6 +304,9 @@ colourScale.numeric = function(x=NULL, breaks=5,
 		} else if(length(labels) == nrow(thetable)) {
 			# labels are assigned to x
 				thetable$label = labels
+		} else if (length(labels) == length(x)) {
+			# labels algined with x
+			thetable$label = labels[match(thetable$ID, x)]
 		} else {
 			# don't use labels
 			thetable$label = as.character(thetable$ID)

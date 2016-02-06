@@ -55,7 +55,7 @@ openmapExtentMerc <-
 	}
   if(requireNamespace('rgdal', quietly=TRUE)) {
 		# if long-lat coordinates and buffer is large, assume buffer is metres 
-		if(raster::isLonLat(crs) & extend > 80) {
+		if(raster::isLonLat(crs) & any(extend > 80)) {
     	x = as(
         	extent(x), 
         	'SpatialPoints'
