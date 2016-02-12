@@ -164,10 +164,6 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 			warning("regions in data missing from adjacency matrix")
 		data$region.indexS = data$region.indexI = region.index[data[[region.id]]]
 		
-		# priors
-		if(!all(c("sdSpatial","sdIndep")%in% names(priorCI))) {
-			warning("priorCI needs elements sdSpatial and sdIndep")
-		}
 		
 		cifun = function(pars) {
 			theci = 	pgamma(obj1, shape=pars[1], rate=pars[2],log.p=T)
@@ -178,6 +174,43 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 		}
 
 		precPrior = list()
+		
+		# priors
+		if(all(c("sd","propSpatial")%in% names(priorCI))) {
+			
+			# pc priors
+			# if length zero, set to default
+			if(!length(priorCI$sd)){
+				priorCI$sd = 1
+			}	
+			if(!length(priorCI$propSpatial)){
+				priorCI$propSpatial = c(0.5)
+			}	
+			
+		
+			# if length 1, assume u provided and alpha = 0.95
+			for(Dpar in c('sd','propSpatial')){
+				if(length(priorCI[[Dpar]])==1) 
+					priorCI[[Dpar]] = c(priorCI[[Dpar]], 0.05)
+				if(is.null(names(priorCI[[Dpar]]))) 
+					names(priorCI[[Dpar]])[1:2] = c('u','alpha')
+			}	
+	
+
+			
+		
+			bymTerm = paste(
+					".~.+f(region.indexS, model='bym2', graph='",
+					graphfile,
+					"', hyper = list(theta1=list(prior='pc.prec', param=c(",
+					paste(priorCI[["sd"]], collapse=","), 
+					")), theta2=list(prior = 'pc.cor0', param=c(", 		
+					paste(priorCI[["propSpatial"]], collapse=","),
+					"))))",
+					sep="")
+			
+		} else if(all(c("sdSpatial","sdIndep")%in% names(priorCI))) {
+		
 		for(D in c("sdSpatial","sdIndep")) {
 			obj1 = sort(priorCI[[D]]^-2)
 		
@@ -215,6 +248,9 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 			paste(precPrior[["sdIndep"]], collapse=","),
 			"))))",
 			sep="")
+	} else {
+		warning("priorCI needs elements sdSpatial and sdIndep, or sd and propSpatial")
+	}	
 	
 	allVars = all.vars(formula)
 	formula = update(formula, as.formula(bymTerm))
