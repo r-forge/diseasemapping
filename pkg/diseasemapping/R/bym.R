@@ -204,7 +204,7 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 					graphfile,
 					"', hyper = list(theta1=list(prior='pc.prec', param=c(",
 					paste(priorCI[["sd"]], collapse=","), 
-					")), theta2=list(prior = 'pc.cor0', param=c(", 		
+					")), theta2=list(prior = 'pc', param=c(", 		
 					paste(priorCI[["propSpatial"]], collapse=","),
 					"))))",
 					sep="")
@@ -260,7 +260,12 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 
 	# INLA doesn't like missing values in categorical covariates
 	# remove rows with NA's 
-	anyNA = which(apply(data[,allVars, drop=FALSE], 1, function(qq) any(is.na(qq))))
+	if(is.matrix(data[[allVars[1]]])) {
+		# response is a matrix, don't look for NA's
+		anyNA = which(apply(data[,allVars[-1], drop=FALSE], 1, function(qq) any(is.na(qq))))
+	} else {
+		anyNA = which(apply(data[,allVars, drop=FALSE], 1, function(qq) any(is.na(qq))))
+	}
 	if(length(anyNA)) {
 		data = data[-anyNA, ]
 	}
@@ -281,6 +286,9 @@ formulaForLincombs = gsub("^.*~", "", toString(formulaForLincombs))
 # get rid of f(stuff) in formula
 formulaForLincombs =
 		gsub("f\\([[:print:]]*\\)", "", formulaForLincombs)
+formulaForLincombs = gsub(
+		"\\+[[:space:]]?\\+([[:space:]]?\\+)?", "+",
+		formulaForLincombs)
 # get rid of offset(stuff)
 formulaForLincombs =
 		gsub("offset\\([[:print:]]*\\)[[:space:]]?($|\\+)", "", formulaForLincombs)
@@ -488,6 +496,140 @@ formulaForLincombs = gsub("\\+[[:space:]]+?$|^[[:space:]]?\\+[[:space:]]+", "", 
 	quantNames = grep("quant$", colnames(params$summary), value=TRUE)
 	revQuant = rev(quantNames)	
 	
+	sdNames = paste(c(sd="Precision",propSpatial="Phi"), "for region.indexS")
+	
+	if(all(names(sdNames) %in% names(priorCI))){
+		# model='bym2'
+	 # sd
+		params$sd = list(
+				params.intern = priorCI$sd,
+				priorCI = 1/sqrt(
+					inla.pc.qprec(c(0.975,0.025),  
+						u = priorCI$sd['u'], alpha = priorCI$sd['alpha'])
+				)
+		)
+			
+		imname = grep(
+				"^Precision.*region.indexS",
+				rownames(inlaRes$summary.hyperpar),
+				value=TRUE
+		)
+		Dname = 'sd'
+		params[[Dname]]$posterior=
+				inlaRes$marginals.hyperpar[[
+						imname	
+				]]
+		params[[Dname]]$posterior[,"y"] = params[[Dname]]$posterior[,"y"] * 2*  
+				params[[Dname]]$posterior[,"x"]^(3/2) 
+		params[[Dname]]$posterior[,"x"] = 1/sqrt(params[[Dname]]$posterior[,"x"])  
+		params[[Dname]]$posterior = 
+				params[[Dname]]$posterior[seq(dim(params[[Dname]]$posterior)[1],1),]		
+		
+		
+		precLim = range( inlaRes$marginals.hyperpar[[
+						imname
+				]][,1] ) 
+		sdSeq = seq(0, 1/sqrt(min(precLim)), len=1000)
+		precSeq = sdSeq^(-2)
+				
+		params[[Dname]]$prior=cbind(
+				x=sdSeq,
+				y=inla.pc.dprec(precSeq, 
+						u = priorCI$sd['u'], alpha = priorCI$sd['alpha']
+				) * 2 * (precSeq)^(3/2) 
+		)
+
+		thesummary = inlaRes$summary.hyperpar[imname, ,drop=FALSE]
+		thesummary[,quantNames] = 1/sqrt(thesummary[,revQuant])
+		
+		thesummary[,"mean"] =sum(
+				1/sqrt(inlaRes$marginals.hyperpar[[imname]][,"x"])*
+						c(0,diff(inlaRes$marginals.hyperpar[[imname]][,"x"]))*
+						inlaRes$marginals.hyperpar[[imname]][,"y"]
+		)
+		thesummary[,"sd"] = NA
+    thesummary[,'mode'] =  1/sqrt(thesummary[,'mode'])
+		rownames(thesummary) = Dname
+		
+		donthave = colnames(params$summary)[
+				!colnames(params$summary) %in% colnames(thesummary)]
+		
+		thesummary = cbind(thesummary, matrix(NA, nrow(thesummary), length(donthave),
+						dimnames=list(NULL, donthave)))
+  	
+		params$summary = rbind(params$summary, 
+				thesummary[,colnames(params$summary),drop=FALSE]
+		)		
+		
+		
+		# propSpatial
+		
+		Deffect = which(unlist(lapply(inlaRes$all.hyper$random, function(qq) qq$hyperid))==
+						'region.indexS')
+
+		priorProp = matrix(scan(text=gsub("[[:alpha:]]+:", "", 
+								inlaRes$all.hyper$random[[Deffect]]$hyper$theta2$prior),
+						quiet=TRUE), 
+				ncol=2, dimnames = list(NULL, c( "xTrans","logDensTrans")))
+		priorProp = cbind(priorProp, logX = exp(priorProp[,'xTrans']))
+		priorProp = cbind(priorProp, 
+				x = priorProp[,'logX']/ (1+priorProp[,'logX'])
+		)
+		
+		# what the prior integrates to	
+		const = sum(exp(priorProp[,'logDensTrans']+
+								c(NA,log(abs(diff(priorProp[,'xTrans']))))),
+				na.rm=TRUE)		
+	# add to it integrates to 1		
+		
+	diffTrans = c(NA, diff(priorProp[,'xTrans']))
+	diffX = c(NA, diff(priorProp[,'x']))
+	
+		priorProp = cbind(priorProp, 
+				logDens = priorProp[,'logDensTrans'] +
+						log(abs(diffTrans)) - 
+						log(abs(diffX)) - log(const)
+		)
+		priorProp[1, 'logDens'] = priorProp[2, 'logDens']
+
+		priorProp = cbind(priorProp, 
+				dens = exp(priorProp[,'logDens'] )
+				)
+		priorProp = cbind(priorProp, 
+						cDens = cumsum(priorProp[,'dens'] *
+  									c(0, abs(diff(priorProp[,'x']))))
+		)
+		
+		imname = grep(
+				"^Phi.*region.indexS",
+				rownames(inlaRes$summary.hyperpar),
+				value=TRUE
+		)
+		phiSeq = seq(0,1,len=1000)
+		
+		params$propSpatial = list(
+				params.intern = priorCI$propSpatial,
+				priorCI = approx(priorProp[,'cDens'], 
+						priorProp[,'x'], c(0.025, 0.975))$y,
+				posterior = inlaRes$marginals.hyperpar[[imname]],
+				prior = as.data.frame(approx(
+						priorProp[,'x'], priorProp[,'dens'], phiSeq
+						))
+		)
+		
+		thesummary = inlaRes$summary.hyperpar[imname, ,drop=FALSE]
+		donthave = colnames(params$summary)[
+				!colnames(params$summary) %in% colnames(thesummary)]
+		
+		thesummary = cbind(thesummary, matrix(NA, nrow(thesummary), length(donthave),
+						dimnames=list(NULL, donthave)))
+		params$summary = rbind(params$summary, 
+				thesummary[,colnames(params$summary),drop=FALSE]
+		)		
+		
+		
+	} else {
+		# model = 'bym'
 	sdNames = c(S='spatial', I='iid')
 	for(D in c("S","I")) {
 		
@@ -556,10 +698,8 @@ formulaForLincombs = gsub("\\+[[:space:]]+?$|^[[:space:]]?\\+[[:space:]]+", "", 
 		params$summary = rbind(params$summary, 
 				thesummary[,colnames(params$summary),drop=FALSE]
 				)		
-}
-
-
-
+	}
+	}
 
 
 	return(list( inla=inlaRes, data=thebym, parameters=params))
