@@ -163,7 +163,7 @@ setMethod("glgm",
 		sdNames = unique(c(sdNames, "sdNugget"))
 	}
 	if(thedots$family=="gamma") {
-		sdNames = unique(c(sdNames, "sdGamma"))
+		sdNames = unique(c(sdNames, "gammaShape"))
 	}
 	
   # list of prior distributions
@@ -173,6 +173,8 @@ setMethod("glgm",
         priorDistributions = list()
       }
   
+	# priors for sd's (and precisions) 
+	
 	precPrior=list()
   
 	for(Dsd in sdNames) {
@@ -274,6 +276,22 @@ setMethod("glgm",
 	} else {
 		ratePrior = c(shape=0.01, rate=0.01)
 	}
+	
+	
+	# prior for gamma shape
+	# log-normal, priorCI is 4 standard deviations
+	if("gammaShape" %in% names(priorCI)) {
+		gammaShapePrior  = list(
+				prior='gaussian',
+				param=c(
+						mean=as.numeric(mean(log(priorCI$gammaShape))),
+						precision = as.numeric(abs(diff(log(priorCI$gammaShape)))[1]/4)^(-2)
+						)
+				)
+	} else {
+		gammaShapePrior = NULL
+	}
+
 
   spaceFormula = paste(".~.+ f(space, model='matern2d', ",
 				"nrow=", nrow(cells)+2*buffer, 
@@ -401,11 +419,9 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 						param=precPrior$sdNugget
 				) 
 	}
-	if(!is.null(precPrior$sdGamma)) {
+	if(!is.null(gammaShapePrior)) {
 		forInla$control.family$hyper$prec =
-				list(prior="loggamma",
-						param=precPrior$sdGamma
-				) 
+				gammaShapePrior 
 	}
 	
 	
@@ -477,6 +493,37 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 
 	}
 
+	if(!is.null(gammaShapePrior)) {
+		
+		paramsGammaShape = 	c(
+				gammaShapePrior$param["mean"], 
+				sd=as.numeric(1/sqrt(gammaShapePrior$param["precision"]))
+		)
+		
+		xLim = sort(exp(-qnorm(
+								c(0.999,0.001), 
+								mean=paramsGammaShape["mean"], 
+								sd=paramsGammaShape["sd"])
+						))
+		xSeq  = seq(xLim[1], xLim[2], len=1000)
+		
+		
+		params[['gammaShape']] = list(
+				userPriorCI = priorCI[['gammaShape']],
+				priorCI = sort(exp(-qnorm(c(0.975,0.025), 
+								mean=paramsGammaShape["mean"], 
+								sd=paramsGammaShape["sd"]))
+				),
+				params.intern=gammaShapePrior$param,
+				params = paramsGammaShape,
+				distribution = 'lognormal',
+				prior = cbind(
+						x=xSeq, 
+						y = stats::dlnorm(xSeq, meanlog = paramsGammaShape['mean'],sdlog = paramsGammaShape['sd'])
+						)
+				)
+	}
+	
 	
 	# random into raster
 # E exp(random)
@@ -631,9 +678,9 @@ if(length(grep("logit",inlaResult$misc$linkfunctions$names))) {
 thecols = paste(c("0.975", "0.5","0.025"), "quant", sep="")
 
 thesd = c(
-		sdNugget= grep("^Precision[[:print:]]*G observations$", 
+		sdNugget= grep("^Precision[[:print:]]*Gaussian observations$", 
 				names(inlaResult$marginals.hyperpar), value=TRUE),
-		sdGamma= grep("^Precision[[:print:]]*Gamma observations$", 
+		gammaShape = grep("^Precision[[:print:]]*Gamma observations$", 
 				names(inlaResult$marginals.hyperpar), value=TRUE),
 		sd = grep("^Precision[[:print:]]*space$", 
 				names(inlaResult$marginals.hyperpar), value=TRUE)
@@ -647,7 +694,7 @@ params$summary = rbind(params$summary,
 
 
 # convert precisions to standard deviations
-for(Dsd in names(thesd)) {
+for(Dsd in grep("gammaShape", names(thesd), invert=TRUE, value=TRUE)) {
 	
 	params[[Dsd]]$posterior=
 			inlaResult$marginals.hyperpar[[thesd[Dsd]]]
@@ -671,6 +718,32 @@ for(Dsd in names(thesd)) {
 				inlaResult$marginals.hyperpar[[thesd[Dsd]]][,"y"]
 	)
 }
+
+if(length(grep("gammaShape", names(thesd))) ) {
+	Dsd = 'gammaShape'
+params[[Dsd]]$posterior=
+		inlaResult$marginals.hyperpar[[thesd[Dsd]]]
+params[[Dsd]]$posterior[,"y"] = params[[Dsd]]$posterior[,"y"] *  
+		params[[Dsd]]$posterior[,"x"]^2 
+params[[Dsd]]$posterior[,"x"] = 1/params[[Dsd]]$posterior[,"x"]  
+params[[Dsd]]$posterior = params[[Dsd]]$posterior[
+		seq(dim(params[[Dsd]]$posterior)[1],1),]		
+
+params$summary[Dsd, thecols] = 
+		1/(inlaResult$summary.hyperpar[
+						thesd[Dsd],rev(thecols)])
+params$summary[Dsd,"mode"] = 
+    1/(inlaResult$summary.hyperpar[
+            thesd[Dsd],'mode'])
+
+
+params$summary[Dsd,"mean"] =sum(
+		1/(inlaResult$marginals.hyperpar[[thesd[Dsd]]][,"x"])*
+				c(0,diff(inlaResult$marginals.hyperpar[[thesd[Dsd]]][,"x"]))*
+				inlaResult$marginals.hyperpar[[thesd[Dsd]]][,"y"]
+)
+}
+
 
 # put range in summary, in units of distance, not numbers of cells
 thecolsFull =c("mean","sd",thecols,"mode") 
