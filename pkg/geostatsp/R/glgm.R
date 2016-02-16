@@ -120,8 +120,9 @@ setMethod("glgm",
               formula, data, 
               grid, covariates, buffer)
           callGeneric(formula, 
-              dataCov$data@data, dataCov$grid, 
-              dataCov$covariates, ...)
+              data=dataCov$data@data, 
+							grid=dataCov$grid, 
+              covariates=dataCov$covariates, ...)
         }
     )
 
@@ -160,6 +161,9 @@ setMethod("glgm",
 	}
 	if(thedots$family=="gaussian") {
 		sdNames = unique(c(sdNames, "sdNugget"))
+	}
+	if(thedots$family=="gamma") {
+		sdNames = unique(c(sdNames, "sdGamma"))
 	}
 	
   # list of prior distributions
@@ -397,6 +401,12 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 						param=precPrior$sdNugget
 				) 
 	}
+	if(!is.null(precPrior$sdGamma)) {
+		forInla$control.family$hyper$prec =
+				list(prior="loggamma",
+						param=precPrior$sdGamma
+				) 
+	}
 	
 	
 	# get rid of some elements of forInla that aren't required
@@ -621,7 +631,9 @@ if(length(grep("logit",inlaResult$misc$linkfunctions$names))) {
 thecols = paste(c("0.975", "0.5","0.025"), "quant", sep="")
 
 thesd = c(
-		sdNugget= grep("^Precision[[:print:]]*Gaussian observations$", 
+		sdNugget= grep("^Precision[[:print:]]*G observations$", 
+				names(inlaResult$marginals.hyperpar), value=TRUE),
+		sdGamma= grep("^Precision[[:print:]]*Gamma observations$", 
 				names(inlaResult$marginals.hyperpar), value=TRUE),
 		sd = grep("^Precision[[:print:]]*space$", 
 				names(inlaResult$marginals.hyperpar), value=TRUE)
