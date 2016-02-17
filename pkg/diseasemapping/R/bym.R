@@ -497,14 +497,15 @@ formulaForLincombs = gsub("\\+[[:space:]]+?$|^[[:space:]]?\\+[[:space:]]+", "", 
 	revQuant = rev(quantNames)	
 	
 	sdNames = paste(c(sd="Precision",propSpatial="Phi"), "for region.indexS")
+	names(sdNames)= c('sd','propSpatial')
 	
-	if(all(names(sdNames) %in% names(priorCI))){
+	if(all( names(sdNames) %in% names(priorCI))){
 		# model='bym2'
 	 # sd
 		params$sd = list(
 				params.intern = priorCI$sd,
 				priorCI = 1/sqrt(
-					inla.pc.qprec(c(0.975,0.025),  
+					INLA::inla.pc.qprec(c(0.975,0.025),  
 						u = priorCI$sd['u'], alpha = priorCI$sd['alpha'])
 				)
 		)
@@ -529,17 +530,18 @@ formulaForLincombs = gsub("\\+[[:space:]]+?$|^[[:space:]]?\\+[[:space:]]+", "", 
 		precLim = range( inlaRes$marginals.hyperpar[[
 						imname
 				]][,1] ) 
-		sdSeq = seq(0, 1/sqrt(min(precLim)), len=1000)
+		sdSeq = seq(0, 2*max(params[[Dname]]$priorCI), len=1000)
 		precSeq = sdSeq^(-2)
 				
 		params[[Dname]]$prior=cbind(
 				x=sdSeq,
-				y=inla.pc.dprec(precSeq, 
+				y=INLA::inla.pc.dprec(precSeq, 
 						u = priorCI$sd['u'], alpha = priorCI$sd['alpha']
 				) * 2 * (precSeq)^(3/2) 
 		)
 
 		thesummary = inlaRes$summary.hyperpar[imname, ,drop=FALSE]
+		
 		thesummary[,quantNames] = 1/sqrt(thesummary[,revQuant])
 		
 		thesummary[,"mean"] =sum(
@@ -626,6 +628,7 @@ formulaForLincombs = gsub("\\+[[:space:]]+?$|^[[:space:]]?\\+[[:space:]]+", "", 
 		params$summary = rbind(params$summary, 
 				thesummary[,colnames(params$summary),drop=FALSE]
 		)		
+
 		
 		
 	} else {
@@ -700,6 +703,12 @@ formulaForLincombs = gsub("\\+[[:space:]]+?$|^[[:space:]]?\\+[[:space:]]+", "", 
 				)		
 	}
 	}
+	
+	rownames(params$summary) = gsub(
+			"^Phi[[:space:]]+for[[:space:]]+region.*", "propSpatial", 
+			rownames(params$summary)
+	)
+	
 
 
 	return(list( inla=inlaRes, data=thebym, parameters=params))
