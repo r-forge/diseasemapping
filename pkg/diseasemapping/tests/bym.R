@@ -47,30 +47,7 @@ if(all(havePackages)){
 	legend('topright', lty=1, col=c('black','blue'), legend=c('posterior','prior'))
 	dev.off()
 
-	
-	# pc prior
-	
-  kBYMpc = bym(
-			formula = observed ~ offset(logExpected) + poverty,
-    	kentucky,
-			priorCI = list(sd=c(1, 0.05), propSpatial=c(0.2, 0.95)))
-	
-	kBYMpc$parameters$summary
-	pdf("priorPostKentuckyPC.pdf")
-	plot(kBYMpc$parameters$sd$posterior, type='l', 
-			xlim=c(0,1))
-	lines(kBYMpc$parameters$sd$prior, col='blue')
-	legend('topright', lty=1, col=c('black','blue'), legend=c('posterior','prior'))
-	dev.off()
-	pdf("priorPostKentuckyPCpropSpatial.pdf")
-	plot(kBYMpc$parameters$propSpatial$posterior, type='l', 
-			xlim=c(0,0.2))
-	lines(kBYMpc$parameters$propSpatial$prior, col='blue')
-	legend('topright', lty=1, col=c('black','blue'), legend=c('posterior','prior'))
-	dev.off()
-	
-	
-	
+
   kBYM = bym(observed ~ offset(logExpected) + poverty,	plot(kBYMpc$parameters$propSpatial$posterior, type='l', 
 					xlim=c(0,0.2))
 	lines(kBYMpc$parameters$propSpatial$prior, col='blue')
