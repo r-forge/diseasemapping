@@ -1,17 +1,31 @@
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{BYM with PC priors}
 
-#' \providecommand{\subfloat}[2][need a sub-caption]{\subcaptionbox{#1}{#2}}
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{subcaption}
+\providecommand{\subfloat}[2][need a sub-caption]{\subcaptionbox{#1}{#2}}
+\title{BYM with PC priors}
+\author{Patrick Brown}
 
+\begin{document}
 
-#+ packages
+\maketitle
+
+<<knitr, include=FALSE>>=
+require('knitr')
+opts_chunk$set(out.width='0.48\\textwidth', fig.align='default', fig.height=3, fig.width=6)
+@    
+
+<<packages>>=
 require('diseasemapping')
-require('sp')
 require("methods")
 data('kentucky')
-#'
+@
 
 
 
-#+ rates, tidy=TRUE
+<<rates, tidy=TRUE>>=
 if(FALSE) {
 	# must have an internet connection to do the following
 	larynxRates= cancerRates("USA", year=1998:2002,site="Larynx")
@@ -27,33 +41,43 @@ if(FALSE) {
 					"F_55", "F_60", "F_65", "F_70", "F_75", "F_80", "F_85"))
 	
 }
-#'
+@
 
 
-#+ smr
+
+<<smr>>=
 # get rid of under 10's
 larynxRates = larynxRates[grep("_(0|5)$",names(larynxRates), invert=TRUE)]
 # compute Sexpected
 kentucky = getSMR(kentucky, larynxRates, larynx,
 		regionCode="County")
-#'
+@
 
-#' BYM with gamma priors on precision
 
-#+ bymGamma, tidy=TRUE
+BYM with gamma priors on precision
+
+<<bymGamma, tidy=TRUE>>=
 kBYM = bym(
 		formula = observed ~ offset(logExpected) + poverty,
     data=kentucky,
     priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)),
 		region.id="County"
 )
-#'
+@
 
-#+ summary, results='asis'
-knitr::kable(kBYM$parameters$summary[,c(1,3,5)], digits=3)
-#'
 
-#+ priorPost, fig.cap='gamma priors, sd parameters', fig.height=4, fig.width=3, fig.subcap=c('spatial','indep'), echo=FALSE, out.width='0.4\\textwidth'
+
+<<summary>>=
+if(!is.null(kBYM$parameters))
+	knitr::kable(kBYM$parameters$summary[,c(1,3,5)], digits=3)
+@
+
+
+
+<<priorPost, fig.cap="gamma priors sd parameters", fig.height=4, fig.width=3, fig.subcap=c("spatial", "indep"), echo=FALSE>>=
+
+if(!is.null(kBYM$parameters)) {
+	
 plot(kBYM$parameters$sdSpatial$posterior, type='l', 
 		xlim=c(0,1))
 lines(kBYM$parameters$sdSpatial$prior, col='blue')
@@ -63,13 +87,17 @@ plot(kBYM$parameters$sdIndep$posterior, type='l',
 		xlim=c(0,1))
 lines(kBYM$parameters$sdIndep$prior, col='blue')
 legend('topright', lty=1, col=c('black','blue'), legend=c('posterior','prior'))
+} else {
+	plot(1:10)
+	plot(1:10)
+}
+@
 
-#'
 
-#' BYM with penalised complexity prior
-#' $pr(sd > 1) = 0.05$ and $pr(phi < 0.2) = 0.95$
+BYM with penalised complexity prior
+$pr(sd > 1) = 0.05$ and $pr(phi < 0.2) = 0.95$
 
-#+ bymPc, tidy=TRUE
+<<bymPc, tidy=TRUE>>=
 if(any(names(inla.models()$latent)=='bym2')) {
 kBYMpc = suppressWarnings(
 bym(
@@ -79,19 +107,19 @@ bym(
 ) } else {
 kBYMpc = NULL
 }
-#'
+@
 
 
-#+ summaryPc, results='asis'
+
+<<summaryPc>>=
 if(!is.null(kBYMpc))
 	knitr::kable(kBYMpc$parameters$summary[,c(1,3,5)], digits=3)
-#'
+@
 
 
 
+<<priorPostPc, fig.cap="PC priors variance parameters", fig.height=4, fig.width=3, fig.subcap=c("sd","prop spatial"), echo=FALSE>>=
 
-
-#+ priorPostPc, fig.cap='PC priors, variance parameters', fig.height=4, fig.width=3, fig.subcap=c('sd','prop spatial'), out.width='0.4\\textwidth', echo=FALSE
 if(!is.null(kBYMpc)) {
 	plot(kBYMpc$parameters$sd$posterior, type='l', 
 		xlim=c(0,1))
@@ -106,11 +134,11 @@ legend('topright', lty=1, col=c('black','blue'), legend=c('posterior','prior'))
 	plot(1:10)
 	plot(1:10)
 }
-#'
+@
 
 
 
-#+ maps, fig.cap='Random effects and fitted values', fig.subcap=c('gamma, fitted','pc fitted','gamma random','pc random'), fig.height=2, fig.width=5, echo=FALSE
+<<maps, fig.cap='Random effects and fitted values', fig.subcap=c('gamma, fitted','pc fitted','gamma random','pc random'), echo=FALSE>>=
 
 if(require('mapmisc') & !is.null(kBYMpc)) {
 	
@@ -155,8 +183,8 @@ legendBreaks('topleft', colRpc, cex=thecex)
 	plot(1:10)
 	
 }
-
-#'
-
+@
 
 
+\end{document}
+  

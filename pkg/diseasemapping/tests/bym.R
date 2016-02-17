@@ -47,14 +47,8 @@ if(all(havePackages)){
 	legend('topright', lty=1, col=c('black','blue'), legend=c('posterior','prior'))
 	dev.off()
 
-
-  kBYM = bym(observed ~ offset(logExpected) + poverty,	plot(kBYMpc$parameters$propSpatial$posterior, type='l', 
-					xlim=c(0,0.2))
-	lines(kBYMpc$parameters$propSpatial$prior, col='blue')
 	
-    kentucky,
-		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
-
+	
 
 
 # also try no covariate or prior
