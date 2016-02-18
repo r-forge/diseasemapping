@@ -212,6 +212,9 @@ setMethod("glgm",
 					)
 		}
 
+		if(!length(names(priorCI[[Dsd]])))
+			names(priorCI[[Dsd]]) = c('lower','upper')
+
 		if(all(c('u','alpha') %in% names(priorCI[[Dsd]]))) {
 			# pc priors
 			precPrior[[Dsd]] = list(
@@ -442,8 +445,8 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 	# if model is gaussian, add prior for nugget
 	if(!is.null(precPrior$sdNugget)) {
 		forInla$control.family$hyper$prec =
-				list(prior="loggamma",
-						param=precPrior$sdNugget
+				list(prior=precPrior$sdNugget$prior,
+						param=precPrior$sdNugget$params
 				) 
 	}
 	if(!is.null(gammaShapePrior)) {

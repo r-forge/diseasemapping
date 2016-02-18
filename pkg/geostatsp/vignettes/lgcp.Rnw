@@ -55,16 +55,16 @@ resG=lgcp(formula, data=murderT,
 
 
 
-\section*{BYM with penalised complexity prior}
+\section*{LGCP with penalised complexity prior}
 
 $pr(sd > 1) = 0.05$ and $pr(phi < 0.2) = 0.95$
 
 <<lgcpPc, tidy=TRUE>>=
-resP=lgcp(formula, data=murder, 
-    grid=squareRaster(torontoBorder, 30),
+resP=lgcp(formula, data=murderT, 
+    grid=squareRaster(borderC, 30),
     covariates=covList,
-    border=torontoBorder,
-		priorCI = list(sd = c(u=0.5, alpha=0.05), range = c(1, 10)*1000)
+    border=borderC, buffer=2000,
+	priorCI = list(sd = c(u=0.5, alpha=0.05), range = c(1, 10)*1000)
 )
 @
 
@@ -123,32 +123,35 @@ if(require('mapmisc', quietly=TRUE) & !is.null(resG$raster)) {
 thecex=0.6	
 	
 colFit = colourScale(resG$raster[['predict.exp']],
-		breaks=6, dec=1, style='equal')
+		breaks=6, dec=8, style='equal',
+		transform='log')
 
 
-map.new(resG$raster)
+map.new(resG$raster, TRUE)
 plot(resG$raster[['predict.exp']], 
 		col=colFit$col,breaks=colFit$breaks,
 		legend=FALSE, add=TRUE)
+points(murderT, col='#00FF0050')
 legendBreaks('bottomright', colFit, cex=thecex)
 
 
-map.new(resG$raster)
+map.new(resG$raster, TRUE)
 plot(resP$raster[['predict.exp']], 
 		col=colFit$col,breaks=colFit$breaks,
 		legend=FALSE, add=TRUE)
+points(murderT, col='#00FF0050')
 legendBreaks('bottomright', colFit, cex=thecex)
 
 colR = colourScale(resG$raster[['random.mean']],
-		breaks=12, dec=-log10(0.05), style='equal')
+		breaks=12, dec=0, style='equal')
 
-map.new(resG$raster)
+map.new(resG$raster, TRUE)
 plot(resG$raster[['random.mean']], 
 		col=colR$col,breaks=colR$breaks,
 		legend=FALSE, add=TRUE)
 legendBreaks('bottomright', colR, cex=thecex)
 
-map.new(resG$raster)
+map.new(resG$raster, TRUE)
 plot(resP$raster[['random.mean']], 
 		col=colR$col,breaks=colR$breaks,
 		legend=FALSE, add=TRUE)
