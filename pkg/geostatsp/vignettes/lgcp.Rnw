@@ -93,9 +93,7 @@ plot(resG$parameters$sd$posterior, type='l',
 lines(resG$parameters$sd$prior, col='blue')
 lines(resP$parameters$sd$posterior, col='red', lty=2)
 lines(resP$parameters$sd$prior, col='blue', lty=2)
-legend('topright', lty=c(1,1,1,2), 
-		col=c('red','blue', 'black','black'), 
-		legend=c('posterior','prior', 'Gamma','PC'))
+
 
 plot(resG$parameters$range$posterior, type='l', 
 		xlim=c(0,10000), col='red')
@@ -120,7 +118,7 @@ legend('topright', lty=c(1,1,1,2),
 
 if(require('mapmisc', quietly=TRUE) & !is.null(resG$raster)) {
 	
-thecex=0.6	
+thecex=1.2	
 	
 colFit = colourScale(resG$raster[['predict.exp']],
 		breaks=6, dec=8, style='equal',
