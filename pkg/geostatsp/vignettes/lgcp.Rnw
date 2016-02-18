@@ -1,5 +1,5 @@
 %\VignetteEngine{knitr::knitr}
-%\VignetteIndexEntry{BYM with PC priors}
+%\VignetteIndexEntry{LGCP with PC priors}
 
 \documentclass[12pt]{article}
 \usepackage[margin=1in]{geometry}
@@ -122,19 +122,19 @@ if(require('mapmisc', quietly=TRUE) & !is.null(resG$raster)) {
 	
 thecex=0.6	
 	
-colFit = colourScale(resG$raster[['fitted.exp']],
+colFit = colourScale(resG$raster[['predict.exp']],
 		breaks=6, dec=1, style='equal')
 
 
 map.new(resG$raster)
-plot(resG$raster[['fitted.exp']], 
+plot(resG$raster[['predict.exp']], 
 		col=colFit$col,breaks=colFit$breaks,
 		legend=FALSE, add=TRUE)
 legendBreaks('bottomright', colFit, cex=thecex)
 
 
 map.new(resG$raster)
-plot(resP$raster[['fitted.exp']], 
+plot(resP$raster[['predict.exp']], 
 		col=colFit$col,breaks=colFit$breaks,
 		legend=FALSE, add=TRUE)
 legendBreaks('bottomright', colFit, cex=thecex)
@@ -143,13 +143,13 @@ colR = colourScale(resG$raster[['random.mean']],
 		breaks=12, dec=-log10(0.05), style='equal')
 
 map.new(resG$raster)
-plot(resG$raster[['fitted.exp']], 
+plot(resG$raster[['random.mean']], 
 		col=colR$col,breaks=colR$breaks,
 		legend=FALSE, add=TRUE)
 legendBreaks('bottomright', colR, cex=thecex)
 
 map.new(resG$raster)
-plot(resP$raster[['fitted.exp']], 
+plot(resP$raster[['random.mean']], 
 		col=colR$col,breaks=colR$breaks,
 		legend=FALSE, add=TRUE)
 legendBreaks('bottomright', colR, cex=thecex)
