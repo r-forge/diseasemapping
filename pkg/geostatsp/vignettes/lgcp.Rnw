@@ -129,7 +129,7 @@ map.new(resG$raster, TRUE)
 plot(resG$raster[['predict.exp']], 
 		col=colFit$col,breaks=colFit$breaks,
 		legend=FALSE, add=TRUE)
-points(murderT, col='#00FF0050')
+points(murderT, col='#00FF0050',cex=0.2)
 legendBreaks('bottomright', colFit, cex=thecex)
 
 
@@ -137,8 +137,9 @@ map.new(resG$raster, TRUE)
 plot(resP$raster[['predict.exp']], 
 		col=colFit$col,breaks=colFit$breaks,
 		legend=FALSE, add=TRUE)
-points(murderT, col='#00FF0050')
+points(murderT, col='#00FFFF50',cex=0.2)
 legendBreaks('bottomright', colFit, cex=thecex)
+
 
 colR = colourScale(resG$raster[['random.mean']],
 		breaks=12, dec=0, style='equal')
