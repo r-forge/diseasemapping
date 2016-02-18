@@ -188,18 +188,38 @@ setMethod("glgm",
     
       if(all(c('shape','rate') %in% names(priorDistributions[[Dprec]]))) {
 
-        precPrior[[Dsd]] = c(
+        precPrior[[Dsd]] = list(
+						param = c(
             shape=as.numeric(priorDistributions[[Dprec]]['shape']), 
-            rate=as.numeric(priorDistributions[[Dprec]]['rate']))
+            rate=as.numeric(priorDistributions[[Dprec]]['rate'])),
+				prior = 'loggamma')
 
       } else {
-        precPrior[[Dsd]] = c(
+        precPrior[[Dsd]] = list(param=c(
             shape=priorDistributions[[Dprec]][1],
-            rate=priorDistributions[[Dprec]][2])
+            rate=priorDistributions[[Dprec]][2]),
+				prior = 'loggamma')
       }
     } else if(any(names(priorCI)==Dsd)) {
       # find distribution from interval supplied
 
+		
+		# if of length 1, it's pc prior u with alpha = 0.05
+		if(length(priorCI[[Dsd]])==1){
+			priorCI[[Dsd]] = c(
+					u=as.numeric(priorCI[[Dsd]]),
+					alpha = 0.05
+					)
+		}
+
+		if(all(c('u','alpha') %in% names(priorCI[[Dsd]]))) {
+			# pc priors
+			precPrior[[Dsd]] = list(
+					param=priorCI[[Dsd]],
+					prior = 'pc.prec')
+		} else {
+			# gamma prior
+		
     obj1 = sort(priorCI[[Dsd]]^-2)
 		cifun = function(pars) {
 				theci = 	pgamma(obj1, shape=pars[1], 
@@ -215,7 +235,11 @@ setMethod("glgm",
 		precPrior2=optim(c(.5,.5/mean(obj1)), cifun, 
 				lower=c(0.000001,0.0000001),method="L-BFGS-B")
 		names(precPrior2$par) = c("shape","rate")
-		precPrior[[Dsd]] = precPrior2$par 
+
+		precPrior[[Dsd]] = list(
+				param = precPrior2$par,
+				prior = 'loggamma')
+		
 				
  		#pgamma(obj1, shape= precPrior["shape"], rate=precPrior["rate"],log.p=F)
 		#pgamma(obj1, shape= precPrior["shape"], rate=precPrior["rate"],log.p=T)
@@ -226,8 +250,12 @@ setMethod("glgm",
  		#1/sqrt(qgamma(c(0.975,0.025), shape=precPrior["shape"], rate=precPrior["rate"]))
 		#priorCI$sd
 		
-		} else {
-			precPrior[[Dsd]] = c(shape=0.01, rate=0.01)
+		} # end gamma prior
+		} else { # no prior supplied
+			# default prior
+			precPrior[[Dsd]] = list(
+					param = c(shape=0.01, rate=0.01),
+					prior = 'loggamma')
 		}
 	}
 		
@@ -276,8 +304,7 @@ setMethod("glgm",
 	} else {
 		ratePrior = c(shape=0.01, rate=0.01)
 	}
-	
-	
+
 	# prior for gamma shape
 	# log-normal, priorCI is 4 standard deviations
 	if("gammaShape" %in% names(priorCI)) {
@@ -302,9 +329,9 @@ setMethod("glgm",
 				      paste(ratePrior, collapse=","),
 				"), prior='loggamma'),",
 				"prec=list( param=c(",
-				paste(precPrior$sd, collapse=","),
-				"),prior='loggamma')",
-				" ) )" 
+				paste(precPrior$sd$param, collapse=","),
+				"), prior='",precPrior$sd$prior,"')",
+				" ) )", sep=""
 			)
 	
 	formula = update.formula(formula,	as.formula(spaceFormula))
@@ -438,7 +465,6 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 			list(logfile="INLA is not installed. \n install splines, numDeriv, Rgraphviz, graph,\n fields, rgl, mvtnorm, multicore, pixmap,\n splancs, orthopolynom \n then see www.r-inla.org")
 	}
 
- 
 	
 	if(all(names(inlaResult)=="logfile"))
 		return(c(forInla, inlares=inlaResult))
@@ -472,25 +498,50 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 	)
 
   for(Dsd in names(precPrior)) {
+		if(precPrior[[Dsd]]$prior == 'loggamma'){
 		params[[Dsd]] = list(userPriorCI=priorCI[[Dsd]], 
 			priorCI = 1/sqrt(
 				qgamma(c(0.975,0.025), 
-						shape=precPrior[[Dsd]]["shape"], 
-						rate=precPrior[[Dsd]]["rate"])),
+						shape=precPrior[[Dsd]]$param["shape"], 
+						rate=precPrior[[Dsd]]$param["rate"])),
 					params.intern=precPrior[[Dsd]])
 	
 	precLim = 	qgamma(c(0.999,0.001), 
-			shape=precPrior[[Dsd]]["shape"], 
-			rate=precPrior[[Dsd]]["rate"])
+			shape=precPrior[[Dsd]]$param["shape"], 
+			rate=precPrior[[Dsd]]$param["rate"])
 	sdLim = 1/sqrt(precLim)
 	sdSeq = seq(min(sdLim), max(sdLim), len=1000)
 	precSeq = sdSeq^(-2)
 	params[[Dsd]]$prior=cbind(
 			x=sdSeq,
-			y=dgamma(precSeq, shape=precPrior[[Dsd]]["shape"], 
-					rate=precPrior[[Dsd]]["rate"]) *2* (precSeq)^(3/2) 
+			y=dgamma(precSeq, shape=precPrior[[Dsd]]$param["shape"], 
+					rate=precPrior[[Dsd]]$param["rate"]) *2* (precSeq)^(3/2) 
 	)
-
+	} else { # pc prior
+	
+		params[[Dsd]] = list(userPriorCI=priorCI[[Dsd]], 
+				priorCI = 1/sqrt(
+						INLA::inla.pc.qprec(c(0.975,0.025),  
+								u = precPrior[[Dsd]]$param['u'], 
+								alpha = precPrior[[Dsd]]$param['alpha'])
+				),
+		params.intern=precPrior[[Dsd]]$param)
+		
+		precLim = INLA::inla.pc.qprec(c(0.999,0.001),  
+						u = precPrior[[Dsd]]$param['u'], 
+						alpha = precPrior[[Dsd]]$param['alpha'])
+		sdLim = 1/sqrt(precLim)
+		sdSeq = seq(min(sdLim), max(sdLim), len=1000)
+		precSeq = sdSeq^(-2)
+		params[[Dsd]]$prior=cbind(
+				x=sdSeq,
+				y=INLA::inla.pc.dprec(precSeq, 
+						u = precPrior[[Dsd]]$param['u'], 
+						alpha = precPrior[[Dsd]]$param['alpha']
+					) * 2 * (precSeq)^(3/2) 
+		)
+		
+	}
 	}
 
 	if(!is.null(gammaShapePrior)) {
