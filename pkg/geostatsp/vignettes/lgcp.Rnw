@@ -3,6 +3,7 @@
 
 \documentclass[12pt]{article}
 \usepackage[margin=1in]{geometry}
+\usepackage{caption}
 \usepackage{subcaption}
 \providecommand{\subfloat}[2][need a sub-caption]{\subcaptionbox{#1}{#2}}
 \title{LGCP with PC priors}
