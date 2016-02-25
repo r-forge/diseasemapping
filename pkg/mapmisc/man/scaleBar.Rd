@@ -18,9 +18,9 @@ scaleBar(crs, pos = "bottomright",
     outer=TRUE,...)
 insetMap(crs, pos="bottomright",map="osm",zoom=0, 
 		width=max(c(0.2, 1-par('plt')[2])), 
-		col="#FF000090", borderSmall=NA, borderBig=NULL,
+		col="#FF000090", borderMap=NULL,
 			cropInset = extent(-180,xmax=180, ymin=-47, ymax=71),
-			outer=TRUE) 
+			outer=TRUE, ...) 
 }
 
 \arguments{
@@ -47,7 +47,8 @@ passed to \code{\link{openmap}}'s path argument}
 passed as the \code{bg} argument to \code{\link[graphics]{polygon}}}
 \item{cropInset}{Crop the insert map to this extent}
 \item{\dots}{
-Additional arguments passed to \code{legend}, for example \code{bty='n'} 
+Additional arguments passed to \code{\link[graphics]{legend}} for \code{scaleBar} 
+or \code{\link[graphics]{polygon}polygon} (for \code{insetMap}).
 }
 }
 \details{
@@ -89,11 +90,12 @@ plot(mymap,add=TRUE)
 plot(myPoints,col = as.character(cut(
 	myPoints$y1, breaks, thecol
 )),add=TRUE)
-scaleBar(myPoints, "bottomright",cex=1.25, scale.cex=2)
+scaleBar(myPoints, "bottomright",cex=1.25, seg.len=2)
 temp=legendBreaks("topleft", legend=breaks, col=thecol)
 
 \dontrun{
-insetMap(myPoints, "bottomleft",col='blue')
+thedot = insetMap(myPoints, "bottomleft",col='#00000000', lty=0)
+points(thedot)
 }
 }
 

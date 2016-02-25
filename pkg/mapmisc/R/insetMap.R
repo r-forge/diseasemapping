@@ -1,9 +1,9 @@
 insetMap = function(crs, 
     pos="bottomright",map="osm",zoom=0, 
     width=max(c(0.2, 1-par('plt')[2])), 
-col="#FF000090", borderSmall=NA, borderBig=NULL,
+col="#FF000090", borderMap=NULL, 
 		cropInset = extent(-180,xmax=180, ymin=-47, ymax=71),
-		outer=TRUE) {
+		outer=TRUE, ...) {
 
   
   
@@ -164,7 +164,7 @@ if(nlayers(map)>=3) {
 }
 bigpoly = t(bbox(map))
 bigpoly = cbind(bigpoly[c(1,2,2,1),1], bigpoly[c(1,1,2,2),2])
-polygon(bigpoly,border=borderBig)
+polygon(bigpoly,border=borderMap)
  
 delta=0.3
 theX = anX = c(-delta + delta*1i, -delta + 1i, delta+1i, delta + delta*1i)
@@ -175,14 +175,14 @@ theX = theX*exp(-2*pi*1i/8)
 if( (diff(range(xsp[,1])))  < (width*dimFull[1]/20) ) {	
 	
 	polygon((1.5*width*dimFull[1]/20) * theX +
-					mean(xsp[,1])+1i*mean(xsp[,2]), col=col,border=NA)
+					mean(xsp[,1])+1i*mean(xsp[,2]), col=col, ...)
 } else {
-	polygon(xsp, col=col,border=borderSmall)
+	polygon(xsp, col=col, ...)
 }
 
 if(outer) {
 	par(xpd=oldxpd)
 }	
 
-return(invisible(mapOrig))
+return(invisible(xsp))
 }
