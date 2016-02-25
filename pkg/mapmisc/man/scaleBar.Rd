@@ -43,8 +43,7 @@ passed to \code{\link{openmap}}'s path argument}
 \item{zoom}{Zoom level if retrieving inset map from \code{\link{openmap}}}
 \item{width}{Width of the inset map, as a fraction of the plot window}
 \item{col}{Colour for shaded region of inset map}
-\item{borderSmall,borderBig}{border style for the inset map and shaded region, 
-passed as the \code{bg} argument to \code{\link[graphics]{polygon}}}
+\item{borderMap}{border style for the inset map (passed to \code{\link[graphics]{polygon}})}
 \item{cropInset}{Crop the insert map to this extent}
 \item{\dots}{
 Additional arguments passed to \code{\link[graphics]{legend}} for \code{scaleBar} 
