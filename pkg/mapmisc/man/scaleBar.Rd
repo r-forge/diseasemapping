@@ -48,7 +48,7 @@ passed as the \code{bg} argument to \code{\link[graphics]{polygon}}}
 \item{cropInset}{Crop the insert map to this extent}
 \item{\dots}{
 Additional arguments passed to \code{\link[graphics]{legend}} for \code{scaleBar} 
-or \code{\link[graphics]{polygon}polygon} (for \code{insetMap}).
+or \code{\link[graphics]{polygon}} (for \code{insetMap}).
 }
 }
 \details{
