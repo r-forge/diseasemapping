@@ -93,10 +93,10 @@ bym.needAdjmat = function(
  	
 	if(requireNamespace("spdep", quietly=TRUE)) {
 		adjMatNB=spdep::poly2nb(data, row.names =  data[[region.id]] )
-		Nneighbours = unlist(lapply(adjMatNb, length))
+		Nneighbours = unlist(lapply(adjMatNB, length))
 		if(any(Nneighbours < 1)){
 			badNeighbours = which(Nneighbours < 1)
-			if(length(badNeighbours) == lenght(data))
+			if(length(badNeighbours) == length(data))
 				stop('No spatial regions are neighbours of each other.')
 			warning('Removing ', length(badNeighbours), ' regions without neighbours')
 			data = data[-badNeighbours,]
