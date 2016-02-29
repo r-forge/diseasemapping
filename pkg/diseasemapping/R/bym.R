@@ -93,6 +93,15 @@ bym.needAdjmat = function(
  	
 	if(requireNamespace("spdep", quietly=TRUE)) {
 		adjMatNB=spdep::poly2nb(data, row.names =  data[[region.id]] )
+		Nneighbours = unlist(lapply(adjMatNb, length))
+		if(any(Nneighbours < 1)){
+			badNeighbours = which(Nneighbours < 1)
+			if(length(badNeighbours) == lenght(data))
+				stop('No spatial regions are neighbours of each other.')
+			warning('Removing ', length(badNeighbours), ' regions without neighbours')
+			data = data[-badNeighbours,]
+			adjMatNB=spdep::poly2nb(data, row.names =  data[[region.id]] )
+		}
 	} else {
 		adjMatNB = NULL
 		warning('spdep package is required for bym if adjMat is missing')
