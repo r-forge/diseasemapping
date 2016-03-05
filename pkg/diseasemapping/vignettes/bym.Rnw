@@ -112,7 +112,7 @@ silent=TRUE
 
 
 <<summaryPc>>=
-if(!is.null(kBYMpc$parameters))
+if(class(kBYMpc) != 'try=error')
 	knitr::kable(kBYMpc$parameters$summary[,c(1,3,5)], digits=3)
 @
 
@@ -120,8 +120,9 @@ if(!is.null(kBYMpc$parameters))
 
 <<priorPostPc, fig.cap="PC priors variance parameters", fig.height=4, fig.width=3, fig.subcap=c("sd","prop spatial"), echo=FALSE>>=
 
-if(!is.null(kBYMpc$parameters)) {
-	plot(kBYMpc$parameters$sd$posterior, type='l', 
+if(class(kBYMpc) != 'try=error') {
+	
+plot(kBYMpc$parameters$sd$posterior, type='l', 
 		xlim=c(0,1))
 lines(kBYMpc$parameters$sd$prior, col='blue')
 legend('topright', lty=1, col=c('black','blue'), legend=c('posterior','prior'))
