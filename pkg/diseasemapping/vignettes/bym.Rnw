@@ -107,7 +107,8 @@ bym(
 		priorCI = list(sd=c(1, 0.05), propSpatial=c(0.2, 0.95))),
 silent=TRUE
 )
-if(class(kBYMpc) == 'try=error') kBYMpc = list()
+if(class(kBYMpc) == 'try-error') 
+	kBYMpc = list()
 @
 
 
