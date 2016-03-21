@@ -40,6 +40,11 @@ if(require('spatstat',quietly=TRUE)){
 
 	myImF$v
 	levels(myraster)
+	
+	# loaloa land types
+	data('loaloa')
+	ltLoaIm = asImRaster(ltLoa)
+	ltLoaIm$v[1:4,1:5]
 }
 }
 
