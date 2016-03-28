@@ -20,8 +20,4 @@ A RasterLayer}
 This function is deceased.  use \code{as.im.RasterLayer} in \code{maptools}
 }
 
-\examples{
-
-}
-
 
