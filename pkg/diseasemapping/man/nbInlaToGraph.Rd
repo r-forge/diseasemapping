@@ -18,6 +18,10 @@ nbToInlaGraph(adjMat, graphFile="graph.dat")
 \item{graphFile}{name of file to save adjacency matrix to.}
 }
 
+\details{
+	This function correctly handles regions which have zero neighbours.
+}
+
 \value{
 	A vector of names and indices
 }
@@ -35,24 +39,31 @@ Patrick Brown
 \examples{
 
 data('kentucky')
+# remove all the neighbours Ballard county
+kSub = kentucky[-c(2,20,79),]
 
 if( require("spdep", quietly=TRUE)) {
 
-kentuckyAdj = poly2nb(
-	kentucky, row.names=kentucky$County,
+
+adjMat = poly2nb(
+	kSub, 
+	row.names=kSub$County,
 	queen=FALSE
 )
 
-attributes(kentuckyAdj)$region.id[1:5]
-unlist(lapply(kentuckyAdj, length))[1:5]
-
 nFile = tempfile()
+nbRes = nbToInlaGraph(adjMat, nFile)
 
-nbRes = nbToInlaGraph(kentuckyAdj, nFile)
+# Ballard is region 3
+nbRes['Ballard']
+# note that Ballard has no neighbours
+adjMat[[3]]
 
-nbRes[1:5]
+cat(readLines(nFile, n=5), sep='\n')
 
-readLines(nFile, n=6)
+\dontrun{
+junk = bym(poverty ~ 1, data=kSub, family='gaussian')
+}
 
 }
 

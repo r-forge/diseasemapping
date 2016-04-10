@@ -21,33 +21,26 @@ setClass('nb',
 
 `nbToInlaGraph` = function(adjMat, graphFile="graph.dat")
 {
-	## A function for converting GeoBUGS adjacency data into the INLA
-	## graph format. modification of code by Aki Havunlinna tkk.fi.
-	# edited by Patrick Brown to allow for some regions having no neighbours
+
+	nbList = as(adjMat, 'list')
+	# get rid of zeros, they mean a region has no neighbours
+	nbList = lapply(nbList, function(x) x[x>0])
 	
-	fd = file(graphFile,  "w")
-	len <- length(adjMat)
+	nbLength = unlist(lapply(nbList, length))
+	inlaVec = unlist(lapply(nbList, paste, collapse=' '))
+	inlaGraph = c(length(nbList), paste(1:length(nbList), nbLength, inlaVec))
+	inlaGraph = paste(inlaGraph, collapse='\n')
 
-	cat(len, '\n', file=fd)
-	k = 1L
-	for(i in 1L:len) {
-		num=adjMat[[i]]
-		lnum = length(num)
-		if (num[1] == "0" | lnum==0 ) {
-			cat(i, "0", "\n", file=fd)
-		} else {
-			cat(i, lnum, 
-					num, "\n", file = fd)
-		}
-	}
-	close(fd)
+	cat(paste(inlaGraph, '\n',sep=''), file=graphFile)
 
-	region.index = 1:len
+	region.index = 1:length(adjMat)
 	region.id = attributes(adjMat)$region.id
 	if(is.null(region.id))
 		region.id = region.index
 	names(region.index) = as.character(region.id)
-		
+	
+	attributes(region.index)$Nneighbours = nbLength
+
 	return(region.index)
 }
 
@@ -92,15 +85,6 @@ bym.needAdjmat = function(
  	
 	if(requireNamespace("spdep", quietly=TRUE)) {
 		adjMatNB=spdep::poly2nb(data, row.names =  data[[region.id]] )
-		Nneighbours = unlist(lapply(adjMatNB, length))
-		if(any(Nneighbours < 1)){
-			badNeighbours = which(Nneighbours < 1)
-			if(length(badNeighbours) == length(data))
-				stop('No spatial regions are neighbours of each other.')
-			warning('Removing ', length(badNeighbours), ' regions without neighbours')
-			data = data[-badNeighbours,]
-			adjMatNB=spdep::poly2nb(data, row.names =  data[[region.id]] )
-		}
 	} else {
 		adjMatNB = NULL
 		warning('spdep package is required for bym if adjMat is missing')
@@ -165,7 +149,18 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 		graphfile = gsub("\\\\", "/", graphfile)
 		
 		region.index = nbToInlaGraph(adjMat, graphfile)
-
+		
+		# check for regions without neighbours
+		badNeighbours = which(
+				attributes(region.index)$Nneighbours < 1
+		)
+		if(length(badNeighbours)){
+			if(length(badNeighbours) == length(data))
+				stop('No spatial regions are neighbours of each other.')
+			warning('There are ', length(badNeighbours), ' regions without neighbours, consider removing these.')
+		}
+		
+		
 		# check for data regions missing from adj mat
 		data[[region.id]] = as.character(data[[region.id]])
 		if(!all(data[[region.id]] %in% names(region.index))  )
@@ -386,12 +381,13 @@ formulaForLincombs = gsub("\\+[[:space:]]+?$|^[[:space:]]?\\+[[:space:]]+", "", 
  	
 	if(all(names(inlaRes)=="logfile"))
 		return(c(list(formula=formula, data=data,
-						family=family, 
+						family=family, graphfile=graphfile,
 						lincomb=inlaLincombs, 
 						ldots = list(...)),
 						inlaRes)
 	)
 	
+	inlaRes$graphfile = graphfile
 
 	# posterior distributions of random effect (spatial + independent)
 	Sbym = seq(1, length(adjMat))
