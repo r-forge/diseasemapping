@@ -62,6 +62,7 @@ adjMat[[3]]
 cat(readLines(nFile, n=5), sep='\n')
 
 \dontrun{
+# there will be a warning about zero neighbours
 junk = bym(poverty ~ 1, data=kSub, family='gaussian')
 }
 
