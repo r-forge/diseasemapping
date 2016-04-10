@@ -22,7 +22,7 @@ setClass('nb',
 `nbToInlaGraph` = function(adjMat, graphFile="graph.dat")
 {
 	## A function for converting GeoBUGS adjacency data into the INLA
-	## graph format. Kindly provided by Aki Havunlinna tkk.fi; thanks.
+	## graph format. modification of code by Aki Havunlinna tkk.fi.
 	# edited by Patrick Brown to allow for some regions having no neighbours
 	
 	fd = file(graphFile,  "w")
@@ -42,7 +42,6 @@ setClass('nb',
 	}
 	close(fd)
 
-	
 	region.index = 1:len
 	region.id = attributes(adjMat)$region.id
 	if(is.null(region.id))
