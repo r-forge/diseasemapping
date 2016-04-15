@@ -86,7 +86,7 @@ for(D in fNames) {
 		overwrite_layer = file.exists(file.path(Dpath, "map.shp"))
 	)
 	
-	
+	bgMap = openmap(x2)
 	png(file.path(Dpath, "map.png"), height=600,width=800)
 	map.new(x2)
 	plot(bgMap,add=TRUE)
