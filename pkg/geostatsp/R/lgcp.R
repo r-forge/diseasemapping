@@ -67,7 +67,7 @@ lgcp = function(formula=NULL, data,  grid, covariates=NULL,
 	}
 	
 	dots = list(...)
-	if(!any(names(list(...))=='family')) {
+	if(!any(names(dots)=='family')) {
 		dots$family='poisson'
 	}
 	dots$formula = formula

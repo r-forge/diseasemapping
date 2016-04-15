@@ -186,6 +186,8 @@ if(toAggregateData != toAggregate & toAggregateData > 1 ){
 		warning("data is coarser than grid")
 	
 	data = stack(data, resample(cellsSmall, data, method='ngb'))	
+
+	
 	dataSP = as(data, "SpatialPointsDataFrame")
 	dataDF =dataSP@data
 

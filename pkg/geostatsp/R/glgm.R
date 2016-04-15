@@ -99,7 +99,9 @@ setMethod("glgm",
           grid,
           covariates,
           buffer)
-      
+
+
+  
       callGeneric(
 			  formula = dataCov$formula, 
           data = dataCov$data, 
@@ -424,7 +426,7 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 			)
 		}
 		names(thelincombs) = paste("c", values(cells),sep="")
-		}
+	}
 
 	# get rid of observations with NA's in covariates
 	allVars = all.vars(formula)
@@ -458,8 +460,6 @@ formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
 	# get rid of some elements of forInla that aren't required
 	forInla = forInla[grep("^buffer$", names(forInla), invert=TRUE)]
 
-#	return(forInla)
- 
 
 	if(requireNamespace("INLA", quietly=TRUE)) {
 		inlaResult = do.call(INLA::inla, forInla) 

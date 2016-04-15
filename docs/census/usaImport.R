@@ -72,18 +72,25 @@ for(D in fNames) {
 	x$id1 = paste("USA", substr(x[[zcol]],1,2), sep='')
 	x$id = x$id1.2 = paste("USA", x[[zcol]], sep='')
 
+	x = spTransform(x, CRS("+init=epsg:4326"))
+	
+	xDf = x@data[,grep("^id", names(x))]
+	
+	x2 = x
+	x2@data = xDf
+	
 	Dyear = gsub(".*_", "", D)
 	Dyear = gsub("\\.zip$", "", Dyear)
 	Dpath = file.path("/store/census/USA", Dyear, "1.2")
-	writeOGR(x, Dpath, 'map', driver="ESRI Shapefile", 
+	writeOGR(x2, Dpath, 'map', driver="ESRI Shapefile", 
 		overwrite_layer = file.exists(file.path(Dpath, "map.shp"))
 	)
 	
 	
 	png(file.path(Dpath, "map.png"), height=600,width=800)
-	map.new(x)
+	map.new(x2)
 	plot(bgMap,add=TRUE)
-	plot(x, add=TRUE)
+	plot(x2, add=TRUE)
 	dev.off()
 	
 }
