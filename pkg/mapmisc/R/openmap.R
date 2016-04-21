@@ -165,11 +165,11 @@ openmap = function(x, zoom,
     toRaster = projectExtent(result, crsOut)
 		
 		# see if this raster has an unnecessarily large extent
-		bboxx = try(bbox(x), silent=TRUE)
+		bboxx = try(bbox(extend(extent(x), buffer)), silent=TRUE)
 		projx = try(proj4string(x), silent=TRUE)
 		if(class(bboxx)!="try-error" &  class(projx) != 'try-error'){
 		if(identical(projx, crsOut)) {
-			bigExtent =  raster::extend(extent(x), 
+			bigExtent =  raster::extend(extend(extent(x), buffer), 
 					as.numeric(apply(bboxx, 1, diff)/4))
 			toRaster = raster::crop(toRaster, bigExtent)
 		}}

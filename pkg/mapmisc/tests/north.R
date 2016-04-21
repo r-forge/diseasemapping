@@ -38,8 +38,8 @@ scaleBar(x, 'bottom')
 scaleBar(x, 'left', seg.len=0, bty='n')
 if(!interactive()) dev.off()
 
-mapSat = openmap(x[x$name=='Hans island',], path='mapquest', 
-    verbose=TRUE, buffer=c(4,0.01), zoom=6)    
+mapSat = openmap(x=x[x$name=='Hans island',], path='mapquest', 
+    verbose=TRUE, buffer=c(4,1), zoom=6)    
 
 if(!interactive()) pdf(tempfile("osmplot", tmpdir=".", fileext=".pdf"))
 map.new(x[x$name=='Hans island',], buffer=0.3)
