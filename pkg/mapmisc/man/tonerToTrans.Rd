@@ -45,4 +45,5 @@ Patrick Brown
 	plot(transMap)
 
 }
+}
 
