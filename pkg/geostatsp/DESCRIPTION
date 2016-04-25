@@ -1,8 +1,8 @@
 Package: geostatsp
 Type: Package
 Title: Geostatistical Modelling with Likelihood and Bayes
-Version: 1.4.2
-Date: 2016-03-24
+Version: 1.4.3
+Date: 2016-04-25
 Depends: Matrix  (>= 1.2.0), raster, sp, R (>= 3.0.0)
 Imports: abind, numDeriv, methods, stats
 Suggests: geoR, RandomFields, rgdal, parallel, mapmisc, ellipse, pracma, knitr
