@@ -126,8 +126,8 @@ simuPoints <- RFsimulate(model, x=myPoints, n=3, cPrintlevel=8)
 spplot(simuPoints, "sim1")
 
 # convert the model to RandomFields format and plot
-if(require('RandomFields', quietly=TRUE)) {
-	plot(modelRandomFields(model))
+if(requireNamespace('RandomFields', quietly=TRUE)) {
+	RandomFields::plot(modelRandomFields(model))
 }
 
 }
