@@ -29,6 +29,9 @@ spatialRocRasterTemplate = function(
 	# remove cells with no predictions
 	template = mask(template, fit[[1]]$raster$predict.mean)
 	
+	# and cells with no truth
+	template = mask(template, truth[[1]])
+	
 	templateID = stackRasterList(
 			list(fitID = template), truth, method='ngb'
 	)
