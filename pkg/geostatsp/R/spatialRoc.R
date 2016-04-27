@@ -1,16 +1,171 @@
+spatialRocPolyTemplate = function(
+		truth, fit
+) {
+	
+	breaksInterior = breaks[seq(2, length(breaks)-1)]
+
+	toRasterize = fit[[1]]$data
+	toRasterize$fitID = 1:length(toRasterize)
+	template = rasterize(
+			toRasterize,
+  		truth,
+			field='fitID'
+			)
+
+	names(template) = 'fitID'
+	
+	template
+	
+}
+
+spatialRocRasterTemplate = function(
+		truth, fit
+) {
+	
+	template = raster(fit[[1]]$raster)
+	values(template) = seq(1, ncell(template))
+	names(template) = 'fitID'
+	
+	# remove cells with no predictions
+	template = mask(template, fit[[1]]$raster$predict.mean)
+	
+	templateID = stackRasterList(
+			list(fitID = template), truth, method='ngb'
+	)
+
+	templateID
+}
+
+spatialRocSims = function(
+		truthCut, marginals, templateID, 
+		breaks, prob=seq(0,1,len=100)
+		) {
+			
+
+			breaksInterior = breaks[seq(2, length(breaks)-1)]
+			
+			
+
+			Slevels = seq(1,length(breaks)-1)
+
+			truthCdf = zonal(
+					truthCut,
+					templateID,
+					function(x,...) {
+						ecdf(x)(Slevels)
+						}
+					)
+			rownames(truthCdf) = truthCdf[,'zone']
+			truthCdf = truthCdf[,grep('zone', colnames(truthCdf), invert=TRUE)]
+			colnames(truthCdf) = paste(
+					rep(names(truthCut), 
+							rep(length(Slevels),nlayers(truthCut))
+							), 
+					rep(Slevels, nlayers(truthCut)),
+					sep="_"
+			)
+			truthCdf = array(
+					truthCdf,
+					c(nrow(truthCdf), length(Slevels), nlayers(truthCut)),
+					dimnames = list(
+							rownames(truthCdf),
+							Slevels,
+							names(truthCut)
+							)
+					)
+			truthCdfUpper = 1-truthCdf
+			
+			idTable = table(values(templateID))		
+			idMatrix = matrix(
+					idTable[dimnames(truthCdf)[[1]]],
+					length(idTable),
+					length(prob)
+					)
+			
+			truthCells = array(
+					idTable[dimnames(truthCdf)[[1]]],
+					dim=dim(truthCdf)
+			)
+			
+			truthOver = truthCdfUpper * truthCells 
+			truthUnder = truthCdf * truthCells 
+			
+
+				
+			tP = tN = array(NA,
+					c(length(prob), length(breaksInterior), length(fit)),
+					dimnames= list(
+							prob,breaksInterior, names(fit)
+							)
+					)		
+					
+					
+			for(Dsim in 1:length(fit)) {
+				
+
+				notNull = which(!unlist(lapply(
+										marginals[[Dsim]], is.null
+										)))
+				
+				pMat = simplify2array(
+						lapply(
+						marginals[[Dsim]][notNull], 
+						INLA::inla.pmarginal, 
+						q=breaksInterior)
+				)
+				rownames(pMat) = as.character(breaksInterior)
+				# upper tail probabilities
+				pMat = pMat[,match(names(marginals[[Dsim]]), colnames(pMat))]
+				pMat = t(pMat)
+				
+				
+				pMat = pMat[as.numeric(dimnames(truthCdf)[[1]]),]
+				pMat = 1-pMat
+
+				for(Dlevel in 1:ncol(pMat)) {
+
+					predOver = outer(pMat[,Dlevel], prob, '>')
+				
+					tP[,Dlevel,Dsim] = apply(predOver*truthOver[,Dlevel,Dsim],2,sum, na.rm=TRUE)
+					tN[,Dlevel,Dsim] = apply((1-predOver)*truthUnder[,Dlevel,Dsim],2,sum, na.rm=TRUE)
+					
+				}
+				
+				
+			}
+				
+			
+
+			return(list(
+							tP = tP, 
+							allP = apply(truthOver, c(2,3), sum), 
+							tN = tN, 
+							allN = apply(truthUnder, c(2,3), sum)
+							))
+			
+			
+			
+
+			
+		}
+
 
 spatialRoc = function(fit, 
 		rr=c(1,1.2, 1.5,2), truth, 
-		border=NULL, random=FALSE){
+		border=NULL, random=FALSE,
+		prob = NULL, spec = seq(0,1,by=0.01)){
 	
-	prob= 1-exp(seq(0,-12,len=200))
+	if(is.null(prob)){
+		prob = 2^seq(-1, -12, len=25)
+		prob = sort(unique(c(prob, 1-prob)))
+	}
 	
 	if(any(names(fit)=='inla')){
 		fit = list(fit)
 	}
 	
 	
-	breaks = c(-Inf, rr, Inf)
+	breaks = c(-Inf, log(rr), Inf)
 	
 	if('raster'%in% names(truth))
 		truth = truth$raster
@@ -23,7 +178,6 @@ spatialRoc = function(fit,
 						names(truth)
 				)
 		]]
-		truth = exp(truth)	
 	} else { 
 		truthVariable = 'relativeIntensity'
 		
@@ -33,157 +187,129 @@ spatialRoc = function(fit,
 						names(truth)
 				)
 		]]
-	}
+		tname = names(truth)
+		truth = log(truth)
+		names(truth) = tname
+	} 
 
+	if(is.null(border))
+		border = fit[[1]]$data
+		
 	if(!is.null(border))
 		truth = mask(truth, border)
 	
+
+	truthCut = cut(truth, breaks=breaks)
+	names(truthCut) = names(truth)
 	
-	if(any(names(fit[[1]])=='raster')){
-		
-		template = fit[[1]]$raster[['space']]
-		if(!is.null(border))
-			template = mask(template, border)
-		
-		Srow= rowFromY(template, seq(ymax(truth), ymin(truth),
-						len=nrow(truth)))
-		Scol= colFromX(template, seq(xmin(truth), xmax(truth), 
-						len=ncol(truth)))
-		Scell = cellFromRowColCombine(template, rownr=Srow, colnr=Scol)
-		Scell= values(template)[Scell]
-		
-		toKeep = which(!is.na(Scell) & !is.na(values(truth[[1]])))
 	
-		Sregion = na.omit(values(template))
+	
+	if(any(names(fit[[1]]) =='raster')){
+		# lgcp or glgm
+		
+		templateID = spatialRocRasterTemplate(
+			truthCut, fit
+		) 
+	
+	
+		if(random) {
+			marginals = lapply(
+				fit, function(x){
+					 x$inla$marginals.random$space
+				}
+				)
+		} else {
+			marginals = lapply(
+				fit, function(x){
+					x$inla$marginals.predict
+				}
+			)
+		}
 		
 	} else { # bym model
-		Sregion = 1:length(fit[[1]]$data)
-		regionRaster = rasterize(fit[[1]]$data, truth, 
-				field=Sregion)
-		if(!is.null(border))
-			regionRaster = mask(regionRaster, border)
-		Scell = values(regionRaster)
-		toKeep = which(!is.na(Scell))
-	
-	}
 
-	Nlevels = length(breaks)-1
-	truthOver = cut(truth, breaks=breaks)
-	names(truthOver) = gsub(
-			paste("^",truthVariable, "$", sep=''),
-			paste(truthVariable, 1, sep=''),
-			names(truth))
-
-	
-	truthOver = as.data.frame(truthOver)[toKeep,,drop=FALSE]	
-	truthOver$fitId = Scell[toKeep]
-	truthOver = na.omit(truthOver)	
-	
-	SlevelsC = as.character(1:Nlevels)
-	
-	result = NULL
-	for(Dsim in 1:length(fit)) {
+		templateID = spatialRocPolyTemplate(
+				truthCut, fit
+		) 
 		
 		if(random) {
-			marginals = fit[[Dsim]]$inla$marginals.bym 
-			if(!length(marginals)) { # lgcp
-				marginals = fit[[Dsim]]$inla$marginals.random$space 
-			} else { # bym
-				names(marginals) = paste("bym.", Sregion, sep="")
-			}
-		} else { 
-			marginals = fit[[Dsim]]$inla$marginals.fitted.bym 
-			if(!length(marginals)) {
-				marginals = fit[[Dsim]]$inla$marginals.predict
-			} else { # bym
-				names(marginals) = paste("bym.", Sregion, sep="")
-			}
-			
+			marginals = lapply(
+					fit, function(x){
+					  x$inla$marginals.bym
+					}
+			)
+		} else {
+			marginals = lapply(
+					fit, function(x){
+					  x$inla$marginals.fitted.bym
+					}
+			)
 		}
 		
-		
-		truthFreqList = tapply(
-				truthOver[,paste(truthVariable,Dsim,sep='')], 
-				truthOver[,'fitId'],
-				function(qq) 
-					table(qq)[SlevelsC]
-		)
-		truthFreq = matrix(unlist(truthFreqList), ncol=Nlevels, byrow=TRUE,
-				dimnames = list(names(truthFreqList), 
-						paste("level", 1:Nlevels, sep="")))
-		truthFreq[is.na(truthFreq)]=0
-		truthCusum = t(apply(truthFreq, 1, cumsum))
-		truthCusum = cbind(truthCusum, 
-				fitId=as.numeric(rownames(truthFreq))
-		)
-		colnames(truthCusum) = gsub(paste("^level", Nlevels	, sep=''), "n",
-				colnames(truthCusum))
-		colnames(truthCusum) = gsub("^level", "under", colnames(truthCusum))
-		
-		underCols = grep("^under", colnames(truthCusum), value=TRUE)
-		overCusum = NULL
-		for(D in underCols){
-			overCusum = cbind(overCusum, truthCusum[,'n'] - truthCusum[,D])
-		}
-		colnames(overCusum) = gsub("^under", "over", underCols)
-		truthCusum = cbind(truthCusum, overCusum)
-		
-		x=NULL	
-
-		for(Drr in rr ) {
-			x = cbind(x,excProb(marginals, log(Drr)))
-		}
-
-		excCols = colnames(x) = paste('exc', 1:(Nlevels-1), sep='')		
-		x = cbind(x, fitId = as.numeric(
-						gsub("^[[:alpha:]]+\\.?", "", 
-								names(marginals)))
-		)
-		x = merge(truthCusum, x, by='fitId')	
-		colnames(x) = gsub("^level", "below", colnames(x))
-		
-		belowCols = grep("^under", colnames(x),value=TRUE)
-		aboveCols = grep("^over", colnames(x),value=TRUE)
-		
-		freqMat = NULL
-		for(Dprob in rev(prob)) {
-			
-			aboveP = x[,excCols]>=Dprob
-			naboveP = !aboveP
-			
-			freqMat = abind::abind(cbind(
-							fp = apply(aboveP * x[,belowCols,drop=FALSE], 2, sum,na.rm=TRUE), 
-							tp = apply(aboveP * x[,aboveCols,drop=FALSE],2,sum,na.rm=TRUE),
-							fn = apply(naboveP * x[,aboveCols,drop=FALSE],2,sum,na.rm=TRUE),	
-							tn = apply(naboveP * x[,belowCols,drop=FALSE],2,sum,na.rm=TRUE)	
-					), freqMat, along=3)
-		}
-
-    
-		resD=
-				abind::abind(
-						sens = (freqMat[, 'tp', ,drop=FALSE] / 
-                    (freqMat[,'tp',,drop=FALSE] + freqMat[,'fn',,drop=FALSE])),
-						onemspec = (1-freqMat[, 'tn', ,drop=FALSE] / 
-                    (freqMat[,'fp',,drop=FALSE] + freqMat[,'tn',,drop=FALSE])),
-						along=4)
-
-    dimnames(resD)[[3]]=as.character(prob)
-		dimnames(resD)[[1]] = paste("exc", rr, sep='')
-		
-		result = abind::abind(result, resD, along=length(dim(resD))+1)
-		
-	} # end loop through fits
-		dimnames(result)[[length(dim(result))]] = 
-				paste('sim', 1:length(fit),sep='') 
-    if(length(fit)>1) {
-      result = abind::abind(result,
-				mean=apply(result, seq(1,length(dim(result))-1), 
-						mean),
-				along=length(dim(result))
-		)	
 	}
-	result = drop(result)
 
-    result
+	res = spatialRocSims(
+			truthCut, marginals, templateID, 
+			breaks, prob
+		)	
+	
+	
+	allParray = array(
+					res$allP,
+					dim = c(dim(res$allP), dim(res$tP)[1]),
+					dimnames = c(
+							dimnames(res$allP),
+							dimnames(res$tP)[1]
+							)
+			)
+
+	allNarray = array(
+			res$allN,
+			dim = dim(allParray),
+			dimnames = dimnames(allParray)
+	)
+
+	allParray = aperm(allParray, c(3,1,2))		
+	allNarray = aperm(allNarray, c(3,1,2))		
+	
+	
+
+			bySim = abind::abind(
+			spec = res$tP / allParray[,-dim(allParray)[2], ,drop=FALSE],
+			sens = res$tN / allNarray[,-dim(allNarray)[2],,drop=FALSE],
+			along=4
+			)
+
+			result = apply(bySim, c(1,2,4), mean)
+
+			dimnames(result)[[2]] = rr
+					
+			
+			if(!is.null(spec)) {
+				
+				resultOut = matrix(
+						NA,
+						length(spec), 
+						dim(result)[2]+1,
+						dimnames = list(
+								1:length(spec),
+								c('spec', dimnames(result)[[2]])
+								)
+						)
+				resultOut[,'spec'] = spec
+				for(D in dimnames(result)[[2]]) {
+					resultOut[,D] = approx(
+							result[,D,'spec'],
+							result[,D,'sens'],
+							xout = spec 
+							)$y
+				}
+				resultOrig = result
+				result = resultOut
+				attributes(result)$orig = resultOrig
+			}
+			
+			attributes(result)$sim = bySim
+	
+  result
 }
