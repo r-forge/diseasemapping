@@ -6,6 +6,7 @@ knitr::spin("lgcpTest.R", format='Rmd', knit=TRUE)
 
 #+ packages
 library('geostatsp')
+library('diseasemapping')
 library("mapmisc")
 library("knitr")
 if(file.exists("../docs/knitrCode.R")) {
@@ -18,8 +19,11 @@ if(file.exists("../docs/knitrCode.R")) {
 
 #+ kentucky, cache=TRUE
 data('kentucky')
-kentuckyT = spTransform(kentucky, mapmisc::omerc(kentucky))
-kMap = openmap(kentuckyT, path='cartodb')
+data('kentuckyTract')
+kentucky = spTransform(kentucky, mapmisc::omerc(kentucky))
+kentuckyT = spTransform(kentuckyTract, projection(kentucky))
+kMap = openmap(kentuckyT, path='stamen-toner')
+kMap = tonerToTrans(kMap, power=1)
 #'
 
 #+ params
@@ -33,19 +37,20 @@ values(cov.ras$w2) = xFromCell(output.ras, 1:ncell(output.ras))/500000
 
 #+ offsets, cache=TRUE
 larynxRates= cancerRates("USA", year=1998:2002,site="Larynx")
+larynxRates = larynxRates * 5
 kentuckyT = getSMR(kentuckyT, larynxRates, regionCode="County")
 kentuckyOffset = rasterize(
 		kentuckyT,
 		output.ras,
 		field='logExpected_surfaceArea'
 )
-cov.ras$offset = kentuckyOffset + log(5)		
-kentuckyT$logExpected = kentuckyT$logExpected + log(5) 
+cov.ras$offset = kentuckyOffset 
 #'
 
 #+ simB, cache=TRUE, stuff=2
 U = c(mean = 0, 
-		variance=sqrt(0.5), range=120000,
+		variance=0.25^2, 
+		range=120000,
 		shape=2)
 
 set.seed(0)
@@ -62,23 +67,29 @@ Sevents = grep("^events", names(lgcp.sim), value=TRUE)
 
 #+ aggregate
 
-Sevents = grep("^events", names(lgcp.sim), value=TRUE)
+offsetCounty = tapply(
+		kentuckyT$expected,
+		list(kentuckyT$name2),
+		sum)
+kentucky$expected = offsetCounty[kentucky$County]
+kentucky$logExpected = log(kentucky$expected)
+
 
 for(Devent in Sevents) {
-	projection(lgcp.sim[[Devent]]) = projection(kentuckyT)
-	stuff = over(lgcp.sim[[Devent]], kentuckyT)$County
+	projection(lgcp.sim[[Devent]]) = projection(kentucky)
+	stuff = over(lgcp.sim[[Devent]], kentucky)$County
 	lgcp.sim[[Devent]] = lgcp.sim[[Devent]][!is.na(stuff)] 
 	stuff = table(factor(
-					stuff, levels=unique(kentuckyT$County)
+					stuff, levels=unique(kentucky$County)
 			))
-	kentuckyT[[Devent]] = stuff[
-			as.character(kentuckyT$County)
+	kentucky[[Devent]] = stuff[
+			as.character(kentucky$County)
 	]
 }
 
-kentuckyPoints = SpatialPoints(kentuckyT)
+kentuckyPoints = SpatialPoints(kentucky)
 for(D in names(cov.ras)) {
-	kentuckyT[[D]] = extract(
+	kentucky[[D]] = extract(
 			cov.ras[[D]],		
 			kentuckyPoints 	
 	)
@@ -91,13 +102,13 @@ for(D in Ssim) {
 
 	pCol = colourScale(
 			lgcp.sim$raster[[D]],
-			breaks=9, dec=-log10(0.5), col='Spectral',
-			rev=TRUE, style='equal', opacity=0.7)
+			breaks=9, dec=-log10(0.25), col='Spectral',
+			rev=TRUE, style='equal')
 	map.new(lgcp.sim$raster,TRUE)
-	plot(kMap,add=TRUE)
 	plot(lgcp.sim$raster[[D]], 
 			legend=FALSE,add=TRUE,
-			col=pCol$colOpacity, breaks=pCol$breaks)
+			col=pCol$col, breaks=pCol$breaks)
+	plot(kMap,add=TRUE)
 	legendBreaks("topleft", pCol)
 }
 
@@ -105,7 +116,7 @@ for(D in Ssim) {
 for(D in Sevents) {
 	map.new(lgcp.sim$raster,TRUE)
 	plot(kMap,add=TRUE)
-	plot(lgcp.sim[[D]],add=TRUE)
+	plot(lgcp.sim[[D]],add=TRUE, col='#00FF0040')
 }	
 
 #'
@@ -113,19 +124,20 @@ for(D in Sevents) {
 #+ estimation, cache=TRUE, stuff=1
 fit = list()
 for(D in Sevents) {
-	e.sp = lgcp.sim[[D]]
-	fit[[D]] = lgcp(data=e.sp, 
-			grid=squareRaster(lgcp.sim$raster, 100),
-      covariates=cov.ras,
+	fit[[D]] = lgcp(
+			data=lgcp.sim[[D]], 
       formula~w1+w2 + offset(offset),
+			grid=squareRaster(kentucky, 80),
+			border=kentucky,
+      covariates=cov.ras,
       buffer=3,
-      priorCI = list(sd=c(.1, 4),range=c(0.5,3)*100000),
-      control.inla=list(tolerance=1e-4),verbose=TRUE)
+      priorCI = list(sd=c(.1, 4),range=c(0.5,3)*100000)
+	)
 }
 #'
 
 #+ forResPLot
-Splot = c('predict.exp', 'random.mean','random.exp')
+Splot = c('predict.exp', 'random.mean')
 #'
 
 #+ resPlot, fig.cap='posterior means', fig.subcap = rep(Splot, length(fit))
@@ -139,9 +151,11 @@ for(D in Splot) {
 			opacity=0.7
 			)
 	map.new(fit[[1]]$raster, TRUE)
-	plot(kMap,add=TRUE)
-	plot(fit[[Ds]]$raster[[D]],breaks=pCol$breaks, col=pCol$colOpacity, 
+	plot(
+			mask(fit[[Ds]]$raster[[D]],kentucky), 
+			breaks=pCol$breaks, col=pCol$col, 
 			add=TRUE, legend=FALSE)
+	plot(kMap,add=TRUE)
 	legendBreaks("right", pCol)
 }
 }
@@ -163,10 +177,10 @@ knitr::kable(toPrint, digits=3)
 #+ estimationBym, cache=TRUE, stuff=4
 fitBym = list()
 for(D in Sevents) {
-	kentuckyT$y = kentuckyT[[D]]
+	kentucky$y = kentucky[[D]]
 	fitBym[[D]] = bym(
 			y ~ w1 + w2 + offset(logExpected), 
-			data=kentuckyT, 
+			data=kentucky, 
       priorCI = list(sd=c(.5, 0.1),propSpatial=c(0.5,0.1))
 	)
 }

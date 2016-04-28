@@ -8,7 +8,8 @@ Sensitivity and specificity
 Calculate ROC curves using model fits to simulated spatial data
 }
 \usage{
-spatialRoc(fit, rr = c(1, 1.2, 1.5, 2), truth, border=NULL, random = FALSE)
+spatialRoc(fit, rr = c(1, 1.2, 1.5, 2), truth, border=NULL, 
+	random = FALSE, prob = NULL, spec = seq(0,1,by=0.01))
 }
 \arguments{
   \item{fit}{

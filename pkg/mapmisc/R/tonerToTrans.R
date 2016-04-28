@@ -1,13 +1,18 @@
 
-tonerToTrans = function(x, power=0.5) {
+tonerToTrans = function(x, power=0.5, col='black') {
 	if(!any(names(x)=='stamen.tonerRed'))
 		warning("x doesn't seem to be stamen-toner")
+
+	newTrans = ((255-values(x[['stamen.tonerRed']]))/255)^power
+	newTrans[is.na(newTrans)] = 0
+	
+	col = col2rgb(col)[,1]
 	
 	newCol = grDevices::rgb(
-			0,
-			0,
-			0,
-			((255-values(x[['stamen.tonerRed']]))/255)^power
+			col['red'],
+			col['green'],
+			col['blue'],
+			newTrans
 	)
 	newCol = factor(newCol)
 	levels(newCol) = gsub("FFFFFFFF", "FFFFFF00", levels(newCol))

@@ -8,7 +8,7 @@ Stamen-toner maps are 3-layer RGB rasters, which are converted
 to single-layer rasters with indexed colours with whites becoming transparent. 
 }
 \usage{
-tonerToTrans(x, power = 0.5)
+tonerToTrans(x, power = 0.5, col='black')
 }
 \arguments{
   \item{x}{
@@ -17,6 +17,7 @@ tonerToTrans(x, power = 0.5)
   \item{power}{
 	Values below 1 increase opacity, above 1 increases transparency
 }
+\item{col}{colour for resulting map}
 }
 
 \value{

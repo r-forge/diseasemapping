@@ -90,7 +90,7 @@ if(is.list(x))	{
 	 
 	 
 	 } else { # not from lgm or glgm, a plain list	
-		 excProbAll = unlist(lapply(x[99:100], excFunQQ, threshold=threshold))
+		 excProbAll = unlist(lapply(x, excFunQQ, threshold=threshold))
 	   names(excProbAll) = names(x)
 		 
 	 }
