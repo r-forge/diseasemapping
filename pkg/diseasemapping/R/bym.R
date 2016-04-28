@@ -41,7 +41,7 @@ setClass('nb',
 	
 	attributes(region.index)$Nneighbours = nbLength
 
-	return(region.index)
+	invisible(region.index)
 }
 
 

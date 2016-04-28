@@ -19,7 +19,7 @@ spatialRoc(fit, rr = c(1, 1.2, 1.5, 2), truth, border=NULL, random = FALSE)
 	are on the natural scale, with \code{spatialRoc} taking logs when appropriate.
 }
   \item{truth}{
-True value of the spatial survace, or result from \code{\link{simLgcp}} function.
+True value of the spatial surface, or result from \code{\link{simLgcp}} function.
 Assumed to be on the log scale if \code{random=TRUE} and on the natural scale otherwise.
 }
   \item{border}{
@@ -28,6 +28,8 @@ optional, \code{SpatialPolygonsDataFrame} specifying region that calculations wi
   \item{random}{
 compute ROC's for relative intensity (\code{FALSE}) or random effect (\code{TRUE})
 }
+\item{prob}{Vector of exceedance probabilities}
+\item{spec}{Vector of specificities for the resulting ROC's to be computed for.}
 }
 \details{
 Fitted models are used to calculate exceedance probabilities, and
