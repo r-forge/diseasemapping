@@ -30,7 +30,7 @@ res = lgcp(data=myLgcp$events,
 res$parameters$summary[,c(1,3,5)]
 
 lgcpRoc =  spatialRoc(
-    res, 
+  res, 
 	rr=log(10), 
 	truth=myLgcp, 
 	random=FALSE)
@@ -39,7 +39,7 @@ head(lgcpRoc)
 
 plot(lgcpRoc[,'onemspec'] , 
 	lgcpRoc[,'sens'], 
-	type='l', 
+	type='o', 
 	xlim=c(0,1), ylim=c(0,1),
 	ylab='sensitivity', xlab='1-specificity'
 )

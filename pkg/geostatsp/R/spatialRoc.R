@@ -2,7 +2,6 @@ spatialRocPolyTemplate = function(
 		truth, fit
 ) {
 	
-	breaksInterior = breaks[seq(2, length(breaks)-1)]
 
 	toRasterize = fit[[1]]$data
 	toRasterize$fitID = 1:length(toRasterize)
@@ -29,28 +28,44 @@ spatialRocRasterTemplate = function(
 	# remove cells with no predictions
 	template = mask(template, fit[[1]]$raster$predict.mean)
 	
-	# and cells with no truth
-	template = mask(template, truth[[1]])
 	
 	templateID = stackRasterList(
 			list(fitID = template), truth, method='ngb'
 	)
 
+	# and cells with no truth
+	templateID = mask(templateID, truth[[1]])
+	
 	templateID
 }
 
 spatialRocSims = function(
 		truthCut, marginals, templateID, 
-		breaks, prob=seq(0,1,len=100)
+		breaks, prob
 		) {
 			
 
+			if(is.null(names(marginals)))
+				names(marginals) = 1:length(marginals)
+			
 			breaksInterior = breaks[seq(2, length(breaks)-1)]
 			
+
+			Slevels = seq(from=1.5,by=1,len=length(breaks)-1)
 			
+			SlevelsRound = 1:length(Slevels)
+			names(Slevels) = SlevelsRound
 
-			Slevels = seq(1,length(breaks)-1)
-
+			# breaks = -Inf, 0.4, 0.7, 0.8, Inf
+			# breaksInterior = 0.4, 0.7, 0.8
+			# SlevelsRound = 1 2 3 4 5
+  		# Slevels = 1.5, 2.5, 3.5, 4.5
+      # There are 4 bins, 5 breaks, 3 interior breaks
+	    # Slevels are bin centres
+	    # SlevelsRound are bin numbers
+			
+			templateID = mask(templateID, truthCut[[1]])
+			
 			truthCdf = zonal(
 					truthCut,
 					templateID,
@@ -58,10 +73,12 @@ spatialRocSims = function(
 						ecdf(x)(Slevels)
 						}
 					)
+					
+					
 			rownames(truthCdf) = truthCdf[,'zone']
 			truthCdf = truthCdf[,grep('zone', colnames(truthCdf), invert=TRUE)]
 			colnames(truthCdf) = paste(
-					rep(names(truthCut), 
+					rep(names(marginals), 
 							rep(length(Slevels),nlayers(truthCut))
 							), 
 					rep(Slevels, nlayers(truthCut)),
@@ -73,7 +90,7 @@ spatialRocSims = function(
 					dimnames = list(
 							rownames(truthCdf),
 							Slevels,
-							names(truthCut)
+							names(marginals)
 							)
 					)
 			truthCdfUpper = 1-truthCdf
@@ -95,42 +112,61 @@ spatialRocSims = function(
 			
 
 				
-			tP = tN = array(NA,
-					c(length(prob), length(breaksInterior), length(fit)),
+			allP = allN = tP = tN = fP = fN = array(NA,
+					c(length(prob), length(SlevelsRound), length(marginals)),
 					dimnames= list(
-							prob,breaksInterior, names(fit)
+							prob,SlevelsRound, names(marginals)
 							)
 					)		
 					
 					
-			for(Dsim in 1:length(fit)) {
+			for(Dsim in names(marginals)) {
 				
 
-				notNull = which(!unlist(lapply(
-										marginals[[Dsim]], is.null
-										)))
-				
+				notNull = dimnames(truthCdf)[[1]]
+				if(! table(notNull %in% names(marginals[[Dsim]])) )
+					warning("can't prediction ID's to marginal distributions")
+
+				# pMat is prob below break
+	      # don't include last break (infinity) or first break
 				pMat = simplify2array(
 						lapply(
 						marginals[[Dsim]][notNull], 
 						INLA::inla.pmarginal, 
 						q=breaksInterior)
 				)
-				rownames(pMat) = as.character(breaksInterior)
+				if(is.vector(pMat))
+					pMat = t(as.matrix(pMat))
+				rownames(pMat) = seq(2, by=1, len=nrow(pMat))
 				# upper tail probabilities
-				pMat = pMat[,match(names(marginals[[Dsim]]), colnames(pMat))]
+				pMat = pMat[,match(names(marginals[[Dsim]]), colnames(pMat)), drop=FALSE]
 				pMat = t(pMat)
 				
-				
-				pMat = pMat[as.numeric(dimnames(truthCdf)[[1]]),]
+				pMat = pMat[as.numeric(dimnames(truthCdf)[[1]]),,drop=FALSE]
+				# pMat is prob above break
 				pMat = 1-pMat
-
-				for(Dlevel in 1:ncol(pMat)) {
-
-					predOver = outer(pMat[,Dlevel], prob, '>')
+				pMat = cbind('1'=1, pMat,'5'=0)
 				
-					tP[,Dlevel,Dsim] = apply(predOver*truthOver[,Dlevel,Dsim],2,sum, na.rm=TRUE)
-					tN[,Dlevel,Dsim] = apply((1-predOver)*truthUnder[,Dlevel,Dsim],2,sum, na.rm=TRUE)
+				for(Dbin in names(Slevels)[-1]) {
+					
+					Dmidpoint = as.character(Slevels[Dbin])
+
+					predOver = outer(pMat[,Dbin], prob, '>')
+#					colnames(predOver) = prob
+					
+					tpMat = predOver*truthOver[,Dmidpoint,Dsim]
+					fpMat = predOver*truthUnder[,Dmidpoint,Dsim]
+					tnMat = (1-predOver)*truthUnder[,Dmidpoint,Dsim]
+					fnMat = (1-predOver)*truthOver[,Dmidpoint,Dsim]
+					allnMat = tnMat + fpMat
+					allpMat = tpMat + fnMat
+					
+					tP[,Dbin,Dsim] = apply(tpMat,2,sum, na.rm=TRUE)
+					tN[,Dbin,Dsim] = apply(tnMat,2,sum, na.rm=TRUE)
+					fP[,Dbin,Dsim] = apply(fpMat,2,sum, na.rm=TRUE)
+					fN[,Dbin,Dsim] = apply(fnMat,2,sum, na.rm=TRUE)
+					allP[,Dbin,Dsim] = apply(allpMat,2,sum, na.rm=TRUE)
+					allN[,Dbin,Dsim] = apply(allnMat,2,sum, na.rm=TRUE)
 					
 				}
 				
@@ -138,17 +174,16 @@ spatialRocSims = function(
 			}
 				
 			
-
-			return(list(
-							tP = tP, 
-							allP = apply(truthOver, c(2,3), sum), 
-							tN = tN, 
-							allN = apply(truthUnder, c(2,3), sum)
-							))
+			result = list(
+					tP = tP, 
+					allP = allP, 
+					tN = tN, 
+					allN = allN
+			)
+			result$allP[result$allP==0] = NA
+			result$allN[result$allN==0] = NA
 			
-			
-			
-
+			return(result)
 			
 		}
 
@@ -159,9 +194,9 @@ spatialRoc = function(fit,
 		prob = NULL, spec = seq(0,1,by=0.01)){
 	
 	if(is.null(prob)){
-		prob = 2^seq(-1, -12, len=25)
-		prob = sort(unique(c(prob, 1-prob)))
+		prob = 2^seq(-1, -10, len=20)
 	}
+	prob = sort(unique(c(prob, 1-prob, 0.5)))
 	
 	if(any(names(fit)=='inla')){
 		fit = list(fit)
@@ -214,17 +249,21 @@ spatialRoc = function(fit,
 			truthCut, fit
 		) 
 	
-	
+		
 		if(random) {
 			marginals = lapply(
 				fit, function(x){
-					 x$inla$marginals.random$space
+					 x=x$inla$marginals.random$space
+					 names(x) = 1:length(x)
+					 x
 				}
 				)
 		} else {
 			marginals = lapply(
 				fit, function(x){
-					x$inla$marginals.predict
+					x=x$inla$marginals.predict
+					names(x) = 1:length(x)
+					x
 				}
 			)
 		}
@@ -257,38 +296,22 @@ spatialRoc = function(fit,
 		)	
 	
 	
-	allParray = array(
-					res$allP,
-					dim = c(dim(res$allP), dim(res$tP)[1]),
-					dimnames = c(
-							dimnames(res$allP),
-							dimnames(res$tP)[1]
-							)
-			)
-
-	allNarray = array(
-			res$allN,
-			dim = dim(allParray),
-			dimnames = dimnames(allParray)
-	)
-
-	allParray = aperm(allParray, c(3,1,2))		
-	allNarray = aperm(allNarray, c(3,1,2))		
-	
 	
 
 			bySim = abind::abind(
-			spec = res$tP / allParray[,-dim(allParray)[2], ,drop=FALSE],
-			sens = res$tN / allNarray[,-dim(allNarray)[2],,drop=FALSE],
+			onemspec = 1-res$tN / res$allN,
+			sens = res$tP / res$allP,
 			along=4
 			)
+			bySim = bySim[,-1,,,drop=FALSE]
 
 			result = apply(bySim, c(1,2,4), mean)
 
-			dimnames(result)[[2]] = rr
-					
+			if(length(rr)>1) {
+				dimnames(result)[[2]] = rr
+			} 
 			
-			if(!is.null(spec)) {
+			if(!is.null(spec) & length(rr)>1) {
 				
 				resultOut = matrix(
 						NA,
@@ -296,20 +319,27 @@ spatialRoc = function(fit,
 						dim(result)[2]+1,
 						dimnames = list(
 								1:length(spec),
-								c('spec', dimnames(result)[[2]])
+								c('onemspec', dimnames(result)[[2]])
 								)
 						)
-				resultOut[,'spec'] = spec
+				resultOut[,'onemspec'] = 1-spec
 				for(D in dimnames(result)[[2]]) {
-					resultOut[,D] = approx(
-							result[,D,'spec'],
+					if(all(is.na(result[,D,'onemspec'])) |
+							all(is.na(result[,D,'sens']))){
+						resultOut[,D] = NA
+					} else {
+						resultOut[,D] = approx(
+							result[,D,'onemspec'],
 							result[,D,'sens'],
-							xout = spec 
+							xout = resultOut[,'onemspec']
 							)$y
+					}
 				}
 				resultOrig = result
 				result = resultOut
 				attributes(result)$orig = resultOrig
+			} else {
+				result = drop(result)
 			}
 			
 			attributes(result)$sim = bySim
