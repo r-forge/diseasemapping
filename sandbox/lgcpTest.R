@@ -27,7 +27,7 @@ kMap = tonerToTrans(kMap, power=1)
 #'
 
 #+ params
-output.ras = squareRaster(kentuckyT, 200)
+output.ras = squareRaster(kentuckyT, 300)
 cov.ras = list()
 cov.ras$w1 = cov.ras$w2 = output.ras
 values(cov.ras$w1) = yFromCell(output.ras, 1:ncell(output.ras))/500000
@@ -51,7 +51,7 @@ cov.ras$offset = log(kentuckyOffset)
 #+ simB, cache=TRUE, stuff=1
 U = c(mean = 0, 
 		variance=0.25^2, 
-		range=120000,
+		range=80000,
 		shape=2)
 
 set.seed(0)
@@ -60,7 +60,7 @@ lgcp.sim = simLgcp(
 		covariates=cov.ras,
 		betas=c(w1=-0.1,w2=0.025),
 		rasterTemplate=output.ras, 
-		n=4,
+		n=12,
 		offset='offset')
 #'
 
@@ -134,7 +134,7 @@ for(D in Sevents) {
 	fitLgcp[[D]] = lgcp(
 			data=lgcp.sim[[D]], 
       formula=~w1+w2 + offset(kentuckyOffset, log=TRUE),
-			grid=squareRaster(kentucky, 80),
+			grid=squareRaster(kentucky, 100),
       covariates=cov.ras,
       buffer=3,
       priorCI = list(sd=c(u=0.25, alpha=0.1),range=c(0.5,3)*100000)
@@ -362,7 +362,7 @@ names(Sspec) = RColorBrewer::brewer.pal(length(Sspec), 'Dark2')
 matplot(resLgcp[,'onemspec'], 
 		resLgcp[,Sspec], 
 		ylab='sens', xlab='1-spec',type='l',
-		xlim=c(0,1), ylim=c(0,1), lty=1,
+		xlim=c(0,0.5), ylim=c(0,1), lty=1,
 		col= names(Sspec)
 )
 
@@ -380,7 +380,7 @@ legend("right", lty=c(1,3), legend=c('lgcp','bym'))
 matplot(resLgcpR[,'onemspec'], 
 		resLgcpR[,Sspec], 
 		ylab='sens', xlab='1-spec',type='l',
-		xlim=c(0,1), ylim=c(0,1), lty=1,
+		xlim=c(0,0.5), ylim=c(0,1), lty=1,
 		col= names(Sspec)
 )
 
