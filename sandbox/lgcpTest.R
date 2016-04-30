@@ -44,7 +44,8 @@ kentuckyOffset = spdfToBrick(
 		x=kentuckyT[,'expected'],
 		template=output.ras
 		)
-cov.ras$offset = kentuckyOffset 
+cov.ras$kentuckyOffset = kentuckyOffset
+cov.ras$offset = log(kentuckyOffset) 
 #'
 
 #+ simB, cache=TRUE, stuff=1
@@ -54,13 +55,18 @@ U = c(mean = 0,
 		shape=2)
 
 set.seed(0)
-lgcp.sim = simLgcp(U,cov.ras,betas=c(-0.1,0.025),
-		rasterTemplate=output.ras, n=4,
+lgcp.sim = simLgcp(
+		param=U,
+		covariates=cov.ras,
+		betas=c(w1=-0.1,w2=0.025),
+		rasterTemplate=output.ras, 
+		n=4,
 		offset='offset')
 #'
 
 #+ forSimPlot
-Ssim = grep('^linear|^intensity|^offset|^w[[:digit:]]', names(lgcp.sim$raster), invert=TRUE, value=TRUE)
+Ssim = grep('^linear|^intensity|^offset|^w[[:digit:]]', 
+		names(lgcp.sim$raster), invert=TRUE, value=TRUE)
 Sevents = grep("^events", names(lgcp.sim), value=TRUE)
 #'
 
@@ -127,7 +133,7 @@ fitLgcp = list()
 for(D in Sevents) {
 	fitLgcp[[D]] = lgcp(
 			data=lgcp.sim[[D]], 
-      formula=~w1+w2 + offset(offset, log=TRUE),
+      formula=~w1+w2 + offset(kentuckyOffset, log=TRUE),
 			grid=squareRaster(kentucky, 80),
       covariates=cov.ras,
       buffer=3,
