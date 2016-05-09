@@ -12,7 +12,11 @@ legendTable = function(x,
   if(length(unit)>1 & type %in% names(unit)){
     unit = unit[type]
   }
-  
+
+  if(!length(x$label)) {
+		x$label = x$legend
+	}
+		
   if(!length(x$label))
     x$label = paste(
       '[',
