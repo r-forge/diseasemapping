@@ -4,6 +4,36 @@ getRasterSphere = function(zoom) {
   raster(openmapExtentMercSphere, nrows = N, ncols=N, crs=crsMercSphere)
 }
 
+getRasterNrcan = function(zoom) {
+	
+	# raster for maps from 
+	# http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_CBCT_GEOM_3978/MapServer
+
+	nrcanExtent = extent(
+			-4282638.06150141,
+	 4852210.1755664,
+	 -5153821.09213678,
+	 4659267.000000001)
+ 
+ nrcanExtent = extent(
+-7786476.885838887,
+  7148753.233541353,
+  -927807.6591668031,
+  7928343.534071138
+			)
+
+	nrcanRaster = raster(
+			nrcanExtent,
+			nrow = 2^(1+zoom),
+			ncol = 2^(1+zoom),
+			crs = crsNrcan
+			)		
+			
+  N = 2^zoom 
+
+  raster(openmapExtentMercSphere, nrows = N, ncols=N, crs=crsMercSphere)
+}
+
 getRowCol <- function(extMerc,
     zoom, 
     rasterSphere = getRasterSphere(zoom)){
@@ -22,6 +52,29 @@ getRowCol <- function(extMerc,
 ) 
 }
 
+
+
+getRowColNrcan <- function(
+		extMerc,
+    zoom, 
+    rasterSphere = getRasterSphere(zoom)){
+	
+
+  Sy=rowFromY(rasterSphere, c(
+          ymax(extMerc), ymin(extMerc)
+      ))
+  Sx=colFromX(rasterSphere, c(
+          xmin(extMerc), xmax(extMerc)
+      ))
+  
+  
+  list(
+  		col = seq(Sx[1],Sx[2]),
+  		row = seq(Sy[1],Sy[2])
+	) 
+}
+
+
 nTilesMerc <- function(extMerc,zoom){
   
   SrowCol = getRowCol(extMerc, zoom=zoom)
@@ -36,7 +89,8 @@ getTilesMerc = function(
     zoom=1, 
     path="http://tile.openstreetmap.org/",
     cacheDir=file.path(tempdir(), paste("X",make.names(path),sep="")),
-    verbose=FALSE){
+    verbose=FALSE, suffix = '.png',
+		tileNames = 'zxy'){
   
   rasterSphere = getRasterSphere(zoom)  
   
@@ -49,18 +103,31 @@ getTilesMerc = function(
   for(Dx in SrowCol$col){
 
     rasterCol= list()
-    Dcache = file.path(cacheDir, zoom, Dx-1)
-    Dpath = paste(path,zoom,'/',Dx-1,'/',sep='')
-    dir.create(Dcache,recursive=TRUE,showWarnings=FALSE)
     for(Dy in SrowCol$row) {
       
       Dcell = cellFromRowCol(rasterSphere, Dy, Dx)
       Dextent = extent(rasterFromCells(rasterSphere, Dcell))
       
-      Dtile = paste(Dy-1, '.png',sep='')
+
+			if(tileNames == 'zxy') {
+    		Dcache = file.path(cacheDir, zoom, Dx-1)
+				Dpath = paste(path,zoom,'/',Dx-1,'/',sep='')
+      	Dtile = paste(Dy-1, suffix,sep='')
+      	Durl = paste(Dpath, Dtile, sep='')
+			} else if (tileNames == 'zyx') {
+				Dcache = file.path(cacheDir, zoom, Dy-1)
+				Dpath = paste(path,zoom,'/',Dy-1,'/',sep='')
+      	Dtile = paste(Dx-1, suffix, sep='')
+      	Durl = paste(Dpath, Dtile, sep='')
+				print(Durl)
+			} else {
+				warning('tileNames must be zxy or zyx')
+			}
+
+    	dir.create(Dcache,recursive=TRUE,showWarnings=FALSE)
       Dfile = file.path(Dcache, Dtile)
-      Durl = paste(Dpath, Dtile, sep='')
-      
+			
+			
       Dsize = file.info(Dfile)['size']
       if(!any(Dsize > 0,na.rm=TRUE)) {
         try(utils::download.file(

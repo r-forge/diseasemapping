@@ -29,7 +29,9 @@ osmTiles = function(name) {
 	humanitarian="http://a.tile.openstreetmap.fr/hot/",
  cartodb='http://c.basemaps.cartocdn.com/light_all/',
 'cartodb-dark'='http://c.basemaps.cartocdn.com/dark_all/',
-historical='http://www.openhistoricalmap.org/ohm_tiles/'#,
+historical='http://www.openhistoricalmap.org/ohm_tiles/',
+nrcan = 
+		'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_CBCT_GEOM_3857/MapServer/tile/'
 #'esri' = 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/',
 #' 'esri-grey' = 'http://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/',
 #' 'esri-transport'='http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/',
@@ -113,11 +115,23 @@ openmap = function(x, zoom,
 	result = NULL
   
 	for(Dpath in rev(path)) {
+		
+		
+		if(length(grep('nrcan\\.gc\\.ca', Dpath))){
+			suffix = ''
+			tileNames = 'zyx'
+		} else {
+			suffix = '.png'
+			tileNames = 'zxy'
+		}
+		
 		thistile = try(
 				getTilesMerc(extMerc, zoom=zoom,
 				path=Dpath,
-				verbose=verbose),
-		silent=TRUE	)
+				verbose=verbose,
+				suffix=suffix,
+				tileNames = tileNames),
+		silent=!verbose)
 
 		if(class(thistile)=="try-error"){
 			message(paste(Dpath, "not accessible"))

@@ -8,6 +8,9 @@ crsMercSphere = crsMerc = CRS("+proj=merc +ellps=sphere +units=m")
 
 crsSphere = CRS("+proj=longlat +ellps=sphere")
 
+# CRS("+init=epsg:3978")
+crsNrcan = CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+
 llLim = atan(sinh(pi))*360/(2*pi)
 openmapExtentLL = extent(-180, 180,-llLim,llLim)
 
