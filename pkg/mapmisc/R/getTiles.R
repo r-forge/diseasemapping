@@ -23,6 +23,67 @@ getRowCol <- function(extMerc,
 }
 
 
+getRasterNrcan = function(zoom) {
+	
+	# raster for maps from 
+	# http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_CBCT_GEOM_3978/MapServer
+	
+	origin = c(-3.46558E7, 3.931E7) 
+	nrCrs = CRS("+init=epsg:3978")
+	
+
+	nrRes = c(38364.660062653464,
+ 22489.62831258996,
+ 13229.193125052918,
+ 7937.5158750317505,
+4630.2175937685215,
+ 2645.8386250105837,
+1587.5031750063501,
+926.0435187537042,
+ 529.1677250021168,
+317.50063500127004,
+ 185.20870375074085,
+ 111.12522225044451,
+66.1459656252646,
+ 38.36466006265346,
+ 22.48962831258996,
+ 13.229193125052918,
+ 7.9375158750317505,
+ 4.6302175937685215
+)
+
+worldLL = raster(
+		extent(-180,180,-90,90), 
+		crs=crsLL,
+		res=0.01
+		)
+		
+worldNrcan = projectRaster(worldLL, crs=nrCrs, res=1000)
+
+	nrcanExtent = extent(
+			-4282638.06150141,
+	  	4852210.1755664,
+	  	-5153821.09213678,
+	  	4659267.000000001)
+  
+  nrcanExtent = extent(
+			-7786476.885838887,
+  		7148753.233541353,
+  		-927807.6591668031,
+  		7928343.534071138
+	)
+	
+	nrcanRaster = raster(
+			nrcanExtent,
+			nrow = 2^(1+zoom),
+			ncol = 2^(1+zoom),
+			crs = crsNrcan
+	)		
+	
+  N = 2^zoom 
+	
+  raster(openmapExtentMercSphere, nrows = N, ncols=N, crs=crsMercSphere)
+}
 
 getRowColNrcan <- function(
 		extMerc,
