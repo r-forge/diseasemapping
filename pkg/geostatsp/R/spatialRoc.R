@@ -70,7 +70,7 @@ spatialRocSims = function(
 					truthCut,
 					templateID,
 					function(x,...) {
-						ecdf(x)(Slevels)
+						stats::ecdf(x)(Slevels)
 						}
 					)
 					
