@@ -133,7 +133,11 @@ openmap = function(x, zoom,
 		if(!is.null(thistile)) {
 			if(nlayers(thistile)==1)
 				ctable = thistile@legend@colortable
-      result =  stack(thistile, result)	
+			if(is.null(result)) {
+				result = stack(thistile)
+			} else {
+	      result =  stack(result, thistile)	
+			}
 		}
 		
 		if(length(ctable))
