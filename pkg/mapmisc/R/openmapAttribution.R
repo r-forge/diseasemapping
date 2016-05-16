@@ -158,7 +158,7 @@ mapquest = mapquestSat = list(
   stamen = stamenToner = list(
       short=list(
           latex='\\copyright \\href{http://stamen.com}{Stamen Design}',
-          markdown='&copy; [OpenStreetMap](http://stamen.com)',
+          markdown='&copy; [Stamen Design](http://stamen.com)',
           html= '&copy; <a href="http://stamen.com">Stamen Design</a>',
           text='copyright Stamen Design'
   ),
@@ -350,7 +350,7 @@ openmapAttribution = function(name, type=c('text','latex','markdown','html'), sh
         result[D] = waze[[shortlong]][[type]]
       } else if(length(grep("maptoolkit",D))){ 
         result[D] = maptoolkit[[shortlong]][[type]]
-      } else if(length(grep("stamen",D))){ # mapquest
+      } else if(length(grep("stamen",D))){ # stamen
         if(length(grep("stamen-toner",D))){
           result[D] = stamenToner[[shortlong]][[type]]
         } else {
