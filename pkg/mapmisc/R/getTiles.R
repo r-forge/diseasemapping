@@ -77,7 +77,7 @@ worldNrcan = projectRaster(worldLL, crs=nrCrs, res=1000)
 			nrcanExtent,
 			nrow = 2^(1+zoom),
 			ncol = 2^(1+zoom),
-			crs = crsNrcan
+			crs = nrCrs
 	)		
 	
   N = 2^zoom 
