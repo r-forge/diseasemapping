@@ -150,7 +150,6 @@ getTilesMerc = function(
 				Dpath = paste(path,zoom,'/',Dy-1,'/',sep='')
       	Dtile = paste(Dx-1, suffix, sep='')
       	Durl = paste(Dpath, Dtile, sep='')
-				print(Durl)
 			} else {
 				warning('tileNames must be zxy or zyx')
 			}
