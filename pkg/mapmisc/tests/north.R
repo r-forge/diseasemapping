@@ -78,14 +78,13 @@ if(!interactive()) dev.off()
 
 xOmerc = spTransform(
 		x,
-		omerc(x),
-		angle=0
+		omerc(x,angle=5)
 		)
 
 mapStack = openmap(xOmerc, 
 		path=c('nrcan', 'nrcan-text'), 
-		verbose=TRUE, 
-		maxTiles=10, buffer=c(30,30,20,0)*30*1000)    
+		verbose=TRUE, fact=2,
+		maxTiles=10, buffer=c(10,100,60,0)*10*1000)    
 
 map = mapStack[[grep("text", names(mapStack), invert=TRUE)]]
 mapText = mapStack[[grep("text", names(mapStack))]]
@@ -98,7 +97,7 @@ plotRGB(map,add=TRUE)
 plot(mapTextTrans,add=TRUE)
 points(xOmerc)
 text(xOmerc, label=xOmerc$name, pos=4)
-scaleBar(xOmerc, 'bottom')
+scaleBar(xOmerc, 'bottom', bg='white')
 scaleBar(xOmerc, 'left', seg.len=0, bty='n')
 if(!interactive()) dev.off()
 
