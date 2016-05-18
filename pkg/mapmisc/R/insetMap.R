@@ -148,10 +148,12 @@ if(requireNamespace('rgdal', quietly=TRUE)) {
 scale =  apply(bbSmall, 2, diff)/ apply(bbOrig, 2, diff)
 
 N = length(xsp)
-xsp = coordinates(xsp)
 
-xsp = (xsp - bbOrig[rep(1,N),]) * matrix(scale, N, 2, byrow=TRUE) + 
+xsp@coords = (xsp@coords - bbOrig[rep(1,N),]) * matrix(scale, N, 2, byrow=TRUE) + 
 		bbSmall[rep(1,N),]
+
+xsp = raster::crop(xsp, map)
+xsp = coordinates(xsp)
 
 if(outer) {
 	oldxpd = par("xpd")
@@ -162,6 +164,8 @@ if(nlayers(map)>=3) {
 } else {
 	plot(map, add=TRUE)
 }
+
+# border around the map
 bigpoly = t(bbox(map))
 bigpoly = cbind(bigpoly[c(1,2,2,1),1], bigpoly[c(1,1,2,2),2])
 polygon(bigpoly,border=borderMap)
@@ -173,11 +177,10 @@ for(D in 1:3)
 theX = theX*exp(-2*pi*1i/8)
 
 if( (diff(range(xsp[,1])))  < (width*dimFull[1]/20) ) {	
-	
 	polygon((1.5*width*dimFull[1]/20) * theX +
 					mean(xsp[,1])+1i*mean(xsp[,2]), col=col, ...)
 } else {
-	polygon(xsp, col=col, ...)
+	polygon(xsp, col=col, border=NA, ...)
 }
 
 if(outer) {
