@@ -198,8 +198,7 @@ getTilesMerc = function(
       } else if (nlayers(thisimage)>1){
         
 				# if values are 1 to 256, change to 0 to 255
-				if(max(maxValue(thisimage))==256 & 
-						min(minValue(thisimage))==1) {
+				if(max(maxValue(thisimage))==256 ) {
 					thisimage = thisimage - 1
 				}
 				

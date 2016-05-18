@@ -78,7 +78,8 @@ openmap = function(x, zoom,
 
 	alltiles = osmTiles()
 	pathOrig = path
-	pathisname = path %in% names(alltiles)
+	pathisname = gsub("-", ".", pathOrig) %in% 
+			gsub("-", ".", names(alltiles))
 	path[pathisname] = alltiles[path[pathisname]]
 	
 	if(length(grep("/$", path, invert=TRUE)))
@@ -89,7 +90,7 @@ openmap = function(x, zoom,
 		path[ grep("^http[s]*://", path, invert=TRUE)] = 
 				paste("http://", 
 						path[ grep("^http[s]*://", path, invert=TRUE)], sep="")
-	names(pathOrig) = path
+	names(path) = pathOrig
 
 	crsOut=crs
 	crsIn = crs(x)
@@ -116,8 +117,8 @@ openmap = function(x, zoom,
 
 	result = NULL
   
-	for(Dpath in rev(path)) {
-		
+	for(Dpath in rev(names(path))) {
+		Durl = path[Dpath]
 		
 		if(length(grep('nrcan\\.gc\\.ca', Dpath))){
 			suffix = ''
@@ -129,20 +130,24 @@ openmap = function(x, zoom,
 		
 		thistile = try(
 				getTilesMerc(extMerc, zoom=zoom,
-				path=Dpath,
+				path=Durl,
 				verbose=verbose,
 				suffix=suffix,
 				tileNames = tileNames),
 		silent=!verbose)
 
 		if(class(thistile)=="try-error"){
-			message(paste(Dpath, "not accessible"))
+			message(paste(Durl, "not accessible"))
       thistile=NULL
 		}	else {
 			if(length(names(thistile))) {
-				theprefix=strsplit(names(thistile), "([rR]ed|[gG]reen|[bB]lue)$",fixed=FALSE)[[1]]
-				names(thistile) = gsub(theprefix, paste(pathOrig[Dpath], "",sep=""), 
-					names(thistile),fixed=TRUE)		
+				theprefix=strsplit(
+						names(thistile), 
+						"([rR]ed|[gG]reen|[bB]lue)$",fixed=FALSE
+				)[[1]]
+				names(thistile) = gsub(
+						theprefix, paste(Dpath, "",sep=""), 
+						names(thistile),fixed=TRUE)		
 			}
 
 		ctable = NULL
@@ -156,14 +161,15 @@ openmap = function(x, zoom,
 			}
 		}
 		
-		if(length(ctable))
-				result[[1]]@legend@colortable = ctable
+#		if(length(ctable))
+#				result[[1]]@legend@colortable = ctable
 		
 		} # end not try-error
 	} # end loop through path	
 
 	
 	if(is.null(result)) {
+		# create an empty raster
 		result = raster(openmapExtentMercSphere,1,1,crs=crsMercSphere)
 		values(result) = NA
     attributes(result)$openmap = list(
@@ -180,7 +186,10 @@ openmap = function(x, zoom,
 		for(D in names(result))
 			oldColorTable[[D]] = result[[D]]@legend@colortable
 		
-		if(verbose) cat("reprojecting ", ncell(result), " cells...")
+		# if tiles need projecting
+	if(verbose) cat("reprojecting ", ncell(result), " cells...")
+	
+	if(!compareCRS(projection(result), crsOut)) {
 
     toRaster = projectExtent(result, crsOut)
 		
@@ -205,8 +214,12 @@ openmap = function(x, zoom,
 
 		
     if(verbose) cat("done\n")
+	} else { # crsOut and projection(result) are the same
+		resultProj = stack(result)
+		if(verbose) cat("tiles arrived in the desired projection\n")
+	}
     
-	} else {
+	} else { # crsOut is NA, don't project
 		resultProj = stack(result)
 	}
 
@@ -215,19 +228,20 @@ openmap = function(x, zoom,
 
 
 	for(D in names(resultProj)) {
-      if(length(result[[D]]@legend@colortable)) {
+    if(length(result[[D]]@legend@colortable)) {
+				if(verbose) cat("copying colortable for ", D, "\n")
 			resultProj[[D]]@legend@colortable =
 					result[[D]]@legend@colortable
       if(any(values(resultProj[[D]])==0,na.rm=TRUE)) {
       # set NA's to transparent
-      resultProj[[D]]@legend@colortable =
+      	resultProj[[D]]@legend@colortable =
           c('#FFFFFF00',
               resultProj[[D]]@legend@colortable 
           )
-      values(resultProj[[D]]) = 1+values(resultProj[[D]])
-	}
-}
-} # end D in names(resultProj)
+      	values(resultProj[[D]]) = 1+values(resultProj[[D]])
+			} # end zeros
+		} # end have colortable
+	} # end D in names(resultProj)
 
 	if(nlayers(resultProj)==1) 
 		resultProj = resultProj[[1]]
