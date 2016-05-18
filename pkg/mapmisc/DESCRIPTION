@@ -1,8 +1,8 @@
 Package: mapmisc
 Type: Package
 Title: Utilities for Producing Maps 
-Version: 1.4.9
-Date: 2016-04-20
+Version: 1.5.0
+Date: 2016-05-18
 Depends: sp, raster, R (>= 3.0.0)
 Imports: methods, grDevices, stats, utils, graphics
 Suggests: RColorBrewer, geonames, classInt, rgdal, rgeos, geosphere, knitr, dismo
