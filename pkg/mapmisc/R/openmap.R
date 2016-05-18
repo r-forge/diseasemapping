@@ -120,7 +120,7 @@ openmap = function(x, zoom,
 	for(Dpath in rev(names(path))) {
 		Durl = path[Dpath]
 		
-		if(length(grep('nrcan\\.gc\\.ca', Dpath))){
+		if(length(grep('nrcan\\.gc\\.ca', Durl))){
 			suffix = ''
 			tileNames = 'zyx'
 		} else {
