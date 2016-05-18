@@ -197,6 +197,12 @@ getTilesMerc = function(
         names(thisimage) = gsub("^http://|/$", "", path)
       } else if (nlayers(thisimage)>1){
         
+				# if values are 1 to 256, change to 0 to 255
+				if(max(maxValue(thisimage))==256 & 
+						min(minValue(thisimage))==1) {
+					thisimage = thisimage - 1
+				}
+				
         cnames = c('Red','Green','Blue','Trans')[1:min(c(4,nlayers(thisimage)))]
         
         names(thisimage)[1:length(cnames)] = paste(
