@@ -39,7 +39,7 @@ rgbtToIndex = function(x) {
 			ignore.case=TRUE)
 	
 
-	if(length(rgbLayers != 4))
+	if(length(rgbLayers) != 4)
 		warning("x doesn't seem to be RGB trans")
 	
 	xsub = subs(
