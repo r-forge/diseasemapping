@@ -81,20 +81,20 @@ xOmerc = spTransform(
 		omerc(x,angle=5)
 		)
 
-mapStack = openmap(xOmerc, 
+map = openmap(xOmerc, 
 		path=c('nrcan', 'nrcan-text'), 
-		verbose=TRUE, fact=2,
-		maxTiles=10, buffer=c(10,100,60,0)*10*1000)    
+		verbose=TRUE, fact=3,
+		maxTiles=10, buffer=c(20,100,100,0)*10*1000)    
 
-map = mapStack[[grep("text", names(mapStack), invert=TRUE)]]
-mapText = mapStack[[grep("text", names(mapStack))]]
 
-mapTextTrans = rgbtToIndex(mapText)
+mapText = rgbtToIndex(map, pattern='nrcan.text')
 
 if(!interactive()) pdf(tempfile("osmplot", tmpdir=".", fileext=".pdf"))
 map.new(map)
-plotRGB(map,add=TRUE)
-plot(mapTextTrans,add=TRUE)
+plotRGB(map[[grep("text", names(map), invert=TRUE)]],
+		add=TRUE)
+gridlinesWrap(map, easts=seq(-180,0,by=2), col='red')
+plot(mapText,add=TRUE)
 points(xOmerc)
 text(xOmerc, label=xOmerc$name, pos=4)
 scaleBar(xOmerc, 'bottom', bg='white')

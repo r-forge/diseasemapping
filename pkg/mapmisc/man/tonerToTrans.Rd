@@ -9,13 +9,13 @@ Stamen-toner maps are 3-layer RGB rasters, which are converted
 to single-layer rasters with indexed colours with whites becoming transparent. 
 }
 \usage{
-tonerToTrans(x, power = 0.5, col='black')
-rgbtToIndex(x)
+tonerToTrans(x,  pattern="(red|green|blue)$", power = 0.5, col='black')
+rgbtToIndex(x,  pattern="(red|green|blue|trans)$")
 }
 \arguments{
   \item{x}{
-	A \code{RasterStack} with RGB colours, such as from \code{\link{openmap}} with \code{path='stamen-toner'}
-}
+	A \code{RasterStack} with RGB colours, such as from \code{\link{openmap}} with \code{path='stamen-toner'}}
+	\item{pattern}{string passed to \code{\link[base]{grep}} to find RGB layers.}
   \item{power}{
 	Values below 1 increase opacity, above 1 increases transparency
 }

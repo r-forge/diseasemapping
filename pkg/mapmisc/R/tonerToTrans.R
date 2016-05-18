@@ -1,7 +1,8 @@
 
-tonerToTrans = function(x, power=0.5, col='black') {
+tonerToTrans = function(x, pattern= "(red|green|blue)$", 
+		power=0.5, col='black') {
 	
-	rgbLayers = grep("(red|green|blue)$", 
+	rgbLayers = grep(pattern, 
 			names(x), 
 			ignore.case=TRUE)
 	
@@ -32,9 +33,9 @@ tonerToTrans = function(x, power=0.5, col='black') {
 }
 
 
-rgbtToIndex = function(x) {
+rgbtToIndex = function(x, pattern="(red|green|blue|trans)$") {
 	
-	rgbLayers = grep("(red|green|blue|trans)$", 
+	rgbLayers = grep(pattern, 
 			names(x), 
 			ignore.case=TRUE)
 	

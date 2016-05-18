@@ -39,10 +39,12 @@ gridlinesWrap = function(crs,
 	glinesT = wrapPoly(glines, crsT)
 	
 	ellipseSmall = attributes(crsT)$ellipse
-	ellipseSmall@polygons[[1]]@Polygons[[1]]@coords = 
+	if(!is.null(ellipseSmall)) {
+		ellipseSmall@polygons[[1]]@Polygons[[1]]@coords = 
 			0.99*ellipseSmall@polygons[[1]]@Polygons[[1]]@coords 
 			
-	glinesT = rgeos::gIntersection(glinesT, ellipseSmall, byid=TRUE)
+		glinesT = rgeos::gIntersection(glinesT, ellipseSmall, byid=TRUE)
+	}
 	glinesData=data.frame(
 			direction = substr(names(glinesT), 1,1),
 			degrees = as.numeric(gsub(
