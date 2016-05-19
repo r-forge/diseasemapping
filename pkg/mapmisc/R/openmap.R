@@ -1,6 +1,10 @@
 osmTiles = function(name) {
 	result = c(
 			osm = "http://tile.openstreetmap.org",
+			'osm-admin' = 'http://korona.geog.uni-heidelberg.de/tiles/adminb',
+			'osm-roads-grey' = 'http://korona.geog.uni-heidelberg.de/tiles/roadsg',
+			'osm-roads' = 'http://korona.geog.uni-heidelberg.de/tiles/roads',
+			'osm-semitransparent' = 'http://korona.geog.uni-heidelberg.de/tiles/hybrid',
 			"osm-no-labels"="http://a.tiles.wmflabs.org/osm-no-labels/",
       "osm-de"="http://c.tile.openstreetmap.de/tiles/osmde",
 			"osm-transport"="http://tile2.opencyclemap.org/transport/",
@@ -119,10 +123,18 @@ openmap = function(x, zoom,
   
 	for(Dpath in rev(names(path))) {
 		Durl = path[Dpath]
+		if(verbose){
+			cat(Dpath, '\n')
+			cat(Durl, '\n')
+		}
 		
-		if(length(grep('nrcan\\.gc\\.ca', Durl))){
+		if(length(grep(
+						'nrcan\\.gc\\.ca', Durl))){
 			suffix = ''
 			tileNames = 'zyx'
+		} else if(length(grep('heidelberg.de/tiles/(hybrid|adminb|roadsg|roads)/?$', Durl))){
+			tileNames = 'xyz='
+			suffix = ''
 		} else {
 			suffix = '.png'
 			tileNames = 'zxy'
@@ -178,7 +190,7 @@ openmap = function(x, zoom,
         path=path,
         zoom=zoom
         )
-	} 
+	}
 
 	
 	if(!is.na(crsOut)  ){
@@ -195,18 +207,24 @@ openmap = function(x, zoom,
 		
 		# see if this raster has an unnecessarily large extent
 		bboxx = try(bbox(extend(extent(x), buffer)), silent=TRUE)
+		
+		# check for bboxx a single point
+		if(any(apply(bboxx,1,diff)<.Machine$double.eps)) {
+			class(bboxx) = 'try-error'
+		}
+		
 		projx = try(proj4string(x), silent=TRUE)
 		if(class(bboxx)!="try-error" &  class(projx) != 'try-error'){
-		if(identical(projx, crsOut)) {
-			bigExtent =  raster::extend(extend(extent(x), buffer), 
+		  if(identical(projx, crsOut)) {
+			  bigExtent =  raster::extend(extend(extent(x), buffer), 
 					as.numeric(apply(bboxx, 1, diff)/4))
-			toRaster = raster::crop(toRaster, bigExtent)
-		}}
-		
+			  toRaster = raster::crop(toRaster, bigExtent)
+		  }
+		}
 		if(any(fact > 1)){
 			res(toRaster) = res(toRaster) / rep_len(fact,2)
 		}
-		
+
 		resultProj = stack(projectRaster(result, toRaster, method="ngb"))
 
 		for(D in names(resultProj))
@@ -222,9 +240,6 @@ openmap = function(x, zoom,
 	} else { # crsOut is NA, don't project
 		resultProj = stack(result)
 	}
-
-
-		#	resultProj@legend@colortable = result@legend@colortable
 
 
 	for(D in names(resultProj)) {
