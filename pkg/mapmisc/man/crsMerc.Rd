@@ -1,9 +1,9 @@
 \name{crsMerc}
 \alias{crsMerc}
 \alias{crsLL}
-\title{Web Mercator projection}
+\title{Spherical Mercator projection}
 \description{
-Defines CRS's for the Web Mercator and long-lat projections.
+Defines CRS's for the Spherical Mercator and long-lat projections.
 }
 \usage{
 crsMerc
@@ -12,9 +12,10 @@ crsLL
 
 
 \details{
-CRS objects for epsg:4326 (long-lat) and epsg:3857 (web Mercator), for use when 
-\code{rgdal} is not available.  Some installations of \code{rgdal} are not able
-to create epsg:3857.
+CRS objects for epsg:4326 (long-lat) and the spherical Mercator projection used by web mapping services.
+Using epsg codes requires the \code{rgdal} package to be installed, and 
+\code{crsLL} is intended as a replacement for \code{CRS("+init=epsg:4326")} when 
+\code{rgdal} is not guaranteed to be available.  
 }
 
 
