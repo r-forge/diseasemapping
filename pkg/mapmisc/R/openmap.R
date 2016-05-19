@@ -178,9 +178,7 @@ openmap = function(x, zoom,
 			}
 		}
 		
-#		if(length(ctable))
-#				result[[1]]@legend@colortable = ctable
-		
+	
 		} # end not try-error
 	} # end loop through path	
 
@@ -221,8 +219,8 @@ openmap = function(x, zoom,
 		projx = try(proj4string(x), silent=TRUE)
 		if(class(bboxx)!="try-error" &  class(projx) != 'try-error'){
 		  if(identical(projx, crsOut)) {
-			  bigExtent =  raster::extend(extend(extent(x), buffer), 
-					as.numeric(apply(bboxx, 1, diff)/4))
+			  bigExtent =  extend(
+						extent(x), buffer + abs(as.numeric(apply(bboxx, 1, diff))/2))
 			  toRaster = raster::crop(toRaster, bigExtent)
 		  }
 		}
