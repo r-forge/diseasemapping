@@ -1,7 +1,7 @@
 
 getRasterSphere = function(zoom) {
   N = 2^zoom 
-  raster(openmapExtentMercSphere, nrows = N, ncols=N, crs=crsMercSphere)
+  raster(openmapExtentMercSphere, nrows = N, ncols=N, crs=crsMerc)
 }
 
 getRowCol <- function(extMerc,
@@ -166,9 +166,9 @@ getTilesMerc = function(
       if(!any(Dsize > 0,na.rm=TRUE)) {
 				if(verbose) cat("downloading ", Durl, "\n")
         try(utils::download.file(
-						Durl, Dfile, quiet=!verbose, 
-						method='internal', mode = 'wb'
-		), silent=TRUE)
+							Durl, Dfile, quiet=!verbose, 
+							method='internal', mode = 'wb'
+						), silent=TRUE)
       } else {
         if(verbose) cat("tile ", Dfile, " cached\n")
       }
@@ -179,11 +179,11 @@ getTilesMerc = function(
         if(verbose) warning("tile ", Dfile, " cannot be loaded")
         
         thisimage = raster(
-            Dextent, nrows=256, ncols=256, crs=crsMercSphere
+            Dextent, nrows=256, ncols=256, crs=crsMerc
             )
         values(thisimage) = NA
       } else {
-        crs(thisimage) = crsMercSphere
+        crs(thisimage) = crsMerc
         extent(thisimage) = Dextent
       }
       
