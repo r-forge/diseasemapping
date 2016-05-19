@@ -203,9 +203,9 @@ openmap = function(x, zoom,
 		for(D in names(result))
 			oldColorTable[[D]] = result[[D]]@legend@colortable
 		
-		# if tiles need projecting
 	if(verbose) cat("reprojecting ", ncell(result), " cells...")
-	
+		
+	# if tiles need projecting
 	if(!compareCRS(projection(result), crsOut)) {
 
     toRaster = projectExtent(result, crsOut)
@@ -238,8 +238,18 @@ openmap = function(x, zoom,
 		
     if(verbose) cat("done\n")
 	} else { # crsOut and projection(result) are the same
-		resultProj = stack(result)
-		if(verbose) cat("tiles arrived in the desired projection\n")
+		if(any(fact < 1)) {
+			# aggregate the raster
+			fact = pmax(1,round(1/fact))
+			if(any(fact > 1)) {
+				if(verbose) cat("aggregating tiles by ", fact,  "\n")
+				resultProj = stack(aggregate(result, fact=fact, fun=min))
+				for(D in names(resultProj)) resultProj[[D]]@legend = result[[D]]@legend
+			}
+		} else {
+			if(verbose) cat("tiles arrived in the desired projection\n")
+			resultProj = stack(result)
+		}
 	}
     
 	} else { # crsOut is NA, don't project

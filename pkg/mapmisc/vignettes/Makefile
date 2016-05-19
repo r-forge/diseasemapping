@@ -18,6 +18,6 @@ mapmisc.pdf: mapmisc.tex
 	xelatex mapmisc
 	'$(R_HOME)/bin/Rscript' -e "tools::compactPDF('mapmisc.pdf', gs_quality='ebook')" 
 
-web: mapLayers.html
+web:
 	cp -r figure ../../../www/openmap;
 	cp mapLayers.html ../../../www/openmap/index.html

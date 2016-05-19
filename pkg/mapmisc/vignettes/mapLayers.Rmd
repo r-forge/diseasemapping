@@ -15,15 +15,14 @@
 library('knitr')
 library('mapmisc')
 
+fact = 0.5
+reRun = FALSE
 
-reRun=("reRun" %in% commandArgs(trailingOnly = TRUE))
+# uncomment for nicer images
+# fact = 1 
+# reRun = TRUE
 
-
-if( Sys.info()['user'] =='patrick') {
-	opts_chunk$set(dpi=72,dev.args=list(bg='white'))	
-} else {	
-	opts_chunk$set(dpi=36,dev.args=list(bg='white'))	
-}
+opts_chunk$set(dpi=72*fact,dev.args=list(bg='white'))	
 
 theNames = names(osmTiles())
 africaExtent = c(25, 25)
@@ -34,31 +33,42 @@ stjohns=c(-52.62, 47.53)
 
 
 ```{r downloadTiles,include=FALSE}
+
 if(reRun) {
-africaTiles = openmap(africaExtent, path=theNames,zoom=2,
+
+  africaTiles = openmap(africaExtent, path=theNames,zoom=2,
     verbose=TRUE, 
-    buffer=c(1,1))
+    crs = crsMerc, 
+    fact=fact)
 
-londonTiles = openmap(trafalgarSquare,zoom=12,path=theNames,verbose=TRUE)
+  londonTiles = openmap(trafalgarSquare,zoom=12,path=theNames,
+    verbose=TRUE, 
+    crs = crsMerc, 
+    fact=fact)
 
-nfTiles = openmap(stjohns, zoom=14, path=theNames, verbose=TRUE)
+  nfTiles = openmap(stjohns, zoom=14, path=theNames,,
+    verbose=TRUE, 
+    crs = crsMerc, 
+    fact=fact)
 
+  # save the data
+  if(FALSE) {
+    # make sure all data is stored in memory not on disk
+    # so that caching will work
+    for(D in names(africaTiles))
+	  values(africaTiles[[D]]) = values(africaTiles[[D]])
+    for(D in names(londonTiles))
+	  values(londonTiles[[D]]) = values(londonTiles[[D]])
+    for(D in names(nfTiles))
+	  values(nfTiles[[D]]) = values(nfTiles[[D]])
 
-
-# make sure all data is stored in memory not on disk
-# so that caching will work
-for(D in names(africaTiles))
-	values(africaTiles[[D]]) = 	values(africaTiles[[D]])
-for(D in names(londonTiles))
-	values(londonTiles[[D]]) = 	values(londonTiles[[D]])
-for(D in names(nfTiles))
-	values(nfTiles[[D]]) = 	values(nfTiles[[D]])
-if(file.exists("../inst/extdata"))
-	save(africaTiles, londonTiles, nfTiles,
+    save(africaTiles, londonTiles, nfTiles,
 			file="../inst/extdata/tiles.RData",
 			compress="xz")
+  }
+
 } else { # don't rerun
-	load(system.file("extdata", "tiles.RData", package = "mapmisc"))
+  load(system.file("extdata", "tiles.RData", package = "mapmisc"))
 }
 ```
 
@@ -75,17 +85,11 @@ for(D in theNames){
 	Dsub = gsub("-",".", D)
 
 	threeTiles = length(
-			grep(paste("^", Dsub, 
-							"([rR]ed|[gG]reen|[bB]lue)$", 
-							sep=""), 
-			names(mytiles[[1]]))
-		)>0 | 	length(
-				grep(paste("^", Dsub, 
-								"([rR]ed|[gG]reen|[bB]lue)$", 
-								sep=""), 
-						names(mytiles[[2]]))
-		)>0
-
+			grep(
+				paste("^", Dsub, "([rR]ed|[gG]reen|[bB]lue)$", sep=""), 
+				names(mytiles[[1]])
+			)
+		) == 3
 	
 	cat("\n\n# ", D, "\n\n")
 	cat("`plot", "RGB"[threeTiles], 
@@ -97,28 +101,23 @@ for(D in theNames){
 	for(Dplot in 1:length(mytiles)) {
 	cat("|")
 
-		oneTile = grep(paste("^", Dsub, "$", sep=""), 
+		oneTileName = grep(paste("^", Dsub, "$", sep=""), 
 				names(mytiles[[Dplot]]), value=TRUE)
-		threeTiles = grep(paste("^", Dsub, 
+		threeTilesName = grep(paste("^", Dsub, 
 						"([rR]ed|[gG]reen|[bB]lue)$", sep=""), 
 				names(mytiles[[Dplot]]),value=TRUE)
 
-
-		if(length(threeTiles)==3) { # plotRGB
+		if(length(threeTilesName)==3) { # plotRGB
 			map.new(mytiles[[Dplot]])
 			
-			thetry = try(plotRGB(mytiles[[Dplot]][[
+			plotRGB(mytiles[[Dplot]][[
 								paste(Dsub, c("Red","Green","Blue"),sep="")
-								]],add=TRUE))
-			if(class(thetry)=="try-error"){
-				print(paste(Dsub, c("Red","Green","Blue"),sep=""))
-				print(mytiles[[Dplot]][[paste(Dsub, c("Red","Green","Blue"),sep="")]])
-			}
+								]],add=TRUE)
 	
-	
-		} else if (length(oneTile)==1){
+		} else if (length(oneTileName)==1){
+		
 			map.new(mytiles[[Dplot]])
-			plot(mytiles[[Dplot]][[oneTile]],add=TRUE)
+			plot(mytiles[[Dplot]][[oneTileName]],add=TRUE)
 
 		} else {
 
