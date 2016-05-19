@@ -93,8 +93,9 @@ for(D in theNames){
 	    sep='')
   	cat(openmapAttribution(D, 'html'), '\n\n')
 	
+	cat("\n|     |     |     |\n|-----|-----|-----|\n")
 	for(Dplot in 1:length(mytiles)) {
-
+	cat("|")
 
 		oneTile = grep(paste("^", Dsub, "$", sep=""), 
 				names(mytiles[[Dplot]]), value=TRUE)
@@ -127,6 +128,7 @@ for(D in theNames){
 		}
 
 	}
+	cat("|")
 	
 }
 
