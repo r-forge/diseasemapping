@@ -1,4 +1,4 @@
-all: mapLayers.pdf mapmisc.pdf 
+all: mapLayers.html mapmisc.pdf 
 
 clean:
 	rm -rf *.tex *.toc *.bbl *.blg *.aux *.out *.log *.spl *tikzDictionary *.md figure/ cache/ *.dvi *.4* *.css *.idv *.lg *.tmp *.xref *.gz
