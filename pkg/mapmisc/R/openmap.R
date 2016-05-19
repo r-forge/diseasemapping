@@ -5,44 +5,49 @@ osmTiles = function(name) {
 			'osm-roads-grey' = 'http://korona.geog.uni-heidelberg.de/tiles/roadsg',
 			'osm-roads' = 'http://korona.geog.uni-heidelberg.de/tiles/roads',
 			'osm-semitransparent' = 'http://korona.geog.uni-heidelberg.de/tiles/hybrid',
-			"osm-no-labels"="http://a.tiles.wmflabs.org/osm-no-labels/",
+			"osm-no-labels"="http://tiles.wmflabs.org/osm-no-labels/",
       "osm-de"="http://c.tile.openstreetmap.de/tiles/osmde",
 			"osm-transport"="http://tile2.opencyclemap.org/transport/",
-			"bw-mapnik"="http://b.tiles.wmflabs.org/bw-mapnik",
+			"bw-mapnik"="http://tiles.wmflabs.org/bw-mapnik",
 			mapquest="http://otile1.mqcdn.com/tiles/1.0.0/osm/",
 			"mapquest-sat"="http://otile1.mqcdn.com/tiles/1.0.0/sat",
       "mapquest-labels"='http://otile3.mqcdn.com/tiles/1.0.0/hyb/',
       'osm-cyclemap' = 'http://a.tile.opencyclemap.org/cycle/',
       'osm-seamap' = 'http://tiles.openseamap.org/seamark/',
       'osm-fr' = 'http://a.tile.openstreetmap.fr/osmfr/',
-#      'osm-rail' = 'http://a.tiles.openrailwaymap.org/standard/',
-# rail is 512 insstead of 256 tiles
-      #			hill="http://www.toolserver.org/~cmarqu/hill/",
 			'landscape'="http://tile.opencyclemap.org/landscape/",
-#		"osm-retina"="http://tile.geofabrik.de/osm_retina/",
-		"opentopomap" = "http://a.tile.opentopomap.org/tiles/",
+			'hyda' = 'http://c.tile.openstreetmap.se/hydda/full/',
+			'hyda-base' = 'http://c.tile.openstreetmap.se/hydda/base/',
+			'hyda-roads' = 'http://c.tile.openstreetmap.se/hydda/roads_and_labels/',
+  		"opentopomap" = "http://a.tile.opentopomap.org/tiles/",
+ "maptoolkit"="http://tile2.maptoolkit.net/terrain/",
+	waze="http://worldtiles3.waze.com/tiles/",
+# 'waze-us'='https://livemap-tiles2.waze.com/tiles/',
+	humanitarian="http://a.tile.openstreetmap.fr/hot/",
+  cartodb='http://c.basemaps.cartocdn.com/light_all/',
+ 'cartodb-dark'='http://c.basemaps.cartocdn.com/dark_all/',
+  historical='http://www.openhistoricalmap.org/ohm_tiles/',
+  nrcan = 
+		'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_CBCT_GEOM_3857/MapServer/tile/',
+ 'nrcan-text' = 
+		 'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_TXT_3857/MapServer/tile/',
+ 'nrcan-text-fr' = 
+		 'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBCT_TXT_3857/MapServer/tile/'
+)
+#	skobbler="http://tiles3.skobbler.net/osm_tiles2/",	
+#  'sputnik' = 'http://a.tiles.maps.sputnik.ru/tiles/kmt2/',
 #		"osm2world"="http://tiles.osm2world.org/osm/pngtiles/n/",
 #		bvg="http://mobil.bvg.de/tiles/",
 #	landshaded="http://tiles.openpistemap.org/landshaded/",
-	"maptoolkit"="http://tile2.maptoolkit.net/terrain/",
-#	skobbler="http://tiles3.skobbler.net/osm_tiles2/",	
-#  'sputnik' = 'http://a.tiles.maps.sputnik.ru/tiles/kmt2/',
-	waze="http://worldtiles3.waze.com/tiles/",
-  'waze-us'='http://livemap-tiles1.waze.com/tiles/',
-#	eu="http://alpha.map1.eu/tiles/"#,
-	humanitarian="http://a.tile.openstreetmap.fr/hot/",
- cartodb='http://c.basemaps.cartocdn.com/light_all/',
-'cartodb-dark'='http://c.basemaps.cartocdn.com/dark_all/',
-historical='http://www.openhistoricalmap.org/ohm_tiles/',
-nrcan = 
-		'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_CBCT_GEOM_3857/MapServer/tile/',
-'nrcan-text' = 'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_TXT_3857/MapServer/tile/',
-'nrcan-text-fr' = 'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBCT_TXT_3857/MapServer/tile/'
-#'esri' = 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/',
-#' 'esri-grey' = 'http://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/',
-#' 'esri-transport'='http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/',
-#' 'esri-topo' = 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/'
-	)
+#		"osm-retina"="http://tile.geofabrik.de/osm_retina/",
+#      'osm-rail' = 'http://a.tiles.openrailwaymap.org/standard/',
+# rail is 512 insstead of 256 tiles
+#			hill="http://www.toolserver.org/~cmarqu/hill/",
+#	eu="http://alpha.map1.eu/tiles/",
+# 'esri' = 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/',
+# 'esri-grey' = 'http://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/',
+# 'esri-transport'='http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/',
+# 'esri-topo' = 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/'
 	
 	
   
