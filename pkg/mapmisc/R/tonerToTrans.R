@@ -6,7 +6,7 @@ tonerToTrans = function(x, pattern= "(red|green|blue)$",
 			names(x), 
 			ignore.case=TRUE)
 	
-	if(length(rgbLayers != 3))
+	if(length(rgbLayers) != 3)
 		warning("x doesn't seem to be RGB")
 	
 	xMax = calc(x[[rgbLayers]], 
