@@ -1,36 +1,35 @@
-# crsLL = CRS("+epsg:4326")
+# crsLL = CRS("+init=epsg:4326")
 crsLL = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0") 
 
-#crsMercSphere = crsMerc = CRS("+proj=merc +ellps=sphere +units=m")
-crsMercSphere = 
-		CRS("+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +no_defs")
+# CRS("+init=epsg:3857") without the nagrids stuff
+crsMerc = CRS("+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +no_defs")
 
-crsMerc =  CRS("+proj=merc +ellps=sphere +units=m")
-crsSphere = CRS("+proj=longlat +ellps=sphere")
+#crsMerc =  CRS("+proj=merc +ellps=sphere +units=m")
+#crsLlSphere = CRS("+proj=longlat +ellps=sphere")
 
+# extent of the Earth in the spherical mercator projection
+createExtentMerc  = function(){
 
-llLim = atan(sinh(pi))*360/(2*pi)
-openmapExtentLL = extent(-180, 180,-llLim,llLim)
+	latlim = atan(sinh(pi))*360/(2*pi)
+	lonlim = 180
 
-if(FALSE) {
-openmapExtentMercSphere = extent(projectExtent(raster(openmapExtentLL, crs=crsSphere), crsMercSphere))
-openmapExtentMercSphere = extent(round(as.vector(openmapExtentMercSphere)))
-openmapExtentMercSphere = as.vector(openmapExtentMercSphere)
-dump('openmapExtentMercSphere', file='')
+	openmapExtentLL = extent(-lonlim, lonlim,-latlim,latlim)
 
-openmapExtentMerc = extent(projectExtent(raster(openmapExtentLL, crs=crsSphere), crsMerc))
-openmapExtentMerc = extent(round(as.vector(openmapExtentMerc)))
-openmapExtentMerc = as.vector(openmapExtentMerc)
-dump('openmapExtentMerc', file='')
+	extentMerc = extent(projectExtent(raster(openmapExtentLL, crs=crsLL), crs=crsMerc))
 
+	extentMerc
 }
-openmapExtentMercSphere <-
-    extent(c(-20015077, 20015077, -20015077, 20015077))
 
-openmapExtentMerc <-
-   extent( c(-20037508, 20037508, -19994875, 19994875))
+extentMerc = createExtentMerc()
 
-.getExtent = function(x, crs=NA, extend=0, crsOut = crsMercSphere) {
+
+.getRasterMerc = function(zoom) {
+  N = 2^zoom 
+  raster(extentMerc, nrows = N, ncols=N, crs=crsMerc)
+}
+
+
+.getExtent = function(x, crs=NA, extend=0, crsOut = crsMerc) {
   
   # find the CRS's
   crsUse = projection(x)
@@ -86,7 +85,8 @@ openmapExtentMerc <-
   result
 }
 
-cropExtent = function(x,y){
+
+.cropExtent = function(x,y){
   xmin(x) = pmax(xmin(x), xmin(y))
   xmax(x) = pmin(xmax(x), xmax(y))
   ymin(x) = pmax(ymin(x), ymin(y))

@@ -1,12 +1,7 @@
 
-getRasterSphere = function(zoom) {
-  N = 2^zoom 
-  raster(openmapExtentMercSphere, nrows = N, ncols=N, crs=crsMerc)
-}
-
 getRowCol <- function(extMerc,
     zoom, 
-    rasterSphere = getRasterSphere(zoom)){
+    rasterSphere = .getRasterMerc(zoom)){
 
   Sy=rowFromY(rasterSphere, c(
           ymax(extMerc), ymin(extMerc)
@@ -82,13 +77,13 @@ worldNrcan = projectRaster(worldLL, crs=nrCrs, res=1000)
 	
   N = 2^zoom 
 	
-  raster(openmapExtentMercSphere, nrows = N, ncols=N, crs=crsMercSphere)
+  raster(extentMerc, nrows = N, ncols=N, crs=crsMerc)
 }
 
 getRowColNrcan <- function(
 		extMerc,
     zoom, 
-    rasterSphere = getRasterSphere(zoom)){
+    rasterSphere = .getRasterMerc(zoom)){
 	
 
   Sy=rowFromY(rasterSphere, c(
@@ -116,14 +111,14 @@ nTilesMerc <- function(extMerc,zoom){
 
 
 getTilesMerc = function(
-    extMerc=openmapExtentMercSphere, 
+    extMerc=extentMerc, 
     zoom=1, 
     path="http://tile.openstreetmap.org/",
     cacheDir=file.path(tempdir(), paste("X",make.names(path),sep="")),
     verbose=FALSE, suffix = '.png',
 		tileNames = 'zxy'){
   
-  rasterSphere = getRasterSphere(zoom)  
+  rasterSphere = .getRasterMerc(zoom)  
   
   SrowCol = getRowCol(extMerc, rasterSphere=rasterSphere)
   

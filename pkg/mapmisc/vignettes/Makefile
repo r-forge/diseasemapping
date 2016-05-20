@@ -19,5 +19,6 @@ mapmisc.pdf: mapmisc.tex
 	'$(R_HOME)/bin/Rscript' -e "tools::compactPDF('mapmisc.pdf', gs_quality='ebook')" 
 
 web:
-	cp -r figure ../../../www/openmap;
-	cp mapLayers.html ../../../www/openmap/index.html
+	cp mapmisc.pdf ../../../www/mapmisc.pdf;
+	cp north.html ../../../www/north.html;
+	cp mapLayers.html ../../../www/openmap.html

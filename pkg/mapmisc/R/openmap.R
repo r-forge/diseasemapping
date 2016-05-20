@@ -113,7 +113,7 @@ openmap = function(x, zoom,
 	
 	
 	extMerc = .getExtent(x,crsIn, buffer, crsMerc)
-  extMerc = cropExtent(extMerc, openmapExtentMercSphere)
+  extMerc = .cropExtent(extMerc, extentMerc)
   
 	if(missing(zoom)) {
 	zoom = 1

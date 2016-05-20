@@ -22,7 +22,7 @@ reRun = FALSE
 # fact = 1 
 # reRun = TRUE
 
-opts_chunk$set(dpi=72*fact,dev.args=list(bg='white'))	
+opts_chunk$set(dpi=72*fact,dev.args=list(bg='white'), out.width='200')	
 
 theNames = names(osmTiles())
 africaExtent = c(25, 25)

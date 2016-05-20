@@ -34,7 +34,15 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
 
 <p> Web pages for geostatsp, geostatsinla, diseasemapping, and mapmisc packages</p>
 
-<a href="openmap">Examples of openmap tiles</a>
+
+<h2> Vignettes for mapmisc</h2>
+These files have higher resolution images than the vignettes installed with the package.
+<ul>
+<li> <a href="openmap.html">Examples of openmap tiles</a> </li>
+<li> <a href="north.html">Maps of Hans Island</a> </li>
+<li> <a href="mapmisc.pdf">Mapmisc oveview</a> </li>
+</ul>
+
 
 <p> The <strong>project summary page</strong> you can find <a href="http://<?php echo $domain; ?>/projects/<?php echo $group_name; ?>/"><strong>here</strong></a>. </p>
 
