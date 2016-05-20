@@ -35,7 +35,8 @@ if(!interactive())
 
   par(mfrow=c(3,3))
   if(require('rgdal', quietly=TRUE)) {
-  bob(0)
+
+  	bob(0)
   
   bob(89)
   
@@ -54,16 +55,9 @@ if(!interactive())
 }
   
   
- 
-if(!interactive())
-  dev.off()
 
 
-
-if(!interactive())
-  pdf("omercBbox.pdf")
-
-  par(mfrow=c(3,2))
+par(mfrow=c(3,2))
   if(require('rgdal', quietly=TRUE)) {
   bob((-10):10)
   
@@ -75,14 +69,6 @@ if(!interactive())
   
   bob((-10):10, post=90)
 }
- 
-if(!interactive())
-  dev.off()
-
-
-if(!interactive())
-  pdf("omercDist.pdf")
- 
 
 N = 12
 somePoints = SpatialPointsDataFrame(
@@ -111,6 +97,6 @@ somePoints = SpatialPointsDataFrame(
   scaleBar(bob((-10):10, preserve=x, post='wide'), c(0,0), seg.len=0)
   
 }
-if(!interactive())
-  dev.off()
+
+if(!interactive())   dev.off()
 

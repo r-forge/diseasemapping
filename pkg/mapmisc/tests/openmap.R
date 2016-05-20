@@ -1,4 +1,7 @@
 
+if(!interactive()) pdf("openmap.pdf")
+
+
 library('mapmisc')
 
 myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10, 
@@ -29,7 +32,6 @@ myPointsMercator = spTransform(myPoints,
 
 
 myplot = function(first,second=first) {
-	if(!interactive()) pdf(tempfile("osmplot", tmpdir=".", fileext=".pdf"))
 	par(mar=c(0,0,0,0))
 	plot(first)
 	plot(mytiles, add=TRUE)
@@ -37,8 +39,8 @@ myplot = function(first,second=first) {
 #	points(mycities,col='red')
 #	text(mycities, labels=mycities$name, col='red',pos=4)
 	scaleBar(first)
-  if(!interactive()) dev.off()
 }
+
 
 thezoom=6
 
@@ -118,3 +120,5 @@ thezoom=6
 
   
   } # end have rgdal
+	if(!interactive()) dev.off()
+	
