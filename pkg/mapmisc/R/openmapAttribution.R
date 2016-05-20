@@ -70,11 +70,11 @@ nrcan = list(long=list(
           			sep=''
       	),
       	html=paste(
-          	'Cartography by <a href="http://www.nrcan.gc.ca/earth-sciences/geography/topographic-information/free-data-geogratis/geogratis-web-services/17216>',
+          	'Cartography by <a href="http://www.nrcan.gc.ca/earth-sciences/geography/topographic-information/free-data-geogratis/geogratis-web-services/17216">',
 						'The Canada Base Map - Transportation (CBMT) web mapping services',
 						' of the Earth Sciences Sector (ESS) at Natural Resources Canada (NRCan)</a>',
           	' licensed as the ',
-						'<a href="http://open.canada.ca/en/open-government-licence-canada>',
+						'<a href="http://open.canada.ca/en/open-government-licence-canada">',
 						'Open Government Licence - Canada</a>.',
           	sep=''
       	),
@@ -92,7 +92,7 @@ nrcan = list(long=list(
   	short=list(
       	latex='\\href{http://www.nrcan.gc.ca}{Natural Resources Canada}',
       	markdown='[Natural Resources Canada](http://www.nrcan.gc.ca)',
-      	html= '&copy; <a href="http://www.nrcan.gc.ca">Natural Resources Canada</a>',
+      	html= '&copy; <a href="http://www.nrcan.gc.ca">Natural Resources Canada"</a>',
       	text='Natural Resources Canada'
     )
 )
