@@ -38,7 +38,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
 <h2> Vignettes for mapmisc</h2>
 These files have higher resolution images than the vignettes installed with the package.
 <ul>
-<li> <a href="openmap.html">Examples of openmap tiles</a> </li>
+<li> <a href="mapLayers.html">Examples of openmap tiles</a> </li>
 <li> <a href="north.html">Maps of Hans Island</a> </li>
 <li> <a href="mapmisc.pdf">Mapmisc oveview</a> </li>
 </ul>
