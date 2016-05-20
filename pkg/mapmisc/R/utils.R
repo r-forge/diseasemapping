@@ -8,6 +8,8 @@ crsMerc = CRS("+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 
 #crsLlSphere = CRS("+proj=longlat +ellps=sphere")
 
 # extent of the Earth in the spherical mercator projection
+if(FALSE) {
+# need rgdal for this	
 createExtentMerc  = function(){
 
 	latlim = atan(sinh(pi))*360/(2*pi)
@@ -21,7 +23,15 @@ createExtentMerc  = function(){
 }
 
 extentMerc = createExtentMerc()
+dput(extentMerc, file='')
+}
 
+extentMerc = new("Extent"
+    , xmin = -20037508.3427892
+    , xmax = 20037508.3427892
+    , ymin = -20037508.3427893
+    , ymax = 20037508.3427892
+)
 
 .getRasterMerc = function(zoom) {
   N = 2^zoom 
