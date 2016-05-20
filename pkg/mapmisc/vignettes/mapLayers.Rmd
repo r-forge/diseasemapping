@@ -22,12 +22,12 @@ reRun = FALSE
 # fact = 1 
 # reRun = TRUE
 
-opts_chunk$set(dpi=72*fact,dev.args=list(bg='white'), out.width='200')	
+opts_chunk$set(dpi=72*fact, dev.args=list(bg='white'), fig.retina=2, out.width='200px')	
 
 theNames = names(osmTiles())
 africaExtent = c(25, 25)
 trafalgarSquare=c(-0.128056,51.508056)
-stjohns=c(-52.62, 47.53)
+stjohns=c(-52.683320, 47.566285)
 
 ```
 
