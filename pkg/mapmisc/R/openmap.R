@@ -185,7 +185,7 @@ openmap = function(x, zoom,
 	
 	if(is.null(result)) {
 		# create an empty raster
-		result = raster(openmapExtentMercSphere,1,1,crs=crsMercSphere)
+		result = raster(extMerc,1,1,crs=crsMerc)
 		values(result) = NA
     attributes(result)$openmap = list(
         tiles=NA,
