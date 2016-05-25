@@ -82,8 +82,18 @@ openmap = function(x, zoom,
 	maxTiles = 9,
 	crs=projection(x),
   buffer=0, fact=1,
-	verbose=FALSE) {
+	verbose=options()$mapmisc$verbose,
+	cachePath=options()$mapmisc$cachePath
+) {
 
+	verbose = max(c(0, verbose))
+	
+	if(is.null(cachePath)) {
+		cachePath = tempdir()
+	}
+	if(!nchar(cachePath)) {
+		cachePath = '.'
+	}
 
 	alltiles = osmTiles()
 	pathOrig = path
@@ -150,7 +160,8 @@ openmap = function(x, zoom,
 				path=Durl,
 				verbose=verbose,
 				suffix=suffix,
-				tileNames = tileNames),
+				tileNames = tileNames,
+				cachePath = cachePath),
 		silent=!verbose)
 
 		if(class(thistile)=="try-error"){

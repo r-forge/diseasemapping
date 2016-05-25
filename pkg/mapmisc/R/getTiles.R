@@ -116,10 +116,14 @@ getTilesMerc = function(
     extMerc=extentMerc, 
     zoom=1, 
     path="http://tile.openstreetmap.org/",
-    cacheDir=file.path(tempdir(), paste("X",make.names(path),sep="")),
+		cachePath='.',
+    cacheDir= paste("X",make.names(path),sep=""),
     verbose=FALSE, suffix = '.png',
 		tileNames = 'zxy'){
-  
+
+
+	cacheDir = file.path(cachePath, cacheDir)
+			
   rasterSphere = .getRasterMerc(zoom)  
   
   SrowCol = getRowCol(extMerc, rasterSphere=rasterSphere)

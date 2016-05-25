@@ -1,5 +1,19 @@
 GNcities = function(north, east, south, west, lang = "en", 
     maxRows = 10, buffer=0) {
+
+	verbose = max(c(0,options()$mapmisc$verbose))
+	
+	cachePath=options()$mapmisc$cachePath
+
+	if(is.null(cachePath)) {
+		cachePath = tempdir()
+	}
+	if(!nchar(cachePath)) {
+		cachePath = '.'
+	}
+
+	cachePath = file.path(cachePath,'GNcities')
+	dir.create(cachePath,recursive=TRUE,showWarnings=FALSE)
 	
 	fourCoords=FALSE
 	if(is.numeric(north))
@@ -8,7 +22,7 @@ GNcities = function(north, east, south, west, lang = "en",
 
 	theproj = projection(north)
 	if(!fourCoords) {
-		extLL = .getExtent(north, extend=buffer, crs=crsLL)
+		extLL = .getExtent(north, extend=buffer, crsOut = crsLL)
 		
 		east = xmax(extLL)
 		west = xmin(extLL)
@@ -16,23 +30,38 @@ GNcities = function(north, east, south, west, lang = "en",
 		north= ymax(extLL)
 		
 	}
-
-	if (requireNamespace("geonames", quietly = TRUE)) { 
-		
-	result = geonames::GNcities(north=north,east=east,
-			south=south,west=west,lang,maxRows)
-
+	
+	cacheFile = file.path(
+			cachePath,  
+			paste(
+					make.names(toString(c(north, east, south,west,lang,maxRows))), 
+					'.Rdata', sep='')
+	)
+	
+	if(file.exists(cacheFile)) {
+		print(1)
+		if(verbose) {
+			message("found in cache", cachePath)
+		}
+		load(cacheFile)
+	}	else if(requireNamespace("geonames", quietly = TRUE)) { 
+		if(verbose)	message("not found in cache, retrieving")
+		result = geonames::GNcities(north=north,east=east,
+				south=south,west=west,lang,maxRows)
+		if(verbose)
+			message("caching in", cachePath)
+		save(result, file=cacheFile)
+	} else {
+		warning("install the geonames package to use GNcities")
+		result = NULL
+	}
 	result = SpatialPointsDataFrame(cbind(
 					as.numeric(result[,'lng']),
 					as.numeric(result[,'lat'])
 					), data=result, 
-			proj4string=crsLL)
-} else {
-	warning("install the geonames package to use GNcities")
-	result = NULL
-}
+			proj4string=mapmisc::crsLL)
 
-	if( !identical(projection(theproj), "NA") & ! identical(projection(theproj), NA)) {
+	if(is.na(theproj)) {
 		if(requireNamespace('rgdal', quietly=TRUE ))
 			result = spTransform(result, CRSobj=CRS(theproj))
 	}
@@ -86,12 +115,49 @@ GNsearch = function(..., crs=crsLL) {
 }
 
 
-geocode = function(...) {
-	if(requireNamespace("dismo", quietly = TRUE)) {
-		
-		result = dismo::geocode(...)		
-		
-		if(is.data.frame(result)) {
+geocode = function(x, oneRecord=FALSE, extent=NULL, progress='', ...) {
+
+	verbose = max(c(0,options()$mapmisc[['verbose']]))
+	
+	cachePath=options()$mapmisc[['cachePath']]
+	if(is.null(cachePath)) {
+		cachePath = tempdir()
+	}
+	if(!nchar(cachePath)) {
+		cachePath = '.'
+	}
+	cachePath = file.path(cachePath,'geocode')
+	dir.create(cachePath,recursive=TRUE,showWarnings=FALSE)
+
+	theproj = projection(extent)
+	extLL = .getExtent(extent, crsOut = crsLL)
+	
+	cacheFile = file.path(
+			cachePath,  
+			paste(
+					make.names(toString(c(x,as.vector(extLL), oneRecord))), 
+					'.Rdata', sep='')
+	)
+
+	if(file.exists(cacheFile)) {
+		if(verbose)
+			message("found in cache ", cachePath)
+		load(cacheFile)
+	}	else if(requireNamespace("dismo", quietly = TRUE)) {
+		if(verbose)
+			message("not found in cache, retrieving")
+		result = dismo::geocode(
+				x, oneRecord=oneRecord, 
+				extent=extLL, progress=progress, ...)		
+		if(verbose)
+			message("caching in ", cachePath)
+		save(result, file=cacheFile)
+	} else {
+		warning("install the dismo package to use geocode")
+		result = NULL
+	}
+	
+	if(is.data.frame(result)) {
 		result$name = gsub(", [[:print:]]+$", "", 
 				as.character(result$interpretedPlace))
 		resultCoords = as.matrix(result[,c('longitude','latitude')])
@@ -100,12 +166,6 @@ geocode = function(...) {
 				data = result,
 				proj4string = mapmisc::crsLL
 				)
-			}
-		
-	} else {
-		warning("install the dismo package to use geocode")
-		result = NULL
-		
 	}
 	result
 	

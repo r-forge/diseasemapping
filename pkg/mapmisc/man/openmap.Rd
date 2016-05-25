@@ -11,7 +11,9 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	path="http://tile.openstreetmap.org/",
 	maxTiles = 9,
 	crs=projection(x),   buffer=0, 
-	fact=1, verbose=FALSE)
+	fact=1, 	
+	verbose=options()$mapmisc$verbose,
+	cachePath=options()$mapmisc$cachePath)
 	osmTiles(name)
 	openmapAttribution(name, type=c('text','latex','markdown','html'), short=FALSE)
 }
@@ -39,9 +41,9 @@ extensions}
 	reprojecting if \code{fact>1}, 
 	helps to produce a clearer image.}
   \item{verbose}{
-    If TRUE, give information on where tiles are coming from, cache
-    hits, etc
+    Print information about map images being downloaded, defaults to \code{FALSE}.
   }
+  \item{cachePath}{Location to store downloaded map images, defaults to \code{\tempdir()}}
   \item{name}{name of a tile path, if missing a vector of all available tile paths
   is returned.  \code{name} can be any of the names of the vector returned when 
   \code{name} is unspecified.}

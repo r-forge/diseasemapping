@@ -35,20 +35,33 @@ legendTable = function(x,
   res
 }
 
+
+
+
 legendTableHtml = function(x, box, unit, collapse) {
   
   box = box[length(box)]
   
-  thetable=data.frame(
-  col = paste(
+	if(is.numeric(box)) {
+	Scol = paste(
       '<span style="background-color: ',
       substr(x$col,1,7), '; ',
       'padding-right: ', box, 
-      'em"></span>', sep=''
-  ))
+      'em"></span>', sep='')
+	} else {
+		Scol = paste(
+      	'<span style="color: ',
+      	substr(x$col,1,7),  
+      	'">', box, 
+				'</span>', sep='')
+	}
+
+  thetable=data.frame( col = Scol)
+
   thetable$label = x$label
 	thetable = thetable[!is.na(x$col),]
-	
+
+		
   if(length(collapse))
     thetable = paste(
         paste(
