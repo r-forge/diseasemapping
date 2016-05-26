@@ -82,8 +82,8 @@ openmap = function(x, zoom,
 	maxTiles = 9,
 	crs=projection(x),
   buffer=0, fact=1,
-	verbose=options()$mapmisc$verbose,
-	cachePath=options()$mapmisc$cachePath
+	verbose=FALSE,
+	cachePath=options()$mapmiscCachePath
 ) {
 
 	verbose = max(c(0, verbose))

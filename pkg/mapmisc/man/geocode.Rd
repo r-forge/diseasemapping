@@ -11,9 +11,9 @@ Uses the dismo package to geocode with Google
 \arguments{
 \item{x}{vector of character strings to search for}
 \item{oneRecord}{see \code{\link[dismo]{geocode}}}
-\item{extent}{}
+\item{extent}{an Extent object, or any object from which an Extent can be obtained.}
 \item{progress}{see \code{\link[dismo]{geocode}}}
-	\item{...}{additional arguments passed to \code{\link[dismo]{geocode}}}
+\item{...}{additional arguments passed to \code{\link[dismo]{geocode}}}
 }
 
 \seealso{\code{\link[dismo]{geocode}}}
@@ -23,10 +23,10 @@ Uses the dismo package to geocode with Google
 projection of \code{extent} if possible, or long-lat
 otherwise.}
 
-\details{If the options \code{options()$mapmisc$verbose} or 
-options()$mapmisc$cachePath} are set, they will be used
-to control the information printed and folder to save downloaded 
-data respectively.}
+\details{If the option  
+\code{options()$mapmiscCachePath} is set, it will be used
+to specify the folder to save downloaded 
+data.}
 
 \examples{
 

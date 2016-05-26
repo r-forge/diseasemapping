@@ -3,8 +3,8 @@ GNcities = function(north, east, south, west, lang = "en",
 
 	verbose = max(c(0,options()$mapmisc$verbose))
 	
-	cachePath=options()$mapmisc$cachePath
-
+	cachePath=options()$mapmiscCachePath
+	
 	if(is.null(cachePath)) {
 		cachePath = tempdir()
 	}
@@ -119,7 +119,7 @@ geocode = function(x, oneRecord=FALSE, extent=NULL, progress='', ...) {
 
 	verbose = max(c(0,options()$mapmisc[['verbose']]))
 	
-	cachePath=options()$mapmisc[['cachePath']]
+	cachePath=options()$mapmiscCachePath
 	if(is.null(cachePath)) {
 		cachePath = tempdir()
 	}

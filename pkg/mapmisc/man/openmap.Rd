@@ -12,8 +12,8 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	maxTiles = 9,
 	crs=projection(x),   buffer=0, 
 	fact=1, 	
-	verbose=options()$mapmisc$verbose,
-	cachePath=options()$mapmisc$cachePath)
+	verbose=FALSE,
+	cachePath=options()$mapmiscCachePath)
 	osmTiles(name)
 	openmapAttribution(name, type=c('text','latex','markdown','html'), short=FALSE)
 }
@@ -43,7 +43,7 @@ extensions}
   \item{verbose}{
     Print information about map images being downloaded, defaults to \code{FALSE}.
   }
-  \item{cachePath}{Location to store downloaded map images, defaults to \code{\tempdir()}}
+  \item{cachePath}{Location to store downloaded map images, defaults to \code{tempdir()}}
   \item{name}{name of a tile path, if missing a vector of all available tile paths
   is returned.  \code{name} can be any of the names of the vector returned when 
   \code{name} is unspecified.}
