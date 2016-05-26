@@ -1,7 +1,7 @@
 GNcities = function(north, east, south, west, lang = "en", 
     maxRows = 10, buffer=0) {
 
-	verbose = max(c(0,options()$mapmisc$verbose))
+	verbose = FALSE
 	
 	cachePath=options()$mapmiscCachePath
 	
@@ -117,7 +117,7 @@ GNsearch = function(..., crs=crsLL) {
 
 geocode = function(x, oneRecord=FALSE, extent=NULL, progress='', ...) {
 
-	verbose = max(c(0,options()$mapmisc[['verbose']]))
+	verbose = FALSE
 	
 	cachePath=options()$mapmiscCachePath
 	if(is.null(cachePath)) {
