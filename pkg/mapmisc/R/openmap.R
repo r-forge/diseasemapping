@@ -50,7 +50,7 @@ osmTiles = function(name) {
 # 'esri-topo' = 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/'
 	
 	
-  
+# http://server.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer/tile/2/1/1.jpg
 
 	# language labels don't appear to be working
 	languages = c("en","fr","de", "it","es","ru")
