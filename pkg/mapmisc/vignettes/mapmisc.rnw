@@ -35,6 +35,10 @@ if( Sys.info()['user'] =='patrick') {
 library('mapmisc')
 @
 
+This document will be incomplete if {\tt rgdal} is unavailable or there is on
+internet connection when this document is compiled.  The full document is at
+\url{http://diseasemapping.r-forge.r-project.org/}.
+
 \section{Introduction}
 
 This package provides a few utilities for making nice maps in R, with an

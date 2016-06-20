@@ -5,6 +5,14 @@
 
 # Mapping Hans Island
 
+
+
+This document will be incomplete if `rgdal` is unavailable or there is on
+internet connection when this document is compiled.  The full document is at
+[diseasemapping.r-forge.r-project.org](http://diseasemapping.r-forge.r-project.org).
+
+
+
 ```{r setup}
 
 library('mapmisc')
@@ -195,12 +203,37 @@ if(haveRgdal) {
 }
 ```
 
+```{r southInset}
+if(haveRgdal){
+
+waterhouseWrap = spTransform(
+	waterhouseMerc, moll(waterhouseMerc, angle=25)
+)
+
+
+southInset = openmap(x=waterhouseWrap, 
+	path='osm-no-labels',
+	buffer=c(4,1,2,1)*1000*1000, 
+	verbose=TRUE)
+
+} else {
+southInset = openmap(waterhouseMerc, 
+	path='osm-no-labels',
+	buffer=c(4,0,0,1.5)*1000*1000, 
+	crs=NA, verbose=TRUE)
+	}
+```
+
 ```{r waterhouseMerc} 
 mapMerc = openmap(waterhouseMerc, buffer=4000, crs=NA, verbose=TRUE)
 
 map.new(mapMerc)
 plot(mapMerc, add=TRUE)
 points(waterhouseMerc, col='blue', cex=5)
+insetMap(crs=mapMerc, 
+	pos='bottomright', 
+	map=southInset, cropInset = NULL,
+	lty=0)
 scaleBar(mapMerc, 'bottomleft')
 ```
 
@@ -212,6 +245,10 @@ mapMercFine = openmap(rockMerc, buffer=100, crs=NA, verbose=TRUE)
 map.new(mapMercFine)
 plot(mapMercFine, add=TRUE)
 points(rockMerc, col='blue',cex=5)
+insetMap(crs=mapMercFine, 
+	pos='bottomright', 
+	map=southInset, cropInset = NULL,
+	lty=0)
 scaleBar(mapMercFine, 'bottomleft')
 ```
 
@@ -223,6 +260,10 @@ if(haveRgdal) {
 	map.new(mapLL)
 	plot(mapLL, add=TRUE)
 	points(waterhouseLL, pch=3, cex=5)
+	insetMap(crs=mapLL, 
+		pos='bottomright', 
+		map=southInset, cropInset = NULL,
+		lty=0)
 	scaleBar(mapLL, 'bottomleft')
 }
 ```

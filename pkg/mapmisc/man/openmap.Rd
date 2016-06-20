@@ -32,8 +32,7 @@ number of map tiles is less than or equl to this number.}
 \item{crs}{Projection for the output, defaulting to the same projection as
 \code{x}.  If \code{x} has no projection, 
 for instance when \code{x} is a matrix or extent, 
-\code{crs} is also used as the projection of \code{x}.  If \code{crs} is missing
-and \code{x} has no crs, long-lat is used.}
+\code{crs} is also used as the projection of \code{x}.  If \code{crs} is \code{NA} or missing and \code{x} has no crs, long-lat is used.  }
 \item{buffer}{Extend the extent for which the map is requested, in units
 of \code{x}.  Can be negative, or a vector of length 2 for different x and y 
 extensions}
@@ -57,23 +56,35 @@ standard way either on a web server or a local folder.
 
 Map tiles are a set of PNG images that span the world at a set of zoom
 levels. Zoom level 1 has four 256x256 pixel tiles
-in a 2x2 pattern over the whole world. In general, zoom level n has 2^n
-by 2^n tiles. Zoom levels go up to about 17 or 18 depending on the tile
+in a 2x2 pattern over the whole world. In general, zoom level n has \eqn{2^n}
+by \eqn{2^n} tiles. Zoom levels go up to about 17 or 18 depending on the tile
 server.
 
 
-Be sure to attribute any maps you publish, the osmAttribution function will assist.
+Be sure to attribute any maps you publish, the \code{osmAttribution} function will assist.
 }
 
 
 \value{
-	\code{openmap} returns a RasterBrick 
-	\code{\link[raster]{brick}}, with 'red', 'green' and 'blue' layers. 
+	\code{openmap} returns a \code{Raster} with indexed colours,
+	 or a \code{RasterBrick} 
+	\code{\link[raster]{brick}}, with 'red', 'green' and 'blue' layers.
+	
+	\code{openmapAttribution} returns a character string.
+	 
 }	
 
-\seealso{\link[OpenStreetMap]{openmap} }
+\seealso{\link[OpenStreetMap]{openmap}}
 
 \examples{
+
+data("netherlands")
+
+plot(nldTiles)
+
+openmapAttribution(nldTiles, short=TRUE, type='markdown')
+
+openmapAttribution("stamen-toner", type='text')
 
 
 myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10, 
@@ -103,6 +114,5 @@ names(osmTiles())
 	openmapAttribution(mytiles)
 }
 
-openmapAttribution("osm", type='markdown')
 
 }

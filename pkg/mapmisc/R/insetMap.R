@@ -37,6 +37,8 @@ extentUsr = extent(
 
 if(outer) {
 	extentBig = extentFull
+} else {
+	extentBig = extentUsr
 }
 
 extentSmall = extentUsr
@@ -66,6 +68,7 @@ xsp = SpatialPoints(polySmall, 	proj4string = crs)
 # if cropInset is numeric
   # use it to extend the extent of the plot region
   # and crop the inset map
+	
 if(is.numeric(cropInset)) {
   cropInset = raster(raster::extend(extentSmall, cropInset), crs=crs)
 }
@@ -74,7 +77,11 @@ if(all(class(cropInset)=='Extent')){
 	cropInset = raster(cropInset, crs=crsLL)
 	mapExtent = xsp
 } else {
-	mapExtent = cropInset
+	if(is.null(cropInset)) {
+		mapExtent = xsp
+	}	 else {
+		mapExtent = cropInset
+	}
 }
 
 if(is.character(map)) {
@@ -85,8 +92,12 @@ if(!length(grep("^Raster", class(map)))) {
   warning('map is not a Raster')
 }
 
+if(!is.null(cropInset)) {
 tocrop = projectExtent(cropInset, CRS(proj4string(map)))
-map = crop(map, extent(tocrop))
+tocrop = raster::union(extent(tocrop), extent(mapExtent))
+# if the extents are overlapping, crop
+map = crop(map, tocrop)
+}
 
 
 
@@ -139,6 +150,7 @@ extent(map)= extent(c(x[1], x[1]+newxrange, x[2],
 proj4string(map) = CRS()
 bbOrig = t(bbox(extent(mapOrig)))
 bbSmall = t(bbox(extent(map)))
+
 
 if(requireNamespace('rgdal', quietly=TRUE)) {
   xsp = spTransform(xsp,

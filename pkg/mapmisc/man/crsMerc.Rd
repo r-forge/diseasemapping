@@ -27,24 +27,21 @@ Using epsg codes requires the \code{rgdal} package to be installed, and
 \url{https://en.wikipedia.org/wiki/Web_Mercator},
 \url{http://spatialreference.org/ref/epsg/4326/}
 }
-\seealso{\code{\link[sp]{CRS}}}
+\seealso{\code{\link[sp]{CRS}}, \code{\link[rgdal]{showEPSG}}}
 
 \examples{
 
 crsMerc
-try(CRS("+init=epsg:3857"), silent=TRUE)
+if(require('rgdal', quietly=TRUE))
+	CRS("+init=epsg:3857")
 
 crsLL
-try(CRS("+init=epsg:4326"), silent=TRUE)
+if(require('rgdal', quietly=TRUE)) {
+	CRS("+init=epsg:4326")
 
-if(require('rgdal', quietly=TRUE)){
-	xOrig = SpatialPoints(cbind(-40,30), proj4string=crsLL)
-	xMerc = spTransform(xOrig, crsMerc)
-	xLL = spTransform(xMerc, crsLL)
-	
-	coordinates(xOrig)
-	coordinates(xMerc)
-	coordinates(xLL)
+	rgdal::showEPSG("+proj=longlat")
+	rgdal::showEPSG(as.character(crsLL))
 }
-	
+
+
 }

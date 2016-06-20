@@ -9,6 +9,11 @@
 # Examples of map layers
 
 
+This document will be incomplete if `rgdal` is unavailable or there is on
+internet connection when this document is compiled.  The full document is at
+[diseasemapping.r-forge.r-project.org](http://diseasemapping.r-forge.r-project.org).
+
+
 
 ```{r setup,include=FALSE}
 
