@@ -15,7 +15,7 @@ library("lgcp")
 utilsFile = 'lgcpUtils.R'
 if(!file.exists(utilsFile)) {
 	download.file(
-			'r-forge.r-project.org/R/?group_id=312', 
+			'https://r-forge.r-project.org/scm/viewvc.php/*checkout*/pkg/utils/R/lgcp.R?root=diseasemapping', 
 			utilsFile)
 }
 source(utilsFile)
@@ -23,7 +23,7 @@ source(utilsFile)
 
 kFile = 'knitrUtils.R'
 if(!file.exists(kFile)) {
-	download.file("", kFile)
+	download.file("https://r-forge.r-project.org/scm/viewvc.php/*checkout*/pkg/utils/R/knitr.R?root=diseasemapping", kFile)
 }
 source(kFile)
 
