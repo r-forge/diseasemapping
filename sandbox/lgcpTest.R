@@ -96,7 +96,7 @@ for(Devent in Sevents) {
 
 kentuckyPoints = SpatialPoints(kentucky)
 for(D in names(cov.ras)) {
-	kentucky[[D]] = extract(
+	kentucky[[D]] = raster::extract(
 			cov.ras[[D]],		
 			kentuckyPoints 	
 	)
@@ -177,7 +177,7 @@ fitBym = list()
 for(D in Sevents) {
 	kentucky$y = kentucky[[D]]
 	fitBym[[D]] = bym(
-			y ~ w1 + w2 + offset(logExpected), 
+			y ~  1, #offset(logExpected),  #w1 + w2 +
 			data=kentucky, 
       priorCI = list(
 					sd=c(.5, 0.1),
@@ -193,7 +193,7 @@ save(fitBym, file=bymFile)
 
 
 #+ estimationLgcp
-library("lgcp")
+
 
 #'
 
