@@ -10,11 +10,26 @@ library('diseasemapping')
 library("mapmisc")
 library("knitr")
 library("lgcp")
-if(file.exists("../docs/knitrCode.R")) {
-	source("../docs/knitrCode.R")
-	knit_hooks$set(plot=hook_plot_p) 
-	opts_chunk$set(fig.ncol=2, fig.height=4, fig.width=8)
+
+
+utilsFile = 'lgcpUtils.R'
+if(!file.exists(utilsFile)) {
+	download.file(
+			'r-forge.r-project.org/R/?group_id=312', 
+			utilsFile)
 }
+source(utilsFile)
+
+
+kFile = 'knitrUtils.R'
+if(!file.exists(kFile)) {
+	download.file("", kFile)
+}
+source(kFile)
+
+knit_hooks$set(plot=hook_plot_p) 
+opts_chunk$set(fig.ncol=2, fig.height=4, fig.width=8)
+	
 #'
 
 
@@ -89,9 +104,9 @@ for(Devent in Sevents) {
 	stuff = table(factor(
 					stuff, levels=unique(kentucky$County)
 			))
-	kentucky[[Devent]] = stuff[
+	kentucky[[Devent]] = as.vector(stuff[
 			as.character(kentucky$County)
-	]
+	])
 }
 
 kentuckyPoints = SpatialPoints(kentucky)
@@ -176,13 +191,13 @@ Sevents = sort(grep("^events[[:digit:]]", names(kentucky), value=TRUE))
 fitBym = list()
 for(D in Sevents) {
 	kentucky$y = kentucky[[D]]
+	
 	fitBym[[D]] = bym(
-			y ~  1, #offset(logExpected),  #w1 + w2 +
+			y ~  offset(logExpected) + w1 + w2,
 			data=kentucky, 
       priorCI = list(
 					sd=c(.5, 0.1),
-					propSpatial=c(0.5,0.8)),
-			verbose=TRUE
+					propSpatial=c(0.5,0.8))
 	)
 }
 save(fitBym, file=bymFile)
@@ -192,11 +207,115 @@ save(fitBym, file=bymFile)
 #'
 
 
-#+ estimationLgcp
+#+ estimationLgcpObjects
+library('maptools')
+library('spatstat')
+
+covBrick = brick(
+		cov.ras$w1, cov.ras$w2
+		)
+names(covBrick) = c('w1','w2')
+#myCov2 = aggregate(covBrick, fact=4)
+gridCov <- as(covBrick,"SpatialPixelsDataFrame")
+gridCov@data <- guessinterp(gridCov@data)
+
+
+polyCov = rgeos::gUnionCascaded(kentuckyS)
+polyCov = raster::crop(
+		polyCov, 
+		extent(-330000, 10^6, -10^6, 10^6)
+		)
+polyCov$offset = 1
+polyCov = polyCov[,'offset']
+polyCov@data = assigninterp(df = polyCov@data, vars = "offset", 
+		value = "ArealWeightedSum")
+
+#map.new(kentuckyT)
+#plot(polyCov,add=TRUE)
+
+
+names(polyCov) = paste('poly', 
+		c('', seq(from=2, by=1, len=length(names(polyCov))-1)), 
+		sep='')
+
+names(gridCov) = paste('grid',
+		c('', seq(from=2, by=1, len=length(names(gridCov))-1)), 
+		sep='')
+
+
+eventsSp = lgcp.sim[[1]]
+eventsPPP = as.ppp(
+		eventsSp@coords,
+		polyCov
+)
+
+
+polyolayfl <- "polyolay.RData"
+if(!file.exists(polyolayfl)){
+	pover <- getpolyol(
+			data=eventsPPP,
+    	regionalcovariates=polyCov,
+    	pixelcovariates=gridCov,
+    	cellwidth=50000,
+    	ext=2)
+	save(pover, file=polyolayfl)
+} else {
+	load(polyolayfl)
+}
+
+pMask = pololayToRaster(pover)
+
+eventsInside = raster::extract(pMask$small, eventsSp)
+eventsPPPinside  = eventsPPP[eventsInside==1,]
+
+
+theFormula = as.formula(
+		paste(c(
+						'X ~ 1',
+#				names(polyCov), 
+						names(gridCov)), 
+				collapse='+'
+		)
+)
+
+
+
+zfl <-  "Zmat.RData"
+if(!file.exists(zfl)){ 
+	Zmat <- getZmat(
+			formula= theFormula,
+    	data=eventsPPPinside,
+			overl=pover,
+#    regionalcovariates=polyCov,
+    	pixelcovariates=gridCov
+	) 
+	save(Zmat, file=zfl)
+} else {
+	load(zfl)
+}
+
+zBrick = zMatToRaster(Zmat)
 
 
 #'
 
+
+#+ plotPoly, echo=FALSE, fig.height=3, fig.width=6, fig.ncol=2, fig.subcap=c('region','intercept')
+pMask = pololayToRaster(pover)
+map.new(pMask$ext)
+plot(zBrick$mask, add=TRUE)
+plot(extent(pMask$small), add=TRUE)
+points(eventsPPP, cex=0.3, col='#00000030')
+plot(kentucky, add=TRUE)
+
+gCol = colourScale(zBrick$grid, breaks=12, dec=1, col='Spectral', style='equal')
+map.new(kentucky)
+plot(zBrick$grid, add=TRUE, legend=FALSE, col=gCol$col, breaks=gCol$breaks)
+plot(kentucky, add=TRUE)
+points(eventsSp, cex=0.3, col='#00000030')
+legendBreaks("topleft",gCol)
+
+#'
 
 
 
