@@ -109,10 +109,19 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 	
 	smallZ = array(
 			bRes$Z,
-			c(bRes$N, bRes$ext, bRes$M, bRes$ext, ncol(bRes$Z))
+			c(bRes$M, bRes$ext, bRes$N, bRes$ext, ncol(bRes$Z)),
+			dimnames = list(
+					bRes$mcens,
+					paste("a", 1:bRes$ext, sep="_"),
+					bRes$ncens,
+					paste("b", 1:bRes$ext, sep="_"), 
+					names(bRes$glmfit$coefficients)
 	)
-	smallZ = drop(smallZ[,1,,1,])
-	smallZ = matrix(smallZ, ncol=ncol(bRes$Z))
+	)
+	smallZ = matrix(smallZ[,1,,1,], 
+			ncol=ncol(bRes$Z), 
+			dimnames = list(NULL, dimnames(smallZ)[[5]])
+	)
 	smallZ[as.vector(bRes$cellInside)==0, ] = NA
 	
 	fixed = tcrossprod(smallZ, bRes$betarec)
@@ -245,4 +254,179 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 					summary=summaryFile)
 	)
 }		
+
+
+
+getZmatPopulation = function(
+		events, 
+		population, covariates, 
+		border=population, fact=4,
+		polyolay = list(
+				Ncell=32
+		),
+		verbose=TRUE
+) {
+	
+	if(!missing(border) & !missing(events))
+		events = events[!is.na(over(events, as(border,'SpatialPolygons')))]
+	
+	if(!missing(events)) {
+		eventsPPP = as.ppp(events)
+	} else {
+		eventsPPP = NULL
+	}
+	
+	if(all(class(polyolay)=='list')) {
+		if(missing(border)){
+			warning("border must be supplied if polyolay is a list")
+		}
+		if(!length(polyolay$ext))
+			polyolay$ext = 2
+		if(length(polyolay$Ncell)) {
+			polyolay$cellwidth = min(abs(apply(bbox(border),1,diff))/polyolay$Ncell)
+		}
+		if(!length(polyolay$cellwidth))
+			warning("polyolay must contain either cellwidth or Ncell")
+		
+		border2 = border
+		border2$junk = 1
+		border2 = border2[,'junk']
+		border2@data = assigninterp(df = border2@data, vars = "junk", 
+				value = "ArealWeightedSum")
+		
+		if(verbose) cat("\nrunning getpolyol")
+		polyolay <- getpolyol(
+				data=eventsPPP,
+        regionalcovariates=border2,
+        cellwidth=polyolay$cellwidth,
+        ext=polyolay$ext)
+		if(verbose) cat("\ndone\n")
+		
+	}						
+	
+	rasterMaskExt = raster(
+			t(polyolay$gridobj$cellInside[,ncol(polyolay$gridobj$cellInside):1]),
+			polyolay$gridobj$mcens[1],
+			max(polyolay$gridobj$mcens),
+			polyolay$gridobj$ncens[1],
+			max(polyolay$gridobj$ncens)
+	)
+	if(!missing(population)) {
+		projection(rasterMaskExt) = projection(population)			
+	} else if(!missing(border)) {
+		projection(rasterMaskExt) = projection(border)				
+	}
+	
+	extentNotExt = extent(
+			polyolay$gridobj$mcens[1]-1,
+			mean(polyolay$gridobj$mcens[c(0,1)+polyolay$gridobj$M/polyolay$ext]),
+			polyolay$gridobj$ncens[1]-1,
+			mean(polyolay$gridobj$ncens[c(0,1)+polyolay$gridobj$N/polyolay$ext])
+	)		
+	
+	rasterMask = crop(rasterMaskExt, extentNotExt)
+	
+	rasterFine = disaggregate(rasterMask, fact)
+	
+	intercept = raster(rasterMask)
+	values(intercept) = 1
+	names(intercept) = 'intercept'
+	
+	if(!missing(population)) {
+		if(verbose) cat("\nrasterizing population")
+		popFine = geostatsp::spdfToBrick(
+				list(population),
+				rasterFine,
+				pattern='^expected$'
+		)
+		if(verbose) cat("\ndone\n")
+		if(!missing(border)) {
+			popFine = mask(popFine, border)		
+		}
+		popCoarse = aggregate(popFine, fact, fun=sum, na.rm=TRUE)
+		names(popCoarse) = 'offsetExp'
+		logPop = log(popCoarse)
+		names(logPop) = 'offset'
+	} else {
+		logPop = NULL
+	}
+	
+	if(!missing(covariates)) {	
+		if(!is.list(covariates)) {
+			covariates = list(covariates)
+			names(covariates) = names(covariates[[1]])[1]
+		}
+		
+		if(verbose) cat("\nrasterizing covariates")
+		covariatesFine = stackRasterList(
+				covariates,
+				rasterFine
+		)
+		if(verbose) cat("\ndone\n")
+		
+		if(!missing(border)) {
+			covariatesFine = mask(covariatesFine, border)
+		}
+		if(!missing(population)) {
+			covariatesFine = mask(covariatesFine, popFine, maskvalue=0, updatevalue=NA)		
+		}
+		covariatesCoarse = aggregate(covariatesFine, fact, fun=mean, na.rm=TRUE)
+		names(covariatesCoarse) = names(covariates)
+	} else {
+		covariatesCoarse = NULL
+	}
+	
+	
+	zRaster = brick(
+			intercept,
+			covariatesCoarse,
+			logPop
+	)
+	
+	zArray = aperm(as.array(zRaster),c(2,1,3))
+	zArray = zArray[,dim(zArray)[2]:1,,drop=FALSE]
+	
+	zMatrix = matrix(zArray, ncol=dim(zArray)[3])
+	theNA = is.na(apply(zMatrix, 1,sum))
+	
+	zDf = as.data.frame(zMatrix[!theNA,,drop=FALSE])
+	zDf$X = 1
+	
+	zMatrix[theNA,] = 0		
+	colnames(zMatrix) = names(zRaster)
+	
+	anymiss = rep(FALSE, sum(zMatrix[,'intercept']))
+	rownames(zDf) = names(anymiss) = as.character(which(zMatrix[,'intercept']>0))
+	
+	
+	attributes(zMatrix) = c(
+			attributes(zMatrix),
+			polyolay[c('gridobj','fftpoly','mcens','ncens','cellwidth','ext','inclusion')],
+			polyolay$gridobj[c('cellInside')],
+			list(
+					data.frame=zDf,
+					M=ncol(zRaster),
+					N=nrow(zRaster),
+					anymiss=anymiss,
+					class=c('lgcpZmat','matrix'),
+					pixelOverlay = polyolay$gridobj$pixol,
+					missingind=rep(0,ncol(zMatrix))
+			)
+	)
+# haven't added FORM data.frame
+	
+	
+	list(Zmat = zMatrix, events = eventsPPP,
+			ext = attributes(zMatrix)$ext,
+			cellwidth = attributes(zMatrix)$cellwidth,
+			raster = zRaster,
+			formula = as.formula(
+					paste(
+							'X ~ ',
+							paste(names(covariates), collapse='+'),
+							'+offset(offset)'
+					)
+			)
+	)
+}
 
