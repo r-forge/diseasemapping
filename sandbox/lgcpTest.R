@@ -9,6 +9,7 @@ library('geostatsp')
 library('diseasemapping')
 library("mapmisc")
 library("knitr")
+library("lgcp")
 if(file.exists("../docs/knitrCode.R")) {
 	source("../docs/knitrCode.R")
 	knit_hooks$set(plot=hook_plot_p) 
@@ -113,6 +114,38 @@ for(D in Sevents) {
 
 #'
 
+#+ priors
+covarianceLgcp <- CovFunction(
+		RandomFieldsCovFct(
+				model="matern",additionalparameters=1
+		)
+)
+
+priorMean = c(range=300*1000, sd=0.2)
+
+priors <- lgcpPrior(
+		etaprior=PriorSpec(LogGaussianPrior(
+						mean=log(c(priorMean['sd'], priorMean['range']/2)),
+						variance=diag(c(0.2, 0.2)))),
+    betaprior=PriorSpec(
+				GaussianPrior(
+						mean=rep(0,2),
+						variance=diag(10^6,2)
+				)
+		)
+)
+
+intSd = exp(qnorm(c(0.025, 0.975), 
+				priors$etaprior$mean[1], 
+				priors$etaprior$variance[1,1]))
+
+intRange = exp(qnorm(c(0.025, 0.975), 
+				priors$etaprior$mean[2], 
+				priors$etaprior$variance[2,2]))*2
+intSd
+intRange
+#'
+
 #+ estimationGeostatsp
 geostatspFile = 'geostatsp.RData'
 if(!file.exists(geostatspFile)) {
@@ -123,8 +156,9 @@ for(D in Sevents) {
       formula=~w1+w2 + offset(kentuckyOffset, log=TRUE),
 			grid=squareRaster(kentucky, 100),
       covariates=cov.ras,
-      buffer=3,
-      priorCI = list(sd=c(u=0.25, alpha=0.1),range=c(0.5,3)*100000)
+      buffer=100*1000,
+			shape = environment(covarianceLgcp)$aditionalparameters,
+      priorCI = list(sd=c(u=priorMean['sd'], alpha=0.5),range=intRange)
 	)
 }
 save(fitLgcp, file=geostatspFile)
@@ -138,13 +172,17 @@ save(fitLgcp, file=geostatspFile)
 bymFile = 'bym.RData'
 if(!file.exists(bymFile)){
 	
+Sevents = sort(grep("^events[[:digit:]]", names(kentucky), value=TRUE))
 fitBym = list()
 for(D in Sevents) {
 	kentucky$y = kentucky[[D]]
 	fitBym[[D]] = bym(
 			y ~ w1 + w2 + offset(logExpected), 
 			data=kentucky, 
-      priorCI = list(sd=c(.5, 0.1),propSpatial=c(0.5,0.1))
+      priorCI = list(
+					sd=c(.5, 0.1),
+					propSpatial=c(0.5,0.8)),
+			verbose=TRUE
 	)
 }
 save(fitBym, file=bymFile)
@@ -154,7 +192,15 @@ save(fitBym, file=bymFile)
 #'
 
 
+#+ estimationLgcp
+library("lgcp")
 
+#'
+
+
+
+
+#'
 
 #+ forResPLot
 Splot = c('predict.exp', 'random.mean')
