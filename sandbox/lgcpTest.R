@@ -102,23 +102,8 @@ for(D in names(cov.ras)) {
 }
 #'
 
-#+ simPlot, fig.cap='truth', fig.subcap=c(Ssim, Sevents)
 
-for(D in Ssim) {
-
-	pCol = colourScale(
-			lgcp.sim$raster[[D]],
-			breaks=9, dec=-log10(0.25), col='Spectral',
-			rev=TRUE, style='equal')
-	map.new(kentucky,TRUE)
-	plot(
-			mask(lgcp.sim$raster[[D]],kentucky), 
-			legend=FALSE,add=TRUE,
-			col=pCol$col, breaks=pCol$breaks)
-	plot(kMap,add=TRUE)
-	legendBreaks("topleft", pCol)
-}
-
+#+ eventsPlot, fig.cap='events',  fig.subcap=Sevents
 
 for(D in Sevents) {
 	map.new(kentucky,TRUE)
@@ -128,7 +113,9 @@ for(D in Sevents) {
 
 #'
 
-#+ estimation, cache=TRUE, stuff=1
+#+ estimationGeostatsp
+geostatspFile = 'geostatsp.RData'
+if(!file.exists(geostatspFile)) {
 fitLgcp = list()
 for(D in Sevents) {
 	fitLgcp[[D]] = lgcp(
@@ -140,7 +127,34 @@ for(D in Sevents) {
       priorCI = list(sd=c(u=0.25, alpha=0.1),range=c(0.5,3)*100000)
 	)
 }
+save(fitLgcp, file=geostatspFile)
+} else {
+	load(geostatspFile)
+}
 #'
+
+
+#+ estimationBym
+bymFile = 'bym.RData'
+if(!file.exists(bymFile)){
+	
+fitBym = list()
+for(D in Sevents) {
+	kentucky$y = kentucky[[D]]
+	fitBym[[D]] = bym(
+			y ~ w1 + w2 + offset(logExpected), 
+			data=kentucky, 
+      priorCI = list(sd=c(.5, 0.1),propSpatial=c(0.5,0.1))
+	)
+}
+save(fitBym, file=bymFile)
+} else {
+	load(bymFile)
+}
+#'
+
+
+
 
 #+ forResPLot
 Splot = c('predict.exp', 'random.mean')
@@ -182,18 +196,6 @@ knitr::kable(toPrint, digits=3)
 #'
 
 
-
-#+ estimationBym, cache=TRUE, stuff=1
-fitBym = list()
-for(D in Sevents) {
-	kentucky$y = kentucky[[D]]
-	fitBym[[D]] = bym(
-			y ~ w1 + w2 + offset(logExpected), 
-			data=kentucky, 
-      priorCI = list(sd=c(.5, 0.1),propSpatial=c(0.5,0.1))
-	)
-}
-#'
 
 
 
