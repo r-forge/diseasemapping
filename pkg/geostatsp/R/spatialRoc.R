@@ -20,14 +20,21 @@ spatialRocPolyTemplate = function(
 spatialRocRasterTemplate = function(
 		truth, fit
 ) {
-	
-	template = raster(fit[[1]]$raster)
+	if(length(grep("^Raster", class(fit)))) {
+		template = raster(fit)
+	} else {
+		template = raster(fit[[1]]$raster)
+	}
 	values(template) = seq(1, ncell(template))
 	names(template) = 'fitID'
 	
 	# remove cells with no predictions
-	template = mask(template, fit[[1]]$raster$predict.mean)
-	
+
+	if(length(grep("^Raster", class(fit)))) {
+		template = mask(template, fit[[1]])
+	} else {
+		template = mask(template, fit[[1]]$raster$predict.mean)
+	}
 	
 	templateID = stackRasterList(
 			list(fitID = template), truth, method='ngb'
@@ -42,150 +49,172 @@ spatialRocRasterTemplate = function(
 spatialRocSims = function(
 		truthCut, marginals, templateID, 
 		breaks, prob
-		) {
-			
-
-			if(is.null(names(marginals)))
-				names(marginals) = 1:length(marginals)
-			
-			breaksInterior = breaks[seq(2, length(breaks)-1)]
-			
-
-			Slevels = seq(from=1.5,by=1,len=length(breaks)-1)
-			
-			SlevelsRound = 1:length(Slevels)
-			names(Slevels) = SlevelsRound
-
-			# breaks = -Inf, 0.4, 0.7, 0.8, Inf
-			# breaksInterior = 0.4, 0.7, 0.8
-			# SlevelsRound = 1 2 3 4 5
-  		# Slevels = 1.5, 2.5, 3.5, 4.5
-      # There are 4 bins, 5 breaks, 3 interior breaks
-	    # Slevels are bin centres
-	    # SlevelsRound are bin numbers
-			
-			templateID = mask(templateID, truthCut[[1]])
-			
-			truthCdf = zonal(
-					truthCut,
-					templateID,
-					function(x,...) {
-						stats::ecdf(x)(Slevels)
-						}
-					)
-					
-					
-			rownames(truthCdf) = truthCdf[,'zone']
-			truthCdf = truthCdf[,grep('zone', colnames(truthCdf), invert=TRUE)]
-			colnames(truthCdf) = paste(
-					rep(names(marginals), 
-							rep(length(Slevels),nlayers(truthCut))
-							), 
-					rep(Slevels, nlayers(truthCut)),
-					sep="_"
-			)
-			truthCdf = array(
-					truthCdf,
-					c(nrow(truthCdf), length(Slevels), nlayers(truthCut)),
-					dimnames = list(
-							rownames(truthCdf),
-							Slevels,
-							names(marginals)
-							)
-					)
-			truthCdfUpper = 1-truthCdf
-			
-			idTable = table(values(templateID))		
-			idMatrix = matrix(
-					idTable[dimnames(truthCdf)[[1]]],
-					length(idTable),
-					length(prob)
-					)
-			
-			truthCells = array(
-					idTable[dimnames(truthCdf)[[1]]],
-					dim=dim(truthCdf)
-			)
-			
-			truthOver = truthCdfUpper * truthCells 
-			truthUnder = truthCdf * truthCells 
-			
-
-				
-			allP = allN = tP = tN = fP = fN = array(NA,
-					c(length(prob), length(SlevelsRound), length(marginals)),
-					dimnames= list(
-							prob,SlevelsRound, names(marginals)
-							)
-					)		
-					
-					
-			for(Dsim in names(marginals)) {
-				
-
-				notNull = dimnames(truthCdf)[[1]]
-				if(! table(notNull %in% names(marginals[[Dsim]])) )
-					warning("can't prediction ID's to marginal distributions")
-
-				# pMat is prob below break
-	      # don't include last break (infinity) or first break
-				pMat = simplify2array(
-						lapply(
-						marginals[[Dsim]][notNull], 
-						INLA::inla.pmarginal, 
-						q=breaksInterior)
-				)
-				if(is.vector(pMat))
-					pMat = t(as.matrix(pMat))
-				rownames(pMat) = seq(2, by=1, len=nrow(pMat))
-				# upper tail probabilities
-				pMat = pMat[,match(names(marginals[[Dsim]]), colnames(pMat)), drop=FALSE]
-				pMat = t(pMat)
-				
-				pMat = pMat[as.numeric(dimnames(truthCdf)[[1]]),,drop=FALSE]
-				# pMat is prob above break
-				pMat = 1-pMat
-				pMat = cbind('1'=1, pMat,'5'=0)
-				
-				for(Dbin in names(Slevels)[-1]) {
-					
-					Dmidpoint = as.character(Slevels[Dbin])
-
-					predOver = outer(pMat[,Dbin], prob, '>')
-#					colnames(predOver) = prob
-					
-					tpMat = predOver*truthOver[,Dmidpoint,Dsim]
-					fpMat = predOver*truthUnder[,Dmidpoint,Dsim]
-					tnMat = (1-predOver)*truthUnder[,Dmidpoint,Dsim]
-					fnMat = (1-predOver)*truthOver[,Dmidpoint,Dsim]
-					allnMat = tnMat + fpMat
-					allpMat = tpMat + fnMat
-					
-					tP[,Dbin,Dsim] = apply(tpMat,2,sum, na.rm=TRUE)
-					tN[,Dbin,Dsim] = apply(tnMat,2,sum, na.rm=TRUE)
-					fP[,Dbin,Dsim] = apply(fpMat,2,sum, na.rm=TRUE)
-					fN[,Dbin,Dsim] = apply(fnMat,2,sum, na.rm=TRUE)
-					allP[,Dbin,Dsim] = apply(allpMat,2,sum, na.rm=TRUE)
-					allN[,Dbin,Dsim] = apply(allnMat,2,sum, na.rm=TRUE)
-					
-				}
-				
-				
+) {
+	
+	
+	breaksInterior = breaks[seq(2, length(breaks)-1)]
+	
+	
+	Slevels = seq(from=1.5,by=1,len=length(breaks)-1)
+	
+	SlevelsRound = 1+1:length(Slevels)
+	names(Slevels) = SlevelsRound
+	
+	# breaks = -Inf, 0.4, 0.7, 0.8, Inf
+	# breaksInterior = 0.4, 0.7, 0.8
+	# SlevelsRound = 1 2 3 4
+  # Slevels = 1.5, 2.5, 3.5, 4.5
+  # There are 4 bins, 5 breaks, 3 interior breaks
+	# Slevels are bin centres
+	# SlevelsRound are bin numbers
+	
+	
+	if(length(grep("^Raster", class(marginals)))) {		
+		# local-em
+		
+		pMat = cbind('1'=1,as.data.frame(
+						marginals[[grep("threshold.", names(marginals))]]
+				), '0'=0)
+		colnames(pMat) = c('1',names(Slevels))
+		pMat = pMat[sort(na.omit(unique(values(templateID)))),]
+		pMat = as.data.frame(t(as.matrix(pMat)))
+		marginals = list('1' = pMat)
+		isLocalEm = TRUE
+	} else {
+		isLocalEm = FALSE
+	}
+	
+	
+	
+	if(is.null(names(marginals)))
+		names(marginals) = 1:length(marginals)
+		
+	templateID = mask(templateID, truthCut[[1]])
+	
+	truthCdf = zonal(
+			truthCut,
+			templateID,
+			function(x,...) {
+				stats::ecdf(x)(Slevels)
 			}
-				
-			
-			result = list(
-					tP = tP, 
-					allP = allP, 
-					tN = tN, 
-					allN = allN
+	)
+	
+	
+	rownames(truthCdf) = truthCdf[,'zone']
+	truthCdf = truthCdf[,grep('zone', colnames(truthCdf), invert=TRUE)]
+	colnames(truthCdf) = paste(
+			rep(names(marginals), 
+					rep(length(Slevels),nlayers(truthCut))
+			), 
+			rep(Slevels, nlayers(truthCut)),
+			sep="_"
+	)
+	truthCdf = array(
+			truthCdf,
+			c(nrow(truthCdf), length(Slevels), nlayers(truthCut)),
+			dimnames = list(
+					rownames(truthCdf),
+					Slevels,
+					names(marginals)
 			)
-			result$allP[result$allP==0] = NA
-			result$allN[result$allN==0] = NA
+	)
+	truthCdfUpper = 1-truthCdf
+	
+	idTable = table(values(templateID))		
+	idMatrix = matrix(
+			idTable[dimnames(truthCdf)[[1]]],
+			length(idTable),
+			length(prob)
+	)
+	
+	truthCells = array(
+			idTable[dimnames(truthCdf)[[1]]],
+			dim=dim(truthCdf)
+	)
+	
+	truthOver = truthCdfUpper * truthCells 
+	truthUnder = truthCdf * truthCells 
+	
+	
+	
+	allP = allN = tP = tN = fP = fN = array(NA,
+			c(length(prob), length(SlevelsRound), length(marginals)),
+			dimnames= list(
+					prob,SlevelsRound, names(marginals)
+			)
+	)
+	
+		for(Dsim in names(marginals)) {
+		
+		
+		notNull = dimnames(truthCdf)[[1]]
+		if(! table(notNull %in% names(marginals[[Dsim]])) )
+			warning("can't map prediction ID's to marginal distributions")
+		
+		if(isLocalEm){
+			pMat = t(as.matrix(marginals[[Dsim]]))
+		} else {
+			# pMat is prob below break
+	  	# don't include last break (infinity) or first break
+			pMat = simplify2array(
+					lapply(
+							marginals[[Dsim]][notNull], 
+							INLA::inla.pmarginal, 
+							q=breaksInterior)
+			)
+			if(is.vector(pMat))
+				pMat = t(as.matrix(pMat))
+			rownames(pMat) = seq(2, by=1, len=nrow(pMat))
+			# upper tail probabilities
+			pMat = pMat[,match(names(marginals[[Dsim]]), colnames(pMat)), drop=FALSE]
+			pMat = t(pMat)
 			
-			return(result)
+			pMat = pMat[as.numeric(dimnames(truthCdf)[[1]]),,drop=FALSE]
+			# pMat is prob above break
+			pMat = 1-pMat
+			pMat = cbind('1'=1, pMat,0)
+			colnames(pMat)[ncol(pMat)] = as.character(ncol(pMat))
+		}
+	
+		for(Dbin in names(Slevels)) {
+			
+			Dmidpoint = as.character(Slevels[Dbin])
+			
+			predOver = outer(pMat[,Dbin], prob, '>')
+#					colnames(predOver) = prob
+			
+			tpMat = predOver*truthOver[,Dmidpoint,Dsim]
+			fpMat = predOver*truthUnder[,Dmidpoint,Dsim]
+			tnMat = (1-predOver)*truthUnder[,Dmidpoint,Dsim]
+			fnMat = (1-predOver)*truthOver[,Dmidpoint,Dsim]
+			allnMat = tnMat + fpMat
+			allpMat = tpMat + fnMat
+			
+			tP[,Dbin,Dsim] = apply(tpMat,2,sum, na.rm=TRUE)
+			tN[,Dbin,Dsim] = apply(tnMat,2,sum, na.rm=TRUE)
+			fP[,Dbin,Dsim] = apply(fpMat,2,sum, na.rm=TRUE)
+			fN[,Dbin,Dsim] = apply(fnMat,2,sum, na.rm=TRUE)
+			allP[,Dbin,Dsim] = apply(allpMat,2,sum, na.rm=TRUE)
+			allN[,Dbin,Dsim] = apply(allnMat,2,sum, na.rm=TRUE)
 			
 		}
+		
+		
+	}
+	
+	
+	result = list(
+			tP = tP, 
+			allP = allP, 
+			tN = tN, 
+			allN = allN
+	)
+	result$allP[result$allP==0] = NA
+	result$allN[result$allN==0] = NA
+	
+	return(result)
+	
+}
 
 
 spatialRoc = function(fit, 
@@ -202,8 +231,18 @@ spatialRoc = function(fit,
 		fit = list(fit)
 	}
 	
-	
+	thresholdNames = grep("^threshold\\.[[:digit:]]", names(fit), value=TRUE)
+	if(length(thresholdNames)) {
+		# this is a local em result
+		# rr must be that used for the bootstrap simulations
+		rr = as.numeric(gsub("^threshold\\.", "", thresholdNames))
+		random = FALSE
+		isLocalEm = TRUE
+	} else {
+		isLocalEm = FALSE
+	}
 	breaks = c(-Inf, log(rr), Inf)
+	
 	
 	if('raster'%in% names(truth))
 		truth = truth$raster
@@ -231,24 +270,33 @@ spatialRoc = function(fit,
 	} 
 
 	if(is.null(border))
-		border = fit[[1]]$data
+		if(any(names(fit[[1]])=='data'))
+			border = fit[[1]]$data
 		
 	if(!is.null(border))
 		truth = mask(truth, border)
-	
 
 	truthCut = cut(truth, breaks=breaks)
 	names(truthCut) = names(truth)
 	
 	
-	
-	if(any(names(fit[[1]]) =='raster')){
+	if(isLocalEm) {
+		templateID = spatialRocRasterTemplate(
+				truthCut, fit
+		)
+		marginals = fit
+	 		
+
+ 
+		
+				
+	} else if(any(names(fit[[1]]) =='raster')){
 		# lgcp or glgm
 		
 		templateID = spatialRocRasterTemplate(
 			truthCut, fit
 		) 
-	
+		
 		
 		if(random) {
 			marginals = lapply(
@@ -303,7 +351,7 @@ spatialRoc = function(fit,
 			sens = res$tP / res$allP,
 			along=4
 			)
-			bySim = bySim[,-1,,,drop=FALSE]
+			bySim = bySim[,-dim(bySim)[2],,,drop=FALSE]
 
 			result = apply(bySim, c(1,2,4), mean)
 
