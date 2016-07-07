@@ -63,7 +63,11 @@ gm.dataRaster = function(
 	dataFactors = intersect(Sfactor,names(data))
 	
   inModel = intersect(inModel, names(covariates))
-  covariates = covariates[inModel]
+	if(length(grep("^Raster", class(covariates)))) {
+		covariates = covariates[[inModel]]
+	} else {
+		covariates = covariates[inModel]
+	}
   if(length(inModel)) {		
     dataFactors = intersect(Sfactor, names(data))
     notInData = setdiff(names(covariates), names(data))
@@ -74,12 +78,23 @@ gm.dataRaster = function(
 		
     notLogOffset = ! names(covariates) %in% names(offsetToLogOrig)
     if(any(notLogOffset)){
-		covariatesStack = stackRasterList(
-        covariates[notLogOffset],
+			if(length(grep("^Raster", class(covariates)))) {
+				covariatesForStack = covariates[[which(notLogOffset)]]
+				covariatesForStackData = 
+						covariates[[notInData]]
+			} else {
+				covariatesForStack = covariates[notLogOffset]
+				covariatesForStackData = 
+						covariates[notInData]
+			}
+			covariatesStack = stackRasterList(
+        	covariatesForStack,
         cellsSmall, method=rmethod)
 
     covariatesStack = stack(cellsSmall, covariatesStack)
-    covData = stackRasterList(covariates[notInData], data, method=rmethod)
+    covData = stackRasterList(
+				covariatesForStackData, 
+				data, method=rmethod)
     
     } else {
       covariatesStack = cellsSmall
