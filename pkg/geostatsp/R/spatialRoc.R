@@ -69,23 +69,6 @@ spatialRocSims = function(
 	# SlevelsRound are bin numbers
 	
 	
-	if(length(grep("^Raster", class(marginals)))) {		
-		# local-em
-		
-		pMat = cbind('1'=1,as.data.frame(
-						marginals[[grep("threshold.", names(marginals))]]
-				), '0'=0)
-		colnames(pMat) = c('1',names(Slevels))
-		pMat = pMat[sort(na.omit(unique(values(templateID)))),]
-		pMat = as.data.frame(t(as.matrix(pMat)))
-		marginals = list('1' = pMat)
-		isLocalEm = TRUE
-	} else {
-		isLocalEm = FALSE
-	}
-	
-	
-	
 	if(is.null(names(marginals)))
 		names(marginals) = 1:length(marginals)
 		
@@ -147,14 +130,23 @@ spatialRocSims = function(
 		for(Dsim in names(marginals)) {
 		
 		
+
+		if(length(grep("^Raster", class(marginals[[Dsim]])))) {		
+			# local-em
+			
+			pMat = cbind('1'=1,as.data.frame(
+							marginals[[Dsim]][[grep("threshold.", names(marginals[[Dsim]]))]]
+					), '0'=0)
+			colnames(pMat) = c('1',names(Slevels))
+			pMat = pMat[sort(na.omit(unique(values(templateID)))),]
+		} else { # not local-em
+
 		notNull = dimnames(truthCdf)[[1]]
 		if(! table(notNull %in% names(marginals[[Dsim]])) )
 			warning("can't map prediction ID's to marginal distributions")
-		
-		if(isLocalEm){
-			pMat = t(as.matrix(marginals[[Dsim]]))
-		} else {
+
 			# pMat is prob below break
+
 	  	# don't include last break (infinity) or first break
 			pMat = simplify2array(
 					lapply(
@@ -227,11 +219,11 @@ spatialRoc = function(fit,
 	}
 	prob = sort(unique(c(prob, 1-prob, 0.5)))
 	
-	if(any(names(fit)=='inla')){
+	if(any(names(fit)=='inla') | length(grep("^Raster", class(fit)))){
 		fit = list(fit)
 	}
-	
-	thresholdNames = grep("^threshold\\.[[:digit:]]", names(fit), value=TRUE)
+
+	thresholdNames = grep("^threshold\\.[[:digit:]]", names(fit[[1]]), value=TRUE)
 	if(length(thresholdNames)) {
 		# this is a local em result
 		# rr must be that used for the bootstrap simulations
@@ -282,14 +274,10 @@ spatialRoc = function(fit,
 	
 	if(isLocalEm) {
 		templateID = spatialRocRasterTemplate(
-				truthCut, fit
+				truthCut, fit[[1]]
 		)
 		marginals = fit
 	 		
-
- 
-		
-				
 	} else if(any(names(fit[[1]]) =='raster')){
 		# lgcp or glgm
 		
@@ -342,7 +330,6 @@ spatialRoc = function(fit,
 			truthCut, marginals, templateID, 
 			breaks, prob
 		)	
-	
 	
 	
 
