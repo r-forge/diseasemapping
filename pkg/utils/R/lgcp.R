@@ -82,9 +82,12 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 	intensityFile = file.path(dirname, 'intensity.grd')
 	summaryFile = file.path(dirname, 'summary.grd')
 	maskFile = file.path(dirname, 'mask.grd')
+	offsetFile = file.path(dirname, 'offset.grd')
 	
 	gsize = diff(bRes$ncens[1:2])/2
-	
+	scaleIntensity = sum(x$poisson.offset, na.rm=TRUE)
+	if(!length(scaleIntensity))
+		scaleIntensity = 1
 	
 	random = brick(randomFile)
 	random = setMinMax(random)
@@ -107,6 +110,10 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 			overwrite = file.exists(maskFile)
 	)
 	
+	scaleOffset = sum(log(res(random)))
+	
+
+			
 	smallZ = array(
 			bRes$Z,
 			c(bRes$M, bRes$ext, bRes$N, bRes$ext, ncol(bRes$Z)),
@@ -124,11 +131,12 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 	)
 	smallZ[as.vector(bRes$cellInside)==0, ] = NA
 	
-	fixed = tcrossprod(smallZ, bRes$betarec)
+	fixed = tcrossprod(smallZ, bRes$betarec) + scaleOffset
 	fixed = array(fixed, 
 			c(bRes$M, bRes$N, nrow(bRes$betarec)))
 	fixed = fixed[,dim(fixed)[2]:1,]
 	fixed = aperm(fixed, c(2,1,3))
+#	fixed = fixed + log(scaleIntensity)
 	fixed = brick(fixed)
 	extent(fixed) = extent(random)
 	fixed = setMinMax(fixed)
@@ -138,10 +146,11 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
   		overwrite = file.exists(fixedFile)
 	)
 	
-	intensity = exp(fixed + random)
-	intensity = setMinMax(intensity)
+	relativeIntensity = exp(fixed + random)
+	relativeIntensity = setMinMax(relativeIntensity)
 	
-	intensity = writeRaster(intensity,
+	relativeIntensity = writeRaster(
+			relativeIntensity,
 			filename = intensityFile,
 			overwrite = file.exists(intensityFile)
 	)
@@ -155,11 +164,27 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 	
 	randomSummary = calc(random, summaryFunction)
 	names(randomSummary) = gsub("^xx", 'random', names(randomSummary))
-	intensitySummary = calc(intensity, summaryFunction)
-	names(intensitySummary) = gsub("^xx", 'intensity', names(intensitySummary))
+	intensitySummary = calc(relativeIntensity, summaryFunction)
+	names(intensitySummary) = gsub("^xx", 'relativeIntensity', 
+			names(intensitySummary))
 	
 	summaryStack = stack(
 			randomSummary, intensitySummary
+	)
+	
+	offset = raster(random)
+	
+	values(offset) = t(x$poisson.offset[
+					1:x$M, x$N:1
+			])
+	offset = log(offset) - scaleOffset
+	offset = brick(
+			offset, exp(offset)
+	)
+	names(offset) = c('offsetLog','offsetExp')			
+	
+	summaryStack = stack(
+			summaryStack, offset
 	)
 	summaryStack = setMinMax(summaryStack)
 	
@@ -179,7 +204,7 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 	}
 	
 	samples = list(
-			intensity = intensity,
+			relativeIntensity = relativeIntensity,
 			random = random,
 			fixed = fixed,
 			mask=rasterMask,
@@ -188,7 +213,7 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 			range = 2*exp(bRes$etarec[,2])
 	)
 	samples$beta[,1] =
-			samples$beta[,1] - samples$sd^2/2
+			samples$beta[,1] - samples$sd^2/2 + scaleOffset
 	
 	summaryTable = lapply(
 			c(as.list(as.data.frame(samples$beta)), 
