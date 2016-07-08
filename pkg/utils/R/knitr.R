@@ -113,3 +113,71 @@ hook_plot_p = function(x, options) {
   result
   
 }
+
+
+# make multiple plots as pseudo-subfigures, in a table
+hook_plot_beamer = function(x, options) {
+	
+  if (options$fig.show == 'animate') return(hook_plot_html(x, options))
+	
+  fig.ncol = options$fig.ncol
+  if(is.null(fig.ncol)) {
+  	fig.ncol=1
+  }
+	
+	fig.num =options$fig.num
+	if(is.null(fig.num))
+		fig.num=1
+	
+  fig.cur =options$fig.cur
+	if(is.null(fig.cur))
+		fig.cur=1
+	
+	fig.nrow = ceiling(fig.num / fig.ncol)		
+	
+	Dcol = floor((fig.cur-1)/fig.nrow)+1
+	Drow = fig.cur-(Dcol-1)*fig.nrow
+	
+#		cat(c('\n', fig.cur, fig.num, fig.nrow, fig.ncol, Drow, Dcol, '\n'))
+	
+	out.width  = options$out.width
+	if(is.null(out.width)){
+		out.width = signif(1/fig.ncol, 2)
+	}
+	out.width = paste("[", out.width, "]",sep='')
+	
+	
+  base = opts_knit$get('base.url') 
+	if(is.null(base)) base=''
+	
+  cap = options$fig.cap
+  scap = options$fig.subcap
+	
+	scapCenter = 
+  		if(is.null(scap)){
+				scap = scapCenter = ''
+			} else {
+				scapCenter = paste("\\centering ", scap, "")
+			}
+	
+  result = sprintf('![%s](%s%s)\\ \n\n%s\n\n', scap, base, knitr:::.upload.url(x), scapCenter)
+  
+	if(Drow == 1 & fig.cur > 1) {
+		result = paste("\n\\newcol", out.width, "\n\n", result, sep="")
+	}
+	
+	if(any(nchar(cap)>1)) {
+		if( fig.ncol > 1) {
+			if(fig.cur == 1 ) 
+				result = paste("\n\\bcol", out.width, "\n\n", result, sep="")
+			if(fig.cur == fig.num) 
+				result = paste(result, "\n\\ecol\n\n", sep="")
+		}
+		if(fig.cur == 1 ) {
+			result = paste( "\n## ", cap,  "\n\n", result, sep="")	
+		}
+	}
+	
+  result
+	
+}
