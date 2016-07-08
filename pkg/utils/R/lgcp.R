@@ -177,11 +177,11 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 	values(offset) = t(x$poisson.offset[
 					1:x$M, x$N:1
 			])
-	offset = log(offset) - scaleOffset
+	offset = offset*exp(-scaleOffset)
 	offset = brick(
-			offset, exp(offset)
+			offset, log(offset)
 	)
-	names(offset) = c('offsetLog','offsetExp')			
+	names(offset) = c('offsetExp','offsetLog')			
 	
 	summaryStack = stack(
 			summaryStack, offset
