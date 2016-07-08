@@ -31,7 +31,7 @@ downloadIfOld = function(
 		if(source) {
 			source(
 					file[D],
-					verbose=verbose
+					verbose=verbose>1
 			)
 		}
 	}
