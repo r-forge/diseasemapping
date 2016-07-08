@@ -13,7 +13,7 @@ downloadIfOld = function(
 	
 	for(D in 1:length(url)) {
 		if(verbose)
-			message('file', file[D])
+			message('file ', file[D])
 		
 		
 		fileIsNew = any(as.numeric(difftime(
