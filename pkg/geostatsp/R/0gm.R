@@ -163,16 +163,31 @@ gm.dataRaster = function(
 	  # any other offsets would also have been removed
 	  # by drop.terms
 
-	  formula = update.formula(
+	
+	if(length(allOffsets)< length(alltermsFull)) {
+		formula = update.formula(
 			drop.terms(terms(formula), dropx=toDrop, keep.response=TRUE),
 			as.formula(
 					paste(".~.", 
 							paste("offset(log", D, ")", sep=''),
 							offsetNotLogged, 
 							sep = '+')
-	) 	
+			) 	
 	)
-	
+	} else {
+		# only offsets in the model
+		# drop.terms won't work
+		formula = update.formula(
+				formula,
+				as.formula(
+						paste(".~", 
+								paste("offset(log", D, ")", sep=''),
+								offsetNotLogged, 
+								sep = '+')
+				)
+		
+		)	
+	}
     
     rmethod[paste('log',D,sep='')] = 'bilinear'
 
