@@ -1,3 +1,4 @@
+#' @export
 zMatToRaster= function(x) {
 	
 	Zmat2 = x
@@ -45,6 +46,7 @@ zMatToRaster= function(x) {
 }
 
 
+#' @export
 pololayToRaster = function(x) {
 	polyolay = x
 	
@@ -70,6 +72,7 @@ pololayToRaster = function(x) {
 }
 
 
+#' @export
 lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 # convert lgcp results to geostatsp-type stuff
 	

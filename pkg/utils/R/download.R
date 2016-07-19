@@ -1,4 +1,4 @@
-
+#' @export
 downloadIfOld = function(
 		url,
 		file = basename(url),

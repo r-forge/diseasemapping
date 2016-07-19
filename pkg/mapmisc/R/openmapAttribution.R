@@ -97,6 +97,9 @@ nrcan = list(long=list(
     )
 )
 
+
+
+
 for(D in names(osm$long)){
   osm$long[[D]] = paste(
       osm$short[[D]], 
@@ -198,7 +201,7 @@ for(D in names(stamen$long)){
           stamen$long[[D]]) 
 }
 
-maptoolkit = waze=cartodb = stamenToner
+tunderforest = maptoolkit = waze=cartodb = stamenToner
 for(D in names(cartodb$long)){
   for(D2 in c('long','short')){
   cartodb[[D2]][[D]] = gsub(
@@ -225,7 +228,15 @@ for(D in names(cartodb$long)){
         "Stamen Design", "Toursprung GmbH",
         maptoolkit[[D2]][[D]]
     )
-    
+	thunderforest[[D2]][[D]] = gsub(
+			"stamen.com", "thunderforest.com",
+			maptoolkit[[D2]][[D]]
+	)
+	thunderforest[[D2]][[D]] = gsub(
+			"Stamen Design", "Thunderforest",
+			maptoolkit[[D2]][[D]]
+	)
+	
   }
   maptoolkit$long[[D]] = paste(
       maptoolkit$short[[D]],

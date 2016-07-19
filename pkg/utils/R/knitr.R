@@ -1,6 +1,7 @@
-# make multiple plots as pseudo-subfigures, in a table
+#' @export
 hook_plot_p = function(x, options) {
-  
+# make multiple plots as pseudo-subfigures, in a table
+	
   # for debugging
   # stuff <<- list(x=x, options=options)
   
@@ -115,7 +116,7 @@ hook_plot_p = function(x, options) {
 }
 
 
-# make multiple plots as pseudo-subfigures, in a table
+#' @export
 hook_plot_beamer = function(x, options) {
 	
   if (options$fig.show == 'animate') return(hook_plot_html(x, options))

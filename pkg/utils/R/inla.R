@@ -1,9 +1,11 @@
+#' @export
 precToSd = function(densmat) {
 	densmat[,"y"] = densmat[,"y"] * 2*  densmat[,"x"]^(3/2) 
 	densmat[,"x"] = 1/sqrt(densmat[,"x"])  
 	densmat
 }
 
+#' @export
 priorPostSd = function(
 		res, 
 		param=1:length(res$all.hyper$random),

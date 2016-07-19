@@ -1,0 +1,89 @@
+---
+title: "Pmisc slides example"
+author: 'Patrick Brown'
+date: `r today()`
+theme: Singapore
+classoption:
+  - aspectratio=169
+  - xcolor=dvipsnames
+header-includes:
+`r Pmisc::slideHeaderIncludes`
+  - \newcommand{\comment}[1]{} 
+  - \usecolortheme[named=MidnightBlue]{structure}
+  - \DeclareMathOperator{\var}{var}
+  - \DeclareMathOperator{\E}{E}
+  - \newcommand{\simiid}{\overset{\text{iid}}{\sim}}
+  - \newcommand{\tp}{^\text{T}}
+  - \newcommand{\pr}{\text{pr}}
+  - \newcommand{\mm}[1]{\ensuremath{\boldsymbol{#1}}}
+  - \usepackage[backend=biber,maxbibnames=4,maxcitenames=2,doi=false,style=authoryear,isbn=false,firstinits=true]{biblatex}
+  - \addbibresource{myBib.bib}
+  - \setbeamertemplate{bibliography item}{}
+---
+
+
+`r slideHeader(
+		title= "Pmisc slides example",
+		author= 'Patrick Brown',
+		theme= 'Singapore',
+		classoption=c(
+			aspectratio=169,
+			xcolor='dvipsnames')
+)`
+
+```{r toCompile, eval=FALSE, echo=FALSE}
+
+if(FALSE){
+  bname = 'slides'
+  knitr::knit(paste(bname, '.Rmd', sep=''))
+  
+  system(paste('pandoc --standalone --smart ',
+  ' --filter=pandoc-citeproc --to=beamer ', 
+  bname, '.md --output=', bname, '.tex', 
+  sep=''))
+  
+  system(paste('xelatex -interaction=nonstopmode', bname))
+  system(paste('biber', bname))
+  system(paste('xelatex -interaction=nonstopmode', bname))
+}
+```
+
+```{r setup, include=FALSE}
+
+library('knitr')
+library('Pmisc')
+knitr::knit_hooks$set(plot=hook_plot_beamer) 
+
+
+knitr::knit_hooks$set(
+	marginsp = function(before, options, envir){	
+		if(!before) return()
+# use small margins
+		par(mar=c(1.5+0.9*options$marginsp,
+				1.5+0.9*options$marginsp,0.2,0.2),
+				mgp=c(1.45, 0.45, 0),cex=1.25)
+	}		
+)
+
+knitr::opts_hooks$set(half = function(options) {
+  options$tidy.opts = list(width.cutoff = 12)#list(options$tidy.opts$width.cutoff/2)
+  options
+})
+
+knitr::opts_chunk$set(echo=FALSE, prompt=TRUE, comment=NA,
+		dev='png', marginsp=1, fig.cap=' ',
+		fig.width=8, fig.height=4.5, half=NULL,
+		tidy=TRUE,tidy.opts=list(indent=2, width.cutoff=55)
+)
+
+options(width=80)
+```
+
+
+
+```{r bib, include=FALSE}
+knitr::write_bib(
+	c('mapmisc', 'knitr'),
+	file='myBib.bib'
+)
+```

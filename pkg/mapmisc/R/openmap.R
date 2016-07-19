@@ -32,7 +32,8 @@ osmTiles = function(name) {
  'nrcan-text' = 
 		 'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_TXT_3857/MapServer/tile/',
  'nrcan-text-fr' = 
-		 'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBCT_TXT_3857/MapServer/tile/'
+		 'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBCT_TXT_3857/MapServer/tile/',
+spinal = 'http://c.tile.thunderforest.com/spinal-map/'
 )
 #	skobbler="http://tiles3.skobbler.net/osm_tiles2/",	
 #  'sputnik' = 'http://a.tiles.maps.sputnik.ru/tiles/kmt2/',
@@ -144,7 +145,7 @@ openmap = function(x, zoom,
 		}
 		
 		if(length(grep(
-						'nrcan\\.gc\\.ca', Durl))){
+						'nrcan\\.gc\\.ca|gov\\.bc\\.ca', Durl))){
 			suffix = ''
 			tileNames = 'zyx'
 		} else if(length(grep('heidelberg.de/tiles/(hybrid|adminb|roadsg|roads)/?$', Durl))){
