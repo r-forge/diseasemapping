@@ -1,77 +1,15 @@
-#' @export
-zMatToRaster= function(x) {
-	
-	Zmat2 = x
-	
-	gsize = attributes(Zmat2)$cellwidth/2
-	
-	
-	zExtent = extent(
-			attributes(Zmat2)$mcens[1]-gsize,
-			max(attributes(Zmat2)$mcens)+gsize,
-			attributes(Zmat2)$ncens[1]-gsize,
-			max(attributes(Zmat2)$ncens)+gsize
-	)
-	
-	rasterMask = raster(
-			t(attributes(x)$gridobj$cellInside[
-							1:attributes(Zmat2)$M,
-							seq(ncol(attributes(x)$gridobj$cellInside),by=-1, 
-									len = attributes(Zmat2)$N)
-					])	
-	)
-	extent(rasterMask) = zExtent
-	names(rasterMask) = 'mask'
-	
-	
-	zArray2 = array(
-			Zmat2, c(
-					c(attributes(Zmat2)$M, attributes(Zmat2)$N),#/attributes(Zmat2)$ext,	
-					ncol(Zmat2)	
-			),
-			dimnames=list(NULL, NULL, colnames(Zmat2))
-	)
-	
-	zArray2 = zArray2[,dim(zArray2)[2]:1,]
-	zArray2 = aperm(zArray2, c(2,1,3))
-	
-	zBrick2 = brick(
-			zArray2
-	)
-	extent(zBrick2) = zExtent		
-	
-	zBrick2 = addLayer(zBrick2, rasterMask)
-	
-	zBrick2
-}
-
-
-#' @export
-pololayToRaster = function(x) {
-	polyolay = x
-	
-	gsize = polyolay$cellwidth/2
-	
-	rasterMaskExt = raster(
-			t(polyolay$gridobj$cellInside[,ncol(polyolay$gridobj$cellInside):1]),
-			polyolay$gridobj$mcens[1]-gsize,
-			max(polyolay$gridobj$mcens)+gsize,
-			polyolay$gridobj$ncens[1]-gsize,
-			max(polyolay$gridobj$ncens)+gsize
-	)
-	zExtent = extent(
-			polyolay$gridobj$mcens[1]-gsize-1,
-			mean(polyolay$gridobj$mcens),
-			polyolay$gridobj$ncens[1]-gsize-1,
-			mean(polyolay$gridobj$ncens)
-	)		
-	
-	rasterMask = crop(rasterMaskExt, zExtent)
-	
-	list(small=rasterMask, ext=rasterMaskExt)
-}
-
-
+#' Convert lgcp results to geostatsp format
+#' 
+#' @description Results from \code{\link[lgcp]{lgcp}} are converted 
+#' to a format comparable to that produced by \code{\link[geostatsp]{lgcp}}
+#' from the \code{geostatsp} package
+#' 
+#' @param x result from \code{\link[lgcp]{lgcp}} 
+#' @param dirname folder with detailed results
+#' 
+#' @import raster
+#' @import sp
+#' 
 #' @export
 lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 # convert lgcp results to geostatsp-type stuff
@@ -243,7 +181,7 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 					density(samples$sd)[c('x','y')]),
 			prior = cbind(
 					x = xSeq,
-					y = dlnorm(xSeq, 
+					y = stats::dlnorm(xSeq, 
 							bRes$priors$etaprior$mean[1], 
 							bRes$priors$etaprior$variance[1,1]
 					)
@@ -261,7 +199,7 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 					density(samples$range)[c('x','y')]),
 			prior = cbind(
 					x = xSeq*2,
-					y = dlnorm(xSeq, 
+					y = stats::dlnorm(xSeq, 
 							bRes$priors$etaprior$mean[2], 
 							bRes$priors$etaprior$variance[2,2]
 					)/2
@@ -296,10 +234,10 @@ getZmatPopulation = function(
 ) {
 	
 	if(!missing(border) & !missing(events))
-		events = events[!is.na(over(events, as(border,'SpatialPolygons')))]
+		events = events[!is.na(sp::over(events, methods::as(border,'SpatialPolygons')))]
 	
 	if(!missing(events)) {
-		eventsPPP = as.ppp(events)
+		eventsPPP = spatstat::as.ppp(events)
 	} else {
 		eventsPPP = NULL
 	}
@@ -319,11 +257,11 @@ getZmatPopulation = function(
 		border2 = border
 		border2$junk = 1
 		border2 = border2[,'junk']
-		border2@data = assigninterp(df = border2@data, vars = "junk", 
+		border2@data = lgcp::assigninterp(df = border2@data, vars = "junk", 
 				value = "ArealWeightedSum")
 		
 		if(verbose) cat("\nrunning getpolyol")
-		polyolay <- getpolyol(
+		polyolay <- lgcp::getpolyol(
 				data=eventsPPP,
         regionalcovariates=border2,
         cellwidth=polyolay$cellwidth,
@@ -386,7 +324,7 @@ getZmatPopulation = function(
 		}
 		
 		if(verbose) cat("\nrasterizing covariates")
-		covariatesFine = stackRasterList(
+		covariatesFine = geostatsp::stackRasterList(
 				covariates,
 				rasterFine
 		)
@@ -448,7 +386,7 @@ getZmatPopulation = function(
 			ext = attributes(zMatrix)$ext,
 			cellwidth = attributes(zMatrix)$cellwidth,
 			raster = zRaster,
-			formula = as.formula(
+			formula = stats::as.formula(
 					paste(
 							'X ~ ',
 							paste(names(covariates), collapse='+'),
@@ -456,5 +394,78 @@ getZmatPopulation = function(
 					)
 			)
 	)
+}
+
+
+zMatToRaster= function(x) {
+	
+	Zmat2 = x
+	
+	gsize = attributes(Zmat2)$cellwidth/2
+	
+	
+	zExtent = extent(
+			attributes(Zmat2)$mcens[1]-gsize,
+			max(attributes(Zmat2)$mcens)+gsize,
+			attributes(Zmat2)$ncens[1]-gsize,
+			max(attributes(Zmat2)$ncens)+gsize
+	)
+	
+	rasterMask = raster(
+			t(attributes(x)$gridobj$cellInside[
+							1:attributes(Zmat2)$M,
+							seq(ncol(attributes(x)$gridobj$cellInside),by=-1, 
+									len = attributes(Zmat2)$N)
+					])	
+	)
+	extent(rasterMask) = zExtent
+	names(rasterMask) = 'mask'
+	
+	
+	zArray2 = array(
+			Zmat2, c(
+					c(attributes(Zmat2)$M, attributes(Zmat2)$N),#/attributes(Zmat2)$ext,	
+					ncol(Zmat2)	
+			),
+			dimnames=list(NULL, NULL, colnames(Zmat2))
+	)
+	
+	zArray2 = zArray2[,dim(zArray2)[2]:1,]
+	zArray2 = aperm(zArray2, c(2,1,3))
+	
+	zBrick2 = brick(
+			zArray2
+	)
+	extent(zBrick2) = zExtent		
+	
+	zBrick2 = addLayer(zBrick2, rasterMask)
+	
+	zBrick2
+}
+
+
+
+pololayToRaster = function(x) {
+	polyolay = x
+	
+	gsize = polyolay$cellwidth/2
+	
+	rasterMaskExt = raster(
+			t(polyolay$gridobj$cellInside[,ncol(polyolay$gridobj$cellInside):1]),
+			polyolay$gridobj$mcens[1]-gsize,
+			max(polyolay$gridobj$mcens)+gsize,
+			polyolay$gridobj$ncens[1]-gsize,
+			max(polyolay$gridobj$ncens)+gsize
+	)
+	zExtent = extent(
+			polyolay$gridobj$mcens[1]-gsize-1,
+			mean(polyolay$gridobj$mcens),
+			polyolay$gridobj$ncens[1]-gsize-1,
+			mean(polyolay$gridobj$ncens)
+	)		
+	
+	rasterMask = crop(rasterMaskExt, zExtent)
+	
+	list(small=rasterMask, ext=rasterMaskExt)
 }
 

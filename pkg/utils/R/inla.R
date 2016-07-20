@@ -1,10 +1,10 @@
-#' @export
-precToSd = function(densmat) {
-	densmat[,"y"] = densmat[,"y"] * 2*  densmat[,"x"]^(3/2) 
-	densmat[,"x"] = 1/sqrt(densmat[,"x"])  
-	densmat
-}
-
+#' precisions to standard deviations
+#' 
+#' @description Transforms prior and posterior distributions of precision parameters to standard deviations
+#'
+#' @param res an inla result
+#' @param param vector of parameters to transform
+#' @param minSd minimum value of standard deviation to consider
 #' @export
 priorPostSd = function(
 		res, 
@@ -125,3 +125,9 @@ priorPostSd = function(
 }
 
 
+#' @export
+precToSd = function(densmat) {
+	densmat[,"y"] = densmat[,"y"] * 2*  densmat[,"x"]^(3/2) 
+	densmat[,"x"] = 1/sqrt(densmat[,"x"])  
+	densmat
+}

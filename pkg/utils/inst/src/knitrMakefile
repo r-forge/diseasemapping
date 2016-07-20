@@ -1,0 +1,21 @@
+ifndef pandocTo
+pandocTo = beamer
+endif
+
+%.md: %.Rmd
+	R -e "knitr::knit('$<', encoding='UTF-8')" $(Rargs)
+
+%.tex: %.md
+	pandoc --standalone --smart --to=$(pandocTo) --output=$@ $<
+
+%.pdf: %.tex %.bbl
+	xelatex -interaction=nonstopmode $<
+
+%.bbl: %.bcf
+	biber $<	
+
+%.bcf: %.tex
+	xelatex $<
+
+clean:
+	rm *.run.xml* *.blg *.out *.log *.aux *.bcf *.bbl *.md.tex		

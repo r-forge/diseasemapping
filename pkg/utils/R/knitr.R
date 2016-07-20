@@ -1,13 +1,19 @@
+#' Hooks for knitr
+#' 
+#' @description Hooks for including in knitr documents
+#' @param x see \code{\link[knitr]{hook_pdfcrop}}
+#' @param options see \code{\link[knitr]{hook_pdfcrop}}
+#' 
 #' @export
-hook_plot_p = function(x, options) {
+hook_plot_htmlsubfig = function(x, options) {
 # make multiple plots as pseudo-subfigures, in a table
 	
   # for debugging
   # stuff <<- list(x=x, options=options)
   
-  if (options$fig.show == 'animate') return(hook_plot_html(x, options))
+  if (options$fig.show == 'animate') return(knitr::hook_plot_html(x, options))
   
-  base = opts_knit$get('base.url') 
+  base = knitr::opts_knit$get('base.url') 
   if(is.null(base)) base=''
   cap = options$fig.cap
   scap = options$fig.subcap
@@ -119,7 +125,7 @@ hook_plot_p = function(x, options) {
 #' @export
 hook_plot_beamer = function(x, options) {
 	
-  if (options$fig.show == 'animate') return(hook_plot_html(x, options))
+  if (options$fig.show == 'animate') return(knitr::hook_plot_html(x, options))
 	
   fig.ncol = options$fig.ncol
   if(is.null(fig.ncol)) {
@@ -148,7 +154,7 @@ hook_plot_beamer = function(x, options) {
 	out.width = paste("[", out.width, "]",sep='')
 	
 	
-  base = opts_knit$get('base.url') 
+  base = knitr::opts_knit$get('base.url') 
 	if(is.null(base)) base=''
 	
   cap = options$fig.cap

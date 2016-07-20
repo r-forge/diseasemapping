@@ -1,18 +1,27 @@
 Package: Pmisc
 Type: Package
-Title: Various Utilities
+Title: Various Utilities for knitr and inla
 Version: 0.0.1
 Date: 2016-07-17
 Imports:
-    knitr
+    knitr,
+    sp,
+    raster
 Suggests:
     mapmisc,
-    utils
+    spatstat,
+    methods,
+    utils,
+    INLA,
+    geostatsp,
+    stats
 Enhances: lgcp
 Author: Patrick Brown <patrick.brown@utoronto.ca>[aut, cre]
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
-Description: Various utilities which will eventually be put into other packages
+Description: This is a collection of various utilities which will eventually be
+    put into other packages.
 URL: http://r-forge.r-project.org/projects/diseasemapping/
+Additional_repositories: https://www.math.ntnu.no/inla/R/stable/
 License: GPL
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1
