@@ -1,3 +1,12 @@
+#' Download a file
+#' 
+#' @description Checks if a downloaded file is old and re-downloads is necessary
+#'
+#' @param url a string specifying the remote location
+#' @param file local file name
+#' @param age maximum age of the local file
+#' @param verbose print additional information
+#' @param source source the file after download
 #' @export
 downloadIfOld = function(
 		url,
