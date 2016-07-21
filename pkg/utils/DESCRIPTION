@@ -24,3 +24,4 @@ URL: http://r-forge.r-project.org/projects/diseasemapping/
 Additional_repositories: https://www.math.ntnu.no/inla/R/stable/
 License: GPL
 VignetteBuilder: knitr
+RoxygenNote: 5.0.1
