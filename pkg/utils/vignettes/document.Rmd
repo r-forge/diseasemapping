@@ -1,0 +1,88 @@
+<!--
+%\VignetteEngine{knitr::docco_linear}
+%\VignetteIndexEntry{Examples of an html document with subfigures}
+-->
+
+```{r setup, include=FALSE}
+
+# to compile
+
+fName = 'document.Rmd'
+Makefile = system.file('src','knitrMakefile', package='Pmisc')
+toCompile = paste("make -f ", Makefile, ' ', gsub("Rmd$","html", fName), sep='')
+toCompile
+
+library('knitr')
+library('Pmisc')
+knitr::knit_hooks$set(plot=hook_plot_htmlsubfig) 
+
+knitr::knit_hooks$set(
+	marginsp = function(before, options, envir){	
+		if(!before) return()
+# use small margins
+		par(mar=c(1.5+0.9*options$marginsp,
+				1.5+0.9*options$marginsp,0.2,0.2),
+				mgp=c(1.45, 0.45, 0),cex=1.25)
+	}		
+)
+
+
+knitr::opts_chunk$set(echo=FALSE, prompt=TRUE, comment=NA,
+		dev='png', marginsp=1, fig.cap=' ',
+		fig.width=6, fig.height=6, 
+		tidy=TRUE,tidy.opts=list(indent=2, width.cutoff=55)
+)
+
+options(width=80)
+
+bibFile = 'myDocBib.bib'
+cat('
+@article{lindgren2011explicit,
+  title={An explicit link between Gaussian fields and Gaussian Markov random fields: the stochastic partial differential equation approach},
+  author={Lindgren, Finn and Rue, Haavard and Lindstrom, Johan},
+  journal={Journal of the Royal Statistical Society B},
+  volume={73},
+  number={4},
+  pages={423--498},
+  year={2011},
+  publisher={Wiley},
+  doi={10.1111/j.1467-9868.2011.00777.x}
+}
+', file=bibFile, encoding='UTF8')
+
+
+```
+		
+```{r theHeader, echo=FALSE}
+Pmisc::markdownHeader(
+		title="Pmisc html subfigures", 		
+		author='Patrick Brown',
+		slides=FALSE,
+		bibliography = bibFile,
+		csl = system.file('src','apa.csl', package='Pmisc'),
+		css = system.file('src','article.css', package='Pmisc')
+)
+```
+
+
+# Introduction
+
+A very good paper is @lindgren2011explicit
+
+
+
+```{r aplot, fig.ncol=2, fig.cap='Uninteresting plots', fig.subcap=c('a','b','c','d')}
+plot(1:10)
+
+plot(1:10+2)
+
+
+plot(1:10-4)
+
+
+plot(1:10+4)
+```
+
+
+# References
+

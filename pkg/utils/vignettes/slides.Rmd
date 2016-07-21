@@ -4,6 +4,50 @@
 -->
 
 
+```{r setup, include=FALSE}
+fName = 'slides.Rmd'
+Makefile = system.file('src','knitrMakefile', package='Pmisc')
+toCompile = paste("make -f ", Makefile, ' ', gsub("Rmd$","pdf", fName), sep='')
+toCompile
+
+# packages
+library('knitr')
+library('Pmisc')
+
+# hook for multicolumn plots
+knitr::knit_hooks$set(plot=hook_plot_beamer) 
+
+# hook for smaller plot margins
+knitr::knit_hooks$set(
+	marginsp = function(before, options, envir){	
+		if(!before) return()
+		par(mar=c(1.5+0.9*options$marginsp,
+				1.5+0.9*options$marginsp,0.2,0.2),
+				mgp=c(1.45, 0.45, 0),cex=1.25)
+	}		
+)
+
+# hook for half width
+knitr::opts_hooks$set(half = function(options) {
+  options$tidy.opts = list(width.cutoff = options$tidy.opts$width.cutoff/2)
+  options
+})
+
+# default chunk options
+knitr::opts_chunk$set(echo=FALSE, prompt=TRUE, comment=NA,
+		dev='pdf', marginsp=1, fig.start='#',
+		fig.width=8, fig.height=4.5, half=NULL,
+		tidy=TRUE,tidy.opts=list(indent=2, width.cutoff=55)
+)
+
+options(width=80)
+
+# write a bibliography
+knitr::write_bib(
+	c('mapmisc', 'knitr'),
+	file='myBib.bib'
+)
+```
 
 ```{r theHeader, echo=FALSE}
 Pmisc::markdownHeader(
@@ -11,79 +55,32 @@ Pmisc::markdownHeader(
 		author='Patrick Brown', 				
 		theme='Singapore',
 		classoption=c(
-  			aspectratio=169,
+  		aspectratio=169,
 				xcolor='dvipsnames'),
-		'header-includes' =c(
-  			'\\usecolortheme[named=MidnightBlue]{structure}',
-  			'\\DeclareMathOperator{\\var}{var}',
-			'\\DeclareMathOperator{\\E}{E}',
-  			'\\newcommand{\\simiid}{\\overset{\\text{iid}}{\\sim}}',
-  			'\\newcommand{\\tp}{^\\text{T}}',
-  			'\\newcommand{\\pr}{\\text{pr}}',
-  			'\\newcommand{\\mm}[1]{\\ensuremath{\\boldsymbol{#1}}}',
-			'\\usepackage[backend=biber,maxbibnames=4,maxcitenames=2,doi=false,style=authoryear,isbn=false,firstinits=true]{biblatex}',
-			'\\addbibresource{myBib.bib}',
-  			'\\setbeamertemplate{bibliography item}{}'									
+		headerincludes =c(
+  		'\\usecolortheme[named=MidnightBlue]{structure}',
+  		'\\DeclareMathOperator{\\var}{var}',
+		'\\DeclareMathOperator{\\E}{E}',
+  		'\\newcommand{\\simiid}{\\overset{\\text{iid}}{\\sim}}',
+  		'\\newcommand{\\tp}{^\\text{T}}',
+  		'\\newcommand{\\pr}{\\text{pr}}',
+  		'\\newcommand{\\mm}[1]{\\ensuremath{\\boldsymbol{#1}}}',
+		'\\usepackage[backend=biber,maxbibnames=4,maxcitenames=2,doi=false,style=authoryear,isbn=false,firstinits=true]{biblatex}',
+		'\\addbibresource{myBib.bib}',
+  		'\\setbeamertemplate{bibliography item}{}'									
 		)
 )
 ```		
-	
-```{r toCompile, eval=FALSE, echo=FALSE}
 
-if(FALSE){
-  system(paste("cp",
-			system.file('doc','slides.Rmd', package='Pmisc'),
-			'.'))
-  bname = 'slides'
-  Makefile = system.file('src','knitrMakefile', package='Pmisc')
-  system(paste("make -f ", Makefile, ' ', bname, '.pdf',sep=''))	
-}
-```
+# Some references
 
-```{r setup, include=FALSE}
-
-library('knitr')
-library('Pmisc')
-knitr::knit_hooks$set(plot=hook_plot_beamer) 
-
-
-knitr::knit_hooks$set(
-	marginsp = function(before, options, envir){	
-		if(!before) return()
-# use small margins
-		par(mar=c(1.5+0.9*options$marginsp,
-				1.5+0.9*options$marginsp,0.2,0.2),
-				mgp=c(1.45, 0.45, 0),cex=1.25)
-	}		
-)
-
-knitr::opts_hooks$set(half = function(options) {
-  options$tidy.opts = list(width.cutoff = 12)#list(options$tidy.opts$width.cutoff/2)
-  options
-})
-
-knitr::opts_chunk$set(echo=FALSE, prompt=TRUE, comment=NA,
-		dev='png', marginsp=1, fig.cap=' ',
-		fig.width=8, fig.height=4.5, half=NULL,
-		tidy=TRUE,tidy.opts=list(indent=2, width.cutoff=55)
-)
-
-options(width=80)
-```
+- \fullcite{R-mapmisc}
+- \fullcite{R-knitr}
 
 
 
-```{r bib, include=FALSE}
-knitr::write_bib(
-	c('mapmisc', 'knitr'),
-	file='myBib.bib'
-)
-```
+```{r aplot, fig.height=3, fig.width=8, fig.ncol=2, fig.cap='A few plots', fig.subcap=c('a','b','c','d'), echo=FALSE, fig.start='#'}
 
-
-# stuff
-
-```{r aplot, fig.height=3, fig.width=8, fig.ncol=2, fig.cap='beans', fig.subcap=c('a','b','c','d'), echo=FALSE, dev='pdf'}
 plot(1:10)
 
 plot(1:10+2)
@@ -96,5 +93,25 @@ plot(1:10+4)
 
 ```
 
+# A few more plots
+
+
+\bcolb{Code}
+
+```{r twoplots, echo=TRUE, eval=FALSE, half=TRUE}
+plot(rnorm(10), xlab='index', ylab='value', pch=1:10)
+
+plot(runif(10), xlab='index', ylab='value', pch=1:10)
+```
+
+\newcolb{Output}
+
+```{r twoplots, fig.height=3, fig.width=8, fig.subcap=c('normal','uniform'), echo=FALSE, fig.start=NULL}
+```
+        
+\ecolb
+
+
 # References
 
+\printbibliography[heading=none]

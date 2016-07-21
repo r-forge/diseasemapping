@@ -8,14 +8,18 @@ endif
 %.tex: %.md
 	pandoc --standalone --smart --to=$(pandocTo) --output=$@ $<
 
-%.pdf: %.tex %.bbl
-	xelatex -interaction=nonstopmode $<
+%.bcf: %.tex
+	xelatex $<
 
 %.bbl: %.bcf
 	biber $<	
 
-%.bcf: %.tex
-	xelatex $<
+%.pdf: %.tex %.bbl
+	xelatex -interaction=nonstopmode $<;
+	xelatex -interaction=nonstopmode $<
+
+%.html: %.md
+	pandoc --standalone --filter=pandoc-citeproc --self-contained --output=$@ $<
 
 clean:
-	rm *.run.xml* *.blg *.out *.log *.aux *.bcf *.bbl *.md.tex		
+	rm *.run.xml* *.blg *.out *.log *.aux *.bcf *.bbl *.nav *.toc *.vrb

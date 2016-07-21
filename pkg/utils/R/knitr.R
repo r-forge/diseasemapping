@@ -126,7 +126,8 @@ hook_plot_htmlsubfig = function(x, options) {
 hook_plot_beamer = function(x, options) {
 	
   if (options$fig.show == 'animate') return(knitr::hook_plot_html(x, options))
-	
+
+		
   fig.ncol = options$fig.ncol
   if(is.null(fig.ncol)) {
   	fig.ncol=1
@@ -181,7 +182,7 @@ hook_plot_beamer = function(x, options) {
 				result = paste(result, "\n\\ecol\n\n", sep="")
 		}
 		if(fig.cur == 1 ) {
-			result = paste( "\n## ", cap,  "\n\n", result, sep="")	
+			result = paste( "\n", options$fig.start," ", cap,  "\n\n", result, sep="")	
 		}
 	}
 	

@@ -1,4 +1,4 @@
-all: slides.pdf
+all: slides.pdf document.html
 
 clean:
 	rm -rf *.tex *.toc *.bbl *.blg *.aux *.out *.log *.spl *tikzDictionary *.md figure/ cache/ *.dvi *.4* *.css *.idv *.lg *.tmp *.xref *.gz
@@ -9,7 +9,16 @@ clean:
 %.tex: %.md
 	pandoc --standalone --smart --to=beamer --output=$@ $<
 
-%.pdf: %.tex
+%.bcf: %.tex
+	xelatex $<
+
+%.bbl: %.bcf
+	biber $<	
+
+%.pdf: %.tex %.bbl
+	xelatex -interaction=nonstopmode $<;
 	xelatex -interaction=nonstopmode $<
 
+%.html: %.md
+	pandoc --standalone --filter=pandoc-citeproc --self-contained --output=$@ $<
 
