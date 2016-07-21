@@ -6,6 +6,9 @@ ifdef citeproc
 pandocArgs = --filter=pandoc-citeproc
 endif
 
+.PRECIOUS: %.md %.tex
+
+
 %.md: %.Rmd
 	R -e "knitr::knit('$<', encoding='UTF-8')" $(Rargs)
 

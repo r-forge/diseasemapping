@@ -51,31 +51,36 @@ knitr::write_bib(
 
 ```{r theHeader, echo=FALSE}
 Pmisc::markdownHeader(
-		title="Pmisc slides example", 		
-		author='Patrick Brown', 				
-		theme='Singapore',
-		classoption=c(
+	title="Pmisc slides example", 		
+	author='Patrick Brown',
+ 	bibliography='myBib.bib',
+	biblatex=1,
+	'biblio-title' = 'References',
+	'biblio-style' = 'authoryear,backend=biber',
+	biblatexoptions = c(maxbibnames=4,maxcitenames=2,
+		doi='false',isbn='false',
+		firstinits='true'),
+	theme='Singapore',
+	classoption=c(
   		aspectratio=169,
-				xcolor='dvipsnames'),
-		headerincludes =c(
+		xcolor='dvipsnames'),
+	headerincludes =c(
   		'\\usecolortheme[named=MidnightBlue]{structure}',
   		'\\DeclareMathOperator{\\var}{var}',
 		'\\DeclareMathOperator{\\E}{E}',
   		'\\newcommand{\\simiid}{\\overset{\\text{iid}}{\\sim}}',
   		'\\newcommand{\\tp}{^\\text{T}}',
   		'\\newcommand{\\pr}{\\text{pr}}',
-  		'\\newcommand{\\mm}[1]{\\ensuremath{\\boldsymbol{#1}}}',
-		'\\usepackage[backend=biber,maxbibnames=4,maxcitenames=2,doi=false,style=authoryear,isbn=false,firstinits=true]{biblatex}',
-		'\\addbibresource{myBib.bib}',
-  		'\\setbeamertemplate{bibliography item}{}'									
-		)
+  		'\\newcommand{\\mm}[1]{\\ensuremath{\\boldsymbol{#1}}}')
 )
 ```		
 
 # Some references
 
-- \fullcite{R-mapmisc}
-- \fullcite{R-knitr}
+- fullcite \fullcite{R-mapmisc}
+- cite \cite{R-knitr}
+- textcite \textcite{R-knitr}
+- parencite \parencite{R-knitr}
 
 
 
@@ -112,6 +117,4 @@ plot(runif(10), xlab='index', ylab='value', pch=1:10)
 \ecolb
 
 
-# References
 
-\printbibliography[heading=none]
