@@ -444,7 +444,7 @@ zMatToRaster= function(x) {
 }
 
 
-
+#' @export
 pololayToRaster = function(x) {
 	polyolay = x
 	
