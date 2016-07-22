@@ -201,7 +201,7 @@ for(D in names(stamen$long)){
           stamen$long[[D]]) 
 }
 
-tunderforest = maptoolkit = waze=cartodb = stamenToner
+thunderforest = maptoolkit = waze=cartodb = stamenToner
 for(D in names(cartodb$long)){
   for(D2 in c('long','short')){
   cartodb[[D2]][[D]] = gsub(

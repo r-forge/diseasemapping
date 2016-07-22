@@ -396,7 +396,7 @@ getZmatPopulation = function(
 	)
 }
 
-
+#' @export
 zMatToRaster= function(x) {
 	
 	Zmat2 = x
