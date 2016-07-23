@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0" demote-non-dropping-particle="never">
   <info>
-    <title>American Psychological Association 6th edition</title>
+    <title>American Psychological Association 6th edition (no DOIs, no issue numbers)</title>
     <title-short>APA</title-short>
-    <id>http://www.zotero.org/styles/apa</id>
-    <link href="http://www.zotero.org/styles/apa" rel="self"/>
+    <id>http://www.zotero.org/styles/apa-no-doi-no-issue</id>
+    <link href="http://www.zotero.org/styles/apa-no-doi-no-issue" rel="self"/>
     <link href="http://owl.english.purdue.edu/owl/resource/560/01/" rel="documentation"/>
     <author>
       <name>Simon Kornblith</name>
@@ -24,14 +24,11 @@
     <contributor>
       <name>Sebastian Karcher</name>
     </contributor>
-    <contributor>
-      <name> Brenton M. Wiernik</name>
-      <email>zotero@wiernik.org</email>
-    </contributor>
     <category citation-format="author-date"/>
     <category field="psychology"/>
     <category field="generic-base"/>
-    <updated>2016-05-25T09:01:49+00:00</updated>
+    <summary>APA 6th edition, but without DOIs and issue numbers, as used in a number of journals like Organization Studies</summary>
+    <updated>2012-09-27T22:06:38+00:00</updated>
     <rights license="http://creativecommons.org/licenses/by-sa/3.0/">This work is licensed under a Creative Commons Attribution-ShareAlike 3.0 License</rights>
   </info>
   <locale xml:lang="en">
@@ -49,32 +46,20 @@
   <macro name="container-contributors">
     <choose>
       <if type="chapter paper-conference entry-dictionary entry-encyclopedia" match="any">
-        <group delimiter=", ">
-          <names variable="container-author" delimiter=", ">
-            <name and="symbol" initialize-with=". " delimiter=", "/>
-            <label form="short" prefix=" (" text-case="title" suffix=")"/>
-          </names>
-          <names variable="editor translator" delimiter=", ">
-            <name and="symbol" initialize-with=". " delimiter=", "/>
-            <label form="short" prefix=" (" text-case="title" suffix=")"/>
-          </names>
-        </group>
+        <names variable="editor translator container-author" delimiter=", " suffix=", ">
+          <name and="symbol" initialize-with=". " delimiter=", "/>
+          <label form="short" prefix=" (" text-case="title" suffix=")"/>
+        </names>
       </if>
     </choose>
   </macro>
   <macro name="secondary-contributors">
     <choose>
       <if type="article-journal chapter paper-conference entry-dictionary entry-encyclopedia" match="none">
-        <group delimiter=", " prefix=" (" suffix=")">
-          <names variable="container-author" delimiter=", ">
-            <name and="symbol" initialize-with=". " delimiter=", "/>
-            <label form="short" prefix=", " text-case="title"/>
-          </names>
-          <names variable="editor translator" delimiter=", ">
-            <name and="symbol" initialize-with=". " delimiter=", "/>
-            <label form="short" prefix=", " text-case="title"/>
-          </names>
-        </group>
+        <names variable="translator editor container-author" delimiter=", " prefix=" (" suffix=")">
+          <name and="symbol" initialize-with=". " delimiter=", "/>
+          <label form="short" prefix=", " text-case="title"/>
+        </names>
       </if>
     </choose>
   </macro>
@@ -114,16 +99,6 @@
           <else-if type="bill book graphic legislation motion_picture song" match="any">
             <text variable="title" form="short" font-style="italic"/>
           </else-if>
-          <else-if variable="reviewed-author">
-            <choose>
-              <if variable="reviewed-title" match="none">
-                <text variable="title" form="short" font-style="italic" prefix="Review of "/>
-              </if>
-              <else>
-                <text variable="title" form="short" quotes="true"/>
-              </else>
-            </choose>
-          </else-if>
           <else>
             <text variable="title" form="short" quotes="true"/>
           </else>
@@ -135,17 +110,14 @@
     <choose>
       <if type="thesis report" match="any">
         <choose>
-          <if variable="DOI" match="any">
-            <text variable="DOI" prefix="http://doi.org/"/>
-          </if>
-          <else-if variable="archive" match="any">
+          <if variable="archive" match="any">
             <group>
               <text term="retrieved" text-case="capitalize-first" suffix=" "/>
               <text term="from" suffix=" "/>
               <text variable="archive" suffix="."/>
               <text variable="archive_location" prefix=" (" suffix=")"/>
             </group>
-          </else-if>
+          </if>
           <else>
             <group>
               <text term="retrieved" text-case="capitalize-first" suffix=" "/>
@@ -157,37 +129,41 @@
       </if>
       <else>
         <choose>
-          <if variable="DOI">
-            <text variable="DOI" prefix="http://doi.org/"/>
-          </if>
-          <else>
+          <if variable="page" match="none">
             <choose>
-              <if type="webpage">
-                <group delimiter=" ">
-                  <text term="retrieved" text-case="capitalize-first" suffix=" "/>
-                  <group>
-                    <date variable="accessed" form="text" suffix=", "/>
-                  </group>
-                  <text term="from"/>
-                  <text variable="URL"/>
-                </group>
+              <if variable="DOI">
+                <text variable="DOI" prefix="doi:"/>
               </if>
               <else>
-                <group>
-                  <text term="retrieved" text-case="capitalize-first" suffix=" "/>
-                  <text term="from" suffix=" "/>
-                  <text variable="URL"/>
-                </group>
+                <choose>
+                  <if type="webpage">
+                    <group delimiter=" ">
+                      <text term="retrieved" text-case="capitalize-first" suffix=" "/>
+                      <group>
+                        <date variable="accessed" form="text" suffix=", "/>
+                      </group>
+                      <text term="from"/>
+                      <text variable="URL"/>
+                    </group>
+                  </if>
+                  <else>
+                    <group>
+                      <text term="retrieved" text-case="capitalize-first" suffix=" "/>
+                      <text term="from" suffix=" "/>
+                      <text variable="URL"/>
+                    </group>
+                  </else>
+                </choose>
               </else>
             </choose>
-          </else>
+          </if>
         </choose>
       </else>
     </choose>
   </macro>
   <macro name="title">
     <choose>
-      <if type="book graphic manuscript motion_picture report song speech thesis" match="any">
+      <if type="report thesis book graphic motion_picture report song manuscript speech" match="any">
         <choose>
           <if variable="version" type="book" match="all">
             <!---This is a hack until we have a computer program type -->
@@ -198,32 +174,6 @@
           </else>
         </choose>
       </if>
-      <else-if variable="reviewed-author">
-        <choose>
-          <if variable="reviewed-title">
-            <group delimiter=" ">
-              <text variable="title"/>
-              <group delimiter=", " prefix="[" suffix="]">
-                <text variable="reviewed-title" font-style="italic" prefix="Review of "/>
-                <names variable="reviewed-author" delimiter=", ">
-                  <label form="verb-short" suffix=" "/>
-                  <name and="symbol" initialize-with=". " delimiter=", "/>
-                </names>
-              </group>
-            </group>
-          </if>
-          <else>
-            <!-- assume `title` is title of reviewed work -->
-            <group delimiter=", " prefix="[" suffix="]">
-              <text variable="title" font-style="italic" prefix="Review of "/>
-              <names variable="reviewed-author" delimiter=", ">
-                <label form="verb-short" suffix=" "/>
-                <name and="symbol" initialize-with=". " delimiter=", "/>
-              </names>
-            </group>
-          </else>
-        </choose>
-      </else-if>
       <else>
         <text variable="title"/>
       </else>
@@ -233,23 +183,9 @@
     <text macro="title"/>
     <choose>
       <if type="report thesis" match="any">
-        <group prefix=" (" suffix=")" delimiter=", ">
-          <group delimiter=" ">
-            <choose>
-              <if variable="genre" match="any">
-                <text variable="genre"/>
-              </if>
-              <else>
-                <text variable="collection-title"/>
-              </else>
-            </choose>
-            <text variable="number" prefix="No. "/>
-          </group>
-          <group delimiter=" ">
-            <text term="version" text-case="capitalize-first"/>
-            <text variable="version"/>
-          </group>
-          <text macro="edition"/>
+        <group prefix=" (" suffix=")" delimiter=" ">
+          <text variable="genre"/>
+          <text variable="number" prefix="No. "/>
         </group>
       </if>
       <else-if type="post-weblog webpage" match="any">
@@ -262,17 +198,10 @@
         </group>
       </else-if>
     </choose>
-    <text macro="format" prefix=" [" suffix="]"/>
+    <text macro="format"/>
   </macro>
   <macro name="format">
-    <choose>
-      <if match="any" variable="medium">
-        <text variable="medium" text-case="capitalize-first"/>
-      </if>
-      <else-if type="dataset" match="any">
-        <text value="Data set"/>
-      </else-if>
-    </choose>
+    <text variable="medium" text-case="capitalize-first" prefix=" [" suffix="]"/>
   </macro>
   <macro name="publisher">
     <choose>
@@ -291,7 +220,7 @@
       <else-if type="post-weblog webpage" match="none">
         <group delimiter=", ">
           <choose>
-            <if variable="event version" type="speech motion_picture" match="none">
+            <if variable="event version" type="speech" match="none">
               <!-- Including version is to avoid printing the programming language for computerProgram /-->
               <text variable="genre"/>
             </if>
@@ -357,7 +286,7 @@
                     <date-part prefix=", " name="month"/>
                   </date>
                 </if>
-                <else-if type="article-journal bill book chapter graphic legal_case legislation motion_picture paper-conference report song dataset" match="none">
+                <else-if type="article-journal bill book chapter graphic legal_case legislation motion_picture paper-conference report song" match="none">
                   <date variable="issued">
                     <date-part prefix=", " name="month"/>
                     <date-part prefix=" " name="day"/>
@@ -384,7 +313,7 @@
   </macro>
   <macro name="issued-sort">
     <choose>
-      <if type="article-journal bill book chapter graphic legal_case legislation motion_picture paper-conference report song dataset" match="none">
+      <if type="article-journal bill book chapter graphic legal_case legislation motion_picture paper-conference report song" match="none">
         <date variable="issued">
           <date-part name="year"/>
           <date-part name="month"/>
@@ -402,13 +331,13 @@
     <choose>
       <if variable="issued">
         <group delimiter="/">
-          <date variable="original-date" form="text"/>
           <group>
             <date variable="issued">
               <date-part name="year"/>
             </date>
             <text variable="year-suffix"/>
           </group>
+          <date variable="original-date" form="text"/>
         </group>
       </if>
       <else-if variable="status">
@@ -440,7 +369,6 @@
         <group prefix=", " delimiter=", ">
           <group>
             <text variable="volume" font-style="italic"/>
-            <text variable="issue" prefix="(" suffix=")"/>
           </group>
           <text variable="page"/>
         </group>
@@ -463,12 +391,7 @@
       </else-if>
       <else-if type="book graphic motion_picture report song chapter paper-conference entry-encyclopedia entry-dictionary" match="any">
         <group prefix=" (" suffix=")" delimiter=", ">
-          <choose>
-            <if type="report" match="none">
-              <!-- edition for report is included in title-plus-extra /-->
-              <text macro="edition"/>
-            </if>
-          </choose>
+          <text macro="edition"/>
           <choose>
             <if variable="volume" match="any">
               <group>
@@ -524,11 +447,9 @@
               <text term="in" text-case="capitalize-first" suffix=" "/>
             </if>
           </choose>
-          <group delimiter=", ">
-            <text macro="container-contributors"/>
-            <text macro="secondary-contributors"/>
-            <text macro="container-title"/>
-          </group>
+          <text macro="container-contributors"/>
+          <text macro="secondary-contributors"/>
+          <text macro="container-title"/>
         </group>
       </if>
     </choose>

@@ -26,7 +26,10 @@ endif
 	xelatex -interaction=nonstopmode $<
 
 %.html: %.md
-	pandoc --standalone --filter=pandoc-citeproc --self-contained --output=$@ $<
+	pandoc --smart --standalone --mathjax --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
+
+%.rtf %.docx %.odt: %.md
+	pandoc --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
 
 clean:
 	rm *.run.xml* *.blg *.out *.log *.aux *.bcf *.bbl *.nav *.toc *.vrb
