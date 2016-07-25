@@ -5,8 +5,8 @@
 \title{Convert lgcp results to geostatsp format}
 \usage{
 lgcpToGeostatsp(x, dirname = x$gridfunction$dirname)
-polyolayToRaster(x)
-zMatToRaster()
+pololayToRaster(x)
+zMatToRaster(x)
 }
 \arguments{
 \item{x}{result from \code{\link[lgcp]{lgcp}} or \code{\link[lgcp]{getpolyol}}}

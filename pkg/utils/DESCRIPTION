@@ -1,8 +1,8 @@
 Package: Pmisc
 Type: Package
 Title: Various Utilities for knitr and inla
-Version: 0.0.2
-Date: 2016-07-21
+Version: 0.0.3
+Date: 2016-07-25
 Imports:
     sp,
     raster,
@@ -13,7 +13,11 @@ Suggests:
     mapmisc,
     utils,
     INLA,
-    geostatsp
+    geostatsp,
+    DBI,
+    RPostgreSQL,
+    rgdal,
+    gdalUtils
 Enhances: lgcp, spatstat
 Author: Patrick Brown <patrick.brown@utoronto.ca>[aut, cre]
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
