@@ -151,7 +151,11 @@ geocode = function(x, oneRecord=FALSE, extent=NULL, progress='', ...) {
 				extent=extLL, progress=progress, ...)		
 		if(verbose)
 			message("caching in ", cachePath)
-		save(result, file=cacheFile)
+		
+		saveRes = try(save(result, file=cacheFile), silent=TRUE)
+		if(verbose & class(saveRes) == 'try-error') {
+			message("cached file couldnt be saved")
+		}
 	} else {
 		warning("install the dismo package to use geocode")
 		result = NULL

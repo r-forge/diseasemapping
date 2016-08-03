@@ -48,6 +48,91 @@ if(!file.exists(pFile)) {
 }
 
 
+otherFile = grep("Generic", unzip(zFile, list=TRUE)$Name, 
+		value=TRUE, invert=TRUE)
+otherSdmx =  readSDMX(file=otherFile, isURL=FALSE)
+codeList = otherSdmx@codelists
+sapply(slot(codeList, "codelists"), function(x) slot(x, "id"))
+sexCode = as.data.frame(
+		slot(otherSdmx, "codelists"), 
+		codelistId = c("CL_DIM1")) 
+ageCode = as.data.frame(
+		slot(otherSdmx, "codelists"), 
+		codelistId = c("CL_DIM")) 
+
+fsaCode = as.data.frame(
+		slot(otherSdmx, "codelists"), 
+		codelistId = c("CL_GEO")) 
+
+
+fsaDf$sex = factor(fsaDf$DIM1,
+		levels = sexCode$id, 
+		labels = substr(gsub("[[:space:]]", "", sexCode$label.en), 
+				1,1))
+fsaDf$age = as.character(
+			factor(fsaDf$DIM0,
+			levels = ageCode$id, 
+			labels = gsub("[[:space:]]", "", ageCode$label.en))
+)
+
+fsaDf$id1.1 = as.character(
+		factor(fsaDf$GEO,
+				levels = fsaCode$id, 
+				labels = gsub("[[:space:]]", "", fsaCode$label.default))
+)
+
+fsaDf$age = gsub("Total.+Age$", "all", fsaDf$age)
+
+fsaDf$age = gsub("-", "_", fsaDf$age)
+fsaDf$age = gsub("\\+$", "plus", fsaDf$age)
+fsaDf$age = gsub("Total", "all", fsaDf$age)
+fsaDf$ageLow = as.numeric(gsub("_[[:digit:]]+$", "",  fsaDf$age))
+fsaDf$ageHigh = as.numeric(gsub("^[[:digit:]]+_", "",  fsaDf$age))
+fsaDf$ageDif = fsaDf$ageHigh - fsaDf$ageLow
+
+
+toKeep = union(which(
+				fsaDf$ageDif==4
+		),
+		grep("^all|^100", fsaDf$age)		
+)
+fsaDf = fsaDf[sort(toKeep),]
+
+
+fsaDf$group = paste(
+		fsaDf$sex, fsaDf$age, sep=''
+)
+
+fsaPop = reshape(
+		fsaDf, v.names='obsValue',
+		idvar = 'id1.1',
+		timevar = 'group',
+		direction = 'wide',
+		drop = grep(
+				"^group$|^id[[:digit:]]|obsValue",
+				names(fsaDf), invert=TRUE, value=TRUE
+		)
+)
+names(fsaPop) = gsub("^obsValue\\.", "", names(fsaPop))
+
+
+toAdd = fsa@data[
+		match(
+				as.character(fsaPop$id1.1),
+				as.character(fsa$id1.1)
+		),
+]
+fsaPopFull = cbind(toAdd, fsaPop)		
+
+
+if(FALSE) {
+	fsa2001 = fsa
+	fsa2001@data = fsaPopFull[
+			match(fsa2001$id1.1, fsaPopFull$id1.1),
+	]
+	save(fsa2001, file='fsa2001.RData', compress='xz')
+}
+
 library(mapmisc)
 fsaBg = openmap(fsa)
 
@@ -66,9 +151,10 @@ if(FALSE){
 			'map',
 			driver= "ESRI Shapefile"
 	)
-	
+
+fsaPopSub = 	fsaPopFull[grep('^[A-Z][[:digit:]][A-Z]$',fsaPopFull$id1.1),]
 	foreign::write.dbf(
-			fsaPopFull,
+fsaPopSub,
 			file.path(
 					theDir, 'population.dbf'
 			)

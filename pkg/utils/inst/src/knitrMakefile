@@ -3,7 +3,10 @@ pandocTo = latex
 endif
 
 ifdef citeproc
-pandocArgs = --filter=pandoc-citeproc
+  pandocArgs = --filter=pandoc-citeproc
+  pdfDepends = %.tex
+else
+  pdfDepends = %.tex %.bbl
 endif
 
 .PRECIOUS: %.md %.tex
@@ -21,15 +24,18 @@ endif
 %.bbl: %.bcf
 	biber $<	
 
-%.pdf: %.tex %.bbl
+%.pdf: $(pdfDepends)
 	xelatex -interaction=nonstopmode $<;
 	xelatex -interaction=nonstopmode $<
 
 %.html: %.md
 	pandoc --smart --standalone --mathjax --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
 
-%.rtf %.docx %.odt: %.md
+%.rtf %.odt: %.md
 	pandoc --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
+
+%.docx: %.md
+	pandoc --smart --standalone --filter=pandoc-citeproc $(pandocArgs) $$(R --slave -e "cat(system.file(\"src\",\"template.docx\",package=\"Pmisc\"))") --output=$@ $<
 
 clean:
 	rm *.run.xml* *.blg *.out *.log *.aux *.bcf *.bbl *.nav *.toc *.vrb
