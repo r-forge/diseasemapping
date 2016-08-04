@@ -19,17 +19,17 @@ make(x = commandArgs(TRUE), suffix = NULL, citeproc = 0,
 \item{...}{additional arguments passed to make}
 }
 \description{
-Runs make with the Makefile supplied by Pmisc
+Runs make with the Makefile supplied by \code{Pmisc}
 }
 
 \details{
+
 The following can be used in an eclipse configuration
-\code{--vanilla -e "Pmisc::make(suffix='html', run=TRUE)" --args ${selected_resource_name}}
+
+\preformatted{--vanilla -e "Pmisc::make(suffix='html', run=TRUE)" --args ${selected_resource_name}}
+
 }
-\example{
 
+\examples{
 make("stuff.html")
-
-
-
 }

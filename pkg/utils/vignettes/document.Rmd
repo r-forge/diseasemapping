@@ -1,16 +1,14 @@
 <!--
-%\VignetteEngine{knitr::docco_linear}
 %\VignetteIndexEntry{Examples of an html document with subfigures}
+%\VignetteEngine{Pmisc::plainKnit}
 -->
 
 ```{r setup, include=FALSE}
 
 # to compile
 
-fName = 'document.Rmd'
-Makefile = system.file('src','knitrMakefile', package='Pmisc')
-toCompile = paste("make -f ", Makefile, ' ', gsub("Rmd$","html", fName), sep='')
-toCompile
+Pmisc::make('document.Rmd', suffix='html', run=FALSE)
+
 
 library('knitr')
 library('Pmisc')

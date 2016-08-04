@@ -6,6 +6,8 @@
 #' @param subset passed as \code{where} to postgreql
 #' @param database details of database to retrieve data from
 #' @param income logical, retrieve income data
+#' @param crs coordinate reference system for the output
+#' @param simplifyTolerance if non-zero, simplify polygons with this tolerance
 #' @details 
 
 #' level	abbreviation	name

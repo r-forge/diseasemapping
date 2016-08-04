@@ -20,6 +20,10 @@ gcensus(country = "USA", year = 2010, level = 1, subset = NULL,
 \item{database}{details of database to retrieve data from}
 
 \item{income}{logical, retrieve income data}
+
+\item{crs}{coordinate reference system for the output}
+
+\item{simplifyTolerance}{if non-zero, simplify polygons with this tolerance}
 }
 \description{
 Retrieve and combine us boundary, population and income data

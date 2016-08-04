@@ -1,5 +1,5 @@
 <!--
-%\VignetteEngine{knitr::docco_linear}
+%\VignetteEngine{Pmisc::plainKnit}
 %\VignetteIndexEntry{Examples of slides with knitr and beamer}
 -->
 
