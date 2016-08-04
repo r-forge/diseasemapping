@@ -53,12 +53,12 @@ cat('
   journal={Journal of the Royal Statistical Society B},
   volume={73},
   number={4},
-  pages={423--498},
+  pages={423-498},
   year={2011},
   publisher={Wiley},
   doi={10.1111/j.1467-9868.2011.00777.x}
 }
-', file=bibFile, encoding='UTF8')
+', file=bibFile)
 
 
 
