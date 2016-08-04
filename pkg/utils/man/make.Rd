@@ -2,15 +2,13 @@
 \alias{make}
 \title{Run make}
 \usage{
-make(x = commandArgs(TRUE), suffix = NULL, citeproc = 0,
+make(x = commandArgs(TRUE), suffix = NULL,
   beamer = FALSE, run = FALSE, ...)
 }
 \arguments{
 \item{x}{a string specifying the target}
 
 \item{suffix}{string to replace file extension}
-
-\item{citeproc}{use \code{--filter=pandoc-citeproc}}
 
 \item{beamer}{use \code{--to=beamer}}
 

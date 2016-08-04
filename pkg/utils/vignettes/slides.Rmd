@@ -54,13 +54,8 @@ Pmisc::markdownHeader(
 	title="Pmisc slides example", 		
 	author='Patrick Brown',
  	bibliography='myBib.bib',
-	biblatex=1,
-	'biblio-title' = 'References',
-	'biblio-style' = 'authoryear,backend=biber',
-	biblatexoptions = c(maxbibnames=4,maxcitenames=2,
-		doi='false',isbn='false',
-		firstinits='true'),
 	theme='Singapore',
+	beamer=TRUE,
 	classoption=c(
   		aspectratio=169,
 		xcolor='dvipsnames'),
@@ -75,6 +70,31 @@ Pmisc::markdownHeader(
 )
 ```		
 
+```{r theHeaderAgain, eval=FALSE, include=FALSE}
+cat(
+	markdownHeader( 	
+		title="Pmisc slides example", 	
+		author='Patrick Brown',
+ 		bibliography='myBib.bib', 	
+		theme='Singapore',
+		beamer=TRUE,
+		classoption=c(
+  			aspectratio=169, 		
+			xcolor='dvipsnames'
+		), 	
+		headerincludes =c(
+  			'\\usecolortheme[named=MidnightBlue]{structure}',
+  			'\\DeclareMathOperator{\\var}{var}',
+			'\\DeclareMathOperator{\\E}{E}',
+  			'\\newcommand{\\simiid}{\\overset{\\text{iid}}{\\sim}}',
+  			'\\newcommand{\\tp}{^\\text{T}}',   		'\\newcommand{\\pr}{\\text{pr}}',
+  			'\\newcommand{\\mm}[1]{\\ensuremath{\\boldsymbol{#1}}}'
+		) 
+	)
+)
+```		
+		
+		
 # Some references
 
 - fullcite \fullcite{R-mapmisc}

@@ -2,21 +2,13 @@ ifndef pandocTo
 pandocTo = latex
 endif
 
-ifdef citeproc
-  pandocArgs = --filter=pandoc-citeproc
-  pdfDepends = %.tex
-else
-  pdfDepends = %.tex %.bbl
-endif
-
 .PRECIOUS: %.md %.tex
-
 
 %.md: %.Rmd
 	R -e "knitr::knit('$<', encoding='UTF-8')" $(Rargs)
 
 %.tex: %.md
-	pandoc --standalone --smart $(pandocArgs) --to=$(pandocTo) --output=$@ $<
+	pandoc --standalone --smart --biblatex $(pandocArgs) --to=$(pandocTo) --output=$@ $<
 
 %.bcf: %.tex
 	xelatex $<
@@ -24,7 +16,7 @@ endif
 %.bbl: %.bcf
 	biber $<	
 
-%.pdf: $(pdfDepends)
+%.pdf: %.tex %.bbl
 	xelatex -interaction=nonstopmode $<;
 	xelatex -interaction=nonstopmode $<
 

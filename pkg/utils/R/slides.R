@@ -1,34 +1,16 @@
-#' Markdown headers
-#' 
-#' 
-#' @description Creates YAML headers for Markdown slides via pandoc
-#' 
-#' @param title value for title
-#' @param author value for author field
-#' @param date value for date field
-#' @param startAndEnd Add `---` before and after YAML block
-#' @param slides Add commands intended for producing slides.
-#' @param ... Additional items for the header, such as `header-includes`
-#' 
-#' @details Put this function in a code chunk at the start of 
-#' 
-#' @return `today()` returns today's date
-#' @examples 
-#' today()
-#' cat(markdownHeader(
-#' 	title='my title',
-#' 	author = 'me',
-#' 	extrastuff = c(a=1, b=2)
-#' ))
-
-
 #' @export
 markdownHeader = function(
 		title=NULL, 
 		author=NULL,
 		date=Pmisc::today(),
+		biblatex=1,
+	 bibliotitle = 'References',
+	 bibliostyle = 'authoryear,backend=biber',
+		biblatexoptions = c(maxbibnames=4,
+				maxcitenames=2,doi='false',
+				isbn='false',	firstinits='true'),
 		startAndEnd='---',
-		slides=TRUE,
+		beamer=FALSE,
 		...
 ) {
 	
@@ -39,7 +21,17 @@ markdownHeader = function(
 			paste('date:', date)
 	)
 	
-	dots = list(...)	
+	dots = list(
+			biblatex=biblatex,
+			'biblio-title'=bibliotitle,
+			'biblio-style'=bibliostyle,
+			biblatexoptions = biblatexoptions, 
+			...)	
+	
+	dots = dots[
+			unlist(lapply(dots, length))>0
+			]
+	
 	names(dots) = gsub(
 			"header[[:punct:]]?includes",
 			'header-includes', names(dots),
@@ -68,13 +60,13 @@ markdownHeader = function(
 	}
 	
 	# header includes
-	if(slides | any(names(dots)=='header-includes')) {
+	if(beamer | any(names(dots)=='header-includes')) {
 		toAdd <- gsub(
 				'\n+', '\n', 
 				knitr::combine_words(c(
 								'header-includes: ', 
 								dots[['header-includes']], 
-								slideHeaderIndcludes[slides]
+								slideHeaderIncludes[beamer]
 						), sep='\n', and='')
 	)
 	result[[length(result)+1]] = toAdd 
@@ -95,7 +87,7 @@ today = function(...){
 	do.call(format, c(list(x=Sys.time()), dots))
 }
 
-slideHeaderIndcludes = 
+slideHeaderIncludes = 
 		knitr::asis_output(
 				knitr::combine_words(c('',
 								paste(

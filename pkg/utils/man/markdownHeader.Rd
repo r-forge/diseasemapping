@@ -3,8 +3,20 @@
 \alias{today}
 \title{Markdown headers}
 \usage{
-markdownHeader(title = NULL, author = NULL, date = Pmisc::today(),
-  startAndEnd = "---", slides = TRUE, ...)
+markdownHeader(
+		title=NULL, 
+		author=NULL,
+		date=Pmisc::today(),
+		biblatex=1,
+	  bibliotitle = 'References',
+	  bibliostyle = 'authoryear,backend=biber',
+		biblatexoptions = c(maxbibnames=4,
+				maxcitenames=2,doi='false',
+				isbn='false',	firstinits='true'),
+		startAndEnd='---',
+		beamer=FALSE,
+		...
+)
 today(...)
 }
 \arguments{
@@ -16,7 +28,12 @@ today(...)
 
 \item{startAndEnd}{Add \code{---} before and after YAML block}
 
-\item{slides}{Add commands intended for producing slides.}
+\item{biblatex}{uses the biblatex package in LaTeX}
+\item{bibliotitle}{title for references section}
+\item{bibliostyle}{style of bibliography}
+\item{biblatexoptions}{options for citations, passed to the biblatex package}
+
+\item{beamer}{Add commands intended for producing slides with LaTeX beamer.}
 
 \item{...}{Additional items for the header, such as 
 \code{header-includes}, or for \code{\link[base]{format}} 
