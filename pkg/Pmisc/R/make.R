@@ -9,13 +9,13 @@
 #' @param ... additional arguments passed to make
 #' @export
 make = function(x=commandArgs(TRUE), 
-		suffix=NULL, beamer=FALSE, 
+		suffix=NULL, beamer=FALSE,
 		run=FALSE, ...) {
 
 	if(!is.null(suffix))
 		x = gsub('\\..*$', paste(".",suffix,sep=""), basename(x))
 	
-theString= paste('make -f', 
+theString= paste(' -f', 
 		system.file('src','knitrMakefile', package='Pmisc'),
 		x)
 
@@ -27,7 +27,7 @@ for(D in seq(from=1, by=1, len=length(dots)))
 	theString = paste(theString, D)
 
 if(run) {
-	system(theString)
+	system(paste('make ', theString))
 } 
 
 theString
