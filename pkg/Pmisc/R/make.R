@@ -28,8 +28,10 @@ for(D in seq(from=1, by=1, len=length(dots)))
 
 if(run) {
 	system(paste('make ', theString))
-} 
+} else {
+	cat(theString)
+}
 
-theString
+invisible()
 
 }

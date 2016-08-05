@@ -24,7 +24,7 @@ Runs make with the Makefile supplied by \code{Pmisc}
 
 The following can be used in an eclipse configuration
 
-\preformatted{--vanilla -e "Pmisc::make(suffix='html', run=TRUE)" --args ${selected_resource_name}}
+\preformatted{\bin\bash -c "make $(R --vanilla --slave -e Pmisc::make\(\'${selected_resource_name}\',suffix=\'pdf\'\))"}
 
 }
 
