@@ -41,8 +41,8 @@ stuff
 if( .Platform$os.type == 'unix') {
 	system(paste(
 	"echo make $(R --vanilla --slave -e",
-	"Pmisc::make\\(\\'stuff.Rmd\\',suffix=\\'pdf\\'\\))"),
-	TRUE)
+	"Pmisc::make\\(\\'stuff.Rmd\\',suffix=\\'pdf\\'\\))")
+	)
 }
 
 }

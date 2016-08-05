@@ -34,5 +34,6 @@ if(run) {
 	cat(theString)
 }
 
-invisible(noquote(theString))
+invisible(theString)
+
 }

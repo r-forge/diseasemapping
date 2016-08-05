@@ -84,7 +84,7 @@ markdownHeader = function(
 today = function(...){
 	dots = list(...)
 	if(!any(names(dots)=='format'))
-		dots$format='%A %d %B %Y'
+		dots$format='%A %e %B %Y'
 	do.call(format, c(list(x=Sys.time()), dots))
 }
 
