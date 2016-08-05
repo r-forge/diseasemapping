@@ -13,7 +13,9 @@ make = function(x,
 		run=FALSE, ...) {
 
 	if(!is.null(suffix))
-		x = gsub('\\..*$', paste(".",suffix,sep=""), basename(x))
+		x = paste(
+				tools::file_path_sans_ext(basename(x)),
+				suffix, sep='')
 	
 theString= paste(' -f', 
 		system.file('src','knitrMakefile', package='Pmisc'),
@@ -32,6 +34,5 @@ if(run) {
 	cat(theString)
 }
 
-invisible()
-
+invisible(noquote(theString))
 }

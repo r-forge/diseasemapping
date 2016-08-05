@@ -17,20 +17,32 @@ make(x, suffix = NULL,
 \item{...}{additional arguments passed to make}
 }
 \description{
-Runs make with the Makefile supplied by \code{Pmisc}
+Creates a string to run \code{make} with the Makefile supplied by \code{Pmisc}
 }
 
 \details{
 
 The following can be used in an eclipse configuration
 
-\preformatted{\bin\bash -c "make $(R --vanilla --slave -e Pmisc::make\(\'${selected_resource_name}\',suffix=\'pdf\'\))"}
+\preformatted{\bin\bash -c make $(}
+\preformatted{"R --vanilla --slave -e }
+\preformatted{Pmisc::make\(\'${selected_resource_name}\',suffix=\'pdf\'}
+\preformatted{\))"}
 
 }
 
 \examples{
 make("stuff.html")
 
-make("stuff.pdf", beamer=TRUE)
+stuff = make("stuff.pdf", beamer=TRUE)
+
+stuff
+
+if( .Platform$os.type == 'unix') {
+	system(paste(
+	"echo make $(R --vanilla --slave -e",
+	"Pmisc::make\\(\\'stuff.Rmd\\',suffix=\\'pdf\\'\\))"),
+	TRUE)
+}
 
 }

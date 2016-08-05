@@ -51,10 +51,11 @@ Put this function in a code chunk at the start of
 }
 \examples{
 today()
-cat(markdownHeader(
+stuff = markdownHeader(
 	title='my title',
 	author = 'me',
 	extrastuff = c(a=1, b=2)
-))
+)
+cat(stuff)
 }
 
