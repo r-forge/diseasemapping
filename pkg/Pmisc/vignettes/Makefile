@@ -7,6 +7,9 @@ clean:
 	R -e "knitr::knit('$<', '$@', encoding='UTF-8')" 
 
 %.tex: %.md
+	pandoc --version;
+	pandoc -D beamer;
+	cat $<;
 	pandoc --standalone --smart --biblatex --to=beamer --output=$@ $<;
 	cat $@
 
