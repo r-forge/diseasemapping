@@ -26,4 +26,3 @@ SystemRequirements: pandoc (http://pandoc.org), biber (http://www.ctan.org/pkg/
     biber)
 License: GPL
 VignetteBuilder: Pmisc
-RoxygenNote: 5.0.1
