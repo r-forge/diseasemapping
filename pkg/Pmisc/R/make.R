@@ -8,7 +8,7 @@
 #' @param run execute the command
 #' @param ... additional arguments passed to make
 #' @export
-make = function(x=commandArgs(TRUE), 
+make = function(x, 
 		suffix=NULL, beamer=FALSE,
 		run=FALSE, ...) {
 

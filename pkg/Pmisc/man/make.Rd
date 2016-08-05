@@ -2,7 +2,7 @@
 \alias{make}
 \title{Run make}
 \usage{
-make(x = commandArgs(TRUE), suffix = NULL,
+make(x, suffix = NULL,
   beamer = FALSE, run = FALSE, ...)
 }
 \arguments{
@@ -30,4 +30,7 @@ The following can be used in an eclipse configuration
 
 \examples{
 make("stuff.html")
+
+make("stuff.pdf", beamer=TRUE)
+
 }
