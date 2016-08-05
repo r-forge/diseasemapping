@@ -5,10 +5,10 @@ markdownHeader = function(
 		date=Pmisc::today(),
 		biblatex=1,
 	 bibliotitle = 'References',
-	 bibliostyle = 'authoryear,backend=biber',
+	 bibliostyle = 'authoryear',
 		biblatexoptions = c(maxbibnames=20,
 				maxcitenames=2,doi='false',
-				isbn='false',	giveninits='true'),
+				isbn='false',	giveninits='true',backend=biber),
 		startAndEnd='---',
 		beamer=FALSE,
 		...
