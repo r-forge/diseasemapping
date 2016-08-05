@@ -22,7 +22,6 @@ Description: These various utilities will eventually be
     put into other packages.
 URL: http://r-forge.r-project.org/projects/diseasemapping/
 Additional_repositories: https://www.math.ntnu.no/inla/R/stable/
-SystemRequirements: pandoc >= 1.16.0 (http://pandoc.org), biber (http://www.ctan.org/pkg/
-    biber)
+SystemRequirements: pandoc >= 1.16.0, pandoc-citeproc (http://pandoc.org), biber (http://www.ctan.org/pkg/biber)
 License: GPL
 VignetteBuilder: Pmisc

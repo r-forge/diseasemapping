@@ -8,10 +8,7 @@ clean:
 
 %.tex: %.md
 	pandoc --version;
-	pandoc -D beamer;
-	cat $<;
-	pandoc --standalone --smart --biblatex --to=beamer --output=$@ $<;
-	cat $@
+	pandoc --standalone --smart --biblatex --to=beamer --output=$@ $<
 
 %.bcf: %.tex
 	xelatex $<
