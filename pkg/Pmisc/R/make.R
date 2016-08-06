@@ -15,7 +15,7 @@ make = function(x,
 	if(!is.null(suffix))
 		x = paste(
 				tools::file_path_sans_ext(basename(x)),
-				suffix, sep='')
+				suffix, sep='.')
 	
 theString= paste(' -f', 
 		system.file('src','knitrMakefile', package='Pmisc'),

@@ -38,10 +38,10 @@ stuff = make("stuff.pdf", beamer=TRUE)
 
 stuff
 
-if( .Platform$os.type == 'unix') {
+if( .Platform$Os.type == 'unix') {
 	system(paste(
 	"echo make $(R --vanilla --slave -e",
-	"Pmisc::make\\(\\'stuff.Rmd\\',suffix=\\'pdf\\'\\))")
+	"\"Pmisc::make('stuff.Rmd',suffix='pdf')\")")
 	)
 }
 
