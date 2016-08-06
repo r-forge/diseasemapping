@@ -68,11 +68,7 @@ Pmisc::markdownHeader(
 	slides=FALSE,
 	bibliography = bibFile,
 	csl = NULL,#system.file('src','chicago-author-date.csl', package='Pmisc'),
-	css = system.file('src','article.css', package='Pmisc'),
-	headerincludes = c(
-		'\\usepackage{subcaption}',
-		'\\newcommand{\\subfloat}[2][need a sub-caption]{\\subcaptionbox{#1}{#2} }'
-	)
+	css = system.file('src','article.css', package='Pmisc')
 )
 ```
 
