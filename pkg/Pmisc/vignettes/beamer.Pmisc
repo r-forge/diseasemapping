@@ -59,9 +59,7 @@ $if(graphics)$
 \setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
 $endif$
 
-% Prevent slide breaks in the middle of a paragraph:
-\widowpenalties 1 10000
-\raggedbottom
+
 
 
 
@@ -70,7 +68,7 @@ $if(links-as-notes)$
 \renewcommand{\href}[2]{#2\footnote{\url{#1}}}
 $endif$
 
-\setlength{\emergencystretch}{3em}  % prevent overfull lines
+
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 

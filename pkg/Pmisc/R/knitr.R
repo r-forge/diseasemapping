@@ -22,17 +22,8 @@ hook_plot_htmlsubfig = function(x, options) {
     scap = cap
   }
   
-  if (is.null(w <- options$out.width) & is.null(h <- options$out.height) &
-    	is.null(s <- options$out.extra) & options$fig.align == 'default') {
     result = 
-    		sprintf('![%s](%s%s) ', scap, base, knitr:::.upload.url(x))    
-  } else {
-    # use HTML syntax <img src=...>
-    result = 
-    		knitr:::.img.tag(knitr:::.upload.url(x), w, h, scap,
-    				c(s, sprintf('style="%s"', knitr:::css_align(options$fig.align)))
-    		)
-  }
+    		sprintf('![%s](%s%s) ', scap, base, x)#knitr:::.upload.url(x))    
   
   if(any(options$fig.ncol==0)){
     return(result)
@@ -167,7 +158,7 @@ hook_plot_beamer = function(x, options) {
 				scapCenter = paste("\\centering ", scap, "")
 			}
 	
-  result = sprintf('![%s](%s%s)\\ \n\n%s\n\n', scap, base, knitr:::.upload.url(x), scapCenter)
+  result = sprintf('![%s](%s%s)\\ \n\n%s\n\n', scap, base, x, scapCenter)
   
 	if(Drow == 1 & fig.cur > 1) {
 		result = paste("\n\\newcol", out.width, "\n\n", result, sep="")
