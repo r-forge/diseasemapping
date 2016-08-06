@@ -12,7 +12,7 @@ make(x, suffix = NULL,
 
 \item{beamer}{use \code{--to=beamer}}
 
-\item{run}{execute the command}
+\item{run}{run make with a system call}
 
 \item{...}{additional arguments passed to make}
 }
