@@ -67,7 +67,7 @@ Pmisc::markdownHeader(
 	author='Patrick Brown',
 	slides=FALSE,
 	bibliography = bibFile,
-	csl = system.file('src','numeric-ordered-brackets.csl', package='Pmisc'),
+	csl = system.file('src','chicago-author-date.csl', package='Pmisc'),
 	css = system.file('src','article.css', package='Pmisc'),
 	headerincludes = c(
 		'\\usepackage{subcaption}',
