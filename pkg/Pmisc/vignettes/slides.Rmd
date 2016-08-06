@@ -59,14 +59,13 @@ Pmisc::markdownHeader(
 	classoption=c(
   		aspectratio=169,
 		xcolor='dvipsnames'),
+	biblatexoptions = c(
+		maxbibnames=20,
+		maxcitenames=2,doi='false'),
 	headerincludes =c(
   		'\\usecolortheme[named=MidnightBlue]{structure}',
   		'\\DeclareMathOperator{\\var}{var}',
-		'\\DeclareMathOperator{\\E}{E}',
-  		'\\newcommand{\\simiid}{\\overset{\\text{iid}}{\\sim}}',
-  		'\\newcommand{\\tp}{^\\text{T}}',
-  		'\\newcommand{\\pr}{\\text{pr}}',
-  		'\\newcommand{\\mm}[1]{\\ensuremath{\\boldsymbol{#1}}}')
+		'\\DeclareMathOperator{\\E}{E}')
 )
 ```
 
@@ -85,11 +84,7 @@ cat(
 		headerincludes =c(
   			'\\usecolortheme[named=MidnightBlue]{structure}',
   			'\\DeclareMathOperator{\\var}{var}',
-			'\\DeclareMathOperator{\\E}{E}',
-  			'\\newcommand{\\simiid}{\\overset{\\text{iid}}{\\sim}}',
-  			'\\newcommand{\\tp}{^\\text{T}}',   		'\\newcommand{\\pr}{\\text{pr}}',
-  			'\\newcommand{\\mm}[1]{\\ensuremath{\\boldsymbol{#1}}}'
-		) 
+			'\\DeclareMathOperator{\\E}{E}') 
 	)
 )
 ```
