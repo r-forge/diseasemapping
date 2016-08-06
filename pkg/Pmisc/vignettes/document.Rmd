@@ -7,7 +7,7 @@
 
 # to compile
 
-Pmisc::make('document.Rmd', suffix='html', run=FALSE)
+Pmisc::make('document.Rmd', suffix='html')
 
 
 library('knitr')
@@ -67,7 +67,7 @@ Pmisc::markdownHeader(
 	author='Patrick Brown',
 	slides=FALSE,
 	bibliography = bibFile,
-	csl = system.file('src','apa.csl', package='Pmisc'),
+	csl = system.file('src','numeric-ordered-brackets.csl', package='Pmisc'),
 	css = system.file('src','article.css', package='Pmisc'),
 	headerincludes = c(
 		'\\usepackage{subcaption}',
@@ -79,7 +79,8 @@ Pmisc::markdownHeader(
 
 # Introduction
 
-A very good paper is @lindgren2011explicit
+
+@lindgren2011explicit is a very good paper.
 
 
 
