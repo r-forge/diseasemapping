@@ -29,5 +29,8 @@ endif
 %.docx: %.md
 	pandoc --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$(R --slave -e "cat(system.file(\"src\",\"template.docx\",package=\"Pmisc\"))") --output=$@ $<
 
+%.odt: %.md
+	pandoc --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
+
 clean:
 	rm *.run.xml* *.blg *.out *.log *.aux *.bcf *.bbl *.nav *.toc *.vrb
