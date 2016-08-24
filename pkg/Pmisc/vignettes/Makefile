@@ -1,4 +1,4 @@
-all: slides.pdf document.html document.docx document.odt
+all: slides.pdf document.html document.docx document.odt document.pdf
 
 clean:
 	rm -rf *.tex *.toc *.bbl *.blg *.aux *.out *.log *.spl *tikzDictionary *.md figure/ cache/ *.dvi *.4* *.css *.idv *.lg *.tmp *.xref *.gz my*.bib *.nav *.xml *.vrb *.snm 
@@ -6,8 +6,11 @@ clean:
 %.md: %.Rmd
 	R -e "knitr::knit('$<', '$@', encoding='UTF-8')" 
 
-%.tex: %.md
+slides.tex: slides.md
 	pandoc --standalone --smart --biblatex --to=beamer --template=../inst/src/beamer.Pmisc --output=$@ $<
+
+document.tex: document.md
+	pandoc --standalone --smart --biblatex --output=$@ $<
 
 %.bcf: %.tex
 	xelatex $<

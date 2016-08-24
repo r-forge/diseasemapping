@@ -67,6 +67,7 @@ Pmisc::markdownHeader(
 	author='Patrick Brown',
 	slides=FALSE,
 	bibliography = bibFile,
+	geometry='margin=1in',
 	csl = system.file('src','apa.csl', package='Pmisc'),
 	css = system.file('src','article.css', package='Pmisc')
 )
