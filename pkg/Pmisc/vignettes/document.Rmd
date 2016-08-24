@@ -80,7 +80,7 @@ Pmisc::markdownHeader(
 
 
 $$
-f(x) = \int_0^{\infty} \exp(-\theta u^2) du
+f(x) = x + \int_0^\infty \exp(-\theta u^2) du
 $$
 
 
