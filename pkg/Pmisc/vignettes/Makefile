@@ -1,4 +1,4 @@
-all: slides.pdf document.html document.docx
+all: slides.pdf document.html document.docx document.odt
 
 clean:
 	rm -rf *.tex *.toc *.bbl *.blg *.aux *.out *.log *.spl *tikzDictionary *.md figure/ cache/ *.dvi *.4* *.css *.idv *.lg *.tmp *.xref *.gz my*.bib *.nav *.xml *.vrb *.snm 
@@ -24,3 +24,6 @@ clean:
 
 %.docx: %.md
 	pandoc --filter=pandoc-citeproc --reference-docx=../inst/src/template.docx --output=$@ $<
+	
+%.odt: %.md
+	pandoc --filter=pandoc-citeproc --output=$@ $<
