@@ -92,17 +92,14 @@ cat(
 
 # Some references
 
-- fullcite \fullcite{R-mapmisc}
-- cite \cite{R-knitr}
-- textcite \textcite{R-knitr}
-- parencite \parencite{R-knitr}
+
+- `@R-knitr`: @R-knitr
+- `[@R-knitr]`: @R-knitr
+- `[see @R-mapmisc for example]`: [see @R-mapmisc for example]
+- `\fullcite{R-mapmisc}`: \fullcite{R-mapmisc}
 
 
 # Markdown citations
-
-- `@R-knitr` @R-knitr
-- `[@R-knitr]` @R-knitr
-- `[see @R-mapmisc for example]` [see @R-mapmisc for example]
 
 
 

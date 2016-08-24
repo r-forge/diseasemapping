@@ -22,7 +22,10 @@ document.tex: document.md
 	xelatex -interaction=nonstopmode $<;
 	xelatex -interaction=nonstopmode $<
 
-%.html: %.md
+slides.html: slides.md
+	pandoc --standalone --to=slidy --filter=pandoc-citeproc --self-contained --output=$@ $<
+
+document.html: document.md
 	pandoc --standalone --filter=pandoc-citeproc --self-contained --output=$@ $<
 
 %.docx: %.md
