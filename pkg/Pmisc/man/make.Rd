@@ -1,9 +1,12 @@
 \name{make}
 \alias{make}
-\title{Run make}
+\alias{Makefile}
+\title{Create a Makefile}
 \usage{
 make(x, suffix = NULL,
   beamer = FALSE, run = FALSE, ...)
+Makefile(x, suffix = NULL,
+  beamer = FALSE, output='Makefile')
 }
 \arguments{
 \item{x}{a string specifying the target}
@@ -14,10 +17,12 @@ make(x, suffix = NULL,
 
 \item{run}{run make with a system call}
 
+\item{output}{Name of file saved, or a function output is passed to.}
+
 \item{...}{additional arguments passed to make}
 }
 \description{
-Creates a string to run \code{make} with the Makefile supplied by \code{Pmisc}
+Creates a Makefile or a string to run \code{make} with the Makefile supplied by \code{Pmisc}
 }
 
 \details{
@@ -32,6 +37,8 @@ The following can be used in an eclipse configuration
 }
 
 \examples{
+Makefile(x='stuff.md', suffix='pdf', beamer=TRUE, output=cat)
+
 make("stuff.html")
 
 stuff = make("stuff.pdf", beamer=TRUE)

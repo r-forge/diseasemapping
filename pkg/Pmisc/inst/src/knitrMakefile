@@ -23,8 +23,11 @@ endif
 %.html: %.md
 	pandoc --smart --standalone --mathjax --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
 
-%.rtf %.odt: %.md
+%.rtf: %.md
 	pandoc --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
+
+%.odt: %.md
+	pandoc --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$(R --slave -e "cat(system.file(\"src\",\"template.odt\",package=\"Pmisc\"))") --output=$@ $<
 
 %.docx: %.md
 	pandoc --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$(R --slave -e "cat(system.file(\"src\",\"template.docx\",package=\"Pmisc\"))") --output=$@ $<
