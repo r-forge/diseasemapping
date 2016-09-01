@@ -3,14 +3,14 @@
 - pattern for extracting vignette metadata now matches `%\Vignette` or `#%\Vignette`, enabling metadata to be put in `R` comments
 - pattern of a vignette engine can be a vector with a named element 'output'
 
-    - `pattern['output']` matches output files, and defaults to '[.](tex|html|pdf)$'
+    - `pattern['output']` matches output files, and defaults to `'[.](tex|html|pdf)$'`
     - this allows vignette engines to produce .md files, with conversion to html or pdf done with a Makefile
     
-- metadata is optional in vignettes,
+- metadata can be avoided in vignettes,
 
     - `VignetteIndexEntry` defaults to the basename of the file name
     - `VignetteEngine` defaults to the VignetteDefaultEngine specified in the package DESCRIPTION
     - this enables file formats where metadata cannot be added
-    - VignetteIndexEntry's are still needed to pass R CMD check
+    - `VignetteIndexEntry`'s are still needed to pass `R CMD check`
  
- 
+- the `Pmisc` package at [](https://r-forge.r-project.org/scm/viewvc.php/pkg/Pmisc/?root=diseasemapping) uses these features
