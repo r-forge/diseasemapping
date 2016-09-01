@@ -1,0 +1,28 @@
+#+ metadata, include=FALSE
+#%\VignetteIndexEntry{A Goat Hair Vignette}
+#'
+
+
+#' # A Goat Hair Vignette
+
+
+#' $$
+#' f(x) = \int_0^\infty \exp(-\theta u^2) du
+#' $$
+
+
+#+ aPlotGoat, fig.cap='Uninteresting plots'
+
+plot(1:10)
+
+plot(1:10+2)
+
+
+plot(1:10-4)
+
+
+plot(1:10+4)
+
+#'
+
+

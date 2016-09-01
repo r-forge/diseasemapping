@@ -46,7 +46,7 @@ before = list(
 )
 
 before = paste(paste(names(before), before, sep='='), collapse='\n')
-before = paste(before, '\n\nall: ', x, '\n\n')
+before = paste(before, '\n\nall: ', paste(x, collapse=' '), '\n\n')
 
 result = paste(
 		before,
@@ -81,7 +81,8 @@ result = paste(
 	pandoc --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$(docxTemplate) --output=$@ $<
 
 clean:
-	rm *.run.xml* *.blg *.out *.log *.aux *.bcf *.bbl *.nav *.toc *.vrb'
+	rm *.run.xml* *.blg *.out *.log *.aux *.bcf *.bbl *.nav *.toc *.vrb',
+sep='\n'
 )	
 	
 	
