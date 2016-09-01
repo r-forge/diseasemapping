@@ -40,6 +40,11 @@ if(!is.null(suffix))
 	
 	
 before = list(
+	REXE = file.path(R.home("bin"), "R"),
+	PANDOC = Sys.which("pandoc"),
+	XELATEX = Sys.which("xelatex"),
+	BIBER = Sys.which("biber"),
+	RM = Sys.which("rm"),
 	pandocTo = c('beamer', 'latex')[2-beamer],
 	docxTemplate = system.file('src/template.docx', package='Pmisc'),
  odtTemplate = system.file('src/template.odt', package='Pmisc')
@@ -53,35 +58,35 @@ result = paste(
 '.PRECIOUS: %.md %.tex
 
 %.md: %.Rmd
-	R -e "knitr::knit(\'$<\', encoding=\'UTF-8\')" $(Rargs)
+	$(REXE) -e "knitr::knit(\'$<\', encoding=\'UTF-8\')" $(Rargs)
 
 %.tex: %.md
-	pandoc --standalone --smart --biblatex $(pandocArgs) --to=$(pandocTo) --output=$@ $<
+	$(PANDOC) --standalone --smart --biblatex $(pandocArgs) --to=$(pandocTo) --output=$@ $<
 
 %.bcf: %.tex
-	xelatex $<
+	$(XELATEX) $<
 
 %.bbl: %.bcf
-	biber $<	
+	$(BIBER) $<	
 
 %.pdf: %.tex %.bbl
-	xelatex -interaction=nonstopmode $<;
-	xelatex -interaction=nonstopmode $<
+	$(XELATEX) -interaction=nonstopmode $<;
+	$(XELATEX) -interaction=nonstopmode $<
 
 %.html: %.md
-	pandoc --smart --standalone --mathjax --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
+	$(PANDOC) --smart --standalone --mathjax --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
 
 %.rtf: %.md
-	pandoc --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
+	$(PANDOC) --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
 
 %.odt: %.md
-	pandoc --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$(odtTemplate) --output=$@ $<
+	$(PANDOC) --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$(odtTemplate) --output=$@ $<
 
 %.docx: %.md
-	pandoc --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$(docxTemplate) --output=$@ $<
+	$(PANDOC) --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$(docxTemplate) --output=$@ $<
 
 clean:
-	rm *.run.xml* *.blg *.out *.log *.aux *.bcf *.bbl *.nav *.toc *.vrb',
+	$(RM) *.run.xml* *.blg *.out *.log *.aux *.bcf *.bbl *.nav *.toc *.vrb',
 sep='\n'
 )	
 	
