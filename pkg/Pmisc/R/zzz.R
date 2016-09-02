@@ -34,7 +34,7 @@
 						report=FALSE, precious=TRUE)
 			},
 			tangle = function(file, ...) file.copy(file, gsub("hair$", "", file)), 
-			pattern = c(input='[.][Rr]hair$',output='[.](md|pdf|html)$')
+			pattern = c(input='[.][Rr]hair$',output='[.]md$')
 	)
 	
 }
