@@ -23,7 +23,7 @@
 			pattern = '[.][Rr]hair$'
 	)
 	
-	# spin without converting md to html
+	# spin to an md file (don't convert to html)
 	tools::vignetteEngine(
 			name = 'spinReportFalse',
   		package='Pmisc',

@@ -44,7 +44,7 @@ options(width=80)
 
 # write a bibliography
 knitr::write_bib(
-	c('mapmisc', 'knitr'),
+	c('geostatsp', 'knitr'),
 	file='myBib.bib'
 )
 ```
@@ -95,8 +95,8 @@ cat(
 
 - `@R-knitr`: @R-knitr
 - `[@R-knitr]`: @R-knitr
-- `[see @R-mapmisc for example]`: [see @R-mapmisc for example]
-- `\fullcite{R-mapmisc}`: \fullcite{R-mapmisc}
+- `[see @R-geostatsp for example]`: [see @R-geostatsp for example]
+- `\fullcite{R-geostatsp}`: \fullcite{R-geostatsp}
 
 
 # Markdown citations
