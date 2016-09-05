@@ -4,7 +4,13 @@
 	tools::vignetteEngine(
 			name='barebones', 
 			package='Pmisc',
-			weave= function(...) knitr::knit(...),
+			weave= function(file, ...) {
+				# create an empty .tex file.  
+				# this is a hack because R CMD build doesn't
+				# check for .md files
+				file.create(paste(basename(file), "tex", sep='.'))
+				knitr::knit(file, ...)
+			},
 			tangle = function(...) knitr::purl(...), 
 			pattern = "[.]([rRsS](nw|tex)|[Rr](md|html|rst))$",
 			aspell = list(
@@ -28,6 +34,7 @@
 			name = 'spinReportFalse',
   		package='Pmisc',
 			weave =	function(file, ...) {
+				file.create(paste(basename(file), "tex", sep='.'))
 				knitr::spin(hair=file, format='Rmd', knit=TRUE, report=FALSE)
 			},
 			tangle = function(file, ...) file.copy(file, gsub("hair$", "", file)),
