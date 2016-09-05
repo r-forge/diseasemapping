@@ -14,3 +14,31 @@
     - `VignetteIndexEntry`'s are still needed to pass `R CMD check`
  
 - the `Pmisc` package at [](https://r-forge.r-project.org/scm/viewvc.php/pkg/Pmisc/?root=diseasemapping) uses these features
+
+    - The `DESCRIPTION` file has `VignetteEngine: Pmisc::spin`
+    - One vignette has the metata below, not specifying an engine but relying on the default
+```    
+#+ metadata, include=FALSE
+#%\VignetteIndexEntry{A Goat Hair Vignette}
+#'
+```    
+    - A vignette builder is
+``` 
+tools::vignetteEngine(
+		name='barebones', 
+		package='Pmisc',
+		weave= function(...) knitr::knit(...),
+		tangle = function(...) knitr::purl(...), 
+		pattern = c(
+				input="[.]([rRsS](nw|tex)|[Rr](md|html|rst))$", 
+				output="[.](tex|md|html|pdf|rst)$"),
+		aspell = list(
+   			filter = function(...) knitr::knit_filter(...)
+		)
+)
+```
+    - The vignette Makefile includes
+```
+%.html: %.md
+	pandoc --standalone --filter=pandoc-citeproc --self-contained --output=$@ $<
+```        

@@ -26,5 +26,4 @@ SystemRequirements: pandoc >= 1.16.0, pandoc-citeproc (http://pandoc.org), biber
     (http://www.ctan.org/pkg/biber)
 License: GPL
 VignetteBuilder: Pmisc
-VignetteEngine: Pmisc::spin
 RoxygenNote: 5.0.1

@@ -1,24 +1,26 @@
-all: mapLayers.html mapmisc.pdf 
+all: mapLayers.html north.html mapmisc.pdf 
 
 clean:
-	rm -rf *.tex *.toc *.bbl *.blg *.aux *.out *.log *.spl *tikzDictionary *.md figure/ cache/ *.dvi *.4* *.css *.idv *.lg *.tmp *.xref *.gz
+	rm -rf *.md *.tex *.toc *.bbl *.blg *.aux *.out *.log *.spl *tikzDictionary *.md figure/ cache/ *.dvi *.4* *.css *.idv *.lg *.tmp *.xref *.gz my*.bib *.nav *.xml *.vrb *.snm 
 
+empty:
+	rm *.pdf *.html
 
-mapLayers.html: mapLayers.Rmd
-	'$(R_HOME)/bin/Rscript' -e "knitr::knit2html('mapLayers.Rmd')" $(Rargs)
+%.pdf: %.tex
+	xelatex -interaction=nonstopmode $<;
+	xelatex -interaction=nonstopmode $<
+	R --slave -e "tools::compactPDF('$@', gs_quality='ebook')" 
 
-mapmisc.tex: mapmisc.rnw
-	'$(R_HOME)/bin/Rscript' -e "knitr::knit('mapmisc.rnw')" $(Rargs)
+%.html: %.md
+	pandoc --standalone --self-contained --smart --output=$@ $<
 
-north.html: north.Rmd
-	'$(R_HOME)/bin/Rscript' -e "knitr::knit2html('north.Rmd')" $(Rargs)
+%.tex: %.Rnw
+	R --slave -e "knitr::knit('$<')" $(Rargs)
 
-mapmisc.pdf: mapmisc.tex
-	xelatex mapmisc;
-	xelatex mapmisc
-	'$(R_HOME)/bin/Rscript' -e "tools::compactPDF('mapmisc.pdf', gs_quality='ebook')" 
+%.md: %.Rmd
+	R --slave -e "knitr::knit('$<')" $(Rargs)
 
-web:
+web: mapmisc.pdf north.html mapLayers.html
 	cp mapmisc.pdf ../../../www/mapmisc.pdf;
 	cp north.html ../../../www/north.html;
 	cp mapLayers.html ../../../www/openmap.html

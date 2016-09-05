@@ -6,9 +6,7 @@
 			package='Pmisc',
 			weave= function(...) knitr::knit(...),
 			tangle = function(...) knitr::purl(...), 
-			pattern = c(
-					input="[.]([rRsS](nw|tex)|[Rr](md|html|rst))$", 
-					output="[.](tex|md|html|pdf|rst)$"),
+			pattern = "[.]([rRsS](nw|tex)|[Rr](md|html|rst))$",
 			aspell = list(
     			filter = function(...) knitr::knit_filter(...)
 			)
@@ -18,7 +16,9 @@
 	tools::vignetteEngine(
 			name = 'spin', 
 			package='Pmisc',
-			weave =	function(file, ...) knitr::spin(file),
+			weave =	function(file, ...) {
+				knitr::spin(hair=file, format='Rmd', knit=TRUE, report=TRUE)
+			},
 			tangle = function(file, ...) file.copy(file, gsub("hair$", "", file)), 
 			pattern = '[.][Rr]hair$'
 	)
@@ -28,13 +28,10 @@
 			name = 'spinReportFalse',
   		package='Pmisc',
 			weave =	function(file, ...) {
-				knitr::spin(
-						hair=file, 
-						format='Rmd', knit=TRUE, 
-						report=FALSE, precious=TRUE)
+				knitr::spin(hair=file, format='Rmd', knit=TRUE, report=FALSE)
 			},
-			tangle = function(file, ...) file.copy(file, gsub("hair$", "", file)), 
-			pattern = c(input='[.][Rr]hair$',output='[.]md$')
+			tangle = function(file, ...) file.copy(file, gsub("hair$", "", file)),
+			pattern = '[.][Rr]hair$'
 	)
 	
 }

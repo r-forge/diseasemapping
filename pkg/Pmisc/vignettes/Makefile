@@ -20,7 +20,8 @@ document.tex: document.md
 
 %.pdf: %.tex %.bbl
 	xelatex -interaction=nonstopmode $<;
-	xelatex -interaction=nonstopmode $<
+	xelatex -interaction=nonstopmode $<;
+	R --slave -e "tools::compactPDF('$@', gs_quality='ebook')"
 
 %.html: %.md
 	pandoc --standalone --filter=pandoc-citeproc --self-contained --output=$@ $<
@@ -29,4 +30,4 @@ document.tex: document.md
 	pandoc --filter=pandoc-citeproc --reference-docx=../inst/src/template.docx --output=$@ $<
 	
 %.odt: %.md
-	pandoc --filter=pandoc-citeproc --reference-docx=../inst/src/template.odt --output=$@ $<
+	pandoc --filter=pandoc-citeproc --reference-odt=../inst/src/template.odt --output=$@ $<
