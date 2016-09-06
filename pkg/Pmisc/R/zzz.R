@@ -8,7 +8,7 @@
 				# create an empty .tex file.  
 				# this is a hack because R CMD build doesn't
 				# check for .md files
-				file.create(paste(basename(file), "tex", sep='.'))
+				file.create(gsub("\\.[[:alpha:]]+$", ".tex", file))
 				knitr::knit(file, ...)
 			},
 			tangle = function(...) knitr::purl(...), 
@@ -34,7 +34,10 @@
 			name = 'spinReportFalse',
   		package='Pmisc',
 			weave =	function(file, ...) {
-				file.create(paste(basename(file), "tex", sep='.'))
+				# create an empty .tex file.  
+				# this is a hack because R CMD build doesn't
+				# check for .md files
+				file.create(gsub("\\.[[:alpha:]]+$", ".tex", file))
 				knitr::spin(hair=file, format='Rmd', knit=TRUE, report=FALSE)
 			},
 			tangle = function(file, ...) file.copy(file, gsub("hair$", "", file)),
