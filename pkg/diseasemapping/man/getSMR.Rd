@@ -20,7 +20,11 @@ It will also merge back the observed value, expected value and the ratio back to
 }
 
 \usage{
-\S4method{getSMR}{data.frame,numeric,missing,ANY,ANY}(
+\S4method{getSMR}{data.frame, ANY,missing,ANY,ANY}(
+popdata, model, casedata, regionCode , regionCodeCases , 
+area.scale = 1,  sex=c('m','f'),...
+)
+\S4method{getSMR}{data.frame,numeric,NULL,ANY,ANY}(
 popdata, model, casedata, regionCode , regionCodeCases , 
 area.scale = 1,  sex=c('m','f'),...
 )

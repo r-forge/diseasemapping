@@ -7,7 +7,8 @@ if('sex' %in% names(poplong)){
   poplong= poplong[grep(sex, poplong$sex, ignore.case=TRUE),]
 }	
 
-poplong <- aggregate(poplong$expected, 
+poplong <- aggregate(
+		poplong$expected, 
     list(poplong[['idForAgg']]), 
     sum, na.rm=TRUE)
 rownames(poplong) = as.character(poplong[,1])
@@ -50,16 +51,30 @@ setGeneric('getSMR',
 
 
 
+setMethod('getSMR', 
+		signature("data.frame", "ANY", "missing", "ANY", "ANY"),
+		function(popdata, model, casedata, 
+				regionCode,
+				regionCodeCases, 
+				area.scale=1, 
+				sex=c('m','f'), ...
+		) {
+
+			callGeneric(popdata, model, NULL, regionCode,
+					regionCodeCases, area.scale, sex, ...)
+		}
+)
+
+
 
 setMethod("getSMR", 
-    signature("data.frame", "numeric", "missing", "ANY"),
+    signature("data.frame", "numeric", "NULL", "ANY", "ANY"),
     function(popdata, model, 
         casedata, 
         regionCode,
         area.scale=1, 
         sex=c('m','f'), ...){
       # model is a vector of rates
-      
       popdata$idForAgg = 1:nrow(popdata)
  
       # check breaks for groups, make sure they line up
@@ -87,12 +102,14 @@ setMethod("getSMR",
           newModel[paste(poplong$sex, poplong$age, sep='.')
               ,'x']
 
+#						save(popdata, poplong, sex, area.scale, file='stuff.RData')				
+										
       aggPopLong(popdata, poplong, sex, area.scale) 
     }
 )
 
 setMethod("getSMR", 
-    signature("data.frame", "glm", "missing", "ANY"),
+    signature("data.frame", "glm", "NULL", "ANY", "ANY"),
     function(popdata, model, casedata, 
         regionCode,
         area.scale=1, 
@@ -289,7 +306,7 @@ setMethod("getSMR",
 
 
 setMethod("getSMR", 
-    signature("SpatialPolygonsDataFrame", 'ANY','ANY', "ANY"),
+    signature("SpatialPolygonsDataFrame", 'ANY','ANY', "ANY", "ANY"),
     function(
         popdata, model,  casedata, 
         regionCode,
@@ -319,7 +336,7 @@ setMethod("getSMR",
 )
 
 setMethod("getSMR", 
-    signature("data.frame", 'list', 'missing', 'ANY'),
+    signature("data.frame", 'list', 'missing', 'ANY', "ANY"),
     function(popdata, model, casedata, 
         regionCode,
         regionCodeCases, area.scale=1, 
@@ -355,7 +372,7 @@ setMethod("getSMR",
 )
 
 setMethod("getSMR", 
-    signature("list", 'list', 'missing', 'ANY'),
+    signature("list", 'list', 'missing', 'ANY', "ANY"),
     function(popdata, model, casedata, 
         regionCode,
         regionCodeCases, area.scale=1, 
@@ -406,7 +423,7 @@ setMethod("getSMR",
 )
 
 setMethod("getSMR", 
-    signature("list", 'ANY', 'data.frame'),
+    signature("list", 'ANY', 'ANY', "ANY", "ANY"),
 function(popdata, model, casedata, regionCode,
     regionCodeCases, area.scale=1 , 
     years = NULL, personYears=TRUE,year.range = NULL,...){
@@ -427,12 +444,17 @@ function(popdata, model, casedata, regionCode,
 			#If year is not in the model as factor
 			if(!length(yearVar)) yearVar="YEAR"
 			
-			caseYearVar = grep("year",names(casedata),value=TRUE,ignore.case=TRUE)
-  
+			if(!missing(casedata)) {
+				caseYearVar = grep("year",names(casedata),value=TRUE,ignore.case=TRUE)
+				caseSexVar = grep("^sex$",names(casedata),value=TRUE,ignore.case=TRUE)
+			} else {
+				caseSexVar = caseYearVar = NULL
+			}
+			
   
 			if(personYears){
 				# if year.range is missing, use year range of the cases
-				if(is.null(year.range)) {
+				if(is.null(year.range) & !missing(casedata)) {
 					if(!length(caseYearVar))
 						warning("year.range unspecified and no year column in case data")
 					year.range = range(as.numeric(as.character(casedata[,caseYearVar])), na.rm=TRUE)
@@ -448,9 +470,6 @@ function(popdata, model, casedata, regionCode,
 				interval<-rep(1,length(popdata))
 			}
 			names(interval) <- names(popdata)
-  
-  
-  caseSexVar =grep("^sex$",names(casedata),value=TRUE,ignore.case=TRUE)
   
   result=list()
   
@@ -478,22 +497,29 @@ function(popdata, model, casedata, regionCode,
     
     popdata[[Dyear]][[yearVar]] = as.integer(Dyear)
     
-    
-    caseThisYear = casedata[casedata[[caseYearVar]]==Dyear,]
-    
-				if(!is.vector(model)) {
-					if (length(model$sexSubset) == 1) {      
-						caseThisYear = caseThisYear[caseThisYear[[caseSexVar]] == model$sexSubset, ]
+				if(!missing(casedata)) {
+					caseThisYear = casedata[casedata[[caseYearVar]]==Dyear,]
+					
+					if(!is.vector(model)) {
+						if (length(model$sexSubset) == 1) {      
+							caseThisYear = caseThisYear[caseThisYear[[caseSexVar]] == model$sexSubset, ]
+						}
 					}
-				}
-    
     if(dim(caseThisYear)[1]==0) caseThisYear<-NULL   
-    
+			} else {
+				caseThisYear = NULL
+				regionCodeCases = NULL
+			}
+			
+			
     cat("computing",Dyear,"\n")
     
-    result[[Dyear]] = getSMR(popdata[[Dyear]], model, caseThisYear,regionCode =regionCode,
-        regionCodeCases = regionCodeCases, years = years, year.range = year.range,
-        area = area, area.scale = area.scale)
+    result[[Dyear]] = getSMR(
+						popdata[[Dyear]], model=model, casedata=caseThisYear,
+						regionCode=regionCode, regionCodeCases=regionCodeCases, 
+						area.scale=area.scale,
+						years = years, year.range = year.range,
+      area = area)
     
   }
   names(result) = years
