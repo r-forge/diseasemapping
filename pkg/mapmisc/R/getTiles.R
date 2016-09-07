@@ -150,6 +150,10 @@ getTilesMerc = function(
 				Dcache = cacheDir
       	Dtile = paste('x=',Dx-1, '&y=', Dy-1, '&z=',zoom,suffix, sep='')
       	Durl = paste(path, Dtile, sep='')				
+			} else if (tileNames == 'xyz') {
+				Dcache = cacheDir
+      	Dtile = paste(Dx-1, '/', Dy-1, '/',zoom,suffix, sep='')
+      	Durl = paste(path, Dtile, sep='')				
 			} else if (tileNames == 'zyx') {
 				Dcache = file.path(cacheDir, zoom, Dy-1)
 				Dpath = paste(path,zoom,'/',Dy-1,'/',sep='')
@@ -168,7 +172,7 @@ getTilesMerc = function(
 				if(verbose) cat("downloading ", Durl, "\n")
         try(utils::download.file(
 							Durl, Dfile, quiet=!verbose, 
-							method='internal', mode = 'wb'
+							method='auto', mode = 'wb'
 						), silent=TRUE)
       } else {
         if(verbose) cat("tile ", Dfile, " cached\n")

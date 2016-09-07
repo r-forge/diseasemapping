@@ -230,11 +230,11 @@ for(D in names(cartodb$long)){
     )
 	thunderforest[[D2]][[D]] = gsub(
 			"stamen.com", "thunderforest.com",
-			maptoolkit[[D2]][[D]]
+			thunderforest[[D2]][[D]]
 	)
 	thunderforest[[D2]][[D]] = gsub(
 			"Stamen Design", "Thunderforest",
-			maptoolkit[[D2]][[D]]
+			thunderforest[[D2]][[D]]
 	)
 	
   }
@@ -342,7 +342,7 @@ openmapAttribution = function(name, type=c('text','latex','markdown','html'), sh
 			result[D] = nrcan[[shortlong]][[type]]
 			
 		} else if(length(grep(
-                "^osm|opentopomap|openstreetmap|historical|bw.mapnik", 
+                "^osm|wikimedia|hyda|opentopomap|openstreetmap|historical|bw.mapnik", 
                 D))){        # openstreetmap
           result[D] = osm[[shortlong]][[type]]
     } else if(length(grep("humanitarian",D))){
@@ -361,6 +361,8 @@ openmapAttribution = function(name, type=c('text','latex','markdown','html'), sh
         result[D] = waze[[shortlong]][[type]]
       } else if(length(grep("maptoolkit",D))){ 
         result[D] = maptoolkit[[shortlong]][[type]]
+      } else if(length(grep("thunderforest|^(spinal|neighbourhood|mobile.atlas|pioneer)$",D))){ 
+        result[D] = thunderforest[[shortlong]][[type]]
       } else if(length(grep("stamen",D))){ # stamen
         if(length(grep("stamen-toner",D))){
           result[D] = stamenToner[[shortlong]][[type]]

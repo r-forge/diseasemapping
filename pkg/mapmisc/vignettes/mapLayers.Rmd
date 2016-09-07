@@ -20,14 +20,14 @@ internet connection when this document is compiled.  The full document is at
 library('knitr')
 library('mapmisc')
 
-fact = 0.5
+fact = 0.6
 reRun = FALSE
 
 # uncomment for nicer images
 # fact = 1 
 # reRun = TRUE
 
-opts_chunk$set(dpi=72*fact, dev.args=list(bg='white'), fig.retina=2, out.width='200px')	
+opts_chunk$set(dpi=72*fact, dev.args=list(bg='white'), fig.retina=2, out.width='260px')	
 
 theNames = names(osmTiles())
 africaExtent = c(25, 25)

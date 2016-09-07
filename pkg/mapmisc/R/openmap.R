@@ -33,7 +33,11 @@ osmTiles = function(name) {
 		 'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_TXT_3857/MapServer/tile/',
  'nrcan-text-fr' = 
 		 'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBCT_TXT_3857/MapServer/tile/',
-spinal = 'http://c.tile.thunderforest.com/spinal-map/'
+spinal = 'http://c.tile.thunderforest.com/spinal-map/',
+neighbourhood = 'https://b.tile.thunderforest.com/neighbourhood/',
+pioneer = 'https://b.tile.thunderforest.com/pioneer/',
+'mobile-atlas'='https://b.tile.thunderforest.com/mobile-atlas/',
+wikimedia = 'https://maps.wikimedia.org/osm-intl/'
 )
 #	skobbler="http://tiles3.skobbler.net/osm_tiles2/",	
 #  'sputnik' = 'http://a.tiles.maps.sputnik.ru/tiles/kmt2/',
