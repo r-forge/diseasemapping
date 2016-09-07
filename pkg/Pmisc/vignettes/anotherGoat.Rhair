@@ -1,7 +1,8 @@
-#+ metadata, include=FALSE
-#%\VignetteEngine{Pmisc::spinReportFalse}
-#%\VignetteIndexEntry{A more complex goat hair vignette}
+#+ metadata, include=FALSE, eval=FALSE
+#\VignetteEngine{Pmisc::spinReportFalse}
+#\VignetteIndexEntry{A more complex goat hair vignette}
 #'
+
 #+ theHeader, echo=FALSE
 bibFile = 'myDocBibGoat.bib'
 Pmisc::markdownHeader(

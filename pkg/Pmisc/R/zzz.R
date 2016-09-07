@@ -18,6 +18,7 @@
 			)
 	)
 	
+	if(FALSE) { # need version of R which handles #\VignetteBuilder metadata
 	# spin goat's hair
 	tools::vignetteEngine(
 			name = 'spin', 
@@ -43,5 +44,5 @@
 			tangle = function(file, ...) file.copy(file, gsub("hair$", "", file)),
 			pattern = '[.][Rr]hair$'
 	)
-	
+}
 }
