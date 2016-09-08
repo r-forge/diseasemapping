@@ -338,7 +338,7 @@ openmapAttribution = function(name, type=c('text','latex','markdown','html'), sh
   result = c()
   for(D in name){
 		
-		if(length(grep('^nrcan$', D))) {
+		if(length(grep('^nrcan(-text.*)$', D))) {
 			result[D] = nrcan[[shortlong]][[type]]
 			
 		} else if(length(grep(

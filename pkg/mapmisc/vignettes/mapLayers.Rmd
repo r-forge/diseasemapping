@@ -29,7 +29,7 @@ reRun = FALSE
 
 opts_chunk$set(dpi=72*fact, dev.args=list(bg='white'), fig.retina=2, out.width='260px')	
 
-theNames = names(osmTiles())
+theNames = grep("mapquest", names(osmTiles()), invert=TRUE, value=TRUE)
 africaExtent = c(25, 25)
 trafalgarSquare=c(-0.128056,51.508056)
 stjohns=c(-52.683320, 47.566285)

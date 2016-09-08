@@ -56,7 +56,7 @@ scaleBar(x, 'left', seg.len=0, bty='n')
 
 ```{r mapquest}
 if(haveRgdal){
-mapSat = openmap(x, path='mapquest', verbose=TRUE, maxTiles=20, buffer=c(30,3))    
+mapSat = openmap(x, path='maptoolkit', verbose=TRUE, maxTiles=20, buffer=c(30,3))    
 
 map.new(mapSat)
 if(nlayers(mapSat) > 2) plotRGB(mapSat,add=TRUE)
@@ -69,7 +69,7 @@ scaleBar(x, 'left', seg.len=0, bty='n')
 
 ```{r mapquestDetail}
 if(haveRgdal){
-mapSat = openmap(x=x[x$name=='Hans island',], path='mapquest', 
+mapSat = openmap(x=x[x$name=='Hans island',], path='maptoolkit', 
     verbose=TRUE, buffer=c(4,1), zoom=6)    
 
 map.new(x[x$name=='Hans island',], buffer=0.3)
@@ -82,7 +82,7 @@ scaleBar(x, 'bottomright')
 
 ```{r mapquestQaanaaq}
 if(haveRgdal){
-mapSat = openmap(x[x$name=='Qaanaaq',], path='mapquest', 
+mapSat = openmap(x[x$name=='Qaanaaq',], path='maptoolkit', 
     verbose=TRUE, buffer=c(2,1), zoom=5)
 
 map.new(x[x$name=='Qaanaaq',], buffer=0.5)
