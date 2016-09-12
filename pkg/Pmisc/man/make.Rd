@@ -6,7 +6,7 @@
 make(x, suffix = NULL,
   beamer = FALSE, run = FALSE, ...)
 Makefile(x, suffix = NULL,
-  beamer = FALSE, output='Makefile')
+  beamer = FALSE, output='Makefile', cygwin=FALSE)
 }
 \arguments{
 \item{x}{a string specifying the target}
@@ -18,6 +18,8 @@ Makefile(x, suffix = NULL,
 \item{run}{run make with a system call}
 
 \item{output}{Name of file saved, or a function output is passed to.}
+
+\item{cygwin}{Makefile is to be run in cygwin}
 
 \item{...}{additional arguments passed to make}
 }

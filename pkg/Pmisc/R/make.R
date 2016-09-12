@@ -31,23 +31,42 @@ invisible(theString)
 
 #' @export
 Makefile = function(x, suffix = NULL,
-		beamer = FALSE, output='Makefile') {
+		beamer = FALSE, output='Makefile', cygwin=FALSE) {
 
 if(!is.null(suffix))
 		x = paste(
 				tools::file_path_sans_ext(basename(x)),
 				suffix, sep='.')
-	
+
+	if(cygwin){
+		whichfun = function(x) {
+			system(paste(
+							Sys.which("bash"),
+							" -c 'which ", x, "'",
+							sep=''
+							), intern=TRUE)
+		}
+		subfun = function(x) {
+			gsub("^([[:alpha:]])(:)", '/cygdrive/\\1', x)
+		}
+	} else {
+		whichfun = function(x) Sys.which(x)
+		subfun = function(x) x
+	}
 	
 before = list(
-	REXE = file.path(R.home("bin"), "R"),
-	PANDOC = Sys.which("pandoc"),
-	XELATEX = Sys.which("xelatex"),
-	BIBER = Sys.which("biber"),
-	RM = Sys.which("rm"),
+	REXE = subfun(file.path(R.home("bin"), "R")),
+	PANDOC = whichfun("pandoc"),
+	XELATEX = whichfun("xelatex"),
+	BIBER = whichfun("biber"),
+	RM = whichfun("rm"),
 	pandocTo = c('beamer', 'latex')[2-beamer],
-	docxTemplate = system.file('src/template.docx', package='Pmisc'),
- odtTemplate = system.file('src/template.odt', package='Pmisc')
+	docxTemplate = subfun(
+			system.file('src/template.docx', package='Pmisc')
+	),
+ odtTemplate = subfun(
+			system.file('src/template.odt', package='Pmisc')
+	)
 )
 
 before = paste(paste(names(before), before, sep='='), collapse='\n')
