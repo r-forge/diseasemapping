@@ -22,7 +22,6 @@ opts_chunk$set(out.width='0.48\\textwidth', fig.align='default', fig.height=3, f
 
 <<packages>>=
 require('diseasemapping')
-require("methods")
 data('kentucky')
 @
 
@@ -52,8 +51,7 @@ if(FALSE) {
 # get rid of under 10's
 larynxRates = larynxRates[grep("_(0|5)$",names(larynxRates), invert=TRUE)]
 # compute Sexpected
-kentucky = getSMR(kentucky, larynxRates, larynx,
-		regionCode="County")
+kentucky = diseasemapping::getSMR(kentucky, larynxRates, larynx, regionCode="County")
 @
 
 

@@ -1,3 +1,4 @@
+#' @export 
 setGeneric('formatPopulation', 
     function(popdata, 
         aggregate.by=NULL, 
@@ -10,7 +11,7 @@ setMethod("formatPopulation",
     signature("SpatialPolygonsDataFrame"),
     function(popdata, ...) {
       
-      callGeneric(popdata@data, ...)
+      methods::callGeneric(popdata@data, ...)
       
     }                         
 )
@@ -24,7 +25,7 @@ setMethod("formatPopulation",
 ageBreaks = getBreaks(names(popdata), breaks)
 
 ####reshape the popdata:
-poplong = reshape(popdata,  varying=ageBreaks$oldNames, direction="long",
+poplong = stats::reshape(popdata,  varying=ageBreaks$oldNames, direction="long",
 	v.names="POPULATION", timevar="GROUP", times = ageBreaks$newNames)
 # create age and sex variables
 agecol = grep("^age$", names(poplong), value=TRUE, ignore.case=TRUE)
@@ -48,7 +49,7 @@ row.names(poplong)<-NULL
 
 if(!is.null(aggregate.by)) {
 
-  popa <- aggregate(poplong$POPULATION, poplong[, aggregate.by, drop=FALSE], 
+  popa <- stats::aggregate(poplong$POPULATION, poplong[, aggregate.by, drop=FALSE], 
     sum, na.rm=TRUE)
 
   # change x column name to 'population'
