@@ -68,7 +68,7 @@ Pmisc::markdownHeader(
 	slides=FALSE,
 	bibliography = bibFile,
 	geometry='margin=1in',
-	csl = system.file('src','apa-no-doi-no-issue.csl', package='Pmisc'),
+#	csl = system.file('src','apa-no-doi-no-issue.csl', package='Pmisc'),
 	css = system.file('src','article.css', package='Pmisc')
 )
 ```

@@ -51,11 +51,12 @@ Put this function in a code chunk at the start of
 }
 \examples{
 today()
-stuff = markdownHeader(
+cat(Pmisc::markdownHeader(
 	title='my title',
 	author = 'me',
-	extrastuff = c(a=1, b=2)
-)
-cat(stuff)
+	geometry='margin=1in',
+	fontsize='12pt',
+	headerincludes=c('\\newcommand{\\tp}{^{\\textrm{T}}}')
+))
 }
 
