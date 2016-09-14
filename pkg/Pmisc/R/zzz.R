@@ -12,7 +12,7 @@
 				knitr::knit(file, ...)
 			},
 			tangle = function(...) knitr::purl(...), 
-			pattern = "[.]([rRsS](nw|tex)|[Rr](md|html|rst))$",
+			pattern = "[.][rR](nw|md)$",
 			aspell = list(
     			filter = function(...) knitr::knit_filter(...)
 			)

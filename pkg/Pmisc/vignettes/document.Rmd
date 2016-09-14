@@ -1,14 +1,10 @@
+
 <!--
-%\VignetteIndexEntry{Examples of an html document with subfigures}
+%\VignetteIndexEntry{Example of an html document with subfigures}
 %\VignetteEngine{Pmisc::barebones}
 -->
 
 ```{r setup, include=FALSE}
-
-# to compile
-
-Pmisc::make('document.Rmd', suffix='html')
-
 
 library('knitr')
 library('Pmisc')
@@ -41,8 +37,6 @@ if(FALSE) {
 }
 
 
-
-
 options(width=80)
 
 bibFile = 'myDocBib.bib'
@@ -63,7 +57,7 @@ cat('
 		
 ```{r theHeader, echo=FALSE}
 Pmisc::markdownHeader(
-	title="Pmisc html subfigures", 		
+	title="Example of an html document with subfigures", 		
 	author='Patrick Brown',
 	slides=FALSE,
 	bibliography = bibFile,
