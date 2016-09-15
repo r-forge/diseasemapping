@@ -1,6 +1,8 @@
 #+ metadata, include=FALSE, eval=FALSE, purl=FALSE
+"
 %\VignetteEngine{Pmisc::spinReportFalse}
 %\VignetteIndexEntry{A more complex goat hair vignette}
+"
 #'
 
 #+ theHeader, echo=FALSE
@@ -10,7 +12,7 @@ Pmisc::markdownHeader(
 	author='Patrick Brown',
 	slides=FALSE,
 	bibliography = bibFile,
-	csl = system.file('src','apa.csl', package='Pmisc'),
+#	csl = system.file('src','apa.csl', package='Pmisc'),
 	css = system.file('src','article.css', package='Pmisc')
 )
 #'

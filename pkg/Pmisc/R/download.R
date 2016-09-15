@@ -12,8 +12,7 @@ downloadIfOld = function(
 		url,
 		file = basename(url),
 		age = '5 days',
-		verbose=FALSE, 
-		source=FALSE
+		verbose=FALSE, exdir=tempdir()
 ) {
 	
 	old = Sys.time() - diff(as.numeric(
@@ -37,12 +36,14 @@ downloadIfOld = function(
 					quiet = !verbose
 			)
 		}
-		if(source) {
-			source(
-					file[D],
-					verbose=verbose>1
-			)
-		}
+		
 	}
-	invisible()
+	
+	zipfiles = grep('[.]zip$', file, value=TRUE, ignore.case=TRUE)	
+	for(D in zipfiles) {
+		file = c(file, tools::unzip(D, exdir=exdir))
+	}
+	
+	invisible(file)
+	
 }

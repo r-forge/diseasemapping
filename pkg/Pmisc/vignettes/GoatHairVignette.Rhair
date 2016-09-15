@@ -1,6 +1,8 @@
 #+ metadata, include=FALSE, eval=FALSE, purl=FALSE
+"
 %\VignetteIndexEntry{A Goat Hair Vignette}
 %\VignetteEngine{Pmisc::spin}
+"
 #'
 
 

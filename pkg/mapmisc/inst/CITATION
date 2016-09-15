@@ -9,9 +9,11 @@ key = 'mapmisc',
   title="Maps, coordinate reference systems and visualising geographic data with mapmisc",
   author = pb,
   journal="R-journal",
-  volume="to appear",
+  volume="8",
+  number = 1,
   year="2016",
-  url = "http://journal.r-project.org/archive/accepted/brown.pdf"
+	pages = "64--91",
+  url = "https://journal.r-project.org/archive/2016-1/brown.pdf"
 )
 
 
