@@ -1,5 +1,4 @@
-all: slides.pdf document.html document.docx document.odt
-# add anotherGoat.html
+all: slides.pdf document.html document.docx document.odt anotherGoat.html
 
 clean:
 	rm -rf *.tex *.toc *.bbl *.blg *.aux *.out *.log *.spl *tikzDictionary *.md figure/ cache/ *.dvi *.4* *.css *.idv *.lg *.tmp *.xref *.gz my*.bib *.nav *.xml *.vrb *.snm 
