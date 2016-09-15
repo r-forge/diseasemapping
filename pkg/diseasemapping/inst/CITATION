@@ -29,22 +29,6 @@ key = 'geostatsp',
   doi = "10.18637/jss.v063.i12"
 )
 
-citEntry(entry = "Article",
-  title        = "MCMC for Generalized Linear Mixed Models with glmmBUGS",
-  author       = c(person("Patrick E. Brown"),
-  					person("L Zhou")
-  				),
-  journal      = "R-journal",
-  year         = "2010",
-  volume       = "2",
-  url          = "http://journal.r-project.org/archive/2010-1/RJournal_2010-1_Brown+Zhou.pdf",
-  textVersion  =
-  paste("Patrick E. Brown and L Zhou (2010).",
-        "MCMC for Generalized Linear Mixed Models with glmmBUGS.",
-        "R-journal, 2.",
-        "URL http://journal.r-project.org/archive/2010-1/RJournal_2010-1_Brown+Zhou.pdf.")
-)
-
 utils::bibentry(
 	key = 'diseasemappingPackage',
 	bibtype = "Manual",
@@ -53,5 +37,5 @@ utils::bibentry(
          author =c(pb, lz),
          year = year,
          note = note,
-         url = "http://CRAN.R-project.org/package=diseasemapping"
+         url = "https://CRAN.R-project.org/package=diseasemapping"
 )
