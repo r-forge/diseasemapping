@@ -7,7 +7,7 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \providecommand{\subfloat}[2][need a sub-caption]{\subcaptionbox{#1}{#2}}
-\title{BYM and PC priors}
+\title{BYM with PC priors}
 \author{Patrick Brown}
 \date{April 2016}
 
