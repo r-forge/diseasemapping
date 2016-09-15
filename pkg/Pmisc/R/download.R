@@ -41,7 +41,7 @@ downloadIfOld = function(
 	
 	zipfiles = grep('[.]zip$', file, value=TRUE, ignore.case=TRUE)	
 	for(D in zipfiles) {
-		file = c(file, tools::unzip(D, exdir=exdir))
+		file = c(file, utils::unzip(D, exdir=exdir))
 	}
 	
 	invisible(file)

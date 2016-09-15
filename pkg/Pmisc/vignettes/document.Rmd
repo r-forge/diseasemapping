@@ -1,9 +1,3 @@
-
-<!--
-%\VignetteIndexEntry{Example of an html document with subfigures}
-%\VignetteEngine{Pmisc::barebones}
--->
-
 ```{r setup, include=FALSE}
 
 library('knitr')
@@ -54,6 +48,12 @@ cat('
 ', file=bibFile, encoding='UTF8')
 
 ```
+
+<!--
+%\VignetteIndexEntry{Example of an html document with subfigures}
+%\VignetteEngine{Pmisc::barebones}
+-->
+
 		
 ```{r theHeader, echo=FALSE}
 Pmisc::markdownHeader(
