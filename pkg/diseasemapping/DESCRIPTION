@@ -7,9 +7,9 @@ Depends: R (>= 3.2)
 Imports:
     stats,
     utils,
+    sp,
     methods
 Suggests:
-    sp,
     spdep,
     mgcv,
     geostatsp,

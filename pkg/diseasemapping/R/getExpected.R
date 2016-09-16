@@ -89,7 +89,7 @@ setMethod("getExpected",
 				area.scale=1, 
 				sex=c('m','f')){
 			
-			popdata$id = 1:nrow(popdata)
+			popdata$idForAgg = 1:nrow(popdata)
 			poplong <- formatPopulation(popdata, breaks=attributes(model)$breaks$breaks)
 			
 			p<-grep("^population$", names(poplong), value=TRUE, ignore.case=TRUE)  
@@ -165,7 +165,8 @@ setMethod("getExpected",
 			
 			# multiply population by popScale, to make it in person years
 			if(any(names(attributes(popdata))=="popScale")) {
-				poplong[,offsetvar]=     poplong[,offsetvar] + log(attributes(popdata)$popScale)
+				poplong[,offsetvar] = poplong[,offsetvar] + 
+						log(attributes(popdata)$popScale)
 			}
 			
 			

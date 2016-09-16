@@ -45,6 +45,7 @@ setClass('nb',
 	invisible(region.index)
 }
 
+#' @importClassesFrom sp SpatialPolygonsDataFrame
 #' @export
 setGeneric('bym', 
 		function(

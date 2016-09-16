@@ -50,7 +50,6 @@ setMethod("getSMR",
 				regionCodeCases, area.scale=1, 
 				sex=c('m','f'), ...
 		){
-			
 			regionCode = grep("^id([[:digit:]]|[[:punct:]])", names(popdata), 
 					value=TRUE, ignore.case=TRUE)
 			
@@ -208,7 +207,7 @@ setMethod("getSMR",
 			years = dots$years
 			
 			yearVar="YEAR"
-			if(!is.vector(model) & !is.list(model)) {
+			if(!is.vector(model) & class(model)[1]!='list' ) {
 				yearVar = grep("year", names(attributes((stats::terms(model)))$dataClasses) ,
 						value=TRUE,ignore.case=TRUE)  # find year var in the model
 				if (length(model$sexSubset) == 1) {
@@ -268,7 +267,6 @@ setMethod("getSMR",
 					if(dim(casedata)[1]==0) casedata<-NULL   
 				} else { # casedata is missing
 					caseThisYear = NULL
-					regionCodeCases = NULL
 				}
 				
 				# Compute area if spdf not in long-lat
@@ -282,7 +280,7 @@ setMethod("getSMR",
 				# scaling factor to convert to person years
 				popScale = interval[names(interval)==Dyear]
 					
-				popdata[[yearVar]] = as.integer(Dyear)
+				popdata[,yearVar] = as.integer(Dyear)
 				
 				
 				result[[Dyear]] = methods::callGeneric()
