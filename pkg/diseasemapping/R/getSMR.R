@@ -280,7 +280,7 @@ setMethod("getSMR",
 				# scaling factor to convert to person years
 				popScale = interval[names(interval)==Dyear]
 					
-				popdata[,yearVar] = as.integer(Dyear)
+				popdata[[yearVar]] = as.integer(Dyear)
 				
 				
 				result[[Dyear]] = methods::callGeneric()
