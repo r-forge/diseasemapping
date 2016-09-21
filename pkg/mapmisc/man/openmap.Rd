@@ -8,14 +8,15 @@ Downloads map tiles from Openstreetmap.org and other servers.
 }
 \usage{
 	openmap(x, zoom, 
-	path="http://tile.openstreetmap.org/",
-	maxTiles = 9,
-	crs=projection(x),   buffer=0, 
-	fact=1, 	
-	verbose=FALSE,
-	cachePath=options()$mapmiscCachePath)
+	  path="http://tile.openstreetmap.org/",
+	  maxTiles = 9, crs=projection(x),   
+	  buffer=0, fact=1, verbose=FALSE,
+	  cachePath=options()$mapmiscCachePath)
+
 	osmTiles(name)
-	openmapAttribution(name, type=c('text','latex','markdown','html'), short=FALSE)
+
+	openmapAttribution(name, 
+	  type=c('text','latex','markdown','html'), short=FALSE)
 }
 
 \arguments{
@@ -25,7 +26,7 @@ Downloads map tiles from Openstreetmap.org and other servers.
 \item{zoom	}{
 the zoom level, when missing it will be determined by maxTiles.}
 \item{path}{	
-the tile server from which to get the map, see \url{http://wiki.openstreetmap.org/wiki/Tiles#Servers}.}
+Source of map tiles, see \url{http://diseasemapping.r-forge.r-project.org/mapLayers.html}.}
 \item{maxTiles}{	
 If zoom is missing, zoom will be chosen such that the 
 number of map tiles is less than or equl to this number.}
@@ -62,6 +63,9 @@ server.
 
 
 Be sure to attribute any maps you publish, the \code{osmAttribution} function will assist.
+
+See \url{http://diseasemapping.r-forge.r-project.org/mapLayers.html} for a full set of 
+map tiles.
 }
 
 
@@ -107,12 +111,11 @@ names(osmTiles())
 
 
 	mytiles = openmap(myPoints,
-		path=osmTiles("mapquest-sat"), verbose=TRUE)
+		path='waze', verbose=TRUE)
 	map.new(myPoints)
 	plotRGB(mytiles, add=TRUE)
-	points(myPoints,col='red')
+	points(myPoints, col='red')
 	openmapAttribution(mytiles)
 }
-
 
 }
