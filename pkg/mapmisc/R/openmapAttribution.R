@@ -13,39 +13,48 @@ odl = list(
         'Data by <a href="http://openstreetmap.org">OpenStreetMap</a>,',
         ' available under the',
         '<a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>'
-     ),
+    ),
     text='Data by OpenStreetMap.org available under the Open Database License (opendatacommons.org/licenses/odbl)'
-    )
+)
 
 # openstreetmap.org
 osm = list(long=list(
-      latex=paste(
-          ', cartography is licensed as ',
-          '\\href{http://creativecommons.org/licenses/by-sa/2.0}{CC BY-SA}.',
-          sep=''
-      ),
-      markdown=paste(
-          ', cartography is licensed as [CC BY-SA](http://creativecommons.org/licenses/by-sa/2.0).',
-          sep=''
-      ),
-      html=paste(
-          ', cartography is licensed as',
-          ' <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.',
-          sep=''
-      ),
-      text =paste(
-          ', cartography is licensed as CC BY-SA (see www.openstreetmap.org/copyright).',
-          sep=''
-      )
-  ),
-  short=list(
-      latex='\\copyright \\href{http://openstreetmap.org/copyright}{OpenStreetMap}',
-      markdown='&copy; [OpenStreetMap](http://openstreetmap.org/copyright)',
-      html= '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>',
-      text='copyright OpenStreetMap.org'
-      )
+      	latex=paste(
+          	', cartography is licensed as ',
+          	'\\href{http://creativecommons.org/licenses/by-sa/2.0}{CC BY-SA}.',
+          	sep=''
+      	),
+      	markdown=paste(
+          	', cartography is licensed as [CC BY-SA](http://creativecommons.org/licenses/by-sa/2.0).',
+          	sep=''
+      	),
+      	html=paste(
+          	', cartography is licensed as',
+          	' <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.',
+          	sep=''
+      	),
+      	text =paste(
+          	', cartography is licensed as CC BY-SA (see www.openstreetmap.org/copyright).',
+          	sep=''
+      	)
+  	),
+  	short=list(
+      	latex='\\copyright \\href{http://openstreetmap.org/copyright}{OpenStreetMap}',
+      	markdown='&copy; [OpenStreetMap](http://openstreetmap.org/copyright)',
+      	html= '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a>',
+      	text='copyright OpenStreetMap.org'
+    )
 )
 
+sputnik = list(
+		long=list(
+      	latex='\\href{http://corp.sputnik.ru/maps}{corp.sputnik.ru/maps}',
+      	markdown='[corp.sputnik.ru/maps](http://corp.sputnik.ru/maps)',
+      	html=' <a href="http://corp.sputnik.ru/maps">corp.sputnik.ru/maps</a>.',
+      	text ='http://corp.sputnik.ru/maps'
+  	)		
+)
+sputnik$short = sputnik$long
 
 # open govt licence canada
 nrcan = list(long=list(
@@ -68,7 +77,7 @@ nrcan = list(long=list(
 								'[Open Government Licence - Canada]',
 								'(http://open.canada.ca/en/open-government-licence-canada).',
           			sep=''
-      	),
+      			),
       	html=paste(
           	'Cartography by <a href="http://www.nrcan.gc.ca/earth-sciences/geography/topographic-information/free-data-geogratis/geogratis-web-services/17216">',
 						'The Canada Base Map - Transportation (CBMT) web mapping services',
@@ -87,8 +96,8 @@ nrcan = list(long=list(
 						'Open Government Licence - Canada',
 						' (open.canada.ca/en/open-government-licence-canada).',
           	sep=''
-  	)
-),
+  			)
+		),
   	short=list(
       	latex='\\href{http://www.nrcan.gc.ca}{Natural Resources Canada}',
       	markdown='[Natural Resources Canada](http://www.nrcan.gc.ca)',
@@ -138,57 +147,57 @@ osmLandscape$long$html = gsub("cartography[[:print:]]+$",
     osmLandscape$long$html)
 
 mapquest = mapquestSat = list(
-      short=list(
-      latex='Tiles courtesy of \\href{http://www.mapquest.com}{MapQuest}',
-      text='Tiles courtesy of MapQuest(www.mapquest.com)',
-      markdown='Tiles courtesy of [MapQuest](http://www.mapquest.com)',
-      html='Tiles courtesy of <a href="http://www.mapquest.com">MapQuest</a>'
+    short=list(
+      	latex='Tiles courtesy of \\href{http://www.mapquest.com}{MapQuest}',
+      	text='Tiles courtesy of MapQuest(www.mapquest.com)',
+      	markdown='Tiles courtesy of [MapQuest](http://www.mapquest.com)',
+      	html='Tiles courtesy of <a href="http://www.mapquest.com">MapQuest</a>'
     ),
     long=list()
-  )
-  for(D in names(mapquest$short)){
-    mapquest$long[[D]] = paste(
-        mapquest$short[[D]],
-				odl[[D]],
-        sep='. ')
-    mapquestSat$long[[D]] = paste(
-            mapquest$short[[D]],
-        ", portions courtesy NASA/JPL-Caltech and U.S. Depart. of Agriculture, Farm Service Agency.",
-        sep='')
-  }
+)
+for(D in names(mapquest$short)){
+  mapquest$long[[D]] = paste(
+      mapquest$short[[D]],
+			odl[[D]],
+      sep='. ')
+  mapquestSat$long[[D]] = paste(
+      mapquest$short[[D]],
+      ", portions courtesy NASA/JPL-Caltech and U.S. Depart. of Agriculture, Farm Service Agency.",
+      sep='')
+}
 
-  
-  stamen = stamenToner = list(
-      short=list(
-          latex='\\copyright \\href{http://stamen.com}{Stamen Design}',
-          markdown='&copy; [Stamen Design](http://stamen.com)',
-          html= '&copy; <a href="http://stamen.com">Stamen Design</a>',
-          text='copyright Stamen Design'
-  ),
-        long=list(
-      html=paste(
-          'Map tiles by <a href="http://stamen.com">Stamen Design</a>',
-          'under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>.'
-          ),
-      latex=paste(
-          'Map tiles by \\href{http://stamen.com}{Stamen Design}',
-          'under \\href{http://creativecommons.org/licenses/by/3.0}{CC BY 3.0}.'
-           ),
-      markdown=paste(
-          'Map tiles by [Stamen Design](http://stamen.com)',
-          'under [CC BY 3.0](http://creativecommons.org/licenses/by/3.0).'
-              ),
-      text=paste(
-          'Map tiles by Stamen Design',
-          'under CC BY 3.0 (creativecommons.org/licenses/by/3.0).'
-              )
-  )
+
+stamen = stamenToner = list(
+    short=list(
+        latex='\\copyright \\href{http://stamen.com}{Stamen Design}',
+        markdown='&copy; [Stamen Design](http://stamen.com)',
+        html= '&copy; <a href="http://stamen.com">Stamen Design</a>',
+        text='copyright Stamen Design'
+  	),
+    long=list(
+      	html=paste(
+          	'Map tiles by <a href="http://stamen.com">Stamen Design</a>',
+          	'under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>.'
+        ),
+      	latex=paste(
+          	'Map tiles by \\href{http://stamen.com}{Stamen Design}',
+          	'under \\href{http://creativecommons.org/licenses/by/3.0}{CC BY 3.0}.'
+        ),
+      	markdown=paste(
+          	'Map tiles by [Stamen Design](http://stamen.com)',
+          	'under [CC BY 3.0](http://creativecommons.org/licenses/by/3.0).'
+        ),
+      	text=paste(
+          	'Map tiles by Stamen Design',
+          	'under CC BY 3.0 (creativecommons.org/licenses/by/3.0).'
+        )
+  	)
 )
 for(D in names(stamenToner$long)){
   stamenToner$long[[D]] = paste(
       stamenToner$long[[D]],
       odl[[D]]
-      )
+  )
 }
 for(D in names(stamen$long)){
   stamen$long[[D]] = 
@@ -204,21 +213,21 @@ for(D in names(stamen$long)){
 thunderforest = maptoolkit = waze=cartodb = stamenToner
 for(D in names(cartodb$long)){
   for(D2 in c('long','short')){
-  cartodb[[D2]][[D]] = gsub(
-      "Stamen Design", "CartoDB",
-          cartodb[[D2]][[D]]
-      )
-      cartodb[[D2]][[D]] = gsub(
-          "stamen.com", "cartodb.com",
-              cartodb[[D2]][[D]]
-      )
+  	cartodb[[D2]][[D]] = gsub(
+      	"Stamen Design", "CartoDB",
+        cartodb[[D2]][[D]]
+    )
+    cartodb[[D2]][[D]] = gsub(
+        "stamen.com", "cartodb.com",
+        cartodb[[D2]][[D]]
+    )
     waze[[D2]][[D]] = gsub(
         "Stamen Design", "Waze mobile",
-            waze[[D2]][[D]]
+        waze[[D2]][[D]]
     )
     waze[[D2]][[D]] = gsub(
         "stamen.com", "www.waze.com/legal/notices",
-            waze[[D2]][[D]]
+        waze[[D2]][[D]]
     )
     maptoolkit[[D2]][[D]] = gsub(
         "stamen.com", "www.toursprung.com",
@@ -228,29 +237,29 @@ for(D in names(cartodb$long)){
         "Stamen Design", "Toursprung GmbH",
         maptoolkit[[D2]][[D]]
     )
-	thunderforest[[D2]][[D]] = gsub(
-			"stamen.com", "thunderforest.com",
-			thunderforest[[D2]][[D]]
-	)
-	thunderforest[[D2]][[D]] = gsub(
-			"Stamen Design", "Thunderforest",
-			thunderforest[[D2]][[D]]
-	)
-	
+		thunderforest[[D2]][[D]] = gsub(
+				"stamen.com", "thunderforest.com",
+				thunderforest[[D2]][[D]]
+		)
+		thunderforest[[D2]][[D]] = gsub(
+				"Stamen Design", "Thunderforest",
+				thunderforest[[D2]][[D]]
+		)
+		
   }
   maptoolkit$long[[D]] = paste(
       maptoolkit$short[[D]],
       odl[[D]]
-      )
-   waze$long[[D]] = waze$short[[D]]
-      
+  )
+  waze$long[[D]] = waze$short[[D]]
+  
 }
 
 
 esriAttribution = function(name) {
   
   #'http://downloads2.esri.com/ArcGISOnline/docs/tou_summary.pdf'
-
+	
   long=list(
       'esri'='Esri, HERE, DeLorme, USGS, Intermap, increment P Corp., NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, MapmyIndia, copyright OpenStreetMap contributors, and the GIS User Community',
       'esri-grey' = 'Esri, HERE, DeLorme, MapmyIndia, copyright OpenStreetMap contributors, and the GIS user community',
@@ -280,11 +289,11 @@ esriAttribution = function(name) {
   
   weburl = gsub("/tile/?$", '', name)
   
-
-
-
-long = long[names(name)]
-
+	
+	
+	
+	long = long[names(name)]
+	
   list(long=list(
           latex=paste(
               gsub("copyright", "\\\\copyright", long), 
@@ -317,7 +326,7 @@ long = long[names(name)]
           markdown = paste('&copy;','[', short,'](',
               weburl, ')',sep=''),
           html = paste('&copy; <a href=\"', weburl, 
-          '\">', short , '</a>',sep=''),
+          		'\">', short , '</a>',sep=''),
           text=paste('copyright', short)
       )
   )
@@ -325,7 +334,7 @@ long = long[names(name)]
 }
 
 openmapAttribution = function(name, type=c('text','latex','markdown','html'), short=FALSE) {
-
+	
   type = type[1]
   
   if(!is.null(names(name))){
@@ -338,37 +347,38 @@ openmapAttribution = function(name, type=c('text','latex','markdown','html'), sh
   result = c()
   for(D in name){
 		
-		if(length(grep('^nrcan(-text.*)$', D))) {
+		if(length(grep('^nrcan', D))) {
 			result[D] = nrcan[[shortlong]][[type]]
 			
 		} else if(length(grep(
-                "^osm|wikimedia|hyda|opentopomap|openstreetmap|historical|bw.mapnik", 
-                D))){        # openstreetmap
-          result[D] = osm[[shortlong]][[type]]
+            "^osm|wikimedia|hyda|opentopomap|openstreetmap|historical|bw.mapnik", 
+            D))){        # openstreetmap
+      result[D] = osm[[shortlong]][[type]]
     } else if(length(grep("humanitarian",D))){
-          result[D] = osmHumanitarian[[shortlong]][[type]]
-          
+      result[D] = osmHumanitarian[[shortlong]][[type]]          
+    } else if(length(grep("sputnik",D))){
+      result[D] = sputnik[[shortlong]][[type]]          
     } else if(length(grep("landscape",D))){
       result[D] = osmLandscape[[shortlong]][[type]]
       
     } else if(length(grep("mapquest|mqcdn",D))){ # mapquest
-        if(length(grep("sat/?$",D))){
-          result[D] = mapquestSat[[shortlong]][[type]]
-        } else {
-          result[D] = mapquest[[shortlong]][[type]]
-        }
-      } else if(length(grep("^waze",D))){ # waze
-        result[D] = waze[[shortlong]][[type]]
-      } else if(length(grep("maptoolkit",D))){ 
-        result[D] = maptoolkit[[shortlong]][[type]]
-      } else if(length(grep("thunderforest|^(spinal|neighbourhood|mobile.atlas|pioneer)$",D))){ 
-        result[D] = thunderforest[[shortlong]][[type]]
-      } else if(length(grep("stamen",D))){ # stamen
-        if(length(grep("stamen-toner",D))){
-          result[D] = stamenToner[[shortlong]][[type]]
-        } else {
-          result[D] = stamen[[shortlong]][[type]]
-        }
+      if(length(grep("sat/?$",D))){
+        result[D] = mapquestSat[[shortlong]][[type]]
+      } else {
+        result[D] = mapquest[[shortlong]][[type]]
+      }
+    } else if(length(grep("^waze",D))){ # waze
+      result[D] = waze[[shortlong]][[type]]
+    } else if(length(grep("maptoolkit",D))){ 
+      result[D] = maptoolkit[[shortlong]][[type]]
+    } else if(length(grep("thunderforest|^(spinal|neighbourhood|mobile.atlas|pioneer)$",D))){ 
+      result[D] = thunderforest[[shortlong]][[type]]
+    } else if(length(grep("stamen",D))){ # stamen
+      if(length(grep("stamen-toner",D))){
+        result[D] = stamenToner[[shortlong]][[type]]
+      } else {
+        result[D] = stamen[[shortlong]][[type]]
+      }
     } else if(length(grep("cartodb",D))){ 
       result[D] = cartodb[[shortlong]][[type]]
     } else if(length(grep("^esri",D))){
@@ -376,6 +386,6 @@ openmapAttribution = function(name, type=c('text','latex','markdown','html'), sh
     } else {
       result[D] = NA
     }
-} # loop through name
-result
+	} # loop through name
+	result
 }

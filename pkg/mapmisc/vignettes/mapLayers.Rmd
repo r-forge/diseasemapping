@@ -1,9 +1,7 @@
 <!--
-%\VignetteEngine{knitr::docco_linear}
+%\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{Examples of map layers}
 -->
-
-
 
 
 # Examples of map layers
@@ -13,6 +11,8 @@ This document will be incomplete if `rgdal` is unavailable or there is on
 internet connection when this document is compiled.  The full document is at
 [diseasemapping.r-forge.r-project.org](http://diseasemapping.r-forge.r-project.org).
 
+See [mc.bbbike.org/mc](http://mc.bbbike.org/mc/) for examples more map tiles 
+(not all of which are compatible with `mapmisc`).
 
 
 ```{r setup,include=FALSE}
@@ -22,12 +22,17 @@ library('mapmisc')
 
 fact = 0.6
 reRun = FALSE
-
+reSave = FALSE
 # uncomment for nicer images
 # fact = 1 
 # reRun = TRUE
+# or run 	R --slave -e "knitr::knit('mapLayers.Rmd')" fact=1 reRun=TRUE
+theArgs = grep("^(fact|reRun|reSave)=", commandArgs(), value=TRUE)
+for(D in theArgs)
+	eval(parse(text=D))
 
-opts_chunk$set(dpi=72*fact, dev.args=list(bg='white'), fig.retina=2, out.width='260px')	
+opts_chunk$set(dpi=72*fact, 
+		dev.args=list(bg='white'))	
 
 theNames = grep("mapquest", names(osmTiles()), invert=TRUE, value=TRUE)
 africaExtent = c(25, 25)
@@ -57,7 +62,7 @@ if(reRun) {
     fact=fact)
 
   # save the data
-  if(FALSE) {
+  if(reSave) {
     # make sure all data is stored in memory not on disk
     # so that caching will work
     for(D in names(africaTiles))

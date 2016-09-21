@@ -13,15 +13,22 @@ internet connection when this document is compiled.  The full document is at
 
 
 
-```{r setup}
+```{r setup, include=FALSE}
 
 library('mapmisc')
 library('knitr')
 haveRgdal = require('rgdal', quietly=TRUE)
-opts_chunk$set(dpi=40,dev.args=list(bg='white'), out.width='400')	
 
-# higher resolution images
-# opts_chunk$set(dpi=72) 
+
+fact = 0.6
+# uncomment for nicer images
+# fact = 1 
+# or run R --slave -e "knitr::knit('north.Rmd')" fact=1
+theArgs = grep("^fact=", commandArgs(), value=TRUE)
+for(D in theArgs)
+	eval(parse(text=D))
+
+opts_chunk$set(dpi=72*fact,dev.args=list(bg='white'), out.width='55%')	
 ```
 
 ```{r data}
@@ -36,102 +43,103 @@ x = SpatialPointsDataFrame(
     coords, 
     data=data.frame(name=rownames(coords)),
     proj4string=crsLL
-    )
+)
 ```
 
         
 ```{r osm}
 if(haveRgdal){
-map = openmap(x, path='osm', verbose=TRUE, maxTiles=20, buffer=c(30,3))    
-
-map.new(map)
-plot(map,add=TRUE)
-points(x)
-text(x, label=x$name, pos=4)
-scaleBar(x, 'bottom')
-scaleBar(x, 'left', seg.len=0, bty='n')
+	map = openmap(x, path='osm', maxTiles=20, buffer=c(30,3))    
+	
+	map.new(map)
+	plot(map,add=TRUE)
+	points(x)
+	text(x, label=x$name, pos=4)
+	scaleBar(x, 'bottom')
+	scaleBar(x, 'left', seg.len=0, bty='n')
 }
 ```
 
 
 ```{r mapquest}
 if(haveRgdal){
-mapSat = openmap(x, path='maptoolkit', verbose=TRUE, maxTiles=20, buffer=c(30,3))    
-
-map.new(mapSat)
-if(nlayers(mapSat) > 2) plotRGB(mapSat,add=TRUE)
-points(x)
-text(x, label=x$name, pos=4)
-scaleBar(x, 'bottom')
-scaleBar(x, 'left', seg.len=0, bty='n')
+	mapSat = openmap(x, path='stamen-terrain', maxTiles=20, buffer=c(30,3))    
+	
+	map.new(mapSat)
+	plot(mapSat,add=TRUE)
+	points(x)
+	text(x, label=x$name, pos=4)
+	scaleBar(x, 'bottom')
+	scaleBar(x, 'left', seg.len=0, bty='n')
 }
 ```
 
 ```{r mapquestDetail}
 if(haveRgdal){
-mapSat = openmap(x=x[x$name=='Hans island',], path='maptoolkit', 
-    verbose=TRUE, buffer=c(4,1), zoom=6)    
-
-map.new(x[x$name=='Hans island',], buffer=0.3)
-if(nlayers(mapSat) > 2) plotRGB(mapSat,add=TRUE)
-points(x, pch=4, col='#FF000040', cex=5)
-text(x, label=x$name, pos=4)
-scaleBar(x, 'bottomright')
+	mapSat = openmap(x=x[x$name=='Hans island',], 
+			path='stamen-terrain', 
+    	buffer=c(4,1), zoom=6)    
+	
+	map.new(x[x$name=='Hans island',], buffer=0.3)
+	plot(mapSat,add=TRUE)
+	points(x, pch=4, col='#FF000040', cex=5)
+	text(x, label=x$name, pos=4)
+	scaleBar(x, 'bottomright')
 }
 ```
 
 ```{r mapquestQaanaaq}
 if(haveRgdal){
-mapSat = openmap(x[x$name=='Qaanaaq',], path='maptoolkit', 
-    verbose=TRUE, buffer=c(2,1), zoom=5)
-
-map.new(x[x$name=='Qaanaaq',], buffer=0.5)
-if(nlayers(mapSat) > 2) plotRGB(mapSat,add=TRUE)
-points(x, pch=4, col='red', cex=5)
-text(x, label=x$name, pos=4, col='red')
-scaleBar(x, 'bottomleft')
+	mapSat = openmap(x[x$name=='Qaanaaq',], path='maptoolkit', 
+    	buffer=c(2,1), zoom=5)
+	
+	map.new(x[x$name=='Qaanaaq',], buffer=0.5)
+	plot(mapSat,add=TRUE)
+	points(x, pch=4, col='red', cex=5)
+	text(x, label=x$name, pos=4, col='red')
+	scaleBar(x, 'bottomleft')
 }
 ```
 
 ```{r omerc}
 if(haveRgdal){
-xMerc = spTransform(x, omerc(x))
-mapMerc = openmap(xMerc, path='osm', verbose=TRUE, 
-    maxTiles=20, buffer=c(50,200)*1000)    
-
-map.new(xMerc, buffer=50000)
-plot(mapMerc,add=TRUE)
-points(xMerc)
-text(xMerc, label=xMerc$name, pos=4)
-scaleBar(xMerc, 'bottomleft')
-scaleBar(xMerc, 'left', seg.len=0, bty='n')
+	xMerc = spTransform(x, omerc(x))
+	mapMerc = openmap(xMerc, path='osm',
+    	maxTiles=20, buffer=c(50,200)*1000)    
+	
+	map.new(xMerc, buffer=50000)
+	plot(mapMerc,add=TRUE)
+	points(xMerc)
+	text(xMerc, label=xMerc$name, pos=4)
+	scaleBar(xMerc, 'bottomleft')
+	scaleBar(xMerc, 'left', seg.len=0, bty='n')
 }
 ```
 
 ```{r nrcan}
 if(haveRgdal){
-xOmerc = spTransform(
-		x,
-		omerc(x,angle=5)
-		)
-
-map = openmap(xOmerc, 
-		path=c('nrcan', 'nrcan-text'), 
-		verbose=TRUE, fact=3,
-		maxTiles=10, buffer=c(20,100,100,0)*10*1000)    
-
-
-mapText = rgbtToIndex(map, pattern='nrcan.text')
-
-map.new(map)
-plotRGB(map[[grep("text", names(map), invert=TRUE)]],
-		add=TRUE)
-gridlinesWrap(map, easts=seq(-180,0,by=2), col='red')
-plot(mapText,add=TRUE)
-points(xOmerc)
-text(xOmerc, label=xOmerc$name, pos=4)
-scaleBar(xOmerc, 'bottom', bg='white')
-scaleBar(xOmerc, 'left', seg.len=0, bty='n')
+	xOmerc = spTransform(
+			x,
+			omerc(x,angle=5)
+	)
+	
+	map = openmap(xOmerc, 
+			path=c('nrcan', 'nrcan-text'), 
+			fact=3,
+			maxTiles=10, buffer=c(20,100,100,0)*10*1000)    
+	
+	
+	mapText = rgbtToIndex(map, pattern='nrcan.text')
+	
+	map.new(map)
+	plotRGB(map[[grep("text", names(map), invert=TRUE)]],
+			add=TRUE)
+	gridlinesWrap(map, easts=seq(-180,0,by=2), col='red')
+	plot(mapText,add=TRUE)
+	points(xOmerc)
+	text(xOmerc, label=xOmerc$name, pos=4)
+	scaleBar(xOmerc, 'bottom', bg='white')
+	scaleBar(xOmerc, 'left', seg.len=0, bty='n')
 }
 
 ```
@@ -140,14 +148,14 @@ scaleBar(xOmerc, 'left', seg.len=0, bty='n')
 
 ```{r nrcanAlex}
 if(haveRgdal){
-map = openmap(x[x$name=='Alex Fjord',], 		
-	path='nrcan', 
-    verbose=TRUE, buffer=c(5,5,2,1))    
-map.new(map)
-plotRGB(map, add=TRUE)
-points(x, pch=4, col='red', cex=5)
-text(x, label=x$name, pos=1, col='red')
-scaleBar(x, 'bottomleft')
+	map = openmap(x[x$name=='Alex Fjord',], 		
+			path='nrcan', 
+    	buffer=c(5,5,2,1))    
+	map.new(map)
+	plotRGB(map, add=TRUE)
+	points(x, pch=4, col='red', cex=5)
+	text(x, label=x$name, pos=1, col='red')
+	scaleBar(x, 'bottomleft')
 }
 ```
 
@@ -170,13 +178,13 @@ rockLL = SpatialPoints(
 
 if(haveRgdal) {
 	waterhouseMerc <- spTransform(waterhouseLL, crsMerc)
-
-
+	
+	
 	rockMerc = spTransform(rockLL, crsMerc)
-
+	
 #dput(rockMerc, file='')
 #dput(waterhouseMerc, file='')
-
+	
 } else {
 	
 	waterhouseMerc = new("SpatialPoints"
@@ -189,7 +197,7 @@ if(haveRgdal) {
     			, projargs = "+proj=merc +ellps=sphere +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +no_defs"
 			)
 	)
-
+	
 	rockMerc = new("SpatialPoints"
     	, coords = structure(c(19904049.631667, -6393055.64126258), .Dim = 1:2, .Dimnames = list(
     					NULL, c("x", "y")))
@@ -205,72 +213,70 @@ if(haveRgdal) {
 
 ```{r southInset}
 if(haveRgdal){
-
-waterhouseWrap = spTransform(
-	waterhouseMerc, moll(waterhouseMerc, angle=25)
-)
-
-
-southInset = openmap(x=waterhouseWrap, 
-	path='osm-no-labels',
-	buffer=c(4,1,2,1)*1000*1000, 
-	verbose=TRUE)
-
+	
+	waterhouseWrap = spTransform(
+			waterhouseMerc, moll(waterhouseMerc, angle=25)
+	)
+	
+	
+	southInset = openmap(x=waterhouseWrap, 
+			path='osm-no-labels',
+			buffer=c(4,1,2,1)*1000*1000)
+	
 } else {
-southInset = openmap(waterhouseMerc, 
-	path='osm-no-labels',
-	buffer=c(4,0,0,1.5)*1000*1000, 
-	crs=NA, verbose=TRUE)
-	}
+	southInset = openmap(waterhouseMerc, 
+			path='osm-no-labels',
+			buffer=c(4,0,0,1.5)*1000*1000, 
+			crs=NA)
+}
 ```
 
 ```{r waterhouseMerc} 
-mapMerc = openmap(waterhouseMerc, buffer=4000, crs=NA, verbose=TRUE)
+mapMerc = openmap(waterhouseMerc, buffer=4000, crs=NA)
 
 map.new(mapMerc)
 plot(mapMerc, add=TRUE)
 points(waterhouseMerc, col='blue', cex=5)
 insetMap(crs=mapMerc, 
-	pos='bottomright', 
-	map=southInset, cropInset = NULL,
-	lty=0)
+		pos='bottomright', 
+		map=southInset, cropInset = NULL,
+		lty=0)
 scaleBar(mapMerc, 'bottomleft')
 ```
 
 ```{r rockMerc} 
 
-mapMercFine = openmap(rockMerc, buffer=100, crs=NA, verbose=TRUE)
-
+mapMercFine = openmap(rockMerc, buffer=100, crs=NA)
 
 map.new(mapMercFine)
 plot(mapMercFine, add=TRUE)
 points(rockMerc, col='blue',cex=5)
 insetMap(crs=mapMercFine, 
-	pos='bottomright', 
-	map=southInset, cropInset = NULL,
-	lty=0)
+		pos='bottomright', 
+		map=southInset, cropInset = NULL,
+		lty=0)
 scaleBar(mapMercFine, 'bottomleft')
 ```
 
 ```{r waterhouseLL}
 if(haveRgdal) {
-
-	mapLL = openmap(waterhouseLL, buffer=0.02, verbose=TRUE)
+	
+	mapLL = openmap(waterhouseLL, buffer=0.02)
 	
 	map.new(mapLL)
 	plot(mapLL, add=TRUE)
 	points(waterhouseLL, pch=3, cex=5)
 	insetMap(crs=mapLL, 
-		pos='bottomright', 
-		map=southInset, cropInset = NULL,
-		lty=0)
+			pos='bottomright', 
+			map=southInset, cropInset = NULL,
+			lty=0)
 	scaleBar(mapLL, 'bottomleft')
 }
 ```
 
 ```{r rockLL}	
 if(haveRgdal) {
-	mapLLfine = openmap(rockLL, zoom=19, verbose=TRUE, buffer=0.0002)
+	mapLLfine = openmap(rockLL, zoom=19, buffer=0.0002)
 	
 	map.new(mapLLfine)
 	plot(mapLLfine, add=TRUE)	
@@ -279,4 +285,3 @@ if(haveRgdal) {
 	
 }
 
- 
