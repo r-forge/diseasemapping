@@ -16,7 +16,6 @@ See [mc.bbbike.org/mc](http://mc.bbbike.org/mc/) for examples more map tiles
 
 
 ```{r setup,include=FALSE}
-
 library('knitr')
 library('mapmisc')
 
@@ -38,7 +37,6 @@ theNames = grep("mapquest", names(osmTiles()), invert=TRUE, value=TRUE)
 africaExtent = c(25, 25)
 trafalgarSquare=c(-0.128056,51.508056)
 stjohns=c(-52.683320, 47.566285)
-
 ```
 
 
