@@ -19,7 +19,7 @@ See [mc.bbbike.org/mc](http://mc.bbbike.org/mc/) for examples more map tiles
 library('knitr')
 library('mapmisc')
 
-fact = 0.6
+fact = 0.5
 reRun = FALSE
 reSave = FALSE
 # uncomment for nicer images
@@ -30,7 +30,7 @@ theArgs = grep("^(fact|reRun|reSave)=", commandArgs(), value=TRUE)
 for(D in theArgs)
 	eval(parse(text=D))
 
-opts_chunk$set(dpi=72*fact, 
+opts_chunk$set(dpi=50*fact, 
 		dev.args=list(bg='white'))	
 
 theNames = grep("mapquest", names(osmTiles()), invert=TRUE, value=TRUE)
@@ -84,7 +84,7 @@ if(reRun) {
 The following are some examples of maps produced with `mymap=openmap(x, path="something")`
 
 
-```{r someTiles, echo=FALSE, results='asis', fig.height=3, fig.width=3}
+```{r someTiles, echo=FALSE, results='asis', fig.height=5, fig.width=5}
 
 
 mytiles = list(africaTiles, londonTiles, nfTiles)
