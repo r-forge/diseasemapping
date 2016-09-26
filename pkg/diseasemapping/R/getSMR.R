@@ -208,8 +208,10 @@ setMethod("getSMR",
 			
 			yearVar="YEAR"
 			if(!is.vector(model) & class(model)[1]!='list' ) {
-				yearVar = grep("year", names(attributes((stats::terms(model)))$dataClasses) ,
+				yearVarModel = grep("year", 
+						names(attributes((stats::terms(model)))$dataClasses) ,
 						value=TRUE,ignore.case=TRUE)  # find year var in the model
+				if(length(yearVarModel)) yearVar = yearVarModel
 				if (length(model$sexSubset) == 1) {
 					message("only one sex is being used:",model$sexSubset)
 					sex = model$sexSubset
@@ -252,13 +254,17 @@ setMethod("getSMR",
 			popdataOrig = popdata
 			if(!missing(casedata)) {
 				casedataOrig = casedata
+				useCaseData = TRUE
+			} else {
+				casedataOrig = NULL
+				useCaseData = FALSE
 			}
 			
 			for(Dyear in names(popdataOrig)) {
 				
 				popdata = popdataOrig[[Dyear]]
-				
-				if(!missing(casedata)) {
+				print(Dyear)
+				if(useCaseData) {
 					casedata = casedataOrig[casedataOrig[[caseYearVar]]==Dyear,]
 					
 					if (length(sex) == 1) {      
@@ -266,7 +272,7 @@ setMethod("getSMR",
 					}
 					if(dim(casedata)[1]==0) casedata<-NULL   
 				} else { # casedata is missing
-					caseThisYear = NULL
+					casedata = NULL
 				}
 				
 				# Compute area if spdf not in long-lat
