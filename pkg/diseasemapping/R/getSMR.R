@@ -263,7 +263,7 @@ setMethod("getSMR",
 			for(Dyear in names(popdataOrig)) {
 				
 				popdata = popdataOrig[[Dyear]]
-				print(Dyear)
+
 				if(useCaseData) {
 					casedata = casedataOrig[casedataOrig[[caseYearVar]]==Dyear,]
 					
