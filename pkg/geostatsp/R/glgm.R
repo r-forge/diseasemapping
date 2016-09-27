@@ -444,7 +444,6 @@ setMethod("glgm",
 					covariates[,cantPredict]= 0
 				}
 				covariates = covariates[,c("space", thevars),drop=FALSE]
-				beans <<- formulaForLincombs
 				lincombMat = model.matrix(update.formula(
 								formulaForLincombs, ~.+space),
 						covariates, na.action=NULL)
@@ -823,28 +822,10 @@ setMethod("glgm",
 				Dsd = 'gammaShape'
 				params[[Dsd]]$posterior=
 						inlaResult$marginals.hyperpar[[thesd[Dsd]]]
-#params[[Dsd]]$posterior[,"y"] = params[[Dsd]]$posterior[,"y"] *  
-#		params[[Dsd]]$posterior[,"x"]^2 
-#params[[Dsd]]$posterior[,"x"] = 1/params[[Dsd]]$posterior[,"x"]  
-#params[[Dsd]]$posterior = params[[Dsd]]$posterior[
-#		seq(dim(params[[Dsd]]$posterior)[1],1),]		
 				
 				params$summary[Dsd, colnames(inlaResult$summary.hyperpar)] = 
 						inlaResult$summary.hyperpar[thesd[Dsd],]
 				
-#params$summary[Dsd, thecols] = 
-#		1/(inlaResult$summary.hyperpar[
-#						thesd[Dsd],rev(thecols)])
-#params$summary[Dsd,"mode"] = 
-#    1/(inlaResult$summary.hyperpar[
-#            thesd[Dsd],'mode'])
-				
-				
-#params$summary[Dsd,"mean"] =sum(
-#		1/(inlaResult$marginals.hyperpar[[thesd[Dsd]]][,"x"])*
-#				c(0,diff(inlaResult$marginals.hyperpar[[thesd[Dsd]]][,"x"]))*
-#				inlaResult$marginals.hyperpar[[thesd[Dsd]]][,"y"]
-#)
 			}
 			
 			
@@ -883,9 +864,6 @@ setMethod("glgm",
 			
 			
 			resRaster=stack(resRasterRandom, resRasterFitted, cells)
-			
-#	if(!is.null(smallBbox))
-#		resRaster = crop(resRaster, extent(smallBbox))
 			
 			result=list(inla=inlaResult,
 					raster=resRaster,
