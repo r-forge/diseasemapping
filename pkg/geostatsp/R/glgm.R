@@ -408,7 +408,6 @@ setMethod("glgm",
 			
 			# create linear combinations object for prediction.
 			# create formula, strip out left variable and f(...) terms
-			beans1 <<- formula
  			formulaForLincombs = unlist(strsplit(as.character(formulaOrig), "~"))
 			formulaForLincombs = formulaForLincombs[length(formulaForLincombs)]
 			formulaForLincombs =
