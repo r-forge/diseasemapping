@@ -80,7 +80,8 @@ scaleBar = function(crs,
 	candidates = c(candidates[1]*c(1,2,5), candidates[2])
 	segdist=candidates[order(abs(candidates - dashdist))[1]]
 	
-	forLegend$seg.len = forLegend$seg.len *segdist / dashdist
+	# lines always seem to be 10% longer than seg.len
+	forLegend$seg.len = 0.9*forLegend$seg.len *segdist / dashdist
 	
 	
 	if(segdist >1100) {
