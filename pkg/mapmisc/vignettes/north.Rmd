@@ -231,6 +231,8 @@ if(haveRgdal){
 }
 ```
 
+Red circle has radius 1km.
+
 ```{r waterhouseMerc} 
 mapMerc = openmap(waterhouseMerc, buffer=4000, crs=NA)
 
@@ -241,7 +243,27 @@ insetMap(crs=mapMerc,
 		pos='bottomright', 
 		map=southInset, cropInset = NULL,
 		lty=0)
-scaleBar(mapMerc, 'bottomleft')
+sRes = scaleBar(mapMerc, 'bottomleft', cex=2)
+
+scaleCentre = SpatialPoints(
+		cbind(Re(sRes$out$textxy), Im(sRes$out$textxy)), 
+		proj4string=crs(mapMerc))
+if(haveRgdal & require('geosphere', quietly=TRUE)){
+	scaleCentre = spTransform(
+			scaleCentre, 
+			crsLL
+			)	
+	circle = SpatialPoints(
+			geosphere::destPoint(
+			scaleCentre@coords,
+			seq(0,360,len=100),
+			1000
+			),
+			proj4string = crsLL)
+	circle = spTransform(circle, crs(mapMerc))
+	points(circle, cex=0.3, col='red')
+}
+
 ```
 
 ```{r rockMerc} 

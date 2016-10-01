@@ -1,7 +1,7 @@
 
 scaleBar = function(crs, 
     pos="bottomright",
-    cex=par('cex'),
+    cex=1,
     pt.cex = 1.1*cex,
     seg.len=5*cex,
     title.cex=cex,
@@ -9,13 +9,11 @@ scaleBar = function(crs,
 
   forLegend = list(cex=cex,pt.cex=pt.cex,seg.len=seg.len,...)
   
-
   if(length(forLegend$scale.cex)){
     warning('use seg.len instead of scale.cex')
     forLegend$seg.len = forLegend$scale.cex
     forLegend$scale.cex=NULL
   }
-
   
   
   # if text.width=0, no north arrow
@@ -46,50 +44,52 @@ scaleBar = function(crs,
 #	dash = "\u2517\u2501\u2501\u2501\u2537\u2501\u2501\u2501\u251B"
 
   # we'll target a label this wide
-  widthTargetUsr = strwidth('m', cex=forLegend$cex)*forLegend$seg.len
+  dashTargetWidth = strwidth('m', cex=forLegend$cex)*forLegend$seg.len
   
   
 	xpoints = t(bbox(extent(par("usr"))))
 	xcentre = apply(xpoints, 2, mean)
-	xpoints = rbind(centre=xcentre, 
-			dashright = xcentre + c(widthTargetUsr,0)
-	)
-	
-	xpoints = SpatialPoints(xpoints, proj4string=crs)
+
+	xpoints = SpatialPoints(
+			rbind(centre=xcentre, 
+				dashright = xcentre + c(dashTargetWidth,0)
+			), proj4string=crs)
 
 	if(requireNamespace('rgdal', quietly=TRUE)) {	
 		xll = spTransform(xpoints, crsLL)
 	} else {
 		xll= xpoints
 		if(!isLonLat(crs))
-			warning('rgdal not intalled, assuming the plot is long-lat')
+			warning('rgdal not intalled, assuming coordinates are either long-lat or metres, and north is up')
 	}
 
-	up = matrix(coordinates(xll)["centre",]+c(0,0.1),ncol=2,
-			dimnames=list("up",NULL))
 	
-	
-	xll=rbind(xll, SpatialPoints(up, 
-					proj4string=CRS(proj4string(xll))))
-	
-# how long (in m) is our dashtemplate
-	dashdist = spDists(xll[c("centre","dashright"),])[1,2]*1000
+# how long (in m) is our target dash
+	dashTargetDist = spDists(xll[c("centre","dashright"),])[1,2]*1000
 
-	theb = log10(dashdist)
+	theb = log10(dashTargetDist)
 	candidates = 10^c(floor(theb), ceiling(theb))
 	candidates = c(candidates[1]*c(1,2,5), candidates[2])
-	segdist=candidates[order(abs(candidates - dashdist))[1]]
+	dashRoundedDist = candidates[
+			order(abs(candidates - dashTargetDist))[1]
+	]
+	dashRoundedWidth = dashTargetWidth * dashRoundedDist /
+			dashTargetDist
 	
-	# lines always seem to be 10% longer than seg.len
-	forLegend$seg.len = 0.9*forLegend$seg.len *segdist / dashdist
+	# seg.len gets multipled by 
+	# cex * par("cex") * xinch(par('cin')[1L], warn.log = FALSE)
+	# in graphics::legend
+	forLegend$seg.len = dashRoundedWidth / (
+				forLegend$cex * par('cex') * xinch(par('cin')[1L], warn.log = FALSE)
+				)
 	
 	
-	if(segdist >1100) {
+	if(dashRoundedDist >1100) {
 		lunits="km"
-		segdistPrint = segdist / 1000
+		segdistPrint = dashRoundedDist / 1000
 	} else {
 		lunits="m"
-    segdistPrint = segdist
+    segdistPrint = dashRoundedDist
 	}
 
 	eps = 0.175
@@ -174,7 +174,6 @@ if(!noScale) {
   
   thelegend$textxy =  
        mean(c(thelegend$rect$left, thelegend$text$x)) + 
-#       max(c(dashdist, sum(strwidth(c('n',thelabel), cex=cex))))/2 + 
           1i*thelegend$text$y
 			
       
@@ -197,7 +196,15 @@ if(!noScale) {
   
   xpoints = SpatialPoints(t(thecentre),
       proj4string=crs)
-  
+
+				up = SpatialPoints(
+						matrix(coordinates(xll)["centre",]+c(0,0.1),
+								ncol=2,
+								dimnames=list("up",NULL)),
+						proj4string=CRS(proj4string(xll))
+				)
+				
+				
   if(requireNamespace('rgdal', quietly=TRUE)) {	
     xll = spTransform(xpoints, crsLL)
   } else {

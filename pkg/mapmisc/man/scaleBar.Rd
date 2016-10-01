@@ -11,7 +11,7 @@ and adding a legend of colour scales.
 }
 \usage{
 scaleBar(crs, pos = "bottomright",   
-	cex=par('cex'),
+	cex=1,
     pt.cex = 1.1*cex,
     seg.len=5*cex,
     title.cex=cex,
