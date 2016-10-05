@@ -179,7 +179,7 @@ and st_area(st_intersection(sf.geom, d.geom))/st_area(sf.geom) > 0.5;"
    ])
 	
 	rownames(map2@data)= as.character(map2$id)
-	map2 = spChFIDs(map2, rownames(map2@data))
+	map2 = sp::spChFIDs(map2, rownames(map2@data))
 	
  map2
 }

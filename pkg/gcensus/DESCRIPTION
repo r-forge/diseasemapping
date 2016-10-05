@@ -10,8 +10,8 @@ Suggests:
     DBI,
     RPostgreSQL,
     rgdal,
-    gdalUtils
-Enhances: knitr
+    gdalUtils,
+    knitr
 Author: Patrick Brown <patrick.brown@utoronto.ca>[aut, cre]
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
 Description: Tools for using the gcensus database, which which is distributed
@@ -19,4 +19,3 @@ Description: Tools for using the gcensus database, which which is distributed
 URL: http://r-forge.r-project.org/projects/diseasemapping/
 License: GPL
 VignetteBuilder: knitr
-RoxygenNote: 5.0.1

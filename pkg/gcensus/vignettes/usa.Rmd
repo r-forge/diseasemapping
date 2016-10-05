@@ -1,0 +1,33 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{USA}
+-->
+
+# USA
+
+```{r data}
+library('gcensus')
+library('mapmisc')
+
+usa = try(gcensus(country = "USA", 
+		year = 2000, level = 4, 
+		subset = c(name1='Maine'),
+		database = c(dbname = "gcensus", user = "gcensus", 
+				host = "localhost", port = 5433), 
+		income = TRUE, crs = "EPSG:3463", simplifyTolerance = 0), silent=TRUE)
+```
+
+
+```{r map}
+if(class(usa) != 'try-error') {
+bgMap = openmap(usa, path='waze-us', maxTiles=20)
+myCol = colourScale(usa$median_hou, 
+		breaks=9, col='Reds',
+		opacity=c(0.5, 1), dec=-3)
+map.new(usa)
+plotRGB(bgMap, add=TRUE)
+plot(usa, add=TRUE, col=myCol$plot)
+legendBreaks("right", myCol)
+scaleBar(usa,'topright')
+}
+```

@@ -52,3 +52,11 @@ level	abbreviation	name
 
 }
 
+\examples{
+\dontrun{
+usa = gcensus(country = "USA", year = 2010, level = 1, subset = NULL,
+  database = c(dbname = "gcensus", user = "gcensus", 
+  host = "localhost", port = 5433), 
+  income = TRUE, crs = "EPSG:4326", simplifyTolerance = 0)
+}
+}
