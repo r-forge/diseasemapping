@@ -6,11 +6,8 @@ clean:
 empty:
 	rm *.pdf *.html *.docx *.odt
 
-slides.tex: slides.md
+%.tex: %.md
 	pandoc --standalone --smart --biblatex --to=beamer --template=../inst/src/beamer.Pmisc --output=$@ $<
-
-document.tex: document.md
-	pandoc --standalone --smart --biblatex --output=$@ $<
 
 %.bcf: %.tex
 	xelatex $<
