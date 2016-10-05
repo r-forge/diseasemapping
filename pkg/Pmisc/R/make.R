@@ -60,13 +60,11 @@ before = list(
 	XELATEX = whichfun("xelatex"),
 	BIBER = whichfun("biber"),
 	RM = whichfun("rm"),
-	pandocTo = c('beamer', 'latex')[2-beamer],
-	docxTemplate = subfun(
-			system.file('src/template.docx', package='Pmisc')
-	),
- odtTemplate = subfun(
+	pandocTo = c('beamer', 'latex')[2L-beamer],
+	docxTemplate = 
+			system.file('src/template.docx', package='Pmisc'),
+ odtTemplate = 
 			system.file('src/template.odt', package='Pmisc')
-	)
 )
 
 before = paste(paste(names(before), before, sep='='), collapse='\n')
