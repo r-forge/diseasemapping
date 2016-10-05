@@ -49,10 +49,12 @@ cat('
 
 ```
 
-<!--
+```{r metadata, include=FALSE, eval=FALSE, purl=FALSE} 
+"
 %\VignetteIndexEntry{Example of an html document with subfigures}
 %\VignetteEngine{Pmisc::barebones}
--->
+"
+```
 
 		
 ```{r theHeader, echo=FALSE}
