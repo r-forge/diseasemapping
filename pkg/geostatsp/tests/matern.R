@@ -68,6 +68,17 @@ myMatern[1:3,1:3]
 
 
 
-param = c(range=0.06, shape=1.5,	anisoRatio=2, anisoAngleDegrees=-25)
+param = c(range=0.2, shape=1.5)
 mypoints = SpatialPointsDataFrame(cbind(runif(10), runif(10)),data=data.frame(id=1:10))
-matern(mypoints, param=param)
+myMatern = matern(mypoints, param=param)
+
+myDist = forceSymmetric(spDists(mypoints), uplo='L')
+
+myMatern2 = matern(myDist, param)
+
+myMatern2
+class(myMatern2)
+
+(myMatern - myMatern2)[1:7, 1:7]
+
+

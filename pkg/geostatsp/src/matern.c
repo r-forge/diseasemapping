@@ -15,6 +15,7 @@ if the precision is computed type is info from dpotrfi
 
 #include"geostatsp.h"
 
+
 void maternArasterBpoints(
 		double *Axmin, double *Axres,
 		int *AxN,
@@ -413,3 +414,90 @@ void maternForL(
 	}
 
 }
+
+
+
+
+SEXP maternDistance(
+		SEXP distance,
+		SEXP param,
+        // range, shape,
+		// variance, nugget,
+		SEXP type
+		//c('variance','cholesky','precision','inverseCholesky')
+		) {
+
+	SEXP result, halfLogDet;
+	const char
+		*valid[] = {"dsyMatrix"},
+		*typeSeq[] = {"variance", "cholesky",
+				"precision","inverseCholesky"};
+	int typeInt=5, D;
+
+	// check distance is symmetric
+	if(R_check_class_etc(distance, valid)) {
+		error("invalid class of 'distance' in maternSexp, must be dsyMatrix");
+	}
+
+	// check values stored in lower triangle
+	if(strcmp(CHAR(STRING_ELT(GET_SLOT(distance, install("uplo")), 0) ), "L") != 0) {
+		Rprintf("d %s", CHAR(STRING_ELT(GET_SLOT(distance, install("uplo")), 0) ) );
+		error("need lower triangular 'distance' in maternSexp");
+	}
+
+	// find type integer, and check it's valid
+	for(D = 0;D< 4;++D){
+		if( strcmp(CHAR(STRING_ELT(type, 0)), typeSeq[D]) == 0 ) {
+			typeInt = D;
+		}
+	}
+	if(typeInt>3) {
+		Rprintf("d %s %s", CHAR(STRING_ELT(type, 0)), typeSeq[0]);
+		error("'type' in maternSexp, must be one of 'variance','cholesky','precision','inverseCholesky'");
+	} else {
+		// indexed from 1
+		typeInt = typeInt + 1;
+	}
+
+	if(typeInt == 2 | typeInt == 4) {
+		// lower triangle
+		PROTECT(result = NEW_OBJECT(MAKE_CLASS("dtrMatrix")));
+	} else {
+		// symmetric
+		PROTECT(result = NEW_OBJECT(MAKE_CLASS("dsyMatrix")));
+	}
+
+	SET_SLOT(result, install("x"),
+			duplicate(GET_SLOT(distance, install("x"))));
+	SET_SLOT(result, install("Dim"),
+			duplicate(GET_SLOT(distance, install("Dim"))));
+	SET_SLOT(result, install("Dimnames"),
+			duplicate(GET_SLOT(distance, install("Dimnames"))));
+	SET_SLOT(result, install("uplo"),
+			duplicate(GET_SLOT(distance, install("uplo"))));
+
+	setAttrib(result, install("type"), duplicate(type));
+    setAttrib(result, install("param"), duplicate(param));
+
+    PROTECT(halfLogDet = allocVector(REALSXP, 1));
+
+    matern(
+    		REAL(GET_SLOT(distance, install("x"))),
+			INTEGER(GET_SLOT(distance, install("Dim"))), //N
+    		REAL(GET_SLOT(result, install("x"))),
+    		&REAL(param)[0],// range,
+			&REAL(param)[1],// shape,
+			&REAL(param)[2],// variance,
+			&REAL(param)[3],// nugget,
+    		&typeInt,
+    		REAL(halfLogDet));
+
+
+    if(typeInt > 1) {
+    	setAttrib(result, install("halfLogDet"), halfLogDet);
+    }
+
+    UNPROTECT(2);
+    return result;
+}
+

@@ -5,15 +5,16 @@
  no vignettes  because I don't have texi2pdf
  */
 
-#include<R.h>
-#include<Rmath.h>
-#include<R_ext/Lapack.h>
-#include<R_ext/Applic.h>
-#include<R_ext/Print.h>
-#include<R_ext/Utils.h>
-#include<R_ext/Rdynload.h>
+#include"geostatsp.h"
+//#include<R.h>
+//#include<Rmath.h>
+//#include<R_ext/Lapack.h>
+//#include<R_ext/Applic.h>
+//#include<R_ext/Print.h>
+//#include<R_ext/Utils.h>
+//#include<R_ext/Rdynload.h>
 //#include<Matrix.h> it's in matrix_stubs.c
-#include<Matrix_stubs.c>
+//#include<Matrix_stubs.c>
 
 double Brent_fmin(double ax, double bx, double (*f)(double, void *),
 		  void *info, double tol);

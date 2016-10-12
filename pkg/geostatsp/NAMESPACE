@@ -17,6 +17,7 @@ S3method(matern, Raster)
 S3method(matern, SpatialPointsDataFrame)
 S3method(matern, SpatialPoints)
 S3method(matern, dist)
+S3method(matern, dsyMatrix)
 S3method(matern, default)
 
 #S3method(as.im, RasterLayer)

@@ -35,14 +35,14 @@ maternGmrfPrec = function(N,...) {
 
 maternGmrfPrec.default = function(N, Ny=N,
 		param=c(variance=1, range=1, shape=1, cellSize=1),
-		 ...) {
-
+		...) {
+	
 	if(!'shape' %in% names(param)){
 		warning("shape parameter appears to be missing")
 	}
 	
 	theNNmat  = NNmat(N, Ny, nearest=param['shape']+1)
-
+	
 	maternGmrfPrec(theNNmat, param,...)
 	
 }
@@ -60,7 +60,7 @@ maternGmrfPrec.dsCMatrix = function(N,
 		param=c(variance=1, range=1, shape=1, cellSize=1),
 		adjustEdges=FALSE,
 		...) {
-
+	
 	param['nugget']=0
 	
 	names(param) = gsub("^var$", "variance", names(param))
@@ -85,8 +85,8 @@ maternGmrfPrec.dsCMatrix = function(N,
 			}
 		}
 	}
-
-
+	
+	
 	
 	if(is.null(attributes(N)$raster)) {
 		if(!any(names(param)=='cellSize')){
@@ -98,8 +98,8 @@ maternGmrfPrec.dsCMatrix = function(N,
 				warning("N should have Nx and Ny attributes")
 			} 
 		} else {
-				Nx = attributes(N)$Nx
-				Ny = attributes(N)$Ny
+			Nx = attributes(N)$Nx
+			Ny = attributes(N)$Ny
 		}
 		theraster = list(
 				nrows=Ny,
@@ -110,8 +110,8 @@ maternGmrfPrec.dsCMatrix = function(N,
 						param['cellSize']
 		)	
 		if(any(installed.packages()[,'Package'] == 'raster')) {
-		theraster = do.call(raster::raster,
-				theraster)
+			theraster = do.call(raster::raster,
+					theraster)
 		}
 		
 	} else {
@@ -129,17 +129,17 @@ maternGmrfPrec.dsCMatrix = function(N,
 	
 	
 	paramInfo = list(
-		original=param,
-		theo = NULL,
-		optimal = NULL
-)
+			original=param,
+			theo = NULL,
+			optimal = NULL
+	)
 	
 	
 	midcellCoord = c(round(Nx*0.4),round(Ny*0.4)) # the middle cell
 	midcell = c(Nx*(Ny-midcellCoord[2]) + midcellCoord[1])
 	midVec = sparseMatrix(midcell,1,x=1,
 			dims=c(ncol(N),1))
-
+	
 	distVecFull =  expand.grid(x=seq(1, Nx),
 			y=seq(Ny,1))
 	buffer = param['shape']+2
@@ -148,13 +148,13 @@ maternGmrfPrec.dsCMatrix = function(N,
 	
 	isInner =  
 			distVecFull[,'x']> buffer & 
-					distVecFull[,'y']>buffer &
-							distVecFull[,'x']< (Nx-buffer) &
-							distVecFull[,'y'] < (Ny-buffer) 
-
+			distVecFull[,'y']>buffer &
+			distVecFull[,'x']< (Nx-buffer) &
+			distVecFull[,'y'] < (Ny-buffer) 
+	
 	distVecFull = t(distVecFull)-midcellCoord 
 	distVecFull = sqrt(apply(distVecFull^2,2,sum))	
-		
+	
 	
 	
 	# if 1 - AR parameter supplied
@@ -165,9 +165,9 @@ maternGmrfPrec.dsCMatrix = function(N,
 				rangeInCells=as.numeric(sqrt(8*param['shape'])/sqrt(a-4)),
 				a=as.vector(a), 
 				scale = as.numeric(sqrt(a-4))
-			)
-			
-			
+		)
+		
+		
 		if ('conditionalVariance' %in% names(param)){
 			if(param['shape'] != 0) {
 				paramInfo$theo['variance'] =   
@@ -183,35 +183,35 @@ maternGmrfPrec.dsCMatrix = function(N,
 			paramInfo$theo['variance'] = param['variance']
 			if(param['shape'] != 0) {
 				paramInfo$theo['conditionalVariance']  =   
-					paramInfo$theo['variance']*
+						paramInfo$theo['variance']*
 						(4*pi*param['shape'] *(a-4)^(param['shape'] ))
 			} else {
 				paramInfo$theo['conditionalVariance'] =   
-					paramInfo$theo['variance']*(4*pi)
+						paramInfo$theo['variance']*(4*pi)
 			}
 			
-	 
+	  	
 		}
-			
-			
+		
+		
 		if(min(c(Nx,Ny)<3*paramInfo$theo['rangeInCells'])){
-				warning("grid is ", Nx, " by ", Ny,
-						"which may be too small for range ",
-						paramInfo$theo['rangeInCells'], " cells, 1- Ar param",
-						param['oneminusar'])
-			}
-			
+			warning("grid is ", Nx, " by ", Ny,
+					"which may be too small for range ",
+					paramInfo$theo['rangeInCells'], " cells, 1- Ar param",
+					param['oneminusar'])
+		}
+		
 		paramInfo$theo['range'] = as.numeric(
 				paramInfo$theo['rangeInCells']*param['cellSize']
-			)
-			
-	
-	#####################	
-	# else range supplied
-	##########################
+		)
+		
+		
+		#####################	
+		# else range supplied
+		##########################
 	} else if(all(c('range','shape') %in% names(param))){
 		param['rangeInCells'] = as.numeric(param['range']/param['cellSize'])
-
+		
 		scale = as.numeric(
 				sqrt(8*param['shape'])/param["rangeInCells"]
 		)
@@ -221,7 +221,7 @@ maternGmrfPrec.dsCMatrix = function(N,
 		
 		paramInfo$theo = c(param, 	a=as.numeric(a),
 				oneminusar = as.numeric(1-4/a))
- 
+  	
 		
 		if(param['shape'] != 0) {
 			paramInfo$theo['conditionalVariance']  =   
@@ -242,11 +242,11 @@ maternGmrfPrec.dsCMatrix = function(N,
 					paramInfo$theo['rangeInCells'], " cells")
 		}
 		
- 
-
-	##############
-	## not range or oneminusar
-	#######################
+  	
+		
+		##############
+		## not range or oneminusar
+		#######################
 	} else {
 		warning("param must have elements named shape  and either oneminusar or range")
 		print(param)
@@ -255,133 +255,133 @@ maternGmrfPrec.dsCMatrix = function(N,
  	
 	# build the matrix
 	precEntries=getPrec(param['shape'],a)
-		
+	
 	precEntries =  precEntries /
 			as.numeric(paramInfo$theo['conditionalVariance']) 
- 
-
- theNNmat = N
- 
- 
- theN = theNNmat@x
- theN = precEntries[theN]
- theNNmat@x = theN
- 
- 
- ######### optimization to see if there are better matern
- # parameters than the theoretical values
-
- varMid = solve(theNNmat,midVec)
- 
- theX = distVecFull * paramInfo$theo['cellSize']
- toKeep = which(theX<
-				 1.75*paramInfo$theo['range'])
- ev = data.frame(
-		 x=theX[toKeep], 
-		 y=as.vector(varMid[toKeep]))
- 
- ev = tapply(ev$y, ev$x, mean)
- paramInfo$empirical = data.frame(x=
-				 as.numeric(names(ev)),
-		 y = ev)
- 
- paramInfo$empirical = paramInfo$empirical[
-		 order(paramInfo$empirical$x),
- ]
-
- # optimal parameters so product of gmrf precision with matern is identity
-# don't do it if shape parameter is zero 
-if(paramInfo$theo['shape'] > 0) {
   
- ndist = c('1'=0, '2'=1, '3'=sqrt(2), '4'=2, '5'=sqrt(5), '6'=3) 
- numbn = c('1'=1,'2'=4,'3'=4,'4'=4,'5'=8,'6'=4)
- 
- nbcells = as.vector(outer((-3):3, 1i*(-3):3,"+"))
- nbcells = nbcells[signif(Mod(nbcells),3)%in%signif(ndist,3)]
- nbn = names(ndist)[match(signif(Mod(nbcells),3), signif(ndist,3))]
- 
- nbprec = precEntries[nbn]
- 
- othercells = as.vector(outer(0:15, 1i*1:15,"+"))
- othercells = othercells[Re(othercells) <= Im(othercells)]
- otherdist = Mod(outer(othercells, nbcells, '-')) * param['cellSize']
- ndist = ndist * param['cellSize']
- 
- # inverse only vary shape
- startparam = paramInfo$theo['shape']
- scaleparam = pmax(startparam,0.0001)
- 
- objfun = function(qq) {
-	 qq = c(qq,paramInfo$theo[c('variance','range')])
-	 
-	 othermatern = matern(otherdist, param= qq)
-	 
-	 nmatern = matern(ndist, param=qq)
-	 
-	 nbprod = as.vector(othermatern %*% nbprec)
-	 thediag = sum(nmatern * precEntries * numbn)
-	 sum(nbprod^2) + 2*length(othercells)*(thediag-1)^2
-	 
- }
- 
- optInv = optim(startparam, objfun,
-		 lower=startparam/4,
-		 upper=4*startparam,
-		 control=list(parscale=scaleparam)
-		 ,
-		 method='L-BFGS-B')
- 
- paramInfo$optimalShape = 
-		 c(optInv$par, 
-				 paramInfo$theo[c('variance','range',
-								 'cellSize')])
- 
- 
- # now estimate variance separately
- objfun = function(qq) {
-	 qq = c(qq,paramInfo$theo[c('variance','range')])
-	 othermatern = matern(otherdist, param= qq)
-	 nbprod = as.vector(othermatern %*% nbprec)
-	 sum(nbprod^2) 
- }
- 
- optInv = optim(startparam, objfun,
-		 lower=startparam/4,
-		 upper=4*startparam,
-		 control=list(parscale=scaleparam)
-		 ,
-		 method='L-BFGS-B')
-
- nmatern = matern(ndist,
-		 param=c(optInv$par, 
-				 paramInfo$theo[c('range','variance')])
- )
- thediag = sum(nmatern * precEntries * numbn)
- 
- paramInfo$optimal = c(optInv$par,
-		 paramInfo$theo[c('cellSize','range')],
-		 paramInfo$theo['variance']/as.numeric(thediag))
-
- 
- paramInfo$empirical$optimal =
-		 matern(paramInfo$empirical$x,
-				 param=paramInfo$optimal)
- 
- for(D in c('theo', 
-		 grep("^optimal", names(paramInfo),value=TRUE))
-  ) {
-
-	paramInfo$empirical[,D] =
-		matern(paramInfo$empirical$x,
-				param=paramInfo[[D]])
-
-}
-
-} # end if shape>0
- 
- # edge correction
+	
+  theNNmat = N
+  
+  
+  theN = theNNmat@x
+  theN = precEntries[theN]
+  theNNmat@x = theN
+  
+  
+  ######### optimization to see if there are better matern
+  # parameters than the theoretical values
+	
+  varMid = solve(theNNmat,midVec)
+  
+  theX = distVecFull * paramInfo$theo['cellSize']
+  toKeep = which(theX<
+				  1.75*paramInfo$theo['range'])
+  ev = data.frame(
+		  x=theX[toKeep], 
+		  y=as.vector(varMid[toKeep]))
+  
+  ev = tapply(ev$y, ev$x, mean)
+  paramInfo$empirical = data.frame(x=
+				  as.numeric(names(ev)),
+		  y = ev)
+  
+  paramInfo$empirical = paramInfo$empirical[
+		  order(paramInfo$empirical$x),
+  ]
+	
+  # optimal parameters so product of gmrf precision with matern is identity
+# don't do it if shape parameter is zero 
+	if(paramInfo$theo['shape'] > 0) {
+  	
+  	ndist = c('1'=0, '2'=1, '3'=sqrt(2), '4'=2, '5'=sqrt(5), '6'=3) 
+  	numbn = c('1'=1,'2'=4,'3'=4,'4'=4,'5'=8,'6'=4)
+  	
+  	nbcells = as.vector(outer((-3):3, 1i*(-3):3,"+"))
+  	nbcells = nbcells[signif(Mod(nbcells),3)%in%signif(ndist,3)]
+  	nbn = names(ndist)[match(signif(Mod(nbcells),3), signif(ndist,3))]
+  	
+  	nbprec = precEntries[nbn]
+  	
+  	othercells = as.vector(outer(0:15, 1i*1:15,"+"))
+  	othercells = othercells[Re(othercells) <= Im(othercells)]
+  	otherdist = Mod(outer(othercells, nbcells, '-')) * param['cellSize']
+  	ndist = ndist * param['cellSize']
+  	
+  	# inverse only vary shape
+  	startparam = paramInfo$theo['shape']
+  	scaleparam = pmax(startparam,0.0001)
+  	
+  	objfun = function(qq) {
+	  	qq = c(qq,paramInfo$theo[c('variance','range')])
+	  	
+	  	othermatern = matern(otherdist, param= qq)
+	  	
+	  	nmatern = matern(ndist, param=qq)
+	  	
+	  	nbprod = as.vector(othermatern %*% nbprec)
+	  	thediag = sum(nmatern * precEntries * numbn)
+	  	sum(nbprod^2) + 2*length(othercells)*(thediag-1)^2
+	  	
+  	}
+  	
+  	optInv = optim(startparam, objfun,
+		  	lower=startparam/4,
+		  	upper=4*startparam,
+		  	control=list(parscale=scaleparam)
+		  	,
+		  	method='L-BFGS-B')
+  	
+  	paramInfo$optimalShape = 
+		  	c(optInv$par, 
+				  	paramInfo$theo[c('variance','range',
+								  	'cellSize')])
+  	
+  	
+  	# now estimate variance separately
+  	objfun = function(qq) {
+	  	qq = c(qq,paramInfo$theo[c('variance','range')])
+	  	othermatern = matern(otherdist, param= qq)
+	  	nbprod = as.vector(othermatern %*% nbprec)
+	  	sum(nbprod^2) 
+  	}
+  	
+  	optInv = optim(startparam, objfun,
+		  	lower=startparam/4,
+		  	upper=4*startparam,
+		  	control=list(parscale=scaleparam)
+		  	,
+		  	method='L-BFGS-B')
 		
+  	nmatern = matern(ndist,
+		  	param=c(optInv$par, 
+				  	paramInfo$theo[c('range','variance')])
+  	)
+  	thediag = sum(nmatern * precEntries * numbn)
+  	
+  	paramInfo$optimal = c(optInv$par,
+		  	paramInfo$theo[c('cellSize','range')],
+		  	paramInfo$theo['variance']/as.numeric(thediag))
 		
+  	
+  	paramInfo$empirical$optimal =
+		  	matern(paramInfo$empirical$x,
+				  	param=paramInfo$optimal)
+  	
+  	for(D in c('theo', 
+		  	grep("^optimal", names(paramInfo),value=TRUE))
+  			) {
+			
+			paramInfo$empirical[,D] =
+					matern(paramInfo$empirical$x,
+							param=paramInfo[[D]])
+			
+		}
+		
+	} # end if shape>0
+  
+  # edge correction
+	
+	
 	if(adjustEdges!=FALSE){
 		if(is.logical(adjustEdges)) {
 			if(paramInfo$theo['shape'] > 0) {
@@ -399,37 +399,45 @@ if(paramInfo$theo['shape'] > 0) {
 		
 		whichInner = 
 				distVecFull[,'x']> buffer & 
-						distVecFull[,'y']>buffer &
-						distVecFull[,'x']< (Nx-buffer) &
-						distVecFull[,'y'] < (Ny-buffer) 
-			
+				distVecFull[,'y']>buffer &
+				distVecFull[,'x']< (Nx-buffer) &
+				distVecFull[,'y'] < (Ny-buffer) 
+		
 		innerCells = cellVec[whichInner]
 		outerCells = cellVec[!whichInner]
-
+		
 		outerCoordsCartesian = SpatialPoints(
-			distVecFull[outerCells,]*param['cellSize']
+				distVecFull[outerCells,]*param['cellSize']
 		)				
  		
 		paramForM = paramInfo[[adjustEdges]]
-
-    covMatInv = matern(
+		
+		InnerPrecision = theNNmat[innerCells, innerCells]
+		
+		#A = x[allCells,-allCells]
+		#InnerPrecInvChol = Matrix::solve(Matrix::chol(InnerPrecision))
+		#Aic = A %*% InnerPrecInvChol
+		# AQinvA = Aic %*% t(Aic)
+		A = theNNmat[innerCells,outerCells]
+    
+		# .C('adjustEdges', 
+	#  InnerPrecision, A, 
+	# outerCoordsCartesian,
+# paramForM)
+# should return precOuter
+		
+		cholInnerPrec =Cholesky(InnerPrecision,LDL=FALSE,perm=TRUE)
+		
+		Aic = solve(cholInnerPrec, 
+				solve(cholInnerPrec,A,system='P'),
+				system='L')
+		
+		covMatInv = matern(
         outerCoordsCartesian,
 				param= paramForM,
         type='precision')
-
-		InnerPrecision = theNNmat[innerCells, innerCells]
-			
-			#A = x[allCells,-allCells]
-			#InnerPrecInvChol = Matrix::solve(Matrix::chol(InnerPrecision))
-			#Aic = A %*% InnerPrecInvChol
-			# AQinvA = Aic %*% t(Aic)
-		A = theNNmat[innerCells,outerCells]
-		cholInnerPrec =Cholesky(InnerPrecision,LDL=FALSE,perm=TRUE)
-
-		Aic = solve(cholInnerPrec, 
-					solve(cholInnerPrec,A,system='P'),
-					system='L')
-
+		
+		
     AQinvA = crossprod(Aic)
     AQinvA = as(AQinvA, class(covMatInv))
     
@@ -439,19 +447,19 @@ if(paramInfo$theo['shape'] > 0) {
     
 		theNNmat[outerCells,outerCells] = precOuter
 		theNNmat = forceSymmetric(theNNmat)
-		} # end edge adjustment 
-		paramInfo$adjustEdges=adjustEdges
-		
-		paramInfo$precisionEntries = precEntries
-
-		theNNmat = drop0(theNNmat)
-
-		
-		attributes(theNNmat)$param=
-				paramInfo
-
-		attributes(theNNmat)$raster= theraster
-		
+	} # end edge adjustment 
+	paramInfo$adjustEdges=adjustEdges
+	
+	paramInfo$precisionEntries = precEntries
+	
+	theNNmat = drop0(theNNmat)
+	
+	
+	attributes(theNNmat)$param=
+			paramInfo
+	
+	attributes(theNNmat)$raster= theraster
+	
 	return(theNNmat)
 }
-	
+

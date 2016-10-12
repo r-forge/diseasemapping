@@ -47,6 +47,20 @@ matern.dist = function(x,
   result
 }
 
+matern.dsyMatrix = function(x, 
+	param=c(range=1, variance=1, shape=1),
+  type=c('variance','cholesky','precision','inverseCholesky'),
+  y=NULL) {
+
+	param=fillParam(param)[c('range','shape','variance','nugget')]
+	
+	.Call(
+		'maternDistance',
+		x, param, type
+	)
+
+}
+
 matern.SpatialPointsDataFrame = function(
     x, 
     param=c(range=1, variance=1, shape=1), 

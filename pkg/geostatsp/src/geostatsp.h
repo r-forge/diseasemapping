@@ -3,7 +3,8 @@
 #include<R_ext/Lapack.h>
 #include<R_ext/Applic.h>
 #include<R_ext/Print.h>
-#include <R_ext/Utils.h>
+#include<R_ext/Utils.h>
+#include<Matrix.h>
 
 
 /* type = 0, distances is a vector
@@ -61,6 +62,15 @@ void maternForL(
 		double *halfLogDet
 		);
 
+
+SEXP maternDistance(
+		SEXP distance,
+		SEXP params,
+        // range, shape,
+		// variance, nugget,
+		SEXP type
+		//c('variance','cholesky','precision','inverseCholesky')
+		);
 
 void computeBoxCox(
 		double *obsCov,
