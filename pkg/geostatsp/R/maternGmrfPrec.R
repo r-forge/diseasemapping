@@ -384,11 +384,7 @@ maternGmrfPrec.dsCMatrix = function(N,
 	
 	if(adjustEdges!=FALSE){
 		if(is.logical(adjustEdges)) {
-			if(paramInfo$theo['shape'] > 0) {
-				adjustEdges='optimalShape'
-			} else {
-				adjustEdges='theo'
-			}
+			adjustEdges='theo'
 		}
 		
 		rasterCells = raster(theraster)
@@ -410,7 +406,7 @@ maternGmrfPrec.dsCMatrix = function(N,
 		#InnerPrecInvChol = Matrix::solve(Matrix::chol(InnerPrecision))
 		#Aic = A %*% InnerPrecInvChol
 		# AQinvA = Aic %*% t(Aic)
-	
+		
 		outerCells = setdiff(values(rasterCells), innerCells)
 		A = theNNmat[innerCells,outerCells]
     
@@ -422,32 +418,29 @@ maternGmrfPrec.dsCMatrix = function(N,
 		outerCoordsCartesian = xyFromCell(
 				theraster, outerCells, spatial=TRUE
 		)
-		covMatInv = matern(
-        outerCoordsCartesian,
-				param= paramForM,
-        type='precision')
 		
-    AQinvA = crossprod(Aic)
-    AQinvA = as(AQinvA, class(covMatInv))
-    
-    precOuter = covMatInv + AQinvA
-    precOuter = as.matrix(forceSymmetric(precOuter))
-    
+		precOuter = .Call("gmrfEdge", 
+				as.matrix(Aic),
+		    outerCoordsCartesian, 
+				fillParam(paramForM)[c(
+								'range','shape','variance',
+								'anisoRatio','anisoAngleRadians','nugget')
+				])
+		
 		theNNmat[outerCells,outerCells] = precOuter
-		theNNmat = forceSymmetric(theNNmat)
+		#	theNNmat = forceSymmetric(theNNmat)
 		
 	} # end edge adjustment 
 	paramInfo$adjustEdges=adjustEdges
 	
 	paramInfo$precisionEntries = precEntries
 	
-	theNNmat = drop0(theNNmat)
+#	theNNmat = drop0(theNNmat)
 	
 	
-	attributes(theNNmat)$param=
-			paramInfo
+	attributes(theNNmat)$param =	paramInfo
 	
-	attributes(theNNmat)$raster= theraster
+	attributes(theNNmat)$raster = theraster
 	
 	return(theNNmat)
 }

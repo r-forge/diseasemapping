@@ -72,6 +72,18 @@ SEXP maternDistance(
 		//c('variance','cholesky','precision','inverseCholesky')
 );
 
+
+SEXP maternPoints(
+		SEXP points,
+		SEXP param,
+		// range,
+		// shape,
+		// variance,
+		// anisoRatio,
+		// anisoAngleRadians,
+		// nugget,
+		SEXP type);
+
 void computeBoxCox(
 		double *obsCov,
 		// number of observations, number of datasets
