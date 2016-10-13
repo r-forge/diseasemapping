@@ -391,62 +391,51 @@ maternGmrfPrec.dsCMatrix = function(N,
 			}
 		}
 		
-		distVecFull =  expand.grid(x=seq(1, Nx),
-				y=seq(Ny,1))
+		rasterCells = raster(theraster)
+		values(rasterCells) = 1:ncell(theraster)
+		
 		buffer = param['shape']+1
 		
-		cellVec = seq(1, nrow(distVecFull)) 
+		innerCells = crop(rasterCells, 
+				extent(rasterCells, 
+						buffer+1, nrow(rasterCells)-buffer, 
+						buffer+1, ncol(rasterCells)-buffer))
 		
-		whichInner = 
-				distVecFull[,'x']> buffer & 
-				distVecFull[,'y']>buffer &
-				distVecFull[,'x']< (Nx-buffer) &
-				distVecFull[,'y'] < (Ny-buffer) 
-		
-		innerCells = cellVec[whichInner]
-		outerCells = cellVec[!whichInner]
-		
-		outerCoordsCartesian = SpatialPoints(
-				distVecFull[outerCells,]*param['cellSize']
-		)				
- 		
-		paramForM = paramInfo[[adjustEdges]]
+		innerCells = sort(values(innerCells))
 		
 		InnerPrecision = theNNmat[innerCells, innerCells]
+		cholInnerPrec =Cholesky(InnerPrecision,LDL=FALSE,perm=TRUE)
 		
 		#A = x[allCells,-allCells]
 		#InnerPrecInvChol = Matrix::solve(Matrix::chol(InnerPrecision))
 		#Aic = A %*% InnerPrecInvChol
 		# AQinvA = Aic %*% t(Aic)
+	
+		outerCells = setdiff(values(rasterCells), innerCells)
 		A = theNNmat[innerCells,outerCells]
     
-		# .C('adjustEdges', 
-	#  InnerPrecision, A, 
-	# outerCoordsCartesian,
-# paramForM)
-# should return precOuter
-		
-		cholInnerPrec =Cholesky(InnerPrecision,LDL=FALSE,perm=TRUE)
-		
 		Aic = solve(cholInnerPrec, 
 				solve(cholInnerPrec,A,system='P'),
 				system='L')
 		
+		paramForM = paramInfo[[adjustEdges]]
+		outerCoordsCartesian = xyFromCell(
+				theraster, outerCells, spatial=TRUE
+		)
 		covMatInv = matern(
         outerCoordsCartesian,
 				param= paramForM,
         type='precision')
 		
-		
     AQinvA = crossprod(Aic)
     AQinvA = as(AQinvA, class(covMatInv))
     
     precOuter = covMatInv + AQinvA
-    precOuter = forceSymmetric(precOuter)
-    precOuter = as.matrix(precOuter)
+    precOuter = as.matrix(forceSymmetric(precOuter))
     
 		theNNmat[outerCells,outerCells] = precOuter
 		theNNmat = forceSymmetric(theNNmat)
+		
 	} # end edge adjustment 
 	paramInfo$adjustEdges=adjustEdges
 	

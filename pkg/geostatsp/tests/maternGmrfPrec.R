@@ -1,7 +1,11 @@
+
+devtools::install("../pkg/geostatsp")
+devtools::reload("../pkg/geostatsp")
+
 library('geostatsp')
 matrix(NNmat(7, 7)[,25], 7, 7)
 
-myr = raster(extent(0,600,0,300), nrows=25,ncols=30)
+myr = squareRaster(extent(0,600,0,300), 60)
 theNN = NNmat(myr)
 
 
@@ -83,8 +87,6 @@ values(varRast[['midCor']]) =  as.vector(Matrix::solve(precMatCorr, midVec))
 values(varRast[['edgeCor']]) = as.vector(Matrix::solve(precMatCorr, edgeVec))
 values(varRast[['midAdj']]) =  as.vector(Matrix::solve(precMatAdj, midVec))
 values(varRast[['edgeAdj']]) = as.vector(Matrix::solve(precMatAdj, edgeVec))
-
-projection(varRast) = "+init:units=m"
 
 
 if(!interactive()){

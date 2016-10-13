@@ -66,19 +66,33 @@ myMatern = matern(myraster, param=c(range=0, shape=2))
 dim(myMatern)
 myMatern[1:3,1:3]
 
-
-
 param = c(range=0.2, shape=1.5)
-mypoints = SpatialPointsDataFrame(cbind(runif(10), runif(10)),data=data.frame(id=1:10))
-myMatern = matern(mypoints, param=param)
+set.seed(0)
+
+mypoints = SpatialPointsDataFrame(cbind(runif(10), runif(10)), 
+		data=data.frame(id=1:10))
 
 myDist = forceSymmetric(spDists(mypoints), uplo='L')
 
+myDist3 = myDist[lower.tri(myDist)]
+
+myMatern1 = matern(mypoints, param)
 myMatern2 = matern(myDist, param)
+myMatern3 = matrix(NA, length(mypoints),length(mypoints))
+myMatern3[lower.tri(myMatern3)] = matern(myDist3, param)
 
-myMatern2
+
+
+class(myMatern1)
 class(myMatern2)
+class(myMatern3)
 
-(myMatern - myMatern2)[1:7, 1:7]
+
+(myMatern1 - myMatern2)[1:8, 1:4]
+sum((myMatern1 - myMatern2)^2)
+(myMatern1 - myMatern3)[1:8, 1:4]
+sum((myMatern1 - myMatern3)^2, na.rm=TRUE)
+
+
 
 
