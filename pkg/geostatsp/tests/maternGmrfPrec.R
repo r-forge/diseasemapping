@@ -1,7 +1,3 @@
-
-devtools::install("../pkg/geostatsp")
-devtools::reload("../pkg/geostatsp")
-
 library('geostatsp')
 matrix(NNmat(7, 7)[,25], 7, 7)
 
