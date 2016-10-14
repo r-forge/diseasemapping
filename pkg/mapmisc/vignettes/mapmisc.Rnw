@@ -57,7 +57,7 @@ class(meuse)
 @
 
 
-<<meuseProjNotRun,eval=FALSE,echo=TRUE>>=
+<<meuseProjNotRun,eval=FALSE,echo=TRUE, purl=FALSE>>=
 library('rgdal')
 proj4string(meuse) <- CRS("+init=epsg:28992")
 meuseLL = spTransform(meuse, CRS("+init=epsg:4326"))
@@ -353,7 +353,7 @@ if(require('rgdal', quietly=TRUE)) {
 @
 
 Get elevation data with
-<<elevation,eval=FALSE>>=
+<<elevation,eval=FALSE, purl=FALSE>>=
 library('raster')
 getData("SRTM", lon=xmin(extent(meuseLL)), 
 	lat=ymin(extent(meuseLL)),path=tempdir())
@@ -379,7 +379,7 @@ nldElev = crop(nldElev, extend(extent(meuse), 1000))
 \section{Downloading background maps and city locations}
 
 Get a background map covering the extent of the meuse data
-<<openmap,eval=FALSE>>=
+<<openmap,eval=FALSE, purl=FALSE>>=
 library('mapmisc')
 nldTiles = openmap(meuse)
 @
@@ -396,7 +396,7 @@ Maps which can be downloaded are shown at
 {\tt GNcities} is a wrapper for the function of the same name in the geonames
 package.
 
-<<cities,eval=FALSE>>=
+<<cities,eval=FALSE, purl=FALSE>>=
 nldCities = GNcities(meuse, maxRows=6)
 @
 A SpatialPointsDataFrame, with same map projection.
@@ -423,7 +423,7 @@ run.
 map.new(meuse)
 plot(nldTiles, add=TRUE)
 points(meuse,col="red", cex=0.3)
-scaleBar(proj4string(meuse),pos="topleft", bg="white")
+scaleBar(crs=proj4string(meuse),pos="topleft", bg="white")
 
 # plot city names
 map.new(meuse)
