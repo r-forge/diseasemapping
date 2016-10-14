@@ -263,7 +263,7 @@ theX = distVecFull * paramInfo$theo['cellSize']
 toKeep = which(theX<
 				1.75*paramInfo$theo['range'])
 
-if(FALSE) {	
+if(adjustEdges == FALSE) {	
   varMid = solve(theNNmat,midVec)
   
   ev = data.frame(

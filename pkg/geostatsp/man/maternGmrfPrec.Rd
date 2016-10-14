@@ -76,13 +76,14 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 	shape=2,
 	variance=5^2)
 	
-	data("nn32")
+	nn32 = NNmat(32)
 	# precision matrix without adjusting for edge effects
 	precMat =maternGmrfPrec(nn32, param=params) 
 	
 	if(interactive() | Sys.info()['user'] =='patrick') {	
 	# and with the adjustment
-	precMatCorr =maternGmrfPrec(nn32, param=params, adjustEdges=TRUE) 
+	precMatCorr =maternGmrfPrec(nn32, param=params, 
+		adjustEdges=TRUE) 
 	
 	midcell = 32*16 + 16 # the middle cell
 	edgeCell = 32*5 + 5 # cell near corner
@@ -130,8 +131,6 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
  
  	prodUncor = crossprod(covMatMatern, precMat)
  	prodCor = crossprod(covMatMatern, precMatCorr)
-
-
 
  	quantile(Matrix::diag(prodUncor),na.rm=TRUE)
  	quantile(Matrix::diag(prodCor),na.rm=TRUE)
