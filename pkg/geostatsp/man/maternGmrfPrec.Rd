@@ -1,12 +1,10 @@
 \name{maternGmrfPrec}
 \alias{maternGmrfPrec}
 \alias{maternGmrfPrec.default}
-\alias{maternGmrfPrec.matrix}
 \alias{maternGmrfPrec.dsCMatrix}
 \alias{NNmat}
 \alias{NNmat.default}
 \alias{NNmat.Raster}
-\alias{gmrfPrecUncond}
 \title{Precision matrix for a Matern spatial correlation}
 \description{
 Produces the precision matrix for a Gaussian random field on a regular square lattice, using a Markov random field approximation. 
@@ -19,16 +17,11 @@ maternGmrfPrec(N, ...)
   adjustEdges=FALSE,...) 
 \method{maternGmrfPrec}{matrix}(N, ...)
 \method{maternGmrfPrec}{default}(N, Ny=N, 	
-param=c(variance=1, range=1, shape=1, cellSize=1),
- ...)
-NNmat(N, Ny=N, nearest=3)
-\method{NNmat}{Raster}(N, Ny=N, nearest=3)
-\method{NNmat}{default}(N, Ny=N, nearest=3)
-
-gmrfPrecUncond(x, 
-			N = attributes(x)$Nx, Ny=attributes(x)$Ny,
-			param = attributes(x)$model,
-			border=param["shape"]+1)
+  param=c(variance=1, range=1, shape=1, cellSize=1),
+  adjustEdges=FALSE, ...)
+NNmat(N, Ny=N, nearest=3, adjustEdges=FALSE)
+\method{NNmat}{Raster}(N, Ny=N, nearest=3, adjustEdges=FALSE)
+\method{NNmat}{default}(N, Ny=N, nearest=3, adjustEdges=FALSE)
 }
 
 \arguments{
@@ -45,10 +38,10 @@ the field takes values of zero outside the specified region.  Defaults to \code{
 
 \item{x}{An MRF precision matrix produced by \code{maternGmrfPrec}}
 \item{nearest}{Number of nearest neighbours to compute}
-\item{...}{Additional arguments passed to \code{maternGmrfPrec.dgCMatrix}}
+\item{...}{Additional arguments passed to \code{maternGmrfPrec.dsCMatrix}}
 }
 \value{
-A sparse matrix \code{dgCMatrix} object, containing a precision matrix for a 
+A sparse matrix \command{\link[Matrix]{dsCMatrix-class}} object, containing a precision matrix for a 
 Gaussian random field or (from the \code{NNmat} function)  a matrix denoting neighbours.  
 
  }

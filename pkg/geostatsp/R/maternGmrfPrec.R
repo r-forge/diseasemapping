@@ -35,23 +35,16 @@ maternGmrfPrec = function(N,...) {
 
 maternGmrfPrec.default = function(N, Ny=N,
 		param=c(variance=1, range=1, shape=1, cellSize=1),
+		adjustEdges=FALSE,
 		...) {
 	
 	if(!'shape' %in% names(param)){
 		warning("shape parameter appears to be missing")
 	}
 	
-	theNNmat  = NNmat(N, Ny, nearest=param['shape']+1)
+	theNNmat  = NNmat(N, Ny, nearest=param['shape']+1, adjustEdges=adjustEdges)
 	
-	maternGmrfPrec(theNNmat, param,...)
-	
-}
-
-
-maternGmrfPrec.matrix = function(N, ...) {
-	
-	N = as(N, "dsCMatrix")
-	maternGmrfPrec(N, ...)
+	maternGmrfPrec(N=theNNmat, param=param, adjustEdges=adjustEdges, ...)
 	
 }
 
@@ -87,8 +80,8 @@ maternGmrfPrec.dsCMatrix = function(N,
 	}
 	
 	
-	
-	if(is.null(attributes(N)$raster)) {
+	theraster = attributes(N)$raster
+	if(is.null(theraster)) {
 		if(!any(names(param)=='cellSize')){
 			param['cellSize']=1
 		}
@@ -109,23 +102,34 @@ maternGmrfPrec.dsCMatrix = function(N,
 				ymn=0, ymx=Ny*
 						param['cellSize']
 		)	
-		if(any(installed.packages()[,'Package'] == 'raster')) {
-			theraster = do.call(raster::raster,
-					theraster)
-		}
 		
-	} else {
+	} else { # the raster not null
 		
-		theraster = attributes(N)$raster
-		Nx = attributes(theraster)$ncols
-		Ny = attributes(theraster)$nrows
+		Nx = ncol(theraster)
+		Ny = nrow(theraster)
 		param['cellSize'] = 
 				( attributes(theraster)$extent@xmax - 
 					attributes(theraster)$extent@xmin) /
-				Nx
-		
+				Nx		
 	}
 	
+	gmrfOrder = param['shape']+1
+	
+	adjustEdgesN = attributes(N)$adjustEdges
+	if(is.null(adjustEdgesN)) adjustEdgesN = FALSE
+	
+	nearestN = attributes(N)$nearest
+	if(is.null(nearestN)) nearestN = Inf
+	
+	adjustEdgesLogical = adjustEdges != FALSE
+	
+	# recompute N if the edge adjustment isn't appropriate
+	if( (adjustEdgesLogical != adjustEdgesN) |
+			(adjustEdgesLogical & (nearestN != gmrfOrder)) |
+			(adjustEdgesLogical & is.null(attributes(N)$cells))
+			) {
+		N = NNmat(theraster, nearest = gmrfOrder, adjustEdges = adjustEdgesLogical)	
+	}
 	
 	
 	paramInfo = list(
@@ -144,17 +148,8 @@ maternGmrfPrec.dsCMatrix = function(N,
 			y=seq(Ny,1))
 	buffer = param['shape']+2
 	
-	cellVec = seq(1, nrow(distVecFull)) 
-	
-	isInner =  
-			distVecFull[,'x']> buffer & 
-			distVecFull[,'y']>buffer &
-			distVecFull[,'x']< (Nx-buffer) &
-			distVecFull[,'y'] < (Ny-buffer) 
-	
 	distVecFull = t(distVecFull)-midcellCoord 
 	distVecFull = sqrt(apply(distVecFull^2,2,sum))	
-	
 	
 	
 	# if 1 - AR parameter supplied
@@ -232,10 +227,6 @@ maternGmrfPrec.dsCMatrix = function(N,
 					paramInfo$theo['variance']*(4*pi)
 		}
 		
-		
-		
-		
-		
 		if(min(c(Nx,Ny)<3*param['rangeInCells'])){
 			warning("grid is ", Nx, " by ", Ny,
 					"which may be too small for range ",
@@ -258,24 +249,23 @@ maternGmrfPrec.dsCMatrix = function(N,
 	
 	precEntries =  precEntries /
 			as.numeric(paramInfo$theo['conditionalVariance']) 
-  
-	
+  	
   theNNmat = N
   
-  
-  theN = theNNmat@x
-  theN = precEntries[theN]
+  theN = precEntries[theNNmat@x]
+	theN[is.na(theN)] = 0
   theNNmat@x = theN
-  
   
   ######### optimization to see if there are better matern
   # parameters than the theoretical values
-	
+
+theX = distVecFull * paramInfo$theo['cellSize']
+toKeep = which(theX<
+				1.75*paramInfo$theo['range'])
+
+if(FALSE) {	
   varMid = solve(theNNmat,midVec)
   
-  theX = distVecFull * paramInfo$theo['cellSize']
-  toKeep = which(theX<
-				  1.75*paramInfo$theo['range'])
   ev = data.frame(
 		  x=theX[toKeep], 
 		  y=as.vector(varMid[toKeep]))
@@ -288,7 +278,9 @@ maternGmrfPrec.dsCMatrix = function(N,
   paramInfo$empirical = paramInfo$empirical[
 		  order(paramInfo$empirical$x),
   ]
-	
+} else {
+	paramInfo$empirical = data.frame(x = theX[toKeep])	
+}
   # optimal parameters so product of gmrf precision with matern is identity
 # don't do it if shape parameter is zero 
 	if(paramInfo$theo['shape'] > 0) {
@@ -387,17 +379,9 @@ maternGmrfPrec.dsCMatrix = function(N,
 			adjustEdges='theo'
 		}
 		
-		rasterCells = raster(theraster)
-		values(rasterCells) = 1:ncell(theraster)
 		
-		buffer = param['shape']+1
-		
-		innerCells = crop(rasterCells, 
-				extent(rasterCells, 
-						buffer+1, nrow(rasterCells)-buffer, 
-						buffer+1, ncol(rasterCells)-buffer))
-		
-		innerCells = sort(values(innerCells))
+		innerCells = attributes(N)$cells$inner
+		outerCells = attributes(N)$cells$outer
 		
 		InnerPrecision = theNNmat[innerCells, innerCells]
 		cholInnerPrec =Cholesky(InnerPrecision,LDL=FALSE,perm=TRUE)
@@ -407,7 +391,6 @@ maternGmrfPrec.dsCMatrix = function(N,
 		#Aic = A %*% InnerPrecInvChol
 		# AQinvA = Aic %*% t(Aic)
 		
-		outerCells = setdiff(values(rasterCells), innerCells)
 		A = theNNmat[innerCells,outerCells]
     
 		Aic = solve(cholInnerPrec, 

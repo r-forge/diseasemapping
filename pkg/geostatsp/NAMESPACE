@@ -1,7 +1,7 @@
 # functions that don't depend on other packages
 export( lgm, glgm, lgcp,
  krigeLgm,stackRasterList,
-  gmrfPrecUncond,simLgcp,simPoissonPP,
+ simLgcp,simPoissonPP,
  excProb, likfitLgm, loglikLgm,
  profLlgm, informationLgm, conditionalGmrf, spatialRoc,
  spdfToBrick
@@ -36,7 +36,6 @@ S3method(squareRaster, SpatialPolygonsDataFrame)
 
 export(maternGmrfPrec)
 S3method(maternGmrfPrec, dsCMatrix)
-S3method(maternGmrfPrec, matrix)
 S3method(maternGmrfPrec, default)
 
 export(NNmat)
