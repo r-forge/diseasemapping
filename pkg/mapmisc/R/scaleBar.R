@@ -66,7 +66,9 @@ scaleBar = function(crs,
 	
 # how long (in m) is our target dash
 	dashTargetDist = spDists(xll[c("centre","dashright"),])[1,2]*1000
-
+	dashDistEuclidean = dist()
+	desiredLen = strwidth("x")*forLegend$seg.len 
+	
 	theb = log10(dashTargetDist)
 	candidates = 10^c(floor(theb), ceiling(theb))
 	candidates = c(candidates[1]*c(1,2,5), candidates[2])
@@ -82,8 +84,7 @@ scaleBar = function(crs,
 	forLegend$seg.len = dashRoundedWidth / (
 				forLegend$cex * par('cex') * xinch(par('cin')[1L], warn.log = FALSE)
 				)
-	
-	
+		
 	if(dashRoundedDist >1100) {
 		lunits="km"
 		segdistPrint = dashRoundedDist / 1000

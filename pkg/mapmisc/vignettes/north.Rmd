@@ -243,6 +243,7 @@ insetMap(crs=mapMerc,
 		pos='bottomright', 
 		map=southInset, cropInset = NULL,
 		lty=0)
+scaleBar(crs=mapMerc,  seg.len=35, pos='center')
 sRes = scaleBar(mapMerc, 'bottomleft', cex=2)
 
 scaleCentre = SpatialPoints(
