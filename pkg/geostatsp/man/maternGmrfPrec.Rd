@@ -15,7 +15,6 @@ maternGmrfPrec(N, ...)
 \method{maternGmrfPrec}{dsCMatrix}(N, 
 	param=c(variance=1, range=1, shape=1, cellSize=1),
   adjustEdges=FALSE,...) 
-\method{maternGmrfPrec}{matrix}(N, ...)
 \method{maternGmrfPrec}{default}(N, Ny=N, 	
   param=c(variance=1, range=1, shape=1, cellSize=1),
   adjustEdges=FALSE, ...)
@@ -32,11 +31,8 @@ scale parameter for the correlation function; \code{prec}, precision parameter; 
 Matern differentiability parameter (0, 1, or 2); and \code{cellSize}, the size of the grid cells.  Optionally, 
 \code{variance} and \code{range} can be given in place of \code{prec} and \code{scale}, when the former 
 are present and the latter are missing the reciprocal of the former are taken.}
-\item{border}{number of cells from the edge of the grid to adjust for edge effects.}
 \item{adjustEdges}{If \code{TRUE}, adjust the precision matrix so it does not implicitly assume 
 the field takes values of zero outside the specified region.  Defaults to \code{FALSE}.  Can be a character string specifying the parameters to use for the correction, such as \code{'optimal'} or \code{'optimalShape'}, with \code{TRUE} equivalent to \code{'theo'}}
-
-\item{x}{An MRF precision matrix produced by \code{maternGmrfPrec}}
 \item{nearest}{Number of nearest neighbours to compute}
 \item{...}{Additional arguments passed to \code{maternGmrfPrec.dsCMatrix}}
 }
