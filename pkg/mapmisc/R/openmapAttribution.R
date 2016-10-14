@@ -218,7 +218,7 @@ for(D in names(cartodb$long)){
         cartodb[[D2]][[D]]
     )
     cartodb[[D2]][[D]] = gsub(
-        "stamen.com", "cartodb.com",
+        "stamen.com", "carto.com",
         cartodb[[D2]][[D]]
     )
     waze[[D2]][[D]] = gsub(

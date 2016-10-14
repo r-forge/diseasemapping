@@ -82,7 +82,7 @@ scaleBar = function(crs,
 	# cex * par("cex") * xinch(par('cin')[1L], warn.log = FALSE)
 	# in graphics::legend
 	forLegend$seg.len = dashRoundedWidth / (
-				forLegend$cex * par('cex') * xinch(par('cin')[1L], warn.log = FALSE)
+				forLegend$cex * par('cex') * graphics::xinch(par('cin')[1L], warn.log = FALSE)
 				)
 		
 	if(dashRoundedDist >1100) {
