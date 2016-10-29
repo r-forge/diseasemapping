@@ -25,30 +25,6 @@ SEXP gmrfEdge(
 			params,
 			typePrecision));
 
-	// if length(gmrfParams) > 0
-	// copy gmrfParams into QAA
-	// copy gmrfParams into QAB
-	// don't permute
-
-	// cholInnerPrec =Cholesky(QAA,LDL=FALSE,perm=FALSE)
-	// cholInnerPrec = Pt L Lt P
-	// cholInnerPrec^(-1) = Pt L^(-1)t L^(-1) P
-	// Aic = L^(-1) P QAB
-
-	// if permute, reorder QAB
-	/*
-	Aic = solve(cholInnerPrec,
-			QAB,
-			system='P')
-	 */
-
-	/*
-	Aic = solve(cholInnerPrec,
-			QAB,
-			system='L')
-	 */
-
-
 	//	result = crossprod(LinvQab) + result
 	// blas DSYRK https://www.math.utah.edu/software/lapack/lapack-blas/dsyrk.html
 	F77_NAME(dsyrk)(

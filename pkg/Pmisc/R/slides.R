@@ -9,11 +9,14 @@ markdownHeader = function(
 		biblatexoptions = c(
 				maxbibnames=20,
 				maxcitenames=2,doi='false',
-				isbn='false',	giveninits='true'),
+				isbn='false',	giveninits='true',
+				uniquelist='false'),
 		startAndEnd='---',
 		beamer=FALSE,
 		...
 ) {
+	
+	biblatexoptions = as.character(biblatexoptions)
 	
 	result = list(
 			startAndEnd,

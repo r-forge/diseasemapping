@@ -10,9 +10,11 @@ markdownHeader(
 		biblatex=1,
 	  bibliotitle = 'References',
 	  bibliostyle = 'authoryear,backend=biber',
-		biblatexoptions = c(maxbibnames=20,
+		biblatexoptions = c(
+				maxbibnames=20,
 				maxcitenames=2,doi='false',
-				isbn='false',	giveninits='true'),
+				isbn='false',	giveninits='true',
+				uniquelist='false'),
 		startAndEnd='---',
 		beamer=FALSE,
 		...
