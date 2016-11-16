@@ -154,6 +154,7 @@ setMethod("getSMR",
 			)
 			
 			casecol = grep("^cases$|^count$|^y$", names(casedata), value=TRUE, ignore.case=TRUE)
+			
 			if(length(casecol)>1) {
 				casecol=casecol[1]
 				warning("more than one column which could be interpreted as case numbers, using ", casecol)
@@ -162,7 +163,7 @@ setMethod("getSMR",
 			if(!length(casecol)) {
 				#there is no case col
 				casecol = "cases"
-				casedata[,casecol] = 1
+				casedata[[casecol]] = 1
 			}
 			
 			
@@ -196,9 +197,9 @@ setMethod("getSMR",
 		function(popdata, model, casedata, regionCode,
 				regionCodeCases, area.scale=1,
 				sex=c('m','f'), ...){  
-			
+
 			# years = NULL, personYears=TRUE,year.range = NULL,...){
-			
+			#dots = list()
 			dots = list(...)
 			
 			if (is.null(dots$years)) {
@@ -255,13 +256,21 @@ setMethod("getSMR",
 			if(!missing(casedata)) {
 				casedataOrig = casedata
 				useCaseData = TRUE
+				# create a case data frame with zero cases for 
+	# years where no cases are present
+				casedataWhenNocases = casedataOrig[,
+						grep("^cases$|^count$|^y$", names(casedataOrig), 
+								invert=TRUE, ignore.case=TRUE)]
+				casedataWhenNocases$cases = 0
 			} else {
-				casedataOrig = NULL
+#				casedataOrig = NULL
 				useCaseData = FALSE
 			}
 			
+			
+			
 			for(Dyear in names(popdataOrig)) {
-				
+
 				popdata = popdataOrig[[Dyear]]
 
 				if(useCaseData) {
@@ -270,10 +279,10 @@ setMethod("getSMR",
 					if (length(sex) == 1) {      
 						casedata = casedata[casedata[[caseSexVar]] %in% sex, ]
 					}
-					if(dim(casedata)[1]==0) casedata<-NULL   
-				} else { # casedata is missing
-					casedata = NULL
-				}
+					if(dim(casedata)[1]==0) casedata <- casedataWhenNocases
+				} #else { # casedata is missing
+					#casedata = casedataWhenNocases
+				#}
 				
 				# Compute area if spdf not in long-lat
 				if(length(grep("Spatial*DataFrame", class(popdata)))) {
@@ -288,9 +297,7 @@ setMethod("getSMR",
 					
 				popdata[[yearVar]] = as.integer(Dyear)
 				
-				
 				result[[Dyear]] = methods::callGeneric()
-				
 			}
 			names(result) = years
 			
