@@ -302,12 +302,12 @@ colourScale.numeric = function(x=NULL, breaks=5,
 		if(length(labels) == length(breaks)) {
 			# labels are assigned to breaks
 			thetable$label = labels[match(thetable$ID,breaks)]
-		} else if(length(labels) == nrow(thetable)) {
-			# labels are assigned to x
-				thetable$label = labels
 		} else if (length(labels) == length(x)) {
 			# labels algined with x
 			thetable$label = labels[match(thetable$ID, x)]
+		} else if(length(labels) == nrow(thetable)) {
+			# labels are assigned to x
+				thetable$label = labels
 		} else {
 			# don't use labels
 			thetable$label = as.character(thetable$ID)

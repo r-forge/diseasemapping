@@ -87,6 +87,8 @@ gcensus = function(
 		map=rgdal::readOGR(dirname(tempFileShp), 
     		gsub("\\.shp$", "", basename(tempFileShp)), 
     		stringsAsFactors=FALSE,verbose=FALSE)
+		# overwrite projection because sometimes it's wrong
+		if(!is.null(t_srs)) projection(map) = crs(t_srs)
   	
 		if(is.null(whereFull)) {
 			# should be 'id' instead of idString if the database is clean
