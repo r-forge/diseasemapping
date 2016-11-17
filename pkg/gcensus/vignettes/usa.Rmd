@@ -14,7 +14,7 @@ usa = try(gcensus(country = "USA",
 		subset = c(name1='Maine'),
 		database = c(dbname = "gcensus", user = "gcensus", 
 				host = "localhost", port = 5433), 
-		income = TRUE, crs = "EPSG:3463", simplifyTolerance = 0), silent=TRUE)
+		income = TRUE, t_srs = "EPSG:3463", simplifyTolerance = 0), silent=TRUE)
 ```
 
 
