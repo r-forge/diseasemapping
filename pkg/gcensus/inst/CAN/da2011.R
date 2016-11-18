@@ -72,15 +72,13 @@ con <- do.call(
 		)
 )
 
-tableName = paste("can", Dyear, ".l",Dlevel,"pop", sep="")
-
-if(DBI::dbExistsTable(con,tableName)) {
-	DBI::dbRemoveTable(con,tableName)
-}
+schemaName = paste("can", Dyear, sep="") 
+tableName = paste("l",Dlevel,"pop", sep="")
 
 
 DBI::dbWriteTable(con,
-		tableName, 
-		daPopAll, row.names = FALSE)
+		c(schemaName, tableName), 
+		daPopAll, 
+		overwrite=TRUE)
 
 DBI::dbDisconnect(con)

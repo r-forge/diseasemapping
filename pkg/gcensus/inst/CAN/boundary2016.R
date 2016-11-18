@@ -8,7 +8,7 @@ dir.create(candir)
 
 Sid = 		c(
 		id1 = 'pr',
-		id1.1 = 'cma',
+		id1.2 = 'cma',
 		id2 = 'cd',
 		id3 = 'csd',
 		id4 = 'ct',
@@ -27,9 +27,9 @@ SidNames = list(
 				name1 = 'PRENAME',
 				fr1 = 'PRFNAME'
 		),
-		'1.1' = c(
-				id1.1 = 'CMAPUID',
-				name1.1 = 'CMANAME',
+		'1.2' = c(
+				id1.2 = 'CMAPUID',
+				name1.2 = 'CMANAME',
 				cmatype = 'CMATYPE'
 		),
 		'2' = c(
@@ -50,6 +50,7 @@ SidNames = list(
 				id5 = 'DAUID'
 				),
 		'6' = c(
+				id6 = 'DBUID'
 				)
 )
 
@@ -102,17 +103,7 @@ for(Dlevel in names(Sid)) {
 		
 	}
 	bnd@data = bndDf
-	
-	# write shapefile
-	
-	writeOGR(
-			bnd,
-			leveldir,
-			'map',
-			driver= "ESRI Shapefile"
-	)
-	
-	
+
 	# write map
 	
 	png(file.path(leveldir, "map.png"))
@@ -120,6 +111,17 @@ for(Dlevel in names(Sid)) {
 	plot(canadaBg, add=TRUE)
 	plot(bnd, add=TRUE, border='red')
 	dev.off()
+	
+	# write shapefile
+	
+	writeOGR(
+			bnd,
+			leveldir,
+			'map',
+			driver= "ESRI Shapefile", overwrite=TRUE
+	)
+	
+	
 	
 }
 
