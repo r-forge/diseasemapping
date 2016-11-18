@@ -107,14 +107,14 @@ gcensus = function(
   	
 		res <- DBI::dbSendQuery(con, 
     		paste("select * from ", tolower(country), year, ".l", level, 
-    				"pop ",# whereFull, 
+    				"pop ", whereFull, 
 						sep='')
 		)
   	
   	pop = DBI::fetch(res, -1)
 		
 	  
-    inc2 = pop[,-1]
+    inc2 = pop[,grep("gid", names(pop), invert=TRUE)]
   	if(income) {
     	res <- try(DBI::dbSendQuery(con, 
       				paste("select * from ", tolower(country), year, 
@@ -135,7 +135,10 @@ gcensus = function(
 	if(idString %in% names(inc2))
 		inc2$id = inc2[[idString]]
 	
-  map2=sp::merge(map, inc2)
+	inc2$id = as.character(inc2$id)
+	map$id = as.character(map$id)
+	
+  map2=sp::merge(map, inc2, by='id')
 	
 	rownames(map2@data)= as.character(map2$id)
 	map2 = sp::spChFIDs(map2, rownames(map2@data))
