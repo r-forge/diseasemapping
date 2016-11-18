@@ -1,0 +1,10 @@
+level	abbreviation	name
+0	Country	Country
+1	PR	Province
+1.1 FSA Forward Sortation Area
+1.2 CMA Census Metropolitan Area
+2	CD	Census Division
+3	CSD	Census Subdivision
+4	CT	Census Tract
+5	EA/DA	Enumeration Area (before 2001)/Dissemination Area (2001 and onwards)
+6	DB	Dissemination Blocks

@@ -68,11 +68,11 @@ Sfile = Pmisc::downloadIfOld(
 SshpFile = grep("[.]shp$", Sfile, value=TRUE)
 SshpFile = gsub("[.]shp$", "", basename(SshpFile))
 
+library("rgdal")
 canada = raster::getData("GADM", country='CAN', level=0, path=rawdir)
 canada = spTransform(canada, mapmisc::crsLL)
 canadaBg = mapmisc::openmap(canada)
 
-library("rgdal")
 for(Dlevel in names(Sid)) {
 	cat(Dlevel, ' ')
 	DlevelId = as.numeric(gsub("id", "", Dlevel))
@@ -107,7 +107,7 @@ for(Dlevel in names(Sid)) {
 	# write map
 	
 	png(file.path(leveldir, "map.png"))
-	mapmisc::map.new(canada, buffer=-c(1,1,0.5,5))
+	mapmisc::map.new(canada, buffer=-c(0,0.5,0.5,5))
 	plot(canadaBg, add=TRUE)
 	plot(bnd, add=TRUE, border='red')
 	dev.off()
