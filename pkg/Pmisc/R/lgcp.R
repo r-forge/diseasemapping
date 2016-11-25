@@ -183,7 +183,7 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 					x = xSeq,
 					y = stats::dlnorm(xSeq, 
 							bRes$priors$etaprior$mean[1], 
-							bRes$priors$etaprior$variance[1,1]
+							sqrt(bRes$priors$etaprior$variance[1,1])
 					)
 			)
 	)
@@ -201,7 +201,7 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 					x = xSeq*2,
 					y = stats::dlnorm(xSeq, 
 							bRes$priors$etaprior$mean[2], 
-							bRes$priors$etaprior$variance[2,2]
+							sqrt(bRes$priors$etaprior$variance[2,2])
 					)/2
 			)
 	)
