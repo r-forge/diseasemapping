@@ -4,8 +4,8 @@ markdownHeader = function(
 		author=NULL,
 		date=Pmisc::today(),
 		biblatex=1,
-	 bibliotitle = 'References',
-	 bibliostyle = 'authoryear,backend=biber',
+	  bibliotitle = 'References',
+	  bibliostyle = 'authoryear,backend=biber',
 		biblatexoptions = c(
 				maxbibnames=20,
 				maxcitenames=2,doi='false',
@@ -16,7 +16,7 @@ markdownHeader = function(
 		...
 ) {
 	
-	biblatexoptions = as.character(biblatexoptions)
+	mode(biblatexoptions) = 'character'
 	
 	result = list(
 			startAndEnd,
@@ -34,7 +34,7 @@ markdownHeader = function(
 	
 	dots = dots[
 			unlist(lapply(dots, length))>0
-			]
+	]
 	
 	names(dots) = gsub(
 			"header[[:punct:]]?includes",
@@ -72,8 +72,8 @@ markdownHeader = function(
 								dots[['header-includes']], 
 								slideHeaderIncludes[beamer]
 						), sep='\n', and='')
-	)
-	result[[length(result)+1]] = toAdd 
+		)
+		result[[length(result)+1]] = toAdd 
 	}
 	result[[length(result)+1]] = startAndEnd
 	
