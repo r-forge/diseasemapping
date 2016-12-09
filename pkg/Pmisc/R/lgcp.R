@@ -26,7 +26,9 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 	offsetFile = file.path(dirname, 'offset.grd')
 	
 	gsize = diff(bRes$ncens[1:2])/2
-	scaleIntensity = sum(x$poisson.offset, na.rm=TRUE)
+	scaleIntensity = sum(x$poisson.offset, na.rm=TRUE) *
+			x$grid$del1 * x$grid$del2
+	
 	if(!length(scaleIntensity))
 		scaleIntensity = 1
 	
@@ -72,7 +74,7 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 	)
 	smallZ[as.vector(bRes$cellInside)==0, ] = NA
 	
-	fixed = tcrossprod(smallZ, bRes$betarec) + scaleOffset
+	fixed = tcrossprod(smallZ, bRes$betarec) 
 	fixed = array(fixed, 
 			c(bRes$M, bRes$N, nrow(bRes$betarec)))
 	fixed = fixed[,dim(fixed)[2]:1,]
@@ -154,7 +156,7 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 			range = 2*exp(bRes$etarec[,2])
 	)
 	samples$beta[,1] =
-			samples$beta[,1] - samples$sd^2/2 + scaleOffset
+			samples$beta[,1] - samples$sd^2/2 
 	
 	summaryTable = lapply(
 			c(as.list(as.data.frame(samples$beta)), 
