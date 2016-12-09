@@ -10,11 +10,11 @@ Imports:
     tools,
     utils,
     raster,
+    lgcp,
     sp
 Suggests:
     INLA,
     geostatsp,
-    lgcp,
     spatstat
 Author: Patrick Brown <patrick.brown@utoronto.ca>[aut, cre]
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
