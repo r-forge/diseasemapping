@@ -123,7 +123,7 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 	values(offset) = t(x$poisson.offset[
 					1:x$M, x$N:1
 			])
-	offset = offset*exp(-scaleOffset)
+
 	offset = brick(
 			offset, log(offset)
 	)
