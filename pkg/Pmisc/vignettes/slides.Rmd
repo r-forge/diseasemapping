@@ -71,21 +71,23 @@ Pmisc::markdownHeader(
 
 ```{r theHeaderAgain, eval=FALSE, include=FALSE}
 cat(
-	markdownHeader( 	
-		title="Pmisc slides example", 	
-		author='Patrick Brown',
- 		bibliography='myBib.bib', 	
-		theme='Singapore',
-		beamer=TRUE,
-		classoption=c(
-  			aspectratio=169, 		
-			xcolor='dvipsnames'
-		), 	
-		headerincludes =c(
-  			'\\usecolortheme[named=MidnightBlue]{structure}',
-  			'\\DeclareMathOperator{\\var}{var}',
-			'\\DeclareMathOperator{\\E}{E}') 
-	)
+		Pmisc::markdownHeader(
+				title="Pmisc slides example", 		
+				author='Patrick Brown',
+				bibliography='myBib.bib',
+				theme='Singapore',
+				beamer=TRUE,
+				classoption=c(
+						aspectratio=169,
+						xcolor='dvipsnames'),
+				biblatexoptions = c(
+						maxbibnames=20,
+						maxcitenames=2,doi='false'),
+				headerincludes =c(
+						'\\usecolortheme[named=MidnightBlue]{structure}',
+						'\\DeclareMathOperator{\\var}{var}',
+						'\\DeclareMathOperator{\\E}{E}')
+		)
 )
 ```
 

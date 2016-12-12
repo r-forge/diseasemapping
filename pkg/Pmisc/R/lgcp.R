@@ -38,6 +38,7 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 			c(bRes$xyt$window$xrange,
 					bRes$xyt$window$yrange)
 	)
+	names(random) = paste("random", 1:nlayers(random), sep='')
 	random = writeRaster(random, 
 			filename = randomFileOut,
   		overwrite = file.exists(randomFileOut)
@@ -82,6 +83,7 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 #	fixed = fixed + log(scaleIntensity)
 	fixed = brick(fixed)
 	extent(fixed) = extent(random)
+	names(fixed) = paste("fixed", 1:nlayers(fixed), sep='')
 	fixed = setMinMax(fixed)
 	
 	fixed = writeRaster(fixed, 
@@ -91,25 +93,26 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 	
 	relativeIntensity = exp(fixed + random)
 	relativeIntensity = setMinMax(relativeIntensity)
+	names(relativeIntensity) = gsub("^fixed", 'intensity', names(fixed))
 	
 	relativeIntensity = writeRaster(
 			relativeIntensity,
 			filename = intensityFile,
 			overwrite = file.exists(intensityFile)
 	)
-	
-	summaryFunction = function(x, prefix = '',...) {
-		Sprob=c(0.025, 0.5, 0.975)
+
+	Sprob=c(0.025, 0.5, 0.975)
+	Snames = c('mean', paste(Sprob,'q',sep=''))
+	summaryFunction = function(x,...) {
 		res = quantile(x, na.rm=TRUE, prob = Sprob)
-		names(res) = paste('xx.',Sprob, "quant", sep='')
-		c('xx.mean' = mean(x, na.rm=TRUE), res)
+		resMean = mean(x, na.rm=TRUE)
+		c(resMean, res)
 	}				
 	
-	randomSummary = calc(random, summaryFunction)
-	names(randomSummary) = gsub("^xx", 'random', names(randomSummary))
-	intensitySummary = calc(relativeIntensity, summaryFunction)
-	names(intensitySummary) = gsub("^xx", 'relativeIntensity', 
-			names(intensitySummary))
+	randomSummary = calc(random, summaryFunction, prefix='random')
+	names(randomSummary) = paste("random.", Snames, sep='')
+	intensitySummary = calc(relativeIntensity, summaryFunction, 		prefix='relativeIntensity')
+	names(intensitySummary) = paste("relativeIntensity.", Snames, sep='')
 	
 	summaryStack = stack(
 			randomSummary, intensitySummary
