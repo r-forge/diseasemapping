@@ -149,7 +149,7 @@ legendBreaks = function(pos,
     }
   }
 
-	legend = format(legend)
+	legend = format(legend, justify='right')
   result=legend(
       pos,
       legend=legend,
