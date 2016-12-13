@@ -149,9 +149,10 @@ legendBreaks = function(pos,
     }
   }
 
+	legend = format(legend)
   result=legend(
       pos,
-      legend=as.character(legend),
+      legend=legend,
       bg=bg,
       col=col,
       pch=pch,
