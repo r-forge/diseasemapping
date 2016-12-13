@@ -3,7 +3,7 @@
 \title{Download a file}
 \usage{
 downloadIfOld(url, file = basename(url), age = "5 days", 
-	verbose = FALSE,  exdir=tempdir())
+	verbose = FALSE,  exdir=tempdir(), ...)
 }
 \arguments{
 \item{url}{a string specifying the remote location}
