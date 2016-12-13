@@ -14,6 +14,7 @@ downloadIfOld(url, file = basename(url), age = "5 days",
 
 \item{verbose}{print additional information}
 \item{exdir}{directory to put contents of any zip files}
+\item{...}{additional arguments for \code{\link[utils]{download.file}}}
 }
 \value{
 A character string of files downloaded or unzipped.
