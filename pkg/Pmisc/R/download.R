@@ -7,12 +7,13 @@
 #' @param age maximum age of the local file
 #' @param verbose print additional information
 #' @param source source the file after download
+#' @param ... additional arguments for \code{\link[utils]{download.file}}
 #' @export
 downloadIfOld = function(
 		url,
 		file = basename(url),
 		age = '5 days',
-		verbose=FALSE, exdir=tempdir()
+		verbose=FALSE, exdir=tempdir(), ...
 ) {
 	
 	old = Sys.time() - diff(as.numeric(
@@ -33,7 +34,8 @@ downloadIfOld = function(
 			utils::download.file(
 					url[D],
 					file[D],
-					quiet = !verbose
+					quiet = !verbose, 
+					...
 			)
 		}
 		
