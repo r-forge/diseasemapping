@@ -49,7 +49,6 @@ If \code{post} is numeric, it specifies an angle for inverse rotation.
 }	
 
 \references{
-\url{http://www.remotesensing.org/geotiff/proj_list/oblique_mercator.html},
 \url{http://en.wikipedia.org/wiki/Space-oblique_Mercator_projection}
 }
 \seealso{\code{\link[sp]{CRS}},\code{\link[sp]{spTransform}}}
