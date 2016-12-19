@@ -105,8 +105,9 @@ lgcpToGeostatsp = function(x, dirname = x$gridfunction$dirname) {
 	Snames = c('mean', paste(Sprob,'q',sep=''))
 	summaryFunction = function(x,...) {
 		res = quantile(x, na.rm=TRUE, prob = Sprob)
+		names(res) = paste(Sprob, 'quant', sep='')
 		resMean = mean(x, na.rm=TRUE)
-		c(resMean, res)
+		c(mean = resMean, res)
 	}				
 	
 	randomSummary = calc(random, summaryFunction, prefix='random')
