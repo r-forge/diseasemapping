@@ -167,10 +167,10 @@ maternGmrfPrec.dsCMatrix = function(N,
 			if(param['shape'] != 0) {
 				paramInfo$theo['variance'] =   
 						param['conditionalVariance']/
-						(4*pi*param['shape'] *(a-4)^(param['shape'] ))
+						(pi*param['shape'] *(1-oneminusar)*oneminusar^(param['shape'] ))
 			} else {
 				paramInfo$theo['variance'] =  
-						param['conditionalVariance']/(4*pi)
+						2*param['conditionalVariance']/((1-oneminusar)*pi)
 			}
 			paramInfo$theo['conditionalVariance'] = 
 					param['conditionalVariance']	
