@@ -167,10 +167,12 @@ maternGmrfPrec.dsCMatrix = function(N,
 			if(param['shape'] != 0) {
 				paramInfo$theo['variance'] =   
 						param['conditionalVariance']/
-						(pi*param['shape'] *(1-oneminusar)*oneminusar^(param['shape'] ))
+						(pi*param['shape'] *(1-param['oneminusar'])*
+							param['oneminusar']^(param['shape'] ))
 			} else {
 				paramInfo$theo['variance'] =  
-						2*param['conditionalVariance']/((1-oneminusar)*pi)
+						2*param['conditionalVariance']/
+						((1-param['oneminusar'])*pi)
 			}
 			paramInfo$theo['conditionalVariance'] = 
 					param['conditionalVariance']	
@@ -249,7 +251,7 @@ maternGmrfPrec.dsCMatrix = function(N,
 	
 	precEntries =  precEntries /
 			as.numeric(paramInfo$theo['conditionalVariance']) 
-  	
+  
   theNNmat = N
   
   theN = precEntries[theNNmat@x]
@@ -258,29 +260,29 @@ maternGmrfPrec.dsCMatrix = function(N,
   
   ######### optimization to see if there are better matern
   # parameters than the theoretical values
-
-theX = distVecFull * paramInfo$theo['cellSize']
-toKeep = which(theX<
-				1.75*paramInfo$theo['range'])
-
-if(adjustEdges == FALSE) {	
-  varMid = solve(theNNmat,midVec)
-  
-  ev = data.frame(
-		  x=theX[toKeep], 
-		  y=as.vector(varMid[toKeep]))
-  
-  ev = tapply(ev$y, ev$x, mean)
-  paramInfo$empirical = data.frame(x=
-				  as.numeric(names(ev)),
-		  y = ev)
-  
-  paramInfo$empirical = paramInfo$empirical[
-		  order(paramInfo$empirical$x),
-  ]
-} else {
-	paramInfo$empirical = data.frame(x = theX[toKeep])	
-}
+	
+	theX = distVecFull * paramInfo$theo['cellSize']
+	toKeep = which(theX<
+					1.75*paramInfo$theo['range'])
+	
+	if(adjustEdges == FALSE) {	
+  	varMid = solve(theNNmat,midVec)
+  	
+  	ev = data.frame(
+		  	x=theX[toKeep], 
+		  	y=as.vector(varMid[toKeep]))
+  	
+  	ev = tapply(ev$y, ev$x, mean)
+  	paramInfo$empirical = data.frame(x=
+				  	as.numeric(names(ev)),
+		  	y = ev)
+  	
+  	paramInfo$empirical = paramInfo$empirical[
+		  	order(paramInfo$empirical$x),
+  	]
+	} else {
+		paramInfo$empirical = data.frame(x = theX[toKeep])	
+	}
   # optimal parameters so product of gmrf precision with matern is identity
 # don't do it if shape parameter is zero 
 	if(paramInfo$theo['shape'] > 0) {
