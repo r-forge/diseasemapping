@@ -1,5 +1,7 @@
 getPrec = function(shape,oneminusar)	{
 	a = as.numeric((1-oneminusar)/4)
+	# This is no longer lindgren et al's a!  it's 1/their a
+	# and the conditional variance is different
 	if(shape == 0){
 		precEntries = c(
 				"1" = 1,
@@ -161,7 +163,10 @@ maternGmrfPrec.dsCMatrix = function(N,
 				a=as.vector(a), 
 				scale = as.numeric(sqrt(a-4))
 		)
-		
+		if(param['shape'] == 0) {
+			paramInfo$theo['rangeInCells'] = as.vector(
+					1/paramInfo$theo['scale'])
+		}
 		
 		if ('conditionalVariance' %in% names(param)){
 			if(param['shape'] != 0) {
@@ -169,15 +174,15 @@ maternGmrfPrec.dsCMatrix = function(N,
 						param['conditionalVariance']/
 						(pi*param['shape'] *(1-param['oneminusar'])*
 							param['oneminusar']^(param['shape'] ))
-			} else {
+			} else { # shape zero
 				paramInfo$theo['variance'] =  
-						2*param['conditionalVariance']/
+						4*param['conditionalVariance']/
 						((1-param['oneminusar'])*pi)
 			}
 			paramInfo$theo['conditionalVariance'] = 
 					param['conditionalVariance']	
 			param['variance'] = paramInfo$theo['variance']
-		} else {
+		} else { # conditional variance not supplied
 			paramInfo$theo['variance'] = param['variance']
 			if(param['shape'] != 0) {
 				paramInfo$theo['conditionalVariance']  =   
@@ -187,7 +192,7 @@ maternGmrfPrec.dsCMatrix = function(N,
 			} else {
 				paramInfo$theo['conditionalVariance'] =   
 						paramInfo$theo['variance']*
-						((1-param['oneminusar'])*pi)
+						((1-param['oneminusar'])*pi)/4
 			}
 			
 	  	
@@ -210,30 +215,47 @@ maternGmrfPrec.dsCMatrix = function(N,
 		# else range supplied
 		##########################
 	} else if(all(c('range','shape') %in% names(param))){
+		
+		
 		param['rangeInCells'] = as.numeric(param['range']/param['cellSize'])
+		paramInfo$theo = param
 		
-		scale = as.numeric(
-				sqrt(8*param['shape'])/param["rangeInCells"]
-		)
-		
+
+		if(param['shape'] != 0) {
+			scale = as.numeric(
+					sqrt(8*param['shape'])/param["rangeInCells"])
+		} else {
+			scale = as.numeric(1/param["rangeInCells"])
+		}
 		
 		a = (scale^2 + 4) 
-		
-		paramInfo$theo = c(param, 	a=as.numeric(a),
-				oneminusar = as.numeric(1-4/a))
-  	
+		paramInfo$theo['oneminusar'] = as.numeric(1-4/a)
+		paramInfo$theo['a'] = as.numeric(a)
 		
 		if(param['shape'] != 0) {
-			paramInfo$theo['conditionalVariance']  =   
-					paramInfo$theo['variance']*
-					(pi*param['shape'] *(1-param['oneminusar'])*
-						param['oneminusar']^(param['shape'] ))
-		} else {
-			paramInfo$theo['conditionalVariance'] =   
-					paramInfo$theo['variance']*
-					((1-param['oneminusar'])*pi)
-			
-		}
+			if ('conditionalVariance' %in% names(param)){
+				paramInfo$theo['variance'] =   
+						param['conditionalVariance']/
+						(pi*param['shape'] *(1-param['oneminusar'])*
+							param['oneminusar']^(param['shape'] ))
+			} else {
+				paramInfo$theo['conditionalVariance']  =   
+						paramInfo$theo['variance']*
+						(pi*param['shape'] *(1-paramInfo$theo['oneminusar'])*
+							paramInfo$theo['oneminusar']^(param['shape'] ))
+				
+			}
+		} else { # shape = 0
+			if ('conditionalVariance' %in% names(param)){
+				paramInfo$theo['variance'] =  
+						4*param['conditionalVariance']/
+						((1-paramInfo$theo['oneminusar'])*pi)
+			} else {
+				paramInfo$theo['conditionalVariance'] =   
+						paramInfo$theo['variance']*
+						((1-paramInfo$theo['oneminusar'])*pi)/4 
+			}
+		} # end shape 0
 		
 		if(min(c(Nx,Ny)<3*param['rangeInCells'])){
 			warning("grid is ", Nx, " by ", Ny,
@@ -253,13 +275,12 @@ maternGmrfPrec.dsCMatrix = function(N,
 	}
  	
 	# build the matrix
-	precEntries=getPrec(param['shape'], param['oneminusar'])
+	precEntries=getPrec(param['shape'], paramInfo$theo['oneminusar'])
 	
-	precEntries =  precEntries /paramInfo$theo['conditionalVariance']
   
   theNNmat = N
   
-  theN = precEntries[theNNmat@x]
+  theN = (precEntries/paramInfo$theo['conditionalVariance'])[theNNmat@x]
 	theN[is.na(theN)] = 0
   theNNmat@x = theN
   
