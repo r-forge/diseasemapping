@@ -1,28 +1,29 @@
-getPrec = function(shape,a)	{
-	a = as.numeric(a)
+getPrec = function(shape,oneminusar)	{
+	a = as.numeric((1-oneminusar)/4)
 	if(shape == 0){
 		precEntries = c(
-				"1" = a,
-				"2" = -1,
+				"1" = 1,
+				"2" = -a,
 				"3" = 0,
 				"4" = 0, 
 				"5" =  0,
 				"6" = 0)
-	} else if(shape==1) {	
-		
-		precEntries = c("1" = 4 + a^2,
+	} else if(shape==1) {			
+		precEntries = c(
+				"1" = 1+4*a^2,
 				"2" = -2*a,
-				"3" = 2,
-				"4" = 1, 
+				"3" = 2*a^2,
+				"4" = a^2, 
 				"5" =  0,
 				"6" = 0)
 	} else if(shape==2) {
-		precEntries = c("1" = a*(a*a+12),
-				"2" = -3*(a*a+3),
-				"3" = 6*a,
-				"4" = 3*a, 
-				"5" =  -3,
-				"6" = -1)
+		precEntries = c(
+				"1" = 1+12*a^2,
+				"2" = -3*a-9*a^3,
+				"3" = 6*a^2,
+				"4" = 3*a^2, 
+				"5" =  -3*a^3,
+				"6" = -a^3)
 	} else {
 		stop("shape parameter must be 0, 1 or 2")			
 	}
@@ -151,7 +152,6 @@ maternGmrfPrec.dsCMatrix = function(N,
 	distVecFull = t(distVecFull)-midcellCoord 
 	distVecFull = sqrt(apply(distVecFull^2,2,sum))	
 	
-	
 	# if 1 - AR parameter supplied
 	if(all(c("oneminusar","shape") %in% names(param))){
 		a = 4/(1-param['oneminusar'])	
@@ -176,15 +176,18 @@ maternGmrfPrec.dsCMatrix = function(N,
 			}
 			paramInfo$theo['conditionalVariance'] = 
 					param['conditionalVariance']	
+			param['variance'] = paramInfo$theo['variance']
 		} else {
 			paramInfo$theo['variance'] = param['variance']
 			if(param['shape'] != 0) {
 				paramInfo$theo['conditionalVariance']  =   
 						paramInfo$theo['variance']*
-						(4*pi*param['shape'] *(a-4)^(param['shape'] ))
+						(pi*param['shape'] *(1-param['oneminusar'])*
+							param['oneminusar']^(param['shape'] ))
 			} else {
 				paramInfo$theo['conditionalVariance'] =   
-						paramInfo$theo['variance']*(4*pi)
+						paramInfo$theo['variance']*
+						((1-param['oneminusar'])*pi)
 			}
 			
 	  	
@@ -223,10 +226,13 @@ maternGmrfPrec.dsCMatrix = function(N,
 		if(param['shape'] != 0) {
 			paramInfo$theo['conditionalVariance']  =   
 					paramInfo$theo['variance']*
-					(4*pi*param['shape'] *(a-4)^(param['shape'] ))
+					(pi*param['shape'] *(1-param['oneminusar'])*
+						param['oneminusar']^(param['shape'] ))
 		} else {
 			paramInfo$theo['conditionalVariance'] =   
-					paramInfo$theo['variance']*(4*pi)
+					paramInfo$theo['variance']*
+					((1-param['oneminusar'])*pi)
+			
 		}
 		
 		if(min(c(Nx,Ny)<3*param['rangeInCells'])){
@@ -247,10 +253,9 @@ maternGmrfPrec.dsCMatrix = function(N,
 	}
  	
 	# build the matrix
-	precEntries=getPrec(param['shape'],a)
+	precEntries=getPrec(param['shape'], param['oneminusar'])
 	
-	precEntries =  precEntries /
-			as.numeric(paramInfo$theo['conditionalVariance']) 
+	precEntries =  precEntries /paramInfo$theo['conditionalVariance']
   
   theNNmat = N
   
