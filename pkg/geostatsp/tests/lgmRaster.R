@@ -21,7 +21,7 @@ values(myY)=rnorm(prod(dim(myLambda)),values(myLambda), sd=10)
 names(myCov) = 'x'
 names(myY) = gsub("^layer\\.","sim", names(mySim))
 
-if(Sys.info()['user'] =='patrick') {
+if(Sys.info()['user'] =='patrick' & FALSE) {
 
 	Sbreaks = c(-50,-20, -5,  -2, -0.5,0)
 	
