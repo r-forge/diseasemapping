@@ -25,9 +25,9 @@ unix.time({precMatCorr =maternGmrfPrec(N=theNNadj, param=params,
 unix.time({precMatAdj =maternGmrfPrec(theNNadj, param=params, 
 					adjustEdges='optimalShape') })
 
-attributes(precMat)$param$adjustEdges
-attributes(precMatAdj)$param$adjustEdges
-attributes(precMatCorr)$param$adjustEdges
+attributes(precMat)$info$adjustEdges
+attributes(precMatAdj)$info$adjustEdges
+attributes(precMatCorr)$info$adjustEdges
 
 Nx = attributes(theNN)$Nx
 Ny = attributes(theNN)$Ny
@@ -313,7 +313,7 @@ if(Sys.info()['user'] =='patrick') {
 	
 	covMatMaternAdj = 
 			matern(attributes(precMat)$raster, 
-					param=attributes(precMatAdj)$param$optimal[
+					param=attributes(precMatAdj)$info$optimal[
 							c('range','shape','variance')])
 	
 	

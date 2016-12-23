@@ -4,9 +4,9 @@ library('geostatsp')
 myRaster = squareRaster(extent(0,8000,0,6000), 50)
 myParam=c(oneminusar=0.1, conditionalVariance=100,shape=2)
 myQ = maternGmrfPrec(myRaster, param=myParam)
-attributes(myQ)$param$optimalShape
+attributes(myQ)$info$optimalShape
 set.seed(0)
-mySim = RFsimulate(attributes(myQ)$param$optimalShape, myRaster)
+mySim = RFsimulate(attributes(myQ)$info$optimalShape, myRaster)
 
 otherPar = c(intercept=1, beta = 2, tau=10)
 myCov = myRaster

@@ -23,7 +23,7 @@ loglikGmrfOneRange = function(
       )
   )
   
-  attributes(result)$param = attributes(Q)$param
+  attributes(result)$param = attributes(Q)$info
   
   result
 }  
