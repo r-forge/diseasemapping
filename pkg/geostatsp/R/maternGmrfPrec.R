@@ -450,7 +450,7 @@ maternGmrfPrec.dsCMatrix = function(N,
 	
 	
 	attributes(theNNmat)$param =	paramInfo$theo[
-			!names(paramInfo$theo) %in% c('a','scale','rangeInCells')
+			!names(paramInfo$theo) %in% c('a','scale','rangeInCells', 'nugget')
 			]	
 	attributes(theNNmat)$raster = theraster
 	attributes(theNNmat)$info = paramInfo
