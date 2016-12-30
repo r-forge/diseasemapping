@@ -95,8 +95,10 @@ if(FALSE) {
 	
 # load the package and set options
 
-library(MODIS)
-MODISoptions(gdalPath="/usr/bin/", localArcPath=dataDir)
+
+
+library('MODIS')
+MODISoptions(gdalPath="/usr/bin/", localArcPath=dataDir, dataFormat='HDF5')
 options()[grep("MODIS", names(options()), value=T)]
 
 # EVI, get 12 month average for 2002
@@ -147,99 +149,89 @@ eviLoa = eviAvg
 #################
 # land cover data
 #################
+library('geostatsp')
+data('loaloa')
+dataDir = "/store/patrick/spatialData/"
+
 myProduct = "MCD12Q1"
-getProduct(myProduct)
 
-thehdf=getHdf(product=myProduct,
-		begin="2001-01-01",end="2010-12-30",
-		extent=extent(
-				spTransform(loaloa, CRS("+init=epsg:4326"))))
+loaloaTiles =  MODIS::getTile(extent(spTransform(loaloa, mapmisc::crsLL)))
 
-layerNames = getSds(thehdf[[1]][1])$SDSnames
-ltLayer = grep("Type_1$", layerNames)
-theString = rep(0, length(layerNames))
-theString[ltLayer] = 1
-theString = paste(theString, collapse="")
+theUrl = 'ftp://ladsweb.nascom.nasa.gov/allData/5/MCD12Q1/2002/001/'
+	
+Sfiles = scan(text=RCurl::getURL(
+	theUrl,
+	verbose=TRUE,ftp.use.epsv=TRUE,
+	dirlistonly = TRUE), what='a')
 
-runGdal(product=myProduct,
-		begin="2002-01-01",end="2002-12-30",
-		outProj = proj4string(loaloa),
-		pixelSize=2000, job="loa",
-		SDSstring = theString,
-		extent=extent(spTransform(loaloa, CRS("+init=epsg:4326"))))
+SfilesSub = grep(paste("h(", 
+	paste(sprintf("%02d", as.numeric(loaloaTiles$tileH)), collapse='|'), 
+	")v(",
+	paste(sprintf("%02d", as.numeric(loaloaTiles$tileV)), collapse='|'), 
+	")", sep=''), Sfiles, value=TRUE)
 
-# find file name 
-thenames = preStack(
-		path = paste(options()$MODIS_outDirPath, "loa",sep=""),
-		pattern=myProduct)
-ltLoa = raster(thenames)
-ltLoa = crop(ltLoa, extend(extent(loaloa),20000))
+Slocal = Pmisc::downloadIfOld(
+	paste(theUrl, SfilesSub, sep=''),
+	paste(dataDir, SfilesSub, sep='')
+)	
 
-# convert to a raster of factors
-ltLoa = as.factor(ltLoa)
+MODIS::MODISoptions(gdalPath="/usr/bin/", localArcPath=dataDir, dataFormat='HDF5')
 
-# get land type labels
-library(XML)
-labels = readHTMLTable("http://nsidc.org/data/ease/ancillary.html")
-labels = labels[[grep("Land Cover Classes", names(labels))]]
-classCol = grep("Class Number", names(labels))
-labels[,classCol] = as.integer(as.character(labels[,classCol]))
+rList = mapply(
+	function(x) stack(MODIS::getSds(x)[[2]]),
+	Slocal
+)
 
-labels[  grep("Water", labels$Category), 
-	classCol		
-	] = 0
-labelVec = as.character(labels$Category)
-names(labelVec) = as.character(labels[,classCol])
+landOrig = merge(rList[[1]][[1]], rList[[2]][[1]])
+landOrig = ratify(landOrig)
 
+landTable = XML::readHTMLTable(RCurl::getURL(
+'https://lpdaac.usgs.gov/dataset_discovery/modis/modis_products_table/mcd12q1'
+), header=TRUE, stringsAsFactors = FALSE)
 
-levels(ltLoa)[[1]]$Category = 
-		labelVec[as.character(levels(ltLoa)[[1]]$ID)]
+landTable = landTable[[2]][,1:2]
 
-# assign colours to most common land types
-commonValues  = sort(table(values(ltLoa)),decreasing=TRUE)
-ctable = levels(ltLoa)[[1]]
-rownames(ctable) = as.character(ctable$ID)
-ctable$n = NA
-ctable[names(commonValues),"n"] = commonValues
+library('mapmisc')
+landTableM = colourScale(
+	x=landOrig, labels=landTable, style='unique', breaks=8,
+	col='Set2', exclude=0
+)
 
-rownames(ctable) = ctable$Category
+landTableM$levels
 
-ctable$col = NA
-ctable["Snow and ice","col"] = "#FFFFFF"
-ctable["Water bodies","col"] = NA
-ctable["Urban and built-up","col"] = "#C31400"
-ctable["Croplands","col"] = "#FFFF88"
-ctable["Grasslands","col"] = "#CCDD11"
-ctable["Permanent Wetlands","col"] ="#99BB99"
-ctable["Cropland/natural vegetation mosaic","col"] = "#CC7711"
-ctable["Barren or sparsely vegetated","col"] = "#111111"
+landOrig@legend@colortable = landTableM$colortable
+levels(landOrig)[[1]] = landTableM$levels
+
+plot(landOrig)
+legendBreaks("bottomleft", landOrig, width=20, cex=0.7)
 
 
-forests = grep("forest",ctable$Category,value=T,ignore.case=T)
-ctable[forests,"col"] = RColorBrewer::brewer.pal(length(forests), "Greens")
+landCrop = raster::crop(
+	landOrig, 
+	extend(extent(spTransform(loaloa, projection(landOrig))), 40*1000)
+)
 
-savannas = grep("savannas|shrublands",ctable$Category,value=T,ignore.case=T)
-ctable[savannas,"col"] = RColorBrewer::brewer.pal(length(savannas), "Oranges")
+ltLoaExt = projectRaster(landCrop, crs=projection(loaloa), method='ngb')
 
-# put labels back in the raster
-levels(ltLoa) = list(ctable)
+ltLoa = raster::crop(
+	ltLoaExt, 
+	extend(extent(loaloa), 20*1000)
+)
 
-# assign colours to values
-forctable = rep(NA, nrow(ctable))
-forctable[ctable$ID+1] = ctable$col
+landTableM = colourScale(
+	x=ltLoa, labels=landTable, style='unique', breaks=8,
+	col='Set2', exclude=0
+)
 
-ltLoa@legend@colortable = forctable
+ltLoa@legend@colortable = landTableM$colortable
+levels(ltLoa)[[1]] = landTableM$levels
+
+plot(ltLoa)
+legendBreaks("bottomleft", ltLoa, width=20, cex=0.7)
+points(loaloa)
 
 
-# plot land type
-plot(ltLoa, legend=FALSE)
-legend("bottomleft",
-		fill=levels(ltLoa)[[1]]$col,
-		legend=levels(ltLoa)[[1]][
-						match(as.integer(names(commonValues)),
-								levels(ltLoa)[[1]]$ID),
-						"Category"]
-	)
+
 
 ############
 # elevation
