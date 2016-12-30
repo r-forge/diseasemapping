@@ -46,4 +46,12 @@ factorValues(modisRaster,
 	extract(modisRaster, myPointModis)
 )
 
+paste(
+  'ftp://ladsweb.nascom.nasa.gov/allData/5/MCD12Q1/2002/001/MCD12Q1.A2002001.',
+  factorValues(modisRaster,
+    values(raster::crop(
+	    modisRaster, extend(extent(myPointModis), 1500*1000)
+    )))[,'tile'],
+  '.005.*', sep='')    
+
 }
