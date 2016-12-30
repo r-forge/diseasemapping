@@ -150,65 +150,46 @@ eviLoa = eviAvg
 # land cover data
 #################
 library('geostatsp')
+library('mapmisc')
 data('loaloa')
 dataDir = "/store/patrick/spatialData/"
 
 myProduct = "MCD12Q1"
 
-loaloaTiles =  MODIS::getTile(extent(spTransform(loaloa, mapmisc::crsLL)))
+modisUrl = 'ftp://ladsweb.nascom.nasa.gov/allData/5/MCD12Q1/2002/001/'
 
-theUrl = 'ftp://ladsweb.nascom.nasa.gov/allData/5/MCD12Q1/2002/001/'
-	
-Sfiles = scan(text=RCurl::getURL(
-	theUrl,
-	verbose=TRUE,ftp.use.epsv=TRUE,
-	dirlistonly = TRUE), what='a')
+loaM = spTransform(loaloa, crsModis)
 
-SfilesSub = grep(paste("h(", 
-	paste(sprintf("%02d", as.numeric(loaloaTiles$tileH)), collapse='|'), 
-	")v(",
-	paste(sprintf("%02d", as.numeric(loaloaTiles$tileV)), collapse='|'), 
-	")", sep=''), Sfiles, value=TRUE)
+Sfiles = paste(modisUrl,
+  grep(
+    paste(factorValues(modisRaster,
+      values(raster::crop(
+	      modisRaster, extend(extent(loaM), 100*1000), snap='out'
+      )))[,'tile'], collapse='|'
+    ),
+    unlist(strsplit(RCurl::getURL(
+	    modisUrl,ftp.use.epsv=TRUE,
+	    dirlistonly = TRUE), '\\n')
+	  ),
+  value=TRUE), 
+sep='')
+
 
 Slocal = Pmisc::downloadIfOld(
-	paste(theUrl, SfilesSub, sep=''),
-	paste(dataDir, SfilesSub, sep='')
+	Sfiles,
+	file.path(dataDir, basename(Sfiles))
 )	
 
-MODIS::MODISoptions(gdalPath="/usr/bin/", localArcPath=dataDir, dataFormat='HDF5')
-
 rList = mapply(
-	function(x) stack(MODIS::getSds(x)[[2]]),
+	function(x) stack(gdalUtils::get_subdatasets(x)),
 	Slocal
 )
 
 landOrig = merge(rList[[1]][[1]], rList[[2]][[1]])
-landOrig = ratify(landOrig)
-
-landTable = XML::readHTMLTable(RCurl::getURL(
-'https://lpdaac.usgs.gov/dataset_discovery/modis/modis_products_table/mcd12q1'
-), header=TRUE, stringsAsFactors = FALSE)
-
-landTable = landTable[[2]][,1:2]
-
-library('mapmisc')
-landTableM = colourScale(
-	x=landOrig, labels=landTable, style='unique', breaks=8,
-	col='Set2', exclude=0
-)
-
-landTableM$levels
-
-landOrig@legend@colortable = landTableM$colortable
-levels(landOrig)[[1]] = landTableM$levels
-
-plot(landOrig)
-legendBreaks("bottomleft", landOrig, width=20, cex=0.7)
-
 
 landCrop = raster::crop(
 	landOrig, 
-	extend(extent(spTransform(loaloa, projection(landOrig))), 40*1000)
+	extend(extent(loaM), 40*1000)
 )
 
 ltLoaExt = projectRaster(landCrop, crs=projection(loaloa), method='ngb')
@@ -217,6 +198,16 @@ ltLoa = raster::crop(
 	ltLoaExt, 
 	extend(extent(loaloa), 20*1000)
 )
+
+ltLoa = ratify(ltLoa)
+
+
+landTable = XML::readHTMLTable(RCurl::getURL(
+'https://lpdaac.usgs.gov/dataset_discovery/modis/modis_products_table/mcd12q1'
+), header=TRUE, stringsAsFactors = FALSE)
+
+landTable = landTable[[2]][,1:2]
+
 
 landTableM = colourScale(
 	x=ltLoa, labels=landTable, style='unique', breaks=8,
