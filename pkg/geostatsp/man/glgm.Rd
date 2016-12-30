@@ -61,7 +61,7 @@ can be overridden with a
 \item{buffer}{Extra space padded around the data bounding box to reduce edge effects.}
 \item{mesh}{Currently unimplemented options for using a mesh rather than a grid for the Markov random field approximation.}
 \item{border}{boundary of the region on which an LGCP is defined, passed to \code{\link[raster]{mask}}}
-\item{...}{Additional options passed to  INLA}
+\item{...}{Additional options passed to  \code{\link[INLA]{inla}} }
 }
 \details{
 This function performs Bayesian inference for generalized linear geostatistical models with INLA.  The Markov random field
