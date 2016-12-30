@@ -210,8 +210,8 @@ landTable = landTable[[2]][,1:2]
 
 
 landTableM = colourScale(
-	x=ltLoa, labels=landTable, style='unique', breaks=8,
-	col='Set2', exclude=0
+	x=ltLoa, labels=landTable, style='unique', breaks=10,
+	col='Set3', exclude=0
 )
 
 ltLoa@legend@colortable = landTableM$colortable
