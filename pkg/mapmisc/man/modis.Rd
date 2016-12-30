@@ -1,47 +1,49 @@
-\name{crsMerc}
-\alias{crsMerc}
-\alias{crsLL}
-\title{Spherical Mercator projection}
+\name{modis}
+\alias{modis}
+\alias{crsModis}
+\alias{modisRaster}
+\title{MODIS tiles and projection}
 \description{
-Defines CRS's for the Spherical Mercator and long-lat projections.
+Raster containing MODIS tile ID's
 }
 \usage{
-crsMerc
-crsLL
+crsModis
+modisRaster
 }
 
 
 \details{
-CRS objects for epsg:4326 (long-lat) and the spherical Mercator projection used by web mapping services.
-Using epsg codes requires the \code{rgdal} package to be installed, and 
-\code{crsLL} is intended as a replacement for \code{CRS("+init=epsg:4326")} when 
-\code{rgdal} is not guaranteed to be available.  
+	\code{modisRaster} shows horizontal and vertical tile names for downloading data from MODIS
+	at, for example, \url{http://e4ftl01.cr.usgs.gov/MOTA}.
 }
 
 
-\value{
-	Objects of class \code{\link[sp]{CRS}}.
-}	
 
 \references{
-\url{https://en.wikipedia.org/wiki/Web_Mercator},
-\url{http://spatialreference.org/ref/epsg/4326/}
+\url{https://modis-land.gsfc.nasa.gov/MODLAND_grid.html},
+\url{http://spatialreference.org/ref/sr-org/6842}
 }
-\seealso{\code{\link[sp]{CRS}}, \code{\link[rgdal]{showEPSG}}}
+
 
 \examples{
 
-crsMerc
-if(require('rgdal', quietly=TRUE))
-	CRS("+init=epsg:3857")
+crsModis
 
-crsLL
+	myPointLL = SpatialPoints(
+		cbind(5,10), proj4string = crsLL
+	)
+
 if(require('rgdal', quietly=TRUE)) {
-	CRS("+init=epsg:4326")
-
-	rgdal::showEPSG("+proj=longlat")
-	rgdal::showEPSG(as.character(crsLL))
+	myPointModis = spTransform(myPointLL, crsModis)
+} else {
+	myPointModis = SpatialPoints(
+		cbind(547500, 1111200), 
+		proj4string = crsModis
+	)
 }
 
+factorValues(modisRaster,
+	extract(modisRaster, myPointModis)
+)
 
 }
