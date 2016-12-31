@@ -595,8 +595,8 @@ setMethod("glgm",
 			if(!is.null(gammaShapePrior)) {
 				
 				paramsGammaShape = 	c(
-						gammaShapePrior$params["mean"], 
-						sd=as.numeric(1/sqrt(gammaShapePrior$params["precision"]))
+						gammaShapePrior$param["mean"], 
+						sd=as.numeric(1/sqrt(gammaShapePrior$param["precision"]))
 				)
 				
 				xLim = sort(exp(-qnorm(
@@ -613,7 +613,7 @@ setMethod("glgm",
 												mean=paramsGammaShape["mean"], 
 												sd=paramsGammaShape["sd"]))
 						),
-						params.intern=gammaShapePrior$params,
+						params.intern=gammaShapePrior$param,
 						params = paramsGammaShape,
 						distribution = 'lognormal',
 						prior = cbind(
