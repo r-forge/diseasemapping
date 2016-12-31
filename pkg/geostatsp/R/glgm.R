@@ -531,7 +531,7 @@ setMethod("glgm",
 						shape=ratePrior$params["shape"], 
 						rate=ratePrior$params["rate"])
 				rangeLim = xres(cells) *rangeLim
-				rangeSeq = seq(min(rangeLim), max(rangeLim), len=1000)
+				rangeSeq = c(0, seq(min(rangeLim), max(rangeLim), len=1000))
 				rangeSeqCells = rangeSeq/xres(cells)
 				params$range$prior=cbind(
 						x=rangeSeq,
@@ -604,8 +604,7 @@ setMethod("glgm",
 										mean=paramsGammaShape["mean"], 
 										sd=paramsGammaShape["sd"])
 						))
-				xSeq  = seq(xLim[1], xLim[2], len=1000)
-				
+				xSeq  = c(0,seq(xLim[1], xLim[2], len=1000))
 				
 				params[['gammaShape']] = list(
 						userPriorCI = priorCI[['gammaShape']],
