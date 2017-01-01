@@ -49,17 +49,7 @@ points(loaloa)
 
 # land type, a categorical variable
 plot(ltLoa)
-text(768000, 800000,"land type")
-commonValues  = order(levels(ltLoa)[[1]]$n,decreasing=TRUE)[1:7]
-# get rid of water
-commonValues = commonValues[commonValues != 1]
-
-legend("bottomleft",
-	fill=levels(ltLoa)[[1]][commonValues,"col"],
-		legend=levels(ltLoa)[[1]][commonValues,"Category"],
-				bty='n'
-)
-
+legendBreaks("bottomleft",ltLoa, bty='n')
 points(loaloa)
 
 }

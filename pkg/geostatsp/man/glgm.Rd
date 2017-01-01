@@ -29,7 +29,7 @@ using \code{inla} }
 \S4method{glgm}{formula,ANY,numeric,ANY}(formula, data,  grid, 
 	covariates=NULL, ...)
 \S4method{glgm}{formula,Raster,Raster,ANY}(formula, data,  grid, 
-	covariates=NULL, ...)
+	covariates=NULL, buffer=0, ...)
 \S4method{glgm}{formula,Spatial,Raster,ANY}(formula, data,  grid, covariates=NULL, buffer=0, ...)
 \S4method{glgm}{formula,data.frame,Raster,data.frame}(formula, data,  grid, covariates=NULL, 
   shape=1, priorCI=NULL, mesh=FALSE,...) 
