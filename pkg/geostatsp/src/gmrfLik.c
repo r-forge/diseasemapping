@@ -261,7 +261,7 @@ SEXP gmrfLik(
 	int NxisqMax = 100; // number of xisqTausq's to retain when optimizing
 	double *YXVYX, *determinant, *determinantForReml;
 	double *m2logL, *m2logReL, *varHatMl, *varHatReml, *resultXisqTausq;
-	double *nothing;
+	double nothing=0.0;
 	SEXP resultR;
 	CHM_DN obsCov;
 
@@ -404,7 +404,7 @@ SEXP gmrfLik(
 		Brent_fmin(
 				optMin, optMax,
 				logLoneLogNugget,
-				nothing, optTol);
+				&nothing, optTol);
 
 
 
@@ -414,7 +414,7 @@ SEXP gmrfLik(
 
 		for(DxisqTausq=1;DxisqTausq < NxisqTausq;++DxisqTausq){
 
-			logLoneNugget(REAL(xisqTausq)[DxisqTausq], nothing);
+			logLoneNugget(REAL(xisqTausq)[DxisqTausq], &nothing);
 
 		}
 	}

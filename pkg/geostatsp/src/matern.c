@@ -419,7 +419,7 @@ void maternForL(
 int typeStringToInt(SEXP type){
 
 	const char *typeSeq[] = {"variance", "cholesky", "precision","inverseCholesky"};
-	int D, typeInt;
+	int D, typeInt = -1;
 
 	// find type integer, and check it's valid
 	for(D = 0;D< 4;++D){
@@ -485,7 +485,7 @@ SEXP maternPoints(
 	INTEGER(dim)[1] = N;
 
 
-	if(typeInt == 2 | typeInt == 4) {
+	if( (typeInt == 2) | (typeInt == 4)) {
 		// lower triangle
 		PROTECT(result = NEW_OBJECT(MAKE_CLASS("dtrMatrix")));
 	} else {
@@ -562,7 +562,7 @@ SEXP maternDistance(
 
 	typeInt = typeStringToInt(type);
 
-	if(typeInt == 2 | typeInt == 4) {
+	if( (typeInt == 2) | (typeInt == 4) ) {
 		// lower triangle
 		PROTECT(result = NEW_OBJECT(MAKE_CLASS("dtrMatrix")));
 	} else {
