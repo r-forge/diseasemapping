@@ -1,6 +1,8 @@
 
 tonerToTrans = function(x, pattern= "(red|green|blue)$", 
 		power=0.5, col='black') {
+
+	tilesOrig = attributes(x)$tiles
 	
 	rgbLayers = grep(pattern, 
 			names(x), 
@@ -29,6 +31,9 @@ tonerToTrans = function(x, pattern= "(red|green|blue)$",
 	names(result) = 'stamen.toner'
 	values(result) = as.numeric(newCol)
 	result@legend@colortable = c(NA,levels(newCol))
+
+	attributes(result)$tiles = tilesOrig
+	attributes(result)$tiles$tonerToTrans = match.call()
 	result
 }
 
@@ -73,5 +78,6 @@ rgbtToIndex = function(x, pattern="(red|green|blue|trans)$") {
 	values(result) = as.numeric(newCol)
 
 	result@legend@colortable = c(NA,levels(newCol))
+	
 	result
 }
