@@ -49,7 +49,7 @@ points(loaloa)
 
 # land type, a categorical variable
 plot(ltLoa)
-legendBreaks("bottomleft",ltLoa, bty='n')
+mapmisc::legendBreaks("bottomleft",ltLoa, bty='n')
 points(loaloa)
 
 }
