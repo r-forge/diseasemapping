@@ -780,7 +780,9 @@ setMethod("glgm",
 							names(inlaResult$marginals.hyperpar), value=TRUE),
 					gammaShape = grep("^Precision[[:print:]]*Gamma observations$", 
 							names(inlaResult$marginals.hyperpar), value=TRUE),
-					sd = grep("^Precision[[:print:]]*space$", 
+     weibullShape = grep("^alpha[[:print:]]*weibull$", 
+       names(inlaResult$marginals.hyperpar), value=TRUE),
+     sd = grep("^Precision[[:print:]]*space$", 
 							names(inlaResult$marginals.hyperpar), value=TRUE)
 			)
 			
@@ -792,7 +794,7 @@ setMethod("glgm",
 			
 			
 # convert precisions to standard deviations
-			for(Dsd in grep("gammaShape", names(thesd), invert=TRUE, value=TRUE)) {
+			for(Dsd in grep("Shape$", names(thesd), invert=TRUE, value=TRUE)) {
 				
 				params[[Dsd]]$posterior=
 						inlaResult$marginals.hyperpar[[thesd[Dsd]]]
@@ -817,8 +819,7 @@ setMethod("glgm",
 				)
 			}
 			
-			if(length(grep("gammaShape", names(thesd))) ) {
-				Dsd = 'gammaShape'
+		for(Dsd in grep("Shape$", names(thesd), value=TRUE) ) {
 				params[[Dsd]]$posterior=
 						inlaResult$marginals.hyperpar[[thesd[Dsd]]]
 				
