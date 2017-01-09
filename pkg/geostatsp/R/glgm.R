@@ -781,7 +781,7 @@ setMethod("glgm",
         names(inlaResult$marginals.hyperpar), value=TRUE),
       gammaShape = grep("^Precision[[:print:]]*Gamma observations$", 
         names(inlaResult$marginals.hyperpar), value=TRUE),
-      weibullShape = grep("^alpha[[:print:]]*weibull$", 
+      weibullShape = grep("^alpha[[:print:]]*weibull", 
         names(inlaResult$marginals.hyperpar), value=TRUE),
       sd = grep("^Precision[[:print:]]*space$", 
         names(inlaResult$marginals.hyperpar), value=TRUE)
