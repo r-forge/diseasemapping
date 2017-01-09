@@ -817,15 +817,33 @@ setMethod("glgm",
 								c(0,diff(inlaResult$marginals.hyperpar[[thesd[Dsd]]][,"x"]))*
 								inlaResult$marginals.hyperpar[[thesd[Dsd]]][,"y"]
 				)
+    
 			}
 			
+   # shape parameters (gamma or weibull)
 		for(Dsd in grep("Shape$", names(thesd), value=TRUE) ) {
 				params[[Dsd]]$posterior=
 						inlaResult$marginals.hyperpar[[thesd[Dsd]]]
 				
 				params$summary[Dsd, colnames(inlaResult$summary.hyperpar)] = 
 						inlaResult$summary.hyperpar[thesd[Dsd],]
-				
+    
+    # prior
+    # if Dsd matches the family argument
+    if(inlaResult$all.hyper$family[[1]]$label == gsub("Shape$", '', Dsd)) {
+      fPrior = inlaResult$all.hyper$family[[1]]$hyper$theta
+      fDist = fPrior$prior
+      fParam = fPrior$param
+      if(fDist == 'loggamma') {
+        xSeq = range(params[[Dsd]]$posterior[,1])
+        xSeq = unique(c(0,seq(xSeq[1], xSeq[2], len=999)))
+        params[[Dsd]]$prior = cbind(
+          x = xSeq,
+          y = stats::dgamma(xSeq, shape=fParam[1], scale=fParam[2])
+        )
+      }
+    }
+    
 			}
 			
 			
