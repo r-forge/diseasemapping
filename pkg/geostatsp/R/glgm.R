@@ -487,7 +487,7 @@ setMethod("glgm",
     forInla$data = data
     forInla$formula = formula
     
-    
+   
     # if model is gaussian, add prior for nugget
     if(!is.null(precPrior$sdNugget)) {
       forInla$control.family$hyper$prec =
@@ -515,36 +515,63 @@ setMethod("glgm",
     if(all(names(inlaResult)=="logfile"))
       return(c(forInla, inlares=inlaResult))
     
+    
+    params = list(range=list())
+    
+    # posterior distributions forrange
+    
+    params$range$posterior = 
+      inlaResult$marginals.hyperpar[["Range for space"]] %*% 
+      diag(c(xres(cells), 1/xres(cells)))
+    
     # parameter priors for result
     
-    params = list()
     if(!is.matrix(priorCI$range)) {
-      params$range = list(
-        userPriorCI=priorCI$range, 
-        priorCI = 
-          xres(cells)*
+      params$range$userPriorCI = priorCI$range
+      params$range$priorCI = 
+          xres(cells) *
           qgamma(c(0.025,0.975), 
             shape=ratePrior$params["shape"], 
-            rate=ratePrior$params["rate"]),
-        priorCIcells = 
+            rate=ratePrior$params["rate"])
+        params$range$priorCIcells = 
           qgamma(c(0.975,0.025), 
             shape=ratePrior$params["shape"], 
-            rate=ratePrior$params["rate"]),
-        params.intern = ratePrior$params)
-      
-      rangeLim = 	qgamma(c(0.001,0.999), 
-        shape=ratePrior$params["shape"], 
-        rate=ratePrior$params["rate"])
-      rangeLim = xres(cells) *rangeLim
-      rangeSeq = c(0, seq(min(rangeLim), max(rangeLim), len=1000))
-      rangeSeqCells = rangeSeq/xres(cells)
+            rate=ratePrior$params["rate"])
+        params$range$params.intern = ratePrior$params
+        params$range$params = c(
+          ratePrior$params['shape'],
+          ratePrior$params['rate']/xres(cells))
+
+        rangeLim = 	c(
+        qgamma(c(0.001,0.999), 
+        shape=params$range$params["shape"], 
+        rate=params$range$params["rate"]),
+        max(
+          params$range$posterior[,1], na.rm=TRUE
+        ))
+      rangeSeq = c(0, seq(min(rangeLim), max(rangeLim), len=999))
       params$range$prior=cbind(
         x=rangeSeq,
-        y=dgamma(rangeSeqCells, shape=ratePrior$params["shape"], 
-          rate=ratePrior$params["rate"])  / xres(cells)
+        y=dgamma(rangeSeq,         
+          shape=params$range$params["shape"], 
+          rate=params$range$params["rate"])
       )
+      # add third column to posterior matrix with prior
+      params$range$posterior = cbind(
+        params$range$posterior,
+        prior = dgamma(
+          params$range$posterior[,1],
+          shape=params$range$params["shape"], 
+          rate=params$range$params["rate"])
+      )
+      
+      params$range$postDiv1000 = params$range$posterior %*%
+        diag(c(1/1000, 1000, 1000))
+      
     } else {
-      params$range = list(prior = priorCI$range)
+      params$range$prior = priorCI$range
+      params$range$postDiv1000 = params$range$posterior %*% 
+        diag(c(1/1000, 1000))
     }
     
     for(Dsd in names(precPrior)) {
@@ -736,11 +763,6 @@ setMethod("glgm",
     
     
     
-    # posterior distributions
-    
-    params$range$posterior=inlaResult$marginals.hyperpar[["Range for space"]]
-    params$range$posterior[,"x"] =  xres(cells) * params$range$posterior[,"x"]
-    params$range$posterior[,"y"] = params$range$posterior[,"y"] / xres(cells)
     
     
 # sum(c(0,diff(params$range$posterior[,"x"])) * params$range$posterior[,"y"])
@@ -837,7 +859,7 @@ setMethod("glgm",
         fParam = fPrior$param
         if(fDist == 'loggamma') {
           xSeq = c(
-            stats::qgamma(c(0.1, 0.9), shape=fParam[1], rate=fParam[2]),
+            stats::qgamma(c(0.001, 0.999), shape=fParam[1], rate=fParam[2]),
             range(params[[Dsd]]$posterior[,1]))
           xSeq = sort(unique(c(0,
                 seq(min(xSeq), max(xSeq), len=999)))
@@ -866,12 +888,21 @@ setMethod("glgm",
     
 # put range in summary, in units of distance, not numbers of cells
     thecolsFull =c("mean","sd",thecols,"mode") 
-    params$summary["range",thecolsFull]=				
-      xres(cells)*
-      inlaResult$summary.hyperpar[
-        "Range for space",
-        thecolsFull
-      ]
+      params$summary["range",thecolsFull]=				
+        xres(cells)*
+        inlaResult$summary.hyperpar[
+          "Range for space",
+          thecolsFull
+        ]
+      if(params$summary["range", 'mean'] > 1000) {
+        
+        params$summary["range",thecolsFull]=				
+          params$summary["range",thecolsFull] / 1000
+        rownames(params$summary) = gsub(
+          "^range$", "range/1000",
+          rownames(params$summary)
+          )
+      }
     dimnames(params$summary) = lapply(dimnames(params$summary),
       function(qq) {
         qq=gsub("_", "\\\\textunderscore~", qq)
