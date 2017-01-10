@@ -93,8 +93,11 @@ if(!length(grep("^Raster", class(map)))) {
 }
 
 if(!is.null(cropInset)) {
-tocrop = projectExtent(cropInset, CRS(proj4string(map)))
-tocrop = raster::union(extent(tocrop), extent(mapExtent))
+tocrop = raster(
+  raster::union(extent(cropInset), 
+    extent(projectExtent(mapExtent, projection(cropInset)))
+  ), crs=projection(cropInset))
+tocrop = projectExtent(tocrop, CRS(proj4string(map)))
 # if the extents are overlapping, crop
 map = crop(map, tocrop)
 }

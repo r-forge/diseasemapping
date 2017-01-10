@@ -529,7 +529,6 @@ plot(tilesRot, add=TRUE)
 points(meuseRot,col="red", cex=0.3)
 
 scaleBar(proj4string(meuseRot), bg="white")
-
 @
 
 \section{Inset maps}
@@ -548,7 +547,7 @@ plot(nldTiles, add=TRUE)
 points(meuse)
 
 scaleBar(proj4string(meuse),pos="bottomright", bg="white")
-insetMap(meuse, "topright",map=world)
+insetMap(crs=meuse, pos="topright",map=world)
 
 # rotated
 map.new(meuseRot)
