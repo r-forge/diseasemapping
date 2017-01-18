@@ -13,9 +13,21 @@ markdownHeader = function(
 				uniquelist='false'),
 		startAndEnd='---',
 		beamer=FALSE,
+  mathCommands=FALSE,
 		...
 ) {
 	
+  extraHeaderIncludes =c(
+    '\\DeclareMathOperator{\\var}{var}',
+    '\\DeclareMathOperator{\\E}{E}',
+    '\\newcommand{\\comment}[1]{}',
+    '\\newcommand{\\simiid}{\\overset{\\text{iid}}{\\sim}}',
+    '\\newcommand{\\yv}{\\mathbf{y}}', 
+    '\\newcommand{\\Yv}{\\mathbf{Y}}', 
+    '\\newcommand{\\dens}{\\boldsymbol{\\pi}}',
+    '\\newcommand{\\tp}{^\\text{T}}'
+  ) 
+  
 	mode(biblatexoptions) = 'character'
 	
 	result = list(
@@ -64,7 +76,14 @@ markdownHeader = function(
 	}
 	
 	# header includes
-	if(beamer | any(names(dots)=='header-includes')) {
+	if(beamer | any(names(dots)=='header-includes') | mathCommands) {
+   
+   if(mathCommands){
+     dots[['header-includes']] = c(
+       dots[['header-includes']], 
+       extraHeaderIncludes)
+   }
+   
 		toAdd <- gsub(
 				'\n+', '\n', 
 				knitr::combine_words(c(

@@ -17,6 +17,7 @@ markdownHeader(
 				uniquelist='false'),
 		startAndEnd='---',
 		beamer=FALSE,
+	  mathCommands=FALSE,
 		...
 )
 today(...)
@@ -36,7 +37,7 @@ today(...)
 \item{biblatexoptions}{options for citations, passed to the biblatex package}
 
 \item{beamer}{Add commands intended for producing slides with LaTeX beamer.}
-
+\item{mathCommands}{Defines latex commands for var, E, tp, dens, and a few others.}
 \item{...}{Additional items for the header, such as 
 \code{header-includes}, or for \code{\link[base]{format}} 
 when passed to \code{today}.
