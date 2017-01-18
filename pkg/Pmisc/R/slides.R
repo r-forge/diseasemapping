@@ -52,7 +52,14 @@ markdownHeader = function(
 			"header[[:punct:]]?includes",
 			'header-includes', names(dots),
 			ignore.case=TRUE)
-	
+
+ if(mathCommands){
+   dots[['header-includes']] = c(
+     extraHeaderIncludes,
+     dots[['header-includes']]
+   )
+ }
+ 
 	for(D in names(dots)) {
 		if(length(dots[[D]])>1) {
 			dots[[D]] = knitr::combine_words(c('',
@@ -67,22 +74,21 @@ markdownHeader = function(
 		}
 	}
 	
-	dotsNotHeaders = grep("^header-includes", names(dots), value=TRUE, invert=TRUE)
+
+ 
+ dotsNotHeaders = grep("^header-includes", names(dots), value=TRUE, invert=TRUE)
 	
 	for(D in dotsNotHeaders) {
 		result[[length(result)+1]] = paste(
 				D, ": ", dots[[D]], sep=''
 		)	
 	}
-	
+
+ 
+ 
 	# header includes
 	if(beamer | any(names(dots)=='header-includes') | mathCommands) {
    
-   if(mathCommands){
-     dots[['header-includes']] = c(
-       dots[['header-includes']], 
-       extraHeaderIncludes)
-   }
    
 		toAdd <- gsub(
 				'\n+', '\n', 
