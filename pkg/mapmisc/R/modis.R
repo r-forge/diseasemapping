@@ -1,9 +1,4 @@
 
-
-crsModis <- CRS(
-  "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs"
-)
-
 getModisRaster = function() {
   modisRaster = raster(
     extent(-20015109.354,20015109.354,-10007554.677,10007554.677),
@@ -33,7 +28,7 @@ getModisRaster = function() {
 getDegreeRaster = function() {
   degreeRaster = raster(
     extent(c(-180,180,-90,90)),
-    res=1, crs=mapmisc::crsLL
+    res=1, crs=crsLL
   )
   values(degreeRaster)=1:ncell(degreeRaster)  
 # coordinate is bottom left
