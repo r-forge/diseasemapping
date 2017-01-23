@@ -2,6 +2,7 @@
 \alias{modis}
 \alias{crsModis}
 \alias{modisRaster}
+\alias{degreeRaster}
 \title{MODIS tiles and projection}
 \description{
 Raster containing MODIS tile ID's
@@ -9,12 +10,16 @@ Raster containing MODIS tile ID's
 \usage{
 crsModis
 modisRaster
+degreeRaster
 }
 
 
 \details{
 	\code{modisRaster} shows horizontal and vertical tile names for downloading data from MODIS
 	at, for example, \url{http://e4ftl01.cr.usgs.gov/MOTA}.
+	
+	\code{degreeRaster} shows horizontal and vertical tiles in long-lat, for downloading elevation
+	from \url{ftp://ftp.glcf.umd.edu/glcf/SRTM/Degree_Tiles/}.
 }
 
 
