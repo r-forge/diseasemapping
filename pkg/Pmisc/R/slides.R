@@ -21,7 +21,7 @@ markdownHeader = function(
     '\\DeclareMathOperator{\\var}{var}',
     '\\DeclareMathOperator{\\E}{E}',
     '\\newcommand{\\comment}[1]{}',
-    '\\newcommand{\\simiid}{\\overset{\\text{iid}}{\\sim}}',
+    '\\newcommand{\\simiid}{\\overset{\\text{ind}}{\\sim}}',
     '\\newcommand{\\yv}{\\mathbf{y}}', 
     '\\newcommand{\\Yv}{\\mathbf{Y}}', 
     '\\newcommand{\\dens}{\\boldsymbol{\\pi}}',

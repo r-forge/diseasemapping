@@ -1,8 +1,8 @@
 Package: Pmisc
 Type: Package
 Title: Various Utilities for knitr and inla
-Version: 0.1.1
-Date: 2016-12-13
+Version: 0.1.2
+Date: 2017-01-25
 Imports:
     knitr,
     methods,
@@ -15,7 +15,8 @@ Imports:
 Suggests:
     INLA,
     geostatsp,
-    spatstat
+    spatstat,
+    nlme
 Author: Patrick Brown <patrick.brown@utoronto.ca>[aut, cre]
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
 Description: Various utilities for files and documents.
