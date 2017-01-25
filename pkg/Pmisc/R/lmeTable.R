@@ -1,5 +1,6 @@
 #' @export
-lmeTable = function(fromLme) {
+lmeTable = function(x) {
+  fromLme = x
 		thetable = summary(fromLme)$tTable
 		toRep = dim(thetable)[2]-1
 		if(length(fromLme$modelStruct$reStruct)==1) {
