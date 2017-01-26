@@ -3,6 +3,17 @@
 #' @description Hooks for including in knitr documents
 #' @param x see \code{\link[knitr]{hook_pdfcrop}}
 #' @param options see \code{\link[knitr]{hook_pdfcrop}}
+#' @param before see \code{\link[knitr]{hook_pdfcrop}}
+#' @param envir see \code{\link[knitr]{hook_pdfcrop}}
+#' @details \code{hook_plot_beamer} produces multi-plot figures in columns for beamer documents
+#' \code{hook_plot_htmlsubfig} produces multi-plot figures in pipe tables for markdown documents
+#' \code{hook_plot_margins} sets small plot margins, which must be set as a hook named \code{margins}.  The \code{margins} option 
+#' in a chunk is an integer which scales the size of the margins.
+#' @examples 
+#' \dontrun{knit_hooks$set(plot=Pmisc::hook_plot_beamer)} 
+#' \dontrun{knit_hooks$set(plot=Pmisc::hook_plot_htmlsubfig)} 
+#' \dontrun{knit_hooks$set(margins = Pmisc::hook_plot_margins)}
+#' \dontrun{opts_chunk$set(margins=1, fig.width=5, fig.height=3)}
 #' 
 #' @export
 hook_plot_htmlsubfig = function(x, options) {
@@ -112,6 +123,7 @@ hook_plot_htmlsubfig = function(x, options) {
 }
 
 
+#' @rdname hook_plot_htmlsubfig
 #' @export
 hook_plot_beamer = function(x, options) {
 	
@@ -179,3 +191,13 @@ hook_plot_beamer = function(x, options) {
   result
 	
 }
+
+#' @rdname hook_plot_htmlsubfig
+#' @export
+hook_plot_margins = function(before, options, envir){	
+  if(!before) return()
+# use small margins
+  par(mar=c(1.5+0.9*options$margins,
+      1.5+0.9*options$margins,0.2,0.2),
+    mgp=c(1.45, 0.45, 0),cex=1.25)
+}		

@@ -18,9 +18,12 @@ markdownHeader(
 		startAndEnd='---',
 		beamer=FALSE,
 	  mathCommands=FALSE,
+  subcaptionCommands = !beamer,
 		...
 )
 today(...)
+mathCommands
+subcaptionCommands
 }
 \arguments{
 \item{title}{value for title}
@@ -38,6 +41,7 @@ today(...)
 
 \item{beamer}{Add commands intended for producing slides with LaTeX beamer.}
 \item{mathCommands}{Defines latex commands for var, E, tp, dens, and a few others.}
+\item{subcaptionCommands}{Enables use of the subcaption package with knitr.}
 \item{...}{Additional items for the header, such as 
 \code{header-includes}, or for \code{\link[base]{format}} 
 when passed to \code{today}.
