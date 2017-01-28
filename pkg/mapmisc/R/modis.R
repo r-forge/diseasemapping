@@ -53,3 +53,15 @@ getDegreeRaster = function() {
 
 modisRaster = getModisRaster()
 degreeRaster = getDegreeRaster()
+
+getModisTiles = function(x, tiles = mapmisc::modisRaster) {
+  
+  xModis = projectExtent(x, projection(tiles))
+  
+  modisCrop = crop(tiles, extend(extent(xModis), sqrt(.Machine$double.eps)), snap='out')
+  
+  res = factorValues(tiles, values(modisCrop))
+  
+  res
+}
+

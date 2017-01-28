@@ -2,24 +2,31 @@
 \alias{modis}
 \alias{crsModis}
 \alias{modisRaster}
+\alias{getModisTiles}
 \alias{degreeRaster}
 \title{MODIS tiles and projection}
 \description{
 Raster containing MODIS tile ID's
 }
 \usage{
+getModisTiles(x)
 crsModis
 modisRaster
 degreeRaster
 }
-
+\arguments{
+\item{x}{A spatial object which modis tiles will cover.}
+}
 
 \details{
+	\code{getMOdisTiles} returns a matrix with modis tiles.
+
 	\code{modisRaster} shows horizontal and vertical tile names for downloading data from MODIS
 	at, for example, \url{http://e4ftl01.cr.usgs.gov/MOTA}.
 	
 	\code{degreeRaster} shows horizontal and vertical tiles in long-lat, for downloading elevation
 	from \url{ftp://ftp.glcf.umd.edu/glcf/SRTM/Degree_Tiles/}.
+	
 }
 
 
@@ -34,39 +41,21 @@ degreeRaster
 
 crsModis
 
-	myPointLL = SpatialPoints(
-		cbind(5,10), proj4string = crsLL
-	)
+myPointLL = SpatialPoints(cbind(c(5:6),10:11), proj4string = crsLL)
 
-if(require('rgdal', quietly=TRUE)) {
-	myPointModis = spTransform(myPointLL, crsModis)
-} else {
-	myPointModis = SpatialPoints(
-		cbind(547500, 1111200), 
-		proj4string = crsModis
-	)
-}
+getModisTiles(myPointLL)
 
-factorValues(modisRaster,
-	extract(modisRaster, myPointModis)
-)
+getModisTiles(myPointLL, mapmisc::degreeRaster)
 
 modisUrl = 	'ftp://ladsweb.nascom.nasa.gov/allData/5/MCD12Q1/2002/001/'
 
 \dontrun{
 paste(modisUrl,
   grep(
-    paste(factorValues(modisRaster,
-      values(raster::crop(
-	      modisRaster, extend(extent(myPointModis), 1500*1000)
-      )))[,'tile'], collapse='|'
-    ),
+    paste(getModisTiles(myPointLL)[,'tile'], collapse='|'),
     unlist(strsplit(RCurl::getURL(
 	    modisUrl,ftp.use.epsv=TRUE,
-	    dirlistonly = TRUE), '\\n')
-	  ),
-  value=TRUE), 
-sep='')
+	    dirlistonly = TRUE), '\\n')), 
+	  value=TRUE), sep='')
 }
-
 }
