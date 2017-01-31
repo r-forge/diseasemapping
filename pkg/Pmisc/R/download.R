@@ -10,42 +10,70 @@
 #' @param ... additional arguments for \code{\link[utils]{download.file}}
 #' @export
 downloadIfOld = function(
-		url,
-		file = basename(url),
-		age = '5 days',
-		verbose=FALSE, exdir=tempdir(), ...
+  url,
+  file = basename(url),
+  age = '5 days',
+  verbose=FALSE, exdir=dirname(file), 
+  ...
 ) {
-	
-	old = Sys.time() - diff(as.numeric(
-					seq(from = Sys.time(), len=2, by=age)
-			)) 		
-	
-	for(D in 1:length(url)) {
-		if(verbose)
-			message('file ', file[D])
-		
-		
-		fileIsNew = any(as.numeric(difftime(
-								file.info(file[D])$mtime,
-								old
-						)) > 0, na.rm=TRUE)
-		
-		if(!fileIsNew) {
-			utils::download.file(
-					url[D],
-					file[D],
-					quiet = !verbose, 
-					...
-			)
-		}
-		
-	}
-	
-	zipfiles = grep('[.]zip$', file, value=TRUE, ignore.case=TRUE)	
-	for(D in zipfiles) {
-		file = c(file, utils::unzip(D, exdir=exdir))
-	}
-	
-	invisible(file)
-	
+  
+  old = Sys.time() - diff(as.numeric(
+      seq(from = Sys.time(), len=2, by=age)
+    )) 		
+  
+  for(D in 1:length(url)) {
+    if(verbose)
+      message('file ', file[D])
+    
+    
+    fileIsNew = any(as.numeric(difftime(
+          file.info(file[D])$mtime,
+          old
+        )) > 0, na.rm=TRUE)
+    
+    if(!fileIsNew) {
+      utils::download.file(
+        url[D],
+        file[D],
+        quiet = !verbose, 
+        ...
+      )
+    }
+    
+  }
+  
+  
+  gzFiles = grep("[.]gz$", file, ignore.case=TRUE)  
+  if(requireNamespace('R.utils')) {
+    for(D in gzFiles) {
+      outfile = gsub("[.]gz$", "", file[D], ignore.case=TRUE)
+      fileIsNew = any(as.numeric(difftime(
+            file.info(outfile)$mtime,
+            old
+          )) > 0, na.rm=TRUE)
+      if(!fileIsNew) {        
+        file[D] = R.utils::gunzip(
+          file[D], 
+          overwrite = file.exists(gsub(
+              "[.]gz$", "", file[D], ignore.case=TRUE
+            )),
+          remove=FALSE
+        )
+      } else {
+        file[D]= outfile
+      }
+    }
+  }
+  
+  res = file
+  exdir = rep_len(exdir, length(file))
+  
+  zipfiles = grep('[.]zip$', file, ignore.case=TRUE)
+  
+  for(D in zipfiles) {
+    res = c(res, utils::unzip(file[D], exdir=exdir[D]))
+  }
+  
+  invisible(res)
+  
 }
