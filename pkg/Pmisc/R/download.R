@@ -4,16 +4,28 @@
 #'
 #' @param url a string specifying the remote location
 #' @param file local file name
+#' @param path local directory to store downloaded files
 #' @param age maximum age of the local file
 #' @param verbose print additional information
-#' @param source source the file after download
 #' @param ... additional arguments for \code{\link[utils]{download.file}}
+#' @return A character string of files downloaded or unzipped.
+#' @details Checks if a downloaded file is old and re-downloads is necessary.  Any zip files are unzipped.
+#' @examples
+#' \dontrun{  
+#'   theFiles = Pmisc::downloadIfOld(
+#'     'https://cran.r-project.org/src/base/Historic/Windows/mva.zip'
+#'   )
+#'   theFiles
+#' }
+
+#' @seealso \code{\link[base]{download.file}}, \code{\link[utils]{unzip}}
 #' @export
 downloadIfOld = function(
   url,
-  file = basename(url),
+  path = getwd(),
+  file = file.path(path, basename(url)),
   age = '5 days',
-  verbose=FALSE, exdir=dirname(file), 
+  verbose=FALSE,
   ...
 ) {
   
@@ -66,7 +78,7 @@ downloadIfOld = function(
   }
   
   res = file
-  exdir = rep_len(exdir, length(file))
+  exdir = rep_len(path, length(file))
   
   zipfiles = grep('[.]zip$', file, ignore.case=TRUE)
   

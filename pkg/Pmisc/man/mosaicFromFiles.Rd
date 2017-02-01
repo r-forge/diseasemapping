@@ -4,7 +4,7 @@
 \alias{mosaicFromFiles}
 \title{Raster mosaic from file names}
 \usage{
-mosaicFromFiles(x, cropOut = NULL, fun = "mean",
+mosaicFromFiles(x, cropOut = NULL, fun = "mean", tolerance = 0.05,
   filename = paste(tempfile(), ".grd", sep = ""),
   overwrite = file.exists(filename), ...)
 }
@@ -15,11 +15,13 @@ mosaicFromFiles(x, cropOut = NULL, fun = "mean",
 
 \item{fun}{Function, see \code{\link[raster]{mosaic}}}
 
+\item{tolerance, }{numeric, see \code{\link[raster]{mosaic}}}
+
 \item{filename}{Output file, see \code{\link[raster]{writeRaster}}}
 
-\item{overwrite}{see \code{\link[raster]{writeRaster}}}
+\item{overwrite}{Logical, see \code{\link[raster]{writeRaster}}}
 
-\item{...}{Additional arguments for \code{\link[raster]{mosaic}} and \code{\link[raster]{writeRaster}}}
+\item{...}{Additional arguments for \code{\link[raster]{writeRaster}}}
 }
 \value{
 A \code{\link[raster]{RasterLayer}}
