@@ -9,17 +9,18 @@
 Raster containing MODIS tile ID's
 }
 \usage{
-getModisTiles(x)
+getModisTiles(x, tiles = mapmisc::modisRaster)
 crsModis
 modisRaster
 degreeRaster
 }
 \arguments{
 \item{x}{A spatial object which modis tiles will cover.}
+\item{tiles}{A raster with modis (or other) tiles.}
 }
 
 \details{
-	\code{getMOdisTiles} returns a matrix with modis tiles.
+	\code{getModisTiles} returns a matrix with modis tiles.
 
 	\code{modisRaster} shows horizontal and vertical tile names for downloading data from MODIS
 	at, for example, \url{http://e4ftl01.cr.usgs.gov/MOTA}.
