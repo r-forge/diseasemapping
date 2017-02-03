@@ -11,7 +11,8 @@ Imports:
     utils,
     raster,
     lgcp,
-    sp
+    sp,
+    graphics
 Suggests:
     INLA,
     geostatsp,

@@ -197,7 +197,7 @@ hook_plot_beamer = function(x, options) {
 hook_plot_margins = function(before, options, envir){	
   if(!before) return()
 # use small margins
-  par(mar=c(1.5+0.9*options$margins,
+  graphics::par(mar=c(1.5+0.9*options$margins,
       1.5+0.9*options$margins,0.2,0.2),
     mgp=c(1.45, 0.45, 0),cex=1.25)
 }		
