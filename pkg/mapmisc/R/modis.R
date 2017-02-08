@@ -61,12 +61,8 @@ getModisTiles = function(x, tiles = mapmisc::modisRaster) {
   modisCrop = crop(tiles, 
     extend(extent(xModis), sqrt(.Machine$double.eps)), 
     snap='out')
-  if(requireNamespace("rgdal")) {
-    res = factorValues(tiles, values(modisCrop))
-  } else {
-    res = factorValues(tiles, values(modisCrop))
-  }
-  
+
+	res = factorValues(tiles, values(modisCrop))
   
   res
 }
