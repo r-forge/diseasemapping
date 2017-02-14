@@ -263,7 +263,7 @@ colourScale.numeric = function(x=NULL, breaks=5,
 		  } else{
 			   theMax = 1
 		  }
-		  col = rgb(col[,redCol], col[,greenCol], col[,blueCol], maxColorValue=theMax)
+		  col = grDevices::rgb(col[,redCol], col[,greenCol], col[,blueCol], maxColorValue=theMax)
 	 }
 	 
 	 

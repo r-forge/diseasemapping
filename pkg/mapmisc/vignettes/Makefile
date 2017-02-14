@@ -10,17 +10,3 @@ empty:
 	xelatex -interaction=nonstopmode $<;
 	xelatex -interaction=nonstopmode $<
 	R --slave -e "tools::compactPDF('$@', gs_quality='ebook')" 
-
-%.html: %.md
-	pandoc --standalone --self-contained --smart --output=$@ $<
-
-%.tex: %.Rnw
-	R --slave -e "knitr::knit('$<')" $(Rargs)
-
-%.md: %.Rmd
-	R --slave -e "knitr::knit('$<')" $(Rargs)
-
-web: mapmisc.pdf north.html mapLayers.html
-	cp mapmisc.pdf ../../../www/mapmisc.pdf;
-	cp north.html ../../../www/north.html;
-	cp mapLayers.html ../../../www/openmap.html
