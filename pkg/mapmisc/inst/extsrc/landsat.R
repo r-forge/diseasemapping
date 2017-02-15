@@ -1,36 +1,44 @@
 #+ packages
 if(FALSE) {
   install.packages("Pmisc", 
-      repos='http://r-forge.r-project.org')
+    repos='http://r-forge.r-project.org')
   # also needs R.utils
 }
 #'
 
 #+ getLandsatTilesFunction
+
+
 getLandsatTiles = function(x,
-    tiles = landsat,
-    buffer = c(1,0.6,0.3, 0.6)*50*1000,
-    crsOut = 'landsat') {
+  tiles = getLandsatCoverage(),
+  buffer = 1000,
+  crsOut = raster::projection(x)) {
   
   xExtent = 
-      raster(extend(extent(x), buffer), 
-          ncol=10, nrow=10, crs=projection(x))
+    raster(extend(extent(x), buffer), 
+      ncol=10, nrow=10, crs=projection(x))
   
   xExtentProj = projectExtent(xExtent, projection(tiles))
   
   tilesCrop = raster::crop(
-      tiles, xExtentProj
+    tiles, xExtentProj
   )
+  tiles = tiles[tiles$PR %in% tilesCrop$PR, ]
   
   if(identical(crsOut, 'landsat'))
     crsOut = paste(
       '+proj=lsat +path=',
-      tilesCrop$PATH[1],
+      tiles$PATH[1],
       ' +lsat=5 +ellps=WGS84 +datum=NAD83', sep='')
   
-  tilesProj = spTransform(tiles, crsOut)
-  tilesProjCrop = tilesProj[tilesProj$PR %in% 
-          tilesCrop$PR,]
+  if(identical(crsOut, 'omerc'))
+    crsOut = mapmisc::omerc(
+      tiles, 
+      angle=seq(-25,25,by=0.1)
+    )
+  
+  
+  tilesProjCrop = spTransform(tiles, crsOut)
   
   tilesProjCrop$pPath = paste('p',  sprintf("%03d", tilesProjCrop$PATH), sep='')
   tilesProjCrop$rRow = paste('r',  sprintf("%03d", tilesProjCrop$ROW), sep='')
@@ -39,264 +47,270 @@ getLandsatTiles = function(x,
   tilesProjCrop$rowString = sprintf("%03d", tilesProjCrop$ROW)
   
   tilesProjCrop$tileString = paste(
-      tilesProjCrop$pathString,
-      tilesProjCrop$rowString, sep='')
+    tilesProjCrop$pathString,
+    tilesProjCrop$rowString, sep='')
   
   tilesProjCrop$tTile = paste(
-      tilesProjCrop$pPath,
-      tilesProjCrop$rRow, sep=' ')
+    tilesProjCrop$pPath,
+    tilesProjCrop$rRow, sep=' ')
   
   tilesProjCrop
 }
+
+getLandsatScenes = function(
+  timeRange,
+  tiles,
+  sceneList = getLandsatSceneList()
+) {
+  
+  if(any(names(tiles) == 'tileString')) {
+    tiles = tiles$tileString
+  }
+  
+  sceneList$tile = sprintf("%03d%03d", sceneList$path, sceneList$row)
+  toKeep = intersect(
+    which(sceneList$tile %in% tiles),
+    which(sceneList$acquisitionDate >= min(timeRange) &
+        sceneList$acquisitionDate <= max(timeRange))
+  )
+  sceneList[toKeep,]  
+}
+
+getLandsatSceneList = function(
+  path = gsub("[[:alnum:]]+$", "landsat", tempdir()),
+  url = "http://landsat-pds.s3.amazonaws.com/scene_list.gz") {
+  
+  localFile = file.path(path, basename(url))
+  outFile = gsub("[.]gz$", "", localFile, ignore.case = TRUE)
+  rdataFile = file.path(path, 'landsatScenes.RData')
+  
+  if(file.exists(rdataFile)) {
+    rdataEnv = new.env()
+    load(rdataFile, envir=rdataEnv)
+    if('landsatScenes' %in% ls(envir=rdataEnv)) {
+      return(get('landsatScenes', envir=rdataEnv))
+    }
+  }
+  
+  if(!file.exists(outFile)) {
+    if(!file.exists(localFile)) {
+      download.file(url, localFile, mode='wb')
+    }
+    R.utils::gunzip(localFile, 
+      remove=FALSE,
+      overwrite = file.exists(outFile))
+  }
+  landsatScenes = read.table(
+    outFile, sep=',', stringsAsFactors=FALSE,
+    header=TRUE
+  )
+  
+  save(landsatScenes, file=rdataFile, compress='xz')
+  landsatScenes
+}
+
+getLandsatCoverage = function(
+  path = gsub("[[:alnum:]]+$", "landsat", tempdir()),
+  url = 'https://landsat.usgs.gov/sites/default/files/documents/wrs2_descending.zip'
+) {
+  
+  localFile = file.path(path, basename(url))
+  rdataFile = file.path(path, 'landsatCover.RData')
+  if(file.exists(rdataFile)) {
+    rdataEnv = new.env()
+    load(rdataFile, envir=rdataEnv)
+    if('landsatCover' %in% ls(envir=rdataEnv)) {
+      return(get('landsatCover', envir=rdataEnv))
+    }
+  }
+  if(!file.exists(localFile)) {
+    download.file(url, localFile, mode='wb')
+  }
+  
+  sfile = file.path(path,
+    grep("shp$", unzip(localFile, list=TRUE)$Name, value=TRUE)
+  )
+  
+  if(!file.exists(sfile))
+    utils::unzip(localFile, exdir=path)
+  landsatCoverLL = raster::shapefile(sfile)
+  if(requireNamespace('rgdal')) {
+    landsatCover = spTransform(
+      raster::crop(landsatCoverLL, extent(-180,180,-88,88)),
+#        "+proj=eck2 +ellps=WGS84 +datum=NAD83"
+      "+proj=sinu +ellps=WGS84 +datum=NAD83"
+    )
+  } else {
+    landsatCover = landsatCoverLL
+  }
+  save(landsatCover, file=rdataFile, compress='xz')
+  landsatCover
+}
+downloadLandsatTiles = function(
+  scenes, band = 1:11,
+  path = gsub("[[:alnum:]]+$", "landsat", tempdir()),
+  ...
+) {
+  
+  scenesLong = scenes[
+    rep(1:nrow(scenes), length(band)),
+  ]
+  scenesLong$band = rep(band, rep(nrow(scenes), length(band)))
+  scenesLong$url = paste(gsub("index[.]html$", "", 
+      scenesLong$download_url), 
+    scenesLong$entityId, '_B', scenesLong$band, '.TIF', sep='')
+  scenesLong$localFile = file.path(path, basename(scenesLong$url))
+  
+  if(!dir.exists(path)) dir.create(path)
+  for(D in 1:nrow(scenesLong)) {
+    if(!file.exists(scenesLong[D, 'localFile']))
+      download.file(scenesLong[D,'url'], scenesLong[D, 'localFile'], 
+        mode='wb', ...)
+  }
+  result = tapply(
+    scenesLong$localFile,
+    scenesLong$entityId,
+    function(x, ...)
+      raster::stack(sort(x), ...)
+  )
+  result
+}
+
+landsatNdvi = function(x, 
+  ndviFile = gsub(
+    '_B[[:digit:]][.]TIF$', '_NDVI.grd',
+    filename(x[[1]]), ignore.case=TRUE)
+) {
+  
+  fourLayer = grep("_B4$", names(x), value=TRUE)
+  fiveLayer = grep("_B5$", names(x), value=TRUE)
+  # https://landsat.usgs.gov/qualityband
+  qaLayer = grep("_BQA$", names(x), value=TRUE)
+  
+  result = overlay(
+    x[[fourLayer]], x[[fiveLayer]], x[[qaLayer]], 
+    fun = function(a,b,c) {
+      isNA = c(1, NA)[1+(c > 50000 | a==1 | b==1)]
+      as.numeric(isNA*(b-a)/(b+a))
+    },
+    filename=ndviFile, overwrite=file.exists(ndviFile))
+  names(result) = gsub("_B[[:digit:]]$", "_NDVI", fourLayer)
+  
+  result
+  
+}
+
 #'
 
 #+ setup
-dataDir = gsub("[[:alnum:]]+$", "landsat", tempdir())
+dataDir = '/store/patrick/landsat'
 if(!dir.exists(dataDir)) dir.create(dataDir)
 #'
 
 #+ downloadLandsatCover
-wfiles = Pmisc::downloadIfOld(   'https://landsat.usgs.gov/sites/default/files/documents/wrs2_descending.zip',
-    path = dataDir
-)
-
 library(raster)
-landsatCover = shapefile(grep("shp$", wfiles, value=TRUE))
+landsatCover = getLandsatCoverage(dataDir)
+landsatScenes = getLandsatSceneList(dataDir)
 #'
 
-#+ landsatProj
-
-landsatSub = landsatCover[landsatCover$PATH %in% seq(0,30,by=2),]
-
-landsatCrop = raster::crop(
-    landsatSub, extent(-170,170,-80,75)
-)
-cropImage = mapmisc::openmap(
-    landsatCrop
-)    
-plot(cropImage)
-plot(landsatCrop, add=TRUE, border='#FF0000')    
-"+proj=ob_tran +o_proj=cc +o_lat_p=50 +o_lon_p=0 +ellps=WGS84 +datum=NAD83"
-
-#  eck2 cc
-"+proj=lsat +path=20 +lsat=5 +ellps=WGS84 +datum=NAD83"
-"+proj=eck2 +ellps=WGS84 +datum=NAD83" 
-landsatTrans =  spTransform(
-    landsatCrop, 
-    mapmisc::omerc(toLL, angle=15)
-)
-plot(landsatTrans)
-
-torontoT = spTransform(toLL, landsatTrans@proj4string)
-
-transImage = mapmisc::openmap(
-    torontoT, zoom=5, fact=2
-)    
-mapmisc::map.new(transImage)
-plot(transImage,add=TRUE)
-plot(landsatTrans, add=TRUE)    
-
-quantile(rgeos::gArea(landsatTrans))/10^12
-
-toTile = landsatTrans[10,]
-plot(toTile@polygons[[1]]@Polygons[[1]]@coords)
-polygon(toTile@polygons[[1]]@Polygons[[1]]@coords)
-
-#'
 
 #+ landsatToronto
 toLL = mapmisc::geocode("Toronto, ON")
 
-toOmerc = spTransform(toLL, 
-    mapmisc::omerc(toLL, -17))
+landsatTiles = getLandsatTiles(
+  x=toLL, 
+  tiles = landsatCover, 
+  buffer=0.25, crsOut='omerc')
 
-landsatTilesO = getLandsatTiles(toOmerc, landsatCover)
-
-plot(landsatTilesO)
-
-landsatCrs = mapmisc::omerc(
-    landsatTiles[1,], angle=seq(5,20,by=0.1)
+torontoTiles = mapmisc::tonerToTrans(
+  mapmisc::openmap(landsatTiles, path='stamen-toner')
 )
-landsatTiles = spTransform(landsatTilesO, landsatCrs)
-plot(landsatTiles)
 #'
 
-#+ torontoMap
-torontoTiles = mapmisc::tonerToTrans(
-    mapmisc::openmap(landsatTiles, path='stamen-toner')
-)
-
+#+ torontoLandastPlot
 Stiles = seq(1, len=length(landsatTiles))
 Scol = mapmisc::col2html(
-    RColorBrewer::brewer.pal(
-        length(landsatTiles), 
-        'Dark2'
-    ),
-    0.85
+  RColorBrewer::brewer.pal(
+    length(landsatTiles), 
+    'Dark2'
+  ),
+  0.85
 )
 mapmisc::map.new(landsatTiles, buffer=-2*1000)
 plot(torontoTiles, add=TRUE)
 plot(landsatTiles, add=TRUE, 
-    border=Scol,
-    col = Scol, 
-    density = 12,
-    angle = 180*Stiles/length(Stiles),
-    lwd=3
+  border=Scol,
+  col = Scol, 
+  density = 12,
+  angle = 180*Stiles/length(Stiles),
+  lwd=3
 )
 mapmisc::legendBreaks("bottomleft", 
-    breaks= landsatTiles$tTile, 
-    col = Scol)    
+  breaks= landsatTiles$tTile, 
+  col = Scol)    
 #'
 
 #+ selectTiles
 
-years = 2014 
-months = c('Feb','Jul')
-days = 1:31
-
-forLandsat = list(
-    landsat = 'L',
-    satellite = 8,
-# Sensor: “C” = OLI/TIRS Combined, “E” = ETM+, “T” = TM, “M”= MSS)
-    sensor = 'C', 
-# GSI = Ground station identifier
-    groundStation = '002',
-# VV = Archive version number
-    version = '00'
-)
-
-
-
-timeMat = expand.grid(
-    tile = landsatTiles$tTile,
-    year=years, 
-    month=months,
-    day = days
-)
-
-
-timeMat$date =strptime(paste(
-        timeMat$year, 
-        timeMat$month,
-        timeMat$day, sep='-'), 
-    format='%Y-%b-%d', tz='UTC')
-timeMat = timeMat[!is.na(timeMat$date),]
-
-
-timeMat$julianDay = format(timeMat$date, format='%j')
-timeMat$julianTwo = substr(timeMat$julianDay, 1,2)
-
-timeMat = timeMat[!duplicated(
-        timeMat[,c('tile','year','julianTwo')]
-    ), ]
-
-
-tileMat = merge(
-    timeMat, landsatTiles, 
-    by.x='tile', by.y = 'tTile',
-    all.x=TRUE, all.y=FALSE
-)
-
-
-tileMat$marker = paste(
-    forLandsat$landsat, 
-    forLandsat$satellite,
-    '/',
-    tileMat$pathString,
-    '/',
-    tileMat$rowString,
-    sep=''
-)    
-
-tileMat$prefix = paste(
-    forLandsat$landsat, 
-    forLandsat$satellite,
-    '/',
-    tileMat$pathString,
-    '/',
-    tileMat$rowString,
-    '/',
-    forLandsat$landsat, 
-    forLandsat$sensor,
-    forLandsat$satellite,
-    tileMat$pathString,
-    tileMat$rowString,
-    tileMat$year, 
-    tileMat$julianTwo,
-    sep=''
-)    
-
-
-#'
-
-#' https://cran.r-project.org/web/packages/getlandsat/vignettes/getlandsat_vignette.html
-#+ getTiles
-library("getlandsat")
-
-landsatScenes = mapply(
-    getlandsat::lsat_list,
-    marker = tileMat$marker,
-    prefix = tileMat$prefix,
-    MoreArgs = list(max=10000)
+scenesFeb = getLandsatScenes(
+  timeRange = ISOdate(
+    2014, 2, c(1,28), tz='utc'
+  ),
+  tiles = landsatTiles,
+  sceneList = landsatScenes
 )
 #'
 
-#+ formatTiles
+#+ downloadTiles
+landsatFeb = downloadLandsatTiles(
+  scenes=scenesFeb, band = c(4,5,'QA'),
+  path = dataDir
+)  
+#'
 
-landsatScenesShort = landsatScenes[
-    which(unlist(lapply(landsatScenes, nrow))>0)
-]
-
-landsatScenes2 = do.call(
-    rbind, landsatScenesShort
+#+ plotBand4
+torontoTiles2 = mapmisc::tonerToTrans(
+  mapmisc::openmap(
+    landsatFeb[[1]], 
+    path='stamen-toner', 
+    fact = 1.5)
 )
 
-# ndvi, need band 4 and 5    
-landsatScenesForNdvi = landsatScenes2[
-    grep("b(4|5)[.]tif$", landsatScenes2$Key, ignore.case=TRUE),
-]    
-
-landsatNdvi = data.frame(
-    pathString = substr(landsatScenesForNdvi$Key,4,6),
-    rowString = substr(landsatScenesForNdvi$Key,8,10),
-    year = substr(landsatScenesForNdvi$Key,21,24),
-    julianDay = substr(landsatScenesForNdvi$Key,25,27),
-    band = gsub("^.*_B|[.]TIF$", "", 
-        landsatScenesForNdvi$Key, ignore.case=TRUE),
-    file = landsatScenesForNdvi$Key,
-    stringsAsFactors=FALSE
-)    
-landsatNdvi$time= strptime(
-    paste(landsatNdvi$year, landsatNdvi$julianDay),
-    format = '%Y %j'
-)
-landsatNdvi$month = format(landsatNdvi$time, '%b')
-
-Simage = sapply(
-    landsatNdvi$file,
-    getlandsat:::parse_landsat_str
+febCol = mapmisc::colourScale(
+  landsatFeb[[2]][[1]], breaks=12, dec=-3, col='Spectral',
+  style= 'quantile'
 )
 
-landsatNdvi$url = paste(
-    "https://s3-us-west-2.amazonaws.com/landsat-pds/L8/",
-    landsatNdvi$pathString, '/', 
-    landsatNdvi$rowString, '/',
-    gsub("_B[[:alnum:]].*[.]tif$", "", 
-        basename(landsatNdvi$file), ignore.case=TRUE),
-    '/', basename(landsatNdvi$file),
-    sep=''
-)    
+plot(landsatFeb[[2]][[1]], col=febCol$col, breaks=febCol$breaks, legend=FALSE)
+plot(torontoTiles2, add=TRUE)
+mapmisc::legendBreaks("right", febCol)
 
-landsatNdvi$localFiles = Pmisc::downloadIfOld(
-    landsatNdvi$url, path=dataDir,
-    age = '2 years', mode='wb')
+
+mapmisc::map.new(good, buffer=-c(20,80,170,10)*1000)
+plot(good, col=febCol$col, breaks=febCol$breaks, legend=FALSE, add=TRUE,
+  maxpixels=2000000)
+plot(torontoTiles2, add=TRUE)
+mapmisc::legendBreaks("right", febCol)
 
 #'
 
-#+ oneTile
+#+ calcNdvi
+ndviFeb = lapply(landsatFeb, landsatNdvi)
+#'
 
-stuff = stack("C:\\Users\\pbrown\\AppData\\Local\\Temp\\landsat\\LC80170302014048LGN00_B5.TIF")
-plot(stuff)
+#+ plotNdviFeb
+myCol = mapmisc::colourScale(
+  ndviFeb[[2]], 
+  breaks=c(-1, -0.1, 0, 0.01, 0.02, 0.05, 0.1, 0.2,0.4, 1), 
+  col='Spectral',
+  style= 'fixed'
+  )
 
+mapmisc::map.new(ndviFeb[[2]], buffer=-c(20,80,170,10)*1000)
+plot(ndviFeb[[2]], col=myCol$col, breaks=myCol$breaks, legend=FALSE, add=TRUE,
+  maxpixels=3000000)
+plot(torontoTiles2, add=TRUE)
+mapmisc::legendBreaks("right", myCol)
+  
 
 #'
