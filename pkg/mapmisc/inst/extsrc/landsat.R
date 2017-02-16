@@ -1,13 +1,4 @@
-#+ packages
-if(FALSE) {
-  install.packages("Pmisc", 
-    repos='http://r-forge.r-project.org')
-  # also needs R.utils
-}
-#'
-
 #+ getLandsatTilesFunction
-
 
 getLandsatTiles = function(x,
   tiles = getLandsatCoverage(),
@@ -23,7 +14,10 @@ getLandsatTiles = function(x,
   tilesCrop = raster::crop(
     tiles, xExtentProj
   )
-  tiles = tiles[tiles$PR %in% tilesCrop$PR, ]
+  tilesCrop2 = spTransform(tilesCrop, projection(xExtent))
+  tilesCrop3 = raster::crop(tilesCrop2, xExtent)
+  
+  tiles = tiles[tiles$PR %in% tilesCrop3$PR, ]
   
   if(identical(crsOut, 'landsat'))
     crsOut = paste(
@@ -54,6 +48,7 @@ getLandsatTiles = function(x,
     tilesProjCrop$pPath,
     tilesProjCrop$rRow, sep=' ')
   
+  attributes(tilesProjCrop)$landsat = xExtent
   tilesProjCrop
 }
 
@@ -92,25 +87,23 @@ getLandsatSceneList = function(
     }
   }
   
-  if(!file.exists(outFile)) {
-    if(!file.exists(localFile)) {
-      download.file(url, localFile, mode='wb')
-    }
-    R.utils::gunzip(localFile, 
-      remove=FALSE,
-      overwrite = file.exists(outFile))
+  if(!all(file.size(localFile)>0, na.rm=TRUE)) {
+    download.file(url, localFile, mode='wb')
   }
   landsatScenes = read.table(
-    outFile, sep=',', stringsAsFactors=FALSE,
+    gzfile(localFile), sep=',', stringsAsFactors=FALSE,
     header=TRUE
   )
   
   save(landsatScenes, file=rdataFile, compress='xz')
+  
   landsatScenes
 }
 
 getLandsatCoverage = function(
-  path = gsub("[[:alnum:]]+$", "landsat", tempdir()),
+  path = c(
+    options()$mapmiscCachePath, 
+    tempdir())[1],
   url = 'https://landsat.usgs.gov/sites/default/files/documents/wrs2_descending.zip'
 ) {
   
@@ -146,9 +139,13 @@ getLandsatCoverage = function(
   save(landsatCover, file=rdataFile, compress='xz')
   landsatCover
 }
+
 downloadLandsatTiles = function(
   scenes, band = 1:11,
-  path = gsub("[[:alnum:]]+$", "landsat", tempdir()),
+  path = c(
+    options()$mapmiscCachePath, 
+    tempdir())[1],
+  mode = 'wb',
   ...
 ) {
   
@@ -163,47 +160,74 @@ downloadLandsatTiles = function(
   
   if(!dir.exists(path)) dir.create(path)
   for(D in 1:nrow(scenesLong)) {
-    if(!file.exists(scenesLong[D, 'localFile']))
+    if(!any(file.size(scenesLong[D, 'localFile'])>1, na.rm=TRUE) )
       download.file(scenesLong[D,'url'], scenesLong[D, 'localFile'], 
-        mode='wb', ...)
+        mode=mode, ...)
   }
   result = tapply(
-    scenesLong$localFile,
-    scenesLong$entityId,
-    function(x, ...)
-      raster::stack(sort(x), ...)
+    X=scenesLong$localFile,
+    INDEX=scenesLong[,'entityId', drop=FALSE],
+    FUN = function(X)
+      raster::stack(sort(X)),
+    simplify=FALSE
   )
-  result
+  lapply(result, function(x) x)
 }
 
 landsatNdvi = function(x, 
-  ndviFile = gsub(
-    '_B[[:digit:]][.]TIF$', '_NDVI.grd',
-    filename(x[[1]]), ignore.case=TRUE)
-) {
+  suffix = 1:3,
+  path = c(
+    options()$mapmiscCachePath, 
+    tempdir())[1],
+  filename = 'ndvi.grd') {
   
-  fourLayer = grep("_B4$", names(x), value=TRUE)
-  fiveLayer = grep("_B5$", names(x), value=TRUE)
-  # https://landsat.usgs.gov/qualityband
-  qaLayer = grep("_BQA$", names(x), value=TRUE)
+  if(basename(filename) == filename) {
+    filename = file.path(path, filename)
+  }  
   
-  result = overlay(
-    x[[fourLayer]], x[[fiveLayer]], x[[qaLayer]], 
-    fun = function(a,b,c) {
-      isNA = c(1, NA)[1+(c > 50000 | a==1 | b==1)]
-      as.numeric(isNA*(b-a)/(b+a))
+  suffixString = paste("_(", paste(suffix, collapse='|'), ')$', sep='')
+  StilesAll = gsub(suffixString, '', names(x))
+  Stiles = unique(StilesAll)
+  
+  tileMat = list()
+  for(D in suffix)
+    tileMat[[D]] = outer(
+      names(x), 
+      paste(Stiles, '_', D, sep=''), 
+      '==')
+  
+  numerMat = tileMat[[suffix[2]]] - tileMat[[suffix[1]]]
+  denomMat = tileMat[[suffix[2]]] + tileMat[[suffix[2]]]
+  qMat = tileMat[[suffix[3]]]
+  
+  colnames(numerMat) = colnames(denomMat) = colnames(qMat) =
+    Stiles
+  
+  calc(
+    x,
+    function(xx) {
+      numer = xx %*% numerMat 
+      denom = xx %*% denomMat 
+      qual = xx %*% qMat 
+      qual[qual > 25000 | is.na(numer) | is.na(denom) |
+          denom == 0] = NA
+      result = numer/denom
+      result[is.na(qual)] = NA
+      meanResult = mean(result, na.rm=TRUE)
+      meanResult[is.nan(meanResult)] = NA
+      result = c(result, meanResult, sum(!is.na(result)))
+      names(result) = c(colnames(numerMat), 'mean', 'N')
+      result
     },
-    filename=ndviFile, overwrite=file.exists(ndviFile))
-  names(result) = gsub("_B[[:digit:]]$", "_NDVI", fourLayer)
-  
-  result
-  
+    filename = filename,
+    overwrite = file.exists(filename)  
+  )
 }
-
 #'
 
 #+ setup
 dataDir = '/store/patrick/landsat'
+
 if(!dir.exists(dataDir)) dir.create(dataDir)
 #'
 
@@ -215,12 +239,15 @@ landsatScenes = getLandsatSceneList(dataDir)
 
 
 #+ landsatToronto
-toLL = mapmisc::geocode("Toronto, ON")
+toLL = SpatialPoints(
+  cbind(-79.3916043, 43.7069564),
+  proj4string=mapmisc::crsLL
+)
 
 landsatTiles = getLandsatTiles(
   x=toLL, 
   tiles = landsatCover, 
-  buffer=0.25, crsOut='omerc')
+  buffer=0.25)
 
 torontoTiles = mapmisc::tonerToTrans(
   mapmisc::openmap(landsatTiles, path='stamen-toner')
@@ -236,7 +263,7 @@ Scol = mapmisc::col2html(
   ),
   0.85
 )
-mapmisc::map.new(landsatTiles, buffer=-2*1000)
+mapmisc::map.new(landsatTiles)
 plot(torontoTiles, add=TRUE)
 plot(landsatTiles, add=TRUE, 
   border=Scol,
@@ -245,16 +272,19 @@ plot(landsatTiles, add=TRUE,
   angle = 180*Stiles/length(Stiles),
   lwd=3
 )
+plot(extent(attributes(landsatTiles)$landsat), 
+  add=TRUE, col='grey', lwd=5, lty=3)
+points(spTransform(toLL, projection(landsatTiles)),
+  col='grey', cex=3, pch=16)
 mapmisc::legendBreaks("bottomleft", 
   breaks= landsatTiles$tTile, 
   col = Scol)    
 #'
 
 #+ selectTiles
-
-scenesFeb = getLandsatScenes(
+scenesWinter = getLandsatScenes(
   timeRange = ISOdate(
-    2014, 2, c(1,28), tz='utc'
+    2013, c(10,12), c(15,15), tz='utc'
   ),
   tiles = landsatTiles,
   sceneList = landsatScenes
@@ -262,55 +292,93 @@ scenesFeb = getLandsatScenes(
 #'
 
 #+ downloadTiles
-landsatFeb = downloadLandsatTiles(
-  scenes=scenesFeb, band = c(4,5,'QA'),
+landsatWinter = downloadLandsatTiles(
+  scenes=scenesWinter, band = c(4,5,'QA'),
   path = dataDir
 )  
 #'
 
-#+ plotBand4
+#+ crop
+toOmerc = spTransform(toLL, omerc(toLL, angle=-17))
+
+torontoRegion = raster(
+  extend(
+    extent(toOmerc),
+    c(5000,3000,5000,1000)
+  ), 
+  res = res(landsatWinter[[1]]),
+  crs=projection(toOmerc)
+)
+
+
+landsatCropFiles = gsub('_B[[:digit:]].TIF', '_crop.grd', 
+  unlist(lapply(landsatWinter, function(x) filename(x[[1]]))))
+
+for(Dfile in names(landsatWinter)) {
+  stuff = projectRaster(
+    from = landsatWinter[[Dfile]],
+    to = torontoRegion,
+    method = 'ngb',
+    filename = landsatCropFiles[Dfile],
+    overwrite = file.exists(landsatCropFiles[Dfile])
+  )    
+}
+
+landsatWinterStack = stack(landsatCropFiles)  
+#'
+
+
+
+#+ moreMapTiles
 torontoTiles2 = mapmisc::tonerToTrans(
   mapmisc::openmap(
-    landsatFeb[[1]], 
+    landsatWinterStack, 
     path='stamen-toner', 
-    fact = 1.5)
+    fact = 1.5, maxTiles=10)
 )
+
+#'
+
+#+ cropMap
 
 febCol = mapmisc::colourScale(
-  landsatFeb[[2]][[1]], breaks=12, dec=-3, col='Spectral',
-  style= 'quantile'
+  landsatWinterStack[[1]], breaks=12, 
+  dec=-log10(500), col='Spectral',
+  style= 'equal', rev=TRUE, transform=-1
 )
 
-plot(landsatFeb[[2]][[1]], col=febCol$col, breaks=febCol$breaks, legend=FALSE)
-plot(torontoTiles2, add=TRUE)
-mapmisc::legendBreaks("right", febCol)
 
-
-mapmisc::map.new(good, buffer=-c(20,80,170,10)*1000)
-plot(good, col=febCol$col, breaks=febCol$breaks, legend=FALSE, add=TRUE,
-  maxpixels=2000000)
+mapmisc::map.new(torontoRegion)
+plot(landsatWinterStack[[1]], col=febCol$col, breaks=febCol$breaks, 
+  legend=FALSE, add=TRUE)
 plot(torontoTiles2, add=TRUE)
-mapmisc::legendBreaks("right", febCol)
+mapmisc::legendBreaks("topleft", febCol)
 
 #'
 
 #+ calcNdvi
-ndviFeb = lapply(landsatFeb, landsatNdvi)
+ndviBrick = landsatNdvi(landsatWinterStack, path=dataDir)
 #'
 
-#+ plotNdviFeb
+
+
+
+#+ plotNdviWinter
 myCol = mapmisc::colourScale(
-  ndviFeb[[2]], 
-  breaks=c(-1, -0.1, 0, 0.01, 0.02, 0.05, 0.1, 0.2,0.4, 1), 
-  col='Spectral',
-  style= 'fixed'
-  )
+  ndviBrick[['mean']], 
+  breaks=12, 
+  col='BrBG',
+  style= 'equal',
+  dec=-log10(0.05)
+)
 
-mapmisc::map.new(ndviFeb[[2]], buffer=-c(20,80,170,10)*1000)
-plot(ndviFeb[[2]], col=myCol$col, breaks=myCol$breaks, legend=FALSE, add=TRUE,
-  maxpixels=3000000)
+mapmisc::map.new(ndviBrick)
+plot(ndviBrick[['mean']], col=myCol$col, 
+  breaks=myCol$breaks, legend=FALSE, add=TRUE)
 plot(torontoTiles2, add=TRUE)
-mapmisc::legendBreaks("right", myCol)
-  
+mapmisc::legendBreaks("topleft", myCol)
 
+plot(ndviBrick[['N']])
+plot(torontoTiles2, add=TRUE)
 #'
+
