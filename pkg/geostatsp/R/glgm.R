@@ -558,7 +558,8 @@ setMethod("glgm",
       )
       # add third column to posterior matrix with prior
       params$range$posterior = cbind(
-        params$range$posterior,
+        x=params$range$posterior[,1],
+        y=params$range$posterior[,2],
         prior = dgamma(
           params$range$posterior[,1],
           shape=params$range$params["shape"], 
