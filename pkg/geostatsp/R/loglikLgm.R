@@ -4,39 +4,39 @@ loglikLgm = function(param,
 		minustwotimes=TRUE,
 		moreParams=NULL) {
   
-	  # create 'covariates', and 'observations'
+	 # create 'covariates', and 'observations'
  	
-	  trend = formula
-	  
-	  if(class(trend)=="formula") {
-		    observations = all.vars(trend)[1]
-		    if(!any(names(data)==observations))
-			      warning("can't find observations ", observations, "in data")
-		    # frame first, so we see which row names have been omitted due to NA's
-		    # sometimes model.matrix removes row names
-		    covariates = model.frame(trend, data.frame(data))
-		    observations = covariates[,	observations]
-		    theRowNames = rownames(covariates)
-		    covariates = model.matrix(trend,covariates)
-		    rownames(covariates) = theRowNames
-		    theNA = which(!rownames(data.frame(data)) %in% theRowNames)
-	  } else if(!is.null(trend)){
-		    # observations must be a vector and covariates a matrix
-		    covariates= as.matrix(trend)
-		    theNA = apply(covariates, 1, function(qq) any(is.na(qq)))
-		    observations=data[!theNA]
-		    theNA = which(theNA)
-	  } else {
-		    theNA = NULL
-	  }
-	  
+	 trend = formula
+	 
+	 if(class(trend)=="formula") {
+		  observations = all.vars(trend)[1]
+		  if(!any(names(data)==observations))
+			   warning("can't find observations ", observations, "in data")
+		  # frame first, so we see which row names have been omitted due to NA's
+		  # sometimes model.matrix removes row names
+		  covariates = model.frame(trend, data.frame(data))
+		  observations = covariates[,	observations]
+		  theRowNames = rownames(covariates)
+		  covariates = model.matrix(trend,covariates)
+		  rownames(covariates) = theRowNames
+		  theNA = which(!rownames(data.frame(data)) %in% theRowNames)
+	 } else if(!is.null(trend)){
+		  # observations must be a vector and covariates a matrix
+		  covariates= as.matrix(trend)
+		  theNA = apply(covariates, 1, function(qq) any(is.na(qq)))
+		  observations=data[!theNA]
+		  theNA = which(theNA)
+	 } else {
+		  theNA = NULL
+	 }
+	 
 		if(length(grep("SpatialPoints", class(coordinates)))) {
-			    if(length(theNA))
-				      coordinates = coordinates[-theNA,]
+			 if(length(theNA))
+				  coordinates = coordinates[-theNA,]
 		} else if(	class(coordinates) == "dist")	{
-			    if(length(theNA)) {
-				      coordinates = 
-					        as.matrix(coordinates)[-theNA,-theNA]
+			 if(length(theNA)) {
+				  coordinates = 
+					   as.matrix(coordinates)[-theNA,-theNA]
     } else {
       coordinates= as.matrix(coordinates)
     } 
@@ -49,7 +49,7 @@ loglikLgm = function(param,
 				warning("coordinates must be a SpatialPoints object\n or matrix a dist object.  It's being assumed \n it's a matrix of coordinates")
 				coordinates = SpatialPoints(coordinates)
 				if(length(theNA))				
-					      coordinates = coordinates[-theNA,]
+					 coordinates = coordinates[-theNA,]
 		}
   
 		# sort out the parameters
@@ -58,47 +58,47 @@ loglikLgm = function(param,
 		names(param) = gsub("^var$", "variance", names(param))
 		
 		param=param[!is.na(param)]
-	  
+	 
 		haveVariance = any(names(param)=="variance")
 		haveNugget = any(names(param)=="nugget")
 		if(haveNugget){
-			    if(param["nugget"] == 0) {
-				      haveNugget=FALSE
-			    }
+			 if(param["nugget"] == 0) {
+				  haveNugget=FALSE
+			 }
 		} else {
-			    param["nugget"] = 0
+			 param["nugget"] = 0
 		}
   
 		if(!haveVariance) {
-			    # variance will be estimated.  
+			 # variance will be estimated.  
 		  # nugget is assumed to be nugget/variance
-			    param["variance"] = 1
+			 param["variance"] = 1
 		}
 		
 		# box cox transform
 		jacobian = 0
 		if(any(names(param)=="boxcox")) {
-			    
-			    
-			    if(abs(param["boxcox"]-  1 ) < 0.001) {
-			       # boxcox close to 1, don't transform
-				      jacobian=0
-				      
-			    } else { # box cox is not one.
-				      jacobian = -2*(param["boxcox"]-1)* 
-					        sum(log(observations))	
-			      
-				      if(is.nan(jacobian))
-					        warning("boxcox shouldnt be used with negative data")
+			 
+			 
+			 if(abs(param["boxcox"]-  1 ) < 0.001) {
+			   # boxcox close to 1, don't transform
+				  jacobian=0
+				  
+			 } else { # box cox is not one.
+				  jacobian = -2*(param["boxcox"]-1)* 
+					   sum(log(observations))	
+			   
+				  if(is.nan(jacobian))
+					   warning("boxcox shouldnt be used with negative data")
       
-				      if(abs(param["boxcox"])<0.001) {
-					        observations = log(observations) 
-				      } else if(abs(param["boxcox"]-1)>0.001) {
-  				        observations <- 
-						          ((observations^param["boxcox"]) - 1)/
-							          param["boxcox"]
-				      }
-			    } # end boxcox param far from 1
+				  if(abs(param["boxcox"])<0.001) {
+					   observations = log(observations) 
+				  } else if(abs(param["boxcox"]-1)>0.001) {
+  				  observations <- 
+						    ((observations^param["boxcox"]) - 1)/
+							   param["boxcox"]
+				  }
+			 } # end boxcox param far from 1
 		} # end have box cox
 		
 		
@@ -166,15 +166,15 @@ loglikLgm = function(param,
   
   
   if(minustwotimes) {
-      names(result) = "minusTwoLogLik"
+    names(result) = "minusTwoLogLik"
   } else {
-      result = -0.5*result
-      
-      names(result)="logLik"
+    result = -0.5*result
+    
+    names(result)="logLik"
   } 
   
   if(reml)
-      names(result) = gsub("Lik$", "RestrictedLik", names(result))
+    names(result) = gsub("Lik$", "RestrictedLik", names(result))
   
   attributes(result)$param = param
   attributes(result)$totalVarHat = resultC$totalVarHat
@@ -219,7 +219,7 @@ likfitLgm = function(
     coordinates = SpatialPoints(coordinates)
     maxDist = dist(t(bbox(coordinates)))
   } else { # isotropic
-		    
+		  
     if(is.matrix(coordinates)){
       if(ncol(coordinates)== 2) {# assume the columns are x and y coordinates
         coordinates = dist(coordinates)
@@ -227,71 +227,70 @@ likfitLgm = function(
         coordinates = as(coordinates, 'dsyMatrix')
       }
     }
-		    
+		  
     if(class(coordinates)=='dist')
       coordinates = as(as.matrix(coordinates), 'dsyMatrix')
     
-		    
+		  
     if(length(grep("^Spatial", class(coordinates)))) {
-		        coordinates = as(Matrix(spDists(coordinates),sparse=FALSE), 'dsyMatrix')
-		    }
-		    
-		    
+		    coordinates = as(Matrix(spDists(coordinates),sparse=FALSE), 'dsyMatrix')
+		  }
+		  
+		  
     maxDist = max(coordinates,na.rm=TRUE)
   }
   trend = formula
   theFactors = NULL
-  print(class(trend))
-	  if(class(trend)=="formula") {
+	 if(class(trend)=="formula") {
     # convert input data to a model matrix
-		    data = data.frame(data)
-		    theNA = apply(
-				      data[,all.vars(trend),drop=FALSE],
-				      1, function(qq) any(is.na(qq)))
-		    noNA = !theNA
-	    
-		    theFactors = model.frame(trend, data[noNA,])
-		    whichFactors = unlist(lapply(theFactors, is.factor))
-		    theFactors = theFactors[,whichFactors,drop=FALSE]
-		    theFactors = lapply(theFactors, levels)
-		    theFactors = unlist(lapply(theFactors, function(qq) qq[1]))
-		    
-		    covariates = model.matrix(trend, data[noNA,])
-      
-      # get rid of NA factor columns
-  covariates = covariates[,
-        grep(
-          paste('^(',paste(names(theFactors), collapse='|'), ')NA$', sep=''), 
-          colnames(covariates), invert=TRUE)]
-      
-		    observations = all.vars(trend)[1]
-		    
-		    if(!any(names(data)==observations))
-			      warning("can't find observations ", observations, "in data")
-		    observations = data[noNA,observations]
-	  } else {
-		    # observations must be a vector and covariates a matrix
-		    trend = as.matrix(trend)
-		    theNA = is.na(data) | apply(trend, 1, 
-					      function(qq) any(is.na(qq))
+		  data = data.frame(data)
+		  theNA = apply(
+				  data[,all.vars(trend),drop=FALSE],
+				  1, function(qq) any(is.na(qq)))
+		  noNA = !theNA
+	   
+		  theFactors = model.frame(trend, data[noNA,])
+		  whichFactors = unlist(lapply(theFactors, is.factor))
+		  theFactors = theFactors[,whichFactors,drop=FALSE]
+		  theFactors = lapply(theFactors, levels)
+		  theFactors = unlist(lapply(theFactors, function(qq) qq[1]))
+		  
+		  covariates = model.matrix(trend, data[noNA,])
+    
+    # get rid of NA factor columns
+      covariates = covariates[,
+      grep(
+        paste('^(',paste(names(theFactors), collapse='|'), ')NA$', sep=''), 
+        colnames(covariates), invert=TRUE)]
+    
+		  observations = all.vars(trend)[1]
+		  
+		  if(!any(names(data)==observations))
+			   warning("can't find observations ", observations, "in data")
+		  observations = data[noNA,observations]
+	 } else {
+		  # observations must be a vector and covariates a matrix
+		  trend = as.matrix(trend)
+		  theNA = is.na(data) | apply(trend, 1, 
+					 function(qq) any(is.na(qq))
 				)
-		    noNA = !theNA
+		  noNA = !theNA
 				
-		    observations=data[noNA]
-		    covariates=trend[noNA,,drop=FALSE]
-	  }
+		  observations=data[noNA]
+		  covariates=trend[noNA,,drop=FALSE]
+	 }
   
-	  if(any(theNA)) {
-		    if(length(grep("^SpatialPoints", class(coordinates)))) {
-			      coordinates = coordinates[noNA]	
-		    } else {
-         if(ncol(coordinates) == nrow(coordinates)) {
-             coordinates = coordinates[noNA,noNA]
-         } else {
-             coordinates = coordinates[noNA, ]
-         }
-		    }
-	  }
+	 if(any(theNA)) {
+		  if(length(grep("^SpatialPoints", class(coordinates)))) {
+			   coordinates = coordinates[noNA]	
+		  } else {
+      if(ncol(coordinates) == nrow(coordinates)) {
+        coordinates = coordinates[noNA,noNA]
+      } else {
+        coordinates = coordinates[noNA, ]
+      }
+		  }
+	 }
   
   
   # check for the variance parameter
@@ -311,12 +310,12 @@ likfitLgm = function(
   paramToEstimate = gsub("anisoAngleDegrees","anisoAngleRadians", paramToEstimate)
   
   degToRad = function(par) {
-      if(length(grep("anisoAngleDegrees", names(par)))){
-          if(!length(grep("anisoAngleRadians", names(par))))
-              par['anisoAngleRadians'] = 2*pi*par['anisoAngleDegrees']/360
-          par = par[grep("anisoAngleDegrees",names(par),invert=TRUE)]
-      }
-       par
+    if(length(grep("anisoAngleDegrees", names(par)))){
+      if(!length(grep("anisoAngleRadians", names(par))))
+        par['anisoAngleRadians'] = 2*pi*par['anisoAngleDegrees']/360
+      par = par[grep("anisoAngleDegrees",names(par),invert=TRUE)]
+    }
+    par
   }
   param = degToRad(param)
   lower = degToRad(lower)
@@ -466,7 +465,7 @@ likfitLgm = function(
   
   obsCov = cbind(y1=observations, y2=0, y3=0, covariates)
   
- 
+   
   if(all(paramToEstimate=='variance') &
     param['nugget']==0){
     
@@ -493,8 +492,8 @@ likfitLgm = function(
     )
     
   } else {
-      
-      fromOptim = .C(
+    
+    fromOptim = .C(
       "maternLogLOpt",
       start=paramsForC,    
       Sparam=as.integer(Sparam),
@@ -503,16 +502,16 @@ likfitLgm = function(
       as.double(ycoord),
       as.integer(aniso),
       N=as.integer(c(nrow(obsCov), 3, ncol(covariates))),
-          Ltype=as.integer(reml+2*!estimateVariance),
-          optInt = as.integer(forO$scalarInt),
-          optF = as.double(forO$scalarF),
-          betas=as.double(forO$pars),
-          limType = as.integer(forO$parsInt),
-          message=format(" ",width=80)
-      )
+      Ltype=as.integer(reml+2*!estimateVariance),
+      optInt = as.integer(forO$scalarInt),
+      optF = as.double(forO$scalarF),
+      betas=as.double(forO$pars),
+      limType = as.integer(forO$parsInt),
+      message=format(" ",width=80)
+    )
     
     
-      result = list(
+    result = list(
       optim = list(
         mle=fromOptim$start,
         logL = c(m2logL = fromOptim$optF[1],
@@ -526,31 +525,31 @@ likfitLgm = function(
           opt = fromOptim$start[Sparam],
           parOptions[,c('parscale','lower','upper','ndeps')]),
         detail = fromOptim$optInt[1:3]      ),
-          betaHat = fromOptim$betas[1:ncol(covariates)],
-          varBetaHat =  
+      betaHat = fromOptim$betas[1:ncol(covariates)],
+      varBetaHat =  
         new("dsyMatrix", 
           Dim = as.integer(rep(ncol(covariates),2)), 
           uplo="L",
           x=fromOptim$betas[
             seq(1+ncol(covariates), len=ncol(covariates)^2)]
         )
-      )
-      
+    )
+    
 # names(result$optim$boxcox) = c('param','sumLogY','twoLogJacobian')
 # names(result$optim$determinants) = c('variance','reml')
-     
-     result$optim$options = cbind(result$optim$options,
+    
+    result$optim$options = cbind(result$optim$options,
       gradient=fromOptim$betas[
-              seq(ncol(covariates)^2+ncol(covariates)+1, 
+        seq(ncol(covariates)^2+ncol(covariates)+1, 
           len=sum(Sparam))
-        ])
-      
-      names(result$optim$detail)  = c(
+      ])
+    
+    names(result$optim$detail)  = c(
       "fail","fncount","grcount"
     )
-     names(result$betaHat) = colnames(covariates)
-     dimnames(result$varBetaHat) = list(
-           names(result$betaHat),names(result$betaHat)
+    names(result$betaHat) = colnames(covariates)
+    dimnames(result$varBetaHat) = list(
+      names(result$betaHat),names(result$betaHat)
     )
     
     
@@ -559,14 +558,14 @@ likfitLgm = function(
   result$parameters = fillParam(
     c(
       result$optim$mle, result$betaHat
-       )
+    )
   )
   
   if(estimateVariance) {
-       result$parameters[c('nugget', 'variance')] = 
+    result$parameters[c('nugget', 'variance')] = 
       result$parameters[c('nugget', 'variance')] * 
       result$optim$totalVarHat  
-   }
+  }
   
   names(result$optim$logL) = paste(
     names(result$optim$logL),
@@ -602,97 +601,97 @@ likfitLgm = function(
   result$data$resid = result$data$obsBC - result$data$fitted
   
   
-   if(length(grep("^Spatial", class(coordinatesOrig)))){
-	     
-	    forDf = rep(NA, length(noNA))
-	    forDf[noNA] = seq(1, sum(noNA))
+  if(length(grep("^Spatial", class(coordinatesOrig)))){
+	   
+	   forDf = rep(NA, length(noNA))
+	   forDf[noNA] = seq(1, sum(noNA))
     
-	    theDf = result$data[forDf,] 
+	   theDf = result$data[forDf,] 
     
-	    result$data = SpatialPointsDataFrame(
+	   result$data = SpatialPointsDataFrame(
       coords=SpatialPoints(coordinatesOrig),
       data=theDf)
-       
-       projection(result$data) = projection(coordinatesOrig)
-   }
+    
+    projection(result$data) = projection(coordinatesOrig)
+  }
   
   
   result$model = list(reml=reml, baseline=theFactors)
-	  if(class(trend)=="formula") {
-		    result$model$formula = trend
+	 if(class(trend)=="formula") {
+		  result$model$formula = trend
     result$data[[all.vars(formula)[1]]] =
       result$data$observations
-	  } else {
-		    result$model$formula= names(trend)
-	  }
+	 } else {
+		  result$model$formula= names(trend)
+	 }
   
-	  
-	  if(length(result$model$baseline)){
-		    
-		    rparams = result$parameters
-		    
-		    baseParams =data.frame(
-				      var = names(result$model$baseline),
-				      base = result$model$baseline,
-				      pasted = paste(names(result$model$baseline), result$model$baseline, sep='')
+	 
+	 if(length(result$model$baseline)){
+		  
+		  rparams = result$parameters
+		  
+		  baseParams =data.frame(
+				  var = names(result$model$baseline),
+				  base = result$model$baseline,
+				  pasted = paste(names(result$model$baseline), result$model$baseline, sep='')
 				)
 				
-		    for(D in which(! baseParams$pasted %in% names(rparams)) ) {
-			      
-			      sameFac = grep(paste("^",baseParams[D,'var'],sep=""),
-					        names(rparams))
-			      pseq = 1:length(rparams)
-			      if(length(sameFac)){
-				        
-				        minFac = min(sameFac)
-				        toAdd = 0
-				        names(toAdd) = baseParams[D,'pasted']
-				        rparams = c(
-						          rparams[pseq < minFac],
-						          toAdd,
-						          rparams[pseq >= minFac]
-						        )
-			      }
-		    }
-		    result$parameters = rparams
-	  }
-	  
-	  parameterTable = data.frame(estimate=result$parameters)
-	  rownames(parameterTable) =  names(result$parameters)
+		  for(D in which(! baseParams$pasted %in% names(rparams)) ) {
+			   
+			   sameFac = grep(paste("^",baseParams[D,'var'],sep=""),
+					   names(rparams))
+			   pseq = 1:length(rparams)
+			   if(length(sameFac)){
+				    
+				    minFac = min(sameFac)
+				    toAdd = 0
+				    names(toAdd) = baseParams[D,'pasted']
+				    rparams = c(
+						    rparams[pseq < minFac],
+						    toAdd,
+						    rparams[pseq >= minFac]
+						  )
+			   }
+		  }
+		  result$parameters = rparams
+	 }
+	 
+	 parameterTable = data.frame(estimate=result$parameters)
+	 rownames(parameterTable) =  names(result$parameters)
   
-	  parameterTable$stdErr = NA
+	 parameterTable$stdErr = NA
   
   stdErr = sqrt(Matrix::diag(result$varBetaHat))
-	  # sometimes varBetaHat doesn't have names
-	  parameterTable[rownames(result$varBetaHat), "stdErr"] =
-			    stdErr
+	 # sometimes varBetaHat doesn't have names
+	 parameterTable[rownames(result$varBetaHat), "stdErr"] =
+			 stdErr
   
-	  thelims = c(0.005, 0.025, 0.05, 0.1)
-	  thelims = c(rbind(thelims, 1-thelims))
+	 thelims = c(0.005, 0.025, 0.05, 0.1)
+	 thelims = c(rbind(thelims, 1-thelims))
   
   theQ = qnorm(thelims)
-	  toadd = outer(parameterTable$stdErr, theQ)
-	  toadd = toadd + matrix(parameterTable$estimate, 
-			    ncol=length(thelims), nrow=dim(parameterTable)[1])
-	  colnames(toadd)= paste("ci", thelims, sep="")
-	  parameterTable = cbind(parameterTable, toadd)
+	 toadd = outer(parameterTable$stdErr, theQ)
+	 toadd = toadd + matrix(parameterTable$estimate, 
+			 ncol=length(thelims), nrow=dim(parameterTable)[1])
+	 colnames(toadd)= paste("ci", thelims, sep="")
+	 parameterTable = cbind(parameterTable, toadd)
   
   parameterTable[,"pval"] = pchisq(
-			    parameterTable$estimate^2  / parameterTable$stdErr^2,
-			    df=1,lower.tail=FALSE)
-	  
-	  parameterTable[,"Estimated"] = FALSE
-	  parameterTable[paramToEstimate,"Estimated"] = TRUE
-	  parameterTable[rownames(result$varBetaHat),"Estimated"] = TRUE
-	  if(estimateVariance)
-		    parameterTable["variance","Estimated"] = TRUE
-	  
-	  rownames(parameterTable)=gsub("^variance$", "sdSpatial", 
-			    rownames(parameterTable))	
-	  rownames(parameterTable)=gsub("^nugget$", "sdNugget", 
-			    rownames(parameterTable))	
-	  parameterTable[c("sdSpatial", "sdNugget"),"estimate"] = 
-			    sqrt(parameterTable[c("sdSpatial", "sdNugget"),"estimate"])
+			 parameterTable$estimate^2  / parameterTable$stdErr^2,
+			 df=1,lower.tail=FALSE)
+	 
+	 parameterTable[,"Estimated"] = FALSE
+	 parameterTable[paramToEstimate,"Estimated"] = TRUE
+	 parameterTable[rownames(result$varBetaHat),"Estimated"] = TRUE
+	 if(estimateVariance)
+		  parameterTable["variance","Estimated"] = TRUE
+	 
+	 rownames(parameterTable)=gsub("^variance$", "sdSpatial", 
+			 rownames(parameterTable))	
+	 rownames(parameterTable)=gsub("^nugget$", "sdNugget", 
+			 rownames(parameterTable))	
+	 parameterTable[c("sdSpatial", "sdNugget"),"estimate"] = 
+			 sqrt(parameterTable[c("sdSpatial", "sdNugget"),"estimate"])
   
   #	dimnames(parameterTable) = unlist(lapply(dimnames(parameterTable),
 #			function(qq) {
@@ -712,7 +711,7 @@ likfitLgm = function(
 #  }
   
   
-	  result$summary = as.data.frame(parameterTable)
+	 result$summary = as.data.frame(parameterTable)
   result$summary$Estimated = as.logical(result$summary$Estimated)
   
   result
