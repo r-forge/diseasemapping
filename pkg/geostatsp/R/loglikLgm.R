@@ -261,13 +261,13 @@ likfitLgm = function(
       covariates = covariates[,
       grep(
         paste('^(',paste(names(theFactors), collapse='|'), ')NA$', sep=''), 
-        colnames(covariates), invert=TRUE)]
+        colnames(covariates), invert=TRUE), drop=FALSE]
     
 		  observations = all.vars(trend)[1]
 		  
 		  if(!any(names(data)==observations))
 			   warning("can't find observations ", observations, "in data")
-		  observations = data[noNA,observations]
+		  observations = data[noNA,observations, drop=FALSE]
 	 } else {
 		  # observations must be a vector and covariates a matrix
 		  trend = as.matrix(trend)
@@ -497,7 +497,7 @@ likfitLgm = function(
       "maternLogLOpt",
       start=paramsForC,    
       Sparam=as.integer(Sparam),
-      obsCov=as.double(obsCov), 
+      obsCov=as.double(as.matrix(obsCov)), 
       as.double(xcoord),
       as.double(ycoord),
       as.integer(aniso),
