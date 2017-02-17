@@ -596,7 +596,7 @@ likfitLgm = function(
     }
   } else {
     result$data$obsBC <- 
-      result$data$observations 
+      obsCov[,1]
   }
   result$data$resid = result$data$obsBC - result$data$fitted
   
