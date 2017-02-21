@@ -8,7 +8,7 @@ endif
 	R -e "knitr::knit('$<', encoding='UTF-8')" $(Rargs)
 
 %.tmd: %.Rmd
-	R -e "knitr::knit('$<', output = '$>' encoding='UTF-8')" $(Rargs) mdToTex
+	R -e "knitr::knit('$<', output = '$@', encoding='UTF-8')"  mdToTex $(Rargs)
 
 %.tex: %.tmd
 	pandoc --standalone --smart --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
