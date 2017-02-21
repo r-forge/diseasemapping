@@ -7,8 +7,11 @@ endif
 %.md: %.Rmd
 	R -e "knitr::knit('$<', encoding='UTF-8')" $(Rargs)
 
-%.tex: %.md
-	pandoc --standalone --smart --biblatex $(pandocArgs) --to=$(pandocTo) --output=$@ $<
+%.tmd: %.Rmd
+	R -e "knitr::knit('$<', output = '$>' encoding='UTF-8')" $(Rargs) mdToTex
+
+%.tex: %.tmd
+	pandoc --standalone --smart --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
 
 %.bcf: %.tex
 	xelatex $<

@@ -3,32 +3,28 @@
 library('knitr')
 library('Pmisc')
 
-knitr::knit_hooks$set(
-	marginsp = function(before, options, envir){	
-		if(!before) return()
-# use small margins
-		par(mar=c(1.5+0.9*options$marginsp,
-				1.5+0.9*options$marginsp,0.2,0.2),
-				mgp=c(1.45, 0.45, 0))
-	}		
-)
 
-knitr::knit_hooks$set(plot=hook_plot_htmlsubfig)
-
-
-knitr::opts_chunk$set(echo=FALSE, prompt=TRUE, comment=NA,
-		dev='png', marginsp=1, fig.cap=' ',
-		fig.width=2.75, fig.height=2.75,  dpi=250, 
-		tidy=TRUE,tidy.opts=list(indent=2, width.cutoff=55)
-)
-
-
+if(any(commandArgs(trailingOnly)=='mdToTex') {
 # if you'll be converting md to tex, can use the following
-if(FALSE) {
-	knitr::knit_hooks$set(plot=hook_plot_tex)
-	knitr::opts_chunk$set(out.width='0.45\\textwidth', 
+	knitr::render_latex()
+	knitr::opts_chunk$set(
+   out.width='0.45\\textwidth', 
 			dev='pdf', fig.align='center')
+} else {
+	 knitr::knit_hooks$set(plot=Pmisc::hook_plot_htmlsubfig)
+  knitr::opts_chunk$set(dev='png')
 }
+
+knitr::knit_hooks$set(
+	marginsp = Pmisc::hook_plot_margins,
+)
+
+knitr::opts_chunk$set(
+  echo=FALSE, prompt=TRUE, comment=NA,
+		marginsp=1, fig.cap=' ',
+		fig.width=2.75, fig.height=2.75,  dpi=250, 
+		tidy=TRUE, tidy.opts=list(indent=2, width.cutoff=55)
+)
 
 
 options(width=80)
