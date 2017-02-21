@@ -11,7 +11,7 @@ endif
 	R -e "knitr::knit('$<', output = '$@', encoding='UTF-8')"  mdToTex $(Rargs)
 
 %.tex: %.tmd
-	pandoc --standalone --smart --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
+	pandoc --standalone --smart --biblatex --filter=pandoc-crossref $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
 
 %.bcf: %.tex
 	xelatex $<
@@ -24,16 +24,16 @@ endif
 	xelatex -interaction=nonstopmode $<
 
 %.html: %.md
-	pandoc --smart --standalone --mathjax --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
+	pandoc --smart --standalone --mathjax --filter=pandoc-crossref --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
 
 %.rtf: %.md
-	pandoc --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
+	pandoc --smart --standalone --filter=pandoc-crossref --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
 
 %.odt: %.md
-	pandoc --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$(R --slave -e "cat(system.file(\"src\",\"template.odt\",package=\"Pmisc\"))") --output=$@ $<
+	pandoc --smart --standalone --filter=pandoc-crossref --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$(R --slave -e "cat(system.file(\"src\",\"template.odt\",package=\"Pmisc\"))") --output=$@ $<
 
 %.docx: %.md
-	pandoc --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$(R --slave -e "cat(system.file(\"src\",\"template.docx\",package=\"Pmisc\"))") --output=$@ $<
+	pandoc --smart --standalone --filter=pandoc-crossref --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$(R --slave -e "cat(system.file(\"src\",\"template.docx\",package=\"Pmisc\"))") --output=$@ $<
 
 clean:
 	rm *.run.xml* *.blg *.out *.log *.aux *.bcf *.bbl *.nav *.toc *.vrb

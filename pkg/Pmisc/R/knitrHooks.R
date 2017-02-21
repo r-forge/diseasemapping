@@ -115,7 +115,8 @@ hook_plot_htmlsubfig = function(x, options) {
     }
     
     if(fig.cur == fig.num)
-    	result = paste(result, "\n : Figure: ", cap, "\n\n\n\n", sep="")	
+    	result = paste(result, "\n : ", cap, " {#tbl:", 
+         knitr::opts_current$get()$label, "}\n\n\n\n", sep="")	
     
   }
   result
