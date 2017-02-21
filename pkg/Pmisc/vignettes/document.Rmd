@@ -4,7 +4,7 @@ library('knitr')
 library('Pmisc')
 
 
-if(any(commandArgs(trailingOnly)=='mdToTex')) {
+if(any(commandArgs()=='mdToTex')) {
 # if you'll be converting md to tex, can use the following
 	knitr::render_latex()
 	knitr::opts_chunk$set(
