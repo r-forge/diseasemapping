@@ -58,7 +58,7 @@ hook_plot_mdsubfig = function(x, options) {
     
     if(fig.cur==1) {
       result = paste('<div id="',
-          options$fig.lp, ":",
+          options$fig.lp, 
           options$label, 
           '">\n',
           result, sep="")
