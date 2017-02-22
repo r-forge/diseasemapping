@@ -6,17 +6,17 @@ library('Pmisc')
 
 if(any(commandArgs()=='mdToTex')) {
 # if you'll be converting md to tex, can use the following
-	knitr::render_latex()
-	knitr::opts_chunk$set(
+  knitr::knit_hooks$set(plot=knitr::hook_plot_tex)  
+  knitr::opts_chunk$set(
    out.width='0.45\\textwidth', 
 			dev='pdf', fig.align='center')
 } else {
-	 knitr::knit_hooks$set(plot=Pmisc::hook_plot_htmlsubfig)
+  knitr::knit_hooks$set(plot=Pmisc::hook_plot_htmlsubfig)
   knitr::opts_chunk$set(dev='png')
 }
 
 knitr::knit_hooks$set(
-	marginsp = Pmisc::hook_plot_margins,
+	marginsp = Pmisc::hook_plot_margins
 )
 
 knitr::opts_chunk$set(
