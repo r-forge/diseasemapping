@@ -16,12 +16,12 @@ if(any(commandArgs()=='mdToTex')) {
 }
 
 knitr::knit_hooks$set(
-	marginsp = Pmisc::hook_plot_margins
+	margins = Pmisc::hook_plot_margins
 )
 
 knitr::opts_chunk$set(
   echo=FALSE, prompt=TRUE, comment=NA,
-		marginsp=1, fig.cap=' ',
+		margins=1, fig.cap=' ',
 		fig.width=2.75, fig.height=2.75,  dpi=250, 
 		tidy=TRUE, tidy.opts=list(indent=2, width.cutoff=55)
 )
