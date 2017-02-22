@@ -1,5 +1,6 @@
 #' Hooks for knitr
 #' 
+#' @aliases hook_plot_mdsubfig
 #' @description Hooks for including in knitr documents
 #' @param x see \code{\link[knitr]{hook_pdfcrop}}
 #' @param options see \code{\link[knitr]{hook_pdfcrop}}

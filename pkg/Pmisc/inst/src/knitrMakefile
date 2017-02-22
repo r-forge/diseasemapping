@@ -2,38 +2,94 @@ ifndef pandocTo
 pandocTo = latex
 endif
 
+REXE = R
+PANDOC = pandoc
+XELATEX = xelatex
+RM = rm
+
+DOCXTEMPLATE = $(REXE) --slave -e "cat(system.file('src','template.docx',package='Pmisc'))"
+
+ODTTEMPLATE = $(REXE) --slave -e "cat(system.file('src','template.odt',package='Pmisc'))"
+
 .PRECIOUS: %.md %.tex
 
-%.md: %.Rmd
-	R -e "knitr::knit('$<', encoding='UTF-8')" $(Rargs)
+#
+# temporary files to remove
+#
+clean:
+	$(RM) *.run.xml* *.blg *.out *.log *.aux *.nav *.toc *.vrb
+	
+#
+# tmd file is markdown only to be converted to latex, 
+# include
+# if(any(commandArgs()=='mdToTex')) {
+#   knitr::knit_hooks$set(plot=knitr::hook_plot_tex)  
+#   mdToTex=TRUE
+# } else {
+#   knitr::knit_hooks$set(plot=Pmisc::hook_plot_htmlsubfig)
+#   mdToTex=FALSE
+# }
+# specify files for tex from tmd directly 
+# so as not to conflict with %.tex: %.md rule
+#
 
+somefile.tex: somefile.tmd
+	$(PANDOC) --standalone --smart --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
+
+#
+# Create tmd
+#
 %.tmd: %.Rmd
-	R -e "knitr::knit('$<', output = '$@', encoding='UTF-8')"  mdToTex $(Rargs)
+	$(REXE) -e "knitr::knit('$<', output = '$@', encoding='UTF-8')"  mdToTex $(Rargs)
 
-%.tex: %.tmd
-	pandoc --standalone --smart --biblatex --filter=pandoc-crossref $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
+#
+# Bog standard markdown
+#
+%.md: %.Rmd
+	$(REXE) -e "knitr::knit('$<', encoding='UTF-8')" $(Rargs)
+
+#
+# Bog standard markdown to tex
+#
+%.tex: %.md
+	$(PANDOC) --standalone --smart --biblatex --filter=pandoc-crossref $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
+
+#
+# tex bibliography
+#
+%.bbl: %.bcf
+	$(BIBER) $<	
 
 %.bcf: %.tex
-	xelatex $<
+	$(XELATEX) -interaction=nonstopmode $<
 
-%.bbl: %.bcf
-	biber $<	
-
+#
+# pdf from tex
+# 
 %.pdf: %.tex %.bbl
-	xelatex -interaction=nonstopmode $<;
-	xelatex -interaction=nonstopmode $<
-
+	$(XELATEX) -interaction=nonstopmode $<;
+	$(XELATEX) -interaction=nonstopmode $<
+#
+# html from md
+#
 %.html: %.md
-	pandoc --smart --standalone --mathjax --filter=pandoc-crossref --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
+	$(PANDOC) --smart --standalone --mathjax --filter=pandoc-crossref --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
 
-%.rtf: %.md
-	pandoc --smart --standalone --filter=pandoc-crossref --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
-
+# 
+# libreoffice document
+#
 %.odt: %.md
-	pandoc --smart --standalone --filter=pandoc-crossref --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$(R --slave -e "cat(system.file(\"src\",\"template.odt\",package=\"Pmisc\"))") --output=$@ $<
+	$(PANDOC) --smart --standalone --filter=pandoc-crossref --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$($(ODTTEMPLATE)) --output=$@ $<
 
+#
+# MS Word document
+#
 %.docx: %.md
-	pandoc --smart --standalone --filter=pandoc-crossref --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$(R --slave -e "cat(system.file(\"src\",\"template.docx\",package=\"Pmisc\"))") --output=$@ $<
+	$(PANDOC) --smart --standalone --filter=pandoc-crossref --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$($(DOCXTEMPLATE)) --output=$@ $<
 
-clean:
-	rm *.run.xml* *.blg *.out *.log *.aux *.bcf *.bbl *.nav *.toc *.vrb
+# 
+# rtf
+# 
+%.rtf: %.md
+	$(PANDOC) --smart --standalone --filter=pandoc-crossref --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
+

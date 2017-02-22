@@ -4,6 +4,7 @@
 \alias{hook_plot_beamer}
 \alias{hook_plot_htmlsubfig}
 \alias{hook_plot_margins}
+\alias{hook_plot_mdsubfig}
 \title{Hooks for knitr}
 \usage{
 hook_plot_htmlsubfig(x, options)
