@@ -33,8 +33,13 @@ clean:
 # so as not to conflict with %.tex: %.md rule
 #
 
+# md to tex, convert from a tmd if it exists
+# get rid of subfig package, it conflicts with subcaption (or something else)
 %.tex: %.tmd
-	$(PANDOC) --standalone --smart --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
+	$(PANDOC) --standalone --smart --filter=pandoc-crossref --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) $< | sed s/\\\\usepackage{subfig}// > $@
+
+%.tex: %.md
+	$(PANDOC) --standalone --smart --filter=pandoc-crossref --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) $< | sed s/\\\\usepackage{subfig}// > $@
 
 #
 # Create tmd
@@ -47,13 +52,6 @@ clean:
 #
 %.md: %.Rmd
 	$(REXE) -e "knitr::knit('$<', encoding='UTF-8')" $(Rargs)
-
-#
-# copy bog standard markdown to tex markdown
-# will only be run if there's no Rmd but there's an md
-#
-%.tmd: %.md
-	$(CP) $< $@
 
 #
 # tex bibliography

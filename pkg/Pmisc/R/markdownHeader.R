@@ -4,6 +4,7 @@ subcaptionCommands = c(
   '\\newcommand{\\subfloat}[2][need a sub-caption]{ \\subcaptionbox{#1}{#2} }'
 )
 
+
 #' @export
 mathCommands =c(
   '\\DeclareMathOperator{\\var}{var}',
@@ -82,7 +83,12 @@ markdownHeader = function(
     biblatex=biblatex,
     'biblio-title'=bibliotitle,
     'biblio-style'=bibliostyle,
-    biblatexoptions = biblatexoptions, 
+    biblatexoptions = biblatexoptions,
+    subfigureChildTemplate = '"$$i$$) $$t$$"',
+subfigureTemplate= '"*$$figureTitle$$ $$i$$*$$titleDelim$$ $$t$$"',
+figPrefix= '""',
+tblPrefix= '""',
+subfigGrid= 'true',
     ...)	
   
   dots = dots[

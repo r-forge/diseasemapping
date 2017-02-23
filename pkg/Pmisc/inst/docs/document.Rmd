@@ -6,9 +6,11 @@ if(any(commandArgs()=='mdToTex')) {
   knitr::opts_chunk$set(
    out.width='0.45\\textwidth', 
 			dev='pdf', fig.align='center')
+  mdToTex = TRUE
 } else {
   knitr::knit_hooks$set(plot=Pmisc::hook_plot_mdsubfig)
-  knitr::opts_chunk$set(dev='png', out.width='30%')
+  knitr::opts_chunk$set(dev='png', out.width='40%')
+  mdToTex = FALSE
 }
 
 knitr::knit_hooks$set(
@@ -60,11 +62,14 @@ Pmisc::markdownHeader(
 # Introduction
 
 
-@lindgren2011explicit is a very good paper.
+@lindgren2011explicit is a very good paper, but Figure [@fig:aplot] is dull.
 
 
 $$
-f(x) = x + \int_0^\infty \exp(-\theta u^2) du
+\begin{aligned}
+f(x) = &x + \int_0^\infty \exp(-\theta u^2) du\\
+\rho(x) = & \sum_i x^i
+\end{aligned}
 $$
 
 
@@ -80,6 +85,14 @@ plot(1:10-4)
 plot(1:10+4)
 ```
 
+
+```{r anotherplot, fig.ncol=3, fig.cap='Other uninteresting plots', fig.subcap=month.name[1:6], out.width=c('30%', '0.3\\textwidth')[1+mdToTex]}
+
+for(D in knitr::opts_current$get()$fig.subcap) {
+  hist(runif(100))
+}
+
+```
 
 # References
 

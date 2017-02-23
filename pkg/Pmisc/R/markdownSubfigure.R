@@ -41,13 +41,18 @@ hook_plot_mdsubfig = function(x, options) {
     Drow = floor((fig.cur-1)/fig.ncol)+1
     Dcol = fig.cur - (Drow-1) * fig.ncol 
     
+    if((Drow == 1) & length(options$out.width)) {
+      # in the first row
+      result = paste(
+          gsub("[[:space:]]*$", "", result), 
+          '{width=', options$out.width, '}', sep=''
+          )
+    }
     
     if( (Dcol == fig.ncol ) | (fig.cur == fig.num) ) { 
       # we're at the end of a column or the last plot
       Dend = fig.ncol*Drow
 
- 
-      
       result = paste(result, 
           "\n\n", sep=""
       )
