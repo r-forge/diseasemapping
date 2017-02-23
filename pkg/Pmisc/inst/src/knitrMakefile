@@ -33,7 +33,7 @@ clean:
 # so as not to conflict with %.tex: %.md rule
 #
 
-somefile.tex: somefile.tmd
+%.tex: %.tmd
 	$(PANDOC) --standalone --smart --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
 
 #
@@ -49,10 +49,11 @@ somefile.tex: somefile.tmd
 	$(REXE) -e "knitr::knit('$<', encoding='UTF-8')" $(Rargs)
 
 #
-# Bog standard markdown to tex
+# copy bog standard markdown to tex markdown
+# will only be run if there's no Rmd but there's an md
 #
-%.tex: %.md
-	$(PANDOC) --standalone --smart --biblatex --filter=pandoc-crossref $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
+%.tmd: %.md
+	$(CP) $< $@
 
 #
 # tex bibliography

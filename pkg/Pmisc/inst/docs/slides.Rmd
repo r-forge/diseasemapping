@@ -1,7 +1,3 @@
-<!--
-%\VignetteEngine{Pmisc::barebones}
-%\VignetteIndexEntry{Examples of slides with knitr and beamer}
--->
 
 
 ```{r setup, include=FALSE}

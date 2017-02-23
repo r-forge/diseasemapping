@@ -65,6 +65,7 @@ Makefile = function(x, suffix = NULL,
       XELATEX = whichfun("xelatex"),
       BIBER = whichfun("biber"),
       RM = whichfun("rm"),
+      CP = whichfun("cp"),
       pandocTo = c('beamer', 'latex')[2L-beamer],
       DOCXTEMPLATE = 
           system.file('src/template.docx', package='Pmisc'),

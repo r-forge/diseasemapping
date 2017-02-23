@@ -1,9 +1,5 @@
 ```{r setup, include=FALSE}
 
-library('knitr')
-library('Pmisc')
-
-
 if(any(commandArgs()=='mdToTex')) {
 # if you'll be converting md to tex, can use the following
   knitr::knit_hooks$set(plot=knitr::hook_plot_tex)  
@@ -11,8 +7,8 @@ if(any(commandArgs()=='mdToTex')) {
    out.width='0.45\\textwidth', 
 			dev='pdf', fig.align='center')
 } else {
-  knitr::knit_hooks$set(plot=Pmisc::hook_plot_htmlsubfig)
-  knitr::opts_chunk$set(dev='png')
+  knitr::knit_hooks$set(plot=Pmisc::hook_plot_mdsubfig)
+  knitr::opts_chunk$set(dev='png', out.width='30%')
 }
 
 knitr::knit_hooks$set(
@@ -45,12 +41,7 @@ cat('
 
 ```
 
-```{r metadata, include=FALSE, eval=FALSE, purl=FALSE} 
-"
-%\VignetteIndexEntry{Example of an html document with subfigures}
-%\VignetteEngine{Pmisc::barebones}
-"
-```
+
 
 		
 ```{r theHeader, echo=FALSE}
