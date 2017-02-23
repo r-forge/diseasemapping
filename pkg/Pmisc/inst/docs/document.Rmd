@@ -91,6 +91,26 @@ plot(1:10+4)
 for(D in knitr::opts_current$get()$fig.subcap) {
   hist(runif(100))
 }
+```
+
+Here is a table
+
+```{r theTable}
+
+mytable = as.data.frame(matrix(runif(6),,3))
+names(mytable) = month.name[1:ncol(mytable)]
+
+tableFun = function(...) {
+  if(mdToTex) {
+    Hmisc::latex(...)
+  } else {
+    Hmisc::html(...)
+  }
+}
+tableFun(mytable, digits=3, file='',
+  caption = 'the table', caption.loc='bottom',
+  label = 'tbl:theTable'
+    )
 
 ```
 

@@ -16,8 +16,8 @@ Patrick Brown
 
 \examples{
 
-
-mydir = tempdir()
+library("Pmisc")
+(mydir = tempdir())
 
 file.copy(
 	system.file("docs/document.Rmd", package='Pmisc'),
@@ -31,14 +31,12 @@ Makefile("document", suffix=c('tmd', 'pdf','html','docx'),
 mydirMake = gsub("\\\\", "/", gsub("^C:", "/cygdrive/c", mydir))
 
 \dontrun{
-
 # run make
-system(
-  paste("bash -c \"cd ", mydirMake, "; make\"", sep="") 
-)
-	
+system(paste("bash -c \"cd ", mydirMake, "; make\"", sep=""))
 }
 
-file.path(mydir, 'document.pdf')
+list.files(mydir, '*.(pdf|docx|Rmd|html|.md|tex)$',
+  full.names=TRUE, ignore.case=TRUE)
+
 
 }
