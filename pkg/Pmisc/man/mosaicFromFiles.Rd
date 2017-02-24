@@ -24,7 +24,7 @@ mosaicFromFiles(x, cropOut = NULL, fun = "mean", tolerance = 0.05,
 \item{...}{Additional arguments for \code{\link[raster]{writeRaster}}}
 }
 \value{
-A \code{\link[raster]{RasterLayer}}
+A \code{\link[raster]{raster}}
 }
 \description{
 Mosaic raster files into a new raster with a larger spatial extent

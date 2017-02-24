@@ -18,7 +18,7 @@
 #'   theFiles
 #' }
 
-#' @seealso \code{\link[base]{download.file}}, \code{\link[utils]{unzip}}
+#' @seealso \code{\link[utils]{download.file}}, \code{\link[utils]{unzip}}
 #' @export
 downloadIfOld = function(
   url,

@@ -9,7 +9,7 @@
 #' @param filename Output file, see \code{\link[raster]{writeRaster}}
 #' @param overwrite Logical, see \code{\link[raster]{writeRaster}}
 #' @param ... Additional arguments for \code{\link[raster]{writeRaster}}
-#' @return A \code{\link[raster]{RasterLayer}}
+#' @return A \code{\link[raster]{raster}}
 #' @seealso \code{\link[raster]{mosaic}}, \code{\link[raster]{writeRaster}}
 #' @export 
 mosaicFromFiles = function(x, cropOut=NULL, fun='mean',
