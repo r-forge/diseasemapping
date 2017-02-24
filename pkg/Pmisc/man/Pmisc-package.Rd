@@ -6,7 +6,7 @@
 Pmisc package
 }
 \description{
-Various utilities which will eventually be put into other packages
+Various functions for knitr documents, INLA, and lgcp.
 }
 
 
@@ -15,28 +15,32 @@ Patrick Brown
 }
 
 \examples{
-
 library("Pmisc")
-(mydir = tempdir())
 
+# copy the document.Rmd file to the temporary folder
+(mydir = tempdir())
 file.copy(
 	system.file("docs/document.Rmd", package='Pmisc'),
 	mydir, overwrite = TRUE)
 
+# create a Makefile for building document.Rmd into pdf, html and docx
 Makefile("document", suffix=c('tmd', 'pdf','html','docx'),
 	output = file.path(mydir, 'Makefile'), 
 	cygwin = .Platform$OS.type == 'windows')
 
-# if necessary, reformat directory for cygwin
-mydirMake = gsub("\\\\", "/", gsub("^C:", "/cygdrive/c", mydir))
 
-\dontrun{
-# run make
-system(paste("bash -c \"cd ", mydirMake, "; make\"", sep=""))
+# run make to build the output files
+if(interactive()) {
+# if necessary, reformat directory name for cygwin
+	mydirMake = gsub("\\\\", "/", 
+	  gsub("^C:", "/cygdrive/c", mydir))
+	system(paste(
+	  "bash -c \"cd ", mydirMake, 
+	  "; make\"", sep=""))
 }
 
-list.files(mydir, '*.(pdf|docx|Rmd|html|.md|tex)$',
-  full.names=TRUE, ignore.case=TRUE)
-
-
+# show the files
+list.files(mydir, 
+  '*.(pdf|docx|html|.md|tex)$',
+  full.names=TRUE, ignore.case=TRUE)  
 }

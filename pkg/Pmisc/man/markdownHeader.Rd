@@ -1,25 +1,28 @@
 \name{markdownHeader}
 \alias{markdownHeader}
 \alias{today}
+\alias{mathCommands}
+\alias{subcaptionCommands}
 \title{Markdown headers}
 \usage{
 markdownHeader(
-		title=NULL, 
-		author=NULL,
-		date=Pmisc::today(),
-		biblatex=1,
-	  bibliotitle = 'References',
-	  bibliostyle = 'authoryear,backend=biber',
-		biblatexoptions = c(
-				maxbibnames=20,
-				maxcitenames=2,doi='false',
-				isbn='false',	giveninits='true',
-				uniquelist='false'),
-		startAndEnd='---',
-		beamer=FALSE,
-	  mathCommands=FALSE,
-  subcaptionCommands = !beamer,
-		...
+	title=NULL, 
+	author=NULL,
+	date=Pmisc::today(),
+	biblatex=1,
+	bibliotitle = 'References',
+	bibliostyle = 'authoryear,backend=biber',
+	biblatexoptions = c(
+		maxbibnames=20,
+		maxcitenames=2,doi='false',
+		isbn='false',	
+		giveninits='true',
+		uniquelist='false'),
+	startAndEnd='---',
+	beamer=FALSE,
+	mathCommands=FALSE,
+	subcaptionCommands = !beamer,
+	...
 )
 today(...)
 mathCommands

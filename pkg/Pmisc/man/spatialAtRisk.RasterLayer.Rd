@@ -29,4 +29,3 @@ par(mfrow=c(1,2))
 plot(x)
 plot(x2)
 }
-

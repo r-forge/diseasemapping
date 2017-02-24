@@ -40,4 +40,3 @@ Checks if a downloaded file is old and re-downloads is necessary.  Any zip files
 \seealso{
 \code{\link[base]{download.file}}, \code{\link[utils]{unzip}}
 }
-

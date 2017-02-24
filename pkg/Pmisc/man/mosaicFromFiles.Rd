@@ -32,4 +32,3 @@ Mosaic raster files into a new raster with a larger spatial extent
 \seealso{
 \code{\link[raster]{mosaic}}, \code{\link[raster]{writeRaster}}
 }
-

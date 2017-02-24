@@ -26,4 +26,3 @@ Y_i \\sim & N(\\mu_i, \\tau^2)\\\\
 ", FALSE))
 
 }
-

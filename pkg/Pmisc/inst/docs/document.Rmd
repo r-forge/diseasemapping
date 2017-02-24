@@ -53,7 +53,7 @@ Pmisc::markdownHeader(
 	slides=FALSE,
 	bibliography = bibFile,
 	geometry='margin=1in',
-#	csl = system.file('src','apa-no-doi-no-issue.csl', package='Pmisc'),
+	csl = system.file('src','apa-no-doi-no-issue.csl', package='Pmisc'),
 	css = system.file('src','article.css', package='Pmisc')
 )
 ```
@@ -93,24 +93,15 @@ for(D in knitr::opts_current$get()$fig.subcap) {
 }
 ```
 
-Here is a table
+Below one will find Table [@tbl:theTable]
 
 ```{r theTable}
 
 mytable = as.data.frame(matrix(runif(6),,3))
 names(mytable) = month.name[1:ncol(mytable)]
 
-tableFun = function(...) {
-  if(mdToTex) {
-    Hmisc::latex(...)
-  } else {
-    Hmisc::html(...)
-  }
-}
-tableFun(mytable, digits=3, file='',
-  caption = 'the table', caption.loc='bottom',
-  label = 'tbl:theTable'
-    )
+mdTable(x=mytable, digits=3,
+  caption = 'the table', caption.loc='bottom')
 
 ```
 

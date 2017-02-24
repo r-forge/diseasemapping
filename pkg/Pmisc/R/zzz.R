@@ -1,23 +1,5 @@
 .onLoad = function(lib, pkg) {
 	
-	# basic knitr builder
-	tools::vignetteEngine(
-			name='barebones', 
-			package='Pmisc',
-			weave= function(file, ...) {
-				# create an empty .tex file.  
-				# this is a hack because R CMD build doesn't
-				# check for .md files
-				file.create(gsub("\\.[[:alpha:]]+$", ".tex", file))
-				knitr::knit(file, ...)
-			},
-			tangle = function(...) knitr::purl(...), 
-			pattern = "[.][rR](nw|md)$",
-			aspell = list(
-    			filter = function(...) knitr::knit_filter(...)
-			)
-	)
-	
 	# spin goat's hair
 	tools::vignetteEngine(
 			name = 'spin', 
