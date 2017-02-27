@@ -72,6 +72,15 @@ Makefile = function(x, suffix = NULL,
       ODTTEMPLATE = 
           system.file('src/template.odt', package='Pmisc')
   )
+
+  pandocCrossref = gsub("(pandoc)([.]exe$)?", "\\1-crossref\\2", 
+      before$PANDOC)
+  if(file.exists(pandocCrossref)) {
+    before$PANDOCCROSSREF = paste("--filter=", pandocCrossref, sep="")
+  } else {
+    before$PANDOCCROSSREF = ''
+  }
+  
   
   before = paste(paste(names(before), before, sep='='), collapse='\n')
   before = paste(before, '\n\nall: ', paste(x, collapse=' '), '\n\n')

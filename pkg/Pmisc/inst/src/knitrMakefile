@@ -6,6 +6,7 @@ REXE = R
 PANDOC = pandoc
 XELATEX = xelatex
 RM = rm
+PANDOCCROSSREF =
 
 DOCXTEMPLATE = $(REXE) --slave -e "cat(system.file('src','template.docx',package='Pmisc'))"
 
@@ -39,7 +40,7 @@ clean:
 	$(PANDOC) --standalone --smart --filter=pandoc-crossref --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) $< | sed s/\\\\usepackage{subfig}// > $@
 
 %.tex: %.md
-	$(PANDOC) --standalone --smart --filter=pandoc-crossref --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) $< | sed s/\\\\usepackage{subfig}// > $@
+	$(PANDOC) --standalone --smart $(PANDOCCROSSREF) --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) $< | sed s/\\\\usepackage{subfig}// > $@
 
 #
 # Create tmd
@@ -72,19 +73,19 @@ clean:
 # html from md
 #
 %.html: %.md
-	$(PANDOC) --smart --standalone --mathjax --filter=pandoc-crossref --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
+	$(PANDOC) --smart --standalone --mathjax $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
 
 # 
 # libreoffice document
 #
 %.odt: %.md
-	$(PANDOC) --smart --standalone --filter=pandoc-crossref --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$($(ODTTEMPLATE)) --output=$@ $<
+	$(PANDOC) --smart --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$($(ODTTEMPLATE)) --output=$@ $<
 
 #
 # MS Word document
 #
 %.docx: %.md
-	$(PANDOC) --smart --standalone --filter=pandoc-crossref --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$($(DOCXTEMPLATE)) --output=$@ $<
+	$(PANDOC) --smart --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$($(DOCXTEMPLATE)) --output=$@ $<
 
 # 
 # rtf
