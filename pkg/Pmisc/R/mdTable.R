@@ -58,10 +58,16 @@ mdTable = function(x, ..., mdToTex = 'auto') {
     
   } else {
     # produce HTML table with htmlTable::htmlTable or knitr::kable
+
+    # some options will be ignored if knitr::kable is used
+    getRidForKable = c(
+        'caption.loc', 'caption.lot', 'pos.caption', 
+        'label', 'row.label', 'title', 'fig.pos',
+        'table.env', 'center',
+        'booktabs','ctable')
     
 	    
 	    # use kable if there aren't rgroup and cgroup commands
-	    getRidForKable = c('caption.loc','label')
 	    if(all(
 	        names(dots) %in% 
 	          c(names(formals(knitr::kable)), getRidForKable) 
