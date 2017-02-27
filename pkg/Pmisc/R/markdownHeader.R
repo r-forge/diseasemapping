@@ -56,13 +56,13 @@ markdownHeader = function(
     maxcitenames=2,doi='false',
     isbn='false',	giveninits='true',
     uniquelist='false'),
-  startAndEnd='---',
   beamer=FALSE,
   mathCommands=FALSE,
   subcaptionCommands = !beamer,
   ...
 ) {
-  
+
+  startAndEnd='---'  
   
   extraHeaderIncludes = c()
   if(mathCommands)
