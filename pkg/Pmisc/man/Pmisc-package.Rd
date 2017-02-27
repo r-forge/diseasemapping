@@ -9,6 +9,11 @@ Pmisc package
 Various functions for knitr documents, INLA, and lgcp.
 }
 
+\details{
+
+The example below makes html, docs, and pdf files from a simple template \code{document.Rmd}.
+
+}
 
 \author{
 Patrick Brown
