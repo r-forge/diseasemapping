@@ -136,17 +136,13 @@ legend('topright', lty=1, col=c('black','blue'), legend=c('posterior','prior'))
 \section*{BYM with penalised complexity prior}
 
 
-
-
-
-
-
 <<bymPc, tidy=TRUE>>=
 kBYMpc = try(
 bym(
 		formula = observed ~ offset(logExpected) + poverty,
     kentucky,
-		priorCI = list(sd=c(1, 0.05), propSpatial=c(0.2, 0.95))),
+		priorCI = list(sd=c(1, 0.05), propSpatial=c(0.2, 0.95)),
+  verbose=TRUE),
 silent=TRUE
 )
 @
