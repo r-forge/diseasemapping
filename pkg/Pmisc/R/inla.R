@@ -216,13 +216,13 @@ priorPost = function(object) {
             internal.name = colnames(resxx)
           )
           colnames(resxx) = resxx['short.name',]
-          resxx = rbind(resxx, id=xx$hyperid)
+          resxx = rbind(resxx, id=xx$hyperid,
+            label = c(xx$label, NA)[1])
           resxx
         })
       resx = do.call(cbind, resx)
       resx = as.data.frame(t(resx))
       resx$index = 1:nrow(resx)
-      resx$label = c(xx$label, NA)[1]
       resx
     })
   paramDf = do.call(rbind, paramList)
@@ -358,7 +358,7 @@ priorPost = function(object) {
   names(result) = paramDf[,'out.name']
   
   result$parameters = paramDf[,'out.name']
-
+  
   result$legend = list(
     x="topleft", lty=Slty, 
     col=Scol, 
