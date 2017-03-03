@@ -265,10 +265,11 @@ priorPost = function(object) {
       
       postHere = object$marginals.hyperpar[[inlaNameHere]]
       
+      xLim = range(object$summary.hyperpar[inlaNameHere,
+          grep('quant$', colnames(object$summary.hyperpar))
+        ])*c(0.8, 1.2)
 		    if(is.null(postHere)) {
-        xRange = range(object$summary.hyperpar[inlaNameHere,
-            grep('quant$', colnames(object$summary.hyperpar))
-          ])*c(0.8, 1.2)
+        xRange = xLim
         xSeq = seq(xRange[1], xRange[2], len=1000)
         postHere = cbind(
           x = xSeq, y = NA
@@ -349,9 +350,8 @@ priorPost = function(object) {
         xlab=gsub(" .*$", "", paramDf[Dparam, 'out.name']),
         ylab='dens', 
         xaxs='i',
-        xlim = xRange
+        xlim = xLim
       )
-      
     }
   }
   
