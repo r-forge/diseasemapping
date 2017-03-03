@@ -89,16 +89,29 @@ priorPostSd = function(
 									   -log(xhyper$param[2])/xhyper$param[1]
 							   )
 					   )
+
       
-      result[[Dparam]]$posterior = 
-        result[[Dparam]]$posterior[result[[Dparam]]$posterior[,1] < maxX, ]
+      forXlim = 20*c(0.8, 1.2)*range(thesummary[
+          Dprec, 
+          grep("quant$", colnames(thesummary))])
+      
+      forXlim = range(c(floor(forXlim), ceiling(forXlim)))/20
+
+      newXseq = sort(c(forXlim, result[[Dparam]]$posterior[,1]))
       
       result[[Dparam]]$posterior = cbind(
-        result[[Dparam]]$posterior,
+        x = newXseq,
+        y = stats::approx(
+          result[[Dparam]]$posterior[,1],
+          result[[Dparam]]$posterior[,2],
+          newXseq, rule=2
+          )$y,
         prior = stats::dexp(
-						    result[[Dparam]]$posterior[,1], 
+						    newXseq, 
           -log(xhyper$param[2])/xhyper$param[1]
-					   ))
+					   )
+        )
+              
       
       result[[Dparam]]$matplot = list(
         x = result[[Dparam]]$posterior[,1], 
@@ -108,12 +121,8 @@ priorPostSd = function(
         xlab='sd',
         ylab='dens', 
         xaxs='i',
-        xlim = c(0.8, 1.2)*range(thesummary[
-            Dprec, 
-            grep("quant$", colnames(thesummary))])
-      )
-      
-      
+        xlim = forXlim      )
+            
 		  }
 		  
 		  # spatial proportion
@@ -157,17 +166,18 @@ priorPostSd = function(
 			   
 			   result[[Dphi]]$prior = priorProp[,c('x','dens')]
 			   result[[Dphi]]$posterior = postPhi
-      Dparam = Dphi
-      result[[Dparam]]$matplot = list(
-        x = result[[Dparam]]$posterior[,1], 
-        y = result[[Dparam]]$posterior[,3:2], 
+      
+      
+      result[[Dphi]]$matplot = list(
+        x = result[[Dphi]]$posterior[,1], 
+        y = result[[Dphi]]$posterior[,3:2], 
         type='l', lty=Slty, 
         col=Scol, 
         xlab='sd',
         ylab='dens', 
         xaxs='i',
         xlim = rev(c(0.8, 1.2))*range(
-          result[[Dparam]]$posterior[,1]
+          result[[Dphi]]$posterior[,1]
         )
       )
       
@@ -240,7 +250,7 @@ priorPost = function(object) {
       paramDf[Dparam, 'out.name'] = paste("sd for", 
         gsub("INLA.Data", paramDf[Dparam, 'label'], paramDf[Dparam, 'id']))
     } else {
-      
+      # not a pc prec prior
       paramDf[Dparam, 'out.name'] = paste(
         paramDf[Dparam, 'short.name'], 'for',
         gsub("INLA.Data", paramDf[Dparam, 'label'], paramDf[Dparam, 'id']))
@@ -267,7 +277,9 @@ priorPost = function(object) {
       
       xLim = range(object$summary.hyperpar[inlaNameHere,
           grep('quant$', colnames(object$summary.hyperpar))
-        ])*c(0.8, 1.2)
+        ])*20*c(0.95, 1.05)
+      xLim = range(c(floor(xLim), ceiling(xLim)))/20
+      
 		    if(is.null(postHere)) {
         xRange = xLim
         xSeq = seq(xRange[1], xRange[2], len=1000)
@@ -307,7 +319,9 @@ priorPost = function(object) {
           c(0.001, 0.999), 
           shape=priorHere$param[1], 
           rate=priorHere$param[2])
+
         xSeqP = seq(xRangeP[1], xRangeP[2], len=1000)
+        
         priorMat = cbind(x=xSeqP, 
           y=stats::dgamma(
             xSeqP,           
@@ -341,7 +355,7 @@ priorPost = function(object) {
         prior = priorMat,
         posterior = cbind(postHere, prior=priorDens)
       )
-      
+
       result[[Dparam]]$matplot = list(
         x = result[[Dparam]]$posterior[,1], 
         y = result[[Dparam]]$posterior[,3:2], 
@@ -352,8 +366,8 @@ priorPost = function(object) {
         xaxs='i',
         xlim = xLim
       )
-    }
-  }
+    } # parameter not pc.prec
+  } # loop through parameters
   
   names(result) = paramDf[,'out.name']
   
