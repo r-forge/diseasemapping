@@ -179,7 +179,7 @@ priorPostSd = function(
 	 result$summary = thesummary
   
 	 result$legend = list(
-    x="topleft", lty=Slty, 
+    x="topright", lty=Slty, 
     col=Scol, 
     legend=names(Slty), 
     bty='n')
