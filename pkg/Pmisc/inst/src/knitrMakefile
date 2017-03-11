@@ -5,6 +5,7 @@ endif
 REXE = R
 PANDOC = pandoc
 XELATEX = xelatex
+BIBER = biber
 RM = rm
 PANDOCCROSSREF =
 

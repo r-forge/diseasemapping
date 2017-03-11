@@ -39,6 +39,9 @@ The following can be used in an eclipse configuration
 }
 
 \examples{
+
+file.show(system.file(file.path('src','knitrMakefile'), package='Pmisc'))
+
 Makefile(x='stuff.md', suffix='pdf', beamer=TRUE, output=cat)
 
 make("stuff.html")

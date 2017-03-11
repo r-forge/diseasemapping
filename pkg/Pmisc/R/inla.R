@@ -89,14 +89,14 @@ priorPostSd = function(
 									   -log(xhyper$param[2])/xhyper$param[1]
 							   )
 					   )
-
+      
       
       forXlim = 20*c(0.8, 1.2)*range(thesummary[
           Dprec, 
           grep("quant$", colnames(thesummary))])
       
       forXlim = range(c(floor(forXlim), ceiling(forXlim)))/20
-
+      
       newXseq = sort(c(forXlim, result[[Dparam]]$posterior[,1]))
       
       result[[Dparam]]$posterior = cbind(
@@ -105,13 +105,13 @@ priorPostSd = function(
           result[[Dparam]]$posterior[,1],
           result[[Dparam]]$posterior[,2],
           newXseq, rule=2
-          )$y,
+        )$y,
         prior = stats::dexp(
 						    newXseq, 
           -log(xhyper$param[2])/xhyper$param[1]
 					   )
-        )
-              
+      )
+      
       
       result[[Dparam]]$matplot = list(
         x = result[[Dparam]]$posterior[,1], 
@@ -122,9 +122,9 @@ priorPostSd = function(
         ylab='dens', 
         xaxs='i',
         xlim = forXlim      )
-            
+      
 		  }
-		  
+    
 		  # spatial proportion
 		  Dphi = paste("Phi for", Dparam)
 		  postPhi = res$marginals.hyperpar[[Dphi]]
@@ -319,7 +319,7 @@ priorPost = function(object) {
           c(0.001, 0.999), 
           shape=priorHere$param[1], 
           rate=priorHere$param[2])
-
+        
         xSeqP = seq(xRangeP[1], xRangeP[2], len=1000)
         
         priorMat = cbind(x=xSeqP, 
@@ -355,7 +355,7 @@ priorPost = function(object) {
         prior = priorMat,
         posterior = cbind(postHere, prior=priorDens)
       )
-
+      
       result[[Dparam]]$matplot = list(
         x = result[[Dparam]]$posterior[,1], 
         y = result[[Dparam]]$posterior[,3:2], 
@@ -378,5 +378,20 @@ priorPost = function(object) {
     col=Scol, 
     legend=names(Slty), 
     bty='n')
+  
+  sdSeq = grep("^sd ", names(result), value=TRUE)
+  if(length(sdSeq)) {
+      theLims = lapply(result[sdSeq], function(x) cbind(
+                  range(x$matplot$xlim),
+                  range(x$matplot$y)))
+      theLims = do.call(rbind, theLims)
+      theLims = apply(theLims, 2, range)
+      for(D in sdSeq) {
+          result[[D]]$matplot$xlim = theLims[,1]
+          result[[D]]$matplot$ylim = theLims[,2]
+      }
+  }
+	 
+  
   result
 }
