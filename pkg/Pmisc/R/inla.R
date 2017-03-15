@@ -33,6 +33,14 @@ priorPostSd = function(
     )
 	   Slabel = do.call(rbind, Slabel)
     paramLong = paste(Slabel[,1], 'parameter for', Slabel[,2])
+    paramLong = grep(paramLong, rownames(res$summary.hyper), 
+      value=TRUE, ignore.case=TRUE)
+    if(!length(paramLong)) {
+      paramLong = grep(paste(
+          "^precision for the ", Slabel[,2], ' observations$', sep=''
+          ), rownames(res$summary.hyper), 
+              value=TRUE, ignore.case=TRUE)
+    }
   }
   names(paramLong) = param
   
@@ -65,7 +73,8 @@ priorPostSd = function(
 			   
 			   result[[Dparam]]$posterior = precToSd(postPrec)
 			   
-			   xhyper = res$all.hyper[[group]][[Dparam]]$hyper[[1]]
+			   xhyper = res$all.hyper[[group]][[
+        which(Dparam==param)]]$hyper[[1]]
 #			   xhyper = xhyper[[which(unlist(lapply(xhyper, function(qq) qq$short.name)) == 'prec')[1] ]]
 			   
 			   
