@@ -1,7 +1,7 @@
 
 #+ setup
 
-source(system.file(file.path('extsrc', 'landast.R'),
+source(system.file(file.path('extsrc', 'landsat.R'),
 	package = 'mapmisc'))
 
 dataDir = '/store/patrick/landsat'
