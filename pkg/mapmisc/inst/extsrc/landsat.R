@@ -87,7 +87,7 @@ getLandsatSceneList = function(
     }
   }
   
-  if(!all(file.size(localFile)>0, na.rm=TRUE)) {
+  if(!any(file.size(localFile)>0, na.rm=TRUE)) {
     download.file(url, localFile, mode='wb')
   }
   landsatScenes = read.table(
