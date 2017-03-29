@@ -4,7 +4,7 @@
 \alias{spatialAtRisk.RasterLayer}
 \title{Convert rasters to lgcp objects}
 \usage{
-\method{spatialAtRisk}{RasterLayer}(X, ...)
+spatialAtRisk.RasterLayer(X, ...)
 }
 \arguments{
 \item{X}{an object of class \code{\link[raster]{RasterLayer-class}}}
@@ -20,12 +20,14 @@ Convert a RasterLayer to spatialAtRisk
 }
 \examples{
 library('raster')
-library('lgcp')
 x = raster(matrix(1:12, 4,3,byrow=TRUE))/100
-x2 = spatialAtRisk(x)
 sum(values(x))*prod(res(x))
-sum(x2$Zm)*prod(res(x))
 par(mfrow=c(1,2))
 plot(x)
+\dontrun{
+library('lgcp')
+x2 = spatialAtRisk(x)
+sum(x2$Zm)*prod(res(x))
 plot(x2)
+}
 }

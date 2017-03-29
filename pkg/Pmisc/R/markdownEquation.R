@@ -11,7 +11,7 @@
 #' Y_i \sim & N(\mu_i, \tau^2)\\
 #' \mu_i= & X_i \beta
 #' \end{align*}
-#' ", FALSE))
+#' ", FALSE) )
 #' 
 #' @export
 eqnarray = function(x, mdToTex=FALSE) {

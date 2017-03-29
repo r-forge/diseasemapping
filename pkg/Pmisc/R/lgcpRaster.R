@@ -9,15 +9,16 @@
 #' 
 #' @examples
 #' library('raster')
-#' library('lgcp')
 #' x = raster(matrix(1:12, 4,3,byrow=TRUE))/100
-#' x2 = spatialAtRisk(x)
 #' sum(values(x))*prod(res(x))
-#' sum(x2$Zm)*prod(res(x))
 #' par(mfrow=c(1,2))
 #' plot(x)
+#' \dontrun{
+#' library('lgcp')
+#' x2 = spatialAtRisk(x)
+#' sum(x2$Zm)*prod(res(x))
 #' plot(x2)
-#' @importFrom lgcp spatialAtRisk
+#' }
 #' @export
 spatialAtRisk.RasterLayer = function(X, ...) {
 	

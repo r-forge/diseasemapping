@@ -10,10 +10,10 @@ Imports:
     tools,
     utils,
     raster,
-    lgcp,
     sp,
     graphics
 Suggests:
+    lgcp,
     INLA,
     geostatsp,
     spatstat,
@@ -29,5 +29,4 @@ Additional_repositories: https://www.math.ntnu.no/inla/R/stable/
 SystemRequirements: pandoc >= 1.16.0, pandoc-citeproc (http://pandoc.org), biber
     (http://www.ctan.org/pkg/biber)
 License: GPL
-VignetteBuilder: Pmisc
 RoxygenNote: 6.0.1

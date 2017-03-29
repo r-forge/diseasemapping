@@ -15,5 +15,4 @@ Multiline equation in a markdown table
 \details{
 A multi-line equation in an eqnarray or align document is converted to markdown code suitable for conversion to docx.
 }
-\examples{
-}
+

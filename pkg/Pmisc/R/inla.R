@@ -1,6 +1,6 @@
 #' precisions to standard deviations
 #' 
-#' @aliases priorPost
+#' @aliases priorPost priorPostSd
 #' @description Transforms prior and posterior distributions of precision parameters to standard deviations
 #'
 #' @param object an inla result
