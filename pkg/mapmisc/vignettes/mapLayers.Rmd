@@ -28,10 +28,10 @@ reSave = FALSE
 # or run 	R --slave -e "knitr::knit('mapLayers.Rmd')" fact=1 reRun=TRUE
 theArgs = grep("^(fact|reRun|reSave)=", commandArgs(), value=TRUE)
 for(D in theArgs)
-	eval(parse(text=D))
+  eval(parse(text=D))
 
 opts_chunk$set(dpi=50*fact, 
-		dev.args=list(bg='white'))	
+  dev.args=list(bg='white'))	
 
 theNames = grep("mapquest", names(osmTiles()), invert=TRUE, value=TRUE)
 africaExtent = c(25, 25)
@@ -43,38 +43,38 @@ stjohns=c(-52.683320, 47.566285)
 ```{r downloadTiles,include=FALSE}
 
 if(reRun) {
-
+  
   africaTiles = openmap(africaExtent, path=theNames,zoom=2,
     verbose=TRUE, 
     crs = crsMerc, 
     fact=fact)
-
+  
   londonTiles = openmap(trafalgarSquare,zoom=12,path=theNames,
     verbose=TRUE, 
     crs = crsMerc, 
     fact=fact)
-
+  
   nfTiles = openmap(stjohns, zoom=14, path=theNames,,
     verbose=TRUE, 
     crs = crsMerc, 
     fact=fact)
-
+  
   # save the data
   if(reSave) {
     # make sure all data is stored in memory not on disk
     # so that caching will work
     for(D in names(africaTiles))
-	  values(africaTiles[[D]]) = values(africaTiles[[D]])
+      values(africaTiles[[D]]) = values(africaTiles[[D]])
     for(D in names(londonTiles))
-	  values(londonTiles[[D]]) = values(londonTiles[[D]])
+      values(londonTiles[[D]]) = values(londonTiles[[D]])
     for(D in names(nfTiles))
-	  values(nfTiles[[D]]) = values(nfTiles[[D]])
-
+      values(nfTiles[[D]]) = values(nfTiles[[D]])
+    
     save(africaTiles, londonTiles, nfTiles,
-			file="../inst/extdata/tiles.RData",
-			compress="xz")
+      file="../inst/extdata/tiles.RData",
+      compress="xz")
   }
-
+  
 } else { # don't rerun
   load(system.file("extdata", "tiles.RData", package = "mapmisc"))
 }
@@ -90,53 +90,122 @@ The following are some examples of maps produced with `mymap=openmap(x, path="so
 mytiles = list(africaTiles, londonTiles, nfTiles)
 
 for(D in theNames){
-	Dsub = gsub("-",".", D)
-
-	threeTiles = length(
-			grep(
-				paste("^", Dsub, "([rR]ed|[gG]reen|[bB]lue)$", sep=""), 
-				names(mytiles[[1]])
-			)
-		) == 3
-	
-	cat("\n\n# ", D, "\n\n")
-	cat("`plot", "RGB"[threeTiles], 
-		"(openmap(x,path=\"", D, "\"))`\n\n", 
-	    sep='')
-  	cat(openmapAttribution(D, 'html'), '\n\n')
-	
-	cat("\n|     |     |     |\n|-----|-----|-----|\n")
-	for(Dplot in 1:length(mytiles)) {
-	cat("|")
-
-		oneTileName = grep(paste("^", Dsub, "$", sep=""), 
-				names(mytiles[[Dplot]]), value=TRUE)
-		threeTilesName = grep(paste("^", Dsub, 
-						"([rR]ed|[gG]reen|[bB]lue)$", sep=""), 
-				names(mytiles[[Dplot]]),value=TRUE)
-
-		if(length(threeTilesName)==3) { # plotRGB
-			map.new(mytiles[[Dplot]])
-			
-			plotRGB(mytiles[[Dplot]][[
-								paste(Dsub, c("Red","Green","Blue"),sep="")
-								]],add=TRUE)
-	
-		} else if (length(oneTileName)==1){
-		
-			map.new(mytiles[[Dplot]])
-			plot(mytiles[[Dplot]][[oneTileName]],add=TRUE)
-
-		} else {
-
-			plot(0.5, 0.8)
-			text(0.5, 0.8, paste(D, "is\n not currently\navailable"))
-		
-		}
-
-	}
-	cat("|")
-	
+  Dsub = gsub("-",".", D)
+  
+  threeTiles = length(
+    grep(
+      paste("^", Dsub, "([rR]ed|[gG]reen|[bB]lue)$", sep=""), 
+      names(mytiles[[1]])
+    )
+  ) == 3
+  
+  cat("\n\n# ", D, "\n\n")
+  cat("`plot", "RGB"[threeTiles], 
+    "(openmap(x,path=\"", D, "\"))`\n\n", 
+    sep='')
+  cat(openmapAttribution(D, 'html'), '\n\n')
+  
+  cat("\n|     |     |     |\n|-----|-----|-----|\n")
+  for(Dplot in 1:length(mytiles)) {
+    cat("|")
+    
+    oneTileName = grep(paste("^", Dsub, "$", sep=""), 
+      names(mytiles[[Dplot]]), value=TRUE)
+    threeTilesName = grep(paste("^", Dsub, 
+        "([rR]ed|[gG]reen|[bB]lue)$", sep=""), 
+      names(mytiles[[Dplot]]),value=TRUE)
+    
+    if(length(threeTilesName)==3) { # plotRGB
+      map.new(mytiles[[Dplot]])
+      
+      plotRGB(mytiles[[Dplot]][[
+          paste(Dsub, c("Red","Green","Blue"),sep="")
+        ]],add=TRUE)
+      
+    } else if (length(oneTileName)==1){
+      
+      map.new(mytiles[[Dplot]])
+      plot(mytiles[[Dplot]][[oneTileName]],add=TRUE)
+      
+    } else {
+      
+      plot(0.5, 0.8)
+      text(0.5, 0.8, paste(D, "is\n not currently\navailable"))
+      
+    }
+    
+  }
+  cat("|")
+  
 }
 
 ```
+
+# Additional map layers
+
+Michelin
+    
+```{r additionalMichelin, echo=TRUE, purl=FALSE, eval=FALSE}
+
+mPath = paste(
+  'http://map3.viamichelin.com/map/mapdirect?map=',
+  c('light','viamichelin'), '&', sep='')
+
+attributes(mPath)$tileNames = 'zxy='
+attributes(mPath)$suffix = 
+  '&format=png&version=201503191157&layer=background'
+
+africaMichelin = openmap(
+  africaExtent, path=mPath,
+  zoom=2,
+  verbose=TRUE, 
+  crs = crsMerc)
+
+for(D in names(africaMichelin)) {
+  plot(africaMichelin[[D]])
+}
+mtext(D, side=3, line=-2, outer=FALSE)
+```
+
+Others
+
+```{r aditionalEsri, echo=TRUE, purl=FALSE, eval=FALSE}
+
+otherPaths = c(
+  'https://a.tile.hosted.thunderforest.com/komoot-2/',
+  'https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&',
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/',
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/',
+  'https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/',
+  'https://tile2.f4map.com/tiles/f4_2d/',
+  'http://tiles1.sigma-dc-control.com/layer8/')
+
+africaExtra = openmap(
+  africaExtent, path=otherPaths,
+  zoom=2,
+  verbose=TRUE, 
+  crs = crsMerc)
+
+Spaths = unique(
+  gsub("(red|green|blue|trans)$", "",
+    names(africaExtra), ignore.case=TRUE)
+)
+
+for(D in Spaths) {
+  
+  oneTileName = grep(paste("^", D, "$", sep=""), 
+    names(africaExtra), value=TRUE)
+  
+  threeTilesName = grep(paste("^", D, 
+      "([rR]ed|[gG]reen|[bB]lue)$", sep=""), 
+    names(africaExtra),value=TRUE)
+  
+  if(length(threeTilesName)==3) {
+    plotRGB(africaExtra[[threeTilesName]])
+  } else {
+    plot(africaExtra[[oneTileName]])
+  }
+  mtext(D, side=3, line=-2, outer=FALSE)
+}
+
+``` 

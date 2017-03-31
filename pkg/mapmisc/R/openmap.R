@@ -111,9 +111,10 @@ openmap = function(x, zoom,
 			gsub("-", ".", names(alltiles))
 	path[pathisname] = alltiles[path[pathisname]]
 	
-	if(length(grep("/$", path, invert=TRUE)))
-		path[ grep("/$", path, invert=TRUE)] =
-				paste(path[ grep("/$", path, invert=TRUE)], "/", sep="")
+	if(length(grep("[[:punct:]]$", path, invert=TRUE)))
+		path[ grep("[[:punct:]]$", path, invert=TRUE)] =
+				paste(path[ grep("[[:punct:]]$", path, invert=TRUE)], 
+      "/", sep="")
 	
 	if(length(grep("^http[s]*://", path, invert=TRUE)))
 		path[ grep("^http[s]*://", path, invert=TRUE)] = 
@@ -154,17 +155,36 @@ openmap = function(x, zoom,
 		}
 		
 		if(length(grep(
-						'nrcan\\.gc\\.ca|gov\\.bc\\.ca', Durl))){
+						'nrcan\\.gc\\.ca|gov\\.bc\\.ca', Durl))
+  ){
 			suffix = ''
 			tileNames = 'zyx'
-		} else if(length(grep('heidelberg.de/tiles/(hybrid|adminb|roadsg|roads)/?$', Durl))){
+		} else if(
+    length(grep(
+        '[.]arcgisonline[.]com', Durl
+      ))) {
+      suffix='.jpg'
+      tileNames = 'zyx'
+    } else if(
+    length(grep(
+      'heidelberg.de/tiles/(hybrid|adminb|roadsg|roads)/?$', 
+      Durl)) |
+    length(grep(
+        '&$',Durl))
+        ){
 			tileNames = 'xyz='
 			suffix = ''
 		} else {
 			suffix = '.png'
 			tileNames = 'zxy'
 		}
-		
+	
+  if(all(c('tileNames','suffix') %in%
+      names(attributes(pathOrig)))) {
+    tileNames = attributes(pathOrig)$tileNames
+    suffix = attributes(pathOrig)$suffix
+  }
+  
 		thistile = try(
 				getTilesMerc(extMerc, zoom=zoom,
 						path=Durl,

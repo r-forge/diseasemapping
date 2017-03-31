@@ -143,10 +143,14 @@ getTilesMerc = function(
 
 			if(tileNames == 'zxy') {
     		Dcache = file.path(cacheDir, zoom, Dx-1)
-				Dpath = paste(path,zoom,'/',Dx-1,'/',sep='')
+				  Dpath = paste(path,zoom,'/',Dx-1,'/',sep='')
       	Dtile = paste(Dy-1, suffix,sep='')
       	Durl = paste(Dpath, Dtile, sep='')
-			} else if (tileNames == 'xyz=') {
+     } else if (tileNames == 'zxy=') {
+       Dcache = cacheDir
+       Dtile = paste('z=',zoom, '&x=', Dx-1, '&y=',Dy-1,suffix, sep='')
+       Durl = paste(path, Dtile, sep='')				
+    } else if (tileNames == 'xyz=') {
 				Dcache = cacheDir
       	Dtile = paste('x=',Dx-1, '&y=', Dy-1, '&z=',zoom,suffix, sep='')
       	Durl = paste(path, Dtile, sep='')				
