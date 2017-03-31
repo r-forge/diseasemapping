@@ -13,7 +13,7 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	  buffer=0, fact=1, verbose=FALSE,
 	  cachePath=options()$mapmiscCachePath)
 
-	osmTiles(name)
+	osmTiles(name, xyz, suffix)
 
 	openmapAttribution(name, 
 	  type=c('text','latex','markdown','html'), short=FALSE)
@@ -49,6 +49,8 @@ extensions}
   \code{name} is unspecified.}
   \item{type}{format for the attribution}
   \item{short}{short or long attribution}
+  \item{xyz}{format of xyz coordinates in URL's}
+  \item{suffix}{string to append to URL's, i.e. \code{'.png'}}
 }
 
 \details{

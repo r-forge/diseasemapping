@@ -1,4 +1,4 @@
-osmTiles = function(name) {
+osmTiles = function(name, xyz, suffix) {
 	result = c(
 			osm = "http://tile.openstreetmap.org",
 			'osm-admin' = 'http://korona.geog.uni-heidelberg.de/tiles/adminb',
@@ -79,10 +79,14 @@ osmTiles = function(name) {
 		if(name %in% names(result)) {
 			result = result[name]
 		} else {
-			warning("name ", name, " is not a tile path, returning vector of all tile paths")
-		}
+    result = name
+  }
 	}
-	
+ if(!missing(xyz))
+  attributes(result)$tileNames = xyz	
+if(!missing(suffix))
+  attributes(result)$suffix = suffix	
+
 	result
 	
 }
@@ -134,7 +138,7 @@ openmap = function(x, zoom,
 	
 	
 	extMerc = .getExtent(x,crsIn, buffer, crsMerc)
-  extMerc = .cropExtent(extMerc, extentMerc)
+ extMerc = .cropExtent(extMerc, extentMerc)
   
 	if(missing(zoom)) {
 		zoom = 1
@@ -179,11 +183,12 @@ openmap = function(x, zoom,
 			tileNames = 'zxy'
 		}
 	
-  if(all(c('tileNames','suffix') %in%
-      names(attributes(pathOrig)))) {
+  if(length(attributes(pathOrig)$tileNames))
     tileNames = attributes(pathOrig)$tileNames
+  if(length(attributes(pathOrig)$suffix))
     suffix = attributes(pathOrig)$suffix
-  }
+  
+    
   
 		thistile = try(
 				getTilesMerc(extMerc, zoom=zoom,

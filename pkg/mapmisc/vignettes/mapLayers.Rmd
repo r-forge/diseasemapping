@@ -149,13 +149,11 @@ Michelin
     
 ```{r additionalMichelin, echo=TRUE, purl=FALSE, eval=FALSE}
 
-mPath = paste(
+mPath = osmTiles(paste(
   'http://map3.viamichelin.com/map/mapdirect?map=',
-  c('light','viamichelin'), '&', sep='')
-
-attributes(mPath)$tileNames = 'zxy='
-attributes(mPath)$suffix = 
-  '&format=png&version=201503191157&layer=background'
+  c('light','viamichelin'), '&', sep=''),
+  xyz='zxy=', suffix = 
+    '&format=png&version=201503191157&layer=background')
 
 africaMichelin = openmap(
   africaExtent, path=mPath,
@@ -163,11 +161,34 @@ africaMichelin = openmap(
   verbose=TRUE, 
   crs = crsMerc)
 
+
 for(D in names(africaMichelin)) {
   plot(africaMichelin[[D]])
+  mtext(D, side=3, line=-2, outer=FALSE)
 }
-mtext(D, side=3, line=-2, outer=FALSE)
+
 ```
+Stamen retina
+
+   
+```{r stamenRetina, echo=TRUE, purl=FALSE, eval=FALSE}
+
+sPath = osmTiles('stamen-toner', 
+  suffix = '@2x.png')
+
+africaS = openmap(
+  africaTiles, 
+  buffer=-1,
+  zoom=attributes(africaTiles)$tiles$zoom+1,
+  path=sPath, verbose=TRUE)
+africaS2 = tonerToTrans(africaS)
+
+plot(africaTiles[['opentopomap']])
+plot(africaS2, add=TRUE)
+
+mtext(sPath, side=3, line=-2, outer=FALSE)
+```
+
 
 Komoot, Yandex, ESRI, F4map, and Sigma
 
@@ -212,3 +233,5 @@ for(D in Spaths) {
 }
 
 ``` 
+
+
