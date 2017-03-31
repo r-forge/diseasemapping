@@ -143,6 +143,8 @@ for(D in theNames){
 
 # Additional map layers
 
+See [mc.bbbike.org/mc](http://mc.bbbike.org/mc/) 
+
 Michelin
     
 ```{r additionalMichelin, echo=TRUE, purl=FALSE, eval=FALSE}
@@ -167,13 +169,14 @@ for(D in names(africaMichelin)) {
 mtext(D, side=3, line=-2, outer=FALSE)
 ```
 
-Others
+Komoot, Yandex, ESRI, F4map, and Sigma
 
 ```{r aditionalEsri, echo=TRUE, purl=FALSE, eval=FALSE}
 
 otherPaths = c(
   'https://a.tile.hosted.thunderforest.com/komoot-2/',
   'https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&',
+  'https://vec02.maps.yandex.net/tiles?l=map&v=4.40&',
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/',
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/',
   'https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/',

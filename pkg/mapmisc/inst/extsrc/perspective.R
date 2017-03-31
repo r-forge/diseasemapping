@@ -43,10 +43,10 @@ myMap = openmap(raster(
   verbose=TRUE,
 #  path=mPath)
 #  path = 'https://a.tile.hosted.thunderforest.com/komoot-2/')
-#path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
+path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
 #  path='https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/')
 #path='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/')
-path='https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/')
+#path='https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/')
 
 map.new(myMap, 
   buffer=-c(0,0,3,0)*1000*1000)
