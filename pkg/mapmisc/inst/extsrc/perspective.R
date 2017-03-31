@@ -9,9 +9,8 @@ korea = raster::getData(
   "GADM", country='KOR', level=0
 )
 
-
-myProj = #mapmisc:::
-tpers(x,y,hKm = 6*1000,tilt =-25)
+#mapmisc:::
+myProj = tpers(x,y,hKm = 6*1000,tilt =-25)
 
 data("wrld_simpl", package='maptools')
 
@@ -29,8 +28,10 @@ okinawaProj = spTransform(
 
 
 
-myMap = openmap(raster( 
-  extent(100,180,-10,70), crs=crsLL),
+myMap = openmap(
+  raster::crop(
+    attributes(myProj)$retain,
+    extent(0,180,-90,90)),
   fact=1.5, maxTiles=24,
   crs = myProj,
   verbose=TRUE,
@@ -38,8 +39,9 @@ myMap = openmap(raster(
 #path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
 path='https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/')
 
+
 par(bg='black')
-map.new(myMap, buffer=-c(0,0,3,0)*1000*1000)
+map.new(myProj)
 plotRGB(myMap, add=TRUE, colNA='black')
 
 points(xProj, col='red', pch=16, cex=2)
@@ -59,6 +61,8 @@ text(yProj@coords,
 
 plot(wrld4, add=TRUE)
 plot(koreaT, add=TRUE, border='yellow')  
+plot(attributes(myProj)$ellipse, add=TRUE,
+  border='yellow', lwd=4)
 
 
 

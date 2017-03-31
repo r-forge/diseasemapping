@@ -24,10 +24,23 @@ tpers = function(x,y,
   extentLL@proj4string = crsLL
   
   attributes(myCrs)$crop =
-    suppressWarnings(rgeos::gBuffer(rgeos::gDifference(extentLL, 
-     attributes(myCrs)$retain, byid=FALSE),
-    width=0.5
- ))
+    suppressWarnings(rgeos::gBuffer(
+        rgeos::gDifference(extentLL, 
+          attributes(myCrs)$retain, byid=FALSE),
+        width=0.5
+      ))
+  attributes(myCrs)$retain =
+    suppressWarnings(
+      rgeos::gDifference(attributes(myCrs)$retain, 
+        attributes(myCrs)$crop))
   
+  attributes(myCrs)$ellipse = 
+    rgeos::gBuffer(spTransform(
+    attributes(myCrs)$retain, myCrs
+  ), byid=TRUE, width=70*1000)
+
+  attributes(myCrs)$ellipse = 
+      rgeos::gUnaryUnion(attributes(myCrs)$ellipse)
+
   myCrs
 }
