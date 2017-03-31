@@ -36,7 +36,7 @@ gridlinesWrap = function(crs,
 	)
 	
 	
-	glinesT = wrapPoly(glines, crsT)
+	glinesT = wrapPoly(x=glines, crsT)
 	
 	ellipseSmall = attributes(crsT)$ellipse
 	if(!is.null(ellipseSmall)) {

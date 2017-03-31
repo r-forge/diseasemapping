@@ -103,9 +103,48 @@ llCropBox = function(crs,
 	toCropLL = rgeos::gBuffer(edgePointsLL, width=res)
 	crs(toCropLL) = crsLL
 
+ ### omerc
+ } else if(length(grep("proj=omerc", as.character(crs)))){
+ toCropPoly = NULL
+ 
+ rasterLLorig = raster(
+   extentLL,
+   res=res, crs=mapmisc::crsLL
+ )
+ 
+ rasterTorig = projectExtent(rasterLLorig, crs)
+ rasterTorig = disaggregate(rasterTorig, 2)
+ 
+ # put 0's around the border
+ rasterTsmall = crop(rasterTorig, extend(extent(rasterTorig), -6*res(rasterTorig)))
+ values(rasterTsmall) = 1
+ rasterT = extend(rasterTsmall, extend(extent(rasterTsmall), 5*res(rasterTsmall)), value=0)
+ 
+ 
+ rasterLL = projectRaster(
+   from=rasterT, 
+   crs=mapmisc::crsLL, 
+   res = res, method='ngb')
+ rasterLL = crop(rasterLL, extentLL)
+ if(keepInner){
+   values(rasterLL)[is.na(values(rasterLL))] = 1
+ } else {
+   values(rasterLL)[is.na(values(rasterLL))] = 0
+ }
+ 
+ borderLL = rasterToPoints(rasterLL, fun=function(x) {x<1}, spatial=TRUE)
+ if(requireNamespace('rgeos', quietly=TRUE)) {
+   crs(borderLL) = NA
+   toCropLL = rgeos::gBuffer(borderLL, width=mean(res*1.5))
+   crs(toCropLL) = mapmisc::crsLL
+ } else {
+   toCropLL = NULL
+ }
+ 
+ 
+ ### otherwise 
 } else {
 
-		
 		rasterLLorig = raster(
   			extentLL,
 				res=res, crs=mapmisc::crsLL
