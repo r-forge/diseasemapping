@@ -10,19 +10,12 @@ korea = raster::getData(
 )
 
 
-# http://proj4.org/projections/tpers.html
-(myProj = CRS(paste(
-        "+proj=tpers +h=",
-        6*1000*1000,
-        " +lat_0=",
-        x@coords[1,'latitude'],
-        " +lon_0=",
-        x@coords[1,'longitude'],
-        " +azi=",
-        geosphere::bearing(x,y),
-        " +tilt=-25",
-        " +ellps=WGS84", 
-        sep="")))
+myProj = #mapmisc:::
+tpers(x,y,hKm = 6*1000,tilt =-25)
+
+data("wrld_simpl", package='maptools')
+
+wrld4 = wrapPoly(wrld_simpl, myProj)
 
 koreaT = spTransform(korea,
   myProj)  
@@ -41,16 +34,13 @@ myMap = openmap(raster(
   fact=1.5, maxTiles=24,
   crs = myProj,
   verbose=TRUE,
-#  path=mPath)
-#  path = 'https://a.tile.hosted.thunderforest.com/komoot-2/')
-path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
-#  path='https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/')
-#path='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/')
-#path='https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/')
+#  path='nrcan')
+#path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
+path='https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/')
 
-map.new(myMap, 
-  buffer=-c(0,0,3,0)*1000*1000)
-plotRGB(myMap, add=TRUE)
+par(bg='black')
+map.new(myMap, buffer=-c(0,0,3,0)*1000*1000)
+plotRGB(myMap, add=TRUE, colNA='black')
 
 points(xProj, col='red', pch=16, cex=2)
 text(xProj@coords, 
@@ -67,6 +57,7 @@ text(yProj@coords,
   as.character(yProj$originalPlace),
   pos=2, col='yellow')
 
+plot(wrld4, add=TRUE)
 plot(koreaT, add=TRUE, border='yellow')  
 
 

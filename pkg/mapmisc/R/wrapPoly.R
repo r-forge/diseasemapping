@@ -105,43 +105,39 @@ llCropBox = function(crs,
 
 } else {
 
-		toCropPoly = NULL
 		
 		rasterLLorig = raster(
   			extentLL,
 				res=res, crs=mapmisc::crsLL
 		)
-		
-		rasterTorig = projectExtent(rasterLLorig, crs)
-		rasterTorig = disaggregate(rasterTorig, 2)
-		
-		# put 0's around the border
-		rasterTsmall = crop(rasterTorig, extend(extent(rasterTorig), -6*res(rasterTorig)))
-		values(rasterTsmall) = 1
-		rasterT = extend(rasterTsmall, extend(extent(rasterTsmall), 5*res(rasterTsmall)), value=0)
+  pointsLLorig = as(rasterLLorig, 'SpatialPoints')  
+  pointsTrans = suppressWarnings(
+    rgdal::rawTransform(
+    as.character(pointsLLorig@proj4string),
+    as.character(crs),
+    length(pointsLLorig),
+    pointsLLorig@coords[,1], 
+    pointsLLorig@coords[,2]))
 
-		
-		rasterLL = projectRaster(
-				from=rasterT, 
-				crs=mapmisc::crsLL, 
-				res = res, method='ngb')
-		rasterLL = crop(rasterLL, extentLL)
-		if(keepInner){
-			values(rasterLL)[is.na(values(rasterLL))] = 1
-		} else {
-			values(rasterLL)[is.na(values(rasterLL))] = 0
-		}
-  	
-		borderLL = rasterToPoints(rasterLL, fun=function(x) {x<1}, spatial=TRUE)
-		if(requireNamespace('rgeos', quietly=TRUE)) {
-			crs(borderLL) = NA
-			toCropLL = rgeos::gBuffer(borderLL, width=mean(res*1.5))
-			crs(toCropLL) = mapmisc::crsLL
-		} else {
-			toCropLL = NULL
-		}
-		
-		
+ pointsTransFinite = 
+   is.finite(pointsTrans[[1]]) &
+   is.finite(pointsTrans[[2]])  
+ values(rasterLLorig) = as.numeric(pointsTransFinite)
+
+ 
+ canProj = rasterToContour(rasterLLorig, 
+   levels=0.5)@lines[[1]]
+ canProj2 = mapply(
+   function(xline, xid) {
+     Polygons(list(Polygon(xline@coords)), ID=xid)
+   },
+   xline = canProj@Lines,
+   xid = 1:length(canProj@Lines))
+
+ toCropLL = SpatialPolygons(canProj2,
+   proj4string = rasterLLorig@crs)
+ 
+ toCropPoly = NULL
 	}
 	
 	if(!is.null(toCropLL)){
