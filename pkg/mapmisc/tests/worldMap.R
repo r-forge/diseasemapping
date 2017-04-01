@@ -20,7 +20,7 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
 	plot(xTcrop,add=TRUE)
 	plot(xTcrop[DcountryT,], col='red', add=TRUE)
 	
-	gridlinesWrap(myCrsO, lty=2, col='orange')
+#	gridlinesWrap(myCrsO, lty=2, col='orange')
 	
 	
 	
@@ -42,6 +42,6 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
 	plot(xTcrop,add=TRUE)
 	plot(xTcrop[DcountryT,], col='green', add=TRUE)
 	
-	gridlinesWrap(crs=xTcrop, lty=2, col='red')
+#	gridlinesWrap(crs=xTcrop, lty=2, col='red')
 
 }
