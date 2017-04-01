@@ -246,8 +246,7 @@ ocea = function(x, angle=0, flip=FALSE) {
 	}
 	
 	attributes(myCrs)$crop = llCropBox(
-			crs=myCrs,
-			keepInner=FALSE)$crop
+			crs=myCrs)$crop
 	
 	circleLLp = SpatialPoints(
 			geosphere::greatCircle(
