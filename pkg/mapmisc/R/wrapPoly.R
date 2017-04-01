@@ -53,139 +53,104 @@ wrapPoly = function(x, crs){
   xTcrop
 }
 
-llCropBox = function(crs, 
-  res=0.5, keepInner=FALSE) {
+llCropBox = function(crs, res=1) {
   
-  polarLimit = 90-res
-  extentLL = extent(-180,180,-polarLimit,polarLimit)
+  edge = c(0.1,1)
   
-  if(length(grep("proj=moll", as.character(crs)))){
-    
-    projMoll = CRS("+proj=moll +ellps=WGS84 +datum=WGS84 +units=m +no_defs +towgs84=0,0,0,0,0,0,0 ")
-    
-    N = 2*round(180/res)
-    buffer = res
-    
-    lonSeq = exp(seq(0, log(90), len=N))
-    lonSeq = sort(unique(c(lonSeq, -lonSeq)))
-    
-    
-    lonMat = cbind(
-      rep(180, N),
-      90-c(0, exp(seq(0,log(90),len=N-1)))
+  latSeq = seq(0, sqrt(90-edge[2]), len=floor(180/res))^2
+  latSeq = sort(unique(c(latSeq, -latSeq)))
+  lonSeq = seq(-180+edge[1], 180-edge[1], by=res)
+  
+  llPoints = expand.grid(
+    long = lonSeq,
+    lat = latSeq)
+  
+  llBorder = rbind(
+    expand.grid(
+      long=lonSeq, 
+      lat=c(1,-1)*90-edge[2]
+    ),
+    expand.grid(
+      long=c(1,-1)*180-edge[1], 
+      lat=latSeq
     )
-    edgePoints = SpatialPoints(lonMat, proj4string=crsLL)
-    edgePointsT = spTransform(edgePoints, projMoll)
-    
-    edgeCoords = abs(edgePointsT@coords)
-    edgeCoords = approx(edgeCoords[,1], edgeCoords[,2], 
-      xout = max(edgeCoords[,1]) * sin(seq(0, pi/2, len=N)[-N]),
-      rule=2)
-    
-    edgeCoords = cbind(
-      c(edgeCoords$x[-1], rev(edgeCoords$x)[-1], -edgeCoords$x[-1], -rev(edgeCoords$x)[-1]),
-      c(edgeCoords$y[-1], -rev(edgeCoords$y)[-1], -edgeCoords$y[-1], rev(edgeCoords$y)[-1])
-    )
-    
-    
-    toCropPoly = SpatialPolygons(list(
-        Polygons(list(
-            Polygon(edgeCoords, hole=FALSE)
-          ), 1)
-      ), proj4string = crs)
-    
-    edgePointsLL = spTransform(
-      SpatialPoints(edgeCoords, proj4string=crs),
-      crsLL)
-    edgePointsLL = raster::crop(edgePointsLL, 
-      extent(-181, 181, -polarLimit,polarLimit))
-    crs(edgePointsLL) = NA
-    toCropLL = rgeos::gBuffer(edgePointsLL, width=res)
-    crs(toCropLL) = crsLL
-    
-    ### omerc
-  } else if(length(grep("proj=omerc", as.character(crs)))){
-    toCropPoly = NULL
-    
-    rasterLLorig = raster(
-      extentLL,
-      res=res, crs=mapmisc::crsLL
-    )
-    
-    rasterTorig = projectExtent(rasterLLorig, crs)
-    rasterTorig = disaggregate(rasterTorig, 2)
-    
-    # put 0's around the border
-    rasterTsmall = crop(rasterTorig, extend(extent(rasterTorig), -6*res(rasterTorig)))
-    values(rasterTsmall) = 1
-    rasterT = extend(rasterTsmall, extend(extent(rasterTsmall), 5*res(rasterTsmall)), value=0)
-    
-    
-    rasterLL = projectRaster(
-      from=rasterT, 
-      crs=mapmisc::crsLL, 
-      res = res, method='ngb')
-    rasterLL = crop(rasterLL, extentLL)
-    if(keepInner){
-      values(rasterLL)[is.na(values(rasterLL))] = 1
-    } else {
-      values(rasterLL)[is.na(values(rasterLL))] = 0
-    }
-    
-    borderLL = rasterToPoints(rasterLL, fun=function(x) {x<1}, spatial=TRUE)
-    if(requireNamespace('rgeos', quietly=TRUE)) {
-      crs(borderLL) = NA
-      toCropLL = rgeos::gBuffer(borderLL, width=mean(res*1.5))
-      crs(toCropLL) = mapmisc::crsLL
-    } else {
-      toCropLL = NULL
-    }
-    
-    
-    ### otherwise 
-  } else {
-    
-    rasterLLorig = raster(
-      extentLL,
-      res=res, crs=mapmisc::crsLL
-    )
-    pointsLLorig = as(rasterLLorig, 'SpatialPoints')  
-    pointsTrans = suppressWarnings(
-      rgdal::rawTransform(
-        as.character(pointsLLorig@proj4string),
-        as.character(crs),
-        length(pointsLLorig),
-        pointsLLorig@coords[,1], 
-        pointsLLorig@coords[,2]))
-    
-    pointsTransFinite = 
-      is.finite(pointsTrans[[1]]) &
-      is.finite(pointsTrans[[2]])  
-    
-    if(!all(pointsTransFinite)) {
-      
-      values(rasterLLorig) = as.numeric(pointsTransFinite)
-      
-      canProj = rasterToContour(rasterLLorig, 
-        levels=0.5)@lines[[1]]
-      canProj2 = mapply(
-        function(xline, xid) {
-          Polygons(list(Polygon(xline@coords)), ID=xid)
-        },
-        xline = canProj@Lines,
-        xid = 1:length(canProj@Lines))
-      
-      toCropLL = SpatialPolygons(canProj2,
-        proj4string = rasterLLorig@crs)
-    } else {
-      toCropLL = NULL
-    } 
-    toCropPoly = NULL
+  )
+  
+  
+  if(!requireNamespace('rgdal', quietly=TRUE)) {
+    warning("rgdal package is required for this operation")
+    return(NULL)
   }
+  pointsTransIn = suppressWarnings(
+    rgdal::rawTransform(
+      as.character(crsLL),
+      as.character(crs),
+      nrow(llPoints),
+      llPoints[,1], 
+      llPoints[,2]))
   
-  if(!is.null(toCropLL)){
-    toCropLL = raster::crop(toCropLL, extentLL)
-  }
+  pointsTransBorder = suppressWarnings(
+    rgdal::rawTransform(
+      as.character(crsLL),
+      as.character(crs),
+      nrow(llBorder),
+      llBorder[,1], 
+      llBorder[,2]))
   
-  list(crop=toCropLL, poly=toCropPoly)
+  pointsInRegion = is.finite(
+      pointsTransIn[[1]]) &
+    is.finite(pointsTransIn[[2]])
+  
+  transInRegion = cbind(
+    pointsTransIn[[1]][pointsInRegion],
+    pointsTransIn[[2]][pointsInRegion])
+  transInRegion = transInRegion[order(transInRegion[,1], transInRegion[,2]),]
+  
+  transOnBorder = cbind(
+    pointsTransBorder[[1]],
+    pointsTransBorder[[2]]
+  )
+  transOnBorder = transOnBorder[
+    apply(transOnBorder, 1, function(xx) all(is.finite(xx))),
+  ]    
+  
+  regionTransOrig = rgeos::gConvexHull(
+    rgeos::gConvexHull(SpatialPoints(transInRegion), byid=FALSE)
+  )
+  
+  resTrans = mean(apply(bbox(regionTransOrig), 1, diff)*(res/180))
+  borderTrans = rgeos::gBuffer(SpatialPoints(transOnBorder), width=1.2*resTrans)
+  regionTransSmall = rgeos::gBuffer(regionTransOrig, width=-resTrans)
+  
+  # crop out areas which are close to edges in LL
+  regionTransSmallInclude = rgeos::gSimplify(
+    rgeos::gDifference(regionTransSmall, borderTrans),
+    tol=resTrans/4, topologyPreserve=FALSE)
+  # convert to separate polygons
+  regionTransSmallInclude = regionTransSmallInclude@polygons[[1]]@Polygons
+  regionTransSmallInclude = SpatialPolygons(
+    mapply(function(srl, ID) Polygons(list(srl), ID),
+    srl=regionTransSmallInclude, ID=1:length(regionTransSmallInclude)
+  ), proj4string = crs)
+  regionTransSmallInclude = regionTransSmallInclude[
+    order(rgeos::gArea(regionTransSmallInclude, byid=TRUE),decreasing=TRUE)
+    ,]
+  
+  edgeTrans = sp::spsample(as(regionTransOrig, 'SpatialLines'),
+    n=2*pi*90/min(res), type='regular')
+  
+  
+  regionTransSmallInclude@proj4string = borderTrans@proj4string = 
+    regionTransSmall@proj4string = edgeTrans@proj4string = crs
+  
+  edgeLL = spTransform(edgeTrans, crsLL)
+  edgeLL = rgeos::gBuffer(SpatialPoints(edgeLL@coords), width=max(res))
+  edgeLL@proj4string = crsLL
+  
+  regionLL = spTransform(regionTransSmallInclude, crsLL)
+  
+  list(crop=edgeLL, poly=regionLL, ellipse = regionTransSmall, 
+    polyTrans = regionTransSmallInclude)
+  
 }
+

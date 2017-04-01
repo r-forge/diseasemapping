@@ -2,6 +2,7 @@ tpeqdProj4string = function(
     lon1, lat1, lon2, lat2, 
     x=0,y=0, datum='WGS84',
     ellps='WGS84', units='m',
+    axis='enu',
     crs=TRUE) {
   
   res = paste(
@@ -12,6 +13,7 @@ tpeqdProj4string = function(
       " +lon_2=",lon2,
       " +x_0=",x,
       " +y_0=",y,
+      " +axis=", axis,
       " +ellps=",ellps,
       " +datum=",datum,
       " +units=",units,
@@ -23,7 +25,7 @@ tpeqdProj4string = function(
   
 }
 
-tpeqd = function(x, offset=c(0,0)){
+tpeqd = function(x, offset=c(0,0), axis='enu'){
   
   if(length(grep("^SpatialPoints", class(x)))){
     if(!isLonLat(crs(x)) & 
@@ -39,7 +41,8 @@ tpeqd = function(x, offset=c(0,0)){
   
   res= tpeqdProj4string(
       x[1,1],x[1,2],x[2,1],x[2,2],
-      x=offset[1],y=offset[2]
+      x=offset[1],y=offset[2],
+      axis=axis
       )
   if(length(res)[[1]])
     res = res[[1]]

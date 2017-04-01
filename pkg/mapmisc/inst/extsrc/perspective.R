@@ -3,46 +3,70 @@ library('mapmisc')
 library('rgdal')
 
 okinawa = mapmisc::geocode("Okinawa")
-y = mapmisc::geocode("Hong Kong")
-x = mapmisc::geocode("Guam")
+hk = y = mapmisc::geocode("Hong Kong")
+guam = mapmisc::geocode("Guam")
+x = SpatialPoints(cbind(130,15), proj4string=crsLL)
 korea = raster::getData(
   "GADM", country='KOR', level=0
 )
 
-#mapmisc:::
-myProj = tpers(x,y,hKm = 6*1000,tilt =-25)
+
+
+myProj = mapmisc::tpers(bind(x,y), hKm = 6*1000,
+  tilt =-45)
+
+myMap1 = openmap(
+  x=attributes(myProj)$regionLL[1,],
+  crs=crsMerc,
+  verbose=TRUE,
+#  path='nrcan')
+#path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
+  path='https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/')
+
+myMap2 = openmap(
+  x=attributes(myProj)$regionLL[2,],
+  zoom=attributes(myMap1)$tiles$zoom,
+  crs=crsMerc,
+  verbose=TRUE,
+#  path='nrcan')
+#path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
+  path='https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/')
+
+mapRaster = raster(
+  extent(attributes(myProj)$ellipse), 
+  res = mean(res(myMap1)/1.5),
+  crs=myProj
+)
+
+myMap1a = projectRaster(
+  from=myMap1, to=mapRaster, method='ngb')
+myMap2a = projectRaster(
+  from=myMap2, to=mapRaster, method='ngb')
+
+myMap = mosaic(myMap1a, myMap2a, fun=mean)
+
 
 data("wrld_simpl", package='maptools')
 
-wrld4 = wrapPoly(wrld_simpl, myProj)
+wrld4 = wrapPoly(x=wrld_simpl, crs=myProj)
+
 
 koreaT = spTransform(korea,
   myProj)  
 xProj = spTransform(
-  x, myProj
+  guam, myProj
 )
-yProj = spTransform(y, myProj)
+yProj = spTransform(hk, myProj)
 okinawaProj = spTransform(
   okinawa, myProj
 )
 
 
 
-myMap = openmap(
-  raster::crop(
-    attributes(myProj)$retain,
-    extent(0,180,-90,90)),
-  fact=1.5, maxTiles=24,
-  crs = myProj,
-  verbose=TRUE,
-#  path='nrcan')
-#path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
-path='https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/')
 
 
-par(bg='black')
-map.new(myProj)
-plotRGB(myMap, add=TRUE, colNA='black')
+map.new(myProj, bg='black', buffer=4*100*1000)
+plotRGB(myMap, add=TRUE, bgalpha=0)
 
 points(xProj, col='red', pch=16, cex=2)
 text(xProj@coords, 
@@ -61,8 +85,7 @@ text(yProj@coords,
 
 plot(wrld4, add=TRUE)
 plot(koreaT, add=TRUE, border='yellow')  
-plot(attributes(myProj)$ellipse, add=TRUE,
-  border='yellow', lwd=4)
+
 
 
 
