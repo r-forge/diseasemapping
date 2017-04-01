@@ -21,7 +21,7 @@ tpers = function(x,
       " +y_0=", offset[2],
       sep=""))
   
-  cropBox = llCropBox(myCrs, res=1)
+  cropBox = llCropBox(crs=myCrs, res=1)
   
   attributes(myCrs)$regionLL = cropBox$poly
   attributes(myCrs)$ellipse = cropBox$ellipse

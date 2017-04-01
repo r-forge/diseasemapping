@@ -6,13 +6,9 @@ okinawa = mapmisc::geocode("Okinawa")
 hk = y = mapmisc::geocode("Hong Kong")
 guam = mapmisc::geocode("Guam")
 x = SpatialPoints(cbind(130,15), proj4string=crsLL)
-korea = raster::getData(
-  "GADM", country='KOR', level=0
-)
 
 
-
-myProj = mapmisc::tpers(bind(x,y), hKm = 6*1000,
+myProj = tpers(x=bind(x,y), hKm = 2*1000,
   tilt =-15, axis='seu')
 
 if(length(attributes(myProj)$ellipseSafeLL)>2) {
@@ -62,8 +58,7 @@ data("wrld_simpl", package='maptools')
 wrld4 = wrapPoly(x=wrld_simpl, crs=myProj)
 
 
-koreaT = spTransform(korea,
-  myProj)  
+
 xProj = spTransform(
   guam, myProj
 )
@@ -76,7 +71,7 @@ okinawaProj = spTransform(
 
 
 
-map.new(myProj, bg='black', buffer=4*100*1000)
+map.new(myProj, bg='black', buffer=2*100*1000)
 plotRGB(myMap, add=TRUE, bgalpha=0)
 
 points(xProj, col='red', pch=16, cex=2)
@@ -95,8 +90,10 @@ text(yProj@coords,
   pos=2, col='yellow')
 
 plot(wrld4, add=TRUE)
-plot(koreaT, add=TRUE, border='yellow')  
 
+gridlinesWrap(myProj, col='yellow', 
+  north=seq(-40,40,by=10), easts=seq(-150,180,by=10),
+  lty=2)
 
 
 
