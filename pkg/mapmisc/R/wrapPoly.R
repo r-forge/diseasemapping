@@ -132,10 +132,10 @@ llCropBox = function(crs, res=1) {
   regionTransOrig = rgeos::gConvexHull(
     rgeos::gConvexHull(SpatialPoints(transInRegion), byid=FALSE)
   )
+  resTrans = mean(apply(bbox(regionTransOrig), 1, diff)*(res/180))
   regionTransSmall = rgeos::gBuffer(regionTransOrig, width=-resTrans/2)
   
   
-  resTrans = mean(apply(bbox(regionTransOrig), 1, diff)*(res/180))
   if(nrow(transOnBorder)) {
     borderTrans = rgeos::gBuffer(SpatialPoints(transOnBorder), width=1.2*resTrans)
     # crop out areas which are close to edges in LL
