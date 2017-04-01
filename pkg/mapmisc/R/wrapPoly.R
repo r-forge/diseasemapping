@@ -55,16 +55,30 @@ wrapPoly = function(x, crs){
 
 llCropBox = function(crs, res=1) {
   
-  edge = c(0.1,1)
+  # long-lat grid covering the globe
+  N = 20
+  res = 1
+  edge = c(0.05,1)
+  oneSeq = seq(-1,1,len=N+1)[-1]-edge[1]/N
+  coordsBox = expand.grid(
+    x=oneSeq,y=oneSeq,z=oneSeq
+    )
+  coordsBox[,'r'] =  sqrt(apply(coordsBox^2,1,sum))
+  coordsBox = coordsBox[coordsBox[,'r']<1,]
+  coordsBox = coordsBox[coordsBox[,'r']>0,]
+  coordsBox[,'lon'] = atan(coordsBox[,'y']/coordsBox[,'x'])
+  coordsBox[,'lat'] = acos(coordsBox[,'z']/coordsBox[,'r'])/2-pi/4
   
-  latSeq = seq(0, sqrt(90-edge[2]), len=floor(180/res))^2
-  latSeq = sort(unique(c(latSeq, -latSeq)))
-  lonSeq = seq(-180+edge[1], 180-edge[1], by=res)
   
-  llPoints = expand.grid(
-    long = lonSeq,
-    lat = latSeq)
+  llPoints = SpatialPoints(
+    as.matrix(coordsBox[,c('lon','lat')])*(360/(pi)),
+    proj4string=crsLL
+    )
   
+  
+    latSeq = sort(unique(llPoints@coords[,2]))
+    lonSeq = sort(unique(llPoints@coords[,1]))
+    
   llBorder = rbind(
     expand.grid(
       long=lonSeq, 
