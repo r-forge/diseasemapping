@@ -3,14 +3,16 @@ tpers = function(x,
   hKm = 100*1000, tilt = -10,
   offset=c(0,0), 
   axis='enu') {
+  
+  if(!raster::isLonLat(x)) x = spTransform(x, crsLL)
 
   myCrs = CRS(paste(
       "+proj=tpers +h=",
       hKm*1000,
       " +lat_0=",
-      x@coords[1,'latitude'],
+      x@coords[1,2],
       " +lon_0=",
-      x@coords[1,'longitude'],
+      x@coords[1,1],
       " +azi=",
       geosphere::bearing(x@coords[1,],x@coords[2,])[1],
       " +tilt=", tilt,

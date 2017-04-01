@@ -120,7 +120,7 @@ llCropBox = function(crs, res=1) {
   
   resTrans = mean(apply(bbox(regionTransOrig), 1, diff)*(res/180))
   borderTrans = rgeos::gBuffer(SpatialPoints(transOnBorder), width=1.2*resTrans)
-  regionTransSmall = rgeos::gBuffer(regionTransOrig, width=-resTrans)
+  regionTransSmall = rgeos::gBuffer(regionTransOrig, width=-resTrans/2)
   
   # crop out areas which are close to edges in LL
   regionTransSmallInclude = rgeos::gSimplify(

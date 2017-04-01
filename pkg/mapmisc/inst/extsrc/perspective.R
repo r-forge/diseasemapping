@@ -13,8 +13,10 @@ korea = raster::getData(
 
 
 myProj = mapmisc::tpers(bind(x,y), hKm = 6*1000,
-  tilt =-45)
+  tilt =-15, axis='seu')
 
+if(length(attributes(myProj)$ellipseSafeLL)>2) {
+  
 myMap1 = openmap(
   x=attributes(myProj)$regionLL[1,],
   crs=crsMerc,
@@ -44,7 +46,16 @@ myMap2a = projectRaster(
   from=myMap2, to=mapRaster, method='ngb')
 
 myMap = mosaic(myMap1a, myMap2a, fun=mean)
-
+} else {
+  myMap = openmap(
+    x=attributes(myProj)$regionLL,
+    buffer=1, maxTiles=26,
+    crs=myProj,
+    verbose=TRUE,
+#  path='nrcan')
+#path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
+    path='https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/')
+  }
 
 data("wrld_simpl", package='maptools')
 
