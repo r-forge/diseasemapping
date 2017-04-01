@@ -59,19 +59,22 @@ llCropBox = function(crs, res=1) {
   N = 20
   res = 1
   edge = c(0.05,1)
-  oneSeq = seq(-1,1,len=N+1)[-1]-edge[1]/N
+
+  eps = 100*sqrt(.Machine$double.eps)
+  
+  oneSeq = seq(-1+2*eps,1-4*eps,len=N+1)
   coordsBox = expand.grid(
     x=oneSeq,y=oneSeq,z=oneSeq
     )
   coordsBox[,'r'] =  sqrt(apply(coordsBox^2,1,sum))
-  coordsBox = coordsBox[coordsBox[,'r']<1,]
+  coordsBox = coordsBox[coordsBox[,'r'] <1,]
   coordsBox = coordsBox[coordsBox[,'r']>0,]
   coordsBox[,'lon'] = atan(coordsBox[,'y']/coordsBox[,'x'])
   coordsBox[,'lat'] = acos(coordsBox[,'z']/coordsBox[,'r'])/2-pi/4
-  
+    
   
   llPoints = SpatialPoints(
-    as.matrix(coordsBox[,c('lon','lat')])*(360/(pi)),
+    as.matrix(na.omit(coordsBox[,c('lon','lat')]))*(360/(pi)),
     proj4string=crsLL
     )
   
