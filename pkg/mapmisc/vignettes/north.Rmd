@@ -132,7 +132,7 @@ if(haveRgdal){
   map.new(map)
   plotRGB(map[[grep("text", names(map), invert=TRUE)]],
     add=TRUE)
-  gridlinesWrap(map, easts=seq(-180,0,by=2), col='red')
+  gridlinesWrap(crs=map, easts=seq(-180,0,by=2), col='red')
   plot(mapText,add=TRUE)
   points(xOmerc)
   text(xOmerc, label=xOmerc$name, pos=4)

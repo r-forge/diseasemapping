@@ -56,7 +56,7 @@ wrapPoly = function(x, crs){
 llCropBox = function(crs, res=1) {
   
   # long-lat grid covering the globe
-  N = 45
+  N = 25
   res = 1
   edge = c(0.05,1)
 
@@ -125,6 +125,14 @@ llCropBox = function(crs, res=1) {
     pointsTransIn[[2]][pointsInRegion])
   transInRegion = transInRegion[order(transInRegion[,1], transInRegion[,2]),]
   
+  # if omerc, truncate the x range
+  if(length(grep("proj=omerc", as.character(crs)))) {
+    
+    absX = abs(transInRegion[,1])
+    toTrunc = quantile(absX, prob=c(0.95))
+    transInRegion = transInRegion[absX < toTrunc,]
+  }
+  
   transOnBorder = cbind(
     pointsTransBorder[[1]],
     pointsTransBorder[[2]]
@@ -171,7 +179,8 @@ llCropBox = function(crs, res=1) {
     n=3000, type='regular')
     
   regionTransSmallInclude@proj4string = borderTrans@proj4string = 
-    regionTransOrig@proj4string = regionTransSmall@proj4string = edgeTrans@proj4string = crs
+    regionTransOrig@proj4string = regionTransSmall@proj4string = 
+    edgeTrans@proj4string = crs
   
   edgeLLP = spTransform(edgeTrans, crsLL)
   
