@@ -11,16 +11,19 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
 	x=wrld_simpl[Dcountry,]
 
 	myCrsO = moll(x, angle=25)
+ 
+ plot(wrld_simpl)
+ plot(attributes(myCrsO)$regionLL, border='red', col='#0000FF10', add=TRUE)
 	
 	xTcrop = wrapPoly(x=wrld_simpl, crs=myCrsO)
 	DcountryT  = grep(country, xTcrop$NAME)
 	
-	map.new(xTcrop)
+	map.new(xTcrop, buffer=1000*1000)
 	plot(attributes(myCrsO)$ellipse, add=TRUE, col='lightBlue', border='blue')
 	plot(xTcrop,add=TRUE)
 	plot(xTcrop[DcountryT,], col='red', add=TRUE)
 	
-#	gridlinesWrap(myCrsO, lty=2, col='orange')
+	gridlinesWrap(myCrsO, lty=2, col='orange')
 	
 	
 	
@@ -42,6 +45,6 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
 	plot(xTcrop,add=TRUE)
 	plot(xTcrop[DcountryT,], col='green', add=TRUE)
 	
-#	gridlinesWrap(crs=xTcrop, lty=2, col='red')
+	gridlinesWrap(crs=xTcrop, lty=2, col='red')
 
 }

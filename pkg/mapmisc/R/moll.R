@@ -150,8 +150,7 @@ moll = function(x=0, angle=NULL, flip=FALSE) {
 	
 	}
 	
-	theBox = llCropBox(
-			crs=result, res=1)
+	theBox = llCropBox(crs=result, res=1)
 
 	if(is.character(flip)) {
 		result = CRS(paste(as.character(result), " +axis=", flip, sep=''))
@@ -164,9 +163,14 @@ moll = function(x=0, angle=NULL, flip=FALSE) {
 			}
 		} 
 	}
-	attributes(result)$crop = theBox$crop
-	attributes(result)$ellipse = theBox$poly
-	
+ attributes(result)$regionLL = theBox$poly
+	attributes(result)$ellipse = theBox$ellipse
+ 
+ attributes(result)$crop = theBox$crop
+ 
+ attributes(result)$ellipseSafeLL = theBox$polyTrans
+ 
+ 
 	result
 }
 
