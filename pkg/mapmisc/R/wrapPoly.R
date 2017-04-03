@@ -68,7 +68,8 @@ llCropBox = function(crs, res=1) {
     x=oneSeq,y=oneSeq,z=oneSeq
     )
   coordsBox = coordsBox + sin(seq(0-eps,2*pi, len=nrow(coordsBox)))/N  
-  coordsBox = coordsBox + runif(length(coordsBox), -0.5/N, 0.5/N)
+  coordsBox = coordsBox + 
+    stats::runif(length(coordsBox), -0.5/N, 0.5/N)
   coordsBox[,'r'] =  sqrt(apply(coordsBox^2,1,sum))
   coordsBox = coordsBox[coordsBox[,'r'] < 1, ]
   coordsBox = coordsBox[coordsBox[,'r']> 0,]
