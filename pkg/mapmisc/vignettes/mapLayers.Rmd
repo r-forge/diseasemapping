@@ -20,14 +20,15 @@ library('knitr')
 library('mapmisc')
 
 fact = 0.5
-reRun = FALSE
-reSave = FALSE
 allTiles = FALSE
 # uncomment for nicer images
 # fact = 1 
 # reRun = TRUE
-# or run 	R --slave -e "knitr::knit('mapLayers.Rmd')" fact=1 reRun=TRUE
-theArgs = grep("^(fact|reRun|reSave)=", commandArgs(), value=TRUE)
+# or run in sandbox	R --slave -e "knitr::knit('../pkg/mapmisc/vignettes/mapLayers.Rmd')" fact=1 allTiles=TRUE
+# pandoc --to=html5 --output=mapLayers.html mapLayers.md
+# cp -r figure ../www
+# cp -r mapLayers.html ../www
+theArgs = grep("^(fact|allTiles)=", commandArgs(), value=TRUE)
 for(D in theArgs)
   eval(parse(text=D))
 
@@ -35,12 +36,13 @@ opts_chunk$set(dpi=50*fact,
   dev.args=list(bg='white'))	
 
 if(allTiles) {
-  theNames = osmTiles()
+  theNames = names(osmTiles())
   cachePath = options()$mapmiscCachePath
 } else {
   # smaller selection of tiles, which are distributed with the package
-  theNames = grep("cyclemap|thunderforest|waze|wikimedia|korona|opentopomap|maptoolkit|nrcan", 
-    osmTiles(), invert=TRUE, value=TRUE)
+  theNames = names(grep(
+      "cyclemap|thunderforest|waze|wikimedia|korona|opentopomap|maptoolkit|nrcan", 
+    osmTiles(), invert=TRUE, value=TRUE))
   cachePath = system.file('extdata', package='mapmisc')
 }
 ```
@@ -139,7 +141,7 @@ See [mc.bbbike.org/mc](http://mc.bbbike.org/mc/)
 
 Michelin
     
-```{r additionalMichelin, echo=TRUE, purl=FALSE, eval=FALSE}
+```{r additionalMichelin, echo=TRUE, purl=FALSE, eval=allTiles}
 
 mPath = osmTiles(paste(
   'http://map3.viamichelin.com/map/mapdirect?map=',
@@ -163,7 +165,7 @@ for(D in names(africaMichelin)) {
 Stamen retina
 
    
-```{r stamenRetina, echo=TRUE, purl=FALSE, eval=FALSE}
+```{r stamenRetina, echo=TRUE, purl=FALSE, eval=allTiles}
 
 sPath = osmTiles('stamen-toner', 
   suffix = '@2x.png')
@@ -184,7 +186,7 @@ mtext(sPath, side=3, line=-2, outer=FALSE)
 
 Komoot, Yandex, ESRI, F4map, and Sigma
 
-```{r aditionalEsri, echo=TRUE, purl=FALSE, eval=FALSE}
+```{r aditionalEsri, echo=TRUE, purl=FALSE, eval=allTiles}
 
 otherPaths = c(
   'https://a.tile.hosted.thunderforest.com/komoot-2/',

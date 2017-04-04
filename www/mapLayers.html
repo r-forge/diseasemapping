@@ -1,1 +1,578 @@
-<p>this page has moved to <a href='openmap.html'>openmap.html</a><p> 
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Examples of map layers}
+-->
+<h1 id="examples-of-map-layers">Examples of map layers</h1>
+<p>This document will be incomplete if <code>rgdal</code> is unavailable or there is on internet connection when this document is compiled. The full document is at <a href="http://diseasemapping.r-forge.r-project.org">diseasemapping.r-forge.r-project.org</a>.</p>
+<p>See <a href="http://mc.bbbike.org/mc/">mc.bbbike.org/mc</a> for examples more map tiles (not all of which are compatible with <code>mapmisc</code>).</p>
+<p>The following are some examples of maps produced with <code>mymap=openmap(x, path=&quot;something&quot;)</code></p>
+<h1 id="osm">osm</h1>
+<p><code>plot(openmap(x,path=&quot;osm&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-1.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-2.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-3.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="osm-admin">osm-admin</h1>
+<p><code>plot(openmap(x,path=&quot;osm-admin&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-4.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-5.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-6.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="osm-roads-grey">osm-roads-grey</h1>
+<p><code>plot(openmap(x,path=&quot;osm-roads-grey&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-7.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-8.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-9.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="osm-roads">osm-roads</h1>
+<p><code>plot(openmap(x,path=&quot;osm-roads&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-10.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-11.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-12.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="osm-semitransparent">osm-semitransparent</h1>
+<p><code>plot(openmap(x,path=&quot;osm-semitransparent&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-13.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-14.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-15.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="osm-no-labels">osm-no-labels</h1>
+<p><code>plot(openmap(x,path=&quot;osm-no-labels&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-16.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-17.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-18.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="osm-de">osm-de</h1>
+<p><code>plot(openmap(x,path=&quot;osm-de&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-19.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-20.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-21.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="osm-transport">osm-transport</h1>
+<p><code>plot(openmap(x,path=&quot;osm-transport&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-22.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-23.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-24.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="bw-mapnik">bw-mapnik</h1>
+<p><code>plot(openmap(x,path=&quot;bw-mapnik&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-25.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-26.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-27.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="osm-cyclemap">osm-cyclemap</h1>
+<p><code>plot(openmap(x,path=&quot;osm-cyclemap&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-28.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-29.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-30.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="osm-seamap">osm-seamap</h1>
+<p><code>plotRGB(openmap(x,path=&quot;osm-seamap&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-31.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-32.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-33.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="osm-fr">osm-fr</h1>
+<p><code>plot(openmap(x,path=&quot;osm-fr&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-34.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-35.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-36.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="landscape">landscape</h1>
+<p><code>plot(openmap(x,path=&quot;landscape&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography by <a href="http://www.thunderforest.com/">Thunderforest</a></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-37.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-38.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-39.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="hyda">hyda</h1>
+<p><code>plot(openmap(x,path=&quot;hyda&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-40.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-41.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-42.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="hyda-base">hyda-base</h1>
+<p><code>plot(openmap(x,path=&quot;hyda-base&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-43.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-44.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-45.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="hyda-roads">hyda-roads</h1>
+<p><code>plot(openmap(x,path=&quot;hyda-roads&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-46.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-47.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-48.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="opentopomap">opentopomap</h1>
+<p><code>plot(openmap(x,path=&quot;opentopomap&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-49.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-50.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-51.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="maptoolkit">maptoolkit</h1>
+<p><code>plot(openmap(x,path=&quot;maptoolkit&quot;))</code></p>
+<p>© <a href="http://www.toursprung.com">Toursprung GmbH</a> Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-52.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-53.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-54.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="waze">waze</h1>
+<p><code>plotRGB(openmap(x,path=&quot;waze&quot;))</code></p>
+<p>© <a href="http://www.waze.com/legal/notices">Waze mobile</a></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-55.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-56.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-57.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="waze-us">waze-us</h1>
+<p><code>plotRGB(openmap(x,path=&quot;waze-us&quot;))</code></p>
+<p>© <a href="http://www.waze.com/legal/notices">Waze mobile</a></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-58.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-59.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-60.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="humanitarian">humanitarian</h1>
+<p><code>plot(openmap(x,path=&quot;humanitarian&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography by <a href="http://hot.openstreetmap.org/about">Humanitarian OSM team</a> is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-61.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-62.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-63.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="cartodb">cartodb</h1>
+<p><code>plot(openmap(x,path=&quot;cartodb&quot;))</code></p>
+<p>Map tiles by <a href="http://carto.com">CartoDB</a> under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-64.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-65.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-66.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="cartodb-dark">cartodb-dark</h1>
+<p><code>plot(openmap(x,path=&quot;cartodb-dark&quot;))</code></p>
+<p>Map tiles by <a href="http://carto.com">CartoDB</a> under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-67.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-68.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-69.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="nrcan">nrcan</h1>
+<p><code>plotRGB(openmap(x,path=&quot;nrcan&quot;))</code></p>
+<p>Cartography by <a href="http://www.nrcan.gc.ca/earth-sciences/geography/topographic-information/free-data-geogratis/geogratis-web-services/17216">The Canada Base Map - Transportation (CBMT) web mapping services of the Earth Sciences Sector (ESS) at Natural Resources Canada (NRCan)</a> licensed as the <a href="http://open.canada.ca/en/open-government-licence-canada">Open Government Licence - Canada</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-70.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-71.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-72.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="nrcan-text">nrcan-text</h1>
+<p><code>plotRGB(openmap(x,path=&quot;nrcan-text&quot;))</code></p>
+<p>Cartography by <a href="http://www.nrcan.gc.ca/earth-sciences/geography/topographic-information/free-data-geogratis/geogratis-web-services/17216">The Canada Base Map - Transportation (CBMT) web mapping services of the Earth Sciences Sector (ESS) at Natural Resources Canada (NRCan)</a> licensed as the <a href="http://open.canada.ca/en/open-government-licence-canada">Open Government Licence - Canada</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-73.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-74.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-75.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="nrcan-text-fr">nrcan-text-fr</h1>
+<p><code>plotRGB(openmap(x,path=&quot;nrcan-text-fr&quot;))</code></p>
+<p>Cartography by <a href="http://www.nrcan.gc.ca/earth-sciences/geography/topographic-information/free-data-geogratis/geogratis-web-services/17216">The Canada Base Map - Transportation (CBMT) web mapping services of the Earth Sciences Sector (ESS) at Natural Resources Canada (NRCan)</a> licensed as the <a href="http://open.canada.ca/en/open-government-licence-canada">Open Government Licence - Canada</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-76.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-77.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-78.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="spinal">spinal</h1>
+<p><code>plot(openmap(x,path=&quot;spinal&quot;))</code></p>
+<p>Map tiles by <a href="http://thunderforest.com">Thunderforest</a> under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-79.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-80.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-81.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="neighbourhood">neighbourhood</h1>
+<p><code>plot(openmap(x,path=&quot;neighbourhood&quot;))</code></p>
+<p>Map tiles by <a href="http://thunderforest.com">Thunderforest</a> under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-82.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-83.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-84.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="pioneer">pioneer</h1>
+<p><code>plot(openmap(x,path=&quot;pioneer&quot;))</code></p>
+<p>Map tiles by <a href="http://thunderforest.com">Thunderforest</a> under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-85.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-86.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-87.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="mobile-atlas">mobile-atlas</h1>
+<p><code>plot(openmap(x,path=&quot;mobile-atlas&quot;))</code></p>
+<p>Map tiles by <a href="http://thunderforest.com">Thunderforest</a> under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-88.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-89.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-90.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="wikimedia">wikimedia</h1>
+<p><code>plotRGB(openmap(x,path=&quot;wikimedia&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-91.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-92.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-93.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="sputnik">sputnik</h1>
+<p><code>plot(openmap(x,path=&quot;sputnik&quot;))</code></p>
+<p><a href="http://corp.sputnik.ru/maps">corp.sputnik.ru/maps</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-94.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-95.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-96.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="stamen-toner">stamen-toner</h1>
+<p><code>plotRGB(openmap(x,path=&quot;stamen-toner&quot;))</code></p>
+<p>Map tiles by <a href="http://stamen.com">Stamen Design</a> under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-97.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-98.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-99.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="stamen-watercolor">stamen-watercolor</h1>
+<p><code>plotRGB(openmap(x,path=&quot;stamen-watercolor&quot;))</code></p>
+<p>Map tiles by <a href="http://stamen.com">Stamen Design</a> under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://creativecommons.org/licenses/by/3.0">CC BY-SA</a></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-100.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-101.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-102.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="stamen-terrain">stamen-terrain</h1>
+<p><code>plot(openmap(x,path=&quot;stamen-terrain&quot;))</code></p>
+<p>Map tiles by <a href="http://stamen.com">Stamen Design</a> under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://creativecommons.org/licenses/by/3.0">CC BY-SA</a></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-103.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-104.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-105.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="stamen-terrain-labels">stamen-terrain-labels</h1>
+<p><code>plotRGB(openmap(x,path=&quot;stamen-terrain-labels&quot;))</code></p>
+<p>Map tiles by <a href="http://stamen.com">Stamen Design</a> under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://creativecommons.org/licenses/by/3.0">CC BY-SA</a></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-106.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-107.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-108.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="stamen-terrain-background">stamen-terrain-background</h1>
+<p><code>plot(openmap(x,path=&quot;stamen-terrain-background&quot;))</code></p>
+<p>Map tiles by <a href="http://stamen.com">Stamen Design</a> under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://creativecommons.org/licenses/by/3.0">CC BY-SA</a></p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="figure/someTiles-109.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-110.png" alt="plot of chunk someTiles" /></td>
+<td><img src="figure/someTiles-111.png" alt="plot of chunk someTiles" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="additional-map-layers">Additional map layers</h1>
+<p>See <a href="http://mc.bbbike.org/mc/">mc.bbbike.org/mc</a></p>
+<p>Michelin</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mPath =<span class="st"> </span><span class="kw">osmTiles</span>(<span class="kw">paste</span>(
+  <span class="st">&#39;http://map3.viamichelin.com/map/mapdirect?map=&#39;</span>,
+  <span class="kw">c</span>(<span class="st">&#39;light&#39;</span>,<span class="st">&#39;viamichelin&#39;</span>), <span class="st">&#39;&amp;&#39;</span>, <span class="dt">sep=</span><span class="st">&#39;&#39;</span>),
+  <span class="dt">xyz=</span><span class="st">&#39;zxy=&#39;</span>, <span class="dt">suffix =</span> 
+    <span class="st">&#39;&amp;format=png&amp;version=201503191157&amp;layer=background&#39;</span>)</code></pre></div>
+<pre><code>## Warning in if (name %in% names(result)) {: the condition has length &gt; 1 and
+## only the first element will be used</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">africaMichelin =<span class="st"> </span><span class="kw">openmap</span>(
+  africaExtent, <span class="dt">path=</span>mPath,
+  <span class="dt">zoom=</span><span class="dv">2</span>,
+  <span class="dt">verbose=</span><span class="ot">TRUE</span>, 
+  <span class="dt">crs =</span> crsMerc)</code></pre></div>
+<pre><code>## zoom is  2 ,  1 tiles
+## http://map3.viamichelin.com/map/mapdirect?map=viamichelin&amp; 
+## http://map3.viamichelin.com/map/mapdirect?map=viamichelin&amp; 
+## tile  /tmp/mapmiscCache_patrick/Xhttp...map3.viamichelin.com.map.mapdirect.map.viamichelin./z=2&amp;x=2&amp;y=1&amp;format=png&amp;version=201503191157&amp;layer=background  cached
+## http://map3.viamichelin.com/map/mapdirect?map=light&amp; 
+## http://map3.viamichelin.com/map/mapdirect?map=light&amp; 
+## tile  /tmp/mapmiscCache_patrick/Xhttp...map3.viamichelin.com.map.mapdirect.map.light./z=2&amp;x=2&amp;y=1&amp;format=png&amp;version=201503191157&amp;layer=background  cached
+## reprojecting  65536  cells...tiles arrived in the desired projection
+## copying colortable for  http...map3.viamichelin.com.map.mapdirect.map.viamichelin. 
+## copying colortable for  http...map3.viamichelin.com.map.mapdirect.map.light.</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="cf">for</span>(D <span class="cf">in</span> <span class="kw">names</span>(africaMichelin)) {
+  <span class="kw">plot</span>(africaMichelin[[D]])
+  <span class="kw">mtext</span>(D, <span class="dt">side=</span><span class="dv">3</span>, <span class="dt">line=</span><span class="op">-</span><span class="dv">2</span>, <span class="dt">outer=</span><span class="ot">FALSE</span>)
+}</code></pre></div>
+<p><img src="figure/additionalMichelin-1.png" alt="plot of chunk additionalMichelin" /><img src="figure/additionalMichelin-2.png" alt="plot of chunk additionalMichelin" /><img src="figure/additionalMichelin-3.png" alt="plot of chunk additionalMichelin" /><img src="figure/additionalMichelin-4.png" alt="plot of chunk additionalMichelin" /> Stamen retina</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sPath =<span class="st"> </span><span class="kw">osmTiles</span>(<span class="st">&#39;stamen-toner&#39;</span>, 
+  <span class="dt">suffix =</span> <span class="st">&#39;@2x.png&#39;</span>)
+
+africaS =<span class="st"> </span><span class="kw">openmap</span>(
+  africaTiles, 
+  <span class="dt">buffer=</span><span class="op">-</span><span class="dv">1</span>,
+  <span class="dt">zoom=</span><span class="kw">attributes</span>(africaTiles)<span class="op">$</span>tiles<span class="op">$</span>zoom<span class="op">+</span><span class="dv">1</span>,
+  <span class="dt">path=</span>sPath, <span class="dt">verbose=</span><span class="ot">TRUE</span>)</code></pre></div>
+<pre><code>## zoom is  3 ,  4 tiles
+## http://d.tile.stamen.com/toner/ 
+## http://d.tile.stamen.com/toner/ 
+## tile  /tmp/mapmiscCache_patrick/Xhttp...d.tile.stamen.com.toner./3/4/2@2x.png  cached
+## tile  /tmp/mapmiscCache_patrick/Xhttp...d.tile.stamen.com.toner./3/4/3@2x.png  cached
+## tile  /tmp/mapmiscCache_patrick/Xhttp...d.tile.stamen.com.toner./3/5/2@2x.png  cached
+## tile  /tmp/mapmiscCache_patrick/Xhttp...d.tile.stamen.com.toner./3/5/3@2x.png  cached
+## reprojecting  1048576  cells...tiles arrived in the desired projection</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">africaS2 =<span class="st"> </span><span class="kw">tonerToTrans</span>(africaS)
+
+<span class="kw">plot</span>(africaTiles[[<span class="st">&#39;opentopomap&#39;</span>]])</code></pre></div>
+<figure>
+<img src="figure/stamenRetina-1.png" alt="plot of chunk stamenRetina" /><figcaption>plot of chunk stamenRetina</figcaption>
+</figure>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(africaS2, <span class="dt">add=</span><span class="ot">TRUE</span>)
+
+<span class="kw">mtext</span>(sPath, <span class="dt">side=</span><span class="dv">3</span>, <span class="dt">line=</span><span class="op">-</span><span class="dv">2</span>, <span class="dt">outer=</span><span class="ot">FALSE</span>)</code></pre></div>
+<figure>
+<img src="figure/stamenRetina-2.png" alt="plot of chunk stamenRetina" /><figcaption>plot of chunk stamenRetina</figcaption>
+</figure>
+<p>Komoot, Yandex, ESRI, F4map, and Sigma</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">otherPaths =<span class="st"> </span><span class="kw">c</span>(
+  <span class="st">&#39;https://a.tile.hosted.thunderforest.com/komoot-2/&#39;</span>,
+  <span class="st">&#39;https://sat01.maps.yandex.net/tiles?l=sat&amp;v=1.35.0&amp;&#39;</span>,
+  <span class="st">&#39;https://vec02.maps.yandex.net/tiles?l=map&amp;v=4.40&amp;&#39;</span>,
+  <span class="st">&#39;https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/&#39;</span>,
+  <span class="st">&#39;https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/&#39;</span>,
+  <span class="st">&#39;https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/&#39;</span>,
+  <span class="st">&#39;https://tile2.f4map.com/tiles/f4_2d/&#39;</span>,
+  <span class="st">&#39;http://tiles1.sigma-dc-control.com/layer8/&#39;</span>)
+
+africaExtra =<span class="st"> </span><span class="kw">openmap</span>(
+  africaExtent, <span class="dt">path=</span>otherPaths,
+  <span class="dt">zoom=</span><span class="dv">2</span>,
+  <span class="dt">verbose=</span><span class="ot">TRUE</span>, 
+  <span class="dt">crs =</span> crsMerc)</code></pre></div>
+<pre><code>## zoom is  2 ,  1 tiles
+## http://tiles1.sigma-dc-control.com/layer8/ 
+## http://tiles1.sigma-dc-control.com/layer8/ 
+## tile  /tmp/mapmiscCache_patrick/Xhttp...tiles1.sigma.dc.control.com.layer8./2/2/1.png  cached
+## https://tile2.f4map.com/tiles/f4_2d/ 
+## https://tile2.f4map.com/tiles/f4_2d/ 
+## tile  /tmp/mapmiscCache_patrick/Xhttps...tile2.f4map.com.tiles.f4_2d./2/2/1.png  cached
+## https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/ 
+## https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/ 
+## tile  /tmp/mapmiscCache_patrick/Xhttps...services.arcgisonline.com.ArcGIS.rest.services.Ocean.World_Ocean_Base.MapServer.tile./2/1/2.jpg  cached
+## https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/ 
+## https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/ 
+## tile  /tmp/mapmiscCache_patrick/Xhttps...server.arcgisonline.com.ArcGIS.rest.services.World_Imagery.MapServer.tile./2/1/2.jpg  cached
+## https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/ 
+## https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/ 
+## tile  /tmp/mapmiscCache_patrick/Xhttps...server.arcgisonline.com.ArcGIS.rest.services.World_Physical_Map.MapServer.tile./2/1/2.jpg  cached
+## https://vec02.maps.yandex.net/tiles?l=map&amp;v=4.40&amp; 
+## https://vec02.maps.yandex.net/tiles?l=map&amp;v=4.40&amp; 
+## tile  /tmp/mapmiscCache_patrick/Xhttps...vec02.maps.yandex.net.tiles.l.map.v.4.40./x=2&amp;y=1&amp;z=2  cached
+## https://sat01.maps.yandex.net/tiles?l=sat&amp;v=1.35.0&amp; 
+## https://sat01.maps.yandex.net/tiles?l=sat&amp;v=1.35.0&amp; 
+## tile  /tmp/mapmiscCache_patrick/Xhttps...sat01.maps.yandex.net.tiles.l.sat.v.1.35.0./x=2&amp;y=1&amp;z=2  cached
+## https://a.tile.hosted.thunderforest.com/komoot-2/ 
+## https://a.tile.hosted.thunderforest.com/komoot-2/ 
+## tile  /tmp/mapmiscCache_patrick/Xhttps...a.tile.hosted.thunderforest.com.komoot.2./2/2/1.png  cached
+## reprojecting  65536  cells...tiles arrived in the desired projection
+## copying colortable for  http...tiles1.sigma.dc.control.com.layer8. 
+## copying colortable for  https...tile2.f4map.com.tiles.f4_2d. 
+## copying colortable for  https...vec02.maps.yandex.net.tiles.l.map.v.4.40. 
+## copying colortable for  https...a.tile.hosted.thunderforest.com.komoot.2.</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">Spaths =<span class="st"> </span><span class="kw">unique</span>(
+  <span class="kw">gsub</span>(<span class="st">&quot;(red|green|blue|trans)$&quot;</span>, <span class="st">&quot;&quot;</span>,
+    <span class="kw">names</span>(africaExtra), <span class="dt">ignore.case=</span><span class="ot">TRUE</span>)
+)
+
+<span class="cf">for</span>(D <span class="cf">in</span> Spaths) {
+  
+  oneTileName =<span class="st"> </span><span class="kw">grep</span>(<span class="kw">paste</span>(<span class="st">&quot;^&quot;</span>, D, <span class="st">&quot;$&quot;</span>, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>), 
+    <span class="kw">names</span>(africaExtra), <span class="dt">value=</span><span class="ot">TRUE</span>)
+  
+  threeTilesName =<span class="st"> </span><span class="kw">grep</span>(<span class="kw">paste</span>(<span class="st">&quot;^&quot;</span>, D, 
+      <span class="st">&quot;([rR]ed|[gG]reen|[bB]lue)$&quot;</span>, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>), 
+    <span class="kw">names</span>(africaExtra),<span class="dt">value=</span><span class="ot">TRUE</span>)
+  
+  <span class="cf">if</span>(<span class="kw">length</span>(threeTilesName)<span class="op">==</span><span class="dv">3</span>) {
+    <span class="kw">plotRGB</span>(africaExtra[[threeTilesName]])
+  } <span class="cf">else</span> {
+    <span class="kw">plot</span>(africaExtra[[oneTileName]])
+  }
+  <span class="kw">mtext</span>(D, <span class="dt">side=</span><span class="dv">3</span>, <span class="dt">line=</span><span class="op">-</span><span class="dv">2</span>, <span class="dt">outer=</span><span class="ot">FALSE</span>)
+}</code></pre></div>
+<p><img src="figure/aditionalEsri-1.png" alt="plot of chunk aditionalEsri" /><img src="figure/aditionalEsri-2.png" alt="plot of chunk aditionalEsri" /><img src="figure/aditionalEsri-3.png" alt="plot of chunk aditionalEsri" /><img src="figure/aditionalEsri-4.png" alt="plot of chunk aditionalEsri" /><img src="figure/aditionalEsri-5.png" alt="plot of chunk aditionalEsri" /><img src="figure/aditionalEsri-6.png" alt="plot of chunk aditionalEsri" /><img src="figure/aditionalEsri-7.png" alt="plot of chunk aditionalEsri" /><img src="figure/aditionalEsri-8.png" alt="plot of chunk aditionalEsri" /><img src="figure/aditionalEsri-9.png" alt="plot of chunk aditionalEsri" /><img src="figure/aditionalEsri-10.png" alt="plot of chunk aditionalEsri" /><img src="figure/aditionalEsri-11.png" alt="plot of chunk aditionalEsri" /><img src="figure/aditionalEsri-12.png" alt="plot of chunk aditionalEsri" /></p>
