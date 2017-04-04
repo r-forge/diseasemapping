@@ -102,16 +102,17 @@ myPoints = SpatialPoints(myraster, proj4string=CRS(proj4string(myraster)))[
 
 names(osmTiles())
 
-\dontrun{
 
-	mytiles = openmap(myraster)
+mytiles = openmap(myraster, zoom=6,
+	cachePath = system.file('extdata', package='mapmisc'))
+	
 
 	map.new(myraster)
 	plot(mytiles, add=TRUE)
 	points(myPoints,col='red')
 
 
-
+\dontrun{
 	mytiles = openmap(myPoints,
 		path='waze', verbose=TRUE)
 	map.new(myPoints)
