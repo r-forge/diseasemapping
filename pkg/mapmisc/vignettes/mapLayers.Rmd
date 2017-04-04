@@ -22,6 +22,7 @@ library('mapmisc')
 fact = 0.5
 reRun = FALSE
 reSave = FALSE
+allTiles = FALSE
 # uncomment for nicer images
 # fact = 1 
 # reRun = TRUE
@@ -33,51 +34,42 @@ for(D in theArgs)
 opts_chunk$set(dpi=50*fact, 
   dev.args=list(bg='white'))	
 
-theNames = grep("mapquest", names(osmTiles()), invert=TRUE, value=TRUE)
+if(allTiles) {
+  theNames = osmTiles()
+  cachePath = options()$mapmiscCachePath
+} else {
+  # smaller selection of tiles, which are distributed with the package
+  theNames = grep("cyclemap|thunderforest|waze|wikimedia|korona|opentopomap|maptoolkit|nrcan", 
+    osmTiles(), invert=TRUE, value=TRUE)
+  cachePath = system.file('extdata', package='mapmisc')
+}
+```
+
+```{r theExtent, include=FALSE}
 africaExtent = c(25, 25)
 trafalgarSquare=c(-0.128056,51.508056)
 stjohns=c(-52.683320, 47.566285)
+
 ```
 
 
 ```{r downloadTiles,include=FALSE}
 
-if(reRun) {
-  
   africaTiles = openmap(africaExtent, path=theNames,zoom=2,
     verbose=TRUE, 
     crs = crsMerc, 
-    fact=fact)
+    fact=fact, cachePath = cachePath)
   
   londonTiles = openmap(trafalgarSquare,zoom=12,path=theNames,
     verbose=TRUE, 
     crs = crsMerc, 
-    fact=fact)
+    fact=fact, cachePath = cachePath)
   
   nfTiles = openmap(stjohns, zoom=14, path=theNames,,
     verbose=TRUE, 
     crs = crsMerc, 
-    fact=fact)
+    fact=fact, cachePath = cachePath)
   
-  # save the data
-  if(reSave) {
-    # make sure all data is stored in memory not on disk
-    # so that caching will work
-    for(D in names(africaTiles))
-      values(africaTiles[[D]]) = values(africaTiles[[D]])
-    for(D in names(londonTiles))
-      values(londonTiles[[D]]) = values(londonTiles[[D]])
-    for(D in names(nfTiles))
-      values(nfTiles[[D]]) = values(nfTiles[[D]])
-    
-    save(africaTiles, londonTiles, nfTiles,
-      file="../inst/extdata/tiles.RData",
-      compress="xz")
-  }
-  
-} else { # don't rerun
-  load(system.file("extdata", "tiles.RData", package = "mapmisc"))
-}
 ```
 
 

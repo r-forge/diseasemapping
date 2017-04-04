@@ -1,3 +1,5 @@
+cachePath = system.file('extdata', package='mapmisc')
+
 
 if(!interactive()) pdf("openmap.pdf")
 
@@ -49,69 +51,69 @@ thezoom=6
 
 		# raster, result will be in project of the raster (long-lat)
 		mytiles = openmap(x=extend(myraster,1),zoom=thezoom, 
-				path="http://tile.openstreetmap.org")
+				path="http://tile.openstreetmap.org", cachePath=cachePath)
 #		mycities = GNcities(extend(myraster,1),max=5)
 		myplot(myraster, myPoints)
 
 		# slash at the end
 		mytiles = openmap(extend(myraster,1),zoom=thezoom, 
-				path="http://tile.openstreetmap.org/")
+				path="http://tile.openstreetmap.org/", cachePath=cachePath)
 #		mycities = GNcities(extend(myraster,1),max=5)
 		myplot(myraster, myPoints)
 		
 		# no http at beginning
-		mytiles = openmap(extend(myraster,1),path="tile.openstreetmap.org")
+		mytiles = openmap(extend(myraster,1),path="tile.openstreetmap.org", cachePath=cachePath)
 #		mycities = GNcities(extend(myraster,1),max=5)
 		myplot(myraster, myPoints)
 		
 		
 		# extent, tiles will be long-lat
-		mytiles = openmap(extent(myraster),zoom=thezoom)
+		mytiles = openmap(extent(myraster),zoom=thezoom, cachePath=cachePath)
 		# cities will be long=lat
 #		mycities = GNcities(extent(myraster),max=5,lang="fr")
 #		myplot(mycities,myPoints)
 		
 		# give the bbox, long lat
-		mytiles = openmap(bbox(myraster),zoom=thezoom)
+		mytiles = openmap(bbox(myraster),zoom=thezoom, cachePath=cachePath)
 #		mycities = GNcities(bbox(myraster),max=5)
 #		myplot(mycities,myPoints)
 		
 		
 		# give points, result is CRS of points (long-lat)
-		mytiles = openmap(myPoints,zoom=thezoom)
+		mytiles = openmap(myPoints,zoom=thezoom, cachePath=cachePath)
 #		mycities = GNcities(myPoints,max=5,lang="es")
 		myplot(myPoints)
 		
 		# UTM raster
-		mytiles = openmap(myrasterUTM,zoom=thezoom)
+		mytiles = openmap(myrasterUTM,zoom=thezoom, cachePath=cachePath)
 #		mycities = GNcities(myrasterUTM,max=5)
 		myplot(myrasterUTM, myPointsUTM)
 		
 		# supply a crs
 		mytiles = openmap(x=extent(myrasterUTM),zoom=thezoom, 
-				crs=proj4string(myrasterUTM))
+				crs=proj4string(myrasterUTM), cachePath=cachePath)
 #		mycities = GNcities(myrasterUTM,max=5)
 		myplot(myrasterUTM, myPointsUTM)
 		
 		# utm points
-		mytiles = openmap(myPointsUTM,zoom=thezoom)
+		mytiles = openmap(myPointsUTM,zoom=thezoom, cachePath=cachePath)
 #		mycities = GNcities(myPointsUTM,max=5)
 		myplot(myPointsUTM)
 		
 		# specify different output crs
-	mytiles = openmap(myPointsUTM, crs=CRS("+init=epsg:4326"))
+	mytiles = openmap(myPointsUTM, crs=CRS("+init=epsg:4326"), cachePath=cachePath)
 #	mycities = GNcities(myPoints,max=5)
 	myplot(myPoints)
 
 	# one point only
-	mytiles = openmap(coordinates(myPoints)[1,], zoom=4)
+	mytiles = openmap(coordinates(myPoints)[1,], zoom=4, cachePath=cachePath)
 	myplot(myPoints)
 
   # ams city hall
   cityHall = SpatialPoints(cbind( 4.891111, 52.373056), proj4string=crsLL)
 #  cityHall = spTransform(cityHall,CRS("+init=epsg:28992"))
   cityHall = spTransform(cityHall,CRS("+init=epsg:32631"))
-  mytiles = openmap(cityHall, buffer=50, verbose=TRUE)
+  mytiles = openmap(cityHall, buffer=50, verbose=TRUE, cachePath=cachePath)
   if(!interactive()) pdf(tempfile("osmplot", tmpdir=".", fileext=".pdf"))
   plot(mytiles)
   points(cityHall, pch=3, col='blue',cex=4)

@@ -165,7 +165,7 @@ hook_plot_beamer = function(x, options) {
   cap = options$fig.cap
   scap = options$fig.subcap
 	
-	scapCenter = 
+#	scapCenter = 
   		if(is.null(scap)){
 				scap = scapCenter = ''
 			} else {
@@ -182,8 +182,10 @@ hook_plot_beamer = function(x, options) {
 		if( fig.ncol > 1) {
 			if(fig.cur == 1 ) 
 				result = paste("\n\\bcol", out.width, "\n\n", result, sep="")
-			if(fig.cur == fig.num) 
-				result = paste(result, "\n\\ecol\n\n", sep="")
+			if(fig.cur == fig.num) {
+     if(!identical(options$ecol, FALSE))
+  				result = paste(result, "\n\\ecol\n\n", sep="")
+    }
 		}
 		if(fig.cur == 1 ) {
 			result = paste( "\n", options$fig.start," ", cap,  "\n\n", result, sep="")	

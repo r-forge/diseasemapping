@@ -1,4 +1,6 @@
 library('mapmisc')
+cachePath = system.file('extdata', package='mapmisc')
+
 Spackages = c('rgdal', 'rgeos', 'geosphere', 'maptools')
 
 if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=TRUE))))){
