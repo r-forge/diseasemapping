@@ -3,6 +3,7 @@
 \name{priorPostSd}
 \alias{priorPostSd}
 \alias{priorPost}
+\alias{precToSd}
 \title{precisions to standard deviations}
 \usage{
 priorPostSd(object, param = 1:length(object$all.hyper$random),
@@ -14,6 +15,8 @@ priorPostSd(object, param = 1:length(object$all.hyper$random),
 \item{param}{vector of parameters to transform}
 
 \item{group}{random effect parameters or 'family' parameters}
+
+\item{densmat}{matrix with columns 'x' and 'y'}
 }
 \description{
 Transforms prior and posterior distributions of precision parameters to standard deviations

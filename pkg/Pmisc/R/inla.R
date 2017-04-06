@@ -1,11 +1,12 @@
 #' precisions to standard deviations
 #' 
-#' @aliases priorPost priorPostSd
+#' @aliases priorPost priorPostSd precToSd
 #' @description Transforms prior and posterior distributions of precision parameters to standard deviations
 #'
 #' @param object an inla result
 #' @param param vector of parameters to transform
 #' @param group random effect parameters or 'family' parameters
+#' @param densmat matrix with columns 'x' and 'y'
 #' @export
 priorPostSd = function(
 		object, 
