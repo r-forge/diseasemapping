@@ -3,6 +3,7 @@ library('mapmisc')
 library('rgdal')
 
 options(mapmiscCachePath = system.file('extdata', package='mapmisc'))
+options(mapmiscVerbose=TRUE)
 
 okinawa = mapmisc::geocode("Okinawa")
 hk = y = mapmisc::geocode("Hong Kong")
@@ -49,8 +50,7 @@ myMap = mosaic(myMap1a, myMap2a, fun=mean)
     buffer=1, zoom=3,
     crs=myProj,
     verbose=TRUE,
-#  path='nrcan')
-path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
+    path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
 #    path='https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/')
   }
 

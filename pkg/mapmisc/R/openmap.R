@@ -96,7 +96,7 @@ openmap = function(x, zoom,
 		maxTiles = 9,
 		crs=projection(x),
   	buffer=0, fact=1,
-		verbose=FALSE,
+		verbose=options()$mapmiscVerbose,
 		cachePath=options()$mapmiscCachePath
 ) {
 	
