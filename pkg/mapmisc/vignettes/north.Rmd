@@ -18,7 +18,7 @@ internet connection when this document is compiled.  The full document is at
 library('mapmisc')
 library('knitr')
 haveRgdal = require('rgdal', quietly=TRUE)
-cachePath = system.file('extdata', package='mapmisc')
+options(mapmiscCachePath = system.file('extdata', package='mapmisc'))
 
 
 fact = 0.6
@@ -50,7 +50,7 @@ x = SpatialPointsDataFrame(
         
 ```{r osm}
 if(haveRgdal){
-  map = openmap(x, path='osm-no-labels', maxTiles=12, buffer=c(30,3), cachePath=cachePath)
+  map = openmap(x, path='osm-no-labels', maxTiles=12, buffer=c(30,3))
   
   map.new(map)
   plot(map,add=TRUE)
@@ -64,7 +64,7 @@ if(haveRgdal){
 
 ```{r mapquest}
 if(haveRgdal){
-  mapSat = openmap(x, path='opentopomap', maxTiles=4, buffer=c(30,3), cachePath=cachePath)
+  mapSat = openmap(x, path='opentopomap', maxTiles=4, buffer=c(30,3))
   
   map.new(mapSat)
   plot(mapSat,add=TRUE)
@@ -79,7 +79,7 @@ if(haveRgdal){
 if(haveRgdal){
   mapSat = openmap(x=x[x$name=='Hans island',], 
     path='opentopomap', 
-    buffer=c(4,1), zoom=2, cachePath=cachePath)
+    buffer=c(4,1), zoom=2)
   
   map.new(x[x$name=='Hans island',], buffer=0.3)
   plot(mapSat,add=TRUE)
@@ -92,7 +92,7 @@ if(haveRgdal){
 ```{r mapquestQaanaaq}
 if(haveRgdal){
   mapSat = openmap(x[x$name=='Qaanaaq',], path='maptoolkit', 
-    buffer=c(2,1), zoom=5, cachePath=cachePath)
+    buffer=c(2,1), zoom=5)
   
   map.new(x[x$name=='Qaanaaq',], buffer=0.5)
   plot(mapSat,add=TRUE)
@@ -107,7 +107,7 @@ if(haveRgdal){
   xMerc = spTransform(x, omerc(x))
   mapMerc = openmap(xMerc, path='osm-no-labels',
     zoom=3,
-    maxTiles=12, buffer=c(50,200)*1000, cachePath=cachePath)
+    maxTiles=12, buffer=c(50,200)*1000)
   
   map.new(xMerc, buffer=50000)
   plot(mapMerc,add=TRUE)
@@ -127,7 +127,7 @@ if(haveRgdal){
     path=c('osm-no-labels', 'stamen-terrain-labels'), 
     fact=1.5, maxTiles=12, 
     verbose=TRUE,
-    buffer=c(2,10,10,0)*100*1000, cachePath=cachePath)
+    buffer=c(2,10,10,0)*100*1000)
   
   mapText = rgbtToIndex(map, pattern='stamen.terrain.labels')
   
@@ -149,7 +149,7 @@ if(haveRgdal){
 if(haveRgdal){
   map = openmap(x[x$name=='Alex Fjord',], 		
     path='maptoolkit', zoom=3, 
-    buffer=c(5,5,2,1), cachePath=cachePath)   
+    buffer=c(5,5,2,1))   
   map.new(map)
   plot(map, add=TRUE)
   points(x, pch=4, col='red', cex=5)
@@ -220,20 +220,20 @@ if(haveRgdal){
   
   southInset = openmap(x=waterhouseWrap, 
     path='osm-no-labels',
-    buffer=c(4,1,2,1)*1000*1000, cachePath=cachePath)
+    buffer=c(4,1,2,1)*1000*1000)
   
 } else {
   southInset = openmap(waterhouseMerc, 
     path='osm-no-labels',
     buffer=c(4,0,0,1.5)*1000*1000, 
-    crs=NA, cachePath=cachePath)
+    crs=NA)
 }
 ```
 
 Red circle has radius 1km.
 
 ```{r waterhouseMerc} 
-mapMerc = openmap(waterhouseMerc, buffer=4000, crs=NA, cachePath=cachePath)
+mapMerc = openmap(waterhouseMerc, buffer=4000, crs=NA)
 
 map.new(mapMerc)
 plot(mapMerc, add=TRUE)
@@ -268,7 +268,7 @@ if(haveRgdal & require('geosphere', quietly=TRUE)){
 
 ```{r rockMerc} 
 
-mapMercFine = openmap(rockMerc, buffer=100, crs=NA, cachePath=cachePath)
+mapMercFine = openmap(rockMerc, buffer=100, crs=NA)
 
 map.new(mapMercFine)
 plot(mapMercFine, add=TRUE)
@@ -283,7 +283,7 @@ scaleBar(mapMercFine, 'bottomleft')
 ```{r waterhouseLL}
 if(haveRgdal) {
   
-  mapLL = openmap(waterhouseLL, buffer=0.02, cachePath=cachePath)
+  mapLL = openmap(waterhouseLL, buffer=0.02)
   
   map.new(mapLL)
   plot(mapLL, add=TRUE)
@@ -298,7 +298,7 @@ if(haveRgdal) {
 
 ```{r rockLL}	
 if(haveRgdal) {
-  mapLLfine = openmap(rockLL, zoom=19, buffer=0.0002, cachePath=cachePath)  
+  mapLLfine = openmap(rockLL, zoom=19, buffer=0.0002)  
   map.new(mapLLfine)
   plot(mapLLfine, add=TRUE)	
   points(rockLL, col='blue', pch=3, cex=5)

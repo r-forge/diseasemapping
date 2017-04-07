@@ -1,5 +1,5 @@
 library('mapmisc')
-cachePath = system.file('extdata', package='mapmisc')
+
 
 Spackages = c('rgdal', 'rgeos', 'geosphere', 'maptools')
 

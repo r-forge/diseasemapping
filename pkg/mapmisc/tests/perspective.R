@@ -18,17 +18,14 @@ if(length(attributes(myProj)$ellipseSafeLL)>2) {
   
 myMap1 = openmap(
   x=attributes(myProj)$regionLL[1,],
-  crs=crsMerc,
-  verbose=TRUE,
-  zoom=3,
+  crs=crsMerc, zoom=3,
 path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
 #  path='https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/')
 
 myMap2 = openmap(
   x=attributes(myProj)$regionLL[2,],
   zoom=attributes(myMap1)$tiles$zoom,
-  crs=crsMerc,
-  verbose=TRUE, zoom=3,
+  crs=crsMerc, zoom=3,
 path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
 #  path='https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/')
 
@@ -49,7 +46,6 @@ myMap = mosaic(myMap1a, myMap2a, fun=mean)
     x=attributes(myProj)$regionLL,
     buffer=1, zoom=3,
     crs=myProj,
-    verbose=TRUE,
     path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
 #    path='https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/')
   }
@@ -69,6 +65,7 @@ okinawaProj = spTransform(
 )
 
 
+if(!interactive()) pdf("perspective.pdf")
 
 
 
@@ -98,3 +95,4 @@ gridlinesWrap(myProj, col='yellow',
 
 
 
+if(!interactive()) dev.off()
