@@ -89,18 +89,6 @@ if(haveRgdal){
 }
 ```
 
-```{r mapquestQaanaaq}
-if(haveRgdal){
-  mapSat = openmap(x[x$name=='Qaanaaq',], path='maptoolkit', 
-    buffer=c(2,1), zoom=5)
-  
-  map.new(x[x$name=='Qaanaaq',], buffer=0.5)
-  plot(mapSat,add=TRUE)
-  points(x, pch=4, col='red', cex=5)
-  text(x, label=x$name, pos=4, col='red')
-  scaleBar(x, 'bottomleft')
-}
-```
 
 ```{r omerc}
 if(haveRgdal){
@@ -126,7 +114,6 @@ if(haveRgdal){
   map = openmap(xOmerc, 
     path=c('osm-no-labels', 'stamen-terrain-labels'), 
     fact=1.5, maxTiles=12, 
-    verbose=TRUE,
     buffer=c(2,10,10,0)*100*1000)
   
   mapText = rgbtToIndex(map, pattern='stamen.terrain.labels')
