@@ -41,7 +41,7 @@ clean:
 	$(PANDOC) --standalone --smart --filter=pandoc-crossref --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) $< | sed s/\\\\usepackage{subfig}// > $@
 
 %.tex: %.md
-	$(PANDOC) --standalone --smart $(PANDOCCROSSREF) --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) $< | sed s/\\\\usepackage{subfig}// > $@
+	$(PANDOC) --standalone --smart $(PANDOCCROSSREF) --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
 
 #
 # Create tmd

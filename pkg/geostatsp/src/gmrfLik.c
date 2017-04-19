@@ -34,7 +34,7 @@ CHM_FR L;
 CHM_DN obsCovRot, Lx;
 CHM_DN YwkL, EwkL, YwkD, EwkD; // workspaces
 cholmod_common c;
-double *YXVYXglobal,  *YXYX, *YrepAdd;
+double *YXVYXglobal,  *YXYXglobal, *YrepAdd, *betaHatGlobal;
 double *copyLx;
 int Nxy, Nobs, Ncov, Nrep, Nxysq;
 int Ltype;
@@ -67,27 +67,28 @@ void ssqFromXprod(
 	xvx = &YXVinvYX[N*Nrep+Nrep];
 	Ncov = N-Nrep;
 
-	// invert X Vinv X
-	// first cholesky
 	//  cholesky X Vinv X
 	F77_CALL(dpotrf)("L",
 			&Ncov, xvx,
 			&N, // Ncov by Ncov submatrix of N by N matrix
 			&infoCholXX);
 
+	// determinant for reml
 	*detXVinvX  = 0.0;
 	for(D=0;D<Ncov;++D){
 		*detXVinvX  += log(xvx[D*N+D]);
 	}
 	*detXVinvX *= 2;
-	// then invert
+
+	// invert X Vinv X
 	F77_NAME(dpotri)("L",
 			&Ncov,
 			xvx,
 			&N,
 			&infoInvXX);
 
-	// put beta hat in first column (first Nrep rows still have LyLx)
+	// put beta hat in last row (or first column?)
+	// (first Nrep rows still have LyLx)
 	// C= A B, A=xvx, B=LxLy
 	F77_NAME(dsymm)(
 			"L", "L", // A on left, A in lower
@@ -99,6 +100,7 @@ void ssqFromXprod(
 			&YXVinvYX[Nrep], &N //betahat, ldc
 	);
 
+	// sum of squares
 	//  blasBeta  C     alpha A     B
 	//     (1)  LyLy + (-1)  LxLy beta
 	F77_NAME(dgemm)(
@@ -125,6 +127,7 @@ void ssqFromXprod(
 double logLoneNuggetMoreArguments(
 		double xisqTausq,
 		double *DYXVYX,
+		double *DbetaHat,
 		double *determinant,
 		double *determinantForReml,
 		double *m2logL,
@@ -137,16 +140,38 @@ double logLoneNuggetMoreArguments(
 	double minusXisqTausq, zeroD=0.0, oneD=1.0;
 	double result;
 	int oneI=1, D;
+/*
+ * V = xisq Q^(-1) + tausq I
+ *   =  xisq ( Q^(-1) + (tausq/xisq) I)
+ *   =  tausq ( (xisq/tausq) Q^(-1) + I)
+ *  = tausq Q^(-1) ( (xisq/tausq) I + Q)
+ *  log | V | = N log(tau^2) − log |Q| +  log |(xisq/tausq) I + Q|
+ *  woodbury
+ *  \left(A+UCV \right)^{-1} =
+ *    A^{-1} -
+ *    A^{-1}U \left(C^{-1}+VA^{-1}U \right)^{-1} VA^{-1}
+ *  C =  Q^{-1},  U = V = I, A = (tausq/xisq) I
+ *  V^{-1} = (xisq/tausq) I -
+ *    (xisq/tausq)^2 ( Q + (xisq/tausq) I )^{-1}
+ * L Lt = Q + (xi^2/tau^2) I
+ * V^(-1) =  (xisq/tausq) (I - (xisq/tausq) (L Lt)^(-1) )
+*/
+	// V^(-1) = (1/tau^2) * Q (L Lt)^(-1)
+	// log | V | =N log(tau^2) − log |Q| + 2 log |L|
 
+
+	// factorize beta*I+A or beta*I+A’*A
 	M_cholmod_factorize_p(
 			Q,
 			&xisqTausq, // beta
 			(int*)NULL, 0 /*fsize*/,
-			L, &c
+			L, // resulting factorization
+			&c // common
 	);
 
+	*determinant = M_chm_factor_ldetL2(L) - *determinant;
 
-	//Lx =
+	//Lx = L^(-1) obsCov
 	M_cholmod_solve2(
 			CHOLMOD_L,
 			L,
@@ -155,11 +180,22 @@ double logLoneNuggetMoreArguments(
 			&YwkL, &EwkL,
 			&c);
 
+	// DYXVYX =  t(YX) (YX)
+	// copy of YXYX
+	F77_CALL(dcopy)(
+			&Nxysq,
+			YXYXglobal, // in
+			&oneI,
+			DYXVYX, // out
+			&oneI);
+
+	minusXisqTausq = - (xisqTausq*xisqTausq);
 
 	// cross product
-	minusXisqTausq = -xisqTausq;
+	// want xisqTausq * YXVYX -
+	//  xisqTausq*xisqTausq t(Lx) Lx
 
-	// - LxLx
+	// DYXVYX = - xisqTausq * t(Lx) Lx
 	// C := alpha*op( A )*op( B ) + beta*C,
 	F77_NAME(dgemm)(
 			//	op(A), op(B),
@@ -173,29 +209,29 @@ double logLoneNuggetMoreArguments(
 			// B, nrow(B)
 			Lx->x, &Nobs,
 			// beta
-			&zeroD,
+			&xisqTausq,
 			// C, nrow(c)
 			DYXVYX, &Nxy);
 
-	// add the cross prod of data
-	F77_NAME(daxpy)(
+	// betaHat =  t(YX) Q^(-1) (YX)
+	// copy of YXVYX
+	F77_CALL(dcopy)(
 			&Nxysq,
-			&oneD,
-			YXYX,
+			DYXVYX, // in
 			&oneI,
-			DYXVYX,
+			DbetaHat, // out
 			&oneI);
 
-	*determinant = M_chm_factor_ldetL2(L);
-
 	ssqFromXprod(
-			DYXVYX, // Nxy by Nxy
-			determinantForReml,
+			DbetaHat,
+			&determinantForReml[0],
 			Nxy, Nrep, copyLx);
 
 	for(D=0;D<Nrep;++D){
+		determinant[D] = determinant[0];
+		determinantForReml[D] = determinantForReml[0];
 		// using result as temporary variable
-		result = log(DYXVYX[D*Nxy+D]);
+		result = log(DbetaHat[D*Nxy+D]);
 		// ml
 		m2logL[D] = Nobs*result - Nobs*log(Nobs) +
 				*determinant - YrepAdd[D];
@@ -234,17 +270,18 @@ double logLoneNugget(double xisqTausq, void *nothing){
 	return logLoneNuggetMoreArguments(
 			xisqTausq,
 			&YXVYXglobal[DxisqTausq*Nxysq], // data cross prod
+			&betaHatGlobal[DxisqTausq*Nxysq],
 			&YXVYXglobal[Nxysq*NxisqTausq+
-						 DxisqTausq*Nrep], // det
-						 &YXVYXglobal[Nxysq*NxisqTausq +
-									  Nrep*NxisqTausq+
-									  DxisqTausq*Nrep], // reml det
-									  &YXVYXglobal[Nxysq*NxisqTausq +
-												   2*Nrep*NxisqTausq+
-												   DxisqTausq*Nrep], // logL
-												   &YXVYXglobal[Nxysq*NxisqTausq +
-																3*Nrep*NxisqTausq+
-																DxisqTausq*Nrep] // reLogL
+			  DxisqTausq*Nrep], // det
+			&YXVYXglobal[Nxysq*NxisqTausq +
+			  Nrep*NxisqTausq+
+			  DxisqTausq*Nrep], // reml det
+			&YXVYXglobal[Nxysq*NxisqTausq +
+			  2*Nrep*NxisqTausq+
+			  DxisqTausq*Nrep], // logL
+			&YXVYXglobal[Nxysq*NxisqTausq +
+			  3*Nrep*NxisqTausq+
+			  DxisqTausq*Nrep] // reLogL
 	);
 
 }
@@ -279,10 +316,12 @@ SEXP gmrfLik(
 ){
 
 	int Drep, dooptim, verbose=0; // length(xisqTausq)
+	int oneI=1;
 	double	oneD=1.0, zeroD=0.0;
 	double optTol, optMin, optMax; // default interval for optimizer
-	int NxisqMax = 100; // number of xisqTausq's to retain when optimizing
-	double *YXVYX, *determinant, *determinantForReml;
+	int NxisqMax = 100, Nxyvarmat, twoNxyvarmat; // number of xisqTausq's to retain when optimizing
+	double *YXVYX, *YXYX, *determinant, *determinantForReml;
+	double *betaHat;
 	double *m2logL, *m2logReL, *varHatMl, *varHatReml, *resultXisqTausq;
 	double nothing=0.0;
 	SEXP resultR;
@@ -307,6 +346,9 @@ SEXP gmrfLik(
 	// if length zero, do optimization
 	dooptim=!NxisqTausq;
 
+	Nxyvarmat = Nxysq*NxisqTausq;
+	twoNxyvarmat = 2*Nxyvarmat;
+
 	if(dooptim){
 		NxisqTausq = NxisqMax;
 	} else {
@@ -323,37 +365,46 @@ SEXP gmrfLik(
 	}
 
 	resultR = PROTECT(allocVector(REALSXP,
-			Nxysq*NxisqTausq + 8*Nrep*NxisqTausq));
+			twoNxyvarmat + 7*Nrep*NxisqTausq + Nxysq));
 
 	for(Drep = 0; Drep < LENGTH(resultR);++Drep){
 		REAL(resultR)[Drep] = NA_REAL;
 	}
 
 	/*
-	 * if NxisqTausq=2, Ny=1, Nx=1, Nxysq=4,
-	 *  result has length 2*2*2+8*2=24
-	 *  result[0-3] = t(obscov) Q obscov
-	 *  result[4-7] = ?
-	 *  result[8] = determinant
-	 *  result[10] = detReml
-	 *  result[12] = m2logL
-	 *  result[14] = m2logLreml
-	 *  result[16] = varhatMl
-	 *  result[18] = varhatReml
-	 *  result[20] = resultxisqTausq
+	 * if NxisqTausq=2, Ny=2, Nx=1, Nxysq=9, Nxyvarmat =18
+	 *  result has length 2*2*(2+1)*(2+1) +7*2*2= 54+28=64
+	 *  result[0-17] = t(obscov) Q obscov
+	 *  result[18-35] = betaHat, varBetaHat
+	 *  result[39] = determinant
+	 *  result[43] = detReml
+	 *  result[47] = m2logL
+	 *  result[51] = m2logLreml
+	 *  result[55] = varhatMl
+	 *  result[59] = varhatReml
+	 *  result[63] = resultxisqTausq
+	 *  result[64-71] = t(YX) %*% YX
 	 */
+
 	YXVYX = &REAL(resultR)[0];
-	YXVYXglobal =  &REAL(resultR)[0];//YXVYX;
+	YXVYXglobal =  YXVYX;
 
-	determinant = &REAL(resultR)[Nxysq*NxisqTausq];
-	determinantForReml = &REAL(resultR)[Nxysq*NxisqTausq + Nrep*NxisqTausq];
-	m2logL = &REAL(resultR)[Nxysq*NxisqTausq + 2*Nrep*NxisqTausq];
-	m2logReL = &REAL(resultR)[Nxysq*NxisqTausq + 3*Nrep*NxisqTausq];
-	varHatMl = &REAL(resultR)[Nxysq*NxisqTausq + 4*Nrep*NxisqTausq];
-	varHatReml = &REAL(resultR)[Nxysq*NxisqTausq + 5*Nrep*NxisqTausq];
-	resultXisqTausq = &REAL(resultR)[Nxysq*NxisqTausq + 6*Nrep*NxisqTausq];
+	betaHat = &REAL(resultR)[Nxyvarmat];
+	betaHatGlobal = betaHat;
 
-	YXYX = (double *) calloc(Nxysq,sizeof(double));
+	YXYX = &REAL(resultR)[twoNxyvarmat + 7*Nrep*NxisqTausq];
+	YXYXglobal = YXYX;
+
+	// determinant of V
+	determinant = &REAL(resultR)[twoNxyvarmat];
+	// determinant of X Vinv X
+	determinantForReml = &REAL(resultR)[twoNxyvarmat + Nrep*NxisqTausq];
+	m2logL = &REAL(resultR)[twoNxyvarmat + 2*Nrep*NxisqTausq];
+	m2logReL = &REAL(resultR)[twoNxyvarmat + 3*Nrep*NxisqTausq];
+	varHatMl = &REAL(resultR)[twoNxyvarmat + 4*Nrep*NxisqTausq];
+	varHatReml = &REAL(resultR)[twoNxyvarmat + 5*Nrep*NxisqTausq];
+	resultXisqTausq = &REAL(resultR)[twoNxyvarmat + 6*Nrep*NxisqTausq];
+
 	copyLx = (double *) calloc(Nxy*Nrep,sizeof(double));
 
 
@@ -365,6 +416,25 @@ SEXP gmrfLik(
 	if(verbose) {
 		Rprintf("starting\n");
 	}
+
+	// YXYX cross product of data
+	F77_NAME(dgemm)(
+			//	op(A), op(B),
+			"T", "N",
+			// nrows of op(A), ncol ob(B), ncol op(A) = nrow(opB)
+			&Nxy, &Nxy, &Nobs,
+			// alpha
+			&oneD,
+			// A, nrow(A)
+			obsCov->x, &Nobs,
+			// B, nrow(B)
+			obsCov->x, &Nobs,
+			// beta
+			&zeroD,
+			// C, nrow(&c)
+			YXYX, &Nxy);
+
+
 	/* .. now allocate Lx .. */
 	Lx = M_cholmod_copy_dense(obsCov,&c);
 
@@ -402,6 +472,9 @@ SEXP gmrfLik(
 	L = M_cholmod_analyze(Q, &c);
 	M_cholmod_factorize(Q,L, &c);
 
+	obsCovRot = M_cholmod_solve(CHOLMOD_P, L,obsCov,&c);
+
+
 	// determinant
 	determinant[0] = M_chm_factor_ldetL2(L);
 	resultXisqTausq[0]= NA_REAL;
@@ -411,45 +484,34 @@ SEXP gmrfLik(
 				determinant[0]);
 	}
 
+	// betaHat =  t(YX) Q^(-1) (YX)
+	// copy of YXVYX
+	F77_CALL(dcopy)(
+			&Nxysq,
+			YXVYX, // in
+			&oneI,
+			betaHat, // out
+			&oneI);
 	ssqFromXprod(
-			YXVYX, // N by N
+			betaHat, // N by N
 			determinantForReml,
 			Nxy, Nrep,
 			copyLx);
-#ifdef UNDEF
+
 	for(Drep=0;Drep<Nrep;++Drep){
 		determinant[Drep] = determinant[0];
 		determinantForReml[Drep] = determinantForReml[0];
 
-		m2logL[Drep] = Nobs*log(YXVYX[Drep*Nxy+Drep]) -
+		m2logL[Drep] = Nobs*log(betaHat[Drep*Nxy+Drep]) -
 				Nobs*log(Nobs) -
 				determinant[0] - YrepAdd[Drep];
 
-		m2logReL[Drep] = (Nobs-Ncov)*log(YXVYX[Drep*Nxy+Drep]/(Nobs-Ncov)) +
+		m2logReL[Drep] = (Nobs-Ncov)*log(betaHat[Drep*Nxy+Drep]/(Nobs-Ncov)) +
 				determinantForReml[0] - determinant[0] - YrepAdd[Drep];
 
 		varHatMl[Drep] = YXVYX[Drep*Nxy+Drep]/Nobs;
 		varHatReml[Drep] = YXVYX[Drep*Nxy+Drep]/(Nobs-Ncov);
 	}
-	// now with xisqTausq
-	obsCovRot = M_cholmod_solve(CHOLMOD_P, L,obsCov,&c);
-
-	// YXYX cross product of data
-	F77_NAME(dgemm)(
-			//	op(A), op(B),
-			"T", "N",
-			// nrows of op(A), ncol ob(B), ncol op(A) = nrow(opB)
-			&Nxy, &Nxy, &Nobs,
-			// alpha
-			&oneD,
-			// A, nrow(A)
-			obsCovRot->x, &Nobs,
-			// B, nrow(B)
-			obsCovRot->x, &Nobs,
-			// beta
-			&zeroD,
-			// C, nrow(&c)
-			YXYX, &Nxy);
 
 
 
@@ -477,49 +539,59 @@ SEXP gmrfLik(
 				Rprintf("DxisqTausq %d, xisqTausq %f\n",
 						DxisqTausq, REAL(xisqTausq)[DxisqTausq]);
 			}
+
+			determinant[DxisqTausq*Nrep] = determinant[0];
+
 			logLoneNuggetMoreArguments(
 					REAL(xisqTausq)[DxisqTausq],
 					&YXVYX[DxisqTausq*Nxysq], // data cross prod
-					&YXVYX[Nxysq*NxisqTausq+
-						   DxisqTausq*Nrep], // det
-					&YXVYX[Nxysq*NxisqTausq +
-						  Nrep*NxisqTausq+
-						  DxisqTausq*Nrep], // reml det
-					&YXVYX[Nxysq*NxisqTausq +
-						 2*Nrep*NxisqTausq+
-						 DxisqTausq*Nrep], // logL
-					&YXVYX[Nxysq*NxisqTausq +
-						3*Nrep*NxisqTausq+
-						DxisqTausq*Nrep] // reLogL
+					&betaHat[DxisqTausq*Nxysq], // betas
+//					&YXVYX[Nxysq*NxisqTausq+
+//						   DxisqTausq*Nrep
+//						   ], // det
+					&determinant[DxisqTausq*Nrep],
+//					&YXVYX[Nxysq*NxisqTausq +
+//						  Nrep*NxisqTausq+
+//						  DxisqTausq*Nrep], // reml det
+					&determinantForReml[DxisqTausq*Nrep],
+//					&YXVYX[Nxysq*NxisqTausq +
+//						 2*Nrep*NxisqTausq+
+//						 DxisqTausq*Nrep], // logL
+					&m2logL[DxisqTausq*Nrep],
+//					&YXVYX[Nxysq*NxisqTausq +
+//						3*Nrep*NxisqTausq+
+//						DxisqTausq*Nrep] // reLogL
+					&m2logReL[DxisqTausq*Nrep]
 			);
 
 		}
 	}
+#ifdef UNDEF
 	// assign global values into their correct spot
-
 	for(DxisqTausq=0;DxisqTausq < NxisqTausq;++DxisqTausq){
 		for(Drep=0;Drep<Nrep;++Drep){
 			resultXisqTausq[DxisqTausq*Nrep + Drep] =
 					REAL(xisqTausq)[DxisqTausq];
 		}
 	}
+
 	for(DxisqTausq=1;DxisqTausq < NxisqTausq;++DxisqTausq){
 
 		for(Drep=0;Drep<Nrep;++Drep){
 
-			/*
-			determinant[DxisqTausq*Nrep+Drep] =
-					determinant[DxisqTausq*Nrep];
 
-			determinantForReml[DxisqTausq*Nrep+Drep]=
-					determinantForReml[DxisqTausq*Nrep];
+//			determinant[DxisqTausq*Nrep+Drep] =
+//					determinant[DxisqTausq*Nrep];
 
-			m2logL[DxisqTausq*Nrep+Drep]  -=
-					determinant[0];
+//			determinantForReml[DxisqTausq*Nrep+Drep]=
+//					determinantForReml[DxisqTausq*Nrep];
 
-			m2logReL[DxisqTausq*Nrep+Drep] -=
-					determinant[0];
-		 */
+//			m2logL[DxisqTausq*Nrep+Drep]  -=
+	//				determinant[0];
+
+		//	m2logReL[DxisqTausq*Nrep+Drep] -=
+		//			determinant[0];
+
 			varHatMl[DxisqTausq*Nrep + Drep] =
 					YXVYX[DxisqTausq*Nxysq+Drep*Nxy+Drep]/Nobs;
 
@@ -530,7 +602,6 @@ SEXP gmrfLik(
 
 	}
 #endif
-
 	M_cholmod_free_factor(&L, &c);
 	M_cholmod_free_dense(&obsCovRot, &c);
 
@@ -544,7 +615,7 @@ SEXP gmrfLik(
 	//	M_cholmod_free_dense(&obsCov, &c);
 
 	free(copyLx);
-	free(YXYX);
+//	free(YXYX);
 	M_cholmod_free_dense(&YwkL, &c);
 	M_cholmod_free_dense(&YwkD, &c);
 	M_cholmod_free_dense(&EwkL, &c);
