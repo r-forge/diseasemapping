@@ -56,45 +56,45 @@ wrapPoly = function(x, crs){
 llCropBox = function(crs, res=1) {
   
   # long-lat grid covering the globe
-  N = 25
+  N = 51
   res = 1
   edge = c(0.05,1)
-
+  
   
   eps = 1/N
   oneSeq = seq(-1+2*eps,1-eps,len=N)
-
+  
   coordsBox = expand.grid(
     x=oneSeq,y=oneSeq,z=oneSeq
-    )
+  )
   coordsBox = coordsBox + sin(seq(0-eps,2*pi, len=nrow(coordsBox)))/N  
   coordsBox = coordsBox + 
-    stats::runif(length(coordsBox), -0.5/N, 0.5/N)
+    stats::runif(length(coordsBox), -0.6/N, 0.6/N)
   coordsBox[,'r'] =  sqrt(apply(coordsBox^2,1,sum))
   coordsBox = coordsBox[coordsBox[,'r'] < 1, ]
   coordsBox = coordsBox[coordsBox[,'r']> 0,]
   coordsBox[,'lon'] = atan(coordsBox[,'y']/coordsBox[,'x'])
   coordsBox[,'lat'] = acos(coordsBox[,'z']/coordsBox[,'r'])/2-pi/4
-    
+  
   
   llPoints =
     as.matrix(na.omit(coordsBox[,c('lon','lat')]))*(360/(pi))
   
-  Sprob = seq(0,1,len=100)
-    latSeq = sort(unique(c(
-        seq(-90,90,len=200),
+  Sprob = seq(0,1,len=251)
+  latSeq = sort(unique(c(
+        seq(-90,90,len=201),
         quantile(llPoints[,2], prob = Sprob))))
-    lonSeq = seq(-180,180,len=20)
-
-    llBorder = cbind(
-      lon=c(
-        lonSeq, rep(-180, length(latSeq)),
-        rep(180, length(latSeq))
-        ),
-      lat=c(
-        rep(-90,length(lonSeq)), latSeq, latSeq
-      ))
-    
+  lonSeq = seq(-180,180,len=51)
+  
+  llBorder = cbind(
+    lon=c(
+      lonSeq, rep(-180, length(latSeq)),
+      rep(180, length(latSeq))
+    ),
+    lat=c(
+      rep(-90,length(lonSeq)), latSeq, latSeq
+    ))
+  
   
   if(!requireNamespace('rgdal', quietly=TRUE)) {
     warning("rgdal package is required for this operation")
@@ -145,13 +145,13 @@ llCropBox = function(crs, res=1) {
     rgeos::gConvexHull(SpatialPoints(transInRegion), byid=FALSE)
   )
   resTrans = mean(apply(bbox(regionTransOrig), 1, diff)*(0.25/180))
-  regionTransSmall = rgeos::gBuffer(regionTransOrig, width=-resTrans)
+  regionTransSmall = rgeos::gBuffer(regionTransOrig, width=-2*resTrans)
   
   
   if(nrow(transOnBorder)) {
     borderTrans = rgeos::gSimplify(
       rgeos::gBuffer(SpatialPoints(transOnBorder), width=2*resTrans),
-      tol = resTrans)
+      tol = 2*resTrans)
     # crop out areas which are close to edges in LL
     regionTransSmallInclude = #rgeos::gSimplify(
       rgeos::gDifference(regionTransSmall, 
@@ -164,20 +164,20 @@ llCropBox = function(crs, res=1) {
   
   # convert to separate polygons
   anyHoles = unlist(lapply(regionTransSmallInclude@polygons[[1]]@Polygons,
-    function(xx) xx@hole))
+      function(xx) xx@hole))
   if(!any(anyHoles)) {
-  regionTransSmallInclude = regionTransSmallInclude@polygons[[1]]@Polygons
-  regionTransSmallInclude = SpatialPolygons(
-    mapply(function(srl, ID) Polygons(list(srl), ID),
-    srl=regionTransSmallInclude, ID=1:length(regionTransSmallInclude)
-  ), proj4string = crs)
-  regionTransSmallInclude = regionTransSmallInclude[
-    order(rgeos::gArea(regionTransSmallInclude, byid=TRUE),decreasing=TRUE)
-    ,]
+    regionTransSmallInclude = regionTransSmallInclude@polygons[[1]]@Polygons
+    regionTransSmallInclude = SpatialPolygons(
+      mapply(function(srl, ID) Polygons(list(srl), ID),
+        srl=regionTransSmallInclude, ID=1:length(regionTransSmallInclude)
+      ), proj4string = crs)
+    regionTransSmallInclude = regionTransSmallInclude[
+      order(rgeos::gArea(regionTransSmallInclude, byid=TRUE),decreasing=TRUE)
+      ,]
   }
   edgeTrans = sp::spsample(as(regionTransOrig, 'SpatialLines'),
     n=3000, type='regular')
-    
+  
   regionTransSmallInclude@proj4string = borderTrans@proj4string = 
     regionTransOrig@proj4string = regionTransSmall@proj4string = 
     edgeTrans@proj4string = crs
