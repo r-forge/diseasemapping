@@ -32,15 +32,14 @@ setMethod("RFsimulate",
 				# convert data to an RFspdf (it might be a vanilla spdf)	
 				if(!is.null(data)) {
 					if(class(data)=='SpatialPointsDataFrame'){
-						data = RandomFields::conventional2RFspDataFrame(
-								array(
-										as.matrix(data@data),
-										c(dim(data@data),1)
-								),
-								coordinates(data),
-								n=dim(data)[2]
-						)
-#		data=as(data, "RFspatialPointsDataFrame") 
+       data = RandomFields::conventional2RFspDataFrame(
+         data=as.matrix(data@data[,1]), 
+         coords=as.matrix(data@coords),
+         n = 1, T=c() )
+       # for some reason there is sometimes an error of
+       # Error in simu[index, ] : subscript out of bounds
+       # in RandomFields unless I do the following
+       data@coords[1,1] = data@coords[1,1] + 10e-7
 					} }
 				
 				theArgs = list(...)
@@ -54,8 +53,12 @@ setMethod("RFsimulate",
 				
 				theArgs$spConform=TRUE
 				
+      
 				res= try(do.call(RandomFields::RFsimulate, theArgs), silent=TRUE)
-				
+				res = SpatialGridDataFrame(
+      grid = res@grid, data=res@data
+      )
+    
 			} else {
 				warning("RandomFields package not available")
 				res = NULL
@@ -120,7 +123,7 @@ setMethod("RFsimulate",
 				
 				theSim=callGeneric(
       			model, x,  data = NULL, 
-      			err.model=NULL, n = 1, ...
+      			err.model=NULL, n = n, ...
       	)
     		#model, x,  
 #		data=data,	err.model= err.model, n=n  ,  ...)

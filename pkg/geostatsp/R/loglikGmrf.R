@@ -11,7 +11,7 @@ loglikGmrfOneRange = function(
       conditionalVariance=1),
     adjustEdges=adjustEdges)
   
-  result = .Call('gmrfLik',
+  fromC = .Call('gmrfLik',
     Q, 
     obsCov, 
     as.double(xisqTausq), 
@@ -22,6 +22,45 @@ loglikGmrfOneRange = function(
         c('lower','upper','tol')]
     )
   )
+  
+  Nxy = ncol(obsCov)
+  Ny = length(jacobian)
+  Nobs = nrow(obsCov)
+  NxisqTausq = length(xisqTausq)
+  Nxysq = Nxy^2
+  logLstart = NxisqTausq*Nxysq*2
+  
+  mlColNames = c('det','detReml','m2logLml', 
+    'm2logLreml', 'profiledVarianceHatMl',
+    'profiledVarianceHatReml', 'xisqTausq')
+  
+  mlDim = c(y=Ny, varRatio=NxisqTausq, output=length(mlColNames))
+  Lseq = 1:logLstart
+  
+  result = array(
+      as.vector(fromC[seq(logLstart+1, len=prod(mlDim))]), 
+      dim=mlDim,
+      dimnames=list(
+        colnames(obsCov)[1:Ny], 
+        as.character(SxisqtausqFull), 
+        mlColNames
+      ))
+
+    attributes(result)$ssq = array(fromC[Lseq], 
+      dim=c(Nxy, Nxy, NxisqTausq,2),
+      dimnames = list(
+        colnames(obsCov), colnames(obsCov), 
+        as.character(SxisqtausqFull),
+        c('ssq','beta')
+      ))
+
+    
+  
+  
+#  yxyxseq = seq(
+#    from = 1 + length(result$ssq) + length(result$ml), 
+#    len=Nxysq)
+#  result$yxyx = matrix(fromC[yxyxseq], Nxy)
   
   attributes(result)$param = attributes(Q)$info
   
@@ -276,7 +315,7 @@ loglikGmrf = function(
       seBetaHat = array(
         seBetaHat, dim=c(1, dim(seBetaHat)),
         dimnames = c(list('x'), dimnames(seBetaHat))
-        )
+      )
     }
     seBetaHat = array(seBetaHat, c(dim(ml)[1],dim(seBetaHat)),
       dimnames=c(dimnames(ml)[1], dimnames(seBetaHat)))

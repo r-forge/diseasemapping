@@ -125,7 +125,15 @@ openmap = function(x, zoom,
 				paste("http://", 
 						path[ grep("^http[s]*://", path, invert=TRUE)], sep="")
 	names(path) = pathOrig
-	
+
+ 
+ if(all(class(x) == 'CRS')) {
+   # x is a crs object
+   # get the ellipse
+   xOrig = x
+   x = attributes(myCrsO$ellipse)
+ }
+ 
 	crsOut=crs
 	crsIn = crs(x)
 	if(all(is.na(crsIn))) {
