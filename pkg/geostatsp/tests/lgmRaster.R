@@ -119,7 +119,7 @@ swissResR =  lgm(
 image(	swissResR$array[,,'propNugget',1], 
 		swissResR$array[,1,'oneminusar',], 
 		swissResR$array[,,'logLreml',])
-}
+
 
 swissResRoptAr =  lgm(
     formula=layer ~ alt+ myvar, 
@@ -127,6 +127,7 @@ swissResRoptAr =  lgm(
 		oneminusar = seq(0.1, 0.5, len=6),
     adjustEdges=FALSE
 )
+}
 
 if(FALSE){
 swissResRopt =  lgm(
