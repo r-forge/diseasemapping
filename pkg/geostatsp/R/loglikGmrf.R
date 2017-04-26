@@ -42,7 +42,7 @@ loglikGmrfOneRange = function(
       dim=mlDim,
       dimnames=list(
         colnames(obsCov)[1:Ny], 
-        as.character(SxisqtausqFull), 
+        as.character(xisqTausq), 
         mlColNames
       ))
 
@@ -50,7 +50,7 @@ loglikGmrfOneRange = function(
       dim=c(Nxy, Nxy, NxisqTausq,2),
       dimnames = list(
         colnames(obsCov), colnames(obsCov), 
-        as.character(SxisqtausqFull),
+        as.character(xisqTausq),
         c('ssq','beta')
       ))
 
