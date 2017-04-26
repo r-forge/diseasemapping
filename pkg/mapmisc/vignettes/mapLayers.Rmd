@@ -15,16 +15,18 @@ See [mc.bbbike.org/mc](http://mc.bbbike.org/mc/) for examples more map tiles
 (not all of which are compatible with `mapmisc`).
 
 
-```{r setup,include=FALSE}
+```{r setup, include=FALSE}
 library('knitr')
 library('mapmisc')
 
 fact = 0.5
 allTiles = FALSE
+
 # uncomment for nicer images
 # fact = 1 
 # reRun = TRUE
-# or run in sandbox	R --slave -e "knitr::knit('../pkg/mapmisc/vignettes/mapLayers.Rmd')" fact=1 allTiles=TRUE
+# or run in sandbox	
+# R --slave -e "knitr::knit('../pkg/mapmisc/vignettes/mapLayers.Rmd')" fact=1 allTiles=TRUE
 # pandoc --to=html5 --output=mapLayers.html mapLayers.md
 # cp -r figure ../www
 # cp -r mapLayers.html ../www
@@ -45,6 +47,7 @@ if(allTiles) {
     osmTiles(), invert=TRUE, value=TRUE))
   cachePath = system.file('extdata', package='mapmisc')
 }
+
 ```
 
 ```{r theExtent, include=FALSE}

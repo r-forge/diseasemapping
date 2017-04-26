@@ -1,32 +1,49 @@
+<!--
+%\VignetteEngine{knitr::docco_linear}
+%\VignetteIndexEntry{Space Station Map Projections}
+-->
 
+```{r setup}
 library('mapmisc')
 library('rgdal')
 
 options(mapmiscCachePath = system.file('extdata', package='mapmisc'))
 options(mapmiscVerbose=TRUE)
+```
 
+```{r data}
 okinawa = mapmisc::geocode("Okinawa")
 hk = y = mapmisc::geocode("Hong Kong")
 guam = mapmisc::geocode("Guam")
 x = SpatialPoints(cbind(130,15), proj4string=crsLL)
+```
 
+```{r projection}
 myProj = tpers(x=bind(x,y), hKm = 2*1000,
   tilt =-15, axis='seu')
+xProj = spTransform(guam, myProj)
+yProj = spTransform(hk, myProj)
+okinawaProj = spTransform(okinawa, myProj)
+```
 
+```{r background}
+myMap = openmap(myProj, path='landscape', zoom=2,fact=3)
+```
+
+```{r backgroundOverDateline, include=FALSE, purl=FALSE}
 if(length(attributes(myProj)$ellipseSafeLL)>2) {
   
   myMap1 = openmap(
     x=attributes(myProj)$regionLL[1,],
     crs=crsMerc, zoom=3,
     path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
-#  path='https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/')
+
   
   myMap2 = openmap(
     x=attributes(myProj)$regionLL[2,],
     zoom=attributes(myMap1)$tiles$zoom,
     crs=crsMerc, zoom=3,
     path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
-#  path='https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/')
   
   mapRaster = raster(
     extent(attributes(myProj)$ellipse), 
@@ -40,40 +57,14 @@ if(length(attributes(myProj)$ellipseSafeLL)>2) {
     from=myMap2, to=mapRaster, method='ngb')
   
   myMap = mosaic(myMap1a, myMap2a, fun=mean)
-} else {
-  myMap = openmap(
-    x=attributes(myProj)$regionLL,
-    buffer=1, zoom=3,
-    crs=myProj,
-    path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
-#    path='https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/')
 }
+```
 
 
-xProj = spTransform(guam, myProj)
-yProj = spTransform(hk, myProj)
-okinawaProj = spTransform(okinawa, myProj)
 
-
-if(!interactive()) pdf("perspective.pdf")
-
+```{r map}
 map.new(myProj, bg='black', buffer=2*100*1000)
-plotRGB(myMap, add=TRUE, bgalpha=0)
-
-points(xProj, col='red', pch=16, cex=2)
-text(xProj@coords, 
-  as.character(xProj$originalPlace),
-  pos=2, col='yellow')
-
-points(okinawaProj, col='red', pch=16, cex=2)
-text(okinawaProj@coords, 
-  as.character(okinawaProj$originalPlace),
-  pos=2, col='yellow')
-
-points(yProj, col='red', pch=16, cex=2)
-text(yProj@coords, 
-  as.character(yProj$originalPlace),
-  pos=2, col='yellow')
+plot(myMap, add=TRUE, bgalpha=0)
 
 if(requireNamespace('maptools')) {
   data("wrld_simpl", package='maptools')
@@ -85,4 +76,20 @@ gridlinesWrap(myProj, col='yellow',
   north=seq(-40,40,by=10), easts=seq(-150,180,by=10),
   lty=2)
 
-if(!interactive()) dev.off()
+points(xProj, col='red', pch=16, cex=2)
+text(xProj@coords, 
+  as.character(xProj$originalPlace),
+  pos=2, col='red')
+
+points(okinawaProj, col='red', pch=16, cex=2)
+text(okinawaProj@coords, 
+  as.character(okinawaProj$originalPlace),
+  pos=2, col='red')
+
+points(yProj, col='red', pch=16, cex=2)
+text(yProj@coords, 
+  as.character(yProj$originalPlace),
+  pos=2, col='red')
+
+
+```

@@ -130,8 +130,11 @@ openmap = function(x, zoom,
  if(all(class(x) == 'CRS')) {
    # x is a crs object
    # get the ellipse
-   xOrig = x
-   x = attributes(myCrsO$ellipse)
+   crs = x
+   toCrop = attributes(x)$ellipse
+   x = attributes(x)$regionLL
+ } else {
+   toCrop = NULL
  }
  
 	crsOut=crs
@@ -314,7 +317,10 @@ openmap = function(x, zoom,
 			if(verbose) cat("copying colortable for ", D, "\n")
 			resultProj[[D]]@legend@colortable =
 					result[[D]]@legend@colortable
-      if(any(values(resultProj[[D]])==0,na.rm=TRUE)) {
+      if(
+        any(values(resultProj[[D]])==0, na.rm=TRUE) | 
+        any(is.na(values(resultProj[[D]])))
+      ) {
       	# set NA's to transparent
       	resultProj[[D]]@legend@colortable =
           	c('#FFFFFF00',
