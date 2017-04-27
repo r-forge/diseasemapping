@@ -34,27 +34,31 @@ loglikGmrfOneRange = function(
     'm2logLreml', 'profiledVarianceHatMl',
     'profiledVarianceHatReml', 'xisqTausq')
   
-  mlDim = c(y=Ny, varRatio=NxisqTausq, output=length(mlColNames))
+  mlDim = c(y=Ny,
+    varRatio=NxisqTausq, 
+    output=length(mlColNames))
   Lseq = 1:logLstart
   
   result = array(
-      as.vector(fromC[seq(logLstart+1, len=prod(mlDim))]), 
-      dim=mlDim,
-      dimnames=list(
-        colnames(obsCov)[1:Ny], 
-        as.character(xisqTausq), 
-        mlColNames
-      ))
-
-    attributes(result)$ssq = array(fromC[Lseq], 
-      dim=c(Nxy, Nxy, NxisqTausq,2),
-      dimnames = list(
-        colnames(obsCov), colnames(obsCov), 
-        as.character(xisqTausq),
-        c('ssq','beta')
-      ))
-
-    
+    as.vector(fromC[
+        seq(logLstart+1, len=prod(mlDim))
+      ]), 
+    dim=mlDim,
+    dimnames=list(
+      colnames(obsCov)[1:Ny], 
+      as.character(xisqTausq), 
+      mlColNames
+    ))
+  
+  attributes(result)$ssq = array(fromC[Lseq], 
+    dim=c(Nxy, Nxy, NxisqTausq,2),
+    dimnames = list(
+      colnames(obsCov), colnames(obsCov), 
+      as.character(xisqTausq),
+      c('ssq','beta')
+    ))
+  
+  
   
   
 #  yxyxseq = seq(
@@ -122,7 +126,8 @@ loglikGmrf = function(
   
   if(length(propNugget))
     propNugget = sort(unique(c(0, propNugget)))
-  xisqTausq = 1/propNugget 
+  xisqTausq = 1/propNugget
+  xisqTausq[!is.finite(xisqTausq)] = 0
   
   
   Nxysq = ncol(obsCov)^2
@@ -164,35 +169,26 @@ loglikGmrf = function(
     )
     
     parInfo = lapply(fromC, function(qq) attributes(qq)$param)
-    fromC = simplify2array(fromC)
+    ml = simplify2array(fromC)
+    dimnames(ml)[[4]] = as.character(oneminusar)
     
-    NxysqTausq = nrow(fromC)/(8*Ny+ncol(obsCov)^2)
-    logLstart = NxysqTausq*Nxysq
-    Lseq = 1:logLstart
-    
-    ml = fromC[-Lseq,]
-    ml = array(
-      as.vector(ml), 
-      dim=c(Ny, NxysqTausq, length(mlColNames), ncol(fromC)),
-      dimnames=list(
-        colnames(obsCov)[1:Ny], 
-        NULL, mlColNames, oneminusar
-      )
-    )
+  
     if(length(xisqTausq))
       dimnames(ml)[[2]] = paste('propNugget=',as.character(1/xisqTausq),sep='')
     
-    dimnames(ml)[[3]] = gsub("^junk$", "boxcox",dimnames(ml)[[3]])
+    ml=abind::abind(ml, 
+      array(0, dim(ml)[-3]),
+      along=3)
+    
+    dimnames(ml)[[3]] = gsub("^$", 
+      "boxcox",dimnames(ml)[[3]])
     
     ml[,,'boxcox',] = boxcox
     
     
-    ssq = fromC[Lseq,]
-    ssq=array(ssq, 
-      dim=c(ncol(obsCov),ncol(obsCov),NxysqTausq, ncol(fromC)),
-      dimnames=list(colnames(obsCov), colnames(obsCov), 
-        dimnames(ml)[[2]], oneminusar))
-    
+    ssq = simplify2array(lapply(fromC,
+      function(x) attributes(x)$ssq))
+    dimnames(ssq)[[5]] = as.character(oneminusar)
     
     covDim = seq(Ny+1, ncol(obsCov))
     
@@ -302,14 +298,14 @@ loglikGmrf = function(
       'boxcox')
     
     Ny = dim(ml)[1]
-    betaHat = ssq[-(1:Ny),1:Ny,,,drop=FALSE]
+    betaHat = ssq[-(1:Ny),1:Ny,,'beta',,drop=FALSE]
     dimnames(betaHat)[[1]] = paste(
       dimnames(betaHat)[[1]], 'BetaHat',sep=''
     )
-    betaHat = aperm(betaHat, c(2,3,1,4))
+    betaHat = aperm(betaHat, c(2,3,1,4,5))
     
-    ssqX = ssq[-(1:Ny),-(1:Ny),,,drop=FALSE]
-    seBetaHat = apply(ssqX,c(3,4),diag)
+    ssqX = ssq[-(1:Ny),-(1:Ny),,'beta',,drop=FALSE]
+    seBetaHat = apply(ssqX,c(3,4,5),diag)
     # if there's only one covariate, make a 3-dim array
     if(length(dim(seBetaHat))==2) {
       seBetaHat = array(
@@ -324,8 +320,9 @@ loglikGmrf = function(
     
     seBetaHatMl = seBetaHatReml = seBetaHat
     
-    for(D in dimnames(seBetaHat)[[3]]){
-      seBetaHatMl[,,D,] = seBetaHatMl[,,D,,drop=FALSE] * 
+    for(D in dimnames(seBetaHatMl)[[3]]){
+      seBetaHatMl[,,D,] = 
+        seBetaHatMl[,,D,,drop=FALSE] * 
         ml[,,'profiledVarianceHatMl',,drop=FALSE]
       seBetaHatReml[,,D,] = seBetaHatReml[,,D,,drop=FALSE] * 
         ml[,,'profiledVarianceHatReml',,drop=FALSE]
