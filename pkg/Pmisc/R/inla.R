@@ -298,9 +298,9 @@ priorPost = function(object) {
       
       xLim = range(object$summary.hyperpar[inlaNameHere,
           grep('quant$', colnames(object$summary.hyperpar))
-        ])*20*c(0.95, 1.05)
+        ])*c(0.7, 1.5)*20
       xLim = range(c(floor(xLim), ceiling(xLim)))/20
-      if(xLim[1]<0.25&xLim[2]>0.5) xLim[1] = 0
+      if( (xLim[1]<0.25) & (xLim[2]> (2*xLim[1]) ) ) xLim[1] = 0
       
 		    if(is.null(postHere)) {
         xRange = xLim

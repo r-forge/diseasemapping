@@ -54,7 +54,17 @@ knitr::kable(modSd$summary, digits=2)
 ```
 
 ```{r sdPlot}
-modSd$matplot$xlim[1]=0
 do.call(matplot, modSd$sd$matplot)
 do.call(legend, modSd$legend)
 ```
+
+```{r alphaPlot}
+do.call(matplot, modSd$alpha$matplot)
+do.call(legend, modSd$legend)
+```
+
+```{r probPlot}
+do.call(matplot, modSd$prob$matplot)
+do.call(legend, modSd$legend)
+```
+
