@@ -122,6 +122,8 @@ priorPostSd = function(
 					   )
       )
       
+      if( (forXlim[1]<0.25) & (forXlim[2]>0.5)) forXlim[1] = 0
+      
       
       result[[Dparam]]$matplot = list(
         x = result[[Dparam]]$posterior[,1], 
@@ -177,6 +179,8 @@ priorPostSd = function(
 			   result[[Dphi]]$prior = priorProp[,c('x','dens')]
 			   result[[Dphi]]$posterior = postPhi
       
+      xLim = rev(c(0.8, 1.2))*range(result[[Dphi]]$posterior[,1])
+      if( (xLim[1]<0.25) & (xLim[2]>0.5)) xLim[1] = 0
       
       result[[Dphi]]$matplot = list(
         x = result[[Dphi]]$posterior[,1], 
@@ -186,10 +190,9 @@ priorPostSd = function(
         xlab='sd',
         ylab='dens', 
         xaxs='i',
-        xlim = rev(c(0.8, 1.2))*range(
-          result[[Dphi]]$posterior[,1]
-        )
+        xlim = xLim
       )
+
       
 		  }
 	 }
@@ -240,17 +243,22 @@ priorPost = function(object) {
             label = c(xx$label, NA)[1])
           resxx
         })
+      Sindex = rep(1:length(resx), unlist(lapply(resx, ncol)))
       resx = do.call(cbind, resx)
       resx = as.data.frame(t(resx))
-      resx$index = 1:nrow(resx)
+      resx$index = Sindex
       resx
     })
   paramDf = do.call(rbind, paramList)
   paramDf$group = rep(names(paramList), unlist(lapply(paramList, nrow)))
   paramDf$out.name = NA
   
+  # a few fixes
+  # weibull cure has short name a which is alpha in summary table
+  paramDf$short.name = gsub("^a$", "alpha", paramDf$short.name)
+  
   result = list()
-  for(Dparam in 1:nrow(paramDf)) {
+  for(Dparam in seq(from=1,by=1, len=nrow(paramDf))) {
     if(paramDf[Dparam, 'prior'] == 'pc.prec') {
       result[[Dparam]] = priorPostSd(
 		      object, 
@@ -274,6 +282,9 @@ priorPost = function(object) {
           paramDf[Dparam, 'short.name'], 'parameter for', 
           paramDf[Dparam, 'label'])
       }
+      # a fix for weibullcure models
+      inlaNameHere = gsub("weibullcure", "ps", inlaNameHere)
+      inlaNameHere = gsub("^prob parameter for ps", "p parameter for ps", inlaNameHere)
       
       priorHere = object$all.hyper[[
         paramDf[Dparam, 'group'] 
@@ -289,6 +300,7 @@ priorPost = function(object) {
           grep('quant$', colnames(object$summary.hyperpar))
         ])*20*c(0.95, 1.05)
       xLim = range(c(floor(xLim), ceiling(xLim)))/20
+      if(xLim[1]<0.25&xLim[2]>0.5) xLim[1] = 0
       
 		    if(is.null(postHere)) {
         xRange = xLim
@@ -376,6 +388,8 @@ priorPost = function(object) {
         xaxs='i',
         xlim = xLim
       )
+      
+      result[[Dparam]]$summary = object$summary.hyperpar[inlaNameHere,]      
     } # parameter not pc.prec
   } # loop through parameters
   
@@ -401,7 +415,15 @@ priorPost = function(object) {
           result[[D]]$matplot$ylim = theLims[,2]
       }
   }
-	 
+
+  result$summary = do.call(
+    rbind,
+    lapply(result[result$parameters], function(x) x$summary)
+  )
+
+  if(!length(grep("2$", rownames(result$summary)))) {
+    rownames(result$summary) = gsub("1$", "", rownames(result$summary))
+  }
   
   result
 }

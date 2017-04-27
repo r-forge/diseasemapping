@@ -45,5 +45,16 @@ results
 ```{r results}
 knitr::kable(mod$summary.fixed, digits=3)
 knitr::kable(mod$summary.hyper, digits=3)
-knitr::kable(Pmisc::priorPostSd(mod)$summary, digits=2)
+```
+
+standard deviation
+```{r sdSummary}
+modSd = Pmisc::priorPost(mod)
+knitr::kable(modSd$summary, digits=2)
+```
+
+```{r sdPlot}
+modSd$matplot$xlim[1]=0
+do.call(matplot, modSd$sd$matplot)
+do.call(legend, modSd$legend)
 ```
