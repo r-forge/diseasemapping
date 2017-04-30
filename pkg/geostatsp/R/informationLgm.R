@@ -9,7 +9,7 @@ informationLgm = function(fit, ...) {
 	]
 	reEstimate = gsub("sdNugget", "nugget", reEstimate)
 	reEstimate = gsub("sdSpatial", "variance", reEstimate)
-	reEstimate = gsub("range \\(km\\)", "range", reEstimate)
+	reEstimate = gsub("range([[:space:]]?\\(km\\)|/1000)", "range", reEstimate)
 	reEstimate = intersect(reEstimate, nonLinearParams)
 	
 	baseParam = fit$parameters[reEstimate]
