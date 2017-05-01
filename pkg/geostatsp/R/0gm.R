@@ -372,10 +372,14 @@ gm.dataSpatial = function(
       theLabels = theLevels[
         match(as.integer(names(theTable)), theLevels[,idCol])
         ,labelCol]
-      if(any(is.na(theLabels)))
-        warning('missing labels in covariate raster', 
+      if(any(is.na(theLabels))) {
+        warning(
+          'missing labels in covariate raster ', 
           D, 
-          names(theTable)[is.na(theLabels)[1]])
+          names(theTable)[is.na(theLabels)][1])
+        theLabels[is.na(theLabels)] = 
+          names(theTable)[is.na(theLabels)]
+      }
     }
     data[[D]] = factor(data[[D]], levels=as.integer(names(theTable)),
       labels=theLabels)			
