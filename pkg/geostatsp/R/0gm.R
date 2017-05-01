@@ -375,7 +375,7 @@ gm.dataSpatial = function(
       if(any(is.na(theLabels))) {
         warning(
           'missing labels in covariate raster ', 
-          D, 
+          D, ' level ',
           names(theTable)[is.na(theLabels)][1])
         theLabels[is.na(theLabels)] = 
           names(theTable)[is.na(theLabels)]
