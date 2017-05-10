@@ -25,7 +25,9 @@ data('murder')
 data('torontoPop')
 @
 
-<<inlaWorkaround, include=FALSE, purl=FALSE>>=
+<<inlaWorkaround, include=FALSE>>=
+# use the static INLA on linux machines
+# to avoid possible 'libgomp not found' errors
 if(Sys.info()['sysname'] =='Linux' & 
   requireNamespace("INLA")) {
   INLA::inla.setOption(inla.call = 
