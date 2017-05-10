@@ -35,8 +35,7 @@ downloadIfOld = function(
   
   for(D in 1:length(url)) {
     if(verbose)
-      message('file ', file[D])
-    
+      message('url ', url[D])
     
     fileIsNew = any(as.numeric(difftime(
           file.info(file[D])$mtime,
@@ -44,12 +43,18 @@ downloadIfOld = function(
         )) > 0, na.rm=TRUE)
     
     if(!fileIsNew) {
+      if(verbose)
+        message('downloading as ', file[D])
+      
       utils::download.file(
         url[D],
         file[D],
         quiet = !verbose, 
         ...
       )
+    } else {
+      if(verbose)
+        message('reloading cached ', file[D])      
     }
     
   }

@@ -137,7 +137,7 @@ double logLoneNuggetMoreArguments(
   // and int Nxy, Nobs, Nxysq, Nrep;
   // as are YwkL, EwkL, YwkD, EwkD; // workspaces
 
-  double minusXisqTausq, zeroD=0.0, oneD=1.0;
+  double minusXisqTausq, oneD=1.0;
   double result, *tempPointer;
   int oneI=1, D;
   /*
@@ -311,7 +311,7 @@ SEXP gmrfLik(
     SEXP xisqTausq, // first element must be zero
     SEXP reml,
     SEXP YrepAddR,// Jacobian, length used for Nrep
-    SEXP optParam  // set first element negative for verbose
+    SEXP optParam  // set first element -999 for verbose
 ){
 
   int Drep, dooptim, verbose=0; // length(xisqTausq)
@@ -356,7 +356,7 @@ SEXP gmrfLik(
               "first element of xisqTausq is %f, must be zero\n",
               REAL(xisqTausq));
       }
-      if(optMin<0.0) {
+      if(optMin < -998.9) {
           verbose = 1;
           Rprintf("d Nxixqtauxq %d, Nobs %d, Nrep %d, Ncov %d\n",
                   NxisqTausq, Nobs, Nrep, Ncov);
@@ -567,7 +567,8 @@ SEXP gmrfLik(
 
           varHatReml[DxisqTausq*Nrep + Drep] =
               betaHat[DxisqTausq*Nxysq+Drep*Nxy+Drep]/(Nobs-Ncov);
-
+          resultXisqTausq[DxisqTausq*Nrep + Drep] =
+              REAL(xisqTausq)[DxisqTausq];
       }
 
   }

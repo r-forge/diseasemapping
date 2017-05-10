@@ -172,7 +172,10 @@ loglikGmrf = function(
     ml = simplify2array(fromC)
     dimnames(ml)[[4]] = as.character(oneminusar)
     
-  
+    if(any(dimnames(ml)[[2]]=='0')) {
+      ml[,'0','xisqTausq', ]= 0
+    }
+    
     if(length(xisqTausq))
       dimnames(ml)[[2]] = paste('propNugget=',as.character(1/xisqTausq),sep='')
     
@@ -187,7 +190,7 @@ loglikGmrf = function(
     
     
     ssq = simplify2array(lapply(fromC,
-      function(x) attributes(x)$ssq))
+        function(x) attributes(x)$ssq))
     dimnames(ssq)[[5]] = as.character(oneminusar)
     
     covDim = seq(Ny+1, ncol(obsCov))
@@ -302,31 +305,41 @@ loglikGmrf = function(
     dimnames(betaHat)[[1]] = paste(
       dimnames(betaHat)[[1]], 'BetaHat',sep=''
     )
-    betaHat = aperm(betaHat, c(2,3,1,4,5))
+    betaHat = aperm(betaHat, c(2,3,1,5, 4))
+    # drop last dimension that's 'beta'
+    betaHat = array(
+      betaHat, dim(betaHat)[1:4],
+      dimnames = dimnames(betaHat)[1:4]
+    )  
     
     ssqX = ssq[-(1:Ny),-(1:Ny),,'beta',,drop=FALSE]
     seBetaHat = apply(ssqX,c(3,4,5),diag)
-    # if there's only one covariate, make a 3-dim array
-    if(length(dim(seBetaHat))==2) {
+    # if there's only one covariate
+    # there won't be a dimension for covariate
+    if(length(dim(seBetaHat)==3)) {
       seBetaHat = array(
-        seBetaHat, dim=c(1, dim(seBetaHat)),
-        dimnames = c(list('x'), dimnames(seBetaHat))
+        seBetaHat, c(1,dim(seBetaHat)),
+        dimnames = c(list(NULL), dimnames(seBetaHat))
       )
     }
-    seBetaHat = array(seBetaHat, c(dim(ml)[1],dim(seBetaHat)),
-      dimnames=c(dimnames(ml)[1], dimnames(seBetaHat)))
+    dimnames(seBetaHat)[[1]] = dimnames(betaHat)[[3]]
     
-    seBetaHat = aperm(seBetaHat, c(1,3,2,4))
     
-    seBetaHatMl = seBetaHatReml = seBetaHat
+# permute seBetaHat to look like betaHat
+# and add a leading dimension for dataset
+    seBetaHat = aperm(seBetaHat, c(2,1,3,4))
+    seBetaHat = array(
+      seBetaHat, dim(betaHat),
+      dimnames = c(
+        dimnames(betaHat)[1], 
+        dimnames(seBetaHat)[-3])
+    )
     
-    for(D in dimnames(seBetaHatMl)[[3]]){
-      seBetaHatMl[,,D,] = 
-        seBetaHatMl[,,D,,drop=FALSE] * 
-        ml[,,'profiledVarianceHatMl',,drop=FALSE]
-      seBetaHatReml[,,D,] = seBetaHatReml[,,D,,drop=FALSE] * 
-        ml[,,'profiledVarianceHatReml',,drop=FALSE]
-    }
+    seBetaHatMl = seBetaHat * 
+      ml[,,'profiledVarianceHatMl',,drop=FALSE]  
+    seBetaHatReml = seBetaHat * 
+      ml[,,'profiledVarianceHatReml',,drop=FALSE]  
+    
     
     dimnames(seBetaHatMl)[[3]] = paste(dimnames(seBetaHatMl)[[3]],'SeMl',sep='')
     dimnames(seBetaHatReml)[[3]] = paste(dimnames(seBetaHatReml)[[3]],'SeReml',sep='')
@@ -354,7 +367,32 @@ loglikGmrf = function(
     dimnames(sigmasqHat)[[3]] = gsub("^xi", "sigma", 
       dimnames(sigmasqHat)[[3]])
     
-    res = abind::abind(logLml, forml, sigmasqHat,
+    # deviance
+    
+    theMin = apply(
+      ml[,,c('m2logLml','m2logLreml'),,drop=FALSE], 
+      c(1,3), min)
+    theMin = array(
+      theMin, 
+      c(dim(ml)[1],1,2,1)
+    )
+    bob = ml[,,c('m2logLml','m2logLreml'),,drop=FALSE] 
+    deviance = 
+      ml[,,c('m2logLml','m2logLreml'),,drop=FALSE] -
+      theMin[
+        ,
+        rep(1, dim(ml)[2]),
+        ,
+        rep(1, dim(ml)[4])
+      ]
+    dimnames(deviance)[[3]] = paste(
+      gsub(
+        'm2logL', '',    dimnames(deviance)[[3]]
+      ),
+      'Deviance', sep='')
+    
+    res = abind::abind(logLml, deviance,
+      forml, sigmasqHat,
       betaHat, seBetaHatMl, seBetaHatReml, parArray,
       along=3)
     
@@ -365,15 +403,16 @@ loglikGmrf = function(
     
     mle = NULL
     for(D in 1:nrow(mleIndex))
-      mle = cbind(mle, res[D,mleIndex[D,1],,mleIndex[D,2]])
+      mle = cbind(mle, 
+        res[D,mleIndex[D,1],,mleIndex[D,2]])
     
     colsToKeep = grep(paste(c('Reml','Ml')[1+reml],'$',sep=''),
       rownames(mle), invert=TRUE)
     mle = mle[colsToKeep,,drop=FALSE]
     mle = mle[grep("^logL", rownames(mle), invert=TRUE),,drop=FALSE]
     rownames(mle) = gsub("(Beta)?(Hat)?(Reml|Ml)?$", "", rownames(mle))
-    
-    
+   
+      
     res = list(
       mle=mle, 
       mlArray = res
@@ -545,7 +584,7 @@ loglikGmrf = function(
       mlMat = mlMat,
       Qinfo = thepar)
     
-  }
+  } # end optimizing
   
   res$profileBoxCox = profBC
   
