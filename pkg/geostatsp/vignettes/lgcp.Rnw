@@ -62,7 +62,7 @@ resG=lgcp(formula, data=murderT,
 $pr(sd > 1) = 0.05$ and $pr(phi < 0.2) = 0.95$
 
 <<inlaWorkaround, include=FALSE, purl=FALSE>>=
-if(Sys.info()$sysname=='Linux' & 
+if(Sys.info()['sysname'] =='Linux' & 
   requireNamespace("INLA")) {
   INLA::inla.setOption(inla.call = 
       system.file(paste(
