@@ -204,6 +204,9 @@ setMethod("RFsimulate",
 				}
 			} else { #RandomFields not available
 				res2 = raster(x)
+    if(ncell(res2) > 500) {
+      message("install the RandomFields package for faster simulations")
+    }
 				if(n>1) {
 					res2 = brick(res2, nl=n)
 				}
