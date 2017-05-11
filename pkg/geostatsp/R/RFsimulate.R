@@ -41,7 +41,7 @@ setMethod("RFsimulate",
           data = RandomFields::conventional2RFspDataFrame(
             data=as.matrix(data@data[,1]), 
             coords=as.matrix(data@coords),
-            n = 1, T=c() )
+            n = 1)
           # for some reason there is sometimes an error of
           # Error in simu[index, ] : subscript out of bounds
           # in RandomFields unless I do the following
