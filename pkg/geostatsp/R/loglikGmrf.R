@@ -58,14 +58,6 @@ loglikGmrfOneRange = function(
       c('ssq','beta')
     ))
   
-  
-  
-  
-#  yxyxseq = seq(
-#    from = 1 + length(result$ssq) + length(result$ml), 
-#    len=Nxysq)
-#  result$yxyx = matrix(fromC[yxyxseq], Nxy)
-  
   attributes(result)$param = attributes(Q)$info
   
   result
@@ -397,7 +389,8 @@ loglikGmrf = function(
       along=3)
     
     
-    theMle = apply(res[,,gsub("^m2","",Lcol),,drop=FALSE], 
+    theMle = apply(
+      res[,,gsub("^m2","",Lcol),,drop=FALSE], 
       1, which.max)
     mleIndex = arrayInd(theMle, dim(res)[-c(1,3)])
     

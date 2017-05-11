@@ -107,10 +107,12 @@ matern.Raster = function(x,
 	
 	Ny = length(y)
 	
-	
 	resC= .C("maternArasterBpoints", 
-			as.double(xmin(x)), as.double(xres(x)), as.integer(ncol(x)), 
-			as.double(ymax(x)), as.double(yres(x)), as.integer(nrow(x)),
+   as.double(xmin(x)), 
+   as.double(xres(x)), as.integer(ncol(x)), 
+   as.double(ymax(x)),
+   as.double(yres(x)), 
+   as.integer(nrow(x)),
 			as.double(y@coords[,1]), as.double(y@coords[,2]), 
 			N=as.integer(Ny), 
 			result=as.double(array(0, c(nrow(x),ncol(x),Ny))),
