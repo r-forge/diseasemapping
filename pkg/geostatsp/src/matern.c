@@ -15,184 +15,6 @@ if the precision is computed type is info from dpotrfi
 
 #include"geostatsp.h"
 
-void maternRasterConditional(
-    double *Axmin, double *Axres,
-    int *AxN,
-    double *Aymax, double *Ayres, int *AyN,
-    double *ydata, double *yx, double *yy, int *Ny,
-    double *result,
-    double *nugget,
-    double  *range, double*shape, double *variance,
-    double *anisoRatio, double *anisoAngleRadians,
-    int *type) {
-
-    int oneI=1, fourI=4, Ncell;
-    double *varY, *Ldata, *Lcrossprod, halfLogDet;
-
-    Ncell = (*AyN) * (*AxN);
-    varY = (double *) calloc((*Ny)*(*Ny), sizeof(double));
-    Ldata = (double *) calloc((*Ny)*Ncell, sizeof(double));
-    Lcrossprod = (double *) calloc(Ncell * Ncell, sizeof(double));
-
-
-    // var U
-   maternRaster(
-       Axmin, Axres, AxN, Aymax, Ayres, AyN,
-       result, range, shape, variance,
-       anisoRatio, anisoAngleRadians, &oneI
-   );
-
-   // var Y
-   maternAniso(
-       yx, yy, Ny, varY,
-       range, shape, variance,
-       anisoRatio, anisoAngleRadians,
-       nugget, &fourI,
-       &halfLogDet
-   );
-
-   free(varY);
-   free(Ldata);
-   free(Lcrossprod);
-}
-
-void maternRaster(
-    double *Axmin, double *Axres,
-    int *AxN,
-    double *Aymax, double *Ayres, int *AyN,
-    double *result,
-    double  *range, double*shape, double *variance,
-    double *anisoRatio, double *anisoAngleRadians,
-    int *type) {
-
-  int DB, DBx, DBy, DAx, DAy, AyN2, AxN2;
-  int Dindex,Ncell;
-  double distCellRight[2], distCellDown[2], distTopLeft[2], distRowHead[2];
-  double distTopLeftR[2], distHere[2], Bx, By;
-  double costheta, sintheta, anisoRatioSq;
-  double logxscale, xscale, varscale,  thisx, logthisx;
-  int nb;
-  double *bk, alpha,truncate;
-
-
-  AyN2 = *AyN;
-  AxN2 = *AxN;
-  Ncell = AyN2*AxN2;
-  *Axmin += *Axres/2; // add half a cells size, assign each cell
-  *Aymax -= *Ayres/2; // it's centroid rather than it's top left corner
-
-
-  costheta = cos(*anisoAngleRadians);
-  sintheta = sin(*anisoAngleRadians);
-  anisoRatioSq = (*anisoRatio)*(*anisoRatio);
-
-  distCellRight[0] = costheta *(*Axres);
-  distCellRight[1] = sintheta * (*Axres);
-
-  distCellDown[0] =  sintheta * (*Ayres);
-  distCellDown[1] =  - costheta * (*Ayres);
-
-  xscale = 2 * M_SQRT2 * sqrt( *shape ) / *range;
-  logxscale  =  1.5 * M_LN2 +   0.5 * log(*shape)  - log(*range);
-  varscale =  log(*variance)  - lgammafn(*shape ) -  (*shape -1)*M_LN2;
-
-  truncate = *variance*1e-06; // count a zero if var < truncate
-
-  alpha = *shape;
-  // code stolen from R's src/nmath/bessel_k.c
-  nb = 1+ (int)floor(alpha);/* nb-1 <= |alpha| < nb */
-  bk = (double *) calloc(nb, sizeof(double));
-
-  DB = 0; // cell index
-  for(DBy=0;DBy<AyN2;++DBy){ // loop through rows of raster B
-      By = *Aymax - DBy * (*Ayres);
-      for(DBx=0;DBx<AxN2;++DBx){ // loop through columns of raster B
-          Bx = *Axmin + DBx * (*Axres);
-          distTopLeft[0]= (Bx-*Axmin); // distance from point DB to
-          distTopLeft[1]= (By-*Aymax); //   top left corner of raster
-
-          distTopLeftR[0]= costheta * distTopLeft[0] - sintheta * distTopLeft[1];
-          distTopLeftR[1] = sintheta *distTopLeft[0] + costheta * distTopLeft[1];
-
-          // distance to leftmost cell of row DAy
-
-          distRowHead[0] = distTopLeftR[0] - distCellDown[0]*DBy;
-          distRowHead[1] = distTopLeftR[1] - distCellDown[1]*DBy;
-
-          for(DAy=DBy;DAy<AyN2;++DAy){ // loop through y of raster A
-              Dindex = DB*Ncell + DAy*AxN2; // index in covariance matrix
-
-              distHere[0] = distRowHead[0]; // dist to cell DAx Day
-              distHere[1] = distRowHead[1];
-              for(DAx=0;DAx<AxN2;++DAx){ // loop through x of raster A
-
-                  //      thisx =  sqrt(distHere[0]*distHere[0] +
-                  //              distHere[1]*distHere[1]/anisoRatioSq)*xscale;
-
-                  thisx = distHere[0]*distHere[0] +
-                      distHere[1]*distHere[1]/anisoRatioSq;
-                  logthisx = 0.5*log(thisx) + logxscale;
-                  thisx =sqrt(thisx) * xscale;
-
-
-                  // if thiex is nan assume it's infinity
-                  if(isnan(thisx)) {
-                      if(isinf(xscale)) {
-                          // range is probably zero.
-                          // if distance is zero set result to variance
-                          if(distHere[0]*distHere[0] +
-                              distHere[1]*distHere[1] < truncate){
-                              result[Dindex]= *variance;
-                          }
-                      } else {
-                          // range is finite, distance must be zero
-                          result[Dindex] = 0;
-                      }
-                  } else {
-                      result[Dindex] = exp(varscale + *shape * logthisx)*
-                          bessel_k_ex(thisx, alpha, 1.0, bk);
-                  }
-
-                  if(isnan(result[Dindex]))  {
-                      // assume distance is very small
-                      if(thisx < 1) {
-                          result[Dindex]= *variance;
-                      } else {
-                          result[Dindex]= 0;
-                      }
-                  }
-
-
-                  //        if(result[Dindex]  <  truncate) ++Nzeros;
-
-                  ++Dindex;
-                  distHere[0] -= distCellRight[0];
-                  distHere[1] -= distCellRight[1];
-              } // x of raster A
-
-              distRowHead[0] -=distCellDown[0];
-              distRowHead[1] -=distCellDown[1];
-
-          } // loop through y of raster A
-          DB += 1;
-      } // loop through x of raster B
-  } // y of raster B
-
-  if(*type >1 ){ // cholesky
-      F77_CALL(dpotrf)("L", &Ncell, result, &Ncell, &Ncell);
-      if(*type == 3){//precision
-          F77_NAME(dpotri)("L", &Ncell,
-              result, &Ncell,&Ncell);
-      } else if (*type==4) {// cholesky of precision
-          F77_NAME(dtrtri)("L", "N", &Ncell,
-              result, &Ncell,&Ncell);
-      }
-  }
-
-  free(bk);
-
-
-}
 
 void maternArasterBpoints(
     double *Axmin, double *Axres,
@@ -780,4 +602,270 @@ SEXP maternDistance(
   UNPROTECT(2);
   return result;
 }
+
+void maternRaster(
+    double *Axmin, double *Axres,
+    int *AxN,
+    double *Aymax, double *Ayres, int *AyN,
+    double *result,
+    double  *range, double*shape, double *variance,
+    double *anisoRatio, double *anisoAngleRadians,
+    int *type) {
+
+  int DB, DBx, DBy, DAx, DAy, AyN2, AxN2;
+  int Dindex,Ncell;
+  double distCellRight[2], distCellDown[2], distTopLeft[2], distRowHead[2];
+  double distTopLeftR[2], distHere[2], Bx, By;
+  double costheta, sintheta, anisoRatioSq;
+  double logxscale, xscale, varscale,  thisx, logthisx;
+  int nb;
+  double *bk, alpha,truncate;
+
+
+  AyN2 = *AyN;
+  AxN2 = *AxN;
+  Ncell = AyN2*AxN2;
+  *Axmin += *Axres/2; // add half a cells size, assign each cell
+  *Aymax -= *Ayres/2; // it's centroid rather than it's top left corner
+
+
+  costheta = cos(*anisoAngleRadians);
+  sintheta = sin(*anisoAngleRadians);
+  anisoRatioSq = (*anisoRatio)*(*anisoRatio);
+
+  distCellRight[0] = costheta *(*Axres);
+  distCellRight[1] = sintheta * (*Axres);
+
+  distCellDown[0] =  sintheta * (*Ayres);
+  distCellDown[1] =  - costheta * (*Ayres);
+
+  xscale = 2 * M_SQRT2 * sqrt( *shape ) / *range;
+  logxscale  =  1.5 * M_LN2 +   0.5 * log(*shape)  - log(*range);
+  varscale =  log(*variance)  - lgammafn(*shape ) -  (*shape -1)*M_LN2;
+
+  truncate = *variance*1e-06; // count a zero if var < truncate
+
+  alpha = *shape;
+  // code stolen from R's src/nmath/bessel_k.c
+  nb = 1+ (int)floor(alpha);/* nb-1 <= |alpha| < nb */
+  bk = (double *) calloc(nb, sizeof(double));
+
+  DB = 0; // cell index
+  for(DBy=0;DBy<AyN2;++DBy){ // loop through rows of raster B
+      By = *Aymax - DBy * (*Ayres);
+      for(DBx=0;DBx<AxN2;++DBx){ // loop through columns of raster B
+          Bx = *Axmin + DBx * (*Axres);
+          distTopLeft[0]= (Bx-*Axmin); // distance from point DB to
+          distTopLeft[1]= (By-*Aymax); //   top left corner of raster
+
+          distTopLeftR[0]= costheta * distTopLeft[0] - sintheta * distTopLeft[1];
+          distTopLeftR[1] = sintheta *distTopLeft[0] + costheta * distTopLeft[1];
+
+          // distance to leftmost cell of row DAy
+
+          distRowHead[0] = distTopLeftR[0] - distCellDown[0]*DBy;
+          distRowHead[1] = distTopLeftR[1] - distCellDown[1]*DBy;
+
+          for(DAy=DBy;DAy<AyN2;++DAy){ // loop through y of raster A
+              Dindex = DB*Ncell + DAy*AxN2; // index in covariance matrix
+
+              distHere[0] = distRowHead[0]; // dist to cell DAx Day
+              distHere[1] = distRowHead[1];
+              for(DAx=0;DAx<AxN2;++DAx){ // loop through x of raster A
+
+                  //      thisx =  sqrt(distHere[0]*distHere[0] +
+                  //              distHere[1]*distHere[1]/anisoRatioSq)*xscale;
+
+                  thisx = distHere[0]*distHere[0] +
+                      distHere[1]*distHere[1]/anisoRatioSq;
+                  logthisx = 0.5*log(thisx) + logxscale;
+                  thisx =sqrt(thisx) * xscale;
+
+
+                  // if thiex is nan assume it's infinity
+                  if(isnan(thisx)) {
+                      if(isinf(xscale)) {
+                          // range is probably zero.
+                          // if distance is zero set result to variance
+                          if(distHere[0]*distHere[0] +
+                              distHere[1]*distHere[1] < truncate){
+                              result[Dindex]= *variance;
+                          }
+                      } else {
+                          // range is finite, distance must be zero
+                          result[Dindex] = 0;
+                      }
+                  } else {
+                      result[Dindex] = exp(varscale + *shape * logthisx)*
+                          bessel_k_ex(thisx, alpha, 1.0, bk);
+                  }
+
+                  if(isnan(result[Dindex]))  {
+                      // assume distance is very small
+                      if(thisx < 1) {
+                          result[Dindex]= *variance;
+                      } else {
+                          result[Dindex]= 0;
+                      }
+                  }
+
+
+                  //        if(result[Dindex]  <  truncate) ++Nzeros;
+
+                  ++Dindex;
+                  distHere[0] -= distCellRight[0];
+                  distHere[1] -= distCellRight[1];
+              } // x of raster A
+
+              distRowHead[0] -=distCellDown[0];
+              distRowHead[1] -=distCellDown[1];
+
+          } // loop through y of raster A
+          DB += 1;
+      } // loop through x of raster B
+  } // y of raster B
+
+  if(*type >1 ){ // cholesky
+      F77_CALL(dpotrf)("L", &Ncell, result, &Ncell, &Ncell);
+      if(*type == 3){//precision
+          F77_NAME(dpotri)("L", &Ncell,
+              result, &Ncell,&Ncell);
+      } else if (*type==4) {// cholesky of precision
+          F77_NAME(dtrtri)("L", "N", &Ncell,
+              result, &Ncell,&Ncell);
+      }
+  }
+
+  free(bk);
+
+
+}
+
+
+void maternRasterConditional(
+    double *Axmin, double *Axres,
+    int *AxN,
+    double *Aymax, double *Ayres, int *AyN,
+    double *yx, double *yy, int *Ny,
+    double *result,
+    int *Nsim, // number of realisations per parameter set
+    int *Nparam, // number of parameter sets
+    double *nugget,
+    double  *range, double*shape, double *variance,
+    double *anisoRatio, double *anisoAngleRadians
+) {
+
+  int oneI=1, fourI=4, Ncell, Nrandom;
+  int Dparam, D;
+  double *resultHere, oneD=1.0, minusOneD=-1.0;
+  double *varY, *covDataGrid, *varGrid, halfLogDet;
+
+  Ncell = (*AyN) * (*AxN);
+  Nrandom = Ncell * (*Nsim);
+  varY = (double *) calloc((*Ny)*(*Ny), sizeof(double));
+  covDataGrid = (double *) calloc( (*Ny) * Ncell, sizeof(double));
+  varGrid = (double *) calloc(Ncell * Ncell, sizeof(double));
+
+  for(Dparam=0; Dparam < *Nparam; ++Dparam) {
+      resultHere = &result[Dparam*Nrandom];
+      // var Y
+      maternAniso(
+          yx, yy, Ny, varY,
+          &range[Dparam], &shape[Dparam], &variance[Dparam],
+          &anisoRatio[Dparam], &anisoAngleRadians[Dparam],
+          &nugget[Dparam], &fourI,
+          &halfLogDet
+      );
+
+      // covUY
+      maternArasterBpoints(
+          Axmin, Axres, AxN, Aymax, Ayres, AyN,
+          yx, yy, Ny,
+          covDataGrid,
+          &range[Dparam], &shape[Dparam], &variance[Dparam],
+          &anisoRatio[Dparam], &anisoAngleRadians[Dparam]);
+
+        /*
+         * varY = L Lt, varY^(-1) = Lt^(-1) L^(-1)
+         * want Linv %*% t(covUV) or t( covUV %*% t(Linv) )
+
+         * side = 'R' uplo='L' transa='T' diag='N'
+         * M = Ngrid N=Ny
+         * alpha = 1.0
+         * A= varY (really Linv)
+         * LDA=Ny
+         * B = covDataGrid
+         * LDB = Ngrid
+
+    DTRMM  performs one of the matrix-matrix operations
+
+        B := alpha*op( A )*B,   or   B := alpha*B*op( A ),
+
+         */
+
+        F77_NAME(dtrmm)(
+            "R", "L", "T", "N",
+            &Ncell, Ny, &oneD,
+            varY, Ny,
+            covDataGrid, &Ncell);
+        // covDataGrid is now t(Linv %*% covUV),
+
+        // var U
+        maternRaster(
+            Axmin, Axres, AxN, Aymax, Ayres, AyN,
+            varGrid,
+            &range[Dparam], &shape[Dparam], &variance[Dparam],
+            &anisoRatio[Dparam], &anisoAngleRadians[Dparam],
+            &oneI);
+
+        // want varU - covDataGrid %*% t(covDataGrid)
+        // Linv %*% covUV is small by big
+        // covDataGrid is big by small
+        /*
+         * B = A = covDataGrid, opB = T, C=varGrid, beta=1 alpha=-1
+         * transa = 'N' transB= 'T'
+         * M=Ngrid N=Ngrid K=Ny
+         * alpha=-1.0
+         * A=covDataGrid LDA = Ngrid
+         * B=covDataGrid LDB = Ngrid
+         * beta = 1.0
+         * C = varGrid LDC = Ngrid
+         *
+         * DGEMM  performs one of the matrix-matrix operations
+
+    C := alpha*op( A )*op( B ) + beta*C,
+
+         */
+        F77_NAME(dgemm)(
+
+            "N", "T",
+            &Ncell, &Ncell, Ny,
+            &minusOneD,
+            covDataGrid, &Ncell,
+            covDataGrid, &Ncell,
+            &oneD,
+            varGrid, &Ncell);
+
+        // cholesky
+        F77_CALL(dpotrf)("L", &Ncell, varGrid, &Ncell, &D);
+
+        // random noise
+        for(D=0;D<Nrandom;++D) {
+            resultHere[D] = norm_rand();
+        }
+
+        // multiply, want L %*% Z
+
+        F77_NAME(dtrmm)(
+            "R", "L", "N", "N",
+            &Ncell, Nsim, &oneD,
+            varGrid, &Ncell,
+            resultHere, &Ncell);
+
+      } // param loop
+
+      free(varY);
+      free(varGrid);
+      free(covDataGrid);
+  }
 
