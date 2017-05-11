@@ -19,17 +19,20 @@ void maternRasterConditional(
     double *Axmin, double *Axres,
     int *AxN,
     double *Aymax, double *Ayres, int *AyN,
-    double *yx, double *yy, int *Ny,
+    double *ydata, double *yx, double *yy, int *Ny,
     double *result,
     double *nugget,
     double  *range, double*shape, double *variance,
     double *anisoRatio, double *anisoAngleRadians,
     int *type) {
 
-    int oneI=1, fourI=4;
-    double *varY, halfLogDet;
+    int oneI=1, fourI=4, Ncell;
+    double *varY, *Ldata, *Lcrossprod, halfLogDet;
 
+    Ncell = (*AyN) * (*AxN);
     varY = (double *) calloc((*Ny)*(*Ny), sizeof(double));
+    Ldata = (double *) calloc((*Ny)*Ncell, sizeof(double));
+    Lcrossprod = (double *) calloc(Ncell * Ncell, sizeof(double));
 
 
     // var U
@@ -49,6 +52,8 @@ void maternRasterConditional(
    );
 
    free(varY);
+   free(Ldata);
+   free(Lcrossprod);
 }
 
 void maternRaster(

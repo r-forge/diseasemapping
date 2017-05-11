@@ -258,7 +258,8 @@ setMethod("RFsimulate",
           as.double(yFromRow(xRaster,1)), 
           as.double(yres(xRaster)), 
           as.integer(nrow(xRaster)),
-          # data coords
+          # data 
+# as.double(y@data[,1]),    
 #          as.double(y@coords[,1]), 
 #          as.double(y@coords[,2]), 
 #          N=as.integer(Ny), 
