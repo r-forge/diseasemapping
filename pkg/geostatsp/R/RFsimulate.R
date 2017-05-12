@@ -154,7 +154,8 @@ setMethod("RFsimulate",
         paramForData = model
         if(!is.null(err.model))
           paramForData['nugget']=as.numeric(err.model)
-        Linv = matern(data, param=paramForData, type='inverseCholesky')
+        Linv = matern(data, param=paramForData,
+          type='inverseCholesky')
         covpreddata = matern(x, y=data, param=model)
         xcov =  tcrossprod( covpreddata,Linv)
         theCov  =theCov - tcrossprod(xcov)
@@ -162,11 +163,13 @@ setMethod("RFsimulate",
       } else {
         theChol = matern(x, param=model, type='cholesky')
       }
-      theRandom = matrix(rnorm(n*nrow(theChol)), nrow=nrow(theChol), ncol=n)
+      theRandom = matrix(
+        rnorm(n*nrow(theChol)), 
+        nrow=nrow(theChol), ncol=n)
       theSim = theChol %*% theRandom
       if(!is.null(data)) {
         theSim = theSim + xcov %*% 
-          (Linv %*% data.frame(data)[,1])	
+          (Linv %*% data.frame(data)[,1])
       }
       theSim = as.data.frame(as.matrix(theSim))
       names(theSim) = paste("sim", 1:n,sep="")
@@ -249,31 +252,59 @@ setMethod("RFsimulate",
         
         
         xRaster = raster(x)
+        if(FALSE) {
+          resC = .C("maternRasterConditional", 
+            # raster
+            as.double(xmin(xRaster)), 
+            as.double(xres(xRaster)), 
+            as.integer(ncol(xRaster)), 
+            # raster y
+            as.double(ymax(xRaster)), 
+            as.double(yres(xRaster)), 
+            as.integer(nrow(xRaster)),
+            # data 
+            as.double(y@data[,1]),    
+            as.double(y@coords[,1]), 
+            as.double(y@coords[,2]), 
+            as.integer(length(y)), 
+            # conditional covariance matrix
+            result=as.double(matrix(0, ncell(xRaster), ncell(xRaster))),
+            # parameters
+#          as.double(paramForData['nugget']),
+            as.double(modelFull["range"]),
+            as.double(modelFull["shape"]),
+            as.double(modelFull["variance"]),
+            as.double(modelFull["anisoRatio"]),
+            as.double(modelFull["anisoAngleRadians"]),
+            as.integer(1)
+          )
+        }
+        
         resC = .C("maternRaster", #"maternRasterConditional",
           # raster
-          as.double(xFromCol(xRaster,1)), 
-          as.double(xres(xRaster)), 
-          as.integer(ncol(xRaster)), 
-          # raster y
-          as.double(yFromRow(xRaster,1)), 
-          as.double(yres(xRaster)), 
-          as.integer(nrow(xRaster)),
-          # data 
+          as.double(xmin(xRaster), 
+            as.double(xres(xRaster)), 
+            as.integer(ncol(xRaster)), 
+            # raster y
+            as.double(ymax(xRaster)), 
+            as.double(yres(xRaster)), 
+            as.integer(nrow(xRaster)),
+            # data 
 # as.double(y@data[,1]),    
 #          as.double(y@coords[,1]), 
 #          as.double(y@coords[,2]), 
 #          N=as.integer(Ny), 
-          # conditional covariance matrix
-          result=as.double(matrix(0, ncell(xRaster), ncell(xRaster))),
-          # parameters
+            # conditional covariance matrix
+            result=as.double(matrix(0, ncell(xRaster), ncell(xRaster))),
+            # parameters
 #          as.double(paramForData['nugget']),
-          as.double(modelFull["range"]),
-          as.double(modelFull["shape"]),
-          as.double(modelFull["variance"]),
-          as.double(modelFull["anisoRatio"]),
-          as.double(modelFull["anisoAngleRadians"]),
-          as.integer(1)
-        )
+            as.double(modelFull["range"]),
+            as.double(modelFull["shape"]),
+            as.double(modelFull["variance"]),
+            as.double(modelFull["anisoRatio"]),
+            as.double(modelFull["anisoAngleRadians"]),
+            as.integer(1)
+          )
         
         theCov =  new("dsyMatrix", 
           Dim = as.integer(rep(ncell(xRaster),2)), 
@@ -288,7 +319,8 @@ setMethod("RFsimulate",
         theChol = chol(theCov)
         
       } else {
-        theChol = matern(res2, param=model, type='cholesky')
+        theChol = matern(res2, param=model,
+          type='cholesky')
         # do the multiplication with random normals in C?
       }
       

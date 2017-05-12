@@ -9,7 +9,7 @@ Stamen-toner maps are 3-layer RGB rasters, which are converted
 to single-layer rasters with indexed colours with whites becoming transparent. 
 }
 \usage{
-tonerToTrans(x,  pattern="(red|green|blue)$", power = 0.5, col='black')
+tonerToTrans(x,  pattern="(red|green|blue)$", power = 0.5, col='black',  threshold=Inf)
 rgbtToIndex(x,  pattern="(red|green|blue|trans)$")
 }
 \arguments{
@@ -20,6 +20,7 @@ rgbtToIndex(x,  pattern="(red|green|blue|trans)$")
 	Values below 1 increase opacity, above 1 increases transparency
 }
 \item{col}{colour for resulting map}
+\item{threshold}{colours above this value are transparent}
 }
 
 \details{

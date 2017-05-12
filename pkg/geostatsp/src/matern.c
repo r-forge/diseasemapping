@@ -743,11 +743,10 @@ void maternRaster(
 
 
 void maternRasterConditional(
-    double *Axmin, double *Axres,
-    int *AxN,
+    double *Axmin, double *Axres, int *AxN,
     double *Aymax, double *Ayres, int *AyN,
     double *yx, double *yy, int *Ny,
-    double *result,
+    double *result, // has y's data in it
     int *Nsim, // number of realisations per parameter set
     int *Nparam, // number of parameter sets
     double *nugget,
@@ -758,13 +757,15 @@ void maternRasterConditional(
   int oneI=1, fourI=4, Ncell, Nrandom;
   int Dparam, D;
   double *resultHere, oneD=1.0, minusOneD=-1.0;
-  double *varY, *covDataGrid, *varGrid, halfLogDet;
+  double *varY, *covDataGrid, *varGrid, *random, halfLogDet;
 
   Ncell = (*AyN) * (*AxN);
   Nrandom = Ncell * (*Nsim);
   varY = (double *) calloc((*Ny)*(*Ny), sizeof(double));
   covDataGrid = (double *) calloc( (*Ny) * Ncell, sizeof(double));
+  random = (double *) calloc(Nrandom, sizeof(double));
   varGrid = (double *) calloc(Ncell * Ncell, sizeof(double));
+
 
   for(Dparam=0; Dparam < *Nparam; ++Dparam) {
       resultHere = &result[Dparam*Nrandom];
@@ -851,20 +852,25 @@ void maternRasterConditional(
 
         // random noise
         for(D=0;D<Nrandom;++D) {
-            resultHere[D] = norm_rand();
+            random[D] = norm_rand();
         }
 
         // multiply, want L %*% Z
+        //B := alpha*op( A )*B,   or   B := alpha*B*op( A )
 
         F77_NAME(dtrmm)(
             "R", "L", "N", "N",
             &Ncell, Nsim, &oneD,
             varGrid, &Ncell,
-            resultHere, &Ncell);
+            random, &Ncell);
+
+        // conditional mean
+// covUY %*% varY^(-1)
 
       } // param loop
 
       free(varY);
+      free(random);
       free(varGrid);
       free(covDataGrid);
   }
