@@ -237,7 +237,7 @@ setMethod("RFsimulate",
 #        if(!is.null(err.model))
 #          theCov = matern(res2, param=model)
         
-        paramForData = model
+        paramForData = fillParam(model)
         if(!is.null(err.model))
           paramForData['nugget']=as.numeric(err.model)
         
@@ -252,37 +252,10 @@ setMethod("RFsimulate",
         
         
         xRaster = raster(x)
-        if(FALSE) {
-          resC = .C("maternRasterConditional", 
-            # raster
-            as.double(xmin(xRaster)), 
-            as.double(xres(xRaster)), 
-            as.integer(ncol(xRaster)), 
-            # raster y
-            as.double(ymax(xRaster)), 
-            as.double(yres(xRaster)), 
-            as.integer(nrow(xRaster)),
-            # data 
-            as.double(y@data[,1]),    
-            as.double(y@coords[,1]), 
-            as.double(y@coords[,2]), 
-            as.integer(length(y)), 
-            # conditional covariance matrix
-            result=as.double(matrix(0, ncell(xRaster), ncell(xRaster))),
-            # parameters
-#          as.double(paramForData['nugget']),
-            as.double(modelFull["range"]),
-            as.double(modelFull["shape"]),
-            as.double(modelFull["variance"]),
-            as.double(modelFull["anisoRatio"]),
-            as.double(modelFull["anisoAngleRadians"]),
-            as.integer(1)
-          )
-        }
         
         resC = .C("maternRaster", #"maternRasterConditional",
           # raster
-          as.double(xmin(xRaster), 
+          as.double(xmin(xRaster)), 
             as.double(xres(xRaster)), 
             as.integer(ncol(xRaster)), 
             # raster y
@@ -297,7 +270,6 @@ setMethod("RFsimulate",
             # conditional covariance matrix
             result=as.double(matrix(0, ncell(xRaster), ncell(xRaster))),
             # parameters
-#          as.double(paramForData['nugget']),
             as.double(modelFull["range"]),
             as.double(modelFull["shape"]),
             as.double(modelFull["variance"]),

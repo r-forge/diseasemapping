@@ -608,7 +608,7 @@ void maternRaster(
     int *AxN,
     double *Aymax, double *Ayres, int *AyN,
     double *result,
-    double  *range, double*shape, double *variance,
+    double  *range, double *shape, double *variance,
     double *anisoRatio, double *anisoAngleRadians,
     int *type) {
 
@@ -745,35 +745,48 @@ void maternRaster(
 void maternRasterConditional(
     double *Axmin, double *Axres, int *AxN,
     double *Aymax, double *Ayres, int *AyN,
-    double *yx, double *yy, int *Ny,
-    double *result, // has y's data in it
+    double *ydata, double *yx, double *yy, int *Ny,
+    double *result,
     int *Nsim, // number of realisations per parameter set
     int *Nparam, // number of parameter sets
     double *nugget,
     double  *range, double*shape, double *variance,
-    double *anisoRatio, double *anisoAngleRadians
+    double *anisoRatio, double *anisoAngleRadians,
+    double *inVarGrid
 ) {
 
-  int oneI=1, fourI=4, Ncell, Nrandom;
+  int oneI=1, fourI=4, Ncell, NcellSq, Nrandom;
   int Dparam, D;
-  double *resultHere, oneD=1.0, minusOneD=-1.0;
-  double *varY, *covDataGrid, *varGrid, *random, halfLogDet;
+  double *resultHere, *ydataHere, oneD=1.0, minusOneD=-1.0;
+  double *varY, *covDataGrid, *varGrid, halfLogDet=0.0;
 
   Ncell = (*AyN) * (*AxN);
+  NcellSq = Ncell * Ncell;
   Nrandom = Ncell * (*Nsim);
   varY = (double *) calloc((*Ny)*(*Ny), sizeof(double));
   covDataGrid = (double *) calloc( (*Ny) * Ncell, sizeof(double));
-  random = (double *) calloc(Nrandom, sizeof(double));
-  varGrid = (double *) calloc(Ncell * Ncell, sizeof(double));
+
+  varGrid = inVarGrid;//(double *) calloc(NcellSq, sizeof(double));
 
 
   for(Dparam=0; Dparam < *Nparam; ++Dparam) {
       resultHere = &result[Dparam*Nrandom];
+      ydataHere = &ydata[Dparam* (*Ny)];
+
+      // random noise
+      for(D=0;D<Nrandom;++D) {
+          resultHere[D] = norm_rand();
+      }
       // var Y
+
       maternAniso(
-          yx, yy, Ny, varY,
-          &range[Dparam], &shape[Dparam], &variance[Dparam],
-          &anisoRatio[Dparam], &anisoAngleRadians[Dparam],
+          yx, yy, Ny,
+          varY,
+          &range[Dparam],
+          &shape[Dparam],
+          &variance[Dparam],
+          &anisoRatio[Dparam],
+          &anisoAngleRadians[Dparam],
           &nugget[Dparam], &fourI,
           &halfLogDet
       );
@@ -786,92 +799,106 @@ void maternRasterConditional(
           &range[Dparam], &shape[Dparam], &variance[Dparam],
           &anisoRatio[Dparam], &anisoAngleRadians[Dparam]);
 
-        /*
-         * varY = L Lt, varY^(-1) = Lt^(-1) L^(-1)
-         * want Linv %*% t(covUV) or t( covUV %*% t(Linv) )
+      /*
+       * varY = L Lt, varY^(-1) = Lt^(-1) L^(-1)
+       * want Linv %*% t(covUV) or t( covUV %*% t(Linv) )
 
-         * side = 'R' uplo='L' transa='T' diag='N'
-         * M = Ngrid N=Ny
-         * alpha = 1.0
-         * A= varY (really Linv)
-         * LDA=Ny
-         * B = covDataGrid
-         * LDB = Ngrid
+       * side = 'R' uplo='L' transa='T' diag='N'
+       * M = Ngrid N=Ny
+       * alpha = 1.0
+       * A= varY (really Linv)
+       * LDA=Ny
+       * B = covDataGrid
+       * LDB = Ngrid
 
     DTRMM  performs one of the matrix-matrix operations
 
         B := alpha*op( A )*B,   or   B := alpha*B*op( A ),
 
-         */
+       */
 
-        F77_NAME(dtrmm)(
-            "R", "L", "T", "N",
-            &Ncell, Ny, &oneD,
-            varY, Ny,
-            covDataGrid, &Ncell);
-        // covDataGrid is now t(Linv %*% covUV),
+      F77_NAME(dtrmm)(
+          "R", "L", "T", "N",
+          &Ncell, Ny, &oneD,
+          varY, Ny,
+          covDataGrid, &Ncell);
 
-        // var U
-        maternRaster(
-            Axmin, Axres, AxN, Aymax, Ayres, AyN,
-            varGrid,
-            &range[Dparam], &shape[Dparam], &variance[Dparam],
-            &anisoRatio[Dparam], &anisoAngleRadians[Dparam],
-            &oneI);
+      // var U
+      maternRaster(
+          Axmin, Axres, AxN,
+          Aymax, Ayres, AyN,
+          varGrid,
+          &range[Dparam], &shape[Dparam], &variance[Dparam],
+          &anisoRatio[Dparam], &anisoAngleRadians[Dparam],
+          &oneI);
 
-        // want varU - covDataGrid %*% t(covDataGrid)
-        // Linv %*% covUV is small by big
-        // covDataGrid is big by small
-        /*
-         * B = A = covDataGrid, opB = T, C=varGrid, beta=1 alpha=-1
-         * transa = 'N' transB= 'T'
-         * M=Ngrid N=Ngrid K=Ny
-         * alpha=-1.0
-         * A=covDataGrid LDA = Ngrid
-         * B=covDataGrid LDB = Ngrid
-         * beta = 1.0
-         * C = varGrid LDC = Ngrid
-         *
-         * DGEMM  performs one of the matrix-matrix operations
+      // want varU - covDataGrid %*% t(covDataGrid)
+      // Linv %*% covUV is small by big
+      // covDataGrid is big by small
+      /*
+       * B = A = covDataGrid, opB = T, C=varGrid, beta=1 alpha=-1
+       * transa = 'N' transB= 'T'
+       * M=Ngrid N=Ngrid K=Ny
+       * alpha=-1.0
+       * A=covDataGrid LDA = Ngrid
+       * B=covDataGrid LDB = Ngrid
+       * beta = 1.0
+       * C = varGrid LDC = Ngrid
+       *
+       * DGEMM  performs one of the matrix-matrix operations
 
     C := alpha*op( A )*op( B ) + beta*C,
 
-         */
+       */
+      F77_NAME(dgemm)(
+          "N", "T",
+          &Ncell, &Ncell, Ny,
+          &minusOneD,
+          covDataGrid, &Ncell,
+          covDataGrid, &Ncell,
+          &oneD,
+          varGrid, &Ncell);
+
+
+
+      // cholesky
+      F77_CALL(dpotrf)("L",
+          &Ncell, varGrid,
+          &Ncell, &D);
+
+
+      // multiply, want L %*% Z
+      //B := alpha*op( A )*B,   or   B := alpha*B*op( A )
+
+      F77_NAME(dtrmm)(
+          "R", "L", "N", "N",
+          &Ncell, Nsim, &oneD,
+          varGrid, &Ncell,
+          resultHere, &Ncell);
+
+
+      // conditional mean
+      // covUY %*% varY^(-1) %*% data
+      // first L %*% data
+      F77_NAME(dtrmm)(
+          "R", "L", "N", "N",
+          Ny, Nsim, &oneD,
+          varY, Ny,
+          ydataHere, Ny);
+
+      // crossprod and add random bit
         F77_NAME(dgemm)(
-
-            "N", "T",
-            &Ncell, &Ncell, Ny,
-            &minusOneD,
-            covDataGrid, &Ncell,
-            covDataGrid, &Ncell,
+            "N", "N",
+            &Ncell, Nsim, Ny,
             &oneD,
-            varGrid, &Ncell);
+            covDataGrid, &Ncell,
+            ydataHere, Ny,
+            &oneD,
+            resultHere, &Ncell);
+  } // param loop
 
-        // cholesky
-        F77_CALL(dpotrf)("L", &Ncell, varGrid, &Ncell, &D);
-
-        // random noise
-        for(D=0;D<Nrandom;++D) {
-            random[D] = norm_rand();
-        }
-
-        // multiply, want L %*% Z
-        //B := alpha*op( A )*B,   or   B := alpha*B*op( A )
-
-        F77_NAME(dtrmm)(
-            "R", "L", "N", "N",
-            &Ncell, Nsim, &oneD,
-            varGrid, &Ncell,
-            random, &Ncell);
-
-        // conditional mean
-// covUY %*% varY^(-1)
-
-      } // param loop
-
-      free(varY);
-      free(random);
-      free(varGrid);
-      free(covDataGrid);
-  }
+  free(varY);
+ // free(varGrid);
+  free(covDataGrid);
+}
 
