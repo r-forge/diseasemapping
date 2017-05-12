@@ -22,9 +22,10 @@ tonerToTrans = function(x, pattern= "(red|green|blue)$",
   if(threshold < maxColorValue)
     xMax = reclassify(xMax, 
       cbind(threshold, maxColorValue, maxColorValue))
+  
   newTrans = ( 
-      (xMaxValue-values(xMax) 
-        ) / xMaxValue)^power
+      (maxColorValue-values(xMax) 
+        ) / maxColorValue)^power
   newTrans[is.na(newTrans)] = 0
   
   col = col2rgb(col)[,1]/255
