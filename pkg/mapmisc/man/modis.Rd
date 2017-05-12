@@ -33,8 +33,8 @@ degreeRaster
 
 
 \references{
-\url{https://modis-land.gsfc.nasa.gov/MODLAND_grid.html},
-\url{http://spatialreference.org/ref/sr-org/6842}
+\url{https://nsidc.org/data/docs/daac/mod10_modis_snow/landgrid.html},
+\url{http://spatialreference.org/ref/sr-org/modis-sinusoidal/}
 }
 
 
