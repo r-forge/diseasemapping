@@ -45,10 +45,9 @@ NNmat.default = function(N, Ny=N, nearest=3, adjustEdges=FALSE) {
     nbMat = nbMat[nbMat[,1]<=c(2,4)[nearest],] 
   }
   
-  
+  Nx = N
   theraster = raster(extent(0,Nx, 0, Ny), nrows = Ny, ncol = Nx)
   
-  Nx = ncol(theraster)
   
   Ncell = ncell(theraster)
   
