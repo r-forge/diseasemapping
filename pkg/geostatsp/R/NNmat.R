@@ -48,9 +48,7 @@ NNmat.default = function(N, Ny=N, nearest=3, adjustEdges=FALSE) {
   Nx = N
   theraster = raster(extent(0,Nx, 0, Ny), nrows = Ny, ncol = Nx)
   
-  
   Ncell = ncell(theraster)
-  
   cellSeq = 1:Ncell
   
   xMat = colFromCell(theraster, cellSeq)
@@ -65,7 +63,7 @@ NNmat.default = function(N, Ny=N, nearest=3, adjustEdges=FALSE) {
   
   nbIndex = xNb + Nx*(yNb-1)
   nbCol = matrix(1:ncol(xNb), nrow(xNb), ncol(xNb), byrow=TRUE)
-  notNa = !(is.na(xNb) | is.na(yNb))
+  notNa = sort(which(!(is.na(xNb) | is.na(yNb))))
   
   result = sparseMatrix(
     i=nbIndex[notNa],
