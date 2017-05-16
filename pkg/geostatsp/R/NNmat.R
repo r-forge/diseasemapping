@@ -1,29 +1,29 @@
 nbMat = rbind(
-    c(1,0,0),# self
-    c(2,0,1), #up
-    c(2,0,-1), #down
-    c(2,1,0), #right,
-    c(2,-1,0), #left
-    c(3,-1,-1),
-    c(3,-1,1),
-    c(3,1,-1),
-    c(3,1,1),
-    c(4,0,2), #up
-    c(4,0,-2), #down
-    c(4,2,0), #right,
-    c(4,-2,0), #left
-    c(5,-1,-2),
-    c(5,-1,2),
-    c(5,1,-2),
-    c(5,1,2),
-    c(5,-2,-1),
-    c(5,-2,1),
-    c(5,2,-1),
-    c(5,2,1),
-    c(6,0,3), #up
-    c(6,0,-3), #down
-    c(6,3,0), #right,
-    c(6,-3,0) #left
+  c(1,0,0),# self
+  c(2,0,1), #up
+  c(2,0,-1), #down
+  c(2,1,0), #right,
+  c(2,-1,0), #left
+  c(3,-1,-1),
+  c(3,-1,1),
+  c(3,1,-1),
+  c(3,1,1),
+  c(4,0,2), #up
+  c(4,0,-2), #down
+  c(4,2,0), #right,
+  c(4,-2,0), #left
+  c(5,-1,-2),
+  c(5,-1,2),
+  c(5,1,-2),
+  c(5,1,2),
+  c(5,-2,-1),
+  c(5,-2,1),
+  c(5,2,-1),
+  c(5,2,1),
+  c(6,0,3), #up
+  c(6,0,-3), #down
+  c(6,3,0), #right,
+  c(6,-3,0) #left
 )
 
 
@@ -45,58 +45,59 @@ NNmat.default = function(N, Ny=N, nearest=3, adjustEdges=FALSE) {
     nbMat = nbMat[nbMat[,1]<=c(2,4)[nearest],] 
   }
   
-  Nx = N
   
-  Ncell = Nx * Ny
+  theraster = raster(extent(0,Nx, 0, Ny), nrows = Ny, ncol = Nx)
   
-  xMat = values(raster(matrix(1:Nx, byrow=TRUE, ncol=Nx, nrow=Ny)))
-  yMat = values(raster(matrix(1:Ny, byrow=FALSE, ncol=Nx, nrow=Ny)))
+  Nx = ncol(theraster)
   
+  Ncell = ncell(theraster)
+  
+  cellSeq = 1:Ncell
+  
+  xMat = colFromCell(theraster, cellSeq)
+  yMat = rowFromCell(theraster, cellSeq)
   
   xNb = outer(nbMat[,2],xMat, FUN='+')   
   yNb = outer(nbMat[,3],yMat, FUN='+')
   nbCode = matrix(nbMat[,1], nrow(xNb), ncol(xNb))
   
-  xNb[xNb<1] = NA
-  xNb[xNb>Nx] = NA
-  yNb[yNb<1] = NA
-  yNb[yNb>Ny] = NA
+  xNb[union(which(xNb<1),which(xNb>Nx))] = NA
+  yNb[union(which(yNb<1),which(yNb>Ny))] = NA
   
   nbIndex = xNb + Nx*(yNb-1)
   nbCol = matrix(1:ncol(xNb), nrow(xNb), ncol(xNb), byrow=TRUE)
   notNa = !(is.na(xNb) | is.na(yNb))
   
   result = sparseMatrix(
-      i=nbIndex[notNa],
-      j=nbCol[notNa], 
-      x=nbCode[notNa]
+    i=nbIndex[notNa],
+    j=nbCol[notNa], 
+    x=nbCode[notNa]
   )
-	
-	theraster = raster(extent(0,Nx, 0, Ny), nrows = Ny, ncol = Nx)
-	
-	# find id's of cells on the border (for edge correction)
-	rasterCells = raster(theraster)
-	values(rasterCells) = 1:ncell(theraster)
-	
-	innerCells = crop(rasterCells, 
-			extent(theraster, 
-					nearest+1, nrow(theraster)-nearest, 
-					nearest+1, ncol(theraster)-nearest))
-	
-	innerCells = sort(values(innerCells))
-	outerCells = sort(setdiff(values(rasterCells), innerCells))
-	
-	if(adjustEdges) {
-		# set entries requiring edge correction to missing
-		result[outerCells, outerCells] = NA
-	}
-	
+  
+  
+  # find id's of cells on the border (for edge correction)
+  rasterCells = raster(theraster)
+  values(rasterCells) = 1:ncell(theraster)
+  
+  innerCells = crop(rasterCells, 
+    extent(theraster, 
+      nearest+1, nrow(theraster)-nearest, 
+      nearest+1, ncol(theraster)-nearest))
+  
+  innerCells = sort(values(innerCells))
+  outerCells = sort(setdiff(values(rasterCells), innerCells))
+  
+  if(adjustEdges) {
+    # set entries requiring edge correction to missing
+    result[outerCells, outerCells] = NA
+  }
+  
   result=forceSymmetric(result)
   
   attributes(result)$Nx = Nx
   attributes(result)$Ny = Ny
-	attributes(result)$adjustEdges = adjustEdges
-	attributes(result)$nearest = nearest
+  attributes(result)$adjustEdges = adjustEdges
+  attributes(result)$nearest = nearest
   attributes(result)$raster = theraster
   attributes(result)$cells = list(inner=innerCells, outer=outerCells)
   
