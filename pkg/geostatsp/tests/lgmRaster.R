@@ -21,29 +21,56 @@ values(myY)=rnorm(prod(dim(myLambda)),values(myLambda), sd=10)
 names(myCov) = 'x'
 names(myY) = gsub("^layer\\.","sim", names(mySim))
 
-if(Sys.info()['user'] =='patrick' & FALSE) {
-  
-  Sbreaks = c(-50,-20, -5,  -2, -0.5,0)
-  
+
+
+# simulated data
+
+
 # grid search	
-  myResR = lgm(formula = sim ~ x, 
-    data=raster::stack(myY, myCov), 
-    oneminusar = seq(0.02, 0.25,len=24),
-    nugget = seq(0, 2,len=40), shape=2, mc.cores=2)		
-  
-  myCol = mapmisc::colourScale(
-    breaks = Sbreaks,
-    style='fixed',
-    col=terrain.colors
-  )
-  
-  image(	myResR$array[,-1,'propNugget',1], 
-    myResR$array[,1,'oneminusar',], 
-    myResR$array[,-1,'logLreml',],
-    col=myCol$col, breaks=myCol$breaks+max(myResR$array[,,'logLreml',]))
-  mapmisc::legendBreaks("topright",  myCol)
-  points(myResR$param['propNugget'], myResR$param['oneminusar'])
-  
+
+Sbreaks = c(-50,-20, -5,  -2, -0.5,0)
+
+myResR = lgm(formula = sim ~ x, 
+  data=raster::stack(myY, myCov), 
+  oneminusar = seq(0.02, 0.25,len=24),
+  nugget = seq(0, 2,len=40), shape=2, mc.cores=2)		
+
+myCol = mapmisc::colourScale(
+  breaks = Sbreaks,
+  style='fixed',
+  col=terrain.colors
+)
+
+image(	myResR$array[,-1,'propNugget',1], 
+  myResR$array[,1,'oneminusar',], 
+  myResR$array[,-1,'logLreml',],
+  col=myCol$col, breaks=myCol$breaks+max(myResR$array[,,'logLreml',]))
+mapmisc::legendBreaks("topright",  myCol)
+points(myResR$param['propNugget'], myResR$param['oneminusar'])
+
+
+
+# swiss rain
+
+swissRainR2 = brick(swissRainR[['alt']], 
+  sqrt(swissRainR[['prec1']]),
+  anotherx)
+
+
+swissResR =  lgm(
+  formula=layer ~ alt+ myvar, 
+  data=swissRainR2, shape=2,
+  oneminusar = seq(0.01, 0.1, len=12),
+  nugget = seq(0, 1, len=20),
+  adjustEdges=TRUE
+)
+
+image(	swissResR$array[,,'propNugget',1], 
+  swissResR$array[,1,'oneminusar',], 
+  swissResR$array[,,'logLreml',])
+
+
+if(Sys.info()['user'] =='patrick' & FALSE) {
 # boxcox
   yBC = sqrt(myY + 1 - minValue(myY))
   names(yBC) = names(myY)
@@ -79,6 +106,7 @@ if(Sys.info()['user'] =='patrick' & FALSE) {
   points(myResBC$param['propNugget'], myResBC$param['oneminusar'])
   if(!interactive()) dev.off()
   
+# optimizing, doesn't work
   
 # optimize propNugget
   myResRopt = lgm(
@@ -86,74 +114,43 @@ if(Sys.info()['user'] =='patrick' & FALSE) {
     data=raster::stack(myY, myCov), 
     oneminusar = seq(0.05, 0.2,len=12),
     shape=2)		
+
   if(!interactive()) pdf("doesntwork.pdf")
   plot(myResRopt$array[,,'oneminusar',], myResRopt$array[,,'propNugget',])
+  
   if(!interactive()) dev.off()	
-}
+
+swissResRoptAr =  lgm(
+  formula=layer ~ alt+ myvar, 
+  data=swissRainR2, shape=2,
+  oneminusar = seq(0.1, 0.5, len=6),
+  adjustEdges=FALSE
+)
+
+swissResRopt =  lgm(
+  formula=layer ~ alt+ myvar, 
+  data=swissRainR2, shape=2,
+  adjustEdges=FALSE
+)
 
 
+swissResRopt$summary
 
-
-
-
-data("swissRainR")
-
-anotherx = raster(swissRainR[['alt']])
-values(anotherx) = seq(0,1,len=ncell(anotherx))
-names(anotherx) = "myvar"
-
-swissRainR2 = brick(swissRainR[['alt']], 
-  sqrt(swissRainR[['prec1']]),
-  anotherx)
-
-if(Sys.info()['user'] =='patrick' & FALSE) {
-  
-  swissResR =  lgm(
-    formula=layer ~ alt+ myvar, 
-    data=swissRainR2, shape=2,
-    oneminusar = seq(0.01, 0.1, len=12),
-    nugget = seq(0, 1, len=20),
-    adjustEdges=TRUE
-  )
-  
-  image(	swissResR$array[,,'propNugget',1], 
-    swissResR$array[,1,'oneminusar',], 
-    swissResR$array[,,'logLreml',])
-  
-  
-  swissResRoptAr =  lgm(
-    formula=layer ~ alt+ myvar, 
-    data=swissRainR2, shape=2,
-    oneminusar = seq(0.1, 0.5, len=6),
-    adjustEdges=FALSE
-  )
-}
-
-if(FALSE){
-  swissResRopt =  lgm(
-    formula=layer ~ alt+ myvar, 
-    data=swissRainR2, shape=2,
-    adjustEdges=FALSE
-  )
-  
-  
-  swissResRopt$summary
-  
 # with edge correction.  
 # time consuming, only run this if Patrick is checking
-  
-  
-  
+
+
+
 # optimize only nugget
-  swissResROptNug =  lgm(
-    formula=layer ~ alt+ myvar, 
-    data=swissRainR2, shape=2,
-    oneminusar=seq(0.05, 0.1, len=12),
-    adjustEdges=FALSE,fixNugget=TRUE,
-    mc.cores=c(1,2)[1+(.Platform$OS.type=='unix')]
-  )
-  
-  plot(swissResROptNug$profL$range, type='l')
+swissResROptNug =  lgm(
+  formula=layer ~ alt+ myvar, 
+  data=swissRainR2, shape=2,
+  oneminusar=seq(0.05, 0.1, len=12),
+  adjustEdges=FALSE,fixNugget=TRUE,
+  mc.cores=c(1,2)[1+(.Platform$OS.type=='unix')]
+)
+
+plot(swissResROptNug$profL$range, type='l')
 }
 
 
