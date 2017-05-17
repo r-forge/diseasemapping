@@ -71,12 +71,15 @@ swissResR =  lgm(
   adjustEdges=TRUE
 )
 
-image(	swissResR$array[,,'propNugget',1], 
-  swissResR$array[,1,'oneminusar',], 
-  swissResR$array[,,'logLreml',])
 
 
 if(Sys.info()['user'] =='patrick' & FALSE) {
+  
+  image(	swissResR$array[,,'propNugget',1], 
+    swissResR$array[,1,'oneminusar',], 
+    swissResR$array[,,'logLreml',])
+  
+  
 # boxcox
   yBC = sqrt(myY + 1 - minValue(myY))
   names(yBC) = names(myY)
