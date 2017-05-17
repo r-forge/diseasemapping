@@ -107,6 +107,13 @@ A list with two components named  \code{inla}, \code{raster}, and \code{paramete
 \url{http://r-inla.org}
 }
 \examples{
+# use the 'safe' version of INLA on linux systems
+if(Sys.info()['sysname'] =='Linux' &
+  requireNamespace("INLA")) {   
+  INLA::inla.setOption(inla.call = system.file(paste("bin/linux/",          
+          ifelse(.Machine$sizeof.pointer == 4, "32", "64"),
+          'bit/inla.static', sep=''), package="INLA")) }
+
 # geostatistical model for the swiss rainfall data
 require("geostatsp")
 data("swissRain")
