@@ -51,7 +51,13 @@ points(myResR$param['propNugget'], myResR$param['oneminusar'])
 
 
 # swiss rain
+
 data('swissRainR')
+
+anotherx = raster(swissRainR[['alt']])
+values(anotherx) = seq(0,1,len=ncell(anotherx))
+names(anotherx) = "myvar"
+
 swissRainR2 = brick(swissRainR[['alt']], 
   sqrt(swissRainR[['prec1']]),
   anotherx)
