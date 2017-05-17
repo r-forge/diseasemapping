@@ -21,7 +21,7 @@ values(myY)=rnorm(prod(dim(myLambda)),values(myLambda), sd=10)
 names(myCov) = 'x'
 names(myY) = gsub("^layer\\.","sim", names(mySim))
 
-if(Sys.info()['user'] =='patrick' & FALSE) {
+if(Sys.info()['user'] =='patrick') {
 
 	Sbreaks = c(-50,-20, -5,  -2, -0.5,0)
 	
@@ -45,7 +45,7 @@ if(Sys.info()['user'] =='patrick' & FALSE) {
 	points(myResR$param['propNugget'], myResR$param['oneminusar'])
 
 # boxcox
-	yBC = sqrt(myY + 50)
+	yBC = sqrt(myY + 1 - minValue(myY))
 	names(yBC) = names(myY)
 	myResBC = lgm(
 			formula = sim ~ x, 

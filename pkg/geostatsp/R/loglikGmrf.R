@@ -314,23 +314,23 @@ loglikGmrf = function(
         dimnames = c(list(NULL), dimnames(seBetaHat))
       )
     }
-    dimnames(seBetaHat)[[1]] = dimnames(betaHat)[[3]]
+#    dimnames(seBetaHat)[[1]] = dimnames(betaHat)[[3]]
     
     
 # permute seBetaHat to look like betaHat
 # and add a leading dimension for dataset
-    seBetaHat = aperm(seBetaHat, c(2,1,3,4))
+    seBetaHat = aperm(seBetaHat, c(1,3,2,4,5))
     seBetaHat = array(
       seBetaHat, dim(betaHat),
       dimnames = c(
         dimnames(betaHat)[1], 
-        dimnames(seBetaHat)[-3])
+        dimnames(seBetaHat)[c(2,3,5)])
     )
     
     seBetaHatMl = seBetaHat * 
-      ml[,,'profiledVarianceHatMl',,drop=FALSE]  
+      ml[,,rep('profiledVarianceHatMl',dim(seBetaHat)[3]),,drop=FALSE]  
     seBetaHatReml = seBetaHat * 
-      ml[,,'profiledVarianceHatReml',,drop=FALSE]  
+      ml[,,rep('profiledVarianceHatReml',dim(seBetaHat)[3]),,drop=FALSE]  
     
     
     dimnames(seBetaHatMl)[[3]] = paste(dimnames(seBetaHatMl)[[3]],'SeMl',sep='')
@@ -368,14 +368,14 @@ loglikGmrf = function(
       theMin, 
       c(dim(ml)[1],1,2,1)
     )
-    bob = ml[,,c('m2logLml','m2logLreml'),,drop=FALSE] 
+    
     deviance = 
       ml[,,c('m2logLml','m2logLreml'),,drop=FALSE] -
       theMin[
         ,
         rep(1, dim(ml)[2]),
         ,
-        rep(1, dim(ml)[4])
+        rep(1, dim(ml)[4]), drop=FALSE
       ]
     dimnames(deviance)[[3]] = paste(
       gsub(
@@ -451,7 +451,7 @@ loglikGmrf = function(
         resEnv)
       assign('allPar', 
         c(get('allPar', resEnv), 
-          list(attributes(Q)$param)),
+          list(attributes(Q)$info)),
         resEnv
       )
       
