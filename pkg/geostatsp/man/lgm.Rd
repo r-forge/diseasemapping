@@ -201,19 +201,6 @@ swissRes$summary
 plot(swissRes$predict[["predict"]], main="predicted rain") 
 plot(swissBorder, add=TRUE)
 
-data("swissRainR")
-swissRainR2 = brick(swissRainR[['alt']], 
-	 sqrt(swissRainR[['prec1']]))
-
-if(interactive() | Sys.info()['user'] =='patrick') {	 
-swissResR =  lgm( formula=layer ~ alt, 
-	data=swissRainR2, shape=1,
-	oneminusar=seq(0.06, 0.09, len=2),
-	nugget =  seq(0,0.0001,len=2)
-	)
-
-swissResR$summary[c('oneminusar','range','propNugget','(Intercept).betaHat', 'alt.betaHat'),]
-}
 
 
 \dontrun{

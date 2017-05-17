@@ -44,52 +44,56 @@ NNmat.default = function(N, Ny=N, nearest=3, adjustEdges=FALSE) {
   if(nearest<3){
     nbMat = nbMat[nbMat[,1]<=c(2,4)[nearest],] 
   }
-  
+
   Nx = N
   theraster = raster(extent(0,Nx, 0, Ny), nrows = Ny, ncol = Nx)
-  
   Ncell = ncell(theraster)
-  cellSeq = 1:Ncell
+  cellSeq = values(theraster) = 1:Ncell
+
+  # find id's of cells on the border (for edge correction)  
+  innerCells = crop(theraster, 
+    extend(extent(theraster), -nearest))
+  
+  innerCells = sort(values(innerCells))
+  outerCells = sort(setdiff(values(theraster), innerCells))
+  
   
   xMat = colFromCell(theraster, cellSeq)
   yMat = rowFromCell(theraster, cellSeq)
-  
+
   xNb = outer(nbMat[,2],xMat, FUN='+')   
   yNb = outer(nbMat[,3],yMat, FUN='+')
-  nbCode = matrix(nbMat[,1], nrow(xNb), ncol(xNb))
+
+  # which neighbour pairs are outside of the grid
+  nbOutsideRegion = which(Matrix(xNb < 1) | Matrix(xNb > Nx) | 
+    Matrix(yNb < 1) | Matrix(yNb> Ny))
+
+  xNb = xNb[-nbOutsideRegion]
+  yNb = yNb[-nbOutsideRegion]
   
-  xNb[union(which(xNb<1),which(xNb>Nx))] = NA
-  yNb[union(which(yNb<1),which(yNb>Ny))] = NA
-  
-  nbIndex = xNb + Nx*(yNb-1)
-  nbCol = matrix(1:ncol(xNb), nrow(xNb), ncol(xNb), byrow=TRUE)
-  notNa = sort(which(!(is.na(xNb) | is.na(yNb))))
-  
-  result = sparseMatrix(
-    i=nbIndex[notNa],
-    j=nbCol[notNa], 
-    x=nbCode[notNa]
-  )
-  
-  
-  # find id's of cells on the border (for edge correction)
-  rasterCells = raster(theraster)
-  values(rasterCells) = 1:ncell(theraster)
-  
-  innerCells = crop(rasterCells, 
-    extent(theraster, 
-      nearest+1, nrow(theraster)-nearest, 
-      nearest+1, ncol(theraster)-nearest))
-  
-  innerCells = sort(values(innerCells))
-  outerCells = sort(setdiff(values(rasterCells), innerCells))
+  nbPairs = cbind(
+  i = xNb + Nx*(yNb-1),
+  j = matrix(cellSeq, nrow(nbMat), Ncell, byrow=TRUE)[-nbOutsideRegion],
+  x = matrix(nbMat[,1], nrow(nbMat), Ncell)[-nbOutsideRegion])
   
   if(adjustEdges) {
     # set entries requiring edge correction to missing
-    result[outerCells, outerCells] = NA
+    # allocating the memory here instead of in maternGmrfPrec is faster
+    outerCellsPairs = expand.grid(i=outerCells, j=outerCells, x=NA)
+    nbPairs = rbind(
+      nbPairs, outerCellsPairs
+      )
   }
-  
-  result=forceSymmetric(result)
+
+  nbPairs = as.list(as.data.frame(nbPairs))
+  nbPairs$dims = c(Ncell, Ncell)
+  nbPairs$symmetric = TRUE
+  nbPairs$dimnames = list(
+    cellSeq, cellSeq
+    )
+  nbPairs$check = FALSE
+    
+  result = do.call(sparseMatrix, nbPairs)
   
   attributes(result)$Nx = Nx
   attributes(result)$Ny = Ny
