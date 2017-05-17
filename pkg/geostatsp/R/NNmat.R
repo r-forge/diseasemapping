@@ -52,7 +52,8 @@ NNmat.default = function(N, Ny=N, nearest=3, adjustEdges=FALSE) {
 
   # find id's of cells on the border (for edge correction)  
   innerCells = crop(theraster, 
-    extend(extent(theraster), -nearest))
+    extend(extent(theraster), as.integer(-nearest))
+  )
   
   innerCells = sort(values(innerCells))
   outerCells = sort(setdiff(values(theraster), innerCells))
