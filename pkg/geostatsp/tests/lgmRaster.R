@@ -51,7 +51,7 @@ points(myResR$param['propNugget'], myResR$param['oneminusar'])
 
 
 # swiss rain
-
+data('swissRainR')
 swissRainR2 = brick(swissRainR[['alt']], 
   sqrt(swissRainR[['prec1']]),
   anotherx)
