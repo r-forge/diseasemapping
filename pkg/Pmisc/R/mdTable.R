@@ -31,11 +31,11 @@ mdTable = function(x, ..., mdToTex = 'auto') {
   
   dots = c(list(x=x), list(...))
   theLabel = c(dots$label, 
-  	    paste("tbl:", 
-  	       c(knitr::opts_current$get()$label, 'labelMissing')[1],
-  	       sep='')
+    paste("tbl:", 
+      c(knitr::opts_current$get()$label, 'labelMissing')[1],
+      sep='')
   )[1]
-	  
+  
   missingNames = which(!nchar(names(dots)))
   
   if(identical(mdToTex, TRUE)) {
@@ -53,49 +53,49 @@ mdTable = function(x, ..., mdToTex = 'auto') {
     if(!length(dots$title)) dots$title = ''
     
     res = utils::capture.output(invisible(
-              do.call(Hmisc::latex, dots)))
+        do.call(Hmisc::latex, dots)))
     res = res[grep("^%", res, invert=TRUE)]
     
-  } else {
+  } else { # not mdToTex
     # produce HTML table with htmlTable::htmlTable or knitr::kable
-
+    
     # some options will be ignored if knitr::kable is used
     getRidForKable = c(
-        'caption.loc', 'caption.lot', 'pos.caption', 
-        'label', 'row.label', 'title', 'fig.pos',
-        'table.env', 'center',
-        'booktabs','ctable')
+      'caption.loc', 'caption.lot', 'pos.caption', 
+      'label', 'row.label', 'title', 'fig.pos',
+      'table.env', 'center',
+      'booktabs','ctable', 'where')
     
-	    
-	    # use kable if there aren't rgroup and cgroup commands
-	    if(all(
-	        names(dots) %in% 
-	          c(names(formals(knitr::kable)), getRidForKable) 
+    
+    # use kable if there aren't rgroup and cgroup commands
+    if(all(
+      names(dots) %in% 
+        c(names(formals(knitr::kable)), getRidForKable) 
     ) ) {
-     	  dots$format = 'markdown'
-	        res = as.character(do.call(
-	              knitr::kable, 
-	              dots[setdiff(names(dots), getRidForKable)]
-	          ))
-	        res = c(res, '', paste(
-	              ": ", dots$caption, 
-	              " {#", theLabel, "}\n\n", sep='')) 
-	    } else {
-	        # use htmlTable
+      dots$format = 'markdown'
+      res = as.character(do.call(
+          knitr::kable, 
+          dots[setdiff(names(dots), getRidForKable)]
+        ))
+      res = c(res, '', paste(
+          ": ", dots$caption, 
+          " {#", theLabel, "}\n\n", sep='')) 
+    } else {
+      # use htmlTable
       newNames = names(formals(htmlTable::htmlTable))[missingNames]
       names(dots)[missingNames] = newNames
       
-	      formatArgs = intersect(
-		        names(formals(format.default)),
-		        names(dots))
-	      if(length(formatArgs)>1) { # more than x
-	 	        dots$x = do.call(format.default, dots[formatArgs])
-	 	        dots= dots[c('x', setdiff(names(dots), formatArgs))]
-	      }
+      formatArgs = intersect(
+        names(formals(format.default)),
+        names(dots))
+      if(length(formatArgs)>1) { # more than x
+        dots$x = do.call(format.default, dots[formatArgs])
+        dots= dots[c('x', setdiff(names(dots), formatArgs))]
+      }
       
-	          dots$label = theLabel
-	          dots$file = ''
-          
+      dots$label = theLabel
+      dots$file = ''
+      
       # remove the caption, it will be added later
       theCaption = dots$caption
       dots = dots[names(dots) != 'caption']
@@ -103,13 +103,13 @@ mdTable = function(x, ..., mdToTex = 'auto') {
       res = do.call(htmlTable::htmlTable, dots)
       res = unlist(strsplit(res, '\n'))
       if(identical(dots$pos.caption, 'top')) {
-    	   capPos = min(grep("<table", res))+1
+        capPos = min(grep("<table", res))+1
       } else {
-    	   capPos = max(grep("[<][/]table", res))
+        capPos = max(grep("[<][/]table", res))
       }
-    	 res[capPos] = paste("<caption>", theCaption, "</caption>\n",
-    	   res[capPos])
-	    } # end use htmltable  
+      res[capPos] = paste("<caption>", theCaption, "</caption>\n",
+        res[capPos])
+    } # end use htmltable  
   } # end not latex
   res = paste(res, '\n', sep='')
   knitr::asis_output(res)

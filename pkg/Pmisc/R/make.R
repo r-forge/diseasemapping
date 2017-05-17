@@ -106,8 +106,7 @@ Makefile = function(x, suffix = NULL,
       c(before, makefileTemplate), collapse='\n')
   
   
-  '.PRECIOUS: %.md %.tex
-      
+  '   
       %.md: %.Rmd
       $(REXE) -e "knitr::knit(\'$<\', encoding=\'UTF-8\')" $(Rargs)
       
