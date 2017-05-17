@@ -13,6 +13,8 @@ DOCXTEMPLATE = $(REXE) --slave -e "cat(system.file('src','template.docx',package
 
 ODTTEMPLATE = $(REXE) --slave -e "cat(system.file('src','template.odt',package='Pmisc'))"
 
+.PRECIOUS: %.tex
+
 #
 # temporary files to remove
 #
