@@ -56,15 +56,15 @@ markdownHeader = function(
     maxcitenames=2,doi='false',
     isbn='false',	giveninits='true',
     uniquelist='false'),
+  numbersections=TRUE,
   beamer=FALSE,
   mathCommands=FALSE,
   subcaptionCommands = !beamer,
   ...
 ) {
-
-  startAndEnd='---'  
   
-  extraHeaderIncludes = c()
+  startAndEnd='---'  
+  extraHeaderIncludes = '\\renewbibmacro{in:}{}'
   if(mathCommands)
     extraHeaderIncludes = c(Pmisc::mathCommands, extraHeaderIncludes)
   if(subcaptionCommands)
@@ -85,15 +85,18 @@ markdownHeader = function(
     'biblio-style'=bibliostyle,
     biblatexoptions = biblatexoptions,
     subfigureChildTemplate = '"$$i$$) $$t$$"',
-subfigureTemplate= '"*$$figureTitle$$ $$i$$*$$titleDelim$$ $$t$$"',
-tableTemplate= '"*$$tableTitle$$ $$i$$*$$titleDelim$$ $$t$$"',
-tblPrefixTemplate= "$$i$$",
-figPrefixTemplate= "$$i$$",
-eqnPrefixTemplate= "$$i$$",
-secPrefixTemplate= "$$i$$",
-lstPrefixTemplate= "$$i$$",
-graphics='true',
-subfigGrid= 'true',
+    subfigureTemplate= '"*$$figureTitle$$ $$i$$*$$titleDelim$$ $$t$$"',
+    tableTemplate= '"*$$tableTitle$$ $$i$$*$$titleDelim$$ $$t$$"',
+    tblPrefixTemplate= "$$i$$",
+    figPrefixTemplate= "$$i$$",
+    eqnPrefixTemplate= "$$i$$",
+    secPrefixTemplate= "$$i$$",
+    lstPrefixTemplate= "$$i$$",
+    numbersections=numbersections,
+    numberSections=numbersections,
+#    chapters=numbersections,
+    graphics='true',
+    subfigGrid= 'true',
     ...)	
   
   dots = dots[

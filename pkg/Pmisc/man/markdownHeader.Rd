@@ -18,6 +18,7 @@ markdownHeader(
 		isbn='false',	
 		giveninits='true',
 		uniquelist='false'),
+  numbersections=TRUE,
 	beamer=FALSE,
 	mathCommands=FALSE,
 	subcaptionCommands = !beamer,
@@ -35,6 +36,7 @@ subcaptionCommands
 \item{bibliotitle}{title for references section}
 \item{bibliostyle}{style of bibliography}
 \item{biblatexoptions}{options for citations, passed to the biblatex package}
+\item{numbersections}{Put numbers in section headings.}
 \item{beamer}{Add commands intended for producing slides with LaTeX beamer.}
 \item{mathCommands}{Defines latex commands for var, E, tp, dens, and a few others.}
 \item{subcaptionCommands}{Enables use of the subcaption package with knitr.}

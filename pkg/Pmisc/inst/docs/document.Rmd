@@ -4,8 +4,8 @@ if(any(commandArgs()=='mdToTex')) {
 # if you'll be converting md to tex, can use the following
   knitr::knit_hooks$set(plot=knitr::hook_plot_tex)  
   knitr::opts_chunk$set(
-   out.width='0.45\\textwidth', 
-			dev='pdf', fig.align='center')
+    out.width='0.45\\textwidth', 
+    dev='pdf', fig.align='center')
   mdToTex = TRUE
 } else {
   knitr::knit_hooks$set(plot=Pmisc::hook_plot_mdsubfig)
@@ -14,14 +14,14 @@ if(any(commandArgs()=='mdToTex')) {
 }
 
 knitr::knit_hooks$set(
-	margins = Pmisc::hook_plot_margins
+  margins = Pmisc::hook_plot_margins
 )
 
 knitr::opts_chunk$set(
   echo=FALSE, prompt=TRUE, comment=NA,
-		margins=1, fig.cap=' ', fig.pos='ht',
-		fig.width=2.75, fig.height=2,  dpi=250, 
-		tidy=TRUE, tidy.opts=list(indent=2, width.cutoff=55)
+  margins=1, fig.cap=' ', fig.pos='ht',
+  fig.width=2.75, fig.height=2,  dpi=250, 
+  tidy=TRUE, tidy.opts=list(indent=2, width.cutoff=55)
 )
 
 
@@ -29,17 +29,17 @@ options(width=80)
 
 bibFile = 'myDocBib.bib'
 cat('
-@article{lindgren2011explicit,
-  title={An explicit link between {G}aussian fields and {G}aussian {M}arkov random fields the stochastic partial differential equation approach},
-  author={Lindgren, Finn and Rue, Haavard and Lindstrom, Johan},
-  journal={Journal of the Royal Statistical Society B},
-  volume={73},
-  number={4},
-  pages={423-498},
-  year={2011},
-  publisher={Wiley}
-}
-', file=bibFile, encoding='UTF8')
+    @article{lindgren2011explicit,
+    title={An explicit link between {G}aussian fields and {G}aussian {M}arkov random fields the stochastic partial differential equation approach},
+    author={Lindgren, Finn and Rue, Haavard and Lindstrom, Johan},
+    journal={Journal of the Royal Statistical Society B},
+    volume={73},
+    number={4},
+    pages={423-498},
+    year={2011},
+    publisher={Wiley}
+    }
+    ', file=bibFile, encoding='UTF8')
 
 ```
 
@@ -47,22 +47,23 @@ cat('
 	
 ```{r theHeader, echo=FALSE}
 Pmisc::markdownHeader(
-	title="Example of a simple R markdown document with subfigures", 		
-	author='Patrick Brown',
-	bibliography = bibFile,
-	geometry='margin=1in',
-	csl = system.file('src','apa-no-doi-no-issue.csl', package='Pmisc'),
-	css = system.file('src','article.css', package='Pmisc')
+  title="Example of a simple R markdown document with subfigures", 		
+  author='Patrick Brown',
+  bibliography = bibFile,
+  geometry='margin=1in',
+  csl = system.file('src','apa-no-doi-no-issue.csl', package='Pmisc'),
+  css = system.file('src','article.css', package='Pmisc')
 )
 ```
 
 
-# Introduction
+# Introduction {#sec:intro}
 
 
 @lindgren2011explicit is a very good paper, but Figure [@fig:aplot] is dull.
 There are some formulas in this document, from ([@eq:myeqn]) we can see
-nothing useful.
+nothing useful.  If you are unsure of which Section we are in, be aware that
+this is Section [@sec:intro].
 
 
 $$

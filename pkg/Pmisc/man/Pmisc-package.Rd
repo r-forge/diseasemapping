@@ -22,6 +22,8 @@ Patrick Brown
 \examples{
 library("Pmisc")
 
+list.files(system.file("docs", package="Pmisc"), full.names=TRUE)
+
 # copy the document.Rmd file to the temporary folder
 (mydir = tempdir())
 file.copy(
