@@ -80,7 +80,7 @@ clean:
 # libreoffice document
 #
 %.odt: %.md
-	$(PANDOC) --smart --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$($(ODTTEMPLATE)) --output=$@ $<
+	$(PANDOC) --smart --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --reference-odt=$$($(ODTTEMPLATE)) --output=$@ $<
 
 #
 # MS Word document

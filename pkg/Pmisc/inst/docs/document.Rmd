@@ -50,9 +50,7 @@ Pmisc::markdownHeader(
   title="Example of a simple R markdown document with subfigures", 		
   author='Patrick Brown',
   bibliography = bibFile,
-  geometry='margin=1in',
-  csl = system.file('src','apa-no-doi-no-issue.csl', package='Pmisc'),
-  css = system.file('src','article.css', package='Pmisc')
+  geometry='margin=1in'
 )
 ```
 
@@ -73,6 +71,7 @@ f(x) = &x + \int_0^\infty \exp(-\theta u^2) du\\
 \end{aligned}
 $$ {#eq:myeqn}
 
+Now some plots.
 
 ```{r aplot, fig.ncol=2, fig.cap='Uninteresting plots', fig.subcap=c('stuff','qq','eeee','www')}
 plot(1:10)

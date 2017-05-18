@@ -60,6 +60,12 @@ markdownHeader = function(
   beamer=FALSE,
   mathCommands=FALSE,
   subcaptionCommands = !beamer,
+  crossrefYaml = system.file(
+    'src','crossref.yaml', package='Pmisc'),
+  csl = system.file(
+    'src','apa-no-doi-no-issue.csl', package='Pmisc'),
+  css = system.file(
+    'src','article.css', package='Pmisc'),
   ...
 ) {
   
@@ -84,19 +90,12 @@ markdownHeader = function(
     'biblio-title'=bibliotitle,
     'biblio-style'=bibliostyle,
     biblatexoptions = biblatexoptions,
-    subfigureChildTemplate = '"$$i$$) $$t$$"',
-    subfigureTemplate= '"*$$figureTitle$$ $$i$$*$$titleDelim$$ $$t$$"',
-    tableTemplate= '"*$$tableTitle$$ $$i$$*$$titleDelim$$ $$t$$"',
-    tblPrefixTemplate= "$$i$$",
-    figPrefixTemplate= "$$i$$",
-    eqnPrefixTemplate= "$$i$$",
-    secPrefixTemplate= "$$i$$",
-    lstPrefixTemplate= "$$i$$",
     numbersections=numbersections,
     numberSections=numbersections,
-#    chapters=numbersections,
-    graphics='true',
-    subfigGrid= 'true',
+    graphics=TRUE,
+    subfigGrid= TRUE,
+    crossrefYaml = crossrefYaml,
+    csl = csl, css=css,
     ...)	
   
   dots = dots[

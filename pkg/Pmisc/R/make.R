@@ -131,7 +131,7 @@ Makefile = function(x, suffix = NULL,
       $(PANDOC) --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
       
       %.odt: %.md
-      $(PANDOC) --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$(odtTemplate) --output=$@ $<
+      $(PANDOC) --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-odt=$(odtTemplate) --output=$@ $<
       
       %.docx: %.md
       $(PANDOC) --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$(docxTemplate) --output=$@ $<

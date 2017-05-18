@@ -1,0 +1,11 @@
+subfigureChildTemplate: "$$i$$) $$t$$"
+subfigureTemplate: "*$$figureTitle$$ $$i$$*$$titleDelim$$ $$t$$"
+tableTemplate: "*$$tableTitle$$ $$i$$*$$titleDelim$$ $$t$$"
+tblPrefixTemplate: $$i$$
+figPrefixTemplate: $$i$$
+eqnPrefixTemplate: $$i$$
+secPrefixTemplate: $$i$$
+lstPrefixTemplate: $$i$$
+numbersections: TRUE
+numberSections: TRUE
+tableEqns: TRUE
