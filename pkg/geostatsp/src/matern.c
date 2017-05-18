@@ -755,13 +755,12 @@ void maternRasterConditional(
     double *inVarGrid
 ) {
 
-  int oneI=1, fourI=4, Ncell, NcellSq, Nrandom;
+  int oneI=1, fourI=4, Ncell, Nrandom;
   int Dparam, D;
   double *resultHere, *ydataHere, oneD=1.0, minusOneD=-1.0;
   double *varY, *covDataGrid, *varGrid, halfLogDet=0.0;
 
   Ncell = (*AyN) * (*AxN);
-  NcellSq = Ncell * Ncell;
   Nrandom = Ncell * (*Nsim);
   varY = (double *) calloc((*Ny)*(*Ny), sizeof(double));
   covDataGrid = (double *) calloc( (*Ny) * Ncell, sizeof(double));
