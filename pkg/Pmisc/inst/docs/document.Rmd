@@ -52,6 +52,10 @@ Pmisc::markdownHeader(
   bibliography = bibFile,
   geometry='margin=1in'
 )
+
+# consider adding
+automatic-styles = '<style:style style:name="OLE" style:family="graphic"><style:graphic-properties text:anchor-type="paragraph" style:wrap="none"/></style:style>'
+# to make equations better in odt document
 ```
 
 
