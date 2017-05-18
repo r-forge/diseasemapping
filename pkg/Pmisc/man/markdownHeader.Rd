@@ -29,18 +29,12 @@ subcaptionCommands
 }
 \arguments{
 \item{title}{value for title}
-
 \item{author}{value for author field}
-
 \item{date}{value for date field}
-
-\item{startAndEnd}{Add \code{---} before and after YAML block}
-
 \item{biblatex}{uses the biblatex package in LaTeX}
 \item{bibliotitle}{title for references section}
 \item{bibliostyle}{style of bibliography}
 \item{biblatexoptions}{options for citations, passed to the biblatex package}
-
 \item{beamer}{Add commands intended for producing slides with LaTeX beamer.}
 \item{mathCommands}{Defines latex commands for var, E, tp, dens, and a few others.}
 \item{subcaptionCommands}{Enables use of the subcaption package with knitr.}

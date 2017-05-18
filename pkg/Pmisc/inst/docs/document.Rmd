@@ -61,14 +61,16 @@ Pmisc::markdownHeader(
 
 
 @lindgren2011explicit is a very good paper, but Figure [@fig:aplot] is dull.
+There are some formulas in this document, from ([@eq:myeqn]) we can see
+nothing useful.
 
 
 $$
 \begin{aligned}
 f(x) = &x + \int_0^\infty \exp(-\theta u^2) du\\
-\rho(x) = & \sum_i x^i
+\rho(x_1 \ldots x_N) = & \sum_i x^i
 \end{aligned}
-$$
+$$ {#eq:myeqn}
 
 
 ```{r aplot, fig.ncol=2, fig.cap='Uninteresting plots', fig.subcap=c('stuff','qq','eeee','www')}

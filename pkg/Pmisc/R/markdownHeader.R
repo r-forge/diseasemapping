@@ -86,8 +86,13 @@ markdownHeader = function(
     biblatexoptions = biblatexoptions,
     subfigureChildTemplate = '"$$i$$) $$t$$"',
 subfigureTemplate= '"*$$figureTitle$$ $$i$$*$$titleDelim$$ $$t$$"',
-figPrefix= '""',
-tblPrefix= '""',
+tableTemplate= '"*$$tableTitle$$ $$i$$*$$titleDelim$$ $$t$$"',
+tblPrefixTemplate= "$$i$$",
+figPrefixTemplate= "$$i$$",
+eqnPrefixTemplate= "$$i$$",
+secPrefixTemplate= "$$i$$",
+lstPrefixTemplate= "$$i$$",
+graphics='true',
 subfigGrid= 'true',
     ...)	
   

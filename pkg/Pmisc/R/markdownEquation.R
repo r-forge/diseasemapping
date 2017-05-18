@@ -6,12 +6,13 @@
 #' @param mdToTex if \code{FALSE} convert to markdown table, return \code{x} otherwise
 #' @details A multi-line equation in an eqnarray or align document is converted to markdown code suitable for conversion to docx.
 #' @examples
-#' cat(eqnarray("
-#' \begin{align*}
-#' Y_i \sim & N(\mu_i, \tau^2)\\
-#' \mu_i= & X_i \beta
-#' \end{align*}
-#' ", FALSE) )
+#' # backslashes may not appear correctly
+#' cat(eqnarray(x=
+#'       "\x5cbegin{align*}
+#'       Y_i = & N(u_i, t^2)\x5c\x5c
+#'       u_i= & X_i B
+#'       \x5cend{align*}", 
+#'     FALSE) )
 #' 
 #' @export
 eqnarray = function(x, mdToTex=FALSE) {
@@ -21,7 +22,7 @@ eqnarray = function(x, mdToTex=FALSE) {
   } else {
     
     res = gsub(
-        "[$][$]|([[:punct:]](begin|end)[[:punct:]](eqnarray|align(ed)?)[*]?[[:punct:]])", 
+        "[$][$]|([[:punct:]]?(begin|end)[[:punct:]](eqnarray|align(ed)?)[*]?[[:punct:]])", 
         "", x)
     res = gsub("[[:space:]]*&[[:space:]]*", " ", res)
     res = gsub(" *[\\][\\] *\n? *", "$ |  |\n| $", res)
