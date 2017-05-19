@@ -25,7 +25,7 @@ utils::bibentry(
          author = pb,
          year = year,
          note = note,
-         url = "http://CRAN.R-project.org/package=mapmisc"
+         url = "https://CRAN.R-project.org/package=mapmisc"
 )
          
          
