@@ -33,7 +33,8 @@ Sbreaks = c(-50,-20, -5,  -2, -0.5,0)
 myResR = lgm(formula = sim ~ x, 
   data=raster::stack(myY, myCov), 
   oneminusar = seq(0.02, 0.25,len=24),
-  nugget = seq(0, 2,len=40), shape=2, mc.cores=2)		
+  nugget = seq(0, 2,len=40), shape=2, 
+  mc.cores=1+(.Platform$OS.type=='unix') )		
 
 myCol = mapmisc::colourScale(
   breaks = Sbreaks,
@@ -89,7 +90,7 @@ if(Sys.info()['user'] =='patrick' & FALSE) {
     oneminusar = seq(0.02, 0.3,len=24),
     nugget = seq(0, 2,len=40), 
     shape=2, 
-    mc.cores=4, 
+    mc.cores=1+(.Platform$OS.type=='unix'), 
     fixBoxcox=FALSE,
     adjustEdges=FALSE)
   
@@ -156,7 +157,7 @@ swissResROptNug =  lgm(
   data=swissRainR2, shape=2,
   oneminusar=seq(0.05, 0.1, len=12),
   adjustEdges=FALSE,fixNugget=TRUE,
-  mc.cores=c(1,2)[1+(.Platform$OS.type=='unix')]
+   mc.cores=1+(.Platform$OS.type=='unix')
 )
 
 plot(swissResROptNug$profL$range, type='l')
