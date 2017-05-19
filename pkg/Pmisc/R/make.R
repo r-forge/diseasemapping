@@ -55,7 +55,7 @@ Makefile = function(x, suffix = NULL,
       gsub("^([[:alpha:]])(:)", '/cygdrive/\\1', x)
     }
   } else {
-    whichfun = function(x) Sys.which(x)
+    whichfun = function(x) normalizePath(Sys.which(x),'/')
     subfun = function(x) x
   }
   
