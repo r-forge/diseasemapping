@@ -117,7 +117,9 @@ getTilesMerc = function(
   zoom=1, 
   path="http://tile.openstreetmap.org/",
   cachePath='.',
-  cacheDir= paste("X",make.names(path),sep=""),
+  cacheDir= make.names(gsub(
+          "^http.*//([[:alpha:]][.])*((tile|basemap)s?[.][[:digit:]]?)?(openstreetmap[.])?|[[:punct:]]$", 
+          "", path)),
   verbose=FALSE, suffix = '.png',
   tileNames = 'zxy'){
   
