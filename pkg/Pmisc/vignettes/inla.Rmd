@@ -23,13 +23,13 @@ if(Sys.info()['sysname'] =='Linux' &
 # Weibull With Cure Fraction
 
 the data
-```{r }
+```{r kidneyData, eval = requireNamespace("INLA"), purl= requireNamespace("INLA")}
 data(Kidney, package='INLA')
 head(Kidney)
 ```
 
 scale the response variable
-```{r scale}
+```{r scale, eval = requireNamespace("INLA"), purl= requireNamespace("INLA")}
 Kidney$years = Kidney$time / 365.25
 ```
 
@@ -38,7 +38,7 @@ Kidney$years = Kidney$time / 365.25
 
 run the model 
 
-```{r fitInla}
+```{r fitInla, eval = requireNamespace("INLA"), purl= requireNamespace("INLA")}
 library("INLA")
 mod = inla(
   inla.surv(years, event) ~ age * sex + 
@@ -58,28 +58,28 @@ mod = inla(
 
 results
 
-```{r results}
+```{r results, eval = requireNamespace("INLA"), purl= requireNamespace("INLA")}
 knitr::kable(mod$summary.fixed, digits=3)
 knitr::kable(mod$summary.hyper, digits=3)
 ```
 
 standard deviation
-```{r sdSummary}
+```{r sdSummary, eval = requireNamespace("INLA"), purl= requireNamespace("INLA")}
 modSd = Pmisc::priorPost(mod)
 knitr::kable(modSd$summary, digits=2)
 ```
 
-```{r sdPlot}
+```{r sdPlot, eval = requireNamespace("INLA"), purl= requireNamespace("INLA")}
 do.call(matplot, modSd$sd$matplot)
 do.call(legend, modSd$legend)
 ```
 
-```{r alphaPlot}
+```{r alphaPlot, eval = requireNamespace("INLA"), purl= requireNamespace("INLA")}
 do.call(matplot, modSd$alpha$matplot)
 do.call(legend, modSd$legend)
 ```
 
-```{r probPlot}
+```{r probPlot, eval = requireNamespace("INLA"), purl= requireNamespace("INLA")}
 do.call(matplot, modSd$prob$matplot)
 do.call(legend, modSd$legend)
 ```
