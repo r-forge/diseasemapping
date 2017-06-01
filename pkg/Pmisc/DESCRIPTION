@@ -1,8 +1,8 @@
 Package: Pmisc
 Type: Package
 Title: Various Utilities for knitr and inla
-Version: 0.2.0
-Date: 2017-05-17
+Version: 0.2.1
+Date: 2017-05-31
 Imports:
     knitr,
     methods,
@@ -20,7 +20,9 @@ Suggests:
     nlme,
     R.utils,
     Hmisc,
-    htmlTable
+    htmlTable,
+Enhances:
+	reshape2
 Author: Patrick Brown <patrick.brown@utoronto.ca>[aut, cre]
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
 Description: Various utilities for files and documents.
