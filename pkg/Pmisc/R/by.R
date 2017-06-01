@@ -13,9 +13,10 @@
 #' head(by2df(byRes, 'wide'))
 #' head(by2df(byRes, 'long'))
 #' 
-#' if(requireNamespace('reshape2')) {
+#' if(requireNamespace('reshape2', quietly=TRUE)) {
 #' 	head(reshape2::dcast(by2df(byRes, 'long'), landuse ~ soil + output))
 #' }
+#' 
 #' 
 #' @export
 by2df = function(x, format = c('wide','long', 'array')) {
