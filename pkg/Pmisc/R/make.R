@@ -125,7 +125,7 @@ Makefile = function(x, suffix = NULL,
       $(XELATEX) -interaction=nonstopmode $<
       
       %.html: %.md
-      $(PANDOC) --smart --standalone --mathjax --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
+      $(PANDOC) --smart --self-contained --mathjax --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
       
       %.rtf: %.md
       $(PANDOC) --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<

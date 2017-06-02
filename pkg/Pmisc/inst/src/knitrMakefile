@@ -74,7 +74,7 @@ clean:
 # html from md
 #
 %.html: %.md
-	$(PANDOC) --smart --standalone --mathjax $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
+	$(PANDOC) --smart --self-contained --mathjax $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
 
 # 
 # libreoffice document

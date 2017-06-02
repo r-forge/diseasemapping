@@ -10,7 +10,8 @@ body {
 }
 
 img {
-	width: 45%
+	width: 45%;
+	    padding: 0.2em;
 }
 
 pre {
