@@ -4,10 +4,14 @@
 \alias{mdTable}
 \title{Markdown tables}
 \usage{
-mdTable(x, ..., mdToTex = "auto")
+mdTable(x, col.just = "r", guessGroup = FALSE, ..., mdToTex = "auto")
 }
 \arguments{
 \item{x}{a matrix or data frame}
+
+\item{col.just}{horizontal justification of text in cells}
+
+\item{guessGroup}{attempt to guess cgroup and rgroup, for reshape2 output}
 
 \item{...}{other arguments for \code{\link[Hmisc]{latex}}, \code{\link[htmlTable]{htmlTable}} or \code{\link[knitr]{kable}}.}
 

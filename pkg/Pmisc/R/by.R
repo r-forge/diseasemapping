@@ -3,7 +3,8 @@
 #' @description Convert the output from the by function to a data frame
 #'
 #' @param x produced by stats::by
-#' @param format type of output
+#' @param format type of output, or a formula passed to dcast
+#' @param name assigned to the output variable
 #' @details The stats::by function produces list-like objects, which can be converted to arrays or data frames
 #' @examples
 #' data('meuse', package='sp')
@@ -19,7 +20,7 @@
 #' 
 #' 
 #' @export
-by2df = function(x, format = c('wide','long', 'array')) {
+by2df = function(x, format = c('wide','long', 'array'), name='output') {
   
   theLengths = unlist(lapply(x, length))
   oneLength = setdiff(unique(theLengths), 0)
@@ -29,17 +30,25 @@ by2df = function(x, format = c('wide','long', 'array')) {
   xList = lapply(x, function(xx) c(xx, rep(NA, oneLength - length(xx))))
   
   theDimnames = c(
-      list(output = names(xList[[baseElement]])),
+      list(names(xList[[baseElement]])),
       dimnames(x)
       )
-   if(!length(theDimnames$output)) 
-     theDimnames$output = paste('out',1:length(xList[[baseElement]]),sep='')   
+   names(theDimnames)[1] = name
+      
+   if(!length(theDimnames[[name]])) 
+     theDimnames[[name]] = paste('out',1:length(xList[[baseElement]]),sep='')   
   
   res = array(unlist(xList), 
       dim = unlist(lapply(theDimnames, length)),
       dimnames = theDimnames
       )
       res = aperm(res, c(2:length(dim(res)),1))
+  
+  if(class(format)=='formula') {
+    resDf = do.call(expand.grid, dimnames(res))
+    resDf$value = as.vector(res)
+    return(reshape2::dcast(resDf, formula=format))    
+  }    
       
   if(format[1]=='wide') {
     resMat = matrix(res, ncol=dim(res)[length(dim(res))],

@@ -4,12 +4,14 @@
 \alias{by2df}
 \title{Convert by to data.frame}
 \usage{
-by2df(x, format = c("wide", "long", "array"))
+by2df(x, format = c("wide", "long", "array"), name = "output")
 }
 \arguments{
 \item{x}{produced by stats::by}
 
-\item{format}{type of output}
+\item{format}{type of output, or a formula passed to dcast}
+
+\item{name}{assigned to the output variable}
 }
 \description{
 Convert the output from the by function to a data frame
@@ -25,8 +27,9 @@ dimnames(by2df(byRes, 'array'))
 head(by2df(byRes, 'wide'))
 head(by2df(byRes, 'long'))
 
-if(requireNamespace('reshape2')) {
+if(requireNamespace('reshape2', quietly=TRUE)) {
 	head(reshape2::dcast(by2df(byRes, 'long'), landuse ~ soil + output))
 }
+
 
 }
