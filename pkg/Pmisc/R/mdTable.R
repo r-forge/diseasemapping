@@ -143,7 +143,7 @@ mdTable = function(x, col.just = 'r', guessGroup=FALSE, ..., mdToTex = 'auto') {
     } else {
       # use htmlTable
 #      newNames = names(formals(htmlTable::htmlTable))[missingNames]
-      newNames = names(formals(getFromNamespace('htmlTable.default', 'htmlTable')))
+      newNames = names(formals(utils::getFromNamespace('htmlTable.default', 'htmlTable')))
       names(dots)[missingNames] = newNames[missingNames] 
       
       formatArgs = intersect(
