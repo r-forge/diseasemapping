@@ -40,11 +40,13 @@ mdTable = function(x, col.just = 'r', guessGroup=FALSE, ..., mdToTex = 'auto') {
     
     rTable= table(x[,1])
     xFirstRowUnique = as.character(x[!duplicated(x[,1]), 1])
-    if(length(xFirstRowUnique) != length(names(rTable)))
+    if(length(xFirstRowUnique) != length(names(rTable))) {
       warning("first column doesn't appear to be a grouping")
+    } 
     if( (!all(rTable==1)) & all(
-          xFirstRowUnique == names(rTable)
-          ) ) {
+        xFirstRowUnique %in% names(rTable)
+    ) ) {
+      rTable = drop(as.matrix(rTable))[xFirstRowUnique]
       if(!length(dots$rgroup)) {
         dots$rgroup = names(rTable)
       }
@@ -150,9 +152,12 @@ mdTable = function(x, col.just = 'r', guessGroup=FALSE, ..., mdToTex = 'auto') {
           names(formals(format.default)),
           names(dots))
       if(length(formatArgs)>1) { # more than x
-        dots$x = do.call(format.default, dots[formatArgs])
+        dots$x =  do.call(format, dots[formatArgs])
         dots= dots[c('x', setdiff(names(dots), formatArgs))]
       }
+      # remove leading white space, which causes problems for html tables
+      dots$x = apply(dots$x, 2, trimws)
+      
       
       dots$label = theLabel
       dots$file = ''
@@ -174,13 +179,43 @@ mdTable = function(x, col.just = 'r', guessGroup=FALSE, ..., mdToTex = 'auto') {
       
       res = do.call(htmlTable::htmlTable, dots)
       res = unlist(strsplit(res, '\n'))
-      if(identical(dots$pos.caption, 'top')) {
-        capPos = min(grep("<table", res))+1
-      } else {
-        capPos = max(grep("[<][/]table", res))
-      }
-      res[capPos] = paste("<caption>", theCaption, "</caption>\n",
-          res[capPos])
+#
+#        capPos = min(grep("<table", res))+1
+#      } else {
+#        capPos = max(grep("[<][/]table", res))
+#      }
+      
+      # a hack, create empty table with a caption
+      
+  if(identical(dots$pos.caption, 'top')) {
+  res = c(
+          '<div>',
+          '|   |   |\n|---|---|',
+          '<span style="display:inline-block; width: 50em"> <span>| \n',   
+           paste(
+               ': ', theCaption, ' {#tbl:',
+              c(knitr::opts_current$get()$label, 'labelMissing')[1],
+              '}\n', sep=''),
+          res,
+          '</div>\n'
+      )
+    } else {
+      res = c(
+          '<div>',
+          res,
+          '\n|   |   |\n|---|---|',
+          '<span style="display:inline-block; width: 50em"> <span>| \n',   
+          paste(
+              ': ', theCaption, ' {#tbl:',
+              c(knitr::opts_current$get()$label, 'labelMissing')[1],
+              '}\n', sep=''),
+          '</div>\n'
+      )
+      
+    }
+      
+#      res[capPos] = paste("<caption>", theCaption, "</caption>\n",
+#          res[capPos])
     } # end use htmltable  
   } # end not latex
   res = paste(res, '\n', sep='')
