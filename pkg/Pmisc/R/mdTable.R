@@ -107,6 +107,15 @@ mdTable = function(x, col.just = 'r', guessGroup=FALSE, ..., mdToTex = 'auto') {
       names(dots) = gsub("^x$", "object", names(dots))
     }
     
+    formatArgs = intersect(
+        names(formals(format.default)),
+        names(dots))
+    if(length(formatArgs)>0) { 
+      dots$object =  do.call(format, c(list(x=dots$object), dots[formatArgs]))
+      dots= dots[c('x', setdiff(names(dots), formatArgs))]
+    }
+    
+    
     dots$label = theLabel
     dots$file = ''
     if(!length(dots$title)) dots$title = ''
