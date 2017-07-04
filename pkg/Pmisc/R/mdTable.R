@@ -69,7 +69,8 @@ mdTable = function(x, col.just = 'r', guessGroup=FALSE, ..., mdToTex = 'auto') {
     }
     
     # look for row and column groups
-    cTable= table(gsub("_([[:alnum:]]|[[:space:]]|[.])+$", "", colnames(dots$x)))
+    cTable= table(gsub("_([[:alnum:]]|[[:space:]]|[.])+$", "", colnames(dots$x)))[
+        unique(gsub("_([[:alnum:]]|[[:space:]]|[.])+$", "", colnames(dots$x)))]
     if( !all(cTable==1) ) {
       if(!length(dots$cgroup)) {
         dots$cgroup = names(cTable)
