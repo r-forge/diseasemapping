@@ -162,28 +162,34 @@ loglikGmrf = function(
     
     parInfo = lapply(fromC, function(qq) attributes(qq)$param)
     ml = simplify2array(fromC)
-    dimnames(ml)[[4]] = as.character(oneminusar)
+    names(dimnames(ml)) = c('dataset','propNugget','output','oneminusar')
+    dimnames(ml)$oneminusar = as.character(oneminusar)
     
     if(any(dimnames(ml)[[2]]=='0')) {
       ml[,'0','xisqTausq', ]= 0
     }
     
     if(length(xisqTausq))
-      dimnames(ml)[[2]] = paste('propNugget=',as.character(1/xisqTausq),sep='')
-    
+      dimnames(ml)$propNugget = paste('propNugget=',as.character(1/xisqTausq),sep='')
+
+    oldDimNames = names(dimnames(ml))
     ml=abind::abind(ml, 
       array(0, dim(ml)[-3]),
       along=3)
+    names(dimnames(ml)) = oldDimNames
     
-    dimnames(ml)[[3]] = gsub("^$", 
-      "boxcox",dimnames(ml)[[3]])
+    dimnames(ml)$output = gsub("^$", 
+      "boxcox",dimnames(ml)$output)
     
     ml[,,'boxcox',] = boxcox
     
     
     ssq = simplify2array(lapply(fromC,
         function(x) attributes(x)$ssq))
-    dimnames(ssq)[[5]] = as.character(oneminusar)
+    
+    names(dimnames(ssq)) = c('datasetRow','datasetCol', 'propNugget','output','oneminusar')
+    
+    dimnames(ssq)$oneminusar = as.character(oneminusar)
     
     covDim = seq(Ny+1, ncol(obsCov))
     
@@ -287,22 +293,21 @@ loglikGmrf = function(
       boxcox = ml[,,'boxcox',,drop=FALSE],
       along=3
     )
-    dimnames(forml)[[3]] = c(
+    
+    names(dimnames(forml)) = names(dimnames(ml))
+    
+    dimnames(forml)$output = c(
       'propNugget','tausqHatMl', 'tausqHatReml', 
       'xisqHatMl','xisqHatReml', 'oneminusar',
       'boxcox')
     
     Ny = dim(ml)[1]
     betaHat = ssq[-(1:Ny),1:Ny,,'beta',,drop=FALSE]
-    dimnames(betaHat)[[1]] = paste(
+    names(dimnames(betaHat))[1] = 'covariate'
+    names(dimnames(betaHat))[2] = 'dataset'
+    dimnames(betaHat)$covariate = paste(
       dimnames(betaHat)[[1]], 'BetaHat',sep=''
     )
-    betaHat = aperm(betaHat, c(2,3,1,5, 4))
-    # drop last dimension that's 'beta'
-    betaHat = array(
-      betaHat, dim(betaHat)[1:4],
-      dimnames = dimnames(betaHat)[1:4]
-    )  
     
     ssqX = ssq[-(1:Ny),-(1:Ny),,'beta',,drop=FALSE]
     seBetaHat = apply(ssqX,c(3,4,5),diag)
@@ -311,21 +316,33 @@ loglikGmrf = function(
     if(length(dim(seBetaHat)==3)) {
       seBetaHat = array(
         seBetaHat, c(1,dim(seBetaHat)),
-        dimnames = c(list(NULL), dimnames(seBetaHat))
+        dimnames = c(dimnames(betaHat)['covariate'], dimnames(seBetaHat))
       )
     }
-#    dimnames(seBetaHat)[[1]] = dimnames(betaHat)[[3]]
-    
-    
-# permute seBetaHat to look like betaHat
-# and add a leading dimension for dataset
-    seBetaHat = aperm(seBetaHat, c(1,3,2,4,5))
-    seBetaHat = array(
-      seBetaHat, dim(betaHat),
-      dimnames = c(
-        dimnames(betaHat)[1], 
-        dimnames(seBetaHat)[c(2,3,5)])
-    )
+  # add dataset dimension  
+  seBetaHat = array(
+  seBetaHat, c(dim(seBetaHat)[1],1,dim(seBetaHat)[-1]),
+  dimnames = c(
+    dimnames(seBetaHat)[1],
+    list(dataset = 'all'),
+    dimnames(seBetaHat)[-1])
+  )
+  # make seBetaHat the same as betaHat
+  seBetaHat = seBetaHat[,rep(1, dim(betaHat)[2]),,,,drop=FALSE]
+  dimnames(seBetaHat)$dataset = dimnames(betaHat)$dataset
+
+  betaHat = aperm(betaHat, c(2,3,1,5, 4))
+  seBetaHat = aperm(seBetaHat, c(2,3,1,5, 4))
+  # drop last dimension that's 'beta'
+  betaHat = array(
+    betaHat, dim(betaHat)[1:4],
+    dimnames = dimnames(betaHat)[1:4]
+  )  
+  seBetaHat = array(
+    seBetaHat, dim(seBetaHat)[1:4],
+    dimnames = dimnames(seBetaHat)[1:4]
+  )  
+  
     
     seBetaHatMl = seBetaHat * 
       ml[,,rep('profiledVarianceHatMl',dim(seBetaHat)[3]),,drop=FALSE]  
@@ -333,12 +350,11 @@ loglikGmrf = function(
       ml[,,rep('profiledVarianceHatReml',dim(seBetaHat)[3]),,drop=FALSE]  
     
     
-    dimnames(seBetaHatMl)[[3]] = paste(dimnames(seBetaHatMl)[[3]],'SeMl',sep='')
-    dimnames(seBetaHatReml)[[3]] = paste(dimnames(seBetaHatReml)[[3]],'SeReml',sep='')
+    dimnames(seBetaHatMl)$covariate = paste(dimnames(seBetaHatMl)$covariate,'SeMl',sep='')
+    dimnames(seBetaHatReml)$covariate = paste(dimnames(seBetaHatReml)$covariate,'SeReml',sep='')
     
     logLml = -ml[,,c('m2logLreml','m2logLml'),,drop=FALSE]/2
     dimnames(logLml)[[3]] = gsub("^m2","", dimnames(logLml)[[3]])
-    
     
     parMat = lapply(parInfo, function(qq){
         c(

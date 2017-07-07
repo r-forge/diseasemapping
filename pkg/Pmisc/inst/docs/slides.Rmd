@@ -11,16 +11,11 @@ library('knitr')
 library('Pmisc')
 
 # hook for multicolumn plots
-knitr::knit_hooks$set(plot=hook_plot_beamer) 
+knitr::knit_hooks$set(Pmisc::plot=hook_plot_beamer) 
 
 # hook for smaller plot margins
 knitr::knit_hooks$set(
-	marginsp = function(before, options, envir){	
-		if(!before) return()
-		par(mar=c(1.5+0.9*options$marginsp,
-				1.5+0.9*options$marginsp,0.2,0.2),
-				mgp=c(1.45, 0.45, 0),cex=1.25)
-	}		
+	margins = Pmisc::hook_plot_margins
 )
 
 # hook for half width
@@ -31,7 +26,7 @@ knitr::opts_hooks$set(half = function(options) {
 
 # default chunk options
 knitr::opts_chunk$set(echo=FALSE, prompt=TRUE, comment=NA,
-		dev='pdf', marginsp=1, fig.start='#',
+		dev='pdf', margins=1, fig.start='#',
 		fig.width=8, fig.height=4.5, half=NULL,
 		tidy=TRUE,tidy.opts=list(indent=2, width.cutoff=55)
 )
