@@ -28,25 +28,31 @@ names(myY) = gsub("^layer\\.","sim", names(mySim))
 
 # grid search	
 
-Sbreaks = c(-50,-20, -5,  -2, -0.5,0)
 
 myResR = lgm(formula = sim ~ x, 
   data=raster::stack(myY, myCov), 
-  oneminusar = seq(0.02, 0.25,len=24),
-  nugget = seq(0, 2,len=40), shape=2, 
+  oneminusar = seq(0.2, 0.7,len=25),
+  nugget = seq(0, 0.001,len=21), shape=2, 
+  adjustEdges=TRUE,
   mc.cores=1+(.Platform$OS.type=='unix') )		
 
+Sbreaks = c(-100000,-50,-20,-10, -5,  -2, -1,0)
+
 myCol = mapmisc::colourScale(
-  breaks = Sbreaks,
+  breaks = Sbreaks + max(myResR$array[,-1,'logLreml',]),
   style='fixed',
   col=terrain.colors
 )
 
-image(	myResR$array[,-1,'propNugget',1], 
-  myResR$array[,1,'oneminusar',], 
-  myResR$array[,-1,'logLreml',],
-  col=myCol$col, breaks=myCol$breaks+max(myResR$array[,,'logLreml',]))
-mapmisc::legendBreaks("topright",  myCol)
+image(	
+  myResR$array[1,-1,'propNugget',1], 
+  myResR$array[1,1,'oneminusar',], 
+  myResR$array[1,-1,'logLreml',],
+  xlab = 'propNugget', ylab='oneminusar',
+col=myCol$col, breaks=myCol$breaks)
+mapmisc::legendBreaks("topright", breaks = Sbreaks, col=myCol$col)
+
+
 points(myResR$param['propNugget'], myResR$param['oneminusar'])
 
 
@@ -67,18 +73,31 @@ swissRainR2 = brick(swissRainR[['alt']],
 swissResR =  lgm(
   formula=layer ~ alt+ myvar, 
   data=swissRainR2, shape=2,
-  oneminusar = seq(0.01, 0.1, len=12),
-  nugget = seq(0, 1, len=20),
-  adjustEdges=TRUE
+  oneminusar = exp(seq(log(0.001), log(0.025), len=11)),
+  nugget = exp(seq(log(100), log(50000), len=11)),
+  adjustEdges=TRUE,
+  mc.cores=1+(.Platform$OS.type=='unix') )		
+
+
+myCol = mapmisc::colourScale(
+    breaks = Sbreaks + max(swissResR$array[,-1,'logLreml',]),
+    style='fixed',
+    col=terrain.colors
 )
+
+image(	
+    swissResR$array[1,-1,'propNugget',1], 
+    swissResR$array[1,1,'oneminusar',], 
+    swissResR$array[1,-1,'logLreml',],
+    xlab = 'propNugget', ylab='oneminusar',
+    log='xy',
+    col=myCol$col, breaks=myCol$breaks)
+mapmisc::legendBreaks("topright", breaks = Sbreaks, col=myCol$col)
 
 
 
 if(Sys.info()['user'] =='patrick' & FALSE) {
   
-  image(	swissResR$array[,,'propNugget',1], 
-    swissResR$array[,1,'oneminusar',], 
-    swissResR$array[,,'logLreml',])
   
   
 # boxcox
