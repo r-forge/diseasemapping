@@ -5,12 +5,15 @@
 
 RPATH="/store/census/USA"
 for year in $RPATH/[[:digit:]]*; do
-  shortYear="${year/$RPATH\//}";
+  echo $year;
+  shortYear=${year/$RPATH\//};
+  echo $shortYear;
   psql --host=localhost --port 5433 --username=gcensus --dbname=gcensus --command=CREATE\ SCHEMA\ usa$shortYear
-  for level in $(find $year -name [[:digit:]]*); do
+  for level in $(ls --directory $year/[[:digit:]]*); do
     echo $level;
     levelShort="${level/$RPATH\//USA}";
     levelShort="${levelShort/\//.l}";
+    echo $levelShort;
     for sfile in $(find $level -name '*.shp'); do
       echo $sfile;
       psql --host=localhost --port=5433 --username=gcensus --dbname=gcensus --command=DROP\ TABLE\ $levelShort"map"

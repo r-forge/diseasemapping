@@ -15,7 +15,9 @@
 
 <<knitr, include=FALSE>>=
 require('knitr')
-opts_chunk$set(out.width='0.48\\textwidth', fig.align='default', fig.height=3, fig.width=6)
+opts_chunk$set(out.width='0.48\\textwidth', 
+    fig.align='default', fig.height=3, fig.width=6,
+    tidy = FALSE)
 if(Sys.info()['sysname'] =='Linux' &
   requireNamespace("INLA")) {   
   INLA::inla.setOption(inla.call = 
