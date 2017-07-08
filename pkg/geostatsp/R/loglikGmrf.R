@@ -322,14 +322,15 @@ loglikGmrf = function(
     }
   # add dataset dimension  
   seBetaHat = array(
-  seBetaHat, c(dim(seBetaHat)[1],1,dim(seBetaHat)[-1]),
-  dimnames = c(
-    dimnames(seBetaHat)[1],
-    list(dataset = 'all'),
-    dimnames(seBetaHat)[-1])
+    seBetaHat, 
+    c(dim(seBetaHat)[1],1,dim(seBetaHat)[-1]),
+    dimnames = c(
+      dimnames(betaHat)['covariate'],
+      list(dataset = 'all'),
+      dimnames(seBetaHat)[-1])
   )
   # make seBetaHat the same as betaHat
-  seBetaHat = seBetaHat[,rep(1, dim(betaHat)[2]),,,,drop=FALSE]
+  seBetaHat = seBetaHat[,rep(1, length(dimnames(betaHat)$dataset)),,,,drop=FALSE]
   dimnames(seBetaHat)$dataset = dimnames(betaHat)$dataset
 
   betaHat = aperm(betaHat, c(2,3,1,5, 4))
