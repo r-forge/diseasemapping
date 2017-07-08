@@ -114,6 +114,7 @@ loglikGmrf = function(
   if(length(jacobian)!= Ny | length(boxcox)!= Ny)
     warning('length of jacobian or boxcox must be same as columns of Y')
   
+  if(is.null(colnames(Xmat))) colnames(Xmat) = paste('cov', 1:ncol(Xmat), sep='')
   obsCov = as.matrix(cbind(Yvec, Xmat))
   
   if(length(propNugget))
@@ -313,7 +314,7 @@ loglikGmrf = function(
     seBetaHat = apply(ssqX,c(3,4,5),diag)
     # if there's only one covariate
     # there won't be a dimension for covariate
-    if(length(dim(seBetaHat)==3)) {
+    if(length(dim(seBetaHat))==3) {
       seBetaHat = array(
         seBetaHat, c(1,dim(seBetaHat)),
         dimnames = c(dimnames(betaHat)['covariate'], dimnames(seBetaHat))
