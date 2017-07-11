@@ -26,7 +26,7 @@ setMethod("lgm",
     data=dataCov$data 
     grid=dataCov$grid 
     covariates=dataCov$covariates
-    
+
     callGeneric(formula, data, grid, 
       covariates, 
       buffer,
@@ -55,7 +55,7 @@ setMethod("lgm",
     fixBoxcox=TRUE,
     fixNugget = FALSE,
     ...) {
-    
+
     NN=NNmat(grid)
     csiz = xres(grid)
     
@@ -252,8 +252,9 @@ setMethod("lgm",
     } # for D
     
     if(length(ress)==1) ress = ress[[1]]
+
     res$summary = ress
-    
+    res$model$extras = thel$extras
     
     return(res)
     

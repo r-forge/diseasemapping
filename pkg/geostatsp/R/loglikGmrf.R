@@ -171,7 +171,7 @@ loglikGmrf = function(
     }
     
     if(length(xisqTausq))
-      dimnames(ml)$propNugget = paste('propNugget=',as.character(1/xisqTausq),sep='')
+      dimnames(ml)$propNugget = paste('propNugget=',c(0,1/xisqTausq[-1]),sep='')
 
     oldDimNames = names(dimnames(ml))
     ml=abind::abind(ml, 
@@ -183,7 +183,6 @@ loglikGmrf = function(
       "boxcox",dimnames(ml)$output)
     
     ml[,,'boxcox',] = boxcox
-    
     
     ssq = simplify2array(lapply(fromC,
         function(x) attributes(x)$ssq))
@@ -426,7 +425,8 @@ loglikGmrf = function(
       
     res = list(
       mle=mle, 
-      mlArray = res
+      mlArray = res,
+      extras = list(ml=ml, ssq=ssq)
     )
     
   } else {

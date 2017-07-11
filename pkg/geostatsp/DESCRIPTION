@@ -1,8 +1,8 @@
 Package: geostatsp
 Type: Package
 Title: Geostatistical Modelling with Likelihood and Bayes
-Version: 1.5.2
-Date: 2017-05-16
+Version: 1.5.3
+Date: 2017-07-10
 Depends:
     Matrix (>= 1.2.0),
     raster,
@@ -14,7 +14,6 @@ Imports:
     methods,
     stats
 Suggests:
-    geoR,
     RandomFields,
     rgdal,
     parallel,
@@ -22,7 +21,7 @@ Suggests:
     ellipse,
     pracma,
     knitr
-Enhances: INLA, diseasemapping
+Enhances: INLA, diseasemapping, geoR
 LinkingTo: Matrix
 Additional_repositories: https://www.math.ntnu.no/inla/R/stable
 Author: Patrick Brown <patrick.brown@utoronto.ca>[aut, cre], Robert Hijmans

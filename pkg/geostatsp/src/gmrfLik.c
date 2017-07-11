@@ -40,6 +40,7 @@ int Nxy, Nobs, Ncov, Nrep, Nxysq;
 int Ltype;
 int DxisqTausq, NxisqTausq;
 const double logTwoPi = 1.837877066409345339082; //format(log(2*pi), digits=22)
+const double onePlusLogTwoPi = 2.837877066409345339082; //format(log(1+2*pi), digits=22)
 /*
  * compute sums of squares from cross products
  *
@@ -137,7 +138,7 @@ double logLoneNuggetMoreArguments(
   // and int Nxy, Nobs, Nxysq, Nrep;
   // as are YwkL, EwkL, YwkD, EwkD; // workspaces
 
-  double minusXisqTausq, oneD=1.0;
+  double minusXisqTausq, oneD=1.0, varHatMl, varHatReml;
   double result, *tempPointer;
   int oneI=1, D;
   /*
@@ -235,13 +236,14 @@ double logLoneNuggetMoreArguments(
       determinantForReml[D] = determinantForReml[0];
 
       // mlrepAdd
-      m2logL[D] = Nobs*logTwoPi + *determinant +
-          DbetaHat[D*Nxy+D] - YrepAdd[D];
+      varHatMl = DbetaHat[D*Nxy+D]/Nobs;
+      m2logL[D] = Nobs*(onePlusLogTwoPi +log(varHatMl) ) +
+          *determinant - YrepAdd[D];
 
       // reml
-      m2logReL[D] = (Nobs-Ncov)*logTwoPi +
-          *determinant - *determinantForReml +
-          DbetaHat[D*Nxy+D] - YrepAdd[D];
+      varHatReml = DbetaHat[D*Nxy+D]/(Nobs-Ncov);
+      m2logReL[D] = (Nobs-Ncov)*(onePlusLogTwoPi +log(varHatMl) ) +
+          *determinant - *determinantForReml - YrepAdd[D];
   }
 
 
@@ -505,17 +507,19 @@ SEXP gmrfLik(
       determinant[Drep] = determinant[0];
       determinantForReml[Drep] = determinantForReml[0];
 
-      // mlrepAdd
-      m2logL[Drep] = Nobs*logTwoPi - *determinant +
-          betaHat[Drep*Nxy+Drep] - YrepAdd[Drep];
-
-      // reml
-      m2logReL[Drep] = (Nobs-Ncov)*logTwoPi -
-          *determinant - *determinantForReml +
-          betaHat[Drep*Nxy+Drep] - YrepAdd[Drep];
-
       varHatMl[Drep] = betaHat[Drep*Nxy+Drep]/Nobs;
       varHatReml[Drep] = betaHat[Drep*Nxy+Drep]/(Nobs-Ncov);
+
+      // mlrepAdd
+      m2logL[Drep] = Nobs*(onePlusLogTwoPi + log(varHatMl[Drep])) -
+          *determinant -
+          YrepAdd[Drep];
+
+      // reml
+      m2logReL[Drep] = (Nobs-Ncov)*(log(varHatReml[Drep]) + onePlusLogTwoPi) -
+          *determinant - *determinantForReml -
+          YrepAdd[Drep];
+
   }
 
 
@@ -560,30 +564,31 @@ SEXP gmrfLik(
   }
 
   for(DxisqTausq=1;DxisqTausq < NxisqTausq;++DxisqTausq){
-
       for(Drep=0;Drep<Nrep;++Drep){
+
           varHatMl[DxisqTausq*Nrep + Drep] =
               betaHat[DxisqTausq*Nxysq+Drep*Nxy+Drep]/Nobs;
 
           varHatReml[DxisqTausq*Nrep + Drep] =
               betaHat[DxisqTausq*Nxysq+Drep*Nxy+Drep]/(Nobs-Ncov);
+
           resultXisqTausq[DxisqTausq*Nrep + Drep] =
               REAL(xisqTausq)[DxisqTausq];
       }
 
   }
 
-  //			determinant[DxisqTausq*Nrep+Drep] =
-  //					determinant[DxisqTausq*Nrep];
+//  determinant[DxisqTausq*Nrep+Drep] =
+//      determinant[DxisqTausq*Nrep];
 
-  //			determinantForReml[DxisqTausq*Nrep+Drep]=
-  //					determinantForReml[DxisqTausq*Nrep];
+//  determinantForReml[DxisqTausq*Nrep+Drep]=
+//      determinantForReml[DxisqTausq*Nrep];
 
-  //			m2logL[DxisqTausq*Nrep+Drep]  -=
-  //				determinant[0];
+//  m2logL[DxisqTausq*Nrep+Drep]  -=
+//      determinant[0];
 
-  //	m2logReL[DxisqTausq*Nrep+Drep] -=
-  //			determinant[0];
+//  m2logReL[DxisqTausq*Nrep+Drep] -=
+//      determinant[0];
 
 
 

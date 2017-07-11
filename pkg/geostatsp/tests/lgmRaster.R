@@ -1,6 +1,11 @@
+#+ setup
 library('geostatsp')
+#'
+
+#' # simulated data
 
 
+#+ simData
 myRaster = squareRaster(extent(0,8000,0,6000), 50)
 myParam=c(oneminusar=0.1, conditionalVariance=100,shape=2)
 myQ = maternGmrfPrec(myRaster, param=myParam)
@@ -12,30 +17,30 @@ otherPar = c(intercept=1, beta = 2, tau=10)
 myCov = myRaster
 values(myCov) = rep(seq(-1,1,len=ncol(myCov)), nrow(myCov))
 
-
-
 myLambda = 1 + 2 * myCov + mySim
 myY = myLambda
 values(myY)=rnorm(prod(dim(myLambda)),values(myLambda), sd=10) 
 
 names(myCov) = 'x'
 names(myY) = gsub("^layer\\.","sim", names(mySim))
+#'
 
 
 
-# simulated data
 
 
-# grid search	
+#' grid search	
 
-
+#+ simGrid
 myResR = lgm(formula = sim ~ x, 
   data=raster::stack(myY, myCov), 
   oneminusar = seq(0.2, 0.7,len=25),
   nugget = seq(0, 0.001,len=21), shape=2, 
   adjustEdges=TRUE,
   mc.cores=1+(.Platform$OS.type=='unix') )		
+#'
 
+#+ simPlot
 Sbreaks = c(-100000,-50,-20,-10, -5,  -2, -1,0)
 
 myCol = mapmisc::colourScale(
@@ -54,8 +59,223 @@ mapmisc::legendBreaks("topright", breaks = Sbreaks, col=myCol$col)
 
 
 points(myResR$param['propNugget'], myResR$param['oneminusar'])
+#'
 
 
+#+ checkResults
+myResR = lgm(formula = sim ~ x, 
+  data=raster::stack(myY, myCov), 
+  oneminusar = seq(0.2, 0.7,len=25),
+  nugget = seq(0, 0.001,len=21), shape=2, 
+  adjustEdges=TRUE,
+  mc.cores=1+(.Platform$OS.type=='unix') )		
+oneRes =myResR$array[,3,,3]
+
+Q = maternGmrfPrec(
+  myRaster, 
+  param=c(conditionalVariance=1, oneRes[c('oneminusar','shape')]),
+  adjustEdges=TRUE)
+
+Qinv = as.matrix(solve(Q))
+V =  oneRes['propNugget'] * Qinv + Diagonal(nrow(Q))
+Vinv = solve(V)
+
+obsCov = cbind(y=values(myY), intercept=1, x=values(myCov))
+
+(xProdQ =  crossprod(obsCov, Vinv) %*% obsCov)
+
+(betahat= drop(solve(xProdQ[Xseq,Xseq]) %*% xProdQ[Xseq, -Xseq]))
+
+myResR$array[,
+  as.character(1/oneRes['propNugget']), 
+  c('(Intercept)BetaHat','xBetaHat'),
+  as.character(oneRes['oneminusar'])]
+
+resid = obsCov[,1] - betahat[1] - obsCov[,3]*betahat[2]
+(varhat = diag(crossprod(resid, Vinv) %*% resid)/Nobs)
+myResR$array[,
+  as.character(1/oneRes['propNugget']), 
+  'tausqHatMl',
+  as.character(oneRes['oneminusar'])]
+
+
+
+
+xisqTausq = c(0, myResR$array[,-1,'propNugget',1])
+myResR$array[,,'propNugget',1]
+jacobian=0
+
+
+
+Nxy = ncol(obsCov)
+Ny = length(jacobian)
+Nobs = nrow(obsCov)
+NxisqTausq = length(xisqTausq)
+Nxysq = Nxy^2
+logLstart = NxisqTausq*Nxysq*2
+Lseq = 1:logLstart
+mlColNames = c('det','detReml','m2logLml', 
+  'm2logLreml', 'profiledVarianceHatMl',
+  'profiledVarianceHatReml', 'xisqTausq')
+
+mlDim = c(y=Ny,
+  varRatio=NxisqTausq, 
+  output=length(mlColNames))
+
+fromC = .Call('gmrfLik',
+  Q, 
+  obsCov, 
+  as.double(xisqTausq), 
+  reml=TRUE,
+  as.double(jacobian),
+  as.double(c(-999,0,0))
+)
+
+stuff3 = loglikGmrf(
+  Yvec=obsCov[,1], Xmat=obsCov[,-1], 
+  NN = NNmat(myRaster), 
+  oneminusar = oneRes['oneminusar'],
+  propNugget= 1/xisqTausq[-1],
+  boxcox=1,
+  fixBoxcox=TRUE,
+  seqBoxcox=outer(c(0.01, 0.02, 0.05, 0.1, 0.2, 0.5), c(-1,1)),
+  shape=oneRes['shape'],
+  reml=TRUE,
+  adjustEdges=TRUE,
+  jacobian = 0,
+  control=list(
+    oneminusar = c(lower=1e-3, upper=0.8, tol= .Machine$double.eps^0.25),
+    propNugget = c(lower=1e-3, upper=1e3, tol= .Machine$double.eps^0.25)
+  ),
+  mc.cores=4
+) 
+
+Xseq = 2:3
+
+stuff = array(
+  as.vector(fromC[
+      seq(logLstart+1, len=prod(mlDim))
+    ]), 
+  dim=mlDim,
+  dimnames=list(
+    colnames(obsCov)[1:Ny], 
+    as.character(xisqTausq), 
+    mlColNames
+  ))
+
+stuff2 = array(fromC[Lseq], 
+  dim=c(Nxy, Nxy, NxisqTausq,2),
+  dimnames = list(
+    colnames(obsCov), colnames(obsCov), 
+    as.character(xisqTausq),
+    c('ssq','beta')
+  ))
+
+stuff[1,1,'det']
+determinant(Q)$modulus
+
+stuff[1,1,'detReml']
+determinant((crossprod(obsCov, Q)%*% obsCov)[Xseq,Xseq])$modulus
+
+stuff2[,,1,1]
+(xProdQ =  crossprod(obsCov, Q) %*% obsCov)
+
+stuff2[Xseq,1,1,2]
+(betahat=drop(solve(xProdQ[Xseq,Xseq]) %*% xProdQ[Xseq, -Xseq]))
+
+resid = obsCov[,1] - betahat[1] - obsCov[,3]*betahat[2]
+(varhat = diag(crossprod(resid, Q) %*% resid)/Nobs)
+stuff[,1,'profiledVarianceHatMl']
+stuff3$extras$ml[,'propNugget=0','profiledVarianceHatMl',as.character(oneRes['oneminusar'])]
+myResR$model$extras$ml[,'propNugget=0','profiledVarianceHatMl',as.character(oneRes['oneminusar'])]
+myResR$array[,
+  '0', 
+  'tausqHatMl',
+  as.character(oneRes['oneminusar'])]
+
+
+stuff[,,'m2logLml']
+Nobs*log(2*pi) + Nobs*log(varhat) - determinant(Q)$modulus + stuff2[-Xseq,-Xseq,1,'beta']/varhat
+Nobs + Nobs*log(2*pi) - determinant(Q)$modulus + Nobs*log(varhat) 
+myResR$model$extras$ml[,'propNugget=0','m2logLml', as.character(oneRes['oneminusar'])]
+
+-2*mvtnorm::dmvnorm(
+  resid, 
+  sigma = stuff[,1,'profiledVarianceHatMl'] * Qinv, log=TRUE)
+
+betahat
+myResR$array[,'0',c('logLml','mlDeviance','(Intercept)BetaHat','xBetaHat'), as.character(oneRes['oneminusar'])]
+
+# with nugget
+
+stuff2[,,2,1]
+(xProdQ =  crossprod(obsCov, Vinv) %*% obsCov)
+
+stuff2[Xseq,1,2,2]
+(betahat= drop(solve(xProdQ[Xseq,Xseq]) %*% xProdQ[Xseq, -Xseq]))
+stuff3$extras$ml[,
+  paste('propNugget=', oneRes['propNugget'],sep=''),
+  'profiledVarianceHatMl',as.character(oneRes['oneminusar'])]
+
+myResR$array[,as.character(1/oneRes['propNugget']),, as.character(oneRes['oneminusar'])]
+
+
+resid = obsCov[,1] - betahat[1] - obsCov[,3]*betahat[2]
+(varhat = diag(crossprod(resid, Vinv) %*% resid)/Nobs)
+stuff[,2,'profiledVarianceHatMl']
+myResR$model$extras$ml[,
+  paste('propNugget=',oneRes['propNugget'],sep=''),,
+  as.character(oneRes['oneminusar'])]
+myResR$model$extras$ml[,
+  3,,
+  as.character(oneRes['oneminusar'])]
+
+stuff[,,'m2logLml']
+Nobs*log(2*pi) + Nobs*log(varhat) - determinant(Vinv)$modulus + stuff2[-Xseq,-Xseq,2,'beta']/varhat
+Nobs + Nobs*log(2*pi) - determinant(Vinv)$modulus + Nobs*log(varhat)
+
+V =  oneRes['propNugget'] * Qinv + Diagonal(nrow(Q))
+
+-2*mvtnorm::dmvnorm(resid, sigma = varhat*as.matrix(V), log=TRUE)
+
+
+
+
+myResR$model$extras$ml[,1:2,c('det','detReml'),   as.character(oneRes['oneminusar'])]
+
+
+
+
+
+Vinv = solve(V)
+
+
+myResR$model$extras$ssq[,,
+  as.character(1/oneRes['propNugget']),
+  ,
+  as.character(oneRes['oneminusar'])]
+
+crossprod(obsCov, Vinv) %*% obsCov
+
+
+crossprod(obsCov) - SxisqtausqFull[2] * 
+  t(obsCov) %*% QalmostInv %*% obsCov
+
+
+varY = as.matrix(oneRes['xisqHatMl']*solve(qTest) + oneRes['tausqHatMl']*diag(ncol(qTest)))
+
+myResR$model$extras$ml[,
+  paste('propNugget=',oneRes['propNugget'],sep=''),,
+  as.character(oneRes['oneminusar'])]
+
+determinant(varY)$modulus
+
+Yresid = myY - oneRes['(Intercept)BetaHat'] - oneRes['xBetaHat'] * myCov
+
+mvtnorm::dmvnorm(values(Yresid), sigma = varY, log=TRUE)
+
+oneRes['logLml']
+#' 
 
 # swiss rain
 
