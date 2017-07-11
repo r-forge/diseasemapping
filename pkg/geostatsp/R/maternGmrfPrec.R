@@ -442,6 +442,9 @@ maternGmrfPrec.dgCMatrix = function(N,
 		#	theNNmat = forceSymmetric(theNNmat)
 		
 	} # end edge adjustment 
+  
+  theNNmat = Matrix::forceSymmetric(theNNmat)
+  
 	paramInfo$adjustEdges=adjustEdges
 	
 	paramInfo$precisionEntries = precEntries

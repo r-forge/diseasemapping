@@ -246,11 +246,6 @@ loglikGmrf = function(
         apply(ml[,,Lcol,,drop=FALSE], 1, which.min),
         dim(ml)[c(2,4)])
       
-    ml <<- ml
-    ssq <<- ssq
-    Lcol <<- Lcol
-    covDim <<- covDim
-  
     
       bestBcList = apply(ml[,,Lcol,,drop=FALSE], c(2,4), which.min)
       newml = ml[bestBcList[1,1],,,,drop=FALSE]
@@ -430,7 +425,9 @@ loglikGmrf = function(
     mle = NULL
     for(D in 1:nrow(mleIndex))
       mle = cbind(mle, 
-        res[D,mleIndex[D,1],,mleIndex[D,2]])
+        c(res[D,mleIndex[D,1],,mleIndex[D,2]],
+    oneminusar = as.numeric(dimnames(res)$oneminusar[mleIndex[D,2]]),
+    propNugget = as.numeric(dimnames(res)$propNugget[mleIndex[D,1]])))
     
     colsToKeep = grep(paste(c('Reml','Ml')[1+reml],'$',sep=''),
       rownames(mle), invert=TRUE)
@@ -438,7 +435,6 @@ loglikGmrf = function(
     mle = mle[grep("^logL", rownames(mle), invert=TRUE),,drop=FALSE]
     rownames(mle) = gsub("(Beta)?(Hat)?(Reml|Ml)?$", "", rownames(mle))
    
-    
       
     res = list(
       mle=mle, 

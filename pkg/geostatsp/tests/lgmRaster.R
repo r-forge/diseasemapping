@@ -11,16 +11,7 @@ myParam=c(oneminusar=0.1, conditionalVariance=2.5^2,shape=2)
 myQ = maternGmrfPrec(myRaster, param=myParam)
 attributes(myQ)$info$optimalShape
 set.seed(0)
-
-mySimGRF = RFsimulate(attributes(myQ)$info$optimalShape, myRaster)
-mySimGmrf = raster(myRaster)
-cholQ = chol(myQ)#, perm=FALSE, ldl=FALSE)
-set.seed(0)
-values(mySimGmrf) = as.vector(solve(t(cholQ), rnorm(ncell(myRaster))))
-plot(mySimGmrf)
-
-
-values(mySimGmrf) = as.vector(Matrix::solve(cholQ, solve1, system='P'))
+mySim = RFsimulate(attributes(myQ)$info$optimalShape, myRaster)
 
 otherPar = c(intercept=1, beta = 2, tau=10)
 myCov = myRaster
@@ -47,8 +38,8 @@ plot(myY)
 #+ simGrid
 myResR = lgm(formula = sim ~ x, 
     data=raster::stack(myY, myCov), 
-    oneminusar = exp(seq(log(0.01), log(0.1),len=25)),
-    nugget = exp(seq(log(10), log(1000),len=21)), shape=2, 
+    oneminusar = exp(seq(log(0.025), log(0.2),len=25)),
+    nugget = exp(seq(log(5), log(100),len=21)), shape=2, 
     adjustEdges=TRUE,
     mc.cores=1+(.Platform$OS.type=='unix') )		
 #'
@@ -73,6 +64,10 @@ mapmisc::legendBreaks("topright", breaks = Sbreaks, col=myCol$col)
 
 
 points(myResR$param['propNugget'], myResR$param['oneminusar'])
+text(myResR$param['propNugget'], myResR$param['oneminusar'], 'mle', pos=3)
+
+points(otherPar['tau']^2/myParam['conditionalVariance'], myParam['oneminusar'], pch=16, col='red')
+text(otherPar['tau']^2/myParam['conditionalVariance'], myParam['oneminusar'], 'truth', pos=3)
 #'
 
 
@@ -80,7 +75,6 @@ points(myResR$param['propNugget'], myResR$param['oneminusar'])
 myResR$param
 attributes(myQ)$info$optimalShape
 otherPar
-
 #'
 
 #' checkResults
@@ -178,8 +172,8 @@ swissRainR2 = brick(swissRainR[['alt']],
 swissResR =  lgm(
     formula=layer ~ alt+ myvar, 
     data=swissRainR2, shape=2,
-    oneminusar = exp(seq(log(0.001), log(0.025), len=11)),
-    nugget = exp(seq(log(100), log(50000), len=11)),
+    oneminusar = exp(seq(log(0.025), log(0.1), len=11)),
+    nugget = exp(seq(log(0.25), log(2.5), len=11)),
     adjustEdges=TRUE,
     mc.cores=1+(.Platform$OS.type=='unix') )		
 
@@ -191,8 +185,8 @@ myCol = mapmisc::colourScale(
 )
 
 image(	
-    swissResR$array[1,-1,'propNugget',1], 
-    swissResR$array[1,1,'oneminusar',], 
+    as.numeric(dimnames(swissResR$array)$propNugget)[-1], 
+    as.numeric(dimnames(swissResR$array)$oneminusar), 
     swissResR$array[1,-1,'logLreml',],
     xlab = 'propNugget', ylab='oneminusar',
     log='xy',
@@ -204,7 +198,6 @@ mapmisc::legendBreaks("topright", breaks = Sbreaks, col=myCol$col)
 
 #' boxcox
 #+ boxCox
-if(Sys.info()['user'] =='patrick' & FALSE) {
   
   
   yBC = sqrt(myY + 1 - minValue(myY))
@@ -212,8 +205,8 @@ if(Sys.info()['user'] =='patrick' & FALSE) {
   myResBC = lgm(
       formula = sim ~ x, 
       data=raster::stack(yBC, myCov), 
-      oneminusar = seq(0.1,0.5,len=24),
-      nugget = seq(1, 10,len=40), 
+    oneminusar = exp(seq(log(0.025), log(0.15), len=11)),
+    nugget = exp(seq(log(5), log(50), len=11)),
       shape=2, 
       mc.cores=1+(.Platform$OS.type=='unix'), 
       fixBoxcox=FALSE,
@@ -234,18 +227,22 @@ if(Sys.info()['user'] =='patrick' & FALSE) {
   
   if(!interactive()) pdf("profLwithboxcox.pdf")
   image(	
-      myResBC$profL$twoDim$x, 
+      myResBC$profL$twoDim$x[-1], 
       myResBC$profL$twoDim$y,
-      myResBC$profL$twoDim$z,
+      myResBC$profL$twoDim$z[-1,],
+      log='xy', 
       ylab = 'range', xlab='propNugget',
       col=myCol$col, breaks=myCol$breaks+max(myResBC$array[,,'logLreml',]))
   mapmisc::legendBreaks("topright",  myCol)
   points(myResBC$param['propNugget'], myResBC$param['oneminusar'])
   if(!interactive()) dev.off()
+#'
   
-# optimizing, doesn't work
+#' optimizing, doesn't work
   
-# optimize propNugget
+#+ optimizepropNugget
+
+if(Sys.info()['user'] =='patrick' & FALSE) {
   myResRopt = lgm(
       formula = sim ~ x, 
       data=raster::stack(myY, myCov), 
