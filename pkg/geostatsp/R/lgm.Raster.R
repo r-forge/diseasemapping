@@ -84,18 +84,21 @@ setMethod("lgm",
       boxcox=boxcox, fixBoxcox=fixBoxcox,
       shape=shape,mc.cores=mc.cores,
       reml=reml, ...)
-    mle = thel$mle   
+    
+ 
+  mle = thel$mle   
     lArray = thel$mlArray
     lMat = thel$mlMat
+    res = list(param = drop(mle))
     
+   
     if (reml){
       chooseLike = 'logLreml'
-    }else{
+    } else{
       chooseLike = 'logLml'
     }
     
     
-    res = list(param = drop(mle))
     if(!is.null(lArray)){
       res$array = lArray
       res$profL = list()
@@ -163,12 +166,16 @@ setMethod("lgm",
           best=arrayInd(best, dim(lArray)[-(2:3)])
           res$profL$propNugget = NULL
           for(D in 1:nrow(best)){
-            res$profL$propNugget = rbind(
+            res$profL$propNugget = c(
               res$profL$propNugget,
-              lArray[best[1], D, 
-                c('propNugget',chooseLike),
-                best[2]])
+                  lArray[best[1], D, chooseLike,  best[2]]
+          )
           }
+          res$profL$propNugget = cbind(
+              propNugget = as.numeric(dimnames(lArray)$propNugget),
+              lik = res$profL$propNugget
+              )
+          colnames(res$profL$propNugget)[2] = chooseLike    
         } # end have nugget
         
         if(dim(lArray)[4]>1){ # have oneminusar
@@ -181,26 +188,30 @@ setMethod("lgm",
             res$profL$oneminusar = rbind(
               res$profL$oneminusar,
               lArray[best[1], best[2], 
-                c('oneminusar',chooseLike,'range'),
+                c(chooseLike,'range'),
                 D])
           }
+          res$profL$oneminusar = cbind(
+              oneminusar = as.numeric(dimnames(lArray)$oneminusar),
+              res$profL$oneminusar
+          )
+          
         } # end have oneminusar
-        res$profL$range = res$profL$oneminusar[,c(3,2)]
-        res$profL$oneminusar = res$profL$oneminusar[,c(1,2)]
+        res$profL$range = res$profL$oneminusar[,c('range',chooseLike)]
         
         if(all(dim(lArray)[c(2,4)]>1)){ # have both
-          x=lArray[1,,'propNugget',1]
+          x=as.numeric(dimnames(lArray)$propNugget)
           orderx = order(x)
           y = lArray[1,1,'range',]
           ordery=order(y)
           
           res$profL$twoDim = list(
-            x=lArray[1,orderx,'propNugget',1],
-            y=lArray[1,1,'range',ordery],
+            x=x[orderx],
+            y=y[ordery],
             z=apply(
               lArray[,,chooseLike,,drop=FALSE],
               c(2,4), max, na.rm=TRUE)[orderx,ordery],
-            oneminusar=lArray[1,1,'oneminusar',ordery]      
+            oneminusar = as.numeric(dimnames(lArray)$oneminusar[ordery])
           )
           
         } # end have both

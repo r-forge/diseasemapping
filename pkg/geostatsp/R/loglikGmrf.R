@@ -122,7 +122,7 @@ loglikGmrf = function(
   xisqTausq = 1/propNugget
   xisqTausq[!is.finite(xisqTausq)] = 0
   
-  
+ 
   Nxysq = ncol(obsCov)^2
   mlColNames = c(
     'det','detReml','m2logLml', 'm2logLreml',
@@ -165,14 +165,12 @@ loglikGmrf = function(
     ml = simplify2array(fromC)
     names(dimnames(ml)) = c('dataset','propNugget','output','oneminusar')
     dimnames(ml)$oneminusar = as.character(oneminusar)
+    dimnames(ml)$propNugget = as.character(propNugget)
     
-    if(any(dimnames(ml)[[2]]=='0')) {
-      ml[,'0','xisqTausq', ]= 0
+    if(any(dimnames(ml)[[2]]=='Inf')) {
+      ml[,'Inf','xisqTausq', ]= 0
     }
     
-    if(length(xisqTausq))
-      dimnames(ml)$propNugget = paste('propNugget=',c(0,1/xisqTausq[-1]),sep='')
-
     oldDimNames = names(dimnames(ml))
     ml=abind::abind(ml, 
       array(0, dim(ml)[-3]),
@@ -188,7 +186,7 @@ loglikGmrf = function(
         function(x) attributes(x)$ssq))
     
     names(dimnames(ssq)) = c('datasetRow','datasetCol', 'propNugget','output','oneminusar')
-    
+    dimnames(ssq)$propNugget = as.character(propNugget)
     dimnames(ssq)$oneminusar = as.character(oneminusar)
     
     covDim = seq(Ny+1, ncol(obsCov))
@@ -248,10 +246,17 @@ loglikGmrf = function(
         apply(ml[,,Lcol,,drop=FALSE], 1, which.min),
         dim(ml)[c(2,4)])
       
+    ml <<- ml
+    ssq <<- ssq
+    Lcol <<- Lcol
+    covDim <<- covDim
+  
+    
       bestBcList = apply(ml[,,Lcol,,drop=FALSE], c(2,4), which.min)
       newml = ml[bestBcList[1,1],,,,drop=FALSE]
-      newssq = ssq[c(bestBcList[1,1], covDim),
-        c(bestBcList[1,1], covDim),,,drop=FALSE]
+      newssq = ssq[
+          c(bestBcList[1,1], covDim),
+          c(bestBcList[1,1], covDim),,,,drop=FALSE]
       
       
       if(length(unique(as.vector(bestBcList)))>=1){
@@ -267,8 +272,8 @@ loglikGmrf = function(
             if(!is.na(thisBc)){
               newml[1,Dnugget,,Dar] =
                 ml[thisBc,Dnugget,,Dar]
-              newssq[,,Dnugget,Dar] = 
-                ssq[c(thisBc,covDim),c(thisBc,covDim),Dnugget,Dar]
+              newssq[,,Dnugget,,Dar] = 
+                ssq[c(thisBc,covDim),c(thisBc,covDim),Dnugget,,Dar]
             }
           }
         }
@@ -281,26 +286,35 @@ loglikGmrf = function(
     
     theInf = ml[,,'xisqTausq',,drop=FALSE] != Inf
     
+    xisqHatRemlArray = theInf*ml[,,'profiledVarianceHatReml',,drop=FALSE]*ml[,,'xisqTausq',,drop=FALSE]
+    dimnames(xisqHatRemlArray)$output = 'xisqHatReml'
+    xisqHatRemlArray[,'0','xisqHatReml',] = ml[,'0','profiledVarianceHatReml',,drop=FALSE]
+        
+    xisqHatMlArray = theInf*ml[,,'profiledVarianceHatMl',,drop=FALSE]*ml[,,'xisqTausq',,drop=FALSE]
+    dimnames(xisqHatMlArray)$output = 'xisqHatMl'
+    xisqHatMlArray[,'0','xisqHatMl',] = ml[,'0','profiledVarianceHatMl',,drop=FALSE]
+    
+    
+    
     forml = abind::abind(
-      propNugget = 1/ml[,,'xisqTausq',,drop=FALSE],
       tausqHatMl=ml[,,'profiledVarianceHatMl',,drop=FALSE]*theInf,
       tausqHatReml=ml[,,'profiledVarianceHatReml',,drop=FALSE]*theInf,
-      xisqHatMl = theInf*ml[,,'profiledVarianceHatMl',,drop=FALSE]*ml[,,'xisqTausq',,drop=FALSE],
-      xisqHatReml = theInf*ml[,,'profiledVarianceHatReml',,drop=FALSE]*ml[,,'xisqTausq',,drop=FALSE],
-      oneminusar = aperm(
-        array(oneminusar, dim(ml)[c(4,2,1)]),3:1
-      ),
+      xisqHatMlArray,
+      xisqHatRemlArray,
       boxcox = ml[,,'boxcox',,drop=FALSE],
       along=3
     )
     
     names(dimnames(forml)) = names(dimnames(ml))
     
-    dimnames(forml)$output = c(
-      'propNugget','tausqHatMl', 'tausqHatReml', 
-      'xisqHatMl','xisqHatReml', 'oneminusar',
-      'boxcox')
     
+
+    
+    dimnames(forml)$output[1:2] = c(
+      'tausqHatMl','tausqHatReml')
+  
+  forml[,'0',c('tausqHatMl','tausqHatReml'),] = 0
+  
     Ny = dim(ml)[1]
     betaHat = ssq[-(1:Ny),1:Ny,,'beta',,drop=FALSE]
     names(dimnames(betaHat))[1] = 'covariate'
@@ -345,8 +359,7 @@ loglikGmrf = function(
   )  
   
     
-    seBetaHatMl = seBetaHat * 
-      ml[,,rep('profiledVarianceHatMl',dim(seBetaHat)[3]),,drop=FALSE]  
+    seBetaHatMl = seBetaHat *  ml[,,rep('profiledVarianceHatMl',dim(seBetaHat)[3]),,drop=FALSE]  
     seBetaHatReml = seBetaHat * 
       ml[,,rep('profiledVarianceHatReml',dim(seBetaHat)[3]),,drop=FALSE]  
     
@@ -376,6 +389,8 @@ loglikGmrf = function(
     dimnames(sigmasqHat)[[3]] = gsub("^xi", "sigma", 
       dimnames(sigmasqHat)[[3]])
     
+   sigmasqHat[,'0',,] = ml[,'0',c('profiledVarianceHatMl','profiledVarianceHatReml'),]
+
     # deviance
     
     theMin = apply(
@@ -404,8 +419,9 @@ loglikGmrf = function(
       forml, sigmasqHat,
       betaHat, seBetaHatMl, seBetaHatReml, parArray,
       along=3)
-    
-    
+    names(dimnames(res)) = names(dimnames(ml))
+  
+  
     theMle = apply(
       res[,,gsub("^m2","",Lcol),,drop=FALSE], 
       1, which.max)
@@ -422,12 +438,14 @@ loglikGmrf = function(
     mle = mle[grep("^logL", rownames(mle), invert=TRUE),,drop=FALSE]
     rownames(mle) = gsub("(Beta)?(Hat)?(Reml|Ml)?$", "", rownames(mle))
    
+    
       
     res = list(
       mle=mle, 
       mlArray = res,
       extras = list(ml=ml, ssq=ssq)
     )
+    
     
   } else {
     #oneminusar is NULL
@@ -598,6 +616,7 @@ loglikGmrf = function(
   } # end optimizing
   
   res$profileBoxCox = profBC
+  
   
   res
   

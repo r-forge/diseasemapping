@@ -42,7 +42,7 @@ NNmat.Raster = function(N, Ny=N, nearest=3, adjustEdges=FALSE) {
 NNmat.default = function(N, Ny=N, nearest=3, adjustEdges=FALSE) {
   
   if(nearest<3){
-    nbMat = nbMat[nbMat[,1]<=c(2,4)[nearest],] 
+    nbMat = nbMat[nbMat[,1] <= (c(2,4)[nearest]),] 
   }
 
   Nx = N
@@ -51,7 +51,7 @@ NNmat.default = function(N, Ny=N, nearest=3, adjustEdges=FALSE) {
   cellSeq = values(theraster) = 1:Ncell
 
   # find id's of cells on the border (for edge correction)  
-  innerCells = crop(theraster, 
+  innerCells = raster::crop(theraster, 
     extend(extent(theraster), as.integer(-nearest))
   )
   
@@ -86,15 +86,19 @@ NNmat.default = function(N, Ny=N, nearest=3, adjustEdges=FALSE) {
       )
   }
 
-  nbPairs = as.list(as.data.frame(nbPairs))
-  nbPairs$dims = c(Ncell, Ncell)
-  nbPairs$symmetric = TRUE
-  nbPairs$dimnames = list(
-    cellSeq, cellSeq
-    )
-  nbPairs$check = FALSE
-    
-  result = do.call(sparseMatrix, nbPairs)
+  nbPairs = nbPairs[order(nbPairs[,'j'], nbPairs[,'i']),]
+  
+  result = Matrix::sparseMatrix(
+      i=as.integer(nbPairs[,'i']),
+      j=as.integer(nbPairs[,'j']),
+      x=as.numeric(nbPairs[,'x']),
+      dims = c(Ncell, Ncell),
+      dimnames = list(
+          cellSeq, cellSeq
+      ), 
+      symmetric=FALSE
+      )
+  
   
   attributes(result)$Nx = Nx
   attributes(result)$Ny = Ny

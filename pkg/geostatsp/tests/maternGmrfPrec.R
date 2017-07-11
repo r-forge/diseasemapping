@@ -12,17 +12,17 @@ params=c(range = 6*xres(myr),
 
 
 # precision matrix without adjusting for edge effects
-unix.time({precMat = maternGmrfPrec(N=theNN, param=params,
+system.time({precMat = maternGmrfPrec(N=theNN, param=params,
 					adjustEdges=FALSE)})
 
 
-unix.time({theNNadj = NNmat(N=myr, nearest=params['shape']+1, adjustEdges=TRUE)})
+system.time({theNNadj = NNmat(N=myr, nearest=params['shape']+1, adjustEdges=TRUE)})
 # and with the adjustment
-unix.time({precMatCorr =maternGmrfPrec(N=theNNadj, param=params, 
+system.time({precMatCorr =maternGmrfPrec(N=theNNadj, param=params, 
 					adjustEdges=TRUE)}) 
 
 # find better parameters using a numerical optimizer
-unix.time({precMatAdj =maternGmrfPrec(theNNadj, param=params, 
+system.time({precMatAdj =maternGmrfPrec(theNNadj, param=params, 
 					adjustEdges='optimalShape') })
 
 attributes(precMat)$info$adjustEdges

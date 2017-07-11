@@ -1,7 +1,7 @@
 \name{maternGmrfPrec}
 \alias{maternGmrfPrec}
 \alias{maternGmrfPrec.default}
-\alias{maternGmrfPrec.dsCMatrix}
+\alias{maternGmrfPrec.dgCMatrix}
 \alias{NNmat}
 \alias{NNmat.default}
 \alias{NNmat.Raster}
@@ -12,7 +12,7 @@ Produces the precision matrix for a Gaussian random field on a regular square la
 
 \usage{ 
 maternGmrfPrec(N, ...)
-\method{maternGmrfPrec}{dsCMatrix}(N, 
+\method{maternGmrfPrec}{dgCMatrix}(N, 
 	param=c(variance=1, range=1, shape=1, cellSize=1),
   adjustEdges=FALSE,...) 
 \method{maternGmrfPrec}{default}(N, Ny=N, 	
@@ -72,6 +72,8 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 	
 	# precision matrix without adjusting for edge effects
 	precMat =maternGmrfPrec(myGrid, param=params) 
+	
+	attributes(precMat)$info$precisionEntries
 	
 	midcell = cellFromRowCol(myGrid, 
 		round(nrow(myGrid)/2), round(ncol(myGrid)/2)) # the middle cell
