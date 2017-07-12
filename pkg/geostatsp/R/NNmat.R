@@ -58,7 +58,7 @@ NNmat.Raster = function(N, Ny=N, nearest=3, adjustEdges=FALSE) {
 NNmat.default = function(N, Ny=N, nearest=3, adjustEdges=FALSE) {
   
   if(nearest<4){
-    nbMat = nbMat[nbMat[,1] <= (c(2,4)[nearest]),] 
+    nbMat = nbMat[nbMat[,1] <= (c(2,4,6)[nearest]),] 
   }
 
   Nx = N

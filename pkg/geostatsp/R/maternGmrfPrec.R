@@ -318,7 +318,7 @@ maternGmrfPrec.dgCMatrix = function(N,
 	toKeep = which(theX< 1.75*paramInfo$theo['range'])
 	
 	if(adjustEdges == FALSE) {	
-  	varMid = solve(theNNmat,midVec)
+  	varMid = Matrix::solve(Matrix::forceSymmetric(theNNmat),midVec)
   	
   	ev = data.frame(
 		  	x=theX[toKeep], 
@@ -341,6 +341,7 @@ maternGmrfPrec.dgCMatrix = function(N,
   	
   	# need stuff on top of file
   	nbprec = precEntries[nbn]
+    nbprec[is.na(nbprec)] = 0
   	otherdist = otherdist * param['cellSize']
   	ndist = ndist * param['cellSize']
   	
@@ -391,7 +392,8 @@ maternGmrfPrec.dgCMatrix = function(N,
 		  	param=c(optInv$par, 
 				  	paramInfo$theo[c('range','variance')])
   	)
-  	thediag = sum(nmatern * precEntries * numbn)
+    names(nmatern) = names(ndist)
+  	thediag = sum(nmatern[names(precEntries)] * precEntries * numbn[names(precEntries)])
   	
   	paramInfo$optimal = c(optInv$par,
 		  	paramInfo$theo[c('cellSize','range')],

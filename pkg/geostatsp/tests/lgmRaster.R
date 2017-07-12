@@ -114,13 +114,14 @@ resid = obsCov[,1] - betahat[1] - obsCov[,3]*betahat[2]
 (varhat = diag(crossprod(resid, Q) %*% resid)/(nrow(obsCov) - c(ml=0,reml=length(Xseq))))
 
 
-c(
-    -0.5*myResR$model$extras$ml[,'0','m2logLml', as.character(oneRes['oneminusar'])],
-    myResR$array[,1,'logLml',as.character(oneRes['oneminusar'])],
+
+    -0.5*myResR$model$extras$ml[,'0','m2logLml', as.character(oneRes['oneminusar'])]
+    myResR$array[,1,'logLml',as.character(oneRes['oneminusar'])]
+
+if(requireNamespace("mvtnorm", quietly=TRUE))
     mvtnorm::dmvnorm(
         resid, 
         sigma = varhat['ml'] * Qinv, log=TRUE)
-)
 #'
 
 #' with nugget
@@ -146,13 +147,14 @@ myResR$array[,
     c('tausqHatMl','tausqHatReml'),
     as.character(oneRes['oneminusar'])]
 
-c(
-    -0.5*myResR$model$extras$ml[,as.character(oneRes['propNugget']),'m2logLml', as.character(oneRes['oneminusar'])],
-    myResR$array[,as.character(oneRes['propNugget']),'logLml',as.character(oneRes['oneminusar'])],
+    -0.5*myResR$model$extras$ml[,as.character(oneRes['propNugget']),'m2logLml', as.character(oneRes['oneminusar'])]
+    myResR$array[,as.character(oneRes['propNugget']),'logLml',as.character(oneRes['oneminusar'])])
+
+if(requireNamespace("mvtnorm", quietly=TRUE))
     mvtnorm::dmvnorm(
         resid, 
         sigma = as.matrix(varhat['ml'] * V), log=TRUE)
-)
+
 #' 
 
 #' # swiss rain
