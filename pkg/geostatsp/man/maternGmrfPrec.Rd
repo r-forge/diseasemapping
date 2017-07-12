@@ -64,7 +64,7 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 
 \examples{
 # produces the matrix above
-	matrix(NNmat(7, 7)[,25], 7, 7)
+	matrix(NNmat(9, 9, nearest=4)[,9*4+5], 9, 9)
 
 	params=c(range = 3,	shape=2, variance=5^2)
 	

@@ -1,3 +1,16 @@
+# needed for optimal parameters
+
+ndist = c('1'=0, '2'=1, '3'=sqrt(2), '4'=2, '5'=sqrt(5), '6'=3, '7'=sqrt(10), '8'=sqrt(8), '9'=4) 
+numbn = c('1'=1,'2'=4,'3'=4,'4'=4,'5'=8,'6'=4, '7' = 8, '8'= 4, '9'=4)
+nbcells = as.vector(outer((-4):4, 1i*(-4):4,"+"))
+nbcells = nbcells[signif(Mod(nbcells),3)%in%signif(ndist,3)]
+nbn = names(ndist)[match(signif(Mod(nbcells),3), signif(ndist,3))]
+othercells = as.vector(outer(0:15, 1i*1:15,"+"))
+othercells = othercells[Re(othercells) <= Im(othercells)]
+otherdist = Mod(outer(othercells, nbcells, '-'))
+dimnames(otherdist) = list(as.character(othercells), as.character(nbcells))
+
+
 getPrec = function(shape,oneminusar)	{
 	a = as.numeric((1-oneminusar)/4)
 	# This is no longer lindgren et al's a!  it's 1/their a
@@ -26,8 +39,22 @@ getPrec = function(shape,oneminusar)	{
 				"4" = 3*a^2, 
 				"5" =  -3*a^3,
 				"6" = -a^3)
+  } else if(shape==3) {
+    # shape 3 https://bitbucket.org/hrue/r-inla/src/ gmrflib/matern.c
+#    val = SQR(SQR(a) + 6.0) + 12 * SQR(a);
+    precEntries = c(
+        "1" = (1+6*a^2)^2 + 12*a^2,
+        "2" = -4*(a+9*a^3),
+        "3" = 12*(a^2+2*a^4),
+        "4" = 2*(3*a^2+8*a^4), 
+        "5" = -12*a^3,
+        "6" = -4*a^3,
+        "7" = 4*a^4, #3,1
+        "8" = 6*a^4, #2,2
+        "9" = a^4
+    )
 	} else {
-		stop("shape parameter must be 0, 1 or 2")			
+		stop("shape parameter must be 0, 1, 2 or 3")			
 	}
 	precEntries
 }
@@ -52,7 +79,7 @@ maternGmrfPrec.default = function(N, Ny=N,
 }
 
 
-maternGmrfPrec.dgCMatrix = function(N, 	
+maternGmrfPrec.dgCMatrix = function(N,
 		param=c(variance=1, range=1, shape=1, cellSize=1),
 		adjustEdges=FALSE,
 		...) {
@@ -147,7 +174,8 @@ maternGmrfPrec.dgCMatrix = function(N,
 	midVec = sparseMatrix(midcell,1,x=1,
 			dims=c(ncol(N),1))
 	
-	distVecFull =  expand.grid(x=seq(1, Nx),
+	distVecFull =  expand.grid(
+      x=seq(1, Nx),
 			y=seq(Ny,1))
 	buffer = param['shape']+2
 	
@@ -215,7 +243,6 @@ maternGmrfPrec.dgCMatrix = function(N,
 		# else range supplied
 		##########################
 	} else if(all(c('range','shape') %in% names(param))){
-		
 		
 		param['rangeInCells'] = as.numeric(param['range']/param['cellSize'])
 		paramInfo$theo = param
@@ -288,8 +315,7 @@ maternGmrfPrec.dgCMatrix = function(N,
   # parameters than the theoretical values
 	
 	theX = distVecFull * paramInfo$theo['cellSize']
-	toKeep = which(theX<
-					1.75*paramInfo$theo['range'])
+	toKeep = which(theX< 1.75*paramInfo$theo['range'])
 	
 	if(adjustEdges == FALSE) {	
   	varMid = solve(theNNmat,midVec)
@@ -306,25 +332,16 @@ maternGmrfPrec.dgCMatrix = function(N,
   	paramInfo$empirical = paramInfo$empirical[
 		  	order(paramInfo$empirical$x),
   	]
-	} else {
+	} else { # adjusting edges
 		paramInfo$empirical = data.frame(x = theX[toKeep])	
 	}
   # optimal parameters so product of gmrf precision with matern is identity
 # don't do it if shape parameter is zero 
 	if(paramInfo$theo['shape'] > 0) {
   	
-  	ndist = c('1'=0, '2'=1, '3'=sqrt(2), '4'=2, '5'=sqrt(5), '6'=3) 
-  	numbn = c('1'=1,'2'=4,'3'=4,'4'=4,'5'=8,'6'=4)
-  	
-  	nbcells = as.vector(outer((-3):3, 1i*(-3):3,"+"))
-  	nbcells = nbcells[signif(Mod(nbcells),3)%in%signif(ndist,3)]
-  	nbn = names(ndist)[match(signif(Mod(nbcells),3), signif(ndist,3))]
-  	
+  	# need stuff on top of file
   	nbprec = precEntries[nbn]
-  	
-  	othercells = as.vector(outer(0:15, 1i*1:15,"+"))
-  	othercells = othercells[Re(othercells) <= Im(othercells)]
-  	otherdist = Mod(outer(othercells, nbcells, '-')) * param['cellSize']
+  	otherdist = otherdist * param['cellSize']
   	ndist = ndist * param['cellSize']
   	
   	# inverse only vary shape
@@ -337,18 +354,17 @@ maternGmrfPrec.dgCMatrix = function(N,
 	  	othermatern = matern(otherdist, param= qq)
 	  	
 	  	nmatern = matern(ndist, param=qq)
+      names(nmatern) = names(ndist)
 	  	
 	  	nbprod = as.vector(othermatern %*% nbprec)
-	  	thediag = sum(nmatern * precEntries * numbn)
+	  	thediag = sum(nmatern[names(precEntries)] * precEntries * numbn[names(precEntries)])
 	  	sum(nbprod^2) + 2*length(othercells)*(thediag-1)^2
-	  	
   	}
   	
   	optInv = optim(startparam, objfun,
 		  	lower=startparam/4,
 		  	upper=4*startparam,
-		  	control=list(parscale=scaleparam)
-		  	,
+		  	control=list(parscale=scaleparam),
 		  	method='L-BFGS-B')
   	
   	paramInfo$optimalShape = 
@@ -368,8 +384,7 @@ maternGmrfPrec.dgCMatrix = function(N,
   	optInv = optim(startparam, objfun,
 		  	lower=startparam/4,
 		  	upper=4*startparam,
-		  	control=list(parscale=scaleparam)
-		  	,
+		  	control=list(parscale=scaleparam),
 		  	method='L-BFGS-B')
 		
   	nmatern = matern(ndist,

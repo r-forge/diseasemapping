@@ -23,8 +23,24 @@ nbMat = rbind(
   c(6,0,3), #up
   c(6,0,-3), #down
   c(6,3,0), #right,
-  c(6,-3,0) #left
-)
+  c(6,-3,0), #left
+  c(7,-3, 1), 
+  c(7,-3,-1), 
+  c(7, 3, 1), 
+  c(7, 3,-1), 
+  c(7,-1, 3), 
+  c(7,-1,-3), 
+  c(7, 1, 3), 
+  c(7, 1,-3),
+  c(8,-2, 2), 
+  c(8,-2,-2), 
+  c(8, 2, 2), 
+  c(8, 2,-2), 
+  c(9, 4, 0),
+  c(9,-4, 0),
+  c(9, 0, 4),
+  c(9, 0,-4)
+  )
 
 
 NNmat = function(N,Ny=N, nearest=3, adjustEdges=FALSE) {
@@ -41,7 +57,7 @@ NNmat.Raster = function(N, Ny=N, nearest=3, adjustEdges=FALSE) {
 
 NNmat.default = function(N, Ny=N, nearest=3, adjustEdges=FALSE) {
   
-  if(nearest<3){
+  if(nearest<4){
     nbMat = nbMat[nbMat[,1] <= (c(2,4)[nearest]),] 
   }
 
