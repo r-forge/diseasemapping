@@ -55,8 +55,8 @@ myCol = mapmisc::colourScale(
 
 image(	
     as.numeric(dimnames(myResR$array)$propNugget)[-1], 
-     as.numeric(dimnames(myResR$array)$oneminusar),
-     myResR$array[1,-1,'logLreml',],
+    as.numeric(dimnames(myResR$array)$oneminusar),
+    myResR$array[1,-1,'logLreml',],
     xlab = 'propNugget', ylab='oneminusar',
     log='xy',
     col=myCol$col, breaks=myCol$breaks)
@@ -115,13 +115,13 @@ resid = obsCov[,1] - betahat[1] - obsCov[,3]*betahat[2]
 
 
 
-    -0.5*myResR$model$extras$ml[,'0','m2logLml', as.character(oneRes['oneminusar'])]
-    myResR$array[,1,'logLml',as.character(oneRes['oneminusar'])]
+-0.5*myResR$model$extras$ml[,'0','m2logLml', as.character(oneRes['oneminusar'])]
+myResR$array[,1,'logLml',as.character(oneRes['oneminusar'])]
 
 if(requireNamespace("mvtnorm", quietly=TRUE))
-    mvtnorm::dmvnorm(
-        resid, 
-        sigma = varhat['ml'] * Qinv, log=TRUE)
+  mvtnorm::dmvnorm(
+      resid, 
+      sigma = varhat['ml'] * Qinv, log=TRUE)
 #'
 
 #' with nugget
@@ -147,13 +147,13 @@ myResR$array[,
     c('tausqHatMl','tausqHatReml'),
     as.character(oneRes['oneminusar'])]
 
-    -0.5*myResR$model$extras$ml[,as.character(oneRes['propNugget']),'m2logLml', as.character(oneRes['oneminusar'])]
-    myResR$array[,as.character(oneRes['propNugget']),'logLml',as.character(oneRes['oneminusar'])])
+-0.5*myResR$model$extras$ml[,as.character(oneRes['propNugget']),'m2logLml', as.character(oneRes['oneminusar'])]
+myResR$array[,as.character(oneRes['propNugget']),'logLml',as.character(oneRes['oneminusar'])]
 
 if(requireNamespace("mvtnorm", quietly=TRUE))
-    mvtnorm::dmvnorm(
-        resid, 
-        sigma = as.matrix(varhat['ml'] * V), log=TRUE)
+  mvtnorm::dmvnorm(
+      resid, 
+      sigma = as.matrix(varhat['ml'] * V), log=TRUE)
 
 #' 
 
@@ -200,48 +200,48 @@ mapmisc::legendBreaks("topright", breaks = Sbreaks, col=myCol$col)
 
 #' boxcox
 #+ boxCox
-  
-  
-  yBC = sqrt(myY + 1 - minValue(myY))
-  names(yBC) = names(myY)
-  myResBC = lgm(
-      formula = sim ~ x, 
-      data=raster::stack(yBC, myCov), 
+
+
+yBC = sqrt(myY + 1 - minValue(myY))
+names(yBC) = names(myY)
+myResBC = lgm(
+    formula = sim ~ x, 
+    data=raster::stack(yBC, myCov), 
     oneminusar = exp(seq(log(0.025), log(0.15), len=11)),
     nugget = exp(seq(log(5), log(50), len=11)),
-      shape=2, 
-      mc.cores=1+(.Platform$OS.type=='unix'), 
-      fixBoxcox=FALSE,
-      adjustEdges=FALSE)
-  
-  
-  if(!interactive()) pdf("profLboxcox.pdf")
-  plot(myResBC$profL$boxcox,type='o', ylim=max(myResBC$profL$boxcox[,2])-c(3,0))
-  if(!interactive()) dev.off()
-  
-  myResBC$param
-  
-  myCol = mapmisc::colourScale(
-      breaks = Sbreaks,
-      style='fixed',
-      col=terrain.colors
-  )
-  
-  if(!interactive()) pdf("profLwithboxcox.pdf")
-  image(	
-      myResBC$profL$twoDim$x[-1], 
-      myResBC$profL$twoDim$y,
-      myResBC$profL$twoDim$z[-1,],
-      log='xy', 
-      ylab = 'range', xlab='propNugget',
-      col=myCol$col, breaks=myCol$breaks+max(myResBC$array[,,'logLreml',]))
-  mapmisc::legendBreaks("topright",  myCol)
-  points(myResBC$param['propNugget'], myResBC$param['oneminusar'])
-  if(!interactive()) dev.off()
+    shape=2, 
+    mc.cores=1+(.Platform$OS.type=='unix'), 
+    fixBoxcox=FALSE,
+    adjustEdges=FALSE)
+
+
+if(!interactive()) pdf("profLboxcox.pdf")
+plot(myResBC$profL$boxcox,type='o', ylim=max(myResBC$profL$boxcox[,2])-c(3,0))
+if(!interactive()) dev.off()
+
+myResBC$param
+
+myCol = mapmisc::colourScale(
+    breaks = Sbreaks,
+    style='fixed',
+    col=terrain.colors
+)
+
+if(!interactive()) pdf("profLwithboxcox.pdf")
+image(	
+    myResBC$profL$twoDim$x[-1], 
+    myResBC$profL$twoDim$y,
+    myResBC$profL$twoDim$z[-1,],
+    log='xy', 
+    ylab = 'range', xlab='propNugget',
+    col=myCol$col, breaks=myCol$breaks+max(myResBC$array[,,'logLreml',]))
+mapmisc::legendBreaks("topright",  myCol)
+points(myResBC$param['propNugget'], myResBC$param['oneminusar'])
+if(!interactive()) dev.off()
 #'
-  
+
 #' optimizing, doesn't work
-  
+
 #+ optimizepropNugget
 
 if(Sys.info()['user'] =='patrick' & FALSE) {
