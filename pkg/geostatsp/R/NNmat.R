@@ -1,3 +1,12 @@
+nnIndices = function(index, baseDist) {
+  rotDist =  Mod(baseDist)*exp(1i*(Arg(baseDist)+seq(0, 2*pi, len=5)))
+  rotDist = c(rotDist, Im(rotDist)+1i*Re(rotDist))
+  rotDist = unique(round(rotDist))
+  
+  cbind(index, x=Re(rotDist), y=Im(rotDist))
+}
+
+
 nbMat = rbind(
   c(1,0,0),# self
   c(2,0,1), #up
@@ -24,23 +33,27 @@ nbMat = rbind(
   c(6,0,-3), #down
   c(6,3,0), #right,
   c(6,-3,0), #left
-  c(7,-3, 1), 
-  c(7,-3,-1), 
-  c(7, 3, 1), 
-  c(7, 3,-1), 
-  c(7,-1, 3), 
-  c(7,-1,-3), 
-  c(7, 1, 3), 
-  c(7, 1,-3),
-  c(8,-2, 2), 
-  c(8,-2,-2), 
-  c(8, 2, 2), 
-  c(8, 2,-2), 
+  c(7,-2, 2), 
+  c(7,-2,-2), 
+  c(7, 2, 2), 
+  c(7, 2,-2), 
+  c(8,-3, 1), 
+  c(8,-3,-1), 
+  c(8, 3, 1), 
+  c(8, 3,-1), 
+  c(8,-1, 3), 
+  c(8,-1,-3), 
+  c(8, 1, 3), 
+  c(8, 1,-3),
   c(9, 4, 0),
   c(9,-4, 0),
   c(9, 0, 4),
   c(9, 0,-4)
-  )
+rbind(
+    nnIndices(10,baseDist = 3+2i),
+    nnIndices(11,baseDist = 4+1i),
+    nnIndices(12,baseDist = 5+0i)
+)
 
 
 NNmat = function(N,Ny=N, nearest=3, adjustEdges=FALSE) {
