@@ -53,7 +53,13 @@ getPrec = function(shape,oneminusar)	{
         "8" = 4*a^4, #3,1
         "9" = a^4
     )
-	} else {
+  } else if(shape==4) {
+  # values computed by yacas in gmrfShape2.R file
+    precEntries = c(
+        
+        
+        )
+  } else {
 		stop("shape parameter must be 0, 1, 2 or 3")			
 	}
 	precEntries

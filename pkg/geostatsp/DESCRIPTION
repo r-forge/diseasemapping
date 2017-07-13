@@ -21,7 +21,12 @@ Suggests:
     ellipse,
     pracma,
     knitr
-Enhances: INLA, diseasemapping, geoR, mvtnorm, Ryacas
+Enhances: 
+	INLA, 
+	diseasemapping, 
+	geoR, 
+	mvtnorm, 
+	Ryacas
 LinkingTo: Matrix
 Additional_repositories: https://www.math.ntnu.no/inla/R/stable
 Author: Patrick Brown <patrick.brown@utoronto.ca>[aut, cre], Robert Hijmans
