@@ -1,7 +1,42 @@
 # needed for optimal parameters
+if(FALSE) {
+  
+  theNN = NNmat(11, 11, nearest=5)
+  theRaster = attributes(theNN)$raster
+  matSub = matrix(theNN[,11*5+6],11, 11)
+  cCell = c(6,6)
+  
+  numbn = table(matSub)
+  numbn = numbn[setdiff(names(numbn), '0')]
+  dput(numbn, '')
+  
+  ndist = c('1'=0, '2'=1, '3'=sqrt(2), '4'=2, '5'=sqrt(5), '6'=3, '7'=sqrt(10), '8'=sqrt(8), '9'=4) 
+  
+  dMat = spDists(
+      xyFromCell(theRaster, 1:ncell(theRaster)),
+      cbind(xFromCol(theRaster, cCell[1]), yFromRow(theRaster, cCell[2]))
+  )
+  values(theRaster) = dMat
+  theIndex = raster(theRaster)
+  values(theIndex) = as.vector(matSub)
+  
+  dVec = cbind(values(theIndex), values(theRaster))
+  dVec = dVec[dVec[,1]> 0,]
+  dVec = dVec[order(dVec[,1]),]  
+  dVec = dVec[!duplicated(dVec[,1]),]
+  rownames(dVec) = dVec[,1]
+  ndist = dVec[,2]
+  dput(ndist, '')
+}
 
-ndist = c('1'=0, '2'=1, '3'=sqrt(2), '4'=2, '5'=sqrt(5), '6'=3, '7'=sqrt(10), '8'=sqrt(8), '9'=4) 
-numbn = c('1'=1,'2'=4,'3'=4,'4'=4,'5'=8,'6'=4, '7' = 8, '8'= 4, '9'=4)
+numbn = structure(c(1L, 4L, 4L, 4L, 8L, 4L, 4L, 8L, 4L, 8L, 8L, 4L), .Dim = 12L, .Dimnames = structure(list(
+            matSub = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", 
+                "11", "12")), .Names = "matSub"), class = "table")
+
+ndist = structure(c(0, 1, 1.4142135623731, 2, 2.23606797749979, 3, 2.82842712474619, 
+        3.16227766016838, 4, 3.60555127546399, 4.12310562561766, 5), .Names = c("1", 
+        "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"))
+
 nbcells = as.vector(outer((-4):4, 1i*(-4):4,"+"))
 nbcells = nbcells[signif(Mod(nbcells),3)%in%signif(ndist,3)]
 nbn = names(ndist)[match(signif(Mod(nbcells),3), signif(ndist,3))]
@@ -18,11 +53,7 @@ getPrec = function(shape,oneminusar)	{
 	if(shape == 0){
 		precEntries = c(
 				"1" = 1,
-				"2" = -a,
-				"3" = 0,
-				"4" = 0, 
-				"5" =  0,
-				"6" = 0)
+				"2" = -a)
 	} else if(shape==1) {			
 		precEntries = c(
 				"1" = 1+4*a^2,
@@ -39,6 +70,7 @@ getPrec = function(shape,oneminusar)	{
 				"4" = 3*a^2, 
 				"5" =  -3*a^3,
 				"6" = -a^3)
+
   } else if(shape==3) {
     # shape 3 https://bitbucket.org/hrue/r-inla/src/ gmrflib/matern.c
 #    val = SQR(SQR(a) + 6.0) + 12 * SQR(a);
@@ -56,8 +88,18 @@ getPrec = function(shape,oneminusar)	{
   } else if(shape==4) {
   # values computed by yacas in gmrfShape2.R file
     precEntries = c(
-        
-        
+        '1'=  180 * a^4 + 40 * a^2 + 1 ,
+        '2'=  5 * (-20 * a^5 - 18 * a^3 - a) ,
+        '3'=  20 * (6 * a^4 + a^2) ,
+        '4'=  10 * (8 * a^4 + a^2) ,
+        '5'=  10 * (-5 * a^5 - 3 * a^3) ,
+        '6'=  5 * (-5 * a^5 - 2 * a^3) ,
+        '7'=  30 * a^4 ,
+        '8'=  20 * a^4 ,
+        '9'=  5 * a^4 ,
+        '10'=  -10 * a^5 ,
+        '11'=  -5 * a^5 ,
+        '12'=  -a^5  
         )
   } else {
 		stop("shape parameter must be 0, 1, 2 or 3")			
@@ -309,14 +351,17 @@ maternGmrfPrec.dgCMatrix = function(N,
  	
 	# build the matrix
 	precEntries=getPrec(param['shape'], paramInfo$theo['oneminusar'])
-	
   
   theNNmat = N
   
   theN = (precEntries/paramInfo$theo['conditionalVariance'])[theNNmat@x]
 	theN[is.na(theN)] = 0
   theNNmat@x = theN
-  
+
+  if(FALSE) {
+  bob = solve(forceSymmetric(theNNmat))
+  image(matrix(bob[,midcell], ncol(theraster),nrow(theraster)))
+  }
   ######### optimization to see if there are better matern
   # parameters than the theoretical values
 	

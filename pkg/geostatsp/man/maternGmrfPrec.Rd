@@ -64,14 +64,14 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 
 \examples{
 # produces the matrix above
-	matrix(NNmat(9, 9, nearest=4)[,9*4+5], 9, 9)
+	matrix(NNmat(11, 11, nearest=5)[,11*5+6],11, 11)
 
 	params=c(range = 3,	shape=2, variance=5^2)
 	
 	myGrid = squareRaster(extent(0,20,0,10), 40)
-	
+		
 	# precision matrix without adjusting for edge effects
-	precMat =maternGmrfPrec(myGrid, param=params) 
+	precMat =maternGmrfPrec(N=myGrid, param=params) 
 	
 	attributes(precMat)$info$precisionEntries
 	
@@ -87,7 +87,8 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 		round(ncol(precMid)/2) + seq(-3, 3)]
 
 	# and with the adjustment
-	precMatCorr =maternGmrfPrec(myGrid, param=params, 
+	precMatCorr =maternGmrfPrec(
+		N = myGrid, param=params, 
 		adjustEdges=TRUE) 
 
 if(interactive() | Sys.info()['user'] =='patrick') {	
