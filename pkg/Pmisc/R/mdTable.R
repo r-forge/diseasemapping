@@ -135,7 +135,7 @@ mdTable = function(x, col.just = 'r', guessGroup=FALSE, ..., mdToTex = 'auto') {
     getRidForKable = c(
         'caption.loc', 'caption.lot', 'pos.caption', 
         'label', 'row.label', 'title', 'fig.pos',
-        'table.env', 'center',
+        'table.env', 'center', 'col.just',
         'booktabs','ctable', 'where')
     
     

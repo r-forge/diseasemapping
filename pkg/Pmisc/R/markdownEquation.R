@@ -25,6 +25,8 @@ eqnarray = function(x, mdToTex=FALSE) {
         "[$][$]|([[:punct:]]?(begin|end)[[:punct:]](eqnarray|align(ed)?)[*]?[[:punct:]])", 
         "", x)
     res = gsub("[[:space:]]*&[[:space:]]*", " ", res)
+    res = gsub("[|]", "\\\\mid ", res)
+    
     res = gsub(" *[\\][\\] *\n? *", "$ |  |\n| $", res)
     
     res = gsub("\n *[|] *[$][[:space:]]*$", "\n", res)
@@ -33,7 +35,7 @@ eqnarray = function(x, mdToTex=FALSE) {
     res = gsub("([$] *[|] *[|])?[[:space:]]*$", "$ |  |\n\n", res)
     
     res = paste(
-        '|      |       |\n|:-----:|:------|\n', 
+        '|                                    |       |\n|:------------------------------:|:------|\n', 
         gsub("^([[:space:]]+)?|[|]$", "", res), 
         sep='')
   }

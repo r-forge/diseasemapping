@@ -2,6 +2,7 @@
 
 export(Makefile)
 export(by2df)
+export(ciMat)
 export(downloadIfOld)
 export(eqnarray)
 export(hook_plot_beamer)
