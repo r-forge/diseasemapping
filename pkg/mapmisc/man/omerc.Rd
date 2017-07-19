@@ -69,7 +69,7 @@ text(nldUtm,labels=nldUtm$name)
 scaleBar(nldUtm, 'topright')
 
 nldRot = spTransform(nldCities,
-omerc(nldCities, angle=seq(25,45,by=1))
+omerc(nldCities, angle=seq(25,45,by=5))
 )
 projection(nldRot)
 
@@ -78,15 +78,6 @@ text(nldRot,labels=nldRot$name)
 scaleBar(nldRot, 'topright')
 insetMap(nldRot, 'bottomright',map=world)
 
-if(require('rgeos', quietly=TRUE) & require('geosphere', quietly=TRUE)){
-	nldMollCrs = moll(nldCities)
-	nldMoll = spTransform(nldCities, nldMollCrs)
-	map.new(nldMoll, buffer=2000)
-	text(nldMoll,labels=nldMoll$name)
-	scaleBar(nldMoll, 'topright')
-	
-	
-}
 }
 \dontrun{
 
