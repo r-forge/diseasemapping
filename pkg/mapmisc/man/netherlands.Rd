@@ -36,7 +36,7 @@ library("sp")
 data("meuse")
 coordinates(meuse) <- ~x+y
 
-if(require('rgdal', quietly=TRUE)) {
+if(requireNamespace('rgdal', quietly=TRUE)) {
 	 proj4string(meuse) <- CRS("+init=epsg:28992")
 } else {
  proj4string(meuse) <- CRS(
@@ -58,7 +58,7 @@ points(nldCities)
 text(nldCities,label=nldCities$name, pos=2)
 points(meuse, pch=16, col=soilCol$plot)
 legend('topleft', fill=soilCol$col,legend=soilCol$legend)
-insetMap(meuse, "bottomright",map=world)
+if(requireNamespace('rgdal', quietly=TRUE)) insetMap(meuse, "bottomright",map=world)
 
 # location won't be marked on the inset map unless rgdal is available
 
