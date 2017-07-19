@@ -27,7 +27,7 @@ ciMat = function(p=0.95, se.fit = FALSE) {
   p = sort(unique(c(p, 1-p)))
   res = rbind(
       1,
-      c(0, qnorm(p))
+      c(0, stats::qnorm(p))
   )
   colnames(res) = c('est', format(100*p))
   if(se.fit) {
