@@ -15,7 +15,10 @@
 #'     FALSE) )
 #' 
 #' @export
-eqnarray = function(x, mdToTex=FALSE) {
+eqnarray = function(x, mdToTex='auto') {
+  
+  if(identical(mdToTex, 'auto'))
+    mdToTex = any(commandArgs()=='mdToTex', na.rm=TRUE)
   
   if(mdToTex) {
     res = x 
