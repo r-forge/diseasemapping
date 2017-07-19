@@ -24,7 +24,7 @@ utils::bibentry(
          author = pb,
          year = year,
          note = note,
-         url = "http://CRAN.R-project.org/package=geostatsp"
+         url = "https://CRAN.R-project.org/package=geostatsp"
 )
          
          
