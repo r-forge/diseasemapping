@@ -55,7 +55,8 @@ Makefile = function(x, suffix = NULL,
       gsub("^([[:alpha:]])(:)", '/cygdrive/\\1', x)
     }
   } else {
-    whichfun = function(x) normalizePath(Sys.which(x),'/')
+    whichfun = function(x) 
+      gsub("xetex", "xelatex", normalizePath(Sys.which(x),'/'))    
     subfun = function(x) x
   }
   

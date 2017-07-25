@@ -4,7 +4,7 @@ if(FALSE) {
   params=c(oneminusar=0.1, shape=0, conditionalVariance=1)
   
   Ngrid = 5
-  myGrid = geostatsp::squareRaster(extent(-Ngrid,Ngrid,-Ngrid,Ngrid), 1+2*Ngrid)
+  myGrid = squareRaster(extent(-Ngrid,Ngrid,-Ngrid,Ngrid), 1+2*Ngrid)
   midcell = cellFromRowCol(myGrid, Ngrid+1, Ngrid+1)
   
   precMat = maternGmrfPrec(myGrid, param=params)
