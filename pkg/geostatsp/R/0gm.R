@@ -1,11 +1,34 @@
 setClassUnion("missingOrNULL", c("missing", "NULL"))
 
 
+allVarsP = function(formula) {
+  # return vector of variable names in the formula
+  allterms = colnames(attributes(terms(formula))$factors)
+  
+  # look for values=1:stuff in inla formula and replace with seq
+  
+  if(length(allterms)) {
+    inlaValuesPattern = 'values[[:space:]]+?=[[:space:]]+?'
+    haveInlaValues = grep(inlaValuesPattern, allterms, value=TRUE)
+    notInlaValues = grep(inlaValuesPattern, allterms, 
+      value=TRUE, invert=TRUE)
+    allterms = c(
+      haveInlaValues, 
+      unique(unlist(strsplit(notInlaValues, ":")))
+    )
+  }
+  allterms = gsub("[[:space:]]", "", allterms)
+# remove offset( or factor(
+  alltermsPlain = gsub("^[[:alpha:]]+\\(|\\)$|[,].*", "", allterms)
+  attributes(alltermsPlain)$orig = allterms
+  alltermsPlain
+}
+
 gm.dataRaster = function(
-    formula,
-    data, grid=data,
-    covariates=NULL,
-    buffer=0){
+  formula,
+  data, grid=data,
+  covariates=NULL,
+  buffer=0){
   
   if(abs(diff(res(grid)))>0.000001 )
     warning("data is not on a square grid")
@@ -42,26 +65,26 @@ gm.dataRaster = function(
   }
   
   inModel = gsub("^[[:alnum:]]+[(]|[,].*|[[:space:]]",
-      "",  alltermsFull)
+    "",  alltermsFull)
   inModel = gsub(
-      "(,([[:alnum:]]|=|[[:space:]])+)?\\)$",#+?[[:space:]]?\\)[[:space:]]?$",
-      "", inModel)
+    "(,([[:alnum:]]|=|[[:space:]])+)?\\)$",#+?[[:space:]]?\\)[[:space:]]?$",
+    "", inModel)
   
   offsetToLogOrig = grep(
-      "^offset\\([[:print:]]+,log=TRUE\\)$", 
-      gsub("[[:space:]]+", "", alltermsFull))
+    "^offset\\([[:print:]]+,log=TRUE\\)$", 
+    gsub("[[:space:]]+", "", alltermsFull))
   offsetToLogOrig = alltermsFull[offsetToLogOrig]
   if(length(offsetToLogOrig)) {
     names(offsetToLogOrig) = gsub(
-        "^[[:space:]]?offset\\(|,[[:space:]]?log[[:space:]]?=[[:space:]]?TRUE[[:space:]]?\\)[[:space:]]?$",
-        '', offsetToLogOrig
+      "^[[:space:]]?offset\\(|,[[:space:]]?log[[:space:]]?=[[:space:]]?TRUE[[:space:]]?\\)[[:space:]]?$",
+      '', offsetToLogOrig
     )
   }
   
   Sfactor = c(
-      dataFactors,
-      covFactors,
-      theFactors
+    dataFactors,
+    covFactors,
+    theFactors
   )
   covFactors = intersect(Sfactor,names(covariates))
   dataFactors = intersect(Sfactor,names(data))
@@ -85,20 +108,20 @@ gm.dataRaster = function(
       if(length(grep("^Raster", class(covariates)))) {
         covariatesForStack = covariates[[which(notLogOffset)]]
         covariatesForStackData = 
-            covariates[[notInData]]
+          covariates[[notInData]]
       } else {
         covariatesForStack = covariates[notLogOffset]
         covariatesForStackData = 
-            covariates[notInData]
+          covariates[notInData]
       }
       covariatesStack = stackRasterList(
-          covariatesForStack,
-          cellsSmall, method=rmethod)
+        covariatesForStack,
+        cellsSmall, method=rmethod)
       
       covariatesStack = stack(cellsSmall, covariatesStack)
       covData = stackRasterList(
-          covariatesForStackData, 
-          data, method=rmethod)
+        covariatesForStackData, 
+        data, method=rmethod)
       
     } else {
       covariatesStack = cellsSmall
@@ -112,31 +135,31 @@ gm.dataRaster = function(
       offsetToLog = covariates[[D]]
       
       toCrop = merge(
-          projectExtent(covariatesStack, 
-              crs(offsetToLog)
-          ),
-          projectExtent(data, 
-              crs(offsetToLog)
-          )
+        projectExtent(covariatesStack, 
+          crs(offsetToLog)
+        ),
+        projectExtent(data, 
+          crs(offsetToLog)
+        )
       )
       
       
       offsetToLogCrop = raster::crop(
-          offsetToLog, 
-          toCrop
+        offsetToLog, 
+        toCrop
       )
       
       offsetToLogCrop = projectRaster(
-          offsetToLogCrop,
-          crs=crs(covariatesStack),
-          method='ngb')
+        offsetToLogCrop,
+        crs=crs(covariatesStack),
+        method='ngb')
       
       # aggregate for covariates
       toAggregate = floor(min(res(covariatesStack)/res(offsetToLogCrop)))
       
       if(any(toAggregate > 1)){
         offsetToLogAgg = aggregate(offsetToLogCrop, fact=toAggregate, 
-            fun=sum, na.rm=TRUE)
+          fun=sum, na.rm=TRUE)
       } else {
         toAggregate = 1
         offsetToLogAgg = offsetToLogCrop
@@ -144,24 +167,24 @@ gm.dataRaster = function(
       offsetToLogAgg = projectRaster(offsetToLogAgg, covariatesStack)
       
       offsetToLogAgg = reclassify(
-          offsetToLogAgg, 
-          t(c(-Inf,0,NA)) 
+        offsetToLogAgg, 
+        t(c(-Inf,0,NA)) 
       )
       
       offsetToLogLogged = log(offsetToLogAgg) - 
-          sum(log(rep_len(toAggregate,2)))
+        sum(log(rep_len(toAggregate,2)))
       names(offsetToLogLogged) = paste('log',D,sep='')
       covariatesStack = stack(covariatesStack, offsetToLogLogged)
       toDrop = which(alltermsFull==offsetToLogOrig[D])
       
       # the offsets
       allOffsets = grep(
-          "^offset\\([[:print:]]+\\)$", 
-          gsub("[[:space:]]+", "", alltermsFull), value=TRUE)
+        "^offset\\([[:print:]]+\\)$", 
+        gsub("[[:space:]]+", "", alltermsFull), value=TRUE)
       offsetNotLogged = grep(
-          "^offset\\([[:print:]]+,log=TRUE\\)$", 
-          gsub("[[:space:]]+", "", allOffsets), 
-          invert=TRUE, value=TRUE)
+        "^offset\\([[:print:]]+,log=TRUE\\)$", 
+        gsub("[[:space:]]+", "", allOffsets), 
+        invert=TRUE, value=TRUE)
       
       
       # any other offsets would also have been removed
@@ -170,25 +193,25 @@ gm.dataRaster = function(
       
       if(length(allOffsets)< length(alltermsFull)) {
         formula = update.formula(
-            drop.terms(terms(formula), dropx=toDrop, keep.response=TRUE),
-            as.formula(
-                paste(".~.", 
-                    paste("offset(log", D, ")", sep=''),
-                    offsetNotLogged, 
-                    sep = '+')
-            ) 	
+          drop.terms(terms(formula), dropx=toDrop, keep.response=TRUE),
+          as.formula(
+            paste(".~.", 
+              paste("offset(log", D, ")", sep=''),
+              offsetNotLogged, 
+              sep = '+')
+          ) 	
         )
       } else {
         # only offsets in the model
         # drop.terms won't work
         formula = update.formula(
-            formula,
-            as.formula(
-                paste(".~", 
-                    paste("offset(log", D, ")", sep=''),
-                    offsetNotLogged, 
-                    sep = '+')
-            )
+          formula,
+          as.formula(
+            paste(".~", 
+              paste("offset(log", D, ")", sep=''),
+              offsetNotLogged, 
+              sep = '+')
+          )
         
         )	
       }
@@ -201,19 +224,19 @@ gm.dataRaster = function(
         offsetToLogAgg = aggregate(offsetToLogCrop, fact=toAggregateData, fun=sum)
         offsetToLogAgg = projectRaster(offsetToLogAgg, covariatesStack)
         offsetToLogAgg = reclassify(
-            offsetToLogAgg, 
-            t(c(-Inf,0,NA)) 
+          offsetToLogAgg, 
+          t(c(-Inf,0,NA)) 
         )
         
         offsetToLogLogged = log(offsetToLogAgg) + 
-            sum(log(res(covariatesStack))) -
-            sum(log(res(offsetToLogCrop)))
+          sum(log(res(covariatesStack))) -
+          sum(log(res(offsetToLogCrop)))
         names(offsetToLogLogged) = paste('log',D,sep='')
       }
       
       covData = stack(
-          covData,
-          offsetToLogLogged
+        covData,
+        offsetToLogLogged
       )
       
     } # end in names(offsetToLogOrig)
@@ -245,21 +268,21 @@ gm.dataRaster = function(
       theLabels = paste("l", names(theTable),sep="")
     } else {
       theLabels = theLevels[
-          match(as.integer(names(theTable)), theLevels$ID)
-          ,"Category"]
+        match(as.integer(names(theTable)), theLevels$ID)
+        ,"Category"]
     }
     dataDF[[D]] = factor(dataDF[[D]], levels=as.integer(names(theTable)),
-        labels=theLabels)			
+      labels=theLabels)			
     covariatesDF[[D]] = factor(covariatesDF[[D]], levels=as.integer(names(theTable)),
-        labels=theLabels)			
+      labels=theLabels)			
     
   }
   
   list(
-      data=dataDF,
-      grid=cellsSmall,
-      covariates=covariatesDF,
-      formula = formula
+    data=dataDF,
+    grid=cellsSmall,
+    covariates=covariatesDF,
+    formula = formula
   )
 }
 
@@ -269,18 +292,23 @@ gm.dataRaster = function(
 #############
 
 gm.dataSpatial = function(
-    formula, data,  grid, 
-    covariates=NULL, 
-    buffer=0) {
+  formula, data,  grid, 
+  covariates=NULL, 
+  buffer=0) {
+  
+  # check response variable is in data
+  if(!all.vars(formula)[1] %in% names(data)){
+    warning(paste(
+        'response variable',
+        all.vars(formula)[1],
+        'not found in data'
+      ))
+  }
+  
+  alltermsPlain = allVarsP(formula)
   
 # find factors
-  allterms = colnames(attributes(terms(formula))$factors)
-  if(length(allterms)) 
-    allterms = unique(unlist(strsplit(allterms, ":")))
-  allterms = gsub("[[:space:]]", "", allterms)
-  # remove offset( or factor(
-  alltermsPlain = gsub("^[[:alpha:]]+\\(|\\)$|[,].*", "", allterms)
-  
+  allterms = attributes(alltermsPlain)$orig
   
   # remove covariates not in the model
   keepCovariates = intersect(alltermsPlain, names(covariates))
@@ -302,7 +330,6 @@ gm.dataSpatial = function(
   termsInF = gsub("^f[(]|[,].*|[[:space:]]", "", termsInF)
   
   
-  
   covFactors = NULL
   for(D in names(covariates)) {
     if(is.factor(covariates[[D]]))
@@ -311,9 +338,9 @@ gm.dataSpatial = function(
   
   
   Sfactors = c(
-      names(data)[unlist(lapply(data@data, is.factor))],
-      covFactors,
-      theFactors
+    names(data)[unlist(lapply(data@data, is.factor))],
+    covFactors,
+    theFactors
   )
   Sfactors = unique(Sfactors)
   covFactors = intersect(Sfactors,names(covariates))
@@ -338,9 +365,9 @@ gm.dataSpatial = function(
     
     
     covariatesStack = stackRasterList(
-        covariates, 
-        template=cellsSmall, 
-        method=rmethod)
+      covariates, 
+      template=cellsSmall, 
+      method=rmethod)
     covariatesStack = stack(cellsSmall, covariatesStack)
     
     
@@ -351,17 +378,17 @@ gm.dataSpatial = function(
   }
   
   # loop through covariates which aren't in data, extract it from `covariates`
-  for(D in setdiff(all.vars(formula), names(data))){
+  for(D in setdiff(alltermsPlain, names(data))){
     if(is.null(covariates[[D]]))
       warning("cant find covariate '", D, "' in covariates or data")
     if(!.compareCRS(covariates[[D]], data, unknown=TRUE) ) {
       if(requireNamespace('rgdal', quietly=TRUE ) ) { 
         data[[D]] = raster::extract(covariates[[D]], 
-            spTransform(data, CRSobj=CRS(projection(covariates[[D]]))))
+          spTransform(data, CRSobj=CRS(projection(covariates[[D]]))))
       } else warning("need rgdal if covariates and data are different projections")
     } else {
       data[[D]] = raster::extract(covariates[[D]], 
-          data) 
+        data) 
     }
   }
   data$space = extract(cellsSmall, data) 
@@ -379,28 +406,28 @@ gm.dataSpatial = function(
       if(!length(labelCol)) labelCol = 2
       
       theLabels = theLevels[
-          match(as.integer(names(theTable)), theLevels[,idCol])
-          ,labelCol]
+        match(as.integer(names(theTable)), theLevels[,idCol])
+        ,labelCol]
       if(any(is.na(theLabels))) {
         warning(
-            'missing labels in covariate raster ', 
-            D, ' level ',
-            names(theTable)[is.na(theLabels)][1])
+          'missing labels in covariate raster ', 
+          D, ' level ',
+          names(theTable)[is.na(theLabels)][1])
         theLabels[is.na(theLabels)] = 
-            names(theTable)[is.na(theLabels)]
+          names(theTable)[is.na(theLabels)]
       }
     }
     data[[D]] = factor(data[[D]], levels=as.integer(names(theTable)),
-        labels=theLabels)			
+      labels=theLabels)			
     covariatesDF[[D]] = factor(covariatesDF[[D]], levels=as.integer(names(theTable)),
-        labels=theLabels)			
+      labels=theLabels)			
     
   }
   
   
   list(
-      data=data,
-      grid = cellsSmall,
-      covariates=covariatesDF
+    data=data,
+    grid = cellsSmall,
+    covariates=covariatesDF
   )
 }
