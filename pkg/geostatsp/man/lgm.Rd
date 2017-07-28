@@ -22,7 +22,7 @@ Calculate MLE's of model parameters and perform spatial prediction. }
  
 
 \usage{
-\S4method{lgm}{missingOrNULL,ANY,ANY,ANY}(
+\S4method{lgm}{missing,ANY,ANY,ANY}(
 formula, data, grid, covariates, 
 buffer=0, shape=1, boxcox=1, nugget = 0, 
 expPred=FALSE, nuggetInPrediction=TRUE,
@@ -62,7 +62,7 @@ fixShape=TRUE,
 fixBoxcox=TRUE,
 fixNugget = FALSE,
 ...) 
-\S4method{lgm}{formula,Spatial,Raster,missingOrNULL}(
+\S4method{lgm}{formula,Spatial,Raster,missing}(
 formula, data, grid, covariates, 
 buffer=0, shape=1, boxcox=1, nugget = 0, 
 expPred=FALSE, nuggetInPrediction=TRUE,
