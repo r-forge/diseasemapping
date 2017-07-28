@@ -50,14 +50,14 @@ covList = list(
 borderT = spTransform(torontoBorder, projection(murderT))
 borderC = crop(borderT, extent(-12700, 7000, -7500, 3100))
 
-formula = ~ inc + offset(pop, log=TRUE)
+formulaHere = ~ inc + offset(pop, log=TRUE)
 @
 
 
 \section*{LGCP with gamma priors on precision}
 
 <<lgcpGamma>>=
-resG=lgcp(formula, data=murderT, 
+resG=lgcp(formulaHere, data=murderT, 
   grid=squareRaster(borderC, 30),
   covariates=covList,
   border=borderC, buffer=2000,
@@ -76,7 +76,7 @@ $pr(sd > 1) = 0.05$ and $pr(phi < 0.2) = 0.95$
 
 
 <<lgcpPc>>=
-resP=lgcp(formula, data=murderT, 
+resP=lgcp(formulaHere, data=murderT, 
   grid=squareRaster(borderC, 30),
   covariates=covList,
   border=borderC, buffer=2000,
@@ -91,7 +91,8 @@ resP=lgcp(formula, data=murderT,
 <<lgcpTable>>=
 sdSeq = seq(0,4,len=501)
 rangeSeq = seq(0,15*1000, len=501)
-resT=lgcp(formula, data=murderT, 
+resT=lgcp(formulaHere, 
+    data=murderT, 
   grid=squareRaster(borderC, 30),
   covariates=covList,
   border=borderC, buffer=2000,

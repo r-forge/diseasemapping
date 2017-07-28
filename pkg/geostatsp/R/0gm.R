@@ -1,9 +1,10 @@
-setClassUnion("missingOrNULL", c("missing", "NULL"))
-
 
 allVarsP = function(formula) {
   # return vector of variable names in the formula
-  allterms = colnames(attributes(terms(formula))$factors)
+  allterms = rownames(attributes(terms(formula))$factors)
+  firstTerm = as.character(formula)
+  firstTerm = trimws(firstTerm[-c(1, length(firstTerm))])
+  allterms = setdiff(allterms, firstTerm)
   
   # look for values=1:stuff in inla formula and replace with seq
   
@@ -13,8 +14,8 @@ allVarsP = function(formula) {
     notInlaValues = grep(inlaValuesPattern, allterms, 
       value=TRUE, invert=TRUE)
     allterms = c(
-      haveInlaValues, 
-      unique(unlist(strsplit(notInlaValues, ":")))
+      unique(unlist(strsplit(notInlaValues, ":"))),
+      haveInlaValues
     )
   }
   allterms = gsub("[[:space:]]", "", allterms)
@@ -38,14 +39,11 @@ gm.dataRaster = function(
   
   # find factors
   
-  alltermsFull = rownames(attributes(terms(formula))$factors)[-1]
-  if(!length(alltermsFull)){
-    # maybe there's offsets
-    # this thing works if that's the case
-    alltermsFull = as.character(attributes(terms(formula))$variables)[-(1:2)]
-  }
-  allterms = grep(":", alltermsFull, invert=TRUE, value=TRUE)
-  allterms = gsub("[[:space:]]", "", allterms)
+  allterms = allVarsP(formula)
+  
+  alltermsFull = attributes(allterms)$orig
+
+  # find factors
   
   theFactors = grep("^factor", allterms, value=T)
   theFactors = gsub("^factor\\(|\\)$", "", theFactors)

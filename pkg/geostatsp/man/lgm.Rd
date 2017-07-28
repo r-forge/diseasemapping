@@ -2,11 +2,11 @@
 \docType{methods}
 \alias{lgm}
 \alias{lgm-methods}
-\alias{lgm,missingOrNULL,ANY,ANY,ANY-method}
+\alias{lgm,missing,ANY,ANY,ANY-method}
 \alias{lgm,numeric,ANY,ANY,ANY-method}
 \alias{lgm,character,ANY,ANY,ANY-method}
 \alias{lgm,formula,Spatial,numeric,ANY-method}
-\alias{lgm,formula,Spatial,Raster,missingOrNULL-method}
+\alias{lgm,formula,Spatial,Raster,missing-method}
 \alias{lgm,formula,Spatial,Raster,list-method}
 \alias{lgm,formula,Spatial,Raster,Raster-method}
 \alias{lgm,formula,Spatial,Raster,data.frame-method}
