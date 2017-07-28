@@ -2,6 +2,16 @@
 allVarsP = function(formula) {
   # return vector of variable names in the formula
   allterms = rownames(attributes(terms(formula))$factors)
+  if(!length(allterms)) {
+  	# might be intercepty only but there may be an offset
+  	# add a junk variable so that the terms function produces a factors
+  	allterms =  setdiff(
+  	rownames(attributes(terms(
+  		update.formula(formula, .~ .+ junk)
+  		))$factors),
+  		'junk')
+  }
+  
   firstTerm = as.character(formula)
   firstTerm = trimws(firstTerm[-c(1, length(firstTerm))])
   allterms = setdiff(allterms, firstTerm)
@@ -45,10 +55,10 @@ gm.dataRaster = function(
 
   # find factors
   
-  theFactors = grep("^factor", allterms, value=T)
+  theFactors = grep("^factor", alltermsFull, value=T)
   theFactors = gsub("^factor\\(|\\)$", "", theFactors)
   
-  termsInF = grep("^f[(]", allterms, value=TRUE)
+  termsInF = grep("^f[(]", alltermsFull, value=TRUE)
   termsInF = gsub("^f[(]|[,].*|[[:space:]]", "", termsInF)
   
   covFactors = NULL
