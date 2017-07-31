@@ -561,8 +561,6 @@ setMethod("glgm",
       # get rid of some elements of forInla that aren't required
       forInla = forInla[grep("^buffer$", names(forInla), invert=TRUE)]
       
-      stuff <<- forInla
-      
       if(requireNamespace("INLA", quietly=TRUE)) {
         inlaResult = do.call(INLA::inla, forInla) 
       } else {

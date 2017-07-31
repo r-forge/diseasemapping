@@ -55,7 +55,6 @@ priorPostSd = function(
   Scol = c(prior='red', posterior='black')
   
 	 for(Dparam in param){
-		  
 		  Dprec = paramLong[Dparam]
 		  
 		  postPrec = res$marginals.hyperpar[[Dprec]]
@@ -79,7 +78,7 @@ priorPostSd = function(
 #			   xhyper = xhyper[[which(unlist(lapply(xhyper, function(qq) qq$short.name)) == 'prec')[1] ]]
 			   
 			   
-			   if(!all(xhyper$prior == 'pc.prec'))
+			   if(!all(trimws(xhyper$prior) == 'pc.prec'))
 				    warning("pc.prec prior expected, got ", xhyper$prior[1])
 			   
       maxX = 2*min(res$summary.hyperpar[Dprec,
