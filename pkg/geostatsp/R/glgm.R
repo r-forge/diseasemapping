@@ -373,8 +373,10 @@ setMethod("glgm",
       } else {
         familyShapePrior = NULL
       }
-      spaceFormula = #paste(
-          c(
+      # done priors
+      
+      # formula for spatial random effect
+      spaceFormula = c(
           ".~.+ f(space, model='matern2d', ",
           "nrow=", nrow(cells)+2*buffer, 
           ", ncol=", ncol(cells)+2*buffer,
@@ -428,9 +430,9 @@ setMethod("glgm",
       formulaForLincombs = formulaForLincombs[length(formulaForLincombs)]
       
       # variables wrapped in an f()
-      termsInF = grep("^f[(]", 
-          rownames(attributes(terms(formulaOrig))$factors), 
-          value=TRUE)
+      termsInF = grep("^f[(]", attributes(allVarsP(formulaOrig))$orig, value=TRUE)
+#          rownames(attributes(terms(formulaOrig))$factors), 
+#          value=TRUE)
       termsInF = gsub("^f[(]|[,].*|[[:space:]]", "", termsInF)
       termsInF = intersect(termsInF, colnames(covariates))
       covariatesInF = covariates[,termsInF, drop=FALSE]
@@ -450,12 +452,12 @@ setMethod("glgm",
       formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
       
       # if we have covariates in the formula and in the data
-      if(nchar(formulaForLincombs) & nrow(covariates) ) {
+      if(max(nchar(formulaForLincombs)) & nrow(covariates) ) {
         
         formulaForLincombs=as.formula(paste("~", formulaForLincombs))
         
         # variables in the model but not in prediction rasters
-        thevars = rownames(attributes(terms(formulaForLincombs))$factors)
+        thevars = allVarsP(formulaForLincombs) #rownames(attributes(terms(formulaForLincombs))$factors)
         thevars = gsub("^factor\\(|\\)", "", thevars)
         varsInPredict = thevars[thevars %in% names(covariates)]
         cantPredict = thevars[! thevars %in% names(covariates)]
@@ -500,10 +502,10 @@ setMethod("glgm",
         for(Dtext in names(thelincombs)) {
           Dnum = as.numeric(gsub("c", '', Dtext))
           Dcell = match(Dnum, covariates[,'space'])
-          if(!is.na(covariates[Dcell,Dcov])) {
+          if(!is.na(covariatesInF[Dcell,Dcov])) {
             covToAdd = list(list(
                     weight = 1,
-                    idx = covariates[Dcell,Dcov]
+                    idx = covariatesInF[Dcell,Dcov]
                 ))
             names(covToAdd) = Dcov
             
@@ -558,6 +560,8 @@ setMethod("glgm",
       
       # get rid of some elements of forInla that aren't required
       forInla = forInla[grep("^buffer$", names(forInla), invert=TRUE)]
+      
+      stuff <<- forInla
       
       if(requireNamespace("INLA", quietly=TRUE)) {
         inlaResult = do.call(INLA::inla, forInla) 
