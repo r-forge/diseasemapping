@@ -244,10 +244,22 @@ priorPost = function(object) {
         })
       Sindex = rep(1:length(resx), unlist(lapply(resx, ncol)))
       resx = do.call(cbind, resx)
+      if(is.null(colnames(resx))) colnames(resx) = resx['label', ] 
+      colnames(resx) = paste(colnames(resx), resx['id',], sep='_')
       resx = as.data.frame(t(resx))
       resx$index = Sindex
       resx
     })
+    
+  notInFamily = setdiff(names(paramList$random), names(paramList$family))
+  paramList$family = cbind(
+      paramList$family,
+      matrix(NA, 
+          nrow = nrow(paramList$family),
+          ncol = length(notInFamily),
+          dimnames = list(rownames(paramList$family), notInFamily)
+      )
+      )[, colnames(paramList$random)]
   paramDf = do.call(rbind, paramList)
   paramDf$group = rep(names(paramList), unlist(lapply(paramList, nrow)))
   paramDf$out.name = NA
@@ -255,9 +267,10 @@ priorPost = function(object) {
   # a few fixes
   # weibull cure has short name a which is alpha in summary table
   paramDf$short.name = gsub("^a$", "alpha", paramDf$short.name)
+  paramDf$prior = trimws(paramDf$prior)
   
   result = list()
-  for(Dparam in seq(from=1,by=1, len=nrow(paramDf))) {
+  for(Dparam in which(!is.na(paramDf$prior))) {
     if(paramDf[Dparam, 'prior'] == 'pc.prec') {
       result[[Dparam]] = priorPostSd(
 		      object, 
@@ -277,9 +290,15 @@ priorPost = function(object) {
           'Precision for', paramDf[Dparam, 'id']
         )  
       } else {
-        inlaNameHere = paste(
-          paramDf[Dparam, 'short.name'], 'parameter for', 
-          paramDf[Dparam, 'label'])
+        paramName = as.character(na.omit(unlist(paramDf[Dparam, c('label','id')]))) 
+        inlaNameHere = 
+            grep(paste(
+                    '^', paramDf[Dparam, 'short.name'], 
+                    '( parameter)? for ', paramName, 
+                    '$',
+                    sep=''),
+                rownames(object$summary.hyperpar),
+                ignore.case=TRUE, value=TRUE)
       }
       # a fix for weibullcure models
       inlaNameHere = gsub("weibullcure", "ps", inlaNameHere)
@@ -292,6 +311,8 @@ priorPost = function(object) {
       ]][['hyper']][[  
         paramDf[Dparam, 'internal.name']  
       ]]
+      
+      trimws(priorHere$prior)
       
       postHere = object$marginals.hyperpar[[inlaNameHere]]
       
