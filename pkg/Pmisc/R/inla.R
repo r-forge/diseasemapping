@@ -290,10 +290,13 @@ priorPost = function(object) {
           'Precision for', paramDf[Dparam, 'id']
         )  
       } else {
-        paramName = as.character(na.omit(unlist(paramDf[Dparam, c('label','id')]))) 
+        paramName = gsub("^weibullcure$", "ps", 
+            as.character(na.omit(unlist(paramDf[Dparam, c('label','id')][1])))
+        )
         inlaNameHere = 
             grep(paste(
-                    '^', paramDf[Dparam, 'short.name'], 
+                    '^', 
+                    gsub("^prob$", "p", paramDf[Dparam, 'short.name']), 
                     '( parameter)? for ', paramName, 
                     '$',
                     sep=''),
