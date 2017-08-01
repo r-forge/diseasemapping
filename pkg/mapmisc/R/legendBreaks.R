@@ -1,22 +1,23 @@
 
 legendBreaks = function(pos,
-  breaks,
-  col,
-  legend,
-  rev=TRUE,
-  outer=TRUE,
-  pch=15,
-  bg='white',
-  cex=par('cex'),
-  pt.cex=2.5*cex,
-  text.col=par('fg'),
-  title=NULL,
-  inset=0.05,
-  title.col=text.col,
-  adj=0,
-  width=Inf, lines=Inf,
-  y.intersp,
-  ...){
+    breaks,
+    col,
+    legend,
+    rev=TRUE,
+    outer=TRUE,
+    pch=15,
+    bg='white',
+    cex=par('cex'),
+    pt.cex=2.5*cex,
+    text.col=par('fg'),
+    title=NULL,
+    inset=0.05,
+    title.col=text.col,
+    adj=0,
+    width=Inf, 
+    lines=Inf,
+    y.intersp,
+    ...){
   
   if(!missing(breaks)){
     if(is.factor(breaks)){
@@ -34,8 +35,8 @@ legendBreaks = function(pos,
   if(missing(legend)&!missing(breaks)) {
     if(is.list(breaks)){
       legendCol = intersect(
-        c('legend','label','level','breaks','ID'),
-        names(breaks)
+          c('legend','label','level','breaks','ID'),
+          names(breaks)
       )
       if(!length(legendCol)){
         warning("can't find legend in breaks")
@@ -66,7 +67,7 @@ legendBreaks = function(pos,
     # one more legend item than colours
     col = c(NA, col)
     pch = c(NA,
-      pch[round(seq(1, length(pch), len=length(legend)-1))]
+        pch[round(seq(1, length(pch), len=length(legend)-1))]
     )
     diffyMult=1
     # make text transparent, add legend text manually afterwards
@@ -85,11 +86,11 @@ legendBreaks = function(pos,
 # line wrapping for legend labels
   if(any(nchar(as.character(legend)) > width)) {
     legend =  trimws(
-      gsub(
-        paste('(.{1,', width, '})(\\s|/|$)' ,sep=''), 
-        '\\1\n ', 
-        as.character(legend)
-      )
+        gsub(
+            paste('(.{1,', width, '})(\\s|/|$)' ,sep=''), 
+            '\\1\n ', 
+            as.character(legend)
+        )
     )
   }
   
@@ -100,19 +101,21 @@ legendBreaks = function(pos,
     cropPos = unlist(lapply(theNewLines[toCrop], function(qq) qq[lines]))
     legend = as.character(legend)
     legend[toCrop] = 
-      trimws(substr(legend[toCrop], 1, cropPos))
+        trimws(substr(legend[toCrop], 1, cropPos))
   }
+  
+  shiftLegendText = rep(0, length(legend))
   
   if(missing(y.intersp)){
     
     if(is.character(legend)) {	
       theNewLines = gregexpr('\n', as.character(legend))
       y.intersp=max(
-        c(1.25, 
-          0.5+unlist(
-            lapply(theNewLines, function(qq) sum(qq>0))
-          )
-        ) 
+          c(1.25, 
+              0.5+unlist(
+                  lapply(theNewLines, function(qq) sum(qq>0))
+              )
+          ) 
       ) - 0.25
     } else {
       y.intersp = 1
@@ -120,66 +123,42 @@ legendBreaks = function(pos,
       # format legend as character
       # note, if y.intersp is supplied this won't be done
       if(is.numeric(legend)) {
-      if(any(legend < 0)) {
         # have negatives
         overZero = which(legend >= 0)
         underZero = which(legend < 0)
         legend = as.character(legend)
+       
         
-        if(names(dev.cur())%in%c("Cairo", 'pdf')) {
-          spaceChar = ' '
-        } else {
-          spaceChar = '\u200A' #  hair space character
-        }
-        extraSpaceFun = function(width) {
-          x = round(width / strwidth(spaceChar))
-           mapply(
-            function(len) 
-              paste(rep(spaceChar,len), collapse=''), 
-            len=x)
-        }
-
         # pad for minus sign
-        maxCharUnderZero = max(strwidth(legend[underZero]))
-        
-        toPaddLeft = intersect(
-          overZero, which(strwidth(legend) < maxCharUnderZero)
-        )
-        legend[toPaddLeft] = paste(
-          extraSpaceFun(strwidth('-')), 
-          legend[toPaddLeft], 
-          sep='')
-      
-      # width before decimal
-      charNoDec = strwidth(gsub("[.].*$", "", legend))
-      maxCharNoDec = max(charNoDec)
-      # width including and after deciman
-      Ndec = strwidth(gsub("^[[:space:]]*[[:punct:]]*[[:digit:]]+ *", "", legend))
-      maxDec = max(Ndec)
-      # total needed to add      
-      maxWidth = max(strwidth(legend))
-      toAddTotal = maxWidth - strwidth(legend)
-      
-      toAddLeft = pmin(toAddTotal, maxCharNoDec - charNoDec)
-      toAddRight = pmin(toAddTotal, maxDec-Ndec)
-      
-
-      toAddAdjust = toAddTotal - toAddLeft - toAddRight
-      toAddLeft = toAddLeft + 0.4*toAddAdjust      
-      
-      toAddLeft = extraSpaceFun(toAddLeft)
-      legend = paste(toAddLeft, legend, sep='')
-      
-      toAddRight = maxWidth - strwidth(legend)
-      toAddRight = extraSpaceFun(toAddRight)
-        
-        legend = paste(
-          legend, 
-          toAddRight,
-          sep='')
+        toPadLeft = rep(0, length(legend))
+        if(length(underZero)) {
+          maxCharUnderZero = max(strwidth(legend[underZero], cex=cex))
+          
+          toPadLeft[intersect(
+              overZero, which(strwidth(legend, cex=cex) < maxCharUnderZero)
+          )] = strwidth('-')
+        }
         
         
-      }} # end justification
+        # width before decimal
+        charNoDec = strwidth(gsub("[.].*$", "", legend), cex=cex) + toPadLeft
+        maxCharNoDec = max(charNoDec)
+        # width including and after deciman
+        Ndec = strwidth(gsub("^[[:space:]]*[[:punct:]]*[[:digit:]]+ *", "", legend), cex=cex)
+        maxDec = max(Ndec)
+        # total needed to add      
+        maxWidth = max(strwidth(legend, cex=cex) + toPadLeft)
+        toAddTotal = maxWidth - (toPadLeft + strwidth(legend, cex=cex))
+        
+        toAddLeft = pmin(toAddTotal, maxCharNoDec - charNoDec)
+        toAddRight = pmin(toAddTotal, maxDec-Ndec)
+        
+        # the amount by which the total to add makes the string too wide        
+        toAddAdjust = toAddTotal - toAddLeft - toAddRight
+        # correct .4 on the left, .6 on the right
+        shiftLegendText = toAddLeft + 0.4*toAddAdjust + toPadLeft     
+        
+      } # end justification
       
     }
   }
@@ -197,7 +176,7 @@ legendBreaks = function(pos,
     oldxpd = par("xpd")
     par(xpd=NA)
     fromEdge = matrix(par("plt"), 2, 2, 
-      dimnames=list(c("min","max"), c("x","y")))
+        dimnames=list(c("min","max"), c("x","y")))
     propIn = apply(fromEdge, 2, diff)
     if(is.character(pos)) {
       forInset = c(0,0)
@@ -218,40 +197,44 @@ legendBreaks = function(pos,
   
 #	legend = format(as.character(legend), justify='right')
   result=legend(
-    pos,
-    legend=legend,
-    bg=bg,
-    col=col,
-    pch=pch,
-    pt.cex=pt.cex,
-    inset=inset,
-    cex=cex,
-    text.col=theTextCol,
-    title.col=title.col,
-    title=title,
-    y.intersp=y.intersp,
-    adj=adj,
-    ...
+      pos,
+      legend=legend,
+      bg=bg,
+      col=col,
+      pch=pch,
+      pt.cex=pt.cex,
+      inset=inset,
+      cex=cex,
+      text.col=theTextCol,
+      title.col=title.col,
+      title=title,
+      y.intersp=y.intersp,
+      adj=adj,
+      ...
   )
   
   if(text.col != theTextCol) {
     diffy = diff(result$text$y)/2
     diffy = c(
-      diffy,diffy[length(diffy)]
+        diffy,diffy[length(diffy)]
     )*diffyMult
     result$text$y = result$text$y + diffy
+    
+    
+    result$text$xOrig = result$text$x 
+    result$text$x = result$text$x + shiftLegendText/2 + max(strwidth(legend, cex=cex))/2
     
     if(par("xlog")) result$text$x = 10^result$text$x
     if(par("ylog")) result$text$y = 10^result$text$y
     
-    result$text$x = result$text$x+max(strwidth(legend))/2    
+    
     text(
         result$text$x, 
         result$text$y,
-      legend, 
-      col=text.col,
-      adj=0.5,
-      cex=cex)
+        legend, 
+        col=text.col,
+        adj=0.5,
+        cex=cex)
   }      
   
   if(outer){
