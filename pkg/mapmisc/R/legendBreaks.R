@@ -119,16 +119,17 @@ legendBreaks = function(pos,
       
       # format legend as character
       # note, if y.intersp is supplied this won't be done
+      if(is.numeric(legend)) {
       if(any(legend < 0)) {
         # have negatives
         overZero = which(legend >= 0)
         underZero = which(legend < 0)
         legend = as.character(legend)
         
-        if(dev.cur()=='Cairo') {
-          spaceChar = ' '#'\u200A\u200A' # two hair space characters
-        } else {
+        if(names(dev.cur())%in%c("Cairo", 'pdf')) {
           spaceChar = ' '
+        } else {
+          spaceChar = '\u200A' #  hair space character
         }
         extraSpaceFun = function(width) {
           x = round(width / strwidth(spaceChar))
@@ -148,25 +149,29 @@ legendBreaks = function(pos,
           extraSpaceFun(strwidth('-')), 
           legend[toPaddLeft], 
           sep='')
-        
-        maxWidth = max(strwidth(legend))
-        
-        maxCharNoDec = max(strwidth(grep("[.]", legend, value=TRUE, invert=TRUE)))
-        toAddLeft = pmin(
-          pmax(0,maxCharNoDec - strwidth(legend)), 
-          maxWidth-strwidth(legend))  
-        Ndec = strwidth(gsub("^[[:space:]]*[[:punct:]]*[[:digit:]]+ *", "", legend))
-        maxDec = max(Ndec)
-        
-        toAddTotal = maxWidth - strwidth(legend)
-        toAddRight = pmin(toAddTotal, maxDec-Ndec)
-        
-        toAddLeft = toAddTotal - 0.4*toAddRight
-        toAddLeft = extraSpaceFun(toAddLeft)
-        legend = paste(toAddLeft, legend, sep='')
       
-        toAddRight = maxWidth - strwidth(legend)
-        toAddRight = extraSpaceFun(toAddRight)
+      # width before decimal
+      charNoDec = strwidth(gsub("[.].*$", "", legend))
+      maxCharNoDec = max(charNoDec)
+      # width including and after deciman
+      Ndec = strwidth(gsub("^[[:space:]]*[[:punct:]]*[[:digit:]]+ *", "", legend))
+      maxDec = max(Ndec)
+      # total needed to add      
+      maxWidth = max(strwidth(legend))
+      toAddTotal = maxWidth - strwidth(legend)
+      
+      toAddLeft = pmin(toAddTotal, maxCharNoDec - charNoDec)
+      toAddRight = pmin(toAddTotal, maxDec-Ndec)
+      
+
+      toAddAdjust = toAddTotal - toAddLeft - toAddRight
+      toAddLeft = toAddLeft + 0.4*toAddAdjust      
+      
+      toAddLeft = extraSpaceFun(toAddLeft)
+      legend = paste(toAddLeft, legend, sep='')
+      
+      toAddRight = maxWidth - strwidth(legend)
+      toAddRight = extraSpaceFun(toAddRight)
         
         legend = paste(
           legend, 
@@ -174,7 +179,7 @@ legendBreaks = function(pos,
           sep='')
         
         
-      }
+      }} # end justification
       
     }
   }
@@ -239,15 +244,19 @@ legendBreaks = function(pos,
     if(par("xlog")) result$text$x = 10^result$text$x
     if(par("ylog")) result$text$y = 10^result$text$y
     
-    
-    text(result$text$x, result$text$y,
-      legend, col=text.col,adj=adj, 
-      cex=cex)   
+    result$text$x = result$text$x+max(strwidth(legend))/2    
+    text(
+        result$text$x, 
+        result$text$y,
+      legend, 
+      col=text.col,
+      adj=0.5,
+      cex=cex)
   }      
   
   if(outer){
     par(xpd=oldxpd)
   }
-  
+  result$legend = legend
   return(invisible(result))
 }
