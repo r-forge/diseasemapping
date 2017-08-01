@@ -123,40 +123,46 @@ legendBreaks = function(pos,
       # format legend as character
       # note, if y.intersp is supplied this won't be done
       if(is.numeric(legend)) {
-        # have negatives
-        overZero = which(legend >= 0)
-        underZero = which(legend < 0)
+        
         legend = as.character(legend)
-       
-        
-        # pad for minus sign
-        toPadLeft = rep(0, length(legend))
-        if(length(underZero)) {
-          maxCharUnderZero = max(strwidth(legend[underZero], cex=cex))
-          
-          toPadLeft[intersect(
-              overZero, which(strwidth(legend, cex=cex) < maxCharUnderZero)
-          )] = strwidth('-')
-        }
-        
-        
+        widthHere = strwidth(legend, cex=cex)
+        maxWidth = max(widthHere) 
+
+        # padd for minus sign
+        withMinus = grep("^[[:space:]]*[-]", legend)
+        toAddForMinus = rep(0, length(legend))
+        toAddForMinus[-withMinus] = pmin(
+            maxWidth - widthHere[-withMinus],
+            strwidth("-", cex=cex)
+        )
         # width before decimal
-        charNoDec = strwidth(gsub("[.].*$", "", legend), cex=cex) + toPadLeft
+        charNoDec = strwidth(gsub("(e|[.])[[:digit:]]*$", "", legend), cex=cex)
         maxCharNoDec = max(charNoDec)
-        # width including and after deciman
-        Ndec = strwidth(gsub("^[[:space:]]*[[:punct:]]*[[:digit:]]+ *", "", legend), cex=cex)
+        toAddLeft = pmin(
+            maxCharNoDec - charNoDec,
+            maxWidth - widthHere)
+        
+        # width after decimal
+        Ndec = strwidth(
+            gsub("^[[:space:]]*[[:punct:]]*([[:digit:]]|e[+])+ *", "", legend), 
+            cex=cex)
         maxDec = max(Ndec)
-        # total needed to add      
-        maxWidth = max(strwidth(legend, cex=cex) + toPadLeft)
-        toAddTotal = maxWidth - (toPadLeft + strwidth(legend, cex=cex))
         
-        toAddLeft = pmin(toAddTotal, maxCharNoDec - charNoDec)
-        toAddRight = pmin(toAddTotal, maxDec-Ndec)
+        toAddRight = pmin(
+            maxDec - Ndec,
+            maxWidth - widthHere)
+
+        # ideally we'd add space for minus, and padding before decimal, and padding after decimal
+        idealWidth = widthHere  + toAddRight + toAddLeft #+ toAddForMinus
+        tooWide = idealWidth - maxWidth
         
-        # the amount by which the total to add makes the string too wide        
-        toAddAdjust = toAddTotal - toAddLeft - toAddRight
-        # correct .4 on the left, .6 on the right
-        shiftLegendText = toAddLeft + 0.4*toAddAdjust + toPadLeft     
+        shiftLegendText  = pmin(
+            toAddForMinus + toAddLeft - 0.4*tooWide,
+            maxWidth - widthHere   
+        )
+            
+
+
         
       } # end justification
       
