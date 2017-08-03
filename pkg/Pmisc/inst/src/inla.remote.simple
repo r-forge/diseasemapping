@@ -38,19 +38,13 @@ if $(echo $args | awk '$0 ~ /(^|[ \t])-v($|[ \t])/{exit 0};{exit 1}'); then
 		echo "scp command $SCPCMD"
 		echo "local $dir"
 		echo "remote $rdir"
-		echo "model $model"
-		echo "args $args"
-		
-		echo -e "\n\n"
 		echo -e "$($SSHCMD $RemoteUserHost pwd)"
-		echo -e "\n\n"
    } 1>&2
 fi
 
 ## if this script is interupted, then cleanup on the remote host
 function kill_inla_remote
 {
-
     prog=${RemoteINLA##*/}
 	$SSHCMD $RemoteUserHost "\
 	    rm -rf $rdir; \
@@ -64,10 +58,6 @@ trap kill_inla_remote SIGINT SIGTERM
 $SSHCMD $RemoteUserHost mkdir -p $rdir
 cd $dir
 $SCPCMD -q -C -r * $RemoteUserHost:$rdir
-if [ $verbose == 1 ]; then {
-	echo -e " *** Starting computations\n"
-	} 
-fi
 $SSHCMD $RemoteUserHost "cd $rdir;$RemoteINLA $args Model.ini < /dev/null"
 if [ $verbose == 1 ]; then
    {
