@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+
+if [ "$INLA_OS" == "windows" ]; then
+    INIFILE=$INLA_HOME/.inlarc
+else
+    INIFILE=~/.inlarc
+fi
+
+source $INIFILE
+
+model=$(echo "$@" | awk '{print $NF}')
+dir=${model%/*}
+rdir=tmp/.inla.remote/inla-remote-$(date|tr '[ :]' -)-$RANDOM$RANDOM
+args=$(echo "$@" | awk '{$NF="";print}')
+
+maketemp () {
+    mktemp -t inla.remote.XXXXXXXX
+}
+TMP=$(maketemp)
+{
+    echo "inladatadir=data.files"
+    echo "inlaresdir=results.files"
+    egrep -v '^(inladatadir|inlaresdir)' $model 
+} > $TMP
+mv -f $TMP $model
+
+verbose=0
+if $(echo $args | awk '$0 ~ /(^|[ \t])-v($|[ \t])/{exit 0};{exit 1}'); then
+	{
+    verbose=1
+		echo -e "\tRun $RemoteINLA at $RemoteUserHost $(date)" 
+		echo "ssh command $SSHCMD"
+		echo "scp command $SCPCMD"
+		echo "local $dir"
+		echo "remote $rdir"
+		echo "model $model"
+		echo "args $args"
+   } 1>&2
+fi
+
+## if this script is interupted, then cleanup on the remote host
+function kill_inla_remote
+{
+
+    prog=${RemoteINLA##*/}
+	$SSHCMD $RemoteUserHost "\
+	    rm -rf $rdir; \
+	    pkill -u $USER $prog; \
+	    sleep 3; \
+	    pkill -9 -u $USER $prog" < /dev/null  > /dev/null 2>&1 &
+}
+trap kill_inla_remote SIGINT SIGTERM
+
+# run the real stuff
+$SSHCMD $RemoteUserHost mkdir -p $rdir
+$SCPCMD -Cr $dir/* $RemoteUserHost:$rdir
+$SSHCMD $RemoteUserHost "cd $rdir;$RemoteINLA $args Model.ini < /dev/null"
+if [ $verbose == 1 ]; then
+   {
+       echo -e " *** Computations finished at $(date)"
+       echo -e " *** Transfer the results...\n" 
+   } 1>&2
+fi
+$SCPCMD -Cr $RemoteUserHost:$rdir/results.files $dir/
