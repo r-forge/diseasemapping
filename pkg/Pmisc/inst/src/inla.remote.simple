@@ -1,22 +1,26 @@
 #!/usr/bin/env bash
 
+maketemp () {
+    mktemp -t inla.remote.XXXXXXXX
+}
 
-if [ "$INLA_OS" == "windows" ]; then
+if [ "$INLA_OS" == "windows" ]; then        
     INIFILE=$INLA_HOME/.inlarc
+	TMP=$(maketemp)
+    tr -d \\015 < "$INIFILE" > $TMP
+    source $TMP
+    rm -r $TMP
 else
     INIFILE=~/.inlarc
+    source $INIFILE
 fi
 
-source $INIFILE
 
 model=$(echo "$@" | awk '{print $NF}')
 dir=${model%/*}
 rdir=tmp/.inla.remote/inla-remote-$(date|tr '[ :]' -)-$RANDOM$RANDOM
 args=$(echo "$@" | awk '{$NF="";print}')
 
-maketemp () {
-    mktemp -t inla.remote.XXXXXXXX
-}
 TMP=$(maketemp)
 {
     echo "inladatadir=data.files"
@@ -36,6 +40,10 @@ if $(echo $args | awk '$0 ~ /(^|[ \t])-v($|[ \t])/{exit 0};{exit 1}'); then
 		echo "remote $rdir"
 		echo "model $model"
 		echo "args $args"
+		
+		echo -e "\n\n"
+		echo -e "$($SSHCMD $RemoteUserHost pwd)"
+		echo -e "\n\n"
    } 1>&2
 fi
 
@@ -54,7 +62,12 @@ trap kill_inla_remote SIGINT SIGTERM
 
 # run the real stuff
 $SSHCMD $RemoteUserHost mkdir -p $rdir
-$SCPCMD -Cr $dir/* $RemoteUserHost:$rdir
+cd $dir
+$SCPCMD -q -C -r * $RemoteUserHost:$rdir
+if [ $verbose == 1 ]; then {
+	echo -e " *** Starting computations\n"
+	} 
+fi
 $SSHCMD $RemoteUserHost "cd $rdir;$RemoteINLA $args Model.ini < /dev/null"
 if [ $verbose == 1 ]; then
    {
@@ -62,4 +75,4 @@ if [ $verbose == 1 ]; then
        echo -e " *** Transfer the results...\n" 
    } 1>&2
 fi
-$SCPCMD -Cr $RemoteUserHost:$rdir/results.files $dir/
+$SCPCMD -q -C -r $RemoteUserHost:$rdir/results.files .
