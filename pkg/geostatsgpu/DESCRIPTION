@@ -1,0 +1,18 @@
+Package: geostatsgpu
+Version: 0.0.1
+Date: 2017-08-01
+Title: Geostats
+Author: Patrick Brown
+SystemRequirements: Gnu Scientific Library version >= 1.12
+Description: 
+ Geostats matern
+Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
+License: GPL (>= 2)
+NeedsCompilation: yes
+Suggests: gsl, gpuR, RViennaCL
+LinkingTo: 
+	Rcpp,
+	gpuR,
+	RcppEigen,
+    RViennaCL (>= 1.7.1.4)
+RoxygenNote: 6.0.1
