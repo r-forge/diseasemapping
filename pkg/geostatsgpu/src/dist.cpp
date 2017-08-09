@@ -85,6 +85,11 @@ static const char * kernel_matern =
 		"double dist[2], distRotate[2], distSq, logDist, nuSq = nu * nu;"
 		"double thisx, logthisx, maternScale, ln_half_x, half_x, half_x_nu, sigma, sinhrat;"
 		"double del0, del1, sum0, sum1,fk, pk, qk, hk, ck;"
+		"double K_mu, K_mup1, maternBit;"
+		// Kp_mu?
+		"double K_nu, K_nup1, K_num1, Kp_nu;"
+		"int nuround = 1 + floor(nu);"
+		"mup1 = nu - nuround + 1;"
 		"int k;"
 		// Get the index of the elements to be processed
 		"const int maxIter = 1000;"
@@ -106,7 +111,6 @@ static const char * kernel_matern =
 		"logDist = log(distSq)*0.5;"
 		"ln_half_x = logDist + log(0.5);"
 		"half_x = exp(ln_half_x);"
-		"result[globalCol+rowHereResult] = half_x;"
 		"logthisx = logDist + logxscale;"
 		"thisx =exp(logthisx);"
 		"maternScale = exp(varscale + nu * logthisx);"
@@ -136,9 +140,23 @@ static const char * kernel_matern =
 		"	del1 = ck * hk;" // = ck * (pk - k fk)
 		"	sum1 += del1;"
 		"}"//while loop
-
-		"}"//function
-		"}";
+		//ex = exp(x[D]);
+		//K_mu   = sum0 * ex;
+//        result[Dindex] = exp(varscale + *shape * logthisx)*
+//           bessel_k_ex(thisx, alpha, 1.0, bk);
+		"maternBit = varscale + nu * logthisx;"
+		"K_mu = sum0 * exp(maternBit);"
+		"K_mup1 = sum1 * exp(maternBit - ln_half_x);"
+		// is Kp_mu needed?
+//		Kp_mu  = - K_mup1 + *nu/x[D] * K_mu;
+		"for(k=0; k<nuround; k++) {"
+		"	K_num1 = K_nu;"
+		"	K_nu   = K_nup1;"
+			// does this need modifying if we're doing the matern?
+		"	K_nup1 = (mup1+k)/half_x * K_nu + K_num1;"
+		"}"
+		"result[globalCol+rowHereResult] = K_nu;"
+		"}";//function
 
 RcppExport SEXP cpp_gpuMatrix_custom_P(
 				SEXP AR,
