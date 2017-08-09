@@ -38,7 +38,7 @@ mdTable = function(x, col.just = 'r', guessGroup=FALSE, ..., mdToTex = 'auto') {
   
   if(guessGroup) {
     
-    rTable= table(x[,1])
+    rTable= table(x[,1])[unique(as.character(x[,1]))]
     xFirstRowUnique = as.character(x[!duplicated(x[,1]), 1])
     if(length(xFirstRowUnique) != length(names(rTable))) {
       warning("first column doesn't appear to be a grouping")
