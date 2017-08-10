@@ -68,6 +68,7 @@ static const char * kernel_matern =
 		"const int size,"
 		"const int internalSizeCoords,"
 		"const int internalSizeResult,"
+		"const double nu,"
 		"const int nuround,"
 		"const double mu,"
 		"const double costheta,"
@@ -80,17 +81,10 @@ static const char * kernel_matern =
 		"const double g_1mnu,"
 		"const double g1,"
 		"const double g2,"
+		"const double epsilon,"
 		"__global const double *coords,"
 		"__global double *result)"
 		"{"
-		"double dist[2], distRotate[2], distSq;"
-		"const double muSq = mu * mu, mup1 = mu+1;"
-		"double logthisx, ln_half_x, half_x_nu, sigma, sinhrat;"
-		"double del0, del1, sum0, sum1,fk, pk, qk, hk, ck;"
-		"double K_mu, K_mup1, maternBit;"
-		"double half_x;" // get rid?
-		"double K_nu, K_nup1, K_num1, Kp_nu;"
-		"int k, sumk;"
 		// Get the index of the elements to be processed
 		"const int maxIter = 15000;"
 		"const int globalRow = get_global_id(0);"
@@ -101,38 +95,47 @@ static const char * kernel_matern =
 
 		"if((globalRow < size) && (globalCol < globalRow)){"
 
+		"double dist[2], distRotate[2], distSq;"
+		"const double muSq = mu * mu, mup1 = mu+1;"
+		"double del0, del1, sum0, sum1,fk, pk, qk, hk, ck;"
+		"double K_mu, K_mup1, sumk;"
+		"double K_nu, K_nup1, K_num1, Kp_nu;"
+		"int k;"
+
 		"dist[0] = coords[rowHereCoords1] - coords[rowHereCoords2];"
 		"dist[1] = coords[rowHereCoords1 + 1] - coords[rowHereCoords2 + 1];"
 		"distRotate[0] = costheta *dist[0] - sintheta * dist[1];"
 		"distRotate[1] = sintheta *dist[0] + costheta * dist[1];"
 		"distSq = distRotate[0]*distRotate[0] + distRotate[1]*distRotate[1]/anisoRatioSq;"
 
-		"logthisx = 0.5 * log(distSq);"//	 + logxscale;"
-		"ln_half_x = logthisx - M_LN2;"
-		"half_x = exp(ln_half_x);"// get rid?
-		"maternBit = logthisx;"//varscale + nu * logthisx;"
-		"sigma   = - mu * ln_half_x;"
-		"half_x_nu = exp(-sigma);"
-		"sinhrat = sinh(sigma)/sigma;"
+		"const double logthisx = 0.5 * log(distSq) + logxscale;"
+		"const double ln_half_x = logthisx - M_LN2;"
+		"const double twoLnHalfX = 2*ln_half_x;"
+		"const double maternBit = varscale + nu * logthisx;"
+		"const double sigma   = - mu * ln_half_x;"
+		"const double half_x_nu = exp(mu*ln_half_x);"//exp(-sigma);"
+		"const double sinhrat = sinh(sigma)/sigma;"
+		"const double half_x = exp(ln_half_x);" // get rid?
 
 		"fk = sinrat * (cosh(sigma)*g1 - sinhrat*ln_half_x*g2);"
 		"pk = 0.5/half_x_nu * g_1pnu;"
 		"qk = 0.5*half_x_nu * g_1mnu;"
+		"ck = exp(maternBit);"
 		"hk = pk;"
-		"sum0 = fk;"
-		"sum1 = hk;"
-		"ck = 1.0;"
+		"sum0 = fk*exp(maternBit);"
+		"sum1 = hk*exp(maternBit);"
 		"k=0;"
-		"sumk = 0;"
-		"del0 = fabs(sum0)+1;"
-		"result[globalCol+rowHereResult] = sigma;"
-		"result[globalCol*internalSizeResult+globalRow] = half_x_nu;"
-		"while( (k < maxIter) && ( fabs(del0) > (0.5*fabs(sum0)) ) ) {"
+		"sumk = 0;"//maternBit;"
+		"del0 = fabs(sum0);"
+
+		"while( (k < maxIter) && ( fabs(del0) > (epsilon * fabs(sum0)) ) ) {"
 		"	k++;"
-//		"   sumk += log((double)k);"
+		"   sumk += log((double)k);"
 		"	fk  = (k*fk + pk + qk)/(k*k-muSq);"
-		"	ck *= half_x*half_x/k;" // log(ck) = k * log(x/2) - sumk"
-//		"   ck = exp(k * ln_half_x - sumk);"
+		"	ck *= half_x*half_x/k;"
+		// log(ck) += 2*log(x) - log(4) - log(k)"
+		// log(ck) = k*log4 - sumk +2*k*log(x)
+//		"   ck = exp(maternBit + 2* k * logthisx - sumk);"
 		"	del0 = ck * fk;"
 		"	sum0 += del0;"
 
@@ -143,24 +146,19 @@ static const char * kernel_matern =
 		"	del1 = ck * hk;" // = ck * (pk - k fk)
 		"	sum1 += del1;"
 		"}"//while loop
-		//ex = exp(x[D]);
-		//K_mu   = sum0 * ex;
-//        result[Dindex] = exp(varscale + *shape * logthisx)*
-//           bessel_k_ex(thisx, alpha, 1.0, bk);
-//		"K_mu = sum0 * exp(maternBit);"
-//		"K_mup1 = sum1 * exp(maternBit - ln_half_x);"
-		// is Kp_mu needed?
-//		Kp_mu  = - K_mup1 + *nu/x[D] * K_mu;
-		"K_nu   = sum0 * exp(maternBit);"
-//		"result[globalCol+rowHereResult] = K_nu;"
-		"K_nup1 = sum1 * exp(maternBit - ln_half_x);"
+
+		"K_nu   = sum0;"// * exp(maternBit);"
+		"K_nup1 = sum1 * exp( - ln_half_x);"
+
 		"for(k=0; k<nuround; k++) {"
 		"	K_num1 = K_nu;"
 		"	K_nu   = K_nup1;"
 			// does this need modifying if we're doing the matern?
 		"	K_nup1 = exp(log(mup1+k) - ln_half_x) * K_nu + K_num1;"
 		"}"
-//		"result[globalCol+rowHereResult] = K_nu;"
+		"result[globalCol*internalSizeResult+globalRow] = k;"
+
+		"result[globalCol+rowHereResult] = K_nu;"
 		"}" // if size
 		"}";//function
 
@@ -219,21 +217,23 @@ RcppExport SEXP cpp_gpuMatrix_custom_P(
 	const double sinrat = (fabs(pi_nu) < GSL_DBL_EPSILON ? 1.0 : pi_nu/sin(pi_nu));
 	Rtemme_gamma(&mu, &g_1pnu, &g_1mnu, &g1, &g2);
 
-	Rprintf("s %f %d %f %f %f %f %f \n", mu, nuround, sinrat, g_1pnu, g_1mnu, g1, g2);
+//	Rprintf("s %f %d %f %f %f %f %f \n", mu, nuround, sinrat, g_1pnu, g_1mnu, g1, g2);
 
 	// execute kernel
 	viennacl::ocl::enqueue(anisoDist(
 			size, internalSizeA, internalSizeD,
 			// nuround mu cos theta, sin theta
-			nuround, mu, cos(param[5]), sin(param[5]),
+			param[0], nuround, mu, cos(param[5]), sin(param[5]),
 			// parameters from matern.c in geostatsp
-			// anisoRatioSq varscale
-			(param[4])*(param[4]), log(param[2])  - Rf_lgammafn(param[0]) -  (param[0]-1)*M_LN2,
+			// anisoRatioSq
+			(param[4])*(param[4]),
+			// varscale
+			log(param[2])  - Rf_lgammafn(param[0]) -  (param[0]-1)*M_LN2,
 			// logxscale
-	//		1.5 * M_LN2 +   0.5 * log(param[0])
-	- log(param[1]),
+			1.5 * M_LN2 +   0.5 * log(param[0]) - log(param[1]),
 			// parameters from bessel temme in gsl
 			sinrat, g_1pnu, g_1mnu, g1, g2,
+			GSL_DBL_EPSILON * 0.5,
 			A, D));
 	return R_NilValue;
 }

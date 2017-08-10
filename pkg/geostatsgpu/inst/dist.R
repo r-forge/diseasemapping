@@ -34,7 +34,8 @@ range(as.matrix(D1 - D2))
 #devtools::document("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
 #devtools::install("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
 #devtools::reload("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
-  devtools::load_all("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
+devtools::load_all("/home/patrick/workspace/diseasemapping/pkg/geostatsp")
+devtools::load_all("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
   library(gpuR)
   x = as.matrix(expand.grid(1:2, 1:2))/5
   coordsV = gpuR::vclMatrix(x)
@@ -50,10 +51,8 @@ range(as.matrix(D1 - D2))
   maxWorkGroupSize <- gpuInfo(coordsV@.platform_index, coordsV@.device_index)$maxWorkGroupSize
   
   myParams = c(shape=1.5, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = pi/4)
+  uscale = (sqrt(8*myParams['shape'])* distMat/ myParams['range'])
   
-  (nuround = round(myParams['shape']+0.5))
-  (mu = myParams['shape'] - nuround)
-  unlist(.C('Rtemme_gamma', mu, 0.1, 0.1, 0.1, 0.1))
   
   .Call("cpp_gpuMatrix_custom_P", 
       coordsV@address, D3@address, 
@@ -61,15 +60,33 @@ range(as.matrix(D1 - D2))
       maxWorkGroupSize, 
       coordsV@.context_index - 1)
 
-  as.matrix(D3)#[1:3, ]
+  as.matrix(D3)
+  log(uscale)
+  log(uscale^myParams['shape'])
+  myParams['shape'] * log(uscale)
   
+  as.matrix(D3) * uscale^myParams['shape']
+
+  (besselK(uscale, myParams['shape']) -
+        as.matrix(D3))
+  
+  geostatsp::matern(
+      distMat, param=myParams
+      )
+      besselK(distMat, myParams['shape'])
+      besselK(distMat, myParams['shape'])*exp(distMat)
+      
   matrix(.C("bessel_K_p", 
       as.integer(nuround),  as.double(mu),  as.double(myParams['shape']),
       as.double(distMat), as.double(distMat), 
       as.integer(length(distMat)), PACKAGE='geostatsgpu')[[5]], ncol(distMat)) 
   
-  
-besselK(distMat[1:3,1:9], myParams['shape'])
+(nuround = round(myParams['shape']+0.5))
+(mu = myParams['shape'] - nuround)
+unlist(.C('Rtemme_gamma', mu, 0.1, 0.1, 0.1, 0.1))
+
+(besselK(distMat, myParams['shape'])*exp(distMat))[1:3,] -
+as.matrix(D3)[1:3, ]
 
 as.matrix(geostatsp::matern(sp::SpatialPoints(as.matrix(coordsV)), myParams))[1:3, 1:9]
 

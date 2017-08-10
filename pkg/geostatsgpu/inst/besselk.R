@@ -29,14 +29,14 @@ y5 = .C("bessel_K_temme", as.integer(nuround), as.double(mu), as.double(x), as.d
     as.integer(length(x)), PACKAGE='geostatsgpu')[[4]] 
 
 
-#range(y5-y4, na.rm=TRUE)
-
 y6 = .C("bessel_K_p", 
     as.integer(nuround),  as.double(mu),  as.double(nu),
     as.double(x), as.double(x), 
     as.integer(length(x)), PACKAGE='geostatsgpu')[[5]] 
 
+range(y5-y4, na.rm=TRUE)
 range(y5-y6, na.rm=TRUE)
+range(besselK(x, nu)*exp(x) - y6)
 
 
 

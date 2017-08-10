@@ -307,7 +307,6 @@ void bessel_K_p(int *nuround, double *mu, double *nu, double *x, double *result,
 		del0=0.0;
 		del1=0.0;
 		k = 0;
-		Rprintf("c2 %d %f %f %f %f\n", D, half_x_nu, sigma, ck, fk);
 		while(k < max_iter) {
 			k++;
 			fk  = (k*fk + pk + qk)/(k*k-(*mu)* (*mu));
@@ -323,7 +322,7 @@ void bessel_K_p(int *nuround, double *mu, double *nu, double *x, double *result,
 			sum1 += del1;
 			if(fabs(del0) < 0.5*fabs(sum0)*GSL_DBL_EPSILON) break;
 		}
-	  Rprintf("d %d %f %f %f %f\n", D, sum0, pk, ck, fk);
+//	  Rprintf("d %d %f %f %f %f\n", D, sum0, pk, ck, fk);
 
 		// Add the matern stuff (on log scale) here?
 		ex = exp(x[D]);
@@ -356,10 +355,11 @@ void bessel_K_p(int *nuround, double *mu, double *nu, double *x, double *result,
 				e10 += p;
 			};
 #endif
-//			Rprintf("%f %f %f %f\n", K_num1, K_nu, K_nup1, *mu);
 			// does this need modifying if we're doing the matern?
 			K_nup1 = 2.0*(*mu+Dn+1)/x[D] * K_nu + K_num1;
 		}
+//		Rprintf("bb %d %f %f %f\n", D, K_nu, K_nup1, *mu);
+
 		result[D] = K_nu;
 	}
 }
