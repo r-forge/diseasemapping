@@ -98,7 +98,7 @@ static const char * kernel_matern =
 		"double dist[2], distRotate[2], distSq;"
 		"const double muSq = mu * mu, mup1 = mu+1;"
 		"double del0, del1, sum0, sum1,fk, pk, qk, hk, ck;"
-		"double K_mu, K_mup1, sumk;"
+		"double K_mu, K_mup1, logck;"
 		"double K_nu, K_nup1, K_num1, Kp_nu;"
 		"int k;"
 
@@ -120,22 +120,23 @@ static const char * kernel_matern =
 		"fk = sinrat * (cosh(sigma)*g1 - sinhrat*ln_half_x*g2);"
 		"pk = 0.5/half_x_nu * g_1pnu;"
 		"qk = 0.5*half_x_nu * g_1mnu;"
-		"ck = exp(maternBit);"
 		"hk = pk;"
 		"sum0 = fk*exp(maternBit);"
 		"sum1 = hk*exp(maternBit);"
 		"k=0;"
-		"sumk = 0;"//maternBit;"
+		"logck = maternBit;"
 		"del0 = fabs(sum0);"
 
 		"while( (k < maxIter) && ( fabs(del0) > (epsilon * fabs(sum0)) ) ) {"
 		"	k++;"
-		"   sumk += log((double)k);"
+		"   logck += twoLnHalfX - log((double)k);"
+		"   ck = exp(logck);"
 		"	fk  = (k*fk + pk + qk)/(k*k-muSq);"
-		"	ck *= half_x*half_x/k;"
+//		"	ck *= half_x*half_x/k;"
 		// log(ck) += 2*log(x) - log(4) - log(k)"
-		// log(ck) = k*log4 - sumk +2*k*log(x)
-//		"   ck = exp(maternBit + 2* k * logthisx - sumk);"
+		// log(ck) = - k*log4 - sumk +2*k*log(x)
+	//	"   ck = exp(maternBit - k * log(4.0) + 2* k * logthisx - sumk);"
+
 		"	del0 = ck * fk;"
 		"	sum0 += del0;"
 
@@ -147,17 +148,15 @@ static const char * kernel_matern =
 		"	sum1 += del1;"
 		"}"//while loop
 
-		"K_nu   = sum0;"// * exp(maternBit);"
+		"K_nu   = sum0;"
 		"K_nup1 = sum1 * exp( - ln_half_x);"
 
 		"for(k=0; k<nuround; k++) {"
 		"	K_num1 = K_nu;"
 		"	K_nu   = K_nup1;"
-			// does this need modifying if we're doing the matern?
 		"	K_nup1 = exp(log(mup1+k) - ln_half_x) * K_nu + K_num1;"
 		"}"
 		"result[globalCol*internalSizeResult+globalRow] = k;"
-
 		"result[globalCol+rowHereResult] = K_nu;"
 		"}" // if size
 		"}";//function
