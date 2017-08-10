@@ -1,8 +1,8 @@
 
 x = seq(1, 3, len=2)
-nu = 1.5
-nuround = round(nu+0.5)
-mu = nu - nuround
+(nu = 1.5)
+(nuround = round(nu+0.5))
+(mu = nu - nuround)
 
 y1 = besselK(x, nu)
 y2 = besselK(x, nu, TRUE)
@@ -18,19 +18,21 @@ y3 = jj$val
 range(y2-y3, na.rm=T)
 
 
+
 y4 = .C("bessel_Knu_scaled", nu, as.double(x), as.double(x), 
     as.integer(length(x)), PACKAGE='geostatsgpu')[[3]] 
 
-range(y3-y4, na.rm=TRUE)
+range(y2-y4, na.rm=TRUE)
 
+devtools::load_all("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
 y5 = .C("bessel_K_temme", as.integer(nuround), as.double(mu), as.double(x), as.double(x), 
     as.integer(length(x)), PACKAGE='geostatsgpu')[[4]] 
 
 
-range(y5-y4, na.rm=TRUE)
+#range(y5-y4, na.rm=TRUE)
 
 y6 = .C("bessel_K_p", 
-    as.integer(nuround), as.double(nu), as.double(mu), 
+    as.integer(nuround),  as.double(mu),  as.double(nu),
     as.double(x), as.double(x), 
     as.integer(length(x)), PACKAGE='geostatsgpu')[[5]] 
 

@@ -163,16 +163,77 @@ void Rtemme_gamma(double *nu, double * g_1pnu, double * g_1mnu, double *g1, doub
 	*g_1pnu = 1.0/(r_g2.val - *nu * r_g1.val);
 }
 
+int gsl_sf_bessel_K_scaled_temmeP(double nu, const double x,
+                             double * K_nu, double * K_nup1, double * Kp_nu)
+{
+  int max_iter = 15000;
+
+  const double half_x    = 0.5 * x;
+  const double ln_half_x = log(half_x);
+  const double half_x_nu = exp(nu*ln_half_x);
+  const double pi_nu   = M_PI * nu;
+  const double sigma   = -nu * ln_half_x;
+  const double sinrat  = (fabs(pi_nu) < GSL_DBL_EPSILON ? 1.0 : pi_nu/sin(pi_nu));
+  const double sinhrat = (fabs(sigma) < GSL_DBL_EPSILON ? 1.0 : sinh(sigma)/sigma);
+  const double ex = exp(x);
+
+  double sum0, sum1;
+  double fk, pk, qk, hk, ck;
+  int k = 0;
+  int stat_iter;
+
+  double g_1pnu, g_1mnu, g1, g2;
+  int stat_g = 0;
+  Rtemme_gamma(&nu, &g_1pnu, &g_1mnu, &g1, &g2);
+
+//  Rprintf("bb %d %f %f %f %f %f\n", -1, nu,  g_1pnu, g_1mnu, g1, g2);
+  fk = sinrat * (cosh(sigma)*g1 - sinhrat*ln_half_x*g2);
+//  Rprintf("cc0 %d %f %f %f %f\n", -1, sinrat, sigma, g1, g2);
+
+  pk = 0.5/half_x_nu * g_1pnu;
+  qk = 0.5*half_x_nu * g_1mnu;
+  hk = pk;
+  ck = 1.0;
+  sum0 = fk;
+  sum1 = hk;
+//  Rprintf("cc1 %d %f %f %f %f\n", -1, sigma, sinhrat, fk, pk);
+  while(k < max_iter) {
+    double del0;
+    double del1;
+    k++;
+    fk  = (k*fk + pk + qk)/(k*k-nu*nu);
+    ck *= half_x*half_x/k;
+//    Rprintf("cc2 %d %f %f %f %f\n", -1, fk, pk, ck, qk);
+    pk /= (k - nu);
+    qk /= (k + nu);
+    hk  = -k*fk + pk;
+    del0 = ck * fk;
+    del1 = ck * hk;
+    sum0 += del0;
+    sum1 += del1;
+    if(fabs(del0) < 0.5*fabs(sum0)*GSL_DBL_EPSILON) break;
+  }
+//  Rprintf("dd %d %f %f %f %f\n", -1, sum0, sum1, ck, fk);
+
+  *K_nu   = sum0 * ex;
+  *K_nup1 = sum1 * 2.0/x * ex;
+  *Kp_nu  = - *K_nup1 + nu/x * *K_nu;
+
+  stat_iter = ( k == max_iter ? GSL_EMAXITER : GSL_SUCCESS );
+  return 1;//GSL_ERROR_SELECT_2(stat_iter, stat_g);
+}
+
+
 void bessel_K_temme(int *nuround, double *mu, double *x, double *result, int *Nx) {
 
 	int D, Dn, e10;
 	double K_mu, K_mup1, Kp_mu;
 	double K_nu, K_nup1, K_num1;
 
-
 	for(D=0;D<*Nx;++D) {
 
-		gsl_sf_bessel_K_scaled_temme(*mu, x[D], &K_mu, &K_mup1, &Kp_mu);
+		gsl_sf_bessel_K_scaled_temmeP(*mu, x[D], &K_mu, &K_mup1, &Kp_mu);
+//		Rprintf("a %d %f %f %f %f\n", D, x[D], K_mu, K_mup1, Kp_mu);
 
 		K_nu   = K_mu;
 		K_nup1 = K_mup1;
@@ -190,7 +251,7 @@ void bessel_K_temme(int *nuround, double *mu, double *x, double *result, int *Nx
 				e10 += p;
 			};
 #endif
-			Rprintf("%f %f %f %f\n", K_num1, K_nu, K_nup1, mu);
+//			Rprintf("b %f %f %f %f\n", K_num1, K_nu, K_nup1, *mu);
 			K_nup1 = 2.0*(*mu+Dn+1)/x[D] * K_nu + K_num1;
 			result[D] = K_nup1;
 		}
@@ -198,10 +259,9 @@ void bessel_K_temme(int *nuround, double *mu, double *x, double *result, int *Nx
 	}
 }
 
-void bessel_K_p(int *nuround, double *muR, double *nu, double *x, double *result, int *Nx) {
+void bessel_K_p(int *nuround, double *mu, double *nu, double *x, double *result, int *Nx) {
 
 	int D, Dn, e10;
-	double mu = *muR;
 	double K_mu, K_mup1, Kp_mu;
 	double K_nu, K_nup1, K_num1, Kp_nu;
 
@@ -215,28 +275,23 @@ void bessel_K_p(int *nuround, double *muR, double *nu, double *x, double *result
 	double del1;
 
 	double g_1pnu, g_1mnu, g1, g2;
-	double sinrat;
+	const double pi_nu = M_PI * (*mu);
+	double sinrat =(fabs(pi_nu) < GSL_DBL_EPSILON ? 1.0 : pi_nu/sin(pi_nu));
 
 	int max_iter = 15000;
-	const double pi_nu = M_PI * (*nu);
-	Rtemme_gamma(nu, &g_1pnu, &g_1mnu, &g1, &g2);
-	sinrat  = (fabs(pi_nu) < GSL_DBL_EPSILON ? 1.0 : pi_nu/sin(pi_nu));
-
+	Rtemme_gamma(mu, &g_1pnu, &g_1mnu, &g1, &g2);
 
 	for(D=0;D<*Nx;++D) {
-		k = 0;
-		//		gsl_sf_bessel_K_scaled_temme(*mu, x[D], &K_mu, &K_mup1, &Kp_mu);
-		//		gsl_sf_bessel_K_scaled_temme(const double nu, const double x,
-		//		                             double * K_nu, double * K_nup1, double * Kp_nu)
-		// assigning Kp_nu below, but if calling temme function would be assigning kp_mu
 		half_x    = 0.5 * x[D];
 		ln_half_x = log(half_x);
 
-		half_x_nu = exp((*nu)*ln_half_x);
-		sigma   = - (*nu) * ln_half_x;
+		half_x_nu = exp((*mu)*ln_half_x);
+		sigma   = - (*mu) * ln_half_x;
 		sinhrat = (fabs(sigma) < GSL_DBL_EPSILON ? 1.0 : sinh(sigma)/sigma);
-
+//	    Rprintf("b %d %f %f %f %f %f %f\n", D, *mu, *nu,  g_1pnu, g_1mnu, g1, g2);
 		fk = sinrat * (cosh(sigma)*g1 - sinhrat*ln_half_x*g2);
+//		Rprintf("c0 %d %f %f %f %f\n", D, sinrat, sigma, g1, g2);
+
 		// no need for sigma anymore
 		pk = 0.5/half_x_nu * g_1pnu;
 		qk = 0.5*half_x_nu * g_1mnu;
@@ -244,25 +299,31 @@ void bessel_K_p(int *nuround, double *muR, double *nu, double *x, double *result
 		ck = 1.0;
 		sum0 = fk;
 		sum1 = hk;
+
 		// fk, ck, pk, qk hk are vectors
 		// keep sum0, sum1, fk, pk, qk, generate kh, ck
 		// but qk = (g_1mnu / g_1pnu) * 0.25/pk
 		// keep sum0, del0, sum1, fk, log_half_x, x? generate pk, qk, ck?
+		del0=0.0;
+		del1=0.0;
+		k = 0;
+		Rprintf("c2 %d %f %f %f %f\n", D, half_x_nu, sigma, ck, fk);
 		while(k < max_iter) {
 			k++;
-			fk  = (k*fk + pk + qk)/(k*k-(*nu)* (*nu));
+			fk  = (k*fk + pk + qk)/(k*k-(*mu)* (*mu));
 			ck *= half_x*half_x/k; // log(ck) = k * log(x/2) - sumk
 			del0 = ck * fk;
 			sum0 += del0;
 
-			pk /= (k - (*nu));
-			qk /= (k + (*nu));
+			pk /= (k - (*mu));
+			qk /= (k + (*mu));
 
 			hk  = -k*fk + pk;
 			del1 = ck * hk; // = ck * (pk - k fk)
 			sum1 += del1;
 			if(fabs(del0) < 0.5*fabs(sum0)*GSL_DBL_EPSILON) break;
 		}
+	  Rprintf("d %d %f %f %f %f\n", D, sum0, pk, ck, fk);
 
 		// Add the matern stuff (on log scale) here?
 		ex = exp(x[D]);
@@ -273,13 +334,13 @@ void bessel_K_p(int *nuround, double *muR, double *nu, double *x, double *result
 
 		stat_iter = ( k == max_iter ? GSL_EMAXITER : GSL_SUCCESS );
 
+//		Rprintf("a %d %f %f %f %f\n", D, x[D], K_mu, K_mup1, Kp_mu);
 
 		/* recurse forward to obtain K_num1, K_nu */
 		K_nu   = K_mu;
 		K_nup1 = K_mup1;
 
-		//		for(Dn=0; Dn<*nuround; Dn++) {
-		for(Dn=0; Dn<1; Dn++) {
+		for(Dn=0; Dn<*nuround; Dn++) {
 			K_num1 = K_nu;
 			K_nu   = K_nup1;
 			/* rescale the recurrence to avoid overflow
@@ -295,9 +356,9 @@ void bessel_K_p(int *nuround, double *muR, double *nu, double *x, double *result
 				e10 += p;
 			};
 #endif
-			Rprintf("%f %f %f %f\n", K_num1, K_nu, K_nup1, mu);
+//			Rprintf("%f %f %f %f\n", K_num1, K_nu, K_nup1, *mu);
 			// does this need modifying if we're doing the matern?
-			K_nup1 = 2.0*(mu+Dn+1)/x[D] * K_nu + K_num1;
+			K_nup1 = 2.0*(*mu+Dn+1)/x[D] * K_nu + K_num1;
 		}
 		result[D] = K_nu;
 	}
