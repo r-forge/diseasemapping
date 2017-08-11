@@ -21,7 +21,7 @@ key = 'mapmisc',
 utils::bibentry(
 	key = 'mapmiscPackage',
 	bibtype = "Manual",
-         title = "mapmisc: Utilities for Producing Maps}",
+         title = "mapmisc: Utilities for Producing Maps",
          author = pb,
          year = year,
          note = note,
