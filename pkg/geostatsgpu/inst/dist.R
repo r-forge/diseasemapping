@@ -1,103 +1,38 @@
-library(gpuR)
 
-coords = as.matrix(expand.grid(1:5, 1:5))/5
-storage.mode(coords) = 'numeric'
-coordsV = vclMatrix(coords)
-
-distV = dist(coordsV, 'sqEuclidean')
-
-x=coords
-D1 <- vclMatrix(as.double(0), nrow=nrow(x), ncol=nrow(x), type='double', ctx_id=coordsV@.context_index)
-
-gpuR:::vclMatrix_euclidean(
-    A=coordsV, 
-    D=D1,
-    diag = TRUE,
-    upper = FALSE,
-    p = 2,
-    squareDist = TRUE)
-
-D2 <- vclMatrix(as.double(0),
-    nrow=nrow(x), ncol=nrow(x), type='double', 
-    ctx_id=coordsV@.context_index)
-
-gpuR:::cpp_vclMatrix_eucl(
-    coordsV@address, 
-    D2@address,
-    squareDist=TRUE,
-    8L,
-    coordsV@.context_index - 1)    
-
-range(as.matrix(D1 - D2))
-
-
-#devtools::document("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
-#devtools::install("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
-#devtools::reload("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
-devtools::load_all("/home/patrick/workspace/diseasemapping/pkg/geostatsp")
 devtools::load_all("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
-  library(gpuR)
-  x = as.matrix(expand.grid(1:2, 1:2))/5
-  coordsV = gpuR::vclMatrix(x)
-  D3 <- vclMatrix(
-      data=-0.1, 
-      
-      nrow(x), nrow(x),
-      type='double'
-  )
-  
-  distMat = as.matrix(dist(as.matrix(coordsV)))
-  
-  maxWorkGroupSize <- gpuInfo(coordsV@.platform_index, coordsV@.device_index)$maxWorkGroupSize
-  
-  myParams = c(shape=1.5, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = pi/4)
-  uscale = (sqrt(8*myParams['shape'])* distMat/ myParams['range'])
-  
-  
-  .Call("cpp_gpuMatrix_custom_P", 
-      coordsV@address, D3@address, 
-      myParams,
-      maxWorkGroupSize, 
-      coordsV@.context_index - 1)
 
-  as.matrix(D3)
-  log(uscale)
-  log(uscale^myParams['shape'])
-  myParams['shape'] * log(uscale)
-  
-  as.matrix(D3) * uscale^myParams['shape']
+library(gpuR)
+x = as.matrix(expand.grid(seq(1,by=1,len=41), seq(1,by=1,len=41)))
+coordsV = gpuR::vclMatrix(x)
+D3 <- vclMatrix(
+    data=-0.1, 
+    nrow(coordsV), nrow(coordsV),
+    type='double'
+)
 
-  (besselK(uscale, myParams['shape']) -
-        as.matrix(D3))
-  
-  geostatsp::matern(
-      distMat, param=myParams
-      )
-      besselK(distMat, myParams['shape'])
-      besselK(distMat, myParams['shape'])*exp(distMat)
-      
-  matrix(.C("bessel_K_p", 
-      as.integer(nuround),  as.double(mu),  as.double(myParams['shape']),
-      as.double(distMat), as.double(distMat), 
-      as.integer(length(distMat)), PACKAGE='geostatsgpu')[[5]], ncol(distMat)) 
-  
-(nuround = round(myParams['shape']+0.5))
-(mu = myParams['shape'] - nuround)
-unlist(.C('Rtemme_gamma', mu, 0.1, 0.1, 0.1, 0.1))
+myParams = c(shape=1.5, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = pi/4)
 
-(besselK(distMat, myParams['shape'])*exp(distMat))[1:3,] -
-as.matrix(D3)[1:3, ]
+v1 = maternGpu(coordsV, myParams, D3, 'variance')
 
-as.matrix(geostatsp::matern(sp::SpatialPoints(as.matrix(coordsV)), myParams))[1:3, 1:9]
+as.matrix(v1)[1,]
+
+as.matrix(v1)[,1]
+
+as.matrix(v1)[1:12,1:8]
+
+v2 = geostatsp::matern(
+    sp::SpatialPoints(as.matrix(coordsV)),
+    myParams
+)
+
+options(width=120)
+(v2 - as.matrix(v1))[1:7,1:7]
+(v2 - as.matrix(v1))[seq(by=1, len=7, to=dim(v2)[1]), seq(by=1, len=7, to=dim(v2)[2])]
 
 
-as.matrix(D3) / geostatsp::matern(
-    sp::SpatialPoints(as.matrix(coordsV)), myParams
-    )
+v2[1:5,1:4]
+as.matrix(v1)[1:5,1:4]
 
 
-.Call("stuff", coordsV@address, D3@address, as.integer(0), package='geostatspgpu')
+quantile((as.matrix(v1) - v2)[lower.tri(v2)])
 
-as.matrix(D3)
-
-range(as.matrix(D1 - D3))

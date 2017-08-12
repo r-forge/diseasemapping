@@ -1,5 +1,5 @@
 
-#include <R_ext/Print.h>
+//#include <R_ext/Print.h>
 #include <Rmath.h>
 
 #define GSL_DBL_EPSILON 2.2204460492503131e-16
@@ -20,8 +20,8 @@
 #include "viennacl/ocl/device.hpp"
 #include "viennacl/ocl/platform.hpp"
 #include "viennacl/matrix.hpp"
-#include "viennacl/linalg/prod.hpp"
-#include "viennacl/linalg/sum.hpp"
+//#include "viennacl/linalg/prod.hpp"
+//#include "viennacl/linalg/sum.hpp"
 //#include "viennacl/linalg/matrix_operations.hpp"
 
 
@@ -29,42 +29,9 @@ using namespace Rcpp;
 
 RcppExport void Rtemme_gamma(double *nu, double * g_1pnu, double * g_1mnu, double *g1, double *g2);
 
-//http://viennacl.sourceforge.net/doc/custom-kernels_8cpp_source.html
-static const char * my_compute_program_bessel =
-		"__kernel void besselk(\n"
-		"          __global const float * dist,\n"
-		"          __global const float * nu, \n"
-		"          __global float * result,\n"
-		"          unsigned int size) \n"
-		"{ \n"
-		"		int Dn, e10;"
-		"		int k;"
-		"		int stat_iter;"
-		//		"		float mu = *muR;"
-		"		float K_mu, K_mup1, Kp_mu;"
-		"		float K_nu, K_nup1, K_num1, Kp_nu;"
-		"		float pi_nu = M_PI * (*nu);"
-		"		float half_x, ln_half_x, half_x_nu, sigma, sinhrat, ex;"
-		"		float sum0, sum1;"
-		"		float fk, pk, qk, hk, ck;"
-		// maxIter, sinrat, pi_nu, mu, nuround
-		//		"		double g_1pnu, g_1mnu, g1, g2;"
-		"		double del0;"
-		"		double del1;"
-
-		"  for (unsigned int i = get_global_id(0); i < size; i += get_global_size(0))\n"
-		"k=0;"
-		"ex = exp(dist[i]);"
-		"half_x    = 0.5 * x[D];"
-		"ln_half_x = log(half_x);"
-		"half_x_nu = exp((*nu)*ln_half_x);"
-		"sigma   = - (*nu) * ln_half_x;"
-
-		"    result[i] = dist[i] * (*nu);\n"
-		"};\n";
 
 static const char * kernel_matern =
-		"__kernel void anisoDist("
+		"__kernel void matern("
 		"const int size,"
 		"const int internalSizeCoords,"
 		"const int internalSizeResult,"
@@ -76,6 +43,7 @@ static const char * kernel_matern =
 		"const double anisoRatioSq,"
 		"const double varscale,"
 		"const double logxscale,"
+		"const double diagVar,"
 		"const double sinrat,"
 		"const double g_1pnu,"
 		"const double g_1mnu,"
@@ -86,21 +54,24 @@ static const char * kernel_matern =
 		"__global double *result)"
 		"{"
 		// Get the index of the elements to be processed
-		"const int maxIter = 15000;"
 		"const int globalRow = get_global_id(0);"
-		"const int globalCol = get_global_id(1);"
+		"if(globalRow < size){"
 		"const int rowHereResult = internalSizeResult*globalRow;"
 		"const int rowHereCoords1 = internalSizeCoords*globalRow;"
-		"const int rowHereCoords2 = internalSizeCoords*globalCol;"
-
-		"if((globalRow < size) && (globalCol < globalRow)){"
-
-		"double dist[2], distRotate[2], distSq;"
+		"int Dcol, rowHereCoords2;"
+		"const int maxIter = 15000;"
 		"const double muSq = mu * mu, mup1 = mu+1;"
+		"double dist[2], distRotate[2], distSq;"
 		"double del0, del1, sum0, sum1,fk, pk, qk, hk, ck;"
 		"double K_mu, K_mup1, logck;"
 		"double K_nu, K_nup1, K_num1, Kp_nu;"
 		"int k;"
+		"double logthisx, ln_half_x, twoLnHalfX, maternBit, sigma, half_x_nu, sinhrat;"
+
+		"result[globalRow+rowHereResult] = diagVar;"
+		"for(Dcol=0; Dcol < globalRow; ++Dcol){"
+
+		"rowHereCoords2 = internalSizeCoords*Dcol;"
 
 		"dist[0] = coords[rowHereCoords1] - coords[rowHereCoords2];"
 		"dist[1] = coords[rowHereCoords1 + 1] - coords[rowHereCoords2 + 1];"
@@ -108,14 +79,13 @@ static const char * kernel_matern =
 		"distRotate[1] = sintheta *dist[0] + costheta * dist[1];"
 		"distSq = distRotate[0]*distRotate[0] + distRotate[1]*distRotate[1]/anisoRatioSq;"
 
-		"const double logthisx = 0.5 * log(distSq) + logxscale;"
-		"const double ln_half_x = logthisx - M_LN2;"
-		"const double twoLnHalfX = 2*ln_half_x;"
-		"const double maternBit = varscale + nu * logthisx;"
-		"const double sigma   = - mu * ln_half_x;"
-		"const double half_x_nu = exp(mu*ln_half_x);"//exp(-sigma);"
-		"const double sinhrat = sinh(sigma)/sigma;"
-		"const double half_x = exp(ln_half_x);" // get rid?
+		"logthisx = 0.5 * log(distSq) + logxscale;"
+		"ln_half_x = logthisx - M_LN2;"
+		"twoLnHalfX = 2*ln_half_x;"
+		"maternBit = varscale + nu * logthisx;"
+		"sigma   = - mu * ln_half_x;"
+		"half_x_nu = exp(-sigma);"
+		"sinhrat = sinh(sigma)/sigma;"
 
 		"fk = sinrat * (cosh(sigma)*g1 - sinhrat*ln_half_x*g2);"
 		"pk = 0.5/half_x_nu * g_1pnu;"
@@ -125,17 +95,13 @@ static const char * kernel_matern =
 		"sum1 = hk*exp(maternBit);"
 		"k=0;"
 		"logck = maternBit;"
-		"del0 = fabs(sum0);"
+		"del0 = fabs(sum0)+100;"
 
 		"while( (k < maxIter) && ( fabs(del0) > (epsilon * fabs(sum0)) ) ) {"
 		"	k++;"
 		"   logck += twoLnHalfX - log((double)k);"
 		"   ck = exp(logck);"
 		"	fk  = (k*fk + pk + qk)/(k*k-muSq);"
-//		"	ck *= half_x*half_x/k;"
-		// log(ck) += 2*log(x) - log(4) - log(k)"
-		// log(ck) = - k*log4 - sumk +2*k*log(x)
-	//	"   ck = exp(maternBit - k * log(4.0) + 2* k * logthisx - sumk);"
 
 		"	del0 = ck * fk;"
 		"	sum0 += del0;"
@@ -144,7 +110,7 @@ static const char * kernel_matern =
 		"	qk /= (k + (mu));"
 
 		"	hk  = -k*fk + pk;"
-		"	del1 = ck * hk;" // = ck * (pk - k fk)
+		"	del1 = ck * hk;"
 		"	sum1 += del1;"
 		"}"//while loop
 
@@ -156,12 +122,13 @@ static const char * kernel_matern =
 		"	K_nu   = K_nup1;"
 		"	K_nup1 = exp(log(mup1+k) - ln_half_x) * K_nu + K_num1;"
 		"}"
-		"result[globalCol*internalSizeResult+globalRow] = k;"
-		"result[globalCol+rowHereResult] = K_nu;"
+		"result[Dcol+rowHereResult] = K_nu;"
+		"}" // loop col
 		"}" // if size
 		"}";//function
 
-RcppExport SEXP cpp_gpuMatrix_custom_P(
+
+RcppExport SEXP cpp_maternGpu(
 				SEXP AR,
 				SEXP DR,
 				SEXP paramR,
@@ -180,18 +147,18 @@ RcppExport SEXP cpp_gpuMatrix_custom_P(
 	viennacl::matrix_range<viennacl::matrix<double> > D  = pMatD->data();
 
 	int size=D.size1();
-	int internalSizeD = D.internal_size1();
-	int internalSizeA = A.internal_size1();
+	int internalSizeD = D.internal_size2();
+	int internalSizeA = A.internal_size2();
 
 	viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
 	// add kernel to program
 	viennacl::ocl::program & my_prog = ctx.add_program(kernel_matern, "kernel_matern");
 
 	// get compiled kernel function
-	viennacl::ocl::kernel & anisoDist = my_prog.get_kernel("anisoDist");
+	viennacl::ocl::kernel &matern = my_prog.get_kernel("matern");
 
 	cl_device_id raw_device = ctx.current_device().id();
-	cl_kernel raw_kernel = ctx.get_kernel("kernel_matern", "anisoDist").handle().get();
+	cl_kernel raw_kernel = ctx.get_kernel("kernel_matern", "matern").handle().get();
 
 	size_t preferred_work_group_size_multiple;
 	cl_int err = clGetKernelWorkGroupInfo(raw_kernel, raw_device,
@@ -199,13 +166,10 @@ RcppExport SEXP cpp_gpuMatrix_custom_P(
 			sizeof(size_t), &preferred_work_group_size_multiple, NULL);
 
 	max_local_size = floor(max_local_size / preferred_work_group_size_multiple);
-	anisoDist.global_work_size(0, internalSizeD);
-	anisoDist.global_work_size(1, internalSizeD);
+	matern.global_work_size(0, internalSizeD);
 
 	// set local work sizes
-	anisoDist.local_work_size(0, max_local_size);
-	anisoDist.local_work_size(1, max_local_size);
-
+	matern.local_work_size(0, max_local_size);
 
 	//param is shape range variance nugget anisoRatio anisoAngleRadians anisoAngleDegrees
 	double *param = &REAL(paramR)[0];
@@ -219,7 +183,7 @@ RcppExport SEXP cpp_gpuMatrix_custom_P(
 //	Rprintf("s %f %d %f %f %f %f %f \n", mu, nuround, sinrat, g_1pnu, g_1mnu, g1, g2);
 
 	// execute kernel
-	viennacl::ocl::enqueue(anisoDist(
+	viennacl::ocl::enqueue(matern(
 			size, internalSizeA, internalSizeD,
 			// nuround mu cos theta, sin theta
 			param[0], nuround, mu, cos(param[5]), sin(param[5]),
@@ -230,6 +194,8 @@ RcppExport SEXP cpp_gpuMatrix_custom_P(
 			log(param[2])  - Rf_lgammafn(param[0]) -  (param[0]-1)*M_LN2,
 			// logxscale
 			1.5 * M_LN2 +   0.5 * log(param[0]) - log(param[1]),
+			// nugget + sigmasq
+			param[3] + param[2],
 			// parameters from bessel temme in gsl
 			sinrat, g_1pnu, g_1mnu, g1, g2,
 			GSL_DBL_EPSILON * 0.5,
