@@ -34,7 +34,7 @@ getCacheDir = function(persistent = FALSE) {
   
   packageStartupMessage(format(paste(
               "map images will be cached in ", 
-              getOption("mapmiscCache")))
+              getOption("mapmiscCachePath")))
   )
   
   invisible()
