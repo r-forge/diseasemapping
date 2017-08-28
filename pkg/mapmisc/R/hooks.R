@@ -1,7 +1,7 @@
 
 getCacheDir = function(persistent = FALSE) {
   if(persistent) {
-    result = file.path(basename(tempdir()), 
+    result = file.path(dirname(tempdir()), 
         paste("mapmiscCache", Sys.info()['user'],  sep='_')
     )
   } else {
