@@ -555,9 +555,10 @@ map.new(meuseRot)
 plot(tilesRot, add=TRUE)
 points(meuseRot,col="red", cex=0.3)
 
-scaleBar(proj4string(meuseRot), bg="white")
-insetMap(meuseRot, "bottomleft",map=world)
-
+if(requireNamespace('rgdal', quietly=TRUE)) {
+  scaleBar(proj4string(meuseRot), bg="white")
+  insetMap(meuseRot, "bottomleft",map=world)
+}
 @
 
 
