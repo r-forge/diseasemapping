@@ -547,8 +547,10 @@ map.new(meuse,legendRight=TRUE)
 plot(nldTiles, add=TRUE)
 points(meuse)
 
-scaleBar(proj4string(meuse),pos="bottomright", bg="white")
-insetMap(crs=meuse, pos="topright",map=world)
+if(requireNamespace('rgdal', quietly=TRUE)) {
+  scaleBar(proj4string(meuse),pos="bottomright", bg="white")
+  insetMap(crs=meuse, pos="topright",map=world)
+}
 
 # rotated
 map.new(meuseRot)
