@@ -11,7 +11,7 @@ persistentCache = function(verbose=TRUE) {
   if(verbose)
     message(format(paste(
                 "map images will be cached in ", 
-                getOption("mapmiscCache"))
+                getOption("mapmiscCachePath"))
         )
     )
   
