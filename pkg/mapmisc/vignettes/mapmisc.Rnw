@@ -33,7 +33,6 @@ if( Sys.info()['user'] =='patrick') {
 }
 
 library('mapmisc')
-options(mapmiscVerbose=TRUE)
 haveRgdal = requireNamespace('rgdal', quietly=TRUE)
 @
 
@@ -547,7 +546,7 @@ world = openmap(
 @
 
 
-<<inset,fig.cap="Inset map", fig.subcap=c("elevation","rotated"), fig.height=3,fig.width=4,out.width="0.48\\textwidth", eval=FALSE>>=
+<<inset,fig.cap="Inset map", fig.subcap=c("elevation","rotated"), fig.height=3,fig.width=4,out.width="0.48\\textwidth">>=
 
 # not rotated
 map.new(meuse,legendRight=TRUE)
