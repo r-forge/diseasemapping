@@ -5,11 +5,10 @@
 
 ```{r setup}
 library('mapmisc')
-library('rgdal')
-
-options(mapmiscCachePath = system.file('extdata', package='mapmisc'))
-options(mapmiscVerbose=TRUE)
 haveRgdal = require('rgdal', quietly=TRUE)
+
+#options(mapmiscCachePath = system.file('extdata', package='mapmisc'))
+options(mapmiscVerbose=TRUE)
 ```
 
 ```{r data}
@@ -34,7 +33,8 @@ if(haveRgdal)
   myMap = openmap(myProj, path='landscape', zoom=2,fact=3)
 ```
 
-```{r backgroundOverDateline, include=FALSE, purl=FALSE, eval=FALSE}
+```{r backgroundOverDateline}
+#, include=FALSE, purl=FALSE, eval=FALSE}
 if(length(attributes(myProj)$ellipseSafeLL)>2) {
   
   myMap1 = openmap(
@@ -69,7 +69,7 @@ if(length(attributes(myProj)$ellipseSafeLL)>2) {
 ```{r map}
 if(haveRgdal){
   map.new(myProj, bg='black', buffer=2*100*1000)
-  plot(myMap, add=TRUE, bgalpha=0)
+#  plot(myMap, add=TRUE, bgalpha=0)
   
   if(requireNamespace('maptools')) {
     data("wrld_simpl", package='maptools')
