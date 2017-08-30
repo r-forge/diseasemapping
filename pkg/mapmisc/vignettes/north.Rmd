@@ -49,7 +49,7 @@ x = SpatialPointsDataFrame(
         
 ```{r osm}
 if(haveRgdal){
-  map = openmap(x, path='osm-no-labels', maxTiles=12, buffer=c(30,3))
+  map = openmap(x, path='osm-no-labels', maxTiles=12, buffer=c(30,3), fact=fact)
   
   map.new(map)
   plot(map,add=TRUE)
@@ -63,7 +63,7 @@ if(haveRgdal){
 
 ```{r mapquest}
 if(haveRgdal){
-  mapSat = openmap(x, path='opentopomap', maxTiles=4, buffer=c(30,3))
+  mapSat = openmap(x, path='opentopomap', maxTiles=4, buffer=c(30,3), fact=fact)
   
   map.new(mapSat)
   plot(mapSat,add=TRUE)
@@ -77,7 +77,7 @@ if(haveRgdal){
 ```{r mapquestDetail}
 if(haveRgdal){
   mapSat = openmap(x=x[x$name=='Hans island',], 
-    path='opentopomap', 
+    path='opentopomap', fact=fact,  
     buffer=c(4,1), zoom=2)
   
   map.new(x[x$name=='Hans island',], buffer=0.3)
@@ -93,7 +93,7 @@ if(haveRgdal){
 if(haveRgdal){
   xMerc = spTransform(x, omerc(x))
   mapMerc = openmap(xMerc, path='osm-no-labels',
-    zoom=3,
+    zoom=3, fact=fact,
     maxTiles=12, buffer=c(50,200)*1000)
   
   map.new(xMerc, buffer=50000)
@@ -112,7 +112,7 @@ if(haveRgdal){
   
   map = openmap(xOmerc, 
     path=c('osm-no-labels', 'stamen-terrain-labels'), 
-    fact=1.5, maxTiles=12, 
+    fact=fact, maxTiles=12, 
     buffer=c(2,10,10,0)*100*1000)
   
   mapText = rgbtToIndex(map, pattern='stamen.terrain.labels')
@@ -134,7 +134,7 @@ if(haveRgdal){
 ```{r nrcanAlex}
 if(haveRgdal){
   map = openmap(x[x$name=='Alex Fjord',], 		
-    path='maptoolkit', zoom=3, 
+    path='maptoolkit', zoom=3, fact=fact, 
     buffer=c(5,5,2,1))   
   map.new(map)
   plot(map, add=TRUE)
@@ -205,12 +205,12 @@ if(haveRgdal){
   
   
   southInset = openmap(x=waterhouseWrap, 
-    path='osm-no-labels',
+    path='osm-no-labels', fact=fact,
     buffer=c(4,1,2,1)*1000*1000)
   
 } else {
   southInset = openmap(waterhouseMerc, 
-    path='osm-no-labels',
+    path='osm-no-labels', fact=fact,
     buffer=c(4,0,0,1.5)*1000*1000, 
     crs=NA)
 }
@@ -271,7 +271,7 @@ if(haveRgdal) {
 ```{r waterhouseLL}
 if(haveRgdal) {
   
-  mapLL = openmap(waterhouseLL, buffer=0.02)
+  mapLL = openmap(waterhouseLL, buffer=0.02, fact=fact)
   
   map.new(mapLL)
   plot(mapLL, add=TRUE)
@@ -286,7 +286,7 @@ if(haveRgdal) {
 
 ```{r rockLL}	
 if(haveRgdal) {
-  mapLLfine = openmap(rockLL, zoom=19, buffer=0.0002)  
+  mapLLfine = openmap(rockLL, zoom=19, fact=fact, buffer=0.0002)  
   map.new(mapLLfine)
   plot(mapLLfine, add=TRUE)	
   points(rockLL, col='blue', pch=3, cex=5)

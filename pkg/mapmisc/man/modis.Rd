@@ -44,9 +44,11 @@ crsModis
 
 myPointLL = SpatialPoints(cbind(c(5:6),10:11), proj4string = crsLL)
 
-getModisTiles(myPointLL)
+if(requireNamespace("rgdal", quietly=TRUE)) {
+  getModisTiles(myPointLL)
 
-getModisTiles(myPointLL, mapmisc::degreeRaster)
+  getModisTiles(myPointLL, mapmisc::degreeRaster)
+}
 
 modisUrl = 	'ftp://ladsweb.nascom.nasa.gov/allData/5/MCD12Q1/2002/001/'
 

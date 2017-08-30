@@ -10,3 +10,6 @@ empty:
 	xelatex -interaction=nonstopmode $<;
 	xelatex -interaction=nonstopmode $<
 	R --slave -e "tools::compactPDF('$@', gs_quality='ebook')" 
+
+north.md: north.Rmd
+	R --slave -e "knitr::knit('north.Rmd')" fact=2
