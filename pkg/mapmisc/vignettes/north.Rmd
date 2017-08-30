@@ -19,7 +19,6 @@ library('mapmisc')
 library('knitr')
 haveRgdal = require('rgdal', quietly=TRUE)
 options(mapmiscCachePath = system.file('extdata', package='mapmisc'))
-#options(mapmiscCachePath = '/tmp/stuff')
 
 fact = 0.6
 # uncomment for nicer images
