@@ -19,13 +19,11 @@ x = SpatialPoints(cbind(130,15), proj4string=crsLL)
 ```
 
 ```{r projection}
-if(haveRgdal){
   myProj = tpers(x=bind(x,y), hKm = 2*1000,
       tilt =-15, axis='seu')
   xProj = spTransform(guam, myProj)
   yProj = spTransform(hk, myProj)
   okinawaProj = spTransform(okinawa, myProj)
-}
 ```
 
 ```{r background}
@@ -33,9 +31,8 @@ if(haveRgdal)
   myMap = openmap(myProj, path='landscape', zoom=2,fact=3)
 ```
 
-```{r backgroundOverDateline}
-#, include=FALSE, purl=FALSE, eval=FALSE}
-if(length(attributes(myProj)$ellipseSafeLL)>2) {
+```{r backgroundOverDateline, include=FALSE, eval=FALSE, purl=FALSE}
+if(length(attributes(myProj)$ellipseSafeLL)>2 & haveRgdal) {
   
   myMap1 = openmap(
       x=attributes(myProj)$regionLL[1,],
