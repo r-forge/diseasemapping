@@ -34,6 +34,7 @@ if( Sys.info()['user'] =='patrick') {
 
 library('mapmisc')
 options(mapmiscVerbose=TRUE)
+haveRgdal = requireNamespace('rgdal', quietly=TRUE)
 @
 
 This document will be incomplete if {\tt rgdal} is unavailable or there is on
@@ -65,7 +66,7 @@ meuseLL = spTransform(meuse, CRS("+init=epsg:4326"))
 @
 
 <<meuseProj,include=FALSE>>=
-if(requireNamespace('rgdal', quietly=TRUE)) {
+if(haveRgdal) {
   proj4string(meuse) <- CRS("+init=epsg:28992")
   meuseLL = spTransform(meuse, CRS("+init=epsg:4326"))
 } else {
@@ -382,7 +383,9 @@ nldElev = crop(nldElev, extend(extent(meuse), 1000))
 Get a background map covering the extent of the meuse data
 <<openmap>>=
 library('mapmisc')
-nldTiles = openmap(meuse, cachePath = system.file('extdata', package='mapmisc'))
+if(haveRgdal)
+  nldTiles = openmap(meuse, 
+      cachePath = system.file('extdata', package='mapmisc'))
 @
 {\tt nldTiles} is a Raster with the same projection as {\tt meuse}
 <<openmapInfo>>=
