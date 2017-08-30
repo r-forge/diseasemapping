@@ -39,7 +39,7 @@ opts_chunk$set(dpi=50*fact,
 
 if(allTiles) {
   theNames = names(osmTiles())
-  cachePath = options()$mapmiscCachePath
+  cachePath = file.path(tempdir(), 'mapLayersVignetteCache')
 } else {
   # smaller selection of tiles, which are distributed with the package
   theNames = names(grep(
@@ -54,7 +54,6 @@ if(allTiles) {
 africaExtent = c(25, 25)
 trafalgarSquare=c(-0.128056,51.508056)
 stjohns=c(-52.683320, 47.566285)
-
 ```
 
 
@@ -160,7 +159,8 @@ africaMichelin = openmap(
 
 
 for(D in names(africaMichelin)) {
-  plot(africaMichelin[[D]])
+  map.new(africaMichelin)
+  plot(africaMichelin[[D]], add=TRUE)
   mtext(D, side=3, line=-2, outer=FALSE)
 }
 
@@ -180,7 +180,8 @@ africaS = openmap(
   path=sPath, verbose=TRUE)
 africaS2 = tonerToTrans(africaS)
 
-plot(africaTiles[['opentopomap']])
+map.new(africaTiles)
+plot(africaTiles[['opentopomap']], add=TRUE)
 plot(africaS2, add=TRUE)
 
 mtext(sPath, side=3, line=-2, outer=FALSE)
@@ -221,10 +222,11 @@ for(D in Spaths) {
       "([rR]ed|[gG]reen|[bB]lue)$", sep=""), 
     names(africaExtra),value=TRUE)
   
+  map.new(africaExtra)
   if(length(threeTilesName)==3) {
-    plotRGB(africaExtra[[threeTilesName]])
+    plotRGB(africaExtra[[threeTilesName]], add=TRUE)
   } else {
-    plot(africaExtra[[oneTileName]])
+    plot(africaExtra[[oneTileName]], add=TRUE)
   }
   mtext(D, side=3, line=-2, outer=FALSE)
 }
