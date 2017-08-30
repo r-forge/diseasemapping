@@ -260,11 +260,11 @@ mapMercFine = openmap(rockMerc, buffer=100, crs=NA)
 map.new(mapMercFine)
 plot(mapMercFine, add=TRUE)
 points(rockMerc, col='blue',cex=5)
-insetMap(crs=mapMercFine, 
+if(haveRgdal) {
+  insetMap(crs=mapMercFine, 
   pos='bottomright', 
   map=southInset, cropInset = NULL,
   lty=0)
-if(haveRgdal) {
   scaleBar(mapMercFine, 'bottomleft')
 }
 ```
