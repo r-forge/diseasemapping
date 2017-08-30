@@ -166,11 +166,14 @@ if(haveRgdal) {
   
   
   rockMerc = spTransform(rockLL, crsMerc)
-  
+}
+```
+
+```{r southDataNoRgdal, include=FALSE}
 #dput(rockMerc, file='')
 #dput(waterhouseMerc, file='')
   
-} else {
+if(!haveRgdal) {
   
   waterhouseMerc = new("SpatialPoints"
     , coords = structure(c(19900911.3682423, -6393470.38497316), .Dim = 1:2, .Dimnames = list(
@@ -228,7 +231,7 @@ insetMap(crs=mapMerc,
   pos='bottomright', 
   map=southInset, cropInset = NULL,
   lty=0)
-scaleBar(crs=mapMerc,  seg.len=35, pos='center')
+#scaleBar(crs=mapMerc,  seg.len=35, pos='center')
 sRes = scaleBar(mapMerc, 'bottomleft', cex=2)
 
 scaleCentre = SpatialPoints(
@@ -274,7 +277,7 @@ if(haveRgdal) {
   mapLL = openmap(waterhouseLL, buffer=0.02, fact=fact)
   
   map.new(mapLL)
-  plot(mapLL, add=TRUE)
+  plot(mapLL, add=TRUE, maxpixels = 10^6)
   points(waterhouseLL, pch=3, cex=5)
   insetMap(crs=mapLL, 
     pos='bottomright', 

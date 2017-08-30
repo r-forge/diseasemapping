@@ -13,3 +13,6 @@ empty:
 
 north.md: north.Rmd
 	R --slave -e "knitr::knit('north.Rmd')" fact=2
+	
+%.html: %.md
+	pandoc --smart --self-contained --to=html5 --output=$@ $<	
