@@ -264,7 +264,9 @@ insetMap(crs=mapMercFine,
   pos='bottomright', 
   map=southInset, cropInset = NULL,
   lty=0)
-scaleBar(mapMercFine, 'bottomleft')
+if(haveRgdal) {
+  scaleBar(mapMercFine, 'bottomleft')
+}
 ```
 
 ```{r waterhouseLL}
