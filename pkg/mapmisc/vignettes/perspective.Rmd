@@ -9,6 +9,7 @@ library('rgdal')
 
 options(mapmiscCachePath = system.file('extdata', package='mapmisc'))
 options(mapmiscVerbose=TRUE)
+haveRgdal = require('rgdal', quietly=TRUE)
 ```
 
 ```{r data}
@@ -19,42 +20,45 @@ x = SpatialPoints(cbind(130,15), proj4string=crsLL)
 ```
 
 ```{r projection}
-myProj = tpers(x=bind(x,y), hKm = 2*1000,
-  tilt =-15, axis='seu')
-xProj = spTransform(guam, myProj)
-yProj = spTransform(hk, myProj)
-okinawaProj = spTransform(okinawa, myProj)
+if(haveRgdal){
+  myProj = tpers(x=bind(x,y), hKm = 2*1000,
+      tilt =-15, axis='seu')
+  xProj = spTransform(guam, myProj)
+  yProj = spTransform(hk, myProj)
+  okinawaProj = spTransform(okinawa, myProj)
+}
 ```
 
 ```{r background}
-myMap = openmap(myProj, path='landscape', zoom=2,fact=3)
+if(haveRgdal)
+  myMap = openmap(myProj, path='landscape', zoom=2,fact=3)
 ```
 
-```{r backgroundOverDateline, include=FALSE, purl=FALSE}
+```{r backgroundOverDateline, include=FALSE, purl=FALSE, eval=FALSE}
 if(length(attributes(myProj)$ellipseSafeLL)>2) {
   
   myMap1 = openmap(
-    x=attributes(myProj)$regionLL[1,],
-    crs=crsMerc, zoom=3,
-    path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
-
+      x=attributes(myProj)$regionLL[1,],
+      crs=crsMerc, zoom=3,
+      path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
+  
   
   myMap2 = openmap(
-    x=attributes(myProj)$regionLL[2,],
-    zoom=attributes(myMap1)$tiles$zoom,
-    crs=crsMerc, zoom=3,
-    path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
+      x=attributes(myProj)$regionLL[2,],
+      zoom=attributes(myMap1)$tiles$zoom,
+      crs=crsMerc, zoom=3,
+      path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
   
   mapRaster = raster(
-    extent(attributes(myProj)$ellipse), 
-    res = mean(res(myMap1)/1.5),
-    crs=myProj
+      extent(attributes(myProj)$ellipse), 
+      res = mean(res(myMap1)/1.5),
+      crs=myProj
   )
   
   myMap1a = projectRaster(
-    from=myMap1, to=mapRaster, method='ngb')
+      from=myMap1, to=mapRaster, method='ngb')
   myMap2a = projectRaster(
-    from=myMap2, to=mapRaster, method='ngb')
+      from=myMap2, to=mapRaster, method='ngb')
   
   myMap = mosaic(myMap1a, myMap2a, fun=mean)
 }
@@ -63,33 +67,34 @@ if(length(attributes(myProj)$ellipseSafeLL)>2) {
 
 
 ```{r map}
-map.new(myProj, bg='black', buffer=2*100*1000)
-plot(myMap, add=TRUE, bgalpha=0)
-
-if(requireNamespace('maptools')) {
-  data("wrld_simpl", package='maptools')
-  wrld4 = wrapPoly(x=wrld_simpl, crs=myProj)
-  plot(wrld4, add=TRUE)
+if(haveRgdal){
+  map.new(myProj, bg='black', buffer=2*100*1000)
+  plot(myMap, add=TRUE, bgalpha=0)
+  
+  if(requireNamespace('maptools')) {
+    data("wrld_simpl", package='maptools')
+    wrld4 = wrapPoly(x=wrld_simpl, crs=myProj)
+    plot(wrld4, add=TRUE)
+  }
+  
+  gridlinesWrap(myProj, col='yellow', 
+      north=seq(-40,40,by=10), easts=seq(-150,180,by=10),
+      lty=2)
+  
+  points(xProj, col='red', pch=16, cex=2)
+  text(xProj@coords, 
+      as.character(xProj$originalPlace),
+      pos=2, col='red')
+  
+  points(okinawaProj, col='red', pch=16, cex=2)
+  text(okinawaProj@coords, 
+      as.character(okinawaProj$originalPlace),
+      pos=2, col='red')
+  
+  points(yProj, col='red', pch=16, cex=2)
+  text(yProj@coords, 
+      as.character(yProj$originalPlace),
+      pos=2, col='red')
+  
 }
-
-gridlinesWrap(myProj, col='yellow', 
-  north=seq(-40,40,by=10), easts=seq(-150,180,by=10),
-  lty=2)
-
-points(xProj, col='red', pch=16, cex=2)
-text(xProj@coords, 
-  as.character(xProj$originalPlace),
-  pos=2, col='red')
-
-points(okinawaProj, col='red', pch=16, cex=2)
-text(okinawaProj@coords, 
-  as.character(okinawaProj$originalPlace),
-  pos=2, col='red')
-
-points(yProj, col='red', pch=16, cex=2)
-text(yProj@coords, 
-  as.character(yProj$originalPlace),
-  pos=2, col='red')
-
-
 ```
