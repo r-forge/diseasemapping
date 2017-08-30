@@ -11,8 +11,8 @@ empty:
 	xelatex -interaction=nonstopmode $<
 	R --slave -e "tools::compactPDF('$@', gs_quality='ebook')" 
 
-north.md: north.Rmd
-	R --slave -e "knitr::knit('north.Rmd')" fact=2
+%.md: %.Rmd
+	R --slave -e "knitr::knit('$<')" fact=2 allTiles=TRUE
 	
 %.html: %.md
-	pandoc --smart --self-contained --to=html5 --output=$@ $<	
+	pandoc --smart --self-contained --to=html5 --css=http://diseasemapping.r-forge.r-project.org/webpage.css --output=$@ $<	

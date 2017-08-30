@@ -95,6 +95,7 @@ openmapAttribution("stamen-toner", type='text')
 
 myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10, 
   crs="+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+
 values(myraster) = seq(0,1,len=ncell(myraster))
 
 myPoints = SpatialPoints(myraster, proj4string=CRS(proj4string(myraster)))[
@@ -103,6 +104,7 @@ myPoints = SpatialPoints(myraster, proj4string=CRS(proj4string(myraster)))[
 names(osmTiles())
 
 
+\dontrun{
 mytiles = openmap(myraster, zoom=6,
 	cachePath = system.file('extdata', package='mapmisc'))
 	
@@ -112,7 +114,6 @@ mytiles = openmap(myraster, zoom=6,
 	points(myPoints,col='red')
 
 
-\dontrun{
 	mytiles = openmap(myPoints,
 		path='waze', verbose=TRUE)
 	map.new(myPoints)

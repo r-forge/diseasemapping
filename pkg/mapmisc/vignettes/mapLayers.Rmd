@@ -63,17 +63,17 @@ stjohns=c(-52.683320, 47.566285)
   africaTiles = openmap(africaExtent, path=theNames,zoom=2,
     verbose=TRUE, 
     crs = crsMerc, 
-    fact=fact, cachePath = cachePath)
+    cachePath = cachePath)
   
   londonTiles = openmap(trafalgarSquare,zoom=12,path=theNames,
     verbose=TRUE, 
     crs = crsMerc, 
-    fact=fact, cachePath = cachePath)
+    cachePath = cachePath)
   
-  nfTiles = openmap(stjohns, zoom=14, path=theNames,,
+  nfTiles = openmap(stjohns, zoom=14, path=theNames,
     verbose=TRUE, 
     crs = crsMerc, 
-    fact=fact, cachePath = cachePath)
+    cachePath = cachePath)
   
 ```
 
