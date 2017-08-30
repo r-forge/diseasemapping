@@ -5,9 +5,10 @@
 
 ```{r setup}
 library('mapmisc')
-haveRgdal = require('rgdal', quietly=TRUE)
+haveRgdal = requireNamespace('rgdal', quietly=TRUE)
+haveGeosphere = requireNamespace('geosphere', quietly=TRUE)
 
-#options(mapmiscCachePath = system.file('extdata', package='mapmisc'))
+options(mapmiscCachePath = system.file('extdata', package='mapmisc'))
 options(mapmiscVerbose=TRUE)
 ```
 
@@ -19,15 +20,17 @@ x = SpatialPoints(cbind(130,15), proj4string=crsLL)
 ```
 
 ```{r projection}
+if(haveGeosphere & haveRgdal) {
   myProj = tpers(x=bind(x,y), hKm = 2*1000,
       tilt =-15, axis='seu')
   xProj = spTransform(guam, myProj)
   yProj = spTransform(hk, myProj)
   okinawaProj = spTransform(okinawa, myProj)
+}
 ```
 
 ```{r background}
-if(haveRgdal)
+if(haveGeosphere & haveRgdal)
   myMap = openmap(myProj, path='landscape', zoom=2,fact=3)
 ```
 
@@ -64,9 +67,9 @@ if(length(attributes(myProj)$ellipseSafeLL)>2 & haveRgdal) {
 
 
 ```{r map}
-if(haveRgdal){
+if(haveGeosphere & haveRgdal) {
   map.new(myProj, bg='black', buffer=2*100*1000)
-#  plot(myMap, add=TRUE, bgalpha=0)
+  plot(myMap, add=TRUE, bgalpha=0)
   
   if(requireNamespace('maptools')) {
     data("wrld_simpl", package='maptools')
@@ -92,6 +95,6 @@ if(haveRgdal){
   text(yProj@coords, 
       as.character(yProj$originalPlace),
       pos=2, col='red')
-  
+ 
 }
 ```

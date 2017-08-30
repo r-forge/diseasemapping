@@ -33,6 +33,7 @@ if( Sys.info()['user'] =='patrick') {
 }
 
 library('mapmisc')
+options(mapmiscVerbose=TRUE)
 @
 
 This document will be incomplete if {\tt rgdal} is unavailable or there is on
@@ -379,9 +380,9 @@ nldElev = crop(nldElev, extend(extent(meuse), 1000))
 \section{Downloading background maps and city locations}
 
 Get a background map covering the extent of the meuse data
-<<openmap,eval=FALSE, purl=FALSE>>=
+<<openmap>>=
 library('mapmisc')
-nldTiles = openmap(meuse)
+nldTiles = openmap(meuse, cachePath = system.file('extdata', package='mapmisc'))
 @
 {\tt nldTiles} is a Raster with the same projection as {\tt meuse}
 <<openmapInfo>>=
@@ -493,7 +494,8 @@ Rotate the data 50 degrees clockwise with an oblique mercator projection.
 <<reproj,echo=TRUE>>=
 if(requireNamespace('rgdal', quietly=TRUE)){
   meuseRot = spTransform(meuse, omerc(meuse, -50))
-  tilesRot = openmap(meuseRot)
+  tilesRot = openmap(meuseRot, fact=2,
+      cachePath = system.file('extdata', package='mapmisc'))
   elevRot = projectRaster(nldElev, crs=projection(meuseRot))
   nldCitiesRot = spTransform(nldCities, CRS(projection(meuseRot)))
 }
@@ -534,13 +536,15 @@ scaleBar(proj4string(meuseRot), bg="white")
 
 \section{Inset maps}
 
-<<world,eval=FALSE>>=
-world = openmap(extent(-10,30,40,60),path="osm-no-labels")
+<<world>>=
+world = openmap(
+    extent(-10,30,40,60),
+    path="osm-no-labels", 
+    cachePath = system.file('extdata', package='mapmisc'))
 @
 
 
-<<inset,fig.cap="Inset map", fig.subcap=c("elevation","rotated"), fig.height=3,fig.width=4,out.width="0.48\\textwidth">>=
-
+<<inset,fig.cap="Inset map", fig.subcap=c("elevation","rotated"), fig.height=3,fig.width=4,out.width="0.48\\textwidth", eval=FALSE>>=
 
 # not rotated
 map.new(meuse,legendRight=TRUE)
