@@ -55,34 +55,92 @@ static const char * kernel_matern =
 		"{"
 		// Get the index of the elements to be processed
 		"const int globalRow = get_global_id(0);"
-		"if(globalRow < size){"
+		"const int Dcol = get_global_id(1);"
 		"const int rowHereResult = internalSizeResult*globalRow;"
-		"const int rowHereCoords1 = internalSizeCoords*globalRow;"
-		"int Dcol, rowHereCoords2;"
+		"const int rowHereCoords1 = globalRow*internalSizeCoords;"
+		"const int rowHereCoords2 = Dcol*internalSizeCoords;"
+		"if(globalRow == Dcol){"
+		"result[globalRow+rowHereResult] = diagVar;"
+		"int Dcol2 = internalSizeCoords*(globalRow+1);"
+		//				"result[globalRow+rowHereResult] = globalRow;"
+		"result[globalRow+rowHereResult+1] = coords[rowHereCoords1] ;"
+		"result[globalRow+rowHereResult+2] = coords[rowHereCoords1 + 1] ;"
+		"result[globalRow+rowHereResult+3] = coords[Dcol2] ;"
+		"result[globalRow+rowHereResult+4] = coords[Dcol2 + 1] ;"
+		"} else if(globalRow < size && Dcol < globalRow){"
 		"const int maxIter = 15000;"
 		"const double muSq = mu * mu, mup1 = mu+1;"
-		"double dist[2], distRotate[2], distSq;"
+		"double dist[2], distRotate[2];"
 		"double del0, del1, sum0, sum1,fk, pk, qk, hk, ck;"
 		"double K_mu, K_mup1, logck;"
 		"double K_nu, K_nup1, K_num1, Kp_nu;"
 		"int k;"
-		"double logthisx, ln_half_x, twoLnHalfX, maternBit, sigma, half_x_nu, sinhrat;"
-
-		"result[globalRow+rowHereResult] = diagVar;"
-		"for(Dcol=0; Dcol < globalRow; ++Dcol){"
-
-		"rowHereCoords2 = internalSizeCoords*Dcol;"
+		"double twoLnHalfX, sigma, half_x_nu, sinhrat;"
 
 		"dist[0] = coords[rowHereCoords1] - coords[rowHereCoords2];"
 		"dist[1] = coords[rowHereCoords1 + 1] - coords[rowHereCoords2 + 1];"
 		"distRotate[0] = costheta *dist[0] - sintheta * dist[1];"
 		"distRotate[1] = sintheta *dist[0] + costheta * dist[1];"
-		"distSq = distRotate[0]*distRotate[0] + distRotate[1]*distRotate[1]/anisoRatioSq;"
+		"const double distSq = distRotate[0]*distRotate[0] + distRotate[1]*distRotate[1]/anisoRatioSq;"
+		"const double logthisx = log(distSq- M_LN2) + logxscale;"
+		"const double ln_half_x = logthisx - M_LN2;"
+		"const double thisx = exp(logthisx);"
+		"const double maternBit = varscale + nu * logthisx;"
+		"const double expMaternBit = exp(maternBit);"
 
-		"logthisx = 0.5 * log(distSq) + logxscale;"
-		"ln_half_x = logthisx - M_LN2;"
+
+		// gsl_sf_bessel_K_scaled_temme x < 2
+		// gsl_sf_bessel_K_scaled_steed_temme_CF2 x > 2
+		"if(logthisx > M_LN2) {"
+		"K_nu = 0.0;"
+		//	"double bi = 2.0*(1.0 + exp(logthisx));//x);"
+		"double logbi = M_LN2 + log1p(thisx);"
+		"double bi = exp(logbi);"
+		"double di = exp(-logbi);"//1.0/bi;"
+		//		  "double delhi = di;" // divide by exp(maternBit)
+		"double delhi = exp(-logbi-maternBit);"
+		"double hi    = delhi;"// was di, now di/exp(maternBit)
+
+		"double qi   = 0.0;"
+		"double qip1 = 1.0;"
+
+		"double ai = -(0.25 - muSq);"
+		"double a1 = ai;"
+		"double ci = -ai;"
+		"double Qi = -ai;"
+
+		"double s = exp(-maternBit) + Qi*delhi;"// was 1 + Qi*delhi
+		"  double dels;"
+		"  double tmp;"
+
+		"for(k=2; k<=maxIter; k++) {"
+		"dels = 0;"
+		"tmp = 0;"
+		"ai -= 2.0*(k-1);"
+		"ci  = -ai*ci/k;"
+		"tmp  = (qi - bi*qip1)/ai;"
+		"qi   = qip1;"
+		"qip1 = tmp;"
+		"Qi += ci*qip1;"
+		"bi += 2.0;"
+		"di  = 1.0/(bi + ai*di);"
+		"delhi = (bi*di - 1.0) * delhi;"
+		"hi += delhi;"
+		"dels = Qi*delhi;"
+		"s += dels;"
+		"if(fabs(dels/s) < epsilon) break;"
+		"}"
+		"result[internalSizeResult*Dcol+globalRow] = -k;"
+
+		"hi *= -a1;"
+
+		//		  "*K_nu   = sqrt(M_PI/(2.0*x)) / s;"  sqrt(pi)/2 sqrt(2/x)/s =
+		"K_nu= exp(-0.5*ln_half_x)/(M_2_SQRTPI * s);"
+
+		"K_nup1 = K_nu * (mu + thisx + 0.5 - hi*exp(maternBit))/thisx;"
+		//		  "Kp_nu  = - *K_nup1 + nu/x * *K_nu;"
+		"} else {" // x < 2
 		"twoLnHalfX = 2*ln_half_x;"
-		"maternBit = varscale + nu * logthisx;"
 		"sigma   = - mu * ln_half_x;"
 		"half_x_nu = exp(-sigma);"
 		"sinhrat = sinh(sigma)/sigma;"
@@ -91,8 +149,8 @@ static const char * kernel_matern =
 		"pk = 0.5/half_x_nu * g_1pnu;"
 		"qk = 0.5*half_x_nu * g_1mnu;"
 		"hk = pk;"
-		"sum0 = fk*exp(maternBit);"
-		"sum1 = hk*exp(maternBit);"
+		"sum0 = fk*expMaternBit;"
+		"sum1 = hk*expMaternBit;"
 		"k=0;"
 		"logck = maternBit;"
 		"del0 = fabs(sum0)+100;"
@@ -113,6 +171,8 @@ static const char * kernel_matern =
 		"	del1 = ck * hk;"
 		"	sum1 += del1;"
 		"}"//while loop
+		"result[internalSizeResult*Dcol+globalRow] = k;"
+		"}"// end x > 2
 
 		"K_nu   = sum0;"
 		"K_nup1 = sum1 * exp( - ln_half_x);"
@@ -123,17 +183,17 @@ static const char * kernel_matern =
 		"	K_nup1 = exp(log(mup1+k) - ln_half_x) * K_nu + K_num1;"
 		"}"
 		"result[Dcol+rowHereResult] = K_nu;"
-		"}" // loop col
+		//		"}" // loop col
 		"}" // if size
 		"}";//function
 
 
 RcppExport SEXP cpp_maternGpu(
-				SEXP AR,
-				SEXP DR,
-				SEXP paramR,
-				SEXP max_local_sizeR,
-				SEXP ctx_idR) {
+		SEXP AR,
+		SEXP DR,
+		SEXP paramR,
+		SEXP max_local_sizeR,
+		SEXP ctx_idR) {
 
 	//    Rcpp::traits::input_parameter< int >::type max_local_size(max_local_sizeR);
 	int max_local_size = as<int>(max_local_sizeR);
@@ -165,11 +225,17 @@ RcppExport SEXP cpp_maternGpu(
 			CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE,
 			sizeof(size_t), &preferred_work_group_size_multiple, NULL);
 
-	max_local_size = floor(max_local_size / preferred_work_group_size_multiple);
+	max_local_size = roundDown(max_local_size, preferred_work_group_size_multiple);
+
+	Rprintf("s %d %d %d %d %d\n", internalSizeA, internalSizeD, size, max_local_size, preferred_work_group_size_multiple);
+
+
 	matern.global_work_size(0, internalSizeD);
+	matern.global_work_size(1, internalSizeD);
 
 	// set local work sizes
 	matern.local_work_size(0, max_local_size);
+	matern.local_work_size(1, max_local_size);
 
 	//param is shape range variance nugget anisoRatio anisoAngleRadians anisoAngleDegrees
 	double *param = &REAL(paramR)[0];
@@ -180,7 +246,6 @@ RcppExport SEXP cpp_maternGpu(
 	const double sinrat = (fabs(pi_nu) < GSL_DBL_EPSILON ? 1.0 : pi_nu/sin(pi_nu));
 	Rtemme_gamma(&mu, &g_1pnu, &g_1mnu, &g1, &g2);
 
-//	Rprintf("s %f %d %f %f %f %f %f \n", mu, nuround, sinrat, g_1pnu, g_1mnu, g1, g2);
 
 	// execute kernel
 	viennacl::ocl::enqueue(matern(
@@ -198,7 +263,7 @@ RcppExport SEXP cpp_maternGpu(
 			param[3] + param[2],
 			// parameters from bessel temme in gsl
 			sinrat, g_1pnu, g_1mnu, g1, g2,
-			GSL_DBL_EPSILON * 0.5,
+			GSL_DBL_EPSILON /1000,
 			A, D));
 	return R_NilValue;
 }

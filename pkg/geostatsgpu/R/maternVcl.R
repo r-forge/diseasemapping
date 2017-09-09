@@ -22,7 +22,7 @@ maternGpu = function(
       x@address, 
       result@address, 
       param,
-      maxWorkGroupSize, 
+      sqrt(maxWorkGroupSize), 
       x@.context_index - 1)
   
   result  
