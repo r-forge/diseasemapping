@@ -9,7 +9,8 @@ Description:
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
 License: GPL (>= 2)
 NeedsCompilation: yes
-Suggests: gsl, gpuR, RViennaCL
+Depends: gpuR
+Suggests: gsl
 LinkingTo: 
 	Rcpp,
 	gpuR,

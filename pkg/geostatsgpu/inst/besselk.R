@@ -19,20 +19,24 @@ range(y2-y3, na.rm=T)
 
 
 
+devtools::load_all("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
 y4 = .C("bessel_Knu_scaled", nu, as.double(x), as.double(x), 
     as.integer(length(x)), PACKAGE='geostatsgpu')[[3]] 
 
 range(y2-y4, na.rm=TRUE)
 
-devtools::load_all("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
 y5 = .C("bessel_K_temme", as.integer(nuround), as.double(mu), as.double(x), as.double(x), 
     as.integer(length(x)), PACKAGE='geostatsgpu')[[4]] 
 
+range(y2-y5, na.rm=TRUE)
 
 y6 = .C("bessel_K_p", 
     as.integer(nuround),  as.double(mu),  as.double(nu),
     as.double(x), as.double(x), 
     as.integer(length(x)), PACKAGE='geostatsgpu')[[5]] 
+range(y2-y6, na.rm=TRUE)
+
+
 
 range(y5-y4, na.rm=TRUE)
 range(y5-y6, na.rm=TRUE)

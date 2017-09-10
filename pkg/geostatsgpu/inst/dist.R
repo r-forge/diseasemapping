@@ -1,11 +1,15 @@
-
 # TO DO: fix x > 2
 # fix large matrices
 
+options(width=200)
+
+Rcpp::compileAttributes("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
+devtools::install("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
 devtools::load_all("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
+library('geostatsgpu')
 
 library(gpuR)
-x = as.matrix(expand.grid(seq(1,by=1,len=4), seq(201,by=1,len=5)))
+x = as.matrix(expand.grid(seq(1,by=1,len=20), seq(201,by=1,len=20)))
 coordsV = gpuR::vclMatrix(x)
 D3 <- vclMatrix(
     data=-0.1, 
@@ -15,9 +19,9 @@ D3 <- vclMatrix(
 
 myParams = c(shape=1.5, range=2, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = pi/4)
 
-system.time(v1 <- maternGpu(coordsV, myParams, D3, 'variance'))
-options(width=200)
-as.matrix(v1)[1:11,1:4]
+system.time(v1 <- distGpu(coordsV, myParams, D3, 'variance'))
+as.matrix(v1)[1:5,1:24]
+as.matrix(dist(x))[1:5,1:24]
 
 #myDist = outer(x[,1] + 1i*x[,2],x[,1] + 1i*x[,2],FUN='-')
 #Mod(myDist)^2
