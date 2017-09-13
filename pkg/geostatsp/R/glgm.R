@@ -155,13 +155,13 @@ setMethod("glgm",
       buffer = (-(cellDim[1]+1) + sqrt(  (cellDim[1]+1)^2 + 8* (firstCell-1) ))/4
       # data, cells, and covariates must have varilable called 'space'		
       # values of cells must be index numbers, and cells shouldnt include the buffer		
-      thedots = list(...)
+      forInla = thedots = list(...)
       
       # priors for spatial standard deviation and nugget std dev.
       sdNames = unique(c("sd",grep("^sd", names(priorCI), value=TRUE)))
       # if model is Gaussian, look for prior for sdNugget
       if(!any(names(thedots)=="family")) {
-        thedots$family =  "gaussian"
+        forInla$family =  "gaussian"
       }
       if(thedots$family=="gaussian") {
         sdNames = unique(c(sdNames, "sdNugget"))
@@ -423,106 +423,115 @@ setMethod("glgm",
           
         }
       }
-      theFactors = thevars
-      # create linear combinations object for prediction.
-      # create formula, strip out left variable and f(...) terms
-      formulaForLincombs = unlist(strsplit(as.character(formulaOrig), "~"))
-      formulaForLincombs = formulaForLincombs[length(formulaForLincombs)]
       
       # variables wrapped in an f()
       termsInF = grep("^f[(]", attributes(allVarsP(formulaOrig))$orig, value=TRUE)
-#          rownames(attributes(terms(formulaOrig))$factors), 
-#          value=TRUE)
       termsInF = gsub("^f[(]|[,].*|[[:space:]]", "", termsInF)
       termsInF = intersect(termsInF, colnames(covariates))
-      covariatesInF = covariates[,termsInF, drop=FALSE]
       
-      formulaForLincombs =
-          gsub("\\+?[[:space:]]*f\\(.*\\)[[:space:]]?($|\\+)", "+", 
-              formulaForLincombs)
-      # strip out offsets
-      formulaForLincombs =
-          gsub("\\+?[[:space:]]*offset\\([[:print:]]*\\)[[:space:]]?($|\\+)", "+", formulaForLincombs)
+      theFactors = thevars
       
-      # convert multiple + to a single +
-      formulaForLincombs = gsub(
-          "\\+[[:space:]]?\\+([[:space:]]?\\+)?", "+",
-          formulaForLincombs)
-      # strip out trailing +
-      formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
-      
-      # if we have covariates in the formula and in the data
-      if(max(nchar(formulaForLincombs)) & nrow(covariates) ) {
+      if(!any(names(thedots)=='lincomb')) {
+        # create linear combinations object for prediction.
+        # create formula, strip out left variable and f(...) terms
+        formulaForLincombs = unlist(strsplit(as.character(formulaOrig), "~"))
+        formulaForLincombs = formulaForLincombs[length(formulaForLincombs)]
         
-        formulaForLincombs=as.formula(paste("~", formulaForLincombs))
+#          rownames(attributes(terms(formulaOrig))$factors), 
+#          value=TRUE)
+        covariatesInF = covariates[,termsInF, drop=FALSE]
         
-        # variables in the model but not in prediction rasters
-        thevars = allVarsP(formulaForLincombs) #rownames(attributes(terms(formulaForLincombs))$factors)
-        thevars = gsub("^factor\\(|\\)", "", thevars)
-        varsInPredict = thevars[thevars %in% names(covariates)]
-        cantPredict = thevars[! thevars %in% names(covariates)]
-        theFactors2 = grep("factor\\([[:print:]]*\\)", cantPredict)
-        if(length(theFactors2)) {
-          temp = cantPredict
-          cantPredict = cantPredict[-theFactors2]
-          theFactorsInFormula = temp[theFactors2]
-        }
-        if(length(cantPredict)){
-          covariates[,cantPredict]= 0
-        }
-        covariates = covariates[,c("space", thevars),drop=FALSE]
-        lincombMat = model.matrix(update.formula(
-                formulaForLincombs, ~.+space),
-            covariates, na.action=NULL)
-        lincombMat[lincombMat==0] = NA
+        formulaForLincombs =
+            gsub("\\+?[[:space:]]*f\\(.*\\)[[:space:]]?($|\\+)", "+", 
+                formulaForLincombs)
+        # strip out offsets
+        formulaForLincombs =
+            gsub("\\+?[[:space:]]*offset\\([[:print:]]*\\)[[:space:]]?($|\\+)", "+", formulaForLincombs)
         
-        spaceCol = grep("^space$", colnames(lincombMat), value=TRUE, ignore.case=TRUE)
+        # convert multiple + to a single +
+        formulaForLincombs = gsub(
+            "\\+[[:space:]]?\\+([[:space:]]?\\+)?", "+",
+            formulaForLincombs)
+        # strip out trailing +
+        formulaForLincombs = gsub("\\+[[:space:]]?$", "", formulaForLincombs)
         
-        thelincombs <- apply(lincombMat, 1, lcOneRow, idxCol=spaceCol)
-        names(thelincombs) = paste("c", lincombMat[,spaceCol],sep="")
-        
-      } else { # no covariates or no INLA
-        thelincombs=list()	
-        for(D in 1:ncell(cells)) {
-          thelincombs[[D]] = list(
-              list(
-                  "(Intercept)"=list(weight=1)
-              ),
-              list(
-                  space=list(weight=1, idx=values(cells)[D])
-              )
-          )
-        }
-        names(thelincombs) = paste("c", values(cells),sep="")
-      }
-      
-      
-      # add in the covariates wrapped in f
-      for(Dcov in termsInF) {
-        for(Dtext in names(thelincombs)) {
-          Dnum = as.numeric(gsub("c", '', Dtext))
-          Dcell = match(Dnum, covariates[,'space'])
-          if(!is.na(covariatesInF[Dcell,Dcov])) {
-            covToAdd = list(list(
-                    weight = 1,
-                    idx = covariatesInF[Dcell,Dcov]
-                ))
-            names(covToAdd) = Dcov
-            
-            thelincombs[[Dtext]] = c(
-                thelincombs[[Dtext]],
+        # if we have covariates in the formula and in the data
+        if(max(nchar(formulaForLincombs)) & nrow(covariates) ) {
+          
+          formulaForLincombs=as.formula(paste("~", formulaForLincombs))
+          
+          # variables in the model but not in prediction rasters
+          thevars = allVarsP(formulaForLincombs) #rownames(attributes(terms(formulaForLincombs))$factors)
+          thevars = gsub("^factor\\(|\\)", "", thevars)
+          varsInPredict = thevars[thevars %in% names(covariates)]
+          cantPredict = thevars[! thevars %in% names(covariates)]
+          theFactors2 = grep("factor\\([[:print:]]*\\)", cantPredict)
+          if(length(theFactors2)) {
+            temp = cantPredict
+            cantPredict = cantPredict[-theFactors2]
+            theFactorsInFormula = temp[theFactors2]
+          }
+          if(length(cantPredict)){
+            covariates[,cantPredict]= 0
+          }
+          covariates = covariates[,c("space", thevars),drop=FALSE]
+          lincombMat = model.matrix(update.formula(
+                  formulaForLincombs, ~.+space),
+              covariates, na.action=NULL)
+          lincombMat[lincombMat==0] = NA
+          
+          spaceCol = grep("^space$", colnames(lincombMat), value=TRUE, ignore.case=TRUE)
+          
+          thelincombs <- apply(lincombMat, 1, lcOneRow, idxCol=spaceCol)
+          names(thelincombs) = paste("c", lincombMat[,spaceCol],sep="")
+          
+        } else { # no covariates or no INLA
+          thelincombs=list()	
+          for(D in 1:ncell(cells)) {
+            thelincombs[[D]] = list(
                 list(
-                    covToAdd
+                    "(Intercept)"=list(weight=1)
+                ),
+                list(
+                    space=list(weight=1, idx=values(cells)[D])
                 )
-            ) 
-          } else {
-            thelincombs[[Dtext]] = NULL
+            )
+          }
+          names(thelincombs) = paste("c", values(cells),sep="")
+        }
+        
+        
+        
+        # add in the covariates wrapped in f
+        for(Dcov in termsInF) {
+          for(Dtext in names(thelincombs)) {
+            Dnum = as.numeric(gsub("c", '', Dtext))
+            Dcell = match(Dnum, covariates[,'space'])
+            if(!is.na(covariatesInF[Dcell,Dcov])) {
+              covToAdd = list(list(
+                      weight = 1,
+                      idx = covariatesInF[Dcell,Dcov]
+                  ))
+              names(covToAdd) = Dcov
+              
+              thelincombs[[Dtext]] = c(
+                  thelincombs[[Dtext]],
+                  list(
+                      covToAdd
+                  )
+              ) 
+            } else {
+              thelincombs[[Dtext]] = NULL
+            }
           }
         }
-      }
+        
+        getRid = which(unlist(lapply(thelincombs, is.null)))
+        if(length(getRid)) thelincombs = thelincombs[-getRid]
+        
+        forInla$lincomb = thelincombs
+      } # end adding lincombs unless lincomb is user-supplied
       
-      getRid = which(unlist(lapply(thelincombs, is.null)))
-      if(length(getRid)) thelincombs = thelincombs[-getRid]
       
       # get rid of observations with NA's in covariates
       allVars = allVarsP(formulaOrig)
@@ -535,13 +544,13 @@ setMethod("glgm",
       }
       
       data = data[!theNA,]
-      if(any(names(thedots)=='Ntrials'))
-        thedots$Ntrials = thedots$Ntrials[!theNA]
-      
-      forInla = thedots
-      forInla$lincomb = c(thelincombs, forInla$lincomb)
       forInla$data = data
       forInla$formula = formula
+      if(any(names(thedots)=='Ntrials'))
+        forInla$Ntrials = thedots$Ntrials[!theNA]
+      if(any(names(thedots)=='weights'))
+        forInla$weights = thedots$weights[!theNA]
+      
       
       
       # if model is gaussian, add prior for nugget
@@ -560,15 +569,24 @@ setMethod("glgm",
       
       # get rid of some elements of forInla that aren't required
       forInla = forInla[grep("^buffer$", names(forInla), invert=TRUE)]
+      if(!length(forInla$lincomb)) forInla$lincomb = NULL
+      
       
       if(requireNamespace("INLA", quietly=TRUE)) {
-        inlaResult = do.call(INLA::inla, forInla) 
+        if(identical(forInla$verbose, TRUE)) {
+          tFile = tempfile('glgm', tempdir(), '.rds')
+          message(paste('saving INLA objects as', tFile))
+          saveRDS(forInla, file=tFile)
+        }
+        inlaResult = try(do.call(INLA::inla, forInla))
       } else {
         inlaResult = 
             list(logfile="INLA is not installed. \n install splines, numDeriv, Rgraphviz, graph,\n fields, rgl, mvtnorm, multicore, pixmap,\n splancs, orthopolynom \n then see www.r-inla.org")
       }
-      
-      if(all(names(inlaResult)=="logfile"))
+      if(identical(forInla$verbose, TRUE)) {
+        message("inla done") 
+      }
+      if(all(names(inlaResult)=="logfile") | class(inlaResult) == 'try-error')
         return(c(forInla, inlares=inlaResult))
       
       
@@ -746,6 +764,7 @@ setMethod("glgm",
       
       inlaResult$marginals.random$space = inlaResult$marginals.random$space[values(cells)]
       
+      # put linear combinations into the raster
       # E exp(lincombs)
       temp=unlist(
           lapply(inlaResult$marginals.lincomb.derived, function(qq) {
@@ -771,53 +790,57 @@ setMethod("glgm",
       
       
       # lincombs into raster
+      # theSpaceName will be empty if lincomb is user-supplied
       theSpaceName = grep("^c[[:digit:]]+$", names(inlaResult$marginals.lincomb.derived), value=TRUE)
       theSpace = as.integer(gsub("^c", "", theSpaceName))
       
-      linc = inlaResult$summary.lincomb.derived[theSpaceName,]
-      linc$space = theSpace
-      inlaResult$marginals.predict = 
-          inlaResult$marginals.lincomb.derived
-      
-      missingCells = values(cells)[! values(cells) %in% theSpace]
-      
-      if(length(missingCells)) {
-        toadd = matrix(NA, length(missingCells), dim(linc)[2], 
-            dimnames=list(
-                paste("c", missingCells, sep=""), 
-                colnames(linc)
-            )
-        )
-        toadd[,"space"] = missingCells
+      if(length(theSpaceName)) {
+        linc = inlaResult$summary.lincomb.derived[theSpaceName,]
+        linc$space = theSpace
+        inlaResult$marginals.predict = 
+            inlaResult$marginals.lincomb.derived
         
-        linc = rbind(linc, toadd)
+        missingCells = values(cells)[! values(cells) %in% theSpace]
         
-        # Add in empty lists for the marginals of missing cells
+        if(length(missingCells)) {
+          toadd = matrix(NA, length(missingCells), dim(linc)[2], 
+              dimnames=list(
+                  paste("c", missingCells, sep=""), 
+                  colnames(linc)
+              )
+          )
+          toadd[,"space"] = missingCells
+          
+          linc = rbind(linc, toadd)
+          
+          # Add in empty lists for the marginals of missing cells
+          
+          missingMarginals = vector("list", length(missingCells))
+          names(missingMarginals) = rownames(toadd)
+          
+          inlaResult$marginals.predict = c(	
+              inlaResult$marginals.predict,
+              missingMarginals)
+          
+        }
+        linc = as.matrix(linc[match( values(cells), linc$space),])
+        inlaResult$marginals.predict = 
+            inlaResult$marginals.predict[
+                paste("c", values(cells), sep="")
+            ]
         
-        missingMarginals = vector("list", length(missingCells))
-        names(missingMarginals) = rownames(toadd)
         
-        inlaResult$marginals.predict = c(	
-            inlaResult$marginals.predict,
-            missingMarginals)
+        resRasterFitted = 
+            brick(extent(cells), nrows=nrow(cells),
+                ncols=ncol(cells), crs=projection(cells),
+                nl=ncol(linc))
+        names(resRasterFitted) = 
+            paste("predict.", colnames(linc),sep="")
         
-      }
-      linc = as.matrix(linc[match( values(cells), linc$space),])
-      inlaResult$marginals.predict = 
-          inlaResult$marginals.predict[
-              paste("c", values(cells), sep="")
-          ]
-      
-      
-      resRasterFitted = 
-          brick(extent(cells), nrows=nrow(cells),
-              ncols=ncol(cells), crs=projection(cells),
-              nl=ncol(linc))
-      names(resRasterFitted) = 
-          paste("predict.", colnames(linc),sep="")
-      
-      values(resRasterFitted) = as.vector(linc)
-      
+        values(resRasterFitted) = as.vector(linc)
+      }  else {
+        resRasterFitted = NULL
+      }    
       
       
       

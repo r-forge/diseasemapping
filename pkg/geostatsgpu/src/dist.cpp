@@ -15,11 +15,11 @@
 #include "gpuR/getVCLptr.hpp"
 
 
-void Rtemme_gamma(double *nu, double * g_1pnu, double * g_1mnu, double *g1, double *g2);
+extern "C" void Rtemme_gamma(double *nu, double * g_1pnu, double * g_1mnu, double *g1, double *g2);
 
 using namespace Rcpp;
 //[[Rcpp::export]]
-void distGpu(
+void cpp_distGpu(
 		SEXP AR,
 		SEXP DR,
 		SEXP paramR,
@@ -49,31 +49,29 @@ void distGpu(
 
 	cl_device_type type_check = ctx.current_device().type();
 
-	size_t preferred_work_group_size_multiple=-1;
 
-	if(type_check & CL_DEVICE_TYPE_CPU){
-		max_local_size = 1;
-	} else {
-		cl_device_id raw_device = ctx.current_device().id();
-		cl_kernel raw_kernel = ctx.get_kernel("my_kernel", "distCL").handle().get();
+	/*
+	 * n by n, n*(n-1)/2 total
+	 * Dindex = ( n*(n-1) - Dcol*(Dcol-1) )/2 + Drow
+	 * Dcol*Dcol - Dcol - 2*Drow + 2*Dindex - n*(n-1) = 0
+	 * Dcol = (1 + sqrt(1 + 4*n*n-4*n - 8*Dindex - 8*Drow)) )/2
+	 */
+	int Ntriangle = sizeD1 * (sizeD1 - 1)/2;
 
-		cl_int err = clGetKernelWorkGroupInfo(raw_kernel, raw_device,
-				CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE,
-				sizeof(size_t), &preferred_work_group_size_multiple, NULL);
-
-		max_local_size = roundDown(max_local_size, preferred_work_group_size_multiple);
-	}
-
+	if(max_local_size > sizeD1) max_local_size = sizeD1;
 
 	// set global work sizes
-	dist.global_work_size(0, iSizeD1);
-	dist.global_work_size(1, iSizeD1);
+	const double workRatio = sizeD1/max_local_size;
+	const int workRatioInt = ceil(workRatio);
+	int globalSize = workRatioInt*max_local_size;
+	dist.global_work_size(0, globalSize);
+	dist.global_work_size(1, globalSize);
 
 	// set local work sizes
 	dist.local_work_size(0, max_local_size);
 	dist.local_work_size(1, max_local_size);
 
-	Rprintf("a1 %d a2 %d d1 %d d2 %d s %d m %d\n", iSizeA1, iSizeA2, iSizeD1, iSizeD2, max_local_size, preferred_work_group_size_multiple);
+	Rprintf("a1 %d a2 %d d1 %d d2 %d a1 %d a2 %d d1 %d d2 %d s %d m %d r %d\n", sizeA1, sizeA2, sizeD1, sizeD2,iSizeA1, iSizeA2, iSizeD1, iSizeD2, max_local_size, Ntriangle,  roundDown(Ntriangle, sizeD1));
 
 
 	//param is shape range variance nugget anisoRatio anisoAngleRadians anisoAngleDegrees
@@ -86,7 +84,7 @@ void distGpu(
 	Rtemme_gamma(&mu, &g_1pnu, &g_1mnu, &g1, &g2);
 
 	// execute kernel
-#ifdef UNDEF
+
 	viennacl::ocl::enqueue(dist(
 			sizeA1, iSizeA2, iSizeD1, iSizeD2,
 			// nuround mu cos theta, sin theta
@@ -104,7 +102,6 @@ void distGpu(
 			sinrat, g_1pnu, g_1mnu, g1, g2,
 			GSL_DBL_EPSILON /1000,
 			*vclA, *vclD));
-#endif
 
 }
 

@@ -15,30 +15,32 @@ distGpu = function(
       "cpu" = cpuInfo(result@.platform_index, result@.device_index)$maxWorkGroupSize,
       stop("unrecognized device type")
   )
-  maxWorkGroupSize = 1
   
   param = geostatsp::fillParam(param)
   
-  file <- system.file("CL", "dist.cl", package = "geostatsgpu")
+  file = '/home/patrick/workspace/diseasemapping/pkg/geostatsgpu/inst/CL/dist.cl'
+  if(!file.exists(file))
+    file <- system.file("CL", "dist.cl", package = "geostatsgpu")
+  
   
   if(!file_test("-f", file)){
     stop("kernel file does not exist")
   }
   kernel <- readChar(file, file.info(file)$size)
   
-#  .Call("cpp_distGpu", 
-#      x@address, 
-#      result@address, 
-#      param, 
-#      TRUE, kernel,
-#      sqrt(maxWorkGroupSize), 
-#      x@.context_index - 1)
+cpp_distGpu(
+      x@address, 
+      result@address, 
+      param, 
+      kernel,
+      floor(sqrt(maxWorkGroupSize)), 
+      x@.context_index - 1)
   
   result  
 }
 
 
-maternGpu = function(
+maternGpuOld = function(
     x, 
     param = c(range = 1, variance = 1, shape = 1), 
     result = vclMatrix(

@@ -27,7 +27,7 @@
 
 using namespace Rcpp;
 
-void Rtemme_gamma(double *nu, double * g_1pnu, double * g_1mnu, double *g1, double *g2);
+extern "C" void Rtemme_gamma(double *nu, double * g_1pnu, double * g_1mnu, double *g1, double *g2);
 
 
 static const char * kernel_matern =
@@ -189,11 +189,11 @@ static const char * kernel_matern =
 
 
 //[[Rcpp::export]]
-void maternGpu(
+void cpp_maternGpu(
 		SEXP AR,
 		SEXP DR,
 		SEXP paramR,
-		const int max_local_size,
+		int max_local_size,
 		const int ctx_id) {
 
 
@@ -263,6 +263,5 @@ void maternGpu(
 			sinrat, g_1pnu, g_1mnu, g1, g2,
 			GSL_DBL_EPSILON /1000,
 			A, D));
-	return R_NilValue;
 }
 

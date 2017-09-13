@@ -6,9 +6,9 @@
 
 using namespace Rcpp;
 
-// distGpu
-void distGpu(SEXP AR, SEXP DR, SEXP paramR, SEXP sourceCode_, int max_local_size, const int ctx_id);
-RcppExport SEXP _geostatsgpu_distGpu(SEXP ARSEXP, SEXP DRSEXP, SEXP paramRSEXP, SEXP sourceCode_SEXP, SEXP max_local_sizeSEXP, SEXP ctx_idSEXP) {
+// cpp_distGpu
+void cpp_distGpu(SEXP AR, SEXP DR, SEXP paramR, SEXP sourceCode_, int max_local_size, const int ctx_id);
+RcppExport SEXP _geostatsgpu_cpp_distGpu(SEXP ARSEXP, SEXP DRSEXP, SEXP paramRSEXP, SEXP sourceCode_SEXP, SEXP max_local_sizeSEXP, SEXP ctx_idSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type AR(ARSEXP);
@@ -17,28 +17,28 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< SEXP >::type sourceCode_(sourceCode_SEXP);
     Rcpp::traits::input_parameter< int >::type max_local_size(max_local_sizeSEXP);
     Rcpp::traits::input_parameter< const int >::type ctx_id(ctx_idSEXP);
-    distGpu(AR, DR, paramR, sourceCode_, max_local_size, ctx_id);
+    cpp_distGpu(AR, DR, paramR, sourceCode_, max_local_size, ctx_id);
     return R_NilValue;
 END_RCPP
 }
-// maternGpu
-void maternGpu(SEXP AR, SEXP DR, SEXP paramR, const int max_local_size, const int ctx_id);
-RcppExport SEXP _geostatsgpu_maternGpu(SEXP ARSEXP, SEXP DRSEXP, SEXP paramRSEXP, SEXP max_local_sizeSEXP, SEXP ctx_idSEXP) {
+// cpp_maternGpu
+void cpp_maternGpu(SEXP AR, SEXP DR, SEXP paramR, int max_local_size, const int ctx_id);
+RcppExport SEXP _geostatsgpu_cpp_maternGpu(SEXP ARSEXP, SEXP DRSEXP, SEXP paramRSEXP, SEXP max_local_sizeSEXP, SEXP ctx_idSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type AR(ARSEXP);
     Rcpp::traits::input_parameter< SEXP >::type DR(DRSEXP);
     Rcpp::traits::input_parameter< SEXP >::type paramR(paramRSEXP);
-    Rcpp::traits::input_parameter< const int >::type max_local_size(max_local_sizeSEXP);
+    Rcpp::traits::input_parameter< int >::type max_local_size(max_local_sizeSEXP);
     Rcpp::traits::input_parameter< const int >::type ctx_id(ctx_idSEXP);
-    maternGpu(AR, DR, paramR, max_local_size, ctx_id);
+    cpp_maternGpu(AR, DR, paramR, max_local_size, ctx_id);
     return R_NilValue;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_geostatsgpu_distGpu", (DL_FUNC) &_geostatsgpu_distGpu, 6},
-    {"_geostatsgpu_maternGpu", (DL_FUNC) &_geostatsgpu_maternGpu, 5},
+    {"_geostatsgpu_cpp_distGpu", (DL_FUNC) &_geostatsgpu_cpp_distGpu, 6},
+    {"_geostatsgpu_cpp_maternGpu", (DL_FUNC) &_geostatsgpu_cpp_maternGpu, 5},
     {NULL, NULL, 0}
 };
 

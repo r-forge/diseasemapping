@@ -6,13 +6,15 @@ options(width=200)
 Rcpp::compileAttributes("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
 devtools::install("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
 devtools::load_all("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
+devtools::load_all("/home/patrick/workspace/diseasemapping/pkg/geostatsp")
+devtools::reload("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
 library('geostatsgpu')
+library('geostatsp')
 
-library(gpuR)
-x = as.matrix(expand.grid(seq(1,by=1,len=20), seq(201,by=1,len=20)))
+x = as.matrix(expand.grid(seq(1,by=1,len=23), seq(201,by=1,len=14)))
 coordsV = gpuR::vclMatrix(x)
 D3 <- vclMatrix(
-    data=-0.1, 
+    data=-1, 
     nrow(coordsV), nrow(coordsV),
     type='double'
 )
@@ -20,7 +22,22 @@ D3 <- vclMatrix(
 myParams = c(shape=1.5, range=2, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = pi/4)
 
 system.time(v1 <- distGpu(coordsV, myParams, D3, 'variance'))
-as.matrix(v1)[1:5,1:24]
+
+mmat=as.matrix(geostatsp::matern(dist(x), myParams))
+xxmat = log(sqrt(8*myParams['shape'])*as.matrix(dist(x))/myParams['range'])
+signif(
+    data.frame(
+a=      as.matrix(v1)[,1],
+b=      xxmat[,1],
+c=      mmat[,1]
+)[4:7,], 2)
+
+plot(xxmat[,1], log(abs(as.matrix(v1)[,1]/mmat[,1])),
+    ylim = c(-1,1)/12)
+
+
+round(as.matrix(v1) - as.matrix(dist(x))^2, digits=5)[1:12,1:12]
+
 as.matrix(dist(x))[1:5,1:24]
 
 #myDist = outer(x[,1] + 1i*x[,2],x[,1] + 1i*x[,2],FUN='-')
@@ -69,3 +86,6 @@ cl_args <- setup_opencl(objects = c(
     intents = c("IN", "OUT", "IN"),
     queues = list("SAXPY", "SAXPY", "SAXPY"),
     kernel_maps = c("x", "y", "a"))
+
+
+
