@@ -66,14 +66,16 @@ __kernel void distCL(
 		// gsl_sf_bessel_K_scaled_temme x < 2
 		// gsl_sf_bessel_K_scaled_steed_temme_CF2 x > 2
 		result[Dcol * sizeResultPadRow + Drow] = logthisx;
-		if(logthisx > 2.0) {
+		if(logthisx > 2.0) { // gsl_sf_bessel_K_scaled_steed_temme_CF2
 			K_nu = 0.0;
-			//	"double bi = 2.0*(1.0 + exp(logthisx));//x);"
-			double logbi = M_LN2 + log1p(thisx);
-			double bi = exp(logbi);
-			double di = exp(-logbi);//1.0/bi;
+			double bi = 2.0*(1.0 + thisx);//x);"
+//			double logbi = M_LN2 + log1p(thisx);
+//			double bi = exp(logbi);
+//			double di = exp(-logbi);//1.0/bi;
+			double di = 1.0/bi;
 			//		  "double delhi = di;" // divide by exp(maternBit)
-			double delhi = exp(-logbi-maternBit);
+//			double delhi = exp(-logbi-maternBit);
+			double delhi = di;
 			double hi    = delhi;// was di, now di/exp(maternBit)
 
 			double qi   = 0.0;
@@ -84,12 +86,13 @@ __kernel void distCL(
 			double ci = -ai;
 			double Qi = -ai;
 
-			double s = exp(-maternBit) + Qi*delhi;// was 1 + Qi*delhi
+//			double s = exp(-maternBit) + Qi*delhi;
+			double s = 1.0 + Qi*delhi;
 			double dels;
 			double tmp;
 			for(k=2; k<=maxIter; k++) {
-				dels = 0;
-				tmp = 0;
+//				dels = 0.0;
+//				tmp = 0.0;
 				ai -= 2.0*(k-1);
 				ci  = -ai*ci/k;
 				tmp  = (qi - bi*qip1)/ai;
@@ -108,14 +111,14 @@ __kernel void distCL(
 
 			hi *= -a1;
 
-			K_nu= exp(-0.5*ln_half_x)/(M_2_SQRTPI * s);
-			K_nu   = sqrt(M_PI/(2.0*thisx)) / s;//"  sqrt(pi)/2 sqrt(2/x)/s =
+//			K_nu= exp(-0.5*ln_half_x)/(M_2_SQRTPI * s);
+			K_nu   = exp(-thisx) * exp(maternBit) * sqrt(M_PI/(2.0*thisx)) / s;//"  sqrt(pi)/2 sqrt(2/x)/s =
 
 //			K_nup1 = K_nu * (mu + thisx + 0.5 - hi*exp(maternBit))/thisx;
-			//		  "Kp_nu  = - *K_nup1 + nu/x * *K_nu;"
-//			K_nu= -K_nu;
+			K_nup1 = K_nu * (mu + thisx + 0.5 - hi)/thisx;
+			Kp_nu  = - K_nup1 + mu/thisx * K_nu;
 
-		} else { // if short distance
+		} else { // if short distance gsl_sf_bessel_K_scaled_temme
 			twoLnHalfX = 2*ln_half_x;
 			sigma   = - mu * ln_half_x;
 			half_x_nu = exp(-sigma);
@@ -145,19 +148,19 @@ __kernel void distCL(
 				qk /= (k + (mu));
 
 				hk  = -k*fk + pk;
-				del1 = ck * hk;
+				del1 = ck * hk; 	
 				sum1 += del1;
 			}//while loop
 			//		result[Dcol * sizeResultPadRow + Drow] = -k;
 			K_nu   = sum0;
 			K_nup1 = sum1 * exp( - ln_half_x);
-
-			for(k=0; k<nuround; k++) {
-				K_num1 = K_nu;
-				K_nu   = K_nup1;
-				K_nup1 = exp(log(mup1+k) - ln_half_x) * K_nu + K_num1;
-			}
 		} // short distance
+
+		for(k=0; k<nuround; k++) {
+			K_num1 = K_nu;
+			K_nu   = K_nup1;
+			K_nup1 = exp(log(mup1+k) - ln_half_x) * K_nu + K_num1;
+		}
 		result[Dcol + Drow * sizeResultPadRow] = K_nu; // lower triangle
 	}// not diag
 
