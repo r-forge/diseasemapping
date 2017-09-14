@@ -10,7 +10,7 @@
  *   besselK(xScale, shape)
  */
 
-__kernel void distCL(
+__kernel void maternCL(
 		const int size,
 		const int sizeCoordsPadCol,
 		const int sizeResultPadRow,
@@ -37,7 +37,10 @@ __kernel void distCL(
 	const int Dcol = get_global_id(1);
 	const int local0 = get_local_id(0);
 	const int local1 = get_local_id(1);
+	if(Drow < size && Dcol == Drow) {
+		result[Dcol + Drow * sizeResultPadRow] = diagVar; // lower triangle
 
+	}
 	if(Drow < size && Dcol < Drow){
 
 		double dist[2], distRotate[2];

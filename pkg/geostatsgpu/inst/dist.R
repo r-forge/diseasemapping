@@ -4,6 +4,7 @@
 options(width=200)
 
 Rcpp::compileAttributes("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
+devtools::document("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
 devtools::install("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
 #devtools::load_all("/home/patrick/workspace/diseasemapping/pkg/geostatsgpu")
 #devtools::load_all("/home/patrick/workspace/diseasemapping/pkg/geostatsp")
@@ -20,11 +21,9 @@ D3 <- vclMatrix(
 )
 
 myParams = c(shape=4.5, range=1.5, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/4)
-myParams2 = c(shape=4.5, range=1.5, variance = 2, nugget = 0, anisoRatio = 1, anisoAngleRadians = -pi/4)
 
-system.time(v1 <- distGpu(coordsV, myParams, D3, 'variance'))
-
-mmat=as.matrix(geostatsp::matern(sp::SpatialPoints(as.matrix(coordsV)), myParams))
+system.time(v1 <- maternGpu(coordsV, myParams, D3, 'variance'))
+system.time(mmat <- geostatsp::matern(sp::SpatialPoints(as.matrix(coordsV)), myParams))
 xxmat = log(sqrt(8*myParams['shape'])*as.matrix(dist(x))/myParams['range'])
 signif(
     data.frame(
