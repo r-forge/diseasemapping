@@ -165,6 +165,7 @@ __kernel void maternCL(
 			K_nup1 = exp(log(mup1+k) - ln_half_x) * K_nu + K_num1;
 		}
 		result[Dcol + Drow * sizeResultPadRow] = K_nu; // lower triangle
+		result[Drow + Dcol * sizeResultPadRow] = K_nu; // upper triangle
 	}// not diag
 
 };//function

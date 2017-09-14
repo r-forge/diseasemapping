@@ -21,6 +21,7 @@
 #' system.time(mmat <- geostatsp::matern(sp::SpatialPoints(as.matrix(coordsV)), myParams))
 #' as.matrix(v1)[1:5,1:5]
 #' mmat[1:5,1:5]
+#' 
 #' @export
 maternGpu = function(
     x, 
@@ -33,16 +34,16 @@ maternGpu = function(
     type = c("variance", "cholesky", "precision", "inverseCholesky")
 ) {
   
-  print(type)
   type = gsub("iance$|esky$|ision", "", tolower(type)[1])    
   type = c(var=1,chol=2,prec=3,inversechol=4)[type]    
-  print(type)
+
   maxWorkGroupSize <- switch(
       deviceType(result@.platform_index, result@.device_index),
       "gpu" = gpuInfo(result@.platform_index, result@.device_index)$maxWorkGroupSize,
       "cpu" = cpuInfo(result@.platform_index, result@.device_index)$maxWorkGroupSize,
       stop("unrecognized device type")
   )
+  maxWorkGroupSize = floor(sqrt(maxWorkGroupSize))
   
   param = geostatsp::fillParam(param)
   
@@ -50,29 +51,38 @@ maternGpu = function(
   if(!file.exists(file))
     file <- system.file("CL", "matern.cl", package = "geostatsgpu")
   
-  
   if(!file_test("-f", file)){
     stop("kernel file does not exist")
   }
   kernel <- readChar(file, file.info(file)$size)
 
-#  cholFile <- system.file("CL", "dcholesky.cl", package = "gpuR")
-#  cholKernel <- readChar(cholFile, file.info(cholFile)$size)
+
+  cholFile <- system.file("CL", "dcholesky.cl", package = "gpuR")
+  cholKernel <- readChar(cholFile, file.info(cholFile)$size)
   
+  upper = FALSE
   cpp_maternGpu(
       x@address, 
       result@address, 
-      param, 
+      param,
+      type,
+      upper,
       kernel,
-#      cholKernel,
-#      type, 
-      floor(sqrt(maxWorkGroupSize)), 
+      cholKernel,
+      maxWorkGroupSize, 
       x@.context_index - 1)
-  if(type == 2) {
-    .Call('_gpuR_cpp_vclMatrix_custom_chol', PACKAGE = 'gpuR', 
-        result, 
-        TRUE, TRUE, cholKernel, 
-        floor(sqrt(maxWorkGroupSize)), type, x@.context_index - 1)
+  
+  if(type == Inf) {
+    # TO DO: pass type to cpp_maternGpu
+    
+    gpuR:::cpp_vclMatrix_custom_chol(
+        result@address,
+        TRUE, # vcl
+        FALSE, # upper
+        cholKernel,
+        maxWorkGroupSize,
+        8L,
+        result@.context_index - 1)
   }
   
   result  

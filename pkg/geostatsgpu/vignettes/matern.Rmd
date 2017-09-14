@@ -11,7 +11,9 @@
 library('geostatsgpu')
 library('geostatsp')
 
-x = as.matrix(expand.grid(seq(1,by=1,len=23), seq(201,by=1,len=14)))
+Ngrid = c(50, 50)
+
+x = as.matrix(expand.grid(seq(1,by=1,len=Ngrid[2]), seq(201,by=1,len=Ngrid[2])))
 coordsV = gpuR::vclMatrix(x)
 D3 <- vclMatrix(
     data=-1, 
@@ -22,7 +24,7 @@ D3 <- vclMatrix(
 myParams = c(shape=4.5, range=1.5, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/4)
 
 system.time(v1 <- maternGpu(coordsV, myParams, D3, 'variance'))
-system.time(mmat <- geostatsp::matern(sp::SpatialPoints(as.matrix(coordsV)), myParams))
+system.time(v2 <- geostatsp::matern(sp::SpatialPoints(as.matrix(coordsV)), myParams))
 
 
 
@@ -31,10 +33,11 @@ C3 <- vclMatrix(
     nrow(coordsV), nrow(coordsV),
     type='double'
 )
-system.time(c1 <- maternGpu(coordsV, myParams, C3, 'cholesky'))
 
-as.matrix(D3)[1:5,1:5]
-mmat[1:5,1:5]
+system.time(c1 <- maternGpu(coordsV, myParams, C3, 'cholesky'))
+system.time(c2 <- geostatsp::matern(sp::SpatialPoints(as.matrix(coordsV)), myParams, type='cholesky'))
+
 as.matrix(C3)[1:5,1:5]
+as.matrix(c2)[1:5,1:5]
 
 ```

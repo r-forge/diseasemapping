@@ -36,4 +36,5 @@ system.time(v1 <- maternGpu(coordsV, myParams, D3, 'variance'))
 system.time(mmat <- geostatsp::matern(sp::SpatialPoints(as.matrix(coordsV)), myParams))
 as.matrix(v1)[1:5,1:5]
 mmat[1:5,1:5]
+
 }

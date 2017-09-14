@@ -9,6 +9,7 @@
 
 //#include <RcppEigen.h>
 #include <Rcpp.h>
+#include <RcppEigen.h>
 
 #include "viennacl/ocl/backend.hpp"
 
@@ -25,9 +26,10 @@ void cpp_maternGpu(
 		SEXP AR,
 		SEXP DR,
 		SEXP paramR,
+		const int type,
+	    const int upper,
 		SEXP sourceCode_,
-//		SEXP cholSourceCode_,
-//		int type,
+		SEXP cholSourceCode_,
 		int max_local_size,
 		const int ctx_id) {
 
@@ -53,14 +55,6 @@ void cpp_maternGpu(
 
 	cl_device_type type_check = ctx.current_device().type();
 
-
-	/*
-	 * n by n, n*(n-1)/2 total
-	 * Dindex = ( n*(n-1) - Dcol*(Dcol-1) )/2 + Drow
-	 * Dcol*Dcol - Dcol - 2*Drow + 2*Dindex - n*(n-1) = 0
-	 * Dcol = (1 + sqrt(1 + 4*n*n-4*n - 8*Dindex - 8*Drow)) )/2
-	 */
-	int Ntriangle = sizeD1 * (sizeD1 - 1)/2;
 
 	if(max_local_size > sizeD1) max_local_size = sizeD1;
 
@@ -107,6 +101,35 @@ void cpp_maternGpu(
 			GSL_DBL_EPSILON /1000,
 			*vclA, *vclD));
 
+	if(type == 2) {
+		// cholesky
+		std::string my_kernelChol = as<std::string>(cholSourceCode_);
+	    // add kernel to program
+	    viennacl::ocl::program & my_progChol = ctx.add_program(my_kernelChol, "my_kernelChol");
 
+	    // get compiled kernel function
+	    viennacl::ocl::kernel & update_kk = my_progChol.get_kernel("update_kk");
+	    viennacl::ocl::kernel & update_k = my_progChol.get_kernel("update_k");
+	    viennacl::ocl::kernel & update_block = my_progChol.get_kernel("update_block");
+
+	    // set global work sizes
+	    update_kk.global_work_size(0, 1);
+	    update_k.global_work_size(0, iSizeD1);
+	    update_block.global_work_size(0, iSizeD1);
+	    update_block.global_work_size(1, iSizeD1);
+
+	    // set local work sizes
+	    update_kk.local_work_size(0, 1);
+	    update_k.local_work_size(0, max_local_size);
+	    update_block.local_work_size(0, max_local_size);
+	    update_block.local_work_size(1, max_local_size);
+
+	    for(unsigned int k=0; k < sizeD1; k++){
+	        viennacl::ocl::enqueue(update_kk(*vclD, iSizeD1, k));
+	        viennacl::ocl::enqueue(update_k(*vclD, upper, sizeD1, iSizeD1, k));
+	        viennacl::ocl::enqueue(update_block(*vclD, upper, sizeD1, iSizeD1, k));
+	    }
+
+	}
 }
 
