@@ -9,14 +9,17 @@ Downloads map tiles from Openstreetmap.org and other servers.
 \usage{
 	openmap(x, zoom, 
 	  path="http://tile.openstreetmap.org/",
-	  maxTiles = 9, crs=projection(x),   
-	  buffer=0, fact=1, verbose=options()$mapmiscVerbose,
+	  maxTiles = 9, 
+	  crs=projection(x),   
+	  buffer=0, fact=1, 
+	  verbose=options()$mapmiscVerbose,
 	  cachePath=options()$mapmiscCachePath)
 
 	osmTiles(name, xyz, suffix)
 
 	openmapAttribution(name, 
-	  type=c('text','latex','markdown','html', 'auto')), short=FALSE)
+	  type=c('text','latex','markdown','html', 'auto'), 
+	  short=FALSE)
 }
 
 \arguments{

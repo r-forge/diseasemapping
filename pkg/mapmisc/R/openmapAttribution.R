@@ -337,13 +337,10 @@ openmapAttribution = function(name, type=c('text','latex','markdown','html','aut
   
   type = type[1]
   if(type == 'auto') {
-    type = 'text'
-    if(exists('mdToTex')) {
-      if(identical(mdToTex,TRUE)) {
-        type = 'latex'  
-      } else {
-        type ='markdown'
-      }
+    if(identical(unlist(mget("mdToTex", ifnotfound=FALSE)), TRUE) ) {
+      type = 'latex'  
+    } else {
+      type ='markdown'
     }
   }
   
