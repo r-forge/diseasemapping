@@ -56,7 +56,7 @@ maternGpu = function(
   }
   kernel <- readChar(file, file.info(file)$size)
 
-
+# use https://github.com/markholland/cholesky/blob/master/OpenCl/kernels.c instead?
   cholFile <- system.file("CL", "dcholesky.cl", package = "gpuR")
   cholKernel <- readChar(cholFile, file.info(cholFile)$size)
   

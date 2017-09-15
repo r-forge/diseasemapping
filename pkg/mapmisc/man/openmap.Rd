@@ -16,7 +16,7 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	osmTiles(name, xyz, suffix)
 
 	openmapAttribution(name, 
-	  type=c('text','latex','markdown','html'), short=FALSE)
+	  type=c('text','latex','markdown','html', 'auto')), short=FALSE)
 }
 
 \arguments{
@@ -64,10 +64,11 @@ by \eqn{2^n} tiles. Zoom levels go up to about 17 or 18 depending on the tile
 server.
 
 
-Be sure to attribute any maps you publish, the \code{osmAttribution} function will assist.
-
 See \url{http://diseasemapping.r-forge.r-project.org/mapLayers.html} for a full set of 
 map tiles.
+
+Be sure to attribute any maps you publish, the \code{osmAttribution} function will assist.  If \code{type = 'auto'} then markdown format will be used unless a variable \code{mdToTex} is defined and equal to \code{TRUE}.
+
 }
 
 

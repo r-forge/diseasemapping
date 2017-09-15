@@ -1,6 +1,7 @@
 \name{colourScale}
 \alias{colourScale}
 \alias{colorScale}
+\alias{breaksForRates}
 
 \title{Create colour scales}
 \description{
@@ -10,6 +11,8 @@ Produces a scale of colours for plotting maps}
 	 col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
 	 transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL,...)
 	colorScale(...)
+	breaksForRates(x, breaks = 10, transform = 0.7,
+      multiples = c(2, 4, 5, 10)) 
 	}
 
 \arguments{
@@ -27,6 +30,7 @@ Produces a scale of colours for plotting maps}
 	\item{revCol}{Reverse the order of the colours.}
 	\item{exclude}{A vector of values to change to NA when they appear in \code{x}}
 	\item{labels}{Vector of names of levels, useful when \code{style='unique'}}
+	\item{multiples}{break points must be multiples of these numbers times a power of 10}
 	\item{...}{Additional arguments passed to \code{\link[classInt]{classIntervals}}.}
 }
 
@@ -49,6 +53,9 @@ Produces a scale of colours for plotting maps}
 
 \code{colorScale} passes all it's arguments to \code{colourScale}
 
+\code{breaksForRates} returns break points suitable for mapping incidence rates, which are positive and always
+include 1.0.
+
 }
 
 \value{A list with elements
@@ -61,6 +68,9 @@ Produces a scale of colours for plotting maps}
 \seealso{\code{\link{legendBreaks}},\code{\link{scaleBar}}, \code{\link[classInt]{classIntervals}}}
 
 \examples{
+
+breaksForRates(13.6, breaks = 7) 
+
 Npoints = 20
 myPoints = SpatialPointsDataFrame(20*cbind(runif(Npoints), runif(Npoints)), 
 	data=data.frame(y1=c(NA, rnorm(Npoints-1)), 

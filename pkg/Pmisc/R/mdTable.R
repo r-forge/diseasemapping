@@ -48,13 +48,13 @@ mdTable = function(x, col.just = 'r', guessGroup=FALSE, ..., mdToTex = 'auto') {
     ) ) {
       rTable = drop(as.matrix(rTable))[xFirstRowUnique]
       if(!length(dots$rgroup)) {
-        dots$rgroup = names(rTable)
+        dots$rgroup = gsub("_", " ", names(rTable))
       }
       if(!length(dots$n.rgroup)) {
         dots$n.rgroup = rTable
       }
       if(!length(dots$rowname)) {
-        dots$rowname = x[,2]
+        dots$rowname = gsub("_", " ", x[,2])
       }
       rownames(dots$x) = NULL
       dots$x = dots$x[,seq(3, ncol(dots$x))]
@@ -63,7 +63,7 @@ mdTable = function(x, col.just = 'r', guessGroup=FALSE, ..., mdToTex = 'auto') {
     # if first column is unique values and character or factor, override row names
     if(all(rTable==1) & !length(dots$rowname)) {
       if(is.character(dots$x[,1]) | is.factor(dots$x[,1])) {
-        dots$rowname = as.character(dots$x[,1])
+        dots$rowname = gsub("_", " ", as.character(dots$x[,1]))
         dots$x= dots$x[,-1]
       }
     }
@@ -73,17 +73,17 @@ mdTable = function(x, col.just = 'r', guessGroup=FALSE, ..., mdToTex = 'auto') {
         unique(gsub("_([[:alnum:]]|[[:space:]]|[.])+$", "", colnames(dots$x)))]
     if( !all(cTable==1) ) {
       if(!length(dots$cgroup)) {
-        dots$cgroup = names(cTable)
+        dots$cgroup = gsub("_", " ", names(cTable))
       }
       if(!length(dots$n.cgroup)) {
         dots$n.cgroup = cTable
       }
       if(!length(dots$colheads)) {
-        dots$colheads = gsub(
+        dots$colheads = gsub("_", " ", gsub(
             paste(
                 paste(names(cTable), '_?', sep=''), 
                 collapse='|'), "", 
-            colnames(dots$x))
+            colnames(dots$x)))
       }
     }
     

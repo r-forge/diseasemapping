@@ -143,7 +143,7 @@ See [mc.bbbike.org/mc](http://mc.bbbike.org/mc/)
 
 Michelin
     
-```{r additionalMichelin, echo=TRUE, purl=FALSE, eval=allTiles}
+```{r additionalMichelin, echo=TRUE, purl=FALSE, eval=unlist(mget("allTiles", ifnotfound=FALSE))}
 
 mPath = osmTiles(paste(
   'http://map3.viamichelin.com/map/mapdirect?map=',
@@ -168,7 +168,7 @@ for(D in names(africaMichelin)) {
 Stamen retina
 
    
-```{r stamenRetina, echo=TRUE, purl=FALSE, eval=allTiles}
+```{r stamenRetina, echo=TRUE, purl=FALSE, eval=unlist(mget("allTiles", ifnotfound=FALSE))}
 
 sPath = osmTiles('stamen-toner', 
   suffix = '@2x.png')
@@ -190,7 +190,7 @@ mtext(sPath, side=3, line=-2, outer=FALSE)
 
 Komoot, Yandex, ESRI, F4map, and Sigma
 
-```{r aditionalEsri, echo=TRUE, purl=FALSE, eval=allTiles}
+```{r aditionalEsri, echo=TRUE, purl=FALSE, eval=unlist(mget("allTiles", ifnotfound=FALSE))}
 
 otherPaths = c(
   'https://a.tile.hosted.thunderforest.com/komoot-2/',
