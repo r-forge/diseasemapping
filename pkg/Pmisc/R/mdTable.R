@@ -28,8 +28,12 @@
 #' @export
 mdTable = function(x, col.just = 'r', guessGroup=FALSE, ..., mdToTex = 'auto') {
   
-  if(identical(mdToTex, 'auto'))
-    mdToTex = any(commandArgs()=='mdToTex', na.rm=TRUE)
+	if(identical(mdToTex, 'auto')) {
+		mdToTex = any(commandArgs()=='mdToTex', na.rm=TRUE)
+		if(exists('mdToTex')) {
+			mdToTex = identical(get("mdToTex"), TRUE)
+		}
+	}		
   
   dots = c(
       list(x=x, 
@@ -89,13 +93,13 @@ mdTable = function(x, col.just = 'r', guessGroup=FALSE, ..., mdToTex = 'auto') {
     
   } # end guessing groups
   
-  
   theLabel = c(dots$label, 
       paste("tbl:", 
           c(knitr::opts_current$get()$label, 'labelMissing')[1],
           sep='')
   )[1]
   
+
   missingNames = which(!nchar(names(dots)))
   
   if(identical(mdToTex, TRUE)) {
@@ -115,7 +119,6 @@ mdTable = function(x, col.just = 'r', guessGroup=FALSE, ..., mdToTex = 'auto') {
       dots$object =  do.call(format, c(list(x=dots$object), dots[formatArgs]))
       dots= dots[c('x', setdiff(names(dots), formatArgs))]
     }
-    
     
     dots$label = theLabel
     dots$file = ''
@@ -203,8 +206,8 @@ mdTable = function(x, col.just = 'r', guessGroup=FALSE, ..., mdToTex = 'auto') {
           '|   |   |\n|---|---|',
           '<span style="display:inline-block; width: 50em"> <span>| \n',   
            paste(
-               ': ', theCaption, ' {#tbl:',
-              c(knitr::opts_current$get()$label, 'labelMissing')[1],
+               ': ', theCaption, ' {#',
+              theLabel,
               '}\n', sep=''),
           res,
           '</div>\n'
@@ -215,9 +218,10 @@ mdTable = function(x, col.just = 'r', guessGroup=FALSE, ..., mdToTex = 'auto') {
           res,
           '\n|   |   |\n|---|---|',
           '<span style="display:inline-block; width: 50em"> <span>| \n',   
+#          '<span style="display:inline-block; width: 50em"> <span>| \n',   
           paste(
-              ': ', theCaption, ' {#tbl:',
-              c(knitr::opts_current$get()$label, 'labelMissing')[1],
+              ': ', theCaption, ' {#',
+              theLabel,
               '}\n', sep=''),
           '</div>\n'
       )

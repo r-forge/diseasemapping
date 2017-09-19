@@ -4,7 +4,7 @@
 \alias{eqnarray}
 \title{Markdown equation array}
 \usage{
-eqnarray(x, mdToTex = FALSE)
+eqnarray(x, mdToTex = "auto")
 }
 \arguments{
 \item{x}{a string with latex code for the equation}

@@ -291,7 +291,7 @@ priorPost = function(object) {
         )  
       } else {
         paramName = gsub("^weibullcure$", "ps", 
-            as.character(na.omit(unlist(paramDf[Dparam, c('label','id')][1])))
+            as.character(stats::na.omit(unlist(paramDf[Dparam, c('label','id')][1])))
         )
         inlaNameHere = 
             grep(paste(

@@ -5,7 +5,7 @@
 \title{Download a file}
 \usage{
 downloadIfOld(url, path = getwd(), file = file.path(path, basename(url)),
-  age = "5 days", verbose = FALSE, ...)
+  age = "6 months", overwrite = FALSE, verbose = FALSE, ...)
 }
 \arguments{
 \item{url}{a string specifying the remote location}
@@ -15,6 +15,8 @@ downloadIfOld(url, path = getwd(), file = file.path(path, basename(url)),
 \item{file}{local file name}
 
 \item{age}{maximum age of the local file}
+
+\item{overwrite}{replace existing unzipped files}
 
 \item{verbose}{print additional information}
 
