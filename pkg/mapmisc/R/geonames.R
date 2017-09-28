@@ -153,6 +153,7 @@ geocode = function(x, oneRecord=FALSE, extent=NULL, progress='', ...) {
   }	else if(requireNamespace("dismo", quietly = TRUE)) {
     if(verbose)
       message("not found in cache, retrieving")
+  	Sys.sleep(1)
     result = dismo::geocode(
       x, oneRecord=oneRecord, 
       extent=extLL, progress=progress, ...)		
