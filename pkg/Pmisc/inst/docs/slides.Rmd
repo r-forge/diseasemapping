@@ -11,7 +11,7 @@ library('knitr')
 library('Pmisc')
 
 # hook for multicolumn plots
-knitr::knit_hooks$set(Pmisc::plot=hook_plot_beamer) 
+knitr::knit_hooks$set(plot=Pmisc::hook_plot_beamer) 
 
 # hook for smaller plot margins
 knitr::knit_hooks$set(
