@@ -153,7 +153,11 @@ setMethod("getSMR",
 					...
 			)
 			
-			casecol = grep("^cases$|^count$|^y$", names(casedata), value=TRUE, ignore.case=TRUE)
+			casecol = rownames(attributes(model$terms)$factors)[
+					attributes(stats::terms(model$formula))$response
+			]
+			if(! identical(casecol %in% colnames(casedata), TRUE))
+				casecol = grep("^cases$|^count$|^y$", names(casedata), value=TRUE, ignore.case=TRUE)
 			
 			if(length(casecol)>1) {
 				casecol=casecol[1]
