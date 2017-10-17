@@ -62,7 +62,11 @@ if(FALSE) {
 # get rid of under 10's
 larynxRates = larynxRates[grep("_(0|5)$",names(larynxRates), invert=TRUE)]
 # compute Sexpected
-kentucky = diseasemapping::getSMR(kentucky, larynxRates, larynx, regionCode="County")
+kentucky = diseasemapping::getSMR(
+    popdata=kentucky, 
+    model = larynxRates, 
+    casedata=larynx, 
+    regionCode="County")
 @
 
 

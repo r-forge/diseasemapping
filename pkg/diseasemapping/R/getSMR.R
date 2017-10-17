@@ -147,31 +147,35 @@ setMethod("getSMR",
 		){
 # have case data, compute SMR
 
-			popdata = methods::callGeneric(
+      popdata = methods::callGeneric(
 					popdata, model,
 					area.scale=area.scale,	sex=sex,
 					...
 			)
-			
+
+   if(class(model)=='formula') {
 			casecol = rownames(attributes(model$terms)$factors)[
 					attributes(stats::terms(model$formula))$response
 			]
-			if(! identical(casecol %in% colnames(casedata), TRUE))
+ } else {
+   casecol = grep("^cases$|^count$|^y$", names(casedata), value=TRUE, ignore.case=TRUE)
+ }
+
+ if(! identical(casecol %in% colnames(casedata), TRUE))
 				casecol = grep("^cases$|^count$|^y$", names(casedata), value=TRUE, ignore.case=TRUE)
-			
-			if(length(casecol)>1) {
+	
+  if(length(casecol)>1) {
 				casecol=casecol[1]
 				warning("more than one column which could be interpreted as case numbers, using ", casecol)
 			}
-			
-			if(!length(casecol)) {
+		
+   if(!length(casecol)) {
 				#there is no case col
 				casecol = "cases"
 				casedata[[casecol]] = 1
 			}
 			
-			
-			casedata = casedata[
+   casedata = casedata[
 					as.character(casedata[, regionCodeCases]) %in% 
 							as.character(popdata[[regionCode]]), ]
 			
@@ -189,8 +193,8 @@ setMethod("getSMR",
 			# change 0's in expected to NA, so SMR is NA
 			theexpected = popdata$expected
 			theexpected[theexpected==0] = NA
-			
-			popdata$SMR <- popdata$observed/theexpected
+
+   popdata$SMR <- popdata$observed/theexpected
 			
 			popdata
 		}
