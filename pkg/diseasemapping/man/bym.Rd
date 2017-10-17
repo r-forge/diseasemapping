@@ -152,7 +152,7 @@ kBYM = bym(observed ~ offset(logExpected) + poverty, kentucky,
 
 
 
-if(require('mapmisc', quietly=TRUE) & length(kBYM$data$fitted.exp){
+if(require('mapmisc', quietly=TRUE) & length(kBYM$data$fitted.exp)){
 
 thecol = colourScale(kBYM$data$fitted.exp, 
 	breaks=5, dec=1, opacity = 0.7)
