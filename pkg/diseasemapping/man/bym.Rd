@@ -145,11 +145,12 @@ kBYM = bym(observed ~ offset(logExpected) + poverty, kentucky,
 		kBYM$data$exc1 = geostatsp::excProb(
 			kBYM$inla$marginals.fitted.bym, log(1.2)
 			)
-}
+} 
 
 
 
-if(require('mapmisc', quietly=TRUE) & length(kBYM$data$fitted.exp)){
+
+if(require('mapmisc', quietly=TRUE) & exists("kBYM")){
 
 thecol = colourScale(kBYM$data$fitted.exp, 
 	breaks=5, dec=1, opacity = 0.7)
