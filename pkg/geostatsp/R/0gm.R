@@ -399,7 +399,7 @@ gm.dataSpatial = function(
         data) 
     }
   }
-  data$space = extract(cellsSmall, data) 
+  data$space = suppressWarnings(extract(cellsSmall, data))
   
   # loop through spatial covariates which are factors
   for(D in intersect(Sfactors, names(covariatesDF))) {
@@ -409,13 +409,19 @@ gm.dataSpatial = function(
       theLabels = paste("l", names(theTable),sep="")
     } else {
       idCol = grep("^id$", names(theLevels), ignore.case=TRUE)[1]
-      if(!length(idCol)) idCol = 1
+      if(is.na(idCol)) idCol = 1
       labelCol = grep("^category$|^label$", names(theLevels), ignore.case=TRUE)[1]
-      if(!length(labelCol)) labelCol = 2
-      
-      theLabels = theLevels[
-        match(as.integer(names(theTable)), theLevels[,idCol])
-        ,labelCol]
+      if(is.na(labelCol)) labelCol = 2
+ 
+    if(all(names(theTable) %in% theLevels[,labelCol])) {
+      # convert table names to numeric
+      # code must work for data where data[[D]] is numeric
+      names(theTable) = theLevels[
+        match(names(theTable), theLevels[,labelCol])
+        , idCol]
+    }
+
+      theLabels = as.character(theLevels[match(names(theTable), theLevels[,idCol]), labelCol])
       if(any(is.na(theLabels))) {
         warning(
           'missing labels in covariate raster ', 
@@ -425,11 +431,14 @@ gm.dataSpatial = function(
           names(theTable)[is.na(theLabels)]
       }
     }
-    data[[D]] = factor(data[[D]], levels=as.integer(names(theTable)),
+    data[[D]] = factor(
+      as.integer(data[[D]]), 
+      levels=as.integer(names(theTable)),
       labels=theLabels)			
-    covariatesDF[[D]] = factor(covariatesDF[[D]], levels=as.integer(names(theTable)),
+    covariatesDF[[D]] = factor(
+      as.integer(covariatesDF[[D]]), 
+      levels=as.integer(names(theTable)),
       labels=theLabels)			
-    
   }
   
   
