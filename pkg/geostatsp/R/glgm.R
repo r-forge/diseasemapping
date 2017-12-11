@@ -393,8 +393,14 @@ setMethod("glgm",
       )
       
       formulaOrig = formula
+       
+      if(any(names(forInla)=='spaceFormula')) {
+        formula = update.formula(formula,	as.formula(forInla$spaceFormula))
+        forInla = forInla[setdiff(names(forInla), 'spaceFormula')]
+      } else {
+        formula = update.formula(formula,	as.formula(spaceFormula))
+      }
       
-      formula = update.formula(formula,	as.formula(spaceFormula))
       
       # sort out factors
       # variables with 'factor(x)' in the formula

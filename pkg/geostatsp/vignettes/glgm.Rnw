@@ -392,4 +392,17 @@ if(all(havePackages)) {
 }
 @
 
+
+
+<<passFormula>>=
+
+res = glgm(y ~ 1,
+  spaceFormula = ~ f(space, model = "matern2d", nrow = 20, ncol = 40, nu = 1, 
+    hyper = list(range = list(param = c(0.07, 0.01), prior = "loggamma"), 
+      prec = list(param = c(0.02, 0.02), prior = "loggamma"))), 
+  family = 'binomial',
+  data=loaloa, grid = 40, shape = 1, Ntrials = loaloa$N, verbose=TRUE) 
+res$inla$.args$formula
+@
+
 \end{document}
