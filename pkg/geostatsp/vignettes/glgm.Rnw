@@ -392,17 +392,29 @@ if(all(havePackages)) {
 }
 @
 
+specifying spatial formula
 
+<<spaceFormula>>=
+swissRain$group = 1+rbinom(length(swissRain), 1, 0.5)
+theGrid = squareRaster(swissRain,50, buffer=3)
+if(all(havePackages)) {
+  swissFit = glgm(
+    formula = rain~ 1,
+    data=swissRain, 
+    grid=theGrid, 
+    family="gaussian",
+    spaceFormula = ~ f(space, model='matern2d', 
+      nrow = nrow(theGrid), ncol = ncol(theGrid),
+      nu = 1, replicate = group))
 
-<<passFormula>>=
+  swissFit$rasterTwo = setValues(
+    swissFit$raster[[1:2]],
+    as.matrix(swissFit$inla$summary.random$space[
+      ncell(theGrid)+values(swissFit$raster[['space']]), 
+      c('mean','0.5quant')]))
 
-res = glgm(y ~ 1,
-  spaceFormula = ~ f(space, model = "matern2d", nrow = 20, ncol = 40, nu = 1, 
-    hyper = list(range = list(param = c(0.07, 0.01), prior = "loggamma"), 
-      prec = list(param = c(0.02, 0.02), prior = "loggamma"))), 
-  family = 'binomial',
-  data=loaloa, grid = 40, shape = 1, Ntrials = loaloa$N, verbose=TRUE) 
-res$inla$.args$formula
+  plot(swissFit$rasterTwo[['mean']])
+}
 @
 
 \end{document}
