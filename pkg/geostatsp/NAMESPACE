@@ -4,7 +4,7 @@ export( lgm, glgm, lgcp,
  simLgcp,simPoissonPP,
  excProb, likfitLgm, loglikLgm,
  profLlgm, informationLgm, conditionalGmrf, spatialRoc,
- spdfToBrick
+ spdfToBrick, pcPriorRange
 )
 
 
