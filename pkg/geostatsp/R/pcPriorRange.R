@@ -36,5 +36,10 @@ pcPriorRange = function(q, p=0.5, cellSize=1) {
         logdens = -lambda*scale + log(lambda);
         log_jacobian = -log_range;
         return(logdens + log_jacobian);", sep='')
+  result$string = paste0(
+    "prior=\"",
+    result$inla,
+    "\""  
+    )
   result
 }

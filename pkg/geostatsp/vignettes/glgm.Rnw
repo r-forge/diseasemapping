@@ -60,17 +60,19 @@ if(Sys.info()['user'] =='patrick'){
 
 standard formula
 
-<<swissWithFormula, fig.cap = 'Swiss rain as in help file', fig.subcap = c('random','fitted')>>=
+<<swissWithFormula, fig.cap = 'Swiss rain as in help file', fig.subcap = c('random','fitted', 'sd','range')>>=
 if(all(havePackages)) {
   
   swissFit =  glgm(lograin~ CHE_alt,
     swissRain, 
     Ncell, 
     covariates=swissAltitudeCrop, family="gaussian", buffer=20000,
-    priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
-    control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
-    control.family=list(hyper=list(prec=list(prior="loggamma", 
-          param=c(.1, .1))))
+    priorCI=list(
+      sd=c(2, 0.05), 
+      range=c(500000, 0.5)), 
+    control.family=list(hyper=list(prec=
+      list(prior="pc.prec", 
+          param=c(1, 0.1))))
   )
   knitr::kable(swissFit$parameters$summary, digits=3)
   
@@ -91,7 +93,18 @@ if(all(havePackages)) {
   plot(swissExcP, breaks = c(0, 0.2, 0.8, 0.95, 1.00001), 
     col=c('green','yellow','orange','red'))	
   plot(swissBorder, add=TRUE)
+
+  matplot(
+    swissFit$parameters$sd$posterior[,'x'],
+    swissFit$parameters$sd$posterior[,c('y','prior')],
+    lty=1, col=c('black','red'), type='l',
+    xlab='sd', ylab='dens', xlim = c(0,3))
   
+  matplot(
+    swissFit$parameters$range$posterior[,'x'],
+    swissFit$parameters$range$posterior[,c('y','prior')],
+    lty=1, col=c('black','red'), type='l',
+    xlab='sd', ylab='dens', xlim = c(0,3))
 }
 @
 
