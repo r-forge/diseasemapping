@@ -14,20 +14,20 @@ pcPriorRange = function(q, p=0.5, cellSize=1) {
   # I call lambda a scale, wikipedia and R call it rate
   quantileCells = q/cellSize
   lambda = -log(p) * quantileCells 
-  top99 = qexp(0.99, lambda)
+  top99 = stats::qexp(0.99, lambda)
   xSeqScale = seq(0, top99, len=1001)
-  bottom99 = qexp(0.05, lambda)
+  bottom99 = stats::qexp(0.05, lambda)
   xSeqRangeCells = seq(0, 1/bottom99, len=1001)
   xSeqRange = xSeqRangeCells * cellSize
   result = list(
     lambda = lambda,
     priorScale = cbind(
-      x = xSeqScale, y = dexp(xSeqScale, lambda)
+      x = xSeqScale, y = stats::dexp(xSeqScale, lambda)
       )
     )
   result$priorRange = cbind(
     x = xSeqRange,
-    y = dexp(1/xSeqRangeCells, lambda) * (xSeqRange)^(-2) * cellSize
+    y = stats::dexp(1/xSeqRangeCells, lambda) * (xSeqRange)^(-2) * cellSize
     )  
   result$inla = paste0(
       "expression:

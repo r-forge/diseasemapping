@@ -629,7 +629,7 @@ if(any(names(ratePrior) == 'priorRange')) {
   params$range$posterior = cbind(
     x=params$range$posterior[,1],
     y=params$range$posterior[,2],
-    prior = dexp(
+    prior = stats::dexp(
       xres(cells)/params$range$posterior[,1], 
       ratePrior$lambda) * (params$range$posterior[,1])^(-2) * 
     xres(cells)
@@ -708,7 +708,7 @@ for(Dsd in names(precPrior)) {
       y=dgamma(precSeq, shape=precPrior[[Dsd]]$params["shape"], 
         rate=precPrior[[Dsd]]$params["rate"]) *2* (precSeq)^(3/2) 
       )
-  } else if(precPrior[[Dsd]]$prior == 'pc.prec'){
+  } else if( identical(precPrior[[Dsd]]$prior, 'pc.prec') ){
     params[[Dsd]] = list(userPriorCI=priorCI[[Dsd]], 
       priorCI = 1/sqrt(
         INLA::inla.pc.qprec(c(0.975,0.025),  
@@ -956,7 +956,7 @@ for(Dsd in grep("Shape$", names(thesd), invert=TRUE, value=TRUE)) {
   params[[Dsd]]$posterior = params[[Dsd]]$posterior[
   seq(dim(params[[Dsd]]$posterior)[1],1),]		
 
-  if(precPrior[[Dsd]]$prior == 'pc.prec') {
+  if(identical(precPrior[[Dsd]]$prior, 'pc.prec') ) {
 
     params[[Dsd]]$posterior = cbind(
       x=params[[Dsd]]$posterior[,'x'],
