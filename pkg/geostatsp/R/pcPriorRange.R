@@ -34,7 +34,7 @@ pcPriorRange = function(q, p=0.5, cellSize=1) {
         lambda = ", lambda, ";
         scale = exp(-log_range);
         logdens = -lambda*scale + log(lambda);
-        log_jacobian = - 2 * log_range;
+        log_jacobian = - log_range;
         return(logdens + log_jacobian);", sep='')
   result$string = paste0(
     "prior=\"",
