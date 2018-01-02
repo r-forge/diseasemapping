@@ -25,6 +25,7 @@ Enhances:
 	INLA, 
 	diseasemapping, 
 	geoR, 
+    rgeos,
 	mvtnorm, 
 	Ryacas
 LinkingTo: Matrix
