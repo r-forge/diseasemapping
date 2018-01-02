@@ -13,23 +13,17 @@
 
 \maketitle
 
-<<knitr, include=FALSE>>=
-require('knitr')
-opts_chunk$set(out.width='0.48\\textwidth', 
-		fig.align='default', fig.height=3, fig.width=6,
-		tidy = FALSE)
-if(Sys.info()['sysname'] =='Linux' &
-		requireNamespace("INLA")) {   
+<<knitr, include=FALSE, tidy=FALSE>>=
+knitr::opts_chunk$set(out.width='0.48\\textwidth', 
+	fig.align='default', fig.height=3, fig.width=6,
+	tidy = FALSE)
+if(Sys.info()['sysname'] =='Linux' & requireNamespace("INLA")) {   
 	INLA::inla.setOption(inla.call = 
-					system.file(paste(
-									"bin/linux/",          
-									ifelse(
-											.Machine$sizeof.pointer == 4, 
-											"32", "64"),
-									'bit/inla.static', sep=''),
-							package="INLA")) 
+		system.file(paste("bin/linux/",          
+			ifelse(.Machine$sizeof.pointer == 4, "32", "64"),
+			'bit/inla.static', sep=''),
+		package="INLA")) 
 }
-
 @    
 
 <<packages>>=
@@ -40,17 +34,16 @@ data('torontoPop')
 @
 
 
-<<Covariates>>=
-
-if(requireNamespace("rgdal")) {
+<<Covariates, tidy=FALSE>>=
+if(requireNamespace("rgdal") & requireNamespace("rgeos")) {
 	murderT = spTransform(murder, omerc(murder, angle=-20))
 	borderT = spTransform(torontoBorder, projection(murderT))
 	borderC = crop(borderT, extent(-12700, 7000, -7500, 3100))
-} 
+}
+
 covList = list(
 		pop=torontoPdens,
-		inc = log(torontoIncome)
-)
+		inc = log(torontoIncome) )
 
 formulaHere = ~ inc + offset(pop, log=TRUE)
 @
@@ -58,15 +51,16 @@ formulaHere = ~ inc + offset(pop, log=TRUE)
 
 \section*{LGCP with gamma priors on precision}
 
-<<lgcpGamma>>=
-if(requireNamespace("rgdal")) {
+<<lgcpGamma, tidy=FALSE>>=
+if(requireNamespace("rgdal") & requireNamespace("rgeos") & requireNamespace("INLA")) {
 	resG=lgcp(formulaHere, data=murderT, 
 			grid=squareRaster(borderC, 30),
 			covariates=covList,
 			border=borderC, buffer=2000,
 			priorCI = list(sd = c(0.05, 0.5), range = c(1, 10)*1000),
 			control.inla=list(verbose=TRUE)
-	)} else {
+	)
+} else {
 	resG = NULL
 }
 @
@@ -80,14 +74,14 @@ if(requireNamespace("rgdal")) {
 $pr(sd > 1) = 0.05$ and $pr(phi < 0.2) = 0.95$
 
 
-<<lgcpPc>>=
-if(requireNamespace("rgdal")) {
+<<lgcpPc, tidy=FALSE>>=
+if(requireNamespace("rgdal") & requireNamespace("rgeos") & requireNamespace("INLA")) {
 	resP=lgcp(formulaHere, data=murderT, 
 			grid=squareRaster(borderC, 30),
 			covariates=covList,
 			border=borderC, buffer=2000,
 			priorCI = list(sd = c(u=0.5, alpha=0.05), range = c(1, 10)*1000)
-	)}else {
+	) } else {
 	resP = NULL
 }
 @
@@ -96,10 +90,10 @@ if(requireNamespace("rgdal")) {
 \section*{LGCP with table priors}
 
 
-<<lgcpTable>>=
+<<lgcpTable, tidy=FALSE>>=
 sdSeq = seq(0,4,len=501)
 rangeSeq = seq(0,15*1000, len=501)
-if(requireNamespace("rgdal")) {
+if(requireNamespace("rgdal") & requireNamespace("rgeos") & requireNamespace("INLA")) {
 	resT=lgcp(formulaHere, 
 			data=murderT, 
 			grid=squareRaster(borderC, 30),

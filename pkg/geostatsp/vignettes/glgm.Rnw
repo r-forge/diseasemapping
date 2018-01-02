@@ -409,7 +409,7 @@ specifying spatial formula
 
 <<spaceFormula>>=
 swissRain$group = 1+rbinom(length(swissRain), 1, 0.5)
-theGrid = squareRaster(swissRain,50, buffer=3)
+theGrid = squareRaster(swissRain,50, buffer=30*1000)
 if(all(havePackages)) {
   swissFit = glgm(
     formula = rain~ 1,
@@ -429,5 +429,32 @@ if(all(havePackages)) {
   plot(swissFit$rasterTwo[['mean']])
 }
 @
+
+
+pc prior for range, no data, check posterior
+<<spaceFormulaNoData>>=
+theGrid = squareRaster(swissRain,20, buffer=300*1000)
+if(all(havePackages)) {
+  swissFit = glgm(
+    formula = rain~ 1,
+    data=swissRain[1:3, ], 
+    grid=theGrid, 
+    family="gaussian",
+    control.mode = list(theta = c(-3.7, -0.75, 2.25), restart=TRUE),
+    priorCI = list(
+      sd = c(u=1, alpha=0.5),
+      range = c(u=400*1000, alpha=0.5)),
+    verbose = TRUE
+    )
+
+
+  matplot(swissFit$parameters$range$posterior[,'x'],
+    swissFit$parameters$range$posterior[,c('y','prior')],
+    xlim = c(0, 800*1000),
+    type='l'
+    )
+}
+@
+
 
 \end{document}
