@@ -2,7 +2,7 @@
 breaksForRates = function(
     x,
     breaks = 10,
-    transform = 0.7,
+    transform = 0.1,
     multiples = c(2, 4, 5, 10)) {
   
   if(methods::existsMethod(raster::maxValue, class(x)))
@@ -16,7 +16,7 @@ breaksForRates = function(
   
   DpropOfMax = 0
   theBreaksP1 = NULL
-  maxIter = 20
+  maxIter = 50
   Diter = 0
   toRound = Inf
 
@@ -42,9 +42,9 @@ breaksForRates = function(
     breakSeq[1] = 0
     breakSeq = sort(unique(signif(breakSeq,10)))
 
-    theBreaksP1 = c(
-      breakSeq[breakSeq < toRoundOld], 
-      theBreaks[theBreaks >= toRoundOld])
+    theBreaksP1 = sort(unique(c(
+      breakSeq[breakSeq < 5*toRoundOld], 
+      theBreaksP1)))
 
 
 #    theBreaksP1 = sort(unique(signif(breakSeq,10)))
@@ -55,8 +55,8 @@ breaksForRates = function(
     
   }
   
-  if(length(theBreaksP1)==breaks | !length(theBreaks)) 
-    theBreaks = theBreaksP1
+  if(length(theBreaksP1) > (2+breaks) ) 
+    theBreaksP1 = theBreaks
   
-  theBreaks
+  theBreaksP1
 }

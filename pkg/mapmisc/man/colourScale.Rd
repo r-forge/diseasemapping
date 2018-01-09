@@ -11,7 +11,7 @@ Produces a scale of colours for plotting maps}
 	 col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
 	 transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL,...)
 	colorScale(...)
-	breaksForRates(x, breaks = 10, transform = 0.7,
+	breaksForRates(x, breaks = 10, transform = 0.1,
       multiples = c(2, 4, 5, 10)) 
 	}
 
