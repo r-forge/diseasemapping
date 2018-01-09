@@ -58,5 +58,9 @@ breaksForRates = function(
   if(length(theBreaksP1) > (2+breaks) ) 
     theBreaksP1 = theBreaks
   
+  if(sum(theBreaksP1 > theMax) > 2) {
+    theBreaksP1 = theBreaksP1[-length(theBreaksP1)]
+  }
+
   theBreaksP1
 }
