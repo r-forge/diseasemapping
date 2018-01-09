@@ -18,9 +18,10 @@ breaksForRates = function(
   theBreaksP1 = NULL
   maxIter = 20
   Diter = 0
-  
+  toRound = Inf
+
   while(Diter < maxIter) {
-    
+    toRoundOld = toRound
     Diter = Diter + 1
     DpropOfMax = DpropOfMax + 1
     theBreaks = theBreaksP1
@@ -39,8 +40,14 @@ breaksForRates = function(
     
     breakSeq = ceiling(ceilingSeq/moreRounding)*moreRounding*toRound
     breakSeq[1] = 0
-    
-    theBreaksP1 = sort(unique(signif(breakSeq,10)))
+    breakSeq = sort(unique(signif(breakSeq,10)))
+
+    theBreaksP1 = c(
+      breakSeq[breakSeq < toRoundOld], 
+      theBreaks[theBreaks >= toRoundOld])
+
+
+#    theBreaksP1 = sort(unique(signif(breakSeq,10)))
     
     if(length(theBreaksP1) >= breaks) {
       break()
@@ -48,7 +55,8 @@ breaksForRates = function(
     
   }
   
-  if(length(theBreaksP1)==breaks | !length(theBreaks)) theBreaks = theBreaksP1
+  if(length(theBreaksP1)==breaks | !length(theBreaks)) 
+    theBreaks = theBreaksP1
   
   theBreaks
 }
