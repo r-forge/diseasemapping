@@ -43,7 +43,7 @@ breaksForRates = function(
     breakSeq = sort(unique(signif(breakSeq,10)))
 
     theBreaksP1 = sort(unique(c(
-      breakSeq[breakSeq < 5*toRoundOld], 
+      breakSeq[breakSeq < 2*toRoundOld], 
       theBreaksP1)))
 
 

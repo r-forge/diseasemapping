@@ -8,8 +8,8 @@
 Produces a scale of colours for plotting maps}
 \usage{
 	colourScale(x, breaks=5, style=c("quantile","equal","unique", "fixed"),
-	 col="YlOrRd", opacity=1, dec=NULL, firstBreak=NULL, 
-	 transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL,...)
+	 col="YlOrRd", opacity=1, dec=NULL, digits = 6, firstBreak=NULL, 
+	 transform=NULL, revCol=FALSE, exclude=NULL, labels=NULL, ...)
 	colorScale(...)
 	breaksForRates(x, breaks = 10, transform = 0.1,
       multiples = c(2, 4, 5, 10)) 
@@ -24,7 +24,8 @@ Produces a scale of colours for plotting maps}
 	argument for \code{\link[RColorBrewer]{brewer.pal}}}
 	\item{opacity}{adds transparency to colours, either a single number,
 	vector of length 2, or vector of same length as \code{breaks}}
-	\item{dec}{Number of decimal places for the breaks}
+	\item{dec}{Number of decimal places for the breaks}	
+	\item{digits}{Number of significant figures}
 	\item{firstBreak}{If non-null, force the first break to take this value (often zero).}
 	\item{transform}{A list of two functions to transform \code{x} and inverse transform the breaks, or a numeric value specifying a Box-Cox parameter.}
 	\item{revCol}{Reverse the order of the colours.}
