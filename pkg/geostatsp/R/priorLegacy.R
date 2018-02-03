@@ -42,13 +42,13 @@ priorLegacy = function(priorCI, family, cellSize) {
         if(all(c('shape','rate') %in% names(priorDistributions[[Dprec]]))) {
 
           precPrior[[Dsd]] = list(
-            params = c(
+            param = c(
               shape=as.numeric(priorDistributions[[Dprec]]['shape']), 
               rate=as.numeric(priorDistributions[[Dprec]]['rate'])),
             prior = 'loggamma')
 
         } else {
-          precPrior[[Dsd]] = list(params=c(
+          precPrior[[Dsd]] = list(param=c(
             shape=priorDistributions[[Dprec]][1],
             rate=priorDistributions[[Dprec]][2]),
           prior = 'loggamma')
@@ -97,7 +97,7 @@ priorLegacy = function(priorCI, family, cellSize) {
         if(all(c('u','alpha') %in% names(priorCI[[Dsd]]))) {
               # pc priors
           precPrior[[Dsd]] = list(
-            params=priorCI[[Dsd]],
+            param=priorCI[[Dsd]],
             prior = 'pc.prec')
         } else {
               # gamma prior
@@ -116,19 +116,19 @@ priorLegacy = function(priorCI, family, cellSize) {
           names(precPrior2$par) = c("shape","rate")
 
           precPrior[[Dsd]] = list(
-            params = precPrior2$par,
+            param = precPrior2$par,
             prior = 'loggamma')
         } # end gamma prior
       }
     } else { # no prior supplied
           # default prior
     precPrior[[Dsd]] = list(
-      params = c(shape=0.01, rate=0.01),
+      param = c(shape=0.01, rate=0.01),
       prior = 'loggamma')
   }
   if(!length(precPrior[[Dsd]]$string))
     precPrior[[Dsd]]$string = paste0("param=c(",
-      paste0(precPrior[[Dsd]]$params, collapse=","),
+      paste0(precPrior[[Dsd]]$param, collapse=","),
       "), prior='", precPrior[[Dsd]]$prior, "'")
 } # end loop Dsd
 
@@ -192,7 +192,7 @@ if(any(names(priorDistributions)=='range')) {
     obj1=sort(priorCI$range/cellSize)
 
     cifun = function(pars) {
-      theci = 		pgamma(obj1, shape=pars[1], rate=pars[2], log.p=T)
+      theci = stats::pgamma(obj1, shape=pars[1], rate=pars[2], log.p=T)
 
       (theci[1] - log(0.025))^2 +
       (theci[2] - log(0.925))^2 
@@ -203,16 +203,27 @@ if(any(names(priorDistributions)=='range')) {
     ratePrior = ratePrior2$par
     names(ratePrior ) = c("shape","rate")
     ratePrior = list(
-      params = ratePrior, prior='loggamma'
+      param = ratePrior, prior='loggamma'
       )
+
+        ratePrior$extra = list(
+				ciProb = c(0.025, 0.975),
+				userPriorCI = priorCI$range,
+				priorCI = cellSize * stats::qgamma(
+					c(0.025, 0.975),
+					shape=ratePrior$param['shape'], 
+					rate=ratePrior$param['rate']),
+    	optim = ratePrior2
+    	)
+
   } 
-}	else { # no range in priorCI
-ratePrior = list(params=c(shape=0.01, rate=0.01), prior='loggamma')
+} else { # no range in priorCI
+	ratePrior = list(param=c(shape=0.01, rate=0.01), prior='loggamma')
 }
 
 if(!length(ratePrior$string))
   ratePrior$string = paste0("param=c(",
-    paste0(ratePrior$params, collapse=","),
+    paste0(ratePrior$param, collapse=","),
     "), prior='",ratePrior$prior,"'", sep='')
 
       # prior for gamma shape
