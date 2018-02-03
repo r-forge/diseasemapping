@@ -14,34 +14,28 @@ pcPriorRange = function(q, p=0.5, cellSize=1) {
   # I call lambda a scale, wikipedia and R call it rate
   quantileCells = q/cellSize
   lambda = -log(p) * quantileCells 
-  top99 = stats::qexp(0.99, lambda)
-  xSeqScale = seq(0, top99, len=1001)
-  bottom99 = stats::qexp(0.05, lambda)
-  xSeqRangeCells = seq(0, 1/bottom99, len=1001)
-  xSeqRange = xSeqRangeCells * cellSize
-  result = list(
-    lambda = lambda,
-    priorScale = cbind(
-      x = xSeqScale, y = stats::dexp(xSeqScale, lambda)
-      )
-    )
-  result$priorRange = cbind(
-    x = xSeqRange,
-    y = stats::dexp(1/xSeqRangeCells, lambda) * (xSeqRange)^(-2) * cellSize
-    )  
-  result$inla = paste0(
-      "expression:
-        lambda = ", lambda, ";
-        scale = exp(-log_range);
-        logdens = -lambda*scale + log(lambda);
-        log_jacobian = - log_range;
-        return(logdens + log_jacobian);", sep='')
-  result$string = paste0(
-    "prior=\"",
-    result$inla,
-    "\""  
-    )
-    result$input = c(range = q, cellSize = cellSize, prob = p)
-    result$median = c(range = cellSize*lambda/log(2), cellSize = cellSize)
+  resultInla = paste0(
+    "expression:
+    lambda = ", lambda, ";
+    scale = exp(-log_range);
+    logdens = -lambda*scale + log(lambda);
+    log_jacobian = - log_range;
+    return(logdens + log_jacobian);", sep='')
+
+  result= list(
+    string = paste0("prior=\"", resultInla, "\"" ),
+    param = c(
+      range = q, prob = p, lambda=lambda,
+      medianRange = cellSize*lambda/log(2), 
+      medianScale = log(2)/(cellSize*lambda)),
+    dprior = list(
+      range = eval(parse(text=paste0(
+        'function(x) x^(-2)*dexp(1/x, rate=', lambda, ')'))),
+      scale = eval(parse(text=paste0(
+        'function(x) dexp(x, rate=', lambda, ')')))
+      ),
+  info = 'exponential prior for scale (pc prior)',
+  cellSize = cellSize)
+
   result
 }
