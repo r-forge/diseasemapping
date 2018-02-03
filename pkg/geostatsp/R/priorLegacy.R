@@ -209,6 +209,7 @@ if(any(names(priorDistributions)=='range')) {
 }	else { # no range in priorCI
 ratePrior = list(params=c(shape=0.01, rate=0.01), prior='loggamma')
 }
+
 if(!length(ratePrior$string))
   ratePrior$string = paste0("param=c(",
     paste0(ratePrior$params, collapse=","),

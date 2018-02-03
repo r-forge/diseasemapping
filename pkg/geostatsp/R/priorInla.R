@@ -27,9 +27,6 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 	if(family=="gamma") {
 		sdNames = unique(c(sdNames, "gammaShape"))
 	}
-	if(family %in% c("weibull", "weibullsurv") ) {
-		sdNames = unique(c(sdNames, "weibullShape"))
-	}
 
 	ciTarget = log(c(0.025, 0.975))
 	parGetRid = c('cellSize','info','dprior', 'extra')
@@ -38,7 +35,6 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 	precPrior=list()
 
 	for(Dsd in sdNames) {
-		Dprec = gsub("^sd","precision",Dsd)
 
 		if(is.null(x[[Dsd]])) { 
 		# no prior supplied
@@ -122,7 +118,7 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 			precPrior[[Dsd]]$string = paste0(
 				"prior=\"expression:
 				a = ", precPrior[[Dsd]]$param['shape'], ";
-				b = 1.0/", precPrior[[Dsd]]$param['rage'], ";
+				b = 1.0/", precPrior[[Dsd]]$param['rate'], ";
 				return (a - 1.0) * (log_precision / 2.0) - 
 				b*exp(-log_precision / 2.0) - log_precision/2.0;\"", 
 				sep='')
@@ -130,14 +126,15 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 			precPrior[[Dsd]]$extra = list(
 				ciProb = exp(ciTarget),
 				userPriorCI = x[[Dsd]],
-				priorCI = qgamma(
+				priorCI = stats::qgamma(
 					exp(ciTarget),
 					shape=precPrior[[Dsd]]$param['shape'], 
-					rate=precPrior[[Dsd]]$param['rage'])
+					rate=precPrior[[Dsd]]$param['rate']),
+				optim = precPrior2
 				)
 
 			precPrior[[Dsd]]$dprior = eval(parse(text=paste0('function(x) stats::dgamma(x, shape=',
-				precPrior[[Dsd]]['shape'],',rate=', precPrior[[Dsd]]['range'], ')')))
+				precPrior[[Dsd]]$param['shape'],',rate=', precPrior[[Dsd]]$param['rate'], ')')))
 			environment(precPrior[[Dsd]]) = emptyenv()
 
 		} # end interval supplied
@@ -200,18 +197,18 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 
 		} else {
 		        # gamma prior for scale
-			scaleTarget = sort(cellSize/x$range[c('lower','upper')])
+			scaleTarget = unname(sort(cellSize/x$range[c('lower','upper')]))
 			cifun = function(pars) {
-				theci = pgamma(
+				theci = stats::pgamma(
 					scaleTarget,
 					shape=pars[1], 
-					rate=pars[2])
+					rate=pars[2], log.p=TRUE)
 
 				sum(c(1,4)*(ciTarget - theci)^2)
 			}
 
 			scalePrior2=stats::optim(
-				c(.5,.5/mean(scaleTarget)), 
+				c(.5,.5/sqrt(prod(scaleTarget))), 
 				cifun, 
 				lower=c(0.000001,0.0000001),method="L-BFGS-B")
 
@@ -222,7 +219,7 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 			rangePrior$string = paste0(
 				"prior=\"expression:
 				a = ", rangePrior$param['shape'], ";
-				b = 1.0/", rangePrior$param['rage'], ";
+				b = 1.0/", rangePrior$param['rate'], ";
 				return (a - 1.0) * (log_range) - 
 				b*exp(-log_range) - log_range;\"", 
 				sep='')
@@ -230,13 +227,22 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 			rangePrior$dprior = list(
 				range = eval(parse(text=paste0(
 					'function(x) x^(-2)*stats::dgamma(1/x, shape=',
-					rangePrior$param['shape'],',rate=', rangePrior$param['range'], ')'))),
+					rangePrior$param['shape'],',rate=', rangePrior$param['rate'], ')'))),
 				scale = eval(parse(text=paste0(
 					'function(x) stats::dgamma(x, shape=',
-					rangePrior$param['shape'],',rate=', rangePrior$param['range'], ')')))
+					rangePrior$param['shape'],',rate=', rangePrior$param['rate'], ')')))
 				)
     environment(rangePrior$dprior$range) = emptyenv()
     environment(rangePrior$dprior$scale) = emptyenv()
+    rangePrior$extra = list(
+				ciProb = exp(ciTarget),
+				userPriorCI = x$range[c('lower','upper')],
+				priorCI = sort(cellSize/stats::qgamma(
+					exp(ciTarget),
+					shape=rangePrior$param['shape'], 
+					rate=rangePrior$param['rate'])),
+    	optim = scalePrior2
+    	)
 
 		} # end types of prior
 
@@ -250,7 +256,7 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 
 	result = c(
 		precPrior,
-		list(rate = rangePrior)
+		list(range = rangePrior)
 		)
 
 
@@ -260,6 +266,12 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 
 	if( length(familyShapeName) ) {
 		familyShapeName = familyShapeName[1]
+		if(!is.list(x[[familyShapeName]])) {
+			familyShapePrior = list(
+				string = deparse(x[[familyShapeName]][setdiff(names(x[[familyShapeName]]), parGetRid)], control=NULL)
+				)
+		} else {
+			# default prior
 		familyShapePrior  = list(
 			prior='gaussian',
 			param=c(
@@ -267,6 +279,7 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 				precision = as.numeric(abs(diff(log(x[[familyShapeName]])))[1]/4)^(-2)
 				)
 			)
+	}
 		result$family = familyShapePrior
 	}
 
