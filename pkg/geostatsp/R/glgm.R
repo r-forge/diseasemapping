@@ -442,10 +442,11 @@ setMethod("glgm",
   diag(c(xres(cells), 1/xres(cells)))
 
     # parameter priors for result
-  if(any(names(ratePrior) == 'priorRange')) {
+
+  if(any(names(priorList) == 'range')) {
       # pc prior
-    params$range$params = ratePrior$lambda
-    params$range$prior = ratePrior$priorRange
+    ratePrior = priorList$range
+    params$range$prior = ratePrior[intersect(names(ratePrior), c('param', 'prior', 'rprior'))]
     params$range$priorScale = ratePrior$priorScale
     params$range$posteriorScale = cbind(
       x = 1/inlaResult$marginals.hyperpar[['Range for space']][,'x'],
