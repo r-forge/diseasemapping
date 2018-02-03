@@ -199,7 +199,7 @@ setMethod("glgm",
     # data, cells, and covariates must have varilable called 'space'		
     # values of cells must be index numbers, and cells shouldnt include the buffer		
     forInla = thedots = list(...)
-    forInla = forInla[setdiff(names(forInla, 'priorCI'))]
+    forInla = forInla[setdiff(names(forInla), 'priorCI')]
 
      if(!any(names(thedots)=="family")) {
       forInla$family =  "gaussian"
