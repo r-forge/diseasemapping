@@ -1,8 +1,8 @@
 Package: Pmisc
 Type: Package
 Title: Various Utilities for knitr and inla
-Version: 0.2.2
-Date: 2017-08-03
+Version: 0.2.3
+Date: 2018-01-16
 Imports:
     knitr,
     methods,
@@ -13,6 +13,8 @@ Imports:
     sp,
     graphics
 Suggests:
+    RColorBrewer,
+    numDeriv,
     lgcp,
     INLA,
     geostatsp,
@@ -20,7 +22,7 @@ Suggests:
     nlme,
     R.utils,
     Hmisc,
-    htmlTable,
+    htmlTable
 Enhances:
 	reshape2
 Author: Patrick Brown <patrick.brown@utoronto.ca>[aut, cre]

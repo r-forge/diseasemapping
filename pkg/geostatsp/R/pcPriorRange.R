@@ -41,5 +41,7 @@ pcPriorRange = function(q, p=0.5, cellSize=1) {
     result$inla,
     "\""  
     )
+    result$input = c(range = q, cellSize = cellSize, prob = p)
+    result$median = c(range = cellSize*lambda/log(2), cellSize = cellSize)
   result
 }
