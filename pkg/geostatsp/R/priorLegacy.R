@@ -232,8 +232,8 @@ if( length(familyShapeName) ) {
 
 list(
 	family = familyShapePrior,
-	prec = precPrior,
-	rate = ratePrior
+	sd = precPrior,
+	range = ratePrior
 	)
 
 }

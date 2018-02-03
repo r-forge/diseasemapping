@@ -13,7 +13,7 @@ pcPriorRange = function(q, p=0.5, cellSize=1) {
   # lambda is a multiplicative parameter
   # I call lambda a scale, wikipedia and R call it rate
   quantileCells = q/cellSize
-  lambda = -log(p) * quantileCells 
+  lambda = -log(p) * quantileCells / log(2)
   resultInla = paste0(
     "expression:
     lambda = ", lambda, ";
@@ -24,18 +24,23 @@ pcPriorRange = function(q, p=0.5, cellSize=1) {
 
   result= list(
     string = paste0("prior=\"", resultInla, "\"" ),
-    param = c(
-      range = q, prob = p, lambda=lambda,
-      medianRange = cellSize*lambda/log(2), 
-      medianScale = log(2)/(cellSize*lambda)),
-    dprior = list(
-      range = eval(parse(text=paste0(
-        'function(x) x^(-2)*dexp(1/x, rate=', lambda, ')'))),
-      scale = eval(parse(text=paste0(
-        'function(x) dexp(x, rate=', lambda, ')')))
-      ),
-  info = 'exponential prior for scale (pc prior)',
-  cellSize = cellSize)
+    param = c(q = q, prob = p), 
+    extra = list(
+      lambda=unname(lambda),
+      medianRange = unname(cellSize*lambda), 
+      medianScale = unname(1/(cellSize*lambda)),
+      meanScale = unname(1/(log(2)*cellSize*lambda))),
+    info = 'exponential prior for scale (pc prior)',
+    cellSize = unname(cellSize))
 
+    result$dprior = list(
+      range = eval(parse(text=paste0(
+        'function(x) x^(-2)*stats::dexp(1/x, rate=', 
+        1/result$extra$meanScale, ')'))),
+      scale = eval(parse(text=paste0(
+        'function(x) stats::dexp(x, rate=', 1/result$extra$meanScale, ')')))
+      )
+    environment(result$dprior$range) = emptyenv()
+    environment(result$dprior$scale) = emptyenv()
   result
 }
