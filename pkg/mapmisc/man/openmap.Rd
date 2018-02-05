@@ -12,8 +12,9 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	  maxTiles = 9, 
 	  crs=projection(x),   
 	  buffer=0, fact=1, 
-	  verbose=options()$mapmiscVerbose,
-	  cachePath=options()$mapmiscCachePath)
+	 verbose=getOption('mapmiscVerbose'),
+	  cachePath=getOption('mapmiscCachePath')
+)
 
 	osmTiles(name, xyz, suffix)
 
