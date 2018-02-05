@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
+  <link rel="stylesheet" href="http://diseasemapping.r-forge.r-project.org/webpage.css">
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&#39;mapmisc&#39;</span>)</code></pre></div>
+<pre><code>## Loading required package: sp</code></pre>
+<pre><code>## Loading required package: raster</code></pre>
+<pre><code>## map images will be cached in  /tmp/mapmiscCache_patrick</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="cf">if</span>(<span class="op">!</span><span class="kw">exists</span>(<span class="st">&#39;mapmiscCachePath&#39;</span>))
+  mapmiscCachePath =<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&#39;extdata&#39;</span>, <span class="dt">package=</span><span class="st">&#39;mapmisc&#39;</span>)
+
+<span class="cf">if</span>(<span class="op">!</span><span class="kw">exists</span>(<span class="st">&#39;mapmiscCacheReadOnly&#39;</span>))
+  mapmiscCacheReadOnly =<span class="st"> </span><span class="ot">TRUE</span>
+
+mapmiscCachePath</code></pre></div>
+<pre><code>## [1] &quot;/home/patrick/workspace/diseasemapping/www/mapmiscCache&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">options</span>(
+  <span class="dt">mapmiscCachePath =</span> mapmiscCachePath,
+  <span class="dt">mapmiscCacheReadOnly =</span> mapmiscCacheReadOnly,
+  <span class="dt">mapmiscVerbose=</span><span class="ot">TRUE</span>)
+
+<span class="kw">getOption</span>(<span class="st">&quot;mapmiscCachePath&quot;</span>)</code></pre></div>
+<pre><code>## [1] &quot;/home/patrick/workspace/diseasemapping/www/mapmiscCache&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">getOption</span>(<span class="st">&quot;mapmiscCacheReadOnly&quot;</span>)</code></pre></div>
+<pre><code>## [1] FALSE</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">Spackages =<span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;rgdal&#39;</span>, <span class="st">&#39;rgeos&#39;</span>, <span class="st">&#39;geosphere&#39;</span>, <span class="st">&#39;maptools&#39;</span>)
+
+<span class="cf">if</span>(<span class="kw">all</span>(<span class="kw">unlist</span>(<span class="kw">mapply</span>(requireNamespace, <span class="dt">package=</span>Spackages, <span class="dt">MoreArgs=</span><span class="kw">list</span>(<span class="dt">quietly=</span><span class="ot">TRUE</span>))))){
+    <span class="kw">library</span>(<span class="st">&#39;rgdal&#39;</span>)
+
+    <span class="kw">data</span>(<span class="st">&#39;wrld_simpl&#39;</span>, <span class="dt">package=</span><span class="st">&#39;maptools&#39;</span>)
+    
+    country=<span class="st">&#39;Japan&#39;</span>
+    Dcountry  =<span class="st"> </span><span class="kw">grep</span>(country, wrld_simpl<span class="op">$</span>NAME)
+    x=wrld_simpl[Dcountry,]
+
+    myCrsO =<span class="st"> </span><span class="kw">moll</span>(x, <span class="dt">angle=</span><span class="dv">25</span>)
+
+ <span class="kw">plot</span>(wrld_simpl)
+ <span class="kw">plot</span>(<span class="kw">attributes</span>(myCrsO)<span class="op">$</span>regionLL, <span class="dt">border=</span><span class="st">&#39;red&#39;</span>, <span class="dt">col=</span><span class="st">&#39;#0000FF10&#39;</span>, <span class="dt">add=</span><span class="ot">TRUE</span>)
+ 
+ myMap =<span class="st"> </span><span class="kw">openmap</span>(myCrsO, <span class="dt">zoom=</span><span class="dv">1</span>, <span class="dt">fact=</span><span class="dv">2</span>)
+ <span class="kw">map.new</span>(myMap)
+ <span class="kw">plot</span>(myMap, <span class="dt">add=</span><span class="ot">TRUE</span>)
+ <span class="kw">gridlinesWrap</span>(myCrsO, <span class="dt">lty=</span><span class="dv">2</span>, <span class="dt">col=</span><span class="st">&#39;orange&#39;</span>)
+
+ xTcrop =<span class="st"> </span><span class="kw">wrapPoly</span>(<span class="dt">x=</span>wrld_simpl, <span class="dt">crs=</span>myCrsO)
+    DcountryT  =<span class="st"> </span><span class="kw">grep</span>(country, xTcrop<span class="op">$</span>NAME)
+    
+    <span class="kw">map.new</span>(xTcrop, <span class="dt">buffer=</span><span class="dv">1000</span><span class="op">*</span><span class="dv">1000</span>)
+ <span class="kw">plot</span>(<span class="kw">attributes</span>(myCrsO)<span class="op">$</span>ellipse, <span class="dt">add=</span><span class="ot">TRUE</span>, <span class="dt">col=</span><span class="st">&#39;lightBlue&#39;</span>, <span class="dt">border=</span><span class="st">&#39;blue&#39;</span>)
+    <span class="kw">plot</span>(xTcrop,<span class="dt">add=</span><span class="ot">TRUE</span>)
+    <span class="kw">plot</span>(xTcrop[DcountryT,], <span class="dt">col=</span><span class="st">&#39;red&#39;</span>, <span class="dt">add=</span><span class="ot">TRUE</span>)
+    
+    <span class="kw">gridlinesWrap</span>(myCrsO, <span class="dt">lty=</span><span class="dv">2</span>, <span class="dt">col=</span><span class="st">&#39;orange&#39;</span>)
+    
+
+ country=<span class="st">&#39;Madagascar&#39;</span>
+    Dcountry  =<span class="st"> </span><span class="kw">grep</span>(country, wrld_simpl<span class="op">$</span>NAME)
+    x=wrld_simpl[Dcountry,]
+    
+    myCrsMoll =<span class="st"> </span><span class="kw">moll</span>(x, <span class="dt">angle=</span><span class="dv">100</span>)
+    
+    
+    <span class="kw">plot</span>(wrld_simpl)
+    <span class="kw">plot</span>(<span class="kw">attributes</span>(myCrsMoll)<span class="op">$</span>crop, <span class="dt">col=</span><span class="st">&#39;red&#39;</span>, <span class="dt">border=</span><span class="st">&#39;yellow&#39;</span>, <span class="dt">add=</span><span class="ot">TRUE</span>)
+    
+    xTcrop =<span class="st"> </span><span class="kw">wrapPoly</span>(<span class="dt">x=</span>wrld_simpl, <span class="dt">crs=</span>myCrsMoll)
+    DcountryT  =<span class="st"> </span><span class="kw">grep</span>(country, xTcrop<span class="op">$</span>NAME)
+    
+    <span class="kw">map.new</span>(xTcrop)
+    <span class="kw">plot</span>(<span class="kw">attributes</span>(myCrsO)<span class="op">$</span>ellipse, <span class="dt">add=</span><span class="ot">TRUE</span>, <span class="dt">col=</span><span class="st">&#39;lightBlue&#39;</span>, <span class="dt">border=</span><span class="st">&#39;blue&#39;</span>)
+    <span class="kw">plot</span>(xTcrop,<span class="dt">add=</span><span class="ot">TRUE</span>)
+    <span class="kw">plot</span>(xTcrop[DcountryT,], <span class="dt">col=</span><span class="st">&#39;green&#39;</span>, <span class="dt">add=</span><span class="ot">TRUE</span>)
+    
+    <span class="kw">gridlinesWrap</span>(<span class="dt">crs=</span>xTcrop, <span class="dt">lty=</span><span class="dv">2</span>, <span class="dt">col=</span><span class="st">&#39;red&#39;</span>)
+
+}</code></pre></div>
+<pre><code>## rgdal: version: 1.2-7, (SVN revision 660)
+##  Geospatial Data Abstraction Library extensions to R successfully loaded
+##  Loaded GDAL runtime: GDAL 2.1.2, released 2016/10/24
+##  Path to GDAL shared files: /usr/share/gdal/2.1
+##  Loaded PROJ.4 runtime: Rel. 4.9.3, 15 August 2016, [PJ_VERSION: 493]
+##  Path to PROJ.4 shared files: (autodetected)
+##  Linking to sp version: 1.2-4</code></pre>
+<pre><code>## zoom is  1 ,  4 tiles
+## http://tile.openstreetmap.org/ 
+## http://tile.openstreetmap.org/ 
+## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/1/0/0.png  cached
+## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/1/0/1.png  cached
+## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/1/1/0.png  cached
+## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/1/1/1.png  cached
+## reprojecting  262144  cells...</code></pre>
+<pre><code>## Warning in rgdal::rawTransform(projto_int, projfrom, nrow(xy), xy[, 1], :
+## 197675 projected point(s) not finite</code></pre>
+<figure>
+<img src="figure/themaps-1.png" alt="plot of chunk themaps" /><figcaption>plot of chunk themaps</figcaption>
+</figure>
+<pre><code>## done
+## copying colortable for  http...tile.openstreetmap.org.</code></pre>
+<p><img src="figure/themaps-2.png" alt="plot of chunk themaps" /><img src="figure/themaps-3.png" alt="plot of chunk themaps" /><img src="figure/themaps-4.png" alt="plot of chunk themaps" /><img src="figure/themaps-5.png" alt="plot of chunk themaps" /></p>
+</body>
+</html>

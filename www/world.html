@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="author" content="Patrick Brown">
+  <title>Maps of the world</title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
+  <link rel="stylesheet" href="http://diseasemapping.r-forge.r-project.org/webpage.css">
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  
+  
+  
+</head>
+<body>
+<header>
+<h1 class="title">Maps of the world</h1>
+<p class="author">Patrick Brown</p>
+<p class="date">Monday 5 February 2018</p>
+</header>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">require</span>(<span class="st">&quot;mapmisc&quot;</span>, <span class="dt">quietly =</span> <span class="ot">TRUE</span>)</code></pre></div>
+<pre><code>## map images will be cached in  /tmp/mapmiscCache_patrick</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">worldLL =<span class="st"> </span><span class="kw">openmap</span>(<span class="kw">extent</span>(<span class="op">-</span><span class="dv">180</span>, <span class="dv">180</span>, <span class="op">-</span><span class="dv">80</span>, <span class="dv">80</span>), <span class="dt">zoom =</span> <span class="dv">1</span>, <span class="dt">crs =</span> mapmisc<span class="op">::</span>crsLL)
+
+
+Scentre =<span class="st"> </span><span class="kw">c</span>(<span class="dt">Grenwich =</span> <span class="dv">0</span>, <span class="dt">Toronto =</span> <span class="op">-</span><span class="dv">79</span>, <span class="st">`</span><span class="dt">Hong kong</span><span class="st">`</span> =<span class="st"> </span><span class="dv">114</span>)
+
+mollList =<span class="st"> </span><span class="kw">mapply</span>(mapmisc<span class="op">::</span>moll, <span class="dt">x =</span> Scentre)
+
+
+worldMoll =<span class="st"> </span><span class="kw">mapply</span>(mapmisc<span class="op">::</span>openmap, <span class="dt">x =</span> mollList, <span class="dt">MoreArgs =</span> <span class="kw">list</span>(<span class="dt">zoom =</span> <span class="dv">1</span>, 
+    <span class="dt">fact =</span> <span class="dv">2</span>))</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">map.new</span>(worldLL)
+<span class="kw">plot</span>(worldLL, <span class="dt">add=</span><span class="ot">TRUE</span>)
+
+<span class="cf">for</span>(D <span class="cf">in</span> <span class="kw">names</span>(worldMoll)) {
+  <span class="kw">map.new</span>(mollList[[D]])
+  <span class="kw">plot</span>(worldMoll[[D]], <span class="dt">add=</span><span class="ot">TRUE</span>)
+}</code></pre></div>
+</body>
+</html>
