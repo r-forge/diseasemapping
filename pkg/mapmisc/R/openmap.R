@@ -5,7 +5,7 @@ osmTiles = function(name, xyz, suffix) {
     'osm-roads-grey' = 'http://korona.geog.uni-heidelberg.de/tiles/roadsg',
     'osm-roads' = 'http://korona.geog.uni-heidelberg.de/tiles/roads',
     'osm-semitransparent' = 'http://korona.geog.uni-heidelberg.de/tiles/hybrid',
-    "osm-no-labels"="http://tiles.wmflabs.org/osm-no-labels/",
+    "osm-no-labels"="http://a.tiles.wmflabs.org/osm",
     "osm-de"="http://c.tile.openstreetmap.de/tiles/osmde",
     "osm-transport"="http://tile2.opencyclemap.org/transport/",
     "bw-mapnik"="http://tiles.wmflabs.org/bw-mapnik",
@@ -76,7 +76,7 @@ osmTiles = function(name, xyz, suffix) {
   
   
   if(!missing(name)) {
-    if(name %in% names(result)) {
+    if(all(name %in% names(result), na.rm=TRUE)) {
       result = result[name]
     } else {
       result = name
@@ -96,8 +96,8 @@ openmap = function(x, zoom,
   maxTiles = 9,
   crs=projection(x),
   buffer=0, fact=1,
-  verbose=options()$mapmiscVerbose,
-  cachePath=options()$mapmiscCachePath
+  verbose=getOption('mapmiscVerbose'),
+  cachePath=getOption('mapmiscCachePath')
 ) {
   
   verbose = max(c(0, verbose))

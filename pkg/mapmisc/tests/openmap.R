@@ -1,13 +1,24 @@
-options(mapmiscCachePath = system.file('extdata', package='mapmisc'))
-#options(mapmiscCachePath = '/home/patrick/workspace/diseasemapping/pkg/mapmisc/inst/extdata')
-options(mapmiscVerbose=TRUE)
-
-
-if(!interactive()) pdf("openmap.pdf")
-
-
+#+ setup
 library('mapmisc')
 
+if(!exists('mapmiscCachePath'))
+  mapmiscCachePath = system.file('extdata', package='mapmisc')
+
+if(!exists('mapmiscCacheReadOnly'))
+  mapmiscCacheReadOnly = TRUE
+
+
+options(
+  mapmiscCachePath = mapmiscCachePath,
+  mapmiscCacheReadOnly = mapmiscCacheReadOnly,
+  mapmiscVerbose=TRUE)
+
+getOption("mapmiscCachePath")
+getOption("mapmiscCacheReadOnly")
+#'
+
+
+#+ simplePlot
 myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10, 
   crs=CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 )
@@ -19,10 +30,11 @@ myPoints = SpatialPoints(myraster,
 
 plot(myraster)
 points(myPoints)
-
-# only do the following if rgdal is available
+#'
+#' 
+#' only do the following if rgdal is available
+#+ africaPlots 
 if(require('rgdal', quietly=TRUE)) {
-  
   
   # utm zone 32
   utmproj = CRS("+init=epsg:3064") 
@@ -110,19 +122,22 @@ if(require('rgdal', quietly=TRUE)) {
   # one point only
   mytiles = openmap(coordinates(myPoints)[1,], zoom=4)
   myplot(myPoints)
-  
-  # ams city hall
+  } # end have rgdal
+#'
+#'   
+#' ams city hall
+#+ ams
   cityHall = SpatialPoints(cbind( 4.891111, 52.373056), proj4string=crsLL)
 #  cityHall = spTransform(cityHall,CRS("+init=epsg:28992"))
+if(require('rgdal', quietly=TRUE)) {
   cityHall = spTransform(cityHall,CRS("+init=epsg:32631"))
   mytiles = openmap(cityHall, buffer=50)
-  if(!interactive()) pdf(tempfile("osmplot", tmpdir=".", fileext=".pdf"))
+
   map.new(mytiles)
   plot(mytiles, add=TRUE)
   points(cityHall, pch=3, col='blue',cex=4)
   scaleBar(mytiles, 'topleft')
-  if(!interactive()) dev.off()
-  
-  
 } # end have rgdal
-if(!interactive()) dev.off()
+#'  
+  
+

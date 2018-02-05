@@ -14,25 +14,42 @@ internet connection when this document is compiled.  The full document is at
 
 
 ```{r setup, include=FALSE}
-
 library('mapmisc')
 library('knitr')
 haveRgdal = require('rgdal', quietly=TRUE)
-options(mapmiscCachePath = system.file('extdata', package='mapmisc'))
 
-fact = 0.6
+if(!exists('mapmiscCachePath'))
+  mapmiscCachePath = system.file('extdata', package='mapmisc')
+
+if(!exists('mapmiscCacheReadOnly'))
+  mapmiscCacheReadOnly = TRUE
+
+if(!exists('fact'))
+  fact = 0.6
 # uncomment for nicer images
 # fact = 1 
-# or run R --slave -e "knitr::knit('north.Rmd')" fact=1
-theArgs = grep("^fact=", commandArgs(), value=TRUE)
-for(D in theArgs)
-  eval(parse(text=D))
+
+if(!exists('testing'))
+  testing=FALSE
+
+options(
+  mapmiscCachePath = mapmiscCachePath,
+  mapmiscCacheReadOnly = mapmiscCacheReadOnly
+  )
 
 opts_chunk$set(dpi=72*fact,dev.args=list(bg='white'), out.width='55%')	
 ```
 
-```{r data}
+```{r mapmiscCache, echo=FALSE, purl=FALSE}
+if(testing) {
+  getOption('mapmiscCachePath')
+  getOption('mapmiscCacheReadOnly')
+  options(mapmiscVerbose = TRUE)
+}
+```
 
+
+```{r data}
 coords = rbind(Alert = c(-62.338889, 82.501389),
   Qaanaaq = c(-69.238685,77.466335), 	
   'Alex Fjord' = c(-75.999722, 78.9),
@@ -106,19 +123,21 @@ if(haveRgdal){
 ```
 
 ```{r nrcan}
-if(haveRgdal){
-  xOmerc = spTransform(x, 
-    omerc(x,angle=5))
+if(haveRgdal & FALSE){
+  xOmerc = spTransform(x, omerc(x,angle=5))
   
   map = openmap(xOmerc, 
-    path=c('osm-no-labels', 'stamen-terrain-labels'), 
+    path=c(
+      'osm-no-labels', 
+      'stamen-terrain-labels'), 
     fact=fact, maxTiles=12, 
     buffer=c(2,10,10,0)*100*1000)
   
-  mapText = rgbtToIndex(map, pattern='stamen.terrain.labels')
+  mapText = rgbtToIndex(map, 
+    pattern='stamen.terrain.labels')
   
   map.new(map)
-  plot(map[['osm.no.labels']], add=TRUE)
+  raster::plot(map[['osm.no.labels']], add=TRUE)
   gridlinesWrap(crs=map, easts=seq(-180,0,by=2), col='red')
   plot(mapText,add=TRUE)
   points(xOmerc)
@@ -126,7 +145,6 @@ if(haveRgdal){
   scaleBar(xOmerc, 'bottom', bg='white')
   scaleBar(xOmerc, 'left', seg.len=0, bty='n')
 }
-
 ```
 
 

@@ -26,14 +26,27 @@ opts_chunk$set(echo=TRUE,message=FALSE,
     fig.height=5,fig.width=3,out.width="0.3\\textwidth",
     dev.args=list(bg='white')
 )
-if( Sys.info()['user'] =='patrick') {
-  opts_chunk$set(dpi=72)	
-}else{	
-  opts_chunk$set(dpi=40)	
-}
 
 library('mapmisc')
 haveRgdal = requireNamespace('rgdal', quietly=TRUE)
+
+if(!exists('mapmiscCachePath'))
+  mapmiscCachePath = system.file('extdata', package='mapmisc')
+
+if(!exists('mapmiscCacheReadOnly'))
+  mapmiscCacheReadOnly = TRUE
+
+if(!exists('fact'))
+  fact = 0.6
+# uncomment for nicer images
+# fact = 1 
+
+options(
+  mapmiscCachePath = mapmiscCachePath,
+  mapmiscCacheReadOnly = mapmiscCacheReadOnly
+  )
+
+opts_chunk$set(dpi=72*fact)
 @
 
 This document will be incomplete if {\tt rgdal} is unavailable or there is on

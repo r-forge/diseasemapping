@@ -169,14 +169,14 @@ getTilesMerc = function(
         warning('tileNames must be zxy or zyx or xyz=')
       }
       
-      dir.create(Dcache,recursive=TRUE,showWarnings=FALSE)
+      dirCreateMapmisc(path=Dcache,recursive=TRUE,showWarnings=FALSE)
       Dfile = file.path(Dcache, Dtile)
       
       
       Dsize = file.info(Dfile)['size']
       if(!any(Dsize > 0,na.rm=TRUE)) {
         if(verbose) cat("downloading ", Durl, "\n")
-        try(utils::download.file(
+        try(downloadFileMapmisc(
             Durl, Dfile, quiet=!verbose, 
             method='auto', mode = 'wb'
           ), silent=TRUE)

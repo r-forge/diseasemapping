@@ -4,12 +4,36 @@
 -->
 
 ```{r setup}
-library('mapmisc')
+library('mapmisc', quietly=TRUE)
 haveRgdal = requireNamespace('rgdal', quietly=TRUE)
 haveGeosphere = requireNamespace('geosphere', quietly=TRUE)
 
-options(mapmiscCachePath = system.file('extdata', package='mapmisc'))
-options(mapmiscVerbose=TRUE)
+if(!exists('mapmiscCachePath'))
+  mapmiscCachePath = system.file('extdata', package='mapmisc')
+
+if(!exists('mapmiscCacheReadOnly'))
+  mapmiscCacheReadOnly = TRUE
+
+if(!exists('testing'))
+  testing=FALSE
+
+if(!exists('fact'))
+  fact = 0.6
+# uncomment for nicer images
+# fact = 1 
+
+options(
+  mapmiscCachePath = mapmiscCachePath,
+  mapmiscCacheReadOnly = mapmiscCacheReadOnly
+  )
+```
+
+```{r mapmiscCache, echo=FALSE, purl=FALSE}
+if(testing) {
+  getOption('mapmiscCachePath')
+  getOption('mapmiscCacheReadOnly')
+  options(mapmiscVerbose = TRUE)
+}
 ```
 
 ```{r data}
@@ -69,7 +93,7 @@ if(length(attributes(myProj)$ellipseSafeLL)>2 & haveRgdal) {
 ```{r map}
 if(haveGeosphere & haveRgdal) {
   map.new(myProj, bg='black', buffer=2*100*1000)
-  plot(myMap, add=TRUE, bgalpha=0)
+  plot(myMap, add=TRUE)
   
   if(requireNamespace('maptools')) {
     data("wrld_simpl", package='maptools')

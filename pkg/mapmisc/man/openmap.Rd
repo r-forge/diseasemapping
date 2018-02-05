@@ -109,14 +109,11 @@ names(osmTiles())
 
 
 \dontrun{
-mytiles = openmap(myraster, zoom=6,
-	cachePath = system.file('extdata', package='mapmisc'))
-	
+	mytiles = openmap(myraster, zoom=6)
 
 	map.new(myraster)
 	plot(mytiles, add=TRUE)
 	points(myPoints,col='red')
-
 
 	mytiles = openmap(myPoints,
 		path='waze', verbose=TRUE)

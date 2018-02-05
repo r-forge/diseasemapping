@@ -17,7 +17,7 @@ GNcities = function(north, east, south, west, lang = "en",
   }
   
   cachePath = file.path(cachePath,'GNcities')
-  dir.create(cachePath,recursive=TRUE,showWarnings=FALSE)
+  dirCreateMapmisc(cachePath,recursive=TRUE,showWarnings=FALSE)
   
   fourCoords=FALSE
   if(is.numeric(north))
@@ -43,14 +43,13 @@ GNcities = function(north, east, south, west, lang = "en",
   )
   
   if(file.exists(cacheFile)) {
-    print(1)
     if(verbose) {
       message("found in cache", cachePath)
     }
     load(cacheFile)
   }	else if(requireNamespace("geonames", quietly = TRUE)) { 
-    if(verbose)	message("not found in cache, retrieving")
-    result = geonames::GNcities(north=north,east=east,
+     if(verbose)	message("not found in cache, retrieving")
+    result = mapmiscGNcities(north=north,east=east,
       south=south,west=west,lang,maxRows)
     if(verbose)
       message("caching in", cachePath)
@@ -121,12 +120,12 @@ GNsearch = function(..., crs=crsLL) {
 
 geocode = function(x, oneRecord=FALSE, extent=NULL, progress='', ...) {
   
-  if(length(options()$mapmiscVerbose)) { 
-    verbose = options()$mapmiscVerbose
+  if(length(getOption('mapmiscVerbose'))) { 
+    verbose = getOption('mapmiscVerbose')
   } else {
     verbose=FALSE
   }
-  cachePath=options()$mapmiscCachePath
+  cachePath=getOption('mapmiscCachePath')
   if(is.null(cachePath)) {
     cachePath = tempdir()
   }
@@ -134,7 +133,7 @@ geocode = function(x, oneRecord=FALSE, extent=NULL, progress='', ...) {
     cachePath = '.'
   }
   cachePath = file.path(cachePath,'geocode')
-  dir.create(cachePath,recursive=TRUE,showWarnings=FALSE)
+  dirCreateMapmisc(cachePath,recursive=TRUE,showWarnings=FALSE)
   
   theproj = projection(extent)
   extLL = .getExtent(extent, crsOut = crsLL)
@@ -154,7 +153,7 @@ geocode = function(x, oneRecord=FALSE, extent=NULL, progress='', ...) {
     if(verbose)
       message("not found in cache, retrieving")
   	Sys.sleep(1)
-    result = dismo::geocode(
+    result = mapmiscGeocode(
       x, oneRecord=oneRecord, 
       extent=extLL, progress=progress, ...)		
     if(verbose)

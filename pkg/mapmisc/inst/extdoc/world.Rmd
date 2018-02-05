@@ -7,13 +7,11 @@ Pmisc::markdownHeader(
   author='Patrick Brown',
   geometry='margin=1in'
 )
-
 ```
 
 
 ```{r worldCrs, tidy=TRUE, warning=FALSE}
 require('mapmisc', quietly=TRUE) 
-options(mapmiscCachePath = system.file('extdata', package='mapmisc'))
 
 worldLL = openmap(extent(-180,180,-80,80), zoom=1, crs=mapmisc::crsLL)
 

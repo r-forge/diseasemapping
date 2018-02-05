@@ -1,6 +1,25 @@
+#+ setup
 library('mapmisc')
 
+if(!exists('mapmiscCachePath'))
+  mapmiscCachePath = system.file('extdata', package='mapmisc')
 
+if(!exists('mapmiscCacheReadOnly'))
+  mapmiscCacheReadOnly = TRUE
+
+mapmiscCachePath
+
+options(
+  mapmiscCachePath = mapmiscCachePath,
+  mapmiscCacheReadOnly = mapmiscCacheReadOnly,
+  mapmiscVerbose=TRUE)
+
+getOption("mapmiscCachePath")
+getOption("mapmiscCacheReadOnly")
+#'
+
+
+#+ themaps
 Spackages = c('rgdal', 'rgeos', 'geosphere', 'maptools')
 
 if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=TRUE))))){
@@ -54,3 +73,4 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
 	gridlinesWrap(crs=xTcrop, lty=2, col='red')
 
 }
+#'
