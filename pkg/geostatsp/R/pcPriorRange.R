@@ -41,6 +41,6 @@ pcPriorRange = function(q, p=0.5, cellSize=1) {
         'function(x) stats::dexp(x, rate=', 1/result$extra$meanScale, ')')))
       )
     environment(result$dprior$range) = baseenv()
-    environment(result$dprior$scale) = emptyenv()
+    environment(result$dprior$scale) = baseenv()
   result
 }

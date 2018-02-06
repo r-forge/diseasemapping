@@ -95,7 +95,7 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 				dprior = eval(parse(text=paste0('function(x) stats::dexp(x, rate=', expRate, ')'))),
 				extra = list(mean = unname(1/expRate), rate=unname(expRate))
 				)
-			environment(precPrior[[Dsd]]$dprior) = emptyenv()
+			environment(precPrior[[Dsd]]$dprior) = baseenv()
 		} else if(all(c('lower','upper') %in% names(x[[Dsd]]))) {
 # quantiles provided
               # gamma prior for sd
@@ -149,7 +149,7 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 
 			precPrior[[Dsd]]$dprior = eval(parse(text=paste0('function(x) stats::dgamma(x, shape=',
 				precPrior[[Dsd]]$param['shape'],',rate=', precPrior[[Dsd]]$param['rate'], ')')))
-			environment(precPrior[[Dsd]]) = emptyenv()
+			environment(precPrior[[Dsd]]) = baseenv()
 
 		} # end interval supplied
 
@@ -260,7 +260,7 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 					',rate=', rangePrior$extra$userParam['rate'], ')')))
 				)
 			environment(rangePrior$dprior$range) = baseenv()
-			environment(rangePrior$dprior$scale) = emptyenv()
+			environment(rangePrior$dprior$scale) = baseenv()
 
 		} # end types of prior
 

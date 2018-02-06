@@ -105,7 +105,7 @@ priorLegacy = function(priorCI, family, cellSize) {
 					dprior = eval(parse(text=paste0('function(x) stats::dexp(x, rate=', expRate, ')'))),
 					extra = list(mean = unname(1/expRate), rate=unname(expRate))
 					)
-				environment(precPrior[[Dsd]]$dprior) = emptyenv()
+				environment(precPrior[[Dsd]]$dprior) = baseenv()
 
 			} else {
               # gamma prior
@@ -155,9 +155,9 @@ priorLegacy = function(priorCI, family, cellSize) {
 		prior = 'loggamma')
 }
 if(!length(precPrior[[Dsd]]$string))
-	precPrior[[Dsd]]$string = paste0("param=c(",
+	precPrior[[Dsd]]$string = paste0("list(param=c(",
 		paste0(precPrior[[Dsd]]$param, collapse=","),
-		"), prior='", precPrior[[Dsd]]$prior, "'")
+		"), prior='", precPrior[[Dsd]]$prior, "')")
 } # end loop Dsd
 
 
@@ -261,15 +261,15 @@ if(any(names(priorDistributions)=='range')) {
 				ratePrior$extra$userParam['shape'],',rate=', 
 				ratePrior$extra$userParam['rate'], ')')))
 			)
-		environment(ratePrior$dprior$range) = emptyenv()
+		environment(ratePrior$dprior$range) = baseenv()
 		environment(ratePrior$dprior$scale) = baseenv()
 	} # end types of rate prior
 } # end distribution for range not supplied
 
 if(!length(ratePrior$string))
-	ratePrior$string = paste0("param=c(",
+	ratePrior$string = paste0("list(param=c(",
 		paste0(ratePrior$param, collapse=","),
-		"), prior='",ratePrior$prior,"'", sep='')
+		"), prior='",ratePrior$prior,"')", sep='')
 
 result = c(
 	precPrior,

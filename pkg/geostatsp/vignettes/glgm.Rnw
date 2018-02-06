@@ -70,7 +70,7 @@ if(all(havePackages)) {
     buffer = 10*1000,
     covariates=swissAltitudeCrop, 
     family="gaussian", 
-    prior=list(
+    priorCI=list(
       sd=c(2, 0.05), 
       sdObs = 1,
       range=c(500000, 0.5)), 

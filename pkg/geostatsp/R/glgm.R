@@ -467,7 +467,7 @@ setMethod("glgm",
   params$scale$postK = params$scale$posterior %*% diag(c(1000, 1/1000, 1/1000))
   colnames(params$range$postK) = colnames(params$scale$postK) = 
   colnames(params$range$posterior)
- 
+
 
 
   Ssd =grep("^sd", names(priorList), value=TRUE)
@@ -482,7 +482,7 @@ setMethod("glgm",
     params[[DsdName]]$posterior = cbind(
       params[[DsdName]]$posterior,
       prior = priorList[[DsdName]]$dprior(params[[DsdName]]$posterior[,'x']))
-}
+  }
 
 
 
@@ -491,8 +491,8 @@ setMethod("glgm",
 
     params[[familyShapeName]] = list(
       priorList[[familyShapeName]]$prior
-    )
-
+      )
+  }
 
     # random into raster
 # E exp(random)
