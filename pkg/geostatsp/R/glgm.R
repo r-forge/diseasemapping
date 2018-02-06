@@ -386,9 +386,14 @@ setMethod("glgm",
 
     # if model is gaussian, add prior for nugget
   if(!is.null(priorList$sdObs)) {
-    forInla$control.family$hyper$prec =
-    eval(parse(text=priorList$sdObs$string))
+    if(!length(forInla$control.family$hyper$prec)) {
+      forInla$control.family$hyper$prec =
+      eval(parse(text=priorList$sdObs$string))
+    } else {
+      priorList = priorList[setdiff(names(priorList), 'sdObs')]
+    }
   }
+
   familyShapeName = grep("familyShape", names(priorList), value=TRUE)
   if(length(familyShapeName)) {
     forInla$control.family$hyper$theta =
@@ -484,11 +489,7 @@ setMethod("glgm",
       prior = priorList[[DsdName]]$dprior(params[[DsdName]]$posterior[,'x']))
   }
 
-
-
-
   if(length(familyShapeName)) {
-
     params[[familyShapeName]] = list(
       priorList[[familyShapeName]]$prior
       )

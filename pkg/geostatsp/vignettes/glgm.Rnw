@@ -73,10 +73,7 @@ if(all(havePackages)) {
     priorCI=list(
       sd=c(2, 0.05), 
       sdObs = 1,
-      range=c(500000, 0.5)), 
-    control.family=list(hyper=list(prec=
-      list(prior="pc.prec", 
-          param=c(1, 0.1))))
+      range=c(500000, 0.5))
   )
   knitr::kable(swissFit$parameters$summary, digits=3)
   
@@ -136,7 +133,7 @@ if(all(havePackages)) {
     grid = Ncell, 
     covariates=swissAltCut,
     family="gaussian", buffer=20000,
-    priorCI=list(sd=c(u = 0.5, alpha = 0.1), range=c(50000,500000)), 
+    prior=list(sd=c(u = 0.5, alpha = 0.1), range=c(50000,500000)), 
     control.mode=list(theta=c(2.7, 4.3, 0.46, 1.9),restart=TRUE),
     control.family=list(hyper=list(prec=list(prior="loggamma", 
           param=c(.1, .1))))

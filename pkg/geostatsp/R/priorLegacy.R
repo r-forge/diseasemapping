@@ -144,7 +144,7 @@ priorLegacy = function(priorCI, family, cellSize) {
 					'function(x) 2 * x^(3/2) * stats::dgamma(x^(-2), shape=',
 					precPrior[[Dsd]]$param['shape'],
 					',rate=', precPrior[[Dsd]]$param['rate'], ')')))
-				environment(precPrior[[Dsd]]) = baseenv()
+				environment(precPrior[[Dsd]]$dprior) = baseenv()
 
 			} # end gamma prior
 		}
@@ -153,6 +153,13 @@ priorLegacy = function(priorCI, family, cellSize) {
 	precPrior[[Dsd]] = list(
 		param = c(shape=0.01, rate=0.01),
 		prior = 'loggamma')
+	precPrior[[Dsd]]$dprior = eval(parse(text=paste0(
+			'function(x) 2 * x^(3/2) * stats::dgamma(x^(-2), shape=',
+			precPrior[[Dsd]]$param['shape'],
+			',rate=', precPrior[[Dsd]]$param['rate'], ')')))
+	environment(precPrior[[Dsd]]$dprior) = baseenv()
+
+
 }
 if(!length(precPrior[[Dsd]]$string))
 	precPrior[[Dsd]]$string = paste0("list(param=c(",
