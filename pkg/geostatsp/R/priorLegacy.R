@@ -144,7 +144,7 @@ priorLegacy = function(priorCI, family, cellSize) {
 					'function(x) 2 * x^(3/2) * stats::dgamma(x^(-2), shape=',
 					precPrior[[Dsd]]$param['shape'],
 					',rate=', precPrior[[Dsd]]$param['rate'], ')')))
-				environment(precPrior[[Dsd]]) = emptyenv()
+				environment(precPrior[[Dsd]]) = baseenv()
 
 			} # end gamma prior
 		}
@@ -262,7 +262,7 @@ if(any(names(priorDistributions)=='range')) {
 				ratePrior$extra$userParam['rate'], ')')))
 			)
 		environment(ratePrior$dprior$range) = emptyenv()
-		environment(ratePrior$dprior$scale) = emptyenv()
+		environment(ratePrior$dprior$scale) = baseenv()
 	} # end types of rate prior
 } # end distribution for range not supplied
 

@@ -1,3 +1,17 @@
+precToSd = function (densmat) 
+{
+    densmat[, "y"] = densmat[, "y"] * 2 * densmat[, "x"]^(3/2)
+    densmat[, "x"] = 1/sqrt(densmat[, "x"])
+
+    theMaxX = max(densmat[densmat[,'y'] > 10^(-5) * max(densmat[,'y']),'x'])
+    do.call(cbind, approx(
+    	densmat[,'x'],   
+    	densmat[,'y'], 
+	    seq(0, theMaxX, len=nrow(densmat)),
+    	rule = 2
+    ))
+}
+
 priorInla = function(x, family='gaussian', cellSize=1) {
 
 	names(x) = gsub("^sdNugget$", "sdObs", names(x))
@@ -245,7 +259,7 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 					rangePrior$extra$userParam['shape'],
 					',rate=', rangePrior$extra$userParam['rate'], ')')))
 				)
-			environment(rangePrior$dprior$range) = emptyenv()
+			environment(rangePrior$dprior$range) = baseenv()
 			environment(rangePrior$dprior$scale) = emptyenv()
 
 		} # end types of prior

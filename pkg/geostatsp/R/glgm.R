@@ -1,19 +1,3 @@
-lcOneRow = function(thisrow, idxCol=NULL) {
-  thisrow = thisrow[!is.na(thisrow)]
-  if(length(thisrow)) {
-    thisrow = sapply(thisrow, function(qq) list(list(weight=qq)))
-    for(D  in idxCol)
-      thisrow[[D]] = list(
-        weight=1, 
-        idx=thisrow[[D]]$weight
-        )
-    for(D in names(thisrow))
-      thisrow[[D]] = thisrow[D]
-    names(thisrow) = paste("v", 1:length(thisrow), sep="")
-  }
-  thisrow
-}
-
 setGeneric('glgm', 
   function(
     formula, 
@@ -28,10 +12,9 @@ setGeneric('glgm',
   }
   )
 
-# sort out formula
-# null formula
+
 setMethod("glgm", 
-  signature("NULL"), 
+  signature("ANY"), 
   function( 
     formula, 
     data,
@@ -41,58 +24,50 @@ setMethod("glgm",
     shape=1, 
     prior, 
     ...) {
-    formula =  1 
-    callGeneric()
-  }
-  )
 
 
-setMethod("glgm", 
-  signature("numeric"),  
-  function(    formula, 
-    data,
-    grid,
-    covariates,
-    buffer=0,  
-    shape=1, 
-    prior, 
-    ...) {
+# clean names of covariates
+    if(!missing(covariates)) {
+      if(is.list(covariates)) {
+        if(!length(names(covariates))) {
+          names(covariates) = paste0("covariate", 1:length(covariates))
+        }
+      }
+      if(is.list(covariates)|is.data.frame(covariates)) {
+        names(covariates) = make.names(names(covariates))
+      }
+    }
 
-    formula = names(data)[formula]
-    callGeneric(formula, data, grid, covariates, ...)
-  }
-  )
 
-# change character to formula
-setMethod("glgm", 
-  signature("character"),  
-  function(    formula, 
-    data,
-    grid,
-    covariates,
-    buffer=0,  
-    shape=1, 
-    prior, 
-    ...) {
+# numeric or missing formula
+    if(missing(formula)) formula = 1
+    if(is.null(formula)) formula = 1
+    if(is.numeric(formula)) {
+      if(missing(data)) 
+        stop("data must be provided if formula is numeric")
+      if(!length(names(data)))
+        stop("data must have names if formula is numeric")
+      formula = names(data)[formula]
+    }
 
-    if(length(names(covariates)))
-      names(covariates) = gsub("[[:punct:]]|[[:space:]]","_", names(covariates))
-    if(length(covariates) & !length(names(covariates))) 
-      names(covariates) = paste("c", 1:length(covariates),sep="")			
+# character formula
+    if(is.character(formula)) {
+      if(length(formula)==1)
+        formula = unique(c(formula, names(covariates)))
+      if(length(formula)==1)
+        formula = c(formula, '1')
 
-    if(length(formula)==1)
-      formula = unique(c(formula, names(covariates)))
-    if(length(formula)==1)
-      formula = c(formula, '1')
-
-    formula = paste(formula[1] , "~",
-      paste(formula[-1], collapse=" + ")
-      )
-    formula = as.formula(formula)
+      formula = paste(formula[1] , "~",
+        paste(formula[-1], collapse=" + ")
+        )
+      formula = as.formula(formula)
+    }
 
     callGeneric()
   }
   )
+
+
 
 
 # numeric cells, create raster from data bounding box
@@ -134,10 +109,10 @@ setMethod("glgm",
       covariates,
       buffer)
 
-    formula = dataCov$formula 
     data = dataCov$data 
     grid = dataCov$grid
     covariates = dataCov$covariates
+
     callGeneric()
   }
   )
@@ -157,10 +132,12 @@ setMethod("glgm",
     dataCov = gm.dataSpatial(
       formula, data, 
       grid, covariates, buffer)
-    callGeneric(formula, 
-      data=dataCov$data@data, 
-      grid=dataCov$grid, 
-      covariates=dataCov$covariates, ...)
+
+    data = dataCov$data@data 
+    grid = dataCov$grid
+    covariates = dataCov$covariates
+
+    callGeneric()
   }
   )
 
@@ -180,8 +157,16 @@ setMethod("glgm",
     prior, 
     ...) {
 
-    if(!any(names(grid)=='space'))
-      warning("grid must have a layer called space with inla cell ID's")
+# undocumented options for ...
+    getRidDots = c(
+      'priorCI', # legacy prior specification
+      'spaceExtra', # extra arguments for the space formula
+      'spaceFormula') # override the space formula
+
+    if(!any(names(grid)=='space')) {
+      grid = setValues(raster(grid), 1:ncell(grid))
+      names(grid) = 'space'
+    }
 
     allVars = allVarsP(formula)
 
@@ -190,7 +175,7 @@ setMethod("glgm",
         paste(allVars, collapse=" "), ", data: ", 
         paste(names(data), collapse=" "))
 
-    cells = trim(grid[['space']])
+    cells = raster::trim(grid[['space']])
     firstCell = values(cells)[1]
     cellDim = dim(cells)[1:2]
     # first cell = 2 * buffer^2 + ncolSmall * buffer + buffer
@@ -199,15 +184,17 @@ setMethod("glgm",
     # data, cells, and covariates must have varilable called 'space'		
     # values of cells must be index numbers, and cells shouldnt include the buffer		
     forInla = thedots = list(...)
-    forInla = forInla[setdiff(names(forInla), 'priorCI')]
+    forInla = forInla[setdiff(names(forInla), getRidDots)]
 
-     if(!any(names(thedots)=="family")) {
+    if(!any(names(thedots)=="family")) {
       forInla$family =  "gaussian"
     }
 
     if(any(names(thedots)== 'priorCI')) {
     # legacy priors
       priorList = priorLegacy(priorCI, forInla$family, cellSize = xres(cells))
+    } else {
+      priorList = priorInla(prior, forInla$family, cellSize = xres(cells))
     }
 
     # done priors
@@ -220,22 +207,23 @@ setMethod("glgm",
       ", nu=", shape, 
       ", hyper = list(",
       "range=list(",
-      priorList$rate$string,
+      priorList$range$string,
       "),",
       "prec=list(",
-      priorList$prec$sd$string,
+      priorList$sd$string,
       ")",
-      " ) )", 
+      " )", 
+      paste(c('', thedots$spaceExtra), collapse=', '),
+      " )", 
       sep=""
       )
 
     formulaOrig = formula
 
-    if(any(names(forInla)=='spaceFormula')) {
-      formula = update.formula(formula,	as.formula(forInla$spaceFormula))
-      forInla = forInla[setdiff(names(forInla), 'spaceFormula')]
+    if(any(names(thedots)=='spaceFormula')) {
+      formula = update.formula(formulaOrig,	as.formula(forInla$spaceFormula))
     } else {
-      formula = update.formula(formula,	as.formula(spaceFormula))
+      formula = update.formula(formulaOrig,	as.formula(paste(spaceFormula, collapse=' ')))
     }
 
 
@@ -397,13 +385,11 @@ setMethod("glgm",
 
 
     # if model is gaussian, add prior for nugget
-  if(!is.null(priorList$prec$sdNugget)) {
+  if(!is.null(priorList$sdObs)) {
     forInla$control.family$hyper$prec =
-    list(prior=priorList$sdNugget$prior)
-    if(length(priorList$sdNugget$params))
-      forInla$control.family$hyper$prec$params = 
-    priorList$sdNugget$params
+    eval(parse(text=priorList$sdObs$string))
   }
+  familyShapeName = grep("familyShape", names(priorList), value=TRUE)
   if(length(familyShapeName)) {
     forInla$control.family$hyper$theta =
     priorList$familyShapePrior 
@@ -411,8 +397,8 @@ setMethod("glgm",
 
 
     # get rid of some elements of forInla that aren't required
-  forInla = forInla[grep("^buffer$", names(forInla), invert=TRUE)]
-  if(!length(forInla$lincomb)) forInla$lincomb = NULL
+  if(!length(forInla$lincomb)) 
+    forInla = forInla[setdiff(names(forInla), 'lincomb')] 
 
 
   if(requireNamespace("INLA", quietly=TRUE)) {
@@ -424,7 +410,7 @@ setMethod("glgm",
     inlaResult = try(do.call(INLA::inla, forInla))
   } else {
     inlaResult = 
-    list(logfile="INLA is not installed. \n install splines, numDeriv, Rgraphviz, graph,\n fields, rgl, mvtnorm, multicore, pixmap,\n splancs, orthopolynom \n then see www.r-inla.org")
+    list(logfile="INLA is not installed. \n see www.r-inla.org")
   }
   if(identical(forInla$verbose, TRUE)) {
     message("inla done") 
@@ -433,165 +419,79 @@ setMethod("glgm",
     return(c(forInla, inlares=inlaResult))
 
 
-  params = list(range=list())
+  params = list(range=list(), scale=list())
 
-    # posterior distributions forrange
+    # posterior distributions for range
 
+  # convert from cells to spatial units (i.e. km)
   params$range$posterior = 
   inlaResult$marginals.hyperpar[["Range for space"]] %*% 
   diag(c(xres(cells), 1/xres(cells)))
+  params$range$posterior = cbind(
+    x=params$range$posterior[,1],
+    y=params$range$posterior[,2],
+    priorList$range$dprior$range(params$range$posterior[,1])
+    )
 
-    # parameter priors for result
+  params$range$prior = priorList$range[setdiff(names(priorList$range), 'dprior')]
+  params$range$dprior = priorList$range$dprior$range
 
-  if(any(names(priorList) == 'range')) {
-      # pc prior
-    ratePrior = priorList$range
-    params$range$prior = ratePrior[intersect(names(ratePrior), c('param', 'prior', 'rprior'))]
-    params$range$priorScale = ratePrior$priorScale
-    params$range$posteriorScale = cbind(
-      x = 1/inlaResult$marginals.hyperpar[['Range for space']][,'x'],
-      y = inlaResult$marginals.hyperpar[['Range for space']][,'y'] *
-      inlaResult$marginals.hyperpar[['Range for space']][,'x']^(2)
-      )
-      # add third column to posterior matrix with prior
-    params$range$posterior = cbind(
-      x=params$range$posterior[,1],
-      y=params$range$posterior[,2],
-      prior = stats::dexp(
-        xres(cells)/params$range$posterior[,1], 
-        ratePrior$lambda) * (params$range$posterior[,1])^(-2) * 
-      xres(cells)
-      )
+  params$scale$posterior = cbind(
+    x = 1/params$range$posterior[,'x'],
+    y = params$range$posterior[,'y'] * params$range$posterior[,'x']^(2)
+    )
 
-  } else if(!is.matrix(priorCI$range)) {
-    params$range$userPriorCI = priorCI$range
-    params$range$priorCI = 
-    xres(cells) *
-    qgamma(c(0.025,0.975), 
-      shape=ratePrior$params["shape"], 
-      rate=ratePrior$params["rate"])
-    params$range$priorCIcells = 
-    qgamma(c(0.975,0.025), 
-      shape=ratePrior$params["shape"], 
-      rate=ratePrior$params["rate"])
-    params$range$params.intern = ratePrior$params
-    params$range$params = c(
-      ratePrior$params['shape'],
-      ratePrior$params['rate']/xres(cells))
 
-    rangeLim = 	c(
-      qgamma(c(0.001,0.999), 
-        shape=params$range$params["shape"], 
-        rate=params$range$params["rate"]),
-      max(
-        params$range$posterior[,1], na.rm=TRUE
-        ))
-    rangeSeq = c(0, seq(min(rangeLim), max(rangeLim), len=999))
-    params$range$prior=cbind(
-      x=rangeSeq,
-      y=dgamma(rangeSeq,         
-        shape=params$range$params["shape"], 
-        rate=params$range$params["rate"])
-      )
-      # add third column to posterior matrix with prior
-    params$range$posterior = cbind(
-      x=params$range$posterior[,1],
-      y=params$range$posterior[,2],
-      prior = dgamma(
-        params$range$posterior[,1],
-        shape=params$range$params["shape"], 
-        rate=params$range$params["rate"])
-      )
+  theMaxX = max(params$scale$posterior[
+   params$scale$posterior[,'y'] > 10^(-4) * max(params$scale$posterior[,'y']), 'x'])
 
-    params$range$postDiv1000 = params$range$posterior %*%
-    diag(c(1/1000, 1000, 1000))
+  params$scale$posterior = approx(
+    params$scale$posterior[,'x'],   
+    params$scale$posterior[,'y'], 
+    seq(0, theMaxX, len=nrow(params$scale$posterior)),
+    rule = 2
+    )
 
-  } else {
-    params$range$prior = priorCI$range
-    params$range$postDiv1000 = params$range$posterior %*% 
-    diag(c(1/1000, 1000))
-  }
+  params$scale$posterior = cbind(
+    do.call(cbind, params$scale$posterior),
+    prior = priorList$range$dprior$scale(params$scale$posterior$x)
+    )
 
-  for(Dsd in names(precPrior)) {
-    if(is.matrix(priorCI[[Dsd]])) {
-      params[[Dsd]] = list(
-        prior = priorCI[[Dsd]]
-        )
-    } else if(precPrior[[Dsd]]$prior == 'loggamma'){
-      params[[Dsd]] = list(userPriorCI=priorCI[[Dsd]], 
-        priorCI = 1/sqrt(
-          qgamma(c(0.975,0.025), 
-            shape=precPrior[[Dsd]]$params["shape"], 
-            rate=precPrior[[Dsd]]$params["rate"])),
-        params.intern=precPrior[[Dsd]])
+# get rid of right tail
+  params$range$posterior = params$range$posterior[
+  params$range$posterior[,'y'] > 10^(-4) * max(params$range$posterior[,'y']) |
+  params$range$posterior[,'x'] < 10^(-1) * max(params$range$posterior[,'x']), ]
 
-      precLim = 	qgamma(c(0.999,0.001), 
-        shape=precPrior[[Dsd]]$params["shape"], 
-        rate=precPrior[[Dsd]]$params["rate"])
-      sdLim = 1/sqrt(precLim)
-      sdSeq = seq(min(sdLim), max(sdLim), len=1000)
-      precSeq = sdSeq^(-2)
-      params[[Dsd]]$prior=cbind(
-        x=sdSeq,
-        y=dgamma(precSeq, shape=precPrior[[Dsd]]$params["shape"], 
-          rate=precPrior[[Dsd]]$params["rate"]) *2* (precSeq)^(3/2) 
-        )
-    } else if( identical(precPrior[[Dsd]]$prior, 'pc.prec') ){
-      params[[Dsd]] = list(userPriorCI=priorCI[[Dsd]], 
-        priorCI = 1/sqrt(
-          INLA::inla.pc.qprec(c(0.975,0.025),  
-            u = precPrior[[Dsd]]$params['u'], 
-            alpha = precPrior[[Dsd]]$params['alpha'])
-          ),
-        params.intern=precPrior[[Dsd]]$params)
 
-      precLim = INLA::inla.pc.qprec(c(0.999,0.001),  
-        u = precPrior[[Dsd]]$params['u'], 
-        alpha = precPrior[[Dsd]]$params['alpha'])
-      sdLim = 1/sqrt(precLim)
-      sdSeq = seq(min(sdLim), max(sdLim), len=1000)
-      precSeq = sdSeq^(-2)
-      params[[Dsd]]$prior=cbind(
-        x=sdSeq,
-        y=INLA::inla.pc.dprec(precSeq, 
-          u = precPrior[[Dsd]]$params['u'], 
-          alpha = precPrior[[Dsd]]$params['alpha']
-          ) * 2 * (precSeq)^(3/2) 
-        )
-    }
-  }
+  params$range$postK = params$range$posterior %*% diag(c(1/1000, 1000, 1000))
+  params$scale$postK = params$scale$posterior %*% diag(c(1000, 1/1000, 1/1000))
+  colnames(params$range$postK) = colnames(params$scale$postK) = 
+  colnames(params$range$posterior)
+ 
+
+
+  Ssd =grep("^sd", names(priorList), value=TRUE)
+  names(Ssd)[grep("^sd$", names(priorList))] = 'Precision for space'
+  names(Ssd)[grep("^sdObs$", names(priorList))] = 'Precision for the Gaussian observations'
+
+  for(Dsd in names(Ssd)) {
+    DsdName = Ssd[Dsd]
+    params[[DsdName]]= list(
+      posterior = precToSd(inlaResult$marginals.hyperpar[[Dsd]]),
+      prior = priorList[[DsdName]])
+    params[[DsdName]]$posterior = cbind(
+      params[[DsdName]]$posterior,
+      prior = priorList[[DsdName]]$dprior(params[[DsdName]]$posterior[,'x']))
+}
+
+
+
 
   if(length(familyShapeName)) {
 
-    paramsFamilyShape = 	c(
-      familyShapePrior$param["mean"], 
-      sd=as.numeric(1/sqrt(familyShapePrior$param["precision"]))
-      )
-
-    xLim = sort(exp(-stats::qnorm(
-      c(0.999,0.001), 
-      mean=paramsFamilyShape["mean"], 
-      sd=paramsFamilyShape["sd"])
-    ))
-
-    xSeq  = c(0,seq(xLim[1], xLim[2], len=1000))
-
     params[[familyShapeName]] = list(
-      userPriorCI = priorCI[[familyShapeName]],
-      priorCI = sort(exp(-stats::qnorm(c(0.975,0.025), 
-        mean=familyShapePrior$param["mean"], 
-        sd=1/sqrt(familyShapePrior$param["precision"])))
-      ),
-      params.intern=familyShapePrior$param,
-      params = paramsFamilyShape,
-      distribution = 'lognormal',
-      prior = cbind(
-        x=xSeq, 
-        y = stats::dlnorm(xSeq, meanlog = paramsFamilyShape['mean'],
-          sdlog = paramsFamilyShape['sd'])
-        )
-      )
-  }
+      priorList[[familyShapeName]]$prior
+    )
 
 
     # random into raster
@@ -776,28 +676,6 @@ setMethod("glgm",
 # convert precisions to standard deviations
   for(Dsd in grep("Shape$", names(thesd), invert=TRUE, value=TRUE)) {
 
-    params[[Dsd]]$posterior=
-    inlaResult$marginals.hyperpar[[thesd[Dsd]]]
-    params[[Dsd]]$posterior[,"y"] = params[[Dsd]]$posterior[,"y"] * 2*  
-    params[[Dsd]]$posterior[,"x"]^(3/2) 
-    params[[Dsd]]$posterior[,"x"] = 1/sqrt(params[[Dsd]]$posterior[,"x"])  
-    params[[Dsd]]$posterior = params[[Dsd]]$posterior[
-    seq(dim(params[[Dsd]]$posterior)[1],1),]		
-
-    if(identical(precPrior[[Dsd]]$prior, 'pc.prec') ) {
-
-      params[[Dsd]]$posterior = cbind(
-        x=params[[Dsd]]$posterior[,'x'],
-        y=params[[Dsd]]$posterior[,'y'],
-        prior = INLA::inla.pc.dprec(
-          params[[Dsd]]$posterior[,'x']^(-2), 
-          u = precPrior[[Dsd]]$params['u'], 
-          alpha = precPrior[[Dsd]]$params['alpha']
-          ) * 2 * (params[[Dsd]]$posterior[,'x']^(-2))^(3/2) 
-        )
-    }
-
-
     params$summary[Dsd, thecols] = 
     1/sqrt(inlaResult$summary.hyperpar[
       thesd[Dsd],rev(thecols)])
@@ -811,6 +689,11 @@ setMethod("glgm",
       c(0,diff(inlaResult$marginals.hyperpar[[thesd[Dsd]]][,"x"]))*
       inlaResult$marginals.hyperpar[[thesd[Dsd]]][,"y"]
       )
+    params$summary[Dsd,"sd"] =sum(
+      1/inlaResult$marginals.hyperpar[[thesd[Dsd]]][,"x"]*
+      c(0,diff(inlaResult$marginals.hyperpar[[thesd[Dsd]]][,"x"]))*
+      inlaResult$marginals.hyperpar[[thesd[Dsd]]][,"y"]
+      ) - params$summary[Dsd,"mean"]^2
 
   }
 
@@ -876,10 +759,10 @@ setMethod("glgm",
   }
   dimnames(params$summary) = lapply(dimnames(params$summary),
     function(qq) {
-      qq=gsub("_", "\\\\textunderscore~", qq)
-      qq=gsub("\\$", "\\\\textdollar~", qq)
-      qq=gsub("<", "\\\\textless~", qq)
-      qq=gsub(">", "\\\\textgreater~", qq)
+      qq=gsub("_", " ", qq)
+      qq=gsub("\\$", " ", qq)
+      qq=gsub("<", " lt ", qq)
+      qq=gsub(">", " gt ", qq)
       qq
     }
     )

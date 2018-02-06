@@ -63,12 +63,16 @@ standard formula
 <<swissWithFormula, fig.cap = 'Swiss rain as in help file', fig.subcap = c('random','fitted', 'sd','range')>>=
 if(all(havePackages)) {
   
-  swissFit =  glgm(lograin~ CHE_alt,
-    swissRain, 
-    Ncell, 
-    covariates=swissAltitudeCrop, family="gaussian", buffer=20000,
-    priorCI=list(
+  swissFit =  glgm(
+    formula = lograin~ CHE_alt,
+    data = swissRain, 
+    grid = Ncell,
+    buffer = 10*1000,
+    covariates=swissAltitudeCrop, 
+    family="gaussian", 
+    prior=list(
       sd=c(2, 0.05), 
+      sdObs = 1,
       range=c(500000, 0.5)), 
     control.family=list(hyper=list(prec=
       list(prior="pc.prec", 
