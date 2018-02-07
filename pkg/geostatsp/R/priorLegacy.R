@@ -220,7 +220,7 @@ if(any(names(priorDistributions)=='range')) {
 		ratePrior = pcPriorRange(
 			q = priorCI$range[1],
 			p = priorCI$range[2],
-			cellSize = cells
+			cellSize = cellSize
 			)
 	} else {
           # gamma prior

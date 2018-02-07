@@ -70,7 +70,7 @@ if(all(havePackages)) {
     buffer = 10*1000,
     covariates=swissAltitudeCrop, 
     family="gaussian", 
-    priorCI=list(
+    prior = list(
       sd=c(2, 0.05), 
       sdObs = 1,
       range=c(500000, 0.5))
@@ -133,10 +133,8 @@ if(all(havePackages)) {
     grid = Ncell, 
     covariates=swissAltCut,
     family="gaussian", buffer=20000,
-    prior=list(sd=c(u = 0.5, alpha = 0.1), range=c(50000,500000)), 
-    control.mode=list(theta=c(2.7, 4.3, 0.46, 1.9),restart=TRUE),
-    control.family=list(hyper=list(prec=list(prior="loggamma", 
-          param=c(.1, .1))))
+    prior=list(sd=c(u = 0.5, alpha = 0.1), range=c(50000,500000), sdObs = c(u=1, alpha=0.4)), 
+    control.mode=list(theta=c(2.7, 4.3, 0.46, 1.9),restart=TRUE)
   )
   knitr::kable(swissFitNp$parameters$summary, digits=3)
   
@@ -161,15 +159,15 @@ if(all(havePackages)) {
 @
   
 
-intercept only, named response variable
+intercept only, named response variable.  legacy priors
 <<asHelpFile>>=
 
 
 if(all(havePackages)) {
   swissFit =  glgm("lograin", swissRain, Ncell, 
     covariates=swissAltitude, family="gaussian", buffer=20000,
-    priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
-    control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE)
+    priorCI=list(sd=c(0.2, 2), range=c(50000,500000), sdObs = 2), 
+    control.mode=list(theta=c(2.5, 0.6, 1.6),restart=TRUE)
   )
   
   knitr::kable(swissFit$parameters$summary, digits=4)

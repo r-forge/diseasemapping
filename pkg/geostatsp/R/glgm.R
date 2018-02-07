@@ -192,7 +192,7 @@ setMethod("glgm",
 
     if(any(names(thedots)== 'priorCI')) {
     # legacy priors
-      priorList = priorLegacy(priorCI, forInla$family, cellSize = xres(cells))
+      priorList = priorLegacy(thedots$priorCI, forInla$family, cellSize = xres(cells))
     } else {
       priorList = priorInla(prior, forInla$family, cellSize = xres(cells))
     }
@@ -435,7 +435,7 @@ setMethod("glgm",
   params$range$posterior = cbind(
     x=params$range$posterior[,1],
     y=params$range$posterior[,2],
-    priorList$range$dprior$range(params$range$posterior[,1])
+    prior=priorList$range$dprior$range(params$range$posterior[,1])
     )
 
   params$range$prior = priorList$range[setdiff(names(priorList$range), 'dprior')]
