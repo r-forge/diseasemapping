@@ -14,7 +14,7 @@ setGeneric('glgm',
 
 
 setMethod("glgm", 
-  signature("ANY"), 
+  signature(formula="ANY", data="ANY", grid="ANY", covariates="ANY"), 
   function( 
     formula, 
     data,
@@ -24,7 +24,6 @@ setMethod("glgm",
     shape=1, 
     prior, 
     ...) {
-
 
 # clean names of covariates
     if(!missing(covariates)) {
@@ -70,29 +69,12 @@ setMethod("glgm",
 
 
 
-# numeric cells, create raster from data bounding box
-
-setMethod("glgm", 
-  signature("formula", "ANY", "numeric", "ANY"),
-  function(
-    formula, 
-    data,
-    grid,
-    covariates,
-    buffer=0,  
-    shape=1, 
-    prior, 
-    ...) {
-    grid = squareRaster(data, grid)
-    callGeneric()
-  }
-  )
 
 
 
 # extrat covariates for data, convert covariates to a stack
 setMethod("glgm", 
-  signature("formula", "Raster", "Raster", "ANY"),
+  signature(formula="formula", data="Raster", grid="ANY", covariates="ANY"),
   function(
     formula, 
     data,
@@ -102,6 +84,9 @@ setMethod("glgm",
     shape=1, 
     prior, 
     ...) {
+
+    if(is.numeric(grid))
+      grid = squareRaster(data, grid)
 
     dataCov = gm.dataRaster(
       formula, data,
@@ -109,17 +94,26 @@ setMethod("glgm",
       covariates,
       buffer)
 
-    data = dataCov$data 
-    grid = dataCov$grid
-    covariates = dataCov$covariates
+ #   data = dataCov$data 
+ #   grid = dataCov$grid
+ #   covariates = dataCov$covariates
 
-    callGeneric()
-  }
+   callGeneric(
+      formula,
+      dataCov$data@data,
+      dataCov$grid,
+      dataCov$covariates,
+      buffer,
+      shape,
+      prior, 
+      ...
+      )
+   }
   )
 
 
 setMethod("glgm", 
-  signature("formula", "Spatial", "Raster", "ANY"),
+  signature(formula="formula", data="Spatial", grid="ANY", covariates="ANY"),
   function(    formula, 
     data,
     grid,
@@ -129,15 +123,27 @@ setMethod("glgm",
     prior, 
     ...) {
 
+    if(is.numeric(grid))
+      grid = squareRaster(data, grid)
+
     dataCov = gm.dataSpatial(
       formula, data, 
       grid, covariates, buffer)
 
-    data = dataCov$data@data 
-    grid = dataCov$grid
-    covariates = dataCov$covariates
+#    data = dataCov$data@data 
+#    grid = dataCov$grid
+#    covariates = dataCov$covariates
 
-    callGeneric()
+    callGeneric(
+      formula,
+      dataCov$data@data,
+      dataCov$grid,
+      dataCov$covariates,
+      buffer,
+      shape,
+      prior, 
+      ...
+      )
   }
   )
 
@@ -146,7 +152,11 @@ setMethod("glgm",
 ##################
 
 setMethod("glgm", 
-  signature("formula", "data.frame", "Raster", "data.frame"), 
+  signature(
+    formula="formula", 
+    data="data.frame",
+    grid="Raster", 
+    covariates="data.frame"), 
   function(
     formula, 
     data,
@@ -194,7 +204,9 @@ setMethod("glgm",
     # legacy priors
       priorList = priorLegacy(thedots$priorCI, forInla$family, cellSize = xres(cells))
     } else {
-      priorList = priorInla(prior, forInla$family, cellSize = xres(cells))
+      if(missing(prior)) prior=list(range=NULL)
+        priorList = priorInla(prior, forInla$family, cellSize = xres(cells))
+      bob <<- priorList
     }
 
     # done priors
@@ -206,12 +218,11 @@ setMethod("glgm",
       ", ncol=", ncol(cells)+2*buffer,
       ", nu=", shape, 
       ", hyper = list(",
-      "range=list(",
+      "range=",
       priorList$range$string,
-      "),",
-      "prec=list(",
+      ",",
+      "prec=",
       priorList$sd$string,
-      ")",
       " )", 
       paste(c('', thedots$spaceExtra), collapse=', '),
       " )", 
@@ -221,7 +232,7 @@ setMethod("glgm",
     formulaOrig = formula
 
     if(any(names(thedots)=='spaceFormula')) {
-      formula = update.formula(formulaOrig,	as.formula(forInla$spaceFormula))
+      formula = update.formula(formulaOrig,	as.formula(thedots$spaceFormula))
     } else {
       formula = update.formula(formulaOrig,	as.formula(paste(spaceFormula, collapse=' ')))
     }
@@ -429,9 +440,10 @@ setMethod("glgm",
     # posterior distributions for range
 
   # convert from cells to spatial units (i.e. km)
+  if("Range for space" %in% names(inlaResult$marginals.hyperpar)) {
   params$range$posterior = 
-  inlaResult$marginals.hyperpar[["Range for space"]] %*% 
-  diag(c(xres(cells), 1/xres(cells)))
+    inlaResult$marginals.hyperpar[["Range for space"]] %*% 
+    diag(c(xres(cells), 1/xres(cells)))
   params$range$posterior = cbind(
     x=params$range$posterior[,1],
     y=params$range$posterior[,2],
@@ -472,9 +484,7 @@ setMethod("glgm",
   params$scale$postK = params$scale$posterior %*% diag(c(1000, 1/1000, 1/1000))
   colnames(params$range$postK) = colnames(params$scale$postK) = 
   colnames(params$range$posterior)
-
-
-
+}
   Ssd =grep("^sd", names(priorList), value=TRUE)
   names(Ssd)[grep("^sd$", names(priorList))] = 'Precision for space'
   names(Ssd)[grep("^sdObs$", names(priorList))] = 'Precision for the Gaussian observations'
@@ -749,7 +759,7 @@ setMethod("glgm",
   "Range for space",
   thecolsFull
   ]
-  if(params$summary["range", 'mean'] > 1000) {
+  if(any(params$summary["range", 'mean'] > 1000, na.rm=TRUE)) {
 
     params$summary["range",thecolsFull]=				
     params$summary["range",thecolsFull] / 1000

@@ -23,7 +23,7 @@ pcPriorRange = function(q, p=0.5, cellSize=1) {
     return(logdens + log_jacobian);", sep='')
 
   result= list(
-    string = paste0("prior=\"", resultInla, "\"" ),
+    string = paste0("list(prior=\"", resultInla, "\")" ),
     param = c(q = q, prob = p), 
     extra = list(
       lambda=unname(lambda),

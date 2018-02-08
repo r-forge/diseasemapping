@@ -2,12 +2,9 @@
 \docType{methods}
 \alias{glgm}
 \alias{glgm-methods}
-\alias{glgm,NULL,ANY,ANY,ANY-method}
-\alias{glgm,numeric,ANY,ANY,ANY-method}
-\alias{glgm,character,ANY,ANY,ANY-method}
-\alias{glgm,formula,ANY,numeric,ANY-method}
-\alias{glgm,formula,Raster,Raster,ANY-method}
-\alias{glgm,formula,Spatial,Raster,ANY-method}
+\alias{glgm,ANY-method}
+\alias{glgm,formula,Raster,ANY,ANY-method}
+\alias{glgm,formula,Spatial,ANY,ANY-method}
 \alias{glgm,formula,data.frame,Raster,data.frame-method}
 
 
@@ -20,19 +17,10 @@ Generalized Linear Geostatistical Models
 Fits a generalized linear geostatistical model or a log-Gaussian Cox process
 using \code{inla} }
 \usage{
-\S4method{glgm}{NULL,ANY,ANY,ANY}(formula, data,  grid, 
-	covariates=NULL, ...)
-\S4method{glgm}{numeric,ANY,ANY,ANY}(formula, data,  grid, 
-	covariates=NULL, ...)
-\S4method{glgm}{character,ANY,ANY,ANY}(formula, data,  grid, 
-	covariates=NULL, ...)
-\S4method{glgm}{formula,ANY,numeric,ANY}(formula, data,  grid, 
-	covariates=NULL, ...)
-\S4method{glgm}{formula,Raster,Raster,ANY}(formula, data,  grid, 
-	covariates=NULL, buffer=0, ...)
-\S4method{glgm}{formula,Spatial,Raster,ANY}(formula, data,  grid, covariates=NULL, buffer=0, ...)
-\S4method{glgm}{formula,data.frame,Raster,data.frame}(formula, data,  grid, covariates=NULL, 
-  shape=1, priorCI=NULL, mesh=FALSE,...) 
+\S4method{glgm}{ANY,ANY,ANY,ANY}(formula, data,  grid, covariates, buffer=0, shape=1, prior, ...) 
+\S4method{glgm}{formula,Raster,ANY,ANY}(formula, data,  grid, covariates, buffer=0, shape=1, prior, ...) 
+\S4method{glgm}{formula,Spatial,ANY,ANY}(formula, data,  grid, covariates, buffer=0, shape=1, prior, ...) 
+\S4method{glgm}{formula,data.frame,Raster,data.frame}(formula, data,  grid, covariates, buffer=0, shape=1, prior, ...) 
 lgcp(formula=NULL, data,  grid, covariates=NULL, border, ...)
 }
  

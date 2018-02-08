@@ -1,7 +1,7 @@
-VPATH = ../pkg/mapmisc/inst/extdoc:../pkg/mapmisc/vignettes:../pkg/mapmisc/tests/
+VPATH = ../pkg/mapmisc/inst/extdoc:../pkg/mapmisc/vignettes:../pkg/geostatsp/vignettes:../pkg/mapmisc/tests/
 
 
-finalDocs = world.html mapLayers.html north.html mapmisc.pdf openmap.html worldMap.html
+finalDocs = glgm.pdf world.html mapLayers.html north.html mapmisc.pdf openmap.html worldMap.html
 testDocs = test_perspective.html test_north.html test_openmap.html test_worldMap.html
 
 all: $(finalDocs)

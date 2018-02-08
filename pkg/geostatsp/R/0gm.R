@@ -301,9 +301,11 @@ gm.dataRaster = function(
 
 gm.dataSpatial = function(
   formula, data,  grid, 
-  covariates=NULL, 
+  covariates, 
   buffer=0) {
   
+  if(missing(covariates)) covariates = list()
+
   # check response variable is in data
   if(!all.vars(formula)[1] %in% names(data)){
     warning(paste(
@@ -317,7 +319,6 @@ gm.dataSpatial = function(
   
 # find factors
   allterms = attributes(alltermsPlain)$orig
-  
   # remove covariates not in the model
   keepCovariates = intersect(alltermsPlain, names(covariates))
   if(is.list(covariates)) {
@@ -370,7 +371,7 @@ gm.dataSpatial = function(
     names(rmethod) = names(covariates)
     rmethod[covFactors] = "ngb"
     rmethod[intersect(names(covariates), termsInF)] = "ngb"
-    
+    print(0)
     
     covariatesStack = stackRasterList(
       covariates, 
@@ -384,7 +385,7 @@ gm.dataSpatial = function(
   } else {
     covariatesDF = data.frame()
   }
-  
+
   # loop through covariates which aren't in data, extract it from `covariates`
   for(D in setdiff(alltermsPlain, names(data))){
     if(is.null(covariates[[D]]))
@@ -400,7 +401,7 @@ gm.dataSpatial = function(
     }
   }
   data$space = suppressWarnings(extract(cellsSmall, data))
-  
+
   # loop through spatial covariates which are factors
   for(D in intersect(Sfactors, names(covariatesDF))) {
     theTable = sort(table(data[[D]]), decreasing=TRUE)
@@ -431,6 +432,7 @@ gm.dataSpatial = function(
           names(theTable)[is.na(theLabels)]
       }
     }
+
     data[[D]] = factor(
       as.integer(data[[D]]), 
       levels=as.integer(names(theTable)),
@@ -440,7 +442,7 @@ gm.dataSpatial = function(
       levels=as.integer(names(theTable)),
       labels=theLabels)			
   }
-  
+
   
   list(
     data=data,

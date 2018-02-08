@@ -1,20 +1,27 @@
 precToSd = function (densmat) 
 {
-    densmat[, "y"] = densmat[, "y"] * 2 * densmat[, "x"]^(3/2)
-    densmat[, "x"] = 1/sqrt(densmat[, "x"])
+	densmat[, "y"] = densmat[, "y"] * 2 * densmat[, "x"]^(3/2)
+	densmat[, "x"] = 1/sqrt(densmat[, "x"])
 
-    theMaxX = max(densmat[densmat[,'y'] > 10^(-5) * max(densmat[,'y']),'x'])
-    do.call(cbind, approx(
-    	densmat[,'x'],   
-    	densmat[,'y'], 
-	    seq(0, theMaxX, len=nrow(densmat)),
-    	rule = 2
-    ))
+	theMaxX = max(densmat[densmat[,'y'] > 10^(-5) * max(densmat[,'y']),'x'])
+	do.call(cbind, approx(
+		densmat[,'x'],   
+		densmat[,'y'], 
+		seq(0, theMaxX, len=nrow(densmat)),
+		rule = 2
+		))
 }
 
 priorInla = function(x, family='gaussian', cellSize=1) {
 
 	names(x) = gsub("^sdNugget$", "sdObs", names(x))
+
+	if("range" %in% names(x)) {
+			# default prior if none specified
+			# pc prior with median 10 cells
+		if(!length(x$range)) 
+			x$range = c(u=10*cellSize, alpha=0.5)
+	}
 
 	for(D in names(x)) {
 		if(!is.list(x[[D]])) {
@@ -80,9 +87,9 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 
 			precPrior[[Dsd]] = x[[Dsd]]
 			precPrior[[Dsd]]$string = paste0(
-				"prior='table:", 
+				"list(prior='table:", 
 				paste(as.vector(logPrecDens), collapse=' '), 
-				"'", sep='')
+				"')", sep='')
 		} else if(all(c('u','alpha') %in% names(x[[Dsd]]))) {
 
               # pc prior specified
@@ -130,11 +137,11 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 			precPrior[[Dsd]]$info = 'gamma prior for sd'
 
 			precPrior[[Dsd]]$string = paste0(
-				"prior=\"expression:
+				"list(prior=\"expression:
 				a = ", precPrior[[Dsd]]$param['shape'], ";
 				b = 1.0/", precPrior[[Dsd]]$param['rate'], ";
 				return (a - 1.0) * (log_precision / 2.0) - 
-				b*exp(-log_precision / 2.0) - log_precision/2.0;\"", 
+				b*exp(-log_precision / 2.0) - log_precision/2.0;\")", 
 				sep='')
 
 			precPrior[[Dsd]]$extra = list(
@@ -167,14 +174,18 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 	if("range" %in% names(x)) {
 			# default prior if none specified
 			# pc prior with median 10 cells
-		if(is.null(x$range)) 
-			x = c(u=10*cellSize, alpha=0.5) 
 
 		if(is.list(x$range)) {
-			if(!is.null(x$range$cellSize))
+			if(is.null(x$range$cellSize))
 				x$range$cellSize = cellSize
 			if(!is.null(x$range$initial))
 				x$range$initial = x$range$cellSize/x$range$initial
+			rangePrior = x$range
+			rangePrior$dprior = list(
+				range = function(x) {rep(NA, length(x))}
+				)
+			environment(rangePrior$dprior$range) = baseenv()
+			rangePrior$dprior$scale=rangePrior$dprior$range
 		}
 
 		if(is.matrix(x$range)) {
@@ -197,9 +208,9 @@ priorInla = function(x, family='gaussian', cellSize=1) {
           # reorder smallest to largest
 			logRangeDens = logRangeDens[nrow(logRangeDens):1, ]
 			rangePrior$string = paste0(
-				"prior='table: ", 
+				"list(prior='table: ", 
 				paste0(as.vector(logRangeDens), collapse=' '),
-				"'", sep='')
+				"')", sep='')
 
 		} else if(all(c('u', 'alpha') %in% names(x$range) ) ) { 
 
@@ -209,7 +220,8 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 				p = x$range['alpha'],
 				cellSize = cellSize)
 
-		} else {
+		} else if(!is.list(x$range)){
+			rangePrior = list()
 		        # gamma prior for scale
 			scaleTarget = unname(sort(cellSize/x$range[c('lower','upper')]))
 			cifun = function(pars) {
@@ -231,15 +243,23 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 			rangePrior$info = 'gamma prior for scale'
 
 			rangePrior$string = paste0(
-				"prior=\"expression:
+				"list(prior=\"expression:
 				a = ", rangePrior$param['shape'], ";
 				b = 1.0/", rangePrior$param['rate'], ";
-				return (a - 1.0) * (log_range) - 
-				b*exp(-log_range) - log_range;\"", 
+				return (a - 1.0) * (log_range) - b*exp(-log_range) - log_range;\")", 
 				sep='')
 
+			bob2 <<- function(log_range) {
+				a = rangePrior$param['shape']
+				print(a)
+				b = 1.0/rangePrior$param['rate']
+				print(b)
+				logDens = (a - 1.0) * (log_range) - b*exp(-log_range) #- log_range
+				exp(logDens)
+			}
+
 			rangePrior$extra = list(
-				userParam = rangePrior$param[c('shape','rate')] / c(1,cellSize),
+				userParam = rangePrior$param[c('shape','rate')] * c(1,cellSize),
 				ciProb = exp(ciTarget),
 				userPriorCI = x$range[c('lower','upper')],
 				priorCI = sort(cellSize/stats::qgamma(
@@ -253,11 +273,13 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 				range = eval(parse(text=paste0(
 					'function(x) x^(-2)*stats::dgamma(1/x, shape=',
 					rangePrior$extra$userParam['shape'],
-					',rate=', rangePrior$extra$userParam['rate'], ')'))),
+					',rate=', 
+					rangePrior$extra$userParam['rate'], ')'))),
 				scale = eval(parse(text=paste0(
 					'function(x) stats::dgamma(x, shape=',
 					rangePrior$extra$userParam['shape'],
-					',rate=', rangePrior$extra$userParam['rate'], ')')))
+					',rate=', 
+					rangePrior$extra$userParam['rate'], ')')))
 				)
 			environment(rangePrior$dprior$range) = baseenv()
 			environment(rangePrior$dprior$scale) = baseenv()

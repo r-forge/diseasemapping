@@ -29,7 +29,7 @@ if(Sys.info()['sysname'] =='Linux' &
           'bit/inla.static', sep=''),
         package="INLA")) 
 }
-
+if(!exists('fact')) fact = 1
 @    
 
 <<packages>>=
@@ -50,11 +50,8 @@ swissAltitudeCrop = raster::mask(swissAltitude,swissBorder)
 
 number of cells... smaller is faster but less interesting
 <<cells>>=
-if(Sys.info()['user'] =='patrick'){
-  Ncell = 60  
-} else {
-  Ncell = 25
-}
+fact
+(Ncell = 25*fact)
 @
 
 
@@ -76,6 +73,7 @@ if(all(havePackages)) {
       range=c(500000, 0.5))
   )
   knitr::kable(swissFit$parameters$summary, digits=3)
+
   
   
   swissExc = excProb(
@@ -267,7 +265,7 @@ if(all(havePackages)) {
 @
 
 put some missing values in covaritates
-also don't put factor() in formula
+also dont put factor() in formula
 <<someMissing>>=
 temp = values(swissAltitude)
 temp[seq(10000,12000)] = NA
@@ -286,98 +284,6 @@ if(all(havePackages)) {
   
 }
 @
-
-these tests are time consuming, so only patrick will do them
-<<longTests>>=
-if(all(havePackages) & Sys.info()['user'] =='patrick') {
-  
-  data('loaloa')
-  rcl = rbind(
-    # wedlands and mixed forests to forest
-    c(5,2),c(11,2),
-# savannas to woody savannas
-    c(9,8),
-    # croplands and urban changed to crop/natural mosaid
-    c(12,14),c(13,14))
-  ltLoaR = reclassify(ltLoa, rcl)
-  levels(ltLoaR) = levels(ltLoa)
-  
-  
-  elevationLoa = elevationLoa - 750
-  elevLow = reclassify(elevationLoa, c(0, Inf, 0))
-  elevHigh = reclassify(elevationLoa, c(-Inf, 0, 0))
-  
-  covList = list(elLow = elevLow, elHigh = elevHigh, 
-    land = ltLoaR, evi=eviLoa)
-  
-  loaFit = glgm(
-    y ~ land + evi + elHigh + elLow, #+ f(villageID,model="iid"),
-    loaloa,
-    Ncell, 
-    covariates=covList, 
-    family="binomial", Ntrials = loaloa$N,
-    shape=2, buffer=25000,
-    priorCI = list(sd=c(0.2, 4), range=c(20000,500000)))
-  
-  loaFit$par$summary
-  
-  plot(loaFit$raster[['predict.exp']])
-  
-  
-# prior for observation standard deviation
-  swissFit =  glgm( formula="lograin",data=swissRain, grid=Ncell,
-    covariates=swissAltitude, family="gaussian", buffer=20000,
-    priorCI=list(sd=c(0.1, 2), range=c(50000,500000), 
-      sdNugget=c(0.1, 2)), 
-    control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE)
-  )
-  
-  
-  
-# a model with little data, posterior should be same as prior
-  
-  data2 = SpatialPointsDataFrame(cbind(c(1,0), c(0,1)),
-    data=data.frame(y=c(0,0), offset=c(-50,-50), x=c(-1,1)))
-  
-  res = glgm(data=data2, grid=20, formula=y~1 + x+offset(offset), 
-    covariates=NULL,
-    priorCI = list(sd=c(0.3,0.5), range=c(0.25, 0.4)),
-    family="poisson",buffer=0.5, 
-    control.fixed=list(mean.intercept=0, prec.intercept=1,
-      mean=0,prec=4),
-    control.mode=list(theta=c(2, 2),restart=TRUE)
-  )
-  
-  par(mfrow=c(3,1))
-  
-# intercept
-  plot(res$inla$marginals.fixed[['(Intercept)']], col='blue', type='l',
-    xlab='intercept',lwd=3)
-  xseq = res$inla$marginals.fixed[['(Intercept)']][,'x']
-  lines(xseq, dnorm(xseq, 0, 1),col='red',lty=2,lwd=3)
-  legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
-  
-# beta
-  plot(res$inla$marginals.fixed[['x']], col='blue', type='l',
-    xlab='beta',lwd=3)
-  xseq = res$inla$marginals.fixed[['x']][,'x']
-  lines(xseq, dnorm(xseq, 0, 1/2),col='red',lty=2,lwd=3)
-  legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
-  
-  
-# sd
-  plot(res$parameters$sd$prior,type='l', col='blue',xlab='sd',lwd=3)
-  lines(res$parameters$sd$post,col='red',lty=2,lwd=3)
-  legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
-  
-  
-# range
-  plot(res$parameters$range$prior,type='l', col='blue', xlab='range',lwd=3)
-  lines(res$parameters$range$post,col='red',lty=2,lwd=3)
-  legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
-}
-@
-
 
 covariates are in data, interactions
 <<interactions, fig.cap = 'interactions'>>=
@@ -404,14 +310,226 @@ if(all(havePackages)) {
 }
 @
 
+
+these tests are time consuming, so only run them if the {\tt fact} 
+variable is set to a value above 1.
+
+<<longTestsLoa>>=
+  data('loaloa')
+  rcl = rbind(
+    # wedlands and mixed forests to forest
+    c(5,2),c(11,2),
+# savannas to woody savannas
+    c(9,8),
+    # croplands and urban changed to crop/natural mosaid
+    c(12,14),c(13,14))
+  ltLoaR = reclassify(ltLoa, rcl)
+  levels(ltLoaR) = levels(ltLoa)
+  
+  
+  elevationLoa = elevationLoa - 750
+  elevLow = reclassify(elevationLoa, c(0, Inf, 0))
+  elevHigh = reclassify(elevationLoa, c(-Inf, 0, 0))
+  
+  covList = list(elLow = elevLow, elHigh = elevHigh, 
+    land = ltLoaR, evi=eviLoa)
+
+if(all(havePackages) & fact > 1) {
+  
+  
+  loaFit = glgm(
+    y ~ land + evi + elHigh + elLow + 
+      f(villageID, prior = 'pc.prec', param = c(log(2), 0.5),
+       model="iid"),
+    loaloa,
+    Ncell, 
+    covariates=covList, 
+    family="binomial", Ntrials = loaloa$N,
+    shape=2, buffer=25000,
+    prior = list(sd=log(2), range=200*1000)
+    )
+  
+  loaFit$par$summary
+  
+  plot(loaFit$raster[['predict.exp']])
+}
+@
+
+<<LongTestsSwiss, fig.height=7, fig.width=3>>=  
+if(all(havePackages) &  fact > 1 ) {
+  
+# prior for observation standard deviation
+  swissFit =  glgm( formula="lograin",data=swissRain, grid=Ncell,
+    covariates=swissAltitude, family="gaussian", buffer=20000,
+    prior=list(sd=0.5, range=200000, sdObs=1), 
+    control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE)
+  )
+  
+  
+}
+@
+
+
+a model with little data, posterior should be same as prior
+
+<<noData, fig.height=7, fig.width=3>>=  
+  
+  data2 = SpatialPointsDataFrame(cbind(c(1,0), c(0,1)),
+    data=data.frame(y=c(0,0), offset=c(-50,-50), x=c(-1,1)))
+
+if(all(havePackages) & fact > 1) {
+  
+  res = glgm(data=data2, grid=Ncell, 
+    formula=y~1 + x+offset(offset), 
+    prior = list(sd=0.5, range=0.1),
+    family="poisson",
+    buffer=0.5, 
+    control.fixed=list(
+      mean.intercept=0, prec.intercept=1,
+      mean=0,prec=4),
+    control.mode=list(theta=c(0.6, 1),restart=TRUE)
+  )
+  
+  par(mfrow=c(3,1))  
+  
+# beta
+  plot(res$inla$marginals.fixed[['x']], col='blue', type='l',
+    xlab='beta',lwd=3)
+  xseq = res$inla$marginals.fixed[['x']][,'x']
+  lines(xseq, dnorm(xseq, 0, 1/2),col='red',lty=2,lwd=3)
+  legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
+    
+# sd
+    matplot(
+      res$parameters$sd$posterior[,'x'],
+      res$parameters$sd$posterior[,c('y','prior')], 
+      xlim = c(0, 4),
+      type='l', col=c('red','blue'),xlab='sd',lwd=3, ylab='dens')
+    legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
+  
+  
+# range
+    matplot(
+      res$parameters$range$posterior[,'x'],
+      res$parameters$range$posterior[,c('y','prior')], 
+      xlim = c(0, 1.5),
+      type='l', col=c('red','blue'),xlab='range',lwd=3, ylab='dens')
+    legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
+}
+@
+
+<<noDataQuantile, fig.height=7, fig.width=3>>=  
+
+if(all(havePackages) & fact > 1) {
+
+bob=priorInla(list(
+      sd=0.5,#c(lower=0.5, upper=0.7), 
+      range=c(lower=0.1, upper=0.11)), cellSize = 0.04
+)
+
+  res = glgm(data=data2, grid=Ncell, 
+    formula=y~1 + x+offset(offset), 
+    prior = list(
+      sd=0.5,#c(lower=0.5, upper=0.7), 
+      range=c(lower=0.1, upper=0.11)),
+    family="poisson",buffer=1, 
+    control.fixed=list(mean.intercept=0, prec.intercept=1,
+      mean=0,prec=4), verbose=TRUE#,
+#    control.mode=list(theta=c(0, 20),restart=TRUE)
+  )
+  
+  par(mfrow=c(3,1))  
+  
+# beta
+  plot(res$inla$marginals.fixed[['x']], col='blue', type='l',
+    xlab='beta',lwd=3)
+  xseq = res$inla$marginals.fixed[['x']][,'x']
+  lines(xseq, dnorm(xseq, 0, 1/2),col='red',lty=2,lwd=3)
+  legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
+    
+# sd
+    matplot(
+      res$parameters$sd$posterior[,'x'],
+      res$parameters$sd$posterior[,c('y','prior')], 
+      type='l', col=c('red','blue'),xlab='sd',lwd=3, ylab='dens')
+    legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
+  
+  
+# range
+    matplot(
+      res$parameters$range$posterior[,'x'],
+      res$parameters$range$posterior[,c('y','prior')], 
+      xlim = c(0, 4),
+      type='l', col=c('red','blue'),xlab='range',lwd=3, ylab='dens')
+    legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
+}
+@
+
+
+
+
+No data, legacy priors
+
+<<noDataLegacy, fig.height=7, fig.width=3>>=  
+
+if(all(havePackages) & fact > 1) {
+  
+  res = glgm(data=data2, 
+    grid=20, 
+    formula=y~1 + x+offset(offset), 
+    priorCI = list(sd=c(0.3,0.5), range=c(0.25, 0.4)),
+    family="poisson",
+    buffer=0.5, 
+    control.fixed=list(
+      mean.intercept=0, 
+      prec.intercept=1,
+      mean=0, prec=4),
+    control.mode=list(theta=c(2, 2),restart=TRUE)
+  )
+  
+  par(mfrow=c(3,1))
+  
+# intercept
+  plot(res$inla$marginals.fixed[['(Intercept)']], col='blue', type='l',
+    xlab='intercept',lwd=3)
+  xseq = res$inla$marginals.fixed[['(Intercept)']][,'x']
+  lines(xseq, dnorm(xseq, 0, 1),col='red',lty=2,lwd=3)
+  legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
+  
+# beta
+  plot(res$inla$marginals.fixed[['x']], col='blue', type='l',
+    xlab='beta',lwd=3)
+  xseq = res$inla$marginals.fixed[['x']][,'x']
+  lines(xseq, dnorm(xseq, 0, 1/2),col='red',lty=2,lwd=3)
+  legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
+    
+# sd
+    matplot(
+      res$parameters$sd$posterior[,'x'],
+      res$parameters$sd$posterior[,c('y','prior')], 
+      type='l', col=c('red','blue'),xlab='sd',lwd=3, ylab='dens')
+    legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
+  
+  
+# range
+    matplot(
+      res$parameters$range$posterior[,'x'],
+      res$parameters$range$posterior[,c('y','prior')], 
+      xlim = c(0, 2),
+      type='l', col=c('red','blue'),xlab='range',lwd=3, ylab='dens')
+    legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
+}
+@
+
+
 specifying spatial formula
 
 <<spaceFormula>>=
 swissRain$group = 1+rbinom(length(swissRain), 1, 0.5)
-theGrid = squareRaster(swissRain,50, buffer=30*1000)
+theGrid = squareRaster(swissRain, Ncell, buffer=30*1000)
 if(all(havePackages)) {
   swissFit = glgm(
-    formula = rain~ 1,
+    formula = rain ~ 1,
     data=swissRain, 
     grid=theGrid, 
     family="gaussian",
@@ -426,32 +544,6 @@ if(all(havePackages)) {
       c('mean','0.5quant')]))
 
   plot(swissFit$rasterTwo[['mean']])
-}
-@
-
-
-pc prior for range, no data, check posterior
-<<spaceFormulaNoData>>=
-theGrid = squareRaster(swissRain,20, buffer=300*1000)
-if(all(havePackages)) {
-  swissFit = glgm(
-    formula = rain~ 1,
-    data=swissRain[1:3, ], 
-    grid=theGrid, 
-    family="gaussian",
-    control.mode = list(theta = c(-3.7, -0.75, 2.25), restart=TRUE),
-    priorCI = list(
-      sd = c(u=1, alpha=0.5),
-      range = c(u=400*1000, alpha=0.5)),
-    verbose = TRUE
-    )
-
-
-  matplot(swissFit$parameters$range$posterior[,'x'],
-    swissFit$parameters$range$posterior[,c('y','prior')],
-    xlim = c(0, 800*1000),
-    type='l'
-    )
 }
 @
 

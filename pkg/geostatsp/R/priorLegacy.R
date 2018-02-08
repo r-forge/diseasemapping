@@ -72,9 +72,9 @@ priorLegacy = function(priorCI, family, cellSize) {
 						)
 					)
 				precPrior[[Dsd]]$string = paste0(
-					"prior='",
+					"list(prior='",
 					precPrior[[Dsd]]$prior,
-					"'", sep=''
+					"')", sep=''
 					)
 			} else { # not a table
 
@@ -205,9 +205,9 @@ if(any(names(priorDistributions)=='range')) {
           # reorder smallest to largest precision		
 		logRangeDens = logRangeDens[nrow(logRangeDens):1, ]
 		ratePrior = list(string=paste0(
-			"prior='table: ", 
+			"list(prior='table: ", 
 			paste0(as.vector(logRangeDens), collapse=' '),
-			"'", sep=''
+			"')", sep=''
 			))
 
 		ratePrior$dprior = list(
