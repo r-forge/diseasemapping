@@ -112,18 +112,13 @@ if(!is.null(swissFit$parameters) ) {
 
 	swissFit$parameters$summary
 
-	plot(swissFit$parameters$range$prior,type="l",
-		ylim=c(0,max(swissFit$parameters$range$posterior[,"y"])),
-		xlim=c(0, 500000))
-	abline(v=swissFit$parameters$range$userPriorCI,col="yellow")
-	abline(v=swissFit$parameters$range$priorCI,col="orange")
-	lines(swissFit$parameters$range$posterior, col='blue')
+	matplot(
+		swissFit$parameters$range$postK[,'x'],
+		swissFit$parameters$range$postK[,c('y','prior')],
+		type="l", lty=1, xlim = c(0, 1000),
+		xlab = 'km', ylab='dens')
+	legend('topright', lty=1, col=1:2, legend=c('post','prior'))
 
-
-}
-
-
-if(interactive()  | Sys.info()['user'] =='patrick') {
 	plot(swissFit$raster[["predict.exp"]]) 
 
 	mycol = c("green","yellow","orange","red")
@@ -142,34 +137,9 @@ if(interactive()  | Sys.info()['user'] =='patrick') {
 
 		
 
-\dontrun{
-load(url("http://www.filefactory.com/file/frd1mhownd9/n/CHE_adm0_RData"))
-thenames = GNcities(bbox(gadm),max=12)
-swissTiles = openmap(bbox(gadm),zoom=8,type="nps")
-
-par(mar=c(0,0,0,0))
-plot(gadm)
-plot(swissTiles, add=TRUE)
-library('RColorBrewer')
-mycol=rev(brewer.pal(4,"RdYlGn"))
-plot(mask(
-		projectRaster(swissExc, crs=proj4string(gadm)),
-		gadm), 
-	breaks = c(0, 0.2, 0.8, 0.95, 1.00001), 
-	col=mycol, alpha=0.5,add=TRUE)	
-plot(gadm, add=TRUE, lwd=2, border='blue')
-
-points(thenames,cex=0.5)
-text(thenames, labels=thenames$name,pos=3,
-  vfont=c("gothic german","plain"),cex=1.5)
-
-
-
-}
 
 # a log-Gaussian Cox process example
 
-if(interactive()  | Sys.info()['user'] =='patrick') {
 myPoints = SpatialPoints(cbind(rbeta(100,2,2), rbeta(100,3,4)))
 myPoints@bbox = cbind(c(0,0), c(1,1))
 
@@ -177,14 +147,16 @@ mycov = raster(matrix(rbinom(100, 1, 0.5), 10, 10), 0, 1, 0, 1)
 names(mycov)="x1"
 
 
-res = lgcp(data=myPoints, grid=20, covariates=mycov,
+res = lgcp(
 	formula=~factor(x1),
-	priorCI=list(sd=c(0.9, 1.1), range=c(0.4, 0.41))
+	data=myPoints, 
+	grid=20, covariates=mycov,
+	prior=list(sd=c(0.9, 1.1), range=c(0.4, 0.41),
+	control.inla = list(strategy='gaussian'))
 )
 plot(res$raster[["predict.exp"]])
 plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
 
-}
 
 }
 
