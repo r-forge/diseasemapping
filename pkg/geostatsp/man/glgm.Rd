@@ -88,7 +88,7 @@ A list with two components named  \code{inla}, \code{raster}, and \code{paramete
 \examples{
 # use the 'safe' version of INLA on linux systems
 if(Sys.info()['sysname'] =='Linux' &
-  requireNamespace("INLA")) {   
+  requireNamespace("INLA", quietly = TRUE)) {   
   INLA::inla.setOption(inla.call = system.file(paste("bin/linux/",          
           ifelse(.Machine$sizeof.pointer == 4, "32", "64"),
           'bit/inla.static', sep=''), package="INLA")) }
@@ -147,6 +147,7 @@ mycov = raster(matrix(rbinom(100, 1, 0.5), 10, 10), 0, 1, 0, 1)
 names(mycov)="x1"
 
 
+if(requireNamespace("INLA", quietly = TRUE)) {  
 res = lgcp(
 	formula=~factor(x1),
 	data=myPoints, 
@@ -156,7 +157,7 @@ res = lgcp(
 )
 plot(res$raster[["predict.exp"]])
 plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
-
+}
 
 }
 
