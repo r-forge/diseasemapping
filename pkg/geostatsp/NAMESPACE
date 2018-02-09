@@ -12,7 +12,7 @@ export(lgm, glgm, lgcp,
 export(RFsimulate)
 export(modelRandomFields)
 
-useDynLib("geostatsp")
+useDynLib("geostatsp", .registration = TRUE)
 export(matern)
 
 S3method(matern, Raster)
