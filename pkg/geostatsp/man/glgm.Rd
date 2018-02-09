@@ -147,7 +147,6 @@ mycov = raster(matrix(rbinom(100, 1, 0.5), 10, 10), 0, 1, 0, 1)
 names(mycov)="x1"
 
 
-if(requireNamespace("INLA", quietly = TRUE)) {  
 res = lgcp(
 	formula=~factor(x1),
 	data=myPoints, 
@@ -155,8 +154,9 @@ res = lgcp(
 	prior=list(sd=c(0.9, 1.1), range=c(0.4, 0.41),
 	control.inla = list(strategy='gaussian'))
 )
-plot(res$raster[["predict.exp"]])
-plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
+if(requireNamespace("INLA", quietly = TRUE)) {  
+	plot(res$raster[["predict.exp"]])
+	plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
 }
 
 }
