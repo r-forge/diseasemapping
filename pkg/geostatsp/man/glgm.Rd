@@ -108,11 +108,9 @@ data("swissRain")
 swissRain$lograin = log(swissRain$rain)
 swissFit =  glgm(formula="lograin", data=swissRain, grid=30, 
 	covariates=swissAltitude, family="gaussian", buffer=20000,
-	priorCI=list(sd=c(0.01, 5), range=c(50000,500000),
-		sdNugget = c(0.01, 5)), 
-	control.mode=list(theta=c(1.6,-0.25,2.9),restart=TRUE)
+	prior = list(sd=1, range=100*1000, sdObs = 2),
+	control.inla = list(strategy='gaussian')
 	)
-
 
 if(!is.null(swissFit$parameters) ) {
 	

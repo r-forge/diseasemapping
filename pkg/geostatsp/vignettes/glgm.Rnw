@@ -438,7 +438,7 @@ if(all(havePackages) & fact > 1) {
     control.inla = list(strategy='gaussian')
   )
   
-  par(mfrow=c(2,2))  
+  par(mfrow = c(2, 2))
   
 # beta
   plot(res$inla$marginals.fixed[['x']], col='blue', type='l',

@@ -29,7 +29,7 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 				# pc prior, median is specified
 				x[[D]] = c(u=unname(x[[D]]), alpha = 0.5)
 			}
-			if(is.null(names(x[[D]]))) {
+			if(is.null(names(x[[D]])) & !is.matrix(x[[D]])) {
 				if(x[[D]][2] > 1) {
 					names(x[[D]]) = c('lower', 'upper')
 				} else {
@@ -72,9 +72,8 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 		} else if(is.matrix(x[[Dsd]])) {
 			# matrix with numerical values of density provided
   #   first column is sd, 2nd column is density
-
-			precPrior[[Dsd]]$dprior = approxfun(
-				x[[Dsd]][,1], x[[Dsd]][,2])
+			precPrior[[Dsd]] = list(
+				dprior = approxfun(x[[Dsd]][,1], x[[Dsd]][,2]))
 
   # get rid of zero
 			x[[Dsd]] = x[[Dsd]][x[[Dsd]][,1]>0,]
@@ -85,7 +84,7 @@ priorInla = function(x, family='gaussian', cellSize=1) {
   # reorder smallest to largest precision		
 			logPrecDens = logPrecDens[order(logPrecDens[,1]), ]
 
-			precPrior[[Dsd]] = x[[Dsd]]
+#			precPrior[[Dsd]] = x[[Dsd]]
 			precPrior[[Dsd]]$string = paste0(
 				"list(prior='table:", 
 				paste(as.vector(logPrecDens), collapse=' '), 
