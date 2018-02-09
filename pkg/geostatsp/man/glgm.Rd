@@ -2,7 +2,7 @@
 \docType{methods}
 \alias{glgm}
 \alias{glgm-methods}
-\alias{glgm,ANY-method}
+\alias{glgm,ANY,ANY,ANY,ANY-method}
 \alias{glgm,formula,Raster,ANY,ANY-method}
 \alias{glgm,formula,Spatial,ANY,ANY-method}
 \alias{glgm,formula,data.frame,Raster,data.frame-method}
@@ -43,11 +43,9 @@ can be overridden with a
  \code{formula} can be an integer or character string specifying the response variable.  For \code{lgcp}, the formula
  should be one-sided.
 }
-\item{priorCI}{list with elements named \code{range}, \code{sd}, \code{sdNugget}, 
-\code{intercept}, or \code{betas}.  See Details.}
+\item{prior}{list with elements named \code{range}, \code{sd}, \code{sdObs}.  See Details.}
 \item{shape}{Shape parameter for the Matern correlation function, must be 1 or 2.}
 \item{buffer}{Extra space padded around the data bounding box to reduce edge effects.}
-\item{mesh}{Currently unimplemented options for using a mesh rather than a grid for the Markov random field approximation.}
 \item{border}{boundary of the region on which an LGCP is defined, passed to \code{\link[raster]{mask}}}
 \item{...}{Additional options passed to  \code{\link[INLA]{inla}} }
 }
@@ -59,22 +57,15 @@ the correlation is 0.13, or
 \deqn{d= |h| \sqrt{8 \nu}/range}
 where \eqn{\nu} is the shape parameter. The range parameter produced by \code{glgm} multiplies the range parameter from \code{INLA} by the cell size.
 
-Elements of \code{priorCI} can be named: 
+Elements of \code{prior} can be named \code{range}, \code{sd}, or \code{sdObs}.  Elements can consist of: 
 \itemize{
-\item \code{range} for the range parameter (not the scale)
-\item \code{sd} for the standard deviation (not the variance or precision)
-\item \code{sdNugget} for the standard deviation of the observation error for Gaussian data
-\item \code{gammaShape} for the shape parameter of a Gamma distributed observations
-\item \code{intercept} for the intercept
-\item \code{betas} for the regression coefficients
+\item a single value giving the prior median for penalized complexity priors (exponential on the sd or 1/range).
+\item a vector \code{c(u=a, alpha=b)} giving an quantile and probability for pc priors.  For standard deviations alpha is an upper quantile, for the range parameter b = pr(1/range > 1/a).
+\item a vector \code{c(lower=a, upper=b)} giving a 0.025 and 0.975 quantiles for the sd or range.
+\item a list of the form \code{list(prior='loggamma', param=c(1,2))} passed directly to inla.
+\item a two-column matrix of prior densities for the sd or range.
 }
-Each element is either a vector of length 2 or a two-column matrix. 
-\itemize{
-\item \code{c(lower=a, upper=b)} specifies 0.025 and 0.975 quantiles of prior distributions
-\item \code{c(u=a, alpha=b)} gives a penalized complexity prior for standard deviation parameters.
-\eqn{pr(\sigma > a) = b}
-\item A matrix has a first column of parameter values and a second column of densities
-}
+
 
 }
 

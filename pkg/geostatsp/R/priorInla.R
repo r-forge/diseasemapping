@@ -73,7 +73,7 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 			# matrix with numerical values of density provided
   #   first column is sd, 2nd column is density
 			precPrior[[Dsd]] = list(
-				dprior = approxfun(x[[Dsd]][,1], x[[Dsd]][,2]))
+				dprior = stats::approxfun(x[[Dsd]][,1], x[[Dsd]][,2]))
 
   # get rid of zero
 			x[[Dsd]] = x[[Dsd]][x[[Dsd]][,1]>0,]
@@ -172,8 +172,8 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 
 			rangePrior = list(
 				dprior = list(
-					range = approxfun(x$range[,1], x$range[,2]),
-					scale = approxfun(1/x$range[,1], x$range[,1]^(-2)*x$range[,2]) ),
+					range = stats::approxfun(x$range[,1], x$range[,2]),
+					scale = stats::approxfun(1/x$range[,1], x$range[,1]^(-2)*x$range[,2]) ),
 				cellSize = cellSize,
 				info = 'table provided for range')
 

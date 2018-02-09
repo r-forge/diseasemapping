@@ -207,7 +207,6 @@ setMethod("glgm",
     } else {
       if(missing(prior)) prior=list(range=NULL)
         priorList = priorInla(prior, forInla$family, cellSize = xres(cells))
-      bob <<- priorList
     }
 
     # done priors
@@ -464,7 +463,7 @@ setMethod("glgm",
   theMaxX = max(params$scale$posterior[
    params$scale$posterior[,'y'] > 10^(-4) * max(params$scale$posterior[,'y']), 'x'])
 
-  params$scale$posterior = approx(
+  params$scale$posterior = stats::approx(
     params$scale$posterior[,'x'],   
     params$scale$posterior[,'y'], 
     seq(0, theMaxX, len=nrow(params$scale$posterior)),

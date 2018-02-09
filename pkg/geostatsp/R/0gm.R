@@ -371,8 +371,7 @@ gm.dataSpatial = function(
       names(rmethod) = names(covariates)
       rmethod[covFactors] = "ngb"
       rmethod[intersect(names(covariates), termsInF)] = "ngb"
-      print(0)
-
+ 
       covariatesStack = stackRasterList(
         covariates, 
         template=cellsSmall, 
