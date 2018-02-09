@@ -77,14 +77,6 @@ function(x,
 		type)
 }
 
-matern.SpatialPointsDataFrameXX = function(
-	x, 
-	param=c(range=1, variance=1, shape=1), 
-	type=c('variance','cholesky','precision','inverseCholesky'), y=NULL) {
-	
-	matern(x=SpatialPoints(x), param=param, type=type, y=y)
-}
-
 
 matern.Raster = function(x, 
 	param=c(range=1, variance=1, shape=1),

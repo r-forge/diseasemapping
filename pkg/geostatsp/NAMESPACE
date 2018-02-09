@@ -1,3 +1,6 @@
+useDynLib("geostatsp", .registration = TRUE, .fixes = "C_")
+
+
 # functions that don't depend on other packages
 
 export(lgm, glgm, lgcp,
@@ -12,7 +15,6 @@ export(lgm, glgm, lgcp,
 export(RFsimulate)
 export(modelRandomFields)
 
-useDynLib("geostatsp", .registration = TRUE, .fixes = "C_")
 export(matern)
 
 S3method(matern, Raster)
