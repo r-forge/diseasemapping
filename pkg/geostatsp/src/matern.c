@@ -613,6 +613,7 @@ SEXP maternDistance(
   return result;
 }
 
+
 void maternRaster(
     double *Axmin, double *Axres,
     int *AxN,

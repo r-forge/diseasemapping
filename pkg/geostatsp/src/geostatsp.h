@@ -84,6 +84,15 @@ SEXP maternPoints(
 		// nugget,
 		SEXP type);
 
+void maternArasterBpoints(
+    double *Axmin, double *Axres,
+    int *AxN,
+    double *Aymax, double *Ayres, int *AyN,
+    double *Bx, double *By, int *BN,
+    double *result,
+    double  *range, double*shape, double *variance,
+    double *anisoRatio, double *anisoAngleRadians);
+
 void computeBoxCox(
 		double *obsCov,
 		// number of observations, number of datasets
@@ -131,6 +140,63 @@ void logLfromComponents(
 		// 1=reml, var estimated
 		//2=ml, var fixed
 		// 3=reml, var fixed
+);
+
+void maternLogL(
+		const double *xcoord,
+		const double *ycoord,
+		const double *param,// nugget, variance,
+        // range, shape,
+        // anisoRatio, ansioAngleRadians
+		const int *aniso,
+		double *obsCov,
+		const int *N,// Nobs, Nrep, Ncov
+		double *boxcox,
+		int *boxcoxType,
+		double *logL,// length N[1]
+		double *totalVarHat,
+		double *betaHat,
+		double *varBetaHat,
+		int *Ltype
+		// 0=ml, var estimated
+		// 1=reml, var estimated
+		//2=ml, var fixed
+		// 3=reml, var fixed
+		// on exit, info from chol of matern
+);
+
+void maternLogLOpt(
+		double *fullParam,// nugget, variance,
+        // range, shape,
+        // anisoRatio, ansioAngleRadians, boxcox
+		int *Sparam,
+		// vector of 0 and 1, depending on whether corresponding parameter
+		// in fullParam is to be optimized
+		double *obsCov,
+		const double *xcoord,
+		const double *ycoord,
+		const int *aniso,
+		const int *N,// Nobs, Nrep, Ncov
+		int *Ltype,
+		int *scalarsInt,
+		double *scalarsF,
+		double *parLim,
+		int *limType,
+		char **msg
+		// 0=ml, var estimated
+		// 1=reml, var estimated
+		//2=ml, var fixed
+		// 3=reml, var fixed
+		// on exit, info from chol of matern
+);
+
+SEXP gmrfLik(
+    SEXP QR,
+    SEXP obsCovR,
+    SEXP xisqTausq, // first element must be zero
+    SEXP reml,
+    SEXP YrepAddR,// Jacobian, length used for Nrep
+    SEXP optParam  // set first element -999 for verbose
 );
 
 // from Matrix_stubs.c

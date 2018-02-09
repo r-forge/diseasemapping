@@ -130,7 +130,7 @@ loglikLgm = function(param,
 		xcoord=ycoord=aniso=NULL
 	}
 	
-	resultC = .C("maternLogL",
+	resultC = .C("C_maternLogL",
 			xcoord=as.double(xcoord), 
 			ycoord=as.double(ycoord),
 			param=as.double(paramFull[
@@ -498,7 +498,7 @@ likfitLgm = function(
 	} else {
 		
 		fromOptim = .C(
-				"maternLogLOpt",
+				"C_maternLogLOpt",
 				start=paramsForC,    
 				Sparam=as.integer(Sparam),
 				obsCov=as.double(as.matrix(obsCov)), 

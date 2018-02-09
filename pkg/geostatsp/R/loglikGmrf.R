@@ -11,7 +11,7 @@ loglikGmrfOneRange = function(
       conditionalVariance=1),
     adjustEdges=adjustEdges)
   
-  fromC = .Call('gmrfLik',
+  fromC = .Call('C_gmrfLik',
     Q, 
     obsCov, 
     as.double(xisqTausq), 
@@ -462,7 +462,7 @@ loglikGmrf = function(
           conditionalVariance=1),
         adjustEdges=adjustEdges)
       
-      fromC = .Call('gmrfLik',
+      fromC = .Call('C_gmrfLik',
         Q, 
         obsCov, 
         as.double(xisqTausq), 
