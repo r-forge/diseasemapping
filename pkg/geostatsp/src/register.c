@@ -54,7 +54,7 @@ static const R_CallMethodDef callMethods[]  = {
   {"maternPoints", (DL_FUNC) &maternPoints, 3},
   {"maternDistance", (DL_FUNC) &maternDistance, 3},
   {"gmrfLik", (DL_FUNC) &gmrfLik, 6},
-  {"gmrfEdge", (DL_FUNC) &gmrfLik, 3},
+  {"gmrfEdge", (DL_FUNC) &gmrfEdge, 3},
   {NULL, NULL, 0}
 };
 

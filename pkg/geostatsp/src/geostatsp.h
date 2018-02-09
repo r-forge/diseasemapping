@@ -199,6 +199,12 @@ SEXP gmrfLik(
     SEXP optParam  // set first element -999 for verbose
 );
 
+SEXP gmrfEdge(
+		SEXP LinvQab, // dense rectangular matrix
+		SEXP points, // SpatialPoints*
+		SEXP params
+);
+
 void maternRaster(
     double *Axmin, 
     double *Axres,
