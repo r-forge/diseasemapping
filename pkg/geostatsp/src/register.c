@@ -1,7 +1,8 @@
 
 #include"geostatsp.h"
 
-//maternPoints, distance gmrflik
+// .Call 
+//maternPoints, maternDistance gmrflik
 static const R_CallMethodDef callMethods[]  = {
   {"maternPoints", (DL_FUNC) &maternPoints, 3},
   {"maternDistance", (DL_FUNC) &maternDistance, 3},
@@ -9,7 +10,7 @@ static const R_CallMethodDef callMethods[]  = {
   {NULL, NULL, 0}
 };
 
-
+// .C
 // matern
 static R_NativePrimitiveArgType matern_t[] = {
     REALSXP, INTSXP, REALSXP, REALSXP, REALSXP, REALSXP, REALSXP, INTSXP, REALSXP
