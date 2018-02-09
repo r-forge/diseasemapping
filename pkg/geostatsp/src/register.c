@@ -36,11 +36,11 @@ static R_NativePrimitiveArgType maternLogLOpt_t[] = {
 };
 
 static const R_CMethodDef cMethods[] = {
-   {"myC", (DL_FUNC) &matern, 9, matern_t},
-   {"myC", (DL_FUNC) &maternAniso, 12, maternAniso_t},
-   {"myC", (DL_FUNC) &maternArasterBpoints, 15, maternArasterBpoints_t},
-   {"myC", (DL_FUNC) &maternLogL, 13, maternLogL_t},
-   {"myC", (DL_FUNC) &maternLogLOpt, 13, maternLogLOpt_t},
+   {"matern", (DL_FUNC) &matern, 9, matern_t},
+   {"maternAniso", (DL_FUNC) &maternAniso, 12, maternAniso_t},
+   {"maternArasterBpoints", (DL_FUNC) &maternArasterBpoints, 15, maternArasterBpoints_t},
+   {"maternLogL", (DL_FUNC) &maternLogL, 13, maternLogL_t},
+   {"maternLogLOpt", (DL_FUNC) &maternLogLOpt, 13, maternLogLOpt_t},
    {NULL, NULL, 0, NULL}
 };
 
