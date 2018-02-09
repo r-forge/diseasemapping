@@ -199,6 +199,21 @@ SEXP gmrfLik(
     SEXP optParam  // set first element -999 for verbose
 );
 
+void maternRaster(
+    double *Axmin, 
+    double *Axres,
+    int *AxN,
+    double *Aymax, 
+    double *Ayres, 
+    int *AyN,
+    double *result,
+    double  *range, 
+    double *shape, 
+    double *variance,
+    double *anisoRatio, 
+    double *anisoAngleRadians,
+    int *type);
+
 // from Matrix_stubs.c
 int attribute_hidden M_cholmod_solve2(
 		int sys,

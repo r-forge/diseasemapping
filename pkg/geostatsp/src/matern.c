@@ -615,12 +615,18 @@ SEXP maternDistance(
 
 
 void maternRaster(
-    double *Axmin, double *Axres,
+    double *Axmin, 
+    double *Axres,
     int *AxN,
-    double *Aymax, double *Ayres, int *AyN,
+    double *Aymax, 
+    double *Ayres, 
+    int *AyN,
     double *result,
-    double  *range, double *shape, double *variance,
-    double *anisoRatio, double *anisoAngleRadians,
+    double  *range, 
+    double *shape, 
+    double *variance,
+    double *anisoRatio, 
+    double *anisoAngleRadians,
     int *type) {
 
   int DB, DBx, DBy, DAx, DAy, AyN2, AxN2;
