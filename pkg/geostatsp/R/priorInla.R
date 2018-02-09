@@ -122,27 +122,7 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 			names(precPrior2$par) = c("shape","rate")
 
 
-# sd is gamma
-# log(sd) is loggamma
-# log(prec) = -2*log(sd) is dist'n below
-
-# a=1/3;b=3/4;stuff = rgamma(10000, a,b)
-# hist(log(stuff^(-2)), prob=TRUE)
-# xseq = seq(-20, 20, len=1001) 
-# lines(xseq, 
-#  exp(a*log(b)  - lgamma(a) -log(2) - 
-#  (a-1)*(xseq/2)-b*exp(-xseq/2)-xseq/2))
-
-			precPrior[[Dsd]]$param = precPrior2$par
-			precPrior[[Dsd]]$info = 'gamma prior for sd'
-
-			precPrior[[Dsd]]$string = paste0(
-				"list(prior=\"expression:
-				a = ", precPrior[[Dsd]]$param['shape'], ";
-				b = 1.0/", precPrior[[Dsd]]$param['rate'], ";
-				return (a - 1.0) * (log_precision / 2.0) - 
-				b*exp(-log_precision / 2.0) - log_precision/2.0;\")", 
-				sep='')
+			precPrior[[Dsd]] = gammaSd(precPrior2$par)
 
 			precPrior[[Dsd]]$extra = list(
 				ciProb = exp(ciTarget),
@@ -153,10 +133,6 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 					rate=precPrior[[Dsd]]$param['rate']),
 				optim = precPrior2
 				)
-
-			precPrior[[Dsd]]$dprior = eval(parse(text=paste0('function(x) stats::dgamma(x, shape=',
-				precPrior[[Dsd]]$param['shape'],',rate=', precPrior[[Dsd]]$param['rate'], ')')))
-			environment(precPrior[[Dsd]]) = baseenv()
 
 		} # end interval supplied
 
@@ -180,12 +156,16 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 				x$range$cellSize = cellSize
 			if(!is.null(x$range$initial))
 				x$range$initial = x$range$cellSize/x$range$initial
+			if(identical(x$range$prior, 'invgamma')){
+				rangePrior = gammaScale(x$range$param, cellSize)
+			} else {
 			rangePrior = x$range
 			rangePrior$dprior = list(
 				range = function(x) {rep(NA, length(x))}
 				)
 			environment(rangePrior$dprior$range) = baseenv()
 			rangePrior$dprior$scale=rangePrior$dprior$range
+			}
 		}
 
 		if(is.matrix(x$range)) {
@@ -239,27 +219,15 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 				lower=c(0.000001,0.0000001),method="L-BFGS-B")
 
 			names(scalePrior2$par) = c("shape","rate")
-			rangePrior$param = scalePrior2$par
-			rangePrior$info = 'gamma prior for scale'
 
-			rangePrior$string = paste0(
-				"list(prior=\"expression:
-				a = ", rangePrior$param['shape'], ";
-				b = 1.0/", rangePrior$param['rate'], ";
-				return (a - 1.0) * (log_range) - b*exp(-log_range) - log_range;\")", 
-				sep='')
+			rangePrior = gammaScale(
+				scalePrior2$par, cellSize
+				)
 
-			bob2 <<- function(log_range) {
-				a = rangePrior$param['shape']
-				print(a)
-				b = 1.0/rangePrior$param['rate']
-				print(b)
-				logDens = (a - 1.0) * (log_range) - b*exp(-log_range) #- log_range
-				exp(logDens)
-			}
 
-			rangePrior$extra = list(
-				userParam = rangePrior$param[c('shape','rate')] * c(1,cellSize),
+			rangePrior$extra = c(
+				rangePrior$extra,
+				list(
 				ciProb = exp(ciTarget),
 				userPriorCI = x$range[c('lower','upper')],
 				priorCI = sort(cellSize/stats::qgamma(
@@ -267,22 +235,7 @@ priorInla = function(x, family='gaussian', cellSize=1) {
 					shape=rangePrior$param['shape'], 
 					rate=rangePrior$param['rate'])),
 				optim = scalePrior2
-				)
-
-			rangePrior$dprior = list(
-				range = eval(parse(text=paste0(
-					'function(x) x^(-2)*stats::dgamma(1/x, shape=',
-					rangePrior$extra$userParam['shape'],
-					',rate=', 
-					rangePrior$extra$userParam['rate'], ')'))),
-				scale = eval(parse(text=paste0(
-					'function(x) stats::dgamma(x, shape=',
-					rangePrior$extra$userParam['shape'],
-					',rate=', 
-					rangePrior$extra$userParam['rate'], ')')))
-				)
-			environment(rangePrior$dprior$range) = baseenv()
-			environment(rangePrior$dprior$scale) = baseenv()
+				))
 
 		} # end types of prior
 

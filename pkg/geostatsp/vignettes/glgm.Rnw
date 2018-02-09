@@ -387,7 +387,7 @@ if(all(havePackages) & fact > 1) {
     control.fixed=list(
       mean.intercept=0, prec.intercept=1,
       mean=0,prec=4),
-    control.mode=list(theta=c(0.6, 1),restart=TRUE)
+    control.inla = list(strategy='gaussian')
   )
   
   par(mfrow=c(3,1))  
@@ -422,23 +422,23 @@ if(all(havePackages) & fact > 1) {
 
 if(all(havePackages) & fact > 1) {
 
-bob=priorInla(list(
-      sd=0.5,#c(lower=0.5, upper=0.7), 
-      range=c(lower=0.1, upper=0.11)), cellSize = 0.04
-)
 
-  res = glgm(data=data2, grid=Ncell, 
+  res = glgm(
+    data=data2, 
+    grid=25, 
     formula=y~1 + x+offset(offset), 
     prior = list(
-      sd=0.5,#c(lower=0.5, upper=0.7), 
-      range=c(lower=0.1, upper=0.11)),
-    family="poisson",buffer=1, 
+      sd=c(lower=0.2, upper=2), 
+#      range = list(prior = 'invgamma', param = c(shape=2,rate=1))),
+      range=c(lower=0.02, upper=0.5)),
+    family="poisson", buffer=1, 
     control.fixed=list(mean.intercept=0, prec.intercept=1,
-      mean=0,prec=4), verbose=TRUE#,
-#    control.mode=list(theta=c(0, 20),restart=TRUE)
+      mean=0,prec=4), verbose=TRUE,
+#    control.mode=list(theta=c(0.7, -1),restart=TRUE)
+    control.inla = list(strategy='gaussian')
   )
   
-  par(mfrow=c(3,1))  
+  par(mfrow=c(2,2))  
   
 # beta
   plot(res$inla$marginals.fixed[['x']], col='blue', type='l',
@@ -451,6 +451,7 @@ bob=priorInla(list(
     matplot(
       res$parameters$sd$posterior[,'x'],
       res$parameters$sd$posterior[,c('y','prior')], 
+      xlim = c(0, 4),
       type='l', col=c('red','blue'),xlab='sd',lwd=3, ylab='dens')
     legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
   
@@ -459,9 +460,20 @@ bob=priorInla(list(
     matplot(
       res$parameters$range$posterior[,'x'],
       res$parameters$range$posterior[,c('y','prior')], 
-      xlim = c(0, 4),
+      xlim = c(0, 1.2*res$parameters$summary['range','0.975quant']),
+#      xlim = c(0, 1), ylim = c(0,5),
       type='l', col=c('red','blue'),xlab='range',lwd=3, ylab='dens')
-    legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
+    legend("topright", col=c("red","blue"),lty=1,legend=c("post'r","prior"))
+
+# scale
+    matplot(
+      res$parameters$scale$posterior[,'x'],
+      res$parameters$scale$posterior[,c('y','prior')], 
+      xlim = c(0, 2/res$parameters$summary['range','0.025quant']),
+#      ylim = c(0, 10^(-3)), xlim = c(0,1000),
+      type='l', col=c('red','blue'),xlab='scale',lwd=3, ylab='dens')
+    legend("topright", col=c("red","blue"),lty=1,legend=c("post'r","prior"))
+
 }
 @
 

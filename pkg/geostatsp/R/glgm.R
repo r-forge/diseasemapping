@@ -432,7 +432,7 @@ setMethod("glgm",
     message("inla done") 
   }
   if(all(names(inlaResult)=="logfile") | class(inlaResult) == 'try-error')
-    return(c(forInla, inlares=inlaResult))
+    return(c(forInla, list(inlares=inlaResult, prior = priorList)))
 
 
   params = list(range=list(), scale=list())
@@ -452,6 +452,7 @@ setMethod("glgm",
 
   params$range$prior = priorList$range[setdiff(names(priorList$range), 'dprior')]
   params$range$dprior = priorList$range$dprior$range
+  params$scale$dprior = priorList$range$dprior$scale
 
   params$scale$posterior = cbind(
     x = 1/params$range$posterior[,'x'],
