@@ -14,7 +14,7 @@ matern.dist = function(x,
 
 	param=fillParam(param)
 	x = as.matrix(x)
-	cres = .C("C_matern", 
+	cres = .C(C_matern, 
 		x=as.double(x), 
 		N=as.integer(ncol(x)),
 		result = as.double(rep(-99.9, prod(dim(x)))),
@@ -55,7 +55,7 @@ matern.dsyMatrix = function(x,
 	param=fillParam(param)[c('range','shape','variance','nugget')]
 	
 	.Call(
-		'C_maternDistance',
+		C_maternDistance,
 		x, param, type
 		)
 	
@@ -68,7 +68,7 @@ function(x,
 	type=c('variance','cholesky','precision','inverseCholesky'), 
 	y=NULL) {
 
-	.Call("C_maternPoints",
+	.Call(C_maternPoints,
 		x, 
 		fillParam(param)[c(
 			'range','shape','variance',
@@ -107,7 +107,7 @@ matern.Raster = function(x,
 	
 	Ny = length(y)
 	
-	resC= .C("C_maternArasterBpoints", 
+	resC= .C(C_maternArasterBpoints, 
 		as.double(xmin(x)), 
 		as.double(xres(x)), 
 		as.integer(ncol(x)), 
@@ -193,7 +193,7 @@ matern.SpatialPointsXX = function(x,
 #	double *variance,
 #				double *anisoRatio, double *anisoAngleRadians) {
 
-	resC = .C("C_maternAniso", 
+	resC = .C(C_maternAniso, 
 		as.double(x@coords[,1]),
 		as.double(x@coords[,2]), 
 		N= as.integer(length(x)),
@@ -244,7 +244,8 @@ matern.default = function(x,
 		x = as.matrix(x)	
 #	void matern(double *distance, long *N,
 #					double *range, double *shape, double *variance) {
-	resultFull = .C("C_matern", 
+	resultFull = .C(
+		C_matern, 
 		as.double(x), 
 		as.integer(length(x)),
 		result= as.double(rep(-99.9, length(x))),

@@ -1,5 +1,6 @@
 
 #include"geostatsp.h"
+#include<R_ext/Visibility.h>
 
 // .Call 
 //maternPoints, maternDistance gmrflik
@@ -45,7 +46,8 @@ static const R_CMethodDef cMethods[] = {
    {NULL, NULL, 0, NULL}
 };
 
-void R_init_geostatsp(DllInfo* info) {
+void attribute_visible R_init_geostatsp(DllInfo *info) {
 	R_registerRoutines(info, cMethods, callMethods, NULL, NULL);
-	R_useDynamicSymbols(info, TRUE);
+	R_useDynamicSymbols(info, FALSE);
+	R_forceSymbols(info, TRUE);
 }
