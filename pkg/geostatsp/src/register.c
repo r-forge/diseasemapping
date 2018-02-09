@@ -45,6 +45,6 @@ static const R_CMethodDef cMethods[] = {
 };
 
 void R_init_geostatsp(DllInfo* info) {
-	R_registerRoutines(info, NULL, NULL, NULL, NULL);
+	R_registerRoutines(info, cMethods, callMethods, NULL, NULL);
 	R_useDynamicSymbols(info, TRUE);
 }
