@@ -212,7 +212,7 @@ if(any(names(priorDistributions)=='range')) {
 
 		ratePrior$dprior = list(
 			range = stats::approxfun(priorCI$range[,1], priorCI$range[,2]),
-			scale = stats::approxfun(1/priorCI$range[,1], priorCI$range[,1]^(-2)*x$range[,2]) 
+			scale = stats::approxfun(1/priorCI$range[,1], priorCI$range[,1]^(-2)*priorCI$range[,2]) 
 			)
 
 	} else if (priorCI$range[2] < priorCI$range[1]){ 
