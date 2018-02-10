@@ -141,7 +141,7 @@ priorLegacy = function(priorCI, family, cellSize) {
 #    densmat[, "x"] = 1/sqrt(densmat[, "x"])
 
 				precPrior[[Dsd]]$dprior = eval(parse(text=paste0(
-					'function(x) 2 * x^(3/2) * stats::dgamma(x^(-2), shape=',
+					'function(x) 2 * x^(-3) * stats::dgamma(x^(-2), shape=',
 					precPrior[[Dsd]]$param['shape'],
 					',rate=', precPrior[[Dsd]]$param['rate'], ')')))
 				environment(precPrior[[Dsd]]$dprior) = baseenv()

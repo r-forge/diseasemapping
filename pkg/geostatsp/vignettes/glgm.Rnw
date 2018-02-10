@@ -15,9 +15,20 @@
 
 <<knitr, include=FALSE>>=
 require('knitr')
-opts_chunk$set(out.width='0.48\\textwidth', 
-  fig.align='default', fig.height=3, fig.width=6,
-  tidy = FALSE)
+knitr::opts_chunk$set(out.width='0.48\\textwidth', 
+  fig.align='default', fig.height=4, fig.width=6,
+  tidy = FALSE, margins = 1)
+
+knitr::knit_hooks$set(
+  margins = function (before, options, envir) {
+    if (!before) 
+        return()
+    graphics::par(mar = c(1.5 + 0.9 * options$margins, 1.5 + 
+        0.9 * options$margins, 0.2, 0.2), mgp = c(1.45, 0.45, 
+        0), cex = 1.25)
+})
+
+
 if(Sys.info()['sysname'] =='Linux' &
   requireNamespace("INLA")) {   
   INLA::inla.setOption(inla.call = 
@@ -70,11 +81,11 @@ if(all(havePackages)) {
     prior = list(
       sd=c(2, 0.05), 
       sdObs = 1,
-      range=c(500000, 0.5))
+      range=c(500000, 0.5)),
+    control.inla = list(strategy='gaussian')
   )
   knitr::kable(swissFit$parameters$summary, digits=3)
 
-  
   
   swissExc = excProb(
     x=swissFit,  random=TRUE,
@@ -97,13 +108,13 @@ if(all(havePackages)) {
     swissFit$parameters$sd$posterior[,'x'],
     swissFit$parameters$sd$posterior[,c('y','prior')],
     lty=1, col=c('black','red'), type='l',
-    xlab='sd', ylab='dens', xlim = c(0,3))
+    xlab='sd', ylab='dens', xlim = c(0,5))
   
   matplot(
     swissFit$parameters$range$posterior[,'x'],
     swissFit$parameters$range$posterior[,c('y','prior')],
     lty=1, col=c('black','red'), type='l',
-    xlab='sd', ylab='dens', xlim = c(0,3))
+    xlab='range', ylab='dens')
 }
 @
 
@@ -131,8 +142,11 @@ if(all(havePackages)) {
     grid = Ncell, 
     covariates=swissAltCut,
     family="gaussian", buffer=20000,
-    prior=list(sd=c(u = 0.5, alpha = 0.1), range=c(50000,500000), sdObs = c(u=1, alpha=0.4)), 
-    control.mode=list(theta=c(2.7, 4.3, 0.46, 1.9),restart=TRUE)
+    prior=list(
+      sd=c(u = 0.5, alpha = 0.1), 
+      range=c(50000,500000), 
+      sdObs = c(u=1, alpha=0.4)), 
+    control.inla=list(strategy='gaussian')
   )
   knitr::kable(swissFitNp$parameters$summary, digits=3)
   
@@ -165,10 +179,10 @@ if(all(havePackages)) {
   swissFit =  glgm("lograin", swissRain, Ncell, 
     covariates=swissAltitude, family="gaussian", buffer=20000,
     priorCI=list(sd=c(0.2, 2), range=c(50000,500000), sdObs = 2), 
-    control.mode=list(theta=c(2.5, 0.6, 1.6),restart=TRUE)
+    control.inla=list(strategy='gaussian')
   )
   
-  knitr::kable(swissFit$parameters$summary, digits=4)
+  knitr::kable(swissFit$parameters$summary[,c(1, 3:5, 8)], digits=4)
 }
 @
 
@@ -177,7 +191,7 @@ if(all(havePackages)) {
 
 intercept only, add a covariate just to confuse glgm.
 
-<<swissINterceptOnly, fig.cap = 'Swiss intercept only'>>=
+<<swissINterceptOnly, fig.cap = 'Swiss intercept only', fig.subcap = c('exc prob','range')>>=
 if(all(havePackages)) {
   
   swissFit =  glgm(
@@ -187,11 +201,11 @@ if(all(havePackages)) {
     covariates=swissAltitude, 
     family="gaussian", buffer=20000,
     priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
-    control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
+    control.inla=list(strategy= 'gaussian'),
     control.family=list(hyper=list(prec=list(prior="loggamma", param=c(.1, .1))))
   )
   
-  knitr::kable(swissFit$parameters$summary, digits=3)
+  knitr::kable(swissFit$parameters$summary[,c(1, 3:5, 8)], digits=3)
   
   swissExc = excProb(
     swissFit$inla$marginals.random$space, 0, 
@@ -199,6 +213,13 @@ if(all(havePackages)) {
   plot(swissExc, breaks = c(0, 0.2, 0.8, 0.95, 1.00001), 
     col=c('green','yellow','orange','red'))	
   plot(swissBorder, add=TRUE)		
+
+    matplot(
+    swissFit$parameters$range$posterior[,'x'],
+    swissFit$parameters$range$posterior[,c('y','prior')],
+    lty=1, col=c('black','red'), type='l',
+    xlab='range', ylab='dens')
+
 }
 @
 
@@ -206,7 +227,7 @@ if(all(havePackages)) {
 
 
 covariates are in data
-<<covInData, fig.cap = 'covaraites in data'>>=
+<<covInData, fig.cap = 'covaraites in data', fig.subcap = c('predict.mean','range')>>=
 newdat = swissRain
 newdat$elev = extract(swissAltitude, swissRain)
 if(all(havePackages)) {
@@ -215,13 +236,21 @@ if(all(havePackages)) {
     covariates=list(land=swissLandType),
     family="gaussian", buffer=40000,
     priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
-    control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
+    control.inla = list(strategy='gaussian'),
     control.family=list(hyper=list(prec=list(prior="loggamma", 
           param=c(.1, .1))))
   )
   knitr::kable(swissFit$parameters$summary, digits=3)
   
   plot(swissFit$raster[['predict.mean']])
+   plot(swissBorder, add=TRUE)    
+
+    matplot(
+    swissFit$parameters$range$posterior[,'x'],
+    swissFit$parameters$range$posterior[,c('y','prior')],
+    lty=1, col=c('black','red'), type='l',
+    xlab='range', ylab='dens')
+
 }
 @
 
@@ -235,15 +264,16 @@ if(all(havePackages)) {
     family="gaussian", buffer=20000,
     priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
     control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
+    control.inla = list(strategy='gaussian'),
     control.family=list(hyper=list(prec=list(prior="loggamma", 
           param=c(.1, .1))))
   )
-  swissFit$parameters$summary
+  swissFit$parameters$summary[,c(1,3,5)]
 }
 @
 
 categorical covariates
-<<swissFitCategorical, fig.cap = 'categorical covariates'>>=
+<<swissFitCategorical, fig.cap = 'categorical covariates', fig.subcap = c('map','range')>>=
 if(all(havePackages)) {
   swissFit =  glgm(
     formula = lograin ~ elev + factor(land),
@@ -251,15 +281,23 @@ if(all(havePackages)) {
     covariates=list(elev=swissAltitude,land=swissLandType), 
     family="gaussian", buffer=20000,
     priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
-    control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
-    control.family=list(hyper=list(prec=list(prior="loggamma", 
+    control.inla=list(strategy='gaussian'),
+    control.family=list(hyper=list(
+      prec=list(prior="loggamma", 
           param=c(.1, .1))))
   )
   
-  knitr::kable(swissFit$parameters$summary, digits=3)
+  knitr::kable(swissFit$parameters$summary[,c(1,3,5)], digits=3)
   
   
   plot(swissFit$raster[['predict.mean']])
+   plot(swissBorder, add=TRUE)    
+
+    matplot(
+    swissFit$parameters$range$posterior[,'x'],
+    swissFit$parameters$range$posterior[,c('y','prior')],
+    lty=1, col=c('black','red'), type='l',
+    xlab='range', ylab='dens')
   
 } 
 @
@@ -276,17 +314,17 @@ if(all(havePackages)) {
     covariates=list(elev=swissAltitude,land=swissLandType), 
     family="gaussian", buffer=20000,
     priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
-    control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
+    control.inla = list(strategy='gaussian'),
     control.family=list(hyper=list(prec=list(prior="loggamma", 
           param=c(.1, .1))))
   )
-  knitr::kable(swissFitMissing$parameters$summary, digits=3)
+  knitr::kable(swissFitMissing$parameters$summary[,1:5], digits=3)
   
 }
 @
 
 covariates are in data, interactions
-<<interactions, fig.cap = 'interactions'>>=
+<<interactions, fig.cap = 'interactions', fig.subcap = c('map','range')>>=
 newdat = swissRain
 newdat$elev = extract(swissAltitude, swissRain)
 if(all(havePackages)) {
@@ -298,7 +336,7 @@ if(all(havePackages)) {
     covariates=list(land=swissLandType),
     family="gaussian", buffer=0,
     priorCI=list(sd=c(0.2, 2), range=c(50000,500000)), 
-    control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE),
+    control.inla = list(strategy='gaussian'),
     control.family=list(hyper=list(prec=list(prior="loggamma", 
           param=c(.1, .1))))
   )
@@ -306,7 +344,14 @@ if(all(havePackages)) {
   knitr::kable(swissFit$parameters$summary, digits=3)
   
   plot(swissFit$raster[['predict.mean']])
-  
+     plot(swissBorder, add=TRUE)    
+
+    matplot(
+    swissFit$parameters$range$posterior[,'x'],
+    swissFit$parameters$range$posterior[,c('y','prior')],
+    lty=1, col=c('black','red'), type='l',
+    xlab='range', ylab='dens')
+
 }
 @
 
@@ -314,7 +359,7 @@ if(all(havePackages)) {
 these tests are time consuming, so only run them if the {\tt fact} 
 variable is set to a value above 1.
 
-<<longTestsLoa>>=
+<<longTestsLoa, fig.cap='categorical', fig.subcap = c('predict','range')>>=
   data('loaloa')
   rcl = rbind(
     # wedlands and mixed forests to forest
@@ -346,40 +391,49 @@ if(all(havePackages) & fact > 1) {
     covariates=covList, 
     family="binomial", Ntrials = loaloa$N,
     shape=2, buffer=25000,
-    prior = list(sd=log(2), range=200*1000)
+    prior = list(
+      sd=log(2), 
+      range = list(prior = 'invgamma', param = c(shape=2,rate=1))),
+    control.inla = list(strategy='gaussian')
     )
   
-  loaFit$par$summary
+  loaFit$par$summary[,c(1,3,5)]
   
   plot(loaFit$raster[['predict.exp']])
+
+    matplot(
+      loaFit$parameters$range$posterior[,'x'],
+      loaFit$parameters$range$posterior[,c('y','prior')],
+    lty=1, col=c('black','red'), type='l',
+    xlab='range', ylab='dens')
+
 }
 @
 
-<<LongTestsSwiss, fig.height=7, fig.width=3>>=  
+<<LongTestsSwiss>>=  
 if(all(havePackages) &  fact > 1 ) {
   
 # prior for observation standard deviation
   swissFit =  glgm( formula="lograin",data=swissRain, grid=Ncell,
     covariates=swissAltitude, family="gaussian", buffer=20000,
     prior=list(sd=0.5, range=200000, sdObs=1), 
-    control.mode=list(theta=c(1.9,0.15,2.6),restart=TRUE)
+    control.inla = list(strategy='gaussian')
   )
-  
-  
 }
 @
 
 
 a model with little data, posterior should be same as prior
 
-<<noData, fig.height=7, fig.width=3>>=  
+<<noData, fig.height=3, fig.width=4, fig.cap = 'no data, pc priors', fig.subcap = c('beta','sd','range','scale')>>=  
   
   data2 = SpatialPointsDataFrame(cbind(c(1,0), c(0,1)),
     data=data.frame(y=c(0,0), offset=c(-50,-50), x=c(-1,1)))
 
 if(all(havePackages) & fact > 1) {
   
-  res = glgm(data=data2, grid=Ncell, 
+resNoData = res = glgm(
+  data=data2, grid=Ncell, 
     formula=y~1 + x+offset(offset), 
     prior = list(sd=0.5, range=0.1),
     family="poisson",
@@ -387,10 +441,10 @@ if(all(havePackages) & fact > 1) {
     control.fixed=list(
       mean.intercept=0, prec.intercept=1,
       mean=0,prec=4),
+    control.mode = list(theta = c(0.651, 1.61), restart=TRUE),
     control.inla = list(strategy='gaussian')
   )
   
-  par(mfrow=c(3,1))  
   
 # beta
   plot(res$inla$marginals.fixed[['x']], col='blue', type='l',
@@ -415,30 +469,36 @@ if(all(havePackages) & fact > 1) {
       xlim = c(0, 1.5),
       type='l', col=c('red','blue'),xlab='range',lwd=3, ylab='dens')
     legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
+
+        matplot(
+      res$parameters$scale$posterior[,'x'],
+      res$parameters$scale$posterior[,c('y','prior')], 
+      xlim = c(0, 2/res$parameters$summary['range','0.025quant']),
+#      ylim = c(0, 10^(-3)), xlim = c(0,1000),
+      type='l', col=c('red','blue'),xlab='scale',lwd=3, ylab='dens')
+    legend("topright", col=c("red","blue"),lty=1,legend=c("post'r","prior"))
+
 }
 @
 
-<<noDataQuantile, fig.height=7, fig.width=3>>=  
+<<noDataQuantile, fig.height=3, fig.width=4, fig.cap = 'no data quantile priors', fig.subcap = c('intercept','sd','range','scale')>>=  
 
 if(all(havePackages) & fact > 1) {
 
 
-  res = glgm(
+  resQuantile = res = glgm(
     data=data2, 
     grid=25, 
     formula=y~1 + x+offset(offset), 
     prior = list(
       sd=c(lower=0.2, upper=2), 
-#      range = list(prior = 'invgamma', param = c(shape=2,rate=1))),
       range=c(lower=0.02, upper=0.5)),
     family="poisson", buffer=1, 
-    control.fixed=list(mean.intercept=0, prec.intercept=1,
-      mean=0,prec=4), verbose=TRUE,
-#    control.mode=list(theta=c(0.7, -1),restart=TRUE)
+    control.fixed=list(
+      mean.intercept=0, prec.intercept=1,
+      mean=0,prec=4),
     control.inla = list(strategy='gaussian')
   )
-  
-  par(mfrow = c(2, 2))
   
 # beta
   plot(res$inla$marginals.fixed[['x']], col='blue', type='l',
@@ -482,25 +542,27 @@ if(all(havePackages) & fact > 1) {
 
 No data, legacy priors
 
-<<noDataLegacy, fig.height=7, fig.width=3>>=  
+<<noDataLegacy, fig.height=3, fig.width=4, fig.cap='No data, legacy priors', fig.subcap = c('intercept','beta','sd','range')>>=  
 
 if(all(havePackages) & fact > 1) {
   
-  res = glgm(data=data2, 
+resLegacy = res = glgm(data=data2, 
     grid=20, 
     formula=y~1 + x+offset(offset), 
-    priorCI = list(sd=c(0.3,0.5), range=c(0.25, 0.4)),
+    priorCI = list(
+      sd=c(lower=0.3,upper=0.5), 
+      range=c(lower=0.25, upper=0.4)),
     family="poisson",
     buffer=0.5, 
     control.fixed=list(
       mean.intercept=0, 
       prec.intercept=1,
       mean=0, prec=4),
+    control.inla = list(strategy='gaussian'),
     control.mode=list(theta=c(2, 2),restart=TRUE)
   )
   
-  par(mfrow=c(3,1))
-  
+   
 # intercept
   plot(res$inla$marginals.fixed[['(Intercept)']], col='blue', type='l',
     xlab='intercept',lwd=3)
@@ -527,7 +589,6 @@ if(all(havePackages) & fact > 1) {
     matplot(
       res$parameters$range$posterior[,'x'],
       res$parameters$range$posterior[,c('y','prior')], 
-      xlim = c(0, 2),
       type='l', col=c('red','blue'),xlab='range',lwd=3, ylab='dens')
     legend("topright", col=c("blue","red"),lty=1,legend=c("prior","post'r"))
 }
@@ -536,7 +597,7 @@ if(all(havePackages) & fact > 1) {
 
 specifying spatial formula
 
-<<spaceFormula>>=
+<<spaceFormula, fig.cap='spatial formula provided', fig.subcap = c('one','two')>>=
 swissRain$group = 1+rbinom(length(swissRain), 1, 0.5)
 theGrid = squareRaster(swissRain, Ncell, buffer=30*1000)
 if(all(havePackages)) {
@@ -547,13 +608,16 @@ if(all(havePackages)) {
     family="gaussian",
     spaceFormula = ~ f(space, model='matern2d', 
       nrow = nrow(theGrid), ncol = ncol(theGrid),
-      nu = 1, replicate = group))
+      nu = 1, replicate = group),
+      control.inla = list(strategy='gaussian')
+)
 
   swissFit$rasterTwo = setValues(
     swissFit$raster[[1:2]],
     as.matrix(swissFit$inla$summary.random$space[
       ncell(theGrid)+values(swissFit$raster[['space']]), 
       c('mean','0.5quant')]))
+  plot(swissFit$raster[['random.mean']])
 
   plot(swissFit$rasterTwo[['mean']])
 }
