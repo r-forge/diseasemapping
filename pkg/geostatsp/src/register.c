@@ -11,7 +11,7 @@ static R_NativePrimitiveArgType matern_t[] = {
 
 // maternAniso
 static R_NativePrimitiveArgType maternAniso_t[] = {
-    REALSXP, REALSXP, INTSXP, REALSXP, REALSXP, REALSXP, REALSXP, REALSXP, REALSXP, REALSXP, REALSXP,  INTSXP, REALSXP
+    REALSXP, REALSXP, INTSXP, REALSXP, REALSXP, REALSXP, REALSXP, REALSXP, REALSXP, REALSXP, INTSXP, REALSXP
 };
 
 // maternArasterBpoints
