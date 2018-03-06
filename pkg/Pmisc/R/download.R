@@ -25,7 +25,7 @@
 downloadIfOld = function(
     url,
     path = getwd(),
-    file = file.path(path, basename(url)),
+    file = make.names(file.path(path, basename(url))),
     age = '6 months',
     overwrite = FALSE,
     verbose = FALSE,
