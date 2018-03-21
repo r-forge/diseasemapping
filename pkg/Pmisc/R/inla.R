@@ -27,15 +27,20 @@ priorPostSd = function(
 
   if(group == 'random') {
     paramLong = paste("Precision for", param)
-  } else { 
+  } else {
     Slabel = lapply(res$all.hyper[[group]], function(qq) c(
       unlist(lapply(qq$hyper, function(qqq) qqq$short.name)),
       qq$label)
     )
     Slabel = do.call(rbind, Slabel)
-    paramLong = paste(Slabel[,1], 'parameter for', Slabel[,2])
-    paramLong = grep(paramLong, rownames(res$summary.hyper), 
-      value=TRUE, ignore.case=TRUE)
+    paramLong1 = paste(Slabel[,1], 'parameter for', Slabel[,2])
+    paramLongRegexp = gsub("prec ", "prec.* ", paramLong1)
+    paramLongRegexp = gsub(" for ", " for (the )?", paramLongRegexp)
+    paramLong = unlist(mapply(
+      grep, 
+      pattern = paramLongRegexp, 
+      MoreArgs = list(x=rownames(res$summary.hyper), 
+      value=TRUE, ignore.case=TRUE)))
     if(!length(paramLong)) {
       paramLong = grep(paste(
         "^precision for the ", Slabel[,2], ' observations$', sep=''
