@@ -102,33 +102,7 @@ void cpp_maternGpu(
 			*vclA, *vclD));
 
 	if(type == 2) {
-		// cholesky
-		std::string my_kernelChol = as<std::string>(cholSourceCode_);
-	    // add kernel to program
-	    viennacl::ocl::program & my_progChol = ctx.add_program(my_kernelChol, "my_kernelChol");
-
-	    // get compiled kernel function
-	    viennacl::ocl::kernel & update_kk = my_progChol.get_kernel("update_kk");
-	    viennacl::ocl::kernel & update_k = my_progChol.get_kernel("update_k");
-	    viennacl::ocl::kernel & update_block = my_progChol.get_kernel("update_block");
-
-	    // set global work sizes
-	    update_kk.global_work_size(0, 1);
-	    update_k.global_work_size(0, iSizeD1);
-	    update_block.global_work_size(0, iSizeD1);
-	    update_block.global_work_size(1, iSizeD1);
-
-	    // set local work sizes
-	    update_kk.local_work_size(0, 1);
-	    update_k.local_work_size(0, max_local_size);
-	    update_block.local_work_size(0, max_local_size);
-	    update_block.local_work_size(1, max_local_size);
-
-	    for(unsigned int k=0; k < sizeD1; k++){
-	        viennacl::ocl::enqueue(update_kk(*vclD, iSizeD1, k));
-	        viennacl::ocl::enqueue(update_k(*vclD, upper, sizeD1, iSizeD1, k));
-	        viennacl::ocl::enqueue(update_block(*vclD, upper, sizeD1, iSizeD1, k));
-	    }
+		viennacl::linalg::lu_factorize(*vclA);
 
 	}
 }

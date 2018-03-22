@@ -52,6 +52,7 @@ mod = inla(
     )),
   data=Kidney, 
   control.inla=list(h=0.001), 
+  control.compute = list(config=TRUE),
   control.mode = list(theta=c(0,-5,4), restart=TRUE),
   verbose=TRUE)
 ```
@@ -86,6 +87,11 @@ do.call(matplot, modSd$prob$matplot)
 do.call(legend, modSd$legend)
 ```
 
+<<<<<<< .mine
+``{r sampleDensHaz}
+myDens = Pmisc::sampleDensHaz(mod, seq(0,10,len=1000), n=3)
+```||||||| .r1943
+=======
 # Gamma
 
 ```{r gammaData}
@@ -134,4 +140,4 @@ matplot(distBreaks[-length(distBreaks)],
   ylab = 'relative rate', xlab='distance', type='l', lty=c(1,2,2),
   col='black', log='y')
 legend("bottomleft", lty=c(1,2), legend=c('median','95% CI'), bty='n')
-```
+```>>>>>>> .r1946
