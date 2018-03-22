@@ -467,9 +467,15 @@ priorPost = function(object) {
       range(x$matplot$y)))
     theLims = do.call(rbind, theLims)
     theLims = apply(theLims, 2, range)
+    colnames(theLims) = c('x', 'y')
+    rownames(theLims) = c('lower','upper')
+    theLims['lower','y'] = 0
+    result$extra$limits = theLims
     for(D in sdSeq) {
-      result[[D]]$matplot$xlim = theLims[,1]
-      result[[D]]$matplot$ylim = theLims[,2]
+      if(sum(abs(result[[D]]$matplot$xlim - theLims[,'x'])) < 0.1) {
+        result[[D]]$matplot$xlim = theLims[,1]
+        result[[D]]$matplot$ylim = theLims[,2]
+      }
     }
   }
 

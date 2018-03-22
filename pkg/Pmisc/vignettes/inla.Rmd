@@ -66,12 +66,14 @@ knitr::kable(mod$summary.hyper, digits=3)
 standard deviation
 ```{r sdSummary, eval = requireNamespace("INLA"), purl= requireNamespace("INLA")}
 modSd = Pmisc::priorPost(mod)
-knitr::kable(modSd$summary, digits=2)
+knitr::kable(modSd$summary, digits=3)
 ```
 
 ```{r sdPlot, eval = requireNamespace("INLA"), purl= requireNamespace("INLA")}
-do.call(matplot, modSd$sd$matplot)
-do.call(legend, modSd$legend)
+for(D in grep('^sd', names(modSd), value=TRUE)) {
+  do.call(matplot, modSd[[D]]$matplot)
+  do.call(legend, modSd$legend)
+}
 ```
 
 ```{r alphaPlot, eval = requireNamespace("INLA"), purl= requireNamespace("INLA")}
@@ -84,3 +86,52 @@ do.call(matplot, modSd$prob$matplot)
 do.call(legend, modSd$legend)
 ```
 
+# Gamma
+
+```{r gammaData}
+data('meuse', package='sp')
+distBreaks = seq(0, 1, len=101)
+meuse$distCut = cut(meuse$dist, breaks=distBreaks, 
+  right=FALSE)
+meuse$soilFac = factor(meuse$soil, levels=1:3, 
+  labels=c('Calcerous','Non-Calcerous','Red Brick'))
+meuse[1:4,c('cadmium','elev','dist','distCut', 'soilFac')]
+```
+
+
+```{r gammaFit, eval = requireNamespace("INLA"), purl= requireNamespace("INLA")}
+library("INLA", quietly=TRUE)
+mod = inla(
+  cadmium ~ elev + soilFac + 
+  f(distCut, model='rw2', 
+    prior = 'pc.prec', param = c(0.01, 0.5),
+    values = levels(distCut), constr=FALSE,
+    extraconstr = list(
+      A = model.matrix(~0+cut(0.25, distBreaks)), e=0
+      )),
+  data = meuse, family = 'gamma',
+  control.family = list(hyper=list(
+    prec=list(prior = 'pc.prec', param = c(0.1, 0.5)))),
+  verbose=TRUE
+  )
+```
+
+```{r results, eval = exists("mod")}
+```
+
+standard deviation
+```{r sdSummary, eval = exists("mod")}
+```
+
+
+```{r sdPlot, eval = exists("mod")}
+```
+
+```{r distPlot, eval = exists("mod")}
+mod$summary.random$distCut[is.na(mod$summary.random$distCut$mean),-1] = 0
+matplot(distBreaks[-length(distBreaks)], 
+  exp(mod$summary.random$distCut[,paste0(c('0.5','0.025','0.975'), 'quant')]),
+  ylab = 'relative rate', xlab='distance', type='l', lty=c(1,2,2),
+  col='black', log='y')
+legend("bottomleft", lty=c(1,2), legend=c('median','95% CI'), bty='n')
+```
