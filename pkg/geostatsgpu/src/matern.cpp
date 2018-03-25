@@ -1,5 +1,5 @@
 
-//#include <R_ext/Print.h>
+#include <R_ext/Print.h>
 #include <Rmath.h>
 
 #define GSL_DBL_EPSILON 2.2204460492503131e-16
@@ -7,7 +7,6 @@
 
 // make link to /usr/lib/x86_64-linux-gnu/libOpenCL.so
 
-//#include <RcppEigen.h>
 #include <Rcpp.h>
 #include <RcppEigen.h>
 
@@ -35,23 +34,26 @@ void cpp_maternGpu(
 
 	std::string my_kernel = as<std::string>(sourceCode_);
 	viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
+	// add kernel to program
+	viennacl::ocl::program & my_prog = ctx.add_program(my_kernel, "my_kernel");
+
+	// get compiled kernel function
+	viennacl::ocl::kernel & maternKernel = my_prog.get_kernel("maternCL");
 
 	// data
 	const bool BisVCL=1;
-	viennacl::matrix<double> *vclA, *vclD;
-	vclA = getVCLptr<double>(AR, BisVCL, ctx_id);
-	vclD = getVCLptr<double>(DR, BisVCL, ctx_id);
+//	viennacl::matrix<double> *vclA, *vclD;
+//	vclA = getVCLptr<double>(AR, BisVCL, ctx_id);
+	std::shared_ptr<viennacl::matrix<double> > vclA = getVCLptr<double>(AR, BisVCL, ctx_id);
+
+//	vclD = getVCLptr<double>(DR, BisVCL, ctx_id);
+	std::shared_ptr<viennacl::matrix<double> > vclD = getVCLptr<double>(DR, BisVCL, ctx_id);
 
 	int sizeD1=vclD->size1(),sizeD2=vclD->size2(),sizeA1=vclA->size1(),sizeA2=vclA->size2();
 	int iSizeD1=vclD->internal_size1(),iSizeD2=vclD->internal_size2();
 	int iSizeA1=vclA->internal_size1(),iSizeA2=vclA->internal_size2();
 
 
-	// add kernel to program
-	viennacl::ocl::program & my_prog = ctx.add_program(my_kernel, "my_kernel");
-
-	// get compiled kernel function
-	viennacl::ocl::kernel & maternKernel = my_prog.get_kernel("maternCL");
 
 	cl_device_type type_check = ctx.current_device().type();
 
@@ -81,7 +83,10 @@ void cpp_maternGpu(
 	const double sinrat = (fabs(pi_nu) < GSL_DBL_EPSILON ? 1.0 : pi_nu/sin(pi_nu));
 	Rtemme_gamma(&mu, &g_1pnu, &g_1mnu, &g1, &g2);
 
+
 	// execute kernel
+
+//	Rprintf("sizeA1 %d isizeA2 %d sizeD1 %d isizeD2 %d global %d local %d\n", sizeA1, iSizeA2, iSizeD1, iSizeD2, globalSize, max_local_size);
 
 	viennacl::ocl::enqueue(maternKernel(
 			sizeA1, iSizeA2, iSizeD1, iSizeD2,
@@ -102,7 +107,7 @@ void cpp_maternGpu(
 			*vclA, *vclD));
 
 	if(type == 2) {
-		viennacl::linalg::lu_factorize(*vclA);
+//		viennacl::linalg::lu_factorize(*vclA);
 
 	}
 }

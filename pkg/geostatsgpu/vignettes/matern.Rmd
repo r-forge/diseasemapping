@@ -5,39 +5,96 @@
 
 # Matern correlations
 
+```{r packages}
+library('geostatsp')
+library('gpuR')
+library('geostatsgpu')
+```
+
+Set up spatial data
+
+```{r setupData}
+
+Ngrid = c(5, 5)
+
+coordsSp = sp::SpatialPoints(
+	as.matrix(expand.grid(
+	seq(1,by=1,len=Ngrid[2]), 
+	seq(201,by=1,len=Ngrid[2]))))
+
+myParams = c(shape=4.5, range=1.5, variance = 2, 
+	nugget = 0, anisoRatio = 1, 
+	anisoAngleRadians = pi/4)
+myParams2 = c(shape=4.5, range=1.5, variance = 2, 
+	nugget = 0, anisoRatio = 1, 
+	anisoAngleRadians = -pi/4)
+```
+
+Transfer coordinates to GPU and create matrix on GPU to hold the variance matrix
+```{r gpuObjects}
+coordsGpu = gpuR::vclMatrix(coordsSp@coords)
+
+varMatGpu <- vclMatrix(
+    data=-1, 
+    length(coordsSp), length(coordsSp),
+    type='double')
+
+varMatGpuSI <- vclMatrix(
+    data=-1, 
+    length(coordsSp), length(coordsSp),
+    type='double')
+```
+
+Create matern matrix on gpu
+```{r maternMatGpu}
+devtools::install("..")
+devtools::reload("..")
+#system.time(maternGpu(coordsGpu, myParams2, varMatGpu, #'variance'))
+
+as.matrix(geostatsgpu:::maternGpu(x=coordsGpu, param=myParams2, result=varMatGpu, type='variance'))[1:5,1:5]
+as.matrix(geostatsgpu:::maternGpuSI(x=coordsGpu, param=myParams2, result=varMatGpuSI, type='variance'))[1:5,1:5]
+
+as.matrix(varMatGpu)[1:5,1:5]
+as.matrix(varMatGpuSI)[1:5,1:5]
+```
+
+problem if N is bigger than global size
+
+
+create matern matrix the old fashioned way
+```{r maternMatCpu}
+system.time(varMatCpu <- geostatsp::matern(coordsSp, myParams))
+```
+
+```{r compare}
+centreCell = 50*25+25
+
+image(matrix(as.matrix(varMatGpu)[centreCell,],50,50))
+
+image(matrix(as.matrix(varMatCpu)[centreCell,],50,50))
+
+
+theTest = as.matrix(varMatGpu) - varMatCpu
+
+which.max(as.matrix(varMatGpu)[2,] - varMatCpu[2,])
+
+as.matrix(varMatGpu)[2,40:60]
+as.matrix(varMatCpu)[2,40:60]
+
+```
 
 ```{r }
-
-library('geostatsgpu')
-library('geostatsp')
-
-Ngrid = c(50, 50)
-
-x = as.matrix(expand.grid(seq(1,by=1,len=Ngrid[2]), seq(201,by=1,len=Ngrid[2])))
-coordsV = gpuR::vclMatrix(x)
-D3 <- vclMatrix(
+cholVarGpu <- vclMatrix(
     data=-1, 
     nrow(coordsV), nrow(coordsV),
     type='double'
 )
 
-myParams = c(shape=4.5, range=1.5, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/4)
+system.time(c1 <- maternGpu(coordsGpu, myParams, cholVarGpu, 'cholesky'))
+system.time(cholVarCpu <- geostatsp::matern(coordsSp, 
+	myParams, type='cholesky'))
 
-system.time(v1 <- maternGpu(coordsV, myParams, D3, 'variance'))
-system.time(v2 <- geostatsp::matern(sp::SpatialPoints(as.matrix(coordsV)), myParams))
-
-
-
-C3 <- vclMatrix(
-    data=-1, 
-    nrow(coordsV), nrow(coordsV),
-    type='double'
-)
-
-system.time(c1 <- maternGpu(coordsV, myParams, C3, 'cholesky'))
-system.time(c2 <- geostatsp::matern(sp::SpatialPoints(as.matrix(coordsV)), myParams, type='cholesky'))
-
-as.matrix(C3)[1:5,1:5]
-as.matrix(c2)[1:5,1:5]
+as.matrix(cholVarGpu)[1:5,1:5]
+as.matrix(cholVarCpu)[1:5,1:5]
 
 ```

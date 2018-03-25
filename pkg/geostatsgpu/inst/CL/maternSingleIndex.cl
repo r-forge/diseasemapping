@@ -1,62 +1,74 @@
 
 
 __kernel void maternSingleIndexCL(
-	__local const unsigned int Ncell,
-	__local const unsigned int sizeCoordsPadCol,
-	__local const unsigned int sizeResultPadRow,
-	__local const unsigned int sizeResultPadCol,
-	__local const unsigned int maxIter,
-	__local const double nu,
-	__local const int nuround,
-	__local const double mu,
-	__local const double muSq,
-	__local const double mup1,
-	__local const double costheta,
-	__local const double sintheta,
-	__local const double anisoRatioSq,
-	__local const double varscale,
-	__local const double logxscale,
-	__local const double sinrat,
-	__local const double g_1pnu,
-	__local const double g_1mnu,
-	__local const double g1,
-	__local const double g2,
-	__local const double epsilon,
-	__local const double *coords,
+	const unsigned int Ncell,
+	const unsigned int sizeCoordsPadCol,
+	const unsigned int sizeResultPadRow,
+	const unsigned int sizeResultPadCol,
+	const unsigned int maxIter,
+	const double nu,
+	const int nuround,
+	const double mu,
+	const double muSq,
+	const double mup1,
+	const double costheta,
+	const double sintheta,
+	const double anisoRatioSq,
+	const double varscale,
+	const double logxscale,
+	const double sinrat,
+	const double g_1pnu,
+	const double g_1mnu,
+	const double g1,
+	const double g2,
+	const double epsilon,
+	__global const double *coords,
 	__global double *result) {
 	// Get the index of the elements to be processed
 
-	unsigned int Dcell, Drow, Dcol, k;
+	int Dcell, Drow, Dcol, k;
 
 	double dist[2], distRotate[2], distSq;
-	double logthisx, K_mu, K_mup1, logck, K_nu, K_nup1, Kp_nu;
+	double logthisx, K_mu, K_mup1, logck, K_nu, K_nup1, Kp_nu, K_num1;
 	double twoLnHalfX, sigma, half_x_nu, sinhrat;
 	double ln_half_x, thisx, maternBit, expMaternBit;
 
 	double bi, delhi, hi, di, qi, qip1, ai, a1, ci, Qi, s, dels, tmp;
-	double fk, pk, qk, hk, sum0, sum1, logck, del0, ck, del1;
+	double fk, pk, qk, hk, sum0, sum1, del0, ck, del1;
 
 	// matrix stacked row-wise, excluding diagonal
-	// k = i * (i-1) + j
-	// i = floor( (1 + sqrt(1 + 8*k)) / 2)
-	// j = k - i*(i-1)/2
-	// Drow = i-1, Dcol = j-1, Dcell = k-1
+	// i = row, j  = col, k = cell
+	// k = i^2/2 - i/2 - i + j + 1
+	// if j = i-1
+	// i^2/2 - 1/2 i -k = 0 or i = [1/2 pm sqrt (1/4 + 4 * (1/2) * k)] / 2 * (1/2)  
+	//   i = 1/2 + sqrt (1/4 + 2*k)
+	// kk = 1:12;ii = ceiling(1/2 + sqrt(0.25 + 2*kk));ii
+	// jj = kk - 1 - ii^2/2 + (3/2)*ii;jj
+	// Drow = ii-1;jj = kk - 1 - Drow-1^2/2 + (3/2)*ii;jj
+	// Dcell +1 = (Drow+1)*Drow/2 - Drow + Dcol + 1 
+	// Dcell = Drow (Drow/2 - 1/2) + Dcol
+	// Dcol = Dcell - Drow * (Drow-1)/2
 	// Ncell = (N-1) * N / 2
 
-	for(Dcell = get_global_id(0), 
-		Dcell < Ncell, 
-		Dcell += get_global_size(0)) {
+	for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += get_global_size(0)) {
+//	for(Dcell = get_global_id(0); Dcell <= get_global_id(0); Dcell += get_global_size(0)) {
 
-		Drow = floor( (1 + sqrt(9 + 8*Dcell)) / 2)-1;
-		Dcol = Dcell - (Drow + 1) * Drow / 2;
+//	if(Dcell < 10) {
+//		result[Dcol + Drow * sizeResultPadRow] = Dcell; // lower triangle
+//		result[Drow + Dcol * sizeResultPadRow] = Dcol; // upper triangle
+//	}
+
+	Drow = ceil(0.5 + sqrt(0.25 + 2.0*(Dcell+1) ) ) - 1;
+	Dcol = Dcell - round(Drow * (Drow - 1.0) / 2.0);
+
+//		result[Dcol + Drow * sizeResultPadRow] = -1000*Dcol - 0.001*Drow; // lower triangle
+//		result[Drow + Dcol * sizeResultPadRow] = 1000*Dcol + 0.001*Drow; // upper triangle
 
 		dist[0] = coords[Drow*sizeCoordsPadCol] - coords[Dcol*sizeCoordsPadCol];
 		dist[1] = coords[Dcol*sizeCoordsPadCol +1] - coords[Drow*sizeCoordsPadCol +1];
 		distRotate[0] = costheta *dist[0] - sintheta * dist[1];
 		distRotate[1] = sintheta *dist[0] + costheta * dist[1];
 		distSq = distRotate[0]*distRotate[0] + distRotate[1]*distRotate[1]/anisoRatioSq;
-
-		//		result[Dcol * sizeResultPadRow + Drow] = distSq; // upper triangle
 
 		logthisx = log(distSq)/2 + logxscale;
 
@@ -67,7 +79,7 @@ __kernel void maternSingleIndexCL(
 
 		// gsl_sf_bessel_K_scaled_temme x < 2
 		// gsl_sf_bessel_K_scaled_steed_temme_CF2 x > 2
-		result[Dcol * sizeResultPadRow + Drow] = logthisx;
+//		result[Dcol * sizeResultPadRow + Drow] = logthisx;
 		if(logthisx > 2.0) { // gsl_sf_bessel_K_scaled_steed_temme_CF2
 			K_nu = 0.0;
 			bi = 2.0*(1.0 + thisx);//x);"
@@ -114,7 +126,7 @@ __kernel void maternSingleIndexCL(
 			half_x_nu = exp(-sigma);
 			sinhrat = sinh(sigma)/sigma;
 
-			k = sinrat * (cosh(sigma)*g1 - sinhrat*ln_half_x*g2);
+			fk = sinrat * (cosh(sigma)*g1 - sinhrat*ln_half_x*g2);
 			pk = 0.5/half_x_nu * g_1pnu;
 			qk = 0.5*half_x_nu * g_1mnu;
 			hk = pk;
@@ -123,7 +135,6 @@ __kernel void maternSingleIndexCL(
 			k=0;
 			logck = maternBit;
 			del0 = fabs(sum0)+100;
-			ck, del1;
 
 			while( (k < maxIter) && ( fabs(del0) > (epsilon * fabs(sum0)) ) ) {
 				k++;
@@ -153,6 +164,6 @@ __kernel void maternSingleIndexCL(
 		}
 		result[Dcol + Drow * sizeResultPadRow] = K_nu; // lower triangle
 		result[Drow + Dcol * sizeResultPadRow] = K_nu; // upper triangle
-		}// not diag
+		}// loop through cells
 
 };//function

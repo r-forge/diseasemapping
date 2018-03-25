@@ -1,8 +1,25 @@
 #include <R_ext/Print.h>
+#include <math.h>
+
+#define GSL_DBL_EPSILON 2.2204460492503131e-16
+#define GSL_SUCCESS 0
+#define GSL_SQRT_DBL_MAX 1.3407807929942596e+154
+#define GSL_EMAXITER 11
+
+struct gsl_sf_result_e10_struct {
+  double val;
+  double err;
+  int    e10;
+};
+typedef struct gsl_sf_result_e10_struct gsl_sf_result_e10;
+
+
+Rtemme_gamma(double *nu, double * g_1pnu, double * g_1mnu, double *g1, double *g2);
 
 int gsl_sf_temme_gamma(const double nu, double * g_1pnu, double * g_1mnu, double * g1, double * g2);
 
 int gsl_sf_bessel_Knu_scaled_e10_e(const double nu, const double x, gsl_sf_result_e10 * result);
+
 
 void bessel_Knu_scaled(double *nu, double *x, double *result, int *N) {
 	int D;

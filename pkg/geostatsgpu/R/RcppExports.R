@@ -5,3 +5,7 @@ cpp_maternGpu <- function(AR, DR, paramR, type, upper, sourceCode_, cholSourceCo
     invisible(.Call('_geostatsgpu_cpp_maternGpu', PACKAGE = 'geostatsgpu', AR, DR, paramR, type, upper, sourceCode_, cholSourceCode_, max_local_size, ctx_id))
 }
 
+cpp_maternGpuSingleIndex <- function(varR, DofLDLR, XYR, crossprodR, coordsR, paramR, type, upper, sourceCode_, max_local_size, ctx_id) {
+    invisible(.Call('_geostatsgpu_cpp_maternGpuSingleIndex', PACKAGE = 'geostatsgpu', varR, DofLDLR, XYR, crossprodR, coordsR, paramR, type, upper, sourceCode_, max_local_size, ctx_id))
+}
+

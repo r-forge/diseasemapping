@@ -50,7 +50,6 @@ __kernel void maternCL(
 		distRotate[1] = sintheta *dist[0] + costheta * dist[1];
 		const double distSq = distRotate[0]*distRotate[0] + distRotate[1]*distRotate[1]/anisoRatioSq;
 
-		//		result[Dcol * sizeResultPadRow + Drow] = distSq; // upper triangle
 
 		const double logthisx = log(distSq)/2 + logxscale;
 		double K_mu, K_mup1, logck;
@@ -68,7 +67,7 @@ __kernel void maternCL(
 
 		// gsl_sf_bessel_K_scaled_temme x < 2
 		// gsl_sf_bessel_K_scaled_steed_temme_CF2 x > 2
-		result[Dcol * sizeResultPadRow + Drow] = logthisx;
+//		result[Dcol * sizeResultPadRow + Drow] = logthisx;
 		if(logthisx > 2.0) { // gsl_sf_bessel_K_scaled_steed_temme_CF2
 			K_nu = 0.0;
 			double bi = 2.0*(1.0 + thisx);//x);"
@@ -166,6 +165,8 @@ __kernel void maternCL(
 		}
 		result[Dcol + Drow * sizeResultPadRow] = K_nu; // lower triangle
 		result[Drow + Dcol * sizeResultPadRow] = K_nu; // upper triangle
+//		result[Dcol * sizeResultPadRow + Drow] = logthisx; // upper triangle
+
 	}// not diag
 
 };//function

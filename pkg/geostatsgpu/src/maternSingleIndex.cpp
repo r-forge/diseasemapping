@@ -23,14 +23,14 @@ using namespace Rcpp;
 
 //[[Rcpp::export]]
 void cpp_maternGpuSingleIndex(
-		SEXP AR,
-		SEXP DofLDLR,
+	SEXP varR,
+	SEXP DofLDLR,
 		SEXP XYR, // solve for Lt b = XY
 		SEXP crossprodR, //bt b
 		SEXP coordsR,
 		SEXP paramR,
 		const int type, // 2 cholesky 3 inversecholesky, 4 inverse, 5 solve for b
-	    const int upper,
+		const int upper,
 		SEXP sourceCode_,
 		int max_local_size,
 		const int ctx_id) {
@@ -48,20 +48,23 @@ void cpp_maternGpuSingleIndex(
 
 	// data
 	const bool BisVCL=1;
-	viennacl::matrix<double> *vclA, *vclD;
-	vclA = getVCLptr<double>(AR, BisVCL, ctx_id);
-	vclCoords = getVCLptr<double>(coordsR, BisVCL, ctx_id);
+	unsigned int D;
+
+	std::shared_ptr<viennacl::matrix<double> > vclVar = getVCLptr<double>(varR, BisVCL, ctx_id);
+	std::shared_ptr<viennacl::matrix<double> > vclCoords = getVCLptr<double>(coordsR, BisVCL, ctx_id);
+	std::shared_ptr<viennacl::matrix<double> > vclDofLDL = getVCLptr<double>(DofLDLR, BisVCL, ctx_id);
+
 
 	const unsigned int 
-		sizeCoords1=vclCoords->size1(),
-		sizeCoords2=vclCoords->size2(),
-		sizeA1=vclA->size1(),
-		sizeA2=vclA->size2(),
-		iSizeCoords1=vclCoords->internal_size1(),
-		iSizeCoords2=vclCoords->internal_size2(),
-		iSizeA1=vclA->internal_size1(),
-		iSizeA2=vclA->internal_size2(),
-		Ncell = sizeA1 * (sizeA1 - 1)/2;
+	sizeCoords1=vclCoords->size1(),
+	sizeCoords2=vclCoords->size2(),
+	sizeVar1=vclVar->size1(),
+	sizeVar2=vclVar->size2(),
+	iSizeCoords1=vclCoords->internal_size1(),
+	iSizeCoords2=vclCoords->internal_size2(),
+	iSizeVar1=vclVar->internal_size1(),
+	iSizeVar2=vclVar->internal_size2(),
+	Ncell = sizeVar1 * (sizeVar1 - 1)/2;
 
 	if(max_local_size > Ncell) max_local_size = Ncell;
 
@@ -85,8 +88,8 @@ void cpp_maternGpuSingleIndex(
 	double mu = param[0] - nuround;
 	double g_1pnu, g_1mnu, g1, g2;
 	const double muSq = mu*mu, 
-		mup1 = mu + 1.0,
-		pi_nu = M_PI * mu;
+	mup1 = mu + 1.0,
+	pi_nu = M_PI * mu;
 	const double sinrat = (fabs(pi_nu) < GSL_DBL_EPSILON ? 1.0 : pi_nu/sin(pi_nu));
 
 	Rtemme_gamma(&mu, &g_1pnu, &g_1mnu, &g1, &g2);
@@ -94,50 +97,53 @@ void cpp_maternGpuSingleIndex(
 	// execute kernel
 
 	viennacl::ocl::enqueue(maternKernel(
-			Ncell, iSizeA2, iSizeCoords1, iSizeCoords2, maxIter,
+		Ncell, iSizeCoords2, iSizeVar1, iSizeVar2, maxIter,
 			// nuround mu
-			param[0], nuround, mu, muSq, mup1,
+		param[0], nuround, mu, muSq, mup1,
 			// cos theta, sin theta
-			cos(param[5]), sin(param[5]),
+		cos(param[5]), sin(param[5]),
 			// parameters from matern.c in geostatsp
 			// anisoRatioSq
-			(param[4])*(param[4]),
+		(param[4])*(param[4]),
 			// varscale
-			log(param[2]) - Rf_lgammafn(param[0]) - (param[0]-1)*M_LN2,
+		log(param[2]) - Rf_lgammafn(param[0]) - (param[0]-1)*M_LN2,
 			// logxscale
-			1.5 * M_LN2 + 0.5 * log(param[0]) - log(param[1]),
+		1.5 * M_LN2 + 0.5 * log(param[0]) - log(param[1]),
 			// parameters from bessel temme in gsl
-			sinrat, g_1pnu, g_1mnu, g1, g2,
-			GSL_DBL_EPSILON /1000,
-			*vclA, *vclCoords));
+		sinrat, g_1pnu, g_1mnu, g1, g2,
+		GSL_DBL_EPSILON /1000, 
+		*vclCoords,
+		*vclVar));
 
 		// diagonal matrix with nugget + sigmasq
 		// diagonal of the matrix
-		viennacl::vector_base<double> diagOfA(
-			vclA.handle(), vclA.size1(), 
-			0, vclA.internal_size2() + 1);
-		const double varDiag = param[3] + param[2];
-		// can I do diagOfA = varDiag?
-		// or matrix_diagonal_assign or vector_assign?
-		for(unsigned int D=0, D<sizeA1;++D) {
-			diagOfA[D] = varDiag;
-		}
+//	viennacl::vector_base<double> diagOfA(
+//		vclA.handle(), 
+//		vclA.size1(), 
+//		0, 
+//		vclA.internal_size2() + 1);
 
-	if(type =>2) {
+	const double varDiag = param[3] + param[2];
+	// can I do diagOfA = varDiag?
+	// or matrix_diagonal_assign or vector_assign?
+//	for(D = 0, D < sizeA1, ++D) {
+//		diagOfA[D] = varDiag;
+//	}
+
+//	if( type >= 2 ) {
 		// cholesky
-		viennacl::linalg::lu_factorize(vclA);
-		vclDofLDL = getVCLptr<double>(DofLDLR, BisVCL, ctx_id);
-		vclDofLDL = diag(vclA);
-		for(D=0, D<sizeA1;++D) {
-			diagOfA[D] = 1.0;
-		}
+//		viennacl::linalg::lu_factorize(vclA);
+//		vclDofLDL = diag(vclA);
+//		for(D=0, D < sizeA1, ++D) {
+//			diagOfA[D] = 1.0;
+//		}
+//	}
 		// or matrix_diagonal_assign or vector_assign?
-		// 3, 4 probably won't be implemented
-	if(type == 5) { // solve for Lt b = X
+		// 3, 4 probably won't be implemente
+//	if(type == 5) { // solve for Lt b = X
 // not implemented yet
-	}
+//	}
 
-	}
 
 
 }
