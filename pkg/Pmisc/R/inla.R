@@ -12,8 +12,10 @@
 priorPostSd = function(
   object, 
   param=1:length(object$all.hyper$random),
-  group = c('random','family')){
+  group = c('random','family')
+){
 
+  param = param[ param <= length(object$all.hyper[[group]]) ]
 	 # return prior and posterior of all standard deviation parameters
 
   res = object
@@ -33,9 +35,9 @@ priorPostSd = function(
       qq$label)
     )
     Slabel = do.call(rbind, Slabel)
-    paramLong1 = paste(Slabel[,1], 'parameter for', Slabel[,2])
-    paramLongRegexp = gsub("prec ", "prec.* ", paramLong1)
-    paramLongRegexp = gsub(" for ", " for (the )?", paramLongRegexp)
+    paramLong1 = paste0(Slabel[,1], ' (parameter )?for ', Slabel[,2])
+    paramLongRegexp = gsub("prec ", "prec(ision)? ", paramLong1)
+    paramLongRegexp = gsub("[?]for ", "?for( the)? ", paramLongRegexp)
     paramLong = unlist(mapply(
       grep, 
       pattern = paramLongRegexp, 
