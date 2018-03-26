@@ -47,13 +47,8 @@ maternGpu = function(
   
   param = geostatsp::fillParam(param)
   
-  file = '/home/patrick/workspaceOxygen/diseasemapping/pkg/geostatsgpu/inst/CL/matern.cl'
-  if(!file.exists(file))
     file <- system.file("CL", "matern.cl", package = "geostatsgpu")
-  
-  if(!file_test("-f", file)){
-    stop("kernel file does not exist")
-  }
+
   kernel <- readChar(file, file.info(file)$size)
 
 # use https://github.com/markholland/cholesky/blob/master/OpenCl/kernels.c instead?
@@ -100,8 +95,8 @@ maternGpuSI = function(
 ) {
   
   type = gsub("iance$|esky$|ision", "", tolower(type)[1])    
-  type = c(var=1,chol=2,prec=3,inversechol=4)[type]    
-
+  type = c(var=1,chol=2,prec=3,inversechol=4)[type]
+  print(type)
   maxWorkGroupSize <- switch(
       deviceType(result@.platform_index, result@.device_index),
       "gpu" = gpuInfo(result@.platform_index, result@.device_index)$maxWorkGroupSize,
@@ -111,13 +106,7 @@ maternGpuSI = function(
   
   param = geostatsp::fillParam(param)
   
-  file = '/home/patrick/workspaceOxygen/diseasemapping/pkg/geostatsgpu/inst/CL/maternSingleIndex.cl'
-  if(!file.exists(file))
     file <- system.file("CL", "maternSingleIndex.cl", package = "geostatsgpu")
-  
-  if(!file_test("-f", file)){
-    stop("kernel file does not exist")
-  }
   kernel <- readChar(file, file.info(file)$size)
 
 

@@ -46,8 +46,8 @@ __kernel void maternCL(
 		double dist[2], distRotate[2];
 		dist[0] = coords[Drow*sizeCoordsPadCol] - coords[Dcol*sizeCoordsPadCol];
 		dist[1] = coords[Dcol*sizeCoordsPadCol +1] - coords[Drow*sizeCoordsPadCol +1];
-		distRotate[0] = costheta *dist[0] - sintheta * dist[1];
-		distRotate[1] = sintheta *dist[0] + costheta * dist[1];
+		distRotate[0] = costheta *dist[0] + sintheta * dist[1];
+		distRotate[1] = - sintheta *dist[0] + costheta * dist[1];
 		const double distSq = distRotate[0]*distRotate[0] + distRotate[1]*distRotate[1]/anisoRatioSq;
 
 

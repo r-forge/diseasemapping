@@ -132,166 +132,166 @@ gm.dataRaster = function(
         data, method=rmethod)
       
     } else { # only log offset
-      covariatesStack = cellsSmall
-      covData = NULL
-    }
-    
-    
-    for(D in names(offsetToLogOrig)) {
+    covariatesStack = cellsSmall
+    covData = NULL
+  }
+
+
+  for(D in names(offsetToLogOrig)) {
       # loop through offsets which should
       # be aggregated before taking logs
-      offsetToLog = covariates[[D]]
-      
-      toCrop = merge(
-        projectExtent(covariatesStack, 
-          crs(offsetToLog)
-          ),
-        projectExtent(data, 
-          crs(offsetToLog)
-          )
+    offsetToLog = covariates[[D]]
+
+    toCrop = merge(
+      projectExtent(covariatesStack, 
+        crs(offsetToLog)
+        ),
+      projectExtent(data, 
+        crs(offsetToLog)
         )
-      
-      
-      offsetToLogCrop = raster::crop(
-        offsetToLog, 
-        toCrop
-        )
-      
-      offsetToLogCrop = projectRaster(
-        offsetToLogCrop,
-        crs=crs(covariatesStack),
-        method='ngb')
-      
+      )
+
+
+    offsetToLogCrop = raster::crop(
+      offsetToLog, 
+      toCrop
+      )
+
+    offsetToLogCrop = projectRaster(
+      offsetToLogCrop,
+      crs=crs(covariatesStack),
+      method='ngb')
+
       # aggregate for covariates
-      toAggregate = floor(min(res(covariatesStack)/res(offsetToLogCrop)))
-      
-      if(any(toAggregate > 1)){
-        offsetToLogAgg = aggregate(offsetToLogCrop, fact=toAggregate, 
-          fun=sum, na.rm=TRUE)
-      } else {
-        toAggregate = 1
-        offsetToLogAgg = offsetToLogCrop
-      }
+    toAggregate = floor(min(res(covariatesStack)/res(offsetToLogCrop)))
+
+    if(any(toAggregate > 1)){
+      offsetToLogAgg = aggregate(offsetToLogCrop, fact=toAggregate, 
+        fun=sum, na.rm=TRUE)
+    } else {
+      toAggregate = 1
+      offsetToLogAgg = offsetToLogCrop
+    }
+    offsetToLogAgg = projectRaster(offsetToLogAgg, covariatesStack)
+
+    offsetToLogAgg = reclassify(
+      offsetToLogAgg, 
+      t(c(-Inf,0,NA)) 
+      )
+
+    offsetToLogLogged = log(offsetToLogAgg) - 
+    sum(log(rep_len(toAggregate,2)))
+    names(offsetToLogLogged) = paste('log',D,sep='')
+    covariatesStack = stack(covariatesStack, offsetToLogLogged)
+    toDrop = which(alltermsFull==offsetToLogOrig[D])
+
+      # the offsets
+    allOffsets = grep(
+      "^offset\\([[:print:]]+\\)$", 
+      gsub("[[:space:]]+", "", alltermsFull), value=TRUE)
+    offsetNotLogged = grep(
+      "^offset\\([[:print:]]+,log=TRUE\\)$", 
+      gsub("[[:space:]]+", "", allOffsets), 
+      invert=TRUE, value=TRUE)
+
+
+      # any other offsets would also have been removed
+      # by drop.terms
+
+
+    if(length(allOffsets)< length(alltermsFull)) {
+      formula = update.formula(
+        drop.terms(terms(formula), dropx=toDrop, keep.response=TRUE),
+        as.formula(
+          paste(".~.", 
+            paste("offset(log", D, ")", sep=''),
+            offsetNotLogged, 
+            sep = '+')
+          ) 	
+        )
+    } else {
+        # only offsets in the model
+        # drop.terms won't work
+      formula = update.formula(
+        formula,
+        as.formula(
+          paste(".~", 
+            paste("offset(log", D, ")", sep=''),
+            offsetNotLogged, 
+            sep = '+')
+          )
+
+        )	
+    }
+
+    rmethod[paste('log',D,sep='')] = 'bilinear'
+
+      # aggregate for data
+    toAggregateData = floor(min(res(data)/res(offsetToLogCrop)))
+    if(toAggregateData != toAggregate & toAggregateData > 1 ){
+      offsetToLogAgg = aggregate(offsetToLogCrop, fact=toAggregateData, fun=sum)
       offsetToLogAgg = projectRaster(offsetToLogAgg, covariatesStack)
-      
       offsetToLogAgg = reclassify(
         offsetToLogAgg, 
         t(c(-Inf,0,NA)) 
         )
-      
-      offsetToLogLogged = log(offsetToLogAgg) - 
-      sum(log(rep_len(toAggregate,2)))
-      names(offsetToLogLogged) = paste('log',D,sep='')
-      covariatesStack = stack(covariatesStack, offsetToLogLogged)
-      toDrop = which(alltermsFull==offsetToLogOrig[D])
-      
-      # the offsets
-      allOffsets = grep(
-        "^offset\\([[:print:]]+\\)$", 
-        gsub("[[:space:]]+", "", alltermsFull), value=TRUE)
-      offsetNotLogged = grep(
-        "^offset\\([[:print:]]+,log=TRUE\\)$", 
-        gsub("[[:space:]]+", "", allOffsets), 
-        invert=TRUE, value=TRUE)
-      
-      
-      # any other offsets would also have been removed
-      # by drop.terms
-      
-      
-      if(length(allOffsets)< length(alltermsFull)) {
-        formula = update.formula(
-          drop.terms(terms(formula), dropx=toDrop, keep.response=TRUE),
-          as.formula(
-            paste(".~.", 
-              paste("offset(log", D, ")", sep=''),
-              offsetNotLogged, 
-              sep = '+')
-            ) 	
-          )
-      } else {
-        # only offsets in the model
-        # drop.terms won't work
-        formula = update.formula(
-          formula,
-          as.formula(
-            paste(".~", 
-              paste("offset(log", D, ")", sep=''),
-              offsetNotLogged, 
-              sep = '+')
-            )
 
-          )	
-      }
-      
-      rmethod[paste('log',D,sep='')] = 'bilinear'
-      
-      # aggregate for data
-      toAggregateData = floor(min(res(data)/res(offsetToLogCrop)))
-      if(toAggregateData != toAggregate & toAggregateData > 1 ){
-        offsetToLogAgg = aggregate(offsetToLogCrop, fact=toAggregateData, fun=sum)
-        offsetToLogAgg = projectRaster(offsetToLogAgg, covariatesStack)
-        offsetToLogAgg = reclassify(
-          offsetToLogAgg, 
-          t(c(-Inf,0,NA)) 
-          )
-        
-        offsetToLogLogged = log(offsetToLogAgg) + 
-        sum(log(res(covariatesStack))) -
-        sum(log(res(offsetToLogCrop)))
-        names(offsetToLogLogged) = paste('log',D,sep='')
-      }
-      
-      covData = stack(
-        covData,
-        offsetToLogLogged
-        )
-      
-    } # end in names(offsetToLogOrig)
-    covariatesSP = as(covariatesStack, "SpatialPointsDataFrame")
-    covariatesDF = covariatesSP@data
-    
-    data = stack(data, covData)			
-    
-    
-  } else {
-    covariatesDF = data.frame()
-  }
-  
-  if(any(res(data)>1.25*res(cellsSmall)))
-    warning("data is coarser than grid")
-  
-  data = stack(data, resample(cellsSmall, data, method='ngb'))	
-  
-  
-  dataSP = as(data, "SpatialPointsDataFrame")
-  dataDF =dataSP@data
-  
+      offsetToLogLogged = log(offsetToLogAgg) + 
+      sum(log(res(covariatesStack))) -
+      sum(log(res(offsetToLogCrop)))
+      names(offsetToLogLogged) = paste('log',D,sep='')
+    }
+
+    covData = stack(
+      covData,
+      offsetToLogLogged
+      )
+
+  } # end in names(offsetToLogOrig)
+  covariatesSP = as(covariatesStack, "SpatialPointsDataFrame")
+  covariatesDF = covariatesSP@data
+
+  data = stack(data, covData)			
+
+
+} else {
+  covariatesDF = data.frame()
+}
+
+if(any(res(data)>1.25*res(cellsSmall)))
+  warning("data is coarser than grid")
+
+data = stack(data, resample(cellsSmall, data, method='ngb'))	
+
+
+dataSP = as(data, "SpatialPointsDataFrame")
+dataDF =dataSP@data
+
   # redo factors
 # loop through spatial covariates which are factors
-  for(D in intersect(Sfactor, names(covariatesDF))) {
-    theTable = sort(table(dataDF[[D]]), decreasing=TRUE)
-    theLevels = levels(covariates[[D]])[[1]]
-    if(is.null(theLevels)) {
-      theLabels = paste("l", names(theTable),sep="")
-    } else {
-      theLabels = theLevels[
-      match(as.integer(names(theTable)), theLevels$ID)
-      ,"Category"]
-    }
-    dataDF[[D]] = factor(dataDF[[D]], levels=as.integer(names(theTable)),
-      labels=theLabels)			
-    covariatesDF[[D]] = factor(covariatesDF[[D]], levels=as.integer(names(theTable)),
-      labels=theLabels)			
-    
+for(D in intersect(Sfactor, names(covariatesDF))) {
+  theTable = sort(table(dataDF[[D]]), decreasing=TRUE)
+  theLevels = levels(covariates[[D]])[[1]]
+  if(is.null(theLevels)) {
+    theLabels = paste("l", names(theTable),sep="")
+  } else {
+    theLabels = theLevels[
+    match(as.integer(names(theTable)), theLevels$ID)
+    ,"Category"]
   }
-  
-  list(
-    data=dataDF,
-    grid=cellsSmall,
-    covariates=covariatesDF,
-    formula = formula
-    )
+  dataDF[[D]] = factor(dataDF[[D]], levels=as.integer(names(theTable)),
+    labels=theLabels)			
+  covariatesDF[[D]] = factor(covariatesDF[[D]], levels=as.integer(names(theTable)),
+    labels=theLabels)			
+
+}
+
+list(
+  data=dataDF,
+  grid=cellsSmall,
+  covariates=covariatesDF,
+  formula = formula
+  )
 }
 
 
@@ -371,7 +371,7 @@ gm.dataSpatial = function(
       names(rmethod) = names(covariates)
       rmethod[covFactors] = "ngb"
       rmethod[intersect(names(covariates), termsInF)] = "ngb"
- 
+
       covariatesStack = stackRasterList(
         covariates, 
         template=cellsSmall, 
@@ -432,20 +432,28 @@ gm.dataSpatial = function(
         }
       }
 
-      data[[D]] = factor(
+      # re-factor data with new baseline category
+      if(is.character(data[[D]])) {
+        data[[D]] = factor(
+          data[[D]], 
+          levels=theLabels,
+          labels=theLabels)     
+      } else {
+       data[[D]] = factor(
         as.integer(data[[D]]), 
         levels=as.integer(names(theTable)),
         labels=theLabels)			
-      covariatesDF[[D]] = factor(
-        as.integer(covariatesDF[[D]]), 
-        levels=as.integer(names(theTable)),
-        labels=theLabels)			
-    }
+     }
+     covariatesDF[[D]] = factor(
+      as.integer(covariatesDF[[D]]), 
+      levels=as.integer(names(theTable)),
+      labels=theLabels)			
+   }
 
 
-    list(
-      data=data,
-      grid = cellsSmall,
-      covariates=covariatesDF
-      )
-  }
+   list(
+    data=data,
+    grid = cellsSmall,
+    covariates=covariatesDF
+    )
+ }

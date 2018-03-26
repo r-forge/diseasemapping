@@ -11,6 +11,7 @@
 #include <Rcpp.h>
 #include <RcppEigen.h>
 
+#include "viennacl/linalg/lu.hpp"
 #include "viennacl/ocl/backend.hpp"
 
 #include "gpuR/utils.hpp"
@@ -116,28 +117,18 @@ void cpp_maternGpuSingleIndex(
 		*vclVar));
 
 		// diagonal matrix with nugget + sigmasq
-		// diagonal of the matrix
-//	viennacl::vector_base<double> diagOfA(
-//		vclA.handle(), 
-//		vclA.size1(), 
-//		0, 
-//		vclA.internal_size2() + 1);
 
 	const double varDiag = param[3] + param[2];
-	// can I do diagOfA = varDiag?
-	// or matrix_diagonal_assign or vector_assign?
-//	for(D = 0, D < sizeA1, ++D) {
-//		diagOfA[D] = varDiag;
-//	}
+	viennacl::linalg::opencl::matrix_diagonal_assign(*vclVar, varDiag);	
 
-//	if( type >= 2 ) {
+	if( type >= 2 ) {
 		// cholesky
-//		viennacl::linalg::lu_factorize(vclA);
+		 viennacl::linalg::lu_factorize(*vclVar);
 //		vclDofLDL = diag(vclA);
 //		for(D=0, D < sizeA1, ++D) {
 //			diagOfA[D] = 1.0;
 //		}
-//	}
+	}
 		// or matrix_diagonal_assign or vector_assign?
 		// 3, 4 probably won't be implemente
 //	if(type == 5) { // solve for Lt b = X

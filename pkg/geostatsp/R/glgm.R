@@ -260,9 +260,9 @@ setMethod("glgm",
         newLevels = unique(c(thebase, levels(factor(data[,D]))))
         data[,D] = factor(data[,D], levels=newLevels)
         if(D %in% colnames(covariates))
-          covariates[,D] = factor(covariates[,D],
+          covariates[,D] = factor(
+            covariates[,D],
             levels=levels(data[,D]))
-
       }
     }
 
@@ -379,7 +379,7 @@ setMethod("glgm",
   allVars = allVarsP(formulaOrig)
 
   if(length(allVars)) {
-    theNA = apply(data[,allVars,drop=FALSE], 
+    theNA = apply(data[,c(allVars,'space'),drop=FALSE], 
       1, function(qq) any(is.na(qq)))
   } else {
     theNA = rep(FALSE, ncol(data))

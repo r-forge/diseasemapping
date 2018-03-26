@@ -51,23 +51,15 @@ __kernel void maternSingleIndexCL(
 	// Ncell = (N-1) * N / 2
 
 	for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += get_global_size(0)) {
-//	for(Dcell = get_global_id(0); Dcell <= get_global_id(0); Dcell += get_global_size(0)) {
 
-//	if(Dcell < 10) {
-//		result[Dcol + Drow * sizeResultPadRow] = Dcell; // lower triangle
-//		result[Drow + Dcol * sizeResultPadRow] = Dcol; // upper triangle
-//	}
+		Drow = ceil(0.5 + sqrt(0.25 + 2.0*(Dcell+1) ) ) - 1;
+		Dcol = Dcell - round(Drow * (Drow - 1.0) / 2.0);
 
-	Drow = ceil(0.5 + sqrt(0.25 + 2.0*(Dcell+1) ) ) - 1;
-	Dcol = Dcell - round(Drow * (Drow - 1.0) / 2.0);
-
-//		result[Dcol + Drow * sizeResultPadRow] = -1000*Dcol - 0.001*Drow; // lower triangle
-//		result[Drow + Dcol * sizeResultPadRow] = 1000*Dcol + 0.001*Drow; // upper triangle
 
 		dist[0] = coords[Drow*sizeCoordsPadCol] - coords[Dcol*sizeCoordsPadCol];
 		dist[1] = coords[Dcol*sizeCoordsPadCol +1] - coords[Drow*sizeCoordsPadCol +1];
-		distRotate[0] = costheta *dist[0] - sintheta * dist[1];
-		distRotate[1] = sintheta *dist[0] + costheta * dist[1];
+		distRotate[0] = costheta *dist[0] + sintheta * dist[1];
+		distRotate[1] = sintheta *dist[0] - costheta * dist[1];
 		distSq = distRotate[0]*distRotate[0] + distRotate[1]*distRotate[1]/anisoRatioSq;
 
 		logthisx = log(distSq)/2 + logxscale;
@@ -114,54 +106,54 @@ __kernel void maternSingleIndexCL(
 				if(fabs(dels/s) < epsilon) break;
 				} // k loop
 
-			hi *= -a1;
+				hi *= -a1;
 			K_nu = exp(-thisx) * exp(maternBit) * sqrt(M_PI/(2.0*thisx)) / s;//"  sqrt(pi)/2 sqrt(2/x)/s =
 
 			K_nup1 = K_nu * (mu + thisx + 0.5 - hi)/thisx;
 			Kp_nu  = - K_nup1 + mu/thisx * K_nu;
 
 			} else { // if short distance gsl_sf_bessel_K_scaled_temme
-			twoLnHalfX = 2*ln_half_x;
-			sigma   = - mu * ln_half_x;
-			half_x_nu = exp(-sigma);
-			sinhrat = sinh(sigma)/sigma;
+				twoLnHalfX = 2*ln_half_x;
+				sigma   = - mu * ln_half_x;
+				half_x_nu = exp(-sigma);
+				sinhrat = sinh(sigma)/sigma;
 
-			fk = sinrat * (cosh(sigma)*g1 - sinhrat*ln_half_x*g2);
-			pk = 0.5/half_x_nu * g_1pnu;
-			qk = 0.5*half_x_nu * g_1mnu;
-			hk = pk;
-			sum0 = fk*expMaternBit;
-			sum1 = hk*expMaternBit;
-			k=0;
-			logck = maternBit;
-			del0 = fabs(sum0)+100;
+				fk = sinrat * (cosh(sigma)*g1 - sinhrat*ln_half_x*g2);
+				pk = 0.5/half_x_nu * g_1pnu;
+				qk = 0.5*half_x_nu * g_1mnu;
+				hk = pk;
+				sum0 = fk*expMaternBit;
+				sum1 = hk*expMaternBit;
+				k=0;
+				logck = maternBit;
+				del0 = fabs(sum0)+100;
 
-			while( (k < maxIter) && ( fabs(del0) > (epsilon * fabs(sum0)) ) ) {
-				k++;
-				logck += twoLnHalfX - log((double)k);
-				ck = exp(logck);
-				fk  = (k*fk + pk + qk)/(k*k-muSq);
+				while( (k < maxIter) && ( fabs(del0) > (epsilon * fabs(sum0)) ) ) {
+					k++;
+					logck += twoLnHalfX - log((double)k);
+					ck = exp(logck);
+					fk  = (k*fk + pk + qk)/(k*k-muSq);
 
-				del0 = ck * fk;
-				sum0 += del0;
+					del0 = ck * fk;
+					sum0 += del0;
 
-				pk /= (k - (mu));
-				qk /= (k + (mu));
+					pk /= (k - (mu));
+					qk /= (k + (mu));
 
-				hk  = -k*fk + pk;
-				del1 = ck * hk; 	
-				sum1 += del1;
+					hk  = -k*fk + pk;
+					del1 = ck * hk; 	
+					sum1 += del1;
 				}//while loop
 			//		result[Dcol * sizeResultPadRow + Drow] = -k;
-			K_nu   = sum0;
-			K_nup1 = sum1 * exp( - ln_half_x);
+				K_nu   = sum0;
+				K_nup1 = sum1 * exp( - ln_half_x);
 			} // short distance
 
-		for(k=0; k<nuround; k++) {
-			K_num1 = K_nu;
-			K_nu   = K_nup1;
-			K_nup1 = exp(log(mup1+k) - ln_half_x) * K_nu + K_num1;
-		}
+			for(k=0; k<nuround; k++) {
+				K_num1 = K_nu;
+				K_nu   = K_nup1;
+				K_nup1 = exp(log(mup1+k) - ln_half_x) * K_nu + K_num1;
+			}
 		result[Dcol + Drow * sizeResultPadRow] = K_nu; // lower triangle
 		result[Drow + Dcol * sizeResultPadRow] = K_nu; // upper triangle
 		}// loop through cells

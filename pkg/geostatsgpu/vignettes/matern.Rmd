@@ -15,7 +15,7 @@ Set up spatial data
 
 ```{r setupData}
 
-Ngrid = c(5, 5)
+Ngrid = c(60, 60)
 
 coordsSp = sp::SpatialPoints(
 	as.matrix(expand.grid(
@@ -23,11 +23,8 @@ coordsSp = sp::SpatialPoints(
 	seq(201,by=1,len=Ngrid[2]))))
 
 myParams = c(shape=4.5, range=1.5, variance = 2, 
-	nugget = 0, anisoRatio = 1, 
-	anisoAngleRadians = pi/4)
-myParams2 = c(shape=4.5, range=1.5, variance = 2, 
-	nugget = 0, anisoRatio = 1, 
-	anisoAngleRadians = -pi/4)
+	nugget = 0, anisoRatio = 10, 
+	anisoAngleRadians = pi/7)
 ```
 
 Transfer coordinates to GPU and create matrix on GPU to hold the variance matrix
@@ -38,33 +35,36 @@ varMatGpu <- vclMatrix(
     data=-1, 
     length(coordsSp), length(coordsSp),
     type='double')
-
-varMatGpuSI <- vclMatrix(
-    data=-1, 
-    length(coordsSp), length(coordsSp),
-    type='double')
 ```
 
 Create matern matrix on gpu
 ```{r maternMatGpu}
-devtools::install("..")
-devtools::reload("..")
-#system.time(maternGpu(coordsGpu, myParams2, varMatGpu, #'variance'))
+#devtools::install("..")
+#devtools::reload("..")
 
-as.matrix(geostatsgpu:::maternGpu(x=coordsGpu, param=myParams2, result=varMatGpu, type='variance'))[1:5,1:5]
-as.matrix(geostatsgpu:::maternGpuSI(x=coordsGpu, param=myParams2, result=varMatGpuSI, type='variance'))[1:5,1:5]
+system.time(varCpu <- geostatsp::matern(coordsSp, myParams, type='variance'))
+system.time(geostatsgpu:::maternGpuSI(x=coordsGpu, param=myParams, result=varMatGpu, type='variance'))
+range(varCpu - as.matrix(varMatGpu))
+```
 
+
+
+```{r maternMatGpuChol}
+
+cholVarGpu <- vclMatrix(
+    data=-1, 
+    length(coordsSp), length(coordsSp),
+    type='double')
+
+
+system.time(cholVarCpu <- geostatsp::matern(coordsSp, myParams, type='cholesky'))
+system.time(geostatsgpu:::maternGpuSI(x=coordsGpu, param=myParams, result=cholVarGpu, type='cholesky'))
+as.matrix(cholVarCpu)[1:5,1:5]
+as.matrix(cholVarGpu)[1:5,1:5]
 as.matrix(varMatGpu)[1:5,1:5]
-as.matrix(varMatGpuSI)[1:5,1:5]
+range(cholVarCpu - as.matrix(cholVarGpu))
 ```
 
-problem if N is bigger than global size
-
-
-create matern matrix the old fashioned way
-```{r maternMatCpu}
-system.time(varMatCpu <- geostatsp::matern(coordsSp, myParams))
-```
 
 ```{r compare}
 centreCell = 50*25+25
