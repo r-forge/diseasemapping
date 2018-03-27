@@ -14,13 +14,12 @@ priorPostSd = function(
   param=1:length(object$all.hyper$random),
   group = c('random','family')
 ){
-
+  group = group[1]
   param = param[ param <= length(object$all.hyper[[group]]) ]
 	 # return prior and posterior of all standard deviation parameters
 
   res = object
   result = list()
-  group = group[1]
   names(res$all.hyper[[group]]) = 
   unlist(lapply(res$all.hyper[[group]], function(qq) qq$hyperid))
 

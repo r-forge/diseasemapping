@@ -63,7 +63,7 @@ mdTable = function(x, col.just = 'r', guessGroup=FALSE, ..., mdToTex = 'auto') {
       rownames(dots$x) = NULL
       dots$x = dots$x[,seq(3, ncol(dots$x))]
     }
-    
+
     # if first column is unique values and character or factor, override row names
     if(all(rTable==1) & !length(dots$rowname)) {
       if(is.character(dots$x[,1]) | is.factor(dots$x[,1])) {
