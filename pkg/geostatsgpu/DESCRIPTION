@@ -3,7 +3,6 @@ Version: 0.0.2
 Date: 2018-03-27
 Title: Geostats with GPU
 Author: Patrick Brown
-SystemRequirements: Gnu Scientific Library version >= 1.12
 Description: Matern correlation function computed in gpu.
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
 License: GPL (>= 2)

@@ -2,6 +2,8 @@
 //#include <R_ext/Print.h>
 #include <Rmath.h>
 
+//#define VIENNACL_WITH_CUDA
+
 #define GSL_DBL_EPSILON 2.2204460492503131e-16
 #define GSL_SQRT_DBL_MAX 1.3407807929942596e+154
 
@@ -11,6 +13,7 @@
 #include <RcppEigen.h>
 
 
+//#include "viennacl/backend/cuda.hpp"
 #include "gpuR/getVCLptr.hpp"
 #include "gpuR/dynVCLMat.hpp"
 #include "gpuR/dynVCLVec.hpp"
@@ -126,7 +129,9 @@ SEXP cpp_maternGpu(
 	if( type >= 2 ) {
 		// cholesky
 		viennacl::linalg::lu_factorize(*vclVar2);
-		
+		// try cusolverDnDpotrf instead?
+
+
 		// vector to contain the D
 		Rcpp::XPtr<dynVCLVec<double> > ptrDofLDL(DofLDLR);
 		viennacl::vector_range<viennacl::vector_base<double> > DofLDL = ptrDofLDL->data();
@@ -134,14 +139,13 @@ SEXP cpp_maternGpu(
 		// pointer to the actual diagonal
 		viennacl::vector_base<double> diagOfVar(vclVar.handle(), std::min(vclVar.size1(), vclVar.size2()), 0, vclVar.internal_size2() + 1);
 
-		// put the diagonals in D, and 1's on the diagonal of L
-		DofLDL = viennacl::diag(vclVar);
-		viennacl::linalg::opencl::matrix_diagonal_assign(vclVar, 1.0);	
-
 		// compute log determinant
-		viennacl::vector_base<double> logOfD(DofLDL.size());
-		logOfD = element_log(DofLDL);
-		logdet = viennacl::linalg::sum(logOfD);
+		DofLDL = element_log(diagOfVar);
+		logdet = viennacl::linalg::sum(DofLDL);
+
+		// put the diagonals in D, and 1's on the diagonal of L
+		DofLDL = diagOfVar;
+		viennacl::linalg::opencl::matrix_diagonal_assign(vclVar, 1.0);	
 
 	}
 	// 3 or 4 or 5 use
