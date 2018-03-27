@@ -7,4 +7,5 @@
 #' @import Rcpp
 #' @useDynLib geostatsgpu
 #' @name geostatsgpu
+
 NULL

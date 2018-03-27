@@ -16,7 +16,7 @@
 #' )
 #' 
 #' myParams = c(shape=4.5, range=1.5, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/4)
-
+#' 
 #' system.time(v1 <- maternGpu(coordsV, myParams, D3, 'variance'))
 #' system.time(mmat <- geostatsp::matern(sp::SpatialPoints(as.matrix(coordsV)), myParams))
 #' as.matrix(v1)[1:5,1:5]
@@ -24,30 +24,30 @@
 #' 
 #' @export
 maternGpu = function(
-    x, 
-    param = c(range = 1, variance = 1, shape = 1), 
-    result = vclMatrix(
-        data=0, 
-        nrow(x), nrow(x),
-        type='double',
-        ctx_id = x@.context_index),	
-    type = c("variance", "cholesky", "precision", "inverseCholesky")
-) {
-  
+  x, 
+  param = c(range = 1, variance = 1, shape = 1), 
+  result = vclMatrix(
+    data=0, 
+    nrow(x), nrow(x),
+    type='double',
+    ctx_id = x@.context_index),	
+  type = c("variance", "cholesky", "precision", "inverseCholesky")
+  ) {
+
   type = gsub("iance$|esky$|ision", "", tolower(type)[1])    
   type = c(var=1,chol=2,prec=3,inversechol=4)[type]    
 
   maxWorkGroupSize <- switch(
-      deviceType(result@.platform_index, result@.device_index),
-      "gpu" = gpuInfo(result@.platform_index, result@.device_index)$maxWorkGroupSize,
-      "cpu" = cpuInfo(result@.platform_index, result@.device_index)$maxWorkGroupSize,
-      stop("unrecognized device type")
-  )
+    deviceType(result@.platform_index, result@.device_index),
+    "gpu" = gpuInfo(result@.platform_index, result@.device_index)$maxWorkGroupSize,
+    "cpu" = cpuInfo(result@.platform_index, result@.device_index)$maxWorkGroupSize,
+    stop("unrecognized device type")
+    )
   maxWorkGroupSize = floor(sqrt(maxWorkGroupSize))
   
   param = geostatsp::fillParam(param)
   
-    file <- system.file("CL", "matern.cl", package = "geostatsgpu")
+  file <- system.file("CL", "matern.cl", package = "geostatsgpu")
 
   kernel <- readChar(file, file.info(file)$size)
 
@@ -57,72 +57,89 @@ maternGpu = function(
   
   upper = FALSE
   cpp_maternGpu(
-      x@address, 
-      result@address, 
-      param,
-      type,
-      upper,
-      kernel,
-      cholKernel,
-      maxWorkGroupSize, 
-      x@.context_index - 1)
+    x@address, 
+    result@address,
+    param,
+    type,
+    upper,
+    kernel,
+    cholKernel,
+    maxWorkGroupSize, 
+    x@.context_index - 1)
   
   if(type == Inf) {
     # TO DO: pass type to cpp_maternGpu
-    
+
     gpuR:::cpp_vclMatrix_custom_chol(
-        result@address,
-        TRUE, # vcl
-        FALSE, # upper
-        cholKernel,
-        maxWorkGroupSize,
-        8L,
-        result@.context_index - 1)
+      result@address,
+      TRUE, # vcl
+      FALSE, # upper
+      cholKernel,
+      maxWorkGroupSize,
+      8L,
+      result@.context_index - 1)
   }
   
   result  
 }
 
+#' @export
 maternGpuSI = function(
-    x, 
-    param = c(range = 1, variance = 1, shape = 1), 
-    result = vclMatrix(
-        data=0, 
-        nrow(x), nrow(x),
-        type='double',
-        ctx_id = x@.context_index), 
-    type = c("variance", "cholesky", "precision", "inverseCholesky")
-) {
-  
+  x, 
+  param = c(range = 1, variance = 1, shape = 1), 
+  output = vclMatrix(
+    data=0, 
+    nrow(x), nrow(x),
+    type='double',
+    ctx_id = x@.context_index), 
+  type = c("variance", "cholesky", "precision", "inverseCholesky"),
+  DofLDL = NULL
+  ) {
+
   type = gsub("iance$|esky$|ision", "", tolower(type)[1])    
   type = c(var=1,chol=2,prec=3,inversechol=4)[type]
-  print(type)
-  maxWorkGroupSize <- switch(
-      deviceType(result@.platform_index, result@.device_index),
-      "gpu" = gpuInfo(result@.platform_index, result@.device_index)$maxWorkGroupSize,
-      "cpu" = cpuInfo(result@.platform_index, result@.device_index)$maxWorkGroupSize,
-      stop("unrecognized device type")
+
+  if(is.null(DofLDL)) {
+   if(type==2) {
+    DofLDL = gpuR::vclVector(data = -1, length=nrow(x), type='double')
+  } else {
+    DofLDL = gpuR::vclVector(data = -1, length=1, type='double')
+  }
+}
+
+maxWorkGroupSize <- switch(
+  deviceType(output@.platform_index, output@.device_index),
+  "gpu" = gpuInfo(output@.platform_index, output@.device_index)$maxWorkGroupSize,
+  "cpu" = cpuInfo(output@.platform_index, output@.device_index)$maxWorkGroupSize,
+  stop("unrecognized device type")
   )
-  
-  param = geostatsp::fillParam(param)
-  
-    file <- system.file("CL", "maternSingleIndex.cl", package = "geostatsgpu")
-  kernel <- readChar(file, file.info(file)$size)
+
+param = geostatsp::fillParam(param)
+
+file <- system.file("CL", "maternSingleIndex.cl", package = "geostatsgpu")
+kernel <- readChar(file, file.info(file)$size)
 
 
-  junkD = junkY = junkC = gpuR::vclMatrix(matrix(1.1, 2, 2))
+junkY = junkC = gpuR::vclMatrix(matrix(1.1, 2, 2))
 
-  upper = FALSE
-  cpp_maternGpuSingleIndex(
-      result@address, 
-      junkD@address, junkY@address, junkC@address,
-      x@address, 
-      param,
-      type,
-      upper,
-      kernel,
-      maxWorkGroupSize, 
-      x@.context_index - 1)
-  
-  result  
+upper = FALSE
+fromC = cpp_maternGpuSingleIndex(
+  output@address, 
+  DofLDL@address,
+  junkY@address, 
+  junkC@address,
+  x@address, 
+  param,
+  type,
+  upper,
+  kernel,
+  maxWorkGroupSize, 
+  x@.context_index - 1)
+
+  if(type == 2) {
+    res = list(L = output, D = DofLDL, det = fromC)
+  }
+  else res = output
+
+  res
 }

@@ -15,7 +15,8 @@ Set up spatial data
 
 ```{r setupData}
 
-Ngrid = c(60, 60)
+Ngrid = c(100, 100)
+Ngrid = c(50, 50)
 
 coordsSp = sp::SpatialPoints(
 	as.matrix(expand.grid(
@@ -39,11 +40,8 @@ varMatGpu <- vclMatrix(
 
 Create matern matrix on gpu
 ```{r maternMatGpu}
-#devtools::install("..")
-#devtools::reload("..")
-
 system.time(varCpu <- geostatsp::matern(coordsSp, myParams, type='variance'))
-system.time(geostatsgpu:::maternGpuSI(x=coordsGpu, param=myParams, result=varMatGpu, type='variance'))
+system.time(geostatsgpu:::maternGpuSI(x=coordsGpu, param=myParams, output=varMatGpu, type='variance'))
 range(varCpu - as.matrix(varMatGpu))
 ```
 
@@ -51,18 +49,33 @@ range(varCpu - as.matrix(varMatGpu))
 
 ```{r maternMatGpuChol}
 
-cholVarGpu <- vclMatrix(
-    data=-1, 
-    length(coordsSp), length(coordsSp),
-    type='double')
+cholVarGpu <- list(
+    L = vclMatrix(
+        data=-1, 
+        length(coordsSp), length(coordsSp),
+        type='double'),
+    D = vclVector(data = -1, length=length(coordsSp), type='double')
+    )
 
+#devtools::document("..")
+#devtools::install("..")
+#devtools::reload("..")
 
 system.time(cholVarCpu <- geostatsp::matern(coordsSp, myParams, type='cholesky'))
-system.time(geostatsgpu:::maternGpuSI(x=coordsGpu, param=myParams, result=cholVarGpu, type='cholesky'))
-as.matrix(cholVarCpu)[1:5,1:5]
-as.matrix(cholVarGpu)[1:5,1:5]
-as.matrix(varMatGpu)[1:5,1:5]
-range(cholVarCpu - as.matrix(cholVarGpu))
+system.time(fromGpu <- geostatsgpu:::maternGpuSI(x=coordsGpu, param=myParams, output=cholVarGpu$L, DofLDL = cholVarGpu$D, type='cholesky'))
+
+fromGpu$det 
+sum(log(diag(cholVarCpu)))*2
+
+library('Matrix')
+ldlL = new('dtrMatrix', x=as.vector(as.matrix(cholVarGpu$L)), Dim = dim(cholVarGpu$L), uplo='L')
+ldlD = Diagonal(ncol(cholVarGpu$L),as.vector(cholVarGpu$D))
+
+cholL = ldlL %*% sqrt(ldlD)
+
+ldlL[1:5,1:5]
+cholL[1:5,1:5]
+range(cholL- cholVarCpu)
 ```
 
 
