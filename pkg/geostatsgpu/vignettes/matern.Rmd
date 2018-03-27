@@ -48,6 +48,7 @@ range(varCpu - as.matrix(varMatGpu))
 ```
 
 ```{r devtools}
+#Rcpp::compileAttributes('..')
 #devtools::document("..")
 #devtools::install("..")
 #devtools::reload("..")
