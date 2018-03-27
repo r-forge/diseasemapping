@@ -1,6 +1,6 @@
 <!--
 %\VignetteEngine{knitr::knitr}
-%\VignetteIndexEntry{Matern correlation}
+%\VignetteIndexEntry{Matern correlations}
 -->
 
 # Matern correlations
@@ -14,14 +14,16 @@ library('geostatsgpu')
 Set up spatial data
 
 ```{r setupData}
-
-Ngrid = c(100, 100)
+# Ngrid = c(100, 100)
 Ngrid = c(50, 50)
 
+seqList = list( 
+    x = seq(1,by=1,len=Ngrid[1]), 
+    y = seq(201,by=1,len=Ngrid[2])
+    )
+
 coordsSp = sp::SpatialPoints(
-	as.matrix(expand.grid(
-	seq(1,by=1,len=Ngrid[2]), 
-	seq(201,by=1,len=Ngrid[2]))))
+	as.matrix(expand.grid(seqList$x, seqList$y)))
 
 myParams = c(shape=4.5, range=1.5, variance = 2, 
 	nugget = 0, anisoRatio = 10, 
@@ -41,14 +43,17 @@ varMatGpu <- vclMatrix(
 Create matern matrix on gpu
 ```{r maternMatGpu}
 system.time(varCpu <- geostatsp::matern(coordsSp, myParams, type='variance'))
-system.time(geostatsgpu:::maternGpuSI(x=coordsGpu, param=myParams, output=varMatGpu, type='variance'))
+system.time(geostatsgpu::maternGpu(x=coordsGpu, param=myParams, output=varMatGpu, type='variance'))
 range(varCpu - as.matrix(varMatGpu))
 ```
 
-
+```{r devtools}
+#devtools::document("..")
+#devtools::install("..")
+#devtools::reload("..")
+```
 
 ```{r maternMatGpuChol}
-
 cholVarGpu <- list(
     L = vclMatrix(
         data=-1, 
@@ -57,21 +62,19 @@ cholVarGpu <- list(
     D = vclVector(data = -1, length=length(coordsSp), type='double')
     )
 
-#devtools::document("..")
-#devtools::install("..")
-#devtools::reload("..")
-
 system.time(cholVarCpu <- geostatsp::matern(coordsSp, myParams, type='cholesky'))
-system.time(fromGpu <- geostatsgpu:::maternGpuSI(x=coordsGpu, param=myParams, output=cholVarGpu$L, DofLDL = cholVarGpu$D, type='cholesky'))
+system.time(fromGpu <- geostatsgpu::maternGpu(x=coordsGpu, param=myParams, output=cholVarGpu$L, DofLDL = cholVarGpu$D, type='cholesky'))
 
 fromGpu$det 
 sum(log(diag(cholVarCpu)))*2
+```
 
+```{r checkChol}
 library('Matrix')
 ldlL = new('dtrMatrix', x=as.vector(as.matrix(cholVarGpu$L)), Dim = dim(cholVarGpu$L), uplo='L')
 ldlD = Diagonal(ncol(cholVarGpu$L),as.vector(cholVarGpu$D))
 
-cholL = ldlL %*% sqrt(ldlD)
+cholL = as(ldlL %*% sqrt(ldlD), 'dtrMatrix')
 
 ldlL[1:5,1:5]
 cholL[1:5,1:5]
@@ -80,34 +83,24 @@ range(cholL- cholVarCpu)
 
 
 ```{r compare}
-centreCell = 50*25+25
+centreCell = floor(prod(Ngrid)/2)+floor(Ngrid[2]/2)
 
-image(matrix(as.matrix(varMatGpu)[centreCell,],50,50))
+myCol = mapmisc::colourScale(c(0, myParams['variance']),
+    breaks = 9, dec=1, style='equal', transform='sqrt')
 
-image(matrix(as.matrix(varMatCpu)[centreCell,],50,50))
+image(
+    seqList$x, seqList$y, 
+    matrix(as.matrix(varMatGpu)[centreCell,],Ngrid[1],Ngrid[2]),
+    col = myCol$col, breaks=myCol$breaks)
+mapmisc::legendBreaks("bottomright", myCol)
 
 
-theTest = as.matrix(varMatGpu) - varMatCpu
-
-which.max(as.matrix(varMatGpu)[2,] - varMatCpu[2,])
-
-as.matrix(varMatGpu)[2,40:60]
-as.matrix(varMatCpu)[2,40:60]
-
+image(
+    seqList$x, seqList$y, 
+ matrix(as.matrix(varCpu)[centreCell,],Ngrid[1],Ngrid[2]),
+    col = myCol$col, breaks=myCol$breaks)
+mapmisc::legendBreaks("bottomright", myCol)
 ```
 
-```{r }
-cholVarGpu <- vclMatrix(
-    data=-1, 
-    nrow(coordsV), nrow(coordsV),
-    type='double'
-)
 
-system.time(c1 <- maternGpu(coordsGpu, myParams, cholVarGpu, 'cholesky'))
-system.time(cholVarCpu <- geostatsp::matern(coordsSp, 
-	myParams, type='cholesky'))
 
-as.matrix(cholVarGpu)[1:5,1:5]
-as.matrix(cholVarCpu)[1:5,1:5]
-
-```

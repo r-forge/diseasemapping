@@ -5,19 +5,23 @@
 \title{Matern correlation}
 \usage{
 maternGpu(x, param = c(range = 1, variance = 1, shape = 1),
-  result = vclMatrix(data = 0, nrow(x), nrow(x), type = "double", ctx_id =
+  output = vclMatrix(data = 0, nrow(x), nrow(x), type = "double", ctx_id =
   x@.context_index), type = c("variance", "cholesky", "precision",
-  "inverseCholesky"))
+  "inverseCholesky"), DofLDL = NULL)
 }
 \arguments{
 \item{x}{points}
 
 \item{param}{parameters}
 
-\item{result}{VCL matrix to store result}
+\item{output}{VCL matrix to store result}
+
+\item{type}{produce variance matrix or it's cholesky}
+
+\item{DofLDL}{a VCL vector to hold the diagonals from the LDL decomposition}
 }
 \value{
-a VCL matrix
+The output and DofLDL objects have been altered in-place
 }
 \description{
 Compute Matern covariance function

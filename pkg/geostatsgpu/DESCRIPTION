@@ -1,6 +1,6 @@
 Package: geostatsgpu
-Version: 0.0.1
-Date: 2017-08-01
+Version: 0.0.2
+Date: 2018-03-27
 Title: Geostats with GPU
 Author: Patrick Brown
 SystemRequirements: Gnu Scientific Library version >= 1.12
@@ -8,11 +8,13 @@ Description: Matern correlation function computed in gpu.
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
 License: GPL (>= 2)
 NeedsCompilation: yes
-Depends: gpuR
-Imports: Rcpp
+Depends: R (>= 3.0.2), gpuR
+Imports: geostatsp
+Suggests: sp, knitr, mapmisc, Matrix
 LinkingTo: 
 	Rcpp,
 	RcppEigen,
 	gpuR,
     RViennaCL (>= 1.7.1.4)
+VignetteBuilder: knitr
 RoxygenNote: 6.0.1
