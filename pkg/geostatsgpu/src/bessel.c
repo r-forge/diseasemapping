@@ -14,7 +14,7 @@ struct gsl_sf_result_e10_struct {
 typedef struct gsl_sf_result_e10_struct gsl_sf_result_e10;
 
 
-Rtemme_gamma(double *nu, double * g_1pnu, double * g_1mnu, double *g1, double *g2);
+void Rtemme_gamma(double *nu, double * g_1pnu, double * g_1mnu, double *g1, double *g2);
 
 int gsl_sf_temme_gamma(const double nu, double * g_1pnu, double * g_1mnu, double * g1, double * g2);
 

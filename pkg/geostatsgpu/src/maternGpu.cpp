@@ -1,8 +1,10 @@
 
-//#include <R_ext/Print.h>
+
 #include <Rmath.h>
 
+
 //#define VIENNACL_WITH_CUDA
+//#define VIENNACL_WITH_OPENCL
 
 #define GSL_DBL_EPSILON 2.2204460492503131e-16
 #define GSL_SQRT_DBL_MAX 1.3407807929942596e+154
@@ -10,7 +12,7 @@
 // make link to /usr/lib/x86_64-linux-gnu/libOpenCL.so
 
 #include <Rcpp.h>
-#include <RcppEigen.h>
+//#include <RcppEigen.h>
 
 
 //#include "viennacl/backend/cuda.hpp"
@@ -42,6 +44,9 @@ SEXP cpp_maternGpu(
 		int max_local_size,
 		const int ctx_id) {
 
+	double logdet=0.0;
+
+
 	std::string my_kernel = as<std::string>(sourceCode_);
 	viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
 
@@ -57,21 +62,25 @@ SEXP cpp_maternGpu(
 	const bool BisVCL=1;
 	unsigned int D;
 
-	Rcpp::XPtr<dynVCLMat<double> > ptrVclVar(varR);
-	viennacl::matrix_range<viennacl::matrix<double> > vclVar = ptrVclVar->data();
+//	Rcpp::XPtr<dynVCLMat<double> > ptrVclVar(varR);
+//	viennacl::matrix_range<viennacl::matrix<double> > vclVar = ptrVclVar->data();
 	std::shared_ptr<viennacl::matrix<double> > vclVar2 = getVCLptr<double>(varR, BisVCL, ctx_id);
+
+	// pointer to the actual diagonal
+//	viennacl::vector_base<double> diagOfVar(vclVar.handle(), std::min(vclVar.size1(), vclVar.size2()), 0, vclVar.internal_size2() + 1);
+	viennacl::vector_base<double> diagOfVar( (*vclVar2).handle(), (*vclVar2).size1(), 0, (*vclVar2).internal_size2() + 1);
 
 	std::shared_ptr<viennacl::matrix<double> > vclCoords = getVCLptr<double>(coordsR, BisVCL, ctx_id);
 
 	const unsigned int 
 	sizeCoords1=vclCoords->size1(),
 	sizeCoords2=vclCoords->size2(),
-	sizeVar1=vclVar.size1(),
-	sizeVar2=vclVar.size2(),
+	sizeVar1=vclVar2->size1(),
+	sizeVar2=vclVar2->size2(),
 	iSizeCoords1=vclCoords->internal_size1(),
 	iSizeCoords2=vclCoords->internal_size2(),
-	iSizeVar1=vclVar.internal_size1(),
-	iSizeVar2=vclVar.internal_size2(),
+	iSizeVar1=vclVar2->internal_size1(),
+	iSizeVar2=vclVar2->internal_size2(),
 	Ncell = sizeVar1 * (sizeVar1 - 1)/2;
 
 	if(max_local_size > Ncell) max_local_size = Ncell;
@@ -123,9 +132,8 @@ SEXP cpp_maternGpu(
 		// diagonal matrix with nugget + sigmasq
 
 	const double varDiag = param[3] + param[2];
-	viennacl::linalg::opencl::matrix_diagonal_assign(vclVar, varDiag);	
+	viennacl::linalg::opencl::matrix_diagonal_assign(*vclVar2, varDiag);	
 
-	double logdet = -1.0;
 	if( type >= 2 ) {
 		// cholesky
 		viennacl::linalg::lu_factorize(*vclVar2);
@@ -133,19 +141,21 @@ SEXP cpp_maternGpu(
 
 
 		// vector to contain the D
-		Rcpp::XPtr<dynVCLVec<double> > ptrDofLDL(DofLDLR);
-		viennacl::vector_range<viennacl::vector_base<double> > DofLDL = ptrDofLDL->data();
-
-		// pointer to the actual diagonal
-		viennacl::vector_base<double> diagOfVar(vclVar.handle(), std::min(vclVar.size1(), vclVar.size2()), 0, vclVar.internal_size2() + 1);
+//		Rcpp::XPtr<dynVCLVec<double> > ptrDofLDL(DofLDLR);
+//		viennacl::vector_range<viennacl::vector_base<double> > DofLDL = ptrDofLDL->data();
+		std::shared_ptr<viennacl::vector_base<double> > DofLDL = getVCLVecptr<double>(DofLDLR, BisVCL, ctx_id);
+//		viennacl::vector_base<double> DofLDL = *DofLDLP;
 
 		// compute log determinant
-		DofLDL = element_log(diagOfVar);
-		logdet = viennacl::linalg::sum(DofLDL);
+		*DofLDL = element_log(diagOfVar);
+		logdet = viennacl::linalg::sum(*DofLDL);
+		(*vclVar2)(0,1) = logdet;
+// OPERATION_UNARY_LOG_TYPE 	
+		//http://viennacl.sourceforge.net/doc/scheduler_8cpp-example.html#a11
 
 		// put the diagonals in D, and 1's on the diagonal of L
-		DofLDL = diagOfVar;
-		viennacl::linalg::opencl::matrix_diagonal_assign(vclVar, 1.0);	
+		*DofLDL = diagOfVar;
+		diagOfVar = 1.0;
 
 	}
 	// 3 or 4 or 5 use
@@ -153,6 +163,6 @@ SEXP cpp_maternGpu(
 //	if(type == 5) { // solve for Lt b = X
 // not implemented yet
 //	}
-    return Rcpp::wrap(logdet);
+	return(Rcpp::wrap(logdet));	
 }
 
