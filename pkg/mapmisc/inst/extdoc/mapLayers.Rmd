@@ -24,8 +24,8 @@ library('mapmisc')
 fact = 2
 allTiles = FALSE
 
-knitr::opts_chunk$set(dpi=150, dev.args=list(bg='white'),
-    fig.path = 'mapLayersFigures/', out.width='30%')
+knitr::opts_chunk$set(dpi=100, dev.args=list(bg='white'),
+    fig.path = 'mapLayersFigures/', out.width='80%')
 
 theNames = names(osmTiles())
 cachePath = file.path(getwd(), 'mapLayersCache')
