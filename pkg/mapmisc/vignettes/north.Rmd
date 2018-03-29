@@ -40,10 +40,10 @@ options(
 opts_chunk$set(dpi=72*fact,dev.args=list(bg='white'), out.width='55%')	
 ```
 
-```{r mapmiscCache, echo=FALSE, purl=FALSE}
-if(testing) {
+```{r mapmiscCache, purl=FALSE}
   getOption('mapmiscCachePath')
   getOption('mapmiscCacheReadOnly')
+if(testing) {
   options(mapmiscVerbose = TRUE)
 }
 ```

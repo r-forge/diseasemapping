@@ -52,7 +52,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&#39;mapmisc&#39;</span>)</code></pre></div>
 <pre><code>## Loading required package: sp</code></pre>
 <pre><code>## Loading required package: raster</code></pre>
-<pre><code>## map images will be cached in  /tmp/mapmiscCache_patrick</code></pre>
+<pre><code>## map images will be cached in  /tmp/Rtmps8FqfY/mapmiscCache</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="cf">if</span>(<span class="op">!</span><span class="kw">exists</span>(<span class="st">&#39;mapmiscCachePath&#39;</span>))
   mapmiscCachePath =<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&#39;extdata&#39;</span>, <span class="dt">package=</span><span class="st">&#39;mapmisc&#39;</span>)
 
@@ -60,14 +60,14 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
   mapmiscCacheReadOnly =<span class="st"> </span><span class="ot">TRUE</span>
 
 mapmiscCachePath</code></pre></div>
-<pre><code>## [1] &quot;/home/patrick/workspace/diseasemapping/www/mapmiscCache&quot;</code></pre>
+<pre><code>## [1] &quot;/home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">options</span>(
   <span class="dt">mapmiscCachePath =</span> mapmiscCachePath,
   <span class="dt">mapmiscCacheReadOnly =</span> mapmiscCacheReadOnly,
   <span class="dt">mapmiscVerbose=</span><span class="ot">TRUE</span>)
 
 <span class="kw">getOption</span>(<span class="st">&quot;mapmiscCachePath&quot;</span>)</code></pre></div>
-<pre><code>## [1] &quot;/home/patrick/workspace/diseasemapping/www/mapmiscCache&quot;</code></pre>
+<pre><code>## [1] &quot;/home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">getOption</span>(<span class="st">&quot;mapmiscCacheReadOnly&quot;</span>)</code></pre></div>
 <pre><code>## [1] FALSE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">Spackages =<span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;rgdal&#39;</span>, <span class="st">&#39;rgeos&#39;</span>, <span class="st">&#39;geosphere&#39;</span>, <span class="st">&#39;maptools&#39;</span>)
@@ -96,7 +96,7 @@ mapmiscCachePath</code></pre></div>
     
     <span class="kw">map.new</span>(xTcrop, <span class="dt">buffer=</span><span class="dv">1000</span><span class="op">*</span><span class="dv">1000</span>)
  <span class="kw">plot</span>(<span class="kw">attributes</span>(myCrsO)<span class="op">$</span>ellipse, <span class="dt">add=</span><span class="ot">TRUE</span>, <span class="dt">col=</span><span class="st">&#39;lightBlue&#39;</span>, <span class="dt">border=</span><span class="st">&#39;blue&#39;</span>)
-    <span class="kw">plot</span>(xTcrop,<span class="dt">add=</span><span class="ot">TRUE</span>)
+    <span class="kw">plot</span>(xTcrop,<span class="dt">add=</span><span class="ot">TRUE</span>, <span class="dt">col=</span><span class="st">&#39;grey&#39;</span>)
     <span class="kw">plot</span>(xTcrop[DcountryT,], <span class="dt">col=</span><span class="st">&#39;red&#39;</span>, <span class="dt">add=</span><span class="ot">TRUE</span>)
     
     <span class="kw">gridlinesWrap</span>(myCrsO, <span class="dt">lty=</span><span class="dv">2</span>, <span class="dt">col=</span><span class="st">&#39;orange&#39;</span>)
@@ -110,41 +110,39 @@ mapmiscCachePath</code></pre></div>
     
     
     <span class="kw">plot</span>(wrld_simpl)
-    <span class="kw">plot</span>(<span class="kw">attributes</span>(myCrsMoll)<span class="op">$</span>crop, <span class="dt">col=</span><span class="st">&#39;red&#39;</span>, <span class="dt">border=</span><span class="st">&#39;yellow&#39;</span>, <span class="dt">add=</span><span class="ot">TRUE</span>)
+    <span class="kw">plot</span>(<span class="kw">attributes</span>(myCrsMoll)<span class="op">$</span>crop, <span class="dt">border=</span><span class="st">&#39;red&#39;</span>, <span class="dt">col=</span><span class="st">&#39;#0000FF10&#39;</span>, <span class="dt">add=</span><span class="ot">TRUE</span>)
     
     xTcrop =<span class="st"> </span><span class="kw">wrapPoly</span>(<span class="dt">x=</span>wrld_simpl, <span class="dt">crs=</span>myCrsMoll)
     DcountryT  =<span class="st"> </span><span class="kw">grep</span>(country, xTcrop<span class="op">$</span>NAME)
     
     <span class="kw">map.new</span>(xTcrop)
     <span class="kw">plot</span>(<span class="kw">attributes</span>(myCrsO)<span class="op">$</span>ellipse, <span class="dt">add=</span><span class="ot">TRUE</span>, <span class="dt">col=</span><span class="st">&#39;lightBlue&#39;</span>, <span class="dt">border=</span><span class="st">&#39;blue&#39;</span>)
-    <span class="kw">plot</span>(xTcrop,<span class="dt">add=</span><span class="ot">TRUE</span>)
+    <span class="kw">plot</span>(xTcrop,<span class="dt">add=</span><span class="ot">TRUE</span>, <span class="dt">col=</span><span class="st">&#39;grey&#39;</span>)
     <span class="kw">plot</span>(xTcrop[DcountryT,], <span class="dt">col=</span><span class="st">&#39;green&#39;</span>, <span class="dt">add=</span><span class="ot">TRUE</span>)
     
     <span class="kw">gridlinesWrap</span>(<span class="dt">crs=</span>xTcrop, <span class="dt">lty=</span><span class="dv">2</span>, <span class="dt">col=</span><span class="st">&#39;red&#39;</span>)
 
 }</code></pre></div>
-<pre><code>## rgdal: version: 1.2-7, (SVN revision 660)
+<pre><code>## rgdal: version: 1.2-15, (SVN revision 691)
 ##  Geospatial Data Abstraction Library extensions to R successfully loaded
-##  Loaded GDAL runtime: GDAL 2.1.2, released 2016/10/24
-##  Path to GDAL shared files: /usr/share/gdal/2.1
+##  Loaded GDAL runtime: GDAL 2.2.1, released 2017/06/23
+##  Path to GDAL shared files: /usr/share/gdal/2.2
+##  GDAL binary built with GEOS: TRUE 
 ##  Loaded PROJ.4 runtime: Rel. 4.9.3, 15 August 2016, [PJ_VERSION: 493]
 ##  Path to PROJ.4 shared files: (autodetected)
-##  Linking to sp version: 1.2-4</code></pre>
+##  Linking to sp version: 1.2-5</code></pre>
 <pre><code>## zoom is  1 ,  4 tiles
 ## http://tile.openstreetmap.org/ 
 ## http://tile.openstreetmap.org/ 
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/1/0/0.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/1/0/1.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/1/1/0.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/1/1/1.png  cached
+## downloading  http://tile.openstreetmap.org/1/0/0.png 
+## downloading  http://tile.openstreetmap.org/1/0/1.png 
+## downloading  http://tile.openstreetmap.org/1/1/0.png 
+## downloading  http://tile.openstreetmap.org/1/1/1.png 
 ## reprojecting  262144  cells...</code></pre>
 <pre><code>## Warning in rgdal::rawTransform(projto_int, projfrom, nrow(xy), xy[, 1], :
 ## 197675 projected point(s) not finite</code></pre>
-<figure>
-<img src="figure/themaps-1.png" alt="plot of chunk themaps" /><figcaption>plot of chunk themaps</figcaption>
-</figure>
 <pre><code>## done
 ## copying colortable for  http...tile.openstreetmap.org.</code></pre>
-<p><img src="figure/themaps-2.png" alt="plot of chunk themaps" /><img src="figure/themaps-3.png" alt="plot of chunk themaps" /><img src="figure/themaps-4.png" alt="plot of chunk themaps" /><img src="figure/themaps-5.png" alt="plot of chunk themaps" /></p>
+<p><img src="figure/themaps-1.png" alt="some maps" /><img src="figure/themaps-2.png" alt="some maps" /><img src="figure/themaps-3.png" alt="some maps" /><img src="figure/themaps-4.png" alt="some maps" /><img src="figure/themaps-5.png" alt="some maps" /></p>
 </body>
 </html>

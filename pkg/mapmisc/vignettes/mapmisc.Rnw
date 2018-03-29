@@ -49,6 +49,19 @@ options(
 opts_chunk$set(dpi=72*fact)
 @
 
+
+<<mapmiscCache, purl=FALSE, echo=FALSE>>=
+if(!exists('testing')) testing=FALSE
+if(testing) {
+  cat('cache:', getOption('mapmiscCachePath'))
+  cat('\nread only:', getOption('mapmiscCacheReadOnly'))
+  cat('\n')
+options(mapmiscVerbose = TRUE)
+}
+
+@
+
+
 This document will be incomplete if {\tt rgdal} is unavailable or there is on
 internet connection when this document is compiled.  The full document is at
 \url{http://diseasemapping.r-forge.r-project.org/}.
@@ -369,9 +382,11 @@ if(haveRgdal) {
 Get elevation data with
 <<elevation,eval=FALSE, purl=FALSE>>=
 library('raster')
-getData("SRTM", lon=xmin(extent(meuseLL)), 
-    lat=ymin(extent(meuseLL)),path=tempdir())
-nldElev = raster(paste(tempdir(), "/", "srtm_38_02.tif", sep=""))
+nldElev = raster::getData("alt", lon=raster::xmin(meuseLL), 
+    lat=raster::ymin(meuseLL), path=tempdir() )
+raster::getData("SRTM", lon=raster::xmin(meuseLL), 
+    lat=raster::ymin(meuseLL), path=tempdir() )
+nldElev = raster(file.path(tempdir(), "srtm_38_02.tif"))
 nldElev = crop(nldElev, extent(meuseLL))
 nldElev = projectRaster(nldElev, crs=proj4string(meuse))
 @
@@ -396,8 +411,7 @@ Get a background map covering the extent of the meuse data
 <<openmap>>=
 library('mapmisc')
 if(haveRgdal)
-  nldTiles = openmap(meuse, 
-      cachePath = system.file('extdata', package='mapmisc'))
+  nldTiles = openmap(meuse)
 @
 {\tt nldTiles} is a Raster with the same projection as {\tt meuse}
 <<openmapInfo>>=
@@ -509,8 +523,7 @@ Rotate the data 50 degrees clockwise with an oblique mercator projection.
 <<reproj,echo=TRUE>>=
 if(requireNamespace('rgdal', quietly=TRUE)){
   meuseRot = spTransform(meuse, omerc(meuse, -50))
-  tilesRot = openmap(meuseRot, fact=2,
-      cachePath = system.file('extdata', package='mapmisc'))
+  tilesRot = openmap(meuseRot, fact=2)
   elevRot = projectRaster(nldElev, crs=projection(meuseRot))
   nldCitiesRot = spTransform(nldCities, CRS(projection(meuseRot)))
 }
@@ -554,8 +567,7 @@ scaleBar(proj4string(meuseRot), bg="white")
 <<world>>=
 world = openmap(
     extent(-10,30,40,60),
-    path="osm-no-labels", 
-    cachePath = system.file('extdata', package='mapmisc'))
+    path="osm-no-labels")
 @
 
 

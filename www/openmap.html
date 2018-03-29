@@ -52,7 +52,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&#39;mapmisc&#39;</span>)</code></pre></div>
 <pre><code>## Loading required package: sp</code></pre>
 <pre><code>## Loading required package: raster</code></pre>
-<pre><code>## map images will be cached in  /tmp/mapmiscCache_patrick</code></pre>
+<pre><code>## map images will be cached in  /tmp/RtmpPX4Ncb/mapmiscCache</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="cf">if</span>(<span class="op">!</span><span class="kw">exists</span>(<span class="st">&#39;mapmiscCachePath&#39;</span>))
   mapmiscCachePath =<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&#39;extdata&#39;</span>, <span class="dt">package=</span><span class="st">&#39;mapmisc&#39;</span>)
 
@@ -66,7 +66,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
   <span class="dt">mapmiscVerbose=</span><span class="ot">TRUE</span>)
 
 <span class="kw">getOption</span>(<span class="st">&quot;mapmiscCachePath&quot;</span>)</code></pre></div>
-<pre><code>## [1] &quot;/home/patrick/workspace/diseasemapping/www/mapmiscCache&quot;</code></pre>
+<pre><code>## [1] &quot;/home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">getOption</span>(<span class="st">&quot;mapmiscCacheReadOnly&quot;</span>)</code></pre></div>
 <pre><code>## [1] FALSE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">myraster =<span class="st"> </span><span class="kw">raster</span>(<span class="kw">matrix</span>(<span class="dv">0</span>,<span class="dv">10</span>,<span class="dv">10</span>),<span class="dt">xmn=</span><span class="dv">8</span>,<span class="dt">xmx=</span><span class="dv">18</span>,<span class="dt">ymn=</span><span class="dv">0</span>,<span class="dt">ymx=</span><span class="dv">10</span>, 
@@ -173,28 +173,29 @@ myPoints =<span class="st"> </span><span class="kw">SpatialPoints</span>(myraste
   mytiles =<span class="st"> </span><span class="kw">openmap</span>(<span class="kw">coordinates</span>(myPoints)[<span class="dv">1</span>,], <span class="dt">zoom=</span><span class="dv">4</span>)
   <span class="kw">myplot</span>(myPoints)
   } <span class="co"># end have rgdal</span></code></pre></div>
-<pre><code>## rgdal: version: 1.2-7, (SVN revision 660)
+<pre><code>## rgdal: version: 1.2-15, (SVN revision 691)
 ##  Geospatial Data Abstraction Library extensions to R successfully loaded
-##  Loaded GDAL runtime: GDAL 2.1.2, released 2016/10/24
-##  Path to GDAL shared files: /usr/share/gdal/2.1
+##  Loaded GDAL runtime: GDAL 2.2.1, released 2017/06/23
+##  Path to GDAL shared files: /usr/share/gdal/2.2
+##  GDAL binary built with GEOS: TRUE 
 ##  Loaded PROJ.4 runtime: Rel. 4.9.3, 15 August 2016, [PJ_VERSION: 493]
 ##  Path to PROJ.4 shared files: (autodetected)
-##  Linking to sp version: 1.2-4</code></pre>
+##  Linking to sp version: 1.2-5</code></pre>
 <figure>
 <img src="figure/africaPlots-1.png" alt="plot of chunk africaPlots" /><figcaption>plot of chunk africaPlots</figcaption>
 </figure>
 <pre><code>## zoom is  6 ,  9 tiles
 ## http://tile.openstreetmap.org/ 
 ## http://tile.openstreetmap.org/ 
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/32.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/32.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/32.png  cached
+## downloading  http://tile.openstreetmap.org/6/33/30.png 
+## downloading  http://tile.openstreetmap.org/6/33/31.png 
+## downloading  http://tile.openstreetmap.org/6/33/32.png 
+## downloading  http://tile.openstreetmap.org/6/34/30.png 
+## downloading  http://tile.openstreetmap.org/6/34/31.png 
+## downloading  http://tile.openstreetmap.org/6/34/32.png 
+## downloading  http://tile.openstreetmap.org/6/35/30.png 
+## downloading  http://tile.openstreetmap.org/6/35/31.png 
+## downloading  http://tile.openstreetmap.org/6/35/32.png 
 ## reprojecting  589824  cells...done
 ## copying colortable for  http...tile.openstreetmap.org.</code></pre>
 <figure>
@@ -203,15 +204,15 @@ myPoints =<span class="st"> </span><span class="kw">SpatialPoints</span>(myraste
 <pre><code>## zoom is  6 ,  9 tiles
 ## http://tile.openstreetmap.org/ 
 ## http://tile.openstreetmap.org/ 
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/32.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/32.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/32.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/32.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/32.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/32.png  cached
 ## reprojecting  589824  cells...done
 ## copying colortable for  http...tile.openstreetmap.org.</code></pre>
 <figure>
@@ -220,15 +221,15 @@ myPoints =<span class="st"> </span><span class="kw">SpatialPoints</span>(myraste
 <pre><code>## zoom is  6 ,  9 tiles
 ## tile.openstreetmap.org 
 ## http://tile.openstreetmap.org/ 
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/32.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/32.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/32.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/32.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/32.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/32.png  cached
 ## reprojecting  589824  cells...done
 ## copying colortable for  tile.openstreetmap.org</code></pre>
 <figure>
@@ -237,32 +238,32 @@ myPoints =<span class="st"> </span><span class="kw">SpatialPoints</span>(myraste
 <pre><code>## zoom is  6 ,  6 tiles
 ## http://tile.openstreetmap.org/ 
 ## http://tile.openstreetmap.org/ 
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
 ## copying colortable for  http...tile.openstreetmap.org. 
 ## zoom is  6 ,  6 tiles
 ## http://tile.openstreetmap.org/ 
 ## http://tile.openstreetmap.org/ 
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
 ## copying colortable for  http...tile.openstreetmap.org. 
 ## zoom is  6 ,  6 tiles
 ## http://tile.openstreetmap.org/ 
 ## http://tile.openstreetmap.org/ 
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
 ## reprojecting  393216  cells...done
 ## copying colortable for  http...tile.openstreetmap.org.</code></pre>
 <figure>
@@ -271,15 +272,15 @@ myPoints =<span class="st"> </span><span class="kw">SpatialPoints</span>(myraste
 <pre><code>## zoom is  6 ,  9 tiles
 ## http://tile.openstreetmap.org/ 
 ## http://tile.openstreetmap.org/ 
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/32.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/32.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/32.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/32.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/32.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/32.png  cached
 ## reprojecting  589824  cells...done
 ## copying colortable for  http...tile.openstreetmap.org.</code></pre>
 <figure>
@@ -288,15 +289,15 @@ myPoints =<span class="st"> </span><span class="kw">SpatialPoints</span>(myraste
 <pre><code>## zoom is  6 ,  9 tiles
 ## http://tile.openstreetmap.org/ 
 ## http://tile.openstreetmap.org/ 
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/32.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/32.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/32.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/32.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/32.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/32.png  cached
 ## reprojecting  589824  cells...done
 ## copying colortable for  http...tile.openstreetmap.org.</code></pre>
 <figure>
@@ -305,12 +306,12 @@ myPoints =<span class="st"> </span><span class="kw">SpatialPoints</span>(myraste
 <pre><code>## zoom is  6 ,  6 tiles
 ## http://tile.openstreetmap.org/ 
 ## http://tile.openstreetmap.org/ 
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
 ## reprojecting  393216  cells...done
 ## copying colortable for  http...tile.openstreetmap.org.</code></pre>
 <figure>
@@ -319,12 +320,12 @@ myPoints =<span class="st"> </span><span class="kw">SpatialPoints</span>(myraste
 <pre><code>## zoom is  6 ,  6 tiles
 ## http://tile.openstreetmap.org/ 
 ## http://tile.openstreetmap.org/ 
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/33/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/34/31.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/30.png  cached
+## tile  /home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache/org/6/35/31.png  cached
 ## reprojecting  393216  cells...done
 ## copying colortable for  http...tile.openstreetmap.org.</code></pre>
 <figure>
@@ -333,7 +334,7 @@ myPoints =<span class="st"> </span><span class="kw">SpatialPoints</span>(myraste
 <pre><code>## zoom is  4 ,  1 tiles
 ## http://tile.openstreetmap.org/ 
 ## http://tile.openstreetmap.org/ 
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/4/8/7.png  cached
+## downloading  http://tile.openstreetmap.org/4/8/7.png 
 ## copying colortable for  http...tile.openstreetmap.org.</code></pre>
 <figure>
 <img src="figure/africaPlots-10.png" alt="plot of chunk africaPlots" /><figcaption>plot of chunk africaPlots</figcaption>
@@ -353,10 +354,10 @@ myPoints =<span class="st"> </span><span class="kw">SpatialPoints</span>(myraste
 <pre><code>## zoom is  18 ,  4 tiles
 ## http://tile.openstreetmap.org/ 
 ## http://tile.openstreetmap.org/ 
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/18/134633/86146.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/18/134633/86147.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/18/134634/86146.png  cached
-## tile  /home/patrick/workspace/diseasemapping/www/mapmiscCache/org/18/134634/86147.png  cached
+## downloading  http://tile.openstreetmap.org/18/134633/86146.png 
+## downloading  http://tile.openstreetmap.org/18/134633/86147.png 
+## downloading  http://tile.openstreetmap.org/18/134634/86146.png 
+## downloading  http://tile.openstreetmap.org/18/134634/86147.png 
 ## reprojecting  262144  cells...done
 ## copying colortable for  http...tile.openstreetmap.org.</code></pre>
 <figure>

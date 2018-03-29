@@ -1,15 +1,16 @@
 
-<!--
-%\VignetteEngine{knitr::knitr}
-%\VignetteIndexEntry{Examples of map layers}
--->
+```{r theHeader, echo=FALSE, result='asis'}
+if(requireNamespace("Pmisc", quietly=TRUE)) {
+  Pmisc::markdownHeader(
+    title="Examples of map layers in the mapmisc package",    
+    author='Patrick Brown'
+    )
+} else {
+cat("# Examples of map layers in the mapmisc package")  
+}
+```
 
-
-# Examples of map layers
-
-
-This document will be incomplete if `rgdal` is unavailable or there is on
-internet connection when this document is compiled.  The full document is at
+The full document is at
 [diseasemapping.r-forge.r-project.org](http://diseasemapping.r-forge.r-project.org).
 
 See [mc.bbbike.org/mc](http://mc.bbbike.org/mc/) for examples more map tiles 
@@ -20,34 +21,14 @@ See [mc.bbbike.org/mc](http://mc.bbbike.org/mc/) for examples more map tiles
 library('knitr')
 library('mapmisc')
 
-fact = 0.5
+fact = 2
 allTiles = FALSE
 
-# uncomment for nicer images
-# fact = 1 
-# reRun = TRUE
-# or run in sandbox	
-# R --slave -e "knitr::knit('../pkg/mapmisc/vignettes/mapLayers.Rmd')" fact=1 allTiles=TRUE
-# pandoc --to=html5 --output=mapLayers.html mapLayers.md
-# cp -r figure ../www
-# cp -r mapLayers.html ../www
-theArgs = grep("^(fact|allTiles)=", commandArgs(), value=TRUE)
-for(D in theArgs)
-  eval(parse(text=D))
+knitr::opts_chunk$set(dpi=150, dev.args=list(bg='white'),
+    fig.path = 'mapLayersFigures/', out.width='30%')
 
-opts_chunk$set(dpi=50*fact, 
-  dev.args=list(bg='white'))	
-
-if(allTiles) {
-  theNames = names(osmTiles())
-  cachePath = file.path(tempdir(), 'mapLayersVignetteCache')
-} else {
-  # smaller selection of tiles, which are distributed with the package
-  theNames = names(grep(
-      "cyclemap|thunderforest|waze|wikimedia|korona|opentopomap|maptoolkit|nrcan", 
-    osmTiles(), invert=TRUE, value=TRUE))
-  cachePath = system.file('extdata', package='mapmisc')
-}
+theNames = names(osmTiles())
+cachePath = file.path(getwd(), 'mapLayersCache')
 
 ```
 
@@ -74,7 +55,6 @@ stjohns=c(-52.683320, 47.566285)
     verbose=TRUE, 
     crs = crsMerc, 
     cachePath = cachePath)
-  
 ```
 
 
@@ -82,7 +62,6 @@ The following are some examples of maps produced with `mymap=openmap(x, path="so
 
 
 ```{r someTiles, echo=FALSE, results='asis', fig.height=5, fig.width=5}
-
 
 mytiles = list(africaTiles, londonTiles, nfTiles)
 
@@ -142,9 +121,11 @@ for(D in theNames){
 
 See [mc.bbbike.org/mc](http://mc.bbbike.org/mc/) 
 
+Maps shown because it is not clear how they should be attributed.
+
 Michelin
     
-```{r additionalMichelin, echo=TRUE, purl=FALSE, eval=unlist(mget("allTiles", ifnotfound=FALSE))}
+```{r additionalMichelin, echo=TRUE, purl=FALSE, eval=FALSE}
 
 mPath = osmTiles(paste(
   'http://map3.viamichelin.com/map/mapdirect?map=',
@@ -169,7 +150,7 @@ for(D in names(africaMichelin)) {
 Stamen retina
 
    
-```{r stamenRetina, echo=TRUE, purl=FALSE, eval=unlist(mget("allTiles", ifnotfound=FALSE))}
+```{r stamenRetina, echo=TRUE, purl=FALSE, eval=FALSE}
 
 sPath = osmTiles('stamen-toner', 
   suffix = '@2x.png')
@@ -191,7 +172,7 @@ mtext(sPath, side=3, line=-2, outer=FALSE)
 
 Komoot, Yandex, ESRI, F4map, and Sigma
 
-```{r aditionalEsri, echo=TRUE, purl=FALSE, eval=unlist(mget("allTiles", ifnotfound=FALSE))}
+```{r aditionalEsri, echo=TRUE, purl=FALSE, eval=FALSE}
 
 otherPaths = c(
   'https://a.tile.hosted.thunderforest.com/komoot-2/',

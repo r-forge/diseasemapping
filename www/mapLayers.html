@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <meta name="author" content="Patrick Brown">
-  <title>Examples of map layers</title>
+  <title>Examples of map layers in the mapmisc package</title>
   <style type="text/css">code{white-space: pre;}</style>
   <style type="text/css">
 div.sourceCode { overflow-x: auto; }
@@ -54,26 +54,12 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 </head>
 <body>
 <header>
-<h1 class="title">Examples of map layers</h1>
+<h1 class="title">Examples of map layers in the mapmisc package</h1>
 <p class="author">Patrick Brown</p>
-<p class="date">Monday 5 February 2018</p>
+<p class="date">Thursday 29 March 2018</p>
 </header>
-<p>This document will be incomplete if <code>rgdal</code> is unavailable or there is on internet connection when this document is compiled. The full document is at <a href="http://diseasemapping.r-forge.r-project.org">diseasemapping.r-forge.r-project.org</a>.</p>
+<p>The full document is at <a href="http://diseasemapping.r-forge.r-project.org">diseasemapping.r-forge.r-project.org</a>.</p>
 <p>See <a href="http://mc.bbbike.org/mc/">mc.bbbike.org/mc</a> for examples more map tiles (not all of which are compatible with <code>mapmisc</code>).</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">africaTiles =<span class="st"> </span><span class="kw">openmap</span>(africaExtent, 
-    <span class="dt">path=</span>theNames,<span class="dt">zoom=</span><span class="dv">2</span>,
-    <span class="dt">verbose=</span><span class="ot">TRUE</span>, 
-    <span class="dt">crs =</span> crsMerc)
-  
-londonTiles =<span class="st"> </span><span class="kw">openmap</span>(trafalgarSquare,<span class="dt">zoom=</span><span class="dv">12</span>,
-    <span class="dt">path=</span>theNames,
-    <span class="dt">verbose=</span><span class="ot">TRUE</span>, 
-    <span class="dt">crs =</span> crsMerc)
-  
-nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span class="dt">zoom=</span><span class="dv">14</span>, 
-    <span class="dt">path=</span>theNames,
-    <span class="dt">verbose=</span><span class="ot">TRUE</span>, 
-    <span class="dt">crs =</span> crsMerc)</code></pre></div>
 <p>The following are some examples of maps produced with <code>mymap=openmap(x, path=&quot;something&quot;)</code></p>
 <h1 id="osm">osm</h1>
 <p><code>plot(openmap(x,path=&quot;osm&quot;))</code></p>
@@ -81,9 +67,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-1.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-2.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-3.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-1.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-2.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-3.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -93,9 +79,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-4.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-5.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-6.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-4.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-5.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-6.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -105,9 +91,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-7.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-8.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-9.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-7.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-8.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-9.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -117,9 +103,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-10.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-11.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-12.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-10.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-11.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-12.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -129,9 +115,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-13.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-14.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-15.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-13.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-14.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-15.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -141,9 +127,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-16.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-17.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-18.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-16.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-17.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-18.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -153,9 +139,21 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-19.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-20.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-21.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-19.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-20.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-21.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+</tr>
+</tbody>
+</table>
+<h1 id="osm-ru">osm-ru</h1>
+<p><code>plot(openmap(x,path=&quot;osm-ru&quot;))</code></p>
+<p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td><img src="mapLayersFigures/someTiles-22.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-23.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-24.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -165,9 +163,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-22.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-23.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-24.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-25.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-26.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-27.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -177,9 +175,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-25.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-26.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-27.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-28.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-29.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-30.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -189,9 +187,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-28.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-29.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-30.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-31.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-32.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-33.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -201,9 +199,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-31.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-32.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-33.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-34.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-35.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-36.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -213,9 +211,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-34.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-35.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-36.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-37.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-38.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-39.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -225,9 +223,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-37.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-38.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-39.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-40.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-41.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-42.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -237,9 +235,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-40.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-41.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-42.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-43.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-44.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-45.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -249,9 +247,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-43.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-44.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-45.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-46.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-47.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-48.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -261,9 +259,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-46.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-47.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-48.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-49.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-50.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-51.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -273,9 +271,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-49.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-50.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-51.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-52.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-53.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-54.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -285,9 +283,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-52.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-53.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-54.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-55.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-56.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-57.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -297,9 +295,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-55.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-56.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-57.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-58.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-59.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-60.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -309,9 +307,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-58.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-59.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-60.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-61.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-62.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-63.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -321,9 +319,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-61.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-62.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-63.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-64.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-65.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-66.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -333,9 +331,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-64.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-65.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-66.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-67.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-68.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-69.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -345,9 +343,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-67.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-68.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-69.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-70.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-71.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-72.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -357,9 +355,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-70.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-71.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-72.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-73.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-74.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-75.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -369,9 +367,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-73.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-74.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-75.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-76.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-77.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-78.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -381,9 +379,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-76.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-77.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-78.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-79.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-80.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-81.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -393,9 +391,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-79.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-80.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-81.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-82.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-83.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-84.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -405,9 +403,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-82.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-83.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-84.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-85.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-86.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-87.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -417,9 +415,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-85.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-86.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-87.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-88.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-89.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-90.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -429,21 +427,21 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-88.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-89.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-90.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-91.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-92.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-93.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
 <h1 id="wikimedia">wikimedia</h1>
-<p><code>plotRGB(openmap(x,path=&quot;wikimedia&quot;))</code></p>
+<p><code>plot(openmap(x,path=&quot;wikimedia&quot;))</code></p>
 <p>© <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, available under the <a href="http://opendatacommons.org/licenses/odbl">Open Database License</a>, cartography is licensed as <a href="http://creativecommons.org/licenses/by-sa/2.0">CC BY-SA</a>.</p>
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-91.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-92.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-93.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-94.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-95.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-96.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -453,9 +451,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-94.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-95.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-96.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-97.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-98.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-99.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -465,9 +463,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-97.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-98.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-99.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-100.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-101.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-102.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -477,9 +475,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-100.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-101.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-102.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-103.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-104.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-105.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -489,9 +487,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-103.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-104.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-105.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-106.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-107.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-108.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -501,9 +499,9 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-106.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-107.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-108.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-109.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-110.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-111.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
@@ -513,14 +511,15 @@ nfTiles =<span class="st"> </span><span class="kw">openmap</span>(stjohns, <span
 <table>
 <tbody>
 <tr class="odd">
-<td><img src="figure/someTiles-109.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-110.png" alt="plot of chunk someTiles" /></td>
-<td><img src="figure/someTiles-111.png" alt="plot of chunk someTiles" /></td>
+<td><img src="mapLayersFigures/someTiles-112.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-113.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
+<td><img src="mapLayersFigures/someTiles-114.png" title="plot of chunk someTiles" alt="plot of chunk someTiles" width="30%" /></td>
 </tr>
 </tbody>
 </table>
 <h1 id="additional-map-layers">Additional map layers</h1>
 <p>See <a href="http://mc.bbbike.org/mc/">mc.bbbike.org/mc</a></p>
+<p>Maps shown because it is not clear how they should be attributed.</p>
 <p>Michelin</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mPath =<span class="st"> </span><span class="kw">osmTiles</span>(<span class="kw">paste</span>(
   <span class="st">&#39;http://map3.viamichelin.com/map/mapdirect?map=&#39;</span>,
@@ -540,7 +539,7 @@ africaMichelin =<span class="st"> </span><span class="kw">openmap</span>(
   <span class="kw">plot</span>(africaMichelin[[D]], <span class="dt">add=</span><span class="ot">TRUE</span>)
   <span class="kw">mtext</span>(D, <span class="dt">side=</span><span class="dv">3</span>, <span class="dt">line=</span><span class="op">-</span><span class="dv">2</span>, <span class="dt">outer=</span><span class="ot">FALSE</span>)
 }</code></pre></div>
-<p><img src="figure/additionalMichelin-1.png" alt="plot of chunk additionalMichelin" /><img src="figure/additionalMichelin-2.png" alt="plot of chunk additionalMichelin" /> Stamen retina</p>
+<p>Stamen retina</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sPath =<span class="st"> </span><span class="kw">osmTiles</span>(<span class="st">&#39;stamen-toner&#39;</span>, 
   <span class="dt">suffix =</span> <span class="st">&#39;@2x.png&#39;</span>)
 
@@ -556,9 +555,6 @@ africaS2 =<span class="st"> </span><span class="kw">tonerToTrans</span>(africaS)
 <span class="kw">plot</span>(africaS2, <span class="dt">add=</span><span class="ot">TRUE</span>)
 
 <span class="kw">mtext</span>(sPath, <span class="dt">side=</span><span class="dv">3</span>, <span class="dt">line=</span><span class="op">-</span><span class="dv">2</span>, <span class="dt">outer=</span><span class="ot">FALSE</span>)</code></pre></div>
-<figure>
-<img src="figure/stamenRetina-1.png" alt="plot of chunk stamenRetina" /><figcaption>plot of chunk stamenRetina</figcaption>
-</figure>
 <p>Komoot, Yandex, ESRI, F4map, and Sigma</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">otherPaths =<span class="st"> </span><span class="kw">c</span>(
   <span class="st">&#39;https://a.tile.hosted.thunderforest.com/komoot-2/&#39;</span>,
@@ -598,6 +594,5 @@ Spaths =<span class="st"> </span><span class="kw">unique</span>(
   }
   <span class="kw">mtext</span>(D, <span class="dt">side=</span><span class="dv">3</span>, <span class="dt">line=</span><span class="op">-</span><span class="dv">2</span>, <span class="dt">outer=</span><span class="ot">FALSE</span>)
 }</code></pre></div>
-<p><img src="figure/aditionalEsri-1.png" alt="plot of chunk aditionalEsri" /><img src="figure/aditionalEsri-2.png" alt="plot of chunk aditionalEsri" /><img src="figure/aditionalEsri-3.png" alt="plot of chunk aditionalEsri" /><img src="figure/aditionalEsri-4.png" alt="plot of chunk aditionalEsri" /><img src="figure/aditionalEsri-5.png" alt="plot of chunk aditionalEsri" /><img src="figure/aditionalEsri-6.png" alt="plot of chunk aditionalEsri" /><img src="figure/aditionalEsri-7.png" alt="plot of chunk aditionalEsri" /><img src="figure/aditionalEsri-8.png" alt="plot of chunk aditionalEsri" /></p>
 </body>
 </html>

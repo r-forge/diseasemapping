@@ -3,6 +3,8 @@
 %\VignetteIndexEntry{Space Station Map Projections}
 -->
 
+# Space Station Map Projections
+
 ```{r setup}
 library('mapmisc', quietly=TRUE)
 haveRgdal = requireNamespace('rgdal', quietly=TRUE)
@@ -29,9 +31,9 @@ options(
 ```
 
 ```{r mapmiscCache, echo=FALSE, purl=FALSE}
-if(testing) {
   getOption('mapmiscCachePath')
   getOption('mapmiscCacheReadOnly')
+if(testing) {
   options(mapmiscVerbose = TRUE)
 }
 ```

@@ -55,6 +55,13 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 -->
 <h1 id="mapping-hans-island">Mapping Hans Island</h1>
 <p>This document will be incomplete if <code>rgdal</code> is unavailable or there is on internet connection when this document is compiled. The full document is at <a href="http://diseasemapping.r-forge.r-project.org">diseasemapping.r-forge.r-project.org</a>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">  <span class="kw">getOption</span>(<span class="st">&#39;mapmiscCachePath&#39;</span>)</code></pre></div>
+<pre><code>## [1] &quot;/home/patrick/workspaceOxygen/diseasemapping/www/mapmiscCache&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">  <span class="kw">getOption</span>(<span class="st">&#39;mapmiscCacheReadOnly&#39;</span>)</code></pre></div>
+<pre><code>## [1] FALSE</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="cf">if</span>(testing) {
+  <span class="kw">options</span>(<span class="dt">mapmiscVerbose =</span> <span class="ot">TRUE</span>)
+}</code></pre></div>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">coords =<span class="st"> </span><span class="kw">rbind</span>(<span class="dt">Alert =</span> <span class="kw">c</span>(<span class="op">-</span><span class="fl">62.338889</span>, <span class="fl">82.501389</span>),
   <span class="dt">Qaanaaq =</span> <span class="kw">c</span>(<span class="op">-</span><span class="fl">69.238685</span>,<span class="fl">77.466335</span>),    
   <span class="st">&#39;Alex Fjord&#39;</span> =<span class="st"> </span><span class="kw">c</span>(<span class="op">-</span><span class="fl">75.999722</span>, <span class="fl">78.9</span>),
