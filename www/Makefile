@@ -8,6 +8,8 @@ test: $(testDocs)
 
 testExistingDocs: test_existing_cache_perspective.html test_existing_cache_north.html test_existing_cache_openmap.html test_existing_cache_mapmisc.pdf
 
+.PRECIOUS: *.html *.pdf
+
 %.Rmd: ../pkg/mapmisc/inst/extdoc/%.Rmd
 	cp $< $@
 
