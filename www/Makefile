@@ -1,12 +1,12 @@
 VPATH = ../pkg/geostatsp/vignettes
 
 finalDocs = glgm.pdf north.html mapmisc.pdf openmap.html mapLayers.html perspective.html
-testDocs = test_perspective.html test_north.html test_openmap.html test_mapmisc.pdf
+testDocs = test_perspective.html test_north.html test_openmap.html test_mapmisc.pdf test_worldMap.html
 
 all: $(finalDocs)
 test: $(testDocs)
 
-testExistingDocs: test_existing_cache_perspective.html test_existing_cache_north.html test_existing_cache_openmap.html test_existing_cache_mapmisc.pdf
+testExistingDocs: test_existing_cache_perspective.html test_existing_cache_north.html test_existing_cache_openmap.html test_existing_cache_mapmisc.pdf test_existing_cache_worldMap.html
 
 .PRECIOUS: *.html *.pdf
 
