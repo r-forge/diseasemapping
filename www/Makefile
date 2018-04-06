@@ -1,13 +1,12 @@
 VPATH = ../pkg/geostatsp/vignettes
 
-finalDocs = glgm.pdf north.html mapmisc.pdf openmap.html worldMap.html mapLayers.html perspective.html
-testDocs = test_perspective.html test_north.html test_openmap.html test_worldMap.html test_mapmisc.pdf
-
+finalDocs = glgm.pdf north.html mapmisc.pdf openmap.html mapLayers.html perspective.html
+testDocs = test_perspective.html test_north.html test_openmap.html test_mapmisc.pdf
 
 all: $(finalDocs)
 test: $(testDocs)
 
-testExistingDocs: test_existing_cache_perspective.html test_existing_cache_north.html test_existing_cache_openmap.html test_existing_cache_worldMap.html test_existing_cache_mapmisc.pdf
+testExistingDocs: test_existing_cache_perspective.html test_existing_cache_north.html test_existing_cache_openmap.html test_existing_cache_mapmisc.pdf
 
 %.Rmd: ../pkg/mapmisc/inst/extdoc/%.Rmd
 	cp $< $@
@@ -20,7 +19,7 @@ testExistingDocs: test_existing_cache_perspective.html test_existing_cache_north
 
 
 %.R: ../pkg/mapmisc/tests/%.R
-	mv $< .;
+	cp $< .;
 
 %.Rmd: %.R
 	R --slave -e "knitr::spin('$<', knit=FALSE)";
