@@ -40,7 +40,7 @@ result
 }
 
 sampleDensHazSingle = function(fit, x, covariates ) {
-	samp = inla.posterior.sample(1,fit)[[1]]
+	samp = INLA::inla.posterior.sample(1,fit)[[1]]
 	shape = samp$hyperpar[grep('alpha parameter for ', 
      names(samp$hyperpar))]
 	betaIndex = which(fit$misc$configs$contents$length==1)

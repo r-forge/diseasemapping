@@ -56,7 +56,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="cf">if</span>(<span class="op">!</span><span class="kw">exists</span>(<span class="st">&#39;mapmiscCachePath&#39;</span>))
   mapmiscCachePath =<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&#39;extdata&#39;</span>, <span class="dt">package=</span><span class="st">&#39;mapmisc&#39;</span>)
 
-<span class="cf">if</span>(<span class="op">!</span><span class="kw">exists</span>(<span class="st">&#39;mapmiscCacheReadOnly&#39;</span>))
+if(!<span class="kw">exists</span>(<span class="st">&#39;mapmiscCacheReadOnly&#39;</span>))
   mapmiscCacheReadOnly =<span class="st"> </span><span class="ot">TRUE</span>
 
 
@@ -84,7 +84,7 @@ myPoints =<span class="st"> </span><span class="kw">SpatialPoints</span>(myraste
 <img src="figure/simplePlot-1.png" alt="plot of chunk simplePlot" /><figcaption>plot of chunk simplePlot</figcaption>
 </figure>
 <p>only do the following if rgdal is available</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="cf">if</span>(<span class="kw">require</span>(<span class="st">&#39;rgdal&#39;</span>, <span class="dt">quietly=</span><span class="ot">TRUE</span>)) {
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">if(<span class="kw">require</span>(<span class="st">&#39;rgdal&#39;</span>, <span class="dt">quietly=</span><span class="ot">TRUE</span>)) {
   
   <span class="co"># utm zone 32</span>
   utmproj =<span class="st"> </span><span class="kw">CRS</span>(<span class="st">&quot;+init=epsg:3064&quot;</span>) 
@@ -97,7 +97,7 @@ myPoints =<span class="st"> </span><span class="kw">SpatialPoints</span>(myraste
     crsMerc)
   
   
-  myplot =<span class="st"> </span><span class="cf">function</span>(first,<span class="dt">second=</span>first) {
+  myplot =<span class="st"> </span>function(first,<span class="dt">second=</span>first) {
     <span class="kw">par</span>(<span class="dt">mar=</span><span class="kw">c</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>))
     <span class="kw">plot</span>(first)
     <span class="kw">plot</span>(mytiles, <span class="dt">add=</span><span class="ot">TRUE</span>)
@@ -342,7 +342,7 @@ myPoints =<span class="st"> </span><span class="kw">SpatialPoints</span>(myraste
 <p>ams city hall</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">  cityHall =<span class="st"> </span><span class="kw">SpatialPoints</span>(<span class="kw">cbind</span>( <span class="fl">4.891111</span>, <span class="fl">52.373056</span>), <span class="dt">proj4string=</span>crsLL)
 <span class="co">#  cityHall = spTransform(cityHall,CRS(&quot;+init=epsg:28992&quot;))</span>
-<span class="cf">if</span>(<span class="kw">require</span>(<span class="st">&#39;rgdal&#39;</span>, <span class="dt">quietly=</span><span class="ot">TRUE</span>)) {
+if(<span class="kw">require</span>(<span class="st">&#39;rgdal&#39;</span>, <span class="dt">quietly=</span><span class="ot">TRUE</span>)) {
   cityHall =<span class="st"> </span><span class="kw">spTransform</span>(cityHall,<span class="kw">CRS</span>(<span class="st">&quot;+init=epsg:32631&quot;</span>))
   mytiles =<span class="st"> </span><span class="kw">openmap</span>(cityHall, <span class="dt">buffer=</span><span class="dv">50</span>)
 

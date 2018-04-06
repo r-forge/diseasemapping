@@ -11,7 +11,8 @@ Imports:
     utils,
     raster,
     sp,
-    graphics
+    graphics,
+	abind
 Suggests:
     RColorBrewer,
     numDeriv,

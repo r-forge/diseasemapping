@@ -4,7 +4,7 @@ sudo chown postgres:postgres /store/census/pgsql
 sudo chmod 775 /store/census/pgsql
 #sudo mkdir /store/census/pgsql/data
 
-sudo ln -s /usr/lib/postgresql/9.6 /usr/lib/postgresql/current
+sudo ln -s /usr/lib/postgresql/10 /usr/lib/postgresql/current
 
 sudo -u postgres /usr/lib/postgresql/current/bin/initdb --auth=trust --pgdata=/store/census/pgsql/data --encoding=UTF8
 
