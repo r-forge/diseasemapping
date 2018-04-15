@@ -1,8 +1,8 @@
 Package: geostatsp
 Type: Package
 Title: Geostatistical Modelling with Likelihood and Bayes
-Version: 1.7.0
-Date: 2018-02-09
+Version: 1.7.1
+Date: 2018-04-15
 Depends:
     Matrix (>= 1.2.0),
     raster,

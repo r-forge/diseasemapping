@@ -362,6 +362,7 @@ gm.dataSpatial = function(
     cellsBoth = cellsBuffer(grid, buffer)			
     cellsSmall = cellsBoth$small
 
+
   # 
     if(length(names(covariates))) {
 
@@ -398,6 +399,11 @@ gm.dataSpatial = function(
         data[[D]] = raster::extract(covariates[[D]], 
           data) 
       }
+    }
+    # reproject data to grid
+    if(requireNamespace('rgdal', quietly=TRUE ) &
+      !is.na(projection(cellsSmall))) {
+        data = spTransform(data, projection(cellsSmall))
     }
     data$space = suppressWarnings(extract(cellsSmall, data))
 
