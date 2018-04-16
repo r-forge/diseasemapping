@@ -87,7 +87,7 @@ do.call(matplot, modSd$prob$matplot)
 do.call(legend, modSd$legend)
 ```
 
-```{r sampleDensHaz}
+```{r sampleDensHaz, eval = requireNamespace("INLA"), purl= requireNamespace("INLA")}
 xSeq = seq(0,1/12,len=1000)
 myDens = Pmisc::sampleDensHaz(mod, xSeq, n=25)
 matplot(xSeq*365.25, myDens[,'dens',]/365.25, type='l',
