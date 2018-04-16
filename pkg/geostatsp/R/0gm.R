@@ -362,7 +362,6 @@ gm.dataSpatial = function(
     cellsBoth = cellsBuffer(grid, buffer)			
     cellsSmall = cellsBoth$small
 
-
   # 
     if(length(names(covariates))) {
 
@@ -379,13 +378,11 @@ gm.dataSpatial = function(
         method=rmethod)
       covariatesStack = stack(cellsSmall, covariatesStack)
 
-
       covariatesSP = as(covariatesStack, "SpatialPointsDataFrame")
       covariatesDF = covariatesSP@data
     } else {
       covariatesDF = data.frame()
     }
-
   # loop through covariates which aren't in data, extract it from `covariates`
     for(D in setdiff(alltermsPlain, names(data))){
       if(is.null(covariates[[D]]))
@@ -400,13 +397,16 @@ gm.dataSpatial = function(
           data) 
       }
     }
+  
+    # ensure row names are identical
+    rownames(data@data) = rownames(data@coords) = 
+        1:length(data)
     # reproject data to grid
     if(requireNamespace('rgdal', quietly=TRUE ) &
       !is.na(projection(cellsSmall))) {
         data = spTransform(data, projection(cellsSmall))
     }
     data$space = suppressWarnings(extract(cellsSmall, data))
-
   # loop through spatial covariates which are factors
     for(D in intersect(Sfactors, names(covariatesDF))) {
       theTable = sort(table(data[[D]]), decreasing=TRUE)
