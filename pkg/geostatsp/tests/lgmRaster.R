@@ -7,9 +7,9 @@ library('geostatsp')
 
 #+ simData
 if(.Platform$OS.type == 'windows') {
-	Ncell = 30 
+	Ncell = 20 
 } else {
-	Ncell = 60
+	Ncell = 40
 }
 myRaster = squareRaster(extent(0,6000,0,6000), Ncell)
 
