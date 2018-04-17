@@ -6,7 +6,13 @@ library('geostatsp')
 
 
 #+ simData
-myRaster = squareRaster(extent(0,6000,0,6000), 60)
+if(.Platform$OS.type == 'windows') {
+	Ncell = 30 
+} else {
+	Ncell = 60
+}
+myRaster = squareRaster(extent(0,6000,0,6000), Ncell)
+
 myParam=c(oneminusar=0.1, conditionalVariance=2.5^2,shape=2)
 myQ = maternGmrfPrec(myRaster, param=myParam)
 attributes(myQ)$info$optimalShape
