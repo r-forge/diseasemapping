@@ -169,7 +169,16 @@ names(anotherx) = "myvar"
 swissRainR2 = brick(swissRainR[['alt']], 
     sqrt(swissRainR[['prec1']]),
     anotherx)
+#'
 
+#+ aggregateIfWindows
+
+if(.Platform$OS.type=='windows') {
+  swissRainR2 = raster::aggregate(swissRainR2, fact=2)
+}
+#'
+
+#+ swissRainFit
 
 swissResR =  lgm(
     formula=layer ~ alt+ myvar, 
@@ -178,7 +187,9 @@ swissResR =  lgm(
     nugget = exp(seq(log(0.25), log(2.5), len=11)),
     adjustEdges=TRUE,
     mc.cores=1+(.Platform$OS.type=='unix') )		
+#'
 
+#+ swissRainPlot
 
 myCol = mapmisc::colourScale(
     breaks = Sbreaks + max(swissResR$array[,-1,'logLreml',]),
@@ -213,11 +224,11 @@ myResBC = lgm(
     mc.cores=1+(.Platform$OS.type=='unix'), 
     fixBoxcox=FALSE,
     adjustEdges=FALSE)
+#'
 
+#+ boxCoxPlot
 
-if(!interactive()) pdf("profLboxcox.pdf")
 plot(myResBC$profL$boxcox,type='o', ylim=max(myResBC$profL$boxcox[,2])-c(3,0))
-if(!interactive()) dev.off()
 
 myResBC$param
 
@@ -227,7 +238,6 @@ myCol = mapmisc::colourScale(
     col=terrain.colors
 )
 
-if(!interactive()) pdf("profLwithboxcox.pdf")
 image(	
     myResBC$profL$twoDim$x[-1], 
     myResBC$profL$twoDim$y,
@@ -237,7 +247,6 @@ image(
     col=myCol$col, breaks=myCol$breaks+max(myResBC$array[,,'logLreml',]))
 mapmisc::legendBreaks("topright",  myCol)
 points(myResBC$param['propNugget'], myResBC$param['oneminusar'])
-if(!interactive()) dev.off()
 #'
 
 #' optimizing, doesn't work
