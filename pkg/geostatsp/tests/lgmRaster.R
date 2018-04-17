@@ -7,7 +7,7 @@ library('geostatsp')
 
 #+ simData
 if(.Platform$OS.type == 'windows') {
-	Ncell = 20 
+	Ncell =  30
 } else {
 	Ncell = 40
 }
@@ -44,7 +44,7 @@ plot(myY)
 #+ simGrid
 myResR = lgm(formula = sim ~ x, 
     data=raster::stack(myY, myCov), 
-    oneminusar = exp(seq(log(0.025), log(0.2),len=25)),
+    oneminusar = exp(seq(log(0.05), log(0.2),len=25)),
     nugget = exp(seq(log(5), log(100),len=21)), shape=2, 
     adjustEdges=TRUE,
     mc.cores=1+(.Platform$OS.type=='unix') )		
@@ -189,7 +189,7 @@ if(.Platform$OS.type=='windows') {
 swissResR =  lgm(
     formula=layer ~ alt+ myvar, 
     data=swissRainR2, shape=2,
-    oneminusar = exp(seq(log(0.025), log(0.1), len=11)),
+    oneminusar = exp(seq(log(0.05), log(0.1), len=11)),
     nugget = exp(seq(log(0.25), log(2.5), len=11)),
     adjustEdges=TRUE,
     mc.cores=1+(.Platform$OS.type=='unix') )		
@@ -224,7 +224,7 @@ names(yBC) = names(myY)
 myResBC = lgm(
     formula = sim ~ x, 
     data=raster::stack(yBC, myCov), 
-    oneminusar = exp(seq(log(0.025), log(0.15), len=11)),
+    oneminusar = exp(seq(log(0.05), log(0.15), len=11)),
     nugget = exp(seq(log(5), log(50), len=11)),
     shape=2, 
     mc.cores=1+(.Platform$OS.type=='unix'), 
