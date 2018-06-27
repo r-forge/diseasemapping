@@ -113,7 +113,7 @@ Makefile = function(x, suffix = NULL,
       $(REXE) -e "knitr::knit(\'$<\', encoding=\'UTF-8\')" $(Rargs)
       
       %.tex: %.md
-      $(PANDOC) --standalone --smart --biblatex $(pandocArgs) --to=$(pandocTo) --output=$@ $<
+      $(PANDOC) --standalone --biblatex $(pandocArgs) --to=$(pandocTo) --output=$@ $<
       
       %.bcf: %.tex
       $(XELATEX) $<
@@ -126,16 +126,16 @@ Makefile = function(x, suffix = NULL,
       $(XELATEX) -interaction=nonstopmode $<
       
       %.html: %.md
-      $(PANDOC) --smart --self-contained --mathjax --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
+      $(PANDOC) --self-contained --mathjax --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
       
       %.rtf: %.md
-      $(PANDOC) --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
+      $(PANDOC) --standalone --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
       
       %.odt: %.md
-      $(PANDOC) --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$(odtTemplate) --output=$@ $<
+      $(PANDOC) --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$(odtTemplate) --output=$@ $<
       
       %.docx: %.md
-      $(PANDOC) --smart --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$(docxTemplate) --output=$@ $<
+      $(PANDOC) --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$(docxTemplate) --output=$@ $<
       
       clean:
       $(RM) *.run.xml* *.blg *.out *.log *.aux *.bcf *.bbl *.nav *.toc *.vrb'

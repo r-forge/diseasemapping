@@ -70,7 +70,8 @@ markdownHeader = function(
 ) {
   
   startAndEnd='---'  
-  extraHeaderIncludes = '\\renewbibmacro{in:}{}'
+#  extraHeaderIncludes = '\\@ifpackageloaded{biblatex}{\\renewbibmacro{in:}{}}{}'
+  extraHeaderIncludes = NULL
   if(mathCommands)
     extraHeaderIncludes = c(Pmisc::mathCommands, extraHeaderIncludes)
   if(subcaptionCommands)

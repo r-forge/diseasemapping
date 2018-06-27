@@ -38,10 +38,10 @@ clean:
 # md to tex, convert from a tmd if it exists
 # get rid of subfig package, it conflicts with subcaption (or something else)
 %.tex: %.tmd
-	$(PANDOC) --standalone --smart --filter=pandoc-crossref --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) $< | sed s/\\\\usepackage{subfig}// > $@
+	$(PANDOC) --standalone --filter=pandoc-crossref --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) $< | sed s/\\\\usepackage{subfig}// > $@
 
 %.tex: %.md
-	$(PANDOC) --standalone --smart $(PANDOCCROSSREF) --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
+	$(PANDOC) --standalone $(PANDOCCROSSREF) --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
 
 #
 # Create tmd
@@ -74,23 +74,23 @@ clean:
 # html from md
 #
 %.html: %.md
-	$(PANDOC) --smart --self-contained --mathjax $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
+	$(PANDOC) --self-contained --mathjax $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
 
 # 
 # libreoffice document
 #
 %.odt: %.md
-	$(PANDOC) --smart --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$($(ODTTEMPLATE)) --output=$@ $<
+	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$($(ODTTEMPLATE)) --output=$@ $<
 
 #
 # MS Word document
 #
 %.docx: %.md
-	$(PANDOC) --smart --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$($(DOCXTEMPLATE)) --output=$@ $<
+	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$($(DOCXTEMPLATE)) --output=$@ $<
 
 # 
 # rtf
 # 
 %.rtf: %.md
-	$(PANDOC) --smart --standalone --filter=pandoc-crossref --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
+	$(PANDOC) --standalone --filter=pandoc-crossref --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
 
