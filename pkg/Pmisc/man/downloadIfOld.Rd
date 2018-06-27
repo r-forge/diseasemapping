@@ -4,9 +4,9 @@
 \alias{downloadIfOld}
 \title{Download a file}
 \usage{
-downloadIfOld(url, path = getwd(), file = make.names(file.path(path,
-  basename(url))), age = "6 months", overwrite = FALSE, verbose = FALSE,
-  ...)
+downloadIfOld(url, path = getwd(), file = file.path(path,
+  make.names(basename(url))), age = "6 months", overwrite = FALSE,
+  verbose = FALSE, ...)
 }
 \arguments{
 \item{url}{a string specifying the remote location}
