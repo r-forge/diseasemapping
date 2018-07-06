@@ -27,9 +27,9 @@ today = function(...){
 }
 
 slideHeaderIncludes = 
-  knitr::asis_output(
-    knitr::combine_words(
-        paste(
+#  knitr::asis_output(
+#    knitr::combine_words(
+        paste0(
           '\\newcommand{\\',
           c(
             'newcol}[1][0.5]{\\column{#1\\textwidth}}',
@@ -37,9 +37,9 @@ slideHeaderIncludes =
             'ecol}{\\end{columns}}',
             'newcolb}[2][0.5]{\\end{block}\\column{#1\\textwidth}\\begin{block}{#2}}',
             'bcolb}[2][0.5]{\\begin{columns}\\column{#1\\textwidth}\\begin{block}{#2}}',
-            'ecolb}{\\end{block}\\end{columns}}'),
-          sep=''),
-      sep='\n', and='')
+            'ecolb}{\\end{block}\\end{columns}}')#,
+#          sep=''),
+#      sep='\n', and='')
   )
 
 
@@ -142,17 +142,20 @@ markdownHeader = function(
   # header includes
   if(beamer | any(names(dots)=='header-includes')) {
 
-
+    hIncludes = paste(
+      "  - '`",
+      c(dots[['header-includes']], slideHeaderIncludes[beamer]),
+      "`{=latex}'",      
+      sep = '')
     
+    stuff <<- hIncludes
+
     toAdd <- gsub(
       '\n+', '\n', 
       knitr::combine_words(c(
-          'header-includes:\n-  |', 
-          '    ```{=latex}',
-          dots[['header-includes']], 
-          gsub('\n', '\n    ',slideHeaderIncludes[beamer]),
-          '    ```'), 
-      sep='\n    ', and='')
+          'header-includes:', 
+          hIncludes),
+      sep='\n', and='')
     )
 
     result[[length(result)+1]] = toAdd 
