@@ -107,8 +107,7 @@ A list containing
 \Sexpr[results=rd]{c(
   '\\\\code{inla}', 
   '\\\\code{\\\\link[INLA]{inla}}'
-  )[1+requireNamespace('INLA', quietly=TRUE)]
-  }}.  
+  )[1+requireNamespace('INLA', quietly=TRUE)]}.  
 Two additional elements are added: \code{marginals.bym} for the marginal distributions of the spatial random
 effects, and \code{marginals.fitted.bym} for the marginals of the fitted values.  }
 \item{data}{A \code{data.frame} or \code{SpatialPolygonsDataFrame} containing posterior means
