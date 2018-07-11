@@ -21,7 +21,7 @@ of land cover types.
 }
 \source{
 \code{www.ai-geostats.org/bin/view/AI_GEOSTATS/EventsSIC97} and  \url{http://srtm.csi.cgiar.org} and
-\url{https://modis.gsfc.nasa.gov/data/dataprod/mod12.php}
+\url{http://modis.gsfc.nasa.gov/data/dataprod/mod12.php}
 }
 
 \examples{
