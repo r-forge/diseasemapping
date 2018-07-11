@@ -46,7 +46,16 @@ If not supplied, row numbers will be used.}
 \item{formula.fitted}{formula to use to compute the fitted values, defaults to the model 
 formula but may, for example, exclude individual-level covariates.}
   \item{\dots}{
-Additional arguments passed to  \code{\link[INLA]{inla}}, such as \code{\link[INLA]{control.inla}}. 
+Additional arguments passed to  
+\Sexpr[results=rd]{c(
+  '\\\\code{inla} in the \\\\code{INLA} package', 
+  '\\\\code{\\\\link[INLA]{inla}}'
+  )[1+requireNamespace('INLA', quietly=TRUE)]
+  }, such as 
+\Sexpr[results=rd]{c(
+  '\\\\code{control.inla}', 
+  '\\\\code{\\\\link[INLA]{control.inla}}'
+  )[1+requireNamespace('INLA', quietly=TRUE)]}
 }
 }
 

@@ -1,8 +1,8 @@
 Package: geostatsp
 Type: Package
 Title: Geostatistical Modelling with Likelihood and Bayes
-Version: 1.7.1
-Date: 2018-04-17
+Version: 1.7.2
+Date: 2018-07-11
 Depends:
     Matrix (>= 1.2.0),
     raster,
@@ -25,12 +25,11 @@ Enhances:
 	INLA, 
 	diseasemapping, 
 	geoR, 
-    	rgeos,
+    rgeos,
 	mvtnorm 
 LinkingTo: Matrix
-Additional_repositories: https://www.math.ntnu.no/inla/R/stable
-Author: Patrick Brown <patrick.brown@utoronto.ca>[aut, cre], Robert Hijmans
-    [ctb]
+Additional_repositories: https://inla.r-inla-download.org/R/testing
+Author: Patrick Brown <patrick.brown@utoronto.ca>[aut, cre], Robert Hijmans [ctb]
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
 Description: Geostatistical modelling facilities using Raster and SpatialPoints
     objects are provided. Non-Gaussian models are fit using INLA, and Gaussian

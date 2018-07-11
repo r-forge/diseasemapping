@@ -1,8 +1,8 @@
 Package: diseasemapping
 Type: Package
 Title: Modelling Spatial Variation in Disease Risk for Areal Data
-Version: 1.4.5
-Date: 2017-10-17
+Version: 1.4.6
+Date: 2018-07-11
 Depends: R (>= 3.2)
 Imports:
     stats,
@@ -16,7 +16,7 @@ Suggests:
     mapmisc (>= 1.0),
     knitr
 Enhances: INLA, XML
-Additional_repositories: https://www.math.ntnu.no/inla/R/stable/
+Additional_repositories: https://inla.r-inla-download.org/R/testing
 Author: Patrick Brown <patrick.brown@utoronto.ca>, Lutong Zhou
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
 Description: Formatting of population and case data, calculation of Standardized
