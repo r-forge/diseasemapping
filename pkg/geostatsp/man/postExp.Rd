@@ -8,7 +8,8 @@ Converts a summary table for model parameters on the log scale to the natural or
 }
 \usage{
 	postExp(x, 
-		exclude = grep('^(range|aniso|shape|boxcox)', rownames(x)), invLogit=FALSE)
+		exclude = grep('^(range|aniso|shape|boxcox)', rownames(x)),
+		invLogit=FALSE)
 }
 
 \arguments{
