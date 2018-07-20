@@ -22,6 +22,8 @@ Converts a summary table for model parameters on the log scale to the natural or
 require("geostatsp")
 data("swissRain")
 swissRain$lograin = log(swissRain$rain)
+
+if(requireNamespace('INLA', quietly=TRUE)) {
 swissFit =  glgm(formula="lograin", data=swissRain, 
 	grid=20, 
 	covariates=swissAltitude/1000, family="gaussian", 
@@ -31,8 +33,6 @@ swissFit =  glgm(formula="lograin", data=swissRain,
 	)
 postExp(swissFit$parameters$summary)
 
-
-
 swissFitLgm =  lgm( formula="lograin",
 	data=swissRain[1:60,], grid=20,
 	covariates=swissAltitude/1000, 
@@ -41,5 +41,6 @@ swissFitLgm =  lgm( formula="lograin",
 )
 
 swissFitLgm$summary
+}
 
 }
