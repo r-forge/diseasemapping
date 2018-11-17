@@ -140,36 +140,3 @@ void Rtemme_gamma(double *nu, double * g_1pnu, double * g_1mnu, double *g1, doub
 	*g_1mnu = 1.0/(r_g2.val + *nu * r_g1.val);
 	*g_1pnu = 1.0/(r_g2.val - *nu * r_g1.val);
 }
-
-void maternConstants(
-	const double *param, 
-	// shape range variance nugget anisoRatio anisoAngleRadians anisoAngleDegrees
-	int *nuround,
-	double *mu,
-	double *g_1pnu, 
-	double *g_1mnu, 
-	double *g1, 
-	double *g2,
-	double *sinrat,
-	double *sinAngle,
-	double *cosAngle,
-	double *anisoRatioSq,
-	double *varscale,
-	double *logxscale,
-	double *totalVariance
-	) {
-
-	*nuround = round(param[0]+0.5);
-	*mu = param[0] - *nuround;
-
-	double pi_nu = M_PI * *mu;	
-	*sinrat = (fabs(pi_nu) < GSL_DBL_EPSILON ? 1.0 : pi_nu/sin(pi_nu));
-
-	Rtemme_gamma(mu, g_1pnu, g_1mnu, g1, g2);
-
-	*totalVariance = param[3] + param[2];
-	*anisoRatioSq = (param[4])*(param[4]);
-
-	*varscale = log(param[2])  - Rf_lgammafn(param[0]) -  (param[0]-1)*M_LN2;
-	*logxscale = 1.5 * M_LN2 + 0.5 * log(param[0]) - log(param[1]);
-}

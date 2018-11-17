@@ -10,10 +10,11 @@ NeedsCompilation: yes
 Depends: R (>= 3.0.2), gpuR
 Imports: geostatsp
 Suggests: sp, knitr, mapmisc, Matrix
-LinkingTo: 
+LinkingTo:
+	gpuR,
+    RViennaCL (>= 1.7.1.4),
 	Rcpp,
 	RcppEigen,
-	gpuR,
-  RViennaCL (>= 1.7.1.4)
+	gpuR
 VignetteBuilder: knitr
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1
