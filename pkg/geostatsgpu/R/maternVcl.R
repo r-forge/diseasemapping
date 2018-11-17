@@ -61,8 +61,8 @@ maxWorkGroupSize <- switch(
 
 param = geostatsp::fillParam(param)
 
-file <- system.file("CL", "matern.cl", package = "geostatsgpu")
-kernel <- readChar(file, file.info(file)$size)
+#file <- system.file("CL", "matern.cl", package = "geostatsgpu")
+#kernel <- readChar(file, file.info(file)$size)
 
 
 junkY = junkC = gpuR::vclMatrix(matrix(1.1, 2, 2))
@@ -77,7 +77,7 @@ fromC = cpp_maternGpu(
   param,
   type,
   upper,
-  kernel,
+#  kernel,
   maxWorkGroupSize, 
   x@.context_index - 1)
 

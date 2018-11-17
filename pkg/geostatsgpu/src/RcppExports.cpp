@@ -7,8 +7,8 @@
 using namespace Rcpp;
 
 // cpp_maternGpu
-SEXP cpp_maternGpu(SEXP varR, SEXP DofLDLR, SEXP XYR, SEXP crossprodR, SEXP coordsR, SEXP paramR, const int type, const int upper, SEXP sourceCode_, int max_local_size, const int ctx_id);
-RcppExport SEXP _geostatsgpu_cpp_maternGpu(SEXP varRSEXP, SEXP DofLDLRSEXP, SEXP XYRSEXP, SEXP crossprodRSEXP, SEXP coordsRSEXP, SEXP paramRSEXP, SEXP typeSEXP, SEXP upperSEXP, SEXP sourceCode_SEXP, SEXP max_local_sizeSEXP, SEXP ctx_idSEXP) {
+SEXP cpp_maternGpu(SEXP varR, SEXP DofLDLR, SEXP XYR, SEXP crossprodR, SEXP coordsR, SEXP paramR, const int type, const int upper, int max_local_size, const int ctx_id);
+RcppExport SEXP _geostatsgpu_cpp_maternGpu(SEXP varRSEXP, SEXP DofLDLRSEXP, SEXP XYRSEXP, SEXP crossprodRSEXP, SEXP coordsRSEXP, SEXP paramRSEXP, SEXP typeSEXP, SEXP upperSEXP, SEXP max_local_sizeSEXP, SEXP ctx_idSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -20,16 +20,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< SEXP >::type paramR(paramRSEXP);
     Rcpp::traits::input_parameter< const int >::type type(typeSEXP);
     Rcpp::traits::input_parameter< const int >::type upper(upperSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type sourceCode_(sourceCode_SEXP);
     Rcpp::traits::input_parameter< int >::type max_local_size(max_local_sizeSEXP);
     Rcpp::traits::input_parameter< const int >::type ctx_id(ctx_idSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_maternGpu(varR, DofLDLR, XYR, crossprodR, coordsR, paramR, type, upper, sourceCode_, max_local_size, ctx_id));
+    rcpp_result_gen = Rcpp::wrap(cpp_maternGpu(varR, DofLDLR, XYR, crossprodR, coordsR, paramR, type, upper, max_local_size, ctx_id));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_geostatsgpu_cpp_maternGpu", (DL_FUNC) &_geostatsgpu_cpp_maternGpu, 11},
+    {"_geostatsgpu_cpp_maternGpu", (DL_FUNC) &_geostatsgpu_cpp_maternGpu, 10},
     {NULL, NULL, 0}
 };
 

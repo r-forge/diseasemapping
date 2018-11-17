@@ -142,7 +142,6 @@ SEXP cpp_maternGpu(
 	SEXP paramR,
 	const int type, // 2 cholesky 3 inversecholesky, 4 inverse, 5 solve for b
 	const int upper,
-	SEXP sourceCode_,
 	int max_local_size,
 	const int ctx_id) {
 
