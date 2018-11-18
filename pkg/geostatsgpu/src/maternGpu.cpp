@@ -93,9 +93,13 @@ double maternGpuVcl(
 	viennacl::vector_base<double> &DofLDL,
 	double *param,
 	const int type,
-	viennacl::ocl::context &ctx,
+	const int ctx_id,
 	int max_local_size
 ){
+
+	// the context
+	viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
+	cl_device_type type_check = ctx.current_device().type();
 
 	// given context but no kernel
 	// add kernel to program
@@ -148,13 +152,10 @@ SEXP cpp_maternGpu(
 	double logdet = 0.0;
 
 
-	// the context
-	viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
-	cl_device_type type_check = ctx.current_device().type();
-	const bool BisVCL=1;
 
 
 	// data
+	const bool BisVCL=1;
 	std::shared_ptr<viennacl::matrix<double> > vclVar = getVCLptr<double>(varR, BisVCL, ctx_id);
 	std::shared_ptr<viennacl::matrix<double> > vclCoords = getVCLptr<double>(coordsR, BisVCL, ctx_id);
 	// vector to contain the D
@@ -162,14 +163,10 @@ SEXP cpp_maternGpu(
 
 	double *param = &REAL(paramR)[0];
 
-	// the kernel code
-	//std::string my_kernel = as<std::string>(sourceCode_);
-
-
 	logdet = maternGpuVcl(
 		*vclVar, *vclCoords, *DofLDL, 
 		param,
-		type, ctx, 
+		type, ctx_id, 
 		max_local_size);
 
 	return(Rcpp::wrap(logdet));	
