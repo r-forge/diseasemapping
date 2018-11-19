@@ -96,7 +96,6 @@ double maternGpuVcl(
 	const int ctx_id,
 	int max_local_size
 ){
-
 	// the context
 	viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
 	cl_device_type type_check = ctx.current_device().type();
@@ -130,7 +129,6 @@ double maternGpuVcl(
 	double logdet = maternGpuVcl(
 		vclVar, vclCoords, DofLDL,
 		param, type, maternKernel);
-
 	return(logdet);
 
 }
@@ -153,10 +151,11 @@ SEXP cpp_maternGpu(
 
 
 
-
 	// data
 	const bool BisVCL=1;
 	std::shared_ptr<viennacl::matrix<double> > vclVar = getVCLptr<double>(varR, BisVCL, ctx_id);
+
+
 	std::shared_ptr<viennacl::matrix<double> > vclCoords = getVCLptr<double>(coordsR, BisVCL, ctx_id);
 	// vector to contain the D
 	std::shared_ptr<viennacl::vector_base<double> > DofLDL = getVCLVecptr<double>(DofLDLR, BisVCL, ctx_id);

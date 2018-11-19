@@ -1,8 +1,8 @@
-#define VIENNACL_WITH_OPENCL
 
 #include <string>
 #include <Rcpp.h>
-#include "gpuR/getVCLptr.hpp"
+#include<type_traits>
+#include "getVCLptr.hpp"
 
 #include "viennacl/ocl/backend.hpp"
 #include "viennacl/linalg/sum.hpp"
