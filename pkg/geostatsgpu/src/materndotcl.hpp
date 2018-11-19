@@ -21,19 +21,19 @@ std::string maternCLstring = "__kernel void maternCL("
 	"const double g1,"
 	"const double g2,"
 	"const double epsilon,"
-	"double *coords,"
-	"double *result) {"
+	"__global const double *coords,"
+	"__global double *result) {"
+
+	// Get the index of the elements to be processed
 	"int Dcell, Drow, Dcol, k;"
+
 	"double dist[2], distRotate[2], distSq;"
 	"double logthisx, K_mu, K_mup1, logck, K_nu, K_nup1, Kp_nu, K_num1;"
 	"double twoLnHalfX, sigma, half_x_nu, sinhrat;"
 	"double ln_half_x, thisx, maternBit, expMaternBit;"
+
 	"double bi, delhi, hi, di, qi, qip1, ai, a1, ci, Qi, s, dels, tmp;"
 	"double fk, pk, qk, hk, sum0, sum1, del0, ck, del1;"
-"};"//function
-;
-
-#ifdef UNDEF
 
 	// matrix stacked row-wise, excluding diagonal
 	// i = row, j  = col, k = cell
@@ -48,6 +48,7 @@ std::string maternCLstring = "__kernel void maternCL("
 	// Dcell = Drow (Drow/2 - 1/2) + Dcol
 	// Dcol = Dcell - Drow * (Drow-1)/2
 	// Ncell = (N-1) * N / 2
+
 	"for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += get_global_size(0)) {"
 
 	"	Drow = ceil(0.5 + sqrt(0.25 + 2.0*(Dcell+1) ) ) - 1;"
@@ -157,6 +158,5 @@ std::string maternCLstring = "__kernel void maternCL("
 	"	}" // loop through cells
 "};"//function
 ;
-#endif
 
 
