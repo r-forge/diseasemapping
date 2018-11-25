@@ -12,7 +12,7 @@ double maternGpuVcl(
 	viennacl::matrix<double> &vclCoords,
 	viennacl::vector_base<double> &DofLDL,
 	double *param,
-	const int type//,
+	const int type,
 	viennacl::ocl::kernel &maternKernel
 ){
 

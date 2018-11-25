@@ -7,8 +7,8 @@
 using namespace Rcpp;
 
 // cpp_cholGpu
-SEXP cpp_cholGpu(SEXP xR, SEXP DR, int max_local_size, const int ctx_id, const char kernel);
-RcppExport SEXP _geostatsgpu_cpp_cholGpu(SEXP xRSEXP, SEXP DRSEXP, SEXP max_local_sizeSEXP, SEXP ctx_idSEXP, SEXP kernelSEXP) {
+SEXP cpp_cholGpu(SEXP xR, SEXP DR, int max_local_size, const int ctx_id, SEXP kernelR);
+RcppExport SEXP _geostatsgpu_cpp_cholGpu(SEXP xRSEXP, SEXP DRSEXP, SEXP max_local_sizeSEXP, SEXP ctx_idSEXP, SEXP kernelRSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -16,8 +16,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< SEXP >::type DR(DRSEXP);
     Rcpp::traits::input_parameter< int >::type max_local_size(max_local_sizeSEXP);
     Rcpp::traits::input_parameter< const int >::type ctx_id(ctx_idSEXP);
-    Rcpp::traits::input_parameter< const char >::type kernel(kernelSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_cholGpu(xR, DR, max_local_size, ctx_id, kernel));
+    Rcpp::traits::input_parameter< SEXP >::type kernelR(kernelRSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_cholGpu(xR, DR, max_local_size, ctx_id, kernelR));
     return rcpp_result_gen;
 END_RCPP
 }

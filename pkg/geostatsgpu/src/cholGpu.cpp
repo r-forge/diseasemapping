@@ -13,7 +13,7 @@ double cholGpu(
 	double logdet=0.0; // the result
 	unsigned int k;
 
-	const unsigned int 
+	const unsigned int
 		iSize1=x.internal_size1(),
 		size1=x.size1();
 
@@ -22,7 +22,7 @@ double cholGpu(
 
 	for(k=0;k<size1;k++) {
 	viennacl::ocl::enqueue(cholKernel(
-		x, D, Dlocal, k, iSize1, size1))
+		x, D, Dlocal, k, iSize1, size1));
 	}
 
 //	logdet = viennacl::linalg::sum(element_log(D));
@@ -35,10 +35,10 @@ double cholGpu(
 
 double cholGpu(
 	viennacl::matrix<double> &x,
-	viennacl::vector_base<double> &DofLDL,
-	char kernel,
+	viennacl::vector_base<double> &D,
+	std::string kernel,
 	const int ctx_id,
-	int max_local_size,
+	int max_local_size
 ){
 	// the context
 	viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
@@ -50,7 +50,7 @@ double cholGpu(
 		kernel,
 		"my_kernel");
 	// get compiled kernel function
-	viennacl::ocl::kernel & cholKernel = my_prog.get_kernel("maternCL");
+	viennacl::ocl::kernel & cholKernel = my_prog.get_kernel("cholGpu");
 
 	// set global work sizes
 	const unsigned int 
@@ -68,7 +68,7 @@ double cholGpu(
 	cholKernel.global_work_size(0, globalSize);
 	cholKernel.local_work_size(0, max_local_size);
 
-	double logdet = maternGpuVcl(
+	double logdet = cholGpu(
 		x, D,
 		cholKernel);
 	return(logdet);
@@ -81,7 +81,7 @@ SEXP cpp_cholGpu(
 	SEXP DR,
 	int max_local_size,
 	const int ctx_id,
-	const char kernel) {
+	SEXP kernelR) {
 
 	double logdet = 0.0;
 
@@ -89,6 +89,9 @@ SEXP cpp_cholGpu(
 	const bool BisVCL=1;
 	std::shared_ptr<viennacl::matrix<double> > x = getVCLptr<double>(xR, BisVCL, ctx_id);
 	std::shared_ptr<viennacl::vector_base<double> > D = getVCLVecptr<double>(DR, BisVCL, ctx_id);
+
+    std::string kernel = as<std::string>(kernelR);
+
 
 	logdet = cholGpu(
 		*x, *D, kernel,
