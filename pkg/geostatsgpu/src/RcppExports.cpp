@@ -6,6 +6,21 @@
 
 using namespace Rcpp;
 
+// cpp_cholGpu
+SEXP cpp_cholGpu(SEXP xR, SEXP DR, int max_local_size, const int ctx_id, const char kernel);
+RcppExport SEXP _geostatsgpu_cpp_cholGpu(SEXP xRSEXP, SEXP DRSEXP, SEXP max_local_sizeSEXP, SEXP ctx_idSEXP, SEXP kernelSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type xR(xRSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type DR(DRSEXP);
+    Rcpp::traits::input_parameter< int >::type max_local_size(max_local_sizeSEXP);
+    Rcpp::traits::input_parameter< const int >::type ctx_id(ctx_idSEXP);
+    Rcpp::traits::input_parameter< const char >::type kernel(kernelSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_cholGpu(xR, DR, max_local_size, ctx_id, kernel));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_maternGpu
 SEXP cpp_maternGpu(SEXP varR, SEXP DofLDLR, SEXP XYR, SEXP crossprodR, SEXP coordsR, SEXP paramR, const int type, const int upper, int max_local_size, const int ctx_id);
 RcppExport SEXP _geostatsgpu_cpp_maternGpu(SEXP varRSEXP, SEXP DofLDLRSEXP, SEXP XYRSEXP, SEXP crossprodRSEXP, SEXP coordsRSEXP, SEXP paramRSEXP, SEXP typeSEXP, SEXP upperSEXP, SEXP max_local_sizeSEXP, SEXP ctx_idSEXP) {
@@ -28,6 +43,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_geostatsgpu_cpp_cholGpu", (DL_FUNC) &_geostatsgpu_cpp_cholGpu, 5},
     {"_geostatsgpu_cpp_maternGpu", (DL_FUNC) &_geostatsgpu_cpp_maternGpu, 10},
     {NULL, NULL, 0}
 };

@@ -47,6 +47,11 @@ system.time(geostatsgpu::maternGpu(x=coordsGpu, param=myParams, output=varMatGpu
 range(varCpu - as.matrix(varMatGpu))
 ```
 
+try cholesky
+```{r chol}
+maternChol = geostatsgpu:::cholGpu(varMatGpu)
+```
+
 ```{r devtools}
 #Rcpp::compileAttributes('..')
 #devtools::document("..")
