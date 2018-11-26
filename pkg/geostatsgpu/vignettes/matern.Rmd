@@ -79,6 +79,11 @@ NN = 450
 range((varRecon - myMatR)[1:NN,1:NN])
 ```
 
+```{r diagPlot}
+plot(DfromR - as.vector(maternChol$D))
+```
+
+
 ```{r devtools}
 #Rcpp::compileAttributes('..')
 #devtools::document("..")

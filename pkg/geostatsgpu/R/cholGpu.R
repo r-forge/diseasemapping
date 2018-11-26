@@ -1,4 +1,8 @@
-
+# To DO:
+# find multiple, shared memory in R
+# set device sizes from R
+# deal with shared memory too large
+# split dLocal?
 cholGpu = function(x,D=NULL) {
 
 	if(is.null(D)) {

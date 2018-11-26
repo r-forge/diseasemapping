@@ -52,8 +52,8 @@ __kernel void cholGpu(
 	}
 	barrier(CLK_LOCAL_MEM_FENCE); 
 
-	if(N - Dglobal - 1 > Dcol) {
-	for(Drow = (N-Dglobal-1); Drow > Dcol; Drow -= Nsize) {
+	if(N - Dglobal - 1 > DcolS) {
+	for(Drow = (N-Dglobal-1); Drow > DcolS; Drow -= Nsize) {
 
 		DL = A[Drow + DcolNpad];
 
