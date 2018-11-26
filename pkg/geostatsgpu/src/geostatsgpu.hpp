@@ -1,5 +1,5 @@
 
-#include <string>
+//#include <string>
 #include <Rcpp.h>
 #include "gpuR/getVCLptr.hpp"
 

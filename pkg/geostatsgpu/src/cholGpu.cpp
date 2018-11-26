@@ -4,6 +4,10 @@
 using namespace Rcpp;
 using namespace viennacl;
 
+// for roundDown
+//#include "gpuR/utils.hpp"
+
+
 double cholGpu(
 	viennacl::matrix<double> &x,
 	viennacl::vector_base<double> &D,
@@ -12,21 +16,31 @@ double cholGpu(
 
 	double logdet=0.0; // the result
 	unsigned int k;
+	int err;
 
 	const unsigned int
-		iSize1=x.internal_size1(),
-		size1=x.size1();
+		Npad=x.internal_size2(),
+		N=x.size2();
 
+	viennacl::ocl::local_mem Dlocal(N*sizeof(cl_double));
 
-	viennacl::vector<double> Dlocal(iSize1);
+	// first column
+	logdet = x(0,0);
+/*	D[0] = D0;
+	viennacl::vector_base<double> firstColX(
+			x.handle(), N, 0, 0);
+	firstColX = firstColX / D0;
+*/
 
-	for(k=0;k<size1;k++) {
-	viennacl::ocl::enqueue(cholKernel(
-		x, D, Dlocal, k, iSize1, size1));
+/*	for(k=0;k<N;k++) {
+		viennacl::ocl::enqueue(cholKernel(
+			x, D, Dlocal, 
+			k, N, Npad));
 	}
-
-//	logdet = viennacl::linalg::sum(element_log(D));
-	logdet = viennacl::linalg::sum(D);
+*/
+//	logdet = viennacl::linalg::sum(viennacl::linalg::element_log(D));
+//	Dlocal = viennacl::linalg::element_log(D);
+//	logdet = viennacl::linalg::sum(D);
 
 	return(logdet);
 	
@@ -38,7 +52,7 @@ double cholGpu(
 	viennacl::vector_base<double> &D,
 	std::string kernel,
 	const int ctx_id,
-	int max_local_size
+	int max_global_size
 ){
 	// the context
 	viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
@@ -52,21 +66,50 @@ double cholGpu(
 	// get compiled kernel function
 	viennacl::ocl::kernel & cholKernel = my_prog.get_kernel("cholGpu");
 
+
 	// set global work sizes
-	const unsigned int 
-		size1=x.size1(),
-		size2=x.size2(),
-		Ncell = size1 * (size1 - 1)/2;
+    unsigned int M = x.size1();
+    unsigned int M_internal = x.internal_size2();
 
-	if(max_local_size > Ncell) max_local_size = Ncell;
+    cl_device_id raw_device = ctx.current_device().id();
+    cl_kernel raw_kernel = ctx.get_kernel("my_kernel", "cholGpu").handle().get();    
+    size_t preferred_work_group_size_multiple;
+        
+    cl_int err = clGetKernelWorkGroupInfo(
+   		raw_kernel, raw_device,
+    	CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, 
+        sizeof(size_t), 
+        &preferred_work_group_size_multiple, NULL);
+        
+        if(err != CL_SUCCESS){
+            stop("clGetKernelWorkGroupInfo failed");
+        }
+        
+    unsigned int max_local_size = floor(
+    	max_global_size/preferred_work_group_size_multiple);
 
-	const double workRatio = Ncell/max_local_size;
-	const int workRatioInt = ceil(workRatio);
-	int globalSize = workRatioInt*max_local_size;
+//	if(max_local_size > size1) max_local_size = size1;
+
+	//	const double workRatio = Ncell/max_local_size;
+//	const int workRatioInt = ceil(workRatio);
+//	int globalSize = workRatioInt*max_local_size;
 
 	// set work sizes
-	cholKernel.global_work_size(0, globalSize);
-	cholKernel.local_work_size(0, max_local_size);
+	// total number of work items
+//	cholKernel.global_work_size(0, max_global_size); 
+    // number of work items in a group
+//	cholKernel.local_work_size(0, max_local_size);
+
+cholKernel.global_work_size(0, 6);//globalSize);
+cholKernel.local_work_size(0, 2);
+
+
+#ifdef DEBUG
+	Rcout << "global size " << max_global_size << 
+		" local size " << max_local_size << 
+		" preferred multiple " << 
+		preferred_work_group_size_multiple << "\n";
+#endif
 
 	double logdet = cholGpu(
 		x, D,

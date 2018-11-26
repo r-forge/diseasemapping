@@ -3,6 +3,10 @@
 %\VignetteIndexEntry{Matern correlations}
 -->
 
+```{r date}
+date()
+```
+
 # Matern correlations
 
 ```{r packages}
@@ -10,6 +14,7 @@ library('geostatsp')
 library('gpuR')
 library('geostatsgpu')
 ```
+
 
 Set up spatial data
 
@@ -49,7 +54,13 @@ range(varCpu - as.matrix(varMatGpu))
 
 try cholesky
 ```{r chol}
-maternChol = geostatsgpu:::cholGpu(varMatGpu)
+myMat = varMatGpu
+as.matrix(myMat)[1:5,1:5]
+maternChol = geostatsgpu:::cholGpu(myMat)
+names(maternChol)
+maternChol$logDet
+as.matrix(maternChol$L)[1:5,1:6]
+as.vector(maternChol$D)[1:5]
 ```
 
 ```{r devtools}
@@ -108,5 +119,8 @@ image(
 mapmisc::legendBreaks("bottomright", myCol)
 ```
 
+# extra info
 
-
+```{r gpuInfo, echo=TRUE}
+gpuR::gpuInfo()
+```
