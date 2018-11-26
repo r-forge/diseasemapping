@@ -25,19 +25,19 @@ double cholGpu(
 	viennacl::ocl::local_mem Dlocal(N*sizeof(cl_double));
 
 	// first column
-	logdet = x(0,0);
-/*	D[0] = D0;
 	viennacl::vector_base<double> firstColX(
-			x.handle(), N, 0, 0);
-	firstColX = firstColX / D0;
-*/
+			x.handle(), N, 0, 1);
+	logdet = firstColX(0);
+	D(0) = logdet;
+	firstColX *= (1 / logdet);
 
-/*	for(k=0;k<N;k++) {
+// remaining columns
+	for(k=1;k<N;k++) {
 		viennacl::ocl::enqueue(cholKernel(
 			x, D, Dlocal, 
 			k, N, Npad));
 	}
-*/
+
 //	logdet = viennacl::linalg::sum(viennacl::linalg::element_log(D));
 //	Dlocal = viennacl::linalg::element_log(D);
 //	logdet = viennacl::linalg::sum(D);

@@ -18,7 +18,7 @@ __kernel void cholGpu(
 	const unsigned int NlocalSize = get_local_size(0);
 	const unsigned int Ngroups = Nsize / NlocalSize;
 
-	const int Dcolm1 = Dcol - 1;
+	const unsigned int Dcolm1 = Dcol - 1;
 	const unsigned int DcolNpad = Dcol * Npad;
 
 	unsigned int Drow, Dk, DrowDk;
@@ -32,7 +32,6 @@ __kernel void cholGpu(
 	}
 	barrier(CLK_LOCAL_MEM_FENCE);
 
-	if(Dcol>0) {
 	for(Dk = Dlocal; Dk < Dcolm1; Dk += NlocalSize) {
 		// copy diag to local memory
 		diagLocal[Dk] = diag[Dk];
@@ -40,23 +39,7 @@ __kernel void cholGpu(
 		DL = DL * DL * diagLocal[Dk];
 		Ddiag -= DL;
 	}
-	}
 	barrier(CLK_LOCAL_MEM_FENCE);
-
-if(Dcol == -1) {
-	A[0] = Dcolm1;
-	A[1] = get_global_size(0);
-	A[2] = NlocalSize;
-	A[3] = Ngroups;
-	A[Npad + Dglobal] = Dglobal;
-	A[2*Npad + Dglobal] = Dlocal;
-
-	A[3*Npad + Dglobal] = Dgroup;
-A[4*Npad + Dglobal] = Dk;
-
-}
-
-
 
 
 	// diagLocal =  diag * A[Dcol, ]
@@ -66,25 +49,33 @@ A[4*Npad + Dglobal] = Dk;
 	barrier(CLK_LOCAL_MEM_FENCE); 
 
 
-	for(Drow = Dglobal; Drow < N; Drow += Nsize) {
+	for(Drow = N-Dglobal-1; Drow > Dcol; Drow -= Nsize) {
 
 		DL = A[Drow + DcolNpad];
 
 		DrowDk=Drow;
-		if(Dcol>0) {
 		for(Dk = 0; Dk < Dcolm1; Dk++) {
 			DL -= A[DrowDk] * diagLocal[Dk];
 			DrowDk += Npad;
 			// DL -= A[Drow + Dk * Npad] * diagLocal[Dk];
 			// DL -= A[Drow + Dk * Npad] * A[Dcol + DkNpad] * diag[Dk];
-		}} // Dk
-		A[Drow + DcolNpad] = DL / Ddiag;
+		} // Dk
+//		A[Drow + DcolNpad] = DL / Ddiag;
 	} // Drow
 	// Ddiag is now diag[Dcol]
 	// copy it to global memory
 	if(Dglobal == 0) {
 		diag[Dcol] = Ddiag;
 	}
+if(Dcol == N-1) {
+	if(Dglobal < N) {
+	A[Dglobal] = Dglobal;
+	A[Npad + Dglobal] = Dlocal;
+//	A[2*Npad + Dglobal] = Dlocal;
+//	A[3*Npad + Dglobal] = Dgroup;
+//	A[4*Npad + Dglobal] = Dk;
+}
+}
 
 }
 

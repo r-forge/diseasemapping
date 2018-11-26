@@ -55,12 +55,15 @@ range(varCpu - as.matrix(varMatGpu))
 try cholesky
 ```{r chol}
 myMat = varMatGpu
+cholR = chol(as.matrix(myMat))
 as.matrix(myMat)[1:5,1:5]
 maternChol = geostatsgpu:::cholGpu(myMat)
 names(maternChol)
 maternChol$logDet
-as.matrix(maternChol$L)[1:5,1:6]
+as.matrix(maternChol$L)[1:5,1:5]
 as.vector(maternChol$D)[1:5]
+diag(cholR)[1:5]
+cholR[1:5,1:5]
 ```
 
 ```{r devtools}

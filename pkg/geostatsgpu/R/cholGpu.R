@@ -14,13 +14,7 @@ cholGpu = function(x,D=NULL) {
   stop("unrecognized device type")
   )
 
-	maxLocalGroupSize <- switch(
-  deviceType(x@.platform_index, x@.device_index),
-  "gpu" = gpuInfo(x@.platform_index, x@.device_index)$maxWorkGroupSize,
-  "cpu" = cpuInfo(x@.platform_index, x@.device_index)$maxWorkGroupSize,
-  stop("unrecognized device type")
-  )
-
+maxWorkGroupSize = min(c(maxWorkGroupSize, nrow(x)))
 
 file <- system.file("CL", "cholGpu.cl", package = "geostatsgpu")
 kernel <- readChar(file, file.info(file)$size)
