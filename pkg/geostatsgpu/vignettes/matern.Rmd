@@ -55,15 +55,28 @@ range(varCpu - as.matrix(varMatGpu))
 try cholesky
 ```{r chol}
 myMat = varMatGpu
-cholR = chol(as.matrix(myMat))
 as.matrix(myMat)[1:5,1:5]
-maternChol = geostatsgpu:::cholGpu(myMat)
+myMatR = as.matrix(myMat)
+system.time(cholR <- chol(myMatR))
+system.time(maternChol <- geostatsgpu:::cholGpu(myMat))
 names(maternChol)
 maternChol$logDet
-as.matrix(maternChol$L)[1:5,1:5]
 as.vector(maternChol$D)[1:5]
-diag(cholR)[1:5]
-cholR[1:5,1:5]
+diag(cholR)[1:5]^2
+```
+```{r cholRes}
+LfromG = as.matrix(maternChol$L)
+LfromG[1:7,1:5]
+DfromR = diag(cholR)^2
+LfromR = diag(1/sqrt(DfromR)) %*% cholR
+LfromR[1:7,1:5]
+LfromG[lower.tri(LfromG, diag=FALSE)]=0
+Ldiff = LfromR - LfromG
+Ldiff[1:9, 1:5]
+range(Ldiff)
+varRecon = t(LfromG) %*% diag(as.vector(maternChol$D)) %*% LfromG
+NN = 450
+range((varRecon - myMatR)[1:NN,1:NN])
 ```
 
 ```{r devtools}

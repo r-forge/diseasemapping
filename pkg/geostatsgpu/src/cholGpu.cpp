@@ -88,7 +88,7 @@ double cholGpu(
     unsigned int max_local_size = floor(
     	max_global_size/preferred_work_group_size_multiple);
 
-//	if(max_local_size > size1) max_local_size = size1;
+	if(max_local_size <1) max_local_size = 1;
 
 	//	const double workRatio = Ncell/max_local_size;
 //	const int workRatioInt = ceil(workRatio);
@@ -100,10 +100,10 @@ double cholGpu(
     // number of work items in a group
 //	cholKernel.local_work_size(0, max_local_size);
 
-cholKernel.global_work_size(0, 6);//globalSize);
-cholKernel.local_work_size(0, 2);
+cholKernel.global_work_size(0, 128);//globalSize);
+cholKernel.local_work_size(0, 16);
 
-
+#define DEBUG
 #ifdef DEBUG
 	Rcout << "global size " << max_global_size << 
 		" local size " << max_local_size << 
