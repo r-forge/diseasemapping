@@ -1,36 +1,66 @@
-# To DO:
-# find multiple, shared memory in R
-# set device sizes from R
-# deal with shared memory too large
-# split dLocal?
-cholGpu = function(x,D=NULL) {
 
-	if(is.null(D)) {
+cholGpu = function(x,D, 
+	MCtotal, MClocal, 
+	localStorage, sizeOfDouble, 
+	verbose=FALSE) {
+
+	file <- system.file("CL", "cholGpu.cl", package = "geostatsgpu")
+	kernel <- readChar(file, file.info(file)$size)
+
+	if(missing(D)) {
 		D = vclVector(0, nrow(x),
-		    type='double',
-    		ctx_id = x@.context_index)
+			type='double',
+			ctx_id = x@.context_index)
 	}
 
-	maxWorkGroupSize <- switch(
-  deviceType(x@.platform_index, x@.device_index),
-  "gpu" = gpuInfo(x@.platform_index, x@.device_index)$maxWorkGroupSize,
-  "cpu" = cpuInfo(x@.platform_index, x@.device_index)$maxWorkGroupSize,
-  stop("unrecognized device type")
-  )
 
-maxWorkGroupSize = min(c(maxWorkGroupSize, nrow(x)))
+	if(missing(MCtotal) | missing(MClocal) | 
+		missing(sizeOfDouble) | missing(localStorage)
+		) {
+		localInfo = gpuNlocal(
+			kernel, 
+			'sumLog',
+			x@.device_index)
 
-file <- system.file("CL", "cholGpu.cl", package = "geostatsgpu")
-kernel <- readChar(file, file.info(file)$size)
+		if(missing(MCtotal)) {
+			MCtotal = localInfo$maxWorkgroupSize
+		}
+		if(missing(MClocal)) {
+			MClocal = localInfo$localWorkgroupSize
+		}
+		if(missing(sizeOfDouble)) {
+			sizeofDouble = localInfo$sizeOfDouble
+		}
+		if(missing(localStorage)) {
+			localStorage = floor(
+				localInfo$localMemory / 
+				sizeofDouble)
+		}
+
+	}
+
+	if(verbose){
+		message(paste('global work items', MCtotal, 
+			'local work items', MClocal, 
+			'local storage', localStorage))
+	}
+
 
 	fromC = cpp_cholGpu(
 		x@address, 
-  		D@address,
-  		maxWorkGroupSize, 
+		D@address,
+		MCtotal,
+		MClocal, 
+		localStorage,
 		x@.context_index - 1,
 		kernel
 		)
 
-	res = list(L = x, D=D, logDet = fromC)
+	res = list(L = x, D=D, logDet = fromC, 
+		extra = c(
+			MCglobal = MCtotal, 
+			MClocal = MClocal, 
+			localStorage = localStorage))
+
 	res
 }

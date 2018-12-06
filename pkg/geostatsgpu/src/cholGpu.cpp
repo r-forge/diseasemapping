@@ -4,46 +4,123 @@
 using namespace Rcpp;
 using namespace viennacl;
 
-// for roundDown
-//#include "gpuR/utils.hpp"
-
 
 double cholGpu(
-	viennacl::matrix<double> &x,
+	// matrix to cholesky
+	viennacl::matrix<double> &A,
+	// on exit the diagonal
 	viennacl::vector_base<double> &D,
-	viennacl::ocl::kernel &cholKernel
-){
+	// temporary storage, of length local_size
+	viennacl::vector_base<double> &diagWorking,
+	// store diag times rows of A, length N
+	viennacl::vector_base<double> &diagTimesRowOfA,
+	// store sections of diagTimesRowOfA locally
+	viennacl::ocl::local_mem &diagLocal,
+	const int NlocalStorage,
+	// kernels
+	viennacl::ocl::kernel &cholDiag,
+	viennacl::ocl::kernel &cholOffDiag,
+	viennacl::ocl::kernel &sumLog
+	){
 
-	double logdet=0.0; // the result
-	unsigned int k;
+	double tempDouble; // the result
+	int Dcol, Dcolm1, Ncycles, Ncyclesm1, NbeforeLastCycle;
 	int err;
 
-	const unsigned int
-		Npad=x.internal_size2(),
-		N=x.size2();
+	const int 
+		Npad=A.internal_size2(),
+		N=A.size2();
 
-	viennacl::ocl::local_mem Dlocal(N*sizeof(cl_double));
+	Rcout << "diagLocalSize " << NlocalStorage <<
+		"\n";
+
 
 	// first column
 	viennacl::vector_base<double> firstColX(
-			x.handle(), N, 0, 1);
-	logdet = firstColX(0);
-	D(0) = logdet;
-	firstColX *= (1 / logdet);
+			A.handle(), N, 0, 1);
+	tempDouble = firstColX(0);
+	D(0) = tempDouble;
+	firstColX *= (1 / tempDouble);
+
 
 // remaining columns
-	for(k=1;k<N;k++) {
-		viennacl::ocl::enqueue(cholKernel(
-			x, D, Dlocal, 
-			k, N, Npad));
+	for(Dcol=1;Dcol<N;Dcol++) {
+//	for(Dcol=1;Dcol<2;Dcol++) {
+		
+		Dcolm1 = Dcol - 1;
+		Ncycles = 1+Dcol / NlocalStorage;
+
+
+		Ncyclesm1 = Ncycles-1;
+		NbeforeLastCycle = Ncyclesm1 * NlocalStorage;
+
+//#ifdef UNDEF
+	Rcout << "Dcol " << Dcol << 
+		" NlocalStorage " << NlocalStorage << 
+		" Ncycles " << Ncycles << 
+		" Nbefore " <<  NbeforeLastCycle << "\n";
+//#endif
+
+
+		
+		// diagonals and diagTimesRowOfA
+		viennacl::ocl::enqueue(cholDiag(
+			A, D,
+			diagWorking, 
+			diagTimesRowOfA,
+			diagLocal, 
+			Dcol, Dcolm1, Npad));
+
+
+		// sum diagWorking to get diag[Dcol]
+		tempDouble = A(Dcol,Dcol) - 
+			viennacl::linalg::sum(diagWorking);
+		D(Dcol) = tempDouble;	
+
+#ifdef UNDEF
+		Rcout << "D " << diagWorking(0) << " " 
+		<< diagWorking(1) << " " <<
+		diagWorking(3) << " " << 
+		diagWorking(2) << " " <<
+		" A " << A(1,1) << " " << 
+		" tempd " << tempDouble << "\n";
+
+		Rcout << "DA " << diagTimesRowOfA(0) << " " 
+		<< diagTimesRowOfA(1) << " " <<
+		diagTimesRowOfA(3) << " " << 
+		diagTimesRowOfA(2) << " " <<
+		"\n";
+#endif
+
+		viennacl::ocl::enqueue(cholOffDiag(
+			A, D,
+			diagTimesRowOfA,
+			diagLocal, 
+			tempDouble,
+			Dcol, Dcolm1, Dcol*Npad,
+			N, Npad, NlocalStorage,
+			Ncycles, Ncyclesm1, 
+			NbeforeLastCycle,
+			Dcol - NbeforeLastCycle
+			));
 	}
 
-//	logdet = viennacl::linalg::sum(viennacl::linalg::element_log(D));
-//	Dlocal = viennacl::linalg::element_log(D);
-//	logdet = viennacl::linalg::sum(D);
+#ifdef UNDEF
+	Rcout << "NlocalSize " << D(10) << 
+		" NlocalStorage " << D(11) << 
+		" " << D(12) << " " << D(13)<< 
+		" Nin " << D(14) << " dd " << D(15) <<
+		" Dcy " << D(16) << 
+		"\n";
+#endif
 
-	return(logdet);
-	
+	viennacl::ocl::enqueue(sumLog(
+		D, diagWorking, diagLocal, N
+		));
+	tempDouble = viennacl::linalg::sum(diagWorking);
+
+
+	return(tempDouble);
 
 }
 
@@ -52,8 +129,14 @@ double cholGpu(
 	viennacl::vector_base<double> &D,
 	std::string kernel,
 	const int ctx_id,
-	int max_global_size
+	const int MCglobal,
+	const int MClocal,
+	const int localVectorSize
 ){
+
+	if(MClocal > localVectorSize) {
+		Rcpp::stop("MClocal must be less than localSize");
+	}
 	// the context
 	viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
 	cl_device_type type_check = ctx.current_device().type();
@@ -63,59 +146,49 @@ double cholGpu(
 	viennacl::ocl::program & my_prog = ctx.add_program(
 		kernel,
 		"my_kernel");
-	// get compiled kernel function
-	viennacl::ocl::kernel & cholKernel = my_prog.get_kernel("cholGpu");
 
+	// get compiled kernel functions
+	viennacl::ocl::kernel 
+		&cholDiag = my_prog.get_kernel("cholDiag"),
+		&cholOffDiag = my_prog.get_kernel("cholOffDiag"),
+		&sumLog = my_prog.get_kernel("sumLog");
 
 	// set global work sizes
-    unsigned int M = x.size1();
-    unsigned int M_internal = x.internal_size2();
 
-    cl_device_id raw_device = ctx.current_device().id();
-    cl_kernel raw_kernel = ctx.get_kernel("my_kernel", "cholGpu").handle().get();    
-    size_t preferred_work_group_size_multiple;
-        
-    cl_int err = clGetKernelWorkGroupInfo(
-   		raw_kernel, raw_device,
-    	CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, 
-        sizeof(size_t), 
-        &preferred_work_group_size_multiple, NULL);
-        
-        if(err != CL_SUCCESS){
-            stop("clGetKernelWorkGroupInfo failed");
-        }
-        
-    unsigned int max_local_size = floor(
-    	max_global_size/preferred_work_group_size_multiple);
+	cholDiag.global_work_size(0, MCglobal);
+	cholDiag.local_work_size(0, MClocal);
 
-	if(max_local_size <1) {
-		max_local_size = 1;
-	}
+	cholOffDiag.global_work_size(0, MCglobal);
+	cholOffDiag.local_work_size(0, MClocal);
 
-	//	const double workRatio = Ncell/max_local_size;
-//	const int workRatioInt = ceil(workRatio);
-//	int globalSize = workRatioInt*max_local_size;
+	sumLog.global_work_size(0, MCglobal);
+	sumLog.local_work_size(0, MClocal);
 
-	// set work sizes
-	// total number of work items
-//	cholKernel.global_work_size(0, max_global_size); 
-    // number of work items in a group
-//	cholKernel.local_work_size(0, max_local_size);
+	viennacl::ocl::local_mem Dlocal(
+		localVectorSize*sizeof(cl_double));
+	viennacl::vector_base<double> Dworking(
+		ceil(MCglobal/MClocal)*sizeof(cl_double));
+	viennacl::vector_base<double> diagTimesRowOfA(
+		x.size1()*sizeof(cl_double));
 
-cholKernel.global_work_size(0, 256);//globalSize);
-cholKernel.local_work_size(0, 16);
-
-#define DEBUG
-#ifdef DEBUG
-	Rcout << "global size " << max_global_size << 
-		" local size " << max_local_size << 
-		" preferred multiple " << 
-		preferred_work_group_size_multiple << "\n";
-#endif
+# ifdef DEBUG
+	Rcout <<
+		"e Dlocal size " << Dlocal.size() << 
+		" global size " << cholOffDiag.global_work_size(0) << 
+		" local size " << cholOffDiag.local_work_size(0) << 
+		" local vector size" << localVectorSize << "\n";
+# endif
 
 	double logdet = cholGpu(
-		x, D,
-		cholKernel);
+		x, D, 
+		Dworking, 
+		diagTimesRowOfA,
+		Dlocal,
+		localVectorSize,
+		cholDiag,
+		cholOffDiag,
+		sumLog);
+
 	return(logdet);
 
 }
@@ -124,25 +197,27 @@ cholKernel.local_work_size(0, 16);
 SEXP cpp_cholGpu(
 	SEXP xR,
 	SEXP DR,
-	int max_local_size,
-	const int ctx_id,
-	SEXP kernelR) {
-
-	double logdet = 0.0;
+	IntegerVector MCglobal,
+	IntegerVector MClocal,
+  	IntegerVector localStorage,
+	IntegerVector ctx_id,
+	CharacterVector kernelR) {
 
 	// data
 	const bool BisVCL=1;
-	std::shared_ptr<viennacl::matrix<double> > x = getVCLptr<double>(xR, BisVCL, ctx_id);
-	std::shared_ptr<viennacl::vector_base<double> > D = getVCLVecptr<double>(DR, BisVCL, ctx_id);
+	std::shared_ptr<viennacl::matrix<double> > 
+		x = getVCLptr<double>(xR, BisVCL, ctx_id[0]);
+	std::shared_ptr<viennacl::vector_base<double> > 
+		D = getVCLVecptr<double>(DR, BisVCL, ctx_id[0]);
 
-    std::string kernel = as<std::string>(kernelR);
+	double logdet = cholGpu(
+		*x, 
+		*D, 
+		Rcpp::as< std::string >(kernelR(0)),
+		ctx_id[0], 
+		MCglobal[0],
+		MClocal[0],
+		localStorage[0]);
 
-
-	logdet = cholGpu(
-		*x, *D, kernel,
-		ctx_id, 
-		max_local_size);
-
-	return(Rcpp::wrap(logdet));	
-
+	return(Rcpp::wrap(logdet));
 }

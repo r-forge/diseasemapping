@@ -7,17 +7,32 @@
 using namespace Rcpp;
 
 // cpp_cholGpu
-SEXP cpp_cholGpu(SEXP xR, SEXP DR, int max_local_size, const int ctx_id, SEXP kernelR);
-RcppExport SEXP _geostatsgpu_cpp_cholGpu(SEXP xRSEXP, SEXP DRSEXP, SEXP max_local_sizeSEXP, SEXP ctx_idSEXP, SEXP kernelRSEXP) {
+SEXP cpp_cholGpu(SEXP xR, SEXP DR, IntegerVector MCglobal, IntegerVector MClocal, IntegerVector localStorage, IntegerVector ctx_id, CharacterVector kernelR);
+RcppExport SEXP _geostatsgpu_cpp_cholGpu(SEXP xRSEXP, SEXP DRSEXP, SEXP MCglobalSEXP, SEXP MClocalSEXP, SEXP localStorageSEXP, SEXP ctx_idSEXP, SEXP kernelRSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type xR(xRSEXP);
     Rcpp::traits::input_parameter< SEXP >::type DR(DRSEXP);
-    Rcpp::traits::input_parameter< int >::type max_local_size(max_local_sizeSEXP);
-    Rcpp::traits::input_parameter< const int >::type ctx_id(ctx_idSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type kernelR(kernelRSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_cholGpu(xR, DR, max_local_size, ctx_id, kernelR));
+    Rcpp::traits::input_parameter< IntegerVector >::type MCglobal(MCglobalSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type MClocal(MClocalSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type localStorage(localStorageSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type ctx_id(ctx_idSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type kernelR(kernelRSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_cholGpu(xR, DR, MCglobal, MClocal, localStorage, ctx_id, kernelR));
+    return rcpp_result_gen;
+END_RCPP
+}
+// gpuNlocal
+List gpuNlocal(CharacterVector kernel, CharacterVector functionName, IntegerVector ctx_id);
+RcppExport SEXP _geostatsgpu_gpuNlocal(SEXP kernelSEXP, SEXP functionNameSEXP, SEXP ctx_idSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< CharacterVector >::type kernel(kernelSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type functionName(functionNameSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type ctx_id(ctx_idSEXP);
+    rcpp_result_gen = Rcpp::wrap(gpuNlocal(kernel, functionName, ctx_id));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -43,7 +58,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_geostatsgpu_cpp_cholGpu", (DL_FUNC) &_geostatsgpu_cpp_cholGpu, 5},
+    {"_geostatsgpu_cpp_cholGpu", (DL_FUNC) &_geostatsgpu_cpp_cholGpu, 7},
+    {"_geostatsgpu_gpuNlocal", (DL_FUNC) &_geostatsgpu_gpuNlocal, 3},
     {"_geostatsgpu_cpp_maternGpu", (DL_FUNC) &_geostatsgpu_cpp_maternGpu, 10},
     {NULL, NULL, 0}
 };
