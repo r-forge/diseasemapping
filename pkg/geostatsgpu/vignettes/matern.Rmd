@@ -52,97 +52,11 @@ system.time(geostatsgpu::maternGpu(x=coordsGpu, param=myParams, output=varMatGpu
 range(varCpu - as.matrix(varMatGpu))
 ```
 
-```{r cholDebug, eval=FALSE}
-    file <- "geostatsgpu/inst/CL/cholGpu.cl"
-    file <- system.file("CL", "cholGpu.cl", package = "geostatsgpu")
-
-myCoords = raster::as.data.frame(geostatsp::squareRaster(raster::extent(0,1,0,1), 60), xy=TRUE)[,1:2]
-set.seed(0)
-myCoords[,1] = myCoords[,1] + rnorm(nrow(myCoords), sd=0.1)
-myCoords[,2] = myCoords[,2]^(1/2)+rnorm(nrow(myCoords), sd=0.1)
-
-x1 = as.matrix(geostatsp::matern(
-    param=c(range=1, shape=1, variance=2),
-    x=sp::SpatialPoints(myCoords)
-    ))
-
-x = gpuR::vclMatrix(x1)
-
-        D = gpuR::vclVector(0, nrow(x),
-            type='double',
-            ctx_id = x@.context_index)
-
-   kernel <- readChar(file, file.info(file)$size)
-
-        localInfo = geostatsgpu:::gpuNlocal(
-            kernel, 
-            'sumLog',
-            x@.device_index)
-
-            MCtotal = localInfo$maxWorkgroupSize
-            MClocal = localInfo$localWorkgroupSize
-            sizeofDouble = localInfo$sizeOfDouble
-            localStorage = 
-            floor(
-                localInfo$localMemory / 
-                sizeofDouble)-2
-
-    fromC = geostatsgpu:::cpp_cholGpu(
-        x@address, 
-        D@address,
-        MCtotal,
-        MClocal, 
-        localStorage,
-        x@.context_index - 1,
-        kernel
-        )
-xchol = chol(x1)
-xchold = diag(xchol)
-cholTest = t((diag(1/xchold) %*% xchol))
-gpuTest = as.matrix(x)
-gpuTest = t(gpuTest)
-quantile(
-    gpuTest[lower.tri(gpuTest, diag=FALSE)] - 
-    cholTest[lower.tri(gpuTest, diag=FALSE)])
-
-
-
-xtest = cbind(
-    xchold^2 , as.vector(D), xchold^2 - as.vector(D)
-    )
-#xtest#[1:40,]
-#quantile(abs(xtest[,3]))
-
-
-
-min(which(abs(xtest[,3]) > 0.1))
-
-theSeq = 1:9
-round(gpuTest[theSeq, theSeq],2)
-round(cholTest[theSeq, theSeq],2)
-cbind(gpuTest[,6], cholTest[,6])
-
-
-max(apply( (cholTest - gpuTest),2,sd))
-
-theSeq = 10:15
-cholTest[theSeq,theSeq]
-gpuTest[theSeq,theSeq]
-as.vector(D)[theSeq]
-(xchold^2)[theSeq]
-
-range( (cholTest - gpuTest)[1:15,1:15])
-
-#t(apply(cholTest - gpuTest, 2, range))
-
-
-#(round(cholTest - gpuTest, 4))[1:60,1:9]
-```
 
 try cholesky
 ```{r chol}
 
-myCoords = raster::as.data.frame(geostatsp::squareRaster(raster::extent(0,1,0,1), 70), xy=TRUE)[,1:2]
+myCoords = raster::as.data.frame(geostatsp::squareRaster(raster::extent(0,1,0,1), 90), xy=TRUE)[,1:2]
 set.seed(0)
 myCoords[,1] = myCoords[,1] + rnorm(nrow(myCoords), sd=0.1)
 myCoords[,2] = myCoords[,2]^(1/2)+rnorm(nrow(myCoords), sd=0.1)
@@ -152,11 +66,27 @@ myMatR = as.matrix(geostatsp::matern(
     x=sp::SpatialPoints(myCoords)
     ))
 
-myMat = gpuR::vclMatrix(myMatR)
-
+dim(myMatR)
 system.time(cholR <- chol(myMatR))
-system.time(maternChol <- geostatsgpu:::cholGpu(myMat, verbose=TRUE))
 
+myMat = gpuR::vclMatrix(myMatR)
+system.time(maternChol <- geostatsgpu:::cholGpu(myMat, verbose=TRUE, 
+    MClocal = 64))
+
+myMat2 = gpuR::vclMatrix(myMatR)
+system.time(maternChol2 <- geostatsgpu:::cholGpu(myMat2, 
+    MClocal = 128,
+    verbose=TRUE))
+
+myMat3 = gpuR::vclMatrix(myMatR)
+system.time(maternChol3 <- geostatsgpu:::cholGpu(myMat3, 
+    MClocal = 256,
+    verbose=TRUE))
+
+myMat4 = gpuR::vclMatrix(myMatR)
+system.time(maternChol4 <- geostatsgpu:::cholGpu(myMat4, 
+    MClocal = 512,
+    verbose=TRUE))
 
 ```
 
@@ -243,4 +173,92 @@ mapmisc::legendBreaks("bottomright", myCol)
 
 ```{r gpuInfo, echo=TRUE}
 gpuR::gpuInfo()
+```
+
+
+```{r cholDebug, eval=FALSE, include=FALSE}
+    file <- "geostatsgpu/inst/CL/cholGpu.cl"
+    file <- system.file("CL", "cholGpu.cl", package = "geostatsgpu")
+
+myCoords = raster::as.data.frame(geostatsp::squareRaster(raster::extent(0,1,0,1), 60), xy=TRUE)[,1:2]
+set.seed(0)
+myCoords[,1] = myCoords[,1] + rnorm(nrow(myCoords), sd=0.1)
+myCoords[,2] = myCoords[,2]^(1/2)+rnorm(nrow(myCoords), sd=0.1)
+
+x1 = as.matrix(geostatsp::matern(
+    param=c(range=1, shape=1, variance=2),
+    x=sp::SpatialPoints(myCoords)
+    ))
+
+x = gpuR::vclMatrix(x1)
+
+        D = gpuR::vclVector(0, nrow(x),
+            type='double',
+            ctx_id = x@.context_index)
+
+   kernel <- readChar(file, file.info(file)$size)
+
+        localInfo = geostatsgpu:::gpuNlocal(
+            kernel, 
+            'sumLog',
+            x@.device_index)
+
+            MCtotal = localInfo$maxWorkgroupSize
+            MClocal = localInfo$localWorkgroupSize
+            sizeofDouble = localInfo$sizeOfDouble
+            localStorage = 
+            floor(
+                localInfo$localMemory / 
+                sizeofDouble)-2
+
+    fromC = geostatsgpu:::cpp_cholGpu(
+        x@address, 
+        D@address,
+        MCtotal,
+        MClocal, 
+        localStorage,
+        x@.context_index - 1,
+        kernel
+        )
+xchol = chol(x1)
+xchold = diag(xchol)
+cholTest = t((diag(1/xchold) %*% xchol))
+gpuTest = as.matrix(x)
+gpuTest = t(gpuTest)
+quantile(
+    gpuTest[lower.tri(gpuTest, diag=FALSE)] - 
+    cholTest[lower.tri(gpuTest, diag=FALSE)])
+
+
+
+xtest = cbind(
+    xchold^2 , as.vector(D), xchold^2 - as.vector(D)
+    )
+#xtest#[1:40,]
+#quantile(abs(xtest[,3]))
+
+
+
+min(which(abs(xtest[,3]) > 0.1))
+
+theSeq = 1:9
+round(gpuTest[theSeq, theSeq],2)
+round(cholTest[theSeq, theSeq],2)
+cbind(gpuTest[,6], cholTest[,6])
+
+
+max(apply( (cholTest - gpuTest),2,sd))
+
+theSeq = 10:15
+cholTest[theSeq,theSeq]
+gpuTest[theSeq,theSeq]
+as.vector(D)[theSeq]
+(xchold^2)[theSeq]
+
+range( (cholTest - gpuTest)[1:15,1:15])
+
+#t(apply(cholTest - gpuTest, 2, range))
+
+
+#(round(cholTest - gpuTest, 4))[1:60,1:9]
 ```
