@@ -24,6 +24,7 @@ double cholGpu(
 	){
 
 	double tempDouble; // the result
+	double NlocalStorateD = NlocalStorage;
 	int Dcol, Dcolm1, Ncycles, Ncyclesm1, NbeforeLastCycle;
 	int err;
 
@@ -31,9 +32,10 @@ double cholGpu(
 		Npad=A.internal_size2(),
 		N=A.size2();
 
+#ifdef UNDEF
 	Rcout << "diagLocalSize " << NlocalStorage <<
 		"\n";
-
+#endif
 
 	// first column
 	viennacl::vector_base<double> firstColX(
@@ -45,21 +47,20 @@ double cholGpu(
 
 // remaining columns
 	for(Dcol=1;Dcol<N;Dcol++) {
-//	for(Dcol=1;Dcol<2;Dcol++) {
 		
 		Dcolm1 = Dcol - 1;
-		Ncycles = 1+Dcol / NlocalStorage;
+		Ncycles = ceil(Dcol / NlocalStorateD);
 
 
 		Ncyclesm1 = Ncycles-1;
 		NbeforeLastCycle = Ncyclesm1 * NlocalStorage;
 
-//#ifdef UNDEF
+#ifdef UNDEF
 	Rcout << "Dcol " << Dcol << 
-		" NlocalStorage " << NlocalStorage << 
+		" NlocalStorage " << NlocalStorateD << 
 		" Ncycles " << Ncycles << 
 		" Nbefore " <<  NbeforeLastCycle << "\n";
-//#endif
+#endif
 
 
 		
@@ -171,7 +172,7 @@ double cholGpu(
 	viennacl::vector_base<double> diagTimesRowOfA(
 		x.size1()*sizeof(cl_double));
 
-# ifdef DEBUG
+# ifdef UNDEF
 	Rcout <<
 		"e Dlocal size " << Dlocal.size() << 
 		" global size " << cholOffDiag.global_work_size(0) << 

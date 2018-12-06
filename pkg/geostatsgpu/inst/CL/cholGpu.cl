@@ -74,6 +74,8 @@ __kernel void cholOffDiag(
 	const int Dglobal = get_global_id(0);
 	const int Nsize = get_global_size(0);
 	const int NlocalSize = get_local_size(0);
+	const int Dcolp1 = Dcol + 1;
+	const int DrowStart = Dcol+1+Dglobal;
 
 	int Dcycle, DcycleNlocalStorage;
 	int Drow, Dk, DrowDk;
@@ -100,7 +102,8 @@ __kernel void cholOffDiag(
 		barrier(CLK_LOCAL_MEM_FENCE);
 
 		// loop through rows
-		for(Drow = Dcol; Drow < N; Drow ++) {
+		for(Drow = DrowStart; 
+			Drow < N; Drow+= Nsize) {
 
 			DL = A[Drow + DcolNpad];
 			for(Dk = 0; Dk < NlocalStorage; Dk++) {
@@ -110,12 +113,14 @@ __kernel void cholOffDiag(
 			}
 			A[Drow + DcolNpad] = DL;
 		}
-
+		barrier(CLK_LOCAL_MEM_FENCE);
 	}
 
 	// the final group of columns
 	// has fewer than NlocalStorage elements
 	DcycleNlocalStorage = Ncyclesm1 * NlocalStorage;
+
+	barrier(CLK_LOCAL_MEM_FENCE);
 
 	for(Dk = Dlocal; 
 		Dk < NinLastCycle; 
@@ -129,7 +134,8 @@ __kernel void cholOffDiag(
 
 
 	// loop through rows
-	for(Drow = Dcol; Drow < N; Drow ++) {
+		for(Drow = DrowStart; 
+			Drow < N; Drow+= Nsize) {
 
 		DL = A[Drow + DcolNpad];
 		for(Dk = 0; Dk < NinLastCycle; Dk++) {
@@ -139,7 +145,17 @@ __kernel void cholOffDiag(
 		}
 		A[Drow + DcolNpad] = DL / diagDcol;
 	}
+	barrier(CLK_LOCAL_MEM_FENCE);
 #ifdef UNDEF
+	if( Dglobal==0 & Dcol == (N-1)) {
+		A[0] = -11.0;
+		A[1] = -DcycleNlocalStorage;
+		for(Dk = 0; Dk < NlocalStorage; ++Dk) {
+			A[2 + Dk] = diagLocal[Dk];
+		}
+		A[2+Dk] = -NinLastCycle;
+	}
+
 		if(Dglobal==0) {
 			diag[10] = NlocalSize;
 			diag[11] = NlocalStorage;

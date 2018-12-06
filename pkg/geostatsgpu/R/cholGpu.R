@@ -32,9 +32,9 @@ cholGpu = function(x,D,
 			sizeofDouble = localInfo$sizeOfDouble
 		}
 		if(missing(localStorage)) {
-			localStorage = floor(
+			localStorage = pmax(MClocal,floor(
 				localInfo$localMemory / 
-				sizeofDouble)
+				sizeofDouble) - 2) 
 		}
 
 	}
