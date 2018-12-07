@@ -1,10 +1,8 @@
 
 // https://en.wikipedia.org/wiki/Cholesky_decomposition#LDL_decomposition_2
 
-// on exit, diagWorking[i] is 
-// sum{A[j]^2 * D[j] ; j in Dlocal + Dk * Nsize}
-
-// diagTimesRowOfA =  diag * A[Dcol, ]
+// 1d with 64 work items, 16 groups of 4
+// 2d with 64 items, 16 by 1 workgroups, each is 2 by 2
 
 __kernel void cholDiag(
 	__global double *A, 
@@ -15,16 +13,22 @@ __kernel void cholDiag(
 	const int Dcol,
 	const int Npad) {
 
-	const int Dglobal = get_global_id(0);
-	const int Dlocal = get_local_id(0);
-
 	const int Nsize = get_global_size(0);
-	const int NlocalSize = get_local_size(0);
+	const int Dlocal1 = get_local_id(0);
+	const int Dlocal2 = get_local_id(1);
+	const int NlocalSize1 = get_local_size(0);
+	const int NlocalSize2 = get_local_size(1);
+
+	const int DlocalUnique = Dlocal1 + 
+		NlocalSize1 * Dlocal2;
+	const int Dstart = Dlocal2 * NlocalSize1;
+	const int Dend = Dstart + NlocalSize1;
+
 	int Dk;
 	double DL, Ddiag, diagDkTimesDl;
 
 	Ddiag = 0.0;
-	for(Dk = Dglobal; Dk < Dcol; Dk += Nsize) {
+	for(Dk = get_global_id(0); Dk < Dcol; Dk += Nsize) {
 		DL = A[Dcol + Dk * Npad];
 		diagDkTimesDl = diag[Dk] * DL;
 
@@ -32,19 +36,31 @@ __kernel void cholDiag(
 
 		Ddiag += diagDkTimesDl * DL;
 	}
-	diagLocal[Dlocal] = Ddiag;
+	diagLocal[DlocalUnique] = Ddiag;
 	// must be added to get D[Dcol]
 	barrier(CLK_LOCAL_MEM_FENCE);
 
-	if(Dlocal==0) {
+	// add up diagLocal over the 'columns'
+	// of the work groups
+	if(Dlocal1==0) {
 		Ddiag = 0.0;
-		for(Dk = 0; Dk < NlocalSize; Dk++) {
+		for(Dk = Dstart; Dk < Dend; Dk++) {
 			Ddiag += diagLocal[Dk];
 		}
-		diagWorking[get_group_id(0)] = Ddiag;
-	// must be added across work groups to get D[Dcol]
+		diagLocal[Dlocal1] = Ddiag;
 	}
+	barrier(CLK_LOCAL_MEM_FENCE);
 
+	// now add the column sums
+	if(DlocalUnique==0) {
+		Ddiag = 0.0;
+		for(Dk = 0; Dk < NlocalSize2; Dk++) {
+			Ddiag += diagLocal[Dk]
+		}
+	}
+	diagWorking[get_group_id(0)] = Ddiag;
+	// must be added across work groups(0)
+	// to get D[Dcol]
 }
 
 __kernel void cholOffDiag(
@@ -66,9 +82,13 @@ __kernel void cholOffDiag(
 
 
 	const int Nsize = get_global_size(0);
-	const int NlocalSize = get_local_size(0);
+	const int Dlocal1 = get_local_id(0);
+	const int Dlocal2 = get_local_id(1);
+	const int NlocalSize1 = get_local_size(0);
+	const int NlocalSize2 = get_local_size(1);
+	const int DlocalUnique = Dlocal1 + 
+		NlocalSize1 * Dlocal2;
 
-	const int Dlocal = get_local_id(0);
 	const int DrowStart = Dcol+1+get_global_id(0);
 
 	int Dcycle, DcycleNlocalStorage, Drow, Dk;

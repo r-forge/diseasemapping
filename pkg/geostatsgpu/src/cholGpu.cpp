@@ -70,7 +70,7 @@ double cholGpu(
 			diagWorking, 
 			diagTimesRowOfA,
 			diagLocal, 
-			Dcol, Dcolm1, Npad));
+			Dcol, Npad));
 
 
 		// sum diagWorking to get diag[Dcol]
@@ -78,29 +78,15 @@ double cholGpu(
 			viennacl::linalg::sum(diagWorking);
 		D(Dcol) = tempDouble;	
 
-#ifdef UNDEF
-		Rcout << "D " << diagWorking(0) << " " 
-		<< diagWorking(1) << " " <<
-		diagWorking(3) << " " << 
-		diagWorking(2) << " " <<
-		" A " << A(1,1) << " " << 
-		" tempd " << tempDouble << "\n";
-
-		Rcout << "DA " << diagTimesRowOfA(0) << " " 
-		<< diagTimesRowOfA(1) << " " <<
-		diagTimesRowOfA(3) << " " << 
-		diagTimesRowOfA(2) << " " <<
-		"\n";
-#endif
 
 		viennacl::ocl::enqueue(cholOffDiag(
 			A, D,
 			diagTimesRowOfA,
 			diagLocal, 
 			tempDouble,
-			Dcol, Dcolm1, Dcol*Npad,
+			Dcol, Dcol*Npad,
 			N, Npad, NlocalStorage,
-			Ncycles, Ncyclesm1, 
+			Ncyclesm1, 
 			NbeforeLastCycle,
 			Dcol - NbeforeLastCycle
 			));
@@ -114,6 +100,8 @@ double cholGpu(
 		" Dcy " << D(16) << 
 		"\n";
 #endif
+
+	viennacl::linalg::opencl::matrix_diagonal_assign(A, 1.0);
 
 	viennacl::ocl::enqueue(sumLog(
 		D, diagWorking, diagLocal, N

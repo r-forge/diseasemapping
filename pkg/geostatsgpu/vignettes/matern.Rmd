@@ -54,49 +54,95 @@ range(varCpu - as.matrix(varMatGpu))
 
 
 try cholesky
-```{r chol}
+```{r chol, eval=FALSE}
+N = 85
+control = list(
+    workgroupSize = 1024,
+    localWorkgroupSize = 256,
+    sizeOfDouble = 8,
+    localStorage = 6140
+    )
 
-myCoords = raster::as.data.frame(geostatsp::squareRaster(raster::extent(0,1,0,1), 90), xy=TRUE)[,1:2]
+myCoords = raster::as.data.frame(geostatsp::squareRaster(raster::extent(0,1,0,1), N), 
+    xy=TRUE)[,1:2]
+
 set.seed(0)
-myCoords[,1] = myCoords[,1] + rnorm(nrow(myCoords), sd=0.1)
-myCoords[,2] = myCoords[,2]^(1/2)+rnorm(nrow(myCoords), sd=0.1)
+myCoords[,1] = myCoords[,1] + 
+    rnorm(nrow(myCoords), sd=0.1)
+myCoords[,2] = myCoords[,2]^(1/2) + 
+    rnorm(nrow(myCoords), sd=0.1)
 
-myMatR = as.matrix(geostatsp::matern(
+system.time(myMatR <- as.matrix(geostatsp::matern(
     param=c(range=1, shape=1, variance=2),
     x=sp::SpatialPoints(myCoords)
-    ))
+    )))
 
 dim(myMatR)
 system.time(cholR <- chol(myMatR))
+xchold = diag(cholR)
+cholTest = t((diag(1/xchold) %*% cholR))
+DfromR = xchold^2
 
+
+
+
+file <- "geostatsgpu/inst/CL/cholGpu.cl"
+kernel <- readChar(file, file.info(file)$size)
 myMat = gpuR::vclMatrix(myMatR)
-system.time(maternChol <- geostatsgpu:::cholGpu(myMat, verbose=TRUE, 
-    MClocal = 64))
 
+x = myMat
+D = gpuR::vclVector(0, nrow(x),
+            type='double',
+            ctx_id = x@.context_index)
+
+system.time(fromC <- geostatsgpu:::cpp_cholGpu(
+        x@address, 
+        D@address,
+        control$workgroupSize, 
+        control$localWorkgroupSize, 
+        control$localStorage,
+        x@.context_index - 1,
+        kernel
+        ))
+
+quantile(DfromR - as.vector(D))
+
+
+system.time(maternChol <- 
+    geostatsgpu:::cholGpu(
+        myMat, 
+        verbose=TRUE, 
+        control = control))
+
+quantile(DfromR - as.vector(maternChol$D))
+
+if(FALSE) {
 myMat2 = gpuR::vclMatrix(myMatR)
 system.time(maternChol2 <- geostatsgpu:::cholGpu(myMat2, 
     MClocal = 128,
     verbose=TRUE))
+quantile(DfromR - as.vector(maternChol2$D))
+
 
 myMat3 = gpuR::vclMatrix(myMatR)
 system.time(maternChol3 <- geostatsgpu:::cholGpu(myMat3, 
     MClocal = 256,
     verbose=TRUE))
+quantile(DfromR - as.vector(maternChol3$D))
+
 
 myMat4 = gpuR::vclMatrix(myMatR)
 system.time(maternChol4 <- geostatsgpu:::cholGpu(myMat4, 
     MClocal = 512,
     verbose=TRUE))
-
+quantile(DfromR - as.vector(maternChol4$D))
+}
 ```
 
-```{r cholRes}
-xchold = diag(cholR)
-cholTest = t((diag(1/xchold) %*% cholR))
-DfromR = xchold^2
+```{r cholRes, eval=FALSE}
 
-LfromG = t(as.matrix(maternChol$L))
-DfromG = as.vector(maternChol$D)
+LfromG = t(as.matrix(maternChol2$L))
+DfromG = as.vector(maternChol2$D)
 
 quantile(DfromR - DfromG)
 
@@ -104,12 +150,19 @@ quantile(
     LfromG[lower.tri(LfromG, diag=FALSE)] - 
     cholTest[lower.tri(LfromG, diag=FALSE)])
 
+Sind = 1:5
+LfromG[Sind,Sind]
+cholTest[Sind,Sind]
+
+Sind = seq(to=ncol(cholTest), by=1, len=5)
+LfromG[Sind,Sind]
+cholTest[Sind,Sind]
 ```
 
 
 ```{r diagPlot, eval=FALSE}
-min(which(abs(as.vector(maternChol$D) - DfromR) > 0.1))
-plot(DfromR - as.vector(maternChol$D))
+min(which(abs(DfromG - DfromR) > 0.1))
+plot(DfromG - DfromR)
 ```
 
 

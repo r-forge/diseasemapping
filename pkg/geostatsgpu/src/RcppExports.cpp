@@ -24,14 +24,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // gpuNlocal
-List gpuNlocal(CharacterVector kernel, CharacterVector functionName, IntegerVector ctx_id);
+Rcpp::List gpuNlocal(Rcpp::CharacterVector kernel, Rcpp::CharacterVector functionName, Rcpp::IntegerVector ctx_id);
 RcppExport SEXP _geostatsgpu_gpuNlocal(SEXP kernelSEXP, SEXP functionNameSEXP, SEXP ctx_idSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< CharacterVector >::type kernel(kernelSEXP);
-    Rcpp::traits::input_parameter< CharacterVector >::type functionName(functionNameSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type ctx_id(ctx_idSEXP);
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type kernel(kernelSEXP);
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type functionName(functionNameSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type ctx_id(ctx_idSEXP);
     rcpp_result_gen = Rcpp::wrap(gpuNlocal(kernel, functionName, ctx_id));
     return rcpp_result_gen;
 END_RCPP

@@ -1,7 +1,10 @@
 
 cholGpu = function(x,D, 
-	MCtotal, MClocal, 
-	localStorage, sizeOfDouble, 
+	control = list(
+		workgroupSize = NULL, 
+		localWorkgroupSize = NULL, 
+		localStorage = NULL, 
+		sizeOfDouble = NULL), 
 	verbose=FALSE) {
 
 	file <- system.file("CL", "cholGpu.cl", package = "geostatsgpu")
@@ -13,54 +16,67 @@ cholGpu = function(x,D,
 			ctx_id = x@.context_index)
 	}
 
+	Scontrol = c(
+		'workgroupSize', 'localWorkgroupSize', 
+		'localStorage',
+		'sizeOfDouble')
 
-	if(missing(MCtotal) | missing(MClocal) | 
-		missing(sizeOfDouble) | missing(localStorage)
-		) {
+	missingControl = setdiff(Scontrol, 
+		names(control))
+
+	if(length(missingControl) | 
+		any(unlist(lapply(control, is.null)))) {
+	
 		localInfo = gpuNlocal(
 			kernel, 
-			'sumLog',
+			'cholOffDiag',
 			x@.device_index)
 
-		if(missing(MCtotal)) {
-			MCtotal = localInfo$maxWorkgroupSize
-		}
-		if(missing(MClocal)) {
-			MClocal = localInfo$localWorkgroupSize
-		}
-		if(missing(sizeOfDouble)) {
-			sizeofDouble = localInfo$sizeOfDouble
-		}
-		if(missing(localStorage)) {
-			localStorage = pmax(MClocal,floor(
-				localInfo$localMemory / 
-				sizeofDouble) - 2) 
+		for(Dcontrol in c(
+			'localWorkgroupSize', 
+			'sizeOfDouble')) {
+
+			if(!length(control[[Dcontrol]])) {
+				control[[Dcontrol]] = localInfo[[Dcontrol]]
+			}
 		}
 
+		if(!length(control$workgroupSize)) {
+			control$workgroupSize = localInfo$maxWorkgroupSize
+		}
+
+		if(!length(control$localStorage)) {
+			control$localStorage = pmax(
+				control$localWorkgroupSize,
+				floor(
+				0.95*localInfo$localMemory / 
+				control$sizeofDouble) ) 
+		}
 	}
 
 	if(verbose){
-		message(paste('global work items', MCtotal, 
-			'local work items', MClocal, 
-			'local storage', localStorage))
+		message(paste('global work items', 
+			control$workgroupSize, 
+			'local work items', 
+			control$localWorkgroupSize, 
+			'local storage', 
+			control$localStorage, 
+			"N", ncol(x)))
 	}
 
 
 	fromC = cpp_cholGpu(
 		x@address, 
 		D@address,
-		MCtotal,
-		MClocal, 
-		localStorage,
+		control$workgroupSize, 
+		control$localWorkgroupSize, 
+		control$localStorage,
 		x@.context_index - 1,
 		kernel
 		)
 
 	res = list(L = x, D=D, logDet = fromC, 
-		extra = c(
-			MCglobal = MCtotal, 
-			MClocal = MClocal, 
-			localStorage = localStorage))
+		control = control)
 
 	res
 }
