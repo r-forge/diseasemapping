@@ -28,7 +28,8 @@ double cholGpu(
 
 	double tempDouble; 
 	int Dcol, Dcolm1, Ncycles, Ncyclesm1, NbeforeLastCycle;
-	int err, Drow, DrowFromZero, Nrows;
+	int err, Drow, DrowFromZero, Nrows, DcolP1;
+	int DcolNpad;
 
 	const int 
 		Npad=A.internal_size2(),
@@ -36,42 +37,65 @@ double cholGpu(
 	const int Nm1 = N - 1, Nm2 = N-2;
 
 	// how many cross products can be stored in local memory
-	const double NlocalStorageD = sqrt(NlocalStorage);
-	const int Ncrossprod = floor(NlocalStorageD/
-		cholCrossprod.local_work_size());
+	const double NlocalStorageD = NlocalStorage;
+	const double NlocalStorageSqrt = sqrt(NlocalStorage);
+	const int Nlocal = cholCrossprod.local_work_size();
+	const double NcrossprodSquared = NlocalStorageD/Nlocal;
+	const int Ncrossprod = floor(sqrt(NcrossprodSquared));
 	const int NbeginLast = N - Ncrossprod;
 
 
-#ifdef UNDEF
-	Rcout << "diagLocalSize " << NlocalStorage <<
-		"\n";
-#endif
+//	viennacl::vector_base<double> oneColX(
+//			A.handle(), Nm1, 
+//			0, 1);
+
+	viennacl::range rowsFrom1(1, N), rowsFrom2(2,N);
+	viennacl::range col1(0, 1), col2(1,2);
 
 	// first column
-	viennacl::vector_base<double> oneColX(
-			A.handle(), Nm1, 1, 1);
+	viennacl::matrix_range<viennacl::matrix<double>>  
+		oneColX(A, col1, rowsFrom1);
+
+
 	tempDouble = A(0,0);
 	D(0) = tempDouble;
-	oneColX *= (1 / tempDouble);
+
+	oneColX /= tempDouble;
 
 	// second column
-	tempDouble = A(1,0);
-	tempDouble = A(1,1) - tempDouble*tempDouble * D(0);
+	viennacl::matrix_range<viennacl::matrix<double>>  
+		twoColX(A, col2, rowsFrom2);
+
+	// first column, from row 3
+	viennacl::matrix_range<viennacl::matrix<double>>
+		oneColX2(A, col1, rowsFrom2);
+
+	tempDouble = A(0,1);
+	tempDouble = A(1,1) - 
+		tempDouble*tempDouble * D(0);
 	D(1) = tempDouble;
-	tempDouble = 1/tempDouble;
 
-	oneColX = vector_base(
-			A.handle(), Nm2, 2, 1);
-
-	viennacl::vector_base<double> twoColX(
-			A.handle(), Nm2, N+2, 1);
-
-	twoColX = ( -D(0) * A(1,0) * tempDouble ) * oneColX + 
-		tempDouble * twoColX; 
+	twoColX = ( -D(0) * A(0,1) / tempDouble ) * 
+//		viennacl::matrix_range<viennacl::matrix<double>>(
+//			A, col2, rowsFrom2) + 
+	oneColX2 + 
+			twoColX / tempDouble; 
 
 	// remaining columns
 	// until the number of columns remaining
 	// is small enough to store in local memory
+
+	Rcout << " N " << N << 
+			" Npad " << Npad<< 
+			" NlocalStorage " << NlocalStorage<< 
+			" NlocalStorageD " << NlocalStorageD<< 
+			" NlocalStorageSqrt " << NlocalStorageSqrt<< 
+			"\n" <<
+			" NbeginLast " << NbeginLast << 
+			" NcrossprodSquared " << NcrossprodSquared << 
+			" Ncrossprod " << Ncrossprod << 
+			"\n";
+
 	for(Dcol=2;Dcol<NbeginLast;Dcol++) {
 		
 		Dcolm1 = Dcol - 1;
@@ -80,13 +104,6 @@ double cholGpu(
 
 		Ncyclesm1 = Ncycles-1;
 		NbeforeLastCycle = Ncyclesm1 * NlocalStorage;
-
-#ifdef UNDEF
-	Rcout << "Dcol " << Dcol << 
-		" NlocalStorage " << NlocalStorateD << 
-		" Ncycles " << Ncycles << 
-		" Nbefore " <<  NbeforeLastCycle << "\n";
-#endif
 
 
 		
@@ -121,45 +138,65 @@ double cholGpu(
 	const int NrowsInCrossprod = N - NbeginLast;
 	const int NrowsInCrossprodSq = 
 		NrowsInCrossprod * NrowsInCrossprod;
+	const int Ngroups = //cholCrossprod.get_num_groups(0);
+		cholCrossprod.global_work_size(0) / 
+				cholCrossprod.local_work_size(0);
 	const int NlocalSum = 4;
+
 
 	// compute the cross products
 	viennacl::ocl::enqueue(cholCrossprod(
 		A, D, diagTimesRowOfA, diagLocal,
 		NbeginLast, NbeginLast * Npad,
 		NrowsInCrossprod, NrowsInCrossprodSq,
-		NlocalSum));
+		Npad, NlocalSum));
+
 
 	viennacl::ocl::enqueue(cholSumCrossprod(
 		diagTimesRowOfA,
-		NrowsInCrossprod, NrowsInCrossprodSq,
-		cholCrossprod.global_work_size() / 
-			cholCrossprod.local_work_size()
-	));
+ 		NrowsInCrossprod, 
+		NrowsInCrossprodSq,
+		Ngroups));
 
-	const int Nrows = N - NbeginLast;
+	Nrows = N - NbeginLast;
+	int NbeginLastNpad = NbeginLast * Npad;
+
 
 	for(Dcol = NbeginLast; Dcol < Nm1; Dcol++) {
 
+		DcolP1 = Dcol + 1;
+
+		DcolNpad = Dcol * Npad;
 		viennacl::ocl::enqueue(cholFromCrossprod(
 			A, D, diagTimesRowOfA, diagLocal,
-			Dcol, NbeginLast,
+			Dcol, 
+			NbeginLast,
 			Dcol - NbeginLast,
-			Dcol + NbeginLast * Npad,
-			Dcol + 1 + Dcol * Npad,
-			Nrows, Npad
+			Dcol + NbeginLastNpad,
+			DcolP1 + DcolNpad,
+			Nrows,
+			Nrows, 
+			Npad
 			));
+
+		// divide A[,Dcol] by diagonal
+		viennacl::matrix_range<viennacl::matrix<double>>(
+			A,
+			viennacl::range(DcolP1, N), 
+			viennacl::range(Dcol,DcolP1)
+			)  /= D(Dcol);
 	}
+
+	// TO DO: Dcol = N - 1
 
 	viennacl::linalg::opencl::matrix_diagonal_assign(A, 1.0);
 
 	viennacl::ocl::enqueue(sumLog(
-		D, diagWorking, diagLocal, N
+		D, diagWorking, diagLocal, N,
+		NlocalSum
 		));
-	tempDouble = viennacl::linalg::sum(diagWorking);
+	return(viennacl::linalg::sum(diagWorking));
 
-
-	return(tempDouble);
 
 }
 
@@ -266,12 +303,14 @@ SEXP cpp_cholGpu(
 	IntegerVector ctx_id,
 	CharacterVector kernelR) {
 
-	// data
+
 	const bool BisVCL=1;
 	std::shared_ptr<viennacl::matrix<double> > 
 		x = getVCLptr<double>(xR, BisVCL, ctx_id[0]);
 	std::shared_ptr<viennacl::vector_base<double> > 
-		D = getVCLVecptr<double>(DR, BisVCL, ctx_id[0]);
+		D = getVCLVecptr<double>(
+			DR, 
+			BisVCL, ctx_id[0]);
 
 	double logdet = cholGpu(
 		*x, 

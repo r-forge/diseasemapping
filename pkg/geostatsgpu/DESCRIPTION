@@ -14,7 +14,6 @@ LinkingTo:
 	gpuR,
     RViennaCL (>= 1.7.1.4),
 	Rcpp,
-	RcppEigen,
-	gpuR
+	RcppEigen
 VignetteBuilder: knitr
 RoxygenNote: 6.1.1

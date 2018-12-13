@@ -54,13 +54,13 @@ range(varCpu - as.matrix(varMatGpu))
 
 
 try cholesky
-```{r chol, eval=FALSE}
-N = 85
+```{r chol}
+N = 75
 control = list(
     workgroupSize = 1024,
-    localWorkgroupSize = 256,
+    localWorkgroupSize = 128,
     sizeOfDouble = 8,
-    localStorage = 6140
+    localStorage = 4096
     )
 
 myCoords = raster::as.data.frame(geostatsp::squareRaster(raster::extent(0,1,0,1), N), 
@@ -81,20 +81,27 @@ dim(myMatR)
 system.time(cholR <- chol(myMatR))
 xchold = diag(cholR)
 cholTest = t((diag(1/xchold) %*% cholR))
+
 DfromR = xchold^2
 
 
 
 
-file <- "geostatsgpu/inst/CL/cholGpu.cl"
-kernel <- readChar(file, file.info(file)$size)
 myMat = gpuR::vclMatrix(myMatR)
+myMatGpuR = gpuR::deepcopy(myMat)
 
-x = myMat
-D = gpuR::vclVector(0, nrow(x),
+D = gpuR::vclVector(0, nrow(myMat),
             type='double',
-            ctx_id = x@.context_index)
+            ctx_id = myMat@.context_index)
 
+file <- "geostatsgpu/inst/CL/cholGpu.cl"
+if(!file.exists(file)) {
+file = system.file('CL/cholGpu.cl', 
+    package='geostatsgpu')
+}
+kernel <- readChar(file, file.info(file)$size)
+
+x = gpuR::deepcopy(myMat)
 system.time(fromC <- geostatsgpu:::cpp_cholGpu(
         x@address, 
         D@address,
@@ -104,6 +111,48 @@ system.time(fromC <- geostatsgpu:::cpp_cholGpu(
         x@.context_index - 1,
         kernel
         ))
+
+SSeq = seq(by=1, len=9, to=ncol(x))
+#SSeq = 1:10
+cbind(gpu=as.vector(D)[SSeq],
+    cpu=DfromR[SSeq], 
+    diff=as.vector(D)[SSeq] - DfromR[SSeq])
+#myMatR[SSeq,SSeq]
+round(as.matrix(x)[SSeq,SSeq],3)
+round(cholTest[SSeq,SSeq],3)
+
+plot(pmax(1e-17,
+    abs(as.vector(D) - DfromR)),
+    type='l', log='y',
+    ylim = c(1e-18,0.1))
+abline(v=control$localStorage*(1:10))
+
+plot(pmax(1e-17,
+    abs(as.vector(D) - DfromR))[
+    seq(to = length(D), by=1, len=50)
+        ],
+    type='o', log='y',
+    ylim = c(1e-18,0.1))
+abline(v=control$localStorage*(1:10))
+
+
+cholFromGpu = t(as.matrix(x))
+cholFromGpu[!lower.tri(cholFromGpu, diag=TRUE)] = NA
+quantile(cholFromGpu - cholTest, na.rm=TRUE)
+
+plotFrac = 0.01
+raster::plot(log(abs(raster::crop(
+    raster::raster(
+        cholFromGpu - cholTest,
+        1, ncol(x), 1, ncol(x)
+        ),
+    raster::extent(
+        ncol(x) * c(1-plotFrac, 1, 0, plotFrac))
+    ))))
+abline(v=(1:10)*control$localStorage)
+
+system.time(cholGpuR <- 
+    gpuR:::chol.vclMatrix(myMatGpuR))
 
 quantile(DfromR - as.vector(D))
 
