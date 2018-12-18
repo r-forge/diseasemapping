@@ -1,7 +1,14 @@
+/*
+	TO DO:
+	- update the R interface
+	- make the update one row per work group for the last few rows
+	- fully implement the 'type' option in matern
+	- clean up unused variables
+*/
+
 
 #include "geostatsgpu.hpp"
 
-using namespace Rcpp;
 using namespace viennacl;
 
 
@@ -27,8 +34,8 @@ double cholGpu(
 	){
 
 	double tempDouble; 
-	int Dcol, Dcolm1, Ncycles, Ncyclesm1, NbeforeLastCycle;
-	int err, Drow, DrowFromZero, Nrows, DcolP1;
+	int Dcol, Ncycles, Ncyclesm1, NbeforeLastCycle;
+	int Drow, DrowFromZero, Nrows, DcolP1;
 	int DcolNpad;
 
 	const int 
@@ -86,7 +93,7 @@ double cholGpu(
 	// is small enough to store in local memory
 
 #ifdef DEBUG
-	Rcout << " N " << N << 
+	Rcpp::Rcout << " N " << N << 
 			" Npad " << Npad<< 
 			" NlocalStorage " << NlocalStorage<< 
 			" NlocalStorageD " << NlocalStorageD<< 
@@ -100,7 +107,7 @@ double cholGpu(
 
 	for(Dcol=2;Dcol<NbeginLast;Dcol++) {
 		
-		Dcolm1 = Dcol - 1;
+//		Dcolm1 = Dcol - 1;
 		Ncycles = ceil(Dcol / NlocalStorageD);
 
 
@@ -162,17 +169,13 @@ double cholGpu(
 
 	int NbeginLastNpad = NbeginLast * Npad;
 
-
-
-
-//	for(Dcol = NbeginLast; Dcol < Nm1; Dcol++) {
 	for(Dcol = NbeginLast; Dcol < N; Dcol++) {
 
 		DcolP1 = Dcol + 1;
-
-		DcolNpad = Dcol * Npad;
-
 		Nrows = N - Dcol;
+
+//		DcolNpad = Dcol * Npad;
+
 
 
 		viennacl::ocl::enqueue(cholFromCrossprod(
@@ -188,22 +191,14 @@ double cholGpu(
 			Npad
 			));
 
+		// divide A[,Dcol] by diagonal
 		viennacl::matrix_range<viennacl::matrix<double>> theColHere(
 			A,
 			viennacl::range(Dcol,DcolP1),
-			viennacl::range(DcolP1, N)
-			);
-
-
-		// divide A[,Dcol] by diagonal
-
+			viennacl::range(DcolP1, N));
 		theColHere  *= (1/D[Dcol]);
-
 	}
-//	Dcol = Nm1;
-//	D[Dcol] = A(Dcol, Dcol) - 
 
-	// TO DO: Dcol = N - 1
 	viennacl::linalg::opencl::matrix_diagonal_assign(A, 1.0);
 
 	viennacl::ocl::enqueue(sumLog(
@@ -212,14 +207,12 @@ double cholGpu(
 		));
 
 	return(viennacl::linalg::sum(diagWorking));
-
-
 }
+
 
 double cholGpu(
 	viennacl::matrix<double> &x,
 	viennacl::vector_base<double> &D,
-	// to do: add the two working arrays
 	viennacl::vector_base<double> &diagWorking,
 	viennacl::vector_base<double> &diagTimesRowOfA,
 	std::string kernel,
@@ -282,8 +275,8 @@ double cholGpu(
 //	viennacl::vector_base<double> diagTimesRowOfA(
 //		x.size1()*sizeof(cl_double));
 
-# ifdef UNDEF
-	Rcout <<
+# ifdef DEBUG
+	Rcpp::Rcout <<
 		"e Dlocal size " << diagLocal.size() << 
 		" global size " << cholOffDiag.global_work_size(0) << 
 		" local size " << cholOffDiag.local_work_size(0) << 
@@ -307,9 +300,6 @@ double cholGpu(
 
 }
 
-	// to do: add the two working arrays
-	// SEXP diagWorkingR, ceil(MCglobal/MClocal)
-	// SEXP diagTimesRowOfAR, N
 
 //[[Rcpp::export]]
 SEXP cpp_cholGpu(
