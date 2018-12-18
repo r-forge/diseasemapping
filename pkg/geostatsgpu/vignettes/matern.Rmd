@@ -53,15 +53,25 @@ range(varCpu - as.matrix(varMatGpu))
 ```
 
 
+
 try cholesky
 ```{r chol}
-N = 75
+control = list(
+    workgroupSize = 64,
+    localWorkgroupSize = 32,
+    sizeOfDouble = 8,
+    localStorage = 4096/2
+    )
+
+N = 55
 control = list(
     workgroupSize = 1024,
-    localWorkgroupSize = 128,
+    localWorkgroupSize = 64,
     sizeOfDouble = 8,
     localStorage = 4096
     )
+
+
 
 myCoords = raster::as.data.frame(geostatsp::squareRaster(raster::extent(0,1,0,1), N), 
     xy=TRUE)[,1:2]
@@ -94,6 +104,16 @@ D = gpuR::vclVector(0, nrow(myMat),
             type='double',
             ctx_id = myMat@.context_index)
 
+diagTimesRowOfA = gpuR::vclVector(0,
+            nrow(myMat),
+            type='double',
+            ctx_id = myMat@.context_index)
+
+diagWorking = gpuR::vclVector(0, 1 + round(control$workgroupSize / control$localWorkgroupSize),
+            type='double',
+            ctx_id = myMat@.context_index)
+
+
 file <- "geostatsgpu/inst/CL/cholGpu.cl"
 if(!file.exists(file)) {
 file = system.file('CL/cholGpu.cl', 
@@ -102,90 +122,32 @@ file = system.file('CL/cholGpu.cl',
 kernel <- readChar(file, file.info(file)$size)
 
 x = gpuR::deepcopy(myMat)
-system.time(fromC <- geostatsgpu:::cpp_cholGpu(
+system.time(logDet <- geostatsgpu:::cpp_cholGpu(
         x@address, 
         D@address,
+        diagWorking@address,
+        diagTimesRowOfA@address,
         control$workgroupSize, 
         control$localWorkgroupSize, 
         control$localStorage,
         x@.context_index - 1,
         kernel
         ))
+# check to see if diagTimesRowOfA is 
+# the crossproduct
+#Ngroups = control$workgroupSize / control$localWorkgroupSize
+#Ncross = floor(sqrt(control$localStorage / control$localWorkgroupSize))
 
-SSeq = seq(by=1, len=9, to=ncol(x))
-#SSeq = 1:10
-cbind(gpu=as.vector(D)[SSeq],
-    cpu=DfromR[SSeq], 
-    diff=as.vector(D)[SSeq] - DfromR[SSeq])
-#myMatR[SSeq,SSeq]
-round(as.matrix(x)[SSeq,SSeq],3)
-round(cholTest[SSeq,SSeq],3)
+SSeq = seq(by=1, len=6, to=ncol(x))
 
-plot(pmax(1e-17,
-    abs(as.vector(D) - DfromR)),
-    type='l', log='y',
-    ylim = c(1e-18,0.1))
-abline(v=control$localStorage*(1:10))
+myMatR[SSeq, SSeq]
+t(as.matrix(x)[SSeq,SSeq])
+cholTest[SSeq,SSeq]
 
-plot(pmax(1e-17,
-    abs(as.vector(D) - DfromR))[
-    seq(to = length(D), by=1, len=50)
-        ],
-    type='o', log='y',
-    ylim = c(1e-18,0.1))
-abline(v=control$localStorage*(1:10))
+quantile(DfromR[SSeq] - as.vector(D)[SSeq])
 
-
-cholFromGpu = t(as.matrix(x))
-cholFromGpu[!lower.tri(cholFromGpu, diag=TRUE)] = NA
-quantile(cholFromGpu - cholTest, na.rm=TRUE)
-
-plotFrac = 0.01
-raster::plot(log(abs(raster::crop(
-    raster::raster(
-        cholFromGpu - cholTest,
-        1, ncol(x), 1, ncol(x)
-        ),
-    raster::extent(
-        ncol(x) * c(1-plotFrac, 1, 0, plotFrac))
-    ))))
-abline(v=(1:10)*control$localStorage)
-
-system.time(cholGpuR <- 
-    gpuR:::chol.vclMatrix(myMatGpuR))
-
-quantile(DfromR - as.vector(D))
-
-
-system.time(maternChol <- 
-    geostatsgpu:::cholGpu(
-        myMat, 
-        verbose=TRUE, 
-        control = control))
-
-quantile(DfromR - as.vector(maternChol$D))
-
-if(FALSE) {
-myMat2 = gpuR::vclMatrix(myMatR)
-system.time(maternChol2 <- geostatsgpu:::cholGpu(myMat2, 
-    MClocal = 128,
-    verbose=TRUE))
-quantile(DfromR - as.vector(maternChol2$D))
-
-
-myMat3 = gpuR::vclMatrix(myMatR)
-system.time(maternChol3 <- geostatsgpu:::cholGpu(myMat3, 
-    MClocal = 256,
-    verbose=TRUE))
-quantile(DfromR - as.vector(maternChol3$D))
-
-
-myMat4 = gpuR::vclMatrix(myMatR)
-system.time(maternChol4 <- geostatsgpu:::cholGpu(myMat4, 
-    MClocal = 512,
-    verbose=TRUE))
-quantile(DfromR - as.vector(maternChol4$D))
-}
+logDet
+sum(log(DfromR))
 ```
 
 ```{r cholRes, eval=FALSE}
@@ -364,3 +326,17 @@ range( (cholTest - gpuTest)[1:15,1:15])
 
 #(round(cholTest - gpuTest, 4))[1:60,1:9]
 ```
+
+
+
+# To do
+
+- fix crossprod
+
+    - put crossprod in A and check it's ok
+- each workgroup a row
+
+    - use some of diagLocal for within-group sums
+- dont store upper triangle in crossprod
+- replace * with += for some iterators
+

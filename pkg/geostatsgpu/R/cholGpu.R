@@ -16,6 +16,7 @@ cholGpu = function(x,D,
 			ctx_id = x@.context_index)
 	}
 
+
 	Scontrol = c(
 		'workgroupSize', 'localWorkgroupSize', 
 		'localStorage',
@@ -65,9 +66,22 @@ cholGpu = function(x,D,
 	}
 
 
+	diagTimesRowOfA = gpuR::vclVector(0, nrow(x),
+            type='double',
+            ctx_id = x@.context_index)
+
+	diagWorking = gpuR::vclVector(0, 
+		1 + round(
+			control$workgroupSize / 
+			control$localWorkgroupSize),
+            type='double',
+            ctx_id = x@.context_index)
+
 	fromC = cpp_cholGpu(
 		x@address, 
 		D@address,
+		diagWorking,
+		diagTimesRowOfA,
 		control$workgroupSize, 
 		control$localWorkgroupSize, 
 		control$localStorage,

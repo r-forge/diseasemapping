@@ -85,6 +85,7 @@ double cholGpu(
 	// until the number of columns remaining
 	// is small enough to store in local memory
 
+#ifdef DEBUG
 	Rcout << " N " << N << 
 			" Npad " << Npad<< 
 			" NlocalStorage " << NlocalStorage<< 
@@ -95,6 +96,7 @@ double cholGpu(
 			" NcrossprodSquared " << NcrossprodSquared << 
 			" Ncrossprod " << Ncrossprod << 
 			"\n";
+#endif
 
 	for(Dcol=2;Dcol<NbeginLast;Dcol++) {
 		
@@ -158,43 +160,57 @@ double cholGpu(
 		NrowsInCrossprodSq,
 		Ngroups));
 
-	Nrows = N - NbeginLast;
 	int NbeginLastNpad = NbeginLast * Npad;
 
 
-	for(Dcol = NbeginLast; Dcol < Nm1; Dcol++) {
+
+
+//	for(Dcol = NbeginLast; Dcol < Nm1; Dcol++) {
+	for(Dcol = NbeginLast; Dcol < N; Dcol++) {
 
 		DcolP1 = Dcol + 1;
 
 		DcolNpad = Dcol * Npad;
+
+		Nrows = N - Dcol;
+
+
 		viennacl::ocl::enqueue(cholFromCrossprod(
 			A, D, diagTimesRowOfA, diagLocal,
 			Dcol, 
 			NbeginLast,
-			Dcol - NbeginLast,
+			Dcol - NbeginLast, // colSinceCrossprod
 			Dcol + NbeginLastNpad,
-			DcolP1 + DcolNpad,
-			Nrows,
+			Dcol*Npad + Dcol, // AforUpdateStart
+			Ncrossprod,
+			(Ncrossprod +1) * (Dcol - NbeginLast),
 			Nrows, 
 			Npad
 			));
 
-		// divide A[,Dcol] by diagonal
-		viennacl::matrix_range<viennacl::matrix<double>>(
+		viennacl::matrix_range<viennacl::matrix<double>> theColHere(
 			A,
-			viennacl::range(DcolP1, N), 
-			viennacl::range(Dcol,DcolP1)
-			)  /= D(Dcol);
+			viennacl::range(Dcol,DcolP1),
+			viennacl::range(DcolP1, N)
+			);
+
+
+		// divide A[,Dcol] by diagonal
+
+		theColHere  *= (1/D[Dcol]);
+
 	}
+//	Dcol = Nm1;
+//	D[Dcol] = A(Dcol, Dcol) - 
 
 	// TO DO: Dcol = N - 1
-
 	viennacl::linalg::opencl::matrix_diagonal_assign(A, 1.0);
 
 	viennacl::ocl::enqueue(sumLog(
 		D, diagWorking, diagLocal, N,
 		NlocalSum
 		));
+
 	return(viennacl::linalg::sum(diagWorking));
 
 
@@ -204,8 +220,8 @@ double cholGpu(
 	viennacl::matrix<double> &x,
 	viennacl::vector_base<double> &D,
 	// to do: add the two working arrays
-	// viennacl::vector_base<double> &diagWorking,
-	// viennacl::vector_base<double> &diagTimesRowOfA,
+	viennacl::vector_base<double> &diagWorking,
+	viennacl::vector_base<double> &diagTimesRowOfA,
 	std::string kernel,
 	const int ctx_id,
 	const int MCglobal,
@@ -259,11 +275,12 @@ double cholGpu(
 	viennacl::ocl::local_mem diagLocal(
 		localVectorSize*sizeof(cl_double));
 
-	viennacl::vector_base<double> Dworking(
-		ceil(MCglobal/MClocal)*sizeof(cl_double));
+	// one entry per group, for summing
+//	viennacl::vector_base<double> Dworking(
+//		ceil(MCglobal/MClocal)*sizeof(cl_double));
 
-	viennacl::vector_base<double> diagTimesRowOfA(
-		x.size1()*sizeof(cl_double));
+//	viennacl::vector_base<double> diagTimesRowOfA(
+//		x.size1()*sizeof(cl_double));
 
 # ifdef UNDEF
 	Rcout <<
@@ -275,7 +292,7 @@ double cholGpu(
 
 	double logdet = cholGpu(
 		x, D, 
-		Dworking, 
+		diagWorking, 
 		diagTimesRowOfA,
 		diagLocal,
 		localVectorSize,
@@ -290,36 +307,49 @@ double cholGpu(
 
 }
 
+	// to do: add the two working arrays
+	// SEXP diagWorkingR, ceil(MCglobal/MClocal)
+	// SEXP diagTimesRowOfAR, N
+
 //[[Rcpp::export]]
 SEXP cpp_cholGpu(
 	SEXP xR,
 	SEXP DR,
-	// to do: add the two working arrays
-	// SEXP diagWorkingR, ceil(MCglobal/MClocal)
-	// SEXP diagTimesRowOfAR, N
-	IntegerVector MCglobal,
-	IntegerVector MClocal,
-  	IntegerVector localStorage,
-	IntegerVector ctx_id,
-	CharacterVector kernelR) {
+	SEXP diagWorkingR,
+	SEXP diagTimesRowOfAR,
+	int MCglobal,
+	int MClocal,
+  	int localStorage,
+	int ctx_id,
+	std::string kernelR) {
 
 
 	const bool BisVCL=1;
 	std::shared_ptr<viennacl::matrix<double> > 
-		x = getVCLptr<double>(xR, BisVCL, ctx_id[0]);
+		x = getVCLptr<double>(xR, BisVCL, ctx_id);
 	std::shared_ptr<viennacl::vector_base<double> > 
 		D = getVCLVecptr<double>(
 			DR, 
-			BisVCL, ctx_id[0]);
+			BisVCL, ctx_id);
+	std::shared_ptr<viennacl::vector_base<double> > 
+		diagWorking = getVCLVecptr<double>(
+			diagWorkingR, 
+			BisVCL, ctx_id);
+	std::shared_ptr<viennacl::vector_base<double> > 
+		diagTimesRowOfA = getVCLVecptr<double>(
+			diagTimesRowOfAR, 
+			BisVCL, ctx_id);
 
 	double logdet = cholGpu(
 		*x, 
 		*D, 
-		Rcpp::as< std::string >(kernelR(0)),
-		ctx_id[0], 
-		MCglobal[0],
-		MClocal[0],
-		localStorage[0]);
+		*diagWorking,
+		*diagTimesRowOfA, 
+		kernelR,
+		ctx_id, 
+		MCglobal,
+		MClocal,
+		localStorage);
 
 	return(Rcpp::wrap(logdet));
 }

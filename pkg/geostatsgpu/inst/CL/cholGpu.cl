@@ -208,6 +208,8 @@ __kernel void cholCrossprod(
 	const int Nlocal = get_local_size(0);
 	const int Dglobal = get_global_id(0);
 	const int Nglobal = get_global_size(0);
+	const int Dgroup = get_group_id(0);
+//	const int Ngroups = Nglobal / Nlocal;
 // location in crossprodLocal to store the results
 	// index for crossprodLocal[1,1,Dlocal]
 	const int crossprodIndex = Dlocal*NrowsSq;
@@ -223,28 +225,46 @@ __kernel void cholCrossprod(
 	Dk = Dglobal;
 
 	if(Dk < Dcol) {
-	Dhere = diag[Dk];
+		Dhere = diag[Dk];
 
-	// index for A[Dcol, Dk]
-	DkNpad = Dk * Npad + Dcol;
-	// Drow1 loops through rows from Dcol
-	for(Drow1 = 0; Drow1 < Nrows; Drow1++) {
-		// index for crossprodLocal[1,Drow1,Dlocal]
-		Drow1Nrows = crossprodIndex + Drow1 * Nrows;
+		// index for A[Dcol, Dk]
+		DkNpad = Dk * Npad + Dcol;
 
-		// A[Drow1, Dk] * diag[Dk]
-		ADhere = A[DkNpad + Drow1] * Dhere;
 
-		for(Drow2 = Drow1; Drow2 < Nrows; Drow2++){
-			// c[Drow1, Drow1, Dlocal] = 
-			//   A[Drow1, Dk] * diag[Dk] * A[Drow2,Dk]
-			crossprodLocal[Drow1Nrows + Drow2] =
-				ADhere * A[DkNpad + Drow2]; 
+
+		// Drow1 loops through rows after the Dcol'th
+		for(Drow1 = 0; Drow1 < Nrows; Drow1++) {
+			// index for crossprodLocal[1,Drow1,Dlocal]
+			Drow1Nrows = crossprodIndex + Drow1 * Nrows;
+
+			// A[Drow1, Dk] * diag[Dk]
+			ADhere = A[DkNpad + Drow1] * Dhere;
+
+			// Drow2 is 'columns' of the crossproduct
+			for(Drow2 = Drow1; Drow2 < Nrows; Drow2++){
+				// c[Drow1, Drow1, Dlocal] = 
+				//   A[Drow1, Dk] * diag[Dk] * A[Drow2,Dk]
+				crossprodLocal[Drow1Nrows + Drow2] =
+					ADhere * A[DkNpad + Drow2]; 
+			}
+		}
+
+	} else {
+		// Dk >= Dcol, set crossprodLocal to zero
+		DkNpad = Dk * Npad + Dcol;
+
+		// Drow1 loops through rows after the Dcol'th
+		for(Drow1 = 0; Drow1 < Nrows; Drow1++) {
+			// index for crossprodLocal[1,Drow1,Dlocal]
+			Drow1Nrows = crossprodIndex + Drow1 * Nrows;
+			// Drow2 is 'columns' of the crossproduct
+			for(Drow2 = Drow1; Drow2 < Nrows; Drow2++){
+				// c[Drow1, Drow1, Dlocal] = 
+				//   A[Drow1, Dk] * diag[Dk] * A[Drow2,Dk]
+				crossprodLocal[Drow1Nrows + Drow2] = 0.0;
+			}
 		}
 	}
-
-	}
-
 
 	// now loop through the rest of the columns
 	for(Dk = Dglobal+ Nglobal; Dk < Dcol; Dk += Nglobal) {
@@ -253,7 +273,7 @@ __kernel void cholCrossprod(
 		DkNpad = Dk * Npad + Dcol;
 	
 		for(Drow1 = 0; Drow1 < Nrows; Drow1++) {
-			Drow1Nrows = Drow1 * Nrows;
+//			Drow1Nrows = Drow1 * Nrows;
 			// index for crossprodLocal[1,Drow1,Dlocal]
 			Drow1Nrows = crossprodIndex + Drow1 * Nrows;
 
@@ -271,96 +291,81 @@ __kernel void cholCrossprod(
 	barrier(CLK_LOCAL_MEM_FENCE);
 
 	// sum over the local work items
-	if(Dlocal < NlocalSum) {
-		// index for 
-		// crossprodLocal[1,1,Dlocal]
-		DlocalNsq = Dlocal * NrowsSq;
 
-		for(Dk = Dlocal + NlocalSum; Dk < Nlocal; 
-			Dk += NlocalSum) {
+	if(Dlocal < NlocalSum ) {
+
+		DkNpad = Dlocal * NrowsSq;
+		for(Dk = Dlocal + NlocalSum; Dk < Nlocal; Dk += NlocalSum) {
 			// index for 
-			// crossprodLocal[1,1,Dk]
-			DkNpad = Dk * NrowsSq;
-
-			// Drow1 = dim 2 of crossprodLocal
-			for(Drow1 = 0; Drow1 < Nrows; Drow1++) {
-
-				Drow1Nrows = Drow1 * Nrows;
-
-				// index for 
-				// crossprodLocal[1,Drow1,Dlocal]
-				DlIndex = DlocalNsq + Drow1Nrows;	
-				// index for 
-				// crossprodLocal[1,Drow1,Dk]
-				DkIndex = DkNpad + Drow1Nrows;
-
-				for(Drow2 = Drow1; Drow2 < Nrows; Drow2++){
-
-					// cl[D2,D1,Dlocal] +=
-					// cl[D2,D1,Dk]
+			// cl[1,1,Dk]
+			DlocalNsq = Dk * NrowsSq;
+			for(Drow2 = 0; Drow2 < Nrows; Drow2++){
+				Drow1Nrows = Drow2 * Nrows;
+				for(Drow1 = Drow2; Drow1 < Nrows; Drow1++) {
 
 					crossprodLocal[
-						DlIndex + Drow2
-					] += crossprodLocal[
-						DkIndex + Drow2
-					];
+						Drow1Nrows + Drow1 + DkNpad //Dlocal * NrowsSq
+						] +=
+					crossprodLocal[
+						Drow1Nrows + Drow1 + DlocalNsq//Dk*NrowsSq
+						];
+
 				}
 			}
 		}
 	}
-	barrier(CLK_LOCAL_MEM_FENCE);
 
 	// sum over the local work items
 	if(Dlocal == 0 ) {
+
+#ifdef DEBUG
+		for(Dk = 1; Dk < NrowsSq; Dk++) {
+		crossprod[
+				Dk + Dgroup * NrowsSq
+				] = crossprodLocal[Dk];
+		}
+#endif
+
 		for(Dk = 1; Dk < NlocalSum; Dk ++) {
 			// index for 
 			// cl[1,1,Dk]
-			DkNpad = Dk * NrowsSq;
+			DlocalNsq = Dk * NrowsSq;
 
-			for(Drow1 = 0; Drow1 < Nrows; Drow1++) {
 
-				Drow1Nrows = Drow1 * NrowsSq;
+			for(Drow2 = 0; Drow2 < Nrows; Drow2++){
+				Drow1Nrows = Drow2 * Nrows;
+				for(Drow1 = Drow2; Drow1 < Nrows; Drow1++) {
 
-				// index for 
-				// crossprodLocal[1,Drow1,1]
-				DlIndex = Drow1Nrows;	
-				// index for 
-				// crossprodLocal[1,Drow1,Dk]
-				DkIndex = DkNpad + Drow1Nrows;
-
-				for(Drow2 = Drow1; Drow2 < Nrows; Drow2++){
 					crossprodLocal[
-						DlIndex + Drow2
-					] += crossprodLocal[
-						DkIndex + 
-						Drow2
-					];
+						Drow1Nrows + Drow1
+						] +=
+					crossprodLocal[
+						Drow1Nrows+ Drow1 + DlocalNsq//Dk*NrowsSq
+						];
+
 				}
 			}
 		}
-		// copy to global memory
-		// address for c[1,1,Dgroup]
-		DkNpad = get_group_id(0) * NrowsSq;
-	
-		for(Drow1 = 0; Drow1 < Nrows; Drow1++) {
-			Drow1Nrows = Drow1 * Nrows;	
 
-			// index for c[1,Drow1,Dgroup]
-			DlIndex = DkNpad + Drow1Nrows;
+		DlocalNsq = Dgroup * NrowsSq;
 
-			// index for cl[1,Drow1,Dlocal]
-			DkIndex = Drow1Nrows;
+		for(Drow2 = 0; Drow2 < Nrows; Drow2++){
+			Drow1Nrows = Drow2 * Nrows;
+			Dk = Drow1Nrows + DlocalNsq;
+			for(Drow1 = 0; Drow1 < Nrows; Drow1++) {
 
-			for(Drow2 = Drow1; Drow2 < Nrows; Drow2++){
-				crossprod[
-					DlIndex + Drow2
-				] = crossprodLocal[
-					DkIndex + Drow2
-				];
+					crossprod[
+//						Dgroup * NrowsSq +
+//						Drow1Nrows
+						Dk + Drow1
+						] =
+					crossprodLocal[
+						Drow1Nrows + Drow1
+						];
+
 			}
-		}  // end Drow1
+		}
 	} // end Dlocal == 0
-
 }
 
 // crossprod is Nrows by Nrows by NtoAdd
@@ -386,7 +391,8 @@ __kernel void cholSumCrossprod(
 	// local items are dimension 1
 	for(Drow1 = Dgroup; Drow1 < Nrows; Drow1 += Ngroups) {
 
-		for(Drow2 = Drow1 + Dlocal; Drow2 < Nrows; 
+		for(Drow2 = Dlocal; //Drow1 + Dlocal; 
+			Drow2 < Nrows; 
 			Drow2 += Nlocal) {
 
 			theSum = 0.0;
@@ -400,9 +406,11 @@ __kernel void cholSumCrossprod(
 				// theSum += crossprod[Drow2, Drow1, Dsum]
 				theSum += crossprod[
 					DlIndex + Dsum * NrowsSq];
+//					Drow1*Nrows + Drow2 + Nrows*Nrows*Dsum];
 			}
 			
 			crossprod[DlIndex] = theSum;
+//			crossprod[Drow1 * Nrows + Drow2] = theSum;
 		}
 
 	}
@@ -430,8 +438,11 @@ __kernel void cholFromCrossprod(
 	// index for A[Dcol, Dcol]
 	const int AforUpdateStart,
 
-	// crossprod is NrowsC by NrowsC
-	const int NrowsCrossprod, // N - colAtCrossprod
+	// crossprod is NrowsCrossprod by NrowsCrossprod
+	const int NrowsCrossprod,
+
+	// colSinceCrossprod * (NrowsCrossprod + 1)
+	const int colSinceCrossprodNrowsCrossprodP1, 
 
 	// number of rows of A which need updating
 	const int Nrows, // N - Dcol
@@ -450,50 +461,84 @@ __kernel void cholFromCrossprod(
 	// compute the L_jk D_k
 	// where k = colAtCrossprod
 	// store locally
+
 	for(Dk = get_local_id(0); 
-		Dk < colSinceCrossprod;
+		Dk < NrowsCrossprod;
 		Dk+=Nlocal) {
 
 		diagLocal[Dk] = A[
+//			(Dk + colAtCrossprod )*Npad + Dcol
 				AforCrossprodStartJ + Dk * Npad
 				] * diag[colAtCrossprod + Dk];
 	}
 	barrier(CLK_LOCAL_MEM_FENCE);
 
-
 	// update the A[,Dcol] to
 	// A[Drow, Dcol] = sum_k L_ik L_jk D_k
 
-	for(Drow = Dglobal; Drow < Nrows; 
+	for(Drow = Dglobal; 
+		Drow < Nrows; 
 		Drow += Nglobal) {
 
-		// index for A[Drow, Dcol]
+		Dcrossprod = crossprod[
+//			colSinceCrossprod * (NrowsCrossprod + 1) +
+			colSinceCrossprodNrowsCrossprodP1 + 
+			Drow];
+
+#ifdef DEBUG
+		A[colSinceCrossprod * Npad + 200 + Drow] = Dcrossprod;
+		Dk = 0;
+		A[colSinceCrossprod * Npad + 400 + Drow] = A[
+					(Dk + colAtCrossprod )*Npad + 
+					Dcol];
+		A[colSinceCrossprod * Npad + 600 + Drow] = 				A[
+					(Dk + colAtCrossprod )*Npad + 
+					Dcol + Drow + Dk
+				];
+		A[colSinceCrossprod * Npad + 800 + Drow] = 				diag[colAtCrossprod + Dk];
+#endif
+
+
 		AforCrossprodStartI = 
 			AforCrossprodStartJ + Drow;
 
-		// stored crossprod = 
-		// sum_{k=1}^colsSinceCrossprod
-		//    A[Drow,k] * A[Dcol,k] * D_k	
-		Dcrossprod = crossprod[
-			colSinceCrossprod + Drow];
-
-		// update with
-		// sum_{k=colsSince + 1}^{j-1}
-		//    A[i,k] * A[j,k] * D_k	
 		for(Dk = 0; Dk < colSinceCrossprod; Dk++) {
-			Dcrossprod += A[
+			Dcrossprod +=  
+				A[
+//					(Dk + colAtCrossprod )*Npad + 
+//					Dcol + Drow
 				AforCrossprodStartI + Dk * Npad
-				] * diagLocal[Dk];
+				]  * diagLocal[Dk];
+//				A[
+//					(Dk + colAtCrossprod )*Npad + 
+//					Dcol] * 
+//				diag[colAtCrossprod + Dk];
 		}
 
-		// index for A[DrowFromZero, Dcol]
-		//  DrowFromZero = Drow + Dcol
-		Dk = AforUpdateStart + Drow;
+#ifdef DEBUG
+		A[colSinceCrossprod * Npad + 1000 + Drow] = Dcrossprod;
+#endif
+
+
+
+
+// index for A[DrowFromZero, Dcol]
+//  DrowFromZero = Drow + Dcol
+//		Dk = AforUpdateStart + Drow;
+
 		if(Drow == 0) {
-			diag[Dcol] = (A[Dk] - Dcrossprod);
+			diag[Dcol] = A[
+				AforUpdateStart
+//				Dcol*Npad + Dcol
+				] - 
+			Dcrossprod;
 		} else {
-			A[Dk] = (A[Dk] - Dcrossprod);
+			A[
+				//Dcol*Npad + Dcol 
+				AforUpdateStart + Drow
+			] -= Dcrossprod;
 		}
+
 		// note havent yet divided by diagonal
 
 	}
