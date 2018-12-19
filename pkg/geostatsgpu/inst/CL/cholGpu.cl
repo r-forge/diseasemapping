@@ -62,23 +62,25 @@ __kernel void cholOffDiag(
 	const int NbeforeLastCycle, // = Ncyclesm1 * NlocalStorage;
 	// number of elements in last cycle
 	// Dcol - NbeforeLastCycle;
-	const int NinLastCycle) {
-
+	const int NinLastCycle,
+	const int rowToStartGroupwise,
+	const int NlocalSum// typicaly 4
+	) {
 
 	const int Nsize = get_global_size(0);
 	const int NlocalSize = get_local_size(0);
 
 	const int Dlocal = get_local_id(0);
+	const int Dgroup = get_group_id(0);
+	const int Ngroup = Nsize / NlocalSize;
 	const int DrowStart = Dcol+1+get_global_id(0);
 
 	int Dcycle, DcycleNlocalStorage, Drow, Dk;
-	double DL;
+	double DL, diagLocalStore;
 	// Dcycle through groups of NlocalStorage columns
 	for(Dcycle=0;Dcycle<Ncyclesm1;Dcycle++) {
-
 		DcycleNlocalStorage = Dcycle * NlocalStorage;
 		// copy over some of D L rows
-
 		for(Dk = Dlocal; Dk < NlocalStorage; 
 			Dk += NlocalSize) {
 	
@@ -92,7 +94,8 @@ __kernel void cholOffDiag(
 		barrier(CLK_LOCAL_MEM_FENCE);
 
 		// loop through rows
-		for(Drow = DrowStart; Drow < N; Drow+= Nsize) {
+		// do one row per work item
+		for(Drow = DrowStart; Drow < rowToStartGroupwise; Drow+= Nsize) {
 
 			// do this cycle's bit of the cholesky
 			DL = A[Drow + DcolNpad];
@@ -106,10 +109,50 @@ __kernel void cholOffDiag(
 			}
 			A[Drow + DcolNpad] = DL;
 		}
+		// loop through remaining rows
+		// do one row per work group
+		// the first Nlocal elements of diagLocal will be overwritten
+		diagLocalStore = diagLocal[Dlocal];
+		for(Drow = rowToStartGroupwise + Dgroup; Drow < N; Drow+= Ngroup) {
+			// assuming Dlocal < NlocalStorage
+			// or more local storage than local work items
 
-	}
+			Dk = Dlocal;
+			DL = A[Drow + 
+					(Dk + DcycleNlocalStorage) * Npad
+					] * diagLocalStore;
+
+			for(Dk = Dlocal + NlocalSize; Dk < NlocalStorage;
+				Dk += NlocalSize) {
+				DL += A[
+					Drow + 
+					(Dk + DcycleNlocalStorage) * Npad
+					] * diagLocal[Dk];
+			}
+			diagLocal[Dlocal] = DL;
+			barrier(CLK_LOCAL_MEM_FENCE);
+			// add the local storage
+			if(Dlocal < NlocalSum) {
+				DL = 0.0;
+				for(Dk = Dlocal; Dk < NlocalSize; 
+					Dk += NlocalSum) {
+					DL += diagLocal[Dk];
+				}
+				diagLocal[Dlocal] = DL;
+			}
+			barrier(CLK_LOCAL_MEM_FENCE);
+
+			if(Dlocal==0) {
+				DL = 0.0;
+				for(Dk = 0; Dk < NlocalSum; Dk++) {
+					DL += diagLocal[Dk];
+				}
+				A[Drow + DcolNpad] -= DL;
+			}
+
+		}
+	} // end Dcycle
 	barrier(CLK_LOCAL_MEM_FENCE);
-
 	// the final group of columns
 	// has fewer than NlocalStorage elements
 //	DcycleNlocalStorage = = NbeforeLastCycle = Ncyclesm1 * NlocalStorage;
@@ -122,8 +165,7 @@ __kernel void cholOffDiag(
 	
 	}
 	barrier(CLK_LOCAL_MEM_FENCE);
-
-	for(Drow = DrowStart; Drow < N; Drow+= Nsize) {
+	for(Drow = DrowStart; Drow < rowToStartGroupwise; Drow+= Nsize) {
 
 		DL = A[Drow + DcolNpad];
 		for(Dk = 0; Dk < NinLastCycle; Dk++) {
@@ -134,7 +176,45 @@ __kernel void cholOffDiag(
 		A[Drow + DcolNpad] = DL / diagDcol;
 	}
 
+	diagLocalStore = diagLocal[Dlocal];
+	for(Drow = rowToStartGroupwise + Dgroup; Drow < N; Drow += Ngroup) {
+		if(Dlocal < NinLastCycle) {
+			Dk = Dlocal;
+			DL = A[Drow + 
+					(Dk + DcycleNlocalStorage) * Npad
+					] * diagLocalStore;
+		} else {
+			DL = 0.0;
+		}
+		for(Dk = Dlocal + NlocalSize; Dk < NinLastCycle;
+			Dk += NlocalSize) {
+			DL += A[
+				Drow + 
+				(Dk + DcycleNlocalStorage) * Npad
+				] * diagLocal[Dk];
+		}
+		diagLocal[Dlocal] = DL;
+		barrier(CLK_LOCAL_MEM_FENCE);
+		// add the local storage
+		if(Dlocal < NlocalSum) {
+			DL = 0.0;
+			for(Dk = Dlocal; Dk < NlocalSize; 
+				Dk += NlocalSum) {
+				DL += diagLocal[Dk];
+			}
+			diagLocal[Dlocal] = DL;
+		}
+		barrier(CLK_LOCAL_MEM_FENCE);
 
+		if(Dlocal==0) {
+			DL = 0.0;
+			for(Dk = 0; Dk < NlocalSum; Dk++) {
+				DL += diagLocal[Dk];
+			}
+			A[Drow + DcolNpad] -= DL;
+		}
+
+	}
 }
 
 

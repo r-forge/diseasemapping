@@ -44,13 +44,26 @@ double cholGpu(
 	const int Nm1 = N - 1, Nm2 = N-2;
 
 	// how many cross products can be stored in local memory
+	const int Nlocal = cholOffDiag.local_work_size();
+	const int Nglobal = cholOffDiag.global_work_size(0);			
+
+	const int Ngroups = //cholCrossprod.get_num_groups(0);
+		cholCrossprod.global_work_size(0) / 
+				cholCrossprod.local_work_size(0);
+
 	const double NlocalStorageD = NlocalStorage;
 	const double NlocalStorageSqrt = sqrt(NlocalStorage);
-	const int Nlocal = cholCrossprod.local_work_size();
+
 	const double NcrossprodSquared = NlocalStorageD/Nlocal;
 	const int Ncrossprod = floor(sqrt(NcrossprodSquared));
 	const int NbeginLast = N - Ncrossprod;
+	const int NlocalSum = 4;
+	const int NrowsInCrossprod = N - NbeginLast;
+	const int NrowsInCrossprodSq = 
+		NrowsInCrossprod * NrowsInCrossprod;
+	const int NbeginLastNpad = NbeginLast * Npad;
 
+	int rowToStartGroupwise = N;
 
 //	viennacl::vector_base<double> oneColX(
 //			A.handle(), Nm1, 
@@ -114,7 +127,19 @@ double cholGpu(
 		Ncyclesm1 = Ncycles-1;
 		NbeforeLastCycle = Ncyclesm1 * NlocalStorage;
 
+		Nrows = N - Dcol;
+		// row to start one row per workgroup
+		rowToStartGroupwise = Dcol + floor(Nrows/Nglobal);
+		// unless there are fewer columns to sum over than
+		// local work items, or only a small number
+		// of work items would be unused if
+		// one row per work item were maintained
+		if(Dcol < Nlocal | 
+			(N - rowToStartGroupwise) < 4
+			) {
 
+			rowToStartGroupwise = N;
+		}
 		
 		// diagonals and diagTimesRowOfA
 		viennacl::ocl::enqueue(cholDiag(
@@ -140,17 +165,15 @@ double cholGpu(
 			N, Npad, NlocalStorage,
 			Ncyclesm1, 
 			NbeforeLastCycle,
-			Dcol - NbeforeLastCycle
-			));
+			Dcol - NbeforeLastCycle,
+			rowToStartGroupwise, 
+			NlocalSum));
 	}
 
-	const int NrowsInCrossprod = N - NbeginLast;
-	const int NrowsInCrossprodSq = 
-		NrowsInCrossprod * NrowsInCrossprod;
-	const int Ngroups = //cholCrossprod.get_num_groups(0);
-		cholCrossprod.global_work_size(0) / 
-				cholCrossprod.local_work_size(0);
-	const int NlocalSum = 4;
+
+	// last few columns
+	// compute the cross product
+	// then finish the cholesky
 
 
 	// compute the cross products
@@ -160,14 +183,14 @@ double cholGpu(
 		NrowsInCrossprod, NrowsInCrossprodSq,
 		Npad, NlocalSum));
 
-
+	// sum up the cross products from 
+	// each work group
 	viennacl::ocl::enqueue(cholSumCrossprod(
 		diagTimesRowOfA,
  		NrowsInCrossprod, 
 		NrowsInCrossprodSq,
 		Ngroups));
 
-	int NbeginLastNpad = NbeginLast * Npad;
 
 	for(Dcol = NbeginLast; Dcol < N; Dcol++) {
 

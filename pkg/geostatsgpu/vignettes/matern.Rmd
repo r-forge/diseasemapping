@@ -56,19 +56,13 @@ range(varCpu - as.matrix(varMatGpu))
 
 try cholesky
 ```{r chol}
-control = list(
-    workgroupSize = 64,
-    localWorkgroupSize = 32,
-    sizeOfDouble = 8,
-    localStorage = 4096/2
-    )
 
 N = 55
 control = list(
     workgroupSize = 1024,
-    localWorkgroupSize = 64,
+    localWorkgroupSize = 32,
     sizeOfDouble = 8,
-    localStorage = 4096
+    localStorage = 4096/2
     )
 
 
@@ -144,7 +138,7 @@ myMatR[SSeq, SSeq]
 t(as.matrix(x)[SSeq,SSeq])
 cholTest[SSeq,SSeq]
 
-quantile(DfromR[SSeq] - as.vector(D)[SSeq])
+quantile(DfromR - as.vector(D))
 
 logDet
 sum(log(DfromR))
