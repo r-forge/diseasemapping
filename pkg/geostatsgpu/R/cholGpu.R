@@ -86,6 +86,7 @@ cholGpu = function(x,D,
 		control$localWorkgroupSize, 
 		control$localStorage,
 		x@.context_index - 1,
+		TRUE, # verbose
 		kernel
 		)
 

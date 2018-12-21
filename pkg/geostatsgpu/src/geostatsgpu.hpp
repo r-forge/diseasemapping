@@ -3,8 +3,9 @@
 #include <Rcpp.h>
 //#include "gpuR/getVCLptr.hpp"
 
+//#include "dynVCLMatGeostatsgpu.hpp"
 #include "gpuR/dynVCLMat.hpp"
-#include "gpuR/dynVCLVec.hpp"
+#include "dynVCLVecGeostatsgpu.hpp"
 
 #include "viennacl/ocl/backend.hpp"
 #include "viennacl/linalg/sum.hpp"

@@ -57,10 +57,11 @@ range(varCpu - as.matrix(varMatGpu))
 try cholesky
 ```{r chol}
 
-N = 55
+setwd("~/workspaceOxygen/diseasemapping/pkg")
+N = 75
 control = list(
     workgroupSize = 1024,
-    localWorkgroupSize = 32,
+    localWorkgroupSize = 128,
     sizeOfDouble = 8,
     localStorage = 4096/2
     )
@@ -92,7 +93,6 @@ DfromR = xchold^2
 
 
 myMat = gpuR::vclMatrix(myMatR)
-myMatGpuR = gpuR::deepcopy(myMat)
 
 D = gpuR::vclVector(0, nrow(myMat),
             type='double',
@@ -103,7 +103,8 @@ diagTimesRowOfA = gpuR::vclVector(0,
             type='double',
             ctx_id = myMat@.context_index)
 
-diagWorking = gpuR::vclVector(0, 1 + round(control$workgroupSize / control$localWorkgroupSize),
+diagWorking = gpuR::vclVector(0, 512,
+    #1 + round(control$workgroupSize / control$localWorkgroupSize),
             type='double',
             ctx_id = myMat@.context_index)
 
@@ -117,31 +118,50 @@ kernel <- readChar(file, file.info(file)$size)
 
 x = gpuR::deepcopy(myMat)
 system.time(logDet <- geostatsgpu:::cpp_cholGpu(
-        x@address, 
-        D@address,
-        diagWorking@address,
-        diagTimesRowOfA@address,
+        x, D, diagWorking, diagTimesRowOfA,
         control$workgroupSize, 
-        control$localWorkgroupSize, 
-        control$localStorage,
-        x@.context_index - 1,
+        128, #control$localWorkgroupSize, 
+        128*28,#control$localStorage,
+        5000, #ncol(x)-512, #5000, 
+        4, # Ncrossprod
+        FALSE, # verbose
         kernel
         ))
+
 # check to see if diagTimesRowOfA is 
 # the crossproduct
 #Ngroups = control$workgroupSize / control$localWorkgroupSize
 #Ncross = floor(sqrt(control$localStorage / control$localWorkgroupSize))
 
 SSeq = seq(by=1, len=6, to=ncol(x))
+SSeq = 1:5
+
+SSeq = seq(5000, len=5)
 
 myMatR[SSeq, SSeq]
 t(as.matrix(x)[SSeq,SSeq])
 cholTest[SSeq,SSeq]
 
-quantile(DfromR - as.vector(D))
+cbind(DfromR[SSeq],
+as.vector(D)[SSeq])
+
+range(which(abs(DfromR - as.vector(D)) > 0.001))
+
+range(which(abs(cholTest[ncol(x), ] - as.matrix(x)[,ncol(x)]) > 0.01))
+
+plot(cholTest[ncol(x),] - as.matrix(x)[ ,ncol(x)])
+
+quantile(DfromR - as.vector(D), na.rm=TRUE)
+
+
+
 
 logDet
 sum(log(DfromR))
+
+x = gpuR::deepcopy(myMat)
+system.time(x2 <- gpuR:::chol.vclMatrix(x))
+
 ```
 
 ```{r cholRes, eval=FALSE}

@@ -23,10 +23,13 @@ double cholGpu(
 	viennacl::vector_base<double> &diagTimesRowOfA,
 	// store sections of diagTimesRowOfA locally
 	viennacl::ocl::local_mem &diagLocal,
-	const int NlocalStorage,
+	const int colGroupwise,
+	int Ncrossprod,
+	const int verbose,
 	// kernels
 	viennacl::ocl::kernel &cholDiag,
 	viennacl::ocl::kernel &cholOffDiag,
+	viennacl::ocl::kernel &cholOffDiagGroupwise,
 	viennacl::ocl::kernel &cholCrossprod,
 	viennacl::ocl::kernel &cholSumCrossprod,
 	viennacl::ocl::kernel &cholFromCrossprod,
@@ -37,6 +40,9 @@ double cholGpu(
 	int Dcol, Ncycles, Ncyclesm1, NbeforeLastCycle;
 	int Drow, DrowFromZero, Nrows, DcolP1;
 	int DcolNpad;
+	int rowToStartGroupwise, Dcycle;
+
+	const int NlocalStorage = diagLocal.size() / sizeof(cl_double);
 
 	const int 
 		Npad=A.internal_size2(),
@@ -55,15 +61,16 @@ double cholGpu(
 	const double NlocalStorageSqrt = sqrt(NlocalStorage);
 
 	const double NcrossprodSquared = NlocalStorageD/Nlocal;
-	const int Ncrossprod = floor(sqrt(NcrossprodSquared));
+	const int NcrossprodI = floor(sqrt(NcrossprodSquared));
+	Ncrossprod = std::min(Ncrossprod, NcrossprodI);
 	const int NbeginLast = N - Ncrossprod;
 	const int NlocalSum = 4;
 	const int NrowsInCrossprod = N - NbeginLast;
 	const int NrowsInCrossprodSq = 
 		NrowsInCrossprod * NrowsInCrossprod;
 	const int NbeginLastNpad = NbeginLast * Npad;
+	const int Nitemwise = std::min(NbeginLast, colGroupwise);
 
-	int rowToStartGroupwise = N;
 
 //	viennacl::vector_base<double> oneColX(
 //			A.handle(), Nm1, 
@@ -105,7 +112,7 @@ double cholGpu(
 	// until the number of columns remaining
 	// is small enough to store in local memory
 
-#ifdef DEBUG
+if(verbose){
 	Rcpp::Rcout << " N " << N << 
 			" Npad " << Npad<< 
 			" NlocalStorage " << NlocalStorage<< 
@@ -116,30 +123,29 @@ double cholGpu(
 			" NcrossprodSquared " << NcrossprodSquared << 
 			" Ncrossprod " << Ncrossprod << 
 			"\n";
-#endif
+}
 
-	for(Dcol=2;Dcol<NbeginLast;Dcol++) {
-		
-//		Dcolm1 = Dcol - 1;
+	for(Dcol=2;Dcol<Nitemwise;Dcol++) {
+		DcolNpad = Dcol * Npad;		
+
 		Ncycles = ceil(Dcol / NlocalStorageD);
-
-
 		Ncyclesm1 = Ncycles-1;
-		NbeforeLastCycle = Ncyclesm1 * NlocalStorage;
 
 		Nrows = N - Dcol;
-		// row to start one row per workgroup
-		rowToStartGroupwise = Dcol + floor(Nrows/Nglobal);
-		// unless there are fewer columns to sum over than
-		// local work items, or only a small number
-		// of work items would be unused if
-		// one row per work item were maintained
-		if(Dcol < Nlocal | 
-			(N - rowToStartGroupwise) < 4
-			) {
 
-			rowToStartGroupwise = N;
+		if(verbose) {
+			if( (Dcol < 4) | (Dcol < 1005 & Dcol > 1000)) {
+
+			Rcpp::Rcout << "Dcol " << Dcol << 
+				" Nrows " << Nrows << 
+				" Nglobal " << Nglobal << 
+				" floor " << floor(Nrows / Nglobal)<<
+				" Ncycles " << Ncycles<<
+				" NbeforeLastCycle " << NbeforeLastCycle <<
+				"\n";
+			}
 		}
+
 		
 		// diagonals and diagTimesRowOfA
 		viennacl::ocl::enqueue(cholDiag(
@@ -147,7 +153,7 @@ double cholGpu(
 			diagWorking, 
 			diagTimesRowOfA,
 			diagLocal, 
-			Dcol, Npad));
+			Dcol, Npad, NlocalSum));
 
 
 		// sum diagWorking to get diag[Dcol]
@@ -155,26 +161,87 @@ double cholGpu(
 			viennacl::linalg::sum(diagWorking);
 		D(Dcol) = tempDouble;	
 
+		if(verbose) {
+			if( (Dcol < 4) | (Dcol < 1005 & Dcol > 1000)) {
+			Rcpp::Rcout << " diag " << tempDouble <<
+			" the sum " << viennacl::linalg::sum(diagWorking) <<
+			"\n";
+		}}
+		// first cycles through columns
+		// cache as many diagonal products as possible
+		// in local memory, divide by 1.0
+		for(Dcycle = 0; Dcycle < Ncyclesm1; Dcycle++) {
+			viennacl::ocl::enqueue(cholOffDiag(
+				A, diagTimesRowOfA,
+				diagLocal, 1.0,
+				Dcol, DcolNpad, N, Npad,
+				Dcycle * NlocalStorage,
+				(Dcycle +1) * NlocalStorage,
+				NlocalStorage,
+				NlocalSum));
+		}
 
-		viennacl::ocl::enqueue(cholOffDiag(
+		// last cycle 
+		// fewer items available to cache
+		// divide result by D(0)
+		if(verbose) {
+			if( (Dcol < 5) | (Dcol < 1005 & Dcol > 1000)) {
+			Rcpp::Rcout << "Dcol " << Dcol << 
+				" startCol " << Dcycle * NlocalStorage << 
+				" endCol " << Dcol << 
+				" numCol " << Dcol- Dcycle * NlocalStorage <<
+				"\n";
+
+		}}
+
+
+		Dcycle = Ncyclesm1;
+		{
+			viennacl::ocl::enqueue(cholOffDiag(
+				A, diagTimesRowOfA,
+				diagLocal, tempDouble,
+				Dcol, DcolNpad, N, Npad,
+				Dcycle * NlocalStorage,
+				Dcol,
+				Dcol - Dcycle * NlocalStorage,
+				NlocalSum));
+		}
+
+
+	} // end loop through columns
+
+	// switch to one row per work group
+	for(Dcol = Nitemwise; Dcol < NbeginLast; Dcol++) {
+
+		// diagonals and diagTimesRowOfA
+		viennacl::ocl::enqueue(cholDiag(
 			A, D,
+			diagWorking, 
 			diagTimesRowOfA,
 			diagLocal, 
-			tempDouble,
-			Dcol, Dcol*Npad,
-			N, Npad, NlocalStorage,
-			Ncyclesm1, 
-			NbeforeLastCycle,
-			Dcol - NbeforeLastCycle,
-			rowToStartGroupwise, 
-			NlocalSum));
-	}
+			Dcol, Npad, NlocalSum));
 
+
+		// sum diagWorking to get diag[Dcol]
+		tempDouble = A(Dcol,Dcol) - 
+			viennacl::linalg::sum(diagWorking);
+		D(Dcol) = tempDouble;	
+
+		viennacl::ocl::enqueue(cholOffDiagGroupwise(
+			A, diagTimesRowOfA,
+			diagLocal, tempDouble,
+			Dcol, Dcol*Npad, N, Npad,
+			Ngroups,
+			NlocalSum));
+
+	}
 
 	// last few columns
 	// compute the cross product
 	// then finish the cholesky
-
+	if(verbose) {
+		Rcpp::Rcout << "crossproducts" << "\n";
+	}
 
 	// compute the cross products
 	viennacl::ocl::enqueue(cholCrossprod(
@@ -191,6 +258,9 @@ double cholGpu(
 		NrowsInCrossprodSq,
 		Ngroups));
 
+	if(verbose) {
+		Rcpp::Rcout << "final columns" << "\n";
+	}
 
 	for(Dcol = NbeginLast; Dcol < N; Dcol++) {
 
@@ -198,8 +268,6 @@ double cholGpu(
 		Nrows = N - Dcol;
 
 //		DcolNpad = Dcol * Npad;
-
-
 
 		viennacl::ocl::enqueue(cholFromCrossprod(
 			A, D, diagTimesRowOfA, diagLocal,
@@ -242,16 +310,20 @@ double cholGpu(
 	const int ctx_id,
 	const int MCglobal,
 	const int MClocal,
+	const int colGroupwise,
+	int Ncrossprod,
+	const int verbose,
 	const int localVectorSize
 ){
 
 	if(MClocal > localVectorSize) {
 		Rcpp::stop("MClocal must be less than localSize");
 	}
+
 	// the context
 	viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
-	cl_device_type type_check = ctx.current_device().type();
 
+	cl_device_type type_check = ctx.current_device().type();
 	// given context but no kernel
 	// add kernel to program
 	viennacl::ocl::program & my_prog = ctx.add_program(
@@ -262,6 +334,7 @@ double cholGpu(
 	viennacl::ocl::kernel 
 		&cholDiag = my_prog.get_kernel("cholDiag"),
 		&cholOffDiag = my_prog.get_kernel("cholOffDiag"),
+		&cholOffDiagGroupwise = my_prog.get_kernel("cholOffDiagGroupwise"),
 		&cholCrossprod = my_prog.get_kernel("cholCrossprod"),
 		&cholSumCrossprod = my_prog.get_kernel("cholSumCrossprod"),
 		&cholFromCrossprod = my_prog.get_kernel("cholFromCrossprod"),
@@ -275,6 +348,9 @@ double cholGpu(
 	cholOffDiag.global_work_size(0, MCglobal);
 	cholOffDiag.local_work_size(0, MClocal);
 
+	cholOffDiagGroupwise.global_work_size(0, MCglobal);
+	cholOffDiagGroupwise.local_work_size(0, MClocal);
+
 	sumLog.global_work_size(0, MCglobal);
 	sumLog.local_work_size(0, MClocal);
 
@@ -287,9 +363,18 @@ double cholGpu(
 	cholFromCrossprod.global_work_size(0, MCglobal);
 	cholFromCrossprod.local_work_size(0, MClocal);
 
+if(verbose){
+
+	Rcpp::Rcout <<
+		" chol Off global size " << cholOffDiag.global_work_size(0) << 
+		" chol Off local size " << cholOffDiag.local_work_size(0) << 
+		" local vector size " << localVectorSize << 
+	"	\n";
+}
 
 	viennacl::ocl::local_mem diagLocal(
 		localVectorSize*sizeof(cl_double));
+
 
 	// one entry per group, for summing
 //	viennacl::vector_base<double> Dworking(
@@ -298,26 +383,29 @@ double cholGpu(
 //	viennacl::vector_base<double> diagTimesRowOfA(
 //		x.size1()*sizeof(cl_double));
 
-# ifdef DEBUG
+if(verbose){
+
 	Rcpp::Rcout <<
-		"e Dlocal size " << diagLocal.size() << 
-		" global size " << cholOffDiag.global_work_size(0) << 
-		" local size " << cholOffDiag.local_work_size(0) << 
-		" local vector size" << localVectorSize << "\n";
-# endif
+		" diag local size " << diagLocal.size()/sizeof(cl_double) << 
+		"\n";
+}
 
 	double logdet = cholGpu(
 		x, D, 
 		diagWorking, 
 		diagTimesRowOfA,
 		diagLocal,
-		localVectorSize,
+		colGroupwise,
+		Ncrossprod,
+		verbose,
 		cholDiag,
 		cholOffDiag,
+		cholOffDiagGroupwise,
 		cholCrossprod,
 		cholSumCrossprod,
 		cholFromCrossprod,
 		sumLog);
+
 
 	return(logdet);
 
@@ -326,32 +414,39 @@ double cholGpu(
 
 //[[Rcpp::export]]
 SEXP cpp_cholGpu(
-	SEXP xR,
-	SEXP DR,
-	SEXP diagWorkingR,
-	SEXP diagTimesRowOfAR,
+	Rcpp::S4 xR,
+	Rcpp::S4  DR,
+	Rcpp::S4  diagWorkingR,
+	Rcpp::S4  diagTimesRowOfAR,
 	int MCglobal,
 	int MClocal,
   	int localStorage,
-	int ctx_id,
+  	int colGroupwise,
+  	int Ncrossprod,
+	int verbose,
 	std::string kernelR) {
 
+	Rcpp::IntegerVector ctx_idR = xR.slot(".context_index");
+	const int ctx_id = ctx_idR[0]-1;
 
 	const bool BisVCL=1;
+
 	std::shared_ptr<viennacl::matrix<double> > 
-		x = getVCLptr<double>(xR, BisVCL, ctx_id);
+		x = getVCLptr<double>(xR.slot("address"), BisVCL, ctx_id);
+
 	std::shared_ptr<viennacl::vector_base<double> > 
 		D = getVCLVecptr<double>(
-			DR, 
+			DR.slot("address"), 
 			BisVCL, ctx_id);
 	std::shared_ptr<viennacl::vector_base<double> > 
 		diagWorking = getVCLVecptr<double>(
-			diagWorkingR, 
+			diagWorkingR.slot("address"), 
 			BisVCL, ctx_id);
 	std::shared_ptr<viennacl::vector_base<double> > 
 		diagTimesRowOfA = getVCLVecptr<double>(
-			diagTimesRowOfAR, 
+			diagTimesRowOfAR.slot("address"), 
 			BisVCL, ctx_id);
+
 
 	double logdet = cholGpu(
 		*x, 
@@ -362,6 +457,9 @@ SEXP cpp_cholGpu(
 		ctx_id, 
 		MCglobal,
 		MClocal,
+		colGroupwise,
+		Ncrossprod,
+		verbose,
 		localStorage);
 
 	return(Rcpp::wrap(logdet));

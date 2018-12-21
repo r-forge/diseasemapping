@@ -7,21 +7,23 @@
 using namespace Rcpp;
 
 // cpp_cholGpu
-SEXP cpp_cholGpu(SEXP xR, SEXP DR, SEXP diagWorkingR, SEXP diagTimesRowOfAR, int MCglobal, int MClocal, int localStorage, int ctx_id, std::string kernelR);
-RcppExport SEXP _geostatsgpu_cpp_cholGpu(SEXP xRSEXP, SEXP DRSEXP, SEXP diagWorkingRSEXP, SEXP diagTimesRowOfARSEXP, SEXP MCglobalSEXP, SEXP MClocalSEXP, SEXP localStorageSEXP, SEXP ctx_idSEXP, SEXP kernelRSEXP) {
+SEXP cpp_cholGpu(Rcpp::S4 xR, Rcpp::S4 DR, Rcpp::S4 diagWorkingR, Rcpp::S4 diagTimesRowOfAR, int MCglobal, int MClocal, int localStorage, int colGroupwise, int Ncrossprod, int verbose, std::string kernelR);
+RcppExport SEXP _geostatsgpu_cpp_cholGpu(SEXP xRSEXP, SEXP DRSEXP, SEXP diagWorkingRSEXP, SEXP diagTimesRowOfARSEXP, SEXP MCglobalSEXP, SEXP MClocalSEXP, SEXP localStorageSEXP, SEXP colGroupwiseSEXP, SEXP NcrossprodSEXP, SEXP verboseSEXP, SEXP kernelRSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type xR(xRSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type DR(DRSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type diagWorkingR(diagWorkingRSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type diagTimesRowOfAR(diagTimesRowOfARSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type xR(xRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type DR(DRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type diagWorkingR(diagWorkingRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type diagTimesRowOfAR(diagTimesRowOfARSEXP);
     Rcpp::traits::input_parameter< int >::type MCglobal(MCglobalSEXP);
     Rcpp::traits::input_parameter< int >::type MClocal(MClocalSEXP);
     Rcpp::traits::input_parameter< int >::type localStorage(localStorageSEXP);
-    Rcpp::traits::input_parameter< int >::type ctx_id(ctx_idSEXP);
+    Rcpp::traits::input_parameter< int >::type colGroupwise(colGroupwiseSEXP);
+    Rcpp::traits::input_parameter< int >::type Ncrossprod(NcrossprodSEXP);
+    Rcpp::traits::input_parameter< int >::type verbose(verboseSEXP);
     Rcpp::traits::input_parameter< std::string >::type kernelR(kernelRSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_cholGpu(xR, DR, diagWorkingR, diagTimesRowOfAR, MCglobal, MClocal, localStorage, ctx_id, kernelR));
+    rcpp_result_gen = Rcpp::wrap(cpp_cholGpu(xR, DR, diagWorkingR, diagTimesRowOfAR, MCglobal, MClocal, localStorage, colGroupwise, Ncrossprod, verbose, kernelR));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -60,7 +62,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_geostatsgpu_cpp_cholGpu", (DL_FUNC) &_geostatsgpu_cpp_cholGpu, 9},
+    {"_geostatsgpu_cpp_cholGpu", (DL_FUNC) &_geostatsgpu_cpp_cholGpu, 11},
     {"_geostatsgpu_gpuNlocal", (DL_FUNC) &_geostatsgpu_gpuNlocal, 3},
     {"_geostatsgpu_cpp_maternGpu", (DL_FUNC) &_geostatsgpu_cpp_maternGpu, 10},
     {NULL, NULL, 0}

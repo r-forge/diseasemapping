@@ -11,9 +11,9 @@ Depends: R (>= 3.0.2), gpuR
 Imports: geostatsp
 Suggests: sp, knitr, mapmisc, Matrix
 LinkingTo:
-	gpuR,
 	RViennaCL (>= 1.7.1.4),
 	Rcpp,
+	gpuR,
 	RcppEigen
 VignetteBuilder: knitr
 RoxygenNote: 6.1.1
