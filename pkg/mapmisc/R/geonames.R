@@ -147,7 +147,7 @@ geocode = function(x,
   url=paste0(
     'https://nominatim.openstreetmap.org/search/',
     gsub("[[:space:]]+", "%20", x),  
-    '?format=geojson&limit=1&namedetails=1'),
+    '?format=geojson&limit=5&namedetails=1'),
   file = file.path(cachePath, make.names(x)),
   stringsAsFactors=FALSE
   )
@@ -172,16 +172,37 @@ geocode = function(x,
         verbose=verbose, 
         stringsAsFactors=FALSE)
 
+    # there might be more than one result
+    # keep only places (not river, etc) if there are places
+      isCat = x3[[D]]$category =='place'
+      if(any(isCat)) {
+        x3[[D]] = x3[[D]][isCat,]
+      }
+    # keep the place with the most name information
+    # it's probably most important
+    mostNames = which.max(nchar(x3[[D]]$namedetails))
+    if(length(mostNames)) {
+      x3[[D]] = x3[[D]][mostNames, ]
+    }
+
+    x3[[D]] = x3[[D]][1,]   
+
     x3[[D]]$name = gsub(langString, "", c(grep(langString,
       trimws(scan(text=gsub("^[{]|[}]$", "", x3[[D]]$namedetails), sep=',', what='a', quiet=TRUE)),
       value=TRUE), NA)[1])
 
   }
 
+  allNames = unique(unlist(lapply(x3, names)))
+  for(D in 1:length(x3)) {
+    missingHere = setdiff(allNames, names(x3[[D]]))
+    for(D2 in missingHere) x3[[D]][[D2]] = NA
+  }
+
 x4=do.call(rbind, x3)
 x4$orig = xDf$orig
 
-x4$name[is.na(x4$name)] = x4$display_name[is.na(x4$name)]
+x4$name[is.na(x4$name)] = gsub(", .*", "", x4$display_name[is.na(x4$name)])
 
 firstCols = c('name','orig','type','category','importance')
 omitCols = c('namedetails','icon')
