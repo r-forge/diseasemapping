@@ -226,7 +226,7 @@ geocodeOld = function(x, oneRecord=FALSE, extent=NULL, progress='', ...) {
     if(verbose)
       message("found in cache ", cachePath)
     load(cacheFile)
-  }	else if(requireNamespace("dismo", quietly = TRUE)) {
+  }	else if(FALSE) { #requireNamespace("dismo", quietly = TRUE)) {
     if(verbose)
       message("not found in cache, retrieving")
   	Sys.sleep(1)
