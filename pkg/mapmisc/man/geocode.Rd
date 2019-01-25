@@ -5,18 +5,15 @@
 Uses the dismo package to geocode with Google
   }
 \usage{
-	geocode(x, oneRecord=FALSE, extent=NULL, progress='', ...)
+	geocode(x, extent, lang = gsub("_.*", "", Sys.getlocale("LC_CTYPE")))
 	}
 
 \arguments{
-\item{x}{vector of character strings to search for}
-\item{oneRecord}{see \code{\link[dismo]{geocode}}}
-\item{extent}{an Extent object, or any object from which an Extent can be obtained.}
-\item{progress}{see \code{\link[dismo]{geocode}}}
-\item{...}{additional arguments passed to \code{\link[dismo]{geocode}}}
+\item{x}{Vector of character strings to search for}
+\item{extent}{Currently unused.  an Extent object, or any object from which an Extent can be obtained.}
+\item{lang}{Language for place names in result.}
 }
 
-\seealso{\code{\link[dismo]{geocode}}}
 
 
 \value{A \code{SpatialPointsDataFrame} with coordinates in the 
@@ -24,26 +21,27 @@ projection of \code{extent} if possible, or long-lat
 otherwise.}
 
 \details{If the option  
-\code{options()$mapmiscCachePath} is set, it will be used
+\code{getOption('mapmiscCachePath')} is set, it will be used
 to specify the folder to save downloaded 
-data.}
+data. \code{getOption('mapmiscVerbose')} for printing progress.
+
+Data are retreived from Openstreetmap.org, see \url{https://wiki.openstreetmap.org/wiki/Nominatim}.
+}
 
 \examples{
 
 
-\dontrun{
 
-if (requireNamespace("dismo", quietly = TRUE)) { 
+if(requireNamespace("rgdal", quietly = TRUE)) { 
 
 cities=geocode('Ulan batar')
-mytiles = openmap(cities, buffer=800*1000)
+mytiles = openmap(cities, buffer=800*1000, maxTiles=1)
 
 map.new(mytiles)
 plot(mytiles, add=TRUE)
 points(cities, col='red')
-text(cities, labels=cities$originalPlace, col='red',pos=4)
+text(cities, labels=cities$name, col='red',pos=4)
 
-}
 }
 
 

@@ -27,7 +27,7 @@ dirCreateMapmisc = function(path, ...) {
 
 mapmiscGeocode = function(...) {
   mapmiscCacheCheck()
-  dismo::geocode(...)
+#  dismo::geocode(...)
 }
 
 mapmiscGNcities = function(...) {

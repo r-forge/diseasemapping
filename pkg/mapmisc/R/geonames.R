@@ -118,7 +118,84 @@ GNsearch = function(..., crs=crsLL) {
 }
 
 
-geocode = function(x, oneRecord=FALSE, extent=NULL, progress='', ...) {
+geocode = function(x, 
+  extent,
+  lang = gsub("_.*", "", Sys.getlocale("LC_CTYPE"))
+  ) {
+#  x = paste(c('ottawa','nain','winnipeg'), 'canada', sep=',')
+
+  if(length(getOption('mapmiscVerbose'))) { 
+    verbose = getOption('mapmiscVerbose')
+  } else {
+    verbose=FALSE
+  }
+
+  cachePath=getOption('mapmiscCachePath')
+  if(is.null(cachePath)) {
+    cachePath = tempdir()
+  }
+  if(!nchar(cachePath)) {
+    cachePath = '.'
+  }
+  cachePath = file.path(cachePath,'geocode')
+  dirCreateMapmisc(cachePath,recursive=TRUE,showWarnings=FALSE)
+
+  langString = paste0(paste(c('name', lang), collapse=':'), ": ")
+
+  xDf = data.frame(
+  orig = x, 
+  url=paste0(
+    'https://nominatim.openstreetmap.org/search/',
+    gsub("[[:space:]]+", "%20", x),  
+    '?format=geojson&limit=1&namedetails=1'),
+  file = file.path(cachePath, make.names(x)),
+  stringsAsFactors=FALSE
+  )
+
+  x3 = list()
+  for(D in 1:nrow(xDf)) {
+      if(verbose) {
+        message(xDf[D,'orig'])
+      }
+
+    cacheFile = xDf[D,'file']
+    if(file.exists(cacheFile)) { 
+      if(verbose) {
+        message("found in cache ", cachePath)
+      }
+    } else {
+      downloadFileMapmisc(url = xDf[D,'url'], destfile = xDf[D,'file'],
+        quiet=!verbose)
+    }
+    x3[[D]] = rgdal::readOGR(
+        dsn = cacheFile,
+        verbose=verbose, 
+        stringsAsFactors=FALSE)
+
+    x3[[D]]$name = gsub(langString, "", c(grep(langString,
+      trimws(scan(text=gsub("^[{]|[}]$", "", x3[[D]]$namedetails), sep=',', what='a', quiet=TRUE)),
+      value=TRUE), NA)[1])
+
+  }
+
+x4=do.call(rbind, x3)
+x4$orig = xDf$orig
+
+x4$name[is.na(x4$name)] = x4$display_name[is.na(x4$name)]
+
+firstCols = c('name','orig','type','category','importance')
+omitCols = c('namedetails','icon')
+
+x4@data = cbind(
+  x4@data[,intersect(firstCols, names(x4))],
+  x4@data[,setdiff(names(x4), c(omitCols, firstCols))]
+  )
+
+x4
+
+}
+
+geocodeOld = function(x, oneRecord=FALSE, extent=NULL, progress='', ...) {
   
   if(length(getOption('mapmiscVerbose'))) { 
     verbose = getOption('mapmiscVerbose')
