@@ -5,7 +5,8 @@
 Uses the dismo package to geocode with Google
   }
 \usage{
-	geocode(x, extent, lang = gsub("_.*", "", Sys.getlocale("LC_CTYPE")))
+	geocode(x, extent,
+	  lang = gsub("(_|[:]).*", "", Sys.getenv('LANGUAGE')))
 	}
 
 \arguments{

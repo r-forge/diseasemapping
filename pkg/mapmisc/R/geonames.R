@@ -120,7 +120,7 @@ GNsearch = function(..., crs=crsLL) {
 
 geocode = function(x, 
   extent,
-  lang = gsub("_.*", "", Sys.getlocale("LC_CTYPE"))
+  lang = gsub("(_|[:]).*", "", Sys.getenv('LANGUAGE'))
   ) {
 #  x = paste(c('ottawa','nain','winnipeg'), 'canada', sep=',')
 
@@ -140,6 +140,9 @@ geocode = function(x,
   cachePath = file.path(cachePath,'geocode')
   dirCreateMapmisc(cachePath,recursive=TRUE,showWarnings=FALSE)
 
+  if(!nchar(lang)) {
+    lang = 'en'
+  }
   langString = paste0(paste(c('name', lang), collapse=':'), ": ")
 
   xDf = data.frame(
@@ -173,6 +176,13 @@ geocode = function(x,
         stringsAsFactors=FALSE)
 
     # there might be more than one result
+    # get rid of ways
+    isNotWay = !x3[[D]]$osm_type == 'way'
+    if(any(isNotWay)) {
+        x3[[D]] = x3[[D]][isNotWay,]
+      }
+
+
     # keep only places (not river, etc) if there are places
       isCat = x3[[D]]$category =='place'
       if(any(isCat)) {
@@ -187,8 +197,11 @@ geocode = function(x,
 
     x3[[D]] = x3[[D]][1,]   
 
-    x3[[D]]$name = gsub(langString, "", c(grep(langString,
-      trimws(scan(text=gsub("^[{]|[}]$", "", x3[[D]]$namedetails), sep=',', what='a', quiet=TRUE)),
+    named = trimws(scan(text=gsub("^[{]|[}]$", "", x3[[D]]$namedetails), 
+        sep=',', what='a', quiet=TRUE))
+
+    x3[[D]]$name = gsub(langString, "", 
+      c(grep(langString, named,
       value=TRUE), NA)[1])
 
   }
