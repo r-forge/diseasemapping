@@ -384,6 +384,10 @@ gm.dataSpatial = function(
     } else {
       covariatesDF = data.frame()
     }
+
+    # ensure row names are identical
+    rownames(data@data) = rownames(data@coords) = 
+        1:length(data)
   # loop through covariates which aren't in data, extract it from `covariates`
     for(D in setdiff(alltermsPlain, names(data))){
       if(is.null(covariates[[D]]))
@@ -391,7 +395,6 @@ gm.dataSpatial = function(
       if(!.compareCRS(covariates[[D]], data, unknown=TRUE) ) {
         if(requireNamespace('rgdal', quietly=TRUE) ) {
           # sometimes the names are different and an error results from spTransform
-          rownames(data@data) = rownames(data@coords) = 1:length(data)
           extractHere = raster::extract(covariates[[D]], 
             spTransform(data, CRSobj=CRS(projection(covariates[[D]]))))
         } else { # don't have gdal
@@ -401,7 +404,7 @@ gm.dataSpatial = function(
         extractHere = raster::extract(covariates[[D]], data) 
       }
 
-      if(is.data.frame(covariates[[D]])) {
+      if(is.data.frame(extractHere)) {
             # first two columns are poly id and point it
         data[[D]] = extractHere[,3]
       } else {
@@ -409,9 +412,7 @@ gm.dataSpatial = function(
       }
     }
 
-    # ensure row names are identical
-    rownames(data@data) = rownames(data@coords) = 
-        1:length(data)
+
     # reproject data to grid
     if(requireNamespace('rgdal', quietly=TRUE ) &
       !is.na(projection(cellsSmall))) {
