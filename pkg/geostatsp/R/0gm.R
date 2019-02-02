@@ -378,8 +378,9 @@ gm.dataSpatial = function(
         method=rmethod)
       covariatesStack = stack(cellsSmall, covariatesStack)
 
-      covariatesSP = as(covariatesStack, "SpatialPointsDataFrame")
-      covariatesDF = covariatesSP@data
+#      covariatesSP = as(covariatesStack, "SpatialPointsDataFrame")
+#      covariatesDF = covariatesSP@data
+      covariatesDF = as.data.frame(covariatesStack)
     } else {
       covariatesDF = data.frame()
     }
@@ -391,15 +392,23 @@ gm.dataSpatial = function(
         if(requireNamespace('rgdal', quietly=TRUE) ) {
           # sometimes the names are different and an error results from spTransform
           rownames(data@data) = rownames(data@coords) = 1:length(data)
-          data[[D]] = raster::extract(covariates[[D]], 
+          extractHere = raster::extract(covariates[[D]], 
             spTransform(data, CRSobj=CRS(projection(covariates[[D]]))))
-        } else warning("need rgdal if covariates and data are different projections")
+        } else { # don't have gdal
+          warning("need rgdal if covariates and data are different projections")
+        }
+      } else { # identical projections
+        extractHere = raster::extract(covariates[[D]], data) 
+      }
+
+      if(is.data.frame(covariates[[D]])) {
+            # first two columns are poly id and point it
+        data[[D]] = extractHere[,3]
       } else {
-        data[[D]] = raster::extract(covariates[[D]], 
-          data) 
+        data[[D]] = extractHere
       }
     }
-  
+
     # ensure row names are identical
     rownames(data@data) = rownames(data@coords) = 
         1:length(data)
