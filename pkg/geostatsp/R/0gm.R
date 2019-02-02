@@ -378,9 +378,8 @@ gm.dataSpatial = function(
         method=rmethod)
       covariatesStack = stack(cellsSmall, covariatesStack)
 
-#      covariatesSP = as(covariatesStack, "SpatialPointsDataFrame")
-#      covariatesDF = covariatesSP@data
-      covariatesDF = as.data.frame(covariatesStack)
+      covariatesSP = as(covariatesStack, "SpatialPointsDataFrame")
+      covariatesDF = covariatesSP@data
     } else {
       covariatesDF = data.frame()
     }
