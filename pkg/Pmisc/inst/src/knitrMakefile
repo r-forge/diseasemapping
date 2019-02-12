@@ -7,13 +7,15 @@ PANDOC = pandoc
 XELATEX = xelatex
 BIBER = biber
 RM = rm
+SED = sed
 PANDOCCROSSREF =
 
+## end of header
+
+
 DOCXTEMPLATE = $(REXE) --slave -e "cat(system.file('src','template.docx',package='Pmisc'))"
+ODTTEMPLATE = $(REXE) --slave -e "cat(system.file('src','template.docx',package='Pmisc'))"
 
-ODTTEMPLATE = $(REXE) --slave -e "cat(system.file('src','template.odt',package='Pmisc'))"
-
-.PRECIOUS: %.tex
 
 #
 # temporary files to remove
@@ -38,7 +40,7 @@ clean:
 # md to tex, convert from a tmd if it exists
 # get rid of subfig package, it conflicts with subcaption (or something else)
 %.tex: %.tmd
-	$(PANDOC) --standalone --filter=pandoc-crossref --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) $< | sed s/\\\\usepackage{subfig}// > $@
+	$(PANDOC) --standalone $(PANDOCCROSSREF) --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) $< | $(SED) s/\\\\usepackage{subfig}// > $@
 
 %.tex: %.md
 	$(PANDOC) --standalone $(PANDOCCROSSREF) --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
@@ -54,6 +56,13 @@ clean:
 #
 %.md: %.Rmd
 	$(REXE) -e "knitr::knit('$<', encoding='UTF-8')" $(Rargs)
+
+#
+# spin
+# 
+%.Rmd: %.R
+	$(REXE) -e "knitr::spin('$<', knit=FALSE, format='Rmd')" $(Rargs)
+
 
 #
 # tex bibliography
@@ -74,23 +83,28 @@ clean:
 # html from md
 #
 %.html: %.md
-	$(PANDOC) --self-contained --mathjax $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
+	$(PANDOC) --self-contained --mathml $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
 
 # 
 # libreoffice document
 #
 %.odt: %.md
-	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$($(ODTTEMPLATE)) --output=$@ $<
+	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --reference-doc=$$($(ODTTEMPLATE)) --output=$@ $<
 
 #
 # MS Word document
 #
 %.docx: %.md
-	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$$($(DOCXTEMPLATE)) --output=$@ $<
+	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --reference-doc=$$($(DOCXTEMPLATE)) --output=$@ $<
 
 # 
 # rtf
 # 
 %.rtf: %.md
-	$(PANDOC) --standalone --filter=pandoc-crossref --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
+	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
 
+# 
+# plain text
+# 
+%.txt: %.md
+	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --to=plain --output=$@ $<

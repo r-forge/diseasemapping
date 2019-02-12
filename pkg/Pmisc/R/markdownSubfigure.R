@@ -7,14 +7,19 @@ hook_plot_mdsubfig = function(x, options) {
   
   base = knitr::opts_knit$get('base.url') 
   if(is.null(base)) base=''
+
+  fig.num =options$fig.num
+
   cap = options$fig.cap
   scap = options$fig.subcap
+
   if(is.null(cap)) cap=''
   if(is.null(scap)){
     scap = cap
   }
+
   if(length(options$out.width)) {
-    options$out.width = rep_len(options$out.width, length(scap))
+    options$out.width = rep_len(options$out.width, fig.num)
   }
 
   result = 
@@ -25,7 +30,6 @@ hook_plot_mdsubfig = function(x, options) {
   }
   
   
-  fig.num =options$fig.num
   if(is.null(fig.num))
     fig.num=1
   
@@ -44,12 +48,11 @@ hook_plot_mdsubfig = function(x, options) {
     Drow = floor((fig.cur-1)/fig.ncol)+1
     Dcol = fig.cur - (Drow-1) * fig.ncol 
     
-    if((Drow == 1) & length(options$out.width)) {
+    if(length(options$out.width)) {
       # in the first row
-      result = paste(
+      result = paste0(
           gsub("[[:space:]]*$", "", result), 
-          '{width=', options$out.width, '}', sep=''
-          )
+          '{width=', options$out.width[fig.cur], '}')
     }
     
     if( (Dcol == fig.ncol ) | (fig.cur == fig.num) ) { 

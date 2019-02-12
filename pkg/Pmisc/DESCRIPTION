@@ -1,8 +1,8 @@
 Package: Pmisc
 Type: Package
 Title: Various Utilities for knitr and inla
-Version: 0.2.5
-Date: 2018-05-08
+Version: 0.2.6
+Date: 2019-02-11
 Imports:
     knitr (>= 1.20.0),
     methods,

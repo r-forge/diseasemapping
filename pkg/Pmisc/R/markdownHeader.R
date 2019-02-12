@@ -18,6 +18,9 @@ mathCommands =c(
   '\\newcommand{\\tp}{^\\text{T}}'
 ) 
 
+
+mathmlCommands = '<script type="text/x-mathjax-config">MathJax.Hub.Config({config: ["MMLorHTML.js"],jax: ["input/TeX","input/MathML","output/HTML-CSS","output/NativeMML"],extensions: ["tex2jax.js","mml2jax.js","MathMenu.js","MathZoom.js"],TeX: {extensions: ["AMSmath.js","AMSsymbols.js","noErrors.js","noUndefined.js"]}});</script><script type="text/javascript" src="https://cdn.mathjax.org/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>'
+
 #' @export
 today = function(...){
   dots = list(...)
@@ -76,7 +79,10 @@ markdownHeader = function(
     extraHeaderIncludes = c(Pmisc::mathCommands, extraHeaderIncludes)
   if(subcaptionCommands)
     extraHeaderIncludes = c(Pmisc::subcaptionCommands, extraHeaderIncludes)
+
+ 
   
+
   mode(biblatexoptions) = 'character'
   
   result = list(
@@ -112,6 +118,18 @@ markdownHeader = function(
     dots[['header-includes']] = c(extraHeaderIncludes,  dots[['header-includes']] )
   }
 
+  dots[['header-includes']] = paste0(
+      "  - '`",
+      c(dots[['header-includes']], slideHeaderIncludes[beamer]),
+      "`{=latex}'")
+  dots[['header-includes']] = c(
+    dots[['header-includes']],
+    paste0(
+      "  - '`",
+      mathmlCommands,
+      "`{=html}'")
+    )
+
   
   for(D in setdiff(names(dots), 'header-includes')) {
     if(length(dots[[D]])>1) {
@@ -142,13 +160,7 @@ markdownHeader = function(
   # header includes
   if(beamer | any(names(dots)=='header-includes')) {
 
-    hIncludes = paste(
-      "  - '`",
-      c(dots[['header-includes']], slideHeaderIncludes[beamer]),
-      "`{=latex}'",      
-      sep = '')
-    
-    stuff <<- hIncludes
+    hIncludes = dots[['header-includes']]
 
     toAdd <- gsub(
       '\n+', '\n', 
