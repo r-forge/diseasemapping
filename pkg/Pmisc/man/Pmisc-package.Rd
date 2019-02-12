@@ -32,8 +32,7 @@ file.copy(
 
 # create a Makefile for building document.Rmd into pdf, html and docx
 Makefile("document", suffix=c('pdf','html','docx'),
-	output = file.path(mydir, 'Makefile'), 
-	cygwin = .Platform$OS.type == 'windows')
+	output = file.path(mydir, 'Makefile'))
 
 
 # run make to build the output files

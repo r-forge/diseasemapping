@@ -13,7 +13,10 @@ hook_plot_mdsubfig = function(x, options) {
   if(is.null(scap)){
     scap = cap
   }
-  
+  if(length(options$out.width)) {
+    options$out.width = rep_len(options$out.width, length(scap))
+  }
+
   result = 
       sprintf('![%s](%s%s) ', scap, base, x)#knitr:::.upload.url(x))    
   
