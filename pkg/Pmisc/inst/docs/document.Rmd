@@ -87,7 +87,7 @@ plot(1:10+4)
 ```
 
 
-```{r anotherplot, fig.ncol=3, fig.cap='Other uninteresting plots', fig.subcap=month.name[1:6], out.width=Pmisc::out.width(0.32)}
+```{r anotherplot, fig.ncol=3, fig.cap='Other uninteresting plots', fig.subcap=month.name[1:6], out.width=Pmisc::out.width(0.31)}
 
 for(D in knitr::opts_current$get()$fig.subcap) {
   hist(runif(100), main='')

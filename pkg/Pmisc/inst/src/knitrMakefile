@@ -42,8 +42,6 @@ clean:
 %.tex: %.tmd
 	$(PANDOC) --standalone $(PANDOCCROSSREF) --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) $< | $(SED) s/\\\\usepackage{subfig}// > $@
 
-%.tex: %.md
-	$(PANDOC) --standalone $(PANDOCCROSSREF) --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
 
 #
 # Create tmd
@@ -56,6 +54,7 @@ clean:
 #
 %.md: %.Rmd
 	$(REXE) -e "knitr::knit('$<', encoding='UTF-8')" $(Rargs)
+
 
 #
 # spin
@@ -108,3 +107,12 @@ clean:
 # 
 %.txt: %.md
 	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --to=plain --output=$@ $<
+
+
+#
+# latex from md
+# should only be used if there's no .tmd or .Rmd file
+#
+
+%.tex: %.md
+	$(PANDOC) --standalone $(PANDOCCROSSREF) --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
