@@ -4,22 +4,17 @@
 \alias{out.width}
 \title{Output width for knitr figures}
 \usage{
-out.width(x, mdToTex = "auto")
+out.width(x, ...)
 }
 \arguments{
-\item{x}{width, fraction of page width}
+\item{x}{width, fraction of page width, a number between zero and 1}
 
-\item{mdToTex}{if \code{FALSE} convert to markdown table, return \code{x} otherwise}
+\item{...}{other arguments, currently ignored}
 }
 \description{
 Creates output width strings for html and latex
 }
 \examples{
-Pmisc::out.width(0.5, 'latex')
-Pmisc::out.width(0.5, 'markdown')
-mdToTex=FALSE
-Pmisc::out.width(0.5, 'auto')
-mdToTex=TRUE
-Pmisc::out.width(0.5, 'auto')
+Pmisc::out.width(0.5)
 
 }
