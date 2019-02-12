@@ -74,7 +74,7 @@ $$ {#eq:myeqn}
 
 Now some plots.
 
-```{r aplot, fig.ncol=2, fig.cap='Uninteresting plots', fig.subcap=c('stuff','qq','eeee','www')}
+```{r aplot, fig.ncol=2, fig.cap='Uninteresting plots', fig.subcap=c('stuff','qq','eeee','www'), out.width=Pmisc::out.width(0.45)}
 plot(1:10)
 
 plot(1:10+2)
