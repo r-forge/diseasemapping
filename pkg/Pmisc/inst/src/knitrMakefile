@@ -14,7 +14,7 @@ PANDOCCROSSREF =
 
 
 DOCXTEMPLATE = $(REXE) --slave -e "cat(system.file('src','template.docx',package='Pmisc'))"
-ODTTEMPLATE = $(REXE) --slave -e "cat(system.file('src','template.docx',package='Pmisc'))"
+ODTTEMPLATE = $(REXE) --slave -e "cat(system.file('src','template.odt',package='Pmisc'))"
 
 
 #
@@ -88,8 +88,8 @@ clean:
 # libreoffice document
 #
 %.odt: %.md
-	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --reference-doc=$$($(ODTTEMPLATE)) --output=$@ $<
-
+	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
+# --reference-doc=$$($(ODTTEMPLATE))  no currently working
 #
 # MS Word document
 #
