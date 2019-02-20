@@ -3,8 +3,8 @@
 #include <Rcpp.h>
 //#include "gpuR/getVCLptr.hpp"
 
-//#include "dynVCLMatGeostatsgpu.hpp"
-#include "gpuR/dynVCLMat.hpp"
+#include "dynVCLMatGeostatsgpu.hpp"
+//#include "gpuR/dynVCLMat.hpp"
 #include "dynVCLVecGeostatsgpu.hpp"
 
 #include "viennacl/ocl/backend.hpp"
@@ -17,37 +17,3 @@ extern "C" void Rtemme_gamma(double *nu, double * g_1pnu, double * g_1mnu, doubl
 
 
 
-template<typename T>
-std::shared_ptr<viennacl::matrix<T> >
-getVCLptr(
-    SEXP ptr_,
-    const bool isVCL,
-    const int ctx_id
-){
-    std::shared_ptr<viennacl::matrix<T> > vclptr;
-    
-    if(isVCL){
-        Rcpp::XPtr<dynVCLMat<T> > ptr(ptr_);
-        vclptr = ptr->sharedPtr();
-    }
-
-    return vclptr;
-}
-
-template<typename T>
-std::shared_ptr<viennacl::vector_base<T> >
-getVCLVecptr(
-    SEXP ptr_,
-    const bool isVCL,
-    const int ctx_id
-){
-    std::shared_ptr<viennacl::vector_base<T> > vclptr;
-    
-    if(isVCL){
-        Rcpp::XPtr<dynVCLVec<T> > ptr(ptr_);
-        vclptr = ptr->sharedPtr();
-    }
-    
-    
-    return vclptr;
-}

@@ -28,11 +28,7 @@
 maternGpu = function(
   x, 
   param = c(range = 1, variance = 1, shape = 1), 
-  output = vclMatrix(
-    data=0, 
-    nrow(x), nrow(x),
-    type='double',
-    ctx_id = x@.context_index), 
+  output,
   type = c("variance", "cholesky", "precision", "inverseCholesky"),
   DofLDL = NULL
   ) {
@@ -44,11 +40,27 @@ maternGpu = function(
     warning("only type= variance or cholesky are currently implemented")
   }
 
+
+if(is.data.frame(x)) {
+  x = as.matrix(x)
+}
+if(is.matrix(x)) {
+  x = vclMatrix(x)
+}
+
+if(missing(output)) {
+  output = vclMatrix(
+    data=0, 
+    nrow(x), nrow(x),
+    type='double',
+    ctx_id = x@.context_index)
+}
+
  if(is.null(DofLDL)) {
     if(type==2) {
-      DofLDL = gpuR::vclVector(data = -1, length=nrow(x), type='double')
+      DofLDL = gpuR::vclVector(data = -1, length=nrow(x), type='double', ctx_id = x@.context_index)
     } else {
-      DofLDL = gpuR::vclVector(data = -1, length=1, type='double')
+      DofLDL = gpuR::vclVector(data = -1, length=1, type='double', ctx_id = x@.context_index)
     }
  }
 

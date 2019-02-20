@@ -3,15 +3,16 @@
 %\VignetteIndexEntry{Matern correlations}
 -->
 
+
+# Matern correlations
+
 ```{r date}
 date()
 ```
 
-# Matern correlations
 
 ```{r packages}
 library('geostatsp')
-library('gpuR')
 library('geostatsgpu')
 ```
 
@@ -53,11 +54,11 @@ range(varCpu - as.matrix(varMatGpu))
 ```
 
 
+# Cholesky
 
-try cholesky
-```{r chol}
+```{r cholSetup}
 
-setwd("~/workspaceOxygen/diseasemapping/pkg")
+#setwd("~/workspaceOxygen/diseasemapping/pkg")
 N = 75
 control = list(
     workgroupSize = 1024,
@@ -77,48 +78,41 @@ myCoords[,1] = myCoords[,1] +
 myCoords[,2] = myCoords[,2]^(1/2) + 
     rnorm(nrow(myCoords), sd=0.1)
 
-system.time(myMatR <- as.matrix(geostatsp::matern(
-    param=c(range=1, shape=1, variance=2),
-    x=sp::SpatialPoints(myCoords)
-    )))
 
-dim(myMatR)
-system.time(cholR <- chol(myMatR))
-xchold = diag(cholR)
-cholTest = t((diag(1/xchold) %*% cholR))
+varMat = maternGpu(myCoords, param=c(range=1, shape=1, variance=2))
 
-DfromR = xchold^2
+varMat1 = gpuR::deepcopy(varMat)
+varMat2 = gpuR::deepcopy(varMat)
+varMat3 = gpuR::deepcopy(varMat)
+varMatR <- as.matrix(varMat)
 
-
-
-
-myMat = gpuR::vclMatrix(myMatR)
-
-D = gpuR::vclVector(0, nrow(myMat),
+D = gpuR::vclVector(0, nrow(varMat),
             type='double',
-            ctx_id = myMat@.context_index)
+            ctx_id = varMat@.context_index)
 
 diagTimesRowOfA = gpuR::vclVector(0,
-            nrow(myMat),
+            nrow(varMat),
             type='double',
-            ctx_id = myMat@.context_index)
+            ctx_id = varMat@.context_index)
 
 diagWorking = gpuR::vclVector(0, 512,
     #1 + round(control$workgroupSize / control$localWorkgroupSize),
             type='double',
-            ctx_id = myMat@.context_index)
+            ctx_id = varMat@.context_index)
 
 
-file <- "geostatsgpu/inst/CL/cholGpu.cl"
+file <- "../pkg/geostatsgpu/inst/CL/cholGpu.cl"
 if(!file.exists(file)) {
 file = system.file('CL/cholGpu.cl', 
     package='geostatsgpu')
 }
 kernel <- readChar(file, file.info(file)$size)
+```
 
-x = gpuR::deepcopy(myMat)
+```{r cholGpu}
+
 system.time(logDet <- geostatsgpu:::cpp_cholGpu(
-        x, D, diagWorking, diagTimesRowOfA,
+        varMat1, D, diagWorking, diagTimesRowOfA,
         control$workgroupSize, 
         128, #control$localWorkgroupSize, 
         128*28,#control$localStorage,
@@ -127,67 +121,49 @@ system.time(logDet <- geostatsgpu:::cpp_cholGpu(
         FALSE, # verbose
         kernel
         ))
+```
 
+```{r cholCpu}
+system.time(cholR <- chol(varMatR))
+xchold = diag(cholR)
+cholTest = t((diag(1/xchold) %*% cholR))
+DfromR = xchold^2
+```
+
+```{r cholGpuR}
+system.time(x2Chol <- gpuR:::chol.vclMatrix(varMat2))
+system.time(x3Chol <- geostatsgpu:::luGpu(varMat3))
+```
+
+```{r cholCompare}
 # check to see if diagTimesRowOfA is 
 # the crossproduct
 #Ngroups = control$workgroupSize / control$localWorkgroupSize
 #Ncross = floor(sqrt(control$localStorage / control$localWorkgroupSize))
 
-SSeq = seq(by=1, len=6, to=ncol(x))
-SSeq = 1:5
+SSeq = seq(by=1, len=6, to=ncol(varMat))
 
-SSeq = seq(5000, len=5)
-
-myMatR[SSeq, SSeq]
-t(as.matrix(x)[SSeq,SSeq])
+t(as.matrix(varMat1)[SSeq,SSeq])
 cholTest[SSeq,SSeq]
 
-cbind(DfromR[SSeq],
-as.vector(D)[SSeq])
+cbind(DfromR[SSeq], as.vector(D)[SSeq])
 
-range(which(abs(DfromR - as.vector(D)) > 0.001))
-
-range(which(abs(cholTest[ncol(x), ] - as.matrix(x)[,ncol(x)]) > 0.01))
-
-plot(cholTest[ncol(x),] - as.matrix(x)[ ,ncol(x)])
 
 quantile(DfromR - as.vector(D), na.rm=TRUE)
-
-
-
 
 logDet
 sum(log(DfromR))
 
-x = gpuR::deepcopy(myMat)
-system.time(x2 <- gpuR:::chol.vclMatrix(x))
 
 ```
 
-```{r cholRes, eval=FALSE}
-
-LfromG = t(as.matrix(maternChol2$L))
-DfromG = as.vector(maternChol2$D)
-
-quantile(DfromR - DfromG)
-
-quantile(
-    LfromG[lower.tri(LfromG, diag=FALSE)] - 
-    cholTest[lower.tri(LfromG, diag=FALSE)])
-
-Sind = 1:5
-LfromG[Sind,Sind]
-cholTest[Sind,Sind]
-
-Sind = seq(to=ncol(cholTest), by=1, len=5)
-LfromG[Sind,Sind]
-cholTest[Sind,Sind]
-```
 
 
 ```{r diagPlot, eval=FALSE}
-min(which(abs(DfromG - DfromR) > 0.1))
-plot(DfromG - DfromR)
+Dcol = ncol(varMat)
+plot(cholTest[Dcol,] - as.matrix(varMat1)[ , Dcol])
+
+plot(as.vector(D) - DfromR)
 ```
 
 
