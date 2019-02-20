@@ -21,7 +21,8 @@ Set up spatial data
 
 ```{r setupData}
 # Ngrid = c(100, 100)
-Ngrid = c(50, 50)
+#Ngrid = c(50, 50)
+Ngrid = c(30, 30)
 
 seqList = list( 
     x = seq(1,by=1,len=Ngrid[1]), 
@@ -31,7 +32,7 @@ seqList = list(
 coordsSp = sp::SpatialPoints(
 	as.matrix(expand.grid(seqList$x, seqList$y)))
 
-myParams = c(shape=4.5, range=1.5, variance = 2, 
+myParams = c(shape=2.15, range=1.5, variance = 2, 
 	nugget = 0, anisoRatio = 10, 
 	anisoAngleRadians = pi/7)
 ```
@@ -79,12 +80,15 @@ myCoords[,2] = myCoords[,2]^(1/2) +
     rnorm(nrow(myCoords), sd=0.1)
 
 
-varMat = maternGpu(myCoords, param=c(range=1, shape=1, variance=2))
+varMat = maternGpu(myCoords, param=c(range=1, shape=1.5, variance=2))
+varMatR <- as.matrix(varMat)
+varMatR[1:6,1:6]
+```
 
+```{r cholSetup2}
 varMat1 = gpuR::deepcopy(varMat)
 varMat2 = gpuR::deepcopy(varMat)
 varMat3 = gpuR::deepcopy(varMat)
-varMatR <- as.matrix(varMat)
 
 D = gpuR::vclVector(0, nrow(varMat),
             type='double',
@@ -132,7 +136,7 @@ DfromR = xchold^2
 
 ```{r cholGpuR}
 system.time(x2Chol <- gpuR:::chol.vclMatrix(varMat2))
-system.time(x3Chol <- geostatsgpu:::luGpu(varMat3))
+system.time(x3Chol <- luGpu(varMat3))
 ```
 
 ```{r cholCompare}
@@ -151,15 +155,12 @@ cbind(DfromR[SSeq], as.vector(D)[SSeq])
 
 quantile(DfromR - as.vector(D), na.rm=TRUE)
 
-logDet
-sum(log(DfromR))
-
-
+c(logDet, sum(log(DfromR)))
 ```
 
 
 
-```{r diagPlot, eval=FALSE}
+```{r diagPlot, fig.cap='comparing choleskies', fig.subcap=c('off diag', 'diag')}
 Dcol = ncol(varMat)
 plot(cholTest[Dcol,] - as.matrix(varMat1)[ , Dcol])
 
@@ -174,7 +175,7 @@ plot(as.vector(D) - DfromR)
 #devtools::reload("..")
 ```
 
-```{r maternMatGpuChol}
+```{r maternMatGpuChol, eval=FALSE}
 cholVarGpu <- list(
     L = vclMatrix(
         data=-1, 
@@ -190,7 +191,7 @@ fromGpu$det
 sum(log(diag(cholVarCpu)))*2
 ```
 
-```{r checkChol}
+```{r checkChol, eval=FALSE}
 library('Matrix')
 ldlL = new('dtrMatrix', x=as.vector(as.matrix(cholVarGpu$L)), Dim = dim(cholVarGpu$L), uplo='L')
 ldlD = Diagonal(ncol(cholVarGpu$L),as.vector(cholVarGpu$D))
@@ -203,7 +204,7 @@ range(cholL- cholVarCpu)
 ```
 
 
-```{r compare}
+```{r compare, eval=FALSE}
 centreCell = floor(prod(Ngrid)/2)+floor(Ngrid[2]/2)
 
 myCol = mapmisc::colourScale(c(0, myParams['variance']),

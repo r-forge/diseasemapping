@@ -4,10 +4,9 @@
 \alias{maternGpu}
 \title{Matern correlation}
 \usage{
-maternGpu(x, param = c(range = 1, variance = 1, shape = 1),
-  output = vclMatrix(data = 0, nrow(x), nrow(x), type = "double", ctx_id
-  = x@.context_index), type = c("variance", "cholesky", "precision",
-  "inverseCholesky"), DofLDL = NULL)
+maternGpu(x, param = c(range = 1, variance = 1, shape = 1), output,
+  type = c("variance", "cholesky", "precision", "inverseCholesky"),
+  DofLDL = NULL)
 }
 \arguments{
 \item{x}{points}

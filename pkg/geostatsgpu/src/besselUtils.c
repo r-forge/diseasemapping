@@ -1,4 +1,5 @@
 // various things stolen from GSL for creating matern functions
+// https://github.com/ampl/gsl/blob/master/specfunc/bessel_Knu.c
 
 #include <Rmath.h>
 #include <math.h>

@@ -11,7 +11,7 @@ double maternGpuVcl(
 	viennacl::matrix<double> &vclVar,
 	viennacl::matrix<double> &vclCoords,
 	viennacl::vector_base<double> &DofLDL,
-	double *param,
+	double *param, // range shape variance nugget ratio angleRadians
 	const int type,
 	viennacl::ocl::kernel &maternKernel
 ){
@@ -28,8 +28,8 @@ double maternGpuVcl(
 		maxIter = 1500;
 
 
-	int nuround = round(param[0]+0.5);
-	double mu = param[0] - nuround;
+	int nuround = (int) (param[1]+0.5);
+	double mu = param[1] - nuround;
 	double g_1pnu, g_1mnu, g1, g2;
 	const double muSq = mu*mu, 
 		varDiag = param[3] + param[2],
@@ -44,16 +44,16 @@ double maternGpuVcl(
 	viennacl::ocl::enqueue(maternKernel(
 		Ncell, iSizeCoords2, iSizeVar1, iSizeVar2, maxIter,
 			// nuround mu
-		param[0], nuround, mu, muSq, mup1,
+		param[1], nuround, mu, muSq, mup1,
 			// cos theta, sin theta
 		cos(param[5]), sin(param[5]),
 			// parameters from matern.c in geostatsp
 			// anisoRatioSq
 		(param[4])*(param[4]),
 			// varscale
-		log(param[2]) - Rf_lgammafn(param[0]) - (param[0]-1)*M_LN2,
+		log(param[2]) - Rf_lgammafn(param[1]) - (param[1]-1)*M_LN2,
 			// logxscale
-		1.5 * M_LN2 + 0.5 * log(param[0]) - log(param[1]),
+		1.5 * M_LN2 + 0.5 * log(param[1]) - log(param[0]),
 			// parameters from bessel temme in gsl
 		sinrat, g_1pnu, g_1mnu, g1, g2,
 		GSL_DBL_EPSILON /1000, 
@@ -148,8 +148,6 @@ SEXP cpp_maternGpu(
 	const int ctx_id) {
 
 	double logdet = 0.0;
-
-
 
 	// data
 	const bool BisVCL=1;

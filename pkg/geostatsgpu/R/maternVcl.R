@@ -80,13 +80,13 @@ param = geostatsp::fillParam(param)
 junkY = junkC = gpuR::vclMatrix(matrix(1.1, 2, 2))
 
 upper = FALSE
-fromC = cpp_maternGpu(
+fromC = geostatsgpu:::cpp_maternGpu(
   output@address, 
   DofLDL@address,
   junkY@address, 
   junkC@address,
   x@address, 
-  param,
+  param[c('range','shape','variance','nugget','anisoRatio','anisoAngleRadians')],
   type,
   upper,
 #  kernel,
