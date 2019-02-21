@@ -148,15 +148,15 @@ SSeq = seq(by=1, len=6, to=ncol(varMat))
 
 
 #t(as.matrix(varMat1)[SSeq,SSeq])
-cholTest[SSeq,SSeq]
+#cholTest[SSeq,SSeq]
+#as.matrix(x3Chol$L)[SSeq,SSeq]
 
-cbind(DfromR[SSeq], as.vector(D)[SSeq], as.vector(x3Chol$D))
+cbind(DfromR[SSeq], as.vector(D)[SSeq], as.vector(x3Chol$D)[SSeq])
 
 
 quantile(DfromR - as.vector(D), na.rm=TRUE)
-
-
 quantile(as.vector(x3Chol$D) - DfromR)
+
 x3CholR = as.matrix(x3Chol$L)
 theLower = lower.tri(x3CholR, diag=FALSE)
 quantile(x3CholR[theLower] - cholTest[theLower])
