@@ -13,21 +13,21 @@ double luT(
 
 	// pointer to the actual diagonal
 	viennacl::vector_base<T> diagOfVar(
-			vclX.handle(), vclX.size1(), 0, 
-			vclX.internal_size2() + 1);
+		vclX.handle(), vclX.size1(), 0, 
+		vclX.internal_size2() + 1);
 
 		// compute log determinant
-		vclD = viennacl::linalg::element_log(diagOfVar);
-   logdet = viennacl::linalg::sum(vclD);
+	vclD = viennacl::linalg::element_log(diagOfVar);
+	logdet = viennacl::linalg::sum(vclD);
 // OPERATION_UNARY_LOG_TYPE 	
 		//http://viennacl.sourceforge.net/doc/scheduler_8cpp-example.html#a11
 
 		// put the diagonals in D, and 1's on the diagonal of L
-		vclD = diagOfVar;
+	vclD = diagOfVar;
 
 		//diagOfVar = T(1); // problem here
-		
-		return(logdet);
+	
+	return(logdet);
 }
 
 template<typename T>
@@ -53,13 +53,13 @@ SEXP cpp_lu(
 	const std::string theClass =  Rcpp::as<std::string>(xR.attr("class"));
 	double logDet;
 
-    if(theClass == "fvclMatrix") {
-        logDet = cpp_luT<float>(xR, dR);
-    } else if(theClass == "dvclMatrix") {
-        logDet = cpp_luT<double>(xR, dR);
-    } else {
-        Rcpp::exception("unknown type detected for x");
-        logDet = -99.9;
-    }
+	if(theClass == "fvclMatrix") {
+		logDet = cpp_luT<float>(xR, dR);
+	} else if(theClass == "dvclMatrix") {
+		logDet = cpp_luT<double>(xR, dR);
+	} else {
+		Rcpp::exception("unknown type detected for x");
+		logDet = -99.9;
+	}
 	return(Rcpp::wrap(logDet));
 }

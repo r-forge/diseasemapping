@@ -14,27 +14,27 @@ double maternGpuVcl(
 	double *param, // range shape variance nugget ratio angleRadians
 	const int type,
 	viennacl::ocl::kernel &maternKernel
-){
+	){
 
 
 	double logdet=0.0; // the result
 
 	const unsigned int 
-		iSizeCoords2=vclCoords.internal_size2(),
-		iSizeVar1=vclVar.internal_size1(),
-		iSizeVar2=vclVar.internal_size2(),
-		sizeVar1=vclVar.size1(),
-		Ncell = sizeVar1 * (sizeVar1 - 1)/2,
-		maxIter = 1500;
+	iSizeCoords2=vclCoords.internal_size2(),
+	iSizeVar1=vclVar.internal_size1(),
+	iSizeVar2=vclVar.internal_size2(),
+	sizeVar1=vclVar.size1(),
+	Ncell = sizeVar1 * (sizeVar1 - 1)/2,
+	maxIter = 1500;
 
 
 	int nuround = (int) (param[1]+0.5);
 	double mu = param[1] - nuround;
 	double g_1pnu, g_1mnu, g1, g2;
 	const double muSq = mu*mu, 
-		varDiag = param[3] + param[2],
-		mup1 = mu + 1.0,
-		pi_nu = M_PI * mu;
+	varDiag = param[3] + param[2],
+	mup1 = mu + 1.0,
+	pi_nu = M_PI * mu;
 	const double sinrat = (fabs(pi_nu) < GSL_DBL_EPSILON ? 1.0 : pi_nu/sin(pi_nu));
 
 	Rtemme_gamma(&mu, &g_1pnu, &g_1mnu, &g1, &g2);
@@ -98,7 +98,7 @@ double maternGpuVcl(
 	const int type,
 	const int ctx_id,
 	int max_local_size
-){
+	){
 	// the context
 	viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
 
@@ -115,9 +115,9 @@ double maternGpuVcl(
 
 	// set global work sizes
 	const unsigned int 
-		sizeVar1=vclVar.size1(),
-		sizeVar2=vclVar.size2(),
-		Ncell = sizeVar1 * (sizeVar1 - 1)/2;
+	sizeVar1=vclVar.size1(),
+	sizeVar2=vclVar.size2(),
+	Ncell = sizeVar1 * (sizeVar1 - 1)/2;
 
 	if(max_local_size > Ncell) max_local_size = Ncell;
 
