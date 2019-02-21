@@ -181,20 +181,10 @@ plot(as.vector(D) - DfromR)
 #devtools::reload("..")
 ```
 
-```{r maternMatGpuChol, eval=FALSE}
-cholVarGpu <- list(
-    L = vclMatrix(
-        data=-1, 
-        length(coordsSp), length(coordsSp),
-        type='double'),
-    D = vclVector(data = -1, length=length(coordsSp), type='double')
-    )
-
-system.time(cholVarCpu <- geostatsp::matern(coordsSp, myParams, type='cholesky'))
-system.time(fromGpu <- geostatsgpu::maternGpu(x=coordsGpu, param=myParams, output=cholVarGpu$L, DofLDL = cholVarGpu$D, type='cholesky'))
-
-fromGpu$det 
-sum(log(diag(cholVarCpu)))*2
+```{r maternMatGpuChol}
+varMatChol = maternGpu(myCoords, param=c(range=1, shape=1.5, variance=2), type='cholesky')
+varMatChol$logDet
+quantile(as.vector(varMatChol$D - x3Chol$D))
 ```
 
 ```{r checkChol, eval=FALSE}

@@ -88,7 +88,7 @@ fromC = geostatsgpu:::cpp_maternGpu(
   maxWorkGroupSize)
 
   if(type == 2) {
-    res = list(L = output, D = DofLDL, det = fromC)
+    res = list(L = output, D = DofLDL, logDet = fromC)
   }
   else res = output
 

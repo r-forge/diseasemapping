@@ -65,6 +65,8 @@ double maternGpuVcl(
 
 	if( type >= 2 ) {
 		// cholesky
+		logdet = luT<double>(vclVar, DofLDL);
+		/*
 		viennacl::linalg::lu_factorize(vclVar);
 		// try cusolverDnDpotrf instead?
 
@@ -81,6 +83,7 @@ double maternGpuVcl(
 		// put the diagonals in D, and 1's on the diagonal of L
 		DofLDL = diagOfVar;
 		diagOfVar = 1.0;
+		*/
 	}
 
 	return(logdet);
