@@ -1,6 +1,7 @@
 #include "geostatsgpu.hpp"
 
 
+
 template<typename T>
 double luT(
 	viennacl::matrix<T> &vclX,
@@ -17,14 +18,15 @@ double luT(
 
 		// compute log determinant
 		vclD = viennacl::linalg::element_log(diagOfVar);
-		logdet = viennacl::linalg::sum(vclD);
+   logdet = viennacl::linalg::sum(vclD);
 // OPERATION_UNARY_LOG_TYPE 	
 		//http://viennacl.sourceforge.net/doc/scheduler_8cpp-example.html#a11
 
 		// put the diagonals in D, and 1's on the diagonal of L
 		vclD = diagOfVar;
-		diagOfVar = 1.0;
 
+		//diagOfVar = T(1); // problem here
+		
 		return(logdet);
 }
 

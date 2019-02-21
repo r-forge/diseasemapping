@@ -10,11 +10,11 @@
 #' @return The output and DofLDL objects have been altered in-place
 #' @examples
 #' x = as.matrix(expand.grid(seq(1,by=1,len=23), seq(201,by=1,len=14)))
-#' coordsV = gpuR::vclMatrix(x)
+#' coordsV = gpuR::vclMatrix(VCLmatrix(x))
 #' D3 <- vclMatrix(
 #'     data=-1, 
 #'     nrow(coordsV), nrow(coordsV),
-#'     type='double'
+#'     type=typeof(coordsV)
 #' )
 #' 
 #' myParams = c(shape=4.5, range=1.5, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/4)
