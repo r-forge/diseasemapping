@@ -6,6 +6,7 @@ REXE = R
 PANDOC = pandoc
 XELATEX = xelatex
 BIBER = biber
+BIBTEX = bibtex
 RM = rm
 SED = sed
 PANDOCCROSSREF =
@@ -66,15 +67,24 @@ clean:
 #
 # tex bibliography
 #
+# biblatex
 %.bbl: %.bcf
 	$(BIBER) $<	
 
 %.bcf: %.tex
 	$(XELATEX) -interaction=nonstopmode $<
 
+# bibtex
+%.aux: %.tex
+	$(XELATEX) -interaction=nonstopmode $<
+
+%.bst: %.aux
+	$(BIBTEX) $<	
+
 #
 # pdf from tex
 # 
+# change bbl to bst to use bibtex
 %.pdf: %.tex %.bbl
 	$(XELATEX) -interaction=nonstopmode $<;
 	$(XELATEX) -interaction=nonstopmode $<
