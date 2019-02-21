@@ -77,21 +77,15 @@ param = geostatsp::fillParam(param)
 #kernel <- readChar(file, file.info(file)$size)
 
 
-junkY = junkC = gpuR::vclMatrix(matrix(1.1, 2, 2))
+#junkY = junkC = gpuR::vclMatrix(matrix(1.1, 2, 2))
 
-upper = FALSE
 fromC = geostatsgpu:::cpp_maternGpu(
-  output@address, 
-  DofLDL@address,
-  junkY@address, 
-  junkC@address,
-  x@address, 
+  output, 
+  DofLDL,
+  x,
   param[c('range','shape','variance','nugget','anisoRatio','anisoAngleRadians')],
   type,
-  upper,
-#  kernel,
-  maxWorkGroupSize, 
-  x@.context_index - 1)
+  maxWorkGroupSize)
 
   if(type == 2) {
     res = list(L = output, D = DofLDL, det = fromC)

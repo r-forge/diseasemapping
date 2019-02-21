@@ -12,7 +12,7 @@ Imports: geostatsp
 Suggests: sp, knitr, mapmisc, Matrix, raster
 LinkingTo:
 	RViennaCL (>= 1.7.1.4),
-	Rcpp,
-	gpuR
+	gpuR,
+	Rcpp
 VignetteBuilder: knitr
 RoxygenNote: 6.1.1

@@ -415,9 +415,9 @@ if(verbose){
 //[[Rcpp::export]]
 SEXP cpp_cholGpu(
 	Rcpp::S4 xR,
-	Rcpp::S4  DR,
-	Rcpp::S4  diagWorkingR,
-	Rcpp::S4  diagTimesRowOfAR,
+	Rcpp::S4 DR,
+	Rcpp::S4 diagWorkingR,
+	Rcpp::S4 diagTimesRowOfAR,
 	int MCglobal,
 	int MClocal,
   	int localStorage,
@@ -426,10 +426,10 @@ SEXP cpp_cholGpu(
 	int verbose,
 	std::string kernelR) {
 
-	Rcpp::IntegerVector ctx_idR = xR.slot(".context_index");
-	const int ctx_id = ctx_idR[0]-1;
+	const int ctx_id = INTEGER(xR.slot(".context_index"))[0]-1;
 
 	const bool BisVCL=1;
+	double logdet = -99.9;
 
 	std::shared_ptr<viennacl::matrix<double> > 
 		x = getVCLptr<double>(xR.slot("address"), BisVCL, ctx_id);
@@ -448,7 +448,7 @@ SEXP cpp_cholGpu(
 			BisVCL, ctx_id);
 
 
-	double logdet = cholGpu(
+	logdet = cholGpu(
 		*x, 
 		*D, 
 		*diagWorking,

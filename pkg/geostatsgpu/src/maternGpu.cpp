@@ -98,6 +98,7 @@ double maternGpuVcl(
 ){
 	// the context
 	viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
+
 	cl_device_type type_check = ctx.current_device().type();
 
 	// given context but no kernel
@@ -125,44 +126,48 @@ double maternGpuVcl(
 	maternKernel.global_work_size(0, globalSize);
 	maternKernel.local_work_size(0, max_local_size);
 
-
 	double logdet = maternGpuVcl(
 		vclVar, vclCoords, DofLDL,
 		param, type, maternKernel);
+	
 	return(logdet);
 
 }
 
+//	SEXP XYR, // solve for Lt b = XY
+//	SEXP crossprodR, //bt b
+
 
 //[[Rcpp::export]]
 SEXP cpp_maternGpu(
-	SEXP varR,
-	SEXP DofLDLR,
-	SEXP XYR, // solve for Lt b = XY
-	SEXP crossprodR, //bt b
-	SEXP coordsR,
-	SEXP paramR,
+	Rcpp::S4 varR,
+	Rcpp::S4 DofLDLR,
+	Rcpp::S4 coordsR,
+	Rcpp::NumericVector param, //'range','shape','variance','nugget','anisoRatio','anisoAngleRadians'
 	const int type, // 2 cholesky 3 inversecholesky, 4 inverse, 5 solve for b
-	const int upper,
-	int max_local_size,
-	const int ctx_id) {
+	int max_local_size) {
 
 	double logdet = 0.0;
 
 	// data
 	const bool BisVCL=1;
-	std::shared_ptr<viennacl::matrix<double> > vclVar = getVCLptr<double>(varR, BisVCL, ctx_id);
+	const int ctx_id = INTEGER(varR.slot(".context_index"))[0]-1;
+
+	std::shared_ptr<viennacl::matrix<double> > vclVar = getVCLptr<double>(
+		varR.slot("address"), BisVCL, ctx_id);
 
 
-	std::shared_ptr<viennacl::matrix<double> > vclCoords = getVCLptr<double>(coordsR, BisVCL, ctx_id);
+	std::shared_ptr<viennacl::matrix<double> > vclCoords = getVCLptr<double>(
+		coordsR.slot("address"), BisVCL, ctx_id);
 	// vector to contain the D
-	std::shared_ptr<viennacl::vector_base<double> > DofLDL = getVCLVecptr<double>(DofLDLR, BisVCL, ctx_id);
+	std::shared_ptr<viennacl::vector_base<double> > DofLDL = getVCLVecptr<double>(
+		DofLDLR.slot("address"), BisVCL, ctx_id);
 
-	double *param = &REAL(paramR)[0];
+	double *param2 = &param[0];
 
 	logdet = maternGpuVcl(
 		*vclVar, *vclCoords, *DofLDL, 
-		param,
+		param2,
 		type, ctx_id, 
 		max_local_size);
 

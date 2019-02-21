@@ -82,7 +82,6 @@ myCoords[,2] = myCoords[,2]^(1/2) +
 
 varMat = maternGpu(myCoords, param=c(range=1, shape=1.5, variance=2))
 varMatR <- as.matrix(varMat)
-varMatR[1:6,1:6]
 ```
 
 ```{r cholSetup2}
@@ -114,7 +113,6 @@ kernel <- readChar(file, file.info(file)$size)
 ```
 
 ```{r cholGpu}
-
 system.time(logDet <- geostatsgpu:::cpp_cholGpu(
         varMat1, D, diagWorking, diagTimesRowOfA,
         control$workgroupSize, 
@@ -147,20 +145,28 @@ system.time(x3Chol <- luGpu(varMat3))
 
 SSeq = seq(by=1, len=6, to=ncol(varMat))
 
-t(as.matrix(varMat1)[SSeq,SSeq])
+
+
+#t(as.matrix(varMat1)[SSeq,SSeq])
 cholTest[SSeq,SSeq]
 
-cbind(DfromR[SSeq], as.vector(D)[SSeq])
+cbind(DfromR[SSeq], as.vector(D)[SSeq], as.vector(x3Chol$D))
 
 
 quantile(DfromR - as.vector(D), na.rm=TRUE)
 
-c(logDet, sum(log(DfromR)))
+
+quantile(as.vector(x3Chol$D) - DfromR)
+x3CholR = as.matrix(x3Chol$L)
+theLower = lower.tri(x3CholR, diag=FALSE)
+quantile(x3CholR[theLower] - cholTest[theLower])
+
+c(logDet, sum(log(DfromR)), x3Chol$logDet)
 ```
 
 
 
-```{r diagPlot, fig.cap='comparing choleskies', fig.subcap=c('off diag', 'diag')}
+```{r diagPlot, fig.cap='comparing choleskies', fig.subcap=c('off diag', 'diag'), eval=FALSE}
 Dcol = ncol(varMat)
 plot(cholTest[Dcol,] - as.matrix(varMat1)[ , Dcol])
 
