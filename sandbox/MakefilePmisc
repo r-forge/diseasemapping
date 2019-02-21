@@ -1,0 +1,109 @@
+REXE=R
+PANDOC=pandoc
+XELATEX=xelatex
+BIBER=biber
+RM=rm
+CP=cp
+PANDOCCROSSREF=--filter=pandoc-crossref
+SED=sed
+pandocTo=latex 
+
+all:  document.pdf document.html document.docx 
+
+
+
+DOCXTEMPLATE = $(REXE) --slave -e "cat(system.file('src','template.docx',package='Pmisc'))"
+
+ODTTEMPLATE = $(REXE) --slave -e "cat(system.file('src','template.docx',package='Pmisc'))"
+## 
+##  temporary files to remove
+## 
+
+clean:
+	$(RM) *.run.xml* *.blg *.out *.log *.aux *.nav *.toc *.vrb
+	
+## 
+##  tmd file is markdown only to be converted to latex, 
+##  include
+##  if(any(commandArgs()=='mdToTex')) {
+##    knitr::knit_hooks$set(plot=knitr::hook_plot_tex)  
+##    mdToTex=TRUE
+##  } else {
+##    knitr::knit_hooks$set(plot=Pmisc::hook_plot_htmlsubfig)
+##    mdToTex=FALSE
+##  }
+##  specify files for tex from tmd directly 
+##  so as not to conflict with %.tex: %.md rule
+## 
+##  md to tex, convert from a tmd if it exists
+##  get rid of subfig package, it conflicts with subcaption (or something else)
+
+%.tex: %.tmd
+	$(PANDOC) --standalone $(PANDOCCROSSREF) --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) $< | $(SED) s/\\\\usepackage{subfig}// > $@
+
+%.tex: %.md
+	$(PANDOC) --standalone $(PANDOCCROSSREF) --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
+## 
+##  Create tmd
+## 
+
+%.tmd: %.Rmd
+	$(REXE) -e "knitr::knit('$<', output = '$@', encoding='UTF-8')"  mdToTex $(Rargs)
+## 
+##  Bog standard markdown
+## 
+
+%.md: %.Rmd
+	$(REXE) -e "knitr::knit('$<', encoding='UTF-8')" $(Rargs)
+## 
+##  spin
+##  
+
+%.Rmd: %.R
+	$(REXE) -e "knitr::spin('$<', knit=FALSE, format='Rmd')" $(Rargs)
+## 
+##  tex bibliography
+## 
+
+%.bbl: %.bcf
+	$(BIBER) $<	
+
+%.bcf: %.tex
+	$(XELATEX) -interaction=nonstopmode $<
+## 
+##  pdf from tex
+##  
+
+%.pdf: %.tex %.bbl
+	$(XELATEX) -interaction=nonstopmode $<;
+	$(XELATEX) -interaction=nonstopmode $<
+## 
+##  html from md
+## 
+
+%.html: %.md
+	$(PANDOC) --self-contained --mathml $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
+##  
+##  libreoffice document
+## 
+
+%.odt: %.md
+	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --reference-doc=$$($(ODTTEMPLATE)) --output=$@ $<
+## 
+##  MS Word document
+## 
+
+%.docx: %.md
+	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --reference-doc=$$($(DOCXTEMPLATE)) --output=$@ $<
+##  
+##  rtf
+##  
+
+%.rtf: %.md
+	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
+##  
+##  plain text
+##  
+
+%.txt: %.md
+	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --to=plain --output=$@ $<
