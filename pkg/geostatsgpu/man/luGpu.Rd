@@ -14,13 +14,13 @@ LU decomposition using ViennaCL
 }
 \examples{
 library('geostatsgpu')
-v1 <- maternGpu(
-	as.matrix(expand.grid(seq(1,by=1,len=23), seq(201,by=1,len=14))),
-	c(shape=4.5, range=1.5, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleDegrees = 12.5))
-v2 = as.matrix(v1) 
-v3 = deepcopy(v1)
-system.time(res1 <- luGpu(v1))
-system.time(res2 <- chol(v2))
+gpuR::setContext(grep('gpu', listContexts()$device_type) [1])
+v1 = matrix(1,10,10)
+diag(v1) = 2
+v2 <- gpuR::vclMatrix(v1, type='float')
+v3 = gpuR::deepcopy(v2)
+system.time(res1 <- luGpu(v2))
+system.time(res2 <- chol(v1))
 system.time(res3 <- cholGpu(v3))
 
 }

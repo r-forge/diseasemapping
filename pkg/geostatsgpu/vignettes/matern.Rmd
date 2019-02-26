@@ -29,28 +29,22 @@ seqList = list(
     y = seq(201,by=1,len=Ngrid[2])
     )
 
-coordsSp = sp::SpatialPoints(
-	as.matrix(expand.grid(seqList$x, seqList$y)))
+coordsSp = sp::SpatialPoints(as.matrix(expand.grid(seqList$x, seqList$y)))
 
-myParams = c(shape=2.15, range=1.5, variance = 2, 
-	nugget = 0, anisoRatio = 10, 
-	anisoAngleRadians = pi/7)
+myParams = c(shape=2.15, range=1.5, variance = 2, nugget = 0, anisoRatio = 10, anisoAngleRadians = pi/7)
 ```
 
 Transfer coordinates to GPU and create matrix on GPU to hold the variance matrix
 ```{r gpuObjects}
 coordsGpu = vclMatrix(coordsSp@coords)
 
-varMatGpu <- vclMatrix(
-    data=-1, 
-    length(coordsSp), length(coordsSp),
-    type='double')
+varMatGpu <- vclMatrix(data=-1, length(coordsSp), length(coordsSp), type='float')
 ```
 
 Create matern matrix on gpu
 ```{r maternMatGpu}
-system.time(varCpu <- geostatsp::matern(coordsSp, myParams, type='variance'))
-system.time(geostatsgpu::maternGpu(x=coordsGpu, param=myParams, output=varMatGpu, type='variance'))
+system.time(varCpu <- geostatsp::matern(coordsSp, myParams, form='variance', type_flag=1))
+system.time(geostatsgpu::maternGpu(x=coordsGpu, param=myParams, output=varMatGpu, form='variance',type_flag=1))
 range(varCpu - as.matrix(varMatGpu))
 ```
 

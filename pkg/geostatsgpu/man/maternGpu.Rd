@@ -4,20 +4,21 @@
 \alias{maternGpu}
 \title{Matern correlation}
 \usage{
-maternGpu(x, param = c(range = 1, variance = 1, shape = 1), output,
-  type = c("variance", "cholesky", "precision", "inverseCholesky"),
-  DofLDL = NULL)
+maternGpu(x, output = vclMatrix(data = 0, nrow(x), nrow(x), type =
+  "float", ctx_id = x@.context_index), DofLDL = NULL, param = c(range =
+  1, variance = 1, shape = 1), form = c("variance", "cholesky",
+  "precision", "inverseCholesky"), type_flag = c(1, 2))
 }
 \arguments{
 \item{x}{points}
 
-\item{param}{parameters}
-
-\item{output}{VCL matrix to store result}
-
-\item{type}{produce variance matrix or it's cholesky}
+\item{output}{a VCL matrix to store result}
 
 \item{DofLDL}{a VCL vector to hold the diagonals from the LDL decomposition}
+
+\item{param}{parameters}
+
+\item{form}{produce variance matrix or it's cholesky}
 }
 \value{
 The output and DofLDL objects have been altered in-place
@@ -26,17 +27,16 @@ The output and DofLDL objects have been altered in-place
 Compute Matern covariance function
 }
 \examples{
+library(gpuR)
+setContext(grep('gpu', listContexts()$device_type)[1])
 x = as.matrix(expand.grid(seq(1,by=1,len=23), seq(201,by=1,len=14)))
-coordsV = gpuR::vclMatrix(x)
-D3 <- vclMatrix(
-    data=-1, 
-    nrow(coordsV), nrow(coordsV),
-    type='double'
-)
+coordsV = vclMatrix(x,type='float')
+currentDevice()
+D3 <- vclMatrix(data=-1, nrow(coordsV), nrow(coordsV),type='float')
 
 myParams = c(shape=4.5, range=1.5, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/4)
 
-system.time(v1 <- maternGpu(coordsV, myParams, D3, 'variance'))
+system.time(v1 <- maternGpu(coordsV, D3, DofLDL = NULL, myParams,'variance', type_flag=1))
 system.time(mmat <- geostatsp::matern(sp::SpatialPoints(as.matrix(coordsV)), myParams))
 as.matrix(v1)[1:5,1:5]
 mmat[1:5,1:5]
