@@ -39,9 +39,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_maternGpu
-SEXP cpp_maternGpu(Rcpp::S4 varR, Rcpp::S4 DofLDLR, Rcpp::S4 coordsR, Rcpp::NumericVector param, const int type, int max_local_size);
-RcppExport SEXP _geostatsgpu_cpp_maternGpu(SEXP varRSEXP, SEXP DofLDLRSEXP, SEXP coordsRSEXP, SEXP paramSEXP, SEXP typeSEXP, SEXP max_local_sizeSEXP) {
+// cpp_maternGpuD
+SEXP cpp_maternGpuD(Rcpp::S4 varR, Rcpp::S4 DofLDLR, Rcpp::S4 coordsR, Rcpp::NumericVector param, const int form, int max_local_size);
+RcppExport SEXP _geostatsgpu_cpp_maternGpuD(SEXP varRSEXP, SEXP DofLDLRSEXP, SEXP coordsRSEXP, SEXP paramSEXP, SEXP formSEXP, SEXP max_local_sizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -49,9 +49,25 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::S4 >::type DofLDLR(DofLDLRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type coordsR(coordsRSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type param(paramSEXP);
-    Rcpp::traits::input_parameter< const int >::type type(typeSEXP);
+    Rcpp::traits::input_parameter< const int >::type form(formSEXP);
     Rcpp::traits::input_parameter< int >::type max_local_size(max_local_sizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_maternGpu(varR, DofLDLR, coordsR, param, type, max_local_size));
+    rcpp_result_gen = Rcpp::wrap(cpp_maternGpuD(varR, DofLDLR, coordsR, param, form, max_local_size));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_maternGpuF
+SEXP cpp_maternGpuF(Rcpp::S4 varR, Rcpp::S4 coordsR, Rcpp::S4 DofLDLR, Rcpp::NumericVector param, const int form, int max_local_size);
+RcppExport SEXP _geostatsgpu_cpp_maternGpuF(SEXP varRSEXP, SEXP coordsRSEXP, SEXP DofLDLRSEXP, SEXP paramSEXP, SEXP formSEXP, SEXP max_local_sizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type varR(varRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type coordsR(coordsRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type DofLDLR(DofLDLRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type param(paramSEXP);
+    Rcpp::traits::input_parameter< const int >::type form(formSEXP);
+    Rcpp::traits::input_parameter< int >::type max_local_size(max_local_sizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_maternGpuF(varR, coordsR, DofLDLR, param, form, max_local_size));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -71,7 +87,8 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_geostatsgpu_cpp_cholGpu", (DL_FUNC) &_geostatsgpu_cpp_cholGpu, 11},
     {"_geostatsgpu_gpuNlocal", (DL_FUNC) &_geostatsgpu_gpuNlocal, 3},
-    {"_geostatsgpu_cpp_maternGpu", (DL_FUNC) &_geostatsgpu_cpp_maternGpu, 6},
+    {"_geostatsgpu_cpp_maternGpuD", (DL_FUNC) &_geostatsgpu_cpp_maternGpuD, 6},
+    {"_geostatsgpu_cpp_maternGpuF", (DL_FUNC) &_geostatsgpu_cpp_maternGpuF, 6},
     {"_geostatsgpu_cpp_lu", (DL_FUNC) &_geostatsgpu_cpp_lu, 2},
     {NULL, NULL, 0}
 };
