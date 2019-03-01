@@ -111,38 +111,8 @@ Makefile = function(x, suffix,
     c(before, makefileTemplate), collapse='\n')
 
 
-  '.PRECIOUS: %.tex
-
-  %.md: %.Rmd
-  $(REXE) -e "knitr::knit(\'$<\', encoding=\'UTF-8\')" $(Rargs)
-
-  %.tex: %.md
-  $(PANDOC) --standalone --biblatex $(pandocArgs) --to=$(pandocTo) --output=$@ $<
-
-  %.bcf: %.tex
-  $(XELATEX) $<
-
-  %.bbl: %.bcf
-  $(BIBER) $<	
-
-  %.pdf: %.tex %.bbl
-  $(XELATEX) -interaction=nonstopmode $<;
-  $(XELATEX) -interaction=nonstopmode $<
-
-  %.html: %.md
-  $(PANDOC) --self-contained --mathjax --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
-
-  %.rtf: %.md
-  $(PANDOC) --standalone --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
-
-  %.odt: %.md
-  $(PANDOC) --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$(odtTemplate) --output=$@ $<
-
-  %.docx: %.md
-  $(PANDOC) --standalone --filter=pandoc-citeproc $(pandocArgs) --reference-docx=$(docxTemplate) --output=$@ $<
-
-  clean:
-  $(RM) *.run.xml* *.blg *.out *.log *.aux *.bcf *.bbl *.nav *.toc *.vrb'
+#base::library('base');.libPaths(file.path(Sys.getenv('USERPROFILE'),'Documents','R','win-library','3.5'));
+#"base::library('base');.libPaths(.Library);"
 
 
   if(is.function(output)) {

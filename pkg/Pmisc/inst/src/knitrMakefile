@@ -14,8 +14,8 @@ PANDOCCROSSREF =
 ## end of header
 
 
-DOCXTEMPLATE = $(REXE) --slave -e "cat(system.file('src','template.docx',package='Pmisc'))"
-ODTTEMPLATE = $(REXE) --slave -e "cat(system.file('src','template.odt',package='Pmisc'))"
+DOCXTEMPLATE = $(REXE) --slave -e "base::cat(base::system.file('src','template.docx',package='Pmisc'))"
+ODTTEMPLATE = $(REXE) --slave -e "base::cat(base::system.file('src','template.odt',package='Pmisc'))"
 
 
 #
@@ -48,21 +48,19 @@ clean:
 # Create tmd
 #
 %.tmd: %.Rmd
-	$(REXE) -e "knitr::knit('$<', output = '$@', encoding='UTF-8')"  mdToTex $(Rargs)
+	$(REXE) -e "base::library('base');.libPaths(.Library);knitr::knit('$<',output='$@',encoding='UTF-8')"  mdToTex $(Rargs)
 
 #
 # Bog standard markdown
 #
 %.md: %.Rmd
-	$(REXE) -e "knitr::knit('$<', encoding='UTF-8')" $(Rargs)
-
+	$(REXE) -e "base::library('base');.libPaths(.Library);knitr::knit('$<',encoding='UTF-8')" $(Rargs)
 
 #
 # spin
 # 
 %.Rmd: %.R
-	$(REXE) -e "knitr::spin('$<', knit=FALSE, format='Rmd')" $(Rargs)
-
+	$(REXE) -e "base::library('base');.libPaths(.Library);knitr::spin('$<',knit=FALSE,format='Rmd')" $(Rargs)
 
 #
 # tex bibliography
