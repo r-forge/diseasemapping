@@ -193,9 +193,9 @@ float maternGpuVclF(
              sinrat = (fabs(pi_nu) < GSL_FLT_EPSILON ? 1.0 : pi_nu/sin(pi_nu));
  
   // convert doubles to float
-  float varScaleF =log(param[2]) - Rf_lgammafn(param[0]) - (param[0]-1)*M_LN2,
+  const float varScaleF =log(param[2]) - Rf_lgammafn(param[0]) - (param[0]-1)*M_LN2,
        numberhere= 1.5 * M_LN2 + 0.5 * log(param[0]) - log(param[1]);
-  float paramF0=param[0], 
+  const float paramF0=param[0], 
        paramF4=param[4],             
        muF = mu,
        cos5F = cos(param[5]), 
@@ -219,7 +219,8 @@ float maternGpuVclF(
         // logxscale
         numberhere,
         // parameters from bessel temme in gsl
-        sinrat, g_1pnuF, g_1mnuF, g1F, g2F,  GSL_FLT_EPSILON /1000,  vclCoords,  vclVar));
+        sinrat, g_1pnuF, g_1mnuF, g1F, g2F,  GSL_FLT_EPSILON /1000,  
+        vclCoords,  vclVar));
 
   viennacl::linalg::opencl::matrix_diagonal_assign(vclVar, varDiag);	
   

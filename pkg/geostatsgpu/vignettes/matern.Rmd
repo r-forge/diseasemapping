@@ -42,7 +42,7 @@ coordsGpu = vclMatrix(coordsSp@coords, type='double')
 Create matern matrix on gpu
 ```{r maternMatGpu}
 system.time(varCpu <- geostatsp::matern(coordsSp, myParams))
-system.time(varGpu <- geostatsgpu::maternGpu(x=coordsGpu, param=myParams, form='cholesky'))
+system.time(varGpu <- geostatsgpu::maternGpu(x=coordsGpu, param=myParams))
 range(varCpu - as.matrix(varGpu))
 ```
 
