@@ -63,7 +63,7 @@ system.time(varCholGpu <- chol(varCpu))
 ```
 
 Using `geostatsgpu`'s Cholesky
-```{r cholGpu}
+```{r cholGpu, eval=FALSE}
 varMat1 = gpuR::deepcopy(varGpuD)
 system.time(varCholGpu <- geostatsgpu:::cholGpu(varMat1))
 ```
