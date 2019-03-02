@@ -58,6 +58,7 @@ double maternGpuVclD(
 		vclCoords,vclVar));
 
 
+
 	viennacl::linalg::opencl::matrix_diagonal_assign(vclVar, varDiag);	
 
 	if( form >= 2 ) {
@@ -193,12 +194,12 @@ float maternGpuVclF(
              sinrat = (fabs(pi_nu) < GSL_FLT_EPSILON ? 1.0 : pi_nu/sin(pi_nu));
  
   // convert doubles to float
-  const float varScaleF =log(param[2]) - Rf_lgammafn(param[0]) - (param[0]-1)*M_LN2,
-       numberhere= 1.5 * M_LN2 + 0.5 * log(param[0]) - log(param[1]);
-  const float paramF0=param[0], 
-       paramF4=param[4],             
+  const float varScaleF = (log(param[2]) - Rf_lgammafn(param[1]) - (param[1]-1)*M_LN2),
+       numberhere= (1.5 * M_LN2 + 0.5 * log(param[1]) - log(param[0]));
+  const float paramF1=param[1], 
+       paramF4Sq=( param[4]*param[4]),     
        muF = mu,
-       cos5F = cos(param[5]), 
+       cos5F = cos(param[5]),
        sin5F=sin(param[5]),
        g_1pnuF=g_1pnu,
        g_1mnuF=g_1mnu, 
@@ -210,12 +211,12 @@ float maternGpuVclF(
  viennacl::ocl::enqueue(maternKernel(
 	Ncell, iSizeCoords2, iSizeVar1, iSizeVar2, maxIter,
         // nuround mu 
-        paramF0, nuround, muF, muSq, mup1,
+        paramF1, nuround, muF, muSq, mup1,
         // cos theta, sin theta
         cos5F, sin5F,
         // parameters from matern.c in geostatsp
         // anisoRatioSq
-        (paramF4)*(paramF4),
+        paramF4Sq,
         // varscale
         varScaleF,
         // logxscale
@@ -227,6 +228,7 @@ float maternGpuVclF(
 
   viennacl::linalg::opencl::matrix_diagonal_assign(vclVar, varDiag);	
   
+
   if( form >= 2 ) 
    {logdet = luT<float>(vclVar, DofLDL); }   // cholesky
     

@@ -40,7 +40,7 @@ maternGpu = function(
     if(form==2) {
       DofLDL = gpuR::vclVector(data = -1, length=nrow(x), type=typeof(x))
     } else {
-      DofLDL = gpuR::vclVector(data = -1, length=2, type=typeof(x))
+      DofLDL = gpuR::vclVector(data = -1, length=3, type=typeof(x))
     }
   }
 
@@ -80,6 +80,8 @@ maternGpu = function(
     res = list(L = output, D = DofLDL, det = fromC)
   }  else {
     res = output
+    # for debugging
+#    attributes(res)$D = DofLDL
   }
   res
 

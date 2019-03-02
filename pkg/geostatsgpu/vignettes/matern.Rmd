@@ -43,9 +43,16 @@ Create matern matrix on gpu
 ```{r maternMatGpu}
 system.time(varCpu <- geostatsp::matern(coordsSp, myParams))
 system.time(varGpu <- geostatsgpu::maternGpu(x=coordsGpu, param=myParams))
+system.time(varGpuD <- geostatsgpu::maternGpu(x=vclMatrix(coordsSp@coords, type='double'), param=myParams))
 quantile(varCpu - as.matrix(varGpu))
+quantile(varCpu - as.matrix(varGpuD))
 ```
 
+```{r compareCpuGpu}
+varCpu[1:5,1:5]
+as.matrix(varGpu)[1:5,1:5]
+as.matrix(varGpuD)[1:5,1:5]
+```
 
 # Cholesky
 
@@ -56,28 +63,27 @@ system.time(varCholGpu <- chol(varCpu))
 ```
 
 Using `geostatsgpu`'s Cholesky
-```{r cholGpu, eval=FALSE}
-varMat1 = gpuR::deepcopy(varMatGpu)
+```{r cholGpu}
+varMat1 = gpuR::deepcopy(varGpuD)
 system.time(varCholGpu <- geostatsgpu:::cholGpu(varMat1))
 ```
 
 Using `gpuR`'s Cholesky
-```{r cholGpurPackage, eval=FALSE}
-varMat2 = gpuR::deepcopy(varMatGpu)
+```{r cholGpurPackage}
+varMat2 = gpuR::deepcopy(varGpuD)
 system.time(varCholGpuR <- gpuR:::chol.vclMatrix(varMat2))
 ```
 
 Using ViennaCL's LU decomposition
-```{r cholViennaclLu, eval=FALSE}
-varMat3 = gpuR::deepcopy(varMatGpu)
+```{r cholViennaclLu}
+varMat3 = gpuR::deepcopy(varGpuD)
 system.time(varCholVcl <- luGpu(varMat3))
 ```
 
 ```{r cholGpuCompare, eval=FALSE}
-xchold = diag(varCholGpu)
+xchold = diag(varGpuD)
 cholTest = t((diag(1/xchold) %*% varCholGpu))
 DfromR = xchold^2
-quantile(DfromR - as.vector(varCholGpu$D), na.rm=TRUE)
 quantile(DfromR - as.vector(varCholGpu$D), na.rm=TRUE)
 ```
 
