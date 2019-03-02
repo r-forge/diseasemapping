@@ -77,7 +77,7 @@ system.time(varCholGpuR <- gpuR:::chol.vclMatrix(varMat2))
 Using ViennaCL's LU decomposition
 ```{r cholViennaclLu}
 varMat3 = gpuR::deepcopy(varGpuD)
-system.time(varCholVcl <- luGpu(varMat3))
+system.time(varCholVcl <- geostatsgpu::luGpu(varMat3))
 ```
 
 ```{r cholGpuCompare, eval=FALSE}
