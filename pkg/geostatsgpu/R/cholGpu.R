@@ -78,14 +78,14 @@ cholGpu = function(x,D,
             ctx_id = x@.context_index)
 
 	fromC = cpp_cholGpu(
-		x@address, 
-		D@address,
+		x, 
+		D,
 		diagWorking,
 		diagTimesRowOfA,
 		control$workgroupSize, 
 		control$localWorkgroupSize, 
 		control$localStorage,
-		x@.context_index - 1,
+		1,1,# NEED TO FIX colGroupwise, Ncrossprod
 		TRUE, # verbose
 		kernel
 		)
