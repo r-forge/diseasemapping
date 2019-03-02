@@ -180,9 +180,8 @@ std::string maternCLstring = "__kernel void maternCLD("
 	"const float g1,"
 	"const float g2,"
 	"const float epsilon,"
-	"__global const float *coords,"
+	"__global float *coords,"
 	"__global float *result) {"
-
 	// Get the index of the elements to be processed
 	"int Dcell, Drow, Dcol, k;"
 

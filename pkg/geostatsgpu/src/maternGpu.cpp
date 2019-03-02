@@ -203,10 +203,12 @@ float maternGpuVclF(
        g_1pnuF=g_1pnu,
        g_1mnuF=g_1mnu, 
        g1F=g1, 
-       g2F=g2;
+       g2F=g2,
+       floatEps = GSL_FLT_EPSILON /1000;
   
  // execute kernel
- viennacl::ocl::enqueue(maternKernel(Ncell, iSizeCoords2, iSizeVar1, iSizeVar2, maxIter,
+ viennacl::ocl::enqueue(maternKernel(
+	Ncell, iSizeCoords2, iSizeVar1, iSizeVar2, maxIter,
         // nuround mu 
         paramF0, nuround, muF, muSq, mup1,
         // cos theta, sin theta
@@ -219,8 +221,9 @@ float maternGpuVclF(
         // logxscale
         numberhere,
         // parameters from bessel temme in gsl
-        sinrat, g_1pnuF, g_1mnuF, g1F, g2F,  GSL_FLT_EPSILON /1000,  
-        vclCoords,  vclVar));
+        sinrat, g_1pnuF, g_1mnuF, g1F, g2F,  floatEps,  
+        vclCoords,  vclVar
+        ));
 
   viennacl::linalg::opencl::matrix_diagonal_assign(vclVar, varDiag);	
   

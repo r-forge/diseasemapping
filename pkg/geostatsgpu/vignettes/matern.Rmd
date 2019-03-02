@@ -36,14 +36,14 @@ myParams = c(shape=2.15, range=1.5, variance = 2, nugget = 0, anisoRatio = 10, a
 
 Transfer coordinates to GPU and create matrix on GPU to hold the variance matrix
 ```{r gpuObjects}
-coordsGpu = vclMatrix(coordsSp@coords, type='double')
+coordsGpu = vclMatrix(coordsSp@coords, type='float')
 ```
 
 Create matern matrix on gpu
 ```{r maternMatGpu}
 system.time(varCpu <- geostatsp::matern(coordsSp, myParams))
 system.time(varGpu <- geostatsgpu::maternGpu(x=coordsGpu, param=myParams))
-range(varCpu - as.matrix(varGpu))
+quantile(varCpu - as.matrix(varGpu))
 ```
 
 
