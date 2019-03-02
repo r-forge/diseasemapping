@@ -5,9 +5,9 @@
 \title{Matern correlation}
 \usage{
 maternGpu(x, output = vclMatrix(data = 0, nrow(x), nrow(x), type =
-  "float", ctx_id = x@.context_index), DofLDL = NULL, param = c(range =
-  1, variance = 1, shape = 1), form = c("variance", "cholesky",
-  "precision", "inverseCholesky"), type_flag = c(1, 2))
+  typeof(x), ctx_id = x@.context_index), DofLDL, param = c(range = 1,
+  variance = 1, shape = 1), form = c("variance", "cholesky", "precision",
+  "inverseCholesky"))
 }
 \arguments{
 \item{x}{points}
@@ -27,7 +27,7 @@ The output and DofLDL objects have been altered in-place
 Compute Matern covariance function
 }
 \examples{
-library(gpuR)
+library('gpuR')
 setContext(grep('gpu', listContexts()$device_type)[1])
 x = as.matrix(expand.grid(seq(1,by=1,len=23), seq(201,by=1,len=14)))
 coordsV = vclMatrix(x,type='float')

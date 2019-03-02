@@ -38,7 +38,9 @@ double maternGpuVclD(
 	Rtemme_gamma(&mu, &g_1pnu, &g_1mnu, &g1, &g2);
 
 	// execute kernel
-	viennacl::ocl::enqueue(maternKernel(Ncell, iSizeCoords2, iSizeVar1, iSizeVar2, maxIter,
+
+	viennacl::ocl::enqueue(maternKernel(Ncell, 
+		iSizeCoords2, iSizeVar1, iSizeVar2, maxIter,
 			// nuround mu
 		param[1], nuround, mu, muSq, mup1,
 			// cos theta, sin theta
@@ -52,7 +54,9 @@ double maternGpuVclD(
 		1.5 * M_LN2 + 0.5 * log(param[1]) - log(param[0]),
 			// parameters from bessel temme in gsl
 		sinrat, g_1pnu, g_1mnu, g1, g2,
-		GSL_DBL_EPSILON /1000, vclCoords,vclVar));
+		GSL_DBL_EPSILON /1000, 
+		vclCoords,vclVar));
+
 
 	viennacl::linalg::opencl::matrix_diagonal_assign(vclVar, varDiag);	
 
@@ -119,7 +123,8 @@ double maternGpuVclD(
 	maternKernel.global_work_size(0, globalSize);
 	maternKernel.local_work_size(0, max_local_size);
 
-	double logdet = maternGpuVclD(vclVar, vclCoords, DofLDL, param, form, maternKernel);
+	double logdet=0.0;
+	logdet = maternGpuVclD(vclVar, vclCoords, DofLDL, param, form, maternKernel);
 	
 	return(logdet);
 }
@@ -130,31 +135,30 @@ double maternGpuVclD(
 //[[Rcpp::export]]
 SEXP cpp_maternGpuD(
 	Rcpp::S4 varR,
-	Rcpp::S4 DofLDLR,
 	Rcpp::S4 coordsR,
+	Rcpp::S4 DofLDLR,
 	Rcpp::NumericVector param, //'range','shape','variance','nugget','anisoRatio','anisoAngleRadians'
 	const int form, // 2 cholesky 3 inversecholesky, 4 inverse, 5 solve for b
 	int max_local_size) {
 
 	double logdet = 0.0;
+	double *param2 = &param[0];
 
 	// data
 	const bool BisVCL=1;
 	const int ctx_id = INTEGER(varR.slot(".context_index"))[0]-1;
-
 	std::shared_ptr<viennacl::matrix<double> > vclVar = getVCLptr<double>(varR.slot("address"), BisVCL, ctx_id);
 
-
-	std::shared_ptr<viennacl::matrix<double> > vclCoords = getVCLptr<double>(coordsR.slot("address"), BisVCL, ctx_id);
 	// vector to contain the D
 	std::shared_ptr<viennacl::vector_base<double> > DofLDL = getVCLVecptr<double>(DofLDLR.slot("address"), BisVCL, ctx_id);
 
-	double *param2 = &param[0];
+	std::shared_ptr<viennacl::matrix<double> > vclCoords = getVCLptr<double>(coordsR.slot("address"), BisVCL, ctx_id);
 
 	logdet = maternGpuVclD(*vclVar, *vclCoords, *DofLDL, param2,form, ctx_id, max_local_size);
 
 	return(Rcpp::wrap(logdet));	
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///FLOAT///////////////////////////////////////////////////////////////////////////////////////////////////////

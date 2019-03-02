@@ -9,7 +9,7 @@
 #' @param form produce variance matrix or it's cholesky
 #' @return The output and DofLDL objects have been altered in-place
 #' @examples
-#' library(gpuR)
+#' library('gpuR')
 #' setContext(grep('gpu', listContexts()$device_type)[1])
 #' x = as.matrix(expand.grid(seq(1,by=1,len=23), seq(201,by=1,len=14)))
 #' coordsV = vclMatrix(x,type='float')
@@ -26,62 +26,62 @@
 #' @export
 maternGpu = function(
   x, 
-  output = vclMatrix(data=0, nrow(x), nrow(x),type='float', ctx_id = x@.context_index),
-  DofLDL = NULL,
+  output = vclMatrix(data=0, nrow(x), nrow(x),type=typeof(x), ctx_id = x@.context_index),
+  DofLDL,
   param = c(range = 1, variance = 1, shape = 1), 
-  form = c("variance", "cholesky", "precision", "inverseCholesky"),
-  type_flag=c(1,2)) 
+  form = c("variance", "cholesky", "precision", "inverseCholesky")) 
 {
   form = gsub("iance$|esky$|ision", "", tolower(form)[1])    
   form = c(var=1,chol=2,prec=3,inversechol=4)[form]
 
   if(form > 2) { warning("only form= variance or cholesky are currently implemented")}
 
-  if(is.null(DofLDL)) {
-    if(form==2) {DofLDL = gpuR::vclVector(data = -1, length=nrow(x), type='float')} 
-    else {DofLDL = gpuR::vclVector(data = -1, length=1, type='float')}
+  if(missing(DofLDL)) {
+    if(form==2) {
+      DofLDL = gpuR::vclVector(data = -1, length=nrow(x), type=typeof(x))
+    } else {
+      DofLDL = gpuR::vclVector(data = -1, length=2, type=typeof(x))
+    }
   }
 
-maxWorkGroupSize <- switch(
-  deviceType(output@.device_index, output@.context_index),
-  "gpu" = gpuInfo(output@.device_index, output@.context_index)$maxWorkGroupSize,
-  "cpu" = cpuInfo(output@.device_index, output@.context_index)$maxWorkGroupSize,
-  stop("unrecognized device type")
-  )
+  maxWorkGroupSize <- switch(
+    deviceType(output@.device_index, output@.context_index),
+    "gpu" = gpuInfo(output@.device_index, output@.context_index)$maxWorkGroupSize,
+    "cpu" = cpuInfo(output@.device_index, output@.context_index)$maxWorkGroupSize,
+    stop("unrecognized device type")
+    )
 
-param = geostatsp::fillParam(param) 
+  param = geostatsp::fillParam(param) 
 
 #file <- system.file("CL", "matern.cl", package = "geostatsgpu")
 #kernel <- readChar(file, file.info(file)$size)
 #junkY = junkC = gpuR::vclMatrix(matrix(1.1, 2, 2))
 
-if (type_flag==1){
-fromC = cpp_maternGpuF(
-  xvt,
-  output, 
-  DofLDL,
-  param,
-  form,
-  maxWorkGroupSize)
+  if (typeof(x) == 'float'){
+    fromC = cpp_maternGpuF(
+      output, 
+      x,
+      DofLDL,
+      param,
+      form,
+      maxWorkGroupSize)
 
-  if(form == 2) 
-    {res = list(L = output, D = DofLDL, det = fromC)}
-  else res = output
-  res}
+  } else if (typeof(x) == 'double'){
+    fromC = geostatsgpu:::cpp_maternGpuD(
+      output, 
+      x,
+      DofLDL,
+      param,
+      form,
+      maxWorkGroupSize)
+  }
 
-if (type_flag==2){
-  fromC = cpp_maternGpuD(
-  x,
-  output, 
-  DofLDL,
-  param,
-  form,
-  maxWorkGroupSize)
-
-  if(form == 2) 
-  {res = list(L = output, D = DofLDL, det = fromC)}
-  else res = output
-  res}
+  if(form == 2) {
+    res = list(L = output, D = DofLDL, det = fromC)
+  }  else {
+    res = output
+  }
+  res
 
 }
 

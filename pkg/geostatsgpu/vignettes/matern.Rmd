@@ -11,9 +11,9 @@ date()
 ```
 
 
-```{r packages}
+```{r packages, results='hide'}
 library('geostatsp')
-library('geostatsgpu')
+library('gpuR')
 ```
 
 
@@ -36,183 +36,52 @@ myParams = c(shape=2.15, range=1.5, variance = 2, nugget = 0, anisoRatio = 10, a
 
 Transfer coordinates to GPU and create matrix on GPU to hold the variance matrix
 ```{r gpuObjects}
-coordsGpu = vclMatrix(coordsSp@coords)
-
-varMatGpu <- vclMatrix(data=-1, length(coordsSp), length(coordsSp), type='float')
+coordsGpu = vclMatrix(coordsSp@coords, type='double')
 ```
 
 Create matern matrix on gpu
 ```{r maternMatGpu}
-system.time(varCpu <- geostatsp::matern(coordsSp, myParams, form='variance', type_flag=1))
-system.time(geostatsgpu::maternGpu(x=coordsGpu, param=myParams, output=varMatGpu, form='variance',type_flag=1))
-range(varCpu - as.matrix(varMatGpu))
+system.time(varCpu <- geostatsp::matern(coordsSp, myParams))
+system.time(varGpu <- geostatsgpu::maternGpu(x=coordsGpu, param=myParams, form='cholesky'))
+#range(varCpu - as.matrix(varGpu))
 ```
 
 
 # Cholesky
 
-```{r cholSetup}
 
-#setwd("~/workspaceOxygen/diseasemapping/pkg")
-N = 75
-control = list(
-    workgroupSize = 1024,
-    localWorkgroupSize = 128,
-    sizeOfDouble = 8,
-    localStorage = 4096/2
-    )
-
-
-
-myCoords = raster::as.data.frame(geostatsp::squareRaster(raster::extent(0,1,0,1), N), 
-    xy=TRUE)[,1:2]
-
-set.seed(0)
-myCoords[,1] = myCoords[,1] + 
-    rnorm(nrow(myCoords), sd=0.1)
-myCoords[,2] = myCoords[,2]^(1/2) + 
-    rnorm(nrow(myCoords), sd=0.1)
-
-
-varMat = maternGpu(myCoords, param=c(range=1, shape=1.5, variance=2))
-varMatR <- as.matrix(varMat)
-```
-
-```{r cholSetup2}
-varMat1 = gpuR::deepcopy(varMat)
-varMat2 = gpuR::deepcopy(varMat)
-varMat3 = gpuR::deepcopy(varMat)
-
-D = gpuR::vclVector(0, nrow(varMat),
-            type='double',
-            ctx_id = varMat@.context_index)
-
-diagTimesRowOfA = gpuR::vclVector(0,
-            nrow(varMat),
-            type='double',
-            ctx_id = varMat@.context_index)
-
-diagWorking = gpuR::vclVector(0, 512,
-    #1 + round(control$workgroupSize / control$localWorkgroupSize),
-            type='double',
-            ctx_id = varMat@.context_index)
-
-
-file <- "../pkg/geostatsgpu/inst/CL/cholGpu.cl"
-if(!file.exists(file)) {
-file = system.file('CL/cholGpu.cl', 
-    package='geostatsgpu')
-}
-kernel <- readChar(file, file.info(file)$size)
-```
-
-```{r cholGpu}
-system.time(logDet <- geostatsgpu:::cpp_cholGpu(
-        varMat1, D, diagWorking, diagTimesRowOfA,
-        control$workgroupSize, 
-        128, #control$localWorkgroupSize, 
-        128*28,#control$localStorage,
-        5000, #ncol(x)-512, #5000, 
-        4, # Ncrossprod
-        FALSE, # verbose
-        kernel
-        ))
-```
-
+Cholesky on the CPU
 ```{r cholCpu}
-system.time(cholR <- chol(varMatR))
-xchold = diag(cholR)
-cholTest = t((diag(1/xchold) %*% cholR))
+system.time(varCholGpu <- chol(varCpu))
+```
+
+Using `geostatsgpu`'s Cholesky
+```{r cholGpu, eval=FALSE}
+varMat1 = gpuR::deepcopy(varMatGpu)
+system.time(varCholGpu <- geostatsgpu:::cholGpu(varMat1))
+```
+
+Using `gpuR`'s Cholesky
+```{r cholGpurPackage, eval=FALSE}
+varMat2 = gpuR::deepcopy(varMatGpu)
+system.time(varCholGpuR <- gpuR:::chol.vclMatrix(varMat2))
+```
+
+Using ViennaCL's LU decomposition
+```{r cholViennaclLu, eval=FALSE}
+varMat3 = gpuR::deepcopy(varMatGpu)
+system.time(varCholVcl <- luGpu(varMat3))
+```
+
+```{r cholGpuCompare, eval=FALSE}
+xchold = diag(varCholGpu)
+cholTest = t((diag(1/xchold) %*% varCholGpu))
 DfromR = xchold^2
-```
-
-```{r cholGpuR}
-system.time(x2Chol <- gpuR:::chol.vclMatrix(varMat2))
-system.time(x3Chol <- luGpu(varMat3))
-```
-
-```{r cholCompare}
-# check to see if diagTimesRowOfA is 
-# the crossproduct
-#Ngroups = control$workgroupSize / control$localWorkgroupSize
-#Ncross = floor(sqrt(control$localStorage / control$localWorkgroupSize))
-
-SSeq = seq(by=1, len=6, to=ncol(varMat))
-
-
-
-#t(as.matrix(varMat1)[SSeq,SSeq])
-#cholTest[SSeq,SSeq]
-#as.matrix(x3Chol$L)[SSeq,SSeq]
-
-cbind(DfromR[SSeq], as.vector(D)[SSeq], as.vector(x3Chol$D)[SSeq])
-
-
-quantile(DfromR - as.vector(D), na.rm=TRUE)
-quantile(as.vector(x3Chol$D) - DfromR)
-
-x3CholR = as.matrix(x3Chol$L)
-theLower = lower.tri(x3CholR, diag=FALSE)
-quantile(x3CholR[theLower] - cholTest[theLower])
-
-c(logDet, sum(log(DfromR)), x3Chol$logDet)
+quantile(DfromR - as.vector(varCholGpu$D), na.rm=TRUE)
+quantile(DfromR - as.vector(varCholGpu$D), na.rm=TRUE)
 ```
 
 
-
-```{r diagPlot, fig.cap='comparing choleskies', fig.subcap=c('off diag', 'diag'), eval=FALSE}
-Dcol = ncol(varMat)
-plot(cholTest[Dcol,] - as.matrix(varMat1)[ , Dcol])
-
-plot(as.vector(D) - DfromR)
-```
-
-
-```{r devtools}
-#Rcpp::compileAttributes('..')
-#devtools::document("..")
-#devtools::install("..")
-#devtools::reload("..")
-```
-
-```{r maternMatGpuChol}
-varMatChol = maternGpu(myCoords, param=c(range=1, shape=1.5, variance=2), type='cholesky')
-varMatChol$logDet
-quantile(as.vector(varMatChol$D - x3Chol$D))
-```
-
-```{r checkChol, eval=FALSE}
-library('Matrix')
-ldlL = new('dtrMatrix', x=as.vector(as.matrix(cholVarGpu$L)), Dim = dim(cholVarGpu$L), uplo='L')
-ldlD = Diagonal(ncol(cholVarGpu$L),as.vector(cholVarGpu$D))
-
-cholL = as(ldlL %*% sqrt(ldlD), 'dtrMatrix')
-
-ldlL[1:5,1:5]
-cholL[1:5,1:5]
-range(cholL- cholVarCpu)
-```
-
-
-```{r compare, eval=FALSE}
-centreCell = floor(prod(Ngrid)/2)+floor(Ngrid[2]/2)
-
-myCol = mapmisc::colourScale(c(0, myParams['variance']),
-    breaks = 9, dec=1, style='equal', transform='sqrt')
-
-image(
-    seqList$x, seqList$y, 
-    matrix(as.matrix(varMatGpu)[centreCell,],Ngrid[1],Ngrid[2]),
-    col = myCol$col, breaks=myCol$breaks)
-mapmisc::legendBreaks("bottomright", myCol)
-
-
-image(
-    seqList$x, seqList$y, 
- matrix(as.matrix(varCpu)[centreCell,],Ngrid[1],Ngrid[2]),
-    col = myCol$col, breaks=myCol$breaks)
-mapmisc::legendBreaks("bottomright", myCol)
-```
 
 # extra info
 
@@ -220,93 +89,6 @@ mapmisc::legendBreaks("bottomright", myCol)
 gpuR::gpuInfo()
 ```
 
-
-```{r cholDebug, eval=FALSE, include=FALSE}
-    file <- "geostatsgpu/inst/CL/cholGpu.cl"
-    file <- system.file("CL", "cholGpu.cl", package = "geostatsgpu")
-
-myCoords = raster::as.data.frame(geostatsp::squareRaster(raster::extent(0,1,0,1), 60), xy=TRUE)[,1:2]
-set.seed(0)
-myCoords[,1] = myCoords[,1] + rnorm(nrow(myCoords), sd=0.1)
-myCoords[,2] = myCoords[,2]^(1/2)+rnorm(nrow(myCoords), sd=0.1)
-
-x1 = as.matrix(geostatsp::matern(
-    param=c(range=1, shape=1, variance=2),
-    x=sp::SpatialPoints(myCoords)
-    ))
-
-x = gpuR::vclMatrix(x1)
-
-        D = gpuR::vclVector(0, nrow(x),
-            type='double',
-            ctx_id = x@.context_index)
-
-   kernel <- readChar(file, file.info(file)$size)
-
-        localInfo = geostatsgpu:::gpuNlocal(
-            kernel, 
-            'sumLog',
-            x@.device_index)
-
-            MCtotal = localInfo$maxWorkgroupSize
-            MClocal = localInfo$localWorkgroupSize
-            sizeofDouble = localInfo$sizeOfDouble
-            localStorage = 
-            floor(
-                localInfo$localMemory / 
-                sizeofDouble)-2
-
-    fromC = geostatsgpu:::cpp_cholGpu(
-        x@address, 
-        D@address,
-        MCtotal,
-        MClocal, 
-        localStorage,
-        x@.context_index - 1,
-        kernel
-        )
-xchol = chol(x1)
-xchold = diag(xchol)
-cholTest = t((diag(1/xchold) %*% xchol))
-gpuTest = as.matrix(x)
-gpuTest = t(gpuTest)
-quantile(
-    gpuTest[lower.tri(gpuTest, diag=FALSE)] - 
-    cholTest[lower.tri(gpuTest, diag=FALSE)])
-
-
-
-xtest = cbind(
-    xchold^2 , as.vector(D), xchold^2 - as.vector(D)
-    )
-#xtest#[1:40,]
-#quantile(abs(xtest[,3]))
-
-
-
-min(which(abs(xtest[,3]) > 0.1))
-
-theSeq = 1:9
-round(gpuTest[theSeq, theSeq],2)
-round(cholTest[theSeq, theSeq],2)
-cbind(gpuTest[,6], cholTest[,6])
-
-
-max(apply( (cholTest - gpuTest),2,sd))
-
-theSeq = 10:15
-cholTest[theSeq,theSeq]
-gpuTest[theSeq,theSeq]
-as.vector(D)[theSeq]
-(xchold^2)[theSeq]
-
-range( (cholTest - gpuTest)[1:15,1:15])
-
-#t(apply(cholTest - gpuTest, 2, range))
-
-
-#(round(cholTest - gpuTest, 4))[1:60,1:9]
-```
 
 
 
