@@ -1,6 +1,7 @@
 #include "geostatsgpu.hpp"
 
-#include "materndotcl.hpp"
+#include "fmaterndotcl.hpp"
+#include "dmaterndotcl.hpp"
 
 using namespace Rcpp;
 using namespace viennacl;
@@ -103,9 +104,9 @@ double maternGpuVclD(
 	cl_device_type type_check = ctx.current_device().type();
 
 	// given context but no kernel, add kernel to program
-	viennacl::ocl::program & my_prog = ctx.add_program(maternCLstring, "my_kernel");
+	viennacl::ocl::program & my_prog = ctx.add_program(dmaternCLstring, "my_kernel");
 	// get compiled kernel function
-	viennacl::ocl::kernel & maternKernel = my_prog.get_kernel("maternCLD");
+	viennacl::ocl::kernel & maternKernel = my_prog.get_kernel("maternCL");
 
 
 	// set global work sizes
@@ -250,9 +251,9 @@ float maternGpuVclF(
   cl_device_type type_check = ctx.current_device().type();
   
   // given context but no kernel, add kernel to program
-  viennacl::ocl::program & my_prog = ctx.add_program(maternCLstring, "my_kernel");
+  viennacl::ocl::program & my_prog = ctx.add_program(fmaternCLstring, "my_kernel");
   // get compiled kernel function
-  viennacl::ocl::kernel & maternKernel = my_prog.get_kernel("maternCLF");
+  viennacl::ocl::kernel & maternKernel = my_prog.get_kernel("maternCL");
   // set global work sizes
   const unsigned int 
     sizeVar1=vclVar.size1(),

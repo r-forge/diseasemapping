@@ -58,15 +58,15 @@ maternGpu = function(
 #junkY = junkC = gpuR::vclMatrix(matrix(1.1, 2, 2))
 
   if (typeof(x) == 'float'){
-    fromC = cpp_maternGpuF(
+    fromC = geostatsgpu:::cpp_maternGpuF(
       output, 
       x,
       DofLDL,
       param,
       form,
       maxWorkGroupSize)
-
-  } else if (typeof(x) == 'double'){
+  } 
+  else if (typeof(x) == 'double'){
     fromC = geostatsgpu:::cpp_maternGpuD(
       output, 
       x,
