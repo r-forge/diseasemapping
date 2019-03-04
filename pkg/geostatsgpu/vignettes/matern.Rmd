@@ -34,15 +34,11 @@ coordsSp = sp::SpatialPoints(as.matrix(expand.grid(seqList$x, seqList$y)))
 myParams = c(shape=2.15, range=1.5, variance = 2, nugget = 0, anisoRatio = 10, anisoAngleRadians = pi/7)
 ```
 
-Transfer coordinates to GPU and create matrix on GPU to hold the variance matrix
-```{r gpuObjects}
-coordsGpu = vclMatrix(coordsSp@coords, type='float')
-```
 
 Create matern matrix on gpu
 ```{r maternMatGpu}
 system.time(varCpu <- geostatsp::matern(coordsSp, myParams))
-system.time(varGpu <- geostatsgpu::maternGpu(x=coordsGpu, param=myParams))
+system.time(varGpu <- geostatsgpu::maternGpu(x=vclMatrix(coordsSp@coords, type='float'), param=myParams))
 system.time(varGpuD <- geostatsgpu::maternGpu(x=vclMatrix(coordsSp@coords, type='double'), param=myParams))
 quantile(varCpu - as.matrix(varGpu))
 quantile(varCpu - as.matrix(varGpuD))
@@ -56,6 +52,20 @@ as.matrix(varGpuD)[1:5,1:5]
 
 # Cholesky
 
+
+
+```{r maternMatGpuC}
+system.time(varCpuC <- geostatsp::matern(coordsSp, myParams, type='cholesky'))
+system.time(varGpuC <- geostatsgpu::maternGpu(x=vclMatrix(coordsSp@coords, type='float'), param=myParams, 
+    form='cholesky'))
+system.time(varGpuCD <- geostatsgpu::maternGpu(x=vclMatrix(coordsSp@coords, type='double'), param=myParams, 
+    form='cholesky'))
+quantile(varCpuC - as.matrix(varGpuC))
+quantile(varCpuC - as.matrix(varGpuCD))
+```
+
+
+# Cholesky again
 
 Cholesky on the CPU
 ```{r cholCpu}
