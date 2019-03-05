@@ -14,7 +14,7 @@ Imports:
     methods,
     stats
 Suggests:
-    RandomFields,
+    RandomFields (>= 3.3.4),
     rgdal,
     parallel,
     mapmisc,
