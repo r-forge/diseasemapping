@@ -54,7 +54,7 @@ as.matrix(varGpuD)[1:5,1:5]
 
 
 
-```{r maternMatGpuC}
+```{r maternMatGpuC, eval=FALSE}
 system.time(varCpuC <- geostatsp::matern(coordsSp, myParams, type='cholesky'))
 system.time(varGpuC <- geostatsgpu::maternGpu(x=vclMatrix(coordsSp@coords, type='float'), param=myParams, 
     form='cholesky'))
