@@ -1,0 +1,63 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Random uniform}
+-->
+
+
+`https://github.com/clMathLibraries/clRNG`
+
+# Random uniform
+
+```{r date}
+date()
+```
+
+
+```{r packages, results='hide'}
+library('gpuR')
+```
+
+```{r testStream}
+Nglobal = 4
+streams = clRNG:::cpp_mrg31k3pCreateStreams(Nglobal);
+t(streams)
+```
+
+```{r test}
+x = vclVector(length=8L, type='double')
+
+streams2 = clRNG::runifGpu(x, streams=streams)
+t(streams2)
+as.vector(x)
+clRNG::runifGpu(x, streams=streams2)
+as.vector(x)
+clRNG::runifGpu(x, streams=streams)
+as.vector(x)
+```
+
+```{r hist}
+
+x = vclVector(length=1e7L, type='double')
+Nglobal = 256
+
+system.time(clRNG::runifGpu(x, Nglobal, localSize=8))
+system.time(junk <- runif(length(x)/10))
+
+xVec = as.vector(x)
+
+hist(xVec)
+
+xMat = matrix(
+	xVec[seq(1,Nglobal * (length(xVec) %/% Nglobal))], 
+	ncol=Nglobal, byrow=TRUE)
+
+theLim = 0.5 + 0.1*c(-1,1)
+plot(as.vector(xMat[-1,1]), as.vector(xMat[-nrow(xMat),1]), xlim = theLim, ylim=theLim, pch='.')
+plot(as.vector(xMat[-1,2]), as.vector(xMat[-nrow(xMat),2]), xlim = theLim, ylim=theLim, pch='.')
+
+```
+
+0.8361187
+```{r checkRandomSeed}
+x[length(x)]
+```
