@@ -5,7 +5,7 @@ cpp_mrg31k3pCreateStreams <- function(numWorkItems) {
     .Call('_clRNG_cpp_mrg31k3pCreateStreams', PACKAGE = 'clRNG', numWorkItems)
 }
 
-cpp_runifGpu <- function(xR, streamsR, max_global_size, max_local_size) {
-    .Call('_clRNG_cpp_runifGpu', PACKAGE = 'clRNG', xR, streamsR, max_global_size, max_local_size)
+cpp_runifGpu <- function(xR, streamsR, max_global_size, max_local_size, type) {
+    .Call('_clRNG_cpp_runifGpu', PACKAGE = 'clRNG', xR, streamsR, max_global_size, max_local_size, type)
 }
 

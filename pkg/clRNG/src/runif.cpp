@@ -225,10 +225,14 @@ SEXP cpp_runifGpu(
     Rcpp::S4            xR,   //vector
     Rcpp::IntegerMatrix streamsR,   //vector
     int max_global_size,     
-    int max_local_size) 
+    int max_local_size,
+    std::string type) 
 {
-
-	return runifGpu<double>(xR, streamsR, max_global_size, max_local_size);
+	if(type == "float") {
+		return runifGpu<float>(xR, streamsR, max_global_size, max_local_size);
+	} else {
+		return runifGpu<double>(xR, streamsR, max_global_size, max_local_size);
+	}
 }
 
 

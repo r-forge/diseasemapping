@@ -24,7 +24,7 @@ t(streams)
 ```
 
 ```{r test}
-x = vclVector(length=8L, type='double')
+x = vclVector(length=8L, type='float')
 
 streams2 = clRNG::runifGpu(x, streams=streams)
 t(streams2)
@@ -39,11 +39,11 @@ as.vector(x)
 ```{r hist}
 
 Nglobal = 256
-NperItem = 1e4
-x = vclVector(length=as.integer(Nglobal*NperItem), type='double')
+NperItem = 2e4
+x = vclVector(length=as.integer(Nglobal*NperItem), type='float')
 
 system.time(clRNG::runifGpu(x, Nglobal))
-system.time(junk <- runif(length(x)/10))
+system.time(junk <- runif(length(x)))
 
 xVec = as.vector(x)
 
