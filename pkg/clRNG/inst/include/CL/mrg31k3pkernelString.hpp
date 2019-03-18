@@ -210,6 +210,26 @@ std::string mrg31k3pkernelString =
 "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"
 "}\n"
 
+"__kernel void mrg31k3pIntUint("
+  "__global clrngMrg31k3pHostStream* streams, __global int* out,\n"
+  "const int Nsim) {\n"
+
+"const int Dglobal = get_global_id(0), Dlocal = get_local_id(0);\n"
+"const int NlocalSize = get_local_size(0);\n"
+"const int Nsize = get_global_size(0);\n"
+
+"clrngMrg31k3pStream private_stream_d;\n" // This is not a pointer!
+"clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[Dglobal]);\n"
+
+"int D;\n"
+
+"for(D = Dglobal; D < Nsim; D += Nsize){\n"
+	"out[D] = clrngMrg31k3pNextState(&private_stream_d.current) * 1;\n"
+"}\n"
+
+"clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"
+"}";
+
 "__kernel void mrg31k3pFloatUint("
   "__global clrngMrg31k3pHostStream* streams, __global float* out,\n"
   "const int Nsim) {\n"
@@ -224,9 +244,8 @@ std::string mrg31k3pkernelString =
 "int D;\n"
 
 "for(D = Dglobal; D < Nsim; D += Nsize){\n"
-	"out[D] = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_float;\n"
+	"out[D] = clrngMrg31k3pNextState(&private_stream_d.current);\n"
 "}\n"
 
 "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"
 "}";
-
