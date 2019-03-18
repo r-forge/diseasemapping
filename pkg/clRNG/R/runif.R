@@ -13,7 +13,7 @@
 runifGpu = function(x, workgroupSize=1, streams, localSize=1) {
 
 	if(missing(streams)) {
-		streams = clRNG:::cpp_mrg31k3pCreateStreams(workgroupSize)	
+		streams = clRNG:::cpp_mrg31k3pCreateStreams(workgroupSize)			
 	} else {
 		if(!is.matrix(streams)) {
 			warning("streams should be a matrix")
@@ -22,6 +22,8 @@ runifGpu = function(x, workgroupSize=1, streams, localSize=1) {
 			warning("streams needs 18 columns")
 		}
 		workgroupSize = ncol(streams)
+		# make a deep copy
+		streams = matrix(as.vector(streams), nrow(streams), ncol(streams), FALSE, dimnames(streams))
 	}
 
 	cpp_runifGpu(x, streams, as.integer(workgroupSize), as.integer(localSize))

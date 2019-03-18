@@ -2,21 +2,13 @@
 std::string mrg31k3pkernelString = 
 //"#include <clRNG/clRNG.clh>"
 
-"#define CLRNG_CLH\n"
-"#define CLRNG_ENABLE_SUBSTREAMS\n" // added by Patrick
+"#define _CLRNG_FPTYPE cl_double\n"
+"#define MODULAR_NUMBER_TYPE cl_uint\n"
+"#define CLRNG_ENABLE_SUBSTREAMS\n"
 
-"#ifndef __OPENCL_C_VERSION__\n"
-"#error \"clRNG.clh can be included in device code only\"\n"
-"#endif\n"
 
 "#define __CLRNG_DEVICE_API\n"
-
-"#ifdef CLRNG_SINGLE_PRECISION\n"
-"#define _CLRNG_FPTYPE cl_float\n"
-"#else\n"
-"#define _CLRNG_FPTYPE cl_double\n"
 "#pragma OPENCL EXTENSION cl_amd_fp64 : enable\n"
-"#endif\n"
 
 "typedef double cl_double;\n"
 "typedef float  cl_float;\n"
@@ -82,28 +74,6 @@ std::string mrg31k3pkernelString =
 "};\n"
 "typedef struct clrngMrg31k3pHostStream_ clrngMrg31k3pHostStream;\n"
 
-"clrngStatus clrngMrg31k3pCopyOverStreamsFromGlobal(size_t count, clrngMrg31k3pStream* destStreams, __global const clrngMrg31k3pHostStream* srcStreams);\n"
-"clrngStatus clrngMrg31k3pCopyOverStreamsToGlobal(size_t count, __global clrngMrg31k3pHostStream* destStreams, const clrngMrg31k3pStream* srcStreams);\n"
-"clrngStatus clrngMrg31k3pCopyOverStreams(size_t count, clrngMrg31k3pStream* destStreams, const clrngMrg31k3pStream* srcStreams);\n"
-
-"#define clrngMrg31k3pRandomU01          _CLRNG_TAG_FPTYPE(clrngMrg31k3pRandomU01)\n"
-"#define clrngMrg31k3pRandomInteger      _CLRNG_TAG_FPTYPE(clrngMrg31k3pRandomInteger)\n"
-"#define clrngMrg31k3pRandomU01Array     _CLRNG_TAG_FPTYPE(clrngMrg31k3pRandomU01Array)\n"
-"#define clrngMrg31k3pRandomIntegerArray _CLRNG_TAG_FPTYPE(clrngMrg31k3pRandomIntegerArray)\n"
-
-"_CLRNG_FPTYPE clrngMrg31k3pRandomU01(clrngMrg31k3pStream* stream);\n"
-"clrngStatus clrngMrg31k3pRandomU01Array(clrngMrg31k3pStream* stream, size_t count, _CLRNG_FPTYPE* buffer);\n"
-"cl_int clrngMrg31k3pRandomInteger(clrngMrg31k3pStream* stream, cl_int i, cl_int j);\n"
-"clrngStatus clrngMrg31k3pRandomIntegerArray(clrngMrg31k3pStream* stream, cl_int i, cl_int j, size_t count, cl_int* buffer);\n"
-
-"clrngStatus clrngMrg31k3pRewindStreams(size_t count, clrngMrg31k3pStream* streams);\n"
-
-"#ifdef CLRNG_ENABLE_SUBSTREAMS\n"
-"clrngStatus clrngMrg31k3pRewindSubstreams(size_t count, clrngMrg31k3pStream* streams);\n"
-"clrngStatus clrngMrg31k3pForwardToNextSubstreams(size_t count, clrngMrg31k3pStream* streams);\n"
-"clrngStatus clrngMrg31k3pMakeOverSubstreams(clrngMrg31k3pStream* stream, size_t count, clrngMrg31k3pStream* substreams);\n"
-"#endif\n"
-
 
 
 " /******************************************************************************** \n"
@@ -154,10 +124,6 @@ std::string mrg31k3pkernelString =
 "}\n"
 
 
-//"#ifdef CLRNG_ENABLE_SUBSTREAMS\n"
-"#define MODULAR_NUMBER_TYPE cl_uint\n"
-"#define MODULAR_FIXED_SIZE 3\n"
-//"#endif\n"
 
 // code that is common to host and device
 //#include <clRNG/private/mrg31k3p.c.h>
@@ -223,12 +189,6 @@ std::string mrg31k3pkernelString =
 "}\n"
 
 
-"double clrngMrg31k3pRandomU01DoubleUint(clrngMrg31k3pStream* stream){" 
-
-"return(clrngMrg31k3pNextState(&stream->current) * mrg31k3p_NORM_cl_double);"
-
-"}"
-
 
 "__kernel void mrg31k3pDoubleUint("
   "__global clrngMrg31k3pHostStream* streams, __global double* out,\n"
@@ -244,10 +204,29 @@ std::string mrg31k3pkernelString =
 "int D;\n"
 
 "for(D = Dglobal; D < Nsim; D += Nsize){\n"
-	"out[D] = clrngMrg31k3pRandomU01DoubleUint(&private_stream_d);\n"
+	"out[D] = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_double;\n"
+"}\n"
+
+"clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"
+"}\n"
+
+"__kernel void mrg31k3pFloatUint("
+  "__global clrngMrg31k3pHostStream* streams, __global float* out,\n"
+  "const int Nsim) {\n"
+
+"const int Dglobal = get_global_id(0), Dlocal = get_local_id(0);\n"
+"const int NlocalSize = get_local_size(0);\n"
+"const int Nsize = get_global_size(0);\n"
+
+"clrngMrg31k3pStream private_stream_d;\n" // This is not a pointer!
+"clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[Dglobal]);\n"
+
+"int D;\n"
+
+"for(D = Dglobal; D < Nsim; D += Nsize){\n"
+	"out[D] = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_float;\n"
 "}\n"
 
 "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"
 "}";
-
 
