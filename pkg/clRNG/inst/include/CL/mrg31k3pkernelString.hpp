@@ -2,7 +2,7 @@
 std::string mrg31k3pkernelString = 
 //"#include <clRNG/clRNG.clh>"
 
-"#define _CLRNG_FPTYPE cl_double\n"
+//"#define _CLRNG_FPTYPE cl_double\n"
 "#define MODULAR_NUMBER_TYPE cl_uint\n"
 "#define CLRNG_ENABLE_SUBSTREAMS\n"
 
@@ -18,9 +18,9 @@ std::string mrg31k3pkernelString =
 "typedef ulong  cl_ulong;\n"
 
 
-"#define _CLRNG_TAG_FPTYPE(name)           _CLRNG_TAG_FPTYPE_(name,_CLRNG_FPTYPE)\n"
-"#define _CLRNG_TAG_FPTYPE_(name,fptype)   _CLRNG_TAG_FPTYPE__(name,fptype)\n"
-"#define _CLRNG_TAG_FPTYPE__(name,fptype)  name##_##fptype\n"
+//"#define _CLRNG_TAG_FPTYPE(name)           _CLRNG_TAG_FPTYPE_(name,_CLRNG_FPTYPE)\n"
+//"#define _CLRNG_TAG_FPTYPE_(name,fptype)   _CLRNG_TAG_FPTYPE__(name,fptype)\n"
+//"#define _CLRNG_TAG_FPTYPE__(name,fptype)  name##_##fptype\n"
 
 
 
