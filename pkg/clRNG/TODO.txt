@@ -1,0 +1,10 @@
+
+normal
+
+multivariate normal, var in local memory
+
+mvn for large varariance matrix
+
+
+multiply triangular matrices
+https://github.com/stan-dev/math/blob/develop/stan/math/opencl/kernels/matrix_multiply.hpp
