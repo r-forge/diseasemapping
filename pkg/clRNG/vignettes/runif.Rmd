@@ -39,15 +39,15 @@ as.vector(x)
 ```{r hist}
 
 Nglobal = 256
-NperItem = 2e5
-x = vclVector(length=as.integer(Nglobal*NperItem), type='float')
+NperItem = 2e4
+x = vclVector(length=as.integer(Nglobal*NperItem), type='integer')
 
 system.time(clRNG::runifGpu(x, Nglobal))
 system.time(junk <- runif(length(x)))
 
 xVec = as.vector(x)
 
-hist(xVec)
+hist(xVec, breaks=seq(0,max(xVec),len=101))
 
 xMat = matrix(xVec, ncol=Nglobal, byrow=TRUE)
 

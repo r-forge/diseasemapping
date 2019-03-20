@@ -105,6 +105,9 @@ template <> std::string mrg31k3pTypeString<double>(){
 template <> std::string mrg31k3pTypeString<float>(){
 	return("mrg31k3pFloatUint");
 }
+template <> std::string mrg31k3pTypeString<int>(){
+	return("mrg31k3pIntUint");
+}
 
 
 template<typename T>
@@ -230,6 +233,8 @@ SEXP cpp_runifGpu(
 {
 	if(type == "float") {
 		return runifGpu<float>(xR, streamsR, max_global_size, max_local_size);
+	} else if (type=="integer") {
+		return runifGpu<int>(xR, streamsR, max_global_size, max_local_size);
 	} else {
 		return runifGpu<double>(xR, streamsR, max_global_size, max_local_size);
 	}
