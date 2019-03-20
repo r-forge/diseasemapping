@@ -13,7 +13,7 @@
 runifGpu = function(x, workgroupSize=1, streams, localSize=1) {
 
 	if(missing(streams)) {
-		streams = clRNG:::cpp_mrg31k3pCreateStreams(workgroupSize)			
+		streams = cpp_mrg31k3pCreateStreams(workgroupSize)			
 	} else {
 		if(!is.matrix(streams)) {
 			warning("streams should be a matrix")
