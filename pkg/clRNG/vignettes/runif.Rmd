@@ -39,7 +39,7 @@ as.vector(x)
 ```{r hist}
 
 Nglobal = 256
-NperItem = 2e4
+NperItem = 2e5
 x = vclVector(length=as.integer(Nglobal*NperItem), type='float')
 
 system.time(clRNG::runifGpu(x, Nglobal))

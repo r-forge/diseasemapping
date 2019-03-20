@@ -224,7 +224,7 @@ std::string mrg31k3pkernelString =
 "int D;\n"
 
 "for(D = Dglobal; D < Nsim; D += Nsize){\n"
-	"out[D] = clrngMrg31k3pNextState(&private_stream_d.current) * 1;\n"
+	"out[D] = clrngMrg31k3pNextState(&private_stream_d.current);\n"
 "}\n"
 
 "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"
@@ -244,7 +244,7 @@ std::string mrg31k3pkernelString =
 "int D;\n"
 
 "for(D = Dglobal; D < Nsim; D += Nsize){\n"
-	"out[D] = clrngMrg31k3pNextState(&private_stream_d.current);\n"
+	"out[D] = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_float;\n"
 "}\n"
 
 "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"
