@@ -39,11 +39,12 @@ as.vector(x)
 ```{r hist}
 
 Nglobal = 256
-NperItem = 2e4
-x = vclVector(length=as.integer(Nglobal*NperItem), type='integer')
+streams = clRNG:::cpp_mrg31k3pCreateStreams(Nglobal)
+NperItem = 2e5
+x = vclVector(length=as.integer(Nglobal*NperItem), type='float')
 
-system.time(clRNG::runifGpu(x, Nglobal))
 system.time(junk <- runif(length(x)))
+system.time(streams <- clRNG::runifGpu(x, Nglobal, streams=streams))
 
 xVec = as.vector(x)
 
