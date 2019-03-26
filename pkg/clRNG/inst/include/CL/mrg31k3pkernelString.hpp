@@ -259,11 +259,7 @@ std::string mrg31k3pkernelString =
 "}\n"
 
 "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"//copy from device private into global 
-"}";
-
-
-
-
+"}\n"
   
   "__kernel void mrg31k3pFloatNorm("
   "__global clrngMrg31k3pHostStream* streams, __global float* u1,\n"
@@ -283,8 +279,6 @@ std::string mrg31k3pkernelString =
   
   "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"//copy from device private into global 
   "}";
-
-
 
 
 
