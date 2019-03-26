@@ -122,7 +122,7 @@ randomUniform.local_work_size(0, numLocalItems);
 
 int Nsim = x.size();
 viennacl::ocl::enqueue(randomUniform(bufIn, x, Nsim) ); //streams, out, vector_size
-int Nsim = y.size();
+//int Nsim = y.size();
 viennacl::ocl::enqueue(randomU(bufIn, y, Nsim) ); 
 
 // copy streams back to cpu
