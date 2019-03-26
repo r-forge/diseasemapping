@@ -238,14 +238,7 @@ std::string mrg31k3pkernelString =
 "}\n"
 
 "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"
-"}"
-
-
-
-
-
-
-
+"}\n"
 
 
 "__kernel void mrg31k3pFloatUint("
