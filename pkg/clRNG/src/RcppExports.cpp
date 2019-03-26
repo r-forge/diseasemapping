@@ -17,25 +17,24 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_runifGpu
-SEXP cpp_runifGpu(Rcpp::S4 xR, Rcpp::S4 yR, Rcpp::IntegerMatrix streamsR, int max_global_size, int max_local_size, std::string type);
-RcppExport SEXP _clRNG_cpp_runifGpu(SEXP xRSEXP, SEXP yRSEXP, SEXP streamsRSEXP, SEXP max_global_sizeSEXP, SEXP max_local_sizeSEXP, SEXP typeSEXP) {
+SEXP cpp_runifGpu(Rcpp::S4 xR, Rcpp::IntegerMatrix streamsR, int max_global_size, int max_local_size, std::string type);
+RcppExport SEXP _clRNG_cpp_runifGpu(SEXP xRSEXP, SEXP streamsRSEXP, SEXP max_global_sizeSEXP, SEXP max_local_sizeSEXP, SEXP typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type xR(xRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type yR(yRSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerMatrix >::type streamsR(streamsRSEXP);
     Rcpp::traits::input_parameter< int >::type max_global_size(max_global_sizeSEXP);
     Rcpp::traits::input_parameter< int >::type max_local_size(max_local_sizeSEXP);
     Rcpp::traits::input_parameter< std::string >::type type(typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_runifGpu(xR, yR, streamsR, max_global_size, max_local_size, type));
+    rcpp_result_gen = Rcpp::wrap(cpp_runifGpu(xR, streamsR, max_global_size, max_local_size, type));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_clRNG_cpp_mrg31k3pCreateStreams", (DL_FUNC) &_clRNG_cpp_mrg31k3pCreateStreams, 1},
-    {"_clRNG_cpp_runifGpu", (DL_FUNC) &_clRNG_cpp_runifGpu, 6},
+    {"_clRNG_cpp_runifGpu", (DL_FUNC) &_clRNG_cpp_runifGpu, 5},
     {NULL, NULL, 0}
 };
 

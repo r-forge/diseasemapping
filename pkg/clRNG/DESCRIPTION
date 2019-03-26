@@ -6,6 +6,7 @@ Author: Patrick Brown
 Description: Random numbers on the gpu
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
 License: GPL (>= 2)
+Encoding: UTF-8
 NeedsCompilation: yes
 Depends: R (>= 3.0.2), gpuR
 Suggests: knitr
