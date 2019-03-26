@@ -38,7 +38,7 @@ x = vclVector(length=8L, type='float')
 #as.vector(x)
 ##
 y = vclVector(length=8L, type='float')
-clRNG::runif(x,y,streams=streams2)
+clRNG::runifGpu(x,y,streams=streams2)
 as.vector(y)
 
 
