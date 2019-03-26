@@ -4,7 +4,7 @@
 \alias{runifGpu}
 \title{runif gpu}
 \usage{
-runifGpu(x, workgroupSize = 1, streams, localSize = 1)
+runifGpu(x, y, workgroupSize = 1, streams, localSize = 1)
 }
 \arguments{
 \item{x}{vector}

@@ -10,7 +10,7 @@
 #' @useDynLib clRNG
 #' @export
 
-runifGpu = function(x, workgroupSize=1, streams, localSize=1) {
+runifGpu = function(x, y, workgroupSize=1, streams, localSize=1) {
 
 	if(missing(streams)) {
 		streams = cpp_mrg31k3pCreateStreams(workgroupSize)			
@@ -26,7 +26,21 @@ runifGpu = function(x, workgroupSize=1, streams, localSize=1) {
 		streams = matrix(as.vector(streams), nrow(streams), ncol(streams), FALSE, dimnames(streams))
 	}
 
-	cpp_runifGpu(x, streams, as.integer(workgroupSize), as.integer(localSize), gpuR::typeof(x))
+	cpp_runifGpu(x, y, streams, as.integer(workgroupSize), as.integer(localSize), gpuR::typeof(x))
 
 	invisible(streams)
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

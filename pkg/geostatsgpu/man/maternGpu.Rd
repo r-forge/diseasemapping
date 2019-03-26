@@ -36,7 +36,9 @@ D3 <- vclMatrix(data=-1, nrow(coordsV), nrow(coordsV),type='float')
 
 myParams = c(shape=4.5, range=1.5, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/4)
 
-system.time(v1 <- maternGpu(coordsV, D3, DofLDL = NULL, myParams,'variance', type_flag=1))
+
+DofLDL = NULL
+system.time(v1 <- maternGpu(coordsV, D3, DofLDL, myParams,'variance'))
 system.time(mmat <- geostatsp::matern(sp::SpatialPoints(as.matrix(coordsV)), myParams))
 as.matrix(v1)[1:5,1:5]
 mmat[1:5,1:5]

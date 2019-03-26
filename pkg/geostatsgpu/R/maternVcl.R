@@ -18,7 +18,9 @@
 #' 
 #' myParams = c(shape=4.5, range=1.5, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/4)
 #' 
-#' system.time(v1 <- maternGpu(coordsV, D3, DofLDL = NULL, myParams,'variance', type_flag=1))
+#' 
+#' DofLDL = NULL
+#' system.time(v1 <- maternGpu(coordsV, D3, DofLDL, myParams,'variance'))
 #' system.time(mmat <- geostatsp::matern(sp::SpatialPoints(as.matrix(coordsV)), myParams))
 #' as.matrix(v1)[1:5,1:5]
 #' mmat[1:5,1:5]
@@ -36,7 +38,7 @@ maternGpu = function(
 
   if(form > 2) { warning("only form= variance or cholesky are currently implemented")}
 
-  if(missing(DofLDL)) {
+  if(is.null(DofLDL)) {
     if(form==2) {
       DofLDL = gpuR::vclVector(data = -1, length=nrow(x), type=typeof(x))
     } else {

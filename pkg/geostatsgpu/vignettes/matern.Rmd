@@ -39,7 +39,7 @@ Create matern matrix on gpu
 ```{r maternMatGpu}
 system.time(varCpu <- geostatsp::matern(coordsSp, myParams))
 system.time(varGpu <- geostatsgpu::maternGpu(x=vclMatrix(coordsSp@coords, type='float'), param=myParams))
-system.time(varGpuD <- geostatsgpu::maternGpu(x=vclMatrix(coordsSp@coords, type='double'), param=myParams))
+system.time(varGpuD <- geostatsgpu::maternGpu(x=vclMatrix(coordsSp@coords, type='float'), param=myParams))
 quantile(varCpu - as.matrix(varGpu))
 quantile(varCpu - as.matrix(varGpuD))
 ```

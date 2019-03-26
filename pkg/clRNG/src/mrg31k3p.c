@@ -295,6 +295,7 @@ clrngStatus clrngMrg31k3pCreateOverStreams(clrngMrg31k3pStreamCreator* creator, 
 	return CLRNG_SUCCESS;
 }
 
+//this one used
 clrngMrg31k3pStream* clrngMrg31k3pCreateStreams(clrngMrg31k3pStreamCreator* creator, size_t count, size_t* bufSize, clrngStatus* err)
 {
 	clrngStatus err_;

@@ -190,6 +190,11 @@ std::string mrg31k3pkernelString =
 
 
 
+
+
+
+
+
 "__kernel void mrg31k3pDoubleUint("
   "__global clrngMrg31k3pHostStream* streams, __global double* out,\n"
   "const int Nsim) {\n"
@@ -209,6 +214,11 @@ std::string mrg31k3pkernelString =
 
 "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"
 "}\n"
+
+
+
+
+
 
 "__kernel void mrg31k3pIntUint("
   "__global clrngMrg31k3pHostStream* streams, __global int* out,\n"
@@ -230,6 +240,14 @@ std::string mrg31k3pkernelString =
 "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"
 "}"
 
+
+
+
+
+
+
+
+
 "__kernel void mrg31k3pFloatUint("
   "__global clrngMrg31k3pHostStream* streams, __global float* out,\n"
   "const int Nsim) {\n"
@@ -238,8 +256,8 @@ std::string mrg31k3pkernelString =
 "const int NlocalSize = get_local_size(0);\n"
 "const int Nsize = get_global_size(0);\n"
 
-"clrngMrg31k3pStream private_stream_d;\n" // This is not a pointer!
-"clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[Dglobal]);\n"
+"clrngMrg31k3pStream private_stream_d;\n" // This is not a pointer! the declaration allocates private memory
+"clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[Dglobal]);\n" //copy from host into private memory
 
 "int D;\n"
 
@@ -247,5 +265,33 @@ std::string mrg31k3pkernelString =
 	"out[D] = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_float;\n"
 "}\n"
 
-"clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"
+"clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"//copy from device private into global 
 "}";
+
+
+
+
+  
+  "__kernel void mrg31k3pFloatNorm("
+  "__global clrngMrg31k3pHostStream* streams, __global float* u1,\n"
+  "const int Nsim) {\n"
+  
+  "const int Dglobal = get_global_id(0);\n"
+  "const int Nsize = get_global_size(0);\n"
+  
+  "clrngMrg31k3pStream private_stream_d;\n" // This is not a pointer! the declaration allocates private memory
+  "clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[Dglobal]);\n" //copy from host into private memory
+  
+  "int i;\n"
+  
+  "for(i = Dglobal; i < Nsim; i += Nsize){\n"
+  "u1[i] = clrngMrg31k3pRandomU01(&private_stream_d);\n"
+  "}\n"
+  
+  "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"//copy from device private into global 
+  "}";
+
+
+
+
+

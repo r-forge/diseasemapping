@@ -80,8 +80,13 @@ struct clrngMrg31k3pHostStream_ {
 typedef struct clrngMrg31k3pHostStream_ clrngMrg31k3pHostStream;
 
 clrngStatus clrngMrg31k3pCopyOverStreamsFromGlobal(size_t count, clrngMrg31k3pStream* destStreams, __global const clrngMrg31k3pHostStream* srcStreams);
+//Copy the host stream objects srcStreams from global memory as device stream objects into the buffer destStreams in private memory.
+
 clrngStatus clrngMrg31k3pCopyOverStreamsToGlobal(size_t count, __global clrngMrg31k3pHostStream* destStreams, const clrngMrg31k3pStream* srcStreams);
+//Copy RNG device stream objects from private memory into global memory [device-only].
+
 clrngStatus clrngMrg31k3pCopyOverStreams(size_t count, clrngMrg31k3pStream* destStreams, const clrngMrg31k3pStream* srcStreams);
+//Copy RNG stream objects in already allocated memory [device].
 
 #define clrngMrg31k3pRandomU01          _CLRNG_TAG_FPTYPE(clrngMrg31k3pRandomU01)
 #define clrngMrg31k3pRandomInteger      _CLRNG_TAG_FPTYPE(clrngMrg31k3pRandomInteger)

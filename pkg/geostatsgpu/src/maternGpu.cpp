@@ -39,7 +39,6 @@ double maternGpuVclD(
 	Rtemme_gamma(&mu, &g_1pnu, &g_1mnu, &g1, &g2);
 
 	// execute kernel
-
 	viennacl::ocl::enqueue(maternKernel(Ncell, 
 		iSizeCoords2, iSizeVar1, iSizeVar2, maxIter,
 			// nuround mu

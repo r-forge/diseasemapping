@@ -7,9 +7,8 @@ using namespace Rcpp;
 using namespace viennacl;	
 using namespace viennacl::linalg;
 
-void convertclRngMat(
-	clrngMrg31k3pStream* streams, 
-	Rcpp::IntegerMatrix result) {
+// clRNG -> Matrix
+void convertclRngMat(clrngMrg31k3pStream* streams, Rcpp::IntegerMatrix result) {
 
 	int numWorkItems = result.nrow();
 	int Ditem,Delement,Dcis,Dg;
@@ -18,40 +17,28 @@ void convertclRngMat(
 
 			Dcis=0;
 			Dg=0;
-			result(Ditem,
-				Dcis*6 + Dg*3 + Delement
-			) = streams[Ditem].current.g1[Delement];
+			result(Ditem, Dcis*6 + Dg*3 + Delement) = streams[Ditem].current.g1[Delement];//0,0; 0,1
 			Dg=1;
-			result(Ditem,
-				Dcis*6 + Dg*3 + Delement
-			) = streams[Ditem].current.g2[Delement];
+			result(Ditem,Dcis*6 + Dg*3 + Delement) = streams[Ditem].current.g2[Delement];//0,3; 0,4
 
 			Dcis=1;
 			Dg=0;
-			result(Ditem,
-				Dcis*6 + Dg*3 + Delement
-			) = streams[Ditem].initial.g1[Delement];
+			result(Ditem,Dcis*6 + Dg*3 + Delement) = streams[Ditem].initial.g1[Delement];//0,6; 0,7
 			Dg=1;
-			result(Ditem,
-				Dcis*6 + Dg*3 + Delement
-			) = streams[Ditem].initial.g2[Delement];
+			result(Ditem,Dcis*6 + Dg*3 + Delement) = streams[Ditem].initial.g2[Delement];//0,9; 0,10
 
 			Dcis=2;
 			Dg=0;
-
-			result(Ditem,
-				Dcis*6 + Dg*3 + Delement
-			) = streams[Ditem].substream.g1[Delement];
+			result(Ditem,Dcis*6 + Dg*3 + Delement) = streams[Ditem].substream.g1[Delement];//0,12
 			Dg=1;
-			result(Ditem,
-				Dcis*6 + Dg*3 + Delement
-			) = streams[Ditem].substream.g2[Delement];
+			result(Ditem,Dcis*6 + Dg*3 + Delement) = streams[Ditem].substream.g2[Delement];//0,15
 
 		}
 	}
 
 }
 
+//matrix ->clRNG streams
 void convertMatclRng(Rcpp::IntegerMatrix Sin, clrngMrg31k3pStream* streams){
 
 	int Ditem,Delement,Dcis,Dg;
@@ -62,33 +49,21 @@ void convertMatclRng(Rcpp::IntegerMatrix Sin, clrngMrg31k3pStream* streams){
 
 			Dcis=0;
 			Dg=0;
-			streams[Ditem].current.g1[Delement] = Sin(Ditem,
-				Dcis*6 + Dg*3 + Delement
-			);
+			streams[Ditem].current.g1[Delement] = Sin(Ditem,Dcis*6 + Dg*3 + Delement);
 			Dg=1;
-			streams[Ditem].current.g2[Delement] = Sin(Ditem,
-				Dcis*6 + Dg*3 + Delement
-			);
+			streams[Ditem].current.g2[Delement] = Sin(Ditem,Dcis*6 + Dg*3 + Delement);
 
 			Dcis=1;
 			Dg=0;
-			streams[Ditem].initial.g1[Delement] = Sin(Ditem,
-				Dcis*6 + Dg*3 + Delement
-			);
+			streams[Ditem].initial.g1[Delement] = Sin(Ditem,Dcis*6 + Dg*3 + Delement);
 			Dg=1;
-			streams[Ditem].initial.g2[Delement]=Sin(Ditem,
-				Dcis*6 + Dg*3 + Delement
-			);
+			streams[Ditem].initial.g2[Delement]=Sin(Ditem,Dcis*6 + Dg*3 + Delement);
 
 			Dcis=2;
 			Dg=0;
-			streams[Ditem].substream.g1[Delement]=Sin(Ditem,
-				Dcis*6 + Dg*3 + Delement
-			);
+			streams[Ditem].substream.g1[Delement]=Sin(Ditem,Dcis*6 + Dg*3 + Delement);
 			Dg=1;
-			streams[Ditem].substream.g2[Delement] = Sin(Ditem,
-				Dcis*6 + Dg*3 + Delement
-			);
+			streams[Ditem].substream.g2[Delement] = Sin(Ditem,Dcis*6 + Dg*3 + Delement);
 		}
 	}
 
@@ -96,34 +71,33 @@ void convertMatclRng(Rcpp::IntegerMatrix Sin, clrngMrg31k3pStream* streams){
 }
 
 
-template <typename T> std::string mrg31k3pTypeString() {
-	return("undefined");
-}
+template <typename T> 
+std::string mrg31k3pTypeString() {
+	return("undefined");}
+
 template <> std::string mrg31k3pTypeString<double>(){
-	return("mrg31k3pDoubleUint");
-}
+	return("mrg31k3pDoubleUint");}
 template <> std::string mrg31k3pTypeString<float>(){
-	return("mrg31k3pFloatUint");
-}
+	return("mrg31k3pFloatUint");}
 template <> std::string mrg31k3pTypeString<int>(){
 	return("mrg31k3pIntUint");
 }
 
-
+//////////////////////////////////the main function;//////////////////////
 template<typename T>
 void runifGpu(
-	viennacl::vector_base<T> &x,
-    Rcpp::IntegerMatrix streamsR,
+	viennacl::vector_base<T> &x, 
+	viennacl::vector_base<T> &y, 
+  Rcpp::IntegerMatrix streamsR, 
 	int numWorkItems,
 	int numLocalItems,
 	int ctx_id){
 
 
-
 viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
 
 // create streams
-size_t streamBufferSize;
+size_t streamBufferSize;   
 clrngStatus err;
 clrngMrg31k3pStream* streams = clrngMrg31k3pAllocStreams(numWorkItems, &streamBufferSize, &err);
   
@@ -134,38 +108,34 @@ convertMatclRng(streamsR, streams);
 // convert to crngMgr31k3pStream in opencl
 // Create buffer to transfer streams to the device.
 // change clrngMrg31k3pCopyOverStreamsFromGlobal
-viennacl::vector<char> bufIn(
-	ctx.create_memory_without_smart_handle(
-		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-		streamBufferSize, (void *) streams), 
-	1);
+viennacl::vector<char> bufIn(ctx.create_memory_without_smart_handle( //Creates a memory buffer within the context.
+		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  streamBufferSize, (void *) streams), 1);
 
 
 // kernel
 viennacl::ocl::program &my_prog = ctx.add_program(mrg31k3pkernelString, "my_kernel");
-viennacl::ocl::kernel &randomUniform = 
-		my_prog.get_kernel(mrg31k3pTypeString<T>());
+viennacl::ocl::kernel &randomUniform = my_prog.get_kernel(mrg31k3pTypeString<T>());
+viennacl::ocl::kernel &randomU = my_prog.get_kernel("mrg31k3pFloatNorm");
 
 randomUniform.global_work_size(0, numWorkItems);
 randomUniform.local_work_size(0, numLocalItems);
 
 int Nsim = x.size();
-viennacl::ocl::enqueue(randomUniform(bufIn, x, Nsim) );
-
+viennacl::ocl::enqueue(randomUniform(bufIn, x, Nsim) ); //streams, out, vector_size
+int Nsim = y.size();
+viennacl::ocl::enqueue(randomU(bufIn, y, Nsim) ); 
 
 // copy streams back to cpu
-viennacl::backend::memory_read(
-	bufIn.handle(), 0, 
-	streamBufferSize,
-	streams);
+viennacl::backend::memory_read(bufIn.handle(), 0, streamBufferSize,streams);
 
 // then transfer to R object
-	convertclRngMat(streams, streamsR);
+convertclRngMat(streams, streamsR);
 
 }
 
-void runifGpuHost(
-	viennacl::vector_base<double> &x){
+////////////////////////////////////////////////////////////////////////////////////////////////
+void runifGpuHost(viennacl::vector_base<double> &x)//use them to generate numbers on the host
+  {
 
 	int D, N=x.size();
 	clrngMrg31k3pStream* stream = clrngMrg31k3pCreateStreams(NULL, 1, NULL, NULL);
@@ -174,12 +144,11 @@ void runifGpuHost(
 		x(D) = clrngMrg31k3pRandomU01(stream);
 	}
 }
-
+////////////////////////////////////////////////////////////////////////////////////////////////
 
 //[[Rcpp::export]]
-Rcpp::IntegerMatrix  cpp_mrg31k3pCreateStreams(
-	int numWorkItems
-	) {
+Rcpp::IntegerMatrix  cpp_mrg31k3pCreateStreams(int numWorkItems) //line 299 in mrg31k3p.c
+  {
 
 	Rcpp::IntegerMatrix result=Rcpp::IntegerMatrix(numWorkItems,18L);
 
@@ -193,9 +162,7 @@ Rcpp::IntegerMatrix  cpp_mrg31k3pCreateStreams(
 
 	int Ditem,Delement,Dcis,Dg;
 
-	clrngMrg31k3pStream* streams = clrngMrg31k3pCreateStreams(
-		NULL, numWorkItems,
-		&streamBufferSize, &err);
+	clrngMrg31k3pStream* streams = clrngMrg31k3pCreateStreams(NULL, numWorkItems, &streamBufferSize, &err);
 
 	convertclRngMat(streams, result);
 	
@@ -203,40 +170,44 @@ Rcpp::IntegerMatrix  cpp_mrg31k3pCreateStreams(
 }
 
 
-template<typename T> SEXP runifGpu(
-    Rcpp::S4            xR,   //vector
+
+
+
+/////////////////////////////////uniforms on GPU function;//////////
+template<typename T> 
+SEXP runifGpu(
+    Rcpp::S4  xR,   //vector
+    Rcpp::S4  yR,
     Rcpp::IntegerMatrix streamsR,   //vector
     int max_global_size,     
     int max_local_size) 
 {
-
   // data
   const bool BisVCL=1;
   const int ctx_id = INTEGER(xR.slot(".context_index"))[0]-1;
 
-
   std::shared_ptr<viennacl::vector_base<T> > x = getVCLVecptr<T>(xR.slot("address"), BisVCL, ctx_id);
-  
-  runifGpu<T>(*x, streamsR, max_global_size, max_local_size, ctx_id);
+  std::shared_ptr<viennacl::vector_base<T> > y = getVCLVecptr<T>(yR.slot("address"), BisVCL, ctx_id);
+  runifGpu<T>(*x,*y, streamsR, max_global_size, max_local_size, ctx_id);
  
   return(Rcpp::wrap(1L));	
 }
 
-
 //[[Rcpp::export]]
 SEXP cpp_runifGpu(
-    Rcpp::S4            xR,   //vector
+    Rcpp::S4  xR,   //vector
+    Rcpp::S4  yR,
     Rcpp::IntegerMatrix streamsR,   //vector
     int max_global_size,     
     int max_local_size,
     std::string type) 
 {
 	if(type == "float") {
-		return runifGpu<float>(xR, streamsR, max_global_size, max_local_size);
+		return runifGpu<float>(xR, yR,streamsR, max_global_size, max_local_size);
 	} else if (type=="integer") {
-		return runifGpu<int>(xR, streamsR, max_global_size, max_local_size);
+		return runifGpu<int>(xR, yR,streamsR, max_global_size, max_local_size);
 	} else {
-		return runifGpu<double>(xR, streamsR, max_global_size, max_local_size);
+		return runifGpu<double>(xR, yR,streamsR, max_global_size, max_local_size);
 	}
 }
 
