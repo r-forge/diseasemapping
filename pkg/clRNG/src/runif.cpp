@@ -77,14 +77,14 @@ std::string mrg31k3pTypeString() {
 
 template <> std::string mrg31k3pTypeString<double>(){
   std::string result;
-  result << mrg31k3pPrefixDouble << mrg31k3pCommon << 
+  result = mrg31k3pPrefixDouble + mrg31k3pCommon +
     mrg31k3pTemplateString;
   return(result);
 }
 
 template <> std::string mrg31k3pTypeString<float>(){
   std::string result;
-  result << mrg31k3pPrefixFloat << mrg31k3pCommon << 
+  result = mrg31k3pPrefixFloat + mrg31k3pCommon + 
     mrg31k3pTemplateString;
   return(result);
 }
@@ -92,7 +92,7 @@ template <> std::string mrg31k3pTypeString<float>(){
 
 template <> std::string mrg31k3pTypeString<int>(){
   std::string result;
-  result << mrg31k3pPrefixInt << mrg31k3pCommon << 
+  result = mrg31k3pPrefixInt + mrg31k3pCommon + 
     mrg31k3pTemplateString;
   return(result);
 }
