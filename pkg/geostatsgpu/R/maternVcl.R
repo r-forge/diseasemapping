@@ -29,7 +29,7 @@
 maternGpu = function(
   x, 
   output = vclMatrix(data=0, nrow(x), nrow(x),type=typeof(x), ctx_id = x@.context_index),
-  DofLDL,
+  DofLDL = NULL,
   param = c(range = 1, variance = 1, shape = 1), 
   form = c("variance", "cholesky", "precision", "inverseCholesky")) 
 {

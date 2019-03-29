@@ -14,8 +14,12 @@ date()
 ```{r packages, results='hide'}
 library('geostatsp')
 library('gpuR')
+
 ```
 
+```{r memoryAvailable, echo=TRUE}
+gpuInfo()$maxAllocatableMem/(1024^3)
+```
 
 Set up spatial data
 

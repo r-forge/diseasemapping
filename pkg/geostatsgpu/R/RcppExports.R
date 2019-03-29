@@ -2,22 +2,22 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 cpp_cholGpu <- function(xR, DR, diagWorkingR, diagTimesRowOfAR, MCglobal, MClocal, localStorage, colGroupwise, Ncrossprod, verbose, kernelR) {
-    .Call(`_geostatsgpu_cpp_cholGpu`, xR, DR, diagWorkingR, diagTimesRowOfAR, MCglobal, MClocal, localStorage, colGroupwise, Ncrossprod, verbose, kernelR)
+    .Call('_geostatsgpu_cpp_cholGpu', PACKAGE = 'geostatsgpu', xR, DR, diagWorkingR, diagTimesRowOfAR, MCglobal, MClocal, localStorage, colGroupwise, Ncrossprod, verbose, kernelR)
 }
 
 gpuNlocal <- function(kernel, functionName, ctx_id) {
-    .Call(`_geostatsgpu_gpuNlocal`, kernel, functionName, ctx_id)
+    .Call('_geostatsgpu_gpuNlocal', PACKAGE = 'geostatsgpu', kernel, functionName, ctx_id)
 }
 
 cpp_maternGpuD <- function(varR, coordsR, DofLDLR, param, form, max_local_size) {
-    .Call(`_geostatsgpu_cpp_maternGpuD`, varR, coordsR, DofLDLR, param, form, max_local_size)
+    .Call('_geostatsgpu_cpp_maternGpuD', PACKAGE = 'geostatsgpu', varR, coordsR, DofLDLR, param, form, max_local_size)
 }
 
 cpp_maternGpuF <- function(varR, coordsR, DofLDLR, param, form, max_local_size) {
-    .Call(`_geostatsgpu_cpp_maternGpuF`, varR, coordsR, DofLDLR, param, form, max_local_size)
+    .Call('_geostatsgpu_cpp_maternGpuF', PACKAGE = 'geostatsgpu', varR, coordsR, DofLDLR, param, form, max_local_size)
 }
 
 cpp_lu <- function(xR, dR) {
-    .Call(`_geostatsgpu_cpp_lu`, xR, dR)
+    .Call('_geostatsgpu_cpp_lu', PACKAGE = 'geostatsgpu', xR, dR)
 }
 
