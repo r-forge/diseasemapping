@@ -108,7 +108,8 @@ void runifGpu(
   
   
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
-  
+  std::string mrg31k3pkernelString = mrg31k3pTypeString<T>();
+
   // create streams
   size_t streamBufferSize;   
   clrngStatus err;
@@ -131,7 +132,7 @@ void runifGpu(
   
   // kernel, in the kernel will Copy RNG host stream objects from global memory into private memory
   viennacl::ocl::program &my_prog = ctx.add_program(mrg31k3pkernelString, "my_kernel");
-  viennacl::ocl::kernel &randomUniform = my_prog.get_kernel(mrg31k3pTypeString<T>());
+  viennacl::ocl::kernel &randomUniform = my_prog.get_kernel("mrg31k3p");
   
   randomUniform.global_work_size(0, numWorkItems);
   randomUniform.local_work_size(0, numLocalItems);
