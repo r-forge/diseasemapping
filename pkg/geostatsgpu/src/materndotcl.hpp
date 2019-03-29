@@ -1,4 +1,9 @@
-
+// TO DO 
+// create float string using maternClcommonString
+// reduce the number of variables so they all fit in private memory
+// use macros to replace different variables in the if(logthisx > 2.0) blocks
+// #define sigma hi and get rid of sigma as a variable?
+// make globalSize local?
 
 std::string maternCLcommonString =
   
@@ -16,6 +21,7 @@ std::string maternCLcommonString =
 // Dcol = Dcell - Drow * (Drow-1)/2
 // Ncell = (N-1) * N / 2
 
+
 "const int globalSize = get_global_size(0);"
 "int Dcell, Drow, Dcol, k;\n"
 "for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += globalSize) {\n"
@@ -32,7 +38,7 @@ std::string maternCLcommonString =
 
 "	logthisx = log(distSq)/2 + logxscale;"
 
-"	ln_half_x = logthisx - M_LN2;"
+"	ln_half_x = logthisx - logTwo;"
 "	thisx = exp(logthisx);"
 "	maternBit = varscale + nu * logthisx;"
 "	expMaternBit = exp(maternBit);\n"
@@ -73,7 +79,8 @@ std::string maternCLcommonString =
 "			if(fabs(dels/s) < epsilon) break;"
 "			}\n" // k loop
 "			hi *= -a1;"
-"		K_nu = exp(-thisx) * exp(maternBit) * sqrt(M_PI/(2.0*thisx)) / s;"//  sqrt(pi)/2 sqrt(2/x)/s =
+//"		K_nu = exp(-thisx) * exp(maternBit) * sqrt(M_PI/(2.0*thisx)) / s;"//  sqrt(pi)/2 sqrt(2/x)/s =
+"		K_nu = exp(logSqrtHalfPi + maternBit - thisx - logthisx / 2) / s;"//  sqrt(pi)/2 sqrt(2/x)/s =
 
 "		K_nup1 = K_nu * (mu + thisx + 0.5 - hi)/thisx;"
 "		Kp_nu  = - K_nup1 + mu/thisx * K_nu;\n"
@@ -118,14 +125,23 @@ std::string maternCLcommonString =
 "			K_nu   = K_nup1;"
 "			K_nup1 = exp(log(mup1+k) - ln_half_x) * K_nu + K_num1;"
 "		}\n"
-"	result[Dcol + Drow * sizeResultPadRow] = K_nu;\n" // lower triangle
-"	result[Drow + Dcol * sizeResultPadRow] = K_nu;"//K_nu;\n" // upper triangle
+"#ifdef assignLower\n"
+"	  result[Dcol + Drow * sizeResultPadRow] = K_nu;\n" // lower triangle
+"# endif\n"
+"#ifdef assignUpper\n;"
+"	result[Drow + Dcol * sizeResultPadRow] = K_nu;\n"//K_nu;\n" // upper triangle
+"# endif\n"
 "	}\n"; // loop through cells
 
 
 
+// note that either assignLower or assignUpper or both must be defined
+// otherwise the values won't be saved
 std::string maternCLstring =
   "\n#pragma OPENCL EXTENSION cl_khr_fp64: enable\n\n"
+  "\n#define logSqrtHalfPi 0.2257913526447273278031\n"
+  "\n#define logTwo M_LN2\n"
+  
   "\n__kernel void maternCLD("
   "const unsigned int Ncell,"
   "const unsigned int sizeCoordsPadCol,"
@@ -152,7 +168,7 @@ std::string maternCLstring =
   "__global double *result) {\n"
   
   "double dist[2], distRotate[2], distSq,"
-  "  logthisx, K_mu, K_mup1, logck, K_nu=0.1, K_nup1, Kp_nu, K_num1,"
+  "  logthisx, K_mu, K_mup1, logck, K_nu, K_nup1, Kp_nu, K_num1,"
   "  twoLnHalfX, sigma, half_x_nu, sinhrat,"
   "  ln_half_x, thisx, maternBit, expMaternBit,"
   "  bi, delhi, hi, di, qi, qip1, ai, a1, ci, Qi, s, dels, tmp,"
