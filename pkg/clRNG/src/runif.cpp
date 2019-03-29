@@ -110,6 +110,7 @@ void runifGpu(
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   std::string mrg31k3pkernelString = mrg31k3pTypeString<T>();
 
+
   // create streams
   size_t streamBufferSize;   
   clrngStatus err;

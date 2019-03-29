@@ -20,7 +20,7 @@ std::string mrg31k3pPrefixInt =
 
 std::string mrg31k3pTemplateString = 
 
-"__kernel void mrg31k3p("
+"\n\n__kernel void mrg31k3p("
   "__global clrngMrg31k3pHostStream* streams," 
   "__global OUTPUT_TYPE* out,\n"
   "const int Nsim) {\n"
