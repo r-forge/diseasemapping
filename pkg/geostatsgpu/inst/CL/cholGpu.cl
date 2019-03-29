@@ -6,6 +6,9 @@
 
 // diagTimesRowOfA =  diag * A[Dcol, ]
 
+
+#pragma OPENCL EXTENSION cl_khr_fp64: enable
+
 __kernel void cholDiag(
 	__global double *A, 
 	__global double *diag,
