@@ -17,6 +17,7 @@ library('gpuR')
 
 ```
 
+
 ```{r memoryAvailable, echo=TRUE}
 gpuInfo()$maxAllocatableMem/(1024^3)
 ```
@@ -24,9 +25,9 @@ gpuInfo()$maxAllocatableMem/(1024^3)
 Set up spatial data
 
 ```{r setupData}
-#Ngrid = c(100, 100)
+Ngrid = c(100, 100)
 #Ngrid = c(50, 50)
-Ngrid = c(30, 30)
+#Ngrid = c(30, 30)
 
 seqList = list( 
     x = seq(1,by=1,len=Ngrid[1]), 
@@ -35,15 +36,63 @@ seqList = list(
 
 coordsSp = sp::SpatialPoints(as.matrix(expand.grid(seqList$x, seqList$y)))
 
-myParams = c(shape=2.15, range=1.5, variance = 2, nugget = 0, anisoRatio = 10, anisoAngleRadians = pi/7)
+head(coordsSp@coords)
+
+myParams = c(shape=2.15, range=1.5, variance = 2, nugget = 0, 
+             anisoRatio = 1,#10, 
+             anisoAngleRadians = pi/7)
 ```
 
 
-Create matern matrix on gpu
+```{r simpleTestFloat}
+
+  coordsGpu = vclMatrix(-99, nrow(coordsSp@coords), ncol(coordsSp@coords), type="float")
+
+    # this shouldnt be necessary
+  # but something currently wrong with gpuR on the server
+
+  coordsGpu[,2] = coordsSp@coords[,2]
+  print(coordsGpu[1:4,1:2])
+
+  coordsGpu[,1] = coordsSp@coords[,1]
+  print(coordsGpu[1:4,1:2])
+
+  coordsGpu[,2] = coordsSp@coords[,2]
+  print(coordsGpu[1:4,1:2])
+
+system.time(varGpu <- geostatsgpu::maternGpu(
+  coordsGpu, param=myParams))
+```
+
+Use double precision if the GPU supports it
+```{r simpleTestDouble}
+if(gpuInfo()$double_support) {
+  
+  coordsGpuD = vclMatrix(-99, nrow(coordsSp@coords), ncol(coordsSp@coords), type="double")
+
+    # this shouldnt be necessary
+  # but something currently wrong with gpuR on the server
+
+  coordsGpuD[,2] = coordsSp@coords[,2]
+  print(coordsGpuD[1:4,1:2])
+
+  coordsGpuD[,1] = coordsSp@coords[,1]
+  print(coordsGpuD[1:4,1:2])
+
+  coordsGpuD[,2] = coordsSp@coords[,2]
+  print(coordsGpuD[1:4,1:2])
+  
+  system.time(varGpuD <- geostatsgpu::maternGpu(
+    x= coordsGpuD, param=myParams))
+} else {
+  varGpuD = NA
+}
+```
+
+
+Create matern matrix on cpu
 ```{r maternMatGpu}
 system.time(varCpu <- geostatsp::matern(coordsSp, myParams))
-system.time(varGpu <- geostatsgpu::maternGpu(x=vclMatrix(coordsSp@coords, type='float'), param=myParams))
-system.time(varGpuD <- geostatsgpu::maternGpu(x=vclMatrix(coordsSp@coords, type='double'), param=myParams))
 quantile(varCpu - as.matrix(varGpu), na.rm=TRUE)
 quantile(varCpu - as.matrix(varGpuD), na.rm=TRUE)
 ```
@@ -72,12 +121,12 @@ quantile(varCpuC - as.matrix(varGpuCD), na.rm=TRUE)
 # Cholesky again
 
 Cholesky on the CPU
-```{r cholCpu}
+```{r cholCpu, eval=FALSE}
 system.time(varCholGpu <- chol(varCpu))
 ```
 
 Using `geostatsgpu`'s Cholesky
-```{r cholGpu}
+```{r cholGpu, eval=FALSE}
 varMat1 = gpuR::deepcopy(varGpuD)
 try(system.time(varCholGpu <- geostatsgpu:::cholGpu(varMat1)))
 ```

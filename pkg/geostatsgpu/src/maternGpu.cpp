@@ -38,6 +38,9 @@ double maternGpuVclD(
 
 	Rtemme_gamma(&mu, &g_1pnu, &g_1mnu, &g1, &g2);
 
+//	Rcout << " hi " << vclCoords(0,0) << "  " << vclCoords(0,1) <<
+//	  vclCoords(1,0) << "  " << vclCoords(1,1) << " ih \n";
+	
 	// execute kernel
 	viennacl::ocl::enqueue(maternKernel(Ncell, 
 		iSizeCoords2, iSizeVar1, iSizeVar2, maxIter,
@@ -124,6 +127,9 @@ double maternGpuVclD(
 	maternKernel.global_work_size(0, globalSize);
 	maternKernel.local_work_size(0, max_local_size);
 
+//	Rcout << " 2hi " << vclCoords(0,0) << "  " << vclCoords(0,1) <<
+//	  vclCoords(1,0) << "  " << vclCoords(1,1) << " ih2 \n";
+	
 	double logdet=0.0;
 	logdet = maternGpuVclD(vclVar, vclCoords, DofLDL, param, form, maternKernel);
 	
