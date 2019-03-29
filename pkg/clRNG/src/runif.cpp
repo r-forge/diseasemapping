@@ -1,6 +1,7 @@
 #include "clRNG.hpp"
 #include <clRNG/mrg31k3p.h>
-#include <CL/mrg31k3pkernelString.hpp>
+#include <CL/mrg31k3pkernelStringSeparate.hpp>
+#include <CL/mrg31k3pkernelStringCommon.hpp>
 
 using namespace Rcpp;
 using namespace viennacl;	
@@ -75,11 +76,25 @@ std::string mrg31k3pTypeString() {
   return("undefined");}
 
 template <> std::string mrg31k3pTypeString<double>(){
-  return("mrg31k3pDoubleUint");}
+  std::string result;
+  result << mrg31k3pPrefixDouble << mrg31k3pCommon << 
+    mrg31k3pTemplateString;
+  return(result);
+}
+
 template <> std::string mrg31k3pTypeString<float>(){
-  return("mrg31k3pFloatUint");}
+  std::string result;
+  result << mrg31k3pPrefixFloat << mrg31k3pCommon << 
+    mrg31k3pTemplateString;
+  return(result);
+}
+
+
 template <> std::string mrg31k3pTypeString<int>(){
-  return("mrg31k3pIntUint");
+  std::string result;
+  result << mrg31k3pPrefixInt << mrg31k3pCommon << 
+    mrg31k3pTemplateString;
+  return(result);
 }
 
 //////////////////////////////////the main function;//////////////////////

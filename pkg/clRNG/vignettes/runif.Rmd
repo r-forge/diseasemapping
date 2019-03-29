@@ -26,28 +26,24 @@ t(streams)
 ```{r test}
 x = vclVector(length=8L, type='float')
 
-#streams2 = clRNG::runifGpu(x, streams=streams)
+streams2 = clRNG::runifGpu(x, streams=streams)
 #t(streams2)
 #t(streams)[1:4,]
-#as.vector(x)
+as.vector(x)
 ##
-#clRNG::runifGpu(x, streams=streams2)
-#as.vector(x)
+clRNG::runifGpu(x, streams=streams2)
+as.vector(x)
 ##
 #clRNG::runifGpu(x, streams=streams)
 #as.vector(x)
 ##
 #y = vclVector(length=8L, type='float')
-clRNG::runifGpu(x,streams=streams2)
-#as.vector(y)
-
-
-
-
+clRNG::runifGpu(x,streams=streams)
+as.vector(x)
 
 ```
 
-```{r hist}
+```{r hist, eval=FALSE}
 
 Nglobal = 256
 streams = clRNG:::cpp_mrg31k3pCreateStreams(Nglobal)
