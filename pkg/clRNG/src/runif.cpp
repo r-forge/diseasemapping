@@ -77,23 +77,34 @@ std::string mrg31k3pTypeString() {
 
 template <> std::string mrg31k3pTypeString<double>(){
   std::string result;
-  result = mrg31k3pPrefixDouble + mrg31k3pCommon +
-    mrg31k3pTemplateString;
+  result = 
+    "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n" + 
+    mrg31k3pCommon +
+    mrg31k3pTemplateStringFirst + "double" +
+    mrg31k3pTemplateStringSecond + 
+  "4.656612873077392578125e-10 * " +  /* 1/2^31 */
+  mrg31k3pTemplateStringThird;
   return(result);
 }
 
 template <> std::string mrg31k3pTypeString<float>(){
   std::string result;
-  result = mrg31k3pPrefixFloat + mrg31k3pCommon + 
-    mrg31k3pTemplateString;
+  result =  mrg31k3pCommon + 
+    mrg31k3pTemplateStringFirst + "float" +
+    mrg31k3pTemplateStringSecond + 
+    "4.6566126e-10 * " +  /* 1/2^31 */
+    mrg31k3pTemplateStringThird;
   return(result);
 }
 
 
 template <> std::string mrg31k3pTypeString<int>(){
   std::string result;
-  result = mrg31k3pPrefixInt + mrg31k3pCommon + 
-    mrg31k3pTemplateString;
+  result = mrg31k3pCommon + 
+    mrg31k3pTemplateStringFirst + "int" +
+    mrg31k3pTemplateStringSecond + "(int) " + 
+    mrg31k3pTemplateStringThird;
+  ;
   return(result);
 }
 
@@ -110,6 +121,7 @@ void runifGpu(
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   std::string mrg31k3pkernelString = mrg31k3pTypeString<T>();
 
+//  Rcout << "hi\n\n" <<mrg31k3pkernelString << "\n\n";
 
   // create streams
   size_t streamBufferSize;   
@@ -133,8 +145,8 @@ void runifGpu(
   
   // kernel, in the kernel will Copy RNG host stream objects from global memory into private memory
   viennacl::ocl::program &my_prog = ctx.add_program(mrg31k3pkernelString, "my_kernel");
+
   viennacl::ocl::kernel &randomUniform = my_prog.get_kernel("mrg31k3p");
-  
   randomUniform.global_work_size(0, numWorkItems);
   randomUniform.local_work_size(0, numLocalItems);
   
@@ -144,8 +156,8 @@ void runifGpu(
   
   // copy streams back to cpu
   viennacl::backend::memory_read(bufIn.handle(), 0, streamBufferSize,streams);
-  
-  // then transfer to R object, //return streams to R 
+
+    // then transfer to R object, //return streams to R 
   convertclRngMat(streams, streamsR);
   
 }

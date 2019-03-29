@@ -83,13 +83,13 @@ try(system.time(varCholGpu <- geostatsgpu:::cholGpu(varMat1)))
 ```
 
 Using `gpuR`'s Cholesky
-```{r cholGpurPackage}
+```{r cholGpurPackage, eval=FALSE}
 varMat2 = gpuR::deepcopy(varGpuD)
 system.time(varCholGpuR <- gpuR:::chol.vclMatrix(varMat2))
 ```
 
 Using ViennaCL's LU decomposition
-```{r cholViennaclLu}
+```{r cholViennaclLu, eval=FALSE}
 varMat3 = gpuR::deepcopy(varGpuD)
 system.time(varCholVcl <- geostatsgpu::luGpu(varMat3))
 ```

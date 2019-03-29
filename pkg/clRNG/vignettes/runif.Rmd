@@ -17,38 +17,52 @@ date()
 library('gpuR')
 ```
 
+Use double precision if the GPU supports it
+```{r setType}
+theType = c('float','double')[1+gpuInfo()$double_support]
+theType
+```
+
+Create some streams
 ```{r testStream}
 Nglobal = 4
 streams = clRNG:::cpp_mrg31k3pCreateStreams(Nglobal);
 t(streams)
 ```
 
+Generate some uniforms
 ```{r test}
-x = vclVector(length=8L, type='float')
+x = vclVector(length=8L, type=theType)
 
-streams2 = clRNG::runifGpu(x, streams=streams)
-#t(streams2)
-#t(streams)[1:4,]
+streams2 <- clRNG::runifGpu(x, streams=streams)
+t(streams)[1:4,]
+t(streams2)[1:4,]
 as.vector(x)
-##
-#clRNG::runifGpu(x, streams=streams2)
-#as.vector(x)
-##
-#clRNG::runifGpu(x, streams=streams)
-#as.vector(x)
-##
-#y = vclVector(length=8L, type='float')
-#clRNG::runifGpu(x,streams=streams)
-#as.vector(x)
-
+```
+Generate some different uniforms
+```{r testAgain}
+clRNG::runifGpu(x, streams=streams2)
+as.vector(x)
 ```
 
-```{r hist, eval=FALSE}
+Reuse the intial seed
+```{r testRepeat}
+clRNG::runifGpu(x, streams=streams)
+as.vector(x)
+```
+
+```{r hist}
+
 
 Nglobal = 256
 streams = clRNG:::cpp_mrg31k3pCreateStreams(Nglobal)
-NperItem = 2e5
-x = vclVector(length=as.integer(Nglobal*NperItem), type='float')
+if(gpuInfo()$maxAllocatableMem > 1e10) {
+  NperItem = 5e5
+} else {
+  NperItem = 200
+}
+x = vclVector(length=as.integer(Nglobal*NperItem), type=theType)
+length(x)*1e-6
 
 system.time(junk <- runif(length(x)))
 system.time(streams <- clRNG::runifGpu(x, Nglobal, streams=streams))

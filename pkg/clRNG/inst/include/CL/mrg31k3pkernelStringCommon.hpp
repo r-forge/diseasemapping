@@ -12,7 +12,7 @@ std::string mrg31k3pCommon =
 
 "#define MODULAR_NUMBER_TYPE cl_uint\n"
 
-"typedef double cl_double;\n"
+//"typedef double cl_double;\n"
 "typedef float  cl_float;\n"
 "typedef int    cl_int;\n"
 "typedef uint   cl_uint;\n"
@@ -20,14 +20,14 @@ std::string mrg31k3pCommon =
 "typedef ulong  cl_ulong;\n"
 
 
-"typedef enum clrngStatus_ {"
-"    CLRNG_SUCCESS              = 0,"
-"    CLRNG_INVALID_VALUE        = -1"
+"typedef enum clrngStatus_ {\n"
+"    CLRNG_SUCCESS              = 0,\n"
+"    CLRNG_INVALID_VALUE        = -1\n"
 "} clrngStatus;\n"
 
 "/*! This macro does nothing."
 " *  It is defined for convenience when adapting host code for the device."
-" */"
+" */\n"
 "#define clrngSetErrorString(err) (err)\n"
 
 //"#include <clRNG/mrg31k3p.clh>"
@@ -108,8 +108,8 @@ std::string mrg31k3pCommon =
 "}\n"
 /*! @brief Advance the rng one step and returns z such that 1 <= z <= mrg31k3p_M1
  */
-"static cl_uint clrngMrg31k3pNextState(clrngMrg31k3pStreamState* currentState)\n"
-"{\n"
+//"static 
+"cl_uint clrngMrg31k3pNextState(clrngMrg31k3pStreamState* currentState) {\n"
 	
 "	cl_uint* g1 = currentState->g1;\n"
 "	cl_uint* g2 = currentState->g2;\n"
