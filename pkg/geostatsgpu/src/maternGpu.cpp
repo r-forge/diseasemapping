@@ -250,7 +250,7 @@ float maternGpuVclF(
   cl_device_type type_check = ctx.current_device().type();
   
   // given context but no kernel, add kernel to program
-  viennacl::ocl::program & my_prog = ctx.add_program(maternCLstring, "my_kernel");
+  viennacl::ocl::program & my_prog = ctx.add_program(maternCLstringF, "my_kernel");
   // get compiled kernel function
   viennacl::ocl::kernel & maternKernel = my_prog.get_kernel("maternCLF");
   // set global work sizes

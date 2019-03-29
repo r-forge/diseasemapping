@@ -81,12 +81,12 @@ legendTableLatex = function(x, rule, ruleUnit, collapse){
   if(is.numeric(rule)) rule = paste(rule, ruleUnit, sep='')
   
   latexCol = paste(
-      '\\textcolor[HTML]{',
+      '\\protect{\\textcolor[HTML]{',
       substr(x$col,2,7),
-      '}{\\protect\\rule[',
+      '}{\\rule[',
       rule[1],']{',
       rule[3],'}{',
-      rule[2],'}}',
+      rule[2],'}}}',
       sep=''
   )
   

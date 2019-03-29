@@ -156,9 +156,9 @@ std::string maternCLstring = "__kernel void maternCLD("
 	"	result[Dcol + Drow * sizeResultPadRow] = K_nu;" // lower triangle
 	"	result[Drow + Dcol * sizeResultPadRow] = K_nu;" // upper triangle
 	"	}" // loop through cells
-"};\n\n"//function
+"};\n\n";//function
 
-
+std::string maternCLstringF = 
 "__kernel void maternCLF("
 	"const unsigned int Ncell,"
 	"const unsigned int sizeCoordsPadCol,"
@@ -182,17 +182,17 @@ std::string maternCLstring = "__kernel void maternCLD("
 	"const float g2,"
 	"const float epsilon,"
 	"__global float *coords,"
-	"__global float *result) {"
+	"__global float *result) {\n"
 	// Get the index of the elements to be processed
-	"int Dcell, Drow, Dcol, k;"
+	"int Dcell, Drow, Dcol, k;\n"
 
-	"float dist[2], distRotate[2], distSq;"
-	"float logthisx, K_mu, K_mup1, logck, K_nu, K_nup1, Kp_nu, K_num1;"
-	"float twoLnHalfX, sigma, half_x_nu, sinhrat;"
-	"float ln_half_x, thisx, maternBit, expMaternBit;"
+	"float dist[2], distRotate[2], distSq;\n"
+	"float logthisx, K_mu, K_mup1, logck, K_nu, K_nup1, Kp_nu, K_num1;\n"
+	"float twoLnHalfX, sigma, half_x_nu, sinhrat;\n"
+	"float ln_half_x, thisx, maternBit, expMaternBit;\n"
 
-	"float bi, delhi, hi, di, qi, qip1, ai, a1, ci, Qi, s, dels, tmp;"
-	"float fk, pk, qk, hk, sum0, sum1, del0, ck, del1;"
+	"float bi, delhi, hi, di, qi, qip1, ai, a1, ci, Qi, s, dels, tmp;\n"
+	"float fk, pk, qk, hk, sum0, sum1, del0, ck, del1;\n"
 
 	// matrix stacked row-wise, excluding diagonal
 	// i = row, j  = col, k = cell
@@ -208,113 +208,113 @@ std::string maternCLstring = "__kernel void maternCLD("
 	// Dcol = Dcell - Drow * (Drow-1)/2
 	// Ncell = (N-1) * N / 2
 
-	"for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += get_global_size(0)) {"
+	"for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += get_global_size(0)) {\n"
 
-	"	Drow = ceil(0.5 + sqrt(0.25 + 2.0*(Dcell+1) ) ) - 1;"
-	"	Dcol = Dcell - round(Drow * (Drow - 1.0) / 2.0);"
+	"	Drow = ceil(0.5 + sqrt(0.25 + 2.0*(Dcell+1) ) ) - 1;\n"
+	"	Dcol = Dcell - round(Drow * (Drow - 1.0) / 2.0);\n"
 
 
-	"	dist[0] = coords[Drow*sizeCoordsPadCol] - coords[Dcol*sizeCoordsPadCol];"
-	"	dist[1] = coords[Dcol*sizeCoordsPadCol +1] - coords[Drow*sizeCoordsPadCol +1];"
-	"	distRotate[0] = costheta *dist[0] + sintheta * dist[1];"
-	"	distRotate[1] = sintheta *dist[0] - costheta * dist[1];"
-	"	distSq = distRotate[0]*distRotate[0] + distRotate[1]*distRotate[1]/anisoRatioSq;"
+	"	dist[0] = coords[Drow*sizeCoordsPadCol] - coords[Dcol*sizeCoordsPadCol];\n"
+	"	dist[1] = coords[Dcol*sizeCoordsPadCol +1] - coords[Drow*sizeCoordsPadCol +1];\n"
+	"	distRotate[0] = costheta *dist[0] + sintheta * dist[1];\n"
+	"	distRotate[1] = sintheta *dist[0] - costheta * dist[1];\n"
+	"	distSq = distRotate[0]*distRotate[0] + distRotate[1]*distRotate[1]/anisoRatioSq;\n"
 
-	"	logthisx = log(distSq)/2 + logxscale;"
+	"	logthisx = log(distSq)/2 + logxscale;\n"
 
-	"	ln_half_x = logthisx - M_LN2;"
-	"	thisx = exp(logthisx);"
-	"	maternBit = varscale + nu * logthisx;"
-	"	expMaternBit = exp(maternBit);"
+	"	ln_half_x = logthisx - M_LN2;\n"
+	"	thisx = exp(logthisx);\n"
+	"	maternBit = varscale + nu * logthisx;\n"
+	"	expMaternBit = exp(maternBit);\n"
 
 		// gsl_sf_bessel_K_scaled_temme x < 2
 		// gsl_sf_bessel_K_scaled_steed_temme_CF2 x > 2
 //		result[Dcol * sizeResultPadRow + Drow] = logthisx;
-	"	if(logthisx > 2.0) {" // gsl_sf_bessel_K_scaled_steed_temme_CF2
-	"		K_nu = 0.0;"
-	"		bi = 2.0*(1.0 + thisx);"
-	"		di = 1.0/bi;"
+	"	if(logthisx > 2.0) {\n" // gsl_sf_bessel_K_scaled_steed_temme_CF2
+	"		K_nu = 0.0;\n"
+	"		bi = 2.0*(1.0 + thisx);\n"
+	"		di = 1.0/bi;\n"
 
-	"		delhi = di;"
-	"		hi = delhi;"// was di, now di/exp(maternBit)
+	"		delhi = di;\n"
+	"		hi = delhi;\n"// was di, now di/exp(maternBit)
 
-	"		qi   = 0.0;"
-	"		qip1 = 1.0;"
+	"		qi   = 0.0;\n"
+	"		qip1 = 1.0;\n"
 
-	"		ai = -(0.25 - muSq);"
-	"		a1 = ai;"
-	"		ci = -ai;"
-	"		Qi = -ai;"
+	"		ai = -(0.25 - muSq);\n"
+	"		a1 = ai;\n"
+	"		ci = -ai;\n"
+	"		Qi = -ai;\n"
 
-	"		s = 1.0 + Qi*delhi;"
+	"		s = 1.0 + Qi*delhi;\n"
 
-	"		for(k=2; k<=maxIter; k++) {"
-	"			ai -= 2.0*(k-1);"
-	"			ci  = -ai*ci/k;"
-	"			tmp  = (qi - bi*qip1)/ai;"
-	"			qi   = qip1;"
-	"			qip1 = tmp;"
-	"			Qi += ci*qip1;"
-	"			bi += 2.0;"
-	"			di  = 1.0/(bi + ai*di);"
-	"			delhi = (bi*di - 1.0) * delhi;"
-	"			hi += delhi;"
-	"			dels = Qi*delhi;"
-	"			s += dels;"
-	"			if(fabs(dels/s) < epsilon) break;"
-	"			}" // k loop
+	"		for(k=2; k<=maxIter; k++) {\n"
+	"			ai -= 2.0*(k-1);\n"
+	"			ci  = -ai*ci/k;\n"
+	"			tmp  = (qi - bi*qip1)/ai;\n"
+	"			qi   = qip1;\n"
+	"			qip1 = tmp;\n"
+	"			Qi += ci*qip1;\n"
+	"			bi += 2.0;\n"
+	"			di  = 1.0/(bi + ai*di);\n"
+	"			delhi = (bi*di - 1.0) * delhi;\n"
+	"			hi += delhi;\n"
+	"			dels = Qi*delhi;\n"
+	"			s += dels;\n"
+	"			if(fabs(dels/s) < epsilon) break;\n"
+	"			}\n" // k loop
 
-	"			hi *= -a1;"
-	"		K_nu = exp(-thisx) * exp(maternBit) * sqrt(M_PI/(2.0*thisx)) / s;"//  sqrt(pi)/2 sqrt(2/x)/s =
+	"			hi *= -a1;\n"
+	"		K_nu = exp(-thisx) * exp(maternBit) * sqrt(M_PI/(2.0*thisx)) / s;\n"//  sqrt(pi)/2 sqrt(2/x)/s =
 
-	"		K_nup1 = K_nu * (mu + thisx + 0.5 - hi)/thisx;"
-	"		Kp_nu  = - K_nup1 + mu/thisx * K_nu;"
+	"		K_nup1 = K_nu * (mu + thisx + 0.5 - hi)/thisx;\n"
+	"		Kp_nu  = - K_nup1 + mu/thisx * K_nu;\n"
 
-	"		} else { "// if short distance gsl_sf_bessel_K_scaled_temme
-	"			twoLnHalfX = 2*ln_half_x;"
-	"			sigma   = - mu * ln_half_x;"
-	"			half_x_nu = exp(-sigma);"
-	"			sinhrat = sinh(sigma)/sigma;"
+	"		} else { \n"// if short distance gsl_sf_bessel_K_scaled_temme
+	"			twoLnHalfX = 2*ln_half_x;\n"
+	"			sigma   = - mu * ln_half_x;\n"
+	"			half_x_nu = exp(-sigma);\n"
+	"			sinhrat = sinh(sigma)/sigma;\n"
 
-	"			fk = sinrat * (cosh(sigma)*g1 - sinhrat*ln_half_x*g2);"
-	"			pk = 0.5/half_x_nu * g_1pnu;"
-	"			qk = 0.5*half_x_nu * g_1mnu;"
-	"			hk = pk;"
-	"			sum0 = fk*expMaternBit;"
-	"			sum1 = hk*expMaternBit;"
-	"			k=0;"
-	"			logck = maternBit;"
-	"			del0 = fabs(sum0)+100;"
+	"			fk = sinrat * (cosh(sigma)*g1 - sinhrat*ln_half_x*g2);\n"
+	"			pk = 0.5/half_x_nu * g_1pnu;\n"
+	"			qk = 0.5*half_x_nu * g_1mnu;\n"
+	"			hk = pk;\n"
+	"			sum0 = fk*expMaternBit;\n"
+	"			sum1 = hk*expMaternBit;\n"
+	"			k=0;\n"
+	"			logck = maternBit;\n"
+	"			del0 = fabs(sum0)+100;\n"
 
-	"			while( (k < maxIter) && ( fabs(del0) > (epsilon * fabs(sum0)) ) ) {"
-	"				k++;"
-	"				logck += twoLnHalfX - log((float)k);"
-	"				ck = exp(logck);"
-	"				fk  = (k*fk + pk + qk)/(k*k-muSq);"
+	"			while( (k < maxIter) && ( fabs(del0) > (epsilon * fabs(sum0)) ) ) {\n"
+	"				k++;\n"
+	"				logck += twoLnHalfX - log((float)k);\n"
+	"				ck = exp(logck);\n"
+	"				fk  = (k*fk + pk + qk)/(k*k-muSq);\n"
 
-	"				del0 = ck * fk;"
-	"				sum0 += del0;"
+	"				del0 = ck * fk;\n"
+	"				sum0 += del0;\n"
 
-	"				pk /= (k - (mu));"
-	"				qk /= (k + (mu));"
+	"				pk /= (k - (mu));\n"
+	"				qk /= (k + (mu));\n"
 
-	"				hk  = -k*fk + pk;"
-	"				del1 = ck * hk; "	
-	"				sum1 += del1;"
-	"			}" //while loop
+	"				hk  = -k*fk + pk;\n"
+	"				del1 = ck * hk;\n "	
+	"				sum1 += del1;\n"
+	"			}\n" //while loop
 			//		result[Dcol * sizeResultPadRow + Drow] = -k;
-	"			K_nu   = sum0;"
-	"			K_nup1 = sum1 * exp( - ln_half_x);"
-	"		}" // short distance
+	"			K_nu   = sum0;\n"
+	"			K_nup1 = sum1 * exp( - ln_half_x);\n"
+	"		}\n" // short distance
 
-	"		for(k=0; k<nuround; k++) {"
-	"			K_num1 = K_nu;"
-	"			K_nu   = K_nup1;"
-	"			K_nup1 = exp(log(mup1+k) - ln_half_x) * K_nu + K_num1;"
-	"		}"
-	"	result[Dcol + Drow * sizeResultPadRow] = K_nu;" // lower triangle
-	"	result[Drow + Dcol * sizeResultPadRow] = K_nu;" // upper triangle
-	"	}" // loop through cells
+	"		for(k=0; k<nuround; k++) {\n"
+	"			K_num1 = K_nu;\n"
+	"			K_nu   = K_nup1;\n"
+	"			K_nup1 = exp(log(mup1+k) - ln_half_x) * K_nu + K_num1;\n"
+	"		}\n"
+	"	result[Dcol + Drow * sizeResultPadRow] = K_nu;\n" // lower triangle
+	"	result[Drow + Dcol * sizeResultPadRow] = K_nu;\n" // upper triangle
+	"	}\n" // loop through cells
 "};\n"
 ;
 

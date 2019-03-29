@@ -43,9 +43,9 @@ Create matern matrix on gpu
 ```{r maternMatGpu}
 system.time(varCpu <- geostatsp::matern(coordsSp, myParams))
 system.time(varGpu <- geostatsgpu::maternGpu(x=vclMatrix(coordsSp@coords, type='float'), param=myParams))
-system.time(varGpuD <- geostatsgpu::maternGpu(x=vclMatrix(coordsSp@coords, type='float'), param=myParams))
-quantile(varCpu - as.matrix(varGpu))
-quantile(varCpu - as.matrix(varGpuD))
+system.time(varGpuD <- geostatsgpu::maternGpu(x=vclMatrix(coordsSp@coords, type='double'), param=myParams))
+quantile(varCpu - as.matrix(varGpu), na.rm=TRUE)
+quantile(varCpu - as.matrix(varGpuD), na.rm=TRUE)
 ```
 
 ```{r compareCpuGpu}
@@ -64,8 +64,8 @@ system.time(varGpuC <- geostatsgpu::maternGpu(x=vclMatrix(coordsSp@coords, type=
     form='cholesky'))
 system.time(varGpuCD <- geostatsgpu::maternGpu(x=vclMatrix(coordsSp@coords, type='double'), param=myParams, 
     form='cholesky'))
-quantile(varCpuC - as.matrix(varGpuC))
-quantile(varCpuC - as.matrix(varGpuCD))
+quantile(varCpuC - as.matrix(varGpuC), na.rm=TRUE)
+quantile(varCpuC - as.matrix(varGpuCD), na.rm=TRUE)
 ```
 
 

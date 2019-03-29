@@ -48,19 +48,19 @@ clean:
 # Create tmd
 #
 %.tmd: %.Rmd
-	$(REXE) -e "base::library('base');.libPaths(.Library);knitr::knit('$<',output='$@',encoding='UTF-8')"  mdToTex $(Rargs)
+	$(REXE) -e "base::library('base');knitr::knit('$<',output='$@',encoding='UTF-8')"  mdToTex $(Rargs)
 
 #
 # Bog standard markdown
 #
 %.md: %.Rmd
-	$(REXE) -e "base::library('base');.libPaths(.Library);knitr::knit('$<',encoding='UTF-8')" $(Rargs)
+	$(REXE) -e "base::library('base');knitr::knit('$<',encoding='UTF-8')" $(Rargs)
 
 #
 # spin
 # 
 %.Rmd: %.R
-	$(REXE) -e "base::library('base');.libPaths(.Library);knitr::spin('$<',knit=FALSE,format='Rmd')" $(Rargs)
+	$(REXE) -e "base::library('base');knitr::spin('$<',knit=FALSE,format='Rmd')" $(Rargs)
 
 #
 # tex bibliography

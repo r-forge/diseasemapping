@@ -59,7 +59,7 @@ system.time(streams <- clRNG::runifGpu(x, Nglobal, streams=streams))
 
 xVec = as.vector(x)
 
-hist(xVec, breaks=seq(0,max(xVec),len=101))
+hist(xVec, breaks=seq(-0.1,1.1,len=121))
 
 xMat = matrix(xVec, ncol=Nglobal, byrow=TRUE)
 
