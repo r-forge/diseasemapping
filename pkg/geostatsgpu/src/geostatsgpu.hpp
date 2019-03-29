@@ -1,3 +1,4 @@
+#pragma OPENCL EXTENSION cl_khr_fp64 : enable
 
 //#include <string>
 #include <Rcpp.h>

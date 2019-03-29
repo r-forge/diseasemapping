@@ -1,5 +1,7 @@
 
-std::string maternCLstring = "__kernel void maternCLD("
+std::string maternCLstring =
+"#pragma OPENCL EXTENSION cl_khr_fp64: enable\n\n"
+"__kernel void maternCLD("
 	"const unsigned int Ncell,"
 	"const unsigned int sizeCoordsPadCol,"
 	"const unsigned int sizeResultPadRow,"

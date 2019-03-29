@@ -3,6 +3,7 @@ std::string mrg31k3pkernelString =
 //"#include <clRNG/clRNG.clh>"
 
 //"#define _CLRNG_FPTYPE cl_double\n"
+#pragma OPENCL EXTENSION cl_khr_fp64 : enable
 "#define MODULAR_NUMBER_TYPE cl_uint\n"
 "#define CLRNG_ENABLE_SUBSTREAMS\n"
 
