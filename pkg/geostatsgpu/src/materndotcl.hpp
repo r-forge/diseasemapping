@@ -158,6 +158,7 @@ std::string maternCLstring = "__kernel void maternCLD("
 	"	}" // loop through cells
 "};\n\n"//function
 
+
 "__kernel void maternCLF("
 	"const unsigned int Ncell,"
 	"const unsigned int sizeCoordsPadCol,"
