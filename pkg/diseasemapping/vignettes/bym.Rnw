@@ -213,7 +213,7 @@ legend('topright', lty=1, col=c('black','blue'), legend=c('posterior','prior'))
 }
 @
 
-<<checkPropSpatial, eval=FALSE>>=
+<<checkPropSpatial, eval=FALSE, include=FALSE, purl=FALSE>>=
 
 noData = bym(
 	formula = observed ~ offset(logExpected) + poverty,
