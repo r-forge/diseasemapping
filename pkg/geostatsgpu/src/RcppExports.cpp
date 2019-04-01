@@ -40,8 +40,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_maternGpuD
-SEXP cpp_maternGpuD(Rcpp::S4 varR, Rcpp::S4 coordsR, Rcpp::S4 DofLDLR, Rcpp::NumericVector param, const int form, int max_local_size);
-RcppExport SEXP _geostatsgpu_cpp_maternGpuD(SEXP varRSEXP, SEXP coordsRSEXP, SEXP DofLDLRSEXP, SEXP paramSEXP, SEXP formSEXP, SEXP max_local_sizeSEXP) {
+SEXP cpp_maternGpuD(Rcpp::S4 varR, Rcpp::S4 coordsR, Rcpp::S4 DofLDLR, Rcpp::NumericVector param, const int form, Rcpp::IntegerVector numWorkItems, Rcpp::IntegerVector numLocalItems);
+RcppExport SEXP _geostatsgpu_cpp_maternGpuD(SEXP varRSEXP, SEXP coordsRSEXP, SEXP DofLDLRSEXP, SEXP paramSEXP, SEXP formSEXP, SEXP numWorkItemsSEXP, SEXP numLocalItemsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -50,8 +50,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::S4 >::type DofLDLR(DofLDLRSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type param(paramSEXP);
     Rcpp::traits::input_parameter< const int >::type form(formSEXP);
-    Rcpp::traits::input_parameter< int >::type max_local_size(max_local_sizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_maternGpuD(varR, coordsR, DofLDLR, param, form, max_local_size));
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type numWorkItems(numWorkItemsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type numLocalItems(numLocalItemsSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_maternGpuD(varR, coordsR, DofLDLR, param, form, numWorkItems, numLocalItems));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -87,7 +88,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_geostatsgpu_cpp_cholGpu", (DL_FUNC) &_geostatsgpu_cpp_cholGpu, 11},
     {"_geostatsgpu_gpuNlocal", (DL_FUNC) &_geostatsgpu_gpuNlocal, 3},
-    {"_geostatsgpu_cpp_maternGpuD", (DL_FUNC) &_geostatsgpu_cpp_maternGpuD, 6},
+    {"_geostatsgpu_cpp_maternGpuD", (DL_FUNC) &_geostatsgpu_cpp_maternGpuD, 7},
     {"_geostatsgpu_cpp_maternGpuF", (DL_FUNC) &_geostatsgpu_cpp_maternGpuF, 6},
     {"_geostatsgpu_cpp_lu", (DL_FUNC) &_geostatsgpu_cpp_lu, 2},
     {NULL, NULL, 0}

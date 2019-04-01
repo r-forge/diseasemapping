@@ -14,20 +14,23 @@ date()
 ```{r packages, results='hide'}
 library('geostatsp')
 library('gpuR')
-
+if(system("hostname", TRUE) == 'englishbreakfast') {
+    setContext(2)
+}
 ```
 
 
 ```{r memoryAvailable, echo=TRUE}
+gpuInfo()$deviceName
 gpuInfo()$maxAllocatableMem/(1024^3)
 ```
 
 Set up spatial data
 
 ```{r setupData}
-Ngrid = c(100, 100)
-#Ngrid = c(50, 50)
-#Ngrid = c(30, 30)
+#Ngrid = c(100, 100)
+#Ngrid = c(20, 20)
+Ngrid = c(50, 50)
 
 seqList = list( 
     x = seq(1,by=1,len=Ngrid[1]), 
@@ -38,52 +41,45 @@ coordsSp = sp::SpatialPoints(as.matrix(expand.grid(seqList$x, seqList$y)))
 
 head(coordsSp@coords)
 
-myParams = c(shape=2.15, range=1.5, variance = 2, nugget = 0, 
-             anisoRatio = 1,#10, 
+myParams = c(shape=2.15, range=2.5, variance = 2, nugget = 0, 
+             anisoRatio = 10, 
              anisoAngleRadians = pi/7)
 ```
 
 
 ```{r simpleTestFloat}
 
-  coordsGpu = vclMatrix(-99, nrow(coordsSp@coords), ncol(coordsSp@coords), type="float")
-
-    # this shouldnt be necessary
-  # but something currently wrong with gpuR on the server
-
-  coordsGpu[,2] = coordsSp@coords[,2]
+  coordsGpu = vclMatrix(coordsSp@coords, 
+                        nrow(coordsSp@coords), 
+                        ncol(coordsSp@coords), type="float")
   print(coordsGpu[1:4,1:2])
 
-  coordsGpu[,1] = coordsSp@coords[,1]
-  print(coordsGpu[1:4,1:2])
 
-  coordsGpu[,2] = coordsSp@coords[,2]
-  print(coordsGpu[1:4,1:2])
+  outputF = vclMatrix(0, nrow(coordsGpu), nrow(coordsGpu), type='float')
 
+  
 system.time(varGpu <- geostatsgpu::maternGpu(
-  coordsGpu, param=myParams))
+  coordsGpu, output = outputF, param=myParams, workgroupSize = c(256L,1L)))
 ```
 
 Use double precision if the GPU supports it
 ```{r simpleTestDouble}
 if(gpuInfo()$double_support) {
   
-  coordsGpuD = vclMatrix(-99, nrow(coordsSp@coords), ncol(coordsSp@coords), type="double")
+  coordsGpuD = vclMatrix(coordsSp@coords, 
+                         nrow(coordsSp@coords),
+                         ncol(coordsSp@coords), type="double")
 
-    # this shouldnt be necessary
-  # but something currently wrong with gpuR on the server
-
-  coordsGpuD[,2] = coordsSp@coords[,2]
   print(coordsGpuD[1:4,1:2])
 
-  coordsGpuD[,1] = coordsSp@coords[,1]
-  print(coordsGpuD[1:4,1:2])
 
-  coordsGpuD[,2] = coordsSp@coords[,2]
-  print(coordsGpuD[1:4,1:2])
+  outputD = vclMatrix(0, nrow(coordsGpuD), nrow(coordsGpuD), type='double')
   
-  system.time(varGpuD <- geostatsgpu::maternGpu(
-    x= coordsGpuD, param=myParams))
+  system.time(
+  varGpuD <- geostatsgpu::maternGpu(
+    x= coordsGpuD, output = outputD, param=myParams, 
+    workgroupSize = c(64L,4L), localSize = c(8L, 4L))
+  )
 } else {
   varGpuD = NA
 }
@@ -93,8 +89,9 @@ if(gpuInfo()$double_support) {
 Create matern matrix on cpu
 ```{r maternMatGpu}
 system.time(varCpu <- geostatsp::matern(coordsSp, myParams))
-quantile(varCpu - as.matrix(varGpu), na.rm=TRUE)
-quantile(varCpu - as.matrix(varGpuD), na.rm=TRUE)
+theProb = c(0.5, 0.9, 0.99, 0.999,1)
+quantile(abs(as.matrix(varCpu) - as.matrix(varGpu)), theProb, na.rm=TRUE)
+quantile(abs(as.matrix(varCpu) - as.matrix(varGpuD)), theProb, na.rm=TRUE)
 ```
 
 ```{r compareCpuGpu}

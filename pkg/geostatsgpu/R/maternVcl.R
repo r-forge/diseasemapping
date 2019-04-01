@@ -7,6 +7,8 @@
 #' @param DofLDL a VCL vector to hold the diagonals from the LDL decomposition
 #' @param param parameters
 #' @param form produce variance matrix or it's cholesky
+#' @param workgroupSize vector of integers, number of work items
+#' @param localSize vector of integers, number of local work items
 #' @return The output and DofLDL objects have been altered in-place
 #' @examples
 #' library('gpuR')
@@ -31,7 +33,8 @@ maternGpu = function(
   output = vclMatrix(data=0, nrow(x), nrow(x),type=typeof(x), ctx_id = x@.context_index),
   DofLDL = NULL,
   param = c(range = 1, variance = 1, shape = 1), 
-  form = c("variance", "cholesky", "precision", "inverseCholesky")) 
+  form = c("variance", "cholesky", "precision", "inverseCholesky"),
+  workgroupSize, localSize) 
 {
   form = gsub("iance$|esky$|ision", "", tolower(form)[1])    
   form = c(var=1,chol=2,prec=3,inversechol=4)[form]
@@ -46,12 +49,17 @@ maternGpu = function(
     }
   }
 
-  maxWorkGroupSize <- switch(
+  if(missing(workgroupSize)) {
+    workgroupSize <- switch(
     deviceType(output@.device_index, output@.context_index),
     "gpu" = gpuInfo(output@.device_index, output@.context_index)$maxWorkGroupSize,
     "cpu" = cpuInfo(output@.device_index, output@.context_index)$maxWorkGroupSize,
     stop("unrecognized device type")
     )
+  }
+  if(missing(localSize)) {
+    localSize = workgroupSize
+  }
 
   param = geostatsp::fillParam(param) 
 
@@ -66,7 +74,7 @@ maternGpu = function(
       DofLDL,
       param,
       form,
-      maxWorkGroupSize)
+      workgroupSize[1])
   } 
   else if (typeof(x) == 'double'){
     fromC = geostatsgpu:::cpp_maternGpuD(
@@ -75,7 +83,9 @@ maternGpu = function(
       DofLDL,
       param,
       form,
-      maxWorkGroupSize)
+      c(workgroupSize, 1, 1, 1)[1:2],
+      c(localSize, 1, 1, 1)[1:2])
+    
   }
 
   if(form == 2) {

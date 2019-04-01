@@ -9,8 +9,8 @@ gpuNlocal <- function(kernel, functionName, ctx_id) {
     .Call('_geostatsgpu_gpuNlocal', PACKAGE = 'geostatsgpu', kernel, functionName, ctx_id)
 }
 
-cpp_maternGpuD <- function(varR, coordsR, DofLDLR, param, form, max_local_size) {
-    .Call('_geostatsgpu_cpp_maternGpuD', PACKAGE = 'geostatsgpu', varR, coordsR, DofLDLR, param, form, max_local_size)
+cpp_maternGpuD <- function(varR, coordsR, DofLDLR, param, form, numWorkItems, numLocalItems) {
+    .Call('_geostatsgpu_cpp_maternGpuD', PACKAGE = 'geostatsgpu', varR, coordsR, DofLDLR, param, form, numWorkItems, numLocalItems)
 }
 
 cpp_maternGpuF <- function(varR, coordsR, DofLDLR, param, form, max_local_size) {

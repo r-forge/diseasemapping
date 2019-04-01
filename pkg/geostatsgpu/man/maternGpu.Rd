@@ -7,7 +7,7 @@
 maternGpu(x, output = vclMatrix(data = 0, nrow(x), nrow(x), type =
   typeof(x), ctx_id = x@.context_index), DofLDL = NULL, param = c(range
   = 1, variance = 1, shape = 1), form = c("variance", "cholesky",
-  "precision", "inverseCholesky"))
+  "precision", "inverseCholesky"), workgroupSize, localSize)
 }
 \arguments{
 \item{x}{points}
@@ -19,6 +19,10 @@ maternGpu(x, output = vclMatrix(data = 0, nrow(x), nrow(x), type =
 \item{param}{parameters}
 
 \item{form}{produce variance matrix or it's cholesky}
+
+\item{workgroupSize}{vector of integers, number of work items}
+
+\item{localSize}{vector of integers, number of local work items}
 }
 \value{
 The output and DofLDL objects have been altered in-place

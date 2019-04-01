@@ -21,31 +21,44 @@ std::string maternCLcommonString =
 // Dcol = Dcell - Drow * (Drow-1)/2
 // Ncell = (N-1) * N / 2
 
+" __local int globalSize, nuround;\n"
+" int Dcell, Drow, Dcol, k;\n"
 
-"const int globalSize = get_global_size(0);"
-"int Dcell, Drow, Dcol, k;\n"
-"for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += globalSize) {\n"
+" globalSize = get_global_size(0)*get_global_size(1);\n"//*get_global_size(2);"
+" nuround = (int) (nu+0.5);\n"
+" costheta = cos(theta);\n"
+" sintheta = sin(theta);\n"
+" mu = nu - (double) (nuround);\n"
+" muSq = mu*mu;\n"
+" mup1 = mu + 1;\n"
+"barrier(CLK_LOCAL_MEM_FENCE);\n"
+
+
+"for(Dcell = get_global_id(0) + " 
+"     get_global_id(1) * get_global_size(0);" 
+//"     get_global_id(2)*get_global_size(1)*get_global_size(0);" 
+"    Dcell < Ncell; Dcell += globalSize) {\n"
 
 "	Drow = ceil(0.5 + sqrt(0.25 + 2.0*(Dcell+1) ) ) - 1;\n"
 "	Dcol = Dcell - round(Drow * (Drow - 1.0) / 2.0);\n"
 
+// dist 0 1 distrotate 0 1 becomes ai bi ci di
+"	ai = coords[Drow*sizeCoordsPadCol] - coords[Dcol*sizeCoordsPadCol];"
+"	bi = coords[Dcol*sizeCoordsPadCol +1] - coords[Drow*sizeCoordsPadCol +1];"
+"	ci = costheta *ai + sintheta * bi;"
+"	di = sintheta *ai - costheta * bi;"
+//"	logthisx = distRotate[0]*distRotate[0] + distRotate[1]*distRotate[1]/anisoRatioSq;"
+"	logthisx = ci*ci + di*di/anisoRatioSq;"
 
-"	dist[0] = coords[Drow*sizeCoordsPadCol] - coords[Dcol*sizeCoordsPadCol];"
-"	dist[1] = coords[Dcol*sizeCoordsPadCol +1] - coords[Drow*sizeCoordsPadCol +1];"
-"	distRotate[0] = costheta *dist[0] + sintheta * dist[1];"
-"	distRotate[1] = sintheta *dist[0] - costheta * dist[1];"
-"	distSq = distRotate[0]*distRotate[0] + distRotate[1]*distRotate[1]/anisoRatioSq;"
+"	logthisx = log(logthisx)/2 + logxscale;"
 
-"	logthisx = log(distSq)/2 + logxscale;"
-
-"	ln_half_x = logthisx - logTwo;"
-"	thisx = exp(logthisx);"
-"	maternBit = varscale + nu * logthisx;"
-"	expMaternBit = exp(maternBit);\n"
+//"	maternBit = varscale + nu * logthisx;"
+//"	expMaternBit = exp(maternBit);\n"
 // gsl_sf_bessel_K_scaled_temme x < 2
 // gsl_sf_bessel_K_scaled_steed_temme_CF2 x > 2
 //		result[Dcol * sizeResultPadRow + Drow] = logthisx;
 "	if(logthisx > 2.0) {\n" // gsl_sf_bessel_K_scaled_steed_temme_CF2
+"	  thisx = exp(logthisx);"
 "		K_nu = 0.0;"
 "		bi = 2.0*(1.0 + thisx);"
 "		di = 1.0/bi;"
@@ -80,50 +93,67 @@ std::string maternCLcommonString =
 "			}\n" // k loop
 "			hi *= -a1;"
 //"		K_nu = exp(-thisx) * exp(maternBit) * sqrt(M_PI/(2.0*thisx)) / s;"//  sqrt(pi)/2 sqrt(2/x)/s =
-"		K_nu = exp(logSqrtHalfPi + maternBit - thisx - logthisx / 2) / s;"//  sqrt(pi)/2 sqrt(2/x)/s =
+"		K_nu = exp(logSqrtHalfPi + varscale + nu * logthisx - thisx - logthisx / 2) / s;"//  sqrt(pi)/2 sqrt(2/x)/s =
 
 "		K_nup1 = K_nu * (mu + thisx + 0.5 - hi)/thisx;"
 "		Kp_nu  = - K_nup1 + mu/thisx * K_nu;\n"
 
+//"	  ln_half_x = logthisx - logTwo;"
+"	    a1 = logthisx - logTwo;"
 "		} else {\n"// if short distance gsl_sf_bessel_K_scaled_temme
-"			twoLnHalfX = 2*ln_half_x;"
-"			sigma   = - mu * ln_half_x;"
-"			half_x_nu = exp(-sigma);"
-"			sinhrat = sinh(sigma)/sigma;"
+// tmp replaces twoLnHalfX
+// s replaces sigma, dels replaces sinhrat
+// delhi replaces half_x_nu
+// sum0 sum1 del0 del1 replaced by
+// ai bi ci nothing
+// logck, ck replaced by qi Qi
+// hk gone
+// fk, pk, qk replaced by qip1, di, hi
+// ln_half_x replaced by a1
 
-"			fk = sinrat * (cosh(sigma)*g1 - sinhrat*ln_half_x*g2);"
-"			pk = 0.5/half_x_nu * g_1pnu;"
-"			qk = 0.5*half_x_nu * g_1mnu;"
-"			hk = pk;"
-"			sum0 = fk*expMaternBit;"
-"			sum1 = hk*expMaternBit;"
+"	    a1 = logthisx - logTwo;"
+"			s   = - mu * a1;"
+"			delhi = exp(-s);"
+"			dels = sinh(s)/s;"
+
+"			qip1 = sinrat * (cosh(s)*g1 - dels*a1*g2);"
+"			di = 0.5/delhi * g_1pnu;"
+"			hi = 0.5*delhi * g_1mnu;"
+//"			hk = pk;"
+"			qi =varscale + nu * logthisx;"//" maternBit;"
+"     tmp = exp(qi);\n"
+"			ai = qip1*tmp;"
+"			bi = di*tmp;"
+"			tmp = 2*a1;"
 "			k=0;"
-"			logck = maternBit;"
-"			del0 = fabs(sum0)+100;\n"
-"			while( (k < maxIter) && ( fabs(del0) > (epsilon * fabs(sum0)) ) ) {\n"
+"			ci = fabs(ai)+100;\n"
+"			while( (k < maxIter) && ( fabs(ci) > (epsilon * fabs(ai)) ) ) {\n"
 "				k++;"
-"				logck += twoLnHalfX - log((double)k);"
-"				ck = exp(logck);"
-"				fk  = (k*fk + pk + qk)/(k*k-muSq);"
+"				qi += tmp - log((double) k);"
+"				Qi = exp(qi);"
+"				qip1  = (k*qip1 + di + hi)/(k*k-muSq);"
 
-"				del0 = ck * fk;"
-"				sum0 += del0;"
+//"				del0 = ck * fk;"
+//"				sum0 += del0;"
+"       ci = Qi * qip1;"
+"       ai += ci;"
 
-"				pk /= (k - (mu));"
-"				qk /= (k + (mu));"
+"				di /= (k - (mu));"
+"				hi /= (k + (mu));"
 
-"				hk  = -k*fk + pk;"
-"				del1 = ck * hk; "	
-"				sum1 += del1;"
+//"				hk  = -k*fk + pk;"
+//"				di = ck * hk; "	
+//"				bi += di;"
+"       bi += Qi*(-k*qip1 + di);\n"
 "			}\n" //while loop
-//		result[Dcol * sizeResultPadRow + Drow] = -k;
-"			K_nu   = sum0;"
-"			K_nup1 = sum1 * exp( - ln_half_x);"
+"			K_nu   = ai;"
+"			K_nup1 = bi * exp( - a1);"
 "		}\n" // short distance
+
 "		for(k=0; k<nuround; k++) {\n"
 "			K_num1 = K_nu;"
 "			K_nu   = K_nup1;"
-"			K_nup1 = exp(log(mup1+k) - ln_half_x) * K_nu + K_num1;"
+"			K_nup1 = exp(log(mup1+k) - a1) * K_nu + K_num1;"
 "		}\n"
 "#ifdef assignLower\n"
 "	  result[Dcol + Drow * sizeResultPadRow] = K_nu;\n" // lower triangle
@@ -131,6 +161,8 @@ std::string maternCLcommonString =
 "#ifdef assignUpper\n;"
 "	result[Drow + Dcol * sizeResultPadRow] = K_nu;\n"//K_nu;\n" // upper triangle
 "# endif\n"
+//"	result[Drow + Dcol * sizeResultPadRow] = Dcell;\n"//K_nu;\n" // upper triangle
+//"	  result[Dcol + Drow * sizeResultPadRow] = get_global_id(0) + 0.01 * get_global_id(1);\n" // lower triangle
 "	}\n"; // loop through cells
 
 
@@ -149,12 +181,13 @@ std::string maternCLstring =
   "const unsigned int sizeResultPadCol,"
   "const unsigned int maxIter,"
   "const double nu,"
-  "const int nuround,"
-  "const double mu,"
-  "const double muSq,"
-  "const double mup1,"
-  "const double costheta,"
-  "const double sintheta,"
+//  "const int nuround,"
+//  "const double mu,"
+//  "const double muSq,"
+//  "const double mup1,"
+  "const double theta,"
+//"const double costheta,"
+//  "const double sintheta,"
   "const double anisoRatioSq,"
   "const double varscale,"
   "const double logxscale,"
@@ -164,17 +197,26 @@ std::string maternCLstring =
   "const double g1,"
   "const double g2,"
   "const double epsilon,"
-  "__global const double *coords,"
+  "__global double *coords,"
   "__global double *result) {\n"
   
-  "double dist[2], distRotate[2], distSq,"
-  "  logthisx, K_mu, K_mup1, logck, K_nu, K_nup1, Kp_nu, K_num1,"
-  "  twoLnHalfX, sigma, half_x_nu, sinhrat,"
-  "  ln_half_x, thisx, maternBit, expMaternBit,"
-  "  bi, delhi, hi, di, qi, qip1, ai, a1, ci, Qi, s, dels, tmp,"
-  "  fk, pk, qk, hk, sum0, sum1, del0, ck, del1;\n"  
+//  "double dist[2], distRotate[2], "
+//"  twoLnHalfX, distSq, sigma, sinhrat"
+// "  half_x_nu, expMaternBit, ck, logck"
+//  "   maternBit,"
+// 21 variables defined here
+// another 16 in the arguments
+// got rid of mu, mup1, nuround
+" double logthisx, thisx, K_mu, K_mup1, K_nu, K_nup1, Kp_nu, K_num1,"
+  "  bi, delhi, hi, di, qi, qip1, ai, a1, ci, Qi, s, dels, tmp;\n"
+"__local double costheta, sintheta,  mu, muSq, mup1;\n"
+//  " __local int nuround = (int) (nu+0.5);" // nuround
+//  "__local double mu = nu - nuround;\n"  
+//  "__local double muSq = mu*mu;\n"  
+//  "__local double costheta = cos(theta), sintheta = sin(theta);\n"
+  //  "ln_half_x,  fk;\n" //", sum0, sum1, del0, del1, hk, pk, qk;\n"  
   + maternCLcommonString +
-  "};\n\n";//function
+"};\n\n"; //function
 
 
 std::string maternCLstringF = 
