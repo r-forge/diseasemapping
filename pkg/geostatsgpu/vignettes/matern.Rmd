@@ -59,7 +59,8 @@ myParams = c(shape=2.15, range=2.5, variance = 2, nugget = 0,
 
   
 system.time(varGpu <- geostatsgpu::maternGpu(
-  coordsGpu, output = outputF, param=myParams, workgroupSize = c(256L,1L)))
+  coordsGpu, output = outputF, param=myParams,
+      workgroupSize = c(128L,2L), localSize = c(32L, 2L)))
 ```
 
 Use double precision if the GPU supports it
@@ -78,7 +79,7 @@ if(gpuInfo()$double_support) {
   system.time(
   varGpuD <- geostatsgpu::maternGpu(
     x= coordsGpuD, output = outputD, param=myParams, 
-    workgroupSize = c(64L,4L), localSize = c(8L, 4L))
+    workgroupSize = c(128L,2L), localSize = c(32L, 2L))
   )
 } else {
   varGpuD = NA

@@ -1,9 +1,7 @@
+// need at least 2 by 2 local work items
+
 // TO DO 
 // create float string using maternClcommonString
-// reduce the number of variables so they all fit in private memory
-// use macros to replace different variables in the if(logthisx > 2.0) blocks
-// #define sigma hi and get rid of sigma as a variable?
-// make globalSize local?
 
 std::string maternCLcommonString =
   
@@ -24,15 +22,24 @@ std::string maternCLcommonString =
 " __local int globalSize, nuround;\n"
 " int Dcell, Drow, Dcol, k;\n"
 
+"if(get_local_id(0) == 0) {\n"
+	"if(get_local_id(1) == 0) {\n"
 " globalSize = get_global_size(0)*get_global_size(1);\n"//*get_global_size(2);"
+	"} else if (get_local_id(1) == 1) {\n"
 " nuround = (int) (nu+0.5);\n"
-" costheta = cos(theta);\n"
-" sintheta = sin(theta);\n"
 " mu = nu - (double) (nuround);\n"
 " muSq = mu*mu;\n"
 " mup1 = mu + 1;\n"
-"barrier(CLK_LOCAL_MEM_FENCE);\n"
+	"}\n"
+"} else if (get_local_id(0) == 1) {\n"
+	"if(get_local_id(1) == 0) {\n"
+" costheta = cos(theta);\n"
+	"} else if (get_local_id(1) == 1) {\n"
+" sintheta = sin(theta);\n"
+	"}\n"
+"}\n"
 
+"barrier(CLK_LOCAL_MEM_FENCE);\n"
 
 "for(Dcell = get_global_id(0) + " 
 "     get_global_id(1) * get_global_size(0);" 
@@ -99,7 +106,7 @@ std::string maternCLcommonString =
 "		Kp_nu  = - K_nup1 + mu/thisx * K_nu;\n"
 
 //"	  ln_half_x = logthisx - logTwo;"
-"	    a1 = logthisx - logTwo;"
+"	    a1 = logthisx - logTwo;\n"
 "		} else {\n"// if short distance gsl_sf_bessel_K_scaled_temme
 // tmp replaces twoLnHalfX
 // s replaces sigma, dels replaces sinhrat
@@ -169,12 +176,12 @@ std::string maternCLcommonString =
 
 // note that either assignLower or assignUpper or both must be defined
 // otherwise the values won't be saved
-std::string maternCLstring =
+std::string maternCLstringDouble =
   "\n#pragma OPENCL EXTENSION cl_khr_fp64: enable\n\n"
   "\n#define logSqrtHalfPi 0.2257913526447273278031\n"
   "\n#define logTwo M_LN2\n"
   
-  "\n__kernel void maternCLD("
+  "\n__kernel void maternCL("
   "const unsigned int Ncell,"
   "const unsigned int sizeCoordsPadCol,"
   "const unsigned int sizeResultPadRow,"
@@ -213,8 +220,37 @@ std::string maternCLstring =
 "};\n\n"; //function
 
 
-std::string maternCLstringF = 
-"__kernel void maternCLF("
+std::string maternCLstringFloat = 
+"\n#define logSqrtHalfPi 0.22579135\n"
+"\n#define logTwo 0.69314718\n"
+"__kernel void maternCL("
+	"const unsigned int Ncell,"
+	"const unsigned int sizeCoordsPadCol,"
+	"const unsigned int sizeResultPadRow,"
+	"const unsigned int sizeResultPadCol,"
+	"const unsigned int maxIter,"
+	"const float nu,"
+	"const float theta,"
+	"const float anisoRatioSq,"
+	"const float varscale,"
+	"const float logxscale,"
+	"const float sinrat,"
+	"const float g_1pnu,"
+	"const float g_1mnu,"
+	"const float g1,"
+	"const float g2,"
+	"const float epsilon,"
+	"__global float *coords,"
+	"__global float *result) {\n"
+"float logthisx, thisx, K_mu, K_mup1, K_nu, K_nup1, Kp_nu, K_num1,"
+  "  bi, delhi, hi, di, qi, qip1, ai, a1, ci, Qi, s, dels, tmp;\n"
+"__local float costheta, sintheta,  mu, muSq, mup1;\n"
+  + maternCLcommonString +
+"};\n\n"; //function
+
+
+std::string maternCLstringFold = 
+"__kernel void maternCLFold("
 	"const unsigned int Ncell,"
 	"const unsigned int sizeCoordsPadCol,"
 	"const unsigned int sizeResultPadRow,"

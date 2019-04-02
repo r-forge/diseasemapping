@@ -8,12 +8,35 @@ using namespace viennacl;
 using namespace viennacl::linalg;
 
 
-double maternGpuVclD(
-	viennacl::matrix<double> &vclVar,
-	viennacl::matrix<double> &vclCoords,
-	viennacl::vector_base<double> &DofLDL,
-	double *param, // range shape variance nugget ratio angleRadians
+template <typename T> 
+std::string maternClString() {
+  return("undefined");}
+template <> std::string maternClString<double>(){
+  return(maternCLstringDouble);
+}
+template <> std::string maternClString<float>(){
+  return(maternCLstringFloat);
+}
+
+template <typename T> T maternClEpsilon() {
+	return(0);
+}
+template <> float maternClEpsilon<float>(){
+	return(GSL_FLT_EPSILON /1000);
+}
+template <> double maternClEpsilon<double>(){
+	return(GSL_DBL_EPSILON /1000);
+} 
+
+
+template<typename T>
+double maternGpuVcl(
+	viennacl::matrix<T> &vclVar,
+	viennacl::matrix<T> &vclCoords,
+	viennacl::vector_base<T> &DofLDL,
+	std::vector<double> param, // range shape variance nugget ratio angleRadians
 	const int form,
+	T epsilon,
 	viennacl::ocl::kernel &maternKernel){
 
 	double logdet=0.0; // the result
@@ -40,38 +63,37 @@ double maternGpuVclD(
 
 //	Rcout << " hi " << vclCoords(0,0) << "  " << vclCoords(0,1) <<
 //	  vclCoords(1,0) << "  " << vclCoords(1,1) << " ih \n";
-	
+
 	// execute kernel
 	viennacl::ocl::enqueue(maternKernel(
 	    Ncell, 
 		iSizeCoords2, iSizeVar1, 
 		iSizeVar2, maxIter,
-			// nuround mu
-		param[1], //nu, 
-//		nuround, 
-//		mu, //muSq, //mup1,
-			// cos theta, sin theta
-//		cos(param[5]), sin(param[5]),
-      param[5], // theta
+		(T) (param[1]), //nu, 
+      	(T) (param[5]), // theta
 			// parameters from matern.c in geostatsp
 			// anisoRatioSq
-		(param[4])*(param[4]),
+		(T) ( (param[4])*(param[4]) ),
 			// varscale
-		log(param[2]) - Rf_lgammafn(param[1]) - (param[1]-1)*M_LN2,
+		(T) (log(param[2]) - Rf_lgammafn(param[1]) - (param[1]-1)*M_LN2),
 			// logxscale, includes range parameter
-		1.5 * M_LN2 + 0.5 * log(param[1]) - log(param[0]),
+		(T) (1.5 * M_LN2 + 0.5 * log(param[1]) - log(param[0])),
 			// parameters from bessel temme in gsl
-		sinrat, g_1pnu, g_1mnu, g1, g2,
-		GSL_DBL_EPSILON /1000, 
-		vclCoords,vclVar));
+		(T) (sinrat), 
+		(T) (g_1pnu), 
+		(T) (g_1mnu), 
+		(T) (g1), (T) (g2),
+		epsilon,
+		vclCoords,
+		vclVar));
 
 
 
-	viennacl::linalg::opencl::matrix_diagonal_assign(vclVar, varDiag);	
+	viennacl::linalg::opencl::matrix_diagonal_assign(vclVar, (T) (varDiag) );	
 
 	if( form >= 2 ) {
 		// cholesky
-		logdet = luT<double>(vclVar, DofLDL);
+		logdet = luT<T>(vclVar, DofLDL);
 		/*
 		viennacl::linalg::lu_factorize(vclVar);
 		// try cusolverDnDpotrf instead?
@@ -95,12 +117,13 @@ double maternGpuVclD(
 	return(logdet);
 }
 
-
-double maternGpuVclD(
-	viennacl::matrix<double> &vclVar,
-	viennacl::matrix<double> &vclCoords,
-	viennacl::vector_base<double> &DofLDL,
-	double *param,
+// note all objects on the cpu are double
+// only the gpu objects are typed
+template<typename T> double maternGpuVcl(
+	viennacl::matrix<T> &vclVar,
+	viennacl::matrix<T> &vclCoords,
+	viennacl::vector_base<T> &DofLDL,
+	std::vector<double> param,
 	const int form,
 	const int ctx_id,
 	std::vector<int> numWorkItems,
@@ -111,15 +134,14 @@ double maternGpuVclD(
 
 	cl_device_type type_check = ctx.current_device().type();
 
-	// given context but no kernel, add kernel to program
 	std::string maternClStringWithOptions = 
-	  "\n#define assignUpper\n" 
-	  "\n#define assignLower\n" +
-	  maternCLstring;
+	  	  "\n#define assignUpper\n" 
+		  "\n#define assignLower\n" +
+		  maternClString<T>();
+
 	viennacl::ocl::program & my_prog = ctx.add_program(maternClStringWithOptions, "my_kernel");
 	// get compiled kernel function
-	viennacl::ocl::kernel & maternKernel = my_prog.get_kernel("maternCLD");
-
+	viennacl::ocl::kernel & maternKernel = my_prog.get_kernel("maternCL");
 
 	// set global work sizes
 	const unsigned int 
@@ -139,15 +161,12 @@ double maternGpuVclD(
 //		  " " << numWorkItems[2] <<  " ih \n";
 
 	double logdet=0.0;
-
 		
 	maternKernel.global_work_size(0, (cl_uint) (numWorkItems[0] ) );//numWorkItems[0]);
 	maternKernel.global_work_size(1, (cl_uint) (numWorkItems[1] ) );//numWorkItems[0]);
-//	maternKernel.global_work_size(2, (cl_uint) (numWorkItems[2] ) );//numWorkItems[0]);
 
 	maternKernel.local_work_size(0,(cl_uint) (numLocalItems[0]));
 	maternKernel.local_work_size(1,(cl_uint) (numLocalItems[1]));
-//	maternKernel.local_work_size(2,(cl_uint) (numLocalItems[2]));
 	
 	
 //	Rcout << " 2hi " << vclCoords(0,0) << "  " << vclCoords(0,1) <<
@@ -157,13 +176,49 @@ double maternGpuVclD(
 //  maternKernel.global_work_size(1) <<
 //  " " << maternKernel.global_work_size(2) <<  " ih \n";
 
+	logdet = maternGpuVcl<T>(
+		vclVar, vclCoords, DofLDL, 
+		param, form, 
+		maternClEpsilon<T>(), 
+		maternKernel);
 
-	logdet = maternGpuVclD(vclVar, vclCoords, DofLDL, param, form, maternKernel);
 	return(logdet);
 }
 
 //	SEXP XYR, // solve for Lt b = XY
 //	SEXP crossprodR, //bt b
+template<typename T> SEXP maternGpuVcl(
+	Rcpp::S4 varR,
+	Rcpp::S4 coordsR,
+	Rcpp::S4 DofLDLR,
+	Rcpp::NumericVector param, //'range','shape','variance','nugget','anisoRatio','anisoAngleRadians'
+	const int form, // 2 cholesky 3 inversecholesky, 4 inverse, 5 solve for b
+	Rcpp::IntegerVector numWorkItems,
+	Rcpp::IntegerVector numLocalItems) {
+
+	double logdet = 0.0;
+	std::vector<double> param2 = Rcpp::as<std::vector<double> >(param);
+	std::vector<int> numWorkItemsStd = Rcpp::as<std::vector<int> >(numWorkItems);
+	std::vector<int> numLocalItemsStd = Rcpp::as<std::vector<int> >(numLocalItems);
+	
+	// data
+	const bool BisVCL=1;
+	const int ctx_id = INTEGER(varR.slot(".context_index"))[0]-1;
+	std::shared_ptr<viennacl::matrix<T> > vclVar = getVCLptr<T>(varR.slot("address"), BisVCL, ctx_id);
+
+	// vector to contain the D
+	std::shared_ptr<viennacl::vector_base<T> > DofLDL = getVCLVecptr<T>(DofLDLR.slot("address"), BisVCL, ctx_id);
+
+	std::shared_ptr<viennacl::matrix<T> > vclCoords = getVCLptr<T>(coordsR.slot("address"), BisVCL, ctx_id);
+	logdet = maternGpuVcl<T>(
+		*vclVar, *vclCoords, *DofLDL, param2,
+		form, ctx_id,
+        numWorkItemsStd, 
+        numLocalItemsStd);
+
+	return(Rcpp::wrap(logdet));	
+
+	}
 
 //[[Rcpp::export]]
 SEXP cpp_maternGpuD(
@@ -175,31 +230,29 @@ SEXP cpp_maternGpuD(
 	Rcpp::IntegerVector numWorkItems,
 	Rcpp::IntegerVector numLocalItems) {
 
-	double logdet = 0.0;
-	double *param2 = &param[0];
-	std::vector<int> numWorkItemsStd = Rcpp::as<std::vector<int> >(numWorkItems);
-	std::vector<int> numLocalItemsStd = Rcpp::as<std::vector<int> >(numLocalItems);
-	
-	// data
-	const bool BisVCL=1;
-	const int ctx_id = INTEGER(varR.slot(".context_index"))[0]-1;
-	std::shared_ptr<viennacl::matrix<double> > vclVar = getVCLptr<double>(varR.slot("address"), BisVCL, ctx_id);
-
-	// vector to contain the D
-	std::shared_ptr<viennacl::vector_base<double> > DofLDL = getVCLVecptr<double>(DofLDLR.slot("address"), BisVCL, ctx_id);
-
-	std::shared_ptr<viennacl::matrix<double> > vclCoords = getVCLptr<double>(coordsR.slot("address"), BisVCL, ctx_id);
-
-	logdet = maternGpuVclD(*vclVar, *vclCoords, *DofLDL, param2,form, ctx_id,
-                        numWorkItemsStd, numLocalItemsStd);
-
-	return(Rcpp::wrap(logdet));	
+	return(maternGpuVcl<double>(
+		varR, coordsR, DofLDLR, param, form, 
+		numWorkItems, numLocalItems));
 }
 
+//[[Rcpp::export]]
+SEXP cpp_maternGpuF(
+	Rcpp::S4 varR,
+	Rcpp::S4 coordsR,
+	Rcpp::S4 DofLDLR,
+	Rcpp::NumericVector param, //'range','shape','variance','nugget','anisoRatio','anisoAngleRadians'
+	const int form, // 2 cholesky 3 inversecholesky, 4 inverse, 5 solve for b
+	Rcpp::IntegerVector numWorkItems,
+	Rcpp::IntegerVector numLocalItems) {
+
+	return(maternGpuVcl<float>(
+		varR, coordsR, DofLDLR, param, form, 
+		numWorkItems, numLocalItems));
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///FLOAT///////////////////////////////////////////////////////////////////////////////////////////////////////
-float maternGpuVclF(
+float maternGpuVclFold(
     viennacl::matrix<float> &vclVar,
     viennacl::matrix<float> &vclCoords,
     viennacl::vector_base<float> &DofLDL,
@@ -271,7 +324,7 @@ float maternGpuVclF(
   return(logdet);
 }
 
-float maternGpuVclF(
+float maternGpuVclFold(
     viennacl::matrix<float> &vclVar,
     viennacl::matrix<float> &vclCoords,
     viennacl::vector_base<float> &DofLDL,
@@ -286,9 +339,9 @@ float maternGpuVclF(
   cl_device_type type_check = ctx.current_device().type();
   
   // given context but no kernel, add kernel to program
-  viennacl::ocl::program & my_prog = ctx.add_program(maternCLstringF, "my_kernel");
+  viennacl::ocl::program & my_prog = ctx.add_program(maternCLstringFloat, "my_kernel");
   // get compiled kernel function
-  viennacl::ocl::kernel & maternKernel = my_prog.get_kernel("maternCLF");
+  viennacl::ocl::kernel & maternKernel = my_prog.get_kernel("maternCL");
   // set global work sizes
   const unsigned int 
     sizeVar1=vclVar.size1(),
@@ -307,7 +360,7 @@ float maternGpuVclF(
   maternKernel.local_work_size(0, max_local_size);
   
   float logdet = 0.0;
-  logdet = maternGpuVclF(vclVar, vclCoords, DofLDL, param, form, maternKernel);
+  logdet = maternGpuVclFold(vclVar, vclCoords, DofLDL, param, form, maternKernel);
   return(logdet);
 }
 
@@ -315,8 +368,8 @@ float maternGpuVclF(
 //	SEXP crossprodR, //bt b
 
 
-//[[Rcpp::export]]
-SEXP cpp_maternGpuF(
+
+SEXP cpp_maternGpuFold(
     Rcpp::S4            varR,   //matrix   
     Rcpp::S4            coordsR,//matrix
     Rcpp::S4            DofLDLR,//vector
@@ -338,7 +391,7 @@ SEXP cpp_maternGpuF(
   
   double *param2 = &param[0];
   
-  logdet = maternGpuVclF(*vclVar, *vclCoords, *DofLDL, param2,form, ctx_id, max_local_size);
+  logdet = maternGpuVclFold(*vclVar, *vclCoords, *DofLDL, param2,form, ctx_id, max_local_size);
   return(Rcpp::wrap(logdet));	
 }
 

@@ -74,7 +74,9 @@ maternGpu = function(
       DofLDL,
       param,
       form,
-      workgroupSize[1])
+      pmax(2, c(workgroupSize, 2, 2)[1:2]),
+      pmax(2,c(localSize, 2, 2)[1:2])
+      )
   } 
   else if (typeof(x) == 'double'){
     fromC = geostatsgpu:::cpp_maternGpuD(
@@ -83,8 +85,9 @@ maternGpu = function(
       DofLDL,
       param,
       form,
-      c(workgroupSize, 1, 1, 1)[1:2],
-      c(localSize, 1, 1, 1)[1:2])
+      pmax(2, c(workgroupSize, 2, 2)[1:2]),
+      pmax(2,c(localSize, 2, 2)[1:2])
+      )
     
   }
 

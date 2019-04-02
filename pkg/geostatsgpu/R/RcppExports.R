@@ -13,8 +13,8 @@ cpp_maternGpuD <- function(varR, coordsR, DofLDLR, param, form, numWorkItems, nu
     .Call('_geostatsgpu_cpp_maternGpuD', PACKAGE = 'geostatsgpu', varR, coordsR, DofLDLR, param, form, numWorkItems, numLocalItems)
 }
 
-cpp_maternGpuF <- function(varR, coordsR, DofLDLR, param, form, max_local_size) {
-    .Call('_geostatsgpu_cpp_maternGpuF', PACKAGE = 'geostatsgpu', varR, coordsR, DofLDLR, param, form, max_local_size)
+cpp_maternGpuF <- function(varR, coordsR, DofLDLR, param, form, numWorkItems, numLocalItems) {
+    .Call('_geostatsgpu_cpp_maternGpuF', PACKAGE = 'geostatsgpu', varR, coordsR, DofLDLR, param, form, numWorkItems, numLocalItems)
 }
 
 cpp_lu <- function(xR, dR) {
