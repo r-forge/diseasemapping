@@ -242,6 +242,8 @@ std::string mrg31k3pkernelString =
 "}\n"
 
 
+
+
 "__kernel void mrg31k3pFloatUint("
   "__global clrngMrg31k3pHostStream* streams, __global float* out,\n"
   "const int Nsim) {\n"
