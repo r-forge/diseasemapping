@@ -181,13 +181,7 @@ std::string maternCLstring =
   "const unsigned int sizeResultPadCol,"
   "const unsigned int maxIter,"
   "const double nu,"
-//  "const int nuround,"
-//  "const double mu,"
-//  "const double muSq,"
-//  "const double mup1,"
   "const double theta,"
-//"const double costheta,"
-//  "const double sintheta,"
   "const double anisoRatioSq,"
   "const double varscale,"
   "const double logxscale,"
@@ -204,8 +198,8 @@ std::string maternCLstring =
 //"  twoLnHalfX, distSq, sigma, sinhrat"
 // "  half_x_nu, expMaternBit, ck, logck"
 //  "   maternBit,"
-// 21 variables defined here
-// another 16 in the arguments
+// 21 +4 variables defined here
+// another 18 in the arguments
 // got rid of mu, mup1, nuround
 " double logthisx, thisx, K_mu, K_mup1, K_nu, K_nup1, Kp_nu, K_num1,"
   "  bi, delhi, hi, di, qi, qip1, ai, a1, ci, Qi, s, dels, tmp;\n"
