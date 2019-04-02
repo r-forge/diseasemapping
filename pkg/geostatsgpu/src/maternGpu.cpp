@@ -134,10 +134,7 @@ template<typename T> double maternGpuVcl(
 
 	cl_device_type type_check = ctx.current_device().type();
 
-	std::string maternClStringWithOptions = 
-	  	  "\n#define assignUpper\n" 
-		  "\n#define assignLower\n" +
-		  maternClString<T>();
+	std::string maternClStringWithOptions = maternClString<T>();
 
 	viennacl::ocl::program & my_prog = ctx.add_program(maternClStringWithOptions, "my_kernel");
 	// get compiled kernel function

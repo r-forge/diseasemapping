@@ -180,6 +180,8 @@ std::string maternCLstringDouble =
   "\n#pragma OPENCL EXTENSION cl_khr_fp64: enable\n\n"
   "\n#define logSqrtHalfPi 0.2257913526447273278031\n"
   "\n#define logTwo M_LN2\n"
+ "\n#define assignUpper\n" 
+ "\n#define assignLower\n" 
   
   "\n__kernel void maternCL("
   "const unsigned int Ncell,"
@@ -223,6 +225,8 @@ std::string maternCLstringDouble =
 std::string maternCLstringFloat = 
 "\n#define logSqrtHalfPi 0.22579135\n"
 "\n#define logTwo 0.69314718\n"
+ "\n#define assignUpper\n" 
+ "\n#define assignLower\n" 
 "__kernel void maternCL("
 	"const unsigned int Ncell,"
 	"const unsigned int sizeCoordsPadCol,"
