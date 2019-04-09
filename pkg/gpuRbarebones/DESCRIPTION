@@ -1,0 +1,25 @@
+Package: gpuRbarebones
+Type: Package
+Title: GPU Functions for R Objects, reduced version
+Description: A reduced version of the gpuR package
+Version: 0.0.1
+Date: 2019-04-06
+Author: Patrick E Brown, Charles Determan Jr.
+Maintainer: Patrick E Brown <patrick.borgnine@gmail.com>
+VignetteBuilder: knitr
+License: GPL (>= 2)
+Encoding: UTF-8
+Depends:
+    R (>= 3.0.2),
+    methods,
+    utils
+Imports:
+    Rcpp (>= 0.11.5),
+    assertive
+LinkingTo: Rcpp,
+    RViennaCL
+NeedsCompilation: yes
+Suggests:
+    testthat,
+    knitr
+RoxygenNote: 6.1.1
