@@ -13,7 +13,7 @@
 rnumberGpu = function(
   x, 
   streams, 
-  workgroupSize=1, 
+  workgroupSize=1,   ###?
   localSize=1, 
   random_type=c("uniform","normal")) {
 
