@@ -23,41 +23,6 @@ contextInfo <- function(contextId) {
     .Call(`_gpuRbarebones_contextInfo`, contextId)
 }
 
-cpp_deviceType <- function(gpu_idx_, ctx_idx) {
-    .Call(`_gpuRbarebones_cpp_deviceType`, gpu_idx_, ctx_idx)
-}
-
-cpp_detectGPUs <- function(platform_idx) {
-    .Call(`_gpuRbarebones_cpp_detectGPUs`, platform_idx)
-}
-
-cpp_gpuInfo <- function(gpu_idx_, ctx_idx) {
-    .Call(`_gpuRbarebones_cpp_gpuInfo`, gpu_idx_, ctx_idx)
-}
-
-cpp_cpuInfo <- function(cpu_idx_, ctx_idx) {
-    .Call(`_gpuRbarebones_cpp_cpuInfo`, cpu_idx_, ctx_idx)
-}
-
-#' @title Current Device Information
-#' @description Check current device information
-#' @return list containing
-#' @return \item{device}{Character string of device name}
-#' @return \item{device_index}{Integer identifying device}
-#' @return \item{device_type}{Character string identifying device type (e.g. gpu)}
-#' @export
-currentDevice <- function() {
-    .Call(`_gpuRbarebones_currentDevice`)
-}
-
-cpp_detectCPUs <- function(platform_idx) {
-    .Call(`_gpuRbarebones_cpp_detectCPUs`, platform_idx)
-}
-
-preferred_wg_size <- function(sourceCode_, kernel_name, ctx_id) {
-    .Call(`_gpuRbarebones_preferred_wg_size`, sourceCode_, kernel_name, ctx_id)
-}
-
 #' @title Detect Number of Platforms
 #' @description Find out how many OpenCL enabled platforms are available.
 #' @return An integer value representing the number of platforms available.

@@ -29,87 +29,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_deviceType
-SEXP cpp_deviceType(SEXP gpu_idx_, int ctx_idx);
-RcppExport SEXP _gpuRbarebones_cpp_deviceType(SEXP gpu_idx_SEXP, SEXP ctx_idxSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type gpu_idx_(gpu_idx_SEXP);
-    Rcpp::traits::input_parameter< int >::type ctx_idx(ctx_idxSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_deviceType(gpu_idx_, ctx_idx));
-    return rcpp_result_gen;
-END_RCPP
-}
-// cpp_detectGPUs
-SEXP cpp_detectGPUs(SEXP platform_idx);
-RcppExport SEXP _gpuRbarebones_cpp_detectGPUs(SEXP platform_idxSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type platform_idx(platform_idxSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_detectGPUs(platform_idx));
-    return rcpp_result_gen;
-END_RCPP
-}
-// cpp_gpuInfo
-List cpp_gpuInfo(SEXP gpu_idx_, int ctx_idx);
-RcppExport SEXP _gpuRbarebones_cpp_gpuInfo(SEXP gpu_idx_SEXP, SEXP ctx_idxSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type gpu_idx_(gpu_idx_SEXP);
-    Rcpp::traits::input_parameter< int >::type ctx_idx(ctx_idxSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_gpuInfo(gpu_idx_, ctx_idx));
-    return rcpp_result_gen;
-END_RCPP
-}
-// cpp_cpuInfo
-List cpp_cpuInfo(SEXP cpu_idx_, int ctx_idx);
-RcppExport SEXP _gpuRbarebones_cpp_cpuInfo(SEXP cpu_idx_SEXP, SEXP ctx_idxSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type cpu_idx_(cpu_idx_SEXP);
-    Rcpp::traits::input_parameter< int >::type ctx_idx(ctx_idxSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_cpuInfo(cpu_idx_, ctx_idx));
-    return rcpp_result_gen;
-END_RCPP
-}
-// currentDevice
-SEXP currentDevice();
-RcppExport SEXP _gpuRbarebones_currentDevice() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(currentDevice());
-    return rcpp_result_gen;
-END_RCPP
-}
-// cpp_detectCPUs
-SEXP cpp_detectCPUs(SEXP platform_idx);
-RcppExport SEXP _gpuRbarebones_cpp_detectCPUs(SEXP platform_idxSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type platform_idx(platform_idxSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_detectCPUs(platform_idx));
-    return rcpp_result_gen;
-END_RCPP
-}
-// preferred_wg_size
-int preferred_wg_size(SEXP sourceCode_, std::string kernel_name, const int ctx_id);
-RcppExport SEXP _gpuRbarebones_preferred_wg_size(SEXP sourceCode_SEXP, SEXP kernel_nameSEXP, SEXP ctx_idSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type sourceCode_(sourceCode_SEXP);
-    Rcpp::traits::input_parameter< std::string >::type kernel_name(kernel_nameSEXP);
-    Rcpp::traits::input_parameter< const int >::type ctx_id(ctx_idSEXP);
-    rcpp_result_gen = Rcpp::wrap(preferred_wg_size(sourceCode_, kernel_name, ctx_id));
-    return rcpp_result_gen;
-END_RCPP
-}
 // detectPlatforms2
 SEXP detectPlatforms2();
 RcppExport SEXP _gpuRbarebones_detectPlatforms2() {
@@ -134,13 +53,6 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_gpuRbarebones_initSingleContext", (DL_FUNC) &_gpuRbarebones_initSingleContext, 3},
     {"_gpuRbarebones_contextInfo", (DL_FUNC) &_gpuRbarebones_contextInfo, 1},
-    {"_gpuRbarebones_cpp_deviceType", (DL_FUNC) &_gpuRbarebones_cpp_deviceType, 2},
-    {"_gpuRbarebones_cpp_detectGPUs", (DL_FUNC) &_gpuRbarebones_cpp_detectGPUs, 1},
-    {"_gpuRbarebones_cpp_gpuInfo", (DL_FUNC) &_gpuRbarebones_cpp_gpuInfo, 2},
-    {"_gpuRbarebones_cpp_cpuInfo", (DL_FUNC) &_gpuRbarebones_cpp_cpuInfo, 2},
-    {"_gpuRbarebones_currentDevice", (DL_FUNC) &_gpuRbarebones_currentDevice, 0},
-    {"_gpuRbarebones_cpp_detectCPUs", (DL_FUNC) &_gpuRbarebones_cpp_detectCPUs, 1},
-    {"_gpuRbarebones_preferred_wg_size", (DL_FUNC) &_gpuRbarebones_preferred_wg_size, 3},
     {"_gpuRbarebones_detectPlatforms2", (DL_FUNC) &_gpuRbarebones_detectPlatforms2, 0},
     {"_gpuRbarebones_platformsAvailable", (DL_FUNC) &_gpuRbarebones_platformsAvailable, 0},
     {NULL, NULL, 0}
