@@ -50,7 +50,6 @@ concordance=TRUE
 
 
 
-\section{Basic Use}
 
 
 <<startup>>=
@@ -70,6 +69,14 @@ contextInfo(myContextId)
 @
 
 
-
+<<aMatrix>>=
+x = vclMatrix(rnorm(6), nrow=3, ncol=2, type='float', ctx_id = myContextId)
+as.matrix(x)
+x@.context_index
+x@.platform
+x@.platform_index
+x@.device
+x@.device_index
+@
 
 \end{document}
