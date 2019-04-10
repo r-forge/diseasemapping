@@ -53,17 +53,20 @@ concordance=TRUE
 \section{Basic Use}
 
 
-<<matMult>>=
+<<startup>>=
+
 library("gpuRbarebones")
-
-
-
 platformsAvailable()
+@
 
-listContexts()
+<<loadGpuR>>=
+Sys.setenv(APPVEYOR='True')
+library('gpuR')
+@
 
-gpuInfo(1L,1L)
-
+<<theContext>>=
+(myContextId = initSingleContext(platformId = 1, deviceId = 1, contextId=1))
+contextInfo(myContextId)
 @
 
 

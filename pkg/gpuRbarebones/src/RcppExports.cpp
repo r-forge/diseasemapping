@@ -5,53 +5,27 @@
 
 using namespace Rcpp;
 
-// initContexts
-void initContexts();
-RcppExport SEXP _gpuRbarebones_initContexts() {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    initContexts();
-    return R_NilValue;
-END_RCPP
-}
-// listContexts
-DataFrame listContexts();
-RcppExport SEXP _gpuRbarebones_listContexts() {
+// initSingleContext
+SEXP initSingleContext(int platformId, int deviceId, int contextId);
+RcppExport SEXP _gpuRbarebones_initSingleContext(SEXP platformIdSEXP, SEXP deviceIdSEXP, SEXP contextIdSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(listContexts());
+    Rcpp::traits::input_parameter< int >::type platformId(platformIdSEXP);
+    Rcpp::traits::input_parameter< int >::type deviceId(deviceIdSEXP);
+    Rcpp::traits::input_parameter< int >::type contextId(contextIdSEXP);
+    rcpp_result_gen = Rcpp::wrap(initSingleContext(platformId, deviceId, contextId));
     return rcpp_result_gen;
 END_RCPP
 }
-// currentContext
-int currentContext();
-RcppExport SEXP _gpuRbarebones_currentContext() {
+// contextInfo
+DataFrame contextInfo(int contextId);
+RcppExport SEXP _gpuRbarebones_contextInfo(SEXP contextIdSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(currentContext());
-    return rcpp_result_gen;
-END_RCPP
-}
-// cpp_setContext
-void cpp_setContext(int id);
-RcppExport SEXP _gpuRbarebones_cpp_setContext(SEXP idSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type id(idSEXP);
-    cpp_setContext(id);
-    return R_NilValue;
-END_RCPP
-}
-// getContextPtr
-SEXP getContextPtr(const int ctx_id);
-RcppExport SEXP _gpuRbarebones_getContextPtr(SEXP ctx_idSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const int >::type ctx_id(ctx_idSEXP);
-    rcpp_result_gen = Rcpp::wrap(getContextPtr(ctx_id));
+    Rcpp::traits::input_parameter< int >::type contextId(contextIdSEXP);
+    rcpp_result_gen = Rcpp::wrap(contextInfo(contextId));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -146,37 +120,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// detectPlatforms
-SEXP detectPlatforms();
-RcppExport SEXP _gpuRbarebones_detectPlatforms() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(detectPlatforms());
-    return rcpp_result_gen;
-END_RCPP
-}
-// currentPlatform
-SEXP currentPlatform();
-RcppExport SEXP _gpuRbarebones_currentPlatform() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(currentPlatform());
-    return rcpp_result_gen;
-END_RCPP
-}
-// cpp_platformInfo
-List cpp_platformInfo(SEXP platform_idx_);
-RcppExport SEXP _gpuRbarebones_cpp_platformInfo(SEXP platform_idx_SEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type platform_idx_(platform_idx_SEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_platformInfo(platform_idx_));
-    return rcpp_result_gen;
-END_RCPP
-}
 // platformsAvailable
 List platformsAvailable();
 RcppExport SEXP _gpuRbarebones_platformsAvailable() {
@@ -187,58 +130,10 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// synchronize
-void synchronize();
-RcppExport SEXP _gpuRbarebones_synchronize() {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    synchronize();
-    return R_NilValue;
-END_RCPP
-}
-// cpp_vcl_nrow
-SEXP cpp_vcl_nrow(SEXP ptrA, const int type_flag);
-RcppExport SEXP _gpuRbarebones_cpp_vcl_nrow(SEXP ptrASEXP, SEXP type_flagSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type ptrA(ptrASEXP);
-    Rcpp::traits::input_parameter< const int >::type type_flag(type_flagSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_vcl_nrow(ptrA, type_flag));
-    return rcpp_result_gen;
-END_RCPP
-}
-// cpp_vcl_ncol
-SEXP cpp_vcl_ncol(SEXP ptrA, const int type_flag);
-RcppExport SEXP _gpuRbarebones_cpp_vcl_ncol(SEXP ptrASEXP, SEXP type_flagSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type ptrA(ptrASEXP);
-    Rcpp::traits::input_parameter< const int >::type type_flag(type_flagSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_vcl_ncol(ptrA, type_flag));
-    return rcpp_result_gen;
-END_RCPP
-}
-// cpp_vclVector_size
-SEXP cpp_vclVector_size(SEXP ptrA, const int type_flag);
-RcppExport SEXP _gpuRbarebones_cpp_vclVector_size(SEXP ptrASEXP, SEXP type_flagSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type ptrA(ptrASEXP);
-    Rcpp::traits::input_parameter< const int >::type type_flag(type_flagSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_vclVector_size(ptrA, type_flag));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_gpuRbarebones_initContexts", (DL_FUNC) &_gpuRbarebones_initContexts, 0},
-    {"_gpuRbarebones_listContexts", (DL_FUNC) &_gpuRbarebones_listContexts, 0},
-    {"_gpuRbarebones_currentContext", (DL_FUNC) &_gpuRbarebones_currentContext, 0},
-    {"_gpuRbarebones_cpp_setContext", (DL_FUNC) &_gpuRbarebones_cpp_setContext, 1},
-    {"_gpuRbarebones_getContextPtr", (DL_FUNC) &_gpuRbarebones_getContextPtr, 1},
+    {"_gpuRbarebones_initSingleContext", (DL_FUNC) &_gpuRbarebones_initSingleContext, 3},
+    {"_gpuRbarebones_contextInfo", (DL_FUNC) &_gpuRbarebones_contextInfo, 1},
     {"_gpuRbarebones_cpp_deviceType", (DL_FUNC) &_gpuRbarebones_cpp_deviceType, 2},
     {"_gpuRbarebones_cpp_detectGPUs", (DL_FUNC) &_gpuRbarebones_cpp_detectGPUs, 1},
     {"_gpuRbarebones_cpp_gpuInfo", (DL_FUNC) &_gpuRbarebones_cpp_gpuInfo, 2},
@@ -247,14 +142,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gpuRbarebones_cpp_detectCPUs", (DL_FUNC) &_gpuRbarebones_cpp_detectCPUs, 1},
     {"_gpuRbarebones_preferred_wg_size", (DL_FUNC) &_gpuRbarebones_preferred_wg_size, 3},
     {"_gpuRbarebones_detectPlatforms2", (DL_FUNC) &_gpuRbarebones_detectPlatforms2, 0},
-    {"_gpuRbarebones_detectPlatforms", (DL_FUNC) &_gpuRbarebones_detectPlatforms, 0},
-    {"_gpuRbarebones_currentPlatform", (DL_FUNC) &_gpuRbarebones_currentPlatform, 0},
-    {"_gpuRbarebones_cpp_platformInfo", (DL_FUNC) &_gpuRbarebones_cpp_platformInfo, 1},
     {"_gpuRbarebones_platformsAvailable", (DL_FUNC) &_gpuRbarebones_platformsAvailable, 0},
-    {"_gpuRbarebones_synchronize", (DL_FUNC) &_gpuRbarebones_synchronize, 0},
-    {"_gpuRbarebones_cpp_vcl_nrow", (DL_FUNC) &_gpuRbarebones_cpp_vcl_nrow, 2},
-    {"_gpuRbarebones_cpp_vcl_ncol", (DL_FUNC) &_gpuRbarebones_cpp_vcl_ncol, 2},
-    {"_gpuRbarebones_cpp_vclVector_size", (DL_FUNC) &_gpuRbarebones_cpp_vclVector_size, 2},
     {NULL, NULL, 0}
 };
 
