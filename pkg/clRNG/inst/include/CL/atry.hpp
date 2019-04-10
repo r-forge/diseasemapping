@@ -143,7 +143,11 @@ std::string mrg31k3pkernelString =
 "#define mrg31k3p_NORM_cl_double 4.656612873077392578125e-10 \n" /* 1/2^31 */
 "#define mrg31k3p_NORM_cl_float  4.6566126e-10\n"
 
-"#define ITER  2\n"
+"#define twopf 6.2831853 \n"
+"#define twopd 6.283185307179586 \n"
+
+
+
 //"#define 2pi_NORM_cl_double 2.925836e-09 \n" 
 //"#define 2pi_NORM_cl_float  4.6566126e-10\n"
 
@@ -213,14 +217,16 @@ std::string mrg31k3pkernelString =
   "const int Nsim) {\n"
 
 "const int Xsize = get_global_size(0);\n"
+"const int size = get_global_size(1)*Xsize;\n"
 
 "clrngMrg31k3pStream private_stream_d;\n" // This is not a pointer! the declaration allocates private memory
 "clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[Dglobal]);\n" //copy from host into private memory
 
 "int index = get_global_id(1)*Xsize + get_global_id(0);\n"
+"int D;\n"
 
-"if (index < Nsim) {\n"
-  "out[index] = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_double;\n"
+"for (D=index; D < Nsim ; D += size){\n"
+  "out[D] = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_double;\n"
 "}\n"
 
 "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"
@@ -236,14 +242,16 @@ std::string mrg31k3pkernelString =
   "const int Nsim) {\n"
 
 "const int Xsize = get_global_size(0);\n"
+"const int size = get_global_size(1)*Xsize;\n"
 
 "clrngMrg31k3pStream private_stream_d;\n" // This is not a pointer! the declaration allocates private memory
 "clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[Dglobal]);\n" //copy from host into private memory
 
 "int index = get_global_id(1)*Xsize + get_global_id(0);\n"
+"int D;\n"
 
-"if (index < Nsim) {\n"
-  "out[index] = (int) clrngMrg31k3pNextState(&private_stream_d.current);\n"
+"for (D=index; D < Nsim ; D += size) {\n"
+  "out[D] = (int) clrngMrg31k3pNextState(&private_stream_d.current);\n"
 "}\n"
 
 "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"
@@ -260,14 +268,16 @@ std::string mrg31k3pkernelString =
   "const int Nsim) {\n"
 
 "const int Xsize = get_global_size(0);\n"
+"const int size = get_global_size(1)*Xsize;\n"
 
 "clrngMrg31k3pStream private_stream_d;\n" // This is not a pointer! the declaration allocates private memory
 "clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[Dglobal]);\n" //copy from host into private memory
 
 "int index = get_global_id(1)*Xsize + get_global_id(0);\n"
+"int D;\n"
 
-"if (index < Nsim) {\n"
-  "out[index] = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_float;\n"
+"for (D=index; D < Nsim ; D += size) {\n"
+  "out[D] = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_float;\n"
 "}\n"
 
 "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"//Copy RNG device stream objects from private memory into global memory
@@ -279,41 +289,39 @@ std::string mrg31k3pkernelString =
 
 
 
-
+"#define TWOPI = 1;\n"
 "__kernel void mrg31k3pDoubleNorm("
   "__global clrngMrg31k3pHostStream* streams,  __global double* z,\n"
-  "const int Nsim) {\n"
+  "const int Nsim ){\n"
   
-  "const int Xsize = get_global_size(0);\n"
 
-"clrngMrg31k3pStream private_stream_d;\n" // This is not a pointer! the declaration allocates private memory
+
+  "const int Xsize = get_global_size(0);\n"
+  "const int size = get_global_size(1)*Xsize;\n"
+
+"clrngMrg31k3pStream private_stream_d;\n"// This is not a pointer! the declaration allocates private memory
 "clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[Dglobal]);\n"//copy from host into private memory
 
-"int i;\n"
-"int index = (get_global_id(1)*Xsize + get_global_id(0))*ITER;\n"
+"int i, D;\n"
+"int index = (get_global_id(1)*Xsize + get_global_id(0))*2\n"
+
 "double temp[2];\n"
+"temp[0] = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_double;\n "//clrngMrg31k3pRandomU01(&private_stream_d);\n"
+"temp[1] = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_double;\n"
 
-"temp[0] = clrngMrg31k3pRandomU01(&private_stream_d);\n"
-"temp[1] = clrngMrg31k3pRandomU01(&private_stream_d);\n"
 
 
-"if (Nsim % 2 == 0 &&  index < Nsim) {\n"
+"for (D=index; D < Nsim; D+=size) {\n"
    "for (i = 0; i < ITER; ++i) {\n"
-    "z[index+i] = sqrt(-2.0f*log(temp[0]))*((1-i)*cos(2*pi*temp[1])+i*sin(2*pi*temp[1]));\n"
- "}\n"
+       "if (D+i < Nsim) {\n"
+       "z[D+i] = sqrt(-2.0*log(temp[0]))*((1-i)*cos(twopd*temp[1])+i*sin(TWOPI*temp[1]));\n"
 "}\n"
-"else if (Nsim % 2 != 0 && index < Nsim-1) {\n"
-  "for (i = 0; i < ITER; ++i) {\n"
-    "z[index+i] = sqrt(-2.0f*log(temp[0]))*((1-i)*cos(2*pi*temp[1])+i*sin(2*pi*temp[1]));\n"
-  "}\n"
 "}\n"
-"else if (Nsim % 2 != 0 && index == Nsim-1){\n"
-  "z[index+i] = sqrt(-2.0f*log(temp[0]))*((1-i)*cos(2*pi*temp[1])+i*sin(2*pi*temp[1]));\n"
 "}\n"
 
 
-  "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);\n"//Copy RNG device stream object from private memory into global memory
-  "}\n"
+"clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);\n"//Copy RNG device stream object from private memory into global memory
+"}\n"
 
 
 
@@ -328,36 +336,32 @@ std::string mrg31k3pkernelString =
   "const int Nsim) {\n"
   
   "const int Xsize = get_global_size(0);\n"
+  "const int size = ITER*get_global_size(1)*Xsize;\n"
 
 "clrngMrg31k3pStream private_stream_d;\n" // This is not a pointer! the declaration allocates private memory
 "clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[Dglobal]);\n"//copy from host into private memory
 
-"int i;\n"
+"int i, D;\n"
 "int index = (get_global_id(1)*Xsize + get_global_id(0))*ITER;\n"
 "float temp[2];\n"
 
-"temp[0] = clrngMrg31k3pRandomU01(&private_stream_d);\n"
-"temp[1] = clrngMrg31k3pRandomU01(&private_stream_d);\n"
+"temp[0] = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_float;\n"
+"temp[1] = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_float;\n"
 
 
-"if (Nsim % 2 == 0 &&  index < Nsim) {\n"
+
+"for (D=index; D < Nsim; D+=size) {\n"
    "for (i = 0; i < ITER; ++i) {\n"
-    "z[index+i] = sqrt(-2.0f*log(temp[0]))*((1-i)*cos(2*pi*temp[1])+i*sin(2*pi*temp[1]));\n"
+      "if (D+i < Nsim) {\n"
+      "z[D+i] = sqrt(-2.0f*log(temp[0]))*((1-i)*cos(twopf*temp[1])+i*sin(twopf*temp[1]));\n"
  "}\n"
 "}\n"
-"else if (Nsim % 2 != 0 && index < Nsim-1) {\n"
-  "for (i = 0; i < ITER; ++i) {\n"
-    "z[index+i] = sqrt(-2.0f*log(temp[0]))*((1-i)*cos(2*pi*temp[1])+i*sin(2*pi*temp[1]));\n"
-  "}\n"
 "}\n"
-"else if (Nsim % 2 != 0 && index == Nsim-1){\n"
-  "z[index+i] = sqrt(-2.0f*log(temp[0]))*((1-i)*cos(2*pi*temp[1])+i*sin(2*pi*temp[1]));\n"
-"}\n"
+ 
 
-
-  "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);\n" //a single stream object
-  "}\n"
-
+"clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);\n" //a single stream object
+"};\n"
+;
 
 
 

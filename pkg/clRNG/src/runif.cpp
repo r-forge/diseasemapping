@@ -77,49 +77,65 @@ std::string mrg31k3pTypeString() {
 
 template <> std::string mrg31k3pTypeString<double>(){
   std::string result;
-  result = 
-    "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n" + 
-    mrg31k3pCommon +
-    mrg31k3pTemplateStringFirst + "double" +
-    mrg31k3pTemplateStringSecond + 
-  "4.656612873077392578125e-10 * " +  /* 1/2^31 */
-  mrg31k3pTemplateStringThird;
+  result = mrg31k3pDoubleUnifString;
   return(result);
 }
 
 template <> std::string mrg31k3pTypeString<float>(){
   std::string result;
-  result =  mrg31k3pCommon + 
-    mrg31k3pTemplateStringFirst + "float" +
-    mrg31k3pTemplateStringSecond + 
-    "4.6566126e-10 * " +  /* 1/2^31 */
-    mrg31k3pTemplateStringThird;
+  result =  mrg31k3pFloatUnifString;
   return(result);
 }
 
 
 template <> std::string mrg31k3pTypeString<int>(){
   std::string result;
-  result = mrg31k3pCommon + 
-    mrg31k3pTemplateStringFirst + "int" +
-    mrg31k3pTemplateStringSecond + "(int) " + 
-    mrg31k3pTemplateStringThird;
-  ;
+  result = mrg31k3pIntegerUnifString;
   return(result);
 }
 
+
+
+template <typename T> 
+std::string mrg31k3pNormString() {
+  return("undefined");}
+
+template <> std::string mrg31k3pNormString<double>(){
+  std::string result;
+  result = mmrg31k3pDoubleNormString;
+  return(result);
+}
+
+template <> std::string mrg31k3pNormString<float>(){
+  std::string result;
+  result = mrg31k3pFloatNormString;
+  return(result);
+}
+
+
+
+
+
+
 //////////////////////////////////the main function;//////////////////////
 template<typename T>
-void runifGpu(
+void random_numberGpu(
     viennacl::vector_base<T> &x, 
     Rcpp::IntegerMatrix streamsR, 
     int numWorkItems,
     int numLocalItems,
-    int ctx_id){
+    int ctx_id,
+    std::string  random_type){
   
   
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
+
+  if(random_type == "uniform"){
   std::string mrg31k3pkernelString = mrg31k3pTypeString<T>();
+  }
+  else if(random_type == "normal") {
+    std::string mrg31k3pkernelString = mrg31k3pNormString<T>();
+  }
 
 //  Rcout << "hi\n\n" <<mrg31k3pkernelString << "\n\n";
 
@@ -146,12 +162,16 @@ void runifGpu(
   // kernel, in the kernel will Copy RNG host stream objects from global memory into private memory
   viennacl::ocl::program &my_prog = ctx.add_program(mrg31k3pkernelString, "my_kernel");
 
-  viennacl::ocl::kernel &randomUniform = my_prog.get_kernel("mrg31k3p");
-  randomUniform.global_work_size(0, numWorkItems);
-  randomUniform.local_work_size(0, numLocalItems);
+  viennacl::ocl::kernel &random_number = my_prog.get_kernel("mrg31k3p");
+
+random_number.global_work_size(0, numWorkItems[0]);
+random_number.global_work_size(1, numWorkItems[1]);
+
+random_number.local_work_size(0, numLocalItems[0]);
+random_number.local_work_size(1, numLocalItems[1]);
   
   int Nsim = x.size();
-  viennacl::ocl::enqueue(randomUniform(bufIn, x, Nsim) ); //streams, out, vector_size
+  viennacl::ocl::enqueue(random_number(bufIn, x, Nsim) ); //streams, out, vector_size
   
   
   // copy streams back to cpu
@@ -161,6 +181,10 @@ void runifGpu(
   convertclRngMat(streams, streamsR);
   
 }
+
+
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 void runifGpuHost(viennacl::vector_base<double> &x)//use them to generate numbers on the host
@@ -202,13 +226,14 @@ Rcpp::IntegerMatrix  cpp_mrg31k3pCreateStreams(int numWorkItems)
 
 
 
-/////////////////////////////////uniforms on GPU function;//////////
+///////////////////////////////// on GPU function;//////////
 template<typename T> 
-SEXP runifGpu(
+SEXP random_numberGpu(
     Rcpp::S4  xR,   //vector
     Rcpp::IntegerMatrix streamsR,   //vector
     int max_global_size,     
-    int max_local_size) 
+    int max_local_size,
+    std::string  random_type) 
 {
   // data
   const bool BisVCL=1;
@@ -216,27 +241,32 @@ SEXP runifGpu(
   
   std::shared_ptr<viennacl::vector_base<T> > x = getVCLVecptr<T>(xR.slot("address"), BisVCL, ctx_id);
   
-  runifGpu<T>(*x, streamsR, max_global_size, max_local_size, ctx_id);
+  random_numberGpu<T>(*x, streamsR, max_global_size, max_local_size, ctx_id, random_type);
   
   return(Rcpp::wrap(1L));	
 }
 
 //[[Rcpp::export]]
-SEXP cpp_runifGpu(
+SEXP cpp_random_numberGpu(
     Rcpp::S4  xR,   //vector
     Rcpp::IntegerMatrix streamsR,   //vector
     int max_global_size,     
     int max_local_size,
-    std::string type) 
+    std::string random_type,
+    std::string precision_type) 
 {
-  if(type == "float") {
-    return runifGpu<float>(xR, streamsR, max_global_size, max_local_size);
-  } else if (type=="integer") {
-    return runifGpu<int>(xR, streamsR, max_global_size, max_local_size);
+  if(precision_type == "float") {
+    return random_numberGpu<float>(xR, streamsR, max_global_size, max_local_size,here);
+  } else if (precision_type=="double") {
+    return random_numberGpu<double>(xR, streamsR, max_global_size, max_local_size,here);
   } else {
-    return runifGpu<double>(xR, streamsR, max_global_size, max_local_size);
+    return random_numberGpu<int>(xR, streamsR, max_global_size, max_local_size,here);
   }
 }
+
+
+
+
 
 
 
