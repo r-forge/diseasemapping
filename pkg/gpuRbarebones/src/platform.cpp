@@ -38,11 +38,11 @@ List platformsAvailable() {
 
     int Nitems = 7;
 
-
     if (clGetPlatformIDs(0, NULL, &platformCount) != CL_SUCCESS) {
         warning("Unable to get platform IDs\n");
         platformCount = 0;
     }
+
     if (clGetPlatformIDs(platformCount, platforms, NULL) != CL_SUCCESS) {
         warning("Unable to get platform IDs (1)\n");
         platformCount = 0;

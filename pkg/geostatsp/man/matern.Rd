@@ -98,10 +98,10 @@ u=seq(0,4,len=20)
 	uscale = sqrt(8*param['shape'])* u / param['range']
 theMaterns = cbind(
 	dist=u, 
-	manual=	param['variance']*
-			( 1/(gamma(param['shape']) * 2^(param['shape']-1)  ) ) * 
+	manual=	param['variance']* 2^(param['shape']-1) * 
+			( 1/(gamma(param['shape'])  )  * 
 			uscale^param['shape'] * besselK( uscale , param['shape']),
-	geostatsp=matern(u, param=param)
+	geostatsp=geostatsp::matern(u, param=param)
 )
 head(theMaterns)
 matplot(theMaterns[,'dist'], 

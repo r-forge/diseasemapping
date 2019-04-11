@@ -29,8 +29,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// currentDevice
+SEXP currentDevice();
+RcppExport SEXP _gpuRbarebones_currentDevice() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(currentDevice());
+    return rcpp_result_gen;
+END_RCPP
+}
 // detectPlatforms2
-SEXP detectPlatforms2();
+int detectPlatforms2();
 RcppExport SEXP _gpuRbarebones_detectPlatforms2() {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -53,6 +63,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_gpuRbarebones_initSingleContext", (DL_FUNC) &_gpuRbarebones_initSingleContext, 3},
     {"_gpuRbarebones_contextInfo", (DL_FUNC) &_gpuRbarebones_contextInfo, 1},
+    {"_gpuRbarebones_currentDevice", (DL_FUNC) &_gpuRbarebones_currentDevice, 0},
     {"_gpuRbarebones_detectPlatforms2", (DL_FUNC) &_gpuRbarebones_detectPlatforms2, 0},
     {"_gpuRbarebones_platformsAvailable", (DL_FUNC) &_gpuRbarebones_platformsAvailable, 0},
     {NULL, NULL, 0}

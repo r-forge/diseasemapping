@@ -23,9 +23,21 @@ contextInfo <- function(contextId) {
     .Call(`_gpuRbarebones_contextInfo`, contextId)
 }
 
+#' @title Current Device Information
+#' @description Check current device information
+#' @return list containing
+#' @return \item{device}{Character string of device name}
+#' @return \item{device_index}{Integer identifying device}
+#' @return \item{device_type}{Character string identifying device type (e.g. gpu)}
+#' @export
+currentDevice <- function() {
+    .Call(`_gpuRbarebones_currentDevice`)
+}
+
 #' @title Detect Number of Platforms
 #' @description Find out how many OpenCL enabled platforms are available.
 #' @return An integer value representing the number of platforms available.
+#' @details see https://laanwj.github.io/2016/05/06/opencl-ubuntu1604.html
 #' @seealso \link{detectGPUs}
 #' @export
 detectPlatforms2 <- function() {

@@ -14,8 +14,11 @@ date()
 ```{r packages, results='hide'}
 library('geostatsp')
 library('gpuR')
+
+Ngrid = c(50, 50)
 if(system("hostname", TRUE) == 'englishbreakfast') {
     setContext(2)
+Ngrid = c(90, 80)
 }
 ```
 
@@ -30,7 +33,6 @@ Set up spatial data
 ```{r setupData}
 #Ngrid = c(100, 100)
 #Ngrid = c(20, 20)
-Ngrid = c(50, 50)
 
 seqList = list( 
     x = seq(1,by=1,len=Ngrid[1]), 
@@ -60,7 +62,7 @@ myParams = c(shape=2.15, range=2.5, variance = 2, nugget = 0,
   
 system.time(varGpu <- geostatsgpu::maternGpu(
   coordsGpu, output = outputF, param=myParams,
-      workgroupSize = c(128L,2L), localSize = c(32L, 2L)))
+      workgroupSize = c(128L,8L), localSize = c(32L, 2L)))
 ```
 
 Use double precision if the GPU supports it
@@ -79,7 +81,7 @@ if(gpuInfo()$double_support) {
   system.time(
   varGpuD <- geostatsgpu::maternGpu(
     x= coordsGpuD, output = outputD, param=myParams, 
-    workgroupSize = c(128L,2L), localSize = c(32L, 2L))
+    workgroupSize = c(128L,8L), localSize = c(32L, 2L))
   )
 } else {
   varGpuD = NA

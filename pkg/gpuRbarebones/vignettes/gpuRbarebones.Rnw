@@ -55,6 +55,8 @@ concordance=TRUE
 <<startup>>=
 
 library("gpuRbarebones")
+currentDevice()
+detectPlatforms2()
 platformsAvailable()
 @
 

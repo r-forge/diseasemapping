@@ -12,6 +12,9 @@ An integer value representing the number of platforms available.
 \description{
 Find out how many OpenCL enabled platforms are available.
 }
+\details{
+see https://laanwj.github.io/2016/05/06/opencl-ubuntu1604.html
+}
 \seealso{
 \link{detectGPUs}
 }

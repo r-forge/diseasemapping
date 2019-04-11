@@ -15,9 +15,14 @@
 using namespace Rcpp;
 
 
+#include "viennacl/ocl/device.hpp"
+#include "viennacl/ocl/platform.hpp"
+#include "viennacl/ocl/backend.hpp"
+
+
 struct platform_data_item {
     int id;
-    char *name;
+    char* name;
 };
 
 struct platform_data_item platform_data_items[] = {
@@ -30,13 +35,49 @@ struct platform_data_item platform_data_items[] = {
 
 #define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
 
+//' @title Current Device Information
+//' @description Check current device information
+//' @return list containing
+//' @return \item{device}{Character string of device name}
+//' @return \item{device_index}{Integer identifying device}
+//' @return \item{device_type}{Character string identifying device type (e.g. gpu)}
+//' @export
+// [[Rcpp::export]]
+SEXP currentDevice()
+{
+    std::string device_type;
+
+    
+
+    cl_device_type check = viennacl::ocl::current_device().type(); 
+
+    if(check & CL_DEVICE_TYPE_CPU){
+    device_type = "cpu";
+    }else if(check & CL_DEVICE_TYPE_GPU){
+    device_type = "gpu";
+    }else if(check & CL_DEVICE_TYPE_ACCELERATOR){
+    device_type = "accelerator";
+    }else{
+    Rcpp::Rcout << "device found: " << std::endl;
+    Rcpp::Rcout << check << std::endl;
+    throw Rcpp::exception("unrecognized device detected");
+
+    }
+    
+    return List::create(Named("device") = wrap(viennacl::ocl::current_context().current_device().name()),
+                        Named("device_type") = wrap(device_type));
+
+}
+
+
 //' @title Detect Number of Platforms
 //' @description Find out how many OpenCL enabled platforms are available.
 //' @return An integer value representing the number of platforms available.
+//' @details see https://laanwj.github.io/2016/05/06/opencl-ubuntu1604.html
 //' @seealso \link{detectGPUs}
 //' @export
 // [[Rcpp::export]]
-SEXP detectPlatforms2() {
+int detectPlatforms2() {
  
     int i, j;
     char value[1024];
@@ -48,8 +89,9 @@ SEXP detectPlatforms2() {
     cl_uint deviceCount;
     cl_device_id devices[128];
     cl_uint maxComputeUnits;
- 
     // get all platforms
+//    clGetPlatformIDs(0, platforms, &platformCount);
+
     if (clGetPlatformIDs(0, NULL, &platformCount) != CL_SUCCESS) {
         stop("Unable to get platform IDs\n");
     }
@@ -117,8 +159,8 @@ SEXP detectPlatforms2() {
 
  
     }
- 
 
-    return Rcpp::wrap(0);
+
+    return 0;
  
 }
