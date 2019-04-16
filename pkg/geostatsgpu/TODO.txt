@@ -1,0 +1,10 @@
+
+- get cholGpu working
+
+    - diagonal element as an argument
+    - different input and output matrices
+    - single input matrix, vector of diagonal elements, multiple output matrices
+    - 2d work items
+- lower triangular solve A B = C for B
+    - with multiple A's   
+    - copy http://viennacl.sourceforge.net/doc/matrix__solve_8hpp_source.html
