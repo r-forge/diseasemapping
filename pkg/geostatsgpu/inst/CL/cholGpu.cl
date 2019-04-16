@@ -62,15 +62,6 @@ __kernel void cholDiag(
 		}
 		diagWorking[get_group_id(0)] = Ddiag;
 	}
-#ifdef UNDEF
-	if(Dlocal==0) {
-		Ddiag = 0.0;
-		for(Dk = 0; Dk < NlocalSize; Dk++) {
-			Ddiag += diagLocal[Dk];
-		}
-		diagWorking[get_group_id(0)] = Ddiag;
-	}
-#endif
 
 	// must be added across work groups to get D[Dcol]
 
