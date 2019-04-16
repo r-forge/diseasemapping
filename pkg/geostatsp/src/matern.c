@@ -490,7 +490,7 @@ SEXP maternPoints(
     result = PROTECT(NEW_OBJECT(PROTECT(MAKE_CLASS("dtrMatrix"))));
   } else {
      // symmetric
-    result = PROTECT(NEW_OBJECT(PROTECT(MAKE_CLASS("dsyMatrix")))));
+    result = PROTECT(NEW_OBJECT(PROTECT(MAKE_CLASS("dsyMatrix"))));
   }
 
 
