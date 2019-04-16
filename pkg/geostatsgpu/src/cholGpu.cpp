@@ -114,14 +114,14 @@ double cholGpu(
 
 if(verbose){
 	Rcpp::Rcout << " N " << N << 
-			" Npad " << Npad<< 
-			" NlocalStorage " << NlocalStorage<< 
-			" NlocalStorageD " << NlocalStorageD<< 
-			" NlocalStorageSqrt " << NlocalStorageSqrt<< 
-			"\n" <<
-			" NbeginLast " << NbeginLast << 
-			" NcrossprodSquared " << NcrossprodSquared << 
-			" Ncrossprod " << Ncrossprod << 
+//			" Npad " << Npad<< 
+//			" NlocalStorage " << NlocalStorage<< 
+//			" NlocalStorageD " << NlocalStorageD<< 
+//			" NlocalStorageSqrt " << NlocalStorageSqrt<< 
+//			" NcrossprodSquared " << NcrossprodSquared << 
+			" Nitemwise " << Nitemwise << 
+  	  " NbeginLast " << NbeginLast << 
+	    " Ncrossprod " << Ncrossprod << 
 			"\n";
 }
 
@@ -163,10 +163,11 @@ if(verbose){
 
 		if(verbose) {
 			if( (Dcol < 4) | (Dcol < 1005 & Dcol > 1000)) {
-			Rcpp::Rcout << " diag " << tempDouble <<
-			" the sum " << viennacl::linalg::sum(diagWorking) <<
-			"\n";
-		}}
+  			Rcpp::Rcout << " diag " << tempDouble <<
+	  		" the sum " << viennacl::linalg::sum(diagWorking) <<
+		  	"\n";
+		  }
+		}
 		// first cycles through columns
 		// cache as many diagonal products as possible
 		// in local memory, divide by 1.0
@@ -209,10 +210,18 @@ if(verbose){
 
 
 	} // end loop through columns
-
+	if(verbose) {
+	  	Rcpp::Rcout << "start one row per group\n";
+	  }
+	int Nverbose = Nitemwise + 10;
 	// switch to one row per work group
 	for(Dcol = Nitemwise; Dcol < NbeginLast; Dcol++) {
 
+	  if(verbose) {
+	    if(Dcol < Nverbose) {
+	      Rcpp::Rcout << Dcol;
+	    }}
+	  
 		// diagonals and diagTimesRowOfA
 		viennacl::ocl::enqueue(cholDiag(
 			A, D,
@@ -221,26 +230,36 @@ if(verbose){
 			diagLocal, 
 			Dcol, Npad, NlocalSum));
 
-
+	  if(verbose) {
+	    if(Dcol < Nverbose) {
+	      Rcpp::Rcout << ".";
+	    }}
 		// sum diagWorking to get diag[Dcol]
 		tempDouble = A(Dcol,Dcol) - 
 			viennacl::linalg::sum(diagWorking);
 		D(Dcol) = tempDouble;	
-
+		if(verbose) {
+		  if(Dcol < Nverbose) {
+		    Rcpp::Rcout << ".";
+		  }}
 		viennacl::ocl::enqueue(cholOffDiagGroupwise(
 			A, diagTimesRowOfA,
 			diagLocal, tempDouble,
 			Dcol, Dcol*Npad, N, Npad,
 			Ngroups,
 			NlocalSum));
-
+		if(verbose) {
+		  if(Dcol < Nverbose) {
+		    Rcpp::Rcout << ".\n";
+		  }}
+		
 	}
 
 	// last few columns
 	// compute the cross product
 	// then finish the cholesky
 	if(verbose) {
-		Rcpp::Rcout << "crossproducts" << "\n";
+		Rcpp::Rcout << "crossproducts\n";
 	}
 
 	// compute the cross products

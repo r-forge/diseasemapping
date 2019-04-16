@@ -15,10 +15,10 @@ date()
 library('geostatsp')
 library('gpuR')
 
-Ngrid = c(50, 50)
+Ngrid = c(40, 50)
 if(system("hostname", TRUE) == 'englishbreakfast') {
-    setContext(2)
-Ngrid = c(90, 80)
+  setContext(2)
+  Ngrid = c(60, 80)
 }
 ```
 
@@ -31,9 +31,6 @@ gpuInfo()$maxAllocatableMem/(1024^3)
 Set up spatial data
 
 ```{r setupData}
-#Ngrid = c(100, 100)
-#Ngrid = c(20, 20)
-
 seqList = list( 
     x = seq(1,by=1,len=Ngrid[1]), 
     y = seq(201,by=1,len=Ngrid[2])
@@ -62,10 +59,12 @@ myParams = c(shape=2.15, range=2.5, variance = 2, nugget = 0,
   
 system.time(varGpu <- geostatsgpu::maternGpu(
   coordsGpu, output = outputF, param=myParams,
-      workgroupSize = c(128L,8L), localSize = c(32L, 2L)))
+      workgroupSize = c(64L,4L), localSize = c(16L, 4L))
+)
 ```
 
 Use double precision if the GPU supports it
+
 ```{r simpleTestDouble}
 if(gpuInfo()$double_support) {
   
@@ -73,7 +72,6 @@ if(gpuInfo()$double_support) {
                          nrow(coordsSp@coords),
                          ncol(coordsSp@coords), type="double")
 
-  print(coordsGpuD[1:4,1:2])
 
 
   outputD = vclMatrix(0, nrow(coordsGpuD), nrow(coordsGpuD), type='double')
@@ -81,7 +79,7 @@ if(gpuInfo()$double_support) {
   system.time(
   varGpuD <- geostatsgpu::maternGpu(
     x= coordsGpuD, output = outputD, param=myParams, 
-    workgroupSize = c(128L,8L), localSize = c(32L, 2L))
+      workgroupSize = c(64L,4L), localSize = c(16L, 4L))
   )
 } else {
   varGpuD = NA
@@ -90,6 +88,7 @@ if(gpuInfo()$double_support) {
 
 
 Create matern matrix on cpu
+
 ```{r maternMatGpu}
 system.time(varCpu <- geostatsp::matern(coordsSp, myParams))
 theProb = c(0.5, 0.9, 0.99, 0.999,1)
@@ -98,13 +97,68 @@ quantile(abs(as.matrix(varCpu) - as.matrix(varGpuD)), theProb, na.rm=TRUE)
 ```
 
 ```{r compareCpuGpu}
-varCpu[1:5,1:5]
-as.matrix(varGpu)[1:5,1:5]
-as.matrix(varGpuD)[1:5,1:5]
+endSeq = seq(by=1, len=5, to=nrow(varCpu))
+varCpu[endSeq,endSeq]
+as.matrix(varGpu[endSeq,endSeq])
+as.matrix(varGpuD[endSeq,endSeq])
 ```
 
 # Cholesky
 
+
+```{r cholGeostatsGpu, eval=FALSE}
+
+varGpuD2 = deepcopy(varGpuD)
+varGpuDiag = vclVector(0, nrow(varGpuD), type="double")
+
+
+	file = "/home/patrick/research/diseasemapping/pkg/geostatsgpu/inst/CL/cholGpu.cl"
+	if(!file.exists(file)) {
+  	file <- system.file("CL", "cholGpu.cl", package = "geostatsgpu")
+	}
+	kernel <- readChar(file, file.info(file)$size)
+
+	diagWorking = deepcopy(varGpuDiag) 
+	diagTimesRow = deepcopy(varGpuDiag) 
+	
+system.time(geostatsgpu:::cpp_cholGpu(
+  xR = varGpuD2,
+  DR = varGpuDiag, 
+  diagWorkingR = diagWorking, 
+  diagTimesRowOfAR = diagTimesRow, 
+  MCglobal = 256, 
+  MClocal = 8, 
+  localStorage = floor(0.9*gpuR::gpuInfo()$localMem/8), 
+  colGroupwise = nrow(varGpuD)-64,
+  Ncrossprod = 32, 
+  verbose = FALSE, 
+  kernelR = kernel))
+
+system.time(theChol <- chol(as.matrix(varGpuD)) )
+
+quantile(as.vector(varGpuDiag) - diag(theChol)^2)
+
+theChol = Matrix::Diagonal(nrow(theChol), 1/diag(theChol) ) %*% theChol
+as.matrix(varGpuD2[1:5,1:5])
+theDiff = theChol - as.matrix(varGpuD2)
+theDiff[lower.tri(theDiff)] = 0
+quantile(theDiff)
+
+
+```
+
+Using ViennaCL's LU decomposition
+```{r cholViennaclLu}
+varMat3 = gpuR::deepcopy(varGpuD)
+system.time(varCholVcl <- geostatsgpu::luGpu(varMat3))
+
+system.time(theChol <- chol(as.matrix(varGpuD)) )
+
+quantile(as.vector(varCholVcl$D) - diag(theChol)^2)
+```
+
+
+# Integrated Cholesky
 
 
 ```{r maternMatGpuC, eval=FALSE}
@@ -137,11 +191,6 @@ varMat2 = gpuR::deepcopy(varGpuD)
 system.time(varCholGpuR <- gpuR:::chol.vclMatrix(varMat2))
 ```
 
-Using ViennaCL's LU decomposition
-```{r cholViennaclLu, eval=FALSE}
-varMat3 = gpuR::deepcopy(varGpuD)
-system.time(varCholVcl <- geostatsgpu::luGpu(varMat3))
-```
 
 ```{r cholGpuCompare, eval=FALSE}
 xchold = diag(varGpuD)
