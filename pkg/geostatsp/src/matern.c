@@ -775,12 +775,15 @@ void maternRasterConditional(
   int oneI=1, fourI=4, Ncell, Nrandom;
   int Dparam, D;
   double *resultHere, *ydataHere, oneD=1.0, minusOneD=-1.0;
-  double *varY, *covDataGrid, *varGrid, halfLogDet=0.0;
+  //double *varY, *covDataGrid
+  double *varGrid, halfLogDet=0.0;
 
   Ncell = (*AyN) * (*AxN);
   Nrandom = Ncell * (*Nsim);
-  varY = (double *) calloc((*Ny)*(*Ny), sizeof(double));
-  covDataGrid = (double *) calloc( (*Ny) * Ncell, sizeof(double));
+//  varY = (double *) calloc((*Ny)*(*Ny), sizeof(double));
+//  covDataGrid = (double *) calloc( (*Ny) * Ncell, sizeof(double));
+  SEXP varY = PROTECT(NEW_NUMERIC( (*Ny)*(*Ny) ));
+  SEXP covDataGrid = PROTECT(NEW_NUMERIC((*Ny) * Ncell));
 
   varGrid = inVarGrid;//(double *) calloc(NcellSq, sizeof(double));
 
@@ -797,7 +800,7 @@ void maternRasterConditional(
 
       maternAniso(
           yx, yy, Ny,
-          varY,
+          REAL(varY),
           &range[Dparam],
           &shape[Dparam],
           &variance[Dparam],
@@ -811,7 +814,7 @@ void maternRasterConditional(
       maternArasterBpoints(
           Axmin, Axres, AxN, Aymax, Ayres, AyN,
           yx, yy, Ny,
-          covDataGrid,
+          REAL(covDataGrid),
           &range[Dparam], &shape[Dparam], &variance[Dparam],
           &anisoRatio[Dparam], &anisoAngleRadians[Dparam]);
 
@@ -836,8 +839,8 @@ void maternRasterConditional(
       F77_NAME(dtrmm)(
           "R", "L", "T", "N",
           &Ncell, Ny, &oneD,
-          varY, Ny,
-          covDataGrid, &Ncell);
+          REAL(varY), Ny,
+          REAL(covDataGrid), &Ncell);
 
       // var U
       maternRaster(
@@ -870,8 +873,8 @@ void maternRasterConditional(
           "N", "T",
           &Ncell, &Ncell, Ny,
           &minusOneD,
-          covDataGrid, &Ncell,
-          covDataGrid, &Ncell,
+          REAL(covDataGrid), &Ncell,
+          REAL(covDataGrid), &Ncell,
           &oneD,
           varGrid, &Ncell);
 
@@ -899,7 +902,7 @@ void maternRasterConditional(
       F77_NAME(dtrmm)(
           "R", "L", "N", "N",
           Ny, Nsim, &oneD,
-          varY, Ny,
+          REAL(varY), Ny,
           ydataHere, Ny);
 
       // crossprod and add random bit
@@ -907,14 +910,16 @@ void maternRasterConditional(
             "N", "N",
             &Ncell, Nsim, Ny,
             &oneD,
-            covDataGrid, &Ncell,
+            REAL(covDataGrid), 
+            &Ncell,
             ydataHere, Ny,
             &oneD,
             resultHere, &Ncell);
   } // param loop
 
-  free(varY);
+//  free(varY);
  // free(varGrid);
-  free(covDataGrid);
+//  free(covDataGrid);
+  UNPROTECT(2);
 }
 
