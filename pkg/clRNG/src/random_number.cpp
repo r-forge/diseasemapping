@@ -1,7 +1,6 @@
 #include "clRNG.hpp"
 #include <clRNG/mrg31k3p.h>
 #include <CL/mrg31k3pkernelStringSeparate.hpp>
-#include <CL/mrg31k3pkernelStringCommon.hpp>
 
 using namespace Rcpp;
 using namespace viennacl;	
@@ -125,29 +124,34 @@ template<typename T>
 void random_numberGpu(
     viennacl::vector_base<T> &x, 
     Rcpp::IntegerMatrix streamsR, 
-    int numWorkItems,
-    int numLocalItems,
+    IntegerVector numWorkItems,
+    IntegerVector numLocalItems,
     int ctx_id,
     std::string  random_type){
   
-  
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
-
+  std::string mrg31k3pkernelString;
+  
   if(random_type == "uniform"){
-    std::string mrg31k3pkernelString = mrg31k3pTypeString<T>();
-  }
-  else if(random_type == "normal"){
-    std::string mrg31k3pkernelString = mrg31k3pNormString<T>();
+    mrg31k3pkernelString = mrg31k3pTypeString<T>();
+  }  else if(random_type == "normal"){
+    mrg31k3pkernelString = mrg31k3pNormString<T>();
+  } else {
+    Rcout << random_type << "\n";
+    warning("random_type undefined");
   }
 
-//  Rcout << "hi\n\n" <<mrg31k3pkernelString << "\n\n";
+  //  Rcout << "hi\n\n" <<mrg31k3pkernelString << "\n\n";
 
   // create streams
   size_t streamBufferSize;   
   clrngStatus err;
   
+  
   //Reserve memory space for count stream objects, without creating the stream objects. Returns a pointer to the newly allocated buffer. 
-  clrngMrg31k3pStream* streams = clrngMrg31k3pAllocStreams(numWorkItems, &streamBufferSize, &err);
+  clrngMrg31k3pStream* streams = clrngMrg31k3pAllocStreams(
+    numWorkItems[0]*numWorkItems[1], 
+    &streamBufferSize, &err);
   //count	Number of stream objects to allocate.
   
   
@@ -155,7 +159,7 @@ void random_numberGpu(
   // transfer streams to opencl as matrix
   // convert to crngMgr31k3pStream in opencl, but still on host
   convertMatclRng(streamsR, streams);
-  
+//#ifdef UNDEF  
   
   // Create buffer to transfer streams to the device.
   viennacl::vector<char> bufIn(ctx.create_memory_without_smart_handle( 
@@ -172,7 +176,7 @@ random_number.global_work_size(1, numWorkItems[1]);
 
 random_number.local_work_size(0, numLocalItems[0]);
 random_number.local_work_size(1, numLocalItems[1]);
-  
+
   int Nsim = x.size();
   viennacl::ocl::enqueue(random_number(bufIn, x, Nsim) ); //streams, out, vector_size
   
@@ -182,7 +186,7 @@ random_number.local_work_size(1, numLocalItems[1]);
 
     // then transfer to R object, //return streams to R 
   convertclRngMat(streams, streamsR);
-  
+//#endif  
 }
 
 
@@ -234,8 +238,8 @@ template<typename T>
 SEXP random_numberGpu(
     Rcpp::S4  xR,   //vector
     Rcpp::IntegerMatrix streamsR,   //vector
-    int max_global_size,     
-    int max_local_size,
+    IntegerVector max_global_size,     
+    IntegerVector max_local_size,
     std::string  random_type) 
 {
   // data
@@ -253,8 +257,8 @@ SEXP random_numberGpu(
 SEXP cpp_random_numberGpu(
     Rcpp::S4  xR,   //vector
     Rcpp::IntegerMatrix streamsR,   //vector
-    int max_global_size,     
-    int max_local_size,
+    IntegerVector max_global_size,     
+    IntegerVector max_local_size,
     std::string random_type,
     std::string precision_type) 
 {

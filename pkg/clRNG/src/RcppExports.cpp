@@ -5,21 +5,6 @@
 
 using namespace Rcpp;
 
-// cpp_rnormGpu
-SEXP cpp_rnormGpu(Rcpp::S4 xR, Rcpp::IntegerMatrix streamsR, int max_global_size, int max_local_size, std::string type);
-RcppExport SEXP _clRNG_cpp_rnormGpu(SEXP xRSEXP, SEXP streamsRSEXP, SEXP max_global_sizeSEXP, SEXP max_local_sizeSEXP, SEXP typeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type xR(xRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerMatrix >::type streamsR(streamsRSEXP);
-    Rcpp::traits::input_parameter< int >::type max_global_size(max_global_sizeSEXP);
-    Rcpp::traits::input_parameter< int >::type max_local_size(max_local_sizeSEXP);
-    Rcpp::traits::input_parameter< std::string >::type type(typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_rnormGpu(xR, streamsR, max_global_size, max_local_size, type));
-    return rcpp_result_gen;
-END_RCPP
-}
 // cpp_mrg31k3pCreateStreams
 Rcpp::IntegerMatrix cpp_mrg31k3pCreateStreams(int numWorkItems);
 RcppExport SEXP _clRNG_cpp_mrg31k3pCreateStreams(SEXP numWorkItemsSEXP) {
@@ -31,26 +16,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_runifGpu
-SEXP cpp_runifGpu(Rcpp::S4 xR, Rcpp::IntegerMatrix streamsR, int max_global_size, int max_local_size, std::string type);
-RcppExport SEXP _clRNG_cpp_runifGpu(SEXP xRSEXP, SEXP streamsRSEXP, SEXP max_global_sizeSEXP, SEXP max_local_sizeSEXP, SEXP typeSEXP) {
+// cpp_random_numberGpu
+SEXP cpp_random_numberGpu(Rcpp::S4 xR, Rcpp::IntegerMatrix streamsR, IntegerVector max_global_size, IntegerVector max_local_size, std::string random_type, std::string precision_type);
+RcppExport SEXP _clRNG_cpp_random_numberGpu(SEXP xRSEXP, SEXP streamsRSEXP, SEXP max_global_sizeSEXP, SEXP max_local_sizeSEXP, SEXP random_typeSEXP, SEXP precision_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type xR(xRSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerMatrix >::type streamsR(streamsRSEXP);
-    Rcpp::traits::input_parameter< int >::type max_global_size(max_global_sizeSEXP);
-    Rcpp::traits::input_parameter< int >::type max_local_size(max_local_sizeSEXP);
-    Rcpp::traits::input_parameter< std::string >::type type(typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_runifGpu(xR, streamsR, max_global_size, max_local_size, type));
+    Rcpp::traits::input_parameter< IntegerVector >::type max_global_size(max_global_sizeSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type max_local_size(max_local_sizeSEXP);
+    Rcpp::traits::input_parameter< std::string >::type random_type(random_typeSEXP);
+    Rcpp::traits::input_parameter< std::string >::type precision_type(precision_typeSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_random_numberGpu(xR, streamsR, max_global_size, max_local_size, random_type, precision_type));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_clRNG_cpp_rnormGpu", (DL_FUNC) &_clRNG_cpp_rnormGpu, 5},
     {"_clRNG_cpp_mrg31k3pCreateStreams", (DL_FUNC) &_clRNG_cpp_mrg31k3pCreateStreams, 1},
-    {"_clRNG_cpp_runifGpu", (DL_FUNC) &_clRNG_cpp_runifGpu, 5},
+    {"_clRNG_cpp_random_numberGpu", (DL_FUNC) &_clRNG_cpp_random_numberGpu, 6},
     {NULL, NULL, 0}
 };
 
