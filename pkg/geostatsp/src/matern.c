@@ -476,10 +476,10 @@ SEXP maternPoints(
 
   typeInt = typeStringToInt(type);
 
-  PROTECT(resultX = NEW_NUMERIC(N*N));
-  PROTECT(halfLogDet = NEW_NUMERIC(1));
-  PROTECT(dim = NEW_INTEGER(2));
-  PROTECT(resultUplo = ScalarString(mkChar("L")));
+  resultX = PROTECT(NEW_NUMERIC(N*N));
+  halfLogDet = PROTECT(NEW_NUMERIC(1));
+  dim = PROTECT(NEW_INTEGER(2));
+  resultUplo = PROTECT(ScalarString(mkChar("L")));
 
   INTEGER(dim)[0] = N;
   INTEGER(dim)[1] = N;
@@ -487,10 +487,10 @@ SEXP maternPoints(
 
   if( (typeInt == 2) | (typeInt == 4)) {
     // lower triangle
-    result = PROTECT(NEW_OBJECT(MAKE_CLASS("dtrMatrix")));
+    result = PROTECT(NEW_OBJECT(PROTECT(MAKE_CLASS("dtrMatrix"))));
   } else {
      // symmetric
-    result = PROTECT(NEW_OBJECT(MAKE_CLASS("dsyMatrix")));
+    result = PROTECT(NEW_OBJECT(PROTECT(MAKE_CLASS("dsyMatrix")))));
   }
 
 
@@ -522,7 +522,7 @@ SEXP maternPoints(
       setAttrib(result, install("halfLogDet"), halfLogDet);
   }
 
-  UNPROTECT(9); // was 5
+  UNPROTECT(11); // was 9
   return result;
 }
 
@@ -545,7 +545,7 @@ SEXP maternDistance(
 
   N = INTEGER(GET_SLOT(distance, install("Dim")))[0];
   P = REAL(GET_SLOT(distance, install("x")));
-  PROTECT(halfLogDet = NEW_NUMERIC(1));
+  halfLogDet = PROTECT(NEW_NUMERIC(1));
 
   // check distance is symmetric
   if(R_check_class_etc(distance, valid)) {
@@ -567,10 +567,10 @@ SEXP maternDistance(
 
   if( (typeInt == 2) | (typeInt == 4) ) {
       // lower triangle
-      result = PROTECT(NEW_OBJECT(MAKE_CLASS("dtrMatrix")));
+      result = PROTECT(NEW_OBJECT(PROTECT(MAKE_CLASS("dtrMatrix"))));
   } else {
       // symmetric
-      result = PROTECT(NEW_OBJECT(MAKE_CLASS("dsyMatrix")));
+      result = PROTECT(NEW_OBJECT(PROTECT(MAKE_CLASS("dsyMatrix"))));
   }
 
   SEXP x_s = PROTECT(install("x"));
@@ -609,7 +609,7 @@ SEXP maternDistance(
       setAttrib(result, install("halfLogDet"), halfLogDet);
   }
 
-  UNPROTECT(14); // was 2, change to 9?
+  UNPROTECT(16); // was 14?
   return result;
 }
 
