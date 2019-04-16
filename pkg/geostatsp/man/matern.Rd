@@ -99,8 +99,8 @@ u=seq(0,4,len=20)
 theMaterns = cbind(
 	dist=u, 
 	manual=	param['variance']* 2^(param['shape']-1) * 
-			( 1/(gamma(param['shape'])  )  * 
-			uscale^param['shape'] * besselK( uscale , param['shape']),
+			( 1/gamma(param['shape'])  )  * 
+			uscale^param['shape'] * besselK(uscale , param['shape']),
 	geostatsp=geostatsp::matern(u, param=param)
 )
 head(theMaterns)
