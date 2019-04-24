@@ -1,4 +1,4 @@
-
+#include <CL/mrg31k3pkernelStringCommon.hpp>
 
 
 std::string mrg31k3pTemplateStringFirst = 
@@ -15,15 +15,15 @@ std::string mrg31k3pTemplateStringSecond =
 
 "const int Xsize = get_global_size(0);\n"
 "const int size = get_global_size(1)*Xsize;\n"
+"int index = get_global_id(1)*Xsize + get_global_id(0);\n"
 
 "clrngMrg31k3pStream private_stream_d;\n" // This is not a pointer! the declaration allocates private memory
-"clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[Dglobal]);\n" //copy from host into private memory
+"clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[index]);\n" //copy from host into private memory
 
-"int index = get_global_id(1)*Xsize + get_global_id(0);\n"
 "int D;\n"
 
 "for (D=index; D < Nsim ; D += size) {\n"
-"out[D] ="
+"out[D] =";
 
 
 
@@ -31,8 +31,8 @@ std::string mrg31k3pTemplateStringThird =
 "clrngMrg31k3pNextState(&private_stream_d.current) ;\n"
 "}\n"
 
-"clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);"//Copy RNG device stream objects from private memory into global memory
-"}\n"
+"clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[index], &private_stream_d);"//Copy RNG device stream objects from private memory into global memory
+"}\n";
 
 
   // normal float string and normal double string
@@ -44,14 +44,15 @@ std::string mrg31k3pTemplateStringForth =
 "const int size = get_global_size(1)*Xsize;\n"
 
 "clrngMrg31k3pStream private_stream_d;\n"// This is not a pointer! the declaration allocates private memory
-"clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[Dglobal]);\n"//copy from host into private memory
-
-"int index = (get_global_id(1)*Xsize + get_global_id(0))*2\n"
+"int index = (get_global_id(1)*Xsize + get_global_id(0))*2;\n"
 "int i, D;\n"
+"clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[index]);\n";
+//copy from host into private memory
 
-// multiply by the relevant constant
+
 
 std::string mrg31k3pTemplateStringFifth = 
+" "
 "temp[2];\n"
 "temp[0] = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl;\n "//clrngMrg31k3pRandomU01(&private_stream_d);\n"
 "temp[1] = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl;\n"
@@ -64,7 +65,7 @@ std::string mrg31k3pTemplateStringFifth =
 "}\n"
 "}\n"
  
-"clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[Dglobal], &private_stream_d);\n" //a single stream object
+"clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[index], &private_stream_d);\n" //a single stream object
 "};\n"
 ;
 
@@ -100,8 +101,8 @@ std::string mrg31k3pIntegerUnifString =
 
 ///////////////////////////////////////////////////////////////////////
 std::string mrg31k3pDoubleNormString = 
-    "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n" + 
-    "\n#define TWOPI 6.283185307179586 \n\n" + 
+    "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n" 
+    "\n#define TWOPI 6.283185307179586 \n\n" 
     "\n#define mrg31k3p_NORM_cl 4.656612873077392578125e-10\n\n"+
     mrg31k3pCommon +
     mrg31k3pTemplateStringFirst + "double" +
@@ -110,8 +111,8 @@ std::string mrg31k3pDoubleNormString =
 
 
 std::string mrg31k3pFloatNormString = 
-    "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n" + 
-    "\n#define TWOPI 6.2831853\n\n" + 
+    "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n" 
+    "\n#define TWOPI 6.2831853\n\n" 
     "\n#define mrg31k3p_NORM_cl 4.6566126e-10\n\n"+
     mrg31k3pCommon +
     mrg31k3pTemplateStringFirst + "float" +

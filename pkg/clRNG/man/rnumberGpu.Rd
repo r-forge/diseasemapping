@@ -4,15 +4,15 @@
 \alias{rnumberGpu}
 \title{runif gpu}
 \usage{
-rnumberGpu(x, workgroupSize = 1, streams, localSize = 1,
-  random_type = c("Uniform", "Normal"))
+rnumberGpu(x, streams, workgroupSize, localSize = c(2, 2),
+  random_type = c("uniform", "normal"))
 }
 \arguments{
 \item{x}{vector}
 
-\item{workgroupSize}{workgroup size}
-
 \item{streams}{vector of integers, 18x workgroupSize}
+
+\item{workgroupSize}{workgroup size}
 
 \item{localSize}{local size}
 }

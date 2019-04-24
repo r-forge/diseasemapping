@@ -31,7 +31,6 @@ void convertclRngMat(clrngMrg31k3pStream* streams, Rcpp::IntegerMatrix result) {
       result(Ditem,Dcis*6 + Dg*3 + Delement) = streams[Ditem].substream.g1[Delement];//0,12
       Dg=1;
       result(Ditem,Dcis*6 + Dg*3 + Delement) = streams[Ditem].substream.g2[Delement];//0,15
-      
     }
   }
   
@@ -41,7 +40,7 @@ void convertclRngMat(clrngMrg31k3pStream* streams, Rcpp::IntegerMatrix result) {
 void convertMatclRng(Rcpp::IntegerMatrix Sin, clrngMrg31k3pStream* streams){
   
   int Ditem,Delement,Dcis,Dg;
-  int numWorkItems = Sin.ncol();
+  int numWorkItems = Sin.nrow();
   
   for(Ditem =0;Ditem < numWorkItems;Ditem++){
     for(Delement=0;Delement < 3;Delement++){
@@ -140,34 +139,37 @@ void random_numberGpu(
     Rcout << random_type << "\n";
     warning("random_type undefined");
   }
+  
+ // Rcout << mrg31k3pkernelString << "\n\n";
 
-  //  Rcout << "hi\n\n" <<mrg31k3pkernelString << "\n\n";
+  // Rcout << "hi\n\n" <<mrg31k3pkernelString << "\n\n";
 
   // create streams
   size_t streamBufferSize;   
   clrngStatus err;
   
   
-  //Reserve memory space for count stream objects, without creating the stream objects. Returns a pointer to the newly allocated buffer. 
+  //Reserve memory space for count stream objects, without creating the stream objects. 
+  //Returns a pointer to the newly allocated buffer. 
   clrngMrg31k3pStream* streams = clrngMrg31k3pAllocStreams(
     numWorkItems[0]*numWorkItems[1], 
     &streamBufferSize, &err);
   //count	Number of stream objects to allocate.
   
-  
-  
+//#ifdef UNDEF  
+
   // transfer streams to opencl as matrix
   // convert to crngMgr31k3pStream in opencl, but still on host
   convertMatclRng(streamsR, streams);
-//#ifdef UNDEF  
-  
+
+
   // Create buffer to transfer streams to the device.
   viennacl::vector<char> bufIn(ctx.create_memory_without_smart_handle( 
       CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  streamBufferSize, (void *) streams), 1);
-  
+ 
   
   // kernel, in the kernel will Copy RNG host stream objects from global memory into private memory
-  viennacl::ocl::program &my_prog = ctx.add_program(mrg31k3pkernelString, "my_kernel");
+    viennacl::ocl::program &my_prog = ctx.add_program(mrg31k3pkernelString, "my_kernel");
 
   viennacl::ocl::kernel &random_number = my_prog.get_kernel("mrg31k3p");
 
@@ -179,14 +181,14 @@ random_number.local_work_size(1, numLocalItems[1]);
 
   int Nsim = x.size();
   viennacl::ocl::enqueue(random_number(bufIn, x, Nsim) ); //streams, out, vector_size
-  
+ 
   
   // copy streams back to cpu
-  viennacl::backend::memory_read(bufIn.handle(), 0, streamBufferSize,streams);
-
+  viennacl::backend::memory_read(bufIn.handle(), 0, streamBufferSize, streams);
+//#endif 
     // then transfer to R object, //return streams to R 
   convertclRngMat(streams, streamsR);
-//#endif  
+
 }
 
 
