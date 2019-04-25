@@ -7,7 +7,7 @@
 
 template <typename T> 
 std::string multiplyLowerTypeString() {
-	
+
   std::string typeString = openclTypeString<T>();
   std::string result = "";
 
@@ -42,6 +42,7 @@ std::string multiplyLowerTypeString() {
     "Bcache[Dcol + Drow*Ncol] = B[Dcol + Drow * NpadB];\n"
   "}\n"
 "}\n"
+"barrier(CLK_LOCAL_MEM_FENCE);\n"
 
 
 // looped through rows which are all cached
