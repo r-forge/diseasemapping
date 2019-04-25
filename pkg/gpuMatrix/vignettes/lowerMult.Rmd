@@ -1,0 +1,64 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Mulitply Lower Triangular}
+-->
+
+
+# Multiply Lower Triangular Matrix
+
+```{r date}
+date()
+```
+
+
+```{r packages, results='hide'}
+library('gpuR')
+```
+
+
+```{r memoryAvailable, echo=TRUE}
+gpuInfo()$deviceName
+gpuInfo()$maxAllocatableMem/(1024^3)
+```
+
+Set up spatial data
+
+```{r setupData}
+library('geostatsp')
+myraster = raster(nrows=20,ncols=30,xmn=-3,xmx=3,ymn=-2,ymx=2)
+param = c(range=4, shape=1.5, anisoRatio=2, anisoAngleDegrees=-25,variance=20)
+
+lowerMat = as.matrix(matern(myraster, param=param, type='cholesky'))
+zMat = matrix(rnorm(nrow(lowerMat)*4), ncol=4)
+
+lowerMatGpu = vclMatrix(lowerMat)
+zMatGpu = vclMatrix(zMat)
+```
+
+
+```{r multiply}
+xCpu = lowerMat %*% zMat
+
+xGpu = vclMatrix(0, nrow(zMatGpu), ncol(zMatGpu), type=gpuR::typeof(zMatGpu))
+
+gpuMatrix::multiplyLowerDouble(xGpu, lowerMatGpu, zMatGpu, 16, 2, 500)
+
+xCpu[1:7,]
+as.matrix(xGpu)[1:7,]
+```
+
+```{r plot}
+mybrick = raster::brick(myraster, nl= ncol(xGpu))
+values(mybrick) = as.vector(as.matrix(xGpu))
+plot(mybrick)
+```
+
+# extra info
+
+```{r gpuInfo, echo=TRUE}
+gpuR::gpuInfo()
+```
+
+
+
+

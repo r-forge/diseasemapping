@@ -1,0 +1,19 @@
+Package: gpuMatrix
+Version: 0.0.1
+Date: 2018-04-26
+Title: Matrix for GPU
+Author: Patrick Brown
+Description: Symmetric and sparse matrices with the gpuR package
+Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
+License: GPL (>= 2)
+Encoding: UTF-8
+NeedsCompilation: yes
+Depends: R (>= 3.0.2), gpuR
+Imports: Rcpp
+Suggests: knitr, geostatsp
+LinkingTo:
+	RViennaCL (>= 1.7.1.4),
+	gpuR,
+	Rcpp
+VignetteBuilder: knitr
+RoxygenNote: 6.1.1
