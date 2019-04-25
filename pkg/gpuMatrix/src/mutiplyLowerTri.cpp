@@ -3,64 +3,103 @@
 #include "gpuMatrix.hpp"
 
 // C = A B, A lower triangular
-std::string multiplyLowerkernelString = 
-"\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n"
-"__kernel void multiplyLowerDouble(\n"
-  "	__global double *C,\n"
-  "	__global double *A,\n"
-  "	__global double *B,\n"
- "	__local double *Acache,\n" // length Ncol
- "	__local double *Bcache,\n"
+
+
+template <typename T> 
+std::string multiplyLowerTypeString() {
+	
+  std::string typeString = openclTypeString<T>();
+  std::string result = "";
+
+  if(typeString == "double") {
+  	result += "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n";
+  }
+  result = result + 
+"__kernel void multiplyLower(\n"
+  "	__global " + typeString+ " *C,\n"
+  "	__global "+ typeString+ " *A,\n"
+  "	__global "+ typeString+ " *B,\n"
+ "	__local "+ typeString+ " *Acache,\n" // length Ncol
+ "	__local "+ typeString+ " *Bcache,\n"
  "const int Nrow, const int Ncol, const int NpadC, const int NpadA,\n" 
- "const int NpadB, const int NlocalCache) {\n"
+ "const int NpadB, const int NlocalCache) {\n" +
+ typeString + " Dout;\n"
 
 "int Dglobal0 = get_global_id(0), Nglobal0 = get_global_size(0);\n"
 "int Nglobal1 = get_global_size(1);\n"
-"int Drow, Dcol, Dinner, DinnerStop;\n"
+"int Drow, Dcol, Dinner, DinnerStop, DrowNpadC, DrowNpadA;\n"
 "int Dlocal0 = get_local_id(0);\n"
 "int Nlocal0 = get_local_size(0);\n"
 "int Dlocal1 = get_local_id(1);\n"
 "int Nlocal1 = get_local_size(1);\n"
 "int doCacheA = (get_local_id(1) == 0);\n"
-"double Dout;\n"
 
+// work items shoudl be Nglobal1 by Ncol, local 1 by Ncol
+
+// cache first rows of B 
 "for(Drow = Dlocal0; Drow < NlocalCache; Drow += Nlocal0){\n"
   "for(Dcol = Dlocal1; Dcol < Ncol; Dcol += Nlocal1){\n"
     "Bcache[Dcol + Drow*Ncol] = B[Dcol + Drow * NpadB];\n"
   "}\n"
 "}\n"
 
-// work items shoudl be Nglobal1 by Ncol, local 1 by Ncol
- "for(Drow = Dglobal0; Drow < Nrow; Drow+=Nglobal0){\n"
 
+// looped through rows which are all cached
+"DinnerStop = min(Nrow, NlocalCache);\n"
+"for(Drow = Dglobal0; Drow < DinnerStop; Drow+=Nglobal0){\n"
+  "DrowNpadA= Drow * NpadA;\n"
+  "DrowNpadC= Drow * NpadC;\n"
   "for(Dcol = get_global_id(1); Dcol < Ncol; Dcol += Nglobal1){\n"
     "Dout = 0.0;\n"
-    "DinnerStop = min(Drow, NlocalCache);\n"
-    "for(Dinner = 0; Dinner < DinnerStop; Dinner++){\n"
+    "for(Dinner = 0; Dinner <= Drow; Dinner++){\n"
 	  "if(doCacheA) {\n"
-	    "Acache[Dlocal0] = A[Dinner + Drow * NpadA];\n"
+	    "Acache[Dlocal0] = A[Dinner + DrowNpadA];\n"
 	  "}\n"
 	  "barrier(CLK_LOCAL_MEM_FENCE);\n"
 	  "Dout += Acache[Dlocal0] * Bcache[Dcol + Dinner * Ncol];\n"
 	"}\n" // Dinner
-
-    "for(Dinner = NlocalCache; Dinner <= Drow; Dinner++){\n"
-//		"Dout += A[Drow, Dinner] * B[Dinner, Dcol];"
+  	"C[Dcol + DrowNpadC] = Dout;\n"
+  "}\n" // Dcol
+"}\n" //Drow
+// rows which are not all cached
+"for( ; Drow < Nrow; Drow+=Nglobal0){\n"
+  "DrowNpadA= Drow * NpadA;\n"
+  "DrowNpadC= Drow * NpadC;\n"
+  "for(Dcol = get_global_id(1); Dcol < Ncol; Dcol += Nglobal1){\n"
+    "Dout = 0.0;\n"
+    // cached rows
+    "for(Dinner = 0; Dinner < NlocalCache; Dinner++){\n"
 	  "if(doCacheA) {\n"
-	    "Acache[Dlocal0] = A[Dinner + Drow * NpadA];\n"
+	    "Acache[Dlocal0] = A[Dinner + DrowNpadA];\n"
+	  "}\n"
+	  "barrier(CLK_LOCAL_MEM_FENCE);\n"
+	  "Dout += Acache[Dlocal0] * Bcache[Dcol + Dinner * Ncol];\n"
+	"}\n" // Dinner
+	// un-cached rows
+    "for( ; Dinner <= Drow; Dinner++){\n"
+	  "if(doCacheA) {\n"
+	    "Acache[Dlocal0] = A[Dinner + DrowNpadA];\n"
 	  "}\n"
 	  "barrier(CLK_LOCAL_MEM_FENCE);\n"
 	  "Dout += Acache[Dlocal0] * B[Dcol + Dinner * NpadB];\n"
 	"}\n" // Dinner
-	"C[Dcol + Drow * NpadC] = Dout;\n"
+	"C[Dcol + DrowNpadC] = Dout;\n"
   "}\n" // Dcol
  "}\n" //Drow
 "}";
 
-void multiplyLowerDouble(
-	viennacl::matrix<double> &C,
-	viennacl::matrix<double> &A,
-	viennacl::matrix<double> &B,
+  return(result);
+}
+
+
+
+
+
+template <typename T> 
+void multiplyLower(
+	viennacl::matrix<T> &C,
+	viennacl::matrix<T> &A,
+	viennacl::matrix<T> &B,
 	const int Nglobal0, const int Nlocal0, const int NlocalCache, const int ctx_id) {
 
 	// the context
@@ -69,24 +108,24 @@ void multiplyLowerDouble(
 	cl_device_type type_check = ctx.current_device().type();
 
 	viennacl::ocl::program & my_prog = ctx.add_program(
-		multiplyLowerkernelString,
+		multiplyLowerTypeString<T>(),
 		"my_kernel");
 
 	viennacl::ocl::kernel 
-		&multiplyLowerDoubleKernel = my_prog.get_kernel("multiplyLowerDouble");
+		&multiplyLowerKernel = my_prog.get_kernel("multiplyLower");
 
 	int Ncol = C.size2();
-	multiplyLowerDoubleKernel.global_work_size(0, Nglobal0);
-	multiplyLowerDoubleKernel.global_work_size(1, Ncol);
-	multiplyLowerDoubleKernel.local_work_size(0, Nlocal0);
-	multiplyLowerDoubleKernel.local_work_size(1, Ncol);
+	multiplyLowerKernel.global_work_size(0, Nglobal0);
+	multiplyLowerKernel.global_work_size(1, Ncol);
+	multiplyLowerKernel.local_work_size(0, Nlocal0);
+	multiplyLowerKernel.local_work_size(1, Ncol);
 
-	viennacl::ocl::local_mem Acache(Nlocal0*sizeof(cl_double));
+	viennacl::ocl::local_mem Acache(Nlocal0*sizeof(cl_double)); // T?
 	viennacl::ocl::local_mem Bcache(NlocalCache*Ncol*sizeof(cl_double));
 
 
 		// diagonals and diagTimesRowOfA
-		viennacl::ocl::enqueue(multiplyLowerDoubleKernel(
+		viennacl::ocl::enqueue(multiplyLowerKernel(
 			C, A, B,
 			Acache, Bcache,
 			(int) A.size1(), 
@@ -96,8 +135,6 @@ void multiplyLowerDouble(
 			(int) B.internal_size2(),
 			(int) NlocalCache
 			));
-
-
 	
 }
 
@@ -132,7 +169,7 @@ SEXP multiplyLowerDouble(
 	std::shared_ptr<viennacl::matrix<double> > 
 		CG = getVCLptr<double>(C.slot("address"), BisVCL, ctx_id);
 
-	multiplyLowerDouble(*CG, *AG, *BG, Nglobal0, Nlocal0, NlocalCache, ctx_id);	
+	multiplyLower<double>(*CG, *AG, *BG, Nglobal0, Nlocal0, NlocalCache, ctx_id);	
 
 	return Rcpp::wrap(0L);
 }
