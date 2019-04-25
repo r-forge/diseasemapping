@@ -139,6 +139,30 @@ void multiplyLower(
 	
 }
 
+template <typename T> 
+SEXP multiplyLower(
+	Rcpp::S4 C,
+	Rcpp::S4 A,
+	Rcpp::S4 B,
+	int Nglobal0,
+	int Nlocal0, 
+	int NlocalCache) {
+
+	const int ctx_id = INTEGER(C.slot(".context_index"))[0]-1;
+	const bool BisVCL=1;
+
+	std::shared_ptr<viennacl::matrix<T> > 
+		AG = getVCLptr<T>(A.slot("address"), BisVCL, ctx_id);
+	std::shared_ptr<viennacl::matrix<T> > 
+		BG = getVCLptr<T>(B.slot("address"), BisVCL, ctx_id);
+	std::shared_ptr<viennacl::matrix<T> > 
+		CG = getVCLptr<T>(C.slot("address"), BisVCL, ctx_id);
+
+	multiplyLower<T>(*CG, *AG, *BG, Nglobal0, Nlocal0, NlocalCache, ctx_id);	
+
+	return Rcpp::wrap(0L);
+}
+
 
 //' Multiply lower triangular matrix
 //' 
@@ -160,17 +184,6 @@ SEXP multiplyLowerDouble(
 	int Nlocal0, 
 	int NlocalCache) {
 
-	const int ctx_id = INTEGER(C.slot(".context_index"))[0]-1;
-	const bool BisVCL=1;
 
-	std::shared_ptr<viennacl::matrix<double> > 
-		AG = getVCLptr<double>(A.slot("address"), BisVCL, ctx_id);
-	std::shared_ptr<viennacl::matrix<double> > 
-		BG = getVCLptr<double>(B.slot("address"), BisVCL, ctx_id);
-	std::shared_ptr<viennacl::matrix<double> > 
-		CG = getVCLptr<double>(C.slot("address"), BisVCL, ctx_id);
-
-	multiplyLower<double>(*CG, *AG, *BG, Nglobal0, Nlocal0, NlocalCache, ctx_id);	
-
-	return Rcpp::wrap(0L);
+	return multiplyLower<double>(C, A, B, Nglobal0, Nlocal0, NlocalCache);
 }
