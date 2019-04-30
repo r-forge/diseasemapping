@@ -44,7 +44,7 @@ std::string mrg31k3pTemplateStringForth =
 "const int size = get_global_size(1)*Xsize;\n"
 
 "clrngMrg31k3pStream private_stream_d;\n"// This is not a pointer! the declaration allocates private memory
-"int index = (get_global_id(1)*Xsize + get_global_id(0));\n"
+"int index = get_global_id(1)*Xsize + get_global_id(0);\n"
 "int D;\n"
 "clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[index]);\n"
 "index = 2*index;\n";
@@ -54,28 +54,27 @@ std::string mrg31k3pTemplateStringForth =
 
 std::string mrg31k3pTemplateStringFifth = 
 " "
-"temp0,temp1;\n"
+"temp0,temp1,part1,part2;\n"
 "for (D=index; D < Nsim; D+=2*size) {\n"
 
-      "temp0 = clrngMrg31k3pNextState(&private_stream_d.current);\n "// * mrg31k3p_NORM_cl;\n "//clrngMrg31k3pRandomU01(&private_stream_d);\n"
-      "temp1 = clrngMrg31k3pNextState(&private_stream_d.current);\n "// * mrg31k3p_NORM_cl;\n "//clrngMrg31k3pRandomU01(&private_stream_d);\n"
+  "temp0 = clrngMrg31k3pNextState(&private_stream_d.current)* mrg31k3p_NORM_cl;\n"    //"clrngMrg31k3pRandomU01(&private_stream_d);\n"
+  "temp1 = clrngMrg31k3pNextState(&private_stream_d.current)* mrg31k3p_NORM_cl;\n"     //"clrngMrg31k3pRandomU01(&private_stream_d);\n"
   
-  "z[D] = index;\n"    
-  "z[D+1] = temp1;\n"    
-      // logTempZero = sqrt(-2.0*log(temp[0]));twoPiTemp1 = TWOPI * temp[1]
-// int twoSize = 2*size;
-//   "for (i = 0; i < 2; ++i) {\n"
-//      "if (D < Nsim) {\n"
-//      "z[D] = temp0;"//"sqrt(-2.0*log(temp[0]))*(cos(TWOPI*temp[1]));\n"
-//      "}\n"
-//      "if (D +1< Nsim) {\n"
-//      "z[D+1] = temp1;"//"sqrt(-2.0*log(temp[0]))*(sin(TWOPI*temp[1]));\n"
-//      // "}\n"
-//"}\n"
-"}\n"
+  "part1 = sqrt(-2.0*log(temp0));\n"
+  "part2 = TWOPI * temp1;\n"
+  
+  "if (D<Nsim) {\n"
+   "z[D] = part1*cos(part2);\n"
+  "}\n"
+   
+  "if (D +1< Nsim) {\n"
+     "z[D+1] = part1*sin(part2);\n"
+  "}\n"
+ 
+ "}\n"
  
 "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[index], &private_stream_d);\n" //a single stream object
-"};\n"
+"}\n"
 ;
 
 

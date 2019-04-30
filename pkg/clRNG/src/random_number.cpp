@@ -140,7 +140,7 @@ void random_numberGpu(
     warning("random_type undefined");
   }
   
- // Rcout << mrg31k3pkernelString << "\n\n";
+  //Rcout << mrg31k3pkernelString << "\n\n";
 
   // Rcout << "hi\n\n" <<mrg31k3pkernelString << "\n\n";
 
