@@ -41,10 +41,12 @@ stackRasterList = function(x, template=x[[1]],method='ngb',mc.cores=NULL) {
 			
 			toAdd =  
 					rasterize(
-							spTransform(x[[D]], CRS(projection(template))), 
-							raster(template), field=names(x[[D]][1])
-					)
- 
+							spTransform(x[[D]][,1], 
+								CRS(projection(template))), 
+							raster(template))
+ 			if(is.numeric(x[[D]]@data[,1])) {
+ 				toAdd = deratify(toAdd)
+ 			}
 		} else { # not a spdf
 			if(as(x[[D]], 'BasicRaster')==template) {
 				# same projection, same resolution
