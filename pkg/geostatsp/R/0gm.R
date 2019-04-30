@@ -421,13 +421,19 @@ gm.dataSpatial = function(
   # loop through spatial covariates which are factors
     for(D in intersect(Sfactors, names(covariatesDF))) {
       theTable = sort(table(data[[D]]), decreasing=TRUE)
+      theTable = theTable[theTable > 0]
       theLevels = levels(covariates[[D]])[[1]]
       if(is.null(theLevels)) {
         theLabels = paste("l", names(theTable),sep="")
       } else {
         idCol = grep("^id$", names(theLevels), ignore.case=TRUE)[1]
         if(is.na(idCol)) idCol = 1
-        labelCol = grep("^category$|^label$", names(theLevels), ignore.case=TRUE)[1]
+        if(D %in% names(theLevels)) {
+          labelCol = D
+        } else {
+          labelCol = grep("^category$|^label$", 
+            names(theLevels), ignore.case=TRUE)[1]
+        }
         if(is.na(labelCol)) labelCol = 2
 
         if(all(names(theTable) %in% theLevels[,labelCol])) {
@@ -438,7 +444,11 @@ gm.dataSpatial = function(
           , idCol]
         }
 
-        theLabels = as.character(theLevels[match(names(theTable), theLevels[,idCol]), labelCol])
+
+        theLabels = as.character(theLevels[
+          match(names(theTable), as.character(theLevels[,idCol])), 
+          labelCol
+          ])
         if(any(is.na(theLabels))) {
           warning(
             'missing labels in covariate raster ', 
@@ -447,7 +457,7 @@ gm.dataSpatial = function(
           theLabels[is.na(theLabels)] = 
           names(theTable)[is.na(theLabels)]
         }
-      }
+      } # end else (not is null thelevels)
 
       # re-factor data with new baseline category
       if(is.character(data[[D]])) {
@@ -465,7 +475,7 @@ gm.dataSpatial = function(
       as.integer(covariatesDF[[D]]), 
       levels=as.integer(names(theTable)),
       labels=theLabels)			
-   }
+   } # loop D trhoguh factors
 
 
    list(
