@@ -5,9 +5,9 @@
 
 using namespace Rcpp;
 
-// multiplyLowerDouble
-SEXP multiplyLowerDouble(Rcpp::S4 C, Rcpp::S4 A, Rcpp::S4 B, int Nglobal0, int Nlocal0, int NlocalCache);
-RcppExport SEXP _gpuMatrix_multiplyLowerDouble(SEXP CSEXP, SEXP ASEXP, SEXP BSEXP, SEXP Nglobal0SEXP, SEXP Nlocal0SEXP, SEXP NlocalCacheSEXP) {
+// multiplyLower
+SEXP multiplyLower(Rcpp::S4 C, Rcpp::S4 A, Rcpp::S4 B, int Nglobal0, int Nlocal0, int NlocalCache, std::string type);
+RcppExport SEXP _gpuMatrix_multiplyLower(SEXP CSEXP, SEXP ASEXP, SEXP BSEXP, SEXP Nglobal0SEXP, SEXP Nlocal0SEXP, SEXP NlocalCacheSEXP, SEXP typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -17,13 +17,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type Nglobal0(Nglobal0SEXP);
     Rcpp::traits::input_parameter< int >::type Nlocal0(Nlocal0SEXP);
     Rcpp::traits::input_parameter< int >::type NlocalCache(NlocalCacheSEXP);
-    rcpp_result_gen = Rcpp::wrap(multiplyLowerDouble(C, A, B, Nglobal0, Nlocal0, NlocalCache));
+    Rcpp::traits::input_parameter< std::string >::type type(typeSEXP);
+    rcpp_result_gen = Rcpp::wrap(multiplyLower(C, A, B, Nglobal0, Nlocal0, NlocalCache, type));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_gpuMatrix_multiplyLowerDouble", (DL_FUNC) &_gpuMatrix_multiplyLowerDouble, 6},
+    {"_gpuMatrix_multiplyLower", (DL_FUNC) &_gpuMatrix_multiplyLower, 7},
     {NULL, NULL, 0}
 };
 

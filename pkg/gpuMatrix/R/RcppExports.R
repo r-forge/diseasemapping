@@ -12,7 +12,7 @@
 #' @param Nlocal0 number of local work items
 #' @param NlocalCache rows of B to cache in local memory
 #' @export
-multiplyLowerDouble <- function(C, A, B, Nglobal0, Nlocal0, NlocalCache) {
-    .Call('_gpuMatrix_multiplyLowerDouble', PACKAGE = 'gpuMatrix', C, A, B, Nglobal0, Nlocal0, NlocalCache)
+multiplyLower <- function(C, A, B, Nglobal0, Nlocal0, NlocalCache, type) {
+    .Call('_gpuMatrix_multiplyLower', PACKAGE = 'gpuMatrix', C, A, B, Nglobal0, Nlocal0, NlocalCache, type)
 }
 

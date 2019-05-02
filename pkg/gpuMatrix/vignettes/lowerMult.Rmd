@@ -16,23 +16,27 @@ library('gpuR')
 ```
 
 
+
 ```{r memoryAvailable, echo=TRUE}
+if(system("hostname", TRUE) == 'englishbreakfast') {
+  setContext(2)
+}
 gpuInfo()$deviceName
-gpuInfo()$maxAllocatableMem/(1024^3)
+gpuInfo()$maxAllocatableMem/(1024^2)
 ```
 
 Set up spatial data
 
 ```{r setupData}
-myraster = geostatsp::squareRaster(raster::extent(-3,3,-4,4), 50);
+myraster = geostatsp::squareRaster(raster::extent(-3,3,-4,4), 30)
 param = c(range=4, shape=1.5, anisoRatio=2, anisoAngleDegrees=25,variance=20)
 
 lowerMat = as.matrix(geostatsp::matern(myraster, param=param, type='cholesky'))
-lowerMatGpu = vclMatrix(lowerMat)
+lowerMatGpu = vclMatrix(lowerMat, type='double')
 
 set.seed(0)
 zMat = matrix(rnorm(nrow(lowerMat)*4), ncol=4)
-zMatGpu = vclMatrix(zMat)
+zMatGpu = vclMatrix(zMat, type=typeof(lowerMatGpu))
 ```
 
 
@@ -41,7 +45,7 @@ xCpu = lowerMat %*% zMat
 
 xGpu = vclMatrix(0, nrow(zMatGpu), ncol(zMatGpu), type=gpuR::typeof(zMatGpu))
 
-gpuMatrix::multiplyLowerDouble(xGpu, lowerMatGpu, zMatGpu, 16, 2, 5)
+gpuMatrix::multiplyLower(xGpu, lowerMatGpu, zMatGpu, 16, 2, 5, gpuR::typeof(xGpu))
 
 xCpu[1:7,]
 as.matrix(xGpu)[1:7,]

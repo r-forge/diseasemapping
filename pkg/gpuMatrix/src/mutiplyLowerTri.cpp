@@ -140,7 +140,7 @@ void multiplyLower(
 }
 
 template <typename T> 
-SEXP multiplyLower(
+SEXP multiplyLowerTyped(
 	Rcpp::S4 C,
 	Rcpp::S4 A,
 	Rcpp::S4 B,
@@ -176,14 +176,24 @@ SEXP multiplyLower(
 //' @param NlocalCache rows of B to cache in local memory
 //' @export
 // [[Rcpp::export]]
-SEXP multiplyLowerDouble(
+SEXP multiplyLower(
 	Rcpp::S4 C,
 	Rcpp::S4 A,
 	Rcpp::S4 B,
 	int Nglobal0,
 	int Nlocal0, 
-	int NlocalCache) {
+	int NlocalCache,
+	std::string type) {
 
+	SEXP result;
 
-	return multiplyLower<double>(C, A, B, Nglobal0, Nlocal0, NlocalCache);
+	if(type == "double") {
+		result = multiplyLowerTyped<double>(C, A, B, Nglobal0, Nlocal0, NlocalCache);
+	} else if (type == "float") {
+		result = multiplyLowerTyped<float>(C, A, B, Nglobal0, Nlocal0, NlocalCache);
+	} else {
+		result = Rcpp::wrap(1L);
+	}
+	return(result);
+
 }
