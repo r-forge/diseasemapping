@@ -490,7 +490,6 @@ gm.dataSpatial = function(
       } # end else (not is null thelevels)
 
       # re-factor data with new baseline category
-      if(is.character(data[[D]])) {
         data[[D]] = factor(
           data[[D]], 
           levels=theLabels,
@@ -499,12 +498,6 @@ gm.dataSpatial = function(
           as.integer(covariatesDF[[D]]), 
           levels=as.integer(names(theTable)),
           labels=theLabels)     
-      } else {
-       data[[D]] = factor(
-        as.integer(data[[D]]), 
-        levels=as.integer(names(theTable)),
-        labels=theLabels)			
-     }
    } # end refactor
    } # end loop D trhoguh factors
 
