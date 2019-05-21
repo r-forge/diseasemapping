@@ -455,7 +455,7 @@ gm.dataSpatial = function(
 
         }
 
-      } else {
+      } else { # data[[D]] isn't a factor
 
         # choose baseline category 
 
@@ -479,6 +479,11 @@ gm.dataSpatial = function(
           match(names(theTable), as.character(theLevels[,idCol])), 
           labelCol
           ])
+        if(is.numeric(data[[D]])) {
+          levelsD = as.integer(names(theTable))
+        } else {
+          levelsD = theLabels
+        }
         if(any(is.na(theLabels))) {
           warning(
             'missing labels in covariate raster ', 
@@ -492,7 +497,7 @@ gm.dataSpatial = function(
       # re-factor data with new baseline category
         data[[D]] = factor(
           data[[D]], 
-          levels=theLabels,
+          levels=levelsD,
           labels=theLabels)     
        covariatesDF[[D]] = factor(
           as.integer(covariatesDF[[D]]), 
