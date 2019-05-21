@@ -420,21 +420,51 @@ gm.dataSpatial = function(
     data$space = suppressWarnings(extract(cellsSmall, data))
   # loop through spatial covariates which are factors
     for(D in intersect(Sfactors, names(covariatesDF))) {
+
+      theLevels = levels(covariates[[D]])[[1]]
+      idCol = grep("^id$", names(theLevels), ignore.case=TRUE)[1]
+      if(is.na(idCol)) idCol = 1
+      if(D %in% names(theLevels)) {
+          labelCol = D
+      } else {
+          labelCol = grep("^category$|^label$", 
+            names(theLevels), ignore.case=TRUE)[1]
+      }
+      if(is.na(labelCol)) labelCol = 2
+
+      if(is.factor(data[[D]])) {
+        # give covariatesDF factor levels from data
+        if(all(levels(data[[D]]) %in% theLevels[,labelCol])) {
+          # match factor levels in data to 
+          # factor levels in raster
+          covariatesDF[[D]] = factor(
+            covariatesDF[[D]],
+            levels = theLevels[
+              match(theLevels[,labelCol], levels(data[[D]])), 
+              idCol],
+            labels = levels(data[[D]])
+            )
+        } else { 
+          # levels in data can't be found in raster levels
+          # ignore raster levels
+          covariatesDF[[D]] = factor(
+            covariatesDF[[D]],
+            levels = 1:nlevels(data[[D]]),
+            labels = levels(data[[D]])
+            )
+
+        }
+
+      } else {
+
+        # choose baseline category 
+
+
       theTable = sort(table(data[[D]]), decreasing=TRUE)
       theTable = theTable[theTable > 0]
-      theLevels = levels(covariates[[D]])[[1]]
       if(is.null(theLevels)) {
         theLabels = paste("l", names(theTable),sep="")
       } else {
-        idCol = grep("^id$", names(theLevels), ignore.case=TRUE)[1]
-        if(is.na(idCol)) idCol = 1
-        if(D %in% names(theLevels)) {
-          labelCol = D
-        } else {
-          labelCol = grep("^category$|^label$", 
-            names(theLevels), ignore.case=TRUE)[1]
-        }
-        if(is.na(labelCol)) labelCol = 2
 
         if(all(names(theTable) %in% theLevels[,labelCol])) {
       # convert table names to numeric
@@ -465,17 +495,18 @@ gm.dataSpatial = function(
           data[[D]], 
           levels=theLabels,
           labels=theLabels)     
+       covariatesDF[[D]] = factor(
+          as.integer(covariatesDF[[D]]), 
+          levels=as.integer(names(theTable)),
+          labels=theLabels)     
       } else {
        data[[D]] = factor(
         as.integer(data[[D]]), 
         levels=as.integer(names(theTable)),
         labels=theLabels)			
      }
-     covariatesDF[[D]] = factor(
-      as.integer(covariatesDF[[D]]), 
-      levels=as.integer(names(theTable)),
-      labels=theLabels)			
-   } # loop D trhoguh factors
+   } # end refactor
+   } # end loop D trhoguh factors
 
 
    list(
