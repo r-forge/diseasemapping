@@ -63,3 +63,13 @@ SEXP cpp_lu(
 	}
 	return(Rcpp::wrap(logDet));
 }
+
+
+
+
+
+
+
+
+
+

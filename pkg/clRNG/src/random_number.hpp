@@ -1,5 +1,5 @@
-
-
+#include <clRNG/mrg31k3p.h>
+#include "clRNG.hpp"
 
 
 // clRNG -> Matrix

@@ -6,6 +6,6 @@
 
 #include "dynVCLMatGeostatsgpu.hpp"
 #include "dynVCLVecGeostatsgpu.hpp"
-
+#include "viennacl/linalg/sum.hpp"
 #include "viennacl/ocl/backend.hpp"
 

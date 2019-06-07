@@ -1,4 +1,24 @@
-#include "fisher_header.hpp"
+//"#include <R.h>\n"
+//"#include <Rinternals.h>\n"
+//"#include <Rmath.h>\n"
+//"#include <R_ext/Random.h>\n"
+
+//"#ifdef HAVE_CONFIG_H\n"
+//"#include <config.h>\n"
+//"#endif\n"
+
+//"#ifdef ENABLE_NLS\n"
+//"#include <libintl.h>\n"
+//"#define _(String) gettext (String)\n"
+//"#else\n"
+//"#define _(String) (String)\n"
+//"#endif\n"
+
+
+//"#include <R_ext/Applic.h>\n"
+//"#include <R_ext/Boolean.h>\n"
+//"#include <R_ext/Error.h>\n"
+//"#include <R_ext/Utils.h>\n"
 
 
 
@@ -6,11 +26,11 @@ std::string FisherSimkernelString  =
   
   "\n\n__kernel void fisher_sim_gpu(\n"
   "   const int nrow,\n"
-  "	const int ncol,\n"
+  "	  const int ncol,\n"
   "   __global int *nrowt, \n"
   "   __global int *ncolt, \n"
   "   const int n, \n" //ntotal
-  "	int vsize,\n" //extra para
+  "	  int vsize,\n" //extra para
   "	__global int *matrix, \n"
   "	__global double *fact,\n"
   "	__global int *jwork, \n"
@@ -42,7 +62,7 @@ std::string FisherSimkernelString  =
   
   /* Construct random matrix */
   "       for (j = 0; j < nc_1; ++j)\n"
-  "	    jwork[j] = ncolt[j];\n"
+  "	      jwork[j] = ncolt[j];\n"
   
   "       jc = n;\n"
   
@@ -76,7 +96,7 @@ std::string FisherSimkernelString  =
   "     if (x >= dummy)\n"
   "     break;\n"
   "     if (x == 0.) \n"       /* MM: I haven't seen this anymore */
-  "     error(_("rcont2 [%d,%d]: exp underflow to 0; algorithm failure"), l, m);\n"
+  "     error(_(\"rcont2 [%d,%d]: exp underflow to 0; algorithm failure\"), l, m);\n"
   
   "     sumprb = x;\n"
   "     y = x;\n"

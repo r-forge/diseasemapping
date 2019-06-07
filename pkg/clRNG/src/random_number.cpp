@@ -1,5 +1,3 @@
-#include "clRNG.hpp"
-#include <clRNG/mrg31k3p.h>
 #include <CL/mrg31k3pkernelStringSeparate.hpp>
 #include "random_number.hpp"
 

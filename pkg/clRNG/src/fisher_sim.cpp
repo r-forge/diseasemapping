@@ -1,7 +1,5 @@
-#include "clRNG.hpp"
-#include <clRNG/mrg31k3p.h>
-#include "random_number.hpp"   //creatred by me
-#include <CL/fisher_sim.hpp>   //kernel created by me
+#include <CL/fisher_sim.hpp>   
+#include "random_number.hpp"   
 
 using namespace Rcpp;
 using namespace viennacl;	
@@ -12,8 +10,7 @@ using namespace viennacl::linalg;
 void fisher_sim_gpu(
     viennacl::vector_base<int> &sr, 
     viennacl::vector_base<int> &sc,
-    viennacl::vector_base<double> &ans,
-    //int B,  
+    viennacl::vector_base<double> &ans,//int B,  
     Rcpp::IntegerMatrix streamsR, 
     IntegerVector numWorkItems,
     int ctx_id){
@@ -85,7 +82,7 @@ SEXP cpp_fisher_sim_gpu(
     IntegerVector max_global_size){
   
   //const bool BisVCL=1;
-  const int ctx_id = INTEGER(sr.slot(".context_index"))[0]-1;
+  const int ctx_id = INTEGER(srR.slot(".context_index"))[0]-1;
   std::shared_ptr<viennacl::vector_base<int> > sr = getVCLVecptr<int>(srR.slot("address"), 1, ctx_id);
   std::shared_ptr<viennacl::vector_base<int> > sc = getVCLVecptr<int>(scR.slot("address"), 1, ctx_id);
   std::shared_ptr<viennacl::vector_base<double> > ans = getVCLVecptr<double>(ansR.slot("address"), 1, ctx_id);
@@ -93,6 +90,5 @@ SEXP cpp_fisher_sim_gpu(
   
   fisher_sim_gpu(*sr, *sc, *ans, streamsR, max_global_size, ctx_id);
   
-  return (wrap(ans))
+  return (wrap(ans));
 }
-
