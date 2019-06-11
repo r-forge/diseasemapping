@@ -34,30 +34,30 @@ Generate some uniforms
 ```{r test}
 x = vclVector(length=8L, type=theType)
 
-streams2 <- clRNG::runifGpu(x, streams=streams)
+streams2 <- clRNG::rnumberGpu(x, streams=streams)
 t(streams)[1:4,]
 t(streams2)[1:4,]
 as.vector(x)
 ```
 Generate some different uniforms
 ```{r testAgain}
-clRNG::runifGpu(x, streams=streams2)
+clRNG::rnumberGpu(x, streams=streams2)
 as.vector(x)
 ```
 
 Reuse the intial seed
 ```{r testRepeat}
-clRNG::runifGpu(x, streams=streams)
+clRNG::rnumberGpu(x, streams=streams)
 as.vector(x)
 ```
 
-```{r hist}
+```{r hist, eval=FALSE}
 
 
-Nglobal = 256
+Nglobal = 128
 streams = clRNG:::cpp_mrg31k3pCreateStreams(Nglobal)
 if(gpuInfo()$maxAllocatableMem > 1e10) {
-  NperItem = 5e5
+  NperItem = 500
 } else {
   NperItem = 200
 }
@@ -65,7 +65,7 @@ x = vclVector(length=as.integer(Nglobal*NperItem), type=theType)
 length(x)*1e-6
 
 system.time(junk <- runif(length(x)))
-system.time(streams <- clRNG::runifGpu(x, Nglobal, streams=streams))
+system.time(streams <- clRNG::rnumberGpu(x, Nglobal, streams=streams))
 
 xVec = as.vector(x)
 

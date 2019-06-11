@@ -2,6 +2,7 @@
 
 #include <clRNG/clRNG.h>
 #include <Rcpp.h>
+#include <string>
 
 
 #include "dynVCLMatGeostatsgpu.hpp"

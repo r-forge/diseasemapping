@@ -1,3 +1,6 @@
+#include <string>
+
+
 std::string mrg31k3pCommon = 
 "#define CLRNG_ENABLE_SUBSTREAMS\n"
 "#define __CLRNG_DEVICE_API\n"
