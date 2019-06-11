@@ -29,7 +29,7 @@ hook_plot_htmlsubfig = function(x, options) {
   if(is.null(base)) base=''
   cap = options$fig.cap
   scap = options$fig.subcap
-  if(is.null(cap)) cap=''
+  if(is.null(cap)) cap=' '
   if(is.null(scap)){
     scap = cap
   }

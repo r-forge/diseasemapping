@@ -1,7 +1,7 @@
 #include <CL/fisher_sim.hpp>   
 #include "random_number.hpp"   
 
-using namespace Rcpp;
+//using namespace Rcpp;
 using namespace viennacl;	
 using namespace viennacl::linalg;
 
@@ -12,7 +12,7 @@ void fisher_sim_gpu(
     viennacl::vector_base<int> &sc,
     viennacl::vector_base<double> &ans,//int B,  
     Rcpp::IntegerMatrix streamsR, 
-    IntegerVector numWorkItems,
+    Rcpp::IntegerVector numWorkItems,
     int ctx_id){
   
   
@@ -50,7 +50,10 @@ void fisher_sim_gpu(
   
   
   int nr = sr.size(), nc = sc.size();
-  int n = viennacl::linalg::sum(sr);  //User interface function for computing the sum of all elements of a vector. 
+  scalar<int> nScalar;
+  //viennacl::linalg::sum_impl(sr, &n);  //User interface function for computing the sum of all elements of a vector. 
+  sum_impl(sr, nScalar);
+  int n = nScalar;
   int vsize= ans.size();
   
   
@@ -58,10 +61,15 @@ void fisher_sim_gpu(
   viennacl::vector_base<double> fact = viennacl::vector_base<double>(n+1, ctx); 
   viennacl::vector_base<int> jwork = viennacl::vector_base<int>(nc, ctx); 
   
-  
-  viennacl::ocl::enqueue(fisher_sim_gpu(nr, nc, sr, sc, n, vsize, &observed, &fact, 
-                                        &jwork, ans, bufIn) ); //streams, out, vector_size
-  
+#ifdef UNDEF  
+  viennacl::ocl::enqueue(fisher_sim_gpu(
+    nr, nc, 
+    sr, sc, 
+    n, vsize, 
+//    &observed, &fact, &jwork, 
+    ans, 
+    bufIn) ); //streams, out, vector_size
+#endif  
   
   // copy streams back to cpu
   viennacl::backend::memory_read(bufIn.handle(), 0, streamBufferSize, streams);
@@ -79,7 +87,7 @@ SEXP cpp_fisher_sim_gpu(
     Rcpp::S4  scR,
     Rcpp::S4  ansR,
     Rcpp::IntegerMatrix streamsR,   //vector
-    IntegerVector max_global_size){
+    Rcpp::IntegerVector max_global_size){
   
   //const bool BisVCL=1;
   const int ctx_id = INTEGER(srR.slot(".context_index"))[0]-1;
