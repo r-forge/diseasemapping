@@ -289,11 +289,11 @@ typeString + " K_nu, K_nup1;\n\n"
 	"}\n" // Dmatrix
 "}\n" // Dcell
 "\n#endif\n"
-
 "}\n"; // funciton
+}
 
-
-template<typename T> void fill22params(
+template<typename T> 
+void fill22params(
 	viennacl::matrix<T> &param
 	// Nmat rows, 22 columns
 // 0 range, 1 shape, 2 variance, 3 nugget, 
@@ -308,12 +308,12 @@ template<typename T> void fill22params(
 ) {
 
 	int D, nuround;
-	const int Nmat = params.size1();
-	double range, shape, theta, anisoRatio, variance;
-	double onePointFiveM_LN2 = 1.5 * M_LN2;
-	double mu, muSq, mup1, pi_nu;
+	const int Nmat = param.size1();
+	T range, shape, theta, anisoRatio, variance, mu;
+	T onePointFiveM_LN2 = 1.5 * M_LN2;
+	double muSq, pi_nu;
 	double g_1pnu, g_1mnu, g1, g2;
-	double epsHere = maternClEpsilon<T>();
+	T epsHere = maternClEpsilon<T>();
 
 
 	for(D=0; D<Nmat;++D) {
@@ -331,9 +331,9 @@ template<typename T> void fill22params(
 		Rtemme_gamma(&mu, &g_1pnu, &g_1mnu, &g1, &g2);
 
 
-		param(D, 7) = cos(theta);
-		param(D, 8) = sin(theta);
-		param(D, 9) = anisoRatio*anisoRatio;
+		param(D, 7) = (T) cos(theta);
+		param(D, 8) = (T) sin(theta);
+		param(D, 9) = (T) anisoRatio*anisoRatio;
 		// varscale
 		param(D, 10) = (T) (log(variance) - Rf_lgammafn(shape) - (shape-1)*M_LN2);
 		// logxscale
@@ -353,9 +353,9 @@ template<typename T> void fill22params(
 		// g2 
 		param(D, 18)= (T) g2;		
 		// g1pnu 
-		param(D, 19)= (T) g1pnu;		
+		param(D, 19)= (T) g_1pnu;		
 		// g1mnu
-		param(D, 20)= (T) g1mnu;		
+		param(D, 20)= (T) g_1mnu;		
 		// variance + nugget
 		param(D, 21)= (T) variance + param(D, 3);		
 
@@ -378,10 +378,9 @@ template<typename T> void maternGpuVcl(
 	const int 
 	N = vclCoords.size1(),
 	Nmat = vclVar.size2(),
-
 	iSizeCoords2=vclCoords.internal_size2(),
-	iSizeVar2=vclVar.internal_size2();
-	iSizeParam2=param.internal_size2(),
+	iSizeVar2=vclVar.internal_size2(),
+	iSizeParam2=param.internal_size2();
 
 	const int Ncell = N * (N - 1)/2, maxIter = 1500;
 	const int Npad = 0; // padding for matrix rows, can't ge deduced from VCL object
@@ -411,7 +410,7 @@ template<typename T> void maternGpuVcl(
 	viennacl::ocl::local_mem localParams(
 		param.size1() * param.size2() * sizeOfReal<T>());
 	viennacl::ocl::local_mem localCoords(
-		coords.size1() * coords.size2() * sizeOfReal<T>());
+		vclCoords.size1() * vclCoords.size2() * sizeOfReal<T>());
 
 
  // "__global " + typeString + " *result,"
@@ -423,8 +422,8 @@ template<typename T> void maternGpuVcl(
 
 	viennacl::ocl::enqueue(maternKernel(
 		vclVar, vclCoords,
-		Ncell, Npad, Nmat, iSizeVar2, isSizeCoords2, 
-		params, iSizeParam2, 
+		Ncell, Npad, Nmat, iSizeVar2, iSizeCoords2, 
+		param, iSizeParam2, 
 		localParams, localCoords 
 	));
 
@@ -432,13 +431,13 @@ template<typename T> void maternGpuVcl(
 
 //	SEXP XYR, // solve for Lt b = XY
 //	SEXP crossprodR, //bt b
-template<typename T> SEXP maternBatch(
+template<typename T> void maternBatch(
 	Rcpp::S4 varR,
 	Rcpp::S4 coordsR,
 	Rcpp::S4 DofLDLR,
 	Rcpp::S4 logDetR,
 	Rcpp::S4 paramR, //22 columns 
-	const int form, // 2 cholesky 3 inversecholesky, 4 inverse, 5 solve for b
+	const int form, // 2 cholesky 3 inversecholesky, 4 inverse
 	Rcpp::IntegerVector numWorkItems,
 	Rcpp::IntegerVector numLocalItems) {
 
@@ -456,13 +455,13 @@ template<typename T> SEXP maternBatch(
 	std::shared_ptr<viennacl::vector_base<T> > logDet = getVCLVecptr<T>(logDetR.slot("address"), BisVCL, ctx_id);
 
 	std::shared_ptr<viennacl::matrix<T> > vclCoords = getVCLptr<T>(coordsR.slot("address"), BisVCL, ctx_id);
-	logdet = maternBatch<T>(
+	maternBatch<T>(
 		*vclVar, *vclCoords, *DofLDL, *logDet, 
-		param2,
+		param,
 		form, ctx_id,
         numWorkItemsStd, 
         numLocalItemsStd);
 
-	return(Rcpp::wrap(logdet));	
 
-	}
+}
+
