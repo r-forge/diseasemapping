@@ -29,19 +29,15 @@ std::string FisherSimkernelString  =
   "	  const int ncol,\n"
   "   __global int *nrowt, \n"
   "   __global int *ncolt, \n"
-//  "   const int n, \n" //ntotal
-//  "	  int vsize,\n" //extra para
-//  "	__global int *matrix, \n"
-// "	__global double *fact,\n"
-// "	__global int *jwork, \n"
+  "   const int n, \n" //ntotal
+  "	  int vsize,\n" //extra para
+  "	__global int *matrix, \n"
+ "	__global double *fact,\n"
+ "	__global int *jwork, \n"
   "	__global double *results,\n" // extra para
   "	__global clrngMrg31k3pHostStream* streams"
   ") { \n"
-  "   double ans;\n"
-  "};\n";
-
-
-  std::string junkString = "   int i, t, u, iter; \n"  //original j changed to t, ii changed to u
+"   int i, t, u, iter; \n"  //original j changed to t, ii changed to u
   "   double ans;\n"
   "   const int size = (get_global_size(1)*get_global_size(0));\n"
   "   int index=get_global_id(1)*get_global_size(0) + get_global_id(0);\n"

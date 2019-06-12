@@ -75,8 +75,8 @@ void fisher_sim_gpu(
   viennacl::ocl::enqueue(fisher_sim(
     nr, nc, 
     sr, sc, 
-//    n, vsize, 
-//    &observed, &fact, &jwork, 
+    n, vsize, 
+    observed, fact, jwork, 
     ans,
     bufIn
     ) ); //streams, out, vector_size
