@@ -25,16 +25,16 @@
 std::string FisherSimkernelString  = 
   
   "\n\n__kernel void fisher_sim_gpu(\n"
-  "const int nrow\n"
+  "const int nrow,\n"
   "	  const int ncol,\n"
   "   __global int *nrowt, \n"
   "   __global int *ncolt, \n"
-  "   const int n, \n" //ntotal
-  "	  int vsize,\n" //extra para
-  "	__global int *matrix, \n"
- "	__global double *fact,\n"
- "	__global int *jwork, \n"
-  "	__global double *results\n" // extra para
+//  "   const int n, \n" //ntotal
+//  "	  int vsize,\n" //extra para
+//  "	__global int *matrix, \n"
+// "	__global double *fact,\n"
+// "	__global int *jwork, \n"
+  "	__global double *results,\n" // extra para
   "	__global clrngMrg31k3pHostStream* streams"
   ") { \n"
   "   double ans;\n"

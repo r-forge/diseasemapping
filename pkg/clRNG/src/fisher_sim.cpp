@@ -58,7 +58,7 @@ void fisher_sim_gpu(
   
   
   int nr = sr.size(), nc = sc.size();
-  int bob=1;
+
   scalar<int> nScalar;
   //viennacl::linalg::sum_impl(sr, &n);  //User interface function for computing the sum of all elements of a vector. 
   sum_impl(sr, nScalar);
@@ -73,11 +73,11 @@ void fisher_sim_gpu(
 
 
   viennacl::ocl::enqueue(fisher_sim(
-      nr, nc, 
+    nr, nc, 
     sr, sc, 
-    n, vsize, 
-    &observed, &fact, &jwork, 
-    ans
+//    n, vsize, 
+//    &observed, &fact, &jwork, 
+    ans,
     bufIn
     ) ); //streams, out, vector_size
 
