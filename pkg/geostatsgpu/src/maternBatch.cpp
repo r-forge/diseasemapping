@@ -37,6 +37,7 @@ template <typename T>
 std::string maternBatchKernelString(int maxIter) {
 
   std::string typeString = openclTypeString<T>();
+  std::string maxIterString = std::to_string(maxIter);
   std::string result = "";
 
   if(typeString == "double") {
@@ -44,15 +45,15 @@ std::string maternBatchKernelString(int maxIter) {
   "\n#define logSqrtHalfPi 0.2257913526447273278031\n"
   "\n#define M_PI_T M_PI\n"
   "\n#define M_LN2_T M_LN2\n";
-  "\n#define epsilon " + (std::string) (GSL_DBL_EPSILON/1000) + "\n";
+  "\n#define epsilon " + std::to_string(GSL_DBL_EPSILON/1000) + "\n";
   } else {
   	result += "\n#define logSqrtHalfPi 0.22579135\n"
 	"\n#define M_LN2_T M_LN2_F\n"
     "\n#define M_PI_T M_PI_F\n"
-	"\n#define epsilon " + (std::string) (GSL_FLT_EPSILON /1000) + "\n";
+	"\n#define epsilon " + std::to_string(GSL_FLT_EPSILON /1000) + "\n";
   }
 
-  result += "\n#define maxIter " + (std::string) maxIter + "\n"
+  result += "\n#define maxIter " + maxIterString + "\n"
 	"#define assignDiag\n"
 	"#define assignLower\n"
 	"#define assignLower\n";
@@ -178,8 +179,10 @@ typeString + " bi, di, delhi, hi, qi, qip1, ai, ci, Qi, s, tmp;\n"
 
 "__local int Drow, Dcol;\n"
 "}\n"; // funciton
+return(result);
+}
 
-
+#ifdef UNDEF
 std::string junk = "int Dmatrix, Dcell, nuround;\n" +
 typeString + " distRotate[2], distSq;\n" +
 typeString + " logthisx, ln_half_x, thisx, maternBit, expMaternBit;\n" +
@@ -289,8 +292,10 @@ typeString + " K_nu, K_nup1;\n\n"
 	"}\n" // Dmatrix
 "}\n" // Dcell
 "\n#endif\n"
-"}\n"; // funciton
+"}\n"; // function
+return result;
 }
+#endif
 
 template<typename T> 
 void fill22params(
@@ -368,9 +373,6 @@ template<typename T> void maternBatchVcl(
 	viennacl::matrix<T> &param, // Nmat rows, 22 columns
 	std::vector<int> numWorkItems,
 	std::vector<int> numLocalItems,	
-	viennacl::matrix<T> &DofLDL,  // Nmat columns, N rows
-	viennacl::vector_base<T> &logDet, // length Nmat
-	const int form,
 	const int ctx_id)
 {
 
@@ -386,13 +388,14 @@ template<typename T> void maternBatchVcl(
 
 	fill22params(param);
 
-#ifdef UNDEF
 	// the context
 	viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
 
 	cl_device_type type_check = ctx.current_device().type();
 
 	std::string maternClString = maternBatchKernelString<T>(maxIter);
+
+#ifdef UNDEF
 
 	viennacl::ocl::program & my_prog = ctx.add_program(maternClString, "my_kernel");
 	// get compiled kernel function
@@ -434,10 +437,7 @@ template<typename T> void maternBatchTemplated(
 	Rcpp::S4 coordsR,
 	Rcpp::S4 paramR, //22 columns 
 	Rcpp::IntegerVector numWorkItems,
-	Rcpp::IntegerVector numLocalItems,
-	SEXP DofLDLR,
-	SEXP logDetR,
-	const int form // 2 cholesky 3 inversecholesky, 4 inverse
+	Rcpp::IntegerVector numLocalItems
 ) {
 
 	std::vector<int> numWorkItemsStd = Rcpp::as<std::vector<int> >(numWorkItems);
@@ -450,37 +450,22 @@ template<typename T> void maternBatchTemplated(
 	std::shared_ptr<viennacl::matrix<T> > param = getVCLptr<T>(paramR.slot("address"), BisVCL, ctx_id);
 	std::shared_ptr<viennacl::matrix<T> > vclCoords = getVCLptr<T>(coordsR.slot("address"), BisVCL, ctx_id);
 
-	// vector to contain the D
-	std::shared_ptr<viennacl::matrix<T> > DofLDL;
-	std::shared_ptr<viennacl::vector_base<T> > logDet;	
-	if(form >= 2) {
-  		Rcpp::warning("haven't written this yet");
-	    Rcpp::traits::input_parameter< Rcpp::S4 >::type DofLDLS4(DofLDLR);
-//		DofLDL = getVCLptr<T>(DofLDLS4.slot("address"), BisVCL, ctx_id);
-	    Rcpp::traits::input_parameter< Rcpp::S4 >::type logDetRS4(logDetR);
-//		logDet = getVCLVecptr<T>(logDetRS4.slot("address"), BisVCL, ctx_id);
-	}
 
 	maternBatchVcl<T>(
 		*vclVar, *vclCoords,
 		*param,
         numWorkItemsStd, 
         numLocalItemsStd,
-		 *DofLDL, *logDet, 
-		form, ctx_id);
+        ctx_id);
 }
 
 //[[Rcpp::export]]
-void maternBatch(
+void maternBatchBackend(
 	Rcpp::S4 varR,
 	Rcpp::S4 coordsR,
 	Rcpp::S4 paramR, //22 columns 
 	Rcpp::IntegerVector numWorkItems,
-	Rcpp::IntegerVector numLocalItems,
-	SEXP DofLDLR = R_NilValue,
-	SEXP logDetR = R_NilValue,
-	const int form = 1 // 2 cholesky 3 inversecholesky, 4 inverse
-) {
+	Rcpp::IntegerVector numLocalItems) {
 
 
     Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(varR));
@@ -490,15 +475,11 @@ void maternBatch(
   if(precision_type == "fvclMatrix") {
 	maternBatchTemplated<float>(
 		varR, coordsR, paramR, 
-		numWorkItems, numLocalItems, 
-		DofLDLR,
-		logDetR, form);
+		numWorkItems, numLocalItems);
   } else if (precision_type == "dvclMatrix") {
 	maternBatchTemplated<double>(
 		varR, coordsR, paramR, 
-		numWorkItems, numLocalItems, 
-		DofLDLR,
-		logDetR, form);
+		numWorkItems, numLocalItems);
   } else {
   	Rcpp::warning("precision_type must be float or double");
  }

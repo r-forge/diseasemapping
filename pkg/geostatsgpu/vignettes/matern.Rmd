@@ -119,7 +119,8 @@ paramsGpu =  vclMatrix(myParamsBatch, type='float')
     nrow(coordsGpu)^2, nrow(paramsGpu), 
     type=gpuR::typeof(paramsGpu))
 
-  geostatsgpu:::maternBatch(outputBatchF,
+  geostatsgpu:::maternBatchBackend(
+    outputBatchF,
     coordsGpu, paramsGpu,  
     numWorkItems = c(128L,4L), 
     numLocalItems = c(4L, 4L))
