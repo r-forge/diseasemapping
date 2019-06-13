@@ -25,7 +25,7 @@
 std::string FisherSimkernelString  = 
   
   "\n\n__kernel void fisher_sim_gpu(\n"
-  "const int nrow,\n"
+  "   const int nrow,\n"
   "	  const int ncol,\n"
   "   __global int *nrowt, \n"
   "   __global int *ncolt, \n"
@@ -37,15 +37,15 @@ std::string FisherSimkernelString  =
   "	__global double *results,\n" // extra para
   "	__global clrngMrg31k3pHostStream* streams"
   ") { \n"
-"   int i, t, u, iter; \n"  //original j changed to t, ii changed to u
+"   int i, t, u, iter, D; \n"  //original j changed to t, ii changed to u, added a D here
   "   double ans;\n"
-  "   const int size = (get_global_size(1)*get_global_size(0));\n"
+  "   const int size = get_global_size(1)*get_global_size(0);\n"
   "   int index=get_global_id(1)*get_global_size(0) + get_global_id(0);\n"
   
   /* Calculate log-factorials.  fact[i] = lgamma(i+1) */
   "   fact[0] = fact[1] = 0.;\n"
   "   for(i = 2; i <= n; i++)\n"
-  "	fact[i] = fact[i - 1] + log(i);\n"
+  "	  fact[i] = fact[i - 1] + log(i);\n"
   
   "   clrngMrg31k3pStream private_stream_d;\n"
   "   clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[index]);\n"

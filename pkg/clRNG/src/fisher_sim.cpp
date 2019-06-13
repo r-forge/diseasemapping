@@ -1,8 +1,7 @@
 #include <CL/fisher_sim.hpp>   
-#include "clRNG.hpp"
 #include "random_number.hpp"
 
-//using namespace Rcpp;
+using namespace Rcpp;
 using namespace viennacl;	
 using namespace viennacl::linalg;
 
@@ -11,7 +10,7 @@ using namespace viennacl::linalg;
 void fisher_sim_gpu(
     viennacl::vector_base<int> &sr, 
     viennacl::vector_base<int> &sc,
-    viennacl::vector_base<double> &ans,//int B,  
+    viennacl::vector_base<double> &ans, 
     Rcpp::IntegerMatrix streamsR, 
     Rcpp::IntegerVector numWorkItems,
     int ctx_id){
@@ -57,12 +56,12 @@ void fisher_sim_gpu(
   fisher_sim.global_work_size(1, numWorkItems[1]);
   
   
-  int nr = sr.size(), nc = sc.size();
+  const int nr = sr.size(), nc = sc.size();
 
   scalar<int> nScalar;
   //viennacl::linalg::sum_impl(sr, &n);  //User interface function for computing the sum of all elements of a vector. 
   sum_impl(sr, nScalar);
-  int n = nScalar;
+  const int n = nScalar;
   int vsize= ans.size();
   
   viennacl::vector_base<int> observed = viennacl::vector_base<int>(nr*nc, ctx); 
