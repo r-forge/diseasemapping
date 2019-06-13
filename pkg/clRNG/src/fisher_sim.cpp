@@ -17,7 +17,7 @@ void fisher_sim_gpu(
   
   
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
-  std::string FisherSimkernelString;
+  std::string kernel_string= FisherSimkernelString;
   
   //Rcout << FisherSimkernelString << "\n\n";
   // create streams
@@ -41,11 +41,11 @@ void fisher_sim_gpu(
   // kernel, in the kernel will Copy RNG host stream objects from global memory into private memory
   // add kernel to program
 
-  std::string stuff = "\n\n__kernel void fisher_sim_gpu2(\n"
+ /* std::string stuff = "\n\n__kernel void fisher_sim_gpu2(\n"
   "int *nrow\n"
   ") { \n"
   "   double ans;\n"
-  "};\n";
+  "};\n";*/
 
 
   viennacl::ocl::program &my_prog = ctx.add_program(FisherSimkernelString, "my_kernel");
