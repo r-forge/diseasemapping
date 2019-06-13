@@ -1,4 +1,5 @@
 #include "geostatsgpu.hpp"
+#define DEBUG
 
 template <typename T> 
 int sizeOfReal() {
@@ -71,7 +72,7 @@ typeString + " g1, " + typeString + " g2," +
 typeString + " g_1pnu, " + typeString + " g_1mnu," +
 typeString + " *K_nu, " + typeString + " *K_nup1\n" 
 "  ){\n" +
-typeString + " twoLnHalfX, sigma, sinhrat, fk, pk, qk, hk;\n" +
+typeString + " twoLnHalfX, sigma, sinhrat, fk, pk, qk, hk, half_x_nu;\n" +
 typeString + " sum0, sum1, ck, logck, del0, del1;\n"
 "int k;\n"
 	"			twoLnHalfX = 2*ln_half_x;\n"
@@ -106,8 +107,8 @@ typeString + " sum0, sum1, ck, logck, del0, del1;\n"
 	"				sum1 += del1;\n"
 	"			}\n" //while loop
 			//		result[Dcol * sizeResultPadRow + Drow] = -k;
-	"			K_nu   = sum0;\n"
-	"			K_nup1 = sum1 * exp( - ln_half_x);\n"
+	"			*K_nu   = sum0;\n"
+	"			*K_nup1 = sum1 * exp( - ln_half_x);\n"
 "}\n\n"
 
 
@@ -116,7 +117,8 @@ typeString + " thisx, " + typeString + " expMaternBit, " +
 typeString + " nu, " + typeString + " mu, " + typeString + " muSq, " + 
 typeString + " *K_nu, " + typeString + " *K_nup1\n"
 "){\n" +
-typeString + " bi, di, delhi, hi, qi, qip1, ai, ci, Qi, s, tmp;\n"
+typeString + " bi, di, delhi, hi, qi, qip1, ai, ci, Qi, s, tmp;\n" +
+typeString + " dels, a1;\n"
 "int k;\n"
 	"		*K_nu = 0.0;\n"
 	"		bi = 2.0*(1.0 + thisx);\n"
@@ -171,61 +173,65 @@ typeString + " bi, di, delhi, hi, qi, qip1, ai, ci, Qi, s, tmp;\n"
 "\n__kernel void maternBatch(\n"
   "__global " + typeString + " *result,"
   "__global " + typeString + " *coords,\n"
-  "const int Ncell, const int Npad, const int Nmat, const int NpadResult, const int NpadCoords,\n"
+  "const int Ncell, const int N, const int Npad," // padding for inner matrices, usually N*N
+  "const int Nmatrix, const int NpadResult, const int NpadCoords,\n"
   "__global " + typeString + " *params, const int NpadParams,\n"  
   "__local " + typeString + " *localParams,\n"
   "__local " + typeString + " *localCoords"
   ") {\n"
 
 "__local int Drow, Dcol;\n"
-"}\n"; // funciton
-return(result);
-}
 
-#ifdef UNDEF
-std::string junk = "int Dmatrix, Dcell, nuround;\n" +
+"int Dmatrix, Dcell, nuround, DlocalParam, k;\n" +
 typeString + " distRotate[2], distSq;\n" +
 typeString + " logthisx, ln_half_x, thisx, maternBit, expMaternBit;\n" +
-typeString + " K_nu, K_nup1;\n\n"
+typeString + " K_num1, K_nu, K_nup1;\n\n"
 
 // dimension 0 is cell, dimension 1 is matrix
-"int isFirstLocal = (get_local_id(0)==0 & get_local_id(1)==0);"
-"int isFirstLocal1 = (get_local_id(1)==0);"
-"int distanceY = get_local_id(0) + get_local_size(0);"
+"int isFirstLocal = (get_local_id(0)==0 & get_local_id(1)==0);\n\n"
+"int isFirstLocal1 = (get_local_id(1)==0);\n\n"
+"int distanceY = get_local_id(0) + get_local_size(0);\n\n\n"
 
 // copy parameters to local storage
-"if(get_local_id(0)==0){"
+"if(get_local_id(0)==0){\n"
 "for(Dmatrix = get_local_id(1); Dmatrix < Nmatrix; Dmatrix += get_local_size(1)) {\n"
-	"for(Dcell = 0; Dcell < NlocalParams; ++Dcell){"
-		"localParams[NlocalParams*Dmatrix + Dcell] = params[NpadParams*Dmatrix + Dcell];\n"
+	"DlocalParam = NlocalParams*Dmatrix;\n"
+	"k = NpadParams*Dmatrix;\n"
+
+	"for(Dcell = 0; Dcell < N; ++Dcell){\n"
+		"localParams[DlocalParam + Dcell] = params[k + Dcell];\n"
 	"}\n" // Dcell
 "}\n" // Dmatrix
 "}\n" // if local0
+
 
 // copy coordinates to local storage
-"if(get_local_id(0)==1){"
+"if(get_local_id(0)==1){\n"
 "for(Dmatrix = get_local_id(1); Dmatrix < Nmatrix; Dmatrix += get_local_size(1)) {\n"
-	"for(Dcell = 0; Dcell < NlocalParams; ++Dcell){"
-		"localCoords[2*Dmatrix + Dcell] = coords[NpadCoords*Dmatrix + Dcell];\n"
+	"DlocalParam = NpadCoords*Dmatrix ;\n"
+	"k = 2*Dmatrix;\n"
+	"for(Dcell = 0; Dcell < N; ++Dcell){\n"
+		"localCoords[k+ Dcell] = coords[DlocalParam + Dcell];\n"
 	"}\n" // Dcell
 "}\n" // Dmatrix
 "}\n" // if local0
 "barrier(CLK_LOCAL_MEM_FENCE);\n"
-
 "for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += get_global_size(0)) {\n"
 
-"if(isFirstLocal){"
+
+"if(isFirstLocal){\n"
 	"	Drow = ceil(0.5 + sqrt(0.25 + 2.0*(Dcell+1) ) ) - 1;\n"
 	"	Dcol = Dcell - round(Drow * (Drow - 1.0) / 2.0);\n"
-"}" // if local0
+"}\n\n" // if local0
 "barrier(CLK_LOCAL_MEM_FENCE);\n"
 
-"if(isFirstLocal1){"
+"if(isFirstLocal1){\n"
 
 	"	localCoords[get_local_id(0)] = coords[Drow*NpadCoords] - coords[Dcol*NpadCoords];\n"
 	"	localCoords[distanceY] = coords[Dcol*NpadCoords +1] - coords[Drow*NpadCoords +1];\n"
-"}" 
+"}\n\n" 
 "barrier(CLK_LOCAL_MEM_FENCE);\n"
+#ifdef UNDEF
 
 "for(Dmatrix = get_global_id(1); Dmatrix < Nmatrix; Dcell += get_global_size(1)) {\n"
 	"   DlocalParam = NlocalParams*Dmatrix;\n"
@@ -262,6 +268,7 @@ typeString + " K_nu, K_nup1;\n\n"
 			" localParams[DlocalParam + 19], localParams[DlocalParam + 20],"
 			" &K_nu, &K_nup1);"
 	"   }\n"
+
 	"		for(k=0; k<nuround; k++) {\n"
 	"			K_num1 = K_nu;\n"
 	"			K_nu   = K_nup1;\n"
@@ -274,28 +281,33 @@ typeString + " K_nu, K_nup1;\n\n"
 "	result[Drow + Dcol * sizeResultPadRow] = K_nu;\n"//K_nu;\n" // upper triangle
 "# endif\n"
 
+
+
 	"}\n" // Dmatrix
+#endif
 
 "}\n" // Dcell
+//"\n#ifdef assignDiag\n;"
 
-"\n#ifdef assignDiag\n;"
-"if(isFirstLocal){"
-// infer dimension of output matrix from number of cells
-"Drow = ceil(0.5 + sqrt(0.25 + 2.0*(Ncell+1) ) ) - 1;\n" 
-"}" // if local0
 
 "barrier(CLK_LOCAL_MEM_FENCE);\n"
-"for(Dcell = get_global_id(0); Dcell < Drow; Dcell += get_global_size(0)) {\n"
-	"DlocalParam = Dcell + Dcell * sizeResultPadRow;\n"
-	"for(Dmatrix = get_global_id(1); Dmatrix < Nmatrix; Dcell += get_global_size(1)) {\n"
-	"	result[DlocalParam] = localParams[NlocalParams*Dmatrix+21];\n"
+
+"for(Dmatrix = get_global_id(1); Dmatrix < Nmatrix; Dmatrix += get_global_size(1)) {\n"
+	"DlocalParam = Dmatrix * NpadResult;\n"
+	"maternBit = localParams[NlocalParams*Dmatrix+21];\n"
+	///FIX THIS!!!
+//	"maternBit = params[NpadParams*Dmatrix+21];\n"
+	"for(Dcell = get_global_id(0); Dcell < N; Dcell += get_global_size(0)) {\n"
+	"	result[Dcell + Dcell * Npad + DlocalParam] = maternBit;\n"
 	"}\n" // Dmatrix
+
 "}\n" // Dcell
-"\n#endif\n"
+//"\n#endif\n"
+
+
 "}\n"; // function
 return result;
 }
-#endif
 
 template<typename T> 
 void fill22params(
@@ -384,7 +396,7 @@ template<typename T> void maternBatchVcl(
 	iSizeParam2=param.internal_size2();
 
 	const int Ncell = N * (N - 1)/2, maxIter = 1500;
-	const int Npad = 0; // padding for matrix rows, can't ge deduced from VCL object
+	const int Npad = N; // padding for matrix rows, can't be deduced from VCL object
 
 	fill22params(param);
 
@@ -395,7 +407,7 @@ template<typename T> void maternBatchVcl(
 
 	std::string maternClString = maternBatchKernelString<T>(maxIter);
 
-#ifdef UNDEF
+
 
 	viennacl::ocl::program & my_prog = ctx.add_program(maternClString, "my_kernel");
 	// get compiled kernel function
@@ -414,21 +426,22 @@ template<typename T> void maternBatchVcl(
 	viennacl::ocl::local_mem localCoords(
 		vclCoords.size1() * vclCoords.size2() * sizeOfReal<T>());
 
+	Rcpp::Rcout << maternClString;
 
- // "__global " + typeString + " *result,"
- // "__global " + typeString + " *coords,\n"
- // "const int Ncell, const int Npad, const int Nmat, const int NpadResult, const int NpadCoords,\n"
- // "__global " + typeString + " *params, const int NpadParams,\n"  
- // "__local " + typeString + " *localParams,\n"
- // "__local " + typeString + " *localCoords"
+#ifdef DEBUG
 
+Rcpp::Rcout << "Ncell " << Ncell << " N" << N <<" Npad" << Npad << " Nmatrix" << Nmat << " NpadResult" << iSizeVar2  << " NpadCoords" << iSizeCoords2  << " NpadParams" << iSizeParam2;
+
+#endif
 	viennacl::ocl::enqueue(maternKernel(
 		vclVar, vclCoords,
-		Ncell, Npad, Nmat, iSizeVar2, iSizeCoords2, 
+// Ncell,  Npad  Nmatrix  NpadResult  NpadCoords params NpadParams
+  Ncell, N, Npad, Nmat, iSizeVar2, iSizeCoords2, 
 		param, iSizeParam2, 
 		localParams, localCoords 
 	));
-#endif
+
+
 }
 
 
@@ -450,13 +463,13 @@ template<typename T> void maternBatchTemplated(
 	std::shared_ptr<viennacl::matrix<T> > param = getVCLptr<T>(paramR.slot("address"), BisVCL, ctx_id);
 	std::shared_ptr<viennacl::matrix<T> > vclCoords = getVCLptr<T>(coordsR.slot("address"), BisVCL, ctx_id);
 
-
 	maternBatchVcl<T>(
 		*vclVar, *vclCoords,
 		*param,
         numWorkItemsStd, 
         numLocalItemsStd,
         ctx_id);
+
 }
 
 //[[Rcpp::export]]

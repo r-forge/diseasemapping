@@ -18,7 +18,7 @@ library('gpuR')
 Ngrid = c(30, 40)
 if(system("hostname", TRUE) == 'englishbreakfast') {
   setContext(2)
-  Ngrid = c(60, 80)
+#  Ngrid = c(60, 80)
 }
 ```
 
@@ -111,19 +111,24 @@ myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
 myParamsBatch
 myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch)))
 paramsGpu =  vclMatrix(myParamsBatch, type='float')
+
+
+coordsGpu2 = vclMatrix(cbind(1:3, 1:3), 
+    type=gpuR::typeof(paramsGpu))
+outputBatchF = vclMatrix(0, 
+    nrow(paramsGpu), nrow(coordsGpu2)^2,
+    type=gpuR::typeof(paramsGpu))
+
 ```
 
 ```{r batchMatern}
-
-  outputBatchF = vclMatrix(0, 
-    nrow(coordsGpu)^2, nrow(paramsGpu), 
-    type=gpuR::typeof(paramsGpu))
-
   geostatsgpu:::maternBatchBackend(
     outputBatchF,
-    coordsGpu, paramsGpu,  
-    numWorkItems = c(128L,4L), 
-    numLocalItems = c(4L, 4L))
+    coordsGpu2, paramsGpu,  
+    numWorkItems = c(4L,4L), 
+    numLocalItems = c(2L, 2L))
+  t(as.matrix(outputBatchF))
+  t(as.matrix(paramsGpu))
 ```
 
 # Cholesky
@@ -171,7 +176,7 @@ quantile(theDiff)
 ```
 
 Using ViennaCL's LU decomposition
-```{r cholViennaclLu}
+```{r cholViennaclLu, eval=FALSE}
 varMat3 = gpuR::deepcopy(varGpuD)
 system.time(varCholVcl <- geostatsgpu::luGpu(varMat3))
 
