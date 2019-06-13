@@ -39,6 +39,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// maternBatch
+void maternBatch(Rcpp::S4 varR, Rcpp::S4 coordsR, Rcpp::S4 paramR, Rcpp::IntegerVector numWorkItems, Rcpp::IntegerVector numLocalItems, SEXP DofLDLR, SEXP logDetR, const int form);
+RcppExport SEXP _geostatsgpu_maternBatch(SEXP varRSEXP, SEXP coordsRSEXP, SEXP paramRSEXP, SEXP numWorkItemsSEXP, SEXP numLocalItemsSEXP, SEXP DofLDLRSEXP, SEXP logDetRSEXP, SEXP formSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type varR(varRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type coordsR(coordsRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type paramR(paramRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type numWorkItems(numWorkItemsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type numLocalItems(numLocalItemsSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type DofLDLR(DofLDLRSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type logDetR(logDetRSEXP);
+    Rcpp::traits::input_parameter< const int >::type form(formSEXP);
+    maternBatch(varR, coordsR, paramR, numWorkItems, numLocalItems, DofLDLR, logDetR, form);
+    return R_NilValue;
+END_RCPP
+}
 // cpp_maternGpuD
 SEXP cpp_maternGpuD(Rcpp::S4 varR, Rcpp::S4 coordsR, Rcpp::S4 DofLDLR, Rcpp::NumericVector param, const int form, Rcpp::IntegerVector numWorkItems, Rcpp::IntegerVector numLocalItems);
 RcppExport SEXP _geostatsgpu_cpp_maternGpuD(SEXP varRSEXP, SEXP coordsRSEXP, SEXP DofLDLRSEXP, SEXP paramSEXP, SEXP formSEXP, SEXP numWorkItemsSEXP, SEXP numLocalItemsSEXP) {
@@ -89,6 +106,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_geostatsgpu_cpp_cholGpu", (DL_FUNC) &_geostatsgpu_cpp_cholGpu, 11},
     {"_geostatsgpu_gpuNlocal", (DL_FUNC) &_geostatsgpu_gpuNlocal, 3},
+    {"_geostatsgpu_maternBatch", (DL_FUNC) &_geostatsgpu_maternBatch, 8},
     {"_geostatsgpu_cpp_maternGpuD", (DL_FUNC) &_geostatsgpu_cpp_maternGpuD, 7},
     {"_geostatsgpu_cpp_maternGpuF", (DL_FUNC) &_geostatsgpu_cpp_maternGpuF, 7},
     {"_geostatsgpu_cpp_lu", (DL_FUNC) &_geostatsgpu_cpp_lu, 2},

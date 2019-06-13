@@ -15,7 +15,7 @@ date()
 library('geostatsp')
 library('gpuR')
 
-Ngrid = c(40, 50)
+Ngrid = c(30, 40)
 if(system("hostname", TRUE) == 'englishbreakfast') {
   setContext(2)
   Ngrid = c(60, 80)
@@ -91,16 +91,38 @@ Create matern matrix on cpu
 
 ```{r maternMatGpu}
 system.time(varCpu <- geostatsp::matern(coordsSp, myParams))
-theProb = c(0.5, 0.9, 0.99, 0.999,1)
-quantile(abs(as.matrix(varCpu) - as.matrix(varGpu)), theProb, na.rm=TRUE)
-quantile(abs(as.matrix(varCpu) - as.matrix(varGpuD)), theProb, na.rm=TRUE)
 ```
 
 ```{r compareCpuGpu}
+theProb = c(0.5, 0.9, 0.99, 0.999,1)
+quantile(abs(as.matrix(varCpu) - as.matrix(varGpu)), theProb, na.rm=TRUE)
+quantile(abs(as.matrix(varCpu) - as.matrix(varGpuD)), theProb, na.rm=TRUE)
 endSeq = seq(by=1, len=5, to=nrow(varCpu))
 varCpu[endSeq,endSeq]
 as.matrix(varGpu[endSeq,endSeq])
 as.matrix(varGpuD[endSeq,endSeq])
+```
+
+# Batch matern
+
+```{r paramsBatch}
+myParamsBatch = rbind(myParams, myParams, myParams * 0.8, myParams*1.2)
+myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
+myParamsBatch
+myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch)))
+paramsGpu =  vclMatrix(myParamsBatch, type='float')
+```
+
+```{r batchMatern}
+
+  outputBatchF = vclMatrix(0, 
+    nrow(coordsGpu)^2, nrow(paramsGpu), 
+    type=gpuR::typeof(paramsGpu))
+
+  geostatsgpu:::maternBatch(outputBatchF,
+    coordsGpu, paramsGpu,  
+    numWorkItems = c(128L,4L), 
+    numLocalItems = c(4L, 4L))
 ```
 
 # Cholesky

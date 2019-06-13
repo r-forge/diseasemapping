@@ -309,9 +309,9 @@ void fill22params(
 
 	int D, nuround;
 	const int Nmat = param.size1();
-	T range, shape, theta, anisoRatio, variance, mu;
+	T range, shape, theta, anisoRatio, variance;
 	T onePointFiveM_LN2 = 1.5 * M_LN2;
-	double muSq, pi_nu;
+	double muSq, pi_nu, mu;
 	double g_1pnu, g_1mnu, g1, g2;
 	T epsHere = maternClEpsilon<T>();
 
@@ -358,21 +358,20 @@ void fill22params(
 		param(D, 20)= (T) g_1mnu;		
 		// variance + nugget
 		param(D, 21)= (T) variance + param(D, 3);		
-
 	}
 
 }
 
-template<typename T> void maternGpuVcl(
+template<typename T> void maternBatchVcl(
 	viennacl::matrix<T> &vclVar, // Nmat columns N^2 rows
 	viennacl::matrix<T> &vclCoords, // 2 columns
+	viennacl::matrix<T> &param, // Nmat rows, 22 columns
+	std::vector<int> numWorkItems,
+	std::vector<int> numLocalItems,	
 	viennacl::matrix<T> &DofLDL,  // Nmat columns, N rows
 	viennacl::vector_base<T> &logDet, // length Nmat
-	viennacl::matrix<T> &param, // Nmat rows, 22 columns
 	const int form,
-	const int ctx_id,
-	std::vector<int> numWorkItems,
-	std::vector<int> numLocalItems)
+	const int ctx_id)
 {
 
 	const int 
@@ -387,7 +386,7 @@ template<typename T> void maternGpuVcl(
 
 	fill22params(param);
 
-
+#ifdef UNDEF
 	// the context
 	viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
 
@@ -426,20 +425,20 @@ template<typename T> void maternGpuVcl(
 		param, iSizeParam2, 
 		localParams, localCoords 
 	));
-
+#endif
 }
 
-//	SEXP XYR, // solve for Lt b = XY
-//	SEXP crossprodR, //bt b
-template<typename T> void maternBatch(
+
+template<typename T> void maternBatchTemplated(
 	Rcpp::S4 varR,
 	Rcpp::S4 coordsR,
-	Rcpp::S4 DofLDLR,
-	Rcpp::S4 logDetR,
 	Rcpp::S4 paramR, //22 columns 
-	const int form, // 2 cholesky 3 inversecholesky, 4 inverse
 	Rcpp::IntegerVector numWorkItems,
-	Rcpp::IntegerVector numLocalItems) {
+	Rcpp::IntegerVector numLocalItems,
+	SEXP DofLDLR,
+	SEXP logDetR,
+	const int form // 2 cholesky 3 inversecholesky, 4 inverse
+) {
 
 	std::vector<int> numWorkItemsStd = Rcpp::as<std::vector<int> >(numWorkItems);
 	std::vector<int> numLocalItemsStd = Rcpp::as<std::vector<int> >(numLocalItems);
@@ -448,20 +447,60 @@ template<typename T> void maternBatch(
 	const bool BisVCL=1;
 	const int ctx_id = INTEGER(varR.slot(".context_index"))[0]-1;
 	std::shared_ptr<viennacl::matrix<T> > vclVar = getVCLptr<T>(varR.slot("address"), BisVCL, ctx_id);
-	std::shared_ptr<viennacl::matrix<T> > param = Rcpp::as<std::vector<T> >(paramR);
+	std::shared_ptr<viennacl::matrix<T> > param = getVCLptr<T>(paramR.slot("address"), BisVCL, ctx_id);
+	std::shared_ptr<viennacl::matrix<T> > vclCoords = getVCLptr<T>(coordsR.slot("address"), BisVCL, ctx_id);
 
 	// vector to contain the D
-	std::shared_ptr<viennacl::vector_base<T> > DofLDL = getVCLVecptr<T>(DofLDLR.slot("address"), BisVCL, ctx_id);
-	std::shared_ptr<viennacl::vector_base<T> > logDet = getVCLVecptr<T>(logDetR.slot("address"), BisVCL, ctx_id);
+	std::shared_ptr<viennacl::matrix<T> > DofLDL;
+	std::shared_ptr<viennacl::vector_base<T> > logDet;	
+	if(form >= 2) {
+  		Rcpp::warning("haven't written this yet");
+	    Rcpp::traits::input_parameter< Rcpp::S4 >::type DofLDLS4(DofLDLR);
+//		DofLDL = getVCLptr<T>(DofLDLS4.slot("address"), BisVCL, ctx_id);
+	    Rcpp::traits::input_parameter< Rcpp::S4 >::type logDetRS4(logDetR);
+//		logDet = getVCLVecptr<T>(logDetRS4.slot("address"), BisVCL, ctx_id);
+	}
 
-	std::shared_ptr<viennacl::matrix<T> > vclCoords = getVCLptr<T>(coordsR.slot("address"), BisVCL, ctx_id);
-	maternBatch<T>(
-		*vclVar, *vclCoords, *DofLDL, *logDet, 
-		param,
-		form, ctx_id,
+	maternBatchVcl<T>(
+		*vclVar, *vclCoords,
+		*param,
         numWorkItemsStd, 
-        numLocalItemsStd);
-
-
+        numLocalItemsStd,
+		 *DofLDL, *logDet, 
+		form, ctx_id);
 }
 
+//[[Rcpp::export]]
+void maternBatch(
+	Rcpp::S4 varR,
+	Rcpp::S4 coordsR,
+	Rcpp::S4 paramR, //22 columns 
+	Rcpp::IntegerVector numWorkItems,
+	Rcpp::IntegerVector numLocalItems,
+	SEXP DofLDLR = R_NilValue,
+	SEXP logDetR = R_NilValue,
+	const int form = 1 // 2 cholesky 3 inversecholesky, 4 inverse
+) {
+
+
+    Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(varR));
+    std::string precision_type = (std::string) classVarR;
+
+
+  if(precision_type == "fvclMatrix") {
+	maternBatchTemplated<float>(
+		varR, coordsR, paramR, 
+		numWorkItems, numLocalItems, 
+		DofLDLR,
+		logDetR, form);
+  } else if (precision_type == "dvclMatrix") {
+	maternBatchTemplated<double>(
+		varR, coordsR, paramR, 
+		numWorkItems, numLocalItems, 
+		DofLDLR,
+		logDetR, form);
+  } else {
+  	Rcpp::warning("precision_type must be float or double");
+ }
+
+}
