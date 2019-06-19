@@ -1,0 +1,76 @@
+
+```{r stuff}
+
+library(Matrix)
+
+x = sparseMatrix(
+	c(1,3,1,2,4,4,1,3,5,2),
+	c(1,1,2,2,3,4,5,3,3,6),
+	x = c(1.1, 2.2, 1.1, 2.2, 3.3, 3.3, 4.4, 5.5, 5.6,-2.1),
+	dims = c(6,6))
+
+
+
+
+gpuMatrix:::generate_row_block_information(x)
+gpuMatrix:::generate_row_block_information(x, 2L)
+
+
+library(gpuR)
+
+
+# note: this effectively transposes x
+# because viennacl wants row-compressed matrices
+
+
+
+vclX = gpuMatrix:::getVclSparseMatrix(x)
+
+
+'
+compressed_matix<double> xGpu(
+	xGpuList$rows, xGpuList$cols, 
+	xGpuList$nonzeros,
+	viennacl::traits::context(xGpuList$elements));
+
+xGpu.handle1() = xGpuList$row_jumper.handle();
+xGpu.handle2() = xGpuList$col_buffer.handle();
+xGpu.handle() = xGpuList$elements.handle();
+xGpu.generate_row_block_information();
+'
+
+
+setClass('vclSparseMatrix', 
+         slots = c(
+         	i="externalptr",
+         	j="externalptr",
+         	x="externalptr",
+            .context_index = "integer",
+            .platform_index = "integer",
+            .platform = "character",
+            .device_index = "integer",
+            .device = "character"))
+
+setClass("fvclSparseMatrix",
+         contains = "vclSparseMatrix",
+         validity = function(object) {
+             if( gpuR::typeof(object) != "float"){
+                 return("fvclSparseMatrix must be of type 'float'")
+             }
+             TRUE
+         })
+
+
+
+
+
+x
+x@i
+x@p
+x@Dim
+x@x
+
+
+
+
+```
