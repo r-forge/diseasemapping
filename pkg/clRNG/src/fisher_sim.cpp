@@ -48,7 +48,7 @@ void fisher_sim_gpu(
   "};\n";*/
 
 
-  viennacl::ocl::program &my_prog = ctx.add_program(FisherSimkernelString, "my_kernel");
+  viennacl::ocl::program &my_prog = ctx.add_program(kernel_string, "my_kernel");
   // get compiled kernel function
   viennacl::ocl::kernel &fisher_sim = my_prog.get_kernel("fisher_sim_gpu");
   

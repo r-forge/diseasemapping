@@ -49,9 +49,10 @@ rnumberGpu = function(
         '\n streams ', toString(dim(streams)), '\n')
       }
    
-	cpp_random_numberGpu(x,  streams, 
+	cpp_random_numberGpu(x,  
+	                     streams, 
 	                     workgroupSize,
-                        localSize,
+                       localSize,
 	                     random_type[1], 
 	                     gpuR::typeof(x))
 

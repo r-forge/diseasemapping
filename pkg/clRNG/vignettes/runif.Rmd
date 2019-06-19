@@ -79,3 +79,43 @@ plot(as.vector(xMat[-1,2]), as.vector(xMat[-nrow(xMat),2]), xlim = theLim, ylim=
 
 ```
 
+# Random normals
+```{r random normals}
+Nglobal = c(64,4)
+streams = clRNG:::cpp_mrg31k3pCreateStreams(prod(Nglobal))
+if(gpuInfo()$maxAllocatableMem > 1e10) {
+  NperItem = 5e5}else {NperItem = 500}
+
+
+z = vclVector(0, length=as.integer(prod(Nglobal)*NperItem), type="double")
+length(z)
+
+system.time(junk <- runif(length(z)))
+system.time(streams <- clRNG::rnumberGpu(z, streams=streams, 
+                                         workgroupSize = Nglobal,
+                                         localSize = c(2,2),
+                                         random_type="normal"))
+```
+
+
+```{r hist for normals}
+
+zVec = as.vector(z)
+
+
+hist(zVec,breaks=40)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
