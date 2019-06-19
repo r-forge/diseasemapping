@@ -46,10 +46,10 @@ std::string FisherSimkernelString  =
   "   fact[0] = fact[1] = 0.;\n"
   "   for(i = 2; i <= n; i++)\n"
   "	  fact[i] = fact[i - 1] + log(i);\n"
-  
+#ifdef UNDEF  
   "   clrngMrg31k3pStream private_stream_d;\n"
   "   clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[index]);\n"
-  
+
   "   for(D = index; D < vsize; D += size) {\n"
   
   "	   int j, l, m, ia, ib, ic, jc, id, ie, ii, nll, nlm, nr_1, nc_1;\n"
@@ -87,6 +87,8 @@ std::string FisherSimkernelString  =
   
   /* Generate pseudo-random number */
   "    dummy = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_double;\n"
+   
+
   
   "     do { \n"        /* Outer Loop */
   /* Compute conditional expected value of MATRIX(L, M) */
@@ -137,7 +139,7 @@ std::string FisherSimkernelString  =
   " dummy = sumprb * clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_double;\n"
   
   " } while (1);\n"
-  
+
   "L160:\n"
   "matrix[l + m * nrow] = nlm;\n"
   "ia -= nlm;\n"
@@ -163,9 +165,9 @@ std::string FisherSimkernelString  =
   
   
   "}\n"
-  
+
   "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[index], &private_stream_d);\n"
   
-  
+#endif  
   "}\n"
   ;

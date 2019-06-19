@@ -96,7 +96,7 @@ void random_numberGpu(
     &streamBufferSize, &err);
   //count	Number of stream objects to allocate.
   
-//#ifdef UNDEF  
+//ifdef UNDEF  
 
   // transfer streams to opencl as matrix
   // convert to crngMgr31k3pStream in opencl, but still on host

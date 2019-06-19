@@ -1,4 +1,4 @@
-#' @title runif gpu
+#' @title fisher_sim gpu
 #'
 #' @description Fisher simulation test
 #'
@@ -10,7 +10,6 @@
 #' @return altered in-place
 #' @useDynLib clRNG
 #' @export
-
 
 fisher_simGpu=function(
   sr, ##marginal row total 
@@ -46,8 +45,8 @@ fisher_simGpu=function(
   if(verbose) {
     cat('\nglobal sizes ', toString(workgroupSize), '\n streams ', toString(dim(streams)), '\n')
   }
-   sr<- as.integer(sr)
-   sc<- as.integer(sc)
+   #sr<- as.integer(sr)
+   #sc<- as.integer(sc)
   
   cpp_fisher_sim_gpu(sr, sc, x, streams, workgroupSize)
   
