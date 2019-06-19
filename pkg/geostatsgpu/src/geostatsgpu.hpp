@@ -20,4 +20,5 @@ extern "C" void Rtemme_gamma(double *nu, double * g_1pnu, double * g_1mnu, doubl
 template<typename T> double luT(viennacl::matrix<T> &vclX, viennacl::vector_base<T> &vclD);
 
 
-template <typename T> T maternClEpsilon();
+template <typename T> int sizeOfReal();
+template <typename T> std::string openclTypeString();
