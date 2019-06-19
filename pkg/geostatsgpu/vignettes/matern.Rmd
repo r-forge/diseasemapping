@@ -106,19 +106,22 @@ as.matrix(varGpuD[endSeq,endSeq])
 # Batch matern
 
 ```{r paramsBatch}
-myParamsBatch = rbind(myParams, myParams, myParams * 0.8, myParams*1.2)
+myParamsBatch = rbind(
+  c(shape=2.15, range=1, variance = 1, nugget = 0, 
+             anisoRatio = 1, 
+             anisoAngleRadians = 0), 
+myParams, myParams * 0.8, myParams*1.2)
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
 myParamsBatch
 myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch)))
 paramsGpu =  vclMatrix(myParamsBatch, type='float')
 
 
-coordsGpu2 = vclMatrix(cbind(1:3, 1:3), 
+coordsGpu2 = vclMatrix(cbind(1:4, c(1,2,1,2)), 
     type=gpuR::typeof(paramsGpu))
 outputBatchF = vclMatrix(0, 
-    nrow(paramsGpu), nrow(coordsGpu2)^2,
+    nrow(paramsGpu)*nrow(coordsGpu2), nrow(coordsGpu2),
     type=gpuR::typeof(paramsGpu))
-
 ```
 
 ```{r batchMatern}
@@ -127,8 +130,20 @@ outputBatchF = vclMatrix(0,
     coordsGpu2, paramsGpu,  
     numWorkItems = c(4L,4L), 
     numLocalItems = c(2L, 2L))
-  t(as.matrix(outputBatchF))
-  t(as.matrix(paramsGpu))
+```
+
+```{r batchMaternCompare}
+as.matrix(outputBatchF)
+geostatsp::matern(
+    x=SpatialPoints(as.matrix(coordsGpu2)),
+    param=drop(myParamsBatch[1,1:6])
+    )[1:4,1:4]
+as.matrix(outputBatchF[1:4,1:4])
+geostatsp::matern(
+    x=SpatialPoints(as.matrix(coordsGpu2)),
+    param=drop(myParamsBatch[2,1:6])
+    )[1:4,1:4]
+as.matrix(outputBatchF[4+1:4,1:4])
 ```
 
 # Cholesky
