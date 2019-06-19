@@ -1,0 +1,34 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Fisher test}
+-->
+
+`https://github.com/clMathLibraries/clRNG`
+
+
+## Fisher test simulation
+
+```{r packages, results='hide'}
+library('gpuR')
+```
+
+Create some streams
+```{r test}
+x = vclVector(5.2,5.3,type="double")
+y = vclVector(4.1,6.1,type="double")
+
+Nglobal = 256
+streams = clRNG:::cpp_mrg31k3pCreateStreams(Nglobal)
+t(streams)
+if(gpuInfo()$maxAllocatableMem > 1e10) {
+  NperItem = 500
+} else {
+  NperItem = 100
+}
+z = vclVector(length=as.integer(Nglobal*NperItem), type=theType)
+length(z)
+
+clRNG::fisher_simGpu(x,y,z,streams=streams)
+
+```
+
