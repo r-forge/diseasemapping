@@ -103,6 +103,11 @@ typeString + " DL, Ddiag, *AHere, *diagHere, *toAddGlobalHere;\n"
 "}\n" //Dk global diag sum
 "   diagHere[Dcol] = AHere[Dcol + DcolNpad] - DL;\n"
 "}\n" //diagGlobalSum
+
+"#ifdef diagToOne\n"
+"AHere[Dcol + DcolNpad] = 1.0;\n"
+"#endif\n"
+
 " barrier(CLK_GLOBAL_MEM_FENCE);\n"
 "}\n" //Dmatrix
 
@@ -144,17 +149,16 @@ typeString + " DL, Ddiag, *AHere, *diagHere, *toAddGlobalHere;\n"
 
 "    AHere[Drow + DcolNpad] -= DL\n"
 "    AHere[Drow + DcolNpad] /= diagHere[Dcol];\n"
+
+"#ifdef upperToZero\n"
+"    AHere[Drow*Npad + Dol] =0.0;\n"
+"#endif\n"
+
 "  }\n" //global Sum
 "  barrier(CLK_GLOBAL_MEM_FENCE);\n"
 
 "}\n" // Dmatrix loop
 "}\n" // Drow
-"#ifdef upperToZero\n"
-// loop Drow, Dmatrix
-"#endif\n"
-"#ifdef diagToOne\n"
-// loop Dmatrix
-"#endif\n"
 "}\n" // Dcol loop
 
 "}\n";
