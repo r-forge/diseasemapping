@@ -34,20 +34,20 @@ Generate some uniforms
 ```{r test}
 x = vclVector(length=8L, type=theType)
 
-streams2 <- clRNG::rnumberGpu(x, streams=streams)
+streams2 <- clRNG::rnumberGpu(x, streams=streams,random_type = "uniform")
 t(streams)[1:4,]
 t(streams2)[1:4,]
 as.vector(x)
 ```
 Generate some different uniforms
 ```{r testAgain}
-clRNG::rnumberGpu(x, streams=streams2)
+clRNG::rnumberGpu(x, streams=streams2,random_type = "uniform")
 as.vector(x)
 ```
 
 Reuse the intial seed
 ```{r testRepeat}
-clRNG::rnumberGpu(x, streams=streams)
+clRNG::rnumberGpu(x, streams=streams,random_type = "uniform")
 as.vector(x)
 ```
 
@@ -65,7 +65,7 @@ x = vclVector(length=as.integer(Nglobal*NperItem), type=theType)
 length(x)*1e-6
 
 system.time(junk <- runif(length(x)))
-system.time(streams <- clRNG::rnumberGpu(x, Nglobal, streams=streams))
+system.time(streams <- clRNG::rnumberGpu(x, Nglobal, streams=streams, random_type = "uniform"))
 
 xVec = as.vector(x)
 
@@ -80,9 +80,24 @@ plot(as.vector(xMat[-1,2]), as.vector(xMat[-nrow(xMat),2]), xlim = theLim, ylim=
 ```
 
 # Random normals
-```{r random normals}
+
+Generate some random normals
+```{r normals}
 Nglobal = c(64,4)
 streams = clRNG:::cpp_mrg31k3pCreateStreams(prod(Nglobal))
+x = vclVector(length=8L, type=theType)
+
+clRNG::rnumberGpu(x, streams=streams, workgroupSize = Nglobal,
+                                         localSize = c(2,2),
+                                         random_type="normal")
+as.vector(x)
+```
+
+
+
+Compare run time for random normals
+```{r random normals}
+
 if(gpuInfo()$maxAllocatableMem > 1e10) {
   NperItem = 5e5}else {NperItem = 500}
 
@@ -97,7 +112,7 @@ system.time(streams <- clRNG::rnumberGpu(z, streams=streams,
                                          random_type="normal"))
 ```
 
-
+Plot histgram for random normals
 ```{r hist for normals}
 
 zVec = as.vector(z)
