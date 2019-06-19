@@ -12,10 +12,11 @@
 #' @export
 
 
-fisher_test_gpu=function(
+fisher_simGpu=function(
   sr, ##marginal row total 
   sc, ##marginal column total
   x,## the vector to stall test statistics
+  streams, 
   workgroupSize){
   
   verbose = TRUE
@@ -23,8 +24,8 @@ fisher_test_gpu=function(
   
   if(missing(streams)) {
     if(missing(workgroupSize)) 
-    {workgroupSize = c(2,64)}
-    workgroupSize = pmax(2, c(workgroupSize, 2, 2)[1:2])
+    {workgroupSize = c(64,4)}
+    workgroupSize = pmax(4, c(workgroupSize, 4, 4)[1:2])
     streams = cpp_mrg31k3pCreateStreams(prod(workgroupSize))			
   } else {
     if(!is.matrix(streams)) {
@@ -43,10 +44,10 @@ fisher_test_gpu=function(
      }
   
   if(verbose) {
-    cat('local sizes ', toString(localSize), '\nglobal sizes ', toString(workgroupSize),
-        '\n streams ', toString(dim(streams)), '\n')
+    cat('\nglobal sizes ', toString(workgroupSize), '\n streams ', toString(dim(streams)), '\n')
   }
-  
+   sr<- as.integer(sr)
+   sc<- as.integer(sc)
   
   cpp_fisher_sim_gpu(sr, sc, x, streams, workgroupSize)
   
