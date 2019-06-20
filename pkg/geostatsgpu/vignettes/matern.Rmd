@@ -107,7 +107,7 @@ as.matrix(varGpuD[endSeq,endSeq])
 
 ```{r paramsBatch}
 myParamsBatch = rbind(
-  c(shape=2.15, range=1, variance = 1, nugget = 0, 
+  c(shape=1.15, range=2.5, variance = 2, nugget = 0, 
              anisoRatio = 1, 
              anisoAngleRadians = 0), 
 myParams, myParams * 0.8, myParams*1.2)
@@ -124,6 +124,7 @@ outputBatchF = vclMatrix(0,
     type=gpuR::typeof(paramsGpu))
 ```
 
+
 ```{r batchMatern}
   geostatsgpu:::maternBatchBackend(
     outputBatchF,
@@ -132,8 +133,9 @@ outputBatchF = vclMatrix(0,
     Nlocal = c(2L, 2L))
 ```
 
-```{r batchMaternCompare}
 
+Compare output to geostatsp's matern
+```{r batchMaternCompare}
 geostatsp::matern(
     x=SpatialPoints(as.matrix(coordsGpu2)),
     param=drop(myParamsBatch[1,1:6])

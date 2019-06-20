@@ -18,7 +18,8 @@ std::string maternBatchKernelString(
 	int Nlocal0,
 	int assignUpper = 1,
 	int assignLower = 1,
-	int assignDiagonals = 1
+	int assignDiagonals = 1,
+	int assignDistUpper = 0
 	) {
 
   std::string typeString = openclTypeString<T>();
@@ -50,6 +51,9 @@ std::string maternBatchKernelString(
   }
   if(assignLower){
   	  result += "#define assignLower\n";
+  }
+  if(assignDistUpper){
+  	  result += "#define assignDistUpper\n";
   }
 
 	result +=
@@ -236,17 +240,17 @@ result +=
 "if(isFirstLocal1){\n"
 	"   k = Drow[get_local_id(0)]*2;\n"
 	"   DlocalParam = Dcol[get_local_id(0)]*2;\n"
-	"	localDist[localDistX] = localCoords[k] - localCoords[DlocalParam];\n"
-	"	localDist[localDistY] = localCoords[k +1] - localCoords[DlocalParam +1];\n"
+	"	localDist[localDistX] = localCoords[DlocalParam] - localCoords[k];\n"
+	"	localDist[localDistY] = localCoords[DlocalParam +1] - localCoords[k +1];\n"
 "}\n\n"
 "barrier(CLK_LOCAL_MEM_FENCE);\n"
 "for(Dmatrix = get_global_id(1); Dmatrix < Nmatrix; Dmatrix += get_global_size(1) ) {\n"
 	"   DlocalParam = NlocalParams*Dmatrix;\n"
 	"   nuround = (int) (localParams[DlocalParam+16]);\n"
-
-	"	distRotate[0] = localParams[DlocalParam+7] * localDist[localDistX] +\n"
+// cos element 7, sin element 8
+	"	distRotate[0] = localParams[DlocalParam+7] * localDist[localDistX] -\n"
 	"         localParams[DlocalParam+8] * localDist[localDistY];\n"
-	"	distRotate[1] = localParams[DlocalParam+8] * localDist[localDistX] -\n" 
+	"	distRotate[1] = localParams[DlocalParam+8] * localDist[localDistX] +\n" 
 	"         localParams[DlocalParam+7] * localDist[localDistY];\n"
 
 	"	distSq = distRotate[0]*distRotate[0] +" 
@@ -291,6 +295,10 @@ result +=
 "\n#ifdef assignUpper\n\n"
 "	result[Dmatrix * NpadBetweenMatrices + Drow[get_local_id(0)] + Dcol[get_local_id(0)] * Npad] = K_nu;\n"//K_nu;\n" // upper triangle
 "\n#endif\n\n"
+"\n#ifdef assignDistUpper\n\n"
+"	result[Dmatrix * NpadBetweenMatrices + Drow[get_local_id(0)] + Dcol[get_local_id(0)] * Npad] = distSq;\n"//K_nu;\n" // upper triangle
+"\n#endif\n\n"
+
 
 //"	result[Dmatrix * NpadBetweenMatrices + Drow[get_local_id(0)] + Dcol[get_local_id(0)] * Npad] = 100* Dmatrix + Drow[get_local_id(0)] + 0.01*Dcol[get_local_id(0)];\n"//K_nu;\n" // upper triangle
 //"	result[Dmatrix * NpadBetweenMatrices + Drow[get_local_id(0)] + Dcol[get_local_id(0)] * Npad] = distSq;\n"
@@ -429,8 +437,7 @@ template<typename T> void maternBatchVcl(
 		N, Ncell, Npad, Nmatrix, NpadBetweenMatrices, 
 		vclCoords.internal_size2(), //NpadCoords, 
 		param.internal_size2(),// NpadParams
-		numLocalItems[0]
-		);
+		numLocalItems[0]);
 
 	viennacl::ocl::program & my_prog = ctx.add_program(maternClString, "my_kernel");
 	// get compiled kernel function

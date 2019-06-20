@@ -36,49 +36,52 @@ std::string cholBatchKernelString(
 
 
   result = result + 
-"__kernel void cholGpu("
-"	__global " + typeString + " *A," 
-"	__global " + typeString + " *diag,"
-"	const int Nstop){\n"
+"\n __global " + typeString + " toAddGlobal["+std::to_string(Nglobal[0]*Ngroups1*Nglobal[2]) + "];//Nglobal0*Ngroups1*Nglobal2\n\n"
+"__kernel void cholBatch(\n"
+"	__global " + typeString + " *A,\n" 
+"	__global " + typeString + " *diag,\n"
+" const int colStart,\n"
+"	const int colStop){\n"
 
-"// first dimension is rows"
-"// second dimension is work items doing the same row"
-"// third dimension matrix"
+"// first dimension is rows\n"
+"// second dimension is work items doing the same row\n"
+"// third dimension matrix\n"
 
 
-"const int doDiag = get_global_id(2)==0 & get_group_id(1)==0;"
+"const int doDiag = get_global_id(2)==0 & get_group_id(1)==0;\n"
 "const int localIndex = get_local_id(0)*get_local_size(1) + get_local_id(1);\n"
 "const int NlocalTotal = get_local_size(0)*get_local_size(1);\n"
 "const int localAddIndex = get_local_id(0)*get_local_size(1)+get_local_id(1);\n"
-"const int globalAddIndex = get_global_size(0)*get_group_size(1)*get_global_id(2) + get_global_id(0)*get_group_size(1);\n"
+"const int globalAddIndex = get_global_size(0)*get_num_groups(1)*get_global_id(2) \n"
+"    + get_global_id(0)*get_num_groups(1);\n"
 
 " __local " + typeString + " diagLocal[Ncache];//local cache of diagonals\n"
 " __local " + typeString + " toAddLocal["+std::to_string(Nlocal[0]*Nlocal[1])+"]; \n"
-" __global " + typeString + " toAddGlobal["+std::to_string(Nglobal[0]*Ngroups1*Nglobal[2]) + "];//Nglobal0*Ngroups1*Nglobal2\n"
 
 
 "	int Dcol, DcolNpad, Dcolm1;\n"
 "	int Drow, Dk, Dmatrix, DmatrixWithPad;\n" +
-typeString + " DL, diagDcol, *AHere, *AHereDrow, *diagHere;\n"
+typeString + " DL, diagDcol;\n" 
+"__global " + typeString + " *AHere, *AHereDrow, *diagHere;\n"
 
 
-"for(Dcol =  0; Dcol < N; Dcol++) {"
+"for(Dcol =  colStart; Dcol < colStop; Dcol++) {\n"
 "   DcolNpad = Dcol*Npad;\n"
-"   Dcolm1 = Dcol - 1;"
+"   Dcolm1 = Dcol - 1;\n"
 
 
 // diagonal entry, use only first group
-"if(doDiag){"
+"if(doDiag){\n"
 
-"for(Dmatrix = get_group_id(0); Dmatrix < Nmatrix; Dmatrix+= get_group_size(0)){"
-"toAddLocal[localIndex]=0.0;"
+"for(Dmatrix = get_group_id(0); Dmatrix < Nmatrix; Dmatrix+= get_num_groups(0)){\n"
+"toAddLocal[localIndex]=0.0;\n"
 "AHere = &A[Dmatrix*NpadBetweenMatrices + DcolNpad];\n"
 "diagHere = &diag[Dmatrix*NpadDiag];\n"
 "  for(Dk = localIndex; Dk < Dcol; Dk += NlocalTotal) {\n"
-"    DL = AHere[Dk];"
-"    DL *= DL;"
-"    toAddLocal[localIndex] += diagHere[Dk] * DL;"
-"  }\n" // Dk
+"    DL = AHere[Dk];\n"
+"    DL *= DL;\n"
+"    toAddLocal[localIndex] += diagHere[Dk] * DL;\n"
+"  }\n\n" // Dk
 
 // reduction on dimension 2
 "barrier(CLK_LOCAL_MEM_FENCE);\n"
@@ -90,14 +93,14 @@ typeString + " DL, diagDcol, *AHere, *AHereDrow, *diagHere;\n"
 
 // final reduction on dimension 1
 "barrier(CLK_LOCAL_MEM_FENCE);\n"
-"if(localIndex==0){"
+"if(localIndex==0){\n"
 "  for(Dk = localIndex + get_local_size(1); Dk < NlocalTotal; Dk+= get_local_size(1)) {\n"
 "    toAddLocal[localIndex] +=  toAddLocal[Dk];\n"
 "  }\n" //Dk
 
-"diagHere[Dcol] = AHere[Dcol] - toAddLocal[localIndex];"
+"diagHere[Dcol] = AHere[Dcol] - toAddLocal[localIndex];\n"
 
-"#ifdef diagToOne\n"
+"\n#ifdef diagToOne\n"
 "AHere[Dcol] = 1.0;\n"
 "#endif\n"
 
@@ -116,7 +119,7 @@ typeString + " DL, diagDcol, *AHere, *AHereDrow, *diagHere;\n"
 "  DmatrixWithPad = Dmatrix*NpadBetweenMatrices;\n"
 "  AHere = &A[DmatrixWithPad + DcolNpad];\n"
 "  diagHere = &diag[Dmatrix*NpadDiag];\n"
-"  diagDcol = diagHere[Dcol];"
+"  diagDcol = diagHere[Dcol];\n"
 
 // TO DO: cache diag * A[Dcol, ]
 
@@ -126,14 +129,14 @@ typeString + " DL, diagDcol, *AHere, *AHereDrow, *diagHere;\n"
 "	 DL = 0.0;\n"
 
 "	 for(Dk = get_global_id(1); Dk < Dcolm1; Dk+=get_global_size(1)) {\n"
-"    DL += AHereDrow[Dk] * AHere[Dk] * diagHere[Dk];"
+"    DL += AHereDrow[Dk] * AHere[Dk] * diagHere[Dk];\n"
 			// DL -= A[Drow + Dk * Npad] * A[Dcol + DkNpad] * diag[Dk];"
 "  }\n" // Dk
 "  toAddLocal[localIndex] = DL;\n"
 
 // local reduction
 "  barrier(CLK_LOCAL_MEM_FENCE);\n"
-"  if(get_local_id(1) == 0){"
+"  if(get_local_id(1) == 0){\n"
 "    for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
 "      toAddLocal[localAddIndex] +=  toAddLocal[localAddIndex + Dk];\n"
 "    }\n" //Dk
@@ -145,7 +148,7 @@ typeString + " DL, diagDcol, *AHere, *AHereDrow, *diagHere;\n"
 "  if(get_global_id(1) == 0){\n"
 "    toAddGlobalHere = &toAddGlobal[globalAddIndex];\n"
 "    DL = toAddLocal[localIndex];\n"
-"    for(Dk = 1; Dk < get_group_size(1); Dk++) {\n"
+"    for(Dk = 1; Dk < get_num_groups(1); Dk++) {\n"
 "       DL += toAddGlobalHere[Dk];\n"
 "    }\n" //Dk global diag sum
 
@@ -192,11 +195,28 @@ int cholBatchVcl(
   Nlocal,
   Nglobal);
 
+  viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
+  viennacl::ocl::program & my_prog = ctx.add_program(cholClString, "my_kernel");
+  viennacl::ocl::kernel & cholKernel = my_prog.get_kernel("cholBatch");
+
+
+// dimension 0 is cell, dimension 1 is matrix
+  cholKernel.global_work_size(0, (cl_uint) (Nglobal[0] ) );
+  cholKernel.global_work_size(1, (cl_uint) (Nglobal[1] ) );
+  cholKernel.global_work_size(2, (cl_uint) (Nglobal[3] ) );
+
+  cholKernel.local_work_size(0, (cl_uint) (Nlocal[0]));
+  cholKernel.local_work_size(1, (cl_uint) (Nlocal[1]));
+  cholKernel.local_work_size(2, (cl_uint) (Nlocal[2]));
+
+
 #ifdef DEBUG
 
 Rcpp::Rcout << cholClString << "\n\n";
 
 #endif  
+
+//  viennacl::ocl::enqueue(cholKernel(A, D, 0,  A.size1()));
 
   return 0L;
 }
