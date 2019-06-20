@@ -5,6 +5,20 @@
 
 using namespace Rcpp;
 
+// cholBatchBackend
+void cholBatchBackend(Rcpp::S4 A, Rcpp::S4 D, std::vector<int> Nglobal, std::vector<int> Nlocal, int NlocalCache);
+RcppExport SEXP _geostatsgpu_cholBatchBackend(SEXP ASEXP, SEXP DSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP, SEXP NlocalCacheSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type A(ASEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type D(DSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type Nglobal(NglobalSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type Nlocal(NlocalSEXP);
+    Rcpp::traits::input_parameter< int >::type NlocalCache(NlocalCacheSEXP);
+    cholBatchBackend(A, D, Nglobal, Nlocal, NlocalCache);
+    return R_NilValue;
+END_RCPP
+}
 // cpp_cholGpu
 SEXP cpp_cholGpu(Rcpp::S4 xR, Rcpp::S4 DR, Rcpp::S4 diagWorkingR, Rcpp::S4 diagTimesRowOfAR, int MCglobal, int MClocal, int localStorage, int colGroupwise, int Ncrossprod, int verbose, std::string kernelR);
 RcppExport SEXP _geostatsgpu_cpp_cholGpu(SEXP xRSEXP, SEXP DRSEXP, SEXP diagWorkingRSEXP, SEXP diagTimesRowOfARSEXP, SEXP MCglobalSEXP, SEXP MClocalSEXP, SEXP localStorageSEXP, SEXP colGroupwiseSEXP, SEXP NcrossprodSEXP, SEXP verboseSEXP, SEXP kernelRSEXP) {
@@ -40,16 +54,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // maternBatchBackend
-void maternBatchBackend(Rcpp::S4 varR, Rcpp::S4 coordsR, Rcpp::S4 paramR, Rcpp::IntegerVector numWorkItems, Rcpp::IntegerVector numLocalItems);
-RcppExport SEXP _geostatsgpu_maternBatchBackend(SEXP varRSEXP, SEXP coordsRSEXP, SEXP paramRSEXP, SEXP numWorkItemsSEXP, SEXP numLocalItemsSEXP) {
+void maternBatchBackend(Rcpp::S4 var, Rcpp::S4 coords, Rcpp::S4 param, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal);
+RcppExport SEXP _geostatsgpu_maternBatchBackend(SEXP varSEXP, SEXP coordsSEXP, SEXP paramSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type varR(varRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type coordsR(coordsRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type paramR(paramRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type numWorkItems(numWorkItemsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type numLocalItems(numLocalItemsSEXP);
-    maternBatchBackend(varR, coordsR, paramR, numWorkItems, numLocalItems);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type var(varSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type coords(coordsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type param(paramSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nglobal(NglobalSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nlocal(NlocalSEXP);
+    maternBatchBackend(var, coords, param, Nglobal, Nlocal);
     return R_NilValue;
 END_RCPP
 }
@@ -101,6 +115,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_geostatsgpu_cholBatchBackend", (DL_FUNC) &_geostatsgpu_cholBatchBackend, 5},
     {"_geostatsgpu_cpp_cholGpu", (DL_FUNC) &_geostatsgpu_cpp_cholGpu, 11},
     {"_geostatsgpu_gpuNlocal", (DL_FUNC) &_geostatsgpu_gpuNlocal, 3},
     {"_geostatsgpu_maternBatchBackend", (DL_FUNC) &_geostatsgpu_maternBatchBackend, 5},

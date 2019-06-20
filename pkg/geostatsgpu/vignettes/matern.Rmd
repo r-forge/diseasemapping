@@ -128,8 +128,8 @@ outputBatchF = vclMatrix(0,
   geostatsgpu:::maternBatchBackend(
     outputBatchF,
     coordsGpu2, paramsGpu,  
-    numWorkItems = c(4L,4L), 
-    numLocalItems = c(2L, 2L))
+    Nglobal = c(4L,4L), 
+    Nlocal = c(2L, 2L))
 ```
 
 ```{r batchMaternCompare}
@@ -144,6 +144,16 @@ geostatsp::matern(
     param=drop(myParamsBatch[2,1:6])
     )[1:4,1:4]
 as.matrix(outputBatchF[nrow(coordsGpu2)+1:4,1:4])
+```
+
+
+```{r cholBach}
+diagMat = vclMatrix(0, nrow(paramsGpu), nrow(outputBatchF), type = gpuR::typeof(outputBatchF))
+geostatsgpu:::cholBatchBackend(
+  outputBatchF, diagMat, 
+   c(4L,4L, 2L),
+   c(2L,2L, 1L))
+
 ```
 
 # Cholesky

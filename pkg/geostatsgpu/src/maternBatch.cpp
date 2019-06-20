@@ -456,12 +456,12 @@ template<typename T> void maternBatchTemplated(
 	Rcpp::S4 varR,
 	Rcpp::S4 coordsR,
 	Rcpp::S4 paramR, //22 columns 
-	Rcpp::IntegerVector numWorkItems,
-	Rcpp::IntegerVector numLocalItems
+	Rcpp::IntegerVector Nglobal,
+	Rcpp::IntegerVector Nlocal
 ) {
 
-	std::vector<int> numWorkItemsStd = Rcpp::as<std::vector<int> >(numWorkItems);
-	std::vector<int> numLocalItemsStd = Rcpp::as<std::vector<int> >(numLocalItems);
+	std::vector<int> numWorkItemsStd = Rcpp::as<std::vector<int> >(Nglobal);
+	std::vector<int> numLocalItemsStd = Rcpp::as<std::vector<int> >(Nlocal);
 	
 	// data
 	const bool BisVCL=1;
@@ -481,25 +481,25 @@ template<typename T> void maternBatchTemplated(
 
 //[[Rcpp::export]]
 void maternBatchBackend(
-	Rcpp::S4 varR,
-	Rcpp::S4 coordsR,
-	Rcpp::S4 paramR, //22 columns 
-	Rcpp::IntegerVector numWorkItems,
-	Rcpp::IntegerVector numLocalItems) {
+	Rcpp::S4 var,
+	Rcpp::S4 coords,
+	Rcpp::S4 param, //22 columns 
+	Rcpp::IntegerVector Nglobal,
+	Rcpp::IntegerVector Nlocal) {
 
 
-    Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(varR));
+    Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(var));
     std::string precision_type = (std::string) classVarR;
 
   if(precision_type == "fvclMatrix") {
 	maternBatchTemplated<float>(
-		varR, coordsR, paramR, 
-		numWorkItems, numLocalItems);
+		var, coords, param, 
+		Nglobal, Nlocal);
   } else if (precision_type == "dvclMatrix") {
 	maternBatchTemplated<double>(
-		varR, coordsR, paramR, 
-		numWorkItems, numLocalItems);
+		var, coords, param, 
+		Nglobal, Nlocal);
   } else {
-  	Rcpp::warning("precision_type must be float or double");
+    Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
  }
 }

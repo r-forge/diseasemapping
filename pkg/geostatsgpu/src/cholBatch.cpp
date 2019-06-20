@@ -1,22 +1,26 @@
 #include "geostatsgpu.hpp"
-//#define DEBUG
+#define DEBUG
 
 
 
 template <typename T> 
-std::string cholBatch(
+std::string cholBatchKernelString(
   int N,
   int Npad,
   int NpadDiag,
   int Nmatrix,
   int NpadBetweenMatrices,
   int Ncache, // must exceed Nlocal0 * Nlocal1
-  int Nlocal0, int Nlocal1, int Nlocal2, 
-  int NlocalGroups0,int NlocalGroups1, int NlocalGroups2
+  std::vector<int> Nlocal,
+  std::vector<int> Nglobal
 ) {
 
   std::string typeString = openclTypeString<T>();
   std::string result = "";
+
+//  int Ngroups0 = ceil(Nglobal[0]/Nlocal[0]);
+  int Ngroups1 = ceil(Nglobal[1]/Nlocal[1]);
+
 
   if(typeString == "double") {
   	result += "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n";
@@ -42,29 +46,21 @@ std::string cholBatch(
 "// third dimension matrix"
 
 
-" const int doDiag = (get_global_id(0) == 0);// diagonals only done with first row\n" 
-" const int doLocalDiagSum = (doDiag & get_local_id(1) == 0);\n"
-" const int doGlobalDiagSum = (doDiag & get_global_id(1) == 0);\n"
-"const int diagLocalAddIndex = get_local_id(1)*get_local_size(1)+get_local_id(2);\n"
-"const int diagGlobalAddIndex = get_group_id(1)*get_num_groups(1)+get_group_id(2);\n"
-"const int localAddIndex = get_local_id(0)*get_local_size(0)+get_local_id(2);\n"
-"const int globalAddIndex = get_group_id(0)*get_group_size(0)+get_global_id(2);\n"
+"const int doDiag = get_global_id(2)==0 & get_group_id(1)==0;"
+"const int localIndex = get_local_id(0)*get_local_size(1) + get_local_id(1);\n"
+"const int NlocalTotal = get_local_size(0)*get_local_size(1);\n"
+"const int localAddIndex = get_local_id(0)*get_local_size(1)+get_local_id(1);\n"
+"const int globalAddIndex = get_global_size(0)*get_group_size(1)*get_global_id(2) + get_global_id(0)*get_group_size(1);\n"
 
 " __local " + typeString + " diagLocal[Ncache];//local cache of diagonals\n"
-" __local " + typeString + " toAddLocal["+std::toString(
-  max(Nlocal1*Nlocal2, // for diagonals
-    Nlocal0*Nlocal2) // for off-diagonals
-  )+"];//Nlocal0 * Nlcoal1\n"
-" __global " + typeString + " toAddGlobal["+std::toString(
-  max(
-    NlocalGroups1,
-    NlocalGroups0 * NlocalGroups2) + 
-  "];//NlocalGroups1\n"
+" __local " + typeString + " toAddLocal["+std::to_string(Nlocal[0]*Nlocal[1])+"]; \n"
+" __global " + typeString + " toAddGlobal["+std::to_string(Nglobal[0]*Ngroups1*Nglobal[2]) + "];//Nglobal0*Ngroups1*Nglobal2\n"
 
 
 "	int Dcol, DcolNpad, Dcolm1;\n"
-"	int Drow, Dk, DrowDk, Dmatrix, toAddHere;\n"
-typeString + " DL, Ddiag, *AHere, *diagHere, *toAddGlobalHere;\n"
+"	int Drow, Dk, Dmatrix, DmatrixWithPad;\n" +
+typeString + " DL, diagDcol, *AHere, *AHereDrow, *diagHere;\n"
+
 
 "for(Dcol =  0; Dcol < N; Dcol++) {"
 "   DcolNpad = Dcol*Npad;\n"
@@ -72,112 +68,186 @@ typeString + " DL, Ddiag, *AHere, *diagHere, *toAddGlobalHere;\n"
 
 
 // diagonal entry, use only first group
-"if(get_global_id(0)==0){"
+"if(doDiag){"
 
-"for(Dmatrix = get_local_id(2);Dmatrix < Nmatrix;Dmatrix+= get_local_size(2)){"
-"diagLocal[diagAddIndex]=0.0;"
-"AHere = &A[Dmatrix*NpadBetweenMatrices];\n"
+"for(Dmatrix = get_group_id(0); Dmatrix < Nmatrix; Dmatrix+= get_group_size(0)){"
+"toAddLocal[localIndex]=0.0;"
+"AHere = &A[Dmatrix*NpadBetweenMatrices + DcolNpad];\n"
 "diagHere = &diag[Dmatrix*NpadDiag];\n"
-" for(Dk = get_global_id(1); Dk < Dcol; Dk += get_global_size(1)) {\n"
-"   DL = AHere[DcolNpad + Dk];"
-"   DL *= DL;"
-"   diagLocal[diagLocalAddIndex] += diagHere[Dk] * DL;"
-" }\n" // Dk
+"  for(Dk = localIndex; Dk < Dcol; Dk += NlocalTotal) {\n"
+"    DL = AHere[Dk];"
+"    DL *= DL;"
+"    toAddLocal[localIndex] += diagHere[Dk] * DL;"
+"  }\n" // Dk
 
-// local reduction
-" barrier(CLK_LOCAL_MEM_FENCE);\n"
-"if(get_local_id(1)==0){"
+// reduction on dimension 2
+"barrier(CLK_LOCAL_MEM_FENCE);\n"
+"if(get_local_id(1) == 0){"
 " for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
-" diagLocal[diagLocalAddIndex] +=  diagLocal[diagLocalAddIndex + Dk];\n"
+" toAddLocal[localIndex] +=  toAddLocal[localIndex + Dk];\n"
 "}\n" //Dk
 "}\n" //diagSum
-" toAddGlobal[diagGlobalAddIndex] =  diagLocal[diagLocalAddIndex];\n"
 
-// final reduction
-" barrier(CLK_GLOBAL_MEM_FENCE);\n"
-"if(get_global_id(1) == 0){"
-"toAddGlobalHere = &toAddGlobal[Dmatrix * Nmatrix];"
-" DL = toAddGlobalHere[0];"
-" for(Dk = 1; Dk < get_group_size(1); Dk++) {\n"
-"DL += toAddGlobalHere[Dk];"
-"}\n" //Dk global diag sum
-"   diagHere[Dcol] = AHere[Dcol + DcolNpad] - DL;\n"
-"}\n" //diagGlobalSum
+// final reduction on dimension 1
+"barrier(CLK_LOCAL_MEM_FENCE);\n"
+"if(localIndex==0){"
+"  for(Dk = localIndex + get_local_size(1); Dk < NlocalTotal; Dk+= get_local_size(1)) {\n"
+"    toAddLocal[localIndex] +=  toAddLocal[Dk];\n"
+"  }\n" //Dk
+
+"diagHere[Dcol] = AHere[Dcol] - toAddLocal[localIndex];"
 
 "#ifdef diagToOne\n"
-"AHere[Dcol + DcolNpad] = 1.0;\n"
+"AHere[Dcol] = 1.0;\n"
 "#endif\n"
 
-" barrier(CLK_GLOBAL_MEM_FENCE);\n"
+
+"}\n" //doFinalDiagSum
+
+"barrier(CLK_LOCAL_MEM_FENCE);\n"
+
 "}\n" //Dmatrix
 
-"	}\n" // doDiag
+"}\n" // doDiag
+"barrier(CLK_GLOBAL_MEM_FENCE);\n"
 
 // off-diagonals
+"for(Dmatrix = get_global_id(2);Dmatrix < Nmatrix;Dmatrix+= get_global_size(2)){\n"
+"  DmatrixWithPad = Dmatrix*NpadBetweenMatrices;\n"
+"  AHere = &A[DmatrixWithPad + DcolNpad];\n"
+"  diagHere = &diag[Dmatrix*NpadDiag];\n"
+"  diagDcol = diagHere[Dcol];"
+
 // TO DO: cache diag * A[Dcol, ]
+
 "	for(Drow = Dcol+get_global_id(0); Drow < N; Drow += get_global_size(0)) {\n"
 
-"for(Dmatrix = get_local_id(2);Dmatrix < Nmatrix;Dmatrix+= get_local_size(2)){"
-"  AHere = &A[Dmatrix*NpadBetweenMatrices];\n"
-"  diagHere = &diag[Dmatrix*NpadDiag];\n"
+"  AHereDrow = &A[DmatrixWithPad + Drow*Npad];\n"
 "	 DL = 0.0;\n"
 
 "	 for(Dk = get_global_id(1); Dk < Dcolm1; Dk+=get_global_size(1)) {\n"
-//			DL -= A[DrowDk] * diagLocal[Dk];"
-"    DL += AHere[Dcol *  Npad + Dk] * AHere[Drow * Npad + Dk] * diagHere[Dk];"
+"    DL += AHereDrow[Dk] * AHere[Dk] * diagHere[Dk];"
 			// DL -= A[Drow + Dk * Npad] * A[Dcol + DkNpad] * diag[Dk];"
 "  }\n" // Dk
-"  toAddLocal[addLocalIndex] = DL;\n"
+"  toAddLocal[localIndex] = DL;\n"
 
 // local reduction
 "  barrier(CLK_LOCAL_MEM_FENCE);\n"
 "  if(get_local_id(1) == 0){"
-"    for(Dk = get_local_id(1)+1; Dk < get_local_size(1); Dk++) {\n"
+"    for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
 "      toAddLocal[localAddIndex] +=  toAddLocal[localAddIndex + Dk];\n"
 "    }\n" //Dk
-"    toAddGlobal[diagGlobalAddIndex] =  toAddLocal[localAddIndex];\n"
-"  }\n" //diagSum
+"  toAddGlobal[globalAddIndex] = toAddLocal[localIndex];\n"
+"  }\n"  
 
 // global reduction
 "  barrier(CLK_GLOBAL_MEM_FENCE);\n"
 "  if(get_global_id(1) == 0){\n"
-"    toAddGlobalHere = &toAddGlobal[diagGlobalAddIndex];\n"
-"    DL = diagLocal[addLocalIndex];\n"
+"    toAddGlobalHere = &toAddGlobal[globalAddIndex];\n"
+"    DL = toAddLocal[localIndex];\n"
 "    for(Dk = 1; Dk < get_group_size(1); Dk++) {\n"
 "       DL += toAddGlobalHere[Dk];\n"
 "    }\n" //Dk global diag sum
 
-"    AHere[Drow + DcolNpad] -= DL\n"
-"    AHere[Drow + DcolNpad] /= diagHere[Dcol];\n"
+"    AHereDrow[Dcol] = (AHereDrow[Dcol] - DL)/diagDcol;\n"
 
 "#ifdef upperToZero\n"
-"    AHere[Drow*Npad + Dol] =0.0;\n"
+"    AHere[Drow] =0.0;\n"
 "#endif\n"
 
-"  }\n" //global Sum
-"  barrier(CLK_GLOBAL_MEM_FENCE);\n"
+"  }\n" //global reduction
 
-"}\n" // Dmatrix loop
+"  barrier(CLK_GLOBAL_MEM_FENCE);\n"
 "}\n" // Drow
+
+"  barrier(CLK_GLOBAL_MEM_FENCE);\n"
+"}\n" // Dmatrix loop
+
+"  barrier(CLK_GLOBAL_MEM_FENCE);\n"
 "}\n" // Dcol loop
 
 "}\n";
-
+return(result);
+}
 
 template <typename T> 
-int cholMulti(
-  viennacl::matrix<T> *A,
-  viennacl::vector<T> *D,
-  const int Nmatrix,
-  const IntegerVector Nglobal,
-  const IntegerVector Nlocal, 
+int cholBatchVcl(
+  viennacl::matrix<T> &A,
+  viennacl::matrix<T> &D,
+  const std::vector<int> &Nglobal,
+  const std::vector<int> &Nlocal, 
   const int NlocalCache,
   const int ctx_id) {
 
-  const bool BisVCL=1;
+  const int Nmatrix = D.size1();
 
-  double **AA, **DD;
-  
+
+  std::string cholClString = cholBatchKernelString<T>(
+  A.size1(),
+  A.internal_size2(),
+  D.internal_size2(),
+  Nmatrix,
+  Nmatrix * A.internal_size2(),// NpadBetweenMatrices,
+  NlocalCache, 
+  Nlocal,
+  Nglobal);
+
+#ifdef DEBUG
+
+Rcpp::Rcout << cholClString << "\n\n";
+
+#endif  
 
   return 0L;
+}
+
+
+template<typename T> void cholBatchTemplated(
+  Rcpp::S4 A,
+  Rcpp::S4 D,
+  const std::vector<int> &Nglobal,
+  const std::vector<int> &Nlocal, 
+  const int NlocalCache
+) {
+
+ 
+  // data
+  const bool BisVCL=1;
+  const int ctx_id = INTEGER(A.slot(".context_index"))[0]-1;
+  std::shared_ptr<viennacl::matrix<T> > vclA = getVCLptr<T>(A.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix<T> > vclD = getVCLptr<T>(D.slot("address"), BisVCL, ctx_id);
+
+  cholBatchVcl<T>(
+    *vclA, *vclD, 
+    Nglobal, 
+    Nlocal,
+    NlocalCache,
+    ctx_id);
+
+}
+
+
+//[[Rcpp::export]]
+void cholBatchBackend(
+  Rcpp::S4 A,
+  Rcpp::S4 D,
+  std::vector<int> Nglobal,
+  std::vector<int> Nlocal,
+  int NlocalCache=1000L) {
+
+
+    Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(A));
+    std::string precision_type = (std::string) classVarR;
+
+  if(precision_type == "fvclMatrix") {
+  cholBatchTemplated<float>(
+    A, D, Nglobal, Nlocal,
+    NlocalCache);
+  } else if (precision_type == "dvclMatrix") {
+  cholBatchTemplated<double>(
+    A, D, Nglobal, Nlocal,
+    NlocalCache);
+  } else {
+    Rcpp::warning("class of A must be fvclMatrix or dvclMatrix");
+ }
 }
