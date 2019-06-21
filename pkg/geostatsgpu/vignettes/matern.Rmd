@@ -150,12 +150,23 @@ as.matrix(outputBatchF[nrow(coordsGpu2)+1:4,1:4])
 
 
 ```{r cholBach}
-diagMat = vclMatrix(0, nrow(paramsGpu), nrow(outputBatchF), type = gpuR::typeof(outputBatchF))
+cholCpu = chol(as.matrix(
+  outputBatchF[1:ncol(outputBatchF), ]
+  ))
+theDiag = diag(cholCpu)
+cholCpu = cholCpu %*% diag(1/theDiag)
+theDiag = theDiag^2
+
+
+diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), type = gpuR::typeof(outputBatchF))
 geostatsgpu:::cholBatchBackend(
   outputBatchF, diagMat, 
    c(4L,4L, 2L),
    c(2L,2L, 1L))
-
+as.matrix(outputBatchF[1:4,1:4])
+cholCpu
+as.matrix(diagMat)
+theDiag
 ```
 
 # Cholesky

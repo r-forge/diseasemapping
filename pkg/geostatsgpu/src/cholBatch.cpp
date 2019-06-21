@@ -36,18 +36,17 @@ std::string cholBatchKernelString(
 
 
   result = result + 
-"\n __global " + typeString + " toAddGlobal["+std::to_string(Nglobal[0]*Ngroups1*Nglobal[2]) + "];//Nglobal0*Ngroups1*Nglobal2\n\n"
 "__kernel void cholBatch(\n"
 "	__global " + typeString + " *A,\n" 
 "	__global " + typeString + " *diag,\n"
-" const int colStart,\n"
-"	const int colStop){\n"
+" __global " + typeString + " *finalReduction" //size Nglobal[0]*Ngroups1*Nglobal[2])
+"){\n"
 
 "// first dimension is rows\n"
 "// second dimension is work items doing the same row\n"
 "// third dimension matrix\n"
 
-
+//"const int colStart=0, colStop=2;\n"
 "const int doDiag = get_global_id(2)==0 & get_group_id(1)==0;\n"
 "const int localIndex = get_local_id(0)*get_local_size(1) + get_local_id(1);\n"
 "const int NlocalTotal = get_local_size(0)*get_local_size(1);\n"
@@ -65,7 +64,8 @@ typeString + " DL, diagDcol;\n"
 "__global " + typeString + " *AHere, *AHereDrow, *diagHere;\n"
 
 
-"for(Dcol =  colStart; Dcol < colStop; Dcol++) {\n"
+//"for(Dcol =  colStart; Dcol < colStop; Dcol++) {\n"
+"for(Dcol = 0; Dcol < 2; Dcol++) {\n"
 "   DcolNpad = Dcol*Npad;\n"
 "   Dcolm1 = Dcol - 1;\n"
 
@@ -140,27 +140,24 @@ typeString + " DL, diagDcol;\n"
 "    for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
 "      toAddLocal[localAddIndex] +=  toAddLocal[localAddIndex + Dk];\n"
 "    }\n" //Dk
-"  toAddGlobal[globalAddIndex] = toAddLocal[localIndex];\n"
+"  finalReduction[globalAddIndex] = toAddLocal[localIndex];\n"
 "  }\n"  
 
 // global reduction
 "  barrier(CLK_GLOBAL_MEM_FENCE);\n"
 "  if(get_global_id(1) == 0){\n"
-"    toAddGlobalHere = &toAddGlobal[globalAddIndex];\n"
 "    DL = toAddLocal[localIndex];\n"
 "    for(Dk = 1; Dk < get_num_groups(1); Dk++) {\n"
-"       DL += toAddGlobalHere[Dk];\n"
+"       DL += finalReduction[globalAddIndex+Dk];\n"
 "    }\n" //Dk global diag sum
 
 "    AHereDrow[Dcol] = (AHereDrow[Dcol] - DL)/diagDcol;\n"
-
 "#ifdef upperToZero\n"
 "    AHere[Drow] =0.0;\n"
 "#endif\n"
-
 "  }\n" //global reduction
-
 "  barrier(CLK_GLOBAL_MEM_FENCE);\n"
+
 "}\n" // Drow
 
 "  barrier(CLK_GLOBAL_MEM_FENCE);\n"
@@ -209,6 +206,9 @@ int cholBatchVcl(
   cholKernel.local_work_size(1, (cl_uint) (Nlocal[1]));
   cholKernel.local_work_size(2, (cl_uint) (Nlocal[2]));
 
+  // with opencl 2.0 can put this as a program-level variable
+  int Ngroups1 = ceil(Nglobal[1]/Nlocal[1]);
+  viennacl::matrix<T> finalReduction(Nglobal[0]*Nglobal[2]*Ngroups1);//size Nglobal[0]*Ngroups1*Nglobal[2]
 
 #ifdef DEBUG
 
@@ -216,7 +216,7 @@ Rcpp::Rcout << cholClString << "\n\n";
 
 #endif  
 
-//  viennacl::ocl::enqueue(cholKernel(A, D, 0,  A.size1()));
+  viennacl::ocl::enqueue(cholKernel(A, D, finalReduction));//,  2L));//A.size1() ));
 
   return 0L;
 }

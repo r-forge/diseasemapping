@@ -14,12 +14,12 @@ library('gpuR')
 
 Create some streams
 ```{r test}
-x = vclVector(5,5,type="double")
-y = vclVector(4,6,type="double")
+x = vclVector(5,5,type="integer")
+y = vclVector(4,6,type="integer")
 
 Nglobal = 256
 streams = clRNG:::cpp_mrg31k3pCreateStreams(Nglobal)
-t(streams)
+#t(streams)
 if(gpuInfo()$maxAllocatableMem > 1e10) {
   NperItem = 100
 } else {
@@ -29,6 +29,8 @@ z = vclVector(length=as.integer(Nglobal*NperItem), type="double")
 length(z)
 
 clRNG::fisher_simGpu(x,y,z,streams=streams)
+
+as.vector(z)[1:3]
 
 ```
 
