@@ -187,7 +187,7 @@ int cholBatchVcl(
   A.internal_size2(),
   D.internal_size2(),
   Nmatrix,
-  Nmatrix * A.internal_size2(),// NpadBetweenMatrices,
+  A.size1() * A.internal_size2(),// NpadBetweenMatrices,
   NlocalCache, 
   Nlocal,
   Nglobal);

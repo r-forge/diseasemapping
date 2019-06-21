@@ -132,6 +132,8 @@ outputBatchF = vclMatrix(0,
     coordsGpu2, paramsGpu,  
     Nglobal = c(4L,4L), 
     Nlocal = c(2L, 2L))
+as.matrix(outputBatchF)
+
 ```
 
 

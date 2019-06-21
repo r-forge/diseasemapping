@@ -423,7 +423,7 @@ template<typename T> void maternBatchVcl(
 	N = vclCoords.size1(),
 	Nmatrix = param.size1(),
 	Npad = vclVar.internal_size2(),
-	NpadBetweenMatrices = Npad*Nmatrix; // change to Npad*(Nmat+k) to insert extra rows between matrices
+	NpadBetweenMatrices = Npad*N; // change to Npad*(Nmat+k) to insert extra rows between matrices
 
 	const int Ncell = N * (N - 1)/2, maxIter = 1500;
 
