@@ -10,9 +10,9 @@ using namespace viennacl::linalg;
 
 #include <string>
 
-std::string FisherSimkernelString(int NR) { 
+std::string FisherSimkernelString(int NR, int NC) { 
   std::string result = 
-  "\n#define mrg31k3p_NORM_cl_double  4.656612873077392578125e-10\n\n"
+  "\n#define mrg31k3p_NORM_cl_T  4.656612873077392578125e-10\n\n"
   "\n\n__kernel void fisher_sim_gpu(\n"
   "   const int nrow,\n"
   "	  const int ncol,\n"
@@ -20,12 +20,12 @@ std::string FisherSimkernelString(int NR) {
   "   __global int *ncolt, \n"
   "   const int n, \n" //ntotal
   "	  const int vsize,\n" //extra para
-  "	__global int *matrix, \n"
   "	__global double *fact,\n"
   "	__global double *results,\n" // extra para
   "	__global clrngMrg31k3pHostStream* streams"
   ") { \n"
   "	  int jwork["+ std::to_string(NR) + "];\n"  // IS THERE ENOUGH PRIVATE MEMORY TO DO THIS FOR LARGE NR?
+  "	  int matrix["+ std::to_string(NR*NC) + "];\n"
   "   int i, t, u, iter, D; \n"  //original j changed to t, ii changed to u, added a D here
   "   double ans;\n"
   "   const int size = get_global_size(1)*get_global_size(0);\n"
@@ -71,7 +71,7 @@ std::string FisherSimkernelString(int NR) {
 "    }\n" // if ie
 
 /* Generate pseudo-random number */
-"    dummy = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_double;\n"
+"    dummy = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_T;\n"
 
 
 "     //do { \n"// Outer Loop  COMMENTED OUT
@@ -122,7 +122,7 @@ std::string FisherSimkernelString(int NR) {
 
 "// } while (!lsp);\n" // do increment entry COMMENTED OUT!!
 
-" dummy = sumprb * clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_double;\n"
+" dummy = sumprb * clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_T;\n"
 
 " //} while (1);\n"  // do outer loop  !! COMMENTED OUT!
 
@@ -169,7 +169,7 @@ void fisher_sim_gpu(
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   
   std::string random_kernel_string = mrg31k3pTypeString<double>();
-  std::string kernel_string= random_kernel_string + FisherSimkernelString(nr);
+  std::string kernel_string= random_kernel_string + FisherSimkernelString(nr, nc);
 
 #ifdef DEBUG
   Rcpp::Rcout << kernel_string << "\n\n";
@@ -217,13 +217,12 @@ void fisher_sim_gpu(
   int vsize= ans.size();
 
   
-  viennacl::vector_base<int> observed = viennacl::vector_base<int>(nr*nc, ctx); 
+//  viennacl::vector_base<int> observed = viennacl::vector_base<int>(nr*nc, ctx); 
 
-  // TO DO: put this in local memory
-  viennacl::vector_base<int> jwork = viennacl::vector_base<int>(nc, ctx); 
-
+    // TO DO: put this in local memory
   viennacl::vector_base<double> fact = viennacl::vector_base<double>(n+1, ctx); 
-  /* Calculate log-factorials.  fact[i] = lgamma(i+1)
+  
+    /* Calculate log-factorials.  fact[i] = lgamma(i+1)
    */
   fact(0) = 0.;
   fact(1) = 0.;
@@ -235,7 +234,9 @@ void fisher_sim_gpu(
     nr, nc, 
     sr, sc, 
     n, vsize, 
-    observed, fact, //jwork, 
+    //observed, 
+    fact, 
+    //jwork, 
     ans,
     bufIn
     ) ); //streams, out, vector_size
