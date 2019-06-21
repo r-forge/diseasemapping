@@ -165,6 +165,11 @@ void fisher_sim_gpu(
     int ctx_id){
   
   const int nr = sr.size(), nc = sc.size();
+  //  scalar<int> nScalar=-1;
+  //  viennacl::linalg::sum_impl(sr, nScalar); 
+  //  sum_impl(sr, nScalar);
+  int n = viennacl::linalg::sum(sr);
+  int vsize= ans.size();
   
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   
@@ -210,16 +215,12 @@ void fisher_sim_gpu(
   
 
   
-//  scalar<int> nScalar=-1;
-//  viennacl::linalg::sum_impl(sr, nScalar);  //User interface function for computing the sum of all elements of a vector. 
-//  sum_impl(sr, nScalar);
-  int n = viennacl::linalg::sum(sr);
-  int vsize= ans.size();
+
 
   
 //  viennacl::vector_base<int> observed = viennacl::vector_base<int>(nr*nc, ctx); 
 
-    // TO DO: put this in local memory
+    // TO DO: put this in local memory (?)
   viennacl::vector_base<double> fact = viennacl::vector_base<double>(n+1, ctx); 
   
     /* Calculate log-factorials.  fact[i] = lgamma(i+1)

@@ -110,7 +110,8 @@ myParamsBatch = rbind(
   c(shape=1.15, range=2.5, variance = 2, nugget = 0, 
              anisoRatio = 1, 
              anisoAngleRadians = 0), 
-myParams, myParams * 0.8, myParams*1.2)
+#myParams, 
+myParams * 0.8, myParams*1.2)
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
 myParamsBatch
 myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch)))
@@ -150,9 +151,9 @@ as.matrix(outputBatchF[nrow(coordsGpu2)+1:4,1:4])
 
 
 ```{r cholBach}
-cholCpu = chol(as.matrix(
+cholCpu = t(chol(as.matrix(
   outputBatchF[1:ncol(outputBatchF), ]
-  ))
+  )))
 theDiag = diag(cholCpu)
 cholCpu = cholCpu %*% diag(1/theDiag)
 theDiag = theDiag^2
@@ -163,7 +164,7 @@ geostatsgpu:::cholBatchBackend(
   outputBatchF, diagMat, 
    c(4L,4L, 2L),
    c(2L,2L, 1L))
-as.matrix(outputBatchF[1:4,1:4])
+as.matrix(outputBatchF)
 cholCpu
 as.matrix(diagMat)
 theDiag

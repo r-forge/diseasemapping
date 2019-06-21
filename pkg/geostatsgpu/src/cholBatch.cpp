@@ -46,8 +46,8 @@ std::string cholBatchKernelString(
 "// second dimension is work items doing the same row\n"
 "// third dimension matrix\n"
 
-//"const int colStart=0, colStop=2;\n"
-"const int doDiag = get_global_id(2)==0 & get_group_id(1)==0;\n"
+//"const int colStart=0, colStop=;\n"
+"const int doDiag = get_group_id(1)==0 & get_group_id(2)==0;\n"
 "const int localIndex = get_local_id(0)*get_local_size(1) + get_local_id(1);\n"
 "const int NlocalTotal = get_local_size(0)*get_local_size(1);\n"
 "const int localAddIndex = get_local_id(0)*get_local_size(1)+get_local_id(1);\n"
@@ -65,7 +65,7 @@ typeString + " DL, diagDcol;\n"
 
 
 //"for(Dcol =  colStart; Dcol < colStop; Dcol++) {\n"
-"for(Dcol = 0; Dcol < 2; Dcol++) {\n"
+"for(Dcol = 0; Dcol < 1; Dcol++) {\n"
 "   DcolNpad = Dcol*Npad;\n"
 "   Dcolm1 = Dcol - 1;\n"
 
@@ -99,7 +99,6 @@ typeString + " DL, diagDcol;\n"
 "  }\n" //Dk
 
 "diagHere[Dcol] = AHere[Dcol] - toAddLocal[localIndex];\n"
-
 "\n#ifdef diagToOne\n"
 "AHere[Dcol] = 1.0;\n"
 "#endif\n"
@@ -123,7 +122,7 @@ typeString + " DL, diagDcol;\n"
 
 // TO DO: cache diag * A[Dcol, ]
 
-"	for(Drow = Dcol+get_global_id(0); Drow < N; Drow += get_global_size(0)) {\n"
+"	for(Drow = Dcol+get_global_id(0)+1; Drow < N; Drow += get_global_size(0)) {\n"
 
 "  AHereDrow = &A[DmatrixWithPad + Drow*Npad];\n"
 "	 DL = 0.0;\n"
@@ -151,7 +150,8 @@ typeString + " DL, diagDcol;\n"
 "       DL += finalReduction[globalAddIndex+Dk];\n"
 "    }\n" //Dk global diag sum
 
-"    AHereDrow[Dcol] = (AHereDrow[Dcol] - DL)/diagDcol;\n"
+//"    AHereDrow[Dcol] = (AHereDrow[Dcol] - DL)/diagDcol;\n"
+"    AHereDrow[Dcol] = diagDcol;\n"
 "#ifdef upperToZero\n"
 "    AHere[Drow] =0.0;\n"
 "#endif\n"
@@ -183,7 +183,7 @@ int cholBatchVcl(
 
 
   std::string cholClString = cholBatchKernelString<T>(
-  A.size1(),
+  A.size2(),
   A.internal_size2(),
   D.internal_size2(),
   Nmatrix,
