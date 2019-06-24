@@ -150,11 +150,11 @@ typeString + " DL, diagDcol;\n"
 "       DL += finalReduction[globalAddIndex+Dk];\n"
 "    }\n" //Dk global diag sum
 
-//"    AHereDrow[Dcol] = (AHereDrow[Dcol] - DL)/diagDcol;\n"
-"    AHereDrow[Dcol] = diagDcol;\n"
-"#ifdef upperToZero\n"
-"    AHere[Drow] =0.0;\n"
-"#endif\n"
+"    AHereDrow[Dcol] = (AHereDrow[Dcol] - DL)/diagDcol;\n"
+"    AHereDrow[Dcol] = diag[Dcol + Dmatrix*NpadDiag];\n"
+//"#ifdef upperToZero\n"
+//"    AHere[Drow] =0.0;\n"
+//"#endif\n"
 "  }\n" //global reduction
 "  barrier(CLK_GLOBAL_MEM_FENCE);\n"
 
@@ -187,7 +187,7 @@ int cholBatchVcl(
   A.internal_size2(),
   D.internal_size2(),
   Nmatrix,
-  A.size1() * A.internal_size2(),// NpadBetweenMatrices,
+  A.size2() * A.internal_size2(),// NpadBetweenMatrices,
   NlocalCache, 
   Nlocal,
   Nglobal);

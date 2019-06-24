@@ -107,11 +107,11 @@ as.matrix(varGpuD[endSeq,endSeq])
 
 ```{r paramsBatch}
 myParamsBatch = rbind(
-  c(shape=1.15, range=2.5, variance = 2, nugget = 0, 
+  c(shape=1.15, range=2.5, variance = 1, nugget = 0, 
              anisoRatio = 1, 
              anisoAngleRadians = 0), 
-#myParams, 
-myParams * 0.8, myParams*1.2)
+myParams, 
+myParams * 0.8, myParams*1.2, myParams)
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
 myParamsBatch
 myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch)))
@@ -130,10 +130,9 @@ outputBatchF = vclMatrix(0,
   geostatsgpu:::maternBatchBackend(
     outputBatchF,
     coordsGpu2, paramsGpu,  
-    Nglobal = c(4L,4L), 
+    Nglobal = c(8L,8L), 
     Nlocal = c(2L, 2L))
 as.matrix(outputBatchF)
-
 ```
 
 
@@ -141,12 +140,12 @@ Compare output to geostatsp's matern
 ```{r batchMaternCompare}
 geostatsp::matern(
     x=SpatialPoints(as.matrix(coordsGpu2)),
-    param=drop(myParamsBatch[1,1:6])
+    param=drop(myParamsBatch[1,1:7])
     )[1:4,1:4]
 as.matrix(outputBatchF[1:4,1:4])
 geostatsp::matern(
     x=SpatialPoints(as.matrix(coordsGpu2)),
-    param=drop(myParamsBatch[2,1:6])
+    param=drop(myParamsBatch[2,1:7])
     )[1:4,1:4]
 as.matrix(outputBatchF[nrow(coordsGpu2)+1:4,1:4])
 ```
