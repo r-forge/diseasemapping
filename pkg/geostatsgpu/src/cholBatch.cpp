@@ -1,7 +1,23 @@
 #include "geostatsgpu.hpp"
 #define DEBUG
 
+/* TO DO
+- v1: one matrix per work group
 
+    - for Dcol small
+    - 2d array, d0 matrix rows d1 multiple items on same row.  
+    - cache A[Dcol, 1:Dcol] D[1:Dcol] in local memory
+    - ... with a global cache for any overflow
+    - local memory for reductions
+
+- v2: small number of work items per matrix, final reductions on gpu
+
+    - for N-Dcol large
+    - loop from Dcol to Dcol + K
+    - need K by K by Nlocal0 local cache for initial reduction
+    - local cache = ?
+    - need Nmatrix by K by (N-Dcol) by Nworkgroups[1] global memory for final reduction
+*/
 
 template <typename T> 
 std::string cholBatchKernelString(
