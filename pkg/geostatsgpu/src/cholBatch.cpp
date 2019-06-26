@@ -96,14 +96,16 @@ result +=  typeString + " DL;\n"
 "  DcolNpad = Dcol*Npad;\n"
 "  Dcolm1 = Dcol - 1;\n"
 "  AHereDcol = &AHere[DcolNpad];\n"
+
 "\n#ifdef allowOverflow\n"
 "  minDcolNcache = min(Dcol, Ncache);\n"
 "  minDcolm1Ncache = min(Dcolm1, Ncache);\n"
 "#endif\n\n"
+
 // diagonals
 "  toAddLocal[localIndex]=0.0;\n"
 "  for(Dk = localIndex; Dk < minDcolNcache; Dk += NlocalTotal) {\n"
-"    DL = AHere[Dk];\n"
+"    DL = AHereDcol[Dk];\n"
 "    diagLocal[Dk] = diagHere[Dk] * DL;\n"// cached A[Dcol, 1:Dcol] D[1:Dcol]
 "    toAddLocal[localIndex] += diagLocal[Dk] * DL;\n"
 "  }\n\n" // Dk
@@ -132,10 +134,15 @@ result +=  typeString + " DL;\n"
 
 "  diagDcol = AHereDcol[Dcol] - toAddLocal[localIndex];\n"
 "  diagHere[Dcol] = diagDcol;\n"
+#ifdef DEBUG
+"AHere[Dcol] = -toAddLocal[localIndex];\n"
+#endif
 "\n#ifdef diagToOne\n"
 "AHere[Dcol] = 1.0;\n"
 "#endif\n"
 "}\n" //localIndex==0
+"  barrier(CLK_LOCAL_MEM_FENCE);\n"
+"  diagDcol = diagHere[Dcol];\n"
 
 // off diagonals
 
@@ -163,6 +170,9 @@ result +=  typeString + " DL;\n"
 "    DL +=  toAddLocal[localIndex + Dk];\n"
 "  }\n" //Dk
 "  AHereDrow[Dcol] = (AHereDrow[Dcol] - DL)/diagDcol;\n"
+#ifdef DEBUG
+"  AHereDcol[Drow] = - DL;\n" 
+#endif
 "}//get_local_id(1) == 0\n" 
 "}//Drow\n" 
 
@@ -183,16 +193,18 @@ int cholBatchVcl(
   const int ctx_id) {
 
   std::string cholClString = cholBatchKernelString<T>(
-  0L, 
-  A.size2(),
-  A.size2(),
-  A.internal_size2(),
+  0L, // start
+//  A.size2(), // end
+  2,
+  A.size2(), // N
+  A.internal_size2(), // Npad
   D.internal_size2(),
-  D.size1(),
+//  D.size1(), // Nmatrix
+  2, 
   A.size2() * A.internal_size2(),// NpadBetweenMatrices,
   NlocalCache, 
   Nlocal,
-  1);
+  A.size2() > NlocalCache); // allow overflow
 
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   viennacl::ocl::program & my_prog = ctx.add_program(cholClString, "my_kernel");
@@ -257,7 +269,7 @@ void cholBatchBackend(
   Rcpp::S4 D,
   std::vector<int> Nglobal,
   std::vector<int> Nlocal,
-  int NlocalCache=1000L) {
+  int NlocalCache=500L) {
 
 
     Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(A));
