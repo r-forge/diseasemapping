@@ -1,5 +1,5 @@
 #include "geostatsgpu.hpp"
-#define DEBUG
+//#define DEBUG
 
 /* TO DO
 - v1: one matrix per work group
@@ -29,7 +29,7 @@ std::string cholBatchKernelString( // V1
   int NpadDiag,
   int Nmatrix,
   int NpadBetweenMatrices,
-  int Ncache, 
+  std::vector<int> Ncache, 
   std::vector<int> Nlocal, // length 2
   bool allowOverflow
 ) {
@@ -49,15 +49,14 @@ std::string cholBatchKernelString( // V1
   "//internal number of columns\n#define Npad " + std::to_string(Npad) + "\n"
   "//internal columns for matrix holding diagonals\n#define NpadDiag " + std::to_string(NpadDiag) + "\n"
   "#define Nmatrix " + std::to_string(Nmatrix) + "\n"
-  "//elements in internal cache\n#define Ncache " + std::to_string(Ncache) + "\n"
+  "//elements in internal cache\n#define Ncache " + std::to_string(Ncache[0]) + "\n"
   "//extra rows between stacked matrices\n#define NpadBetweenMatrices " + std::to_string(NpadBetweenMatrices) + "\n"
   "#define maxLocalItems " + std::to_string(Nlocal[0]*Nlocal[1]) + "\n\n";
 
 if(allowOverflow) {
   result += "\n#define allowOverflow\n\n";
 } else {
-  result += "\n#define minDcolNcache Dcol\n" 
-  "#define minDcolm1Ncache Dcolm1\n\n";
+  result += "\n#define minDcolNcache Dcol\n";
 }
   
 result += "__kernel void cholBatch(\n"
@@ -68,16 +67,15 @@ result += "__kernel void cholBatch(\n"
 //"const int colStart=0, colStop=;\n"
 "const int localIndex = get_local_id(0)*get_local_size(1) + get_local_id(1);\n"
 "const int NlocalTotal = get_local_size(0)*get_local_size(1);\n"
-"const int localAddIndex = get_local_id(0)*get_local_size(1)+get_local_id(1);\n"
 
 " __local " + typeString + " diagLocal[Ncache];//local cache of diagonals\n"
 " __local " + typeString + " toAddLocal[maxLocalItems];\n"
 
-"	int Dcol, DcolNpad, Dcolm1;\n"
+"	int Dcol, DcolNpad;\n"
 "	int Drow, Dk, Dmatrix;\n";
 
 if(allowOverflow) {
-result += "	int minDcolm1Ncache, minDcolNcache;\n";
+result += "	int minDcolNcache;\n";
 }
 
 result +=  typeString + " DL;\n" 
@@ -94,12 +92,11 @@ result +=  typeString + " DL;\n"
 "for(Dcol = colStart; Dcol < colEnd; Dcol++) {\n"
 
 "  DcolNpad = Dcol*Npad;\n"
-"  Dcolm1 = Dcol - 1;\n"
+//"  Dcolm1 = Dcol - 1;\n"
 "  AHereDcol = &AHere[DcolNpad];\n"
 
 "\n#ifdef allowOverflow\n"
 "  minDcolNcache = min(Dcol, Ncache);\n"
-"  minDcolm1Ncache = min(Dcolm1, Ncache);\n"
 "#endif\n\n"
 
 // diagonals
@@ -108,13 +105,13 @@ result +=  typeString + " DL;\n"
 "    DL = AHereDcol[Dk];\n"
 "    diagLocal[Dk] = diagHere[Dk] * DL;\n"// cached A[Dcol, 1:Dcol] D[1:Dcol]
 "    toAddLocal[localIndex] += diagLocal[Dk] * DL;\n"
-"  }\n\n" // Dk
+"  }\n" // Dk
 "\n#ifdef allowOverflow\n"
-"  for(; Dk < Ncache; Dk += NlocalTotal) {\n"
+"  for(; Dk < N; Dk += NlocalTotal) {\n"
 "    DL = AHereDcol[Dk];\n"
 "    toAddLocal[localIndex] += diagHere[Dk] * DL * DL;\n"
-"  }\n\n" // Dk
-"\n#endif\n"
+"  }\n" // Dk
+"#endif\n\n"
 
 
 // reduction on dimension 1
@@ -136,13 +133,14 @@ result +=  typeString + " DL;\n"
 "  diagHere[Dcol] = diagDcol;\n"
 #ifdef DEBUG
 "AHere[Dcol] = -toAddLocal[localIndex];\n"
+//"AHereDcol[Dcol] = 10*Dcol;\n"
 #endif
 "\n#ifdef diagToOne\n"
-"AHere[Dcol] = 1.0;\n"
+"AHereDcol[Dcol] = 1.0;\n"
 "#endif\n"
 "}\n" //localIndex==0
 "  barrier(CLK_LOCAL_MEM_FENCE);\n"
-"  diagDcol = diagHere[Dcol];\n"
+//"  diagDcol = diagHere[Dcol];\n"
 
 // off diagonals
 
@@ -151,15 +149,15 @@ result +=  typeString + " DL;\n"
 "  AHereDrow = &AHere[Drow*Npad];\n"
 "	 DL = 0.0;\n"
 
-"	 for(Dk = get_local_id(1); Dk < minDcolm1Ncache; Dk+=get_local_size(1)) {\n"
+"	 for(Dk = get_local_id(1); Dk < minDcolNcache; Dk+=get_local_size(1)) {\n"
 "    DL += AHereDrow[Dk] * diagLocal[Dk];\n"
 			// DL -= A[Drow + Dk * Npad] * A[Dcol + DkNpad] * diag[Dk];"
 "  }\n" // Dk
 "\n#ifdef allowOverflow\n"
-"	 for(; Dk < Dcolm1; Dk+=get_local_size(1)) {\n"
+"	 for(; Dk < Dcol; Dk+=get_local_size(1)) {\n"
 "    DL += AHereDrow[Dk] * diagHere[Dk] * AHereDcol[Dk];\n"
 "  }\n" // Dk
-"\n#endif\n"
+"#endif\n\n"
 "  toAddLocal[localIndex] = DL;\n"
 
 // local reduction
@@ -171,14 +169,14 @@ result +=  typeString + " DL;\n"
 "  }\n" //Dk
 "  AHereDrow[Dcol] = (AHereDrow[Dcol] - DL)/diagDcol;\n"
 #ifdef DEBUG
-"  AHereDcol[Drow] = - DL;\n" 
+"  AHereDcol[Drow] = DL;\n" 
 #endif
-"}//get_local_id(1) == 0\n" 
+"}//get_local_id(1) == 0\n\n" 
 "}//Drow\n" 
 
 "  barrier(CLK_GLOBAL_MEM_FENCE);\n"
 "} // Dcol loop\n"
-"} // Dmatrix loop\n"
+"} // Dmatrix loop\n\n"
 "}\n";
 return(result);
 }
@@ -189,22 +187,20 @@ int cholBatchVcl(
   viennacl::matrix<T> &D,
   const std::vector<int> &Nglobal,
   const std::vector<int> &Nlocal, 
-  const int NlocalCache,
+  const std::vector<int> &NlocalCache,
   const int ctx_id) {
 
   std::string cholClString = cholBatchKernelString<T>(
   0L, // start
-//  A.size2(), // end
-  2,
+  A.size2(), // end
   A.size2(), // N
   A.internal_size2(), // Npad
   D.internal_size2(),
-//  D.size1(), // Nmatrix
-  2, 
+  D.size1(), // Nmatrix
   A.size2() * A.internal_size2(),// NpadBetweenMatrices,
   NlocalCache, 
   Nlocal,
-  A.size2() > NlocalCache); // allow overflow
+  A.size2() > NlocalCache[0]); // allow overflow
 
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   viennacl::ocl::program & my_prog = ctx.add_program(cholClString, "my_kernel");
@@ -243,7 +239,7 @@ template<typename T> void cholBatchTemplated(
   Rcpp::S4 D,
   const std::vector<int> &Nglobal,
   const std::vector<int> &Nlocal, 
-  const int NlocalCache
+  const std::vector<int> &NlocalCache
 ) {
 
  
@@ -269,7 +265,7 @@ void cholBatchBackend(
   Rcpp::S4 D,
   std::vector<int> Nglobal,
   std::vector<int> Nlocal,
-  int NlocalCache=500L) {
+  std::vector<int> NlocalCache) {
 
 
     Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(A));

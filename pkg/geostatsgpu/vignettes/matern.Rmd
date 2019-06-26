@@ -164,8 +164,9 @@ theDiag = theDiag^2
 diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), type = gpuR::typeof(outputBatchF))
 geostatsgpu:::cholBatchBackend(
   outputBatchF, diagMat, 
-   c(4L,2L),
-   c(2L,2L))
+  Nglobal = c(4L,2L),
+  Nlocal = c(2L,2L),
+  NlocalCache = 1L)
 as.matrix(outputBatchF)
 varCpu
 cholCpu

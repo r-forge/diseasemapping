@@ -6,7 +6,7 @@
 using namespace Rcpp;
 
 // cholBatchBackend
-void cholBatchBackend(Rcpp::S4 A, Rcpp::S4 D, std::vector<int> Nglobal, std::vector<int> Nlocal, int NlocalCache);
+void cholBatchBackend(Rcpp::S4 A, Rcpp::S4 D, std::vector<int> Nglobal, std::vector<int> Nlocal, std::vector<int> NlocalCache);
 RcppExport SEXP _geostatsgpu_cholBatchBackend(SEXP ASEXP, SEXP DSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP, SEXP NlocalCacheSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -14,7 +14,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::S4 >::type D(DSEXP);
     Rcpp::traits::input_parameter< std::vector<int> >::type Nglobal(NglobalSEXP);
     Rcpp::traits::input_parameter< std::vector<int> >::type Nlocal(NlocalSEXP);
-    Rcpp::traits::input_parameter< int >::type NlocalCache(NlocalCacheSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type NlocalCache(NlocalCacheSEXP);
     cholBatchBackend(A, D, Nglobal, Nlocal, NlocalCache);
     return R_NilValue;
 END_RCPP
