@@ -14,7 +14,7 @@
     - for N-Dcol large
     - work items rows by cols by matrix
     - loop from Dcol to Dcol + K
-    - need K by (Dcol+K)/Ncycles by 2 local cache for matrix multiplication
+    - need K by (Dcol+K)/Ngroups[1] by 2 local cache for matrix multiplication
     - or K by Nlocal1 by (2 + c) local cache for matrix multiplication, cache c row groups locally, remainder global
     - need Nmatrix by K by (N-Dcol) by Ngroups global memory for final reduction
 */
@@ -30,7 +30,8 @@ std::string cholBatchKernelString( // V1
   int Nmatrix,
   int NpadBetweenMatrices,
   int Ncache, 
-  std::vector<int> Nlocal // length 2
+  std::vector<int> Nlocal, // length 2
+  bool allowOverflow
 ) {
 
   std::string typeString = openclTypeString<T>();
@@ -42,22 +43,27 @@ std::string cholBatchKernelString( // V1
   }
 
   result +=
-  "\n#define N " + std::to_string(N) + " //dimension of matrix\n"
-  "#define colStart " + std::to_string(colStart) + " //column to start at\n"
-  "#define colEnd " + std::to_string(colEnd) + " //column to end at\n"
-  "#define Npad " + std::to_string(Npad) + " //internal number of columns\n"
-  "#define NpadDiag " + std::to_string(NpadDiag) + " //internal columns for matrix holding diagonals\n"
-  "#define Nmatrix " + std::to_string(Nmatrix) + " // number of matrices\n"
-  "#define Ncache " + std::to_string(Ncache) + " //elements in internal cache\n"
-  "#define NpadBetweenMatrices " + std::to_string(NpadBetweenMatrices) + " //extra rows between stacked matrices\n"
-  "#define maxLocalItems " + std::to_string(Nlocal[0]*Nlocal[1]) + "\n\n"
+  "\n//dimension of matrix\n#define N " + std::to_string(N) + "\n"
+  "//column to start at\n#define colStart " + std::to_string(colStart) + "\n"
+  "#define colEnd " + std::to_string(colEnd) + "\n"
+  "//internal number of columns\n#define Npad " + std::to_string(Npad) + "\n"
+  "//internal columns for matrix holding diagonals\n#define NpadDiag " + std::to_string(NpadDiag) + "\n"
+  "#define Nmatrix " + std::to_string(Nmatrix) + "\n"
+  "//elements in internal cache\n#define Ncache " + std::to_string(Ncache) + "\n"
+  "//extra rows between stacked matrices\n#define NpadBetweenMatrices " + std::to_string(NpadBetweenMatrices) + "\n"
+  "#define maxLocalItems " + std::to_string(Nlocal[0]*Nlocal[1]) + "\n\n";
 
-  result = result + 
-"__kernel void cholBatch(\n"
+if(allowOverflow) {
+  result += "\n#define allowOverflow\n\n";
+} else {
+  result += "\n#define minDcolNcache Dcol\n" 
+  "#define minDcolm1Ncache Dcolm1\n\n";
+}
+  
+result += "__kernel void cholBatch(\n"
 "	__global " + typeString + " *A,\n" 
 "	__global " + typeString + " *diag\n"
 "){\n"
-
 
 //"const int colStart=0, colStop=;\n"
 "const int localIndex = get_local_id(0)*get_local_size(1) + get_local_id(1);\n"
@@ -67,41 +73,47 @@ std::string cholBatchKernelString( // V1
 " __local " + typeString + " diagLocal[Ncache];//local cache of diagonals\n"
 " __local " + typeString + " toAddLocal[maxLocalItems];\n"
 
+"	int Dcol, DcolNpad, Dcolm1;\n"
+"	int Drow, Dk, Dmatrix;\n";
 
-"	int Dcol, DcolNpad, Dcolm1, minDcolm1Ncache, minDcolNcache;\n"
-"	int Drow, Dk, Dmatrix, DmatrixWithPad;\n" +
+if(allowOverflow) {
+result += "	int minDcolm1Ncache, minDcolNcache;\n";
+}
 
-  typeString + " DL;\n" 
+result +=  typeString + " DL;\n" 
   "__local " +  typeString + " diagDcol;\n" 
-  "__global " + typeString + " *AHere, *diagHere;\n"
+  "__global " + typeString + " *AHere, *AHereDcol, *AHereDrow, *diagHere;\n"
 
 
 "for(Dmatrix = get_group_id(0); Dmatrix < Nmatrix; Dmatrix+= get_num_groups(0)){\n"
 
 "diagHere = &diag[Dmatrix*NpadDiag];\n"
-"DmatrixWithPad = Dmatrix*NpadBetweenMatrices;\n"
+"AHere = &A[Dmatrix*NpadBetweenMatrices];\n"
 
 
 "for(Dcol = colStart; Dcol < colEnd; Dcol++) {\n"
 
 "  DcolNpad = Dcol*Npad;\n"
 "  Dcolm1 = Dcol - 1;\n"
-"  AHere = &A[DmatrixWithPad + DcolNpad];\n"
+"  AHereDcol = &AHere[DcolNpad];\n"
+"\n#ifdef allowOverflow\n"
 "  minDcolNcache = min(Dcol, Ncache);\n"
 "  minDcolm1Ncache = min(Dcolm1, Ncache);\n"
-
+"#endif\n\n"
 // diagonals
 "  toAddLocal[localIndex]=0.0;\n"
-"  AHere = &A[DmatrixWithPad + DcolNpad];\n"
 "  for(Dk = localIndex; Dk < minDcolNcache; Dk += NlocalTotal) {\n"
 "    DL = AHere[Dk];\n"
 "    diagLocal[Dk] = diagHere[Dk] * DL;\n"// cached A[Dcol, 1:Dcol] D[1:Dcol]
 "    toAddLocal[localIndex] += diagLocal[Dk] * DL;\n"
 "  }\n\n" // Dk
+"\n#ifdef allowOverflow\n"
 "  for(; Dk < Ncache; Dk += NlocalTotal) {\n"
-"    DL = AHere[Dk];\n"
+"    DL = AHereDcol[Dk];\n"
 "    toAddLocal[localIndex] += diagHere[Dk] * DL * DL;\n"
 "  }\n\n" // Dk
+"\n#endif\n"
+
 
 // reduction on dimension 1
 "barrier(CLK_LOCAL_MEM_FENCE);\n"
@@ -118,7 +130,7 @@ std::string cholBatchKernelString( // V1
 "    toAddLocal[localIndex] +=  toAddLocal[Dk];\n"
 "  }\n" //Dk
 
-"  diagDcol = AHere[Dcol] - toAddLocal[localIndex];\n"
+"  diagDcol = AHereDcol[Dcol] - toAddLocal[localIndex];\n"
 "  diagHere[Dcol] = diagDcol;\n"
 "\n#ifdef diagToOne\n"
 "AHere[Dcol] = 1.0;\n"
@@ -129,16 +141,18 @@ std::string cholBatchKernelString( // V1
 
 "	for(Drow = Dcol+get_local_id(0)+1; Drow < N; Drow += get_local_size(0)) {\n"
 
-"  AHere = &A[DmatrixWithPad + Drow*Npad];\n"
+"  AHereDrow = &AHere[Drow*Npad];\n"
 "	 DL = 0.0;\n"
 
 "	 for(Dk = get_local_id(1); Dk < minDcolm1Ncache; Dk+=get_local_size(1)) {\n"
-"    DL += AHere[Dk] * diagLocal[Dk];\n"
+"    DL += AHereDrow[Dk] * diagLocal[Dk];\n"
 			// DL -= A[Drow + Dk * Npad] * A[Dcol + DkNpad] * diag[Dk];"
 "  }\n" // Dk
+"\n#ifdef allowOverflow\n"
 "	 for(; Dk < Dcolm1; Dk+=get_local_size(1)) {\n"
-"    DL += AHere[Dk] * diagHere[Dk] * A[DmatrixWithPad + DcolNpad + Dk];\n"
+"    DL += AHereDrow[Dk] * diagHere[Dk] * AHereDcol[Dk];\n"
 "  }\n" // Dk
+"\n#endif\n"
 "  toAddLocal[localIndex] = DL;\n"
 
 // local reduction
@@ -148,14 +162,13 @@ std::string cholBatchKernelString( // V1
 "  for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
 "    DL +=  toAddLocal[localIndex + Dk];\n"
 "  }\n" //Dk
-"  AHere[Dcol] = (AHere[Dcol] - DL)/diagDcol;\n"
-"}\n" //get_local_id(1) == 0
+"  AHereDrow[Dcol] = (AHereDrow[Dcol] - DL)/diagDcol;\n"
+"}//get_local_id(1) == 0\n" 
+"}//Drow\n" 
 
 "  barrier(CLK_GLOBAL_MEM_FENCE);\n"
-"}\n" // Dcol loop
-"}\n" // Dmatrix loop
-
-
+"} // Dcol loop\n"
+"} // Dmatrix loop\n"
 "}\n";
 return(result);
 }
@@ -178,14 +191,22 @@ int cholBatchVcl(
   D.size1(),
   A.size2() * A.internal_size2(),// NpadBetweenMatrices,
   NlocalCache, 
-  Nlocal);
+  Nlocal,
+  1);
 
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   viennacl::ocl::program & my_prog = ctx.add_program(cholClString, "my_kernel");
+  
+#ifdef DEBUG
+  
+  Rcpp::Rcout << cholClString << "\n\n";
+  
+#endif  
+  
   viennacl::ocl::kernel & cholKernel = my_prog.get_kernel("cholBatch");
-
+  
   if(Nlocal[1] != Nglobal[1]) {
-    Rf_warning("local and global work sizes should be identical for dimension 2")
+    Rf_warning("local and global work sizes should be identical for dimension 2");
   }
 
 // dimension 0 is cell, dimension 1 is matrix
@@ -198,12 +219,6 @@ int cholBatchVcl(
   // with opencl 2.0 can put this as a program-level variable
 //  int Ngroups1 = ceil(Nglobal[1]/Nlocal[1]);
 //  viennacl::matrix<T> finalReduction(Nglobal[0]*Nglobal[2]*Ngroups1);//size Nglobal[0]*Ngroups1*Nglobal[2]
-
-#ifdef DEBUG
-
-Rcpp::Rcout << cholClString << "\n\n";
-
-#endif  
 
   viennacl::ocl::enqueue(cholKernel(A, D));//,  2L));//A.size1() ));
 
