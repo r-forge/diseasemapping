@@ -105,7 +105,7 @@ if(gpuInfo()$maxAllocatableMem > 1e10) {
 z = vclVector(0, length=as.integer(prod(Nglobal)*NperItem), type="double")
 length(z)
 
-system.time(junk <- runif(length(z)))
+system.time(junk <- rnorm(length(z)))
 system.time(streams <- clRNG::rnumberGpu(z, streams=streams, 
                                          workgroupSize = Nglobal,
                                          localSize = c(2,2),
