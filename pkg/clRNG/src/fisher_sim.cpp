@@ -89,8 +89,8 @@ std::string FisherSimkernelString(int NR, int NC) {
 "     y = x;\n"
 "     nll = nlm;\n"
 
-#ifdef UNDEF
-" do {\n"     /* Increment entry in row L, column M  COMMENTED OUT!!*/
+
+" //do {\n"     /* Increment entry in row L, column M  COMMENTED OUT!!*/
 " j = (int)((id - nlm) * (double)(ia - nlm));\n"
 " lsp = (j == 0);\n"
 " if (!lsp) {\n"
@@ -122,8 +122,8 @@ std::string FisherSimkernelString(int NR, int NC) {
 " } while (!lsm);\n" // do 2
 //#endif
 
-" } while (!lsp);\n" // do increment entry COMMENTED OUT!!
-#endif
+" //} while (!lsp);\n" // do increment entry COMMENTED OUT!!
+
 
 " dummy = sumprb * clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_T;\n"
 
