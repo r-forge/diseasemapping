@@ -74,7 +74,7 @@ std::string FisherSimkernelString(int NR, int NC) {
 "    dummy = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_T;\n"
 
 " Diter = 0;\n"
-"     do { \n"// Outer Loop 
+"     do { \n"// loop 1
 " Diter ++;\n"
 /* Compute conditional expected value of MATRIX(L, M) */
 "     nlm = (int)(ia * (id / (double) ie) + 0.5);\n"
@@ -90,7 +90,7 @@ std::string FisherSimkernelString(int NR, int NC) {
 "     nll = nlm;\n"
 
 
-" //do {\n"     /* Increment entry in row L, column M  COMMENTED OUT!!*/
+" //do {\n" // loop 2
 " j = (int)((id - nlm) * (double)(ia - nlm));\n"
 " lsp = (j == 0);\n"
 " if (!lsp) {\n"
@@ -102,7 +102,7 @@ std::string FisherSimkernelString(int NR, int NC) {
 " }\n" // if !lsp
 
 //#ifdef UNDEF  
-" do {\n"  // do 2 
+" //do {\n"  // loop 3 
 //  " R_CheckUserInterrupt();\n"
 
 /* Decrement entry in row L, column M */
@@ -118,8 +118,8 @@ std::string FisherSimkernelString(int NR, int NC) {
 "  }\n" // if sumprb
 "  if (!lsp)\n"
 "  break;\n"/* to while (!lsp) */
-" }\n" // if !lsp
-" } while (!lsm);\n" // do 2
+"// }\n" // loop 3
+" //} while (!lsm);\n" // do loop 2
 //#endif
 
 " //} while (!lsp);\n" // do increment entry COMMENTED OUT!!
