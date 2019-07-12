@@ -24,8 +24,8 @@ std::string FisherSimkernelString(int NR, int NC) {
   "	__global double *results,\n" // extra para
   "	__global clrngMrg31k3pHostStream* streams"
   ") { \n"
-  "	  int jwork["+ std::to_string(NR) + "];\n"  // IS THERE ENOUGH PRIVATE MEMORY TO DO THIS FOR LARGE NR?
-  "	  int matrix["+ std::to_string(NR*NC) + "];\n"
+  "	  local int jwork["+ std::to_string(NR) + "];\n"  // IS THERE ENOUGH PRIVATE MEMORY TO DO THIS FOR LARGE NR?
+  "	  local int matrix["+ std::to_string(NR*NC) + "];\n"
   "   int i, t, u, iter, D; \n"  //original j changed to t, ii changed to u, added a D here
   "   double ans;\n"
   "   const int size = get_global_size(1)*get_global_size(0);\n"
@@ -74,7 +74,7 @@ std::string FisherSimkernelString(int NR, int NC) {
 "    dummy = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_T;\n"
 
 
-"     //do { \n"// Outer Loop  COMMENTED OUT
+"     do { \n"// Outer Loop  COMMENTED OUT
 /* Compute conditional expected value of MATRIX(L, M) */
 "     nlm = (int)(ia * (id / (double) ie) + 0.5);\n"
 "     x = exp(fact[ia] + fact[ib] + fact[ic] + fact[id]- fact[ie] - fact[nlm]\n"
@@ -88,7 +88,7 @@ std::string FisherSimkernelString(int NR, int NC) {
 "     y = x;\n"
 "     nll = nlm;\n"
 
-" //do {\n"     /* Increment entry in row L, column M  COMMENTED OUT!!*/
+" do {\n"     /* Increment entry in row L, column M  COMMENTED OUT!!*/
 " j = (int)((id - nlm) * (double)(ia - nlm));\n"
 " lsp = (j == 0);\n"
 " if (!lsp) {\n"
@@ -120,11 +120,11 @@ std::string FisherSimkernelString(int NR, int NC) {
 " } while (!lsm);\n" // do 2
 //#endif
 
-"// } while (!lsp);\n" // do increment entry COMMENTED OUT!!
+" } while (!lsp);\n" // do increment entry COMMENTED OUT!!
 
 " dummy = sumprb * clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_T;\n"
 
-" //} while (1);\n"  // do outer loop  !! COMMENTED OUT!
+" } while (1);\n"  // do outer loop  !! COMMENTED OUT!
 
 "L160:\n"
 "matrix[l + m * nrow] = nlm;\n"
@@ -142,13 +142,13 @@ std::string FisherSimkernelString(int NR, int NC) {
 
 "ans = 0.;\n"
 "for (t = 0; t < ncol; ++t) {\n"
-"for (i = 0, u = j * nrow; i < nrow;  i++, u++)\n"
+"for (i = 0, u = j * nrow; i < nrow;  i++, u++) {\n"
 "ans -= fact[matrix[u]];\n"
+"}\n"  // for i
 "}\n"  // for t
 
 
-"results[D] = D;\n"    // results[D]=D;
-
+"results[D] = ans;\n"    // results[D]=D;
 
 "}\n" // for D loop
 "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[index], &private_stream_d);\n"
@@ -211,6 +211,8 @@ void fisher_sim_gpu(
   
   fisher_sim.global_work_size(0, numWorkItems[0]);
   fisher_sim.global_work_size(1, numWorkItems[1]);
+  fisher_sim.local_work_size(0, numWorkItems[0]);
+  fisher_sim.local_work_size(1, numWorkItems[1]);
   
   
 
@@ -230,7 +232,7 @@ void fisher_sim_gpu(
   int i;
   for(i = 2; i <= n; i++) fact(i) = fact(i - 1) + log(i);
   
-
+#ifdef UNDEF
   viennacl::ocl::enqueue(fisher_sim(
     nr, nc, 
     sr, sc, 
@@ -241,7 +243,7 @@ void fisher_sim_gpu(
     ans,
     bufIn
     ) ); //streams, out, vector_size
-
+#endif
   // copy streams back to cpu
   viennacl::backend::memory_read(bufIn.handle(), 0, streamBufferSize, streams);
   //#endif 

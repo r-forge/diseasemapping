@@ -119,9 +119,10 @@ zVec = as.vector(z)
 
 
 hist(zVec,breaks=40)
+
+
+qqnorm(zVec)
 ```
-
-
 
 
 
