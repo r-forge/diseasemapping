@@ -89,8 +89,8 @@ std::string FisherSimkernelString(int NR, int NC) {
 "     y = x;\n"
 "     nll = nlm;\n"
 
-#ifdef UNDEF
-" //do {\n" // loop 2
+
+" //do {\n" // loop 2 !!
 " j = (int)((id - nlm) * (double)(ia - nlm));\n"
 " lsp = (j == 0);\n"
 " if (!lsp) {\n"
@@ -100,14 +100,14 @@ std::string FisherSimkernelString(int NR, int NC) {
 " if (sumprb >= dummy)\n"
 " goto L160;\n"
 " }\n" // if !lsp
-
-//#ifdef UNDEF  
-" //do {\n"  // loop 3 
+#ifdef UNDEF
+" //do {\n"  // loop 3  !!!
 //  " R_CheckUserInterrupt();\n"
 
 /* Decrement entry in row L, column M */
 " j = (int)(nll * (double)(ii + nll));\n"
 " lsm = (j == 0);\n"
+
 " if (!lsm) {\n"
 " --nll;\n"
 " y = y * j / ((double) (id - nll) * (ia - nll));\n"
@@ -116,14 +116,15 @@ std::string FisherSimkernelString(int NR, int NC) {
 "  nlm = nll;\n"
 "  goto L160;\n"
 "  }\n" // if sumprb
-"  if (!lsp)\n"
-"  break;\n"/* to while (!lsp) */
+//"  if (!lsp)\n" !!
+//"  break;\n"/* to while (!lsp) */!!
 "  }\n" // if !lsm
-" //} while (!lsm);\n" // do loop 3
-//#endif
-
-" //} while (!lsp);\n" // do loop 2
 #endif
+" //} while (!lsm);\n" // do loop 3 !!!
+
+
+" //} while (!lsp);\n" // do loop 2 !!!
+
 
 " dummy = sumprb * clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_T;\n"
 
