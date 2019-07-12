@@ -33,7 +33,7 @@ std::string FisherSimkernelString(int NR, int NC) {
   "   clrngMrg31k3pStream private_stream_d;\n"
   "   clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[index]);\n"
   
-  "	  int j, l, m, ia, ib, ic, jc, id, ie, ii, nll, nlm, nr_1, nc_1;\n"
+  "	  int j, l, m, ia, ib, ic, jc, id, ie, ii, nll, nlm, nr_1, nc_1, Diter;\n"
   "   double x, y, dummy, sumprb;\n"
   "   bool lsm, lsp;\n"
   
@@ -73,14 +73,15 @@ std::string FisherSimkernelString(int NR, int NC) {
 /* Generate pseudo-random number */
 "    dummy = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_T;\n"
 
-
-"     do { \n"// Outer Loop  COMMENTED OUT
+" Diter = 0;\n"
+"     do { \n"// Outer Loop 
+" Diter ++;\n"
 /* Compute conditional expected value of MATRIX(L, M) */
 "     nlm = (int)(ia * (id / (double) ie) + 0.5);\n"
 "     x = exp(fact[ia] + fact[ib] + fact[ic] + fact[id]- fact[ie] - fact[nlm]\n"
 "     - fact[id - nlm] - fact[ia - nlm] - fact[ii + nlm]);\n"
-"     if (x >= dummy)\n"
-"     break;\n"
+"     if (x >= dummy | Diter > 100) {\n"
+"     break;\n}\n"
 //  "     if (x == 0.) \n"       /* MM: I haven't seen this anymore */
 //  "     error(_(\"rcont2 [%d,%d]: exp underflow to 0; algorithm failure\"), l, m);\n"
 
@@ -88,6 +89,7 @@ std::string FisherSimkernelString(int NR, int NC) {
 "     y = x;\n"
 "     nll = nlm;\n"
 
+#ifdef UNDEF
 " do {\n"     /* Increment entry in row L, column M  COMMENTED OUT!!*/
 " j = (int)((id - nlm) * (double)(ia - nlm));\n"
 " lsp = (j == 0);\n"
@@ -121,11 +123,11 @@ std::string FisherSimkernelString(int NR, int NC) {
 //#endif
 
 " } while (!lsp);\n" // do increment entry COMMENTED OUT!!
+#endif
 
 " dummy = sumprb * clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_T;\n"
 
 " } while (1);\n"  // do outer loop  !! COMMENTED OUT!
-
 "L160:\n"
 "matrix[l + m * nrow] = nlm;\n"
 "ia -= nlm;\n"
@@ -211,8 +213,8 @@ void fisher_sim_gpu(
   
   fisher_sim.global_work_size(0, numWorkItems[0]);
   fisher_sim.global_work_size(1, numWorkItems[1]);
-  fisher_sim.local_work_size(0, numWorkItems[0]);
-  fisher_sim.local_work_size(1, numWorkItems[1]);
+  fisher_sim.local_work_size(0, 1L);
+  fisher_sim.local_work_size(1, 1L);
   
   
 
@@ -232,8 +234,8 @@ void fisher_sim_gpu(
   int i;
   for(i = 2; i <= n; i++) fact(i) = fact(i - 1) + log(i);
   
-#ifdef UNDEF
-  viennacl::ocl::enqueue(fisher_sim(
+
+    viennacl::ocl::enqueue(fisher_sim(
     nr, nc, 
     sr, sc, 
     n, vsize, 
@@ -243,8 +245,8 @@ void fisher_sim_gpu(
     ans,
     bufIn
     ) ); //streams, out, vector_size
-#endif
-  // copy streams back to cpu
+
+    // copy streams back to cpu
   viennacl::backend::memory_read(bufIn.handle(), 0, streamBufferSize, streams);
   //#endif 
   // then transfer to R object, //return streams to R 
