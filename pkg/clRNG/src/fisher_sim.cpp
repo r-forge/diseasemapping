@@ -99,7 +99,7 @@ std::string FisherSimkernelString(int NR, int NC) {
 " goto L160;\n"
 " }\n" // if !lsp
 
-#ifdef UNDEF  
+//#ifdef UNDEF  
 " do {\n"  // do 2 
 //  " R_CheckUserInterrupt();\n"
 
@@ -118,7 +118,7 @@ std::string FisherSimkernelString(int NR, int NC) {
 "  break;\n"/* to while (!lsp) */
 " }\n" // if !lsp
 " } while (!lsm);\n" // do 2
-#endif
+//#endif
 
 "// } while (!lsp);\n" // do increment entry COMMENTED OUT!!
 
@@ -147,7 +147,7 @@ std::string FisherSimkernelString(int NR, int NC) {
 "}\n"  // for t
 
 
-"results[D] = ans;\n"
+"results[D] = D;\n"    // results[D]=D;
 
 
 "}\n" // for D loop
@@ -173,7 +173,7 @@ void fisher_sim_gpu(
   
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   
-  std::string random_kernel_string = mrg31k3pTypeString<double>();
+  std::string random_kernel_string = mrg31k3pTypeString<double>(); 
   std::string kernel_string= random_kernel_string + FisherSimkernelString(nr, nc);
 
 #ifdef DEBUG

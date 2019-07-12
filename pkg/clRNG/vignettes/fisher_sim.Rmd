@@ -30,7 +30,7 @@ length(z)
 
 clRNG::fisher_simGpu(x,y,z,streams=streams)
 
-as.vector(z)[1:3]
+as.vector(z)[1:30]
 
 ```
 
