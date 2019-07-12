@@ -100,13 +100,13 @@ std::string FisherSimkernelString(int NR, int NC) {
 " if (sumprb >= dummy)\n"
 " goto L160;\n"
 " }\n" // if !lsp
-#ifdef UNDEF
 " //do {\n"  // loop 3  !!!
 //  " R_CheckUserInterrupt();\n"
 
 /* Decrement entry in row L, column M */
-" j = (int)(nll * (double)(ii + nll));\n"
-" lsm = (j == 0);\n"
+//" j = (int)(nll * (double)(ii + nll));\n"
+//" lsm = (j == 0);\n"
+#ifdef UNDEF
 
 " if (!lsm) {\n"
 " --nll;\n"
