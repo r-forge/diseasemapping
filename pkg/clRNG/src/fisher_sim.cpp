@@ -37,7 +37,7 @@ std::string FisherSimkernelString(int NR, int NC) {
   "   double x, y, dummy, sumprb;\n"
   "   bool lsm, lsp;\n"
   
-  
+"if(index == 0) {"  
   "   for(D = index; D < vsize; D += size) {\n"
   
   
@@ -80,7 +80,7 @@ std::string FisherSimkernelString(int NR, int NC) {
 "     nlm = (int)(ia * (id / (double) ie) + 0.5);\n"
 "     x = exp(fact[ia] + fact[ib] + fact[ic] + fact[id]- fact[ie] - fact[nlm]\n"
 "     - fact[id - nlm] - fact[ia - nlm] - fact[ii + nlm]);\n"
-"     if (x >= dummy | Diter > 100) {\n"
+"     if (x >= dummy | Diter > 10) {\n"
 "     break;\n}\n"
 //  "     if (x == 0.) \n"       /* MM: I haven't seen this anymore */
 //  "     error(_(\"rcont2 [%d,%d]: exp underflow to 0; algorithm failure\"), l, m);\n"
@@ -104,7 +104,8 @@ std::string FisherSimkernelString(int NR, int NC) {
 //  " R_CheckUserInterrupt();\n"
 
 /* Decrement entry in row L, column M */
-" ii=0;\nj = ii;\n"//"(int)(nll * (double)(ii + nll));\n" !!!! DOESNT WORK
+"results[Diter] = nll;\n"    // results[D]=D;
+//" j = ii;\n"//"(int)(nll * (double)(ii + nll));\n" !!!! DOESNT WORK
 " lsm = (j == 0);\n"
 #ifdef UNDEF
 
@@ -154,6 +155,8 @@ std::string FisherSimkernelString(int NR, int NC) {
 "results[D] = ans;\n"    // results[D]=D;
 
 "}\n" // for D loop
+"}\n" // if index 0
+
 "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[index], &private_stream_d);\n"
 "}\n" ;
  return(result); 
