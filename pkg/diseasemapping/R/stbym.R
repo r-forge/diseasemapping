@@ -125,20 +125,21 @@ stbym = function(
     posterior = fitStFullRes$marginals$'SD for regionST',
     summarySpaceTime = fitStFullRes$summary)
 
-stMedianMat = unlist(fromBym$inla$summary.random$regionST)
-stMedian = array(stMedianMat, c(
+stMedianMat = fromBym$inla$summary.random$regionST
+stMedian = array(unlist(stMedianMat), 
+  c(
   length(adjMat), 
   2, 
   nlevels(timeStFac),
-  ncol(stMedian)) )
+  ncol(stMedianMat)) )
 
 dimnames(stMedian) = list(
   region = attributes(adjMat)$region.id,
   effect = c('bym','indep'),
   time = levels(timeStFac),
-  quantile = colnames(fromBym$inla$summary.random[['regionST']])
+  quantile = colnames(stMedianMat)
   )
-stMedian = stMedian[,'bym',,setdiff(dimnames(stMedian)[[4]], c('ID','mode','kld'))]
+stMedian = stMedian[,'bym',,setdiff(dimnames(stMedian)[[4]], 'ID')]
   
 fromBym$inla$summary.random$regionST = stMedian
 
