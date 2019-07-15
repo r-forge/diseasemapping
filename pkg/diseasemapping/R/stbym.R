@@ -54,7 +54,7 @@ result$stMedian = stMedian
 }
 
 stbym = function(
-    formula, data, adjMat, region.id, time.id, ...
+    formula, data, adjMat, region.id, time.id, prior, ...
     ) {
 
   if(length(region.id) == 1) region.id = c(data=region.id, spatial=region.id)
