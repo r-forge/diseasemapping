@@ -127,8 +127,9 @@ stbym = function(
 
 stMedian = fromBym$inla$summary.random[['regionST']] 
 stMedian = array(stMedian, c(
-  length(adjMat), 2, nrow(stMedian)/(2*length(adjMat)),
+  length(adjMat), 2, nlevels(timeStFac),
   ncol(stMedian)) )
+
 dimnames(stMedian) = list(
   region = attributes(adjMat)$region.id,
   effect = c('bym','indep'),
