@@ -139,5 +139,5 @@ stMedian = stMedian[,'bym',,setdiff(dimnames(stMedian)[[4]], 'ID')]
   
 fromBym$inla$summary.random$regionST = stMedian
 
-fromBYM
+fromBym
 }
