@@ -17,20 +17,19 @@ Create some streams
 x = vclVector(5,5,type="integer")
 y = vclVector(4,6,type="integer")
 
-Nglobal = 256
+Nglobal = 4
+NperItem = 2
+
 streams = clRNG:::cpp_mrg31k3pCreateStreams(Nglobal)
-#t(streams)
-if(gpuInfo()$maxAllocatableMem > 1e10) {
-  NperItem = 100
-} else {
-  NperItem = 100
-}
-z = vclVector(length=as.integer(Nglobal*NperItem), type="double")
+streamsOrig = as.matrix(streams)
+
+z = vclVector(length=as.integer(Nglobal*NperItem*3), type="double")
 length(z)
 
 clRNG::fisher_simGpu(x,y,z,streams=streams)
 
-as.vector(z)[1:30]
-
+matrix(as.vector(z), ncol=Nglobal, byrow=TRUE)
+t(streamsOrig)
+t(streams)
 ```
 
