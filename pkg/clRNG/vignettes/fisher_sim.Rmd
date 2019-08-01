@@ -12,24 +12,39 @@
 library('gpuR')
 ```
 
+```{r memoryAvailable, echo=TRUE}
+gpuInfo()$deviceName
+gpuInfo()$maxAllocatableMem/(1024^3)
+```
+
+
 Create some streams
 ```{r test}
-x = vclVector(5,5,type="integer")
-y = vclVector(4,6,type="integer")
 
-Nglobal = 4
-NperItem = 2
+rowSums = vclVector(5,5,type="integer")
+colSums = vclVector(4,6,type="integer")
 
-streams = clRNG:::cpp_mrg31k3pCreateStreams(Nglobal)
-streamsOrig = as.matrix(streams)
+Nglobal = c(4,2)
+NperItem = 12
 
-z = vclVector(length=as.integer(Nglobal*NperItem*3), type="double")
+streams = clRNG:::cpp_mrg31k3pCreateStreams(prod(Nglobal))
+
+z = vclVector(length=as.integer(prod(Nglobal)*NperItem), type="double")
 length(z)
 
-clRNG::fisher_simGpu(x,y,z,streams=streams)
 
-matrix(as.vector(z), ncol=Nglobal, byrow=TRUE)
-t(streamsOrig)
-t(streams)
+#clRNG::fisher_simGpu(x,y,z, streams, c(2L, 2L))
+stuff = clRNG:::cpp_fisher_sim_gpu(rowSums, colSums, z, 
+	#extraR, extraX, 
+	streams, as.integer(Nglobal))
+
+
+matrix(as.vector(z), ncol=prod(Nglobal), byrow=TRUE)
+
+
+t(as.matrix(streams))
+
+hist(as.vector(z))
+
 ```
 

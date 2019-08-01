@@ -14,7 +14,7 @@
 fisher_simGpu=function(
   sr, ##marginal row total 
   sc, ##marginal column total
-  x,## the vector to stall test statistics
+  x,## the vector to stall test statistics,
   streams, 
   workgroupSize){
   

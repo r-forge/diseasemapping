@@ -1,4 +1,4 @@
-#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+//#pragma OPENCL EXTENSION cl_khr_fp64 : enable
 
 #include <clRNG/clRNG.h>
 #include <Rcpp.h>
@@ -10,3 +10,6 @@
 #include "viennacl/linalg/sum.hpp"
 #include "viennacl/ocl/backend.hpp"
 
+
+template <typename T> std::string openclTypeString();
+template <typename T> int sizeOfReal();

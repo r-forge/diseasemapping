@@ -1,162 +1,227 @@
-#include <CL/fisher_sim.hpp>   
+//#include <CL/fisher_sim.hpp>   
 #include "random_number.hpp"
 
-#define DEBUG
+//#define DEBUG
 
 using namespace Rcpp;
 using namespace viennacl;	
 using namespace viennacl::linalg;
 
 
-#include <string>
-
+// adapted from https://github.com/wch/r-source/blob/HEAD/src/library/stats/src/rcont.c
+// https://github.com/wch/r-source/blob/HEAD/src/library/stats/src/chisqsim.c
+template <typename T> 
 std::string FisherSimkernelString(int NR, int NC) { 
-  std::string result = 
-  "\n#define mrg31k3p_NORM_cl_T  4.656612873077392578125e-10\n\n"
-  "\n\n__kernel void fisher_sim_gpu(\n"
-  "   const int nrow,\n"
-  "	  const int ncol,\n"
+  
+  std::string typeString = openclTypeString<T>();
+  std::string result = mrg31k3pTypeString<T>(); 
+
+  
+  result += "\n"
+  "\n#define MAXITER 10\n"
+  "#define nrow " + std::to_string(NR) + "\n"
+  "#define ncol " + std::to_string(NC) + "\n"
+  "#define nr_1  " + std::to_string(NR - 1) + "\n"
+  "#define nc_1 " + std::to_string(NC - 1) + "\n"
+  "#define nc_1nrow " + std::to_string((NC - 1) * NR) + "\n"
+  "#define nrowncol " + std::to_string(NR*NC) + "\n"
+  "\n__kernel void fisher_sim_gpu(\n"
+
+  //  "   const int nrow,\n"
+//  "	  const int ncol,\n"
   "   __global int *nrowt, \n"
   "   __global int *ncolt, \n"
   "   const int n, \n" //ntotal
   "	  const int vsize,\n" //extra para
-  "	__global double *fact,\n"
-  "	__global double *results,\n" // extra para
+  "	__global  " + typeString + "  *fact,\n"
+  "	__global  " + typeString + "  *results,\n" // fisher log p
+#ifdef DEBUGEXTRA  
+  "	__global  " + typeString + "  *extraR,\n" // random numbers
+  "	__global  " + typeString + "  *extraX,\n" // x statistics
+#endif  
   "	__global clrngMrg31k3pHostStream* streams"
-  ") { \n"
-  "	  local int jwork["+ std::to_string(NR) + "];\n"  // IS THERE ENOUGH PRIVATE MEMORY TO DO THIS FOR LARGE NR?
-  "	  local int matrix["+ std::to_string(NR*NC) + "];\n"
+  ") { \n\n"
+  "	  local int jwork[ncol];\n"
+  "	  local int matrix[nrowncol];\n"
   "   int i, t, u, iter, D; \n"  //original j changed to t, ii changed to u, added a D here
-  "   double ans;\n"
-  "   const int size = get_global_size(1)*get_global_size(0);\n"
-  "   int index=get_global_id(1)*get_global_size(0) + get_global_id(0);\n"
+  "   " + typeString + "  ans;\n"
+  "   const int globalSize = get_global_size(1)*get_global_size(0);\n"
+  "   const int index=get_global_id(1)*get_global_size(0) + get_global_id(0);\n"
+  
+  "	  local int jjj, l, m, ia, ib, ic, jc, id, ie, ii, nll, nlm;\n"
+  "   local " + typeString + " x, y, dummy, sumprb;\n"
+  "   bool lsm, lsp;\n\n"
+  "   int Diter, Diter2, Diter3, goTo160;\n"
+
   "   clrngMrg31k3pStream private_stream_d;\n"
-  "   clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[index]);\n"
-  
-  "	  int j, l, m, ia, ib, ic, jc, id, ie, ii, nll, nlm, nr_1, nc_1, Diter;\n"
-  "   double x, y, dummy, sumprb;\n"
-  "   bool lsm, lsp;\n"
-  
-"if(index == 0) {"  
-  "   for(D = index; D < vsize; D += size) {\n"
+  "   clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[index]);\n\n"
   
   
-  "      nr_1 = nrow - 1;\n"
-  "      nc_1 = ncol - 1;\n"
-  "      ib = 0;\n" /* -Wall */
+"   for(D = index; D < vsize; D += globalSize) {\n"
 
+  
+"      ib = 0;\n" /* -Wall */
+  
 /* Construct random matrix */
-"       for (j = 0; j < nc_1; ++j)\n"
-"	      jwork[j] = ncolt[j];\n"
+"      for (jjj = 0; jjj < nc_1; ++jjj){\n"
+"	       jwork[jjj] = ncolt[jjj];\n"
+//"  extraR[jj + D*nrowncol*size+Diter*nrowncol*size*vsize]= jwork[jjj];"
+"      }\n"
 
-"       jc = n;\n"
+"      jc = n;\n"
 /* -----  matrix[ l, * ] ----- */
-"       for (l = 0; l < nr_1; ++l) {\n"
-"	    ia = nrowt[l];\n"
-"	    ic = jc;\n"
-"	    jc -= ia;\n"/* = n_tot - sum(nr[0:l]) */
+"      for (l = 0; l < nr_1; ++l) {\n"
+"	         ia = nrowt[l];\n"
+"	         ic = jc;\n"
+"	         jc -= ia;\n"/* = n_tot - sum(nr[0:l]) */
 
-"    for (m = 0; m < nc_1; ++m) {\n"
-"    id = jwork[m];\n"
-"    ie = ic;\n"
-"    ic -= id;\n"
-"    ib = ie - ia;\n"
-"    ii = ib - id;\n"
+"          for (m = 0; m < nc_1; ++m) {\n"
+"            id = jwork[m];\n"
+"            ie = ic;\n"
+"            ic -= id;\n"
+"            ib = ie - ia;\n"
+"            ii = ib - id;\n"
 
-"    if (ie == 0) {\n" /* Row [l,] is full, fill rest with zero entries */
-"       for (j = m; j < nc_1; ++j)\n"
-"       matrix[l + j * nrow] = 0;\n"
-"       ia = 0;\n"
-"       break;\n"
-"    }\n" // if ie
+"            if (ie == 0) {\n" /* Row [l,] is full, fill rest with zero entries */
+"              for (jjj = m; jjj < nc_1; ++jjj)\n"
+"                matrix[l + jjj * nrow] = 0;\n"
+"              ia = 0;\n"
+"              m = nc_1;// induce break of m loop\n"  
+#ifdef DEBUGEXTRA
+"     extraX[l + m*nrow + D*nrowncol+Diter*nrowncol*vsize]= -1.0;\n"
+#endif  
+// used to have "             break;\n" 
+"            } else {\n" // if ie not zero
 
 /* Generate pseudo-random number */
-"    dummy = clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_T;\n"
+"            dummy = mrg31k3p_NORM_cl * clrngMrg31k3pNextState(&private_stream_d.current);\n"
 
-" Diter = 0;\n"
-"     do { \n"// loop 1
-" Diter ++;\n"
+// LOOP 1
+"goTo160 = 0;\n"
+"Diter = 0;\n"
+"do { \n"
+"  Diter ++;\n"
 /* Compute conditional expected value of MATRIX(L, M) */
-"     nlm = (int)(ia * (id / (double) ie) + 0.5);\n"
+"     nlm = (int)(ia * (id / (" + typeString + ") ie) + 0.5);\n"
 "     x = exp(fact[ia] + fact[ib] + fact[ic] + fact[id]- fact[ie] - fact[nlm]\n"
-"     - fact[id - nlm] - fact[ia - nlm] - fact[ii + nlm]);\n"
-"     if (x >= dummy | Diter > 10) {\n"
-"     break;\n}\n"
-//  "     if (x == 0.) \n"       /* MM: I haven't seen this anymore */
-//  "     error(_(\"rcont2 [%d,%d]: exp underflow to 0; algorithm failure\"), l, m);\n"
+"         - fact[id - nlm] - fact[ia - nlm] - fact[ii + nlm]);\n"
+// l is row, m column
+#ifdef DEBUGEXTRA
+"     extraX[l + m*nrow + D*nrowncol+Diter*nrowncol*vsize]= x;\n"
+#endif  
+
+"     if (x >= dummy) {\n"
+"        break;\n"
+"     }\n" // break loop 1
 
 "     sumprb = x;\n"
 "     y = x;\n"
 "     nll = nlm;\n"
 
-
-" //do {\n" // loop 2 !!
-" j = (int)((id - nlm) * (double)(ia - nlm));\n"
-" lsp = (j == 0);\n"
+ // LOOP 2
+" Diter2 = 0;\n"
+" do {\n"
+" Diter2 ++;\n"
+"// j = (int)((id - nlm) * (" + typeString + ")(ia - nlm));\n"
+" jjj=(int)((id - nlm) * (" + typeString + ")(ia - nlm));\n"
+" lsp = (jjj == 0);\n"
 " if (!lsp) {\n"
-" ++nlm;\n"
-" x = x * j / ((double) nlm * (ii + nlm));\n"
-" sumprb += x;\n"
-" if (sumprb >= dummy)\n"
-" goto L160;\n"
+"   ++nlm;\n"
+"   x = x * jjj / ((" + typeString + ") nlm * (ii + nlm));\n"
+"   sumprb += x;\n"
+"   if (sumprb >= dummy) {\n"
+//"     goto L160;\n"
+"     goTo160 = 1;\n"
+"   }\n"
 " }\n" // if !lsp
-" //do {\n"  // loop 3  !!!
-//  " R_CheckUserInterrupt();\n"
+" if(goTo160) {"
+"    break;\n" // break loop 2
+" }\n"
 
+
+// LOOP 3
+" Diter3 = 0;\n"
+" do {\n"  
+" Diter3 ++;\n"
 /* Decrement entry in row L, column M */
-"results[Diter] = nll;\n"    // results[D]=D;
-//" j = ii;\n"//"(int)(nll * (double)(ii + nll));\n" !!!! DOESNT WORK
-" lsm = (j == 0);\n"
-#ifdef UNDEF
+" jjj = (int)(nll * (" + typeString + ")(ii + nll));\n"  
+" lsm = (jjj == 0);\n"
 
 " if (!lsm) {\n"
 " --nll;\n"
-" y = y * j / ((double) (id - nll) * (ia - nll));\n"
+" y = y * jjj / ((" + typeString + ") (id - nll) * (ia - nll));\n"
 " sumprb += y;\n"
 "  if (sumprb >= dummy) {\n"
 "  nlm = nll;\n"
-"  goto L160;\n"
+//"  goto L160;\n"
+"    goTo160 = 1;\n"
 "  }\n" // if sumprb
-//"  if (!lsp)\n" !!
-//"  break;\n"/* to while (!lsp) */!!
+"  if (!lsp)\n" 
+"    break;\n" // to while (!lsp) loop 3
 "  }\n" // if !lsm
-#endif
-" //} while (!lsm);\n" // do loop 3 !!!
+" } while (!lsm & (Diter3 < MAXITER) & (!goTo160) );\n" // do loop 3 !!!
+// END LOOP 3
 
 
-" //} while (!lsp);\n" // do loop 2 !!!
+
+" } while (!lsp & (Diter2 < MAXITER) & (!goTo160));\n" // do loop 2 !!! 
+// END LOOP 2
+
+//" dummy = sumprb * mrg31k3p_NORM_cl * clrngMrg31k3pNextState(&private_stream_d.current);\n"
+//" extraR[D + Diter*vsize] = dummy;\n"    
 
 
-" dummy = sumprb * clrngMrg31k3pNextState(&private_stream_d.current) * mrg31k3p_NORM_cl_T;\n"
-
-" } while (1);\n"  // do outer loop  !! COMMENTED OUT!
-"L160:\n"
-"matrix[l + m * nrow] = nlm;\n"
-"ia -= nlm;\n"
-"jwork[m] -= nlm;\n"
-"}\n" // for m
-"matrix[l + nc_1 * nrow] = ia;\n"/* last column in row l */
-"}\n" // for l
-
-"for (m = 0; m < nc_1; ++m)\n"
-"matrix[nr_1 + m * nrow] = jwork[m];\n"
-
-"matrix[nr_1 + nc_1 * nrow] = ib - matrix[nr_1 + (nc_1-1) * nrow ];\n"
+" } while (!goTo160 &  (Diter < MAXITER) );\n"  // do loop 1
+// END LOOP 1
 
 
-"ans = 0.;\n"
-"for (t = 0; t < ncol; ++t) {\n"
-"for (i = 0, u = j * nrow; i < nrow;  i++, u++) {\n"
-"ans -= fact[matrix[u]];\n"
-"}\n"  // for i
-"}\n"  // for t
+// still in M loop
+//"L160:\n"
+"        matrix[l + m * nrow] = nlm;\n"
+"        ia -= nlm;\n"
+"        jwork[m] -= nlm;\n\n"
+
+"        }// IF ie not zero\n" 
+
+"     }// M LOOP\n" 
+//"     // originally was       matrix[l + nc_1 * nrow] = ia;\n"/* last column in row l */
+"     matrix[l + nc_1nrow] = ia;\n"/* last column in row l */
+"  }// L LOOP\n" 
+    /* Compute entries in last row of MATRIX */
+
+"  for (m = 0; m < nc_1; ++m) {\n"
+"    matrix[nr_1 + m * nrow] = jwork[m];\n"
+"  }\n"
+
+"  matrix[nr_1 + nc_1nrow] = ib - matrix[nr_1 + (nc_1-1) * nrow ];\n"
+// end of rcont2
+// now on fisher_sim
+#ifdef DEBUGEXTRA
+"      for (l = 0; l < nrow; ++l) {\n"
+"         for (m = 0; m < ncol; ++m) {\n"
+"  extraR[l + m*nrow + D*nrowncol]= matrix[nr_1 + m * nrow];\n"
+"}}\n"
+#endif  
+
+"  ans = 0.;\n"
+"  for (m = 0; m < ncol; ++m) {\n"
+"    for (l = 0,u=m*nrow; l < nrow;  l++, u++) {\n"
+"      ans -= fact[matrix[u]];\n"
+#ifdef DEBUGEXTRA
+"  extraR[u + D*nrowncol + 1*nrowncol*vsize]= ans;\n"
+"  extraR[u + D*nrowncol + 2*nrowncol*vsize]= fact[matrix[u]];\n"
+"  extraR[u + D*nrowncol + 3*nrowncol*vsize]= matrix[u];\n"
+"  extraR[u + D*nrowncol + 4*nrowncol*vsize]= u;\n"
+#endif  
+"    }\n"  // for l
+"  }\n\n"  // for m
 
 
-"results[D] = ans;\n"    // results[D]=D;
+
+"  results[D] = ans;\n"    
+
 
 "}\n" // for D loop
-"}\n" // if index 0
-
 "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[index], &private_stream_d);\n"
 "}\n" ;
  return(result); 
@@ -166,6 +231,8 @@ void fisher_sim_gpu(
     viennacl::vector_base<int> &sr, 
     viennacl::vector_base<int> &sc,
     viennacl::vector_base<double> &ans, 
+//    viennacl::vector_base<double> &extraR, 
+//    viennacl::vector_base<double> &extraX, 
     Rcpp::IntegerMatrix streamsR, 
     Rcpp::IntegerVector numWorkItems,
     int ctx_id){
@@ -179,8 +246,7 @@ void fisher_sim_gpu(
   
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   
-  std::string random_kernel_string = mrg31k3pTypeString<double>(); 
-  std::string kernel_string= random_kernel_string + FisherSimkernelString(nr, nc);
+  std::string kernel_string= FisherSimkernelString<double>(nr, nc);
 
 #ifdef DEBUG
   Rcpp::Rcout << kernel_string << "\n\n";
@@ -211,6 +277,7 @@ void fisher_sim_gpu(
   ") { \n"
   "   double ans;\n"
   "};\n";*/
+
   viennacl::ocl::program &my_prog = ctx.add_program(kernel_string, "my_kernel");
   // get compiled kernel function
   viennacl::ocl::kernel &fisher_sim = my_prog.get_kernel("fisher_sim_gpu");
@@ -220,10 +287,6 @@ void fisher_sim_gpu(
   fisher_sim.local_work_size(0, 1L);
   fisher_sim.local_work_size(1, 1L);
   
-  
-
-  
-
 
   
 //  viennacl::vector_base<int> observed = viennacl::vector_base<int>(nr*nc, ctx); 
@@ -236,21 +299,24 @@ void fisher_sim_gpu(
   fact(0) = 0.;
   fact(1) = 0.;
   int i;
-  for(i = 2; i <= n; i++) fact(i) = fact(i - 1) + log(i);
-  
+  for(i = 2; i <= n; i++) {
+    fact(i) = fact(i - 1) + log(i);
+  }
+
 
     viennacl::ocl::enqueue(fisher_sim(
-    nr, nc, 
+//    nr, nc, 
     sr, sc, 
     n, vsize, 
     //observed, 
     fact, 
     //jwork, 
     ans,
+//    extraR, extraX,
     bufIn
     ) ); //streams, out, vector_size
 
-    // copy streams back to cpu
+  // copy streams back to cpu
   viennacl::backend::memory_read(bufIn.handle(), 0, streamBufferSize, streams);
   //#endif 
   // then transfer to R object, //return streams to R 
@@ -258,6 +324,8 @@ void fisher_sim_gpu(
 }
 
 
+//    Rcpp::S4  extraRR,
+//    Rcpp::S4  extraXR,
 
 //[[Rcpp::export]]
 SEXP cpp_fisher_sim_gpu(
@@ -272,9 +340,15 @@ SEXP cpp_fisher_sim_gpu(
   std::shared_ptr<viennacl::vector_base<int> > sr = getVCLVecptr<int>(srR.slot("address"), 1, ctx_id);
   std::shared_ptr<viennacl::vector_base<int> > sc = getVCLVecptr<int>(scR.slot("address"), 1, ctx_id);
   std::shared_ptr<viennacl::vector_base<double> > ans = getVCLVecptr<double>(ansR.slot("address"), 1, ctx_id);
+#ifdef DEBUGEXTRA
+  std::shared_ptr<viennacl::vector_base<double> > extraR = getVCLVecptr<double>(extraRR.slot("address"), 1, ctx_id);
+  std::shared_ptr<viennacl::vector_base<double> > extraX = getVCLVecptr<double>(extraXR.slot("address"), 1, ctx_id);
+#endif
   
   
-  fisher_sim_gpu(*sr, *sc, *ans, streamsR, max_global_size, ctx_id);
+  fisher_sim_gpu(*sr, *sc, *ans, 
+//    *extraR, *extraX, 
+    streamsR, max_global_size, ctx_id);
   
   return (ansR);
 }
