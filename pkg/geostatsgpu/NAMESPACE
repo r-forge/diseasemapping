@@ -2,5 +2,6 @@
 
 export(luGpu)
 export(maternGpu)
+export(multiplyLowerBatchBackend)
 import(gpuR)
 useDynLib(geostatsgpu)

@@ -25,6 +25,21 @@ cpp_maternGpuF <- function(varR, coordsR, DofLDLR, param, form, numWorkItems, nu
     .Call('_geostatsgpu_cpp_maternGpuF', PACKAGE = 'geostatsgpu', varR, coordsR, DofLDLR, param, form, numWorkItems, numLocalItems)
 }
 
+#' Multiply lower triangular matrices
+#' 
+#' Multiplies a lower triangular matrix by a rectangular matrix
+#'
+#' @param C output matrices, stacked row-wise
+#' @param A lower triangular matrices
+#' @param B rectangular matrix or matrices
+#' @param Nglobal vector of number of global work items
+#' @param Nlocal vector of number of local work items
+#' @param NlocalCache elements in local cache
+#' @export
+multiplyLowerBatchBackend <- function(C, A, B, Nglobal, Nlocal, NlocalCache) {
+    .Call('_geostatsgpu_multiplyLowerBatchBackend', PACKAGE = 'geostatsgpu', C, A, B, Nglobal, Nlocal, NlocalCache)
+}
+
 cpp_lu <- function(xR, dR) {
     .Call('_geostatsgpu_cpp_lu', PACKAGE = 'geostatsgpu', xR, dR)
 }
