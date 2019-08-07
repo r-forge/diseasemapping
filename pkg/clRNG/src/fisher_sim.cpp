@@ -63,10 +63,14 @@ std::string FisherSimkernelString(int NR, int NC) {
 "      ib = 0;\n" /* -Wall */
   
 /* Construct random matrix */
+#ifdef UNDEF
 "      for (jjj = 0; jjj < nc_1; ++jjj){\n"
 "	       jwork[jjj] = ncolt[jjj];\n"
 //"  extraR[jj + D*nrowncol*size+Diter*nrowncol*size*vsize]= jwork[jjj];"
 "      }\n"
+#endif
+"async_work_group_copy(jwork, ncolt, nc_1, 0);\n"
+
 
 "      jc = n;\n"
 /* -----  matrix[ l, * ] ----- */

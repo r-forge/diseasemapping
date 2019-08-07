@@ -3,7 +3,31 @@
 // #define VIENNACL_DEBUG_KERNEL
 
 #define NlocalParams 22
-
+/*
+   parameters
+ 0 range, 
+ 1 shape, 
+ 2 variance, 
+ 3 nugget, 
+ 4 anisoRatio 
+ 5 anisoAngleRadians  
+ 6 anisoAngleDegrees
+ 7 costheta, 
+ 8 sintheta 
+ 9 anisoRatioSq
+ 10 varscale
+ 11 logxscale
+ 12 sinrat 
+ 13 mu 
+ 14 muSq 
+ 15 mup1 
+ 16 nuround
+ 17 g1 
+ 18 g2 
+ 19 g1pnu 
+ 20 g1mnu
+ 21 variance + nugget
+*/
 
 template <typename T> 
 std::string maternBatchKernelString(
@@ -30,13 +54,15 @@ std::string maternBatchKernelString(
   	result += "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n"
   "#define logSqrtHalfPi 0.2257913526447273278031\n"
   "#define M_PI_T M_PI\n"
+  "#define M_PI_2_T M_PI_2\n"
   "#define M_LN2_T M_LN2\n"
   "#define epsilon 1e-12\n\n";
   } else {
   	result += "\n#define logSqrtHalfPi 0.22579135\n"
 	"#define M_LN2_T M_LN2_F\n"
     "#define M_PI_T M_PI_F\n"
-   	"#define epsilon 1e-4\n\n";
+    "#define M_PI_2_T M_PI_2_F\n"
+    "#define epsilon 1e-4\n\n";
   }
 
 //  "#define epsilon " + std::to_string(GSL_DBL_EPSILON/1000) + "\n\n";
@@ -86,7 +112,7 @@ typeString + " sum0, sum1, ck, logck, del0, del1;\n"
 	"			sigma   = - mu * ln_half_x;\n"
 	"			half_x_nu = exp(-sigma);\n"
 	"			sinhrat = sinh(sigma)/sigma;\n"
-
+// save sinrat*g1 and sinrat*g2?
 	"			fk = sinrat * (cosh(sigma)*g1 - sinhrat*ln_half_x*g2);\n"
 	"			pk = 0.5/half_x_nu * g_1pnu;\n"
 	"			qk = 0.5*half_x_nu * g_1mnu;\n"
@@ -99,7 +125,8 @@ typeString + " sum0, sum1, ck, logck, del0, del1;\n"
 
 	"			while( (k < maxIter) && ( fabs(del0) > (epsilon * fabs(sum0)) ) ) {\n"
 	"				k++;\n"
-	"				logck += twoLnHalfX - log((float)k);\n"
+	// save log K?
+	"				logck += twoLnHalfX - log((" + typeString + ")k);\n"
 	"				ck = exp(logck);\n"
 	"				fk  = (k*fk + pk + qk)/(k*k-muSq);\n"
 
@@ -162,7 +189,7 @@ typeString + " dels, a1;\n"
 	"			}\n" // k loop
 
 	"			hi *= -a1;\n"
-	"		*K_nu = exp(-thisx) * expMaternBit * sqrt(M_PI_T/(2.0*thisx)) / s;\n"//  sqrt(pi)/2 sqrt(2/x)/s =
+	"		*K_nu = exp(-thisx) * expMaternBit * sqrt(M_PI_2_T/thisx) / s;\n"//  sqrt(pi)/2 sqrt(2/x)/s =
 
 	"		*K_nup1 = *K_nu * (mu + thisx + 0.5 - hi)/thisx;\n"
 // not needed?	"		Kp_nu  = - K_nup1 + mu/thisx * K_nu;\n"
@@ -185,76 +212,57 @@ result +=
 
 
 "int Dmatrix, Dcell, nuround, DlocalParam, k;\n" +
-typeString + " distRotate[2], distSq;\n" +
+typeString + " distSq;\n" +
+typeString + "2 distRotate;\n" +
+typeString + "2 sincos;\n" +
 typeString + " logthisx, ln_half_x, thisx, maternBit, expMaternBit;\n" +
 typeString + " K_num1, K_nu, K_nup1;\n\n"
 
 "__local " + typeString + " localParams[" +
-	std::to_string(NlocalParams*Nmatrix) + "];//NlocalParams * Nmatrix\n"
+	std::to_string(NpadParams*Nmatrix) + "];//NlocalParams * Nmatrix\n"
+#ifdef UNDEF
 "__local " + typeString + " localCoords[" +
 	std::to_string(N*2) + "];//N*2\n"
-"__local " + typeString + " localDist[" +
-	std::to_string(Nlocal0*2) + "];// Nmatrix*2\n"
+"const int localDistX = 2*get_local_id(0);\n"
+"const int localDistY = localDistX+1;\n"
+#endif
+"__local " + typeString + "2 localDist[Nmatrix];\n"
 "__local int Drow["+std::to_string(Nlocal0) +"], Dcol["+ std::to_string(Nlocal0)+"];\n";
 
 result += 
 // dimension 0 is cell, dimension 1 is matrix
 "const int isFirstLocal = (get_local_id(0)==0 & get_local_id(1)==0);\n"
 "const int isFirstLocal1 = (get_local_id(1)==0);\n"
-"const int localDistX = 2*get_local_id(0);\n"
-"const int localDistY = localDistX+1;\n"
 
 // copy parameters to local storage
-"if(get_local_id(0)==0){\n"
-"for(Dmatrix = get_local_id(1); Dmatrix < Nmatrix; Dmatrix += get_local_size(1)) {\n"
-"  DlocalParam = NlocalParams*Dmatrix;\n"
-"  k = NpadParams*Dmatrix;\n"
-"    for(Dcell = 0; Dcell < NlocalParams; ++Dcell){\n"
-"       localParams[DlocalParam + Dcell] = params[k + Dcell];\n"
-"     }\n" // Dcell
-"  }\n" // Dmatrix
-"}\n\n" // if local0
+"async_work_group_copy(localParams, params, NpadParams*Nmatrix, 0);\n"
 
-
-
-// copy coordinates to local storage
-"if(get_local_id(0)==1){\n"
-"for(Dmatrix = get_local_id(1); Dmatrix < Nmatrix; Dmatrix += get_local_size(1)) {\n"
-	"DlocalParam = NpadCoords*Dmatrix ;\n"
-	"k = 2*Dmatrix;\n"
-	"for(Dcell = 0; Dcell < N; ++Dcell){\n"
-		"localCoords[k+ Dcell] = coords[DlocalParam + Dcell];\n"
-	"}\n" // Dcell
-"}\n" // Dmatrix
-"}\n" // if local0
-"barrier(CLK_LOCAL_MEM_FENCE);\n"
 
 "for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += get_global_size(0)) {\n"
 
 "if(isFirstLocal1){\n"  // only one work item per group computes Drow and Dcol
 	"	Drow[get_local_id(0)] = ceil(0.5 + sqrt(0.25 + 2.0*(Dcell+1) ) ) - 1;\n"
 	"	Dcol[get_local_id(0)] = Dcell - round(Drow[get_local_id(0)] * (Drow[get_local_id(0)] - 1.0) / 2.0);\n"
-"}\n\n" // if local0
+
+	" k = Drow[get_local_id(0)]*NpadCoords;\n"
+" DlocalParam = Dcol[get_local_id(0)]*NpadCoords;\n"
+"	localDist[get_local_id(0)].x = coords[DlocalParam] - coords[k];\n"
+"	localDist[get_local_id(0)].y = coords[DlocalParam +1] - coords[k +1];\n"
+	"}\n\n"
 "barrier(CLK_LOCAL_MEM_FENCE);\n"
 
-"if(isFirstLocal1){\n"
-	"   k = Drow[get_local_id(0)]*2;\n"
-	"   DlocalParam = Dcol[get_local_id(0)]*2;\n"
-	"	localDist[localDistX] = localCoords[DlocalParam] - localCoords[k];\n"
-	"	localDist[localDistY] = localCoords[DlocalParam +1] - localCoords[k +1];\n"
-"}\n\n"
-"barrier(CLK_LOCAL_MEM_FENCE);\n"
 "for(Dmatrix = get_global_id(1); Dmatrix < Nmatrix; Dmatrix += get_global_size(1) ) {\n"
-	"   DlocalParam = NlocalParams*Dmatrix;\n"
-	"   nuround = (int) (localParams[DlocalParam+16]);\n"
-// cos element 7, sin element 8
-	"	distRotate[0] = localParams[DlocalParam+7] * localDist[localDistX] -\n"
-	"         localParams[DlocalParam+8] * localDist[localDistY];\n"
-	"	distRotate[1] = localParams[DlocalParam+8] * localDist[localDistX] +\n" 
-	"         localParams[DlocalParam+7] * localDist[localDistY];\n"
+	" DlocalParam = NpadParams*Dmatrix;\n"
+		// cos element 7, sin element 8
+	" sincos.x = localParams[DlocalParam+8];\n"
+	" sincos.y = localParams[DlocalParam+7];\n"
+	" nuround = (int) (localParams[DlocalParam+16]);\n"
 
-	"	distSq = distRotate[0]*distRotate[0] +" 
-	"         distRotate[1]*distRotate[1]/localParams[DlocalParam + 9];\n"
+		" distRotate.x = sincos.y *localDist[get_local_id(0)].x - sincos.x *localDist[get_local_id(0)].y;\n"
+	" distRotate.y = dot(sincos, localDist[get_local_id(0)]);\n"
+	" distRotate *= distRotate;\n"
+	" distSq = distRotate.x + distRotate.y/localParams[DlocalParam + 9];\n"
+
 
 	"	logthisx = log(distSq)/2 + localParams[DlocalParam + 11];\n"
 	"	ln_half_x = logthisx - M_LN2_T;\n"
@@ -313,7 +321,7 @@ result +=
 "barrier(CLK_LOCAL_MEM_FENCE);\n"
 "for(Dmatrix = get_global_id(1); Dmatrix < Nmatrix; Dmatrix += get_global_size(1)) {\n"
 	"DlocalParam = Dmatrix * NpadBetweenMatrices;\n"
-	"maternBit = localParams[NlocalParams*Dmatrix+21];\n"
+	"maternBit = localParams[NpadParams*Dmatrix+21];\n"
 //	"maternBit = params[NpadParams*Dmatrix+21];\n"
 	"for(Dcell = get_global_id(0); Dcell < N; Dcell += get_global_size(0)) {\n"
 	"	result[DlocalParam + Dcell * Npad + Dcell] = maternBit;\n"

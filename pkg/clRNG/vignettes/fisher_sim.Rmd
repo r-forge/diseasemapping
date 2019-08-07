@@ -44,7 +44,7 @@ matrix(as.vector(z), ncol=prod(Nglobal), byrow=TRUE)
 
 t(as.matrix(streams))
 
-hist(as.vector(z))
+hist(as.vector(exp(z)), breaks=seq(0,1,by=0.2), prob=TRUE)
 
 ```
 
