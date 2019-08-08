@@ -220,6 +220,13 @@ rmat2 = do.call(Matrix::bdiag, rmat)
 
 rmat2 %*% zmat
 
+zmatGpu3 = deepcopy(zmatGpu2)
+geostatsgpu:::multiplyLowerBatchBackend(
+  zmatGpu3, outputBatchF, zmatGpu2,
+  Nglobal = c(4L, 2L, 2L),
+  Nlocal = c(2L,2L),
+  NlocalCache = 2)
+as.matrix(zmatGpu3)
 ```
 
 

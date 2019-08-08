@@ -72,7 +72,7 @@ std::string multiplyDiagonalBatchString(
   
   result +=
   " AforThisWorkitem = Acache[get_local_id(0)];\n"
-  " AforThisWorkitem = A[AHere + DrowGlobal];\n"
+//  " AforThisWorkitem = A[AHere + DrowGlobal];\n"
     
   " for(Dcol = get_global_id(1); Dcol < Ncol; Dcol += get_global_size(1)){\n"
     
@@ -129,64 +129,65 @@ std::string multiplyLowerBatchString(
   "	__global "+ typeString+ " *A,\n"
   "	__global "+ typeString+ " *B) {\n\n" +
 
-    typeString + " Dout, *AHere, *BHere, *CHere;\n"
+    typeString + " Dout;\n"
+    "int AHere, BHere, CHere;\n"
   "	local "+ typeString+ " Acache[NlocalCacheA];\n" 
 "	local "+ typeString+ " Bcache[NlocalCache];\n"
   
 "int Dmatrix, Drow, Dcol, Dinner, DrowNpadC, DrowNpadA;\n"
   
 "const int doCacheA = (get_local_id(1) == 0);\n"
-"const int DinnerStop = min(Nrow, NlocalCache);\n";
+"const int DinnerStop = min(Nrow, NlocalCache);\n"
 
-  "BHere = B;\n"
+  "BHere = 0;\n"
 
-    "for(Dmatrix = get_global_id(2); Dmatrix < Nmatrix; Dmatrix += get_global_size(2)){\n"
-  "  AHere = &A[Dmatrix*NpadBetweenMatricesA];\n";
+  "for(Dmatrix = get_global_id(2); Dmatrix < Nmatrix; Dmatrix += get_global_size(2)){\n"
+  "  AHere = Dmatrix*NpadBetweenMatricesA;\n";
 
   if(!sameB){
-    result +=  "  BHere = &B[Dmatrix*NpadBetweenMatricesB];\n";
+    result +=  "  BHere = Dmatrix*NpadBetweenMatricesB;\n";
   } 
 
-result += "  CHere = &C[Dmatrix*NpadBetweenMatricesC];\n"
+result += "  CHere = Dmatrix*NpadBetweenMatricesC;\n"
 
 // cache first rows of B 
 "  for(Drow = get_local_id(0); Drow < NlocalCache; Drow += get_local_size(0)){\n"
 "    DrowNpadC = Drow*Ncol;\n"
-"    DrowNpadA = Drow*NpadB;\n"
+"    DrowNpadA = BHere+Drow*NpadB;\n"
 // replace with async?
-"    for(Dcol = get_local_id(1); Dcol < Ncol; Dcol += get_local_size(1))){\n"
+"    for(Dcol = get_local_id(1); Dcol < Ncol; Dcol += get_local_size(1) ){\n"
 //     "Bcache[Dcol + Drow*Ncol] = B[Dcol + Drow * NpadB];\n"
-"      Bcache[Dcol + DrowNpadC] = BHere[Dcol +DrowNpadA];\n"
+"      Bcache[Dcol + DrowNpadC] = B[Dcol +DrowNpadA];\n"
 "    }\n"
 "  }\n"
 "barrier(CLK_LOCAL_MEM_FENCE);\n"
 
 // looped through rows which are all cached
 "for(Drow = get_global_id(0); Drow < DinnerStop; Drow+=get_global_size(0)){\n"
-  "DrowNpadA= Drow * NpadA;\n"
-  "DrowNpadC= Drow * NpadC;\n"
+  "DrowNpadA= AHere + Drow * NpadA;\n"
+  "DrowNpadC= CHere+Drow * NpadC;\n"
   "for(Dcol = get_global_id(1); Dcol < Ncol; Dcol += get_global_size(1)){\n"
     "Dout = 0.0;\n"
     "for(Dinner = 0; Dinner <= Drow; Dinner++){\n"
     "  if(doCacheA) {\n"
-    "    Acache[get_local_id(0)] = AHere[Dinner + DrowNpadA];\n"
+    "    Acache[get_local_id(0)] = A[Dinner + DrowNpadA];\n"
     "  }\n"
 	  "  barrier(CLK_LOCAL_MEM_FENCE);\n"
 	  "Dout += Acache[get_local_id(0)] * Bcache[Dcol + Dinner * Ncol];\n"
 	"}\n" // Dinner
-  	"CHere[Dcol + DrowNpadC] = Dout;\n"
+  	"C[Dcol + DrowNpadC] = Dout;\n"
   "}\n" // Dcol
 "}\n" //Drow
 // rows which are not all cached
 "for( ; Drow < Nrow; Drow+=get_global_size(0)){\n"
-  "DrowNpadA= Drow * NpadA;\n"
-  "DrowNpadC= Drow * NpadC;\n"
+  "DrowNpadA= AHere + Drow * NpadA;\n"
+  "DrowNpadC= CHere + Drow * NpadC;\n"
   "for(Dcol = get_global_id(1); Dcol < Ncol; Dcol += get_global_size(1)){\n"
     "Dout = 0.0;\n"
     // cached rows
     "for(Dinner = 0; Dinner < NlocalCache; Dinner++){\n"
 	  "if(doCacheA) {\n"
-	    "Acache[get_local_id(0)] = AHere[Dinner + DrowNpadA];\n"
+	    "Acache[get_local_id(0)] = A[Dinner + DrowNpadA];\n"
 	  "}\n"
 	  "barrier(CLK_LOCAL_MEM_FENCE);\n"
 	  "Dout += Acache[get_local_id(0)] * Bcache[Dcol + Dinner * Ncol];\n"
@@ -194,15 +195,15 @@ result += "  CHere = &C[Dmatrix*NpadBetweenMatricesC];\n"
 	// un-cached rows
     "for( ; Dinner <= Drow; Dinner++){\n"
 	  "if(doCacheA) {\n"
-	    "Acache[get_local_id(0)] = AHere[Dinner + DrowNpadA];\n"
+	    "Acache[get_local_id(0)] = A[Dinner + DrowNpadA];\n"
 	  "}\n"
 	  "barrier(CLK_LOCAL_MEM_FENCE);\n"
-	  "Dout += Acache[get_local_id(0)] * BHere[Dcol + Dinner * NpadB];\n"
+	  "Dout += Acache[get_local_id(0)] * B[BHere+Dcol + Dinner * NpadB];\n"
 	"}\n" // Dinner
-	"CHere[Dcol + DrowNpadC] = Dout;\n"
+	"C[Dcol + DrowNpadC] = Dout;\n"
   "}\n" // Dcol
  "}\n" //Drow
- 
+
  "}\n" // Dmatrix
  "}";
 
@@ -251,13 +252,14 @@ std::string multiplyADBBatchString(
 
 // global work items are rows, columns, matrices
 // local work items anything, anything, 1
-"__kernel void multiplyLowerBatch(\n"
+"__kernel void multiplyADBBatch(\n"
   " __global " + typeString+ " *C,\n"
   " __global "+ typeString+ " *A,\n"
   " __global "+ typeString+ " *D,\n"
   " __global "+ typeString+ " *B) {\n\n" +
 
-   typeString + " Dout, *AHere, *DHere, *BHere, *CHere;\n"
+   typeString + " Dout;\n"
+  " int  AHere, DHere, BHere, CHere;\n"
   " local "+ typeString+ " Acache[NlocalCacheA];\n" 
   " local "+ typeString+ " Dcache[NlocalCacheD];\n"
   " local "+ typeString+ " Bcache[NlocalCacheB];\n"
@@ -267,44 +269,44 @@ std::string multiplyADBBatchString(
 "const int doCacheA = (get_local_id(1) == 0);\n"
 "const int DinnerStop = min(Nrow, NlocalCache);\n";
 
-  "BHere = B;\n"
+  "BHere = 0;\n"
 
     "for(Dmatrix = get_global_id(2); Dmatrix < Nmatrix; Dmatrix += get_global_size(2)){\n"
   "  AHere = &A[Dmatrix*NpadBetweenMatricesA];\n";
 
   if(!sameB){
-    result +=  "  BHere = &B[Dmatrix*NpadBetweenMatricesB];\n";
+    result +=  "  BHere = Dmatrix*NpadBetweenMatricesB;\n";
   } 
 
-result += "  CHere = &C[Dmatrix*NpadBetweenMatricesC];\n"
+result += "  CHere = Dmatrix*NpadBetweenMatricesC;\n"
 
 // cache first rows of B 
 
 "  for(Drow = get_local_id(0); Drow < NlocalCache; Drow += get_local_size(0)){\n"
 "    DrowNpadC = Drow*Ncol;\n"
-"    DrowNpadA = Drow*NpadB;\n"
+"    DrowNpadA = BHere+Drow*NpadB;\n"
 // replace with async?
-"    for(Dcol = get_local_id(1); Dcol < Ncol; Dcol += get_local_size(1))){\n"
+"    for(Dcol = get_local_id(1); Dcol < Ncol; Dcol += get_local_size(1) ){\n"
 //     "Bcache[Dcol + Drow*Ncol] = B[Dcol + Drow * NpadB];\n"
-"      Bcache[Dcol + DrowNpadC] = BHere[Dcol +DrowNpadA];\n"
+"      Bcache[Dcol + DrowNpadC] = B[Dcol +DrowNpadA];\n"
 "    }\n"
 "  }\n"
 "barrier(CLK_LOCAL_MEM_FENCE);\n"
 
 // looped through rows which are all cached
 "for(Drow = get_global_id(0); Drow < DinnerStop; Drow+=get_global_size(0)){\n"
-  "DrowNpadA= Drow * NpadA;\n"
+  "DrowNpadA= AHere+Drow * NpadA;\n"
   "DrowNpadC= Drow * NpadC;\n"
   "for(Dcol = get_global_id(1); Dcol < Ncol; Dcol += get_global_size(1)){\n"
     "Dout = 0.0;\n"
     "for(Dinner = 0; Dinner <= Drow; Dinner++){\n"
     "  if(doCacheA) {\n"
-    "    Acache[get_local_id(0)] = AHere[Dinner + DrowNpadA];\n"
+    "    Acache[get_local_id(0)] = A[Dinner + DrowNpadA];\n"
     "  }\n"
     "  barrier(CLK_LOCAL_MEM_FENCE);\n"
     "Dout += Acache[get_local_id(0)] * Bcache[Dcol + Dinner * Ncol];\n"
   "}\n" // Dinner
-    "CHere[Dcol + DrowNpadC] = Dout;\n"
+    "C[CHere+Dcol + DrowNpadC] = Dout;\n"
   "}\n" // Dcol
 "}\n" //Drow
 // rows which are not all cached
@@ -329,7 +331,7 @@ result += "  CHere = &C[Dmatrix*NpadBetweenMatricesC];\n"
     "barrier(CLK_LOCAL_MEM_FENCE);\n"
     "Dout += Acache[get_local_id(0)] * BHere[Dcol + Dinner * NpadB];\n"
   "}\n" // Dinner
-  "CHere[Dcol + DrowNpadC] = Dout;\n"
+  "C[CHere+Dcol + DrowNpadC] = Dout;\n"
   "}\n" // Dcol
  "}\n" //Drow
  
@@ -351,28 +353,36 @@ void multiplyLowerBatch(
 	const int NlocalCache, 
 	const int ctx_id) {
 
-  const int Nmatrix = C.size1()/A.size1();
-	// the context
+  
+  const int Nrow = A.size2();
+  const int Nmatrix = C.size1()/Nrow;
+
+  	// the context
 	viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
 
 	cl_device_type type_check = ctx.current_device().type();
 
+  std::string clString =  multiplyLowerBatchString<T>(  
+      Nrow == B.size1(),
+      Nrow, 
+      B.size2(), // ncol
+      Nmatrix,
+      C.internal_size2(), 
+      A.internal_size2(), 
+      B.internal_size2(),
+      C.internal_size2()*Nrow,//NpadBetweenMatricesC,
+      A.internal_size2()*Nrow,//NpadBetweenMatricesA,
+      B.internal_size2()*Nrow,//NpadBetweenMatricesB,
+      Nlocal[0], 
+      NlocalCache);
+#ifdef DEBUG
+  
+  Rcpp::Rcout << clString << "\n\n";
+  
+#endif  
 	viennacl::ocl::program & my_prog = ctx.add_program(
-	  multiplyLowerBatchString<T>(  
-	    A.size2() == B.size1(),
-  	  A.size2(), 
-	    B.size2(),
-	    Nmatrix,//Nmatrix, 
-  	  C.internal_size2(), 
-	    A.internal_size2(), 
-	    B.internal_size2(),
-  	  C.internal_size2()*Nmatrix,//NpadBetweenMatricesC,
-	    A.internal_size2()*Nmatrix,//NpadBetweenMatricesA,
-	    B.internal_size2()*Nmatrix,//NpadBetweenMatricesB,
-  	  Nlocal[0], 
-	    NlocalCache),
-	    "my_kernel");
-	
+	  clString, "my_kernel");
+
 	viennacl::ocl::kernel & multiplyKernel = my_prog.get_kernel("multiplyLowerBatch");
 
 	multiplyKernel.global_work_size(0, Nglobal[0]);
@@ -381,12 +391,12 @@ void multiplyLowerBatch(
 
   multiplyKernel.local_work_size(0, Nlocal[0]);
   multiplyKernel.local_work_size(1, Nlocal[1]);
-  multiplyKernel.local_work_size(2, Nlocal[2]);
+  multiplyKernel.local_work_size(2, 1L);//Nlocal[2]);
   
 		// diagonals and diagTimesRowOfA
 		viennacl::ocl::enqueue(multiplyKernel(
 			C, A, B));
-		
+
 }
 
 
