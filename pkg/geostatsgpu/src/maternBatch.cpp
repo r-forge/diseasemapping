@@ -219,7 +219,7 @@ typeString + " logthisx, ln_half_x, thisx, maternBit, expMaternBit;\n" +
 typeString + " K_num1, K_nu, K_nup1;\n\n"
 
 "__local " + typeString + " localParams[" +
-	std::to_string(NpadParams*Nmatrix) + "];//NlocalParams * Nmatrix\n"
+	std::to_string(NlocalParams * Nmatrix) + "];\n"
 #ifdef UNDEF
 "__local " + typeString + " localCoords[" +
 	std::to_string(N*2) + "];//N*2\n"
@@ -235,8 +235,16 @@ result +=
 "const int isFirstLocal1 = (get_local_id(1)==0);\n"
 
 // copy parameters to local storage
-"async_work_group_copy(localParams, params, NpadParams*Nmatrix, 0);\n"
-
+//"async_work_group_copy(localParams, params, NpadParams*Nmatrix, 0);\n"
+"if(get_local_id(0)==0){\n"
+"for(Dmatrix = get_local_id(1); Dmatrix < Nmatrix; Dmatrix += get_local_size(1)) {\n"
+"  DlocalParam = NlocalParams*Dmatrix;\n"
+"  k = NpadParams*Dmatrix;\n"
+"    for(Dcell = 0; Dcell < NlocalParams; ++Dcell){\n"
+"       localParams[DlocalParam + Dcell] = params[k + Dcell];\n"
+"     }\n" // Dcell
+"  }\n" // Dmatrix
+"}\n\n" // if local0
 
 "for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += get_global_size(0)) {\n"
 
@@ -252,7 +260,7 @@ result +=
 "barrier(CLK_LOCAL_MEM_FENCE);\n"
 
 "for(Dmatrix = get_global_id(1); Dmatrix < Nmatrix; Dmatrix += get_global_size(1) ) {\n"
-	" DlocalParam = NpadParams*Dmatrix;\n"
+	" DlocalParam = NlocalParams*Dmatrix;\n"
 		// cos element 7, sin element 8
 	" sincos.x = localParams[DlocalParam+8];\n"
 	" sincos.y = localParams[DlocalParam+7];\n"
@@ -321,7 +329,7 @@ result +=
 "barrier(CLK_LOCAL_MEM_FENCE);\n"
 "for(Dmatrix = get_global_id(1); Dmatrix < Nmatrix; Dmatrix += get_global_size(1)) {\n"
 	"DlocalParam = Dmatrix * NpadBetweenMatrices;\n"
-	"maternBit = localParams[NpadParams*Dmatrix+21];\n"
+	"maternBit = localParams[NlocalParams*Dmatrix+21];\n"
 //	"maternBit = params[NpadParams*Dmatrix+21];\n"
 	"for(Dcell = get_global_id(0); Dcell < N; Dcell += get_global_size(0)) {\n"
 	"	result[DlocalParam + Dcell * Npad + Dcell] = maternBit;\n"

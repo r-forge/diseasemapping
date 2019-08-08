@@ -101,6 +101,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// multiplyDiagonalBatchBackend
+SEXP multiplyDiagonalBatchBackend(Rcpp::S4 C, Rcpp::S4 A, Rcpp::S4 B, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal);
+RcppExport SEXP _geostatsgpu_multiplyDiagonalBatchBackend(SEXP CSEXP, SEXP ASEXP, SEXP BSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type C(CSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type A(ASEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type B(BSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nglobal(NglobalSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nlocal(NlocalSEXP);
+    rcpp_result_gen = Rcpp::wrap(multiplyDiagonalBatchBackend(C, A, B, Nglobal, Nlocal));
+    return rcpp_result_gen;
+END_RCPP
+}
 // multiplyLowerBatchBackend
 SEXP multiplyLowerBatchBackend(Rcpp::S4 C, Rcpp::S4 A, Rcpp::S4 B, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal, int NlocalCache);
 RcppExport SEXP _geostatsgpu_multiplyLowerBatchBackend(SEXP CSEXP, SEXP ASEXP, SEXP BSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP, SEXP NlocalCacheSEXP) {
@@ -137,6 +152,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geostatsgpu_maternBatchBackend", (DL_FUNC) &_geostatsgpu_maternBatchBackend, 5},
     {"_geostatsgpu_cpp_maternGpuD", (DL_FUNC) &_geostatsgpu_cpp_maternGpuD, 7},
     {"_geostatsgpu_cpp_maternGpuF", (DL_FUNC) &_geostatsgpu_cpp_maternGpuF, 7},
+    {"_geostatsgpu_multiplyDiagonalBatchBackend", (DL_FUNC) &_geostatsgpu_multiplyDiagonalBatchBackend, 5},
     {"_geostatsgpu_multiplyLowerBatchBackend", (DL_FUNC) &_geostatsgpu_multiplyLowerBatchBackend, 6},
     {"_geostatsgpu_cpp_lu", (DL_FUNC) &_geostatsgpu_cpp_lu, 2},
     {NULL, NULL, 0}

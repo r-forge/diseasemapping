@@ -137,7 +137,9 @@ as.matrix(outputBatchF)
 
 
 Compare output to geostatsp's matern
+
 ```{r batchMaternCompare}
+
 geostatsp::matern(
     x=SpatialPoints(as.matrix(coordsGpu2)),
     param=drop(myParamsBatch[1,1:7])
@@ -149,6 +151,8 @@ geostatsp::matern(
     )[1:4,1:4]
 as.matrix(outputBatchF[nrow(coordsGpu2)+1:4,1:4])
 ```
+
+# Cholesky
 
 
 ```{r cholBach}
@@ -174,7 +178,53 @@ as.matrix(diagMat)
 theDiag
 ```
 
-# Cholesky
+# Multiplying lower triangle
+
+```{r multLower}
+Nsim = 2
+Nmatrix = nrow(diagMat)
+set.seed(0)
+zmat = matrix(rnorm(ncol(outputBatchF) * Nsim * Nmatrix, mean=1,sd=0.001), ncol=Nsim)
+zmatGpu = vclMatrix(zmat, type = gpuR::typeof(outputBatchF))
+
+sdMat = sqrt(diagMat)
+
+as.matrix(sdMat)
+as.matrix(zmatGpu)[1:5,]
+
+zmatGpu2 = deepcopy(zmatGpu)
+
+geostatsgpu:::multiplyDiagonalBatchBackend(
+  zmatGpu2, sdMat, zmatGpu,
+  Nglobal = c(4L, 2L, 2L),
+  Nlocal = c(2L,2L))
+
+as.matrix(zmatGpu2)
+zmatMult = diag(as.vector(t(as.matrix(sdMat)))) %*% zmat
+
+zmatMult[1:5,]
+
+quantile(as.vector(as.matrix(zmatGpu2)) -
+  as.vector(zmatMult))
+rmat = mapply(function(DD, xx) {
+  xx = xx[seq(1+(DD-1)*ncol(xx),len=ncol(xx)), ]
+  xx[upper.tri(xx)] = 0
+  diag(xx) = 1
+  xx
+  },
+  DD = 1:Nmatrix,
+  MoreArgs = list(xx=as.matrix(outputBatchF)),
+  SIMPLIFY=FALSE)
+
+rmat2 = do.call(Matrix::bdiag, rmat)
+
+rmat2 %*% zmat
+
+```
+
+
+
+# Old stuff
 
 
 ```{r cholGeostatsGpu, eval=FALSE}

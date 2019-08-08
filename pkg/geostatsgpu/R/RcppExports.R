@@ -25,6 +25,10 @@ cpp_maternGpuF <- function(varR, coordsR, DofLDLR, param, form, numWorkItems, nu
     .Call('_geostatsgpu_cpp_maternGpuF', PACKAGE = 'geostatsgpu', varR, coordsR, DofLDLR, param, form, numWorkItems, numLocalItems)
 }
 
+multiplyDiagonalBatchBackend <- function(C, A, B, Nglobal, Nlocal) {
+    .Call('_geostatsgpu_multiplyDiagonalBatchBackend', PACKAGE = 'geostatsgpu', C, A, B, Nglobal, Nlocal)
+}
+
 #' Multiply lower triangular matrices
 #' 
 #' Multiplies a lower triangular matrix by a rectangular matrix
