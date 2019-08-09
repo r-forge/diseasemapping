@@ -25,6 +25,10 @@ cpp_maternGpuF <- function(varR, coordsR, DofLDLR, param, form, numWorkItems, nu
     .Call('_geostatsgpu_cpp_maternGpuF', PACKAGE = 'geostatsgpu', varR, coordsR, DofLDLR, param, form, numWorkItems, numLocalItems)
 }
 
+multiplyLowerDiagonalBatchBackend <- function(C, A, D, B, diagIsOne, transformD, Nglobal, Nlocal, NlocalCache) {
+    .Call('_geostatsgpu_multiplyLowerDiagonalBatchBackend', PACKAGE = 'geostatsgpu', C, A, D, B, diagIsOne, transformD, Nglobal, Nlocal, NlocalCache)
+}
+
 multiplyDiagonalBatchBackend <- function(C, A, B, Nglobal, Nlocal) {
     .Call('_geostatsgpu_multiplyDiagonalBatchBackend', PACKAGE = 'geostatsgpu', C, A, B, Nglobal, Nlocal)
 }
@@ -40,8 +44,8 @@ multiplyDiagonalBatchBackend <- function(C, A, B, Nglobal, Nlocal) {
 #' @param Nlocal vector of number of local work items
 #' @param NlocalCache elements in local cache
 #' @export
-multiplyLowerBatchBackend <- function(C, A, B, Nglobal, Nlocal, NlocalCache) {
-    .Call('_geostatsgpu_multiplyLowerBatchBackend', PACKAGE = 'geostatsgpu', C, A, B, Nglobal, Nlocal, NlocalCache)
+multiplyLowerBatchBackend <- function(C, A, B, diagIsOne, Nglobal, Nlocal, NlocalCache) {
+    .Call('_geostatsgpu_multiplyLowerBatchBackend', PACKAGE = 'geostatsgpu', C, A, B, diagIsOne, Nglobal, Nlocal, NlocalCache)
 }
 
 cpp_lu <- function(xR, dR) {

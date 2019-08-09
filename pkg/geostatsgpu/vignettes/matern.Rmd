@@ -187,25 +187,8 @@ set.seed(0)
 zmat = matrix(rnorm(ncol(outputBatchF) * Nsim * Nmatrix, mean=1,sd=0.001), ncol=Nsim)
 zmatGpu = vclMatrix(zmat, type = gpuR::typeof(outputBatchF))
 
-sdMat = sqrt(diagMat)
 
-as.matrix(sdMat)
-as.matrix(zmatGpu)[1:5,]
-
-zmatGpu2 = deepcopy(zmatGpu)
-
-geostatsgpu:::multiplyDiagonalBatchBackend(
-  zmatGpu2, sdMat, zmatGpu,
-  Nglobal = c(4L, 2L, 2L),
-  Nlocal = c(2L,2L))
-
-as.matrix(zmatGpu2)
-zmatMult = diag(as.vector(t(as.matrix(sdMat)))) %*% zmat
-
-zmatMult[1:5,]
-
-quantile(as.vector(as.matrix(zmatGpu2)) -
-  as.vector(zmatMult))
+zmatMult = diag(as.vector(t(as.matrix(sqrt(diagMat))))) %*% zmat
 rmat = mapply(function(DD, xx) {
   xx = xx[seq(1+(DD-1)*ncol(xx),len=ncol(xx)), ]
   xx[upper.tri(xx)] = 0
@@ -215,117 +198,23 @@ rmat = mapply(function(DD, xx) {
   DD = 1:Nmatrix,
   MoreArgs = list(xx=as.matrix(outputBatchF)),
   SIMPLIFY=FALSE)
-
 rmat2 = do.call(Matrix::bdiag, rmat)
 
-rmat2 %*% zmat
 
-zmatGpu3 = deepcopy(zmatGpu2)
-geostatsgpu:::multiplyLowerBatchBackend(
-  zmatGpu3, outputBatchF, zmatGpu2,
+zmatGpu4 = deepcopy(-100*zmatGpu)
+geostatsgpu:::multiplyLowerDiagonalBatchBackend(
+  zmatGpu4, outputBatchF, diagMat, zmatGpu,
+  diagIsOne = 1L,
+  "sqrt",
   Nglobal = c(4L, 2L, 2L),
   Nlocal = c(2L,2L),
   NlocalCache = 2)
-as.matrix(zmatGpu3)
+
+
+as.matrix(zmatGpu4)
+rmat2 %*% zmatMult
 ```
 
-
-
-# Old stuff
-
-
-```{r cholGeostatsGpu, eval=FALSE}
-
-varGpuD2 = deepcopy(varGpuD)
-varGpuDiag = vclVector(0, nrow(varGpuD), type="double")
-
-
-	file = "/home/patrick/research/diseasemapping/pkg/geostatsgpu/inst/CL/cholGpu.cl"
-	if(!file.exists(file)) {
-  	file <- system.file("CL", "cholGpu.cl", package = "geostatsgpu")
-	}
-	kernel <- readChar(file, file.info(file)$size)
-
-	diagWorking = deepcopy(varGpuDiag) 
-	diagTimesRow = deepcopy(varGpuDiag) 
-	
-system.time(geostatsgpu:::cpp_cholGpu(
-  xR = varGpuD2,
-  DR = varGpuDiag, 
-  diagWorkingR = diagWorking, 
-  diagTimesRowOfAR = diagTimesRow, 
-  MCglobal = 256, 
-  MClocal = 8, 
-  localStorage = floor(0.9*gpuR::gpuInfo()$localMem/8), 
-  colGroupwise = nrow(varGpuD)-64,
-  Ncrossprod = 32, 
-  verbose = FALSE, 
-  kernelR = kernel))
-
-system.time(theChol <- chol(as.matrix(varGpuD)) )
-
-quantile(as.vector(varGpuDiag) - diag(theChol)^2)
-
-theChol = Matrix::Diagonal(nrow(theChol), 1/diag(theChol) ) %*% theChol
-as.matrix(varGpuD2[1:5,1:5])
-theDiff = theChol - as.matrix(varGpuD2)
-theDiff[lower.tri(theDiff)] = 0
-quantile(theDiff)
-
-
-```
-
-Using ViennaCL's LU decomposition
-```{r cholViennaclLu, eval=FALSE}
-varMat3 = gpuR::deepcopy(varGpuD)
-system.time(varCholVcl <- geostatsgpu::luGpu(varMat3))
-
-system.time(theChol <- chol(as.matrix(varGpuD)) )
-
-quantile(as.vector(varCholVcl$D) - diag(theChol)^2)
-```
-
-
-# Integrated Cholesky
-
-
-```{r maternMatGpuC, eval=FALSE}
-system.time(varCpuC <- geostatsp::matern(coordsSp, myParams, type='cholesky'))
-system.time(varGpuC <- geostatsgpu::maternGpu(x=vclMatrix(coordsSp@coords, type='float'), param=myParams, 
-    form='cholesky'))
-system.time(varGpuCD <- geostatsgpu::maternGpu(x=vclMatrix(coordsSp@coords, type='double'), param=myParams, 
-    form='cholesky'))
-quantile(varCpuC - as.matrix(varGpuC), na.rm=TRUE)
-quantile(varCpuC - as.matrix(varGpuCD), na.rm=TRUE)
-```
-
-
-# Cholesky again
-
-Cholesky on the CPU
-```{r cholCpu, eval=FALSE}
-system.time(varCholGpu <- chol(varCpu))
-```
-
-Using `geostatsgpu`'s Cholesky
-```{r cholGpu, eval=FALSE}
-varMat1 = gpuR::deepcopy(varGpuD)
-try(system.time(varCholGpu <- geostatsgpu:::cholGpu(varMat1)))
-```
-
-Using `gpuR`'s Cholesky
-```{r cholGpurPackage, eval=FALSE}
-varMat2 = gpuR::deepcopy(varGpuD)
-system.time(varCholGpuR <- gpuR:::chol.vclMatrix(varMat2))
-```
-
-
-```{r cholGpuCompare, eval=FALSE}
-xchold = diag(varGpuD)
-cholTest = t((diag(1/xchold) %*% varCholGpu))
-DfromR = xchold^2
-quantile(DfromR - as.vector(varCholGpu$D), na.rm=TRUE)
-```
 
 
 
