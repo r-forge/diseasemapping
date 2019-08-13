@@ -27,19 +27,22 @@ colSums = vclVector(4,6,type="integer")
 Nglobal = c(4,2)
 NperItem = 12
 
-streams = clRNG:::cpp_mrg31k3pCreateStreams(prod(Nglobal))
+stream_num=prod(Nglobal)
+streams = clRNG:::cpp_mrg31k3pCreateStreams(stream_num)
 
-z = vclVector(length=as.integer(prod(Nglobal)*NperItem), type="double")
+z = vclVector(length=as.integer(stream_num*NperItem), type="double")
 length(z)
 
 
-#clRNG::fisher_simGpu(x,y,z, streams, c(2L, 2L))
-stuff = clRNG:::cpp_fisher_sim_gpu(rowSums, colSums, z, 
+clRNG::fisher_simGpu(rowSums, colSums, z, 
 	#extraR, extraX, 
 	streams, as.integer(Nglobal))
 
+#stuff = clRNG:::cpp_fisher_sim_gpu(rowSums, colSums, z, 
+	#extraR, extraX, streams, as.integer(Nglobal))
 
-matrix(as.vector(z), ncol=prod(Nglobal), byrow=TRUE)
+
+matrix(as.vector(z), ncol=stream_num, byrow=TRUE)
 
 
 t(as.matrix(streams))

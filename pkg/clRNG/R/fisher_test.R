@@ -1,4 +1,4 @@
-#' @title fisher_sim gpu
+#' @title fisher_simGpu
 #'
 #' @description Fisher simulation test
 #'
@@ -12,9 +12,9 @@
 #' @export
 
 fisher_simGpu=function(
-  sr, ##marginal row total 
-  sc, ##marginal column total
-  x,## the vector to stall test statistics,
+  sr, #marginal row total 
+  sc, #marginal column total
+  x,# the vector to store test statistics,
   streams, 
   workgroupSize){
   
@@ -23,19 +23,13 @@ fisher_simGpu=function(
   
   if(missing(streams)) {
     if(missing(workgroupSize)) 
-    {workgroupSize = c(64,4)}
-    workgroupSize = pmax(4, c(workgroupSize, 4, 4)[1:2])
-    streams = cpp_mrg31k3pCreateStreams(prod(workgroupSize))			
+    {workgroupSize = c(64,4)
+    streams = cpp_mrg31k3pCreateStreams(prod(workgroupSize))	}	
   } else {
     if(!is.matrix(streams)) {
       warning("streams should be a matrix")
     }
-    if(ncol(streams) != 18) {
-      warning("streams needs 18 columns")
-    }
-    if(missing(workgroupSize)) {
-      workgroupSize = c(nrow(streams)/2,2)
-    }
+    
     if(prod(workgroupSize) != nrow(streams))
       warning("number of work items needs to be same as number of streams")
     # make a deep copy
@@ -45,8 +39,8 @@ fisher_simGpu=function(
   if(verbose) {
     cat('\nglobal sizes ', toString(workgroupSize), '\n streams ', toString(dim(streams)), '\n')
   }
-   #sr<- as.integer(sr)
-   #sc<- as.integer(sc)
+  
+  
   
   cpp_fisher_sim_gpu(sr, sc, x, streams, workgroupSize)
   

@@ -21,30 +21,36 @@ std::string openclTypeString() {
   return("undefined");
 }
 
-template <> std::string openclTypeString<double>(){
+template <> 
+std::string openclTypeString<double>(){
   std::string result = "double";
   return(result);
 }
 
-template <> std::string openclTypeString<float>(){
+template <> 
+std::string openclTypeString<float>(){
   std::string result = "float";
   return(result);
 }
 
-template <> std::string openclTypeString<int>(){
+template <> 
+std::string openclTypeString<int>(){
   std::string result = "int";
   return(result);
 }
 
 
-template <typename T> T maternClEpsilon(){
+template <typename T> 
+T maternClEpsilon(){
   return(-1);
 }
 
-template <> double maternClEpsilon<double>(){
+template <> 
+double maternClEpsilon<double>(){
   return(GSL_DBL_EPSILON);
 }
 
-template <> float maternClEpsilon<float>(){
+template <> 
+float maternClEpsilon<float>(){
   return(GSL_FLT_EPSILON);
 }

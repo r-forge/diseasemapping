@@ -475,7 +475,8 @@ maternBatchVcl(vclVar, vclCoords, param, maternKernel);
 
 
 
-template<typename T> void maternBatchTemplated(
+template<typename T> 
+void maternBatchTemplated(
 	Rcpp::S4 varR,
 	Rcpp::S4 coordsR,
 	Rcpp::S4 paramR, //22 columns 
