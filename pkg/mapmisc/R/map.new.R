@@ -23,11 +23,18 @@ map.new = function(x, legendRight=FALSE, buffer=0, mar=c(0,0,0,0), ...) {
 
 	ldots = list(...)
 	ldots$mar = mar
-	if(!length(ldots$bty) & mar[4]>0 ) ldots$bty='l'
+	if(!length(ldots$bty)) {
+		if( mar[4]>0 ) {
+			ldots$bty='l'
+		} else {
+			ldots$bty='n'			
+		}
 	if(!length(ldots$xpd)) ldots$xpd=FALSE
 	if(!length(ldots$axes)) ldots$axes=TRUE
 	if(!length(ldots$xaxs)) ldots$xaxs = 'i'
 	if(!length(ldots$yaxs)) ldots$yaxs = 'i'
+	if(!length(ldots$xaxt)) ldots$yaxs = 'n'
+	if(!length(ldots$yaxt)) ldots$yaxs = 'n'
 	
   	do.call(par, ldots[setdiff(names(ldots),'axes')]) #(mar=mar, xaxs='i',yaxs='i',xpd=FALSE, ...)
   
