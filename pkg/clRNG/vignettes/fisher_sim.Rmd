@@ -67,7 +67,7 @@ Convictions
 
 ## Using the R function 
 fisher.test(Convictions)
-fisher.test(Convictions,   simulate.p.value = TRUE)
+fisher.test(Convictions,   simulate.p.value = TRUE, B = 1e5)
 ## Using the gpu function
 Nglobal = c(4,4)
 NperItem = 20
@@ -86,11 +86,13 @@ length(results)
 clRNG::fisher_simGpu(a, b, results, #extraR, extraX, 
 	streams, as.integer(Nglobal))
 
-
 matrix(as.vector(results), ncol=stream_num, byrow=TRUE)
+
+
 ## calculate the p-value
 STATISTIC <- -sum(lfactorial(Convictions))
-PVAL <- sum(   as.vector(results) <= STATISTIC  ) / (length(results))
+almost.1 <- 1 + 64 * .Machine$double.eps
+PVAL <- (1 + sum(   as.vector(results) <= STATISTIC/almost.1   )) / (length(results) + 1)
 PVAL
 ```
 
