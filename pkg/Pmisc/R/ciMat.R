@@ -4,6 +4,7 @@
 #'
 #' @param p coverage of confidence interval
 #' @param se.fit row names of result are 'fit' and 'se.fit'
+#' @param df degrees of freedom for t distribution, defaults to normal
 #' @return matrix with three columns (estimate, upper and lower bound of CI) and two rows
 #' @examples
 #' 
@@ -22,18 +23,24 @@
 #' exp(glmPred[,rownames(myCiMatPred)] %*% myCiMatPred)
 #' 
 #' @export
-ciMat = function(p=0.95, se.fit = FALSE) {
-  p = (1-p)/2
-  p = sort(unique(c(p, 1-p)))
-  res = rbind(
-      1,
-      c(0, stats::qnorm(p))
-  )
-  colnames(res) = c('est', format(100*p))
-  if(se.fit) {
-    rownames(res) = c('fit','se.fit')
-  } else {
-    rownames(res) = c('Estimate','Std. Error')
-  }
-  res
+ciMat = function (p = 0.95, se.fit = FALSE, df = NULL) 
+{
+    p = (1 - p)/2
+    p = sort(unique(c(p, 1 - p)))
+
+    if(length(df)) {
+      theQ = stats::qt(p, df=df)
+    } else {
+      theQ = stats::qnorm(p)
+    }
+
+    res = rbind(1, c(0, theQ))
+    colnames(res) = c("est", format(100 * p))
+    if (se.fit) {
+        rownames(res) = c("fit", "se.fit")
+    }
+    else {
+        rownames(res) = c("Estimate", "Std. Error")
+    }
+    res
 }
