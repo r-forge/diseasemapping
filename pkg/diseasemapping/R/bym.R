@@ -86,6 +86,10 @@ bym.needAdjmat = function(
 		...) {	
  	
 	if(requireNamespace("spdep", quietly=TRUE)) {
+		if(missing(region.id)) {
+			region.id = 'region.id'
+			data[[region.id]]=1:length(data)
+		}
 		adjMatNB=spdep::poly2nb(data, row.names =  data[[region.id]] )
 	} else {
 		adjMatNB = NULL
