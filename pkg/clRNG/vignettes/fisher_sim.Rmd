@@ -18,56 +18,23 @@ gpuInfo()$maxAllocatableMem/(1024^3)
 ```
 
 
-Create some streams
-```{r test}
 
-rowSums = vclVector(5,5,type="integer")
-colSums = vclVector(4,6,type="integer")
-
-Nglobal = c(4,2)
-NperItem = 12
-
-stream_num=prod(Nglobal)
-streams = clRNG:::cpp_mrg31k3pCreateStreams(stream_num)
-
-z = vclVector(length=as.integer(stream_num*NperItem), type="double")
-length(z)
-
-
-clRNG::fisher_simGpu(rowSums, colSums, z, 
-	#extraR, extraX, 
-	streams, as.integer(Nglobal))
-
-#stuff = clRNG:::cpp_fisher_sim_gpu(rowSums, colSums, z, 
-	#extraR, extraX, streams, as.integer(Nglobal))
-
-
-matrix(as.vector(z), ncol=stream_num, byrow=TRUE)
-
-
-t(as.matrix(streams))
-
-hist(as.vector(exp(z)), breaks=seq(0,1,by=0.1), prob=TRUE)
-
-
-
-
-
-
-```
 
 
 
 Example
 ```{r }
-## Fisher (1962, 1970), Criminal convictions of like-sex twins
-Convictions <- matrix(c(2, 10, 15, 3), nrow = 2,
-	             dimnames = list(c("Dizygotic", "Monozygotic"), c("Convicted", "Not convicted")))
-Convictions
-
+TeaTasting <-
+matrix(c(2, 10, 15, 3),
+       nrow = 2,
+       dimnames = list(Guess = c("Milk", "Tea"),
+                       Truth = c("Milk", "Tea")))
+TeaTasting
 ## Using the R function 
-fisher.test(Convictions)
-fisher.test(Convictions,   simulate.p.value = TRUE, B = 1e5)
+fisher.test(TeaTasting,   simulate.p.value = TRUE, B = 1e5)
+
+
+
 ## Using the gpu function
 Nglobal = c(4,4)
 NperItem = 20
@@ -78,22 +45,25 @@ streams = clRNG:::cpp_mrg31k3pCreateStreams(stream_num)
 results = vclVector(length=as.integer(stream_num*NperItem), type="double")
 length(results)
 
- a = as.integer(rowSums(Convictions, na.rm = FALSE))
- b = as.integer(colSums(Convictions, na.rm = FALSE))
+ a = as.integer(rowSums(TeaTasting, na.rm = FALSE))
+ b = as.integer(colSums(TeaTasting, na.rm = FALSE))
  a<-as.vclVector(a)
  b<-as.vclVector(b)
 
-clRNG::fisher_simGpu(a, b, results, #extraR, extraX, 
-	streams, as.integer(Nglobal))
+ extraX = vclVector(length=as.integer(2*2*stream_num*NperItem), type="double")
+ 
+ 
+clRNG::fisher_simGpu(a, b, results, #extraR, 
+                     extraX, streams, workgroupSize = Nglobal)
 
-matrix(as.vector(results), ncol=stream_num, byrow=TRUE)
+matrix(as.vector(extraX), ncol=4*stream_num, byrow=TRUE)
 
 
 ## calculate the p-value
-STATISTIC <- -sum(lfactorial(Convictions))
-almost.1 <- 1 + 64 * .Machine$double.eps
-PVAL <- (1 + sum(   as.vector(results) <= STATISTIC/almost.1   )) / (length(results) + 1)
-PVAL
+##STATISTIC <- -sum(lfactorial(TeaTasting))
+##almost.1 <- 1 + 64 * .Machine$double.eps
+##PVAL <- (1 + sum(   as.vector(results) <= STATISTIC/almost.1   )) / (length(results) + 1)
+##PVAL
 ```
 
 

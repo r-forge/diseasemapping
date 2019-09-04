@@ -15,6 +15,7 @@ fisher_simGpu=function(
   sr, #marginal row total 
   sc, #marginal column total
   x,# the vector to store test statistics,
+  extraX,
   streams, 
   workgroupSize){
   
@@ -42,7 +43,7 @@ fisher_simGpu=function(
   
   
   
-  cpp_fisher_sim_gpu(sr, sc, x, streams, workgroupSize)
+  cpp_fisher_sim_gpu(sr, sc, x,extraX, streams, workgroupSize)
   
   invisible(streams)
   

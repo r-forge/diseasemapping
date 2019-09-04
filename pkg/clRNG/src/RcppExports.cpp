@@ -6,17 +6,18 @@
 using namespace Rcpp;
 
 // cpp_fisher_sim_gpu
-SEXP cpp_fisher_sim_gpu(Rcpp::S4 srR, Rcpp::S4 scR, Rcpp::S4 resultsR, Rcpp::IntegerMatrix streamsR, Rcpp::IntegerVector max_global_size);
-RcppExport SEXP _clRNG_cpp_fisher_sim_gpu(SEXP srRSEXP, SEXP scRSEXP, SEXP resultsRSEXP, SEXP streamsRSEXP, SEXP max_global_sizeSEXP) {
+SEXP cpp_fisher_sim_gpu(Rcpp::S4 srR, Rcpp::S4 scR, Rcpp::S4 resultsR, Rcpp::S4 extraXR, Rcpp::IntegerMatrix streamsR, Rcpp::IntegerVector max_global_size);
+RcppExport SEXP _clRNG_cpp_fisher_sim_gpu(SEXP srRSEXP, SEXP scRSEXP, SEXP resultsRSEXP, SEXP extraXRSEXP, SEXP streamsRSEXP, SEXP max_global_sizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type srR(srRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type scR(scRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type resultsR(resultsRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type extraXR(extraXRSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerMatrix >::type streamsR(streamsRSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type max_global_size(max_global_sizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_fisher_sim_gpu(srR, scR, resultsR, streamsR, max_global_size));
+    rcpp_result_gen = Rcpp::wrap(cpp_fisher_sim_gpu(srR, scR, resultsR, extraXR, streamsR, max_global_size));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -49,7 +50,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_clRNG_cpp_fisher_sim_gpu", (DL_FUNC) &_clRNG_cpp_fisher_sim_gpu, 5},
+    {"_clRNG_cpp_fisher_sim_gpu", (DL_FUNC) &_clRNG_cpp_fisher_sim_gpu, 6},
     {"_clRNG_cpp_mrg31k3pCreateStreams", (DL_FUNC) &_clRNG_cpp_mrg31k3pCreateStreams, 1},
     {"_clRNG_cpp_random_numberGpu", (DL_FUNC) &_clRNG_cpp_random_numberGpu, 6},
     {NULL, NULL, 0}
