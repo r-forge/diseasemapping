@@ -41,8 +41,6 @@ fisher_simGpu=function(
     cat('\nglobal sizes ', toString(workgroupSize), '\n streams ', toString(dim(streams)), '\n')
   }
   
-  
-  
   cpp_fisher_sim_gpu(sr, sc, x,extraX, streams, workgroupSize)
   
   invisible(streams)

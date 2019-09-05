@@ -13,9 +13,8 @@ std::string mrg31k3pTemplateStringSecond =
 "* out,\n"
 "const int Nsim) {\n"
 
-"const int Xsize = get_global_size(0);\n"
-"const int size = get_global_size(1)*Xsize;\n"
-"int index = get_global_id(1)*Xsize + get_global_id(0);\n"
+"const int size = get_global_size(1)*get_global_size(0);\n"
+"int index = get_global_id(1)*get_global_size(0) + get_global_id(0);\n"
 
 "clrngMrg31k3pStream private_stream_d;\n" // This is not a pointer! the declaration allocates private memory
 "clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[index]);\n" //copy from host into private memory
@@ -40,11 +39,10 @@ std::string mrg31k3pTemplateStringForth =
 "* z,\n"
 "const int Nsim ){\n"
 
-"const int Xsize = get_global_size(0);\n"
-"const int size = get_global_size(1)*Xsize;\n"
+"const int size = get_global_size(1)*get_global_size(0);\n"
 
 "clrngMrg31k3pStream private_stream_d;\n"// This is not a pointer! the declaration allocates private memory
-"int index = get_global_id(1)*Xsize + get_global_id(0);\n"
+"int index = get_global_id(1)*get_global_size(0) + get_global_id(0);\n"
 "int D;\n"
 "clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[index]);\n"
 "index = 2*index;\n";
@@ -107,7 +105,7 @@ std::string mrg31k3pIntegerUnifString =
     mrg31k3pTemplateStringThird;
 
 
-
+//////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 std::string mrg31k3pDoubleNormString = 
     "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n" 

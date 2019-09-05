@@ -17,15 +17,10 @@ gpuInfo()$deviceName
 gpuInfo()$maxAllocatableMem/(1024^3)
 ```
 
-
-
-
-
-
 Example
 ```{r }
 TeaTasting <-
-matrix(c(3,13,9, 4),
+matrix(c(2,8,7, 2),
        nrow = 2,
        dimnames = list(Guess = c("Milk", "Tea"),
                        Truth = c("Milk", "Tea")))
@@ -35,8 +30,8 @@ fisher.test(TeaTasting, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
 
 
 ## Using the gpu function
-Nglobal = c(4,4)
-NperItem = 50
+Nglobal = c(8,64)
+NperItem = 30
 
 stream_num=prod(Nglobal)
 streams = clRNG:::cpp_mrg31k3pCreateStreams(stream_num)
@@ -54,8 +49,8 @@ length(results)
  
 clRNG::fisher_simGpu(a, b, results, extraX, streams, workgroupSize = Nglobal)
 
-matrix(as.vector(extraX), ncol=4*stream_num, byrow=TRUE)
-matrix(as.vector(results), ncol=stream_num, byrow=TRUE)
+#matrix(as.vector(extraX), ncol=4*stream_num, byrow=TRUE)
+#matrix(as.vector(results), ncol=stream_num, byrow=TRUE)
 
 
 ## calculate the p-value

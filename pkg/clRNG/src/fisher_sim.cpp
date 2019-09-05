@@ -16,7 +16,7 @@ std::string FisherSimkernelString(int NR, int NC) {
   std::string result = mrg31k3pTypeString<T>(); 
   
   result += "\n"
-  "\n#define MAXITER 1000\n"
+  "\n#define MAXITER 5000\n"
   "#define nrow " + std::to_string(NR) + "\n"
   "#define ncol " + std::to_string(NC) + "\n"
   "#define nr_1  " + std::to_string(NR - 1) + "\n"
@@ -81,9 +81,6 @@ std::string FisherSimkernelString(int NR, int NC) {
   "                matrix[l + jjj * nrow] = 0;\n"
   "              ia = 0;\n"
   "              break;\n"  // induce break of m loop
-#ifdef DEBUGEXTRA
-  // "     extraX[l + m*nrow + D*nrowncol+Diter1*nrowncol*vsize]= -1.0;\n"
-#endif  
   " }else{\n" // ie not zero
   "dummy = mrg31k3p_NORM_cl * clrngMrg31k3pNextState(&private_stream_d.current);\n"  //???
   "goTo160 = 0;\n"
@@ -173,31 +170,12 @@ std::string FisherSimkernelString(int NR, int NC) {
   "extraX[nrowncol*D+m]=matrix[m];\n"
   "}\n"
   
-  
-  
-  
-  
+
   // now on fisher_sim
-#ifdef DEBUGEXTRA
-  //"      for (l = 0; l < nrow; ++l) {\n"
-  //"         for (m = 0; m < ncol; ++m) {\n"
-  //"  extraR[l + m*nrow + D*nrowncol]= matrix[nr_1 + m * nrow];\n"
-  //"}}\n"
-#endif    
-  
   "  ans = 0.;\n"
   "  for (m = 0; m < ncol; ++m) {\n"
   "    for (l = 0,u=m*nrow; l < nrow;  l++, u++) {\n"
   "      ans -= fact[matrix[u]];\n"
-  
-  
-#ifdef DEBUGEXTRA
-  //"  extraR[u + D*nrowncol + 1*nrowncol*vsize]= ans;\n"
-  //"  extraR[u + D*nrowncol + 2*nrowncol*vsize]= fact[matrix[u]];\n"
-  //"  extraR[u + D*nrowncol + 3*nrowncol*vsize]= matrix[u];\n"
-  //"  extraR[u + D*nrowncol + 4*nrowncol*vsize]= u;\n"
-#endif  
-  
   "    }\n"  // for l
   "  }\n"  // for m
   "  results[D] = ans;\n"    
@@ -212,7 +190,7 @@ template<typename T>
 void fisher_sim_gpu(
     viennacl::vector_base<int> &sr, 
     viennacl::vector_base<int> &sc,
-    viennacl::vector_base<T> &results,  //viennacl::vector_base<T> &extraR, 
+    viennacl::vector_base<T> &results,  
     viennacl::vector_base<T> &extraX, 
     Rcpp::IntegerMatrix streamsR, 
     Rcpp::IntegerVector numWorkItems,
@@ -277,7 +255,6 @@ void fisher_sim_gpu(
   
   // copy streams back to cpu
   viennacl::backend::memory_read(bufIn.handle(), 0, streamBufferSize, streams);
-  //#endif 
   //return streams to R 
   convertclRngMat(streams, streamsR);
 }
@@ -287,7 +264,7 @@ template<typename T>
 SEXP fisher_sim_gpu_Templated(
     Rcpp::S4  srR, 
     Rcpp::S4  scR,
-    Rcpp::S4  resultsR,//Rcpp::S4  extraRR,
+    Rcpp::S4  resultsR,
     Rcpp::S4  extraXR,
     Rcpp::IntegerMatrix streamsR,   
     Rcpp::IntegerVector max_global_size){
@@ -298,16 +275,10 @@ SEXP fisher_sim_gpu_Templated(
   std::shared_ptr<viennacl::vector_base<int> > sc = getVCLVecptr<int>(scR.slot("address"), 1, ctx_id);
   std::shared_ptr<viennacl::vector_base<T> > results = getVCLVecptr<T>(resultsR.slot("address"), 1, ctx_id);
   std::shared_ptr<viennacl::vector_base<T> > extraX = getVCLVecptr<T>(extraXR.slot("address"), 1, ctx_id);
-#ifdef DEBUGEXTRA
- // std::shared_ptr<viennacl::vector_base<T> > extraR = getVCLVecptr<T>(extraRR.slot("address"), 1, ctx_id);
- // std::shared_ptr<viennacl::vector_base<T> > extraX = getVCLVecptr<T>(extraXR.slot("address"), 1, ctx_id);
-#endif 
   
-  fisher_sim_gpu<T>(*sr, *sc, *results, //    *extraR, 
-                    *extraX, streamsR, max_global_size, ctx_id);
+  fisher_sim_gpu<T>(*sr, *sc, *results, *extraX, streamsR, max_global_size, ctx_id);
 
   return (resultsR);
-  //return(extraXR);
 }
 
 
