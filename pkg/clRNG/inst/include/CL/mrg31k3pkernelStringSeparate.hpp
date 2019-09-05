@@ -82,7 +82,7 @@ std::string mrg31k3pTemplateStringFifth =
 
 std::string mrg31k3pDoubleUnifString = 
     "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n"
-    "\n#define mrg31k3p_NORM_cl 2.328306549295727688e-10\n\n" +
+    "\n#define mrg31k3p_NORM_cl 4.656612873077392578125e-10\n\n" +
     mrg31k3pCommon +
     mrg31k3pTemplateStringFirst + "double" +
     mrg31k3pTemplateStringSecond +
@@ -91,7 +91,7 @@ std::string mrg31k3pDoubleUnifString =
 
 
 std::string mrg31k3pFloatUnifString = 
-  "\n#define mrg31k3p_NORM_cl 2.3283064e-10\n\n" +
+  "\n#define mrg31k3p_NORM_cl 4.6566126e-10\n\n" +
     mrg31k3pCommon + 
     mrg31k3pTemplateStringFirst + "float" +
     mrg31k3pTemplateStringSecond +

@@ -25,19 +25,18 @@ gpuInfo()$maxAllocatableMem/(1024^3)
 Example
 ```{r }
 TeaTasting <-
-matrix(c(2, 10, 15, 3),
+matrix(c(3,13,9, 4),
        nrow = 2,
        dimnames = list(Guess = c("Milk", "Tea"),
                        Truth = c("Milk", "Tea")))
 TeaTasting
 ## Using the R function 
-fisher.test(TeaTasting,   simulate.p.value = TRUE, B = 1e5)
-
+fisher.test(TeaTasting, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
 
 
 ## Using the gpu function
 Nglobal = c(4,4)
-NperItem = 20
+NperItem = 50
 
 stream_num=prod(Nglobal)
 streams = clRNG:::cpp_mrg31k3pCreateStreams(stream_num)
@@ -53,17 +52,21 @@ length(results)
  extraX = vclVector(length=as.integer(2*2*stream_num*NperItem), type="double")
  
  
-clRNG::fisher_simGpu(a, b, results, #extraR, 
-                     extraX, streams, workgroupSize = Nglobal)
+clRNG::fisher_simGpu(a, b, results, extraX, streams, workgroupSize = Nglobal)
 
 matrix(as.vector(extraX), ncol=4*stream_num, byrow=TRUE)
+matrix(as.vector(results), ncol=stream_num, byrow=TRUE)
 
 
 ## calculate the p-value
-##STATISTIC <- -sum(lfactorial(TeaTasting))
-##almost.1 <- 1 + 64 * .Machine$double.eps
-##PVAL <- (1 + sum(   as.vector(results) <= STATISTIC/almost.1   )) / (length(results) + 1)
-##PVAL
+STATISTIC <- -sum(lfactorial(TeaTasting))
+almost.1 <- 1 + 64 * .Machine$double.eps
+PVAL <- (1 + sum(   as.vector(results) <= STATISTIC/almost.1   )) / (length(results) + 1)
+PVAL
+
+PVAL <- (sum(   as.vector(results) <= STATISTIC  )) / (length(results))
+PVAL
+ 
 ```
 
 

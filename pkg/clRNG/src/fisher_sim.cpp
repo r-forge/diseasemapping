@@ -13,9 +13,9 @@ template <typename T>
 std::string FisherSimkernelString(int NR, int NC) { 
   
   std::string typeString = openclTypeString<T>();
-  std::string extraX = mrg31k3pTypeString<T>(); 
+  std::string result = mrg31k3pTypeString<T>(); 
   
-  extraX += "\n"
+  result += "\n"
   "\n#define MAXITER 1000\n"
   "#define nrow " + std::to_string(NR) + "\n"
   "#define ncol " + std::to_string(NC) + "\n"
@@ -205,8 +205,7 @@ std::string FisherSimkernelString(int NR, int NC) {
   
   "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[index], &private_stream_d);\n"
   "}\n" ;
-  //return(result);
-  return(extraX);
+  return(result);
 }
 
 template<typename T> 
@@ -257,8 +256,7 @@ void fisher_sim_gpu(
   
   
   viennacl::vector_base<T> fact = viennacl::vector_base<T>(n+1, ctx); 
-  //viennacl::vector_base<T> extraX = viennacl::vector_base<T>(nr*nc*vsize, ctx); 
-  
+
   
   // Calculate log-factorials.  fact[i] = lgamma(i+1)/
   fact(0) = 0.;
@@ -273,7 +271,7 @@ void fisher_sim_gpu(
       sr, sc, 
       n, vsize, 
       fact, 
-      results,//extraR, 
+      results,
       extraX,
       bufIn) ); 
   
@@ -308,8 +306,8 @@ SEXP fisher_sim_gpu_Templated(
   fisher_sim_gpu<T>(*sr, *sc, *results, //    *extraR, 
                     *extraX, streamsR, max_global_size, ctx_id);
 
-  //return (resultsR);
-  return(extraXR);
+  return (resultsR);
+  //return(extraXR);
 }
 
 

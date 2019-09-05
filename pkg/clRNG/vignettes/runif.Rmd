@@ -51,31 +51,31 @@ clRNG::rnumberGpu(x, streams=streams,random_type = "uniform")
 as.vector(x)
 ```
 
-```{r hist, eval=FALSE}
+```{r hist, eval=TRUE}
 
 
-Nglobal = 128
-streams = clRNG:::cpp_mrg31k3pCreateStreams(Nglobal)
+Nglobal = c(2,2)
+streams = clRNG:::cpp_mrg31k3pCreateStreams(prod(Nglobal))
 if(gpuInfo()$maxAllocatableMem > 1e10) {
   NperItem = 500
 } else {
   NperItem = 200
 }
-x = vclVector(length=as.integer(Nglobal*NperItem), type=theType)
-length(x)*1e-6
+x = vclVector(length=as.integer(prod(Nglobal)*NperItem), type=theType)
+length(x)
 
 system.time(junk <- runif(length(x)))
-system.time(streams <- clRNG::rnumberGpu(x, Nglobal, streams=streams, random_type = "uniform"))
+system.time(streams <- clRNG::rnumberGpu(x,  streams=streams,Nglobal, random_type = "uniform"))
 
 xVec = as.vector(x)
 
 hist(xVec, breaks=seq(-0.1,1.1,len=121))
 
-xMat = matrix(xVec, ncol=Nglobal, byrow=TRUE)
+xMat = matrix(xVec, ncol=prod(Nglobal), byrow=TRUE)
 
 theLim = 0.5 + 0.1*c(-1,1)
-plot(as.vector(xMat[-1,1]), as.vector(xMat[-nrow(xMat),1]), xlim = theLim, ylim=theLim, pch='.')
-plot(as.vector(xMat[-1,2]), as.vector(xMat[-nrow(xMat),2]), xlim = theLim, ylim=theLim, pch='.')
+#plot(as.vector(xMat[-1,1]), as.vector(xMat[-nrow(xMat),1]), xlim = theLim, ylim=theLim, pch='.')
+#plot(as.vector(xMat[-1,2]), as.vector(xMat[-nrow(xMat),2]), xlim = theLim, ylim=theLim, pch='.')
 
 ```
 
