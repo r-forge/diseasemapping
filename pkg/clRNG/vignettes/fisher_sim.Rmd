@@ -17,13 +17,12 @@ gpuInfo()$deviceName
 gpuInfo()$maxAllocatableMem/(1024^3)
 ```
 
-Example
+Example 1
 ```{r }
-TeaTasting <-
-matrix(c(2,8,7, 2),
-       nrow = 2,
-       dimnames = list(Guess = c("Milk", "Tea"),
-                       Truth = c("Milk", "Tea")))
+TeaTasting <-matrix(c(21,17,5,19,38,6,26,12,9),nrow=3)
+#matrix(c(10,20,10,5, 30,30,60,10, 100,100,140,90, 60,70,120,110), 4, 4,
+#           dimnames = list(income = c("< 15k", "15-25k", "25-40k", "> 40k"),
+#                     satisfaction = c("VeryD", "LittleD", "ModerateS", "VeryS")))
 TeaTasting
 ## Using the R function 
 fisher.test(TeaTasting, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
@@ -44,12 +43,12 @@ length(results)
  a<-as.vclVector(a)
  b<-as.vclVector(b)
 
- extraX = vclVector(length=as.integer(2*2*stream_num*NperItem), type="double")
+ extraX = vclVector(length=as.integer(4*4*stream_num*NperItem), type="double")
  
  
 clRNG::fisher_simGpu(a, b, results, extraX, streams, workgroupSize = Nglobal)
 
-#matrix(as.vector(extraX), ncol=4*stream_num, byrow=TRUE)
+#matrix(as.vector(extraX), ncol=16*stream_num, byrow=TRUE)
 #matrix(as.vector(results), ncol=stream_num, byrow=TRUE)
 
 
@@ -65,7 +64,11 @@ PVAL
 ```
 
 
+Example 2
+```{}
 
+
+```
 
 
 
