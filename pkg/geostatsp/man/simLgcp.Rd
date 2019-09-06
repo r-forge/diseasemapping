@@ -7,6 +7,7 @@
 \description{
 Give covariates and model parameters, simulates a log-Gaussian Cox process
 }
+
 \usage{
 	simLgcp(param, covariates=NULL, betas=NULL, 
 	offset=NULL,

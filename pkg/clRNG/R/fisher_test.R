@@ -17,7 +17,8 @@ fisher_simGpu=function(
   x,# the vector to store test statistics,
   extraX,
   streams, 
-  workgroupSize){
+  workgroupSize,
+  localSize){
   
   verbose = TRUE
   
@@ -36,12 +37,13 @@ fisher_simGpu=function(
     # make a deep copy
     streams = matrix(as.vector(streams), nrow(streams), ncol(streams), FALSE, dimnames(streams))
      }
+  localSize = pmax(2,c(localSize, 2, 2)[1:2])
   
   if(verbose) {
-    cat('\nglobal sizes ', toString(workgroupSize), '\n streams ', toString(dim(streams)), '\n')
+    cat('local sizes ', toString(localSize), '\nglobal sizes ', toString(workgroupSize),
+        '\n streams ', toString(dim(streams)), '\n')
   }
-  
-  cpp_fisher_sim_gpu(sr, sc, x,extraX, streams, workgroupSize)
+  cpp_fisher_sim_gpu(sr, sc, x,extraX, streams, workgroupSize,localSize)
   
   invisible(streams)
   

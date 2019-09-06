@@ -194,6 +194,7 @@ void fisher_sim_gpu(
     viennacl::vector_base<T> &extraX, 
     Rcpp::IntegerMatrix streamsR, 
     Rcpp::IntegerVector numWorkItems,
+    IntegerVector numLocalItems,
     int ctx_id){
   
   const int nr = sr.size(), nc = sc.size();
@@ -267,7 +268,8 @@ SEXP fisher_sim_gpu_Templated(
     Rcpp::S4  resultsR,
     Rcpp::S4  extraXR,
     Rcpp::IntegerMatrix streamsR,   
-    Rcpp::IntegerVector max_global_size){
+    Rcpp::IntegerVector max_global_size,
+    Rcpp::IntegerVector max_local_size){
 
   const int ctx_id = INTEGER(resultsR.slot(".context_index"))[0]-1;
   
@@ -291,7 +293,8 @@ SEXP cpp_fisher_sim_gpu(
     Rcpp::S4  resultsR,
     Rcpp::S4  extraXR,
     Rcpp::IntegerMatrix streamsR,  
-    Rcpp::IntegerVector max_global_size){
+    Rcpp::IntegerVector max_global_size,
+    Rcpp::IntegerVector max_local_size){
   
   Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(resultsR));
   std::string precision_type = (std::string) classVarR;
