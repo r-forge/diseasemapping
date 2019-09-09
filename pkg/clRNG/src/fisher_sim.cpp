@@ -194,7 +194,7 @@ void fisher_sim_gpu(
     viennacl::vector_base<T> &extraX, 
     Rcpp::IntegerMatrix streamsR, 
     Rcpp::IntegerVector numWorkItems,
-    IntegerVector numLocalItems,
+    Rcpp::IntegerVector numLocalItems,
     int ctx_id){
   
   const int nr = sr.size(), nc = sc.size();
@@ -278,7 +278,7 @@ SEXP fisher_sim_gpu_Templated(
   std::shared_ptr<viennacl::vector_base<T> > results = getVCLVecptr<T>(resultsR.slot("address"), 1, ctx_id);
   std::shared_ptr<viennacl::vector_base<T> > extraX = getVCLVecptr<T>(extraXR.slot("address"), 1, ctx_id);
   
-  fisher_sim_gpu<T>(*sr, *sc, *results, *extraX, streamsR, max_global_size, ctx_id);
+  fisher_sim_gpu<T>(*sr, *sc, *results, *extraX, streamsR, max_global_size,max_local_size, ctx_id);
 
   return (resultsR);
 }
@@ -301,10 +301,10 @@ SEXP cpp_fisher_sim_gpu(
   
   if(precision_type == "fvclVector") {
     fisher_sim_gpu_Templated<float>(
-      srR,scR,resultsR,extraXR, streamsR,max_global_size);
+      srR,scR,resultsR,extraXR, streamsR,max_global_size,max_local_size);
   } else if (precision_type == "dvclVector") {
     fisher_sim_gpu_Templated<double>(
-      srR,scR,resultsR,extraXR, streamsR,max_global_size);
+      srR,scR,resultsR,extraXR, streamsR,max_global_size,max_local_size);
   } else {
     Rcpp::warning("class of var must be fvclVector or dvclVector");
   }
