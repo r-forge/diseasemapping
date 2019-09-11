@@ -26,7 +26,7 @@ t(streams1)
 
 Generate eight random uniforms
 ```{r generateUnif}
-x = vclVector(length=8L, type=theType)
+x = vclVector(length=8L, type="float")
 streams2<-gpuRandom::gpuRn(x, streams=streams1,random_type = "uniform")
 ```
 
