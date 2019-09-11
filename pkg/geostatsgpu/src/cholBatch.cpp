@@ -1,23 +1,6 @@
 #include "geostatsgpu.hpp"
 //#define DEBUG
 
-/* TO DO
-- v1: one matrix per work group
-
-    - for Dcol small
-    - d0 matrix rows d1 multiple items on same row. local memory for reductions
-    - cache A[Dcol, 1:Dcol] D[1:Dcol] in local memory
-    - ... with a global cache for any overflow
-
-- v2: small number of work items per matrix, final reductions on gpu
-
-    - for N-Dcol large
-    - work items rows by cols by matrix
-    - loop from Dcol to Dcol + K
-    - need K by (Dcol+K)/Ngroups[1] by 2 local cache for matrix multiplication
-    - or K by Nlocal1 by (2 + c) local cache for matrix multiplication, cache c row groups locally, remainder global
-    - need Nmatrix by K by (N-Dcol) by Ngroups global memory for final reduction
-*/
 
 
 template <typename T> 
@@ -43,33 +26,28 @@ std::string cholBatchKernelString( // V1
   }
 
   result +=
-  "\n//dimension of matrix\n#define N " + std::to_string(N) + "\n"
-  "//column to start at\n#define colStart " + std::to_string(colStart) + "\n"
+  "\n#define N " + std::to_string(N) + "  //dimension of matrix\n"
+  "#define colStart " + std::to_string(colStart) + "  //column to start at\n"
   "#define colEnd " + std::to_string(colEnd) + "\n"
   "//internal number of columns\n#define Npad " + std::to_string(Npad) + "\n"
   "//internal columns for matrix holding diagonals\n#define NpadDiag " + std::to_string(NpadDiag) + "\n"
   "#define Nmatrix " + std::to_string(Nmatrix) + "\n"
   "//elements in internal cache\n#define Ncache " + std::to_string(Ncache[0]) + "\n"
   "//extra rows between stacked matrices\n#define NpadBetweenMatrices " + std::to_string(NpadBetweenMatrices) + "\n"
-  "#define maxLocalItems " + std::to_string(Nlocal[0]*Nlocal[1]) + "\n\n";
+  "#define maxLocalItems " + std::to_string(Nlocal[0]*Nlocal[1]) + "\n";
 
-if(allowOverflow) {
-  result += "\n#define allowOverflow\n\n";
-} else {
-  result += "\n#define minDcolNcache Dcol\n";
-}
-  
-result += "__kernel void cholBatch(\n"
+
+result += "\n__kernel void cholBatch(\n"
 "	__global " + typeString + " *A,\n" 
 "	__global " + typeString + " *diag\n"
 "){\n"
 
-//"const int colStart=0, colStop=;\n"
-"const int localIndex = get_local_id(0)*get_local_size(1) + get_local_id(1);\n"
-"const int NlocalTotal = get_local_size(0)*get_local_size(1);\n"
+" const int localIndex = get_local_id(0)*get_local_size(1) + get_local_id(1);\n"
+" const int NlocalTotal = get_local_size(0)*get_local_size(1);\n"
 
-" __local " + typeString + " diagLocal[Ncache];//local cache of diagonals\n"
-" __local " + typeString + " toAddLocal[maxLocalItems];\n"
+" local " + typeString + " diagLocal[Ncache];//local cache of diagonals\n"
+
+" local " + typeString + " toAddLocal[maxLocalItems];\n"
 
 "	int Dcol, DcolNpad;\n"
 "	int Drow, Dk, Dmatrix;\n";
@@ -79,43 +57,49 @@ result += "	int minDcolNcache;\n";
 }
 
 result +=  typeString + " DL;\n" 
-  "__local " +  typeString + " diagDcol;\n" 
-  "__global " + typeString + " *AHere, *AHereDcol, *AHereDrow, *diagHere;\n"
-
+"  local " +  typeString + " diagDcol;\n" 
+"  int AHere, AHereDcol, AHereDrow, diagHere;\n"
+  
 
 "for(Dmatrix = get_group_id(0); Dmatrix < Nmatrix; Dmatrix+= get_num_groups(0)){\n"
 
-"diagHere = &diag[Dmatrix*NpadDiag];\n"
-"AHere = &A[Dmatrix*NpadBetweenMatrices];\n"
-
+"diagHere = Dmatrix*NpadDiag;\n"
+"AHere = Dmatrix*NpadBetweenMatrices;\n"
 
 "for(Dcol = colStart; Dcol < colEnd; Dcol++) {\n"
-
 "  DcolNpad = Dcol*Npad;\n"
+"  AHereDcol = AHere+DcolNpad;\n"
 //"  Dcolm1 = Dcol - 1;\n"
-"  AHereDcol = &AHere[DcolNpad];\n"
+"  toAddLocal[localIndex]=0.0;\n";
 
-"\n#ifdef allowOverflow\n"
-"  minDcolNcache = min(Dcol, Ncache);\n"
-"#endif\n\n"
+
+if(allowOverflow) {
+  result +="  minDcolNcache = min(Dcol, Ncache);\n"
+  "  for(Dk = localIndex; Dk < minDcolNcache; Dk += NlocalTotal) {\n";
+} else {
+  result +="  for(Dk = localIndex; Dk < Dcol; Dk += NlocalTotal) {\n";
+}
+
 
 // diagonals
-"  toAddLocal[localIndex]=0.0;\n"
-"  for(Dk = localIndex; Dk < minDcolNcache; Dk += NlocalTotal) {\n"
-"    DL = AHereDcol[Dk];\n"
-"    diagLocal[Dk] = diagHere[Dk] * DL;\n"// cached A[Dcol, 1:Dcol] D[1:Dcol]
+result += 
+"    DL = A[AHereDcol+Dk];\n"
+"    diagLocal[Dk] = diag[diagHere+Dk] * DL;\n"// cached A[Dcol, 1:Dcol] D[1:Dcol]
 "    toAddLocal[localIndex] += diagLocal[Dk] * DL;\n"
-"  }\n" // Dk
-"\n#ifdef allowOverflow\n"
-"  for(; Dk < N; Dk += NlocalTotal) {\n"
-"    DL = AHereDcol[Dk];\n"
-"    toAddLocal[localIndex] += diagHere[Dk] * DL * DL;\n"
-"  }\n" // Dk
-"#endif\n\n"
+"  }// Dk\n"; 
+
+
+if(allowOverflow) {
+  result +=
+    "  for(Dk=minDcolNcache+localIndex; Dk < N; Dk += NlocalTotal) {\n"
+"    DL = A[AHereDcol+Dk];\n"
+"    toAddLocal[localIndex] += diag[diagHere+Dk] * DL * DL;\n"
+"  }// Dk\n";
+}
 
 
 // reduction on dimension 1
-"barrier(CLK_LOCAL_MEM_FENCE);\n"
+result += "barrier(CLK_LOCAL_MEM_FENCE);\n"
 "if(get_local_id(1) == 0){"
 " for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
 " toAddLocal[localIndex] +=  toAddLocal[localIndex + Dk];\n"
@@ -129,54 +113,69 @@ result +=  typeString + " DL;\n"
 "    toAddLocal[localIndex] +=  toAddLocal[Dk];\n"
 "  }\n" //Dk
 
-"  diagDcol = AHereDcol[Dcol] - toAddLocal[localIndex];\n"
-"  diagHere[Dcol] = diagDcol;\n"
+"  diagDcol = A[AHereDcol+Dcol] - toAddLocal[localIndex];\n"
+"  diag[diagHere+Dcol] = diagDcol;\n"
 #ifdef DEBUG
-"AHere[Dcol] = -toAddLocal[localIndex];\n"
+"A[AHere+Dcol] = -toAddLocal[localIndex];\n"
 //"AHereDcol[Dcol] = 10*Dcol;\n"
 #endif
 "\n#ifdef diagToOne\n"
-"AHereDcol[Dcol] = 1.0;\n"
+"A[AHereDcol+Dcol] = 1.0;\n"
 "#endif\n"
 "}\n" //localIndex==0
-"  barrier(CLK_LOCAL_MEM_FENCE);\n"
+"  barrier(CLK_LOCAL_MEM_FENCE);\n";
 //"  diagDcol = diagHere[Dcol];\n"
 
 // off diagonals
-
+result +=
 "	for(Drow = Dcol+get_local_id(0)+1; Drow < N; Drow += get_local_size(0)) {\n"
 
-"  AHereDrow = &AHere[Drow*Npad];\n"
-"	 DL = 0.0;\n"
+"  AHereDrow = AHere+Drow*Npad;\n"
+"	 DL = 0.0;\n";
 
-"	 for(Dk = get_local_id(1); Dk < minDcolNcache; Dk+=get_local_size(1)) {\n"
-"    DL += AHereDrow[Dk] * diagLocal[Dk];\n"
+
+if(allowOverflow) {
+  result +=
+    "	 for(Dk = get_local_id(1); Dk < minDcolNcache; Dk+=get_local_size(1)) {\n";
+} else {
+  result +=
+    "	 for(Dk = get_local_id(1); Dk < Dcol; Dk+=get_local_size(1)) {\n";
+}
+
+result +=
+  "    DL += A[AHereDrow+Dk] * diagLocal[Dk];\n"
 			// DL -= A[Drow + Dk * Npad] * A[Dcol + DkNpad] * diag[Dk];"
-"  }\n" // Dk
-"\n#ifdef allowOverflow\n"
-"	 for(; Dk < Dcol; Dk+=get_local_size(1)) {\n"
-"    DL += AHereDrow[Dk] * diagHere[Dk] * AHereDcol[Dk];\n"
-"  }\n" // Dk
-"#endif\n\n"
-"  toAddLocal[localIndex] = DL;\n"
+"  } // Dk\n";
+
+if(allowOverflow) {
+  result +=
+    "	 for(minDcolNcache + get_local_id(1); Dk < Dcol; Dk+=get_local_size(1)) {\n"
+"    DL += A[AHereDrow+Dk] * diag[diagHere+Dk] * A[AHereDcol+Dk];\n"
+"  }// Dk\n"; 
+}
+result +=
+  "  toAddLocal[localIndex] = DL;\n";
 
 // local reduction
-"barrier(CLK_LOCAL_MEM_FENCE);\n"
+result +=
+  "barrier(CLK_LOCAL_MEM_FENCE);\n"
 "if(get_local_id(1) == 0){"
 "  DL = toAddLocal[localIndex];\n"
 "  for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
 "    DL +=  toAddLocal[localIndex + Dk];\n"
 "  }\n" //Dk
-"  AHereDrow[Dcol] = (AHereDrow[Dcol] - DL)/diagDcol;\n"
+"  A[AHereDrow+Dcol] = (A[AHereDrow+Dcol] - DL)/diagDcol;\n"
 #ifdef DEBUG
-"  AHereDcol[Drow] = DL;\n" 
+"  A[AHereDcol+Drow] = DL;\n" 
 #endif
-"}//get_local_id(1) == 0\n\n" 
-"}//Drow\n" 
+"}//get_local_id(1) == 0\n\n"; 
 
-"  barrier(CLK_GLOBAL_MEM_FENCE);\n"
+result +=
+  "}//Drow\n"
+  "  barrier(CLK_GLOBAL_MEM_FENCE);\n"
 "} // Dcol loop\n"
 "} // Dmatrix loop\n\n"
+
 "}\n";
 return(result);
 }
@@ -214,12 +213,12 @@ int cholBatchVcl(
   viennacl::ocl::kernel & cholKernel = my_prog.get_kernel("cholBatch");
   
   if(Nlocal[1] != Nglobal[1]) {
-    Rf_warning("local and global work sizes should be identical for dimension 2");
+    Rf_warning("local and global work sizes should be identical for dimension 2, ignoring global");
   }
 
 // dimension 0 is cell, dimension 1 is matrix
   cholKernel.global_work_size(0, (cl_uint) (Nglobal[0] ) );
-  cholKernel.global_work_size(1, (cl_uint) (Nglobal[1] ) );
+  cholKernel.global_work_size(1, (cl_uint) (Nlocal[1] ) );
 
   cholKernel.local_work_size(0, (cl_uint) (Nlocal[0]));
   cholKernel.local_work_size(1, (cl_uint) (Nlocal[1]));

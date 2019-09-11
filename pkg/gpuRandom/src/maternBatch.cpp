@@ -1,4 +1,21 @@
-#include "geostatsgpu.hpp"
+
+#include <Rcpp.h>
+#include <string>
+
+
+#include "dynVCL/dynVCLMatGeostatsgpu.hpp"
+#include "dynVCL/dynVCLVecGeostatsgpu.hpp"
+#include "viennacl/linalg/sum.hpp"
+#include "viennacl/ocl/backend.hpp"
+
+//from typeDef.cpp
+template <typename T> std::string openclTypeString();
+template <typename T> int sizeOfReal();
+template <typename T> T maternClEpsilon();
+
+
+extern "C" void Rtemme_gamma(double *nu, double * g_1pnu, double * g_1mnu, double *g1, double *g2);
+
 //#define DEBUG
 
 #define NlocalParams 22

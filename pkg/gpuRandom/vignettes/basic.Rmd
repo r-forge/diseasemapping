@@ -1,0 +1,34 @@
+---
+title: "Basic"
+author: "me"
+---
+
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Basic}
+-->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+Create some streams
+```{r }
+Nglobal = 4
+streams1 = gpuRandom:::cpp_mrg31k3pCreateStreams(Nglobal);
+t(streams1)
+```
+
+Generate eight random uniforms
+```{r generateUnif}
+x = vclVector(length=8L, type=theType)
+streams2<-gpuRandom::gpuRn(x, streams=streams1,random_type = "uniform")
+```
+
+new streams
+```{r unifResults}
+t(streams2)[1:4,]
+as.vector(x)
+```

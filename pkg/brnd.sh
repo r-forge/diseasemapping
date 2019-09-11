@@ -1,5 +1,5 @@
-R -e "Rcpp::compileAttributes('clRNG')"
-R -e "devtools::document('clRNG')"
-R CMD build clRNG
-tar --extract --strip=3 --directory=junk --file=clRNG_0.0.1.tar.gz clRNG/inst/doc/runif.html
-tar --extract --strip=3 --directory=junk --file=clRNG_0.0.1.tar.gz clRNG/inst/doc/fisher_sim.html
+R -e "Rcpp::compileAttributes('gpuRandom')"
+R -e "devtools::document('gpuRandom')"
+R CMD build gpuRandom
+tar --list --file=gpuRandom_0.1.tar.gz gpuRandom/inst/doc/
+tar --extract --strip=3 --directory=junk --file=gpuRandom_0.1.tar.gz gpuRandom/inst/doc/basic.html

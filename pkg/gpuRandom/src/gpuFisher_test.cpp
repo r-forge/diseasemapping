@@ -7,10 +7,11 @@ using namespace viennacl;
 using namespace viennacl::linalg;
 
 
+
 // adapted from https://github.com/wch/r-source/blob/HEAD/src/library/stats/src/rcont.c
 // https://github.com/wch/r-source/blob/HEAD/src/library/stats/src/chisqsim.c
 template <typename T> 
-std::string FisherSimkernelString(int NR, int NC) { 
+std::string FisherSimkernelString(int NR, int NC) {
   
   std::string typeString = openclTypeString<T>();
   std::string result = mrg31k3pTypeString<T>(); 
@@ -23,18 +24,23 @@ std::string FisherSimkernelString(int NR, int NC) {
   "#define nc_1 " + std::to_string(NC - 1) + "\n"
   "#define nc_1nrow " + std::to_string((NC - 1) * NR) + "\n"
   "#define nrowncol " + std::to_string(NR*NC) + "\n"
-  "\n__kernel void fisher_sim_gpu(\n"
+  "\n__kernel void fisher_sim_gpu(\n";
+#ifdef UNDEF
   "   __global int *nrowt, \n"
   "   __global int *ncolt, \n"
   "   const int n, \n" 
   "   const int vsize,\n" 
   " __global  " + typeString + "  *fact,\n"
-  " __global  " + typeString + "  *results,\n" // fisher log p
+  " __global  " + typeString + "  *results,\n"; // fisher log p
+#endif
+  
 #ifdef DEBUG  
-  " __global  " + typeString + "  *extraX,\n" // random table
-/#endif    
-  " __global clrngMrg31k3pHostStream* streams"
+  result +=  " __global  " + typeString + "  *extraX,\n"; // random table
+#endif    
+
+result +=  " __global clrngMrg31k3pHostStream* streams"
   ") { \n\n"
+#ifdef UNDEF  
   "   local int jwork[nc_1];\n"  
   "   local int matrix[nrowncol];\n"
   "   int u, D; \n"  //original ii changed to u, added a D here
@@ -160,11 +166,11 @@ std::string FisherSimkernelString(int NR, int NC) {
   "  matrix[nr_1 + nc_1nrow] = ib - matrix[nr_1 + (nc_1-1) * nrow ];\n"
   // end of rcont2
 
-  #ifdef DEBUG
+#ifdef DEBUG
   "for (m=0; m<nrowncol; m++){\n"
   "extraX[nrowncol*D+m]=matrix[m];\n"
   "}\n"
-  #endif    
+#endif    
   
   // now on fisher_sim
   "  ans = 0.;\n"
@@ -177,6 +183,7 @@ std::string FisherSimkernelString(int NR, int NC) {
   "}\n" //end D loop
   
   "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[index], &private_stream_d);\n"
+#endif
   "}\n" ;
   return(result);
 }
@@ -186,9 +193,9 @@ void gpuFisher_test(
     viennacl::vector_base<int> &sr, 
     viennacl::vector_base<int> &sc,
     viennacl::vector_base<T> &results,  
-#ifdef DEBUG
-    viennacl::vector_base<T> &extraX, 
-#endif
+//#ifdef DEBUG
+//    viennacl::vector_base<T> &extraX, 
+//#endif
     Rcpp::IntegerMatrix streamsR, 
     Rcpp::IntegerVector numWorkItems,
     Rcpp::IntegerVector numLocalItems,
@@ -247,7 +254,9 @@ void gpuFisher_test(
       n, vsize, 
       fact, 
       results,
+#ifdef DEBUG  
       extraX,
+#endif
       bufIn) ); 
   
   // copy streams back to cpu
@@ -262,9 +271,9 @@ SEXP gpuFisher_test_Templated(
     Rcpp::S4  srR, 
     Rcpp::S4  scR,
     Rcpp::S4  resultsR,
-#ifdef DEBUG
-    Rcpp::S4  extraXR,
-#endif
+//#ifdef DEBUG
+//    Rcpp::S4  extraXR,
+//#endif
     Rcpp::IntegerMatrix streamsR,   
     Rcpp::IntegerVector max_global_size,
     Rcpp::IntegerVector max_local_size){
@@ -294,9 +303,6 @@ SEXP cpp_gpuFisher_test(
     Rcpp::S4  srR, 
     Rcpp::S4  scR,
     Rcpp::S4  resultsR,
-#ifdef DEBUG 
-    Rcpp::S4  extraXR,
-#endif
     Rcpp::IntegerMatrix streamsR,  
     Rcpp::IntegerVector max_global_size,
     Rcpp::IntegerVector max_local_size){
