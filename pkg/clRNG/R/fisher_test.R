@@ -18,7 +18,7 @@ fisher_simGpu=function(
   extraX,
   streams, 
   workgroupSize,
-  localSize){
+  localSize=c(2,2)){
   
   verbose = TRUE
   
@@ -37,6 +37,7 @@ fisher_simGpu=function(
     # make a deep copy
     streams = matrix(as.vector(streams), nrow(streams), ncol(streams), FALSE, dimnames(streams))
      }
+  
   localSize = pmax(2,c(localSize, 2, 2)[1:2])
   
   if(verbose) {

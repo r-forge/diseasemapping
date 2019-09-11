@@ -30,7 +30,7 @@ fisher.test(TeaTasting, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
 
 ## Using the gpu function
 Nglobal = c(8,64)
-NperItem = 30
+NperItem = 25
 
 stream_num=prod(Nglobal)
 streams = clRNG:::cpp_mrg31k3pCreateStreams(stream_num)
