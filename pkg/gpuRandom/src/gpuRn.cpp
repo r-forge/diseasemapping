@@ -1,5 +1,6 @@
 
 #include "gpuRn.hpp" 
+#include <CL/mrg31k3pkernelStringSeparate.hpp>
 
 
 using namespace Rcpp;
@@ -87,7 +88,8 @@ void gpuRn(
   //Reserve memory space for count stream objects, without creating the stream objects. 
   //Returns a pointer to the newly allocated buffer. 
   clrngMrg31k3pStream* streams = clrngMrg31k3pAllocStreams(
-    numWorkItems[0]*numWorkItems[1], &streamBufferSize, &err);
+    numWorkItems[0]*numWorkItems[1], 
+                                &streamBufferSize, &err);
   //count	Number of stream objects to allocate.
   
 
@@ -178,7 +180,7 @@ SEXP cpp_gpuRn(
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-/*void runifGpuHost(viennacl::vector_base<double> &x)//use them to generate numbers on the host
+void runifGpuHost(viennacl::vector_base<double> &x)//use them to generate numbers on the host
 {
   
   int D, N=x.size();
@@ -187,34 +189,8 @@ SEXP cpp_gpuRn(
   for(D =0; D<N; D++) {
     x(D) = clrngMrg31k3pRandomU01(stream);
   }
-}*/
-////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-//[[Rcpp::export]]
-Rcpp::IntegerMatrix  cpp_mrg31k3pCreateStreams(int numWorkItems) //this function returns a R_stream not clrng stream
-{
-  
-  Rcpp::IntegerMatrix result=Rcpp::IntegerMatrix(numWorkItems,18L);
-  
-  colnames(result) = CharacterVector::create(
-    "current.g1.1", "current.g1.2", "current.g1.3", "current.g2.1", "current.g2.2", "current.g2.3",
-    "initial.g1.1", "initial.g1.2", "initial.g1.3", "initial.g2.1", "initial.g2.2", "initial.g2.3",
-    "substream.g1.1", "substream.g1.2", "substream.g1.3", "substream.g2.1", "substream.g2.2", "substream.g2.3");
-  
-  size_t streamBufferSize;
-  clrngStatus err;
-  
-  int Ditem,Delement,Dcis,Dg;
-  
-  clrngMrg31k3pStream* streams = clrngMrg31k3pCreateStreams(NULL, numWorkItems, &streamBufferSize, &err);//line 299 in mrg31k3p.c
-  
-  convertclRngMat(streams, result);
-  
-  return result;
 }
+////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -279,5 +255,31 @@ void convertMatclRng(Rcpp::IntegerMatrix Sin, clrngMrg31k3pStream* streams){
   }
   
   
+}
+
+
+
+
+//[[Rcpp::export]]
+Rcpp::IntegerMatrix  cpp_mrg31k3pCreateStreams(int numWorkItems) //this function returns a R_stream not clrng stream
+{
+  
+  Rcpp::IntegerMatrix result=Rcpp::IntegerMatrix(numWorkItems,18L);
+  
+  colnames(result) = CharacterVector::create(
+    "current.g1.1", "current.g1.2", "current.g1.3", "current.g2.1", "current.g2.2", "current.g2.3",
+    "initial.g1.1", "initial.g1.2", "initial.g1.3", "initial.g2.1", "initial.g2.2", "initial.g2.3",
+    "substream.g1.1", "substream.g1.2", "substream.g1.3", "substream.g2.1", "substream.g2.2", "substream.g2.3");
+  
+  size_t streamBufferSize;
+  clrngStatus err;
+  
+  int Ditem,Delement,Dcis,Dg;
+  
+  clrngMrg31k3pStream* streams = clrngMrg31k3pCreateStreams(NULL, numWorkItems, &streamBufferSize, &err);//line 299 in mrg31k3p.c
+  
+  convertclRngMat(streams, result);
+  
+  return result;
 }
 

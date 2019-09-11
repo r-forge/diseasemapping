@@ -40,7 +40,7 @@
 #define MRG31K3P_H
 
 #include <clRNG/clRNG.h>
-#include <stdio.h>
+#include <stdio.h>   //C library to perform Input/Output operations
 
 
 /*  @brief State type of a MRG31k3p stream
@@ -113,35 +113,64 @@ CLRNGAPI clrngStatus clrngMrg31k3pSetBaseCreatorState(clrngMrg31k3pStreamCreator
  */
 CLRNGAPI clrngStatus clrngMrg31k3pChangeStreamsSpacing(clrngMrg31k3pStreamCreator* creator, cl_int e, cl_int c);
 
+
 /*! @copybrief clrngAllocStreams()
  *  @see clrngAllocStreams()
  */
 CLRNGAPI clrngMrg31k3pStream* clrngMrg31k3pAllocStreams(size_t count, size_t* bufSize, clrngStatus* err);
+//Reserve memory space for count stream objects, without creating the stream objects. Returns a pointer to the newly allocated buffer. 
+
 
 /*! @copybrief clrngDestroyStreams()
  *  @see clrngDestroyStreams()
  */
-CLRNGAPI clrngStatus clrngMrg31k3pDestroyStreams(clrngMrg31k3pStream* streams);
+CLRNGAPI clrngStatus clrngMrg31k3pDestroyStreams(clrngMrg31k3pStream* streams); 
+//Destroy one or many stream objects.Release the memory space taken by those stream objects.
+
 
 /*! @copybrief clrngCreateOverStreams()
  *  @see clrngCreateOverStreams()
  */
 CLRNGAPI clrngStatus clrngMrg31k3pCreateOverStreams(clrngMrg31k3pStreamCreator* creator, size_t count, clrngMrg31k3pStream* streams);
+//Create new RNG stream objects in already allocated memory.
+//similar to clrngCreateStreams(), except that it does not reserve memory for the structure.
+//Returns error status
+
 
 /*! @copybrief clrngCreateStreams()
  *  @see clrngCreateStreams()
  */
 CLRNGAPI clrngMrg31k3pStream* clrngMrg31k3pCreateStreams(clrngMrg31k3pStreamCreator* creator, size_t count, size_t* bufSize, clrngStatus* err);
+//Create and return an array of count new streams using the specified creator. 
+//It returns in bufSize the size of the allocated buffer, in bytes. 
+//To use the default creator, put NULL as the creator parameter. To create a single stream, just put set count to 1
+
+
 
 /*! @copybrief clrngCopyOverStreams()
  *  @see clrngCopyOverStreams()
  */
 CLRNGAPI clrngStatus clrngMrg31k3pCopyOverStreams(size_t count, clrngMrg31k3pStream* destStreams, const clrngMrg31k3pStream* srcStreams);
+//Copy (or restore) the stream objects srcStreams into the buffer destStreams, 
+//and each of the count stream objects from the array srcStreams into the buffer destStreams.
+
+
 
 /*! @copybrief clrngCopyStreams()
  *  @see clrngCopyStreams()
  */
 CLRNGAPI clrngMrg31k3pStream* clrngMrg31k3pCopyStreams(size_t count, const clrngMrg31k3pStream* streams, clrngStatus* err);
+//Create an identical copy of each of the count stream objects in the array streams.
+
+
+
+
+
+
+
+
+
+
 
 #define clrngMrg31k3pRandomU01          _CLRNG_TAG_FPTYPE(clrngMrg31k3pRandomU01)
 #define clrngMrg31k3pRandomInteger      _CLRNG_TAG_FPTYPE(clrngMrg31k3pRandomInteger)
@@ -161,6 +190,10 @@ CLRNGAPI cl_double clrngMrg31k3pRandomU01_cl_double(clrngMrg31k3pStream* stream)
 CLRNGAPI cl_int clrngMrg31k3pRandomInteger(clrngMrg31k3pStream* stream, cl_int i, cl_int j);
 CLRNGAPI cl_int clrngMrg31k3pRandomInteger_cl_float (clrngMrg31k3pStream* stream, cl_int i, cl_int j);
 CLRNGAPI cl_int clrngMrg31k3pRandomInteger_cl_double(clrngMrg31k3pStream* stream, cl_int i, cl_int j);
+//Generate the next random integer value [device].
+
+
+
 
 /*! @copybrief clrngRandomU01Array()
  *  @see clrngRandomU01Array()
@@ -168,6 +201,8 @@ CLRNGAPI cl_int clrngMrg31k3pRandomInteger_cl_double(clrngMrg31k3pStream* stream
 CLRNGAPI clrngStatus clrngMrg31k3pRandomU01Array(clrngMrg31k3pStream* stream, size_t count, _CLRNG_FPTYPE* buffer);
 CLRNGAPI clrngStatus clrngMrg31k3pRandomU01Array_cl_float (clrngMrg31k3pStream* stream, size_t count, cl_float * buffer);
 CLRNGAPI clrngStatus clrngMrg31k3pRandomU01Array_cl_double(clrngMrg31k3pStream* stream, size_t count, cl_double* buffer);
+//Fill an array with successive random values in (0,1) [device].
+
 
 /*! @copybrief clrngRandomIntegerArray()
  *  @see clrngRandomIntegerArray()

@@ -13,3 +13,7 @@ cpp_mrg31k3pCreateStreams <- function(numWorkItems) {
     .Call('_gpuRandom_cpp_mrg31k3pCreateStreams', PACKAGE = 'gpuRandom', numWorkItems)
 }
 
+maternBatchBackend <- function(var, coords, param, Nglobal, Nlocal) {
+    invisible(.Call('_gpuRandom_maternBatchBackend', PACKAGE = 'gpuRandom', var, coords, param, Nglobal, Nlocal))
+}
+

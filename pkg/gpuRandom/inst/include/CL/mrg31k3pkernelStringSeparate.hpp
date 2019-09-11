@@ -1,4 +1,4 @@
-#include "CL/mrg31k3pkernelStringCommon.hpp"
+#include <CL/mrg31k3pkernelStringCommon.hpp>
 
 
 std::string mrg31k3pTemplateStringFirst = 

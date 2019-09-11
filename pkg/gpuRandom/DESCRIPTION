@@ -1,16 +1,18 @@
 Package: gpuRandom
 Type: Package
-Title: Random numbers with GPU
-Version: 1.0
-Date: 2019-09-11
+Title: What the Package Does in One 'Title Case' Line
+Encoding: UTF-8
+Version: 0.1
+Date: 2019-09-06
 Author: Your Name
 Maintainer: Your Name <your@email.com>
-Description: Generate random numbers on gpu and its applications
+Description: One paragraph description of what the package does as one or more full sentences.
 License: GPL (>= 2)
-Encoding: UTF-8
+Depends: gpuR
+Imports: Rcpp (>= 1.0.2)
+NeedsCompilation: yes
+LinkingTo: Rcpp,
+	RViennaCL (>= 1.7.1.4)
 Suggests: knitr
-LinkingTo: 
-  RViennaCL (>= 1.7.1.4),
-  Rcpp
-VignetteBuilder: knitr
 RoxygenNote: 6.1.1
+VignetteBuilder: knitr
