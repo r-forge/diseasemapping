@@ -32,3 +32,12 @@ new streams
 t(streams2)[1:4,]
 as.vector(x)
 ```
+
+
+
+
+# extra info
+
+```{r gpuInfo, echo=TRUE}
+gpuR::gpuInfo()
+```
