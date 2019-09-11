@@ -13,6 +13,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
+```{r package}
+library(gpuR)
+```
 
 Create some streams
 ```{r }

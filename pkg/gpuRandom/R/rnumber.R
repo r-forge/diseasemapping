@@ -7,6 +7,13 @@
 #' @param localSize local size
 #' @param streams vector of integers, 18x workgroupSize
 #' @return altered in-place
+
+
+#'
+#' @useDynLib gpuRandom
+#' @import Rcpp
+#' 
+
 #' @export
 
 rnumberGpu = function(

@@ -2,4 +2,5 @@
 
 export(fisher_simGpu)
 export(rnumberGpu)
+import(Rcpp)
 useDynLib(gpuRandom)

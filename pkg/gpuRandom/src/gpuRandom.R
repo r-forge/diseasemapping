@@ -1,5 +1,0 @@
-
-#'
-#' @useDynLib gpuRandom
-#' @import Rcpp
-#' 
