@@ -6,26 +6,26 @@
 \description{Give streams, work group sizes and vector length, generate a vector of Uniform or Normal random numbers on GPU.}
 
 
-\usage{gpuRn(x, streams, globalSize,  random_type=c("uniform","normal"))}
+\usage{gpuRn(x, streams, workgroupSize,  random_type=c("uniform","normal"))}
 
 \arguments{
 \item{x}{A vector of desired length for storing generated random numbers.}
 \item{streams}{Used to generate random numbers on GPU by work items.}
-\item{globalSize}{Number of work items used in the device domain.}
-\item{random_type}{Either random uniform numbers or random normal numbers.}
+\item{workgroupSize}{Global Sizes of device domain.}
+\item{random_type}{Either Uniform random numbers or Normal random numbers.}
 }
 
 \value{A vector containing the desired number of Normal or Uniform random numbers.}
 
 \examples{
 ## Create some streams
-Nglobal = 4
-streams1 = gpuRandom:::cpp_mrg31k3pCreateStreams(Nglobal);
+Nglobal = c(4,4)
+streams1 = gpuRandom:::cpp_mrg31k3pCreateStreams(prod(Nglobal));
 t(streams1)
 
 ## Generate eight random uniforms
 x = vclVector(length=8L, type=theType)
-streams2<-gpuRandom::gpuRn(x, streams=streams1,random_type = "uniform")
+streams2<-gpuRandom::gpuRn(x, streams=streams1, Nglobal,random_type = "uniform")
 ## new streams
 t(streams2)[1:4,]
 as.vector(x)
