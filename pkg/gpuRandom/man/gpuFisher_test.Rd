@@ -6,17 +6,18 @@
 \description{
 Provide marginal row total and marginal column total of a contingency table, streams, work group size and a vector, performs Fisher's exact test using Monte Carlo simulation on GPU, returns the two-sided p-value.
 }
-\usage{gpuFisher_test(rowsum, colsum, results, streams, workgroupSize)}
+\usage{gpuFisher_test(rowsum, colsum, results, streams, globalSize, localSize)}
 
 \arguments{
 \item{rowsum}{A vector of marginal row total.}
 \item{colsum}{A vector of marginal column total.}
 \item{results}{A vector of test statistics, whose length is the number of replicates used in the Monte Carlo simulation. }
 \item{streams}{Used to generate random numbers on GPU by work items.}
-\item{workgroupSize}{Global sizes of device domain.}
+\item{globalSize}{Number of work items used in the device domain.}
+\item{localSize}{Number of work items in a work group.}
 }
 
-\value{p-value of Fisher's exact test using Monte Carlo simulation.}
+\value{The p-value of Fisher's exact test using Monte Carlo simulation.}
 
 \examples{
 ## Fisher's test for a 3 by 3 contingency table
@@ -45,7 +46,7 @@ colsum = as.integer(colSums(TeaTasting, na.rm = FALSE))
 rowsum<-as.vclVector(rowsum)
 colsum<-as.vclVector(colsum)
  
-gpuRandom::gpuFisher_test(rowsum, colsum, results,  streams, workgroupSize = Nglobal)
+gpuRandom::gpuFisher_test(rowsum, colsum, results,  streams, globalSize = Nglobal)
 
 ## calculate the p-value
 STATISTIC <- -sum(lfactorial(TeaTasting))
