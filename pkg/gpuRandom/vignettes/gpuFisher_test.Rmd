@@ -23,12 +23,13 @@ TeaTasting <-matrix(c(21,17,5,19,38,6,26,12,9),nrow=3)
 
 TeaTasting
 ## Using the R function 
+fisher.test(TeaTasting)
 fisher.test(TeaTasting, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
 
 
 ## Using the gpu function
 Nglobal = c(8,64)
-NperItem = 20
+NperItem = 25
 
 stream_num=prod(Nglobal)
 streams = gpuRandom:::cpp_mrg31k3pCreateStreams(stream_num)
@@ -44,8 +45,7 @@ length(results)
 
  
  
-gpuRandom::gpuFisher_test(a, b, results, #extraX, 
-                          streams, workgroupSize = Nglobal)
+#gpuRandom::gpuFisher_test(a, b, results, streams, workgroupSize = Nglobal)
 
 #matrix(as.vector(extraX), ncol=16*stream_num, byrow=TRUE)
 #matrix(as.vector(results), ncol=stream_num, byrow=TRUE)

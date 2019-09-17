@@ -28,8 +28,8 @@ theType
 
 Create some streams
 ```{r testStream}
-Nglobal = c(4,4)
-streams = gpuRandom:::cpp_mrg31k3pCreateStreams(prod(Nglobal));
+Nglobal = 4
+streams = gpuRandom:::cpp_mrg31k3pCreateStreams((Nglobal));
 t(streams)
 ```
 
@@ -68,7 +68,7 @@ x = vclVector(length=as.integer(prod(Nglobal)*NperItem), type=theType)
 length(x)
 
 system.time(junk <- runif(length(x)))
-system.time(streams <- gpuRandom::gpuRn(x,  streams=streams,Nglobal, random_type = "uniform"))
+system.time(streams <- gpuRandom::gpuRn(x,  streams=streams, Nglobal,random_type = "uniform"))
 
 xVec = as.vector(x)
 
@@ -89,7 +89,7 @@ Nglobal = c(64,4)
 streams = gpuRandom:::cpp_mrg31k3pCreateStreams(prod(Nglobal))
 x = vclVector(length=8L, type=theType)
 
-gpuRandom::gpuRn(x, streams=streams, workgroupSize = Nglobal,localSize = c(2,2), random_type="normal")
+gpuRandom::gpuRn(x, streams=streams, workgroupSize = Nglobal, random_type="normal")
 
 as.vector(x)
 ```
@@ -108,8 +108,7 @@ length(z)
 
 system.time(junk <- rnorm(length(z)))
 system.time(streams <- gpuRandom::gpuRn(z, streams=streams, 
-                                         workgroupSize = Nglobal,
-                                         localSize = c(2,2),
+                                         workgroupSize = Nglobal,localSize = c(2,2),
                                          random_type="normal"))
 ```
 

@@ -30,9 +30,6 @@ std::string FisherSimkernelString(int NR, int NC) {
   "   const int vsize,\n" 
   " __global  " + typeString + "  *fact,\n"
   " __global  " + typeString + "  *results,\n" // fisher log p
-//#ifdef DEBUGEXTRA  
-//  " __global  " + typeString + "  *extraR,\n" // random numbers
-//#endif    
   " __global  " + typeString + "  *extraX,\n" // random table
   " __global clrngMrg31k3pHostStream* streams"
   ") { \n\n"
@@ -92,9 +89,6 @@ std::string FisherSimkernelString(int NR, int NC) {
   "     nlm = (int)(ia * (id / (" + typeString + ") ie) + 0.5);\n"
   "     x = exp(fact[ia] + fact[ib] + fact[ic] + fact[id]- fact[ie] - fact[nlm]\n"
   "         - fact[id - nlm] - fact[ia - nlm] - fact[ii + nlm]);\n"
-#ifdef DEBUGEXTRA
-  // "     extraX[l + m*nrow + D*nrowncol+Diter1*nrowncol*vsize]= x;\n"
-#endif  
   "     if (x >= dummy)\n"
   "        break;\n"// break loop 1
   

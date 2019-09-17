@@ -6,7 +6,7 @@
 \description{
 Provide marginal row total and marginal column total of a contingency table, streams, work group size and a vector, performs Fisher's exact test using Monte Carlo simulation on GPU, returns the two-sided p-value.
 }
-\usage{gpuFisher_test(rowsum, colsum, results, streams, workgroupSize, localSize)}
+\usage{gpuFisher_test(rowsum, colsum, results, streams, workgroupSize)}
 
 \arguments{
 \item{rowsum}{A vector of marginal row total.}
@@ -14,7 +14,6 @@ Provide marginal row total and marginal column total of a contingency table, str
 \item{results}{A vector of test statistics, whose length is the number of replicates used in the Monte Carlo simulation. }
 \item{streams}{Used to generate random numbers on GPU by work items.}
 \item{workgroupSize}{Global sizes of device domain.}
-\item{localSize}{Number of work items in a work group.}
 }
 
 \value{p-value of Fisher's exact test using Monte Carlo simulation.}

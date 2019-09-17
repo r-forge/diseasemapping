@@ -6,7 +6,7 @@
 \description{Give streams, work group sizes and vector length, generate a vector of Uniform or Normal random numbers on GPU.}
 
 
-\usage{gpuRn(x, streams, workgroupSize,  random_type=c("uniform","normal"))}
+\usage{gpuRn(x, streams, workgroupSize, random_type=c("uniform","normal"))}
 
 \arguments{
 \item{x}{A vector of desired length for storing generated random numbers.}

@@ -7,7 +7,6 @@
 #' @param x A Vclvector for putting test statistics.
 #' @param streams Vectors of integers, 18x workgroupSize
 #' @param workgroupSize Global dimensions of work-item domain
-#' @param localSize Dimensions of work groups
 #' @return Altered in-place
 #' @useDynLib gpuRandom
 #' @export
@@ -18,14 +17,14 @@ gpuFisher_test=function(
   x, #extraX,
   streams, 
   workgroupSize,
-  localSize){
+  localSize=c(1,1)){
   
   verbose = TRUE
   
   if(missing(streams)) {
     if(missing(workgroupSize)) 
-    {workgroupSize = c(64,4)}
-    streams = cpp_mrg31k3pCreateStreams(prod(workgroupSize))	
+    {workgroupSize = c(64,4)
+    streams = cpp_mrg31k3pCreateStreams(prod(workgroupSize))}
   }else{
     if(!is.matrix(streams))
       {warning("streams should be a matrix")}
@@ -36,15 +35,14 @@ gpuFisher_test=function(
     streams = matrix(as.vector(streams), nrow(streams), ncol(streams), FALSE, dimnames(streams))
      }
   
-  if (missing(localSize)){
-  localSize = pmax(2,c(localSize, 2, 2)[1:2])}
+ 
+  localSize = pmax(2,c(localSize, 2, 2)[1:2])
   
   if(verbose) {
     cat('local sizes ', toString(localSize), '\nglobal sizes ', toString(workgroupSize),
         '\n streams ', toString(dim(streams)), '\n')
   }
-  cpp_gpuFisher_test(sr, sc, x, #extraX
-                     streams, workgroupSize,localSize)
+  cpp_gpuFisher_test(sr, sc, x, streams, workgroupSize, localSize)
   
   invisible(streams)
   
