@@ -1,5 +1,5 @@
 #include "geostatsgpu.hpp"
-#define DEBUG
+//#define DEBUG
 
 // C = A B, A diagonal
 
@@ -104,7 +104,8 @@ std::string multiplyLowerBatchString(
   const int NpadBetweenMatricesA,
   const int NpadBetweenMatricesB,
   const int NlocalCacheA,  // greater than Nlocal(0), smaller than Nrow
-  const int NlocalCacheB 
+  const int NlocalCacheB,
+  const int NcolInCache
   ) {
 
   std::string typeString = openclTypeString<T>();
@@ -128,7 +129,8 @@ std::string multiplyLowerBatchString(
 "#define NpadBetweenMatricesA " + std::to_string(NpadBetweenMatricesA) + "\n"    
 "#define NpadBetweenMatricesB " + std::to_string(NpadBetweenMatricesB) + "\n"    
 "#define NlocalCache " + std::to_string(NlocalCacheB) + "\n"    
-"#define NlocalCacheA " + std::to_string(NlocalCacheA) + "\n\n";
+"#define NlocalCacheA " + std::to_string(NlocalCacheA) + "\n"
+"#define NcolInCache " + std::to_string(NcolInCache) + "\n\n";
   
 
 // global work items are rows, columns, matrices
@@ -146,7 +148,9 @@ result +=  "	__global "+ typeString+ " *B) {\n\n" +
   "int AHere, BHere=0, CHere, BcacheHere=0;\n"
   "local "+ typeString+ " Acache[NlocalCacheA];\n" 
   "local "+ typeString+ " Bcache[NlocalCache];\n"
-  "int Dmatrix, Drow, Dcol, Dinner, DrowNpadC, DrowNpadA;\n"
+  "int Dmatrix, Drow, Dcol, Dinner, DrowNpadC, DrowNpadA, DcolInCache, DinnerCache;\n"
+  "const int incInCacheLocal = get_local_size(0)*NcolInCache;\n"
+  "const int incInCacheGlobal = get_global_size(0)*NcolInCache;\n"
   "const int doCacheA = (get_local_id(1) == 0);\n";
 
 if(NpadD) {
@@ -171,8 +175,9 @@ if(NpadD) {
   
   result += "\n  // cache first rows of B for Dmatrix\n";
   result +=  
-    "  for(Drow = get_local_id(0); Drow < DinnerStop; Drow += get_local_size(0) ){\n"
-    "    BcacheHere = Drow*Ncol;\n"
+    "  for(Drow = get_local_id(0),BcacheHere = get_local_id(0)*NcolInCache;\n"
+    "      Drow < DinnerStop; Drow += get_local_size(0),BcacheHere += incInCacheLocal){\n"
+    
     "    DrowNpadA = BHere+Drow*NpadB;\n"
     "    barrier(CLK_LOCAL_MEM_FENCE);\n";
   
@@ -184,14 +189,15 @@ if(NpadD) {
     "    barrier(CLK_LOCAL_MEM_FENCE);\n";
   }
     result +=     
-      "    for(Dcol = get_local_id(1); Dcol < Ncol; Dcol += get_local_size(1) ){\n";
-    //     "Bcache[Dcol + Drow*Ncol] = B[Dcol + Drow * NpadB];\n"
+      "    for(Dcol = get_global_id(1), DcolInCache=get_local_id(1);\n"
+      "        Dcol < Ncol; Dcol += get_global_size(1), DcolInCache += get_local_size(1) ){\n";
+    //     "Bcache[DcolInCache + Drow*NcolInCache] = B[Dcol + Drow * NpadB];\n"
     if(NpadD) {
       result +=     
-        "      Bcache[BcacheHere + Dcol] = B[Dcol +DrowNpadA] * Dcache[get_local_id(0)];\n";
+        "      Bcache[BcacheHere + DcolInCache] = B[Dcol +DrowNpadA] * Dcache[get_local_id(0)];\n";
     } else {
       result +=     
-        "      Bcache[BcacheHere + Dcol] = B[Dcol +DrowNpadA];\n";
+        "      Bcache[BcacheHere + DcolInCache] = B[Dcol +DrowNpadA];\n";
     }
 result +=
     "    } // Dcol\n" 
@@ -202,18 +208,20 @@ result +=
 result += 
   
 "\n// looped through rows which are all cached\n"
-"  for(Drow = get_global_id(0); Drow < DinnerStop; Drow+=get_global_size(0)){\n"
+"  for(Drow = get_global_id(0),BcacheHere = get_global_id(0)*NcolInCache;\n"
+"        Drow < DinnerStop; Drow+=get_global_size(0),BcacheHere += incInCacheGlobal){\n"
   "    DrowNpadA= AHere + Drow * NpadA;\n"
   "    DrowNpadC= CHere+Drow * NpadC;\n"
-  "    BcacheHere = Drow*Ncol;\n"
-  "    for(Dcol = get_global_id(1); Dcol < Ncol; Dcol += get_global_size(1)){\n";
+  "    for(Dcol = get_global_id(1), DcolInCache=get_local_id(1);\n"
+  "        Dcol < Ncol; Dcol += get_global_size(1),DcolInCache += get_local_size(1)){\n";
   
 if(diagIsOne) {
-  result += "      Dout = Bcache[BcacheHere + Dcol];\n";
-  result +=   "      for(Dinner = 0; Dinner < Drow; Dinner++){\n";
+  result += "      Dout = Bcache[BcacheHere + DcolInCache];\n";
+  result +=   "      for(Dinner = 0,DinnerCache=0; Dinner < Drow; Dinner++,DinnerCache += NcolInCache){\n";
+  
 } else {
   result +=   "      Dout = 0.0;\n"
-    "      for(Dinner = 0; Dinner <= Drow; Dinner++){\n";
+    "      for(Dinner = 0,DinnerCache=0; Dinner <= Drow; Dinner++,DinnerCache += NcolInCache){\n";
 } 
 
   result +=  
@@ -223,7 +231,7 @@ if(diagIsOne) {
   "        }\n"
 	"        barrier(CLK_LOCAL_MEM_FENCE);\n"
 
-	"        Dout += Acache[get_local_id(0)] * Bcache[Dinner*Ncol + Dcol];\n"
+	"        Dout += Acache[get_local_id(0)] * Bcache[DinnerCache + DcolInCache];\n"
 
   "      }// Dinner\n";
 
@@ -235,10 +243,10 @@ result +=  "\n// rows which are not all cached\n"
 
   
   //"\nfor(Drow = DinnerStop + get_global_id(0) ; Drow < Nrow; Drow+=get_global_size(0)){\n"
-"  for(1 ; Drow < Nrow; Drow+=get_global_size(0)){\n"
+"  for(1 ; Drow < Nrow; Drow+=get_global_size(0),BcacheHere += incInCacheGlobal){\n"
   "    DrowNpadA= AHere + Drow * NpadA;\n"
-  "    DrowNpadC= CHere + Drow * NpadC;\n"
-  "    BcacheHere = Drow*Ncol;\n";
+  "    DrowNpadC= CHere + Drow * NpadC;\n";
+
 if(NpadD) {
     result +=  
       "    barrier(CLK_LOCAL_MEM_FENCE);\n"
@@ -249,9 +257,10 @@ if(NpadD) {
       "    barrier(CLK_LOCAL_MEM_FENCE);\n";
   }
 
-  result += "    for(Dcol = get_global_id(1); Dcol < Ncol; Dcol += get_global_size(1)){\n";
+  result += "    for(Dcol = get_global_id(1), DcolInCache=get_local_id(1);\n"
+"        Dcol < Ncol; Dcol += get_global_size(1),DcolInCache += get_local_size(1)){\n";
 
-  result += "    // cached rows\n";
+  result += "    // last row of B\n";
   if(diagIsOne) {
     if(NpadD) {
       result += "      Dout = B[BHere + Dcol + Drow * NpadB] * Dcache[get_local_id(0)];\n";
@@ -262,15 +271,17 @@ if(NpadD) {
     result += "      Dout = 0.0;\n";
   }
 
+  result += "    // cached rows of B\n";
+  result +=  
+  "      for(Dinner = 0,DinnerCache=0; Dinner < DinnerStop; Dinner++,DinnerCache += NcolInCache){\n"
   
-  result += "      for(Dinner = 0; Dinner < NlocalCache; Dinner++){\n"
   "        barrier(CLK_LOCAL_MEM_FENCE);\n"
   "        if(doCacheA) {\n"
 	"          Acache[get_local_id(0)] = A[Dinner + DrowNpadA];\n"
 	"        }\n"
 	"        barrier(CLK_LOCAL_MEM_FENCE);\n"
 	  
-  "        Dout += Acache[get_local_id(0)] *Bcache[Dinner*Ncol + Dcol];\n"
+  "        Dout += Acache[get_local_id(0)] * Bcache[DinnerCache + DcolInCache];\n"
 	"      }\n" // Dinner
   "      barrier(CLK_LOCAL_MEM_FENCE);\n"
 
@@ -297,10 +308,11 @@ if(NpadD) {
   result +=	"    }//do cacheA\n"
 	"    barrier(CLK_LOCAL_MEM_FENCE);\n";
 
-	 result += "     Dout += Acache[get_local_id(0)] * B[BHere+Dcol + Dinner * NpadB];\n";
+	 result += "// last row of B\n"
+	   "     Dout += Acache[get_local_id(0)] * B[BHere+Dcol + Dinner * NpadB];\n";
 	 
 	result += "      }// Dinner\n" 
-	"    C[Dcol + DrowNpadC] = Dout;\n";
+	"\n    C[Dcol + DrowNpadC] = Dout;\n";
 	result +=	"    }// Dcol\n";
   result +=	"  }//Drow\n";
 
@@ -322,13 +334,16 @@ void multiplyLowerDiagonalBatch(
     const int diagIsOne,
     const std::string transformD,
     std::vector<int> Nglobal,
-    std::vector<int> Nlocal, 
+    std::vector<int> Nlocal,
     const int NlocalCache, 
     const int ctx_id) {
   
   
   const int Nrow = A.size2(), Ncol = B.size2();
   const int Nmatrix = C.size1()/Nrow;
+  const int Nrounds = std::ceil( static_cast<T>(Ncol) / static_cast<T>(Nglobal[1]));
+  
+
   
   // the context
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
@@ -350,14 +365,16 @@ void multiplyLowerDiagonalBatch(
     A.internal_size2()*Nrow,//NpadBetweenMatricesA,
     B.internal_size2()*Nrow,//NpadBetweenMatricesB,
     Nlocal[0], 
-    std::min(Nrow*Ncol,NlocalCache));
+    std::min(Nrow*Ncol,NlocalCache), //NcacheB
+    Nlocal[1]*Nrounds);  //NcolsInCache
+    
 #ifdef DEBUG
   
   Rcpp::Rcout << clString << "\n\n";
   
 #endif  
   
-  
+
 
     viennacl::ocl::program & my_prog = ctx.add_program(
     clString, "my_kernel");
@@ -375,7 +392,8 @@ void multiplyLowerDiagonalBatch(
     // diagonals and diagTimesRowOfA
   viennacl::ocl::enqueue(multiplyKernel(
       C, A, D, B));
-}
+
+    }
 
 
 template <typename T> 
@@ -390,7 +408,8 @@ void multiplyLowerBatch(
 	const int ctx_id) {
 
   
-  const int Nrow = A.size2();
+  const int Nrow = A.size2(), Ncol = B.size2();
+  
   const int Nmatrix = C.size1()/Nrow;
 
   	// the context
@@ -402,7 +421,7 @@ void multiplyLowerBatch(
       Nrow == B.size1(),
       diagIsOne,
       Nrow, 
-      B.size2(), // ncol
+      Ncol,
       Nmatrix,
       C.internal_size2(), 
       A.internal_size2(), 
@@ -413,14 +432,14 @@ void multiplyLowerBatch(
       A.internal_size2()*Nrow,//NpadBetweenMatricesA,
       B.internal_size2()*Nrow,//NpadBetweenMatricesB,
       Nlocal[0], 
-      std::min(Nrow,NlocalCache));
+      std::min(Nrow,NlocalCache), Ncol);
 #ifdef DEBUG
   
   Rcpp::Rcout << clString << "\n\n";
   
 #endif
 
-#ifdef UNDEF    
+ 
 	viennacl::ocl::program & my_prog = ctx.add_program(
 	  clString, "my_kernel");
 
@@ -436,7 +455,7 @@ void multiplyLowerBatch(
   
 		// diagonals and diagTimesRowOfA
 		viennacl::ocl::enqueue(multiplyKernel(C, A, B));
-#endif
+
 }
 
 

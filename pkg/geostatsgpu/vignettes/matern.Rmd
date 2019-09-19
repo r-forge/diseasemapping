@@ -33,14 +33,13 @@ Set up spatial data
 
 Nsim = 4
 Ngrid = c(10, 10)
-Ngrid = c(4,4)
 NlocalCache = 1000
-Nglobal = c(8L, 8L, 4L)
+Nglobal = c(8L, 8L, 8L)
 Nlocal = c(4L, 2L)
 theType = "float"
 
 if(gpuInfo()$deviceMemory > 10^10){
-   Ngrid = Ngrid * 2
+   Ngrid = Ngrid * 4
     NlocalCache = 2000
 #   Nglobal = c(16L, 16L, 8L)
 #   Nlocal = c(8L, 4L)
@@ -179,7 +178,7 @@ geostatsgpu:::multiplyLowerDiagonalBatchBackend(
   transformD = "sqrt", # take the square root of each element of D
   Nglobal = Nglobal,
   Nlocal = Nlocal,
-  NlocalCache = 200)#NlocalCache)
+  NlocalCache = NlocalCache)
 ```
 
 Do the same in R and compare
@@ -227,14 +226,21 @@ multCpu[ncol(outputChol) + seq(-2, 4), ]
 
 # Plot simulated materns
 
-```{r plotSim, fig.height=4, fig.width=9}
+```{r plotSimSetup}
 library(raster)
 simRaster = brick(myRaster, 
-  nl = ncol(simMat)*Nmatrix)
+  nl = ncol(simMat)*nrow(paramsGpu))
 values(simRaster) = as.vector(as.matrix(simMat))
+names(simRaster) = apply(expand.grid('par',1:nrow(paramsGpu), 'sim', 1:ncol(simMat)), 1, paste, collapse='')
+```
 
-plot(simRaster, nr = Nsim, nc = Nmatrix)
-
+```{r plotSim, fig.height=3, fig.width=3, out.width=paste0(98/nrow(paramsGpu), '%'), fig.cap='simulations', fig.subcap = names(simRaster)}
+par(mar=rep(0.1, 4))
+for(D in names(simRaster)) {
+  plot(extent(simRaster))
+  plot(simRaster[[D]], legend=FALSE, add=TRUE)
+}
+  
 ```
 
 
@@ -249,12 +255,6 @@ gpuR::gpuInfo()
 
 # To do
 
-- fix crossprod
-
-    - put crossprod in A and check it's ok
-- each workgroup a row
-
-    - use some of diagLocal for within-group sums
-- dont store upper triangle in crossprod
+- backsolve https://en.wikipedia.org/wiki/Triangular_matrix#Forward_and_back_substitution
 - replace * with += for some iterators
 
