@@ -5,8 +5,8 @@
 #include <string>
 
 
-#include "dynVCLMatGeostatsgpu.hpp"
-#include "dynVCLVecGeostatsgpu.hpp"
+#include "vclMatrix/dynVCLMatGeostatsgpu.hpp"
+#include "vclMatrix/dynVCLVecGeostatsgpu.hpp"
 #include "viennacl/linalg/sum.hpp"
 #include "viennacl/ocl/backend.hpp"
 
