@@ -11,8 +11,8 @@
 #include <dynVCL/dynVCLVecGeostatsgpu.hpp>
 
 
-#include "mrg31k3p.h"
-#include "clRNG.h"
+#include <clRNG/mrg31k3p.h>
+#include <clRNG/clRNG.h>
 
 
 
