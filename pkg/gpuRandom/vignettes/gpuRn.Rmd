@@ -1,0 +1,136 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Random uniform}
+-->
+
+
+`https://github.com/clMathLibraries/clRNG`
+
+# Random uniform
+
+```{r date}
+date()
+```
+
+
+```{r packages, results='hide'}
+library('gpuR')
+```
+
+Use double precision if the GPU supports it
+```{r setType}
+theType = c('float','double')[1+gpuInfo()$double_support]
+theType
+```
+
+Create some streams
+```{r testStream}
+Nglobal = 4
+streams = gpuRandom:::cpp_mrg31k3pCreateStreams(Nglobal);
+t(streams)
+```
+
+Generate some uniforms
+```{r test}
+x = vclVector(length=8L, type=theType)
+
+streams2 <- gpuRandom::gpuRn(x, streams=streams,random_type = "uniform")
+t(streams)[1:4,]
+t(streams2)[1:4,]
+as.vector(x)
+```
+Generate some different uniforms
+```{r testAgain}
+gpuRandom::gpuRn(x, streams=streams2,random_type = "uniform")
+as.vector(x)
+```
+
+Reuse the intial seed
+```{r testRepeat}
+gpuRandom::gpuRn(x, streams=streams,random_type = "uniform")
+as.vector(x)
+```
+
+```{r hist, eval=TRUE}
+
+
+Nglobal = c(64,4)
+streams = gpuRandom:::cpp_mrg31k3pCreateStreams(prod(Nglobal))
+if(gpuInfo()$maxAllocatableMem > 1e10) {
+  NperItem = 5000
+} else {
+  NperItem = 500
+}
+x = vclVector(length=as.integer(prod(Nglobal)*NperItem), type=theType)
+length(x)
+
+system.time(junk <- runif(length(x)))
+system.time(streams <- gpuRandom::gpuRn(x,  streams=streams,Nglobal, random_type = "uniform"))
+
+xVec = as.vector(x)
+
+hist(xVec, xlim=c(0,1),breaks=40)
+
+xMat = matrix(xVec, ncol=prod(Nglobal), byrow=TRUE)
+
+#theLim = 0.5 + 0.1*c(-1,1)
+#plot(as.vector(xMat[-1,1]), as.vector(xMat[-nrow(xMat),1]), xlim = theLim, ylim=theLim, pch='.')
+#plot(as.vector(xMat[-1,2]), as.vector(xMat[-nrow(xMat),2]), xlim = theLim, ylim=theLim, pch='.')
+
+```
+
+# Random normals
+Generate some random normals
+```{r normals}
+Nglobal = c(64,4)
+streams = gpuRandom:::cpp_mrg31k3pCreateStreams(prod(Nglobal))
+x = vclVector(length=8L, type=theType)
+
+gpuRandom::gpuRn(x, streams=streams, workgroupSize = Nglobal,
+                                         localSize = c(2,2),
+                                         random_type="normal")
+as.vector(x)
+```
+
+
+
+Compare run time for random normals
+```{r random normals}
+
+if(gpuInfo()$maxAllocatableMem > 1e10) {
+  NperItem = 5e5}else {NperItem = 500}
+
+
+z = vclVector(0, length=as.integer(prod(Nglobal)*NperItem), type="double")
+length(z)
+
+system.time(junk <- rnorm(length(z)))
+system.time(streams <- gpuRandom::gpuRn(z, streams=streams, 
+                                         workgroupSize = Nglobal,
+                                         localSize = c(2,2),
+                                         random_type="normal"))
+```
+
+Plot histgram for random normals
+```{r hist for normals}
+
+zVec = as.vector(z)
+
+
+hist(zVec,breaks=40)
+
+
+qqnorm(zVec)
+```
+
+
+
+
+
+
+
+
+
+
+
+
