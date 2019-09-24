@@ -2,17 +2,17 @@ Package: gpuRandom
 Version: 0.1
 Date: 2019-09-14
 Title: Random numbers with GPU
-Author: Patrick Brown
-Description: Random numbers on the gpu
-Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
+Author: Patrick Brown, Ruoyong Xu
+Description: Generate random numbers on gpu
+Maintainer: 
 License: GPL (>= 2)
 Encoding: UTF-8
 NeedsCompilation: yes
 Depends: R (>= 3.0.2), gpuR
-Suggests: knitr
+Imports: geostatsp
+Suggests: sp, mapmisc, Matrix, raster, knitr, 
 LinkingTo:
 	RViennaCL (>= 1.7.1.4),
-	gpuR,
 	Rcpp
 VignetteBuilder: knitr
 RoxygenNote: 6.1.1
