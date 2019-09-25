@@ -160,9 +160,9 @@ std::string backsolveBatchString(
 
 
   result += 
-//    "        cacheSum[DlocalCache + DcolCache * NpadBetweenMatricesSum] +=\n"
-"        cacheSum[DSum] += Acache * Ccache[DinnerC];\n";
-//  "           Acache * Ccache[Dinner * NpadCcache + DcolCache];\n";
+    "        cacheSum[Dsum] += Acache * Ccache[DinnerC];\n";
+  //    "        cacheSum[DlocalCache + DcolCache * NpadBetweenMatricesSum] +=\n"
+  //  "           Acache * Ccache[Dinner * NpadCcache + DcolCache];\n";
   
   
   result += 
