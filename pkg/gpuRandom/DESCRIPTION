@@ -1,19 +1,18 @@
 Package: gpuRandom
-Version: 0.1
-Date: 2019-09-14
-Title: Random numbers with GPU
-Author: Patrick Brown
-Description: Random numbers on the gpu
-Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
-License: GPL (>= 2)
+Type: Package
+Title: What the Package Does in One 'Title Case' Line
 Encoding: UTF-8
+Version: 0.1
+Date: 2019-09-06
+Author: Your Name
+Maintainer: Your Name <your@email.com>
+Description: One paragraph description of what the package does as one or more full sentences.
+License: GPL (>= 2)
+Depends: gpuR
+Imports: Rcpp (>= 1.0.2)
 NeedsCompilation: yes
-Depends: R (>= 3.0.2), gpuR
-Imports: geostatsp
-Suggests: sp, knitr, mapmisc, Matrix, raster
-LinkingTo:
-	RViennaCL (>= 1.7.1.4),
-	gpuR,
-	Rcpp
-VignetteBuilder: knitr
+LinkingTo: Rcpp,
+	RViennaCL (>= 1.7.1.4)
+Suggests: knitr
 RoxygenNote: 6.1.1
+VignetteBuilder: knitr

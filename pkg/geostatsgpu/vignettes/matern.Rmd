@@ -39,7 +39,7 @@ Nlocal = c(4L, 2L)
 theType = "float"
 
 if(gpuInfo()$deviceMemory > 10^10){
-   Ngrid = Ngrid * 4
+   Ngrid = Ngrid * 2
     NlocalCache = 2000
 #   Nglobal = c(16L, 16L, 8L)
 #   Nlocal = c(8L, 4L)
@@ -241,6 +241,36 @@ for(D in names(simRaster)) {
   plot(simRaster[[D]], legend=FALSE, add=TRUE)
 }
   
+```
+
+# Backsolve
+
+```{r backsolve, echo=TRUE}
+  
+solveMat = -99 +0*simMat
+
+geostatsgpu:::backsolveBatchBackend(
+  solveMat, outputChol, simMat, 
+  diagIsOne = TRUE,   
+  Nglobal = Nglobal,
+  Nlocal = Nlocal,
+  NlocalCache = NlocalCache)
+
+Nglobal
+Nlocal
+Nglobal/Nlocal
+
+as.matrix(simMat[1:12,])
+
+as.matrix(solveMat[1:12,])
+
+L = as.matrix(outputChol[1:ncol(outputChol), ])
+L[!lower.tri(L, diag=TRUE)] = 0
+diag(L) = 1
+L[1:4,1:4]
+
+solve(L, as.matrix(simMat[1:ncol(outputChol),]))[1:12, ]
+
 ```
 
 

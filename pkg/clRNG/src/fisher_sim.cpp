@@ -1,4 +1,4 @@
-#include "random_number.hpp"
+#include <gpuRandom.hpp>
 
 //#define DEBUG
 

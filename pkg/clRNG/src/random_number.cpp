@@ -1,5 +1,5 @@
 #include <CL/mrg31k3pkernelStringSeparate.hpp>
-#include "random_number.hpp"
+#include <gpuRandom.hpp>
 
 
 using namespace Rcpp;
