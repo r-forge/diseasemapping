@@ -239,10 +239,171 @@ std::string backsolveBatchString(
     "  }//for Drow\n";
 
   result += 
+    "  //Now rows that aren't all cached\n";
+  
+  result +=
+    "  for(Drow = NrowStop + get_local_id(0),\n"
+    "      BHereRow = BHere + Drow * NpadB,\n"
+    "      CHereRow = CHere + Drow * NpadC,\n"
+    "      CcacheHereRow = Drow * NpadCcache,\n"
+    "      AHereRow = AHere + Drow * NpadA;\n"
+    "      Drow < Nrow;\n" 
+    "      Drow += get_local_size(0), \n"
+    "      BHereRow += DBrowInc,\n"
+    "      AHereRow += DArowInc, CHereRow += DCrowInc,\n"
+    "      CcacheHereRow += DCcacheRowInc){\n"
+    
+    "    barrier(CLK_LOCAL_MEM_FENCE);\n"
+    "    if(localIsFirstItem) {\n"
+    "      DrowZero = Drow;\n"
+    "    };\n"
+    "    barrier(CLK_LOCAL_MEM_FENCE);\n";
+  
+  result += 
+    "    // initialize cacheSum\n"
+    "    for(Dcol = get_group_id(1), DcolCache=DlocalCache;\n"
+    "      Dcol < Ncol;\n"
+    "      Dcol += get_num_groups(1), DcolCache+=NpadBetweenMatricesSum){\n";
+  
+  //    result += "cacheSum[DcolCache] = 0.0;\n";
+  result += "cacheSum[DcolCache] = 0.0;\n";
+  result += 
+    "    }//for Dcol\n"
+    "    barrier(CLK_LOCAL_MEM_FENCE);\n";
+  
+  result += 
+    "    for(Dinner = get_local_id(1),\n"
+    "      DinnerC = get_local_id(1)*NpadCcache;\n"
+    "      Dinner < NrowStop;\n"
+    "      Dinner += get_local_size(1), DinnerC += DinnerCinc){\n";
+  
+  result += 
+    "      Acache = A[AHereRow + Dinner];\n"; 
+  //"      Acache = A[AHere + Drow*NpadA + Dinner];\n"; 
+  
+  result += 
+    "      // loop through columns of B and C\n"
+    "      for(Dcol = get_group_id(1),DcolCache=0, Dsum=DlocalCache;\n"
+    "        Dcol < Ncol;\n"
+    "        Dcol += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n";
+  
+  
+  result += 
+    "        cacheSum[Dsum] += Acache * Ccache[DinnerC];\n";
+  //    "        cacheSum[DlocalCache + DcolCache * NpadBetweenMatricesSum] +=\n"
+  //  "           Acache * Ccache[Dinner * NpadCcache + DcolCache];\n";
+  
+  
+  result += 
+    "      }//for Dcol\n";
+  
+  
+  result += 
+    "    }//for Dinner\n"
+    "    barrier(CLK_LOCAL_MEM_FENCE);\n";
+  
+  result += 
+    "    for(Dinner = NrowStop + get_local_id(1),\n"
+    "      DinnerC = Dinner*NpadCcache;\n"
+    "      Dinner < Nrow;\n"
+    "      Dinner += get_local_size(1), DinnerC += DinnerCinc){\n";
+  
+  result += 
+    "      Acache = A[AHereRow + Dinner];\n"; 
+  //"      Acache = A[AHere + Drow*NpadA + Dinner];\n"; 
+  
+  result += 
+    "      // loop through columns of B and C\n"
+    "      for(Dcol = get_group_id(1),DcolCache=0, Dsum=DlocalCache;\n"
+    "        Dcol < Ncol;\n"
+    "        Dcol += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n";
+  
+  
+  result += 
+    "        cacheSum[Dsum] += Acache * C[CHere + Dcol + NpadC * Dinner];\n";
+  //    "        cacheSum[DlocalCache + DcolCache * NpadBetweenMatricesSum] +=\n"
+  //  "           Acache * Ccache[Dinner * NpadCcache + DcolCache];\n";
+  
+  
+  result += 
+    "      }//for Dcol\n";
+  
+  
+  result += 
+    "    }//for Dinner\n"
+    "    barrier(CLK_LOCAL_MEM_FENCE);\n";
+  
+  result += 
+    "    // loop columns again\n"
+    "    for(Dcol = get_group_id(1),DcolCache=0;\n"
+    "      Dcol < Ncol;\n"
+    "      Dcol += get_num_groups(1), DcolCache++){\n";
+  
+  result += "\n"
+  "      if(localIsFirstCol){\n";
+  
+  result += 
+    "        for(Dinner = 1, DinnerC = DlocalCache+1;\n"
+    "          Dinner < get_local_size(1);\n"
+    "          Dinner++,DinnerC++){\n"
+    
+    "            cacheSum[NpadBetweenMatricesSum*DcolCache + DlocalCache] +=\n"
+    "              cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
+    
+    "        }//Dinner\n"
+    "        barrier(CLK_LOCAL_MEM_FENCE);\n";
+  
+  result +=
+    "       // last bit of the triangle\n"    
+    "       for(Dinner = 0,DinnerC = 0;\n"
+    "         Dinner < get_local_size(0);\n"
+    "         Dinner++,DinnerC += get_local_size(1)){\n";
+  
+  result +=
+    "        // create C in cache and copy to C\n"
+    "        if(get_local_id(0) == Dinner){\n"
+    
+    "          cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC] = B[BHereRow + Dcol] -\n"
+    "               cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
+    
+    "          C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
+    
+    "        } //if(get_local_id(0) == Dinner)\n"
+    "        barrier(CLK_LOCAL_MEM_FENCE);\n"; 
+  
+  
+  result +=
+    "        // update A[Drow, ] * B[, Dcol] \n"
+    "        if(get_local_id(0) > Dinner){\n"
+    "          cacheSum[NpadBetweenMatricesSum*DcolCache + DlocalCache] +=\n"
+    "            A[AHereRow + DrowZero + Dinner] * cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
+    "        }//if(get_local_id(0) > Dinner)\n"
+    "        barrier(CLK_LOCAL_MEM_FENCE);\n"; 
+  
+  
+  result +=
+    "        }//Dinner\n";
+  
+  
+  result +=
+    "      }//localIsFirstCol\n"
+    "      barrier(CLK_LOCAL_MEM_FENCE);\n";  
+  
+  result += 
+    "    }//for Dcol\n";
+  result += 
+    "  }//for Drow\n";
+  
+  result += 
     "}\n" // Dmatrix
     "}";
   /*
-   * TO DO: cache C NcolsPerGroup * NrowsToCacheC
+   * TO DO: do remaining rows
+   * multiply A with cached C
+   *   copy C over
+   * loop through cached blocks of C
+   * do triangle bit
+   *    
    */
   return(result);
 }
