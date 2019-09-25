@@ -1,4 +1,4 @@
-#include "geostatsgpu.hpp"
+#include "gpuRandom.hpp"
 //#define DEBUG
 
 #define NlocalParams 22
