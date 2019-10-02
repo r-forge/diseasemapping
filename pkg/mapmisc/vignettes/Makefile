@@ -19,4 +19,4 @@ empty:
 
 	
 %.html: %.md
-	pandoc --smart --self-contained --to=html5 --css=http://diseasemapping.r-forge.r-project.org/webpage.css --output=$@ $<	
+	pandoc --self-contained --to=html5 --css=http://diseasemapping.r-forge.r-project.org/webpage.css --output=$@ $<	
