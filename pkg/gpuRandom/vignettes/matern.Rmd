@@ -1,0 +1,260 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Matern correlations}
+-->
+
+
+# Matern correlations
+
+```{r date}
+date()
+```
+
+
+```{r packages, results='hide'}
+library('geostatsp')
+library('gpuR')
+
+```
+
+
+```{r memoryAvailable, echo=TRUE}
+which2.1 = grep('OpenCL 2.1',listContexts()[,'platform'])
+if(length(which2.1)) {
+  setContext(which2.1[1])
+}
+gpuInfo()$deviceName
+gpuInfo()$maxAllocatableMem/(1024^3)
+```
+
+Set up spatial data
+
+```{r setupData}
+
+Nsim = 4
+Ngrid = c(10, 10)
+NlocalCache = 1000
+Nglobal = c(8L, 8L, 8L)
+Nlocal = c(4L, 2L)
+theType = "float"
+
+if(gpuInfo()$deviceMemory > 10^10){
+   Ngrid = Ngrid * 4
+    NlocalCache = 2000
+#   Nglobal = c(16L, 16L, 8L)
+#   Nlocal = c(8L, 4L)
+    theType = "double"
+}
+
+myRaster = raster(
+    extent(0,Ngrid[1]/Ngrid[2],5,6),
+    Ngrid[2], Ngrid[1]
+  )
+coordsSp = sp::SpatialPoints(xyFromCell(myRaster, 1:ncell(myRaster)))
+
+head(coordsSp@coords)
+
+  coordsGpu = vclMatrix(coordsSp@coords, 
+                        nrow(coordsSp@coords), 
+                        ncol(coordsSp@coords), type=theType)
+```
+
+
+
+# Batch matern
+
+```{r paramsBatch}
+myParamsBatch = rbind(
+  c(shape=1.25, range=0.5, variance = 1.5, nugget = 0, 
+             anisoRatio = 1, 
+             anisoAngleRadians = 0), 
+c(shape=2.15, range=0.25, variance = 2, nugget = 0, 
+             anisoRatio = 4, 
+             anisoAngleRadians = pi/7),
+c(shape=0.55, range=1.5, variance = 2, nugget = 0, 
+             anisoRatio = 4, 
+             anisoAngleRadians = pi/7),
+c(shape=2.15, range=0.5, variance = 2, nugget = 0, 
+             anisoRatio = 4, 
+             anisoAngleRadians = -pi/7),
+c(shape=2.15, range=0.5, variance = 2, nugget = 0, 
+             anisoRatio = 2, 
+             anisoAngleRadians = pi/4))
+
+myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
+myParamsBatch
+myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch)))
+paramsGpu =  vclMatrix(myParamsBatch, type=gpuR::typeof(coordsGpu))
+
+outputBatchF = vclMatrix(0, 
+    nrow(paramsGpu)*nrow(coordsGpu), nrow(coordsGpu),
+    type=gpuR::typeof(paramsGpu))
+class(outputBatchF)
+```
+
+
+```{r batchMatern}
+  gpuRandom:::maternBatchBackend(
+    outputBatchF,
+    coordsGpu, paramsGpu,  
+    Nglobal = Nglobal[2:3], 
+    Nlocal = Nlocal)
+dim(outputBatchF)
+```
+
+
+Compare output to geostatsp's matern
+
+```{r batchMaternCompare}
+
+geostatsp::matern(
+    x=coordsSp,
+    param=drop(myParamsBatch[1,1:7])
+    )[1:4,1:4]
+as.matrix(outputBatchF[1:4,1:4])
+var4cpu = geostatsp::matern(
+    x=coordsSp,
+    param=drop(myParamsBatch[4,1:7])
+    )
+var4gpu = outputBatchF[seq(1+3*nrow(coordsGpu),len=nrow(coordsGpu)), ]
+var4cpu[1:4,1:4]
+as.matrix(var4gpu)[1:4,1:4]
+range(var4cpu - as.matrix(var4gpu))
+```
+
+# Cholesky
+
+
+```{r cholBach}
+diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), 
+                    type = gpuR::typeof(outputBatchF))
+outputChol = deepcopy(outputBatchF)
+gpuRandom:::cholBatchBackend(
+  outputChol, diagMat, 
+  Nglobal = c(Nglobal[1], Nlocal[2], Nglobal[3]),
+  Nlocal = Nlocal,
+  NlocalCache = NlocalCache)
+```
+
+```{r cholBatchCpu}
+cholCpu = as.matrix(chol(var4cpu))
+theDiag = diag(cholCpu)
+cholCpu = cholCpu %*% diag(1/theDiag)
+theDiag = theDiag^2
+
+chol4gpu = as.matrix(outputChol[seq(1+3*nrow(coordsGpu), len=nrow(coordsGpu)),])
+chol4gpu[upper.tri(chol4gpu)] = 0
+diag(chol4gpu) = 1
+
+chol4gpu[1:4,1:4]
+cholCpu[1:4,1:4]
+range(cholCpu - as.matrix(chol4gpu))
+
+range(theDiag - as.matrix(diagMat)[4,])
+```
+
+# Multiplying lower triangle
+
+
+create a matrix of independent normals
+
+```{r multLowerSetup}
+Nmatrix = nrow(diagMat)
+set.seed(0)
+zmat = matrix(rnorm(ncol(outputBatchF) * Nsim * Nmatrix), ncol=Nsim)
+zmatGpu = vclMatrix(zmat, type = gpuR::typeof(outputChol))
+```
+
+compute U = L D^(1/2) Z, where LDLt is the Cholesky of the variance matrix, Z is the independent normals
+
+```{r multLowerGpu}
+simMat = deepcopy(-100*zmatGpu)
+
+diagMat = 0*diagMat + 1.0
+
+gpuRandom:::multiplyLowerDiagonalBatchBackend(
+  simMat, outputChol, diagMat, zmatGpu,
+  diagIsOne = 1L, # diagonal of L is one
+  transformD = "sqrt", # take the square root of each element of D
+  Nglobal = Nglobal,
+  Nlocal = Nlocal,
+  NlocalCache = NlocalCache)
+```
+
+Do the same in R and compare
+```{r multLower}
+zmatMult = try(diag(as.vector(t(sqrt(as.matrix(diagMat))))) %*% zmat)
+
+rmat = try(mapply(function(DD, xx) {
+  xx = xx[seq(1+(DD-1)*ncol(xx),len=ncol(xx)), ]
+  xx[upper.tri(xx)] = 0
+  diag(xx) = 1
+  xx
+  },
+  DD = 1:Nmatrix,
+  MoreArgs = list(xx=as.matrix(outputChol)),
+  SIMPLIFY=FALSE))
+
+rmat2 = do.call(Matrix::bdiag, rmat)
+
+multCpu = rmat2 %*% zmatMult
+
+toCompare = as.matrix(simMat) - multCpu
+range(toCompare)
+
+toCompare[1:3, ]
+
+badone = which(abs(toCompare[,1]) > 0.01)
+length(badone)
+if(length(badone)) {
+  badone = min(badone)
+  print(badone)
+  Sbad = badone + seq(-2, 4)
+  Sbad = Sbad[Sbad > 0]
+  print(toCompare[Sbad, ])
+  print(as.matrix(simMat)[Sbad, ])
+  print(multCpu[Sbad, ])
+}
+
+as.matrix(simMat)[ncol(outputChol) + seq(-2, 4), ]
+multCpu[ncol(outputChol) + seq(-2, 4), ]
+
+
+
+```
+
+
+# Plot simulated materns
+
+```{r plotSimSetup}
+library(raster)
+simRaster = brick(myRaster, 
+  nl = ncol(simMat)*nrow(paramsGpu))
+values(simRaster) = as.vector(as.matrix(simMat))
+names(simRaster) = apply(expand.grid('par',1:nrow(paramsGpu), 'sim', 1:ncol(simMat)), 1, paste, collapse='')
+```
+
+```{r plotSim, fig.height=3, fig.width=3, out.width=paste0(98/nrow(paramsGpu), '%'), fig.cap='simulations', fig.subcap = names(simRaster)}
+par(mar=rep(0.1, 4))
+for(D in names(simRaster)) {
+  plot(extent(simRaster))
+  plot(simRaster[[D]], legend=FALSE, add=TRUE)
+}
+  
+```
+
+
+# extra info
+
+```{r gpuInfo, echo=TRUE}
+gpuR::gpuInfo()
+```
+
+
+
+
+# To do
+
+- backsolve https://en.wikipedia.org/wiki/Triangular_matrix#Forward_and_back_substitution
+- replace * with += for some iterators
+

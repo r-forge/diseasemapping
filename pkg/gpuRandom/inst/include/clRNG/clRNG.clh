@@ -30,47 +30,57 @@
  ***********************************************************************
  */
 
-/* @file private.c
- * @brief Implementation of functions defined in clRNG.h and private.h
+/*! @file clRNG.clh
+ *  @brief Common definitions for the device-side API of clRNG
+ *
+ *  The definitions defined in this file are not documented here.  Refer to the
+ *  documentation of clRNG.h.
  */
-#include <clRNG/clRNG.h>
-#include <clRNG/private.h>
 
-#include <stdio.h>
-#include <stdarg.h>
-#include <stdlib.h>
+#pragma once
+#ifndef CLRNG_CLH
+#define CLRNG_CLH
 
-#define CASE_ERR_(code,msg) case code: base = msg; break
-#define CASE_ERR(code)      CASE_ERR_(CLRNG_ ## code, MSG_ ## code)
+#ifndef __OPENCL_C_VERSION__
+#error "clRNG.clh can be included in device code only"
+#endif
 
-char errorString[1024]				= "";
+#define __CLRNG_DEVICE_API
 
-static const char MSG_DEFAULT[]                 = "unknown status";
-static const char MSG_SUCCESS[]                 = "success";
-static const char MSG_OUT_OF_RESOURCES[]        = "out of resources";
-static const char MSG_INVALID_VALUE[]           = "invalid value";
-static const char MSG_INVALID_RNG_TYPE[]        = "invalid type of RNG";
-static const char MSG_INVALID_STREAM_CREATOR[]  = "invalid stream creator";
-static const char MSG_INVALID_SEED[]            = "invalid seed";
+#ifdef CLRNG_SINGLE_PRECISION
+#define _CLRNG_FPTYPE cl_float
+#else
+#define _CLRNG_FPTYPE cl_double
+#pragma OPENCL EXTENSION cl_amd_fp64 : enable
+#endif
+
+typedef double cl_double;
+typedef float  cl_float;
+typedef int    cl_int;
+typedef uint   cl_uint;
+typedef long   cl_long;
+typedef ulong  cl_ulong;
 
 
-clrngStatus clrngSetErrorString(cl_int err, const char* msg, ...)
-{
-    char formatted[1024];
-    const char* base;
-    switch (err) {
-        CASE_ERR(SUCCESS);
-        CASE_ERR(OUT_OF_RESOURCES);
-        CASE_ERR(INVALID_VALUE);
-        CASE_ERR(INVALID_RNG_TYPE);
-        CASE_ERR(INVALID_STREAM_CREATOR);
-        CASE_ERR(INVALID_SEED);
-        default: base = MSG_DEFAULT;
-    }
-    va_list args;
-    va_start(args, msg);
-    vsprintf(formatted, msg, args);
-    sprintf(errorString, "[%s] %s", base, formatted);
-    va_end(args);
-	return (clrngStatus)err;
-}
+#define _CLRNG_TAG_FPTYPE(name)           _CLRNG_TAG_FPTYPE_(name,_CLRNG_FPTYPE)
+#define _CLRNG_TAG_FPTYPE_(name,fptype)   _CLRNG_TAG_FPTYPE__(name,fptype)
+#define _CLRNG_TAG_FPTYPE__(name,fptype)  name##_##fptype
+
+
+
+typedef enum clrngStatus_ {
+    CLRNG_SUCCESS              = 0,
+    CLRNG_INVALID_VALUE        = -1
+} clrngStatus;
+
+/*! This macro does nothing.
+ *  It is defined for convenience when adapting host code for the device.
+ */
+#define clrngSetErrorString(err) (err)
+
+
+#endif
+
+/*
+    vim: ft=c sw=4
+*/

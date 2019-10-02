@@ -1,24 +1,18 @@
-#' @title gpuFisher_test
+#' @title Fisher's exact test on GPU
 #'
-#' @description Peform Fisher's simulation test on GPU
-#'
-#' @param sr a Vclvector
-#' @param sc a Vclvector
-#' @param x a Vclvector
-#' @param streams vector of integers, 18x workgroupSize
-#' @param workgroupSize global dimensions of work items
-#' @param localSize dimensions of work groups
-#' @return altered in-place
+
 #' @useDynLib gpuRandom
 #' @export
 
-fisher_simGpu=function(
+
+
+gpuFisher_sim=function(
   sr, #marginal row total 
   sc, #marginal column total
-  x, # the vector to store test statistics,//extraX,
+  x,# the vector to store test statistics,
   streams, 
   workgroupSize,
-  localSize){
+  localSize=c(2,2)){
   
   verbose = TRUE
   
@@ -36,19 +30,20 @@ fisher_simGpu=function(
       warning("number of work items needs to be same as number of streams")
     # make a deep copy
     streams = matrix(as.vector(streams), nrow(streams), ncol(streams), FALSE, dimnames(streams))
-     }
+  }
+  
   localSize = pmax(2,c(localSize, 2, 2)[1:2])
   
   if(verbose) {
     cat('local sizes ', toString(localSize), '\nglobal sizes ', toString(workgroupSize),
         '\n streams ', toString(dim(streams)), '\n')
   }
-  cpp_gpuFisher_test(sr, sc, x, #extraX, 
-                     streams, workgroupSize,localSize)
+  cpp_gpuFisher_test(sr, sc, x, streams, workgroupSize,localSize)
   
   invisible(streams)
   
 }
+
 
 
 
