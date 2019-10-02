@@ -79,7 +79,7 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
 	Dcountry  = grep(country, wrld_simpl$NAME)
 	x=wrld_simpl[Dcountry,]
 	
-	myCrsMoll = moll(x, angle=100, flip= 'nwu' )
+	myCrsMoll = moll(x,  angle=0, flip= 'nwu' )
 	
 	plot(attributes(myCrsMoll)$ellipse)
 	
