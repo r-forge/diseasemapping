@@ -54,7 +54,7 @@ wrapPoly = function(x, crs){
 }
 
 llCropBox = function(crs, res=1) {
-  
+  if(FALSE) {
   # long-lat grid covering the globe
   N = 51
   res = 1
@@ -79,6 +79,7 @@ llCropBox = function(crs, res=1) {
   
   llPoints =
     as.matrix(na.omit(coordsBox[,c('lon','lat')]))*(360/(pi))
+
   
   Sprob = seq(0,1,len=251)
   latSeq = sort(unique(c(
@@ -95,7 +96,11 @@ llCropBox = function(crs, res=1) {
       rep(-90,length(lonSeq)), latSeq, latSeq
     ))
   
-  
+  }
+
+  llPoints = polyhedron@coords
+  llBorder = llBorder@coords
+
   if(!requireNamespace('rgdal', quietly=TRUE)) {
     warning("rgdal package is required for this operation")
     return(NULL)
@@ -144,7 +149,7 @@ llCropBox = function(crs, res=1) {
   regionTransOrig = rgeos::gConvexHull(
     rgeos::gConvexHull(SpatialPoints(transInRegion), byid=FALSE)
   )
-  resTrans = mean(apply(bbox(regionTransOrig), 1, diff)*(0.25/180))
+  resTrans = res*mean(apply(bbox(regionTransOrig), 1, diff)*(0.25/180))
   regionTransSmall = rgeos::gBuffer(regionTransOrig, width=-2*resTrans)
   
   
@@ -191,6 +196,8 @@ llCropBox = function(crs, res=1) {
   regionLL = spTransform(regionTransSmallInclude, crsLL)
 #  regionLL = raster::crop(regionLL, extent(-179.9, 179.9, -89.9, 89.9))
   
+#plot(myMap);plot(regionLL, add=TRUE, col='#FF000030');plot(edgeLL, add=TRUE, col='#0000FF30')
+# plot(regionTransSmall);plot(myMap2, add=TRUE);plot(regionTransSmall, add=TRUE, col='#FF000030');plot(regionTransSmallInclude, add=TRUE, col='#0000FF30')
   list(crop=edgeLL, poly=regionLL, ellipse = regionTransSmall, 
     polyTrans = regionTransSmallInclude)
   
