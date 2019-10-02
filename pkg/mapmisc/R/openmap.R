@@ -286,7 +286,11 @@ openmap = function(x, zoom,
         res(toRaster) = res(toRaster) / rep_len(fact,2)
       }
       
-      resultProj = stack(projectRaster(result, toRaster, method="ngb"))
+      resultProj1 = suppressWarnings(
+        projectRaster(result, toRaster, method="ngb")
+      )
+
+      resultProj = stack(resultProj1)
       
       for(D in names(resultProj))
         resultProj[[D]]@legend@colortable = oldColorTable[[D]]

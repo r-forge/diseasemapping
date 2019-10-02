@@ -50,8 +50,20 @@ wrapPoly = function(x, crs) {
 
 llCropBox = function(crs, res = 1) {
   
-  llPoints = polyhedron@coords
-  llBorder = llBorder@coords
+   
+  
+  extraSeq = seq(-0.75,0.75, by=0.1)
+  extraBox = expand.grid(apply(
+    expand.grid(c(-179,179),extraSeq),
+              1, sum),
+    apply(
+      expand.grid(c(-89,89),extraSeq),
+            1, sum))
+  
+  
+
+  llPoints = rbind(polyhedron@coords,
+                   as.matrix(extraBox), llBorder@coords)
   
   if (!requireNamespace('rgdal', quietly = TRUE)) {
     warning("rgdal package is required for this operation")
@@ -66,14 +78,6 @@ llCropBox = function(crs, res = 1) {
     llPoints[, 2]
   ))
   
-  pointsTransBorder = suppressWarnings(rgdal::rawTransform(
-    as.character(crsLL),
-    as.character(crs),
-    nrow(llBorder),
-    llBorder[, 1],
-    llBorder[, 2]
-  ))
-  
   pointsInRegion = is.finite(pointsTransIn[[1]]) &
     is.finite(pointsTransIn[[2]])
   
@@ -83,85 +87,132 @@ llCropBox = function(crs, res = 1) {
   
   # if omerc, truncate the x range
   if (length(grep("proj=omerc", as.character(crs)))) {
-    absX = abs(transInRegion[, 1])
-    toTrunc = quantile(absX, prob = c(0.95))
-    transInRegion = transInRegion[absX < toTrunc, ]
+    #    crsUp = gsub("(alpha|gamma)=([[:digit:]]|[.])+", "", as.character(crs))
+    crsUp = gsub("gamma=([[:digit:]]|[.])+", "gamma=0", 
+                 as.character(crs))    
+    
+    transInRegionUp = suppressWarnings(
+      rgdal::rawTransform(
+        as.character(crs), 
+        as.character(crsUp), nrow(transInRegion), 
+        transInRegion[,1], transInRegion[,2]))
+    toTrunc = transInRegionUp[[1]]
+    toTrunc = toTrunc[is.finite(toTrunc)]
+    toTrunc = quantile(toTrunc, prob = c(0.01, 0.99), na.rm=TRUE)
+    getRid =  which(
+      transInRegionUp[[1]] < toTrunc[1] |
+        transInRegionUp[[1]] > toTrunc[2])
+    if(length(getRid))
+      transInRegion = transInRegion[-getRid, ]
+  }
+  transInRegion = SpatialPoints(transInRegion,
+                                proj4string = crs)
+  
+  # region in crs
+  regionTransOrig = 
+    rgeos::gConvexHull(transInRegion, 
+                       byid = FALSE)
+  # border in crs
+  border2 = SpatialLines(list(Lines(list(Line(
+    regionTransOrig@polygons[[1]]@Polygons[[1]]@coords
+    )), ID=1)), proj4string = crs)
+  border3=rgeos::gInterpolate(border2,seq(0,1,len=4000),
+                              normalized=TRUE)
+  
+  # border of crs transformed to LL
+  borderLL = suppressWarnings(rgdal::rawTransform(
+    as.character(crs),
+    as.character(crsLL),
+    nrow(border3@coords),
+    border3@coords[, 1],
+    border3@coords[, 2]
+  ))
+  
+  borderLL = cbind(borderLL[[1]],borderLL[[2]])
+  borderLL = borderLL[is.finite(borderLL[,1]), ]
+  
+  theBreaks = c(0,which(abs(diff(borderLL[,1]))>350), nrow(borderLL))
+  theLines = list()
+  for(D in 1:(length(theBreaks)-1)){
+    theLines[[D]] = Line(borderLL[
+      seq(theBreaks[D]+1, theBreaks[D+1]), ])
   }
   
-  transOnBorder = cbind(pointsTransBorder[[1]],
-                        pointsTransBorder[[2]])
-  transOnBorder = transOnBorder[apply(transOnBorder, 1, function(xx)
-    all(is.finite(xx))),]
+  borderLL2 = SpatialLines(list(Lines(
+    theLines, ID=1)), proj4string = crsLL)
   
-  regionTransOrig = rgeos::gConvexHull(rgeos::gConvexHull(SpatialPoints(transInRegion), byid =
-                                                            FALSE))
-  resTrans = res * mean(apply(bbox(regionTransOrig), 1, diff) * (0.25 /
-                                                                   180))
-  regionTransSmall = rgeos::gBuffer(regionTransOrig, width = -2 * resTrans)
+  borderLL3=rgeos::gInterpolate(borderLL2,seq(0,1,len=4000),
+                              normalized=TRUE)
+  borderLL3@proj4string = CRS()
+  holeLL = rgeos::gBuffer(borderLL3,
+          width = res)
+  holeLL@proj4string = crsLL
   
-  
-  if (nrow(transOnBorder)) {
-    borderTrans = rgeos::gSimplify(rgeos::gBuffer(SpatialPoints(transOnBorder), width =
-                                                    2 * resTrans),
-                                   tol = 2 * resTrans)
-    # crop out areas which are close to edges in LL
-    regionTransSmallInclude = #rgeos::gSimplify(
-      rgeos::gDifference(regionTransSmall,
-                         borderTrans)#,
-    #      tol=resTrans/4, topologyPreserve=FALSE)
-  } else {
-    borderTrans = SpatialPolygons(list())
-    regionTransSmallInclude = regionTransSmall
-  }
-  
-  # convert to separate polygons
-  anyHoles = unlist(lapply(regionTransSmallInclude@polygons[[1]]@Polygons,
+  # get rid of holes
+  notHoles = which(!unlist(lapply(holeLL@polygons[[1]]@Polygons,
                            function(xx)
-                             xx@hole))
-  if (!any(anyHoles)) {
-    regionTransSmallInclude = regionTransSmallInclude@polygons[[1]]@Polygons
-    regionTransSmallInclude = SpatialPolygons(
-      mapply(
-        function(srl, ID)
-          Polygons(list(srl), ID),
-        srl = regionTransSmallInclude,
-        ID = 1:length(regionTransSmallInclude)
-      ),
-      proj4string = crs
-    )
-    regionTransSmallInclude = regionTransSmallInclude[
-      order(rgeos::gArea(regionTransSmallInclude, 
-                         byid = TRUE),
-            decreasing = TRUE), ]
-  }
-  edgeTrans = sp::spsample(as(regionTransOrig, 'SpatialLines'),
-                           n = 3000,
-                           type = 'regular')
-  
-  regionTransSmallInclude@proj4string = borderTrans@proj4string =
-    regionTransOrig@proj4string = regionTransSmall@proj4string =
-    edgeTrans@proj4string = crs
-  
-  edgeLLP = spTransform(edgeTrans, crsLL)
-  
-  edgeLL = rgeos::gBuffer(SpatialPoints(edgeLLP@coords), width = res)
-  #  edgeLL = rgeos::gSimplify(edgeLL, tol=0.5)
-  edgeLL@proj4string = crsLL
-  
-  regionLL = spTransform(regionTransSmallInclude, crsLL)
-  
-  #  regionLL = raster::crop(regionLL, extent(-179.9, 179.9, -89.9, 89.9))
-  
-  
-  #plot(myMap);plot(regionLL, add=TRUE, col='#FF000030');plot(edgeLL, add=TRUE, col='#0000FF30')
-  # plot(regionTransSmall);plot(myMap2, add=TRUE);plot(regionTransSmall, add=TRUE, col='#FF000030');plot(regionTransSmallInclude, add=TRUE, col='#0000FF30')
-  
-  list(
-    crop = edgeLL,
-    poly = regionLL,
-    ellipse = regionTransSmall,
-    polyTrans = regionTransSmallInclude
+                             xx@hole)))
+  edgeLL = SpatialPolygons(
+    list(Polygons(holeLL@polygons[[1]]@Polygons[notHoles], ID=1))
   )
   
+
+  llBorderT = suppressWarnings(rgdal::rawTransform(
+    as.character(crsLL),
+    as.character(crs),
+    nrow(llBorder@coords),
+    llBorder@coords[, 1],
+    llBorder@coords[, 2]
+  ))
+  llBorderT = cbind(llBorderT[[1]], llBorderT[[2]])  
+  llBorderT = llBorderT[is.finite(llBorderT[,1]), ]
+  
+  resTrans = res * mean(apply(bbox(regionTransOrig), 1, diff) * (0.25 /
+                                                                   180))
+  
+  borderTrans = rgeos::gSimplify(rgeos::gBuffer(
+    SpatialPoints(llBorderT), width =
+                                                  4 * resTrans),
+                                 tol = 4 * resTrans)
+  projection(borderTrans) = crs
+  
+  regionTrans = rgeos::gSimplify(regionTransOrig,tol=resTrans)
+  
+    regionTransSmallInclude = rgeos::gDifference(
+      regionTrans,
+    borderTrans
+  )
+  
+    # projectable region in LL
+    transInRegion2 = rgeos::gIntersection(
+      transInRegion, regionTransSmallInclude
+    )
+    pointsInLL = suppressWarnings(rgdal::rawTransform(
+      as.character(crs),
+      as.character(crsLL),
+      nrow(transInRegion2@coords),
+      transInRegion2@coords[, 1],
+      transInRegion2@coords[, 2]
+    ))
+    pointsInLL2 = SpatialPoints(cbind(
+      pointsInLL[[1]], pointsInLL[[2]]))
+    
+    # region in crs
+    regionLLOrig = 
+      rgeos::gConvexHull(pointsInLL2, 
+                         byid = FALSE)
+    regionLL = rgeos::gDifference(regionLLOrig, edgeLL)
+    
+    regionLL@proj4string = edgeLL@proj4string = crsLL
+    
+    
+    
+  result = list(
+    crop = edgeLL,
+    poly = regionLL,
+    ellipse = regionTrans,
+    polyTrans = regionTransSmallInclude
+  )
+
 }
 

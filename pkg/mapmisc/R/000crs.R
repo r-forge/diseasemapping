@@ -12,7 +12,8 @@ crsMerc = sp::CRS(
 crsModis <-
   sp::CRS("+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs")
 
-
+bboxLL = as(extent(-180,180,-90,90), 'SpatialPolygons')
+bboxLL@proj4string = crsLL
 
 polyhedron = new(
   "SpatialPoints",
