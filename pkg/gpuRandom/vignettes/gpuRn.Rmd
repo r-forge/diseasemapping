@@ -21,6 +21,7 @@ Use double precision if the GPU supports it
 ```{r setType}
 theType = c('float','double')[1+gpuInfo()$double_support]
 theType
+#setContext(   grep('gpu', listContexts()$device_type) [2]    )
 ```
 
 Create some streams

@@ -4,8 +4,8 @@
 #include <Rcpp.h>
 #include <string>
 
-#include <gpuMatrix/dynVCLMatGeostatsgpu.hpp>
-#include <gpuMatrix/dynVCLVecGeostatsgpu.hpp>
+#include <dynMatrix/dynVCLMatGeostatsgpu.hpp>
+#include <dynMatrix/dynVCLVecGeostatsgpu.hpp>
 #include "viennacl/linalg/sum.hpp"
 #include "viennacl/ocl/backend.hpp"
 

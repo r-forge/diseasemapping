@@ -34,7 +34,10 @@ std::string mrg31k3pTemplateStringThird =
 "}\n";
 
 
-  // normal float string and normal double string
+
+
+
+// normal float string and normal double string
 std::string mrg31k3pTemplateStringForth = 
 "* z,\n"
 "const int Nsim ){\n"

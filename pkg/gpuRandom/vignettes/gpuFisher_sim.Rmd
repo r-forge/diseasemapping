@@ -15,6 +15,7 @@ library('gpuR')
 ```{r memoryAvailable, echo=TRUE}
 gpuInfo()$deviceName
 gpuInfo()$maxAllocatableMem/(1024^3)
+#setContext(   grep('gpu', listContexts()$device_type) [2]    )
 ```
 
 Example 1
@@ -29,7 +30,7 @@ fisher.test(TeaTasting, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
 
 ## Using the gpu function
 Nglobal = c(8,64)
-NperItem = 25
+NperItem = 15
 
 stream_num=prod(Nglobal)
 streams = gpuRandom::CreateStreams(stream_num)
@@ -47,8 +48,8 @@ length(results)
  
 gpuRandom::gpuFisher_sim(a, b, results, streams, workgroupSize = Nglobal)
 
-#matrix(as.vector(extraX), ncol=16*stream_num, byrow=TRUE)
-#matrix(as.vector(results), ncol=stream_num, byrow=TRUE)
+
+matrix(as.vector(results), ncol=stream_num, byrow=TRUE)
 
 
 ## calculate the p-value
