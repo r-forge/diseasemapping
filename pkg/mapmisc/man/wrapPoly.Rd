@@ -11,7 +11,7 @@ wrapPoly(x,crs)
 
 \arguments{
 \item{x}{A Spatial object}
-\item{crs}{	An object of class \code{\link[sp]{CRS}}.}
+\item{crs}{	An object of class \code{\link[sp:CRS-class]{CRS}}.}
 }
 
 \value{

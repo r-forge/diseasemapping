@@ -32,7 +32,7 @@ degreeRaster
 
 \references{
 \url{https://nsidc.org/data/docs/daac/mod10_modis_snow/landgrid.html},
-\url{http://spatialreference.org/ref/sr-org/modis-sinusoidal/}
+\url{https://spatialreference.org/ref/sr-org/modis-sinusoidal/}
 }
 
 

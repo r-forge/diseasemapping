@@ -25,14 +25,13 @@ A coordinate reference system is returned
 
 
 \value{
-	An object of class \code{\link[sp]{CRS}}.
+	An object of class \code{\link[sp:CRS-class]{CRS}}.
 }	
-
 \references{
 \url{http://en.wikipedia.org/wiki/Two-point_equidistant_projection}
-\url{http://proj4.org/projections/tpers.html}
+\url{https://proj.org/operations/projections/tpers.html}
 }
-\seealso{\code{\link[sp]{CRS}},\code{\link[sp]{spTransform}}}
+\seealso{\code{\link[sp:CRS-class]{CRS}},\code{\link[sp]{spTransform}}}
 
 \examples{
 

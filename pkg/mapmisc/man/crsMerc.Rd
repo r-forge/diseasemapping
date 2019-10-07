@@ -20,14 +20,14 @@ Using epsg codes requires the \code{rgdal} package to be installed, and
 
 
 \value{
-	Objects of class \code{\link[sp]{CRS}}.
+	Objects of class \code{\link[sp:CRS-class]{CRS}}.
 }	
 
 \references{
 \url{https://en.wikipedia.org/wiki/Web_Mercator},
-\url{http://spatialreference.org/ref/epsg/4326/}
+\url{https://spatialreference.org/ref/epsg/4326/}
 }
-\seealso{\code{\link[sp]{CRS}}, \code{\link[rgdal]{showEPSG}}}
+\seealso{\code{\link[sp:CRS-class]{CRS}}, \code{\link[rgdal:showWKT]{showEPSG}}}
 
 \examples{
 

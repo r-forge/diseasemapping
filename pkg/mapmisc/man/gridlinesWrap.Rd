@@ -36,7 +36,7 @@ for example \code{lty=2}
 Patrick Brown
 }
 
-\seealso{\code{\link[sp]{gridlines}}, \code{\link[rgdal]{llgridlines}}}
+\seealso{\code{\link[sp]{gridlines}}, \code{\link[rgdal]{llgrid}}}
 
 \examples{
 \dontrun{

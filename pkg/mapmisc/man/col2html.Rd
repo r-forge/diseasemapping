@@ -11,7 +11,7 @@ col2html(col, opacity=1, alpha)
 
 \arguments{
 \item{col}{Either a character vector of colour names 
-as listed by \code{\link[grDevices]{colours}()}
+as listed by \code{\link[grDevices:colors]{colours}()}
  or an integer vector of colour indexes. Passed to \code{\link[grDevices]{col2rgb}}.}
 \item{opacity}{scalar or vector of colour opacities between 0 and 1.}
 \item{alpha}{Integer between 0 and 255, or a character giving a 2-digit hex value.  

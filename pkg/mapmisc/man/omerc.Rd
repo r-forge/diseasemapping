@@ -45,13 +45,13 @@ If \code{post} is numeric, it specifies an angle for inverse rotation.
 
 
 \value{
-	An object of class \code{\link[sp]{CRS}}.
+	An object of class \code{\link[sp:CRS-class]{CRS}}.
 }	
 
 \references{
 \url{http://en.wikipedia.org/wiki/Space-oblique_Mercator_projection}
 }
-\seealso{\code{\link[sp]{CRS}},\code{\link[sp]{spTransform}}}
+\seealso{\code{\link[sp]{CRS-class}},\code{\link[sp]{spTransform}}}
 
 \examples{
 

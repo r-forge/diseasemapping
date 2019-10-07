@@ -21,7 +21,7 @@ Produces a scale of colours for plotting maps}
 	for \code{legendBreaks} usually the output of \code{colourScale}, or a vector of breaks}
 	\item{style}{Style for breaks, see Details}
 	\item{col}{Colours to use, either a function or 
-	argument for \code{\link[RColorBrewer]{brewer.pal}}}
+	argument for \code{\link[RColorBrewer:ColorBrewer]{brewer.pal}}}
 	\item{opacity}{adds transparency to colours, either a single number,
 	vector of length 2, or vector of same length as \code{breaks}}
 	\item{dec}{Number of decimal places for the breaks}	
