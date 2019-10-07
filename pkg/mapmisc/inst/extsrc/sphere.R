@@ -31,7 +31,7 @@ raster::plot(myMap)
 sp::plot(polyhedron, add=TRUE)
 
 
-dput(polyhedron, control='niceNames')
+dput(polyhedron)
 
 
 
@@ -58,7 +58,11 @@ dput(polyhedron, control='niceNames')
   raster::plot(myMap)
 	sp::plot(llBorder, add=TRUE)
 
-dput(llBorder, control='niceNames')
+dput(llBorder)
+
+saveRDS(llBorder, ascii=TRUE, compress=FALSE, file='stuff')
+saveRDS(polyhedron, ascii=TRUE, compress=TRUE, file='stuff')
+
 
 
 myMap2 = projectRaster(myMap, crs=milliondeaths::indiaCrs, method='ngb')
