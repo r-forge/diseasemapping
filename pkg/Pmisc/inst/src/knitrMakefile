@@ -41,14 +41,14 @@ clean:
 # md to tex, convert from a tmd if it exists
 # get rid of subfig package, it conflicts with subcaption (or something else)
 %.tex: %.tmd
-	$(PANDOC) --standalone $(PANDOCCROSSREF) --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) $< | $(SED) s/\\\\usepackage{subfig}// > $@
+	$(PANDOC) --standalone $(PANDOCCROSSREF) --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) $< | $(SED) s/^..ifpackageloaded.subfig.*// | $(SED) s/^..ifpackageloaded.caption.*//  > $@
 
 
 #
 # Create tmd
 #
 %.tmd: %.Rmd
-	$(REXE) -e "base::library('base');knitr::knit('$<',output='$@',encoding='UTF-8')"  mdToTex $(Rargs)
+	$(REXE) -e "base::library('base');knitr::knit('$<',output='$@',encoding='UTF-8')" mdToTex $(Rargs)
 
 #
 # Bog standard markdown
@@ -122,5 +122,5 @@ clean:
 # should only be used if there's no .tmd or .Rmd file
 #
 
-%.tex: %.md
-	$(PANDOC) --standalone $(PANDOCCROSSREF) --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
+#%.tex: %.md
+#	$(PANDOC) --standalone $(PANDOCCROSSREF) --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) --output=$@ $<
