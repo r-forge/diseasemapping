@@ -1,7 +1,7 @@
 #' @export
 subcaptionCommands = c(
   '\\usepackage{subcaption}',
-  '\\newcommand{\\subfloat}[2][need a sub-caption]{ \\subcaptionbox{#1}{#2} }'
+  '\\makeatletter\\@ifundefined{subfloat}{\\newcommand{\\subfloat}[2][need a sub-caption]{\\subcaptionbox{#1}{#2}}}{}\\makeatother'
 )
 
 
