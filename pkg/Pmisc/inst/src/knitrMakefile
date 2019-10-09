@@ -41,8 +41,7 @@ clean:
 # md to tex, convert from a tmd if it exists
 # get rid of subfig package, it conflicts with subcaption (or something else)
 %.tex: %.tmd
-	$(PANDOC) --standalone $(PANDOCCROSSREF) --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) $< | $(SED) s/^..ifpackageloaded.subfig.*// | $(SED) s/^..ifpackageloaded.caption.*//  > $@
-
+	$(PANDOC) --standalone $(PANDOCCROSSREF) --biblatex $(pandocArgs) --from=markdown --to=$(pandocTo) $< | $(SED) 's/.usepackage.subfig.//' > $@
 
 #
 # Create tmd

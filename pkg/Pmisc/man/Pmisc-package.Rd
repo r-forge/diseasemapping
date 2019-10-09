@@ -23,7 +23,7 @@ Patrick Brown
 library("Pmisc")
 
 list.files(system.file("docs", package="Pmisc"), full.names=TRUE)
-
+file.show(system.file("docs/document.Rmd", package="Pmisc"))
 # copy the document.Rmd file to the temporary folder
 (mydir = tempdir())
 file.copy(
