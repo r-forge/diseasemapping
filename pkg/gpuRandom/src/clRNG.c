@@ -35,7 +35,7 @@
 */
 
 #include <clRNG/clRNG.h>
-#include <clRNG/private.h>
+#include "private.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>

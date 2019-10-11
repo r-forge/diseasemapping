@@ -11,11 +11,15 @@
 #' 
 priorPostSd = function(
   object, 
-  param=1:length(object$all.hyper$random),
+  param,
   group = c('random','family')
 ){
   group = group[1]
+  if(missing(param)) {
+  param = 1:length(object$all.hyper[[group]])
+  }
   param = param[ param <= length(object$all.hyper[[group]]) ]
+
 	 # return prior and posterior of all standard deviation parameters
 
   res = object
@@ -34,8 +38,11 @@ priorPostSd = function(
       qq$label)
     )
     Slabel = do.call(rbind, Slabel)
+    if(ncol(Slabel)==3) Slabel = Slabel[,-2, drop=FALSE]
+
+
     paramLong1 = paste0(Slabel[,1], ' (parameter )?for ', Slabel[,2])
-    paramLongRegexp = gsub("prec ", "prec(ision)? ", paramLong1)
+    paramLongRegexp = gsub("prec ", "[pP]rec(ision)? ", paramLong1)
     paramLongRegexp = gsub("[?]for ", "?for( the)? ", paramLongRegexp)
     paramLong = unlist(mapply(
       grep, 
@@ -44,7 +51,7 @@ priorPostSd = function(
       value=TRUE, ignore.case=TRUE)))
     if(!length(paramLong)) {
       paramLong = grep(paste(
-        "^precision for the ", Slabel[,2], ' observations$', sep=''
+        "^precision for the ", Slabel[,ncol(Slabel)], ' observations$', sep=''
         ), rownames(res$summary.hyper), 
       value=TRUE, ignore.case=TRUE)
     }
@@ -299,6 +306,8 @@ priorPost = function(object) {
   paramDf = do.call(rbind, paramList)
   paramDf$group = rep(names(paramList), unlist(lapply(paramList, nrow)))
   paramDf$out.name = NA
+  paramDf = paramDf[grep('precision offset', paramDf[,'name'], invert=TRUE), , drop=FALSE]
+
 
   # a few fixes
   # weibull cure has short name a which is alpha in summary table

@@ -1,5 +1,6 @@
+
+#include "gpuRn.hpp" 
 #include <CL/mrg31k3pkernelStringSeparate.hpp>
-#include "gpuRandom.hpp"
 
 
 using namespace Rcpp;
@@ -8,7 +9,7 @@ using namespace viennacl::linalg;
 
 
 
-//Uniform number kernel
+
 template <typename T> 
 std::string mrg31k3pTypeString() {
   return("undefined");}
@@ -18,11 +19,14 @@ template <> std::string mrg31k3pTypeString<double>(){
   result = mrg31k3pDoubleUnifString;
   return(result);
 }
+
 template <> std::string mrg31k3pTypeString<float>(){
   std::string result;
   result =  mrg31k3pFloatUnifString;
   return(result);
 }
+
+
 template <> std::string mrg31k3pTypeString<int>(){
   std::string result;
   result = mrg31k3pIntegerUnifString;
@@ -30,7 +34,7 @@ template <> std::string mrg31k3pTypeString<int>(){
 }
 
 
-//Normal number kernel
+
 template <typename T> 
 std::string mrg31k3pNormString() {
   return("undefined");}
@@ -40,11 +44,13 @@ template <> std::string mrg31k3pNormString<double>(){
   result = mrg31k3pDoubleNormString;
   return(result);
 }
+
 template <> std::string mrg31k3pNormString<float>(){
   std::string result;
   result = mrg31k3pFloatNormString;
   return(result);
 }
+
 template <> std::string mrg31k3pNormString<int>(){
   return("undefined");
 }
@@ -81,10 +87,12 @@ void gpuRn(
   
   //Reserve memory space for count stream objects, without creating the stream objects. 
   //Returns a pointer to the newly allocated buffer. 
-  clrngMrg31k3pStream* streams = clrngMrg31k3pAllocStreams(numWorkItems[0]*numWorkItems[1], &streamBufferSize, &err);
+  clrngMrg31k3pStream* streams = clrngMrg31k3pAllocStreams(
+    numWorkItems[0]*numWorkItems[1], 
+                                &streamBufferSize, &err);
   //count	Number of stream objects to allocate.
   
-  
+
   // transfer streams to opencl as matrix
   // convert to crngMgr31k3pStream in opencl, but still on host
   convertMatclRng(streamsR, streams);
@@ -112,7 +120,7 @@ void gpuRn(
   
   // copy streams back to cpu
   viennacl::backend::memory_read(bufIn.handle(), 0, streamBufferSize, streams);
-  
+
   // then transfer to R object, //return streams to R 
   convertclRngMat(streams, streamsR);
   
@@ -149,8 +157,8 @@ SEXP gpuRn(
 
 //[[Rcpp::export]]
 SEXP cpp_gpuRn(
-    Rcpp::S4  xR,  
-    Rcpp::IntegerMatrix streamsR,   
+    Rcpp::S4  xR,   //vector
+    Rcpp::IntegerMatrix streamsR,   //vector
     IntegerVector max_global_size,     
     IntegerVector max_local_size,
     std::string random_type,
@@ -274,5 +282,4 @@ Rcpp::IntegerMatrix  cpp_mrg31k3pCreateStreams(int numWorkItems) //this function
   
   return result;
 }
-
 
