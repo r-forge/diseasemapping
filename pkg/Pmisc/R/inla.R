@@ -360,7 +360,7 @@ priorPost = function(object) {
       paramDf[Dparam, 'internal.name']  
       ]]
 
-
+    if(length(inlaNameHere)) {
       postHere = object$marginals.hyperpar[[inlaNameHere]]
 
       xLim = range(object$summary.hyperpar[inlaNameHere,
@@ -368,7 +368,6 @@ priorPost = function(object) {
         ])*c(0.7, 1.5)*20
       xLim = range(c(floor(xLim), ceiling(xLim)))/20
       if( (xLim[1]<0.25) & (xLim[2]> (2*xLim[1]) ) ) xLim[1] = 0
-
       if(is.null(postHere)) {
         xRange = xLim
         xSeq = seq(xRange[1], xRange[2], len=1000)
@@ -457,6 +456,8 @@ priorPost = function(object) {
         )
 
       result[[Dparam]]$summary = object$summary.hyperpar[inlaNameHere,]      
+    } 
+      
     } # parameter not pc.prec
   } # loop through parameters
 
