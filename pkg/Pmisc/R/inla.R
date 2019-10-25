@@ -40,7 +40,7 @@ priorPostSd = function(
     Slabel = do.call(rbind, Slabel)
     if(ncol(Slabel)==3) Slabel = Slabel[,-2, drop=FALSE]
 
-
+    Slabel[,2] = gsub("^t$", 'student-t', Slabel[,2])
     paramLong1 = paste0(Slabel[,1], ' (parameter )?for ', Slabel[,2])
     paramLongRegexp = gsub("prec ", "[pP]rec(ision)? ", paramLong1)
     paramLongRegexp = gsub("[?]for ", "?for( the)? ", paramLongRegexp)
@@ -240,7 +240,7 @@ priorPostSd = function(
   } # loop through params
 
   if(length(result)==1) result = result[[1]]
-  rownames(thesummary) = gsub("^Precision", "SD", rownames(thesummary))
+  rownames(thesummary) = gsub("^[Pp]recision", "SD", rownames(thesummary))
   result$summary = thesummary
 
   result$legend = list(
