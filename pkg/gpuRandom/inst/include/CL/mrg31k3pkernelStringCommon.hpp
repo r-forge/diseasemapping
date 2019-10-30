@@ -1,4 +1,4 @@
-//#include <string>
+#include <string>
 
 
 std::string mrg31k3pCommon = 

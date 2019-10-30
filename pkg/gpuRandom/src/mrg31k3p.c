@@ -32,11 +32,9 @@
 
 #include <clRNG/mrg31k3p.h>
 
-#include "private.h"
+#include <clRNG/private.h>
 #include <stdlib.h>
 
- 
- 
 #if defined ( WIN32 )
 #define __func__ __FUNCTION__
 #endif
@@ -52,11 +50,10 @@ struct clrngMrg31k3pStreamCreator_ {
 
 #define MODULAR_NUMBER_TYPE cl_uint
 #define MODULAR_FIXED_SIZE 3
-#include "modularHost.c.h"
+#include "../include/clRNG/modularHost.c.h"
 
 // code that is common to host and device
-//#include "../include/clRNG/private/mrg31k3p.c.h"
-#include "mrg31k3p.c.h"
+#include "../include/clRNG/private/mrg31k3p.c.h"
 
 
 

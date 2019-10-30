@@ -146,7 +146,7 @@ std::string mrg31k3pkernelString =
 "static cl_uint clrngMrg31k3pNextState(clrngMrg31k3pStreamState* currentState)\n"
 "{\n"
 	
-"	cl_uint* g1 = currentState->g1;\n"
+"	t* g1 = currentState->g1;\n"
 "	cl_uint* g2 = currentState->g2;\n"
 "	cl_uint y1, y2;\n"
 

@@ -1,23 +1,23 @@
-\name{gpuFisher_test}
-\alias{gpuFisher_test}
+\name{gpuFisher_sim}
+\alias{gpuFisher_sim}
 
 \title{Performs Fisher's exact test}
 
 \description{
 Provide marginal row total and marginal column total of a contingency table, streams, work group size and a vector, performs Fisher's exact test using Monte Carlo simulation on GPU, returns the two-sided p-value.
 }
-\usage{gpuFisher_test(rowsum, colsum, results, streams, globalSize, localSize)}
+\usage{gpuFisher_sim(rowsum, colsum, results, streams, workgroupSize)}
 
 \arguments{
 \item{rowsum}{A vector of marginal row total.}
 \item{colsum}{A vector of marginal column total.}
 \item{results}{A vector of test statistics, whose length is the number of replicates used in the Monte Carlo simulation. }
 \item{streams}{Used to generate random numbers on GPU by work items.}
-\item{globalSize}{Number of work items used in the device domain.}
-\item{localSize}{Number of work items in a work group.}
+\item{workgroupSize}{Global sizes of device domain.}
+\item{verbose}{A logical indicating if global and local dimensions should be showed. }
 }
 
-\value{The p-value of Fisher's exact test using Monte Carlo simulation.}
+\value{p-value of Fisher's exact test using Monte Carlo simulation.}
 
 \examples{
 ## Fisher's test for a 3 by 3 contingency table
@@ -46,7 +46,7 @@ colsum = as.integer(colSums(TeaTasting, na.rm = FALSE))
 rowsum<-as.vclVector(rowsum)
 colsum<-as.vclVector(colsum)
  
-gpuRandom::gpuFisher_test(rowsum, colsum, results,  streams, globalSize = Nglobal)
+gpuRandom::gpuFisher_sim(rowsum, colsum, results,  streams, workgroupSize = Nglobal)
 
 ## calculate the p-value
 STATISTIC <- -sum(lfactorial(TeaTasting))
@@ -54,3 +54,4 @@ almost.1 <- 1 + 64 * .Machine$double.eps
 PVAL <- (1 + sum(   as.vector(results) <= STATISTIC/almost.1   )) / (length(results) + 1)
 PVAL
 }
+

@@ -76,8 +76,8 @@
  *  
  *  When a kernel is called, one should pass a copy of the streams from the host 
  *  to the global memory of the device.
- *  Another copy of the stream state must be stored
- *  in the private memory of the work item that uses it in the kernel code to generate random numbers. 
+ *  Another copy of the stream state must be stored in the private memory of the work item 
+ *  that uses it in the kernel code to generate random numbers. 
  *  In the current implementation, to avoid wasting (scarce) private memory,
  *  without the option \c CLRNG_ENABLE_SUBSTREAMS (see below),
  *  only the current state of the stream is stored explicitly in the work-item's private memory.
@@ -510,8 +510,10 @@ clrngStatus clrngCopyOverStreamsFromGlobal(size_t count, clrngStream* destStream
 
 /*! @brief Copy RNG device stream objects from private memory into global memory [**device-only**]
  *
- *  @param[in]  count			Number of stream objects to copy (use 1 for a single stream object).
- *  @param[out] destStreams		Destination buffer into which to copy (its content will be overwritten).
+ *  @param[in]  count			Number of stream objects to copy (use 1 for a single
+ *								stream object).
+ *  @param[out] destStreams		Destination buffer into which to copy (its
+ *								content will be overwritten).
  *  @param[in]  srcStreams		Device stream object or array of device stream objects to be copied.
  *
  *  @return     Error status
