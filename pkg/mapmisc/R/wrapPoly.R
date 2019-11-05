@@ -30,7 +30,8 @@ wrapPoly = function(x, crs) {
     
     if (any(slotNames(x) == 'data')) {
       xCropData = x@data[match(row.names(xCrop),
-                               rownames(x@data)), ]
+                               rownames(x@data)), ,
+          drop = FALSE]
       
       rownames(xCropData) = names(xCrop)
       

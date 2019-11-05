@@ -1,12 +1,12 @@
 Package: mapmisc
 Type: Package
 Title: Utilities for Producing Maps 
-Version: 1.7.4
-Date: 2019-10-02
+Version: 1.7.5
+Date: 2019-11-05
 Depends: sp, raster, R (>= 3.0.0)
 Imports: methods, grDevices, stats, utils, graphics
 Suggests: RColorBrewer, classInt, rgdal, rgeos, geosphere, knitr
-Enhances: maptools, tools, geonames
+Enhances: tools, geonames
 Author: Patrick Brown <patrick.brown@utoronto.ca> 
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
 Description: A minimal, light-weight set of tools for producing nice looking maps in R, with support for map projections.
