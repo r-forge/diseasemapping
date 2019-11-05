@@ -35,13 +35,15 @@ Data are retreived from Openstreetmap.org, see \url{https://wiki.openstreetmap.o
 
 if(requireNamespace("rgdal", quietly = TRUE)) { 
 
-cities=geocode('Ulan batar')
+cities=try(geocode('Ulan batar'), silent=TRUE)
+if(class(cities) != 'try-error') {
 mytiles = openmap(cities, buffer=800*1000, maxTiles=1)
 
 map.new(mytiles)
 plot(mytiles, add=TRUE)
 points(cities, col='red')
 text(cities, labels=cities$name, col='red',pos=4)
+}
 
 }
 
