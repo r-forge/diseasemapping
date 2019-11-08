@@ -1,0 +1,14 @@
+
+- create sparse matrix in R
+- create sparseMultiMatrix on gpu
+- cholesky in R
+- create cholMultiMatrix object on gpu
+- adding different scalars to diagonals
+
+    - addToDiagonal(x, y) # y a vector
+- update
+- create sparseMultiMatrix on gpu by adding different numbers to diagonals
+
+    - create matrix of new diagonals
+    - addToDiagonal(x, y, perm=xChol)
+- update
