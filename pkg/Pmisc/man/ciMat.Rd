@@ -4,12 +4,14 @@
 \alias{ciMat}
 \title{Matrix for confidence intervals}
 \usage{
-ciMat(p = 0.95, se.fit = FALSE)
+ciMat(p = 0.95, se.fit = FALSE, df = NULL)
 }
 \arguments{
 \item{p}{coverage of confidence interval}
 
 \item{se.fit}{row names of result are 'fit' and 'se.fit'}
+
+\item{df}{degrees of freedom for t distribution, defaults to normal}
 }
 \value{
 matrix with three columns (estimate, upper and lower bound of CI) and two rows

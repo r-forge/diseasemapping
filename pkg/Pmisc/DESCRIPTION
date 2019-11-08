@@ -1,25 +1,19 @@
 Package: Pmisc
 Type: Package
 Title: Various Utilities for knitr and inla
-Version: 0.2.8
-Date: 2019-10-11
+Version: 0.3.0
+Date: 2019-11-09
 Imports:
     knitr (>= 1.20.0),
-    methods,
     stats,
     tools,
     utils,
-    raster,
-    sp,
     graphics,
 	abind
 Suggests:
     RColorBrewer,
     numDeriv,
-    lgcp,
     INLA,
-    geostatsp,
-    spatstat,
     nlme,
     R.utils,
     Hmisc,
@@ -33,4 +27,5 @@ URL: http://r-forge.r-project.org/projects/diseasemapping/
 Additional_repositories: https://www.math.ntnu.no/inla/R/stable/
 License: GPL
 VignetteBuilder: knitr
-RoxygenNote: 6.0.1
+Encoding: UTF-8
+RoxygenNote: 6.1.1

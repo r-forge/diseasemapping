@@ -3,10 +3,10 @@
 \alias{Makefile}
 \title{Create a Makefile}
 \usage{
-make(x, suffix = NULL,
+make(x, suffix,
   beamer = FALSE, run = FALSE, ...)
-Makefile(x, suffix = NULL,
-  beamer = FALSE, output='Makefile', cygwin=FALSE)
+Makefile(x, suffix,
+  beamer = FALSE, output='Makefile', cygwin=FALSE, fullpath=FALSE)
 }
 \arguments{
 \item{x}{a string specifying the target}
@@ -20,6 +20,9 @@ Makefile(x, suffix = NULL,
 \item{output}{Name of file saved, or a function output is passed to.}
 
 \item{cygwin}{Makefile is to be run in cygwin}
+
+
+\item{fullpath}{add full path to executables}
 
 \item{...}{additional arguments passed to make}
 }

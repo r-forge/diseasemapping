@@ -5,7 +5,7 @@
 \title{precisions to standard deviations}
 \usage{
 priorPost(object)
-priorPostSd(object, param = 1:length(object$all.hyper$random),
+priorPostSd(object, param,
   group = c("random", "family"))
 precToSd(densmat)
 }
