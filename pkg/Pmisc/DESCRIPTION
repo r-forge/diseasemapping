@@ -17,7 +17,8 @@ Suggests:
     nlme,
     R.utils,
     Hmisc,
-    htmlTable
+    htmlTable,
+    sp
 Enhances:
 	reshape2
 Author: Patrick Brown <patrick.brown@utoronto.ca>[aut, cre]
