@@ -113,7 +113,8 @@ double maternGpuVcl(
 
 // note all objects on the cpu are double
 // only the gpu objects are typed
-template<typename T> double maternGpuVcl(
+template<typename T> 
+double maternGpuVcl(
 	viennacl::matrix<T> &vclVar,
 	viennacl::matrix<T> &vclCoords,
 	viennacl::vector_base<T> &DofLDL,
@@ -201,11 +202,10 @@ template<typename T> SEXP maternGpuVcl(
 	std::shared_ptr<viennacl::vector_base<T> > DofLDL = getVCLVecptr<T>(DofLDLR.slot("address"), BisVCL, ctx_id);
 
 	std::shared_ptr<viennacl::matrix<T> > vclCoords = getVCLptr<T>(coordsR.slot("address"), BisVCL, ctx_id);
+	
 	logdet = maternGpuVcl<T>(
 		*vclVar, *vclCoords, *DofLDL, param2,
-		form, ctx_id,
-        numWorkItemsStd, 
-        numLocalItemsStd);
+		form, ctx_id,  numWorkItemsStd, numLocalItemsStd);
 
 	return(Rcpp::wrap(logdet));	
 
@@ -225,6 +225,7 @@ SEXP cpp_maternGpuD(
 		varR, coordsR, DofLDLR, param, form, 
 		numWorkItems, numLocalItems));
 }
+
 
 //[[Rcpp::export]]
 SEXP cpp_maternGpuF(
