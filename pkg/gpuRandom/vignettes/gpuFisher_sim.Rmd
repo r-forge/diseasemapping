@@ -1,0 +1,122 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Fisher test}
+-->
+
+`https://github.com/clMathLibraries/clRNG`
+
+
+## Fisher test simulation
+
+```{r packages, results='hide'}
+library('gpuR')
+```
+
+```{r memoryAvailable, echo=TRUE}
+gpuInfo()$deviceName
+gpuInfo()$maxAllocatableMem/(1024^3)
+setContext(   grep('gpu', listContexts()$device_type) [2]    )
+```
+
+Example 1
+```{r  eval=FALSE}
+TeaTasting <-matrix(c(21,17,5,19,38,6,26,12,9),nrow=3)
+
+TeaTasting
+## Using the R function 
+fisher.test(TeaTasting)
+fisher.test(TeaTasting, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
+
+
+## Using the gpu function
+Nglobal = c(8,64)
+NperItem = 15
+
+stream_num=prod(Nglobal)
+streams = gpuRandom::CreateStreams(stream_num)
+
+results = vclVector(length=as.integer(stream_num*NperItem), type="double")
+length(results)
+
+ a = as.integer(rowSums(TeaTasting, na.rm = FALSE))
+ b = as.integer(colSums(TeaTasting, na.rm = FALSE))
+ a<-as.vclVector(a)
+ b<-as.vclVector(b)
+
+
+ 
+ 
+gpuRandom::gpuFisher_sim(a, b, results, streams, workgroupSize = Nglobal)
+
+
+#matrix(as.vector(results), ncol=stream_num, byrow=TRUE)
+
+
+## calculate the p-value
+STATISTIC <- -sum(lfactorial(TeaTasting))
+almost.1 <- 1 + 64 * .Machine$double.eps
+PVAL <- (1 + sum(   as.vector(results) <= STATISTIC/almost.1   )) / (length(results) + 1)
+PVAL
+
+#PVAL <- (sum(   as.vector(results) <= STATISTIC  )) / (length(results))
+#PVAL
+ 
+```
+
+
+Example 2
+```{r}
+x<- matrix(c(2, 10, 15, 3), nrow = 2)
+STATISTIC <- -sum(lfactorial(x))
+
+fisher.test(x, alternative = "t",  simulate.p.value = TRUE, B = 1e3)
+
+Nglobal = c(16,64)
+streams = gpuRandom::CreateStreams(prod(Nglobal))
+
+results = vclVector(length=10000L, type="double")
+
+#x<-vclMatrix(x)
+ a = as.integer(rowSums(x))
+ b = as.integer(colSums(x))
+ a<-as.vclVector(a)
+ b<-as.vclVector(b)
+
+aa<-gpuRandom::gpuFisher_sim(a,b, results, streams, workgroupSize = Nglobal)
+#results[1:10]
+#as.vector(aa)[1:20]
+
+almost.1 <- 1 + 64 * .Machine$double.eps
+PVAL <- (1 + sum(   as.vector(results) <= STATISTIC/almost.1   )) / (length(results) + 1)
+PVAL
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
