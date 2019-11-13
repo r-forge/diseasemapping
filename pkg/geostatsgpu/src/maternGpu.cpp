@@ -179,7 +179,8 @@ double maternGpuVcl(
 
 //	SEXP XYR, // solve for Lt b = XY
 //	SEXP crossprodR, //bt b
-template<typename T> SEXP maternGpuVcl(
+template<typename T> 
+SEXP maternGpuVcl(
 	Rcpp::S4 varR,
 	Rcpp::S4 coordsR,
 	Rcpp::S4 DofLDLR,
@@ -204,8 +205,7 @@ template<typename T> SEXP maternGpuVcl(
 	std::shared_ptr<viennacl::matrix<T> > vclCoords = getVCLptr<T>(coordsR.slot("address"), BisVCL, ctx_id);
 	
 	logdet = maternGpuVcl<T>(
-		*vclVar, *vclCoords, *DofLDL, param2,
-		form, ctx_id,  numWorkItemsStd, numLocalItemsStd);
+		*vclVar, *vclCoords, *DofLDL, param2, form, ctx_id,  numWorkItemsStd, numLocalItemsStd);
 
 	return(Rcpp::wrap(logdet));	
 
@@ -222,8 +222,7 @@ SEXP cpp_maternGpuD(
 	Rcpp::IntegerVector numLocalItems) {
 
 	return(maternGpuVcl<double>(
-		varR, coordsR, DofLDLR, param, form, 
-		numWorkItems, numLocalItems));
+		varR, coordsR, DofLDLR, param, form, numWorkItems, numLocalItems));
 }
 
 
@@ -238,8 +237,7 @@ SEXP cpp_maternGpuF(
 	Rcpp::IntegerVector numLocalItems) {
 
 	return(maternGpuVcl<float>(
-		varR, coordsR, DofLDLR, param, form, 
-		numWorkItems, numLocalItems));
+		varR, coordsR, DofLDLR, param, form, numWorkItems, numLocalItems));
 }
 
 

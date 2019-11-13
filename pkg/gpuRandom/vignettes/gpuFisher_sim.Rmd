@@ -65,7 +65,7 @@ PVAL
 
 
 Example 2
-```{r}
+```{r eval=FALSE}
 x<- matrix(c(2, 10, 15, 3), nrow = 2)
 STATISTIC <- -sum(lfactorial(x))
 

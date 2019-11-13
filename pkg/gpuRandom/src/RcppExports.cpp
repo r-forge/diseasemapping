@@ -20,18 +20,18 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_gpuFisher_test
-SEXP cpp_gpuFisher_test(Rcpp::S4 srR, Rcpp::S4 scR, Rcpp::S4 resultsR, Rcpp::IntegerMatrix streamsR, Rcpp::IntegerVector max_global_size, Rcpp::IntegerVector max_local_size);
-RcppExport SEXP _gpuRandom_cpp_gpuFisher_test(SEXP srRSEXP, SEXP scRSEXP, SEXP resultsRSEXP, SEXP streamsRSEXP, SEXP max_global_sizeSEXP, SEXP max_local_sizeSEXP) {
+SEXP cpp_gpuFisher_test(Rcpp::S4 xR, Rcpp::S4 resultsR, double threshold, Rcpp::IntegerMatrix streamsR, Rcpp::IntegerVector max_global_size, Rcpp::IntegerVector max_local_size);
+RcppExport SEXP _gpuRandom_cpp_gpuFisher_test(SEXP xRSEXP, SEXP resultsRSEXP, SEXP thresholdSEXP, SEXP streamsRSEXP, SEXP max_global_sizeSEXP, SEXP max_local_sizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type srR(srRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type scR(scRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type xR(xRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type resultsR(resultsRSEXP);
+    Rcpp::traits::input_parameter< double >::type threshold(thresholdSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerMatrix >::type streamsR(streamsRSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type max_global_size(max_global_sizeSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type max_local_size(max_local_sizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_gpuFisher_test(srR, scR, resultsR, streamsR, max_global_size, max_local_size));
+    rcpp_result_gen = Rcpp::wrap(cpp_gpuFisher_test(xR, resultsR, threshold, streamsR, max_global_size, max_local_size));
     return rcpp_result_gen;
 END_RCPP
 }
