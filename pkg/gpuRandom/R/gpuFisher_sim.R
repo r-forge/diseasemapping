@@ -37,9 +37,9 @@ fisher.sim=function(
         storage.mode(x) <- "integer"
     }
   
-   }else{
-    stop("'x'  must be matrix")
-   }
+   }else{stop("'x'  must be matrix")}
+  
+
   
   STATISTIC <- -sum(lfactorial(x))
   ##STATISTIC is negative
@@ -71,19 +71,28 @@ fisher.sim=function(
 
   sr0 <- rowSums(x)
   sc0 <- colSums(x)
+  
+
+  
   ## we drop all-zero rows and columns
   x <- x[sr0 > 0, sc0 > 0, drop = FALSE]
 
-  x<-gpuR::vclMatrix(x, type='int')
+  xVcl<-gpuR::vclMatrix(x, type='integer')  ## problem here
+  
+  print(class(xVcl))
 
   
-  print(class(x))
   
-  results <- gpuR::vclVector(length=B, type=type)
-
+  if(returnStatistics) {
+    results <- gpuR::vclVector(length=as.integer(B), type=type)
+  } else {
+    results <- gpuR::vclVector(length=as.integer(1), type=type)
+  }
+  
+  
   PVAL <- NULL
   
-  po<-cpp_gpuFisher_test(x, results, threshold, streams, workgroupSize,localSize)
+  po<-cpp_gpuFisher_test(xVcl, results, threshold, as.integer(B), streams, workgroupSize,localSize)
   
   PVAL <- (1 + po ) / (B + 1)
   
@@ -91,13 +100,14 @@ fisher.sim=function(
   
   if (returnStatistics){
   
-  list(pval = PVAL, sim = results, streams=streams)
+  theResult = list(pval = PVAL, sim = results, streams=streams)
     
   }else {
-    list(pval = PVAL)
+    theResult = PVAL
+    attributes(theResult)$streams = streams
     }
 
-  invisible(streams)
+  theResult
   
   
 }

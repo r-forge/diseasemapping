@@ -65,30 +65,20 @@ PVAL
 
 
 Example 2
-```{r eval=FALSE}
+```{r eval=TRUE}
 x<- matrix(c(2, 10, 15, 3), nrow = 2)
-STATISTIC <- -sum(lfactorial(x))
 
-fisher.test(x, alternative = "t",  simulate.p.value = TRUE, B = 1e3)
+fisher.test(x, alternative = "t",  simulate.p.value = TRUE, B = 1e4)
 
 Nglobal = c(16,64)
 streams = gpuRandom::CreateStreams(prod(Nglobal))
 
-results = vclVector(length=10000L, type="double")
 
-#x<-vclMatrix(x)
- a = as.integer(rowSums(x))
- b = as.integer(colSums(x))
- a<-as.vclVector(a)
- b<-as.vclVector(b)
+res1 = gpuRandom::fisher.sim(x, 100L, returnStatistics=TRUE, type="double", streams, workgroupSize = Nglobal)
+#res2 = gpuRandom::fisher.sim(x, 100000, returnStatistics=FALSE, type="double", streams, workgroupSize = Nglobal)
 
-aa<-gpuRandom::gpuFisher_sim(a,b, results, streams, workgroupSize = Nglobal)
-#results[1:10]
-#as.vector(aa)[1:20]
 
-almost.1 <- 1 + 64 * .Machine$double.eps
-PVAL <- (1 + sum(   as.vector(results) <= STATISTIC/almost.1   )) / (length(results) + 1)
-PVAL
+
 ```
 
 

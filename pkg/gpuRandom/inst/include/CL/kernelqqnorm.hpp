@@ -6,7 +6,7 @@ std::string qqnormkernelString =
 "#define R_D_Cval(p)	(lower_tail ? (0.5 - (p) + 0.5) : (p) )\n"
 
 " __kernel void qnorm(\n"
-                      "__global double *p,\n "
+//                      "__global double *p,\n "
                       "__global double  *out,\n"
                       " __global double mu,\n "
                       "__global double sigma,\n"
@@ -19,6 +19,8 @@ std::string qqnormkernelString =
                     
          "double p_, q, r, val;\n"    
          "double pD;"
+         "double multFrac;\n"
+//         "if(out_size > 10) {multFrac = 3/8;} else {multFrac=0.5;}"
 //         "if(sigma == 0)  return mu;\n"
         
         " if (out_size <=10)  {\n"

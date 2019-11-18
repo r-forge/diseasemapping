@@ -29,8 +29,8 @@ std::string FisherSimkernelString(int NR, int NC) {
   "   __global int *ncolt, \n"
   "   const int n, \n" 
   "   const int vsize,\n"
-  " __global  int *count, \n"
-  "  double threshold,\n"
+  " __global  int *count, \n" // length number of work items
+   + typeString + " threshold,\n"
   " __global  " + typeString + "  *fact,\n"
   " __global  " + typeString + "  *results,\n" // fisher log p
   " __global clrngMrg31k3pHostStream* streams"
@@ -45,6 +45,7 @@ std::string FisherSimkernelString(int NR, int NC) {
   "   local " + typeString + " x, y, dummy, sumprb;\n"
   "   bool lsm, lsp;\n\n"
   "   int Diter1, Diter2, Diter3, goTo160;\n"
+  "   int countD=0;\n"
   "   clrngMrg31k3pStream private_stream_d;\n"
   "   clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[index]);\n\n"
   
@@ -168,17 +169,23 @@ std::string FisherSimkernelString(int NR, int NC) {
   "    for (l = 0,u=m*nrow; l < nrow;  l++, u++) {\n"
   "      ans -= fact[matrix[u]];\n"
   "    }\n"  // for l
-  "  }\n"  // for m
+  "  }\n";  // for m
   
   
-  "  results[D] = ans;\n"   
-  
- " if (results[D]<=threshold) {\n"
-    " count[D]=1;\n"
-  "}else {\n"
-  "count[D]=0;\n"
+
+    result += "\n #ifdef returnResult\n"
+   " results[D] = ans;\n"   
+    "#endif";
+
+    
+    result += " if (ans<=threshold) {\n"
+     " ++countD;\n"
       "}\n"
+      
   "}\n" //end D loop
+  
+  // save countD
+  " count[index] = countD;\n"
   
   "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[index], &private_stream_d);\n"
   "}\n" ;
@@ -196,6 +203,7 @@ double gpuFisher_test(
     viennacl::matrix<int> &x, //  viennacl::vector_base<int> &sr,  //  viennacl::vector_base<int> &sc,
     viennacl::vector_base<T> &results,  
     double threshold,   //???
+    int vsize,
     Rcpp::IntegerMatrix streamsR, 
     Rcpp::IntegerVector numWorkItems,
     Rcpp::IntegerVector numLocalItems,
@@ -211,15 +219,18 @@ double gpuFisher_test(
   sr = viennacl::linalg::row_sum(x);
   sc = viennacl::linalg::column_sum(x);
   
+  T thresholdT = (T) threshold;
   
   int n = viennacl::linalg::sum(sr);
-  int vsize= results.size();
   int countss=0;
   double po;
   
 
   
   std::string kernel_string = FisherSimkernelString<T>(nr, nc);
+  if(results.size() == vsize) {
+    kernel_string = "\n#define returnResults\n" + kernel_string;
+  }
   
 #ifdef DEBUG
   Rcpp::Rcout << kernel_string << "\n\n";
@@ -250,7 +261,7 @@ double gpuFisher_test(
   
   
   viennacl::vector_base<T> fact = viennacl::vector_base<T>(n+1, ctx); 
-  viennacl::vector_base<int> count = viennacl::vector_base<int>(vsize, ctx); 
+  viennacl::vector_base<int> count = viennacl::vector_base<int>(numWorkItems[0]*numWorkItems[1], ctx); 
   
   // Calculate log-factorials.  fact[i] = lgamma(i+1)/
   fact(0) = 0.;
@@ -261,7 +272,7 @@ double gpuFisher_test(
   }
   
   
-    viennacl::ocl::enqueue( fisher_sim  (sr, sc, n, vsize, count, threshold, fact, results, bufIn) ); 
+    viennacl::ocl::enqueue( fisher_sim  (sr, sc, n, vsize, count, thresholdT, fact, results, bufIn) ); 
   
   countss = viennacl::linalg::sum(count);
   
@@ -282,6 +293,7 @@ SEXP gpuFisher_test_Templated(
     Rcpp::S4  xR, 
     Rcpp::S4  resultsR,
     double threshold,
+    int B,
     Rcpp::IntegerMatrix streamsR,   
     Rcpp::IntegerVector max_global_size,
     Rcpp::IntegerVector max_local_size){
@@ -292,7 +304,7 @@ SEXP gpuFisher_test_Templated(
   std::shared_ptr<viennacl::matrix<int> > x =getVCLptr<int>(xR.slot("address"), 1, ctx_id);
   std::shared_ptr<viennacl::vector_base<T> > results = getVCLVecptr<T>(resultsR.slot("address"), 1, ctx_id);
   
-  po=gpuFisher_test<T>(*x, *results, threshold, streamsR, max_global_size, max_local_size, ctx_id);
+  po=gpuFisher_test<T>(*x, *results, threshold, B,streamsR, max_global_size, max_local_size, ctx_id);
   
   return (Rcpp::wrap(po));
 }
@@ -300,25 +312,28 @@ SEXP gpuFisher_test_Templated(
 
 
 
-//[[Rcpp::export]]
+// [[Rcpp::export]]
 SEXP cpp_gpuFisher_test(
     Rcpp::S4  xR, 
     Rcpp::S4  resultsR,
     double threshold,
+    int B,
     Rcpp::IntegerMatrix streamsR,  
     Rcpp::IntegerVector max_global_size,
     Rcpp::IntegerVector max_local_size){
   
   Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(resultsR));
   std::string precision_type = (std::string) classVarR;
-  
+
+//#ifdef UNDEF    
   if(precision_type == "fvclVector") {
-    gpuFisher_test_Templated<float>(xR,resultsR,threshold, streamsR,max_global_size,max_local_size);
+    gpuFisher_test_Templated<float>(xR,resultsR,threshold, B,streamsR,max_global_size,max_local_size);
   } else if (precision_type == "dvclVector") {
-    gpuFisher_test_Templated<double>(xR,resultsR,threshold, streamsR,max_global_size,max_local_size);
+    gpuFisher_test_Templated<double>(xR,resultsR,threshold, B,streamsR,max_global_size,max_local_size);
   } else {
     Rcpp::warning("class of var must be fvclVector or dvclVector");
   }
+//#endif  
 }
 
 

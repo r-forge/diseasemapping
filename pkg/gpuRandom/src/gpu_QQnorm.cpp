@@ -49,7 +49,7 @@ void gpu_qqnorm_0(
 
 
 
-//[[Rcpp::export]]
+// [[Rcpp::export]]
 SEXP cpp_gpu_qqnorm(
     Rcpp::S4  pR,  
     Rcpp::S4  outR,

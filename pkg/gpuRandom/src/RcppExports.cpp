@@ -20,18 +20,19 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_gpuFisher_test
-SEXP cpp_gpuFisher_test(Rcpp::S4 xR, Rcpp::S4 resultsR, double threshold, Rcpp::IntegerMatrix streamsR, Rcpp::IntegerVector max_global_size, Rcpp::IntegerVector max_local_size);
-RcppExport SEXP _gpuRandom_cpp_gpuFisher_test(SEXP xRSEXP, SEXP resultsRSEXP, SEXP thresholdSEXP, SEXP streamsRSEXP, SEXP max_global_sizeSEXP, SEXP max_local_sizeSEXP) {
+SEXP cpp_gpuFisher_test(Rcpp::S4 xR, Rcpp::S4 resultsR, double threshold, int B, Rcpp::IntegerMatrix streamsR, Rcpp::IntegerVector max_global_size, Rcpp::IntegerVector max_local_size);
+RcppExport SEXP _gpuRandom_cpp_gpuFisher_test(SEXP xRSEXP, SEXP resultsRSEXP, SEXP thresholdSEXP, SEXP BSEXP, SEXP streamsRSEXP, SEXP max_global_sizeSEXP, SEXP max_local_sizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type xR(xRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type resultsR(resultsRSEXP);
     Rcpp::traits::input_parameter< double >::type threshold(thresholdSEXP);
+    Rcpp::traits::input_parameter< int >::type B(BSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerMatrix >::type streamsR(streamsRSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type max_global_size(max_global_sizeSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type max_local_size(max_local_sizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_gpuFisher_test(xR, resultsR, threshold, streamsR, max_global_size, max_local_size));
+    rcpp_result_gen = Rcpp::wrap(cpp_gpuFisher_test(xR, resultsR, threshold, B, streamsR, max_global_size, max_local_size));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -147,7 +148,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_cholBatchBackend", (DL_FUNC) &_gpuRandom_cholBatchBackend, 5},
-    {"_gpuRandom_cpp_gpuFisher_test", (DL_FUNC) &_gpuRandom_cpp_gpuFisher_test, 6},
+    {"_gpuRandom_cpp_gpuFisher_test", (DL_FUNC) &_gpuRandom_cpp_gpuFisher_test, 7},
     {"_gpuRandom_cpp_gpuRn", (DL_FUNC) &_gpuRandom_cpp_gpuRn, 6},
     {"_gpuRandom_cpp_mrg31k3pCreateStreams", (DL_FUNC) &_gpuRandom_cpp_mrg31k3pCreateStreams, 1},
     {"_gpuRandom_cpp_gpu_qqnorm", (DL_FUNC) &_gpuRandom_cpp_gpu_qqnorm, 7},
