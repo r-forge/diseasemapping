@@ -202,7 +202,7 @@ template<typename T>
 double gpuFisher_test(
     viennacl::matrix<int> &x, //  viennacl::vector_base<int> &sr,  //  viennacl::vector_base<int> &sc,
     viennacl::vector_base<T> &results,  
-    double threshold,   //???
+    double threshold,  
     int vsize,
     Rcpp::IntegerMatrix streamsR, 
     Rcpp::IntegerVector numWorkItems,

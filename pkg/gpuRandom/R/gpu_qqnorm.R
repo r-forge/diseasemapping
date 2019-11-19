@@ -3,7 +3,7 @@
 #' @useDynLib gpuRandom
 #' @export
 
-qqnorm.vclVector <-function(y, ylim, mu, sigma, lowertail=1,
+qqnorm<-function(y, ylim, mu, sigma, lowertail=1,
                   main = "Normal Q-Q Plot",
                   xlab = "Theoretical Quantiles", ylab = "Sample Quantiles",
                   workgroupSize, localSize=c(2,2),
@@ -37,9 +37,9 @@ qqnorm.vclVector <-function(y, ylim, mu, sigma, lowertail=1,
     
 
  #   p <-gpuR::vclVector(ppoints(n), type=gpuR::typeof(y))
-    out <-gpuR::vclVector(length=length(y), type=gpuR::typeof(y))
+    out <-gpuR::vclVector(length=as.integer(n), type=gpuR::typeof(y))
    
-    x <- as.vector(cpp_gpu_qqnorm(p,out, mu,sigma, lowertail, workgroupSize , localSize))
+    x <- as.vector(cpp_gpu_qqnorm(out, mu,sigma, lowertail, workgroupSize , localSize))
     
     x<-x[order(order(as.vector(y)))]
     

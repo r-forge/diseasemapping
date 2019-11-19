@@ -1,6 +1,5 @@
-#include <CL/kernelqqnorm.hpp>
 #include "gpuRandom.hpp"
-
+#include <CL/kernelqqnorm.hpp>
 
 
 using namespace Rcpp;
@@ -9,9 +8,8 @@ using namespace viennacl;
 
 //using namespace viennacl::linalg;
 
-void gpu_qqnorm_0(
-    viennacl::vector_base<double> &p, 
-    viennacl::vector_base<double> &out,
+void gpu_qqnorm_0( 
+    viennacl::vector_base<double> &out, // viennacl::vector_base<double> &p, 
     double mu,
     double sigma,
     int lowertail,
@@ -38,10 +36,10 @@ void gpu_qqnorm_0(
   qqnorm.local_work_size(0, numLocalItems[0]);
   qqnorm.local_work_size(1, numLocalItems[1]);
   
-  const int outsize = p.size();
+  const int outsize = out.size();
   //viennacl::vector_base<double> out = viennacl::vector_base<double>(outsize, ctx); 
 
-  viennacl::ocl::enqueue(qqnorm(p, out, mu, sigma, outsize, lowertail) );
+  viennacl::ocl::enqueue(qqnorm( out, mu, sigma, outsize, lowertail) );
    
 //#endif
 }
@@ -51,7 +49,6 @@ void gpu_qqnorm_0(
 
 // [[Rcpp::export]]
 SEXP cpp_gpu_qqnorm(
-    Rcpp::S4  pR,  
     Rcpp::S4  outR,
     double mu,
     double sigma,
@@ -59,12 +56,12 @@ SEXP cpp_gpu_qqnorm(
     Rcpp::IntegerVector max_global_size,
     Rcpp::IntegerVector max_local_size){
   
-  const int ctx_id = INTEGER(pR.slot(".context_index"))[0]-1;
+  const int ctx_id = INTEGER(outR.slot(".context_index"))[0]-1;
   
-  std::shared_ptr<viennacl::vector_base<double> > p = getVCLVecptr<double>(pR.slot("address"), 1, ctx_id);
+ //std::shared_ptr<viennacl::vector_base<double> > p = getVCLVecptr<double>(pR.slot("address"), 1, ctx_id);
   std::shared_ptr<viennacl::vector_base<double> > out = getVCLVecptr<double>(outR.slot("address"), 1, ctx_id);
   
-   gpu_qqnorm_0(*p, *out, mu, sigma, lowertail, max_global_size, max_local_size, ctx_id);
+   gpu_qqnorm_0(*out, mu, sigma, lowertail, max_global_size, max_local_size, ctx_id);
   
   return outR;
   
