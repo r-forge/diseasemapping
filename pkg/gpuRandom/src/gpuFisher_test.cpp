@@ -1,6 +1,6 @@
 #include "gpuRandom.hpp"
 
-//#define DEBUG
+#define DEBUG
 
 using namespace Rcpp;
 using namespace viennacl; 
@@ -25,6 +25,8 @@ std::string FisherSimkernelString(int NR, int NC) {
   "#define nc_1nrow " + std::to_string((NC - 1) * NR) + "\n"
   "#define nrowncol " + std::to_string(NR*NC) + "\n"
   "\n__kernel void fisher_sim_gpu(\n"
+  "){\n"
+#ifdef UNDEF  
   "   __global int *nrowt, \n"
   "   __global int *ncolt, \n"
   "   const int n, \n" 
@@ -188,6 +190,7 @@ std::string FisherSimkernelString(int NR, int NC) {
   " count[index] = countD;\n"
   
   "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[index], &private_stream_d);\n"
+#endif
   "}\n" ;
   return(result);
 }
@@ -208,11 +211,22 @@ double gpuFisher_test(
     Rcpp::IntegerVector numWorkItems,
     Rcpp::IntegerVector numLocalItems,
     int ctx_id){
-  
+
+  double po = -99.9;
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));  
  
  const int nr = x.size1(), nc = x.size2();
-  
+
+ std::string kernel_string = FisherSimkernelString<T>(nr, nc);
+ if(results.size() == vsize) {
+   kernel_string = "\n#define returnResults\n" + kernel_string;
+ }
+ 
+#ifdef DEBUG
+ Rcpp::Rcout << kernel_string << "\n\n";
+#endif  
+ 
+   
   viennacl::vector_base<int> sr(nr, ctx = ctx);
   viennacl::vector_base<int> sc(nc, ctx = ctx);
   
@@ -220,25 +234,17 @@ double gpuFisher_test(
   sc = viennacl::linalg::column_sum(x);
   
   T thresholdT = (T) threshold;
-  
+
+ 
   int n = viennacl::linalg::sum(sr);
   int countss=0;
-  double po;
   
-
   
-  std::string kernel_string = FisherSimkernelString<T>(nr, nc);
-  if(results.size() == vsize) {
-    kernel_string = "\n#define returnResults\n" + kernel_string;
-  }
-  
-#ifdef DEBUG
-  Rcpp::Rcout << kernel_string << "\n\n";
-#endif  
   
   size_t streamBufferSize;   
   clrngStatus err;
   
+
   
   //Reserve memory space for count stream objects, without creating the stream objects. 
   clrngMrg31k3pStream* streams = clrngMrg31k3pAllocStreams(numWorkItems[0]*numWorkItems[1], &streamBufferSize, &err);
@@ -253,6 +259,8 @@ double gpuFisher_test(
   
   viennacl::ocl::program &my_prog = ctx.add_program(kernel_string, "my_kernel");
   viennacl::ocl::kernel &fisher_sim = my_prog.get_kernel("fisher_sim_gpu");
+
+#ifdef UNDEF   
   
   fisher_sim.global_work_size(0, numWorkItems[0]);
   fisher_sim.global_work_size(1, numWorkItems[1]);
@@ -283,7 +291,7 @@ double gpuFisher_test(
   viennacl::backend::memory_read(bufIn.handle(), 0, streamBufferSize, streams);
   //return streams to R 
   convertclRngMat(streams, streamsR);
-  
+#endif  
   return po;
 }
 
@@ -299,7 +307,7 @@ SEXP gpuFisher_test_Templated(
     Rcpp::IntegerVector max_local_size){
   
   const int ctx_id = INTEGER(resultsR.slot(".context_index"))[0]-1;
-  double po;
+  double po=-99.9;
   
   std::shared_ptr<viennacl::matrix<int> > x =getVCLptr<int>(xR.slot("address"), 1, ctx_id);
   std::shared_ptr<viennacl::vector_base<T> > results = getVCLVecptr<T>(resultsR.slot("address"), 1, ctx_id);
@@ -327,9 +335,9 @@ SEXP cpp_gpuFisher_test(
 
 //#ifdef UNDEF    
   if(precision_type == "fvclVector") {
-    gpuFisher_test_Templated<float>(xR,resultsR,threshold, B,streamsR,max_global_size,max_local_size);
+    return (gpuFisher_test_Templated<float>(xR,resultsR,threshold, B,streamsR,max_global_size,max_local_size));
   } else if (precision_type == "dvclVector") {
-    gpuFisher_test_Templated<double>(xR,resultsR,threshold, B,streamsR,max_global_size,max_local_size);
+    return (gpuFisher_test_Templated<double>(xR,resultsR,threshold, B,streamsR,max_global_size,max_local_size));
   } else {
     Rcpp::warning("class of var must be fvclVector or dvclVector");
   }

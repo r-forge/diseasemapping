@@ -19,15 +19,16 @@ setContext(   grep('gpu', listContexts()$device_type) [2]    )
 ```
 
 Example 1
-```{r  eval=FALSE}
+```{r  teaTasting}
 TeaTasting <-matrix(c(21,17,5,19,38,6,26,12,9),nrow=3)
 
 TeaTasting
 ## Using the R function 
 fisher.test(TeaTasting)
 fisher.test(TeaTasting, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
+```
 
-
+```{r gpuSetup}
 ## Using the gpu function
 Nglobal = c(8,64)
 NperItem = 15
@@ -42,10 +43,10 @@ length(results)
  b = as.integer(colSums(TeaTasting, na.rm = FALSE))
  a<-as.vclVector(a)
  b<-as.vclVector(b)
-
+```
 
  
- 
+```{r teaTastingGpu, eval=FALSE} 
 gpuRandom::gpuFisher_sim(a, b, results, streams, workgroupSize = Nglobal)
 
 
@@ -70,7 +71,7 @@ x<- matrix(c(2, 10, 15, 3), nrow = 2)
 
 fisher.test(x, alternative = "t",  simulate.p.value = TRUE, B = 1e4)
 
-Nglobal = c(16,64)
+Nglobal = c(8,16)
 streams = gpuRandom::CreateStreams(prod(Nglobal))
 
 

@@ -43,7 +43,9 @@ gridlinesWrap = function(crs,
 		ellipseSmall@polygons[[1]]@Polygons[[1]]@coords = 
 			0.99*ellipseSmall@polygons[[1]]@Polygons[[1]]@coords 
 			
-		glinesT = rgeos::gIntersection(glinesT, ellipseSmall, byid=TRUE)
+		glinesT = rgeos::gIntersection(
+		  spTransform(glinesT,projection(ellipseSmall)), 
+		  ellipseSmall, byid=TRUE)
 	}
 	glinesData=data.frame(
 			direction = substr(names(glinesT), 1,1),

@@ -32,7 +32,7 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
 	Dcountry = grep(country, world$NAME)
 	x=world[Dcountry,]
 
-	myCrsO = moll(x, angle=25)
+	myCrsO = moll(x)
 
  plot(world)
  plot(attributes(myCrsO)$regionLL, 
@@ -59,7 +59,7 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
 	Dcountry  = grep(country, world$NAME)
 	x=world[Dcountry,]
 	
-	myCrsMoll = moll(x, angle=100, flip= 'nwu' )
+	myCrsMoll = moll(x, flip= 'nwu' )
 	
 	plot(attributes(myCrsMoll)$ellipse)
 	
@@ -82,7 +82,7 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
 	Dcountry  = grep(country, world$NAME)
 	x=world[Dcountry,]
 	
-	myCrsMoll = moll(x,  angle=0, flip= 'nwu' )
+	myCrsMoll = moll(x,  flip= 'nwu' )
 	
 	plot(attributes(myCrsMoll)$ellipse)
 	

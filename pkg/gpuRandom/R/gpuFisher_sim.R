@@ -94,7 +94,10 @@ fisher.sim=function(
   
   po<-cpp_gpuFisher_test(xVcl, results, threshold, as.integer(B), streams, workgroupSize,localSize)
   
-  PVAL <- (1 + po ) / (B + 1)
+  PVAL <- try((1 + po ) / (B + 1))
+  if(class(PVAL) == 'try-error') {
+    PVAL = po
+  }
   
 
   

@@ -57,6 +57,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// crossprodBatchBackend
+SEXP crossprodBatchBackend(Rcpp::S4 C, Rcpp::S4 A, Rcpp::S4 D, const int invertD, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal, const int NlocalCache);
+RcppExport SEXP _geostatsgpu_crossprodBatchBackend(SEXP CSEXP, SEXP ASEXP, SEXP DSEXP, SEXP invertDSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP, SEXP NlocalCacheSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type C(CSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type A(ASEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type D(DSEXP);
+    Rcpp::traits::input_parameter< const int >::type invertD(invertDSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nglobal(NglobalSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nlocal(NlocalSEXP);
+    Rcpp::traits::input_parameter< const int >::type NlocalCache(NlocalCacheSEXP);
+    rcpp_result_gen = Rcpp::wrap(crossprodBatchBackend(C, A, D, invertD, Nglobal, Nlocal, NlocalCache));
+    return rcpp_result_gen;
+END_RCPP
+}
 // gpuNlocal
 Rcpp::List gpuNlocal(std::string kernel, std::string functionName, int ctx_id);
 RcppExport SEXP _geostatsgpu_gpuNlocal(SEXP kernelSEXP, SEXP functionNameSEXP, SEXP ctx_idSEXP) {
@@ -186,6 +203,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geostatsgpu_backsolveBatchBackend", (DL_FUNC) &_geostatsgpu_backsolveBatchBackend, 7},
     {"_geostatsgpu_cholBatchBackend", (DL_FUNC) &_geostatsgpu_cholBatchBackend, 5},
     {"_geostatsgpu_cpp_cholGpu", (DL_FUNC) &_geostatsgpu_cpp_cholGpu, 11},
+    {"_geostatsgpu_crossprodBatchBackend", (DL_FUNC) &_geostatsgpu_crossprodBatchBackend, 7},
     {"_geostatsgpu_gpuNlocal", (DL_FUNC) &_geostatsgpu_gpuNlocal, 3},
     {"_geostatsgpu_maternBatchBackend", (DL_FUNC) &_geostatsgpu_maternBatchBackend, 5},
     {"_geostatsgpu_cpp_maternGpuD", (DL_FUNC) &_geostatsgpu_cpp_maternGpuD, 7},

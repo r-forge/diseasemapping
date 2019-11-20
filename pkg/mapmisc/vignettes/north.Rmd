@@ -221,7 +221,7 @@ if(!haveRgdal) {
 if(haveRgdal){
   
   waterhouseWrap = spTransform(
-    waterhouseMerc, moll(waterhouseMerc, angle=25)
+    waterhouseMerc, moll(waterhouseMerc)
   )
   
   
@@ -283,7 +283,7 @@ points(rockMerc, col='blue',cex=5)
 if(haveRgdal) {
   insetMap(crs=mapMercFine, 
   pos='bottomright', 
-  map=southInset, cropInset = NULL,
+  map=southInset, 
   lty=0)
   scaleBar(mapMercFine, 'bottomleft')
 }
