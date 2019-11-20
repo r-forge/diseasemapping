@@ -3,7 +3,6 @@
 \docType{package}
 \name{gpuMatrix}
 \alias{gpuMatrix}
-\alias{gpuMatrix-package}
 \title{gpuMatrix}
 \description{
 Matrix for GPU

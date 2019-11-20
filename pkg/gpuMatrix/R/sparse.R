@@ -3,6 +3,12 @@
 
 generate_row_block_information = function(x, shared_mem_size = 1024L, showWarnings=FALSE) {
 
+  
+if(!all(class(x) %in% c('dCHMsimpl','dsRMatrix'))) {
+  warning("x should be row-oriented dsRMatrix or dCHMsimpl")
+  x = as(x, 'dsRMatrix')
+}
+  
 # 'http://viennacl.sourceforge.net/doc/classviennacl_1_1compressed__matrix.html' #set
 # http://viennacl.sourceforge.net/doc/compressed__matrix_8hpp_source.html, line 794
 
@@ -87,10 +93,23 @@ list(
 
 
 getVclSparseMatrix = function(x) {
+
+  if(!all(class(x) %in% c('dCHMsimpl','dsRMatrix'))) {
+      warning("x should be row-oriented dsRMatrix or dCHMSimpl")
+      x = as(x, 'dsRMatrix')
+    }
+      
 blockInfo = generate_row_block_information(x)
+
+if(class(x) == 'dCHMsimpl') {
+  col_buffer = vclVector(x@i, type = 'integer')
+} else {
+  col_buffer = vclVector(x@j, type = 'integer')
+}
+
 list(
 	row_jumper = vclVector(x@p, type = 'integer'),
-	col_buffer = vclVector(x@i, type = 'integer'),
+	col_buffer = col_buffer,
 	elements = vclVector(x@x, type = 'double'),
 	rows = x@Dim[2],
 	cols = x@Dim[1],
@@ -99,4 +118,47 @@ list(
 	row_blocks = vclVector(as.integer(blockInfo$row_blocks), type='integer'),
 	row_blocks_overflow = vclVector(as.integer(blockInfo$row_blocks_overflow), type='integer')
 	)
+}
+
+
+getVclSparseMultiMatrix = function(x, elements) {
+  
+  if(!all(class(x) %in% c('dCHMsimpl','dsRMatrix'))) {
+    warning("x should be row-oriented dsRMatrix or dCHMSimpl")
+    x = as(x, 'dsRMatrix')
+  }
+
+
+    if(is.vector(elements)) {
+    if(length(elements)==1) {
+      elements= matrix(x@x, nrow=length(x@x), ncol=elements[1])
+    } else {
+      diagElements = x@p[-length(x@p)]+1
+      addToDiag = elements
+      elements= matrix(x@x, nrow=length(x@x), ncol=length(addToDiag))
+      elements[diagElements,] = elements[diagElements,] +
+        matrix(addToDiag, ncol=ncol(elements), 
+                 nrow = length(diagElements), byrow=TRUE)
+    }
+  }
+  
+  if(class(x) == 'dCHMsimpl') {
+    col_buffer = vclVector(x@i, type = 'integer')
+  } else {
+    col_buffer = vclVector(x@j, type = 'integer')
+  }
+  
+  blockInfo = generate_row_block_information(x)
+  list(
+    row_jumper = vclVector(x@p, type = 'integer'),
+    col_buffer =  col_buffer,
+    elements = vclMatrix(elements, type = gpuR::typeof(elements)),
+    rows = x@Dim[2],
+    cols = x@Dim[1],
+    matrices = ncol(elements),
+    nonzeros = nrow(elements),
+    row_block_num = blockInfo$row_block_num,
+    row_blocks = vclVector(as.integer(blockInfo$row_blocks), type='integer'),
+    row_blocks_overflow = vclVector(as.integer(blockInfo$row_blocks_overflow), type='integer')
+  )
 }

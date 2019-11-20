@@ -199,7 +199,7 @@ int cholBatchVcl(
   A.size2() * A.internal_size2(),// NpadBetweenMatrices,
   NlocalCache, 
   Nlocal,
-  A.size2() > NlocalCache[0]); // allow overflow
+  ((int) A.size2() ) > NlocalCache[0]); // allow overflow
 
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   viennacl::ocl::program & my_prog = ctx.add_program(cholClString, "my_kernel");

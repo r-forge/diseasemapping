@@ -58,16 +58,16 @@ typedef struct {
 
 
 struct clrngMrg31k3pStream_ {
-	union {
-		struct {
+//	union {
+//		struct {
 			clrngMrg31k3pStreamState states[3];
-		};
-		struct {
+//		};
+//		struct {
 			clrngMrg31k3pStreamState current;
 			clrngMrg31k3pStreamState initial;
 			clrngMrg31k3pStreamState substream;
-		};
-	};
+//		};
+//	};
 };
 
 /*! @copybrief clrngStream

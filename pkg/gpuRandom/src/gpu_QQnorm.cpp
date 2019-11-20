@@ -28,7 +28,7 @@ void gpu_qqnorm_0(
   // get compiled kernel function
   viennacl::ocl::kernel &qqnorm = my_prog.get_kernel("qnorm");
  
-  cl_device_type type_check = ctx.current_device().type();
+//  cl_device_type type_check = ctx.current_device().type();
   
   qqnorm.global_work_size(0, numWorkItems[0]);
   qqnorm.global_work_size(1, numWorkItems[1]);
