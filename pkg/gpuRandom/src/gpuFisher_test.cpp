@@ -1,6 +1,6 @@
 #include "gpuRandom.hpp"
 
-#define DEBUG
+//#define DEBUG
 
 using namespace Rcpp;
 using namespace viennacl; 
@@ -61,21 +61,22 @@ std::string FisherSimkernelString(int NR, int NC) {
   
   "async_work_group_copy(jwork, ncolt, nc_1, 0);\n"
   
-  "      jc = n;\n"
-  
+  "      jc = n;\n";
+
   //L LOOP
+  result += "\n"
   "      for (l = 0; l < nr_1; ++l) {\n"
   "          ia = nrowt[l];\n"
   "          ic = jc;\n"
-  "          jc -= ia;\n"
+  "          jc -= ia;\n";
   //M LOOP
+  result += "\n"
   "          for (m = 0; m < nc_1; ++m) {\n"
   "            id = jwork[m];\n"
   "            ie = ic;\n"
   "            ic -= id;\n"
   "            ib = ie - ia;\n"
   "            ii = ib - id;\n"
-#ifdef UNDEF  
  
   "            if (ie == 0) {\n" /* Row [l,] is full, fill rest with zero entries */
   "              for (jjj = m; jjj < nc_1; ++jjj)\n"
@@ -150,14 +151,13 @@ std::string FisherSimkernelString(int NR, int NC) {
   "        ia -= nlm;\n"
   "        jwork[m] -= nlm;\n\n"
   "        }\n"//end LOOP ie not zero
-#endif
   
   "        }\n" //end M LOOP
   
   /* last column in row l , l is from 0*/
   "  matrix[l + nc_1nrow] = ia;\n"
   "  }\n" //end L LOOP
-  
+
   /* Compute entries in last row of MATRIX */
   "  for (m = 0; m < nc_1; ++m) {\n"
   "    matrix[nr_1 + m * nrow] = jwork[m];\n"
@@ -174,17 +174,18 @@ std::string FisherSimkernelString(int NR, int NC) {
   "    }\n"  // for l
   "  }\n";  // for m
   
-  
 
-    result += "\n #ifdef returnResult\n"
-   " results[D] = ans;\n"   
-    "#endif";
 
+    result += "\n" 
+    "#ifdef returnResult\n"
+   "results[D] = ans;\n"   
+  "#endif\n";
+    
+    
     
     result += " if (ans<=threshold) {\n"
      " ++countD;\n"
       "}\n"
-      
   "}\n" //end D loop
   
   // save countD

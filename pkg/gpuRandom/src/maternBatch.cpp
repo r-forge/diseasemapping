@@ -372,7 +372,8 @@ void fill22params(
   const int Nmat = param.size1();
   T range, shape, theta, anisoRatio, variance;
   T onePointFiveM_LN2 = 1.5 * M_LN2;
-  double muSq, pi_nu, mu;
+//  double muSq, 
+  double pi_nu, mu;
   double g_1pnu, g_1mnu, g1, g2;
   T epsHere = maternClEpsilon<T>();
   
@@ -456,7 +457,7 @@ template<typename T> void maternBatchVcl(
   // the context
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   
-  cl_device_type type_check = ctx.current_device().type();
+//  cl_device_type type_check = ctx.current_device().type();
   
   std::string maternClString = maternBatchKernelString<T>(
     maxIter,
