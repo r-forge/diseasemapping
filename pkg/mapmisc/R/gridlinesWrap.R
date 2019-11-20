@@ -70,9 +70,12 @@ gridlinesWrap = function(crs,
 	fun1 = function(onedir) {		
 		lapply(
 				onedir@Lines, 
-				function(oneline) oneline@coords[
+				function(oneline) {
+				  result = oneline@coords[
 							which.max(abs(oneline@coords[,pointPos]))
 							,]
+				  result
+				}
 		)
 	}
 	
@@ -81,7 +84,13 @@ gridlinesWrap = function(crs,
 				t(simplify2array(fun1(qq2)))
 			}
 	)
-	
+
+	# at most three labels per line
+	manyPoints = which(unlist(lapply(legendPoints, nrow)) > 3)
+	for(D in manyPoints) {
+	  legendPoints[[D]] = legendPoints[[D]][c(1, nrow(legendPoints[[D]])), ]
+	}
+		
 	legendDf = glinesT@data[rep(1:length(glinesT),
 					unlist(lapply(legendPoints, nrow))
 			),]
