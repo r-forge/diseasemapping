@@ -28,22 +28,6 @@ fisher.test(TeaTasting)
 fisher.test(TeaTasting, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
 ```
 
-```{r gpuSetup}
-## Using the gpu function
-Nglobal = c(8,64)
-NperItem = 15
-
-stream_num=prod(Nglobal)
-streams = gpuRandom::CreateStreams(stream_num)
-
-results = vclVector(length=as.integer(stream_num*NperItem), type="double")
-length(results)
-
- a = as.integer(rowSums(TeaTasting, na.rm = FALSE))
- b = as.integer(colSums(TeaTasting, na.rm = FALSE))
- a<-as.vclVector(a)
- b<-as.vclVector(b)
-```
 
  
 ```{r teaTastingGpu, eval=FALSE} 
