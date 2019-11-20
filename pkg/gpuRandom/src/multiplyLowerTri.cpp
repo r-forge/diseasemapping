@@ -418,19 +418,19 @@ void multiplyLowerBatch(
 	cl_device_type type_check = ctx.current_device().type();
 
   std::string clString =  multiplyLowerBatchString<T>(  
-      Nrow == B.size1(),
+      Nrow == (int) B.size1(),
       diagIsOne,
       Nrow, 
       Ncol,
       Nmatrix,
-      C.internal_size2(), 
-      A.internal_size2(), 
-      B.internal_size2(),
+      (int) C.internal_size2(), 
+      (int) A.internal_size2(), 
+      (int) B.internal_size2(),
       0L, // NpadD
       "ignored",//transformD
-      C.internal_size2()*Nrow,//NpadBetweenMatricesC,
-      A.internal_size2()*Nrow,//NpadBetweenMatricesA,
-      B.internal_size2()*Nrow,//NpadBetweenMatricesB,
+      ((int) C.internal_size2())*Nrow,//NpadBetweenMatricesC,
+       ( (int) A.internal_size2())*Nrow,//NpadBetweenMatricesA,
+       ((int) B.internal_size2())*Nrow,//NpadBetweenMatricesB,
       Nlocal[0], 
       std::min(Nrow,NlocalCache), Ncol);
 #ifdef DEBUG
@@ -470,22 +470,22 @@ void multiplyDiagonalBatch(
     const int ctx_id) {
   
   const int Nrow = A.size2();
-  const int Nmatrix = C.size1()/Nrow;
+  const int Nmatrix = ((int) C.size1())/Nrow;
   // the context
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   
   cl_device_type type_check = ctx.current_device().type();
   
   std::string clString =  multiplyDiagonalBatchString<T>(  
-      B.size1() == Nrow,
+    ((int) B.size1()) == Nrow,
       Nrow, 
-      B.size2(), // Ncol
+      (int) B.size2(), // Ncol
       Nmatrix, 
-      C.internal_size2(), 
-      A.internal_size2(), 
-      B.internal_size2(),
-      C.internal_size2()*Nrow,//NpadBetweenMatricesC,
-      B.internal_size2()*Nrow,//NpadBetweenMatricesB,
+      (int) C.internal_size2(), 
+      (int) A.internal_size2(), 
+      (int) B.internal_size2(),
+      ((int) C.internal_size2())*Nrow,//NpadBetweenMatricesC,
+       ((int) B.internal_size2())*Nrow,//NpadBetweenMatricesB,
       Nlocal[0]);
 
   viennacl::ocl::program & my_prog = ctx.add_program(

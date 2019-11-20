@@ -85,7 +85,7 @@ Be sure to attribute any maps you publish, the \code{osmAttribution} function wi
 	 
 }	
 
-\seealso{\link[OpenStreetMap]{openmap}}
+
 
 \examples{
 

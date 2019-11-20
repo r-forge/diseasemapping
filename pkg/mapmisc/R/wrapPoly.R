@@ -5,7 +5,12 @@ wrapPoly = function(x, crs) {
   
   if (requireNamespace('rgeos', quietly = TRUE) &
       requireNamespace('rgdal', quietly = TRUE)) {
-    toCropX = spTransform(attributes(crs)$crop, crs(x))
+
+    toCrop1 = rgeos::gIntersection(
+      attributes(crs)$crop, bboxLLsafe
+    )
+    
+    toCropX = spTransform(toCrop1, crs(x))
     xCrop = rgeos::gDifference(x, toCropX, byid = TRUE)
     
     row.names(xCrop) = gsub(" (buffer|[[:digit:]]+)$", "", row.names(xCrop))
@@ -147,6 +152,8 @@ llCropBox = function(crs, res = 1) {
   borderLL3@proj4string = CRS()
   holeLL = rgeos::gBuffer(borderLL3,
           width = res)
+  holeLL = rgeos::gIntersection(
+    holeLL, bboxLL)
   holeLL@proj4string = crsLL
   
   # get rid of holes

@@ -25,8 +25,6 @@ std::string FisherSimkernelString(int NR, int NC) {
   "#define nc_1nrow " + std::to_string((NC - 1) * NR) + "\n"
   "#define nrowncol " + std::to_string(NR*NC) + "\n"
   "\n__kernel void fisher_sim_gpu(\n"
-  "){\n"
-#ifdef UNDEF  
   "   __global int *nrowt, \n"
   "   __global int *ncolt, \n"
   "   const int n, \n" 
@@ -77,7 +75,8 @@ std::string FisherSimkernelString(int NR, int NC) {
   "            ic -= id;\n"
   "            ib = ie - ia;\n"
   "            ii = ib - id;\n"
-  
+#ifdef UNDEF  
+ 
   "            if (ie == 0) {\n" /* Row [l,] is full, fill rest with zero entries */
   "              for (jjj = m; jjj < nc_1; ++jjj)\n"
   "                matrix[l + jjj * nrow] = 0;\n"
@@ -151,6 +150,8 @@ std::string FisherSimkernelString(int NR, int NC) {
   "        ia -= nlm;\n"
   "        jwork[m] -= nlm;\n\n"
   "        }\n"//end LOOP ie not zero
+#endif
+  
   "        }\n" //end M LOOP
   
   /* last column in row l , l is from 0*/
@@ -190,7 +191,6 @@ std::string FisherSimkernelString(int NR, int NC) {
   " count[index] = countD;\n"
   
   "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[index], &private_stream_d);\n"
-#endif
   "}\n" ;
   return(result);
 }
@@ -215,10 +215,10 @@ double gpuFisher_test(
   double po = -99.9;
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));  
  
- const int nr = x.size1(), nc = x.size2();
+ const int nr = x.size1(), nc = x.size2(), resultSize = results.size();
 
  std::string kernel_string = FisherSimkernelString<T>(nr, nc);
- if(results.size() == vsize) {
+ if(resultSize == vsize) {
    kernel_string = "\n#define returnResults\n" + kernel_string;
  }
  
@@ -260,8 +260,7 @@ double gpuFisher_test(
   viennacl::ocl::program &my_prog = ctx.add_program(kernel_string, "my_kernel");
   viennacl::ocl::kernel &fisher_sim = my_prog.get_kernel("fisher_sim_gpu");
 
-#ifdef UNDEF   
-  
+
   fisher_sim.global_work_size(0, numWorkItems[0]);
   fisher_sim.global_work_size(1, numWorkItems[1]);
   fisher_sim.local_work_size(0, 1L);
@@ -291,7 +290,6 @@ double gpuFisher_test(
   viennacl::backend::memory_read(bufIn.handle(), 0, streamBufferSize, streams);
   //return streams to R 
   convertclRngMat(streams, streamsR);
-#endif  
   return po;
 }
 
@@ -335,12 +333,15 @@ SEXP cpp_gpuFisher_test(
 
 //#ifdef UNDEF    
   if(precision_type == "fvclVector") {
-    return (gpuFisher_test_Templated<float>(xR,resultsR,threshold, B,streamsR,max_global_size,max_local_size));
+    return (gpuFisher_test_Templated<float>(xR,resultsR,threshold, B,
+                                            streamsR, max_global_size, max_local_size));
   } else if (precision_type == "dvclVector") {
-    return (gpuFisher_test_Templated<double>(xR,resultsR,threshold, B,streamsR,max_global_size,max_local_size));
+    return (gpuFisher_test_Templated<double>(xR,resultsR,threshold, B,
+                                             streamsR, max_global_size, max_local_size));
   } else {
     Rcpp::warning("class of var must be fvclVector or dvclVector");
   }
+  return(Rcpp::wrap(-1));
 //#endif  
 }
 

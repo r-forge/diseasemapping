@@ -29,7 +29,7 @@ objFunAngle = function(param, start, target) {
 					param['lon'], " +o_lat_p=", param['lat'],
 					" +lon_0=", param['wrap'], 
 					" +lon_wrap=", param['wrap'],
-					" +ellps=WGS84 +datum=WGS84 ",
+					" +ellps=WGS84 ",
 					"+units=m +no_defs +towgs84=0,0,0",
 					sep='')
 	)
@@ -80,8 +80,8 @@ moll = function(x=0, angle=NULL, flip=FALSE) {
 						"+proj=moll +lon_wrap=",
 						midX, " +lon_0=",
 						midX,
-						" +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 ",
-						"+units=m +no_defs +towgs84=0,0,0",
+						" +x_0=0 +y_0=0 +ellps=WGS84 ",
+						"+units=m +no_defs",
 						sep=''))
 	} else {
 
@@ -144,7 +144,7 @@ moll = function(x=0, angle=NULL, flip=FALSE) {
 						newParam['lon'], " +o_lat_p=", newParam['lat'],
 						" +lon_0=", newParam['wrap'], 
 						" +lon_wrap=", newParam['wrap'],
-						" +ellps=WGS84 +datum=WGS84 ",
+						" +ellps=WGS84 ",
 						"+units=m +no_defs +towgs84=0,0,0",
 						sep=''))
 	
@@ -191,7 +191,7 @@ ocea = function(x, angle=0, flip=FALSE) {
 	
 	if(any(c(northShiftS, eastShiftS, twistShiftS)!= 0)){
 		crsSphere	= CRS(paste(
-						"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0,",
+						"+proj=longlat +no_defs +ellps=WGS84 +towgs84=0,0,0,",
 						northShiftS, ",",
 						twistShiftS, ",",
 						eastShiftS, ",0",
@@ -234,7 +234,7 @@ ocea = function(x, angle=0, flip=FALSE) {
 	myCrs = CRS(paste("+proj=ocea",
 					" +lonc=", myEquator[whichPos], 
 					" +alpha=", 180-angleIntersection[whichPos], 
-					" +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84", 
+					" +x_0=0 +y_0=0 +ellps=WGS84", 
 					" +units=m +no_defs",
 					" +towgs84=0,0,0,",  
 					northShiftS, ",",

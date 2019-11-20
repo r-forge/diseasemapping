@@ -75,7 +75,11 @@ Nglobal = c(8,16)
 streams = gpuRandom::CreateStreams(prod(Nglobal))
 
 
-res1 = gpuRandom::fisher.sim(x, 100L, returnStatistics=TRUE, type="double", streams, workgroupSize = Nglobal)
+res1 = gpuRandom::fisher.sim(x, 100L, returnStatistics=TRUE, 
+                             type="double", streams, workgroupSize = Nglobal)
+
+str(res1)
+
 #res2 = gpuRandom::fisher.sim(x, 100000, returnStatistics=FALSE, type="double", streams, workgroupSize = Nglobal)
 
 

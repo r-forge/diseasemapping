@@ -4,9 +4,19 @@
 \alias{qqnorm}
 \title{gpu_qqnorm}
 \usage{
-qqnorm(y, ylim, mu, sigma, lowertail = 1, main = "Normal Q-Q Plot",
-  xlab = "Theoretical Quantiles", ylab = "Sample Quantiles",
-  workgroupSize, localSize = c(2, 2), verbose = FALSE)
+qqnorm(
+  y,
+  ylim,
+  mu,
+  sigma,
+  lowertail = 1,
+  main = "Normal Q-Q Plot",
+  xlab = "Theoretical Quantiles",
+  ylab = "Sample Quantiles",
+  workgroupSize,
+  localSize = c(2, 2),
+  verbose = FALSE
+)
 }
 \description{
 gpu_qqnorm

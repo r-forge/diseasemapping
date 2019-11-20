@@ -15,7 +15,7 @@ tpeqdProj4string = function(
       " +y_0=",y,
       " +axis=", axis,
       " +ellps=",ellps,
-      " +datum=",datum,
+#      " +datum=",datum,
       " +units=",units,
       " +no_defs",sep=''
       )

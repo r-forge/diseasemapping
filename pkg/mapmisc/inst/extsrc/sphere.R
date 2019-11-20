@@ -1,4 +1,4 @@
-#Produced by polyHédronisme http://levskaya.github.com/polyhedronisme
+#Produced by polyH dronisme http://levskaya.github.com/polyhedronisme
 # group dccdkdkdkD
 
 x = read.table(file.path(Sys.getenv("HOME"), 'Downloads', 

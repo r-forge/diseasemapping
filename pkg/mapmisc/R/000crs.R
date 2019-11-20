@@ -1,5 +1,5 @@
 # crsLL = CRS("+init=epsg:4326")
-crsLL = sp::CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+crsLL = sp::CRS("+proj=longlat +no_defs +ellps=WGS84 +towgs84=0,0,0")
 
 # CRS("+init=epsg:3857") without the nagrids stuff
 crsMerc = sp::CRS(
@@ -13,7 +13,11 @@ crsModis <-
   sp::CRS("+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs")
 
 bboxLL = as(extent(-180,180,-90,90), 'SpatialPolygons')
-bboxLL@proj4string = crsLL
+eps = 0.1    
+bboxLLsafe = as(extent(-180,180,-90+eps,90-eps), 'SpatialPolygons')
+bboxLLsafe@proj4string = bboxLL@proj4string = crsLL
+
+
 
 polyhedron = new(
   "SpatialPoints",
@@ -5467,7 +5471,7 @@ polyhedron = new(
     .Dim = c(2L, 2L),
     .Dimnames = list(c("coords.x1", "coords.x2"), c("min", "max"))
   ),
-  proj4string = new("CRS", projargs = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+  proj4string = new("CRS", projargs = "+proj=longlat +no_defs +ellps=WGS84 +towgs84=0,0,0")
 )
 
 
@@ -7257,5 +7261,5 @@ llBorder = new(
     .Dimnames = list(c("lon", "lat"), c("min", "max"))
   ),
   proj4string = new("CRS",
-                    projargs = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+                    projargs = "+proj=longlat +no_defs +ellps=WGS84 +towgs84=0,0,0")
 )
