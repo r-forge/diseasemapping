@@ -52,11 +52,11 @@ vclXp = getVclSparseMatrix(xP)
 xMulti = getVclSparseMultiMatrix(xP, 0:3)
 
 xP
-sparseMatrix(
+forceSymmetric(sparseMatrix(
   p = as.vector(xMulti$row_jumper), 
   j = as.vector(xMulti$col_buffer),
   x = as.vector(xMulti$elements[,3]),
-  index1=FALSE)
+  index1=FALSE))
 
 xCholMulti = getVclSparseMultiMatrix(cholX, 3)
 sparseMatrix(
@@ -69,6 +69,27 @@ sparseMatrix(
   i = as.vector(cholX@i),
   x = as.vector(cholX@x),
   index1=FALSE)
+```
+
+
+```{r updateChol}
+
+cholNoPerm = Cholesky(xP, perm=FALSE, LDL=TRUE)
+
+chol3 = update(cholNoPerm, forceSymmetric(sparseMatrix(
+  p = as.vector(xMulti$row_jumper), 
+  j = as.vector(xMulti$col_buffer),
+  x = as.vector(xMulti$elements[,3]),
+  index1=FALSE)))
+
+sparseMatrix(
+  p = chol3@p, 
+  i = chol3@i,
+  x = chol3@x,
+  index1=FALSE)
+
+updateCholGpu(xCholMulti, xMulti)
+
 ```
 
 ```{r s4}

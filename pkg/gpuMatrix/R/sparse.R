@@ -91,7 +91,10 @@ list(
 
 }
 
-
+#' @title Sparse matrix on GPU
+#'
+#' @export
+#' 
 getVclSparseMatrix = function(x) {
 
   if(!all(class(x) %in% c('dCHMsimpl','dsRMatrix'))) {
@@ -120,6 +123,10 @@ list(
 	)
 }
 
+#' @title Sparse multiple matrices on GPU
+#'
+#' @export
+#' 
 
 getVclSparseMultiMatrix = function(x, elements) {
   
