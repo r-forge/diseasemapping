@@ -227,20 +227,33 @@ double gpuFisher_test(
  Rcpp::Rcout << kernel_string << "\n\n";
 #endif  
  
-   
-  viennacl::vector_base<int> sr(nr, ctx = ctx);
-  viennacl::vector_base<int> sc(nc, ctx = ctx);
-  
-  sr = viennacl::linalg::row_sum(x);
-  sc = viennacl::linalg::column_sum(x);
+
+ // row and column sums
+ viennacl::vector_base<int> sr(nr, ctx = ctx);
+ viennacl::vector_base<int> srOnes(nr, ctx = ctx);
+ viennacl::vector_base<int> sc(nc, ctx = ctx);
+ 
+  sc = 1;
+  srOnes = 1;
+    
+  sr = prod(x, sc);
+  sc = prod(trans(x), srOnes);
   
   T thresholdT = (T) threshold;
 
- 
   int n = viennacl::linalg::sum(sr);
   int countss=0;
   
+  viennacl::vector_base<T> fact(n+1, ctx); 
+  viennacl::vector_base<int> count(numWorkItems[0]*numWorkItems[1], ctx); 
   
+  // Calculate log-factorials.  fact[i] = lgamma(i+1)/
+  fact(0) = 0.;
+  fact(1) = 0.;
+  int i;
+  for(i = 2; i <= n; i++) {
+    fact(i) = fact(i - 1) + log(i);
+  }
   
   size_t streamBufferSize;   
   clrngStatus err;
@@ -268,17 +281,6 @@ double gpuFisher_test(
   fisher_sim.local_work_size(1, 1L);
   
   
-  viennacl::vector_base<T> fact = viennacl::vector_base<T>(n+1, ctx); 
-  viennacl::vector_base<int> count = viennacl::vector_base<int>(numWorkItems[0]*numWorkItems[1], ctx); 
-  
-  // Calculate log-factorials.  fact[i] = lgamma(i+1)/
-  fact(0) = 0.;
-  fact(1) = 0.;
-  int i;
-  for(i = 2; i <= n; i++) {
-    fact(i) = fact(i - 1) + log(i);
-  }
-  
   
     viennacl::ocl::enqueue( fisher_sim  (sr, sc, n, vsize, count, thresholdT, fact, results, bufIn) ); 
   
@@ -291,6 +293,7 @@ double gpuFisher_test(
   viennacl::backend::memory_read(bufIn.handle(), 0, streamBufferSize, streams);
   //return streams to R 
   convertclRngMat(streams, streamsR);
+
   return po;
 }
 

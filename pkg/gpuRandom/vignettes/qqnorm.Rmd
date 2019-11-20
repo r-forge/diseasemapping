@@ -13,8 +13,8 @@ setContext(   grep('gpu', listContexts()$device_type) [2]    )
 
 
 ```{r eval=FALSE }
-y <- rt(100, df = 5)
-Nglobal = c(16,64)
+y <- rt(256, df = 5)
+Nglobal = c(4,16)
 gpuRandom::qqnorm(y, mu=0, sigma=1, workgroupSize = Nglobal )
 
 
