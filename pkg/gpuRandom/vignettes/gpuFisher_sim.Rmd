@@ -68,7 +68,7 @@ res1 = gpuRandom::fisher.sim(x, 100L, returnStatistics=TRUE,
                              type="double", streams, workgroupSize = Nglobal)
 
 str(res1)
-hist(as.matrix(res1$sim))
+hist(as.vector(res1$sim))
 ```
 
 ```{r ex2}

@@ -177,7 +177,7 @@ std::string FisherSimkernelString(int NR, int NC) {
 
 
     result += "\n" 
-    "#ifdef returnResult\n"
+    "#ifdef returnResults\n"
    "results[D] = ans;\n"   
   "#endif\n";
     
