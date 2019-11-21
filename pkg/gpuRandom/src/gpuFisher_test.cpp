@@ -227,6 +227,7 @@ double gpuFisher_test(
  Rcpp::Rcout << kernel_string << "\n\n";
 #endif  
  
+ 
 
  // row and column sums
  viennacl::vector_base<int> sr(nr, ctx = ctx);
