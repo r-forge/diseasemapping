@@ -1,6 +1,6 @@
 #include "gpuRandom.hpp"
 
-//#define DEBUG
+#define DEBUG
 
 using namespace Rcpp;
 using namespace viennacl; 
@@ -222,7 +222,7 @@ double gpuFisher_test(
    kernel_string = "\n#define returnResults\n" + kernel_string;
  }
  
-#ifdef DEBUG
+#ifdef DEBUGKERNEL
  Rcpp::Rcout << kernel_string << "\n\n";
 #endif  
  
@@ -231,14 +231,13 @@ double gpuFisher_test(
  // row and column sums
  viennacl::vector<int> sr(nr);
  viennacl::vector<int> sc(nc);
- sc = 1;
- sr = prod(x, sc);
-
-  
- viennacl::vector<int> srOnes(nr);
- srOnes = 1;
-    
- sc = prod(trans(x), srOnes);
+ row_sum_impl(x, sr);
+ column_sum_impl(x, sc);
+ 
+   
+#ifdef DEBUG
+  Rcpp::Rcout << "x0 " << x(0,0) << " row0 " << sr(0)<< " col0 " << sc(0) << "\n";
+#endif  
   
   T thresholdT = (T) threshold;
   
@@ -286,6 +285,10 @@ double gpuFisher_test(
     viennacl::ocl::enqueue( fisher_sim  (sr, sc, n, vsize, count, thresholdT, fact, results, bufIn) ); 
   
   countss = viennacl::linalg::sum(count);
+  
+#ifdef DEBUG
+  Rcpp::Rcout << "countss " << countss << " count0 " << count(0) << "\n";
+#endif  
   
   po=countss/vsize;
   
