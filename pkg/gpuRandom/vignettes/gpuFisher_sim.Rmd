@@ -8,14 +8,19 @@
 
 ## Fisher test simulation
 
+```{r date}
+date()
+```
+
+
 ```{r packages, results='hide'}
 library('gpuR')
 ```
 
 ```{r memoryAvailable, echo=TRUE}
+setContext(   grep('gpu', listContexts()$device_type) [2]    )
 gpuInfo()$deviceName
 gpuInfo()$maxAllocatableMem/(1024^3)
-setContext(   grep('gpu', listContexts()$device_type) [2]    )
 ```
 
 Example 1
@@ -63,11 +68,12 @@ res1 = gpuRandom::fisher.sim(x, 100L, returnStatistics=TRUE,
                              type="double", streams, workgroupSize = Nglobal)
 
 str(res1)
+hist(as.matrix(res1$sim))
+```
 
-#res2 = gpuRandom::fisher.sim(x, 100000, returnStatistics=FALSE, type="double", streams, workgroupSize = Nglobal)
-
-
-
+```{r ex2}
+res2 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=FALSE, type="double", streams, workgroupSize = Nglobal)
+res2$pval
 ```
 
 

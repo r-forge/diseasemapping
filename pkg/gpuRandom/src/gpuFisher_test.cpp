@@ -217,7 +217,6 @@ double gpuFisher_test(
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));  
  
  const int nr = x.size1(), nc = x.size2(), resultSize = results.size();
-
  std::string kernel_string = FisherSimkernelString<T>(nr, nc);
  if(resultSize == vsize) {
    kernel_string = "\n#define returnResults\n" + kernel_string;
@@ -230,23 +229,24 @@ double gpuFisher_test(
  
 
  // row and column sums
- viennacl::vector_base<int> sr(nr, ctx = ctx);
- viennacl::vector_base<int> srOnes(nr, ctx = ctx);
- viennacl::vector_base<int> sc(nc, ctx = ctx);
- 
-  sc = 1;
-  srOnes = 1;
+ viennacl::vector<int> sr(nr);
+ viennacl::vector<int> sc(nc);
+ sc = 1;
+ sr = prod(x, sc);
+
+  
+ viennacl::vector<int> srOnes(nr);
+ srOnes = 1;
     
-  sr = prod(x, sc);
-  sc = prod(trans(x), srOnes);
+ sc = prod(trans(x), srOnes);
   
   T thresholdT = (T) threshold;
-
+  
   int n = viennacl::linalg::sum(sr);
   int countss=0;
   
-  viennacl::vector_base<T> fact(n+1, ctx); 
-  viennacl::vector_base<int> count(numWorkItems[0]*numWorkItems[1], ctx); 
+  viennacl::vector<T> fact(n+1); 
+  viennacl::vector<int> count(numWorkItems[0]*numWorkItems[1]); 
   
   // Calculate log-factorials.  fact[i] = lgamma(i+1)/
   fact(0) = 0.;

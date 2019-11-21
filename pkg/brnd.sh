@@ -1,3 +1,5 @@
+rm junk/gpuFisher_sim.html
+rm gpuRandom_*.gz
 R -e "Rcpp::compileAttributes('gpuRandom')"
 R -e "devtools::document('gpuRandom')"
 R CMD build gpuRandom

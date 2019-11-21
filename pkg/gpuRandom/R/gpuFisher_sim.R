@@ -79,7 +79,7 @@ fisher.sim=function(
 
   xVcl<-gpuR::vclMatrix(x, type='integer')  ## problem here
   
-  print(class(xVcl))
+#  print(class(xVcl))
 
   
   
