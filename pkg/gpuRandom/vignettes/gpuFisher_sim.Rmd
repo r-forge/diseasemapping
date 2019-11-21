@@ -73,7 +73,7 @@ hist(as.matrix(res1$sim))
 
 ```{r ex2}
 res2 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=FALSE, type="double", streams, workgroupSize = Nglobal)
-res2$pval
+c(res2)
 ```
 
 
