@@ -245,14 +245,18 @@ double gpuFisher_test(
   int countss=0;
   
   viennacl::vector<T> fact(n+1); 
+  T factTemp;
   viennacl::vector<int> count(numWorkItems[0]*numWorkItems[1]); 
   
   // Calculate log-factorials.  fact[i] = lgamma(i+1)/
   fact(0) = 0.;
   fact(1) = 0.;
+  factTemp = 0.;
   int i;
   for(i = 2; i <= n; i++) {
-    fact(i) = fact(i - 1) + log(i);
+    factTemp = factTemp + log(i);
+    fact(i) = factTemp;
+//    fact(i) = fact(i - 1) + log(i);
   }
   
   size_t streamBufferSize;   
@@ -287,7 +291,7 @@ double gpuFisher_test(
   countss = viennacl::linalg::sum(count);
   
 #ifdef DEBUG
-  Rcpp::Rcout << "countss " << countss << " count0 " << count(0) << "\n";
+  Rcpp::Rcout << "threshold " << thresholdT << " countss " << countss << " count0 " << count(0) << " size " << vsize <<  "\n";
 #endif  
   
   po=countss/vsize;
