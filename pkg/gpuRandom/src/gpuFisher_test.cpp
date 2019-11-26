@@ -61,16 +61,16 @@ std::string FisherSimkernelString(int NR, int NC) {
   
   "async_work_group_copy(jwork, ncolt, nc_1, 0);\n"
   
-  "      jc = n;\n";
+  "      jc = n;\n"
 
   //L LOOP
-  result += "\n"
+ // result += "\n"
   "      for (l = 0; l < nr_1; ++l) {\n"
   "          ia = nrowt[l];\n"
   "          ic = jc;\n"
-  "          jc -= ia;\n";
+  "          jc -= ia;\n"
   //M LOOP
-  result += "\n"
+ // result += "\n"
   "          for (m = 0; m < nc_1; ++m) {\n"
   "            id = jwork[m];\n"
   "            ie = ic;\n"
@@ -184,7 +184,7 @@ std::string FisherSimkernelString(int NR, int NC) {
     
     
     result += " if (ans<=threshold) {\n"
-     " ++countD;\n"
+     " countD=countD+1;\n"
       "}\n"
   "}\n" //end D loop
   
@@ -203,22 +203,23 @@ std::string FisherSimkernelString(int NR, int NC) {
 
 
 template<typename T> 
-double gpuFisher_test(
+int gpuFisher_test(
     viennacl::matrix<int> &x, //  viennacl::vector_base<int> &sr,  //  viennacl::vector_base<int> &sc,
     viennacl::vector_base<T> &results,  
     double threshold,  
-    int vsize,
+    int B,
     Rcpp::IntegerMatrix streamsR, 
     Rcpp::IntegerVector numWorkItems,
     Rcpp::IntegerVector numLocalItems,
     int ctx_id){
 
-  double po = -99.9;
+  //double po = -99.9;
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));  
  
  const int nr = x.size1(), nc = x.size2(), resultSize = results.size();
+ 
  std::string kernel_string = FisherSimkernelString<T>(nr, nc);
- if(resultSize == vsize) {
+ if(resultSize == B) {
    kernel_string = "\n#define returnResults\n" + kernel_string;
  }
  
@@ -286,15 +287,15 @@ double gpuFisher_test(
   
   
   
-    viennacl::ocl::enqueue( fisher_sim  (sr, sc, n, vsize, count, thresholdT, fact, results, bufIn) ); 
+    viennacl::ocl::enqueue( fisher_sim  (sr, sc, n, B, count, thresholdT, fact, results, bufIn) ); 
   
   countss = viennacl::linalg::sum(count);
   
 #ifdef DEBUG
-  Rcpp::Rcout << "threshold " << thresholdT << " countss " << countss << " count0 " << count(0) << " size " << vsize <<  "\n";
+  Rcpp::Rcout << "threshold " << thresholdT << " countss " << countss << " count0 " << count(0) << " size " << B <<  "\n";
 #endif  
   
-  po=countss/vsize;
+  //po=countss/B;
   
   
   // copy streams back to cpu
@@ -302,7 +303,7 @@ double gpuFisher_test(
   //return streams to R 
   convertclRngMat(streams, streamsR);
 
-  return po;
+  return countss;
 }
 
 
@@ -317,14 +318,14 @@ SEXP gpuFisher_test_Templated(
     Rcpp::IntegerVector max_local_size){
   
   const int ctx_id = INTEGER(resultsR.slot(".context_index"))[0]-1;
-  double po=-99.9;
+  int countss=0;
   
   std::shared_ptr<viennacl::matrix<int> > x =getVCLptr<int>(xR.slot("address"), 1, ctx_id);
   std::shared_ptr<viennacl::vector_base<T> > results = getVCLVecptr<T>(resultsR.slot("address"), 1, ctx_id);
   
-  po=gpuFisher_test<T>(*x, *results, threshold, B,streamsR, max_global_size, max_local_size, ctx_id);
+  countss=gpuFisher_test<T>(*x, *results, threshold, B,streamsR, max_global_size, max_local_size, ctx_id);
   
-  return (Rcpp::wrap(po));
+  return (Rcpp::wrap(countss));
 }
 
 

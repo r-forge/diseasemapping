@@ -77,7 +77,7 @@ fisher.sim=function(
   ## we drop all-zero rows and columns
   x <- x[sr0 > 0, sc0 > 0, drop = FALSE]
 
-  xVcl<-gpuR::vclMatrix(x, type='integer')  ## problem here
+  xVcl<-gpuR::vclMatrix(x, type='integer') 
   
 #  print(class(xVcl))
 
@@ -92,12 +92,13 @@ fisher.sim=function(
   
   PVAL <- NULL
   
-  po<-cpp_gpuFisher_test(xVcl, results, threshold, as.integer(B), streams, workgroupSize,localSize)
+  counts<-cpp_gpuFisher_test(xVcl, results, threshold, as.integer(B), streams, workgroupSize,localSize)
   
-  PVAL <- try((1 + po ) / (B + 1))
-  if(class(PVAL) == 'try-error') {
-    PVAL = po
-  }
+  PVAL <- ((1 + counts ) / (as.integer(B) + 1))
+  
+  #if(class(PVAL) == 'try-error') {
+  #  PVAL = counts
+  #}
   
 
   
