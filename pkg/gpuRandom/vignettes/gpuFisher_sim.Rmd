@@ -18,7 +18,7 @@ library('gpuR')
 ```
 
 ```{r memoryAvailable, echo=TRUE}
-setContext(   grep('gpu', listContexts()$device_type) [2]    )
+setContext(   grep('OpenCL 2.1', listContexts()$platform)[1]    )
 gpuInfo()$deviceName
 gpuInfo()$maxAllocatableMem/(1024^3)
 ```
