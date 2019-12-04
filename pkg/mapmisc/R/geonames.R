@@ -271,7 +271,7 @@ geocodeOld = function(x, oneRecord=FALSE, extent=NULL, progress='', ...) {
       message("caching in ", cachePath)
     
     saveRes = try(save(result, file=cacheFile), silent=TRUE)
-    if(verbose & class(saveRes) == 'try-error') {
+    if(verbose & any(class(saveRes) == 'try-error')) {
       message("cached file couldnt be saved")
     }
   } else {

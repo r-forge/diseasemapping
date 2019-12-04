@@ -63,7 +63,7 @@ moll = function(x=0, angle=NULL, flip=FALSE) {
 		}
 	} else {
 		
-		if(class(x)=='Extent'){
+		if(any(class(x)=='Extent')){
 			xExtent = raster(x,crs=mapmisc::crsLL)
 		} else if(length(grep("^SpatialPoints", class(x)))){
 			if(length(x)==1){
@@ -204,7 +204,7 @@ ocea = function(x, angle=0, flip=FALSE) {
 		if(length(x)==2) x = c(x,x+10^(-4))
 		x = extent(x)
 	}
-	if(class(x)=='Extent'){
+	if(any(class(x)=='Extent')){
 		xExtent = projectExtent(raster(x, crs=mapmisc::crsLL), crsSphere)
 	} else {
 		if(length(grep("^SpatialPoints", class(x)))){

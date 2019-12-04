@@ -211,7 +211,7 @@ openmap = function(x, zoom,
         cachePath = cachePath),
       silent=!verbose)
     
-    if(class(thistile)=="try-error"){
+    if(any(class(thistile)=="try-error")){
       message(paste(Durl, "not accessible"))
       thistile=NULL
     }	else {
@@ -275,7 +275,7 @@ openmap = function(x, zoom,
       }
       
       projx = try(proj4string(x), silent=TRUE)
-      if(class(bboxx)!="try-error" &  class(projx) != 'try-error'){
+      if(any(class(bboxx)!="try-error") &  any(class(projx) != 'try-error')){
         if(identical(projx, crsOut)) {
           bigExtent =  extend(
             extent(x), buffer + abs(as.numeric(apply(bboxx, 1, diff))/2))

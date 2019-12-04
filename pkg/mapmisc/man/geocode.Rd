@@ -36,7 +36,7 @@ Data are retreived from Openstreetmap.org, see \url{https://wiki.openstreetmap.o
 if(requireNamespace("rgdal", quietly = TRUE)) { 
 
 cities=try(geocode('Ulan batar'), silent=TRUE)
-if(class(cities) != 'try-error') {
+if(!all(class(cities) == 'try-error')) {
 mytiles = openmap(cities, buffer=800*1000, maxTiles=1)
 
 map.new(mytiles)

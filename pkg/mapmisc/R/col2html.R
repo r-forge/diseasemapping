@@ -11,7 +11,7 @@ col2html = function(col, opacity=1, alpha){
   } else {
     if(is.character(alpha))
       alpha = as.hexmode(alpha)
-    if(class(alpha)=='hexmode')
+    if(any(class(alpha)=='hexmode'))
       alpha = as.integer(alpha)
   }
   if(any(alpha<255))

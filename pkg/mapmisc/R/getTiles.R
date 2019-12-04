@@ -188,7 +188,7 @@ getTilesMerc = function(
       
       thisimage = try(raster::brick(Dfile), silent=TRUE)
       
-      if(class(thisimage)=='try-error') {
+      if(any(class(thisimage)=='try-error')) {
         if(verbose) warning("tile ", Dfile, " cannot be loaded")
         
         thisimage = raster(

@@ -121,7 +121,7 @@ colourScale.Raster = function(x=NULL, breaks=5,
 			x = unique(x)
 		} else {
 			x = try(range(c(minValue(x), maxValue(x))), silent=TRUE)
-			if(class(x)=='try-error')
+			if(any(class(x)=='try-error'))
 				x = range(quantile(sampleRegular(x, size=NforSample)))
 		}
 	} else if(style=='fixed') {

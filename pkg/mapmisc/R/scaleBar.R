@@ -37,7 +37,7 @@ scaleBar = function(crs,
 
 	if(is.character(crs))
 		crs = CRS(crs)
-	if(class(crs) != "CRS")
+	if(all(class(crs) != "CRS"))
 		crs = CRS(proj4string(crs))
 	
 
