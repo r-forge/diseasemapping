@@ -7,7 +7,7 @@
 ##  QQnorm plot on gpu
 ```{r }
 library('gpuR')
-setContext(   grep('PpenCL 2.1', listContexts()$platform)[1]    )
+setContext(   grep('OpenCL 2.1', listContexts()$platform)[1]    )
 ```
 
 
