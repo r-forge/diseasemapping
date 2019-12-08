@@ -194,7 +194,8 @@ loglikGmrf = function(
     
     if( !length(propNugget)){
       # retain only propNugget with best likelihood
-      bestN = apply(ml[,,Lcol,,drop=FALSE],c(1,3,4),which.min)
+      bestN = apply(ml[,,Lcol,,drop=FALSE],c(1,3,4),
+        base::which.min)
       
       newml = array(NA, 
         c(dim(ml)[1],1,dim(ml)[-(1:2)]),
@@ -235,7 +236,7 @@ loglikGmrf = function(
         boxcox=boxcox,
 #				xisqTausq = ml[1,profBCind[,1],'xisqTausq',1],
 #				oneminusar = oneminusar[profBCind[,2]], 
-        logLstuff = -apply(ml[,,Lcol,,drop=FALSE], 1, min)/2
+        logLstuff = -apply(ml[,,Lcol,,drop=FALSE], 1, base::min)/2
       )
       colnames(profBC) = gsub("logLstuff", 
         gsub("^m2", "", Lcol), 
@@ -244,11 +245,13 @@ loglikGmrf = function(
       
       # only keep best box-cox
       profBCind = arrayInd(
-        apply(ml[,,Lcol,,drop=FALSE], 1, which.min),
+        apply(ml[,,Lcol,,drop=FALSE], 1, base::which.min),
         dim(ml)[c(2,4)])
       
     
-      bestBcList = apply(ml[,,Lcol,,drop=FALSE], c(2,4), which.min)
+      bestBcList = apply(ml[,,Lcol,,drop=FALSE], 
+        c(2,4), 
+        base::which.min)
       newml = ml[bestBcList[1,1],,,,drop=FALSE]
       newssq = ssq[
           c(bestBcList[1,1], covDim),
