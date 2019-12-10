@@ -256,7 +256,7 @@ values(simRaster) = as.vector(as.matrix(simMat))
 names(simRaster) = apply(expand.grid('par',1:nrow(paramsGpu), 'sim', 1:ncol(simMat)), 1, paste, collapse='')
 ```
 
-```{r plotSim, fig.height=3, fig.width=3, out.width=paste0(98/nrow(paramsGpu), '%'), fig.cap='simulations', fig.subcap = names(simRaster), eval=FALSE}
+```{r plotSim, fig.height=3, fig.width=3, out.width=paste0(98/nrow(paramsGpu), '%'), fig.cap='simulations', fig.subcap = 'names(simRaster)', eval=FALSE}
 par(mar=rep(0.1, 4))
 for(D in names(simRaster)) {
   plot(extent(simRaster))

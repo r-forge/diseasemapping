@@ -1,3 +1,4 @@
+#include <CL/mrg31k3pkernelStringCommon.hpp>
 
 std::string mrg31k3pTemplateStringFirst = 
 
@@ -85,7 +86,7 @@ std::string mrg31k3pTemplateStringFifth =
 std::string mrg31k3pDoubleUnifString = 
     "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n"
     "\n#define mrg31k3p_NORM_cl 4.656612873077392578125e-10\n\n" +
-    mrg31k3pCommon()  +
+    mrg31k3pCommon +
     mrg31k3pTemplateStringFirst + "double" +
     mrg31k3pTemplateStringSecond +
     "mrg31k3p_NORM_cl * " +
@@ -94,7 +95,7 @@ std::string mrg31k3pDoubleUnifString =
 
 std::string mrg31k3pFloatUnifString = 
   "\n#define mrg31k3p_NORM_cl 4.6566126e-10\n\n" + // 1/max integer
-    mrg31k3pCommon()  + 
+    mrg31k3pCommon + 
     mrg31k3pTemplateStringFirst + "float" +
     mrg31k3pTemplateStringSecond +
     "mrg31k3p_NORM_cl * " +
@@ -102,7 +103,7 @@ std::string mrg31k3pFloatUnifString =
 
 
 std::string mrg31k3pIntegerUnifString = 
-    mrg31k3pCommon() + 
+    mrg31k3pCommon + 
     mrg31k3pTemplateStringFirst + "int" +
     mrg31k3pTemplateStringSecond + 
     "(int) " + 
@@ -115,7 +116,7 @@ std::string mrg31k3pDoubleNormString =
     "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n" 
     "\n#define TWOPI 6.283185307179586 \n\n" 
     "\n#define mrg31k3p_NORM_cl 4.656612873077392578125e-10\n\n"+
-    mrg31k3pCommon()  +
+    mrg31k3pCommon  +
     mrg31k3pTemplateStringFirst + "double" +
     mrg31k3pTemplateStringForth + "double" +
     mrg31k3pTemplateStringFifth;
@@ -124,7 +125,7 @@ std::string mrg31k3pDoubleNormString =
 std::string mrg31k3pFloatNormString = 
     "\n#define TWOPI 6.2831853\n\n" 
     "\n#define mrg31k3p_NORM_cl 4.6566126e-10\n\n"+
-    mrg31k3pCommon()  +
+    mrg31k3pCommon +
     mrg31k3pTemplateStringFirst + "float" +
     mrg31k3pTemplateStringForth + "float" +
     mrg31k3pTemplateStringFifth;

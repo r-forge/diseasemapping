@@ -58,9 +58,9 @@ as.vector(x)
 Nglobal = c(64,4)
 streams = gpuRandom::CreateStreams(prod(Nglobal))
 if(gpuInfo()$maxAllocatableMem > 1e10) {
-  NperItem = 5000
+  NperItem = 1000
 } else {
-  NperItem = 500
+  NperItem = 100
 }
 x = vclVector(length=as.integer(prod(Nglobal)*NperItem), type=theType)
 length(x)
