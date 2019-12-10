@@ -1,3 +1,5 @@
+#define DEBUGKERNEL
+
 #include "gpuRandom.hpp"
 #include <CL/kernelqqnorm.hpp>
 
@@ -24,10 +26,15 @@ void gpu_qqnorm_0(
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
 
   viennacl::ocl::program &my_prog = ctx.add_program(kernel_string, "my_kernel");
- 
   // get compiled kernel function
+#ifdef DEBUGKERNEL
+  Rcpp::Rcout << kernel_string << "\n\n";
+#endif  
+  
+  
   viennacl::ocl::kernel &qqnorm = my_prog.get_kernel("qnorm");
- 
+
+#ifdef UNDEF  
 //  cl_device_type type_check = ctx.current_device().type();
   
   qqnorm.global_work_size(0, numWorkItems[0]);
@@ -40,8 +47,8 @@ void gpu_qqnorm_0(
   //viennacl::vector_base<double> out = viennacl::vector_base<double>(outsize, ctx); 
 
   viennacl::ocl::enqueue(qqnorm( out, mu, sigma, outsize, lowertail) );
-   
-//#endif
+#endif  
+  
 }
 
 

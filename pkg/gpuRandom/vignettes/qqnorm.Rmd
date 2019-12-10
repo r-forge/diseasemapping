@@ -12,7 +12,7 @@ setContext(   grep('OpenCL 2.1', listContexts()$platform)[1]    )
 
 
 
-```{r eval=TRUE}
+```{r eval=FALSE}
 y <- rt(256, df = 5)
 Nglobal = c(4,16)
 gpuRandom::qqnorm(y, mu=0, sigma=1, workgroupSize = Nglobal )

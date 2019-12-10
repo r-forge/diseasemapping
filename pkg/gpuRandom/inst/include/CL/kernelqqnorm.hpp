@@ -2,23 +2,26 @@
  /* Use 0.5 - p + 0.5 to perhaps gain 1 bit of accuracy */
 
 std::string qqnormkernelString = 
-"#define R_D_Lval(p)	(lower_tail ? (p) : (0.5 - (p) + 0.5) )\n"
+
+"\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n"
+
+"\n#define R_D_Lval(p)	(lower_tail ? (p) : (0.5 - (p) + 0.5) )\n"
 "#define R_D_Cval(p)	(lower_tail ? (0.5 - (p) + 0.5) : (p) )\n"
 
 "\n\n__kernel void qnorm(__global double  *out,\n"
-                      " __global double mu,\n "
-                      "__global double sigma,\n"
+                      "const double mu,\n "
+                      "const double sigma,\n"
                       "const int out_size,\n"
-                      "int lower_tail){\n"
+                      "const int lower_tail){\n"
                     
          "const int size = get_global_size(1)*get_global_size(0);\n"
          "const int index = get_global_id(1)*get_global_size(0) + get_global_id(0);\n"
          "int D;\n"  
-                    
+#ifdef UNDEF                    
          "double p_, q, r, val;\n"    
          "double pD;"
          "double multFrac;\n"
-         "if(out_size > 10) {multFrac = 3/8;} else {multFrac=0.5;}"
+         "if(out_size > 10) {multFrac = 0.375;} else {multFrac=0.5;}"
           // "if(sigma == 0)  return mu;\n"
         
       
@@ -74,6 +77,7 @@ std::string qqnormkernelString =
           "}\n  "
           
           "out[D]= mu + sigma * val;}\n"
+#endif          
   "}\n";
     
     

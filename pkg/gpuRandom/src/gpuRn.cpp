@@ -1,5 +1,5 @@
-#include <CL/mrg31k3pkernelStringSeparate.hpp>
 #include "gpuRandom.hpp"
+#include <CL/mrg31k3pkernelStringSeparate.hpp>
 
 
 using namespace Rcpp;
@@ -48,9 +48,6 @@ template <> std::string mrg31k3pNormString<float>(){
 template <> std::string mrg31k3pNormString<int>(){
   return("undefined");
 }
-
-
-
 
 
 //////////////////////////////////the main function;//////////////////////
@@ -123,9 +120,6 @@ void gpuRn(
 
 
 
-
-
-
 ///////////////////////////////// on GPU function;//////////
 template<typename T> 
 SEXP gpuRn(
@@ -145,6 +139,8 @@ SEXP gpuRn(
   
   return(Rcpp::wrap(1L));	
 }
+
+
 
 
 //[[Rcpp::export]]

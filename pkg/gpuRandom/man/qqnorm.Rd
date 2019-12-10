@@ -15,7 +15,8 @@ qqnorm(
   ylab = "Sample Quantiles",
   workgroupSize,
   localSize = c(2, 2),
-  verbose = FALSE
+  verbose = FALSE,
+  ...
 )
 }
 \description{

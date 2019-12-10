@@ -158,16 +158,38 @@ range(theDiag - as.matrix(diagMat)[4,])
 
 create a matrix of independent normals
 
-```{r multLowerSetup}
+```{r multLowerSetup, eval=FALSE}
 Nmatrix = nrow(diagMat)
 set.seed(0)
 zmat = matrix(rnorm(ncol(outputBatchF) * Nsim * Nmatrix), ncol=Nsim)
+
 zmatGpu = vclMatrix(zmat, type = gpuR::typeof(outputChol))
+
+
+Nglobal = 128
+streams = gpuRandom::CreateStreams(Nglobal);
+streams[1:4,1:6]
+
+zMatGpu3 = vclMatrix(nrow=as.integer(ncol(outputBatchF) * Nmatrix),
+                     ncol= as.integer(Nsim), 
+                     type = gpuR::typeof(outputChol))
+zMatGpu2 = vclVector(length=as.integer(ncol(outputBatchF) * Nmatrix * Nsim), 
+                     type = gpuR::typeof(outputChol))
+
+
+
+streams2 <- gpuRandom::gpuRn(
+  zMatGpu2, 
+  streams=streams, random_type = "normal")
+
+zMatGpu4 = vclMatrix(as.vector(zMatGpu2), 
+                     nrow=as.integer(ncol(outputBatchF) * Nmatrix),
+                     ncol= as.integer(Nsim))
 ```
 
 compute U = L D^(1/2) Z, where LDLt is the Cholesky of the variance matrix, Z is the independent normals
 
-```{r multLowerGpu}
+```{r multLowerGpu, eval=FALSE}
 simMat = deepcopy(-100*zmatGpu)
 
 diagMat = 0*diagMat + 1.0
@@ -182,7 +204,7 @@ gpuRandom:::multiplyLowerDiagonalBatchBackend(
 ```
 
 Do the same in R and compare
-```{r multLower}
+```{r multLower, eval=FALSE}
 zmatMult = try(diag(as.vector(t(sqrt(as.matrix(diagMat))))) %*% zmat)
 
 rmat = try(mapply(function(DD, xx) {
@@ -226,7 +248,7 @@ multCpu[ncol(outputChol) + seq(-2, 4), ]
 
 # Plot simulated materns
 
-```{r plotSimSetup}
+```{r plotSimSetup, eval=FALSE}
 library(raster)
 simRaster = brick(myRaster, 
   nl = ncol(simMat)*nrow(paramsGpu))
@@ -234,7 +256,7 @@ values(simRaster) = as.vector(as.matrix(simMat))
 names(simRaster) = apply(expand.grid('par',1:nrow(paramsGpu), 'sim', 1:ncol(simMat)), 1, paste, collapse='')
 ```
 
-```{r plotSim, fig.height=3, fig.width=3, out.width=paste0(98/nrow(paramsGpu), '%'), fig.cap='simulations', fig.subcap = names(simRaster)}
+```{r plotSim, fig.height=3, fig.width=3, out.width=paste0(98/nrow(paramsGpu), '%'), fig.cap='simulations', fig.subcap = names(simRaster), eval=FALSE}
 par(mar=rep(0.1, 4))
 for(D in names(simRaster)) {
   plot(extent(simRaster))

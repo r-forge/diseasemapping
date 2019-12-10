@@ -18,6 +18,7 @@ template <typename T> int sizeOfReal();
 
 
 
+
 #include <clRNG/mrg31k3p.h>
 
 // clRNG -> Matrix
@@ -28,8 +29,8 @@ void convertMatclRng(Rcpp::IntegerMatrix Sin, clrngMrg31k3pStream* streams);
 template <typename T> std::string mrg31k3pTypeString();
 
 
-
-
+// string for random number generation
+std::string mrg31k3pCommon();
 
 
 
