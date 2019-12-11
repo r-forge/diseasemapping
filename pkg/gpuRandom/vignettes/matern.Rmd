@@ -157,13 +157,13 @@ range(theDiag - as.matrix(diagMat)[4,])
 create a matrix of independent normals
 
 
-```{r randomNormalsTest, eval=FALSE}
+```{r randomNormalsTest}
 NglobalRandom = c(128,4)
 set.seed(1)
 streams = gpuRandom::CreateStreams(prod(NglobalRandom));
 
-zMatGpu = vclMatrix(as.integer(ncol(outputBatchF) * nrow(myParamsBatch)),
-                     as.integer(Nsim),
+zMatGpu = vclMatrix(nrow=as.integer(ncol(outputBatchF) * nrow(myParamsBatch)),
+                     ncol=as.integer(Nsim),
                      type = gpuR::typeof(outputChol))
 dim(zMatGpu)
 
@@ -171,7 +171,7 @@ streamOut = gpuRandom:::gpuRnBackend(zMatGpu, streams, NglobalRandom, "normal")
 
 ```
 
-```{r checkRange, eval=FALSE}
+```{r checkRange}
 zMatCpu = as.matrix(zMatGpu)
 hist(zMatCpu)
 
