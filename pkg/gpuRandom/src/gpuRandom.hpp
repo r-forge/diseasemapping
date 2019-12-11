@@ -30,7 +30,7 @@ template <typename T> std::string mrg31k3pTypeString();
 
 
 
-std::string mrg31k3pString(); 
+std::string mrg31k3pString();
 
 
 

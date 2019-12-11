@@ -55,7 +55,7 @@ PVAL
 
 
 Example 2
-```{r eval=TRUE}
+```{r eval=FALSE}
 x<- matrix(c(2, 10, 15, 3), nrow = 2)
 
 fisher.test(x, alternative = "t",  simulate.p.value = TRUE, B = 1e3)
@@ -71,7 +71,7 @@ str(res1)
 hist(as.vector(res1$sim))
 ```
 
-```{r ex2}
+```{r ex2, eval=FALSE}
 res2 = gpuRandom::fisher.sim(x, 1000L, returnStatistics=FALSE, type="double", streams, workgroupSize = Nglobal)
 str(res2)
 ```

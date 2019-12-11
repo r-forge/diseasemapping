@@ -17,6 +17,20 @@ cpp_mrg31k3pCreateStreams <- function(numWorkItems) {
     .Call('_gpuRandom_cpp_mrg31k3pCreateStreams', PACKAGE = 'gpuRandom', numWorkItems)
 }
 
+#' Random number generation
+#' 
+#' Fills a matrix with random numbers
+#'
+#' @param x output matrix
+#' @param streams matrix of random number seeds
+#' @param max_global_size vector of length 2, number of work items
+#' @param random_type one of "uniform" or "normal"
+#' 
+#' @export
+gpuRnBackend <- function(x, streams, max_global_size, random_type) {
+    .Call('_gpuRandom_gpuRnBackend', PACKAGE = 'gpuRandom', x, streams, max_global_size, random_type)
+}
+
 cpp_gpu_qqnorm <- function(outR, mu, sigma, lowertail, max_global_size, max_local_size) {
     .Call('_gpuRandom_cpp_gpu_qqnorm', PACKAGE = 'gpuRandom', outR, mu, sigma, lowertail, max_global_size, max_local_size)
 }

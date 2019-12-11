@@ -3,6 +3,7 @@
 export(CreateStreams)
 export(fisher.sim)
 export(gpuRn)
+export(gpuRnBackend)
 export(multiplyLowerBatchBackend)
 export(qqnorm)
 useDynLib(gpuRandom)

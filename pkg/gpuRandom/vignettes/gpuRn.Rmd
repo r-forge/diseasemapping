@@ -96,7 +96,7 @@ as.vector(x)
 
 
 Compare run time for random normals
-```{r random normals}
+```{r random normals, eval=FALSE}
 
 if(gpuInfo()$maxAllocatableMem > 1e10) {
   NperItem = 5e5}else {NperItem = 500}
@@ -113,7 +113,7 @@ system.time(streams <- gpuRandom::gpuRn(z, streams=streams,
 ```
 
 Plot histgram for random normals
-```{r hist for normals}
+```{r histNormals, eval=FALSE}
 
 #zVec = as.vector(z)
 
