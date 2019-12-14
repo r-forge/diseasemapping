@@ -135,7 +135,7 @@ SEXP gpuRn(
   
   std::shared_ptr<viennacl::vector_base<T> > x = getVCLVecptr<T>(xR.slot("address"), BisVCL, ctx_id);
   
-  gpuRn<T>(*x, streamsR, max_global_size, max_local_size, ctx_id, random_type);
+//  gpuRn<T>(*x, streamsR, max_global_size, max_local_size, ctx_id, random_type);
   
   return(Rcpp::wrap(1L));	
 }

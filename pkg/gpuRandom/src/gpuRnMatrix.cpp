@@ -10,6 +10,8 @@ using namespace viennacl;
 using namespace viennacl::linalg;
 
 
+
+
 template <typename T> 
 std::string mrg31k3pMatrixString(
     const int Nrow, 
@@ -39,12 +41,22 @@ std::string mrg31k3pMatrixString(
     "\n#define mrg31k3p_NORM_cl 1L\n\n";
   }
   
+  result += 
+    "\n#define mrg31k3p_M1 2147483647\n"             /* 2^31 - 1 */
+  "#define mrg31k3p_M2 2147462579\n"             /* 2^31 - 21069 */
+  
+  "#define mrg31k3p_MASK12 511  \n"              /* 2^9 - 1 */
+  "#define mrg31k3p_MASK13 16777215  \n"         /* 2^24 - 1 */
+  "#define mrg31k3p_MASK2 65535     \n"          /* 2^16 - 1 */
+  "#define mrg31k3p_MULT2 21069\n";
+  
   result +=
     "\n#define Nrow " + std::to_string(Nrow) + "\n"    
     "#define Ncol " + std::to_string(Ncol) + "\n"
     "#define NpadStreams " + std::to_string(NpadStreams) + "\n"
     "#define NpadCol " + std::to_string(NpadCol) + "\n";    
-  result += mrg31k3pString();
+
+  //  result += mrg31k3pString();
 
   result += 
     "\n\n__kernel void mrg31k3pMatrix(\n"
@@ -54,25 +66,29 @@ std::string mrg31k3pMatrixString(
   
   result += 
     "const int index = get_global_id(0)*get_global_size(1) + get_global_id(1);\n";
-
-  result += 
-    "int Drow, Dcol, DrowStart, Dentry;\n";
   
-  result += "cl_uint g1[3], g2[3];\n"
-  " for(Drow = 0,DrowStart = index * NpadStreams,Dcol = DrowStart + 3;\n"
-  "     Drow < 3; Drow++, DrowStart++, Dcol++){"
+  result += "int Drow, Dcol, DrowStart, Dentry;\n";
+  
+  result += "const int DrowInc = 2*get_global_size(0), DrowStartInc = DrowInc * NpadCol;\n";
+  
+  result += "uint y1, y2, temp;\n";
+  result += "uint g1[3], g2[3];\n";
+  
+
+  if(random_type == "normal"){  
+    result += 
+      "local " + typeString + " part[2], cosPart1;\n";// local size must be 1,2
+  }
+  
+  
+  result += 
+    " for(Drow = 0, DrowStart = index * NpadStreams, Dcol = DrowStart + 3;\n"
+  "     Drow < 3; Drow++, DrowStart++, Dcol++){\n"
   "   g1[Drow] = streams[DrowStart];\n"
   "   g2[Drow] = streams[Dcol];\n"
   " }\n";    
-    result += "cl_uint temp;\n";
   
-    if(random_type == "normal"){  
-      result += 
-      "local " + typeString + " part[2];\n";// local size must be 1,2
-    }
   
-  result += "const int DrowInc = 2*get_global_size(0),\n"
-  "  DrowStartInc = DrowInc * NpadCol;\n";
   
   
   // Drow, Dcol = 2* global(0), group(1)
@@ -87,16 +103,55 @@ std::string mrg31k3pMatrixString(
     "      Dcol < Ncol;\n" 
     "      Dcol += get_num_groups(1), Dentry += get_num_groups(1)) {\n";
   
-  result += 
-    "    temp = clrngMrg31k3pNextState(g1, g2);\n";
+  //    "    temp = clrngMrg31k3pNextState(g1, g2);\n";
 
+    result += 
+
+// first component
+"	y1 = ((g1[1] & mrg31k3p_MASK12) << 22) + (g1[1] >> 9)\n"
+"		+ ((g1[2] & mrg31k3p_MASK13) << 7) + (g1[2] >> 24);\n"
+
+"	if (y1 >= mrg31k3p_M1)\n"
+"		y1 -= mrg31k3p_M1;\n"
+
+"	y1 += g1[2];\n"
+"	if (y1 >= mrg31k3p_M1)\n"
+"		y1 -= mrg31k3p_M1;\n"
+
+"	g1[2] = g1[1];\n"
+"	g1[1] = g1[0];\n"
+"	g1[0] = y1;\n"
+
+// second component
+"	y1 = ((g2[0] & mrg31k3p_MASK2) << 15) + (mrg31k3p_MULT2 * (g2[0] >> 16));\n"
+"	if (y1 >= mrg31k3p_M2)\n"
+"		y1 -= mrg31k3p_M2;\n"
+"	y2 = ((g2[2] & mrg31k3p_MASK2) << 15) + (mrg31k3p_MULT2 * (g2[2] >> 16));\n"
+"	if (y2 >= mrg31k3p_M2)\n"
+"		y2 -= mrg31k3p_M2;\n"
+"	y2 += g2[2];\n"
+"	if (y2 >= mrg31k3p_M2)\n"
+"		y2 -= mrg31k3p_M2;\n"
+"	y2 += y1;\n"
+"	if (y2 >= mrg31k3p_M2)\n"
+"		y2 -= mrg31k3p_M2;\n"
+
+"	g2[2] = g2[1];\n"
+"	g2[1] = g2[0];\n"
+"	g2[0] = y2;\n"
+
+"	if (g1[0] <= g2[0]){\n"
+"		temp= g1[0] - g2[0] + mrg31k3p_M1;\n"
+"	} else {\n"
+"		temp = g1[0] - g2[0];\n"
+" }\n";
+  
   if(random_type == "normal"){  
   result += 
     "    if(get_local_id(1)) {\n"
     "      part[1] = TWOPI_mrg31k3p_NORM_cl * temp;\n"
-    //"sinPart1 = sin(part[1]);\n"
-    //"part[1] = cos(part[1]);\n"
-    "    } else {"
+    "      cosPart1 = cos(part[1]);\n"
+    "    } else {\n"
     "      part[0] = sqrt(-2.0*log(temp * mrg31k3p_NORM_cl));\n"
     "    }\n"
     "    barrier(CLK_LOCAL_MEM_FENCE);\n";
@@ -104,8 +159,8 @@ std::string mrg31k3pMatrixString(
   result += 
     "    if(get_local_id(1)) {\n"
     "      out[Dentry] = part[0]*sin(part[1]);\n"
-    "    } else {"
-    "      out[Dentry] = part[0]*cos(part[1]);\n"
+    "    } else {\n"
+    "      out[Dentry] = part[0]*cosPart1;\n"
     "    }\n"
     "    barrier(CLK_LOCAL_MEM_FENCE);\n";
   } else { // uniform
@@ -119,16 +174,17 @@ std::string mrg31k3pMatrixString(
   }
   
   result += 
-    "  }//Dcol\n "
-    "}//Drow\n";
-  
+    "  }//Dcol\n";
+    result += 
+      "}//Drow\n";
+    
   result +=
     " for(Drow = 0,DrowStart = index * NpadStreams,Dcol = DrowStart + 3;\n"
-    "     Drow < 3; Drow++, DrowStart++, Dcol++){"
+    "     Drow < 3; Drow++, DrowStart++, Dcol++){\n"
     "   streams[DrowStart] = g1[Drow];\n"
     "   streams[Dcol] = g2[Drow];\n"
     " }\n";
-  
+
   result += 
     "}//kernel\n";
   
@@ -137,31 +193,21 @@ std::string mrg31k3pMatrixString(
 
 
 template<typename T>
-void gpuMatrixRn(
+int gpuMatrixRn(
     viennacl::matrix<T> &x,
-    const Rcpp::IntegerMatrix streamsIn,
-    Rcpp::IntegerMatrix streamsOut,
+    viennacl::matrix<int> &streams,
     const IntegerVector numWorkItems,
     const int ctx_id,
     const std::string random_type){
 
-   const int Nstreams = numWorkItems[0]*numWorkItems[1];
-   viennacl::matrix<int> streamsGpu(Nstreams, 6);
-   int Drow, Dcol;
-
-   for(Drow = 0; Drow < Nstreams; Drow++) {
-     for(Dcol = 0; Dcol < 6; Dcol++) {
-        streamsGpu(Drow, Dcol) = streamsIn(Drow, Dcol);       
-     }
-   }
 
   std::string mrg31k3pkernelString = mrg31k3pMatrixString<T>(
     x.size1(),
     x.size2(),
     x.internal_size2(),
-    streamsGpu.internal_size2(),
+    streams.internal_size2(),
     random_type);
-  
+
 #ifdef DEBUGKERNEL
   
   Rcpp::Rcout << mrg31k3pkernelString << "\n\n";
@@ -169,37 +215,22 @@ void gpuMatrixRn(
 #endif  
 
   
-  viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
-  viennacl::ocl::program &my_prog = ctx.add_program(mrg31k3pkernelString, "my_kernel");
+
+  // the context
+  viennacl::ocl::switch_context(ctx_id);
+  viennacl::ocl::program & my_prog = viennacl::ocl::current_context().add_program(mrg31k3pkernelString, "my_kernel");
+  
   
   viennacl::ocl::kernel &random_number = my_prog.get_kernel("mrg31k3pMatrix");
-  random_number.global_work_size(0, numWorkItems[0]);
+
+    random_number.global_work_size(0, numWorkItems[0]);
   random_number.global_work_size(1, numWorkItems[1]);
   
   random_number.local_work_size(0, 1L);
   random_number.local_work_size(1, 2L);
 
-  viennacl::ocl::enqueue(random_number(streamsGpu, x) );
-
-
-#ifdef DEBUG
-  
-  Rcpp::Rcout << "x\n" << x(0,0) << " "<< x(0,1) << " // "<< x(1,0) << " "<< x(1,1) <<  "\n";
-//  Rcpp::Rcout << x2.size1() << " "<< x2.size2() << "  "<< x2.internal_size1() << " "<< x.internal_size2()  <<  "\n";
-  
-#endif  
-  
-
-  // copy streams back to cpu
-  for(Drow = 0; Drow < Nstreams; Drow++) {
-    for(Dcol = 0; Dcol < 6; Dcol++) {
-      streamsOut(Drow, Dcol) = streamsGpu(Drow, Dcol);       
-    }
-    for(Dcol = 6 ; Dcol < 18; Dcol++) {
-      streamsOut(Drow, Dcol) = streamsIn(Drow, Dcol);       
-    }
-  }
-
+  viennacl::ocl::enqueue(random_number(streams, x));
+  return(0L);
 }
 
 
@@ -207,23 +238,23 @@ void gpuMatrixRn(
 template<typename T> 
 SEXP gpuRnMatrixTyped(
     Rcpp::S4  xR,
-    const Rcpp::IntegerMatrix streamsIn,
+    Rcpp::S4  streamsR,
     IntegerVector max_global_size,
     std::string  random_type) 
 {
   
-  Rcpp::IntegerMatrix streamsOut(streamsIn.nrow(), streamsIn.ncol());
-
   const bool BisVCL=1;
   const int ctx_id = INTEGER(xR.slot(".context_index"))[0]-1;
   
   std::shared_ptr<viennacl::matrix<T> > x = getVCLptr<T>(
     xR.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix<int> > streams = getVCLptr<int>(
+    streamsR.slot("address"), BisVCL, ctx_id);
   
-  gpuMatrixRn<T>(*x, streamsIn, streamsOut, 
-                 max_global_size, ctx_id, random_type);
-  
-  return(streamsOut);	
+  return( Rcpp::wrap(
+  gpuMatrixRn<T>(*x, *streams, 
+                 max_global_size, ctx_id, random_type)
+  ));	
 }
 
 
@@ -240,7 +271,7 @@ SEXP gpuRnMatrixTyped(
 // [[Rcpp::export]]
 SEXP gpuRnBackend(
     Rcpp::S4  x,
-    const Rcpp::IntegerMatrix streams,
+    Rcpp::S4  streams,
     IntegerVector max_global_size,
     std::string  random_type) {
   

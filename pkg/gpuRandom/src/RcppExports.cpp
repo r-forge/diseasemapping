@@ -64,13 +64,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // gpuRnBackend
-SEXP gpuRnBackend(Rcpp::S4 x, const Rcpp::IntegerMatrix streams, IntegerVector max_global_size, std::string random_type);
+SEXP gpuRnBackend(Rcpp::S4 x, Rcpp::S4 streams, IntegerVector max_global_size, std::string random_type);
 RcppExport SEXP _gpuRandom_gpuRnBackend(SEXP xSEXP, SEXP streamsSEXP, SEXP max_global_sizeSEXP, SEXP random_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::IntegerMatrix >::type streams(streamsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type streams(streamsSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type max_global_size(max_global_sizeSEXP);
     Rcpp::traits::input_parameter< std::string >::type random_type(random_typeSEXP);
     rcpp_result_gen = Rcpp::wrap(gpuRnBackend(x, streams, max_global_size, random_type));

@@ -345,11 +345,7 @@ void multiplyLowerDiagonalBatch(
   
 
   
-  // the context
-  viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
-  
-//  cl_device_type type_check = ctx.current_device().type();
-  
+
   std::string clString =  multiplyLowerBatchString<T>(  
     Nrow == (int) B.size1(),
     diagIsOne,
@@ -375,8 +371,13 @@ void multiplyLowerDiagonalBatch(
 #endif  
   
 
+  // the context
+  viennacl::ocl::switch_context(ctx_id);
+  //  viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
+  
+//  cl_device_type type_check = ctx.current_device().type();
 
-    viennacl::ocl::program & my_prog = ctx.add_program(
+    viennacl::ocl::program & my_prog = viennacl::ocl::current_context().add_program(
     clString, "my_kernel");
   
   viennacl::ocl::kernel & multiplyKernel = my_prog.get_kernel("multiplyLowerBatch");
