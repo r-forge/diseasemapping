@@ -222,16 +222,14 @@ gpuRandom:::multiplyLowerDiagonalBatchBackend(
 # Plot simulated materns
 
 ```{r plotSimNames}
-Ssim = 1:Nsim
-Ssim = 1:2
-theNames = apply(expand.grid('par',1:nrow(paramsGpu), 'sim', Ssim), 1, paste, collapse='')
+theNames = apply(expand.grid('par',1:nrow(paramsGpu), 'sim', 1:Nsim), 1, paste, collapse='')
 ```
 
 ```{r plotSimSetup, eval = exists('simMat')}
 library(raster)
 simRaster = brick(myRaster, 
   nl = ncol(simMat)*nrow(paramsGpu))
-system.time(values(simRaster) <- as.vector(as.matrix(simMat[,Ssim])))
+system.time(values(simRaster) <- as.vector(as.matrix(simMat)))
 names(simRaster) = theNames
 ```
 
