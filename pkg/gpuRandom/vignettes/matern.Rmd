@@ -44,16 +44,16 @@ Set up spatial data
 theType = "float"
 
 if(gpuInfo()$deviceMemory > 10^10){
-   Ngrid = c(80,100)
-   Nsim = 4
+   Ngrid = c(80,120)
+   Nsim = 12
    NlocalCache = 4000
-    NglobalMatern = c(256,8) 
-    NlocalMatern = c(32, 8)
-    NglobalChol =  c(128,8)
-    NlocalChol = c(16, 8)
-    NglobalRandom = c(512,8)
-  NglobalMult = c(64,8,8)   
-  NlocalMult = c(8,8,1)   
+   NglobalMatern = c(256,8) 
+   NlocalMatern = c(32, 8)
+   NglobalChol =  c(128,8)
+   NlocalChol = c(16, 8)
+   NglobalRandom = c(512,8)
+   NglobalMult = c(64,8,8)   
+   NlocalMult = c(8,8,1)
    theType = "double"
 }
 
@@ -88,7 +88,7 @@ c(shape=0.55, range=1.5, variance = 2, nugget = 0,
 c(shape=2.15, range=0.5, variance = 2, nugget = 0, 
              anisoRatio = 4, 
              anisoAngleRadians = -pi/7),
-c(shape=2.15, range=0.5, variance = 2, nugget = 0, 
+c(shape=2.15, range=0.1, variance = 2, nugget = 0, 
              anisoRatio = 2, 
              anisoAngleRadians = pi/4))
 
@@ -96,7 +96,9 @@ myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
 myParamsBatch
 myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch)))
 paramsGpu =  vclMatrix(myParamsBatch, type=gpuR::typeof(coordsGpu))
+```
 
+```{r outputBatchCreate}
 outputBatchF = vclMatrix(0, 
     nrow(paramsGpu)*nrow(coordsGpu), nrow(coordsGpu),
     type=gpuR::typeof(paramsGpu))
@@ -112,7 +114,7 @@ system.time(gpuRandom:::maternBatchBackend(
     Nglobal = NglobalMatern, 
     Nlocal = NlocalMatern))
 dim(outputBatchF)
-as.matrix(outputBatchF[1:12,1:7])
+#as.matrix(outputBatchF[1:12,1:7])
 ```
 
 
@@ -138,7 +140,7 @@ range(var4cpu - as.matrix(var4gpu))
 # Cholesky
 
 
-```{r cholBach}
+```{r cholBach, eval = exists('outputBatchF')}
 diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), 
                     type = gpuR::typeof(outputBatchF))
 outputChol = deepcopy(outputBatchF)
@@ -180,7 +182,7 @@ streamsGpu = vclMatrix(streams, type='integer')
 
 zMatGpu = vclMatrix(nrow=as.integer(ncol(outputBatchF) * nrow(myParamsBatch)),
                      ncol=as.integer(Nsim),
-                     type = gpuR::typeof(outputChol))
+                     type = gpuR::typeof(outputBatchF))
 dim(zMatGpu)
 
 system.time(
@@ -201,7 +203,7 @@ qqnorm(as.vector(zMatCpu))
 
 compute U = L D^(1/2) Z, where LDLt is the Cholesky of the variance matrix, Z is the independent normals
 
-```{r multLowerGpu}
+```{r multLowerGpu, eval = exists('zMatGpu') & exists('outputChol')}
 simMat = deepcopy(-100*zMatGpu)
 
 system.time(
@@ -220,18 +222,20 @@ gpuRandom:::multiplyLowerDiagonalBatchBackend(
 # Plot simulated materns
 
 ```{r plotSimNames}
-theNames = apply(expand.grid('par',1:nrow(paramsGpu), 'sim', 1:ncol(simMat)), 1, paste, collapse='')
+Ssim = 1:Nsim
+Ssim = 1:2
+theNames = apply(expand.grid('par',1:nrow(paramsGpu), 'sim', Ssim), 1, paste, collapse='')
 ```
 
-```{r plotSimSetup, eval=FALSE}
+```{r plotSimSetup, eval = exists('simMat')}
 library(raster)
 simRaster = brick(myRaster, 
   nl = ncol(simMat)*nrow(paramsGpu))
-system.time(values(simRaster) <- as.vector(as.matrix(simMat)))
+system.time(values(simRaster) <- as.vector(as.matrix(simMat[,Ssim])))
 names(simRaster) = theNames
 ```
 
-```{r plotSim, fig.height=5, fig.width=3, out.width=paste0(98/nrow(paramsGpu), '%'), fig.cap='simulations', fig.subcap = theNames, eval = exists('simRaster')}
+```{r plotSim, fig.height=5, fig.width=4, out.width=paste0(98/nrow(paramsGpu), '%'), fig.cap='simulations', fig.subcap = theNames, eval = exists('simRaster')}
 par(mar=rep(0.1, 4))
 for(D in names(simRaster)) {
   plot(extent(simRaster))

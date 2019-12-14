@@ -223,20 +223,19 @@ std::string maternBatchKernelString(
     "\n__kernel void maternBatch(\n"
     "__global " + typeString + " *result,"
     "__global " + typeString + " *coords,\n"  
-    "__global " + typeString + " *params) {\n"
+    "__global " + typeString + " *params) {\n\n";
     
     
-    
+    result +=
     "int Dmatrix, Dcell, nuround, DlocalParam, k;\n" +
       typeString + " distSq;\n" +
       typeString + "2 distRotate;\n" +
       typeString + "2 sincos;\n" +
       typeString + " logthisx, ln_half_x, thisx, maternBit, expMaternBit;\n" +
       typeString + " K_num1;\n\n" +
-      typeString + "2 K_nuK_nup1;\n\n"
-  
-      "K_nuK_nup1.x=1;K_nuK_nup1.y=1;\n"
+      typeString + "2 K_nuK_nup1;\n\n";
 
+  result +=
   "__local " + typeString + " localParams[" +
     std::to_string(NlocalParams * Nmatrix) + "];\n"
   "__local " + typeString + "2 localDist[NlocalStorage];\n"
@@ -259,7 +258,6 @@ std::string maternBatchKernelString(
     "     }\n" // Dcell
     "  }\n" // Dmatrix
     "}// if local0\n\n";
-
   result +=    
     "for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += get_global_size(0)) {\n";
 
@@ -348,7 +346,6 @@ result +=
   "barrier(CLK_LOCAL_MEM_FENCE);\n";
   
   result += "} // Dcell\n";
-  
     result +=     "\n#ifdef assignDiag\n"
     
     "barrier(CLK_LOCAL_MEM_FENCE);\n"
@@ -361,6 +358,7 @@ result +=
     "}\n" // Dmatrix
     "}\n" // Dcell
     "#endif\n\n"; // assign diagonals
+
       result +=  
     "}\n"; // function
   
