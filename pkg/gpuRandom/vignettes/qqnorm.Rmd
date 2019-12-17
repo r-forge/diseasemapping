@@ -1,0 +1,22 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{qqnorm plot}
+-->
+
+
+##  QQnorm plot on gpu
+```{r }
+library('gpuR')
+setContext(   grep('OpenCL 2.1', listContexts()$platform)[1]    )
+```
+
+
+
+```{r eval=TRUE}
+y <- rt(256, df = 5)
+Nglobal = c(4,16)
+gpuRandom::qqnorm(y, mu=0, sigma=1, workgroupSize = Nglobal )
+
+x<-rnorm(256)
+gpuRandom::qqnorm(x, mu=0, sigma=1, workgroupSize = Nglobal )
+```
