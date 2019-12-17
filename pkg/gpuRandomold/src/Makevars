@@ -1,2 +1,0 @@
-SOURCES = $(wildcard clRNG/*.c)
-OBJECTS = clRNG.o RcppExports.o $(SOURCES:.c=.o)
