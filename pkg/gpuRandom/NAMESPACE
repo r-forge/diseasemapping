@@ -3,7 +3,6 @@
 export()
 export(CreateStreams)
 export(fisher.sim)
-export(gpuRn)
 export(multiplyLowerBatchBackend)
 export(qqnorm)
 export(rnorm)

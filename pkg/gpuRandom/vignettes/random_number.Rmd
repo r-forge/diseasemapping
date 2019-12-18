@@ -24,36 +24,70 @@ theType
 #setContext(   grep('gpu', listContexts()$device_type) [2]    )
 ```
 
-Create some streams
-```{r testStream}
+
+#new random normals
+```{r rnorm}
+Nglobal = c(64,4)
+a<-gpuRandom::rnorm(c(200,200), workgroupSize=Nglobal, type="double")
+
+avector<-as.vector(t(a))
+hist(avector,breaks=40)
+qqnorm(avector)
+
+```
+
+#new random uniforms
+```{r unif}
+b<-gpuRandom::runif(c(200,800),workgroupSize=Nglobal, type="double")
+bvector<-as.vector(b)
+hist(bvector, breaks=40)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Generate some uniforms
+```{r test, eval=FALSE}
 Nglobal = 4
 streams = gpuRandom::CreateStreams(Nglobal);
 t(streams)
-```
 
-Generate some uniforms
-```{r test}
+
+
 x = vclVector(length=8L, type=theType)
 
 streams2 <- gpuRandom::gpuRn(x, streams=streams,random_type = "uniform")
 t(streams)[1:4,]
 t(streams2)[1:4,]
 as.vector(x)
-```
-Generate some different uniforms
-```{r testAgain}
+
+#Generate some different uniforms
+
 gpuRandom::gpuRn(x, streams=streams2,random_type = "uniform")
 as.vector(x)
-```
 
-Reuse the intial seed
-```{r testRepeat}
+
+#Reuse the intial seed
+
 y=vclVector(length=8L,type="double")
 gpuRandom::gpuRn(y, streams=streams,random_type = "uniform")
 as.vector(y)
-```
 
-```{r hist, eval=TRUE}
+
 
 
 Nglobal = c(64,4)
@@ -79,11 +113,11 @@ xMat = matrix(xVec, ncol=prod(Nglobal), byrow=TRUE)
 #plot(as.vector(xMat[-1,1]), as.vector(xMat[-nrow(xMat),1]), xlim = theLim, ylim=theLim, pch='.')
 #plot(as.vector(xMat[-1,2]), as.vector(xMat[-nrow(xMat),2]), xlim = theLim, ylim=theLim, pch='.')
 
-```
+
 
 # Random normals
-Generate some random normals
-```{r normals}
+#Generate some random normals
+
 Nglobal = c(64,4)
 streams = gpuRandom::CreateStreams(prod(Nglobal))
 x = vclVector(length=8L, type=theType)
@@ -92,12 +126,12 @@ gpuRandom::gpuRn(x, streams=streams, workgroupSize = Nglobal,
                                          localSize = c(2,2),
                                          random_type="normal")
 as.vector(x)
-```
 
 
 
-Compare run time for random normals
-```{r random normals, eval=TRUE}
+
+#Compare run time for random normals
+
 
 if(gpuInfo()$maxAllocatableMem > 1e10) {
   NperItem = 5e5}else {NperItem = 500}
@@ -111,10 +145,10 @@ system.time(streams <- gpuRandom::gpuRn(z, streams=streams,
                                          workgroupSize = Nglobal,
                                          localSize = c(2,2),
                                          random_type="normal"))
-```
 
-Plot histgram for random normals
-```{r histNormals, eval=TRUE}
+
+#Plot histgram for random normals
+
 
 zVec = as.vector(z)
 
@@ -124,27 +158,6 @@ hist(zVec,breaks=40)
 
 #qqnorm(zVec)
 ```
-
-#new random normals
-```{r rnorm}
-Nglobal = c(64,4)
-a<-gpuRandom::rnorm(c(200,200), workgroupSize=Nglobal, type="double")
-
-avector<-as.vector(t(a))
-hist(avector,breaks=40)
-qqnorm(avector)
-
-```
-
-#new random uniforms
-```{r unif}
-b<-gpuRandom::runif(c(200,800),workgroupSize=Nglobal, type="double")
-bvector<-as.vector(b)
-hist(bvector, breaks=40)
-```
-
-
-
 
 
 

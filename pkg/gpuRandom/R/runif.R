@@ -1,3 +1,4 @@
+#' @title runif
 #' @useDynLib gpuRandom
 #' @export
 

@@ -1,3 +1,4 @@
+#' @title rnorm
 #' @useDynLib gpuRandom
 #' @export
 
