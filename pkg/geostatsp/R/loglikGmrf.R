@@ -252,10 +252,11 @@ loglikGmrf = function(
       bestBcList = apply(ml[,,Lcol,,drop=FALSE], 
         c(2,4), 
         base::which.min)
-      newml = ml[bestBcList[1,1],,,,drop=FALSE]
+      theIndex = as.vector(bestBcList[1,1])[1]
+      newml = ml[theIndex,,,,drop=FALSE]
       newssq = ssq[
-          c(bestBcList[1,1], covDim),
-          c(bestBcList[1,1], covDim),,,,drop=FALSE]
+          c(theIndex, covDim),
+          c(theIndex, covDim),,,,drop=FALSE]
       
       
       if(length(unique(as.vector(bestBcList)))>=1){
