@@ -1,0 +1,107 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Fisher test}
+-->
+
+`https://github.com/clMathLibraries/clRNG`
+
+
+## Fisher test simulation
+
+```{r date}
+date()
+```
+
+
+```{r packages, results='hide'}
+library('gpuR')
+```
+
+```{r memoryAvailable, echo=TRUE}
+setContext(   grep('OpenCL 2.1', listContexts()$platform)[1]    )
+gpuInfo()$deviceName
+gpuInfo()$maxAllocatableMem/(1024^3)
+```
+
+Example 1
+```{r  teaTasting}
+TeaTasting <-matrix(c(21,17,5,19,38,6,26,12,9),nrow=3)
+
+TeaTasting
+## Using the R function 
+fisher.test(TeaTasting)
+fisher.test(TeaTasting, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
+```
+
+
+ 
+```{r teaTastingGpu, eval=FALSE} 
+gpuRandom::gpuFisher_sim(a, b, results, streams, workgroupSize = Nglobal)
+
+
+#matrix(as.vector(results), ncol=stream_num, byrow=TRUE)
+
+
+## calculate the p-value
+STATISTIC <- -sum(lfactorial(TeaTasting))
+almost.1 <- 1 + 64 * .Machine$double.eps
+PVAL <- (1 + sum(   as.vector(results) <= STATISTIC/almost.1   )) / (length(results) + 1)
+PVAL
+
+#PVAL <- (sum(   as.vector(results) <= STATISTIC  )) / (length(results))
+#PVAL
+ 
+```
+
+
+Example 2
+```{r eval=FALSE}
+x<- matrix(c(2, 10, 15, 3), nrow = 2)
+
+fisher.test(x, alternative = "t",  simulate.p.value = TRUE, B = 1e3)
+
+Nglobal = c(8,16)
+streams = gpuRandom::CreateStreams(prod(Nglobal))
+
+
+res1 = gpuRandom::fisher.sim(x, 1000L, returnStatistics=TRUE, 
+                             type="double", streams, workgroupSize = Nglobal)
+
+str(res1)
+hist(as.vector(res1$sim))
+```
+
+```{r ex2, eval=FALSE}
+res2 = gpuRandom::fisher.sim(x, 1000L, returnStatistics=FALSE, type="double", streams, workgroupSize = Nglobal)
+str(res2)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
