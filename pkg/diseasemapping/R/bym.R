@@ -291,8 +291,11 @@ formulaForLincombs = base::format(formula.fitted)
 # if there is a line break in the formula, 
 # format(formula) will create a vector
 formulaForLincombs = paste(formulaForLincombs, collapse="")
-formulaForLincombs = gsub("^.*~", "", toString(formulaForLincombs))
- 
+formulaForLincombs = toString(formulaForLincombs)
+#formulaForLincombs = gsub("^.*~", "", toString(formulaForLincombs))
+theTilde = gregexpr("[~]",  formulaForLincombs)[[1]][1]
+formulaForLincombs = substr(formulaForLincombs, theTilde+1, nchar(formulaForLincombs))
+
 # get rid of f(stuff) in formula
 formulaForLincombs =
 		gsub("f\\([[:print:]]*\\)", "", formulaForLincombs)
