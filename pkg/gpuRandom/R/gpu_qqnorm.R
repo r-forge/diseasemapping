@@ -41,7 +41,7 @@ qqnorm<-function(y, ylim, mu, sigma, lowertail=1,
    
     x <- as.vector(cpp_gpu_qqnorm(out, mu,sigma, lowertail, workgroupSize , localSize))
     
-    x<-x[order(order(as.vector(y)))]
+    x<-x[order(order(as.vector(y)))]  ###
     
     
     if(has.na) {

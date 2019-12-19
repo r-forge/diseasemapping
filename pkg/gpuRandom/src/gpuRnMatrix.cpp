@@ -31,7 +31,7 @@ std::string mrg31k3pMatrixString(
     
   } else if(typeString == "float") {
     result += "\n#define TWOPI 6.2831853\n" 
-    "\n#define mrg31k3p_NORM_cl 4.6566126e-10\n\n";
+    "\n#define mrg31k3p_NORM_cl 4.6566126e-10\n\n"
     "//TWOPI * mrg31k3p_NORM_cl\n"
     "#define TWOPI_mrg31k3p_NORM_cl 2.9258361e-09\n\n";
   } else {
@@ -44,7 +44,8 @@ std::string mrg31k3pMatrixString(
     "#define Ncol " + std::to_string(Ncol) + "\n"
     "#define NpadStreams " + std::to_string(NpadStreams) + "\n"
     "#define NpadCol " + std::to_string(NpadCol) + "\n";    
-  result += mrg31k3pString();
+  
+  result += mrg31k3pString();   ////////
 
   result += 
     "\n\n__kernel void mrg31k3pMatrix(\n"

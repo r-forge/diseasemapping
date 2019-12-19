@@ -40,14 +40,14 @@ rnorm = function(
     streams = matrix(as.vector(streams), nrow(streams), ncol(streams), FALSE, dimnames(streams))
   }
 
-    xVcl<-gpuR::vclMatrix(x,type=type[1])
+    xVcl<-gpuR::vclMatrix(x,type=type[1])###change
   
   
     gpuRnBackend(xVcl,streams,workgroupSize,"normal") 
     
     invisible(streams)
     
-    as.matrix(xVcl)
-  
+    if(ncol(xVcl)==1) xVcl = xVcl[,1]
+  xvcl
 
 }

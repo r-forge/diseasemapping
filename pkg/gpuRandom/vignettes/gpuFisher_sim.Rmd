@@ -23,16 +23,6 @@ gpuInfo()$deviceName
 gpuInfo()$maxAllocatableMem/(1024^3)
 ```
 
-Example 1
-```{r  teaTasting}
-TeaTasting <-matrix(c(21,17,5,19,38,6,26,12,9),nrow=3)
-
-TeaTasting
-## Using the R function 
-fisher.test(TeaTasting)
-fisher.test(TeaTasting, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
-```
-
 
  
 
@@ -47,7 +37,7 @@ Nglobal = c(16,64)
 streams = gpuRandom::CreateStreams(prod(Nglobal))
 
 
-res1 = gpuRandom::fisher.sim(x, 10000L, returnStatistics=TRUE, 
+res1 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=TRUE, 
                              type="double", streams, workgroupSize = Nglobal)
 
 str(res1)
@@ -55,7 +45,8 @@ hist(as.vector(res1$sim))
 ```
 
 ```{r ex2, eval=TRUE}
-res2 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=FALSE, type="double", streams, workgroupSize = Nglobal)
+res2 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=FALSE, 
+                             type="double", streams, workgroupSize = Nglobal)
 str(res2)
 ```
 
@@ -67,6 +58,16 @@ str(res2)
 
 
 
+
+Example 1
+```{r  teaTasting, eval=FALSE}
+TeaTasting <-matrix(c(21,17,5,19,38,6,26,12,9),nrow=3)
+
+TeaTasting
+## Using the R function 
+fisher.test(TeaTasting)
+fisher.test(TeaTasting, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
+```
 
 
 

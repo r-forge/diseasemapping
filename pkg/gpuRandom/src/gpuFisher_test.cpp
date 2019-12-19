@@ -1,6 +1,6 @@
 #include "gpuRandom.hpp"
 
-#define DEBUG
+#define DEBUGKERNEL
 
 using namespace Rcpp;
 using namespace viennacl; 
@@ -14,7 +14,27 @@ template <typename T>
 std::string FisherSimkernelString(int NR, int NC) { 
   
   std::string typeString = openclTypeString<T>();
-  std::string result = mrg31k3pTypeString<T>(); 
+  std::string result = mrg31k3pString(); 
+  
+  if(typeString == "double") {
+    
+    result += "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n"
+    "#define mrg31k3p_NORM_cl 4.656612873077392578125e-10\n";
+    
+  } else if(typeString == "float") {
+    result +=  "\n#define mrg31k3p_NORM_cl 4.6566126e-10\n\n";
+
+  } else {
+    result += "\n#define mrg31k3p_NORM_cl 1L\n\n";
+  }
+  
+  result +=  "\n\n__kernel void mrg31k3p(\n"
+  "  __global int* streams,\n" 
+  "  __global " + typeString + "* out){\n\n";  
+    
+ 
+
+  
   
   result += "\n"
   "\n#define MAXITER 2500\n"
