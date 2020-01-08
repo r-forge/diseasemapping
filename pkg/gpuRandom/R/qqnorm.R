@@ -3,10 +3,10 @@
 #' @useDynLib gpuRandom
 #' @export
 
-qqnorm<-function(y, ylim, mu, sigma, lowertail=1,
+qqnorm<-function(y, ylim, mu=0, sigma=1, lowertail=1,
                   main = "Normal Q-Q Plot",
                   xlab = "Theoretical Quantiles", ylab = "Sample Quantiles",
-                  workgroupSize, localSize=c(2,2),
+                  workgroupSize, localSize = c(2, 2),
                   verbose=FALSE, ...){
    
    if(has.na <- any(ina <- is.na(y))) { ## keep NA's in proper places

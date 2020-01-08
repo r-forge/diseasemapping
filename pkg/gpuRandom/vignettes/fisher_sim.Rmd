@@ -34,19 +34,19 @@ x<- matrix(c(2, 10, 15, 3), nrow = 2)
 fisher.test(x, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
 
 Nglobal = c(16,64)
-streams = gpuRandom::CreateStreams(prod(Nglobal))
+streams = gpuR::vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
 
 
-res1 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=TRUE, 
-                             type="double", streams, workgroupSize = Nglobal)
+#res1 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=TRUE, 
+                             #type="double", streams=streams, workgroupSize = Nglobal)
 
-str(res1)
-hist(as.vector(res1$sim))
+#str(res1)
+#hist(as.vector(res1$sim))
 ```
 
 ```{r ex2, eval=TRUE}
 res2 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=FALSE, 
-                             type="double", streams, workgroupSize = Nglobal)
+                             type="double", streams=streams, workgroupSize = Nglobal)
 str(res2)
 ```
 

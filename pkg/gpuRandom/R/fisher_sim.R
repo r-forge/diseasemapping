@@ -12,7 +12,6 @@ fisher.sim=function(
   returnStatistics = FALSE,
   streams, 
   workgroupSize,
-  localSize=c(2,2),
   verbose = FALSE){
 
   METHOD <- "Fisher's Exact Test for Count Data"
@@ -41,27 +40,29 @@ fisher.sim=function(
   
 
   
-  STATISTIC <- -sum(lfactorial(x))
-  ##STATISTIC is negative
+  STATISTIC <- -sum(lfactorial(x))          ##STATISTIC is negative
   almost.1 <- 1 + 64 * .Machine$double.eps
   
   threshold = STATISTIC/almost.1
   
   if(missing(streams)) {
-       if(missing(workgroupSize)) 
-           {workgroupSize = c(64,4)
-            streams = cpp_mrg31k3pCreateStreams(prod(workgroupSize))	}	
-        }else {
-              if(!is.matrix(streams)) {
-               warning("streams should be a matrix") }
+    if(missing(workgroupSize)) {
+      workgroupSize = c(64,8)
+      streams = gpuR::vclMatrix(cpp_mrg31k3pCreateStreams(prod(workgroupSize)))
+    }else{
+      streams = gpuR::vclMatrix(cpp_mrg31k3pCreateStreams(prod(workgroupSize)))
+    }
+  }else {
+    if(!isS4(streams)) {
+      warning("streams should be a S4 matrix") }
     
     if(prod(workgroupSize) != nrow(streams))
       warning("number of work items needs to be same as number of streams")
     # make a deep copy
-    streams = matrix(as.vector(streams), nrow(streams), ncol(streams), FALSE, dimnames(streams))
+    # streams = gpuR::vclMatrix(as.matrix(streams), nrow(streams), ncol(streams), FALSE, dimnames(streams))
   }
   
-  localSize = pmax(2,c(localSize, 2, 2)[1:2])
+ localSize = c(1, 1)
   
   if(verbose) {
     cat('local sizes ', toString(localSize), '\nglobal sizes ', toString(workgroupSize),
@@ -71,9 +72,8 @@ fisher.sim=function(
 
   sr0 <- rowSums(x)
   sc0 <- colSums(x)
-  
 
-  
+    
   ## we drop all-zero rows and columns
   x <- x[sr0 > 0, sc0 > 0, drop = FALSE]
 
