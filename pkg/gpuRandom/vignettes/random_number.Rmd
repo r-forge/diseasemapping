@@ -6,7 +6,7 @@
 
 `https://github.com/clMathLibraries/clRNG`
 
-# Random uniform
+
 
 ```{r date}
 date()
@@ -28,18 +28,20 @@ theType
 #new random normals
 ```{r rnorm}
 Nglobal = c(64,4)
-a<-gpuRandom::rnorm(c(200,200), workgroupSize=Nglobal, type="double")
+streams = gpuR::vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
 
-avector<-as.vector(t(a))
+a<-gpuRandom::rnorm(c(200,200), streams=streams, workgroupSize=Nglobal, type="double")
+
+avector<-as.vector(as.matrix(a))
 hist(avector,breaks=40)
-qqnorm(avector)
+gpuRandom::qqnorm(avector, workgroupSize = Nglobal)
 
 ```
 
 #new random uniforms
 ```{r unif}
-b<-gpuRandom::runif(c(200,800),workgroupSize=Nglobal, type="double")
-bvector<-as.vector(b)
+b<-gpuRandom::runif(c(200,800), workgroupSize=Nglobal, type="double")
+bvector<-as.vector(as.matrix(b))
 hist(bvector, breaks=40)
 ```
 

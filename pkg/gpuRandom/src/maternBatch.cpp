@@ -3,30 +3,30 @@
 
 #define NlocalParams 22
 /*
-parameters
-0 range, 
-1 shape, 
-2 variance, 
-3 nugget, 
-4 anisoRatio 
-5 anisoAngleRadians  
-6 anisoAngleDegrees
-7 costheta, 
-8 sintheta 
-9 anisoRatioSq
-10 varscale
-11 logxscale
-12 sinrat 
-13 mu 
-14 muSq 
-15 mup1 
-16 nuround
-17 g1 
-18 g2 
-19 g1pnu 
-20 g1mnu
-21 variance + nugget
-*/
+ parameters
+ 0 range, 
+ 1 shape, 
+ 2 variance, 
+ 3 nugget, 
+ 4 anisoRatio 
+ 5 anisoAngleRadians  
+ 6 anisoAngleDegrees
+ 7 costheta, 
+ 8 sintheta 
+ 9 anisoRatioSq
+ 10 varscale
+ 11 logxscale
+ 12 sinrat 
+ 13 mu 
+ 14 muSq 
+ 15 mup1 
+ 16 nuround
+ 17 g1 
+ 18 g2 
+ 19 g1pnu 
+ 20 g1mnu
+ 21 variance + nugget
+ */
 
 template <typename T> 
 std::string maternBatchKernelString(
@@ -87,6 +87,7 @@ std::string maternBatchKernelString(
     "#define Ncell " + std::to_string(Ncell) + "\n"
     "#define Npad " + std::to_string(Npad) + "\n"
     "#define Nmatrix " + std::to_string(Nmatrix) + "\n"
+    "#define NlocalStorage " + std::to_string(2*std::max(Nlocal0,Nmatrix)) + "\n"
     "#define NpadBetweenMatrices " + std::to_string(NpadBetweenMatrices) + "\n"
     "#define NpadCoords " + std::to_string(NpadCoords) + "\n"
     "#define NpadParams " + std::to_string(NpadParams) + "\n"
@@ -95,8 +96,8 @@ std::string maternBatchKernelString(
   
   
   result = result + 
-  
-  "\n" + typeString + "2 maternShort(\n" +
+    
+    "\n" + typeString + "2 maternShort(\n" +
     "const " + typeString + " ln_half_x, " 
     "const " + typeString + " maternBit, " 
     "const " + typeString + " expMaternBit, " 
@@ -107,13 +108,13 @@ std::string maternBatchKernelString(
     "const " + typeString + " g2,"
     "const " + typeString + " g_1pnu, "
     "const " + typeString + " g_1mnu"
-//    + typeString + " *K_nu, " + typeString + " *K_nup1\n" 
-  "  ){\n" +
-    typeString + " twoLnHalfX, sigma, sinhrat, fk, pk, qk, hk, half_x_nu;\n" +
-    typeString + " sum0, sum1, ck, logck, del0, del1;\n" +
-    typeString + "2 result;\n" // K_nu, K_nup1
+    //    + typeString + " *K_nu, " + typeString + " *K_nup1\n" 
+    "  ){\n" +
+      typeString + " twoLnHalfX, sigma, sinhrat, fk, pk, qk, hk, half_x_nu;\n" +
+      typeString + " sum0, sum1, ck, logck, del0, del1;\n" +
+      typeString + "2 result;\n" // K_nu, K_nup1
   "int k;\n"
-
+  
   "			twoLnHalfX = 2*ln_half_x;\n"
   "			sigma   = - mu * ln_half_x;\n"
   "			half_x_nu = exp(-sigma);\n"
@@ -146,8 +147,8 @@ std::string maternBatchKernelString(
   "				sum1 += del1;\n"
   "			}\n" //while loop
   //		result[Dcol * sizeResultPadRow + Drow] = -k;
-//  "			*K_nu   = sum0;\n"
-//  "			*K_nup1 = sum1 * exp( - ln_half_x);\n"
+  //  "			*K_nu   = sum0;\n"
+  //  "			*K_nup1 = sum1 * exp( - ln_half_x);\n"
   "			result.x  = sum0;\n"
   "			result.y = sum1 * exp( - ln_half_x);\n"
   "return(result);\n"
@@ -160,14 +161,14 @@ std::string maternBatchKernelString(
     "const " + typeString + " nu, " 
     "const " + typeString + " mu, " 
     "const " + typeString + " muSq" 
-
-  "){\n" +
     
-    typeString + " bi, di, delhi, hi, qi, qip1, ai, ci, Qi, s, tmp;\n" +
-    typeString + " dels, a1;\n" +
-    typeString + "2 result;\n" // K_nu, K_nup1
+    "){\n" +
+      
+      typeString + " bi, di, delhi, hi, qi, qip1, ai, ci, Qi, s, tmp;\n" +
+      typeString + " dels, a1;\n" +
+      typeString + "2 result;\n" // K_nu, K_nup1
   "int k;\n"
-
+  
   "		bi = 2.0*(1.0 + thisx);\n"
   "		di = 1.0/bi;\n"
   
@@ -199,13 +200,13 @@ std::string maternBatchKernelString(
   "			if(fabs(dels/s) < epsilon) break;\n"
   "			}\n" // k loop
   "			hi *= -a1;\n"
-
-//  "		*K_nu = exp(-thisx) * expMaternBit * sqrt(M_PI_2_T/thisx) / s;\n"//  sqrt(pi)/2 sqrt(2/x)/s =
-//  "		*K_nup1 = *K_nu * (mu + thisx + 0.5 - hi)/thisx;\n"
-
+  
+  //  "		*K_nu = exp(-thisx) * expMaternBit * sqrt(M_PI_2_T/thisx) / s;\n"//  sqrt(pi)/2 sqrt(2/x)/s =
+  //  "		*K_nup1 = *K_nu * (mu + thisx + 0.5 - hi)/thisx;\n"
+  
   "		result.x = exp(-thisx) * expMaternBit * sqrt(M_PI_2_T/thisx) / s;\n"//  sqrt(pi)/2 sqrt(2/x)/s =
   "		result.y = result.x * (mu + thisx + 0.5 - hi)/thisx;\n"
-
+  
   "return(result);\n"
   "}\n\n";
   
@@ -222,23 +223,23 @@ std::string maternBatchKernelString(
     "\n__kernel void maternBatch(\n"
     "__global " + typeString + " *result,"
     "__global " + typeString + " *coords,\n"  
-    "__global " + typeString + " *params) {\n"
-    
-    
-    "int Dmatrix, Dcell, nuround, DlocalParam, k;\n" +
-      typeString + " distSq;\n" +
-      typeString + "2 distRotate;\n" +
-      typeString + "2 sincos;\n" +
-      typeString + " logthisx, ln_half_x, thisx, maternBit, expMaternBit;\n" +
-      typeString + " K_num1;\n\n" +
-      typeString + "2 K_nuK_nup1;\n\n"
+    "__global " + typeString + " *params) {\n\n";
   
-      "K_nuK_nup1.x=1;K_nuK_nup1.y=1;\n"
-
-  "__local " + typeString + " localParams[" +
+  
+  result +=
+    "int Dmatrix, Dcell, nuround, DlocalParam, k;\n" +
+    typeString + " distSq;\n" +
+    typeString + "2 distRotate;\n" +
+    typeString + "2 sincos;\n" +
+    typeString + " logthisx, ln_half_x, thisx, maternBit, expMaternBit;\n" +
+    typeString + " K_num1;\n\n" +
+    typeString + "2 K_nuK_nup1;\n\n";
+  
+  result +=
+    "__local " + typeString + " localParams[" +
     std::to_string(NlocalParams * Nmatrix) + "];\n"
-  "__local " + typeString + "2 localDist[Nmatrix];\n"
-  "__local int Drow["+std::to_string(Nlocal0) +"], Dcol["+ std::to_string(Nlocal0)+"];\n";
+  "__local " + typeString + "2 localDist[NlocalStorage];\n"
+  "__local int Drow[NlocalStorage], Dcol[NlocalStorage];\n";
   
   result += 
     // dimension 0 is cell, dimension 1 is matrix
@@ -250,16 +251,17 @@ std::string maternBatchKernelString(
     "if(get_local_id(0)==0){\n"
     "for(Dmatrix = get_local_id(1); Dmatrix < Nmatrix; Dmatrix += get_local_size(1)) {\n"
     "  DlocalParam = NlocalParams*Dmatrix;\n"
-
+    
     "  k = NpadParams*Dmatrix;\n"
     "    for(Dcell = 0; Dcell < NlocalParams; ++Dcell){\n"
     "       localParams[DlocalParam + Dcell] = params[k + Dcell];\n"
     "     }\n" // Dcell
     "  }\n" // Dmatrix
-    "}\n\n" // if local0
-    
-    "for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += get_global_size(0)) {\n"
-    
+    "}// if local0\n\n";
+  result +=    
+    "for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += get_global_size(0)) {\n";
+  
+  result +=    
     "if(isFirstLocal1){\n"  // only one work item per group computes Drow and Dcol
     "	Drow[get_local_id(0)] = ceil(0.5 + sqrt(0.25 + 2.0*(Dcell+1) ) ) - 1;\n"
     "	Dcol[get_local_id(0)] = Dcell - round(Drow[get_local_id(0)] * (Drow[get_local_id(0)] - 1.0) / 2.0);\n"
@@ -269,36 +271,41 @@ std::string maternBatchKernelString(
     "	localDist[get_local_id(0)].x = coords[DlocalParam] - coords[k];\n"
     "	localDist[get_local_id(0)].y = coords[DlocalParam +1] - coords[k +1];\n"
     "}\n\n"
-    "barrier(CLK_LOCAL_MEM_FENCE);\n"
-    "for(Dmatrix = get_global_id(1); Dmatrix < Nmatrix; Dmatrix += get_global_size(1) ) {\n"
+    "barrier(CLK_LOCAL_MEM_FENCE);\n";
+  
+  result +=    
+    "for(Dmatrix = get_global_id(1); Dmatrix < Nmatrix; Dmatrix += get_global_size(1) ) {\n";
+  result +=    
     " DlocalParam = NlocalParams*Dmatrix;\n"
     // cos element 7, sin element 8
     " sincos.x = localParams[DlocalParam+8];\n"
     " sincos.y = localParams[DlocalParam+7];\n"
-
+    
     
     " distRotate.x = sincos.y *localDist[get_local_id(0)].x - sincos.x *localDist[get_local_id(0)].y;\n"
     " distRotate.y = dot(sincos, localDist[get_local_id(0)]);\n"
     " distRotate *= distRotate;\n"
     " distSq = distRotate.x + distRotate.y/localParams[DlocalParam + 9];\n"
- 
     
     "	logthisx = log(distSq)/2 + localParams[DlocalParam + 11];\n"
     "	ln_half_x = logthisx - M_LN2_T;\n"
     "	thisx = exp(logthisx);\n"
     "	maternBit = localParams[DlocalParam + 10] + localParams[DlocalParam + 1] * logthisx;\n"
-    "	expMaternBit = exp(maternBit);\n"
+    "	expMaternBit = exp(maternBit);\n";
+  
+  
+  result +=
     "	if(logthisx > 2.0) {\n" // gsl_sf_bessel_K_scaled_steed_temme_CF2
-
+    
     //	"   maternLong(thisx, expMaternBit, nu[Dmatrix], mu[Dmatrix], muSq[Dmatrix], &K_nu, &K_nup1);\n"
     "   K_nuK_nup1=maternLong(\n"
     "		thisx,\n"
     "       expMaternBit, localParams[DlocalParam + 1],\n"
     "       (localParams[DlocalParam + 13]),\n"
     "       localParams[DlocalParam + 14]);\n"//, &K_nu, &K_nup1);\n"
-
+    
     "	} else { \n"// if short distance gsl_sf_bessel_K_scaled_temme
-
+    
     "K_nuK_nup1=maternShort(ln_half_x, maternBit, expMaternBit,\n"
     //" mu[Dmatrix], muSq[Dmatrix]," 
     " localParams[DlocalParam + 13], localParams[DlocalParam + 14],\n"
@@ -307,46 +314,52 @@ std::string maternBatchKernelString(
     " localParams[DlocalParam + 17], localParams[DlocalParam + 18],\n"
     //			" g_1pnu[Dmatrix], g_1mnu[Dmatrix]," 
     " localParams[DlocalParam + 19], localParams[DlocalParam + 20]);\n"
-//    " &K_nu, &K_nup1);\n"
-
-    "   }\n"
-
+    //    " &K_nu, &K_nup1);\n"
+    
+    "   }\n";
+  
+  result +=
     " nuround = (int) (localParams[DlocalParam+16]);\n"
     "for(k=0; k<nuround; k++) {\n"
-//    "			K_num1 = K_nu;\n"
-       "       K_num1 = K_nuK_nup1.x;\n"
-//    "			K_nu   = K_nup1;\n"
-       "       K_nuK_nup1.x = K_nuK_nup1.y;\n"
-
- //   "			K_nup1 = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nu + K_num1;\n"
-       "       K_nuK_nup1.y = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nuK_nup1.x  + K_num1;\n"
-    "}\n"
-
-//    "#ifdef assignLower\n\n"
-    "	  result[Dmatrix * NpadBetweenMatrices + Dcol[get_local_id(0)] + Drow[get_local_id(0)] * Npad] ="
-    		"K_nuK_nup1.x;\n" // lower triangle
-//    "\n#endif\n\n"
-//    "\n#ifdef assignUpper\n\n"
-    "	result[Dmatrix * NpadBetweenMatrices + Drow[get_local_id(0)] + Dcol[get_local_id(0)] * Npad] = K_nuK_nup1.x;\n"//K_nu;\n" // upper triangle
-//    "\n#endif\n\n"
-
-    "}\n" // Dmatrix
+    //    "			K_num1 = K_nu;\n"
+    "       K_num1 = K_nuK_nup1.x;\n"
+    //    "			K_nu   = K_nup1;\n"
+    "       K_nuK_nup1.x = K_nuK_nup1.y;\n"
     
-    "}\n" // Dcell
+    //   "			K_nup1 = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nu + K_num1;\n"
+    "       K_nuK_nup1.y = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nuK_nup1.x  + K_num1;\n"
+    "}\n";
+  
+  result +=
     
-    "\n#ifdef assignDiag\n\n"
-    
-    "barrier(CLK_LOCAL_MEM_FENCE);\n"
-    "for(Dmatrix = get_global_id(1); Dmatrix < Nmatrix; Dmatrix += get_global_size(1)) {\n"
-    "DlocalParam = Dmatrix * NpadBetweenMatrices;\n"
-    "maternBit = localParams[NlocalParams*Dmatrix+21];\n"
-    //	"maternBit = params[NpadParams*Dmatrix+21];\n"
-    "for(Dcell = get_global_id(0); Dcell < N; Dcell += get_global_size(0)) {\n"
-    "	result[DlocalParam + Dcell * Npad + Dcell] = maternBit;\n"
-    "}\n" // Dmatrix
-    "}\n" // Dcell
-    "\n#endif\n" // assign diagonals
-    
+    "\n#ifdef assignLower\n"
+    "	result[Dmatrix * NpadBetweenMatrices +  Dcol[get_local_id(0)]  +  Drow[get_local_id(0)] * Npad] ="
+    "K_nuK_nup1.x;\n" // lower triangle
+    "#endif\n"
+    "#ifdef assignUpper\n"
+    "	result[Dmatrix * NpadBetweenMatrices + Drow[get_local_id(0)] + Dcol[get_local_id(0)] * Npad] ="
+    " K_nuK_nup1.x;\n"//K_nu;\n" // upper triangle
+    "#endif\n\n";
+  
+  
+  result += "} // Dmatrix\n"
+  "barrier(CLK_LOCAL_MEM_FENCE);\n";
+  
+  result += "} // Dcell\n";
+  result +=     "\n#ifdef assignDiag\n"
+  
+  "barrier(CLK_LOCAL_MEM_FENCE);\n"
+  "for(Dmatrix = get_global_id(1); Dmatrix < Nmatrix; Dmatrix += get_global_size(1)) {\n"
+  "DlocalParam = Dmatrix * NpadBetweenMatrices;\n"
+  "maternBit = localParams[NlocalParams*Dmatrix+21];\n"
+  //	"maternBit = params[NpadParams*Dmatrix+21];\n"
+  "for(Dcell = get_global_id(0); Dcell < N; Dcell += get_global_size(0)) {\n"
+  "	result[DlocalParam + Dcell * Npad + Dcell] = maternBit;\n"
+  "}\n" // Dmatrix
+  "}\n" // Dcell
+  "#endif\n\n"; // assign diagonals
+  
+  result +=  
     "}\n"; // function
   
   return result;
@@ -372,7 +385,7 @@ void fill22params(
   const int Nmat = param.size1();
   T range, shape, theta, anisoRatio, variance;
   T onePointFiveM_LN2 = 1.5 * M_LN2;
-//  double muSq, 
+  //  double muSq, 
   double pi_nu, mu;
   double g_1pnu, g_1mnu, g1, g2;
   T epsHere = maternClEpsilon<T>();
@@ -454,10 +467,8 @@ template<typename T> void maternBatchVcl(
   
   const int Ncell = N * (N - 1)/2, maxIter = 1500;
   
-  // the context
-  viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   
-//  cl_device_type type_check = ctx.current_device().type();
+  //  cl_device_type type_check = ctx.current_device().type();
   
   std::string maternClString = maternBatchKernelString<T>(
     maxIter,
@@ -466,7 +477,9 @@ template<typename T> void maternBatchVcl(
     param.internal_size2(),// NpadParams
     numLocalItems[0]);
   
-  viennacl::ocl::program & my_prog = ctx.add_program(maternClString, "my_kernel");
+  // the context
+  viennacl::ocl::switch_context(ctx_id);
+  viennacl::ocl::program & my_prog = viennacl::ocl::current_context().add_program(maternClString, "my_kernel");
   // get compiled kernel function
   viennacl::ocl::kernel & maternKernel = my_prog.get_kernel("maternBatch");
   
@@ -488,11 +501,11 @@ template<typename T> void maternBatchVcl(
 
 template<typename T> 
 void maternBatchTemplated(
-	Rcpp::S4 varR,
-	Rcpp::S4 coordsR,
-	Rcpp::S4 paramR, //22 columns 
-	Rcpp::IntegerVector Nglobal,
-	Rcpp::IntegerVector Nlocal
+    Rcpp::S4 varR,
+    Rcpp::S4 coordsR,
+    Rcpp::S4 paramR, //22 columns 
+    Rcpp::IntegerVector Nglobal,
+    Rcpp::IntegerVector Nlocal
 ) {
   
   std::vector<int> numWorkItemsStd = Rcpp::as<std::vector<int> >(Nglobal);
@@ -511,7 +524,6 @@ void maternBatchTemplated(
     numWorkItemsStd, 
     numLocalItemsStd,
     ctx_id);
-  
 }
 
 //[[Rcpp::export]]

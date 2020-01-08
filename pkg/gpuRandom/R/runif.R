@@ -20,33 +20,33 @@ runif = function(
     n<-c(n,1)
   }
   
-  x<-matrix(0,nrow=n[1],ncol=n[2])
+
   
   
   if(missing(streams)) {
     if(missing(workgroupSize)) {
       workgroupSize = c(64,8)
-      streams = cpp_mrg31k3pCreateStreams(prod(workgroupSize))	
+      streams = gpuR::vclMatrix(cpp_mrg31k3pCreateStreams(prod(workgroupSize)))
     }else{
-      streams = cpp_mrg31k3pCreateStreams(prod(workgroupSize)) 
+      streams = gpuR::vclMatrix(cpp_mrg31k3pCreateStreams(prod(workgroupSize)))
     }
   }else {
-    if(!is.matrix(streams)) {
-      warning("streams should be a matrix") }
+    if(!isS4(streams)) {
+      warning("streams should be a S4 matrix") }
     
     if(prod(workgroupSize) != nrow(streams))
       warning("number of work items needs to be same as number of streams")
     # make a deep copy
-    streams = matrix(as.vector(streams), nrow(streams), ncol(streams), FALSE, dimnames(streams))
+   # streams = gpuR::vclMatrix(as.matrix(streams), nrow(streams), ncol(streams), FALSE, dimnames(streams))
   }
   
-  xVcl<-gpuR::vclMatrix(x,type=type[1])
+  xVcl<-gpuR::vclMatrix(0, nrow=n[1], ncol=n[2], type=type[1])    
   
   
   gpuRnBackend(xVcl,streams,workgroupSize,"uniform") 
   
   invisible(streams)
-  
-  as.matrix(xVcl)
+  if(ncol(xVcl)==1) xVcl = xVcl[,1]
+  xVcl
   
 }

@@ -20,3 +20,18 @@ gpuRandom::qqnorm(y, mu=0, sigma=1, workgroupSize = Nglobal )
 x<-rnorm(256)
 gpuRandom::qqnorm(x, mu=0, sigma=1, workgroupSize = Nglobal )
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

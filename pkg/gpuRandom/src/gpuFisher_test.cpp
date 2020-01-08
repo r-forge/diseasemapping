@@ -11,10 +11,10 @@ using namespace viennacl::linalg;
 // adapted from https://github.com/wch/r-source/blob/HEAD/src/library/stats/src/rcont.c
 // https://github.com/wch/r-source/blob/HEAD/src/library/stats/src/chisqsim.c
 template <typename T> 
-std::string FisherSimkernelString(int NR, int NC) { 
+std::string FisherSimkernelString(const int NR, const int NC, const int NpadStreams) { 
   
   std::string typeString = openclTypeString<T>();
-  std::string result = mrg31k3pString(); 
+  std::string result = "";
   
   if(typeString == "double") {
     
@@ -25,15 +25,21 @@ std::string FisherSimkernelString(int NR, int NC) {
     result +=  "\n#define mrg31k3p_NORM_cl 4.6566126e-10\n\n";
 
   } else {
-    result += "\n#define mrg31k3p_NORM_cl 1L\n\n";
+    result += 
+      "\n#define mrg31k3p_NORM_cl 1L\n\n";
   }
-  
-  result +=  "\n\n__kernel void mrg31k3p(\n"
-  "  __global int* streams,\n" 
-  "  __global " + typeString + "* out){\n\n";  
-    
- 
 
+  result += 
+  "\n#define mrg31k3p_M1 2147483647\n"             /* 2^31 - 1 */
+  "#define mrg31k3p_M2 2147462579\n"             /* 2^31 - 21069 */
+  "#define mrg31k3p_MASK12 511  \n"              /* 2^9 - 1 */
+  "#define mrg31k3p_MASK13 16777215  \n"         /* 2^24 - 1 */
+  "#define mrg31k3p_MASK2 65535     \n"          /* 2^16 - 1 */
+  "#define mrg31k3p_MULT2 21069\n";
+  
+  result +=
+    "#define NpadStreams " + std::to_string(NpadStreams) + "\n";    
+  
   
   
   result += "\n"
@@ -43,7 +49,9 @@ std::string FisherSimkernelString(int NR, int NC) {
   "#define nr_1  " + std::to_string(NR - 1) + "\n"
   "#define nc_1 " + std::to_string(NC - 1) + "\n"
   "#define nc_1nrow " + std::to_string((NC - 1) * NR) + "\n"
-  "#define nrowncol " + std::to_string(NR*NC) + "\n"
+  "#define nrowncol " + std::to_string(NR*NC) + "\n";
+  
+  result += "\n"
   "\n__kernel void fisher_sim_gpu(\n"
   "   __global int *nrowt, \n"
   "   __global int *ncolt, \n"
@@ -53,7 +61,7 @@ std::string FisherSimkernelString(int NR, int NC) {
    + typeString + " threshold,\n"
   " __global  " + typeString + "  *fact,\n"
   " __global  " + typeString + "  *results,\n" // fisher log p
-  " __global clrngMrg31k3pHostStream* streams"
+  " __global int *streams" 
   ") { \n\n"
   "   local int jwork[nc_1];\n"  
   "   local int matrix[nrowncol];\n"
@@ -65,11 +73,21 @@ std::string FisherSimkernelString(int NR, int NC) {
   "   local " + typeString + " x, y, dummy, sumprb;\n"
   "   bool lsm, lsp;\n\n"
   "   int Diter1, Diter2, Diter3, goTo160;\n"
-  "   int countD=0;\n"
-  "   clrngMrg31k3pStream private_stream_d;\n"
-  "   clrngMrg31k3pCopyOverStreamsFromGlobal(1, &private_stream_d, &streams[index]);\n\n"
-  
+  "   int countD=0;\n";
 
+ 
+  
+  result += "int Drow, Dcol, DrowStart, Dentry;\n";
+  
+  result += "uint y1, y2, temp;\n";
+  result += "uint g1[3], g2[3];\n"; 
+
+  result += 
+    " for(Drow = 0, DrowStart = index * NpadStreams, Dcol = DrowStart + 3;\n"
+    "     Drow < 3; Drow++, DrowStart++, Dcol++){\n"
+    "   g1[Drow] = streams[DrowStart];\n"
+    "   g2[Drow] = streams[Dcol];\n"
+    " }\n";    
   
   "   for(D = index; D < vsize; D += globalSize) {\n"
   "      ib = 0;\n"  
@@ -84,13 +102,11 @@ std::string FisherSimkernelString(int NR, int NC) {
   "      jc = n;\n"
 
   //L LOOP
- // result += "\n"
   "      for (l = 0; l < nr_1; ++l) {\n"
   "          ia = nrowt[l];\n"
   "          ic = jc;\n"
   "          jc -= ia;\n"
   //M LOOP
- // result += "\n"
   "          for (m = 0; m < nc_1; ++m) {\n"
   "            id = jwork[m];\n"
   "            ie = ic;\n"
@@ -104,9 +120,50 @@ std::string FisherSimkernelString(int NR, int NC) {
   "              ia = 0;\n"
   "              break;\n"  // induce break of m loop
   " }else{\n" // ie not zero
-  "dummy = mrg31k3p_NORM_cl * clrngMrg31k3pNextState(&private_stream_d.current);\n"  //???
+    
+    // first component
+    "	y1 = ((g1[1] & mrg31k3p_MASK12) << 22) + (g1[1] >> 9)\n"
+    "		+ ((g1[2] & mrg31k3p_MASK13) << 7) + (g1[2] >> 24);\n"
+    
+    "	if (y1 >= mrg31k3p_M1)\n"
+    "		y1 -= mrg31k3p_M1;\n"
+    
+    "	y1 += g1[2];\n"
+    "	if (y1 >= mrg31k3p_M1)\n"
+    "		y1 -= mrg31k3p_M1;\n"
+    
+    "	g1[2] = g1[1];\n"
+    "	g1[1] = g1[0];\n"
+    "	g1[0] = y1;\n"
+    
+    // second component
+    "	y1 = ((g2[0] & mrg31k3p_MASK2) << 15) + (mrg31k3p_MULT2 * (g2[0] >> 16));\n"
+    "	if (y1 >= mrg31k3p_M2)\n"
+    "		y1 -= mrg31k3p_M2;\n"
+    "	y2 = ((g2[2] & mrg31k3p_MASK2) << 15) + (mrg31k3p_MULT2 * (g2[2] >> 16));\n"
+    "	if (y2 >= mrg31k3p_M2)\n"
+    "		y2 -= mrg31k3p_M2;\n"
+    "	y2 += g2[2];\n"
+    "	if (y2 >= mrg31k3p_M2)\n"
+    "		y2 -= mrg31k3p_M2;\n"
+    "	y2 += y1;\n"
+    "	if (y2 >= mrg31k3p_M2)\n"
+    "		y2 -= mrg31k3p_M2;\n"
+    
+    "	g2[2] = g2[1];\n"
+    "	g2[1] = g2[0];\n"
+    "	g2[0] = y2;\n"
+    
+    "	if (g1[0] <= g2[0]){\n"
+    "		temp= g1[0] - g2[0] + mrg31k3p_M1;\n"
+    "	} else {\n"
+    "		temp = g1[0] - g2[0];\n"
+    " }\n"
+  
+  "dummy = mrg31k3p_NORM_cl * temp;\n" 
   "goTo160 = 0;\n"
   "Diter1 = 0;\n"
+  
   
   // LOOP 1
   "do { \n"
@@ -162,7 +219,7 @@ std::string FisherSimkernelString(int NR, int NC) {
   " } while (!lsp & (Diter2 < MAXITER) & (!goTo160));\n" 
   // END LOOP 2
   
-  " dummy = sumprb * mrg31k3p_NORM_cl * clrngMrg31k3pNextState(&private_stream_d.current);\n"
+  " dummy = sumprb * mrg31k3p_NORM_cl * temp;\n"
   " } while ((Diter1 < MAXITER) & !goTo160 );\n"  
   // END LOOP 1
   
@@ -198,8 +255,8 @@ std::string FisherSimkernelString(int NR, int NC) {
 
     result += "\n" 
     "#ifdef returnResults\n"
-   "results[D] = ans;\n"   
-  "#endif\n";
+    "results[D] = ans;\n"   
+    "#endif\n";
     
     
     
@@ -211,7 +268,12 @@ std::string FisherSimkernelString(int NR, int NC) {
   // save countD
   " count[index] = countD;\n"
   
-  "clrngMrg31k3pCopyOverStreamsToGlobal(1,  &streams[index], &private_stream_d);\n"
+  " for(Drow = 0,DrowStart = index * NpadStreams,Dcol = DrowStart + 3;\n"
+  "     Drow < 3; Drow++, DrowStart++, Dcol++){\n"
+  "   streams[DrowStart] = g1[Drow];\n"
+  "   streams[Dcol] = g2[Drow];\n"
+  " }\n"
+  
   "}\n" ;
   return(result);
 }
@@ -227,18 +289,17 @@ int gpuFisher_test(
     viennacl::matrix<int> &x, //  viennacl::vector_base<int> &sr,  //  viennacl::vector_base<int> &sc,
     viennacl::vector_base<T> &results,  
     double threshold,  
-    int B,
-    Rcpp::IntegerMatrix streamsR, 
+    int B, //number of simualtion,
+    viennacl::matrix<int> &streams,
     Rcpp::IntegerVector numWorkItems,
     Rcpp::IntegerVector numLocalItems,
     int ctx_id){
 
-  //double po = -99.9;
-  viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));  
+  
  
  const int nr = x.size1(), nc = x.size2(), resultSize = results.size();
  
- std::string kernel_string = FisherSimkernelString<T>(nr, nc);
+ std::string kernel_string = FisherSimkernelString<T>(nr, nc, streams.internal_size2());
  if(resultSize == B) {
    kernel_string = "\n#define returnResults\n" + kernel_string;
  }
@@ -267,6 +328,7 @@ int gpuFisher_test(
   
   viennacl::vector<T> fact(n+1); 
   T factTemp;
+  
   viennacl::vector<int> count(numWorkItems[0]*numWorkItems[1]); 
   
   // Calculate log-factorials.  fact[i] = lgamma(i+1)/
@@ -276,26 +338,22 @@ int gpuFisher_test(
   int i;
   for(i = 2; i <= n; i++) {
     factTemp = factTemp + log(i);
-    fact(i) = factTemp;
-//    fact(i) = fact(i - 1) + log(i);
+    fact(i) = factTemp;    //    fact(i) = fact(i - 1) + log(i);
   }
   
-  size_t streamBufferSize;   
-  clrngStatus err;
-  
-
-  
-  //Reserve memory space for count stream objects, without creating the stream objects. 
-  clrngMrg31k3pStream* streams = clrngMrg31k3pAllocStreams(numWorkItems[0]*numWorkItems[1], &streamBufferSize, &err);
-  
+ // size_t streamBufferSize;   
+ // clrngStatus err;
+   //Reserve memory space for count stream objects, without creating the stream objects. 
+ // clrngMrg31k3pStream* streams = clrngMrg31k3pAllocStreams(numWorkItems[0]*numWorkItems[1], &streamBufferSize, &err);
+ 
   // convert to crngMgr31k3pStream in opencl, but still on host
-  convertMatclRng(streamsR, streams);
+ // convertMatclRng(streamsR, streams);
   
   // Create buffer to transfer streams to the device.
-  viennacl::vector<char> bufIn(ctx.create_memory_without_smart_handle( 
-      CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  streamBufferSize, (void *) streams), 1);
+ // viennacl::vector<char> bufIn(ctx.create_memory_without_smart_handle( 
+    //CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  streamBufferSize, (void *) streams), 1);
   
-  
+  viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));  
   viennacl::ocl::program &my_prog = ctx.add_program(kernel_string, "my_kernel");
   viennacl::ocl::kernel &fisher_sim = my_prog.get_kernel("fisher_sim_gpu");
 
@@ -307,7 +365,7 @@ int gpuFisher_test(
   
   
   
-    viennacl::ocl::enqueue( fisher_sim  (sr, sc, n, B, count, thresholdT, fact, results, bufIn) ); 
+  viennacl::ocl::enqueue( fisher_sim  (sr, sc, n, B, count, thresholdT, fact, results, streams) ); 
   
   countss = viennacl::linalg::sum(count);
   
@@ -316,12 +374,10 @@ int gpuFisher_test(
 #endif  
   
   //po=countss/B;
-  
-  
   // copy streams back to cpu
-  viennacl::backend::memory_read(bufIn.handle(), 0, streamBufferSize, streams);
+  //viennacl::backend::memory_read(bufIn.handle(), 0, streamBufferSize, streams);
   //return streams to R 
-  convertclRngMat(streams, streamsR);
+  //convertclRngMat(streams, streamsR);
 
   return countss;
 }
@@ -333,17 +389,19 @@ SEXP gpuFisher_test_Templated(
     Rcpp::S4  resultsR,
     double threshold,
     int B,
-    Rcpp::IntegerMatrix streamsR,   
+    Rcpp::S4 streamsR,   
     Rcpp::IntegerVector max_global_size,
     Rcpp::IntegerVector max_local_size){
   
+  const bool BisVCL=1;
   const int ctx_id = INTEGER(resultsR.slot(".context_index"))[0]-1;
   int countss=0;
   
-  std::shared_ptr<viennacl::matrix<int> > x =getVCLptr<int>(xR.slot("address"), 1, ctx_id);
-  std::shared_ptr<viennacl::vector_base<T> > results = getVCLVecptr<T>(resultsR.slot("address"), 1, ctx_id);
+  std::shared_ptr<viennacl::matrix<int> > x =getVCLptr<int>(xR.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::vector_base<T> > results = getVCLVecptr<T>(resultsR.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix<int> > streams = getVCLptr<int>(streamsR.slot("address"), BisVCL, ctx_id);
   
-  countss=gpuFisher_test<T>(*x, *results, threshold, B,streamsR, max_global_size, max_local_size, ctx_id);
+  countss=gpuFisher_test<T>(*x, *results, threshold, B, *streams, max_global_size, max_local_size, ctx_id);
   
   return (Rcpp::wrap(countss));
 }
@@ -357,7 +415,7 @@ SEXP cpp_gpuFisher_test(
     Rcpp::S4  resultsR,
     double threshold,
     int B,
-    Rcpp::IntegerMatrix streamsR,  
+    Rcpp::S4 streamsR,  
     Rcpp::IntegerVector max_global_size,
     Rcpp::IntegerVector max_local_size){
   
@@ -366,11 +424,9 @@ SEXP cpp_gpuFisher_test(
 
 //#ifdef UNDEF    
   if(precision_type == "fvclVector") {
-    return (gpuFisher_test_Templated<float>(xR,resultsR,threshold, B,
-                                            streamsR, max_global_size, max_local_size));
+    return (gpuFisher_test_Templated<float>(xR,resultsR,threshold, B, streamsR, max_global_size, max_local_size));
   } else if (precision_type == "dvclVector") {
-    return (gpuFisher_test_Templated<double>(xR,resultsR,threshold, B,
-                                             streamsR, max_global_size, max_local_size));
+    return (gpuFisher_test_Templated<double>(xR,resultsR,threshold, B, streamsR, max_global_size, max_local_size));
   } else {
     Rcpp::warning("class of var must be fvclVector or dvclVector");
   }

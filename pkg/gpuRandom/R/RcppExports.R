@@ -27,8 +27,6 @@ cpp_mrg31k3pCreateStreams <- function(numWorkItems) {
 #' @param random_type one of "uniform" or "normal"
 #' 
 #' @export
-NULL
-
 gpuRnBackend <- function(x, streams, max_global_size, random_type) {
     .Call('_gpuRandom_gpuRnBackend', PACKAGE = 'gpuRandom', x, streams, max_global_size, random_type)
 }
