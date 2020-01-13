@@ -28,25 +28,32 @@ gpuInfo()$maxAllocatableMem/(1024^3)
 
 
 Example 2
-```{r eval=TRUE}
+```{r, eval=TRUE}
 x<- matrix(c(2, 10, 15, 3), nrow = 2)
 
 fisher.test(x, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
 
 Nglobal = c(16,64)
 streams = gpuR::vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
+streams2 = deepcopy(streams)
 
+dim(streams)
+as.matrix(streams[1:4,])
 
-#res1 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=TRUE, 
-                             #type="double", streams=streams, workgroupSize = Nglobal)
+res1 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=TRUE, 
+                             type="double", streams=streams, workgroupSize = Nglobal)
 
-#str(res1)
+as.matrix(streams[1:4,1:4])
+
+str(res1)
 #hist(as.vector(res1$sim))
 ```
 
 ```{r ex2, eval=TRUE}
 res2 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=FALSE, 
-                             type="double", streams=streams, workgroupSize = Nglobal)
+                             type="double", streams=streams2, workgroupSize = Nglobal)
+as.matrix(streams2[1:4,1:4])
+
 str(res2)
 ```
 

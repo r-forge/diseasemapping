@@ -1,7 +1,7 @@
 #include "gpuRandom.hpp"
 
 //#define DEBUG
-#define DEBUGKERNEL
+//#define DEBUGKERNEL
 
 
 

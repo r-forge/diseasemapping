@@ -44,8 +44,8 @@ Set up spatial data
 theType = "float"
 
 if(gpuInfo()$deviceMemory > 10^10){
-   Ngrid = c(80,120)
-   Nsim = 12
+   Ngrid = c(40,60)
+   Nsim = 6
    NlocalCache = 4000
    NglobalMatern = c(256,8) 
    NlocalMatern = c(32, 8)

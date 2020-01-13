@@ -62,7 +62,7 @@ fisher.sim=function(
     # streams = gpuR::vclMatrix(as.matrix(streams), nrow(streams), ncol(streams), FALSE, dimnames(streams))
   }
   
- localSize = c(1, 1)
+ localSize = c(1, 2)
   
   if(verbose) {
     cat('local sizes ', toString(localSize), '\nglobal sizes ', toString(workgroupSize),

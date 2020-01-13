@@ -13,17 +13,17 @@ std::string mrg31k3pString() {
 "#define mrg31k3p_MASK2 65535     \n"          /* 2^16 - 1 */
 "#define mrg31k3p_MULT2 21069\n"
 
-"#define MODULAR_NUMBER_TYPE cl_uint\n"
+//"#define MODULAR_NUMBER_TYPE cl_uint\n"
 
 //"typedef double cl_double;\n"
-"typedef float  cl_float;\n"
-"typedef int    cl_int;\n"
-"typedef uint   cl_uint;\n"
-"typedef long   cl_long;\n"
-"typedef ulong  cl_ulong;\n"
+//"typedef float  cl_float;\n"
+//"typedef int    cl_int;\n"
+//"typedef uint   cl_uint;\n"
+//"typedef long   cl_long;\n"
+//"typedef ulong  cl_ulong;\n"
 
 
-"#define MRG31K3P_CLH\n"
+//"#define MRG31K3P_CLH\n"
 
 
 " /******************************************************************************** \n"
@@ -35,9 +35,9 @@ std::string mrg31k3pString() {
 /*! @brief Advance the rng one step and returns z such that 1 <= z <= mrg31k3p_M1
  */
 //"static 
-"cl_uint clrngMrg31k3pNextState(cl_uint *g1, cl_uint *g2) {\n"
+"int clrngMrg31k3pNextState(int *g1, int *g2) {\n"
 
-"	cl_uint y1, y2;\n"
+"	int y1, y2;\n"
 
 	// first component
 "	y1 = ((g1[1] & mrg31k3p_MASK12) << 22) + (g1[1] >> 9)\n"
