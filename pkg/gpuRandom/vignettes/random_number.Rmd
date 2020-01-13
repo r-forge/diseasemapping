@@ -32,17 +32,17 @@ streams = gpuR::vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
 
 a<-gpuRandom::rnorm(c(200,200), streams=streams, workgroupSize=Nglobal, type="double")
 
-#avector<-as.vector(as.matrix(a))
-#hist(avector,breaks=40)
-#gpuRandom::qqnorm(avector, workgroupSize = Nglobal)
+avector<-as.vector(as.matrix(a))
+hist(avector,breaks=40)
+gpuRandom::qqnorm(avector, workgroupSize = Nglobal)
 
 ```
 
 #new random uniforms
 ```{r unif}
 b<-gpuRandom::runif(c(200,800), workgroupSize=Nglobal, type="double")
-#bvector<-as.vector(as.matrix(b))
-#hist(bvector, breaks=40)
+bvector<-as.vector(as.matrix(b))
+hist(bvector, breaks=40)
 ```
 
 

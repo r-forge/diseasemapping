@@ -1,5 +1,3 @@
-#define DEBUGKERNEL
-
 #include "gpuRandom.hpp"
 #include <CL/kernelqqnorm.hpp>
 
@@ -7,6 +5,8 @@
 using namespace Rcpp;
 using namespace viennacl;
 
+
+//#define DEBUGKERNEL
 
 //using namespace viennacl::linalg;
 

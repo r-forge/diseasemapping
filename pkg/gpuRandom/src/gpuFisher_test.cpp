@@ -1,6 +1,6 @@
 #include "gpuRandom.hpp"
 
-#define DEBUGKERNEL
+//#define DEBUGKERNEL
 
 using namespace Rcpp;
 using namespace viennacl; 
@@ -181,7 +181,7 @@ result +=
   // END LOOP 2
   
   "temp = clrngMrg31k3pNextState(g1, g2);\n"
-  " dummy = sumprb * mrg31k3p_NORM_cl * temp;\n"
+  "dummy = sumprb * mrg31k3p_NORM_cl * temp;\n"
   " } while ((Diter1 < MAXITER) & !goTo160 );\n"  
   // END LOOP 1
   
@@ -303,17 +303,7 @@ int gpuFisher_test(
     fact(i) = factTemp;    //    fact(i) = fact(i - 1) + log(i);
   }
   
- // size_t streamBufferSize;   
- // clrngStatus err;
-   //Reserve memory space for count stream objects, without creating the stream objects. 
- // clrngMrg31k3pStream* streams = clrngMrg31k3pAllocStreams(numWorkItems[0]*numWorkItems[1], &streamBufferSize, &err);
- 
-  // convert to crngMgr31k3pStream in opencl, but still on host
- // convertMatclRng(streamsR, streams);
-  
-  // Create buffer to transfer streams to the device.
- // viennacl::vector<char> bufIn(ctx.create_memory_without_smart_handle( 
-    //CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  streamBufferSize, (void *) streams), 1);
+
   
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));  
 //#ifdef UNDEF  
@@ -336,11 +326,6 @@ int gpuFisher_test(
   Rcpp::Rcout << "threshold " << thresholdT << " countss " << countss << " count0 " << count(0) << " size " << B <<  "\n";
 #endif  
   
-  //po=countss/B;
-  // copy streams back to cpu
-  //viennacl::backend::memory_read(bufIn.handle(), 0, streamBufferSize, streams);
-  //return streams to R 
-  //convertclRngMat(streams, streamsR);
 
   return countss;
 }

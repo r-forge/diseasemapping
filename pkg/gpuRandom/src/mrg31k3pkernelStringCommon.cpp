@@ -2,7 +2,7 @@
 
 std::string mrg31k3pString() {
 
-  std::string result = "\n#define CLRNG_ENABLE_SUBSTREAMS\n"
+std::string result = "\n#define CLRNG_ENABLE_SUBSTREAMS\n"
 "#define __CLRNG_DEVICE_API\n"
 
 "#define mrg31k3p_M1 2147483647\n"             /* 2^31 - 1 */
@@ -18,7 +18,7 @@ std::string mrg31k3pString() {
 //"typedef double cl_double;\n"
 //"typedef float  cl_float;\n"
 //"typedef int    cl_int;\n"
-//"typedef uint   cl_uint;\n"
+// "typedef uint   cl_uint;\n"
 //"typedef long   cl_long;\n"
 //"typedef ulong  cl_ulong;\n"
 
@@ -35,9 +35,9 @@ std::string mrg31k3pString() {
 /*! @brief Advance the rng one step and returns z such that 1 <= z <= mrg31k3p_M1
  */
 //"static 
-"int clrngMrg31k3pNextState(int *g1, int *g2) {\n"
+"uint clrngMrg31k3pNextState(uint *g1, uint *g2) {\n"
 
-"	int y1, y2;\n"
+"	uint y1, y2;\n"
 
 	// first component
 "	y1 = ((g1[1] & mrg31k3p_MASK12) << 22) + (g1[1] >> 9)\n"

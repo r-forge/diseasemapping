@@ -31,14 +31,14 @@ Example 2
 ```{r, eval=TRUE}
 x<- matrix(c(2, 10, 15, 3), nrow = 2)
 
+fisher.test(x)
 fisher.test(x, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
 
-Nglobal = c(16,64)
+Nglobal = c(32,64)
 streams = gpuR::vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
 streams2 = deepcopy(streams)
 
 dim(streams)
-as.matrix(streams[1:4,])
 
 res1 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=TRUE, 
                              type="double", streams=streams, workgroupSize = Nglobal)
@@ -66,19 +66,55 @@ str(res2)
 
 
 
+
+
+
+
+
+
+
+
+
+
 Example 1
-```{r  teaTasting, eval=FALSE}
-TeaTasting <-matrix(c(21,17,5,19,38,6,26,12,9),nrow=3)
+```{r  teaTasting, eval=TRUE}
+TeaTasting <-matrix(c(3, 1, 1, 3),nrow=2)
 
 TeaTasting
 ## Using the R function 
-fisher.test(TeaTasting)
 fisher.test(TeaTasting, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
+
+
+Nglobal = c(32,64)
+streams = gpuR::vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
+
+result<-gpuRandom::fisher.sim(TeaTasting, 100000L, returnStatistics=FALSE, 
+                             type="double", streams=streams, workgroupSize = Nglobal)
+
+str(result)
+
+
+
 ```
 
 
 
+```{r eg3, eval=TRUE}
 
+Job <- matrix(c(1,2,1,0, 3,3,6,1, 10,10,14,9, 6,7,12,11), 4, 4)
+fisher.test(Job) # 0.7827
+fisher.test(Job, simulate.p.value = TRUE, B = 1e5) # also close to 0.78
+
+
+result3<-gpuRandom::fisher.sim(Job, 100000L, returnStatistics=FALSE, 
+                             type="double", streams=streams, workgroupSize = Nglobal)
+
+str(result3)
+
+
+
+
+```
 
 
 

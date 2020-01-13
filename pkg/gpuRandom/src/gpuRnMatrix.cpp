@@ -56,7 +56,7 @@ std::string mrg31k3pMatrixString(
     "#define NpadStreams " + std::to_string(NpadStreams) + "\n"
     "#define NpadCol " + std::to_string(NpadCol) + "\n";    
   
-  //  result += mrg31k3pString();
+    result += mrg31k3pString();
   
   result += 
     "\n\n__kernel void mrg31k3pMatrix(\n"
@@ -101,11 +101,11 @@ std::string mrg31k3pMatrixString(
   result += 
     "  for(Dcol=get_group_id(1), Dentry = DrowStart + Dcol;\n" 
     "      Dcol < Ncol;\n" 
-    "      Dcol += get_num_groups(1), Dentry += get_num_groups(1)) {\n";
+    "      Dcol += get_num_groups(1), Dentry += get_num_groups(1)) {\n"
   
-  //    "    temp = clrngMrg31k3pNextState(g1, g2);\n";
+     "    temp = clrngMrg31k3pNextState(g1, g2);\n";
   
-  result += 
+ /* result += 
     
     // first component
     "	y1 = ((g1[1] & mrg31k3p_MASK12) << 22) + (g1[1] >> 9)\n"
@@ -144,7 +144,7 @@ std::string mrg31k3pMatrixString(
     "		temp= g1[0] - g2[0] + mrg31k3p_M1;\n"
     "	} else {\n"
     "		temp = g1[0] - g2[0];\n"
-    " }\n";
+    " }\n";*/
   
   if(random_type == "normal"){  
     result += 

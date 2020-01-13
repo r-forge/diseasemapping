@@ -1,13 +1,13 @@
 #include "gpuRandom.hpp"
-#include <CL/mrg31k3pkernelStringSeparate.hpp>
+//#include <CL/mrg31k3pkernelStringSeparate.hpp>
 
 
 using namespace Rcpp;
-using namespace viennacl;	
-using namespace viennacl::linalg;
+//using namespace viennacl;	
+//using namespace viennacl::linalg;
 
 
-
+/**
 //Uniform number kernel
 template <typename T> 
 std::string mrg31k3pTypeString() {
@@ -181,7 +181,7 @@ void runifGpuHost(viennacl::vector_base<double> &x)//use them to generate number
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
+*/
 
 // clRNG -> Matrix
 void convertclRngMat(clrngMrg31k3pStream* streams, Rcpp::IntegerMatrix result) {

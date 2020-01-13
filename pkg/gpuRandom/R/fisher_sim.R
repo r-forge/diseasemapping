@@ -96,6 +96,7 @@ fisher.sim=function(
   
   PVAL <- ((1 + counts ) / (as.integer(B) + 1))
   
+  format(PVAL, digits=5)
   #if(class(PVAL) == 'try-error') {
   #  PVAL = counts
   #}

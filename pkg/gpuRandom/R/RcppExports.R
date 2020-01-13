@@ -9,10 +9,6 @@ cpp_gpuFisher_test <- function(xR, resultsR, threshold, B, streamsR, max_global_
     .Call('_gpuRandom_cpp_gpuFisher_test', PACKAGE = 'gpuRandom', xR, resultsR, threshold, B, streamsR, max_global_size, max_local_size)
 }
 
-cpp_gpuRn <- function(xR, streamsR, max_global_size, max_local_size, random_type, precision_type) {
-    .Call('_gpuRandom_cpp_gpuRn', PACKAGE = 'gpuRandom', xR, streamsR, max_global_size, max_local_size, random_type, precision_type)
-}
-
 cpp_mrg31k3pCreateStreams <- function(numWorkItems) {
     .Call('_gpuRandom_cpp_mrg31k3pCreateStreams', PACKAGE = 'gpuRandom', numWorkItems)
 }
