@@ -439,7 +439,7 @@ setMethod("glgm",
   if(identical(forInla$verbose, TRUE)) {
     message("inla done") 
   }
-  if(all(names(inlaResult)=="logfile") | class(inlaResult) == 'try-error')
+  if(all(names(inlaResult)=="logfile") | any(class(inlaResult) == 'try-error'))
     return(c(forInla, list(inlares=inlaResult, prior = priorList)))
 
 
