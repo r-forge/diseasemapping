@@ -249,12 +249,9 @@ loglikGmrf = function(
         dim(ml)[c(2,4)])
       
     
-	ml <<- ml
-Lcol <<- Lcol
       bestBcList = apply(ml[,,Lcol,,drop=FALSE], 
         c(2,4), 
         base::which.min)
-stuff <<- bestBcList
       theIndex = unlist(bestBcList[1,1])[1]
       newml = ml[theIndex,,,,drop=FALSE]
       newssq = ssq[
