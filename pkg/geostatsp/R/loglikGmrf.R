@@ -81,6 +81,9 @@ loglikGmrf = function(
   ),
   mc.cores=1
 ) {
+
+	## something with reml and boxcox is broken
+## getting Nan's in reml determinant matrix
   
   Yvec = as.matrix(Yvec)
   if(is.null(colnames(Yvec)))

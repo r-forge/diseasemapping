@@ -85,7 +85,6 @@ setMethod("lgm",
       shape=shape,mc.cores=mc.cores,
       reml=reml, ...)
     
- 	thel <<- thel
   mle = thel$mle   
     lArray = thel$mlArray
     lMat = thel$mlMat
