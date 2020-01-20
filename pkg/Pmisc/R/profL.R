@@ -37,7 +37,7 @@ likSurface = function(fit, se=seq(0,3,len=10)){
 			y=fit$model[,yCol], 
 			covariates=stats::model.matrix(fit$formula, fit$model))
 	
-	likArray = array(likVec, rep(nrow(parameters$short), 3))
+	likArray = array(likVec, rep(nrow(parameters$short), length(fit$coef)))
 	
 	likBreaks = likelihoodBreaks(
 			max(likArray),  df=length(fit$coef))
