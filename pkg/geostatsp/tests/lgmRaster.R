@@ -226,7 +226,7 @@ myResBC = lgm(
     data=raster::stack(yBC, myCov), 
     oneminusar = exp(seq(log(0.05), log(0.15), len=11)),
     nugget = exp(seq(log(5), log(50), len=11)),
-    shape=2, 
+    shape=2, reml=FALSE, 
     mc.cores=1+(.Platform$OS.type=='unix'), 
     fixBoxcox=FALSE,
     adjustEdges=FALSE)

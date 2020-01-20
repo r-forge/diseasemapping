@@ -145,7 +145,7 @@ loglikGmrf = function(
     )
   }
   
-  
+
   if(length(oneminusar)){
     # not optimizing
     
@@ -232,6 +232,7 @@ loglikGmrf = function(
     if(length(boxcox)>1 & !fixBoxcox){
       
       
+
       profBC = cbind(
         boxcox=boxcox,
 #				xisqTausq = ml[1,profBCind[,1],'xisqTausq',1],
@@ -283,6 +284,7 @@ loglikGmrf = function(
       
     } # end have boxcox
     
+
     
     theInf = ml[,,'xisqTausq',,drop=FALSE] != Inf
     
@@ -294,7 +296,7 @@ loglikGmrf = function(
     dimnames(xisqHatMlArray)$output = 'xisqHatMl'
     xisqHatMlArray[,'0','xisqHatMl',] = ml[,'0','profiledVarianceHatMl',,drop=FALSE]
     
-    
+ 
     
     forml = abind::abind(
       tausqHatMl=ml[,,'profiledVarianceHatMl',,drop=FALSE]*theInf,
@@ -313,6 +315,7 @@ loglikGmrf = function(
     dimnames(forml)$output[1:2] = c(
       'tausqHatMl','tausqHatReml')
   
+
   forml[,'0',c('tausqHatMl','tausqHatReml'),] = 0
   
     Ny = dim(ml)[1]
@@ -358,7 +361,7 @@ loglikGmrf = function(
     dimnames = dimnames(seBetaHat)[1:4]
   )  
   
-    
+
     seBetaHatMl = seBetaHat *  ml[,,rep('profiledVarianceHatMl',dim(seBetaHat)[3]),,drop=FALSE]  
     seBetaHatReml = seBetaHat * 
       ml[,,rep('profiledVarianceHatReml',dim(seBetaHat)[3]),,drop=FALSE]  
@@ -421,7 +424,7 @@ loglikGmrf = function(
       along=3)
     names(dimnames(res)) = names(dimnames(ml))
   
-  
+
     theMle = apply(
       res[,,gsub("^m2","",Lcol),,drop=FALSE], 
       1, which.max)
@@ -439,16 +442,15 @@ loglikGmrf = function(
     mle = mle[colsToKeep,,drop=FALSE]
     mle = mle[grep("^logL", rownames(mle), invert=TRUE),,drop=FALSE]
     rownames(mle) = gsub("(Beta)?(Hat)?(Reml|Ml)?$", "", rownames(mle))
-   
+
       
+
     res = list(
       mle=mle, 
       mlArray = res,
       extras = list(ml=ml, ssq=ssq)
     )
-    
-    
-  } else {
+  } else { # if (!length)
     #oneminusar is NULL
     ########################
     # optimizing
@@ -507,7 +509,7 @@ loglikGmrf = function(
       
       ml
     }
-    
+
     optimize(oneL, 
       lower=control$oneminusar['lower'], 
       upper=control$oneminusar['upper'], 
@@ -534,7 +536,8 @@ loglikGmrf = function(
         NULL, mlColNames, oneminusarRes
       )
     )
-    
+
+
     minMl = min(ml[,,Lcol,],na.rm=TRUE)
     mleIndex = arrayInd(
       which((ml[,,Lcol,,drop=FALSE]-minMl) < 10),
@@ -561,7 +564,6 @@ loglikGmrf = function(
     thepar = Qinfo[[
       which.min(abs(oneminusarRes-mle['oneminusar']))
     ]]
-    
     
     parMat = lapply(Qinfo, function(qq){
         c(
@@ -616,9 +618,10 @@ loglikGmrf = function(
       Qinfo = thepar)
     
   } # end optimizing
-  
+
+
   res$profileBoxCox = profBC
-  
+ 
   
   res
   
