@@ -234,7 +234,8 @@ myResBC = lgm(
 
 #+ boxCoxPlot
 
-plot(myResBC$profL$boxcox,type='o', ylim=max(myResBC$profL$boxcox[,2], na.rm=TRUE)-c(3,0))
+plot(myResBC$profL$boxcox,type='o', 
+  ylim=max(c(-10000,myResBC$profL$boxcox[,2]), na.rm=TRUE)-c(3,0))
 
 myResBC$param
 
