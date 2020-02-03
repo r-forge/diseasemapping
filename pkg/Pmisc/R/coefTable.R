@@ -19,8 +19,9 @@ if(all(class(x) == 'glmmTMB')) {
   rownames(result$table ) = gsub("^cond[.]", "", 
     rownames(result$table))
   rownames(result$table ) = gsub("cond[.]Std[.]Dev[.][(]Intercept[)]", "SD", rownames(result$table))
+
 } else {
-result$table = cbind(result$tableRaw,
+result$table = cbind(result$tableRaw[,'Estimate', drop=FALSE],
   result$confint[
     match(rownames(result$tableRaw),rownames(result$confint)), ])
 
@@ -31,8 +32,9 @@ result$table = rbind(result$table,
   cbind(data.frame(Estimate = rep(NA, length(otherParameters))), 
     result$confint[otherParameters, ,drop=FALSE]))
 }
+
 result$table = result$table[, c('Estimate', 
-  setdiff(colnames(result$confint), 'Estimate'))]
+  setdiff(colnames(result$confint), 'Estimate')), drop=FALSE]
 
 
 variables = attributes(terms(x))$term.labels
