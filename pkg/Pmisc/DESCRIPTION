@@ -1,8 +1,8 @@
 Package: Pmisc
 Type: Package
 Title: Various Utilities for knitr and inla
-Version: 0.3.0
-Date: 2019-11-09
+Version: 0.3.1
+Date: 2020-01-02
 Imports:
     knitr (>= 1.20.0),
     stats,
@@ -18,7 +18,9 @@ Suggests:
     R.utils,
     Hmisc,
     htmlTable,
-    sp
+    sp,
+    lmer,
+    glmmTMB
 Enhances:
 	reshape2
 Author: Patrick Brown <patrick.brown@utoronto.ca>[aut, cre]
@@ -29,4 +31,4 @@ Additional_repositories: https://www.math.ntnu.no/inla/R/stable/
 License: GPL
 VignetteBuilder: knitr
 Encoding: UTF-8
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2

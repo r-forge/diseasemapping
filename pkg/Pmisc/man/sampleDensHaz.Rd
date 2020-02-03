@@ -4,8 +4,7 @@
 \alias{sampleDensHaz}
 \title{Sample hazard functions}
 \usage{
-sampleDensHaz(fit, x, n = 1, covariates = c(`(Intercept)` = 1),
-  scale = 1)
+sampleDensHaz(fit, x, n = 1, covariates = c(`(Intercept)` = 1), scale = 1)
 }
 \arguments{
 \item{fit}{result from inla}

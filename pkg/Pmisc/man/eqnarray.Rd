@@ -20,10 +20,10 @@ A multi-line equation in an eqnarray or align document is converted to markdown 
 \examples{
 # backslashes may not appear correctly
 cat(eqnarray(x=
-      "\\x5cbegin{align*}
-      Y_i = & N(u_i, t^2)\\x5c\\x5c
+      "\x5cbegin{align*}
+      Y_i = & N(u_i, t^2)\x5c\x5c
       u_i= & X_i B
-      \\x5cend{align*}", 
+      \x5cend{align*}", 
     FALSE) )
 
 }
