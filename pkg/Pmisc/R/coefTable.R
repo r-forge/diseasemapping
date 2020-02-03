@@ -47,9 +47,15 @@ coefNames = data.frame(
   level = unlist(variablesLevels), stringsAsFactors=FALSE)
 rownames(coefNames) = paste0(coefNames$variable, coefNames$level)
 
+if(nrow(coefNames)) {
 result$table = cbind(
-  result$table,
+  as.data.frame(result$table),
   coefNames[match(rownames(result$table), rownames(coefNames)), ])
+} else {
+  result$table = as.data.frame(result$table, stringsAsFactors=FALSE)
+  result$table$variable = rownames(result$table)
+  result$table$levels = NA
+}
 
 interactions = grep("[:]", rownames(result$table))
 
@@ -72,8 +78,10 @@ result$table = result$table[,c('variable','level',outcomeColumns)]
 
 interceptLevels = unlist(lapply(variablesLevels, 
   function(xx) c(xx, NA)[1]))
+if(any(!is.na(interceptLevels))) {
 if(sum(nchar(interceptLevels))>12)
   interceptLevels = trimws(substr(interceptLevels,1,maxChar))
+}
 
 if('(Intercept)' %in% rownames(result$table)) {
   result$table['(Intercept)','level'] =
@@ -83,7 +91,7 @@ if('(Intercept)' %in% rownames(result$table)) {
 
 
 if(link[1] %in% c('log','logit')) {
-  notSd = grep("[.]SD$", rownames(result$table), invert=TRUE)
+  notSd = grep("[.]SD$|^sigma$", rownames(result$table), invert=TRUE)
   result$table[notSd,outcomeColumns] = 
     exp(result$table[notSd,outcomeColumns])
 }
@@ -116,16 +124,23 @@ for(D in grep("^[.]sig[[:digit:]]+", rownames(result$table), value=TRUE)) {
 
 # standard deviations for glmmTMB
 if(all(class(x) == 'glmmTMB')) {
-  sdRow = grep("[.]SD$", rownames(result$table), value=TRUE)
+  sdRow = grep("[.]SD$|^sigma$", rownames(result$table), value=TRUE)
   result$table[sdRow,'variable'] = 'sd'
-  result$table[sdRow,'level'] = gsub("[.]SD$", "", sdRow) 
+  result$table[sdRow,'level'] = gsub("[.]SD$", "", sdRow)
+  result$table[sdRow,'level'] = gsub("^sigma$", "obs", 
+    result$table[sdRow,'level'])
   ziRow = grep("^zi[.]zi", rownames(result$table), value=TRUE)
   result$table[ziRow,'variable'] = 'zero inf'
   result$table[ziRow,'level'] = gsub(
     "^zi[.]zi[~]", "", ziRow)
 
-  result$table[ziRow,outcomeColumns] = 
-    exp(result$table[ziRow,outcomeColumns])
+if(any(family(x)$family == 'Gamma')) {
+  obsRow = grep("^sigma$", rownames(result$table))
+  # dispersion parameter, 1/shape, 1/sqrt(shape) = Coef of Var
+  result$table[obsRow,outcomeColumns] = 
+    sqrt(result$table[obsRow,outcomeColumns])
+  result$table[obsRow,'level'] = "sd(Y)/E(Y)"
+}
 
   ziIntercept = grep("^zi[.]zi[~][(]Intercept[)]", 
     rownames(result$table), value=TRUE)
