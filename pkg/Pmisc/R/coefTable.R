@@ -137,8 +137,6 @@ if(all(class(x) == 'glmmTMB')) {
 if(any(family(x)$family == 'Gamma')) {
   obsRow = grep("^sigma$", rownames(result$table))
   # dispersion parameter, 1/shape, 1/sqrt(shape) = Coef of Var
-  result$table[obsRow,outcomeColumns] = 
-    sqrt(result$table[obsRow,outcomeColumns])
   result$table[obsRow,'level'] = "sd(Y)/E(Y)"
 }
 
