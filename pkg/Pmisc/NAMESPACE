@@ -3,6 +3,7 @@
 export(Makefile)
 export(by2df)
 export(ciMat)
+export(coefTable)
 export(downloadIfOld)
 export(eqnarray)
 export(hook_plot_beamer)
