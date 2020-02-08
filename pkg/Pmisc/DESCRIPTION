@@ -19,7 +19,7 @@ Suggests:
     Hmisc,
     htmlTable,
     sp,
-    lmer,
+    lme4,
     glmmTMB
 Enhances:
 	reshape2
