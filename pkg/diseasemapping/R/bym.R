@@ -455,7 +455,7 @@ formulaForLincombs = gsub("\\+[[:space:]]+?$|^[[:space:]]?\\+[[:space:]]+", "", 
 	
 	# E inv logit(lincombs)
 
-	if(length(grep("binomial",inlaRes$.args$family))) {
+	if(length(grep("^binomial$",inlaRes$.args$family))) {
 		invlogit=unlist(
 				lapply(inlaRes$marginals.fitted.bym, 
 						function(qq) {
