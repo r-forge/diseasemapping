@@ -29,12 +29,32 @@ std::string result = "\n#define CLRNG_ENABLE_SUBSTREAMS\n"
 " /******************************************************************************** \n"
 " * Implementation                                                               * \n"
 " ********************************************************************************/ \n"
+/*
+"void streamsToPrivate(__global int* streams, uint* g1, uint* g2, const int start.){\n"
+" int Drow, Dcol, DrowStart;"
+"for(Drow = 0, DrowStart = start, Dcol = DrowStart + 3;\n"
+"Drow < 3; Drow++, DrowStart++, Dcol++){\n"
+"g1[Drow] = streams[DrowStart];\n"
+"g2[Drow] = streams[Dcol];\n"
+"}\n"
+"}\n"
 
 
+"void streamsFromPrivate(uint* g1, uint* g2, __global int* streams, const int start){\n"
+" int Drow, Dcol, DrowStart;"
+" for(Drow = 0,DrowStart = start, Dcol = DrowStart + 3;\n"
+"     Drow < 3; Drow++, DrowStart++, Dcol++){\n"
+"   streams[DrowStart] = g1[Drow];\n"
+"   streams[Dcol] = g2[Drow];\n"
+" }\n"
+"}\n"
+
+*/
 
 /*! @brief Advance the rng one step and returns z such that 1 <= z <= mrg31k3p_M1
  */
-//"static 
+
+
 "uint clrngMrg31k3pNextState(uint *g1, uint *g2) {\n"
 
 "	uint y1, y2;\n"
@@ -73,13 +93,23 @@ std::string result = "\n#define CLRNG_ENABLE_SUBSTREAMS\n"
 "	g2[0] = y2;\n"
 
 "	if (g1[0] <= g2[0]){\n"
-"		return (g1[0] - g2[0] + mrg31k3p_M1);\n"
-//"		result = convert_int(mrg31k3p_M1 - (g2[0] - g1[0]));\n"
+"		return (g1[0] - g2[0] + mrg31k3p_M1);\n"      //"		result = convert_int(mrg31k3p_M1 - (g2[0] - g1[0]));\n"
 "	} else {\n"
 "		return(g1[0] - g2[0]);\n"
 " }\n"
 "}\n\n";
+
+  
+
+  
+  
+  
 return(result);
 }
 
-  
+
+
+
+
+
+

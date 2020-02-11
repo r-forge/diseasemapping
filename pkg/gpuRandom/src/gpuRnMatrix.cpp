@@ -71,8 +71,9 @@ std::string mrg31k3pMatrixString(
   
   result += "const int DrowInc = 2*get_global_size(0), DrowStartInc = DrowInc * NpadCol;\n";
   
-  result += "uint y1, y2, temp;\n";
-  result += "uint g1[3], g2[3];\n";
+  result += "uint temp;\n";
+  result += "uint g1[3], g2[3];\n"
+            "const int startvalue=index * NpadStreams;\n";
   
   
   if(random_type == "normal"){  
@@ -81,15 +82,13 @@ std::string mrg31k3pMatrixString(
   }
   
   
-  result += 
-    " for(Drow = 0, DrowStart = index * NpadStreams, Dcol = DrowStart + 3;\n"
-    "     Drow < 3; Drow++, DrowStart++, Dcol++){\n"
-    "   g1[Drow] = streams[DrowStart];\n"
-    "   g2[Drow] = streams[Dcol];\n"
-    " }\n";    
+  result +=  " for(Drow = 0, DrowStart = startvalue, Dcol = DrowStart + 3;\n"
+      "     Drow < 3; Drow++, DrowStart++, Dcol++){\n"
+      "   g1[Drow] = streams[DrowStart];\n"
+      "   g2[Drow] = streams[Dcol];\n"
+      " }\n";    
   
-  
-  
+  //"streamsToPrivate(streams,g1,g2,startvalue);\n";
   
   // Drow, Dcol = 2* global(0), group(1)
   // local work item (0,0) does out[Drow, Dcol]
@@ -179,12 +178,15 @@ std::string mrg31k3pMatrixString(
   result += 
     "}//Drow\n";
   
-  result +=
-    " for(Drow = 0,DrowStart = index * NpadStreams,Dcol = DrowStart + 3;\n"
+  result += //"fillstreams(g1,g2,streams,startvalue);\n";
+  
+  
+     " for(Drow = 0,DrowStart = index * NpadStreams,Dcol = DrowStart + 3;\n"
     "     Drow < 3; Drow++, DrowStart++, Dcol++){\n"
     "   streams[DrowStart] = g1[Drow];\n"
     "   streams[Dcol] = g2[Drow];\n"
     " }\n";
+    
   
   result += 
     "}//kernel\n";

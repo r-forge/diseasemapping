@@ -8,9 +8,9 @@
 fisher.sim=function(
   x,
   B,# number of simualtion,
+  streams, 
   type = c('float','double')[1+gpuR::gpuInfo()$double_support],
   returnStatistics = FALSE,
-  streams, 
   workgroupSize,
   verbose = FALSE){
 
@@ -47,7 +47,7 @@ fisher.sim=function(
   
   if(missing(streams)) {
     if(missing(workgroupSize)) {
-      workgroupSize = c(64,8)
+      workgroupSize = c(64,16)
       streams = gpuR::vclMatrix(cpp_mrg31k3pCreateStreams(prod(workgroupSize)))
     }else{
       streams = gpuR::vclMatrix(cpp_mrg31k3pCreateStreams(prod(workgroupSize)))
@@ -105,11 +105,10 @@ fisher.sim=function(
   
   if (returnStatistics){
   
-  theResult = list(pval = PVAL, sim = results, streams=streams)
+  theResult = list(p.value = PVAL, sim = results, streams=streams)
     
   }else {
-    theResult = PVAL
-    attributes(theResult)$streams = streams
+    theResult = list(p.value=PVAL, streams = streams)
     }
 
   theResult

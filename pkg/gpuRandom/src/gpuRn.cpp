@@ -247,7 +247,6 @@ void convertMatclRng(Rcpp::IntegerMatrix Sin, clrngMrg31k3pStream* streams){
 
 
 
-
 //[[Rcpp::export]]
 Rcpp::IntegerMatrix  cpp_mrg31k3pCreateStreams(int numWorkItems) //this function returns a R_stream not clrng stream
 {

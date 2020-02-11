@@ -32,7 +32,7 @@ Example 2
 x<- matrix(c(2, 10, 15, 3), nrow = 2)
 
 fisher.test(x)
-fisher.test(x, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
+fisher.test(x, alternative = "t",  simulate.p.value = F, B = 1e5)
 
 Nglobal = c(32,64)
 streams = gpuR::vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
@@ -45,7 +45,7 @@ res1 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=TRUE,
 
 as.matrix(streams[1:4,1:4])
 
-str(res1)
+res1$p.value
 #hist(as.vector(res1$sim))
 ```
 
@@ -55,6 +55,7 @@ res2 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=FALSE,
 as.matrix(streams2[1:4,1:4])
 
 str(res2)
+res2$p.value
 ```
 
 
@@ -117,10 +118,23 @@ str(result3)
 ```
 
 
+```{time compare}
+
+set.seed(120)
+atable<-matrix(as.integer(stats::runif(600,0,1000)), nrow=100, ncol=6)
+atable[1:6,]
 
 
 
 
+system.time(fisher.test(atable, simulate.p.value = TRUE, B = 1e5))  ##72.596s on cpu, 250.825s on my cpu
+Nglobal = c(64,64)
+streams<-vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
+system.time(gpuRandom::fisher.sim(atable, 100000L, returnStatistics=FALSE, streams=streams,
+                             type="double", workgroupSize = Nglobal))
+
+
+```
 
 
 
