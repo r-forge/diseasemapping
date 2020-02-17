@@ -11,8 +11,12 @@
 
 coefTable = function(x, maxChar = 6, 
   link=family(x)$link, ...) {
-#  result = list(confint=confint(x))
-result = list(confint = confint(x, ...))
+#
+if(interactive()) {
+  result = list(confint=confint(x))
+} else {
+  result = list(confint = confint(x, ...))
+}
 result$tableRaw = summary(x)$coef
 if(all(class(x) == 'glmmTMB')) {
   result$table = result$confint
@@ -40,7 +44,13 @@ result$table = result$table[, c('Estimate',
 variables = attributes(terms(x))$term.labels
 variables = intersect(variables, colnames(model.frame(x)))
 variablesLevels = lapply(model.frame(x)[variables], 
-  function(xx) if(is.logical(xx)){ return(c(TRUE,FALSE))} else {return(levels(xx))})
+  function(xx) if(is.logical(xx)){
+      return(c(TRUE,FALSE))
+    } else if (is.factor(xx)) {
+      return(levels(xx))
+    } else {
+      return("")
+    })
 coefNamePrefix = rep(names(variablesLevels), unlist(lapply(variablesLevels, length)))
 coefNames = data.frame(
   variable = coefNamePrefix,
@@ -57,15 +67,17 @@ result$table = cbind(
   result$table$levels = NA
 }
 
-interactions = grep("[:]", rownames(result$table))
+interactions = grep("[:]", rownames(result$table), value=TRUE)
+interactions = grep("[.]SD$", interactions, value=TRUE, invert=TRUE)
+
 
 for(D in interactions) {
 result$table[D, 'level'] = gsub(
-paste0('(',paste(unique(coefNames$variable), collapse='|'),')'), 
-'', rownames(result$table)[D])
+paste0('(',paste(unique(coefNames$variable), collapse='|'),')[:]?'), 
+'', D)
 result$table[D, 'variable'] = gsub(
   paste0('(', gsub('[:]', '|', result$table[D,'level']),')'),
-    '', rownames(result$table)[D])
+    '', D)
 }
 
 dontHave = which(is.na(result$table$variable))
@@ -76,10 +88,10 @@ result$table[dontHave,'level'] = ''
 result$table = result$table[,c('variable','level',outcomeColumns)]
 
 
-interceptLevels = unlist(lapply(variablesLevels, 
-  function(xx) c(xx, NA)[1]))
+interceptLevels = variablesLevels[unlist(lapply(variablesLevels, length))>1]
+interceptLevels = unlist(lapply(interceptLevels, function(xx) xx[1]))
 if(any(!is.na(interceptLevels))) {
-if(sum(nchar(interceptLevels))>12)
+if(sum(nchar(interceptLevels), na.rm=TRUE)>12)
   interceptLevels = trimws(substr(interceptLevels,1,maxChar))
 }
 
