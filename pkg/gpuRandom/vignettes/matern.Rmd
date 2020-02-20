@@ -11,6 +11,7 @@ date()
 ```
 
 
+
 ```{r packages, results='hide', message='hide'}
 library('gpuR')
 ```
@@ -33,8 +34,8 @@ Set up spatial data
    Nsim = 4
    Ngrid = c(15,20)
    NlocalCache = 300
-    NglobalMatern = c(128,8) 
-    NlocalMatern = c(16, 4)
+    NglobalMatern = c(64,8) 
+    NlocalMatern = c(8, 4)
    NglobalChol =  c(16,8,4)
     NglobalChol =  c(64,8)
     NlocalChol = c(16, 8)
@@ -43,7 +44,11 @@ Set up spatial data
   NlocalMult = c(4,4,1)   
 theType = "float"
 
-if(gpuInfo()$deviceMemory > 10^10){
+
+NlocalMatern = c(2,2)
+
+
+if(gpuR::gpuInfo()$deviceMemory > 10^10){
    Ngrid = c(40,60)
    Nsim = 6
    NlocalCache = 4000
@@ -65,9 +70,6 @@ coordsSp = sp::SpatialPoints(raster::xyFromCell(myRaster, 1:raster::ncell(myRast
 
 head(coordsSp@coords)
 
-coordsGpu = vclMatrix(coordsSp@coords, 
-                        nrow(coordsSp@coords), 
-                        ncol(coordsSp@coords), type=theType)
 ```
 
 
@@ -95,15 +97,23 @@ c(shape=2.15, range=0.1, variance = 2, nugget = 0,
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
 myParamsBatch
 myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch)))
-paramsGpu =  vclMatrix(myParamsBatch, type=gpuR::typeof(coordsGpu))
+
 ```
 
 ```{r outputBatchCreate}
+library(gpuR)
+coordsGpu = vclMatrix(coordsSp@coords, 
+                        nrow(coordsSp@coords), 
+                        ncol(coordsSp@coords), type=theType)
+
+paramsGpu =  vclMatrix(myParamsBatch, 
+  type=gpuR::typeof(coordsGpu))
 outputBatchF = vclMatrix(0, 
     nrow(paramsGpu)*nrow(coordsGpu), nrow(coordsGpu),
     type=gpuR::typeof(paramsGpu))
 class(outputBatchF)
 ```
+
 
 
 ```{r batchMatern}
@@ -126,7 +136,7 @@ geostatsp::matern(
     x=coordsSp,
     param=drop(myParamsBatch[1,1:7])
     )[1:4,1:4]
-as.matrix(outputBatchF[1:4,1:4])
+as.matrix(outputBatchF)[1:4,1:4]
 var4cpu = geostatsp::matern(
     x=coordsSp,
     param=drop(myParamsBatch[4,1:7])
@@ -143,7 +153,8 @@ range(var4cpu - as.matrix(var4gpu))
 ```{r cholBach, eval = exists('outputBatchF')}
 diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), 
                     type = gpuR::typeof(outputBatchF))
-outputChol = deepcopy(outputBatchF)
+outputChol = vclMatrix(0, nrow(outputBatchF), ncol(outputBatchF), 
+                    type = gpuR::typeof(outputBatchF))
 system.time(
 gpuRandom:::cholBatchBackend(
   outputChol, diagMat, 

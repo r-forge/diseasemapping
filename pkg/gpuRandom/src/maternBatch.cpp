@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-//#define DEBUG
+#define DEBUG
 
 #define NlocalParams 22
 /*
@@ -258,6 +258,8 @@ std::string maternBatchKernelString(
     "     }\n" // Dcell
     "  }\n" // Dmatrix
     "}// if local0\n\n";
+
+
   result +=    
     "for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += get_global_size(0)) {\n";
   
@@ -272,7 +274,8 @@ std::string maternBatchKernelString(
     "	localDist[get_local_id(0)].y = coords[DlocalParam +1] - coords[k +1];\n"
     "}\n\n"
     "barrier(CLK_LOCAL_MEM_FENCE);\n";
-  
+
+
   result +=    
     "for(Dmatrix = get_global_id(1); Dmatrix < Nmatrix; Dmatrix += get_global_size(1) ) {\n";
   result +=    
@@ -317,34 +320,34 @@ std::string maternBatchKernelString(
     //    " &K_nu, &K_nup1);\n"
     
     "   }\n";
-  
-  result +=
-    " nuround = (int) (localParams[DlocalParam+16]);\n"
-    "for(k=0; k<nuround; k++) {\n"
-    //    "			K_num1 = K_nu;\n"
-    "       K_num1 = K_nuK_nup1.x;\n"
-    //    "			K_nu   = K_nup1;\n"
-    "       K_nuK_nup1.x = K_nuK_nup1.y;\n"
-    
-    //   "			K_nup1 = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nu + K_num1;\n"
-    "       K_nuK_nup1.y = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nuK_nup1.x  + K_num1;\n"
-    "}\n";
-  
-  result +=
-    
-    "\n#ifdef assignLower\n"
-    "	result[Dmatrix * NpadBetweenMatrices +  Dcol[get_local_id(0)]  +  Drow[get_local_id(0)] * Npad] ="
-    "K_nuK_nup1.x;\n" // lower triangle
-    "#endif\n"
-    "#ifdef assignUpper\n"
-    "	result[Dmatrix * NpadBetweenMatrices + Drow[get_local_id(0)] + Dcol[get_local_id(0)] * Npad] ="
-    " K_nuK_nup1.x;\n"//K_nu;\n" // upper triangle
-    "#endif\n\n";
-  
-  
-  result += "} // Dmatrix\n"
-  "barrier(CLK_LOCAL_MEM_FENCE);\n";
-  
+      
+      result +=
+        " nuround = (int) (localParams[DlocalParam+16]);\n"
+        "for(k=0; k<nuround; k++) {\n"
+        //    "      K_num1 = K_nu;\n"
+        "       K_num1 = K_nuK_nup1.x;\n"
+        //    "      K_nu   = K_nup1;\n"
+        "       K_nuK_nup1.x = K_nuK_nup1.y;\n"
+        
+        //   "      K_nup1 = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nu + K_num1;\n"
+        "       K_nuK_nup1.y = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nuK_nup1.x  + K_num1;\n"
+        "}\n";
+      
+      result +=
+        
+        "\n#ifdef assignLower\n"
+        "  result[Dmatrix * NpadBetweenMatrices +  Dcol[get_local_id(0)]  +  Drow[get_local_id(0)] * Npad] ="
+        "K_nuK_nup1.x;\n" // lower triangle
+        "#endif\n"
+        "#ifdef assignUpper\n"
+        "  result[Dmatrix * NpadBetweenMatrices + Drow[get_local_id(0)] + Dcol[get_local_id(0)] * Npad] ="
+        " K_nuK_nup1.x;\n"//K_nu;\n" // upper triangle
+        "#endif\n\n";
+      
+      
+      result += "} // Dmatrix\n"
+      "barrier(CLK_LOCAL_MEM_FENCE);\n";
+
   result += "} // Dcell\n";
   result +=     "\n#ifdef assignDiag\n"
   
