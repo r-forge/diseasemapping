@@ -4,19 +4,30 @@
 #'
 #' @param x model output from lm, glm, lmer, glmer, glmmTMB
 #' @param maxChar truncate characters
-#' @param link link function
+#' @param approx if TRUE, create confidence intervals based on standard errors
 #' @param ... additional arguments for confint
 #' @return data frame with estimates and confidence interval.  coefficients are exponentiated if link is log or logit.
 #' @export
 
-coefTable = function(x, maxChar = 6, 
-  link=family(x)$link, ...) {
+coefTable = function(x, maxChar = 6, approx=FALSE, ...) {
 #
-if(interactive()) {
-  result = list(confint=confint(x))
-} else {
-  result = list(confint = confint(x, ...))
-}
+
+  link=family(x)$link
+
+  if(approx) {
+    theDots = list(...)
+    if(!'level' %in% names(theDots))
+      level = 0.95
+    if(length(level) == 1)
+      level = c(0,1) + c(1,-1)*(1-level)/2
+    result = x$coef + outer(summary(x)$coef[,'Std. Error'],
+      qnorm(level))
+    colnames(result) = paste(100*level, '%')
+    result = list(confint = as.data.frame(result))
+  } else { # not approximate
+    result = list(confint = confint(x, ...))    
+  }
+
 result$tableRaw = summary(x)$coef
 if(all(class(x) == 'glmmTMB')) {
   result$table = result$confint

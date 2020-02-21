@@ -4,14 +4,14 @@
 \alias{coefTable}
 \title{Matrix of coefficients}
 \usage{
-coefTable(x, maxChar = 6, link = family(x)$link, ...)
+coefTable(x, maxChar = 6, approx = FALSE, ...)
 }
 \arguments{
 \item{x}{model output from lm, glm, lmer, glmer, glmmTMB}
 
 \item{maxChar}{truncate characters}
 
-\item{link}{link function}
+\item{approx}{if TRUE, create confidence intervals based on standard errors}
 
 \item{...}{additional arguments for confint}
 }
