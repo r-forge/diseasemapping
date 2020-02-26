@@ -29,8 +29,8 @@ std::string result = "\n#define CLRNG_ENABLE_SUBSTREAMS\n"
 " /******************************************************************************** \n"
 " * Implementation                                                               * \n"
 " ********************************************************************************/ \n"
-/*
-"void streamsToPrivate(__global int* streams, uint* g1, uint* g2, const int start.){\n"
+
+"void streamsToPrivate(__global int* streams, uint* g1, uint* g2, const int start){\n"
 " int Drow, Dcol, DrowStart;"
 "for(Drow = 0, DrowStart = start, Dcol = DrowStart + 3;\n"
 "Drow < 3; Drow++, DrowStart++, Dcol++){\n"
@@ -49,7 +49,7 @@ std::string result = "\n#define CLRNG_ENABLE_SUBSTREAMS\n"
 " }\n"
 "}\n"
 
-*/
+
 
 /*! @brief Advance the rng one step and returns z such that 1 <= z <= mrg31k3p_M1
  */

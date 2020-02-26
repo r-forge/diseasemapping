@@ -39,7 +39,7 @@ streams = gpuR::vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
 streams2 = deepcopy(streams)
 
 dim(streams)
-
+x<-vclMatrix(x,type="integer")
 res1 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=TRUE, 
                              type="double", streams=streams, workgroupSize = Nglobal)
 
@@ -50,6 +50,7 @@ res1$p.value
 ```
 
 ```{r ex2, eval=TRUE}
+##using the same stream
 res2 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=FALSE, 
                              type="double", streams=streams2, workgroupSize = Nglobal)
 as.matrix(streams2[1:4,1:4])
@@ -89,10 +90,11 @@ fisher.test(TeaTasting, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
 Nglobal = c(32,64)
 streams = gpuR::vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
 
+TeaTasting<-vclMatrix(TeaTasting,type="integer")
 result<-gpuRandom::fisher.sim(TeaTasting, 100000L, returnStatistics=FALSE, 
                              type="double", streams=streams, workgroupSize = Nglobal)
 
-str(result)
+result$p.value
 
 
 
@@ -101,12 +103,12 @@ str(result)
 
 
 ```{r eg3, eval=TRUE}
-
+#compare results with R fisher function
 Job <- matrix(c(1,2,1,0, 3,3,6,1, 10,10,14,9, 6,7,12,11), 4, 4)
 fisher.test(Job) # 0.7827
 fisher.test(Job, simulate.p.value = TRUE, B = 1e5) # also close to 0.78
 
-
+Job<-vclMatrix(Job, type="integer")
 result3<-gpuRandom::fisher.sim(Job, 100000L, returnStatistics=FALSE, 
                              type="double", streams=streams, workgroupSize = Nglobal)
 
@@ -118,7 +120,9 @@ str(result3)
 ```
 
 
-```{time compare}
+```{r eg4, eval=TRUE}
+Nglobal = c(64,64)
+streams<-vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
 
 set.seed(120)
 atable<-matrix(as.integer(stats::runif(600,0,1000)), nrow=100, ncol=6)
@@ -126,12 +130,13 @@ atable[1:6,]
 
 
 
-
 system.time(fisher.test(atable, simulate.p.value = TRUE, B = 1e5))  ##72.596s on cpu, 250.825s on my cpu
-Nglobal = c(64,64)
-streams<-vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
-system.time(gpuRandom::fisher.sim(atable, 100000L, returnStatistics=FALSE, streams=streams,
-                             type="double", workgroupSize = Nglobal))
+
+atable<-vclMatrix(atable, type="integer")
+gpuRandom::fisher.sim(atable, 100000L, returnStatistics=FALSE, streams=streams, type="double", 
+                      workgroupSize = Nglobal,verbose=TRUE)
+#system.time(gpuRandom::fisher.sim(atable, 100000L, returnStatistics=FALSE, streams=streams,
+                            # type="double", workgroupSize = Nglobal))
 
 
 ```

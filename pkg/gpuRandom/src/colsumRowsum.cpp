@@ -7,7 +7,7 @@
 std::string colsumRowsumString(
     const int Nrow, 
     const int Ncol,
-    const int NpadCol) { 
+    const int NpadCol) {  //internal column size
   
   std::string typeString = "int";
   std::string typeStringSum = "double"; // type of the sum of log factorial
@@ -58,6 +58,8 @@ std::string colsumRowsumString(
   "  } // end loop through columns\n"
 
   "}\n\n";
+  
+  
   result += 
     "}//kernel\n";
 
@@ -81,7 +83,7 @@ std::string colsumRowsumString(
   "  } // end loop through rows\n";
 
   result += 
-  "result[get_global_id(1) + get_global_id(0)*get_global_size(1)] = resultD;\n";
+  "result[get_global_id(1) + get_global_id(0)*get_global_size(1)] = Dresult;\n";
 
   result += 
     "}//sumLfactorial kernel\n";
@@ -89,6 +91,83 @@ std::string colsumRowsumString(
   return(result);
 }
 
+
+double colsumRowsum(
+    viennacl::matrix<int>  x,
+    viennacl::vector_base<int>  rowSum,
+    viennacl::vector_base<int>  colSum,   
+    Rcpp::IntegerVector numWorkItems,
+    int ctx_id) {
+  
+  double result;
+  
+ // const bool BisVCL=1;
+ // const int ctx_id = INTEGER(x.slot(".context_index"))[0]-1;
+  
+ // std::shared_ptr<viennacl::matrix<int> > xVcl = getVCLptr<int>(x.slot("address"), BisVCL, ctx_id);
+ // std::shared_ptr<viennacl::vector_base<int> > rowSumVcl = getVCLVecptr<int>(rowSum.slot("address"), BisVCL, ctx_id);
+ // std::shared_ptr<viennacl::vector_base<int> > colSumVcl = getVCLVecptr<int>(colSum.slot("address"), BisVCL, ctx_id);
+  
+  std::string sumKernelString = colsumRowsumString(
+    x.size1(), 
+    x.size2(),
+    x.internal_size2() 
+  );
+  
+  // the context
+  viennacl::ocl::switch_context(ctx_id);
+  viennacl::ocl::program & my_prog = viennacl::ocl::current_context().add_program(sumKernelString, "my_kernel");
+  
+  
+  viennacl::ocl::kernel &sumKernel = my_prog.get_kernel("colsumRowsum");
+  
+  
+  sumKernel.global_work_size(0, numWorkItems[0]);
+  sumKernel.global_work_size(1, numWorkItems[1]);
+  
+  sumKernel.local_work_size(0, 1L);
+  sumKernel.local_work_size(1, 1L);
+  
+  viennacl::ocl::enqueue(sumKernel(x, rowSum, colSum) );
+  
+  viennacl::ocl::kernel &sumLfactorialKernel = my_prog.get_kernel("sumLfactorial");
+  sumLfactorialKernel.global_work_size(0, numWorkItems[0]);
+  sumLfactorialKernel.global_work_size(1, numWorkItems[1]);
+  
+  sumLfactorialKernel.local_work_size(0, 1L);
+  sumLfactorialKernel.local_work_size(1, 1L);
+  
+  viennacl::vector_base<double> logFactorial(numWorkItems[0] * numWorkItems[1]);
+  
+  viennacl::ocl::enqueue(sumLfactorialKernel(x, logFactorial) );
+  
+  
+  result = viennacl::linalg::sum(logFactorial);
+  
+  return result;
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
 //' @export
 // [[Rcpp::export]]
 SEXP colsumRowsumBackend(
@@ -107,8 +186,10 @@ SEXP colsumRowsumBackend(
   std::shared_ptr<viennacl::vector_base<int> > colSumVcl = getVCLVecptr<int>(colSum.slot("address"), BisVCL, ctx_id);
 
   std::string sumKernelString = colsumRowsumString(
-    (*xVcl).size1(), (*xVcl).size2(),
-    (*xVcl).internal_size2() );
+    (*xVcl).size1(), 
+    (*xVcl).size2(),
+    (*xVcl).internal_size2() 
+    );
 
     // the context
   viennacl::ocl::switch_context(ctx_id);
@@ -144,6 +225,6 @@ SEXP colsumRowsumBackend(
 
 }
 
-
+*/
 
 

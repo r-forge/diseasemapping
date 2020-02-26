@@ -5,13 +5,8 @@ cholBatchBackend <- function(A, D, Nglobal, Nlocal, NlocalCache) {
     invisible(.Call('_gpuRandom_cholBatchBackend', PACKAGE = 'gpuRandom', A, D, Nglobal, Nlocal, NlocalCache))
 }
 
-#' @export
-colsumRowsumBackend <- function(x, rowSum, colSum, numWorkItems) {
-    .Call('_gpuRandom_colsumRowsumBackend', PACKAGE = 'gpuRandom', x, rowSum, colSum, numWorkItems)
-}
-
-cpp_gpuFisher_test <- function(xR, resultsR, threshold, B, streamsR, max_global_size, max_local_size) {
-    .Call('_gpuRandom_cpp_gpuFisher_test', PACKAGE = 'gpuRandom', xR, resultsR, threshold, B, streamsR, max_global_size, max_local_size)
+cpp_gpuFisher_test <- function(xR, resultsR, B, streamsR, max_global_size, max_local_size) {
+    .Call('_gpuRandom_cpp_gpuFisher_test', PACKAGE = 'gpuRandom', xR, resultsR, B, streamsR, max_global_size, max_local_size)
 }
 
 cpp_mrg31k3pCreateStreams <- function(numWorkItems) {

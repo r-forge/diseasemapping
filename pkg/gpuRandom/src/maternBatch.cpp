@@ -553,3 +553,12 @@ void maternBatchBackend(
     Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
   }
 }
+
+
+
+
+
+
+
+
+
