@@ -47,7 +47,7 @@ fisher.sim=function(
   
   if(missing(streams)) {
     if(missing(workgroupSize)) {
-      workgroupSize = c(64,16)
+      workgroupSize = c(64,64)
       streams = gpuR::vclMatrix(cpp_mrg31k3pCreateStreams(prod(workgroupSize)))
     }else{
       streams = gpuR::vclMatrix(cpp_mrg31k3pCreateStreams(prod(workgroupSize)))

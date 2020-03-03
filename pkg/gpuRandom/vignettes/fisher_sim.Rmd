@@ -34,7 +34,7 @@ x<- matrix(c(2, 10, 15, 3), nrow = 2)
 fisher.test(x)
 fisher.test(x, alternative = "t",  simulate.p.value = F, B = 1e5)
 
-Nglobal = c(32,64)
+Nglobal = c(64,64)
 streams = gpuR::vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
 streams2 = deepcopy(streams)
 
@@ -87,7 +87,7 @@ TeaTasting
 fisher.test(TeaTasting, alternative = "t",  simulate.p.value = TRUE, B = 1e5)
 
 
-Nglobal = c(32,64)
+Nglobal = c(16,64)
 streams = gpuR::vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
 
 TeaTasting<-vclMatrix(TeaTasting,type="integer")

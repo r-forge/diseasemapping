@@ -1,7 +1,8 @@
 #include "gpuRandom.hpp"
 
+#include <R.h>
 
-//#define DEBUGKERNEL
+#define DEBUGKERNEL
 
 using namespace Rcpp;
 using namespace viennacl; 
@@ -261,6 +262,7 @@ int gpuFisher_test(
  T threshold;
  T statistics;
  const int nr = x.size1(), nc = x.size2(), resultSize = results.size();
+ int countss=0;
  
  std::string kernel_string = FisherSimkernelString<T>(nr, nc, streams.internal_size2());
  if(resultSize == B) {
@@ -283,14 +285,14 @@ int gpuFisher_test(
 #ifdef DEBUG
   Rcpp::Rcout << "x0 " << x(0,0) << " row0 " << sr(0)<< " col0 " << sc(0) << "\n";
 #endif  
-  
+
   statistics = (T) -colsumRowsum(x, sr, sc, numWorkItems[0]*numWorkItems[1],ctx_id);
-  threshold = (T) statistics/(1+1.421085e-14);
+  // if(viennacl::min(sr) <= 0) RCpp::warning("zeros in row sums");
+  threshold = (T) statistics/(1+64 * DOUBLE_EPS);
   
-  
-  
+//#ifdef UNDEF    
+
   int n = viennacl::linalg::sum(sr);
-  int countss=0;
   
   viennacl::vector<T> fact(n+1); 
   T factTemp;
@@ -310,7 +312,7 @@ int gpuFisher_test(
 
   
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));  
-//#ifdef UNDEF  
+ 
   viennacl::ocl::program &my_prog = ctx.add_program(kernel_string, "my_kernel");
   viennacl::ocl::kernel &fisher_sim = my_prog.get_kernel("fisher_sim_gpu");
 
@@ -323,8 +325,9 @@ int gpuFisher_test(
   
   
   viennacl::ocl::enqueue( fisher_sim  (sr, sc, n, B, count, threshold, fact, results, streams) ); 
-//#endif  
+ 
   countss = viennacl::linalg::sum(count);
+//#endif 
   
 #ifdef DEBUG
   Rcpp::Rcout << "threshold " << threshold << " countss " << countss << " count0 " << count(0) << " size " << B <<  "\n";
