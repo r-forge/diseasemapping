@@ -2,7 +2,7 @@
 
 #include <R.h>
 
-#define DEBUGKERNEL
+//#define DEBUGKERNEL
 
 using namespace Rcpp;
 using namespace viennacl; 
@@ -285,11 +285,11 @@ int gpuFisher_test(
   Rcpp::Rcout << "x0 " << x(0,0) << " row0 " << sr(0)<< " col0 " << sc(0) << "\n";
 #endif  
 
-  statistics = (T) -colsumRowsum(x, sr, sc, numWorkItems,ctx_id);
+  statistics = colsumRowsum<T> (x, numWorkItems,ctx_id);
   // if(viennacl::min(sr) <= 0) RCpp::warning("zeros in row sums");
-  threshold = (T) statistics/(1+64 * DOUBLE_EPS);
+  threshold = (T) (-statistics)/(1+64 * DOUBLE_EPS);
   
-//#ifdef UNDEF    
+    
    row_sum_impl(x, sr);
    column_sum_impl(x, sc);
   int n = viennacl::linalg::sum(sr);
@@ -327,7 +327,7 @@ int gpuFisher_test(
   viennacl::ocl::enqueue( fisher_sim  (sr, sc, n, B, count, threshold, fact, results, streams) ); 
  
   countss = viennacl::linalg::sum(count);
-//#endif 
+
   
 #ifdef DEBUG
   Rcpp::Rcout << "threshold " << threshold << " countss " << countss << " count0 " << count(0) << " size " << B <<  "\n";

@@ -112,7 +112,7 @@ Job<-vclMatrix(Job, type="integer")
 result3<-gpuRandom::fisher.sim(Job, 100000L, returnStatistics=FALSE, 
                              type="double", streams=streams, workgroupSize = Nglobal)
 
-str(result3)
+result3$p.value
 
 
 

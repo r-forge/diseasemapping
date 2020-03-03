@@ -3,14 +3,11 @@
 
 
 //#define DEBUGKERNEL
-
-std::string colsumRowsumString(
-    const int Nrow, 
-    const int Ncol,
-    const int NpadCol) {  //internal column size
+template <typename T> 
+std::string colsumRowsumString(const int Nrow, const int Ncol, const int NpadCol) {  //internal column size
   
   std::string typeString = "int";
-  std::string typeStringSum = "double";  // type of the sum of log factorial
+  std::string typeStringSum = openclTypeString<T>();  // type of the sum of log factorial
 
   std::string result = "";
   
@@ -20,12 +17,13 @@ std::string colsumRowsumString(
     
   }
 
-  
+
   result +=
     "\n#define Nrow " + std::to_string(Nrow) + "\n"    
     "#define Ncol " + std::to_string(Ncol) + "\n"
     "#define NpadCol " + std::to_string(NpadCol) + "\n";    
-  
+
+ /* 
   result += 
     "\n\n__kernel void colsumRowsum(\n"
     "  __global " + typeString + "* x,\n"  
@@ -38,14 +36,14 @@ std::string colsumRowsumString(
   result += "int Drow, Dcol, Dindex;\n";
   result += typeString + " result;\n";
 
-  
+
   result += "if(get_global_id(1)) { // sum columns\n"
   "  for(Drow = get_global_id(0); Drow < Nrow; Drow++){\n"
   "    result = 0;\n"
   "    for(Dcol = 0, Dindex = Drow*NpadCol; Dcol < Ncol; Dcol++, Dindex++){\n"
   "       result += x[Dindex];\n"    
   "    } // end loop through columns\n"
-  "    colSum[Drow] = result;\n"
+  "    colSum[Dcol] = result;\n"
   "  } // end loop through rows\n"
   "} else { // sum rows\n"
   "  for(Dcol = get_global_id(0); Dcol < Ncol; Dcol++){\n"
@@ -53,7 +51,7 @@ std::string colsumRowsumString(
   "    for(Drow = 0, Dindex = Dcol; Drow < Nrow; Drow++, Dindex+= NpadCol){\n"
   "       result += x[Dindex];\n"    
   "    } // end loop through columns\n"
-  "    rowSum[Dcol] = result;\n"
+  "    rowSum[Drow] = result;\n"
   "  } // end loop through columns\n"
 
   "}\n\n";
@@ -62,6 +60,8 @@ std::string colsumRowsumString(
   result += 
     "}//kernel\n";
 
+*/ 
+  
   result += 
     "\n\n__kernel void sumLfactorial(\n"
     "  __global " + typeString + "* x,\n"  
@@ -73,16 +73,16 @@ std::string colsumRowsumString(
   result += "int Drow, Dcol, Dindex;\n";
   result += typeStringSum + " Dresult=0;\n";
   result += typeStringSum + " insidevalue;\n";
-  //#ifdef UNDEF
+
   result += 
- "  for(Drow = get_global_id(0); Drow < Nrow; Drow+=get_global_size(0)){\n"
+  "  for(Drow = get_global_id(0); Drow < Nrow; Drow+=get_global_size(0)){\n"
   "    for(Dcol = get_global_id(1), Dindex = Drow*NpadCol;\n" 
   "        Dcol < Ncol; Dcol+=get_global_size(1), Dindex++){\n"
   "        insidevalue = 1 + x[Dindex];\n"
   "       Dresult += lgamma(insidevalue);\n"
   "    } // end loop through columns\n"
   "  } // end loop through rows\n";
-//#endif
+
   result += 
   "result[get_global_id(1) + get_global_id(0)*get_global_size(1)] = Dresult;\n";
 
@@ -92,18 +92,18 @@ std::string colsumRowsumString(
   return(result);
 }
 
+// viennacl::vector_base<int>  rowSum, viennacl::vector_base<int>  colSum,  
 
-double colsumRowsum(
-    viennacl::matrix<int>  x,
-    viennacl::vector_base<int>  rowSum,
-    viennacl::vector_base<int>  colSum,   
+template<typename T> 
+T colsumRowsum(
+    viennacl::matrix<int>  x,   
     Rcpp::IntegerVector numWorkItems,
     int ctx_id) {
   
-  double result;
+  T result;
   
 
-  std::string sumKernelString = colsumRowsumString(
+  std::string sumKernelString = colsumRowsumString<T>(
     x.size1(), 
     x.size2(),
     x.internal_size2() 
@@ -117,7 +117,7 @@ double colsumRowsum(
   Rcpp::Rcout << sumKernelString << "\n\n";
 #endif  
 
-  viennacl::ocl::kernel &sumKernel = my_prog.get_kernel("colsumRowsum");
+ /* viennacl::ocl::kernel &sumKernel = my_prog.get_kernel("colsumRowsum");
 
 
   sumKernel.global_work_size(0, numWorkItems[0]);
@@ -127,7 +127,8 @@ double colsumRowsum(
   sumKernel.local_work_size(1, 1L);
  
   viennacl::ocl::enqueue(sumKernel(x, rowSum, colSum) );
-//#ifdef UNDEF  
+*/
+ 
   viennacl::ocl::kernel &sumLfactorialKernel = my_prog.get_kernel("sumLfactorial");
   sumLfactorialKernel.global_work_size(0, numWorkItems[0]);
   sumLfactorialKernel.global_work_size(1, numWorkItems[1]);
@@ -135,13 +136,13 @@ double colsumRowsum(
   sumLfactorialKernel.local_work_size(0, 1L);
   sumLfactorialKernel.local_work_size(1, 1L);
   
-  viennacl::vector_base<double> logFactorial(numWorkItems[0] * numWorkItems[1]);
+  viennacl::vector_base<T> logFactorial(numWorkItems[0] * numWorkItems[1]);
   
   viennacl::ocl::enqueue(sumLfactorialKernel(x, logFactorial) );
   
   
   result = viennacl::linalg::sum(logFactorial);
-//#endif  
+
   return result;
   
 }
