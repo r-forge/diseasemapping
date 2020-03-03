@@ -2,7 +2,7 @@
 
 
 
-#define DEBUGKERNEL
+//#define DEBUGKERNEL
 
 std::string colsumRowsumString(
     const int Nrow, 
@@ -119,15 +119,15 @@ double colsumRowsum(
 
   viennacl::ocl::kernel &sumKernel = my_prog.get_kernel("colsumRowsum");
 
-//#ifdef UNDEF
+
   sumKernel.global_work_size(0, numWorkItems[0]);
   sumKernel.global_work_size(1, numWorkItems[1]);
   
   sumKernel.local_work_size(0, 1L);
   sumKernel.local_work_size(1, 1L);
-  
+ 
   viennacl::ocl::enqueue(sumKernel(x, rowSum, colSum) );
-  
+//#ifdef UNDEF  
   viennacl::ocl::kernel &sumLfactorialKernel = my_prog.get_kernel("sumLfactorial");
   sumLfactorialKernel.global_work_size(0, numWorkItems[0]);
   sumLfactorialKernel.global_work_size(1, numWorkItems[1]);

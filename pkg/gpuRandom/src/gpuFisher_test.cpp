@@ -278,20 +278,20 @@ int gpuFisher_test(
  // row and column sums
  viennacl::vector_base<int> sr(nr);
  viennacl::vector_base<int> sc(nc);
- //row_sum_impl(x, sr);
- //column_sum_impl(x, sc);
+ 
  
    
 #ifdef DEBUG
   Rcpp::Rcout << "x0 " << x(0,0) << " row0 " << sr(0)<< " col0 " << sc(0) << "\n";
 #endif  
 
-  statistics = (T) -colsumRowsum(x, sr, sc, numWorkItems[0]*numWorkItems[1],ctx_id);
+  statistics = (T) -colsumRowsum(x, sr, sc, numWorkItems,ctx_id);
   // if(viennacl::min(sr) <= 0) RCpp::warning("zeros in row sums");
   threshold = (T) statistics/(1+64 * DOUBLE_EPS);
   
 //#ifdef UNDEF    
-
+   row_sum_impl(x, sr);
+   column_sum_impl(x, sc);
   int n = viennacl::linalg::sum(sr);
   
   viennacl::vector<T> fact(n+1); 

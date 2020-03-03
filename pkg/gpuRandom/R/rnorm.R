@@ -40,6 +40,7 @@ rnorm = function(
    # streams = gpuR::vclMatrix(as.matrix(streams), nrow(streams), ncol(streams), FALSE, dimnames(streams))
   }
   
+  
   xVcl<-gpuR::vclMatrix(0, nrow=n[1], ncol=n[2], type=type[1])     
   
   
