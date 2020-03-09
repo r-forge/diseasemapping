@@ -17,62 +17,10 @@ date()
 library('gpuR')
 ```
 
-```{r memoryAvailable, echo=TRUE}
+```{r memoryAvailable, echo=TRUE, results='hide'}
 setContext(   grep('OpenCL 2.1', listContexts()$platform)[1]    )
-gpuInfo()$deviceName
-gpuInfo()$maxAllocatableMem/(1024^3)
+gpuInfo()$deviceName   #gpuInfo()$maxAllocatableMem/(1024^3)
 ```
-
-
-
-
-
-
-Example 2
-```{r, eval=TRUE}
-x<- matrix(c(2, 10, 15, 3), nrow = 2)
-
-fisher.test(x)
-fisher.test(x, alternative = "t",  simulate.p.value = F, B = 1e5)
-
-Nglobal = c(64,64)
-streams = gpuR::vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
-streams2 = deepcopy(streams)
-
-dim(streams)
-x<-vclMatrix(x,type="integer")
-res1 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=TRUE, 
-                             type="double", streams=streams, workgroupSize = Nglobal)
-
-as.matrix(streams[1:4,1:4])
-
-res1$p.value
-#hist(as.vector(res1$sim))
-```
-
-```{r ex2, eval=TRUE}
-##using the same stream
-res2 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=FALSE, 
-                             type="double", streams=streams2, workgroupSize = Nglobal)
-as.matrix(streams2[1:4,1:4])
-
-str(res2)
-res2$p.value
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -80,6 +28,63 @@ res2$p.value
 
 
 Example 1
+```{r, eval=TRUE}
+x<- matrix(c(2, 10, 15, 3), nrow = 2)
+
+fisher.test(x, alternative = "t",  simulate.p.value = T, B = 1e5)
+
+Nglobal = c(64,16)
+streams = gpuR::vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
+streams2 = deepcopy(streams)
+
+
+x<-vclMatrix(x,type="integer")
+res1 = gpuRandom::fisher.sim(x, 200000L, returnStatistics=FALSE, 
+                             type="double", streams=streams, workgroupSize = Nglobal)
+
+ 
+res1$p.value
+#as.vector(res1$sim)
+#hist(as.vector(res1$sim))
+```
+
+```{r ex2, eval=TRUE}
+##using the same stream
+res2 = gpuRandom::fisher.sim(x, 200000L, returnStatistics=FALSE, 
+                             type="double", streams=streams2, workgroupSize = Nglobal)
+as.matrix(streams2[1:4,1:4])
+res2$p.value
+```
+
+
+
+
+example 3
+```{r eg3, eval=TRUE}
+#compare results with R fisher function
+Job <- matrix(c(1,2,1,0, 3,3,6,1, 10,10,14,9, 6,7,12,11), 4, 4)
+fisher.test(Job, simulate.p.value = TRUE, B = 1e5) # also close to 0.78
+
+
+Job<-vclMatrix(Job, type="integer")
+result3<-gpuRandom::fisher.sim(Job, 100000L, returnStatistics=FALSE, 
+                             type="double", streams=streams, workgroupSize = Nglobal)
+result3$p.value
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+Example 4
 ```{r  teaTasting, eval=TRUE}
 TeaTasting <-matrix(c(3, 1, 1, 3),nrow=2)
 
@@ -101,23 +106,7 @@ result$p.value
 
 ```
 
-```{r eg3, eval=TRUE}
-#compare results with R fisher function
-Job <- matrix(c(1,2,1,0, 3,3,6,1, 10,10,14,9, 6,7,12,11), 4, 4)
-fisher.test(Job) # 0.7827
-fisher.test(Job, simulate.p.value = TRUE, B = 1e5) # also close to 0.78
 
-
-Job<-vclMatrix(Job, type="integer")
-result3<-gpuRandom::fisher.sim(Job, 100000L, returnStatistics=FALSE, 
-                             type="double", streams=streams, workgroupSize = Nglobal)
-
-result3$p.value
-
-
-
-
-```
 
 
 

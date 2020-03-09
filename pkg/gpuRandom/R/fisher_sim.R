@@ -84,7 +84,7 @@ fisher.sim=function(
   
   
   if(returnStatistics) {
-    results <- gpuR::vclVector(length=as.integer(B), type=type)
+    results <- gpuR::vclVector(length=as.integer(B+1), type=type)
   } else {
     results <- gpuR::vclVector(length=as.integer(1), type=type)
   }
@@ -113,7 +113,7 @@ fisher.sim=function(
   theResult = list(p.value = PVAL, sim = results, streams=streams)
     
   }else {
-    theResult = list(p.value=PVAL, streams = streams)
+    theResult = list(p.value=PVAL, sim=results, streams = streams)
     }
 
   theResult

@@ -40,7 +40,7 @@ std::string result = "\n#define CLRNG_ENABLE_SUBSTREAMS\n"
 "}\n"
 
 
-"void streamsFromPrivate(uint* g1, uint* g2, __global int* streams, const int start){\n"
+"void streamsFromPrivate(__global int* streams, uint* g1, uint* g2,  const int start){\n"
 " int Drow, Dcol, DrowStart;"
 " for(Drow = 0,DrowStart = start, Dcol = DrowStart + 3;\n"
 "     Drow < 3; Drow++, DrowStart++, Dcol++){\n"

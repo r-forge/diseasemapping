@@ -79,14 +79,12 @@ result +=
   result += "int Drow, Dcol, DrowStart, Dentry;\n";
   
   result += "uint y1, y2, temp;\n";
-  result += "uint g1[3], g2[3];\n"; 
-
-  result += 
-    " for(Drow = 0, DrowStart = index * NpadStreams, Dcol = DrowStart + 3;\n"
-    "     Drow < 3; Drow++, DrowStart++, Dcol++){\n"
-    "   g1[Drow] = streams[DrowStart];\n"
-    "   g2[Drow] = streams[Dcol];\n"
-    " }\n";    
+  result += "uint g1[3], g2[3];\n" 
+            "const int startvalue=index * NpadStreams;\n";
+            
+            
+  result += "streamsToPrivate(streams,g1,g2,startvalue);\n";
+ 
   
   result += 
     
@@ -229,14 +227,11 @@ result +=
   "}\n" //end D loop
   
   // save countD
-  " count[index] = countD;\n"
+  " count[index] = countD;\n";
+    
+    result += "streamsFromPrivate(streams,g1,g2,startvalue);\n";
   
-  " for(Drow = 0,DrowStart = index * NpadStreams,Dcol = DrowStart + 3;\n"
-  "     Drow < 3; Drow++, DrowStart++, Dcol++){\n"
-  "   streams[DrowStart] = g1[Drow];\n"
-  "   streams[Dcol] = g2[Drow];\n"
-  " }\n";
-//#endif
+
     
 result +=  "}\n" ;
   return(result);
@@ -260,12 +255,12 @@ int gpuFisher_test(
 
   
  T threshold;
- T statistics;
+ double statistics;
  const int nr = x.size1(), nc = x.size2(), resultSize = results.size();
  int countss=0;
  
  std::string kernel_string = FisherSimkernelString<T>(nr, nc, streams.internal_size2());
- if(resultSize == B) {
+ if(resultSize >= B) {
    kernel_string = "\n#define returnResults\n" + kernel_string;
  }
  
@@ -285,7 +280,10 @@ int gpuFisher_test(
   Rcpp::Rcout << "x0 " << x(0,0) << " row0 " << sr(0)<< " col0 " << sc(0) << "\n";
 #endif  
 
-  statistics = colsumRowsum<T> (x, numWorkItems,ctx_id);
+  statistics = colsumRowsum(x, numWorkItems, ctx_id);
+
+
+
   // if(viennacl::min(sr) <= 0) RCpp::warning("zeros in row sums");
   threshold = (T) (-statistics)/(1+64 * DOUBLE_EPS);
   
@@ -333,7 +331,11 @@ int gpuFisher_test(
   Rcpp::Rcout << "threshold " << threshold << " countss " << countss << " count0 " << count(0) << " size " << B <<  "\n";
 #endif  
   
-
+ /* if(B < resultSize) {
+    results[B] = results[0];
+ }
+  results[0] = statistics;*/
+  
   return countss;
 }
 

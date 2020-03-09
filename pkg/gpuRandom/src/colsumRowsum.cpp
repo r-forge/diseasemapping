@@ -76,7 +76,7 @@ std::string colsumRowsumString(const int Nrow, const int Ncol, const int NpadCol
 
   result += 
   "  for(Drow = get_global_id(0); Drow < Nrow; Drow+=get_global_size(0)){\n"
-  "    for(Dcol = get_global_id(1), Dindex = Drow*NpadCol;\n" 
+  "    for(Dcol = get_global_id(1), Dindex = Drow*NpadCol+Dcol;\n" 
   "        Dcol < Ncol; Dcol+=get_global_size(1), Dindex++){\n"
   "        insidevalue = 1 + x[Dindex];\n"
   "       Dresult += lgamma(insidevalue);\n"
@@ -94,16 +94,16 @@ std::string colsumRowsumString(const int Nrow, const int Ncol, const int NpadCol
 
 // viennacl::vector_base<int>  rowSum, viennacl::vector_base<int>  colSum,  
 
-template<typename T> 
-T colsumRowsum(
-    viennacl::matrix<int>  x,   
+double colsumRowsum(
+    viennacl::matrix<int> &x,
     Rcpp::IntegerVector numWorkItems,
     int ctx_id) {
   
-  T result;
+
+  double result;
   
 
-  std::string sumKernelString = colsumRowsumString<T>(
+  std::string sumKernelString = colsumRowsumString<double>(
     x.size1(), 
     x.size2(),
     x.internal_size2() 
@@ -136,13 +136,14 @@ T colsumRowsum(
   sumLfactorialKernel.local_work_size(0, 1L);
   sumLfactorialKernel.local_work_size(1, 1L);
   
-  viennacl::vector_base<T> logFactorial(numWorkItems[0] * numWorkItems[1]);
+  viennacl::vector_base<double> logFactorial(numWorkItems[0] * numWorkItems[1]);
   
   viennacl::ocl::enqueue(sumLfactorialKernel(x, logFactorial) );
   
   
   result = viennacl::linalg::sum(logFactorial);
 
+  
   return result;
   
 }

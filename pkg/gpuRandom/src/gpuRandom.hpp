@@ -34,9 +34,7 @@ std::string mrg31k3pString();
 std::string colsumRowsumString();
 
 double colsumRowsum(
-    viennacl::matrix<int>  x,
-    viennacl::vector_base<int>  rowSum,
-    viennacl::vector_base<int>  colSum,   
+    viennacl::matrix<int>  &x, //viennacl::vector_base<int>  rowSum,viennacl::vector_base<int>  colSum,   
     Rcpp::IntegerVector numWorkItems,
     int ctx_id);
 
