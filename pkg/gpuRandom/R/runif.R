@@ -46,7 +46,8 @@ runif = function(
   gpuRnBackend(xVcl,streams,workgroupSize,"uniform") 
   
   invisible(streams)
-  if(ncol(xVcl)==1) xVcl = xVcl[,1]
+  
+  if(ncol(xVcl)==1) xVcl = drop(xVcl)
   xVcl
   
 }

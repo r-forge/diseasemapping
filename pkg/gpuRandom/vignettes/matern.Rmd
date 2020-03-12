@@ -253,6 +253,9 @@ for(D in names(simRaster)) {
   
 ```
 
+# Backsolve
+
+outputChol a = cbind(Y, 1), solve for a
 
 # extra info
 
