@@ -117,10 +117,10 @@ atable[1:6,]
 
 
 
-system.time(fisher.test(atable, simulate.p.value = TRUE, B = 1e7))  ##72.596s on cpu, 250.825s on my cpu
+system.time(fisher.test(atable, simulate.p.value = TRUE, B = 1e5))  ##72.596s on cpu, 250.825s on my cpu
 
 atable<-vclMatrix(atable, type="integer")
-res5<-gpuRandom::fisher.sim(atable, 10000000L, returnStatistics=FALSE, streams=streams, type="double", 
+res5<-gpuRandom::fisher.sim(atable, 100000L, returnStatistics=FALSE, streams=streams, type="double", 
                             workgroupSize = Nglobal,verbose=F)
 
 
@@ -134,6 +134,23 @@ res5$counts
 
 
 
+```{data, echo=FALSE,  results="hide",  eval=F}
+exampleone<- read.csv("/home/ruoyong/paper2/try1.csv")
+exampleone<-exampleone[,-1]
+exampleone<-data.matrix(exampleone)
+```
+
+```{Timecompare1, eval=F}
+Nglobal<-c(128,64)
+streams = gpuR::vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
+
+system.time(fisher.test(exampleone,simulate.p.value = TRUE,B=1e7))
+
+exampleone<-vclMatrix(exampleone,type="integer")
+system.time(gpuRandom::fisher.sim(exampleone, 10000000L, returnStatistics=FALSE, 
+                       type="double", streams=streams, 
+                       workgroupSize = Nglobal, verbose=TRUE))
+```
 
 
 

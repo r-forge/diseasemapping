@@ -47,7 +47,7 @@ runif = function(
   
   invisible(streams)
   
-  if(ncol(xVcl)==1) xVcl = drop(xVcl)
+  if(ncol(xVcl)==1) xVcl <- as.vclVector(xVcl)
   xVcl
   
 }
