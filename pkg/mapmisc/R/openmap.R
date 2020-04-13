@@ -292,8 +292,10 @@ openmap = function(x, zoom,
 
       resultProj = stack(resultProj1)
       
-      for(D in names(resultProj))
-        resultProj[[D]]@legend@colortable = oldColorTable[[D]]
+      for(D in names(resultProj)) {
+        if(length(oldColorTable[[D]]))
+          resultProj[[D]]@legend@colortable = oldColorTable[[D]]
+      }
       
       
       if(verbose) cat("done\n")
