@@ -9,7 +9,7 @@ empty:
 %.pdf: %.tex
 	xelatex -interaction=nonstopmode $<;
 	xelatex -interaction=nonstopmode $<
-	R --slave -e "tools::compactPDF('$@', gs_quality='ebook')" 
+#	R --slave -e "tools::compactPDF('$@', gs_quality='ebook')" 
 
 %.md: %.Rmd
 	R --slave -e "knitr::knit('$<')" fact=2
