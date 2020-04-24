@@ -44,8 +44,11 @@ worldMap = rgeos::gSimplify(
 worldMap = SpatialPolygonsDataFrame(
 	worldMap, data=earth@data)
 
+worldMap$NAME = gsub("C.te d.Ivoire", "Cote d Ivoire", worldMap$NAME)
+
+
 save(list='worldMap', 
-	file=file.path('/home/patrick',
+	file=file.path('~',
 #	  'workspace',
     'research',
 		'diseasemapping/pkg/mapmisc/data/worldMap.RData'),
