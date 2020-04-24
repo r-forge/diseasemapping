@@ -229,7 +229,12 @@ if(haveRgdal){
     path='osm-no-labels', fact=fact,
     buffer=c(4,1,2,1)*1000*1000)
   
-} 
+} else {
+  southInset = openmap(waterhouseMerc, 
+    path='osm-no-labels', fact=fact,
+    buffer=c(4,0,0,1.5)*1000*1000, 
+    crs=NA)
+}
 ```
 
 Red circle has radius 1km.
