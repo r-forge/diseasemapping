@@ -45,7 +45,7 @@ extentSmall = extentUsr
 		
 if(is.character(crs))
 			crs = CRS(crs)
-if(class(crs) != "CRS")
+if(any(class(crs) != "CRS"))
 	crs = CRS(proj4string(crs))
 
 bboxSmall = t(bbox(extentSmall))

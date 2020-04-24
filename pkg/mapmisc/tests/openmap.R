@@ -56,68 +56,90 @@ if(require('rgdal', quietly=TRUE)) {
 #	text(mycities, labels=mycities$name, col='red',pos=4)
     scaleBar(first)
   }
-  
+}  
   
   thezoom=6
   
 # only do the following if running unix (because nsl is available)
 # and if the OpenStreetMap.org web site can be accessed
+if(require('rgdal', quietly=TRUE)) {
   
   # raster, result will be in project of the raster (long-lat)
-  mytiles = openmap(x=extend(myraster,1),
+  mytiles = openmap(
+    x=extend(myraster,1),
     zoom=thezoom)
 #		mycities = GNcities(extend(myraster,1),max=5)
   myplot(myraster, myPoints)
-  
+}  
+if(require('rgdal', quietly=TRUE)) {
+
   # slash at the end
   mytiles = openmap(extend(myraster,1),zoom=thezoom, 
     path="http://tile.openstreetmap.org/")
 #		mycities = GNcities(extend(myraster,1),max=5)
   myplot(myraster, myPoints)
+}  
+if(require('rgdal', quietly=TRUE)) {
   
   # no http at beginning
   mytiles = openmap(extend(myraster,1),path="tile.openstreetmap.org")
 #		mycities = GNcities(extend(myraster,1),max=5)
   myplot(myraster, myPoints)
   
+}  
+if(require('rgdal', quietly=TRUE)) {
   
   # extent, tiles will be long-lat
   mytiles = openmap(extent(myraster),zoom=thezoom)
   # cities will be long=lat
 #		mycities = GNcities(extent(myraster),max=5,lang="fr")
 #		myplot(mycities,myPoints)
+}  
+if(require('rgdal', quietly=TRUE)) {
   
   # give the bbox, long lat
   mytiles = openmap(bbox(myraster),zoom=thezoom)
 #		mycities = GNcities(bbox(myraster),max=5)
 #		myplot(mycities,myPoints)
   
+}  
+if(require('rgdal', quietly=TRUE)) {
   
   # give points, result is CRS of points (long-lat)
   mytiles = openmap(myPoints,zoom=thezoom)
 #		mycities = GNcities(myPoints,max=5,lang="es")
   myplot(myPoints)
+}  
+if(require('rgdal', quietly=TRUE)) {
   
   # UTM raster
   mytiles = openmap(myrasterUTM,zoom=thezoom)
 #		mycities = GNcities(myrasterUTM,max=5)
   myplot(myrasterUTM, myPointsUTM)
+}  
+if(require('rgdal', quietly=TRUE)) {
   
   # supply a crs
   mytiles = openmap(x=extent(myrasterUTM),zoom=thezoom, 
     crs=proj4string(myrasterUTM))
 #		mycities = GNcities(myrasterUTM,max=5)
   myplot(myrasterUTM, myPointsUTM)
+}  
+if(require('rgdal', quietly=TRUE)) {
   
   # utm points
   mytiles = openmap(myPointsUTM,zoom=thezoom)
 #		mycities = GNcities(myPointsUTM,max=5)
   myplot(myPointsUTM)
+}  
+if(require('rgdal', quietly=TRUE)) {
   
   # specify different output crs
   mytiles = openmap(myPointsUTM, crs=CRS("+init=epsg:4326"))
 #	mycities = GNcities(myPoints,max=5)
   myplot(myPoints)
+}  
+if(require('rgdal', quietly=TRUE)) {
   
   # one point only
   mytiles = openmap(coordinates(myPoints)[1,], zoom=4)

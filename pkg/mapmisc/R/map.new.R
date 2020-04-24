@@ -10,7 +10,7 @@ map.new = function(x, legendRight=FALSE, buffer=0,
   xpoints = as(extend(extent(x), buffer), 'SpatialPoints')
 
 	thecrs = try(proj4string(x), silent=TRUE) 
-	if(class(thecrs)!="try-error" & !is.na(thecrs)) {
+	if(any(class(thecrs)!="try-error") & !is.na(thecrs)) {
 			proj4string(xpoints) = CRS(thecrs)
 	}
   

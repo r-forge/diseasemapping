@@ -22,7 +22,7 @@ Country borders from naturalearthdata.com
 library("mapmisc")
 
 data("worldMap")
-myMap = openmap(worldMap, zoom=1, fact=2)
+myMap = openmap(worldMap, zoom=1, fact=1.5)
 map.new(worldMap)
 plot(myMap, add=TRUE)
 plot(worldMap, border='red', lwd=3, add=TRUE)

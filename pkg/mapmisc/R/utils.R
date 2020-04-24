@@ -78,7 +78,7 @@ extentMerc = new("Extent"
   } else {
     # no rgdal, try to use raster, doesn't always work
 		message("install rgdal to use map projections")
-    result = extent(x)
+    result = extend(extent(x), extend)
   }
   
   result
