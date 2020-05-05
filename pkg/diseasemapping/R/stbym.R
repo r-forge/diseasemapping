@@ -116,7 +116,7 @@ stbym = function(
       prior$spaceTime$ar$param[1],',', prior$spaceTime$ar$param[2],
       ')))) )')
   formulaOrig = formula
-  formulaUpdated = update.formula(formula, stFormula)
+  formulaUpdated = stats::update.formula(formula, stFormula)
 
   fromBym = bym(
     formula.fitted=formulaOrig,
