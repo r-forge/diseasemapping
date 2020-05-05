@@ -1,3 +1,11 @@
+precToSd = function(densmat) {
+  densmat[,"y"] = densmat[,"y"] * 2*  densmat[,"x"]^(3/2) 
+  densmat[,"x"] = 1/sqrt(densmat[,"x"])  
+  densmat
+}
+
+
+
 getStRes = function(x, Squant = c(0.5, 0.025, 0.975)) {
 
 qCols = paste0(Squant, 'quant')
@@ -9,7 +17,7 @@ qCols = paste0(Squant, 'quant')
 
 for(Dpar in names(x$summary.random)) {
   result$marginals[[paste('SD for', Dpar)]] = 
-    Pmisc::precToSd(x$marginals.hyperpar[[paste('Precision for', Dpar)]])
+    precToSd(x$marginals.hyperpar[[paste('Precision for', Dpar)]])
 
   result$summary[paste('SD for', Dpar), ] = NA
   result$summary[paste('SD for', Dpar), qCols] = 
