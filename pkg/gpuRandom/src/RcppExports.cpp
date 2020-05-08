@@ -5,6 +5,23 @@
 
 using namespace Rcpp;
 
+// backsolveBatchBackend
+SEXP backsolveBatchBackend(Rcpp::S4 C, Rcpp::S4 A, Rcpp::S4 B, const int diagIsOne, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal, const int NlocalCache);
+RcppExport SEXP _gpuRandom_backsolveBatchBackend(SEXP CSEXP, SEXP ASEXP, SEXP BSEXP, SEXP diagIsOneSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP, SEXP NlocalCacheSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type C(CSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type A(ASEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type B(BSEXP);
+    Rcpp::traits::input_parameter< const int >::type diagIsOne(diagIsOneSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nglobal(NglobalSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nlocal(NlocalSEXP);
+    Rcpp::traits::input_parameter< const int >::type NlocalCache(NlocalCacheSEXP);
+    rcpp_result_gen = Rcpp::wrap(backsolveBatchBackend(C, A, B, diagIsOne, Nglobal, Nlocal, NlocalCache));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cholBatchBackend
 void cholBatchBackend(Rcpp::S4 A, Rcpp::S4 D, std::vector<int> Nglobal, std::vector<int> Nlocal, std::vector<int> NlocalCache);
 RcppExport SEXP _gpuRandom_cholBatchBackend(SEXP ASEXP, SEXP DSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP, SEXP NlocalCacheSEXP) {
@@ -143,6 +160,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_gpuRandom_backsolveBatchBackend", (DL_FUNC) &_gpuRandom_backsolveBatchBackend, 7},
     {"_gpuRandom_cholBatchBackend", (DL_FUNC) &_gpuRandom_cholBatchBackend, 5},
     {"_gpuRandom_cpp_gpuFisher_test", (DL_FUNC) &_gpuRandom_cpp_gpuFisher_test, 6},
     {"_gpuRandom_cpp_mrg31k3pCreateStreams", (DL_FUNC) &_gpuRandom_cpp_mrg31k3pCreateStreams, 1},

@@ -33,7 +33,7 @@ template <typename T> std::string mrg31k3pTypeString();
 std::string mrg31k3pString();
 std::string colsumRowsumString();
 
-double colsumRowsum(
+double logfactsum(
     viennacl::matrix<int>  &x, //viennacl::vector_base<int>  rowSum,viennacl::vector_base<int>  colSum,   
     Rcpp::IntegerVector numWorkItems,
     int ctx_id);

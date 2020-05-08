@@ -12,7 +12,7 @@ Leading causes of death, total population, by age group at time of death, all ag
   A data frame with 51 observations on the 19 variables, with columns being the year
  and row being the leading causes of death.
   }
-}
+
 
 \source{ 
 \url{https://doi.org/10.25318/1310039401-eng}

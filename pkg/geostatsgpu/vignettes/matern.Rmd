@@ -161,7 +161,7 @@ create a matrix of independent normals
 ```{r multLowerSetup}
 Nmatrix = nrow(diagMat)
 set.seed(0)
-zmat = matrix(rnorm(ncol(outputBatchF) * Nsim * Nmatrix), ncol=Nsim)
+zmat = matrix(rnorm(ncol(outputBatchF) * Nsim * nrow(diagMat)), ncol=Nsim)
 zmatGpu = vclMatrix(zmat, type = gpuR::typeof(outputChol))
 ```
 
@@ -249,7 +249,7 @@ for(D in names(simRaster)) {
   
 solveMat = -99 +0*simMat
 
-geostatsgpu:::backsolveBatchBackend(
+gpuRandom:::backsolveBatchBackend(
   solveMat, outputChol, simMat, 
   diagIsOne = TRUE,   
   Nglobal = Nglobal,

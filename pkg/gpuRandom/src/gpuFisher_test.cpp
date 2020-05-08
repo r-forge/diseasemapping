@@ -280,7 +280,7 @@ int gpuFisher_test(
   Rcpp::Rcout << "x0 " << x(0,0) << " row0 " << sr(0)<< " col0 " << sc(0) << "\n";
 #endif  
 
-  statistics = colsumRowsum(x, numWorkItems, ctx_id);
+  statistics = logfactsum(x, numWorkItems, ctx_id);
 
 
 

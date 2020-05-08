@@ -78,21 +78,15 @@ head(coordsSp@coords)
 
 ```{r paramsBatch}
 myParamsBatch = rbind(
-  c(shape=1.25, range=0.5, variance = 1.5, nugget = 0, 
-             anisoRatio = 1, 
-             anisoAngleRadians = 0), 
-c(shape=2.15, range=0.25, variance = 2, nugget = 0, 
-             anisoRatio = 4, 
-             anisoAngleRadians = pi/7),
-c(shape=0.55, range=1.5, variance = 2, nugget = 0, 
-             anisoRatio = 4, 
-             anisoAngleRadians = pi/7),
-c(shape=2.15, range=0.5, variance = 2, nugget = 0, 
-             anisoRatio = 4, 
-             anisoAngleRadians = -pi/7),
-c(shape=2.15, range=0.1, variance = 2, nugget = 0, 
-             anisoRatio = 2, 
-             anisoAngleRadians = pi/4))
+c(shape=1.25, range=0.5, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
+
+c(shape=2.15, range=0.25, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = pi/7),
+
+c(shape=0.55, range=1.5, variance = 2, nugget = 0, anisoRatio = 4,  anisoAngleRadians = pi/7),
+
+c(shape=2.15, range=0.5, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = -pi/7),
+
+c(shape=2.15, range=0.1, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/4))
 
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
 myParamsBatch
@@ -100,23 +94,20 @@ myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myPa
 
 ```
 
-```{r outputBatchCreate, eval=F}
+```{r outputBatchCreate, eval=T}
 library(gpuR)
-coordsGpu = vclMatrix(coordsSp@coords, 
-                        nrow(coordsSp@coords), 
-                        ncol(coordsSp@coords), type=theType)
+coordsGpu = vclMatrix(coordsSp@coords, nrow(coordsSp@coords), ncol(coordsSp@coords), type=theType)
 
-paramsGpu =  vclMatrix(myParamsBatch, 
-  type=gpuR::typeof(coordsGpu))
-outputBatchF = vclMatrix(0, 
-    nrow(paramsGpu)*nrow(coordsGpu), nrow(coordsGpu),
-    type=gpuR::typeof(paramsGpu))
+paramsGpu = vclMatrix(myParamsBatch, type=gpuR::typeof(coordsGpu))
+
+outputBatchF = vclMatrix(0, nrow(paramsGpu)*nrow(coordsGpu), nrow(coordsGpu), type=gpuR::typeof(paramsGpu))
+
 class(outputBatchF)
 ```
 
 
 
-```{r batchMatern, eval=F}
+```{r batchMatern, eval=T}
 system.time(gpuRandom:::maternBatchBackend(
     outputBatchF,
     coordsGpu, 
@@ -129,18 +120,23 @@ dim(outputBatchF)
 
 
 
-```{r batchMaternCompare, include=FALSE, eval=FALSE}
+```{r batchMaternCompare, include=FALSE, eval=T}
 # Compare output to geostatsp's matern
 
 geostatsp::matern(
     x=coordsSp,
     param=drop(myParamsBatch[1,1:7])
     )[1:4,1:4]
+
 as.matrix(outputBatchF)[1:4,1:4]
+
+
+
 var4cpu = geostatsp::matern(
     x=coordsSp,
     param=drop(myParamsBatch[4,1:7])
     )
+
 var4gpu = outputBatchF[seq(1+3*nrow(coordsGpu),len=nrow(coordsGpu)), ]
 var4cpu[1:4,1:4]
 as.matrix(var4gpu)[1:4,1:4]
@@ -150,20 +146,19 @@ range(var4cpu - as.matrix(var4gpu))
 # Cholesky
 
 
-```{r cholBach, eval = F}
-diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), 
-                    type = gpuR::typeof(outputBatchF))
-outputChol = vclMatrix(0, nrow(outputBatchF), ncol(outputBatchF), 
-                    type = gpuR::typeof(outputBatchF))
-system.time(
-gpuRandom:::cholBatchBackend(
+```{r cholBach, eval = T}
+diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), type = gpuR::typeof(outputBatchF))
+
+outputChol = vclMatrix(0, nrow(outputBatchF), ncol(outputBatchF), type = gpuR::typeof(outputBatchF))
+
+system.time(gpuRandom:::cholBatchBackend(
   outputChol, diagMat, 
   Nglobal = NglobalChol,
   Nlocal = NlocalChol,
   NlocalCache = NlocalCache))
 ```
 
-```{r cholBatchCpu, include=FALSE, eval=FALSE}
+```{r cholBatchCpu, include=FALSE, eval=TRUE}
 cholCpu = as.matrix(chol(var4cpu))
 theDiag = diag(cholCpu)
 cholCpu = cholCpu %*% diag(1/theDiag)
@@ -186,22 +181,21 @@ range(theDiag - as.matrix(diagMat)[4,])
 create a matrix of independent normals
 
 
-```{r randomNormalsSim, eval=F}
+```{r randomNormalsSim, eval=TRUE}
 set.seed(1)
 streams = gpuRandom::CreateStreams(prod(NglobalRandom))
 streamsGpu = vclMatrix(streams, type='integer')
 
 zMatGpu = vclMatrix(nrow=as.integer(ncol(outputBatchF) * nrow(myParamsBatch)),
-                     ncol=as.integer(Nsim),
-                     type = gpuR::typeof(outputBatchF))
+                    ncol=as.integer(Nsim),
+                    type = gpuR::typeof(outputBatchF))
 dim(zMatGpu)
 
-system.time(
-  gpuRandom:::gpuRnBackend(zMatGpu, streamsGpu, NglobalRandom, "normal")
-)
+system.time(gpuRandom:::gpuRnBackend(zMatGpu, streamsGpu, NglobalRandom, "normal"))
+
 ```
 
-```{r checkRange, eval=FALSE, include=FALSE}
+```{r checkRange, eval=T, include=FALSE}
 streams[1:3,1:6]
 as.matrix(streamsGpu[1:3,1:6])
 zMatCpu = as.matrix(zMatGpu)
@@ -214,7 +208,7 @@ qqnorm(as.vector(zMatCpu))
 
 compute U = L D^(1/2) Z, where LDLt is the Cholesky of the variance matrix, Z is the independent normals
 
-```{r multLowerGpu, eval = F}
+```{r multLowerGpu, eval = T}
 simMat = deepcopy(-100*zMatGpu)
 
 system.time(
@@ -232,11 +226,11 @@ gpuRandom:::multiplyLowerDiagonalBatchBackend(
 
 # Plot simulated materns
 
-```{r plotSimNames,eval=F }
+```{r plotSimNames,eval=T }
 theNames = apply(expand.grid('par',1:nrow(paramsGpu), 'sim', 1:Nsim), 1, paste, collapse='')
 ```
 
-```{r plotSimSetup, eval = F}
+```{r plotSimSetup, eval = T}
 library(raster)
 simRaster = brick(myRaster, 
   nl = ncol(simMat)*nrow(paramsGpu))
@@ -244,7 +238,7 @@ system.time(values(simRaster) <- as.vector(as.matrix(simMat)))
 names(simRaster) = theNames
 ```
 
-```{r plotSim, fig.height=5, fig.width=4, out.width="paste0(98/nrow(paramsGpu), '%')", fig.cap='simulations', fig.subcap = 'theNames', eval = F}
+```{r plotSim, fig.height=5, fig.width=4, out.width="paste0(98/nrow(paramsGpu), '%')", fig.cap='simulations', fig.subcap = 'theNames', eval = T}
 par(mar=rep(0.1, 4))
 for(D in names(simRaster)) {
   plot(extent(simRaster))
@@ -253,9 +247,43 @@ for(D in names(simRaster)) {
   
 ```
 
-# Backsolve
+
 
 outputChol a = cbind(Y, 1), solve for a
+
+# Backsolve
+
+```{r backsolve, echo=TRUE}
+  
+solveMat = -99 +0*simMat
+
+geostatsgpu:::backsolveBatchBackend(
+  solveMat, outputChol, simMat, 
+  diagIsOne = TRUE,   
+  Nglobal = Nglobal,
+  Nlocal = Nlocal,
+  NlocalCache = NlocalCache)
+
+Nglobal
+Nlocal
+Nglobal/Nlocal
+
+as.matrix(simMat[1:12,])
+
+as.matrix(solveMat[1:12,])
+
+L = as.matrix(outputChol[1:ncol(outputChol), ])
+L[!lower.tri(L, diag=TRUE)] = 0
+diag(L) = 1
+L[1:4,1:4]
+
+solve(L, as.matrix(simMat[1:ncol(outputChol),]))[1:12, ]
+
+```
+
+
+
+
 
 # extra info
 

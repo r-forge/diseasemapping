@@ -40,7 +40,7 @@ std::string colsumRowsumString(const int Nrow, const int Ncol, const int NpadCol
   result += "if(get_global_id(1)) { // sum columns\n"
   "  for(Drow = get_global_id(0); Drow < Nrow; Drow++){\n"
   "    result = 0;\n"
-  "    for(Dcol = 0, Dindex = Drow*NpadCol; Dcol < Ncol; Dcol++, Dindex++){\n"
+  "    for(Dcol = 0, Dindex = Drow*NpadCol+Dcol; Dcol < Ncol; Dcol++, Dindex++){\n"
   "       result += x[Dindex];\n"    
   "    } // end loop through columns\n"
   "    colSum[Dcol] = result;\n"
@@ -59,8 +59,8 @@ std::string colsumRowsumString(const int Nrow, const int Ncol, const int NpadCol
     
   result += 
     "}//kernel\n";
+*/
 
-*/ 
   
   result += 
     "\n\n__kernel void sumLfactorial(\n"
@@ -92,10 +92,20 @@ std::string colsumRowsumString(const int Nrow, const int Ncol, const int NpadCol
   return(result);
 }
 
-// viennacl::vector_base<int>  rowSum, viennacl::vector_base<int>  colSum,  
 
-double colsumRowsum(
-    viennacl::matrix<int> &x,
+
+
+
+
+
+
+
+
+
+
+
+double logfactsum(
+    viennacl::matrix<int> &x,// viennacl::vector_base<int>  rowSum, viennacl::vector_base<int>  colSum,  
     Rcpp::IntegerVector numWorkItems,
     int ctx_id) {
   

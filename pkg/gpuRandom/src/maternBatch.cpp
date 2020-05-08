@@ -406,7 +406,7 @@ void fill22params(
     mu = shape - nuround;
     pi_nu = M_PI * mu,
       
-      Rtemme_gamma(&mu, &g_1pnu, &g_1mnu, &g1, &g2);
+    Rtemme_gamma(&mu, &g_1pnu, &g_1mnu, &g1, &g2);
     
     
     param(D, 7) = (T) cos(theta);
@@ -440,7 +440,8 @@ void fill22params(
   
 }
 
-template<typename T> void maternBatchVcl(
+template<typename T> 
+void maternBatchVcl(
     viennacl::matrix<T> &vclVar, // Nmat columns N^2 rows
     viennacl::matrix<T> &vclCoords, // 2 columns
     viennacl::matrix<T> &param, // Nmat rows, 22 columns
@@ -463,7 +464,7 @@ template<typename T> void maternBatchVcl(
 {
   
   const int 
-  N = vclCoords.size1(),
+    N = vclCoords.size1(),
     Nmatrix = param.size1(),
     Npad = vclVar.internal_size2(),
     NpadBetweenMatrices = Npad*N; // change to Npad*(Nmat+k) to insert extra rows between matrices
@@ -542,13 +543,9 @@ void maternBatchBackend(
   std::string precision_type = (std::string) classVarR;
   
   if(precision_type == "fvclMatrix") {
-    maternBatchTemplated<float>(
-      var, coords, param, 
-      Nglobal, Nlocal);
+    maternBatchTemplated<float>(var, coords, param, Nglobal, Nlocal);
   } else if (precision_type == "dvclMatrix") {
-    maternBatchTemplated<double>(
-      var, coords, param, 
-      Nglobal, Nlocal);
+    maternBatchTemplated<double>(var, coords, param, Nglobal, Nlocal);
   } else {
     Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
   }
