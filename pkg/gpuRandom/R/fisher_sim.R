@@ -94,13 +94,16 @@ fisher.sim=function(
   
   counts<-cpp_gpuFisher_test(x, results, as.integer(B), streams, workgroupSize,localSize)
   
+  #theTime<-system.time(cpp_gpuFisher_test(x, results, as.integer(B), streams, workgroupSize,localSize))
+  
   
   # if(verbose)
-  #   print(theTime)
+     #print(theTime)
   #time 
   
   PVAL <- ((1 + counts ) / (as.integer(B) + 1))
-  
+  #counts<-10
+  #PVAL<-0.1
   # format(PVAL, digits=5)
   #if(class(PVAL) == 'try-error') {
   #  PVAL = counts

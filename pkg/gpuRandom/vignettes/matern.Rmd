@@ -255,18 +255,18 @@ outputChol a = cbind(Y, 1), solve for a
 
 ```{r backsolve, echo=TRUE}
   
-solveMat = -99 +0*simMat
-
-geostatsgpu:::backsolveBatchBackend(
+#solveMat = -99 +0*simMat
+solveMat=vclMatrix(0, nrow(simMat),ncol(simMat),type=gpuR::typeof(outputChol))
+gpuRandom:::backsolveBatchBackend(
   solveMat, outputChol, simMat, 
   diagIsOne = TRUE,   
-  Nglobal = Nglobal,
-  Nlocal = Nlocal,
+  Nglobal = NglobalChol,
+  Nlocal = NlocalChol,
   NlocalCache = NlocalCache)
 
-Nglobal
-Nlocal
-Nglobal/Nlocal
+NglobalChol
+NlocalChol
+NglobalChol/NlocalChol
 
 as.matrix(simMat[1:12,])
 

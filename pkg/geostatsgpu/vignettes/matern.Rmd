@@ -247,7 +247,9 @@ for(D in names(simRaster)) {
 
 ```{r backsolve, echo=TRUE}
   
-solveMat = -99 +0*simMat
+#solveMat = -99 +0*simMat  # create a new vclmatrix
+solveMat=vclMatrix(0, nrow(simMat),ncol(simMat),type=gpuR::typeof(outputChol))
+
 
 gpuRandom:::backsolveBatchBackend(
   solveMat, outputChol, simMat, 

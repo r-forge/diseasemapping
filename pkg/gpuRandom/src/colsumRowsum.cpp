@@ -12,9 +12,7 @@ std::string colsumRowsumString(const int Nrow, const int Ncol, const int NpadCol
   std::string result = "";
   
   if(typeStringSum == "double") {
-    
     result += "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n";
-    
   }
 
 
@@ -30,8 +28,6 @@ std::string colsumRowsumString(const int Nrow, const int Ncol, const int NpadCol
     "  __global " + typeString + "* rowSum,\n"  
     "  __global " + typeString + "* colSum\n"
     "){\n\n";  
-  
-  
  
   result += "int Drow, Dcol, Dindex;\n";
   result += typeString + " result;\n";
@@ -109,7 +105,6 @@ double logfactsum(
     Rcpp::IntegerVector numWorkItems,
     int ctx_id) {
   
-
   double result;
   
 

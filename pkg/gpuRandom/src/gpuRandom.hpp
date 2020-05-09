@@ -11,6 +11,7 @@
 
 //from typeDef.cpp
 template <typename T> std::string openclTypeString();
+
 template <typename T> int sizeOfReal();
 
 
@@ -37,6 +38,23 @@ double logfactsum(
     viennacl::matrix<int>  &x, //viennacl::vector_base<int>  rowSum,viennacl::vector_base<int>  colSum,   
     Rcpp::IntegerVector numWorkItems,
     int ctx_id);
+
+
+
+template <typename T>  std::string logfactString();
+
+
+template <typename T>  
+void logfactorial(
+    viennacl::vector<int> &x,
+    viennacl::vector<T>  &output, //must be same length with x
+    Rcpp::IntegerVector numWorkItems,
+    int ctx_id);
+
+
+
+
+
 
 
 

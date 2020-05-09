@@ -53,8 +53,8 @@ std::string FisherSimkernelString(const int NR, const int NC, const int NpadStre
   "   __global int *nrowt, \n"
   "   __global int *ncolt, \n"
   "   const int n, \n" 
-  "   const int vsize,\n"
-  " __global  int *count, \n" // length number of work items
+  "   const int vsize,\n"   //number of simulations
+  " __global  int *count, \n" // number of work items
    + typeString + " threshold,\n"
   " __global  " + typeString + "  *fact,\n"
   " __global  " + typeString + "  *results,\n" // fisher log p
@@ -280,33 +280,26 @@ int gpuFisher_test(
   Rcpp::Rcout << "x0 " << x(0,0) << " row0 " << sr(0)<< " col0 " << sc(0) << "\n";
 #endif  
 
-  statistics = logfactsum(x, numWorkItems, ctx_id);
-
-
-
-  // if(viennacl::min(sr) <= 0) RCpp::warning("zeros in row sums");
+  statistics = logfactsum(x, numWorkItems, ctx_id);   // if(viennacl::min(sr) <= 0) RCpp::warning("zeros in row sums");
   threshold = (T) (-statistics)/(1+64 * DOUBLE_EPS);
   
     
-   row_sum_impl(x, sr);
-   column_sum_impl(x, sc);
-  int n = viennacl::linalg::sum(sr);
-  
-  viennacl::vector<T> fact(n+1); 
-  T factTemp;
+  row_sum_impl(x, sr);
+  column_sum_impl(x, sc);
+  int n = viennacl::linalg::sum(sr); //sum of row/column totals
   
   viennacl::vector<int> count(numWorkItems[0]*numWorkItems[1]); 
   
-  // Calculate log-factorials.  fact[i] = lgamma(i+1)/
-  fact(0) = 0.;
-  fact(1) = 0.;
-  factTemp = 0.;
+  viennacl::vector<int> factTemp(n+1); 
+  viennacl::vector<T> factTrue(n+1); 
+
   int i;
-  for(i = 2; i <= n; i++) {
-    factTemp = factTemp + log(i);
-    fact(i) = factTemp;    //    fact(i) = fact(i - 1) + log(i);
+  for(i = 0; i <= n; i++) {
+    factTemp(i) = i;  
   }
-  
+
+ // Calculate log-factorials.  fact[i] = lgamma(i+1)/ //    fact(i) = fact(i - 1) + log(i); 
+  logfactorial(factTemp, factTrue, numWorkItems, ctx_id);
 
   
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));  
@@ -322,7 +315,7 @@ int gpuFisher_test(
   
   
   
-  viennacl::ocl::enqueue( fisher_sim  (sr, sc, n, B, count, threshold, fact, results, streams) ); 
+  viennacl::ocl::enqueue( fisher_sim  (sr, sc, n, B, count, threshold, factTrue, results, streams) ); 
  
   countss = viennacl::linalg::sum(count);
 
