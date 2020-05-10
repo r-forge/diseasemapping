@@ -43,14 +43,15 @@ std::string logfactString() {
 }
 
 
-template <typename T> void logfactorial(
-    viennacl::vector<T>  &output, 
+//template <typename T> 
+void logfactorial(
+    viennacl::vector<float>  &output, 
     Rcpp::IntegerVector numWorkItems,
     int ctx_id) {
 
   const int numelements=output.size();
   
-  std::string logKernelString = logfactString<T>();
+  std::string logKernelString = logfactString<float>();
   
   // the context
   viennacl::ocl::switch_context(ctx_id);
