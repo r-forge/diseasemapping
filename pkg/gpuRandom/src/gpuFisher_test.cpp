@@ -290,16 +290,16 @@ int gpuFisher_test(
   
   viennacl::vector<int> count(numWorkItems[0]*numWorkItems[1]); 
   
-  viennacl::vector<int> factTemp(n+1); 
+//  viennacl::vector<int> factTemp(n+1); 
   viennacl::vector<T> factTrue(n+1); 
 
-  int i;
-  for(i = 0; i <= n; i++) {
-    factTemp(i) = i;  
-  }
+//  int i;
+//  for(i = 0; i <= n; i++) {
+ //   factTemp(i) = i;  
+ // }
 
  // Calculate log-factorials.  fact[i] = lgamma(i+1)/ //    fact(i) = fact(i - 1) + log(i); 
-  logfactorial(factTemp, factTrue, numWorkItems, ctx_id);
+  logfactorial(factTrue, numWorkItems, ctx_id);
 
   
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));  

@@ -21,7 +21,7 @@ std::string logfactString() {
   
    result += 
    "\n\n__kernel void logfactorial(\n"
-   "  __global int *vector,\n"  
+//   "  __global int *vector,\n"  
    "  __global " + typeString + "* out,\n"  
    " const int numElements\n"
    "){\n";  
@@ -31,10 +31,11 @@ std::string logfactString() {
    result += "const int size = get_global_size(1)*get_global_size(0);\n"
    "const int index = get_global_id(1)*get_global_size(0) + get_global_id(0);\n"
    "int D;\n";
-   
+    result += typeString + " Dfloat;\n\n";   
    
    result += "for(D=index; D< numElements; D+=size){\n"
-     "out[D]=lgamma(vector[D]);\n"
+    " Dfloat = D;\n"
+     "out[D]=lgamma(Dfloat);\n"
    "}\n"
    "}\n";
 
@@ -44,12 +45,12 @@ std::string logfactString() {
 
 template <typename T> 
 void logfactorial(
-    viennacl::vector<int> &x,
+//    viennacl::vector<int> &x,
     viennacl::vector<T>  &output, //must be same length with x
     Rcpp::IntegerVector numWorkItems,
     int ctx_id) {
   
-  const int numelements=x.size();
+  const int numelements=output.size();
   
   std::string logKernelString = logfactString<T>();
   
@@ -71,7 +72,7 @@ void logfactorial(
  // lfactorialKernel.local_work_size(1, 1L);
   
   
-  viennacl::ocl::enqueue(lfactorialKernel(x, output, numelements) );
+  viennacl::ocl::enqueue(lfactorialKernel(output, numelements) );
   
   
 }
