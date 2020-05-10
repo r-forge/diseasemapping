@@ -45,10 +45,10 @@ std::string logfactString() {
 
 //template <typename T> 
 void logfactorial(){
-    viennacl::vector<T>  &output, //must be same length with x
+    viennacl::vector<T>  &output, 
     Rcpp::IntegerVector numWorkItems,
     int ctx_id) {
-#ifdef UNDEF  
+
   const int numelements=output.size();
   
   std::string logKernelString = logfactString<T>();
@@ -70,9 +70,7 @@ void logfactorial(){
  // lfactorialKernel.local_work_size(0, 1L);
  // lfactorialKernel.local_work_size(1, 1L);
   
-  
   viennacl::ocl::enqueue(lfactorialKernel(output, numelements) );
-#endif  
   
 }
 
