@@ -43,13 +43,13 @@ double logfactsum(
 
 template <typename T>  std::string logfactString();
 
-
-template <typename T>  
-void logfactorial(
+/*
+template <typename T> void logfactorial(
     viennacl::vector<T>  &output,  
     Rcpp::IntegerVector numWorkItems,
     int ctx_id);
-
+*/
+void logfactorial();
 
 
 

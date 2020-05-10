@@ -43,8 +43,9 @@ std::string logfactString() {
 }
 
 
-template <typename T> 
-void logfactorial(
+//template <typename T> 
+void logfactorial(){
+  #ifdef UNDEF
 //    viennacl::vector<int> &x,
     viennacl::vector<T>  &output, //must be same length with x
     Rcpp::IntegerVector numWorkItems,
@@ -73,7 +74,7 @@ void logfactorial(
   
   
   viennacl::ocl::enqueue(lfactorialKernel(output, numelements) );
-  
+#endif  
   
 }
 
