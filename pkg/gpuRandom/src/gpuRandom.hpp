@@ -52,6 +52,10 @@ void logfactorial(
     Rcpp::IntegerVector numWorkItems,
     int ctx_id);
 
+void logfactorial(
+    viennacl::vector<double>  &output,  
+    Rcpp::IntegerVector numWorkItems,
+    int ctx_id);
 
 
 
