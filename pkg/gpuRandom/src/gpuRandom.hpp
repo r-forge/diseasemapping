@@ -43,6 +43,7 @@ double logfactsum(
 
 template <typename T>  std::string logfactString();
 
+
 //template <typename T> 
 void logfactorial(
 //    viennacl::vector<T>  &output,  
