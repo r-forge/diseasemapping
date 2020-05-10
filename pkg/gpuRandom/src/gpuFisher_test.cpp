@@ -299,7 +299,7 @@ int gpuFisher_test(
  // }
 
  // Calculate log-factorials.  fact[i] = lgamma(i+1)/ //    fact(i) = fact(i - 1) + log(i); 
-  logfactorial(//factTrue, 
+  logfactorial(factTrue, 
     numWorkItems, ctx_id);
 
   

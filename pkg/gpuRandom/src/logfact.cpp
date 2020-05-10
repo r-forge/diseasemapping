@@ -45,7 +45,7 @@ std::string logfactString() {
 
 //template <typename T> 
 void logfactorial(){
-//    viennacl::vector<T>  &output, //must be same length with x
+    viennacl::vector<T>  &output, //must be same length with x
     Rcpp::IntegerVector numWorkItems,
     int ctx_id) {
 #ifdef UNDEF  
