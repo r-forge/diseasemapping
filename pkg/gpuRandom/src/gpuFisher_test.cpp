@@ -2,7 +2,7 @@
 
 #include <R.h>
 
-//#define DEBUGKERNEL
+#define DEBUGKERNEL
 
 using namespace Rcpp;
 using namespace viennacl; 
@@ -88,7 +88,7 @@ result +=
   
   result += 
     
-  "   for(D = index; D < vsize; D += globalSize) {\n"
+  "   for(D = index; D < vsize; D ++) {\n"
   "      ib = 0;\n"  
   
   /* Construct random matrix */  
@@ -258,6 +258,7 @@ int gpuFisher_test(
  double statistics;
  const int nr = x.size1(), nc = x.size2(), resultSize = results.size();
  int countss=0;
+ int vsize;
  
  std::string kernel_string = FisherSimkernelString<T>(nr, nc, streams.internal_size2());
  if(resultSize >= B) {
@@ -290,17 +291,38 @@ int gpuFisher_test(
   
   viennacl::vector<int> count(numWorkItems[0]*numWorkItems[1]); 
   
-//  viennacl::vector<int> factTemp(n+1); 
-  viennacl::vector<T> factTrue(n+1); 
+  //viennacl::vector<int> factTemp(n+1); 
+  viennacl::vector<double> factTrue(n+1); 
 
-//  int i;
-//  for(i = 0; i <= n; i++) {
+ // int i;
+ // for(i = 0; i <= n; i++) {
  //   factTemp(i) = i;  
  // }
 
  // Calculate log-factorials.  fact[i] = lgamma(i+1)/ //    fact(i) = fact(i - 1) + log(i); 
-  logfactorial(factTrue, 
-    numWorkItems, ctx_id);
+  logfactorial(factTrue, numWorkItems, ctx_id);
+
+
+
+/*
+viennacl::vector<T> fact(n+1); 
+T factTemp;
+
+// Calculate log-factorials.  fact[i] = lgamma(i+1)/
+fact(0) = 0.;
+fact(1) = 0.;
+factTemp = 0.;
+int i;
+for(i = 2; i <= n; i++) {
+  factTemp = factTemp + log(i);
+  fact(i) = factTemp;    //    fact(i) = fact(i - 1) + log(i);
+}
+*/
+
+
+
+
+
 
   
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));  
@@ -314,9 +336,9 @@ int gpuFisher_test(
   fisher_sim.local_work_size(0, 1L);
   fisher_sim.local_work_size(1, 1L);
   
+  vsize=round( B/(numWorkItems[0]*numWorkItems[1]));
   
-  
-  viennacl::ocl::enqueue( fisher_sim  (sr, sc, n, B, count, threshold, factTrue, results, streams) ); 
+  viennacl::ocl::enqueue( fisher_sim  (sr, sc, n, vsize, count, threshold, factTrue, results, streams) ); 
  
   countss = viennacl::linalg::sum(count);
 
@@ -337,7 +359,7 @@ int gpuFisher_test(
 template<typename T> 
 SEXP gpuFisher_test_Templated(
     Rcpp::S4  xR, 
-    Rcpp::S4  resultsR,//double threshold,
+    Rcpp::S4  resultsR,
     int B,
     Rcpp::S4 streamsR,   
     Rcpp::IntegerVector max_global_size,
@@ -362,7 +384,7 @@ SEXP gpuFisher_test_Templated(
 // [[Rcpp::export]]
 SEXP cpp_gpuFisher_test(
     Rcpp::S4  xR, 
-    Rcpp::S4  resultsR,// double threshold,
+    Rcpp::S4  resultsR,
     int B,
     Rcpp::S4 streamsR,  
     Rcpp::IntegerVector max_global_size,

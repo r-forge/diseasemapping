@@ -48,7 +48,7 @@ res1
 #hist(as.vector(res1$sim))
 ```
 
-```{r ex2, eval=F}
+```{r ex2, eval=T}
 ##using the same stream
 res2 = gpuRandom::fisher.sim(x, 200000L, returnStatistics=FALSE, 
                              type="double", streams=streams2, workgroupSize = Nglobal)

@@ -46,13 +46,7 @@ template <typename T>  std::string logfactString();
 
 //template <typename T> 
 
-
-void logfactorial(
-    viennacl::vector<float>  &output,  
-    Rcpp::IntegerVector numWorkItems,
-    int ctx_id);
-
-void logfactorial(
+void logfactorial(//viennacl::vector<int> &x,    
     viennacl::vector<double>  &output,  
     Rcpp::IntegerVector numWorkItems,
     int ctx_id);
