@@ -266,6 +266,14 @@ void convertMatclRng(Rcpp::IntegerMatrix Sin, clrngMrg31k3pStream* streams){
  *  The default is \f$nu = 2^{134}\f$.
  *  The default seed is \f$(12345,12345,12345,12345,12345,12345)\f$.
  */
+struct clrngMrg31k3pStreamCreator_ {
+  clrngMrg31k3pStreamState initialState;
+  clrngMrg31k3pStreamState nextState;
+  /*! @brief Jump matrices for advancing the initial seed of streams
+   */
+  cl_uint nuA1[3][3];
+  cl_uint nuA2[3][3];
+};        
 static clrngMrg31k3pStreamCreator defaultStreamCreator = {
   BASE_CREATOR_STATE,
   BASE_CREATOR_STATE,
