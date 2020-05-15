@@ -299,11 +299,13 @@ Rcpp::IntegerMatrix  cpp_mrg31k3pCreateStreams(int numWorkItems) //this function
   
   clrngMrg31k3pStream streams = 
     clrngMrg31k3pCreateStreams(
-      defaultStreamCreator, 
+      &defaultStreamCreator, 
       numWorkItems, 
-      &streamBufferSize, &err);//line 299 in mrg31k3p.c
+      &streamBufferSize, &err);
+
+      //line 299 in mrg31k3p.c
   
-  convertclRngMat(&streams, result);
+  convertclRngMat(streams, result);
   
   return result;
 }
