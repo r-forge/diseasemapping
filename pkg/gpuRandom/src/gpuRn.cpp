@@ -297,7 +297,7 @@ Rcpp::IntegerMatrix  cpp_mrg31k3pCreateStreams(int numWorkItems) //this function
   
 //  int Ditem,Delement,Dcis,Dg;
   
-  clrngMrg31k3pStream* streams = 
+  clrngMrg31k3pStream streams = 
     clrngMrg31k3pCreateStreams(
       defaultStreamCreator, 
       numWorkItems, 
