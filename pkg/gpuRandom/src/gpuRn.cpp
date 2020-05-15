@@ -245,7 +245,33 @@ void convertMatclRng(Rcpp::IntegerMatrix Sin, clrngMrg31k3pStream* streams){
   
 }
 
+/*! @brief Default initial seed of the first stream
+ */
+#define BASE_CREATOR_STATE { {12345, 12345, 12345 }, { 12345, 12345, 12345 } }
+/*! @brief Jump matrices for \f$2^{134}\f$ steps forward
+ */
+#define BASE_CREATOR_JUMP_MATRIX_1 { \
+        {1702500920, 1849582496, 1656874625}, \
+        { 828554832, 1702500920, 1512419905}, \
+        {1143731069,  828554832,  102237247} }
+#define BASE_CREATOR_JUMP_MATRIX_2 { \
+        { 796789021, 1464208080,  607337906}, \
+        {1241679051, 1431130166, 1464208080}, \
+        {1401213391, 1178684362, 1431130166} }
 
+/*! @brief Default stream creator (defaults to \f$2^{134}\f$ steps forward)
+ *
+ *  Contains the default seed and the transition matrices to jump \f$\nu\f$ steps forward;
+ *  adjacent streams are spaced nu steps apart.
+ *  The default is \f$nu = 2^{134}\f$.
+ *  The default seed is \f$(12345,12345,12345,12345,12345,12345)\f$.
+ */
+static clrngMrg31k3pStreamCreator defaultStreamCreator = {
+  BASE_CREATOR_STATE,
+  BASE_CREATOR_STATE,
+  BASE_CREATOR_JUMP_MATRIX_1,
+  BASE_CREATOR_JUMP_MATRIX_2
+};
 
 //[[Rcpp::export]]
 Rcpp::IntegerMatrix  cpp_mrg31k3pCreateStreams(int numWorkItems) //this function returns a R_stream not clrng stream
@@ -263,7 +289,11 @@ Rcpp::IntegerMatrix  cpp_mrg31k3pCreateStreams(int numWorkItems) //this function
   
 //  int Ditem,Delement,Dcis,Dg;
   
-  clrngMrg31k3pStream* streams = clrngMrg31k3pCreateStreams(NULL, numWorkItems, &streamBufferSize, &err);//line 299 in mrg31k3p.c
+  clrngMrg31k3pStream* streams = 
+    clrngMrg31k3pCreateStreams(
+      defaultStreamCreator, 
+      numWorkItems, 
+      &streamBufferSize, &err);//line 299 in mrg31k3p.c
   
   convertclRngMat(streams, result);
   
