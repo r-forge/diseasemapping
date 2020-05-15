@@ -6,7 +6,7 @@
 \usage{
 fisher.sim(
   x,
-  B,
+  C,
   streams,
   type = c("float", "double")[1 + gpuR::gpuInfo()$double_support],
   returnStatistics = FALSE,

@@ -2,7 +2,7 @@
 
 #include <R.h>
 
-#define DEBUGKERNEL
+//#define DEBUGKERNEL
 
 using namespace Rcpp;
 using namespace viennacl; 
@@ -247,7 +247,7 @@ template<typename T>
 int gpuFisher_test(
     viennacl::matrix<int> &x, //  viennacl::vector_base<int> &sr,  //  viennacl::vector_base<int> &sc,
     viennacl::vector_base<T> &results,  
-    int B, //number of simualtion,
+    int B, //number of simualtion each work item,
     viennacl::matrix<int> &streams,
     Rcpp::IntegerVector numWorkItems,
     Rcpp::IntegerVector numLocalItems,
@@ -258,7 +258,7 @@ int gpuFisher_test(
  double statistics;
  const int nr = x.size1(), nc = x.size2(), resultSize = results.size();
  int countss=0;
- int vsize;
+ 
  
  std::string kernel_string = FisherSimkernelString<T>(nr, nc, streams.internal_size2());
  if(resultSize >= B) {
@@ -291,7 +291,6 @@ int gpuFisher_test(
   
   viennacl::vector<int> count(numWorkItems[0]*numWorkItems[1]); 
   
-  //viennacl::vector<int> factTemp(n+1); 
   viennacl::vector<double> factTrue(n+1); 
 
  // int i;
@@ -319,12 +318,6 @@ for(i = 2; i <= n; i++) {
 }
 */
 
-
-
-
-
-
-  
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));  
  
   viennacl::ocl::program &my_prog = ctx.add_program(kernel_string, "my_kernel");
@@ -336,9 +329,9 @@ for(i = 2; i <= n; i++) {
   fisher_sim.local_work_size(0, 1L);
   fisher_sim.local_work_size(1, 1L);
   
-  vsize=round( B/(numWorkItems[0]*numWorkItems[1]));
+ 
   
-  viennacl::ocl::enqueue( fisher_sim  (sr, sc, n, vsize, count, threshold, factTrue, results, streams) ); 
+  viennacl::ocl::enqueue( fisher_sim  (sr, sc, n, B, count, threshold, factTrue, results, streams) ); 
  
   countss = viennacl::linalg::sum(count);
 

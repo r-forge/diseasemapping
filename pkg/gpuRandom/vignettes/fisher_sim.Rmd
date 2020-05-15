@@ -33,13 +33,13 @@ x<- matrix(c(2, 5, 15, 3), nrow = 2)
 
 fisher.test(x, alternative = "t",  simulate.p.value = T, B = 1e5)
 
-Nglobal = c(64,16)
+Nglobal = c(64,128)
 streams = gpuR::vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
 streams2 = deepcopy(streams)
 
 
 x<-vclMatrix(x,type="integer")
-res1 = gpuRandom::fisher.sim(x, 200000L, returnStatistics=FALSE, 
+res1 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=FALSE, 
                              type="double", streams=streams, workgroupSize = Nglobal)
 
  
@@ -50,7 +50,7 @@ res1
 
 ```{r ex2, eval=T}
 ##using the same stream
-res2 = gpuRandom::fisher.sim(x, 200000L, returnStatistics=FALSE, 
+res2 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=FALSE, 
                              type="double", streams=streams2, workgroupSize = Nglobal)
 as.matrix(streams2[1:4,1:4])
 res2$p.value
