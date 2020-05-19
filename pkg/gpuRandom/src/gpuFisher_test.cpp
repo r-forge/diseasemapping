@@ -88,7 +88,7 @@ result +=
   
   result += 
     
-  "   for(D = index; D < vsize; D ++) {\n"
+  "   for(D = index; D < vsize; D +=globalSize) {\n"
   "      ib = 0;\n"  
   
   /* Construct random matrix */  
@@ -293,12 +293,6 @@ int gpuFisher_test(
   
   viennacl::vector<double> factTrue(n+1); 
 
- // int i;
- // for(i = 0; i <= n; i++) {
- //   factTemp(i) = i;  
- // }
-
- // Calculate log-factorials.  fact[i] = lgamma(i+1)/ //    fact(i) = fact(i - 1) + log(i); 
   logfactorial(factTrue, numWorkItems, ctx_id);
 
 

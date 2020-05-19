@@ -39,18 +39,18 @@ streams2 = deepcopy(streams)
 
 
 x<-vclMatrix(x,type="integer")
-res1 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=FALSE, 
+res1 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=T, 
                              type="double", streams=streams, workgroupSize = Nglobal)
 
  
-res1
+res1$p.value
 #as.vector(res1$sim)
-#hist(as.vector(res1$sim))
+hist(as.vector(res1$sim))
 ```
 
 ```{r ex2, eval=T}
 ##using the same stream
-res2 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=FALSE, 
+res2 = gpuRandom::fisher.sim(x, 100000L, returnStatistics=T, 
                              type="double", streams=streams2, workgroupSize = Nglobal)
 as.matrix(streams2[1:4,1:4])
 res2$p.value
@@ -67,9 +67,10 @@ fisher.test(Job, simulate.p.value = TRUE, B = 1e5) # also close to 0.78
 
 
 Job<-vclMatrix(Job, type="integer")
-result3<-gpuRandom::fisher.sim(Job, 1e5, returnStatistics=FALSE, 
+result3<-gpuRandom::fisher.sim(Job, 1e5, returnStatistics=T, 
                              type="double", streams=streams, workgroupSize = Nglobal)
-result3
+result3$p.value
+result3$sim
 ```
 
 
@@ -97,7 +98,7 @@ Nglobal = c(16,64)
 streams = gpuR::vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
 
 TeaTasting<-vclMatrix(TeaTasting,type="integer")
-result<-gpuRandom::fisher.sim(TeaTasting, 100000L, returnStatistics=FALSE, 
+result<-gpuRandom::fisher.sim(TeaTasting, 100000L, returnStatistics=F, 
                              type="double", streams=streams, workgroupSize = Nglobal)
 
 result$p.value
