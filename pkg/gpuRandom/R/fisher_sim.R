@@ -81,10 +81,12 @@ fisher.sim=function(
   
 #  print(class(xVcl))
 
-  #simnumber<-round(C/prod(workgroupSize))
+  simnumber<-round(C/prod(workgroupSize))
+  
+  #remainder<-C%%prod(workgroupSize)
   
   if(returnStatistics) {
-    results <- gpuR::vclVector(length=as.integer(C), type=type)
+    results <- gpuR::vclVector(length=as.integer(simnumber*prod(workgroupSize)), type=type)
   } else {
     results <- gpuR::vclVector(length=as.integer(1), type=type)
   }
@@ -92,7 +94,7 @@ fisher.sim=function(
   
   PVAL <- NULL
   
-  counts<-cpp_gpuFisher_test(x, results, as.integer(C), streams, workgroupSize,localSize)
+  counts<-cpp_gpuFisher_test(x, results, simnumber, streams, workgroupSize,localSize)
   
   #theTime<-system.time(cpp_gpuFisher_test(x, results, as.integer(B), streams, workgroupSize,localSize))
   
@@ -101,7 +103,7 @@ fisher.sim=function(
      #print(theTime)
   #time 
   
-  PVAL <- (1 + counts ) / (as.integer(C) + 1)
+  PVAL <- (1 + counts ) / (simnumber*prod(workgroupSize) + 1)
   #counts<-10
   #PVAL<-0.1
   # format(PVAL, digits=5)
