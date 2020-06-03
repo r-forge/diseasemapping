@@ -73,6 +73,7 @@ result +=
   "   bool lsm, lsp;\n\n"
   "   int Diter1, Diter2, Diter3, goTo160;\n"
   "   int countD=0;\n";
+ // "   int newsize=round((vsize-index)/globalSize);\n";
 
  
   
@@ -88,7 +89,7 @@ result +=
   
   result += 
     
-  "   for(D = index; D < vsize; D +=globalSize) {\n"
+  "   for(D = 0; D < vsize; D ++) {\n"
   "      ib = 0;\n"  
   
   /* Construct random matrix */  
@@ -216,7 +217,7 @@ result +=
 
     result += "\n" 
     "#ifdef returnResults\n"
-    "results[D] = ans;\n"   
+    "results[index + D*globalSize] = ans;\n"   
     "#endif\n";
     
     
@@ -247,7 +248,7 @@ template<typename T>
 int gpuFisher_test(
     viennacl::matrix<int> &x, //  viennacl::vector_base<int> &sr,  //  viennacl::vector_base<int> &sc,
     viennacl::vector_base<T> &results,  
-    int B, //number of simualtion each work item,
+    int B, //number of simualtion each work item, // int remainder,
     viennacl::matrix<int> &streams,
     Rcpp::IntegerVector numWorkItems,
     Rcpp::IntegerVector numLocalItems,
@@ -258,6 +259,7 @@ int gpuFisher_test(
  double statistics;
  const int nr = x.size1(), nc = x.size2(), resultSize = results.size();
  int countss=0;
+// int userrequired=(B-1)*numWorkItems[0]*numWorkItems[1]+remainder;
  
  
  std::string kernel_string = FisherSimkernelString<T>(nr, nc, streams.internal_size2());
@@ -347,7 +349,7 @@ template<typename T>
 SEXP gpuFisher_test_Templated(
     Rcpp::S4  xR, 
     Rcpp::S4  resultsR,
-    int B,
+    int B,// int remainder,
     Rcpp::S4 streamsR,   
     Rcpp::IntegerVector max_global_size,
     Rcpp::IntegerVector max_local_size){
@@ -372,7 +374,7 @@ SEXP gpuFisher_test_Templated(
 SEXP cpp_gpuFisher_test(
     Rcpp::S4  xR, 
     Rcpp::S4  resultsR,
-    int B,
+    int B,// int remainder,
     Rcpp::S4 streamsR,  
     Rcpp::IntegerVector max_global_size,
     Rcpp::IntegerVector max_local_size){

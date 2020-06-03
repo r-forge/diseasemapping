@@ -127,17 +127,18 @@ BEGIN_RCPP
 END_RCPP
 }
 // multiplyDiagonalBatchBackend
-SEXP multiplyDiagonalBatchBackend(Rcpp::S4 C, Rcpp::S4 A, Rcpp::S4 B, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal);
-RcppExport SEXP _gpuRandom_multiplyDiagonalBatchBackend(SEXP CSEXP, SEXP ASEXP, SEXP BSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP) {
+SEXP multiplyDiagonalBatchBackend(Rcpp::S4 C, Rcpp::S4 A, Rcpp::S4 B, const int inverse, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal);
+RcppExport SEXP _gpuRandom_multiplyDiagonalBatchBackend(SEXP CSEXP, SEXP ASEXP, SEXP BSEXP, SEXP inverseSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type C(CSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type A(ASEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type B(BSEXP);
+    Rcpp::traits::input_parameter< const int >::type inverse(inverseSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nglobal(NglobalSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nlocal(NlocalSEXP);
-    rcpp_result_gen = Rcpp::wrap(multiplyDiagonalBatchBackend(C, A, B, Nglobal, Nlocal));
+    rcpp_result_gen = Rcpp::wrap(multiplyDiagonalBatchBackend(C, A, B, inverse, Nglobal, Nlocal));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -168,7 +169,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_cpp_gpu_qqnorm", (DL_FUNC) &_gpuRandom_cpp_gpu_qqnorm, 6},
     {"_gpuRandom_maternBatchBackend", (DL_FUNC) &_gpuRandom_maternBatchBackend, 5},
     {"_gpuRandom_multiplyLowerDiagonalBatchBackend", (DL_FUNC) &_gpuRandom_multiplyLowerDiagonalBatchBackend, 9},
-    {"_gpuRandom_multiplyDiagonalBatchBackend", (DL_FUNC) &_gpuRandom_multiplyDiagonalBatchBackend, 5},
+    {"_gpuRandom_multiplyDiagonalBatchBackend", (DL_FUNC) &_gpuRandom_multiplyDiagonalBatchBackend, 6},
     {"_gpuRandom_multiplyLowerBatchBackend", (DL_FUNC) &_gpuRandom_multiplyLowerBatchBackend, 7},
     {NULL, NULL, 0}
 };

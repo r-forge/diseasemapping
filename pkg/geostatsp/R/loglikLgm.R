@@ -17,8 +17,7 @@ loglikLgm = function(param,
 		covariates = model.frame(trend, data.frame(data))
 		observations = covariates[,	observations]
 		theRowNames = rownames(covariates)
-		covariates = model.matrix(trend,
-			covariates, drop.unused.levels = FALSE)
+		covariates = model.matrix(trend, covariates, drop.unused.levels = FALSE)
 		# possible that there are columns of all zeros
 		# if there's a factor with no observations for a category
 		# drop.unused.levels should sort this

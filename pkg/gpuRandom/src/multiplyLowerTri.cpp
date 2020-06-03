@@ -14,7 +14,8 @@ std::string multiplyDiagonalBatchString(
     const int NpadB,
     const int NpadBetweenMatricesC,
     const int NpadBetweenMatricesB,
-    const int NlocalCacheA) { // get_local_size(0)
+    const int NlocalCacheA,
+    const int inverse) { // get_local_size(0)
   
 // Dmatrix, Drow, Dcol
 // C[Drow,Dcol,Dmatrix] = A[Dmatrix,Drow] * B[Drow,Dcol,Dmatrix]
@@ -37,7 +38,8 @@ std::string multiplyDiagonalBatchString(
     "#define NpadB " + std::to_string(NpadB) + "\n"    
     "#define NpadBetweenMatricesC " + std::to_string(NpadBetweenMatricesC) + "\n"    
     "#define NpadBetweenMatricesB " + std::to_string(NpadBetweenMatricesB) + "\n"    
-    "#define NlocalCacheA "  + std::to_string(NlocalCacheA) + "\n\n"    
+    "#define NlocalCacheA "  + std::to_string(NlocalCacheA) + "\n"    
+    "#define inversediagonal" +std::to_string(inverse)+ "\n\n"
     
     "__kernel void multiplyDiagonalBatch(\n"
     "	__global " + typeString+ " *C,\n"
@@ -76,8 +78,15 @@ std::string multiplyDiagonalBatchString(
     
   " for(Dcol = get_global_id(1); Dcol < Ncol; Dcol += get_global_size(1)){\n"
     
-  "   C[CHere+Dcol] = B[BHere+Dcol] * AforThisWorkitem;\n"
+ 
+   "if (inversediagonal) {\n"
+  " C[CHere+Dcol] = B[BHere+Dcol] / AforThisWorkitem;\n"
+  "}\n"
   
+  "else{\n"
+  " C[CHere+Dcol] = B[BHere+Dcol] * AforThisWorkitem;\n"
+  "}\n"
+
   " }\n"// Dcol
   "}\n"// Drow
   "}\n"//Dmatrix
@@ -323,7 +332,7 @@ if(NpadD) {
 }
 
 
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename T> 
 void multiplyLowerDiagonalBatch(
@@ -393,78 +402,83 @@ void multiplyLowerDiagonalBatch(
   viennacl::ocl::enqueue(multiplyKernel(
       C, A, D, B));
 
-    }
-
+}
 
 template <typename T> 
-void multiplyLowerBatch(
-	viennacl::matrix<T> &C,
-	viennacl::matrix<T> &A,
-	viennacl::matrix<T> &B,
-	const int diagIsOne,
-	std::vector<int> Nglobal,
-	std::vector<int> Nlocal, 
-	const int NlocalCache, 
-	const int ctx_id) {
-
+SEXP multiplyLowerDiagonalBatchTyped(
+    Rcpp::S4 CR,
+    Rcpp::S4 AR,
+    Rcpp::S4 DR,
+    Rcpp::S4 BR,
+    const int diagIsOne,
+    std::string transformD,
+    Rcpp::IntegerVector NglobalR,
+    Rcpp::IntegerVector NlocalR, 
+    const int NlocalCache) {
   
-  const int Nrow = A.size2(), Ncol = B.size2();
+  std::vector<int> Nglobal = Rcpp::as<std::vector<int> >(NglobalR);
+  std::vector<int> Nlocal = Rcpp::as<std::vector<int> >(NlocalR);
   
-  const int Nmatrix = C.size1()/Nrow;
-
-  	// the context
-	viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
-
-//	cl_device_type type_check = ctx.current_device().type();
-
-  std::string clString =  multiplyLowerBatchString<T>(  
-      Nrow == (int) B.size1(),
-      diagIsOne,
-      Nrow, 
-      Ncol,
-      Nmatrix,
-      (int) C.internal_size2(), 
-      (int) A.internal_size2(), 
-      (int) B.internal_size2(),
-      0L, // NpadD
-      "ignored",//transformD
-      ((int) C.internal_size2())*Nrow,//NpadBetweenMatricesC,
-       ( (int) A.internal_size2())*Nrow,//NpadBetweenMatricesA,
-       ((int) B.internal_size2())*Nrow,//NpadBetweenMatricesB,
-      Nlocal[0], 
-      std::min(Nrow,NlocalCache), Ncol);
-#ifdef DEBUG
+  const int ctx_id = INTEGER(CR.slot(".context_index"))[0]-1;
+  const bool BisVCL=1;
   
-  Rcpp::Rcout << clString << "\n\n";
   
-#endif
-
- 
-	viennacl::ocl::program & my_prog = ctx.add_program(
-	  clString, "my_kernel");
-
-	viennacl::ocl::kernel & multiplyKernel = my_prog.get_kernel("multiplyLowerBatch");
-
-	multiplyKernel.global_work_size(0, Nglobal[0]);
-	multiplyKernel.global_work_size(1, Nglobal[1]);
-  multiplyKernel.global_work_size(2, Nglobal[2]);
-
-  multiplyKernel.local_work_size(0, Nlocal[0]);
-  multiplyKernel.local_work_size(1, Nlocal[1]);
-  multiplyKernel.local_work_size(2, 1L);//Nlocal[2]);
   
-		// diagonals and diagTimesRowOfA
-		viennacl::ocl::enqueue(multiplyKernel(C, A, B));
-
+  std::shared_ptr<viennacl::matrix<T> > 
+    AG = getVCLptr<T>(AR.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix<T> > 
+    BG = getVCLptr<T>(BR.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix<T> > 
+    CG = getVCLptr<T>(CR.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix<T> > 
+    DG = getVCLptr<T>(DR.slot("address"), BisVCL, ctx_id);
+  
+  multiplyLowerDiagonalBatch<T>(*CG, *AG, *DG, *BG, 
+                                diagIsOne, transformD, 
+                                Nglobal, Nlocal, NlocalCache, ctx_id);
+  
+  return Rcpp::wrap(0L);
+  
 }
 
 
+
+// [[Rcpp::export]]
+SEXP multiplyLowerDiagonalBatchBackend(
+    Rcpp::S4 C,
+    Rcpp::S4 A,
+    Rcpp::S4 D,
+    Rcpp::S4 B,
+    const int diagIsOne,
+    std::string transformD,
+    Rcpp::IntegerVector Nglobal,
+    Rcpp::IntegerVector Nlocal,
+    const int NlocalCache) {
+  
+  SEXP result;
+  
+  Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(C));
+  std::string precision_type = (std::string) classVarR;
+  
+  
+  if(precision_type == "fvclMatrix") {
+    result = multiplyLowerDiagonalBatchTyped<float>(C, A, D, B, diagIsOne, transformD, Nglobal, Nlocal, NlocalCache);
+  } else if (precision_type == "dvclMatrix") {
+    result = multiplyLowerDiagonalBatchTyped<double>(C, A, D, B, diagIsOne, transformD,Nglobal, Nlocal,NlocalCache);
+  } else {
+    result = Rcpp::wrap(1L);
+  }
+  return(result);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename T> 
 void multiplyDiagonalBatch(
     viennacl::matrix<T> &C,
     viennacl::matrix<T> &A,
     viennacl::matrix<T> &B,
+    const int inverse,
     std::vector<int> Nglobal,   // work items are Drow, Dcol, Dmatrix
     std::vector<int> Nlocal,   // local size is x, y, 1
     const int ctx_id) {
@@ -486,10 +500,10 @@ void multiplyDiagonalBatch(
       (int) B.internal_size2(),
       ((int) C.internal_size2())*Nrow,//NpadBetweenMatricesC,
        ((int) B.internal_size2())*Nrow,//NpadBetweenMatricesB,
-      Nlocal[0]);
+       Nlocal[0],
+       inverse);
 
-  viennacl::ocl::program & my_prog = ctx.add_program(
-    clString, "my_kernel");
+  viennacl::ocl::program & my_prog = ctx.add_program(clString, "my_kernel");
   
 #ifdef DEBUG
   
@@ -514,25 +528,20 @@ void multiplyDiagonalBatch(
 }
 
 
-
 template <typename T> 
-SEXP multiplyLowerDiagonalBatchTyped(
+SEXP multiplyDiagonalBatchTyped(
     Rcpp::S4 CR,
     Rcpp::S4 AR,
-    Rcpp::S4 DR,
     Rcpp::S4 BR,
-    const int diagIsOne,
-    std::string transformD,
+    const int inverse,
     Rcpp::IntegerVector NglobalR,
-    Rcpp::IntegerVector NlocalR, 
-    const int NlocalCache) {
-
+    Rcpp::IntegerVector NlocalR) {
+  
   std::vector<int> Nglobal = Rcpp::as<std::vector<int> >(NglobalR);
   std::vector<int> Nlocal = Rcpp::as<std::vector<int> >(NlocalR);
   
   const int ctx_id = INTEGER(CR.slot(".context_index"))[0]-1;
   const bool BisVCL=1;
-  
   
   
   std::shared_ptr<viennacl::matrix<T> > 
@@ -541,16 +550,108 @@ SEXP multiplyLowerDiagonalBatchTyped(
     BG = getVCLptr<T>(BR.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<T> > 
     CG = getVCLptr<T>(CR.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > 
-    DG = getVCLptr<T>(DR.slot("address"), BisVCL, ctx_id);
   
-  multiplyLowerDiagonalBatch<T>(*CG, *AG, *DG, *BG, 
-                                diagIsOne, transformD, 
-                        Nglobal, Nlocal, NlocalCache, ctx_id);
+  multiplyDiagonalBatch<T>(*CG, *AG, *BG, inverse, Nglobal, Nlocal, ctx_id);	
   
   return Rcpp::wrap(0L);
-
 }
+
+// [[Rcpp::export]]
+SEXP multiplyDiagonalBatchBackend(
+    Rcpp::S4 C,
+    Rcpp::S4 A,
+    Rcpp::S4 B,
+    const int inverse,
+    Rcpp::IntegerVector Nglobal,
+    Rcpp::IntegerVector Nlocal) {
+  
+  SEXP result;
+  
+  Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(C));
+  std::string precision_type = (std::string) classVarR;
+  
+  if(precision_type == "fvclMatrix") {
+    result = multiplyDiagonalBatchTyped<float>(C, A, B, inverse, Nglobal, Nlocal);
+  } else if (precision_type == "dvclMatrix") {
+    result = multiplyDiagonalBatchTyped<double>(C, A, B, inverse, Nglobal, Nlocal);
+  } else {
+    result = Rcpp::wrap(1L);
+  }
+  return(result);
+  
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename T> 
+void multiplyLowerBatch(
+    viennacl::matrix<T> &C,
+    viennacl::matrix<T> &A,
+    viennacl::matrix<T> &B,
+    const int diagIsOne,
+    std::vector<int> Nglobal,
+    std::vector<int> Nlocal, 
+    const int NlocalCache, 
+    const int ctx_id) {
+  
+  
+  const int Nrow = A.size2(), Ncol = B.size2();
+  
+  const int Nmatrix = C.size1()/Nrow;
+  
+  // the context
+  viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
+  
+  //	cl_device_type type_check = ctx.current_device().type();
+  
+  std::string clString =  multiplyLowerBatchString<T>(  
+    Nrow == (int) B.size1(),
+    diagIsOne,
+    Nrow, 
+    Ncol,
+    Nmatrix,
+    (int) C.internal_size2(), 
+    (int) A.internal_size2(), 
+    (int) B.internal_size2(),
+    0L, // NpadD
+    "ignored",//transformD
+    ((int) C.internal_size2())*Nrow,//NpadBetweenMatricesC,
+    ( (int) A.internal_size2())*Nrow,//NpadBetweenMatricesA,
+    ((int) B.internal_size2())*Nrow,//NpadBetweenMatricesB,
+    Nlocal[0], 
+          std::min(Nrow,NlocalCache), Ncol);
+#ifdef DEBUG
+  
+  Rcpp::Rcout << clString << "\n\n";
+  
+#endif
+  
+  
+  viennacl::ocl::program & my_prog = ctx.add_program(
+    clString, "my_kernel");
+  
+  viennacl::ocl::kernel & multiplyKernel = my_prog.get_kernel("multiplyLowerBatch");
+  
+  multiplyKernel.global_work_size(0, Nglobal[0]);
+  multiplyKernel.global_work_size(1, Nglobal[1]);
+  multiplyKernel.global_work_size(2, Nglobal[2]);
+  
+  multiplyKernel.local_work_size(0, Nlocal[0]);
+  multiplyKernel.local_work_size(1, Nlocal[1]);
+  multiplyKernel.local_work_size(2, 1L);//Nlocal[2]);
+  
+  // diagonals and diagTimesRowOfA
+  viennacl::ocl::enqueue(multiplyKernel(C, A, B));
+  
+}
+
+
+
+
+
+
+
 
 template <typename T> 
 SEXP multiplyLowerBatchTyped(
@@ -583,83 +684,7 @@ SEXP multiplyLowerBatchTyped(
 	return Rcpp::wrap(0L);
 }
 
-template <typename T> 
-SEXP multiplyDiagonalBatchTyped(
-    Rcpp::S4 CR,
-    Rcpp::S4 AR,
-    Rcpp::S4 BR,
-    Rcpp::IntegerVector NglobalR,
-    Rcpp::IntegerVector NlocalR) {
-  
-  std::vector<int> Nglobal = Rcpp::as<std::vector<int> >(NglobalR);
-  std::vector<int> Nlocal = Rcpp::as<std::vector<int> >(NlocalR);
-  
-  const int ctx_id = INTEGER(CR.slot(".context_index"))[0]-1;
-  const bool BisVCL=1;
-  
-  
-  std::shared_ptr<viennacl::matrix<T> > 
-    AG = getVCLptr<T>(AR.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > 
-    BG = getVCLptr<T>(BR.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > 
-    CG = getVCLptr<T>(CR.slot("address"), BisVCL, ctx_id);
-  
-  multiplyDiagonalBatch<T>(*CG, *AG, *BG, Nglobal, Nlocal, ctx_id);	
-  
-  return Rcpp::wrap(0L);
-}
-// [[Rcpp::export]]
-SEXP multiplyLowerDiagonalBatchBackend(
-    Rcpp::S4 C,
-    Rcpp::S4 A,
-    Rcpp::S4 D,
-    Rcpp::S4 B,
-    const int diagIsOne,
-    std::string transformD,
-    Rcpp::IntegerVector Nglobal,
-    Rcpp::IntegerVector Nlocal,
-    const int NlocalCache) {
-  
-  SEXP result;
-  
-  Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(C));
-  std::string precision_type = (std::string) classVarR;
-  
-  
-  if(precision_type == "fvclMatrix") {
-    result = multiplyLowerDiagonalBatchTyped<float>(C, A, D, B, diagIsOne, transformD, Nglobal, Nlocal, NlocalCache);
-  } else if (precision_type == "dvclMatrix") {
-    result = multiplyLowerDiagonalBatchTyped<double>(C, A, D, B, diagIsOne, transformD,Nglobal, Nlocal,NlocalCache);
-  } else {
-    result = Rcpp::wrap(1L);
-  }
-  return(result);
-}
 
-// [[Rcpp::export]]
-SEXP multiplyDiagonalBatchBackend(
-    Rcpp::S4 C,
-    Rcpp::S4 A,
-    Rcpp::S4 B,
-    Rcpp::IntegerVector Nglobal,
-    Rcpp::IntegerVector Nlocal) {
-  
-  SEXP result;
-  
-  Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(C));
-  std::string precision_type = (std::string) classVarR;
-  
-  if(precision_type == "fvclMatrix") {
-    result = multiplyDiagonalBatchTyped<float>(C, A, B, Nglobal, Nlocal);
-  } else if (precision_type == "dvclMatrix") {
-    result = multiplyDiagonalBatchTyped<double>(C, A, B, Nglobal, Nlocal);
-  } else {
-    result = Rcpp::wrap(1L);
-  }
-  return(result);
-  
-}
 
 //' Multiply lower triangular matrices
 //' 

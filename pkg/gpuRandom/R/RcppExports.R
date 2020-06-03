@@ -43,8 +43,8 @@ multiplyLowerDiagonalBatchBackend <- function(C, A, D, B, diagIsOne, transformD,
     .Call('_gpuRandom_multiplyLowerDiagonalBatchBackend', PACKAGE = 'gpuRandom', C, A, D, B, diagIsOne, transformD, Nglobal, Nlocal, NlocalCache)
 }
 
-multiplyDiagonalBatchBackend <- function(C, A, B, Nglobal, Nlocal) {
-    .Call('_gpuRandom_multiplyDiagonalBatchBackend', PACKAGE = 'gpuRandom', C, A, B, Nglobal, Nlocal)
+multiplyDiagonalBatchBackend <- function(C, A, B, inverse, Nglobal, Nlocal) {
+    .Call('_gpuRandom_multiplyDiagonalBatchBackend', PACKAGE = 'gpuRandom', C, A, B, inverse, Nglobal, Nlocal)
 }
 
 #' Multiply lower triangular matrices
