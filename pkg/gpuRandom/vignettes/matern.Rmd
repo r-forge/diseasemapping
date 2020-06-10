@@ -197,8 +197,8 @@ zMatGpu = vclMatrix(nrow=as.integer(ncol(outputBatchF) * nrow(myParamsBatch)),
                     ncol=as.integer(Nsim),
                     type = gpuR::typeof(outputBatchF))
 dim(zMatGpu)
-
-system.time(gpuRandom:::gpuRnBackend(zMatGpu, streamsGpu, NglobalRandom, "normal"))
+gpuRandom:::gpuRnBackend(zMatGpu, streamsGpu, NglobalRandom, "normal")
+#system.time(gpuRandom:::gpuRnBackend(zMatGpu, streamsGpu, NglobalRandom, "normal"))
 
 ```
 

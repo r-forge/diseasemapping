@@ -235,13 +235,13 @@ void crossprodBatch(
   
   cl_device_type type_check = ctx.current_device().type();
   
-  const int NpadC, 
+ /* const int NpadC, 
   const int NpadA,
   const int NpadD, // set to zero to omit D
   const int invertD, // set to 1 for A^T D^(-1) A
   const int NpadBetweenMatricesC,
   const int NpadBetweenMatricesA,
-  
+  */
   std::string clString =  crossprodBatchString<T>(  
     Nrow, 
     Ncol, // ncol
@@ -263,8 +263,7 @@ void crossprodBatch(
   
   
   
-  viennacl::ocl::program & my_prog = ctx.add_program(
-    clString, "my_kernel");
+  viennacl::ocl::program & my_prog = ctx.add_program(clString, "my_kernel");
   
   viennacl::ocl::kernel & multiplyKernel = my_prog.get_kernel("crossprodBatch");
   
@@ -275,8 +274,7 @@ void crossprodBatch(
   multiplyKernel.local_work_size(1, Nlocal[1]);
 
   // diagonals and diagTimesRowOfA
-  viennacl::ocl::enqueue(multiplyKernel(
-      C, A, D, B));
+  viennacl::ocl::enqueue(multiplyKernel( A, D));
   
 }
 
@@ -307,8 +305,7 @@ SEXP crossprodBatchTyped(
   std::shared_ptr<viennacl::matrix<T> > 
     DG = getVCLptr<T>(DR.slot("address"), BisVCL, ctx_id);
   
-  crossprodBatch<T>(*CG, *AG, *DG, invertD,
-                                Nglobal, Nlocal, NlocalCache, ctx_id);
+  crossprodBatch<T>(*CG, *AG, *DG, invertD,Nglobal, Nlocal, NlocalCache, ctx_id);
   
   return Rcpp::wrap(0L);
   
