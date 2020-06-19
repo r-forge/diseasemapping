@@ -34,8 +34,8 @@ __kernel void myGEMM2(const int M,
     // Load one batch of A and B into local memory
     const int batchedRow = M*t + localrow;
     const int batchedCol = localcol
-      Asub[col][row] = A[batchedCol*M*z + globalRow];
-    Bsub[col][row] = B[globalCol*K*z + batchedRow];
+    Asub[localcol][localrow] = A[batchedCol*M*z + globalRow];
+    Bsub[localcol][localrow] = B[globalCol*K*z + batchedRow];
     
     // Synchronise to make sure the tile is loaded
     barrier(CLK_LOCAL_MEM_FENCE);
