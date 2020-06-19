@@ -48,10 +48,12 @@ __kernel void myGEMM2(const int M,
     
     // Synchronise before loading the next tile
     barrier(CLK_LOCAL_MEM_FENCE);
-  }
+  
   
   // Store the final result in C
-  C[globalCol*M*z + globalRow] = acc;
+  C[col*M*z + batchedRowA] = acc;
+
+  }
 }
 
 
