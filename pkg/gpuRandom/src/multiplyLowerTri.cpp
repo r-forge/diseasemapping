@@ -95,7 +95,7 @@ std::string multiplyDiagonalBatchString(
 }
 
 
-// C = A B, A lower triangular
+// C = A  D B, A lower triangular, D diagonal
 
 template <typename T> 
 std::string multiplyLowerBatchString(

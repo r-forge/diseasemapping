@@ -68,19 +68,21 @@ table {
     margin: 0;
     padding: 0px;
     border: 0;
-	border-spacing: 50px 0;
+	border-spacing: 1px 0;
 }
 
 td { 
     border: 0;
-	padding:5px; 
+	padding:1px; 
 	border-width:0px; 
+    border-spacing: 1px 0;
 	margin:0px;
 }
 
-img{
+figure,figcaption,img{
 padding:0px; 
 border-width:0px; 
+    border-spacing: 1px 0;
 margin:0px;
 	display: block;
 }

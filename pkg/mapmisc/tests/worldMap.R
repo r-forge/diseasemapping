@@ -37,6 +37,8 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
  plot(world)
  plot(attributes(myCrsO)$regionLL, 
  	border='red', col='#0000FF10', add=TRUE)
+}
+if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=TRUE))))){
  
  myMap = openmap(myCrsO, zoom=1, fact=2)
  map.new(myMap)
@@ -54,6 +56,8 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
 	
 	gridlinesWrap(myCrsO, lty=2, col='orange')
 	
+}
+if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=TRUE))))){
 
  country='Madagascar'
 	Dcountry  = grep(country, world$NAME)
@@ -76,6 +80,8 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
 	
 	gridlinesWrap(crs=xTcrop, lty=2, col='red')
 
+}
+if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=TRUE))))){
 	
 	
 	country='Iceland'

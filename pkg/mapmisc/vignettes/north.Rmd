@@ -3,8 +3,9 @@
 %\VignetteIndexEntry{Mapping Hans Island}
 -->
 
-# Mapping Hans Island
-
+---
+title: Mapping Hans Island
+---
 
 
 This document will be incomplete if `rgdal` is unavailable or there is on

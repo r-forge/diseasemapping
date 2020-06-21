@@ -13,8 +13,13 @@ body {
 }
 
 img {
-	width: 21em
+	width: 21em; margin:0px; display: inline-table; 
+
 }
+figure,figcaption{
+margin:0px; display: inline-table; 
+}
+
 
 pre {
     border: 1px dotted gray;

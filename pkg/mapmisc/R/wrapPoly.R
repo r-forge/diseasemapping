@@ -136,7 +136,8 @@ llCropBox = function(crs, res = 1) {
   
   borderLL = cbind(borderLL[[1]],borderLL[[2]])
   borderLL = borderLL[is.finite(borderLL[,1]), ]
-  
+
+
   theBreaks = c(0,which(abs(diff(borderLL[,1]))>350), nrow(borderLL))
   theLines = list()
   for(D in 1:(length(theBreaks)-1)){
@@ -152,6 +153,7 @@ llCropBox = function(crs, res = 1) {
   borderLL3@proj4string = CRS()
   holeLL = rgeos::gBuffer(borderLL3,
           width = res)
+  holeLL@proj4string = bboxLL@proj4string
   holeLL = rgeos::gIntersection(
     holeLL, bboxLL)
   holeLL@proj4string = crsLL
