@@ -1,5 +1,4 @@
 # crsLL = CRS("+init=epsg:4326")
-library(rgdal)
 crsLL = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 
 # CRS("+init=epsg:3857") without the nagrids stuff
