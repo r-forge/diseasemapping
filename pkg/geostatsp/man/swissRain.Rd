@@ -60,7 +60,8 @@ legend("topleft",fill=thecol[names(commonValues)],
 \dontrun{
 	dataDir = tempdir()
 
-	download.file("https://wiki.52north.org/pub/AI_GEOSTATS/AI_GEOSTATSData/sic97data_01.zip",
+	download.file(
+"https://wiki.52north.org/pub/AI_GEOSTATS/AI_GEOSTATSData/sic97data_01.zip",
 		destfile=paste(dataDir, "swiss.zip",sep=""))
 	swissFile = unzip(paste(dataDir, 'swiss.zip',sep=""), exdir=dataDir)
 	swissRain = read.table(grep("sic_obs.dat",swissFile, value=TRUE), 
@@ -133,7 +134,7 @@ runGdal(product=myProduct,
 		SDSstring = theString,
 				tileH=17:18, tileV=3:4)
 
-#ÃŸ		extent=extent(spTransform(swissBorder, CRS("+init=epsg:4326"))))
+#á		extent=extent(spTransform(swissBorder, CRS("+init=epsg:4326"))))
 
 # find file name 
 thenames = preStack(
