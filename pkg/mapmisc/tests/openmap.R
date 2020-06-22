@@ -1,4 +1,5 @@
 #+ setup
+options("rgdal_show_exportToProj4_warnings"="none") 
 library('mapmisc')
 
 if(!exists('mapmiscCachePath'))

@@ -36,15 +36,12 @@ library("sp")
 data("meuse")
 coordinates(meuse) <- ~x+y
 
-if(requireNamespace('rgdal', quietly=TRUE)) {
-	 proj4string(meuse) <- CRS("+init=epsg:28992")
-} else {
+#	 proj4string(meuse) <- CRS("+init=epsg:28992")
  proj4string(meuse) <- CRS(
   paste("+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889",
-    "+k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +units=m +no_defs"
-  )
+    "+k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +units=m", 
+    "+no_defs +datum=WGS84")
  )
-}
 
 meuse$soilFac = factor(meuse$soil, levels=c(1,2,3), 
 	labels=c("Calcareous","Non-Calc's","Red Brick"))
@@ -76,7 +73,7 @@ world = openmap(extent(-10,30,40,60))
 
 # elevation data
 require('rgdal')
-meuseLL = spTransform(meuse, CRS("+init=epsg:4326"))
+meuseLL = spTransform(meuse, mapmisc::crsLL)
 getData("SRTM", lon=xmin(extent(meuseLL)), 
 	lat=ymin(extent(meuseLL)),path=tempdir())
 nldElev = raster(paste(tempdir(), "/", "srtm_38_02.tif", sep=""))
@@ -86,8 +83,8 @@ nldElev = crop(nldElev, extent(nldTiles))
 
 # save the files where the package builder wants them
 # save(nldElev, nldTiles, nldCities,world,
-#   file="~/workspace/diseasemapping/pkg/mapmisc/data/netherlands.RData",
-#   compress="xz")
+ #  file="~/research/diseasemapping/pkg/mapmisc/data/netherlands.RData",
+ #  compress="xz")
 }
 }
 

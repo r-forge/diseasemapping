@@ -76,7 +76,7 @@ Npoints = 20
 myPoints = SpatialPointsDataFrame(20*cbind(runif(Npoints), runif(Npoints)), 
 	data=data.frame(y1=c(NA, rnorm(Npoints-1)), 
 	y2=c(sample(1:4, Npoints-1,replace=TRUE), NA)),
-	proj4string=CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+	proj4string=mapmisc::crsLL)
 	)
 
 \dontrun{
