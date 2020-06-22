@@ -130,7 +130,9 @@ colourScale.Raster = function(x=NULL, breaks=5,
 
 	   # if labels is missing, take labels from the raster
 		if(is.null(labels)){
-			labels = levels(x)[[1]]
+
+				labels = levels(x)[[1]]
+
 		}
 
     # if labels is a data frame, use it
@@ -189,14 +191,18 @@ colourScale.Raster = function(x=NULL, breaks=5,
 		levelsx = data.frame(
 			ID=sort(unique(x))
 			)
-		if(ncol(levelsx)==length(labels)) {
-			levelsx$label = as.character(labels)
-		} else {
-			warning('labels must be same length as either breaks or unique(x)')
+		if(is.null(labels)) {
 			levelsx$label = as.character(levelsx$ID)
-		}
-	} # end different numbers of levels and breaks
-
+		} else {
+			if(ncol(levelsx)==length(labels)) {
+				levelsx$label = as.character(labels)
+			} else {
+				warning('labels must be same length as either breaks or unique(x)')
+				levelsx$label = as.character(levelsx$ID)
+			}
+		} # end different numbers of levels and breaks
+	} # levels not null
+	
 
 	if(ncell(x)<1e+06) {
 		x = freq(x, useNA='no')
