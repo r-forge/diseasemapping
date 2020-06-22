@@ -1,8 +1,8 @@
 Package: mapmisc
 Type: Package
 Title: Utilities for Producing Maps 
-Version: 1.7.8
-Date: 2020-05-01
+Version: 1.7.9
+Date: 2020-06-22
 Depends: sp, raster, R (>= 3.5.0)
 Imports: methods, grDevices, stats, utils, graphics
 Suggests: RColorBrewer, classInt, rgdal, rgeos, geosphere, knitr
