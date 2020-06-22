@@ -80,7 +80,8 @@ moll = function(x=0, angle=NULL, flip=FALSE) {
 						"+proj=moll +lon_wrap=",
 						midX, " +lon_0=",
 						midX,
-						" +x_0=0 +y_0=0 +ellps=WGS84 ",
+						" +x_0=0 +y_0=0 ",
+						"+datum=WGS84 +ellps=WGS84 ",
 						"+units=m +no_defs",
 						sep=''))
 	} else {
