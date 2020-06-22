@@ -45,7 +45,7 @@ omercProj4string = function(
         " +y_0=", y[whichZeros] ,
         " +ellps=", ellps,
         " +units=", units,
-      ' +datum=', datum,
+        ' +datum=', datum,
         sep="")
   }
 

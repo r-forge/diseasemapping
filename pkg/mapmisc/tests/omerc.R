@@ -6,8 +6,7 @@ data('netherlands')
 if(require('rgdal', quietly=TRUE)) {
 x=nldCities
 xbox = as(extent(nldCities), 'SpatialPolygons')
-crs(xbox) = crs(nldCities)
-
+xbox@proj4string= nldCities@proj4string
 
 bob=function(angle, ...){
   y = spTransform(x, omerc(x, angle, ...))
