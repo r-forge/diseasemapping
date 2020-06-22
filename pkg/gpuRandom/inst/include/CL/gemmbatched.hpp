@@ -1,6 +1,6 @@
 //A is (M*z)*K
 //B is (K*z)*N
-//group size is M*N
+//group size=global size = M*N
 
 
 // Tiled and coalesced version

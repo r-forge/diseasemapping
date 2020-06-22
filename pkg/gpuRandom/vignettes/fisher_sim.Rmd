@@ -18,7 +18,7 @@ library('gpuR')
 ```
 
 ```{r memoryAvailable, echo=TRUE, results='hide'}
-setContext(   grep('OpenCL 2.1', listContexts()$platform)[1]    )
+#setContext(   grep('OpenCL 2.1', listContexts()$platform)[1]    )
 gpuInfo()$deviceName   #gpuInfo()$maxAllocatableMem/(1024^3)
 ```
 
@@ -39,7 +39,7 @@ streams2 = deepcopy(streams)
 
 
 x<-vclMatrix(x,type="integer")
-res1 = gpuRandom::fisher.sim(x, 1e5L, returnStatistics=T, type="double", streams=streams, workgroupSize = Nglobal)
+res1 = gpuRandom::fisher.sim(x, 1e5, returnStatistics=T, type="double", streams=streams, workgroupSize = Nglobal)
 
  
 res1$p.value

@@ -7,7 +7,7 @@
 
 fisher.sim=function(
   x, # a vclMatrix
-  C, # number of simualtion,
+  C, # requested number of simualtion,
   streams, 
   type = c('float','double')[1+gpuR::gpuInfo()$double_support],
   returnStatistics = FALSE,
@@ -82,11 +82,11 @@ fisher.sim=function(
 #  print(class(xVcl))
 
   simnumber<-round(C/prod(workgroupSize))
-  
+  iterations<-simnumber*prod(workgroupSize)
   #remainder<-C%%prod(workgroupSize)
   
   if(returnStatistics) {
-    results <- gpuR::vclVector(length=as.integer(simnumber*prod(workgroupSize)), type=type)
+    results <- gpuR::vclVector(length=as.integer(iterations), type=type)
   } else {
     results <- gpuR::vclVector(length=as.integer(1), type=type)
   }
@@ -103,7 +103,7 @@ fisher.sim=function(
      #print(theTime)
   #time 
   
-  PVAL <- (1 + counts ) / (simnumber*prod(workgroupSize) + 1)
+  PVAL <- (1 + counts ) / (iterations + 1)
   #counts<-10
   #PVAL<-0.1
   # format(PVAL, digits=5)
@@ -115,11 +115,11 @@ fisher.sim=function(
   
   if (returnStatistics){
   
-  theResult = list(p.value = PVAL, sim = results, counts=counts, streams=streams)
+  theResult = list(p.value = PVAL, simnum=iterations, sim = results, counts=counts, streams=streams)
     
   }else {
     
-  theResult = list(p.value=PVAL, counts=counts, streams=streams)
+  theResult = list(p.value=PVAL, simnum=iterations, counts=counts, streams=streams)
   }
 
   theResult
