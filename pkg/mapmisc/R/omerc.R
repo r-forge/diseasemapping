@@ -3,6 +3,7 @@ omercProj4string = function(
     x=0,y=0, inverseAngle=0,
     scale=1,
     ellps='WGS84', units='m',
+    datum='WGS84',
     crs=TRUE) {
   
 #  negAngle = angle<0
@@ -31,6 +32,7 @@ omercProj4string = function(
       " +gamma=", inverseAngle,
       " +ellps=", ellps,
       " +units=", units,
+      ' +datum=', datum,
       sep="")
   
   if(any(whichZeros)) {
@@ -43,6 +45,7 @@ omercProj4string = function(
         " +y_0=", y[whichZeros] ,
         " +ellps=", ellps,
         " +units=", units,
+      ' +datum=', datum,
         sep="")
   }
 
