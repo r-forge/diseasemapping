@@ -75,7 +75,8 @@ legend("topleft",fill=thecol[names(commonValues)],
 	library(rgdal)
 	# create projection without epsg code so rgdal doesn't need to be loaded
 	#theproj = CRSargs(CRS("+init=epsg:2056"))
-	theproj = CRS("+proj=somerc +lat_0=46.9524055555556 +lon_0=7.43958333333333 +k_0=1 +x_0=2600000 +y_0=1200000")
+	theproj = CRS(paste("+proj=somerc +lat_0=46.9524055555556",
+		"+lon_0=7.43958333333333 +k_0=1 +x_0=2600000 +y_0=1200000"))
 
 	#theproj = gsub("\\+init=epsg:[[:digit:]]+ ", "", theproj)
 	#theproj = CRS(theproj)

@@ -1,3 +1,4 @@
+options("rgdal_show_exportToProj4_warnings"="none") 
 if(Sys.info()['sysname'] =='Linux' &
   requireNamespace("INLA")) {   
   INLA::inla.setOption(inla.call = 

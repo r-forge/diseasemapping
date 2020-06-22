@@ -21,8 +21,7 @@ getOption("mapmiscCacheReadOnly")
 
 #+ simplePlot
 myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10, 
-  crs=CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
-)
+  crs=mapmisc::crsLL)
 values(myraster) = seq(0,1,len=ncell(myraster))
 
 myPoints = SpatialPoints(myraster, 
@@ -38,7 +37,8 @@ points(myPoints)
 if(require('rgdal', quietly=TRUE)) {
   
   # utm zone 32
-  utmproj = CRS("+init=epsg:3064") 
+#  utmproj = CRS("+init=epsg:3064") 
+  utmproj = CRS("+proj=utm +zone=32 +datum=WGS84 +ellps=WGS84 +no_defs +units=m")
   myrasterUTM = projectRaster(myraster, crs=utmproj)
   myPointsUTM = spTransform(myPoints, utmproj)
   plot(myrasterUTM)
@@ -136,7 +136,7 @@ if(require('rgdal', quietly=TRUE)) {
 if(require('rgdal', quietly=TRUE)) {
   
   # specify different output crs
-  mytiles = openmap(myPointsUTM, crs=CRS("+init=epsg:4326"))
+  mytiles = openmap(myPointsUTM, crs=mapmisc::crsLL)
 #	mycities = GNcities(myPoints,max=5)
   myplot(myPoints)
 }  
