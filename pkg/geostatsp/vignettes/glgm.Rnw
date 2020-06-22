@@ -55,6 +55,7 @@ havePackages = c(
 print(havePackages)
 
 swissRain$lograin = log(swissRain$rain)
+
 swissAltitudeCrop = raster::mask(swissAltitude,swissBorder)
 @
     

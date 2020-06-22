@@ -11,8 +11,7 @@ crsMerc = sp::CRS("+proj=merc +ellps=sphere +datum=WGS84 +lat_ts=0.0 +lon_0=0.0 
 #crsMerc =  CRS("+proj=merc +ellps=sphere +units=m")
 #crsLlSphere = CRS("+proj=longlat +ellps=sphere")
 
-crsModis <-
-  sp::CRS("+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs")
+crsModis <- sp::CRS("+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") 
 
 bboxLL = as(raster::extent(-180,180,-90,90), 'SpatialPolygons')
 eps = 0.1    
