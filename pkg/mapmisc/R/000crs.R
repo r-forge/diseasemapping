@@ -1,9 +1,9 @@
 # crsLL = CRS("+init=epsg:4326")
-crsLL = sp::CRS("+proj=longlat +no_defs +ellps=WGS84 +towgs84=0,0,0")
+crsLL = sp::CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0 +no_defs")
 
 # CRS("+init=epsg:3857") without the nagrids stuff
 crsMerc = sp::CRS(
-  "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +type=crs"
+  "+proj=merc +ellps=WGS84 +datum=WGS84 +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +type=crs"
 )
 
 #crsMerc =  CRS("+proj=merc +ellps=sphere +units=m")

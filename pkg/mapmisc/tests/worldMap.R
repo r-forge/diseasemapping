@@ -22,7 +22,7 @@ getOption("mapmiscCacheReadOnly")
 #+ themaps, fig.cap='some maps', fig.subcap = c('projectable region', 'projected, with bg','projected, with world countries','projectable madagascar','madagascar')
 Spackages = c('rgdal', 'rgeos', 'geosphere')
 
-if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=TRUE))))){
+#if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=TRUE))))){
 #	library('rgdal')
 
 	data("worldMap")
@@ -37,9 +37,11 @@ if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=
  plot(world)
  plot(attributes(myCrsO)$regionLL, 
  	border='red', col='#0000FF10', add=TRUE)
-}
+#}
+
+
 if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=TRUE))))){
- 
+
  myMap = openmap(myCrsO, zoom=1, fact=2)
  map.new(myMap)
  plot(myMap, add=TRUE)
