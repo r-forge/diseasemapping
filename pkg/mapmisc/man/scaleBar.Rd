@@ -69,10 +69,7 @@ myPoints = SpatialPointsDataFrame(
 	cbind(runif(Npoints), 51+runif(Npoints)), 
 	data=data.frame(y1=c(NA, rnorm(Npoints-1)), 
 	y2=c(sample(0:5, Npoints-1,replace=TRUE), NA)),
-	proj4string=CRS(
-	"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-	)
-)
+	proj4string=mapmisc::crsLL)
 
 \dontrun{
 mymap = openmap(myPoints)
