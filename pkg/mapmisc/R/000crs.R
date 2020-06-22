@@ -5473,7 +5473,7 @@ polyhedron = new(
     .Dim = c(2L, 2L),
     .Dimnames = list(c("coords.x1", "coords.x2"), c("min", "max"))
   ),
-  proj4string = new("CRS", projargs = "+proj=longlat +no_defs +ellps=WGS84 +towgs84=0,0,0")
+  proj4string = crsLL
 )
 
 
@@ -7262,6 +7262,4 @@ llBorder = new(
     .Dim = c(2L, 2L),
     .Dimnames = list(c("lon", "lat"), c("min", "max"))
   ),
-  proj4string = new("CRS",
-                    projargs = "+proj=longlat +no_defs +ellps=WGS84 +towgs84=0,0,0")
-)
+  proj4string = crsLL)

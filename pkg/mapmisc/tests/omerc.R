@@ -10,7 +10,7 @@ xbox@proj4string= nldCities@proj4string
 
 bob=function(angle, ...){
   y = spTransform(x, omerc(x, angle, ...))
-  nld2 = spTransform(xbox, crs(y))
+  nld2 = spTransform(xbox, y@proj4string)
   map.new(nld2)
   abline(v=0, col='grey')
   abline(h=0, col='grey')
@@ -22,7 +22,7 @@ bob=function(angle, ...){
    mtext(paste(strwrap(projection(y),50), collapse='\n'),side=1,
        outer=FALSE,line=-2, cex=0.6)
    scaleBar(y,'topright')
-   return(invisible(crs(y)))
+   return(invisible(y@proj4string))
   
  }
 
@@ -73,11 +73,11 @@ N = 12
 somePoints = SpatialPointsDataFrame(
     cbind(runif(N,-5,40), runif(N,40,70)),
     data=data.frame(name=1:N),
-    proj4string=CRS("+init=epsg:4326")
+    proj4string=mapmisc::crsLL
     )
     x=somePoints
     xbox = as(extent(somePoints), 'SpatialPolygons')
-    crs(xbox) = crs(x)
+    xbox@proj4string = x@proj4string
  
   par(mfrow=c(3,2))
   

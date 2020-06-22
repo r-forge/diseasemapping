@@ -25,7 +25,7 @@ myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10,
 values(myraster) = seq(0,1,len=ncell(myraster))
 
 myPoints = SpatialPoints(myraster, 
-  proj4string=CRS(proj4string(myraster)))[
+  proj4string=projection(myraster)[
   seq(1,ncell(myraster),len=5)]
 
 plot(myraster)
@@ -37,8 +37,7 @@ points(myPoints)
 if(require('rgdal', quietly=TRUE)) {
   
   # utm zone 32
-#  utmproj = CRS("+init=epsg:3064") 
-  utmproj = CRS("+proj=utm +zone=32 +datum=WGS84 +ellps=WGS84 +no_defs +units=m")
+  utmproj = CRS("+init=epsg:3064") 
   myrasterUTM = projectRaster(myraster, crs=utmproj)
   myPointsUTM = spTransform(myPoints, utmproj)
   plot(myrasterUTM)
