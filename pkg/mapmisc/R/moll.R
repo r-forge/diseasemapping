@@ -166,14 +166,14 @@ moll = function(x=0, angle=NULL, flip=FALSE) {
   
   theBox = llCropBox(crs=result, res=1)
   
- attributes(result)$regionLL = theBox$poly
-	attributes(result)$ellipse = theBox$ellipse
- 
- attributes(result)$crop = theBox$crop
- 
- attributes(result)$ellipseSafeLL = theBox$polyTrans
- 
- 
+	 attributes(result)$regionLL = theBox$poly
+		attributes(result)$ellipse = theBox$ellipse
+	 
+	 attributes(result)$crop = theBox$crop
+	 
+	 attributes(result)$ellipseSafeLL = theBox$polyTrans
+	 
+	 
 	result
 }
 

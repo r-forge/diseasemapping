@@ -25,14 +25,14 @@ Spackages = c('rgdal', 'rgeos', 'geosphere')
 #if(all(unlist(mapply(requireNamespace, package=Spackages, MoreArgs=list(quietly=TRUE))))){
 #	library('rgdal')
 
-	data("worldMap")
+		data("worldMap")
 
-	world = spTransform(worldMap, crsLL)
-	country='Japan'
-	Dcountry = grep(country, world$NAME)
-	x=world[Dcountry,]
+		world = spTransform(worldMap, crsLL)
+		country='Japan'
+		Dcountry = grep(country, world$NAME)
+		x=world[Dcountry,]
 
-	myCrsO = moll(x)
+		myCrsO = moll(x)
 
  plot(world)
  plot(attributes(myCrsO)$regionLL, 
