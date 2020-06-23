@@ -103,8 +103,8 @@ rbind(resL$param$summary, resO$param$summary)
 
 # check spdfToBrock
 
-if(require('diseasemapping', quiet=TRUE)){
-	
+if(requireNamespace('diseasemapping', quietly=TRUE)){
+	require('diseasemapping')
 	
 	data('kentucky')
 	

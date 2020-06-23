@@ -559,6 +559,7 @@ if(all(paramToEstimate=='variance') &
 
 } # end not only variance to estimate
 
+
 result$parameters = fillParam(
 	c(
 		result$optim$mle, result$betaHat
@@ -616,7 +617,7 @@ if(length(grep("^Spatial", class(coordinatesOrig)))){
 		coords=SpatialPoints(coordinatesOrig),
 		data=theDf)
 
-	raster::crs(result$data) = raster::crs(coordinatesOrig)
+	result$data@proj4string = coordinatesOrig@proj4string
 }
 
 
