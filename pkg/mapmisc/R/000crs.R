@@ -1,7 +1,7 @@
 # crsLL = CRS("+init=epsg:4326")
 if(requireNamespace("rgdal", quietly=TRUE)) {
 
-crsLL = CRS("+init=EPSG:4326")
+crsLL = CRS("+init=epsg:4326")
 crsMerc = CRS("+init=epsg:3857")
 
 } else {
