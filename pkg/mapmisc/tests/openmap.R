@@ -24,7 +24,7 @@ myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10,
   crs=mapmisc::crsLL)
 values(myraster) = seq(0,1,len=ncell(myraster))
 
-myPoints = as(myraster, 'SpatialPoints')[
+myPoints = as(myraster,'SpatialPoints')[
   seq(1,ncell(myraster),len=5)]
 
 plot(myraster)
@@ -59,6 +59,7 @@ if(require('rgdal', quietly=TRUE)) {
   
   thezoom=6
   
+  print(1)
 # only do the following if running unix (because nsl is available)
 # and if the OpenStreetMap.org web site can be accessed
 if(require('rgdal', quietly=TRUE)) {
@@ -70,6 +71,7 @@ if(require('rgdal', quietly=TRUE)) {
 #		mycities = GNcities(extend(myraster,1),max=5)
   myplot(myraster, myPoints)
 }  
+print(2)
 if(require('rgdal', quietly=TRUE)) {
 
   # slash at the end
@@ -78,6 +80,7 @@ if(require('rgdal', quietly=TRUE)) {
 #		mycities = GNcities(extend(myraster,1),max=5)
   myplot(myraster, myPoints)
 }  
+print(3)
 if(require('rgdal', quietly=TRUE)) {
   
   # no http at beginning
@@ -86,6 +89,7 @@ if(require('rgdal', quietly=TRUE)) {
   myplot(myraster, myPoints)
   
 }  
+print(4)
 if(require('rgdal', quietly=TRUE)) {
   
   # extent, tiles will be long-lat
@@ -94,6 +98,7 @@ if(require('rgdal', quietly=TRUE)) {
 #		mycities = GNcities(extent(myraster),max=5,lang="fr")
 #		myplot(mycities,myPoints)
 }  
+print(5)
 if(require('rgdal', quietly=TRUE)) {
   
   # give the bbox, long lat
@@ -102,6 +107,7 @@ if(require('rgdal', quietly=TRUE)) {
 #		myplot(mycities,myPoints)
   
 }  
+print(6)
 if(require('rgdal', quietly=TRUE)) {
   
   # give points, result is CRS of points (long-lat)
@@ -109,6 +115,7 @@ if(require('rgdal', quietly=TRUE)) {
 #		mycities = GNcities(myPoints,max=5,lang="es")
   myplot(myPoints)
 }  
+print(7)
 if(require('rgdal', quietly=TRUE)) {
   
   # UTM raster
@@ -116,6 +123,7 @@ if(require('rgdal', quietly=TRUE)) {
 #		mycities = GNcities(myrasterUTM,max=5)
   myplot(myrasterUTM, myPointsUTM)
 }  
+print(8)
 if(require('rgdal', quietly=TRUE)) {
   
   # supply a crs
@@ -124,6 +132,7 @@ if(require('rgdal', quietly=TRUE)) {
 #		mycities = GNcities(myrasterUTM,max=5)
   myplot(myrasterUTM, myPointsUTM)
 }  
+print(9)
 if(require('rgdal', quietly=TRUE)) {
   
   # utm points
@@ -131,6 +140,7 @@ if(require('rgdal', quietly=TRUE)) {
 #		mycities = GNcities(myPointsUTM,max=5)
   myplot(myPointsUTM)
 }  
+print(10)
 if(require('rgdal', quietly=TRUE)) {
   
   # specify different output crs
@@ -138,17 +148,20 @@ if(require('rgdal', quietly=TRUE)) {
 #	mycities = GNcities(myPoints,max=5)
   myplot(myPoints)
 }  
+print(11)
 if(require('rgdal', quietly=TRUE)) {
   
   # one point only
   mytiles = openmap(coordinates(myPoints)[1,], zoom=4)
   myplot(myPoints)
   } # end have rgdal
+print(12)  
 #'
 #'   
 #' ams city hall
 #+ ams
-  cityHall = SpatialPoints(cbind( 4.891111, 52.373056), proj4string=crsLL)
+  cityHall = SpatialPoints(cbind(4.895536, 52.371583), 
+    proj4string=crsLL)
 #  cityHall = spTransform(cityHall,CRS("+init=epsg:28992"))
 if(require('rgdal', quietly=TRUE)) {
   cityHall = spTransform(cityHall,CRS("+init=epsg:32631"))
