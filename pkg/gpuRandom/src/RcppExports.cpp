@@ -53,6 +53,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// gemmBatchBackend
+SEXP gemmBatchBackend(Rcpp::S4 A, Rcpp::S4 B, Rcpp::S4 C, const int z, Rcpp::IntegerVector Nglobal);
+RcppExport SEXP _gpuRandom_gemmBatchBackend(SEXP ASEXP, SEXP BSEXP, SEXP CSEXP, SEXP zSEXP, SEXP NglobalSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type A(ASEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type B(BSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type C(CSEXP);
+    Rcpp::traits::input_parameter< const int >::type z(zSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nglobal(NglobalSEXP);
+    rcpp_result_gen = Rcpp::wrap(gemmBatchBackend(A, B, C, z, Nglobal));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_gpuFisher_test
 SEXP cpp_gpuFisher_test(Rcpp::S4 xR, Rcpp::S4 resultsR, int B, Rcpp::S4 streamsR, Rcpp::IntegerVector max_global_size, Rcpp::IntegerVector max_local_size);
 RcppExport SEXP _gpuRandom_cpp_gpuFisher_test(SEXP xRSEXP, SEXP resultsRSEXP, SEXP BSEXP, SEXP streamsRSEXP, SEXP max_global_sizeSEXP, SEXP max_local_sizeSEXP) {
@@ -181,6 +196,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_backsolveBatchBackend", (DL_FUNC) &_gpuRandom_backsolveBatchBackend, 7},
     {"_gpuRandom_cholBatchBackend", (DL_FUNC) &_gpuRandom_cholBatchBackend, 5},
     {"_gpuRandom_crossprodBatchBackend", (DL_FUNC) &_gpuRandom_crossprodBatchBackend, 7},
+    {"_gpuRandom_gemmBatchBackend", (DL_FUNC) &_gpuRandom_gemmBatchBackend, 5},
     {"_gpuRandom_cpp_gpuFisher_test", (DL_FUNC) &_gpuRandom_cpp_gpuFisher_test, 6},
     {"_gpuRandom_cpp_mrg31k3pCreateStreams", (DL_FUNC) &_gpuRandom_cpp_mrg31k3pCreateStreams, 1},
     {"_gpuRandom_gpuRnBackend", (DL_FUNC) &_gpuRandom_gpuRnBackend, 4},

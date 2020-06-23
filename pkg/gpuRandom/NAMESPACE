@@ -3,6 +3,7 @@
 export(CreateStreams)
 export(crossprodBatchBackend)
 export(fisher.sim)
+export(gemmBatchBackend)
 export(gpuRnBackend)
 export(loglikGpu)
 export(multiplyLowerBatchBackend)
