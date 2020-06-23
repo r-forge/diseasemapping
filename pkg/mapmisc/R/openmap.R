@@ -95,12 +95,14 @@ osmTiles = function(name, xyz, suffix) {
 openmap = function(x, zoom, 
   path="http://tile.openstreetmap.org/",
   maxTiles = 9,
-  crs=crs(x),
+  crs=raster::crs(x),
   buffer=0, fact=1,
   verbose=getOption('mapmiscVerbose'),
   cachePath=getOption('mapmiscCachePath')
 ) {
   
+
+
   verbose = max(c(0, verbose))
   
   if(is.null(cachePath)) {
@@ -138,8 +140,12 @@ openmap = function(x, zoom,
     toCrop = NULL
   }
   
+
+
   crsOut=crs
+
   crsIn = crs(x)
+
   if(all(is.na(crsIn))) {
     if(is.vector(x)){
       crsIn=crsLL
@@ -148,10 +154,10 @@ openmap = function(x, zoom,
     }
   }
   
-  
+
   extMerc = .getExtent(x,crsIn, buffer, crsMerc)
   extMerc = .cropExtent(extMerc, extentMerc)
-  
+
   if(missing(zoom)) {
     zoom = 1
     while(nTilesMerc(extMerc, zoom) <= maxTiles & zoom <= 18) {
@@ -253,7 +259,7 @@ openmap = function(x, zoom,
     )
   }
   
-  
+
   if(!is.na(crsOut)  ){
     oldColorTable = list()
     for(D in names(result))
