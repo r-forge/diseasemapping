@@ -280,7 +280,7 @@ openmap = function(x, zoom,
         class(bboxx) = 'try-error'
       }
       
-      projx = try(proj4string(x), silent=TRUE)
+      projx = try(raster::crs(x), silent=TRUE)
       if(any(class(bboxx)!="try-error") &  any(class(projx) != 'try-error')){
         if(identical(projx, crsOut)) {
           bigExtent =  extend(

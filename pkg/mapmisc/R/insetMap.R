@@ -46,7 +46,7 @@ extentSmall = extentUsr
 if(is.character(crs))
 			crs = CRS(crs)
 if(any(class(crs) != "CRS"))
-	crs = CRS(proj4string(crs))
+	crs = crs(crs)
 
 bboxSmall = t(bbox(extentSmall))
 
@@ -150,14 +150,14 @@ if(length(grep("left$",pos)))
 mapOrig = map
 extent(map)= extent(c(x[1], x[1]+newxrange, x[2],
 				x[2]+newyrange))
-proj4string(map) = CRS()
+crs(map) = CRS()
 bbOrig = t(bbox(extent(mapOrig)))
 bbSmall = t(bbox(extent(map)))
 
 
 if(requireNamespace('rgdal', quietly=TRUE)) {
   xsp = spTransform(xsp,
-		CRSobj=CRS(proj4string(mapOrig)))
+		CRSobj=crs(mapOrig))
 }
 
 scale =  apply(bbSmall, 2, diff)/ apply(bbOrig, 2, diff)

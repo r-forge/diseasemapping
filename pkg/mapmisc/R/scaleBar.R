@@ -38,7 +38,7 @@ scaleBar = function(crs,
 	if(is.character(crs))
 		crs = CRS(crs)
 	if(all(class(crs) != "CRS"))
-		crs = CRS(proj4string(crs))
+		crs = raster::crs(crs)
 	
 
 #	dash = "\u2517\u2501\u2501\u2501\u2537\u2501\u2501\u2501\u251B"
@@ -201,7 +201,7 @@ if(!noScale) {
 						matrix(coordinates(xll)["centre",]+c(0,0.1),
 								ncol=2,
 								dimnames=list("up",NULL)),
-						proj4string=CRS(proj4string(xll))
+						proj4string=raster::crs(xll)
 				)
 				
 				
@@ -209,13 +209,13 @@ if(!noScale) {
     xll = spTransform(xpoints, crsLL)
   } else {
     xll= xpoints
-    if(!length(grep("longlat", crs(xpoints)@projargs)))
+    if(!length(grep("longlat", raster::crs(xpoints)@projargs)))
       warning('rgdal not intalled, assuming the plot is long-lat')
   }
   xll = rbind(xll,
       SpatialPoints(
           xll@coords+c(0,1),
-      proj4string=crs(xll))
+      proj4string=raster::crs(xll))
   )
   
   if(requireNamespace('rgdal', quietly=TRUE)) {	

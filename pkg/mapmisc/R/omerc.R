@@ -50,8 +50,9 @@ omercProj4string = function(
   }
 
   
-  if(crs) 
+  if(crs) {
     result = lapply(result, CRS)
+  }
   
   result
 }
