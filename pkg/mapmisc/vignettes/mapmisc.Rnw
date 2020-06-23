@@ -1,7 +1,7 @@
-\documentclass[12pt]{article}
-
 %\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{Overview of mapping with mapmisc}
+\documentclass[12pt]{article}
+
 
 \usepackage[margin=1in]{geometry}
 \usepackage{graphicx,hyperref}
