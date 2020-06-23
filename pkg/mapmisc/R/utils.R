@@ -37,7 +37,7 @@ extentMerc = new("Extent"
 		return(NULL)
 	
   # find the CRS's
-  crsUse = projection(x)
+  crsUse = crs(x)
   
 #	if(is.logical(crs)) { # it's probably NA,
   if(all(is.na(crs))) {

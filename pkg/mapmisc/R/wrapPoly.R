@@ -184,7 +184,7 @@ llCropBox = function(crs, res = 1) {
     SpatialPoints(llBorderT), width =
                                                   4 * resTrans),
                                  tol = 4 * resTrans)
-  projection(borderTrans) = crs
+  crs(borderTrans) = crs
   
   regionTrans = rgeos::gSimplify(regionTransOrig,tol=resTrans)
   

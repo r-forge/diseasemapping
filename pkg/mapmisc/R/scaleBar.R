@@ -209,7 +209,7 @@ if(!noScale) {
     xll = spTransform(xpoints, crsLL)
   } else {
     xll= xpoints
-    if(!length(grep("longlat", projection(xpoints))))
+    if(!length(grep("longlat", crs(xpoints)@projargs)))
       warning('rgdal not intalled, assuming the plot is long-lat')
   }
   xll = rbind(xll,

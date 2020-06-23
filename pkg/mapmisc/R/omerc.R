@@ -124,7 +124,7 @@ omerc = function(
     return(rotatedCRS)
   }
   
-  crs = projection(x)
+  crs = crs(x)
   if(is.na(crs)){
     crs = crsLL
   }
@@ -169,7 +169,7 @@ omerc = function(
     # preserve distances between points
     if(!is.null(preserve)) {
       # convert to LL
-      if(!isLonLat(projection(preserve))){
+      if(!isLonLat(crs(preserve))){
         preserve = spTransform(preserve, crsLL)
       }
       # great circle distance

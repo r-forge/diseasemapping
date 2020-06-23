@@ -95,7 +95,7 @@ osmTiles = function(name, xyz, suffix) {
 openmap = function(x, zoom, 
   path="http://tile.openstreetmap.org/",
   maxTiles = 9,
-  crs=projection(x),
+  crs=crs(x),
   buffer=0, fact=1,
   verbose=getOption('mapmiscVerbose'),
   cachePath=getOption('mapmiscCachePath')
@@ -262,7 +262,7 @@ openmap = function(x, zoom,
     if(verbose) cat("reprojecting ", ncell(result), " cells...")
     
     # if tiles need projecting
-    if(!compareCRS(projection(result), crsOut)) {
+    if(!compareCRS(crs(result), crsOut)) {
       
       toRaster = projectExtent(result, crsOut)
       

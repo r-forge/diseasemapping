@@ -24,7 +24,7 @@ GNcities = function(north, east, south, west, lang = "en",
     if(length(north)== 1)
       fourCoords = TRUE
   
-  theproj = projection(north)
+  theproj = crs(north)
   if(!fourCoords) {
     extLL = .getExtent(north, extend=buffer, crsOut = crsLL)
     
@@ -246,7 +246,7 @@ geocodeOld = function(x, oneRecord=FALSE, extent=NULL, progress='', ...) {
   cachePath = file.path(cachePath,'geocode')
   dirCreateMapmisc(cachePath,recursive=TRUE,showWarnings=FALSE)
   
-  theproj = projection(extent)
+  theproj = crs(extent)
   extLL = .getExtent(extent, crsOut = crsLL)
   
   cacheFile = file.path(
