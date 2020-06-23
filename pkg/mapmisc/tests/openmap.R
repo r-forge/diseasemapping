@@ -160,7 +160,7 @@ print(12)
 #'   
 #' ams city hall
 #+ ams
-  cityHall = SpatialPoints(cbind(4.895536, 52.371583), 
+  cityHall = SpatialPoints(cbind(4.891111, 52.373056),
     proj4string=crsLL)
 #  cityHall = spTransform(cityHall,CRS("+init=epsg:28992"))
 if(require('rgdal', quietly=TRUE)) {
