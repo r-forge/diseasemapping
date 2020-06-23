@@ -25,7 +25,7 @@ myraster = raster(matrix(0,10,10),xmn=8,xmx=18,ymn=0,ymx=10,
 values(myraster) = seq(0,1,len=ncell(myraster))
 
 myPoints = SpatialPoints(myraster, 
-  proj4string=projection(myraster)[
+  proj4string=projection(myraster))[
   seq(1,ncell(myraster),len=5)]
 
 plot(myraster)

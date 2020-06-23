@@ -134,7 +134,7 @@ runGdal(product=myProduct,
 		SDSstring = theString,
 				tileH=17:18, tileV=3:4)
 
-#á		extent=extent(spTransform(swissBorder, CRS("+init=epsg:4326"))))
+#		extent=extent(spTransform(swissBorder, CRS("+init=epsg:4326"))))
 
 # find file name 
 thenames = preStack(
