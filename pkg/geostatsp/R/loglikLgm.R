@@ -616,7 +616,7 @@ if(length(grep("^Spatial", class(coordinatesOrig)))){
 		coords=SpatialPoints(coordinatesOrig),
 		data=theDf)
 
-	raster::projection(result$data) = raster::projection(coordinatesOrig)
+	raster::crs(result$data) = raster::crs(coordinatesOrig)
 }
 
 
