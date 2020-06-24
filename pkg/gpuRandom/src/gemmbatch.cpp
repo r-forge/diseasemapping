@@ -191,9 +191,9 @@ SEXP gemmBatchBackend(
     Rcpp::IntegerVector Nglobal// Rcpp::IntegerVector Nlocal, 
     ) {
   
+#ifdef UNDEF  
   Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(C));
   std::string precision_type = (std::string) classVarR;
-#ifdef UNDEF  
   if(precision_type == "fvclMatrix") {
     gemmBatchTyped<float>(A, B, C, z, Nglobal);
   } else if (precision_type == "dvclMatrix") {

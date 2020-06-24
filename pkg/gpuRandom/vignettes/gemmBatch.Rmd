@@ -33,7 +33,7 @@ gpuB<-vclMatrix(B,type="float")
 outputC<-vclMatrix(0, nrow=8, ncol=4, type="float")
 Nglobal = c(16,8,3) 
 
-#gpuRandom:::gemmBatchBackend(gpuA, gpuB, outputC, 4L, Nglobal)
+gpuRandom:::gemmBatchBackend(gpuA, gpuB, outputC, 4L, Nglobal)
 
 as.matrix(outputC)
 
