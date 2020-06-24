@@ -51,25 +51,33 @@ std::string gemmBatchString(
       // Initialise the accumulation register
       //#define Ncache 100	
   result += typeString + " acc ;\n"
-         "int Dmatrix, Drow, Dcol, Dinner;\n"
+         "int Dmatrix, Drow, DrowA0, Dcol, DrowC0, Dinner, DrowB, DcolB;\n"
       
       //local float Acache[Ncachje];
 
       
       // Loop over all batches
       "for (Dmatrix=get_global_id(2); Dmatrix < z; Dmatrix += get_global_size(2)) {\n"
-        
+
+        " DrowB = Dmatrix * NpadMatrixB;\n"// B_Dmatrix(0,0)
+
        " for (Drow = get_global_id(0); Drow < M; Drow += get_global_size(0)) {\n"
-         
+
+          "DrowA0 = Dmatrix * NpadMatrixA + Drow*NpadA;\n" 
+          // points to entry (Drow,0) of submatrix Dmatrix of A
+          "DrowC0 = Dmatrix * NpadMatrixC + Drow*NpadC;\n" 
+
           "for (Dcol = get_global_id(1); Dcol < N; Dcol += get_global_size(1)) {\n"
-            
+            " DcolB = DrowB + Dcol;\n"            
             "acc = 0;\n"
             
-            "for(Dinner = 0; Dinner < K; Dinner++){\n"
-              "acc+= A[Dmatrix * NpadMatrixA + Drow*NpadA + Dinner] * B[Dmatrix * NpadMatrixB + Dinner * NpadB + Dcol];\n"
+            "for(Dinner = 0;"
+            "     Dinner < K;" 
+            "    Dinner++)}\n"
+              "acc+= A[DrowA0 + Dinner] * B[DcolB + Dinner * NpadB];\n"
            " }\n"
             
-            "C[Dmatrix * NpadMatrixC + NpadC * Drow + Dcol] = acc;\n"
+            "C[DrowC0 + Dcol] = acc;\n"
           "}\n" //Dcol
         "}\n"  	//Drow
       "}\n"  //Dmatrix
@@ -185,7 +193,7 @@ SEXP gemmBatchBackend(
   
   Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(C));
   std::string precision_type = (std::string) classVarR;
-  
+#ifdef UNDEF  
   if(precision_type == "fvclMatrix") {
     gemmBatchTyped<float>(A, B, C, z, Nglobal);
   } else if (precision_type == "dvclMatrix") {
@@ -193,7 +201,7 @@ SEXP gemmBatchBackend(
   } else {
     Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
   }
-  
+#endif  
 }
 
 
