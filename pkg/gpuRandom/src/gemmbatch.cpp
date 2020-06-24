@@ -158,7 +158,7 @@ SEXP gemmBatchTyped( Rcpp::S4 AR,
   std::shared_ptr<viennacl::matrix<T> > B = getVCLptr<T>(BR.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<T> > C = getVCLptr<T>(CR.slot("address"), BisVCL, ctx_id);
   
-  gemmBatch<T>(*A, *B, *C, z, Nglobal, ctx_id);	
+//  gemmBatch<T>(*A, *B, *C, z, Nglobal, ctx_id);	
   
   return Rcpp::wrap(0L);
 }
