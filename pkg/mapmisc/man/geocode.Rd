@@ -32,20 +32,20 @@ Data are retreived from Openstreetmap.org, see \url{https://wiki.openstreetmap.o
 \examples{
 
 
+cities=try(mapmisc::geocode('Ulan batar'), silent=TRUE)
+data('worldMap', package='mapmisc')
 
-if(requireNamespace("rgdal", quietly = TRUE)) { 
+if(
+	!all(class(cities) == 'try-error') & requireNamespace("rgdal", quietly = TRUE)
+	) { 
+citiesT = spTransform(cities, crs(worldMap))
+mapmisc::map.new(citiesT, buffer=5000*1000)
+plot(worldMap, add=TRUE)
+points(citiesT, col='red')
+text(citiesT, labels=citiesT$name, col='red',pos=4)
 
-cities=try(geocode('Ulan batar'), silent=TRUE)
-if(!all(class(cities) == 'try-error')) {
-mytiles = openmap(cities, buffer=800*1000, maxTiles=1)
-
-map.new(mytiles)
-plot(mytiles, add=TRUE)
-points(cities, col='red')
-text(cities, labels=cities$name, col='red',pos=4)
 }
 
-}
 
 
 }

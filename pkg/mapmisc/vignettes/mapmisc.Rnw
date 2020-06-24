@@ -85,6 +85,7 @@ class(meuse)
 @
 
 
+
 <<meuseProjNotRun,eval=FALSE,echo=TRUE, purl=FALSE>>=
 library('rgdal')
 proj4string(meuse) <- CRS("+init=epsg:28992")
@@ -396,6 +397,8 @@ Or simply do
 library('mapmisc')
 data('netherlands')
 @
+
+
 
 The elevation data is a Raster.
 <<classElev>>=
