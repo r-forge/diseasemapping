@@ -32,13 +32,16 @@ std::string gemmBatchString(
   }
   
   result += 
-    "#define M " + std::to_string(M) + "\n"    
-    "#define N " + std::to_string(N) + "\n"    
-    "#define K " + std::to_string(K) + "\n"    
-    "#define z " + std::to_string(z) + "\n"  
+    "#define M " + std::to_string(M) + "\n" // rows 
+    "#define N " + std::to_string(N) + "\n" // columns
+    "#define K " + std::to_string(K) + "\n" // inter
+    "#define z " + std::to_string(z) + "\n" // matrices
     "#define NpadA " + std::to_string(NpadA) + "\n"    
     "#define NpadB " + std::to_string(NpadB) + "\n"  
-    "#define NpadC " + std::to_string(NpadC) + "\n";
+    "#define NpadC " + std::to_string(NpadC) + "\n"
+    "#define NpadMatrixA " + std::to_string(NpadMatrixA) + "\n"    
+    "#define NpadMatrixB " + std::to_string(NpadMatrixB) + "\n"  
+    "#define NpadMatrixC " + std::to_string(NpadMatrixC) + "\n";
   
   result += "__kernel void GEMM( __global"  + typeString+ "* A,\n"
                                " __global"  + typeString+ "* B,\n"
@@ -56,20 +59,20 @@ std::string gemmBatchString(
       // Loop over all batches
       "for (Dmatrix=get_global_id(2); Dmatrix < z; Dmatrix += get_global_size(2)) {\n"
         
-       " for (Drow = Dmatrix*M + get_global_id(0); Drow < (Dmatrix+1)*M; Drow += get_global_size(0)) {\n"
+       " for (Drow = get_global_id(0); Drow < M; Drow += get_global_size(0)) {\n"
          
           "for (Dcol = get_global_id(1); Dcol < N; Dcol += get_global_size(1)) {\n"
             
             "acc = 0;\n"
             
             "for(Dinner = 0; Dinner < K; Dinner++){\n"
-              "acc+= A[Drow*NpadA + Dinner] * B[Dmatrix* K* NpadB + Dinner * NpadB + Dcol];\n"
+              "acc+= A[Dmatrix * NpadMatrixA + Drow*NpadA + Dinner] * B[Dmatrix * NpadMatrixB + Dinner * NpadB + Dcol];\n"
            " }\n"
             
-            "C[NpadC * Drow + Dcol] = acc;\n"
+            "C[Dmatrix * NpadMatrixC + NpadC * Drow + Dcol] = acc;\n"
           "}\n" //Dcol
         "}\n"  	//Drow
-      "}\n"  //Dbatch
+      "}\n"  //Dmatrix
     "}\n";
   
   return(result);
@@ -123,6 +126,7 @@ void gemmBatch(
   
   
   viennacl::ocl::program & my_prog = ctx.add_program(gemmString, "mymykernel");
+#ifdef UNDEF
   viennacl::ocl::kernel & gemmKernel = my_prog.get_kernel("GEMM");
   
   gemmKernel.global_work_size(0, Nglobal[0]);
@@ -133,7 +137,7 @@ void gemmBatch(
   //gemmKernel.local_work_size(1, Nlocal[1]);
   
   viennacl::ocl::enqueue(gemmKernel( A, B, C));
-  
+#endif 
 }
 
 
