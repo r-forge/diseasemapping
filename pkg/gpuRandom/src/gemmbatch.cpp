@@ -42,19 +42,8 @@ std::string gemmBatchString(
   
   result += "__kernel void GEMM( __global"  + typeString+ "* A,\n"
                                " __global"  + typeString+ "* B,\n"
-                               "__global" + typeString+ "* C) {\n";
+                               " __global" + typeString+ "* C) {\n";
       
-      // Thread identifiers
-      //  const int row = get_local_id(0); // Local row ID 
-      //  const int col = get_local_id(1); // Local col ID 
-      
-      // Identify the row and column of the C matrix to work on
-      // const int globalRow = M*get_group_id(0) + localrow; // Row ID of C 
-      // const int globalCol = localcol; // Col ID of C 
-      
-      // Local memory to fit a tile of TS*TS elements of A and B
-      // __local float Asub[M][K];
-      // __local float Bsub[K][N];
       
       // Initialise the accumulation register
       //#define Ncache 100	
@@ -62,24 +51,17 @@ std::string gemmBatchString(
          "int Dmatrix, Drow, Dcol, Dinner;\n"
       
       //local float Acache[Ncachje];
-      // "int rowtotal=M*z;\n"
+
       
       // Loop over all batches
       "for (Dmatrix=get_global_id(2); Dmatrix < z; Dmatrix += get_global_size(2)) {\n"
         
-       " for (Drow = Dmatrix*M + get_glboal_id(0); Drow < (Dmatrix+1)*M; Drow += get_global_size(0)) {\n"
-          //		for(Dcol = 0; Dcol < Ncache; Dcache++) {
-          //			Acache[Dcol] = A[Drow * NpadA + Dcol];
-          //		}
-          "for (Dcol = get_glboal_id(1); Dcol < N; Dcol += get_global_size(1)) {\n"
+       " for (Drow = Dmatrix*M + get_global_id(0); Drow < (Dmatrix+1)*M; Drow += get_global_size(0)) {\n"
+         
+          "for (Dcol = get_global_id(1); Dcol < N; Dcol += get_global_size(1)) {\n"
             
             "acc = 0;\n"
-            // break stuff
-            //for(Dinner = 0; Dinner < Ncache; Dinner++){
-            //acc+= Acache[Dinner] * B[Dinner * NpadB + Dcol];
-            //}
-            // break stuff
-            //			for(; Dinner < K; Dinner++){
+            
             "for(Dinner = 0; Dinner < K; Dinner++){\n"
               "acc+= A[Drow*NpadA + Dinner] * B[Dmatrix* K* NpadB + Dinner * NpadB + Dcol];\n"
            " }\n"
@@ -140,17 +122,17 @@ void gemmBatch(
 #endif  
   
   
- // viennacl::ocl::program & my_prog = ctx.add_program(gemmString, "mymykernel");
- // viennacl::ocl::kernel & gemmKernel = my_prog.get_kernel("GEMM");
- /* 
+  viennacl::ocl::program & my_prog = ctx.add_program(gemmString, "mymykernel");
+  viennacl::ocl::kernel & gemmKernel = my_prog.get_kernel("GEMM");
+  
   gemmKernel.global_work_size(0, Nglobal[0]);
   gemmKernel.global_work_size(1, Nglobal[1]);
   gemmKernel.global_work_size(2, Nglobal[2]);
-  */
+  
   //gemmKernel.local_work_size(0, Nlocal[0]);
   //gemmKernel.local_work_size(1, Nlocal[1]);
   
- // viennacl::ocl::enqueue(gemmKernel( A, B, C));
+  viennacl::ocl::enqueue(gemmKernel( A, B, C));
   
 }
 
