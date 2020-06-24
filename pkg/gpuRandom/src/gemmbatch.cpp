@@ -202,6 +202,8 @@ SEXP gemmBatchBackend(
     Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
   }
 #endif  
+    return Rcpp::wrap(0L);
+
 }
 
 

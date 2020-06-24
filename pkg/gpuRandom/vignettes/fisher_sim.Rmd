@@ -58,13 +58,13 @@ res2$p.value
 
 
 example 3
-```{r eg3, eval=TRUE}
+```{r eg3, eval=FALSE}
 #compare results with R fisher function
 Job <- matrix(c(1,2,1,0, 3,3,6,1, 10,10,14,9, 6,7,12,11), 4, 4)
 fisher.test(Job, simulate.p.value = TRUE, B = 1e5) # also close to 0.78
 
 
-Job<-vclMatrix(Job, type="integer", eval=FALSE)
+Job<-vclMatrix(Job, type="integer")
 result3<-gpuRandom::fisher.sim(Job, 1e5, returnStatistics=T, 
                              type="double", streams=streams, workgroupSize = Nglobal)
 result3$p.value
