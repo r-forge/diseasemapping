@@ -30,7 +30,7 @@ crossprodBatchBackend <- function(C, A, D, invertD, Nglobal, Nlocal, NlocalCache
 #'
 #' @param C output matrices, stacked row-wise
 #' @param A rectangular matrices
-#' @param B rectangular matrix 
+#' @param B rectangular matrices 
 #' @param Nglobal vector of number of global work items//' @param Nlocal vector of number of local work items//' @param NlocalCache elements in local cache
 #' @export
 gemmBatchBackend <- function(A, B, C, z, Nglobal) {

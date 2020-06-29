@@ -1,5 +1,7 @@
 
 #include "gpuRandom.hpp"
+using namespace Rcpp;
+
 
 #define DEBUG
 
@@ -43,23 +45,24 @@ std::string gemmBatchString(
     "#define NpadMatrixB " + std::to_string(NpadMatrixB) + "\n"  
     "#define NpadMatrixC " + std::to_string(NpadMatrixC) + "\n";
   
-  result += "__kernel void GEMM( __global"  + typeString+ "* A,\n"
+  result += "__kernel void gemm2( __global"  + typeString+ "* A,\n"
                                " __global"  + typeString+ "* B,\n"
                                " __global" + typeString+ "* C) {\n";
       
       
       // Initialise the accumulation register
       //#define Ncache 100	
+    
   result += typeString + " acc ;\n"
-         "int Dmatrix, Drow, DrowA0, Dcol, DrowC0, Dinner, DrowB, DcolB;\n"
+         "int Dmatrix, Drow, DrowA0, Dcol, DrowC0, Dinner, DrowB, DcolB;\n";
       
       //local float Acache[Ncachje];
+#ifdef UNDEF      
 
-      
       // Loop over all batches
       "for (Dmatrix=get_global_id(2); Dmatrix < z; Dmatrix += get_global_size(2)) {\n"
 
-        " DrowB = Dmatrix * NpadMatrixB;\n"// B_Dmatrix(0,0)
+        " DrowB = Dmatrix * NpadMatrixB;\n"      // B_Dmatrix(0,0)
 
        " for (Drow = get_global_id(0); Drow < M; Drow += get_global_size(0)) {\n"
 
@@ -68,21 +71,20 @@ std::string gemmBatchString(
           "DrowC0 = Dmatrix * NpadMatrixC + Drow*NpadC;\n" 
 
           "for (Dcol = get_global_id(1); Dcol < N; Dcol += get_global_size(1)) {\n"
-            " DcolB = DrowB + Dcol;\n"            
+            "DcolB = DrowB + Dcol;\n"            
             "acc = 0;\n"
             
-            "for(Dinner = 0;"
-            "     Dinner < K;" 
-            "    Dinner++)}\n"
+            "for(Dinner = 0; Dinner < K; Dinner++){\n"
               "acc+= A[DrowA0 + Dinner] * B[DcolB + Dinner * NpadB];\n"
            " }\n"
             
             "C[DrowC0 + Dcol] = acc;\n"
           "}\n" //Dcol
         "}\n"  	//Drow
-      "}\n"  //Dmatrix
-    "}\n";
-  
+      "}\n"；  //Dmatrix
+#endif     
+   result +=  "}\n";
+
   return(result);
 }
 
@@ -103,8 +105,8 @@ void gemmBatch(
     viennacl::matrix<T> &A,
     viennacl::matrix<T> &B,
     viennacl::matrix<T> &C,
-    const int z, //num of batches
-    std::vector<int> Nglobal,//   std::vector<int> Nlocal,// const int NlocalCache, 
+    const int z, //num of batches//std::vector<int> Nglobal,//   std::vector<int> Nlocal,// const int NlocalCache, 
+    const IntegerVector Nglobal,
     const int ctx_id) {
   
   const int M = A.size1()/z;
@@ -134,17 +136,17 @@ void gemmBatch(
   
   
   viennacl::ocl::program & my_prog = ctx.add_program(gemmString, "mymykernel");
-#ifdef UNDEF
-  viennacl::ocl::kernel & gemmKernel = my_prog.get_kernel("GEMM");
-  
+
+  viennacl::ocl::kernel & gemmKernel = my_prog.get_kernel("gemm2");
+
   gemmKernel.global_work_size(0, Nglobal[0]);
   gemmKernel.global_work_size(1, Nglobal[1]);
   gemmKernel.global_work_size(2, Nglobal[2]);
   
   //gemmKernel.local_work_size(0, Nlocal[0]);
   //gemmKernel.local_work_size(1, Nlocal[1]);
-  
-  viennacl::ocl::enqueue(gemmKernel( A, B, C));
+  #ifdef UNDEF   
+ viennacl::ocl::enqueue(gemmKernel( A, B, C));
 #endif 
 }
 
@@ -156,7 +158,7 @@ SEXP gemmBatchTyped( Rcpp::S4 AR,
                      const int z,
                      Rcpp::IntegerVector NglobalR) {
   
-  std::vector<int> Nglobal = Rcpp::as<std::vector<int> >(NglobalR);
+  //std::vector<int> Nglobal = Rcpp::as<std::vector<int> >(NglobalR);
   //std::vector<int> Nlocal = Rcpp::as<std::vector<int> >(NlocalR);
   
   const int ctx_id = INTEGER(CR.slot(".context_index"))[0]-1;
@@ -166,7 +168,7 @@ SEXP gemmBatchTyped( Rcpp::S4 AR,
   std::shared_ptr<viennacl::matrix<T> > B = getVCLptr<T>(BR.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<T> > C = getVCLptr<T>(CR.slot("address"), BisVCL, ctx_id);
   
-//  gemmBatch<T>(*A, *B, *C, z, Nglobal, ctx_id);	
+  gemmBatch<T>(*A, *B, *C, z, NglobalR, ctx_id);	
   
   return Rcpp::wrap(0L);
 }
@@ -179,7 +181,7 @@ SEXP gemmBatchTyped( Rcpp::S4 AR,
 //'
 //' @param C output matrices, stacked row-wise
 //' @param A rectangular matrices
-//' @param B rectangular matrix 
+//' @param B rectangular matrices 
 //' @param Nglobal vector of number of global work items//' @param Nlocal vector of number of local work items//' @param NlocalCache elements in local cache
 //' @export
 // [[Rcpp::export]]
@@ -188,10 +190,9 @@ SEXP gemmBatchBackend(
     Rcpp::S4 B,
     Rcpp::S4 C,
     const int z,
-    Rcpp::IntegerVector Nglobal// Rcpp::IntegerVector Nlocal, 
-    ) {
+    Rcpp::IntegerVector Nglobal) {
   
-#ifdef UNDEF  
+//#ifdef UNDEF  
   Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(C));
   std::string precision_type = (std::string) classVarR;
   if(precision_type == "fvclMatrix") {
@@ -201,7 +202,7 @@ SEXP gemmBatchBackend(
   } else {
     Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
   }
-#endif  
+//#endif  
     return Rcpp::wrap(0L);
 
 }
