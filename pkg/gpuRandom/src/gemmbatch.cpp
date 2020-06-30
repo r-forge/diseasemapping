@@ -136,6 +136,7 @@ void gemmBatch(
   
   
   viennacl::ocl::program & my_prog = ctx.add_program(gemmString, "mymykernel");
+#ifdef UNDEF   
 
   viennacl::ocl::kernel & gemmKernel = my_prog.get_kernel("gemm2");
 
@@ -145,7 +146,6 @@ void gemmBatch(
   
   //gemmKernel.local_work_size(0, Nlocal[0]);
   //gemmKernel.local_work_size(1, Nlocal[1]);
-  #ifdef UNDEF   
  viennacl::ocl::enqueue(gemmKernel( A, B, C));
 #endif 
 }
