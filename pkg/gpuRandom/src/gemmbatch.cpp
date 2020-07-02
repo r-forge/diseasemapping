@@ -23,8 +23,7 @@ std::string gemmBatchString(
     const int z, //number of batches
     const int NpadMatrixA, 
     const int NpadMatrixB, 
-    const int NpadMatrixC,
-    const int need_transpose) { 
+    const int NpadMatrixC) { 
   
  
   std::string typeString = openclTypeString<T>();
@@ -44,12 +43,13 @@ std::string gemmBatchString(
     "#define NpadC " + std::to_string(NpadC) + "\n"
     "#define NpadMatrixA " + std::to_string(NpadMatrixA) + "\n"    
     "#define NpadMatrixB " + std::to_string(NpadMatrixB) + "\n"  
-    "#define NpadMatrixC " + std::to_string(NpadMatrixC) + "\n"
-    "#define need_transpose" + std::to_string(need_transpose) + "\n";
+    "#define NpadMatrixC " + std::to_string(NpadMatrixC) + "\n";
+   // "#define need_transpose" + std::to_string(need_transpose) + "\n";
   
   result += "__kernel void gemm2( __global "  + typeString+ "* A,\n"
                                " __global "  + typeString+ "* B,\n"
-                               " __global " + typeString+ "* C) {\n";
+                               " __global " + typeString+ "* C,\n"
+                               "const int need_transpose) {\n";
       
       
       // Initialise the accumulation register
@@ -59,7 +59,7 @@ std::string gemmBatchString(
          "int Dmatrix, Drow, DrowA0, Dcol, DrowC0, Dinner, DrowB0, DcolB;\n"
       
 
-   "if (need_transpose==1) {\n"
+   "if (need_transpose) {\n"
       "for (Dmatrix=get_global_id(2); Dmatrix < z; Dmatrix += get_global_size(2)) {\n"
          "DrowB0 = Dmatrix * NpadMatrixB;\n"   
           
@@ -79,32 +79,31 @@ std::string gemmBatchString(
             "}\n"//Dcol
           "}\n"//Drow
         "}\n"//Dmatrix
-      "}\n"
-      
- "else{\n"
-      // Loop over all batches
-      "for (Dmatrix=get_global_id(2); Dmatrix < z; Dmatrix += get_global_size(2)) {\n"
-
-        " DrowB0 = Dmatrix * NpadMatrixB;\n"      // B_Dmatrix(0,0)
-
-       " for (Drow = get_global_id(0); Drow < M; Drow += get_global_size(0)) {\n"
-
-          "DrowA0 = Dmatrix * NpadMatrixA + Drow*NpadA;\n"  // points to entry (Drow,0) of submatrix Dmatrix of A
-          "DrowC0 = Dmatrix * NpadMatrixC + Drow*NpadC;\n" 
-
-          "for (Dcol = get_global_id(1); Dcol < N; Dcol += get_global_size(1)) {\n"
-            "DcolB = DrowB0 + Dcol;\n"            
-            "acc = 0;\n"
-            
-            "for(Dinner = 0; Dinner < K; Dinner++){\n"
-              "acc+= A[DrowA0 + Dinner] * B[DcolB + Dinner * NpadB];\n"
-           " }\n"
-            
-            "C[DrowC0 + Dcol] = acc;\n"
-          "}\n" //Dcol
-        "}\n"  	//Drow
-      "}\n"//Dmatrix
-      "}\n"  //ifelse
+     "}else{\n"
+     // Loop over all batches
+     "for (Dmatrix=get_global_id(2); Dmatrix < z; Dmatrix += get_global_size(2)) {\n"
+     
+     " DrowB0 = Dmatrix * NpadMatrixB;\n"      // B_Dmatrix(0,0)
+     
+     " for (Drow = get_global_id(0); Drow < M; Drow += get_global_size(0)) {\n"
+     
+     "DrowA0 = Dmatrix * NpadMatrixA + Drow*NpadA;\n"  // points to entry (Drow,0) of submatrix Dmatrix of A
+     "DrowC0 = Dmatrix * NpadMatrixC + Drow*NpadC;\n" 
+     
+     "for (Dcol = get_global_id(1); Dcol < N; Dcol += get_global_size(1)) {\n"
+     "DcolB = DrowB0 + Dcol;\n"            
+     "acc = 0;\n"
+     
+     "for(Dinner = 0; Dinner < K; Dinner++){\n"
+     "acc+= A[DrowA0 + Dinner] * B[DcolB + Dinner * NpadB];\n"
+     " }\n"
+     
+     "C[DrowC0 + Dcol] = acc;\n"
+     "}\n" //Dcol
+     "}\n"  	//Drow
+     "}\n"//Dmatrix
+     "}\n"  //ifelse
+ 
     
      "}\n";
 
@@ -156,8 +155,7 @@ void gemmBatch(
       z, // 
       A.internal_size2()*K,//NpadBetweenMatricesA,
       B.internal_size2()*K,//NpadBetweenMatricesB,
-      C.internal_size2()*M,
-      need_transpose);
+      C.internal_size2()*M);
   }
   else if (need_transpose==0){
     M = A.size1()/z;
@@ -172,8 +170,7 @@ void gemmBatch(
       z, // 
       A.internal_size2()*M,//NpadBetweenMatricesA,
       B.internal_size2()*K,//NpadBetweenMatricesB,
-      C.internal_size2()*M,
-      need_transpose);
+      C.internal_size2()*M);
   }
 
   
@@ -192,7 +189,7 @@ void gemmBatch(
   
   //gemmKernel.local_work_size(0, Nlocal[0]);
   //gemmKernel.local_work_size(1, Nlocal[1]);
- viennacl::ocl::enqueue(gemmKernel( A, B, C));
+ viennacl::ocl::enqueue(gemmKernel( A, B, C, need_transpose));
 }
 
 
