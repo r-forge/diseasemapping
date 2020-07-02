@@ -1,53 +1,9 @@
-#' @title Log-likelihood function for Gaussian random fields
+#' @title Estimate Log-likelihood for Gaussian random fields
 #'
 #' @useDynLib gpuRandom
 #' @export
 
 
-loglikGpu <- function(y, #sets of observations
-                      X, #vclmatrix of covaraites
-                      coordsGpu,
-                      paramsBatch, #vclMatrix of parameter sets
-                      minustwotimes=TRUE,
-                      workgroupSize,
-                      localSize,
-                      NlocalCache=1000, 
-                      verbose=FALSE){
-  
-  
-  
-  # #1, get matern correlation matrix Vbatch=R+mu^2*I
-  # Vbatch = vclMatrix(0, nrow(paramsBatch)*nrow(y), nrow(y), type=gpuR::typeof(paramsBatch))
-  # 
-  # maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  Nglobal = workgroupSize, Nlocal = localSize)
-  # 
-  # #2, Vbatch=LDL^T 
-  # diagMat = vclMatrix(0, nrow(paramsBatch), ncol(Vbatch), type = gpuR::typeof(Vbatch))
-  # 
-  # cholBatchBackend(Vbatch, diagMat, Nglobal = workgroupSize, Nlocal = localSize, NlocalCache = NlocalCache)
-  # 
-  # # get part1 = n*log(sigma^2)+log |D|
-  # n<-nrow(Vbatch)
-  # part1<-n*log(paramsBatch['variance']) + apply(log(diagMat),1,sum) 
-  # 
-  # #3, L(a,b)=(y,X)   use backsolve function
-  # yx<-cbind(y,X)
-  # abMat = vclMatrix(0, nrow(Vbatch), ncol(yx), type = gpuR::typeof(Vbatch))
-  # 
-  # backsolveBatchBackend(abMat, Vbatch, yx, diagIsOne=TRUE, Nglobal, Nlocal, NlocalCache)
-  # 
-  # 
-  # #4, (a^T, b^T) * D^(-1) * (a, b)
-  # outputC<-vclMatrix(0, nrow(paramsBatch)*ncol(abMat), ncol(abMat), type = gpuR::typeof(abMat))
-  # 
-  # crossprodBatchBackend(outputC, abMat, diagMat, invertD=TRUE,  Nglobal,  Nlocal,  NlocalCache) 
-  # 
-  # #5, get part2 =  a^T D^(-1) a - 2* a^T D^(-1)b *beta + beta^T * b^T D^(-1)b * beta
-  # 
-  # 
-  
-  
-}
 
 
 

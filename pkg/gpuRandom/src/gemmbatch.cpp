@@ -23,7 +23,8 @@ std::string gemmBatchString(
     const int z, //number of batches
     const int NpadMatrixA, 
     const int NpadMatrixB, 
-    const int NpadMatrixC) { 
+    const int NpadMatrixC,
+    const int need_transpose) { 
   
  
   std::string typeString = openclTypeString<T>();
@@ -43,35 +44,56 @@ std::string gemmBatchString(
     "#define NpadC " + std::to_string(NpadC) + "\n"
     "#define NpadMatrixA " + std::to_string(NpadMatrixA) + "\n"    
     "#define NpadMatrixB " + std::to_string(NpadMatrixB) + "\n"  
-    "#define NpadMatrixC " + std::to_string(NpadMatrixC) + "\n";
+    "#define NpadMatrixC " + std::to_string(NpadMatrixC) + "\n"
+    "#define need_transpose" + std::to_string(need_transpose) + "\n";
   
-  result += "__kernel void gemm2( __global"  + typeString+ "* A,\n"
-                               " __global"  + typeString+ "* B,\n"
-                               " __global" + typeString+ "* C) {\n";
+  result += "__kernel void gemm2( __global "  + typeString+ "* A,\n"
+                               " __global "  + typeString+ "* B,\n"
+                               " __global " + typeString+ "* C) {\n";
       
       
       // Initialise the accumulation register
       //#define Ncache 100	
     
   result += typeString + " acc ;\n"
-         "int Dmatrix, Drow, DrowA0, Dcol, DrowC0, Dinner, DrowB, DcolB;\n";
+         "int Dmatrix, Drow, DrowA0, Dcol, DrowC0, Dinner, DrowB0, DcolB;\n"
       
-      //local float Acache[Ncachje];
-#ifdef UNDEF      
 
+   "if (need_transpose==1) {\n"
+      "for (Dmatrix=get_global_id(2); Dmatrix < z; Dmatrix += get_global_size(2)) {\n"
+         "DrowB0 = Dmatrix * NpadMatrixB;\n"   
+          
+        "for (Drow = get_global_id(0); Drow < M; Drow += get_global_size(0)) {\n"
+          "DrowC0 = Dmatrix * NpadMatrixC + Drow*NpadC;\n"
+          "DrowA0 = Dmatrix * NpadMatrixA + Drow;\n"
+            
+            "for (Dcol = get_global_id(1); Dcol < N; Dcol += get_global_size(1)) {\n"
+              "DcolB = DrowB0 + Dcol;\n"
+              "acc = 0;\n"
+              
+              "for(Dinner = 0; Dinner < K; Dinner++){\n "
+                "acc+= A[DrowA0 + Dinner * NpadA] * B[DcolB + Dinner * NpadB];\n "     
+             " }\n"
+              
+              "C[DrowC0 + Dcol] = acc;\n"
+            "}\n"//Dcol
+          "}\n"//Drow
+        "}\n"//Dmatrix
+      "}\n"
+      
+ "else{\n"
       // Loop over all batches
       "for (Dmatrix=get_global_id(2); Dmatrix < z; Dmatrix += get_global_size(2)) {\n"
 
-        " DrowB = Dmatrix * NpadMatrixB;\n"      // B_Dmatrix(0,0)
+        " DrowB0 = Dmatrix * NpadMatrixB;\n"      // B_Dmatrix(0,0)
 
        " for (Drow = get_global_id(0); Drow < M; Drow += get_global_size(0)) {\n"
 
-          "DrowA0 = Dmatrix * NpadMatrixA + Drow*NpadA;\n" 
-          // points to entry (Drow,0) of submatrix Dmatrix of A
+          "DrowA0 = Dmatrix * NpadMatrixA + Drow*NpadA;\n"  // points to entry (Drow,0) of submatrix Dmatrix of A
           "DrowC0 = Dmatrix * NpadMatrixC + Drow*NpadC;\n" 
 
           "for (Dcol = get_global_id(1); Dcol < N; Dcol += get_global_size(1)) {\n"
-            "DcolB = DrowB + Dcol;\n"            
+            "DcolB = DrowB0 + Dcol;\n"            
             "acc = 0;\n"
             
             "for(Dinner = 0; Dinner < K; Dinner++){\n"
@@ -81,9 +103,10 @@ std::string gemmBatchString(
             "C[DrowC0 + Dcol] = acc;\n"
           "}\n" //Dcol
         "}\n"  	//Drow
-      "}\n"；  //Dmatrix
-#endif     
-   result +=  "}\n";
+      "}\n"//Dmatrix
+      "}\n"  //ifelse
+    
+     "}\n";
 
   return(result);
 }
@@ -106,29 +129,53 @@ void gemmBatch(
     viennacl::matrix<T> &B,
     viennacl::matrix<T> &C,
     const int z, //num of batches//std::vector<int> Nglobal,//   std::vector<int> Nlocal,// const int NlocalCache, 
+    const int need_transpose,
     const IntegerVector Nglobal,
     const int ctx_id) {
   
-  const int M = A.size1()/z;
+  int M,K;
   const int N = B.size2();
-  const int K = A.size2();
-
+  std::string gemmString;
+ 
+  
   // the context
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   
   cl_device_type type_check = ctx.current_device().type();
   
-  std::string gemmString =  gemmBatchString<T>(  
-    M, 
-    N, // ncol of B
-    K,
-    A.internal_size2(), 
-    B.internal_size2(), 
-    C.internal_size2(),
-    z, // 
-    A.internal_size2()*M,//NpadBetweenMatricesA,
-    B.internal_size2()*K,//NpadBetweenMatricesB,
-    C.internal_size2()*M);
+  if (need_transpose==1){
+    M = A.size2();
+    K = A.size1()/z;
+    gemmString =  gemmBatchString<T>(  
+      M, 
+      N, // ncol of B
+      K,
+      A.internal_size2(), 
+      B.internal_size2(), 
+      C.internal_size2(),
+      z, // 
+      A.internal_size2()*K,//NpadBetweenMatricesA,
+      B.internal_size2()*K,//NpadBetweenMatricesB,
+      C.internal_size2()*M,
+      need_transpose);
+  }
+  else if (need_transpose==0){
+    M = A.size1()/z;
+    K = A.size2();
+    gemmString =  gemmBatchString<T>(  
+      M, 
+      N, // ncol of B
+      K,
+      A.internal_size2(), 
+      B.internal_size2(), 
+      C.internal_size2(),
+      z, // 
+      A.internal_size2()*M,//NpadBetweenMatricesA,
+      B.internal_size2()*K,//NpadBetweenMatricesB,
+      C.internal_size2()*M,
+      need_transpose);
+  }
+
   
 #ifdef DEBUG
   Rcpp::Rcout << gemmString << "\n\n";
@@ -136,7 +183,6 @@ void gemmBatch(
   
   
   viennacl::ocl::program & my_prog = ctx.add_program(gemmString, "mymykernel");
-#ifdef UNDEF   
 
   viennacl::ocl::kernel & gemmKernel = my_prog.get_kernel("gemm2");
 
@@ -147,7 +193,6 @@ void gemmBatch(
   //gemmKernel.local_work_size(0, Nlocal[0]);
   //gemmKernel.local_work_size(1, Nlocal[1]);
  viennacl::ocl::enqueue(gemmKernel( A, B, C));
-#endif 
 }
 
 
@@ -156,10 +201,9 @@ SEXP gemmBatchTyped( Rcpp::S4 AR,
                      Rcpp::S4 BR,
                      Rcpp::S4 CR,
                      const int z,
+                     const int need_transpose,
                      Rcpp::IntegerVector NglobalR) {
   
-  //std::vector<int> Nglobal = Rcpp::as<std::vector<int> >(NglobalR);
-  //std::vector<int> Nlocal = Rcpp::as<std::vector<int> >(NlocalR);
   
   const int ctx_id = INTEGER(CR.slot(".context_index"))[0]-1;
   const bool BisVCL=1;
@@ -168,7 +212,7 @@ SEXP gemmBatchTyped( Rcpp::S4 AR,
   std::shared_ptr<viennacl::matrix<T> > B = getVCLptr<T>(BR.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<T> > C = getVCLptr<T>(CR.slot("address"), BisVCL, ctx_id);
   
-  gemmBatch<T>(*A, *B, *C, z, NglobalR, ctx_id);	
+  gemmBatch<T>(*A, *B, *C, z, need_transpose, NglobalR, ctx_id);	
   
   return Rcpp::wrap(0L);
 }
@@ -190,15 +234,16 @@ SEXP gemmBatchBackend(
     Rcpp::S4 B,
     Rcpp::S4 C,
     const int z,
+    const int need_transpose,
     Rcpp::IntegerVector Nglobal) {
   
 //#ifdef UNDEF  
   Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(C));
   std::string precision_type = (std::string) classVarR;
   if(precision_type == "fvclMatrix") {
-    gemmBatchTyped<float>(A, B, C, z, Nglobal);
+    gemmBatchTyped<float>(A, B, C, z, need_transpose, Nglobal);
   } else if (precision_type == "dvclMatrix") {
-    gemmBatchTyped<double>(A, B, C, z, Nglobal);
+    gemmBatchTyped<double>(A, B, C, z, need_transpose, Nglobal);
   } else {
     Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
   }
