@@ -57,16 +57,16 @@ std::string gemmBatchString(
       //#define Ncache 100	
     
   result += typeString + " acc ;\n"
-         "int Dmatrix, Drow, DrowA0, Dcol, DrowC0, Dinner, DrowB0, DcolB;\n"
+         "int Dmatrix, Drow, DrowA0, Dcol, DrowC0, Dinner, DrowB0, DcolB;\n";
       
-
-   "if (need_transpose) {\n"
-      "for (Dmatrix=get_global_id(2); Dmatrix < z; Dmatrix += get_global_size(2)) {\n"
+     result +=  "for (Dmatrix=get_global_id(2); Dmatrix < z; Dmatrix += get_global_size(2)) {\n"
          "DrowB0 = Dmatrix * NpadMatrixB;\n"   
+     "for (Drow = get_global_id(0); Drow < M; Drow += get_global_size(0)) {\n"
+          "DrowC0 = Dmatrix * NpadMatrixC + Drow*NpadC;\n";
           
-        "for (Drow = get_global_id(0); Drow < M; Drow += get_global_size(0)) {\n"
-          "DrowC0 = Dmatrix * NpadMatrixC + Drow*NpadC;\n"
-          "DrowA0 = Dmatrix * NpadMatrixA + Drow;\n"
+   if (need_transpose) {
+          
+  result += "DrowA0 = Dmatrix * NpadMatrixA + Drow;\n"
             
             "for (Dcol = get_global_id(1); Dcol < N; Dcol += get_global_size(1)) {\n"
               "DcolB = DrowB0 + Dcol;\n"
@@ -74,22 +74,14 @@ std::string gemmBatchString(
               
               "for(Dinner = 0; Dinner < K; Dinner++){\n "
                 "acc+= A[DrowA0 + Dinner * NpadA] * B[DcolB + Dinner * NpadB];\n "     
-             " }\n"
-              
-              "C[DrowC0 + Dcol] = acc;\n"
-            "}\n"//Dcol
-          "}\n"//Drow
-        "}\n"//Dmatrix
-     "}else{\n"
+             " }\n";
+                 
+     }else{
      // Loop over all batches
-     "for (Dmatrix=get_global_id(2); Dmatrix < z; Dmatrix += get_global_size(2)) {\n"
-     
-     " DrowB0 = Dmatrix * NpadMatrixB;\n"      // B_Dmatrix(0,0)
-     
-     " for (Drow = get_global_id(0); Drow < M; Drow += get_global_size(0)) {\n"
+ result += 
+
      
      "DrowA0 = Dmatrix * NpadMatrixA + Drow*NpadA;\n"  // points to entry (Drow,0) of submatrix Dmatrix of A
-     "DrowC0 = Dmatrix * NpadMatrixC + Drow*NpadC;\n" 
      
      "for (Dcol = get_global_id(1); Dcol < N; Dcol += get_global_size(1)) {\n"
      "DcolB = DrowB0 + Dcol;\n"            
@@ -97,13 +89,13 @@ std::string gemmBatchString(
      
      "for(Dinner = 0; Dinner < K; Dinner++){\n"
      "acc+= A[DrowA0 + Dinner] * B[DcolB + Dinner * NpadB];\n"
-     " }\n"
-     
-     "C[DrowC0 + Dcol] = acc;\n"
+     " }\n";
+     }
+
+result +=     "C[DrowC0 + Dcol] = acc;\n"
      "}\n" //Dcol
      "}\n"  	//Drow
      "}\n"//Dmatrix
-     "}\n"  //ifelse
      
      "}\n";
 
