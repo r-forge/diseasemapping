@@ -5,8 +5,8 @@ using namespace Rcpp;
 
 #define DEBUG
 
-// C = A B   C_i is M by N, A_i is M by K B_i is K by N 
-// work items w1, w2, w3 global size, i.e 32 by 32 by 4
+// C = A B   C_i is M by N, A_i is M by K, B_i is K by N  (if no transposition)
+// work items w1, w2, w3, i.e 32 by 32 by 4
 // for now local items 1x1x1
 // suppose matrices C are 120 by 140, 10 matrices
 // item w1, w2, 0  will do matrices 0,4,8.  
@@ -23,7 +23,8 @@ std::string gemmBatchString(
     const int z, //number of batches
     const int NpadMatrixA, 
     const int NpadMatrixB, 
-    const int NpadMatrixC) { 
+    const int NpadMatrixC,
+    const int need_transpose) { 
   
  
   std::string typeString = openclTypeString<T>();
@@ -43,13 +44,13 @@ std::string gemmBatchString(
     "#define NpadC " + std::to_string(NpadC) + "\n"
     "#define NpadMatrixA " + std::to_string(NpadMatrixA) + "\n"    
     "#define NpadMatrixB " + std::to_string(NpadMatrixB) + "\n"  
-    "#define NpadMatrixC " + std::to_string(NpadMatrixC) + "\n";
-   // "#define need_transpose" + std::to_string(need_transpose) + "\n";
+    "#define NpadMatrixC " + std::to_string(NpadMatrixC) + "\n"
+    "#define need_transpose  " + std::to_string(need_transpose) + "\n";
   
   result += "__kernel void gemm2( __global "  + typeString+ "* A,\n"
                                " __global "  + typeString+ "* B,\n"
-                               " __global " + typeString+ "* C,\n"
-                               "const int need_transpose) {\n";
+                               " __global " + typeString+ "* C){\n";
+                              
       
       
       // Initialise the accumulation register
@@ -103,8 +104,7 @@ std::string gemmBatchString(
      "}\n"  	//Drow
      "}\n"//Dmatrix
      "}\n"  //ifelse
- 
-    
+     
      "}\n";
 
   return(result);
@@ -136,8 +136,6 @@ void gemmBatch(
   const int N = B.size2();
   std::string gemmString;
  
-  
-  // the context
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   
   cl_device_type type_check = ctx.current_device().type();
@@ -155,7 +153,8 @@ void gemmBatch(
       z, // 
       A.internal_size2()*K,//NpadBetweenMatricesA,
       B.internal_size2()*K,//NpadBetweenMatricesB,
-      C.internal_size2()*M);
+      C.internal_size2()*M,
+      need_transpose);
   }
   else if (need_transpose==0){
     M = A.size1()/z;
@@ -170,7 +169,8 @@ void gemmBatch(
       z, // 
       A.internal_size2()*M,//NpadBetweenMatricesA,
       B.internal_size2()*K,//NpadBetweenMatricesB,
-      C.internal_size2()*M);
+      C.internal_size2()*M,
+      need_transpose);
   }
 
   
@@ -189,7 +189,7 @@ void gemmBatch(
   
   //gemmKernel.local_work_size(0, Nlocal[0]);
   //gemmKernel.local_work_size(1, Nlocal[1]);
- viennacl::ocl::enqueue(gemmKernel( A, B, C, need_transpose));
+ viennacl::ocl::enqueue(gemmKernel( A, B, C));
 }
 
 
@@ -218,7 +218,7 @@ SEXP gemmBatchTyped( Rcpp::S4 AR,
 
 
 //' 
-//' Multiplies a rectangular matrix by a rectangular matrix
+//' Multiplies a rectangular matrix by a rectangular matrix in batches
 //'
 //' @param C output matrices, stacked row-wise
 //' @param A rectangular matrices
@@ -229,9 +229,9 @@ SEXP gemmBatchTyped( Rcpp::S4 AR,
 SEXP gemmBatchBackend(
     Rcpp::S4 A,
     Rcpp::S4 B,
-    Rcpp::S4 C,
+    Rcpp::S4 C,  //output matrices, stacked row-wise
     const int z,
-    const int need_transpose,
+    const int need_transpose, //A need transpose?
     Rcpp::IntegerVector Nglobal) {
   
 //#ifdef UNDEF  
