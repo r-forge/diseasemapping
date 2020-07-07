@@ -54,19 +54,20 @@ BEGIN_RCPP
 END_RCPP
 }
 // gemmBatchBackend
-SEXP gemmBatchBackend(Rcpp::S4 A, Rcpp::S4 B, Rcpp::S4 C, const int z, const int zc, const int need_transpose, Rcpp::IntegerVector Nglobal);
-RcppExport SEXP _gpuRandom_gemmBatchBackend(SEXP ASEXP, SEXP BSEXP, SEXP CSEXP, SEXP zSEXP, SEXP zcSEXP, SEXP need_transposeSEXP, SEXP NglobalSEXP) {
+SEXP gemmBatchBackend(Rcpp::S4 A, Rcpp::S4 B, Rcpp::S4 C, const int rowbatch, const int Acolbatch, const int Bcolbatch, const int need_transpose, Rcpp::IntegerVector Nglobal);
+RcppExport SEXP _gpuRandom_gemmBatchBackend(SEXP ASEXP, SEXP BSEXP, SEXP CSEXP, SEXP rowbatchSEXP, SEXP AcolbatchSEXP, SEXP BcolbatchSEXP, SEXP need_transposeSEXP, SEXP NglobalSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type A(ASEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type B(BSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type C(CSEXP);
-    Rcpp::traits::input_parameter< const int >::type z(zSEXP);
-    Rcpp::traits::input_parameter< const int >::type zc(zcSEXP);
+    Rcpp::traits::input_parameter< const int >::type rowbatch(rowbatchSEXP);
+    Rcpp::traits::input_parameter< const int >::type Acolbatch(AcolbatchSEXP);
+    Rcpp::traits::input_parameter< const int >::type Bcolbatch(BcolbatchSEXP);
     Rcpp::traits::input_parameter< const int >::type need_transpose(need_transposeSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nglobal(NglobalSEXP);
-    rcpp_result_gen = Rcpp::wrap(gemmBatchBackend(A, B, C, z, zc, need_transpose, Nglobal));
+    rcpp_result_gen = Rcpp::wrap(gemmBatchBackend(A, B, C, rowbatch, Acolbatch, Bcolbatch, need_transpose, Nglobal));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -198,7 +199,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_backsolveBatchBackend", (DL_FUNC) &_gpuRandom_backsolveBatchBackend, 7},
     {"_gpuRandom_cholBatchBackend", (DL_FUNC) &_gpuRandom_cholBatchBackend, 5},
     {"_gpuRandom_crossprodBatchBackend", (DL_FUNC) &_gpuRandom_crossprodBatchBackend, 7},
-    {"_gpuRandom_gemmBatchBackend", (DL_FUNC) &_gpuRandom_gemmBatchBackend, 7},
+    {"_gpuRandom_gemmBatchBackend", (DL_FUNC) &_gpuRandom_gemmBatchBackend, 8},
     {"_gpuRandom_cpp_gpuFisher_test", (DL_FUNC) &_gpuRandom_cpp_gpuFisher_test, 6},
     {"_gpuRandom_cpp_mrg31k3pCreateStreams", (DL_FUNC) &_gpuRandom_cpp_mrg31k3pCreateStreams, 1},
     {"_gpuRandom_gpuRnBackend", (DL_FUNC) &_gpuRandom_gpuRnBackend, 4},
