@@ -3,7 +3,7 @@
 using namespace Rcpp;
 
 
-#define DEBUG
+//#define DEBUG
 
 // C = A B   C_i is M by N, A_i is M by K, B_i is K by N  (if no transposition)
 // work items w1, w2, w3, i.e 32 by 32 by 4
