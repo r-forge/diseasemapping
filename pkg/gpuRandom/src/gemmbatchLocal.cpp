@@ -21,7 +21,7 @@ std::string gemmBatchString(
     const int NpadB, 
     const int NpadC,
     const int z, //number of batches
-    const int Ntotal, //total columns of B
+//    const int Ntotal, //total columns of B
     const int NpadMatrixA, 
     const int NpadMatrixB, 
     const int NpadMatrixC,
@@ -43,7 +43,7 @@ std::string gemmBatchString(
     "#define N " + std::to_string(N) + "\n" // columns
     "#define K " + std::to_string(K) + "\n" // inter
     "#define z " + std::to_string(z) + "\n" // matrices
-    "#define Ntotal " + std::to_string(Ntotal) + "\n" // 
+//    "#define Ntotal " + std::to_string(Ntotal) + "\n" // 
     "#define NpadA " + std::to_string(NpadA) + "\n"    
     "#define NpadB " + std::to_string(NpadB) + "\n"
     "#define NpadC " + std::to_string(NpadC) + "\n"
@@ -82,7 +82,6 @@ std::string gemmBatchString(
   "    Drow += get_global_size(0),DrowLocal += get_global_size(0)) {\n"
   "    DrowC0 = Dmatrix * NpadMatrixC + Drow*NpadC;\n";
           
-   if (need_transpose) {
           
   result += 
 
@@ -94,7 +93,9 @@ std::string gemmBatchString(
 
       // Initialise the accumulation register
   "      acc = 0.0;\n"
+   if (need_transpose) {
   // inner loop
+    result +=
   "      for(Dinner=0,DinnerA = DmatrixA + DrowLocal,DinnerB = DmatrixB + DcolLocal;"
   "        Dinner < K;\n"
   "        Dinner++,DinnerA += NpadA,DinnerB += NpadB);\n"
@@ -105,36 +106,38 @@ std::string gemmBatchString(
   "  A[DinnerA],"
   "  get_local_size(0),"
   "  0);\n"
+
+     } else{ // not transposed
+ // inner loop
+  "      for(Dinner=0,DinnerA = DmatrixA + DrowLocal*NpadA, DinnerB = DmatrixB + DcolLocal;"
+  "        Dinner < K;\n"
+  "        Dinner++, DinnerA++, DinnerB += NpadB);\n"
+  //  "        acc+= A[DrowA + Dinner * NpadA] * B[DcolB + Dinner * NpadB];\n "     
+  // do cache
+  "wait = async_work_group_strided_copy("
+  "  Acache,"
+  "  A[DinnerA],"
+  "  get_local_size(0),"
+  "  NpadA,"
+  "  0);\n"
+}
+  result +=
   "wait = async_work_group_copy("
   "  Bcache,"
   "  B[DinnerB],"
   "  get_local_size(1),"
-  "  wait);\n"
+  "  wait);\n";
   "wait_group_events(1, &wait);\n"
 
   "        acc+= Acache[get_local_id(0)] * Bcache[get_local_id(1)];\n "     
   "      }//Dinner\n";
-
-     } else{ // not transposed
- result += 
-     "DrowA0 = Dmatrix * NpadMatrixA + Drow*NpadA;\n"  // points to entry (Drow,0) of submatrix Dmatrix of A
-     
-     "for (Dcol = get_global_id(1); Dcol < Ntotal; Dcol += get_global_size(1)) {\n"
-     "DcolB = DrowB0 + Dcol;\n"            
-     "acc = 0;\n"
-     "numbatch = Dcol/N;\n"
-     "DrowA = DrowA0 + K*numbatch;\n"
-     "for(Dinner = 0; Dinner < K; Dinner++){\n"
-     "acc+= A[DrowA + Dinner] * B[DcolB + Dinner * NpadB];\n"
-     " }\n";
-     }
 
 result +=  "C[DrowC0 + Dcol] = acc;\n"
      "}\n" //Dcol
      "}\n"  	//Drow
      "}\n"//Dmatrix
      
-     "}\n";
+     "}\n"; // function
 
   return(result);
 }
