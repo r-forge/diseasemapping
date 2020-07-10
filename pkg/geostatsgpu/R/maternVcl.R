@@ -35,6 +35,7 @@ maternGpu = function(
   param = c(range = 1, variance = 1, shape = 1), 
   form = c("variance", "cholesky", "precision", "inverseCholesky"),
   workgroupSize, localSize) 
+
 {
   form = gsub("iance$|esky$|ision", "", tolower(form)[1])    
   form = c(var=1,chol=2,prec=3,inversechol=4)[form]

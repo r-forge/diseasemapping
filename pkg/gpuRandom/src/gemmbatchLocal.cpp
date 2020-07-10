@@ -2,7 +2,7 @@
 #include "gpuRandom.hpp"
 using namespace Rcpp;
 
-
+/***
 //#define DEBUG
 
 // C = A B   C_i is M by N, A_i is M by K, B_i is K by N  (if no transposition)
@@ -20,8 +20,7 @@ std::string gemmBatchString(
     const int NpadA, 
     const int NpadB, 
     const int NpadC,
-    const int z, //number of batches
-//    const int Ntotal, //total columns of B
+    const int z, //number of batches//    const int Ntotal, //total columns of B
     const int NpadMatrixA, 
     const int NpadMatrixB, 
     const int NpadMatrixC,
@@ -173,21 +172,7 @@ void gemmBatch(
   
   cl_device_type type_check = ctx.current_device().type();
   
-  
- /*** 
-  const int M, // rows of Ai
-  const int N, // columns of Bi
-  const int K, // common size of Ai Bi
-  const int NpadA, 
-  const int NpadB, 
-  const int NpadC,
-  const int z, //number of batches in row
-  const int Ntotal, //total columns of B
-  const int NpadMatrixA, 
-  const int NpadMatrixB, 
-  const int NpadMatrixC,
-  const int need_transpose
- ***/ 
+
   if (need_transpose==1){
     M = A.size2()/zc;
     K = A.size1()/z;
@@ -302,7 +287,7 @@ SEXP gemmBatchBackend(
 }
 
 
-
+****/
 
 
 

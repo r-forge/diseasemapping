@@ -25,14 +25,6 @@ crossprodBatchBackend <- function(C, A, D, invertD, Nglobal, Nlocal, NlocalCache
     .Call('_gpuRandom_crossprodBatchBackend', PACKAGE = 'gpuRandom', C, A, D, invertD, Nglobal, Nlocal, NlocalCache)
 }
 
-#' 
-#' Multiplies a rectangular matrix by a rectangular matrix in batches
-#'
-#' @param C output matrices, stacked row-wise
-#' @param A rectangular matrices
-#' @param B rectangular matrices 
-#' @param Nglobal vector of number of global work items//' @param Nlocal vector of number of local work items//' @param NlocalCache elements in local cache
-#' @export
 gemmBatchBackend <- function(A, B, C, rowbatch, Acolbatch, Bcolbatch, need_transpose, Nglobal) {
     .Call('_gpuRandom_gemmBatchBackend', PACKAGE = 'gpuRandom', A, B, C, rowbatch, Acolbatch, Bcolbatch, need_transpose, Nglobal)
 }
