@@ -19,20 +19,21 @@ gemmBatch <- function(
   workgroupSize,
   verbose=FALSE){
   
-  if((Acolbatch != Bcolbatch) & (Bcolbatch != 1))
-    stop("A and B should have same number of blocks in column or B should have only one block in column")
+  if((Acolbatch != Bcolbatch) & (Bcolbatch != 1) & (Acolbatch != 1))
+    stop("A and B should have same number of blocks in column or either A or B should have only one block in column")
   
   localSize = c(1, 1, 1)
   
   if(verbose){ message(paste('global work items', workgroupSize, 
                              'local work items', localSize))}
   
+  x <- max(c(Acolbatch,Bcolbatch))
   
   
   if (need_transpose){
-  C = vclMatrix(data=0, ncol(A)/Acolbatch*rowbatch, ncol(B)/Bcolbatch*Acolbatch, type=gpuR::typeof(A))
+  C = vclMatrix(data=0, ncol(A)/Acolbatch*rowbatch, ncol(B)/Bcolbatch*x, type=gpuR::typeof(A))
   }else{
-  C = vclMatrix(data=0, nrow(A), ncol(B)/Bcolbatch*Acolbatch, type=gpuR::typeof(A))  
+  C = vclMatrix(data=0, nrow(A), ncol(B)/Bcolbatch*x, type=gpuR::typeof(A))  
   }
 
   

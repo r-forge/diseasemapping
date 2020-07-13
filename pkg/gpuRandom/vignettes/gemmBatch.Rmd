@@ -27,7 +27,7 @@ a42 = matrix(c(11,3,2,7,10,15), ncol=3, nrow=2)
 A1<- rbind(a11,a21,a31,a41)  #8*3
 A2<- rbind(a12,a22,a32,a42)
 A<-cbind(A1,A2)
-
+A
 
 a11t=t(a11)
 a21t=t(a21)
@@ -54,14 +54,14 @@ b32<-matrix(c(17,10,1,22,5,0,4,15,3,8,2,9), nrow=3, ncol=4)
 b42<-matrix(c(4,0,1,5,2,8,7,9,22,10,6,3), nrow=3, ncol=4)
 B2<-rbind(b12,b22,b32,b42)   #12*4
 B<- cbind(B1,B2)  #12*8
-ncol(B)
+B
 gpuA<-vclMatrix(A,type="float")
 gpuB<-vclMatrix(B,type="float")
 gpuAt<-vclMatrix(At,type="float")
 ```
 
 
-```{r multiplication1, echo=TRUE, eval=T}
+```{r test transpose, echo=TRUE, eval=T}
 outputC<-vclMatrix(0, nrow=8, ncol=8, type="float")
 Nglobal = c(16,8,4) 
 
@@ -82,26 +82,33 @@ a12%*%b12
 a22%*%b22
 a41%*%b41
 a42%*%b42
+a42%*%b41
 ```
 
 
 
-```{r multiplication2, echo=TRUE, eval=T}
+```{r test one vs multiple, echo=TRUE, eval=T}
 gpuB1<-vclMatrix(B1,type="float")
-outputC3<-vclMatrix(0, nrow=8, ncol=8, type="float")
-
-gpuRandom:::gemmBatchBackend(gpuA, gpuB1, outputC3, 4L, 2L, 1L, FALSE, Nglobal)
-as.matrix(outputC3)
+gpuA1<-vclMatrix(A1, type="float")
+gpuA1t<-vclMatrix(A1t, type="float")
+#outputC3<-vclMatrix(0, nrow=8, ncol=8, type="float")
+#gpuRandom:::gemmBatchBackend(gpuA, gpuB1, outputC3, 4L, 2L, 1L, FALSE, Nglobal)
+#as.matrix(outputC3)
 
 C4<-gpuRandom::gemmBatch(gpuA, gpuB1, 4L, 2L, 1L, FALSE, Nglobal)
 as.matrix(C4)
 
+C5<-gpuRandom::gemmBatch(gpuA1, gpuB, 4L, 1L, 2L, FALSE, Nglobal)
+as.matrix(C5)
+
+C6<-gpuRandom::gemmBatch(gpuA1t, gpuB, 4L, 1L, 2L, TRUE, Nglobal)
+as.matrix(C6)
 
 a11%*%b11
-a21%*%b21
 a12%*%b11
-a22%*%b21
+a21%*%b21
+a21%*%b22
 a41%*%b41
-a42%*%b41
+a41%*%b42
 ```
 
