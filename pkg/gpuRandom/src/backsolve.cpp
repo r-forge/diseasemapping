@@ -508,7 +508,8 @@ SEXP backsolveBatchTyped(
   
 }
 
-
+//if diagIsOne=TRUE, then backsolve ignores the diagonal entries in A and assumes they're all 1.  
+//if diagIsOne=FALSE then backsolve will use the diagonal elements provided in A.
 
 // [[Rcpp::export]]
 SEXP backsolveBatchBackend(

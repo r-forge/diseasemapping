@@ -11,20 +11,18 @@
 
 
 backsolveBatch <- function(A, B,  #vclmatrices
-                           diagIsOne, #
+                           diagIsOne, 
                            workgroupSize, localsize,
                            NlocalCache,
                            verbose=FALSE){
   
 
   if(missing(workgroupSize)) {
-    workgroupSize <- c(64,64)
-    )
-
-
+    workgroupSize <- c(64,64,8)
+  }
 
   if(verbose){ message(paste('global work items', workgroupSize, 
-                           'local work items', localSize))}
+                             'local work items', localSize))}
 
 
   C = vclMatrix(data=0, ncol(A), ncol(B), type=gpuR::typeof(A))

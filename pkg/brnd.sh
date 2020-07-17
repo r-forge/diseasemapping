@@ -9,3 +9,4 @@ tar --extract --strip=3 --directory=junk --file=gpuRandom_0.1.tar.gz gpuRandom/i
 tar --extract --strip=3 --directory=junk --file=gpuRandom_0.1.tar.gz gpuRandom/inst/doc/matern.html
 tar --extract --strip=3 --directory=junk --file=gpuRandom_0.1.tar.gz gpuRandom/inst/doc/qqnorm.html
 tar --extract --strip=3 --directory=junk --file=gpuRandom_0.1.tar.gz gpuRandom/inst/doc/gemmBatch.html
+tar --extract --strip=3 --directory=junk --file=gpuRandom_0.1.tar.gz gpuRandom/inst/doc/backsolve.html

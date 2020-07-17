@@ -42,7 +42,7 @@ x<-vclMatrix(x,type="integer")
 res1 = gpuRandom::fisher.sim(x, 1e5, returnStatistics=T, type="double", streams=streams, workgroupSize = Nglobal)
 
  
-res1$p.value
+res1
 #as.vector(res1$sim)
 #hist(as.vector(res1$sim))
 ```
@@ -51,7 +51,7 @@ res1$p.value
 ##using the same stream
 res2 = gpuRandom::fisher.sim(x, 1e5, returnStatistics=F, type="double", streams=streams2, workgroupSize = Nglobal)
 as.matrix(streams2[1:4,1:4])
-res2$p.value
+res2
 ```
 
 

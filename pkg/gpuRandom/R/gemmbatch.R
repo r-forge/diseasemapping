@@ -24,7 +24,7 @@ gemmBatch <- function(
   
   if(missing(workgroupSize)) {
     workgroupSize <- c(64,8,8)
-    )
+  }
   
   localSize = c(1, 1, 1)
   
