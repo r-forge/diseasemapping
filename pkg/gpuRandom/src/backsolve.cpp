@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-#define DEBUG
+//#define DEBUG
 
 
 /*
@@ -460,7 +460,7 @@ void backsolveBatch(
     C.internal_size2(),   
     A.internal_size2(), 
     B.internal_size2(),
-    C.internal_size2()*C.size1/Nmatrix,//NpadBetweenMatricesC,
+    C.internal_size2()*C.size1()/Nmatrix,//NpadBetweenMatricesC,
     A.internal_size2()*A.size2(),//NpadBetweenMatricesA,
     B.internal_size2()*B.size1()/numbatchB,//NpadBetweenMatricesB,
     NstartC,
@@ -528,8 +528,7 @@ SEXP backsolveBatchTyped(
   
   backsolveBatch<T>(*CG, *AG, *BG, 
                     Cstartend, Astartend, Bstartend,
-                    numbatchB,
-                    diagIsOne, 
+                    numbatchB,diagIsOne, 
                     Nglobal, Nlocal, NlocalCache, ctx_id);
   
   return Rcpp::wrap(0L);

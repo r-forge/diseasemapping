@@ -260,7 +260,7 @@ outputChol a = cbind(Y, 1), solve for a
 
 # Backsolve
 
-```{r backsolve, echo=TRUE}
+```{r backsolve, echo=TRUE, eval=F}
   
 #solveMat = -99 +0*simMat
 solveMat=vclMatrix(0, nrow(simMat),ncol(simMat),type=gpuR::typeof(outputChol))
