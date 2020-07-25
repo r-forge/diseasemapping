@@ -51,7 +51,7 @@ as.matrix(gpuC)
 
 
 ```{r testP}
-N = 2
+N = 4
 Amat = vclMatrix(rbind(diag(N), diag(N), diag(N),
                        diag(N) + as.matrix(0.1*Matrix::bandSparse(N,N,-1))),
                  type='double')
