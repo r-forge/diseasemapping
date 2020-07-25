@@ -52,7 +52,9 @@ as.matrix(gpuC)
 
 ```{r testP}
 N = 3
-Amat = vclMatrix(rbind(diag(N), 2*diag(N), 4*diag(N)), type='double')
+Amat = vclMatrix(rbind(diag(N), 2*diag(N), 
+                       diag(N) + as.matrix(0.1*Matrix::bandSparse(N,N,-1))),
+                 type='double')
 Bmat = vclMatrix(cbind(rep(c(1,0), c(1, N-1)),
              rep(c(0,1), c(N-1,1))), type='double')
 Cmat = vclMatrix(0, nrow(Amat), ncol(Bmat), type='double')
