@@ -51,20 +51,21 @@ as.matrix(gpuC)
 
 
 ```{r testP}
-N = 2
+N = 4
 
 Amat = vclMatrix(rbind(diag(N), diag(N), diag(N),
                        diag(N) + as.matrix(0.1*Matrix::bandSparse(N,N,-1))),
                  type='double')
+Nmatrix = nrow(Amat)/ncol(Amat)
 Bmat = vclMatrix(cbind(rep(c(1,0), c(1, N-1)),
              rep(1,N)), type='double')
 Cmat = vclMatrix(0, nrow(Amat), ncol(Bmat), type='double')
 as.matrix(Amat)
 as.matrix(Bmat)
 
-NlocalCache = 1000
-Nglobal = c(1L, 1L, 1L)
-Nlocal = c(1L, 1L)
+NlocalCache = 100
+Nglobal = c(2L, 2L, 2L)
+Nlocal = c(2L, 2L) # breaks if there's more than one group
 gpuRandom:::backsolveBatchBackend(Cmat, Amat, Bmat, 
                                   c(0,nrow(Cmat),0,ncol(Cmat)),
                                   c(0,nrow(Amat),0,ncol(Amat)),
@@ -72,10 +73,10 @@ gpuRandom:::backsolveBatchBackend(Cmat, Amat, Bmat,
                                   1L,
                                   diagIsOne=FALSE, 
                                   Nglobal, Nlocal, NlocalCache)
-for(D in seq(nrow(Amat)/ncol(Amat))) {
+for(D in 1:Nmatrix) {
 print(cbind(
   as.matrix(Amat)[(D-1)*N + 1:N, ], NA,
-  as.matrix(Bmat), NA,
+#  as.matrix(Bmat), NA,
   as.matrix(Cmat)[(D-1)*N + 1:N,], NA,
   solve(as.matrix(Amat)[(D-1)*N + 1:N, ]) %*% as.matrix(Bmat)))
 }
