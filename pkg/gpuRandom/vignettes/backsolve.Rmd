@@ -49,3 +49,31 @@ as.matrix(gpuC)
 
 ```
 
+
+```{r testP}
+N = 3
+Amat = vclMatrix(rbind(diag(N), 2*diag(N), 4*diag(N)), type='double')
+Bmat = vclMatrix(cbind(rep(c(1,0), c(1, N-1)),
+             rep(c(0,1), c(N-1,1))), type='double')
+Cmat = vclMatrix(0, nrow(Amat), ncol(Bmat), type='double')
+as.matrix(Amat)
+as.matrix(Bmat)
+
+NlocalCache = 0
+Nglobal = c(8L, 8L, 8L)
+Nlocal = c(4L, 2L)
+gpuRandom:::backsolveBatchBackend(Cmat, Amat, Bmat, 
+                                  c(0,nrow(Cmat),0,ncol(Cmat)),
+                                  c(0,nrow(Amat),0,ncol(Amat)),
+                                  c(0,nrow(Bmat),0,ncol(Bmat)),
+                                  1L,
+                                  diagIsOne=FALSE, 
+                                  Nglobal, Nlocal, NlocalCache)
+for(D in 1:3) {
+print(cbind(
+  as.matrix(Amat)[(D-1)*N + 1:N, ], NA,
+  as.matrix(Bmat), NA,
+  as.matrix(Cmat)[(D-1)*N + 1:N,], NA,
+  solve(as.matrix(Amat)[(D-1)*N + 1:N, ]) %*% as.matrix(Bmat)))
+}
+```
