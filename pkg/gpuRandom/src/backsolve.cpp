@@ -111,9 +111,13 @@ std::string backsolveBatchString(
   "  barrier(CLK_LOCAL_MEM_FENCE);\n"
   "  if(localIsFirstItem) {\n"
   "    AHere = Dmatrix*NpadBetweenMatricesA + NstartA;\n"
-  "    CHere = Dmatrix*NpadBetweenMatricesC + NstartC;\n"
-  "    BHere = Dmatrix*NpadBetweenMatricesB + NstartB;\n"
-  "  };\n"
+  "    CHere = Dmatrix*NpadBetweenMatricesC + NstartC;\n";
+  if(sameB){
+    result +=  "    BHere = NstartB;\n";
+  } else {
+    result +=  "    BHere = Dmatrix*NpadBetweenMatricesB + NstartB;\n";
+  }
+result +=  "  };\n"
   "  barrier(CLK_LOCAL_MEM_FENCE);\n";
   
   // loop through rows of A
@@ -213,7 +217,9 @@ std::string backsolveBatchString(
     "               cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
     
     "          C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
-    
+//    "          C[CHereRow + Dcol] = 100*(1 + Dmatrix) + 10*(1+Drow) + (1+Dcol);\n"
+//"          C[CHereRow + Dcol] = A[AHereRow + Dcol];\n"
+
     "          Ccache[CcacheHereRow + DcolCache] =\n"
     //"          Ccache[Drow*NpadCcache + DcolCache] =\n"
     "            cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
@@ -372,6 +378,7 @@ std::string backsolveBatchString(
     "               cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
     
     "          C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
+//    "          C[CHereRow + Dcol] = 10*(1 + Dmatrix) + (1+Drow) + (1+Dcol)/10;\n"
     
     "        } //if(get_local_id(0) == Dinner)\n"
     "        barrier(CLK_LOCAL_MEM_FENCE);\n"; 
