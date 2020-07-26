@@ -63,9 +63,9 @@ Cmat = vclMatrix(0, nrow(Amat), ncol(Bmat), type='double')
 as.matrix(Amat)
 as.matrix(Bmat)
 
-NlocalCache = 100
-Nglobal = c(2L, 2L, 1L)
-Nlocal = c(1L, 1L) # breaks if there's more than one group
+NlocalCache = 1 # breaks if NlocalCache < N
+Nglobal = c(4L, 4L, 4L)
+Nlocal = c(2L, 2L) 
 gpuRandom:::backsolveBatchBackend(Cmat, Amat, Bmat, 
                                   c(0,N,0,ncol(Bmat)),
                                   c(0,N,0,N),
