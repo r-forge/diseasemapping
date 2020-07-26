@@ -442,7 +442,7 @@ void backsolveBatch(
   const int NstartC = C.internal_size2() * Cstartend[0] + Cstartend[2];
   const int NstartA = A.internal_size2() * Astartend[0] + Astartend[2];
   const int NstartB = B.internal_size2() * Bstartend[0] + Bstartend[2];
-  const int Nrow = Astartend[1]-Astartend[0] + 1, Ncol = Bstartend[3]-Bstartend[2] + 1;
+  const int Nrow = Astartend[1]-Astartend[0], Ncol = Bstartend[3]-Bstartend[2];
   const int Nmatrix = A.size1()/A.size2();
   //const int fullCrow = C.size1/Nmatrix;
   //const int fullBrow = B.size1/numbatchB;
@@ -451,7 +451,14 @@ void backsolveBatch(
   const int NcolsPerGroup = std::ceil( static_cast<T>(Ncol) / static_cast<T>(Ngroups1));
   const int NrowsToCache = std::floor(static_cast<T>(NlocalCache) /static_cast<T>(NcolsPerGroup));
   
+
+#ifdef DEBUG
   
+  Rcpp::Rcout << "\nNrow " << Nrow  << " Nmatrix " << Nmatrix << " Ncol " << Ncol << "\n\n";
+  
+#endif  
+  
+    
   // the context
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   
