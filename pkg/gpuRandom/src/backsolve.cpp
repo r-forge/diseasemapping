@@ -250,7 +250,7 @@ result +=  "  };\n"
     "  }//for Drow\n";
   
   result += 
-    "  //Now rows that aren't all cached\n";
+    "//\n//Now rows that aren't all cached\n//\n";
   
   result +=
     "  for(Drow = NrowStop + get_local_id(0),\n"
