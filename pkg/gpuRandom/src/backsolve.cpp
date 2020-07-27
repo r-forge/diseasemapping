@@ -443,7 +443,7 @@ void backsolveBatch(
   const int NstartC = C.internal_size2() * Cstartend[0] + Cstartend[2];
   const int NstartA = A.internal_size2() * Astartend[0] + Astartend[2];
   const int NstartB = B.internal_size2() * Bstartend[0] + Bstartend[2];
-  const int Nrow = Astartend[1]-Astartend[0], Ncol = Bstartend[3]-Bstartend[2];
+  const int Nrow = Astartend[1], Ncol = Bstartend[3];
   const int Nmatrix = A.size1()/A.size2();
   //const int fullCrow = C.size1/Nmatrix;
   //const int fullBrow = B.size1/numbatchB;
@@ -489,7 +489,7 @@ void backsolveBatch(
   
 #ifdef DEBUG
   
-  Rcpp::Rcout << clString << "\n\n";
+//Rcpp::Rcout << clString << "\n\n";
   
 #endif  
   

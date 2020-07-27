@@ -182,27 +182,28 @@ return(result);
 
 template <typename T> 
 int cholBatchVcl(
-  viennacl::matrix<T> &A,
-  viennacl::matrix<T> &D,
-  const std::vector<int> &Nglobal,
-  const std::vector<int> &Nlocal, 
-  const std::vector<int> &NlocalCache,
-  const int ctx_id) {
-
+    viennacl::matrix<T> &A,
+    viennacl::matrix<T> &D,
+    const std::vector<int> &Nglobal,
+    const std::vector<int> &Nlocal, 
+    const std::vector<int> &NlocalCache,
+    const int ctx_id) {
+  
   std::string cholClString = cholBatchKernelString<T>(
-  0L, // start
-  A.size2(), // end
-  A.size2(), // N
-  A.internal_size2(), // Npad
-  D.internal_size2(),
-  D.size1(), // Nmatrix
-  A.size2() * A.internal_size2(),// NpadBetweenMatrices,
-  NlocalCache, 
-  Nlocal,
-  ((int) A.size2() ) > NlocalCache[0]); // allow overflow
-
+    0L, // start
+    A.size2(), // end
+    A.size2(), // N
+    A.internal_size2(), // Npad
+    D.internal_size2(),
+    D.size1(), // Nmatrix
+    A.size2() * A.internal_size2(),// NpadBetweenMatrices,
+    NlocalCache, 
+    Nlocal,
+    ((int) A.size2() ) > NlocalCache[0]); // allow overflow
+  
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   viennacl::ocl::program & my_prog = ctx.add_program(cholClString, "my_kernel");
+  
   
 #ifdef DEBUG
   
