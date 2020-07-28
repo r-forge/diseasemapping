@@ -67,13 +67,14 @@ C
 gpuA <- vclMatrix(A, type="double")
 gpuB <- vclMatrix(B, type="double")
 gpuC <- vclMatrix(0,nrow=6, ncol=2, type="double")
-
+gpuC2 <- vclMatrix(0,nrow=6, ncol=2, type="double")
 gpuRandom:::backsolveBatchBackend(gpuC, gpuA, gpuB, 
                                   c(0,3,0,2),c(0,3,0,3),c(0,3,0,2),2L,
                                   diagIsOne=FALSE, Nglobal, Nlocal, NlocalCache)
 as.matrix(gpuC)
-
-
+gpuRandom:::backsolveBatchBackend2(gpuC2, gpuA, gpuB, 
+                                  diagIsOne=FALSE, Nglobal, Nlocal, NlocalCache)
+as.matrix(gpuC2)
 ```
 
 

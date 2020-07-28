@@ -5,6 +5,10 @@ backsolveBatchBackend <- function(C, A, B, Cstartend, Astartend, Bstartend, numb
     .Call('_gpuRandom_backsolveBatchBackend', PACKAGE = 'gpuRandom', C, A, B, Cstartend, Astartend, Bstartend, numbatchB, diagIsOne, Nglobal, Nlocal, NlocalCache)
 }
 
+backsolveBatchBackend2 <- function(C, A, B, diagIsOne, Nglobal, Nlocal, NlocalCache) {
+    .Call('_gpuRandom_backsolveBatchBackend2', PACKAGE = 'gpuRandom', C, A, B, diagIsOne, Nglobal, Nlocal, NlocalCache)
+}
+
 cholBatchBackend <- function(A, D, Nglobal, Nlocal, NlocalCache) {
     invisible(.Call('_gpuRandom_cholBatchBackend', PACKAGE = 'gpuRandom', A, D, Nglobal, Nlocal, NlocalCache))
 }
