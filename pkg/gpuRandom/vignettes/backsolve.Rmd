@@ -42,10 +42,46 @@ Nlocal = c(4L, 4L)
 NlocalCache = 18
 gpuRandom:::backsolveBatchBackend(gpuC, gpuA, gpuB, 
                                   c(0,3,0,2),c(0,3,1,3),c(1,3,1,2),2L,
-                                  diagIsOne=F, Nglobal, Nlocal, NlocalCache)
+                                  diagIsOne=FALSE, Nglobal, Nlocal, NlocalCache)
 as.matrix(gpuC)
 
 ```
+
+
+```{r test2}
+a1 = matrix( c(3, 0,0,0, 3,0, 3, 0, 3), nrow=3, ncol=3, byrow = TRUE) 
+a2 = matrix( c(1, 0,0,6, 1,0, 8, 0, 1), nrow=3, ncol=3, byrow = TRUE) 
+
+C1 = matrix( c(22, 41, 30, 11, 15, 17), nrow=3, ncol=2, byrow=F) 
+C2 = matrix( c(6, 6, 5, 2, 1, 2), nrow=3, ncol=2,byrow=F)  
+
+B1 = a1%*%C1
+B2= a2%*%C2
+
+A <- rbind(a1,a2)
+A
+B <- rbind(B1,B2)
+B
+C <- rbind(C1,C2)
+C
+gpuA <- vclMatrix(A, type="double")
+gpuB <- vclMatrix(B, type="double")
+gpuC <- vclMatrix(0,nrow=6, ncol=2, type="double")
+
+gpuRandom:::backsolveBatchBackend(gpuC, gpuA, gpuB, 
+                                  c(0,3,0,2),c(0,3,0,3),c(0,3,0,2),2L,
+                                  diagIsOne=FALSE, Nglobal, Nlocal, NlocalCache)
+as.matrix(gpuC)
+
+
+```
+
+
+
+
+
+
+
 
 ```{r testP}
 N = 5

@@ -1,0 +1,49 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{cholBatch}
+-->
+
+
+## Chol
+```{r package}
+#library(Matrix)
+
+```
+
+```{r cpu_function}
+A = matrix(c(3,4,3,4,8,6,3,6,9),nrow=3,ncol=3)
+x <- chol(A)   ## start from factor given by chol
+y <- diag(x)   ## extract sqrt(D)
+L <- t(x/y)     ## get unit lower triangular factor
+D <- diag(x^2)  ## and diagonal
+L;
+D
+## So now A = LDL'
+```
+
+```{r chol_no_batch}
+gpuA<-vclMatrix(A,type="float")
+diagMat = vclMatrix(0, 1, ncol(A), type = "float")
+NglobalChol =  c(64,8)
+NlocalChol = c(16, 8)
+NlocalCache = 4
+gpuRandom:::cholBatchBackend(gpuA, diagMat, #c(0,3,0,3), 
+                             NglobalChol, NlocalChol, NlocalCache)
+A
+as.matrix(gpuA)
+as.matrix(diagMat)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
