@@ -110,7 +110,7 @@ gpuRandom:::backsolveBatchBackend(Cmat, Amat, Bmat,
                                   c(0,N,0,N),
                                   c(0,N,0,ncol(Bmat)),
                                   1L,
-                                  diagIsOne=TRUE, 
+                                  diagIsOne=FALSE, 
                                   Nglobal, Nlocal, NlocalCache)
 for(D in 1:Nmatrix) {
 print(cbind(

@@ -222,10 +222,11 @@ result +=  "  };\n"
     result += ";\n";
     
   
-      result +=  "    C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n";
+      result +=  
+        //"    C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n";
   
     
-//    "          C[CHereRow + Dcol] = 100*(1 + Dmatrix) + 10*(1+Drow) + (1+Dcol);\n"
+    "          C[CHereRow + Dcol] = 100*(1 + Dmatrix) + 10*(1+Drow) + (1+Dcol);\n";
 //"          C[CHereRow + Dcol] = A[AHereRow + Dcol];\n"
 
 result +=
