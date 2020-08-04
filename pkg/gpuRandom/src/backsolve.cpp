@@ -214,8 +214,7 @@ result +=  "  };\n"
     "        if(get_local_id(0) == Dinner){\n";
     
     "          cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC] = B[BHereRow + Dcol] -\n"
-    "               cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];
-    
+    "               cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC]";
     
     if(!diagIsOne){
       result += "/ A[AHere + Drow * NpadA + Drow]";
