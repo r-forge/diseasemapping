@@ -399,7 +399,8 @@ result +=
           "      C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n";
     //    "          C[CHereRow + Dcol] = 10*(1 + Dmatrix) + (1+Drow) + (1+Dcol)/10;\n"
     
-    "        } //if(get_local_id(0) == Dinner)\n"
+result +=
+  "        } //if(get_local_id(0) == Dinner)\n"
     "        barrier(CLK_LOCAL_MEM_FENCE);\n"; 
   
   
