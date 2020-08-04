@@ -249,7 +249,7 @@ void crossprodBatch(
     C.internal_size2(), 
     A.internal_size2(), 
     D.internal_size2(),
-    1, // A^T D^(-1) A
+    invertD, // A^T D^(-1) A
     C.internal_size2()*Nrow,//NpadBetweenMatricesC,
     A.internal_size2()*Nrow,//NpadBetweenMatricesA,
     NlocalCache,
@@ -262,7 +262,7 @@ void crossprodBatch(
 #endif  
   
   
-  
+  /*
   viennacl::ocl::program & my_prog = ctx.add_program(clString, "my_kernel");
   
   viennacl::ocl::kernel & multiplyKernel = my_prog.get_kernel("crossprodBatch");
@@ -275,7 +275,7 @@ void crossprodBatch(
 
   // diagonals and diagTimesRowOfA
   viennacl::ocl::enqueue(multiplyKernel( A, D));
-  
+  */
 }
 
 

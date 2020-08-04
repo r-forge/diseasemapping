@@ -216,7 +216,12 @@ result +=  "  };\n"
     "          cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC] = B[BHereRow + Dcol] -\n"
     "               cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
     
-    "          C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
+    if(diagIsOne){
+      result +=  "C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n";
+    } else {
+      result +=  "C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC] / A[something]\n";
+    }
+    
 //    "          C[CHereRow + Dcol] = 100*(1 + Dmatrix) + 10*(1+Drow) + (1+Dcol);\n"
 //"          C[CHereRow + Dcol] = A[AHereRow + Dcol];\n"
 
@@ -375,10 +380,15 @@ result +=  "  };\n"
     "        // create C in cache and copy to C\n"
     "        if(get_local_id(0) == Dinner){\n"
     
-    "          cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC] = B[BHereRow + Dcol] -\n"
-    "               cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
+    "       cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC] = B[BHereRow + Dcol] -\n"
+    "       cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
     
-    "          C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
+    
+    if(diagIsOne){
+      result +=  "C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n";
+    } else {
+      result +=  "C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC] / A[something]\n";
+    }
 //    "          C[CHereRow + Dcol] = 10*(1 + Dmatrix) + (1+Drow) + (1+Dcol)/10;\n"
     
     "        } //if(get_local_id(0) == Dinner)\n"

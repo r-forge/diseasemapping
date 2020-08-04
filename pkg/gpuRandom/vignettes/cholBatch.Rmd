@@ -24,8 +24,8 @@ D
 ```{r chol_no_batch}
 gpuA<-vclMatrix(A,type="float")
 diagMat = vclMatrix(0, 1, ncol(A), type = "float")
-NglobalChol =  c(64,8)
-NlocalChol = c(16, 8)
+NglobalChol =  c(64,8,8)
+NlocalChol = c(16, 8,4)
 NlocalCache = 4
 gpuRandom:::cholBatchBackend(gpuA, diagMat, #c(0,3,0,3), 
                              NglobalChol, NlocalChol, NlocalCache)
@@ -35,7 +35,19 @@ as.matrix(diagMat)
 ```
 
 
-
+```{r crossprodbatch}
+D <- matrix(0,nrow=3, ncol=3)
+diag(D)<-c(1,2,3)
+D
+A
+result<- t(A)%*% D%*%A
+result
+gpuC<-vclMatrix(0, nrow=3, ncol=3,type="float")
+gpuA2<-vclMatrix(A,type="float")
+gpuD<-vclMatrix(c(1,2,3), nrow=1,ncol=3,type='float')
+gpuRandom:::crossprodBatchBackend(gpuC,gpuA2,gpuD,invertD=F, NglobalChol,NlocalChol, NlocalCache)
+as.matrix(gpuC)
+```
 
 
 
