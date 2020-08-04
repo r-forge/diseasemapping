@@ -214,12 +214,12 @@ result +=  "  };\n"
     "        if(get_local_id(0) == Dinner){\n"
     
     "          cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC] = B[BHereRow + Dcol] -\n"
-    "               cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
+    "               cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC]/ A[AhereRow + Drow];\n";
     
     if(diagIsOne){
       result +=  "C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n";
     } else {
-      result +=  "C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC] / A[something]\n";
+      result +=  "C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC] /A[AhereRow + Drow]\n";
     }
     
 //    "          C[CHereRow + Dcol] = 100*(1 + Dmatrix) + 10*(1+Drow) + (1+Dcol);\n"
@@ -381,13 +381,13 @@ result +=  "  };\n"
     "        if(get_local_id(0) == Dinner){\n"
     
     "       cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC] = B[BHereRow + Dcol] -\n"
-    "       cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
+    "       cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC]/ A[AhereRow + Drow];\n";
     
     
     if(diagIsOne){
       result +=  "C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n";
     } else {
-      result +=  "C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC] / A[something]\n";
+      result +=  "C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC] / A[AhereRow + Drow]\n";
     }
 //    "          C[CHereRow + Dcol] = 10*(1 + Dmatrix) + (1+Drow) + (1+Dcol)/10;\n"
     
@@ -499,12 +499,12 @@ void backsolveBatch(
   
 #ifdef DEBUG
   
-//Rcpp::Rcout << clString << "\n\n";
+ Rcpp::Rcout << clString << "\n\n";
   
 #endif  
   
   
-  
+ /* 
   viennacl::ocl::program & my_prog = ctx.add_program(clString, "my_kernel");
   
   viennacl::ocl::kernel & backsolveKernel = my_prog.get_kernel("backsolveBatch");
@@ -517,7 +517,7 @@ void backsolveBatch(
   
   
   viennacl::ocl::enqueue(backsolveKernel(C, A, B));
-  
+  */
 }
 
 
