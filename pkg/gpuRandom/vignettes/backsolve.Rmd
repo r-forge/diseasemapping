@@ -85,10 +85,15 @@ as.matrix(gpuC2)
 
 
 ```{r testP}
-N = 5
+N = 4
 
-Amat = vclMatrix(rbind(diag(N), diag(N), diag(N),
-                       diag(N) + as.matrix(0.1*Matrix::bandSparse(N,N,-1))),
+oneLwer = matrix(0, N, N)
+oneLwer[lower.tri(oneLwer, diag=FALSE)] = 1
+
+Amat = vclMatrix(rbind(diag(N), 
+                       4*diag(N), 
+                       diag(N) + 0.5*oneLwer,
+                       2*diag(N) - 0.5*oneLwer),
                  type='double')
 Nmatrix = nrow(Amat)/ncol(Amat)
 Bmat = vclMatrix(cbind(rep(c(1,0), c(1, N-1)),
@@ -97,9 +102,9 @@ Cmat = vclMatrix(0, nrow(Amat), ncol(Bmat), type='double')
 as.matrix(Amat)
 as.matrix(Bmat)
 
-NlocalCache = 2 # breaks if NlocalCache < N
-Nglobal = c(4L, 4L, 4L)
-Nlocal = c(2L, 2L) 
+NlocalCache = 1000 
+Nglobal = c(1L, 1L, 1L)
+Nlocal = c(1L, 1L) 
 gpuRandom:::backsolveBatchBackend(Cmat, Amat, Bmat, 
                                   c(0,N,0,ncol(Bmat)),
                                   c(0,N,0,N),
