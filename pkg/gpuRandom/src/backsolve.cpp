@@ -117,7 +117,7 @@ std::string backsolveBatchString(
   } else {
     result +=  "    BHere = Dmatrix*NpadBetweenMatricesB + NstartB;\n";
   }
-result +=  "  };\n"
+  result +=  "  };\n"
   "  barrier(CLK_LOCAL_MEM_FENCE);\n";
   
   // loop through rows of A
@@ -215,21 +215,20 @@ result +=  "  };\n"
     
     "          cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC] = (B[BHereRow + Dcol] -\n"
     "               cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC])";
-    
-    if(!diagIsOne){
-      result += "/ A[AHere + Drow * NpadA + Drow]";
-    }
-    result += ";\n";
-    
   
-      result +=  
-        //"    C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n";
+  if(!diagIsOne){
+    result += "/ A[AHere + Drow * NpadA + Drow]";
+  }
+  result += ";\n";
   
-    
-    "          C[CHereRow + Dcol] = 100*(1 + Dmatrix) + 10*(1+Drow) + (1+Dcol);\n";
-//"          C[CHereRow + Dcol] = A[AHereRow + Dcol];\n"
-
-result +=
+  
+  result +=  "    C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n";
+  
+  
+  //    "          C[CHereRow + Dcol] = 100*(1 + Dmatrix) + 10*(1+Drow) + (1+Dcol);\n"
+  //"          C[CHereRow + Dcol] = A[AHereRow + Dcol];\n"
+  
+  result +=
     "          Ccache[CcacheHereRow + DcolCache] =\n"
     //"          Ccache[Drow*NpadCcache + DcolCache] =\n"
     "            cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
@@ -266,9 +265,9 @@ result +=
     "  for(Drow = NrowStop + get_local_id(0),\n"
     "      BHereRow = BHere + Drow * NpadB,\n"
     "      CHereRow = CHere + Drow * NpadC,\n"
-  // "      CcacheHereRow = Drow * NpadCcache,\n"
-"      CcacheHereRow = get_local_id(0) * NpadCcache,\n"
-"      AHereRow = AHere + Drow * NpadA;\n"
+    // "      CcacheHereRow = Drow * NpadCcache,\n"
+    "      CcacheHereRow = get_local_id(0) * NpadCcache,\n"
+    "      AHereRow = AHere + Drow * NpadA;\n"
     "      Drow < Nrow;\n" 
     "      Drow += get_local_size(0), \n"
     "      BHereRow += DBrowInc,\n"
@@ -368,13 +367,13 @@ result +=
     "        for(Dinner = 1, DinnerC = DlocalCache+1;\n"
     "          Dinner < get_local_size(1);\n"
     "          Dinner++,DinnerC++){\n";
-    
-    result += 
-      "            cacheSum[NpadBetweenMatricesSum*DcolCache + DlocalCache] +=\n"
+  
+  result += 
+    "            cacheSum[NpadBetweenMatricesSum*DcolCache + DlocalCache] +=\n"
     "              cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n";
-    
-    result += 
-      "        }//Dinner\n"
+  
+  result += 
+    "        }//Dinner\n"
     "        barrier(CLK_LOCAL_MEM_FENCE);\n";
   
   result +=
@@ -389,19 +388,19 @@ result +=
     
     "       cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC] = (B[BHereRow + Dcol] -\n"
     "           cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC])";
-    
-    
-    if(!diagIsOne){
-      result += "/ A[AHere + Drow * NpadA + Drow]";
-    }
+  
+  
+  if(!diagIsOne){
+    result += "/ A[AHere + Drow * NpadA + Drow]";
+  }
   result += ";\n";
-    
-        result +=  
-          "      C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n";
-    //    "          C[CHereRow + Dcol] = 10*(1 + Dmatrix) + (1+Drow) + (1+Dcol)/10;\n"
-    
-result +=
-  "        } //if(get_local_id(0) == Dinner)\n"
+  
+  result +=  
+    "      C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n";
+  //    "          C[CHereRow + Dcol] = 10*(1 + Dmatrix) + (1+Drow) + (1+Dcol)/10;\n"
+  
+  result +=
+    "        } //if(get_local_id(0) == Dinner)\n"
     "        barrier(CLK_LOCAL_MEM_FENCE);\n"; 
   
   
@@ -472,14 +471,14 @@ void backsolveBatch(
   const int NcolsPerGroup = std::ceil( static_cast<T>(Ncol) / static_cast<T>(Ngroups1));
   const int NrowsToCache = std::floor(static_cast<T>(NlocalCache) /static_cast<T>(NcolsPerGroup));
   
-
+  
 #ifdef DEBUG
   
   Rcpp::Rcout << "\nNrow " << Nrow  << " Nmatrix " << Nmatrix << " Ncol " << Ncol << "\n\n";
   
 #endif  
   
-    
+  
   // the context
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   
@@ -509,12 +508,12 @@ void backsolveBatch(
   
 #ifdef DEBUG
   
- Rcpp::Rcout << clString << "\n\n";
+  // Rcpp::Rcout << clString << "\n\n";
   
 #endif  
   
   
- /* 
+  
   viennacl::ocl::program & my_prog = ctx.add_program(clString, "my_kernel");
   
   viennacl::ocl::kernel & backsolveKernel = my_prog.get_kernel("backsolveBatch");
@@ -527,7 +526,7 @@ void backsolveBatch(
   
   
   viennacl::ocl::enqueue(backsolveKernel(C, A, B));
-  */
+  
 }
 
 
