@@ -9,29 +9,51 @@
 #' @export
 
 
-# 
-# backsolveBatch <- function(A, B,  #vclmatrices
-#                            diagIsOne, 
-#                            workgroupSize, localsize,
-#                            NlocalCache,
-#                            verbose=FALSE){
-#   
-# 
-#   if(missing(workgroupSize)) {
-#     workgroupSize <- c(64,64,8)
-#   }
-# 
-#   if(verbose){ message(paste('global work items', workgroupSize, 
-#                              'local work items', localSize))}
-# 
-# 
-#   C = vclMatrix(data=0, ncol(A), ncol(B), type=gpuR::typeof(A))
-# 
-#   backsolveBatchBackend(C, A, B, diagIsOne, workgroupSize, localsize, NlocalCache) 
-# 
-# 
-#   C
-# 
-#   }
-#   
+
+backsolveBatch <- function(C, #output vclmatrix
+                           A, B,  #vclmatrices
+                           Cstartend,
+                           Astartend=c(0, ncol(A), 0, ncol(A)),
+                           Bstartend,
+                           numbatchB,
+                           diagIsOne,
+                           workgroupSize, localsize,
+                           NlocalCache,
+                           verbose=FALSE){
+
+
+  if(missing(workgroupSize)) {
+    workgroupSize <- c(64,64,16)
+  }
+  
+  if(missing(localSize)) {
+    localSize <- c(4,4,4)
+  }
+
+  if(missing(NlocalCache)) {
+    NlocalCache <- 18
+  }
+  
+  
+  
+  C = vclMatrix(data=0, ncol(A), ncol(B), type=gpuR::typeof(A))
+  
+  
+  
+  
+  
+  
+  if(verbose){ message(paste('global work items', workgroupSize,
+                             'local work items', localSize))}
+
+
+ 
+
+  backsolveBatchBackend(C, A, B, diagIsOne, workgroupSize, localsize, NlocalCache)
+
+
+  C
+
+  }
+
   

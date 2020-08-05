@@ -29,7 +29,7 @@
  
  */
 
-//  solve A C = B for C
+//  solve A C = B for C, A must be lower triangular 
 
 template <typename T> 
 std::string backsolveBatchString(
