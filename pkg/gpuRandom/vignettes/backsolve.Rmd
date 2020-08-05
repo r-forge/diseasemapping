@@ -25,9 +25,9 @@ BN1 <- rbind(c(0,0,0,0), cbind(c(0,0,0),B1,c(0,0,0)), c(0,0,0,0))
 BN2 <- rbind(c(0,0,0,0), cbind(c(0,0,0),B2,c(0,0,0)), c(0,0,0,0))
 
 A <- rbind(A1,A2)
-A
+#A
 B <- rbind(BN1,BN2)
-B
+#B
 C <- rbind(C1,C2)
 C
 gpuA <- vclMatrix(A, type="double")
@@ -57,9 +57,9 @@ B1 = a1%*%C1
 B2= a2%*%C2
 
 A <- rbind(a1,a2)
-A
+#A
 B <- rbind(B1,B2)
-B
+#B
 C <- rbind(C1,C2)
 C
 gpuA <- vclMatrix(A, type="double")
@@ -75,7 +75,7 @@ as.matrix(gpuC)
 
 
 ```{r test3}
-a1 = matrix( c(5, 0,0,0, 5,2, 5, 66, 5), nrow=3, ncol=3, byrow = TRUE) 
+a1 = matrix( c(5, 0,0,2, 5,0, 5, 66, 5), nrow=3, ncol=3, byrow = TRUE) 
 a2 = matrix( c(1, 0,0,6, 1,0, 18, 8, 1), nrow=3, ncol=3, byrow = TRUE) 
 A1 = cbind(c(0,0,0,0), rbind(c(0,0,0), a1))  #4x4
 A2 = cbind(c(0,0,0,0), rbind(c(0,0,0), a2))
