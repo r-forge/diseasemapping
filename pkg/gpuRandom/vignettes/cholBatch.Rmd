@@ -35,21 +35,24 @@ as.matrix(diagMat)
 ```
 
 
-```{r crossprodbatch1, eval=F}
-D <- matrix(0,nrow=3, ncol=3)
-diag(D)<-c(1,2,3)
+```{r crossprodbatch1, eval=TRUE}
+A = matrix(1:30,5,6)
+D <- matrix(0,nrow=nrow(A), ncol=nrow(A))
+diag(D)<-1:nrow(A)
 D
 A
-result<- t(A)%*% D%*%A
-result
-gpuC<-vclMatrix(0, nrow=3, ncol=3,type="float")
+library(gpuR)
+gpuC<-vclMatrix(0, nrow=ncol(A), ncol=ncol(A),type="float")
 gpuA2<-vclMatrix(A,type="float")
-gpuD<-vclMatrix(c(1,2,3), nrow=1,ncol=3,type='float')
-gpuRandom:::crossprodBatchBackend(gpuC,gpuA2,gpuD,invertD=F, NglobalChol,NlocalChol, NlocalCache)
-as.matrix(gpuC)
+gpuD<-vclMatrix(diag(D), nrow=1,ncol=ncol(A),type='float')
+gpuRandom:::crossprodBatchBackend(gpuC,gpuA2,gpuD,invertD=FALSE,
+                                  Nglobal=c(4,4,1), 
+                                  Nlocal = c(2,2,1), 
+                                  NlocalCache=2)
+cbind(as.matrix(gpuC), NA,  t(A)%*% D%*%A)
 ```
 
-```{r crossprodbatch2, eval=T}
+```{r crossprodbatch2, eval=FALSE}
 D <- matrix(0,nrow=3, ncol=3)
 diag(D)<-c(1,1,1)
 D
