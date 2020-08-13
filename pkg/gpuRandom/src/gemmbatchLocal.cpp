@@ -12,6 +12,8 @@ using namespace Rcpp;
 // item w1, w2, 0  will do matrices 0,4,8.  
 // item w1, w2, 3 will do matrices 3, 7
 
+// or C = A E B, if NpadE > 0
+
 template <typename T> 
 std::string gemmBatchString(
     const int M, // rows of Ai
@@ -49,7 +51,6 @@ std::string gemmBatchString(
     "#define NpadMatrixA " + std::to_string(NpadMatrixA) + "\n"    
     "#define NpadMatrixB " + std::to_string(NpadMatrixB) + "\n"  
     "#define NpadMatrixC " + std::to_string(NpadMatrixC) + "\n"
-    "#define need_transpose  " + std::to_string(need_transpose) + "\n"
     "#define Ncache " + std::to_string(Ncache) + "\n"; 
   
   result += "__kernel void gemm( __global "  + typeString+ "* A,\n"
@@ -63,13 +64,15 @@ std::string gemmBatchString(
   result += "int DrowLocal, DcolLocal, DinnerA, DinnerB;\n";
   result += "event_t wait;\n";
 
-  result += "local " + typeString + " localCacheA[Ncache], localCacheB[Ncache]";
+  result += "local " + typeString + " localCacheA[Ncache], localCacheB[Ncache];\n";
+
+
 
   result += 
   "for (Dmatrix=get_global_id(2);\n"
   "     Dmatrix < z;"
   "     Dmatrix += get_global_size(2)) {\n"
-
+// for(DmatrixCol=0;DmatrixCol < NcolBatchA;DmatrixCol++){
   "  DmatrixA = Dmatrix * NpadMatrixA;\n"
   "  DmatrixB = Dmatrix * NpadMatrixB;\n";
 
@@ -100,9 +103,12 @@ std::string gemmBatchString(
   "        Dinner++,DinnerA += NpadA,DinnerB += NpadB);\n"
   //  "        acc+= A[DrowA + Dinner * NpadA] * B[DcolB + Dinner * NpadB];\n "     
   // do cache
+  // entry C[Drow, Dcol] = inner(A[, Drow], B[, Dcol])
+  // copy A[seq(DrowLocal, len= get_local_size(0) ), Drow] to Acache
+  // DrowLocal is Dinner
   "wait = async_work_group_copy("
   "  Acache,"
-  "  A[DinnerA],"
+  "  A[DinnerA]," //
   "  get_local_size(0),"
   "  0);\n"
 
@@ -113,6 +119,7 @@ std::string gemmBatchString(
   "        Dinner++, DinnerA++, DinnerB += NpadB);\n"
   //  "        acc+= A[DrowA + Dinner * NpadA] * B[DcolB + Dinner * NpadB];\n "     
   // do cache
+  // copy A[,Drow]
   "wait = async_work_group_strided_copy("
   "  Acache,"
   "  A[DinnerA],"
@@ -120,6 +127,7 @@ std::string gemmBatchString(
   "  NpadA,"
   "  0);\n"
 }
+// copy B[Dcol, ] to Bcache
   result +=
   "wait = async_work_group_copy("
   "  Bcache,"
