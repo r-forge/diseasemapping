@@ -165,7 +165,7 @@ if(NpadD) {
   result += 
     "      // cached parts\n"
     "      for(Dinner = get_local_id(0),\n"
-    "          DinnerA = A0Drow + Dinner*DinnerAinc;\n"
+    "          DinnerA = A0Drow + Dinner*NpadA;\n"
     "        Dinner < NrowStop;\n"
     "        Dinner += get_local_size(0),\n"
     "          DinnerA += DinnerAinc\n"
@@ -178,8 +178,8 @@ if(NpadD) {
   result +=
     "      // un-cached parts\n"
     "      for(Dinner = NrowStop + get_local_id(0),\n"
-    "          DinnerA = A0Drow + Dinner*DinnerAinc,\n"
-    "          DinnerAcol = A0Dcol + Dinner*DinnerAinc;\n"
+    "          DinnerA = A0Drow + Dinner*NpadA,\n"
+    "          DinnerAcol = A0Dcol + Dinner*NpadA;\n"
     "        Dinner < Nrow;\n"
     "        Dinner += get_local_size(0),\n"
     "          DinnerA += DinnerAinc,\n"
@@ -188,11 +188,13 @@ if(NpadD) {
   if(NpadD) {
     if(invertD) {
       result += 
-        "      Cout += A[DinnerA] * A[DinnerAcol] / D[DHere+Dinner];\n";
+        " Cout += A[DinnerA] * A[DinnerAcol] / D[DHere+Dinner];\n";
     } else {
       result += 
-        "      Cout += A[DinnerA] * A[DinnerAcol] * D[DHere+Dinner];\n";
-//      "      Cout += A[Dmatrix * NpadBetweenMatricesA + Dinner*NpadA + Dcol] * A[Dmatrix * NpadBetweenMatricesA + Dinner*NpadA + Drow] * D[DHere+Dinner];\n";
+//        "      Cout += A[Dmatrix * NpadBetweenMatricesA + Dinner*NpadA + Dcol] * A[Dmatrix * NpadBetweenMatricesA + Dinner*NpadA + Drow] * D[DHere+Dinner];\n"
+//  "      Cout += A[AHere + Dinner*NpadA + Dcol] * A[AHere + Dinner*NpadA + Drow] * D[DHere+Dinner];\n"
+//  "      Cout += A[A0Drow + Dinner*NpadA] * A[A0Dcol + Dinner*NpadA] * D[DHere+Dinner];\n"
+  "      Cout += A[DinnerA] * A[DinnerAcol] * D[DHere+Dinner];\n";
     }
   } else {
     result += 
