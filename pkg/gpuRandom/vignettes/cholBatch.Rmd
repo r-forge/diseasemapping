@@ -10,6 +10,7 @@
 
 ```
 
+
 ```{r cpu_function}
 A = matrix(c(3,4,3,4,8,6,3,6,9),nrow=3,ncol=3)
 x <- chol(A)   ## start from factor given by chol
@@ -18,50 +19,74 @@ L <- t(x/y)     ## get unit lower triangular factor
 D <- diag(x^2)  ## and diagonal
 L;
 D
+
+
 ## So now A = LDL'
 ```
 
-```{r chol_no_batch}
-gpuA<-vclMatrix(A,type="float")
-diagMat = vclMatrix(0, 1, ncol(A), type = "float")
-NglobalChol =  c(1,1,1)
-NlocalChol = c(1, 1,1)
-NlocalCache = 1000
-gpuRandom:::cholBatchBackend(gpuA, diagMat, #c(0,3,0,3), 
+```{r chol_two_batch}
+gpuA2<-vclMatrix(rbind(A,A),type="float")
+diagMat2 = vclMatrix(0, 2, ncol(A), type = "float")
+NglobalChol =  c(4,4,1)
+NlocalChol = c(2, 2,1)
+NlocalCache = 100
+gpuRandom:::cholBatchBackend(gpuA2, diagMat2, #c(0,3,0,3), 
                              NglobalChol, NlocalChol, NlocalCache)
 A
-as.matrix(gpuA)
-as.matrix(diagMat)
+as.matrix(gpuA2)
+as.matrix(diagMat2)
 ```
 
 
+
+
+
 ```{r crossprodbatch1, eval=TRUE}
-A = matrix(1,2,1)
-D <- diag(nrow(A))
+A = matrix(1:16,4,4)
+D <- matrix(0,nrow=nrow(A), ncol=nrow(A))
+diag(D)<-1:nrow(A)
 library(gpuR)
 gpuC<-vclMatrix(0, nrow=ncol(A), ncol=ncol(A),type="float")
 gpuA2<-vclMatrix(A,type="float")
 gpuD<-vclMatrix(diag(D), nrow=1,ncol=ncol(D),type='float')
 gpuRandom:::crossprodBatchBackend(gpuC,gpuA2,gpuD,invertD=FALSE,
-                                  Nglobal=c(2,2,1), 
+                                  Nglobal=c(4,4,1), 
                                   Nlocal = c(2,2,1), 
-                                  NlocalCache=0)
-D
-A
+                                  NlocalCache=50)
+
 cbind(as.matrix(gpuC), NA,  t(A)%*% D%*%A)
+
+
+
 ```
 
-```{r crossprodbatch2, eval=FALSE}
+```{r crossprodbatch_square, eval=TRUE}
 D <- matrix(0,nrow=3, ncol=3)
-diag(D)<-c(1,1,1)
+diag(D)<-c(1,3,8)
 D
-A = matrix(c(1,0,0,0,1,0,0,0,1),nrow=3,ncol=3, byrow=T)
+A = matrix(c(6,6,2,0,8,2,10,2,5),nrow=3,ncol=3, byrow=T)
 A
 result<- t(A)%*% D%*%A
 result
 gpuC<-vclMatrix(0, nrow=3, ncol=3,type="float")
 gpuA2<-vclMatrix(A,type="float")
-gpuD<-vclMatrix(c(1,1,1), nrow=1,ncol=3,type='float')
+gpuD<-vclMatrix(c(1,3,8), nrow=1,ncol=3,type='float')
+gpuRandom:::crossprodBatchBackend(gpuC,gpuA2,gpuD,invertD=F, NglobalChol,NlocalChol, NlocalCache)
+as.matrix(gpuC)
+```
+
+
+```{r crossprodbatch_rectangular, eval=FALSE}
+D <- matrix(0,nrow=3, ncol=3)
+diag(D)<-c(1,8,3)
+D
+A = matrix(c(1,0,0,0,1,0),nrow=3,ncol=2, byrow=T)
+A
+result<- t(A)%*% D%*%A
+result
+gpuC<-vclMatrix(0, nrow=2, ncol=2,type="float")
+gpuA2<-vclMatrix(A,type="float")
+gpuD<-vclMatrix(diag(D), nrow=1,ncol=3,type='float')
 gpuRandom:::crossprodBatchBackend(gpuC,gpuA2,gpuD,invertD=F, NglobalChol,NlocalChol, NlocalCache)
 as.matrix(gpuC)
 ```
