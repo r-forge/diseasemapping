@@ -9,8 +9,8 @@ backsolveBatchBackend2 <- function(C, A, B, diagIsOne, Nglobal, Nlocal, NlocalCa
     .Call('_gpuRandom_backsolveBatchBackend2', PACKAGE = 'gpuRandom', C, A, B, diagIsOne, Nglobal, Nlocal, NlocalCache)
 }
 
-cholBatchBackend <- function(A, D, Nglobal, Nlocal, NlocalCache) {
-    invisible(.Call('_gpuRandom_cholBatchBackend', PACKAGE = 'gpuRandom', A, D, Nglobal, Nlocal, NlocalCache))
+cholBatchBackend <- function(A, D, Astartend, Dstartend, numbatchD, Nglobal, Nlocal, NlocalCache) {
+    invisible(.Call('_gpuRandom_cholBatchBackend', PACKAGE = 'gpuRandom', A, D, Astartend, Dstartend, numbatchD, Nglobal, Nlocal, NlocalCache))
 }
 
 #' Multiply crossproduct matrices

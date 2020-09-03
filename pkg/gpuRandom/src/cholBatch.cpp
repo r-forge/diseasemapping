@@ -12,6 +12,8 @@ std::string cholBatchKernelString( // V1
     int NpadDiag,
     int Nmatrix,
     int NpadBetweenMatrices,
+    int NstartA,
+    int NstartD,
     std::vector<int> Ncache, 
     std::vector<int> Nlocal, // length 2
     bool allowOverflow) {
@@ -31,6 +33,8 @@ std::string cholBatchKernelString( // V1
     "//internal number of columns\n#define Npad " + std::to_string(Npad) + "\n"
     "//internal columns for matrix holding diagonals\n#define NpadDiag " + std::to_string(NpadDiag) + "\n"
     "#define Nmatrix " + std::to_string(Nmatrix) + "\n"
+    "#define NstartA " + std::to_string(NstartA) + "\n"
+    "#define NstartD " + std::to_string(NstartD) + "\n"
     "//elements in internal cache\n#define Ncache " + std::to_string(Ncache[0]) + "\n"
     "//extra rows between stacked matrices\n#define NpadBetweenMatrices " + std::to_string(NpadBetweenMatrices) + "\n"
     "#define maxLocalItems " + std::to_string(Nlocal[0]*Nlocal[1]) + "\n";
@@ -62,8 +66,8 @@ std::string cholBatchKernelString( // V1
   
   "for(Dmatrix = get_group_id(0); Dmatrix < Nmatrix; Dmatrix+= get_num_groups(0)){\n"
   
-  "diagHere = Dmatrix*NpadDiag;\n"
-  "AHere = Dmatrix*NpadBetweenMatrices;\n"
+  "diagHere = Dmatrix*NpadDiag + NstartD;\n"
+  "AHere = Dmatrix*NpadBetweenMatrices + NstartA;\n"
   
   "for(Dcol = colStart; Dcol < colEnd; Dcol++) {\n"
   "  DcolNpad = Dcol*Npad;\n"
@@ -196,22 +200,30 @@ template <typename T>
 int cholBatchVcl(
     viennacl::matrix<T> &A,
     viennacl::matrix<T> &D,
+    Rcpp::IntegerVector Astartend,
+    Rcpp::IntegerVector Dstartend,  
+    const int numbatchD,
     const std::vector<int> &Nglobal,
     const std::vector<int> &Nlocal, 
     const std::vector<int> &NlocalCache,
     const int ctx_id) {
+ 
+  const int NstartA = A.internal_size2() * Astartend[0] + Astartend[2];
+  const int NstartD = D.internal_size2() * Dstartend[0] + Dstartend[2];
   
   std::string cholClString = cholBatchKernelString<T>(
     0L, // start
-    A.size2(), // end
-    A.size2(), // N
+    Astartend[3], // end
+    Astartend[3], // N
     A.internal_size2(), // Npad
     D.internal_size2(),
-    D.size1(), // Nmatrix
+    numbatchD, // Nmatrix
     A.size2() * A.internal_size2(),// NpadBetweenMatrices,
+    NstartA,
+    NstartD,
     NlocalCache, 
     Nlocal,
-    ((int) A.size2() ) > NlocalCache[0]); // allow overflow
+    ((int) A.size2() ) > NlocalCache[0]); // allow overflow  // needs change?
   
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   viennacl::ocl::program & my_prog = ctx.add_program(cholClString, "my_kernel");
@@ -239,7 +251,7 @@ int cholBatchVcl(
   //  int Ngroups1 = ceil(Nglobal[1]/Nlocal[1]);
   //  viennacl::matrix<T> finalReduction(Nglobal[0]*Nglobal[2]*Ngroups1);//size Nglobal[0]*Ngroups1*Nglobal[2]
   
-  viennacl::ocl::enqueue(cholKernel(A, D));//,  2L));//A.size1() ));
+  viennacl::ocl::enqueue(cholKernel(A, D));    //,  2L));//A.size1() ));
   
   return 0L;
 }
@@ -256,9 +268,13 @@ int cholBatchVcl(
 
 
 
-template<typename T> void cholBatchTemplated(
+template<typename T> 
+void cholBatchTemplated(
     Rcpp::S4 A,
     Rcpp::S4 D,
+    Rcpp::IntegerVector Astartend,
+    Rcpp::IntegerVector Dstartend,
+    const int numbatchD,
     const std::vector<int> &Nglobal,
     const std::vector<int> &Nlocal, 
     const std::vector<int> &NlocalCache) {
@@ -270,6 +286,8 @@ template<typename T> void cholBatchTemplated(
   
   cholBatchVcl<T>(
     *vclA, *vclD, 
+    Astartend, Dstartend,
+    numbatchD,
     Nglobal, 
     Nlocal,
     NlocalCache,
@@ -295,6 +313,9 @@ template<typename T> void cholBatchTemplated(
 void cholBatchBackend(
     Rcpp::S4 A,
     Rcpp::S4 D,
+    Rcpp::IntegerVector Astartend,
+    Rcpp::IntegerVector Dstartend,
+    const int numbatchD,
     std::vector<int> Nglobal,
     std::vector<int> Nlocal,
     std::vector<int> NlocalCache) {
@@ -305,11 +326,13 @@ void cholBatchBackend(
   
   if(precision_type == "fvclMatrix") {
     cholBatchTemplated<float>(
-      A, D, Nglobal, Nlocal,
+      A, D, Astartend, Dstartend,
+      numbatchD, Nglobal, Nlocal,
       NlocalCache);
   } else if (precision_type == "dvclMatrix") {
     cholBatchTemplated<double>(
-      A, D, Nglobal, Nlocal,
+      A, D, Astartend, Dstartend,
+      numbatchD, Nglobal, Nlocal,
       NlocalCache);
   } else {
     Rcpp::warning("class of A must be fvclMatrix or dvclMatrix");
