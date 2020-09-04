@@ -59,8 +59,8 @@ result<-gpuRandom::cholBatch(a, diagMat, numbatchD=2L,
                             Nglobal=NglobalChol, Nlocal=NlocalChol, NlocalCache=NlocalCache)
 
 L1;D1;L2;D2
-#as.matrix(result$L)
-#as.matrix(result$diag)
+as.matrix(result$L)
+as.matrix(result$diag)
 ```
 
 
