@@ -1,7 +1,9 @@
 #' @title Backsolve function on GPU
 #'
-#' @param A a vclMatrix 
+#' @param C a vclMatrix
+#' @param A a vclMatrix, unit lower triangular
 #' @param B a vclMatrix 
+#' @param numbatchB number of batches in B
 #' @param diagIsOne logical, indicates if all the diagonal entries in A are one
 #' 
 #' @return a vclMatrix C that satisfies A*C=B
@@ -10,46 +12,46 @@
 
 
 
-backsolveBatch <- function(C, #output vclmatrix
-                           A, B,  #vclmatrices
+backsolveBatch <- function(C, A, B,  #vclmatrices
                            Cstartend,
-                           Astartend=c(0, ncol(A), 0, ncol(A)),
+                           Astartend,
                            Bstartend,
                            numbatchB,
                            diagIsOne,
-                           workgroupSize, localsize,
+                           Nglobal, 
+                           Nlocal=c(2L,2L,2L), 
                            NlocalCache,
                            verbose=FALSE){
 
 
-  if(missing(workgroupSize)) {
-    workgroupSize <- c(64,64,16)
+  if(missing(Cstartend)) {
+    Cstartend=c(0, nrow(C), 0, ncol(C))
   }
   
-  if(missing(localSize)) {
-    localSize <- c(4,4,4)
+  if(missing(Astartend)) {
+    Astartend=c(0, nrow(A)/numbatchB, 0, ncol(A))
   }
+  
+  if(missing(Bstartend)) {
+    Bstartend=c(0, nrow(B)/numbatchB, 0, ncol(B))
+   }
+  
 
-  if(missing(NlocalCache)) {
-    NlocalCache <- 18
-  }
-  
-  
-  
-  C = vclMatrix(data=0, ncol(A), ncol(B), type=gpuR::typeof(A))
   
   
   
   
   
-  
-  if(verbose){ message(paste('global work items', workgroupSize,
-                             'local work items', localSize))}
+  if(verbose){ message(paste('global work items', Nglobal,
+                             'local work items', Nlocal))}
 
 
  
 
-  backsolveBatchBackend(C, A, B, diagIsOne, workgroupSize, localsize, NlocalCache)
+  backsolveBatchBackend(C, A, B, 
+                        Cstartend, Astartend, Bstartend, 
+                        numbatchB, diagIsOne, 
+                        Nglobal, Nlocal, NlocalCache)
 
 
   C

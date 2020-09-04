@@ -51,6 +51,17 @@ as.matrix(diagMat)
 ```
 
 
+```{r chol_R_function}
+rbind(a1,a2)
+a<-vclMatrix(rbind(a1,a2),type="float")
+diagMat = vclMatrix(0, 2, ncol(a1), type = "float")
+result<-gpuRandom::cholBatch(a, diagMat, numbatchD=2L,
+                            Nglobal=NglobalChol, Nlocal=NlocalChol, NlocalCache=NlocalCache)
+
+L1;D1;L2;D2
+#as.matrix(result$L)
+#as.matrix(result$diag)
+```
 
 
 
