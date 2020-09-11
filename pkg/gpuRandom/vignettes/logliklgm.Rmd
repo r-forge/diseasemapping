@@ -49,7 +49,7 @@ temp0
 ```{r test1}
 # start here
 y<-vclMatrix(as.matrix(mydat$Y),type="double")
-X<-vclMatrix(as.matrix(mydat@data),type="double")
+X<-vclMatrix(as.matrix(cbind(c(rep(1, n)),mydat$cov1,mydat$cov2)),type="double")
 coordsGpu<-vclMatrix(mydat@coords,type="double")
 Paramsbatch = vclMatrix(as.matrix(expand.grid(
   shape = trueParam['shape'],
