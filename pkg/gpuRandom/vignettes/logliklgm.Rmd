@@ -10,13 +10,12 @@ library(geostatsp)
 n=40
 mydat = SpatialPointsDataFrame(
 	cbind(runif(n), seq(0,1,len=n)), 
-	data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 0.5))
+	data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 2))
 	)
 
 # simulate a random field
-trueParam = c(variance=2^2, range=0.35, shape=2, nugget=0.5^2)
+trueParam = c(variance=1.5, range=0.5, shape=1.25, nugget=0.25)
 set.seed(1)
-
 mydat@data= cbind(mydat@data , RFsimulate(model=trueParam,x=mydat)@data)
 
 # add fixed effects
@@ -25,17 +24,14 @@ mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + mydat$sim + rnorm(length(mydat)
 library(sp)
 spplot(mydat, "sim", col.regions=rainbow(10), main="U")
 spplot(mydat, "Y", col.regions=rainbow(10), main="Y")
-
-
 myres = likfitLgm(
 	formula=Y ~ cov1 + cov2, 
 	data=mydat, 
-	param=c(range=0.1,nugget=0.1,shape=2), 
-	paramToEstimate = c("range","nugget")
+	param=c(range=0.1,nugget=0.25,shape=1.25), 
+	paramToEstimate = c("range")
 	)
-
+#variance parameter and regression coefficients are always estimated even if not listed.
 myres$summary[,1:4]
-
 # calculate likelihood
 temp0=loglikLgm(param=myres$param, 
 		data=mydat, 
@@ -46,29 +42,35 @@ temp0
 ```
 
 
-```{r test1}
+```{r test1, eval=TRUE}
 # start here
 y<-vclMatrix(as.matrix(mydat$Y),type="double")
 X<-vclMatrix(as.matrix(cbind(c(rep(1, n)),mydat$cov1,mydat$cov2)),type="double")
 coordsGpu<-vclMatrix(mydat@coords,type="double")
-Paramsbatch = vclMatrix(as.matrix(expand.grid(
-  shape = trueParam['shape'],
-  range = trueParam['range'], 
-  variance = trueParam['variance'],
-  nugget = c(0.5^2,0.6^2,0.7^2,0.8^2)
-)),type="double")
+paramsBatch = rbind(
+c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0), 
+
+c(shape=2.15, range=0.25, variance = 2, nugget = 0.25, anisoRatio = 4, anisoAngleRadians = pi/7),
+
+c(shape=0.55, range=2.5, variance = 2.5, nugget = 0.25, anisoRatio = 4,  anisoAngleRadians = pi/7),
+
+c(shape=2.15, range=0.5, variance = 4, nugget = 0.25, anisoRatio = 4, anisoAngleRadians = -pi/7))
+
+paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam))
+paramsBatch
+paramsBatch = vclMatrix(cbind(paramsBatch, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),type="double")
 
 betas<-vclMatrix(as.matrix(myres$summary[c("(Intercept)","cov1","cov2"),1]),type="double")
 
 
-Vbatch = vclMatrix(0, nrow(Paramsbatch)*nrow(y), nrow(y), type="double")
-diagMat = vclMatrix(0, nrow(Paramsbatch), ncol(Vbatch), type = "double")
-#Nglobal=c(16,16,4)
-Nlocal = c(2,2,1)
+Vbatch = vclMatrix(0, nrow(paramsBatch)*nrow(y), nrow(y), type="double")
+diagMat = vclMatrix(0, nrow(paramsBatch), ncol(Vbatch), type = "double")
+workgroupSize=c(16,16,1)
+localSize = c(2,2,1)
 NlocalCache=50
 
-temp1=gpuRandom::likfitGpu0(y,X,coordsGpu,Paramsbatch,Vbatch,diagMat,betas,50,c(16,16,4),c(2,2,1))
-temp1
+temp1=gpuRandom::likfitGpu0(y,X,coordsGpu,paramsBatch,Vbatch,diagMat,betas,50,c(16,16,1),c(2,2,1))
+as.matrix(temp1)
 
 
 ```

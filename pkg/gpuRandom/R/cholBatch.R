@@ -27,7 +27,7 @@ cholBatch <- function(A,
   }
   
   if(missing(Dstartend)) {
-    Dstartend=c(0, numbatchD, 0, ncol(B))
+    Dstartend=c(0, numbatchD, 0, ncol(D))
   }
   
   

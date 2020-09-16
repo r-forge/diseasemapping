@@ -32,8 +32,10 @@
 # ##########################loglik########################################################
 
     #1, Vbatch=LDL^T, cholesky decomposition
-    maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
-    gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache=NlocalCache)  
+    gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
+    Vbatch<-gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache=NlocalCache)$L
+    diagMat<-gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache=NlocalCache)$diag
+    
 
     #2, temp = y-X*beta
     temp <- y - gpuRandom::gemmBatch(X, betas, rowbatch, 1L, colbatch, need_transpose = FALSE, workgroupSize)
@@ -41,7 +43,7 @@
     #3, C = L^(-1) * temp,   L * C = temp, backsolve
     C <- vclMatrix(0, nrow(Vbatch), ncol(temp), type = gpuR::typeof(Vbatch))
 
-    backsolveBatchBackend(C, Vbatch, temp,
+    gpuRandom:::backsolveBatchBackend(C, Vbatch, temp,
                           c(0,n,0,ncol(y)),   c(0,n,0,n),  c(0,n,0,ncol(y)),
                           rowbatch,  diagIsOne=TRUE,
                           workgroupSize,  localSize,  NlocalCache)
@@ -49,24 +51,31 @@
     #4, result0 = C^T * D^(-1) * C = (y-X*betas)^T * V^(-1) * (y-X*betas)
     result0 <- vclMatrix(0, rowbatch*colbatch, colbatch, type = gpuR::typeof(Vbatch))
 
-    crossprodBatchBackend(result0, C, diagMat,  invertD=T,  workgroupSize, localSize, NlocalCache)
+    gpuRandom:::crossprodBatchBackend(result0, C, diagMat,  invertD=T,  workgroupSize, localSize, NlocalCache)
 
     part2<- vclMatrix(0, nrow=rowbatch, ncol=colbatch, type = gpuR::typeof(Vbatch))
 
     #need edit
-    for (j in 1:ncol(result0)){
-     for(i in 1:(nrow(result0)/colbatch)){
+    for (j in 1:colbatch){
+     for(i in 1:rowbatch){
       part2[i,j] <- result0[colbatch*(i-1)+j,j]
      }
     }
 
+    
+    
     #5, part1 = n*log(sigma^2)+log |D|
+   
     logD <- apply(log(diagMat),1,sum)
+    
     part1_0 <-n*log(paramsBatch[,3]) + logD
-    part1 <- replicate(colbatch, part1_0)
+    #replicate the part1 to do the plus operation
+    part1_0<- matrix(part1_0, nrow=length(part1_0), ncol=colbatch, byrow=F)
+    part1 <- vclMatrix(part1_0,type = gpuR::typeof(Vbatch))
 
     #6,
-    loglik <- part1 + part2/paramsBatch[,3]
+    variances<-vclMatrix(paramsBatch[,3],nrow=rowbatch, ncol=1,type = gpuR::typeof(Vbatch))
+    loglik <- part1 + part2/variances
 
 
     loglik
