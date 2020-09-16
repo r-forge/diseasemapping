@@ -27,8 +27,7 @@ spplot(mydat, "Y", col.regions=rainbow(10), main="Y")
 myres = likfitLgm(
 	formula=Y ~ cov1 + cov2, 
 	data=mydat, 
-	param=c(range=0.1,nugget=0.25,shape=1.25), 
-	paramToEstimate = c("range")
+	param=c(variance=1.5,range=0.5,nugget=0.25,shape=1.25)
 	)
 #variance parameter and regression coefficients are always estimated even if not listed.
 myres$summary[,1:4]
