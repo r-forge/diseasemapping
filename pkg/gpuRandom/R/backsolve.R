@@ -13,10 +13,10 @@
 
 
 backsolveBatch <- function(C, A, B,  #vclmatrices
-                           numbatchB,
+                           numbatchB, #sometimes B can have only 1 batch, for repeated same batches
                            diagIsOne,
                            Nglobal, 
-                           Nlocal=c(2L,2L,2L), 
+                           Nlocal, 
                            NlocalCache,
                            Cstartend,
                            Astartend,

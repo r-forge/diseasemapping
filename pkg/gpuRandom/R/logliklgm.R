@@ -32,7 +32,7 @@
 # ##########################loglik########################################################
 
     #1, Vbatch=LDL^T, cholesky decomposition
-    gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
+    maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
     Vbatch<-gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache=NlocalCache)$L
     diagMat<-gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache=NlocalCache)$diag
     
@@ -68,10 +68,10 @@
    
     logD <- apply(log(diagMat),1,sum)
     
-    part1_0 <-n*log(paramsBatch[,3]) + logD
+    part1 <-n*log(paramsBatch[,3]) + logD
     #replicate the part1 to do the plus operation
-    part1_0<- matrix(part1_0, nrow=length(part1_0), ncol=colbatch, byrow=F)
-    part1 <- vclMatrix(part1_0,type = gpuR::typeof(Vbatch))
+    part1<- matrix(part1, nrow=length(part1), ncol=colbatch, byrow=F)
+    part1 <- vclMatrix(part1,type = gpuR::typeof(Vbatch))
 
     #6,
     variances<-vclMatrix(paramsBatch[,3],nrow=rowbatch, ncol=1,type = gpuR::typeof(Vbatch))
@@ -80,6 +80,87 @@
 
     loglik
 
+    
+    ###################################profile############################################################################
+    
+    #profile = nlog hat_sigma^2 + log|D|
+    #1, to get hat_sigma^2,  #L(a b) = (y X)
+    ab <- vclMatrix(0, nrow(Vbatch), colbatch+p, type = gpuR::typeof(Vbatch))
+    yX <- cbind(y,X)
+    gpuRandom::backsolveBatch(ab, Vbatch, yX, 
+                               numbatchB=rowbatch,
+                               diagIsOne=TRUE,
+                               Nglobal=workgroupSize, 
+                               Nlocal=localSize, 
+                               NlocalCache)
+    
+    
+    #2, temp2 = (ab)^T * D^(-1) *ab
+    temp2 <- vclMatrix(0, ncol(ab)*rowbatch, ncol(ab), type = gpuR::typeof(Vbatch))
+    gpuRandom:::crossprodBatchBackend(temp2, ab, diagMat, invertD=TRUE,  workgroupSize, localSize, NlocalCache)
+    
+    #3, b^T * D^(-1) * b = Q * P * Q^T, cholesky of a subset of temp2
+    diagP <- vclMatrix(0, rowbatch, p, type = gpuR::typeof(Vbatch))
+    gpuRandom:::cholBatchBackend(temp2, diagP, c(colbatch, p, colbatch, p), c(0, rowbatch, 0, p), rowbatch, workgroupSize, localSize, NlocalCache) 
+    
+    #4, temp3 = Q^(-1) * (b^T * D^(-1) *a), backsolve
+    temp3 <- vclMatrix(0, rowbatch*p, colbatch, type = gpuR::typeof(Vbatch))
+    gpuRandom:::backsolveBatchBackend(temp3, temp2, temp2,
+                          c(0,p,0,colbatch), c(colbatch, p, colbatch, p), c(colbatch, p, 0, colbatch),rowbatch,
+                          diagIsOne=TRUE, workgroupSize, localSize, NlocalCache)
+    
+    #5, pro_0 = temp3^T * P^(-1) * temp3,  four 2 by 2 matrices
+    pro_0 <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
+    gpuRandom:::crossprodBatchBackend(pro_0, temp3, diagP, invertD=TRUE,  workgroupSize, localSize, NlocalCache) ##doesn't need selecting row/col
+    
+    aTDinva <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
+    pro <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
+    
+    #extract a^TDa from temp2
+    for (j in 1:colbatch){
+      for (i in 1:rowbatch){
+        aTDinva[i,j]= temp2[(i-1)*ncol(ab)+j, j]
+      }
+    }
+    #extract needed cells from pro_0
+    for (j in 1:colbatch){
+      for (i in 1:rowbatch){
+        pro[i,j]= pro_0[(i-1)*colbatch+j, j]
+      }
+    }
+    
+    #a^TDa - pro
+    star = aTDinva - pro
+    pro_loglik = n*log(star) + replicate(colbatch, logD)
+    
+    ####################################REML##############################################
+    #(n-p) * log sigma^2 + log |D| + log |P| + star/sigma^2
+    logP <- apply(log(diagP),1,sum)
+    first_part <- (n-p)*log(paramsBatch[,3]) + logD + logP
+    second_part <- star/variances
+    reml <- replicate(colbatch, first_part) + second_part
+    
+    
+    ##################################pro_reml################################################
+    #(n-p)*log star + log|D| + log|P|
+    pro_reml <- (n-p)* log(star) + replicate(colbatch, (logD+logP))
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
   }
      
      
