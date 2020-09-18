@@ -14,7 +14,7 @@ mydat = SpatialPointsDataFrame(
 	)
 
 # simulate a random field
-trueParam = c(variance=1.5, range=0.5, shape=1.25, nugget=0.25)
+trueParam = c(variance=1.5,range=0.5,nugget=0.25,shape=1.25)
 set.seed(1)
 mydat@data= cbind(mydat@data , RFsimulate(model=trueParam,x=mydat)@data)
 

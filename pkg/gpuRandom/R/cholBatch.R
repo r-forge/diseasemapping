@@ -44,7 +44,7 @@ cholBatch <- function(A,
                    numbatchD,
                    Nglobal, Nlocal, NlocalCache)
   
-  #theResult = list(L=A, diag=D)
+   #theResult = list(L=A, diag=D)
 
 
    #theResult
