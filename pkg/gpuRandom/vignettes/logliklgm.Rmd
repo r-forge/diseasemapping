@@ -32,7 +32,8 @@ myres = likfitLgm(
 #variance parameter and regression coefficients are always estimated even if not listed.
 myres$summary[,1:4]
 # calculate likelihood
-temp0=loglikLgm(param=myres$param, 
+trueParam1 = c(variance=1.5, range=0.5, shape=1.25, nugget=0.25, anisoRatio = 1, anisoAngleRadins=0)
+temp0=loglikLgm(param=trueParam1, 
 		data=mydat, 
 		formula = Y ~ cov1 + cov2,
 		reml=FALSE, minustwotimes=TRUE)
@@ -41,20 +42,19 @@ temp0
 ```
 
 
-```{r test1, eval=TRUE}
+```{r test1, eval=FALSE}
 # start here
 y<-vclMatrix(as.matrix(mydat$Y),type="double")
 X<-vclMatrix(as.matrix(cbind(c(rep(1, n)),mydat$cov1,mydat$cov2)),type="double")
 coordsGpu<-vclMatrix(mydat@coords,type="double")
 paramsBatch = rbind(
-c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0), 
+c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
 
 c(shape=2.15, range=0.25, variance = 2, nugget = 0.25, anisoRatio = 4, anisoAngleRadians = pi/7),
 
 c(shape=0.55, range=2.5, variance = 2.5, nugget = 0.25, anisoRatio = 4,  anisoAngleRadians = pi/7),
 
 c(shape=2.15, range=0.5, variance = 4, nugget = 0.25, anisoRatio = 4, anisoAngleRadians = -pi/7))
-
 paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam))
 paramsBatch
 paramsBatch = vclMatrix(cbind(paramsBatch, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),type="double")
@@ -64,8 +64,8 @@ betas<-vclMatrix(as.matrix(myres$summary[c("(Intercept)","cov1","cov2"),1]),type
 
 Vbatch = vclMatrix(0, nrow(paramsBatch)*nrow(y), nrow(y), type="double")
 diagMat = vclMatrix(0, nrow(paramsBatch), ncol(Vbatch), type = "double")
-workgroupSize=c(16,16,1)
-localSize = c(2,2,1)
+workgroupSize=c(1,1,1)
+localSize = c(1,1,1)
 NlocalCache=50
 
 temp1=gpuRandom::likfitGpu0(y,X,coordsGpu,paramsBatch,Vbatch,diagMat,betas,50,c(16,16,1),c(2,2,1))

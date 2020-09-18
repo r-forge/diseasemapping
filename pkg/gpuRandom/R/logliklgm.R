@@ -28,13 +28,14 @@
      colbatch = ncol(y)
      n = nrow(y)
      p = ncol(X)
-
+     
 # ##########################loglik########################################################
 
     #1, Vbatch=LDL^T, cholesky decomposition
-    maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
-    Vbatch<-gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache=NlocalCache)$L
-    diagMat<-gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache=NlocalCache)$diag
+    gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
+    junk=gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache=NlocalCache)
+    
+    #diagMat<-gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache=NlocalCache)$diag
     
 
     #2, temp = y-X*beta
@@ -49,9 +50,12 @@
                           workgroupSize,  localSize,  NlocalCache)
 
     #4, result0 = C^T * D^(-1) * C = (y-X*betas)^T * V^(-1) * (y-X*betas)
-    result0 <- vclMatrix(0, rowbatch*colbatch, colbatch, type = gpuR::typeof(Vbatch))
+    result0 <- vclMatrix(5, rowbatch*colbatch, colbatch, type = gpuR::typeof(Vbatch))
 
-    gpuRandom:::crossprodBatchBackend(result0, C, diagMat,  invertD=T,  workgroupSize, localSize, NlocalCache)
+    
+    
+    
+    gpuRandom:::crossprodBatchBackend(result0, C, diagMat,  invertD=TRUE,  workgroupSize, localSize, 1)
 
     part2<- vclMatrix(0, nrow=rowbatch, ncol=colbatch, type = gpuR::typeof(Vbatch))
 
@@ -94,10 +98,18 @@
                                Nlocal=localSize, 
                                NlocalCache)
     
+    vbatchcpu<-as.matrix(Vbatch)
+    abcpu<-as.matrix(ab)
+    yxcpu<-as.matrix(yX)
+    diagmatcpu<-as.matrix(diagMat)
+    
+    
     
     #2, temp2 = (ab)^T * D^(-1) *ab
     temp2 <- vclMatrix(0, ncol(ab)*rowbatch, ncol(ab), type = gpuR::typeof(Vbatch))
-    gpuRandom:::crossprodBatchBackend(temp2, ab, diagMat, invertD=TRUE,  workgroupSize, localSize, NlocalCache)
+    gpuRandom:::crossprodBatchBackend(temp2, ab, diagMat, invertD=TRUE,  c(1,1,1), localSize, NlocalCache)
+    
+    temp2cpu<-as.matrix(temp2)
     
     #3, b^T * D^(-1) * b = Q * P * Q^T, cholesky of a subset of temp2
     diagP <- vclMatrix(0, rowbatch, p, type = gpuR::typeof(Vbatch))
