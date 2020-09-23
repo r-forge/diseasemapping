@@ -91,6 +91,38 @@ cbind(as.matrix(gpuC), NA,  result)
 
 
 
+
+
+
+
+
+
+
+
+
+
+a1 = matrix(1:72,6,9)
+a2=matrix(2:73,6,9)
+A=rbind(a1,a2,a1,a2)
+d1 <- matrix(0,nrow=nrow(a1), ncol=nrow(a1))
+diag(d1)<-1:nrow(a1)
+d2 <- matrix(0,nrow=nrow(a2), ncol=nrow(a2))
+diag(d2)<-1:nrow(a2)
+
+result<-rbind(t(a1)%*% d1%*%a1,t(a2)%*% d2%*%a2,t(a1)%*% d1%*%a1,t(a2)%*% d2%*%a2)
+
+D<-rbind(diag(d1),diag(d2),diag(d1),diag(d2))
+
+library(gpuR)
+gpuC<-vclMatrix(0, nrow=ncol(A)*4, ncol=ncol(A),type="double")
+gpuA<-vclMatrix(A,type="double")
+gpuD<-vclMatrix(D, nrow=nrow(D),ncol=ncol(D),type='double')
+gpuRandom:::crossprodBatchBackend(gpuC,gpuA,gpuD,invertD=FALSE,
+                                  Nglobal=c(16,16,1), 
+                                  Nlocal = c(2,2,1), 
+                                  NlocalCache=50)
+
+cbind(as.matrix(gpuC), NA,  result)
 ```
 
 ```{r crossprodbatch_square, eval=TRUE}

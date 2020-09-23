@@ -211,7 +211,8 @@ if(NpadD) {
       "        for(Dinner = 1;Dinner < get_local_size(0);Dinner++){\n"
       "          Ccache[cacheIndex] += Ccache[cacheIndex + Dinner * NpadLocal];\n"
       "        }\n"
-      "          C[DrowNpadC + Dcol] = Ccache[cacheIndex];\n" 
+     " C[DrowNpadC + Dcol]  = 100*(1+Dmatrix) + 10 * (1+Drow) + (1+Dcol);\n"
+     // "          C[DrowNpadC + Dcol] = Dmatrix;\n" //Ccache[cacheIndex]
 //"          C[DrowNpadC + Dcol] = A[Dmatrix * NpadBetweenMatricesA + Drow*NpadA + Dcol];\n"
 //        result +=       "    C[Dmatrix * NpadBetweenMatricesC + Drow * NpadC + Dcol] = 100*(Dmatrix+1) + 10*(Drow+1) + Dcol+1;\n";
 "      }//doLocalSum \n"

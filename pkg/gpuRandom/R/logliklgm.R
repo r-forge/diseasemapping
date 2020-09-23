@@ -156,23 +156,7 @@
     ##################################pro_reml################################################
     #(n-p)*log star + log|D| + log|P|
     pro_reml <- (n-p)* log(star) + replicate(colbatch, (logD+logP))
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+  
   }
      
      
