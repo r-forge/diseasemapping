@@ -167,7 +167,30 @@ as.matrix(gpuC)
 ```
 
 
+```{r crossprodbatch_more, eval=TRUE}
+D <- matrix(0,nrow=40, ncol=40)
+diag(D)<-c(1:40)
+a = matrix(1:40,nrow=40,ncol=1, byrow=T)
+A=rbind(a,a,a,a)
+result<- t(a)%*% D%*%a
+result
+gpuC<-vclMatrix(0, nrow=4, ncol=1,type="float")
+gpuA<-vclMatrix(A,type="float")
+gpuD<-vclMatrix(rbind(diag(D),diag(D),diag(D),diag(D)), nrow=4,ncol=40,type='float')
+gpuRandom:::crossprodBatchBackend(gpuC,gpuA,gpuD,invertD=F, NglobalChol,NlocalChol, NlocalCache)
+as.matrix(gpuC)
 
+
+gpuC2<-vclMatrix(0, nrow=1, ncol=1,type="float")
+gpuA2<-vclMatrix(a,type="float")
+gpuD2<-vclMatrix(diag(D), nrow=1,ncol=40,type='float')
+gpuRandom:::crossprodBatchBackend(gpuC2,gpuA2,gpuD2,invertD=F, NglobalChol,NlocalChol, NlocalCache)
+as.matrix(gpuC2)
+
+
+
+
+```
 
 
 

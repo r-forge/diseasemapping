@@ -23,13 +23,15 @@ backsolveBatch <- function(C, A, B,  #vclmatrices
                            Bstartend,
                            verbose=FALSE){
 
+  
+  nbatch<-nrow(A)/ncol(A)
 
   if(missing(Cstartend)) {
-    Cstartend=c(0, nrow(C), 0, ncol(C))
+    Cstartend=c(0, nrow(C)/nbatch, 0, ncol(C))
   }
   
   if(missing(Astartend)) {
-    Astartend=c(0, nrow(A)/numbatchB, 0, ncol(A))
+    Astartend=c(0, nrow(A)/nbatch, 0, ncol(A))
   }
   
   if(missing(Bstartend)) {
@@ -54,7 +56,6 @@ backsolveBatch <- function(C, A, B,  #vclmatrices
                         Nglobal, Nlocal, NlocalCache)
 
 
-  C
 
   }
 
