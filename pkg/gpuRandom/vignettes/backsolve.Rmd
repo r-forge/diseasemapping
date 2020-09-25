@@ -62,6 +62,59 @@ as.matrix(gpuC2)
 
 
 
+```{r two_function_test2}
+a1 = matrix( c(3, 0,0,0, 3,0, 3, 66, 3), nrow=3, ncol=3, byrow = TRUE) 
+a2 = matrix( c(1, 0,0,6, 1,0, 18, 8, 1), nrow=3, ncol=3, byrow = TRUE) 
+
+c1 = matrix( c(26, 41, 6), nrow=3, ncol=1, byrow=F) 
+
+b1 = a1%*%c1
+c2=solve(a2,b1)
+
+A <- rbind(a1,a2)
+#A
+B <- b1
+#B
+C <- rbind(c1,c2)
+C
+gpuA <- vclMatrix(A, type="double")
+gpuB <- vclMatrix(B, type="double")
+gpuC <- vclMatrix(0,nrow=6, ncol=1, type="double")  
+gpuC2 <- vclMatrix(0,nrow=6, ncol=1, type="double")
+#gpuRandom:::backsolveBatchBackend(gpuC, gpuA, gpuB, c(0,3,2,2),c(0,3,0,3),c(0,3,0,2),2L,
+#                                  diagIsOne=FALSE, Nglobal, Nlocal, NlocalCache)
+#as.matrix(gpuC)
+gpuRandom::backsolveBatch(gpuC2, gpuA, gpuB, numbatchB=1L, diagIsOne=FALSE, Nglobal=c(8L,8L,4L), Nlocal=Nlocal, NlocalCache=NlocalCache)
+as.matrix(gpuC2)
+
+gpuRandom:::backsolveBatchBackend(gpuC, gpuA, gpuB, 
+                                  c(0,3,0,1),c(0,3,0,3),c(0,3,0,1),1L,
+                                  diagIsOne=FALSE, Nglobal, Nlocal, NlocalCache)
+as.matrix(gpuC)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
