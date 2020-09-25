@@ -40,11 +40,15 @@
      
     gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache=NlocalCache)
 
-    Vbatchcpu<-as.matrix(Vbatch)
-    diagcpu<-as.matrix(diagMat)
-    Vbatchcpunew<-as.matrix(Vbatch)
+    # Vbatchcpu<-as.matrix(Vbatch)
+    # diagcpu<-as.matrix(diagMat)
     
-    diagcpunew<-as.matrix(diagMat)
+    a<-Vbatchcpu[1:40,]-Vbatchcpunew
+    
+    b<-diagcpu[1,]-diagcpunew
+    # Vbatchcpunew<-as.matrix(Vbatch)
+    # 
+    # diagcpunew<-as.matrix(diagMat)
     
     
     
@@ -52,18 +56,19 @@
     
     #2, temp = y-X*beta
     temp <- y - gpuRandom::gemmBatch(X, betas, rowbatch, 1L, colbatch, need_transpose = FALSE, workgroupSize)
-    tempcpu<-as.matrix(temp)
+    #tempcpu<-as.matrix(temp)
     
     #3, L * C = temp, backsolve for C
     C <- vclMatrix(0, nrow(Vbatch), ncol(temp), type = gpuR::typeof(Vbatch))
     
-    gpuRandom:::backsolveBatchBackend(C, Vbatch, temp,
-                          c(0,n,0,ncol(y)),   c(0,n,0,n),  c(0,n,0,ncol(y)),
-                          1L,  diagIsOne=TRUE,
+    gpuRandom::backsolveBatch(C, Vbatch, temp, numbatchB=1L,  diagIsOne=TRUE,
                           workgroupSize,  localSize,  NlocalCache)
    
     Ccpunew<-as.matrix(C)
     Ccpu<-as.matrix(C)
+    
+    Ccpunew-Ccpu[1:40]
+    
     
     #4, result0 = C^T * D^(-1) * C = (y-X*betas)^T * V^(-1) * (y-X*betas)
     result0 <- vclMatrix(0, rowbatch*colbatch, colbatch, type = gpuR::typeof(Vbatch))
