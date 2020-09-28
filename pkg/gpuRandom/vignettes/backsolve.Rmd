@@ -14,22 +14,49 @@ library('gpuR')
 Nglobal = c(64L, 64L, 4L)
 Nlocal = c(4L, 4L, 4L)
 NlocalCache = 18
-
 ```
 
 
 ```{r  test_check2}
 
-D1 = matrix( 1:160, nrow=40, ncol=40, byrow = TRUE) 
+D1 = matrix(0.01*sample(100, 16, replace=TRUE),
+            nrow=4, ncol=4, byrow = TRUE) 
 D1[upper.tri(D1)] <- 0
-diag(D1)<-1
+diag(D1)<-10
+
+B = matrix(1:nrow(D1), ncol=1)
+C = 99*B
+gpuA = vclMatrix(rbind(D1, D1), type='double')
+gpuB = vclMatrix(rbind(B), type='double')
+gpuC = vclMatrix(rbind(C,C), type='double')
+
+#C = D1^(-1) B
+realC = solve(D1, B)
+
+junk = gpuRandom:::backsolveBatchBackend(gpuC, gpuA, gpuB,
+                                c(0, nrow(C), 0, ncol(C)),
+                                c(0, nrow(D1), 0, ncol(D1)),
+                                c(0, nrow(B), 0, ncol(B)),
+                                1L, diagIsOne=FALSE, 
+                                Nglobal, Nlocal, 2)
+
+cbind(as.matrix(gpuC), rbind(realC, realC),
+      as.matrix(gpuC) - rbind(realC,realC))
+```
+
+
+```{r dontrun, eval=FALSE}
+
 C1 = matrix( 1:40, nrow=40, ncol=1, byrow = TRUE) 
+
 temp1 = D1%*%C1
+
 
 gpuD2<-vclMatrix(rbind(D1,D1,D1,D1),nrow=160, ncol=40, type="double")
 gpuC2 <- vclMatrix(0, nrow=160, ncol=1, type="double")
 gputemp1 <- vclMatrix(temp1,nrow=40, ncol=1, type="double")
 
+# D C = gputemp1
 gpuRandom::backsolveBatch(gpuC2, gpuD2, gputemp1, 
                                  1L, diagIsOne=TRUE, Nglobal, Nlocal, NlocalCache)
 as.matrix(gpuC2)

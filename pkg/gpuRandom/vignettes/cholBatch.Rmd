@@ -162,7 +162,7 @@ result
 gpuC<-vclMatrix(0, nrow=2, ncol=2,type="float")
 gpuA2<-vclMatrix(A,type="float")
 gpuD<-vclMatrix(diag(D), nrow=1,ncol=3,type='float')
-gpuRandom:::crossprodBatchBackend(gpuC,gpuA2,gpuD,invertD=F, NglobalChol,NlocalChol, NlocalCache)
+gpuRandom:::crossprodBatchBackend(gpuC,gpuA2,gpuD,invertD=F, c(1,1,1),c(1,1,1), 1000)
 as.matrix(gpuC)
 ```
 

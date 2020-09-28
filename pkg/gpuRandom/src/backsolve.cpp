@@ -326,7 +326,8 @@ std::string backsolveBatchString(
   result += 
     "    for(Dinner = NrowStop + get_local_id(1),\n"
     "      DinnerC = Dinner*NpadCcache;\n"
-    "      Dinner < Nrow;\n"
+    //    "      Dinner < Nrow;\n"
+    "      Dinner < DrowZero;\n"
     "      Dinner += get_local_size(1), DinnerC += DinnerCinc){\n";
   
   result += 
@@ -395,7 +396,7 @@ std::string backsolveBatchString(
   }
   result += ";\n";
   
-  result +=  
+  result +=
     "      C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n";
   //    "          C[CHereRow + Dcol] = 10*(1 + Dmatrix) + (1+Drow) + (1+Dcol)/10;\n"
   
@@ -475,7 +476,7 @@ void backsolveBatch(
 #ifdef DEBUG
   
   Rcpp::Rcout << "\nNrow " << Nrow  << " Nmatrix " << Nmatrix << " Ncol " << Ncol << "\n\n";
-  
+
 #endif  
   
   
@@ -508,7 +509,7 @@ void backsolveBatch(
   
 #ifdef DEBUG
   
-  // Rcpp::Rcout << clString << "\n\n";
+  Rcpp::Rcout << clString << "\n\n";
   
 #endif  
   
