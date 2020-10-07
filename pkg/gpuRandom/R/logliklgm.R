@@ -30,44 +30,21 @@
      n = nrow(y)
      p = ncol(X)
      
-     
+     varianceColumn = grep("variance", paramsBatch)
 # ##########################loglik########################################################
 
     #1, Vbatch=LDL^T, cholesky decomposition
     gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
-     
-     
-     
     gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache=NlocalCache)
 
-    # Vbatchcpu<-as.matrix(Vbatch)
-    # diagcpu<-as.matrix(diagMat)
-    
-    a<-Vbatchcpu[1:40,]-Vbatchcpunew
-    
-    b<-diagcpu[1,]-diagcpunew
-    # Vbatchcpunew<-as.matrix(Vbatch)
-    # 
-    # diagcpunew<-as.matrix(diagMat)
-    
-    
-    
-    
     
     #2, temp = y-X*beta
-    temp <- y - gpuRandom::gemmBatch(X, betas, rowbatch, 1L, colbatch, need_transpose = FALSE, workgroupSize)
-    #tempcpu<-as.matrix(temp)
+    temp <- y - gpuRandom::gemmBatch(X, betas, 1L, 1L, colbatch, need_transpose = FALSE, workgroupSize)
     
     #3, L * C = temp, backsolve for C
     C <- vclMatrix(0, nrow(Vbatch), ncol(temp), type = gpuR::typeof(Vbatch))
     
-    gpuRandom::backsolveBatch(C, Vbatch, temp, numbatchB=1L,  diagIsOne=TRUE,
-                          workgroupSize,  localSize,  NlocalCache)
-   
-    Ccpunew<-as.matrix(C)
-    Ccpu<-as.matrix(C)
-    
-    Ccpunew-Ccpu[1:40]
+    gpuRandom::backsolveBatch(C, Vbatch, temp, numbatchB=1L,  diagIsOne=TRUE,workgroupSize,  localSize,  NlocalCache)
     
     
     #4, result0 = C^T * D^(-1) * C = (y-X*betas)^T * V^(-1) * (y-X*betas)
@@ -76,10 +53,7 @@
   
     gpuRandom:::crossprodBatchBackend(result0, C, diagMat,  invertD=TRUE,  workgroupSize, localSize, NlocalCache)
 
-    result0cpu<-as.matrix(result0)
-   
-    
-    #need edit
+    #
     for (j in 1:colbatch){
      for(i in 1:rowbatch){
       part2[i,j] <- result0[colbatch*(i-1)+j,j]
@@ -102,9 +76,7 @@
     loglik <- part1 + part2/variances
 
     #as.matrix(loglik)
-    
 
-    
     ###################################profile############################################################################
     
     #profile = nlog hat_sigma^2 + log|D|
@@ -141,13 +113,13 @@
     pro_0 <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
     gpuRandom:::crossprodBatchBackend(pro_0, temp3, diagP, invertD=TRUE,  workgroupSize, localSize, NlocalCache) ##doesn't need selecting row/col
     
-    aTDinva <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
+    aTDa <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
     pro <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
     
     #extract a^TDa from temp2
     for (j in 1:colbatch){
       for (i in 1:rowbatch){
-        aTDinva[i,j]= temp2[(i-1)*ncol(ab)+j, j]
+        aTDa[i,j]= temp2[(i-1)*ncol(ab)+j, j]
       }
     }
     #extract needed cells from pro_0
@@ -158,7 +130,7 @@
     }
     
     #a^TDa - pro
-    star = aTDinva - pro
+    star = aTDa - pro
     pro_loglik = n*log(star) + replicate(colbatch, logD)
     
     ####################################REML##############################################
@@ -176,7 +148,6 @@
     
     if (type==1 ){
       result = loglik
-      
     } else if (type==2){
       result =  pro_loglik
     } else if (type==3) {

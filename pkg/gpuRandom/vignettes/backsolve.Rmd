@@ -19,26 +19,26 @@ NlocalCache = 18
 
 ```{r  test_check2}
 
-D1 = matrix(0.01*sample(100, 16, replace=TRUE),
-            nrow=4, ncol=4, byrow = TRUE) 
-D1[upper.tri(D1)] <- 0
-diag(D1)<-10
+A = matrix(0.01*sample(100, 25, replace=TRUE),
+            nrow=5, ncol=5, byrow = TRUE) 
+A[upper.tri(A)] <- 0
+diag(A)<-1
 
-B = matrix(1:nrow(D1), ncol=1)
+B = matrix(1:nrow(A), ncol=1)
 C = 99*B
-gpuA = vclMatrix(rbind(D1, D1), type='double')
+gpuA = vclMatrix(rbind(A, A), type='double')
 gpuB = vclMatrix(rbind(B), type='double')
 gpuC = vclMatrix(rbind(C,C), type='double')
 
 #C = D1^(-1) B
-realC = solve(D1, B)
+realC = solve(A, B)
 
 junk = gpuRandom:::backsolveBatchBackend(gpuC, gpuA, gpuB,
                                 c(0, nrow(C), 0, ncol(C)),
-                                c(0, nrow(D1), 0, ncol(D1)),
+                                c(0, nrow(A), 0, ncol(A)),
                                 c(0, nrow(B), 0, ncol(B)),
-                                1L, diagIsOne=FALSE, 
-                                Nglobal, Nlocal, 2)
+                                1L, diagIsOne=TRUE, 
+                                Nglobal, Nlocal, 1)
 
 cbind(as.matrix(gpuC), rbind(realC, realC),
       as.matrix(gpuC) - rbind(realC,realC))
@@ -95,146 +95,6 @@ gpuRandom:::backsolveBatchBackend(gpuC, gpuA, gpuB,
 as.matrix(gpuC)
 
 ```
-
-
-```{r test_preparation}
-library(gpuR)
-library(geostatsp)
-n=40
-mydat = SpatialPointsDataFrame(
-	cbind(runif(n), seq(0,1,len=n)), 
-	data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 2))
-	)
-
-# simulate a random field
-set.seed(1)
-mydat@data= cbind(mydat@data , RFsimulate(model=c(variance=1.5,range=0.5,nugget=0.25,shape=1.25,anisoRatio = 1, anisoAngleRadins=0),x=mydat)@data)
-
-# add fixed effects
-mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + mydat$sim + rnorm(length(mydat), 0, sd=sqrt(0.25))
-
-# fit the model
-myres = likfitLgm(
-	formula=Y ~ cov1 + cov2, 
-	data=mydat, 
-	param=c(variance=1.5,range=0.5,nugget=0.25,shape=1.25)
-	)
-
-workgroupSize=c(16,16,1)
-localSize = c(2,2,1)
-NlocalCache=50
-```
-
-
-```{r  test21}
-y<-vclMatrix(as.matrix(mydat$Y),type="double")
-X<-vclMatrix(as.matrix(cbind(c(rep(1, n)),mydat$cov1,mydat$cov2)),type="double")
-coordsGpu<-vclMatrix(mydat@coords,type="double")
-paramsBatch = rbind(
-c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
-c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
-c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
-c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0))
-
-
-paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam));    paramsBatch
-paramsBatch = vclMatrix(cbind(paramsBatch, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),type="double")
-
-betas<-vclMatrix(as.matrix(myres$summary[c("(Intercept)","cov1","cov2"),1]),type="double")
-
-Vbatch = vclMatrix(0, nrow(paramsBatch)*nrow(y), nrow(y), type="double")
-diagMat = vclMatrix(0, nrow(paramsBatch), ncol(Vbatch), type = "double")
-
-
- rowbatch = nrow(paramsBatch)
- colbatch = ncol(y)
- n = nrow(y)
- p = ncol(X)
-     
-
-# ##########################loglik########################################################
-
-    #1, Vbatch=LDL^T, cholesky decomposition
-gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
-gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache=NlocalCache)
-
-    
-    
-    
-    #2, temp = y-X*beta
-    temp <- y - gpuRandom::gemmBatch(X, betas, rowbatch, 1L, colbatch, need_transpose = FALSE, workgroupSize)
-    #tempcpu<-as.matrix(temp)
-    
-    #3, L * C = temp, backsolve for C
-    C <- vclMatrix(0, nrow(Vbatch), ncol(temp), type = gpuR::typeof(Vbatch))
-    
-    gpuRandom::backsolveBatch(C, Vbatch, temp, numbatchB=1L,  diagIsOne=TRUE,
-                          workgroupSize,  localSize,  NlocalCache)
-   
-   
-    Ccpu<-as.matrix(C)
-    
-    
-```
-
-
-
-```{r  test22}
-y<-vclMatrix(as.matrix(mydat$Y),type="double")
-X<-vclMatrix(as.matrix(cbind(c(rep(1, n)),mydat$cov1,mydat$cov2)),type="double")
-coordsGpu<-vclMatrix(mydat@coords,type="double")
-
-paramsBatch = rbind( 
-c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0))
-
-paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam));    paramsBatch
-paramsBatch = vclMatrix(cbind(paramsBatch, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),type="double")
-
-betas<-vclMatrix(as.matrix(myres$summary[c("(Intercept)","cov1","cov2"),1]),type="double")
-
-Vbatch = vclMatrix(0, nrow(paramsBatch)*nrow(y), nrow(y), type="double")
-diagMat = vclMatrix(0, nrow(paramsBatch), ncol(Vbatch), type = "double")
- 
-rowbatch = nrow(paramsBatch)
- colbatch = ncol(y)
- n = nrow(y)
- p = ncol(X)
-     
-# ##########################loglik########################################################
-
-    #1, Vbatch=LDL^T, cholesky decomposition
-gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
-gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache=NlocalCache)
-
- 
-    #2, temp = y-X*beta
-    temp <- y - gpuRandom::gemmBatch(X, betas, rowbatch, 1L, colbatch, need_transpose = FALSE, workgroupSize)
-    #tempcpu<-as.matrix(temp)
-    
-    #3, L * C = temp, backsolve for C
-    C <- vclMatrix(0, nrow(Vbatch), ncol(temp), type = gpuR::typeof(Vbatch))
-    
-    gpuRandom::backsolveBatch(C, Vbatch, temp, numbatchB=1L,  diagIsOne=TRUE,
-                          workgroupSize,  localSize,  NlocalCache)
-   
-    Ccpunew<-as.matrix(C)
-    
-    Ccpunew-Ccpu[1:40]
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 ```{r test3}

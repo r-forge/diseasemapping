@@ -8,8 +8,7 @@
 library(gpuR)
 library(geostatsp)
 n=40
-mydat = SpatialPointsDataFrame(
-	cbind(runif(n), seq(0,1,len=n)), 
+mydat = SpatialPointsDataFrame(cbind(runif(n), seq(0,1,len=n)), 
 	data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 2))
 	)
 
@@ -46,7 +45,7 @@ temp0
 ```
 
 
-```{r test1, eval=FALSE}
+```{r test1, eval=TRUE}
 # start here
 y<-vclMatrix(as.matrix(mydat$Y),type="double")
 X<-vclMatrix(as.matrix(cbind(c(rep(1, n)),mydat$cov1,mydat$cov2)),type="double")
@@ -68,56 +67,27 @@ paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam));    paramsBatch
 paramsBatch = vclMatrix(cbind(paramsBatch, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),type="double")
 
 betas<-vclMatrix(as.matrix(myres$summary[c("(Intercept)","cov1","cov2"),1]),type="double")
-#betas<-vclMatrix(c(-2.9590085,0.5520393,0.2788058),nrow=2, ncol=1,type="double")
-
+#as.matrix(betas)
 Vbatch = vclMatrix(0, nrow(paramsBatch)*nrow(y), nrow(y), type="double")
 diagMat = vclMatrix(0, nrow(paramsBatch), ncol(Vbatch), type = "double")
 workgroupSize=c(16,16,1)
 localSize = c(2,2,1)
 NlocalCache=50
 
-temp1=gpuRandom::likfitGpu0(y,X,coordsGpu,paramsBatch,Vbatch,diagMat,betas,type="loglik",c(16,16,1),c(2,2,1), 50)
+temp1=gpuRandom::likfitGpu0(y,X,coordsGpu,paramsBatch,Vbatch,diagMat,betas,type="loglik",workgroupSize,localSize, NlocalCache)
 as.matrix(temp1)
 
-
-```
-
-
-```{r test2, eval=FALSE}
-# start here
-y<-vclMatrix(as.matrix(mydat$Y),type="double")
-X<-vclMatrix(as.matrix(cbind(c(rep(1, n)),mydat$cov1,mydat$cov2)),type="double")
-coordsGpu<-vclMatrix(mydat@coords,type="double")
-
-paramsBatch = rbind( 
-c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0))
-
-
-
-
-paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam));    paramsBatch
-paramsBatch = vclMatrix(cbind(paramsBatch, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),type="double")
-
-betas<-vclMatrix(as.matrix(myres$summary[c("(Intercept)","cov1","cov2"),1]),type="double")
-#betas<-vclMatrix(c(-2.9590085,0.5520393,0.2788058),nrow=2, ncol=1,type="double")
-
-Vbatch = vclMatrix(0, nrow(paramsBatch)*nrow(y), nrow(y), type="double")
-diagMat = vclMatrix(0, nrow(paramsBatch), ncol(Vbatch), type = "double")
-workgroupSize=c(16,16,1)
-localSize = c(2,2,1)
-NlocalCache=50
-
-temp1=gpuRandom::likfitGpu0(y,X,coordsGpu,paramsBatch,Vbatch,diagMat,betas,type="loglik",c(16,16,1),c(2,2,1), 50)
+temp1=gpuRandom::likfitGpu0(y,X,coordsGpu,paramsBatch,Vbatch,diagMat,betas,type="profile",workgroupSize,localSize, NlocalCache)
 as.matrix(temp1)
-
-
 ```
 
 
 
 
 
-```{r test3, eval=FALSE}
+
+
+```{r test3_oncpu, eval=FALSE}
 # start here
 ycpu<-mydat$Y
 Xcpu<-as.matrix(cbind(c(rep(1, n)),mydat$cov1,mydat$cov2))
