@@ -41,6 +41,11 @@ osmTiles = function(name, xyz, suffix) {
     wikimedia = 'https://maps.wikimedia.org/osm-intl/',
     'sputnik' = 'http://tiles.maps.sputnik.ru/'
   )
+
+  # toronto
+  #https://gis.toronto.ca/arcgis/rest/services/basemap/cot_topo/MapServer/tile/9/186/142
+# https://map.toronto.ca/maps/map.jsp?app=TorontoMaps_v2
+
 #	skobbler="http://tiles3.skobbler.net/osm_tiles2/",	
 #		"osm2world"="http://tiles.osm2world.org/osm/pngtiles/n/",
 #		bvg="http://mobil.bvg.de/tiles/",
