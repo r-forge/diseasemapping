@@ -7,13 +7,13 @@
 ```{r test_preparation}
 library(gpuR)
 library(geostatsp)
+set.seed(1)
 n=40
 mydat = SpatialPointsDataFrame(cbind(runif(n), seq(0,1,len=n)), 
 	data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 2))
 	)
 
 # simulate a random field
-set.seed(1)
 mydat@data= cbind(mydat@data , RFsimulate(model=c(variance=1.5,range=0.5,nugget=0.25,shape=1.25,anisoRatio = 1, anisoAngleRadins=0),x=mydat)@data)
 
 # add fixed effects
@@ -27,8 +27,7 @@ spplot(mydat, "Y", col.regions=rainbow(10), main="Y")
 myres = likfitLgm(
 	formula=Y ~ cov1 + cov2, 
 	data=mydat, 
-	param=c(variance=1.5,range=0.5,nugget=0.25,shape=1.25)
-	)
+	param=c(variance=1.5,range=0.5,nugget=0.25,shape=1.25), reml=FALSE)
 #variance parameter and regression coefficients are always estimated even if not listed.
 myres$summary[,1:4]
 myres$summary[c("(Intercept)","cov1","cov2"),1] 
@@ -36,25 +35,26 @@ myres$summary[c("(Intercept)","cov1","cov2"),1]
 
 # calculate likelihood
 trueParam1 = c(variance=1.5, range=0.5, shape=1.25, nugget=0.25, anisoRatio = 1, anisoAngleRadins=0)
-temp0=loglikLgm(param=trueParam1, 
+temp0=loglikLgm(param=myres$parameters, 
 		data=mydat, 
 		formula = Y ~ cov1 + cov2,
 		reml=FALSE, minustwotimes=TRUE)
 temp0
 #-2.9590085   0.5520393   0.2788058 
+#-2.9693862   0.5435322   0.2857668
 ```
 
 
-```{r test1, eval=TRUE}
+```{r test1, eval=FALSE}
 # start here
 y<-vclMatrix(as.matrix(mydat$Y),type="double")
 X<-vclMatrix(as.matrix(cbind(c(rep(1, n)),mydat$cov1,mydat$cov2)),type="double")
 coordsGpu<-vclMatrix(mydat@coords,type="double")
-paramsBatch = rbind(
-c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
-c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
-c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
-c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0))
+paramsBatch = rbind(c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0))
+# ,
+# c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
+# c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
+# c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0))
 
 #c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
 #c(shape=2.15, range=0.25, variance = 2, nugget = 0.25, anisoRatio = 4, anisoAngleRadians = pi/7),
@@ -70,7 +70,7 @@ betas<-vclMatrix(as.matrix(myres$summary[c("(Intercept)","cov1","cov2"),1]),type
 #as.matrix(betas)
 Vbatch = vclMatrix(0, nrow(paramsBatch)*nrow(y), nrow(y), type="double")
 diagMat = vclMatrix(0, nrow(paramsBatch), ncol(Vbatch), type = "double")
-workgroupSize=c(16,16,1)
+workgroupSize=c(16,2,4)
 localSize = c(2,2,1)
 NlocalCache=50
 
@@ -125,12 +125,69 @@ part1 <-n*log(paramsBatch[,3]) + logD
 #6,
   
 loglik2 <- part1 + result2/paramsBatch[,3]
+```
 
 
 
 
 
+```{r test2, eval=TRUE}
+library(gpuR)
+library(geostatsp)
+set.seed(1)
+n=40
+mydat = SpatialPointsDataFrame(cbind(runif(n), seq(0,1,len=n)), 
+	data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 2))
+	)
 
+# simulate a random field
+mydat@data= cbind(mydat@data , RFsimulate(model=c(variance=1.5,range=0.5,nugget=0.25,shape=1.25,anisoRatio = 1, anisoAngleRadins=0),x=mydat)@data)
+
+# add fixed effects
+mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + mydat$sim + rnorm(length(mydat), 0, sd=sqrt(0.25))
+
+# fit the model
+myres = likfitLgm(
+	formula=Y ~ cov1 + cov2, 
+	data=mydat, 
+	param=c(variance=1.5,range=0.5,nugget=0.25,shape=1.25), reml=FALSE)
+
+
+paramsBatch = rbind(c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
+ c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
+ c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
+ c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0))
+
+paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam));    paramsBatch
+paramsBatch = vclMatrix(cbind(paramsBatch, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),type="double")
+
+betas<-vclMatrix(as.matrix(myres$summary[c("(Intercept)","cov1","cov2"),1]),type="double")
+#as.matrix(betas)
+#Vbatch = vclMatrix(0, nrow(paramsBatch)*nrow(y), nrow(y), type="double")
+#diagMat = vclMatrix(0, nrow(paramsBatch), ncol(Vbatch), type = "double")
+workgroupSize=c(16,4,4)
+localSize = c(2,2,1)
+NlocalCache=50
+
+temp1=gpuRandom::likfitGpu(myres,mydat, type="double", 
+                           paramsBatch,betas,form="ml",workgroupSize,localSize, NlocalCache)
+
+as.matrix(temp1)
 
 
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
