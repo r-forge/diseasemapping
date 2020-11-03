@@ -4,7 +4,7 @@
 -->
 
 
-```{r test_preparation}
+```{r test_preparation, message=FALSE}
 library(gpuR)
 library(geostatsp)
 set.seed(1)
@@ -19,9 +19,6 @@ mydat@data= cbind(mydat@data , RFsimulate(model=c(variance=1.5,range=0.5,nugget=
 # add fixed effects
 mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + mydat$sim + rnorm(length(mydat), 0, sd=sqrt(0.25))
 
-library(sp)
-spplot(mydat, "sim", col.regions=rainbow(10), main="U")
-spplot(mydat, "Y", col.regions=rainbow(10), main="Y")
 
 # fit the model
 myres = likfitLgm(
@@ -45,7 +42,7 @@ temp0
 ```
 
 
-```{r test1, eval=FALSE}
+```{r test1, echo=FALSE,eval=FALSE}
 # start here
 y<-vclMatrix(as.matrix(mydat$Y),type="double")
 X<-vclMatrix(as.matrix(cbind(c(rep(1, n)),mydat$cov1,mydat$cov2)),type="double")
@@ -87,7 +84,7 @@ as.matrix(temp1)
 
 
 
-```{r test3_oncpu, eval=FALSE}
+```{r test3_oncpu, echo=FALSE, eval=FALSE}
 # start here
 ycpu<-mydat$Y
 Xcpu<-as.matrix(cbind(c(rep(1, n)),mydat$cov1,mydat$cov2))
@@ -162,9 +159,7 @@ paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam));    paramsBatch
 paramsBatch = vclMatrix(cbind(paramsBatch, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),type="double")
 
 betas<-vclMatrix(as.matrix(myres$summary[c("(Intercept)","cov1","cov2"),1]),type="double")
-#as.matrix(betas)
-#Vbatch = vclMatrix(0, nrow(paramsBatch)*nrow(y), nrow(y), type="double")
-#diagMat = vclMatrix(0, nrow(paramsBatch), ncol(Vbatch), type = "double")
+
 workgroupSize=c(16,4,4)
 localSize = c(2,2,1)
 NlocalCache=50
@@ -174,6 +169,9 @@ temp1=gpuRandom::likfitGpu(myres,mydat, type="double",
 
 as.matrix(temp1)
 
+temp2=gpuRandom::likfitGpu(myres,mydat, type="double", 
+                           paramsBatch,betas,form="ProBeta",workgroupSize,localSize, NlocalCache)
+as.matrix(temp2)
 
 ```
 
