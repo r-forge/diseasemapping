@@ -24,7 +24,7 @@ lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
   output<-list(yX=yX, coordsGpu=coordsGpu, n=n, p=p)
   
 
-  return(output)
+  output
 }
 
   
@@ -42,7 +42,7 @@ lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
                          NlocalCache,
                          verbose=FALSE){
      
-     if(is.null(betas) & type == ("ml" | "ProSigma" ) ) stop("need betas")
+     if((is.null(betas) & form == "ProSigma") | (is.null(betas) & form == "ml") ) stop("need betas")
      
      yX <- lgmGpuObjectes(modelname, mydat, type)$yX
      
