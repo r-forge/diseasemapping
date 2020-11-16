@@ -42,42 +42,6 @@ temp0
 ```
 
 
-```{r test1, echo=FALSE,eval=FALSE}
-# start here
-y<-vclMatrix(as.matrix(mydat$Y),type="double")
-X<-vclMatrix(as.matrix(cbind(c(rep(1, n)),mydat$cov1,mydat$cov2)),type="double")
-coordsGpu<-vclMatrix(mydat@coords,type="double")
-paramsBatch = rbind(c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0))
-# ,
-# c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
-# c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
-# c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0))
-
-#c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
-#c(shape=2.15, range=0.25, variance = 2, nugget = 0.25, anisoRatio = 4, anisoAngleRadians = pi/7),
-#c(shape=0.55, range=2.5, variance = 2.5, nugget = 0.25, anisoRatio = 4,  anisoAngleRadians = pi/7),
-#c(shape=2.15, range=0.5, variance = 4, nugget = 0.25, anisoRatio = 4, anisoAngleRadians = -pi/7))
-
-
-
-paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam));    paramsBatch
-paramsBatch = vclMatrix(cbind(paramsBatch, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),type="double")
-
-betas<-vclMatrix(as.matrix(myres$summary[c("(Intercept)","cov1","cov2"),1]),type="double")
-#as.matrix(betas)
-Vbatch = vclMatrix(0, nrow(paramsBatch)*nrow(y), nrow(y), type="double")
-diagMat = vclMatrix(0, nrow(paramsBatch), ncol(Vbatch), type = "double")
-workgroupSize=c(16,2,4)
-localSize = c(2,2,1)
-NlocalCache=50
-
-temp1=gpuRandom::likfitGpu0(y,X,coordsGpu,paramsBatch,Vbatch,diagMat,betas,type="loglik",workgroupSize,localSize, NlocalCache)
-as.matrix(temp1)
-
-temp1=gpuRandom::likfitGpu0(y,X,coordsGpu,paramsBatch,Vbatch,diagMat,betas,type="profile",workgroupSize,localSize, NlocalCache)
-as.matrix(temp1)
-```
-
 
 
 
@@ -170,14 +134,74 @@ temp1=gpuRandom::likfitGpu(myres,mydat, type="double",
 as.matrix(temp1)
 
 temp2=gpuRandom::likfitGpu(myres,mydat, type="double", 
-                           paramsBatch,betas,form="ProBeta",workgroupSize,localSize, NlocalCache)
+                           paramsBatch,betas,form="loglik",workgroupSize,localSize, NlocalCache)
 as.matrix(temp2)
 
 ```
 
 
 
+```{r test 4,eval=FALSE}
+library('geostatsp')
+data('swissRain')
+sr2 = swissRain
 
+# extract variables for modeling
+sr2$sqrtY = sqrt(sr2$rain)
+sr2$elev = raster::extract(swissAltitude, sr2)
+
+swissFitIso = likfitLgm(
+  data=sr2,
+  formula=sqrtY ~ elev,
+  param=c(range=10000,shape=1,nugget=0),
+  reml=FALSE,
+  verbose=FALSE
+)
+
+swissFitIso$parameters
+
+newParamList = list(
+  range=seq(15, 100 , len=24)*1000,
+  nugget = seq(0,0.25,len=24)
+)
+newParam= do.call(expand.grid, newParamList)
+
+otherparams = c(shape=1, variance = 1.5, anisoRatio = 1, anisoAngleRadians = 0)
+otherparams = matrix(rep(otherparams,each=nrow(newParam)),nrow=nrow(newParam))
+colnames(otherparams) <- c("shape","variance", "anisoRatio", "anisoAngleRadians")
+
+paramsBatch = cbind(newParam, otherparams)
+
+
+paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam))
+paramsBatch = vclMatrix(cbind(paramsBatch, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),
+                        type="double")
+
+#list <- c("range", "shape", "variance", "nugget", "anisoRatio", "anisoAngleRadians")
+#paramsBatch = paramsBatch[,list]
+
+
+workgroupSize=c(16,4,4)
+localSize = c(2,2,1)
+NlocalCache=50
+
+temp=gpuRandom::likfitGpu(swissFitIso,sr2, type="double", 
+                           paramsBatch,betas=NULL,form="ml",workgroupSize,localSize, NlocalCache)
+
+
+lMatrix = matrix(temp, length(newParamList[[1]]), length(newParamList[[2]]))
+
+myCol = mapmisc::colourScale(lMatrix, breaks=8, dec=0)
+image(
+  newParamList[[1]]/1000, newParamList[[2]], lMatrix,
+  col = myCol$col, breaks=myCol$breaks,
+  xlab = names(newParamList)[1],
+  ylab = names(newParamList)[2]
+)
+mapmisc::legendBreaks('topright', myCol)
+
+
+```
 
 
 

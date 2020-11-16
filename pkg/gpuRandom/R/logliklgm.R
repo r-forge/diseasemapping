@@ -1,4 +1,4 @@
-#' @title pre_functionn for likfitGpu
+#' @title pre_function for likfitGpu
 #'
 #' @useDynLib gpuRandom
 #' @export
@@ -22,7 +22,6 @@ lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
   p = ncol(covariates)
   
   output<-list(yX=yX, coordsGpu=coordsGpu, n=n, p=p)
-  
 
   output
 }
@@ -36,13 +35,13 @@ lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
   likfitGpu <- function( modelname, mydat, type=c("double", "float"),
                          paramsBatch, #vclMatrix of parameter sets,Vbatch, # matern correlation vclmatrix,diagMat, # D of cholesky decomposition
                          betas=NULL, #a vclmatrix  #given by the user or provided from formula
-                         form = c("ml", "Pro", "ProSigma", "ProBeta", "reml", "remlPro"),
+                         form = c("loglik", "ml", "mlFixBeta", "mlFixSigma", "reml", "remlPro"),
                          workgroupSize,
                          localSize,
                          NlocalCache,
                          verbose=FALSE){
      
-     if((is.null(betas) & form == "ProSigma") | (is.null(betas) & form == "ml") ) stop("need betas")
+     if((is.null(betas) & form == "loglik") | (is.null(betas) & form == "mlFixSigma") ) stop("need betas")
      
      yX <- lgmGpuObjectes(modelname, mydat, type)$yX
      
@@ -54,7 +53,7 @@ lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
      y <-  vclMatrix(yX[,1], nrow=n, ncol=1, type = type) 
      X <-  vclMatrix(yX[,c(2:(1+p))],type = type)
                            
-     form = c(ml=1,Pro=2,ProSigma=3,ProBeta=4, reml=5, remlPro=6)[form]
+     form = c(loglik=1, ml=2, mlFixBeta=3, mlFixSigma=4, reml=5, remlPro=6)[form]
      
      rowbatch = nrow(paramsBatch)
      colbatch = 1     #colbatch = ncol(y)
@@ -66,7 +65,10 @@ lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
      Vbatch = vclMatrix(0, nrow(paramsBatch)*n, n, type = type)
      diagMat = vclMatrix(0, nrow(paramsBatch), n, type = type) 
      
-# ########################## 1,ml or ml(beta,sigma), given beta and sigma ##################################################
+     aTDa <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
+     nine <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
+     
+# ########################## 1, loglik or ml(beta,sigma), given beta and sigma ##################################################
 
     # Vbatch=LDL^T, cholesky decomposition
     gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
@@ -108,11 +110,11 @@ lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
 
     # n*log(sigma^2)+log |D| + one/variances
     variances<-vclMatrix(paramsBatch[,3],nrow=rowbatch, ncol=1,type = gpuR::typeof(Vbatch))
-    ml <- part1 + one/variances
+    loglik <- part1 + one/variances
 
    
 
-    ###################################2, Pro or ml(hatbeta,hatsigma)############################################################
+    ###################################2, ml or ml(hatbeta,hatsigma)############################################################
     #profile = nlog hat_sigma^2 + log|D|
     # to get hat_sigma^2,  #L(a b) = (y X)
     ab <- vclMatrix(0, nrow(Vbatch), colbatch+p, type = gpuR::typeof(Vbatch))
@@ -144,9 +146,7 @@ lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
     nine0 <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
     gpuRandom:::crossprodBatchBackend(nine0, temp3, diagP, invertD=TRUE,  workgroupSize, localSize, NlocalCache) ##doesn't need selecting row/col
     
-    aTDa <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
-    nine <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
-    
+   
     #extract a^TDa from temp2
     for (j in 1:colbatch){
       for (i in 1:rowbatch){
@@ -162,13 +162,13 @@ lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
     
     #a^TDa - nine
     two = aTDa - nine
-    Pro = n*log(two) + replicate(colbatch, logD)
+    ml = n*log(two) + replicate(colbatch, logD)
     
-    ####################################3, ProSigma / or ml(beta,hatsigma)##############################################
-    ProSigma = n*log(one)+replicate(colbatch, logD)
+    ####################################3, mlFixBeta / or ml(beta,hatsigma)##############################################
+    mlFixBeta = n*log(one)+replicate(colbatch, logD)
     
-    ####################################4, ProBeta / or ml(hatbeta,sigma)##############################################
-    ProBeta = part1 + two/variances
+    ####################################4, mlFixSigma / or ml(hatbeta,sigma)##############################################
+    mlFixSigma = part1 + two/variances
     
     
     ####################################5, reml ##############################################
@@ -184,13 +184,13 @@ lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
     
     
     if (form==1 ){
-      result = ml
+      result = loglik
     } else if (form==2){
-      result =  Pro
+      result =  ml
     } else if (form==3) {
-      result =ProSigma
+      result = mlFixBeta
     } else if (form==4) {
-      result=ProBeta
+      result= mlFixSigma
     }else if (form==5) {
       result=reml
     }else if (form==6) {

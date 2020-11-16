@@ -152,3 +152,6 @@ legend("topright", fill=x2d$col, legend=x2d$prob[-length(x2d$prob)])
 if(!interactive()) 
   dev.off()
 }
+
+
+
