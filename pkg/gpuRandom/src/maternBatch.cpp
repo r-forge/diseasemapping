@@ -308,7 +308,8 @@ std::string maternBatchKernelString(
     "       localParams[DlocalParam + 14]);\n"//, &K_nu, &K_nup1);\n"
     
     "	} else { \n"// if short distance gsl_sf_bessel_K_scaled_temme
-    
+    "K_nuK_nup1 = ln_half_x;\n"
+#ifdef UNDEF
     "K_nuK_nup1=maternShort(ln_half_x, maternBit, expMaternBit,\n"
     //" mu[Dmatrix], muSq[Dmatrix]," 
     " localParams[DlocalParam + 13], localParams[DlocalParam + 14],\n"
@@ -318,9 +319,9 @@ std::string maternBatchKernelString(
     //			" g_1pnu[Dmatrix], g_1mnu[Dmatrix]," 
     " localParams[DlocalParam + 19], localParams[DlocalParam + 20]);\n"
     //    " &K_nu, &K_nup1);\n"
-    
+#endif    
     "   }\n";
-      
+#ifdef UNDEF      
       result +=
         " nuround = (int) (localParams[DlocalParam+16]);\n"
         "for(k=0; k<nuround; k++) {\n"
@@ -332,7 +333,7 @@ std::string maternBatchKernelString(
         //   "      K_nup1 = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nu + K_num1;\n"
         "       K_nuK_nup1.y = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nuK_nup1.x  + K_num1;\n"
         "}\n";
-      
+#endif      
       result +=
         
         "\n#ifdef assignLower\n"

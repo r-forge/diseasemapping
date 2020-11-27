@@ -183,8 +183,9 @@ workgroupSize=c(64,16,16)
 localSize = c(4,4,1)
 NlocalCache=50
  
-temp=gpuRandom::likfitGpu(swissFitIso,sr2, type="double", 
-                           paramsBatch,betas=NULL,form="ml",workgroupSize,localSize, NlocalCache)
+temp=gpuRandom::likfitGpu(swissFitIso,sr2, type="double",
+  paramsBatch,betas=NULL,form="ml",
+  workgroupSize,localSize, NlocalCache)
 
 as.matrix(temp)
 
