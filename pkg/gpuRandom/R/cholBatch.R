@@ -12,12 +12,12 @@
 
 cholBatch <- function(A,
                       D,
-                      Astartend,
-                      Dstartend,
                       numbatchD,
                       Nglobal,
                       Nlocal,
                       NlocalCache,
+                      Astartend,
+                      Dstartend,
                       verbose=FALSE){
   
 

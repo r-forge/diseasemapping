@@ -4,7 +4,7 @@
 -->
 
 
-```{r test_preparation, message=FALSE}
+```{r test_preparation, message=FALSE, eval=FALSE}
 library(gpuR)
 library(geostatsp)
 set.seed(1)
@@ -92,7 +92,7 @@ loglik2 <- part1 + result2/paramsBatch[,3]
 
 
 
-```{r test2, eval=TRUE}
+```{r test2, eval=F}
 library(gpuR)
 library(geostatsp)
 set.seed(1)
@@ -128,10 +128,10 @@ workgroupSize=c(16,4,4)
 localSize = c(2,2,1)
 NlocalCache=50
 
-temp1=gpuRandom::likfitGpu(myres,mydat, type="double", 
-                           paramsBatch,betas,form="ml",workgroupSize,localSize, NlocalCache)
+#temp1=gpuRandom::likfitGpu(myres,mydat, type="double", 
+                            #paramsBatch,betas,form="ml",workgroupSize,localSize, NlocalCache)
 
-as.matrix(temp1)
+#as.matrix(temp1)
 
 temp2=gpuRandom::likfitGpu(myres,mydat, type="double", 
                            paramsBatch,betas,form="loglik",workgroupSize,localSize, NlocalCache)
@@ -141,10 +141,10 @@ as.matrix(temp2)
 
 
 
-```{r test 4,eval=FALSE}
+```{r test Nov20,eval=TRUE}
 library('geostatsp')
 data('swissRain')
-sr2 = swissRain
+sr2 = swissRain[1:20,]
 
 # extract variables for modeling
 sr2$sqrtY = sqrt(sr2$rain)
@@ -153,7 +153,7 @@ sr2$elev = raster::extract(swissAltitude, sr2)
 swissFitIso = likfitLgm(
   data=sr2,
   formula=sqrtY ~ elev,
-  param=c(range=10000,shape=1,nugget=0),
+  param=c(range=10,shape=1,nugget=0),
   reml=FALSE,
   verbose=FALSE
 )
@@ -161,8 +161,8 @@ swissFitIso = likfitLgm(
 swissFitIso$parameters
 
 newParamList = list(
-  range=seq(15, 100 , len=24)*1000,
-  nugget = seq(0,0.25,len=24)
+  range=seq(15, 50 , len=3)*1000,
+  nugget = seq(0.01,0.5,len=3)
 )
 newParam= do.call(expand.grid, newParamList)
 
@@ -170,35 +170,34 @@ otherparams = c(shape=1, variance = 1.5, anisoRatio = 1, anisoAngleRadians = 0)
 otherparams = matrix(rep(otherparams,each=nrow(newParam)),nrow=nrow(newParam))
 colnames(otherparams) <- c("shape","variance", "anisoRatio", "anisoAngleRadians")
 
-paramsBatch = cbind(newParam, otherparams)
+paramsBatch0 = cbind(newParam, otherparams)
 
 
-paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam))
-paramsBatch = vclMatrix(cbind(paramsBatch, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),
-                        type="double")
+paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
+paramsBatch = vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),type="double")
 
-#list <- c("range", "shape", "variance", "nugget", "anisoRatio", "anisoAngleRadians")
-#paramsBatch = paramsBatch[,list]
+#paramscpu<-as.matrix(paramsBatch)
 
 
-workgroupSize=c(16,4,4)
-localSize = c(2,2,1)
+workgroupSize=c(64,16,16)
+localSize = c(4,4,1)
 NlocalCache=50
-
+ 
 temp=gpuRandom::likfitGpu(swissFitIso,sr2, type="double", 
                            paramsBatch,betas=NULL,form="ml",workgroupSize,localSize, NlocalCache)
 
+as.matrix(temp)
 
-lMatrix = matrix(temp, length(newParamList[[1]]), length(newParamList[[2]]))
-
-myCol = mapmisc::colourScale(lMatrix, breaks=8, dec=0)
-image(
-  newParamList[[1]]/1000, newParamList[[2]], lMatrix,
-  col = myCol$col, breaks=myCol$breaks,
-  xlab = names(newParamList)[1],
-  ylab = names(newParamList)[2]
-)
-mapmisc::legendBreaks('topright', myCol)
+# lMatrix = matrix(temp, length(newParamList[[1]]), length(newParamList[[2]]))
+# 
+# myCol = mapmisc::colourScale(lMatrix, breaks=8, dec=0)
+# image(
+#   newParamList[[1]]/1000, newParamList[[2]], lMatrix,
+#   col = myCol$col, breaks=myCol$breaks,
+#   xlab = names(newParamList)[1],
+#   ylab = names(newParamList)[2]
+# )
+# mapmisc::legendBreaks('topright', myCol)
 
 
 ```

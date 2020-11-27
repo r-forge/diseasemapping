@@ -35,7 +35,7 @@ lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
   likfitGpu <- function( modelname, mydat, type=c("double", "float"),
                          paramsBatch, #vclMatrix of parameter sets,Vbatch, # matern correlation vclmatrix,diagMat, # D of cholesky decomposition
                          betas=NULL, #a vclmatrix  #given by the user or provided from formula
-                         form = c("loglik", "ml", "mlFixBeta", "mlFixSigma", "reml", "remlPro"),
+                         form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),
                          workgroupSize,
                          localSize,
                          NlocalCache,
@@ -53,7 +53,7 @@ lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
      y <-  vclMatrix(yX[,1], nrow=n, ncol=1, type = type) 
      X <-  vclMatrix(yX[,c(2:(1+p))],type = type)
                            
-     form = c(loglik=1, ml=2, mlFixBeta=3, mlFixSigma=4, reml=5, remlPro=6)[form]
+     form = c(loglik=1, ml=2, mlFixSigma=3, mlFixBeta=4, reml=5, remlPro=6)[form]
      
      rowbatch = nrow(paramsBatch)
      colbatch = 1     #colbatch = ncol(y)
@@ -65,87 +65,100 @@ lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
      Vbatch = vclMatrix(0, nrow(paramsBatch)*n, n, type = type)
      diagMat = vclMatrix(0, nrow(paramsBatch), n, type = type) 
      
-     aTDa <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
-     nine <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
+     #ycpu<-as.matrix(y)
+     #xcpu<-as.matrix(X)
      
 # ########################## 1, loglik or ml(beta,sigma), given beta and sigma ##################################################
 
     # Vbatch=LDL^T, cholesky decomposition
     gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
+    vbatchcpu<-as.matrix(Vbatch)
+     
+     createspatialpoints <- SpatialPoints(sr2@coords, proj4string=CRS(as.character(NA)), bbox = NULL)
+     var4cpu = geostatsp::matern(
+       x=createspatialpoints,
+       param=drop(paramsBatch0[1,1:7])
+     )
+     dim(var4cpu)
+     vbatchcpu[1:100,]-var4cpu
+     diag(vbatchcpu[1:100,])-diag(var4cpu)
+     
+     
+     
+     
+     
     gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSizechol, NlocalCache=NlocalCache)
-
     
-    # temp = y-X*beta
-    temp <- y - gpuRandom::gemmBatch(X, betas, 1L, 1L, colbatch, need_transpose = FALSE, workgroupSize)
-    
-    # L * C = temp, backsolve for C
-    C <- vclMatrix(0, nrow(Vbatch), ncol(temp), type = gpuR::typeof(Vbatch))
-    
-    gpuRandom::backsolveBatch(C, Vbatch, temp, numbatchB=1L,  diagIsOne=TRUE,workgroupSize,  localSize,  NlocalCache)
+    #vbatchcpu<-as.matrix(Vbatch)
+    vbatchcpu[1:10,]-vbatchcpu[101:110,]
+    vbatchcpu[1:10,]-vbatchcpu[401:410,]
+    vbatchcpu[1:10,]-vbatchcpu[801:810,]
+    #Dcpu<-as.matrix(diagMat)
     
     
-    # one0 = C^T * D^(-1) * C = (y-X*betas)^T * V^(-1) * (y-X*betas)
-    one0 <- vclMatrix(0, rowbatch*colbatch, colbatch, type = gpuR::typeof(Vbatch))
-    one<- vclMatrix(0, nrow=rowbatch, ncol=colbatch, type = gpuR::typeof(Vbatch))
-  
-    gpuRandom:::crossprodBatchBackend(one0, C, diagMat,  invertD=TRUE,  workgroupSize, localSize, NlocalCache)
-
-    #
-    for (j in 1:colbatch){
-     for(i in 1:rowbatch){
-       one[i,j] <- one0[colbatch*(i-1)+j,j]
-     }
-    }
-
-    #onecpu<-as.matrix(one)
-    
-    # part1 = n*log(sigma^2)+log |D|
-   
     logD <- apply(log(diagMat),1,sum)
+    variances<-vclMatrix(paramsBatch[,3],nrow=rowbatch, ncol=1,type = type)
     
-    part1 <-n*log(paramsBatch[,3]) + logD
-    #replicate the part1 to do the plus operation
-    part1<- matrix(part1, nrow=length(part1), ncol=colbatch, byrow=F)
-    part1 <- vclMatrix(part1,type = gpuR::typeof(Vbatch))
-
-    # n*log(sigma^2)+log |D| + one/variances
-    variances<-vclMatrix(paramsBatch[,3],nrow=rowbatch, ncol=1,type = gpuR::typeof(Vbatch))
-    loglik <- part1 + one/variances
-
-   
-
-    ###################################2, ml or ml(hatbeta,hatsigma)############################################################
+    
+    
+    if (form == 1 | form == 3) { # to get one
+      # temp = y-X*beta
+      temp <- y - gpuRandom::gemmBatch(X, betas, 1L, 1L, colbatch, need_transpose = FALSE, workgroupSize)
+      
+      # L * A = temp, backsolve for A
+      A <- vclMatrix(0, nrow(Vbatch), ncol(temp), type = gpuR::typeof(Vbatch))
+      
+      gpuRandom::backsolveBatch(A, Vbatch, temp, numbatchB=1L,  diagIsOne=TRUE,workgroupSize,  localSize,  NlocalCache)
+      
+      
+      # one0 = A^T * D^(-1) * A = (y-X*betas)^T * V^(-1) * (y-X*betas)
+      one0 <- vclMatrix(0, rowbatch*colbatch, colbatch, type = gpuR::typeof(Vbatch))
+      one<- vclMatrix(0, nrow=rowbatch, ncol=colbatch, type = gpuR::typeof(Vbatch))
+      
+      gpuRandom:::crossprodBatchBackend(one0, A, diagMat,  invertD=TRUE,  workgroupSize, localSize, NlocalCache)
+      
+      #
+      for (j in 1:colbatch){
+        for(i in 1:rowbatch){
+          one[i,j] <- one0[colbatch*(i-1)+j,j]
+        }
+      }
+      
+      }else { # form == 2,4,5,6
     #profile = nlog hat_sigma^2 + log|D|
     # to get hat_sigma^2,  #L(a b) = (y X)
     ab <- vclMatrix(0, nrow(Vbatch), colbatch+p, type = gpuR::typeof(Vbatch))
     gpuRandom::backsolveBatch(ab, Vbatch, yX, numbatchB=1L, diagIsOne=TRUE, Nglobal=workgroupSize, Nlocal=localSize, 
-                               NlocalCache)
-    
-    # vbatchcpu<-as.matrix(Vbatch)
-    # abcpu<-as.matrix(ab)
-    # yxcpu<-as.matrix(yX)
-    # diagmatcpu<-as.matrix(diagMat)
-    
+                              NlocalCache)
+      
+    abcpu<-as.matrix(ab)
+    abcpu[1:100,]-abcpu[401:500,]
     # temp2 = (ab)^T * D^(-1) *ab
     temp2 <- vclMatrix(0, ncol(ab)*rowbatch, ncol(ab), type = gpuR::typeof(Vbatch))
     gpuRandom:::crossprodBatchBackend(temp2, ab, diagMat, invertD=TRUE, workgroupSize, localSize, NlocalCache)
-    
+
     #temp2cpu<-as.matrix(temp2)
     
-    # b^T * D^(-1) * b = Q * P * Q^T, cholesky of a subset of temp2
+    
+    # b^T * D^(-1) * b = Q * P * Q^T, cholesky of a subset (right bottom) of temp2
     diagP <- vclMatrix(0, rowbatch, p, type = gpuR::typeof(Vbatch))
     gpuRandom:::cholBatchBackend(temp2, diagP, c(colbatch, p, colbatch, p), c(0, rowbatch, 0, p), rowbatch, workgroupSize, localSizechol, NlocalCache) 
-    
-    # Q * temp3 = (b^T * D^(-1) *a), backsolve for temp3
+      
+    diagPcpu<-as.matrix(diagP)
+    # Q * temp3 = (b^T * D^(-1) *a), backsolve for temp3    2 by 1
     temp3 <- vclMatrix(0, rowbatch*p, colbatch, type = gpuR::typeof(Vbatch))
     gpuRandom:::backsolveBatchBackend(temp3, temp2, temp2,
-                          c(0,p,0,colbatch), c(colbatch, p, colbatch, p), c(colbatch, p, 0, colbatch),rowbatch,
-                          diagIsOne=TRUE, workgroupSize, localSize, NlocalCache)
+                                      c(0,p,0,colbatch), c(colbatch, p, colbatch, p), c(colbatch, p, 0, colbatch),rowbatch,
+                                      diagIsOne=TRUE, workgroupSize, localSize, NlocalCache)
+      
+    #temp3cpu<-as.matrix(temp3)
     
-    # nine = temp3^T * P^(-1) * temp3,  four 2 by 2 matrices
+    # nine0 = temp3^T * P^(-1) * temp3,  four 2 by 2 matrices
     nine0 <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
     gpuRandom:::crossprodBatchBackend(nine0, temp3, diagP, invertD=TRUE,  workgroupSize, localSize, NlocalCache) ##doesn't need selecting row/col
-    
+      
+    aTDa <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
+    nine <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))  
    
     #extract a^TDa from temp2
     for (j in 1:colbatch){
@@ -160,47 +173,46 @@ lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
       }
     }
     
-    #a^TDa - nine
     two = aTDa - nine
-    ml = n*log(two) + replicate(colbatch, logD)
+    }
     
-    ####################################3, mlFixBeta / or ml(beta,hatsigma)##############################################
-    mlFixBeta = n*log(one)+replicate(colbatch, logD)
-    
-    ####################################4, mlFixSigma / or ml(hatbeta,sigma)##############################################
-    mlFixSigma = part1 + two/variances
-    
-    
-    ####################################5, reml ##############################################
-    #(n-p) * log sigma^2 + log |D| + log |P| + two/sigma^2
+    if (form == 1 | form == 4){
+    #part1 = n*log(sigma^2)+log |D|
+    part1 <- n*log(paramsBatch[,3]) + logD
+    #replicate the part1 to do the plus operation
+    part1 <- matrix(part1, nrow=length(part1), ncol=colbatch, byrow=F)
+    part1 <- vclMatrix(part1,type = type)
+    }else if (form == 5 | form==6){
     logP <- apply(log(diagP),1,sum)
-    first_part <- (n-p)*log(paramsBatch[,3]) + logD + logP
-    reml <- replicate(colbatch, first_part) + two/variances
+    }
     
     
-    ##################################6, remlPro or reml(hatsigma) ################################################
-    #(n-p)*log two + log|D| + log|P|
-    remlPro <- (n-p)*log(two) + replicate(colbatch, (logD+logP))
-    
-    
-    if (form==1 ){
-      result = loglik
-    } else if (form==2){
-      result =  ml
-    } else if (form==3) {
-      result = mlFixBeta
-    } else if (form==4) {
-      result= mlFixSigma
-    }else if (form==5) {
-      result=reml
-    }else if (form==6) {
-      result=remlPro
+    if (form == 1 ) { #loglik
+      # n*log(sigma^2) + log |D| + one/variances
+      result <- part1 + one/variances
+    } else if (form == 2) {#ml
+      result = n*log(two) + replicate(colbatch, logD)
+    } else if (form == 3){ # mlFixSigma/ or ml(beta,hatsigma)
+      result = n*log(one)+replicate(colbatch, logD)
+    } else if (form == 4){ # mlFixBeta / or ml(hatbeta,sigma)
+      result = part1 + two/variances
+    } else if (form == 5){ #reml
+      first_part <- (n-p)*log(paramsBatch[,3]) + logD + logP
+      result <- replicate(colbatch, first_part) + two/variances
+    } else if (form == 6) { #remlPro  #(n-p)*log two + log|D| + log|P|
+      result <- (n-p)*log(two) + replicate(colbatch, (logD+logP))
     }
     
     result
   }
     
     
+    
+
+    
+    
+    
+
     
     
     

@@ -32,7 +32,7 @@ Set up spatial data
 ```{r setupData}
 
    Nsim = 4
-   Ngrid = c(15,20)
+   Ngrid = c(5,10)
    NlocalCache = 300
     NglobalMatern = c(64,8) 
     NlocalMatern = c(8, 4)
@@ -49,7 +49,7 @@ NlocalMatern = c(2,2)
 
 
 if(gpuR::gpuInfo()$deviceMemory > 10^10){
-   Ngrid = c(40,60)
+   Ngrid = c(5,10)
    Nsim = 6
    NlocalCache = 4000
    NglobalMatern = c(256,8) 
@@ -151,18 +151,19 @@ range(var4cpu - as.matrix(var4gpu))
 ```
 
 # Cholesky
-
-
 ```{r cholBach, eval = F}
 diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), type = gpuR::typeof(outputBatchF))
 
 outputChol = vclMatrix(0, nrow(outputBatchF), ncol(outputBatchF), type = gpuR::typeof(outputBatchF))
 
-system.time(gpuRandom:::cholBatchBackend(
-  outputChol, diagMat, 
+system.time(gpuRandom::cholBatch(
+  outputChol, diagMat, numbatchD=nrow(myParamsBatch),
   Nglobal = NglobalChol,
   Nlocal = NlocalChol,
   NlocalCache = NlocalCache))
+
+as.matrix(outputChol[1:12,1:7])
+as.matrix(diagMat[1:12,1:7])
 ```
 
 ```{r cholBatchCpu, include=FALSE, eval=F}
