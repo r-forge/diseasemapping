@@ -258,8 +258,8 @@ std::string maternBatchKernelString(
     "     }\n" // Dcell
     "  }\n" // Dmatrix
     "}// if local0\n\n";
-
-
+  
+  
   result +=    
     "for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += get_global_size(0)) {\n";
   
@@ -274,8 +274,8 @@ std::string maternBatchKernelString(
     "	localDist[get_local_id(0)].y = coords[DlocalParam +1] - coords[k +1];\n"
     "}\n\n"
     "barrier(CLK_LOCAL_MEM_FENCE);\n";
-
-
+  
+  
   result +=    
     "for(Dmatrix = get_global_id(1); Dmatrix < Nmatrix; Dmatrix += get_global_size(1) ) {\n";
   result +=    
@@ -308,8 +308,7 @@ std::string maternBatchKernelString(
     "       localParams[DlocalParam + 14]);\n"//, &K_nu, &K_nup1);\n"
     
     "	} else { \n"// if short distance gsl_sf_bessel_K_scaled_temme
-    "K_nuK_nup1 = ln_half_x;\n"
-#ifdef UNDEF
+    
     "K_nuK_nup1=maternShort(ln_half_x, maternBit, expMaternBit,\n"
     //" mu[Dmatrix], muSq[Dmatrix]," 
     " localParams[DlocalParam + 13], localParams[DlocalParam + 14],\n"
@@ -319,36 +318,38 @@ std::string maternBatchKernelString(
     //			" g_1pnu[Dmatrix], g_1mnu[Dmatrix]," 
     " localParams[DlocalParam + 19], localParams[DlocalParam + 20]);\n"
     //    " &K_nu, &K_nup1);\n"
-#endif    
+    
     "   }\n";
-#ifdef UNDEF      
-      result +=
-        " nuround = (int) (localParams[DlocalParam+16]);\n"
-        "for(k=0; k<nuround; k++) {\n"
-        //    "      K_num1 = K_nu;\n"
-        "       K_num1 = K_nuK_nup1.x;\n"
-        //    "      K_nu   = K_nup1;\n"
-        "       K_nuK_nup1.x = K_nuK_nup1.y;\n"
-        
-        //   "      K_nup1 = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nu + K_num1;\n"
-        "       K_nuK_nup1.y = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nuK_nup1.x  + K_num1;\n"
-        "}\n";
-#endif      
-      result +=
-        
-        "\n#ifdef assignLower\n"
-        "  result[Dmatrix * NpadBetweenMatrices +  Dcol[get_local_id(0)]  +  Drow[get_local_id(0)] * Npad] ="
-        "K_nuK_nup1.x;\n" // lower triangle
-        "#endif\n"
-        "#ifdef assignUpper\n"
-        "  result[Dmatrix * NpadBetweenMatrices + Drow[get_local_id(0)] + Dcol[get_local_id(0)] * Npad] ="
-        " K_nuK_nup1.x;\n"//K_nu;\n" // upper triangle
-        "#endif\n\n";
-      
-      
-      result += "} // Dmatrix\n"
-      "barrier(CLK_LOCAL_MEM_FENCE);\n";
 
+#ifdef UNDEF
+  result +=
+    " nuround = (int) (localParams[DlocalParam+16]);\n"
+    "for(k=0; k<nuround; k++) {\n"
+    //    "      K_num1 = K_nu;\n"
+    "       K_num1 = K_nuK_nup1.x;\n"
+    //    "      K_nu   = K_nup1;\n"
+    "       K_nuK_nup1.x = K_nuK_nup1.y;\n"
+    
+    //   "      K_nup1 = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nu + K_num1;\n"
+    "       K_nuK_nup1.y = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nuK_nup1.x  + K_num1;\n"
+    "}\n";
+#endif  
+  
+  result +=
+    
+    "\n#ifdef assignLower\n"
+    "  result[Dmatrix * NpadBetweenMatrices +  Dcol[get_local_id(0)]  +  Drow[get_local_id(0)] * Npad] ="
+    "K_nuK_nup1.x;\n" // lower triangle
+    "#endif\n"
+    "#ifdef assignUpper\n"
+    "  result[Dmatrix * NpadBetweenMatrices + Drow[get_local_id(0)] + Dcol[get_local_id(0)] * Npad] ="
+    " K_nuK_nup1.y;\n"//K_nu;\n" // upper triangle
+    "#endif\n\n";
+  
+  
+  result += "} // Dmatrix\n"
+  "barrier(CLK_LOCAL_MEM_FENCE);\n";
+  
   result += "} // Dcell\n";
   result +=     "\n#ifdef assignDiag\n"
   
@@ -407,7 +408,7 @@ void fill22params(
     mu = shape - nuround;
     pi_nu = M_PI * mu,
       
-    Rtemme_gamma(&mu, &g_1pnu, &g_1mnu, &g1, &g2);
+      Rtemme_gamma(&mu, &g_1pnu, &g_1mnu, &g1, &g2);
     
     
     param(D, 7) = (T) cos(theta);
@@ -465,7 +466,7 @@ template<typename T> void maternBatchVcl(
 {
   
   const int 
-    N = vclCoords.size1(),
+  N = vclCoords.size1(),
     Nmatrix = param.size1(),
     Npad = vclVar.internal_size2(),
     NpadBetweenMatrices = Npad*N; // change to Npad*(Nmat+k) to insert extra rows between matrices
@@ -559,10 +560,6 @@ void maternBatchBackend(
     Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
   }
 }
-
-
-
-
 
 
 

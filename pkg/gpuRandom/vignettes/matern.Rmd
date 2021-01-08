@@ -32,7 +32,7 @@ Set up spatial data
 ```{r setupData}
 
    Nsim = 4
-   Ngrid = c(5,10)
+   Ngrid = c(4,5)
    NlocalCache = 300
     NglobalMatern = c(64,8) 
     NlocalMatern = c(8, 4)
@@ -49,7 +49,7 @@ NlocalMatern = c(2,2)
 
 
 if(gpuR::gpuInfo()$deviceMemory > 10^10){
-   Ngrid = c(5,10)
+   Ngrid = c(4,5)
    Nsim = 6
    NlocalCache = 4000
    NglobalMatern = c(256,8) 
@@ -67,7 +67,6 @@ myRaster = raster::raster(
     Ngrid[1], Ngrid[2]
   )
 coordsSp = sp::SpatialPoints(raster::xyFromCell(myRaster, 1:raster::ncell(myRaster)))
-
 head(coordsSp@coords,15)
 
 ```
@@ -78,64 +77,25 @@ head(coordsSp@coords,15)
 
 ```{r paramsBatch}
 myParamsBatch = rbind(
-c(shape=1.25, range=0.5, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
-
-c(shape=2.15, range=0.25, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = pi/7),
-
-c(shape=0.55, range=1.5, variance = 2, nugget = 0, anisoRatio = 4,  anisoAngleRadians = pi/7),
-
-c(shape=2.15, range=0.5, variance = 2, nugget = 0.5, anisoRatio = 4, anisoAngleRadians = -pi/7),
-
-c(shape=2.15, range=4, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/4))
+c(shape=5.9, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
+c(shape=6, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0)) 
+# c(shape=3, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
+# c(shape=4, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
+# c(shape=5, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0) )
 
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
 myParamsBatch
 myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch)))
-
 ```
 
 ```{r outputBatchCreate, eval=T}
 library(gpuR)
 coordsGpu = vclMatrix(coordsSp@coords, nrow(coordsSp@coords), ncol(coordsSp@coords), type=theType)
-
 paramsGpu = vclMatrix(myParamsBatch, type=gpuR::typeof(coordsGpu))
-
 outputBatchF = vclMatrix(0, nrow(paramsGpu)*nrow(coordsGpu), nrow(coordsGpu), type=gpuR::typeof(paramsGpu))
 
 class(outputBatchF)
 ```
-
-problem is maternShort call
-
-1- check order of parameters
-2- check the fill22params
-3- comment out bits of kernel and retun distance or other things
-
-```{r batchMaternSwussRaub, eval=T}
-data('swissRain', package='geostatsp')
-sr2 = swissRain[1:4,]
-sr2@coords = sr2@coords
-dist(sr2@coords)
-myParamsSR = geostatsp::fillParam(c(
-  variance=2,nugget=1, anisoAngleRadians=0,
-  range=12*1000, shape=1, anisoRatio = 1))
-
-myParamsBatchSR1 = rbind(myParamsSR, myParamsSR)
-myParamsBatchSR = cbind(myParamsBatchSR1, 
-        matrix(0, nrow(myParamsBatchSR1), 22-ncol(myParamsBatchSR1)))
-
-outputSwissRain = vclMatrix(0, 
-        nrow(myParamsBatchSR)*length(sr2),length(sr2),type='double')
-gpuRandom:::maternBatchBackend(
-    var=outputSwissRain,
-    coords=vclMatrix(sr2@coords, type='double'), 
-    param=vclMatrix(myParamsBatchSR, type='double'),  
-    Nglobal = c(1,1,1), 
-    Nlocal = c(1,1,1))
-geostatsp::matern(sr2, myParamsSR)
-as.matrix(outputSwissRain)
-```
-
 
 ```{r batchMatern, eval=T}
 system.time(gpuRandom:::maternBatchBackend(
@@ -145,8 +105,44 @@ system.time(gpuRandom:::maternBatchBackend(
     Nglobal = NglobalMatern, 
     Nlocal = NlocalMatern))
 dim(outputBatchF)
-as.matrix(outputBatchF[1:12,1:7])
+
+gpuRandom:::maternBatchBackend(
+    outputBatchF,
+    coordsGpu, 
+    paramsGpu,  
+    Nglobal = NglobalMatern, 
+    Nlocal = NlocalMatern)
+fromCpu = geostatsp::matern(
+    x=coordsSp,
+    param=drop(myParamsBatch[1,1:7])
+    )
+fromCpu[1:8,1:8]
+as.matrix(outputBatchF[1:8,1:8])
+#as.matrix(1000*outputBatchF[1:8,1:8])
+as.matrix(outputBatchF[21:28,1:8])
+
+#################
+#upper
+thisx = as.matrix(dist(coordsSp@coords)/5)
+#lower
+ln_half_x = log(thisx/2)
+
+####compare
+as.matrix(outputBatchF[1:8,1:8])
+thisx[1:8,1:8]
+as.matrix(outputBatchF[1:8,1:8])
+ln_half_x[1:8,1:8]
+
+#lower
+lower<-outer(coordsSp@coords[,1], coordsSp@coords[,1], FUN = '-')
+lower[1:8,1:8]
 ```
+
+
+
+
+
+
 
 
 
@@ -315,9 +311,149 @@ solve(L, as.matrix(simMat[1:ncol(outputChol),]))[1:12, ]
 ```
 
 
+# matern again
+
+```{r matern test Nov23,2020, eval=F}
+library('geostatsp')
+data('swissRain')
+sr2 = swissRain[1:20,]
+
+# extract variables for modeling
+sr2$sqrtY = sqrt(sr2$rain)
+sr2$elev = raster::extract(swissAltitude, sr2)
+
+
+swissFitIso = likfitLgm(
+  data=sr2,
+  formula=sqrtY ~ elev,
+  param=c(range=15,shape=1,nugget=0),
+  reml=FALSE,
+  verbose=FALSE
+)
+
+swissFitIso$parameters
+
+# newParamList = list(
+#   range=seq(15, 50 , len=3)*1000,
+#   nugget = seq(0.01,0.5,len=3)
+# )
+# newParam= do.call(expand.grid, newParamList)
+# 
+# otherparams = c(shape=1, variance = 1.5, anisoRatio = 1, anisoAngleRadians = 0)
+# otherparams = matrix(rep(otherparams,each=nrow(newParam)),nrow=nrow(newParam))
+# colnames(otherparams) <- c("shape","variance", "anisoRatio", "anisoAngleRadians")
+# paramsBatch0 = cbind(newParam, otherparams)
+paramsBatch0 = rbind(c(shape=1.25, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
+                     c(shape=1.25, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
+                     c(shape=1.25, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
+                     c(shape=1.25, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
+
+paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
+paramsBatch = vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0), 22-ncol(paramsBatch0))),type="double")
+paramscpu<-as.matrix(paramsBatch)
+workgroupSize=c(64,16,16)
+localSize = c(4,4,1)
+NlocalCache=50
+
+#betas=NULL
+#form="ml"
+type="double"
+#covariates = model.matrix(swissFitIso$model$formula, data=swissFitIso$data)
+temp = model.frame(swissFitIso$model$formula, data=swissFitIso$data)
+response=temp[,as.character(attributes(terms(temp))$variables)[2]]
+#yX=vclMatrix(cbind(response,covariates),type=type)
+coordsGpu<-vclMatrix(sr2@coords/1000,type=type)
+n = length(response)
+#p = ncol(covariates)
+
+
+ # form = c(loglik=1, ml=2, mlFixSigma=3, mlFixBeta=4, reml=5, remlPro=6)[form]
+ # rowbatch = nrow(paramsBatch)
+ # colbatch = 1     #colbatch = ncol(y)
+   
+ # localSizechol<-localSize
+ # localSizechol[2]<-workgroupSize[2]
+    
+ Vbatch = vclMatrix(0, nrow(paramsBatch)*n, n, type = type)
+ diagMat = vclMatrix(0, nrow(paramsBatch), n, type = type) 
+     
+     #ycpu<-as.matrix(y)
+     #xcpu<-as.matrix(X)
+     
+  # 
+ gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
+ vbatchcpu<-as.matrix(Vbatch)
+ vbatchcpu[1:6,1:6]
+ var4cpu[1:6,1:6]
+ diag(vbatchcpu[1:20,])
+     
+ 
+ var4cpu = geostatsp::matern(
+      x=sr2,
+      param=drop(paramsBatch0[1,1:7]))
+ 
+ quantile(var4cpu-vbatchcpu[1:20,])
+     
+ dim(var4cpu)
+ vbatchcpu[1:20,]-var4cpu
+ diag(vbatchcpu[1:20,])-diag(var4cpu)
+
+
+#################
+#upper
+thisx = as.matrix(dist(sr2@coords/1000)/5)
+
+#lower
+ln_half_x = log(thisx/2)
+
+vbatchcpu[1:7,1:7]
+thisx[1:7,1:7]
+vbatchcpu[1:7,1:7]
+ln_half_x[1:7,1:7]
+
+if anisotriopc then rotate coordinates before takking distance matrix.
+
+see line 283 in maternBatch.cpp 
 
 
 
+
+
+    
+
+
+```
+
+problem is maternShort call
+
+1- check order of parameters
+2- check the fill22params
+3- comment out bits of kernel and retun distance or other things
+
+```{r batchMaternSwussRaub, eval=T}
+data('swissRain', package='geostatsp')
+sr2 = swissRain[1:4,]
+sr2@coords = sr2@coords
+dist(sr2@coords)
+myParamsSR = geostatsp::fillParam(c(
+  variance=2,nugget=1, anisoAngleRadians=0,
+  range=12*1000, shape=1, anisoRatio = 1))
+
+myParamsBatchSR1 = rbind(myParamsSR, myParamsSR)
+myParamsBatchSR = cbind(myParamsBatchSR1, 
+        matrix(0, nrow(myParamsBatchSR1), 22-ncol(myParamsBatchSR1)))
+
+outputSwissRain = vclMatrix(0, 
+        nrow(myParamsBatchSR)*length(sr2),length(sr2),type='double')
+gpuRandom:::maternBatchBackend(
+    var=outputSwissRain,
+    coords=vclMatrix(sr2@coords, type='double'), 
+    param=vclMatrix(myParamsBatchSR, type='double'),  
+    Nglobal = c(1,1,1), 
+    Nlocal = c(1,1,1))
+geostatsp::matern(sr2, myParamsSR)
+as.matrix(outputSwissRain)
+```
 # extra info
 
 ```{r gpuInfo, echo=TRUE}
