@@ -119,6 +119,7 @@ std::string maternBatchKernelString(
   "			sigma   = - mu * ln_half_x;\n"
   "			half_x_nu = exp(-sigma);\n"
   "			sinhrat = sinh(sigma)/sigma;\n"
+  "     if(isnan(sinhrat)) sinhrat = 1.0;\n"
   // save sinrat*g1 and sinrat*g2?
   "			fk = sinrat * (cosh(sigma)*g1 - sinhrat*ln_half_x*g2);\n"
   "			pk = 0.5/half_x_nu * g_1pnu;\n"
@@ -320,8 +321,7 @@ std::string maternBatchKernelString(
     //    " &K_nu, &K_nup1);\n"
     
     "   }\n";
-
-#ifdef UNDEF
+  
   result +=
     " nuround = (int) (localParams[DlocalParam+16]);\n"
     "for(k=0; k<nuround; k++) {\n"
@@ -333,7 +333,6 @@ std::string maternBatchKernelString(
     //   "      K_nup1 = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nu + K_num1;\n"
     "       K_nuK_nup1.y = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nuK_nup1.x  + K_num1;\n"
     "}\n";
-#endif  
   
   result +=
     
@@ -343,7 +342,7 @@ std::string maternBatchKernelString(
     "#endif\n"
     "#ifdef assignUpper\n"
     "  result[Dmatrix * NpadBetweenMatrices + Drow[get_local_id(0)] + Dcol[get_local_id(0)] * Npad] ="
-    " K_nuK_nup1.y;\n"//K_nu;\n" // upper triangle
+    " K_nuK_nup1.x;\n"//K_nu;\n" // upper triangle
     "#endif\n\n";
   
   
@@ -560,8 +559,4 @@ void maternBatchBackend(
     Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
   }
 }
-
-
-
-
 

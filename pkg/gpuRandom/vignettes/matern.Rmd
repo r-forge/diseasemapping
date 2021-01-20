@@ -5,7 +5,6 @@
 
 
 # Matern correlations
-
 ```{r date}
 date()
 ```
@@ -13,7 +12,8 @@ date()
 
 
 ```{r packages, results='hide', message='hide'}
-library('gpuR')
+   library(gpuR)
+   library(gpuRandom)
 ```
 
 
@@ -28,9 +28,7 @@ gpuInfo()$maxAllocatableMem/(1024^3)
 ```
 
 Set up spatial data
-
 ```{r setupData}
-
    Nsim = 4
    Ngrid = c(4,5)
    NlocalCache = 300
@@ -68,74 +66,64 @@ myRaster = raster::raster(
   )
 coordsSp = sp::SpatialPoints(raster::xyFromCell(myRaster, 1:raster::ncell(myRaster)))
 head(coordsSp@coords,15)
-
+dist(coordsSp@coords)
 ```
 
 
 
 # Batch matern
-
 ```{r paramsBatch}
 myParamsBatch = rbind(
-c(shape=5.9, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
-c(shape=6, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0)) 
+c(shape=5.99, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
+c(shape=6, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
+c(shape=6.01, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0)) 
 # c(shape=3, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
 # c(shape=4, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
 # c(shape=5, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0) )
 
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
-myParamsBatch
 myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch)))
+myParamsBatch
 ```
 
 ```{r outputBatchCreate, eval=T}
-library(gpuR)
 coordsGpu = vclMatrix(coordsSp@coords, nrow(coordsSp@coords), ncol(coordsSp@coords), type=theType)
 paramsGpu = vclMatrix(myParamsBatch, type=gpuR::typeof(coordsGpu))
 outputBatchF = vclMatrix(0, nrow(paramsGpu)*nrow(coordsGpu), nrow(coordsGpu), type=gpuR::typeof(paramsGpu))
-
-class(outputBatchF)
 ```
 
 ```{r batchMatern, eval=T}
-system.time(gpuRandom:::maternBatchBackend(
-    outputBatchF,
-    coordsGpu, 
-    paramsGpu,  
-    Nglobal = NglobalMatern, 
-    Nlocal = NlocalMatern))
-dim(outputBatchF)
-
 gpuRandom:::maternBatchBackend(
     outputBatchF,
     coordsGpu, 
     paramsGpu,  
     Nglobal = NglobalMatern, 
     Nlocal = NlocalMatern)
+
+#finalparamsbatch = as.matrix(paramsGpu)
 fromCpu = geostatsp::matern(
     x=coordsSp,
     param=drop(myParamsBatch[1,1:7])
     )
 fromCpu[1:8,1:8]
 as.matrix(outputBatchF[1:8,1:8])
-#as.matrix(1000*outputBatchF[1:8,1:8])
 as.matrix(outputBatchF[21:28,1:8])
-
+as.matrix(outputBatchF[41:48,1:8])
 #################
-#upper
-thisx = as.matrix(dist(coordsSp@coords)/5)
-#lower
-ln_half_x = log(thisx/2)
-
-####compare
-as.matrix(outputBatchF[1:8,1:8])
-thisx[1:8,1:8]
-as.matrix(outputBatchF[1:8,1:8])
-ln_half_x[1:8,1:8]
-
-#lower
-lower<-outer(coordsSp@coords[,1], coordsSp@coords[,1], FUN = '-')
-lower[1:8,1:8]
+# #upper
+# thisx = as.matrix(dist(coordsSp@coords)/5)
+# #lower
+# ln_half_x = log(thisx/2)
+# 
+# ####compare
+# as.matrix(outputBatchF[1:8,1:8])
+# thisx[1:8,1:8]
+# as.matrix(outputBatchF[1:8,1:8])
+# ln_half_x[1:8,1:8]
+# 
+# #lower
+# lower<-outer(coordsSp@coords[,1], coordsSp@coords[,1], FUN = '-')
+# lower[1:8,1:8]
 ```
 
 
@@ -146,7 +134,7 @@ lower[1:8,1:8]
 
 
 
-```{r batchMaternCompare, include=TRUE, eval=TRUE}
+```{r batchMaternCompare, include=TRUE, eval=FALSE}
 # Compare output to geostatsp's matern
 
 fromCpu = geostatsp::matern(
@@ -424,13 +412,9 @@ see line 283 in maternBatch.cpp
 
 ```
 
-problem is maternShort call
 
-1- check order of parameters
-2- check the fill22params
-3- comment out bits of kernel and retun distance or other things
 
-```{r batchMaternSwussRaub, eval=T}
+```{r batchMaternSwussRaub, eval=FALSE}
 data('swissRain', package='geostatsp')
 sr2 = swissRain[1:4,]
 sr2@coords = sr2@coords

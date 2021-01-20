@@ -4,11 +4,11 @@
 -->
 
 
-```{r test_preparation, message=FALSE, eval=FALSE}
+```{r test_on_cpu, message=FALSE, eval=FALSE}
 library(gpuR)
 library(geostatsp)
 set.seed(1)
-n=40
+n=20
 mydat = SpatialPointsDataFrame(cbind(runif(n), seq(0,1,len=n)), 
 	data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 2))
 	)
@@ -24,100 +24,29 @@ mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + mydat$sim + rnorm(length(mydat)
 myres = likfitLgm(
 	formula=Y ~ cov1 + cov2, 
 	data=mydat, 
-	param=c(variance=1.5,range=0.5,nugget=0.25,shape=1.25), reml=FALSE)
+	param=c(variance=1.5,range=0.5, shape=1.25, nugget=0.25), reml=FALSE)
 #variance parameter and regression coefficients are always estimated even if not listed.
-myres$summary[,1:4]
+# produces mles of parameters
+myres$parameters
 myres$summary[c("(Intercept)","cov1","cov2"),1] 
-# -2.9486083  0.5618399  0.2718926
 
-# calculate likelihood
-trueParam1 = c(variance=1.5, range=0.5, shape=1.25, nugget=0.25, anisoRatio = 1, anisoAngleRadins=0)
+
+# calculate log-likelihood
 temp0=loglikLgm(param=myres$parameters, 
 		data=mydat, 
 		formula = Y ~ cov1 + cov2,
 		reml=FALSE, minustwotimes=TRUE)
 temp0
-#-2.9590085   0.5520393   0.2788058 
-#-2.9693862   0.5435322   0.2857668
+
 ```
 
 
 
-
-
-
-
-
-```{r test3_oncpu, echo=FALSE, eval=FALSE}
-# start here
-ycpu<-mydat$Y
-Xcpu<-as.matrix(cbind(c(rep(1, n)),mydat$cov1,mydat$cov2))
-betas<-c( -2.9486083,  0.5618399,  0.2718926)
-
-tempcpu2<-ycpu-Xcpu%*%betas
-
-Vbatch = vclMatrix(0, nrow(paramsBatch)*nrow(y), nrow(y), type="double")
-diagMat = vclMatrix(0, nrow(paramsBatch), ncol(Vbatch), type = "double")
-gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
-gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache=NlocalCache)
-
-L<-as.matrix(Vbatch)
-library(gdata)
-upperTriangle(L, diag=FALSE, byrow=FALSE) <- 0
-diag(L)<-1
-
-C2<-solve(L, tempcpu2)
-
-
-#######
-diag2<-matrix(0,nrow=n, ncol=n)
-diag(diag2)<-as.matrix(diagMat)
-
-###C^T * D^(-1) * C
-result2<-t(C2)%*% solve(diag2) %*%C2
-
-
-#5, part1 = n*log(sigma^2)+log |D|
-   
-logD <- apply(log(diagMat),1,sum)
-    
-part1 <-n*log(paramsBatch[,3]) + logD
-    
-#6,
-  
-loglik2 <- part1 + result2/paramsBatch[,3]
-```
-
-
-
-
-
-```{r test2, eval=F}
-library(gpuR)
-library(geostatsp)
-set.seed(1)
-n=40
-mydat = SpatialPointsDataFrame(cbind(runif(n), seq(0,1,len=n)), 
-	data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 2))
-	)
-
-# simulate a random field
-mydat@data= cbind(mydat@data , RFsimulate(model=c(variance=1.5,range=0.5,nugget=0.25,shape=1.25,anisoRatio = 1, anisoAngleRadins=0),x=mydat)@data)
-
-# add fixed effects
-mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + mydat$sim + rnorm(length(mydat), 0, sd=sqrt(0.25))
-
-# fit the model
-myres = likfitLgm(
-	formula=Y ~ cov1 + cov2, 
-	data=mydat, 
-	param=c(variance=1.5,range=0.5,nugget=0.25,shape=1.25), reml=FALSE)
-
-
-paramsBatch = rbind(c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
- c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
- c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
- c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0))
+```{r test on gpu, eval=F}
+paramsBatch = rbind(c(shape=1.25, range=0.2641423, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
+ # c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
+ # c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
+ # c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0))
 
 paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam));    paramsBatch
 paramsBatch = vclMatrix(cbind(paramsBatch, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),type="double")
@@ -141,7 +70,60 @@ as.matrix(temp2)
 
 
 
-```{r test Nov20,eval=TRUE}
+
+
+
+```{r test_using_cpu_funtions, echo=FALSE, eval=FALSE}
+ycpu<-mydat$Y
+Xcpu<-as.matrix(cbind(c(rep(1, n)),mydat$cov1,mydat$cov2))
+betas<-c(  -2.9630175,  0.6672477,  0.3847218)
+
+tempcpu2<-ycpu-Xcpu%*%betas
+
+# one batch parameters
+paramsBatch = rbind(c(shape=1.25, range=0.2641423, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
+paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam));    paramsBatch
+
+materncpu = geostatsp::matern(
+    x=mydat,
+    param=drop(paramsBatch[1,1:7])
+    )
+
+cholCpu = as.matrix(chol(materncpu))
+theDiag = diag(cholCpu)
+L = cholCpu %*% diag(1/theDiag)
+D = diag(theDiag^2)
+
+# L<-as.matrix(Vbatch)
+# library(gdata)
+# upperTriangle(L, diag=FALSE, byrow=FALSE) <- 0
+# diag(L)<-1
+
+A<-solve(L, tempcpu2)
+
+###C^T * D^(-1) * C
+one0<-t(A)%*% solve(D) %*%A
+
+
+#5, part1 = n*log(sigma^2)+log |D|
+logD<-  sum(log(diag(D)))
+#logD <- apply(log(D),1,sum)
+part1 <-n*log(paramsBatch[,3]) + logD
+    
+#6,
+loglik2 <- part1 + one0/paramsBatch[,3]
+
+
+#19.45533
+```
+
+
+
+
+
+
+
+```{r test Nov20,eval=F}
 library('geostatsp')
 data('swissRain')
 sr2 = swissRain[1:20,]
@@ -150,10 +132,11 @@ sr2 = swissRain[1:20,]
 sr2$sqrtY = sqrt(sr2$rain)
 sr2$elev = raster::extract(swissAltitude, sr2)
 
+# build spatial model
 swissFitIso = likfitLgm(
   data=sr2,
   formula=sqrtY ~ elev,
-  param=c(range=10,shape=1,nugget=0),
+  param=c(range=10,shape=1,nugget=0.5),
   reml=FALSE,
   verbose=FALSE
 )
@@ -161,8 +144,8 @@ swissFitIso = likfitLgm(
 swissFitIso$parameters
 
 newParamList = list(
-  range=seq(15, 50 , len=3),
-  nugget = seq(0.01,0.5,len=3)
+  range=seq(15, 50 , len=1),
+  nugget = seq(0.4,0.6,len=1)
 )
 newParam= do.call(expand.grid, newParamList)
 
@@ -174,7 +157,7 @@ paramsBatch0 = cbind(newParam, otherparams)
 
 
 paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
-paramsBatch = vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),type="double")
+paramsBatch = vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0), 22-ncol(paramsBatch0))),type="double")
 
 #paramscpu<-as.matrix(paramsBatch)
 
@@ -188,7 +171,7 @@ temp=gpuRandom::likfitGpu(swissFitIso,sr2, type="double",
   workgroupSize,localSize, NlocalCache)
 
 as.matrix(temp)
-
+as.matrix(result)
 # lMatrix = matrix(temp, length(newParamList[[1]]), length(newParamList[[2]]))
 # 
 # myCol = mapmisc::colourScale(lMatrix, breaks=8, dec=0)
