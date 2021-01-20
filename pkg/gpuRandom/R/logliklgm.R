@@ -64,7 +64,13 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
         
         Vbatch = vclMatrix(0, nrow(paramsBatch)*n, n, type = type)
         diagMat = vclMatrix(0, nrow(paramsBatch), n, type = type) 
+        ab <- vclMatrix(0, nrow(Vbatch), colbatch+p, type = gpuR::typeof(Vbatch))
+        temp2 <- vclMatrix(0, ncol(ab)*rowbatch, ncol(ab), type = gpuR::typeof(Vbatch))
+        diagP <- vclMatrix(0, rowbatch, p, type = gpuR::typeof(Vbatch))
+        temp3 <- vclMatrix(0, rowbatch*p, colbatch, type = gpuR::typeof(Vbatch))
         
+        nine0 <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
+        aTDa <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
         # ########################## 1, loglik or ml(beta,sigma), given beta and sigma #############################
         
         # Vbatch=LDL^T, cholesky decomposition
@@ -104,31 +110,24 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
         }else { # form == 2,4,5,6
                 #profile = nlog hat_sigma^2 + log|D|
                 # to get hat_sigma^2,  #L(a b) = (y X)
-                ab <- vclMatrix(0, nrow(Vbatch), colbatch+p, type = gpuR::typeof(Vbatch))
                 gpuRandom::backsolveBatch(ab, Vbatch, yX, numbatchB=1L, diagIsOne=TRUE, Nglobal=workgroupSize, Nlocal=localSize, 
                                           NlocalCache)
                 
 
                 # temp2 = (ab)^T * D^(-1) *ab
-                temp2 <- vclMatrix(0, ncol(ab)*rowbatch, ncol(ab), type = gpuR::typeof(Vbatch))
                 gpuRandom:::crossprodBatchBackend(temp2, ab, diagMat, invertD=TRUE, workgroupSize, localSize, NlocalCache)
                 
                 # b^T * D^(-1) * b = Q * P * Q^T, cholesky of a subset (right bottom) of temp2
-                diagP <- vclMatrix(0, rowbatch, p, type = gpuR::typeof(Vbatch))
                 gpuRandom:::cholBatchBackend(temp2, diagP, c(colbatch, p, colbatch, p), c(0, rowbatch, 0, p), rowbatch, workgroupSize, localSizechol, NlocalCache) 
                 
                 # Q * temp3 = (b^T * D^(-1) *a), backsolve for temp3    2 by 1
-                temp3 <- vclMatrix(0, rowbatch*p, colbatch, type = gpuR::typeof(Vbatch))
                 gpuRandom:::backsolveBatchBackend(temp3, temp2, temp2,
                                                   c(0,p,0,colbatch), c(colbatch, p, colbatch, p), c(colbatch, p, 0, colbatch),rowbatch,
                                                   diagIsOne=TRUE, workgroupSize, localSize, NlocalCache)
                 
 
                 # nine0 = temp3^T * P^(-1) * temp3,  four 2 by 2 matrices
-                nine0 <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
                 gpuRandom:::crossprodBatchBackend(nine0, temp3, diagP, invertD=TRUE,  workgroupSize, localSize, NlocalCache) ##doesn't need selecting row/col
-                
-                aTDa <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
                 
                 # won't need if there is just one y batch (if colbatch=1)
                 #nine <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))  
@@ -139,14 +138,12 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
                                 aTDa[i,j]= temp2[(i-1)*ncol(ab)+j, j]
                         }
                 }
-                #extract needed cells from nine0
-                # won't need if there is just one y batch (if colbatch=1)
+                #extract needed cells from nine0 # won't need if there is just one y batch (if colbatch=1)
                 # for (j in 1:colbatch){
                 #         for (i in 1:rowbatch){
                 #                 nine[i,j]= nine0[(i-1)*colbatch+j, j]
                 #         }
                 # }
-                
                 two = aTDa - nine0
         }
         
@@ -159,6 +156,9 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
         }else if (form == 5 | form==6){
                 logP <- apply(log(diagP),1,sum)
         }
+        
+        
+       
         
         
         if (form == 1 ) { #loglik

@@ -123,7 +123,7 @@ loglik2 <- part1 + one0/paramsBatch[,3]
 
 
 
-```{r test Nov20,eval=F}
+```{r test_using_new_example_Nov20,eval=T}
 library('geostatsp')
 data('swissRain')
 sr2 = swissRain[1:20,]
@@ -171,7 +171,7 @@ temp=gpuRandom::likfitGpu(swissFitIso,sr2, type="double",
   workgroupSize,localSize, NlocalCache)
 
 as.matrix(temp)
-as.matrix(result)
+
 # lMatrix = matrix(temp, length(newParamList[[1]]), length(newParamList[[2]]))
 # 
 # myCol = mapmisc::colourScale(lMatrix, breaks=8, dec=0)
