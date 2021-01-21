@@ -37,6 +37,33 @@ temp0=loglikLgm(param=myres$parameters,
 		formula = Y ~ cov1 + cov2,
 		reml=FALSE, minustwotimes=TRUE)
 temp0
+#minusTwoLogLik 
+#      52.20254 
+
+#52.20254-56.21288=-4.01034
+
+# fit the model second time with different parameters
+myres = likfitLgm(
+	formula=Y ~ cov1 + cov2, 
+	data=mydat, 
+	param=c(variance=5.5,range=10, shape=3, nugget=0.75), reml=FALSE)
+#variance parameter and regression coefficients are always estimated even if not listed.
+# produces mles of parameters
+myres$parameters
+myres$summary[c("(Intercept)","cov1","cov2"),1] 
+
+
+# calculate log-likelihood
+temp0=loglikLgm(param=myres$parameters, 
+		data=mydat, 
+		formula = Y ~ cov1 + cov2,
+		reml=FALSE, minustwotimes=TRUE)
+temp0
+#minusTwoLogLik 
+#      53.73501 
+myres$summary[c("(Intercept)","cov1","cov2"),1] 
+
+ #53.73501 -72.85779 = -19.12278
 
 ```
 
@@ -47,6 +74,8 @@ paramsBatch = rbind(c(shape=1.25, range=0.2641423, variance = 1.5, nugget = 0, a
  # c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
  # c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
  # c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0))
+paramsBatch = rbind(c(shape=3, range=11.5247874, variance = 5.5, nugget = 0.6932729, anisoRatio = 1, anisoAngleRadians = 0))
+
 
 paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam));    paramsBatch
 paramsBatch = vclMatrix(cbind(paramsBatch, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),type="double")
@@ -65,6 +94,10 @@ NlocalCache=50
 temp2=gpuRandom::likfitGpu(myres,mydat, type="double", 
                            paramsBatch,betas,form="loglik",workgroupSize,localSize, NlocalCache)
 as.matrix(temp2)
+#56.21288
+
+# 72.85779
+
 
 ```
 
@@ -77,11 +110,12 @@ as.matrix(temp2)
 ycpu<-mydat$Y
 Xcpu<-as.matrix(cbind(c(rep(1, n)),mydat$cov1,mydat$cov2))
 betas<-c(  -2.9630175,  0.6672477,  0.3847218)
-
+betas<- c(-3.0552499, 0.6161210, 0.4188837)
 tempcpu2<-ycpu-Xcpu%*%betas
 
 # one batch parameters
 paramsBatch = rbind(c(shape=1.25, range=0.2641423, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
+paramsBatch = rbind(c(shape=3, range=11.5247874, variance = 5.5, nugget = 0.6932729, anisoRatio = 1, anisoAngleRadians = 0))
 paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam));    paramsBatch
 
 materncpu = geostatsp::matern(
@@ -111,10 +145,12 @@ logD<-  sum(log(diag(D)))
 part1 <-n*log(paramsBatch[,3]) + logD
     
 #6,
-loglik2 <- part1 + one0/paramsBatch[,3]
+loglik2 <- part1 + one0/paramsBatch[,3] + n*log(2*pi)
 
 
-#19.45533
+#
+
+#72.85779
 ```
 
 
@@ -167,7 +203,7 @@ localSize = c(4,4,1)
 NlocalCache=50
  
 temp=gpuRandom::likfitGpu(swissFitIso,sr2, type="double",
-  paramsBatch,betas=NULL,form="ml",
+  paramsBatch,betas=NULL,form="mlFixBeta",
   workgroupSize,localSize, NlocalCache)
 
 as.matrix(temp)

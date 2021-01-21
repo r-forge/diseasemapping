@@ -163,18 +163,18 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
         
         if (form == 1 ) { #loglik
                 # n*log(sigma^2) + log |D| + one/variances
-                result <- part1 + one0/variances
+                result <- part1 + one0/variances + n*log(2*pi)
         } else if (form == 2) {#ml
-                result = n*log(two) + replicate(colbatch, logD)
+                result = n*log(two) + replicate(colbatch, logD) + n*log(2*pi) + n
         } else if (form == 3){ # mlFixSigma/ or ml(beta,hatsigma)
-                result = n*log(one0)+replicate(colbatch, logD)
+                result = n*log(one0)+replicate(colbatch, logD) + n*log(2*pi) + n
         } else if (form == 4){ # mlFixBeta / or ml(hatbeta,sigma)
-                result = part1 + two/variances
+                result = part1 + two/variances + n*log(2*pi) 
         } else if (form == 5){ #reml
                 first_part <- (n-p)*log(paramsBatch[,3]) + logD + logP
-                result <- replicate(colbatch, first_part) + two/variances
+                result <- first_part + two/variances + n*log(2*pi) 
         } else if (form == 6) { #remlPro  #(n-p)*log two + log|D| + log|P|
-                result <- (n-p)*log(two) + replicate(colbatch, (logD+logP))
+                result <- (n-p)*log(two) + logD+logP + n*log(2*pi) + n-p
         }
         
         result
