@@ -68,7 +68,6 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
         temp2 <- vclMatrix(0, ncol(ab)*rowbatch, ncol(ab), type = gpuR::typeof(Vbatch))
         diagP <- vclMatrix(0, rowbatch, p, type = gpuR::typeof(Vbatch))
         temp3 <- vclMatrix(0, rowbatch*p, colbatch, type = gpuR::typeof(Vbatch))
-        
         nine0 <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
         aTDa <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
         # ########################## 1, loglik or ml(beta,sigma), given beta and sigma #############################
@@ -80,8 +79,6 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
 
         logD <- apply(log(diagMat),1,sum)
         variances<-vclMatrix(paramsBatch[,3],nrow=rowbatch, ncol=1,type = type)
-        
-        
         
         if (form == 1 | form == 3) { # to get one, see the notes
                 # temp = y-X*beta
@@ -126,7 +123,7 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
                                                   diagIsOne=TRUE, workgroupSize, localSize, NlocalCache)
                 
 
-                # nine0 = temp3^T * P^(-1) * temp3,  four 2 by 2 matrices
+                # nine0 = temp3^T * P^(-1) * temp3,  four 1 by 1 matrices
                 gpuRandom:::crossprodBatchBackend(nine0, temp3, diagP, invertD=TRUE,  workgroupSize, localSize, NlocalCache) ##doesn't need selecting row/col
                 
                 # won't need if there is just one y batch (if colbatch=1)
@@ -165,16 +162,16 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
                 # n*log(sigma^2) + log |D| + one/variances
                 result <- part1 + one0/variances + n*log(2*pi)
         } else if (form == 2) {#ml
-                result = n*log(two) + replicate(colbatch, logD) + n*log(2*pi) + n
+                result = n*log(two) + logD + n*log(2*pi) + n
         } else if (form == 3){ # mlFixSigma/ or ml(beta,hatsigma)
-                result = n*log(one0)+replicate(colbatch, logD) + n*log(2*pi) + n
+                result = n*log(one0/n)+logD + n*log(2*pi) + n
         } else if (form == 4){ # mlFixBeta / or ml(hatbeta,sigma)
                 result = part1 + two/variances + n*log(2*pi) 
         } else if (form == 5){ #reml
-                first_part <- (n-p)*log(paramsBatch[,3]) + logD + logP
+                first_part <- (n-p)*log(variances) + logD + logP
                 result <- first_part + two/variances + n*log(2*pi) 
         } else if (form == 6) { #remlPro  #(n-p)*log two + log|D| + log|P|
-                result <- (n-p)*log(two) + logD+logP + n*log(2*pi) + n-p
+                result <- (n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p
         }
         
         result

@@ -9,9 +9,8 @@ library(gpuR)
 library(geostatsp)
 set.seed(1)
 n=20
-mydat = SpatialPointsDataFrame(cbind(runif(n), seq(0,1,len=n)), 
-	data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 2))
-	)
+mydat = SpatialPointsDataFrame(cbind(stats::runif(n), seq(0,1,len=n)),
+                               data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 2)))
 
 # simulate a random field
 mydat@data= cbind(mydat@data , RFsimulate(model=c(variance=1.5,range=0.5,nugget=0.25,shape=1.25,anisoRatio = 1, anisoAngleRadins=0),x=mydat)@data)
@@ -86,19 +85,36 @@ workgroupSize=c(16,4,4)
 localSize = c(2,2,1)
 NlocalCache=50
 
-#temp1=gpuRandom::likfitGpu(myres,mydat, type="double", 
-                            #paramsBatch,betas,form="ml",workgroupSize,localSize, NlocalCache)
 
-#as.matrix(temp1)
-
-temp2=gpuRandom::likfitGpu(myres,mydat, type="double", 
+temp1=gpuRandom::likfitGpu(myres,mydat, type="double", 
                            paramsBatch,betas,form="loglik",workgroupSize,localSize, NlocalCache)
-as.matrix(temp2)
+as.matrix(temp1)
 #56.21288
 
 # 72.85779
+temp2=gpuRandom::likfitGpu(myres,mydat, type="double", 
+                           paramsBatch,betas=NULL,form="ml",workgroupSize,localSize, NlocalCache)
+as.matrix(temp2)
+#117.924
+temp3=gpuRandom::likfitGpu(myres,mydat, type="double", 
+                           paramsBatch,betas,form="mlFixSigma",workgroupSize,localSize, NlocalCache)
+as.matrix(temp3)
+#50.17793
 
+temp4=gpuRandom::likfitGpu(myres,mydat, type="double", 
+                           paramsBatch,betas=NULL,form="mlFixBeta",workgroupSize,localSize, NlocalCache)
+as.matrix(temp4)
+#60.14219
 
+temp5=gpuRandom::likfitGpu(myres,mydat, type="double", 
+                           paramsBatch,betas=NULL,form="reml",workgroupSize,localSize, NlocalCache)
+as.matrix(temp5)
+#67.53707
+
+temp6=gpuRandom::likfitGpu(myres,mydat, type="double", 
+                           paramsBatch,betas=NULL,form="remlPro",workgroupSize,localSize, NlocalCache)
+as.matrix(temp6)
+#66.66792
 ```
 
 
