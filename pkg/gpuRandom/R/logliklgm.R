@@ -36,6 +36,7 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
                        paramsBatch, #vclMatrix of parameter sets,Vbatch, # matern correlation vclmatrix,diagMat, # D of cholesky decomposition
                        betas=NULL, #a vclmatrix  #given by the user or provided from formula
                        form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),
+                       minustwotimes=TRUE,
                        workgroupSize,
                        localSize,
                        NlocalCache,
@@ -64,8 +65,8 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
         
         Vbatch = vclMatrix(0, nrow(paramsBatch)*n, n, type = type)
         diagMat = vclMatrix(0, nrow(paramsBatch), n, type = type) 
-        ab <- vclMatrix(0, nrow(Vbatch), colbatch+p, type = gpuR::typeof(Vbatch))
-        temp2 <- vclMatrix(0, ncol(ab)*rowbatch, ncol(ab), type = gpuR::typeof(Vbatch))
+        ab <- vclMatrix(0, nrow(Vbatch), 1+p, type = gpuR::typeof(Vbatch))
+        temp2 <- vclMatrix(0, (1+p)*rowbatch, (1+p), type = gpuR::typeof(Vbatch))
         diagP <- vclMatrix(0, rowbatch, p, type = gpuR::typeof(Vbatch))
         temp3 <- vclMatrix(0, rowbatch*p, colbatch, type = gpuR::typeof(Vbatch))
         nine0 <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
@@ -115,16 +116,18 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
                 gpuRandom:::crossprodBatchBackend(temp2, ab, diagMat, invertD=TRUE, workgroupSize, localSize, NlocalCache)
                 
                 # b^T * D^(-1) * b = Q * P * Q^T, cholesky of a subset (right bottom) of temp2
-                gpuRandom:::cholBatchBackend(temp2, diagP, c(colbatch, p, colbatch, p), c(0, rowbatch, 0, p), rowbatch, workgroupSize, localSizechol, NlocalCache) 
+                gpuRandom:::cholBatchBackend(temp2, diagP, c(colbatch, p, colbatch, p), c(0, rowbatch, 0, p), 
+                                             rowbatch, workgroupSize, localSizechol, NlocalCache) 
                 
                 # Q * temp3 = (b^T * D^(-1) *a), backsolve for temp3    2 by 1
                 gpuRandom:::backsolveBatchBackend(temp3, temp2, temp2,
-                                                  c(0,p,0,colbatch), c(colbatch, p, colbatch, p), c(colbatch, p, 0, colbatch),rowbatch,
-                                                  diagIsOne=TRUE, workgroupSize, localSize, NlocalCache)
+                                                  c(0,p,0,colbatch), c(colbatch, p, colbatch, p), c(colbatch, p, 0, colbatch),
+                                                  rowbatch,diagIsOne=TRUE, workgroupSize, localSize, NlocalCache)
                 
 
                 # nine0 = temp3^T * P^(-1) * temp3,  four 1 by 1 matrices
-                gpuRandom:::crossprodBatchBackend(nine0, temp3, diagP, invertD=TRUE,  workgroupSize, localSize, NlocalCache) ##doesn't need selecting row/col
+                gpuRandom:::crossprodBatchBackend(nine0, temp3, diagP, 
+                                                  invertD=TRUE,  workgroupSize, localSize, NlocalCache) ##doesn't need selecting row/col
                 
                 # won't need if there is just one y batch (if colbatch=1)
                 #nine <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))  
@@ -174,6 +177,15 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
                 result <- (n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p
         }
         
+        
+        
+        if(minustwotimes) {
+                names(result) = "minusTwoLogLik"
+        } else {
+                result = -0.5*result
+                names(result)="logLik"
+        } 
+    
         result
 }
 
