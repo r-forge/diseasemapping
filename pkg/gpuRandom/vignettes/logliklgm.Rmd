@@ -18,7 +18,7 @@ mydat@data= cbind(mydat@data , RFsimulate(model=c(variance=1.5,range=0.5,nugget=
 # add fixed effects
 mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + mydat$sim + rnorm(length(mydat), 0, sd=sqrt(0.25))
 
-
+dist(mydat@coords)
 # fit the model
 myres = likfitLgm(
 	formula=Y ~ cov1 + cov2, 
@@ -69,11 +69,11 @@ myres$summary[c("(Intercept)","cov1","cov2"),1]
 
 
 ```{r test on gpu, eval=F}
-paramsBatch = rbind(c(shape=1.25, range=0.2641423, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
- # c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
- # c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
+paramsBatch = rbind(c(shape=1.25, range=0.2641423, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
+                    c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
+                    c(shape=2.25, range=0.5, variance = 2.5, nugget = 2.25, anisoRatio = 1, anisoAngleRadians = 0))
  # c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0))
-paramsBatch = rbind(c(shape=3, range=11.5247874, variance = 5.5, nugget = 0.6932729, anisoRatio = 1, anisoAngleRadians = 0))
+#paramsBatch = rbind(c(shape=3, range=11.5247874, variance = 5.5, nugget = 0.6932729, anisoRatio = 1, anisoAngleRadians = 0))
 
 
 paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam));    paramsBatch
@@ -87,33 +87,33 @@ NlocalCache=50
 
 
 temp1=gpuRandom::likfitGpu(myres,mydat, type="double", 
-                           paramsBatch,betas,form="loglik",workgroupSize,localSize, NlocalCache)
+                           paramsBatch,betas,form="loglik",minustwotimes=TRUE,workgroupSize,localSize, NlocalCache)
 as.matrix(temp1)
 #56.21288
 
 # 72.85779
 temp2=gpuRandom::likfitGpu(myres,mydat, type="double", 
-                           paramsBatch,betas=NULL,form="ml",workgroupSize,localSize, NlocalCache)
+                            paramsBatch,betas=NULL,form="ml",minustwotimes=TRUE,workgroupSize,localSize, NlocalCache)
 as.matrix(temp2)
-#117.924
+# #117.924
 temp3=gpuRandom::likfitGpu(myres,mydat, type="double", 
-                           paramsBatch,betas,form="mlFixSigma",workgroupSize,localSize, NlocalCache)
+                            paramsBatch,betas,form="mlFixSigma",minustwotimes=TRUE,workgroupSize,localSize, NlocalCache)
 as.matrix(temp3)
-#50.17793
-
-temp4=gpuRandom::likfitGpu(myres,mydat, type="double", 
-                           paramsBatch,betas=NULL,form="mlFixBeta",workgroupSize,localSize, NlocalCache)
-as.matrix(temp4)
-#60.14219
-
-temp5=gpuRandom::likfitGpu(myres,mydat, type="double", 
-                           paramsBatch,betas=NULL,form="reml",workgroupSize,localSize, NlocalCache)
-as.matrix(temp5)
-#67.53707
-
-temp6=gpuRandom::likfitGpu(myres,mydat, type="double", 
-                           paramsBatch,betas=NULL,form="remlPro",workgroupSize,localSize, NlocalCache)
-as.matrix(temp6)
+# #50.17793
+# 
+# temp4=gpuRandom::likfitGpu(myres,mydat, type="double", 
+#                            paramsBatch,betas=NULL,form="mlFixBeta",minustwotimes=TRUE,workgroupSize,localSize, NlocalCache)
+# as.matrix(temp4)
+# #60.14219
+# 
+# temp5=gpuRandom::likfitGpu(myres,mydat, type="double", 
+#                            paramsBatch,betas=NULL,form="reml",minustwotimes=TRUE,workgroupSize,localSize, NlocalCache)
+# as.matrix(temp5)
+# #67.53707
+# 
+# temp6=gpuRandom::likfitGpu(myres,mydat, type="double", 
+#                            paramsBatch,betas=NULL,form="remlPro",minustwotimes=TRUE,workgroupSize,localSize, NlocalCache)
+# as.matrix(temp6)
 #66.66792
 ```
 
@@ -131,7 +131,7 @@ tempcpu2<-ycpu-Xcpu%*%betas
 
 # one batch parameters
 paramsBatch = rbind(c(shape=1.25, range=0.2641423, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
-paramsBatch = rbind(c(shape=3, range=11.5247874, variance = 5.5, nugget = 0.6932729, anisoRatio = 1, anisoAngleRadians = 0))
+#paramsBatch = rbind(c(shape=3, range=11.5247874, variance = 5.5, nugget = 0.6932729, anisoRatio = 1, anisoAngleRadians = 0))
 paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam));    paramsBatch
 
 materncpu = geostatsp::matern(
@@ -175,7 +175,7 @@ loglik2 <- part1 + one0/paramsBatch[,3] + n*log(2*pi)
 
 
 
-```{r test_using_new_example_Nov20,eval=T}
+```{r test_using_another_example_Nov20,eval=T}
 library('geostatsp')
 data('swissRain')
 sr2 = swissRain[1:20,]
@@ -183,12 +183,13 @@ sr2 = swissRain[1:20,]
 # extract variables for modeling
 sr2$sqrtY = sqrt(sr2$rain)
 sr2$elev = raster::extract(swissAltitude, sr2)
-
+dist(sr2@coords)
 # build spatial model
+
 swissFitIso = likfitLgm(
   data=sr2,
   formula=sqrtY ~ elev,
-  param=c(range=10,shape=1,nugget=0.5),
+  param=c(range=500,shape=1,nugget=2.5),
   reml=FALSE,
   verbose=FALSE
 )
@@ -196,31 +197,25 @@ swissFitIso = likfitLgm(
 swissFitIso$parameters
 
 newParamList = list(
-  range=seq(15, 50 , len=1),
-  nugget = seq(0.4,0.6,len=1)
+  range=seq(10000, 50000 , len=2),
+  nugget = seq(1,3,len=2)
 )
 newParam= do.call(expand.grid, newParamList)
 
-otherparams = c(shape=1, variance = 1.5, anisoRatio = 1, anisoAngleRadians = 0)
+otherparams = c(shape=1, variance = 1.841, anisoRatio = 1, anisoAngleRadians = 0)
 otherparams = matrix(rep(otherparams,each=nrow(newParam)),nrow=nrow(newParam))
 colnames(otherparams) <- c("shape","variance", "anisoRatio", "anisoAngleRadians")
 
 paramsBatch0 = cbind(newParam, otherparams)
-
-
 paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
 paramsBatch = vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0), 22-ncol(paramsBatch0))),type="double")
-
-#paramscpu<-as.matrix(paramsBatch)
 
 
 workgroupSize=c(64,16,16)
 localSize = c(4,4,1)
 NlocalCache=50
  
-temp=gpuRandom::likfitGpu(swissFitIso,sr2, type="double",
-  paramsBatch,betas=NULL,form="mlFixBeta",
-  workgroupSize,localSize, NlocalCache)
+temp=gpuRandom::likfitGpu(swissFitIso,sr2, type="double",paramsBatch,betas=NULL,form="ml",minustwotimes=TRUE,workgroupSize,localSize, NlocalCache)
 
 as.matrix(temp)
 

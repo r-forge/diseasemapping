@@ -65,12 +65,12 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
         
         Vbatch = vclMatrix(0, nrow(paramsBatch)*n, n, type = type)
         diagMat = vclMatrix(0, nrow(paramsBatch), n, type = type) 
-        ab <- vclMatrix(0, nrow(Vbatch), 1+p, type = gpuR::typeof(Vbatch))
-        temp2 <- vclMatrix(0, (1+p)*rowbatch, (1+p), type = gpuR::typeof(Vbatch))
-        diagP <- vclMatrix(0, rowbatch, p, type = gpuR::typeof(Vbatch))
-        temp3 <- vclMatrix(0, rowbatch*p, colbatch, type = gpuR::typeof(Vbatch))
-        nine0 <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
-        aTDa <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))
+        ab <- vclMatrix(0, nrow(Vbatch), 1+p, type = type)
+        temp2 <- vclMatrix(0, (1+p)*rowbatch, (1+p), type = type)
+        diagP <- vclMatrix(0, rowbatch, p, type = type)
+        temp3 <- vclMatrix(0, rowbatch*p, colbatch, type = type)
+        nine0 <- vclMatrix(0, colbatch*rowbatch, colbatch, type = type)
+        aTDa <- vclMatrix(0, colbatch*rowbatch, colbatch, type = type)
         # ########################## 1, loglik or ml(beta,sigma), given beta and sigma #############################
         
         # Vbatch=LDL^T, cholesky decomposition
@@ -92,10 +92,8 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
                 
                 # one0 = A^T * D^(-1) * A = (y-X*betas)^T * V^(-1) * (y-X*betas)
                 one0 <- vclMatrix(0, rowbatch*colbatch, colbatch, type = gpuR::typeof(Vbatch))
-               
-                #won't need if there is just one y batch (if colbatch=1)
+                # one won't need if there is just one y batch (if colbatch=1)
                 # one<- vclMatrix(0, nrow=rowbatch, ncol=colbatch, type = gpuR::typeof(Vbatch))
-                
                 gpuRandom:::crossprodBatchBackend(one0, A, diagMat,  invertD=TRUE,  workgroupSize, localSize, NlocalCache)
                 
                 #
@@ -165,25 +163,23 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
                 # n*log(sigma^2) + log |D| + one/variances
                 result <- part1 + one0/variances + n*log(2*pi)
         } else if (form == 2) {#ml
-                result = n*log(two) + logD + n*log(2*pi) + n
+                result = n*log(two) + vclMatrix(logD, nrow=rowbatch,ncol=1, type=type) + n*log(2*pi) + n
         } else if (form == 3){ # mlFixSigma/ or ml(beta,hatsigma)
-                result = n*log(one0/n)+logD + n*log(2*pi) + n
+                result = n*log(one0/n)+vclMatrix(logD, nrow=rowbatch,ncol=1, type=type) + n*log(2*pi) + n
         } else if (form == 4){ # mlFixBeta / or ml(hatbeta,sigma)
                 result = part1 + two/variances + n*log(2*pi) 
         } else if (form == 5){ #reml
                 first_part <- (n-p)*log(variances) + logD + logP
                 result <- first_part + two/variances + n*log(2*pi) 
         } else if (form == 6) { #remlPro  #(n-p)*log two + log|D| + log|P|
-                result <- (n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p
+                result <- (n-p)*log(two/(n-p)) + vclMatrix(logD+logP,nrow=rowbatch,ncol=1, type=type) + n*log(2*pi) + n-p
         }
         
         
         
-        if(minustwotimes) {
-                names(result) = "minusTwoLogLik"
-        } else {
-                result = -0.5*result
-                names(result)="logLik"
+        if(!minustwotimes) {
+             result = -0.5*result
+                
         } 
     
         result
