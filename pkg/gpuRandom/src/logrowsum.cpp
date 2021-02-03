@@ -8,7 +8,7 @@ using namespace Rcpp;
 using namespace viennacl; 
 using namespace viennacl::linalg;
 
-
+/*
 //#define DEBUGKERNEL
 template <typename T> 
 std::string LogString(const int Nrow, const int Ncol, const int NpadCol) {  //internal column size
@@ -53,12 +53,12 @@ std::string LogString(const int Nrow, const int Ncol, const int NpadCol) {  //in
   return(result);
 }
 
+*/
 
 
 
 
-
-
+/*
 template <typename T>
 void rowsum(
     viennacl::matrix<T> &x,
@@ -96,18 +96,37 @@ void rowsum(
     }else if(log==0){
       
     row_sum_impl(x, Sum);}
-    
+}
 
-    
-  }
+*/
 
+
+template <typename T>
+void rowsum(
+    viennacl::matrix<T> &x,
+    viennacl::vector_base<T> &Sum,
+    int log){// Rcpp::IntegerVector numWorkItems,int ctx_id) {
+  
+  const int nrow = x.size1(), ncol = x.size2();
+  
+  
+  if (log ==1 ){
+    viennacl::matrix<T> output(nrow,ncol);  
+    
+    output = viennacl::linalg::element_log(x);
+    
+    row_sum_impl(output, Sum);
+    
+  }else if(log==0){
+    
+    row_sum_impl(x, Sum);}
+}
 
 template<typename T> 
 void rowsum_Templated(
     Rcpp::S4  xR, 
     Rcpp::S4  SumR,
-    int log,
-    Rcpp::IntegerVector numWorkItems){
+    int log){//   Rcpp::IntegerVector numWorkItems){
   
   const bool BisVCL=1;
   const int ctx_id = INTEGER(xR.slot(".context_index"))[0]-1;
@@ -115,8 +134,7 @@ void rowsum_Templated(
   
   std::shared_ptr<viennacl::matrix<T> > x =getVCLptr<T>(xR.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::vector_base<T> > Sum = getVCLVecptr<T>(SumR.slot("address"), BisVCL, ctx_id);
- // std::shared_ptr<viennacl::vector_base<T> > sumc = getVCLptr<T>(sumcR.slot("address"), BisVCL, ctx_id);
-  rowsum<T>(*x,*Sum,log,numWorkItems,ctx_id);
+  rowsum<T>(*x,*Sum,log);
   
   //return (Rcpp::wrap(1L));
 }
@@ -128,16 +146,15 @@ void rowsum_Templated(
 void rowsumBackend(
     Rcpp::S4  xR, 
     Rcpp::S4  SumR,
-    int log,
-    Rcpp::IntegerVector numWorkItems){
+    int log){//  Rcpp::IntegerVector numWorkItems){
   
   Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(xR));
   std::string precision_type = (std::string) classVarR;
   
   if(precision_type == "fvclMatrix") {
-    return (rowsum_Templated<float>(xR,SumR, log,numWorkItems));
+    return (rowsum_Templated<float>(xR,SumR, log));
   } else if (precision_type == "dvclMatrix") {
-    return (rowsum_Templated<double>(xR, SumR, log,numWorkItems));
+    return (rowsum_Templated<double>(xR, SumR, log));
   } else {
     Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
   }

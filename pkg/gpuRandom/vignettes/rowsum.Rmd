@@ -9,14 +9,15 @@ library(gpuRandom)
 library(gpuR)
 type="double"
 nrow<-5
-Nglobal = c(16,8) 
+#Nglobal = c(16,8) 
 x<-vclMatrix(1:30, nrow=nrow,ncol=6, type=type)
 xcpu<-matrix(1:30, nrow=nrow,ncol=6)
 rowsum <- apply(xcpu,1,sum)
 logrowsum <- apply(log(xcpu),1,sum)
 sumr<-vclVector(0,length=nrow,type=type)
-gpuRandom:::rowsumBackend(x, sumr,log=1,numWorkItems=Nglobal)
-gpuRandom:::rowsumBackend(x, sumr,log=0,numWorkItems=Nglobal)
+gpuRandom:::rowsumBackend(x, sumr,log=1)
+gpuRandom:::rowsumBackend(x, sumr,log=0)
 as.vector(sumr)
+rowsum
 
 ```
