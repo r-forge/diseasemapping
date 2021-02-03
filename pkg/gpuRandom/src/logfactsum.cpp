@@ -21,42 +21,6 @@ std::string colsumRowsumString(const int Nrow, const int Ncol, const int NpadCol
     "#define Ncol " + std::to_string(Ncol) + "\n"
     "#define NpadCol " + std::to_string(NpadCol) + "\n";    
 
- /* 
-  result += 
-    "\n\n__kernel void colsumRowsum(\n"
-    "  __global " + typeString + "* x,\n"  
-    "  __global " + typeString + "* rowSum,\n"  
-    "  __global " + typeString + "* colSum\n"
-    "){\n\n";  
- 
-  result += "int Drow, Dcol, Dindex;\n";
-  result += typeString + " result;\n";
-
-
-  result += "if(get_global_id(1)) { // sum columns\n"
-  "  for(Drow = get_global_id(0); Drow < Nrow; Drow++){\n"
-  "    result = 0;\n"
-  "    for(Dcol = 0, Dindex = Drow*NpadCol+Dcol; Dcol < Ncol; Dcol++, Dindex++){\n"
-  "       result += x[Dindex];\n"    
-  "    } // end loop through columns\n"
-  "    colSum[Dcol] = result;\n"
-  "  } // end loop through rows\n"
-  "} else { // sum rows\n"
-  "  for(Dcol = get_global_id(0); Dcol < Ncol; Dcol++){\n"
-  "    result = 0;\n"
-  "    for(Drow = 0, Dindex = Dcol; Drow < Nrow; Drow++, Dindex+= NpadCol){\n"
-  "       result += x[Dindex];\n"    
-  "    } // end loop through columns\n"
-  "    rowSum[Drow] = result;\n"
-  "  } // end loop through columns\n"
-
-  "}\n\n";
-
-    
-  result += 
-    "}//kernel\n";
-*/
-
   
   result += 
     "\n\n__kernel void sumLfactorial(\n"
@@ -71,8 +35,8 @@ std::string colsumRowsumString(const int Nrow, const int Ncol, const int NpadCol
   result += typeStringSum + " insidevalue;\n";
 
   result += 
-  "  for(Drow = get_global_id(0); Drow < Nrow; Drow+=get_global_size(0)){\n"
-  "    for(Dcol = get_global_id(1), Dindex = Drow*NpadCol+Dcol;\n" 
+  "  for(Drow = get_global_id(0);   Drow < Nrow;    Drow+=get_global_size(0)){\n"
+  "    for(Dcol = get_global_id(1),   Dindex = Drow*NpadCol+Dcol;\n" 
   "        Dcol < Ncol; Dcol+=get_global_size(1), Dindex++){\n"
   "        insidevalue = 1 + x[Dindex];\n"
   "       Dresult += lgamma(insidevalue);\n"
@@ -87,8 +51,6 @@ std::string colsumRowsumString(const int Nrow, const int Ncol, const int NpadCol
 
   return(result);
 }
-
-
 
 
 
@@ -121,18 +83,6 @@ double logfactsum(
 #ifdef DEBUGKERNEL
   Rcpp::Rcout << sumKernelString << "\n\n";
 #endif  
-
- /* viennacl::ocl::kernel &sumKernel = my_prog.get_kernel("colsumRowsum");
-
-
-  sumKernel.global_work_size(0, numWorkItems[0]);
-  sumKernel.global_work_size(1, numWorkItems[1]);
-  
-  sumKernel.local_work_size(0, 1L);
-  sumKernel.local_work_size(1, 1L);
- 
-  viennacl::ocl::enqueue(sumKernel(x, rowSum, colSum) );
-*/
  
   viennacl::ocl::kernel &sumLfactorialKernel = my_prog.get_kernel("sumLfactorial");
   sumLfactorialKernel.global_work_size(0, numWorkItems[0]);

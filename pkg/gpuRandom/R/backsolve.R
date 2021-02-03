@@ -5,7 +5,6 @@
 #' @param B a vclMatrix 
 #' @param numbatchB number of batches in B
 #' @param diagIsOne logical, indicates if all the diagonal entries in A are one
-#' 
 #' @return a vclMatrix C that satisfies A*C=B
 #' @useDynLib gpuRandom
 #' @export
