@@ -48,8 +48,8 @@ std::string gemmBatchString(
     "#define NpadC " + std::to_string(NpadC) + "\n"
     "#define NpadMatrixA " + std::to_string(NpadMatrixA) + "\n"    
     "#define NpadMatrixB " + std::to_string(NpadMatrixB) + "\n"  
-    "#define NpadMatrixC " + std::to_string(NpadMatrixC) + "\n"
-    "#define need_transpose  " + std::to_string(need_transpose) + "\n";
+    "#define NpadMatrixC " + std::to_string(NpadMatrixC) + "\n";
+   // "#define need_transpose  " + std::to_string(need_transpose) + "\n";
   
   result += "__kernel void gemm2( __global "  + typeString+ "* A,\n"
                                 " __global "  + typeString+ "* B,\n"

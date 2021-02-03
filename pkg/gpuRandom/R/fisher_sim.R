@@ -39,7 +39,7 @@ fisher.sim=function(
   #  }else{stop("'x'  must be matrix")}
   
 
-  
+  # lfactorial(x)=lgamma(x+1)
   # STATISTIC <- -sum(lfactorial(x))          ##STATISTIC is negative
   # almost.1 <- 1 + 64 * .Machine$double.eps
   # 

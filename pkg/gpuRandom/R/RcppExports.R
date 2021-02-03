@@ -59,6 +59,10 @@ cpp_gpu_qqnorm <- function(outR, mu, sigma, lowertail, max_global_size, max_loca
     .Call('_gpuRandom_cpp_gpu_qqnorm', PACKAGE = 'gpuRandom', outR, mu, sigma, lowertail, max_global_size, max_local_size)
 }
 
+rowsumBackend <- function(xR, SumR, log, numWorkItems) {
+    invisible(.Call('_gpuRandom_rowsumBackend', PACKAGE = 'gpuRandom', xR, SumR, log, numWorkItems))
+}
+
 maternBatchBackend <- function(var, coords, param, Nglobal, Nlocal) {
     invisible(.Call('_gpuRandom_maternBatchBackend', PACKAGE = 'gpuRandom', var, coords, param, Nglobal, Nlocal))
 }

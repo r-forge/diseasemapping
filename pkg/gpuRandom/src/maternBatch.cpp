@@ -455,7 +455,9 @@ void maternBatchVcl(
 }
 
 
-template<typename T> void maternBatchVcl(
+
+template<typename T> 
+void maternBatchVcl(
     viennacl::matrix<T> &vclVar, // Nmat columns N^2 rows
     viennacl::matrix<T> &vclCoords, // 2 columns
     viennacl::matrix<T> &param, // Nmat rows, 22 columns

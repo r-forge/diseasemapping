@@ -152,6 +152,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rowsumBackend
+void rowsumBackend(Rcpp::S4 xR, Rcpp::S4 SumR, int log, Rcpp::IntegerVector numWorkItems);
+RcppExport SEXP _gpuRandom_rowsumBackend(SEXP xRSEXP, SEXP SumRSEXP, SEXP logSEXP, SEXP numWorkItemsSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type xR(xRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type SumR(SumRSEXP);
+    Rcpp::traits::input_parameter< int >::type log(logSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type numWorkItems(numWorkItemsSEXP);
+    rowsumBackend(xR, SumR, log, numWorkItems);
+    return R_NilValue;
+END_RCPP
+}
 // maternBatchBackend
 void maternBatchBackend(Rcpp::S4 var, Rcpp::S4 coords, Rcpp::S4 param, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal);
 RcppExport SEXP _gpuRandom_maternBatchBackend(SEXP varSEXP, SEXP coordsSEXP, SEXP paramSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP) {
@@ -229,6 +242,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_cpp_mrg31k3pCreateStreams", (DL_FUNC) &_gpuRandom_cpp_mrg31k3pCreateStreams, 1},
     {"_gpuRandom_gpuRnBackend", (DL_FUNC) &_gpuRandom_gpuRnBackend, 4},
     {"_gpuRandom_cpp_gpu_qqnorm", (DL_FUNC) &_gpuRandom_cpp_gpu_qqnorm, 6},
+    {"_gpuRandom_rowsumBackend", (DL_FUNC) &_gpuRandom_rowsumBackend, 4},
     {"_gpuRandom_maternBatchBackend", (DL_FUNC) &_gpuRandom_maternBatchBackend, 5},
     {"_gpuRandom_multiplyLowerDiagonalBatchBackend", (DL_FUNC) &_gpuRandom_multiplyLowerDiagonalBatchBackend, 9},
     {"_gpuRandom_multiplyDiagonalBatchBackend", (DL_FUNC) &_gpuRandom_multiplyDiagonalBatchBackend, 6},
