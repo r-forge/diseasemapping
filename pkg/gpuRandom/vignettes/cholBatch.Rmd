@@ -188,7 +188,7 @@ range(theDiag - as.matrix(diagMat)[4,])
 
 
 
-```{r crossprodbatch2, eval=TRUE}
+```{r crossprodbatch, eval=TRUE}
 a1 = matrix(1:160,40,4)
 a2=matrix(2:161,40,4)
 A=rbind(a1,a2,a1,a2)

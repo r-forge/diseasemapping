@@ -153,14 +153,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // rowsumBackend
-void rowsumBackend(Rcpp::S4 xR, Rcpp::S4 SumR, int log);
-RcppExport SEXP _gpuRandom_rowsumBackend(SEXP xRSEXP, SEXP SumRSEXP, SEXP logSEXP) {
+void rowsumBackend(Rcpp::S4 xR, Rcpp::S4 SumR, std::string type, int log);
+RcppExport SEXP _gpuRandom_rowsumBackend(SEXP xRSEXP, SEXP SumRSEXP, SEXP typeSEXP, SEXP logSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type xR(xRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type SumR(SumRSEXP);
+    Rcpp::traits::input_parameter< std::string >::type type(typeSEXP);
     Rcpp::traits::input_parameter< int >::type log(logSEXP);
-    rowsumBackend(xR, SumR, log);
+    rowsumBackend(xR, SumR, type, log);
     return R_NilValue;
 END_RCPP
 }
@@ -241,7 +242,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_cpp_mrg31k3pCreateStreams", (DL_FUNC) &_gpuRandom_cpp_mrg31k3pCreateStreams, 1},
     {"_gpuRandom_gpuRnBackend", (DL_FUNC) &_gpuRandom_gpuRnBackend, 4},
     {"_gpuRandom_cpp_gpu_qqnorm", (DL_FUNC) &_gpuRandom_cpp_gpu_qqnorm, 6},
-    {"_gpuRandom_rowsumBackend", (DL_FUNC) &_gpuRandom_rowsumBackend, 3},
+    {"_gpuRandom_rowsumBackend", (DL_FUNC) &_gpuRandom_rowsumBackend, 4},
     {"_gpuRandom_maternBatchBackend", (DL_FUNC) &_gpuRandom_maternBatchBackend, 5},
     {"_gpuRandom_multiplyLowerDiagonalBatchBackend", (DL_FUNC) &_gpuRandom_multiplyLowerDiagonalBatchBackend, 9},
     {"_gpuRandom_multiplyDiagonalBatchBackend", (DL_FUNC) &_gpuRandom_multiplyDiagonalBatchBackend, 6},

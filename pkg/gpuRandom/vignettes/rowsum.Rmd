@@ -15,8 +15,8 @@ xcpu<-matrix(1:30, nrow=nrow,ncol=6)
 rowsum <- apply(xcpu,1,sum)
 logrowsum <- apply(log(xcpu),1,sum)
 sumr<-vclVector(0,length=nrow,type=type)
-gpuRandom:::rowsumBackend(x, sumr,log=1)
-gpuRandom:::rowsumBackend(x, sumr,log=0)
+gpuRandom:::rowsumBackend(x, sumr,type="row",log=1)
+gpuRandom:::rowsumBackend(x, sumr,type="row",log=0)
 as.vector(sumr)
 rowsum
 
