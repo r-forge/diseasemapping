@@ -10,7 +10,7 @@ library(geostatsp)
 set.seed(1)
 n=20
 mydat = SpatialPointsDataFrame(cbind(stats::runif(n), seq(0,1,len=n)),
-                               data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 2)))
+                               data=data.frame(cov1 = stats::rnorm(n), cov2 = stats::rpois(n, 2)))
 
 # simulate a random field
 mydat@data= cbind(mydat@data , RFsimulate(model=c(variance=1.5,range=0.5,nugget=0.25,shape=1.25,anisoRatio = 1, anisoAngleRadins=0),x=mydat)@data)
@@ -59,7 +59,7 @@ paramsBatch = rbind(c(shape=1.25, range=0.2641423, variance = 1.5, nugget = 0, a
 paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam));    paramsBatch
 paramsBatch = vclMatrix(cbind(paramsBatch, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),type="double")
 
-betas<-vclVector(as.matrix(myres$summary[c("(Intercept)","cov1","cov2"),1]),type="double")
+betas<-vclMatrix(as.matrix(myres$summary[c("(Intercept)","cov1","cov2"),1]),type="double")
 
 workgroupSize=c(64,16,16)
 localSize = c(4,4,1)
@@ -67,8 +67,9 @@ NlocalCache=50
 
 
 temp1=gpuRandom::likfitGpu(myres,mydat, type="double", 
-                    paramsBatch,betas,form="loglik",minustwotimes=TRUE,workgroupSize,localSize, NlocalCache)$minusTwoLogLik
-as.matrix(temp1)
+                    paramsBatch,betas,form="loglik",minustwotimes=TRUE,workgroupSize,localSize, NlocalCache)
+
+#as.matrix(temp1)
 #56.21288
 
 # 72.85779

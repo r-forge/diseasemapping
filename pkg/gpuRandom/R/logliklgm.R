@@ -35,8 +35,7 @@ lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
 likfitGpu <- function( modelname, mydat, type=c("double", "float"),
                        paramsBatch, #vclMatrix of parameter sets,Vbatch, # matern correlation vclmatrix,diagMat, # D of cholesky decomposition
                        betas=NULL, #a vclmatrix  #given by the user or provided from formula
-                       form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),
-                       minustwotimes=TRUE,
+                       form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),# minustwotimes=TRUE,
                        workgroupSize,
                        localSize,
                        NlocalCache,
@@ -45,12 +44,10 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
     if((is.null(betas) & form == "loglik") | (is.null(betas) & form == "mlFixSigma") ) stop("need betas")
         
     yX <- lgmGpuObjectes(modelname, mydat, type)$yX
-        
     coordsGpu <- lgmGpuObjectes(modelname, mydat, type)$coordsGpu   
-        
     n <- lgmGpuObjectes(modelname, mydat, type)$n 
     p <- lgmGpuObjectes(modelname, mydat, type)$p  
-        
+    
     y <-  vclMatrix(yX[,1], nrow=n, ncol=1, type = type) 
     X <-  vclMatrix(yX[,c(2:(1+p))],type = type)
         
@@ -63,16 +60,16 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
     localSizechol[2]<-workgroupSize[2]
         
         
-    Vbatch = vclMatrix(0, nrow(paramsBatch)*n, n, type = type)
-    diagMat = vclMatrix(0, nrow(paramsBatch), n, type = type) 
-    logD<- vclMatrix(0, nrow=rowbatch,ncol=1, type=type)
+    Vbatch = vclMatrix(0, rowbatch*n, n, type = type)
+    diagMat = vclMatrix(0, rowbatch, n, type = type) 
+    logD<- vclVector(0, length=rowbatch,type=type)
     ab <- vclMatrix(0, nrow(Vbatch), 1+p, type = type)
     temp2 <- vclMatrix(0, (1+p)*rowbatch, (1+p), type = type)
     diagP <- vclMatrix(0, rowbatch, p, type = type)
     temp3 <- vclMatrix(0, rowbatch*p, colbatch, type = type)
     nine0 <- vclMatrix(0, colbatch*rowbatch, colbatch, type = type)
     aTDa <- vclMatrix(0, colbatch*rowbatch, colbatch, type = type)
-    logP<- vclMatrix(0, nrow=rowbatch,ncol=1, type=type)
+    logP<- vclVector(0, length=rowbatch, type=type)
         
 ########################### 1, loglik or ml(beta,sigma), given beta and sigma #############################
         
@@ -85,8 +82,7 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
     variances<-vclMatrix(paramsBatch[,3],nrow=rowbatch, ncol=1,type = type)
     
     #L(a b) = (y X)
-    gpuRandom::backsolveBatch(ab, Vbatch, yX, numbatchB=1L, diagIsOne=TRUE, Nglobal=workgroupSize, Nlocal=localSize, 
-                              NlocalCache)
+    gpuRandom::backsolveBatch(ab, Vbatch, yX, numbatchB=1L, diagIsOne=TRUE, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache)
     b <-  vclMatrix(ab[,c(2:(1+p))],type = type) 
     
         
@@ -113,13 +109,10 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
         #}
           
        #to obtain ssqBeta=betaT*XT V^(-1) X*beta = betaT bT D^(-1) b*beta
-       
        # b*beta  = n*p p*1 = n*1 
-   # bBeta <-gpuRandom::gemmBatch(b, betas,rowbatch=rowbatch, Acolbatch=1L, Bcolbatch=1L, need_transpose = FALSE, workgroupSize)
-    
-   # ssqBeta<- vclMatrix(0, nrow=rowbatch,ncol=1, type=type)
-    
-   # gpuRandom:::crossprodBatchBackend(ssqBeta, bBeta, diagMat,  invertD=TRUE,  workgroupSize, localSize, NlocalCache)
+    bBeta <-gpuRandom::gemmBatch(b, betas,Arowbatch=rowbatch, Browbatch=1L, Acolbatch=1L, Bcolbatch=1L, need_transpose = FALSE, workgroupSize)
+    ssqBeta<- vclMatrix(0, nrow=rowbatch,ncol=1, type=type)
+    gpuRandom:::crossprodBatchBackend(ssqBeta, bBeta, diagMat,  invertD=TRUE,  workgroupSize, localSize, NlocalCache)
  }else { # form == 2,4,5,6
     #profile = nlog hat_sigma^2 + log|D|
     # to get hat_sigma^2
@@ -177,19 +170,19 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
         # n*log(sigma^2) + log |D| + one/variances # result <- part1 + one0/variances + n*log(2*pi)
                 
     Result = list(minusTwoLogLik=part1 + one0/variances + n*log(2*pi), 
-                  ssqBeta=NULL, ssqX=NULL, ssqY=aTDa, logD=logD, logP=NULL)      
+                  ssqBeta=ssqBeta, ssqX=NULL, ssqY=aTDa, logD=logD, logP=NULL)      
                 
                 
     }else if(form == 2) {#ml  result = n*log(two) +logD + n*log(2*pi) + n
     
-    Result = list(minusTwoLogLik=n*log(two/n) +logD + n*log(2*pi) + n, 
+    Result = list(minusTwoLogLik=n*log(two/n) +logD + n*log(2*pi) + n,
                   ssqBeta=NULL, ssqX=nine0, ssqY=aTDa, logD=logD, logP=NULL)           
                 
                 
     }else if(form == 3){ # mlFixSigma/ or ml(beta,hatsigma)result = n*log(one0/n)+logD + n*log(2*pi) + n
                 
     Result = list(minusTwoLogLik=n*log(one0/n)+logD + n*log(2*pi) + n, 
-                  ssqBeta=NULL, ssqX=nine0, ssqY=aTDa, logD=logD, logP=NULL)   
+                  ssqBeta=ssqBeta, ssqX=nine0, ssqY=aTDa, logD=logD, logP=NULL)   
         
         
     }else if(form == 4){ # mlFixBeta / or ml(hatbeta,sigma) result = part1 + two/variances + n*log(2*pi) 
@@ -202,12 +195,12 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
     first_part <- (n-p)*log(variances) + logD + logP  #result <- first_part + two/variances + n*log(2*pi) 
           
     Result = list(minusTwoLogLik=first_part + two/variances + n*log(2*pi), 
-                  ssqBeta=NULL, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)            
+                  ssqBeta=0, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)            
              
     }else if(form == 6){ #remlPro  #(n-p)*log two + log|D| + log|P|, result <- (n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p
                 
     Result = list(minusTwoLogLik=(n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p, 
-                  ssqBeta=NULL, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)                  
+                  ssqBeta=0, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)                  
     }
         
         
