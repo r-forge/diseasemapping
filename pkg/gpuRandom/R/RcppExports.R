@@ -29,8 +29,8 @@ crossprodBatchBackend <- function(C, A, D, invertD, Nglobal, Nlocal, NlocalCache
     .Call('_gpuRandom_crossprodBatchBackend', PACKAGE = 'gpuRandom', C, A, D, invertD, Nglobal, Nlocal, NlocalCache)
 }
 
-gemmBatchBackend <- function(A, B, C, rowbatch, Acolbatch, Bcolbatch, need_transpose, Nglobal) {
-    .Call('_gpuRandom_gemmBatchBackend', PACKAGE = 'gpuRandom', A, B, C, rowbatch, Acolbatch, Bcolbatch, need_transpose, Nglobal)
+gemmBatchBackend <- function(A, B, C, Arowbatch, Browbatch, Acolbatch, Bcolbatch, need_transpose, Nglobal) {
+    .Call('_gpuRandom_gemmBatchBackend', PACKAGE = 'gpuRandom', A, B, C, Arowbatch, Browbatch, Acolbatch, Bcolbatch, need_transpose, Nglobal)
 }
 
 cpp_gpuFisher_test <- function(xR, resultsR, B, streamsR, max_global_size, max_local_size) {

@@ -17,7 +17,8 @@ std::string gemmBatchString(
     const int M, // rows of Ai
     const int N, // columns of Bi
     const int K, // common size of Ai Bi
-    const int rowbatch, //number of batches in row
+    const int Arowbatch, //number of batches in row of A
+    const int Browbatch, //number of batches in row of B
     const int Acolbatch, 
     const int Bcolbatch,
     const int NpadA, 
@@ -40,7 +41,8 @@ std::string gemmBatchString(
     "#define M " + std::to_string(M) + "\n" // rows 
     "#define N " + std::to_string(N) + "\n" // columns
     "#define K " + std::to_string(K) + "\n" // inter
-    "#define rowbatch " + std::to_string(rowbatch) + "\n" // matrices
+    "#define Arowbatch " + std::to_string(Arowbatch) + "\n" // matrices
+    "#define Browbatch " + std::to_string(Browbatch) + "\n" // matrices
     "#define Acolbatch " + std::to_string(Acolbatch) + "\n" 
     "#define Bcolbatch " + std::to_string(Bcolbatch) + "\n" //num of batches in B columnwise
     "#define NpadA " + std::to_string(NpadA) + "\n"    
@@ -49,7 +51,7 @@ std::string gemmBatchString(
     "#define NpadMatrixA " + std::to_string(NpadMatrixA) + "\n"    
     "#define NpadMatrixB " + std::to_string(NpadMatrixB) + "\n"  
     "#define NpadMatrixC " + std::to_string(NpadMatrixC) + "\n";
-   // "#define need_transpose  " + std::to_string(need_transpose) + "\n";
+ 
   
   result += "__kernel void gemm2( __global "  + typeString+ "* A,\n"
                                 " __global "  + typeString+ "* B,\n"
@@ -65,12 +67,12 @@ std::string gemmBatchString(
          "int CcoltotalA= N * Acolbatch;\n"
          "int CcoltotalB= N * Bcolbatch;\n";
   
-  result += "for (Dmatrix=get_global_id(2); Dmatrix < rowbatch; Dmatrix += get_global_size(2)) {\n"
+  result += "for (Dmatrix=get_global_id(2); Dmatrix < Arowbatch; Dmatrix += get_global_size(2)) {\n"
                 "DrowB0 = Dmatrix * NpadMatrixB;\n"   
                 "for (Drow = get_global_id(0); Drow < M; Drow += get_global_size(0)) {\n"
                 "DrowC0 = Dmatrix * NpadMatrixC + Drow*NpadC;\n";
           
-if (need_transpose && (Bcolbatch == Acolbatch)) {
+if (need_transpose && (Bcolbatch == Acolbatch) && (Arowbatch == Browbatch)) {
           
 result += "DrowA0 = Dmatrix * NpadMatrixA + Drow;\n"
             
@@ -83,7 +85,7 @@ result += "DrowA0 = Dmatrix * NpadMatrixA + Drow;\n"
                 "acc+= A[DrowA + Dinner * NpadA] * B[DcolB + Dinner * NpadB];\n "     
              " }\n";
                  
-}else if (need_transpose && (Bcolbatch == 1) && (Acolbatch > 1)){
+}else if (need_transpose && (Bcolbatch == 1) && (Acolbatch > 1) && (Arowbatch == Browbatch)){
   
 result +=  " DrowA0 = Dmatrix * NpadMatrixA + Drow;\n" 
        " for (Dcol = get_global_id(1); Dcol < CcoltotalA; Dcol += get_global_size(1)) {\n"
@@ -96,7 +98,7 @@ result +=  " DrowA0 = Dmatrix * NpadMatrixA + Drow;\n"
    " for(Dinner = 0; Dinner < K; Dinner++){\n "
      " acc+= A[DrowA + Dinner * NpadA] * B[DcolB + Dinner * NpadB];\n  "   
    " }\n";
-}else if (need_transpose && (Bcolbatch > 1) && (Acolbatch == 1)){
+}else if (need_transpose && (Bcolbatch > 1) && (Acolbatch == 1) && (Arowbatch == Browbatch)){
   
   result += "DrowA0 = Dmatrix * NpadMatrixA + Drow;\n "//Drow is col of A
   "for (Dcol = get_global_id(1); Dcol < CcoltotalB; Dcol += get_global_size(1)) {\n"
@@ -109,7 +111,7 @@ result +=  " DrowA0 = Dmatrix * NpadMatrixA + Drow;\n"
      " acc+= A[DrowA0 + Dinner * NpadA] * B[DcolB + Dinner * NpadB];\n "     
     "}\n";
 }
-else if (!need_transpose && (Bcolbatch == Acolbatch)){
+else if (!need_transpose && (Bcolbatch == Acolbatch) && (Arowbatch == Browbatch)){
   
 result += 
      "DrowA0 = Dmatrix * NpadMatrixA + Drow*NpadA;\n"  // points to entry (Drow,0) of submatrix Dmatrix of A
@@ -123,7 +125,7 @@ result +=
      "acc+= A[DrowA + Dinner] * B[DcolB + Dinner * NpadB];\n"
      " }\n";
 }
-else if (!need_transpose && (Bcolbatch == 1) && (Acolbatch > 1)){
+else if (!need_transpose && (Bcolbatch == 1) && (Acolbatch > 1) && (Arowbatch == Browbatch)){
 result += "DrowA0 = Dmatrix * NpadMatrixA + Drow * NpadA;\n"     
   "for (Dcol = get_global_id(1); Dcol < CcoltotalA; Dcol += get_global_size(1)) {\n "  
     
@@ -135,7 +137,7 @@ result += "DrowA0 = Dmatrix * NpadMatrixA + Drow * NpadA;\n"
       "acc+= A[DrowA+ Dinner] * B[DcolB + Dinner * NpadB];\n"
     "}\n";
 }
-else if (!need_transpose && (Bcolbatch > 1) && (Acolbatch == 1)){
+else if (!need_transpose && (Bcolbatch > 1) && (Acolbatch == 1) && (Arowbatch == Browbatch)){
   result += "DrowA0 = Dmatrix * NpadMatrixA + Drow * NpadA;\n  "   
   "for (Dcol = get_global_id(1); Dcol < CcoltotalB; Dcol += get_global_size(1)) {\n "  
     "DcolB = DrowB0 + Dcol;\n"
@@ -144,6 +146,33 @@ else if (!need_transpose && (Bcolbatch > 1) && (Acolbatch == 1)){
     "for(Dinner = 0; Dinner < K; Dinner++){\n "
       "acc+= A[DrowA0+ Dinner] * B[DcolB + Dinner * NpadB];\n"
     "}\n";
+}
+else if (!need_transpose && (Bcolbatch == Acolbatch) && (Arowbatch > Browbatch) && (Browbatch==1)){
+  
+  result += 
+    "DrowA0 = Dmatrix * NpadMatrixA + Drow * NpadA;\n"  // points to entry (Drow,0) of submatrix Dmatrix of A
+    
+    "for (Dcol = get_global_id(1); Dcol < CcoltotalA; Dcol += get_global_size(1)) {\n"
+    "DcolB = Dcol;\n"            
+    "numbatch = Dcol/N;\n"
+    "DrowA = DrowA0 + K*numbatch;\n"
+    "acc = 0;\n"
+    "for(Dinner = 0; Dinner < K; Dinner++){\n"
+    "acc+= A[DrowA + Dinner] * B[DcolB + Dinner * NpadB];\n"
+    " }\n";
+}else if (need_transpose && (Bcolbatch == Acolbatch) && (Arowbatch > Browbatch) && (Browbatch==1)) {
+  
+  result += "DrowA0 = Dmatrix * NpadMatrixA + Drow;\n"
+  
+  "for (Dcol = get_global_id(1); Dcol < CcoltotalA; Dcol += get_global_size(1)) {\n"
+  "DcolB =  Dcol;\n"
+  "acc = 0;\n"
+  "numbatch = Dcol/N;\n"
+  "DrowA = DrowA0 + M*numbatch;\n"
+  "for(Dinner = 0; Dinner < K; Dinner++){\n "
+  "acc+= A[DrowA + Dinner * NpadA] * B[DcolB + Dinner * NpadB];\n "     
+  " }\n";
+  
 }
 
 
@@ -175,7 +204,8 @@ void gemmBatch(
     viennacl::matrix<T> &A,
     viennacl::matrix<T> &B,
     viennacl::matrix<T> &C,
-    const int rowbatch, //num of batches in row//std::vector<int> Nglobal,//   std::vector<int> Nlocal,// const int NlocalCache, 
+    const int Arowbatch, //num of batches in row//std::vector<int> Nglobal,//   std::vector<int> Nlocal,// const int NlocalCache, 
+    const int Browbatch,
     const int Acolbatch, //num of batches in col
     const int Bcolbatch,
     const int need_transpose,
@@ -193,12 +223,13 @@ void gemmBatch(
  
   if (need_transpose==1){
     M = A.size2()/Acolbatch;
-    K = A.size1()/rowbatch;
+    K = A.size1()/Arowbatch;
     gemmString =  gemmBatchString<T>(  
       M, 
       N, // ncol of Bi
       K,
-      rowbatch,
+      Arowbatch,
+      Browbatch,
       Acolbatch,
       Bcolbatch,
       A.internal_size2(), 
@@ -210,13 +241,14 @@ void gemmBatch(
       need_transpose);
   }
   else if (need_transpose==0){
-    M = A.size1()/rowbatch;
+    M = A.size1()/Arowbatch;
     K = A.size2()/Acolbatch;
     gemmString =  gemmBatchString<T>(  
       M, 
       N, // ncol of Bi
       K,
-      rowbatch,
+      Arowbatch,
+      Browbatch,
       Acolbatch,
       Bcolbatch,
       A.internal_size2(), 
@@ -252,7 +284,8 @@ template <typename T>
 SEXP gemmBatchTyped( Rcpp::S4 AR,
                      Rcpp::S4 BR,
                      Rcpp::S4 CR,
-                     const int rowbatch, //num of batches in row
+                     const int Arowbatch, //num of batches in row
+                     const int Browbatch,
                      const int Acolbatch, //num of batches in col
                      const int Bcolbatch,
                      const int need_transpose,
@@ -266,7 +299,7 @@ SEXP gemmBatchTyped( Rcpp::S4 AR,
   std::shared_ptr<viennacl::matrix<T> > B = getVCLptr<T>(BR.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<T> > C = getVCLptr<T>(CR.slot("address"), BisVCL, ctx_id);
   
-  gemmBatch<T>(*A, *B, *C, rowbatch, Acolbatch, Bcolbatch, need_transpose, NglobalR, ctx_id);	
+  gemmBatch<T>(*A, *B, *C, Arowbatch, Browbatch, Acolbatch, Bcolbatch, need_transpose, NglobalR, ctx_id);	
   
   return Rcpp::wrap(0L);
 }
@@ -280,7 +313,8 @@ SEXP gemmBatchBackend(
     Rcpp::S4 A,
     Rcpp::S4 B,
     Rcpp::S4 C,  //output matrices, stacked row-wise
-    const int rowbatch, //num of batches in row
+    const int Arowbatch, //num of batches in row
+    const int Browbatch,
     const int Acolbatch, //num of batches in col
     const int Bcolbatch,
     const int need_transpose, //A need transpose?
@@ -290,9 +324,9 @@ SEXP gemmBatchBackend(
   Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(C));
   std::string precision_type = (std::string) classVarR;
   if(precision_type == "fvclMatrix") {
-    gemmBatchTyped<float>(A, B, C, rowbatch, Acolbatch, Bcolbatch, need_transpose, Nglobal);
+    gemmBatchTyped<float>(A, B, C, Arowbatch,Browbatch, Acolbatch, Bcolbatch, need_transpose, Nglobal);
   } else if (precision_type == "dvclMatrix") {
-    gemmBatchTyped<double>(A, B, C, rowbatch, Acolbatch, Bcolbatch, need_transpose, Nglobal);
+    gemmBatchTyped<double>(A, B, C, Arowbatch, Browbatch, Acolbatch, Bcolbatch, need_transpose, Nglobal);
   } else {
     Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
   }

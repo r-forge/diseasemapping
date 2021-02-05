@@ -92,7 +92,7 @@ likfitGpu <- function( modelname, mydat, type=c("double", "float"),
         
     if(form == 1 | form == 3) { # to get one, see the notes
                 # temp = y-X*beta
-        temp <- y - gpuRandom::gemmBatch(X, betas, 1L, 1L, colbatch, need_transpose = FALSE, workgroupSize)
+        temp <- y - gpuRandom::gemmBatch(X, betas, Arowbatch=1L, Browbatch=1L, Acolbatch=1L, Bcolbatch=colbatch, need_transpose = FALSE, workgroupSize)
                 
         # L * A = temp, backsolve for A
         A <- vclMatrix(0, nrow(Vbatch), ncol(temp), type = gpuR::typeof(Vbatch))
