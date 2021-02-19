@@ -33,6 +33,18 @@ gemmBatchBackend <- function(A, B, C, Arowbatch, Browbatch, Acolbatch, Bcolbatch
     .Call('_gpuRandom_gemmBatchBackend', PACKAGE = 'gpuRandom', A, B, C, Arowbatch, Browbatch, Acolbatch, Bcolbatch, need_transpose, Nglobal)
 }
 
+#' 
+#' Multiplies a rectangular matrix by a rectangular matrix in batches
+#'
+#' @param C output matrices, stacked row-wise
+#' @param A rectangular matrices
+#' @param B rectangular matrices 
+#' @param Nglobal vector of number of global work items//' @param Nlocal vector of number of local work items//' @param NlocalCache elements in local cache
+#' @export
+gemmBatch2backend <- function(A, B, C, transposeABC, submatrixA, submatrixB, submatrixC, batches, workgroupSize, NlocalCache, verbose) {
+    .Call('_gpuRandom_gemmBatch2backend', PACKAGE = 'gpuRandom', A, B, C, transposeABC, submatrixA, submatrixB, submatrixC, batches, workgroupSize, NlocalCache, verbose)
+}
+
 cpp_gpuFisher_test <- function(xR, resultsR, B, streamsR, max_global_size, max_local_size) {
     .Call('_gpuRandom_cpp_gpuFisher_test', PACKAGE = 'gpuRandom', xR, resultsR, B, streamsR, max_global_size, max_local_size)
 }

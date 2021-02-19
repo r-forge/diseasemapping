@@ -70,7 +70,7 @@ clrngStatus clrngSetErrorString(cl_int err, const char* msg, ...)
     va_list args;
     va_start(args, msg);
     vsprintf(formatted, msg, args);
-    sprintf(errorString, "[%s] %s", base, formatted);
+    snprintf(errorString, sizeof(errorString), "[%s] %s", base, formatted);
     va_end(args);
 	return (clrngStatus)err;
 }

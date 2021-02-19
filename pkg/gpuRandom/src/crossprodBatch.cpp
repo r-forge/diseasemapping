@@ -252,7 +252,7 @@ void crossprodBatch(
   // the context
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   
-  cl_device_type type_check = ctx.current_device().type();
+//  cl_device_type type_check = ctx.current_device().type();
   
  /* const int NpadC, 
   const int NpadA,
