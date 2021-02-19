@@ -27,7 +27,6 @@ gemmBatch <- function(
   if( (Arowbatch != Browbatch) & ((Acolbatch != Bcolbatch))) 
     stop("A and B must have same number of row batches or A and B must have same number of col batches") 
   
-  
   if((Acolbatch != Bcolbatch) & (Bcolbatch != 1) & (Acolbatch != 1))
     stop("A and B must have same number of blocks in column or either A or B can have only one block in column")
   

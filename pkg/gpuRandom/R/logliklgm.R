@@ -4,223 +4,206 @@
 #' @export
 
 
-#before start, we have SpatialPointsDataFrame and spatial model
+#before start, we have spatial model and SpatialPointsDataFrame 
 
 lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
+    
+    covariates = model.matrix(modelname$model$formula, data=modelname$data)
+    temp = model.frame(modelname$model$formula, data=modelname$data)
+    response=temp[,as.character(attributes(terms(temp))$variables)[2]]
+    n = length(response)
+    p = ncol(covariates)
+    yX=vclMatrix(cbind(response,covariates),type=type)   
+    y <-  vclMatrix(yX[,1], nrow=n, ncol=1, type = type) 
+    X <-  vclMatrix(yX[,c(2:(1+p))],type = type)
+    coordsGpu<-vclMatrix(mydat@coords,type=type)
+    
+    
+    output<-list(yX=yX, y=y, X=X, coordsGpu=coordsGpu, n=n, p=p)
+    
+    output
+}
+
+
+
+
+
+
+
+
+#' @title Estimate Log-likelihood for Gaussian random fields middle step
+#'
+#' @useDynLib gpuRandom
+#' @export  
+
+likfitGpu_0 <- function(yX, y, X, n, p, coordsGpu, type=c("double", "float"),
+                        paramsBatchcpu, #cpu Matrix of parameter sets,
+                        betas=NULL, #a vclmatrix  #given by the user or provided from formula
+                        form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),# minustwotimes=TRUE,
+                        workgroupSize,
+                        localSize,
+                        NlocalCache){
+    
+    if((is.null(betas) & form == "loglik") | (is.null(betas) & form == "mlFixSigma") ) stop("need betas")
+    
+    form = c(loglik=1, ml=2, mlFixSigma=3, mlFixBeta=4, reml=5, remlPro=6)[form]
+    
+    rowbatch = nrow(paramsBatchcpu)
+    colbatch = 1     #colbatch = ncol(y)
+    localSizechol<-localSize
+    localSizechol[2]<-workgroupSize[2]
+    
+    paramsBatch <- vclMatrix(paramsBatchcpu, type=type)
+    Vbatch = vclMatrix(0, rowbatch*n, n, type = type)
+    diagMat = vclMatrix(0, rowbatch, n, type = type) 
+    logD<- vclVector(0, length=rowbatch,type=type)
+    ab <- vclMatrix(0, nrow(Vbatch), 1+p, type = type)
+    A <- vclMatrix(0, nrow(Vbatch), colbatch, type = gpuR::typeof(Vbatch))
+    one0 <- vclMatrix(0, rowbatch*colbatch, colbatch, type = gpuR::typeof(Vbatch))
+    temp2 <- vclMatrix(0, (1+p)*rowbatch, (1+p), type = type)
+    diagP <- vclMatrix(0, rowbatch, p, type = type)
+    temp3 <- vclMatrix(0, rowbatch*p, colbatch, type = type)
+    nine0 <- vclMatrix(0, colbatch*rowbatch, colbatch, type = type)
+    aTDa <- vclMatrix(0, colbatch*rowbatch, colbatch, type = type)
+    ssqBeta<- vclMatrix(0, nrow=rowbatch,ncol=1, type=type)
+    logP<- vclVector(0, length=rowbatch, type=type)
+    
+    ########################### 1, loglik or ml(beta,sigma), given beta and sigma #############################
+    
+    # Vbatch=LDL^T, cholesky decomposition
+    gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
+    gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSizechol, NlocalCache=NlocalCache)
+    #logD <- apply(log(diagMat),1,sum)
+    gpuRandom:::rowsumBackend(diagMat, logD,type="row", log=1)    
+    variances<-vclMatrix(paramsBatch[,3],nrow=rowbatch, ncol=1,type = type)   
+    #L(a b) = (y X)
+    gpuRandom::backsolveBatch(ab, Vbatch, yX, numbatchB=1L, diagIsOne=TRUE, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache)
+    b <-  vclMatrix(ab[,c(2:(1+p))],type = type) 
+    
+    if(form == 1 | form == 3){ # to get one, see the notes
+        #temp = y-X*beta
+        temp <- y - gpuRandom::gemmBatch(X, betas, Arowbatch=1L, Browbatch=1L, Acolbatch=1L, Bcolbatch=colbatch, need_transpose = FALSE, workgroupSize)       
+        # L * A = temp, backsolve for A
+        gpuRandom::backsolveBatch(A, Vbatch, temp, numbatchB=1L,  diagIsOne=TRUE,workgroupSize,  localSize,  NlocalCache)      
+        # one0 = A^T * D^(-1) * A = (y-X*betas)^T * V^(-1) * (y-X*betas)
+        gpuRandom:::crossprodBatchBackend(one0, A, diagMat,  invertD=TRUE,  workgroupSize, localSize, NlocalCache)       
+        #to obtain ssqBeta=betaT*XT V^(-1) X*beta = betaT bT D^(-1) b*beta
+        # b*beta   n*p p*1 = n*1 
+        bBeta <-gpuRandom::gemmBatch(b, betas,Arowbatch=rowbatch, Browbatch=1L, Acolbatch=1L, Bcolbatch=1L, need_transpose = FALSE, workgroupSize)
+        gpuRandom:::crossprodBatchBackend(ssqBeta, bBeta, diagMat,  invertD=TRUE,  workgroupSize, localSize, NlocalCache)
+    }
+    # to get hat_sigma^2
+    # temp2 = (ab)^T * D^(-1) *ab
+    gpuRandom:::crossprodBatchBackend(temp2, ab, diagMat, invertD=TRUE, workgroupSize, localSize, NlocalCache)    
+    # b^T * D^(-1) * b = Q * P * Q^T, cholesky of a subset (right bottom) of temp2
+    gpuRandom:::cholBatchBackend(temp2, diagP, c(colbatch, p, colbatch, p), c(0, rowbatch, 0, p), rowbatch, workgroupSize, localSizechol, NlocalCache)     
+    # Q * temp3 = (b^T * D^(-1) *a), backsolve for temp3    2 by 1
+    gpuRandom:::backsolveBatchBackend(temp3, temp2, temp2, c(0,p,0,colbatch), c(colbatch, p, colbatch, p), c(colbatch, p, 0, colbatch),
+                                      rowbatch,diagIsOne=TRUE, workgroupSize, localSize, NlocalCache)     
+    # nine0 = temp3^T * P^(-1) * temp3,  four 1 by 1 matrices
+    gpuRandom:::crossprodBatchBackend(nine0, temp3, diagP, invertD=TRUE,  workgroupSize, localSize, NlocalCache) ##doesn't need selecting row/col
+    #extract a^TDa from temp2
+    for (j in 1:colbatch){
+        for (i in 1:rowbatch){
+            aTDa[i,j]= temp2[(i-1)*ncol(ab)+j, j]
+        }
+    }
+    two = aTDa - nine0  
+    
+    if(form == 1 | form == 4){     
+        part1 <- n*log(variances) + logD    #part1 = n*log(sigma^2)+log |D|
+    }  
+    gpuRandom:::rowsumBackend(diagP, logP,type="row",log=1)  #logP <- apply(log(diagP),1,sum)
+    
+    
+    
+    
+    if(form == 1 ){ #loglik
+        # n*log(sigma^2) + log |D| + one/variances # result <- part1 + one0/variances + n*log(2*pi)
+        Result = list(minusTwoLogLik=part1 + one0/variances + n*log(2*pi), 
+                      ssqBeta=ssqBeta, ssqX=NULL, ssqY=aTDa, logD=logD, logP=logP)      
         
-        covariates = model.matrix(modelname$model$formula, data=modelname$data)
+    }else if(form == 2) {#ml  result = n*log(two) +logD + n*log(2*pi) + n
+        Result = list(minusTwoLogLik=n*log(two/n) +logD + n*log(2*pi) + n,
+                      ssqBeta=NULL, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)           
         
-        temp = model.frame(modelname$model$formula, data=modelname$data)
+    }else if(form == 3){ # mlFixSigma/ or ml(beta,hatsigma)result = n*log(one0/n)+logD + n*log(2*pi) + n
+        Result = list(minusTwoLogLik=n*log(one0/n)+logD + n*log(2*pi) + n, 
+                      ssqBeta=ssqBeta, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)   
         
-        response=temp[,as.character(attributes(terms(temp))$variables)[2]]
+    }else if(form == 4){ # mlFixBeta / or ml(hatbeta,sigma) result = part1 + two/variances + n*log(2*pi) 
+        Result = list(minusTwoLogLik=part1 + two/variances + n*log(2*pi), 
+                      ssqBeta=NULL, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)            
         
-        yX=vclMatrix(cbind(response,covariates),type=type)
+    }else if(form == 5){ #reml
+        first_part <- (n-p)*log(variances) + logD + logP  #result <- first_part + two/variances + n*log(2*pi) 
+        Result = list(minusTwoLogLik=first_part + two/variances + n*log(2*pi), 
+                      ssqBeta=0, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)            
         
-        coordsGpu<-vclMatrix(mydat@coords,type=type)
-        
-        n = length(response)
-        p = ncol(covariates)
-        
-        output<-list(yX=yX, coordsGpu=coordsGpu, n=n, p=p)
-        
-        output
+    }else if(form == 6){ #remlPro  #(n-p)*log two + log|D| + log|P|, result <- (n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p
+        Result = list(minusTwoLogLik=(n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p, 
+                      ssqBeta=0, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)                  
+    }
+    
+    
+    
+    Result
+    
 }
 
 
 #' @title Estimate Log-likelihood for Gaussian random fields
 #'
 #' @useDynLib gpuRandom
-#' @export  
-
-likfitGpu <- function( modelname, mydat, type=c("double", "float"),
-                       paramsBatch, #vclMatrix of parameter sets,Vbatch, # matern correlation vclmatrix,diagMat, # D of cholesky decomposition
-                       betas=NULL, #a vclmatrix  #given by the user or provided from formula
-                       form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),# minustwotimes=TRUE,
-                       workgroupSize,
-                       localSize,
-                       NlocalCache,
-                       verbose=FALSE){
-        
-    if((is.null(betas) & form == "loglik") | (is.null(betas) & form == "mlFixSigma") ) stop("need betas")
-        
-    yX <- lgmGpuObjectes(modelname, mydat, type)$yX
-    coordsGpu <- lgmGpuObjectes(modelname, mydat, type)$coordsGpu   
-    n <- lgmGpuObjectes(modelname, mydat, type)$n 
-    p <- lgmGpuObjectes(modelname, mydat, type)$p  
+#' @export 
+likfitGpu <- function(modelname, mydat, type=c("double", "float"), 
+                      bigparamsBatchcpu, #cpu Matrix of parameter sets,
+                      betas=NULL, #a vclmatrix  #given by the user or provided from formula
+                      form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),# minustwotimes=TRUE,
+                      groupsize,
+                      workgroupSize,
+                      localSize,
+                      NlocalCache,
+                      verbose=FALSE){
     
-    y <-  vclMatrix(yX[,1], nrow=n, ncol=1, type = type) 
-    X <-  vclMatrix(yX[,c(2:(1+p))],type = type)
-        
-    form = c(loglik=1, ml=2, mlFixSigma=3, mlFixBeta=4, reml=5, remlPro=6)[form]
-        
-    rowbatch = nrow(paramsBatch)
-    colbatch = 1     #colbatch = ncol(y)
-        
-    localSizechol<-localSize
-    localSizechol[2]<-workgroupSize[2]
-        
-        
-    Vbatch = vclMatrix(0, rowbatch*n, n, type = type)
-    diagMat = vclMatrix(0, rowbatch, n, type = type) 
-    logD<- vclVector(0, length=rowbatch,type=type)
-    ab <- vclMatrix(0, nrow(Vbatch), 1+p, type = type)
-    temp2 <- vclMatrix(0, (1+p)*rowbatch, (1+p), type = type)
-    diagP <- vclMatrix(0, rowbatch, p, type = type)
-    temp3 <- vclMatrix(0, rowbatch*p, colbatch, type = type)
-    nine0 <- vclMatrix(0, colbatch*rowbatch, colbatch, type = type)
-    aTDa <- vclMatrix(0, colbatch*rowbatch, colbatch, type = type)
-    logP<- vclVector(0, length=rowbatch, type=type)
-        
-########################### 1, loglik or ml(beta,sigma), given beta and sigma #############################
-        
-    # Vbatch=LDL^T, cholesky decomposition
-    gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
-    gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSizechol, NlocalCache=NlocalCache)
-        
-        
-    gpuRandom:::rowsumBackend(diagMat, logD,type="row", log=1)     #logD <- apply(log(diagMat),1,sum)
-    variances<-vclMatrix(paramsBatch[,3],nrow=rowbatch, ncol=1,type = type)
+    lgmGpuObjectes(modelname, mydat, type=type)
+    totalnumbersets <- nrow(bigparamsBatchcpu)
+    Result<- vclVector(rep(0, totalnumbersets),type=type)
+    index <- c(1:groupsize)
     
-    #L(a b) = (y X)
-    gpuRandom::backsolveBatch(ab, Vbatch, yX, numbatchB=1L, diagIsOne=TRUE, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache)
-    b <-  vclMatrix(ab[,c(2:(1+p))],type = type) 
+    for(i in 0:(totalnumbersets/groupsize) ){    # can do 8990 sets of parameters
+        
+        if(groupsize*(i+1) < totalnumbersets +1){
+            
+            paramsBatchcpu<-bigparamsBatchcpu[index + i*groupsize,]
+            
+            resulti <- (likfitGpu_0(lgmGpuObjectes(modelname, mydat, type)$yX,
+                                    lgmGpuObjectes(modelname, mydat, type)$y, 
+                                    lgmGpuObjectes(modelname, mydat, type)$X, 
+                                    lgmGpuObjectes(modelname, mydat, type)$n, 
+                                    lgmGpuObjectes(modelname, mydat, type)$p, 
+                                    lgmGpuObjectes(modelname, mydat, type)$coordsGpu, 
+                                    type=type,
+                                    paramsBatchcpu, #cpu Matrix of parameter sets,
+                                    betas= betas, #a vclmatrix  #given by the user or provided from formula
+                                    form = form,# minustwotimes=TRUE,
+                                    workgroupSize,
+                                    localSize,
+                                    NlocalCache)$minusTwoLogLik)
+            
+            
+            
+            replace(Result,index + i*groupsize, resulti)
+        }
+        
+    }
     
-        
-    if(form == 1 | form == 3) { # to get one, see the notes
-                # temp = y-X*beta
-        temp <- y - gpuRandom::gemmBatch(X, betas, Arowbatch=1L, Browbatch=1L, Acolbatch=1L, Bcolbatch=colbatch, need_transpose = FALSE, workgroupSize)
-                
-        # L * A = temp, backsolve for A
-        A <- vclMatrix(0, nrow(Vbatch), ncol(temp), type = gpuR::typeof(Vbatch))
-        gpuRandom::backsolveBatch(A, Vbatch, temp, numbatchB=1L,  diagIsOne=TRUE,workgroupSize,  localSize,  NlocalCache)
-                
-                
-        # one0 = A^T * D^(-1) * A = (y-X*betas)^T * V^(-1) * (y-X*betas)
-        one0 <- vclMatrix(0, rowbatch*colbatch, colbatch, type = gpuR::typeof(Vbatch))
-        # one won't need if there is just one y batch (if colbatch=1)
-        # one<- vclMatrix(0, nrow=rowbatch, ncol=colbatch, type = gpuR::typeof(Vbatch))
-        gpuRandom:::crossprodBatchBackend(one0, A, diagMat,  invertD=TRUE,  workgroupSize, localSize, NlocalCache)
-                
-        #
-        #for (j in 1:colbatch){
-        #   for(i in 1:rowbatch){
-        #     one[i,j] <- one0[colbatch*(i-1)+j,j]
-        #   }
-        #}
-          
-       #to obtain ssqBeta=betaT*XT V^(-1) X*beta = betaT bT D^(-1) b*beta
-       # b*beta  = n*p p*1 = n*1 
-    bBeta <-gpuRandom::gemmBatch(b, betas,Arowbatch=rowbatch, Browbatch=1L, Acolbatch=1L, Bcolbatch=1L, need_transpose = FALSE, workgroupSize)
-    ssqBeta<- vclMatrix(0, nrow=rowbatch,ncol=1, type=type)
-    gpuRandom:::crossprodBatchBackend(ssqBeta, bBeta, diagMat,  invertD=TRUE,  workgroupSize, localSize, NlocalCache)
- }else { # form == 2,4,5,6
-    #profile = nlog hat_sigma^2 + log|D|
-    # to get hat_sigma^2
-
-    # temp2 = (ab)^T * D^(-1) *ab
-    gpuRandom:::crossprodBatchBackend(temp2, ab, diagMat, invertD=TRUE, workgroupSize, localSize, NlocalCache)
-                
-    # b^T * D^(-1) * b = Q * P * Q^T, cholesky of a subset (right bottom) of temp2
-    gpuRandom:::cholBatchBackend(temp2, diagP, c(colbatch, p, colbatch, p), c(0, rowbatch, 0, p), 
-                                rowbatch, workgroupSize, localSizechol, NlocalCache) 
-                
-    # Q * temp3 = (b^T * D^(-1) *a), backsolve for temp3    2 by 1
-    gpuRandom:::backsolveBatchBackend(temp3, temp2, temp2,
-                             c(0,p,0,colbatch), c(colbatch, p, colbatch, p), c(colbatch, p, 0, colbatch),
-                             rowbatch,diagIsOne=TRUE, workgroupSize, localSize, NlocalCache)
-                
-
-        # nine0 = temp3^T * P^(-1) * temp3,  four 1 by 1 matrices
-    gpuRandom:::crossprodBatchBackend(nine0, temp3, diagP, 
-                    invertD=TRUE,  workgroupSize, localSize, NlocalCache) ##doesn't need selecting row/col
-                
-        #won't need if there is just one y batch (if colbatch=1)
-        #nine <- vclMatrix(0, colbatch*rowbatch, colbatch, type = gpuR::typeof(Vbatch))  
-                
-        #extract a^TDa from temp2
-    for (j in 1:colbatch){
-        for (i in 1:rowbatch){
-            aTDa[i,j]= temp2[(i-1)*ncol(ab)+j, j]
-            }
-    }
-        #extract needed cells from nine0 # won't need if there is just one y batch (if colbatch=1)
-        # for (j in 1:colbatch){
-        #         for (i in 1:rowbatch){
-        #                 nine[i,j]= nine0[(i-1)*colbatch+j, j]
-        #         }
-        # }
-    two = aTDa - nine0
-    }
-        
-    if(form == 1 | form == 4){
-        #part1 = n*log(sigma^2)+log |D|
-        part1 <- n*log(variances) + logD
-        #replicate the part1 to do the plus operation
-        #part1 <- matrix(part1, nrow=length(part1), ncol=colbatch, byrow=F)
-        #part1 <- vclMatrix(part1,nrow=length(part1), ncol=1, type = type)
-    }else if(form == 5 | form==6){
-        gpuRandom:::rowsumBackend(diagP, logP,type="row",log=1)  #logP <- apply(log(diagP),1,sum)
-    }
-        
-        
-       
-        
-        
-    if(form == 1 ){ #loglik
-        # n*log(sigma^2) + log |D| + one/variances # result <- part1 + one0/variances + n*log(2*pi)
-                
-    Result = list(minusTwoLogLik=part1 + one0/variances + n*log(2*pi), 
-                  ssqBeta=ssqBeta, ssqX=NULL, ssqY=aTDa, logD=logD, logP=NULL)      
-                
-                
-    }else if(form == 2) {#ml  result = n*log(two) +logD + n*log(2*pi) + n
-    
-    Result = list(minusTwoLogLik=n*log(two/n) +logD + n*log(2*pi) + n,
-                  ssqBeta=NULL, ssqX=nine0, ssqY=aTDa, logD=logD, logP=NULL)           
-                
-                
-    }else if(form == 3){ # mlFixSigma/ or ml(beta,hatsigma)result = n*log(one0/n)+logD + n*log(2*pi) + n
-                
-    Result = list(minusTwoLogLik=n*log(one0/n)+logD + n*log(2*pi) + n, 
-                  ssqBeta=ssqBeta, ssqX=nine0, ssqY=aTDa, logD=logD, logP=NULL)   
-        
-        
-    }else if(form == 4){ # mlFixBeta / or ml(hatbeta,sigma) result = part1 + two/variances + n*log(2*pi) 
-                
-    Result = list(minusTwoLogLik=part1 + two/variances + n*log(2*pi), 
-                  ssqBeta=NULL, ssqX=nine0, ssqY=aTDa, logD=logD, logP=NULL)            
-          
-    }else if(form == 5){ #reml
-        
-    first_part <- (n-p)*log(variances) + logD + logP  #result <- first_part + two/variances + n*log(2*pi) 
-          
-    Result = list(minusTwoLogLik=first_part + two/variances + n*log(2*pi), 
-                  ssqBeta=0, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)            
-             
-    }else if(form == 6){ #remlPro  #(n-p)*log two + log|D| + log|P|, result <- (n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p
-                
-    Result = list(minusTwoLogLik=(n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p, 
-                  ssqBeta=0, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)                  
-    }
-        
-        
-    #    if(!minustwotimes) {
-    #    Result = -0.5*Result
-    #    } 
-
     Result
-    
 }
 
 
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
+
+
+
+
+

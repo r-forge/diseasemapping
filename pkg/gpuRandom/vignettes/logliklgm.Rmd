@@ -48,7 +48,7 @@ temp0
 
 
 
-```{r test on gpu, eval=T}
+```{r test on gpu, eval=F}
 paramsBatch = rbind(c(shape=1.25, range=0.2641423, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
                     c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
                     c(shape=2.25, range=0.5, variance = 2.5, nugget = 2.25, anisoRatio = 1, anisoAngleRadians = 0))
@@ -67,18 +67,18 @@ NlocalCache=50
 
 
 temp1=gpuRandom::likfitGpu(myres,mydat, type="double", 
-                    paramsBatch,betas,form="loglik",minustwotimes=TRUE,workgroupSize,localSize, NlocalCache)
+                    paramsBatch,betas,form="loglik",workgroupSize,localSize, NlocalCache)
 
 #as.matrix(temp1)
 #56.21288
 
 # 72.85779
 temp2=gpuRandom::likfitGpu(myres,mydat, type="double", 
-            paramsBatch,betas=NULL,form="ml",minustwotimes=TRUE,workgroupSize,localSize, NlocalCache)$minusTwoLogLik
+            paramsBatch,betas=NULL,form="ml",workgroupSize,localSize, NlocalCache)$minusTwoLogLik
 as.matrix(temp2)
 # #117.924
  temp3=gpuRandom::likfitGpu(myres,mydat, type="double", 
-             paramsBatch,betas,form="mlFixSigma",minustwotimes=TRUE,workgroupSize,localSize, NlocalCache)$minusTwoLogLik
+             paramsBatch,betas,form="mlFixSigma",workgroupSize,localSize, NlocalCache)$minusTwoLogLik
  as.matrix(temp3)
 # #50.17793
 # 
@@ -159,18 +159,18 @@ loglik2 <- part1 + one0/paramsBatch[,3] + n*log(2*pi)
 ```{r test_using_another_example_Nov20,eval=F}
 library('geostatsp')
 data('swissRain')
-sr2 = swissRain[1:20,]
+sr2 = swissRain[0:100,]
 
 # extract variables for modeling
 sr2$sqrtY = sqrt(sr2$rain)
 sr2$elev = raster::extract(swissAltitude, sr2)
-dist(sr2@coords)
+#dist(sr2@coords)
 # build spatial model
 
 swissFitIso = likfitLgm(
   data=sr2,
   formula=sqrtY ~ elev,
-  param=c(range=500,shape=1,nugget=2.5),
+  param=c(range=50000,shape=1,nugget=1.5),
   reml=FALSE,
   verbose=FALSE
 )
@@ -178,7 +178,7 @@ swissFitIso = likfitLgm(
 swissFitIso$parameters
 
 newParamList = list(
-  range=seq(10000, 50000 , len=10),
+  range=seq(40000, 90000 , len=29),
   nugget = seq(0,1,len=10)
 )
 newParam= do.call(expand.grid, newParamList)
@@ -192,11 +192,11 @@ paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
 paramsBatch = vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0), 22-ncol(paramsBatch0))),type="double")
 
 
-workgroupSize=c(64,16,16)
+workgroupSize=c(128,16,8)
 localSize = c(4,4,1)
 NlocalCache=500
  
-temp=gpuRandom::likfitGpu(swissFitIso,sr2, type="double",paramsBatch,betas=NULL,form="ml",minustwotimes=TRUE,workgroupSize,localSize, NlocalCache)
+temp=gpuRandom::likfitGpu(swissFitIso,sr2, type="double",paramsBatch,betas=NULL,form="ml",workgroupSize,localSize,NlocalCache)$minusTwoLogLik
 
 tempcpu<-as.matrix(temp)
 
@@ -216,6 +216,74 @@ mapmisc::legendBreaks('topright', myCol)
 
 
 
+```{r test_loop_Feb9,eval=F}
+library('geostatsp')
+data('swissRain')
+sr2 = swissRain[0:80,]
+
+# extract variables for modeling
+sr2$sqrtY = sqrt(sr2$rain)
+sr2$elev = raster::extract(swissAltitude, sr2)
+
+
+swissFitIso = likfitLgm(
+  data=sr2,
+  formula=sqrtY ~ elev,
+  param=c(range=50000,shape=1,nugget=1.5),
+  reml=FALSE,
+  verbose=FALSE
+)
+
+swissFitIso$parameters
+swissFitIso$summary[c("(Intercept)","elev"),1]
+
+#betas<-vclMatrix(as.matrix(swissFitIso$summary[c("(Intercept)","elev"),1]),type="double")
+
+
+
+
+newParamList = list(
+  range=seq(30000, 80000 , len=290),
+  nugget = seq(0,1,len=20)
+) #5800
+
+
+newParam= do.call(expand.grid, newParamList)
+
+otherparams = c(shape=1, variance = 2.021188, anisoRatio = 1, anisoAngleRadians = 0)
+otherparams = matrix(rep(otherparams,each=nrow(newParam)),nrow=nrow(newParam))
+colnames(otherparams) <- c("shape","variance", "anisoRatio", "anisoAngleRadians")
+
+paramsBatch0 = cbind(newParam, otherparams)
+bigparamsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
+
+
+workgroupSize=c(128,16,8)
+localSize = c(4,4,1)
+NlocalCache=500
+ 
+# likfitGpu <- function(modelname, mydat, type=c("double", "float"), 
+#                       bigparamsBatchcpu, #cpu Matrix of parameter sets,
+#                       betas=NULL, #a vclmatrix  #given by the user or provided from formula
+#                       form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),# minustwotimes=TRUE,
+#                       groupsize,
+#                       workgroupSize,
+#                       localSize,
+#                       NlocalCache,
+#                       verbose=FALSE)
+
+system.time(temp <- gpuRandom::likfitGpu(swissFitIso, sr2, type="double", 
+                      bigparamsBatch0, #cpu Matrix of parameter sets,
+                      betas=NULL, #a vclmatrix  #given by the user or provided from formula
+                      form = "ml",  
+                      groupsize=290,
+                      workgroupSize,
+                      localSize,
+                      NlocalCache))
+tempcpu<-as.matrix(temp)
+
+
+```
 
 
 
