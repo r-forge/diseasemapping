@@ -6,7 +6,7 @@
 
 #before start, we have spatial model and SpatialPointsDataFrame 
 
-lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
+lgmGpuObjectes1 <- function(modelname, mydat, type=c("double", "float")){
     
     covariates = model.matrix(modelname$model$formula, data=modelname$data)
     temp = model.frame(modelname$model$formula, data=modelname$data)
@@ -26,7 +26,30 @@ lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
 
 
 
-
+lgmGpuObjectes2 <- function(rowbatch, n, p, type=c("double", "float")){
+    
+    colbatch = 1
+    
+    Vbatch = vclMatrix(0, rowbatch*n, n, type = type)
+    diagMat = vclMatrix(0, rowbatch, n, type = type) 
+    logD<- vclVector(0, length=rowbatch,type=type)
+    ab <- vclMatrix(0, nrow(Vbatch), 1+p, type = type)
+    A <- vclMatrix(0, nrow(Vbatch), colbatch, type = type)
+    one0 <- vclMatrix(0, rowbatch*colbatch, colbatch, type = type)
+    temp2 <- vclMatrix(0, (1+p)*rowbatch, (1+p), type = type)
+    diagP <- vclMatrix(0, rowbatch, p, type = type)
+    temp3 <- vclMatrix(0, rowbatch*p, colbatch, type = type)
+    nine0 <- vclMatrix(0, colbatch*rowbatch, colbatch, type = type)
+    aTDa <- vclMatrix(0, colbatch*rowbatch, colbatch, type = type)
+    ssqBeta <- vclMatrix(0, nrow=rowbatch, ncol=1, type=type)
+    logP <- vclVector(0, length=rowbatch, type=type)
+    
+    
+    output<-list(Vbatch=Vbatch, diagMat=diagMat, logD=logD, ab=ab, A=A, one0=one0, temp2=temp2, diagP=diagP, 
+                 temp3=temp3, nine0=nine0, aTDa=aTDa, ssqBeta=ssqBeta, logP=logP)
+    
+    output
+}
 
 
 
@@ -36,7 +59,21 @@ lgmGpuObjectes <- function(modelname, mydat, type=c("double", "float")){
 #' @useDynLib gpuRandom
 #' @export  
 
-likfitGpu_0 <- function(yX, y, X, n, p, coordsGpu, type=c("double", "float"),
+likfitGpu_0 <- function(yX, y, X, n, p, coordsGpu, 
+                        type=c("double", "float"),
+                        Vbatch,
+                        diagMat,
+                        logD,
+                        ab,
+                        A,
+                        one0,
+                        temp2,
+                        diagP,
+                        temp3,
+                        nine0,
+                        aTDa,
+                        ssqBeta,
+                        logP,
                         paramsBatchcpu, #cpu Matrix of parameter sets,
                         betas=NULL, #a vclmatrix  #given by the user or provided from formula
                         form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),# minustwotimes=TRUE,
@@ -54,20 +91,6 @@ likfitGpu_0 <- function(yX, y, X, n, p, coordsGpu, type=c("double", "float"),
     localSizechol[2]<-workgroupSize[2]
     
     paramsBatch <- vclMatrix(paramsBatchcpu, type=type)
-    Vbatch = vclMatrix(0, rowbatch*n, n, type = type)
-    diagMat = vclMatrix(0, rowbatch, n, type = type) 
-    logD<- vclVector(0, length=rowbatch,type=type)
-    ab <- vclMatrix(0, nrow(Vbatch), 1+p, type = type)
-    A <- vclMatrix(0, nrow(Vbatch), colbatch, type = gpuR::typeof(Vbatch))
-    one0 <- vclMatrix(0, rowbatch*colbatch, colbatch, type = gpuR::typeof(Vbatch))
-    temp2 <- vclMatrix(0, (1+p)*rowbatch, (1+p), type = type)
-    diagP <- vclMatrix(0, rowbatch, p, type = type)
-    temp3 <- vclMatrix(0, rowbatch*p, colbatch, type = type)
-    nine0 <- vclMatrix(0, colbatch*rowbatch, colbatch, type = type)
-    aTDa <- vclMatrix(0, colbatch*rowbatch, colbatch, type = type)
-    ssqBeta<- vclMatrix(0, nrow=rowbatch,ncol=1, type=type)
-    logP<- vclVector(0, length=rowbatch, type=type)
-    
     ########################### 1, loglik or ml(beta,sigma), given beta and sigma #############################
     
     # Vbatch=LDL^T, cholesky decomposition
@@ -113,7 +136,7 @@ likfitGpu_0 <- function(yX, y, X, n, p, coordsGpu, type=c("double", "float"),
     if(form == 1 | form == 4){     
         part1 <- n*log(variances) + logD    #part1 = n*log(sigma^2)+log |D|
     }  
-    gpuRandom:::rowsumBackend(diagP, logP,type="row",log=1)  #logP <- apply(log(diagP),1,sum)
+    gpuRandom:::rowsumBackend(diagP, logP, type="row",log=1)  #logP <- apply(log(diagP),1,sum)
     
     
     
@@ -166,7 +189,10 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
                       NlocalCache,
                       verbose=FALSE){
     
-    lgmGpuObjectes(modelname, mydat, type=type)
+    output1 <- lgmGpuObjectes1(modelname, mydat, type=type)
+    
+    output2 <- lgmGpuObjectes2(groupsize, output1$n, output1$p, type=type)
+    
     totalnumbersets <- nrow(bigparamsBatchcpu)
     Result<- vclVector(rep(0, totalnumbersets),type=type)
     index <- c(1:groupsize)
@@ -177,20 +203,32 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
             
             paramsBatchcpu<-bigparamsBatchcpu[index + i*groupsize,]
             
-            resulti <- (likfitGpu_0(lgmGpuObjectes(modelname, mydat, type)$yX,
-                                    lgmGpuObjectes(modelname, mydat, type)$y, 
-                                    lgmGpuObjectes(modelname, mydat, type)$X, 
-                                    lgmGpuObjectes(modelname, mydat, type)$n, 
-                                    lgmGpuObjectes(modelname, mydat, type)$p, 
-                                    lgmGpuObjectes(modelname, mydat, type)$coordsGpu, 
-                                    type=type,
-                                    paramsBatchcpu, #cpu Matrix of parameter sets,
-                                    betas= betas, #a vclmatrix  #given by the user or provided from formula
-                                    form = form,# minustwotimes=TRUE,
-                                    workgroupSize,
-                                    localSize,
-                                    NlocalCache)$minusTwoLogLik)
-            
+            resulti <- likfitGpu_0(output1$yX,
+                                   output1$y, 
+                                   output1$X, 
+                                   output1$n, 
+                                   output1$p, 
+                                   output1$coordsGpu, 
+                                   type=type,
+                                   output2$Vbatch,
+                                   output2$diagMat,
+                                   output2$logD,
+                                   output2$ab,
+                                   output2$A,
+                                   output2$one0,
+                                   output2$temp2,
+                                   output2$diagP,
+                                   output2$temp3,
+                                   output2$nine0,
+                                   output2$aTDa,
+                                   output2$ssqBeta,
+                                   output2$logP,
+                                   paramsBatchcpu, #cpu Matrix of parameter sets,
+                                   betas= betas, #a vclmatrix  #given by the user or provided from formula
+                                   form = form,# minustwotimes=TRUE,
+                                   workgroupSize,
+                                   localSize,
+                                   NlocalCache)$minusTwoLogLik
             
             
             replace(Result,index + i*groupsize, resulti)
@@ -200,10 +238,6 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
     
     Result
 }
-
-
-
-
 
 
 

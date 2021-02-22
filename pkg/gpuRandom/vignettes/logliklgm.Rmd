@@ -244,8 +244,8 @@ swissFitIso$summary[c("(Intercept)","elev"),1]
 
 newParamList = list(
   range=seq(30000, 80000 , len=290),
-  nugget = seq(0,1,len=20)
-) #5800
+  nugget = seq(0,1,len=50)
+) #11600
 
 
 newParam= do.call(expand.grid, newParamList)
@@ -280,7 +280,20 @@ system.time(temp <- gpuRandom::likfitGpu(swissFitIso, sr2, type="double",
                       workgroupSize,
                       localSize,
                       NlocalCache))
+
+# 50.580
 tempcpu<-as.matrix(temp)
+
+lMatrix = matrix(tempcpu, length(newParamList[[1]]), length(newParamList[[2]]))
+# 
+myCol = mapmisc::colourScale(lMatrix, breaks=8, dec=0)
+image(
+  newParamList[[1]]/1000, newParamList[[2]], lMatrix,
+  col = myCol$col, breaks=myCol$breaks,
+  xlab = names(newParamList)[1],
+  ylab = names(newParamList)[2]
+)
+mapmisc::legendBreaks('topright', myCol)
 
 
 ```
