@@ -94,7 +94,7 @@ likfitGpu_0 <- function(yX, y, X, n, p, coordsGpu,
     ########################### 1, loglik or ml(beta,sigma), given beta and sigma #############################
     
     # Vbatch=LDL^T, cholesky decomposition
-    gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
+    gpuRandom::maternBatch(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
     gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSizechol, NlocalCache=NlocalCache)
     #logD <- apply(log(diagMat),1,sum)
     gpuRandom:::rowsumBackend(diagMat, logD,type="row", log=1)    

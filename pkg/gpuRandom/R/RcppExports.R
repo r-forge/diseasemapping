@@ -25,8 +25,8 @@ cholBatchBackend <- function(A, D, Astartend, Dstartend, numbatchD, Nglobal, Nlo
 #' @param Nlocal vector of number of local work items
 #' @param NlocalCache elements in local cache
 #' @export
-crossprodBatchBackend <- function(C, A, D, invertD, Nglobal, Nlocal, NlocalCache) {
-    .Call('_gpuRandom_crossprodBatchBackend', PACKAGE = 'gpuRandom', C, A, D, invertD, Nglobal, Nlocal, NlocalCache)
+crossprodBatchBackend <- function(C, A, D, invertD, Cstartend, Astartend, Dstartend, Nglobal, Nlocal, NlocalCache) {
+    .Call('_gpuRandom_crossprodBatchBackend', PACKAGE = 'gpuRandom', C, A, D, invertD, Cstartend, Astartend, Dstartend, Nglobal, Nlocal, NlocalCache)
 }
 
 gemmBatchBackend <- function(A, B, C, Arowbatch, Browbatch, Acolbatch, Bcolbatch, need_transpose, Nglobal) {
@@ -75,8 +75,8 @@ rowsumBackend <- function(xR, SumR, type, log) {
     invisible(.Call('_gpuRandom_rowsumBackend', PACKAGE = 'gpuRandom', xR, SumR, type, log))
 }
 
-maternBatchBackend <- function(var, coords, param, Nglobal, Nlocal) {
-    invisible(.Call('_gpuRandom_maternBatchBackend', PACKAGE = 'gpuRandom', var, coords, param, Nglobal, Nlocal))
+maternBatchBackend <- function(var, coords, param, Nglobal, Nlocal, startrow, numberofrows) {
+    invisible(.Call('_gpuRandom_maternBatchBackend', PACKAGE = 'gpuRandom', var, coords, param, Nglobal, Nlocal, startrow, numberofrows))
 }
 
 multiplyLowerDiagonalBatchBackend <- function(C, A, D, B, diagIsOne, transformD, Nglobal, Nlocal, NlocalCache) {
