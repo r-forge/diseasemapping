@@ -15,6 +15,9 @@ std::string crossprodBatchString(
     const int NpadA,
     const int NpadD, // set to zero to omit D
     const int invertD, // set to 1 for A^T D^(-1) A
+    const int NstartC,  // newly added
+    const int NstartA,  // new
+    const int NstartD,  // new
     const int NpadBetweenMatricesC,
     const int NpadBetweenMatricesA,
     const int NlocalCacheA, // numbers of rows to cache of A
@@ -40,7 +43,10 @@ std::string crossprodBatchString(
     "#define Nmatrix " + std::to_string(Nmatrix) + "\n"    
     "#define NpadC " + std::to_string(NpadC) + "\n"    
     "#define NpadA " + std::to_string(NpadA) + "\n"    
-    "#define NpadD " + std::to_string(NpadD) + "\n"    
+    "#define NpadD " + std::to_string(NpadD) + "\n"   
+    "#define NstartC " + std::to_string(NstartC) + "\n"   
+    "#define NstartA " + std::to_string(NstartA) + "\n" 
+    "#define NstartD " + std::to_string(NstartD) + "\n" 
     "#define NpadLocal " + std::to_string(Nlocal[1]) + "\n"    
     "#define NpadBetweenMatricesC " + std::to_string(NpadBetweenMatricesC) + "\n"    
     "#define NpadBetweenMatricesA " + std::to_string(NpadBetweenMatricesA) + "\n"    
@@ -87,13 +93,13 @@ std::string crossprodBatchString(
   
       result +=  "\n\n"
   "for(Dmatrix = get_group_id(1),\n"
-  "    AHere = Dmatrix * NpadBetweenMatricesA,\n";
+  "    AHere = Dmatrix * NpadBetweenMatricesA + NstartA,\n"; // made changes here
   if(NpadD) {
     result +=
-    "    DHere = Dmatrix * NpadD,\n";
+    "    DHere = Dmatrix * NpadD + NstartD,\n"; // made changes here
   }
   result +=  
-    "    CHere = Dmatrix * NpadBetweenMatricesC;\n"
+    "    CHere = Dmatrix * NpadBetweenMatricesC + NstartC;\n" // made changes here
   "  Dmatrix < Nmatrix;\n"
   "  Dmatrix += get_num_groups(1),\n"
   "    AHere += AHereInc,\n";
@@ -233,20 +239,25 @@ if(NpadD) {
 
 template <typename T> 
 void crossprodBatch(
-    viennacl::matrix<T> &C,
+    viennacl::matrix<T> &C,  // must be a batch of square matrices 
     viennacl::matrix<T> &A,
     viennacl::matrix<T> &D,
     const int invertD,
+    Rcpp::IntegerVector Cstartend,
+    Rcpp::IntegerVector Astartend,
+    Rcpp::IntegerVector Dstartend,  
     std::vector<int> Nglobal,
     std::vector<int> Nlocal,
     const int NlocalCache, 
     const int ctx_id) {
   
+  const int Ncol = Astartend[3];
+  const int Nmatrix = C.size1()/C.size2();
+  const int Nrow = Astartend[1];
   
-  const int Ncol = A.size2();
-  const int Nmatrix = C.size1()/Ncol;
-  const int Nrow = A.size1()/Nmatrix;
-
+  const int NstartC = C.internal_size2() * Cstartend[0] + Cstartend[2];
+  const int NstartA = A.internal_size2() * Astartend[0] + Astartend[2];
+  const int NstartD = D.internal_size2() * Dstartend[0] + Dstartend[2];
   
   
   // the context
@@ -269,8 +280,11 @@ void crossprodBatch(
     A.internal_size2(), 
     D.internal_size2(),
     invertD, // A^T D^(-1) A
-    C.internal_size2()*Ncol,//NpadBetweenMatricesC,
-    A.internal_size2()*Nrow,//NpadBetweenMatricesA,
+    NstartC,
+    NstartA,
+    NstartD,
+    C.internal_size2()*C.size2(),//NpadBetweenMatricesC,
+    A.internal_size2()*A.size1()/Nmatrix,//NpadBetweenMatricesA,
     NlocalCache,
     Nlocal);
   
@@ -305,6 +319,9 @@ SEXP crossprodBatchTyped(
     Rcpp::S4 AR,
     Rcpp::S4 DR,
     const int invertD,
+    Rcpp::IntegerVector Cstartend,
+    Rcpp::IntegerVector Astartend,
+    Rcpp::IntegerVector Dstartend,  
     Rcpp::IntegerVector NglobalR,
     Rcpp::IntegerVector NlocalR, 
     const int NlocalCache) {
@@ -324,7 +341,7 @@ SEXP crossprodBatchTyped(
   std::shared_ptr<viennacl::matrix<T> > 
     DG = getVCLptr<T>(DR.slot("address"), BisVCL, ctx_id);
   
-  crossprodBatch<T>(*CG, *AG, *DG, invertD,Nglobal, Nlocal, NlocalCache, ctx_id);
+  crossprodBatch<T>(*CG, *AG, *DG, invertD, Cstartend, Astartend, Dstartend, Nglobal, Nlocal, NlocalCache, ctx_id);
   
   return Rcpp::wrap(0L);
   
@@ -349,6 +366,9 @@ SEXP crossprodBatchBackend(
     Rcpp::S4 A,
     Rcpp::S4 D,
     const int invertD,
+    Rcpp::IntegerVector Cstartend,
+    Rcpp::IntegerVector Astartend,
+    Rcpp::IntegerVector Dstartend, 
     Rcpp::IntegerVector Nglobal,
     Rcpp::IntegerVector Nlocal, 
     const int NlocalCache) {
@@ -360,9 +380,9 @@ SEXP crossprodBatchBackend(
   
   
   if(precision_type == "fvclMatrix") {
-    result = crossprodBatchTyped<float>(C, A, D, invertD, Nglobal, Nlocal, NlocalCache);
+    result = crossprodBatchTyped<float>(C, A, D, invertD,  Cstartend, Astartend, Dstartend, Nglobal, Nlocal, NlocalCache);
   } else if (precision_type == "dvclMatrix") {
-    result = crossprodBatchTyped<double>(C, A, D, invertD, Nglobal, Nlocal, NlocalCache);
+    result = crossprodBatchTyped<double>(C, A, D, invertD, Cstartend, Astartend, Dstartend, Nglobal, Nlocal, NlocalCache);
   } else {
     result = Rcpp::wrap(1L);
   }

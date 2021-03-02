@@ -42,8 +42,7 @@ std::string maternBatchKernelString(
     int assignUpper = 1,
     int assignLower = 1,
     int assignDiagonals = 1,
-    int assignDistUpper = 0
-) {
+    int assignDistUpper = 0) {
   
   std::string typeString = openclTypeString<T>();
   std::string result = "";
@@ -224,7 +223,8 @@ std::string maternBatchKernelString(
     "\n__kernel void maternBatch(\n"
     "__global " + typeString + " *result,"
     "__global " + typeString + " *coords,\n"  
-    "__global " + typeString + " *params) {\n\n";
+    "__global " + typeString + " *params,\n"
+    "int startrow) {\n\n";
   
   
   result +=
@@ -253,7 +253,7 @@ std::string maternBatchKernelString(
     "for(Dmatrix = get_local_id(1); Dmatrix < Nmatrix; Dmatrix += get_local_size(1)) {\n"
     "  DlocalParam = NlocalParams*Dmatrix;\n"
     
-    "  k = NpadParams*Dmatrix;\n"
+    "  k = NpadParams*(Dmatrix+ startrow);\n"
     "    for(Dcell = 0; Dcell < NlocalParams; ++Dcell){\n"
     "       localParams[DlocalParam + Dcell] = params[k + Dcell];\n"
     "     }\n" // Dcell
@@ -446,11 +446,11 @@ void maternBatchVcl(
     viennacl::matrix<T> &vclVar, // Nmat columns N^2 rows
     viennacl::matrix<T> &vclCoords, // 2 columns
     viennacl::matrix<T> &param, // Nmat rows, 22 columns
-    viennacl::ocl::kernel & maternKernel)
-{
+    viennacl::ocl::kernel & maternKernel,
+    int startrow){  // new added
   
   fill22params(param);
-  viennacl::ocl::enqueue(maternKernel(vclVar, vclCoords, param));
+  viennacl::ocl::enqueue(maternKernel(vclVar, vclCoords, param, startrow));
   
 }
 
@@ -463,12 +463,13 @@ void maternBatchVcl(
     viennacl::matrix<T> &param, // Nmat rows, 22 columns
     std::vector<int> numWorkItems,
     std::vector<int> numLocalItems,	
-    const int ctx_id)
-{
+    const int ctx_id,
+    int startrow,   // new added
+    int numberofrows){ 
   
   const int 
-  N = vclCoords.size1(),
-    Nmatrix = param.size1(),
+    N = vclCoords.size1(),
+    Nmatrix = numberofrows,  // made changes here
     Npad = vclVar.internal_size2(),
     NpadBetweenMatrices = Npad*N; // change to Npad*(Nmat+k) to insert extra rows between matrices
   
@@ -500,8 +501,8 @@ void maternBatchVcl(
 #ifdef DEBUG
   Rcpp::Rcout << maternClString << "\n";
 #endif
+  maternBatchVcl(vclVar, vclCoords, param, maternKernel, startrow);
   
-  maternBatchVcl(vclVar, vclCoords, param, maternKernel);
 }
 
 
@@ -512,8 +513,9 @@ void maternBatchTemplated(
     Rcpp::S4 coordsR,
     Rcpp::S4 paramR, //22 columns 
     Rcpp::IntegerVector Nglobal,
-    Rcpp::IntegerVector Nlocal
-) {
+    Rcpp::IntegerVector Nlocal,
+    int startrow,   // new added
+    int numberofrows) {
   
   std::vector<int> numWorkItemsStd = Rcpp::as<std::vector<int> >(Nglobal);
   std::vector<int> numLocalItemsStd = Rcpp::as<std::vector<int> >(Nlocal);
@@ -530,7 +532,9 @@ void maternBatchTemplated(
     *param,
     numWorkItemsStd, 
     numLocalItemsStd,
-    ctx_id);
+    ctx_id,
+    startrow,   // new added
+    numberofrows);
 }
 
 
@@ -547,16 +551,18 @@ void maternBatchBackend(
     Rcpp::S4 coords,
     Rcpp::S4 param, //22 columns 
     Rcpp::IntegerVector Nglobal,
-    Rcpp::IntegerVector Nlocal) {
+    Rcpp::IntegerVector Nlocal,
+    int startrow,   // new added
+    int numberofrows) {
   
   
   Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(var));
   std::string precision_type = (std::string) classVarR;
   
   if(precision_type == "fvclMatrix") {
-    maternBatchTemplated<float>(var, coords, param, Nglobal, Nlocal);
+    maternBatchTemplated<float>(var, coords, param, Nglobal, Nlocal, startrow, numberofrows);
   } else if (precision_type == "dvclMatrix") {
-    maternBatchTemplated<double>(var, coords, param, Nglobal, Nlocal);
+    maternBatchTemplated<double>(var, coords, param, Nglobal, Nlocal, startrow, numberofrows);
   } else {
     Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
   }

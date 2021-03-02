@@ -61,8 +61,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // crossprodBatchBackend
-SEXP crossprodBatchBackend(Rcpp::S4 C, Rcpp::S4 A, Rcpp::S4 D, const int invertD, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal, const int NlocalCache);
-RcppExport SEXP _gpuRandom_crossprodBatchBackend(SEXP CSEXP, SEXP ASEXP, SEXP DSEXP, SEXP invertDSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP, SEXP NlocalCacheSEXP) {
+SEXP crossprodBatchBackend(Rcpp::S4 C, Rcpp::S4 A, Rcpp::S4 D, const int invertD, Rcpp::IntegerVector Cstartend, Rcpp::IntegerVector Astartend, Rcpp::IntegerVector Dstartend, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal, const int NlocalCache);
+RcppExport SEXP _gpuRandom_crossprodBatchBackend(SEXP CSEXP, SEXP ASEXP, SEXP DSEXP, SEXP invertDSEXP, SEXP CstartendSEXP, SEXP AstartendSEXP, SEXP DstartendSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP, SEXP NlocalCacheSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -70,10 +70,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::S4 >::type A(ASEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type D(DSEXP);
     Rcpp::traits::input_parameter< const int >::type invertD(invertDSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Cstartend(CstartendSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Astartend(AstartendSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Dstartend(DstartendSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nglobal(NglobalSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nlocal(NlocalSEXP);
     Rcpp::traits::input_parameter< const int >::type NlocalCache(NlocalCacheSEXP);
-    rcpp_result_gen = Rcpp::wrap(crossprodBatchBackend(C, A, D, invertD, Nglobal, Nlocal, NlocalCache));
+    rcpp_result_gen = Rcpp::wrap(crossprodBatchBackend(C, A, D, invertD, Cstartend, Astartend, Dstartend, Nglobal, Nlocal, NlocalCache));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -188,8 +191,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // maternBatchBackend
-void maternBatchBackend(Rcpp::S4 var, Rcpp::S4 coords, Rcpp::S4 param, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal);
-RcppExport SEXP _gpuRandom_maternBatchBackend(SEXP varSEXP, SEXP coordsSEXP, SEXP paramSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP) {
+void maternBatchBackend(Rcpp::S4 var, Rcpp::S4 coords, Rcpp::S4 param, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal, int startrow, int numberofrows);
+RcppExport SEXP _gpuRandom_maternBatchBackend(SEXP varSEXP, SEXP coordsSEXP, SEXP paramSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP, SEXP startrowSEXP, SEXP numberofrowsSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type var(varSEXP);
@@ -197,7 +200,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::S4 >::type param(paramSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nglobal(NglobalSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nlocal(NlocalSEXP);
-    maternBatchBackend(var, coords, param, Nglobal, Nlocal);
+    Rcpp::traits::input_parameter< int >::type startrow(startrowSEXP);
+    Rcpp::traits::input_parameter< int >::type numberofrows(numberofrowsSEXP);
+    maternBatchBackend(var, coords, param, Nglobal, Nlocal, startrow, numberofrows);
     return R_NilValue;
 END_RCPP
 }
@@ -258,7 +263,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_backsolveBatchBackend", (DL_FUNC) &_gpuRandom_backsolveBatchBackend, 11},
     {"_gpuRandom_backsolveBatchBackend2", (DL_FUNC) &_gpuRandom_backsolveBatchBackend2, 7},
     {"_gpuRandom_cholBatchBackend", (DL_FUNC) &_gpuRandom_cholBatchBackend, 8},
-    {"_gpuRandom_crossprodBatchBackend", (DL_FUNC) &_gpuRandom_crossprodBatchBackend, 7},
+    {"_gpuRandom_crossprodBatchBackend", (DL_FUNC) &_gpuRandom_crossprodBatchBackend, 10},
     {"_gpuRandom_gemmBatchBackend", (DL_FUNC) &_gpuRandom_gemmBatchBackend, 9},
     {"_gpuRandom_gemmBatch2backend", (DL_FUNC) &_gpuRandom_gemmBatch2backend, 11},
     {"_gpuRandom_cpp_gpuFisher_test", (DL_FUNC) &_gpuRandom_cpp_gpuFisher_test, 6},
@@ -266,7 +271,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_gpuRnBackend", (DL_FUNC) &_gpuRandom_gpuRnBackend, 4},
     {"_gpuRandom_cpp_gpu_qqnorm", (DL_FUNC) &_gpuRandom_cpp_gpu_qqnorm, 6},
     {"_gpuRandom_rowsumBackend", (DL_FUNC) &_gpuRandom_rowsumBackend, 4},
-    {"_gpuRandom_maternBatchBackend", (DL_FUNC) &_gpuRandom_maternBatchBackend, 5},
+    {"_gpuRandom_maternBatchBackend", (DL_FUNC) &_gpuRandom_maternBatchBackend, 7},
     {"_gpuRandom_multiplyLowerDiagonalBatchBackend", (DL_FUNC) &_gpuRandom_multiplyLowerDiagonalBatchBackend, 9},
     {"_gpuRandom_multiplyDiagonalBatchBackend", (DL_FUNC) &_gpuRandom_multiplyDiagonalBatchBackend, 6},
     {"_gpuRandom_multiplyLowerBatchBackend", (DL_FUNC) &_gpuRandom_multiplyLowerBatchBackend, 7},

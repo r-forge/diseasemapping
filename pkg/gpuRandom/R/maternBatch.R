@@ -1,10 +1,5 @@
 #' @title maternBatch function on GPU
 #'
-#' @param A a vclMatrix, positive definite
-#' @param D a vclMatrix, diagonal elements of LDL^t 
-#' @param numbatchD number of batches in D
-#' 
-#' @return  vclMatrix L and D that satisfies A=LDL^T
 #' @useDynLib gpuRandom
 #' @export
 

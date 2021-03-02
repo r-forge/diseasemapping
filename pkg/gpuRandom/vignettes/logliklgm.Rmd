@@ -156,7 +156,10 @@ loglik2 <- part1 + one0/paramsBatch[,3] + n*log(2*pi)
 
 
 
-```{r test_using_another_example_Nov20,eval=F}
+
+
+
+```{r test_loop_Feb9,eval=F}
 library('geostatsp')
 data('swissRain')
 sr2 = swissRain[0:100,]
@@ -164,72 +167,12 @@ sr2 = swissRain[0:100,]
 # extract variables for modeling
 sr2$sqrtY = sqrt(sr2$rain)
 sr2$elev = raster::extract(swissAltitude, sr2)
-#dist(sr2@coords)
-# build spatial model
 
-swissFitIso = likfitLgm(
+
+swissFitIso = geostatsp::likfitLgm(
   data=sr2,
   formula=sqrtY ~ elev,
-  param=c(range=50000,shape=1,nugget=1.5),
-  reml=FALSE,
-  verbose=FALSE
-)
-
-swissFitIso$parameters
-
-newParamList = list(
-  range=seq(40000, 90000 , len=29),
-  nugget = seq(0,1,len=10)
-)
-newParam= do.call(expand.grid, newParamList)
-
-otherparams = c(shape=1, variance = 1.841, anisoRatio = 1, anisoAngleRadians = 0)
-otherparams = matrix(rep(otherparams,each=nrow(newParam)),nrow=nrow(newParam))
-colnames(otherparams) <- c("shape","variance", "anisoRatio", "anisoAngleRadians")
-
-paramsBatch0 = cbind(newParam, otherparams)
-paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
-paramsBatch = vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0), 22-ncol(paramsBatch0))),type="double")
-
-
-workgroupSize=c(128,16,8)
-localSize = c(4,4,1)
-NlocalCache=500
- 
-temp=gpuRandom::likfitGpu(swissFitIso,sr2, type="double",paramsBatch,betas=NULL,form="ml",workgroupSize,localSize,NlocalCache)$minusTwoLogLik
-
-tempcpu<-as.matrix(temp)
-
-lMatrix = matrix(tempcpu, length(newParamList[[1]]), length(newParamList[[2]]))
-# 
-myCol = mapmisc::colourScale(lMatrix, breaks=8, dec=0)
-image(
-  newParamList[[1]]/1000, newParamList[[2]], lMatrix,
-  col = myCol$col, breaks=myCol$breaks,
-  xlab = names(newParamList)[1],
-  ylab = names(newParamList)[2]
-)
-mapmisc::legendBreaks('topright', myCol)
-
-
-```
-
-
-
-```{r test_loop_Feb9,eval=F}
-library('geostatsp')
-data('swissRain')
-sr2 = swissRain[0:80,]
-
-# extract variables for modeling
-sr2$sqrtY = sqrt(sr2$rain)
-sr2$elev = raster::extract(swissAltitude, sr2)
-
-
-swissFitIso = likfitLgm(
-  data=sr2,
-  formula=sqrtY ~ elev,
-  param=c(range=50000,shape=1,nugget=1.5),
+  param=c(range=50000,shape=1),
   reml=FALSE,
   verbose=FALSE
 )
@@ -244,36 +187,30 @@ swissFitIso$summary[c("(Intercept)","elev"),1]
 
 newParamList = list(
   range=seq(30000, 80000 , len=290),
-  nugget = seq(0,1,len=50)
-) #11600
+  nugget = seq(0,0.25,len=10)
+) #5800
 
 
 newParam= do.call(expand.grid, newParamList)
 
-otherparams = c(shape=1, variance = 2.021188, anisoRatio = 1, anisoAngleRadians = 0)
+otherparams = c(shape=1, variance = 2.016713, anisoRatio = 1, anisoAngleRadians = 0)
 otherparams = matrix(rep(otherparams,each=nrow(newParam)),nrow=nrow(newParam))
 colnames(otherparams) <- c("shape","variance", "anisoRatio", "anisoAngleRadians")
 
 paramsBatch0 = cbind(newParam, otherparams)
-bigparamsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
+paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
+#paramsBatch = cbind(paramsBatch0, matrix(0, nrow(paramsBatch0), 22-ncol(paramsBatch0)))
 
+paramsBatch = gpuR::vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0), 22-ncol(paramsBatch0))),type="double")
 
 workgroupSize=c(128,16,8)
 localSize = c(4,4,1)
 NlocalCache=500
  
-# likfitGpu <- function(modelname, mydat, type=c("double", "float"), 
-#                       bigparamsBatchcpu, #cpu Matrix of parameter sets,
-#                       betas=NULL, #a vclmatrix  #given by the user or provided from formula
-#                       form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),# minustwotimes=TRUE,
-#                       groupsize,
-#                       workgroupSize,
-#                       localSize,
-#                       NlocalCache,
-#                       verbose=FALSE)
+
 
 system.time(temp <- gpuRandom::likfitGpu(swissFitIso, sr2, type="double", 
-                      bigparamsBatch0, #cpu Matrix of parameter sets,
+                       paramsBatch, #cpu Matrix of parameter sets,
                       betas=NULL, #a vclmatrix  #given by the user or provided from formula
                       form = "ml",  
                       groupsize=290,
