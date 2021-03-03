@@ -164,21 +164,39 @@ a42%*%b12
 
 
 ```{r testBatcchLocal, eval=FALSE}
-outputCp = deepcopy(outputC)
-library(gpuRandom)
+library("gpuRandom")
+dimA = c(8,8)
+dimB = c(10,8)
+gpuA = vclMatrix(matrix(seq(1, prod(dimA)), 
+                        dimA[1], dimA[2]), type='float')
+gpuB = vclMatrix(matrix(10*(1:prod(dimB)), dimB[1], dimB[2]), type='float')
+
+outputCp = vclMatrix(matrix(-1, 10, 10), type='float')
+
+SsubA = c(0,3,4,0,2,4) # A [rowStart, nRowsSub, nRowsTotal, colStart, ...]
+SsubB = c(0,4,4,0,3,4) #B
+
 gemmBatch2backend(
   gpuA, gpuB, outputCp,
-  c(0,0,0), # transposeA, transposeB, transposeC
-  c(0,2,2,0,3,3), # A [rowStart, nRowsSub, nRowsTotal, colStart, ...]
-  c(0,3,3,0,4,4), #B
-  c(0,2,2,0,4,4), #C
-  c(2,2,0,0,0,0), # batches, nRow, nCol, recycleArow, recycleAcol, recycleB row col
+  c(1,1,1), # transposeA, transposeB, transposeC
+  SsubA, SsubB,
+  c(0,SsubB[2],5,0,SsubA[2],5), #C
+  c(2,2,0,0,0,0), # batches: nRow, nCol, recycleArow, recycleAcol, recycleB row col
   c(1,1,1,1,1,1), #workgroupSize  global 0 1 2, local 0 1 2  
   c(10,10), # cacheSizeA, cacheSizeB,                
   TRUE # verbose
   )
-as.matrix(outputCp)[1:2,1:4]
-a11%*%b11
+as.matrix(gpuA)
+as.matrix(gpuB)
+as.matrix(outputCp)#[1:2,1:4]
+Dmatrix = c(2,2)-1
+AA = as.matrix(gpuA[seq(Dmatrix[1]*SsubA[3] + SsubA[1]+1, len=SsubA[2]),
+               seq(Dmatrix[2]*SsubA[6] + SsubA[4]+1, len=SsubA[5])])
+BB = as.matrix(gpuB[seq(Dmatrix[1]*SsubB[3] + SsubB[1]+1, len=SsubB[2]),
+               seq(Dmatrix[2]*SsubB[6] + SsubB[4]+1, len=SsubB[5])] )
+AA
+BB
+t(AA) %*% t(BB)
 ```
 
 

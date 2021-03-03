@@ -25,8 +25,11 @@ NOTE: recycling A, B not implemented
   * recycleArow = 1, there are no row batches for A, use the same A for all batches
   * 
   * Rcpp::IntegerVector workgroupSize, global 0 1 2, local 0 1 2
-  *  matrix global0 rowbatch local0 colbatch, rows of C (and A), cols of C (and B)
-  * DmatrixRow = global0; Dcolbatch = local0, Drow = global1, Dcol = global2
+  * global0 is row batch, col batch not parallelized
+  * global1 and global2 are rows and columns of C
+  * local0 is ignored, set to 1.  group 1 and group2 cache rows and columns of A and B
+  * DmatrixRow = global0; DmatrixCol = not parallel, 
+  * Drow = global1, Dcol = global2
   * 
   * 
   * A[DmatrixRow, DmatrixCol][Drow, Dcol] =
@@ -62,73 +65,80 @@ std::string gemmBatch2String(
     result += "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n";
   }
   
-  result += 
-    "#define NpadA "+ std::to_string(NpadA) + "\n"  
-    "#define NpadB "+ std::to_string(NpadB) + "\n"  
-    "#define NpadC "+ std::to_string(NpadC) + "\n\n";  
     
+    result +=  
+      "#define NmatrixRow " + std::to_string(batches[0]) + "\n"
+      "#define NmatrixCol " + std::to_string(batches[1]) + "\n"; 
+    
+
+        result +=  
+          "#define NpadA "+ std::to_string(NpadA) + "\n"  
+          "#define rowStartA " + std::to_string(submatrixA[0]) + "\n"
+      "#define NrowTotalA " + std::to_string(submatrixA[2]) + "\n"
+      "#define NpadNrowTotalA "+ std::to_string(NpadA * submatrixA[2]) + "\n"  
+      "#define colStartA " + std::to_string(submatrixA[3]) + "\n"
+      "#define NcolTotalA " + std::to_string(submatrixA[5]) + "\n\n";
+
+    result +=
+      "#define NpadB "+ std::to_string(NpadB) + "\n"  
+      "#define rowStartB " + std::to_string(submatrixB[0]) + "\n"
+      "#define NrowTotalB " + std::to_string(submatrixB[2]) + "\n"
+      "#define NpadNrowTotalB "+ std::to_string(NpadB * submatrixB[2]) + "\n"  
+      "#define colStartB " + std::to_string(submatrixB[3]) + "\n"
+      "#define NcolTotalB " + std::to_string(submatrixB[5]) + "\n\n";
+    
+      result += 
+        "#define NpadC "+ std::to_string(NpadC) + "\n"
+      "#define rowStartC " + std::to_string(submatrixC[0]) + "\n"
+    "#define NrowTotalC " + std::to_string(submatrixC[2]) + "\n"
+    "#define NpadNrowTotalC "+ std::to_string(NpadC * submatrixC[2]) + "\n"  
+    "#define colStartC " + std::to_string(submatrixC[3]) + "\n"
+    "#define NcolTotalC " + std::to_string(submatrixC[5]) + "\n\n";
+    
+
+  if(transposeABC[0]) { // transpose A, Ninner is rows of A^T, rows of A
+    result += 
+    "#define Nrow " + std::to_string(submatrixA[4]) + "\n"  
+    "#define Ninner " + std::to_string(submatrixA[1]) + "\n"
+    "#define Ai0orig(ii) (DmatrixRow * NpadNrowTotalA + NpadA * (rowStartA + (ii)) + DmatrixCol * NcolTotalA + colStartA + DrowBlock)\n"
+    "#define Ai0(ii) (startInnerA + NpadA * (ii) )\n";
+  } else { // no transpose, Ninner is cols of A
+    result += 
+      "#define Nrow " + std::to_string(submatrixA[1]) + "\n"  
+      "#define Ninner " + std::to_string(submatrixA[4]) + "\n"
+    "#define Ai0orig(ii) (DmatrixRow * NpadNrowTotalA + NpadA * (rowStartA + DrowBlock) + DmatrixCol * NcolTotalA + colStartA + (ii))\n"
+    "#define Ai0(ii) (startInnerA + (ii) )\n";
+  }
+  result += "\n";
+  
+    if(transposeABC[1]) { // transpose B
+    result += 
+      "#define Ncol " + std::to_string(submatrixB[1]) + "\n"  
+      "#define Bi0orig(ii) ( DmatrixRow * NpadNrowTotalB + NpadB * (rowStartB + DcolBlock) + DmatrixCol * NcolTotalB + colStartB + (ii))\n";
+      "#define Bi0(ii) (startInnerB + (ii) )\n\n";
+    } else { // no transpose, columns of B
+    result += 
+      "#define Ncol " + std::to_string(submatrixB[4]) + "\n"  
+    "#define Bi0orig(ii) ( DmatrixRow * NpadNrowTotalB + NpadB * (rowStartB + (ii)) + DmatrixCol * NcolTotalB + colStartB + DcolBlock)\n"
+      "#define Bi0(ii) (startInnerB + NpadB * (ii) )\n\n";
+    }
+  result += "\n";
+  
   if(transposeABC[2]) { // transpose C, Nrow is rows of C^T, cols of C
     result += 
-      "#define Nrow " + std::to_string(submatrixC[4]) + "\n"  
-      "#define rowStartC " + std::to_string(submatrixC[3]) + "\n"
-      "#define NrowTotalC " + std::to_string(submatrixC[5]) + "\n"
-      "#define Ncol " + std::to_string(submatrixC[1]) + "\n"
-      "#define colStartC " + std::to_string(submatrixC[0]) + "\n"
-      "#define NcolTotalC " + std::to_string(submatrixC[2]) + "\n"
-      "#define Cij = ( DmatrixRow * NpadC * NcolTotalC + NpadC * (colStartC + Dcol) + DmatrixCol * NrowTotalC + rowStartC + Drow)\n\n";
+      "#define Cijorig ( DmatrixRow * NpadNrowTotalC + NpadC * (colStartC + Dcol) + DmatrixCol * NrowTotalC + rowStartC + Drow)\n"
+      "#define Cij (startMatrixC+ NpadC * Dcol + Drow\n\n";
   } else {
-      result += 
-        "#define Nrow " + std::to_string(submatrixC[1]) + "\n"  
-        "#define rowStartC " + std::to_string(submatrixC[0]) + "\n"
-        "#define NrowTotalC " + std::to_string(submatrixC[2]) + "\n"
-        "#define Ncol " + std::to_string(submatrixC[4]) + "\n"
-        "#define colStartC " + std::to_string(submatrixC[3]) + "\n"
-        "#define NcolTotalC " + std::to_string(submatrixC[5]) + "\n"
-        "#define Cij ( DmatrixRow * NpadC * NrowTotalC + NpadC * (rowStartC + Drow) + DmatrixCol * NcolTotalC + colStartC + Dcol)\n\n";
+    result += 
+      "#define Cijorig ( DmatrixRow * NpadNrowTotalC + NpadC * (rowStartC + Drow) + DmatrixCol * NcolTotalC + colStartC + Dcol)\n";
+    "#define Cij (startMatrixC+ NpadC * Drow + Dcol\n\n";
   }
-  if(transposeABC[0]) { // transpose A, Ninner is cols of A^T, rows of A
-    result += 
-    "#define Ninner " + std::to_string(submatrixA[4]) + "\n"
-    "#define rowStartA " + std::to_string(submatrixA[3]) + "\n"
-    "#define NrowTotalA " + std::to_string(submatrixA[5]) + "\n"
-    "#define colStartA " + std::to_string(submatrixA[0]) + "\n"
-    "#define NcolTotalA " + std::to_string(submatrixA[2]) + "\n"
-    "#define Ai0(ii) ( DmatrixRow * NpadA * NcolTotalA + NpadA * (colStartA + ii) + DmatrixCol * NrowTotalA + rowStartA)\n\n";
-  } else { // no transpose, Ninner is cols of A
-    result += 
-      "#define Ninner " + std::to_string(submatrixA[1]) + "\n"
-    "#define rowStartA " + std::to_string(submatrixA[0]) + "\n"
-    "#define NrowTotalA " + std::to_string(submatrixA[2]) + "\n"
-    "#define colStartA " + std::to_string(submatrixA[3]) + "\n"
-    "#define NcolTotalA " + std::to_string(submatrixA[5]) + "\n"
-    "#define Ai0(ii) ( DmatrixRow * NpadA * NrowTotalA + NpadA * (rowStartA + ii) + DmatrixCol * NcolTotalA + colStartA)\n\n";
-  }
-
-  if(transposeABC[1]) { // transpose B
-    result += 
-      "#define rowStartB " + std::to_string(submatrixA[3]) + "\n"
-      "#define NrowTotalB " + std::to_string(submatrixA[5]) + "\n"
-      "#define colStartB " + std::to_string(submatrixA[0]) + "\n"
-      "#define NcolTotalB " + std::to_string(submatrixA[2]) + "\n"
-    "#define Bi0(ii) ( DmatrixRow * NpadB * NcolTotalB + NpadB * (colStartB + ii) + DmatrixCol * NrowTotalB + rowStartB)\n\n";
-  } else { // no transpose, Ninner is cols of A
-    result += 
-    "#define rowStartB " + std::to_string(submatrixB[0]) + "\n"
-    "#define NrowTotalB " + std::to_string(submatrixB[2]) + "\n"
-    "#define colStartB " + std::to_string(submatrixB[3]) + "\n"
-    "#define NcolTotalB " + std::to_string(submatrixB[5]) + "\n"
-    "#define Bi0(ii) ( DmatrixRow * NpadB * NrowTotalB + NpadB * (rowStartB + ii) + DmatrixCol * NcolTotalB + colStartB)\n\n";
-  }
-
-    result +=  
-    "#define NmatrixRow " + std::to_string(batches[0]) + "\n"
-    "#define NmatrixCol " + std::to_string(batches[1]) + "\n"; 
+  result += "\n";
   
   result +=  
-  "#define cacheSizeA " + std::to_string(NlocalCache[0]) + "\n"
-  "#define cacheSizeB " + std::to_string(NlocalCache[1]) + "\n"; 
+    "#define cacheSizeA " + std::to_string(NlocalCache[0]) + "\n"
+    "#define cacheSizeB " + std::to_string(NlocalCache[1]) + "\n"; 
   
-    
 
   result += "\n__kernel void gemm( __global "  + typeString+ "* A,\n"
                                " __global "  + typeString+ "* B,\n"
@@ -137,31 +147,36 @@ std::string gemmBatch2String(
   
   result += typeString + " acc;\n"
            "int DmatrixRow, DmatrixCol;\n"
-           "int DthisA, DthisB, DthisC;\n"
+           "int startMatrixA, startMatrixB, startMatrixC, startInnerA, startInnerB;\n"
            "int Drow, DrowBlock, Dcol, DcolBlock;\n"
-           "int Dinner, Dinnerp1, Dinnerp2;\n";
+           "int Dinnerp1;\n";
   result += "event_t wait;\n\n";
 
   result += "local " + typeString + 
     " localCacheA1[cacheSizeA], localCacheB1[cacheSizeB];\n";   
     result += "local " + typeString + 
       " localCacheA2[cacheSizeA], localCacheB2[cacheSizeB];\n";
-
+    result += "local " + typeString + 
+      " *Anow, *Anext, *Atemp, *Bnow, *Bnext, *Btemp;\n";   
+    
 result += "\n";
 result += 
-  " for(DmatrixRow = get_group_id(0);\n" 
+  " for(DmatrixRow = get_global_id(0);\n" 
   "   DmatrixRow < NmatrixRow;\n" 
-  "   DmatrixRow += get_num_groups(0)) {\n"
-  " for(DmatrixCol = get_local_id(1);\n"
+  "   DmatrixRow += get_global_size(0)) {\n"
+  " for(DmatrixCol = 0;\n"
   "   DmatrixCol < NmatrixCol;\n" 
-  "   DmatrixCol += get_local_size(1)) {\n\n";
+  "   DmatrixCol ++) {\n\n";
+
+  result += "startMatrixA = DmatrixRow * NpadNrowTotalA + NpadA * rowStartA + DmatrixCol * NcolTotalA + colStartA;\n";
+  result += "startMatrixB = DmatrixRow * NpadNrowTotalB + NpadB * rowStartB + DmatrixCol * NcolTotalB + colStartC;\n";
+  result += "startMatrixC = DmatrixRow * NpadNrowTotalC + NpadC * rowStartC + DmatrixCol * NcolTotalC + colStartC;\n";
+  
 result +=
   "   for(DrowBlock = get_group_id(1)*get_local_size(1);\n" // row for work item ?,0,?
   "     DrowBlock < Nrow;\n"
   "     DrowBlock += get_global_size(1)) {\n"
   "   Drow = DrowBlock + get_local_id(1);\n";
-
-  result += "\n/* cache A keep */\n\n";
 
 
 result +=
@@ -169,65 +184,103 @@ result +=
   "     DcolBlock < Ncol;\n"
   "     DcolBlock += get_global_size(2)) {\n"
   "   Dcol = DcolBlock + get_local_id(2);\n";
-  
+
+if(transposeABC[0]) {  
+  result += "startInnerA = startMatrixA + DrowBlock ;\n";
+} else {
+  result += "startInnerA = startMatrixA + NpadA * DrowBlock;\n";
+}
+if(transposeABC[1]) {  
+  result += "startInnerB = startMatrixB + NpadB * DcolBlock ;\n";
+} else {
+  result += "startInnerB = startMatrixB + DcolBlock;\n";
+}
+
+
 result += "acc = 0.0;\n";
 
 result += "wait =  (event_t) 0;\n";
 
-if(transposeABC[0]) { 
+result += "Anow = localCacheA1;\n"
+"Anext = localCacheA2;\n"
+"Bnow = localCacheB1;\n"
+"Bnext = localCacheB2;\n";
+
+// cache A[1:Nlocal, 1], and B[1, 1:Nlocal]
+if(transposeABC[0]) {
   result +=  "  wait = async_work_group_copy(\n"
-  "    localCacheA1, &A[Ai0(0)],\n"
+  "    Anext, &A[Ai0(0)],\n"
   "    get_local_size(1), (event_t) 0);\n";
 } else {
   result +=  "  wait = async_work_group_strided_copy(\n"
-  "    localCacheA1, &A[Ai0(0)],\n"
+  "    Anext, &A[Ai0(0)],\n"
   "    get_local_size(1), NpadA, (event_t) 0);\n";
 }
-if(transposeABC[1]) { 
+if(transposeABC[1]) {
   result +=  "  wait = async_work_group_strided_copy(\n"
-  "    localCacheB1, &B[Bi0(0)],\n"
+  "    Bnext, &B[Bi0(0)],\n"
   "    get_local_size(2), NpadB, wait);\n";
 } else {
   result +=  "  wait = async_work_group_copy(\n"
-  "    localCacheB1, &B[Bi0(0)],\n"
+  "    Bnext, &B[Bi0(0)],\n"
   "    get_local_size(2), wait);\n";
 }
+result += "  wait_group_events (1, &wait);\n";
 
   result += // loop through remaining inner
-    "   for(Dinner = 0,Dinnerp1=1,Dinnerp2=2;\n" 
-    "     Dinner < Ninner;\n"
-    "     Dinner++, Dinnerp1++, Dinnerp2++) {\n";
+    "   for(Dinnerp1=1;\n" 
+    "     Dinnerp1 < Ninner;\n"
+    "     Dinnerp1++) {\n";
   // cache row Dinner of C, col Dinner of A
-  if(transposeABC[0]) { 
+
+result +=  " Atemp = Anow;\n"
+  " Btemp = Bnow;\n"
+  " Anow = Anext;\n"
+  " Bnow = Bnext;\n"
+  " Anext = Atemp;\n"
+  " Bnext = Btemp;\n";
+
+  // cache ahead
+  if(transposeABC[0]) {
     result +=  "  wait = async_work_group_copy(\n"
-    "    localCacheA1, &A[Ai0(Dinner)],\n"
+    "    Anext, &A[Ai0(Dinnerp1)],\n"
     "    get_local_size(1), (event_t) 0);\n";
   } else {
-result +=  "  wait = async_work_group_strided_copy(\n"
-  "    localCacheA1, &A[Ai0(Dinner)],\n"
-  "    get_local_size(1), NpadA, (event_t) 0);\n";
-  }
-  if(transposeABC[1]) { 
     result +=  "  wait = async_work_group_strided_copy(\n"
-    "    localCacheB1, &B[Bi0(Dinner)],\n"
+    "    Anext, &A[Ai0(Dinnerp1)],\n"
+    "    get_local_size(1), NpadA, (event_t) 0);\n";
+  }
+  if(transposeABC[1]) {
+    result +=  "  wait = async_work_group_strided_copy(\n"
+    "    Bnext, &B[Bi0(Dinnerp1)],\n"
     "    get_local_size(2), NpadB, wait);\n";
   } else {
     result +=  "  wait = async_work_group_copy(\n"
-    "    localCacheB1, &B[Bi0(Dinner)],\n"
+    "    Bnext, &B[Bi0(Dinnerp1)],\n"
     "    get_local_size(2), wait);\n";
   }
-  result += "  wait_group_events (1, &wait);\n";
 //  "  barrier(CLK_LOCAL_MEM_FENCE);\n";
 
   result += "\n";
-  result += "acc += localCacheA1[get_local_id(1)] * localCacheB1[get_local_id(2)];\n";
+  // compute component from previously cached values
+  // this will happen at the same time the caching is done
+  result += "acc += Anow[get_local_id(1)] * "
+  " Bnow[get_local_id(2)];\n";
   result += "\n";
-
-  result += 
-    "   }//Dinner Ninner\n";
+  result += "  wait_group_events (1, &wait);\n";
   
   result += 
-    "\nC[Cij] = acc;\n\n";
+    "   }//Dinner Ninner\n";
+  result += "\n";
+  // last row of B, Dinner = Ninner
+  // A and B are cached, don't need to cache ahead
+  result += "acc += Anext[get_local_id(1)] * "
+  " Bnext[get_local_id(2)];\n";
+  result += "\n";
+  result += 
+    "\nif(Drow < Nrow & Dcol < Ncol) {\n"
+    "  C[Cij] = acc;\n"
+    "}\n\n";
     
 
 result += 
@@ -288,7 +341,8 @@ int gemmBatch2(
   gemmKernel.global_work_size(0, workgroupSize[0]);
   gemmKernel.global_work_size(1, workgroupSize[1]);
   gemmKernel.global_work_size(2, workgroupSize[2]);
-  gemmKernel.local_work_size(0, workgroupSize[3]);
+//  gemmKernel.local_work_size(0, workgroupSize[3]);
+  gemmKernel.local_work_size(0, 1L);  // local size 0 must be 1
   gemmKernel.local_work_size(1, workgroupSize[4]);
   gemmKernel.local_work_size(2, workgroupSize[5]);  
   
