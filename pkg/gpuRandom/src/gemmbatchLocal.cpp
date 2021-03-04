@@ -130,8 +130,8 @@ std::string gemmBatch2String(
       "#define Cij (startMatrixC+ NpadC * Dcol + Drow\n\n";
   } else {
     result += 
-      "#define Cijorig ( DmatrixRow * NpadNrowTotalC + NpadC * (rowStartC + Drow) + DmatrixCol * NcolTotalC + colStartC + Dcol)\n";
-    "#define Cij (startMatrixC+ NpadC * Drow + Dcol\n\n";
+      "#define Cijorig ( DmatrixRow * NpadNrowTotalC + NpadC * (rowStartC + Drow) + DmatrixCol * NcolTotalC + colStartC + Dcol)\n"
+    "#define Cij (startMatrixC+ NpadC * Drow + Dcol)\n\n";
   }
   result += "\n";
   

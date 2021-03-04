@@ -3,7 +3,6 @@
 export(CreateStreams)
 export(backsolveBatch)
 export(cholBatch)
-export(crossprodBatch)
 export(crossprodBatchBackend)
 export(fisher.sim)
 export(gemmBatch)

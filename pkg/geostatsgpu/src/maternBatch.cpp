@@ -39,6 +39,7 @@ std::string maternBatchKernelString(
     int NpadCoords,
     int NpadParams,
     int Nlocal0,
+    int NlocalParamsCache,
     int assignUpper = 1,
     int assignLower = 1,
     int assignDiagonals = 1,
@@ -90,8 +91,8 @@ std::string maternBatchKernelString(
     "#define NpadBetweenMatrices " + std::to_string(NpadBetweenMatrices) + "\n"
     "#define NpadCoords " + std::to_string(NpadCoords) + "\n"
     "#define NpadParams " + std::to_string(NpadParams) + "\n"
+    "#define NlocalParamsCache"+ std::to_string(NpadlocalParamsCache) + "\n"
     "#define NlocalParams " + std::to_string(NlocalParams) + "\n\n";
-  
   
   
   result = result + 
@@ -225,7 +226,7 @@ std::string maternBatchKernelString(
     "__global " + typeString + " *params) {\n"
     
     
-    "int Dmatrix, Dcell, nuround, DlocalParam, k;\n" +
+    "int Dmatrix, DmatrixLocal, DmatrixBlock, Dcell, nuround, DlocalParam, k;\n" +
       typeString + " distSq;\n" +
       typeString + "2 distRotate;\n" +
       typeString + "2 sincos;\n" +
@@ -233,12 +234,14 @@ std::string maternBatchKernelString(
       typeString + " K_num1;\n\n" +
       typeString + "2 K_nuK_nup1;\n\n"
   
-      "K_nuK_nup1.x=1;K_nuK_nup1.y=1;\n"
 
-  "__local " + typeString + " localParams[" +
-    std::to_string(NlocalParams * Nmatrix) + "];\n"
+  "__local " + typeString + " localParams[NlocalParamsCache];\n"
   "__local " + typeString + "2 localDist[Nmatrix];\n"
   "__local int Drow["+std::to_string(Nlocal0) +"], Dcol["+ std::to_string(Nlocal0)+"];\n";
+  
+  result += "event_t wait;\n";
+  
+  result += "K_nuK_nup1.x=1;K_nuK_nup1.y=1;\n";
   
   result += 
     // dimension 0 is cell, dimension 1 is matrix
@@ -246,8 +249,23 @@ std::string maternBatchKernelString(
     "const int isFirstLocal1 = (get_local_id(1)==0);\n"
     
     // copy parameters to local storage
-    //"async_work_group_copy(localParams, params, NpadParams*Nmatrix, 0);\n"
-    "if(get_local_id(0)==0){\n"
+    result += "wait = (event_t) 0;\n";
+    result += 
+    "for(DmatrixBlock = get_group_id(1),DmatrixLocal = 0;" 
+    "  DmatrixBlock < Nmatrix;" 
+    "  DmatrixBlock += get_global_size(1)) {\n"
+    "  for(Dmatrix = 0;"
+    "    Dmatrix < get_local_size(1);" 
+    "    Dmatrix ++,DmatrixLocal++) {\n"
+    "    wait = async_work_group_copy("
+    "      &localParams[DmatrixLocal * NlocalParams],"
+    "      params[(DmatrixBlock + Dmatrix) * NpadParams],"
+    "      NlocalParams, wait);\n"
+    "  }\n"
+    "}\n";
+    result += "  wait_group_events (1, &wait);\n";
+#ifdef UNDEF    
+  "if(get_local_id(0)==0){\n"
     "for(Dmatrix = get_local_id(1); Dmatrix < Nmatrix; Dmatrix += get_local_size(1)) {\n"
     "  DlocalParam = NlocalParams*Dmatrix;\n"
 
@@ -257,7 +275,7 @@ std::string maternBatchKernelString(
     "     }\n" // Dcell
     "  }\n" // Dmatrix
     "}\n\n" // if local0
-    
+#endif    
     "for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += get_global_size(0)) {\n"
     
     "if(isFirstLocal1){\n"  // only one work item per group computes Drow and Dcol
@@ -270,8 +288,10 @@ std::string maternBatchKernelString(
     "	localDist[get_local_id(0)].y = coords[DlocalParam +1] - coords[k +1];\n"
     "}\n\n"
     "barrier(CLK_LOCAL_MEM_FENCE);\n"
-    "for(Dmatrix = get_global_id(1); Dmatrix < Nmatrix; Dmatrix += get_global_size(1) ) {\n"
-    " DlocalParam = NlocalParams*Dmatrix;\n"
+    "for(Dmatrix = get_global_id(1),DmatrixLocal = get_local_id(0);" 
+    "    Dmatrix < Nmatrix;" 
+    "    Dmatrix += get_global_size(1),DmatrixLocal += get_local_size(1) ) {\n"
+    " DlocalParam = NlocalParams*DmatrixLocal;\n"
     // cos element 7, sin element 8
     " sincos.x = localParams[DlocalParam+8];\n"
     " sincos.y = localParams[DlocalParam+7];\n"
@@ -463,7 +483,9 @@ template<typename T> void maternBatchVcl(
     N, Ncell, Npad, Nmatrix, NpadBetweenMatrices, 
     vclCoords.internal_size2(), //NpadCoords, 
     param.internal_size2(),// NpadParams
-    numLocalItems[0]);
+    numLocalItems[0],
+    NlocalParams * ceil(Nmatrix/numLocalItems[1]) // NlocalParamsCache
+    );
   
   viennacl::ocl::program & my_prog = ctx.add_program(maternClString, "my_kernel");
   // get compiled kernel function

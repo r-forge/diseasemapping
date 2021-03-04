@@ -173,17 +173,17 @@ gpuB = vclMatrix(matrix(10*(1:prod(dimB)), dimB[1], dimB[2]), type='float')
 
 outputCp = vclMatrix(matrix(-1, 10, 10), type='float')
 
-SsubA = c(0,3,4,0,2,4) # A [rowStart, nRowsSub, nRowsTotal, colStart, ...]
-SsubB = c(0,4,4,0,3,4) #B
+SsubA = c(0,2,4,0,3,4) # A [rowStart, nRowsSub, nRowsTotal, colStart, ...]
+SsubB = c(0,3,4,0,4,4) #B
 
 gemmBatch2backend(
   gpuA, gpuB, outputCp,
-  c(1,1,1), # transposeA, transposeB, transposeC
+  c(0,0,0), # transposeA, transposeB, transposeC
   SsubA, SsubB,
-  c(0,SsubB[2],5,0,SsubA[2],5), #C
+  c(0,SsubA[2],5,0,SsubB[5],5), #C
   c(2,2,0,0,0,0), # batches: nRow, nCol, recycleArow, recycleAcol, recycleB row col
-  c(1,1,1,1,1,1), #workgroupSize  global 0 1 2, local 0 1 2  
-  c(10,10), # cacheSizeA, cacheSizeB,                
+  c(2,4,4,1,2,2), #workgroupSize  global 0 1 2, local 0 1 2  
+  c(16,16), # cacheSizeA, cacheSizeB,                
   TRUE # verbose
   )
 as.matrix(gpuA)
@@ -196,7 +196,7 @@ BB = as.matrix(gpuB[seq(Dmatrix[1]*SsubB[3] + SsubB[1]+1, len=SsubB[2]),
                seq(Dmatrix[2]*SsubB[6] + SsubB[4]+1, len=SsubB[5])] )
 AA
 BB
-t(AA) %*% t(BB)
+(AA) %*% (BB)
 ```
 
 
