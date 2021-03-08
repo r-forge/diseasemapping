@@ -190,9 +190,19 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// fillParamsExtra
+void fillParamsExtra(Rcpp::S4 param);
+RcppExport SEXP _gpuRandom_fillParamsExtra(SEXP paramSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type param(paramSEXP);
+    fillParamsExtra(param);
+    return R_NilValue;
+END_RCPP
+}
 // maternBatchBackend
-void maternBatchBackend(Rcpp::S4 var, Rcpp::S4 coords, Rcpp::S4 param, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal, int startrow, int numberofrows);
-RcppExport SEXP _gpuRandom_maternBatchBackend(SEXP varSEXP, SEXP coordsSEXP, SEXP paramSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP, SEXP startrowSEXP, SEXP numberofrowsSEXP) {
+void maternBatchBackend(Rcpp::S4 var, Rcpp::S4 coords, Rcpp::S4 param, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal, int startrow, int numberofrows, int verbose);
+RcppExport SEXP _gpuRandom_maternBatchBackend(SEXP varSEXP, SEXP coordsSEXP, SEXP paramSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP, SEXP startrowSEXP, SEXP numberofrowsSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type var(varSEXP);
@@ -202,7 +212,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nlocal(NlocalSEXP);
     Rcpp::traits::input_parameter< int >::type startrow(startrowSEXP);
     Rcpp::traits::input_parameter< int >::type numberofrows(numberofrowsSEXP);
-    maternBatchBackend(var, coords, param, Nglobal, Nlocal, startrow, numberofrows);
+    Rcpp::traits::input_parameter< int >::type verbose(verboseSEXP);
+    maternBatchBackend(var, coords, param, Nglobal, Nlocal, startrow, numberofrows, verbose);
     return R_NilValue;
 END_RCPP
 }
@@ -271,7 +282,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_gpuRnBackend", (DL_FUNC) &_gpuRandom_gpuRnBackend, 4},
     {"_gpuRandom_cpp_gpu_qqnorm", (DL_FUNC) &_gpuRandom_cpp_gpu_qqnorm, 6},
     {"_gpuRandom_rowsumBackend", (DL_FUNC) &_gpuRandom_rowsumBackend, 4},
-    {"_gpuRandom_maternBatchBackend", (DL_FUNC) &_gpuRandom_maternBatchBackend, 7},
+    {"_gpuRandom_fillParamsExtra", (DL_FUNC) &_gpuRandom_fillParamsExtra, 1},
+    {"_gpuRandom_maternBatchBackend", (DL_FUNC) &_gpuRandom_maternBatchBackend, 8},
     {"_gpuRandom_multiplyLowerDiagonalBatchBackend", (DL_FUNC) &_gpuRandom_multiplyLowerDiagonalBatchBackend, 9},
     {"_gpuRandom_multiplyDiagonalBatchBackend", (DL_FUNC) &_gpuRandom_multiplyDiagonalBatchBackend, 6},
     {"_gpuRandom_multiplyLowerBatchBackend", (DL_FUNC) &_gpuRandom_multiplyLowerBatchBackend, 7},

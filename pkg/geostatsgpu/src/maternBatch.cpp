@@ -251,18 +251,19 @@ std::string maternBatchKernelString(
     // copy parameters to local storage
     result += "wait = (event_t) 0;\n";
     result += 
-    "for(DmatrixBlock = get_group_id(1),DmatrixLocal = 0;" 
-    "  DmatrixBlock < Nmatrix;" 
-    "  DmatrixBlock += get_global_size(1)) {\n"
-    "  for(Dmatrix = 0;"
-    "    Dmatrix < get_local_size(1);" 
-    "    Dmatrix ++,DmatrixLocal++) {\n"
+//    "for(DmatrixBlock = get_group_id(1)*get_global_size(1),DmatrixLocal = 0;" 
+//    "  DmatrixBlock < Nmatrix;" 
+//    "  DmatrixBlock += get_global_size(1)) {\n"
+//    "  for(Dmatrix = 0;"
+//    "    Dmatrix < get_local_size(1);" 
+//    "    Dmatrix ++,DmatrixLocal++) {\n"
     "    wait = async_work_group_copy("
-    "      &localParams[DmatrixLocal * NlocalParams],"
-    "      params[(DmatrixBlock + Dmatrix) * NpadParams],"
+    "localParams",//      &localParams[DmatrixLocal * NlocalParams],"
+    "params,"
+//    "      &params[(DmatrixBlock + Dmatrix) * NpadParams],"
     "      NlocalParams, wait);\n"
-    "  }\n"
-    "}\n";
+//    "  }\n"
+//    "}\n";
     result += "  wait_group_events (1, &wait);\n";
 #ifdef UNDEF    
   "if(get_local_id(0)==0){\n"
@@ -288,10 +289,11 @@ std::string maternBatchKernelString(
     "	localDist[get_local_id(0)].y = coords[DlocalParam +1] - coords[k +1];\n"
     "}\n\n"
     "barrier(CLK_LOCAL_MEM_FENCE);\n"
-    "for(Dmatrix = get_global_id(1),DmatrixLocal = get_local_id(0);" 
+    "for(Dmatrix = get_global_id(1),DmatrixLocal = get_local_id(1);" 
     "    Dmatrix < Nmatrix;" 
     "    Dmatrix += get_global_size(1),DmatrixLocal += get_local_size(1) ) {\n"
-    " DlocalParam = NlocalParams*DmatrixLocal;\n"
+//    " DlocalParam = NlocalParams*DmatrixLocal;\n"
+"DlocalParam = 0;\n" // REMOVE
     // cos element 7, sin element 8
     " sincos.x = localParams[DlocalParam+8];\n"
     " sincos.y = localParams[DlocalParam+7];\n"
@@ -347,7 +349,8 @@ std::string maternBatchKernelString(
     		"K_nuK_nup1.x;\n" // lower triangle
 //    "\n#endif\n\n"
 //    "\n#ifdef assignUpper\n\n"
-    "	result[Dmatrix * NpadBetweenMatrices + Drow[get_local_id(0)] + Dcol[get_local_id(0)] * Npad] = K_nuK_nup1.x;\n"//K_nu;\n" // upper triangle
+//  RESTORE  "	result[Dmatrix * NpadBetweenMatrices + Drow[get_local_id(0)] + Dcol[get_local_id(0)] * Npad] = K_nuK_nup1.x;\n"//K_nu;\n" // upper triangle
+"	result[Dmatrix * NpadBetweenMatrices + Drow[get_local_id(0)] + Dcol[get_local_id(0)] * Npad] = 0.1+Dmatrix;\n"//K_nu;\n" // upper triangle
 //    "\n#endif\n\n"
 
     "}\n" // Dmatrix

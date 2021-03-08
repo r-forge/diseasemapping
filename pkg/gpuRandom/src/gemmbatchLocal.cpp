@@ -127,7 +127,7 @@ std::string gemmBatch2String(
   if(transposeABC[2]) { // transpose C, Nrow is rows of C^T, cols of C
     result += 
       "#define Cijorig ( DmatrixRow * NpadNrowTotalC + NpadC * (colStartC + Dcol) + DmatrixCol * NrowTotalC + rowStartC + Drow)\n"
-      "#define Cij (startMatrixC+ NpadC * Dcol + Drow\n\n";
+      "#define Cij (startMatrixC+ NpadC * Dcol + Drow)\n\n";
   } else {
     result += 
       "#define Cijorig ( DmatrixRow * NpadNrowTotalC + NpadC * (rowStartC + Drow) + DmatrixCol * NcolTotalC + colStartC + Dcol)\n"

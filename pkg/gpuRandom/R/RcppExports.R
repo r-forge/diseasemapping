@@ -75,8 +75,12 @@ rowsumBackend <- function(xR, SumR, type, log) {
     invisible(.Call('_gpuRandom_rowsumBackend', PACKAGE = 'gpuRandom', xR, SumR, type, log))
 }
 
-maternBatchBackend <- function(var, coords, param, Nglobal, Nlocal, startrow, numberofrows) {
-    invisible(.Call('_gpuRandom_maternBatchBackend', PACKAGE = 'gpuRandom', var, coords, param, Nglobal, Nlocal, startrow, numberofrows))
+fillParamsExtra <- function(param) {
+    invisible(.Call('_gpuRandom_fillParamsExtra', PACKAGE = 'gpuRandom', param))
+}
+
+maternBatchBackend <- function(var, coords, param, Nglobal, Nlocal, startrow, numberofrows, verbose = 0L) {
+    invisible(.Call('_gpuRandom_maternBatchBackend', PACKAGE = 'gpuRandom', var, coords, param, Nglobal, Nlocal, startrow, numberofrows, verbose))
 }
 
 multiplyLowerDiagonalBatchBackend <- function(C, A, D, B, diagIsOne, transformD, Nglobal, Nlocal, NlocalCache) {

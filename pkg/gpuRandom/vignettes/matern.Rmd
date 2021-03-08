@@ -72,42 +72,57 @@ coordsSp = sp::SpatialPoints(raster::xyFromCell(myRaster, 1:raster::ncell(myRast
 ```{r paramsBatch}
 myParamsBatch = rbind(
 c(shape=5.99, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
-c(shape=6, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
-c(shape=6.01, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
-c(shape=3, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
+c(shape=6, range=1, variance = 2, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
+c(shape=6.01, range=1, variance = 3, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
+c(shape=3, range=5, variance = 4, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
 # c(shape=4, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
 # c(shape=5, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0) )
 
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
-myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch)))
-myParamsBatch
+
+#myParamsBatch = myParamsBatch[rep(1, 12),]
 ```
 
 ```{r outputBatchCreate, eval=T}
 coordsGpu = vclMatrix(coordsSp@coords, nrow(coordsSp@coords), ncol(coordsSp@coords), type=theType)
-paramsGpu = vclMatrix(myParamsBatch, type=gpuR::typeof(coordsGpu))
-outputBatchF = vclMatrix(0, 3*nrow(coordsGpu), nrow(coordsGpu), type=gpuR::typeof(paramsGpu))
-```
+outputBatchF = vclMatrix(0, nrow(myParamsBatch)*nrow(coordsGpu), nrow(coordsGpu), type=gpuR::typeof(coordsGpu))
 
-```{r batchMatern, eval=T}
-gpuRandom::maternBatch(
+paramsGpu = vclMatrix(cbind(
+  myParamsBatch, 
+  matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch))), type=gpuR::typeof(coordsGpu))
+
+colnames(paramsGpu)= c(colnames(paramsGpu)[1:7],
+ c('costheta', 'sintheta','anisoRatioSq',
+ ' varscale', 'logxscale', 'sinrat','mu', 'muSq', 'mup1', 'nuround', 'g1', 
+ 'g2', 'g1pnu', 'g1mnu', 'variancePlusNugget'))
+
+
+gpuRandom:::maternBatchBackend(
     outputBatchF,
     coordsGpu, 
     paramsGpu,  
-    Nglobal = NglobalMatern, 
-    Nlocal = NlocalMatern,
-    1,3)
+    c(1,4),#NglobalMatern, 
+    c(1,4),#NlocalMatern,
+    startrow = 1,
+    numberofrows = 4,
+    verbose = 1)
+as.matrix(outputBatchF)[,1:6]
 
-#finalparamsbatch = as.matrix(paramsGpu)
-fromCpu = geostatsp::matern(
+geostatsp::matern(
     x=coordsSp,
-    param=drop(myParamsBatch[4,1:7])
-    )
-fromCpu[1:8,1:8]
-as.matrix(outputBatchF[1:8,1:8])
-as.matrix(outputBatchF)
-as.matrix(outputBatchF[21:28,1:8])
-as.matrix(outputBatchF[41:48,1:8])
+    param=drop(myParamsBatch[1,1:7])
+    )[1:7,1:7]
+as.matrix(outputBatchF[1:7,1:7])
+geostatsp::matern(
+    x=coordsSp,
+    param=drop(myParamsBatch[2,1:7])
+    )[1:7,1:7]
+as.matrix(outputBatchF[ncol(outputBatchF) + (1:7),1:7])
+geostatsp::matern(
+    x=coordsSp,
+    param=drop(myParamsBatch[3,1:7])
+    )[1:7,1:7]
+as.matrix(outputBatchF[2*ncol(outputBatchF) + (1:7),1:7])
 #################
 # #upper
 # thisx = as.matrix(dist(coordsSp@coords)/5)

@@ -39,6 +39,7 @@ std::string maternBatchKernelString(
     int NpadCoords,
     int NpadParams,
     int Nlocal0,
+    int NlocalParamsCache,
     int assignUpper = 1,
     int assignLower = 1,
     int assignDiagonals = 1,
@@ -90,6 +91,7 @@ std::string maternBatchKernelString(
     "#define NpadBetweenMatrices " + std::to_string(NpadBetweenMatrices) + "\n"
     "#define NpadCoords " + std::to_string(NpadCoords) + "\n"
     "#define NpadParams " + std::to_string(NpadParams) + "\n"
+    "#define NlocalParamsCache "+ std::to_string(NlocalParamsCache) + "\n"
     "#define NlocalParams " + std::to_string(NlocalParams) + "\n\n";
   
   
@@ -228,7 +230,7 @@ std::string maternBatchKernelString(
   
   
   result +=
-    "int Dmatrix, Dcell, nuround, DlocalParam, k;\n" +
+    "int Dmatrix, DmatrixLocal, Dcell, nuround, DlocalParam, k;\n" +
     typeString + " distSq;\n" +
     typeString + "2 distRotate;\n" +
     typeString + "2 sincos;\n" +
@@ -237,29 +239,33 @@ std::string maternBatchKernelString(
     typeString + "2 K_nuK_nup1;\n\n";
   
   result +=
-    "__local " + typeString + " localParams[" +
-    std::to_string(NlocalParams * Nmatrix) + "];\n"
+    "__local " + typeString + " localParams[NlocalParamsCache];\n"
   "__local " + typeString + "2 localDist[NlocalStorage];\n"
   "__local int Drow[NlocalStorage], Dcol[NlocalStorage];\n";
+  
+  result += "event_t wait;\n\n";
   
   result += 
     // dimension 0 is cell, dimension 1 is matrix
     "const int isFirstLocal = (get_local_id(0)==0 & get_local_id(1)==0);\n"
-    "const int isFirstLocal1 = (get_local_id(1)==0);\n"
+    "const int isFirstLocal1 = (get_local_id(1)==0);\n";
     
     // copy parameters to local storage
-    //"async_work_group_copy(localParams, params, NpadParams*Nmatrix, 0);\n"
-    "if(get_local_id(0)==0){\n"
-    "for(Dmatrix = get_local_id(1); Dmatrix < Nmatrix; Dmatrix += get_local_size(1)) {\n"
-    "  DlocalParam = NlocalParams*Dmatrix;\n"
-    
-    "  k = NpadParams*(Dmatrix+ startrow);\n"
-    "    for(Dcell = 0; Dcell < NlocalParams; ++Dcell){\n"
-    "       localParams[DlocalParam + Dcell] = params[k + Dcell];\n"
-    "     }\n" // Dcell
-    "  }\n" // Dmatrix
-    "}// if local0\n\n";
+    result += "wait = (event_t) 0;\n";
+  result += //Dcell is really DmatrixBlock
+    "for(Dcell = 0,Dmatrix = get_group_id(1)*get_local_size(1);\n"
+    "     Dmatrix < Nmatrix;\n"
+    "     Dcell++,Dmatrix += get_global_size(1)){\n"
+    "   for(DmatrixLocal = 0; DmatrixLocal < get_local_size(1); DmatrixLocal++){"
+    "      wait = async_work_group_copy("
+    "        &localParams[(Dcell * get_local_size(1) + DmatrixLocal) * NlocalParams],"
+    "        &params[(startrow + Dmatrix + DmatrixLocal) * NpadParams],\n"
+    "        NlocalParams, wait);\n"
+    "  }\n"//DmatrixLocal
+    "}\n";//Dcell,Dmatrix
   
+    result += "wait_group_events (1, &wait);\n\n";
+
   
   result +=    
     "for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += get_global_size(0)) {\n";
@@ -278,9 +284,12 @@ std::string maternBatchKernelString(
   
   
   result +=    
-    "for(Dmatrix = get_global_id(1); Dmatrix < Nmatrix; Dmatrix += get_global_size(1) ) {\n";
+    "for(Dmatrix = get_global_id(1),DmatrixLocal = get_local_id(1);" 
+    "    Dmatrix < Nmatrix;" 
+    "    Dmatrix += get_global_size(1),DmatrixLocal += get_local_size(1) ) {\n";
+  
   result +=    
-    " DlocalParam = NlocalParams*Dmatrix;\n"
+    " DlocalParam = NlocalParams*DmatrixLocal;\n"
     // cos element 7, sin element 8
     " sincos.x = localParams[DlocalParam+8];\n"
     " sincos.y = localParams[DlocalParam+7];\n"
@@ -338,29 +347,30 @@ std::string maternBatchKernelString(
     
     "\n#ifdef assignLower\n"
     "  result[Dmatrix * NpadBetweenMatrices +  Dcol[get_local_id(0)]  +  Drow[get_local_id(0)] * Npad] ="
-    "K_nuK_nup1.x;\n" // lower triangle
+    "    K_nuK_nup1.x;\n" // lower triangle
     "#endif\n"
     "#ifdef assignUpper\n"
     "  result[Dmatrix * NpadBetweenMatrices + Drow[get_local_id(0)] + Dcol[get_local_id(0)] * Npad] ="
-    " K_nuK_nup1.x;\n"//K_nu;\n" // upper triangle
+    "    K_nuK_nup1.x;\n"//K_nu;\n" // upper triangle
     "#endif\n\n";
   
   
-  result += "} // Dmatrix\n"
-  "barrier(CLK_LOCAL_MEM_FENCE);\n";
+  result += "} // Dmatrix\n";
+
+  result += "} // Dcell\n\n";
+
+    result +=     "\n#ifdef assignDiag\n";
   
-  result += "} // Dcell\n";
-  result +=     "\n#ifdef assignDiag\n"
-  
-  "barrier(CLK_LOCAL_MEM_FENCE);\n"
-  "for(Dmatrix = get_global_id(1); Dmatrix < Nmatrix; Dmatrix += get_global_size(1)) {\n"
-  "DlocalParam = Dmatrix * NpadBetweenMatrices;\n"
-  "maternBit = localParams[NlocalParams*Dmatrix+21];\n"
-  //	"maternBit = params[NpadParams*Dmatrix+21];\n"
-  "for(Dcell = get_global_id(0); Dcell < N; Dcell += get_global_size(0)) {\n"
-  "	result[DlocalParam + Dcell * Npad + Dcell] = maternBit;\n"
+  result += 
+  "for(Dmatrix = get_global_id(1),DmatrixLocal = get_local_id(1);\n"
+  "  Dmatrix < Nmatrix;\n" 
+  "  Dmatrix += get_global_size(1),DmatrixLocal += get_local_size(1) ) {\n"
+  "    maternBit = localParams[NlocalParams*DmatrixLocal+21];\n"
+  "    DlocalParam = Dmatrix * NpadBetweenMatrices;\n"
+  "  for(Dcell = get_global_id(0); Dcell < N; Dcell += get_global_size(0)) {\n"
+  "	   result[DlocalParam + Dcell * Npad + Dcell] = maternBit;\n"
+  "  }\n" // Dcell
   "}\n" // Dmatrix
-  "}\n" // Dcell
   "#endif\n\n"; // assign diagonals
   
   result +=  
@@ -447,7 +457,7 @@ void maternBatchVcl(
     viennacl::matrix<T> &vclCoords, // 2 columns
     viennacl::matrix<T> &param, // Nmat rows, 22 columns
     viennacl::ocl::kernel & maternKernel,
-    int startrow){  // new added
+    int startrow){
   
   fill22params(param);
   viennacl::ocl::enqueue(maternKernel(vclVar, vclCoords, param, startrow));
@@ -465,7 +475,8 @@ void maternBatchVcl(
     std::vector<int> numLocalItems,	
     const int ctx_id,
     int startrow,   // new added
-    int numberofrows){ 
+    int numberofrows,
+    int verbose){ 
   
   const int 
     N = vclCoords.size1(),
@@ -483,7 +494,9 @@ void maternBatchVcl(
     N, Ncell, Npad, Nmatrix, NpadBetweenMatrices, 
     vclCoords.internal_size2(), //NpadCoords, 
     param.internal_size2(),// NpadParams
-    numLocalItems[0]);
+    numLocalItems[0],
+    NlocalParams * numLocalItems[1] * ceil(Nmatrix * numLocalItems[1] / numWorkItems[1])// local params cache
+  );
   
   // the context
   viennacl::ocl::switch_context(ctx_id);
@@ -498,9 +511,12 @@ void maternBatchVcl(
   maternKernel.local_work_size(0, (cl_uint) (numLocalItems[0]));
   maternKernel.local_work_size(1, (cl_uint) (numLocalItems[1]));
   
-#ifdef DEBUG
-  Rcpp::Rcout << maternClString << "\n";
-#endif
+if(verbose) {
+  Rcpp::Rcout << "\n" << 
+    NlocalParams * numLocalItems[1] * ceil(Nmatrix * numLocalItems[1] / numWorkItems[1])  << 
+      "\n" << maternClString << "\n";
+}
+
   maternBatchVcl(vclVar, vclCoords, param, maternKernel, startrow);
   
 }
@@ -515,7 +531,8 @@ void maternBatchTemplated(
     Rcpp::IntegerVector Nglobal,
     Rcpp::IntegerVector Nlocal,
     int startrow,   // new added
-    int numberofrows) {
+    int numberofrows, 
+    int verbose) {
   
   std::vector<int> numWorkItemsStd = Rcpp::as<std::vector<int> >(Nglobal);
   std::vector<int> numLocalItemsStd = Rcpp::as<std::vector<int> >(Nlocal);
@@ -533,16 +550,39 @@ void maternBatchTemplated(
     numWorkItemsStd, 
     numLocalItemsStd,
     ctx_id,
-    startrow,   // new added
-    numberofrows);
+    startrow - 1,   // indexing from 0 rather than from 1
+    numberofrows, verbose);
 }
 
 
 
+template<typename T> 
+void fillParamsExtraTemplated(
+    Rcpp::S4 paramR){
+  const bool BisVCL=1;
+  const int ctx_id = INTEGER(paramR.slot(".context_index"))[0]-1;
+  std::shared_ptr<viennacl::matrix<T> > param = getVCLptr<T>(paramR.slot("address"), BisVCL, ctx_id);
 
+  fill22params(*param);  
+}
 
-
-
+//[[Rcpp::export]]
+void fillParamsExtra(
+    Rcpp::S4 param //22 columns 
+) {
+  Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(param));
+  std::string precision_type = (std::string) classVarR;
+  
+  
+  if(precision_type == "fvclMatrix") {
+    fillParamsExtraTemplated<float>(param);
+  } else if (precision_type == "dvclMatrix") {
+    fillParamsExtraTemplated<double>(param);
+  } else {
+    Rcpp::warning("class of param must be fvclMatrix or dvclMatrix");
+  }
+  
+}
 
 
 //[[Rcpp::export]]
@@ -553,16 +593,17 @@ void maternBatchBackend(
     Rcpp::IntegerVector Nglobal,
     Rcpp::IntegerVector Nlocal,
     int startrow,   // new added
-    int numberofrows) {
+    int numberofrows,
+    int verbose=0) {
   
   
   Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(var));
   std::string precision_type = (std::string) classVarR;
   
   if(precision_type == "fvclMatrix") {
-    maternBatchTemplated<float>(var, coords, param, Nglobal, Nlocal, startrow, numberofrows);
+    maternBatchTemplated<float>(var, coords, param, Nglobal, Nlocal, startrow, numberofrows, verbose);
   } else if (precision_type == "dvclMatrix") {
-    maternBatchTemplated<double>(var, coords, param, Nglobal, Nlocal, startrow, numberofrows);
+    maternBatchTemplated<double>(var, coords, param, Nglobal, Nlocal, startrow, numberofrows, verbose);
   } else {
     Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
   }
