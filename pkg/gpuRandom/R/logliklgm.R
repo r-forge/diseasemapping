@@ -6,6 +6,7 @@
 
 #before start, we have spatial model and SpatialPointsDataFrame 
 
+
 lgmGpuObjectes1 <- function(modelname, mydat, type=c("double", "float")){
     
     covariates = model.matrix(modelname$model$formula, data=modelname$data)
@@ -14,8 +15,8 @@ lgmGpuObjectes1 <- function(modelname, mydat, type=c("double", "float")){
     n = length(response)
     p = ncol(covariates)
     yX=vclMatrix(cbind(response,covariates),type=type)   
-    y <-  vclMatrix(yX[,1], nrow=n, ncol=1, type = type) 
-    X <-  vclMatrix(yX[,c(2:(1+p))],type = type)
+    y <-vclMatrix(yX[,1], nrow=n, ncol=1, type = type) 
+    X <-vclMatrix(yX[,c(2:(1+p))],type = type)
     coordsGpu<-vclMatrix(mydat@coords,type=type)
     
     
@@ -38,7 +39,8 @@ lgmGpuObjectes2 <- function(rowbatch, n, p, type=c("double", "float")){
     logD<- vclVector(0, length=rowbatch,type=type)
     ab <- vclMatrix(0, nrow(Vbatch), 1+p, type = type)
     A <- vclMatrix(0, nrow(Vbatch), colbatch, type = type)
-    one0 <- vclMatrix(0, rowbatch*colbatch, colbatch, type = type)
+    temp0 <- vclMatrix(0, rowbatch, colbatch, type = type)   
+    temp1 <- vclMatrix(0, rowbatch, colbatch, type = type)   
     temp2 <- vclMatrix(0, (1+p)*rowbatch, (1+p), type = type)
     diagP <- vclMatrix(0, rowbatch, p, type = type)
     temp3 <- vclMatrix(0, rowbatch*p, colbatch, type = type)
@@ -62,7 +64,7 @@ lgmGpuObjectes2 <- function(rowbatch, n, p, type=c("double", "float")){
 #' @useDynLib gpuRandom
 #' @export  
 
-likfitGpu_0 <- function(yX, y, X, n, p, coordsGpu, 
+likfitGpu_0 <- function(yX, n, p, coordsGpu, 
                         type=c("double", "float"),
                         Vbatch,
                         diagMat,
@@ -81,6 +83,7 @@ likfitGpu_0 <- function(yX, y, X, n, p, coordsGpu,
                         startrow,   # new added
                         numberofrows,
                         betas=NULL, #a vclmatrix  #given by the user or provided from formula
+                        BoxCox,
                         form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),# minustwotimes=TRUE,
                         workgroupSize,
                         localSize,
@@ -96,32 +99,55 @@ likfitGpu_0 <- function(yX, y, X, n, p, coordsGpu,
     localSizechol[2]<-workgroupSize[2]
     
     ########################### 1, loglik or ml(beta,sigma), given beta and sigma #############################
+    #get matern matrix
+    gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize, startrow, numberofrows)
     
     # Vbatch=LDL^T, cholesky decomposition
-    gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize, startrow, numberofrows)
     gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSizechol, NlocalCache=NlocalCache)
     #logD <- apply(log(diagMat),1,sum)
     gpuRandom:::rowsumBackend(diagMat, logD, type="row", log=1)    
     variances<-vclMatrix(paramsBatch[,3],nrow=rowbatch, ncol=1,type = type)   
     #L(a b) = (y X)
     gpuRandom::backsolveBatch(ab, Vbatch, yX, numbatchB=1L, diagIsOne=TRUE, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache)
-    b <-  vclMatrix(ab[,c(2:(1+p))],type = type) 
-    
-    if(form == 1 | form == 3){ # to get one, see the notes
-        #temp = y-X*beta
-        temp <- y - gpuRandom::gemmBatch(X, betas, Arowbatch=1L, Browbatch=1L, Acolbatch=1L, Bcolbatch=colbatch, need_transpose = FALSE, workgroupSize)       
-        # L * A = temp, backsolve for A
-        gpuRandom::backsolveBatch(A, Vbatch, temp, numbatchB=1L,  diagIsOne=TRUE,workgroupSize,  localSize,  NlocalCache)      
-        # one0 = A^T * D^(-1) * A = (y-X*betas)^T * V^(-1) * (y-X*betas)
-        gpuRandom::crossprodBatch(one0, A, diagMat,  invertD=TRUE,  workgroupSize, localSize, NlocalCache)       
-        #to obtain ssqBeta=betaT*XT V^(-1) X*beta = betaT bT D^(-1) b*beta
-        # b*beta   n*p p*1 = n*1 
-        bBeta <-gpuRandom::gemmBatch(b, betas,Arowbatch=rowbatch, Browbatch=1L, Acolbatch=1L, Bcolbatch=1L, need_transpose = FALSE, workgroupSize)
-        gpuRandom::crossprodBatch(ssqBeta, bBeta, diagMat,  invertD=TRUE,  workgroupSize, localSize, NlocalCache)
-    }
-    # to get hat_sigma^2
     # temp2 = (ab)^T * D^(-1) *ab
     gpuRandom::crossprodBatch(temp2, ab, diagMat, invertD=TRUE, workgroupSize, localSize, NlocalCache)    
+    
+    #extract a^TDa from temp2
+    for (j in 1:colbatch){
+        for (i in 1:rowbatch){
+            aTDa[i,j]= temp2[(i-1)*ncol(ab)+j, j]
+        }
+    }
+    
+    if(form == 1 | form == 3){       
+        # a^TD^(-1)b * beta = temp0
+        gemmBatch2backend(temp2, betas, temp0,
+                          c(0,0,0), # transposeA, transposeB, transposeC
+                          (0,1,(1+p),1,p,(1+p)), (0,p,p,0,1,1), #select from temp2 and betas
+                          c(0,1,1,0,1,1), #select from output
+                          c(rowbatch,1,0,0,1,0), # batches: nRow, nCol, recycleArow, recycleAcol, recycleB row col
+                          c(workgroupSize,localSize), #workgroupSize  global 0 1 2, local 0 1 2  
+                          c(NlocalCache,NlocalCache), # cacheSizeA, cacheSizeB,                
+                          FALSE )
+        
+        
+        # b * beta = temp1 (n x 1), to get ssqBeta
+        gemmBatch2backend(ab, betas, temp1,
+                          c(0,0,0), # transposeA, transposeB, transposeC
+                          (0,n,n,1,p,(1+p)), (0,p,p,0,1,1), #select from ab and betas
+                          c(0,n,n,0,1,1), #select from output
+                          c(rowbatch,1,0,0,1,0), # batches: nRow, nCol, recycleArow, recycleAcol, recycleB row col
+                          c(workgroupSize,localSize), #workgroupSize  global 0 1 2, local 0 1 2  
+                          c(NlocalCache,NlocalCache), # cacheSizeA, cacheSizeB,                
+                          FALSE )
+        
+        # ssqBeta = temp1^T D^(-1) temp1 = beta T*bT D^(-1) b*beta
+        gpuRandom::crossprodBatch(ssqBeta, temp1, diagMat,  invertD=TRUE,  workgroupSize, localSize, NlocalCache)
+        
+        # to get one, see the notes
+        one0 = aTDa - 2*temp0 + ssqBeta
+    }
+    # to get hat_sigma^2 when beta is not given by users
     # b^T * D^(-1) * b = Q * P * Q^T, cholesky of a subset (right bottom) of temp2
     gpuRandom:::cholBatchBackend(temp2, diagP, c(colbatch, p, colbatch, p), c(0, rowbatch, 0, p), rowbatch, workgroupSize, localSizechol, NlocalCache)     
     # Q * temp3 = (b^T * D^(-1) *a), backsolve for temp3    2 by 1
@@ -129,12 +155,7 @@ likfitGpu_0 <- function(yX, y, X, n, p, coordsGpu,
                                       rowbatch,diagIsOne=TRUE, workgroupSize, localSize, NlocalCache)     
     # nine0 = temp3^T * P^(-1) * temp3,  four 1 by 1 matrices
     gpuRandom::crossprodBatch(nine0, temp3, diagP, invertD=TRUE,  workgroupSize, localSize, NlocalCache) ##doesn't need selecting row/col
-    #extract a^TDa from temp2
-    for (j in 1:colbatch){
-        for (i in 1:rowbatch){
-            aTDa[i,j]= temp2[(i-1)*ncol(ab)+j, j]
-        }
-    }
+    
     two = aTDa - nine0  
     
     if(form == 1 | form == 4){     
@@ -154,7 +175,7 @@ likfitGpu_0 <- function(yX, y, X, n, p, coordsGpu,
     }else if(form == 2) {#ml  result = n*log(two) +logD + n*log(2*pi) + n
         Result = list(minusTwoLogLik=n*log(two/n) +logD + n*log(2*pi) + n,
                       LogLik = -0.5*(n*log(two/n) +logD + n*log(2*pi) + n),
-                      ssqBeta=NULL, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)           
+                      ssqBeta=0, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)           
         
     }else if(form == 3){ # mlFixSigma/ or ml(beta,hatsigma)result = n*log(one0/n)+logD + n*log(2*pi) + n
         Result = list(minusTwoLogLik=n*log(one0/n)+logD + n*log(2*pi) + n, 
@@ -164,7 +185,7 @@ likfitGpu_0 <- function(yX, y, X, n, p, coordsGpu,
     }else if(form == 4){ # mlFixBeta / or ml(hatbeta,sigma) result = part1 + two/variances + n*log(2*pi) 
         Result = list(minusTwoLogLik=part1 + two/variances + n*log(2*pi), 
                       LogLik = -0.5*(part1 + two/variances + n*log(2*pi)),
-                      ssqBeta=NULL, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)            
+                      ssqBeta=0, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)            
         
     }else if(form == 5){ #reml
         first_part <- (n-p)*log(variances) + logD + logP  #result <- first_part + two/variances + n*log(2*pi) 
@@ -190,6 +211,7 @@ likfitGpu_0 <- function(yX, y, X, n, p, coordsGpu,
 likfitGpu <- function(modelname, mydat, type=c("double", "float"), 
                       bigparamsBatch, #vclMatrix of parameter sets,
                       betas=NULL, #a vclmatrix  #given by the user or provided from formula
+                      BoxCox,
                       form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),# minustwotimes=TRUE,
                       groupsize,  # how many rows of params to be executed each loop
                       workgroupSize,
@@ -205,60 +227,63 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
     index <- c(1:groupsize)
     
     LogLik <- vclVector(rep(0, totalnumbersets),type=type)
-    ssqBeta <- vclVector(rep(0, totalnumbersets),type=type)
-    ssqX <- vclVector(rep(0, totalnumbersets),type=type)
-    ssqY <- vclVector(rep(0, totalnumbersets),type=type)
-    logD <- vclVector(rep(0, totalnumbersets),type=type)
-    logP <- vclVector(rep(0, totalnumbersets),type=type)
+    # ssqBeta <- vclVector(rep(0, totalnumbersets),type=type)
+    # ssqX <- vclVector(rep(0, totalnumbersets),type=type)
+    # ssqY <- vclVector(rep(0, totalnumbersets),type=type)
+    # logD <- vclVector(rep(0, totalnumbersets),type=type)
+    # logP <- vclVector(rep(0, totalnumbersets),type=type)
     
     
     for(i in 0:(totalnumbersets/groupsize) ){    # can do >8990 sets of parameters
         
+        startrow <- i*groupsize
         
-        resulti <- likfitGpu_0(output1$yX,
-                               output1$y, 
-                               output1$X, 
-                               output1$n, 
-                               output1$p, 
-                               output1$coordsGpu, 
-                               type=type,
-                               output2$Vbatch,
-                               output2$diagMat,
-                               output2$logD,
-                               output2$ab,
-                               output2$A,
-                               output2$one0,
-                               output2$temp2,
-                               output2$diagP,
-                               output2$temp3,
-                               output2$nine0,
-                               output2$aTDa,
-                               output2$ssqBeta,
-                               output2$logP,
-                               bigparamsBatch, #vclMatrix of parameter sets,
-                               i*groupsize,  # note that here in C row starts from 0
-                               groupsize, # number of rows to run 
-                               betas= betas, #a vclmatrix  #given by the user or provided from formula
-                               form = form,# minustwotimes=TRUE,
-                               workgroupSize,
-                               localSize,
-                               NlocalCache)
-        
-        
-        replace(LogLik,index + i*groupsize, resulti$LogLik)
-        # replace(ssqBeta,index + i*groupsize, resulti$ssqBeta)
-        # replace(ssqX,index + i*groupsize, resulti$ssqX)
-        # replace(ssqY,index + i*groupsize, resulti$ssqY)
-        # replace(logD,index + i*groupsize, resulti$logD)
-        # replace(logP,index + i*groupsize, resulti$logP)
-        
-        
-        
+        if(groupsize*(i+1) < totalnumbersets +1){
+            
+            resulti <- likfitGpu_0(output1$yX,
+                                   output1$y, 
+                                   output1$X, 
+                                   output1$n, 
+                                   output1$p, 
+                                   output1$coordsGpu, 
+                                   type=type,
+                                   output2$Vbatch,
+                                   output2$diagMat,
+                                   output2$logD,
+                                   output2$ab,
+                                   output2$A,
+                                   output2$one0,
+                                   output2$temp2,
+                                   output2$diagP,
+                                   output2$temp3,
+                                   output2$nine0,
+                                   output2$aTDa,
+                                   output2$ssqBeta,
+                                   output2$logP,
+                                   bigparamsBatch, #vclMatrix of parameter sets,
+                                   startrow,  # note that here in C row starts from 0
+                                   groupsize, # number of rows to run 
+                                   betas= betas, #a vclmatrix  #given by the user or provided from formula
+                                   BoxCox,
+                                   form = form,# minustwotimes=TRUE,
+                                   workgroupSize,
+                                   localSize,
+                                   NlocalCache)
+            
+            
+            replace(LogLik,index + startrow, resulti$LogLik)
+            # replace(ssqBeta,index + i*groupsize, resulti$ssqBeta)
+            # replace(ssqX,index + i*groupsize, resulti$ssqX)
+            # replace(ssqY,index + i*groupsize, resulti$ssqY)
+            # replace(logD,index + i*groupsize, resulti$logD)
+            # replace(logP,index + i*groupsize, resulti$logP)
+            
+            
+        }   
     }
     
     LogLik
 }
-
 
 
 
