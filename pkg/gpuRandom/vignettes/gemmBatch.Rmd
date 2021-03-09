@@ -226,7 +226,7 @@ B12= cbind(rbind(zerorow,zerorow,b12),zerocol)
 gpuA = vclMatrix(cbind(A11,A12), type='float')
 gpuB = vclMatrix(cbind(B11,B12), type='float')
 
-outputCp = vclMatrix(matrix(-123, 10, 16), type='float')   # 3x4  3x4
+outputCp = vclMatrix(matrix(-123, 10, 12), type='float')   # 3x4  3x4
 
 SsubA = c(1,dima[1],5,1,dima[2],7) # A [rowStart, nRowsSub, nRowsTotal, colStart, ...]
 SsubB = c(2,dimb[1],8,0,dimb[2],5) #B
