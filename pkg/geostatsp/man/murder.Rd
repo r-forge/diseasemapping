@@ -28,7 +28,7 @@ Lights: \url{https://ngdc.noaa.gov/eog/viirs/download_ut_mos.html}
 
 Boundary files: \url{http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/bound-limit-2006-eng.cfm}
 
-Income: \url{http://www12.statcan.gc.ca/census-recensement/2006/dp-pd/tbt/Ap-eng.cfm?LANG=E&APATH=3&DETAIL=0&DIM=0&FL=A&FREE=0&GC=0&GID=0&GK=0&GRP=1&PID=88982&PRID=0&PTYPE=88971,97154&S=0&SHOWALL=0&SUB=0&Temporal=2006&THEME=66&VID=0&VNAMEE=&VNAMEF=}
+Income: \url{https://www150.statcan.gc.ca/n1/en/catalogue/97-551-X2006007}
 }
 
 \examples{
