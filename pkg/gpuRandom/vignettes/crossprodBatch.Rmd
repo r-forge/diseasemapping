@@ -1,0 +1,9 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{crossprodBatch}
+-->
+
+
+```{r setup, include=FALSE}
+library('gpuR')
+```
