@@ -1,4 +1,3 @@
-rm gpuRandom_*.gz
 R -e "Rcpp::compileAttributes('gpuRandom')"
 R -e "devtools::document('gpuRandom')"
 R CMD build --no-build-vignettes gpuRandom

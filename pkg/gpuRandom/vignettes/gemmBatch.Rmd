@@ -200,7 +200,51 @@ BB
 ```
 
 
+```{r testBatcchLocal2, eval=FALSE}
+library("gpuRandom")
+library("gpuR")
+dima = c(3,6)
+dimb = c(6,4)
 
+a11=matrix(seq(1, prod(dima)), dima[1], dima[2])
+a12=matrix(2*seq(1, prod(dima)), dima[1], dima[2])
+b11=matrix(seq(1, prod(dimb)), dimb[1], dimb[2])
+b12=matrix(2*seq(1, prod(dimb)), dimb[1], dimb[2])
+
+zerorow=integer(dima[2])
+zerocol=integer(dima[1]+2)
+
+
+A11= cbind(zerocol,rbind(zerorow,a11,zerorow))
+A12= cbind(zerocol,rbind(zerorow,a12,zerorow))
+zerorow=integer(dimb[2])
+zerocol=integer(dimb[1]+2)
+B11= cbind(rbind(zerorow,zerorow,b11),zerocol)
+B12= cbind(rbind(zerorow,zerorow,b12),zerocol)
+
+
+gpuA = vclMatrix(cbind(A11,A12), type='float')
+gpuB = vclMatrix(cbind(B11,B12), type='float')
+
+outputCp = vclMatrix(matrix(-123, 10, 16), type='float')   # 3x4  3x4
+
+SsubA = c(1,dima[1],5,1,dima[2],7) # A [rowStart, nRowsSub, nRowsTotal, colStart, ...]
+SsubB = c(2,dimb[1],8,0,dimb[2],5) #B
+
+gemmBatch2backend(
+  gpuA, gpuB, outputCp,
+  c(0,0,0), # transposeA, transposeB, transposeC
+  SsubA, SsubB,
+  c(0,SsubA[2],5,  0,SsubB[5],ncol(outputCp)/2), #C
+  c(2,2,1,0,1,0), # batches: nRow, nCol, recycleArow, recycleAcol, recycleB row col
+  c(2,4,4,1,2,2), #workgroupSize  global 0 1 2, local 0 1 2  
+  c(16,16), # cacheSizeA, cacheSizeB,                
+  TRUE # verbose
+  )
+
+as.matrix(outputCp)
+cbind(a11%*%b11,a12%*%b12)
+```
 
 
 
