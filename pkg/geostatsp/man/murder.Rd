@@ -26,7 +26,7 @@ Murder data:\url{http://www.thestar.com/news/crime/torontohomicidemap.html},
 
 Lights: \url{https://ngdc.noaa.gov/eog/viirs/download_ut_mos.html}
 
-Boundary files: \url{http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/bound-limit-2006-eng.cfm}
+Boundary files: \url{https://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/bound-limit-2006-eng.cfm}
 
 Income: \url{https://www150.statcan.gc.ca/n1/en/catalogue/97-551-X2006007}
 }
