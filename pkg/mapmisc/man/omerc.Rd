@@ -49,7 +49,7 @@ If \code{post} is numeric, it specifies an angle for inverse rotation.
 }	
 
 \references{
-\url{http://en.wikipedia.org/wiki/Space-oblique_Mercator_projection}
+\url{https://en.wikipedia.org/wiki/Space-oblique_Mercator_projection/}
 }
 \seealso{\code{\link[sp]{CRS-class}},\code{\link[sp]{spTransform}}}
 

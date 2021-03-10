@@ -28,7 +28,7 @@ A coordinate reference system is returned
 	An object of class \code{\link[sp:CRS-class]{CRS}}.
 }	
 \references{
-\url{http://en.wikipedia.org/wiki/Two-point_equidistant_projection}
+\url{https://en.wikipedia.org/wiki/Two-point_equidistant_projection/}
 \url{https://proj.org/operations/projections/tpers.html}
 }
 \seealso{\code{\link[sp:CRS-class]{CRS}},\code{\link[sp]{spTransform}}}
