@@ -1,3 +1,9 @@
+ifeq ($(OS),Windows_NT)     # is Windows_NT on XP, 2000, 7, Vista, 10...
+    GS := gs
+else
+    GS := $(which gs)  # same as "uname -s"
+endif
+
 all: north.html mapmisc.pdf 
 
 clean:
@@ -8,7 +14,9 @@ empty:
 
 %.pdf: %.tex
 	xelatex -interaction=nonstopmode $<;
-	xelatex -interaction=nonstopmode $<
+	xelatex -interaction=nonstopmode $<;
+	$(GS) -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dPDFSETTINGS=/ebook -dCompatibilityLevel=1.5 -dAutoRotatePages=/None -dPrinted=false -sOutputFile='$@' '$@'
+
 #	R --slave -e "tools::compactPDF('$@', gs_quality='ebook')" 
 
 %.md: %.Rmd
