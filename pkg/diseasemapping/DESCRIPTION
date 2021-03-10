@@ -20,7 +20,7 @@ Additional_repositories: https://inla.r-inla-download.org/R/testing
 Author: Patrick Brown <patrick.brown@utoronto.ca>, Lutong Zhou
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
 Description: Formatting of population and case data, calculation of Standardized
-    Incidence Ratios, and fitting the BYM model using INLA.
+    Incidence Ratios, and fitting the BYM model using 'INLA'. For details see Brown (2015) <doi:10.18637/jss.v063.i12>.
 License: GPL
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1
