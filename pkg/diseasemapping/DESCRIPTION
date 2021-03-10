@@ -23,4 +23,3 @@ Description: Formatting of population and case data, calculation of Standardized
     Incidence Ratios, and fitting the BYM model using 'INLA'. For details see Brown (2015) <doi:10.18637/jss.v063.i12>.
 License: GPL
 VignetteBuilder: knitr
-RoxygenNote: 5.0.1
