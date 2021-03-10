@@ -178,7 +178,7 @@ swissFitIso = geostatsp::likfitLgm(
 )
 
 swissFitIso$parameters
-swissFitIso$summary[c("(Intercept)","elev"),1]
+#swissFitIso$summary[c("(Intercept)","elev"),1]
 
 #betas<-vclMatrix(as.matrix(swissFitIso$summary[c("(Intercept)","elev"),1]),type="double")
 
@@ -201,7 +201,7 @@ paramsBatch0 = cbind(newParam, otherparams)
 paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
 #paramsBatch = cbind(paramsBatch0, matrix(0, nrow(paramsBatch0), 22-ncol(paramsBatch0)))
 
-paramsBatch = gpuR::vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0), 22-ncol(paramsBatch0))),type="double")
+paramsBatch = gpuR::vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0),22-ncol(paramsBatch0))),type="double")
 
 workgroupSize=c(128,16,8)
 localSize = c(4,4,1)
@@ -209,14 +209,16 @@ NlocalCache=500
  
 
 
-system.time(temp <- gpuRandom::likfitGpu(swissFitIso, sr2, type="double", 
-                       paramsBatch, #cpu Matrix of parameter sets,
-                      betas=NULL, #a vclmatrix  #given by the user or provided from formula
-                      form = "ml",  
-                      groupsize=290,
-                      workgroupSize,
-                      localSize,
-                      NlocalCache))
+system.time(
+temp <- gpuRandom::likfitGpu(swissFitIso, sr2, type="double", 
+                             paramsBatch, #vclMatrix of parameter sets,
+                             betas=NULL, #a vclmatrix  #given by the user or provided from formula
+                             BoxCox=1,
+                             form = "ml",  
+                             groupsize=290,
+                             workgroupSize,
+                             localSize,
+                             NlocalCache))
 
 # 50.580
 tempcpu<-as.matrix(temp)

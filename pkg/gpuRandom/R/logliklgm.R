@@ -14,13 +14,11 @@ lgmGpuObjectes1 <- function(modelname, mydat, type=c("double", "float")){
     response=temp[,as.character(attributes(terms(temp))$variables)[2]]
     n = length(response)
     p = ncol(covariates)
-    yX=vclMatrix(cbind(response,covariates),type=type)   
-    y <-vclMatrix(yX[,1], nrow=n, ncol=1, type = type) 
-    X <-vclMatrix(yX[,c(2:(1+p))],type = type)
+    yX=vclMatrix(cbind(response,covariates),type=type)   # y <-vclMatrix(yX[,1], nrow=n, ncol=1, type = type) # X <-vclMatrix(yX[,c(2:(1+p))],type = type)
     coordsGpu<-vclMatrix(mydat@coords,type=type)
     
     
-    output<-list(yX=yX, y=y, X=X, coordsGpu=coordsGpu, n=n, p=p)
+    output<-list(yX=yX, coordsGpu=coordsGpu, n=n, p=p)
     
     output
 }
@@ -50,7 +48,7 @@ lgmGpuObjectes2 <- function(rowbatch, n, p, type=c("double", "float")){
     logP <- vclVector(0, length=rowbatch, type=type)
     
     
-    output<-list(Vbatch=Vbatch, diagMat=diagMat, logD=logD, ab=ab, A=A, one0=one0, temp2=temp2, diagP=diagP, 
+    output<-list(Vbatch=Vbatch, diagMat=diagMat, logD=logD, ab=ab, A=A, temp0=temp0, temp1=temp1, temp2=temp2, diagP=diagP, 
                  temp3=temp3, nine0=nine0, aTDa=aTDa, ssqBeta=ssqBeta, logP=logP)
     
     output
@@ -71,7 +69,8 @@ likfitGpu_0 <- function(yX, n, p, coordsGpu,
                         logD,
                         ab,
                         A,
-                        one0,
+                        temp0,
+                        temp1,
                         temp2,
                         diagP,
                         temp3,
@@ -98,11 +97,33 @@ likfitGpu_0 <- function(yX, n, p, coordsGpu,
     localSizechol<-localSize
     localSizechol[2]<-workgroupSize[2]
     
+    
+    # box cox transform
+    jacobian = 0
+    if(BoxCox != 1) {
+        
+        if(abs(BoxCox - 1 ) < 0.001) {
+            jacobian=0  # BoxCox close to 1, don't transform
+        }else{# box cox is not one.
+            
+            jacobian = -2*(BoxCox-1)* sum(log(yX[,1]))  
+            
+            if(is.nan(jacobian))
+                warning("boxcox shouldnt be used with negative data")
+            
+            if(abs(BoxCox)<0.001) {
+                y = log(yX[,1]) 
+            }else if(abs(BoxCox-1)>0.001) {
+                y <- ((yX[,1]^BoxCox) - 1)/BoxCox
+            }
+        } 
+    } # end have box cox
+    
     ########################### 1, loglik or ml(beta,sigma), given beta and sigma #############################
     #get matern matrix
     gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize, startrow, numberofrows)
     
-    # Vbatch=LDL^T, cholesky decomposition
+    #Vbatch=LDL^T, cholesky decomposition
     gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSizechol, NlocalCache=NlocalCache)
     #logD <- apply(log(diagMat),1,sum)
     gpuRandom:::rowsumBackend(diagMat, logD, type="row", log=1)    
@@ -123,7 +144,7 @@ likfitGpu_0 <- function(yX, n, p, coordsGpu,
         # a^TD^(-1)b * beta = temp0
         gemmBatch2backend(temp2, betas, temp0,
                           c(0,0,0), # transposeA, transposeB, transposeC
-                          (0,1,(1+p),1,p,(1+p)), (0,p,p,0,1,1), #select from temp2 and betas
+                          c(0,1,(1+p),1,p,(1+p)), c(0,p,p,0,1,1), #select from temp2 and betas
                           c(0,1,1,0,1,1), #select from output
                           c(rowbatch,1,0,0,1,0), # batches: nRow, nCol, recycleArow, recycleAcol, recycleB row col
                           c(workgroupSize,localSize), #workgroupSize  global 0 1 2, local 0 1 2  
@@ -134,7 +155,7 @@ likfitGpu_0 <- function(yX, n, p, coordsGpu,
         # b * beta = temp1 (n x 1), to get ssqBeta
         gemmBatch2backend(ab, betas, temp1,
                           c(0,0,0), # transposeA, transposeB, transposeC
-                          (0,n,n,1,p,(1+p)), (0,p,p,0,1,1), #select from ab and betas
+                          c(0,n,n,1,p,(1+p)), c(0,p,p,0,1,1), #select from ab and betas
                           c(0,n,n,0,1,1), #select from output
                           c(rowbatch,1,0,0,1,0), # batches: nRow, nCol, recycleArow, recycleAcol, recycleB row col
                           c(workgroupSize,localSize), #workgroupSize  global 0 1 2, local 0 1 2  
@@ -211,7 +232,7 @@ likfitGpu_0 <- function(yX, n, p, coordsGpu,
 likfitGpu <- function(modelname, mydat, type=c("double", "float"), 
                       bigparamsBatch, #vclMatrix of parameter sets,
                       betas=NULL, #a vclmatrix  #given by the user or provided from formula
-                      BoxCox,
+                      BoxCox=1,
                       form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),# minustwotimes=TRUE,
                       groupsize,  # how many rows of params to be executed each loop
                       workgroupSize,
@@ -241,8 +262,6 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
         if(groupsize*(i+1) < totalnumbersets +1){
             
             resulti <- likfitGpu_0(output1$yX,
-                                   output1$y, 
-                                   output1$X, 
                                    output1$n, 
                                    output1$p, 
                                    output1$coordsGpu, 
@@ -252,7 +271,8 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
                                    output2$logD,
                                    output2$ab,
                                    output2$A,
-                                   output2$one0,
+                                   output2$temp0,
+                                   output2$temp1,
                                    output2$temp2,
                                    output2$diagP,
                                    output2$temp3,
@@ -284,15 +304,6 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
     
     LogLik
 }
-
-
-
-
-
-
-
-
-
 
 
 
