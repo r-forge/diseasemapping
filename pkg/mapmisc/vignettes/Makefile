@@ -1,8 +1,4 @@
-ifeq ($(OS),Windows_NT)     # is Windows_NT on XP, 2000, 7, Vista, 10...
-    GS := gswin32c
-else
-    GS := gs
-endif
+GS := gs
 
 all: north.html mapmisc.pdf 
 
