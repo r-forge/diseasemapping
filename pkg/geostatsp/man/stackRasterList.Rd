@@ -42,22 +42,24 @@ A raster brick, with one layer for each variable.
 
 \examples{
 
+myCrs = CRS("+proj=utm +zone=17 +ellps=GRS80 +units=m +no_defs")
 mylist = list(a=raster(matrix(1:9, 3, 3), 0,1,0,1, 
-       crs="+proj=utm +zone=17 +ellps=GRS80 +units=m +no_defs"),
+       crs=myCrs),
 	b=raster(matrix(1:25, 5, 5), -1, 2, -1, 2,
-	   crs="+proj=utm +zone=17 +ellps=GRS80 +units=m +no_defs")
+	   crs=myCrs)
 	)
 mystack = stackRasterList(mylist)
 mystack
 
 
 
-mylist = list(a=raster(matrix(1:36, 6, 6,byrow=TRUE), 0,1000,0,1000, 
-       crs="+proj=utm +zone=17 +ellps=GRS80 +units=m +no_defs"),
-	b=raster(matrix(1:144, 12, 12), -85.49, -85.48, 0, 0.01,
-	   crs="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "),
+mylist = list(
+	a=raster(matrix(1:36, 6, 6,byrow=TRUE), 0,1000,0,1000, 
+       crs=myCrs),
+	b=raster(matrix(1:144, 12, 12), -200, 200, -200, 200,
+	   crs=myCrs),
 	c=raster(matrix(1:100, 10, 10), -5000,5000,-5000,5000, 
-       crs="+proj=utm +zone=17 +ellps=GRS80 +units=m +no_defs")
+       crs=myCrs)
 	)
 	
 if(.Platform$OS.type=='unix' & require('rgdal', quietly=TRUE)) {	
