@@ -1,4 +1,3 @@
-GS := gs
 
 all: north.html mapmisc.pdf 
 
@@ -11,7 +10,7 @@ empty:
 %.pdf: %.tex
 	xelatex -interaction=nonstopmode $<;
 	xelatex -interaction=nonstopmode $<;
-	$(GS) -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dPDFSETTINGS=/ebook -dCompatibilityLevel=1.5 -dAutoRotatePages=/None -dPrinted=false -sOutputFile='$@' '$@'
+	gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dPDFSETTINGS=/ebook -dCompatibilityLevel=1.5 -dAutoRotatePages=/None -dPrinted=false -sOutputFile='$@' '$@'
 
 #	R --slave -e "tools::compactPDF('$@', gs_quality='ebook')" 
 
