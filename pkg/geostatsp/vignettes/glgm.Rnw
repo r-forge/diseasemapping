@@ -402,10 +402,10 @@ newdat$elev = extract(swissAltitude, swissRain)
 if(requireNamespace('INLA', quietly=TRUE)) {
   
   swissFit =  glgm(
-    formula = lograin~ elev : landOrig,
+    formula = lograin~ elev : land,
     data=newdat, 
     grid=squareRaster(swissRain,Ncell), 
-#    covariates=list(land=swissLandType),
+    covariates=list(land=swissLandType),
     family="gaussian", buffer=0,
     prior=list(sd=c(0.2, 0.5), range=c(100000,0.5)), 
     control.inla = list(strategy='gaussian'),
