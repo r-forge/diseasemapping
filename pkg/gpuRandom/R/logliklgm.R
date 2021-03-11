@@ -287,9 +287,7 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
             
             
             replace(LogLik,index + i*groupsize, resulti$LogLik)
-            
-            
-            
+       
         }   
     }
     
