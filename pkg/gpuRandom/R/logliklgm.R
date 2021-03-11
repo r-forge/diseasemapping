@@ -78,7 +78,9 @@ likfitGpu_0 <- function(yX, n, p, coordsGpu,
                         aTDa,
                         ssqBeta,
                         logP,
-                        paramsBatch, 
+                        paramsBatch, #gpu Matrix of parameter sets,
+                        startrow,   # new added
+                        numberofrows,
                         betas=NULL, #a vclmatrix  #given by the user or provided from formula
                         jacobian,
                         form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),# minustwotimes=TRUE,
@@ -90,14 +92,17 @@ likfitGpu_0 <- function(yX, n, p, coordsGpu,
     
     form = c(loglik=1, ml=2, mlFixSigma=3, mlFixBeta=4, reml=5, remlPro=6)[form]
     
-    rowbatch = nrow(paramsBatch)
+    rowbatch = numberofrows    # nrow(paramsBatchcpu)
     colbatch = 1     #colbatch = ncol(y)
     localSizechol<-localSize
     localSizechol[2]<-workgroupSize[2]
     
+    
+    
     ########################### 1, loglik or ml(beta,sigma), given beta and sigma #############################
     #get matern matrix
-    gpuRandom::maternBatch(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
+    gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize, startrow, numberofrows)
+    
     #Vbatch=LDL^T, cholesky decomposition
     gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSizechol, NlocalCache=NlocalCache)
     #logD <- apply(log(diagMat),1,sum)
@@ -195,8 +200,6 @@ likfitGpu_0 <- function(yX, n, p, coordsGpu,
                       ssqBeta=0, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)                  
     }
     
-    Result
-    
 }
 
 
@@ -205,9 +208,9 @@ likfitGpu_0 <- function(yX, n, p, coordsGpu,
 #' @useDynLib gpuRandom
 #' @export 
 likfitGpu <- function(modelname, mydat, type=c("double", "float"), 
-                      bigparamsBatch, 
+                      bigparamsBatch, #vclMatrix of parameter sets,
                       betas=NULL, #a vclmatrix  #given by the user or provided from formula
-                      BoxCox,
+                      BoxCox=1,
                       form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),# minustwotimes=TRUE,
                       groupsize,  # how many rows of params to be executed each loop
                       workgroupSize,
@@ -223,7 +226,6 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
     index <- c(1:groupsize)
     
     LogLik <- vclVector(rep(0, totalnumbersets),type=type)
-    # box cox transform
     
     yX <- output1$yX
     
@@ -246,17 +248,13 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
                 yX[,1] <- ((yX[,1]^BoxCox) - 1)/BoxCox
             }
         } 
-    } # end have box cox
+    } 
     
-    
-    
-    for(i in 0:(totalnumbersets/groupsize) ){    # can do >8990 sets of parameters       
+    for(i in 0:(totalnumbersets/groupsize) ){    # can do >8990 sets of parameters
+        
+        startrow <- i*groupsize
         
         if(groupsize*(i+1) < totalnumbersets +1){
-            
-            paramsBatchcpu<-bigparamsBatch[index + i*groupsize,]
-            
-            paramsBatch <- vclMatrix(paramsBatchcpu, type=type)
             
             resulti <- likfitGpu_0(yX,
                                    output1$n, 
@@ -277,7 +275,9 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
                                    output2$aTDa,
                                    output2$ssqBeta,
                                    output2$logP,
-                                   paramsBatch, 
+                                   bigparamsBatch, #vclMatrix of parameter sets,
+                                   startrow,  # note that here in C row starts from 0
+                                   groupsize, # number of rows to run 
                                    betas= betas, #a vclmatrix  #given by the user or provided from formula
                                    jacobian,
                                    form = form,# minustwotimes=TRUE,
@@ -286,8 +286,12 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
                                    NlocalCache)
             
             
-            replace(LogLik,index + i*groupsize, resulti$LogLik)
-            
+            replace(LogLik,index + startrow, resulti$LogLik)
+            # replace(ssqBeta,index + i*groupsize, resulti$ssqBeta)
+            # replace(ssqX,index + i*groupsize, resulti$ssqX)
+            # replace(ssqY,index + i*groupsize, resulti$ssqY)
+            # replace(logD,index + i*groupsize, resulti$logD)
+            # replace(logP,index + i*groupsize, resulti$logP)
             
             
         }   
@@ -295,7 +299,4 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
     
     LogLik
 }
-
-
-
 
