@@ -350,7 +350,7 @@ if(requireNamespace('INLA', quietly=TRUE)) {
 
 covariates in data, factors
 
-<<covInData>>=
+<<covInDataLevels>>=
 newdat = swissRain
 newdat$landOrig = factor(unlist(raster::factorValues(swissLandType, raster::extract(swissLandType, swissRain),att='Category')))
 newdat$landRel = relevel(newdat$landOrig, 'Mixed forests')
