@@ -7,7 +7,7 @@
 #before start, we have spatial model and SpatialPointsDataFrame 
 
 
-lgmGpuObjectes1 <- function(modelname, mydat, type=c("double", "float")){
+lgmGpuObjectes11 <- function(modelname, mydat, type=c("double", "float")){
   
   covariates = model.matrix(modelname$model$formula, data=modelname$data)
   temp = model.frame(modelname$model$formula, data=modelname$data)
@@ -28,7 +28,7 @@ lgmGpuObjectes1 <- function(modelname, mydat, type=c("double", "float")){
 #' @useDynLib gpuRandom
 #' @export
 
-lgmGpuObjectes2 <- function(rowbatch, n, p, type=c("double", "float")){
+lgmGpuObjectes22 <- function(rowbatch, n, p, type=c("double", "float")){
   
   colbatch = 1
   
@@ -169,34 +169,34 @@ likfitGpu_00 <- function(yX, n, p, coordsGpu,
   
   if(form == 1 ){ #loglik
     # n*log(sigma^2) + log |D| + one/variances # result <- part1 + one0/variances + n*log(2*pi)
-    Result = list(minusTwoLogLik=(part1 + one0/variances + n*log(2*pi))*jacobian, 
-                  LogLik = -0.5*(part1 + one0/variances + n*log(2*pi))*jacobian,
+    Result = list(minusTwoLogLik=(part1 + one0/variances + n*log(2*pi))*log(jacobian), 
+                  LogLik = -0.5*(part1 + one0/variances + n*log(2*pi))*log(jacobian),
                   ssqBeta=ssqBeta, ssqX=NULL, ssqY=aTDa, logD=logD, logP=logP)      
     
   }else if(form == 2) {#ml  result = n*log(two) +logD + n*log(2*pi) + n
-    Result = list(minusTwoLogLik=(n*log(two/n) +logD + n*log(2*pi) + n)*jacobian,
-                  LogLik = -0.5*(n*log(two/n) +logD + n*log(2*pi) + n)*jacobian,
+    Result = list(minusTwoLogLik=(n*log(two/n) +logD + n*log(2*pi) + n)*log(jacobian),
+                  LogLik = -0.5*(n*log(two/n) +logD + n*log(2*pi) + n)*log(jacobian),
                   ssqBeta=0, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)           
     
   }else if(form == 3){ # mlFixSigma/ or ml(beta,hatsigma)result = n*log(one0/n)+logD + n*log(2*pi) + n
-    Result = list(minusTwoLogLik=(n*log(one0/n)+logD + n*log(2*pi) + n)*jacobian, 
-                  LogLik = -0.5*(n*log(one0/n)+logD + n*log(2*pi) + n)*jacobian,
+    Result = list(minusTwoLogLik=(n*log(one0/n)+logD + n*log(2*pi) + n)*log(jacobian), 
+                  LogLik = -0.5*(n*log(one0/n)+logD + n*log(2*pi) + n)*log(jacobian),
                   ssqBeta=ssqBeta, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)   
     
   }else if(form == 4){ # mlFixBeta / or ml(hatbeta,sigma) result = part1 + two/variances + n*log(2*pi) 
-    Result = list(minusTwoLogLik=(part1 + two/variances + n*log(2*pi))*jacobian, 
-                  LogLik = -0.5*(part1 + two/variances + n*log(2*pi))*jacobian,
+    Result = list(minusTwoLogLik=(part1 + two/variances + n*log(2*pi))*log(jacobian), 
+                  LogLik = -0.5*(part1 + two/variances + n*log(2*pi))*log(jacobian),
                   ssqBeta=0, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)            
     
   }else if(form == 5){ #reml
     first_part <- (n-p)*log(variances) + logD + logP  #result <- first_part + two/variances + n*log(2*pi) 
-    Result = list(minusTwoLogLik=(first_part + two/variances + n*log(2*pi))*jacobian, 
-                  LogLik = -0.5*(first_part + two/variances + n*log(2*pi))*jacobian,
+    Result = list(minusTwoLogLik=(first_part + two/variances + n*log(2*pi))*log(jacobian), 
+                  LogLik = -0.5*(first_part + two/variances + n*log(2*pi))*log(jacobian),
                   ssqBeta=0, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)            
     
   }else if(form == 6){ #remlPro  #(n-p)*log two + log|D| + log|P|, result <- (n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p
-    Result = list(minusTwoLogLik=((n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p)*jacobian, 
-                  LogLik = -0.5*((n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p)*jacobian,
+    Result = list(minusTwoLogLik=((n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p)*log(jacobian), 
+                  LogLik = -0.5*((n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p)*log(jacobian),
                   ssqBeta=0, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)                  
   }
   
@@ -218,9 +218,9 @@ likfitGpu_slow <- function(modelname, mydat, type=c("double", "float"),
                       NlocalCache,
                       verbose=FALSE){
   
-  output1 <- lgmGpuObjectes1(modelname, mydat, type=type)
+  output1 <- lgmGpuObjectes11(modelname, mydat, type=type)
   
-  output2 <- lgmGpuObjectes2(groupsize, output1$n, output1$p, type=type)
+  output2 <- lgmGpuObjectes22(groupsize, output1$n, output1$p, type=type)
   
   totalnumbersets <- nrow(bigparamsBatch)
   index <- c(1:groupsize)

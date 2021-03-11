@@ -201,7 +201,7 @@ colnames(otherparams) <- c("shape","variance", "anisoRatio", "anisoAngleRadians"
 
 paramsBatch0 = cbind(newParam, otherparams)
 paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
-paramsBatch = cbind(paramsBatch0, matrix(0, nrow(paramsBatch0), 22-ncol(paramsBatch0)))
+paramsBatchcpu = cbind(paramsBatch0, matrix(0, nrow(paramsBatch0), 22-ncol(paramsBatch0)))
 
 paramsBatch = gpuR::vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0),22-ncol(paramsBatch0))),type="double")
 
@@ -213,7 +213,7 @@ NlocalCache=500
 
 system.time(
 temp <- likfitGpu(swissFitIso, sr2, type="double", 
-                             paramsBatch, #cpu Matrix of parameter sets,
+                             paramsBatchcpu, #cpu Matrix of parameter sets,
                              betas=NULL, #a vclmatrix  #given by the user or provided from formula
                              BoxCox=1,
                              form = "ml",  
@@ -221,7 +221,7 @@ temp <- likfitGpu(swissFitIso, sr2, type="double",
                              workgroupSize,
                              localSize,
                              NlocalCache))
-
+#34
 
 system.time(
 temp <- likfitGpu_slow(swissFitIso, sr2, type="double", 
@@ -235,7 +235,7 @@ temp <- likfitGpu_slow(swissFitIso, sr2, type="double",
                              NlocalCache))
 
 
-# 50.580
+# 151.580
 tempcpu<-as.matrix(temp)
 
 lMatrix = matrix(tempcpu, length(newParamList[[1]]), length(newParamList[[2]]))
