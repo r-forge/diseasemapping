@@ -78,11 +78,9 @@ likfitGpu_0 <- function(yX, n, p, coordsGpu,
                         aTDa,
                         ssqBeta,
                         logP,
-                        paramsBatch, #gpu Matrix of parameter sets,
-                        startrow,   # new added
-                        numberofrows,
+                        paramsBatch, 
                         betas=NULL, #a vclmatrix  #given by the user or provided from formula
-                        BoxCox,
+                        jacobian,
                         form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),# minustwotimes=TRUE,
                         workgroupSize,
                         localSize,
@@ -92,37 +90,14 @@ likfitGpu_0 <- function(yX, n, p, coordsGpu,
     
     form = c(loglik=1, ml=2, mlFixSigma=3, mlFixBeta=4, reml=5, remlPro=6)[form]
     
-    rowbatch = numberofrows    # nrow(paramsBatchcpu)
+    rowbatch = nrow(paramsBatch)
     colbatch = 1     #colbatch = ncol(y)
     localSizechol<-localSize
     localSizechol[2]<-workgroupSize[2]
     
-    
-    # box cox transform
-    jacobian = 0
-    if(BoxCox != 1) {
-        
-        if(abs(BoxCox - 1 ) < 0.001) {
-            jacobian=0  # BoxCox close to 1, don't transform
-        }else{# box cox is not one.
-            
-            jacobian = -2*(BoxCox-1)* sum(log(yX[,1]))  
-            
-            if(is.nan(jacobian))
-                warning("boxcox shouldnt be used with negative data")
-            
-            if(abs(BoxCox)<0.001) {
-                y = log(yX[,1]) 
-            }else if(abs(BoxCox-1)>0.001) {
-                y <- ((yX[,1]^BoxCox) - 1)/BoxCox
-            }
-        } 
-    } # end have box cox
-    
     ########################### 1, loglik or ml(beta,sigma), given beta and sigma #############################
     #get matern matrix
-    gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize, startrow, numberofrows)
-    
+    gpuRandom::maternBatch(Vbatch, coordsGpu, paramsBatch,  workgroupSize, localSize)
     #Vbatch=LDL^T, cholesky decomposition
     gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=workgroupSize, Nlocal=localSizechol, NlocalCache=NlocalCache)
     #logD <- apply(log(diagMat),1,sum)
@@ -189,34 +164,34 @@ likfitGpu_0 <- function(yX, n, p, coordsGpu,
     
     if(form == 1 ){ #loglik
         # n*log(sigma^2) + log |D| + one/variances # result <- part1 + one0/variances + n*log(2*pi)
-        Result = list(minusTwoLogLik=part1 + one0/variances + n*log(2*pi), 
-                      LogLik = -0.5*(part1 + one0/variances + n*log(2*pi)),
+        Result = list(minusTwoLogLik=(part1 + one0/variances + n*log(2*pi))*jacobian, 
+                      LogLik = -0.5*(part1 + one0/variances + n*log(2*pi))*jacobian,
                       ssqBeta=ssqBeta, ssqX=NULL, ssqY=aTDa, logD=logD, logP=logP)      
         
     }else if(form == 2) {#ml  result = n*log(two) +logD + n*log(2*pi) + n
-        Result = list(minusTwoLogLik=n*log(two/n) +logD + n*log(2*pi) + n,
-                      LogLik = -0.5*(n*log(two/n) +logD + n*log(2*pi) + n),
+        Result = list(minusTwoLogLik=(n*log(two/n) +logD + n*log(2*pi) + n)*jacobian,
+                      LogLik = -0.5*(n*log(two/n) +logD + n*log(2*pi) + n)*jacobian,
                       ssqBeta=0, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)           
         
     }else if(form == 3){ # mlFixSigma/ or ml(beta,hatsigma)result = n*log(one0/n)+logD + n*log(2*pi) + n
-        Result = list(minusTwoLogLik=n*log(one0/n)+logD + n*log(2*pi) + n, 
-                      LogLik = -0.5*(n*log(one0/n)+logD + n*log(2*pi) + n),
+        Result = list(minusTwoLogLik=(n*log(one0/n)+logD + n*log(2*pi) + n)*jacobian, 
+                      LogLik = -0.5*(n*log(one0/n)+logD + n*log(2*pi) + n)*jacobian,
                       ssqBeta=ssqBeta, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)   
         
     }else if(form == 4){ # mlFixBeta / or ml(hatbeta,sigma) result = part1 + two/variances + n*log(2*pi) 
-        Result = list(minusTwoLogLik=part1 + two/variances + n*log(2*pi), 
-                      LogLik = -0.5*(part1 + two/variances + n*log(2*pi)),
+        Result = list(minusTwoLogLik=(part1 + two/variances + n*log(2*pi))*jacobian, 
+                      LogLik = -0.5*(part1 + two/variances + n*log(2*pi))*jacobian,
                       ssqBeta=0, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)            
         
     }else if(form == 5){ #reml
         first_part <- (n-p)*log(variances) + logD + logP  #result <- first_part + two/variances + n*log(2*pi) 
-        Result = list(minusTwoLogLik=first_part + two/variances + n*log(2*pi), 
-                      LogLik = -0.5*(first_part + two/variances + n*log(2*pi)),
+        Result = list(minusTwoLogLik=(first_part + two/variances + n*log(2*pi))*jacobian, 
+                      LogLik = -0.5*(first_part + two/variances + n*log(2*pi))*jacobian,
                       ssqBeta=0, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)            
         
     }else if(form == 6){ #remlPro  #(n-p)*log two + log|D| + log|P|, result <- (n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p
-        Result = list(minusTwoLogLik=(n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p, 
-                      LogLik = -0.5*((n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p),
+        Result = list(minusTwoLogLik=((n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p)*jacobian, 
+                      LogLik = -0.5*((n-p)*log(two/(n-p)) + logD+logP + n*log(2*pi) + n-p)*jacobian,
                       ssqBeta=0, ssqX=nine0, ssqY=aTDa, logD=logD, logP=logP)                  
     }
     
@@ -230,9 +205,9 @@ likfitGpu_0 <- function(yX, n, p, coordsGpu,
 #' @useDynLib gpuRandom
 #' @export 
 likfitGpu <- function(modelname, mydat, type=c("double", "float"), 
-                      bigparamsBatch, #vclMatrix of parameter sets,
+                      bigparamsBatch, 
                       betas=NULL, #a vclmatrix  #given by the user or provided from formula
-                      BoxCox=1,
+                      BoxCox,
                       form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),# minustwotimes=TRUE,
                       groupsize,  # how many rows of params to be executed each loop
                       workgroupSize,
@@ -248,20 +223,42 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
     index <- c(1:groupsize)
     
     LogLik <- vclVector(rep(0, totalnumbersets),type=type)
-    # ssqBeta <- vclVector(rep(0, totalnumbersets),type=type)
-    # ssqX <- vclVector(rep(0, totalnumbersets),type=type)
-    # ssqY <- vclVector(rep(0, totalnumbersets),type=type)
-    # logD <- vclVector(rep(0, totalnumbersets),type=type)
-    # logP <- vclVector(rep(0, totalnumbersets),type=type)
+    # box cox transform
     
+    yX <- output1$yX
     
-    for(i in 0:(totalnumbersets/groupsize) ){    # can do >8990 sets of parameters
+    jacobian = 0
+    
+    if(BoxCox != 1) {
         
-        startrow <- i*groupsize
+        if(abs(BoxCox - 1 ) < 0.001) {
+            jacobian=0  # BoxCox close to 1, don't transform
+        }
+        else{# box cox is not one.
+            jacobian = -2*(BoxCox-1)* sum(log(yX[,1]))  
+            
+            if(is.nan(jacobian))
+                warning("boxcox shouldnt be used with negative data")
+            
+            if(abs(BoxCox)<0.001) {
+                yX[,1] = log(yX[,1]) 
+            }else if(abs(BoxCox-1)>0.001) {
+                yX[,1] <- ((yX[,1]^BoxCox) - 1)/BoxCox
+            }
+        } 
+    } # end have box cox
+    
+    
+    
+    for(i in 0:(totalnumbersets/groupsize) ){    # can do >8990 sets of parameters       
         
         if(groupsize*(i+1) < totalnumbersets +1){
             
-            resulti <- likfitGpu_0(output1$yX,
+            paramsBatchcpu<-bigparamsBatch[index + i*groupsize,]
+            
+            paramsBatch <- vclMatrix(paramsBatchcpu, type=type)
+            
+            resulti <- likfitGpu_0(yX,
                                    output1$n, 
                                    output1$p, 
                                    output1$coordsGpu, 
@@ -280,23 +277,17 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
                                    output2$aTDa,
                                    output2$ssqBeta,
                                    output2$logP,
-                                   bigparamsBatch, #vclMatrix of parameter sets,
-                                   startrow,  # note that here in C row starts from 0
-                                   groupsize, # number of rows to run 
+                                   paramsBatch, 
                                    betas= betas, #a vclmatrix  #given by the user or provided from formula
-                                   BoxCox,
+                                   jacobian,
                                    form = form,# minustwotimes=TRUE,
                                    workgroupSize,
                                    localSize,
                                    NlocalCache)
             
             
-            replace(LogLik,index + startrow, resulti$LogLik)
-            # replace(ssqBeta,index + i*groupsize, resulti$ssqBeta)
-            # replace(ssqX,index + i*groupsize, resulti$ssqX)
-            # replace(ssqY,index + i*groupsize, resulti$ssqY)
-            # replace(logD,index + i*groupsize, resulti$logD)
-            # replace(logP,index + i*groupsize, resulti$logP)
+            replace(LogLik,index + i*groupsize, resulti$LogLik)
+            
             
             
         }   
@@ -304,6 +295,7 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
     
     LogLik
 }
+
 
 
 

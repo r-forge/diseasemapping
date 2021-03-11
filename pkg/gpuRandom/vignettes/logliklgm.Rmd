@@ -186,7 +186,7 @@ swissFitIso$parameters
 
 
 newParamList = list(
-  range=seq(30000, 80000 , len=290),
+  range=seq(30000, 80000 , len=580),
   nugget = seq(0,0.25,len=10)
 ) #5800
 
@@ -199,9 +199,9 @@ colnames(otherparams) <- c("shape","variance", "anisoRatio", "anisoAngleRadians"
 
 paramsBatch0 = cbind(newParam, otherparams)
 paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
-#paramsBatch = cbind(paramsBatch0, matrix(0, nrow(paramsBatch0), 22-ncol(paramsBatch0)))
+paramsBatch = cbind(paramsBatch0, matrix(0, nrow(paramsBatch0), 22-ncol(paramsBatch0)))
 
-paramsBatch = gpuR::vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0),22-ncol(paramsBatch0))),type="double")
+#paramsBatch = gpuR::vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0),22-ncol(paramsBatch0))),type="double")
 
 workgroupSize=c(128,16,8)
 localSize = c(4,4,1)
@@ -210,10 +210,10 @@ NlocalCache=500
 
 
 system.time(
-temp <- gpuRandom::likfitGpu(swissFitIso, sr2, type="double", 
+temp <- likfitGpu(swissFitIso, sr2, type="double", 
                              paramsBatch, #vclMatrix of parameter sets,
                              betas=NULL, #a vclmatrix  #given by the user or provided from formula
-                             BoxCox=1,
+                             BoxCox=2,
                              form = "ml",  
                              groupsize=290,
                              workgroupSize,
