@@ -412,7 +412,7 @@ if(requireNamespace('INLA', quietly=TRUE)) {
     control.family=list(hyper=list(prec=list(prior="loggamma", 
           param=c(.1, .1))))
   )
-  swissFitR =  glgm(
+
   if(length(swissFit$parameters)) {
 
     knitr::kable(swissFit$parameters$summary, digits=3)
