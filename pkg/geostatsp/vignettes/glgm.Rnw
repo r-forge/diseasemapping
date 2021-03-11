@@ -391,6 +391,7 @@ if(requireNamespace('INLA', quietly=TRUE)) {
     knitr::kable(swissFit$parameters$summary, digits=3)
     knitr::kable(swissFitR$parameters$summary, digits=3)
   }
+}
 @
 
 covariates are in data, interactions
