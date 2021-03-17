@@ -221,10 +221,10 @@ temp <- likfitGpu(swissFitIso, sr2, type="double",
                              workgroupSize,
                              localSize,
                              NlocalCache))
-#34
+#33
 
 system.time(
-temp <- likfitGpu_slow(swissFitIso, sr2, type="double", 
+temp2 <- likfitGpu_slow(swissFitIso, sr2, type="double", 
                              paramsBatch, #vclMatrix of parameter sets,
                              betas=NULL, #a vclmatrix  #given by the user or provided from formula
                              BoxCox=1,
