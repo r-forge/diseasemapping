@@ -32,7 +32,7 @@ lgmGpuObjectes2 <- function(rowbatch, colbatch, n, p, type=c("double", "float"))
     
     Vbatch = vclMatrix(0, rowbatch*n, n, type = type)
     diagMat = vclMatrix(0, rowbatch, n, type = type) 
-    logD<- vclVector(0, length=rowbatch,type=type)
+    #logD<- vclVector(0, length=rowbatch,type=type)
     ab <- vclMatrix(0, rowbatch*n, colbatch+p, type = type)
     temp00 <- vclMatrix(0, rowbatch*colbatch, colbatch, type = type)   
     temp0 <- vclMatrix(0, rowbatch, colbatch, type = type)   
@@ -45,12 +45,13 @@ lgmGpuObjectes2 <- function(rowbatch, colbatch, n, p, type=c("double", "float"))
     aTDa <- vclMatrix(0, rowbatch, colbatch, type = type)
     ssqBeta0 <- vclMatrix(0, rowbatch*colbatch, colbatch, type=type)
     ssqBeta <- vclMatrix(0, rowbatch, colbatch, type=type)
-    logP <- vclVector(0, length=rowbatch, type=type)
+    #logP <- vclVector(0, length=rowbatch, type=type)
     
     
-    output<-list(Vbatch=Vbatch, diagMat=diagMat, logD=logD, ab=ab, temp00=temp00, temp0=temp0,
+    output<-list(Vbatch=Vbatch, diagMat=diagMat, #logD=logD, 
+                 ab=ab, temp00=temp00, temp0=temp0,
                  temp1=temp1, temp2=temp2, diagP=diagP, temp3=temp3, 
-                 nine0=nine0, nine=nine, aTDa=aTDa, ssqBeta0=ssqBeta0, ssqBeta=ssqBeta, logP=logP)
+                 nine0=nine0, nine=nine, aTDa=aTDa, ssqBeta0=ssqBeta0, ssqBeta=ssqBeta) #logP=logP)
     
     output
 }
@@ -68,18 +69,19 @@ likfitGpu_0 <- function(yX,  #y1,y2,y3,X
                         rowbatch, colbatch,
                         type=c("double", "float"),
                         Vbatch,
-                        diagMat,
-                        logD,
+                        diagMat, #logD,
                         ab,
+                        temp00,
                         temp0,
                         temp1,
                         temp2,
                         diagP,
                         temp3,
                         nine0,
+                        nine,
                         aTDa,
-                        ssqBeta,
-                        logP,
+                        ssqBeta0,
+                        ssqBeta, #logP,
                         paramsBatch, 
                         betas=NULL, #a vclmatrix  #given by the user or provided from formula
                         jacobian,
@@ -237,7 +239,6 @@ likfitGpu_0 <- function(yX,  #y1,y2,y3,X
 
 
 #' @title Estimate Log-likelihood for Gaussian random fields
-#'
 #' @useDynLib gpuRandom
 #' @export 
 likfitGpu <- function(modelname, mydat, type=c("double", "float"), 
@@ -252,54 +253,82 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
                       verbose=FALSE){
     
     output1 <- lgmGpuObjectes1(modelname, mydat, type=type)
-    colbatch<- length(BoxCox)+1
-    
-    #lgmGpuObjectes2 <- function(rowbatch, colbatch, n, p, type=c("double", "float")){
-    
+    colbatch<- length(BoxCox)+1   
+    #lgmGpuObjectes2 <- function(rowbatch, colbatch, n, p, type=c("double", "float")){  
     output2 <- lgmGpuObjectes2(groupsize, colbatch, output1$n, output1$p, type=type)
     
-    totalnumbersets <- nrow(bigparamsBatchcpu)
-    
-    loopindex <- c(1:groupsize)
-    
-    # box cox transform   
     yXcpu <- output1$yXcpu
     
+    # box cox transform   
     jacobian = -2*(BoxCox-1)* sum(log(yXcpu[,1])) 
-    
     closetooneindex <- which(abs(BoxCox - 1 ) < 0.001)
-    
-    jacobian[closetooneindex] = 0
-    
-    jacobian <- c(jacobian, 0)
-    
-    jacobian<- matrix(jacobian, nrow=groupsize, ncol=length(jacobian), byrow=TRUE)
-    
+    jacobian[closetooneindex] = 0    
+    jacobian <- c(jacobian, 0)   
     if(is.nan(jacobian))
         warning("boxcox shouldnt be used with negative data")
+    jacobian<- matrix(jacobian, nrow=groupsize, ncol=length(jacobian), byrow=TRUE)
     
-    transformed_y = matrix(0,output1$n,length(BoxCox))
     
+    transformed_y = matrix(0,output1$n,length(BoxCox))    
     for (i in 1:length(BoxCox)){
-        transformed_ys[ ,i] <- ((yXcpu[,1]^BoxCox[i]) - 1)/BoxCox[i]
-    }   
-    
+        transformed_y[ ,i] <- ((yXcpu[ ,1]^BoxCox[i]) - 1)/BoxCox[i]
+    }      
     closetozeroindex <- which(abs(BoxCox)<0.001)
-    transformed_y[ ,closetozeroindex] = log(yXcpu[,1]) 
-    
-    
+    transformed_y[ ,closetozeroindex] = log(yXcpu[,1])     
     yX <- vclMatrix(cbind(transformed_y,yXcpu),type=type)
     
-    LogLik <- vclVector(rep(0, totalnumbersets),type=type)
+    
+    totalnumbersets <- nrow(bigparamsBatchcpu)      
+    #LogLik <- vclVector(rep(0, totalnumbersets),type=type)
+    #LogLik <- vclMatrix(0, totalnumbersets, colbatch, type=type)
+    loopindex <- c(1:groupsize)  
+    
+    paramsBatchcpu<-bigparamsBatchcpu[loopindex,]
+    paramsBatch <- vclMatrix(paramsBatchcpu, type=type)
     
     
-    for(i in 0:(totalnumbersets/groupsize) ){    # can do >8990 sets of parameters       
+    result0 <- likfitGpu_0(yX,
+                           output1$n, 
+                           output1$p, 
+                           output1$coordsGpu, 
+                           groupsize, colbatch,
+                           type=type,
+                           output2$Vbatch,
+                           output2$diagMat, #output2$logD,
+                           output2$ab,
+                           output2$temp00,
+                           output2$temp0,
+                           output2$temp1,
+                           output2$temp2,
+                           output2$diagP,
+                           output2$temp3,
+                           output2$nine0,
+                           output2$nine,
+                           output2$aTDa,
+                           output2$ssqBeta0,
+                           output2$ssqBeta, #output2$logP,
+                           paramsBatch, 
+                           betas= betas, #a vclmatrix  #given by the user or provided from formula
+                           jacobian,
+                           form = form,# minustwotimes=TRUE,
+                           workgroupSize,
+                           localSize,
+                           NlocalCache)
+    
+    
+    LogLik_Result <- result0$LogLik
+    
+    
+    
+    
+    for(i in 1:(totalnumbersets/groupsize) ){    # can do >8990 sets of parameters       
         
         if(groupsize*(i+1) < totalnumbersets +1){
             
             paramsBatchcpu<-bigparamsBatchcpu[loopindex + i*groupsize,]
             
             paramsBatch <- vclMatrix(paramsBatchcpu, type=type)
+            
             
             resulti <- likfitGpu_0(yX,
                                    output1$n, 
@@ -308,18 +337,19 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
                                    groupsize, colbatch,
                                    type=type,
                                    output2$Vbatch,
-                                   output2$diagMat,
-                                   output2$logD,
+                                   output2$diagMat, #output2$logD,
                                    output2$ab,
+                                   output2$temp00,
                                    output2$temp0,
                                    output2$temp1,
                                    output2$temp2,
                                    output2$diagP,
                                    output2$temp3,
                                    output2$nine0,
+                                   output2$nine,
                                    output2$aTDa,
-                                   output2$ssqBeta,
-                                   output2$logP,
+                                   output2$ssqBeta0,
+                                   output2$ssqBeta, #output2$logP,
                                    paramsBatch, 
                                    betas= betas, #a vclmatrix  #given by the user or provided from formula
                                    jacobian,
@@ -329,20 +359,19 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
                                    NlocalCache)
             
             
-            replace(LogLik,loopindex + i*groupsize, resulti$LogLik)
+            LogLik_Result <- rbind(LogLik_Result, resulti$LogLik)
+            
+            
+            
+            #replace(LogLik,loopindex + i*groupsize, resulti$LogLik)
             
             
             
         }   
     }
     
-    LogLik
+    LogLik_Result
 }
-
-
-
-
-
 
 
 

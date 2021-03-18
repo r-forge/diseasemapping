@@ -188,7 +188,7 @@ swissFitIso$parameters
 
 
 newParamList = list(
-  range=seq(30000, 80000 , len=580),
+  range=seq(30000, 80000 , len=20),
   nugget = seq(0,0.25,len=10)
 ) #5800
 
@@ -208,14 +208,12 @@ paramsBatch = gpuR::vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0),2
 workgroupSize=c(128,16,8)
 localSize = c(4,4,1)
 NlocalCache=500
- 
-
 
 system.time(
 temp <- likfitGpu(swissFitIso, sr2, type="double", 
                              paramsBatchcpu, #cpu Matrix of parameter sets,
                              betas=NULL, #a vclmatrix  #given by the user or provided from formula
-                             BoxCox=1,
+                             BoxCox=c(1,2),
                              form = "ml",  
                              groupsize=290,
                              workgroupSize,
