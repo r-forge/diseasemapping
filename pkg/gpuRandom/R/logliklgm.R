@@ -362,11 +362,6 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
             LogLik_Result <- rbind(LogLik_Result, resulti$LogLik)
             
             
-            
-            #replace(LogLik,loopindex + i*groupsize, resulti$LogLik)
-            
-            
-            
         }   
     }
     

@@ -188,7 +188,7 @@ swissFitIso$parameters
 
 
 newParamList = list(
-  range=seq(30000, 80000 , len=20),
+  range=seq(20000, 80000 , len=20),
   nugget = seq(0,0.25,len=10)
 ) #5800
 
@@ -215,7 +215,7 @@ temp <- likfitGpu(swissFitIso, sr2, type="double",
                              betas=NULL, #a vclmatrix  #given by the user or provided from formula
                              BoxCox=c(1,2),
                              form = "ml",  
-                             groupsize=290,
+                             groupsize=20,
                              workgroupSize,
                              localSize,
                              NlocalCache))
@@ -236,7 +236,7 @@ temp2 <- likfitGpu_slow(swissFitIso, sr2, type="double",
 # 151.580
 tempcpu<-as.matrix(temp)
 
-lMatrix = matrix(tempcpu, length(newParamList[[1]]), length(newParamList[[2]]))
+lMatrix = matrix(tempcpu[,2], length(newParamList[[1]]), length(newParamList[[2]]))
 # 
 myCol = mapmisc::colourScale(lMatrix, breaks=8, dec=0)
 image(
