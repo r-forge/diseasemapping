@@ -169,7 +169,11 @@ result +=
   "   DmatrixCol ++) {\n\n";
 
   result += "startMatrixA = DmatrixRow * NpadNrowTotalA + NpadA * rowStartA + DmatrixCol * NcolTotalA + colStartA;\n";
-  result += "startMatrixB = DmatrixRow * NpadNrowTotalB + NpadB * rowStartB + DmatrixCol * NcolTotalB + colStartC;\n";
+  if(batches[4]) {
+    result += "startMatrixB = NpadB * rowStartB + DmatrixCol * NcolTotalB + colStartC;\n";
+} else {
+    result += "startMatrixB = DmatrixRow * NpadNrowTotalB + NpadB * rowStartB + DmatrixCol * NcolTotalB + colStartC;\n";
+  }
   result += "startMatrixC = DmatrixRow * NpadNrowTotalC + NpadC * rowStartC + DmatrixCol * NcolTotalC + colStartC;\n";
   
 result +=
