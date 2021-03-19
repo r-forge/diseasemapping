@@ -264,8 +264,8 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
     closetooneindex <- which(abs(BoxCox - 1 ) < 0.001)
     jacobian[closetooneindex] = 0    
     jacobian <- c(jacobian, 0)   
-    if(is.nan(jacobian))
-        warning("boxcox shouldnt be used with negative data")
+   # if(is.nan(jacobian))
+   #     warning("boxcox shouldnt be used with negative data")
     jacobian<- matrix(jacobian, nrow=groupsize, ncol=length(jacobian), byrow=TRUE)
     
     

@@ -213,7 +213,7 @@ system.time(
 temp <- likfitGpu(swissFitIso, sr2, type="double", 
                              paramsBatchcpu, #cpu Matrix of parameter sets,
                              betas=NULL, #a vclmatrix  #given by the user or provided from formula
-                             BoxCox=c(1,2),
+                             BoxCox=1,
                              form = "ml",  
                              groupsize=20,
                              workgroupSize,
