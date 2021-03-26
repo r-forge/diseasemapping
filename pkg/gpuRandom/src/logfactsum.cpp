@@ -139,8 +139,13 @@ SEXP logfactsumBackend(
  /* if(precision_type == "fvclMatrix") {
     logfactsumTemplated<float>(xR, numWorkItems);
  } else if (precision_type == "dvclMatrix") {*/
+   std::string precision_type = (std::string) classVarR;
+   if(precision_type == "ivclMatrix") {
     result = logfactsumTemplated(xR, numWorkItems);
-    
+   } else {
+     Rcpp::warning("class of param must be ivclMatrix");
+     result = Rcpp::wrap(1L);
+     }
     return result;
   
    /* } else {
