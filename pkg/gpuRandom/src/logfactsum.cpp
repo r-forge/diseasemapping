@@ -136,11 +136,11 @@ SEXP logfactsumBackend(
   Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(xR));
   std::string precision_type = (std::string) classVarR;
   
-  if(precision_type == "fvclMatrix" || precision_type == "dvclMatrix") {
-    Rcpp::warning("must be matrix of integers!");
-    }
+  /*if(precision_type == "fvclMatrix" || precision_type == "dvclMatrix") {
+    Rcpp::warning("must be matrix of integers!\n");
+  }
     
-   std::string precision_type = (std::string) classVarR;
+   std::string precision_type = (std::string) classVarR;*/
    if(precision_type == "ivclMatrix") {
     result = logfactsumTemplated(xR, numWorkItems);
    } else {
