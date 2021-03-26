@@ -144,13 +144,12 @@ SEXP logfactsumBackend(
    if(precision_type == "ivclMatrix") {
     result = logfactsumTemplated(xR, numWorkItems);
    } else {
-     Rcpp::warning("class of param must be ivclMatrix");
+     Rcpp::warning("class of param must be ivclMatrix\n\n");
      result = Rcpp::wrap(1L);
      }
     return result;
   
-
-   }
+  }
 
 
 

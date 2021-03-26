@@ -1,0 +1,30 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{logfactSum}
+-->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r logfactsum}
+library(gpuR)
+library(gpuRandom)
+x<-vclMatrix(c(1:36), 6,6,type="double")
+gpuRandom:::logfactsumBackend(x, c(1,1))
+
+
+x2<-vclMatrix(c(1:36), 6,6,type="integer")
+gpuRandom:::logfactsumBackend(x2, c(16,16))
+
+xx = as.matrix(x2)
+sum(lfactorial(xx))
+```
+
+
+
+
+
+
+
