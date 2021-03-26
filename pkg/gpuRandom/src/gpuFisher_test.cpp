@@ -295,7 +295,7 @@ int gpuFisher_test(
   
   viennacl::vector<double> factTrue(n+1); 
 
-  logfactorial(&factTrue, numWorkItems, ctx_id);
+  logfactorial(factTrue, numWorkItems, ctx_id);
 
 
 
