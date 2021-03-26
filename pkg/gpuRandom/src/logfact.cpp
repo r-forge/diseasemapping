@@ -69,12 +69,63 @@ void logfactorial(// viennacl::vector<int> &x,
   lfactorialKernel.global_work_size(0, numWorkItems[0]);
   lfactorialKernel.global_work_size(1, numWorkItems[1]);
   
- // lfactorialKernel.local_work_size(0, 1L);
- // lfactorialKernel.local_work_size(1, 1L);
   
   viennacl::ocl::enqueue(lfactorialKernel(output, numelements) );
   
 }
+
+
+/*
+//template<typename T> 
+void logfactorialTemplated(
+    Rcpp::S4 outputR,
+    Rcpp::IntegerVector numWorkItems) {
+
+  
+  const bool BisVCL=1;
+  const int ctx_id = INTEGER(outputR.slot(".context_index"))[0]-1;
+  std::shared_ptr<viennacl::vector_base<double> > output = getVCLVecptr<double>(outputR.slot("address"), BisVCL, ctx_id);
+  
+  logfactorial(*output, numWorkItems, ctx_id);
+  
+  
+}
+
+
+
+
+
+//[[Rcpp::export]]
+void logfactorialBackend(
+    Rcpp::S4 outputR,
+    Rcpp::IntegerVector numWorkItems) {
+
+
+  logfactorialTemplated(outputR, numWorkItems);
+  
+
+}
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

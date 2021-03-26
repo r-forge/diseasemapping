@@ -37,7 +37,7 @@ std::string colsumRowsumString(const int Nrow, const int Ncol, const int NpadCol
   result += 
   "  for(Drow = get_global_id(0);   Drow < Nrow;    Drow+=get_global_size(0)){\n"
   "    for(Dcol = get_global_id(1),   Dindex = Drow*NpadCol+Dcol;\n" 
-  "        Dcol < Ncol; Dcol+=get_global_size(1), Dindex++){\n"
+  "        Dcol < Ncol; Dcol+=get_global_size(1), Dindex+=get_global_size(1)){\n"
   "        insidevalue = 1 + x[Dindex];\n"
   "       Dresult += lgamma(insidevalue);\n"
   "    } // end loop through columns\n"
@@ -104,6 +104,50 @@ double logfactsum(
 }
 
 
+
+//template<typename T> 
+SEXP logfactsumTemplated(
+    Rcpp::S4 xR,
+    Rcpp::IntegerVector numWorkItems) {
+  
+  double result;
+
+  const bool BisVCL=1;
+  const int ctx_id = INTEGER(xR.slot(".context_index"))[0]-1;
+  std::shared_ptr<viennacl::matrix<int> > x = getVCLptr<int>(xR.slot("address"), BisVCL, ctx_id);
+  
+  result = logfactsum(*x, numWorkItems, ctx_id);
+  
+  return Rcpp::wrap(result);
+
+}
+
+
+
+
+
+//[[Rcpp::export]]
+SEXP logfactsumBackend(
+    Rcpp::S4 xR,
+    Rcpp::IntegerVector numWorkItems) {
+  
+  SEXP result;
+  /*
+  Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(xR));
+  std::string precision_type = (std::string) classVarR;*/
+  
+ /* if(precision_type == "fvclMatrix") {
+    logfactsumTemplated<float>(xR, numWorkItems);
+ } else if (precision_type == "dvclMatrix") {*/
+    result = logfactsumTemplated(xR, numWorkItems);
+    
+    return result;
+  
+   /* } else {
+    Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
+ }*/
+
+   }
 
 
 

@@ -18,14 +18,14 @@ maternBatch <- function(var,  # the output matern matrices
     startrow=0
     numberofrows=nrow(param)
   }
-
+  
   
   
   maternBatchBackend(var, coords, param,
                      Nglobal, Nlocal,
                      startrow, numberofrows)
   
-
+  
   invisible()
   
   

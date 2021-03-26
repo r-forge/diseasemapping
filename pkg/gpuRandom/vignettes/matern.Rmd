@@ -71,10 +71,11 @@ coordsSp = sp::SpatialPoints(raster::xyFromCell(myRaster, 1:raster::ncell(myRast
 # Batch matern
 ```{r paramsBatch}
 myParamsBatch = rbind(
-c(shape=5.99, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
-c(shape=6, range=1, variance = 2, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
-c(shape=6.01, range=1, variance = 3, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
-c(shape=3, range=5, variance = 4, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
+c(shape=5.99, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
+
+# c(shape=6, range=1, variance = 2, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
+# c(shape=6.01, range=1, variance = 3, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
+# c(shape=3, range=5, variance = 4, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
 # c(shape=4, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
 # c(shape=5, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0) )
 
@@ -84,6 +85,7 @@ myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
 ```
 
 ```{r outputBatchCreate, eval=T}
+library(gpuR)
 coordsGpu = vclMatrix(coordsSp@coords, nrow(coordsSp@coords), ncol(coordsSp@coords), type=theType)
 outputBatchF = vclMatrix(0, nrow(myParamsBatch)*nrow(coordsGpu), nrow(coordsGpu), type=gpuR::typeof(coordsGpu))
 
@@ -103,16 +105,27 @@ gpuRandom:::maternBatchBackend(
     paramsGpu,  
     c(1,4),#NglobalMatern, 
     c(1,4),#NlocalMatern,
-    startrow = 1,
-    numberofrows = 4,
+    startrow = 0,
+    numberofrows = 1,
     verbose = 1)
-as.matrix(outputBatchF)[,1:6]
+as.matrix(outputBatchF)[1:7,1:7]
+
+
+gpuRandom::maternBatch(
+    outputBatchF,
+    coordsGpu, 
+    paramsGpu,  
+    c(1,4),#NglobalMatern, 
+    c(1,4))
+as.matrix(outputBatchF)
+
+
 
 geostatsp::matern(
     x=coordsSp,
     param=drop(myParamsBatch[1,1:7])
-    )[1:7,1:7]
-as.matrix(outputBatchF[1:7,1:7])
+    )
+as.matrix(outputBatchF)
 geostatsp::matern(
     x=coordsSp,
     param=drop(myParamsBatch[2,1:7])

@@ -259,7 +259,7 @@ std::string maternBatchKernelString(
     "   for(DmatrixLocal = 0; DmatrixLocal < get_local_size(1); DmatrixLocal++){"
     "      wait = async_work_group_copy("
     "        &localParams[(Dcell * get_local_size(1) + DmatrixLocal) * NlocalParams],"
-    "        &params[(startrow + Dmatrix + DmatrixLocal) * NpadParams],\n"
+    "        &params[(startrow + Dmatrix + DmatrixLocal) * NpadParams],\n"  
     "        NlocalParams, wait);\n"
     "  }\n"//DmatrixLocal
     "}\n";//Dcell,Dmatrix
@@ -550,7 +550,7 @@ void maternBatchTemplated(
     numWorkItemsStd, 
     numLocalItemsStd,
     ctx_id,
-    startrow - 1,   // indexing from 0 rather than from 1
+    startrow,   // indexing from 0 rather than from 1
     numberofrows, verbose);
 }
 

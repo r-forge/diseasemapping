@@ -71,6 +71,10 @@ cpp_gpu_qqnorm <- function(outR, mu, sigma, lowertail, max_global_size, max_loca
     .Call('_gpuRandom_cpp_gpu_qqnorm', PACKAGE = 'gpuRandom', outR, mu, sigma, lowertail, max_global_size, max_local_size)
 }
 
+logfactsumBackend <- function(xR, numWorkItems) {
+    .Call('_gpuRandom_logfactsumBackend', PACKAGE = 'gpuRandom', xR, numWorkItems)
+}
+
 rowsumBackend <- function(xR, SumR, type, log) {
     invisible(.Call('_gpuRandom_rowsumBackend', PACKAGE = 'gpuRandom', xR, SumR, type, log))
 }

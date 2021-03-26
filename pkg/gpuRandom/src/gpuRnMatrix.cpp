@@ -289,3 +289,11 @@ SEXP gpuRnBackend(
   }
   return(result);
 }
+
+
+
+
+
+
+
+

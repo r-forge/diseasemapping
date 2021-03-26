@@ -40,8 +40,6 @@ streams2 = deepcopy(streams)
 
 x<-vclMatrix(x,type="integer")
 res1 = gpuRandom::fisher.sim(x, 1e5, returnStatistics=T, type="double", streams=streams, workgroupSize = Nglobal)
-
- 
 res1
 #as.vector(res1$sim)
 #hist(as.vector(res1$sim))

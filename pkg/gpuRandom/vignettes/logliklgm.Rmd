@@ -164,7 +164,7 @@ library(gpuRandom)
 library(gpuR)
 library('geostatsp')
 data('swissRain')
-sr2 = swissRain[0:100,]
+sr2 = swissRain[0:25,]
 
 # extract variables for modeling
 sr2$sqrtY = sqrt(sr2$rain)
@@ -188,9 +188,9 @@ swissFitIso$parameters
 
 
 newParamList = list(
-  range=seq(20000, 80000 , len=20),
-  nugget = seq(0,0.25,len=10)
-) #5800
+  range=seq(30000, 80000 , len=1),
+  nugget = seq(0,0.25,len=1)
+) 
 
 
 newParam= do.call(expand.grid, newParamList)
@@ -203,9 +203,9 @@ paramsBatch0 = cbind(newParam, otherparams)
 paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
 paramsBatchcpu = cbind(paramsBatch0, matrix(0, nrow(paramsBatch0), 22-ncol(paramsBatch0)))
 
-paramsBatch = gpuR::vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0),22-ncol(paramsBatch0))),type="double")
+#paramsBatch = gpuR::vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0),22-ncol(paramsBatch0))),type="double")
 
-workgroupSize=c(128,16,8)
+workgroupSize=c(16,16,8)
 localSize = c(4,4,1)
 NlocalCache=500
 
@@ -213,30 +213,17 @@ system.time(
 temp <- likfitGpu(swissFitIso, sr2, type="double", 
                              paramsBatchcpu, #cpu Matrix of parameter sets,
                              betas=NULL, #a vclmatrix  #given by the user or provided from formula
-                             BoxCox=1,
+                             BoxCox=c(1.5,2),
                              form = "ml",  
-                             groupsize=20,
+                             groupsize=2,
                              workgroupSize,
                              localSize,
                              NlocalCache))
-#33
-
-system.time(
-temp2 <- likfitGpu_slow(swissFitIso, sr2, type="double", 
-                             paramsBatch, #vclMatrix of parameter sets,
-                             betas=NULL, #a vclmatrix  #given by the user or provided from formula
-                             BoxCox=1,
-                             form = "ml",  
-                             groupsize=290,
-                             workgroupSize,
-                             localSize,
-                             NlocalCache))
-
 
 # 151.580
 tempcpu<-as.matrix(temp)
 
-lMatrix = matrix(tempcpu[,2], length(newParamList[[1]]), length(newParamList[[2]]))
+lMatrix = matrix(tempcpu[,3], length(newParamList[[1]]), length(newParamList[[2]]))
 # 
 myCol = mapmisc::colourScale(lMatrix, breaks=8, dec=0)
 image(
@@ -253,7 +240,64 @@ mapmisc::legendBreaks('topright', myCol)
 
 
 
+```{r}
+# isotropic
+data('swissRain')
+sr2 = swissRain[0:100,]
 
+# extract variables for modeling
+sr2$sqrtY = sqrt(sr2$rain)
+sr2$elev = raster::extract(swissAltitude, sr2)
+
+
+swissFitIso = geostatsp::likfitLgm(
+  data=sr2,
+  formula=sqrtY ~ elev,
+  param=c(range=50000,shape=1),
+  reml=FALSE,
+  verbose=FALSE
+)
+
+newParamList = list(
+  range=seq(30000, 80000 , len=10),
+  nugget = seq(0,0.25,len=5)
+) 
+
+newParam= do.call(expand.grid, newParamList)
+
+materncpu = geostatsp::matern(
+    x= sr2,
+    param=drop(paramsBatchcpu[1,1:7])
+    )
+materncpu[1:10,1:10]
+
+res= mapply(
+	function(range, nugget) {
+		loglikLgm(
+		c(swissFitIso$parameters[c('shape')], 
+			range = unname(range), nugget = unname(nugget)),
+		data = sr2,
+		formula = swissFitIso$model$formula,
+		reml = swissFitIso$model$reml,
+		minustwotimes=FALSE)
+	},
+	range = newParam$range,
+	nugget = newParam$nugget
+	)
+
+lMatrix = matrix(res, length(newParamList[[1]]), length(newParamList[[2]]))
+
+myCol = mapmisc::colourScale(lMatrix, breaks=8, dec=0)
+image(
+	newParamList[[1]]/1000, newParamList[[2]], lMatrix,
+	col = myCol$col, breaks=myCol$breaks,
+	xlab = names(newParamList)[1],
+	ylab = names(newParamList)[2]	
+	)
+mapmisc::legendBreaks('topright', myCol)
+
+
+```
 
 
 

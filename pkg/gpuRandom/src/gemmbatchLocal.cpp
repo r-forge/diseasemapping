@@ -336,7 +336,7 @@ int gemmBatch2(
     (int) C.internal_size2()
   );
   
-  if(verbose) Rcpp::Rcout << "\n\n" << gemmString << "\n\n";
+  if(verbose)  Rcpp::Rcout << "\n\n" << gemmString << "\n\n";
 
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   viennacl::ocl::program & my_prog = ctx.add_program(gemmString, "mykernel");
