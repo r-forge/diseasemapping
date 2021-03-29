@@ -79,6 +79,10 @@ rowsumBackend <- function(xR, SumR, type, log) {
     invisible(.Call('_gpuRandom_rowsumBackend', PACKAGE = 'gpuRandom', xR, SumR, type, log))
 }
 
+matrix_vector_sumBackend <- function(matrixR, vectorR, sumR, numWorkItems) {
+    invisible(.Call('_gpuRandom_matrix_vector_sumBackend', PACKAGE = 'gpuRandom', matrixR, vectorR, sumR, numWorkItems))
+}
+
 fillParamsExtra <- function(param) {
     invisible(.Call('_gpuRandom_fillParamsExtra', PACKAGE = 'gpuRandom', param))
 }

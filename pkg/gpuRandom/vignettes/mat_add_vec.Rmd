@@ -1,0 +1,26 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{matrix_add_vector}
+-->
+
+
+```{r test}
+library(gpuRandom)
+library(gpuR)
+type="double"
+nrow<-5
+ncol<-6
+x<-vclMatrix(1:30, nrow=nrow,ncol=ncol, type=type);      xcpu<-matrix(1:30, nrow=nrow,ncol=ncol)
+
+v1<-vclVector(1:5, type=type);        vcpu <- as.vector(v1)
+v2<-vclVector(3:8,  type=type);       vcpu <- as.vector(v2)
+
+result <- vclMatrix(0, nrow=nrow,ncol=ncol, type=type)
+
+r<-xcpu+vcpu
+
+gpuRandom:::matrix_vector_sumBackend(x,v2, result, c(16,8))
+as.matrix(result)
+
+
+```
