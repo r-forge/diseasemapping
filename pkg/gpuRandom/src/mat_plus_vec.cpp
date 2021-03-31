@@ -42,7 +42,7 @@ std::string matrix_plus_vectorString(const int Nrow, const int Ncol, const int N
       "    } // end loop through columns\n"
       "  } // end loop through rows\n";
     
-  }else if (byrow==0){
+  }else if (byrow==0){ // by column
     result += 
       "  for(Drow = get_global_id(0);   Drow < Nrow;  Drow+=get_global_size(0)){\n"
       "    for(Dcol = get_global_id(1);  Dcol < Ncol;   Dcol+=get_global_size(1)){\n"
@@ -134,7 +134,7 @@ void matrix_vector_sumTemplated(
 
 
 
-//[[Rcpp::export]]
+// [[Rcpp::export]]
 void matrix_vector_sumBackend(
     Rcpp::S4 matrixR,
     Rcpp::S4 vectorR,
