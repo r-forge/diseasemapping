@@ -216,15 +216,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // matrix_vector_sumBackend
-void matrix_vector_sumBackend(Rcpp::S4 matrixR, Rcpp::S4 vectorR, Rcpp::S4 sumR, Rcpp::IntegerVector numWorkItems);
-RcppExport SEXP _gpuRandom_matrix_vector_sumBackend(SEXP matrixRSEXP, SEXP vectorRSEXP, SEXP sumRSEXP, SEXP numWorkItemsSEXP) {
+void matrix_vector_sumBackend(Rcpp::S4 matrixR, Rcpp::S4 vectorR, Rcpp::S4 sumR, const int byrow, Rcpp::IntegerVector numWorkItems);
+RcppExport SEXP _gpuRandom_matrix_vector_sumBackend(SEXP matrixRSEXP, SEXP vectorRSEXP, SEXP sumRSEXP, SEXP byrowSEXP, SEXP numWorkItemsSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type matrixR(matrixRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type vectorR(vectorRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type sumR(sumRSEXP);
+    Rcpp::traits::input_parameter< const int >::type byrow(byrowSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type numWorkItems(numWorkItemsSEXP);
-    matrix_vector_sumBackend(matrixR, vectorR, sumR, numWorkItems);
+    matrix_vector_sumBackend(matrixR, vectorR, sumR, byrow, numWorkItems);
     return R_NilValue;
 END_RCPP
 }
@@ -322,7 +323,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_logfactsumBackend", (DL_FUNC) &_gpuRandom_logfactsumBackend, 2},
     {"_gpuRandom_rowsumBackend", (DL_FUNC) &_gpuRandom_rowsumBackend, 4},
     {"_gpuRandom_matrix_matrix_sumBackend", (DL_FUNC) &_gpuRandom_matrix_matrix_sumBackend, 4},
-    {"_gpuRandom_matrix_vector_sumBackend", (DL_FUNC) &_gpuRandom_matrix_vector_sumBackend, 4},
+    {"_gpuRandom_matrix_vector_sumBackend", (DL_FUNC) &_gpuRandom_matrix_vector_sumBackend, 5},
     {"_gpuRandom_fillParamsExtra", (DL_FUNC) &_gpuRandom_fillParamsExtra, 1},
     {"_gpuRandom_maternBatchBackend", (DL_FUNC) &_gpuRandom_maternBatchBackend, 8},
     {"_gpuRandom_multiplyLowerDiagonalBatchBackend", (DL_FUNC) &_gpuRandom_multiplyLowerDiagonalBatchBackend, 9},

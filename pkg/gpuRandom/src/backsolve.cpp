@@ -606,3 +606,11 @@ SEXP backsolveBatchBackend(
   return(result);
   
 }
+
+
+
+
+
+
+
+

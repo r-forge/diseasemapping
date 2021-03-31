@@ -17,9 +17,10 @@ v2<-vclVector(3:12,  type=type);       vcpu <- as.vector(v2)
 
 result <- vclMatrix(0, nrow=nrow,ncol=ncol, type=type)
 
-r<-xcpu+vcpu
+xcpu 
+vcpu
 
-gpuRandom:::matrix_vector_sumBackend(x,v2, result, c(4,4))
+gpuRandom:::matrix_vector_sumBackend(x,v1, result, byrow=TRUE, c(4,4))
 as.matrix(result)
 
 

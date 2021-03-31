@@ -3,7 +3,7 @@
 
 //#define DEBUGKERNEL
 template <typename T> 
-std::string matrix_plus_vectorString(const int Nrow, const int Ncol, const int NpadCol, const int n) {  //internal column size
+std::string matrix_plus_vectorString(const int Nrow, const int Ncol, const int NpadCol, const int byrow) {  //internal column size
   
   std::string typeString = openclTypeString<T>();  // type of the sum of log factorial
   
@@ -31,7 +31,7 @@ std::string matrix_plus_vectorString(const int Nrow, const int Ncol, const int N
   result += "int Drow, Dcol;\n";
 
   
-  if (n == Nrow) {
+  if (byrow) {
     
     result += 
       "  for(Drow = get_global_id(0);   Drow < Nrow;  Drow += get_global_size(0)){\n"
@@ -42,7 +42,7 @@ std::string matrix_plus_vectorString(const int Nrow, const int Ncol, const int N
       "    } // end loop through columns\n"
       "  } // end loop through rows\n";
     
-  }else if (n == Ncol){
+  }else if (byrow==0){
     result += 
       "  for(Drow = get_global_id(0);   Drow < Nrow;  Drow+=get_global_size(0)){\n"
       "    for(Dcol = get_global_id(1);  Dcol < Ncol;   Dcol+=get_global_size(1)){\n"
@@ -75,6 +75,7 @@ void matrix_vector_sum(
     viennacl::matrix<T> &matrix,// viennacl::vector_base<int>  rowSum, viennacl::vector_base<int>  colSum,  
     viennacl::vector_base<T> &vector,
     viennacl::matrix<T> &sum,
+    const int byrow,
     Rcpp::IntegerVector numWorkItems,
     int ctx_id) {
 
@@ -87,7 +88,7 @@ void matrix_vector_sum(
     matrix.size1(), 
     matrix.size2(),
     matrix.internal_size2(),
-    vector.size()
+    byrow
   );
 
   viennacl::ocl::switch_context(ctx_id);
@@ -115,6 +116,7 @@ void matrix_vector_sumTemplated(
     Rcpp::S4 matrixR,
     Rcpp::S4 vectorR,
     Rcpp::S4 sumR,
+    const int byrow,
     Rcpp::IntegerVector numWorkItems) {
   
   
@@ -124,7 +126,7 @@ void matrix_vector_sumTemplated(
   std::shared_ptr<viennacl::vector_base<T> > vector = getVCLVecptr<T>(vectorR.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<T> > sum = getVCLptr<T>(sumR.slot("address"), BisVCL, ctx_id);
   
-  matrix_vector_sum(*matrix, *vector, *sum, numWorkItems, ctx_id);
+  matrix_vector_sum(*matrix, *vector, *sum, byrow, numWorkItems, ctx_id);
   
 }
 
@@ -137,19 +139,19 @@ void matrix_vector_sumBackend(
     Rcpp::S4 matrixR,
     Rcpp::S4 vectorR,
     Rcpp::S4 sumR,
+    const int byrow,
     Rcpp::IntegerVector numWorkItems) {
-  
   
   Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(sumR));
   std::string precision_type = (std::string) classVarR;
   
  
  if(precision_type == "fvclMatrix") {
-   return (matrix_vector_sumTemplated<float>(matrixR, vectorR, sumR, numWorkItems));
+   return (matrix_vector_sumTemplated<float>(matrixR, vectorR, sumR, byrow, numWorkItems));
  } else if (precision_type == "dvclMatrix") {
-   return (matrix_vector_sumTemplated<double>(matrixR, vectorR, sumR, numWorkItems));
+   return (matrix_vector_sumTemplated<double>(matrixR, vectorR, sumR, byrow, numWorkItems));
  } else if (precision_type  == "ivclMatrix") {
-   return( matrix_vector_sumTemplated<int>(matrixR, vectorR, sumR, numWorkItems));
+   return( matrix_vector_sumTemplated<int>(matrixR, vectorR, sumR, byrow, numWorkItems));
  }
   
 }
