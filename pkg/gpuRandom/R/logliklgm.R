@@ -206,7 +206,7 @@ likfitGpu_0 <- function(yX,  #y1,y2,y3,X
                   LogLik = -0.5*(part1 + one/variances + n*log(2*pi)+jacobian),
                   ssqBeta=ssqBeta, ssqX=NULL, ssqY=aTDa, logD=logD, logP=logP)      
     
-  }else if(form == 2) {#ml  result = n*log(two) +logD + n*log(2*pi) + n
+  }else if(form == 2) {#ml  result = n*log(two/n) +logD + n*log(2*pi) + n
     Result = list(minusTwoLogLik= n*log(two/n) +logD + n*log(2*pi) + n +jacobian,
                   LogLik = -0.5*(n*log(two/n) +logD + n*log(2*pi) + n + jacobian),
                   ssqBeta=0, ssqX=nine, ssqY=aTDa, logD=logD, logP=logP)           

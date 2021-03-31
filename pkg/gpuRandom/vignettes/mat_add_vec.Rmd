@@ -23,7 +23,8 @@ vcpu
 gpuRandom:::matrix_vector_sumBackend(x,v1, result, byrow=TRUE, c(4,4))
 as.matrix(result)
 
-
+gpuRandom:::matrix_vector_sumBackend(x,v2, result, byrow=0, c(4,4))
+as.matrix(result)
 ```
 
 
