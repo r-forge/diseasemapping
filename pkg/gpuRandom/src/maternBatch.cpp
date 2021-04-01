@@ -473,8 +473,8 @@ void maternBatchVcl(
     viennacl::matrix<T> &vclVar, // Nmat columns N^2 rows
     viennacl::matrix<T> &vclCoords, // 2 columns
     viennacl::matrix<T> &param, // Nmat rows, 22 columns
-    std::vector<int> numWorkItems,
-    std::vector<int> numLocalItems,	
+    Rcpp::IntegerVector numWorkItems,
+    Rcpp::IntegerVector numLocalItems,	
     const int ctx_id,
     int startrow,   // new added
     int numberofrows,
@@ -535,9 +535,9 @@ void maternBatchTemplated(
     int startrow,   // new added
     int numberofrows, 
     int verbose) {
-  
+  /*
   std::vector<int> numWorkItemsStd = Rcpp::as<std::vector<int> >(Nglobal);
-  std::vector<int> numLocalItemsStd = Rcpp::as<std::vector<int> >(Nlocal);
+  std::vector<int> numLocalItemsStd = Rcpp::as<std::vector<int> >(Nlocal);*/
   
   // data
   const bool BisVCL=1;
@@ -549,8 +549,8 @@ void maternBatchTemplated(
   maternBatchVcl<T>(
     *vclVar, *vclCoords,
     *param,
-    numWorkItemsStd, 
-    numLocalItemsStd,
+    Nglobal, 
+    Nlocal,
     ctx_id,
     startrow,   // indexing from 0 rather than from 1
     numberofrows, verbose);

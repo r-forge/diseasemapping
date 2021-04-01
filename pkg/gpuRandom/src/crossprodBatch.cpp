@@ -21,7 +21,7 @@ std::string crossprodBatchString(
     const int NpadBetweenMatricesC,
     const int NpadBetweenMatricesA,
     const int NlocalCacheA, // numbers of rows to cache of A
-    const std::vector<int> Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
+    Rcpp::IntegerVector Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
   ) { 
     
  /*
@@ -237,6 +237,14 @@ if(NpadD) {
   return(result);
 }
 
+/*
+std::vector<int> Nglobal,
+std::vector<int> Nlocal,*/
+
+
+
+
+
 template <typename T> 
 void crossprodBatch(
     viennacl::matrix<T> &C,  // must be a batch of square matrices 
@@ -246,8 +254,8 @@ void crossprodBatch(
     Rcpp::IntegerVector Cstartend,
     Rcpp::IntegerVector Astartend,
     Rcpp::IntegerVector Dstartend,  
-    std::vector<int> Nglobal,
-    std::vector<int> Nlocal,
+    Rcpp::IntegerVector Nglobal,
+    Rcpp::IntegerVector Nlocal,
     const int NlocalCache, 
     const int ctx_id) {
   
@@ -322,12 +330,12 @@ SEXP crossprodBatchTyped(
     Rcpp::IntegerVector Cstartend,
     Rcpp::IntegerVector Astartend,
     Rcpp::IntegerVector Dstartend,  
-    Rcpp::IntegerVector NglobalR,
-    Rcpp::IntegerVector NlocalR, 
+    Rcpp::IntegerVector Nglobal,
+    Rcpp::IntegerVector Nlocal, 
     const int NlocalCache) {
-  
+  /*
   std::vector<int> Nglobal = Rcpp::as<std::vector<int> >(NglobalR);
-  std::vector<int> Nlocal = Rcpp::as<std::vector<int> >(NlocalR);
+  std::vector<int> Nlocal = Rcpp::as<std::vector<int> >(NlocalR);*/
   
   const int ctx_id = INTEGER(CR.slot(".context_index"))[0]-1;
   const bool BisVCL=1;

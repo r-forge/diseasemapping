@@ -44,7 +44,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // cholBatchBackend
-void cholBatchBackend(Rcpp::S4 A, Rcpp::S4 D, Rcpp::IntegerVector Astartend, Rcpp::IntegerVector Dstartend, const int numbatchD, std::vector<int> Nglobal, std::vector<int> Nlocal, std::vector<int> NlocalCache);
+void cholBatchBackend(Rcpp::S4 A, Rcpp::S4 D, Rcpp::IntegerVector Astartend, Rcpp::IntegerVector Dstartend, const int numbatchD, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal, Rcpp::IntegerVector NlocalCache);
 RcppExport SEXP _gpuRandom_cholBatchBackend(SEXP ASEXP, SEXP DSEXP, SEXP AstartendSEXP, SEXP DstartendSEXP, SEXP numbatchDSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP, SEXP NlocalCacheSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -53,9 +53,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Astartend(AstartendSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Dstartend(DstartendSEXP);
     Rcpp::traits::input_parameter< const int >::type numbatchD(numbatchDSEXP);
-    Rcpp::traits::input_parameter< std::vector<int> >::type Nglobal(NglobalSEXP);
-    Rcpp::traits::input_parameter< std::vector<int> >::type Nlocal(NlocalSEXP);
-    Rcpp::traits::input_parameter< std::vector<int> >::type NlocalCache(NlocalCacheSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nglobal(NglobalSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nlocal(NlocalSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type NlocalCache(NlocalCacheSEXP);
     cholBatchBackend(A, D, Astartend, Dstartend, numbatchD, Nglobal, Nlocal, NlocalCache);
     return R_NilValue;
 END_RCPP

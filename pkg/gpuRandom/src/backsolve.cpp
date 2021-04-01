@@ -453,8 +453,8 @@ void backsolveBatch(
     Rcpp::IntegerVector Bstartend, 
     const int numbatchB,
     const int diagIsOne,
-    std::vector<int> Nglobal,
-    std::vector<int> Nlocal,
+    Rcpp::IntegerVector Nglobal,
+    Rcpp::IntegerVector Nlocal,
     const int NlocalCache,
     const int ctx_id) {
   
@@ -545,12 +545,12 @@ SEXP backsolveBatchTyped(
     Rcpp::IntegerVector Bstartend,
     const int numbatchB,
     const int diagIsOne,
-    Rcpp::IntegerVector NglobalR,
-    Rcpp::IntegerVector NlocalR, 
+    Rcpp::IntegerVector Nglobal,
+    Rcpp::IntegerVector Nlocal, 
     const int NlocalCache) {
-  
+  /*
   std::vector<int> Nglobal = Rcpp::as<std::vector<int> >(NglobalR);
-  std::vector<int> Nlocal = Rcpp::as<std::vector<int> >(NlocalR);
+  std::vector<int> Nlocal = Rcpp::as<std::vector<int> >(NlocalR);*/
   
   const int ctx_id = INTEGER(CR.slot(".context_index"))[0]-1;
   const bool BisVCL=1;

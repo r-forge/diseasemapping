@@ -14,8 +14,8 @@ std::string cholBatchKernelString( // V1
     int NpadBetweenMatrices,
     int NstartA,
     int NstartD,
-    std::vector<int> Ncache, 
-    std::vector<int> Nlocal, // length 2
+    Rcpp::IntegerVector Ncache, 
+    Rcpp::IntegerVector Nlocal, // length 2
     bool allowOverflow) {
   
   std::string typeString = openclTypeString<T>();
@@ -189,9 +189,11 @@ std::string cholBatchKernelString( // V1
 
 
 
-
-
-
+/*
+const std::vector<int> &Nglobal,
+const std::vector<int> &Nlocal, 
+const std::vector<int> &NlocalCache,
+*/
 
 
 
@@ -203,9 +205,9 @@ int cholBatchVcl(
     Rcpp::IntegerVector Astartend,
     Rcpp::IntegerVector Dstartend,  
     const int numbatchD,
-    const std::vector<int> &Nglobal,
-    const std::vector<int> &Nlocal, 
-    const std::vector<int> &NlocalCache,
+    Rcpp::IntegerVector Nglobal,
+    Rcpp::IntegerVector Nlocal, 
+    Rcpp::IntegerVector NlocalCache,
     const int ctx_id) {
  
   const int NstartA = A.internal_size2() * Astartend[0] + Astartend[2];
@@ -275,9 +277,9 @@ void cholBatchTemplated(
     Rcpp::IntegerVector Astartend,
     Rcpp::IntegerVector Dstartend,
     const int numbatchD,
-    const std::vector<int> &Nglobal,
-    const std::vector<int> &Nlocal, 
-    const std::vector<int> &NlocalCache) {
+    Rcpp::IntegerVector Nglobal,
+    Rcpp::IntegerVector Nlocal, 
+    Rcpp::IntegerVector NlocalCache) {
 
   const bool BisVCL=1;
   const int ctx_id = INTEGER(A.slot(".context_index"))[0]-1;
@@ -316,9 +318,9 @@ void cholBatchBackend(
     Rcpp::IntegerVector Astartend,
     Rcpp::IntegerVector Dstartend,
     const int numbatchD,
-    std::vector<int> Nglobal,
-    std::vector<int> Nlocal,
-    std::vector<int> NlocalCache) {
+    Rcpp::IntegerVector Nglobal,
+    Rcpp::IntegerVector Nlocal,
+    Rcpp::IntegerVector NlocalCache) {
   
   
   Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(A));
