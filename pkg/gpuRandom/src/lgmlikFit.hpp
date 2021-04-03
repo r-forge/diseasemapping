@@ -3,81 +3,96 @@
 #include "viennacl/matrix_proxy.hpp"
 
 
-void maternBatchBackend(Rcpp::S4 var,
-    Rcpp::S4 coords,
-    Rcpp::S4 param, 
-    Rcpp::IntegerVector Nglobal,
-    Rcpp::IntegerVector Nlocal,
-    int startrow,   
+template<typename T> 
+void maternBatchVcl(
+    viennacl::matrix<T> &vclVar, // Nmat columns N^2 rows
+    viennacl::matrix<T> &vclCoords, // 2 columns
+    viennacl::matrix<T> &param, // Nmat rows, 22 columns
+    Rcpp::IntegerVector numWorkItems,
+    Rcpp::IntegerVector numLocalItems,	
+    const int ctx_id,
+    int startrow,   // new added
     int numberofrows,
-    int verbose=0) 
+    int verbose)
     
     
-void cholBatchBackend(Rcpp::S4 A,
-        Rcpp::S4 D,
+    template <typename T> 
+    int cholBatchVcl(
+        viennacl::matrix<T> &A,
+        viennacl::matrix<T> &D,
         Rcpp::IntegerVector Astartend,
-        Rcpp::IntegerVector Dstartend,
+        Rcpp::IntegerVector Dstartend,  
         const int numbatchD,
-        std::vector<int> Nglobal,
-        std::vector<int> Nlocal,
-        std::vector<int> NlocalCache)     
+        Rcpp::IntegerVector Nglobal,
+        Rcpp::IntegerVector Nlocal, 
+        Rcpp::IntegerVector NlocalCache,
+        const int ctx_id)
     
     
-void rowsumBackend(
-        Rcpp::S4  xR, 
-        Rcpp::S4  SumR,
+    template <typename T>
+    void rowsum(
+        viennacl::matrix<T> &x,
+        viennacl::vector_base<T> &Sum,
         std::string type,
         int log)
         
         
-SEXP backsolveBatchBackend(
-            Rcpp::S4 C,
-            Rcpp::S4 A,
-            Rcpp::S4 B,
+        template <typename T> 
+        void backsolveBatch(
+            viennacl::matrix<T> &C,
+            viennacl::matrix<T> &A,  //must be batches of square matrices
+            viennacl::matrix<T> &B,
             Rcpp::IntegerVector Cstartend,
-            Rcpp::IntegerVector Astartend,
-            Rcpp::IntegerVector Bstartend,
+            Rcpp::IntegerVector Astartend, //square matrices
+            Rcpp::IntegerVector Bstartend, 
             const int numbatchB,
             const int diagIsOne,
             Rcpp::IntegerVector Nglobal,
-            Rcpp::IntegerVector Nlocal, 
-            const int NlocalCache)       
+            Rcpp::IntegerVector Nlocal,
+            const int NlocalCache,
+            const int ctx_id)       
         
         
-SEXP crossprodBatchBackend(
-            Rcpp::S4 C,
-            Rcpp::S4 A,
-            Rcpp::S4 D,
+        template <typename T> 
+        void crossprodBatch(
+            viennacl::matrix<T> &C,  // must be a batch of square matrices 
+            viennacl::matrix<T> &A,
+            viennacl::matrix<T> &D,
             const int invertD,
             Rcpp::IntegerVector Cstartend,
             Rcpp::IntegerVector Astartend,
-            Rcpp::IntegerVector Dstartend, 
+            Rcpp::IntegerVector Dstartend,  
             Rcpp::IntegerVector Nglobal,
-            Rcpp::IntegerVector Nlocal, 
-            const int NlocalCache)        
+            Rcpp::IntegerVector Nlocal,
+            const int NlocalCache, 
+            const int ctx_id)      
       
         
-SEXP gemmBatch2backend(Rcpp::S4 A,
-                Rcpp::S4 B,  
-                Rcpp::S4 C,
-                Rcpp::IntegerVector transposeABC,  
-                Rcpp::IntegerVector submatrixA,
-                Rcpp::IntegerVector submatrixB,
-                Rcpp::IntegerVector submatrixC, 
-                Rcpp::IntegerVector batches, 
-                Rcpp::IntegerVector workgroupSize,   
-                Rcpp::IntegerVector NlocalCache,
-                const int verbose)        
+        template <typename T> 
+        int gemmBatch2(
+            viennacl::matrix<T> &A,
+            viennacl::matrix<T> &B,
+            viennacl::matrix<T> &C,
+            Rcpp::IntegerVector transposeABC,  
+            Rcpp::IntegerVector submatrixA,
+            Rcpp::IntegerVector submatrixB,
+            Rcpp::IntegerVector submatrixC,  
+            Rcpp::IntegerVector batches, 
+            Rcpp::IntegerVector workgroupSize,
+            Rcpp::IntegerVector NlocalCache, 
+            const int verbose,
+            const int ctx_id) 
         
         
-void matrix_vector_sumBackend(Rcpp::S4 matrixR,
-                Rcpp::S4 vectorR,
-                Rcpp::S4 sumR,
-                const int byrow,
-                Rcpp::IntegerVector numWorkItems)  
-                
-                
-                
+        
+template<typename T> 
+void matrix_vector_sum(
+     viennacl::matrix<T> &matrix,// viennacl::vector_base<int>  rowSum, viennacl::vector_base<int>  colSum,  
+     viennacl::vector_base<T> &vector,
+     viennacl::matrix<T> &sum,
+     const int byrow,
+     Rcpp::IntegerVector numWorkItems,
+     int ctx_id)            
                 
                 
                 
