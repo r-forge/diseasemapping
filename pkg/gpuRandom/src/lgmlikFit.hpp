@@ -1,16 +1,36 @@
 
-#include "viennacl/vector_proxy.hpp"
-#include "viennacl/matrix_proxy.hpp"
+#include <Rcpp.h>
+#include <string>
+
+#include <dynMatrix/dynVCLMatGeostatsgpu.hpp>
+#include <dynMatrix/dynVCLVecGeostatsgpu.hpp>
 #include "viennacl/linalg/sum.hpp"
 #include "viennacl/ocl/backend.hpp"
-#include <Rcpp.h>
 
+
+template <typename T> std::string maternBatchKernelString();
+std::string cholBatchKernelString();
+std::string backsolveBatchString();
+std::string crossprodBatchString();
+std::string gemmBatch2String();
+std::string matrix_plus_vectorString();
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//#include "viennacl/linalg/lu.hpp"
 
 extern "C" void Rtemme_gamma(double *nu, double * g_1pnu, double * g_1mnu, double *g1, double *g2);
 
 //template<typename T> double luT(viennacl::matrix<T> &vclX, viennacl::vector_base<T> &vclD);
 
 template <typename T> T maternClEpsilon();
+
+
+
+
+#include "viennacl/vector_proxy.hpp"
+#include "viennacl/matrix_proxy.hpp"
 
 
 
@@ -26,7 +46,7 @@ void maternBatchVcl(
     const int ctx_id,
     int startrow,   // new added
     int numberofrows,
-    int verbose)
+    int verbose);
     
     
     template <typename T> 
@@ -39,7 +59,7 @@ void maternBatchVcl(
         Rcpp::IntegerVector Nglobal,
         Rcpp::IntegerVector Nlocal, 
         Rcpp::IntegerVector NlocalCache,
-        const int ctx_id)
+        const int ctx_id);
     
     
     template <typename T>
@@ -47,7 +67,7 @@ void maternBatchVcl(
         viennacl::matrix<T> &x,
         viennacl::vector_base<T> &Sum,
         std::string type,
-        int log)
+        int log);
         
         
         template <typename T> 
@@ -63,7 +83,7 @@ void maternBatchVcl(
             Rcpp::IntegerVector Nglobal,
             Rcpp::IntegerVector Nlocal,
             const int NlocalCache,
-            const int ctx_id)       
+            const int ctx_id);       
         
         
         template <typename T> 
@@ -78,7 +98,7 @@ void maternBatchVcl(
             Rcpp::IntegerVector Nglobal,
             Rcpp::IntegerVector Nlocal,
             const int NlocalCache, 
-            const int ctx_id)      
+            const int ctx_id);      
       
         
         template <typename T> 
@@ -94,7 +114,7 @@ void maternBatchVcl(
             Rcpp::IntegerVector workgroupSize,
             Rcpp::IntegerVector NlocalCache, 
             const int verbose,
-            const int ctx_id) 
+            const int ctx_id); 
         
         
         
@@ -105,7 +125,7 @@ void matrix_vector_sum(
      viennacl::matrix<T> &sum,
      const int byrow,
      Rcpp::IntegerVector numWorkItems,
-     int ctx_id)            
+     int ctx_id);            
                 
                 
                 
