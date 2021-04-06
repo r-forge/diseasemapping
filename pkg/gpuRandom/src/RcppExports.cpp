@@ -178,15 +178,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // likfitGpu_Backend
-void likfitGpu_Backend(Rcpp::S4 coordsGpuR, Rcpp::S4 bigparamsBatchR, Rcpp::S4 yXR, Rcpp::S4 betasR, Rcpp::S4 variancesR, Rcpp::S4 jacobianR, Rcpp::S4 finalLogLikR, int n, int p, int groupsize, int colbatch, int form, Rcpp::IntegerVector workgroupSize, Rcpp::IntegerVector localSize, Rcpp::IntegerVector NlocalCache);
-RcppExport SEXP _gpuRandom_likfitGpu_Backend(SEXP coordsGpuRSEXP, SEXP bigparamsBatchRSEXP, SEXP yXRSEXP, SEXP betasRSEXP, SEXP variancesRSEXP, SEXP jacobianRSEXP, SEXP finalLogLikRSEXP, SEXP nSEXP, SEXP pSEXP, SEXP groupsizeSEXP, SEXP colbatchSEXP, SEXP formSEXP, SEXP workgroupSizeSEXP, SEXP localSizeSEXP, SEXP NlocalCacheSEXP) {
+void likfitGpu_Backend(Rcpp::S4 coordsGpuR, Rcpp::S4 bigparamsBatchR, Rcpp::S4 yXR, Rcpp::S4 betasR, Rcpp::S4 bigvariancesR, Rcpp::S4 jacobianR, Rcpp::S4 finalLogLikR, int n, int p, int groupsize, int colbatch, int form, Rcpp::IntegerVector workgroupSize, Rcpp::IntegerVector localSize, Rcpp::IntegerVector NlocalCache);
+RcppExport SEXP _gpuRandom_likfitGpu_Backend(SEXP coordsGpuRSEXP, SEXP bigparamsBatchRSEXP, SEXP yXRSEXP, SEXP betasRSEXP, SEXP bigvariancesRSEXP, SEXP jacobianRSEXP, SEXP finalLogLikRSEXP, SEXP nSEXP, SEXP pSEXP, SEXP groupsizeSEXP, SEXP colbatchSEXP, SEXP formSEXP, SEXP workgroupSizeSEXP, SEXP localSizeSEXP, SEXP NlocalCacheSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type coordsGpuR(coordsGpuRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type bigparamsBatchR(bigparamsBatchRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type yXR(yXRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type betasR(betasRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type variancesR(variancesRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type bigvariancesR(bigvariancesRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type jacobianR(jacobianRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type finalLogLikR(finalLogLikRSEXP);
     Rcpp::traits::input_parameter< int >::type n(nSEXP);
@@ -197,7 +197,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type workgroupSize(workgroupSizeSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type localSize(localSizeSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type NlocalCache(NlocalCacheSEXP);
-    likfitGpu_Backend(coordsGpuR, bigparamsBatchR, yXR, betasR, variancesR, jacobianR, finalLogLikR, n, p, groupsize, colbatch, form, workgroupSize, localSize, NlocalCache);
+    likfitGpu_Backend(coordsGpuR, bigparamsBatchR, yXR, betasR, bigvariancesR, jacobianR, finalLogLikR, n, p, groupsize, colbatch, form, workgroupSize, localSize, NlocalCache);
     return R_NilValue;
 END_RCPP
 }
