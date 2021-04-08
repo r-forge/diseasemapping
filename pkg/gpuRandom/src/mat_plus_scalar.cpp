@@ -23,7 +23,7 @@ std::string matrix_plus_scalarString(const int Nrow, const int Ncol, const int N
   result += 
     "\n\n__kernel void matrix_add_scalar(\n"
     "  __global " + typeString + "* m,\n"  
-    "  __global " + typeString + " value,\n"
+                  +  typeString + " value,\n"
     "  __global " + typeString + "* result"  
     "){\n\n";  
   
