@@ -384,7 +384,7 @@ std::string maternBatchKernelString(
 
 template<typename T> 
 void fill22params(
-    viennacl::matrix<T> &param
+    viennacl::matrix_base<T> &param
   // Nmat rows, 22 columns
   // 0 range, 1 shape, 2 variance, 3 nugget, 
   // 4 anisoRatio 5 anisoAngleRadians  6 anisoAngleDegrees
@@ -457,7 +457,7 @@ template<typename T>
 void maternBatchVcl(
     viennacl::matrix<T> &vclVar, // Nmat columns N^2 rows
     viennacl::matrix<T> &vclCoords, // 2 columns
-    viennacl::matrix<T> &param, // Nmat rows, 22 columns
+    viennacl::matrix_base<T> &param, // Nmat rows, 22 columns
     viennacl::ocl::kernel & maternKernel,
     int startrow){
   
@@ -472,7 +472,7 @@ template<typename T>
 void maternBatchVcl(
     viennacl::matrix<T> &vclVar, // Nmat columns N^2 rows
     viennacl::matrix<T> &vclCoords, // 2 columns
-    viennacl::matrix<T> &param, // Nmat rows, 22 columns
+    viennacl::matrix_base<T> &param, // Nmat rows, 22 columns
     Rcpp::IntegerVector numWorkItems,
     Rcpp::IntegerVector numLocalItems,	
     const int ctx_id,

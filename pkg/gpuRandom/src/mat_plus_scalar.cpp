@@ -64,7 +64,7 @@ void matrix_scalar_sum(
     T  value,         //viennacl::scalar<T> value,     
     viennacl::matrix<T> &sum,
     Rcpp::IntegerVector numWorkItems,
-    int ctx_id) {
+    const int ctx_id) {
   
   
   std::string KernelString = matrix_plus_scalarString<T>(

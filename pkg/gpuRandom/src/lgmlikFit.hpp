@@ -40,7 +40,7 @@ template<typename T>
 void maternBatchVcl(
     viennacl::matrix<T> &vclVar, // Nmat columns N^2 rows
     viennacl::matrix<T> &vclCoords, // 2 columns
-    viennacl::matrix<T> &param, // Nmat rows, 22 columns
+    viennacl::matrix_base<T> &param, // Nmat rows, 22 columns
     Rcpp::IntegerVector numWorkItems,
     Rcpp::IntegerVector numLocalItems,	
     const int ctx_id,
@@ -83,7 +83,7 @@ void maternBatchVcl(
             Rcpp::IntegerVector Nglobal,
             Rcpp::IntegerVector Nlocal,
             const int NlocalCache,
-            const int ctx_id);       
+            const int ctx_id);     
         
         
         template <typename T> 
@@ -125,16 +125,16 @@ void matrix_vector_sum(
      viennacl::matrix<T> &sum,
      const int byrow,
      Rcpp::IntegerVector numWorkItems,
-     int ctx_id);            
+     const int ctx_id);            
                 
                 
-template<typename T> 
-void matrix_scalar_sum(
-      viennacl::matrix<T> &matrix,// viennacl::vector_base<int>  rowSum, viennacl::vector_base<int>  colSum,  
-      T  value,         //viennacl::scalar<T> value,     
-      viennacl::matrix<T> &sum,
-      Rcpp::IntegerVector numWorkItems,
-      int ctx_id);                
+                template<typename T> 
+                void matrix_scalar_sum(
+                    viennacl::matrix<T> &matrix,// viennacl::vector_base<int>  rowSum, viennacl::vector_base<int>  colSum,  
+                    T  value,         //viennacl::scalar<T> value,     
+                    viennacl::matrix<T> &sum,
+                    Rcpp::IntegerVector numWorkItems,
+                    const int ctx_id);                
                 
                 
                 
