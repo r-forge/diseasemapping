@@ -14,7 +14,7 @@ std::string backsolveBatchString();
 std::string crossprodBatchString();
 std::string gemmBatch2String();
 std::string matrix_plus_vectorString();
-
+std::string matrix_plus_scalarString();
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +128,13 @@ void matrix_vector_sum(
      int ctx_id);            
                 
                 
-                
+template<typename T> 
+void matrix_scalar_sum(
+      viennacl::matrix<T> &matrix,// viennacl::vector_base<int>  rowSum, viennacl::vector_base<int>  colSum,  
+      T  value,         //viennacl::scalar<T> value,     
+      viennacl::matrix<T> &sum,
+      Rcpp::IntegerVector numWorkItems,
+      int ctx_id);                
                 
                 
                 
