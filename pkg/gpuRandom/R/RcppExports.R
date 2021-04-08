@@ -71,6 +71,10 @@ cpp_gpu_qqnorm <- function(outR, mu, sigma, lowertail, max_global_size, max_loca
     .Call('_gpuRandom_cpp_gpu_qqnorm', PACKAGE = 'gpuRandom', outR, mu, sigma, lowertail, max_global_size, max_local_size)
 }
 
+likfitGpu_Backend <- function(coordsGpuR, bigparamsBatchR, yXR, betasR, bigvariancesR, jacobianR, finalLogLikR, n, p, groupsize, colbatch, form, workgroupSize, localSize, NlocalCache) {
+    invisible(.Call('_gpuRandom_likfitGpu_Backend', PACKAGE = 'gpuRandom', coordsGpuR, bigparamsBatchR, yXR, betasR, bigvariancesR, jacobianR, finalLogLikR, n, p, groupsize, colbatch, form, workgroupSize, localSize, NlocalCache))
+}
+
 logfactsumBackend <- function(xR, numWorkItems) {
     .Call('_gpuRandom_logfactsumBackend', PACKAGE = 'gpuRandom', xR, numWorkItems)
 }
