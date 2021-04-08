@@ -71,10 +71,6 @@ cpp_gpu_qqnorm <- function(outR, mu, sigma, lowertail, max_global_size, max_loca
     .Call('_gpuRandom_cpp_gpu_qqnorm', PACKAGE = 'gpuRandom', outR, mu, sigma, lowertail, max_global_size, max_local_size)
 }
 
-likfitGpu_Backend <- function(coordsGpuR, bigparamsBatchR, yXR, betasR, bigvariancesR, jacobianR, finalLogLikR, n, p, groupsize, colbatch, form, workgroupSize, localSize, NlocalCache) {
-    invisible(.Call('_gpuRandom_likfitGpu_Backend', PACKAGE = 'gpuRandom', coordsGpuR, bigparamsBatchR, yXR, betasR, bigvariancesR, jacobianR, finalLogLikR, n, p, groupsize, colbatch, form, workgroupSize, localSize, NlocalCache))
-}
-
 logfactsumBackend <- function(xR, numWorkItems) {
     .Call('_gpuRandom_logfactsumBackend', PACKAGE = 'gpuRandom', xR, numWorkItems)
 }
@@ -85,6 +81,10 @@ rowsumBackend <- function(xR, SumR, type, log) {
 
 matrix_matrix_sumBackend <- function(aR, bR, sumR, numWorkItems) {
     invisible(.Call('_gpuRandom_matrix_matrix_sumBackend', PACKAGE = 'gpuRandom', aR, bR, sumR, numWorkItems))
+}
+
+matrix_scalar_sumBackend <- function(matrixR, valueR, sumR, numWorkItems) {
+    invisible(.Call('_gpuRandom_matrix_scalar_sumBackend', PACKAGE = 'gpuRandom', matrixR, valueR, sumR, numWorkItems))
 }
 
 matrix_vector_sumBackend <- function(matrixR, vectorR, sumR, byrow, numWorkItems) {

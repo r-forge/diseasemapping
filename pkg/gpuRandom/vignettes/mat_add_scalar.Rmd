@@ -1,0 +1,25 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{matrix_add_scalar}
+-->
+
+
+```{r test}
+library(gpuRandom)
+library(gpuR)
+type="double"
+nrow<-8
+ncol<-10
+x<-vclMatrix(1:80, nrow=nrow,ncol=ncol, type=type);      xcpu<-matrix(1:80, nrow=nrow,ncol=ncol)
+
+a <- 3
+
+result <- vclMatrix(0, nrow=nrow,ncol=ncol, type=type)
+
+
+gpuRandom:::matrix_scalar_sumBackend(x,a, result, c(4,4))
+as.matrix(result)
+
+gpuRandom:::matrix_vector_sumBackend(x,v2, result, byrow=0, c(4,4))
+as.matrix(result)
+```
