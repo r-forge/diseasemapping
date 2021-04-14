@@ -23,7 +23,7 @@ void likfitGpu_0(viennacl::matrix<T> &Vbatch,
                  viennacl::matrix<T> &diagMat, 
                  viennacl::vector_base<T> &logD,
                  viennacl::matrix<T> &ab,
-                 viennacl::matrix<T> &yX, //y1,y2,y3,X               
+                 viennacl::matrix<T> &yX, //y1,y2,y3,X            
                  viennacl::matrix<T> &temp2,
                  viennacl::matrix<T> &aTDa,   // ssqY
                  viennacl::matrix<T> &betas, //a vclmatrix  //given by the user or provided from formula, default=null
@@ -38,7 +38,7 @@ void likfitGpu_0(viennacl::matrix<T> &Vbatch,
                  viennacl::matrix<T> &nine0,
                  viennacl::matrix<T> &nine,      // ssqX
                  viennacl::matrix<T> &two,
-                 viennacl::vector_base<T> &logP,      
+                 viennacl::vector_base<T> &logP,  // matrix logPlogD
                  viennacl::matrix<T> &Qinverse,
                  viennacl::matrix<T> &identity,
                  viennacl::matrix<T> &QPQinverse,
@@ -61,6 +61,10 @@ void likfitGpu_0(viennacl::matrix<T> &Vbatch,
                  Rcpp::IntegerVector localSizechol,
                  Rcpp::IntegerVector NlocalCache,
                  const int ctx_id){
+
+  const T nlog2pi  = (T) n*2*M_LN_SQRT_2PI;   //  M_LN_SQRT_2PI == log(2*pi)/2  
+// logP = column 1 of logPlogD, logD = column2 of logPlogD
+
   
   //if((form == 1 && betas.size1==betas.size2==0) || (form == 3 && betas.size1==betas.size2==0) )  
   
@@ -75,6 +79,7 @@ void likfitGpu_0(viennacl::matrix<T> &Vbatch,
   
   
   //logD <- apply(log(diagMat),1,sum)
+  // half log determinant of V
   rowsum(diagMat, logD, "row", 1);
   //variances <- vclMatrix(matrix(paramsBatch[,3], nrow=rowbatch, ncol=colbatch, byrow=FALSE), type=type)     # this has to be a vclMatrix not vector
   
@@ -88,7 +93,7 @@ void likfitGpu_0(viennacl::matrix<T> &Vbatch,
   
   
   
-  //# temp2 = (ab)^T * D^(-1) *ab
+  //# temp2 = (ab)^T * D^(-1) *ab  = (Y X)^T V^{-1} (YX)
   Cstartend=IntegerVector::create(0,colbatch+p,0,colbatch+p);
   Astartend=IntegerVector::create(0,n,0,colbatch+p);
   //Dstartend=IntegerVector::create(0,1,0,n);
@@ -102,7 +107,13 @@ void likfitGpu_0(viennacl::matrix<T> &Vbatch,
    }
    }*/
   
-  //extract a^TDa from temp2       1x3
+  /*
+
+   SAVE SSQY
+
+  */
+  // extract a^TDa from temp2       1x3
+  // multiple datasets, save as aTDa or ssqY
   viennacl::slice s2(0, 1, colbatch);   // {0,1,2}  colbatch=3    ？？？？？？？？？？？
   for (int i = 0; i < rowbatch; i++){// square sub_matrices
     viennacl::slice s1((colbatch+p)*i, 1, colbatch); 
@@ -110,7 +121,108 @@ void likfitGpu_0(viennacl::matrix<T> &Vbatch,
     viennacl::vector<T> diags = viennacl::row(aTDa, i);
     diags = viennacl::diag(temp2_sub);
   }
+
+  /*
+   cholesky of X^T V^(-1) X
+  */
+  // to get hat_sigma^2 when beta is not given by users
+  // b^T * D^(-1) * b = Q * P * Q^T, cholesky of a subset (right bottom) of temp2
+  Astartend =IntegerVector::create(colbatch, p, colbatch, p);
+  Dstartend =IntegerVector::create(0, 1, 0, p);
+  cholBatchVcl( temp2, diagP, Astartend, Dstartend,  
+                rowbatch, workgroupSize, localSizechol, NlocalCache, ctx_id);
+  // store determinant for REML  
+  rowsum(diagP, logP, "row",1L);  
+
+  /* 
+    SSQX
+  */
+  // ssqx = (X betahat)^T V^(-1) X betahat = nine
+  // temp3 = Q^(-1) * (b^T * D^(-1) *a), backsolve for temp3    2 by 1
+  Cstartend =IntegerVector::create(0,p,0,colbatch);
+  //Astartend = IntegerVector::create(colbatch, p, colbatch, p);
+  Bstartend =IntegerVector::create(colbatch, p, 0, colbatch);  
+  backsolveBatch(temp3, temp2, temp2, 
+                 Cstartend, Astartend, Bstartend, 
+                 rowbatch, 1, workgroupSize, localSize, NlocalCache[0], ctx_id);
   
+  
+  
+  // nine0 = temp3^T * P^(-1) * temp3,  four 1 by 1 matrices      3x3
+  Cstartend = IntegerVector::create(0, colbatch, 0, colbatch);
+  Astartend = IntegerVector::create(0, p, 0, colbatch);
+  //Dstartend =IntegerVector::create(0, 1, 0, p);  
+  crossprodBatch(nine0, temp3, diagP, 1,  
+                 Cstartend, Astartend, Dstartend,  
+                 workgroupSize, localSize, NlocalCache[0], ctx_id);
+  // TO DO (long list), save SSQX matrix, row batches and column batches
+  
+  // save diagonals of ssqX, for standard errors of beta hat
+  // extract needed cells from nine0       1x3
+  for (int i = 0; i < rowbatch; i++){
+    viennacl::slice s1(colbatch*i, 1, colbatch); 
+    matrix_slice<viennacl::matrix<T> >  nine0_sub(nine0, s1, s2);  //project(temp2, r, r); //returns a matrix_range as above
+    viennacl::vector<T> diag4 = viennacl::row(nine, i);
+    diag4 = viennacl::diag(nine0_sub);
+  }
+
+
+    // betahat = (X^T V^(-1) X)^(-1)  X^T V^(-1) Y
+  // Q^T P Q = (X^T V^(-1) X)
+  // calculate betahat = Q^(-T) p^(-1) Q^(-1) * b^T D^(-1)a
+  // first: get Q^(-1)    pxp
+  Cstartend = IntegerVector::create(0, p, 0, p);
+  Astartend = IntegerVector::create(colbatch, p, colbatch, p);
+  Bstartend = IntegerVector::create(0, p, 0, p);    
+  backsolveBatch(Qinverse, temp2, identity,
+                 Cstartend, Astartend, Bstartend, 
+                 1,  1,
+                 workgroupSize, localSize, NlocalCache[0], ctx_id);
+  
+  
+  // Q^(-T) P^(-1) Q^(-1) = QPQinverse = SSQX^(-1)
+  //Cstartend = IntegerVector::create(0, p, 0, p);
+  Astartend = IntegerVector::create(0, p, 0, p);
+  //Dstartend = IntegerVector::create(0, 1, 0, p);    
+  crossprodBatch(QPQinverse, Qinverse, diagP, 1,
+                 Cstartend, Astartend, Dstartend,  
+                 workgroupSize, localSize, NlocalCache[0], ctx_id);
+  
+  
+  // QPQinverse * b^T D^(-1)a = betahat
+  //Rcpp::IntegerVector transposeABC = IntegerVector::create(0,0,0);
+  Rcpp::IntegerVector transposeABC = IntegerVector::create(0,0,0);
+  Rcpp::IntegerVector batches = IntegerVector::create(rowbatch,1,0,0,1,0); //batches: nRow, nCol, recycleArow, recycleAcol, recycleBrow, col
+  Rcpp::IntegerVector workgroupSize_gemm = IntegerVector::create(workgroupSize[0],workgroupSize[1],workgroupSize[2],localSize[0],localSize[1],localSize[2]);
+  Rcpp::IntegerVector NlocalCache_gemm = IntegerVector::create(NlocalCache[0],NlocalCache[0]);
+
+  Astartend=IntegerVector::create(0,p,p,0,p,p);
+  Bstartend=IntegerVector::create(colbatch, p,(colbatch+p), 0, colbatch, (colbatch+p));
+  Cstartend=IntegerVector::create(0,p,p,0,colbatch,colbatch);
+  batches = IntegerVector::create(rowbatch,1,0,0,0,0); //batches: nRow, nCol, recycleArow, recycleAcol, recycleBrow, col
+  gemmBatch2(QPQinverse, temp2, betahat,
+             transposeABC,  Astartend, Bstartend, Cstartend,  
+             batches, workgroupSize_gemm, NlocalCache_gemm, 0, ctx_id);
+  
+
+
+
+  // resid^T V^(-1) resid, resid = Y - X betahat 
+  // nine is ssqx
+  two = aTDa - nine;
+  // log ssqResid
+  form_temp0 = element_log(two);  // overwritten later, keep here for debugging
+  LogLik = form_temp0;
+
+  /* important things saved are
+  logLik is logSsqResid
+  aTDa = SSQY 
+  nine = SSQX
+  logD, logP, determinants, return, matrix with Nparam rows, two columns
+  */
+
+#ifdef UNDEF
+
   /*
    // Extract 5-th row of A, then overwrite with 6-th diagonal:
    viennacl::vector<T> r = viennacl::row(A, 4);
@@ -119,15 +231,12 @@ void likfitGpu_0(viennacl::matrix<T> &Vbatch,
    viennacl::range r(0, colbatch); 
    vector_range<vector<T> > aTDa(temp2_diag, r); */
   
-  Rcpp::IntegerVector transposeABC = IntegerVector::create(0,0,0);
-  Rcpp::IntegerVector batches = IntegerVector::create(rowbatch,1,0,0,1,0); //batches: nRow, nCol, recycleArow, recycleAcol, recycleBrow, col
-  Rcpp::IntegerVector workgroupSize_gemm = IntegerVector::create(workgroupSize[0],workgroupSize[1],workgroupSize[2],localSize[0],localSize[1],localSize[2]);
-  Rcpp::IntegerVector NlocalCache_gemm = IntegerVector::create(NlocalCache[0],NlocalCache[0]);
   
   
-#ifdef UNDEF
+
+
   
-  if(form == 1 || form == 3){       
+  if(form == 1 || form == 3){      // beta is supplied 
     // a^TD^(-1)b * beta = temp00
     Astartend=IntegerVector::create(0,colbatch,(colbatch+p),colbatch,p,(colbatch+p));
     Bstartend=IntegerVector::create(0,p,p,0,colbatch,colbatch);
@@ -181,89 +290,13 @@ void likfitGpu_0(viennacl::matrix<T> &Vbatch,
     one = aTDa - 2*temp0 + ssqBeta;      // 1x3
   }
   
-#endif
   
-  // to get hat_sigma^2 when beta is not given by users
-  // b^T * D^(-1) * b = Q * P * Q^T, cholesky of a subset (right bottom) of temp2
-  Astartend =IntegerVector::create(colbatch, p, colbatch, p);
-  Dstartend =IntegerVector::create(0, 1, 0, p);
-  cholBatchVcl( temp2, diagP, Astartend, Dstartend,  
-                rowbatch, workgroupSize, localSizechol, NlocalCache, ctx_id);
-  
-  
-  
-  // temp3 = Q^(-1) * (b^T * D^(-1) *a), backsolve for temp3    2 by 1
-  Cstartend =IntegerVector::create(0,p,0,colbatch);
-  //Astartend = IntegerVector::create(colbatch, p, colbatch, p);
-  Bstartend =IntegerVector::create(colbatch, p, 0, colbatch);  
-  backsolveBatch(temp3, temp2, temp2, 
-                 Cstartend, Astartend, Bstartend, 
-                 rowbatch, 1, workgroupSize, localSize, NlocalCache[0], ctx_id);
-  
-  
-  
-  // nine0 = temp3^T * P^(-1) * temp3,  four 1 by 1 matrices      3x3
-  Cstartend = IntegerVector::create(0, colbatch, 0, colbatch);
-  Astartend = IntegerVector::create(0, p, 0, colbatch);
-  //Dstartend =IntegerVector::create(0, 1, 0, p);  
-  crossprodBatch(nine0, temp3, diagP, 1,  
-                 Cstartend, Astartend, Dstartend,  
-                 workgroupSize, localSize, NlocalCache[0], ctx_id);
-  
-  
-  
-  // extract needed cells from nine0       1x3
-  for (int i = 0; i < rowbatch; i++){
-    viennacl::slice s1(colbatch*i, 1, colbatch); 
-    matrix_slice<viennacl::matrix<T> >  nine0_sub(nine0, s1, s2);  //project(temp2, r, r); //returns a matrix_range as above
-    viennacl::vector<T> diag4 = viennacl::row(nine, i);
-    diag4 = viennacl::diag(nine0_sub);
-  }
-  
-  two = aTDa - nine;
-  
-  
-  rowsum( diagP, logP, "row",1L);  
-  
-  
-  // calculate betahat = Q^(-T) p^(-1) Q^(-1) * b^T D^(-1)a
-  // first: get Q^(-1)    pxp
-  Cstartend = IntegerVector::create(0, p, 0, p);
-  Astartend = IntegerVector::create(colbatch, p, colbatch, p);
-  Bstartend = IntegerVector::create(0, p, 0, p);    
-  backsolveBatch(Qinverse, temp2, identity,
-                 Cstartend, Astartend, Bstartend, 
-                 1,  1,
-                 workgroupSize, localSize, NlocalCache[0], ctx_id);
-  
-  
-  
-  // Q^(-T) P^(-1) Q^(-1) = QPQinverse
-  //Cstartend = IntegerVector::create(0, p, 0, p);
-  Astartend = IntegerVector::create(0, p, 0, p);
-  //Dstartend = IntegerVector::create(0, 1, 0, p);    
-  crossprodBatch(QPQinverse, Qinverse, diagP, 1,
-                 Cstartend, Astartend, Dstartend,  
-                 workgroupSize, localSize, NlocalCache[0], ctx_id);
-  
-  
-  
-  // QPQinverse * b^T D^(-1)a = betahat
-  //Rcpp::IntegerVector transposeABC = IntegerVector::create(0,0,0);
-  Astartend=IntegerVector::create(0,p,p,0,p,p);
-  Bstartend=IntegerVector::create(colbatch, p,(colbatch+p), 0, colbatch, (colbatch+p));
-  Cstartend=IntegerVector::create(0,p,p,0,colbatch,colbatch);
-  batches = IntegerVector::create(rowbatch,1,0,0,0,0); //batches: nRow, nCol, recycleArow, recycleAcol, recycleBrow, col
-  gemmBatch2(QPQinverse, temp2, betahat,
-             transposeABC,  Astartend, Bstartend, Cstartend,  
-             batches, workgroupSize_gemm, NlocalCache_gemm, 0, ctx_id);
+
   
   
   
   
-  
-  
-  if(form == 1 || form == 4){     
+  if(form == 1 || form == 4){     // variances are provided
     // get form_temp <- n*log(variances) + logD    , form_temp = n*log(sigma^2)+log |D|
     viennacl::matrix<T> nlog_variances(rowbatch, colbatch);  
     nlog_variances = n * element_log(variances);
@@ -275,11 +308,6 @@ void likfitGpu_0(viennacl::matrix<T> &Vbatch,
     logD_plusP = logD + logP;   
   }
   
-  
-  T nlog2pi  = (T) n*2*M_LN_SQRT_2PI;   //  M_LN_SQRT_2PI == log(2*pi)/2  
-  
-  
-#ifdef UNDEF
   
   
   if (form==1){ //loglik
@@ -351,6 +379,7 @@ void likfitGpu_0(viennacl::matrix<T> &Vbatch,
     
     LogLik = -0.5*form_temp1;
   } 
+
 #endif 
   
 }
@@ -416,14 +445,15 @@ void likfitGpu_1(viennacl::matrix<T> &coordsGpu,
   
   
   const int totalsets = bigparamsBatch.size1();
-  
+  const int Niter = floor(totalsets / groupsize);
+
   viennacl::range r(0, bigparamsBatch.size2()); 
   viennacl::range r2(0, colbatch);  
   
   
   
   ///////////////////////////Loop starts !!!//////////////////////////////////////////////////////////////////////////
-  for (int i=0; i< totalsets/groupsize; i++ ){
+  for (int i=0; i< Niter; i++ ){
     
     viennacl::range ri(i*groupsize, (i+1)*groupsize);  //{0, 2}    
     viennacl::matrix_range<viennacl::matrix<T>> paramsBatch(bigparamsBatch, ri, r);//{m(0,0),m(0,1);m(1,0),m(1,1)} matrix_slice<matrix<double> > ms(m, s, s);         
@@ -459,6 +489,9 @@ void likfitGpu_1(viennacl::matrix<T> &coordsGpu,
     
     
   }
+
+  // calculate log likelihood
+
 }      
 
 
@@ -554,7 +587,7 @@ void likfitGpu_Backend(
     Rcpp::S4 logDR,
     Rcpp::S4 logPR,
     Rcpp::S4 betahatR,
-    Rcpp::S4 finalLogLikR,   
+    Rcpp::S4 finalLogLikR,  
     const int n, 
     const int p, 
     const int groupsize,

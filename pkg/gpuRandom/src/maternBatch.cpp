@@ -28,6 +28,10 @@
  21 variance + nugget
  */
 
+/* TO FIX!!!
+crashes if global size bigger than number of parameter sets
+*/
+
 template <typename T> 
 std::string maternBatchKernelString(
     int maxIter, 
@@ -51,13 +55,13 @@ std::string maternBatchKernelString(
   
   if(typeString == "double") {
     result += "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n"
-    "#define logSqrtHalfPi 0.2257913526447273278031\n"
+    "#define logSqrtHalfPi " + M_LN_SQRT_PId2 + "\n" // Rmath.h
     "#define M_PI_T M_PI\n"
     "#define M_PI_2_T M_PI_2\n"
     "#define M_LN2_T M_LN2\n"
     "#define epsilon 1e-12\n\n";
   } else {
-    result += "\n#define logSqrtHalfPi 0.22579135\n"
+    result += "\n#define logSqrtHalfPi 0.2257914\n"
     "#define M_LN2_T M_LN2_F\n"
     "#define M_PI_T M_PI_F\n"
     "#define M_PI_2_T M_PI_2_F\n"
