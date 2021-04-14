@@ -6,7 +6,7 @@
 #include <dynMatrix/dynVCLVecGeostatsgpu.hpp>
 #include "viennacl/linalg/sum.hpp"
 #include "viennacl/ocl/backend.hpp"
-
+#include <Rmath.h>
 
 template <typename T> std::string maternBatchKernelString();
 std::string cholBatchKernelString();

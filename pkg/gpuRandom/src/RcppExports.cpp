@@ -178,8 +178,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // likfitGpu_Backend
-void likfitGpu_Backend(Rcpp::S4 coordsGpuR, Rcpp::S4 bigparamsBatchR, Rcpp::S4 yXR, Rcpp::S4 betasR, Rcpp::S4 bigvariancesR, Rcpp::S4 jacobianR, Rcpp::S4 finalLogLikR, int n, int p, int groupsize, int colbatch, int form, Rcpp::IntegerVector workgroupSize, Rcpp::IntegerVector localSize, Rcpp::IntegerVector NlocalCache);
-RcppExport SEXP _gpuRandom_likfitGpu_Backend(SEXP coordsGpuRSEXP, SEXP bigparamsBatchRSEXP, SEXP yXRSEXP, SEXP betasRSEXP, SEXP bigvariancesRSEXP, SEXP jacobianRSEXP, SEXP finalLogLikRSEXP, SEXP nSEXP, SEXP pSEXP, SEXP groupsizeSEXP, SEXP colbatchSEXP, SEXP formSEXP, SEXP workgroupSizeSEXP, SEXP localSizeSEXP, SEXP NlocalCacheSEXP) {
+void likfitGpu_Backend(Rcpp::S4 coordsGpuR, Rcpp::S4 bigparamsBatchR, Rcpp::S4 yXR, Rcpp::S4 betasR, Rcpp::S4 bigvariancesR, Rcpp::S4 jacobianR, Rcpp::S4 ssqBetaR, Rcpp::S4 ssqXR, Rcpp::S4 ssqYR, Rcpp::S4 logDR, Rcpp::S4 logPR, Rcpp::S4 betahatR, Rcpp::S4 finalLogLikR, const int n, const int p, const int groupsize, const int colbatch, const int form, Rcpp::IntegerVector workgroupSize, Rcpp::IntegerVector localSize, Rcpp::IntegerVector NlocalCache);
+RcppExport SEXP _gpuRandom_likfitGpu_Backend(SEXP coordsGpuRSEXP, SEXP bigparamsBatchRSEXP, SEXP yXRSEXP, SEXP betasRSEXP, SEXP bigvariancesRSEXP, SEXP jacobianRSEXP, SEXP ssqBetaRSEXP, SEXP ssqXRSEXP, SEXP ssqYRSEXP, SEXP logDRSEXP, SEXP logPRSEXP, SEXP betahatRSEXP, SEXP finalLogLikRSEXP, SEXP nSEXP, SEXP pSEXP, SEXP groupsizeSEXP, SEXP colbatchSEXP, SEXP formSEXP, SEXP workgroupSizeSEXP, SEXP localSizeSEXP, SEXP NlocalCacheSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type coordsGpuR(coordsGpuRSEXP);
@@ -188,16 +188,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::S4 >::type betasR(betasRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type bigvariancesR(bigvariancesRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type jacobianR(jacobianRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type ssqBetaR(ssqBetaRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type ssqXR(ssqXRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type ssqYR(ssqYRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type logDR(logDRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type logPR(logPRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type betahatR(betahatRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type finalLogLikR(finalLogLikRSEXP);
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< int >::type groupsize(groupsizeSEXP);
-    Rcpp::traits::input_parameter< int >::type colbatch(colbatchSEXP);
-    Rcpp::traits::input_parameter< int >::type form(formSEXP);
+    Rcpp::traits::input_parameter< const int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const int >::type groupsize(groupsizeSEXP);
+    Rcpp::traits::input_parameter< const int >::type colbatch(colbatchSEXP);
+    Rcpp::traits::input_parameter< const int >::type form(formSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type workgroupSize(workgroupSizeSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type localSize(localSizeSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type NlocalCache(NlocalCacheSEXP);
-    likfitGpu_Backend(coordsGpuR, bigparamsBatchR, yXR, betasR, bigvariancesR, jacobianR, finalLogLikR, n, p, groupsize, colbatch, form, workgroupSize, localSize, NlocalCache);
+    likfitGpu_Backend(coordsGpuR, bigparamsBatchR, yXR, betasR, bigvariancesR, jacobianR, ssqBetaR, ssqXR, ssqYR, logDR, logPR, betahatR, finalLogLikR, n, p, groupsize, colbatch, form, workgroupSize, localSize, NlocalCache);
     return R_NilValue;
 END_RCPP
 }
@@ -357,7 +363,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_cpp_mrg31k3pCreateStreams", (DL_FUNC) &_gpuRandom_cpp_mrg31k3pCreateStreams, 1},
     {"_gpuRandom_gpuRnBackend", (DL_FUNC) &_gpuRandom_gpuRnBackend, 4},
     {"_gpuRandom_cpp_gpu_qqnorm", (DL_FUNC) &_gpuRandom_cpp_gpu_qqnorm, 6},
-    {"_gpuRandom_likfitGpu_Backend", (DL_FUNC) &_gpuRandom_likfitGpu_Backend, 15},
+    {"_gpuRandom_likfitGpu_Backend", (DL_FUNC) &_gpuRandom_likfitGpu_Backend, 21},
     {"_gpuRandom_logfactsumBackend", (DL_FUNC) &_gpuRandom_logfactsumBackend, 2},
     {"_gpuRandom_rowsumBackend", (DL_FUNC) &_gpuRandom_rowsumBackend, 4},
     {"_gpuRandom_matrix_matrix_sumBackend", (DL_FUNC) &_gpuRandom_matrix_matrix_sumBackend, 4},

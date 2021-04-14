@@ -77,7 +77,7 @@ void matrix_vector_sum(
     viennacl::matrix<T> &sum,
     const int byrow,
     Rcpp::IntegerVector numWorkItems,
-    int ctx_id) {
+    const int ctx_id) {
 
   if ((vector.size()!=matrix.size1()) && (vector.size()!=matrix.size2())){
     Rcpp::Rcout << "Error: cannot do plus operation" << "\n\n";
