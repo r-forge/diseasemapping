@@ -351,7 +351,7 @@ betas <- vclMatrix(0, nrow=groupsize, ncol= length(BoxCox)+1,type="double")
 system.time(
 temp <- gpuRandom::likfitGpu(swissFitIso, sr2, type="double", 
                   paramsBatch, #gpu Matrix of parameter sets,
-                  betas=NULL, #a vclmatrix  #given by the user or provided from formula
+                  betas, #a vclmatrix  #given by the user or provided from formula
                   BoxCox=2,
                   form = "ml",  
                   groupsize=10,

@@ -51,7 +51,7 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
   closetooneindex <- which(abs(BoxCox - 1 ) < 0.001)
   jacobian[closetooneindex] = 0    
   jacobian <- c(jacobian, 0)   
-  jacobian<- vclMatrix(matrix(jacobian, nrow=groupsize, ncol=length(jacobian), byrow=TRUE), type=type) # make it from a vector to a matrix!!!
+  jacobian<- gpuR::vclMatrix(matrix(jacobian, nrow=groupsize, ncol=length(jacobian), byrow=TRUE), type=type) # make it from a vector to a matrix!!!
   
   
   # box cox transform   
@@ -65,14 +65,14 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
   
   
   
-  bigvariances <- vclMatrix(matrix(bigparamsBatch[,3], nrow=nrow(bigparamsBatch), ncol=colbatch, byrow=FALSE), type=type)  
-  ssqBetaR <- vclMatrix(0, nrow(bigparamsBatch), colbatch, type=type)
-  ssqXR <- vclMatrix(0, nrow(bigparamsBatch), colbatch, type=type)
-  ssqYR <- vclMatrix(0, nrow(bigparamsBatch), colbatch, type=type)
-  logDR <- vclVector(0, length=groupsize, type=type)
-  logPR <- vclVector(0, length=groupsize, type=type)
-  betahatR <- vclMatrix(0, groupsize*output1$p, colbatch, type=type)
-  finalLogLik <- vclMatrix(0, nrow(bigparamsBatch), colbatch, type=type)
+  bigvariances <- gpuR::vclMatrix(matrix(bigparamsBatch[,3], nrow=nrow(bigparamsBatch), ncol=colbatch, byrow=FALSE), type=type)  
+  ssqBetaR <- gpuR::vclMatrix(0, nrow(bigparamsBatch), colbatch, type=type)
+  ssqXR <- gpuR::vclMatrix(0, nrow(bigparamsBatch), colbatch, type=type)
+  ssqYR <- gpuR::vclMatrix(0, nrow(bigparamsBatch), colbatch, type=type)
+  logDR <- gpuR::vclVector(0, length=groupsize, type=type)
+  logPR <- gpuR::vclVector(0, length=groupsize, type=type)
+  betahatR <- gpuR::vclMatrix(0, groupsize*output1$p, colbatch, type=type)
+  finalLogLik <- gpuR::vclMatrix(0, nrow(bigparamsBatch), colbatch, type=type)
   
   
   likfitGpu_Backend(output1$coordsGpu,
