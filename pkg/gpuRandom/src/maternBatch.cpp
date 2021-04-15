@@ -55,7 +55,7 @@ std::string maternBatchKernelString(
   
   if(typeString == "double") {
     result += "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n"
-    "#define logSqrtHalfPi " + M_LN_SQRT_PId2 + "\n" // Rmath.h
+    "#define logSqrtHalfPi " + std::to_string(M_LN_SQRT_PId2) + "\n" // Rmath.h
     "#define M_PI_T M_PI\n"
     "#define M_PI_2_T M_PI_2\n"
     "#define M_LN2_T M_LN2\n"
