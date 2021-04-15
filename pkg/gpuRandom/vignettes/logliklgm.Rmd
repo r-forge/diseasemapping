@@ -343,9 +343,9 @@ workgroupSize=c(16,16,8)
 localSize = c(4,4,1)
 NlocalCache=500
 
-groupsize=10
-BoxCox=2
-betas <- vclMatrix(0, nrow=groupsize, ncol= length(BoxCox)+1,type="double")
+#groupsize=10
+#BoxCox=2
+betas <- vclMatrix(0, nrow=0, ncol= 0,type="double")
 
 
 system.time(
@@ -359,6 +359,10 @@ temp <- gpuRandom::likfitGpu(swissFitIso, sr2, type="double",
                   localSize,
                   NlocalCache))
 
+as.matrix(temp$logD)
+as.matrix(temp$logP)
+as.matrix(temp$ssqX)
+as.matrix(temp$LogLik)
 # 151.580
 tempcpu<-as.matrix(temp)
 tempcpu[1:10,]
