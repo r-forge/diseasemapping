@@ -178,8 +178,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // likfitGpu_Backend
-void likfitGpu_Backend(Rcpp::S4 coordsGpuR, Rcpp::S4 bigparamsBatchR, Rcpp::S4 yXR, Rcpp::S4 betasR, Rcpp::S4 bigvariancesR, Rcpp::S4 jacobianR, Rcpp::S4 ssqBetaR, Rcpp::S4 ssqXR, Rcpp::S4 ssqYR, Rcpp::S4 logDR, Rcpp::S4 logPR, Rcpp::S4 betahatR, Rcpp::S4 finalLogLikR, const int n, const int p, const int groupsize, const int colbatch, const int form, Rcpp::IntegerVector workgroupSize, Rcpp::IntegerVector localSize, Rcpp::IntegerVector NlocalCache);
-RcppExport SEXP _gpuRandom_likfitGpu_Backend(SEXP coordsGpuRSEXP, SEXP bigparamsBatchRSEXP, SEXP yXRSEXP, SEXP betasRSEXP, SEXP bigvariancesRSEXP, SEXP jacobianRSEXP, SEXP ssqBetaRSEXP, SEXP ssqXRSEXP, SEXP ssqYRSEXP, SEXP logDRSEXP, SEXP logPRSEXP, SEXP betahatRSEXP, SEXP finalLogLikRSEXP, SEXP nSEXP, SEXP pSEXP, SEXP groupsizeSEXP, SEXP colbatchSEXP, SEXP formSEXP, SEXP workgroupSizeSEXP, SEXP localSizeSEXP, SEXP NlocalCacheSEXP) {
+void likfitGpu_Backend(Rcpp::S4 coordsGpuR, Rcpp::S4 bigparamsBatchR, Rcpp::S4 yXR, Rcpp::S4 betasR, Rcpp::S4 bigvariancesR, Rcpp::S4 jacobianR, Rcpp::S4 finalssqBetaR, Rcpp::S4 finalssqXR, Rcpp::S4 finalssqYR, Rcpp::S4 finallogDR, Rcpp::S4 finallogPR, Rcpp::S4 finalbetahatR, Rcpp::S4 finalLogLikR, const int n, const int p, const int groupsize, const int colbatch, const int form, Rcpp::IntegerVector workgroupSize, Rcpp::IntegerVector localSize, Rcpp::IntegerVector NlocalCache);
+RcppExport SEXP _gpuRandom_likfitGpu_Backend(SEXP coordsGpuRSEXP, SEXP bigparamsBatchRSEXP, SEXP yXRSEXP, SEXP betasRSEXP, SEXP bigvariancesRSEXP, SEXP jacobianRSEXP, SEXP finalssqBetaRSEXP, SEXP finalssqXRSEXP, SEXP finalssqYRSEXP, SEXP finallogDRSEXP, SEXP finallogPRSEXP, SEXP finalbetahatRSEXP, SEXP finalLogLikRSEXP, SEXP nSEXP, SEXP pSEXP, SEXP groupsizeSEXP, SEXP colbatchSEXP, SEXP formSEXP, SEXP workgroupSizeSEXP, SEXP localSizeSEXP, SEXP NlocalCacheSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type coordsGpuR(coordsGpuRSEXP);
@@ -188,12 +188,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::S4 >::type betasR(betasRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type bigvariancesR(bigvariancesRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type jacobianR(jacobianRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type ssqBetaR(ssqBetaRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type ssqXR(ssqXRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type ssqYR(ssqYRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type logDR(logDRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type logPR(logPRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type betahatR(betahatRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type finalssqBetaR(finalssqBetaRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type finalssqXR(finalssqXRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type finalssqYR(finalssqYRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type finallogDR(finallogDRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type finallogPR(finallogPRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type finalbetahatR(finalbetahatRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type finalLogLikR(finalLogLikRSEXP);
     Rcpp::traits::input_parameter< const int >::type n(nSEXP);
     Rcpp::traits::input_parameter< const int >::type p(pSEXP);
@@ -203,7 +203,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type workgroupSize(workgroupSizeSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type localSize(localSizeSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type NlocalCache(NlocalCacheSEXP);
-    likfitGpu_Backend(coordsGpuR, bigparamsBatchR, yXR, betasR, bigvariancesR, jacobianR, ssqBetaR, ssqXR, ssqYR, logDR, logPR, betahatR, finalLogLikR, n, p, groupsize, colbatch, form, workgroupSize, localSize, NlocalCache);
+    likfitGpu_Backend(coordsGpuR, bigparamsBatchR, yXR, betasR, bigvariancesR, jacobianR, finalssqBetaR, finalssqXR, finalssqYR, finallogDR, finallogPR, finalbetahatR, finalLogLikR, n, p, groupsize, colbatch, form, workgroupSize, localSize, NlocalCache);
     return R_NilValue;
 END_RCPP
 }

@@ -312,7 +312,7 @@ template <typename T>
 int gemmBatch2(
     viennacl::matrix<T> &A,
     viennacl::matrix<T> &B,
-    viennacl::matrix<T> &C,
+    viennacl::matrix_base<T> &C,
     Rcpp::IntegerVector transposeABC,  
     Rcpp::IntegerVector submatrixA,
     Rcpp::IntegerVector submatrixB,

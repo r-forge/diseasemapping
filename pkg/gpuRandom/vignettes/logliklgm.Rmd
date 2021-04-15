@@ -335,7 +335,7 @@ colnames(otherparams) <- c("shape","variance", "anisoRatio", "anisoAngleRadians"
 
 paramsBatch0 = cbind(newParam, otherparams)
 paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
-paramsBatchcpu = cbind(paramsBatch0, matrix(0, nrow(paramsBatch0), 22-ncol(paramsBatch0)))
+#paramsBatchcpu = cbind(paramsBatch0, matrix(0, nrow(paramsBatch0), 22-ncol(paramsBatch0)))
 
 paramsBatch = gpuR::vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0),22-ncol(paramsBatch0))),type="double")
 
