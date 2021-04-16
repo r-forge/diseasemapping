@@ -16,7 +16,8 @@ std::string cholBatchKernelString( // V1
     int NstartD,
     Rcpp::IntegerVector Ncache, 
     Rcpp::IntegerVector Nlocal, // length 2
-    bool allowOverflow) {
+    bool allowOverflow,
+    bool logDet=0) {
   
   std::string typeString = openclTypeString<T>();
   std::string result = "";
@@ -42,8 +43,14 @@ std::string cholBatchKernelString( // V1
   
   result += "\n__kernel void cholBatch(\n"
   "	__global " + typeString + " *A,\n" 
-  "	__global " + typeString + " *diag\n"
-  "){\n"
+  "	__global " + typeString + " *diag";
+
+  if(logDet){
+    result += 
+      ",\n	__global " + typeString + " *logDet\n";
+    }
+    
+  result += "\n){\n"
   
   " const int localIndex = get_local_id(0)*get_local_size(1) + get_local_id(1);\n"
   " const int NlocalTotal = get_local_size(0)*get_local_size(1);\n"
@@ -61,14 +68,21 @@ std::string cholBatchKernelString( // V1
   
   result +=  typeString + " DL;\n" 
   "  local " +  typeString + " diagDcol;\n" 
-  "  int AHere, AHereDcol, AHereDrow, diagHere;\n"
+  "  int AHere, AHereDcol, AHereDrow, diagHere;\n";
   
+  if(logDet){
+    result += typeString  + " logDetHere;\n";
+  }
   
+result +=  
   "for(Dmatrix = get_group_id(0); Dmatrix < Nmatrix; Dmatrix+= get_num_groups(0)){\n"
   
   "diagHere = Dmatrix*NpadDiag + NstartD;\n"
-  "AHere = Dmatrix*NpadBetweenMatrices + NstartA;\n"
-  
+  "AHere = Dmatrix*NpadBetweenMatrices + NstartA;\n";
+  if(logDet){
+    result += " logDetHere = 0.0;\n";
+  }
+  result +=
   "for(Dcol = colStart; Dcol < colEnd; Dcol++) {\n"
   "  DcolNpad = Dcol*Npad;\n"
   "  AHereDcol = AHere+DcolNpad;\n"
@@ -117,7 +131,13 @@ std::string cholBatchKernelString( // V1
   "  }\n" //Dk
   
   "  diagDcol = A[AHereDcol+Dcol] - toAddLocal[localIndex];\n"
-  "  diag[diagHere+Dcol] = diagDcol;\n"
+  "  diag[diagHere+Dcol] = diagDcol;\n";
+
+  if(logDet){
+    result += " logDetHere += log(diagDcol);\n";
+  }
+  
+  result +=  
 #ifdef DEBUG
   "A[AHere+Dcol] = -toAddLocal[localIndex];\n"
   //"AHereDcol[Dcol] = 10*Dcol;\n"
@@ -176,9 +196,15 @@ std::string cholBatchKernelString( // V1
   result +=
     "}//Drow\n"
     "  barrier(CLK_GLOBAL_MEM_FENCE);\n"
-    "} // Dcol loop\n"
+    "} // Dcol loop\n";
+  
+    if(logDet){
+        result +=  "if(localIndex==0){\n"
+          " logDet[Dmatrix] = logDetHere;\n"
+          "}\n";
+    }
+    result +=
     "} // Dmatrix loop\n\n"
-    
     "}\n";
   return(result);
 }
@@ -202,7 +228,7 @@ template <typename T>
 int cholBatchVcl(
     viennacl::matrix<T> &A,
     viennacl::matrix<T> &D,
-    Rcpp::IntegerVector Astartend,
+    Rcpp::IntegerVector Astartend, // submatrices, matrix A[Astartend[1]:Astartend[2]:Astartend[3]:Astartend[4]]
     Rcpp::IntegerVector Dstartend,  
     const int numbatchD,
     Rcpp::IntegerVector Nglobal,

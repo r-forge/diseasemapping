@@ -459,8 +459,8 @@ void fill22params(
 
 template<typename T> 
 void maternBatchVcl(
-    viennacl::matrix<T> &vclVar, // Nmat columns N^2 rows
-    viennacl::matrix<T> &vclCoords, // 2 columns
+    viennacl::matrix_base<T> &vclVar, // Nmat columns N^2 rows
+    viennacl::matrix_base<T> &vclCoords, // 2 columns
     viennacl::matrix_base<T> &param, // Nmat rows, 22 columns
     viennacl::ocl::kernel & maternKernel,
     int startrow){
@@ -474,8 +474,8 @@ void maternBatchVcl(
 
 template<typename T> 
 void maternBatchVcl(
-    viennacl::matrix<T> &vclVar, // Nmat columns N^2 rows
-    viennacl::matrix<T> &vclCoords, // 2 columns
+    viennacl::matrix_base<T> &vclVar, // Nmat columns N^2 rows
+    viennacl::matrix_base<T> &vclCoords, // 2 columns
     viennacl::matrix_base<T> &param, // Nmat rows, 22 columns
     Rcpp::IntegerVector numWorkItems,
     Rcpp::IntegerVector numLocalItems,	

@@ -218,7 +218,7 @@ void gemmBatch(
  
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   
-  cl_device_type type_check = ctx.current_device().type();
+//  cl_device_type type_check = ctx.current_device().type();
   
  
   if (need_transpose==1){

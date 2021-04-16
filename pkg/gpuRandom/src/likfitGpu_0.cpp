@@ -11,9 +11,10 @@ using namespace viennacl::linalg;
 //#define M_PI  3.141592653589793238463
 /*
  const double PI  =3.141592653589793238463;
- const float  PI_F=3.14159265358979f;*/
-/*#define M_LN_SQRT_2PI 0.918938533204672741780329736406  /* log(sqrt(2*pi))
- == log(2*pi)/2 */
+ const float  PI_F=3.14159265358979f;
+*/
+//#define M_LN_SQRT_2PI 0.918938533204672741780329736406  
+// log(sqrt(2*pi)) == log(2*pi)/2
 
 
 template<typename T> 
@@ -389,8 +390,17 @@ void likfitGpu_1(viennacl::matrix<T> &coordsGpu,
                  Rcpp::IntegerVector workgroupSize,
                  Rcpp::IntegerVector localSize,
                  Rcpp::IntegerVector NlocalCache,
-                 const int ctx_id){
+                 const int ctx_id, const int verbose){
   
+  /* TO DO
+   * compute jacobian
+   */
+  viennacl::vector<T> Y0 = viennacl::column(yX, 0);
+  T sumLogY = viennacl::linalg::sum(viennacl::linalg::element_log(Y0));
+  if(verbose) {
+    Rcpp::Rcout << "\n" << "sumlog " << sumLogY << "\n" ;
+    
+  }
   
   viennacl::matrix<T> Vbatch(groupsize*n, n);
   viennacl::matrix<T> diagMat(groupsize, n);//viennacl::vector_base<T> logD(groupsize);
@@ -420,15 +430,16 @@ void likfitGpu_1(viennacl::matrix<T> &coordsGpu,
   
   const int totalsets = bigparamsBatch.size1();
   const int Niter = floor(totalsets / groupsize);
+  int endThisIteration;
   
   viennacl::range r(0, bigparamsBatch.size2()); 
   viennacl::range r2(0, colbatch);  
   
   ///////////////////////////Loop starts !!!//////////////////////////////////////////////////////////////////////////
   for (int i=0; i< Niter; i++ ){
-    
-    viennacl::range ri(i*groupsize, (i+1)*groupsize);  //{0, 2}  
-    viennacl::range ri_betahat(i*groupsize*p, (i+1)*groupsize*p);  //{0, 2}    
+    endThisIteration = std::min((i+1)*groupsize, totalsets);   
+    viennacl::range ri(i*groupsize, endThisIteration);  //{0, 2}  
+    viennacl::range ri_betahat(i*groupsize*p, endThisIteration*p);  //{0, 2}    
     viennacl::matrix_range<viennacl::matrix<T>> paramsBatch(bigparamsBatch, ri, r);//{m(0,0),m(0,1);m(1,0),m(1,1)} matrix_slice<matrix<double> > ms(m, s, s);         
     viennacl::matrix_range<viennacl::matrix<T>> variances(bigvariances, ri, r2);   
     viennacl::matrix_range<viennacl::matrix<T>> ssqBeta(finalssqBeta, ri, r2);    // (groupsize, colbatch)
@@ -439,7 +450,17 @@ void likfitGpu_1(viennacl::matrix<T> &coordsGpu,
     viennacl::matrix_range<viennacl::matrix<T>> betahat(finalbetahat, ri_betahat, r2);
     viennacl::matrix_range<viennacl::matrix<T>> loglik(finalLogLik, ri, r2);
     
+    
+    if(verbose) {
+      Rcpp::Rcout << "\n" << "iteration " << i <<
+        " first parameter " << paramsBatch(0,0) << " original first parameter "
+        << bigparamsBatch(0,0) << 
+          "\n" ;
+      
+      }
+    
     //42
+    
     likfitGpu_0(Vbatch,
                 coordsGpu, 
                 paramsBatch, 
@@ -505,7 +526,10 @@ void likfitGpu_Templated(
     const int form,
     Rcpp::IntegerVector workgroupSize,
     Rcpp::IntegerVector localSize,
-    Rcpp::IntegerVector NlocalCache) {
+    Rcpp::IntegerVector NlocalCache,
+    const int verbose) {
+  
+
   
   const bool BisVCL=1;
   const int ctx_id = INTEGER(finalLogLikR.slot(".context_index"))[0]-1;
@@ -539,7 +563,7 @@ void likfitGpu_Templated(
                  *finalLogLik,
                  n, p, groupsize, colbatch, form, // c(loglik=1, ml=2, mlFixSigma=3, mlFixBeta=4, reml=5, remlPro=6)
                  workgroupSize, localSize, 
-                 NlocalCache, ctx_id);
+                 NlocalCache, ctx_id, verbose);
   
 }
 
@@ -574,7 +598,8 @@ void likfitGpu_Backend(
     const int form,
     Rcpp::IntegerVector workgroupSize,
     Rcpp::IntegerVector localSize,
-    Rcpp::IntegerVector NlocalCache) {
+    Rcpp::IntegerVector NlocalCache,
+    const int verbose) {
   
   
   Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(finalLogLikR));
@@ -586,7 +611,7 @@ void likfitGpu_Backend(
     likfitGpu_Templated<float>(coordsGpuR, bigparamsBatchR, yXR,  betasR,  bigvariancesR,  jacobianR,    finalssqBetaR, finalssqXR,  finalssqYR,    
                                finallogDR, finallogPR, finalbetahatR, 
                                finalLogLikR, n, p, groupsize, colbatch, form, workgroupSize, localSize, 
-                               NlocalCache);
+                               NlocalCache, verbose);
   } 
   else if (precision_type == "dvclMatrix") {
     likfitGpu_Templated<double>(coordsGpuR, bigparamsBatchR, yXR,  
@@ -596,7 +621,373 @@ void likfitGpu_Backend(
                                 n, p, groupsize, colbatch, form, 
                                 workgroupSize, 
                                 localSize, 
-                                NlocalCache);
+                                NlocalCache, verbose);
+  } else {
+    Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
+  }
+}
+
+
+//#endif
+
+
+template <typename T> 
+std::string boxcoxKernelString(int NlocalCache) {
+  
+  std::string typeString = openclTypeString<T>();
+  std::string result = "";
+
+  if(typeString == "double") {
+    result += "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n";
+  }
+  result += 
+  "#define NlocalCache " + std::to_string(NlocalCache) + "\n"
+  "#define DstartObs 0\n"
+  "#define DstartBoxcox 0\n";
+  
+ result +=
+   "\n__kernel void boxcox(\n"
+   "__global " + typeString + " *y,\n"
+   "__global " + typeString + " *param,\n"  
+   "__global " + typeString + " *jacobian,\n"
+   "int zeroCol,"
+   "int Nobs, int Nboxcox, int Npad){\n\n";
+   
+result +=
+  "int Dboxcox, Dobs;\n"
+   + typeString + " logYhere, boxcoxHere;\n"
+   "local " + typeString + " sumLogY[NlocalCache];\n";
+
+#ifdef UNDEFR
+ result +=
+      " if(get_global_id(1)==0 & get_group_id(0) == 0){\n"
+   "  sumLogY[get_local_id(0)] = 0.0;\n"
+   "  for(Dobs=get_local_id(0);Dobs < Nobs; Dobs+= get_local_size(0)){\n"
+   "    logYhere = log(y[DstartObs + Npad * Dobs]);\n"
+   "    sumLogY[get_local_id(0)] += logYhere;\n"
+   "    if(zeroCol) y[DstartObs + zeroCol + Npad * Dobs] = logYhere;\n"
+   "  }// for Dobs\n"
+   "  if(get_local_id(0)==0){\n"
+   "    for(Dobs=1;Dobs < get_local_size(0);Dobs++){\n"
+   "     sumLogY[0] += sumLogY[Dobs];\n"
+   "    }// for Dobs\n"
+   "    if(get_global_id(0)==0){\n"
+   "     for(Dboxcox=0;Dboxcox < Nboxcox;Dboxcox++){\n"
+   " //   jacobian = -2*(BoxCox-1)* sum(log(yXcpu[,1]))\n"
+   "      jacobian[DstartBoxcox + Dboxcox] =  -2*(param[DstartBoxcox + Dboxcox])*sumLogY[Dboxcox];\n"
+   "     }// for Dboxcox\n"
+   "    }// if global0\n"
+   "  }// if local0\n"
+   "}// if global and group\n";
+   
+   result +=
+   "for(Dboxcox = get_global_id(1)+1; Dboxcox < Nboxcox; Dboxcox+= get_global_size(1)){\n"
+   " boxcoxHere = param[DstartBoxcox + Dboxcox];\n"
+   " if(Dboxcox != zeroCol) {\n"
+   "  for(Dobs=get_global_id(0);Dobs < Nobs; Dobs+= get_global_size(0)){\n"
+   "//    transformed_y[ ,i] <- ((yXcpu[ ,1]^BoxCox[i]) - 1)/BoxCox[i]\n"
+   "      y[DstartObs + Dboxcox + Npad * Dobs] = \n"
+   "        (pow(y[DstartObs + Npad * Dobs],boxcoxHere)-1)/boxcoxHere;\n"
+   "    }// for Dobs\n"
+   "  }// if zerocol\n"
+   "}// for Dboxcox\n";
+#endif   
+result +=   "}// kernel\n";
+  return(result);
+}
+
+
+/*
+ * sum logs of rows
+ * use only one work item dimension
+ * groups are rows, local items sum over colums
+ * 
+ */
+template <typename T> 
+std::string logRowSumString(int NlocalCache) {  
+  
+  std::string typeString = openclTypeString<T>();
+  
+  
+  std::string result = "";
+  
+  if(typeString == "double") {
+    result += "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n";
+  }
+  result += 
+    "#define NlocalCache " + std::to_string(NlocalCache) + "\n";    
+
+  result += 
+    "\n\n__kernel void logRowSum(\n"
+    "  __global " + typeString + "* x,\n"  
+    "  __global " + typeString + "* output,\n" 
+    "  int Nrow, int Ncol, int Npad, int startX, int startOutput"
+    "){\n\n";  
+  
+  result += "int Drow, Dcol, Dindex;\n";
+  result += "local " + typeString + " thesum[NlocalCache];\n";
+  
+  result += 
+    
+    "  for(Drow = get_group_id(0);   Drow < Nrow;    Drow+=get_num_groups(0)){\n"
+    "    thesum[get_local_id(0)] = 0.0;\n"
+    "    for(Dcol = get_global_id(0),   Dindex = startX + Drow*NpadCol+Dcol;\n" 
+    "        Dcol < Ncol; Dcol+=get_global_size(0), Dindex+=get_global_size(0)){\n"
+    "        thesum[get_local_id(0)] += log(x[Dindex]);\n"
+    "    } // end loop through columns\n"
+    "  if(get_local_id(0) == 0) {\n"
+    "    for(Dcol = 1; Dcol < get_local_size(0); Dcol++){\n"
+    "      thesum[0] += thesum[Dcol];\n"
+    "    }//for\n"
+    "    output[Drow + startOutput] = thesum[0];\n"
+    "  }//if\n"
+    "  } // end loop through rows\n"
+    
+    
+    "}\n";
+  
+  return(result);
+}
+
+template<typename T> 
+void likfitGpuP(viennacl::matrix_base<T> &yx, 
+                viennacl::matrix_base<T> &coords, 
+                viennacl::matrix_base<T> &params, 
+                viennacl::vector_base<T>  &boxcox,
+                  viennacl::matrix_base<T> &betas,
+                  viennacl::matrix_base<T> &ssqY,
+                  viennacl::matrix_base<T> &ssqX,
+                  viennacl::vector_base<T> &detVar,
+                  viennacl::matrix_base<T> &detReml,
+                  viennacl::vector_base<T> &jacobian,
+                  Rcpp::IntegerVector NparamPerIter,
+                  Rcpp::IntegerVector workgroupSize, 
+                  Rcpp::IntegerVector localSize, 
+                  Rcpp::IntegerVector NlocalCache, 
+                  const int ctx_id, 
+                  Rcpp::IntegerVector verbose){
+    const int Nobs = yx.size1(), Ndatasets = boxcox.size();
+  const int Nparams = params.size1();
+  const int Ncovariates = yx.size2() - Ndatasets;
+
+    const int Niter = ceil(Nparams / NparamPerIter[0]);
+    int Diter;
+    int endThisIteration;
+    int DiterIndex, NthisIteration;
+    int verboseMatern = verbose[0]>1;
+    
+    viennacl::ocl::switch_context(ctx_id);
+    viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
+    
+  /* 
+   * compute boxcox and jacobian
+   */
+  std::string theBoxcoxKernel = boxcoxKernelString<T>(NlocalCache[0]);
+  
+  if(verbose[0]) {
+    Rcpp::Rcout << "\n" << theBoxcoxKernel << "\n";
+  }
+  
+  viennacl::ocl::program & my_prog_boxcox = ctx.add_program(theBoxcoxKernel, "my_kernel_boxcox");
+  viennacl::ocl::kernel & boxcoxKernel = my_prog_boxcox.get_kernel("boxcox");
+  // dimension 0 is cell, dimension 1 is matrix
+  boxcoxKernel.global_work_size(0, (cl_uint) (workgroupSize[0] ) );
+  boxcoxKernel.global_work_size(1, (cl_uint) (workgroupSize[1] ) );
+  
+  boxcoxKernel.local_work_size(0, (cl_uint) (localSize[0]));
+  boxcoxKernel.local_work_size(1, (cl_uint) (localSize[1]));
+  if(verbose[0] & boxcox.size() > 1) {
+    if(boxcox[1] != 0){
+      Rcpp::warning("second entry of boxcox parameters should be zero");
+    }
+  }
+  viennacl::ocl::enqueue(
+    boxcoxKernel(
+      yx, boxcox, jacobian, 
+      1,// zerocol
+      Nobs, 
+      Ndatasets, 
+      yx.internal_size2()
+  ));
+  
+    
+
+  viennacl::matrix<T> Vbatch(NparamPerIter[0]*Nobs, Nobs);
+  viennacl::matrix<T> cholDiagMat(NparamPerIter[0], Nobs);
+
+  
+  IntegerVector Astartend = {0,  Nobs, 0, Nobs};
+  IntegerVector Dstartend ={0,  NparamPerIter[0], 0, Nobs};
+  
+  // create and compile kernels
+  const int Ncell = Nobs * (Nobs - 1)/2, maxIter = 1500;
+  std::string maternClString = maternBatchKernelString<T>(
+    maxIter,
+    Nobs, Ncell, Vbatch.internal_size2(), 
+    NparamPerIter[0], NparamPerIter[0]*Nobs, 
+    coords.internal_size2(), //NpadCoords, 
+    params.internal_size2(),// NpadParams
+    localSize[0],
+    NlocalCache[0]
+  );
+  viennacl::ocl::program & my_prog_matern = viennacl::ocl::current_context().add_program(maternClString, "my_kernel_matern");
+  // get compiled kernel function
+  viennacl::ocl::kernel & maternKernel = my_prog_matern.get_kernel("maternBatch");
+  
+  // dimension 0 is cell, dimension 1 is matrix
+  maternKernel.global_work_size(0, workgroupSize[0] );//numWorkItems[0]);
+  maternKernel.global_work_size(1, workgroupSize[1] );//numWorkItems[0]);
+  
+  maternKernel.local_work_size(0, localSize[0]);
+  maternKernel.local_work_size(1, localSize[1]);
+  
+  
+  ///////////////////////////Loop starts !!!//////////////////////////////////////////////////////////////////////////
+//  for (Diter=0; Diter< Niter; Diter++ ){
+  for (Diter=0; Diter< 1; Diter++ ){
+  DiterIndex = Diter * NparamPerIter[0];
+    endThisIteration = std::min(DiterIndex + NparamPerIter[0], Nparams);
+    NthisIteration = endThisIteration - DiterIndex;
+    Dstartend[1] = NthisIteration;
+    
+    if(verbose[0]) {
+      Rcpp::Rcout << "\n" <<"DiterIndex " << DiterIndex << " endThisIteration " << 
+        endThisIteration << "\n";
+    }
+    
+    
+#ifdef UNDEF
+    viennacl::ocl::enqueue(maternKernel(vclVar, vclCoords, param, startrow, Nmatrix));
+    maternBatchVcl(Vbatch, coords, params, workgroupSize, localSize, ctx_id, 
+                   DiterIndex, endThisIteration, // subset of parameters
+                   verboseMatern);
+    //#Vbatch=LDL^T, cholesky decomposition
+    cholBatchVcl(Vbatch, cholDiagMat,
+                 Astartend, Dstartend, NthisIteration, workgroupSize, 
+                 localSize, NlocalCache, ctx_id);
+    
+    //logD <- apply(log(diagMat),1,sum)
+    // half log determinant of V
+    viennacl::range ri(DiterIndex, endThisIteration);
+    viennacl::vector_range<viennacl::vector<T> > logDHere(detVar, ri);
+    rowsum(cholDiagMat, logDHere, "row", 1);
+    
+    if(verbose[0]) {
+      Rcpp::Rcout << "\n" << "logDhere " << logDHere(0) << " detvar "<< detVar(0) << "\n";
+    }
+#endif  
+  } // Diter
+}
+
+template<typename T> 
+void likfitGpuP_Templated(
+    Rcpp::S4 yx,
+    Rcpp::S4 coords,
+    Rcpp::S4 params,
+    Rcpp::S4 boxcox,
+    Rcpp::S4 betas,
+    Rcpp::S4 ssqY,
+    Rcpp::S4 ssqX,
+    Rcpp::S4 detVar,
+    Rcpp::S4 detReml,
+    Rcpp::S4 jacobian,
+    Rcpp::IntegerVector NparamPerIter,
+    Rcpp::IntegerVector workgroupSize,
+    Rcpp::IntegerVector localSize,
+    Rcpp::IntegerVector NlocalCache,
+    Rcpp::IntegerVector verbose) {
+  
+  
+  const bool BisVCL=1;
+  const int ctx_id = INTEGER(yx.slot(".context_index"))[0]-1;
+  std::shared_ptr<viennacl::matrix<T> > yxGpu = getVCLptr<T>(yx.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix<T> > coordsGpu = getVCLptr<T>(coords.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix<T> > paramsGpu = getVCLptr<T>(params.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix<T> > betasGpu = getVCLptr<T>(betas.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix<T> > ssqYGpu = getVCLptr<T>(ssqY.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix<T> > ssqXGpu = getVCLptr<T>(ssqX.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::vector_base<T> > detVarGpu = getVCLVecptr<T>(detVar.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix<T> > detRemlGpu = getVCLptr<T>(detReml.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::vector_base<T> > boxcoxGpu = getVCLVecptr<T>(boxcox.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::vector_base<T> > jacobianGpu = getVCLVecptr<T>(jacobian.slot("address"), BisVCL, ctx_id);
+  
+  likfitGpuP<T>(
+                 *yxGpu, 
+                 *coordsGpu, 
+                 *paramsGpu, 
+                 *boxcoxGpu,
+                 *betasGpu,
+                 *ssqYGpu, *ssqXGpu,
+                 *detVarGpu, *detRemlGpu,
+                 *jacobianGpu,
+                 NparamPerIter,
+                 workgroupSize, 
+                 localSize, 
+                 NlocalCache, ctx_id, verbose);
+  
+  }
+
+
+
+
+
+
+//[[Rcpp::export]]
+void likfitGpu_BackendP(
+    Rcpp::S4 yx,
+    Rcpp::S4 coords,
+    Rcpp::S4 params,
+    Rcpp::S4 boxcox,
+    Rcpp::S4 betas,
+    Rcpp::S4 ssqY,
+    Rcpp::S4 ssqX,
+    Rcpp::S4 detVar,
+    Rcpp::S4 detReml,
+    Rcpp::S4 jacobian,
+    Rcpp::IntegerVector NparamPerIter,
+    Rcpp::IntegerVector workgroupSize,
+    Rcpp::IntegerVector localSize,
+    Rcpp::IntegerVector NlocalCache,
+    Rcpp::IntegerVector verbose) {
+  
+  
+  Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(yx));
+  std::string precision_type = (std::string) classVarR;
+  
+  
+  if(precision_type == "fvclMatrix") {
+    likfitGpuP_Templated<float>(  yx,
+                                  coords,
+                                  params,
+                                  boxcox,
+                                  betas,
+                                  ssqY,
+                                  ssqX,
+                                  detVar,
+                                  detReml,
+                                  jacobian,
+                                  NparamPerIter,
+                                  workgroupSize,
+                                  localSize,
+                                  NlocalCache,
+                                  verbose);
+  } 
+  else if (precision_type == "dvclMatrix") {
+    likfitGpuP_Templated<double>(  yx,
+                                   coords,
+                                   params,
+                                   boxcox,
+                                   betas,
+                                   ssqY,
+                                   ssqX,
+                                   detVar,
+                                   detReml,
+                                   jacobian,
+                                   NparamPerIter,
+                                   workgroupSize,
+                                   localSize,
+                                   NlocalCache,
+                                   verbose);
   } else {
     Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
   }

@@ -16,6 +16,7 @@ std::string gemmBatch2String();
 std::string matrix_plus_vectorString();
 std::string matrix_plus_scalarString();
 
+template <typename T> std::string openclTypeString();
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 //#include "viennacl/linalg/lu.hpp"
@@ -35,11 +36,27 @@ template <typename T> T maternClEpsilon();
 
 
 
+template <typename T> 
+std::string maternBatchKernelString(
+    int maxIter, 
+    int N,
+    int Ncell,
+    int Npad,
+    int Nmatrix,
+    int NpadBetweenMatrices,
+    int NpadCoords,
+    int NpadParams,
+    int Nlocal0,
+    int NlocalParamsCache,
+    int assignUpper = 1,
+    int assignLower = 1,
+    int assignDiagonals = 1,
+    int assignDistUpper = 0);
 
 template<typename T> 
 void maternBatchVcl(
-    viennacl::matrix<T> &vclVar, // Nmat columns N^2 rows
-    viennacl::matrix<T> &vclCoords, // 2 columns
+    viennacl::matrix_base<T> &vclVar, // Nmat columns N^2 rows
+    viennacl::matrix_base<T> &vclCoords, // 2 columns
     viennacl::matrix_base<T> &param, // Nmat rows, 22 columns
     Rcpp::IntegerVector numWorkItems,
     Rcpp::IntegerVector numLocalItems,	

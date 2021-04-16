@@ -114,7 +114,7 @@ std::string gemmBatch2String(
     if(transposeABC[1]) { // transpose B
     result += 
       "#define Ncol " + std::to_string(submatrixB[1]) + "\n"  
-      "#define Bi0orig(ii) ( DmatrixRow * NpadNrowTotalB + NpadB * (rowStartB + DcolBlock) + DmatrixCol * NcolTotalB + colStartB + (ii))\n";
+      "#define Bi0orig(ii) ( DmatrixRow * NpadNrowTotalB + NpadB * (rowStartB + DcolBlock) + DmatrixCol * NcolTotalB + colStartB + (ii))\n"
       "#define Bi0(ii) (startInnerB + (ii) )\n\n";
     } else { // no transpose, columns of B
     result += 
