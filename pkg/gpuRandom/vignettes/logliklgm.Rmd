@@ -4,8 +4,7 @@
 -->
 
 
-```{r OLDtest_on_cpu, message=FALSE, eval=T}
-library(gpuR)
+```{r setup, include=FALSE}
 library(geostatsp)
 set.seed(1)
 n=20
@@ -16,9 +15,87 @@ mydat = SpatialPointsDataFrame(cbind(stats::runif(n), seq(0,1,len=n)),
 mydat@data= cbind(mydat@data , RFsimulate(model=c(variance=1.5,range=0.5,nugget=0.25,shape=1.25,anisoRatio = 1, anisoAngleRadins=0),x=mydat)@data)
 
 # add fixed effects
+# exponentiate to make positive and enable boxcox
 mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + mydat$sim + stats::rnorm(length(mydat), 0, sd=sqrt(0.25))
+mydat$Yexp = exp(mydat$Y)
+```
 
-dist(mydat@coords)
+
+```{r patrickTest, eval=F}
+library(gpuR)
+
+params = rbind(c(shape=1.25, range=0.2641423, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
+                    c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
+                    c(shape=2.25, range=0.5, variance = 2.5, nugget = 2.25, anisoRatio = 1, anisoAngleRadians = 0))
+ # c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0))
+#paramsBatch = rbind(c(shape=3, range=11.5247874, variance = 5.5, nugget = 0.6932729, anisoRatio = 1, anisoAngleRadians = 0))
+
+
+x = mydat
+boxcox = c(0, 0.5)
+Scov = c('cov1','cov2')
+yvar = 'Yexp'
+NparamPerIter = 2
+
+workgroupSize = localSize = c(2,2,1)
+NlocalCache=500
+type='double'
+verbose = 1L
+
+paramsBatch = t(apply(params, 1, geostatsp::fillParam))
+paramsBatch = vclMatrix(
+  cbind(paramsBatch, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),
+  type=type)
+
+if(boxcox[1] != 1) {
+  boxcox = c(1, 0, setdiff(boxcox, c(0,1)))
+}
+Ncov = length(Scov)+1
+Ndata = length(boxcox)
+Nparam = nrow(params)
+
+yx = vclMatrix(cbind(
+  as.vector(x@data[,yvar]),
+  matrix(0, nrow(x@data), length(boxcox)-1),
+  1,
+  as.matrix(x@data[,Scov])
+), type=type)
+coords = vclMatrix(x@coords, type =type)
+
+boxcoxGpu = vclVector(boxcox, type=type)
+betas = vclMatrix(0, Nparam, Ncov * Ndata, type=type)
+detVar = vclVector(0, Nparam,type=type)
+detReml = vclMatrix(0, Nparam, Ndata, type=type)
+jacobian = vclVector(0, Ndata, type=type)
+ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
+ssqX <- vclMatrix(0, Nparam, Ndata, type=type)
+
+gpuRandom:::likfitGpu_BackendP(
+  yx,
+  coords,
+  paramsBatch,
+  boxcoxGpu,
+  betas,
+  ssqY,
+  ssqX,
+  detVar,
+  detReml,
+  jacobian,
+  NparamPerIter,
+  workgroupSize,
+  localSize,
+  NlocalCache,
+  verbose = 2
+)
+
+as.vector(detVar)
+ 
+```
+
+
+
+```{r OLDtest_on_cpu, message=FALSE, eval=T}
+#dist(mydat@coords)
 # fit the model
 myres = likfitLgm(
 	formula=Y ~ cov1 + cov2, 
@@ -48,26 +125,95 @@ temp0
 
 
 
-```{r OLDtest on gpu, eval=F}
-paramsBatch = rbind(c(shape=1.25, range=0.2641423, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
-                    c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
-                    c(shape=2.25, range=0.5, variance = 2.5, nugget = 2.25, anisoRatio = 1, anisoAngleRadians = 0))
- # c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0))
-#paramsBatch = rbind(c(shape=3, range=11.5247874, variance = 5.5, nugget = 0.6932729, anisoRatio = 1, anisoAngleRadians = 0))
-
-
-paramsBatch = t(apply(paramsBatch, 1, geostatsp::fillParam));    paramsBatch
-paramsBatch = vclMatrix(cbind(paramsBatch, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),type="double")
-
+```{r oldTest, eval=FALSE}
 betas<-vclMatrix(as.matrix(myres$summary[c("(Intercept)","cov1","cov2"),1]),type="double")
 
 workgroupSize=c(64,16,16)
 localSize = c(4,4,1)
-NlocalCache=50
+workgroupSize = localSize = c(1,1,1)
+NlocalCache=500
+
+BoxCox = c(1, 0, 0.5)
 
 
-temp1=gpuRandom::likfitGpu(myres,mydat, type="double", 
-                    paramsBatch,betas,form="loglik",workgroupSize,localSize, NlocalCache)
+
+
+
+
+
+temp1=likfitGpu(modelname = myres,
+                           mydat = mydat, type="double", 
+                    bigparamsBatch = paramsBatch,betas = betas,form="loglik",
+                    BoxCox = 1, groupsize = 1,
+                    workgroupSize=workgroupSize,localSize=localSize, NlocalCache=NlocalCache,
+                    verbose=1L)
+
+modelname = myres
+type='double'
+bigparamsBatch = paramsBatch
+BoxCox = 1
+groupsize = 1
+  form = c(loglik=1, ml=2, mlFixSigma=3, mlFixBeta=4, reml=5, remlPro=6)['loglik']
+  
+  output1 <- lgmGpuObjectes1(modelname, mydat, type=type)
+  colbatch<- length(BoxCox)+1   
+  
+  yXcpu <- output1$yXcpu
+  
+  # get jacobian matrix
+  jacobian = -2*(BoxCox-1)* sum(log(yXcpu[,1])) 
+  closetooneindex <- which(abs(BoxCox - 1 ) < 0.001)
+  jacobian[closetooneindex] = 0    
+  jacobian <- c(jacobian, 0)   
+  jacobian<- vclMatrix(matrix(jacobian, nrow=groupsize, ncol=length(jacobian), byrow=TRUE), type=type) # make it from a vector to a matrix!!!
+  
+  
+  # box cox transform   
+  transformed_y = matrix(0,output1$n,length(BoxCox))    
+  for (i in 1:length(BoxCox)){
+    transformed_y[ ,i] <- ((yXcpu[ ,1]^BoxCox[i]) - 1)/BoxCox[i]
+  }      
+  closetozeroindex <- which(abs(BoxCox)<0.001)
+  if(length(closetozeroindex))
+    transformed_y[ ,closetozeroindex] = log(yXcpu[,1])     
+  yX <- vclMatrix(cbind(transformed_y,yXcpu),type=type)
+  
+  totalparams <- nrow(bigparamsBatch)
+  
+  bigvariances <- vclMatrix(matrix(bigparamsBatch[,3], nrow=totalparams, ncol=colbatch, byrow=FALSE), type=type)  
+  ssqBetaR <- vclMatrix(0, totalparams, colbatch, type=type)
+  ssqXR <- vclMatrix(0, totalparams, colbatch, type=type)
+  ssqYR <- vclMatrix(0, totalparams, colbatch, type=type)
+  logDR <- vclVector(0, totalparams, type=type)
+  logPR <- vclVector(0, totalparams, type=type)
+  finalbetahatR <- vclMatrix(0, totalparams*output1$p, colbatch, type=type)
+  finalLogLik <- vclMatrix(0, totalparams, colbatch, type=type)
+  
+  
+  gpuRandom:::likfitGpu_Backend(output1$coordsGpu,
+                    bigparamsBatch,
+                    yX,       # a vclMatrix of n * colbatch
+                    betas,
+                    bigvariances,  # a vclMatrix of nrow(bigparamsBatch) * colbatch
+                    jacobian,      # a vclMatrix of groupsize * colbatch
+                    ssqBetaR,      # a vclMatrix
+                    ssqXR,        # a vclMatrix
+                    ssqYR,        # a vclMatrix
+                    logDR,         # a vclVector
+                    logPR,         # a vclVector
+                    finalbetahatR,      # a vclMatrix
+                    finalLogLik,   # a vclMatrix of nrow(bigparamsBatch) * colbatch
+                    output1$n, 
+                    output1$p, 
+                    groupsize,
+                    colbatch,
+                    form,
+                    workgroupSize, 
+                    localSize, 
+                    NlocalCache)
+  as.matrix(bigparamsBatch)  
+  as.matrix(logDR)
+  
 
 #as.matrix(temp1)
 #56.21288

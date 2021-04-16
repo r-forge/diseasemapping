@@ -95,7 +95,8 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
                     form,
                     workgroupSize, 
                     localSize, 
-                    NlocalCache)
+                    NlocalCache,
+                    verbose)
   
   list(ssqX=ssqXR, ssqY=ssqYR, logD = logDR, logP = logPR, betahat=finalbetahatR, LogLik = finalLogLik)
   
