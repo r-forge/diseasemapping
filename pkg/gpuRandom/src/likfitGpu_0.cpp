@@ -778,18 +778,56 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     
     viennacl::ocl::switch_context(ctx_id);
     viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
+
+    viennacl::matrix<T> Vbatch(NparamPerIter[0]*Nobs, Nobs);
+    viennacl::matrix<T> cholDiagMat(NparamPerIter[0], Nobs);
     
   /* 
    * compute boxcox and jacobian
    */
+  
+  // create and compile kernels
+  const int Ncell = Nobs * (Nobs - 1)/2, maxIter = 1500;
+  std::string maternClString = maternBatchKernelString<T>(
+    maxIter,
+    Nobs, Ncell, Vbatch.internal_size2(), 
+    NparamPerIter[0], NparamPerIter[0]*Nobs, 
+    coords.internal_size2(), //NpadCoords, 
+    params.internal_size2(),// NpadParams
+    localSize[0],
+             NlocalCache[0]
+  );
+  if(verbose[0]>1) {
+    Rcpp::Rcout << maternClString << "\n";
+  }
+
+    if(verbose[0]) {
+    Rcpp::Rcout << "kernels\n";
+  }
+  
   std::string theBoxcoxKernel = boxcoxKernelString<T>(NlocalCache[0]);
   
   if(verbose[0]) {
     Rcpp::Rcout << "\n" << theBoxcoxKernel << "\n";
   }
   
-  viennacl::ocl::program & my_prog_boxcox = ctx.add_program(theBoxcoxKernel, "my_kernel_boxcox");
+  if(verbose[0]) {
+    Rcpp::Rcout << "prog matern\n";
+  }
+  viennacl::ocl::program & my_prog_matern = viennacl::ocl::current_context().add_program(maternClString, "mkm");
+
+  if(verbose[0]) {
+    Rcpp::Rcout << "prog boxcox\n";
+  }
+  viennacl::ocl::program & my_prog_boxcox = viennacl::ocl::current_context().add_program(theBoxcoxKernel, "mkb");
+  if(verbose[0]) {
+    Rcpp::Rcout << "stuff\n";
+  }
+#ifdef UNDEF33
   viennacl::ocl::kernel & boxcoxKernel = my_prog_boxcox.get_kernel("boxcox");
+  if(verbose[0]) {
+    Rcpp::Rcout << "worksizes\n";
+  }
   // dimension 0 is cell, dimension 1 is matrix
   boxcoxKernel.global_work_size(0, (cl_uint) (workgroupSize[0] ) );
   boxcoxKernel.global_work_size(1, (cl_uint) (workgroupSize[1] ) );
@@ -801,6 +839,10 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       Rcpp::warning("second entry of boxcox parameters should be zero");
     }
   }
+  if(verbose[0]) {
+    Rcpp::Rcout << "enqueue\n";
+  }
+  
   viennacl::ocl::enqueue(
     boxcoxKernel(
       yx, boxcox, jacobian, 
@@ -810,30 +852,20 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       yx.internal_size2()
   ));
   
-    
+  if(verbose[0]) {
+    Rcpp::Rcout << "enqueue done\n";
+  }
 
-  viennacl::matrix<T> Vbatch(NparamPerIter[0]*Nobs, Nobs);
-  viennacl::matrix<T> cholDiagMat(NparamPerIter[0], Nobs);
 
   
   IntegerVector Astartend = {0,  Nobs, 0, Nobs};
   IntegerVector Dstartend ={0,  NparamPerIter[0], 0, Nobs};
   
-  // create and compile kernels
-  const int Ncell = Nobs * (Nobs - 1)/2, maxIter = 1500;
-  std::string maternClString = maternBatchKernelString<T>(
-    maxIter,
-    Nobs, Ncell, Vbatch.internal_size2(), 
-    NparamPerIter[0], NparamPerIter[0]*Nobs, 
-    coords.internal_size2(), //NpadCoords, 
-    params.internal_size2(),// NpadParams
-    localSize[0],
-    NlocalCache[0]
-  );
-  viennacl::ocl::program & my_prog_matern = viennacl::ocl::current_context().add_program(maternClString, "my_kernel_matern");
   // get compiled kernel function
   viennacl::ocl::kernel & maternKernel = my_prog_matern.get_kernel("maternBatch");
-  
+  if(verbose[0]) {
+    Rcpp::Rcout << "worksizesM\n";
+  }
   // dimension 0 is cell, dimension 1 is matrix
   maternKernel.global_work_size(0, workgroupSize[0] );//numWorkItems[0]);
   maternKernel.global_work_size(1, workgroupSize[1] );//numWorkItems[0]);
@@ -877,6 +909,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     }
 #endif  
   } // Diter
+#endif  
 }
 
 template<typename T> 
