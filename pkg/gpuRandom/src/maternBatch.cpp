@@ -37,17 +37,17 @@ std::string maternBatchKernelString(
     int maxIter, 
     int N,
     int Ncell,
+    int NmatrixMax,
     int Npad,
-    int Nmatrix,
     int NpadBetweenMatrices,
     int NpadCoords,
     int NpadParams,
     int Nlocal0,
     int NlocalParamsCache,
-    int assignUpper = 1,
-    int assignLower = 1,
-    int assignDiagonals = 1,
-    int assignDistUpper = 0) {
+    int assignUpper, // last four default to     1L, 1L, 1L, 0L
+    int assignLower,
+    int assignDiagonals,
+    int assignDistUpper) {
   
   std::string typeString = openclTypeString<T>();
   std::string result = "";
@@ -90,8 +90,7 @@ std::string maternBatchKernelString(
     "#define N " + std::to_string(N) + "\n"
     "#define Ncell " + std::to_string(Ncell) + "\n"
     "#define Npad " + std::to_string(Npad) + "\n"
-    "#define Nmatrix " + std::to_string(Nmatrix) + "\n"
-    "#define NlocalStorage " + std::to_string(2*std::max(Nlocal0,Nmatrix)) + "\n"
+    "#define NlocalStorage " + std::to_string(2*std::max(Nlocal0,NmatrixMax)) + "\n"
     "#define NpadBetweenMatrices " + std::to_string(NpadBetweenMatrices) + "\n"
     "#define NpadCoords " + std::to_string(NpadCoords) + "\n"
     "#define NpadParams " + std::to_string(NpadParams) + "\n"
@@ -230,7 +229,7 @@ std::string maternBatchKernelString(
     "__global " + typeString + " *result,"
     "__global " + typeString + " *coords,\n"  
     "__global " + typeString + " *params,\n"
-    "int startrow) {\n\n";
+    "int startrow, int Nmatrix) {\n\n";
   
   
   result +=
@@ -463,10 +462,10 @@ void maternBatchVcl(
     viennacl::matrix_base<T> &vclCoords, // 2 columns
     viennacl::matrix_base<T> &param, // Nmat rows, 22 columns
     viennacl::ocl::kernel & maternKernel,
-    int startrow){
+    int startrow, int Nmatrix){ // param[seq(startrow, len=Nmatrix),]
   
   fill22params(param);
-  viennacl::ocl::enqueue(maternKernel(vclVar, vclCoords, param, startrow));
+  viennacl::ocl::enqueue(maternKernel(vclVar, vclCoords, param, startrow, Nmatrix));
   
 }
 
@@ -497,12 +496,15 @@ void maternBatchVcl(
   
   std::string maternClString = maternBatchKernelString<T>(
     maxIter,
-    N, Ncell, Npad, Nmatrix, NpadBetweenMatrices, 
+    N, Ncell, numberofrows,
+    Npad,
+    NpadBetweenMatrices, 
     vclCoords.internal_size2(), //NpadCoords, 
     param.internal_size2(),// NpadParams
     numLocalItems[0],
-    NlocalParams * numLocalItems[1] * ceil(Nmatrix * numLocalItems[1] / numWorkItems[1])// local params cache
-  );
+    NlocalParams * numLocalItems[1] * ceil(Nmatrix * numLocalItems[1] / numWorkItems[1]),// local params cache
+    1L, 1L, 1L, 0L
+      );
   
   // the context
   viennacl::ocl::switch_context(ctx_id);
@@ -523,7 +525,7 @@ if(verbose) {
       "\n" << maternClString << "\n";
 }
 
-  maternBatchVcl(vclVar, vclCoords, param, maternKernel, startrow);
+  maternBatchVcl(vclVar, vclCoords, param, maternKernel, startrow, numberofrows);
   
 }
 

@@ -85,7 +85,7 @@ gpuRandom:::likfitGpu_BackendP(
   workgroupSize,
   localSize,
   NlocalCache,
-  verbose = 2
+  verbose = 1
 )
 
 as.vector(detVar)

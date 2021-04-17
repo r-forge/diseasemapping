@@ -10,7 +10,6 @@ std::string cholBatchKernelString( // V1
     int N,
     int Npad,
     int NpadDiag,
-    int Nmatrix,
     int NpadBetweenMatrices,
     int NstartA,
     int NstartD,
@@ -33,7 +32,6 @@ std::string cholBatchKernelString( // V1
     "#define colEnd " + std::to_string(colEnd) + "\n"
     "//internal number of columns\n#define Npad " + std::to_string(Npad) + "\n"
     "//internal columns for matrix holding diagonals\n#define NpadDiag " + std::to_string(NpadDiag) + "\n"
-    "#define Nmatrix " + std::to_string(Nmatrix) + "\n"
     "#define NstartA " + std::to_string(NstartA) + "\n"
     "#define NstartD " + std::to_string(NstartD) + "\n"
     "//elements in internal cache\n#define Ncache " + std::to_string(Ncache[0]) + "\n"
@@ -43,7 +41,8 @@ std::string cholBatchKernelString( // V1
   
   result += "\n__kernel void cholBatch(\n"
   "	__global " + typeString + " *A,\n" 
-  "	__global " + typeString + " *diag";
+  "	__global " + typeString + " *diag,\n"
+  "int Nmatrix";
 
   if(logDet){
     result += 
@@ -245,7 +244,6 @@ int cholBatchVcl(
     Astartend[3], // N
     A.internal_size2(), // Npad
     D.internal_size2(),
-    numbatchD, // Nmatrix
     A.size2() * A.internal_size2(),// NpadBetweenMatrices,
     NstartA,
     NstartD,
@@ -279,7 +277,7 @@ int cholBatchVcl(
   //  int Ngroups1 = ceil(Nglobal[1]/Nlocal[1]);
   //  viennacl::matrix<T> finalReduction(Nglobal[0]*Nglobal[2]*Ngroups1);//size Nglobal[0]*Ngroups1*Nglobal[2]
   
-  viennacl::ocl::enqueue(cholKernel(A, D));    //,  2L));//A.size1() ));
+  viennacl::ocl::enqueue(cholKernel(A, D, numbatchD));    //,  2L));//A.size1() ));
   
   return 0L;
 }
