@@ -85,11 +85,12 @@ gpuRandom:::likfitGpu_BackendP(
   workgroupSize,
   localSize,
   NlocalCache,
-  verbose = 1
+  verbose = 2
 )
 
 as.vector(detVar)
- 
+as.vector(jacobian)
+head(as.matrix(yx)) 
 ```
 
 

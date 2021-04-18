@@ -826,6 +826,9 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     viennacl::matrix<T> Vbatch(NparamPerIter[0]*Nobs, Nobs);
     viennacl::matrix<T> cholDiagMat(NparamPerIter[0], Nobs);
     
+    fill22params(params);
+    
+    
   /* 
    * compute boxcox and jacobian
    */
@@ -845,7 +848,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     NlocalCache[0],
     1L, 1L, 1L, 0L
   );
-  
+  int allowOverflow = ( ((int) Vbatch.size2() ) > NlocalCache[0] );
   std::string cholClString = cholBatchKernelString<T>(
     0L, // colstart
     Nobs, // colend
@@ -855,22 +858,23 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     Vbatch.size2() * Vbatch.internal_size2(),// NpadBetweenMatrices,
     0L,//NstartA
     0L,// NstartD
-    NlocalCache[0], //Ncache
-    localSize[0], //Nlocal
-    ((int) Vbatch.size2() ) > NlocalCache[0], // allowoverflow
+    NlocalCache, //Ncache
+    localSize, //Nlocal
+    allowOverflow, // allowoverflow
     1L // do log determinant
   );
-  
+
+
   if(verbose[0]>1) {
       Rcpp::Rcout << maternClString << "\n";
     Rcpp::Rcout << cholClString << "\n";
   }
   
   
-  viennacl::ocl::program & my_prog_matern = viennacl::ocl::current_context().add_program(maternClString, "mkm");
-  viennacl::ocl::kernel & maternKernel = my_prog_matern.get_kernel("maternBatch");
-  viennacl::ocl::program & my_prog_chol = viennacl::ocl::current_context().add_program(cholClString, "mkc");
-  viennacl::ocl::kernel & cholKernel = my_prog_matern.get_kernel("cholBatch");
+  viennacl::ocl::program & my_prog_matern = viennacl::ocl::current_context().add_program(maternClString, "mykernelmatern");
+  viennacl::ocl::program & my_prog_chol = viennacl::ocl::current_context().add_program(cholClString, "mykernelchol");
+    viennacl::ocl::kernel & maternKernel = my_prog_matern.get_kernel("maternBatch");
+  viennacl::ocl::kernel & cholKernel = my_prog_chol.get_kernel("cholBatch");
   
   
   // dimension 0 is cell, dimension 1 is matrix
@@ -897,10 +901,10 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     }
     
     
-    viennacl::ocl::enqueue(maternKernel(Vbatch, coords, params, DiterIndex, endThisIteration));
+    viennacl::ocl::enqueue(maternKernel(Vbatch, coords, params, DiterIndex, NthisIteration));
 
     //#Vbatch=LDL^T, cholesky decomposition
-    viennacl::ocl::enqueue(cholKernel(Vbatch, cholDiagMat, NthisIteration, detVar));
+    viennacl::ocl::enqueue(cholKernel(Vbatch, cholDiagMat, NthisIteration, detVar, DiterIndex));
     
     } // Diter
 }

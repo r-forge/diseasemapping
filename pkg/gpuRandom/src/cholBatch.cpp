@@ -3,8 +3,7 @@
 
 
 
-template <typename T> 
-std::string cholBatchKernelString( // V1
+template <typename T> std::string cholBatchKernelString(
     int colStart,
     int colEnd,
     int N,
@@ -15,8 +14,8 @@ std::string cholBatchKernelString( // V1
     int NstartD,
     Rcpp::IntegerVector Ncache, 
     Rcpp::IntegerVector Nlocal, // length 2
-    bool allowOverflow,
-    bool logDet=0) {
+    int allowOverflow,
+    int logDet) {
   
   std::string typeString = openclTypeString<T>();
   std::string result = "";
@@ -42,12 +41,12 @@ std::string cholBatchKernelString( // V1
   result += "\n__kernel void cholBatch(\n"
   "	__global " + typeString + " *A,\n" 
   "	__global " + typeString + " *diag,\n"
-  "int Nmatrix)";
-
+  "              int Nmatrix";
+  
   if(logDet){
     result += 
       ",\n	__global " + typeString + " *logDet,\n"
-      "int logDetIndex\n";
+      "                int logDetIndex\n";
     }
     
   result += "\n){\n"
@@ -250,7 +249,9 @@ int cholBatchVcl(
     NstartD,
     NlocalCache, 
     Nlocal,
-    ((int) A.size2() ) > NlocalCache[0]); // allow overflow  // needs change?
+    ((int) A.size2() ) > NlocalCache[0], // allow overflow  // needs change?
+    0L // logDet
+  );
   
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   viennacl::ocl::program & my_prog = ctx.add_program(cholClString, "my_kernel");

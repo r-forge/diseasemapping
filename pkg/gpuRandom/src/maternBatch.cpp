@@ -261,9 +261,9 @@ std::string maternBatchKernelString(
     "     Dcell++,Dmatrix += get_global_size(1)){\n"
     // number of sets of parameters to copy over
     "   k = min((int) get_local_size(1), Nmatrix - Dmatrix);\n"
-    "   for(DmatrixLocal = 0; DmatrixLocal < k; DmatrixLocal++){"
-    "      wait = async_work_group_copy("
-    "        &localParams[(Dcell * get_local_size(1) + DmatrixLocal) * NlocalParams],"
+    "   for(DmatrixLocal = 0; DmatrixLocal < k; DmatrixLocal++){\n"
+    "      wait = async_work_group_copy(\n"
+    "        &localParams[(Dcell * get_local_size(1) + DmatrixLocal) * NlocalParams],\n"
     "        &params[(startrow + Dmatrix + DmatrixLocal) * NpadParams],\n"  
     "        NlocalParams, wait);\n"
     "  }\n"//DmatrixLocal

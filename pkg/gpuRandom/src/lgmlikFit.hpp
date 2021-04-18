@@ -9,7 +9,26 @@
 #include <Rmath.h>
 
 template <typename T> std::string maternBatchKernelString();
-template <typename T> std::string cholBatchKernelString();
+template <typename T> std::string cholBatchKernelString(
+    int colStart,
+int colEnd,
+int N,
+int Npad,
+int NpadDiag,
+int NpadBetweenMatrices,
+int NstartA,
+int NstartD,
+Rcpp::IntegerVector Ncache, 
+Rcpp::IntegerVector Nlocal, // length 2
+int allowOverflow,
+int logDet);
+
+
+template<typename T> 
+void fill22params(
+    viennacl::matrix_base<T> &param
+); 
+
 std::string backsolveBatchString();
 std::string crossprodBatchString();
 std::string gemmBatch2String();
