@@ -42,11 +42,12 @@ std::string cholBatchKernelString( // V1
   result += "\n__kernel void cholBatch(\n"
   "	__global " + typeString + " *A,\n" 
   "	__global " + typeString + " *diag,\n"
-  "int Nmatrix";
+  "int Nmatrix)";
 
   if(logDet){
     result += 
-      ",\n	__global " + typeString + " *logDet\n";
+      ",\n	__global " + typeString + " *logDet,\n"
+      "int logDetIndex\n";
     }
     
   result += "\n){\n"
@@ -199,7 +200,7 @@ result +=
   
     if(logDet){
         result +=  "if(localIndex==0){\n"
-          " logDet[Dmatrix] = logDetHere;\n"
+          " logDet[logDetIndex + Dmatrix] = logDetHere;\n"
           "}\n";
     }
     result +=

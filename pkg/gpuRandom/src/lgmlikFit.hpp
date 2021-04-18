@@ -9,9 +9,7 @@
 #include <Rmath.h>
 
 template <typename T> std::string maternBatchKernelString();
-
-
-std::string cholBatchKernelString();
+template <typename T> std::string cholBatchKernelString();
 std::string backsolveBatchString();
 std::string crossprodBatchString();
 std::string gemmBatch2String();
