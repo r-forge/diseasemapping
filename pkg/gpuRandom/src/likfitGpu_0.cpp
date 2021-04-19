@@ -966,9 +966,13 @@ std::string crossprodKernelString = crossprodBatchString<T>(
     // ssqYX = YX^Y L^(-1)T D^(-1) L^(-1) YX
     viennacl::ocl::enqueue(crossprodKernel(ssqYX, LinvYX, cholDiagMat, NthisIteration));
     
-    // copy diag(ssqYX[1:Ndatasets, 1:Ndatasets]) to ssqY
+    // create a second cholesky kernel to invert X^T V^(-1) X = QPQ^T,
+    // .. or add dimensions and submatrix as arguments to existing kernel?
+    // vienacl::ocl::enqueue(cholKernelSubmat(ssqYX, cholDiagMatXVX, NthisIteration, detREML, DiterIndex))
     
-    
+    // backsolve W = Q^(-1) ssqYX[(Ndatasets+1):nrow(ssqYX),1:Ndatasets]  
+    // crossprod W^T P^(-1) W, keep diagonals as ssqx
+          
     } // Diter
 }
 
