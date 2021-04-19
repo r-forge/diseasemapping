@@ -10,7 +10,7 @@ template <typename T>
 std::string crossprodBatchString(
     const int Nrow, 
     const int Ncol,
-    const int Nmatrix, 
+//    const int Nmatrix, 
     const int NpadC, 
     const int NpadA,
     const int NpadD, // set to zero to omit D
@@ -40,7 +40,7 @@ std::string crossprodBatchString(
   result += 
     "\n#define Nrow " + std::to_string(Nrow) + "\n"    
     "#define Ncol " + std::to_string(Ncol) + "\n"  
-    "#define Nmatrix " + std::to_string(Nmatrix) + "\n"    
+//    "#define Nmatrix " + std::to_string(Nmatrix) + "\n"    
     "#define NpadC " + std::to_string(NpadC) + "\n"    
     "#define NpadA " + std::to_string(NpadA) + "\n"    
     "#define NpadD " + std::to_string(NpadD) + "\n"   
@@ -56,13 +56,13 @@ std::string crossprodBatchString(
     result +=
     "__kernel void crossprodBatch(\n"
     "global " + typeString+ " *C,\n"
-    "const global "+ typeString+ " *A";
+    "const global "+ typeString+ " *A,\n";
     
     if (NpadD >0 ) {
-      result +=  ",\n const global " + typeString + " *D";
+      result +=  "const global " + typeString + " *D,\n";
     }
   
-    result += "\n) {\n\n"
+    result += "int Nmatrix) {\n\n"
    
     "local " + typeString + " Acache[" + 
       std::to_string(NlocalCacheA) + "];\n" 
@@ -283,7 +283,7 @@ void crossprodBatch(
   std::string clString =  crossprodBatchString<T>(  
     Nrow, 
     Ncol, // ncol
-    Nmatrix,
+//    Nmatrix,
     C.internal_size2(), 
     A.internal_size2(), 
     D.internal_size2(),
@@ -315,7 +315,7 @@ void crossprodBatch(
   multiplyKernel.local_work_size(1, Nlocal[1]);
   
   // diagonals and diagTimesRowOfA
-  viennacl::ocl::enqueue(multiplyKernel( C, A, D));
+  viennacl::ocl::enqueue(multiplyKernel( C, A, D, Nmatrix));
 #endif  
 }
 

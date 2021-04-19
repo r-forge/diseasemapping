@@ -37,7 +37,7 @@ std::string backsolveBatchString(
     const int diagIsOne,
     const int Nrow, 
     const int Ncol,
-    const int Nmatrix, 
+//    const int Nmatrix, 
     const int NpadC, 
     const int NpadA, 
     const int NpadB,
@@ -47,7 +47,8 @@ std::string backsolveBatchString(
     const int NstartC,
     const int NstartA,
     const int NstartB,
-    const int NrowsToCache, const int NcolsPerGroup,
+    const int NrowsToCache, 
+    const int NcolsPerGroup,
     const int NlocalCacheC,  // NrowsToCache by NcolsPerGroup
     const int NlocalCacheSum, // Nlocal(0) * Nlocal(1) * NcolsPerGroup 
     const int NpadBetweenMatricesSum // Nlocal(0) * Nlocal(1)
@@ -62,7 +63,7 @@ std::string backsolveBatchString(
   result = result + 
     "\n#define Nrow " + std::to_string(Nrow) + "\n"    
     "#define Ncol " + std::to_string(Ncol) + "\n"    
-    "#define Nmatrix " + std::to_string(Nmatrix) + "\n"    
+//    "#define Nmatrix " + std::to_string(Nmatrix) + "\n"    
     "#define NpadC " + std::to_string(NpadC) + "\n"
     "#define NpadA " + std::to_string(NpadA) + "\n"    
     "#define NpadB " + std::to_string(NpadB) + "\n"
@@ -82,7 +83,8 @@ std::string backsolveBatchString(
   result += "__kernel void backsolveBatch(\n"
   "	__global " + typeString+ " *C,\n"
   "	__global "+ typeString+ " *A,\n"
-  "	__global "+ typeString+ " *B) {\n\n"
+  "	__global "+ typeString+ " *B,\n"
+  "           int Nmatrix) {\n\n"
   "local int AHere, BHere, CHere, DrowZero;\n"
   "int AHereRow, BHereRow, CHereRow, CcacheHereRow;\n"
   "local "+ typeString+ " Ccache[NlocalCacheC];\n" 
@@ -491,7 +493,7 @@ void backsolveBatch(
     diagIsOne,
     Nrow, 
     Ncol, // ncol
-    Nmatrix,
+//    Nmatrix,
     C.internal_size2(),   
     A.internal_size2(), 
     B.internal_size2(),
@@ -526,7 +528,7 @@ void backsolveBatch(
   backsolveKernel.local_work_size(1, Nlocal[1]);
   
   
-  viennacl::ocl::enqueue(backsolveKernel(C, A, B));
+  viennacl::ocl::enqueue(backsolveKernel(C, A, B, Nmatrix));
   
 }
 

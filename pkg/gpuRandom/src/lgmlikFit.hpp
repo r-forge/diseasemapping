@@ -8,7 +8,6 @@
 #include "viennacl/ocl/backend.hpp"
 #include <Rmath.h>
 
-template <typename T> std::string maternBatchKernelString();
 template <typename T> std::string cholBatchKernelString(
     int colStart,
 int colEnd,
@@ -23,9 +22,46 @@ Rcpp::IntegerVector Nlocal, // length 2
 int allowOverflow,
 int logDet);
 
+template <typename T> std::string backsolveBatchString(
+    const int sameB,
+    const int diagIsOne,
+    const int Nrow, 
+    const int Ncol,
+    //    const int Nmatrix, 
+    const int NpadC, 
+    const int NpadA, 
+    const int NpadB,
+    const int NpadBetweenMatricesC,
+    const int NpadBetweenMatricesA,
+    const int NpadBetweenMatricesB,
+    const int NstartC,
+    const int NstartA,
+    const int NstartB,
+    const int NrowsToCache, 
+    const int NcolsPerGroup,
+    const int NlocalCacheC,  // NrowsToCache by NcolsPerGroup
+    const int NlocalCacheSum, // Nlocal(0) * Nlocal(1) * NcolsPerGroup 
+    const int NpadBetweenMatricesSum // Nlocal(0) * Nlocal(1)
+);
 
-template<typename T> 
-void fill22params(
+template <typename T> std::string crossprodBatchString(
+    const int Nrow, 
+    const int Ncol,
+    //    const int Nmatrix, 
+    const int NpadC, 
+    const int NpadA,
+    const int NpadD, // set to zero to omit D
+    const int invertD, // set to 1 for A^T D^(-1) A
+    const int NstartC,  // newly added
+    const int NstartA,  // new
+    const int NstartD,  // new
+    const int NpadBetweenMatricesC,
+    const int NpadBetweenMatricesA,
+    const int NlocalCacheA, // numbers of rows to cache of A
+    Rcpp::IntegerVector Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
+);
+
+template<typename T> void fill22params(
     viennacl::matrix_base<T> &param
 ); 
 
@@ -67,10 +103,10 @@ std::string maternBatchKernelString(
     int NpadParams,
     int Nlocal0,
     int NlocalParamsCache,
-    int assignUpper = 1,
-    int assignLower = 1,
-    int assignDiagonals = 1,
-    int assignDistUpper = 0);
+    int assignUpper,
+    int assignLower,
+    int assignDiagonals,
+    int assignDistUpper);
 
 template<typename T> 
 void maternBatchVcl(

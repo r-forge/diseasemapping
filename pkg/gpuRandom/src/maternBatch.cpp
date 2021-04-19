@@ -226,7 +226,7 @@ std::string maternBatchKernelString(
   // 21 variance + nugget
   result +=
     "\n__kernel void maternBatch(\n"
-    "__global " + typeString + " *result,"
+    "__global " + typeString + " *result,\n"
     "__global " + typeString + " *coords,\n"  
     "__global " + typeString + " *params,\n"
     "int startrow, int Nmatrix) {\n\n";

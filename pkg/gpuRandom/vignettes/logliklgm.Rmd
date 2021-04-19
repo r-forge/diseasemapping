@@ -37,15 +37,12 @@ Scov = c('cov1','cov2')
 yvar = 'Yexp'
 NparamPerIter = 2
 
-workgroupSize = localSize = c(2,2,1)
+workgroupSize = c(1,1,1)
+  localSize = c(1,1,1)
 NlocalCache=500
 type='double'
 verbose = 1L
 
-paramsBatch = t(apply(params, 1, geostatsp::fillParam))
-paramsBatch = vclMatrix(
-  cbind(paramsBatch, matrix(0, nrow(paramsBatch), 22-ncol(paramsBatch))),
-  type=type)
 
 if(boxcox[1] != 1) {
   boxcox = c(1, 0, setdiff(boxcox, c(0,1)))
@@ -53,6 +50,11 @@ if(boxcox[1] != 1) {
 Ncov = length(Scov)+1
 Ndata = length(boxcox)
 Nparam = nrow(params)
+
+paramsBatch1 = t(apply(params, 1, geostatsp::fillParam))
+paramsBatch = vclMatrix(
+  cbind(paramsBatch1, matrix(0, nrow(paramsBatch1), 22-ncol(paramsBatch1))),
+  type=type)
 
 yx = vclMatrix(cbind(
   as.vector(x@data[,yvar]),
@@ -69,6 +71,8 @@ detReml = vclMatrix(0, Nparam, Ndata, type=type)
 jacobian = vclVector(0, Ndata, type=type)
 ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
 ssqX <- vclMatrix(0, Nparam, Ndata, type=type)
+
+varMat = vclMatrix(0, nrow(coords)*NparamPerIter, nrow(coords), type=type)
 
 gpuRandom:::likfitGpu_BackendP(
   yx,
@@ -87,6 +91,7 @@ gpuRandom:::likfitGpu_BackendP(
   NlocalCache,
   verbose = 2
 )
+
 
 as.vector(detVar)
 as.vector(jacobian)
