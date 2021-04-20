@@ -48,15 +48,15 @@ if(requireNamespace("rgdal", quietly=TRUE)) {
   getModisTiles(myPointLL, mapmisc::degreeRaster)
 }
 
-modisUrl = 	'ftp://ladsweb.nascom.nasa.gov/allData/5/MCD12Q1/2002/001/'
+
+modisUrl = 	'https://e4ftl01.cr.usgs.gov/MOTA/MCD12Q1.006/2002.01.01/'
 
 \dontrun{
-paste(modisUrl,
-  grep(
-    paste(getModisTiles(myPointLL)[,'tile'], collapse='|'),
-    unlist(strsplit(RCurl::getURL(
-	    modisUrl,ftp.use.epsv=TRUE,
-	    dirlistonly = TRUE), '\\n')), 
-	  value=TRUE), sep='')
+theFiles = 	grep(
+		paste0("(",paste(getModisTiles(myPointLL)[,'tile'], collapse='|'), ").*.hdf$"),
+	XML::getHTMLLinks(RCurl::getURL(
+	    modisUrl,ftp.use.epsv=FALSE,
+	    dirlistonly = TRUE)), value=TRUE)
+paste0(modisUrl, theFiles)
 }
 }
