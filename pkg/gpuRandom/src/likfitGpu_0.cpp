@@ -1036,7 +1036,7 @@ std::string crossprodKernelString = crossprodBatchString<T>(
       Rcpp::Rcout << "cr";
     }
     
-    // cholesky X^T V^(-1) X = QPQ^T,
+    // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml
     viennacl::ocl::enqueue(cholXvxKernel(ssqYX, cholXVXdiag, NthisIteration, 
                                          detReml, DiterIndex) );
   if(verbose[0]>3) {
@@ -1047,7 +1047,10 @@ std::string crossprodKernelString = crossprodBatchString<T>(
     
     
     
-    // crossprod W^T P^(-1) W, keep diagonals as ssqx
+    // crossprod QinvSsqYx^T P^(-1) QinvSsqYx, 
+    
+    
+    // keep diagonals as ssqx
           
     } // Diter
 }
