@@ -1048,10 +1048,10 @@ std::string crossprodKernelString = crossprodBatchString<T>(
     
     
     // crossprod QinvSsqYx^T P^(-1) QinvSsqYx, 
+    // keep diagonals as ssqx of the above as 
+    // write a kernel to compute only the diagonals?
+
     
-    
-    // keep diagonals as ssqx
-          
     } // Diter
 }
 
