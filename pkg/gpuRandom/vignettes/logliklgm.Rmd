@@ -41,7 +41,7 @@ workgroupSize = c(1,1,1)
   localSize = c(1,1,1)
 NlocalCache=500
 type='double'
-verbose = 1L
+verbose = 9L
 
 
 if(boxcox[1] != 1) {
@@ -67,12 +67,15 @@ coords = vclMatrix(x@coords, type =type)
 boxcoxGpu = vclVector(boxcox, type=type)
 betas = vclMatrix(0, Nparam, Ncov * Ndata, type=type)
 detVar = vclVector(0, Nparam,type=type)
-detReml = vclMatrix(0, Nparam, Ndata, type=type)
+detReml = vclVector(0, Nparam, type=type)
 jacobian = vclVector(0, Ndata, type=type)
 ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
 ssqX <- vclMatrix(0, Nparam, Ndata, type=type)
 
-varMat = vclMatrix(0, nrow(coords)*NparamPerIter, nrow(coords), type=type)
+# objects for debugging
+ssqYX = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
+LinvYX = vclMatrix(0, nrow(yx) * NparamPerIter, ncol(yx), type=type)
+varMat = vclMatrix(0, nrow(yx)*NparamPerIter, nrow(coords), type=type)
 
 gpuRandom:::likfitGpu_BackendP(
   yx,
@@ -89,11 +92,14 @@ gpuRandom:::likfitGpu_BackendP(
   workgroupSize,
   localSize,
   NlocalCache,
-  verbose = 2
+  verbose = 20,
+  ssqYX, LinvYX
 )
 
 
 as.vector(detVar)
+as.vector(detReml)
+
 as.vector(jacobian)
 head(as.matrix(yx)) 
 ```
