@@ -99,6 +99,8 @@ gpuRandom:::likfitGpu_BackendP(
 
 as.vector(detVar)
 as.vector(detReml)
+as.matrix(ssqX)
+as.matrix(ssqY)
 
 as.vector(jacobian)
 head(as.matrix(yx)) 

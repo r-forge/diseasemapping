@@ -52,6 +52,7 @@ template <typename T> std::string crossprodBatchString(
     const int NpadA,
     const int NpadD, // set to zero to omit D
     const int invertD, // set to 1 for A^T D^(-1) A
+    const int onlyDiagC,
     const int NstartC,  // newly added
     const int NstartA,  // new
     const int NstartD,  // new

@@ -831,8 +831,8 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
 //    viennacl::matrix<T> ssqYX(NparamPerIter[0]*yx.size2(), yx.size2());
     
     viennacl::matrix<T> cholXVXdiag(NparamPerIter[0], Ncovariates);
-    viennacl::matrix<T> QinvSsqYx(ssqYX.size1(), ssqYX.size2());
-    
+    viennacl::matrix<T> QinvSsqYx(NparamPerIter[0]*Ncovariates, Ndatasets);
+
     fill22params(params);
     
     
@@ -947,6 +947,7 @@ std::string crossprodKernelString = crossprodBatchString<T>(
   LinvYX.internal_size2(),//const int NpadA,
   cholDiagMat.internal_size2(),//const int NpadD, // set to zero to omit D
   1, //const int invertD, // set to 1 for A^T D^(-1) A
+  0, // not only the diagonals
   0,//const int NstartC,  
   0,//const int NstartA,  
   0,//const int NstartD,  
@@ -955,7 +956,26 @@ std::string crossprodKernelString = crossprodBatchString<T>(
   NlocalCache[0]/2, // NlocalCacheA, 
   localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
 );
-        
+ 
+ std::string crossprodSsqYxKernelString = crossprodBatchString<T>(
+   Ncovariates,//const int Nrow, 
+   Ndatasets,//const int Ncol,
+   //    const int Nmatrix, 
+   0,//const int NpadC, ignored
+   QinvSsqYx.internal_size2(),//const int NpadA,
+   cholXVXdiag.internal_size2(),//const int NpadD, // set to zero to omit D
+   1, //const int invertD, // set to 1 for A^T D^(-1) A
+   1, // only diagonals
+   0,//const int NstartC,  
+   0,//const int NstartA,  
+   0,//const int NstartD,  
+   ssqX.internal_size2(), //const int NpadBetweenMatricesC,
+   QinvSsqYx.internal_size2()*Nobs, //const int NpadBetweenMatricesA,
+   NlocalCache[0]/2, // NlocalCacheA, 
+   localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
+ );
+ 
+ 
   if(verbose[0]>1) {
       Rcpp::Rcout << "crossprod\n" << crossprodKernelString << "\n";
     Rcpp::Rcout << "cholXVXkernelString\n" << cholXVXkernelString << "\n";
@@ -969,14 +989,16 @@ std::string crossprodKernelString = crossprodBatchString<T>(
   viennacl::ocl::program & my_prog_cholxvx = viennacl::ocl::current_context().add_program(cholXVXkernelString, "mykernelcholxvx");
   viennacl::ocl::program & my_prog_backsolveSsqYx = viennacl::ocl::current_context().add_program(
     backsolveSsqYxString, "mybacksolvessqyx");
-
+  viennacl::ocl::program & my_prog_crossprodSsqYx = viennacl::ocl::current_context().add_program(
+    crossprodSsqYxKernelString, "mykernelcrossprodssqyx");
+  
     viennacl::ocl::kernel & maternKernel = my_prog_matern.get_kernel("maternBatch");
   viennacl::ocl::kernel & cholKernel = my_prog_chol.get_kernel("cholBatch");
   viennacl::ocl::kernel & cholXvxKernel = my_prog_cholxvx.get_kernel("cholBatch");
   viennacl::ocl::kernel & backsolveKernel = my_prog_backsolve.get_kernel("backsolveBatch");
   viennacl::ocl::kernel & crossprodKernel = my_prog_crossprod.get_kernel("crossprodBatch");
   viennacl::ocl::kernel & backsolveSsqYxKernel = my_prog_backsolveSsqYx.get_kernel("backsolveBatch");
-  
+  viennacl::ocl::kernel & crossprodSsqYxKernel = my_prog_crossprodSsqYx.get_kernel("crossprodBatch");
   
   // dimension 0 is cell, dimension 1 is matrix
   maternKernel.global_work_size(0, workgroupSize[0] ); 
@@ -1000,7 +1022,15 @@ std::string crossprodKernelString = crossprodBatchString<T>(
   crossprodKernel.local_work_size(0, localSize[0]);
   crossprodKernel.local_work_size(1, localSize[1]);
   
+  backsolveSsqYxKernel.global_work_size(0, workgroupSize[0] ); 
+  backsolveSsqYxKernel.global_work_size(1, workgroupSize[1] ); 
+  backsolveSsqYxKernel.local_work_size(0, localSize[0]);
+  backsolveSsqYxKernel.local_work_size(1, localSize[1]);
   
+  crossprodSsqYxKernel.global_work_size(0, workgroupSize[0] ); 
+  crossprodSsqYxKernel.global_work_size(1, workgroupSize[1] ); 
+  crossprodSsqYxKernel.local_work_size(0, localSize[0]);
+  crossprodSsqYxKernel.local_work_size(1, localSize[1]);
   ///////////////////////////Loop starts !!!//////////////////////////////////////////////////////////////////////////
   for (Diter=0,DiterIndex=0; Diter< Niter; 
   Diter++,DiterIndex += NparamPerIter[0]){
@@ -1024,19 +1054,21 @@ std::string crossprodKernelString = crossprodBatchString<T>(
     if(verbose[0]>3) {
       Rcpp::Rcout << "c";
     }
-    // LinvYX = L^(-1) YX
+    // LinvYX = L^(-1) YX,   Nobs by (Ndatasets + Ncovariates)
     viennacl::ocl::enqueue(backsolveKernel(LinvYX, Vbatch, yx, NthisIteration));
     
     if(verbose[0]>3) {
       Rcpp::Rcout << "b";
     }
-    // ssqYX = YX^Y L^(-1)T D^(-1) L^(-1) YX
+    // ssqYX = YX^Y L^(-1)T D^(-1) L^(-1) YX  square matrix, (Ndatasets + Ncovariates)
     viennacl::ocl::enqueue(crossprodKernel(ssqYX, LinvYX, cholDiagMat, NthisIteration));
     if(verbose[0]>3) {
       Rcpp::Rcout << "cr";
     }
     
-    // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml
+    // TO DO: save diagonals of ssqYX to ssqY
+    
+    // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part
     viennacl::ocl::enqueue(cholXvxKernel(ssqYX, cholXVXdiag, NthisIteration, 
                                          detReml, DiterIndex) );
   if(verbose[0]>3) {
@@ -1044,10 +1076,17 @@ std::string crossprodKernelString = crossprodBatchString<T>(
   }
 
     // backsolve QinvSsqYx = Q^(-1) ssqYX[(Ndatasets+1):nrow(ssqYX),1:Ndatasets]  
+    // Ncovariates by Ndatasets
+    viennacl::ocl::enqueue(backsolveSsqYxKernel(
+        QinvSsqYx, ssqYX, ssqYX, NthisIteration 
+        ));
     
     
+    // crossprod QinvSsqYx^T P^(-1) QinvSsqYx,   Ndatasets by Ndatasets
+    viennacl::ocl::enqueue(crossprodSsqYxKernel(ssqX, QinvSsqYx,
+                                                cholXVXdiag, NthisIteration)); 
     
-    // crossprod QinvSsqYx^T P^(-1) QinvSsqYx, 
+    
     // keep diagonals as ssqx of the above as 
     // write a kernel to compute only the diagonals?
 

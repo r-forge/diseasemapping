@@ -3,7 +3,8 @@
 //#define NOKERNELS
 
 // C = A^T A or A^T D A or A^T D^(-1) A 
-// TO DO: iterate cache
+// if onlyDiagC = 1, then only compute diagonals of C
+// C is an Nmatrix by Ncol matrix
 
 
 template <typename T> 
@@ -11,10 +12,11 @@ std::string crossprodBatchString(
     const int Nrow, 
     const int Ncol,
 //    const int Nmatrix, 
-    const int NpadC, 
+    const int NpadC, // ignored if onlyDiagC, use NpadBetweenMatrices in this case
     const int NpadA,
     const int NpadD, // set to zero to omit D
     const int invertD, // set to 1 for A^T D^(-1) A
+    const int onlyDiagC, // set to 1 to only compute diagonals of C
     const int NstartC,  // newly added
     const int NstartA,  // new
     const int NstartD,  // new
@@ -78,14 +80,21 @@ std::string crossprodBatchString(
   "int A0Dcol, A0Drow;// location of elements A[0,Dcol] and A[0,Drow]\n" 
   "const int AHereInc = get_num_groups(1)*NpadBetweenMatricesA;\n"
   "const int CHereInc = get_num_groups(1)*NpadBetweenMatricesC;\n"
-  "const int DlocalInc = get_local_size(0)*NpadLocal;\n"
   "const int DrowNpadCInc = get_local_size(1)*NpadC;\n"
-  "const int DinnerAinc = get_local_size(0)*NpadA;\n"
+ 
   "const int localIndex = get_local_id(0) * get_local_size(1) + get_local_id(1);\n"
   "const int NlocalTotal = get_local_size(1)*get_local_size(0);\n"
-  "const int doLocalSum = (get_local_id(0)==0);\n"
   "const int cacheIndex = get_local_id(1)+NpadLocal*get_local_id(0);\n";
-  
+
+    if(onlyDiagC) {
+      result +=    "const int doLocalSum = (localIndex==0);\n"
+      "const int DinnerAinc = NlocalTotal*NpadA;\n";
+    } else {
+      result +=    "const int doLocalSum = (get_local_id(0)==0);\n"
+                  "const int DinnerAinc = get_local_size(0)*NpadA;\n";
+    }
+    
+    
   if(NpadD) {
     result += "int DHere;\n"
     "const int DHereInc = get_num_groups(1)*NpadD;\n";
@@ -130,13 +139,25 @@ std::string crossprodBatchString(
   "    A0Dcol += get_num_groups(0)){\n\n";
   
   
-if(NrowStop) {  
+if(NrowStop) {
   result +=  "\n"
   "    // cache A[1:NrowStop, Dcol]\n"
   "    ev=async_work_group_strided_copy (\n"
   "      Acache, &A[A0Dcol],\n"
   "      NrowStop, NpadA, 0);\n"
   "    wait_group_events (1, &ev);\n";
+  if(onlyDiagC) {
+    result +=
+    "    // square the cached A\n"
+    "    for(Dinner = localIndex;\n"
+    "        Dinner < NrowStop;\n"
+    "        Dinner+=NlocalTotal\n"
+    "    ){\n";   
+  result +=
+    "      Acache[Dinner] *= Acache[Dinner];\n";
+  result +=
+  "    }\n\n";
+  }
 if(NpadD) {
     result +=
     "    // multiply by D\n"
@@ -157,40 +178,79 @@ if(NpadD) {
 } // NrowStop
 
 
+
+if(onlyDiagC) {
+    result += 
+      "     Drow = Dcol;\n"
+      "     A0Drow = AHere + Drow;\n"
+      "     DrowNpadC = CHere + Drow * NpadC;\n\n";
+      
+}  else {
+    result += 
+      "   for(Drow = Dcol + get_local_id(1),\n"
+      "       DrowNpadC = CHere + Drow * NpadC,\n"
+      "       A0Drow = AHere + Drow;\n"
+      "     Drow < Ncol;\n"
+      "     Drow += get_local_size(1),\n" 
+      "       DrowNpadC += DrowNpadCInc,\n"
+      "       A0Drow +=  get_local_size(1)\n"
+      "   ){\n\n";
+}
+  
   result += 
-  "   for(Drow = Dcol + get_local_id(1),\n"
-  "       DrowNpadC = CHere + Drow * NpadC,\n"
-  "       A0Drow = AHere + Drow;\n"
-  "     Drow < Ncol;\n"
-  "     Drow += get_local_size(1),\n" 
-  "       DrowNpadC += DrowNpadCInc,\n"
-  "       A0Drow +=  get_local_size(1)\n"
-  "   ){\n\n";
+    "      Cout=0.0;\n";
+  
   result += 
-  "      Cout=0.0;\n";
+      "      // cached parts\n";
+  
+if(onlyDiagC) {
+  result +=      "      for(Dinner = localIndex,\n";
+} else {
+  result +=  "      for(Dinner = get_local_id(0),\n";
+}
+result +=
+      "          DinnerA = A0Drow + Dinner*NpadA;\n"
+      "        Dinner < NrowStop;\n"
+      "        Dinner += NlocalTotal,\n"
+      "          DinnerA += DinnerAinc\n"
+      "      ){\n";
+
+if(onlyDiagC) {    
+    result += 
+      "          Cout += Acache[Dinner];\n"; 
+} else {
   result += 
-    "      // cached parts\n"
-    "      for(Dinner = get_local_id(0),\n"
-    "          DinnerA = A0Drow + Dinner*NpadA;\n"
-    "        Dinner < NrowStop;\n"
-    "        Dinner += get_local_size(0),\n"
-    "          DinnerA += DinnerAinc\n"
-    "      ){\n";
-  result += 
-    "          Cout += A[DinnerA] * Acache[Dinner];\n"
-//    "          Cout += A[Dmatrix * NpadBetweenMatricesA + Dinner*NpadA + Drow] * Acache[Dinner];\n"
-    "      }\n";
+    "          Cout += A[DinnerA] * Acache[Dinner];\n";
+    //    "          Cout += A[Dmatrix * NpadBetweenMatricesA + Dinner*NpadA + Drow] * Acache[Dinner];\n";
+  }
+
+result += "      }// Dinner\n";
 
   result +=
-    "      // un-cached parts\n"
-    "      for(Dinner = NrowStop + get_local_id(0),\n"
-    "          DinnerA = A0Drow + Dinner*NpadA,\n"
+    "      // un-cached parts\n";
+
+  if(onlyDiagC) {
+  result +=
+    "      for(Dinner = NrowStop + localIndex,\n";
+} else {
+  result +=
+  "      for(Dinner = NrowStop + get_local_id(0),\n";
+}
+
+result +=
+  "          DinnerA = A0Drow + Dinner*NpadA,\n"
     "          DinnerAcol = A0Dcol + Dinner*NpadA;\n"
-    "        Dinner < Nrow;\n"
-    "        Dinner += get_local_size(0),\n"
-    "          DinnerA += DinnerAinc,\n"
+    "        Dinner < Nrow;\n";
+
+if(onlyDiagC){
+} else {
+  result +=  "        Dinner += get_local_size(0),\n";
+}
+
+result +=    "          DinnerA += DinnerAinc,\n"
     "          DinnerAcol += DinnerAinc\n"
     "      ){\n";
+
   if(NpadD) {
     if(invertD) {
       result += 
@@ -212,21 +272,32 @@ if(NpadD) {
     result +=       
       "      Ccache[cacheIndex] = Cout;\n"
       "      barrier(CLK_LOCAL_MEM_FENCE);\n";
+    
       result +=
-        "      if(doLocalSum){\n"
+        "      if(doLocalSum){\n";
+      if(onlyDiagC) {
+        result +=
+          "        for(Dinner = 1;Dinner < NlocalTotal;Dinner++){\n"
+          "          Ccache[cacheIndex] += Ccache[cacheIndex + Dinner];\n"
+          "        }\n";
+        result += "          C[CHere + Dcol] = Ccache[cacheIndex];\n";
+      } else {
+      result +=
       "        for(Dinner = 1;Dinner < get_local_size(0);Dinner++){\n"
       "          Ccache[cacheIndex] += Ccache[cacheIndex + Dinner * NpadLocal];\n"
-      "        }\n"
-     //" C[DrowNpadC + Dcol]  = 100*(1+Dmatrix) + 10 * (1+Drow) + (1+Dcol);\n"
-      "          C[DrowNpadC + Dcol] = Ccache[cacheIndex];\n" 
-//"          C[DrowNpadC + Dcol] = A[Dmatrix * NpadBetweenMatricesA + Drow*NpadA + Dcol];\n"
-//        result +=       "    C[Dmatrix * NpadBetweenMatricesC + Drow * NpadC + Dcol] = 100*(Dmatrix+1) + 10*(Drow+1) + Dcol+1;\n";
-"      }//doLocalSum \n"
+      "        }\n";
+        result += "          C[DrowNpadC + Dcol] = Ccache[cacheIndex];\n";
+      } 
+      
+      result +=
+        "      }//doLocalSum \n"
 "      barrier(CLK_LOCAL_MEM_FENCE);\n";
 
     
-    result += 
+    if(!onlyDiagC) {
+      result += 
       "    }// Drow\n";
+    }
     result += 
       "  }// Dcol\n";
     result += 
@@ -288,6 +359,7 @@ void crossprodBatch(
     A.internal_size2(), 
     D.internal_size2(),
     invertD, // A^T D^(-1) A
+    0, // don't only compute diagonals of C
     NstartC,
     NstartA,
     NstartD,
