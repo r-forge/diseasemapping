@@ -450,14 +450,12 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     if(verbose[0]>3) {
       Rcpp::Rcout << "cr";
     }
-    
     // save diagonals of ssqYX to ssqY
     for(Dy1 = 0; Dy1 < Ndatasets; Dy1++) {
       for(Dy2 = 0; Dy2 < NthisIteration; Dy2++) {
-        ssqY(DiterIndex + Dy2,Dy) = ssqYX(Dy2 * ssqYX.internal_size2() + Dy1, Dy1);
+        ssqY(DiterIndex + Dy2,Dy1) = ssqYX( Dy2 * ssqYX.size2() + Dy1, Dy1);
       }
     }
-    
     // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part
     viennacl::ocl::enqueue(cholXvxKernel(ssqYX, cholXVXdiag, NthisIteration, 
                                          detReml, DiterIndex) );
