@@ -11,7 +11,8 @@ using namespace viennacl::linalg;
 
 
 template <typename T> 
-std::string extract_some_diag_string(int NpadCol_Y, int NpadcolYX, int Ncols_YX) {  //ssqYX.size2()
+std::string extract_some_diag_string(int NthisIteration,  int Ndatasets,
+                                     int NpadCol_Y, int NpadcolYX, int Ncols_YX) {  //ssqYX.size2()
   
   std::string typeString = openclTypeString<T>();
   
@@ -24,6 +25,8 @@ std::string extract_some_diag_string(int NpadCol_Y, int NpadcolYX, int Ncols_YX)
   
   
   result += 
+    "#define NthisIteration " + std::to_string(NthisIteration) + "\n"
+    "#define Ndatasets " + std::to_string(Ndatasets) + "\n"
     "#define NpadCol_Y " + std::to_string(NpadCol_Y) + "\n"
     "#define NpadcolYX"   + std::to_string(NpadcolYX) + "\n"
     "#define Ncols_YX "   + std::to_string(Ncols_YX) + "\n";
@@ -49,6 +52,7 @@ std::string extract_some_diag_string(int NpadCol_Y, int NpadcolYX, int Ncols_YX)
   
   return(result);
 }
+
 
 
 
