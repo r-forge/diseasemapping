@@ -831,7 +831,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
    int Ncovariates = yx.size2() - Ndatasets;
 
      int Niter = ceil(Nparams / NparamPerIter[0]);
-    int Diter;
+    int Diter, Dy1, Dy2;
     int endThisIteration;
     int DiterIndex, NthisIteration;
     int verboseMatern = verbose[0]>1;
@@ -1080,7 +1080,12 @@ std::string crossprodKernelString = crossprodBatchString<T>(
       Rcpp::Rcout << "cr";
     }
     
-    // TO DO: save diagonals of ssqYX to ssqY
+    // save diagonals of ssqYX to ssqY
+    for(Dy1 = 0; Dy1 < Ndatasets; Dy1++) {
+      for(Dy2 = 0; Dy2 < NthisIteration; Dy2++) {
+        ssqY(DiterIndex + Dy2,Dy) = ssqYX(Dy2 * ssqYX.internal_size2() + Dy1, Dy1);
+      }
+    }
     
     // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part
     viennacl::ocl::enqueue(cholXvxKernel(ssqYX, cholXVXdiag, NthisIteration, 
@@ -1101,8 +1106,6 @@ std::string crossprodKernelString = crossprodBatchString<T>(
                                                 cholXVXdiag, NthisIteration)); 
     
     
-    // keep diagonals as ssqx of the above as 
-    // write a kernel to compute only the diagonals?
 
     
     } // Diter
