@@ -1,0 +1,126 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{loglikelihood_p}
+-->
+
+```{r test_4.28,eval=F}
+library(gpuRandom)
+library(gpuR)
+library('geostatsp')
+data('swissRain')
+sr2 = swissRain[0:50,]
+
+# extract variables for modeling
+sr2$sqrtY = sqrt(sr2$rain)
+sr2$elev = raster::extract(swissAltitude, sr2)
+swissFitIso = geostatsp::likfitLgm(
+  data=sr2,
+  formula=sqrtY ~ elev,
+  param=c(range=50000,shape=1),
+  reml=FALSE,
+  verbose=FALSE
+)
+
+
+swissFitIso$parameters   #swissFitIso$summary[c("(Intercept)","elev"),1]
+newParamList = list(
+  range=seq(30000, 80000 , len=10),
+  nugget = seq(0,0.25,len=10)
+) 
+
+
+newParam= do.call(expand.grid, newParamList)
+otherparams = c(shape=1, variance = 2.079408, anisoRatio = 1, anisoAngleRadians = 0)
+otherparams = matrix(rep(otherparams,each=nrow(newParam)),nrow=nrow(newParam))
+colnames(otherparams) <- c("shape","variance", "anisoRatio", "anisoAngleRadians")
+paramsBatch0 = cbind(newParam, otherparams)
+paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
+paramsBatch = gpuR::vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0),22-ncol(paramsBatch0))),type="double")
+
+workgroupSize=c(16,16,8)
+localSize = c(4,4,1)
+NlocalCache=500
+
+lgmGpuObjectes1 <- function(modelname, mydat, type=c("double", "float")){
+  
+  covariates = model.matrix(modelname$model$formula, data=modelname$data)
+  temp = model.frame(modelname$model$formula, data=modelname$data)
+  response=temp[,as.character(attributes(terms(temp))$variables)[2]]
+  n = length(response)
+  p = ncol(covariates)
+  yXcpu=cbind(response,covariates)   
+  yX <- vclMatrix(yXcpu,type=type)
+  coordsGpu<-vclMatrix(mydat@coords,type=type)
+  
+  
+  output<-list(yXcpu=yXcpu, yX=yX, coordsGpu=coordsGpu, n=n, p=p)
+  
+  output
+}
+
+
+boxcox <- vclVector(1,  type=type)
+totalparams <- nrow(paramsBatch)
+output1  <- lgmGpuObjectes1(swissFitIso, sr2, type="double")
+n<-output1$n
+p<-output1$p
+colbatch=length(boxcox)+1
+NparamPerIter=50
+type="double"
+betas <- vclMatrix(0, nrow=0, ncol= 0,type="double")
+ssqY <- vclMatrix(0, totalparams, colbatch, type=type)
+ssqX <- vclMatrix(0, totalparams, colbatch, type=type)
+logD <- vclVector(0, totalparams, type=type)
+logP <- vclVector(0, totalparams, type=type)
+jacobian <- vclVector(0, length(boxcox), type=type)
+ssqYX <- vclMatrix(0, (colbatch+p)*NparamPerIter, (colbatch+p), type=type)
+LinvYX <- vclMatrix(0, NparamPerIter*n, colbatch+p, type = type)
+ 
+ 
+ 
+ 
+gpuRandom:::likfitGpu_BackendP(
+    output1$yX,
+    output1$coordsGpu,
+    paramsBatch,
+    boxcox,
+    betas,
+    ssqY,
+    ssqX,
+    logD,
+    logP,
+    jacobian,
+    NparamPerIter,
+    workgroupSize,
+    localSize,
+    NlocalCache,
+    verbose=0,
+    ssqYX, 
+    LinvYX) 
+
+as.matrix(logD)
+as.matrix(logP)
+as.matrix(ssqY)
+
+
+
+
+
+
+
+
+
+
+lMatrix = matrix(tempcpu[,3], length(newParamList[[1]]), length(newParamList[[2]]))
+# 
+myCol = mapmisc::colourScale(lMatrix, breaks=8, dec=0)
+image(
+  newParamList[[1]]/1000, newParamList[[2]], lMatrix,
+  col = myCol$col, breaks=myCol$breaks,
+  xlab = names(newParamList)[1],
+  ylab = names(newParamList)[2]
+)
+mapmisc::legendBreaks('topright', myCol)
+
+
+```
