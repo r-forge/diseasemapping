@@ -1,4 +1,4 @@
-v]#' @title pre_function for likfitGpu
+#' @title pre_function for likfitGpu
 #'
 #' @useDynLib gpuRandom
 #' @export

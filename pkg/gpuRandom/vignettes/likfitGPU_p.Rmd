@@ -64,7 +64,7 @@ totalparams <- nrow(paramsBatch)
 output1  <- lgmGpuObjectes1(swissFitIso, sr2, type="double")
 n<-output1$n
 p<-output1$p
-colbatch=length(boxcox)+1
+colbatch=length(boxcox)
 NparamPerIter=50
 betas <- vclMatrix(0, nrow=0, ncol= 0,type="double")
 ssqY <- vclMatrix(0, totalparams, colbatch, type=type)
@@ -73,7 +73,7 @@ logD <- vclVector(0, totalparams, type=type)
 logP <- vclVector(0, totalparams, type=type)
 jacobian <- vclVector(0, length(boxcox), type=type)
 ssqYX <- vclMatrix(0, (colbatch+p)*NparamPerIter, (colbatch+p), type=type)
-LinvYX <- vclMatrix(0, NparamPerIter*n, colbatch+p, type = type)
+LinvYX <- vclMatrix(0, (colbatch+p)*NparamPerIter, (colbatch+p), type = type)
  
  
  
@@ -97,8 +97,8 @@ gpuRandom:::likfitGpu_BackendP(
     ssqYX, 
     LinvYX) 
 
-as.matrix(logD)
-as.matrix(logP)
+as.vector(logD)
+as.vector(logP)
 as.matrix(ssqY)
 
 
