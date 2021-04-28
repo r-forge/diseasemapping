@@ -12,7 +12,7 @@ using namespace viennacl::linalg;
 
 template <typename T> 
 std::string extract_some_diag_string(int NthisIteration,  int Ndatasets,
-                                     int NpadCol_Y, int NpadcolYX, int Ncols_YX) {  //ssqYX.size2()
+                                     int NpadColY, int NpadcolYX, int Ncols_YX) {  //ssqYX.size2()
   
   std::string typeString = openclTypeString<T>();
   
@@ -27,7 +27,7 @@ std::string extract_some_diag_string(int NthisIteration,  int Ndatasets,
   result += 
     "#define NthisIteration " + std::to_string(NthisIteration) + "\n"
     "#define Ndatasets " + std::to_string(Ndatasets) + "\n"
-    "#define NpadCol_Y " + std::to_string(NpadCol_Y) + "\n"
+    "#define NpadColY " + std::to_string(NpadCol_Y) + "\n"
     "#define NpadcolYX"   + std::to_string(NpadcolYX) + "\n"
     "#define Ncols_YX "   + std::to_string(Ncols_YX) + "\n";
   
@@ -45,7 +45,7 @@ std::string extract_some_diag_string(int NthisIteration,  int Ndatasets,
     "for (Drow = get_global_id(0); Drow < NthisIteration; Drow += get_global_size(0)) {\n"
     "for (Dcol = get_global_id(1); Dcol < Ndatasets; Dcol += get_global_size(1)) {\n" 
     
-    "ssqY[Drow*NpadCol_Y+Dcol] = ssqYX[ (Drow * Ncols_YX + Dcol) * NpadcolYX + Dcol ] ;\n"
+    "ssqY[Drow*NpadColY+Dcol] = ssqYX[ (Drow * Ncols_YX + Dcol) * NpadcolYX + Dcol ] ;\n"
     
     "}\n"
     "};\n";
