@@ -58,15 +58,14 @@ lgmGpuObjectes1 <- function(modelname, mydat, type=c("double", "float")){
   output
 }
 
-
-boxcox <- vclVector(1,  type=type)
+type="double"
+boxcox <- vclVector(c(1,0,0.5),  type=type)
 totalparams <- nrow(paramsBatch)
 output1  <- lgmGpuObjectes1(swissFitIso, sr2, type="double")
 n<-output1$n
 p<-output1$p
 colbatch=length(boxcox)+1
 NparamPerIter=50
-type="double"
 betas <- vclMatrix(0, nrow=0, ncol= 0,type="double")
 ssqY <- vclMatrix(0, totalparams, colbatch, type=type)
 ssqX <- vclMatrix(0, totalparams, colbatch, type=type)
