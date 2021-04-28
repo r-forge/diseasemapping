@@ -48,7 +48,7 @@ std::string extract_some_diag_string(int NthisIteration,  int Ndatasets,
     "ssqY[Drow*NpadColY+Dcol] = ssqYX[ (Drow * Ncols_YX + Dcol) * NpadcolYX + Dcol ] ;\n"
     
     "}\n"
-    "};\n";
+    "}\n";
   
   return(result);
 }
