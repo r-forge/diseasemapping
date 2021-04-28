@@ -10,6 +10,45 @@ using namespace viennacl::linalg;
 
 
 
+template <typename T> 
+std::string extract_some_diag_string(int NpadCol_Y, int NpadcolYX, int Ncols_YX) {  //ssqYX.size2()
+  
+  std::string typeString = openclTypeString<T>();
+  
+  
+  std::string result = "";
+  
+  if(typeString == "double") {
+    result += "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n";
+  }
+  
+  
+  result += 
+    "#define NpadCol_Y " + std::to_string(NpadCol_Y) + "\n"
+    "#define NpadcolYX"   + std::to_string(NpadcolYX) + "\n"
+    "#define Ncols_YX "   + std::to_string(Ncols_YX) + "\n";
+  
+  result += 
+    "\n__kernel void extract_some_diag(\n"
+    "__global " + typeString + " *ssqY,\n"
+    "__global " + typeString + " *ssqYX\n"  
+    "){\n\n";
+  
+  result +=
+    "int Drow, Dcol;\n";
+  
+  result += 
+    
+    "for (Drow = get_global_id(0); Drow < NthisIteration; Drow += get_global_size(0)) {\n"
+    "for (Dcol = get_global_id(1); Dcol < Ndatasets; Dcol += get_global_size(1)) {\n" 
+    
+    "ssqY[Drow*NpadCol_Y+Dcol] = ssqYX[ (Drow * Ncols_YX + Dcol) * NpadcolYX + Dcol ] ;\n"
+    
+    "}\n"
+    "};\n";
+  
+  return(result);
+}
 
 
 
