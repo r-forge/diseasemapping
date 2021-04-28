@@ -264,7 +264,7 @@ result +=    "          DinnerA += DinnerAinc,\n"
     }
   } else {
     result += 
-      "      Cout += A[DinnerA] * A[DinnerAcol]\n";
+      "      Cout += A[DinnerA] * A[DinnerAcol];\n";
   }  
     
     result += 
