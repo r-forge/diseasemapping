@@ -37,8 +37,8 @@ Scov = c('cov1','cov2')
 yvar = 'Yexp'
 NparamPerIter = 2
 
-workgroupSize = c(1,1,1)
-  localSize = c(1,1,1)
+workgroupSize = c(4,4,1)
+  localSize = c(2,1,1)
 NlocalCache=500
 type='double'
 verbose = 9L
