@@ -75,7 +75,10 @@ ssqX <- vclMatrix(0, Nparam, Ndata, type=type)
 # objects for debugging
 ssqYX = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
 LinvYX = vclMatrix(0, nrow(yx) * NparamPerIter, ncol(yx), type=type)
+QinvSsqYx = vclMatrix(0, NparamPerIter*Ncov, Ndata, type = type);
 varMat = vclMatrix(0, nrow(yx)*NparamPerIter, nrow(coords), type=type)
+
+
 
 gpuRandom:::likfitGpu_BackendP(
   yx,
@@ -92,18 +95,19 @@ gpuRandom:::likfitGpu_BackendP(
   workgroupSize,
   localSize,
   NlocalCache,
-  verbose = 20,
-  ssqYX, LinvYX
+  verbose = 10,
+  ssqYX, LinvYX,QinvSsqYx
 )
 
 
 as.vector(detVar)
 as.vector(detReml)
 as.matrix(ssqX)
-as.matrix(ssqY)
+as.matrix(LinvYX)
+as.matrix(QinvSsqYx)
 
-as.vector(jacobian)
-head(as.matrix(yx)) 
+#as.vector(jacobian)
+#head(as.matrix(yx)) 
 ```
 
 

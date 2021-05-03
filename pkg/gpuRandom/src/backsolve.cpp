@@ -223,11 +223,10 @@ std::string backsolveBatchString(
   }
   result += ";\n";
   
-  
   result +=  "    C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n";
   
   
-  //    "          C[CHereRow + Dcol] = 100*(1 + Dmatrix) + 10*(1+Drow) + (1+Dcol);\n"
+  //    "          C[CHereRow + Dcol] = 100*(1 + Dmatrix) + 10*(1+Drow) + (1+Dcol);\n";
   //"          C[CHereRow + Dcol] = A[AHereRow + Dcol];\n"
   
   result +=
@@ -397,10 +396,10 @@ std::string backsolveBatchString(
     result += "/ A[AHere + Drow * NpadA + Drow]";
   }
   result += ";\n";
-  
+  // DEBUGGING!!
   result +=
     "      C[CHereRow + Dcol] = cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n";
-  //    "          C[CHereRow + Dcol] = 10*(1 + Dmatrix) + (1+Drow) + (1+Dcol)/10;\n"
+//      "          C[CHereRow + Dcol] = 10*(1 + Dmatrix) + (1+Drow) + (1+Dcol)/10;\n";
   
   result +=
     "        } //if(get_local_id(0) == Dinner)\n"
