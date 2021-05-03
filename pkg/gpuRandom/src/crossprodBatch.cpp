@@ -281,6 +281,8 @@ result +=    "          DinnerA += DinnerAinc,\n"
           "          Ccache[cacheIndex] += Ccache[cacheIndex + Dinner];\n"
           "        }\n";
         result += "          C[CHere + Dcol] = Ccache[cacheIndex];\n";
+        // DEBUG
+//        result += "          C[CHere + Dcol] = CHere + Dcol;\n";
       } else {
       result +=
       "        for(Dinner = 1;Dinner < get_local_size(0);Dinner++){\n"

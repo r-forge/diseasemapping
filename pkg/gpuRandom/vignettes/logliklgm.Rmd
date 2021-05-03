@@ -77,7 +77,7 @@ ssqYX = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
 LinvYX = vclMatrix(0, nrow(yx) * NparamPerIter, ncol(yx), type=type)
 QinvSsqYx = vclMatrix(0, NparamPerIter*Ncov, Ndata, type = type);
 varMat = vclMatrix(0, nrow(yx)*NparamPerIter, nrow(coords), type=type)
-
+cholXVXdiag = vclMatrix(0, NparamPerIter, Ndata, type=type)
 
 
 gpuRandom:::likfitGpu_BackendP(
@@ -96,15 +96,16 @@ gpuRandom:::likfitGpu_BackendP(
   localSize,
   NlocalCache,
   verbose = 10,
-  ssqYX, LinvYX,QinvSsqYx
+  ssqYX, LinvYX,QinvSsqYx,cholXVXdiag
 )
 
 
 as.vector(detVar)
 as.vector(detReml)
 as.matrix(ssqX)
-as.matrix(LinvYX)
+as.matrix(ssqY)
 as.matrix(QinvSsqYx)
+as.matrix(cholXVXdiag)
 
 #as.vector(jacobian)
 #head(as.matrix(yx)) 
