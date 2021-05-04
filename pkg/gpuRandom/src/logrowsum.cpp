@@ -101,6 +101,10 @@ void rowsum(
 */
 
 
+
+
+
+
 template <typename T>
 void rowsum(
     viennacl::matrix<T> &x,
