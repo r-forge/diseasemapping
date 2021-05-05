@@ -286,6 +286,8 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                                      1L, 1L, 1L, 0L
   );
   int allowOverflow = ( ((int) Vbatch.size2() ) > NlocalCache[0] );
+  
+  
   std::string cholClString = cholBatchKernelString<T>(
     0, // colstart
     Nobs, // colend

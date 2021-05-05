@@ -31,8 +31,7 @@ likfitGpu_0 <- function(Vbatch,
                         coordsGpu, 
                         paramsBatchperIter, 
                         diagMat, 
-                        logD_temp,   #viennacl::vector
-                        logD_i,
+                        logD_temp,   #viennacl::vectorlogD_i,
                         ab,
                         yX, #y1,y2,y3,X            
                         temp2,
@@ -47,8 +46,7 @@ likfitGpu_0 <- function(Vbatch,
                         temp3,
                         ssqbetahat0,
                         ssqbetahat,      # ssqbetahat
-                        logP_temp,  # viennacl::vector
-                        logP_i,
+                        logP_temp,  # viennacl::vectorlogP_i,
                         Qinverse,
                         identity,
                         QPQinverse,
@@ -73,7 +71,7 @@ likfitGpu_0 <- function(Vbatch,
   
   #logD_temp <- apply(log(diagMat),1,sum)   half log determinant of V
   gpuRandom:::rowsumBackend(diagMat, logD_temp, type="row", log=TRUE)   
-  logD_i[] <- logD_temp
+  #logD_i[] <- logD_temp
   
   #L(a1,a2,a3, b) = (y1,y2,y3, X)
   gpuRandom::backsolveBatch(ab, Vbatch, yX, numbatchB=1L, diagIsOne=TRUE, Nglobal=workgroupSize, Nlocal=localSize, NlocalCache)
@@ -145,7 +143,7 @@ likfitGpu_0 <- function(Vbatch,
   
   # store determinant for REML  
   gpuRandom:::rowsumBackend(diagP, logP_temp, type="row",log=1L)  
-  logP_i[] <- logP_temp
+  #logP_i[] <- logP_temp
   
   
   # ssqbetahat = (X betahat)^T V^(-1) X betahat 
@@ -283,8 +281,12 @@ likfitGpu_0 <- function(Vbatch,
 likfitGpu <- function(modelname, mydat, type=c("double", "float"), 
                       completeparamsBatch, #a vclmatrix
                       betas=NULL, #a vclmatrix  #given by the user or provided from formula
+                      ssqY,
+                      ssqbetahat,
                       logD,
                       logP,
+                      betahat,
+                      finalLogLik,
                       BoxCox, # an R vector
                       form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),
                       groupsize,  # how many rows of params to be executed in each loop
@@ -304,11 +306,11 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
   p<-output1$p
   
   ssqBeta <- vclMatrix(0, groupsize, colbatch, type=type)
-  ssqbetahat  <- vclMatrix(0, groupsize, colbatch, type = type)
+  ssqbetahat_foruse  <- vclMatrix(0, groupsize, colbatch, type = type)
   aTDa <- vclMatrix(0, groupsize, colbatch, type = type)
   logD_temp <- vclVector(0, length=groupsize, type=type)
   logP_temp <- vclVector(0, length=groupsize, type=type)
-  betahat <- vclMatrix(0, groupsize*p, colbatch, type = type)
+  betahat_foruse <- vclMatrix(0, groupsize*p, colbatch, type = type)
   
   
   Vbatch <- vclMatrix(0, groupsize*n, n, type = type)
@@ -329,7 +331,7 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
   QPQinverse  <- vclMatrix(0, groupsize*p, p, type = type)
   form_temp <- vclMatrix(0, groupsize, colbatch, type = type)
   form_temp1 <- vclMatrix(0, groupsize, colbatch, type = type)
-  finalLogLik <- vclMatrix(0, totalnumbersets, colbatch, type=type)
+  #finalLogLik <- vclMatrix(0, totalnumbersets, colbatch, type=type)
   
   yXcpu <- output1$yXcpu
   
@@ -362,20 +364,21 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
     
     paramsBatch_i <-gpuR::block(completeparamsBatch, rowStart = as.integer(1L + (i-1)*groupsize), rowEnd = as.integer(i * groupsize), colStart = 1L, colEnd = ncols)
     params_foruse <- deepcopy(paramsBatch_i)
+    variances_i <- gpuR::block(variances, rowStart = as.integer(1L + (i-1)*groupsize), rowEnd = as.integer(i * groupsize), colStart = 1L, colEnd = colbatch)
     
+    ssqY_i <-gpuR::block(ssqY, rowStart = as.integer(1L + (i-1)*groupsize), rowEnd = as.integer(i * groupsize), colStart = 1L, colEnd = colbatch) 
+    ssqbetahat_i <- gpuR::block(ssqbetahat, rowStart = as.integer(1L + (i-1)*groupsize), rowEnd = as.integer(i *groupsize), colStart = 1L, colEnd = colbatch)
     logD_i <- gpuR::slice(logD, start=as.integer(1L + (i-1)*groupsize), end=as.integer(i * groupsize))
-    logP_i <- gpuR::slice(logP, start=as.integer(1L + (i-1)*groupsize), end=as.integer(i * groupsize))
-    
+    logP_i <- gpuR::slice(logP, start=as.integer(1L + (i-1)*groupsize), end=as.integer(i * groupsize))   
+    betahat_i <- gpuR::block(betahat, rowStart = as.integer(1L + (i-1)*groupsize*p), rowEnd = as.integer(i *groupsize*p), colStart = 1L, colEnd = colbatch)    
     LogLik_i <-gpuR::block(finalLogLik, rowStart = as.integer(1L + (i-1)*groupsize), rowEnd = as.integer(i * groupsize), colStart = 1L, colEnd = colbatch)
     
-    variances_i <- gpuR::block(variances, rowStart = as.integer(1L + (i-1)*groupsize), rowEnd = as.integer(i * groupsize), colStart = 1L, colEnd = colbatch)
     
     likfitGpu_0(Vbatch,
                 output1$coordsGpu,
                 params_foruse, 
                 diagMat, 
                 logD_temp,   #viennacl::vector
-                logD_i,
                 ab,
                 yX, #y1,y2,y3,X            
                 temp2,
@@ -389,13 +392,12 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
                 diagP,
                 temp3,
                 ssqbetahat0,
-                ssqbetahat,      # ssqbetahat
-                logP_temp,  # viennacl::vector
-                logP_i,
+                ssqbetahat_foruse,      # ssqbetahat
+                logP_temp,  # viennacl::vectorlogP_i,
                 Qinverse,
                 identity,
                 QPQinverse,
-                betahat,  # p*rowbatch   colbatch                            
+                betahat_foruse,  # p*rowbatch   colbatch                            
                 variances_i,   # must be rowbatch * colbatch matrix !!!
                 form_temp,
                 form_temp1,
@@ -408,10 +410,17 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
                 form=form, # c(loglik=1, ml=2, mlFixSigma=3, mlFixBeta=4, reml=5, remlPro=6)
                 workgroupSize, localSize, localSizechol, NlocalCache)
     
+    ssqY_i[,] <- aTDa
+    ssqbetahat_i[,] <- ssqbetahat_foruse
+    logD_i[] <- logD_temp
+    logP_i[] <- logP_temp
+    betahat_i[,] <- betahat_foruse
+    
+    
     
   }
   
-  finalLogLik
+  #finalLogLik
 }
 
 
