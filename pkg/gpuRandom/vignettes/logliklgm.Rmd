@@ -574,8 +574,8 @@ swissFitIso = geostatsp::likfitLgm(
 swissFitIso$parameters
 
 newParamList = list(
-  range=seq(30000, 80000 , len=10),
-  nugget = seq(0,0.25,len=2)
+  range=seq(30000, 80000 , len=20),
+  nugget = seq(0,0.25,len=20)
 ) 
 
 
@@ -583,7 +583,7 @@ newParam= do.call(expand.grid, newParamList)
 
 otherparams = c(shape=1, variance=1.750759, anisoRatio = 1, anisoAngleRadians = 0)
 otherparams = matrix(rep(otherparams,each=nrow(newParam)),nrow=nrow(newParam))
-colnames(otherparams) <- c("shape", "variance"", anisoRatio", "anisoAngleRadians")
+colnames(otherparams) <- c("shape", "variance", "anisoRatio", "anisoAngleRadians")
 
 paramsBatch0 = cbind(newParam, otherparams)
 paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
@@ -609,13 +609,14 @@ logD<- vclVector(0, length=totalnumbersets,type=type)
 logP<- vclVector(0, length=totalnumbersets,type=type)
 betahat <- vclMatrix(0, totalnumbersets*p, colbatch, type=type)
 finalLogLik <- vclMatrix(0, totalnumbersets, colbatch, type=type)
-
+ssqYX <- vclMatrix(0, (colbatch+p)*totalnumbersets, (colbatch+p), type=type)
 
 
 system.time(
 gpuRandom::likfitGpu(swissFitIso, sr2, type="double", 
                   paramsBatch, #gpu Matrix of parameter sets,
                   betas=NULL, #a vclmatrix  #given by the user or provided from formula
+                  ssqYX,
                   ssqY,
                   ssqbetahat,
                   logD,
@@ -624,7 +625,7 @@ gpuRandom::likfitGpu(swissFitIso, sr2, type="double",
                   finalLogLik,
                   BoxCox,
                   form = "ml",  
-                  groupsize=10,
+                  groupsize=20,
                   workgroupSize,
                   localSize,
                   NlocalCache))

@@ -281,6 +281,7 @@ likfitGpu_0 <- function(Vbatch,
 likfitGpu <- function(modelname, mydat, type=c("double", "float"), 
                       completeparamsBatch, #a vclmatrix
                       betas=NULL, #a vclmatrix  #given by the user or provided from formula
+                      ssqYX,
                       ssqY,
                       ssqbetahat,
                       logD,
@@ -366,6 +367,8 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
     params_foruse <- deepcopy(paramsBatch_i)
     variances_i <- gpuR::block(variances, rowStart = as.integer(1L + (i-1)*groupsize), rowEnd = as.integer(i * groupsize), colStart = 1L, colEnd = colbatch)
     
+    
+    ssqYX_i <- gpuR::block(ssqYX, rowStart = as.integer(1L + (i-1)*(colbatch+p)*groupsize), rowEnd = as.integer(i * (colbatch+p)*groupsize), colStart = 1L, colEnd = (colbatch+p))
     ssqY_i <-gpuR::block(ssqY, rowStart = as.integer(1L + (i-1)*groupsize), rowEnd = as.integer(i * groupsize), colStart = 1L, colEnd = colbatch) 
     ssqbetahat_i <- gpuR::block(ssqbetahat, rowStart = as.integer(1L + (i-1)*groupsize), rowEnd = as.integer(i *groupsize), colStart = 1L, colEnd = colbatch)
     logD_i <- gpuR::slice(logD, start=as.integer(1L + (i-1)*groupsize), end=as.integer(i * groupsize))
@@ -410,6 +413,7 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
                 form=form, # c(loglik=1, ml=2, mlFixSigma=3, mlFixBeta=4, reml=5, remlPro=6)
                 workgroupSize, localSize, localSizechol, NlocalCache)
     
+    ssqYX_i[,] <- temp2
     ssqY_i[,] <- aTDa
     ssqbetahat_i[,] <- ssqbetahat_foruse
     logD_i[] <- logD_temp
