@@ -504,7 +504,8 @@ void backsolveBatch(
     NstartC,
     NstartA,
     NstartB,
-    NrowsToCache, NcolsPerGroup, 
+    NrowsToCache, 
+    NcolsPerGroup, 
     NcolsPerGroup * NrowsToCache,//    NlocalCacheC, 
     Nlocal[0] * Nlocal[1] * NcolsPerGroup, //    NlocalCacheSum 
     Nlocal[0] * Nlocal[1] //NpadBetweenMatricesSum

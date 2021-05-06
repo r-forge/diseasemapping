@@ -6,6 +6,7 @@
 
 ```{r setup, include=FALSE}
 library(geostatsp)
+library(gpuR)
 set.seed(1)
 n=20
 mydat = SpatialPointsDataFrame(cbind(stats::runif(n), seq(0,1,len=n)),
@@ -36,7 +37,6 @@ paramsBatch = vclMatrix(cbind(paramsBatch1, matrix(0, nrow(paramsBatch1), 22-nco
 
 coords = vclMatrix(mydat@coords, type =type)
 groupsize <- nrow(paramsBatch) 
-Vbatch <- vclMatrix(0, groupsize*n, n, type = type)
 
 
 
@@ -48,9 +48,10 @@ workgroupSize=c(3,3,1)
 localSize = c(1,1,1)
 
 
-workgroupSize=c(4,3,2)
+workgroupSize=c(6,6,6)
 localSize = c(1,1,1)
 
+Vbatch <- vclMatrix(0, groupsize*n, n, type = type)
 gpuRandom::maternBatch(Vbatch, coords, paramsBatch,  workgroupSize, localSize)
 
 
