@@ -411,7 +411,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   
   
   if(verbose[0]>1) {
-    Rcpp::Rcout << "backsolveSsqYxString\n" << backsolveSsqYxString << "\n";
+    Rcpp::Rcout << "backsolveString\n" << backsolveString << "\n";
     Rcpp::Rcout << "crossprodSsqYxKernelString\n" << crossprodSsqYxKernelString << "\n";
   }
   
@@ -474,7 +474,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
         " Niter " << Niter << " Ncovariates " << Ncovariates << " Ndatasets " << Ndatasets <<"\n";
   }
   
-    for (Diter=0,DiterIndex=0; Diter< Niter; 
+    for (Diter=0,DiterIndex=0; Diter< 1;//Niter; 
     Diter++,DiterIndex += NparamPerIter[0]){
     
     endThisIteration = std::min(DiterIndex + NparamPerIter[0], Nparams);
@@ -513,7 +513,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
         ssqY(DiterIndex + Dy2,Dy1) = ssqYX( Dy2 * ssqYX.size2() + Dy1, Dy1);
       }
     }
-    // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part
+        // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part
     viennacl::ocl::enqueue(cholXvxKernel(ssqYX, cholXVXdiag, NthisIteration, 
                                          detReml, DiterIndex) );
     if(verbose[0]>3) {
@@ -529,8 +529,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     viennacl::ocl::enqueue(crossprodSsqYxKernel(ssqX, QinvSsqYx,
                                                 cholXVXdiag, NthisIteration)); 
     
-    
-    
+
     
   } // Diter
 

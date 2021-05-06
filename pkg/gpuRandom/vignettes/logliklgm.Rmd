@@ -99,6 +99,27 @@ gpuRandom:::likfitGpu_BackendP(
   ssqYX, LinvYX,QinvSsqYx,cholXVXdiag
 )
 
+dim(ssqYX)
+
+varMatCpu = geostatsp::matern(
+  mydat, params[1,])
+
+as.matrix(ssqYX)[1:ncol(ssqYX),]
+t(as.matrix(yx)) %*% solve(varMatCpu) %*% as.matrix(yx)
+
+determinant(varMatCpu, logarithm=TRUE)$modulus
+as.vector(detVar)
+
+theChol = chol(varMatCpu)
+theDiags = diag(theChol)
+theCholL = theChol %*% diag(1/theDiags)
+LinvYxCpu = solve(theCholL) %*% as.matrix(yx)
+
+recoverVar = theCholL %*% diag(theDiags^2) %*% t(theCholL)
+range(recoverVar - varMatCpu)
+
+LinvYxCpu[1:4,]
+as.matrix(LinvYX)[1:4,]
 
 as.vector(detVar)
 as.vector(detReml)
