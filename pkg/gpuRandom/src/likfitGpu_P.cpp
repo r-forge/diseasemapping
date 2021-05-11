@@ -28,7 +28,7 @@ std::string extract_some_diag_string(int NthisIteration,  int Ndatasets,
     "#define NthisIteration " + std::to_string(NthisIteration) + "\n"
     "#define Ndatasets " + std::to_string(Ndatasets) + "\n"
     "#define NpadColY " + std::to_string(NpadColY) + "\n"
-    "#define NpadcolYX"   + std::to_string(NpadcolYX) + "\n"
+    "#define NpadcolYX "   + std::to_string(NpadcolYX) + "\n"
     "#define Ncols_YX "   + std::to_string(Ncols_YX) + "\n";
   
   result += 
@@ -45,8 +45,9 @@ std::string extract_some_diag_string(int NthisIteration,  int Ndatasets,
     "for (Drow = get_global_id(0); Drow < NthisIteration; Drow += get_global_size(0)) {\n"
     "for (Dcol = get_global_id(1); Dcol < Ndatasets; Dcol += get_global_size(1)) {\n" 
     
-    "ssqY[Drow*NpadColY+Dcol] = ssqYX[ (Drow * Ncols_YX + Dcol) * NpadcolYX + Dcol ];\n"
+    "ssqY[Drow * NpadColY+Dcol] = ssqYX[ (Drow * Ncols_YX + Dcol) * NpadcolYX + Dcol ];\n"
     
+    "}\n"
     "}\n"
     "}\n";
   
@@ -222,6 +223,15 @@ void addBoxcoxToData(
 }
 
 
+
+
+
+
+
+
+
+
+
 template<typename T> 
 void likfitGpuP(viennacl::matrix_base<T> &yx, 
                 viennacl::matrix_base<T> &coords, 
@@ -260,8 +270,8 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   //    viennacl::matrix<T> LinvYX(NparamPerIter[0]*Nobs, yx.size2());
   //    viennacl::matrix<T> ssqYX(NparamPerIter[0]*yx.size2(), yx.size2());
   
-//  viennacl::matrix<T> cholXVXdiag(NparamPerIter[0], Ncovariates);
-//  viennacl::matrix<T> QinvSsqYx(NparamPerIter[0]*Ncovariates, Ndatasets);
+  //  viennacl::matrix<T> cholXVXdiag(NparamPerIter[0], Ncovariates);
+  //  viennacl::matrix<T> QinvSsqYx(NparamPerIter[0]*Ncovariates, Ndatasets);
   
   fill22params(params);
   
@@ -410,6 +420,16 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   );
   
   
+  
+  std::string extractSomeDiagString = extract_some_diag_string<T>(
+                 NparamPerIter[0],  
+                 Ndatasets,
+                 ssqY.internal_size2(), 
+                 ssqYX.internal_size2(), 
+                 ssqYX.size2());
+  
+  
+  
   if(verbose[0]>1) {
     Rcpp::Rcout << "backsolveString\n" << backsolveString << "\n";
     Rcpp::Rcout << "crossprodSsqYxKernelString\n" << crossprodSsqYxKernelString << "\n";
@@ -421,10 +441,12 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   viennacl::ocl::program & my_prog_backsolve = viennacl::ocl::current_context().add_program(backsolveString, "mykernelbacksolve");
   viennacl::ocl::program & my_prog_crossprod = viennacl::ocl::current_context().add_program(crossprodKernelString, "mykernelcrossprod");
   viennacl::ocl::program & my_prog_cholxvx = viennacl::ocl::current_context().add_program(cholXVXkernelString, "mykernelcholxvx");
-  viennacl::ocl::program & my_prog_backsolveSsqYx = viennacl::ocl::current_context().add_program(
-    backsolveSsqYxString, "mybacksolvessqyx");
-  viennacl::ocl::program & my_prog_crossprodSsqYx = viennacl::ocl::current_context().add_program(
-    crossprodSsqYxKernelString, "mykernelcrossprodssqyx");
+  viennacl::ocl::program & my_prog_backsolveSsqYx = viennacl::ocl::current_context().add_program(backsolveSsqYxString, "mybacksolvessqyx");
+  viennacl::ocl::program & my_prog_crossprodSsqYx = viennacl::ocl::current_context().add_program(crossprodSsqYxKernelString, "mykernelcrossprodssqyx");
+  viennacl::ocl::program & my_prog_extractSomeDiag = viennacl::ocl::current_context().add_program(extractSomeDiagString, "mykernelextract_some_diag");
+  
+  
+  
   
   viennacl::ocl::kernel & maternKernel = my_prog_matern.get_kernel("maternBatch");
   viennacl::ocl::kernel & cholKernel = my_prog_chol.get_kernel("cholBatch");
@@ -433,6 +455,11 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   viennacl::ocl::kernel & crossprodKernel = my_prog_crossprod.get_kernel("crossprodBatch");
   viennacl::ocl::kernel & backsolveSsqYxKernel = my_prog_backsolveSsqYx.get_kernel("backsolveBatch");
   viennacl::ocl::kernel & crossprodSsqYxKernel = my_prog_crossprodSsqYx.get_kernel("crossprodBatch");
+  viennacl::ocl::kernel & extractSomeDiagKernel = my_prog_extractSomeDiag.get_kernel("extract_some_diag");
+  
+  
+  
+  
   
   // dimension 0 is cell, dimension 1 is matrix
   maternKernel.global_work_size(0, workgroupSize[0] ); 
@@ -465,8 +492,14 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   crossprodSsqYxKernel.global_work_size(1, workgroupSize[1] ); 
   crossprodSsqYxKernel.local_work_size(0, localSize[0]);
   crossprodSsqYxKernel.local_work_size(1, localSize[1]);
+  
+  extractSomeDiagKernel.global_work_size(0, workgroupSize[0] ); 
+  extractSomeDiagKernel.global_work_size(1, workgroupSize[1] );   
+  
+  
+  
   ///////////////////////////Loop starts !!!//////////////////////////////////////////////////////////////////////////
-
+  
   
   if(verbose[0]) {
     Rcpp::Rcout << "\n" << " Nparams " << 
@@ -474,8 +507,8 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
         " Niter " << Niter << " Ncovariates " << Ncovariates << " Ndatasets " << Ndatasets <<"\n";
   }
   
-    for (Diter=0,DiterIndex=0; Diter< 1;//Niter; 
-    Diter++,DiterIndex += NparamPerIter[0]){
+  for (Diter=0,DiterIndex=0; Diter< 1;//Niter; 
+  Diter++,DiterIndex += NparamPerIter[0]){
     
     endThisIteration = std::min(DiterIndex + NparamPerIter[0], Nparams);
     NthisIteration = endThisIteration - DiterIndex;
@@ -507,15 +540,25 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     if(verbose[0]>3) {
       Rcpp::Rcout << "cr";
     }
+    
+    
+    
+    
     // save diagonals of ssqYX to ssqY
-    for(Dy1 = 0; Dy1 < Ndatasets; Dy1++) {
-      for(Dy2 = 0; Dy2 < NthisIteration; Dy2++) {
-        ssqY(DiterIndex + Dy2,Dy1) = ssqYX( Dy2 * ssqYX.size2() + Dy1, Dy1);
-      }
-    }
-        // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part
-    viennacl::ocl::enqueue(cholXvxKernel(ssqYX, cholXVXdiag, NthisIteration, 
-                                         detReml, DiterIndex) );
+    viennacl::ocl::enqueue(extractSomeDiagKernel(ssqY, ssqYX));
+    
+    // save diagonals of ssqYX to ssqY
+    /*
+     for(Dy1 = 0; Dy1 < Ndatasets; Dy1++) {
+     for(Dy2 = 0; Dy2 < NthisIteration; Dy2++) {
+     ssqY(DiterIndex + Dy2,Dy1) = ssqYX( Dy2 * ssqYX.size2() + Dy1, Dy1);
+     }
+     }
+     */
+    
+    
+    // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part
+    viennacl::ocl::enqueue(cholXvxKernel(ssqYX, cholXVXdiag, NthisIteration, detReml, DiterIndex) );
     if(verbose[0]>3) {
       Rcpp::Rcout << "cxy";
     }
@@ -529,11 +572,25 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     viennacl::ocl::enqueue(crossprodSsqYxKernel(ssqX, QinvSsqYx,
                                                 cholXVXdiag, NthisIteration)); 
     
-
+    
     
   } // Diter
-
+  
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 template<typename T> 
 void likfitGpuP_Templated(
@@ -554,7 +611,7 @@ void likfitGpuP_Templated(
     Rcpp::IntegerVector verbose,
     Rcpp::S4 ssqYX,
     Rcpp::S4 LinvYX, Rcpp::S4 QinvSsqYx, Rcpp::S4 cholXVXdiag
-  ) {
+) {
   
   
   const bool BisVCL=1;
@@ -599,6 +656,20 @@ void likfitGpuP_Templated(
     *cholXVXdiaggpu);
   
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -669,6 +740,7 @@ void likfitGpu_BackendP(
 
 
 //#endif
+
 
 
 

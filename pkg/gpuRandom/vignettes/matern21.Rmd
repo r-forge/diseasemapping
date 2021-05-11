@@ -18,7 +18,7 @@ mydat@data= cbind(mydat@data , RFsimulate(model=c(variance=1.5,range=0.5,nugget=
 # add fixed effects
 # exponentiate to make positive and enable boxcox
 mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + mydat$sim + stats::rnorm(length(mydat), 0, sd=sqrt(0.25))
-#mydat$Yexp = exp(mydat$Y)
+
 
 
 
