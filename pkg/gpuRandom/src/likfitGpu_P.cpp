@@ -130,6 +130,9 @@ std::string boxcoxKernelString(int NlocalCache, int zeroCol,
 }
 
 
+
+
+
 /*
  * sum logs of rows
  * use only one work item dimension
@@ -238,7 +241,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                 viennacl::matrix_base<T> &params, 
                 viennacl::matrix_base<T> &betas,
                 viennacl::matrix_base<T> &ssqY,
-                viennacl::matrix_base<T> &ssqX,
+                viennacl::matrix_base<T> &ssqBetahat,
                 viennacl::vector_base<T> &detVar,
                 viennacl::vector_base<T> &detReml,
                 int Ndatasets,
@@ -405,7 +408,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     Ncovariates,//const int Nrow, 
     Ndatasets,//const int Ncol,
     //    const int Nmatrix, 
-    ssqX.internal_size2(),//const int NpadC, ignored
+    ssqBetahat.internal_size2(),//const int NpadC, ignored
     QinvSsqYx.internal_size2(),//const int NpadA,
     cholXVXdiag.internal_size2(),//const int NpadD, // set to zero to omit D
     1, //const int invertD, // set to 1 for A^T D^(-1) A
@@ -413,7 +416,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     0,//const int NstartC,  
     0,//const int NstartA,  
     0,//const int NstartD,  
-    ssqX.internal_size2(), //const int NpadBetweenMatricesC
+    ssqBetahat.internal_size2(), //const int NpadBetweenMatricesC
     QinvSsqYx.internal_size2()*Ndatasets, //const int NpadBetweenMatricesA,
     NlocalCache[0]/2, // NlocalCacheA, 
     localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
@@ -569,7 +572,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
         QinvSsqYx, ssqYX, ssqYX, NthisIteration));
     
     // crossprod QinvSsqYx^T P^(-1) QinvSsqYx,   Ndatasets by Ndatasets
-    viennacl::ocl::enqueue(crossprodSsqYxKernel(ssqX, QinvSsqYx,
+    viennacl::ocl::enqueue(crossprodSsqYxKernel(ssqBetahat, QinvSsqYx,
                                                 cholXVXdiag, NthisIteration)); 
     
     
@@ -600,7 +603,7 @@ void likfitGpuP_Templated(
     Rcpp::S4 boxcox,
     Rcpp::S4 betas,
     Rcpp::S4 ssqY,
-    Rcpp::S4 ssqX,
+    Rcpp::S4 ssqBetahat,
     Rcpp::S4 detVar,
     Rcpp::S4 detReml,
     Rcpp::S4 jacobian,
@@ -621,7 +624,7 @@ void likfitGpuP_Templated(
   std::shared_ptr<viennacl::matrix<T> > paramsGpu = getVCLptr<T>(params.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<T> > betasGpu = getVCLptr<T>(betas.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<T> > ssqYGpu = getVCLptr<T>(ssqY.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > ssqXGpu = getVCLptr<T>(ssqX.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix<T> > ssqBetahatGpu = getVCLptr<T>(ssqBetahat.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::vector_base<T> > detVarGpu = getVCLVecptr<T>(detVar.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::vector_base<T> > detRemlGpu = getVCLVecptr<T>(detReml.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::vector_base<T> > boxcoxGpu = getVCLVecptr<T>(boxcox.slot("address"), BisVCL, ctx_id);
@@ -646,7 +649,7 @@ void likfitGpuP_Templated(
     *coordsGpu, 
     *paramsGpu, 
     *betasGpu,
-    *ssqYGpu, *ssqXGpu,
+    *ssqYGpu, *ssqBetahatGpu,
     *detVarGpu, *detRemlGpu,
     (*boxcoxGpu).size(),// Ndatasets
     NparamPerIter,
@@ -684,7 +687,7 @@ void likfitGpu_BackendP(
     Rcpp::S4 boxcox,
     Rcpp::S4 betas,
     Rcpp::S4 ssqY,
-    Rcpp::S4 ssqX,
+    Rcpp::S4 ssqBetahat,
     Rcpp::S4 detVar,
     Rcpp::S4 detReml,
     Rcpp::S4 jacobian,
@@ -707,7 +710,7 @@ void likfitGpu_BackendP(
                                   boxcox,
                                   betas,
                                   ssqY,
-                                  ssqX,
+                                  ssqBetahat,
                                   detVar,
                                   detReml,
                                   jacobian,
@@ -724,7 +727,7 @@ void likfitGpu_BackendP(
                                    boxcox,
                                    betas,
                                    ssqY,
-                                   ssqX,
+                                   ssqBetahat,
                                    detVar,
                                    detReml,
                                    jacobian,
