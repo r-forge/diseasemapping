@@ -209,8 +209,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // likfitGpu_BackendP
-void likfitGpu_BackendP(Rcpp::S4 yx, Rcpp::S4 coords, Rcpp::S4 params, Rcpp::S4 boxcox, Rcpp::S4 betas, Rcpp::S4 ssqY, Rcpp::S4 ssqX, Rcpp::S4 detVar, Rcpp::S4 detReml, Rcpp::S4 jacobian, Rcpp::IntegerVector NparamPerIter, Rcpp::IntegerVector workgroupSize, Rcpp::IntegerVector localSize, Rcpp::IntegerVector NlocalCache, Rcpp::IntegerVector verbose, Rcpp::S4 ssqYX, Rcpp::S4 LinvYX, Rcpp::S4 QinvSsqYx, Rcpp::S4 cholXVXdiag);
-RcppExport SEXP _gpuRandom_likfitGpu_BackendP(SEXP yxSEXP, SEXP coordsSEXP, SEXP paramsSEXP, SEXP boxcoxSEXP, SEXP betasSEXP, SEXP ssqYSEXP, SEXP ssqXSEXP, SEXP detVarSEXP, SEXP detRemlSEXP, SEXP jacobianSEXP, SEXP NparamPerIterSEXP, SEXP workgroupSizeSEXP, SEXP localSizeSEXP, SEXP NlocalCacheSEXP, SEXP verboseSEXP, SEXP ssqYXSEXP, SEXP LinvYXSEXP, SEXP QinvSsqYxSEXP, SEXP cholXVXdiagSEXP) {
+void likfitGpu_BackendP(Rcpp::S4 yx, Rcpp::S4 coords, Rcpp::S4 params, Rcpp::S4 boxcox, Rcpp::S4 betas, Rcpp::S4 ssqY, Rcpp::S4 ssqBetahat, Rcpp::S4 detVar, Rcpp::S4 detReml, Rcpp::S4 jacobian, Rcpp::IntegerVector NparamPerIter, Rcpp::IntegerVector workgroupSize, Rcpp::IntegerVector localSize, Rcpp::IntegerVector NlocalCache, Rcpp::IntegerVector verbose, Rcpp::S4 ssqYX, Rcpp::S4 LinvYX, Rcpp::S4 QinvSsqYx, Rcpp::S4 cholXVXdiag, Rcpp::S4 aTDinvb_beta, Rcpp::S4 aTDinvb_beta_diag);
+RcppExport SEXP _gpuRandom_likfitGpu_BackendP(SEXP yxSEXP, SEXP coordsSEXP, SEXP paramsSEXP, SEXP boxcoxSEXP, SEXP betasSEXP, SEXP ssqYSEXP, SEXP ssqBetahatSEXP, SEXP detVarSEXP, SEXP detRemlSEXP, SEXP jacobianSEXP, SEXP NparamPerIterSEXP, SEXP workgroupSizeSEXP, SEXP localSizeSEXP, SEXP NlocalCacheSEXP, SEXP verboseSEXP, SEXP ssqYXSEXP, SEXP LinvYXSEXP, SEXP QinvSsqYxSEXP, SEXP cholXVXdiagSEXP, SEXP aTDinvb_betaSEXP, SEXP aTDinvb_beta_diagSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type yx(yxSEXP);
@@ -219,7 +219,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::S4 >::type boxcox(boxcoxSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type betas(betasSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type ssqY(ssqYSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type ssqX(ssqXSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type ssqBetahat(ssqBetahatSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type detVar(detVarSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type detReml(detRemlSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type jacobian(jacobianSEXP);
@@ -232,7 +232,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::S4 >::type LinvYX(LinvYXSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type QinvSsqYx(QinvSsqYxSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type cholXVXdiag(cholXVXdiagSEXP);
-    likfitGpu_BackendP(yx, coords, params, boxcox, betas, ssqY, ssqX, detVar, detReml, jacobian, NparamPerIter, workgroupSize, localSize, NlocalCache, verbose, ssqYX, LinvYX, QinvSsqYx, cholXVXdiag);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type aTDinvb_beta(aTDinvb_betaSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type aTDinvb_beta_diag(aTDinvb_beta_diagSEXP);
+    likfitGpu_BackendP(yx, coords, params, boxcox, betas, ssqY, ssqBetahat, detVar, detReml, jacobian, NparamPerIter, workgroupSize, localSize, NlocalCache, verbose, ssqYX, LinvYX, QinvSsqYx, cholXVXdiag, aTDinvb_beta, aTDinvb_beta_diag);
     return R_NilValue;
 END_RCPP
 }
@@ -393,7 +395,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_gpuRnBackend", (DL_FUNC) &_gpuRandom_gpuRnBackend, 4},
     {"_gpuRandom_cpp_gpu_qqnorm", (DL_FUNC) &_gpuRandom_cpp_gpu_qqnorm, 6},
     {"_gpuRandom_likfitGpu_Backend", (DL_FUNC) &_gpuRandom_likfitGpu_Backend, 22},
-    {"_gpuRandom_likfitGpu_BackendP", (DL_FUNC) &_gpuRandom_likfitGpu_BackendP, 19},
+    {"_gpuRandom_likfitGpu_BackendP", (DL_FUNC) &_gpuRandom_likfitGpu_BackendP, 21},
     {"_gpuRandom_logfactsumBackend", (DL_FUNC) &_gpuRandom_logfactsumBackend, 2},
     {"_gpuRandom_rowsumBackend", (DL_FUNC) &_gpuRandom_rowsumBackend, 4},
     {"_gpuRandom_matrix_matrix_sumBackend", (DL_FUNC) &_gpuRandom_matrix_matrix_sumBackend, 4},

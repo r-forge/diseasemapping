@@ -95,7 +95,8 @@ likfitGpu_0 <- function(Vbatch,
     # a^TD^(-1)b * beta = temp0
     gemmBatch2backend(temp2, betas, temp00,
                       c(0,0,0), # transposeA, transposeB, transposeC
-                      c(0,colbatch,(colbatch+p),colbatch,p,(colbatch+p)), c(0,p,p,0,colbatch,colbatch), #select from temp2 and betas
+                      c(0,colbatch,(colbatch+p),colbatch,p,(colbatch+p)), 
+                      c(0,p,p,0,colbatch,colbatch), #select from temp2 and betas
                       c(0,colbatch,colbatch,0,colbatch,colbatch), #select from output
                       c(rowbatch,1,0,0,1,0), # batches: nRow, nCol, recycleArow, recycleAcol, recycleBrow, col
                       c(workgroupSize,localSize), #workgroupSize  global 0 1 2, local 0 1 2  

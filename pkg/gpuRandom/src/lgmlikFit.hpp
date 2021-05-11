@@ -8,6 +8,9 @@
 #include "viennacl/ocl/backend.hpp"
 #include <Rmath.h>
 
+
+
+
 template <typename T> std::string cholBatchKernelString(
     int colStart,
 int colEnd,
@@ -68,11 +71,26 @@ template<typename T> void fill22params(
 
 std::string backsolveBatchString();
 std::string crossprodBatchString();
-std::string gemmBatch2String();
 std::string matrix_plus_vectorString();
 std::string matrix_plus_scalarString();
 
 template <typename T> std::string openclTypeString();
+
+
+template <typename T> 
+std::string gemmBatch2String(
+    Rcpp::IntegerVector transposeABC,  
+    Rcpp::IntegerVector submatrixA,  
+    Rcpp::IntegerVector submatrixB,
+    Rcpp::IntegerVector submatrixC,
+    Rcpp::IntegerVector batches,  
+    Rcpp::IntegerVector NlocalCache,
+    int NpadA, int NpadB, int NpadC);
+
+
+
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 //#include "viennacl/linalg/lu.hpp"

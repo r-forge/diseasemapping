@@ -159,7 +159,7 @@ void likfitGpu_0(viennacl::matrix<T> &Vbatch,
   
   
   // betahat = (X^T V^(-1) X)^(-1)  X^T V^(-1) Y
-  // Q^T P Q = (X^T V^(-1) X)
+  // Q P Q^T = (X^T V^(-1) X)
   // calculate betahat = Q^(-T) p^(-1) Q^(-1) * b^T D^(-1)a
   // first: get Q^(-1)    pxp
   Cstartend = IntegerVector::create(0, p, 0, p);
