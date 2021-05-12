@@ -614,23 +614,41 @@ workgroupSize=c(16,16,8)
 localSize = c(4,4,1)
 NlocalCache=500
 
+
 type="double"
-BoxCox=2
-colbatch<- as.integer(length(BoxCox)+1) 
-totalnumbersets <- nrow(paramsBatch)  
-
-
-#covariates = model.matrix(swissFitIso$model$formula, data=swissFitIso$data)
-
 p=2
+BoxCox=2
+betas = vclMatrix(0, nrow=p, ncol=length(BoxCox)+2, type=type)
+
+finalLogLik <- vclMatrix(0, nrow(paramsBatch), length(BoxCox)+2, type=type)
+
+
 
 ssqY <- vclMatrix(0, totalnumbersets, colbatch, type = type)
 ssqbetahat <- vclMatrix(0, totalnumbersets, colbatch, type = type)
 logD<- vclVector(0, length=totalnumbersets,type=type)
 logP<- vclVector(0, length=totalnumbersets,type=type)
 betahat <- vclMatrix(0, totalnumbersets*p, colbatch, type=type)
-finalLogLik <- vclMatrix(0, totalnumbersets, colbatch, type=type)
 ssqYX <- vclMatrix(0, (colbatch+p)*totalnumbersets, (colbatch+p), type=type)
+
+likfitGpu(swissFitIso, 
+                      sr2,
+                      type="double",
+                      paramsBatch, #a vclmatrix
+                      betas, #a vclmatrix  #given by the user or provided from formula
+                      finalLogLik,
+                      BoxCox=2, # an R vector
+                      form = "ml",
+                      NparamPerIter=10,  # how many rows of params to be executed in each loop
+                      workgroupSize,
+                      localSize,
+                      NlocalCache,
+                      verbose=0)
+
+
+
+
+
 
 
 system.time(
@@ -650,6 +668,17 @@ gpuRandom::likfitGpu(swissFitIso, sr2, type="double",
                   workgroupSize,
                   localSize,
                   NlocalCache))
+
+
+
+
+
+
+
+
+
+
+
 
 as.vector(logD)
 as.vector(logP)

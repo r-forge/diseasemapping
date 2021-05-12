@@ -95,8 +95,8 @@ matrix_scalar_sumBackend <- function(matrixR, valueR, sumR, numWorkItems) {
     invisible(.Call('_gpuRandom_matrix_scalar_sumBackend', PACKAGE = 'gpuRandom', matrixR, valueR, sumR, numWorkItems))
 }
 
-matrix_vector_sumBackend <- function(matrixR, vectorR, sumR, byrow, numWorkItems) {
-    invisible(.Call('_gpuRandom_matrix_vector_sumBackend', PACKAGE = 'gpuRandom', matrixR, vectorR, sumR, byrow, numWorkItems))
+matrix_vector_sumBackend <- function(matrixR, rowvectorR, colvectorR, constantR, sumR, numWorkItems) {
+    invisible(.Call('_gpuRandom_matrix_vector_sumBackend', PACKAGE = 'gpuRandom', matrixR, rowvectorR, colvectorR, constantR, sumR, numWorkItems))
 }
 
 fillParamsExtra <- function(param) {
