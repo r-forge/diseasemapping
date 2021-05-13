@@ -631,29 +631,25 @@ logP<- vclVector(0, length=totalnumbersets,type=type)
 betahat <- vclMatrix(0, totalnumbersets*p, colbatch, type=type)
 ssqYX <- vclMatrix(0, (colbatch+p)*totalnumbersets, (colbatch+p), type=type)
 
-            likfitGpu(swissFitIso,
-                      sr2,
-                      type="double",
-                      paramsBatch, #a vclmatrix
-                      betas, #a vclmatrix  #given by the user or provided from formula
-                      finalLogLik,
-                      BoxCox=2, # an R vector
-                      form = "ml",
-                      10,  # how many rows of params to be executed in each loop
-                      workgroupSize=c(16,16,8),
-                      localSize= c(4,4,1),
-                      NlocalCache)
 
 
-
-
-
-
-
-
-
-
-
+system.time(
+gpuRandom::likfitGpu(swissFitIso, sr2, type="double", 
+                  paramsBatch, #gpu Matrix of parameter sets,
+                  betas=NULL, #a vclmatrix  #given by the user or provided from formula
+                  ssqYX,
+                  ssqY,
+                  ssqbetahat,
+                  logD,
+                  logP,
+                  betahat,
+                  finalLogLik,
+                  BoxCox,
+                  form = "ml",  
+                  groupsize=20,
+                  workgroupSize,
+                  localSize,
+                  NlocalCache))
 
 
 

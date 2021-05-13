@@ -202,14 +202,14 @@ likfitGpu_0 <- function(Vbatch,
                     FALSE )
   
   
-  
-  if(form == 1 | form == 4){     # variances are provided
-    # get form_temp <- n*log(variances) + logD_temp    , form_temp = n*log(sigma^2)+log |D|
-    new_temp = n*log(variances)
-    gpuRandom:::matrix_vector_sumBackend(new_temp, logD_temp, form_temp, byrow = TRUE, workgroupSize)
-    
-  } 
-  
+  # 
+  # if(form == 1 | form == 4){     # variances are provided
+  #   # get form_temp <- n*log(variances) + logD_temp    , form_temp = n*log(sigma^2)+log |D|
+  #   new_temp = n*log(variances)
+  #   gpuRandom:::matrix_vector_sumBackend(new_temp, logD_temp, form_temp, byrow = TRUE, workgroupSize)
+  #   
+  # } 
+  # 
   if (form ==5 | form ==6){
     logD_plusP = logD_temp + logP_temp
   }
@@ -218,50 +218,50 @@ likfitGpu_0 <- function(Vbatch,
   
   
   
-  if (form==1){ #loglik
-    # form_temp + one/variances +jacobian + n*log(2*pi)
-    minusTwoLogLik = form_temp + one/variances + jacobian + n*log(2*pi)
-    
-    LogLik[,] = -0.5*minusTwoLogLik
-    
-  }else if(form ==2){ #ml  
-    # = n*log(two) +logD + n*log(2*pi) + n
-    new_temp = n*log(two/n)
-    gpuRandom:::matrix_vector_sumBackend(new_temp, logD_temp, form_temp1, byrow = TRUE, workgroupSize)
-    minusTwoLogLik= form_temp1 + jacobian + n*log(2*pi) + n 
-    LogLik[,] = -0.5*minusTwoLogLik
-    
-  }else if(form==3){ # mlFixSigma
-    # n*log(one/n)+ logD +jacobian + n*log(2*pi) + n
-    new_temp = n*log(one/n)
-    gpuRandom:::matrix_vector_sumBackend(new_temp, logD_temp, form_temp1, byrow = TRUE, workgroupSize)  
-    minusTwoLogLik= form_temp1 + jacobian + n*log(2*pi) + n 
-    LogLik[,] = -0.5*minusTwoLogLik
-    
-  }else if(form==4){ #mlFixBeta
-    #form_temp + two/variances +jacobian + n*log(2*pi)
-    
-    minusTwoLogLik= form_temp + two/variances +jacobian + n*log(2*pi)
-    LogLik[,] = -0.5 * minusTwoLogLik
-    
-  }else if(form==5){ #reml
-    #first_part <- (n-p)*log(variances) + logD + logP  
-    #minusTwoLogLik=first_part + two/variances +jacobian + n*log(2*pi)
-    
-    new_temp = (n-p)*log(variances)
-    gpuRandom:::matrix_vector_sumBackend(new_temp, logD_plusP, form_temp1, byrow = TRUE, workgroupSize)
-    
-    minusTwoLogLik= form_temp1 + two/variances +jacobian + n*log(2*pi)
-    LogLik[,] = -0.5 * minusTwoLogLik
-    
-  }else if(form==6){ # remlPro
-    # minusTwoLogLik= (n-p)*log(two/(n-p)) + logD + logP + jacobian + n*log(2*pi) + n-p
-    new_temp = (n-p)*log(two/(n-p))
-    gpuRandom:::matrix_vector_sumBackend(new_temp, logD_plusP, form_temp1, byrow = TRUE, workgroupSize)
-    
-    minusTwoLogLik= form_temp1 +jacobian + n*log(2*pi) + n-p 
-    LogLik[,] = -0.5 * minusTwoLogLik
-  } 
+  # if (form==1){ #loglik
+  #   # form_temp + one/variances +jacobian + n*log(2*pi)
+  #   minusTwoLogLik = form_temp + one/variances + jacobian + n*log(2*pi)
+  #   
+  #   LogLik[,] = -0.5*minusTwoLogLik
+  #   
+  # }else if(form ==2){ #ml  
+  #   # = n*log(two) +logD + n*log(2*pi) + n
+  #   new_temp = n*log(two/n)
+  #   gpuRandom:::matrix_vector_sumBackend(new_temp, logD_temp, form_temp1, byrow = TRUE, workgroupSize)
+  #   minusTwoLogLik= form_temp1 + jacobian + n*log(2*pi) + n 
+  #   LogLik[,] = -0.5*minusTwoLogLik
+  #   
+  # }else if(form==3){ # mlFixSigma
+  #   # n*log(one/n)+ logD +jacobian + n*log(2*pi) + n
+  #   new_temp = n*log(one/n)
+  #   gpuRandom:::matrix_vector_sumBackend(new_temp, logD_temp, form_temp1, byrow = TRUE, workgroupSize)  
+  #   minusTwoLogLik= form_temp1 + jacobian + n*log(2*pi) + n 
+  #   LogLik[,] = -0.5*minusTwoLogLik
+  #   
+  # }else if(form==4){ #mlFixBeta
+  #   #form_temp + two/variances +jacobian + n*log(2*pi)
+  #   
+  #   minusTwoLogLik= form_temp + two/variances +jacobian + n*log(2*pi)
+  #   LogLik[,] = -0.5 * minusTwoLogLik
+  #   
+  # }else if(form==5){ #reml
+  #   #first_part <- (n-p)*log(variances) + logD + logP  
+  #   #minusTwoLogLik=first_part + two/variances +jacobian + n*log(2*pi)
+  #   
+  #   new_temp = (n-p)*log(variances)
+  #   gpuRandom:::matrix_vector_sumBackend(new_temp, logD_plusP, form_temp1, byrow = TRUE, workgroupSize)
+  #   
+  #   minusTwoLogLik= form_temp1 + two/variances +jacobian + n*log(2*pi)
+  #   LogLik[,] = -0.5 * minusTwoLogLik
+  #   
+  # }else if(form==6){ # remlPro
+  #   # minusTwoLogLik= (n-p)*log(two/(n-p)) + logD + logP + jacobian + n*log(2*pi) + n-p
+  #   new_temp = (n-p)*log(two/(n-p))
+  #   gpuRandom:::matrix_vector_sumBackend(new_temp, logD_plusP, form_temp1, byrow = TRUE, workgroupSize)
+  #   
+  #   minusTwoLogLik= form_temp1 +jacobian + n*log(2*pi) + n-p 
+  #   LogLik[,] = -0.5 * minusTwoLogLik
+  # } 
   
   
 }
@@ -303,7 +303,7 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
   ncols <- ncol(completeparamsBatch)
   
   output1 <- lgmGpuObjectes1(modelname, mydat, type=type)
-  colbatch<- as.integer(length(BoxCox)+1) 
+  colbatch<- as.integer(length(BoxCox)) 
   n<-output1$n
   p<-output1$p
   
@@ -341,7 +341,7 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
   jacobian = -2*(BoxCox-1)* sum(log(yXcpu[,1])) 
   closetooneindex <- which(abs(BoxCox - 1 ) < 0.001)
   jacobian[closetooneindex] = 0    
-  jacobian <- c(jacobian, 0)   
+# jacobian <- c(jacobian, 0)   
   jacobian<- vclMatrix(matrix(jacobian, nrow=groupsize, ncol=length(jacobian), byrow=TRUE), type=type) # make it from a vector to a matrix!!!
   
   
@@ -353,7 +353,7 @@ likfitGpu <- function(modelname, mydat, type=c("double", "float"),
   closetozeroindex <- which(abs(BoxCox)<0.001)
   transformed_y[ ,closetozeroindex] = log(yXcpu[,1])  
   transformed_y[ ,closetooneindex] = yXcpu[,1]   
-  yX <- vclMatrix(cbind(transformed_y,yXcpu),type=type)
+  yX <- vclMatrix(cbind(transformed_y,yXcpu[,-1]),type=type)
   
   
   variances <- vclMatrix(matrix(completeparamsBatch[,3], nrow=totalnumbersets, ncol=colbatch, byrow=FALSE), type=type)     # this has to be a vclMatrix not vector
