@@ -27,6 +27,9 @@ library(gpuR)
 params = rbind(c(shape=1.25, range=0.2641423, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
                     c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
                     c(shape=2.25, range=0.5, variance = 2.5, nugget = 2.25, anisoRatio = 1, anisoAngleRadians = 0))
+params2 = params[rep(1, 20),]
+params2[,'nugget'] = seq(1,10,len=nrow(params2))
+params = rbind(params, params2)
  # c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0))
 #paramsBatch = rbind(c(shape=3, range=11.5247874, variance = 5.5, nugget = 0.6932729, anisoRatio = 1, anisoAngleRadians = 0))
 
@@ -35,7 +38,7 @@ x = mydat
 boxcox = c(0, 0.5)
 Scov = c('cov1','cov2')
 yvar = 'Yexp'
-NparamPerIter = 3
+NparamPerIter = 1
 
 workgroupSize = c(1,1,1)
   localSize = c(1,1,1)
@@ -100,6 +103,7 @@ gpuRandom:::likfitGpu_BackendP(
 )
 
 dim(ssqYX)
+as.vector(detVar)
 
 varMatCpu = geostatsp::matern(
   mydat, params[1,])
