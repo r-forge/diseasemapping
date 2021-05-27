@@ -107,6 +107,7 @@ setMethod("RFsimulate",
         theArgs$err.model = err.model
       theArgs$n = n
       theArgs$spConform=TRUE
+      theArgs$grid = FALSE
       
       res= try(do.call(RandomFields::RFsimulate, theArgs))
       
