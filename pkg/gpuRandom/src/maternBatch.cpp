@@ -52,7 +52,11 @@ std::string maternBatchKernelString(
   std::string typeString = openclTypeString<T>();
   std::string result = "";
   
-  
+  if(NmatrixMax * NlocalParams > NlocalParamsCache) {
+    Rcpp::Rcout << "warning creating matern kernel: need to store " << NmatrixMax << 
+      " sets of " << NlocalParams<< " parameters, cache of " << NlocalParamsCache <<" is insufficient\n";
+    }
+    
   if(typeString == "double") {
     result += "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n"
     "#define logSqrtHalfPi " + std::to_string(M_LN_SQRT_PId2) + "\n" // Rmath.h
@@ -364,7 +368,7 @@ std::string maternBatchKernelString(
 
   result += "} // Dcell\n\n";
 
-    result +=     "\n#ifdef assignDiag\n";
+  result +=     "\n#ifdef assignDiag\n";
   
   result += 
   "for(Dmatrix = get_global_id(1),DmatrixLocal = get_local_id(1);\n"

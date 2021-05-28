@@ -75,8 +75,8 @@ likfitGpu_Backend <- function(coordsGpuR, bigparamsBatchR, yXR, betasR, bigvaria
     invisible(.Call('_gpuRandom_likfitGpu_Backend', PACKAGE = 'gpuRandom', coordsGpuR, bigparamsBatchR, yXR, betasR, bigvariancesR, jacobianR, finalssqBetaR, finalssqXR, finalssqYR, finallogDR, finallogPR, finalbetahatR, finalLogLikR, n, p, groupsize, colbatch, form, workgroupSize, localSize, NlocalCache, verbose))
 }
 
-likfitGpu_BackendP <- function(yx, coords, params, boxcox, betas, ssqY, ssqBetahat, detVar, detReml, jacobian, NparamPerIter, workgroupSize, localSize, NlocalCache, verbose, ssqYX, LinvYX, QinvSsqYx, cholXVXdiag) {
-    invisible(.Call('_gpuRandom_likfitGpu_BackendP', PACKAGE = 'gpuRandom', yx, coords, params, boxcox, betas, ssqY, ssqBetahat, detVar, detReml, jacobian, NparamPerIter, workgroupSize, localSize, NlocalCache, verbose, ssqYX, LinvYX, QinvSsqYx, cholXVXdiag))
+likfitGpu_BackendP <- function(yx, coords, params, boxcox, betas, ssqY, ssqBetahat, detVar, detReml, jacobian, NparamPerIter, workgroupSize, localSize, NlocalCache, verbose, ssqYX, ssqYXcopy, LinvYX, QinvSsqYx, cholXVXdiag, varMat, cholDiagMat) {
+    invisible(.Call('_gpuRandom_likfitGpu_BackendP', PACKAGE = 'gpuRandom', yx, coords, params, boxcox, betas, ssqY, ssqBetahat, detVar, detReml, jacobian, NparamPerIter, workgroupSize, localSize, NlocalCache, verbose, ssqYX, ssqYXcopy, LinvYX, QinvSsqYx, cholXVXdiag, varMat, cholDiagMat))
 }
 
 logfactsumBackend <- function(xR, numWorkItems) {

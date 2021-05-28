@@ -7,12 +7,13 @@
 ```{r setup, include=FALSE}
 library(geostatsp)
 set.seed(1)
-n=20
-mydat = SpatialPointsDataFrame(cbind(stats::runif(n), seq(0,1,len=n)),
+n=3
+mydat = SpatialPointsDataFrame(cbind(stats::runif(n), seq(0,0.1,len=n)),
                                data=data.frame(cov1 = stats::rnorm(n), cov2 = stats::rpois(n, 2)))
 
 # simulate a random field
-mydat@data= cbind(mydat@data , RFsimulate(model=c(variance=1.5,range=0.5,nugget=0.25,shape=1.25,anisoRatio = 1, anisoAngleRadins=0),x=mydat)@data)
+mydat@data= cbind(mydat@data , 
+                  RFsimulate(model=c(variance=1.5,range=0.5,nugget=0.25,shape=1.25,anisoRatio = 1, anisoAngleRadins=0),x=mydat)@data)
 
 # add fixed effects
 # exponentiate to make positive and enable boxcox
@@ -23,13 +24,14 @@ mydat$Yexp = exp(mydat$Y)
 
 ```{r patrickTest, eval=F}
 library(gpuR)
+library('gpuRandom')
 
 params = rbind(c(shape=1.25, range=0.2641423, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
                     c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
                     c(shape=2.25, range=0.5, variance = 2.5, nugget = 2.25, anisoRatio = 1, anisoAngleRadians = 0))
 params2 = params[rep(1, 20),]
-params2[,'nugget'] = seq(1,10,len=nrow(params2))
-params = rbind(params, params2)
+params2[,'nugget'] = seq(1,2,len=nrow(params2))
+params = rbind(params, params2)[1:12,]
  # c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0))
 #paramsBatch = rbind(c(shape=3, range=11.5247874, variance = 5.5, nugget = 0.6932729, anisoRatio = 1, anisoAngleRadians = 0))
 
@@ -38,7 +40,7 @@ x = mydat
 boxcox = c(0, 0.5)
 Scov = c('cov1','cov2')
 yvar = 'Yexp'
-NparamPerIter = 1
+NparamPerIter = 4#nrow(paramsBatch)
 
 workgroupSize = c(1,1,1)
   localSize = c(1,1,1)
@@ -73,15 +75,17 @@ detVar = vclVector(0, Nparam,type=type)
 detReml = vclVector(0, Nparam, type=type)
 jacobian = vclVector(0, Ndata, type=type)
 ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
-ssqX <- vclMatrix(0, Nparam, Ndata, type=type)
+ssqBetaHat <- vclMatrix(0, Nparam, Ndata, type=type)
+
 
 # objects for debugging
 ssqYX = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
+ssqYXcopy = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
 LinvYX = vclMatrix(0, nrow(yx) * NparamPerIter, ncol(yx), type=type)
 QinvSsqYx = vclMatrix(0, NparamPerIter*Ncov, Ndata, type = type);
-varMat = vclMatrix(0, nrow(yx)*NparamPerIter, nrow(coords), type=type)
-cholXVXdiag = vclMatrix(0, NparamPerIter, Ndata, type=type)
-
+varMat = vclMatrix(0, nrow(coords)*NparamPerIter, nrow(coords), type=type)
+cholXVXdiag = vclMatrix(0, NparamPerIter, Ncov, type=type)
+diagOfVar = vclMatrix(0, NparamPerIter, nrow(coords), type=type)
 
 gpuRandom:::likfitGpu_BackendP(
   yx,
@@ -90,20 +94,68 @@ gpuRandom:::likfitGpu_BackendP(
   boxcoxGpu,
   betas,
   ssqY,
-  ssqX,
+  ssqBetaHat,
   detVar,
   detReml,
   jacobian,
   NparamPerIter,
   workgroupSize,
   localSize,
-  NlocalCache,
-  verbose = 10,
-  ssqYX, LinvYX,QinvSsqYx,cholXVXdiag
+  NlocalCache, 
+  verbose = 1,
+  ssqYX,ssqYXcopy, LinvYX,QinvSsqYx,cholXVXdiag, varMat, diagOfVar
 )
+```
+```{r sutff, eval=TRUE}
 
-dim(ssqYX)
+as.matrix(ssqYX)[1:ncol(ssqYX),]
+as.matrix(ssqYXcopy)[1:ncol(ssqYX),]
+
+Dpar = 11
+Dpar2 = Dpar %% NparamPerIter
+  (varOrig = geostatsp::matern(mydat, unlist(params[Dpar, ])))
+  bobc1 = as.matrix(chol(varOrig))
+  (bobc2  =  bobc1 %*% diag(1/diag(bobc1)))
+  (fromGpu = as.matrix(varMat[seq(from=1+(Dpar2-1)*ncol(varMat), len=nrow(yx)),]))
+  
+  rbind(diag(bobc1)^2, as.vector(diagOfVar[Dpar2,]))
+
+  
+  
+    as.vector(detVar)
+    as.vector(detReml)
+  array(t(as.matrix(varMat)), c(nrow(yx), nrow(yx), NparamPerIter))[1,2,]
+  
+```
+
+```{r moreStuff}
+if(FALSE) {
+  
+  
+    
+ ssqYXorig = as.matrix(ssqYXcopy)
+ ssqYXchol = as.matrix(ssqYX)
+ ssqYXdiag = as.matrix(cholXVXdiag)
+ detVarHere = as.vector(detVar)
+ detRemlHere = as.vector(detReml)
+ (toChol = t(ssqYXorig[12+Ndata+1:Ncov, Ndata+1:Ncov]))
+ theChol = chol(toChol)
+ diag(theChol)^2
+ diag(1/diag(theChol), nrow(theChol), nrow(theChol)) %*% theChol
+}
+ (toChol = t(as.matrix(ssqYXcopy)[Ndata + 1:Ncov, Ndata + 1:Ncov]))
+ as.matrix(ssqYX)[Ndata + 1:Ncov, Ndata + 1:Ncov]
+# theChol = chol(toChol)
+# diag(theChol)^2
+# diag(1/diag(theChol), nrow(theChol), nrow(theChol)) %*% theChol
+ as.matrix(cholXVXdiag)  
+
+
 as.vector(detVar)
+as.vector(detReml)
+
+as.matrix(ssqYX)
+
 
 varMatCpu = geostatsp::matern(
   mydat, params[1,])

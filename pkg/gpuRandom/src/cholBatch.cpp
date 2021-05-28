@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-//#define DEBUG
+#define DEBUG
 
 
 
@@ -50,14 +50,13 @@ template <typename T> std::string cholBatchKernelString(
     }
     
   result += "\n){\n"
-  
+  " barrier(CLK_LOCAL_MEM_FENCE);\n"
   " const int localIndex = get_local_id(0)*get_local_size(1) + get_local_id(1);\n"
   " const int NlocalTotal = get_local_size(0)*get_local_size(1);\n"
   
   " local " + typeString + " diagLocal[Ncache];//local cache of diagonals\n"
   
   " local " + typeString + " toAddLocal[maxLocalItems];\n"
-  
   "	int Dcol, DcolNpad;\n"
   "	int Drow, Dk, Dmatrix;\n";
   
@@ -72,6 +71,7 @@ template <typename T> std::string cholBatchKernelString(
   if(logDet){
     result += typeString  + " logDetHere;\n";
   }
+  result +=   "barrier(CLK_LOCAL_MEM_FENCE);\n";
   
 result +=  
   "for(Dmatrix = get_group_id(0); Dmatrix < Nmatrix; Dmatrix+= get_num_groups(0)){\n"
@@ -107,7 +107,7 @@ result +=
   
   if(allowOverflow) {
     result +=
-      "  for(Dk=minDcolNcache+localIndex; Dk < N; Dk += NlocalTotal) {\n"
+      "  for(Dk=minDcolNcache+localIndex; Dk < Dcol; Dk += NlocalTotal) {\n"
       "    DL = A[AHereDcol+Dk];\n"
       "    toAddLocal[localIndex] += diag[diagHere+Dk] * DL * DL;\n"
       "  }// Dk\n";
@@ -137,23 +137,18 @@ result +=
   }
   
   result +=  
-#ifdef DEBUG
-  "A[AHere+Dcol] = -toAddLocal[localIndex];\n"
-  //"AHereDcol[Dcol] = 10*Dcol;\n"
-#endif
-  "\n#ifdef diagToOne\n"
+    "\n#ifdef diagToOne\n"
   "A[AHereDcol+Dcol] = 1.0;\n"
   "#endif\n"
   "}\n" //localIndex==0
   "  barrier(CLK_LOCAL_MEM_FENCE);\n";
   //"  diagDcol = diagHere[Dcol];\n"
   
-  // off diagonals
+  result += "// off diagonals\n";
   result +=
-    "	for(Drow = Dcol+get_local_id(0)+1; Drow < N; Drow += get_local_size(0)) {\n"
-    
+    " for(Drow = Dcol+get_local_id(0)+1; Drow < N; Drow += get_local_size(0)) {\n"
     "  AHereDrow = AHere+Drow*Npad;\n"
-    "	 DL = 0.0;\n";
+    "  DL = 0.0;\n";
   
   
   if(allowOverflow) {
@@ -187,9 +182,6 @@ result +=
     "    DL +=  toAddLocal[localIndex + Dk];\n"
     "  }\n" //Dk
     "  A[AHereDrow+Dcol] = (A[AHereDrow+Dcol] - DL)/diagDcol;\n"
-#ifdef DEBUG
-    "  A[AHereDcol+Drow] = DL;\n" 
-#endif
     "}//get_local_id(1) == 0\n\n"; 
   
   result +=
@@ -202,9 +194,22 @@ result +=
           " logDet[logDetIndex + Dmatrix] = logDetHere;\n"
           "}\n";
     }
-    result +=
-    "} // Dmatrix loop\n\n"
+#ifdef DEBUG
+    result +=  
+      "if(localIndex==0){\n"
+      "logDet[logDetIndex + Dmatrix] = DL;\n"
+//      "A[AHere] = diagLocal[0];\n"//"-toAddLocal[localIndex];\n"
+//      "A[AHere+1] = minDcolNcache;\n"//"-toAddLocal[localIndex];\n"
+      //"AHereDcol[Dcol] = 10*Dcol;\n"
     "}\n";
+    
+#endif
+    
+    
+    result +=
+    "} // Dmatrix loop\n\n";
+    result +=   "barrier(CLK_LOCAL_MEM_FENCE);\n"
+    "}// kernel\n";
   return(result);
 }
 
