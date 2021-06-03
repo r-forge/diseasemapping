@@ -30,7 +30,7 @@ cholBatch <- function(A,
     Dstartend=c(0, numbatchD, 0, ncol(D))
   }
   
-  
+  Nlocal[2]=Nglobal[2]
  
   
   if(verbose){ message(paste('global work items', Nglobal,

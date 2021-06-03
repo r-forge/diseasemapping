@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-#define DEBUG
+//#define DEBUG
 
 // C = A B, A diagonal
 
@@ -127,8 +127,7 @@ std::string multiplyLowerBatchString(
   result = result + 
 "\n#define Nrow " + std::to_string(Nrow) + "\n"    
 "#define Ncol " + std::to_string(Ncol) + "\n"    
-"#define DinnerStop " + std::to_string(std::min(Nrow, 
-                             rowsToCache)) + "\n"
+"#define DinnerStop " + std::to_string(std::min(Nrow, rowsToCache)) + "\n"
 "#define Nmatrix " + std::to_string(Nmatrix) + "\n"    
 "#define NpadC " + std::to_string(NpadC) + "\n"    
 "#define NpadA " + std::to_string(NpadA) + "\n"    
@@ -333,7 +332,6 @@ if(NpadD) {
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 template <typename T> 
 void multiplyLowerDiagonalBatch(
     viennacl::matrix<T> &C,
@@ -471,8 +469,23 @@ SEXP multiplyLowerDiagonalBatchBackend(
   return(result);
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
 template <typename T> 
 void multiplyDiagonalBatch(
     viennacl::matrix<T> &C,
@@ -582,8 +595,25 @@ SEXP multiplyDiagonalBatchBackend(
 }
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename T> 
 void multiplyLowerBatch(
     viennacl::matrix<T> &C,
@@ -645,11 +675,6 @@ void multiplyLowerBatch(
   viennacl::ocl::enqueue(multiplyKernel(C, A, B));
   
 }
-
-
-
-
-
 
 
 

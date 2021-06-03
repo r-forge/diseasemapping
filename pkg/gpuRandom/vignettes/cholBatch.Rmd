@@ -119,7 +119,7 @@ paramsGpu = vclMatrix(myParamsBatch, type=gpuR::typeof(coordsGpu))
 outputBatchF = vclMatrix(0, nrow(paramsGpu)*nrow(coordsGpu), nrow(coordsGpu), type=gpuR::typeof(paramsGpu))
 
 ############ matern gpu ###################
-gpuRandom:::maternBatchBackend(outputBatchF,coordsGpu, paramsGpu,  Nglobal = NglobalMatern, Nlocal = NlocalMatern)
+gpuRandom::maternBatch(outputBatchF,coordsGpu, paramsGpu,  Nglobal = NglobalMatern, Nlocal = NlocalMatern)
 dim(outputBatchF)
 as.matrix(outputBatchF[1:12,1:7])
 

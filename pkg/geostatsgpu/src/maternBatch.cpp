@@ -91,7 +91,7 @@ std::string maternBatchKernelString(
     "#define NpadBetweenMatrices " + std::to_string(NpadBetweenMatrices) + "\n"
     "#define NpadCoords " + std::to_string(NpadCoords) + "\n"
     "#define NpadParams " + std::to_string(NpadParams) + "\n"
-    "#define NlocalParamsCache"+ std::to_string(NpadlocalParamsCache) + "\n"
+    "#define NlocalParamsCache"+ std::to_string(NlocalParamsCache) + "\n"
     "#define NlocalParams " + std::to_string(NlocalParams) + "\n\n";
   
   
@@ -246,7 +246,7 @@ std::string maternBatchKernelString(
   result += 
     // dimension 0 is cell, dimension 1 is matrix
     "const int isFirstLocal = (get_local_id(0)==0 & get_local_id(1)==0);\n"
-    "const int isFirstLocal1 = (get_local_id(1)==0);\n"
+    "const int isFirstLocal1 = (get_local_id(1)==0);\n";
     
     // copy parameters to local storage
     result += "wait = (event_t) 0;\n";
@@ -261,7 +261,7 @@ std::string maternBatchKernelString(
     "localParams",//      &localParams[DmatrixLocal * NlocalParams],"
     "params,"
 //    "      &params[(DmatrixBlock + Dmatrix) * NpadParams],"
-    "      NlocalParams, wait);\n"
+    "      NlocalParams, wait);\n";
 //    "  }\n"
 //    "}\n";
     result += "  wait_group_events (1, &wait);\n";

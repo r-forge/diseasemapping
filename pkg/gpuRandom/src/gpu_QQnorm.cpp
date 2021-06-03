@@ -7,7 +7,7 @@ using namespace viennacl;
 
 
 //#define DEBUGKERNEL
-
+// kernel adapted from      https://github.com/SurajGupta/r-source/blob/master/src/nmath/qnorm.c
 //using namespace viennacl::linalg;
 
 void gpu_qqnorm_0( 

@@ -65,30 +65,18 @@ head(coordsSp@coords)
 
 ```{r paramsBatch}
 myParamsBatch = rbind(
-  c(shape=1.25, range=0.5, variance = 1.5, nugget = 0, 
-             anisoRatio = 1, 
-             anisoAngleRadians = 0), 
-c(shape=2.15, range=0.25, variance = 2, nugget = 0, 
-             anisoRatio = 4, 
-             anisoAngleRadians = pi/7),
-c(shape=0.55, range=1.5, variance = 2, nugget = 0, 
-             anisoRatio = 4, 
-             anisoAngleRadians = pi/7),
-c(shape=2.15, range=0.5, variance = 2, nugget = 0, 
-             anisoRatio = 4, 
-             anisoAngleRadians = -pi/7),
-c(shape=2.15, range=0.5, variance = 2, nugget = 0, 
-             anisoRatio = 2, 
-             anisoAngleRadians = pi/4))
+  c(shape=1.25, range=0.5, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
+c(shape=2.15, range=0.25, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = pi/7),
+c(shape=0.55, range=1.5, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = pi/7),
+c(shape=2.15, range=0.5, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = -pi/7),
+c(shape=2.15, range=0.5, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/4))
 
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
 myParamsBatch
 myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch)))
 paramsGpu =  vclMatrix(myParamsBatch, type=gpuR::typeof(coordsGpu))
 
-outputBatchF = vclMatrix(0, 
-    nrow(paramsGpu)*nrow(coordsGpu), nrow(coordsGpu),
-    type=gpuR::typeof(paramsGpu))
+outputBatchF = vclMatrix(0, nrow(paramsGpu)*nrow(coordsGpu), nrow(coordsGpu),type=gpuR::typeof(paramsGpu))
 class(outputBatchF)
 ```
 

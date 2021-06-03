@@ -335,7 +335,7 @@ myParamsBatchSR = cbind(myParamsBatchSR1,
 
 outputSwissRain = vclMatrix(0, 
         nrow(myParamsBatchSR)*length(sr2),length(sr2),type='double')
-gpuRandom:::maternBatchBackend(
+gpuRandom::maternBatch(
     var=outputSwissRain,
     coords=vclMatrix(sr2@coords, type='double'), 
     param=vclMatrix(myParamsBatchSR, type='double'),  

@@ -159,6 +159,13 @@ hist(zVec,breaks=40)
 
 
 #qqnorm(zVec)
+
+
+
+
+Nglobal = c(1,4)
+a<-gpuRandom::rnorm(c(5,5), workgroupSize=Nglobal, type="double")
+avector<-as.vector(as.matrix(a))
 ```
 
 
