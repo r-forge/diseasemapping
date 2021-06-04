@@ -5,15 +5,12 @@
 
 
 
-maternParamsGpu = function(
-  myParamsBatch, type = c('float','double')){
-  
-
-  myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
-  myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch)))
-  paramsGpu =  vclMatrix(myParamsBatch, type=theType)
-  
+maternGpuParam = function(x, type='double') {
+  x = geostatsp::fillParam(x)
+  paramsGpu = vclMatrix(cbind(x, 
+                                matrix(0, nrow(x), 22-ncol(x))),type=type)
   paramsGpu
+
   
 }
 
