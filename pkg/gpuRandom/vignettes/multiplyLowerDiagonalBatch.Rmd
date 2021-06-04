@@ -1,0 +1,38 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{multiplyLowerDiagonal}
+-->
+
+
+
+```{r test}
+set.seed(888)
+type = "double"
+L <- matrix(c(1,2,1,0,9,  21,3,3,6,1,  26,10,10,14,9,  8,33,6,7,12,  11,19,31,60,53), 5, 5)
+
+
+L[upper.tri(L)] = 0
+diag(L) = 1
+L  # 5 x 5
+
+
+diagmat <- matrix(0, 5,5)
+diag(diagmat) <- c(2,1,2,3,5)
+zmat = matrix(rnorm(5*2), ncol=2)
+
+outputcpu <- L %*% sqrt(diagmat) %*% zmat
+outputcpu
+#####################################################################
+output <- vclMatrix(0, nrow=5, ncol=2, type=type)
+Lg <- vclMatrix(L, type=type)
+diagg <- vclMatrix(diagmat, type=type)
+zmatg <- vclMatrix(zmat, type = type)
+
+gpuRandom::multiplyLowerDiagonalBatch(output, Lg, diagg, zmatg, diagIsOne = 1, transformD = "sqrt", Nglobal = c(4,4,1),
+                      Nlocal = c(2,2,1),
+                      NlocalCache = 50)
+
+
+as.matrix(output)
+```
+
