@@ -440,14 +440,14 @@ SEXP multiplyLowerDiagonalBatchTyped(
 }
 
 
-
+// output = L  D B, L lower triangular, D diagonal
 // [[Rcpp::export]]
 SEXP multiplyLowerDiagonalBatchBackend(
-    Rcpp::S4 C,
-    Rcpp::S4 A,
+    Rcpp::S4 output,
+    Rcpp::S4 L,
     Rcpp::S4 D,
     Rcpp::S4 B,
-    const int diagIsOne,
+    const int diagIsOne,    
     std::string transformD,
     Rcpp::IntegerVector Nglobal,
     Rcpp::IntegerVector Nlocal,
@@ -455,14 +455,14 @@ SEXP multiplyLowerDiagonalBatchBackend(
   
   SEXP result;
   
-  Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(C));
+  Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(output));
   std::string precision_type = (std::string) classVarR;
   
   
   if(precision_type == "fvclMatrix") {
-    result = multiplyLowerDiagonalBatchTyped<float>(C, A, D, B, diagIsOne, transformD, Nglobal, Nlocal, NlocalCache);
+    result = multiplyLowerDiagonalBatchTyped<float>(output, L, D, B, diagIsOne, transformD, Nglobal, Nlocal, NlocalCache);
   } else if (precision_type == "dvclMatrix") {
-    result = multiplyLowerDiagonalBatchTyped<double>(C, A, D, B, diagIsOne, transformD,Nglobal, Nlocal,NlocalCache);
+    result = multiplyLowerDiagonalBatchTyped<double>(output, L, D, B, diagIsOne, transformD,Nglobal, Nlocal,NlocalCache);
   } else {
     result = Rcpp::wrap(1L);
   }

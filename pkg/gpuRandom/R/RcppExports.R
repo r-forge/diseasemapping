@@ -107,8 +107,8 @@ maternBatchBackend <- function(var, coords, param, Nglobal, Nlocal, startrow, nu
     invisible(.Call('_gpuRandom_maternBatchBackend', PACKAGE = 'gpuRandom', var, coords, param, Nglobal, Nlocal, startrow, numberofrows, verbose))
 }
 
-multiplyLowerDiagonalBatchBackend <- function(C, A, D, B, diagIsOne, transformD, Nglobal, Nlocal, NlocalCache) {
-    .Call('_gpuRandom_multiplyLowerDiagonalBatchBackend', PACKAGE = 'gpuRandom', C, A, D, B, diagIsOne, transformD, Nglobal, Nlocal, NlocalCache)
+multiplyLowerDiagonalBatchBackend <- function(output, L, D, B, diagIsOne, transformD, Nglobal, Nlocal, NlocalCache) {
+    .Call('_gpuRandom_multiplyLowerDiagonalBatchBackend', PACKAGE = 'gpuRandom', output, L, D, B, diagIsOne, transformD, Nglobal, Nlocal, NlocalCache)
 }
 
 multiplyDiagonalBatchBackend <- function(C, A, B, inverse, Nglobal, Nlocal) {

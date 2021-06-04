@@ -333,13 +333,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // multiplyLowerDiagonalBatchBackend
-SEXP multiplyLowerDiagonalBatchBackend(Rcpp::S4 C, Rcpp::S4 A, Rcpp::S4 D, Rcpp::S4 B, const int diagIsOne, std::string transformD, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal, const int NlocalCache);
-RcppExport SEXP _gpuRandom_multiplyLowerDiagonalBatchBackend(SEXP CSEXP, SEXP ASEXP, SEXP DSEXP, SEXP BSEXP, SEXP diagIsOneSEXP, SEXP transformDSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP, SEXP NlocalCacheSEXP) {
+SEXP multiplyLowerDiagonalBatchBackend(Rcpp::S4 output, Rcpp::S4 L, Rcpp::S4 D, Rcpp::S4 B, const int diagIsOne, std::string transformD, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal, const int NlocalCache);
+RcppExport SEXP _gpuRandom_multiplyLowerDiagonalBatchBackend(SEXP outputSEXP, SEXP LSEXP, SEXP DSEXP, SEXP BSEXP, SEXP diagIsOneSEXP, SEXP transformDSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP, SEXP NlocalCacheSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type C(CSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type A(ASEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type output(outputSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type L(LSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type D(DSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type B(BSEXP);
     Rcpp::traits::input_parameter< const int >::type diagIsOne(diagIsOneSEXP);
@@ -347,7 +347,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nglobal(NglobalSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nlocal(NlocalSEXP);
     Rcpp::traits::input_parameter< const int >::type NlocalCache(NlocalCacheSEXP);
-    rcpp_result_gen = Rcpp::wrap(multiplyLowerDiagonalBatchBackend(C, A, D, B, diagIsOne, transformD, Nglobal, Nlocal, NlocalCache));
+    rcpp_result_gen = Rcpp::wrap(multiplyLowerDiagonalBatchBackend(output, L, D, B, diagIsOne, transformD, Nglobal, Nlocal, NlocalCache));
     return rcpp_result_gen;
 END_RCPP
 }
