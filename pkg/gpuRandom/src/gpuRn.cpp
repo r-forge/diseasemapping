@@ -223,7 +223,7 @@ void convertMatclRng(Rcpp::IntegerMatrix Sin, clrngMrg31k3pStream* streams){
   }
 }
 
-*/
+ */
 
 // clRNG -> Matrix
 void convertclRngMat(clrngMrg31k3pStream* streams, Rcpp::IntegerMatrix result) {
@@ -254,6 +254,9 @@ void convertclRngMat(clrngMrg31k3pStream* streams, Rcpp::IntegerMatrix result) {
   }
   
 }
+
+
+
 
 /*! @brief Default initial seed of the first stream
  */
@@ -323,8 +326,6 @@ Rcpp::IntegerMatrix  cpp_mrg31k3pCreateStreams(Rcpp::IntegerMatrix result) //thi
   /*
   Rcpp::IntegerMatrix result=Rcpp::IntegerMatrix(numWorkItems,18L);
    
-   
-    
   colnames(result) = CharacterVector::create(
     "current.g1.1", "current.g1.2", "current.g1.3", "current.g2.1", "current.g2.2", "current.g2.3",
     "initial.g1.1", "initial.g1.2", "initial.g1.3", "initial.g2.1", "initial.g2.2", "initial.g2.3",
@@ -332,13 +333,14 @@ Rcpp::IntegerMatrix  cpp_mrg31k3pCreateStreams(Rcpp::IntegerMatrix result) //thi
   */
   size_t streamBufferSize;
   clrngStatus err;
-  
+  int Ditem,Delement,Dcis,Dg;
   
   int numWorkItems =result.nrow();
   //  int Ditem,Delement,Dcis,Dg;
   
   clrngMrg31k3pStream* streams = clrngMrg31k3pCreateStreams(&defaultStreamCreator, numWorkItems, &streamBufferSize, &err);//line 299 in mrg31k3p.c
   
+
   convertclRngMat(streams, result);
   
   return result;

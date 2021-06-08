@@ -23,6 +23,26 @@ theType = c('float','double')[1+gpuInfo()$double_support]
 theType
 #setContext(   grep('gpu', listContexts()$device_type) [2]    )
 ```
+```{t norm 68}
+library("gpuRandom")
+Nglobal = c(64,4)
+streams = gpuR::vclMatrix(gpuRandom::CreateStreams(prod(Nglobal)))
+a<-gpuRandom::rnorm(c(10,10), streams=streams, workgroupSize=Nglobal, type="double")
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
 
 
 #new random normals
