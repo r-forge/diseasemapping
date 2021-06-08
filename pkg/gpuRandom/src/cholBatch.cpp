@@ -194,17 +194,7 @@ result +=
           " logDet[logDetIndex + Dmatrix] = logDetHere;\n"
           "}\n";
     }
-#ifdef DEBUG
-    result +=  
-      "if(localIndex==0){\n"
-      "logDet[logDetIndex + Dmatrix] = DL;\n"
-//      "A[AHere] = diagLocal[0];\n"//"-toAddLocal[localIndex];\n"
-//      "A[AHere+1] = minDcolNcache;\n"//"-toAddLocal[localIndex];\n"
-      //"AHereDcol[Dcol] = 10*Dcol;\n"
-    "}\n";
-    
-#endif
-    
+
     
     result +=
     "} // Dmatrix loop\n\n";
