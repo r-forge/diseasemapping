@@ -137,13 +137,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_mrg31k3pCreateStreams
-Rcpp::IntegerMatrix cpp_mrg31k3pCreateStreams(int numWorkItems);
-RcppExport SEXP _gpuRandom_cpp_mrg31k3pCreateStreams(SEXP numWorkItemsSEXP) {
+Rcpp::IntegerMatrix cpp_mrg31k3pCreateStreams(Rcpp::IntegerMatrix result);
+RcppExport SEXP _gpuRandom_cpp_mrg31k3pCreateStreams(SEXP resultSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type numWorkItems(numWorkItemsSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_mrg31k3pCreateStreams(numWorkItems));
+    Rcpp::traits::input_parameter< Rcpp::IntegerMatrix >::type result(resultSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_mrg31k3pCreateStreams(result));
     return rcpp_result_gen;
 END_RCPP
 }

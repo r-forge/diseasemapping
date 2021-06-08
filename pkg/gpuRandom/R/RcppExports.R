@@ -49,8 +49,8 @@ cpp_gpuFisher_test <- function(xR, resultsR, B, streamsR, max_global_size, max_l
     .Call('_gpuRandom_cpp_gpuFisher_test', PACKAGE = 'gpuRandom', xR, resultsR, B, streamsR, max_global_size, max_local_size)
 }
 
-cpp_mrg31k3pCreateStreams <- function(numWorkItems) {
-    .Call('_gpuRandom_cpp_mrg31k3pCreateStreams', PACKAGE = 'gpuRandom', numWorkItems)
+cpp_mrg31k3pCreateStreams <- function(result) {
+    .Call('_gpuRandom_cpp_mrg31k3pCreateStreams', PACKAGE = 'gpuRandom', result)
 }
 
 #' Random number generation

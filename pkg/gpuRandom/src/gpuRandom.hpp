@@ -3,6 +3,8 @@
 #include <clRNG/clRNG.h>
 #include <Rcpp.h>
 #include <string>
+#include <clRNG/mrg31k3p.h>
+
 
 #include <dynMatrix/dynVCLMatGeostatsgpu.hpp>
 #include <dynMatrix/dynVCLVecGeostatsgpu.hpp>
@@ -20,7 +22,7 @@ template <typename T> int sizeOfReal();
 
 
 
-#include <clRNG/mrg31k3p.h>
+
 
 // clRNG -> Matrix
 void convertclRngMat(clrngMrg31k3pStream* streams, Rcpp::IntegerMatrix result);
