@@ -215,7 +215,7 @@ int gpuMatrixRn(
   Rcpp::Rcout << mrg31k3pkernelString << "\n\n";
 #endif  
   
-  
+  //Rcpp::Rcout << "666" << "\n\n";
   
   // the context
   viennacl::ocl::switch_context(ctx_id);
@@ -230,6 +230,11 @@ int gpuMatrixRn(
   random_number.local_work_size(0, 1L);
   random_number.local_work_size(1, 2L);
   
+  
+  //Rcpp::Rcout << "555" << "\n\n";
+  
+  
+  
   viennacl::ocl::enqueue(random_number(streams, x));
   return(0L);
 }
@@ -243,12 +248,14 @@ SEXP gpuRnMatrixTyped(
     Rcpp::IntegerVector max_global_size,
     std::string  random_type) 
 {
-  
+  //Rcpp::Rcout << "444" << "\n\n"; 
   const bool BisVCL=1;
   const int ctx_id = INTEGER(xR.slot(".context_index"))[0]-1;
-  
+  //Rcpp::Rcout << "332" << "\n\n";
   std::shared_ptr<viennacl::matrix<T> > x = getVCLptr<T>(xR.slot("address"), BisVCL, ctx_id);
+  //Rcpp::Rcout << "331" << "\n\n";
   std::shared_ptr<viennacl::matrix<int> > streams = getVCLptr<int>(streamsR.slot("address"), BisVCL, ctx_id);
+  //Rcpp::Rcout << "330" << "\n\n";
   
   return(Rcpp::wrap(gpuMatrixRn<T>(*x, *streams, max_global_size, ctx_id, random_type)));	
 
@@ -274,14 +281,19 @@ SEXP gpuRnBackend(
   
   SEXP result;
   
+  //Rcpp::Rcout << "222" << "\n\n";
+  
+  
   Rcpp::traits::input_parameter< std::string >::type classInput(RCPP_GET_CLASS(x));
   std::string classInputString = (std::string) classInput;
   
+
   
   if(classInputString == "fvclMatrix") {
     result = gpuRnMatrixTyped<float>(x, streams, max_global_size, random_type);
   } else if (classInputString == "dvclMatrix") {
     result = gpuRnMatrixTyped<double>(x, streams, max_global_size, random_type);
+    //Rcpp::Rcout << "111" << "\n\n";
   } else if (classInputString == "ivclMatrix") {
     result = gpuRnMatrixTyped<int>(x, streams, max_global_size, random_type);
   } else {

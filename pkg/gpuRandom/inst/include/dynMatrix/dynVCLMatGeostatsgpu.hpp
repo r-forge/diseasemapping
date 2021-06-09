@@ -66,7 +66,12 @@ class dynVCLMat {
 	        nr = A.size1();
 	        nc = A.size2();
 	        // ptr = &A;
+
+	        
 	        shptr = std::make_shared<viennacl::matrix<T> >(A);
+         
+	          
+	          
 	        // shptr.reset(ptr);
 	        viennacl::range temp_rr(0, nr);
 	        viennacl::range temp_cr(0, nc);
@@ -150,11 +155,12 @@ class dynVCLMat {
             
             // A.switch_memory_context(ctx);
             viennacl::matrix<T> A = viennacl::scalar_matrix<T>(nr_in, nc_in, scalar, ctx);
-            
             nr = nr_in;
             nc = nc_in;
             // ptr = &A;
+
             shptr = std::make_shared<viennacl::matrix<T> >(A);
+
             // shptr.reset(ptr);
             viennacl::range temp_rr(0, nr);
             viennacl::range temp_cr(0, nc);
@@ -296,6 +302,9 @@ getVCLptr(
 ){
     std::shared_ptr<viennacl::matrix<T> > vclptr;
     
+    
+ //   std::cout<< "is it here6?\n";
+    
     if(isVCL){
         Rcpp::XPtr<dynVCLMat<T> > ptr(ptr_);
         vclptr = ptr->sharedPtr();
@@ -303,3 +312,10 @@ getVCLptr(
 
     return vclptr;
 }
+
+
+
+
+
+
+
