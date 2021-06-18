@@ -130,3 +130,7 @@ multiplyLowerBatchBackend <- function(C, A, B, diagIsOne, Nglobal, Nlocal, Nloca
     .Call('_gpuRandom_multiplyLowerBatchBackend', PACKAGE = 'gpuRandom', C, A, B, diagIsOne, Nglobal, Nlocal, NlocalCache)
 }
 
+CreateStreamsGpuBackend <- function(streamsR) {
+    .Call('_gpuRandom_CreateStreamsGpuBackend', PACKAGE = 'gpuRandom', streamsR)
+}
+

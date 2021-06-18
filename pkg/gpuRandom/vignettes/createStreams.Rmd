@@ -1,12 +1,29 @@
 <!--
 %\VignetteEngine{knitr::knitr}
-%\VignetteIndexEntry{matrix_add_scalar}
+%\VignetteIndexEntry{Create_Streams_GPU}
 -->
 
 
-```{r test}
+```{r test, eval=FALSE}
 library(gpuRandom)
 library(gpuR)
+
+
+Nstreams = 6
+streamsR<-vclMatrix(0L, nrow=Nstreams, ncol=18, type="integer")
+gpuRandom:::CreateStreamsGpuBackend(streamsR)
+
+as.matrix(streamsR)
+
+
+
+
+
+
+
+
+
+
 type="integer"
 nrow<-8
 ncol<-10
@@ -23,13 +40,6 @@ as.matrix(result)
 gpuRandom:::matrix_vector_sumBackend(x,v2, result, byrow=0, c(4,4))
 as.matrix(result)
 ```
-
-
-
-
-
-
-
 
 
 

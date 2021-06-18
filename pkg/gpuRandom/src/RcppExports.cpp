@@ -384,6 +384,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// CreateStreamsGpuBackend
+SEXP CreateStreamsGpuBackend(Rcpp::S4 streamsR);
+RcppExport SEXP _gpuRandom_CreateStreamsGpuBackend(SEXP streamsRSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type streamsR(streamsRSEXP);
+    rcpp_result_gen = Rcpp::wrap(CreateStreamsGpuBackend(streamsR));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_backsolveBatchBackend", (DL_FUNC) &_gpuRandom_backsolveBatchBackend, 11},
@@ -408,6 +419,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_multiplyLowerDiagonalBatchBackend", (DL_FUNC) &_gpuRandom_multiplyLowerDiagonalBatchBackend, 9},
     {"_gpuRandom_multiplyDiagonalBatchBackend", (DL_FUNC) &_gpuRandom_multiplyDiagonalBatchBackend, 6},
     {"_gpuRandom_multiplyLowerBatchBackend", (DL_FUNC) &_gpuRandom_multiplyLowerBatchBackend, 7},
+    {"_gpuRandom_CreateStreamsGpuBackend", (DL_FUNC) &_gpuRandom_CreateStreamsGpuBackend, 1},
     {NULL, NULL, 0}
 };
 

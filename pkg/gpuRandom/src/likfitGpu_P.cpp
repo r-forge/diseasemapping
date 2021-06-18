@@ -182,6 +182,10 @@ std::string logRowSumString(int NlocalCache) {
   return(result);
 }
 
+
+
+
+
 template<typename T> 
 void addBoxcoxToData(
     viennacl::matrix_base<T> &yx,

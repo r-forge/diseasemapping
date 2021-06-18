@@ -68,7 +68,6 @@ double logfactsum(
     int ctx_id) {
   
   double result;
-  
 
   std::string sumKernelString = colsumRowsumString<double>(
     x.size1(), 
@@ -95,7 +94,7 @@ double logfactsum(
   
   viennacl::ocl::enqueue(sumLfactorialKernel(x, logFactorial) );
   
-  
+ 
   result = viennacl::linalg::sum(logFactorial);
 
   
