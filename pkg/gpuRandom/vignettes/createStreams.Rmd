@@ -9,36 +9,16 @@ library(gpuRandom)
 library(gpuR)
 
 
-Nstreams = 6
+Nstreams = 4
 streamsR<-vclMatrix(0L, nrow=Nstreams, ncol=18, type="integer")
 gpuRandom:::CreateStreamsGpuBackend(streamsR)
 
-as.matrix(streamsR)
+t(as.matrix(streamsR))
 
 
-
-
-
-
-
-
-
-
-type="integer"
-nrow<-8
-ncol<-10
-x<-vclMatrix(1:80, nrow=nrow,ncol=ncol, type=type);      xcpu<-matrix(1:80, nrow=nrow,ncol=ncol)
-
-a <- 3
-
-result <- vclMatrix(0L, nrow=nrow,ncol=ncol, type=type)
-
-
-gpuRandom:::matrix_scalar_sumBackend(x,a, result, c(4,4))
-as.matrix(result)
-
-gpuRandom:::matrix_vector_sumBackend(x,v2, result, byrow=0, c(4,4))
-as.matrix(result)
+Nglobal = 4
+streams = gpuRandom::CreateStreams(Nglobal);
+t(streams)
 ```
 
 

@@ -11,34 +11,40 @@ std::string streamsString(int NpadStreams) {
     "#define NpadStreams " + std::to_string(NpadStreams) + "\n"
     "#define mrg31k3p_M1 2147483647 \n"
     "#define mrg31k3p_M2 2147462579 \n";
+
+
+  result += "__constant uint jmatrix[18]= {1702500920, 1849582496, 1656874625,\n"
+  " 828554832, 1702500920, 1512419905,\n"
+  " 1143731069,  828554832,  102237247,\n"
+  " 796789021, 1464208080,  607337906, \n"
+  " 1241679051, 1431130166, 1464208080, \n"
+  " 1401213391, 1178684362, 1431130166};\n\n\n";
+
   
   result += 
     "\n__kernel void createStreams(\n" 
-    "__global int *creatorInitialGlobal, \n"
-    "__global int *streams,\n"
+    "__global uint *creatorInitialGlobal, \n"
+    "__global uint *streams,\n"
     "int Nstreams){\n";
   
   
   result +=
-    "int creatorNextState[6], creatorCurrentState[6], g[6];\n"  
+    "uint creatorNextState[6], creatorCurrentState[6], g[6];\n"  
     "int i, row, col, Dstream;\n"
-    "float acc; \n"
-    "const int jmatrix[18]={1702500920, 1849582496, 1656874625,\n"
-    " 828554832, 1702500920, 1512419905,\n"
-    " 1143731069,  828554832,  102237247,\n"
-    " 796789021, 1464208080,  607337906, \n"
-    " 1241679051, 1431130166, 1464208080, \n"
-    " 1401213391, 1178684362, 1431130166};\n\n\n";
+    "float acc; \n";
+
   
   
   result += 
     
     // copy creatorInitialGlobal to creatorCurrentState
+
+    
+    "for(Dstream = 0;   Dstream < Nstreams;    Dstream++){\n\n"
+    
     " for (i=0; i<6; i++) {\n"
     "creatorNextState[i] = creatorInitialGlobal[i];\n"
     "}\n"
-    
-    "for(Dstream = 0;   Dstream < Nstreams;    Dstream++){\n"
     
     // upate creatorNext from creatorCurrentState,
     "for (i=0; i<6; i++) {\n"
@@ -59,7 +65,8 @@ std::string streamsString(int NpadStreams) {
     " }\n"
     "creatorNextState[row] = fmod((float)acc, (float)mrg31k3p_M1);\n"
     "}\n"
-    
+  
+  
     // modMatVec(creator->nuA2, creator->nextState.g2, creator->nextState.g2, mrg31k3p_M2);
     "for (row=3; row<6; row++){\n"
     " acc = 0.0;\n"
@@ -69,11 +76,13 @@ std::string streamsString(int NpadStreams) {
     "creatorNextState[row] = fmod((float)acc, (float)mrg31k3p_M2);\n"
     "}\n"
     
+    "for (i=0; i<6; i++) {\n"
+      "creatorInitialGlobal[i] = creatorNextState[i];\n"
+    "}\n\n"
+    
     "}\n" // loop through streams
     
-    
-    // copy current state to substream
-    
+  
     
     
     "}\n"; 
@@ -101,9 +110,11 @@ void CreateStreamsGpu(
   // fill a vector on GPU with data from CPU - faster versions:
   copy(cpu_vector, creatorInitialGlobal);  //option 1 // copy(cpu_vector.begin(), cpu_vector.end(), vcl_vector.begin()); //option 2
   
+
+  
   const int Nstreams = streams.size1(); //# of rows
   std::string streamsKernelString = streamsString(
-    streams.internal_size2() 
+    streams.internal_size2()
   );
   
   // the context
@@ -137,8 +148,8 @@ SEXP CreateStreamsGpuTemplated(
   std::cout<< "33\n";    
   CreateStreamsGpu(*streams, ctx_id);
   
-  return Rcpp::wrap(0L);
   std::cout<< "44\n";  
+  return Rcpp::wrap(0L);
 }
 
 
@@ -158,7 +169,7 @@ SEXP CreateStreamsGpuBackend(
   }
   Rcpp::Rcout << "55" << "\n\n";
   if(precision_type == "ivclMatrix") {
-    CreateStreamsGpuTemplated(streamsR);
+    return(CreateStreamsGpuTemplated(streamsR));
   } 
   
   
