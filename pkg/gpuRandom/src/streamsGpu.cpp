@@ -13,7 +13,7 @@ std::string streamsString(int NpadStreams) {
     "#define mrg31k3p_M2 2147462579 \n";
 
 
-  result += "__constant uint jmatrix[18]= {1702500920, 1849582496, 1656874625,\n"
+  result += "__constant ulong jmatrix[18]= {1702500920, 1849582496, 1656874625,\n"
   " 828554832, 1702500920, 1512419905,\n"
   " 1143731069,  828554832,  102237247,\n"
   " 796789021, 1464208080,  607337906, \n"
@@ -22,36 +22,35 @@ std::string streamsString(int NpadStreams) {
 
   
   result += 
-    "\n__kernel void createStreams(\n" 
-    "__global uint *creatorInitialGlobal, \n"
-    "__global uint *streams,\n"
+    "\n__kernel void createStreams(\n"    
+    "__global ulong *creatorInitialGlobal, \n"
+    "__global ulong *streams,\n"
     "int Nstreams){\n";
   
   
   result +=
-    "uint creatorNextState[6], creatorCurrentState[6], g[6];\n"  
+    "ulong creatorNextState[6], g[6];\n"  
     "int i, row, col, Dstream;\n"
-    "float acc; \n";
+    "ulong acc; \n";
 
   
   
   result += 
     
-    // copy creatorInitialGlobal to creatorCurrentState
 
-    
-    "for(Dstream = 0;   Dstream < Nstreams;    Dstream++){\n\n"
-    
     " for (i=0; i<6; i++) {\n"
     "creatorNextState[i] = creatorInitialGlobal[i];\n"
     "}\n"
+    
+    "for(Dstream = 0;   Dstream < Nstreams;    Dstream++){\n\n"
+    
     
     // upate creatorNext from creatorCurrentState,
     "for (i=0; i<6; i++) {\n"
     " streams[Dstream * NpadStreams +  i] = \n"//initial
     "streams[Dstream * NpadStreams + 6 + i] = \n"//current
-    "streams[Dstream * NpadStreams + 12 + i] = \n"// substream
-    "creatorCurrentState[i] = creatorNextState[i];\n"
+    "streams[Dstream * NpadStreams + 12 + i] = "// substream
+    " creatorNextState[i];\n"
     "}\n"
     
     
@@ -63,7 +62,8 @@ std::string streamsString(int NpadStreams) {
     "for (col=0; col<3; col++){\n"
     "acc += jmatrix[3 * row + col] * creatorNextState[col];\n"
     " }\n"
-    "creatorNextState[row] = fmod((float)acc, (float)mrg31k3p_M1);\n"
+    "creatorNextState[row] = acc % mrg31k3p_M1;\n"
+ //   "creatorNextState[row] = fmod((float)acc, (float)mrg31k3p_M1);\n"
     "}\n"
   
   
@@ -73,12 +73,14 @@ std::string streamsString(int NpadStreams) {
     "for (col=0; col<3; col++){\n"
     "acc += jmatrix[3 * row + col] * creatorNextState[col+3];\n"
     "}\n"
-    "creatorNextState[row] = fmod((float)acc, (float)mrg31k3p_M2);\n"
+    "creatorNextState[row] = acc % mrg31k3p_M2;\n"
+ //  "creatorNextState[row] = fmod((float)acc, (float)mrg31k3p_M2);\n"
     "}\n"
     
-    "for (i=0; i<6; i++) {\n"
-      "creatorInitialGlobal[i] = creatorNextState[i];\n"
-    "}\n\n"
+    
+    
+    
+    
     
     "}\n" // loop through streams
     
@@ -98,17 +100,18 @@ std::string streamsString(int NpadStreams) {
 
 
 void CreateStreamsGpu(
-    viennacl::matrix_base<int> &streams,
+    viennacl::vector_base<int> &creatorInitialGlobal,
+    viennacl::matrix_base<int> &streams, //int keepinitial,
     int ctx_id) {
   
-  std::vector<int>   cpu_vector = {12345, 12345, 12345, 12345, 12345, 12345};
-  viennacl::vector_base<int> creatorInitialGlobal(6);
+ /* std::vector<int>   cpu_vector = {12345, 12345, 12345, 12345, 12345, 12345};
+  viennacl::vector_base<int> creatorInitialGlobal(6); */
   /* fill a vector on CPU
    for (size_t i=0; i<6; ++i)
    cpu_vector[i] = 12345; */
   
   // fill a vector on GPU with data from CPU - faster versions:
-  copy(cpu_vector, creatorInitialGlobal);  //option 1 // copy(cpu_vector.begin(), cpu_vector.end(), vcl_vector.begin()); //option 2
+  //copy(cpu_vector, creatorInitialGlobal);  //option 1 // copy(cpu_vector.begin(), cpu_vector.end(), vcl_vector.begin()); //option 2
   
 
   
@@ -134,19 +137,28 @@ void CreateStreamsGpu(
   Rcpp::Rcout << "11" << "\n\n";
   
   viennacl::ocl::enqueue(streamsKernel(creatorInitialGlobal, streams, Nstreams) );
+  
+  
+  
+  
   Rcpp::Rcout << "22" << "\n\n";
 }
 
 
 
 SEXP CreateStreamsGpuTemplated(
+    Rcpp::S4 creatorInitialGlobalR,
     Rcpp::S4 streamsR){
   
   const bool BisVCL=1;
   const int ctx_id = INTEGER(streamsR.slot(".context_index"))[0]-1;
+  std::shared_ptr<viennacl::vector_base<int> > creatorInitialGlobal = getVCLVecptr<int>(creatorInitialGlobalR.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix_base<int> > streams = getVCLptr<int>(streamsR.slot("address"), BisVCL, ctx_id);
+  
+  
+  
   std::cout<< "33\n";    
-  CreateStreamsGpu(*streams, ctx_id);
+  CreateStreamsGpu(*creatorInitialGlobal, *streams, ctx_id);
   
   std::cout<< "44\n";  
   return Rcpp::wrap(0L);
@@ -158,6 +170,7 @@ SEXP CreateStreamsGpuTemplated(
 
 //[[Rcpp::export]]
 SEXP CreateStreamsGpuBackend(
+    Rcpp::S4 creatorInitialGlobalR,    
     Rcpp::S4 streamsR) {
   
   
@@ -169,7 +182,7 @@ SEXP CreateStreamsGpuBackend(
   }
   Rcpp::Rcout << "55" << "\n\n";
   if(precision_type == "ivclMatrix") {
-    return(CreateStreamsGpuTemplated(streamsR));
+    return(CreateStreamsGpuTemplated(creatorInitialGlobalR, streamsR));
   } 
   
   

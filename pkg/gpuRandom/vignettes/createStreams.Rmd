@@ -8,12 +8,22 @@
 library(gpuRandom)
 library(gpuR)
 
-
+seedR<-gpuR::vclVector(c(12345, 12345, 12345, 12345, 12345, 12345),type="integer")
 Nstreams = 4
 streamsR<-vclMatrix(0L, nrow=Nstreams, ncol=18, type="integer")
-gpuRandom:::CreateStreamsGpuBackend(streamsR)
+gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR)
 
+t(as.matrix(streamsR))[,4]
+as.vector(seedR)
+
+seedR<-gpuR::vclVector(c(1244030976,1708337152,1448169472,40399744,1774503424,1771898112),type="integer")
+gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR)
 t(as.matrix(streamsR))
+
+
+
+
+
 
 
 Nglobal = 4
