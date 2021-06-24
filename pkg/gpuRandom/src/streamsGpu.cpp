@@ -14,7 +14,7 @@ std::string streamsString(int NpadStreams,
     "#define mrg31k3p_M2 2147462579 \n";
   
   
-  result += "__constant uint jmatrix[18]= {1702500920, 1849582496, 1656874625,\n"
+  result += "__constant ulong jmatrix[18]= {1702500920, 1849582496, 1656874625,\n"
   " 828554832, 1702500920, 1512419905,\n"
   " 1143731069,  828554832,  102237247,\n"
   " 796789021, 1464208080,  607337906, \n"
@@ -24,15 +24,15 @@ std::string streamsString(int NpadStreams,
   
   result += 
     "\n__kernel void createStreams(\n"    
-    "__global uint *creatorInitialGlobal, \n"
-    "__global uint *streams,\n"
+    "__global ulong *creatorInitialGlobal, \n"
+    "__global ulong *streams,\n"
     "int Nstreams){\n";
   
   
   result +=
-    "uint creatorNextState[6], g[6];\n"  
+    "ulong creatorNextState[6], g[6];\n"  
     "int i, row, col, Dstream;\n"
-    "float acc; \n"
+    "ulong acc; \n"
     
     
     " for (i=0; i<6; i++) {\n"
@@ -50,7 +50,7 @@ std::string streamsString(int NpadStreams,
       "for (col=0; col<3; col++){\n"
       "acc += jmatrix[3 * row + col] * creatorNextState[col];\n"
       " }\n"
-        "creatorNextState[row] = (float)acc % (float)mrg31k3p_M1;\n"
+       "creatorNextState[row] = acc % mrg31k3p_M1;\n"
      // "creatorNextState[row] = fmod((double)acc, (double)mrg31k3p_M1);\n"
       "}\n"
       
@@ -61,8 +61,8 @@ std::string streamsString(int NpadStreams,
       "for (col=0; col<3; col++){\n"
       "acc += jmatrix[3 * row + col] * creatorNextState[col+3];\n"
       "}\n"
-        "creatorNextState[row] = (float)acc % (float)mrg31k3p_M2;\n"
-    //  "creatorNextState[row] = fmod((float)acc, (float)mrg31k3p_M2);\n"
+       "creatorNextState[row] = acc % mrg31k3p_M2;\n"
+     // "creatorNextState[row] = fmod((float)acc, (float)mrg31k3p_M2);\n"
       "}\n";
     
   }
@@ -91,8 +91,8 @@ std::string streamsString(int NpadStreams,
     "for (col=0; col<3; col++){\n"
     "acc += jmatrix[3 * row + col] * creatorNextState[col];\n"
     " }\n"
-     "creatorNextState[row] = (float)acc % (float)mrg31k3p_M1;\n"
-  //  "creatorNextState[row] = fmod((float)acc, (float)mrg31k3p_M1);\n"
+     "creatorNextState[row] = acc % mrg31k3p_M1;\n"
+    // "creatorNextState[row] = fmod((float)acc, (float)mrg31k3p_M1);\n"
     "}\n"
     
     
@@ -103,7 +103,7 @@ std::string streamsString(int NpadStreams,
     "for (col=0; col<3; col++){\n"
     "acc += jmatrix[3 * row + col] * creatorNextState[col+3];\n"
     "}\n"
-    "creatorNextState[row] = (float)acc % (float)mrg31k3p_M2;\n"
+    "creatorNextState[row] = acc % mrg31k3p_M2;\n"
    // "creatorNextState[row] = fmod((float)acc, (float)mrg31k3p_M2);\n"
     "}\n"
     
@@ -124,8 +124,8 @@ std::string streamsString(int NpadStreams,
 
 
 void CreateStreamsGpu(
-    viennacl::vector_base<int> &creatorInitialGlobal,
-    viennacl::matrix_base<int> &streams, 
+    viennacl::vector_base<ulong> &creatorInitialGlobal,
+    viennacl::matrix_base<ulong> &streams, 
     const int keepinitial,
     int ctx_id) {
   
@@ -182,8 +182,8 @@ SEXP CreateStreamsGpuTemplated(
   
   const bool BisVCL=1;
   const int ctx_id = INTEGER(streamsR.slot(".context_index"))[0]-1;
-  std::shared_ptr<viennacl::vector_base<int> > creatorInitialGlobal = getVCLVecptr<int>(creatorInitialGlobalR.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix_base<int> > streams = getVCLptr<int>(streamsR.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::vector_base<ulong> > creatorInitialGlobal = getVCLVecptr<ulong>(creatorInitialGlobalR.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix_base<ulong> > streams = getVCLptr<ulong>(streamsR.slot("address"), BisVCL, ctx_id);
   
   
   
@@ -202,20 +202,29 @@ SEXP CreateStreamsGpuTemplated(
 SEXP CreateStreamsGpuBackend(
     Rcpp::S4 creatorInitialGlobalR,    
     Rcpp::S4 streamsR,
-    const int keepinitial ){
+    const int keepinitial){
   
   
-  Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(streamsR));
+  /*
+  Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(creatorInitialGlobalR));
   std::string precision_type = (std::string) classVarR;
+  */
+ 
+  //Rcpp::traits::input_parameter< std::string >::type classstream(RCPP_GET_CLASS(streamsR));
+  //std::string precision_type_stream = (std::string) classstream;
   
-  if(precision_type == "fvclMatrix" || precision_type == "dvclMatrix") {
-    Rcpp::warning("must be matrix of integers!\n");
-  }
+  
   Rcpp::Rcout << "55" << "\n\n";
-  if(precision_type == "ivclMatrix") {
+  
+  
+  if(1) {
     return(CreateStreamsGpuTemplated(creatorInitialGlobalR, streamsR, keepinitial));
-  } 
+  }else  {
+    Rcpp::warning("must be matrix of doubles!\n");
+  }
   
   
 }
+
+
 

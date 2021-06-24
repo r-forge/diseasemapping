@@ -27,6 +27,7 @@ class dynVCLMat {
     
     static_assert(std::is_same<T, double>::value || 
                   std::is_same<T, float>::value ||
+                  std::is_same<T, ulong>::value ||
                   std::is_same<T, int>::value,
                   "some meaningful error message");
     
