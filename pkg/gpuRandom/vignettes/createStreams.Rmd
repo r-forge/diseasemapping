@@ -10,10 +10,19 @@ library(gpuRandom)
 library(gpuR)
 
 
+# Nstreams = 4
+# streamsR<-vclMatrix(0L, nrow=Nstreams, ncol=18, type="integer")
+# gpuRandom:::CreateStreamsGpuBackend(streamsR)
+
+
+
+seedR<-gpuR::vclVector(c(12345, 12345, 12345, 12345, 12345, 12345),type="integer")
 Nstreams = 4
 streamsR<-vclMatrix(0L, nrow=Nstreams, ncol=18, type="integer")
-gpuRandom:::CreateStreamsGpuBackend(streamsR)
-
+gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR, keepinitial=1)
+gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR, keepinitial=0)
+t(as.matrix(streamsR))
+as.vector(seedR)
 
 
 
