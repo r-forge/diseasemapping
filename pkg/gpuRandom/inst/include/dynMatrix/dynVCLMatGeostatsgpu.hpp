@@ -29,7 +29,7 @@ class dynVCLMat {
                   std::is_same<T, float>::value ||
                   std::is_same<T, ulong>::value ||
                   std::is_same<T, int>::value,
-                  "some meaningful error message");
+                  "should be a double or float or ulong or int"); 
     
     private:
         int nr, nc;

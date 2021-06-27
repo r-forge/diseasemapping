@@ -38,30 +38,38 @@ seedR <- c(12345, 12345, 12345, 12345, 12345, 12345)
 is.double(seedR)
 is.integer(seedR)
 
+
+seedR <- 12345
 seedR <- as.integer(seedR)
 
 intToBits(seedR)
+
+
+
+
+
+
+
+seedR <- c(12345L, 12345L, 12345L, 12345L, 12345L, 12345L)
+packBits(intToBits(seedR), type = 'double')
+
+
+seedR <- 12345L
+packBits(intToBits(seedR), type = 'integer')
+
+
+seedR <- c(12345L, 12345L, 12345L, 12345L, 12345L, 12345L)
+packBits(intToBits(seedR), type = 'integer')
+
+
+seedR <- c(12345L)
 packBits(intToBits(seedR), type = 'double')
 
 as.vector(rbind(0L, seedR))
-
 packBits( intToBits(as.vector(rbind(0L, seedR))), type = 'double')
 
 
 
-packBits(intToBits(c(0, seedR)), type = 'double')
-
-seedR<-gpuR::vclVector(c(12345, 12345, 12345, 12345, 12345, 12345),type="integer")
-Nstreams = 4
-streamsR<-vclMatrix(0L, nrow=Nstreams, ncol=18, type="integer")
-gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR, keepinitial=1)
-gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR, keepinitial=0)
-t(as.matrix(streamsR))[,4]
-as.vector(seedR)
-
-seedR<-gpuR::vclVector(c(1244030976,1708337152,1448169472,40399744,1774503424,1771898112),type="integer")
-gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR, keepinitial=0)
-t(as.matrix(streamsR))
 
 
 
@@ -81,13 +89,66 @@ t(streams)
 library(gpuRandom)
 library(gpuR)
 
+# seed is created as double in R
+# seed is then convert to double vclvector on gpu
+# streams are created as double vclmatrix on gpu
+
+
 
 seedR <- c(12345, 12345, 12345, 12345, 12345, 12345)
-gpuRandom::CreateStreamsGpu(seedR, 4L, keepinitial=1)
+streamsGpu <- gpuRandom::CreateStreamsGpu(seedR, 4L, keepinitial=1)
 
+
+streams <- as.matrix(streamsGpu)
+t(streams)
+
+
+temp <- packBits(numToBits(as.matrix(streamsGpu)), type = 'integer')
+
+
+streamsCpu <- t(matrix(temp[which(temp!= 0)], nrow=4, byrow=FALSE))
+
+
+
+
+
+
+
+
+packBits(numToBits(as.matrix(streamsGpu)[1,]), type = 'double')
+#matrix(packBits(numToBits(as.matrix(streamsGpu)[1,]), type = 'integer'), nrow=2, byrow=FALSE)
+
+# packBits accepts raw, integer or logical inputs, the last two without any NAs.
+
+# numToBits(.) and packBits(., type="double") are inverse functions of each other, see also the examples. 
+
+
+
+#why do we need to convert the seed to bits 
+seedR<-gpuR::vclVector(c(12345, 12345, 12345, 12345, 12345, 12345),type="integer")
+streamsR<-vclMatrix(0L, nrow=4, ncol=18, type="integer")
+gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR, keepinitial=1)
 t(as.matrix(streamsR))
-packBits(intToBits(as.matrix(streamsR)), type = 'integer')
 
+
+
+
+# this is also okay
+seedR<-gpuR::vclVector(c(12345, 12345, 12345, 12345, 12345, 12345),type="double")
+streamsR<-vclMatrix(0L, nrow=4, ncol=18, type="double")
+gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR, keepinitial=1)
+t(as.matrix(streamsR))
+
+
+
+
+
+
+
+seedR<-gpuR::vclVector(c(12345, 12345, 12345, 12345, 12345, 12345),type="integer")
+streamsR<-vclMatrix(0L, nrow=4, ncol=18, type="double")
+gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR, keepinitial=1)
+t(as.matrix(streamsR))
 ```
 
 

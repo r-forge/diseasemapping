@@ -158,12 +158,12 @@ void CreateStreamsGpu(
   
   //streamsKernel.local_work_size(0, 1L);
   //streamsKernel.local_work_size(1, 1L);
-  Rcpp::Rcout << "11" << "\n\n";
+  //Rcpp::Rcout << "11" << "\n\n";
   
   viennacl::ocl::enqueue(streamsKernel(creatorInitialGlobal, streams, Nstreams) );
   
   
-  Rcpp::Rcout << "22" << "\n\n";
+  //Rcpp::Rcout << "22" << "\n\n";
 }
 
 
@@ -175,7 +175,7 @@ void CreateStreamsGpu(
 
 
 
-SEXP CreateStreamsGpuTemplated(
+void CreateStreamsGpuTemplated(
     Rcpp::S4 creatorInitialGlobalR,
     Rcpp::S4 streamsR,
     const int keepinitial){
@@ -187,11 +187,11 @@ SEXP CreateStreamsGpuTemplated(
   
   
   
-  std::cout<< "33\n";    
+  //std::cout<< "33\n";    
   CreateStreamsGpu(*creatorInitialGlobal, *streams, keepinitial, ctx_id);
   
-  std::cout<< "44\n";  
-  return Rcpp::wrap(0L);
+  //std::cout<< "44\n";  
+  //return Rcpp::wrap(0L);
 }
 
 
@@ -199,7 +199,7 @@ SEXP CreateStreamsGpuTemplated(
 
 
 //[[Rcpp::export]]
-SEXP CreateStreamsGpuBackend(
+void CreateStreamsGpuBackend(
     Rcpp::S4 creatorInitialGlobalR,    
     Rcpp::S4 streamsR,
     const int keepinitial){
@@ -214,17 +214,16 @@ SEXP CreateStreamsGpuBackend(
   //std::string precision_type_stream = (std::string) classstream;
   
   
-  Rcpp::Rcout << "55" << "\n\n";
+  //Rcpp::Rcout << "55" << "\n\n";
   
   
-  if(1) {
-    return(CreateStreamsGpuTemplated(creatorInitialGlobalR, streamsR, keepinitial));
-  }else  {
-    Rcpp::warning("must be matrix of doubles!\n");
+ 
+    CreateStreamsGpuTemplated(creatorInitialGlobalR, streamsR, keepinitial);
+ 
   }
   
   
-}
+
 
 
 
