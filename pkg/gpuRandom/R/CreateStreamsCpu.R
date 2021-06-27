@@ -10,7 +10,7 @@
 
 
 
-CreateStreams = function(numWorkItems) {
+CreateStreamsCpu = function(numWorkItems) {
 
   result = matrix(as.integer(0), nrow=numWorkItems, ncol=18)
 

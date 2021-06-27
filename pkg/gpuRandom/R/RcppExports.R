@@ -49,10 +49,6 @@ cpp_gpuFisher_test <- function(xR, resultsR, B, streamsR, max_global_size, max_l
     .Call('_gpuRandom_cpp_gpuFisher_test', PACKAGE = 'gpuRandom', xR, resultsR, B, streamsR, max_global_size, max_local_size)
 }
 
-cpp_mrg31k3pCreateStreams <- function(result) {
-    .Call('_gpuRandom_cpp_mrg31k3pCreateStreams', PACKAGE = 'gpuRandom', result)
-}
-
 #' Random number generation
 #' 
 #' Fills a matrix with random numbers
@@ -128,6 +124,10 @@ multiplyDiagonalBatchBackend <- function(C, A, B, inverse, Nglobal, Nlocal) {
 #' @export
 multiplyLowerBatchBackend <- function(C, A, B, diagIsOne, Nglobal, Nlocal, NlocalCache) {
     .Call('_gpuRandom_multiplyLowerBatchBackend', PACKAGE = 'gpuRandom', C, A, B, diagIsOne, Nglobal, Nlocal, NlocalCache)
+}
+
+cpp_mrg31k3pCreateStreams <- function(result) {
+    .Call('_gpuRandom_cpp_mrg31k3pCreateStreams', PACKAGE = 'gpuRandom', result)
 }
 
 CreateStreamsGpuBackend <- function(creatorInitialGlobalR, streamsR, keepinitial) {
