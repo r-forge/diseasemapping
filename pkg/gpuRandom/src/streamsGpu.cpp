@@ -14,7 +14,7 @@ std::string streamsString(int NpadStreams,
     "#define mrg31k3p_M2 2147462579 \n";
   
   
-  result += "__constant ulong jmatrix[18]= {1702500920, 1849582496, 1656874625,\n"
+  result += "__constant unsigned int jmatrix[18]= {1702500920, 1849582496, 1656874625,\n"
   " 828554832, 1702500920, 1512419905,\n"
   " 1143731069,  828554832,  102237247,\n"
   " 796789021, 1464208080,  607337906, \n"
@@ -24,15 +24,15 @@ std::string streamsString(int NpadStreams,
   
   result += 
     "\n__kernel void createStreams(\n"    
-    "__global ulong *creatorInitialGlobal, \n"
-    "__global ulong *streams,\n"
+    "__global unsigned int *creatorInitialGlobal, \n"
+    "__global unsigned int *streams,\n"
     "int Nstreams){\n";
   
   
   result +=
-    "ulong creatorNextState[6], g[6];\n"  
+    "unsigned int creatorNextState[6], g[6];\n"  
     "int i, row, col, Dstream;\n"
-    "ulong acc; \n"
+    "unsigned int acc; \n"
     
     
     " for (i=0; i<6; i++) {\n"
@@ -50,6 +50,7 @@ std::string streamsString(int NpadStreams,
       "for (col=0; col<3; col++){\n"
       "acc += jmatrix[3 * row + col] * creatorNextState[col];\n"
       " }\n"
+      //"creatorNextState[row] = acc; \n"
        "creatorNextState[row] = acc % mrg31k3p_M1;\n"
      // "creatorNextState[row] = fmod((double)acc, (double)mrg31k3p_M1);\n"
       "}\n"
@@ -61,6 +62,7 @@ std::string streamsString(int NpadStreams,
       "for (col=0; col<3; col++){\n"
       "acc += jmatrix[3 * row + col] * creatorNextState[col+3];\n"
       "}\n"
+      //"creatorNextState[row] = acc; \n"
        "creatorNextState[row] = acc % mrg31k3p_M2;\n"
      // "creatorNextState[row] = fmod((float)acc, (float)mrg31k3p_M2);\n"
       "}\n";
@@ -91,6 +93,7 @@ std::string streamsString(int NpadStreams,
     "for (col=0; col<3; col++){\n"
     "acc += jmatrix[3 * row + col] * creatorNextState[col];\n"
     " }\n"
+    //"creatorNextState[row] = acc; \n"
      "creatorNextState[row] = acc % mrg31k3p_M1;\n"
     // "creatorNextState[row] = fmod((float)acc, (float)mrg31k3p_M1);\n"
     "}\n"
@@ -103,6 +106,7 @@ std::string streamsString(int NpadStreams,
     "for (col=0; col<3; col++){\n"
     "acc += jmatrix[3 * row + col] * creatorNextState[col+3];\n"
     "}\n"
+    //"creatorNextState[row] = acc; \n"
     "creatorNextState[row] = acc % mrg31k3p_M2;\n"
    // "creatorNextState[row] = fmod((float)acc, (float)mrg31k3p_M2);\n"
     "}\n"
@@ -124,8 +128,8 @@ std::string streamsString(int NpadStreams,
 
 
 void CreateStreamsGpu(
-    viennacl::vector_base<ulong> &creatorInitialGlobal,
-    viennacl::matrix_base<ulong> &streams, 
+    viennacl::vector_base<unsigned int> &creatorInitialGlobal,
+    viennacl::matrix_base<unsigned int> &streams, 
     const int keepinitial,
     int ctx_id) {
   
@@ -182,8 +186,8 @@ void CreateStreamsGpuTemplated(
   
   const bool BisVCL=1;
   const int ctx_id = INTEGER(streamsR.slot(".context_index"))[0]-1;
-  std::shared_ptr<viennacl::vector_base<ulong> > creatorInitialGlobal = getVCLVecptr<ulong>(creatorInitialGlobalR.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix_base<ulong> > streams = getVCLptr<ulong>(streamsR.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::vector_base<unsigned int> > creatorInitialGlobal = getVCLVecptr<unsigned int>(creatorInitialGlobalR.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix_base<unsigned int> > streams = getVCLptr<unsigned int>(streamsR.slot("address"), BisVCL, ctx_id);
   
   
   
