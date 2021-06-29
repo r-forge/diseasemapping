@@ -27,7 +27,7 @@ class dynVCLMat {
     
     static_assert(std::is_same<T, double>::value || 
                   std::is_same<T, float>::value ||
-                  std::is_same<T, uint>::value ||
+                  std::is_same<T, cl_uint>::value ||
                   std::is_same<T, int>::value,
                   "should be a double or float or ulong or int"); 
     

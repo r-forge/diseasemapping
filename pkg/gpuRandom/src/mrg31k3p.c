@@ -92,7 +92,7 @@ static cl_uint invA2[3][3] = {
 
 /*! @brief Default initial seed of the first stream
  */
-#define BASE_CREATOR_STATE { { 12345, 12345, 12345 }, { 12345, 12345, 12345 } }
+#define BASE_CREATOR_STATE { { 2, 1, 0 }, { 0, 0, 0 } }
 /*! @brief Jump matrices for \f$2^{134}\f$ steps forward
  */
 #define BASE_CREATOR_JUMP_MATRIX_1 { \

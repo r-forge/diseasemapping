@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-//#define DEBUGKERNEL
+#define DEBUGKERNEL
 
 std::string streamsString(int NpadStreams, 
                           const int keepinitial) {  
@@ -14,22 +14,23 @@ std::string streamsString(int NpadStreams,
     "#define mrg31k3p_M2 2147462579 \n\n\n";
   
 
-  result += "__constant uint jmatrix[18]= {1702500920, 1849582496, 1656874625,\n"
-  " 828554832, 1702500920, 1512419905,\n"
-  " 1143731069,  828554832,  102237247,\n"
-  " 796789021, 1464208080,  607337906, \n"
-  " 1241679051, 1431130166, 1464208080, \n"
-  " 1401213391, 1178684362, 1431130166};\n\n\n";
-
- /*
- result += "__constant int jmatrix[18]= {1, 2, 3,\n"
- " 4, 5, 6,\n"
- " 7,  8, 9,\n"
-  "1, 0, 0,\n"
- " 0, 1, 0,\n"
- " 0,  0,  1 };\n\n\n";
-*/
+   result += "__constant uint jmatrix[18]= {1702500920, 1849582496, 1656874625,\n"
+   " 828554832, 1702500920, 1512419905,\n"
+   " 1143731069,  828554832,  102237247,\n"
+   " 796789021, 1464208080,  607337906, \n"
+   " 1241679051, 1431130166, 1464208080, \n"
+   " 1401213391, 1178684362, 1431130166};\n\n\n";
  
+ 
+ /* 
+  result += "__constant cl_uint jmatrix[18]= {1, 2, 3,\n"
+  " 4, 5, 6,\n"
+  " 7,  8, 9,\n"
+  "1, 0, 0,\n"
+  " 0, 1, 0,\n"
+  " 0,  0,  1 };\n\n\n";
+  */  
+  
   
   result += 
     "\n__kernel void createStreams(\n"    
@@ -52,84 +53,82 @@ std::string streamsString(int NpadStreams,
   
   
   /*
-  if (keepinitial == 0) {
-    
-    result +=     
-      // Matrix-vector modular multiplication
-      // modMatVec(creator->nuA1, creator->nextState.g1, creator->nextState.g1, mrg31k3p_M1);
-      "for (row=0; row<3; row++){\n"
-      "acc = 0;\n"
-      "for (col=0; col<3; col++){\n"
-      "acc += jmatrix[3 * row + col] * creatorInitialGlobal[col];\n"
-      " }\n"
-      //"creatorCurrentState[row] = acc; \n"
-      "creatorCurrentState[row] = acc % mrg31k3p_M1;\n"
-     // "creatorCurrentState[row] = fmod((double)acc, (double)mrg31k3p_M1);\n"
-      "}\n"
-      
-      
-      // modMatVec(creator->nuA2, creator->nextState.g2, creator->nextState.g2, mrg31k3p_M2);
-      "for (row=3; row<6; row++){\n"
-      " acc = 0;\n"
-      "for (col=0; col<3; col++){\n"
-      "acc += jmatrix[3 * row + col] * creatorInitialGlobal[col+3];\n"
-      "}\n"
-    //"creatorCurrentState[row] = acc; \n"
-      "creatorCurrentState[row] = acc % mrg31k3p_M2;\n"
-     // "creatorCurrentState[row] = fmod((float)acc, (float)mrg31k3p_M2);\n"
-      "}\n\n";
-    
-  }
+   if (keepinitial == 0) {
+   
+   result +=     
+   // Matrix-vector modular multiplication
+   // modMatVec(creator->nuA1, creator->nextState.g1, creator->nextState.g1, mrg31k3p_M1);
+   "for (row=0; row<3; row++){\n"
+   "acc = 0;\n"
+   "for (col=0; col<3; col++){\n"
+   "acc += jmatrix[3 * row + col] * creatorInitialGlobal[col];\n"
+   " }\n"
+   //"creatorCurrentState[row] = acc; \n"
+   "creatorCurrentState[row] = acc % mrg31k3p_M1;\n"
+   // "creatorCurrentState[row] = fmod((double)acc, (double)mrg31k3p_M1);\n"
+   "}\n"
+   
+   
+   // modMatVec(creator->nuA2, creator->nextState.g2, creator->nextState.g2, mrg31k3p_M2);
+   "for (row=3; row<6; row++){\n"
+   " acc = 0;\n"
+   "for (col=0; col<3; col++){\n"
+   "acc += jmatrix[3 * row + col] * creatorInitialGlobal[col+3];\n"
+   "}\n"
+   //"creatorCurrentState[row] = acc; \n"
+   "creatorCurrentState[row] = acc % mrg31k3p_M2;\n"
+   // "creatorCurrentState[row] = fmod((float)acc, (float)mrg31k3p_M2);\n"
+   "}\n\n";
+   
+   }
+   
+   */ 
   
- */ 
-
-
+  
   
   
   result +=  
-    
-    "for(Dstream = 0;   Dstream < Nstreams;    Dstream++){\n\n"
-    
-    // upate creatorNext from creatorCurrentState,
-    "for (i=0; i<6; i++) {\n"
-    " streams[Dstream * NpadStreams +  i] = \n"//initial
-    "streams[Dstream * NpadStreams + 6 + i] = \n"//current
-    "streams[Dstream * NpadStreams + 12 + i] = "// substream
-    " creatorNextState[i] = creatorCurrentState[i];\n"
-    "}\n"
-    
-    
-    
-    // Matrix-vector modular multiplication
-    // modMatVec(creator->nuA1, creator->nextState.g1, creator->nextState.g1, mrg31k3p_M1);
-    "for (row=0; row<3; row++){\n"
-    "acc = 0;\n"
-    "for (col=0; col<3; col++){\n"
-    "acc += jmatrix[3 * row + col] * creatorNextState[col];\n"
-    " }\n"
-    //"creatorCurrentState[row] = acc; \n"
-     "creatorCurrentState[row] = acc % mrg31k3p_M1;\n"
-    // "creatorCurrentState[row] = fmod((float)acc, (float)mrg31k3p_M1);\n"
-    "}\n"
-    
-    
-    
-    // modMatVec(creator->nuA2, creator->nextState.g2, creator->nextState.g2, mrg31k3p_M2);
-    "for (row=3; row<6; row++){\n"
-    " acc = 0;\n"
-    "for (col=0; col<3; col++){\n"
-    "acc += jmatrix[3 * row + col] * creatorNextState[col+3];\n"
-    "}\n"
-    //"creatorCurrentState[row] = acc; \n"
-    "creatorCurrentState[row] = acc % mrg31k3p_M2;\n"
-   // "creatorCurrentState[row] = fmod((float)acc, (float)mrg31k3p_M2);\n"
-    "}\n"
-    
-    
-    
-    "}\n" // loop through streams
-    
-    "}\n"; 
+  
+  "for(Dstream = 0;   Dstream < Nstreams;    Dstream++){\n\n"
+  
+  // upate creatorNext from creatorCurrentState,
+  "for (i=0; i<6; i++) {\n"
+  " streams[Dstream * NpadStreams +  i] = \n"//initial
+  "streams[Dstream * NpadStreams + 6 + i] = \n"//current
+  "streams[Dstream * NpadStreams + 12 + i] = "// substream
+  " creatorNextState[i] = creatorCurrentState[i];\n"
+  "}\n"
+  
+  
+  
+  // Matrix-vector modular multiplication
+  // modMatVec(creator->nuA1, creator->nextState.g1, creator->nextState.g1, mrg31k3p_M1);
+  "for (row=0; row<3; row++){\n"
+  "acc = 0;\n"
+  "for (col=0; col<3; col++){\n"
+  "acc += jmatrix[3 * row + col] * creatorNextState[col];\n"
+  " }\n"
+  "creatorCurrentState[row] = acc; \n"
+  // "creatorCurrentState[row] = acc % mrg31k3p_M1;\n"
+  // "creatorCurrentState[row] = fmod((float)acc, (float)mrg31k3p_M1);\n"
+  "}\n"
+  
+  
+  
+  // modMatVec(creator->nuA2, creator->nextState.g2, creator->nextState.g2, mrg31k3p_M2);
+  "for (row=3; row<6; row++){\n"
+  " acc = 0;\n"
+  "for (col=0; col<3; col++){\n"
+  "acc += jmatrix[3 * row + col] * creatorNextState[col+3];\n"
+  "}\n"
+   "creatorCurrentState[row] = acc; \n"
+   //"creatorCurrentState[row] = acc % mrg31k3p_M2;\n"
+  // "creatorCurrentState[row] = fmod((float)acc, (float)mrg31k3p_M2);\n"
+  "}\n"
+  
+  "}\n" // loop through streams
+  
+  "}\n"; 
   
   return(result);
 }
@@ -142,8 +141,8 @@ std::string streamsString(int NpadStreams,
 
 
 void CreateStreamsGpu(
-    viennacl::vector_base<uint> &creatorInitialGlobal,
-    viennacl::matrix_base<uint> &streams, 
+    viennacl::vector_base<cl_uint> &creatorInitialGlobal,
+    viennacl::matrix_base<cl_uint> &streams, 
     const int keepinitial,
     int ctx_id) {
   
@@ -180,8 +179,9 @@ void CreateStreamsGpu(
   
   viennacl::ocl::enqueue(streamsKernel(creatorInitialGlobal, streams, Nstreams) );
   
-  
-  //Rcpp::Rcout << "22" << "\n\n";
+  Rcpp::Rcout << streams(0,0) << "\n" << streams(0,1) << "\n"<< streams(0,2) << "\n\n";
+  Rcpp::Rcout << streams(1,0) << "\n" << streams(1,1) << "\n"<< streams(1,2) << "\n\n";
+  Rcpp::Rcout << streams(2,0) << "\n" << streams(2,1) << "\n"<< streams(2,2) << "\n\n";
 }
 
 
@@ -200,8 +200,8 @@ void CreateStreamsGpuTemplated(
   
   const bool BisVCL=1;
   const int ctx_id = INTEGER(streamsR.slot(".context_index"))[0]-1;
-  std::shared_ptr<viennacl::vector_base<uint> > creatorInitialGlobal = getVCLVecptr<uint>(creatorInitialGlobalR.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix_base<uint> > streams = getVCLptr<uint>(streamsR.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::vector_base<cl_uint> > creatorInitialGlobal = getVCLVecptr<cl_uint>(creatorInitialGlobalR.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix_base<cl_uint> > streams = getVCLptr<cl_uint>(streamsR.slot("address"), BisVCL, ctx_id);
   
   
   
@@ -224,10 +224,10 @@ void CreateStreamsGpuBackend(
   
   
   /*
-  Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(creatorInitialGlobalR));
-  std::string precision_type = (std::string) classVarR;
-  */
- 
+   Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(creatorInitialGlobalR));
+   std::string precision_type = (std::string) classVarR;
+   */
+  
   //Rcpp::traits::input_parameter< std::string >::type classstream(RCPP_GET_CLASS(streamsR));
   //std::string precision_type_stream = (std::string) classstream;
   
@@ -235,12 +235,16 @@ void CreateStreamsGpuBackend(
   //Rcpp::Rcout << "55" << "\n\n";
   
   
- 
-    CreateStreamsGpuTemplated(creatorInitialGlobalR, streamsR, keepinitial);
- 
-  }
   
+  CreateStreamsGpuTemplated(creatorInitialGlobalR, streamsR, keepinitial);
   
+}
+
+
+
+
+
+
 
 
 
