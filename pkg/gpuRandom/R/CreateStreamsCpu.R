@@ -10,9 +10,9 @@
 
 
 
-CreateStreamsCpu = function(numWorkItems) {
+CreateStreamsCpu = function(Nstreams) {
 
-  result = matrix(as.integer(0), nrow=numWorkItems, ncol=18)
+  result = matrix(as.integer(0), nrow=Nstreams, ncol=18)
 
   colnames(result) = c("current.g1.1", "current.g1.2", "current.g1.3", "current.g2.1", "current.g2.2", "current.g2.3",
                        "initial.g1.1", "initial.g1.2", "initial.g1.3", "initial.g2.1", "initial.g2.2", "initial.g2.3",
