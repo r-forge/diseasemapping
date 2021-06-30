@@ -29,7 +29,7 @@ class dynVCLMat {
                   std::is_same<T, float>::value ||
                   std::is_same<T, cl_uint>::value ||
                   std::is_same<T, int>::value,
-                  "should be a double or float or ulong or int"); 
+                  "should be a double or float or cl_uint or int"); 
     
     private:
         int nr, nc;

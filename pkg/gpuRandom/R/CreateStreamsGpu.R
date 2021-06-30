@@ -12,13 +12,9 @@
 
 
 
-CreateStreamsGpu = function(seedR, Nstreams, keepinitial=1) {
+CreateStreamsGpu = function(seedR, Nstreams, keepInitial=1) {
 
-  
-  # gpuR::colnames(streamsR) = c("current.g1.1", "current.g1.2", "current.g1.3", "current.g2.1", "current.g2.2", "current.g2.3",
-  #                              "initial.g1.1", "initial.g1.2", "initial.g1.3", "initial.g2.1", "initial.g2.2", "initial.g2.3",
-  #                              "substream.g1.1", "substream.g1.2", "substream.g1.3", "substream.g2.1", "substream.g2.2", "substream.g2.3")
-  # 
+
   
    # if(typeof(seedR)=="integer"){
    #  
@@ -31,8 +27,8 @@ CreateStreamsGpu = function(seedR, Nstreams, keepinitial=1) {
   
     myseed <- gpuR::vclVector(as.integer(seedR), type="integer")  
     streamsR<-vclMatrix(0L, nrow=Nstreams, ncol=18, type="integer")
-  
-    gpuRandom:::CreateStreamsGpuBackend(myseed, streamsR, keepinitial)
+    
+    gpuRandom:::CreateStreamsGpuBackend(myseed, streamsR, keepInitial)
   
   
     streamsR

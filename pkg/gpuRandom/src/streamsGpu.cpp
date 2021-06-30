@@ -1,8 +1,8 @@
 #include "gpuRandom.hpp"
-#define DEBUGKERNEL
+//#define DEBUGKERNEL
 
 std::string streamsString(int NpadStreams, 
-                          const int keepinitial) {  
+                          const int keepInitial) {  
   
   
   std::string result = "";
@@ -14,7 +14,7 @@ std::string streamsString(int NpadStreams,
     "#define mrg31k3p_M2 2147462579 \n\n\n";
   
 
-   result += "__constant uint jmatrix[18]= {1702500920, 1849582496, 1656874625,\n"
+   result += "__constant ulong jmatrix[18]= {1702500920, 1849582496, 1656874625,\n"
    " 828554832, 1702500920, 1512419905,\n"
    " 1143731069,  828554832,  102237247,\n"
    " 796789021, 1464208080,  607337906, \n"
@@ -42,30 +42,29 @@ std::string streamsString(int NpadStreams,
   result +=
     "uint creatorNextState[6], creatorCurrentState[6];\n"  
     "int i, row, col, Dstream;\n"
-    "uint acc; \n";
-  
+    "ulong acc; \n\n\n";
+ 
+ 
+ 
+ 
+ if (keepInitial >= 1){
   result +=  
     " for (i=0; i<6; i++) {\n"
     "creatorCurrentState[i] = creatorInitialGlobal[i];\n"
     "}\n";
   
-  
-  
-  
-  /*
-   if (keepinitial == 0) {
+ }else if (keepInitial == 0) {
    
    result +=     
-   // Matrix-vector modular multiplication
    // modMatVec(creator->nuA1, creator->nextState.g1, creator->nextState.g1, mrg31k3p_M1);
    "for (row=0; row<3; row++){\n"
    "acc = 0;\n"
    "for (col=0; col<3; col++){\n"
-   "acc += jmatrix[3 * row + col] * creatorInitialGlobal[col];\n"
+   "acc += (jmatrix[3 * row + col] * ( (ulong) creatorInitialGlobal[col]) ) % mrg31k3p_M1;\n"
    " }\n"
    //"creatorCurrentState[row] = acc; \n"
-   "creatorCurrentState[row] = acc % mrg31k3p_M1;\n"
-   // "creatorCurrentState[row] = fmod((double)acc, (double)mrg31k3p_M1);\n"
+   "creatorCurrentState[row] = (uint) (acc % mrg31k3p_M1);\n"
+ 
    "}\n"
    
    
@@ -73,19 +72,15 @@ std::string streamsString(int NpadStreams,
    "for (row=3; row<6; row++){\n"
    " acc = 0;\n"
    "for (col=0; col<3; col++){\n"
-   "acc += jmatrix[3 * row + col] * creatorInitialGlobal[col+3];\n"
+   "acc += (jmatrix[3 * row + col] * ((ulong) creatorInitialGlobal[col+3])) % mrg31k3p_M2;\n"
    "}\n"
    //"creatorCurrentState[row] = acc; \n"
-   "creatorCurrentState[row] = acc % mrg31k3p_M2;\n"
-   // "creatorCurrentState[row] = fmod((float)acc, (float)mrg31k3p_M2);\n"
+   "creatorCurrentState[row] = (uint) (acc % mrg31k3p_M2);\n"
+
    "}\n\n";
    
    }
    
-   */ 
-  
-  
-  
   
   result +=  
   
@@ -106,10 +101,10 @@ std::string streamsString(int NpadStreams,
   "for (row=0; row<3; row++){\n"
   "acc = 0;\n"
   "for (col=0; col<3; col++){\n"
-  "acc += jmatrix[3 * row + col] * creatorNextState[col];\n"
+  "acc += (jmatrix[3 * row + col] * ( (ulong) creatorNextState[col]) ) % mrg31k3p_M1;\n"
   " }\n"
-  "creatorCurrentState[row] = acc; \n"
-  // "creatorCurrentState[row] = acc % mrg31k3p_M1;\n"
+  //"creatorCurrentState[row] = acc; \n"
+   "creatorCurrentState[row] = (uint) (acc % mrg31k3p_M1);\n"
   // "creatorCurrentState[row] = fmod((float)acc, (float)mrg31k3p_M1);\n"
   "}\n"
   
@@ -119,10 +114,10 @@ std::string streamsString(int NpadStreams,
   "for (row=3; row<6; row++){\n"
   " acc = 0;\n"
   "for (col=0; col<3; col++){\n"
-  "acc += jmatrix[3 * row + col] * creatorNextState[col+3];\n"
+  "acc += (jmatrix[3 * row + col] * ((ulong)creatorNextState[col+3])) % mrg31k3p_M2;\n"
   "}\n"
-   "creatorCurrentState[row] = acc; \n"
-   //"creatorCurrentState[row] = acc % mrg31k3p_M2;\n"
+  // "creatorCurrentState[row] = acc; \n"
+   "creatorCurrentState[row] = (uint) (acc % mrg31k3p_M2);\n"
   // "creatorCurrentState[row] = fmod((float)acc, (float)mrg31k3p_M2);\n"
   "}\n"
   
@@ -143,7 +138,7 @@ std::string streamsString(int NpadStreams,
 void CreateStreamsGpu(
     viennacl::vector_base<cl_uint> &creatorInitialGlobal,
     viennacl::matrix_base<cl_uint> &streams, 
-    const int keepinitial,
+    const int keepInitial,
     int ctx_id) {
   
   /* std::vector<int>   cpu_vector = {12345, 12345, 12345, 12345, 12345, 12345};
@@ -158,7 +153,7 @@ void CreateStreamsGpu(
   const int Nstreams = streams.size1(); //# of rows
   std::string streamsKernelString = streamsString(
     streams.internal_size2(), 
-    keepinitial
+    keepInitial
   );
   
   // the context
@@ -178,10 +173,11 @@ void CreateStreamsGpu(
   //Rcpp::Rcout << "11" << "\n\n";
   
   viennacl::ocl::enqueue(streamsKernel(creatorInitialGlobal, streams, Nstreams) );
-  
+ /* 
   Rcpp::Rcout << streams(0,0) << "\n" << streams(0,1) << "\n"<< streams(0,2) << "\n\n";
   Rcpp::Rcout << streams(1,0) << "\n" << streams(1,1) << "\n"<< streams(1,2) << "\n\n";
   Rcpp::Rcout << streams(2,0) << "\n" << streams(2,1) << "\n"<< streams(2,2) << "\n\n";
+  */
 }
 
 
@@ -196,7 +192,7 @@ void CreateStreamsGpu(
 void CreateStreamsGpuTemplated(
     Rcpp::S4 creatorInitialGlobalR,
     Rcpp::S4 streamsR,
-    const int keepinitial){
+    const int keepInitial){
   
   const bool BisVCL=1;
   const int ctx_id = INTEGER(streamsR.slot(".context_index"))[0]-1;
@@ -206,7 +202,7 @@ void CreateStreamsGpuTemplated(
   
   
   //std::cout<< "33\n";    
-  CreateStreamsGpu(*creatorInitialGlobal, *streams, keepinitial, ctx_id);
+  CreateStreamsGpu(*creatorInitialGlobal, *streams, keepInitial, ctx_id);
   
   //std::cout<< "44\n";  
   //return Rcpp::wrap(0L);
@@ -220,7 +216,7 @@ void CreateStreamsGpuTemplated(
 void CreateStreamsGpuBackend(
     Rcpp::S4 creatorInitialGlobalR,    
     Rcpp::S4 streamsR,
-    const int keepinitial){
+    const int keepInitial){
   
   
   /*
@@ -234,9 +230,8 @@ void CreateStreamsGpuBackend(
   
   //Rcpp::Rcout << "55" << "\n\n";
   
-  
-  
-  CreateStreamsGpuTemplated(creatorInitialGlobalR, streamsR, keepinitial);
+
+  CreateStreamsGpuTemplated(creatorInitialGlobalR, streamsR, keepInitial);
   
 }
 

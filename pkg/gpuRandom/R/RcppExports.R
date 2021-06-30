@@ -130,7 +130,7 @@ cpp_mrg31k3pCreateStreams <- function(result) {
     .Call('_gpuRandom_cpp_mrg31k3pCreateStreams', PACKAGE = 'gpuRandom', result)
 }
 
-CreateStreamsGpuBackend <- function(creatorInitialGlobalR, streamsR, keepinitial) {
-    invisible(.Call('_gpuRandom_CreateStreamsGpuBackend', PACKAGE = 'gpuRandom', creatorInitialGlobalR, streamsR, keepinitial))
+CreateStreamsGpuBackend <- function(creatorInitialGlobalR, streamsR, keepInitial) {
+    invisible(.Call('_gpuRandom_CreateStreamsGpuBackend', PACKAGE = 'gpuRandom', creatorInitialGlobalR, streamsR, keepInitial))
 }
 

@@ -88,123 +88,20 @@ t(streams)
 
 
 
-```{r test ulong2, eval=FALSE}
-library(gpuRandom)
-library(gpuR)
 
-# seed is created as double in R
-# seed is then convert to double vclvector on gpu
-# streams are created as double vclmatrix on gpu
-
-
-
-seedR <- c(12345, 12345, 12345, 12345, 12345, 12345)
-streamsGpu <- gpuRandom::CreateStreamsGpu(seedR, 4L, keepinitial=1)
-streams <- as.matrix(streamsGpu)
-t(streams)
-
-
-seedR <- c(12345L, 12345L, 12345L, 12345L, 12345L, 12345L)
-streamsGpu <- gpuRandom::CreateStreamsGpu(seedR, 4L, keepinitial=1)
-streams <- as.matrix(streamsGpu)
-t(streams)
-
-
-
-
-
-temp <- packBits(numToBits(as.matrix(streamsGpu)), type = 'integer')
-streamsCpu <- t(matrix(temp[which(temp!= 0)], nrow=4, byrow=FALSE))
-
-
-
-
-
-
-
-
-# packBits(numToBits(as.matrix(streamsGpu)[1,]), type = 'double')
-#matrix(packBits(numToBits(as.matrix(streamsGpu)[1,]), type = 'integer'), nrow=2, byrow=FALSE)
-
-# packBits accepts raw, integer or logical inputs, the last two without any NAs.
-
-# numToBits(.) and packBits(., type="double") are inverse functions of each other, see also the examples. 
-
-
-
-#why do we need to convert the seed to bits 
-seedR<-gpuR::vclVector(c(12345, 12345, 12345, 12345, 12345, 12345),type="integer")
-streamsR<-vclMatrix(0L, nrow=4, ncol=18, type="double")
-gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR, keepinitial=1)
-t(as.matrix(streamsR))
-
-
-
-
-# this is also okay
-seedR<-gpuR::vclVector(c(12345, 12345, 12345, 12345, 12345, 12345),type="double")
-streamsR<-vclMatrix(0L, nrow=4, ncol=18, type="double")
-gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR, keepinitial=1)
-t(as.matrix(streamsR))
-
-
-
-
-
-
-
-seedR<-gpuR::vclVector(c(12345, 12345, 12345, 12345, 12345, 12345),type="integer")
-streamsR<-vclMatrix(0L, nrow=4, ncol=18, type="double")
-gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR, keepinitial=1)
-t(as.matrix(streamsR))
-```
 
 
 ```{r test uint3, eval=FALSE}
-library(gpuRandom)
-library(gpuR)
-
-# seed is created as double in R
-# seed is then convert to double vclvector on gpu
-# streams are created as double vclmatrix on gpu
-
-
-
-seedR <- c(12345, 12345, 12345, 12345, 12345, 12345)
-streamsGpu <- gpuRandom::CreateStreamsGpu(seedR, Nstreams=6L, keepinitial=1)
-sim_11 = gpuRandom::runif(6,streams=streamsGpu, workgroupSize=c(1,6), type="double")
-as.vector(sim_11)
-
-
-
-seedR <- c(12345L, 12345L, 12345L, 12345L, 12345L, 12345L)
-streamsGpu <- gpuRandom::CreateStreamsGpu(seedR, Nstreams=6L, keepinitial=1)
-sim_11 = gpuRandom::runif(6,streams=streamsGpu, workgroupSize=c(1,6), type="double")
-as.vector(sim_11)
-
-
-
-
 seedR<-gpuR::vclVector(c(12345, 12345, 12345, 12345, 12345, 12345),type="integer")
 streamsR<-vclMatrix(0L, nrow=4, ncol=18, type="integer")
 gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR, keepinitial=1)
 t(as.matrix(streamsR))
-
-
-
-
 seedR<-gpuR::vclVector(c(12345, 12345, 12345, 12345, 12345, 12345),type="integer")
 streamsR<-vclMatrix(0L, nrow=4, ncol=18, type="integer")
 gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR, keepinitial=1)
 t(as.matrix(streamsR))
 
 matrix(packBits( numToBits(streams), type = 'double'), nrow=18, ncol=4)
-
-
-
-
-
-
 temp <- packBits(intToBits(as.matrix(streamsR)), type = 'integer')
 streamsCpu <- t(matrix(temp[which(temp!= 0)], nrow=4, byrow=FALSE))
 
@@ -227,32 +124,34 @@ streams = gpuR::vclMatrix(gpuRandom::CreateStreamsCpu(64*4))
 cpu<-gpuRandom::runif(c(200,800), streams=streams, workgroupSize=c(64,4), type="double")
 cpuvector<-as.vector(as.matrix(cpu))
 hist(cpuvector, breaks=40)
-
-
 a<-gpuRandom::rnorm(c(200,800), streams=streams, workgroupSize=c(64,4), type="double")
 
 avector<-as.vector(as.matrix(a))
 hist(avector,breaks=40)
 gpuRandom::qqnorm(avector, workgroupSize = Nglobal)
 
-
-
-
-
-
-
-
-
 streamsGpu <- gpuRandom::CreateStreamsGpu(seedR, Nstreams=64*4, keepinitial=1)
 b<-gpuRandom::runif(c(200,800), streams=streamsGpu, workgroupSize=c(64,4), type="double")
 bvector<-as.vector(as.matrix(b))
 hist(bvector, breaks=40)
 
-
 temp <- packBits(numToBits(as.matrix(streamsGpu)), type = 'integer')
 streamsCpu <- t(matrix(temp[which(temp!= 0)], nrow=4, byrow=FALSE))
 
 
+
+library(gpuRandom)
+library(gpuR)
+
+seedR <- c(12345L, 12345L, 12345L, 12345L, 12345L, 12345L)
+streamsGpu <- gpuRandom::CreateStreamsGpu(seedR, 5L, keepInitial=FALSE)
+streams <- as.matrix(streamsGpu)
+gpuR::colnames(streams) = c("current.g1.1", "current.g1.2", "current.g1.3", "current.g2.1", "current.g2.2", "current.g2.3",
+                                 "initial.g1.1", "initial.g1.2", "initial.g1.3", "initial.g2.1", "initial.g2.2", "initial.g2.3",
+                                 "substream.g1.1", "substream.g1.2", "substream.g1.3", "substream.g2.1", "substream.g2.2", "substream.g2.3")
+t(streams)    
+
+t(gpuRandom::CreateStreamsCpu(5))
 ```
 
 
