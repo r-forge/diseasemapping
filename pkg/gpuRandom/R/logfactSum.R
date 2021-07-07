@@ -6,7 +6,7 @@
 
 
 
-logfactSum <- function(x, 
+logfactSum <- function(x,      # an R matrix
                        workgroupSize) {
   
   
@@ -19,7 +19,7 @@ logfactSum <- function(x,
               if(any(x > .Machine$integer.max))
               stop("'x' has entries too large to be integer")
           if(!identical(TRUE, (ax <- all.equal(xo, x))))
-           warning(gettextf("'x' has been rounded to integer: %d", ax), domain = NA)
+           warning(gettext("matrix has been rounded to integer", ax), domain = NA)
            storage.mode(x) <- "integer"
      }
     

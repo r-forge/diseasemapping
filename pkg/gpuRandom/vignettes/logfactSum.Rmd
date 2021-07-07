@@ -23,7 +23,27 @@ sum(lfactorial(xx))
 ```
 
 
+```{r logfactsum}
+library(gpuR)
+library(gpuRandom)
+x<-matrix(c(1:36), 6,6)
+gpuRandom::logfactSum(x, c(2,2))
 
+
+x2<-matrix(c(1.1,2.1,3.1,4.1,5.1,6.1,7.1,8.1,9.1), 3,3)
+!is.integer(x2)
+
+
+ # xo <- x2
+ # x2 <- round(x2)
+ # 
+ # !identical(TRUE, (ax <- all.equal(xo, x2)))
+
+gpuRandom::logfactSum(x2, c(16,16))
+
+x<-matrix(c(1:9), 3,3)
+gpuRandom::logfactSum(x, c(2,2))
+```
 
 
 

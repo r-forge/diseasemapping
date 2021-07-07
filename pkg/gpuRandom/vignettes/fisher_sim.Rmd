@@ -62,11 +62,16 @@ Job <- matrix(c(1,2,1,0, 3,3,6,1, 10,10,14,9, 6,7,12,11), 4, 4)
 fisher.test(Job, simulate.p.value = TRUE, B = 1e5) # also close to 0.78
 
 
+
+
+Nglobal = c(64,128)
+streams <- CreateStreamsGpu(Nstreams =8192, keepInitial=1)
 Job<-vclMatrix(Job, type="integer")
 result3<-gpuRandom::fisher.sim(Job, 1e5, returnStatistics=T, 
                              type="double", streams=streams, workgroupSize = Nglobal)
-result3$p.value
-result3$sim
+
+result3$counts
+result3$simnnum
 ```
 
 
