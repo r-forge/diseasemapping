@@ -12,7 +12,9 @@
 
 
 
-CreateStreamsGpu = function(seedR, Nstreams, keepInitial=1) {
+CreateStreamsGpu = function(seedR=c(12345, 12345, 12345, 12345, 12345, 12345), 
+                            Nstreams, 
+                            keepInitial=1) {
 
 
   

@@ -48,9 +48,16 @@ fisher.sim=function(
   if(missing(streams)) {
     if(missing(workgroupSize)) {
       workgroupSize = c(64,16)
-      streams = gpuR::vclMatrix(cpp_mrg31k3pCreateStreams(prod(workgroupSize)))
+      seedR = as.integer(as.integer(2^31-1)*(2*stats::runif(6) - 1) ) 
+      seed <- gpuR::vclVector(seedR, type="integer")  
+      streams<-vclMatrix(0L, nrow=1024, ncol=18, type="integer")
+      CreateStreamsGpuBackend(seed, streams, keepInitial=1)
+   
     }else{
-      streams = gpuR::vclMatrix(cpp_mrg31k3pCreateStreams(prod(workgroupSize)))
+      seedR = as.integer(as.integer(2^31-1)*(2*stats::runif(6) - 1) ) 
+      seed <- gpuR::vclVector(seedR, type="integer")  
+      streams<-vclMatrix(0L, nrow=prod(workgroupSize), ncol=18, type="integer")
+      CreateStreamsGpuBackend(seed, streams, keepInitial=1)
     }
   }else {
     if(!isS4(streams)) {

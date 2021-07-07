@@ -338,8 +338,9 @@ Rcpp::IntegerMatrix  cpp_mrg31k3pCreateStreams(Rcpp::IntegerMatrix result) //thi
   int numWorkItems =result.nrow();
   //  int Ditem,Delement,Dcis,Dg;
   
-  clrngMrg31k3pStream* streams = clrngMrg31k3pCreateStreams(&defaultStreamCreator, numWorkItems, &streamBufferSize, &err);//line 299 in mrg31k3p.c
   
+  clrngMrg31k3pStream* streams = clrngMrg31k3pCreateStreams(&defaultStreamCreator, numWorkItems, &streamBufferSize, &err);//line 299 in mrg31k3p.c
+ 
 
   convertclRngMat(streams, result);
   

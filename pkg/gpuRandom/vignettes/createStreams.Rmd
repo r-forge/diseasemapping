@@ -10,29 +10,6 @@ library(gpuRandom)
 library(gpuR)
 
 
-# Nstreams = 4
-# streamsR<-vclMatrix(0L, nrow=Nstreams, ncol=18, type="integer")
-# gpuRandom:::CreateStreamsGpuBackend(streamsR)
-
-
-
-seedR<-gpuR::vclVector(c(12345, 12345, 12345, 12345, 12345, 12345),type="integer")
-Nstreams = 4
-streamsR<-vclMatrix(0L, nrow=Nstreams, ncol=18, type="integer")
-gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR, keepinitial=1)
-gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR, keepinitial=0)
-t(as.matrix(streamsR))
-as.vector(seedR)
-
-
-
-
-
-
-
-library(gpuRandom)
-library(gpuR)
-
 
 seedR <- c(12345, 12345, 12345, 12345, 12345, 12345)
 is.double(seedR)
@@ -92,51 +69,18 @@ t(streams)
 
 
 ```{r test uint3, eval=FALSE}
-seedR<-gpuR::vclVector(c(12345, 12345, 12345, 12345, 12345, 12345),type="integer")
-streamsR<-vclMatrix(0L, nrow=4, ncol=18, type="integer")
-gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR, keepinitial=1)
-t(as.matrix(streamsR))
-seedR<-gpuR::vclVector(c(12345, 12345, 12345, 12345, 12345, 12345),type="integer")
-streamsR<-vclMatrix(0L, nrow=4, ncol=18, type="integer")
-gpuRandom:::CreateStreamsGpuBackend(seedR, streamsR, keepinitial=1)
-t(as.matrix(streamsR))
-
-matrix(packBits( numToBits(streams), type = 'double'), nrow=18, ncol=4)
-temp <- packBits(intToBits(as.matrix(streamsR)), type = 'integer')
-streamsCpu <- t(matrix(temp[which(temp!= 0)], nrow=4, byrow=FALSE))
 
 
 ###GPU stream
 seedR<-gpuR::vclVector(c(12345, 12345, 12345, 12345, 12345, 12345),type="integer")
-streamsGPU<-vclMatrix(0L, nrow=4*64, ncol=18, type="integer")
-gpuRandom:::CreateStreamsGpuBackend(seedR, streamsGPU, keepinitial=1)
-b<-gpuRandom::runif(c(200,800), streams=streamsGPU, workgroupSize=c(64,4), type="double")
-bvector<-as.vector(as.matrix(b))
-hist(bvector, breaks=40)
+streamsGPU<-vclMatrix(0L, nrow=4, ncol=18, type="integer")
+gpuRandom:::CreateStreamsGpuBackend(seedR, streamsGPU, keepInitial=1)
+t(as.matrix(streamsGPU))
 
-# a<-gpuRandom::rnorm(c(200,200), streams=streamsR, workgroupSize=c(64,4), type="double")
-# avector<-as.vector(as.matrix(a))
-# hist(avector,breaks=40)
-# qqnorm(avector)
 
-### CPU stream
-streams = gpuR::vclMatrix(gpuRandom::CreateStreamsCpu(64*4))
-cpu<-gpuRandom::runif(c(200,800), streams=streams, workgroupSize=c(64,4), type="double")
-cpuvector<-as.vector(as.matrix(cpu))
-hist(cpuvector, breaks=40)
-a<-gpuRandom::rnorm(c(200,800), streams=streams, workgroupSize=c(64,4), type="double")
-
-avector<-as.vector(as.matrix(a))
-hist(avector,breaks=40)
-gpuRandom::qqnorm(avector, workgroupSize = Nglobal)
-
-streamsGpu <- gpuRandom::CreateStreamsGpu(seedR, Nstreams=64*4, keepinitial=1)
-b<-gpuRandom::runif(c(200,800), streams=streamsGpu, workgroupSize=c(64,4), type="double")
-bvector<-as.vector(as.matrix(b))
-hist(bvector, breaks=40)
-
-temp <- packBits(numToBits(as.matrix(streamsGpu)), type = 'integer')
-streamsCpu <- t(matrix(temp[which(temp!= 0)], nrow=4, byrow=FALSE))
+random_vector<-gpuRandom::runif(5, workgroupSize=c(2,4), type="double")
+random_vector<-as.vector(as.matrix(random_vector))
+hist(random_vector, prob = TRUE, main="Histogram")
 
 
 
@@ -144,6 +88,7 @@ library(gpuRandom)
 library(gpuR)
 
 seedR <- c(12345L, 12345L, 12345L, 12345L, 12345L, 12345L)
+seedR <- c(12345, 12345, 12345, 12345, 12345, 12345)
 streamsGpu <- gpuRandom::CreateStreamsGpu(seedR, 5L, keepInitial=FALSE)
 streams <- as.matrix(streamsGpu)
 gpuR::colnames(streams) = c("current.g1.1", "current.g1.2", "current.g1.3", "current.g2.1", "current.g2.2", "current.g2.3",
