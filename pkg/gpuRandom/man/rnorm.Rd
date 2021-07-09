@@ -4,7 +4,7 @@
 \alias{rnorm}
 \title{rnorm}
 \usage{
-rnorm(n, streams, workgroupSize, type = c("double", "float"))
+rnorm(n, streams, Nglobal, type = c("double", "float"))
 }
 \description{
 rnorm

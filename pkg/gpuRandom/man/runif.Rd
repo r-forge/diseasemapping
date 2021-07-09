@@ -4,7 +4,7 @@
 \alias{runif}
 \title{runif}
 \usage{
-runif(n, streams, workgroupSize, type = c("double", "float"))
+runif(n, streams, Nglobal, type = c("double", "float"))
 }
 \description{
 runif
