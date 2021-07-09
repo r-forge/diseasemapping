@@ -10,7 +10,7 @@ fisher.sim(
   streams,
   type = c("float", "double")[1 + gpuR::gpuInfo()$double_support],
   returnStatistics = FALSE,
-  workgroupSize,
+  Nglobal,
   verbose = FALSE
 )
 }

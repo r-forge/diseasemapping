@@ -12,8 +12,8 @@ multiplyLowerDiagonalBatch <- function(
                       output, L, D, B,
                       diagIsOne, # diagonal of L is one
                       transformD, 
-                      Nglobal,
-                      Nlocal,
+                      workgroupSize,
+                      localSize,
                       NlocalCache){
   
   
@@ -25,8 +25,8 @@ multiplyLowerDiagonalBatch <- function(
                B,
                diagIsOne,    
                transformD,
-               Nglobal,
-               Nlocal,
+               workgroupSize,
+               localSize,
                NlocalCache)
   
   

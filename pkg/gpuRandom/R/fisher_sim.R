@@ -11,7 +11,7 @@ fisher.sim=function(
   streams, 
   type = c('float','double')[1+gpuR::gpuInfo()$double_support],
   returnStatistics = FALSE,
-  workgroupSize,
+  Nglobal,
   verbose = FALSE){
 
   # METHOD <- "Fisher's Exact Test for Count Data"
@@ -46,8 +46,8 @@ fisher.sim=function(
   # threshold = STATISTIC/almost.1
   
   if(missing(streams)) {
-    if(missing(workgroupSize)) {
-      workgroupSize = c(64,16)
+    if(missing(Nglobal)) {
+      Nglobal = c(64,16)
       seedR = as.integer(as.integer(2^31-1)*(2*stats::runif(6) - 1) ) 
       seed <- gpuR::vclVector(seedR, type="integer")  
       streams<-vclMatrix(0L, nrow=1024, ncol=18, type="integer")
@@ -56,23 +56,23 @@ fisher.sim=function(
     }else{
       seedR = as.integer(as.integer(2^31-1)*(2*stats::runif(6) - 1) ) 
       seed <- gpuR::vclVector(seedR, type="integer")  
-      streams<-vclMatrix(0L, nrow=prod(workgroupSize), ncol=18, type="integer")
+      streams<-vclMatrix(0L, nrow=prod(Nglobal), ncol=18, type="integer")
       CreateStreamsGpuBackend(seed, streams, keepInitial=1)
     }
   }else {
     if(!isS4(streams)) {
       warning("streams should be a S4 matrix") }
     
-    if(prod(workgroupSize) != nrow(streams))
+    if(prod(Nglobal) != nrow(streams))
       warning("number of work items needs to be same as number of streams")
     # make a deep copy
     # streams = gpuR::vclMatrix(as.matrix(streams), nrow(streams), ncol(streams), FALSE, dimnames(streams))
   }
   
-  localSize = c(1, 1)
+  Nlocal = c(1, 1)
   
   if(verbose) {
-    cat('local sizes ', toString(localSize), '\nglobal sizes ', toString(workgroupSize),
+    cat('local sizes ', toString(Nlocal), '\nglobal sizes ', toString(Nglobal),
         '\n streams ', toString(dim(streams)), '\n')
   }
   
@@ -88,9 +88,9 @@ fisher.sim=function(
   
 #  print(class(xVcl))
 
-  simnumber<-round(C/prod(workgroupSize))
-  iterations<-simnumber*prod(workgroupSize)
-  #remainder<-C%%prod(workgroupSize)
+  simnumber<-round(C/prod(Nglobal))
+  iterations<-simnumber*prod(Nglobal)
+  #remainder<-C%%prod(Nglobal)
   
   if(returnStatistics) {
     results <- gpuR::vclVector(length=as.integer(iterations), type=type)
@@ -101,9 +101,9 @@ fisher.sim=function(
   
   PVAL <- NULL
   
-  counts<-cpp_gpuFisher_test(x, results, simnumber, streams, workgroupSize,localSize)
+  counts<-cpp_gpuFisher_test(x, results, simnumber, streams, Nglobal,Nlocal)
   
-  #theTime<-system.time(cpp_gpuFisher_test(x, results, as.integer(B), streams, workgroupSize,localSize))
+  #theTime<-system.time(cpp_gpuFisher_test(x, results, as.integer(B), streams, Nglobal,Nlocal))
   
   
   # if(verbose)

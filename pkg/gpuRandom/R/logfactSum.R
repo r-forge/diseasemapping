@@ -7,7 +7,7 @@
 
 
 logfactSum <- function(x,      # an R matrix
-                       workgroupSize) {
+                       Nglobal) {
   
   
   if(any(dim(x) < 2L))
@@ -27,7 +27,7 @@ logfactSum <- function(x,      # an R matrix
   x <- gpuR::vclMatrix(x,type="integer")
   
   
-  result <- logfactsumBackend(x, workgroupSize)
+  result <- logfactsumBackend(x, Nglobal)
   
   
   result

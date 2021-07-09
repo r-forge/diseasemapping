@@ -89,8 +89,8 @@ library(gpuR)
 
 seedR <- c(12345L, 12345L, 12345L, 12345L, 12345L, 12345L)
 seedR <- c(12345, 12345, 12345, 12345, 12345, 12345)
-streamsGpu <- gpuRandom::CreateStreamsGpu(seedR, 5L, keepInitial=FALSE)
-streams <- as.matrix(streamsGpu)
+streamsGpu <- gpuRandom::CreateStreamsGpu(seedR, 5L, keepInitial=TRUE)
+t(as.matrix(streamsGpu))
 gpuR::colnames(streams) = c("current.g1.1", "current.g1.2", "current.g1.3", "current.g2.1", "current.g2.2", "current.g2.3",
                                  "initial.g1.1", "initial.g1.2", "initial.g1.3", "initial.g2.1", "initial.g2.2", "initial.g2.3",
                                  "substream.g1.1", "substream.g1.2", "substream.g1.3", "substream.g2.1", "substream.g2.2", "substream.g2.3")

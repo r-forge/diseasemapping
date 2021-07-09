@@ -13,8 +13,8 @@ qqnorm(
   main = "Normal Q-Q Plot",
   xlab = "Theoretical Quantiles",
   ylab = "Sample Quantiles",
-  workgroupSize,
-  localSize = c(2, 2),
+  Nglobal,
+  Nlocal = c(2, 2),
   verbose = FALSE,
   ...
 )

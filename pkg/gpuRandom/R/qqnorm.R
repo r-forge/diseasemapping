@@ -6,7 +6,7 @@
 qqnorm<-function(y, ylim, mu=0, sigma=1, lowertail=1,
                   main = "Normal Q-Q Plot",
                   xlab = "Theoretical Quantiles", ylab = "Sample Quantiles",
-                  workgroupSize, localSize = c(2, 2),
+                  Nglobal, Nlocal = c(2, 2),
                   verbose=FALSE, ...){
    
    if(has.na <- any(ina <- is.na(y))) { ## keep NA's in proper places
@@ -27,19 +27,19 @@ qqnorm<-function(y, ylim, mu=0, sigma=1, lowertail=1,
       x<- rep(mu, n)
     }
 
-    if(missing(workgroupSize)) 
-    {workgroupSize = c(64,4)}
+    if(missing(Nglobal)) 
+    {Nglobal = c(64,4)}
     
     
     if(verbose) {
-      cat('local sizes ', toString(localSize), '\nglobal sizes ', toString(workgroupSize), '\n')
+      cat('local sizes ', toString(Nlocal), '\nglobal sizes ', toString(Nglobal), '\n')
     }
     
 
  #   p <-gpuR::vclVector(ppoints(n), type=gpuR::typeof(y))
     out <-gpuR::vclVector(length=as.integer(n), type=gpuR::typeof(y))
    
-    x <- as.vector(cpp_gpu_qqnorm(out, mu,sigma, lowertail, workgroupSize , localSize))
+    x <- as.vector(cpp_gpu_qqnorm(out, mu,sigma, lowertail, Nglobal , Nlocal))
     
     x<-x[order(order(as.vector(y)))]  ###
     
