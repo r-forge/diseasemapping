@@ -151,22 +151,24 @@ void CreateStreamsGpu(
   //copy(cpu_vector, creatorInitialGlobal);  //option 1 // copy(cpu_vector.begin(), cpu_vector.end(), vcl_vector.begin()); //option 2
   
   const int Nstreams = streams.size1(); //# of rows
+  
   std::string streamsKernelString = streamsString(
     streams.internal_size2(), 
     keepInitial
   );
   
 
-  
+
   // the context
   viennacl::ocl::switch_context(ctx_id);
   viennacl::ocl::program & my_prog = viennacl::ocl::current_context().add_program(streamsKernelString, "my_kernel");
   
   Rcpp::Rcout << "after adding kernelstring" << "\n\n";
-#ifdef DEBUGKERNEL
-  Rcpp::Rcout << streamsKernelString << "\n\n";
-#endif  
-  
+   #ifdef DEBUGKERNEL
+   Rcpp::Rcout << streamsKernelString << "\n\n";
+   #endif  
+   
+#ifdef UNDEF   
   viennacl::ocl::kernel &streamsKernel = my_prog.get_kernel("createStreams");
   streamsKernel.global_work_size(0, 1L);
   streamsKernel.global_work_size(1, 1L);
@@ -176,8 +178,8 @@ void CreateStreamsGpu(
   Rcpp::Rcout << "before enqueue kernel" << "\n\n";
   
   viennacl::ocl::enqueue(streamsKernel(creatorInitialGlobal, streams, Nstreams) );
-  
-  Rcpp::Rcout << "after enqueue kernel" << "\n\n";
+#endif 
+  Rcpp::Rcout << "after enqueue kernel\n\n" << "\n\n";
   
  /* 
   Rcpp::Rcout << streams(0,0) << "\n" << streams(0,1) << "\n"<< streams(0,2) << "\n\n";
@@ -207,10 +209,10 @@ void CreateStreamsGpuTemplated(
   
   
   
-  std::cout<< "in CreateStreamsGpuTemplated\n";    
+  std::cout<< "in CreateStreamsGpuTemplated\n\n\n";    
   CreateStreamsGpu(*creatorInitialGlobal, *streams, keepInitial, ctx_id);
   
-  std::cout<< "end of CreateStreamsGpuTemplated\n";  
+  std::cout<< "end of CreateStreamsGpuTemplated\n\n\n";  
   
   
   //return Rcpp::wrap(0L);
