@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-//#define DEBUGKERNEL
+#define DEBUGKERNEL
 
 std::string streamsString(int NpadStreams, 
                           const int keepInitial) {  
@@ -156,10 +156,13 @@ void CreateStreamsGpu(
     keepInitial
   );
   
+
+  
   // the context
   viennacl::ocl::switch_context(ctx_id);
   viennacl::ocl::program & my_prog = viennacl::ocl::current_context().add_program(streamsKernelString, "my_kernel");
   
+  Rcpp::Rcout << "after adding kernelstring" << "\n\n";
 #ifdef DEBUGKERNEL
   Rcpp::Rcout << streamsKernelString << "\n\n";
 #endif  
@@ -170,9 +173,12 @@ void CreateStreamsGpu(
   
   //streamsKernel.local_work_size(0, 1L);
   //streamsKernel.local_work_size(1, 1L);
-  //Rcpp::Rcout << "11" << "\n\n";
+  Rcpp::Rcout << "before enqueue kernel" << "\n\n";
   
   viennacl::ocl::enqueue(streamsKernel(creatorInitialGlobal, streams, Nstreams) );
+  
+  Rcpp::Rcout << "after enqueue kernel" << "\n\n";
+  
  /* 
   Rcpp::Rcout << streams(0,0) << "\n" << streams(0,1) << "\n"<< streams(0,2) << "\n\n";
   Rcpp::Rcout << streams(1,0) << "\n" << streams(1,1) << "\n"<< streams(1,2) << "\n\n";
@@ -201,10 +207,12 @@ void CreateStreamsGpuTemplated(
   
   
   
-  //std::cout<< "33\n";    
+  std::cout<< "in CreateStreamsGpuTemplated\n";    
   CreateStreamsGpu(*creatorInitialGlobal, *streams, keepInitial, ctx_id);
   
-  //std::cout<< "44\n";  
+  std::cout<< "end of CreateStreamsGpuTemplated\n";  
+  
+  
   //return Rcpp::wrap(0L);
 }
 
@@ -228,10 +236,13 @@ void CreateStreamsGpuBackend(
   //std::string precision_type_stream = (std::string) classstream;
   
   
-  //Rcpp::Rcout << "55" << "\n\n";
+  Rcpp::Rcout << "in CreateStreamsGpuBackend" << "\n\n";
   
 
   CreateStreamsGpuTemplated(creatorInitialGlobalR, streamsR, keepInitial);
+  
+  Rcpp::Rcout << "end of CreateStreamsGpuBackend" << "\n\n";
+  
   
 }
 

@@ -1,4 +1,12 @@
 #' @title rnorm
+#' 
+#' @param n a number or a vector specifying the size of output matrix
+#' @param streams streams object
+#' @param Nglobal the size of the index space for use
+#' @param "double" or "float" format of generated random numbers
+#' 
+#' @return a vclVector or vclMatrix of normal random numbers
+#' 
 #' @useDynLib gpuRandom
 #' @export
 

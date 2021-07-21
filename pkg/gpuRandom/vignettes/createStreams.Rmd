@@ -69,7 +69,8 @@ t(streams)
 
 
 ```{r test uint3, eval=FALSE}
-
+library(gpuRandom)
+library(gpuR)
 
 ###GPU stream
 seedR<-gpuR::vclVector(c(12345, 12345, 12345, 12345, 12345, 12345),type="integer")

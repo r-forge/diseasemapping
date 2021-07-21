@@ -6,6 +6,18 @@
 \usage{
 rnorm(n, streams, Nglobal, type = c("double", "float"))
 }
+\arguments{
+\item{n}{a number or a vector specifying the size of output matrix}
+
+\item{streams}{streams object}
+
+\item{Nglobal}{the size of the index space for use}
+
+\item{"double"}{or "float" format of generated random numbers}
+}
+\value{
+a vclVector or vclMatrix of normal random numbers
+}
 \description{
 rnorm
 }
