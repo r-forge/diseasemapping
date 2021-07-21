@@ -4,7 +4,7 @@
 #' @param x an R matrix
 #' @param Nglobal the size of the index space for use
 #' 
-#' @return   the sum of log-factorials of the matrix
+#' @return the sum of log-factorials of the matrix
 #'
 #' @useDynLib gpuRandom
 #' @export
