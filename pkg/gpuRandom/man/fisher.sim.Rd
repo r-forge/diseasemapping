@@ -14,6 +14,20 @@ fisher.sim(
   verbose = FALSE
 )
 }
+\arguments{
+\item{x}{a vclMatrix for Fisher's test}
+
+\item{C}{requested number of simulations.}
+
+\item{streams}{streams objects.}
+
+\item{type}{"double" or "float" of test statistics.}
+
+\item{Nglobal}{the size of the index space for use.}
+}
+\value{
+a list of results
+}
 \description{
 Fisher's exact test on GPU
 }

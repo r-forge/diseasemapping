@@ -1,5 +1,16 @@
 #' @title Fisher's exact test on GPU
 #'
+#'
+#' @param x a vclMatrix for Fisher's test
+#' @param C requested number of simulations.
+#' @param streams streams objects. 
+#' @param type "double" or "float" of test statistics.
+#' @param Nglobal the size of the index space for use.
+#' 
+#' 
+#' @return a list of results
+#' 
+#' 
 #' @useDynLib gpuRandom
 #' @export
 

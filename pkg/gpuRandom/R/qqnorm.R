@@ -1,4 +1,19 @@
-#' @title gpu_qqnorm
+#' @title qqnorm on GPU
+#' 
+#' @param y the data sample
+#' @param ylim  limits on the plot region
+#' @param mu  mean of Normal distribution
+#' @param sigma  variance of Normal distribution
+#' @param lowertail logical, whether use lower tail probability, default is TRUE
+#' @param main plot label
+#' @param xlab plot label
+#' @param ylab plot label
+#' @param Nglobal the size of the index space for use, default is 64 by 4
+#' @param Nlocal the work group size of the index space
+#' 
+#' @return the Normal Q-Q plot
+#' 
+#' @return the result matrices of LDB in batch 
 #'
 #' @useDynLib gpuRandom
 #' @export
