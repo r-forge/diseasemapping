@@ -18,19 +18,19 @@ date()
 
 
 ```{r memoryAvailable, echo=TRUE}
-listContexts()[,'platform']
-which2.1 = grep('OpenCL 2.1',listContexts()[,'platform'])
+gpuR::listContexts()[,'platform']
+which2.1 = grep('OpenCL 2.[[:digit:]]',gpuR::listContexts()[,'platform'])
 if(length(which2.1)) {
-  setContext(which2.1[1])
+  gpuR::setContext(which2.1[1])
 }
-gpuInfo()$deviceName
-gpuInfo()$maxAllocatableMem/(1024^3)
+gpuR::gpuInfo()$deviceName
+gpuR::gpuInfo()$maxAllocatableMem/(1024^3)
 ```
 
 Set up spatial data
 ```{r setupData}
    Nsim = 4
-   Ngrid = c(2,4)
+   Ngrid = c(2,4)*2
    NlocalCache = 300
     NglobalMatern = c(64,8) 
     NlocalMatern = c(8, 4)
@@ -47,7 +47,7 @@ NlocalMatern = c(2,2)
 
 
 if(gpuR::gpuInfo()$deviceMemory > 10^10){
-   Ngrid = c(2,4)
+   Ngrid = c(10,20)
    Nsim = 6
    NlocalCache = 4000
    NglobalMatern = c(256,8) 
@@ -71,17 +71,16 @@ coordsSp = sp::SpatialPoints(raster::xyFromCell(myRaster, 1:raster::ncell(myRast
 # Batch matern
 ```{r paramsBatch}
 myParamsBatch = rbind(
-c(shape=5.99, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
-
-# c(shape=6, range=1, variance = 2, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
-# c(shape=6.01, range=1, variance = 3, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
-# c(shape=3, range=5, variance = 4, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
+c(shape=5.99, range=1, variance = 1, nugget = 10, anisoRatio = 1, anisoAngleRadians = 0),
+ c(shape=6, range=1, variance = 1, nugget = 20, anisoRatio = 1, anisoAngleRadians = 0),
+ c(shape=6.01, range=1, variance = 1, nugget = 30, anisoRatio = 1, anisoAngleRadians = 0), 
+ c(shape=3, range=5, variance = 1, nugget = 40, anisoRatio = 1, anisoAngleRadians = 0))
 # c(shape=4, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
 # c(shape=5, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0) )
 
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
 
-#myParamsBatch = myParamsBatch[rep(1, 12),]
+myParamsBatch[,1:6]
 ```
 
 ```{r outputBatchCreate, eval=T}
@@ -93,7 +92,7 @@ paramsGpu = vclMatrix(cbind(
   myParamsBatch, 
   matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch))), type=gpuR::typeof(coordsGpu))
 
-colnames(paramsGpu)= c(colnames(paramsGpu)[1:7],
+colnames(paramsGpu)= c(colnames(myParamsBatch)[1:7],
  c('costheta', 'sintheta','anisoRatioSq',
  ' varscale', 'logxscale', 'sinrat','mu', 'muSq', 'mup1', 'nuround', 'g1', 
  'g2', 'g1pnu', 'g1mnu', 'variancePlusNugget'))
@@ -103,54 +102,30 @@ gpuRandom:::maternBatchBackend(
     outputBatchF,
     coordsGpu, 
     paramsGpu,  
-    c(4,4),#NglobalMatern, 
-    c(2,4),#NlocalMatern,
+    c(64,12),#NglobalMatern, 
+    c(16,2),#NlocalMatern,
     startrow = 0,
-    numberofrows = 1,
-    verbose = 1)
-as.matrix(outputBatchF)[1:7,1:7]
+    numberofrows = nrow(paramsGpu),
+    verbose = 0)
+```
 
+```{r outputBatchShowStuff, eval=FALSE}
+as.matrix(outputBatchF[1:7,1:7])
+as.matrix(outputBatchF[3*ncol(outputBatchF) + 1:7,1:7])
+as.matrix(outputBatchF[seq(1, by=ncol(outputBatchF), len=nrow(paramsGpu)),1])
+myParamsBatch[,c('variance','nugget')]
+```
 
-gpuRandom::maternBatch(
-    outputBatchF,
-    coordsGpu, 
-    paramsGpu,  
-    c(4,4),#NglobalMatern, 
-    c(2,4))
-as.matrix(outputBatchF)
-
-
-
-geostatsp::matern(
+for(D in 1:nrow(myParamsBatch)) {
+fromCpu = geostatsp::matern(
     x=coordsSp,
-    param=drop(myParamsBatch[1,1:7])
+    param=drop(myParamsBatch[D,1:7])
     )
-as.matrix(outputBatchF)
-geostatsp::matern(
-    x=coordsSp,
-    param=drop(myParamsBatch[2,1:7])
-    )[1:7,1:7]
-as.matrix(outputBatchF[ncol(outputBatchF) + (1:7),1:7])
-geostatsp::matern(
-    x=coordsSp,
-    param=drop(myParamsBatch[3,1:7])
-    )[1:7,1:7]
-as.matrix(outputBatchF[2*ncol(outputBatchF) + (1:7),1:7])
-#################
-# #upper
-# thisx = as.matrix(dist(coordsSp@coords)/5)
-# #lower
-# ln_half_x = log(thisx/2)
-# 
-# ####compare
-# as.matrix(outputBatchF[1:8,1:8])
-# thisx[1:8,1:8]
-# as.matrix(outputBatchF[1:8,1:8])
-# ln_half_x[1:8,1:8]
-# 
-# #lower
-# lower<-outer(coordsSp@coords[,1], coordsSp@coords[,1], FUN = '-')
-# lower[1:8,1:8]
+
+print(quantile(fromCpu - as.matrix(outputBatchF)[
+  seq(from=1+ncol(outputBatchF) * (D-1), len=ncol(outputBatchF)),], na.rm=FALSE))
+}
+
 ```
 
 
