@@ -136,27 +136,14 @@ print(quantile(fromCpu - as.matrix(outputBatchF)[
 
 
 
-```{r batchMaternCompare, include=TRUE, eval=FALSE}
-# Compare output to geostatsp's matern
-
-
-quantile(fromCpu - as.matrix(outputBatchF[1:ncol(outputBatchF),]))
-
-
-var4cpu = geostatsp::matern(
-    x=coordsSp,
-    param=drop(myParamsBatch[2,1:7])
-    )
-
-var4gpu = as.matrix(outputBatchF[21:40, ])
-quantile(var4cpu - var4gpu)
-```
 
 # Cholesky
 ```{r cholBach, eval = F}
 diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), type = gpuR::typeof(outputBatchF))
 
-outputChol = vclMatrix(0, nrow(outputBatchF), ncol(outputBatchF), type = gpuR::typeof(outputBatchF))
+outputChol = deepcopy(outputBatchF)
+outputChol2 = deepcopy(outputBatchF)
+diagMat2 = deepcopy(diagMat)
 
 system.time(gpuRandom::cholBatch(
   outputChol, diagMat, numbatchD=nrow(myParamsBatch),
@@ -164,19 +151,50 @@ system.time(gpuRandom::cholBatch(
   Nlocal = NlocalChol,
   NlocalCache = NlocalCache))
 
+gpuRandom::cholBatch(
+  outputChol2, diagMat2, numbatchD=nrow(myParamsBatch),
+  Nglobal = NglobalChol,
+  Nlocal = NlocalChol,
+  NlocalCache = 20)
+
+stuff = as.matrix(diagMat - diagMat2)
+range(as.matrix(outputChol - outputChol2))
+
+as.matrix(outputBatchF[1:12,1:7])
 as.matrix(outputChol[1:12,1:7])
-as.matrix(diagMat[1:12,1:7])
+as.matrix(diagMat[,1:7])
+```
+
+```{r cholCheck, include=FALSE, eval=F}
+
+for(D in 1:nrow(myParamsBatch)) {
+chol4gpu = as.matrix(outputChol[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
+chol4gpu[upper.tri(chol4gpu)] = 0
+diag(chol4gpu) = 1
+
+recovered = chol4gpu %*% diag(as.vector(diagMat[D,])) %*% t(chol4gpu)
+print(quantile(recovered - as.matrix(outputBatchF[
+  seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),]),
+  prob = c(0, 0.01, 0.05, 0.95, 0.99, 1)))
+}
 ```
 
 ```{r cholBatchCpu, include=FALSE, eval=F}
+D=1
+
+chol4gpu = as.matrix(outputChol[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
+chol4gpu[upper.tri(chol4gpu)] = 0
+diag(chol4gpu) = 1
+
+var4cpu = geostatsp::matern(
+    x=coordsSp,
+    param=drop(myParamsBatch[D,1:7])
+    )
 cholCpu = as.matrix(chol(var4cpu))
 theDiag = diag(cholCpu)
 cholCpu = cholCpu %*% diag(1/theDiag)
 theDiag = theDiag^2
 
-chol4gpu = as.matrix(outputChol[seq(1+3*nrow(coordsGpu), len=nrow(coordsGpu)),])
-chol4gpu[upper.tri(chol4gpu)] = 0
-diag(chol4gpu) = 1
 
 chol4gpu[1:4,1:4]
 cholCpu[1:4,1:4]
