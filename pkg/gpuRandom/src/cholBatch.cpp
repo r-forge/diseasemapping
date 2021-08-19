@@ -260,7 +260,7 @@ int cholBatchVcl(
   viennacl::ocl::kernel & cholKernel = my_prog.get_kernel("cholBatch");
   
   if(Nlocal[1] != Nglobal[1]) {
-    Rf_warning("local and global work sizes should be identical for dimension 2, ignoring global");
+    Rcpp::warning("local and global work sizes should be identical for dimension 2, ignoring global");
   }
   
   // dimension 0 is cell, dimension 1 is matrix
