@@ -135,7 +135,7 @@ fillParam = function(param) {
 
 	theOrder = c('range','shape','variance','nugget','anisoRatio','anisoAngleRadians')
 	otherParams = setdiff(colnames(param), theOrder)
-	param = param[,c(theOrder, otherParams)]
+	param = param[,c(theOrder, otherParams), drop=FALSE]
 
 	param[is.na(param[, 'range']), 'range'] = 1
 	param[is.na(param[, 'anisoRatio']), 'anisoRatio'] = 1
