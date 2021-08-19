@@ -65,7 +65,7 @@ model
 
 fillParam = function(param) {
 
-	if(is.numeric(param))
+	if(is.vector(param))
 		param = matrix(param, ncol=length(param), nrow=1,
 				dimnames=list("1", names(param)))
 
@@ -137,11 +137,12 @@ fillParam = function(param) {
 	otherParams = setdiff(colnames(param), theOrder)
 	param = param[,c(theOrder, otherParams)]
 
+	param[is.na(param[, 'range']), 'range'] = 1
+	param[is.na(param[, 'anisoRatio']), 'anisoRatio'] = 1
+	param[is.na(param[, 'anisoAngleRadians']), 'anisoAngleRadians'] = 1
+	param[is.na(param[, 'anisoAngleDegrees']), 'anisoAngleDegrees'] = 1
+	
 	param = drop(param)
-	if(is.na(param['range'])) param['range'] = 1
-	if(is.na(param['anisoRatio'])) param['anisoRatio'] = 1
-
-	if(is.na(param['anisoAngleDegrees'])) 
-		param['anisoAngleRadians'] = param['anisoAngleDegrees'] =0
+	
 	param
 }
