@@ -1,6 +1,8 @@
 #include "gpuRandom.hpp"
 //#define DEBUG
 
+// dimension 0 is cell, dimension 1 is matrix
+// local and global work sizes should be identical for dimension 2
 
 
 template <typename T> std::string cholBatchKernelString(
@@ -57,32 +59,32 @@ template <typename T> std::string cholBatchKernelString(
   " local " + typeString + " diagLocal[Ncache];//local cache of diagonals\n"
   
   " local " + typeString + " toAddLocal[maxLocalItems];\n"
-  "	int Dcol, DcolNpad;\n"
-  "	int Drow, Dk, Dmatrix;\n";
+  " int Dcol, DcolNpad;\n"
+  " int Drow, Dk, Dmatrix;\n";
   
   if(allowOverflow) {
     result += "	int minDcolNcache;\n";
   }
   
-  result +=  typeString + " DL;\n" 
-  "  local " +  typeString + " diagDcol;\n" 
-  "  int AHere, AHereDcol, AHereDrow, diagHere;\n";
+  result += " " +  typeString + " DL;\n" 
+  " local " +  typeString + " diagDcol;\n" 
+  " int AHere, AHereDcol, AHereDrow, diagHere;\n";
   
   if(logDet){
     result += typeString  + " logDetHere;\n";
   }
-  result +=   "barrier(CLK_LOCAL_MEM_FENCE);\n";
+  result +=   " barrier(CLK_LOCAL_MEM_FENCE);\n\n";
   
 result +=  
   "for(Dmatrix = get_group_id(0); Dmatrix < Nmatrix; Dmatrix+= get_num_groups(0)){\n"
   
-  "diagHere = Dmatrix*NpadDiag + NstartD;\n"
-  "AHere = Dmatrix*NpadBetweenMatrices + NstartA;\n";
+  " diagHere = Dmatrix*NpadDiag + NstartD;\n"
+  " AHere = Dmatrix*NpadBetweenMatrices + NstartA;\n";
   if(logDet){
     result += " logDetHere = 0.0;\n";
   }
   result +=
-  "for(Dcol = colStart; Dcol < colEnd; Dcol++) {\n"
+  "\n for(Dcol = colStart; Dcol < colEnd; Dcol++) {\n"
   "  DcolNpad = Dcol*Npad;\n"
   "  AHereDcol = AHere+DcolNpad;\n"
   //"  Dcolm1 = Dcol - 1;\n"
@@ -113,35 +115,37 @@ result +=
       "  }// Dk\n";
   }
   
-  
-  // reduction on dimension 1
-  result += "barrier(CLK_LOCAL_MEM_FENCE);\n"
-  "if(get_local_id(1) == 0){"
-  " for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
-  " toAddLocal[localIndex] +=  toAddLocal[localIndex + Dk];\n"
-  "}\n" //Dk
-  "}\n" //get_local_id(1) == 0
-  
-  // final reduction on dimension 0
-  "barrier(CLK_LOCAL_MEM_FENCE);\n"
-  "if(localIndex==0){\n"
-  "  for(Dk = localIndex + get_local_size(1); Dk < NlocalTotal; Dk+= get_local_size(1)) {\n"
+   result +=  
+  "\n// reduction on dimension 1\n";
+
+  result += "  barrier(CLK_LOCAL_MEM_FENCE);\n"
+  "  if(get_local_id(1) == 0){\n"
+  "   for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
+  "    toAddLocal[localIndex] +=  toAddLocal[localIndex + Dk];\n"
+  "   }//for Dk\n"
+  "  }//get_local_id(1) == 0\n"
+  "  barrier(CLK_LOCAL_MEM_FENCE);\n\n";
+
+  result +=     
+  "// final reduction on dimension 0\n"
+  "  if(localIndex==0){\n"
+  "   for(Dk = localIndex + get_local_size(1); Dk < NlocalTotal; Dk+= get_local_size(1)) {\n"
   "    toAddLocal[localIndex] +=  toAddLocal[Dk];\n"
-  "  }\n" //Dk
+  "   } //Dk\n"
   
-  "  diagDcol = A[AHereDcol+Dcol] - toAddLocal[localIndex];\n"
-  "  diag[diagHere+Dcol] = diagDcol;\n";
+  "   diagDcol = A[AHereDcol+Dcol] - toAddLocal[localIndex];\n"
+  "   diag[diagHere+Dcol] = diagDcol;\n";
 
   if(logDet){
-    result += " logDetHere += log(diagDcol);\n";
+    result += "  logDetHere += log(diagDcol);\n";
   }
   
   result +=  
-    "\n#ifdef diagToOne\n"
-  "A[AHereDcol+Dcol] = 1.0;\n"
+    "\n\n#ifdef diagToOne\n"
+  "   A[AHereDcol+Dcol] = 1.0;\n"
   "#endif\n"
-  "}\n" //localIndex==0
-  "  barrier(CLK_LOCAL_MEM_FENCE);\n";
+  "  }\n" //localIndex==0
+  "  barrier(CLK_LOCAL_MEM_FENCE);\n\n";
   //"  diagDcol = diagHere[Dcol];\n"
   
   result += "// off diagonals\n";
@@ -153,14 +157,14 @@ result +=
   
   if(allowOverflow) {
     result +=
-      "	 for(Dk = get_local_id(1); Dk < minDcolNcache; Dk+=get_local_size(1)) {\n";
+      "  for(Dk = get_local_id(1); Dk < minDcolNcache; Dk+=get_local_size(1)) {\n";
   } else {
     result +=
-      "	 for(Dk = get_local_id(1); Dk < Dcol; Dk+=get_local_size(1)) {\n";
+      "  for(Dk = get_local_id(1); Dk < Dcol; Dk+=get_local_size(1)) {\n";
   }
   
   result +=
-    "    DL += A[AHereDrow+Dk] * diagLocal[Dk];\n"
+    "   DL += A[AHereDrow+Dk] * diagLocal[Dk];\n"
     // DL -= A[Drow + Dk * Npad] * A[Dcol + DkNpad] * diag[Dk];"
     "  } // Dk\n";
   
@@ -171,23 +175,24 @@ result +=
       "  }// Dk\n"; 
   }
   result +=
-    "  toAddLocal[localIndex] = DL;\n";
+    "  toAddLocal[localIndex] = DL;\n\n";
   
-  // local reduction
   result +=
-    "barrier(CLK_LOCAL_MEM_FENCE);\n"
-    "if(get_local_id(1) == 0){"
-    "  DL = toAddLocal[localIndex];\n"
-    "  for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
+  "  // local reduction\n"
+    "  barrier(CLK_LOCAL_MEM_FENCE);\n"
+    "  if(get_local_id(1) == 0){"
+    "   DL = toAddLocal[localIndex];\n"
+    "   for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
     "    DL +=  toAddLocal[localIndex + Dk];\n"
-    "  }\n" //Dk
-    "  A[AHereDrow+Dcol] = (A[AHereDrow+Dcol] - DL)/diagDcol;\n"
-    "}//get_local_id(1) == 0\n\n"; 
+    "   }//Dk\n" 
+    "   A[AHereDrow+Dcol] = (A[AHereDrow+Dcol] - DL)/diagDcol;\n"
+    "  }//get_local_id(1) == 0\n" 
+    "  barrier(CLK_GLOBAL_MEM_FENCE);\n\n";
   
   result +=
-    "}//Drow\n"
+    " }//Drow\n"
     "  barrier(CLK_GLOBAL_MEM_FENCE);\n"
-    "} // Dcol loop\n";
+    "} // Dcol loop\n\n";
   
     if(logDet){
         result +=  "if(localIndex==0){\n"
