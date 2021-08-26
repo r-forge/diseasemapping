@@ -528,6 +528,17 @@ void maternBatchVcl(
   // the context
   viennacl::ocl::switch_context(ctx_id);
   viennacl::ocl::program & my_prog = viennacl::ocl::current_context().add_program(maternClString, "my_kernel");
+  
+#ifdef DEBUG
+  
+  Rcpp::Rcout << maternClString << "\n\n";
+  
+#endif  
+  
+  
+  
+  
+  
   // get compiled kernel function
   viennacl::ocl::kernel & maternKernel = my_prog.get_kernel("maternBatch");
   

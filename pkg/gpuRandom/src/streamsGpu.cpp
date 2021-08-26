@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-#define DEBUGKERNEL
+//#define DEBUGKERNEL
 
 std::string streamsString(int NpadStreams, 
                           const int keepInitial) {  
@@ -163,23 +163,23 @@ void CreateStreamsGpu(
   viennacl::ocl::switch_context(ctx_id);
   viennacl::ocl::program & my_prog = viennacl::ocl::current_context().add_program(streamsKernelString, "my_kernel");
   
-  Rcpp::Rcout << "after adding kernelstring" << "\n\n";
+  //Rcpp::Rcout << "after adding kernelstring" << "\n\n";
    #ifdef DEBUGKERNEL
    Rcpp::Rcout << streamsKernelString << "\n\n";
    #endif  
    
-#ifdef UNDEF   
+  
   viennacl::ocl::kernel &streamsKernel = my_prog.get_kernel("createStreams");
   streamsKernel.global_work_size(0, 1L);
   streamsKernel.global_work_size(1, 1L);
   
   //streamsKernel.local_work_size(0, 1L);
   //streamsKernel.local_work_size(1, 1L);
-  Rcpp::Rcout << "before enqueue kernel" << "\n\n";
+  //Rcpp::Rcout << "before enqueue kernel" << "\n\n";
   
   viennacl::ocl::enqueue(streamsKernel(creatorInitialGlobal, streams, Nstreams) );
-#endif 
-  Rcpp::Rcout << "after enqueue kernel\n\n" << "\n\n";
+
+  //Rcpp::Rcout << "after enqueue kernel\n\n" << "\n\n";
   
  /* 
   Rcpp::Rcout << streams(0,0) << "\n" << streams(0,1) << "\n"<< streams(0,2) << "\n\n";
@@ -209,10 +209,10 @@ void CreateStreamsGpuTemplated(
   
   
   
-  std::cout<< "in CreateStreamsGpuTemplated\n\n\n";    
+  //std::cout<< "in CreateStreamsGpuTemplated\n\n\n";    
   CreateStreamsGpu(*creatorInitialGlobal, *streams, keepInitial, ctx_id);
   
-  std::cout<< "end of CreateStreamsGpuTemplated\n\n\n";  
+  //std::cout<< "end of CreateStreamsGpuTemplated\n\n\n";  
   
   
   //return Rcpp::wrap(0L);
@@ -238,12 +238,12 @@ void CreateStreamsGpuBackend(
   //std::string precision_type_stream = (std::string) classstream;
   
   
-  Rcpp::Rcout << "in CreateStreamsGpuBackend" << "\n\n";
+  //Rcpp::Rcout << "in CreateStreamsGpuBackend" << "\n\n";
   
 
   CreateStreamsGpuTemplated(creatorInitialGlobalR, streamsR, keepInitial);
   
-  Rcpp::Rcout << "end of CreateStreamsGpuBackend" << "\n\n";
+  //Rcpp::Rcout << "end of CreateStreamsGpuBackend" << "\n\n";
   
   
 }
