@@ -487,11 +487,6 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   
   
   
-  
-  
-  
-  
-  
   viennacl::ocl::program & my_prog_matern = viennacl::ocl::current_context().add_program(maternClString, "mykernelmatern");
   viennacl::ocl::program & my_prog_chol = viennacl::ocl::current_context().add_program(cholClString, "mykernelchol");
   viennacl::ocl::program & my_prog_backsolve = viennacl::ocl::current_context().add_program(backsolveString, "mykernelbacksolve");
@@ -689,8 +684,11 @@ void likfitGpuP_Templated(
     Rcpp::IntegerVector localSize,
     Rcpp::IntegerVector NlocalCache,
     Rcpp::IntegerVector verbose,
-    Rcpp::S4 ssqYX,    Rcpp::S4 ssqYXcopy,
-    Rcpp::S4 LinvYX, Rcpp::S4 QinvSsqYx, Rcpp::S4 cholXVXdiag,
+    Rcpp::S4 ssqYX,    
+    Rcpp::S4 ssqYXcopy,
+    Rcpp::S4 LinvYX, 
+    Rcpp::S4 QinvSsqYx, 
+    Rcpp::S4 cholXVXdiag,
     Rcpp::S4 varMat,
     Rcpp::S4 cholDiagMat){  //Rcpp::S4 aTDinvb_beta,Rcpp::S4 aTDinvb_beta_diag
   
@@ -719,9 +717,6 @@ void likfitGpuP_Templated(
   //  std::shared_ptr<viennacl::matrix<T> > aTDinvb_beta_diaggpu = getVCLptr<T>(aTDinvb_beta_diag.slot("address"), BisVCL, ctx_id);
   
   
-  
-  
-  
   addBoxcoxToData<T>(
     *yxGpu,
     *boxcoxGpu,
@@ -731,6 +726,9 @@ void likfitGpuP_Templated(
     NlocalCache,
     ctx_id,
     verbose);
+  
+  
+  
   
   likfitGpuP<T>(
     *yxGpu, 
@@ -743,8 +741,17 @@ void likfitGpuP_Templated(
     NparamPerIter,
     workgroupSize, 
     localSize, 
-    NlocalCache, ctx_id, verbose, *ssqYXgpu, *ssqYXcopyGpu, *LinvYXgpu, *QinvSsqYxgpu,
-    *cholXVXdiaggpu, *varMatgpu, *cholDiagMatgpu);
+    NlocalCache, 
+    ctx_id, 
+    verbose, 
+    *ssqYXgpu, 
+    *ssqYXcopyGpu, 
+    *LinvYXgpu, 
+    *QinvSsqYxgpu,
+    *cholXVXdiaggpu, 
+    *varMatgpu, 
+    *cholDiagMatgpu);
+    
   // *aTDinvb_betagpu,
   // *aTDinvb_beta_diaggpu
   
@@ -771,23 +778,28 @@ void likfitGpuP_Templated(
 
 //[[Rcpp::export]]
 void likfitGpu_BackendP(
-    Rcpp::S4 yx,
-    Rcpp::S4 coords,
-    Rcpp::S4 params,
-    Rcpp::S4 boxcox,
-    Rcpp::S4 betas,
-    Rcpp::S4 ssqY,
-    Rcpp::S4 ssqBetahat,
-    Rcpp::S4 detVar,
-    Rcpp::S4 detReml,
-    Rcpp::S4 jacobian,
-    Rcpp::IntegerVector NparamPerIter,
-    Rcpp::IntegerVector workgroupSize,
-    Rcpp::IntegerVector localSize,
-    Rcpp::IntegerVector NlocalCache,
-    Rcpp::IntegerVector verbose,
-    Rcpp::S4 ssqYX, Rcpp::S4 ssqYXcopy, Rcpp::S4 LinvYX, Rcpp::S4 QinvSsqYx, Rcpp::S4 cholXVXdiag,
-    Rcpp::S4 varMat, Rcpp::S4 cholDiagMat) {
+    Rcpp::S4 yx,   //1
+    Rcpp::S4 coords,  //2
+    Rcpp::S4 params,  //3
+    Rcpp::S4 boxcox,  //4
+    Rcpp::S4 betas,   //5
+    Rcpp::S4 ssqY,  //6
+    Rcpp::S4 ssqBetahat, //7 
+    Rcpp::S4 detVar, //8
+    Rcpp::S4 detReml, //9
+    Rcpp::S4 jacobian,  //10
+    Rcpp::IntegerVector NparamPerIter,//11
+    Rcpp::IntegerVector workgroupSize,//12
+    Rcpp::IntegerVector localSize,//13
+    Rcpp::IntegerVector NlocalCache,//14
+    Rcpp::IntegerVector verbose,//15
+    Rcpp::S4 ssqYX, //16
+    Rcpp::S4 ssqYXcopy, //17
+    Rcpp::S4 LinvYX, //18
+    Rcpp::S4 QinvSsqYx, //19
+    Rcpp::S4 cholXVXdiag,//20
+    Rcpp::S4 varMat, //21
+    Rcpp::S4 cholDiagMat) {
   //    Rcpp::S4 aTDinvb_beta,
   //    Rcpp::S4 aTDinvb_beta_diag
   

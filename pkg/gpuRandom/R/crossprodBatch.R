@@ -9,14 +9,13 @@
 
  
 crossprodBatch <- function(C,   # must be a batch of square matrices 
-                      A,
-                      D,
-                      invertD,
-                      Nglobal, Nlocal, 
-                      NlocalCache,
-                      Cstartend,
-                      Astartend,
-                      Dstartend) {
+                           A,
+                           D,
+                           invertD,
+                           Nglobal, Nlocal, NlocalCache,
+                           Cstartend,
+                           Astartend,
+                           Dstartend) {
   
   Nbatches = nrow(C)/ncol(C)
   

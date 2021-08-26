@@ -10,8 +10,7 @@
 template <typename T> 
 std::string crossprodBatchString(
     const int Nrow, 
-    const int Ncol,
-//    const int Nmatrix, 
+    const int Ncol,//    const int Nmatrix, 
     const int NpadC, // ignored if onlyDiagC, use NpadBetweenMatrices in this case
     const int NpadA,
     const int NpadD, // set to zero to omit D

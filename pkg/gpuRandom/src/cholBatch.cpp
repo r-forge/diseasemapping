@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-//#define DEBUG
+#define DEBUG
 
 // dimension 0 is cell, dimension 1 is matrix
 // local and global work sizes should be identical for dimension 2
