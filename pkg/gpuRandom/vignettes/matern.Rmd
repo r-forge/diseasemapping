@@ -109,13 +109,14 @@ gpuRandom:::maternBatchBackend(
     verbose = 0)
 ```
 
-```{r outputBatchShowStuff, eval=FALSE}
+```{r outputBatchShowStuff}
 as.matrix(outputBatchF[1:7,1:7])
 as.matrix(outputBatchF[3*ncol(outputBatchF) + 1:7,1:7])
 as.matrix(outputBatchF[seq(1, by=ncol(outputBatchF), len=nrow(paramsGpu)),1])
 myParamsBatch[,c('variance','nugget')]
 ```
 
+```{r showfromcpu, eval=FALSE}
 for(D in 1:nrow(myParamsBatch)) {
 fromCpu = geostatsp::matern(
     x=coordsSp,
@@ -123,9 +124,8 @@ fromCpu = geostatsp::matern(
     )
 
 print(quantile(fromCpu - as.matrix(outputBatchF)[
-  seq(from=1+ncol(outputBatchF) * (D-1), len=ncol(outputBatchF)),], na.rm=FALSE))
+  seq(from=1+ncol(outputBatchF) * (D-1), len=ncol(outputBatchF)),], na.rm=TRUE))
 }
-
 ```
 
 
@@ -133,12 +133,8 @@ print(quantile(fromCpu - as.matrix(outputBatchF)[
 
 
 
-
-
-
-
 # Cholesky
-```{r cholBach, eval = F}
+```{r cholBach, eval = TRUE}
 diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), type = gpuR::typeof(outputBatchF))
 
 outputChol = deepcopy(outputBatchF)
@@ -202,6 +198,15 @@ range(cholCpu - as.matrix(chol4gpu))
 
 range(theDiag - as.matrix(diagMat)[4,])
 ```
+
+
+```{r checkCopy, eval=FALSE}
+xx = matrix(-99.9, ncol(outputChol), nrow(outputChol))
+gpuRandom:::copyToCpu(xx, outputChol)
+xx[1:5,1:5]
+as.matrix(outputChol)[1:5,1:5]
+```
+
 
 # Multiplying lower triangle
 
