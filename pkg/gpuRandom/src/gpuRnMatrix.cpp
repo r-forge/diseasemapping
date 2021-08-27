@@ -234,8 +234,10 @@ int gpuMatrixRn(
   //Rcpp::Rcout << "555" << "\n\n";
   
   
+  viennacl::ocl::command_queue theQueue = random_number.context().get_queue();
+  viennacl::ocl::enqueue(random_number(streams, x), theQueue);
+  clFinish(theQueue.handle().get());
   
-  viennacl::ocl::enqueue(random_number(streams, x));
   return(0L);
 }
 
