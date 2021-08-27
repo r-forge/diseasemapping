@@ -6,9 +6,6 @@ using namespace viennacl;
 using namespace viennacl::linalg;
 
 
-
-
-
 template <typename T> 
 std::string extract_some_diag_string(int NthisIteration,  int Ndatasets,
                                      int NpadColY, int NpadcolYX, int Ncols_YX) {  //ssqYX.size2()
@@ -225,6 +222,7 @@ void addBoxcoxToData(
   viennacl::ocl::enqueue(
     boxcoxKernel(
       yx, boxcox, jacobian));
+  clFinish(boxcoxKernel.context().get_queue().handle().get());
   
 }
 
@@ -558,11 +556,6 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   
   
   
-  
-  
-  
-  
-  
   ///////////////////////////Loop starts !!!//////////////////////////////////////////////////////////////////////////
   
   
@@ -571,6 +564,8 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       Nparams << " NparamsPerIter " <<  NparamPerIter[0] <<
         " Niter " << Niter << " Ncovariates " << Ncovariates << " Ndatasets " << Ndatasets <<"\n";
   }
+
+  viennacl::ocl::command_queue theQueue = maternKernel.context().get_queue();
   
   for (Diter=0,DiterIndex=0; Diter< Niter; 
   Diter++,DiterIndex += NparamPerIter[0]){
@@ -584,26 +579,30 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     }
     
     
-    viennacl::ocl::enqueue(maternKernel(Vbatch, coords, params, DiterIndex, NthisIteration));
+    viennacl::ocl::enqueue(maternKernel(Vbatch, coords, params, DiterIndex, NthisIteration),
+                           theQueue);
     
     if(verbose[0]>3) {
       Rcpp::Rcout << "m";
     }
     
     //#Vbatch=LDL^T, cholesky decomposition
-    viennacl::ocl::enqueue(cholKernel(Vbatch, cholDiagMat, NthisIteration, detVar, DiterIndex));
+    viennacl::ocl::enqueue(cholKernel(Vbatch, cholDiagMat, NthisIteration, detVar, DiterIndex),
+                           theQueue);
     if(verbose[0]>3) {
       Rcpp::Rcout << "c";
     }
     
     // LinvYX = L^(-1) YX,   Nobs by (Ndatasets + Ncovariates)
-    viennacl::ocl::enqueue(backsolveKernel(LinvYX, Vbatch, yx, NthisIteration));
+    viennacl::ocl::enqueue(backsolveKernel(LinvYX, Vbatch, yx, NthisIteration),
+                           theQueue);
     
     if(verbose[0]>3) {
       Rcpp::Rcout << "b";
     }
     // ssqYX = YX^Y L^(-1)T D^(-1) L^(-1) YX  square matrix, (Ndatasets + Ncovariates)
-    viennacl::ocl::enqueue(crossprodKernel(ssqYX, LinvYX, cholDiagMat, NthisIteration));
+    viennacl::ocl::enqueue(crossprodKernel(ssqYX, LinvYX, cholDiagMat, NthisIteration),
+                           theQueue);
     if(verbose[0]>3) {
       Rcpp::Rcout << "cr";
     }
@@ -625,21 +624,27 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       }}
     
     // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part
-    viennacl::ocl::enqueue(cholXvxKernel(ssqYX, cholXVXdiag, NthisIteration, detReml, DiterIndex) );
+    viennacl::ocl::enqueue(
+      cholXvxKernel(ssqYX, cholXVXdiag, NthisIteration, detReml, DiterIndex),
+      theQueue);
     if(verbose[0]>3) {
       Rcpp::Rcout << "cxy";
     }
     
         // backsolve QinvSsqYx = Q^(-1) ssqYX[(Ndatasets+1):nrow(ssqYX),1:Ndatasets]  
     // Ncovariates by Ndatasets
-    viennacl::ocl::enqueue(backsolveSsqYxKernel(QinvSsqYx, ssqYX, ssqYX, NthisIteration));
+    viennacl::ocl::enqueue(
+      backsolveSsqYxKernel(QinvSsqYx, ssqYX, ssqYX, NthisIteration),
+      theQueue);
     
     // crossprod QinvSsqYx^T P^(-1) QinvSsqYx,   Ndatasets by Ndatasets
     /* 
      * TO DO!!!!  add DiterIndex option to the kernel to set the start position of ssqBetahat
      */
-    viennacl::ocl::enqueue(crossprodSsqYxKernel(ssqBetahat, QinvSsqYx,
-                                                cholXVXdiag, NthisIteration)); 
+    viennacl::ocl::enqueue(
+      crossprodSsqYxKernel(ssqBetahat, QinvSsqYx,
+                                                cholXVXdiag, NthisIteration),
+                                                theQueue); 
     
     /*  
      // a^TD^(-1)b * beta = aTDinvb_beta
@@ -647,7 +652,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
      */  
     
   } // Diter
-  
+  clFinish(theQueue.handle().get());
 }
 
 
