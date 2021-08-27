@@ -14,7 +14,7 @@ cholBatch <- function(A,
                       D,
                       numbatchD,
                       Nglobal,
-                      Nlocal,
+                      Nlocal,   # needs Nglobal[2]=Nlocal[2]
                       NlocalCache,
                       Astartend,
                       Dstartend,
