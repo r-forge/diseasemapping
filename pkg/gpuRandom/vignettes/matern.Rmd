@@ -102,8 +102,8 @@ gpuRandom:::maternBatchBackend(
     outputBatchF,
     coordsGpu, 
     paramsGpu,  
-    c(64,12),#NglobalMatern, 
-    c(16,2),#NlocalMatern,
+    c(64,64),#NglobalMatern, 
+    c(16,16),#NlocalMatern,
     startrow = 0,
     numberofrows = nrow(paramsGpu),
     verbose = 0)
@@ -142,10 +142,9 @@ diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), type = gpuR::typeof(
 gpuRandom::cholBatch(
   outputBatchF, diagMat, 
   numbatchD=nrow(myParamsBatch),
-  Nglobal = c(128L, 16L),#NglobalChol,
+  Nglobal = c(256L, 16L),#NglobalChol,
   Nlocal = c(16L, 16L),#NlocalChol,
   NlocalCache = 4000)#NlocalCache)
-
 ```
 
 
@@ -161,11 +160,11 @@ maternReconstruct = chol4gpu %*% diag(diagGpu) %*% t(chol4gpu)
 maternReconstruct[1:4,1:4]
 fromGpuOrig[1:4,1:4]
 
-var4cpu = geostatsp::matern(
+cholCpu = geostatsp::matern(
     x=coordsSp,
-    param=drop(myParamsBatch[D,1:7])
+    param=drop(myParamsBatch[D,1:7]),
+    type='cholesky'
     )
-cholCpu = as.matrix(chol(var4cpu))
 theDiag = diag(cholCpu)
 cholCpu = cholCpu %*% diag(1/theDiag)
 theDiag = theDiag^2
@@ -174,8 +173,8 @@ theDiag = theDiag^2
 chol4gpu[1:4,1:4]
 cholCpu[1:4,1:4]
 
-range(cholCpu - as.matrix(chol4gpu))
-range(theDiag - as.matrix(diagMat)[D,])
+quantile(cholCpu - chol4gpu)
+quantile(theDiag - as.matrix(diagMat)[D,])
 ```
 
 
