@@ -66,14 +66,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // copyToCpu
-void copyToCpu(Rcpp::NumericMatrix output, Rcpp::S4 input);
-RcppExport SEXP _gpuRandom_copyToCpu(SEXP outputSEXP, SEXP inputSEXP) {
+Rcpp::NumericMatrix copyToCpu(Rcpp::S4 input);
+RcppExport SEXP _gpuRandom_copyToCpu(SEXP inputSEXP) {
 BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type output(outputSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type input(inputSEXP);
-    copyToCpu(output, input);
-    return R_NilValue;
+    rcpp_result_gen = Rcpp::wrap(copyToCpu(input));
+    return rcpp_result_gen;
 END_RCPP
 }
 // crossprodBatchBackend
@@ -417,7 +417,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_backsolveBatchBackend", (DL_FUNC) &_gpuRandom_backsolveBatchBackend, 11},
     {"_gpuRandom_backsolveBatchBackend2", (DL_FUNC) &_gpuRandom_backsolveBatchBackend2, 7},
     {"_gpuRandom_cholBatchBackend", (DL_FUNC) &_gpuRandom_cholBatchBackend, 8},
-    {"_gpuRandom_copyToCpu", (DL_FUNC) &_gpuRandom_copyToCpu, 2},
+    {"_gpuRandom_copyToCpu", (DL_FUNC) &_gpuRandom_copyToCpu, 1},
     {"_gpuRandom_crossprodBatchBackend", (DL_FUNC) &_gpuRandom_crossprodBatchBackend, 10},
     {"_gpuRandom_gemmBatchBackend", (DL_FUNC) &_gpuRandom_gemmBatchBackend, 9},
     {"_gpuRandom_gemmBatch2backend", (DL_FUNC) &_gpuRandom_gemmBatch2backend, 11},

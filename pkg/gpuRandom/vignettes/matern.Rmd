@@ -47,7 +47,7 @@ NlocalMatern = c(2,2)
 
 
 if(gpuR::gpuInfo()$deviceMemory > 10^10){
-   Ngrid = c(10,20)
+   Ngrid = c(60,80)
    Nsim = 6
    NlocalCache = 4000
    NglobalMatern = c(256,8) 
@@ -109,7 +109,7 @@ gpuRandom:::maternBatchBackend(
     verbose = 0)
 ```
 
-```{r outputBatchShowStuff}
+```{r outputBatchShowStuff, eval=FALSE}
 as.matrix(outputBatchF[1:7,1:7])
 as.matrix(outputBatchF[3*ncol(outputBatchF) + 1:7,1:7])
 as.matrix(outputBatchF[seq(1, by=ncol(outputBatchF), len=nrow(paramsGpu)),1])
@@ -123,8 +123,10 @@ fromCpu = geostatsp::matern(
     param=drop(myParamsBatch[D,1:7])
     )
 
-print(quantile(fromCpu - as.matrix(outputBatchF)[
-  seq(from=1+ncol(outputBatchF) * (D-1), len=ncol(outputBatchF)),], na.rm=TRUE))
+fromGpu = as.matrix(outputBatchF)[
+  seq(from=1+ncol(outputBatchF) * (D-1), len=ncol(outputBatchF)),]
+
+print(quantile(as.vector(fromCpu - fromGpu), na.rm=TRUE))
 }
 ```
 
@@ -137,50 +139,31 @@ print(quantile(fromCpu - as.matrix(outputBatchF)[
 ```{r cholBach, eval = TRUE}
 diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), type = gpuR::typeof(outputBatchF))
 
-outputChol = deepcopy(outputBatchF)
-outputChol2 = deepcopy(outputBatchF)
-diagMat2 = deepcopy(diagMat)
-
-system.time(gpuRandom::cholBatch(
-  outputChol, diagMat, numbatchD=nrow(myParamsBatch),
-  Nglobal = NglobalChol,
-  Nlocal = NlocalChol,
-  NlocalCache = NlocalCache))
-
 gpuRandom::cholBatch(
-  outputChol2, diagMat2, numbatchD=nrow(myParamsBatch),
-  Nglobal = NglobalChol,
-  Nlocal = NlocalChol,
-  NlocalCache = 20)
+  outputBatchF, diagMat, 
+  numbatchD=nrow(myParamsBatch),
+  Nglobal = c(128L, 16L),#NglobalChol,
+  Nlocal = c(16L, 16L),#NlocalChol,
+  NlocalCache = 4000)#NlocalCache)
 
-stuff = as.matrix(diagMat - diagMat2)
-range(as.matrix(outputChol - outputChol2))
-
-as.matrix(outputBatchF[1:12,1:7])
-as.matrix(outputChol[1:12,1:7])
-as.matrix(diagMat[,1:7])
 ```
 
-```{r cholCheck, include=FALSE, eval=F}
-
-for(D in 1:nrow(myParamsBatch)) {
-chol4gpu = as.matrix(outputChol[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
-chol4gpu[upper.tri(chol4gpu)] = 0
-diag(chol4gpu) = 1
-
-recovered = chol4gpu %*% diag(as.vector(diagMat[D,])) %*% t(chol4gpu)
-print(quantile(recovered - as.matrix(outputBatchF[
-  seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),]),
-  prob = c(0, 0.01, 0.05, 0.95, 0.99, 1)))
-}
+```{r checkCopy, eval=FALSE}
+system.time(junk <- as.vector(vclVector(0, 1, type='float')))
+system.time(xx <- as.matrix(diagMat))
 ```
+
 
 ```{r cholBatchCpu, include=FALSE, eval=F}
-D=1
-
-chol4gpu = as.matrix(outputChol[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
+D=4
+fromGpuOrig = chol4gpu = as.matrix(outputBatchF[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
 chol4gpu[upper.tri(chol4gpu)] = 0
 diag(chol4gpu) = 1
+diagGpu = as.vector(diagMat[D,])
+
+maternReconstruct = chol4gpu %*% diag(diagGpu) %*% t(chol4gpu)
+maternReconstruct[1:4,1:4]
+fromGpuOrig[1:4,1:4]
 
 var4cpu = geostatsp::matern(
     x=coordsSp,
@@ -194,18 +177,12 @@ theDiag = theDiag^2
 
 chol4gpu[1:4,1:4]
 cholCpu[1:4,1:4]
+
 range(cholCpu - as.matrix(chol4gpu))
-
-range(theDiag - as.matrix(diagMat)[4,])
+range(theDiag - as.matrix(diagMat)[D,])
 ```
 
 
-```{r checkCopy, eval=FALSE}
-xx = matrix(-99.9, ncol(outputChol), nrow(outputChol))
-gpuRandom:::copyToCpu(xx, outputChol)
-xx[1:5,1:5]
-as.matrix(outputChol)[1:5,1:5]
-```
 
 
 # Multiplying lower triangle
@@ -344,7 +321,7 @@ as.matrix(outputSwissRain)
 ```
 # extra info
 
-```{r gpuInfo, echo=TRUE}
+```{r gpuInfo, echo=TRUE, eval=FALSE}
 gpuR::gpuInfo()
 ```
 

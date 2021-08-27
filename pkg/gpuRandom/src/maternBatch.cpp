@@ -483,8 +483,9 @@ void maternBatchVcl(
     int startrow, int Nmatrix){ // param[seq(startrow, len=Nmatrix),]
   
   fill22params(param);
-  viennacl::ocl::enqueue(maternKernel(vclVar, vclCoords, param, startrow, Nmatrix));
-  
+  viennacl::ocl::command_queue theQueue = maternKernel.context().get_queue();
+  viennacl::ocl::enqueue(maternKernel(vclVar, vclCoords, param, startrow, Nmatrix), theQueue);
+  clFinish(theQueue.handle().get());
 }
 
 

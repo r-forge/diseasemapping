@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-#define DEBUG
+//#define DEBUG
 
 // dimension 0 is cell, dimension 1 is matrix
 // local and global work sizes should be identical for dimension 2
@@ -74,7 +74,6 @@ template <typename T> std::string cholBatchKernelString(
     result += typeString  + " logDetHere;\n";
   }
   result +=   " barrier(CLK_LOCAL_MEM_FENCE);\n\n";
-  
 result +=  
   "for(Dmatrix = get_group_id(0); Dmatrix < Nmatrix; Dmatrix+= get_num_groups(0)){\n"
   
@@ -167,20 +166,23 @@ result +=
     "   DL += A[AHereDrow+Dk] * diagLocal[Dk];\n"
     // DL -= A[Drow + Dk * Npad] * A[Dcol + DkNpad] * diag[Dk];"
     "  } // Dk\n";
-  
+
+
+    
   if(allowOverflow) {
     result +=
       "	 for(minDcolNcache + get_local_id(1); Dk < Dcol; Dk+=get_local_size(1)) {\n"
       "    DL += A[AHereDrow+Dk] * diag[diagHere+Dk] * A[AHereDcol+Dk];\n"
       "  }// Dk\n"; 
   }
+
   result +=
     "  toAddLocal[localIndex] = DL;\n\n";
   
   result +=
   "  // local reduction\n"
     "  barrier(CLK_LOCAL_MEM_FENCE);\n"
-    "  if(get_local_id(1) == 0){"
+    "  if(get_local_id(1) == 0){\n"
     "   DL = toAddLocal[localIndex];\n"
     "   for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
     "    DL +=  toAddLocal[localIndex + Dk];\n"
@@ -191,7 +193,8 @@ result +=
   
   result +=
     " }//Drow\n"
-    "  barrier(CLK_GLOBAL_MEM_FENCE);\n"
+    "  barrier(CLK_GLOBAL_MEM_FENCE);\n";
+  result +=  
     "} // Dcol loop\n\n";
   
     if(logDet){
@@ -275,12 +278,10 @@ int cholBatchVcl(
   cholKernel.local_work_size(0, (cl_uint) (Nlocal[0]));
   cholKernel.local_work_size(1, (cl_uint) (Nlocal[1]));
   
-  // with opencl 2.0 can put this as a program-level variable
-  //  int Ngroups1 = ceil(Nglobal[1]/Nlocal[1]);
-  //  viennacl::matrix<T> finalReduction(Nglobal[0]*Nglobal[2]*Ngroups1);//size Nglobal[0]*Ngroups1*Nglobal[2]
-  
-  viennacl::ocl::enqueue(cholKernel(A, D, numbatchD));    //,  2L));//A.size1() ));
-  
+  viennacl::ocl::command_queue theQueue = cholKernel.context().get_queue();
+  viennacl::ocl::enqueue(cholKernel(A, D, numbatchD), theQueue);  
+  clFinish(theQueue.handle().get());
+  //viennacl::ocl::enqueue(cholKernel(A, D, numbatchD));
   return 0L;
 }
 
