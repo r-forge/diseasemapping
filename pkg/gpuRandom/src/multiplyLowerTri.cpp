@@ -397,9 +397,10 @@ void multiplyLowerDiagonalBatch(
   multiplyKernel.local_work_size(2, 1L);//Nlocal[2]);
 
     // diagonals and diagTimesRowOfA
+  viennacl::ocl::command_queue theQueue = multiplyKernel.context().get_queue();
   viennacl::ocl::enqueue(multiplyKernel(
-      C, A, D, B));
-
+      C, A, D, B), theQueue);
+  clFinish(theQueue.handle().get());
 }
 
 template <typename T> 

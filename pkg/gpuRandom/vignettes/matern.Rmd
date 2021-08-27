@@ -148,10 +148,6 @@ gpuRandom::cholBatch(
 
 ```
 
-```{r checkCopy, eval=FALSE}
-system.time(junk <- as.vector(vclVector(0, 1, type='float')))
-system.time(xx <- as.matrix(diagMat))
-```
 
 
 ```{r cholBatchCpu, include=FALSE, eval=F}

@@ -529,8 +529,9 @@ void backsolveBatch(
   backsolveKernel.local_work_size(0, Nlocal[0]);
   backsolveKernel.local_work_size(1, Nlocal[1]);
   
-  
+  viennacl::ocl::command_queue theQueue = backsolveKernel.context().get_queue();
   viennacl::ocl::enqueue(backsolveKernel(C, A, B, Nmatrix));
+  clFinish(theQueue.handle().get());
   
 }
 
@@ -564,7 +565,7 @@ SEXP backsolveBatchTyped(
   std::shared_ptr<viennacl::matrix<T> > AG = getVCLptr<T>(AR.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<T> > BG = getVCLptr<T>(BR.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<T> > CG = getVCLptr<T>(CR.slot("address"), BisVCL, ctx_id);
-  
+
   backsolveBatch<T>(*CG, *AG, *BG, 
                     Cstartend, Astartend, Bstartend,
                     numbatchB,diagIsOne, 

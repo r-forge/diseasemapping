@@ -178,7 +178,7 @@ void CreateStreamsGpu(
   //Rcpp::Rcout << "before enqueue kernel" << "\n\n";
   
   viennacl::ocl::enqueue(streamsKernel(creatorInitialGlobal, streams, Nstreams) );
-
+  clFinish(streamsKernel.context().get_queue().handle().get());
   //Rcpp::Rcout << "after enqueue kernel\n\n" << "\n\n";
   
  /* 
