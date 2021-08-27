@@ -83,136 +83,83 @@ as.matrix(a)
 as.matrix(diagMat)
 ```
 
-```{r chol test Nov22, eval=F}
- Nsim = 4
-   Ngrid = c(5,5)
-   NlocalCache = 300
-    NglobalMatern = c(64,8) 
-    NlocalMatern = c(8, 4)
-   NglobalChol =  c(16,8,4)
-    NglobalChol =  c(64,8)
-    NlocalChol = c(16, 8)
-    NglobalRandom = c(64,4)
-  NglobalMult = c(16,4,4)   
-  NlocalMult = c(4,4,1)   
-theType = "float"
+```{r chol test Aug27, eval=F}
+ 
+library("gpuR")
+library("gpuRandom")
+library('geostatsp')
+library("raster")
+Nsim = 2
+Ngrid = c(20, 20)
+NlocalCache = 1000
+Nglobal = c(8L, 8L, 8L)
+Nlocal = c(4L, 2L)
+theType = "double"
 
 
-NlocalMatern = c(2,2)
+myRaster = raster(
+  extent(0,Ngrid[1]/Ngrid[2],5,6),
+  Ngrid[2], Ngrid[1]
+)
+coordsSp = sp::SpatialPoints(xyFromCell(myRaster, 1:ncell(myRaster)))
+coordsGpu = vclMatrix(coordsSp@coords, 
+                      nrow(coordsSp@coords), 
+                      ncol(coordsSp@coords), type=theType)
+# x = rbind(
+#   c(shape=5.25, range=1.5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
 
 
-if(gpuR::gpuInfo()$deviceMemory > 10^10){
-   Ngrid = c(6,10)
-   Nsim = 6
-   NlocalCache = 4000
-   NglobalMatern = c(256,8) 
-   NlocalMatern = c(32, 8)
-   NglobalChol =  c(128,8)
-   NlocalChol = c(16, 8)
-   NglobalRandom = c(512,8)
-   NglobalMult = c(64,8,8)   
-   NlocalMult = c(8,8,1)
-   theType = "double"
-}
+myParamsBatch = rbind(c(shape=5.25, range=1.5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
+  c(shape=5.25, range=1.5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
 
-myRaster = raster::raster(
-    raster::extent(0,Ngrid[1]/Ngrid[2],5,6),
-    Ngrid[1], Ngrid[2]
-  )
-coordsSp = sp::SpatialPoints(raster::xyFromCell(myRaster, 1:raster::ncell(myRaster)))
-
-head(coordsSp@coords,15)
-
-myParamsBatch = rbind(c(shape=1.25, range=5, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
-
-# myParamsBatch = rbind(
-# c(shape=1.25, range=5, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), 
-# c(shape=2.15, range=10, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = pi/7),
-# c(shape=0.55, range=15, variance = 2, nugget = 0, anisoRatio = 4,  anisoAngleRadians = pi/7))
+paramsGpu = gpuRandom::maternGpuParam(myParamsBatch, type=theType)
 
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
 myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch)))
 
-coordsGpu = vclMatrix(coordsSp@coords, nrow(coordsSp@coords), ncol(coordsSp@coords), type=theType)
-paramsGpu = vclMatrix(myParamsBatch, type=gpuR::typeof(coordsGpu))
-outputBatchF = vclMatrix(0, nrow(paramsGpu)*nrow(coordsGpu), nrow(coordsGpu), type=gpuR::typeof(paramsGpu))
-```
 
 
-```{r three}
-############ matern gpu ###################
-gpuRandom::maternBatch(outputBatchF,coordsGpu, paramsGpu,  Nglobal = NglobalMatern, Nlocal = NlocalMatern)
-dim(outputBatchF)
-#as.matrix(outputBatchF[1:12,1:7])
+maternMatrix = vclMatrix(0, nrow(paramsGpu)*nrow(coordsGpu), 
+                         nrow(coordsGpu),type=theType)
+dim(maternMatrix)
+gpuRandom::maternBatch(maternMatrix, coordsGpu, paramsGpu, c(64,64), c(2,4))
 
-########### matern cpu ##################
+
 var4cpu = geostatsp::matern(
-    x=coordsSp,
-    param=drop(myParamsBatch[1,1:7])
-    )
+  x=coordsSp,
+  param=drop(myParamsBatch[1,1:7])
+)
 
-#var4cpu[1:12,1:7]
+var4gpu = maternMatrix[1:prod(Ngrid), ]
 dim(var4cpu)
-#outputBatchF[1:25,]-var4cpu
-range(as.matrix(outputBatchF)-var4cpu)
-```
+range(var4cpu - var4gpu)
 
-```{r four}
-################chol gpu ####################
-diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), type = gpuR::typeof(outputBatchF))
-#outputChol = vclMatrix(0, nrow(outputBatchF), ncol(outputBatchF), type = gpuR::typeof(outputBatchF))
-
-gpuRandom::cholBatch(outputBatchF, diagMat, numbatchD=nrow(myParamsBatch),Nglobal = NglobalChol,Nlocal = NlocalChol,NlocalCache = NlocalCache)
+diagMat = vclMatrix(0, nrow(paramsGpu), ncol(maternMatrix), type = theType)
+gpuRandom::cholBatch(maternMatrix, diagMat, numbatchD=nrow(myParamsBatch),
+                     Nglobal = c(8L, 8L, 8L),Nlocal=c(2,2,2),3000)
 
 
-#as.matrix(diagMat)
-dim(outputBatchF)
 
-##############chol cpu############################
 cholCpu = as.matrix(chol(var4cpu))
 theDiag = diag(cholCpu)
 cholCpu = cholCpu %*% diag(1/theDiag)
 theDiag = theDiag^2
-```
 
-```{r five}
-
-chol4gpu = as.matrix(outputBatchF)
+chol4gpu = as.matrix(maternMatrix[1:400,])
 chol4gpu[upper.tri(chol4gpu)] = 0
 diag(chol4gpu) = 1
 
-
+ chol4gpu[300:400,1:4]
+ cholCpu[300:400,1:4]
 range(cholCpu - chol4gpu)
-range(theDiag - as.matrix(diagMat))
+range(theDiag - as.matrix(diagMat)[1,])
 
-(cholCpu - chol4gpu)[30:60,]
+(cholCpu - chol4gpu)[200:300,100:200]
 
+dim(cholCpu)
 
-
-theDiag[31]
-as.matrix(diagMat)[31]
-which((theDiag - as.matrix(diagMat))>0.1)
-```
-
-
-
-
-
-
-
-
-
-
-```{r cholBatchCpu, include=FALSE, eval=F}
-cholCpu = as.matrix(chol(var4cpu))
-theDiag = diag(cholCpu)
-cholCpu = cholCpu %*% diag(1/theDiag)
-theDiag = theDiag^2
 
 ```
-
-
-
 
 
 
