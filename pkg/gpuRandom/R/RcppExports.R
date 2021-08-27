@@ -13,10 +13,6 @@ cholBatchBackend <- function(A, D, Astartend, Dstartend, numbatchD, Nglobal, Nlo
     invisible(.Call('_gpuRandom_cholBatchBackend', PACKAGE = 'gpuRandom', A, D, Astartend, Dstartend, numbatchD, Nglobal, Nlocal, NlocalCache))
 }
 
-copyToCpu <- function(input) {
-    .Call('_gpuRandom_copyToCpu', PACKAGE = 'gpuRandom', input)
-}
-
 #' Multiply crossproduct matrices
 #' 
 #' Computes C = t(A) D A
