@@ -51,14 +51,14 @@ as.matrix(gpuC2)
 
 ```{r checkAug26}
 D <- matrix(0,nrow=5, ncol=5)
-diag(D)<-c(1:5)
+diag(D)<-c(1,2,3,4,5)
 D
-a = matrix(1:15,nrow=5,ncol=3, byrow=T)
+a = matrix(c(2:16),nrow=5,ncol=3, byrow=T)
 a
 result<- t(a)%*% D%*%a
 result     # 3x3
-result<- t(a)%*% solve(D)%*%a
-result
+# result<- t(a)%*% solve(D)%*%a
+# result
 
 gpuC<-vclMatrix(0, nrow=6, ncol=3,type="float")   
 gpuA<-vclMatrix(rbind(a,a),type="float")
@@ -68,9 +68,9 @@ gpuRandom::crossprodBatch(gpuC,
                           gpuA,
                           gpuD,
                           invertD = FALSE,
-                          Nglobal = c(8,8), 
+                          Nglobal = c(6,6), 
                           Nlocal = c(2, 2),
-                          NlocalCache = 40)
+                          NlocalCache = 1000)
 
 as.matrix(gpuC)
 

@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-//#define DEBUG
+#define DEBUG
 //#define NOKERNELS
 
 // C = A^T A or A^T D A or A^T D^(-1) A 
@@ -210,7 +210,7 @@ if(onlyDiagC) {
 result +=
       "          DinnerA = A0Drow + Dinner*NpadA;\n"
       "        Dinner < NrowStop;\n"
-      "        Dinner += NlocalTotal,\n"
+      "        Dinner += get_local_size(0),\n"
       "          DinnerA += DinnerAinc\n"
       "      ){\n";
 
