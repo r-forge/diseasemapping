@@ -66,19 +66,17 @@ diag(D2)<-c(1,1,1,1, 1.66, 1, 1)
 result2<- t(a)%*% D2%*%a
 result2
 
-
-
-gpuC<-vclMatrix(0, nrow=18, ncol=3,type="double")   
-gpuA<-vclMatrix(rbind(a,a,a,a,a,a),type="double")
-gpuD<-vclMatrix(rbind(diag(D1),diag(D2),diag(D1),diag(D2),diag(D1),diag(D2)), nrow=6,ncol=nrow(D2),type='double')
+gpuC<-vclMatrix(0, nrow=21, ncol=3,type="double")   
+gpuA<-vclMatrix(rbind(a,a,a,a,a,a,a),type="double")
+gpuD<-vclMatrix(rbind(diag(D1),diag(D2),diag(D1),diag(D2),diag(D1),diag(D2),diag(D1)), nrow=7,ncol=nrow(D2),type='double')
 
 gpuRandom::crossprodBatch(gpuC, 
                           gpuA,
                           gpuD,
                           invertD = FALSE,
-                          Nglobal = c(64, 16), 
+                          Nglobal = c(64, 8), 
                           Nlocal =  c(32, 8),
-                          NlocalCache = 20)
+                          NlocalCache = 3)
 
 as.matrix(gpuC)
 
