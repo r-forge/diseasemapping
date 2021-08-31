@@ -145,7 +145,8 @@ std::string crossprodBatchString(
     "    ev=async_work_group_strided_copy (\n"
     "      Acache, &A[A0Dcol],\n"
     "      NrowStop, NpadA, 0);\n"
-    "    wait_group_events (1, &ev);\n";
+    "    wait_group_events (1, &ev);\n"
+    "  barrier(CLK_LOCAL_MEM_FENCE);\n";
     
     if(onlyDiagC) {
       result +=
@@ -272,7 +273,8 @@ std::string crossprodBatchString(
   result += 
     "      }// Dinner\n";
   result +=       
-    "      Ccache[cacheIndex] = Cout;\n";
+    "      Ccache[cacheIndex] = Cout;\n"
+    "  barrier(CLK_LOCAL_MEM_FENCE);\n";
   
   result +=
     "      if(doLocalSum){\n";
