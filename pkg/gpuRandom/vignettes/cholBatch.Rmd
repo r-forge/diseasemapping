@@ -64,13 +64,6 @@ as.matrix(diagMat)
 ```
 
 
-
-
-
-
-
-
-
 ```{r chol_R_function}
 rbind(a1,a2)
 a<-vclMatrix(rbind(a1,a2),type="float")
@@ -83,6 +76,16 @@ as.matrix(a)
 as.matrix(diagMat)
 ```
 
+
+
+
+
+
+
+
+
+
+
 ```{r chol test Aug27, eval=F}
  
 library("gpuR")
@@ -90,7 +93,7 @@ library("gpuRandom")
 library('geostatsp')
 library("raster")
 Nsim = 2
-Ngrid = c(20, 20)
+Ngrid = c(25, 25)
 NlocalCache = 1000
 Nglobal = c(8L, 8L, 8L)
 Nlocal = c(4L, 2L)
@@ -109,8 +112,8 @@ coordsGpu = vclMatrix(coordsSp@coords,
 #   c(shape=5.25, range=1.5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
 
 
-myParamsBatch = rbind(c(shape=5.25, range=1.5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
-  c(shape=5.25, range=1.5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
+myParamsBatch = rbind(c(shape=5.25, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
+  c(shape=5.25, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
 
 paramsGpu = gpuRandom::maternGpuParam(myParamsBatch, type=theType)
 
@@ -145,14 +148,20 @@ theDiag = diag(cholCpu)
 cholCpu = cholCpu %*% diag(1/theDiag)
 theDiag = theDiag^2
 
-chol4gpu = as.matrix(maternMatrix[1:400,])
+chol4gpu = as.matrix(maternMatrix[1:prod(Ngrid),])
 chol4gpu[upper.tri(chol4gpu)] = 0
 diag(chol4gpu) = 1
 
- chol4gpu[300:400,1:4]
- cholCpu[300:400,1:4]
+ # chol4gpu[300:400,1:4]
+ # cholCpu[300:400,1:4]
 range(cholCpu - chol4gpu)
 range(theDiag - as.matrix(diagMat)[1,])
+
+
+
+
+
+
 
 (cholCpu - chol4gpu)[200:300,100:200]
 
