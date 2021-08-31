@@ -199,9 +199,8 @@ std::string crossprodBatchString(
   }
   
   result += 
-    "  barrier(CLK_GLOBAL_MEM_FENCE);\n"
-    "      Cout=0.0;\n\n";
-  
+    "      Cout=0.0;\n\n"
+  "  barrier(CLK_LOCAL_MEM_FENCE);\n";
   result += 
     
     "      // cached parts\n";
