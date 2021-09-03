@@ -63,6 +63,11 @@ if (abs(param["anisoRatio"]-1) <=  10^(-4) ){
 model 
 }
 
+
+
+
+
+
 fillParam = function(param) {
 
 	if(is.vector(param))
