@@ -53,30 +53,31 @@ as.matrix(gpuC2)
 
 
 
-D1 <- matrix(0,nrow=7, ncol=7)
-diag(D1)<-c(1,2,3,4,5,6,7)
+D1 <- matrix(0,nrow=5, ncol=5)
+diag(D1)<-c(1,2,3,4,5)
 D1
-a = matrix(rep(1,21),nrow=7,ncol=3, byrow=T)
-#a
+#a = matrix(c(1,0,0,0,1,0,0,0,1,1,0,0,0,1,0),nrow=5,ncol=3, byrow=T)
+a = matrix(rep(1,15),nrow=5,ncol=3, byrow=T)
+a
 result<- t(a)%*% D1%*%a
 result     # 3x3
-D2 <- matrix(0,nrow=7, ncol=7)
-diag(D2)<-c(1,1,1,1, 1.66, 1, 1)
+D2 <- matrix(0,nrow=5, ncol=5)
+diag(D2)<-c(1.6,1,1,1, 1)
 #D2
 result2<- t(a)%*% D2%*%a
 result2
 
-gpuC<-vclMatrix(0, nrow=21, ncol=3,type="double")   
-gpuA<-vclMatrix(rbind(a,a,a,a,a,a,a),type="double")
-gpuD<-vclMatrix(rbind(diag(D1),diag(D2),diag(D1),diag(D2),diag(D1),diag(D2),diag(D1)), nrow=7,ncol=nrow(D2),type='double')
+gpuC<-vclMatrix(0, nrow=24, ncol=3,type="double")   
+gpuA<-vclMatrix(rbind(a,a,a,a,a,a,a,a),type="double")
+gpuD<-vclMatrix(rbind(diag(D1),diag(D2),diag(D1),diag(D2),diag(D1),diag(D2),diag(D1),diag(D2)), nrow=8,ncol=nrow(D2),type='double')
 
 gpuRandom::crossprodBatch(gpuC, 
                           gpuA,
                           gpuD,
                           invertD = FALSE,
-                          Nglobal = c(32, 8), 
-                          Nlocal =  c(32, 8),
-                          NlocalCache = 100)
+                          Nglobal = c(70, 6), 
+                          Nlocal =  c(35, 3),
+                          NlocalCache = 20)
 
 as.matrix(gpuC)
 
