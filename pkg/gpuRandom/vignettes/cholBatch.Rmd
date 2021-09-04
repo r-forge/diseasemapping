@@ -93,7 +93,7 @@ library("gpuRandom")
 library('geostatsp')
 library("raster")
 Nsim = 2
-Ngrid = c(25, 25)
+Ngrid = c(20, 20)
 NlocalCache = 1000
 Nglobal = c(8L, 8L, 8L)
 Nlocal = c(4L, 2L)
@@ -112,8 +112,8 @@ coordsGpu = vclMatrix(coordsSp@coords,
 #   c(shape=5.25, range=1.5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
 
 
-myParamsBatch = rbind(c(shape=5.25, range=0.1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
-  c(shape=5.25, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
+myParamsBatch = rbind(c(shape=2.25, range=0.1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
+  #c(shape=5.25, range=1, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0))
 
 paramsGpu = gpuRandom::maternGpuParam(myParamsBatch, type=theType)
 
