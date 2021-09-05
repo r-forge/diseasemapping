@@ -50,7 +50,8 @@ as.matrix(gpuC2)
 
 
 ```{r checkAug26}
-
+library("gpuR")
+library("gpuRandom")
 
 
 D1 <- matrix(0,nrow=5, ncol=5)
@@ -75,8 +76,8 @@ gpuRandom::crossprodBatch(gpuC,
                           gpuA,
                           gpuD,
                           invertD = FALSE,
-                          Nglobal = c(70, 6), 
-                          Nlocal =  c(35, 3),
+                          Nglobal = c(64, 8), 
+                          Nlocal =  c(32, 8),
                           NlocalCache = 20)
 
 as.matrix(gpuC)

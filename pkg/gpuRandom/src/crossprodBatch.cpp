@@ -175,7 +175,8 @@ std::string crossprodBatchString(
           "      Acache[Dinner] *= Dcache[Dinner];\n";
       }
       result +=
-        "    }\n\n";
+        "    }\n\n"
+        "  barrier(CLK_LOCAL_MEM_FENCE);\n";
     } // NpadD
   } // NrowStop
   
@@ -200,8 +201,8 @@ std::string crossprodBatchString(
   }
   
   result += 
-    "      Cout=0.0;\n\n"
-    "  barrier(CLK_LOCAL_MEM_FENCE);\n";   // barrier needed
+    "      Cout=0.0;\n\n";
+ //   "  barrier(CLK_LOCAL_MEM_FENCE);\n";   // barrier needed
   result += 
     
     "      // cached parts\n";
@@ -226,8 +227,8 @@ std::string crossprodBatchString(
     //    "          Cout += A[Dmatrix * NpadBetweenMatricesA + Dinner*NpadA + Drow] * Acache[Dinner];\n";
   }
   result +=     
-    "      }// Dinner\n";
-    //"  barrier(CLK_LOCAL_MEM_FENCE);\n";    // not important
+    "      }// Dinner\n"
+    "  barrier(CLK_LOCAL_MEM_FENCE);\n";    // not important
   
   result +=
     
@@ -304,7 +305,7 @@ std::string crossprodBatchString(
   
   result +=
     "      }//doLocalSum \n";
-    //"      barrier(CLK_LOCAL_MEM_FENCE);\n\n";    //  no barrier here!
+  //"      barrier(CLK_LOCAL_MEM_FENCE);\n\n";    //  no barrier here!
   
   
   if(!onlyDiagC) {
@@ -312,11 +313,11 @@ std::string crossprodBatchString(
       "    }// Drow\n";
   }
   result += 
- //   "  barrier(CLK_LOCAL_MEM_FENCE);\n\n"  // not here
+    //   "  barrier(CLK_LOCAL_MEM_FENCE);\n\n"  // not here
     "  }// Dcol\n";
   
   result += 
-   //"  barrier(CLK_LOCAL_MEM_FENCE);\n\n"  // no barrier
+    "  barrier(CLK_LOCAL_MEM_FENCE);\n\n"  
     "}// Dmatrix\n"
     "  barrier(CLK_LOCAL_MEM_FENCE);\n";
   result += 
@@ -486,6 +487,7 @@ SEXP crossprodBatchBackend(
   return(result);
   
 }
+
 
 
 
