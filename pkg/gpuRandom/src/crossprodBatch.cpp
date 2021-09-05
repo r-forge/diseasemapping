@@ -120,14 +120,21 @@ std::string crossprodBatchString(
     "  ){\n";
   
   
-  if(NpadD && NrowStop) {  
+  if(NpadD && NrowStop) {
+    // result +=
+    //   "\n"
+    // " for (int i=0; i < NrowStop; i++) {\n"
+    // "Dcache[i] = D[DHere+i];\n"
+    // "  }\n"
+    // " barrier(CLK_LOCAL_MEM_FENCE);\n";
+    
     result +=  "\n"
     "  /* cache first NrowStop elements of D for this matrix*/\n"
     "  ev=async_work_group_copy(\n"
     "    Dcache, &D[DHere],\n"
     "    NrowStop, 0);\n"
     "  wait_group_events (1, &ev);\n"
-    "  barrier(CLK_LOCAL_MEM_FENCE);\n";      // barrier needed 
+    "  barrier(CLK_LOCAL_MEM_FENCE);\n";      // barrier needed
     
   }
   
@@ -140,13 +147,20 @@ std::string crossprodBatchString(
   
   
   if(NrowStop) {
-    result +=  "\n"
-    "    // cache A[1:NrowStop, Dcol]\n"
-    "    ev=async_work_group_strided_copy (\n"
-    "      Acache, &A[A0Dcol],\n"
-    "      NrowStop, NpadA, 0);\n"
-    "    wait_group_events (1, &ev);\n"
-    "  barrier(CLK_LOCAL_MEM_FENCE);\n";    // barrier needed 
+    result += "\n"
+    " for (int i=0; i < NrowStop; i++) {\n"
+    " Acache[i] = A[A0Dcol+i*NpadA];\n"
+    "  }\n"
+    
+    " barrier(CLK_LOCAL_MEM_FENCE);\n";
+    
+    // result +=  "\n"
+    // "    // cache A[1:NrowStop, Dcol]\n"
+    // "    ev=async_work_group_strided_copy (\n"
+    // "      Acache, &A[A0Dcol],\n"
+    // "      NrowStop, NpadA, 0);\n"
+    // "    wait_group_events (1, &ev);\n"
+    // "  barrier(CLK_LOCAL_MEM_FENCE);\n";    // barrier needed
     
     if(onlyDiagC) {
       result +=
@@ -176,7 +190,7 @@ std::string crossprodBatchString(
       }
       result +=
         "    }\n\n"
-        "  barrier(CLK_LOCAL_MEM_FENCE);\n";
+        " barrier(CLK_LOCAL_MEM_FENCE);\n";
     } // NpadD
   } // NrowStop
   
@@ -202,7 +216,7 @@ std::string crossprodBatchString(
   
   result += 
     "      Cout=0.0;\n\n";
- //   "  barrier(CLK_LOCAL_MEM_FENCE);\n";   // barrier needed
+  // "  barrier(CLK_LOCAL_MEM_FENCE);\n";   // no useful
   result += 
     
     "      // cached parts\n";
@@ -227,8 +241,8 @@ std::string crossprodBatchString(
     //    "          Cout += A[Dmatrix * NpadBetweenMatricesA + Dinner*NpadA + Drow] * Acache[Dinner];\n";
   }
   result +=     
-    "      }// Dinner\n"
-    "  barrier(CLK_LOCAL_MEM_FENCE);\n";    // not important
+    "      }// Dinner\n";
+  //  "  barrier(CLK_LOCAL_MEM_FENCE);\n";    // no useful
   
   result +=
     
@@ -276,7 +290,7 @@ std::string crossprodBatchString(
     "      }// Dinner\n";
   result +=       
     "      Ccache[cacheIndex] = Cout;\n";
-  // "  barrier(CLK_LOCAL_MEM_FENCE);\n";    no barrier here!
+  // "  barrier(CLK_LOCAL_MEM_FENCE);\n";    //no useful
   
   result +=
     "      if(doLocalSum){\n";
@@ -292,20 +306,15 @@ std::string crossprodBatchString(
     result +=
       "        for(Dinner = 1;Dinner < get_local_size(0);Dinner++){\n"
       "          Ccache[cacheIndex] += Ccache[cacheIndex + Dinner * NpadLocal];\n"
-      "        }\n"
-      "  }\n"
-      "  barrier(CLK_LOCAL_MEM_FENCE);\n";
-    
-    
+      "        }\n";
     
     result += 
-      "      if(doLocalSum){\n"
       "          C[DrowNpadC + Dcol] = Ccache[cacheIndex];\n";
   } 
   
   result +=
-    "      }//doLocalSum \n";
-  //"      barrier(CLK_LOCAL_MEM_FENCE);\n\n";    //  no barrier here!
+    "      }//doLocalSum \n"
+    "      barrier(CLK_LOCAL_MEM_FENCE);\n\n";    //  barrier here!
   
   
   if(!onlyDiagC) {
@@ -313,15 +322,15 @@ std::string crossprodBatchString(
       "    }// Drow\n";
   }
   result += 
-    //   "  barrier(CLK_LOCAL_MEM_FENCE);\n\n"  // not here
+    "  barrier(CLK_LOCAL_MEM_FENCE);\n\n"  //
     "  }// Dcol\n";
   
   result += 
-    "  barrier(CLK_LOCAL_MEM_FENCE);\n\n"  
+    "  barrier(CLK_LOCAL_MEM_FENCE);\n\n"  // 
     "}// Dmatrix\n"
     "  barrier(CLK_LOCAL_MEM_FENCE);\n";
   result += 
-    "}// function";
+    "}";
   
   return(result);
 }
@@ -356,6 +365,7 @@ void crossprodBatch(
   const int NstartA = A.internal_size2() * Astartend[0] + Astartend[2];
   const int NstartD = D.internal_size2() * Dstartend[0] + Dstartend[2];
   
+  std::cout<< Nmatrix << "\n\n\n";  
   
   // the context
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
@@ -487,6 +497,7 @@ SEXP crossprodBatchBackend(
   return(result);
   
 }
+
 
 
 
