@@ -313,7 +313,7 @@ int gpuFisher_test(
  
   std::string Fisher_kernel_string = FisherSimkernelString<T>(nr, nc, streams.internal_size2());
   if(resultSize >= B) {
-   kernel_string = "\n#define returnResults\n" + kernel_string;
+    Fisher_kernel_string = "\n#define returnResults\n" + Fisher_kernel_string;
   }
    #ifdef DEBUGKERNEL
    Rcpp::Rcout << Fisher_kernel_string << "\n\n";
@@ -323,16 +323,16 @@ int gpuFisher_test(
 
   std::string lfactorialKernelString = logfactString<double>();
   #ifdef DEBUGKERNEL
-   Rcpp::Rcout << logKernelString << "\n\n";
+   Rcpp::Rcout << lfactorialKernelString << "\n\n";
   #endif  
  
  // the context
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));  
-  viennacl::ocl::program &my_prog = ctx.add_program(Fisher_kernel_string, "my_kernel");
-  viennacl::ocl::program & my_prog = viennacl::ocl::current_context().add_program(lfactorialKernelString, "my_kernel");
+  viennacl::ocl::program &my_prog_Fisher = ctx.add_program(Fisher_kernel_string, "Fisher_kernel");
+  viennacl::ocl::program & my_prog_lf = viennacl::ocl::current_context().add_program(lfactorialKernelString, "lfactorialKernel");
 
-  viennacl::ocl::kernel &fisher_sim = my_prog.get_kernel("fisher_sim_gpu"); 
-  viennacl::ocl::kernel &lfactorialKernel = my_prog.get_kernel("logfactorial");
+  viennacl::ocl::kernel &fisher_sim = my_prog_Fisher.get_kernel("fisher_sim_gpu"); 
+  viennacl::ocl::kernel &lfactorialKernel = my_prog_lf.get_kernel("logfactorial");
  
  
  
@@ -367,7 +367,7 @@ int gpuFisher_test(
    
    countss = viennacl::linalg::sum(count);
    
-   #ifdef DEBUG
+   #ifdef DEBUGKERNEL
    Rcpp::Rcout << "threshold " << threshold << " countss " << countss << " count0 " << count(0) << " size " << B <<  "\n";
    #endif  
 
