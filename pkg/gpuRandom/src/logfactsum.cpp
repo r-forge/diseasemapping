@@ -4,7 +4,7 @@
 
 //#define DEBUGKERNEL
 template <typename T> 
-std::string colsumRowsumString(const int Nrow, const int Ncol, const int NpadCol) {  //internal column size
+std::string sum_of_LfactorialString(const int Nrow, const int Ncol, const int NpadCol) {  //internal column size
   
   std::string typeString = "int";
   std::string typeStringSum = openclTypeString<T>();  // type of the sum of log factorial
@@ -69,7 +69,7 @@ double logfactsum(
   
   double result;
 
-  std::string sumKernelString = colsumRowsumString<double>(
+  std::string sumKernelString = sum_of_LfactorialString<double>(
     x.size1(), 
     x.size2(),
     x.internal_size2() 
@@ -90,12 +90,12 @@ double logfactsum(
   sumLfactorialKernel.local_work_size(0, 1L);
   sumLfactorialKernel.local_work_size(1, 1L);
   
-  viennacl::vector_base<double> logFactorial(numWorkItems[0] * numWorkItems[1]);
+  viennacl::vector_base<double> logFactorials(numWorkItems[0] * numWorkItems[1]);
   
-  viennacl::ocl::enqueue(sumLfactorialKernel(x, logFactorial) );
+  viennacl::ocl::enqueue(sumLfactorialKernel(x, logFactorials) );
   
  
-  result = viennacl::linalg::sum(logFactorial);
+  result = viennacl::linalg::sum(logFactorials);
 
   
   return result;
@@ -185,7 +185,7 @@ SEXP colsumRowsumBackend(
   std::shared_ptr<viennacl::vector_base<int> > rowSumVcl = getVCLVecptr<int>(rowSum.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::vector_base<int> > colSumVcl = getVCLVecptr<int>(colSum.slot("address"), BisVCL, ctx_id);
 
-  std::string sumKernelString = colsumRowsumString(
+  std::string sumKernelString = sum_of_LfactorialString(
     (*xVcl).size1(), 
     (*xVcl).size2(),
     (*xVcl).internal_size2() 
