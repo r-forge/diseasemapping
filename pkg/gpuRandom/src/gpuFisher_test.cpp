@@ -374,7 +374,7 @@ int gpuFisher_test(
    Rcpp::Rcout << lfactorialKernelString << "\n\n";
   #endif  
  
- // the context
+ // the context//////////////////////////////////////////////////////
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));  
  
   viennacl::ocl::program & my_prog_sumlf = viennacl::ocl::current_context().add_program(sumlfKernelString, "sumlf_kernel"); 
@@ -400,15 +400,16 @@ int gpuFisher_test(
   fisher_sim.local_work_size(0, 1L);
   fisher_sim.local_work_size(1, 1L); 
  
- 
 
- 
  
  
    viennacl::vector_base<double> logFactorials(numWorkItems[0] * numWorkItems[1]);
    viennacl::ocl::command_queue theQueue = sumLfactorialKernel.context().get_queue();
    viennacl::ocl::enqueue(sumLfactorialKernel(x, logFactorials), theQueue);
    clFinish(theQueue.handle().get());
+   
+   
+   
    
    statistics = viennacl::linalg::sum(logFactorials);
    threshold = (T) (-statistics)/(1+64 * DOUBLE_EPS);
