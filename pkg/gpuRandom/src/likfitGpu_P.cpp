@@ -52,6 +52,55 @@ std::string extract_some_diag_string(int NthisIteration,  int Ndatasets,
 
 
 
+/*
+ * sum logs of rows
+ * use only one work item dimension
+ * groups are rows, local items sum over colums
+ * 
+ */
+template <typename T> 
+std::string logRowSumString(int NlocalCache) {  
+  
+  std::string typeString = openclTypeString<T>();
+  
+  
+  std::string result = "";
+  
+  if(typeString == "double") {
+    result += "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n";
+  }
+  result += 
+    "#define NlocalCache " + std::to_string(NlocalCache) + "\n";    
+  
+  result += 
+    "\n\n__kernel void logRowSum(\n"
+    "  __global " + typeString + "* x,\n"  
+    "  __global " + typeString + "* output,\n" 
+    "  int Nrow, int Ncol, int Npad, int startX, int startOutput"
+    "){\n\n";  
+  
+  result += "int Drow, Dcol, Dindex;\n";
+  result += "local " + typeString + " thesum[NlocalCache];\n";
+  
+  result += 
+    
+    "  for(Drow = get_group_id(0);   Drow < Nrow;    Drow+=get_num_groups(0)){\n"
+    "    thesum[get_local_id(0)] = 0.0;\n"
+    "    for(Dcol = get_global_id(0),   Dindex = startX + Drow*NpadCol+Dcol;\n" 
+    "        Dcol < Ncol; Dcol+=get_global_size(0), Dindex+=get_global_size(0)){\n"
+    "        thesum[get_local_id(0)] += log(x[Dindex]);\n"
+    "    } // end loop through columns\n"
+    "  if(get_local_id(0) == 0) {\n"
+    "    for(Dcol = 1; Dcol < get_local_size(0); Dcol++){\n"
+    "      thesum[0] += thesum[Dcol];\n"
+    "    }//for\n"
+    "    output[Drow + startOutput] = thesum[0];\n"
+    "  }//if\n"
+    "  } // end loop through rows\n"
+    "}\n";
+  
+  return(result);
+}
 
 
 
@@ -124,63 +173,6 @@ std::string boxcoxKernelString(int NlocalCache, int zeroCol,
   result +=   "}// kernel\n";
   return(result);
 }
-
-
-
-
-
-/*
- * sum logs of rows
- * use only one work item dimension
- * groups are rows, local items sum over colums
- * 
- */
-template <typename T> 
-std::string logRowSumString(int NlocalCache) {  
-  
-  std::string typeString = openclTypeString<T>();
-  
-  
-  std::string result = "";
-  
-  if(typeString == "double") {
-    result += "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n";
-  }
-  result += 
-    "#define NlocalCache " + std::to_string(NlocalCache) + "\n";    
-  
-  result += 
-    "\n\n__kernel void logRowSum(\n"
-    "  __global " + typeString + "* x,\n"  
-    "  __global " + typeString + "* output,\n" 
-    "  int Nrow, int Ncol, int Npad, int startX, int startOutput"
-    "){\n\n";  
-  
-  result += "int Drow, Dcol, Dindex;\n";
-  result += "local " + typeString + " thesum[NlocalCache];\n";
-  
-  result += 
-    
-    "  for(Drow = get_group_id(0);   Drow < Nrow;    Drow+=get_num_groups(0)){\n"
-    "    thesum[get_local_id(0)] = 0.0;\n"
-    "    for(Dcol = get_global_id(0),   Dindex = startX + Drow*NpadCol+Dcol;\n" 
-    "        Dcol < Ncol; Dcol+=get_global_size(0), Dindex+=get_global_size(0)){\n"
-    "        thesum[get_local_id(0)] += log(x[Dindex]);\n"
-    "    } // end loop through columns\n"
-    "  if(get_local_id(0) == 0) {\n"
-    "    for(Dcol = 1; Dcol < get_local_size(0); Dcol++){\n"
-    "      thesum[0] += thesum[Dcol];\n"
-    "    }//for\n"
-    "    output[Drow + startOutput] = thesum[0];\n"
-    "  }//if\n"
-    "  } // end loop through rows\n"
-    "}\n";
-  
-  return(result);
-}
-
-
-
 
 
 template<typename T> 
