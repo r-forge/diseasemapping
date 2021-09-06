@@ -1,5 +1,4 @@
 #include "gpuRandom.hpp"
-
 #include <R.h>
 
 //#define DEBUGKERNEL
@@ -240,6 +239,38 @@ result +=  "}\n" ;
 
 
 
+template <typename T> 
+std::string logfactString() {  
+  
+  
+  std::string typeString = openclTypeString<T>();  // type of the log factorial
+  
+  std::string result = "";
+  
+  if(typeString == "double") {
+    result += "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n";
+  }
+  
+  result += 
+    "\n\n__kernel void logfactorial(\n"  // "  __global int *vector,\n"
+    "  __global " + typeString + "* out,\n"  
+    "  const int numElements\n"
+    "){\n";  
+  
+  
+  result += "const int size = get_global_size(1)*get_global_size(0);\n"
+  "int index = get_global_id(1)*get_global_size(0) + get_global_id(0);\n"
+  "int D;\n";
+  result += typeString + " DD;\n\n";   
+  
+  result += "for(D=index; D< numElements; D+=size){\n"
+  " DD = D+1;\n"
+  "out[D]=lgamma(DD);\n"
+  "}\n"
+  "}\n";
+  
+  return(result);
+}
 
 
 
@@ -259,83 +290,88 @@ int gpuFisher_test(
  double statistics;
  const int nr = x.size1(), nc = x.size2(), resultSize = results.size();
  int countss=0;
-// int userrequired=(B-1)*numWorkItems[0]*numWorkItems[1]+remainder;
- 
- 
- std::string kernel_string = FisherSimkernelString<T>(nr, nc, streams.internal_size2());
- if(resultSize >= B) {
-   kernel_string = "\n#define returnResults\n" + kernel_string;
- }
- 
-   #ifdef DEBUGKERNEL
-     Rcpp::Rcout << kernel_string << "\n\n";
-   #endif  
- 
- 
+  // int userrequired=(B-1)*numWorkItems[0]*numWorkItems[1]+remainder;
+  // row and column sums
+  viennacl::vector_base<int> sr(nr);
+  viennacl::vector_base<int> sc(nc);
 
- // row and column sums
- viennacl::vector_base<int> sr(nr);
- viennacl::vector_base<int> sc(nc);
- 
- 
-   
-#ifdef DEBUG
+  #ifdef DEBUG
   Rcpp::Rcout << "x0 " << x(0,0) << " row0 " << sr(0)<< " col0 " << sc(0) << "\n";
-#endif  
+  #endif  
 
   statistics = logfactsum(x, numWorkItems, ctx_id);   // if(viennacl::min(sr) <= 0) RCpp::warning("zeros in row sums");
   threshold = (T) (-statistics)/(1+64 * DOUBLE_EPS);
-  
-    
+
+
   row_sum_impl(x, sr);
   column_sum_impl(x, sc);
   int n = viennacl::linalg::sum(sr); //sum of row/column totals
-  
+
   viennacl::vector<int> count(numWorkItems[0]*numWorkItems[1]); 
-  
   viennacl::vector<double> factTrue(n+1); 
 
-  logfactorial(factTrue, numWorkItems, ctx_id);
-
-
-
-/*
-viennacl::vector<T> fact(n+1); 
-T factTemp;
-
-// Calculate log-factorials.  fact[i] = lgamma(i+1)/
-fact(0) = 0.;
-fact(1) = 0.;
-factTemp = 0.;
-int i;
-for(i = 2; i <= n; i++) {
-  factTemp = factTemp + log(i);
-  fact(i) = factTemp;    //    fact(i) = fact(i - 1) + log(i);
-}
-*/
-
-  viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));  
  
-  viennacl::ocl::program &my_prog = ctx.add_program(kernel_string, "my_kernel");
-  viennacl::ocl::kernel &fisher_sim = my_prog.get_kernel("fisher_sim_gpu");
+  std::string Fisher_kernel_string = FisherSimkernelString<T>(nr, nc, streams.internal_size2());
+  if(resultSize >= B) {
+   kernel_string = "\n#define returnResults\n" + kernel_string;
+  }
+   #ifdef DEBUGKERNEL
+   Rcpp::Rcout << Fisher_kernel_string << "\n\n";
+   #endif  
 
+  
 
+  std::string lfactorialKernelString = logfactString<double>();
+  #ifdef DEBUGKERNEL
+   Rcpp::Rcout << logKernelString << "\n\n";
+  #endif  
+ 
+ // the context
+  viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));  
+  viennacl::ocl::program &my_prog = ctx.add_program(Fisher_kernel_string, "my_kernel");
+  viennacl::ocl::program & my_prog = viennacl::ocl::current_context().add_program(lfactorialKernelString, "my_kernel");
+
+  viennacl::ocl::kernel &fisher_sim = my_prog.get_kernel("fisher_sim_gpu"); 
+  viennacl::ocl::kernel &lfactorialKernel = my_prog.get_kernel("logfactorial");
+ 
+ 
+ 
+
+  lfactorialKernel.global_work_size(0, numWorkItems[0]);
+  lfactorialKernel.global_work_size(1, numWorkItems[1]);
+  lfactorialKernel.local_work_size(0, 1L);
+  lfactorialKernel.local_work_size(1, 1L); 
+  
   fisher_sim.global_work_size(0, numWorkItems[0]);
   fisher_sim.global_work_size(1, numWorkItems[1]);
   fisher_sim.local_work_size(0, 1L);
-  fisher_sim.local_work_size(1, 1L);
-  
+  fisher_sim.local_work_size(1, 1L); 
  
-  
-  viennacl::ocl::enqueue( fisher_sim  (sr, sc, n, B, count, threshold, factTrue, results, streams) ); 
  
-  countss = viennacl::linalg::sum(count);
+ /*
+  viennacl::vector<T> fact(n+1); 
+  T factTemp;
+  
+  // Calculate log-factorials.  fact[i] = lgamma(i+1)/
+  fact(0) = 0.;
+  fact(1) = 0.;
+  factTemp = 0.;
+  int i;
+  for(i = 2; i <= n; i++) {
+  factTemp = factTemp + log(i);
+  fact(i) = factTemp;    //    fact(i) = fact(i - 1) + log(i);
+  }
+  */
+   viennacl::ocl::enqueue(lfactorialKernel(factTrue, n+1));
+   viennacl::ocl::enqueue(fisher_sim(sr, sc, n, B, count, threshold, factTrue, results, streams)); 
+   
+   countss = viennacl::linalg::sum(count);
+   
+   #ifdef DEBUG
+   Rcpp::Rcout << "threshold " << threshold << " countss " << countss << " count0 " << count(0) << " size " << B <<  "\n";
+   #endif  
 
-  
-#ifdef DEBUG
-  Rcpp::Rcout << "threshold " << threshold << " countss " << countss << " count0 " << count(0) << " size " << B <<  "\n";
-#endif  
-  
+
  /* if(B < resultSize) {
     results[B] = results[0];
  }

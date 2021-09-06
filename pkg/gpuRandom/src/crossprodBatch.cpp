@@ -242,7 +242,7 @@ std::string crossprodBatchString(
   }
   result +=     
     "      }// Dinner\n";
-  //  "  barrier(CLK_LOCAL_MEM_FENCE);\n";    // no useful
+  // "  barrier(CLK_LOCAL_MEM_FENCE);\n";    // no useful
   
   result +=
     

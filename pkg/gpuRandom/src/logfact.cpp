@@ -20,7 +20,7 @@ std::string logfactString() {
 
   
    result += 
-   "\n\n__kernel void logfactori(\n"  // "  __global int *vector,\n"
+   "\n\n__kernel void logfactorial(\n"  // "  __global int *vector,\n"
    "  __global " + typeString + "* out,\n"  
    "  const int numElements\n"
    "){\n";  
@@ -64,7 +64,7 @@ void logfactorial(// viennacl::vector<int> &x,
 #endif  
   
   
-  viennacl::ocl::kernel &lfactorialKernel = my_prog.get_kernel("logfactori");
+  viennacl::ocl::kernel &lfactorialKernel = my_prog.get_kernel("logfactorial");
   
   lfactorialKernel.global_work_size(0, numWorkItems[0]);
   lfactorialKernel.global_work_size(1, numWorkItems[1]);

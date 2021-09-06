@@ -173,8 +173,8 @@ void CreateStreamsGpu(
   streamsKernel.global_work_size(0, 1L);
   streamsKernel.global_work_size(1, 1L);
   
-  //streamsKernel.local_work_size(0, 1L);
-  //streamsKernel.local_work_size(1, 1L);
+  streamsKernel.local_work_size(0, 1L);
+  streamsKernel.local_work_size(1, 1L);
   //Rcpp::Rcout << "before enqueue kernel" << "\n\n";
   
   viennacl::ocl::enqueue(streamsKernel(creatorInitialGlobal, streams, Nstreams) );
