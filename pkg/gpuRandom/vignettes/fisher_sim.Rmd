@@ -69,11 +69,15 @@ library("gpuRandom")
 Nglobal = c(64,128)
 streams <- CreateStreamsGpu(Nstreams =8192, keepInitial=1)
 Job<-gpuR::vclMatrix(Job, type="integer")
+
+
 result3<-gpuRandom::fisher.sim(Job, 1e5, returnStatistics=T, 
                              type="double", streams=streams, Nglobal = Nglobal)
 
-result3$counts
 result3$p.value
+
+
+result3$counts
 result3$simnum
 ```
 
