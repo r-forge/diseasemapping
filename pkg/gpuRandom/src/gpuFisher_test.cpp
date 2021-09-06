@@ -35,7 +35,6 @@ std::string FisherSimkernelString(const int NR, const int NC, const int NpadStre
     "#define NpadStreams " + std::to_string(NpadStreams) + "\n";    
   
   
-  
   result += "\n"
   "\n#define MAXITER 2500\n"
   "#define nrow " + std::to_string(NR) + "\n"
@@ -238,13 +237,63 @@ result +=  "}\n" ;
 }
 
 
+template <typename T> 
+std::string sum_of_LfactorialString(const int Nrow, const int Ncol, const int NpadCol) {  //internal column size
+  
+  std::string typeString = "int";
+  std::string typeStringSum = openclTypeString<T>();  // type of the sum of log factorial
+  
+  std::string result = "";
+  
+  if(typeStringSum == "double") {
+    result += "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n";
+  }
+  
+  
+  result +=
+    "\n#define Nrow " + std::to_string(Nrow) + "\n"    
+    "#define Ncol " + std::to_string(Ncol) + "\n"
+    "#define NpadCol " + std::to_string(NpadCol) + "\n";    
+  
+  
+  result += 
+    "\n\n__kernel void sumLfactorial(\n"
+    "  __global " + typeString + "* x,\n"  
+    "  __global " + typeStringSum + "* result"  
+    "){\n\n";  
+  
+  // TO DO: use groups and local memory
+  
+  result += "int Drow, Dcol, Dindex;\n";
+  result += typeStringSum + " Dresult=0;\n";
+  result += typeStringSum + " insidevalue;\n";
+  
+  result += 
+    "  for(Drow = get_global_id(0);   Drow < Nrow;    Drow+=get_global_size(0)){\n"
+    "    for(Dcol = get_global_id(1),   Dindex = Drow*NpadCol+Dcol;\n" 
+    "        Dcol < Ncol; Dcol+=get_global_size(1), Dindex+=get_global_size(1)){\n"
+    "        insidevalue = 1 + x[Dindex];\n"
+    "       Dresult += lgamma(insidevalue);\n"
+    "    } // end loop through columns\n"
+    "  } // end loop through rows\n";
+  
+  result += 
+    "result[get_global_id(1) + get_global_id(0)*get_global_size(1)] = Dresult;\n";
+  
+  result += 
+    "}//sumLfactorial kernel\n";
+  
+  return(result);
+}
+
+
+
+
 
 template <typename T> 
 std::string logfactString() {  
-  
-  
+
   std::string typeString = openclTypeString<T>();  // type of the log factorial
-  
   std::string result = "";
   
   if(typeString == "double") {
@@ -286,30 +335,23 @@ int gpuFisher_test(
     int ctx_id){
 
   
- T threshold;
- double statistics;
- const int nr = x.size1(), nc = x.size2(), resultSize = results.size();
- int countss=0;
-  // int userrequired=(B-1)*numWorkItems[0]*numWorkItems[1]+remainder;
-  // row and column sums
-  viennacl::vector_base<int> sr(nr);
-  viennacl::vector_base<int> sc(nc);
+   T threshold;
+   double statistics;
+   const int nr = x.size1(), nc = x.size2(), resultSize = results.size();
+   int countss=0;
+   // int userrequired=(B-1)*numWorkItems[0]*numWorkItems[1]+remainder;
+   // row and column sums
+   viennacl::vector_base<int> sr(nr);
+   viennacl::vector_base<int> sc(nc);
 
-  #ifdef DEBUG
-  Rcpp::Rcout << "x0 " << x(0,0) << " row0 " << sr(0)<< " col0 " << sc(0) << "\n";
-  #endif  
+   #ifdef DEBUG
+    Rcpp::Rcout << "x0 " << x(0,0) << " row0 " << sr(0)<< " col0 " << sc(0) << "\n";
+   #endif  
 
-  statistics = logfactsum(x, numWorkItems, ctx_id);   // if(viennacl::min(sr) <= 0) RCpp::warning("zeros in row sums");
-  threshold = (T) (-statistics)/(1+64 * DOUBLE_EPS);
-
-
-  row_sum_impl(x, sr);
-  column_sum_impl(x, sc);
-  int n = viennacl::linalg::sum(sr); //sum of row/column totals
-
-  viennacl::vector<int> count(numWorkItems[0]*numWorkItems[1]); 
-  viennacl::vector<double> factTrue(n+1); 
-
+  
+   viennacl::vector<int> count(numWorkItems[0]*numWorkItems[1]); 
+ 
+ 
  
   std::string Fisher_kernel_string = FisherSimkernelString<T>(nr, nc, streams.internal_size2());
   if(resultSize >= B) {
@@ -320,6 +362,12 @@ int gpuFisher_test(
    #endif  
 
   
+  std::string sumlfKernelString = sum_of_LfactorialString<double>(
+    x.size1(), 
+    x.size2(),
+    x.internal_size2() 
+  );
+
 
   std::string lfactorialKernelString = logfactString<double>();
   #ifdef DEBUGKERNEL
@@ -328,14 +376,19 @@ int gpuFisher_test(
  
  // the context
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));  
-  viennacl::ocl::program &my_prog_Fisher = ctx.add_program(Fisher_kernel_string, "Fisher_kernel");
+ 
+  viennacl::ocl::program & my_prog_sumlf = viennacl::ocl::current_context().add_program(sumlfKernelString, "sumlf_kernel"); 
   viennacl::ocl::program & my_prog_lf = viennacl::ocl::current_context().add_program(lfactorialKernelString, "lfactorialKernel");
-
-  viennacl::ocl::kernel &fisher_sim = my_prog_Fisher.get_kernel("fisher_sim_gpu"); 
+  viennacl::ocl::program &my_prog_Fisher = ctx.add_program(Fisher_kernel_string, "Fisher_kernel");
+  
+  viennacl::ocl::kernel &sumLfactorialKernel = my_prog_sumlf.get_kernel("sumLfactorial");
   viennacl::ocl::kernel &lfactorialKernel = my_prog_lf.get_kernel("logfactorial");
+  viennacl::ocl::kernel &fisher_sim = my_prog_Fisher.get_kernel("fisher_sim_gpu"); 
  
- 
- 
+  sumLfactorialKernel.global_work_size(0, numWorkItems[0]);
+  sumLfactorialKernel.global_work_size(1, numWorkItems[1]);
+  sumLfactorialKernel.local_work_size(0, 1L);
+  sumLfactorialKernel.local_work_size(1, 1L);
 
   lfactorialKernel.global_work_size(0, numWorkItems[0]);
   lfactorialKernel.global_work_size(1, numWorkItems[1]);
@@ -348,22 +401,41 @@ int gpuFisher_test(
   fisher_sim.local_work_size(1, 1L); 
  
  
- /*
-  viennacl::vector<T> fact(n+1); 
-  T factTemp;
+
+ 
+ 
+ 
+   viennacl::vector_base<double> logFactorials(numWorkItems[0] * numWorkItems[1]);
+   viennacl::ocl::command_queue theQueue = sumLfactorialKernel.context().get_queue();
+   viennacl::ocl::enqueue(sumLfactorialKernel(x, logFactorials), theQueue);
+   clFinish(theQueue.handle().get());
+   
+   statistics = viennacl::linalg::sum(logFactorials);
+   threshold = (T) (-statistics)/(1+64 * DOUBLE_EPS);
+   row_sum_impl(x, sr);
+   column_sum_impl(x, sc);
+   int n = viennacl::linalg::sum(sr); //sum of row/column totals
+   viennacl::vector<double> factTrue(n+1); 
+   
   
-  // Calculate log-factorials.  fact[i] = lgamma(i+1)/
-  fact(0) = 0.;
-  fact(1) = 0.;
-  factTemp = 0.;
-  int i;
-  for(i = 2; i <= n; i++) {
-  factTemp = factTemp + log(i);
-  fact(i) = factTemp;    //    fact(i) = fact(i - 1) + log(i);
-  }
-  */
-   viennacl::ocl::enqueue(lfactorialKernel(factTrue, n+1));
+   /*
+    viennacl::vector<T> fact(n+1); 
+    T factTemp;
+    
+    // Calculate log-factorials.  fact[i] = lgamma(i+1)/
+    fact(0) = 0.;
+    fact(1) = 0.;
+    factTemp = 0.;
+    int i;
+    for(i = 2; i <= n; i++) {
+    factTemp = factTemp + log(i);
+    fact(i) = factTemp;    //    fact(i) = fact(i - 1) + log(i);
+    }
+    */
+   viennacl::ocl::enqueue(lfactorialKernel(factTrue, (n+1)));
    viennacl::ocl::enqueue(fisher_sim(sr, sc, n, B, count, threshold, factTrue, results, streams)); 
+   
+   
    
    countss = viennacl::linalg::sum(count);
    
@@ -379,6 +451,9 @@ int gpuFisher_test(
   
   return countss;
 }
+
+
+
 
 
 template<typename T> 
