@@ -44,35 +44,35 @@ std::string logfactString() {
 
 
 
-
-//template <typename T> 
-void logfactorial(// viennacl::vector<int> &x,
-    viennacl::vector<double>  &output, 
-    Rcpp::IntegerVector numWorkItems,
-    int ctx_id) {
-
-  const int numelements=output.size();
-  
-  std::string logKernelString = logfactString<double>();
-  
-  // the context
-  viennacl::ocl::switch_context(ctx_id);
-  viennacl::ocl::program & my_prog = viennacl::ocl::current_context().add_program(logKernelString, "my_kernel");
-  
-#ifdef DEBUGKERNEL
-  Rcpp::Rcout << logKernelString << "\n\n";
-#endif  
-  
-  
-  viennacl::ocl::kernel &lfactorialKernel = my_prog.get_kernel("logfactorial");
-  
-  lfactorialKernel.global_work_size(0, numWorkItems[0]);
-  lfactorialKernel.global_work_size(1, numWorkItems[1]);
-  
-  
-  viennacl::ocl::enqueue(lfactorialKernel(output, numelements) );
-  
-}
+// 
+// //template <typename T> 
+// void logfactorial(// viennacl::vector<int> &x,
+//     viennacl::vector<double>  &output, 
+//     Rcpp::IntegerVector numWorkItems,
+//     int ctx_id) {
+// 
+//   const int numelements=output.size();
+//   
+//   std::string logKernelString = logfactString<double>();
+//   
+//   // the context
+//   viennacl::ocl::switch_context(ctx_id);
+//   viennacl::ocl::program & my_prog = viennacl::ocl::current_context().add_program(logKernelString, "my_kernel");
+//   
+// #ifdef DEBUGKERNEL
+//   Rcpp::Rcout << logKernelString << "\n\n";
+// #endif  
+//   
+//   
+//   viennacl::ocl::kernel &lfactorialKernel = my_prog.get_kernel("logfactorial");
+//   
+//   lfactorialKernel.global_work_size(0, numWorkItems[0]);
+//   lfactorialKernel.global_work_size(1, numWorkItems[1]);
+//   
+//   
+//   viennacl::ocl::enqueue(lfactorialKernel(output, numelements) );
+//   
+// }
 
 
 /*

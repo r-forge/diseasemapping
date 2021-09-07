@@ -85,6 +85,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// extractDiagBackend
+void extractDiagBackend(Rcpp::S4 ssqYXR, Rcpp::S4 ssqYR, Rcpp::IntegerVector NparamPerIter, int Ndatasets, Rcpp::IntegerVector numWorkItems);
+RcppExport SEXP _gpuRandom_extractDiagBackend(SEXP ssqYXRSEXP, SEXP ssqYRSEXP, SEXP NparamPerIterSEXP, SEXP NdatasetsSEXP, SEXP numWorkItemsSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type ssqYXR(ssqYXRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type ssqYR(ssqYRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type NparamPerIter(NparamPerIterSEXP);
+    Rcpp::traits::input_parameter< int >::type Ndatasets(NdatasetsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type numWorkItems(numWorkItemsSEXP);
+    extractDiagBackend(ssqYXR, ssqYR, NparamPerIter, Ndatasets, numWorkItems);
+    return R_NilValue;
+END_RCPP
+}
 // gemmBatchBackend
 SEXP gemmBatchBackend(Rcpp::S4 A, Rcpp::S4 B, Rcpp::S4 C, const int Arowbatch, const int Browbatch, const int Acolbatch, const int Bcolbatch, const int need_transpose, Rcpp::IntegerVector Nglobal);
 RcppExport SEXP _gpuRandom_gemmBatchBackend(SEXP ASEXP, SEXP BSEXP, SEXP CSEXP, SEXP ArowbatchSEXP, SEXP BrowbatchSEXP, SEXP AcolbatchSEXP, SEXP BcolbatchSEXP, SEXP need_transposeSEXP, SEXP NglobalSEXP) {
@@ -407,6 +421,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_backsolveBatchBackend2", (DL_FUNC) &_gpuRandom_backsolveBatchBackend2, 7},
     {"_gpuRandom_cholBatchBackend", (DL_FUNC) &_gpuRandom_cholBatchBackend, 8},
     {"_gpuRandom_crossprodBatchBackend", (DL_FUNC) &_gpuRandom_crossprodBatchBackend, 10},
+    {"_gpuRandom_extractDiagBackend", (DL_FUNC) &_gpuRandom_extractDiagBackend, 5},
     {"_gpuRandom_gemmBatchBackend", (DL_FUNC) &_gpuRandom_gemmBatchBackend, 9},
     {"_gpuRandom_gemmBatch2backend", (DL_FUNC) &_gpuRandom_gemmBatch2backend, 11},
     {"_gpuRandom_cpp_gpuFisher_test", (DL_FUNC) &_gpuRandom_cpp_gpuFisher_test, 6},
