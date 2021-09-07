@@ -1,7 +1,7 @@
 #include "gpuRandom.hpp"
 #define DEBUGKERNEL
 template <typename T> 
-std::string extract_some_diag_string(int Ndatasets,    // number of Y's
+std::string extract_some_diag_string2(int Ndatasets,    // number of Y's
                                      int NpadColY, 
                                      int NpadColYX,
                                      int NpadBetweenMatricesYX) { 
@@ -24,7 +24,7 @@ std::string extract_some_diag_string(int Ndatasets,    // number of Y's
     "#define NpadColYX "   + std::to_string(NpadColYX) + "\n";
   
   result += 
-    "\n__kernel void extract_some_diag(\n"
+    "\n__kernel void extract_some_diag2(\n"
     "__global " + typeString + " *ssqY,\n"
     "__global " + typeString + " *ssqYX,\n"  
     " int Nrowstart,\n"
@@ -58,7 +58,7 @@ std::string extract_some_diag_string(int Ndatasets,    // number of Y's
 
 
 
-void extractDiag(
+void extractDiag_version2(
     viennacl::matrix<double> &ssqYX,// must be batches of square matrices
     viennacl::matrix<double> &ssqY,
     Rcpp::IntegerVector NparamPerIter,
@@ -68,7 +68,7 @@ void extractDiag(
   
 
   
-  std::string extractSomeDiagKernelString = extract_some_diag_string<double>(//NparamPerIter[0],  
+  std::string extractSomeDiagKernelString = extract_some_diag_string2<double>(//NparamPerIter[0],  
                  Ndatasets,
                  ssqY.internal_size2(), 
                  ssqYX.internal_size2(), 
@@ -86,7 +86,7 @@ void extractDiag(
   viennacl::ocl::program & my_prog = ctx.add_program(extractSomeDiagKernelString, "my_kernel");
 
   
-  viennacl::ocl::kernel &extractSomeDiagKernel = my_prog.get_kernel("extract_some_diag");
+  viennacl::ocl::kernel &extractSomeDiagKernel = my_prog.get_kernel("extract_some_diag2");
   extractSomeDiagKernel.global_work_size(0, numWorkItems[0]);
   extractSomeDiagKernel.global_work_size(1, numWorkItems[1]);
   
@@ -99,7 +99,7 @@ void extractDiag(
   int endThisIteration;
   int DiterIndex, NthisIteration;
   
-  
+  //viennacl::ocl::command_queue theQueue = extractSomeDiagKernel.context().get_queue();
   for (Diter=0, DiterIndex=0; 
        Diter< Niter; 
        Diter++, DiterIndex += NparamPerIter[0]){
@@ -119,7 +119,7 @@ void extractDiag(
   } // Diter
   
   
-  
+  //clFinish(theQueue.handle().get());
   
   
   
@@ -128,7 +128,7 @@ void extractDiag(
 
 
 //template<typename T> 
-void extractDiagTemplated(
+void extractDiagTemplated2(
     Rcpp::S4 ssqYXR,// viennacl::vector_base<int>  rowSum, viennacl::vector_base<int>  colSum,  
     Rcpp::S4 ssqYR,
     Rcpp::IntegerVector NparamPerIter,
@@ -141,7 +141,7 @@ void extractDiagTemplated(
   std::shared_ptr<viennacl::matrix<double> > ssqYX = getVCLptr<double>(ssqYXR.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<double> > ssqY = getVCLptr<double>(ssqYR.slot("address"), BisVCL, ctx_id);
   
-  extractDiag(
+  extractDiag_version2(
     *ssqYX,// viennacl::vector_base<int>  rowSum, viennacl::vector_base<int>  colSum,  
     *ssqY,
     NparamPerIter,
@@ -158,7 +158,7 @@ void extractDiagTemplated(
 
 
 // [[Rcpp::export]]
-void extractDiagBackend(
+void extractDiagBackend_version2(
     Rcpp::S4 ssqYXR,// viennacl::vector_base<int>  rowSum, viennacl::vector_base<int>  colSum,  
     Rcpp::S4 ssqYR,
     Rcpp::IntegerVector NparamPerIter,
@@ -166,7 +166,7 @@ void extractDiagBackend(
     Rcpp::IntegerVector numWorkItems) {
   
   
-  extractDiagTemplated(ssqYXR,ssqYR, NparamPerIter,Ndatasets,numWorkItems);
+  extractDiagTemplated2(ssqYXR,ssqYR, NparamPerIter,Ndatasets,numWorkItems);
   
   
 }
