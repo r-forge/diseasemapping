@@ -4,7 +4,7 @@ template <typename T>
 std::string extract_some_diag_string(int Ndatasets,    // number of Y's
                                      int NpadColY, 
                                      int NpadColYX,
-                                     int NpadBetweenMatricesYX) {  //ssqYX.size2()
+                                     int NpadBetweenMatricesYX) { 
   
   std::string typeString = openclTypeString<T>();
   
