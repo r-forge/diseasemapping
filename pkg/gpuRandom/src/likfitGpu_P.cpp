@@ -10,7 +10,7 @@ template <typename T>
 std::string extract_some_diag_string(int Ndatasets,    // number of Y's
                                      int NpadColY, 
                                      int NpadColYX,
-                                     int NpadBetweenMatricesYX) {  
+                                     int NpadBetweenMatricesYX) { 
   
   std::string typeString = openclTypeString<T>();
   
@@ -37,15 +37,14 @@ std::string extract_some_diag_string(int Ndatasets,    // number of Y's
     " int NthisIteration ){\n\n";
   
   result +=
-    "int Drow, Dcol;\n"
-    "int NrowEnd = Nrowstart+NthisIteration;\n";
+    "int Drow, Dcol;\n";
   
   result += 
     
-    "for (Drow = Nrowstart+get_global_id(0); Drow < NrowEnd; Drow += get_global_size(0)) {\n"
+    "for (Drow = get_global_id(0); Drow < NthisIteration; Drow += get_global_size(0)) {\n"
     "for (Dcol = get_global_id(1); Dcol < Ndatasets; Dcol += get_global_size(1)) {\n" 
     
-    "ssqY[Drow * NpadColY+Dcol] = ssqYX[ Drow*NpadBetweenMatricesYX + Dcol* NpadColYX + Dcol ];\n"
+    "ssqY[(Nrowstart+Drow) * NpadColY+Dcol] = ssqYX[ Drow*NpadBetweenMatricesYX + Dcol* NpadColYX + Dcol ];\n"
     
     "}\n"
     "}\n"
@@ -428,7 +427,8 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     Ndatasets,
     ssqY.internal_size2(), 
     ssqYX.internal_size2(), 
-    ssqYX.internal_size2()*ssqYX.size2());
+    ssqYX.internal_size2()*ssqYX.size2()
+  );
   
   
   /*
@@ -460,14 +460,6 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
    aTDinvb_beta.internal_size2(), 
    aTDinvb_beta.size2());
    */
-  
-  
-  
-  
-  
-  
-  
-  
   
   
   
@@ -563,16 +555,15 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   
   viennacl::ocl::command_queue theQueue = maternKernel.context().get_queue();
   
-  for (Diter=0,DiterIndex=0; Diter< Niter; 
-  Diter++,DiterIndex += NparamPerIter[0]){
+  for (Diter=0,DiterIndex=0; 
+       Diter< Niter; 
+       Diter++,DiterIndex += NparamPerIter[0]){
+    
     
     endThisIteration = std::min(DiterIndex + NparamPerIter[0], Nparams);
     NthisIteration = endThisIteration - DiterIndex;
     
-    if(verbose[0]) {
-      Rcpp::Rcout << "\n" << "Diter " << Diter <<" DiterIndex " << DiterIndex << " endThisIteration " << 
-        endThisIteration << " Nthisiteration " << NthisIteration  << "\n";
-    }
+    
     
     
     viennacl::ocl::enqueue(maternKernel(Vbatch, coords, params, DiterIndex, NthisIteration),
@@ -607,24 +598,27 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     // save diagonals of ssqYX to ssqY
     viennacl::ocl::enqueue(extractSomeDiagKernel(ssqY, ssqYX, DiterIndex, NthisIteration),
                            theQueue);  
-  
+    
     // for(Dy1 = 0; Dy1 < Ndatasets; Dy1++) {
     //   for(Dy2 = 0; Dy2 < NthisIteration; Dy2++) {
     //     ssqY(DiterIndex + Dy2,Dy1) = ssqYX( Dy2 * ssqYX.size2() + Dy1, Dy1);
     //   }
     // }
-    
+    if(verbose[0]>1) {
+      Rcpp::Rcout << "extract diagonals";
+    }
     
     for(Dy1 = 0; Dy1 < ssqYXcopy.size1(); Dy1++) {
       for(Dy2 = 0; Dy2 < ssqYXcopy.size2(); Dy2++) {
         ssqYXcopy(Dy1, Dy2) = ssqYX(Dy1, Dy2);
       }}
     
-
+    
     // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part
     viennacl::ocl::enqueue(
       cholXvxKernel(ssqYX, cholXVXdiag, NthisIteration, detReml, DiterIndex),
       theQueue);
+    
     if(verbose[0]>3) {
       Rcpp::Rcout << "cxy";
     }
@@ -644,6 +638,10 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                            cholXVXdiag, NthisIteration),
                            theQueue); 
     
+    if(verbose[0]) {
+      Rcpp::Rcout << "\n" << "Diter " << Diter <<" DiterIndex " << DiterIndex << " endThisIteration " << 
+        endThisIteration << " Nthisiteration " << NthisIteration  << "\n";
+    }
     /*  
      // a^TD^(-1)b * beta = aTDinvb_beta
      viennacl::ocl::enqueue(gemmaTDinvb_betaKernel(ssqYX, betas,aTDinvb_beta));     
@@ -851,6 +849,8 @@ void likfitGpu_BackendP(
 
 
 //#endif
+
+
 
 
 
