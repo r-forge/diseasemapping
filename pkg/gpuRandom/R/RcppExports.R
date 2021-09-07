@@ -29,6 +29,10 @@ crossprodBatchBackend <- function(C, A, D, invertD, Cstartend, Astartend, Dstart
     .Call('_gpuRandom_crossprodBatchBackend', PACKAGE = 'gpuRandom', C, A, D, invertD, Cstartend, Astartend, Dstartend, Nglobal, Nlocal, NlocalCache)
 }
 
+extractDiagBackend <- function(ssqYXR, ssqYR, NparamPerIter, Ndatasets, numWorkItems) {
+    invisible(.Call('_gpuRandom_extractDiagBackend', PACKAGE = 'gpuRandom', ssqYXR, ssqYR, NparamPerIter, Ndatasets, numWorkItems))
+}
+
 gemmBatchBackend <- function(A, B, C, Arowbatch, Browbatch, Acolbatch, Bcolbatch, need_transpose, Nglobal) {
     .Call('_gpuRandom_gemmBatchBackend', PACKAGE = 'gpuRandom', A, B, C, Arowbatch, Browbatch, Acolbatch, Bcolbatch, need_transpose, Nglobal)
 }
