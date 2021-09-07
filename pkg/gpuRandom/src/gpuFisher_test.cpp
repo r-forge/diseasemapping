@@ -404,9 +404,10 @@ int gpuFisher_test(
  
  
    viennacl::vector_base<double> logFactorials(numWorkItems[0] * numWorkItems[1]);
+   
    viennacl::ocl::command_queue theQueue = sumLfactorialKernel.context().get_queue();
    viennacl::ocl::enqueue(sumLfactorialKernel(x, logFactorials), theQueue);
-   clFinish(theQueue.handle().get());
+   
    
    
    
@@ -436,21 +437,20 @@ int gpuFisher_test(
    viennacl::ocl::enqueue(lfactorialKernel(factTrue, (n+1)));
    viennacl::ocl::enqueue(fisher_sim(sr, sc, n, B, count, threshold, factTrue, results, streams)); 
    
+   clFinish(theQueue.handle().get());
    
+   /* if(B < resultSize) {
+    results[B] = results[0];
+   }
+    results[0] = statistics;*/
    
    countss = viennacl::linalg::sum(count);
    
    #ifdef DEBUGKERNEL
    Rcpp::Rcout << "threshold " << threshold << " countss " << countss << " count0 " << count(0) << " size " << B <<  "\n";
    #endif  
-
-
- /* if(B < resultSize) {
-    results[B] = results[0];
- }
-  results[0] = statistics;*/
-  
-  return countss;
+   
+   return countss;
 }
 
 
