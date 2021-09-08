@@ -47,7 +47,7 @@ NlocalMatern = c(2,2)
 
 
 if(gpuR::gpuInfo()$deviceMemory > 10^9){
-   Ngrid = c(60,80)
+   Ngrid = c(40,60)
    Nsim = 6
    NlocalCache = 4000
    NglobalMatern = c(256,8) 
@@ -157,7 +157,7 @@ outputChol = outputBatchF #deepcopy(outputBatchF)
 gpuRandom::cholBatch(
   outputChol, diagMat, 
   numbatchD=nrow(myParamsBatch),
-  Nglobal = c(256L, 16L),#NglobalChol,
+  Nglobal = c(128L, 16L),#NglobalChol,
   Nlocal = c(16L, 16L),#NlocalChol,
   NlocalCache = 5000)#NlocalCache)
 as.matrix(diagMat)[,1:4]
@@ -165,7 +165,7 @@ as.matrix(diagMat)[,1:4]
 
 
 
-```{r cholBatchCpu, eval=TRUE}
+```{r cholBatchCpu, eval=FALSE}
 D=3
 fromGpuOrig = chol4gpu = as.matrix(outputChol[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
 chol4gpu[upper.tri(chol4gpu)] = 0
