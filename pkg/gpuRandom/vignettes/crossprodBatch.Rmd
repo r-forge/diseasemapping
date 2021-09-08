@@ -76,9 +76,9 @@ gpuRandom::crossprodBatch(gpuC,
                           gpuA,
                           gpuD,
                           invertD = FALSE,
-                          Nglobal = c(64, 8), 
-                          Nlocal =  c(32, 8),
-                          NlocalCache = 1)
+                          Nglobal = c(64, 4), 
+                          Nlocal =  c(8, 4),
+                          NlocalCache = 20)
 
 as.matrix(gpuC)
 
