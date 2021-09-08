@@ -610,10 +610,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     //     ssqY(DiterIndex + Dy2,Dy1) = ssqYX( Dy2 * ssqYX.size2() + Dy1, Dy1);
     //   }
     // }
-    if(verbose[0]>1) {
-      Rcpp::Rcout << "extract diagonals";
-    }
-    
+
     for(Dy1 = 0; Dy1 < ssqYXcopy.size1(); Dy1++) {
       for(Dy2 = 0; Dy2 < ssqYXcopy.size2(); Dy2++) {
         ssqYXcopy(Dy1, Dy2) = ssqYX(Dy1, Dy2);
