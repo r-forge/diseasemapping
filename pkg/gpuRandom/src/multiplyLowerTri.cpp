@@ -222,12 +222,16 @@ result +=
 "        Drow < DinnerStop; DrowBlock+=get_global_size(0),BcacheHere += incInCacheGlobal){\n"
   "    Drow = DrowBlock + get_global_id(0);\n"
   "    DrowNpadA= AHere + Drow * NpadA;\n"
-  "    DrowNpadC= CHere+Drow * NpadC;\n"
+  "    DrowNpadC= CHere+Drow * NpadC;\n";
+result +=
   "    for(DcolBlock=0, DcolInCache=get_local_id(1);\n"
   "        DcolBlock < Ncol; DcolBlock += get_global_size(1),DcolInCache += get_local_size(1)){\n";
 result +=
   "       Dcol = DcolBlock + get_global_id(1);\n";
-  
+result +=   "      Dout = 0.0;\n";
+
+#ifdef UNDEF
+
 if(diagIsOne) {
   result += "      Dout = Bcache[BcacheHere + DcolInCache];\n";
   result +=   "      for(Dinner = 0,DinnerCache=0; Dinner < Drow; Dinner++,DinnerCache += NcolInCache){\n";
@@ -247,9 +251,14 @@ if(diagIsOne) {
 	"        Dout += Acache[get_local_id(0)] * Bcache[DinnerCache + DcolInCache];\n"
 
   "      }// Dinner\n";
+#endif
 
 result +=  "      C[Dcol + DrowNpadC] = Dout;\n"
-  "    }// Dcol\n" 
+  "    }// Dcol\n";
+result +=
+"  barrier(CLK_LOCAL_MEM_FENCE);\n";
+
+result +=
   "  } //Drow\n"
   "  barrier(CLK_LOCAL_MEM_FENCE);\n";
 result +=  "\n// rows which are not all cached\n";
