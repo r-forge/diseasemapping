@@ -287,9 +287,9 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   int Ncell = Nobs * (Nobs - 1)/2, maxIter = 1500;
   
   std::string maternClString = maternBatchKernelString<T>(
-    maxIter,
-    Nobs, Ncell, 
-    NparamPerIter[0],//NmatrixMax
+                 maxIter,
+                 Nobs, Ncell, 
+                 NparamPerIter[0],//NmatrixMax
                  Vbatch.internal_size2(), //NpadVbatch
                  Vbatch.internal_size2()*Nobs, //NpadBetweenMatrices,
                  coords.internal_size2(), 
@@ -502,18 +502,22 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   maternKernel.global_work_size(1, workgroupSize[1] ); 
   maternKernel.local_work_size(0, localSize[0]);
   maternKernel.local_work_size(1, localSize[1]);
+  
   cholKernel.global_work_size(0, workgroupSize[0] ); 
   cholKernel.global_work_size(1, workgroupSize[1] ); 
   cholKernel.local_work_size(0, localSize[0]);
-  cholKernel.local_work_size(1, localSize[1]);
+  cholKernel.local_work_size(1, workgroupSize[1]);
+  
   cholXvxKernel.global_work_size(0, workgroupSize[0] ); 
   cholXvxKernel.global_work_size(1, workgroupSize[1] ); 
   cholXvxKernel.local_work_size(0, localSize[0]);
-  cholXvxKernel.local_work_size(1, localSize[1]);
+  cholXvxKernel.local_work_size(1, workgroupSize[1]);
+  
   backsolveKernel.global_work_size(0, workgroupSize[0] ); 
   backsolveKernel.global_work_size(1, workgroupSize[1] ); 
   backsolveKernel.local_work_size(0, localSize[0]);
   backsolveKernel.local_work_size(1, localSize[1]);
+  
   crossprodKernel.global_work_size(0, workgroupSize[0] ); 
   crossprodKernel.global_work_size(1, workgroupSize[1] ); 
   crossprodKernel.local_work_size(0, localSize[0]);
@@ -543,7 +547,6 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
    */
   
   
-  int NrowStartC = 0;
   
   if(verbose[0]) {
     Rcpp::Rcout << "\n" << " Nparams " << 
@@ -588,7 +591,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       Rcpp::Rcout << "b";
     }
     // ssqYX = YX^Y L^(-1)T D^(-1) L^(-1) YX  square matrix, (Ndatasets + Ncovariates)
-    viennacl::ocl::enqueue(crossprodKernel(ssqYX, LinvYX, cholDiagMat, NrowStartC, NthisIteration),
+    viennacl::ocl::enqueue(crossprodKernel(ssqYX, LinvYX, cholDiagMat, 0, NthisIteration),
                            theQueue);
     if(verbose[0]>3) {
       Rcpp::Rcout << "cr";
@@ -616,8 +619,8 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     
     // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part
     viennacl::ocl::enqueue(
-      cholXvxKernel(ssqYX, cholXVXdiag, NthisIteration, detReml, DiterIndex),
-      theQueue);
+          cholXvxKernel(ssqYX, cholXVXdiag, NthisIteration, detReml, DiterIndex),
+          theQueue);
     
     if(verbose[0]>3) {
       Rcpp::Rcout << "cxy";
@@ -626,8 +629,8 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     // backsolve QinvSsqYx = Q^(-1) ssqYX[(Ndatasets+1):nrow(ssqYX),1:Ndatasets]  
     // Ncovariates by Ndatasets
     viennacl::ocl::enqueue(
-      backsolveSsqYxKernel(QinvSsqYx, ssqYX, ssqYX, NthisIteration),
-      theQueue);
+           backsolveSsqYxKernel(QinvSsqYx, ssqYX, ssqYX, NthisIteration),
+           theQueue);
     
     // crossprod QinvSsqYx^T P^(-1) QinvSsqYx,   Ndatasets by Ndatasets
     /* 
