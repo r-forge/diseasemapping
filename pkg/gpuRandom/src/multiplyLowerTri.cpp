@@ -252,9 +252,9 @@ result +=  "      C[Dcol + DrowNpadC] = Dout;\n"
   "    }// Dcol\n" 
   "  } //Drow\n"
   "  barrier(CLK_LOCAL_MEM_FENCE);\n";
-result +=  "\n// rows which are not all cached\n"
+result +=  "\n// rows which are not all cached\n";
 #ifdef UNDEF
-  
+result +=  
   //"\nfor(Drow = DinnerStop + get_global_id(0) ; Drow < Nrow; Drow+=get_global_size(0)){\n"
 "  for(1 ; Drow < Nrow; Drow+=get_global_size(0),BcacheHere += incInCacheGlobal){\n"
   "    DrowNpadA= AHere + Drow * NpadA;\n"
