@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-//#define DEBUG
+#define DEBUG
 
 // dimension 0 is cell, dimension 1 is matrix
 // local and global work sizes should be identical for dimension 2
@@ -83,8 +83,8 @@ result +=
     result += " logDetHere = 0.0;\n";
   }
   result +=
-  "\n for(Dcol = colStart; Dcol < colEnd; Dcol++) {\n"
-  "  DcolNpad = Dcol*Npad;\n"
+    "\n for(Dcol = colStart; Dcol < colEnd; Dcol++) {\n"
+    "  DcolNpad = Dcol*Npad;\n"
   "  AHereDcol = AHere+DcolNpad;\n"
   //"  Dcolm1 = Dcol - 1;\n"
   "  toAddLocal[localIndex]=0.0;\n";
@@ -135,11 +135,8 @@ result +=
   "   diagDcol = A[AHereDcol+Dcol] - toAddLocal[localIndex];\n"
   "   diag[diagHere+Dcol] = diagDcol;\n";
 
-  if(logDet){
-    result +=  "if(localIndex==0){\n"
+  if(logDet & 0){
     result += "  logDetHere += log(diagDcol);\n";
-    result +=  "}\n"
-    
   }
   
   result +=  
@@ -206,6 +203,7 @@ result +=
           "}\n";
     }
 
+result += "  barrier(CLK_GLOBAL_MEM_FENCE);\n";
     
     result +=
     "} // Dmatrix loop\n\n";

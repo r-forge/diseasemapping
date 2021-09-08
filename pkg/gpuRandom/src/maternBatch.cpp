@@ -377,7 +377,8 @@ result +=  "barrier(CLK_LOCAL_MEM_FENCE);\n\n";
     "#endif\n\n";
 
   result += "} // Dmatrix\n";
-
+  result += "barrier(CLK_LOCAL_MEM_FENCE);\n";
+  
   result += "} // Dcell\n\n";
 
   result +=     "\n#ifdef assignDiag\n";
