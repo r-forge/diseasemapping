@@ -543,15 +543,15 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
    */
   
   
-  
-  ///////////////////////////Loop starts !!!//////////////////////////////////////////////////////////////////////////
-  
+  int NrowStartC = 0;
   
   if(verbose[0]) {
     Rcpp::Rcout << "\n" << " Nparams " << 
       Nparams << " NparamsPerIter " <<  NparamPerIter[0] <<
         " Niter " << Niter << " Ncovariates " << Ncovariates << " Ndatasets " << Ndatasets <<"\n";
   }
+  
+  ///////////////////////////Loop starts !!!//////////////////////////////////////////////////////////////////////////
   
   viennacl::ocl::command_queue theQueue = maternKernel.context().get_queue();
   
@@ -588,7 +588,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       Rcpp::Rcout << "b";
     }
     // ssqYX = YX^Y L^(-1)T D^(-1) L^(-1) YX  square matrix, (Ndatasets + Ncovariates)
-    viennacl::ocl::enqueue(crossprodKernel(ssqYX, LinvYX, cholDiagMat, NthisIteration),
+    viennacl::ocl::enqueue(crossprodKernel(ssqYX, LinvYX, cholDiagMat, NrowStartC, NthisIteration),
                            theQueue);
     if(verbose[0]>3) {
       Rcpp::Rcout << "cr";
@@ -634,8 +634,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
      * TO DO!!!!  add DiterIndex option to the kernel to set the start position of ssqBetahat
      */
     viennacl::ocl::enqueue(
-      crossprodSsqYxKernel(ssqBetahat, QinvSsqYx,
-                           cholXVXdiag, NthisIteration),
+      crossprodSsqYxKernel(ssqBetahat, QinvSsqYx, cholXVXdiag, DiterIndex, NthisIteration),
                            theQueue); 
     
     if(verbose[0]) {
@@ -648,7 +647,12 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
      */  
     
   } // Diter
+  
+
   clFinish(theQueue.handle().get());
+
+  
+  
 }
 
 
@@ -849,9 +853,5 @@ void likfitGpu_BackendP(
 
 
 //#endif
-
-
-
-
 
 

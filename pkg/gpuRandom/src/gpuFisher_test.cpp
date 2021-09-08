@@ -434,8 +434,8 @@ int gpuFisher_test(
     fact(i) = factTemp;    //    fact(i) = fact(i - 1) + log(i);
     }
     */
-   viennacl::ocl::enqueue(lfactorialKernel(factTrue, (n+1)));
-   viennacl::ocl::enqueue(fisher_sim(sr, sc, n, B, count, threshold, factTrue, results, streams)); 
+   viennacl::ocl::enqueue(lfactorialKernel(factTrue, (n+1)),theQueue);
+   viennacl::ocl::enqueue(fisher_sim(sr, sc, n, B, count, threshold, factTrue, results, streams),theQueue); 
    
    clFinish(theQueue.handle().get());
    
