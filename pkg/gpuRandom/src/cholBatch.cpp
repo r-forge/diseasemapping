@@ -136,7 +136,10 @@ result +=
   "   diag[diagHere+Dcol] = diagDcol;\n";
 
   if(logDet){
+    result +=  "if(localIndex==0){\n"
     result += "  logDetHere += log(diagDcol);\n";
+    result +=  "}\n"
+    
   }
   
   result +=  
