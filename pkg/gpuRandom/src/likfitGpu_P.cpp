@@ -1,3 +1,6 @@
+// likfitGpu_p 9.8 6pm version
+
+
 #include "lgmlikFit.hpp"
 
 
@@ -509,12 +512,12 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   
   cholKernel.global_work_size(0, workgroupSize[0] ); 
   cholKernel.global_work_size(1, workgroupSize[1] ); 
-  cholKernel.local_work_size(0, localSize[0]);
+  cholKernel.local_work_size(0, chol_localSize[0]);
   cholKernel.local_work_size(1, chol_localSize[1]);
   
   cholXvxKernel.global_work_size(0, workgroupSize[0] ); 
   cholXvxKernel.global_work_size(1, workgroupSize[1] ); 
-  cholXvxKernel.local_work_size(0, localSize[0]);
+  cholXvxKernel.local_work_size(0, chol_localSize[0]);
   cholXvxKernel.local_work_size(1, chol_localSize[1]);
   
   backsolveKernel.global_work_size(0, workgroupSize[0] ); 
@@ -610,7 +613,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     //     ssqY(DiterIndex + Dy2,Dy1) = ssqYX( Dy2 * ssqYX.size2() + Dy1, Dy1);
     //   }
     // }
-
+    
     for(Dy1 = 0; Dy1 < ssqYXcopy.size1(); Dy1++) {
       for(Dy2 = 0; Dy2 < ssqYXcopy.size2(); Dy2++) {
         ssqYXcopy(Dy1, Dy2) = ssqYX(Dy1, Dy2);
@@ -618,9 +621,8 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     
     
     // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part
-    viennacl::ocl::enqueue(
-      cholXvxKernel(ssqYX, cholXVXdiag, NthisIteration, detReml, DiterIndex),
-      theQueue);
+    viennacl::ocl::enqueue(cholXvxKernel(ssqYX, cholXVXdiag, NthisIteration, detReml, DiterIndex),
+                           theQueue);
     
     if(verbose[0]>3) {
       Rcpp::Rcout << "cxy";
@@ -856,6 +858,27 @@ void likfitGpu_BackendP(
 
 
 //#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

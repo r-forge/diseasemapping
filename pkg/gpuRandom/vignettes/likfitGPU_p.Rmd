@@ -8,120 +8,122 @@ library(gpuRandom)
 library(gpuR)
 library('geostatsp')
 data('swissRain')
-sr2 = swissRain[0:50,]
+sr2 = swissRain[0:20,]
 
 # extract variables for modeling
 sr2$sqrtY = sqrt(sr2$rain)
 sr2$elev = raster::extract(swissAltitude, sr2)
-swissFitIso = geostatsp::likfitLgm(
-  data=sr2,
-  formula=sqrtY ~ elev,
-  param=c(range=50000,shape=1),
-  reml=FALSE,
-  verbose=FALSE
-)
+# swissFitIso = geostatsp::likfitLgm(
+#   data=sr2,
+#   formula=sqrtY ~ elev,
+#   param=c(range=50000,shape=1),
+#   reml=FALSE,
+#   verbose=FALSE
+# )
+# swissFitIso$parameters
 
-
-swissFitIso$parameters   #swissFitIso$summary[c("(Intercept)","elev"),1]
+# myParamsBatch = rbind(c(shape=1, range=34358, variance = 1.840997, nugget = 0.11, anisoRatio = 1, anisoAngleRadians = 0))
+# myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
+# myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch)))
+# paramsBatch  = vclMatrix(myParamsBatch, type=type)
 newParamList = list(
-  range=seq(30000, 80000 , len=10),
-  nugget = seq(0,0.25,len=10)
+  range=seq(30000, 80000 , len=4),
+  nugget = seq(0,0.25,len=2)
 ) 
 
 
 newParam= do.call(expand.grid, newParamList)
-otherparams = c(shape=1, variance = 2.079408, anisoRatio = 1, anisoAngleRadians = 0)
+
+otherparams = c(shape=1, variance=1.840997, anisoRatio = 1, anisoAngleRadians = 0)
 otherparams = matrix(rep(otherparams,each=nrow(newParam)),nrow=nrow(newParam))
-colnames(otherparams) <- c("shape","variance", "anisoRatio", "anisoAngleRadians")
+colnames(otherparams) <- c("shape", "variance", "anisoRatio", "anisoAngleRadians")
+
 paramsBatch0 = cbind(newParam, otherparams)
 paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
-paramsBatch = gpuR::vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0),22-ncol(paramsBatch0))),type="double")
+paramsGpu = gpuR::vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0),22-ncol(paramsBatch0))),type="double")
 
-workgroupSize=c(16,16,8)
-localSize = c(4,4,1)
-NlocalCache=500
 
-lgmGpuObjectes1 <- function(modelname, mydat, type=c("double", "float")){
-  
-  covariates = model.matrix(modelname$model$formula, data=modelname$data)
-  temp = model.frame(modelname$model$formula, data=modelname$data)
-  response=temp[,as.character(attributes(terms(temp))$variables)[2]]
-  n = length(response)
-  p = ncol(covariates)
-  yXcpu=cbind(response,covariates)   
-  yX <- vclMatrix(yXcpu,type=type)
-  coordsGpu<-vclMatrix(mydat@coords,type=type)
-  
-  
-  output<-list(yXcpu=yXcpu, yX=yX, coordsGpu=coordsGpu, n=n, p=p)
-  
-  output
+
+
+x = sr2
+boxcox = c(0, 0.5)
+Scov = c('elev')
+yvar = 'sqrtY'
+
+
+workgroupSize = c(32,4,4)
+localSize = c(8,2,1)
+NlocalCache=50
+verbose = 9L
+
+
+if(boxcox[1] != 1) {
+  boxcox = c(1, 0, setdiff(boxcox, c(0,1)))
 }
+Ncov = length(Scov)+1
+Ndata = length(boxcox)
+Nparam = nrow(paramsGpu)
+
 
 type="double"
-boxcox <- vclVector(c(1,0,0.5),  type=type)
-totalparams <- nrow(paramsBatch)
-output1  <- lgmGpuObjectes1(swissFitIso, sr2, type="double")
-n<-output1$n
-p<-output1$p
-colbatch=length(boxcox)
-NparamPerIter=50
-betas <- vclMatrix(0, nrow=0, ncol= 0,type="double")
-ssqY <- vclMatrix(0, totalparams, colbatch, type=type)
-ssqX <- vclMatrix(0, totalparams, colbatch, type=type)
-logD <- vclVector(0, totalparams, type=type)
-logP <- vclVector(0, totalparams, type=type)
-jacobian <- vclVector(0, length(boxcox), type=type)
-ssqYX <- vclMatrix(0, (colbatch+p)*NparamPerIter, (colbatch+p), type=type)
-LinvYX <- vclMatrix(0, (colbatch+p)*NparamPerIter, (colbatch+p), type = type)
- 
- 
- 
- 
+yx = vclMatrix(cbind(
+  as.vector(x@data[,yvar]),
+  matrix(0, nrow(x@data), length(boxcox)-1),
+  1,
+  as.matrix(x@data[,Scov])
+), type=type)
+coords = vclMatrix(x@coords, type =type)
+
+boxcoxGpu = vclVector(boxcox, type=type)
+betas = vclMatrix(0, Nparam, Ncov * Ndata, type=type)
+detVar = vclVector(0, Nparam,type=type)
+detReml = vclVector(0, Nparam, type=type)
+jacobian = vclVector(0, Ndata, type=type)
+ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
+ssqBetahat <- vclMatrix(0, Nparam+2, Ndata+2, type=type)
+
+NparamPerIter = 5
+
+# objects for debugging
+ssqYX = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
+ssqYXcopy = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
+LinvYX = vclMatrix(0, nrow(yx) * NparamPerIter, ncol(yx), type=type)
+QinvSsqYx = vclMatrix(0, NparamPerIter*Ncov, Ndata, type = type);
+varMat = vclMatrix(0, nrow(yx)*NparamPerIter, nrow(coords), type=type)
+cholXVXdiag = vclMatrix(0, NparamPerIter, Ndata, type=type)
+cholDiagMat = vclMatrix(0, NparamPerIter, nrow(coords), type=type)
+
 gpuRandom:::likfitGpu_BackendP(
-    output1$yX,
-    output1$coordsGpu,
-    paramsBatch,
-    boxcox,
-    betas,
-    ssqY,
-    ssqX,
-    logD,
-    logP,
-    jacobian,
-    NparamPerIter,
-    workgroupSize,
-    localSize,
-    NlocalCache,
-    verbose=0,
-    ssqYX, 
-    LinvYX) 
+  yx,  #1
+  coords,
+  paramsGpu,
+  boxcoxGpu,  
+  betas,  #5
+  ssqY,
+  ssqBetahat,
+  detVar,
+  detReml,
+  jacobian,  #10
+  NparamPerIter,  
+  workgroupSize,  
+  localSize,  
+  NlocalCache,  
+  verbose = 2,  #15
+  ssqYX, 
+  ssqYXcopy,  #new
+  LinvYX,  #18
+  QinvSsqYx, 
+  cholXVXdiag, #20
+  varMat, #new
+  cholDiagMat)   #new
 
-as.vector(logD)
-as.vector(logP)
+
+
+as.vector(detVar)
+as.vector(detReml)
+as.matrix(ssqBetahat)
 as.matrix(ssqY)
-
-
-
-
-
-
-
-
-
-
-lMatrix = matrix(tempcpu[,3], length(newParamList[[1]]), length(newParamList[[2]]))
-# 
-myCol = mapmisc::colourScale(lMatrix, breaks=8, dec=0)
-image(
-  newParamList[[1]]/1000, newParamList[[2]], lMatrix,
-  col = myCol$col, breaks=myCol$breaks,
-  xlab = names(newParamList)[1],
-  ylab = names(newParamList)[2]
-)
-mapmisc::legendBreaks('topright', myCol)
-
-
+as.matrix(ssqYX)
 ```
 
 
