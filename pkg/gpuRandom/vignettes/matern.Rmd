@@ -149,20 +149,22 @@ print(quantile(as.vector(fromCpu - fromGpu), na.rm=TRUE))
 # Cholesky
 ```{r cholBach, eval = TRUE}
 diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), type = gpuR::typeof(outputBatchF))
+outputChol = deepcopy(outputBatchF)
 
 gpuRandom::cholBatch(
-  outputBatchF, diagMat, 
+  outputChol, diagMat, 
   numbatchD=nrow(myParamsBatch),
-  Nglobal = c(1L, 1L),#NglobalChol,
-  Nlocal = c(1L, 1L),#NlocalChol,
+  Nglobal = c(128L, 16L),#NglobalChol,
+  Nlocal = c(16L, 16L),#NlocalChol,
   NlocalCache = 4000)#NlocalCache)
+as.matrix(diagMat)[,1:4]
 ```
 
 
 
-```{r cholBatchCpu, include=FALSE, eval=F}
-D=4
-fromGpuOrig = chol4gpu = as.matrix(outputBatchF[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
+```{r cholBatchCpu, eval=TRUE}
+D=3
+fromGpuOrig = chol4gpu = as.matrix(outputChol[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
 chol4gpu[upper.tri(chol4gpu)] = 0
 diag(chol4gpu) = 1
 diagGpu = as.vector(diagMat[D,])
@@ -186,6 +188,7 @@ cholCpu[1:4,1:4]
 
 quantile(cholCpu - chol4gpu)
 quantile(theDiag - as.matrix(diagMat)[D,])
+#cbind(theDiag, diagGpu)
 ```
 
 

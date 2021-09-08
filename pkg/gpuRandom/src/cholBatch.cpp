@@ -2,7 +2,7 @@
 #define DEBUG
 
 // dimension 0 is cell, dimension 1 is matrix
-// local and global work sizes should be identical for dimension 2
+// local and global work sizes should be identical for dimension 1 (second dimension)
 
 
 template <typename T> std::string cholBatchKernelString(
@@ -54,13 +54,14 @@ template <typename T> std::string cholBatchKernelString(
   result += "\n){\n"
   " barrier(CLK_LOCAL_MEM_FENCE);\n"
   " const int localIndex = get_local_id(0)*get_local_size(1) + get_local_id(1);\n"
+  " const int localIndexIsZero = localIndex==0;\n"
   " const int NlocalTotal = get_local_size(0)*get_local_size(1);\n"
   
   " local " + typeString + " diagLocal[Ncache];//local cache of diagonals\n"
   
   " local " + typeString + " toAddLocal[maxLocalItems];\n"
   " int Dcol, DcolNpad;\n"
-  " int Drow, Dk, Dmatrix;\n";
+  " int Drow, DrowBlock, Dk, Dmatrix;\n";
   
   if(allowOverflow) {
     result += "	int minDcolNcache;\n";
@@ -127,15 +128,18 @@ result +=
 
   result +=     
   "// final reduction on dimension 0\n"
-  "  if(localIndex==0){\n"
-  "   for(Dk = localIndex + get_local_size(1); Dk < NlocalTotal; Dk+= get_local_size(1)) {\n"
+  "  if(localIndexIsZero){\n";
+
+  result +=     
+    "   for(Dk = localIndex + get_local_size(1); Dk < NlocalTotal; Dk+= get_local_size(1)) {\n"
   "    toAddLocal[localIndex] +=  toAddLocal[Dk];\n"
-  "   } //Dk\n"
-  
-  "   diagDcol = A[AHereDcol+Dcol] - toAddLocal[localIndex];\n"
+  "   } //Dk\n";
+
+result +=     
+    "   diagDcol = A[AHereDcol+Dcol] - toAddLocal[localIndex];\n"
   "   diag[diagHere+Dcol] = diagDcol;\n";
 
-  if(logDet & 0){
+  if(logDet){
     result += "  logDetHere += log(diagDcol);\n";
   }
   
@@ -148,11 +152,24 @@ result +=
   //"  diagDcol = diagHere[Dcol];\n"
   
   result += "// off diagonals\n";
-  result +=
-    " for(Drow = Dcol+get_local_id(0)+1; Drow < N; Drow += get_local_size(0)) {\n"
-    "  AHereDrow = AHere+Drow*Npad;\n"
+//  result += " for(Drow = Dcol+get_local_id(0)+1; Drow < N; Drow += get_local_size(0)) {\n";
+
+// DrowBlock is the Drow for the first work item.  
+// sometimes DrowBlock < N but Drow > N
+// need if statement to stop those rows from being computed
+// can't have condition Drow < N in loop
+// because some work items won't do the loop and 
+// memory fence won't work
+
+result += " for(DrowBlock = Dcol+1; DrowBlock < N; DrowBlock += get_local_size(0)) {\n";
+
+result += "  Drow = DrowBlock + get_local_id(0);\n";
+
+    result +=
+      "  AHereDrow = AHere+Drow*Npad;\n"
     "  DL = 0.0;\n";
   
+  result += "  if(Drow < N){\n";
   
   if(allowOverflow) {
     result +=
@@ -176,29 +193,39 @@ result +=
       "  }// Dk\n"; 
   }
 
+
+  result += "   }//Drow < N\n";
+
   result +=
     "  toAddLocal[localIndex] = DL;\n\n";
   
+      
   result +=
   "  // local reduction\n"
-    "  barrier(CLK_LOCAL_MEM_FENCE);\n"
+    "  barrier(CLK_LOCAL_MEM_FENCE);\n";
+  result +=
     "  if(get_local_id(1) == 0){\n"
-    "   DL = toAddLocal[localIndex];\n"
-    "   for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
+    "   DL = toAddLocal[localIndex];\n";
+
+result +=    "   for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
     "    DL +=  toAddLocal[localIndex + Dk];\n"
-    "   }//Dk\n" 
+    "   }//Dk\n"; 
+
+result +=    
     "   A[AHereDrow+Dcol] = (A[AHereDrow+Dcol] - DL)/diagDcol;\n"
     "  }//get_local_id(1) == 0\n" 
     "  barrier(CLK_GLOBAL_MEM_FENCE);\n\n";
-  
+
   result +=
-    " }//Drow\n"
+    " }//DrowBlock\n"
     "  barrier(CLK_GLOBAL_MEM_FENCE);\n";
+  
+
   result +=  
     "} // Dcol loop\n\n";
   
     if(logDet){
-        result +=  "if(localIndex==0){\n"
+        result +=  "if(localIndexIsZero){\n"
           " logDet[logDetIndex + Dmatrix] = logDetHere;\n"
           "}\n";
     }
