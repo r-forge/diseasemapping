@@ -122,8 +122,8 @@ multiplyDiagonalBatchBackend <- function(C, A, B, inverse, Nglobal, Nlocal) {
 #' @param C output matrices, stacked row-wise
 #' @param A lower triangular matrices
 #' @param B rectangular matrix or matrices
-#' @param Nglobal vector of number of global work items
-#' @param Nlocal vector of number of local work items
+#' @param Nglobal vector of number of global work items: Drow, Dcol, Dmatrix
+#' @param Nlocal vector of number of local work items anything, anything, 1
 #' @param NlocalCache elements in local cache
 #' @export
 multiplyLowerBatchBackend <- function(C, A, B, diagIsOne, Nglobal, Nlocal, NlocalCache) {

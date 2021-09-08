@@ -203,25 +203,14 @@ quantile(theDiag - as.matrix(diagMat)[D,])
 create a matrix of independent normals
 
 
-```{r randomNormalsSim, eval=F}
+```{r randomNormalsSim}
 streamsGpu <- gpuRandom::CreateStreamsGpu(Nstreams=128*64, keepInitial=TRUE)
 
-zmatGpu = gpuRandom::rnorm(c(nrow(maternCov),Nsim), 
+zMatGpu = gpuRandom::rnorm(c(ncol(outputBatchF),Nsim), 
                            streams=streamsGpu, Nglobal=c(128,64),
                            type = theType)
-
-
-#system.time(gpuRandom:::gpuRnBackend(zMatGpu, streamsGpu, NglobalRandom, "normal"))
-
 ```
 
-```{r checkRange, eval=F, include=FALSE}
-streams[1:3,1:6]
-as.matrix(streamsGpu[1:3,1:6])
-zMatCpu = as.matrix(zmatGpu)
-hist(zMatCpu)
-qqnorm(as.vector(zMatCpu))
-```
 
 
 
@@ -236,9 +225,9 @@ gpuRandom:::multiplyLowerDiagonalBatchBackend(
   simMat, outputChol, diagMat, zMatGpu,
   diagIsOne = TRUE, # diagonal of L is one
   transformD = "sqrt", # take the square root of each element of D
-  Nglobal = NglobalMult,
-  Nlocal = NlocalMult,
-  NlocalCache = NlocalCache)
+  Nglobal = c(1,1,1),#c(64,8,8),
+  Nlocal = c(1,1,1),
+  NlocalCache = 4000)
 )
 ```
 
@@ -246,7 +235,7 @@ gpuRandom:::multiplyLowerDiagonalBatchBackend(
 
 # Plot simulated materns
 
-```{r plotSimNames,eval=F }
+```{r plotSimNames}
 theNames = apply(expand.grid('par',1:nrow(paramsGpu), 'sim', 1:Nsim), 1, paste, collapse='')
 ```
 
