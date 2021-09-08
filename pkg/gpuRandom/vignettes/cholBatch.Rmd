@@ -138,8 +138,9 @@ dim(var4cpu)
 range(var4cpu - var4gpu)
 
 diagMat = vclMatrix(0, nrow(paramsGpu), ncol(maternMatrix), type = theType)
-gpuRandom::cholBatch(maternMatrix, diagMat, numbatchD=nrow(myParamsBatch),
-                     Nglobal = c(8L, 8L, 8L),Nlocal=c(2,2,2),3000)
+new=deepcopy(maternMatrix)
+gpuRandom::cholBatch(new, diagMat, numbatchD=nrow(myParamsBatch),
+                     Nglobal = c(8L, 8L, 8L),Nlocal=c(2,2,2),1)
 
 
 
@@ -148,7 +149,7 @@ theDiag = diag(cholCpu)
 cholCpu = cholCpu %*% diag(1/theDiag)
 theDiag = theDiag^2
 
-chol4gpu = as.matrix(maternMatrix[1:prod(Ngrid),])
+chol4gpu = as.matrix(new[1:prod(Ngrid),])
 chol4gpu[upper.tri(chol4gpu)] = 0
 diag(chol4gpu) = 1
 

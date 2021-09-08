@@ -106,6 +106,8 @@ gpuRandom:::likfitGpu_BackendP(
   ssqYX,ssqYXcopy, LinvYX,QinvSsqYx,cholXVXdiag, varMat, diagOfVar
 )
 ```
+
+
 ```{r sutff, eval=TRUE}
 
 as.matrix(ssqYX)[1:ncol(ssqYX),]
