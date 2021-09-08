@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-//#define DEBUG
+#define DEBUG
 
 // C = A B, A diagonal
 
@@ -156,7 +156,7 @@ result +=  "	__global "+ typeString+ " *B) {\n\n" +
   "int AHere, BHere=0, CHere, BcacheHere=0;\n"
   "local "+ typeString+ " Acache[NlocalCacheA];\n" 
   "local "+ typeString+ " Bcache[NlocalCache];\n"
-  "int Dmatrix, Drow, Dcol, Dinner, DrowNpadC, DrowNpadA, DcolInCache, DinnerCache;\n"
+  "int Dmatrix, Drow, DrowBlock, Dcol, DcolBlock, Dinner, DrowNpadC, DrowNpadA, DcolInCache, DinnerCache;\n"
   "const int incInCacheLocal = get_local_size(0)*NcolInCache;\n"
   "const int incInCacheGlobal = get_global_size(0)*NcolInCache;\n"
   "const int doCacheA = (get_local_id(1) == 0);\n";
@@ -183,16 +183,18 @@ if(NpadD) {
   
   result += "\n  // cache first rows of B for Dmatrix\n";
   result +=  
-    "  for(Drow = get_local_id(0),BcacheHere = get_local_id(0)*NcolInCache;\n"
-    "      Drow < DinnerStop; Drow += get_local_size(0),BcacheHere += incInCacheLocal){\n"
-    
+    "  for(DrowBlock = 0,BcacheHere = get_local_id(0)*NcolInCache;\n"
+    "      DrowBlock < DinnerStop; DrowBlock += get_local_size(0),BcacheHere += incInCacheLocal){\n"
+    "    Drow = DrowBlock + get_local_id(0);\n"
     "    DrowNpadA = BHere+Drow*NpadB;\n"
     "    barrier(CLK_LOCAL_MEM_FENCE);\n";
   
   if(NpadD) {
-    result +=  "    if(doCacheA) {\n"
+    result +=  "    if(doCacheA & Drow < DinnerStop) {\n"
     "      Dcache[get_local_id(0)] = " +
       transformD + "(D[DHere + Drow]);\n"
+    "    } else {\n"
+    "      Dcache[get_local_id(0)] =0;\n"
     "    }\n"
     "    barrier(CLK_LOCAL_MEM_FENCE);\n";
   }
@@ -216,12 +218,15 @@ result +=
 result += 
   
 "\n// looped through rows which are all cached\n"
-"  for(Drow = get_global_id(0),BcacheHere = get_global_id(0)*NcolInCache;\n"
-"        Drow < DinnerStop; Drow+=get_global_size(0),BcacheHere += incInCacheGlobal){\n"
+"  for(DrowBlock = 0,BcacheHere = get_global_id(0)*NcolInCache;\n"
+"        Drow < DinnerStop; DrowBlock+=get_global_size(0),BcacheHere += incInCacheGlobal){\n"
+  "    Drow = DrowBlock + get_global_id(0);\n"
   "    DrowNpadA= AHere + Drow * NpadA;\n"
   "    DrowNpadC= CHere+Drow * NpadC;\n"
-  "    for(Dcol = get_global_id(1), DcolInCache=get_local_id(1);\n"
-  "        Dcol < Ncol; Dcol += get_global_size(1),DcolInCache += get_local_size(1)){\n";
+  "    for(DcolBlock=0, DcolInCache=get_local_id(1);\n"
+  "        DcolBlock < Ncol; DcolBlock += get_global_size(1),DcolInCache += get_local_size(1)){\n";
+result +=
+  "       Dcol = DcolBlock + get_global_id(1);\n";
   
 if(diagIsOne) {
   result += "      Dout = Bcache[BcacheHere + DcolInCache];\n";
@@ -248,7 +253,7 @@ result +=  "      C[Dcol + DrowNpadC] = Dout;\n"
   "  } //Drow\n"
   "  barrier(CLK_LOCAL_MEM_FENCE);\n";
 result +=  "\n// rows which are not all cached\n"
-
+#ifdef UNDEF
   
   //"\nfor(Drow = DinnerStop + get_global_id(0) ; Drow < Nrow; Drow+=get_global_size(0)){\n"
 "  for(1 ; Drow < Nrow; Drow+=get_global_size(0),BcacheHere += incInCacheGlobal){\n"
@@ -323,7 +328,7 @@ if(NpadD) {
 	"\n    C[Dcol + DrowNpadC] = Dout;\n";
 	result +=	"    }// Dcol\n";
   result +=	"  }//Drow\n";
-
+#endif
   result += "}// Dmatrix\n" 
   "}";
 
@@ -719,8 +724,8 @@ SEXP multiplyLowerBatchTyped(
 //' @param C output matrices, stacked row-wise
 //' @param A lower triangular matrices
 //' @param B rectangular matrix or matrices
-//' @param Nglobal vector of number of global work items
-//' @param Nlocal vector of number of local work items
+//' @param Nglobal vector of number of global work items: Drow, Dcol, Dmatrix
+//' @param Nlocal vector of number of local work items anything, anything, 1
 //' @param NlocalCache elements in local cache
 //' @export
 // [[Rcpp::export]]
