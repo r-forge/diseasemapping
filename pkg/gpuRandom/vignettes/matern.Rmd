@@ -40,7 +40,7 @@ Set up spatial data
     NglobalRandom = c(64,4)
   NglobalMult = c(16,4,4)   
   NlocalMult = c(4,4,1)   
-theType = "float"
+theType = "double"
 
 
 NlocalMatern = c(2,2)
@@ -86,8 +86,7 @@ c(shape=1, range=1, variance = 1, nugget = 10, anisoRatio = 1, anisoAngleRadians
  c(shape=6.5, range=5, variance = 2.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #13
  c(shape=5.5, range=5, variance = 2.5, nugget = 20, anisoRatio = 1, anisoAngleRadians = 0), #14
  c(shape=6.5, range=5, variance = 2.5, nugget = 10, anisoRatio = 1, anisoAngleRadians = 0), #15
- c(shape=5.5, range=5, variance = 1.5, nugget = 30, anisoRatio = 1, anisoAngleRadians = 0), #16
-
+ c(shape=5.5, range=5, variance = 1.5, nugget = 30, anisoRatio = 1, anisoAngleRadians = 0)#16
 )
 
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
@@ -114,8 +113,8 @@ gpuRandom:::maternBatchBackend(
     outputBatchF,
     coordsGpu, 
     paramsGpu,  
-    c(64,64),#NglobalMatern, 
-    c(16,16),#NlocalMatern,
+    c(64,32),#NglobalMatern, 
+    c(16,16),#c(16,16),#NlocalMatern,
     startrow = 0,
     numberofrows = nrow(paramsGpu),
     verbose = 0)
@@ -154,8 +153,8 @@ diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), type = gpuR::typeof(
 gpuRandom::cholBatch(
   outputBatchF, diagMat, 
   numbatchD=nrow(myParamsBatch),
-  Nglobal = c(256L, 16L),#NglobalChol,
-  Nlocal = c(16L, 16L),#NlocalChol,
+  Nglobal = c(1L, 1L),#NglobalChol,
+  Nlocal = c(1L, 1L),#NlocalChol,
   NlocalCache = 4000)#NlocalCache)
 ```
 
