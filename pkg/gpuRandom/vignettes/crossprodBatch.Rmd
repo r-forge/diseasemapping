@@ -82,6 +82,24 @@ gpuRandom::crossprodBatch(gpuC,
 
 as.matrix(gpuC)
 
+
+
+# gpuRandom:::crossprodBatchBackend(
+#                           gpuC, 
+#                           gpuA,
+#                           gpuD,
+#                           invertD = FALSE,
+#                           Cstartend=c(0,1,0,3),
+#                           Astartend=c(0,5,0,3),
+#                           Dstartend=c(0,1,0,3), 
+#                           Nglobal = c(64, 4), 
+#                           Nlocal =  c(8, 4),
+#                           NlocalCache = 20,
+#                           NrowStartC=11)
+# 
+# as.matrix(gpuC)
+
+
 ```
 
 

@@ -265,6 +265,10 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   int DiterIndex, NthisIteration;
   int verboseMatern = verbose[0]>1;
   
+  Rcpp::IntegerVector chol_localSize=localSize;
+  chol_localSize[1]=workgroupSize[1];
+  
+  
   viennacl::ocl::switch_context(ctx_id);
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   
@@ -287,9 +291,9 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   int Ncell = Nobs * (Nobs - 1)/2, maxIter = 1500;
   
   std::string maternClString = maternBatchKernelString<T>(
-                 maxIter,
-                 Nobs, Ncell, 
-                 NparamPerIter[0],//NmatrixMax
+    maxIter,
+    Nobs, Ncell, 
+    NparamPerIter[0],//NmatrixMax
                  Vbatch.internal_size2(), //NpadVbatch
                  Vbatch.internal_size2()*Nobs, //NpadBetweenMatrices,
                  coords.internal_size2(), 
@@ -311,7 +315,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     0,//NstartA
     0,// NstartD
     NlocalCache, //Ncache
-    localSize, //Nlocal
+    chol_localSize, //Nlocal
     1,//allowOverflow, // allowoverflow
     1 // do log determinant
   );
@@ -326,7 +330,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     Ndatasets * ssqYX.internal_size2() + Ndatasets,//NstartA start at entry ssqYX[Ndatasets, Ndatasets]
     0,// NstartD
     NlocalCache, //Ncache
-    localSize, //Nlocal
+    chol_localSize, //Nlocal
     1, // allowoverflow
     1 // do log determinant
   );
@@ -417,7 +421,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     0,//const int NstartA,  
     0,//const int NstartD,  
     ssqBetahat.internal_size2(), //const int NpadBetweenMatricesC
-    QinvSsqYx.internal_size2()*Ndatasets, //const int NpadBetweenMatricesA,
+    QinvSsqYx.internal_size2()*Ncovariates, //const int NpadBetweenMatricesA,  made changes here
     NlocalCache[0]/2, // NlocalCacheA, 
     localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
   );
@@ -506,12 +510,12 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   cholKernel.global_work_size(0, workgroupSize[0] ); 
   cholKernel.global_work_size(1, workgroupSize[1] ); 
   cholKernel.local_work_size(0, localSize[0]);
-  cholKernel.local_work_size(1, workgroupSize[1]);
+  cholKernel.local_work_size(1, chol_localSize[1]);
   
   cholXvxKernel.global_work_size(0, workgroupSize[0] ); 
   cholXvxKernel.global_work_size(1, workgroupSize[1] ); 
   cholXvxKernel.local_work_size(0, localSize[0]);
-  cholXvxKernel.local_work_size(1, workgroupSize[1]);
+  cholXvxKernel.local_work_size(1, chol_localSize[1]);
   
   backsolveKernel.global_work_size(0, workgroupSize[0] ); 
   backsolveKernel.global_work_size(1, workgroupSize[1] ); 
@@ -545,7 +549,6 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
    gemmaTDinvb_betaKernel.local_work_size(1, localSize[1]); 
    gemmaTDinvb_betaKernel.local_work_size(2, localSize[2]); 
    */
-  
   
   
   if(verbose[0]) {
@@ -619,8 +622,8 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     
     // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part
     viennacl::ocl::enqueue(
-          cholXvxKernel(ssqYX, cholXVXdiag, NthisIteration, detReml, DiterIndex),
-          theQueue);
+      cholXvxKernel(ssqYX, cholXVXdiag, NthisIteration, detReml, DiterIndex),
+      theQueue);
     
     if(verbose[0]>3) {
       Rcpp::Rcout << "cxy";
@@ -629,8 +632,8 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     // backsolve QinvSsqYx = Q^(-1) ssqYX[(Ndatasets+1):nrow(ssqYX),1:Ndatasets]  
     // Ncovariates by Ndatasets
     viennacl::ocl::enqueue(
-           backsolveSsqYxKernel(QinvSsqYx, ssqYX, ssqYX, NthisIteration),
-           theQueue);
+      backsolveSsqYxKernel(QinvSsqYx, ssqYX, ssqYX, NthisIteration),
+      theQueue);
     
     // crossprod QinvSsqYx^T P^(-1) QinvSsqYx,   Ndatasets by Ndatasets
     /* 
@@ -638,7 +641,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
      */
     viennacl::ocl::enqueue(
       crossprodSsqYxKernel(ssqBetahat, QinvSsqYx, cholXVXdiag, DiterIndex, NthisIteration),
-                           theQueue); 
+      theQueue); 
     
     if(verbose[0]) {
       Rcpp::Rcout << "\n" << "Diter " << Diter <<" DiterIndex " << DiterIndex << " endThisIteration " << 
@@ -651,9 +654,9 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     
   } // Diter
   
-
+  
   clFinish(theQueue.handle().get());
-
+  
   
   
 }
@@ -856,5 +859,11 @@ void likfitGpu_BackendP(
 
 
 //#endif
+
+
+
+
+
+
 
 

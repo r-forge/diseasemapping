@@ -188,8 +188,8 @@ void maternBatchVcl(
             Rcpp::IntegerVector Dstartend,  
             Rcpp::IntegerVector Nglobal,
             Rcpp::IntegerVector Nlocal,
-            const int NlocalCache, 
-            const int ctx_id);      
+            const int NlocalCache, //int NrowStartC,
+            const int ctx_id);     
       
         
         template <typename T> 
