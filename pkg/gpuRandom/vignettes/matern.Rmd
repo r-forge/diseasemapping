@@ -157,7 +157,7 @@ outputChol = outputBatchF #deepcopy(outputBatchF)
 gpuRandom::cholBatch(
   outputChol, diagMat, 
   numbatchD=nrow(myParamsBatch),
-  Nglobal = c(128L, 16L),#NglobalChol,
+  Nglobal = c(256L, 16L),#NglobalChol,
   Nlocal = c(16L, 16L),#NlocalChol,
   NlocalCache = 5000)#NlocalCache)
 as.matrix(diagMat)[,1:4]
@@ -172,9 +172,9 @@ chol4gpu[upper.tri(chol4gpu)] = 0
 diag(chol4gpu) = 1
 diagGpu = as.vector(diagMat[D,])
 
-maternReconstruct = chol4gpu %*% diag(diagGpu) %*% t(chol4gpu)
-maternReconstruct[1:4,1:4]
-fromGpuOrig[1:4,1:4]
+#maternReconstruct = chol4gpu %*% diag(diagGpu) %*% t(chol4gpu)
+#maternReconstruct[1:4,1:4]
+#fromGpuOrig[1:4,1:4]
 
 cholCpu = geostatsp::matern(
     x=coordsSp,
@@ -191,7 +191,7 @@ cholCpu[1:4,1:4]
 
 quantile(cholCpu - chol4gpu)
 quantile(theDiag - as.matrix(diagMat)[D,])
-#cbind(theDiag, diagGpu)
+#cbind(theDiag, diagGpu)[1:10,]
 ```
 
 
@@ -220,15 +220,13 @@ compute U = L D^(1/2) Z, where LDLt is the Cholesky of the variance matrix, Z is
 ```{r multLowerGpu, eval = F}
 simMat = deepcopy(-100*zMatGpu)
 
-system.time(
 gpuRandom:::multiplyLowerDiagonalBatchBackend(
   simMat, outputChol, diagMat, zMatGpu,
   diagIsOne = TRUE, # diagonal of L is one
   transformD = "sqrt", # take the square root of each element of D
-  Nglobal = c(1,1,1),#c(64,8,8),
-  Nlocal = c(1,1,1),
+  Nglobal = c(1,1,1),#c(64,8,8), # rows, columns, matrix
+  Nlocal = c(1,1,1),  # anything, anything 1
   NlocalCache = 4000)
-)
 ```
 
 
