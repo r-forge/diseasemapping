@@ -224,7 +224,7 @@ gpuRandom:::multiplyLowerDiagonalBatchBackend(
   simMat, outputChol, diagMat, zMatGpu,
   diagIsOne = TRUE, # diagonal of L is one
   transformD = "sqrt", # take the square root of each element of D
-  Nglobal = c(1,1,1),#c(64,8,8), # rows, columns, matrix
+  Nglobal = c(2,1,1),#c(64,8,8), # rows, columns, matrix
   Nlocal = c(1,1,1),  # anything, anything 1
   NlocalCache = 4000)
 ```
