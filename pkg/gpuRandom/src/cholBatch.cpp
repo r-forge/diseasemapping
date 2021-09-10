@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-//#define DEBUG
+#define DEBUG
 
 // dimension 0 is cell, dimension 1 is matrix
 // local and global work sizes should be identical for dimension 1 (second dimension)
@@ -54,7 +54,7 @@ template <typename T> std::string cholBatchKernelString(
   result += "\n){\n"
   " barrier(CLK_LOCAL_MEM_FENCE);\n"
   " const int localIndex = get_local_id(0)*get_local_size(1) + get_local_id(1);\n"
-  " const int localIndexIsZero = localIndex==0;\n"
+  " const int localIndexIsZero = (localIndex==0);\n"
   " const int NlocalTotal = get_local_size(0)*get_local_size(1);\n"
   
   " local " + typeString + " diagLocal[Ncache];//local cache of diagonals\n"
