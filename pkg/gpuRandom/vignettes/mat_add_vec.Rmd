@@ -24,7 +24,10 @@ vccpu
 a <- xcpu +vrcpu
 a+vccpu
 
-gpuRandom:::matrix_vector_sumBackend(x,vr, vc, 5+2, result,  c(4,4))
+gpuRandom:::matrix_vector_sumBackend(x,vr, vc, 10, result,  c(4,4))
+as.matrix(result)
+
+gpuRandom:::matrix_vector_sumBackend(3*log(x/2),vr, vc, 10, result,  c(4,4))
 as.matrix(result)
 
 
