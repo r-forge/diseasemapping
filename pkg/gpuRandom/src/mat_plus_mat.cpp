@@ -64,7 +64,7 @@ std::string matrix_plus_matrixString(const int Nrow, const int Ncol, const int N
 template<typename T> 
 void matrix_matrix_sum(
     viennacl::matrix<T> &a,//
-    viennacl::matrix<T> &b,  // must be a matrix of 1 columnn
+    viennacl::matrix<T> &b,  // must be a matrix of 1 column
     viennacl::matrix<T> &sum,
     Rcpp::IntegerVector numWorkItems,
     int ctx_id) {
@@ -105,7 +105,7 @@ void matrix_matrix_sum(
 template<typename T> 
 void matrix_matrix_sumTemplated(
     Rcpp::S4 aR,
-    Rcpp::S4 bR,
+    Rcpp::S4 bR,    // must be a matrix of 1 column
     Rcpp::S4 sumR,
     Rcpp::IntegerVector numWorkItems) {
   
@@ -127,7 +127,7 @@ void matrix_matrix_sumTemplated(
 //[[Rcpp::export]]
 void matrix_matrix_sumBackend(
     Rcpp::S4 aR,
-    Rcpp::S4 bR,
+    Rcpp::S4 bR,    // must be a matrix of 1 column
     Rcpp::S4 sumR,
     Rcpp::IntegerVector numWorkItems) {
   
