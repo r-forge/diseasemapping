@@ -1,4 +1,4 @@
-// likfitGpu_p 9.10 9pm version
+// likfitGpu_p 9.11 5pm version
 
 
 #include "lgmlikFit.hpp"
@@ -272,7 +272,7 @@ void addBoxcoxToData(
   }
   
   std::string theBoxcoxKernel = boxcoxKernelString<T>(
-               NlocalCache[0],
+    NlocalCache[0],
                1, yx.size1(), Ndatasets, 
                yx.internal_size2());
   
@@ -365,16 +365,16 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   int Ncell = Nobs * (Nobs - 1)/2, maxIter = 1500;
   
   std::string maternClString = maternBatchKernelString<T>(
-                 maxIter,
-                 Nobs, Ncell, 
-                 NparamPerIter[0],//NmatrixMax
+    maxIter,
+    Nobs, Ncell, 
+    NparamPerIter[0],//NmatrixMax
                  Vbatch.internal_size2(), //NpadVbatch
                  Vbatch.internal_size2()*Nobs, //NpadBetweenMatrices,
                  coords.internal_size2(), 
                  params.internal_size2(), //NpadParams,
                  localSize[0],
-                 NlocalCache[0],
-                 1L, 1L, 1L, 0L);
+                          NlocalCache[0],
+                                     1L, 1L, 1L, 0L);
   
   int allowOverflow = ( ((int) Vbatch.size2() ) > NlocalCache[0] );
   
@@ -522,26 +522,52 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   );  
   
   
+  
+  // when beta is supplied by user
+  // a^TD^(-1)b * beta = aTDinvb_beta
+  Rcpp::IntegerVector transposeABC = {1,0,0};// transposeA, transposeB, transposeC
+  Rcpp::IntegerVector submatrixA = {Ndatasets,Ncovariates,yx.size2(),0,Ndatasets,yx.size2()};
+  Rcpp::IntegerVector submatrixB = {0,Ncovariates,Ncovariates,0,Ndatasets,Ndatasets};
+  Rcpp::IntegerVector submatrixC = {0,Ndatasets,Ndatasets,0,Ndatasets,Ndatasets};
+  Rcpp::IntegerVector recycle = {1,0,0,1,0};   // nColBatch, recycleArow, recycleAcol, recycleBrow, recycleBcol
+  Rcpp::IntegerVector NlocalCachegemm = {NlocalCache[0],NlocalCache[0]};
+  
+  std::string aTDinvb_beta_KernelString = gemmBatch2String<T>(
+    transposeABC,  // (1,0,0),      
+    submatrixA, //
+    submatrixB,//
+    submatrixC, //
+    recycle,  //  nColBatch, recycleArow, recycleAcol, recycleBrow, recycleBcol
+    NlocalCachegemm,    // cacheSizeA, cacheSizeB, 
+    ssqYX.internal_size2(),// NpadA, 
+    betas.internal_size2(),// NpadB, 
+    aTDinvb_beta.internal_size2());// NpadC
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   /*
-   // when beta is given
-   // a^TD^(-1)b * beta = aTDinvb_beta
-   Rcpp::IntegerVector transposeABC = {1,0,0};// transposeA, transposeB, transposeC
-   Rcpp::IntegerVector submatrixA = {Ndatasets,Ncovariates,Ndatasets+Ncovariates,0,Ndatasets,Ndatasets+Ncovariates};
-   Rcpp::IntegerVector submatrixB = {0,Ncovariates,Ncovariates,0,Ndatasets,Ndatasets};
-   Rcpp::IntegerVector submatrixC = {0,Ndatasets,Ndatasets,0,Ndatasets,Ndatasets};
-   Rcpp::IntegerVector batches = {NparamPerIter[0],1,0,0,1,0};
-   Rcpp::IntegerVector NlocalCachegemm = {NlocalCache[0],NlocalCache[0]};
    
-   std::string aTDinvb_beta_String = gemmBatch2String<T>(
-   transposeABC,  // (0,0,0),      
-   submatrixA, //(0,Ndatasets,(Ndatasets+Ncovariates),Ndatasets,Ncovariates,(Ndatasets+Ncovariates)),         //submatrixA,  
-   submatrixB,//(0,Ncovariates,Ncovariates,0,Ndatasets,Ndatasets),            //  submatrixB,
-   submatrixC, //(0,Ndatasets,Ndatasets,0,Ndatasets,Ndatasets), // submatrixC,
-   batches,  //(NparamPerIter[0],1,0,0,1,0), // batches,  
-   NlocalCachegemm,
-   ssqYX.internal_size2(),// NpadA, 
-   betas.internal_size2(),// NpadB, 
-   aTDinvb_beta.internal_size2());// NpadC
    
    
    std::string extract_aTDinvb_betaDiagString = extract_some_diag_string<T>(
@@ -571,7 +597,9 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   viennacl::ocl::program & my_prog_crossprodSsqYx = viennacl::ocl::current_context().add_program(crossprodSsqYxKernelString, "mykernelcrossprodssqyx");
   viennacl::ocl::program & my_prog_extractSomeDiag = viennacl::ocl::current_context().add_program(extractSomeDiagKernelString, "mykernelextract_some_diag");
   viennacl::ocl::program & my_prog_extractBlock = viennacl::ocl::current_context().add_program(extractBlockKernelString, "mykernelextract_Block");
-  //  viennacl::ocl::program & my_prog_gemmaTDinvb_beta = viennacl::ocl::current_context().add_program(aTDinvb_beta_String, "mykernelaTDinvb_beta");
+  viennacl::ocl::program & my_prog_aTDinvb_beta = viennacl::ocl::current_context().add_program(aTDinvb_beta_KernelString, "mykernelaTDinvb_beta");
+  
+  
   
   
   
@@ -585,7 +613,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   viennacl::ocl::kernel & crossprodSsqYxKernel = my_prog_crossprodSsqYx.get_kernel("crossprodBatch");
   viennacl::ocl::kernel & extractSomeDiagKernel = my_prog_extractSomeDiag.get_kernel("extract_some_diag");
   viennacl::ocl::kernel & extractBlockKernel = my_prog_extractBlock.get_kernel("extract_block");
-  //  viennacl::ocl::kernel & gemmaTDinvb_betaKernel = my_prog_gemmaTDinvb_beta.get_kernel("gemm");  
+  viennacl::ocl::kernel & aTDinvb_betaKernel = my_prog_aTDinvb_beta.get_kernel("gemm");  
   
   
   
@@ -631,21 +659,19 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   extractSomeDiagKernel.local_work_size(0, 1L);
   extractSomeDiagKernel.local_work_size(1, 1L);
   
+  
   extractBlockKernel.global_work_size(0, workgroupSize[0] ); 
   extractBlockKernel.global_work_size(1, workgroupSize[1] );   
   extractBlockKernel.local_work_size(0, 1L);
   extractBlockKernel.local_work_size(1, 1L);
   
   
+  aTDinvb_betaKernel.global_work_size(0, workgroupSize[0] ); 
+  aTDinvb_betaKernel.global_work_size(1, workgroupSize[1] ); 
+  aTDinvb_betaKernel.local_work_size(0, localSize[0]);
+  aTDinvb_betaKernel.local_work_size(1, localSize[1]); 
   
-  /* 
-   gemmaTDinvb_betaKernel.global_work_size(0, workgroupSize[0] ); 
-   gemmaTDinvb_betaKernel.global_work_size(1, workgroupSize[1] ); 
-   gemmaTDinvb_betaKernel.global_work_size(2, workgroupSize[2] ); 
-   gemmaTDinvb_betaKernel.local_work_size(0, 1L);
-   gemmaTDinvb_betaKernel.local_work_size(1, localSize[1]); 
-   gemmaTDinvb_betaKernel.local_work_size(2, localSize[2]); 
-   */
+  
   
   
   if(verbose[0]) {
@@ -740,14 +766,22 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       crossprodSsqYxKernel(ssqBetahat, QinvSsqYx, cholXVXdiag, DiterIndex, NthisIteration),
       theQueue); 
     
+    
+    
+    // a^TD^(-1)b * beta = aTDinvb_beta
+    viennacl::ocl::enqueue(aTDinvb_betaKernel(ssqYX, betas, aTDinvb_beta, NthisIteration), //nRowBatch
+                           theQueue);     
+    
+    
+    
+    
+    
+    
     if(verbose[0]) {
       Rcpp::Rcout << "\n" << "Diter " << Diter <<" DiterIndex " << DiterIndex << " endThisIteration " << 
         endThisIteration << " Nthisiteration " << NthisIteration  << "\n";
     }
-    /*  
-     // a^TD^(-1)b * beta = aTDinvb_beta
-     viennacl::ocl::enqueue(gemmaTDinvb_betaKernel(ssqYX, betas,aTDinvb_beta));     
-     */  
+    
     
   } // Diter
   
