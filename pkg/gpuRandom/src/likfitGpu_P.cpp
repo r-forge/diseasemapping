@@ -669,7 +669,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   aTDinvb_betaKernel.global_work_size(1, workgroupSize[1] ); 
   aTDinvb_betaKernel.global_work_size(2, workgroupSize[2] ); 
   aTDinvb_betaKernel.local_work_size(0, localSize[0]);
-  aTDinvb_betaKernel.local_work_size(1, 1); 
+  aTDinvb_betaKernel.local_work_size(1, 1L); 
   aTDinvb_betaKernel.local_work_size(2, localSize[2]);    
   
   
