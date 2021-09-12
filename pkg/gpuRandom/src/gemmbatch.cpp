@@ -1,4 +1,3 @@
-
 #include "gpuRandom.hpp"
 using namespace Rcpp;
 
@@ -29,7 +28,7 @@ std::string gemmBatchString(
     const int NpadMatrixC,
     const int need_transpose) { 
   
- 
+  
   std::string typeString = openclTypeString<T>();
   std::string result = "";
   
@@ -51,139 +50,139 @@ std::string gemmBatchString(
     "#define NpadMatrixA " + std::to_string(NpadMatrixA) + "\n"    
     "#define NpadMatrixB " + std::to_string(NpadMatrixB) + "\n"  
     "#define NpadMatrixC " + std::to_string(NpadMatrixC) + "\n";
- 
+  
   
   result += "__kernel void gemm2( __global "  + typeString+ "* A,\n"
-                                " __global "  + typeString+ "* B,\n"
-                                " __global " + typeString+ "* C){\n";
-                              
-      
-      
-      // Initialise the accumulation register
-      //#define Ncache 100	
-    
+  " __global "  + typeString+ "* B,\n"
+  " __global " + typeString+ "* C){\n";
+  
+  
+  
+  // Initialise the accumulation register
+  //#define Ncache 100	
+  
   result += typeString + " acc ;\n"
-         "int numbatch, Dmatrix, Drow, DrowA0, DrowA, Dcol, DrowC0, Dinner, DrowB0, DcolB;\n"
-         "int CcoltotalA= N * Acolbatch;\n"
-         "int CcoltotalB= N * Bcolbatch;\n";
+  "int numbatch, Dmatrix, Drow, DrowA0, DrowA, Dcol, DrowC0, Dinner, DrowB0, DcolB;\n"
+  "int CcoltotalA= N * Acolbatch;\n"
+  "int CcoltotalB= N * Bcolbatch;\n";
   
   result += "for (Dmatrix=get_global_id(2); Dmatrix < Arowbatch; Dmatrix += get_global_size(2)) {\n"
-                "DrowB0 = Dmatrix * NpadMatrixB;\n"   
-                "for (Drow = get_global_id(0); Drow < M; Drow += get_global_size(0)) {\n"
-                "DrowC0 = Dmatrix * NpadMatrixC + Drow*NpadC;\n";
-          
-if (need_transpose && (Bcolbatch == Acolbatch) && (Arowbatch == Browbatch)) {
-          
-result += "DrowA0 = Dmatrix * NpadMatrixA + Drow;\n"
-            
-            "for (Dcol = get_global_id(1); Dcol < CcoltotalA; Dcol += get_global_size(1)) {\n"
-              "DcolB = DrowB0 + Dcol;\n"
-              "acc = 0;\n"
-              "numbatch = Dcol/N;\n"
-              "DrowA = DrowA0 + M*numbatch;\n"
-              "for(Dinner = 0; Dinner < K; Dinner++){\n "
-                "acc+= A[DrowA + Dinner * NpadA] * B[DcolB + Dinner * NpadB];\n "     
-             " }\n";
-                 
-}else if (need_transpose && (Bcolbatch == 1) && (Acolbatch > 1) && (Arowbatch == Browbatch)){
+  "DrowB0 = Dmatrix * NpadMatrixB;\n"   
+  "for (Drow = get_global_id(0); Drow < M; Drow += get_global_size(0)) {\n"
+  "DrowC0 = Dmatrix * NpadMatrixC + Drow*NpadC;\n";
   
-result +=  " DrowA0 = Dmatrix * NpadMatrixA + Drow;\n" 
-       " for (Dcol = get_global_id(1); Dcol < CcoltotalA; Dcol += get_global_size(1)) {\n"
+  if (need_transpose && (Bcolbatch == Acolbatch) && (Arowbatch == Browbatch)) {
+    
+    result += "DrowA0 = Dmatrix * NpadMatrixA + Drow;\n"
+    
+    "for (Dcol = get_global_id(1); Dcol < CcoltotalA; Dcol += get_global_size(1)) {\n"
+    "DcolB = DrowB0 + Dcol;\n"
+    "acc = 0;\n"
+    "numbatch = Dcol/N;\n"
+    "DrowA = DrowA0 + M*numbatch;\n"
+    "for(Dinner = 0; Dinner < K; Dinner++){\n "
+    "acc+= A[DrowA + Dinner * NpadA] * B[DcolB + Dinner * NpadB];\n "     
+    " }\n";
+    
+  }else if (need_transpose && (Bcolbatch == 1) && (Acolbatch > 1) && (Arowbatch == Browbatch)){
+    
+    result +=  " DrowA0 = Dmatrix * NpadMatrixA + Drow;\n" 
+    " for (Dcol = get_global_id(1); Dcol < CcoltotalA; Dcol += get_global_size(1)) {\n"
     
     "acc = 0;\n"
     "numbatch=Dcol/N;\n"
     "DrowA = DrowA0 + M*numbatch;\n"
-   " DcolB = DrowB0 + Dcol - numbatch*N;\n"
+    " DcolB = DrowB0 + Dcol - numbatch*N;\n"
     
-   " for(Dinner = 0; Dinner < K; Dinner++){\n "
-     " acc+= A[DrowA + Dinner * NpadA] * B[DcolB + Dinner * NpadB];\n  "   
-   " }\n";
-}else if (need_transpose && (Bcolbatch > 1) && (Acolbatch == 1) && (Arowbatch == Browbatch)){
-  
-  result += "DrowA0 = Dmatrix * NpadMatrixA + Drow;\n "//Drow is col of A
-  "for (Dcol = get_global_id(1); Dcol < CcoltotalB; Dcol += get_global_size(1)) {\n"
+    " for(Dinner = 0; Dinner < K; Dinner++){\n "
+    " acc+= A[DrowA + Dinner * NpadA] * B[DcolB + Dinner * NpadB];\n  "   
+    " }\n";
+  }else if (need_transpose && (Bcolbatch > 1) && (Acolbatch == 1) && (Arowbatch == Browbatch)){
     
-   " acc = 0;\n"
+    result += "DrowA0 = Dmatrix * NpadMatrixA + Drow;\n "//Drow is col of A
+    "for (Dcol = get_global_id(1); Dcol < CcoltotalB; Dcol += get_global_size(1)) {\n"
     
-   " DcolB = DrowB0 + Dcol ;\n"
+    " acc = 0;\n"
+    
+    " DcolB = DrowB0 + Dcol ;\n"
     
     "for(Dinner = 0; Dinner < K; Dinner++){\n "
-     " acc+= A[DrowA0 + Dinner * NpadA] * B[DcolB + Dinner * NpadB];\n "     
+    " acc+= A[DrowA0 + Dinner * NpadA] * B[DcolB + Dinner * NpadB];\n "     
     "}\n";
-}
-else if (!need_transpose && (Bcolbatch == Acolbatch) && (Arowbatch == Browbatch)){
-  
-result += 
-     "DrowA0 = Dmatrix * NpadMatrixA + Drow*NpadA;\n"  // points to entry (Drow,0) of submatrix Dmatrix of A
-     
-     "for (Dcol = get_global_id(1); Dcol < CcoltotalA; Dcol += get_global_size(1)) {\n"
-     "DcolB = DrowB0 + Dcol;\n"            
-     "numbatch = Dcol/N;\n"
-     "DrowA = DrowA0 + K*numbatch;\n"
-     "acc = 0;\n"
-     "for(Dinner = 0; Dinner < K; Dinner++){\n"
-     "acc+= A[DrowA + Dinner] * B[DcolB + Dinner * NpadB];\n"
-     " }\n";
-}
-else if (!need_transpose && (Bcolbatch == 1) && (Acolbatch > 1) && (Arowbatch == Browbatch)){
-result += "DrowA0 = Dmatrix * NpadMatrixA + Drow * NpadA;\n"     
-  "for (Dcol = get_global_id(1); Dcol < CcoltotalA; Dcol += get_global_size(1)) {\n "  
+  }
+  else if (!need_transpose && (Bcolbatch == Acolbatch) && (Arowbatch == Browbatch)){
+    
+    result += 
+      "DrowA0 = Dmatrix * NpadMatrixA + Drow*NpadA;\n"  // points to entry (Drow,0) of submatrix Dmatrix of A
+      
+      "for (Dcol = get_global_id(1); Dcol < CcoltotalA; Dcol += get_global_size(1)) {\n"
+      "DcolB = DrowB0 + Dcol;\n"            
+      "numbatch = Dcol/N;\n"
+      "DrowA = DrowA0 + K*numbatch;\n"
+      "acc = 0;\n"
+      "for(Dinner = 0; Dinner < K; Dinner++){\n"
+      "acc+= A[DrowA + Dinner] * B[DcolB + Dinner * NpadB];\n"
+      " }\n";
+  }
+  else if (!need_transpose && (Bcolbatch == 1) && (Acolbatch > 1) && (Arowbatch == Browbatch)){
+    result += "DrowA0 = Dmatrix * NpadMatrixA + Drow * NpadA;\n"     
+    "for (Dcol = get_global_id(1); Dcol < CcoltotalA; Dcol += get_global_size(1)) {\n "  
     
     "numbatch=Dcol/N;\n"
     "DrowA = DrowA0 + K*numbatch;\n"
     "DcolB = DrowB0 + Dcol-numbatch*N;\n"
     "acc = 0;\n"
-   " for(Dinner = 0; Dinner < K; Dinner++){\n "
-      "acc+= A[DrowA+ Dinner] * B[DcolB + Dinner * NpadB];\n"
+    " for(Dinner = 0; Dinner < K; Dinner++){\n "
+    "acc+= A[DrowA+ Dinner] * B[DcolB + Dinner * NpadB];\n"
     "}\n";
-}
-else if (!need_transpose && (Bcolbatch > 1) && (Acolbatch == 1) && (Arowbatch == Browbatch)){
-  result += "DrowA0 = Dmatrix * NpadMatrixA + Drow * NpadA;\n  "   
-  "for (Dcol = get_global_id(1); Dcol < CcoltotalB; Dcol += get_global_size(1)) {\n "  
+  }
+  else if (!need_transpose && (Bcolbatch > 1) && (Acolbatch == 1) && (Arowbatch == Browbatch)){
+    result += "DrowA0 = Dmatrix * NpadMatrixA + Drow * NpadA;\n  "   
+    "for (Dcol = get_global_id(1); Dcol < CcoltotalB; Dcol += get_global_size(1)) {\n "  
     "DcolB = DrowB0 + Dcol;\n"
-   " acc = 0;\n"
+    " acc = 0;\n"
     
     "for(Dinner = 0; Dinner < K; Dinner++){\n "
-      "acc+= A[DrowA0+ Dinner] * B[DcolB + Dinner * NpadB];\n"
+    "acc+= A[DrowA0+ Dinner] * B[DcolB + Dinner * NpadB];\n"
     "}\n";
-}
-else if (!need_transpose && (Bcolbatch == Acolbatch) && (Arowbatch > Browbatch) && (Browbatch==1)){
-  
-  result += 
-    "DrowA0 = Dmatrix * NpadMatrixA + Drow * NpadA;\n"  // points to entry (Drow,0) of submatrix Dmatrix of A
+  }
+  else if (!need_transpose && (Bcolbatch == Acolbatch) && (Arowbatch > Browbatch) && (Browbatch==1)){
+    
+    result += 
+      "DrowA0 = Dmatrix * NpadMatrixA + Drow * NpadA;\n"  // points to entry (Drow,0) of submatrix Dmatrix of A
+      
+      "for (Dcol = get_global_id(1); Dcol < CcoltotalA; Dcol += get_global_size(1)) {\n"
+      "DcolB = Dcol;\n"            
+      "numbatch = Dcol/N;\n"
+      "DrowA = DrowA0 + K*numbatch;\n"
+      "acc = 0;\n"
+      "for(Dinner = 0; Dinner < K; Dinner++){\n"
+      "acc+= A[DrowA + Dinner] * B[DcolB + Dinner * NpadB];\n"
+      " }\n";
+  }else if (need_transpose && (Bcolbatch == Acolbatch) && (Arowbatch > Browbatch) && (Browbatch==1)) {
+    
+    result += "DrowA0 = Dmatrix * NpadMatrixA + Drow;\n"
     
     "for (Dcol = get_global_id(1); Dcol < CcoltotalA; Dcol += get_global_size(1)) {\n"
-    "DcolB = Dcol;\n"            
-    "numbatch = Dcol/N;\n"
-    "DrowA = DrowA0 + K*numbatch;\n"
+    "DcolB =  Dcol;\n"
     "acc = 0;\n"
-    "for(Dinner = 0; Dinner < K; Dinner++){\n"
-    "acc+= A[DrowA + Dinner] * B[DcolB + Dinner * NpadB];\n"
+    "numbatch = Dcol/N;\n"
+    "DrowA = DrowA0 + M*numbatch;\n"
+    "for(Dinner = 0; Dinner < K; Dinner++){\n "
+    "acc+= A[DrowA + Dinner * NpadA] * B[DcolB + Dinner * NpadB];\n "     
     " }\n";
-}else if (need_transpose && (Bcolbatch == Acolbatch) && (Arowbatch > Browbatch) && (Browbatch==1)) {
+    
+  }
   
-  result += "DrowA0 = Dmatrix * NpadMatrixA + Drow;\n"
   
-  "for (Dcol = get_global_id(1); Dcol < CcoltotalA; Dcol += get_global_size(1)) {\n"
-  "DcolB =  Dcol;\n"
-  "acc = 0;\n"
-  "numbatch = Dcol/N;\n"
-  "DrowA = DrowA0 + M*numbatch;\n"
-  "for(Dinner = 0; Dinner < K; Dinner++){\n "
-  "acc+= A[DrowA + Dinner * NpadA] * B[DcolB + Dinner * NpadB];\n "     
-  " }\n";
   
-}
-
-
-
-result +=  "C[DrowC0 + Dcol] = acc;\n"
-     "}\n" //Dcol
-     "}\n"  	//Drow
-     "}\n"//Dmatrix
-     
-     "}\n";
-     
+  result +=  "C[DrowC0 + Dcol] = acc;\n"
+  "}\n" //Dcol
+  "}\n"  	//Drow
+  "}\n"//Dmatrix
+  
+  "}\n";
+  
   return(result);
 }
 
@@ -215,12 +214,12 @@ void gemmBatch(
   int M,K;
   const int N = B.size2()/Bcolbatch;
   std::string gemmString;
- 
+  
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   
-//  cl_device_type type_check = ctx.current_device().type();
+  //  cl_device_type type_check = ctx.current_device().type();
   
- 
+  
   if (need_transpose==1){
     M = A.size2()/Acolbatch;
     K = A.size1()/Arowbatch;
@@ -259,7 +258,7 @@ void gemmBatch(
       C.internal_size2()*M,
       need_transpose);
   }
-
+  
   
 #ifdef DEBUG
   Rcpp::Rcout << gemmString << "\n\n";
@@ -267,16 +266,16 @@ void gemmBatch(
   
   
   viennacl::ocl::program & my_prog = ctx.add_program(gemmString, "mymykernel");
-
+  
   viennacl::ocl::kernel & gemmKernel = my_prog.get_kernel("gemm2");
-
+  
   gemmKernel.global_work_size(0, Nglobal[0]);
   gemmKernel.global_work_size(1, Nglobal[1]);
   gemmKernel.global_work_size(2, Nglobal[2]);
   
   //gemmKernel.local_work_size(0, Nlocal[0]);
   //gemmKernel.local_work_size(1, Nlocal[1]);
- viennacl::ocl::enqueue(gemmKernel( A, B, C));
+  viennacl::ocl::enqueue(gemmKernel( A, B, C));
 }
 
 
@@ -320,7 +319,7 @@ SEXP gemmBatchBackend(
     const int need_transpose, //A need transpose?
     Rcpp::IntegerVector Nglobal) {
   
-//#ifdef UNDEF  
+  //#ifdef UNDEF  
   Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(C));
   std::string precision_type = (std::string) classVarR;
   if(precision_type == "fvclMatrix") {
@@ -330,14 +329,10 @@ SEXP gemmBatchBackend(
   } else {
     Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
   }
-//#endif  
-    return Rcpp::wrap(0L);
-
+  //#endif  
+  return Rcpp::wrap(0L);
+  
 }
-
-
-
-
 
 
 

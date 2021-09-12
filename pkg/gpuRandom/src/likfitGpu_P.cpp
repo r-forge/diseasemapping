@@ -310,6 +310,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                 viennacl::matrix_base<T> &params, 
                 viennacl::matrix_base<T> &betas,
                 viennacl::matrix_base<T> &ssqY,
+                viennacl::matrix_base<T> &aTDinvb_beta,
                 viennacl::matrix_base<T> &XVYXVX,
                 viennacl::matrix_base<T> &ssqBetahat,
                 viennacl::vector_base<T> &detVar,
@@ -533,6 +534,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   Rcpp::IntegerVector NlocalCachegemm = {NlocalCache[0],NlocalCache[0]};
   
   std::string aTDinvb_beta_KernelString = gemmBatch2String<T>(
+    1,  //  onlyDiagC
     transposeABC,  // (1,0,0),      
     submatrixA, //
     submatrixB,//
@@ -567,9 +569,6 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   
   
   /*
-   
-   
-   
    std::string extract_aTDinvb_betaDiagString = extract_some_diag_string<T>(
    NparamPerIter[0],  
    Ndatasets,
@@ -771,11 +770,8 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     
     
     // a^TD^(-1)b * beta = aTDinvb_beta
-    viennacl::ocl::enqueue(aTDinvb_betaKernel(ssqYX, betas, aTDinvb_beta, NthisIteration), //nRowBatch
+    viennacl::ocl::enqueue(aTDinvb_betaKernel(ssqYX, betas, aTDinvb_beta, DiterIndex, NthisIteration), //nRowBatch
                            theQueue);     
-    
-    
-    
     
     
     
@@ -819,6 +815,7 @@ void likfitGpuP_Templated(
     Rcpp::S4 boxcox,
     Rcpp::S4 betas,
     Rcpp::S4 ssqY,
+    Rcpp::S4 aTDinvb_beta,
     Rcpp::S4 XVYXVX,
     Rcpp::S4 ssqBetahat,
     Rcpp::S4 detVar,
@@ -845,6 +842,7 @@ void likfitGpuP_Templated(
   std::shared_ptr<viennacl::matrix<T> > paramsGpu = getVCLptr<T>(params.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<T> > betasGpu = getVCLptr<T>(betas.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<T> > ssqYGpu = getVCLptr<T>(ssqY.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix<T> > aTDinvb_betaGpu = getVCLptr<T>(aTDinvb_beta.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<T> > XVYXVXGpu = getVCLptr<T>(XVYXVX.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<T> > ssqBetahatGpu = getVCLptr<T>(ssqBetahat.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::vector_base<T> > detVarGpu = getVCLVecptr<T>(detVar.slot("address"), BisVCL, ctx_id);
@@ -882,6 +880,7 @@ void likfitGpuP_Templated(
     *paramsGpu, 
     *betasGpu,
     *ssqYGpu, 
+    *aTDinvb_betaGpu,
     *XVYXVXGpu,
     *ssqBetahatGpu,
     *detVarGpu, 
@@ -933,23 +932,24 @@ void likfitGpu_BackendP(
     Rcpp::S4 boxcox,  //4
     Rcpp::S4 betas,   //5    not used
     Rcpp::S4 ssqY,  //6
-    Rcpp::S4 XVYXVX,  //7 
-    Rcpp::S4 ssqBetahat, //8
-    Rcpp::S4 detVar, //9
-    Rcpp::S4 detReml, //10
-    Rcpp::S4 jacobian,  //11
-    Rcpp::IntegerVector NparamPerIter,//12
-    Rcpp::IntegerVector workgroupSize,//13
-    Rcpp::IntegerVector localSize,//14
-    Rcpp::IntegerVector NlocalCache,//15
-    Rcpp::IntegerVector verbose,//16
-    Rcpp::S4 ssqYX, //17          col number must be exactly Ncovariates + Ndatasets
-    Rcpp::S4 ssqYXcopy, //18    not really used?
-    Rcpp::S4 LinvYX, //19
-    Rcpp::S4 QinvSsqYx, //20
-    Rcpp::S4 cholXVXdiag,//21
-    Rcpp::S4 varMat, //22       Vbatch
-    Rcpp::S4 cholDiagMat) { //23
+    Rcpp::S4 aTDinvb_beta, //7
+    Rcpp::S4 XVYXVX,  //8 
+    Rcpp::S4 ssqBetahat, //9
+    Rcpp::S4 detVar, //10
+    Rcpp::S4 detReml, //11
+    Rcpp::S4 jacobian,  //12
+    Rcpp::IntegerVector NparamPerIter,//13
+    Rcpp::IntegerVector workgroupSize,//14
+    Rcpp::IntegerVector localSize,//15
+    Rcpp::IntegerVector NlocalCache,//16
+    Rcpp::IntegerVector verbose,//17
+    Rcpp::S4 ssqYX, //18          col number must be exactly Ncovariates + Ndatasets
+    Rcpp::S4 ssqYXcopy, //19    not really used?
+    Rcpp::S4 LinvYX, //20
+    Rcpp::S4 QinvSsqYx, //21
+    Rcpp::S4 cholXVXdiag,//22
+    Rcpp::S4 varMat, //23       Vbatch
+    Rcpp::S4 cholDiagMat) { //24
   //    Rcpp::S4 aTDinvb_beta,
   //    Rcpp::S4 aTDinvb_beta_diag
   
@@ -965,6 +965,7 @@ void likfitGpu_BackendP(
                                   boxcox,
                                   betas,
                                   ssqY,
+                                  aTDinvb_beta,
                                   XVYXVX,
                                   ssqBetahat,
                                   detVar,
@@ -983,6 +984,7 @@ void likfitGpu_BackendP(
                                    boxcox,
                                    betas,
                                    ssqY,
+                                   aTDinvb_beta,
                                    XVYXVX,
                                    ssqBetahat,
                                    detVar,
