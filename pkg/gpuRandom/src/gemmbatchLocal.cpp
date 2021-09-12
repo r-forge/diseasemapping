@@ -222,6 +222,7 @@ std::string gemmBatch2String(
   if(onlyDiagC){
     result +=   "   DrowBlock < NrowStop;\n";
   }else{
+    result +=
     "   DrowBlock < Nrow;\n";
   }
   
@@ -235,6 +236,7 @@ std::string gemmBatch2String(
       "       Dcol = Drow;\n"
       "       DcolBlock = Dcol;\n";
   }else{
+    result +=
     "   for(DcolBlock = get_group_id(2)*get_local_size(2);\n" // col for work item ?,?,0
     "     DcolBlock < Ncol;\n"
     "     DcolBlock += get_global_size(2)) {\n"
@@ -535,8 +537,6 @@ SEXP gemmBatch2backend(
   return result;
   
 }
-
-
 
 
 
