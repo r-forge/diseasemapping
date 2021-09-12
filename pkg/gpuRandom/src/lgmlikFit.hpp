@@ -79,11 +79,12 @@ template <typename T> std::string openclTypeString();
 
 template <typename T> 
 std::string gemmBatch2String(
+    const int onlyDiagC,         // compute only the diagonal values of C
     Rcpp::IntegerVector transposeABC,  
     Rcpp::IntegerVector submatrixA,  
     Rcpp::IntegerVector submatrixB,
     Rcpp::IntegerVector submatrixC,
-    Rcpp::IntegerVector batches,  
+    Rcpp::IntegerVector recycle,      //"nCol", "recycleArow", "recycleAcol", "recycleBrow", "recycleBcol"
     Rcpp::IntegerVector NlocalCache,
     int NpadA, int NpadB, int NpadC);
 

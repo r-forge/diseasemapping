@@ -1,3 +1,5 @@
+//9.12   5pm
+
 
 
 /*
@@ -49,6 +51,7 @@ using namespace Rcpp;
 
 template <typename T> 
 std::string gemmBatch2String(
+    const int onlyDiagC,         // compute only the diagonal values of C
     Rcpp::IntegerVector transposeABC,  
     Rcpp::IntegerVector submatrixA,  
     Rcpp::IntegerVector submatrixB,
@@ -67,7 +70,7 @@ std::string gemmBatch2String(
   
   
   result +=  
-  //  "#define NmatrixRow " + std::to_string(batches[0]) + "\n"
+    //  "#define NmatrixRow " + std::to_string(batches[0]) + "\n"
     "#define NmatrixCol " + std::to_string(recycle[0]) + "\n"; 
   
   
@@ -89,14 +92,24 @@ std::string gemmBatch2String(
   
   result += 
     "#define NpadC "+ std::to_string(NpadC) + "\n"
-    "#define rowStartC " + std::to_string(submatrixC[0]) + "\n"
-    "#define NrowTotalC " + std::to_string(submatrixC[2]) + "\n"
-    "#define NpadNrowTotalC "+ std::to_string(NpadC * submatrixC[2]) + "\n"  
+    "#define rowStartC " + std::to_string(submatrixC[0]) + "\n";
+  
+  if(onlyDiagC){
+    result +=
+      "#define NrowTotalC 1 \n"
+      "#define NpadNrowTotalC "+ std::to_string(NpadC * 1) + "\n";
+  }else{
+    result +=
+      "#define NrowTotalC " + std::to_string(submatrixC[2]) + "\n"
+      "#define NpadNrowTotalC "+ std::to_string(NpadC * submatrixC[2]) + "\n";  
+  }
+  
+  result +=
     "#define colStartC " + std::to_string(submatrixC[3]) + "\n"
     "#define NcolTotalC " + std::to_string(submatrixC[5]) + "\n\n";
   
   
-  if(transposeABC[0]) { // transpose A, Ninner is rows of A^T, rows of A
+  if(transposeABC[0]) { // transpose A, Ninner is rows of A^T, rows of A， A is Nrow by Ninner
     result += 
       "#define Nrow " + std::to_string(submatrixA[4]) + "\n"  
       "#define Ninner " + std::to_string(submatrixA[1]) + "\n"
@@ -124,15 +137,28 @@ std::string gemmBatch2String(
   }
   result += "\n";
   
-  if(transposeABC[2]) { // transpose C, Nrow is rows of C^T, cols of C
+  if(transposeABC[2] && !onlyDiagC) { // transpose C, Nrow is rows of C^T, cols of C
     result += 
       "#define Cijorig ( DmatrixRow * NpadNrowTotalC + NpadC * (colStartC + Dcol) + DmatrixCol * NrowTotalC + rowStartC + Drow)\n"
       "#define Cij (startMatrixC+ NpadC * Dcol + Drow)\n\n";
-  } else {
+  } else if(!transposeABC[2] && !onlyDiagC){  // no transpose
     result += 
       "#define Cijorig ( DmatrixRow * NpadNrowTotalC + NpadC * (rowStartC + Drow) + DmatrixCol * NcolTotalC + colStartC + Dcol)\n"
       "#define Cij (startMatrixC+ NpadC * Drow + Dcol)\n\n";
+  }else if(transposeABC[2] && onlyDiagC){
+    result += 
+      "#define Cijorig ( DmatrixRow * NpadNrowTotalC + NpadC * (colStartC + Dcol) + DmatrixCol * NrowTotalC + rowStartC + Drow)\n"
+      "#define Cij (startMatrixC  + Drow)\n\n";
+  }else if(!transposeABC[2] && onlyDiagC){
+    result += 
+      "#define Cijorig ( DmatrixRow * NpadNrowTotalC + NpadC * (rowStartC + Drow) + DmatrixCol * NcolTotalC + colStartC + Dcol)\n"
+      "#define Cij (startMatrixC + Dcol)\n\n";
   }
+  
+  
+  
+  
+  
   result += "\n";
   
   result +=  
@@ -143,7 +169,8 @@ std::string gemmBatch2String(
   result += "\n__kernel void gemm( __global "  + typeString+ "* A,\n"
   " __global "  + typeString+ "* B,\n"
   " __global " + typeString+ "* C,\n"
-  "   int NmatrixRow){\n\n   //nRowBatch";
+  "   int NrowStartC,\n"
+  "   int NmatrixRow){   //nRowBatch \n\n";
   
   
   result += typeString + " acc;\n"
@@ -173,31 +200,52 @@ std::string gemmBatch2String(
   if(recycle[3]) {
     result += "startMatrixB = NpadB * rowStartB + DmatrixCol * NcolTotalB + colStartC;\n";
   } else {
-    result += "startMatrixB = DmatrixRow * NpadNrowTotalB + NpadB * rowStartB + DmatrixCol * NcolTotalB + colStartC;\n";
+    result += "startMatrixB = DmatrixRow * NpadNrowTotalB + NpadB * rowStartB + DmatrixCol * NcolTotalB + colStartB;\n";
   }
-  result += "startMatrixC = DmatrixRow * NpadNrowTotalC + NpadC * rowStartC + DmatrixCol * NcolTotalC + colStartC;\n";
+  
+  result += "startMatrixC = (DmatrixRow + NrowStartC) * NpadNrowTotalC + NpadC * rowStartC + DmatrixCol * NcolTotalC + colStartC;\n";
   
   result +=
     "   for(DrowBlock = get_group_id(1)*get_local_size(1);\n" // row for work item ?,0,?
     "     DrowBlock < Nrow;\n"
     "     DrowBlock += get_global_size(1)) {\n"
-    "   Drow = DrowBlock + get_local_id(1);\n";
+    "     Drow = DrowBlock + get_local_id(1);\n";
   
   
-  result +=
-    "   for(DcolBlock = get_group_id(2)*get_local_size(2);\n" // col for work item ?,?,0
-    "     DcolBlock < Ncol;\n"
-    "     DcolBlock += get_global_size(2)) {\n"
-    "   Dcol = DcolBlock + get_local_id(2);\n";
+  
+  if(onlyDiagC){
+    result += 
+      " Dcol = Drow; \n";
+  }else {
+    result +=
+      "   for(DcolBlock = get_group_id(2)*get_local_size(2);\n" // col for work item ?,?,0
+      "     DcolBlock < Ncol;\n"
+      "     DcolBlock += get_global_size(2)) {\n"
+      "   Dcol = DcolBlock + get_local_id(2);\n"; 
+  }
+  
+  
+  
+  
+  
+  
   
   if(transposeABC[0]) {  
     result += "startInnerA = startMatrixA + DrowBlock ;\n";
   } else {
     result += "startInnerA = startMatrixA + NpadA * DrowBlock;\n";
   }
-  if(transposeABC[1]) {  
+  
+  if(transposeABC[1] && onlyDiagC) {  
+    result += "startInnerB = startMatrixB + NpadB * Dcol ;\n";
+  }
+  else if(transposeABC[1] & !onlyDiagC){
     result += "startInnerB = startMatrixB + NpadB * DcolBlock ;\n";
-  } else {
+  }
+  else if(!transposeABC[1] && onlyDiagC){
+    result += "startInnerB = startMatrixB + Dcol;\n";
+  }
+  else if(!transposeABC[1] && !onlyDiagC){
     result += "startInnerB = startMatrixB + DcolBlock;\n";
   }
   
@@ -288,9 +336,16 @@ std::string gemmBatch2String(
     "}\n\n";
   
   
-  result += 
-    "   }//DrowBlock\n"
-    "   }//DcolBlock\n";
+  
+  if(onlyDiagC){
+  }else {
+    result += 
+      "   }//DcolBlock\n";
+  }
+  
+  result +=
+    "   }//DrowBlock\n";
+  
   
   result += 
     " }//DmatrixRow\n"
@@ -333,6 +388,7 @@ int gemmBatch2(
   Rcpp::IntegerVector recycle = batches[integer];      //"nCol", "recycleArow", "recycleAcol", "recycleBrow", "recycleBcol"
   
   std::string gemmString = gemmBatch2String<T>(
+    1,   // want to compute all elements of C
     transposeABC,  
     submatrixA,
     submatrixB,
@@ -358,7 +414,7 @@ int gemmBatch2(
   gemmKernel.local_work_size(1, workgroupSize[4]);
   gemmKernel.local_work_size(2, workgroupSize[5]);  
   
-  viennacl::ocl::enqueue(gemmKernel(A, B, C, batches[0]));
+  viennacl::ocl::enqueue(gemmKernel(A, B, C, 0, batches[0]));
   
   return 1;
 }
@@ -388,7 +444,7 @@ SEXP gemmBatch2Typed(Rcpp::S4 AR,
   
   result = gemmBatch2<T>(*A, *B, *C, transposeABC, 
                          submatrixA, submatrixB, submatrixC, batches, 
-                         workgroupSize, NlocalCache, verbose, ctx_id);	
+                         workgroupSize, NlocalCache, verbose, ctx_id);  
   
   return Rcpp::wrap(result);
 }
@@ -440,6 +496,13 @@ SEXP gemmBatch2backend(
   return result;
   
 }
+
+
+
+
+
+
+
 
 
 
