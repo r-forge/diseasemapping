@@ -429,7 +429,7 @@ int gemmBatch2(
   Rcpp::IntegerVector recycle = batches[integer];      //"nCol", "recycleArow", "recycleAcol", "recycleBrow", "recycleBcol"
   
   std::string gemmString = gemmBatch2String<T>(
-    0,   // want to compute all elements of C
+    1,   // want to compute all elements of C
     transposeABC,  
     submatrixA,
     submatrixB,
