@@ -1,4 +1,4 @@
-//9.12   5pm
+//9.13   1am
 
 
 
@@ -43,6 +43,7 @@
  */
 
 #include "gpuRandom.hpp"
+#include <algorithm>        // std::min
 using namespace Rcpp;
 
 
@@ -97,7 +98,8 @@ std::string gemmBatch2String(
   if(onlyDiagC){
     result +=
       "#define NrowTotalC 1 \n"
-      "#define NpadNrowTotalC "+ std::to_string(NpadC * 1) + "\n";
+      "#define NpadNrowTotalC "+ std::to_string(NpadC * 1) + "\n"
+      "#define MIN(x, y) (x < y ? x : y) \n";
   }else{
     result +=
       "#define NrowTotalC " + std::to_string(submatrixC[2]) + "\n"
@@ -156,14 +158,14 @@ std::string gemmBatch2String(
   }
   
   
-  
-  
-  
   result += "\n";
   
   result +=  
     "#define cacheSizeA " + std::to_string(NlocalCache[0]) + "\n"
     "#define cacheSizeB " + std::to_string(NlocalCache[1]) + "\n"; 
+  
+  
+  
   
   
   result += "\n__kernel void gemm( __global "  + typeString+ "* A,\n"
@@ -172,6 +174,10 @@ std::string gemmBatch2String(
   "   int NrowStartC,\n"
   "   int NmatrixRow){   //nRowBatch \n\n";
   
+  if(onlyDiagC){
+    result +=
+      "const int NrowStop = MIN(Nrow, Ncol);\n\n";
+  }
   
   result += typeString + " acc;\n"
   "int DmatrixRow, DmatrixCol;\n"
@@ -192,6 +198,7 @@ std::string gemmBatch2String(
     " for(DmatrixRow = get_global_id(0);\n" 
     "   DmatrixRow < NmatrixRow;\n" 
     "   DmatrixRow += get_global_size(0)) {\n"
+    
     " for(DmatrixCol = 0;\n"
     "   DmatrixCol < NmatrixCol;\n" 
     "   DmatrixCol ++) {\n\n";
@@ -205,27 +212,34 @@ std::string gemmBatch2String(
   
   result += "startMatrixC = (DmatrixRow + NrowStartC) * NpadNrowTotalC + NpadC * rowStartC + DmatrixCol * NcolTotalC + colStartC;\n";
   
+  
+  
+  
+  
   result +=
-    "   for(DrowBlock = get_group_id(1)*get_local_size(1);\n" // row for work item ?,0,?
-    "     DrowBlock < Nrow;\n"
+    "   for(DrowBlock = get_group_id(1)*get_local_size(1);\n"; // row for work item ?,0,?
+  
+  if(onlyDiagC){
+    result +=   "   DrowBlock < NrowStop;\n";
+  }else{
+    "   DrowBlock < Nrow;\n";
+  }
+  
+  result +=
     "     DrowBlock += get_global_size(1)) {\n"
     "     Drow = DrowBlock + get_local_id(1);\n";
   
   
-  
   if(onlyDiagC){
-    result += 
-      " Dcol = Drow; \n";
-  }else {
     result +=
-      "   for(DcolBlock = get_group_id(2)*get_local_size(2);\n" // col for work item ?,?,0
-      "     DcolBlock < Ncol;\n"
-      "     DcolBlock += get_global_size(2)) {\n"
-      "   Dcol = DcolBlock + get_local_id(2);\n"; 
+      "       Dcol = Drow;\n"
+      "       DcolBlock = Dcol;\n";
+  }else{
+    "   for(DcolBlock = get_group_id(2)*get_local_size(2);\n" // col for work item ?,?,0
+    "     DcolBlock < Ncol;\n"
+    "     DcolBlock += get_global_size(2)) {\n"
+    "     Dcol = DcolBlock + get_local_id(2);\n";
   }
-  
-  
-  
   
   
   
@@ -235,23 +249,15 @@ std::string gemmBatch2String(
   } else {
     result += "startInnerA = startMatrixA + NpadA * DrowBlock;\n";
   }
-  
-  if(transposeABC[1] && onlyDiagC) {  
-    result += "startInnerB = startMatrixB + NpadB * Dcol ;\n";
-  }
-  else if(transposeABC[1] & !onlyDiagC){
+  if(transposeABC[1]) {  
     result += "startInnerB = startMatrixB + NpadB * DcolBlock ;\n";
-  }
-  else if(!transposeABC[1] && onlyDiagC){
-    result += "startInnerB = startMatrixB + Dcol;\n";
-  }
-  else if(!transposeABC[1] && !onlyDiagC){
+  } else {
     result += "startInnerB = startMatrixB + DcolBlock;\n";
   }
   
   
-  result += "acc = 0.0;\n";
   
+  result += "acc = 0.0;\n";
   result += "wait =  (event_t) 0;\n";
   
   result += "Anow = localCacheA1;\n"
@@ -260,15 +266,21 @@ std::string gemmBatch2String(
   "Bnext = localCacheB2;\n";
   
   // cache A[1:Nlocal, 1], and B[1, 1:Nlocal]
-  if(transposeABC[0]) {
+  if(transposeABC[0] ) {   // transpose A
     result +=  "  wait = async_work_group_copy(\n"
     "    Anext, &A[Ai0(0)],\n"
     "    get_local_size(1), (event_t) 0);\n";
-  } else {
+    
+  } else {    // don't transpose A
     result +=  "  wait = async_work_group_strided_copy(\n"
     "    Anext, &A[Ai0(0)],\n"
     "    get_local_size(1), NpadA, (event_t) 0);\n";
+    
   }
+  
+  
+  
+  
   if(transposeABC[1]) {
     result +=  "  wait = async_work_group_strided_copy(\n"
     "    Bnext, &B[Bi0(0)],\n"
@@ -278,6 +290,15 @@ std::string gemmBatch2String(
     "    Bnext, &B[Bi0(0)],\n"
     "    get_local_size(2), wait);\n";
   }
+  
+  
+  
+  
+  
+  
+  
+  
+  
   result += "  wait_group_events (1, &wait);\n";
   
   result += // loop through remaining inner
@@ -293,16 +314,22 @@ std::string gemmBatch2String(
   " Anext = Atemp;\n"
   " Bnext = Btemp;\n";
   
+  
+  
+  
   // cache ahead
   if(transposeABC[0]) {
     result +=  "  wait = async_work_group_copy(\n"
     "    Anext, &A[Ai0(Dinnerp1)],\n"
     "    get_local_size(1), (event_t) 0);\n";
-  } else {
+  } else if(!transposeABC[0]){
     result +=  "  wait = async_work_group_strided_copy(\n"
     "    Anext, &A[Ai0(Dinnerp1)],\n"
     "    get_local_size(1), NpadA, (event_t) 0);\n";
   }
+  
+  
+  
   if(transposeABC[1]) {
     result +=  "  wait = async_work_group_strided_copy(\n"
     "    Bnext, &B[Bi0(Dinnerp1)],\n"
@@ -314,11 +341,18 @@ std::string gemmBatch2String(
   }
   //  "  barrier(CLK_LOCAL_MEM_FENCE);\n";
   
+  
+  
+  
   result += "\n";
   // compute component from previously cached values
   // this will happen at the same time the caching is done
+  
+  
+  
   result += "acc += Anow[get_local_id(1)] * "
   " Bnow[get_local_id(2)];\n";
+  
   result += "\n";
   result += "  wait_group_events (1, &wait);\n";
   
@@ -327,8 +361,12 @@ std::string gemmBatch2String(
   result += "\n";
   // last row of B, Dinner = Ninner
   // A and B are cached, don't need to cache ahead
+  
+  
   result += "acc += Anext[get_local_id(1)] * "
   " Bnext[get_local_id(2)];\n";
+  
+  
   result += "\n";
   result += 
     "\nif(Drow < Nrow & Dcol < Ncol) {\n"
@@ -338,10 +376,11 @@ std::string gemmBatch2String(
   
   
   if(onlyDiagC){
-  }else {
+  }else{
     result += 
-      "   }//DcolBlock\n";
+      "   }//DcolBlock\n"; 
   }
+  
   
   result +=
     "   }//DrowBlock\n";
@@ -388,7 +427,7 @@ int gemmBatch2(
   Rcpp::IntegerVector recycle = batches[integer];      //"nCol", "recycleArow", "recycleAcol", "recycleBrow", "recycleBcol"
   
   std::string gemmString = gemmBatch2String<T>(
-    1,   // want to compute all elements of C
+    0,   // want to compute all elements of C
     transposeABC,  
     submatrixA,
     submatrixB,
@@ -496,12 +535,6 @@ SEXP gemmBatch2backend(
   return result;
   
 }
-
-
-
-
-
-
 
 
 
