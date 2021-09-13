@@ -1,8 +1,8 @@
 #include "gpuRandom.hpp"
 #define DEBUG
 
-// dimension 0 is cell, dimension 1 is matrix
-// local and global work sizes should be identical for dimension 1 (second dimension)
+// dimension 0 is row, local dimension 1 inner loop over columns, group 0 is matrix
+// local and global work sizes should be identical for dimension 1 (second dimension), only 1 group for dimension 1
 
 
 template <typename T> std::string cholBatchKernelString(
@@ -148,14 +148,14 @@ result +=
   }
   
   result +=  
-    "\n\n#ifdef diagToOne\n"
+  "#ifdef diagToOne\n"
   "   A[AHereDcol+Dcol] = 1.0;\n"
   "#endif\n"
-  "  }\n" //localIndex==0 and Dmatrix < Nmatrix
+  "  }  //localIndex==0 and Dmatrix < Nmatrix\n"
   "  barrier(CLK_LOCAL_MEM_FENCE);\n\n";
   //"  diagDcol = diagHere[Dcol];\n"
-  
-  result += "// off diagonals\n";
+
+    result += "// off diagonals\n";
 //  result += " for(Drow = Dcol+get_local_id(0)+1; Drow < N; Drow += get_local_size(0)) {\n";
 
 // DrowBlock is the Drow for the first work item.  
@@ -173,7 +173,7 @@ result += "  Drow = DrowBlock + get_local_id(0);\n";
       "  AHereDrow = AHere+Drow*Npad;\n"
     "  DL = 0.0;\n";
   
-  result += "  if( (Drow < N) & (Dmatrix < Nmatrix)){\n";
+  result += "  if( (Drow < N) & (Dmatrix < Nmatrix) & (Drow < N) ){\n";
   
   if(allowOverflow) {
     result +=
@@ -208,7 +208,7 @@ result += "  Drow = DrowBlock + get_local_id(0);\n";
   "  // local reduction\n"
     "  barrier(CLK_LOCAL_MEM_FENCE);\n";
   result +=
-    "  if( (get_local_id(1) == 0) & (Dmatrix < Nmatrix) ){\n"
+    "  if( (get_local_id(1) == 0) & (Dmatrix < Nmatrix)  & (Drow < N)){\n"
     "   DL = toAddLocal[localIndex];\n";
 
 result +=    "   for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
@@ -222,14 +222,13 @@ result +=
 
   result +=
     " }//DrowBlock\n";
-  
 
   result +=  
     "barrier(CLK_GLOBAL_MEM_FENCE);\n"
     "} // Dcol loop\n\n";
   
     if(logDet){
-        result +=  "if(localIndexIsZero & (Dmatrix < Nmatrix) ){\n"
+        result +=  "if(localIndexIsZero & (Dmatrix < Nmatrix)  & (Drow < N)){\n"
           " logDet[logDetIndex + Dmatrix] = logDetHere;\n"
           "}\n";
     }
