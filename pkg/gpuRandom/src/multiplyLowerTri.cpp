@@ -46,19 +46,23 @@ std::string multiplyDiagonalBatchString(
     "	__global "+ typeString+ " *A,\n"
     "	__global "+ typeString+ " *B) {\n\n" +
       
-    "int DrowGlobal, DrowLocal, Dcol,Dmatrix, Diter;\n"
+    "int DrowGlobal, DrowGlobalBlock, DrowLocal, Dcol,Dmatrix, DmatrixBlock, Diter;\n"
     "	local "+ typeString+ " Acache[NlocalCacheA];\n" 
     " int AHere, BHere, CHere;\n" 
     " "+ typeString+ " AforThisWorkitem;\n" 
     "const int doCacheA = (get_local_id(1) == 0);\n"
 
-  "for(Dmatrix = get_global_id(2); Dmatrix < Nmatrix; Dmatrix += get_global_size(2)){\n"
+  "for(DmatrixBlock = 0, Dmatrix = get_global_id(2);\n"
+  "    DmatrixBlock < Nmatrix;\n"
+  "    DmatrixBlock += get_global_size(2), Dmatrix += get_global_size(2)){\n"
 
   "  AHere = Dmatrix*NpadA;\n"
 
   
   
-  "for(DrowGlobal = get_global_id(0);DrowGlobal < Nrow; DrowGlobal += get_global_size(0)){\n"
+  "for(DrowGlobalBlock = 0, DrowGlobal = get_global_id(0);"
+  "    DrowGlobalBlock < Nrow;\n"
+  "    DrowGlobalBlock += get_global_size(0),DrowGlobal += get_global_size(0)){\n"
 
 //  " async_work_group_copy(Acache, &A[AHere+Diter], get_local_size(0), 0);\n"
   "if(doCacheA==0){Acache[get_local_id(0)] = A[AHere + get_global_id(0)];}\n"

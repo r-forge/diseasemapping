@@ -47,7 +47,7 @@ NlocalMatern = c(2,2)
 
 
 if(gpuR::gpuInfo()$deviceMemory > 10^9){
-   Ngrid = c(40,60)
+   Ngrid = c(20,30)
    Nsim = 6
    NlocalCache = 4000
    NglobalMatern = c(256,8) 
@@ -157,8 +157,8 @@ outputChol = deepcopy(outputBatchF)
 gpuRandom::cholBatch(
   outputChol, diagMat, 
   numbatchD=nrow(myParamsBatch),
-  Nglobal = c(256L, 16L),#NglobalChol,
-  Nlocal = c(16L, 16L),#NlocalChol,
+  Nglobal = c(2L, 2L),#NglobalChol,
+  Nlocal = c(2L, 2L),#NlocalChol,
   NlocalCache = 5000)#NlocalCache)
 as.matrix(diagMat)[,1:4]
 ```
@@ -166,7 +166,7 @@ as.matrix(diagMat)[,1:4]
 
 
 ```{r cholBatchCpu, eval=FALSE}
-D=1
+D=3
 fromGpuOrig = chol4gpu = as.matrix(outputChol[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
 chol4gpu[upper.tri(chol4gpu)] = 0
 diag(chol4gpu) = 1
@@ -189,9 +189,12 @@ theDiag = theDiag^2
 chol4gpu[1:4,1:4]
 cholCpu[1:4,1:4]
 
-quantile(cholCpu - chol4gpu)
-quantile(theDiag - as.matrix(diagMat)[D,])
-#cbind(theDiag, diagGpu)[1:10,]
+Sprob = c(0,0.01, 0.1, 0.5)
+Sprob = sort(unique(c(Sprob, 1-Sprob)))
+quantile(cholCpu - chol4gpu, prob = Sprob)
+quantile(theDiag - as.matrix(diagMat)[D,], prob=Sprob)
+plot(theDiag - diagGpu)#, xlim = c(700,900))
+cbind(theDiag, diagGpu, theDiag - diagGpu)[seq(1,len=20),]
 ```
 
 
