@@ -152,7 +152,7 @@ print(quantile(as.vector(fromCpu - fromGpu), na.rm=TRUE))
 # Cholesky
 ```{r cholBach, eval = TRUE}
 diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), type = gpuR::typeof(outputBatchF))
-outputChol = outputBatchF #deepcopy(outputBatchF)
+outputChol = deepcopy(outputBatchF)
 
 gpuRandom::cholBatch(
   outputChol, diagMat, 
@@ -166,15 +166,15 @@ as.matrix(diagMat)[,1:4]
 
 
 ```{r cholBatchCpu, eval=FALSE}
-D=3
+D=1
 fromGpuOrig = chol4gpu = as.matrix(outputChol[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
 chol4gpu[upper.tri(chol4gpu)] = 0
 diag(chol4gpu) = 1
 diagGpu = as.vector(diagMat[D,])
 
-#maternReconstruct = chol4gpu %*% diag(diagGpu) %*% t(chol4gpu)
-#maternReconstruct[1:4,1:4]
-#fromGpuOrig[1:4,1:4]
+maternReconstruct = chol4gpu %*% diag(diagGpu) %*% t(chol4gpu)
+maternReconstruct[1:4,1:4]
+fromGpuOrig[1:4,1:4]
 
 cholCpu = geostatsp::matern(
     x=coordsSp,

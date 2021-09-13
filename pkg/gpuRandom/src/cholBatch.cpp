@@ -61,7 +61,7 @@ template <typename T> std::string cholBatchKernelString(
   
   " local " + typeString + " toAddLocal[maxLocalItems];\n"
   " int Dcol, DcolNpad;\n"
-  " int Drow, DrowBlock, Dk, Dmatrix;\n";
+  " int Drow, DrowBlock, Dk, Dmatrix, DmatrixBlock;\n";
   
   if(allowOverflow) {
     result += "	int minDcolNcache;\n";
@@ -76,8 +76,10 @@ template <typename T> std::string cholBatchKernelString(
   }
   result +=   " barrier(CLK_LOCAL_MEM_FENCE);\n\n";
 result +=  
-  "for(Dmatrix = get_group_id(0); Dmatrix < Nmatrix; Dmatrix+= get_num_groups(0)){\n"
-  
+  "for(DmatrixBlock=0, Dmatrix = get_group_id(0);\n"
+  "     DmatrixBlock < Nmatrix;\n"
+  "     Dmatrix+= get_num_groups(0),DmatrixBlock+= get_num_groups(0)){\n"
+ 
   " diagHere = Dmatrix*NpadDiag + NstartD;\n"
   " AHere = Dmatrix*NpadBetweenMatrices + NstartA;\n";
   if(logDet){
@@ -119,7 +121,7 @@ result +=
   "\n// reduction on dimension 1\n";
 
   result += "  barrier(CLK_LOCAL_MEM_FENCE);\n"
-  "  if(get_local_id(1) == 0){\n"
+  "  if( (get_local_id(1) == 0) & (Dmatrix < Nmatrix) ){\n"
   "   for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
   "    toAddLocal[localIndex] +=  toAddLocal[localIndex + Dk];\n"
   "   }//for Dk\n"
@@ -128,7 +130,7 @@ result +=
 
   result +=     
   "// final reduction on dimension 0\n"
-  "  if(localIndexIsZero){\n";
+  "  if(localIndexIsZero & (Dmatrix < Nmatrix) ){\n";
 
   result +=     
     "   for(Dk = localIndex + get_local_size(1); Dk < NlocalTotal; Dk+= get_local_size(1)) {\n"
@@ -147,7 +149,7 @@ result +=
     "\n\n#ifdef diagToOne\n"
   "   A[AHereDcol+Dcol] = 1.0;\n"
   "#endif\n"
-  "  }\n" //localIndex==0
+  "  }\n" //localIndex==0 and Dmatrix < Nmatrix
   "  barrier(CLK_LOCAL_MEM_FENCE);\n\n";
   //"  diagDcol = diagHere[Dcol];\n"
   
@@ -169,7 +171,7 @@ result += "  Drow = DrowBlock + get_local_id(0);\n";
       "  AHereDrow = AHere+Drow*Npad;\n"
     "  DL = 0.0;\n";
   
-  result += "  if(Drow < N){\n";
+  result += "  if( (Drow < N) & (Dmatrix < Nmatrix)){\n";
   
   if(allowOverflow) {
     result +=
@@ -204,7 +206,7 @@ result += "  Drow = DrowBlock + get_local_id(0);\n";
   "  // local reduction\n"
     "  barrier(CLK_LOCAL_MEM_FENCE);\n";
   result +=
-    "  if(get_local_id(1) == 0){\n"
+    "  if( (get_local_id(1) == 0) & (Dmatrix < Nmatrix) ){\n"
     "   DL = toAddLocal[localIndex];\n";
 
 result +=    "   for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
@@ -217,23 +219,22 @@ result +=
     "  barrier(CLK_GLOBAL_MEM_FENCE);\n\n";
 
   result +=
-    " }//DrowBlock\n"
-    "  barrier(CLK_GLOBAL_MEM_FENCE);\n";
+    " }//DrowBlock\n";
   
 
   result +=  
+    "barrier(CLK_GLOBAL_MEM_FENCE);\n"
     "} // Dcol loop\n\n";
   
     if(logDet){
-        result +=  "if(localIndexIsZero){\n"
+        result +=  "if(localIndexIsZero & (Dmatrix < Nmatrix) ){\n"
           " logDet[logDetIndex + Dmatrix] = logDetHere;\n"
           "}\n";
     }
 
-result += "  barrier(CLK_GLOBAL_MEM_FENCE);\n";
-    
-    result +=
+result += "barrier(CLK_GLOBAL_MEM_FENCE);\n"
     "} // Dmatrix loop\n\n";
+    
     result +=   "barrier(CLK_LOCAL_MEM_FENCE);\n"
     "}// kernel\n";
   return(result);
