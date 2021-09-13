@@ -87,7 +87,7 @@ c(shape=1, range=1, variance = 1, nugget = 10, anisoRatio = 1, anisoAngleRadians
  c(shape=5.5, range=5, variance = 2.5, nugget = 20, anisoRatio = 1, anisoAngleRadians = 0), #14
  c(shape=6.5, range=5, variance = 2.5, nugget = 10, anisoRatio = 1, anisoAngleRadians = 0), #15
  c(shape=5.5, range=5, variance = 1.5, nugget = 30, anisoRatio = 1, anisoAngleRadians = 0) #16
-)[1:2,]
+)
 
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
 
@@ -128,7 +128,7 @@ myParamsBatch[,c('variance','nugget')]
 ```
 
 ```{r showfromcpu, eval=FALSE}
-for(D in unique(round(seq(1L,now(myParamsBatch), len=min(c(3, nrow(myParamsBatch))))))) {
+for(D in unique(round(seq(1L,nrow(myParamsBatch), len=min(c(3, nrow(myParamsBatch))))))) {
 print(D)
 fromCpu = geostatsp::matern(
     x=coordsSp,
@@ -156,16 +156,17 @@ outputChol = deepcopy(outputBatchF)
 gpuRandom::cholBatch(
   outputChol, diagMat, 
   numbatchD=nrow(myParamsBatch),
-  Nglobal = c(8L, 8L),#NglobalChol,
-  Nlocal = c(8L, 8L),#NlocalChol,
-  NlocalCache = 100)#NlocalCache)
+  Nglobal = c(1L, 2L),#NglobalChol,
+  Nlocal = c(1L, 2L),#NlocalChol,
+  NlocalCache = 5000)#NlocalCache)
 as.matrix(diagMat)[,1:4]
 ```
 
 
 
 ```{r cholBatchCpu, eval=FALSE}
-D=2
+D=3
+theMaternGpu = as.matrix(outputBatchF[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
 fromGpuOrig = chol4gpu = as.matrix(outputChol[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
 chol4gpu[upper.tri(chol4gpu)] = 0
 diag(chol4gpu) = 1
@@ -174,6 +175,7 @@ diagGpu = as.vector(diagMat[D,])
 maternReconstruct = chol4gpu %*% diag(diagGpu) %*% t(chol4gpu)
 maternReconstruct[1:4,1:4]
 fromGpuOrig[1:4,1:4]
+theMaternGpu[1:4,1:4]
 
 cholCpu = geostatsp::matern(
     x=coordsSp,
@@ -187,13 +189,23 @@ theDiag = theDiag^2
 
 chol4gpu[1:4,1:4]
 cholCpu[1:4,1:4]
+outputBatchF[ncol(cholCpu)*(D-1) + 1:4, 1:4]
+outputChol[ncol(cholCpu)*(D-1) + 1:4, 1:4]
+
+
+theSeq = seq(to=ncol(cholCpu), len=5, by=1)
+chol4gpu[theSeq,theSeq]
+cholCpu[theSeq, theSeq]
+outputBatchF[ncol(cholCpu)*(D-1) +theSeq, theSeq]
+outputChol[ncol(cholCpu)*(D-1) +theSeq, theSeq]
 
 Sprob = c(0,0.01, 0.1, 0.5)
 Sprob = sort(unique(c(Sprob, 1-Sprob)))
 quantile(cholCpu - chol4gpu, prob = Sprob)
 quantile(theDiag - as.matrix(diagMat)[D,], prob=Sprob)
-plot(theDiag - diagGpu)#, xlim = c(700,900))
-cbind(theDiag, diagGpu, theDiag - diagGpu)[seq(1,len=20),]
+plot(theDiag - diagGpu, xlim = c(150,200))
+plot(cholCpu[600,] - chol4gpu[600,])
+cbind(theDiag, diagGpu, theDiag - diagGpu)[seq(178,len=20),]
 ```
 
 
@@ -229,6 +241,7 @@ gpuRandom:::multiplyLowerDiagonalBatchBackend(
   Nglobal = c(2,1,1),#c(64,8,8), # rows, columns, matrix
   Nlocal = c(1,1,1),  # anything, anything 1
   NlocalCache = 4000)
+date()
 ```
 
 
