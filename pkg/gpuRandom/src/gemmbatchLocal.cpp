@@ -154,7 +154,7 @@ std::string gemmBatch2String(
   }else if(!transposeABC[2] && onlyDiagC){
     result += 
       "#define Cijorig ( DmatrixRow * NpadNrowTotalC + NpadC * (rowStartC + Drow) + DmatrixCol * NcolTotalC + colStartC + Dcol)\n"
-      "#define Cij (startMatrixC + Dcol)\n\n";
+      "#define Cij (startMatrixC + Drow)\n\n";
   }
   
   
