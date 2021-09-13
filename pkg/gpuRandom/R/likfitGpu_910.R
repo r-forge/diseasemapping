@@ -39,23 +39,28 @@ likfitGpu_2 <- function(spatialmodel,     #data,
                        covariates),
                  type=type)      #as.matrix(yx)
   
-  coordsGpu<-vclMatrix(spatialmodel$data@coords,type=type)
   
+  coordsGpu<-vclMatrix(spatialmodel$data@coords,type=type)  
   boxcoxGpu = vclVector(BoxCox, type=type)
-  betas = vclMatrix(0, Nparam, Ncov * Ndata, type=type)
+  if(is.null(betas)){
+    betas = vclMatrix(0, Nparam, Ncov * Ndata, type=type)
+  }
   ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
   XVYXVX = vclMatrix(-77, Nparam * Ncov, ncol(yx), type=type)
   ssqBetahat <- vclMatrix(0, Nparam, Ndata, type=type)
+  ssqBeta <- vclMatrix(0, Nparam, Ndata, type=type)
   detVar = vclVector(0, Nparam,type=type)
   detReml = vclVector(0, Nparam, type=type)
   jacobian = vclVector(0, Ndata, type=type)   
   ssqYX = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
+  aTDinvb_beta = vclMatrix(0, Nparam, Ndata, type=type)
   ssqYXcopy = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
   LinvYX = vclMatrix(0, nrow(yx) * NparamPerIter, ncol(yx), type=type)
   QinvSsqYx = vclMatrix(0, NparamPerIter*Ncov, Ndata, type = type)
   cholXVXdiag = vclMatrix(0, NparamPerIter, Ndata, type=type)
   varMat = vclMatrix(0, nrow(yx)*NparamPerIter, nrow(coords), type=type)
   cholDiagMat = vclMatrix(0, NparamPerIter, nrow(coords), type=type)
+  b_beta = vclMatrix(0, NparamPerIter*n, Ndata, type=type)
   
   gpuRandom:::likfitGpu_BackendP(
     yx,        #1
@@ -64,8 +69,10 @@ likfitGpu_2 <- function(spatialmodel,     #data,
     boxcoxGpu,   #4
     betas,  #5
     ssqY,     #6
+    aTDinvb_beta,
     XVYXVX,
     ssqBetahat, #8
+    ssqBeta,
     detVar,    #9
     detReml,   #10
     jacobian,  #11
@@ -80,14 +87,51 @@ likfitGpu_2 <- function(spatialmodel,     #data,
     QinvSsqYx, 
     cholXVXdiag, #21
     varMat,        #22     Vbatch
-    cholDiagMat)   #new
+    cholDiagMat,
+    b_beta)   #new
+  
+  
+  
+  
+  temp <- vclMatrix(0, Nparam, Ndata, type=type)  
+  
+  
+  
+  if(form ==1 | form ==3){
+    if(is.null(betas)){
+      stop("must supply betas for this likelihood")
+    }else{
+      
+      one <- ssqY - 2*aTDinvb_beta + ssqBeta
+      
+      
+      if(form ==1){
+        mat_vec_eledivideBackend(one, variances, temp,  Nglobal)
+        
+        matrix_vector_sumBackend(temp,
+                                 detVar + n*log(variances),
+                                 jacobian,  
+                                 n*log(2*pi),
+                                 minusTwoLogLik,
+                                 Nglobal)   
+        
+      }else if(form == 3){
+        matrix_vector_sumBackend(n*log(one/n),
+                                 detVar,
+                                 jacobian,  
+                                 n + n*log(2*pi),
+                                 minusTwoLogLik,
+                                 Nglobal)    
+      }
+    }
+  }
   
   
   
   # resid^T V^(-1) resid, resid = Y - X betahat = two
   two <- ssqY - ssqBetahat
   minusTwoLogLik <- vclMatrix(0, Nparam, Ndata, type=type)
-  temp <- vclMatrix(0, Nparam, Ndata, type=type)
+  
   
   if(form ==2){ #ml
     # = n*log(two/n) + logD + jacobian +n + n*log(2*pi)
@@ -95,7 +139,7 @@ likfitGpu_2 <- function(spatialmodel,     #data,
     matrix_vector_sumBackend(n*log(two/n),
                              detVar,
                              jacobian,  
-                             n*log(2*pi),
+                             n + n*log(2*pi),
                              minusTwoLogLik,
                              Nglobal)
     
@@ -139,6 +183,11 @@ likfitGpu_2 <- function(spatialmodel,     #data,
                              Nglobal)
     
   }
+  
+  
+  minusTwoLogLik
+  
+  
   
   
 }
