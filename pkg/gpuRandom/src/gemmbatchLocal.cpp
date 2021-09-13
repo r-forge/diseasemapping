@@ -1,4 +1,4 @@
-//9.13   1am
+//9.13   3pm
 
 
 
@@ -429,7 +429,7 @@ int gemmBatch2(
   Rcpp::IntegerVector recycle = batches[integer];      //"nCol", "recycleArow", "recycleAcol", "recycleBrow", "recycleBcol"
   
   std::string gemmString = gemmBatch2String<T>(
-    1,   // want to compute all elements of C
+    0,   // onlyDiagC,         // compute only the diagonal values of C
     transposeABC,  
     submatrixA,
     submatrixB,
