@@ -87,8 +87,7 @@ c(shape=1, range=1, variance = 1, nugget = 10, anisoRatio = 1, anisoAngleRadians
  c(shape=5.5, range=5, variance = 2.5, nugget = 20, anisoRatio = 1, anisoAngleRadians = 0), #14
  c(shape=6.5, range=5, variance = 2.5, nugget = 10, anisoRatio = 1, anisoAngleRadians = 0), #15
  c(shape=5.5, range=5, variance = 1.5, nugget = 30, anisoRatio = 1, anisoAngleRadians = 0) #16
-
-)
+)[1:2,]
 
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
 
@@ -157,16 +156,16 @@ outputChol = deepcopy(outputBatchF)
 gpuRandom::cholBatch(
   outputChol, diagMat, 
   numbatchD=nrow(myParamsBatch),
-  Nglobal = c(2L, 2L),#NglobalChol,
-  Nlocal = c(2L, 2L),#NlocalChol,
-  NlocalCache = 5000)#NlocalCache)
+  Nglobal = c(8L, 8L),#NglobalChol,
+  Nlocal = c(8L, 8L),#NlocalChol,
+  NlocalCache = 100)#NlocalCache)
 as.matrix(diagMat)[,1:4]
 ```
 
 
 
 ```{r cholBatchCpu, eval=FALSE}
-D=3
+D=2
 fromGpuOrig = chol4gpu = as.matrix(outputChol[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
 chol4gpu[upper.tri(chol4gpu)] = 0
 diag(chol4gpu) = 1

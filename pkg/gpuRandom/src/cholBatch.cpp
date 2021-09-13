@@ -50,9 +50,9 @@ template <typename T> std::string cholBatchKernelString(
       ",\n	__global " + typeString + " *logDet,\n"
       "                int logDetIndex\n";
     }
+
     
   result += "\n){\n"
-  " barrier(CLK_LOCAL_MEM_FENCE);\n"
   " const int localIndex = get_local_id(0)*get_local_size(1) + get_local_id(1);\n"
   " const int localIndexIsZero = (localIndex==0);\n"
   " const int NlocalTotal = get_local_size(0)*get_local_size(1);\n"
@@ -64,7 +64,7 @@ template <typename T> std::string cholBatchKernelString(
   " int Drow, DrowBlock, Dk, Dmatrix, DmatrixBlock;\n";
   
   if(allowOverflow) {
-    result += "	int minDcolNcache;\n";
+    result += "int minDcolNcache;\n";
   }
   
   result += " " +  typeString + " DL;\n" 
@@ -90,6 +90,8 @@ result +=
     "  DcolNpad = Dcol*Npad;\n"
   "  AHereDcol = AHere+DcolNpad;\n"
   //"  Dcolm1 = Dcol - 1;\n"
+  "  DL = 0.0;\n"
+  "  diagLocal[localIndex]=0.0;\n"
   "  toAddLocal[localIndex]=0.0;\n";
   
   
