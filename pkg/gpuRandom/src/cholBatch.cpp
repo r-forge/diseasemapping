@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-#define DEBUG
+//#define DEBUG
 
 // dimension 0 is row, local dimension 1 inner loop over columns, group 0 is matrix
 // local and global work sizes should be identical for dimension 1 (second dimension), only 1 group for dimension 1

@@ -47,7 +47,7 @@ NlocalMatern = c(2,2)
 
 
 if(gpuR::gpuInfo()$deviceMemory > 10^9){
-   Ngrid = c(20,30)
+   Ngrid = c(40,60)
    Nsim = 6
    NlocalCache = 4000
    NglobalMatern = c(256,8) 
@@ -157,9 +157,9 @@ outputChol = deepcopy(outputBatchF)
 gpuRandom::cholBatch(
   outputChol, diagMat, 
   numbatchD=nrow(myParamsBatch),
-  Nglobal = c(1L, 1L),#NglobalChol,
-  Nlocal = c(1L, 1L),#NlocalChol,
-  NlocalCache = 2000)#NlocalCache)
+  Nglobal = c(128L, 16L),#NglobalChol,
+  Nlocal = c(16L, 16L),#NlocalChol,
+  NlocalCache = 5000)#NlocalCache)
 as.matrix(diagMat)[,1:4]
 ```
 
@@ -204,7 +204,7 @@ Sprob = c(0,0.01, 0.1, 0.5)
 Sprob = sort(unique(c(Sprob, 1-Sprob)))
 quantile(cholCpu - chol4gpu, prob = Sprob)
 quantile(theDiag - as.matrix(diagMat)[D,], prob=Sprob)
-plot(theDiag - diagGpu, xlim = c(150,200))
+plot(theDiag - diagGpu)
 plot(cholCpu[600,] - chol4gpu[600,])
 cbind(theDiag, diagGpu, theDiag - diagGpu)[seq(178,len=20),]
 ```
@@ -232,17 +232,17 @@ zMatGpu = gpuRandom::rnorm(c(ncol(outputBatchF),Nsim),
 
 compute U = L D^(1/2) Z, where LDLt is the Cholesky of the variance matrix, Z is the independent normals
 
-```{r multLowerGpu, eval = F}
-simMat = deepcopy(-100*zMatGpu)
-
+```{r multLowerGpu, eval = TRUE}
+simMat = vclMatrix(0, nrow(zMatGpu), ncol(zMatGpu), 
+  type = gpuR::typeof(zMatGpu))
+    
 gpuRandom:::multiplyLowerDiagonalBatchBackend(
   simMat, outputChol, diagMat, zMatGpu,
   diagIsOne = TRUE, # diagonal of L is one
   transformD = "sqrt", # take the square root of each element of D
-  Nglobal = c(2,1,1),#c(64,8,8), # rows, columns, matrix
+  Nglobal = c(1,1,1),#c(64,8,8), # rows, columns, matrix
   Nlocal = c(1,1,1),  # anything, anything 1
   NlocalCache = 4000)
-date()
 ```
 
 
