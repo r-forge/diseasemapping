@@ -47,7 +47,7 @@ NlocalMatern = c(2,2)
 
 
 if(gpuR::gpuInfo()$deviceMemory > 10^9){
-   Ngrid = c(40,60)
+   Ngrid = c(40,40)
    Nsim = 6
    NlocalCache = 4000
    NglobalMatern = c(256,8) 

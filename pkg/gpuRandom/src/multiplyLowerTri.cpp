@@ -235,7 +235,7 @@ result +=
   
 "\n// looped through rows which are all cached\n"
 "  for(DrowBlock = 0,BcacheHere = get_global_id(0)*NcolInCache;\n"
-"        Drow < DinnerStop;\n"
+"        DrowBlock < DinnerStop;\n"
 "        DrowBlock+=get_global_size(0),BcacheHere += incInCacheGlobal){\n"
   "    Drow = DrowBlock + get_global_id(0);\n"
   "    DrowBlockEnd = DrowBlock + get_global_size(0);\n"
@@ -261,8 +261,10 @@ result +=
   result +=  
   "        if( doCacheAhere ) {\n"
   "           Acache[get_local_id(0)] = A[Dinner + DrowNpadA];\n"
-  "        }\n"
-	"        barrier(CLK_LOCAL_MEM_FENCE);\n";
+  "        }\n";
+  result +=
+  "       barrier(CLK_LOCAL_MEM_FENCE);\n";
+  
   
   if(diagIsOne) {
     result +=
@@ -352,31 +354,39 @@ if(NpadD) {
 
   "\n// un-cached rows\n";
   if(diagIsOne) {
-//	  result += "for(Dinner = NlocalCache; Dinner < Drow; Dinner++){\n";
-     result += "    for(1; Dinner < Drow; Dinner++){\n";
+     result += "    for(1; Dinner < DrowBlockEnd; Dinner++){\n";
 	} else {
-//	  result += "for(Dinner = NlocalCache; Dinner <= Drow; Dinner++){\n";
-	   result += "    for(1; Dinner <= Drow; Dinner++){\n";
+	   result += "    for(1; Dinner <= DrowBlockEnd; Dinner++){\n";
 	}
 
-	result += "    barrier(CLK_LOCAL_MEM_FENCE);\n"
-  "    if(doCacheAhere) {\n";
+	result += "      barrier(CLK_LOCAL_MEM_FENCE);\n"
+  "      if(doCacheAhere) {\n";
 
 		if(NpadD) {
 	  result += 
-	    "      Acache[get_local_id(0)] = " + transformD + 
+	    "        Acache[get_local_id(0)] = " + transformD + 
 	    "(D[DHere + Dinner]) * A[Dinner + DrowNpadA];\n";
 	} else {
 	  result += 
 	    "      Acache[get_local_id(0)] = A[Dinner + DrowNpadA];\n";
 	}
-  result +=	"    }//do cacheA\n"
-	"    barrier(CLK_LOCAL_MEM_FENCE);\n";
+  result +=	"      }//do cacheA\n"
+	"      barrier(CLK_LOCAL_MEM_FENCE);\n";
 
+	if(diagIsOne) {
+	  result += 
+	    "      if(Dinner < Drow) {";
+	  else {
+	    result += 
+	      "      if(Dinner <= Drow) {";
+	  }
+	
 	 result += "// last row of B\n"
-	   "     Dout += Acache[get_local_id(0)] * B[BHere+Dcol + Dinner * NpadB];\n";
-	 
-	result += "      }// Dinner\n" 
+	   "         Dout += Acache[get_local_id(0)] * B[BHere+Dcol + Dinner * NpadB];\n";
+	  
+  result += "      }// if Dinner\n";
+	  	 
+	result += "  }// Dinner\n" 
 	"\n"
 	"    if( (Drow < Nrow) & (Dcol < Ncol) & (Dmatrix < Nmatrix) ) {\n"
 	"      C[Dcol + DrowNpadC] = Dout;\n"
