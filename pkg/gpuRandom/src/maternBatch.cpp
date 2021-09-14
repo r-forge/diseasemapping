@@ -517,13 +517,14 @@ void maternBatchVcl(
 
   std::string maternClString = maternBatchKernelString<T>(
     maxIter,
-    N, Ncell, numberofrows,
+    N, Ncell, 
+    numberofrows,
     Npad,
     NpadBetweenMatrices, 
     vclCoords.internal_size2(), //NpadCoords, 
     param.internal_size2(),// NpadParams
     numLocalItems[0],
-    NlocalParams * numLocalItems[1] * (1+ Nmatrix * numLocalItems[1] / numWorkItems[1]),// local params cache
+    NlocalParams * numLocalItems[1] * (1+ numberofrows * numLocalItems[1] / numWorkItems[1]),// local params cache
     1L, 1L, 1L, 0L
       );
   

@@ -412,6 +412,9 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     1 // do log determinant
   );
   
+  
+  
+  
   int Ncol = yx.size2();
   int Ngroups1 = static_cast<T>(workgroupSize[1]) / static_cast<T>(localSize[1]);
   int NcolsPerGroup = std::ceil( static_cast<T>(Ncol) / static_cast<T>(Ngroups1));
@@ -443,6 +446,9 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   Ngroups1 = static_cast<T>(workgroupSize[1]) / static_cast<T>(localSize[1]);
   NcolsPerGroup = std::ceil( static_cast<T>(Ncol) / static_cast<T>(Ngroups1));
   NrowsToCache = std::floor(static_cast<T>(NlocalCache[0]) /static_cast<T>(NcolsPerGroup));
+  
+  
+  
   
   // backsolve QinvSsqYx = Q^(-1) ssqYX[(Ndatasets+1):nrow(ssqYX),1:Ndatasets]  
   // Ncovariates by Ndatasets
@@ -700,7 +706,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   aTDinvb_betaKernel.global_work_size(0, workgroupSize[0] ); 
   aTDinvb_betaKernel.global_work_size(1, workgroupSize[1] ); 
   aTDinvb_betaKernel.global_work_size(2, workgroupSize[2] ); 
-  aTDinvb_betaKernel.local_work_size(0, localSize[0]);
+  aTDinvb_betaKernel.local_work_size(0, 1L);
   aTDinvb_betaKernel.local_work_size(1, 1L);   // localsize[1] must be 1 for compute Only-diagonals 
   aTDinvb_betaKernel.local_work_size(2, localSize[2]);    
   
