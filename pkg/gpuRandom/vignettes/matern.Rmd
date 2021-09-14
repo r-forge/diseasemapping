@@ -150,15 +150,16 @@ print(quantile(as.vector(fromCpu - fromGpu), na.rm=TRUE))
 
 # Cholesky
 ```{r cholBach, eval = TRUE}
-diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), type = gpuR::typeof(outputBatchF))
+diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), 
+                    type = gpuR::typeof(outputBatchF))
 outputChol = deepcopy(outputBatchF)
 
 gpuRandom::cholBatch(
   outputChol, diagMat, 
   numbatchD=nrow(myParamsBatch),
-  Nglobal = c(1L, 2L),#NglobalChol,
-  Nlocal = c(1L, 2L),#NlocalChol,
-  NlocalCache = 5000)#NlocalCache)
+  Nglobal = c(1L, 1L),#NglobalChol,
+  Nlocal = c(1L, 1L),#NlocalChol,
+  NlocalCache = 2000)#NlocalCache)
 as.matrix(diagMat)[,1:4]
 ```
 

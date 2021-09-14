@@ -330,7 +330,7 @@ result +=  "barrier(CLK_LOCAL_MEM_FENCE);\n\n";
 
   
   result +=
-    "	if(logthisx > 2.0) {\n" // gsl_sf_bessel_K_scaled_steed_temme_CF2
+    "	if(logthisx > 1.0) {\n" // was 2.0 gsl_sf_bessel_K_scaled_steed_temme_CF2
     
     //	"   maternLong(thisx, expMaternBit, nu[Dmatrix], mu[Dmatrix], muSq[Dmatrix], &K_nu, &K_nup1);\n"
     "   K_nuK_nup1=maternLong(\n"
