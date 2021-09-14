@@ -70,24 +70,35 @@ coordsSp = sp::SpatialPoints(raster::xyFromCell(myRaster, 1:raster::ncell(myRast
 
 # Batch matern
 ```{r paramsBatch}
-myParamsBatch = rbind(
-c(shape=1, range=1, variance = 1, nugget = 10, anisoRatio = 1, anisoAngleRadians = 0), #1
- c(shape=2, range=1, variance = 1, nugget = 20, anisoRatio = 1, anisoAngleRadians = 0),  #2
- c(shape=2.5, range=1, variance = 1, nugget = 30, anisoRatio = 1, anisoAngleRadians = 0), #3
- c(shape=3, range=5, variance = 1, nugget = 40, anisoRatio = 1, anisoAngleRadians = 0),#4
- c(shape=3.5, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #5
- c(shape=4, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),#6
- c(shape=4.5, range=5, variance = 1, nugget = 40, anisoRatio = 1, anisoAngleRadians = 0),#7
- c(shape=5, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #8
- c(shape=5.5, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #9
- c(shape=6, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #10
- c(shape=6.25, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),#11
- c(shape=6.5, range=5, variance = 1, nugget = 40, anisoRatio = 1, anisoAngleRadians = 0),#12
- c(shape=6.5, range=5, variance = 2.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #13
- c(shape=5.5, range=5, variance = 2.5, nugget = 20, anisoRatio = 1, anisoAngleRadians = 0), #14
- c(shape=6.5, range=5, variance = 2.5, nugget = 10, anisoRatio = 1, anisoAngleRadians = 0), #15
- c(shape=5.5, range=5, variance = 1.5, nugget = 30, anisoRatio = 1, anisoAngleRadians = 0) #16
-)
+myParamsBatch =
+  rbind(c(shape=1.25, range=0.5, variance = 1.5, nugget = 0,anisoRatio = 1, anisoAngleRadians = 0))
+        # c(shape=2.15, range=0.25, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = pi/7),
+        # c(shape=0.55, range=1.5, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = pi/7),
+        # c(shape=2.15, range=0.5, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = -pi/7),
+        # c(shape=2.15, range=0.5, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/4))
+
+myParamsBatch = myParamsBatch[rep(1,5),]
+
+
+
+# myParamsBatch = rbind(
+# c(shape=1, range=1, variance = 1, nugget = 10, anisoRatio = 1, anisoAngleRadians = 0), #1
+#  c(shape=2, range=1, variance = 1, nugget = 20, anisoRatio = 1, anisoAngleRadians = 0),  #2
+#  c(shape=2.5, range=1, variance = 1, nugget = 30, anisoRatio = 1, anisoAngleRadians = 0), #3
+#  c(shape=3, range=5, variance = 1, nugget = 40, anisoRatio = 1, anisoAngleRadians = 0),#4
+#  c(shape=3.5, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #5
+#  c(shape=4, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),#6
+#  c(shape=4.5, range=5, variance = 1, nugget = 40, anisoRatio = 1, anisoAngleRadians = 0),#7
+#  c(shape=5, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #8
+#  c(shape=5.5, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #9
+#  c(shape=6, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #10
+#  c(shape=6.25, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),#11
+#  c(shape=6.5, range=5, variance = 1, nugget = 40, anisoRatio = 1, anisoAngleRadians = 0),#12
+#  c(shape=6.5, range=5, variance = 2.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #13
+#  c(shape=5.5, range=5, variance = 2.5, nugget = 20, anisoRatio = 1, anisoAngleRadians = 0), #14
+#  c(shape=6.5, range=5, variance = 2.5, nugget = 10, anisoRatio = 1, anisoAngleRadians = 0), #15
+#  c(shape=5.5, range=5, variance = 1.5, nugget = 30, anisoRatio = 1, anisoAngleRadians = 0) #16
+# )
 
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
 
@@ -157,15 +168,15 @@ outputChol = deepcopy(outputBatchF)
 gpuRandom::cholBatch(
   outputChol, diagMat, 
   numbatchD=nrow(myParamsBatch),
-  Nglobal = c(32L, 16L),#NglobalChol,
-  Nlocal = c(16L, 16L),#NlocalChol,
+  Nglobal = c(32L, 1L),#NglobalChol,
+  Nlocal = c(8L, 1L),#NlocalChol,
   NlocalCache = 5000)#NlocalCache)
 as.matrix(diagMat)[,1:4]
 ```
 
 
 
-```{r cholBatchCpu, eval=FALSE}
+```{r cholBatchCpu, eval=TRUE}
 D=3
 theMaternGpu = as.matrix(outputBatchF[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
 fromGpuOrig = chol4gpu = as.matrix(outputChol[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
