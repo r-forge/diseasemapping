@@ -376,10 +376,10 @@ if(NpadD) {
 	if(diagIsOne) {
 	  result += 
 	    "      if(Dinner < Drow) {";
-	  else {
+	}  else {
 	    result += 
 	      "      if(Dinner <= Drow) {";
-	  }
+	 }
 	
 	 result += "// last row of B\n"
 	   "         Dout += Acache[get_local_id(0)] * B[BHere+Dcol + Dinner * NpadB];\n";
