@@ -157,7 +157,7 @@ outputChol = deepcopy(outputBatchF)
 gpuRandom::cholBatch(
   outputChol, diagMat, 
   numbatchD=nrow(myParamsBatch),
-  Nglobal = c(128L, 16L),#NglobalChol,
+  Nglobal = c(32L, 16L),#NglobalChol,
   Nlocal = c(16L, 16L),#NlocalChol,
   NlocalCache = 5000)#NlocalCache)
 as.matrix(diagMat)[,1:4]
