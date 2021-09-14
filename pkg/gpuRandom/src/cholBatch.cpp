@@ -81,7 +81,7 @@ result +=
   "     Dmatrix+= get_num_groups(0),DmatrixBlock+= get_num_groups(0)){\n"
  
   " diagHere = Dmatrix*NpadDiag + NstartD;\n"
-  " AHere = Dmatrix*NpadBetweenMatrices + NstartA;\n";
+  " AHere = (Dmatrix < Nmatrix) * Dmatrix*NpadBetweenMatrices + NstartA;\n";
   if(logDet){
     result += " logDetHere = 0.0;\n";
   }
