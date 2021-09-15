@@ -89,7 +89,7 @@ c(shape=1, range=1, variance = 1, nugget = 10, anisoRatio = 2, anisoAngleRadians
  c(shape=5.5, range=5, variance = 1.5, nugget = 30, anisoRatio = 1, anisoAngleRadians = 0) #16
 )[1:5,]
 
-myParamsBatch = myParamsBatch[rep(1,5),]
+myParamsBatch = myParamsBatch[rep(1,2),]
 
 
 
@@ -114,7 +114,7 @@ myParamsBatch = myParamsBatch[rep(1,5),]
 
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
 
-myParamsBatch[,1:3]
+myParamsBatch[,1:7]
 ```
 
 ```{r outputBatchCreate, eval=T}
@@ -144,8 +144,9 @@ gpuRandom:::maternBatchBackend(
 ```
 
 ```{r outputBatchShowStuff, eval=FALSE}
+dim(outputBatchF)
 as.matrix(outputBatchF[1:7,1:7])
-as.matrix(outputBatchF[(5-1)*ncol(outputBatchF) + 1:7,1:7])
+as.matrix(outputBatchF[(2-1)*ncol(outputBatchF) + 1:7,1:7])
 as.matrix(outputBatchF[seq(1, by=ncol(outputBatchF), len=nrow(paramsGpu)),1])
 myParamsBatch[,c('variance','nugget')]
 ```
@@ -180,8 +181,8 @@ outputChol = deepcopy(outputBatchF)
 gpuRandom::cholBatch(
   outputChol, diagMat, 
   numbatchD=nrow(myParamsBatch),
-  Nglobal = c(32L, 1L),#NglobalChol,
-  Nlocal = c(8L, 1L),#NlocalChol,
+  Nglobal = c(64L, 8L),#NglobalChol,
+  Nlocal = c(16L, 4L),#NlocalChol,
   NlocalCache = 5000)#NlocalCache)
 as.matrix(diagMat)[,1:4]
 ```
@@ -189,7 +190,7 @@ as.matrix(diagMat)[,1:4]
 
 
 ```{r cholBatchCpu, eval=TRUE}
-D=5
+D=2
 theMaternGpu = as.matrix(outputBatchF[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
 fromGpuOrig = chol4gpu = as.matrix(outputChol[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
 chol4gpu[upper.tri(chol4gpu)] = 0
