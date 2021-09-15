@@ -411,7 +411,7 @@ void crossprodBatch(
     A.internal_size2(), 
     D.internal_size2(),
     invertD, // A^T D^(-1) A
-    1, // don't only compute diagonals of C,  onlyDiagC, // set to 1 to only compute diagonals of C
+    0, // don't only compute diagonals of C,  onlyDiagC, // set to 1 to only compute diagonals of C
     NstartC,
     NstartA,
     NstartD,
@@ -439,7 +439,7 @@ void crossprodBatch(
   multiplyKernel.local_work_size(1, Nlocal[1]);
   
   // diagonals and diagTimesRowOfA
-  viennacl::ocl::enqueue(multiplyKernel( C, A, D, 2, Nmatrix));
+  viennacl::ocl::enqueue(multiplyKernel( C, A, D, 0, Nmatrix));
 #endif  
 }
 
