@@ -297,7 +297,7 @@ std::string crossprodBatchString(
   if(NpadD) {
     if(invertD) {
       result += 
-        " Cout += A[DinnerA] * A[DinnerAcol] / D[DHere+Dinner];\n";
+        "             Cout += A[DinnerA] * A[DinnerAcol] / D[DHere+Dinner];\n";
     } else {
       result += 
         //        "      Cout += A[Dmatrix * NpadBetweenMatricesA + Dinner*NpadA + Dcol] * A[Dmatrix * NpadBetweenMatricesA + Dinner*NpadA + Drow] * D[DHere+Dinner];\n"
@@ -343,10 +343,10 @@ std::string crossprodBatchString(
   
   if(!onlyDiagC) {
     result += 
-      "    }// Drow\n";
+      "    }// Drow\n"
+      "  barrier(CLK_LOCAL_MEM_FENCE);\n\n";
   }
   result += 
-    "  barrier(CLK_LOCAL_MEM_FENCE);\n\n"  //
     "  }// Dcol\n";
   
   result += 
@@ -411,7 +411,7 @@ void crossprodBatch(
     A.internal_size2(), 
     D.internal_size2(),
     invertD, // A^T D^(-1) A
-    0, // don't only compute diagonals of C,  onlyDiagC, // set to 1 to only compute diagonals of C
+    1, // don't only compute diagonals of C,  onlyDiagC, // set to 1 to only compute diagonals of C
     NstartC,
     NstartA,
     NstartD,
@@ -439,7 +439,7 @@ void crossprodBatch(
   multiplyKernel.local_work_size(1, Nlocal[1]);
   
   // diagonals and diagTimesRowOfA
-  viennacl::ocl::enqueue(multiplyKernel( C, A, D, 0, Nmatrix));
+  viennacl::ocl::enqueue(multiplyKernel( C, A, D, 2, Nmatrix));
 #endif  
 }
 
