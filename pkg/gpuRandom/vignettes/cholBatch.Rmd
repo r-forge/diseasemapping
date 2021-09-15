@@ -112,7 +112,7 @@ myParamsBatch =
         c(shape=2.15, range=0.5, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = -pi/7),
         c(shape=2.15, range=0.5, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/4))
 
-
+myParamsBatch = myParamsBatch[rep(1,8),]
 
 paramsGpu = gpuRandom::maternGpuParam(myParamsBatch, type=theType)
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
@@ -122,7 +122,7 @@ maternCov = vclMatrix(0, nrow(paramsGpu)*nrow(coordsGpu), nrow(coordsGpu),type=t
 dim(maternCov)
 gpuRandom::maternBatch(maternCov, coordsGpu, paramsGpu, Nglobal=c(128,64,16), Nlocal=c(4,4,4))
 
-set=2
+set=3
 var4cpu = geostatsp::matern(
   x=coordsSp,
   param=drop(myParamsBatch[set,1:7])
@@ -131,15 +131,14 @@ dim(var4cpu)
 
 a<-prod(Ngrid)*(set-1)+1
 b<-prod(Ngrid)*set
-temp=as.matrix(maternCov)
-var4gpu = temp[c(a:b), ]
+var4gpu = maternCov[c(a:b), ]
 range(var4gpu-var4cpu)
 
 
 ###########################################################################################################
 diagMat = vclMatrix(0, nrow(paramsGpu), ncol(maternCov), type = theType)
 outputChol = deepcopy(maternCov)
-gpuRandom::cholBatch(outputChol, diagMat, numbatchD=nrow(myParamsBatch), Nglobal = c(32,1,1), Nlocal = c(8,1,1),NlocalCache = 3000)
+gpuRandom::cholBatch(outputChol, diagMat, numbatchD=nrow(myParamsBatch), Nglobal = c(64,16,1), Nlocal = c(16,16,1),NlocalCache = 3000)
 dim(outputChol)
 
 cholCpu = as.matrix((chol(var4cpu)))            #cholCpu[1:6,1:6]
@@ -147,8 +146,8 @@ theDiag = diag(cholCpu)
 cholCpu = cholCpu %*% diag(1/theDiag)
 theDiag = theDiag^2
 
-tempchol = as.matrix(outputChol)
-chol4gpu = tempchol[a:b, ]
+
+chol4gpu = outputChol[a:b, ]
 chol4gpu[upper.tri(chol4gpu)] = 0
 diag(chol4gpu) = 1
 
