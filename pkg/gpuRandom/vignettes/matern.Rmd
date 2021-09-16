@@ -230,18 +230,15 @@ compute U = L D^(1/2) Z, where LDLt is the Cholesky of the variance matrix, Z is
 simMat = vclMatrix(0, nrow(outputChol), ncol(zMatGpu), 
   type = gpuR::typeof(zMatGpu))
 
-#outputChol2 = vclMatrix(diag(ncol(outputChol))[rep(1:ncol(outputChol), nrow(diagMat)),], type='double')    
-#diagMat2 = vclMatrix(matrix(0,#1:prod(dim(diagMat)),
-#                            nrow(diagMat), ncol(diagMat)), type='double')
-#zMatGpu2 = vclMatrix(matrix(1, nrow(zMatGpu), ncol(zMatGpu)), type='double')
 
 gpuRandom:::multiplyLowerDiagonalBatchBackend(
   simMat, outputChol, diagMat, zMatGpu,
   diagIsOne = TRUE, # diagonal of L is one
   transformD = "sqrt", # take the square root of each element of D
-  Nglobal = c(1,1,16),#c(32,32,4),#c(64,8,8), # rows, columns, matrix
-  Nlocal = c(1,1,1),#c(8,8,1),  # anything, anything 1
+  Nglobal = c(128,8,16),#c(32,32,4),#c(64,8,8), # rows, columns, matrix
+  Nlocal = c(32,8,1),#c(8,8,1),  # anything, anything 1
   NlocalCache = 5000)
+
 
 D=1
 resGpu = simMat[seq( (D-1) * ncol(outputBatchF)+1, len=ncol(outputBatchF)),]
@@ -250,21 +247,12 @@ chol4gpu[upper.tri(chol4gpu)] = 0
 diag(chol4gpu) = 1
 diagGpu = as.vector(diagMat[D,])
 zCpu = as.matrix(zMatGpu)
-resCpu = diag( sqrt(diagGpu)) %*% zCpu
-
-
-resGpu[c(1:6),]
-(resGpu - resCpu )[c(1:6),]
-
-resGpu[830+1:8,]
-resCpu[830+1:8,]
+resCpu = chol4gpu %*% diag( sqrt(diagGpu)) %*% zCpu
 
 
 
-plot(apply(resGpu - resCpu, 1, sum)[1:800])
 
-
-range(resGpu - resCpu)
+quantile(resGpu - resCpu)
 
 ```
 
