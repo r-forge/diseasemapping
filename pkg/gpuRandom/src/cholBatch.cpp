@@ -89,7 +89,6 @@ result +=
     "\n for(Dcol = colStart; Dcol < colEnd; Dcol++) {\n"
     "  DcolNpad = Dcol*Npad;\n"
   "  AHereDcol = AHere+DcolNpad;\n"
-  //"  Dcolm1 = Dcol - 1;\n"
   "  DL = 0.0;\n"
   "  diagLocal[localIndex]=0.0;\n"
   "  toAddLocal[localIndex]=0.0;\n";

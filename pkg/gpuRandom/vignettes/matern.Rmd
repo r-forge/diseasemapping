@@ -74,43 +74,23 @@ myParamsBatch = rbind(
 c(shape=1, range=1, variance = 1, nugget = 10, anisoRatio = 2, anisoAngleRadians = pi/6), #1
  c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.001, anisoRatio = 1, anisoAngleRadians = 0),  #2
  c(shape=1.25, range=0.5, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),  #2
- c(shape=3, range=5, variance = 1, nugget = 40, anisoRatio = 1, anisoAngleRadians = 0),#4
- c(shape=3.5, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #5
- c(shape=4, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),#6
- c(shape=4.5, range=5, variance = 1, nugget = 40, anisoRatio = 1, anisoAngleRadians = 0),#7
- c(shape=5, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #8
- c(shape=5.5, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #9
- c(shape=6, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #10
- c(shape=6.25, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),#11
- c(shape=6.5, range=5, variance = 1, nugget = 40, anisoRatio = 1, anisoAngleRadians = 0),#12
- c(shape=6.5, range=5, variance = 2.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #13
- c(shape=5.5, range=5, variance = 2.5, nugget = 20, anisoRatio = 1, anisoAngleRadians = 0), #14
- c(shape=6.5, range=5, variance = 2.5, nugget = 10, anisoRatio = 1, anisoAngleRadians = 0), #15
- c(shape=5.5, range=5, variance = 1.5, nugget = 30, anisoRatio = 1, anisoAngleRadians = 0) #16
-)[1:5,]
-
-myParamsBatch = myParamsBatch[rep(1,2),]
+ c(shape=3, range=3, variance = 1, nugget = 40, anisoRatio = 1, anisoAngleRadians = 0),#4
+ c(shape=3.5, range=2, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #5
+ c(shape=4, range=3, variance = 1, nugget = 1, anisoRatio = 1, anisoAngleRadians = 0),#6
+ c(shape=4.5, range=2, variance = 1, nugget = 40, anisoRatio = 1, anisoAngleRadians = 0),#7
+ c(shape=5, range=2, variance = 1, nugget = 1, anisoRatio = 1, anisoAngleRadians = 0), #8
+ c(shape=1.5, range=3, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #9
+ c(shape=1, range=2, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #10
+ c(shape=1.25, range=2, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),#11
+ c(shape=1.5, range=5, variance = 1, nugget = 40, anisoRatio = 1, anisoAngleRadians = 0),#12
+ c(shape=1.5, range=2, variance = 2.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #13
+ c(shape=1.5, range=5, variance = 2.5, nugget = 20, anisoRatio = 1, anisoAngleRadians = 0), #14
+ c(shape=1.5, range=5, variance = 2.5, nugget = 10, anisoRatio = 1, anisoAngleRadians = 0), #15
+ c(shape=1.5, range=5, variance = 1.5, nugget = 30, anisoRatio = 1, anisoAngleRadians = 0) #16
+)
 
 
 
-# myParamsBatch = rbind(
-# c(shape=1, range=1, variance = 1, nugget = 10, anisoRatio = 1, anisoAngleRadians = 0), #1
-#  c(shape=2, range=1, variance = 1, nugget = 20, anisoRatio = 1, anisoAngleRadians = 0),  #2
-#  c(shape=2.5, range=1, variance = 1, nugget = 30, anisoRatio = 1, anisoAngleRadians = 0), #3
-#  c(shape=3, range=5, variance = 1, nugget = 40, anisoRatio = 1, anisoAngleRadians = 0),#4
-#  c(shape=3.5, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #5
-#  c(shape=4, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),#6
-#  c(shape=4.5, range=5, variance = 1, nugget = 40, anisoRatio = 1, anisoAngleRadians = 0),#7
-#  c(shape=5, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #8
-#  c(shape=5.5, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #9
-#  c(shape=6, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #10
-#  c(shape=6.25, range=5, variance = 1, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),#11
-#  c(shape=6.5, range=5, variance = 1, nugget = 40, anisoRatio = 1, anisoAngleRadians = 0),#12
-#  c(shape=6.5, range=5, variance = 2.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0), #13
-#  c(shape=5.5, range=5, variance = 2.5, nugget = 20, anisoRatio = 1, anisoAngleRadians = 0), #14
-#  c(shape=6.5, range=5, variance = 2.5, nugget = 10, anisoRatio = 1, anisoAngleRadians = 0), #15
-#  c(shape=5.5, range=5, variance = 1.5, nugget = 30, anisoRatio = 1, anisoAngleRadians = 0) #16
-# )
 
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
 
@@ -169,9 +149,6 @@ print(quantile(as.vector(fromCpu - fromGpu), na.rm=TRUE))
 
 
 
-
-
-
 # Cholesky
 ```{r cholBach, eval = TRUE}
 diagMat = vclMatrix(0, nrow(paramsGpu), ncol(outputBatchF), 
@@ -181,15 +158,15 @@ outputChol = deepcopy(outputBatchF)
 gpuRandom::cholBatch(
   outputChol, diagMat, 
   numbatchD=nrow(myParamsBatch),
-  Nglobal = c(64L, 8L),#NglobalChol,
-  Nlocal = c(16L, 4L),#NlocalChol,
+  Nglobal = c(256L, 16L),#NglobalChol,
+  Nlocal = c(16L, 16L),#NlocalChol,
   NlocalCache = 5000)#NlocalCache)
 as.matrix(diagMat)[,1:4]
 ```
 
 
 
-```{r cholBatchCpu, eval=TRUE}
+```{r cholBatchCpu, eval=FALSE}
 D=2
 theMaternGpu = as.matrix(outputBatchF[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
 fromGpuOrig = chol4gpu = as.matrix(outputChol[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
@@ -219,11 +196,11 @@ theDiag = theDiag^2
 
 
 
-quantile(cholCpu - chol4gpu, prob = Sprob)
-quantile(theDiag - as.matrix(diagMat)[D,], prob=Sprob)
+#quantile(cholCpu - chol4gpu, prob = Sprob)
+#quantile(theDiag - as.matrix(diagMat)[D,], prob=Sprob)
 plot(theDiag - diagGpu)
-plot(cholCpu[600,] - chol4gpu[600,])
-cbind(theDiag, diagGpu, theDiag - diagGpu)[seq(178,len=20),]
+#plot(cholCpu[600,] - chol4gpu[600,])
+#cbind(theDiag, diagGpu, theDiag - diagGpu)[seq(178,len=20),]
 ```
 
 
@@ -238,7 +215,7 @@ create a matrix of independent normals
 ```{r randomNormalsSim}
 streamsGpu <- gpuRandom::CreateStreamsGpu(Nstreams=128*64, keepInitial=TRUE)
 
-zMatGpu = gpuRandom::rnorm(c(ncol(outputBatchF),Nsim), 
+zMatGpu = gpuRandom::rnorm(c(ncol(outputBatchF), Nsim), 
                            streams=streamsGpu, Nglobal=c(128,64),
                            type = theType)
 ```
@@ -252,18 +229,47 @@ compute U = L D^(1/2) Z, where LDLt is the Cholesky of the variance matrix, Z is
 ```{r multLowerGpu, eval = TRUE}
 simMat = vclMatrix(0, nrow(outputChol), ncol(zMatGpu), 
   type = gpuR::typeof(zMatGpu))
-    
+
+#outputChol2 = vclMatrix(diag(ncol(outputChol))[rep(1:ncol(outputChol), nrow(diagMat)),], type='double')    
+#diagMat2 = vclMatrix(matrix(0,#1:prod(dim(diagMat)),
+#                            nrow(diagMat), ncol(diagMat)), type='double')
+#zMatGpu2 = vclMatrix(matrix(1, nrow(zMatGpu), ncol(zMatGpu)), type='double')
+
 gpuRandom:::multiplyLowerDiagonalBatchBackend(
   simMat, outputChol, diagMat, zMatGpu,
   diagIsOne = TRUE, # diagonal of L is one
   transformD = "sqrt", # take the square root of each element of D
-  Nglobal = c(1,1,1),#c(64,8,8), # rows, columns, matrix
-  Nlocal = c(1,1,1),  # anything, anything 1
-  NlocalCache = 4000)
+  Nglobal = c(1,1,16),#c(32,32,4),#c(64,8,8), # rows, columns, matrix
+  Nlocal = c(1,1,1),#c(8,8,1),  # anything, anything 1
+  NlocalCache = 5000)
+
+D=1
+resGpu = simMat[seq( (D-1) * ncol(outputBatchF)+1, len=ncol(outputBatchF)),]
+chol4gpu = as.matrix(outputChol[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
+chol4gpu[upper.tri(chol4gpu)] = 0
+diag(chol4gpu) = 1
+diagGpu = as.vector(diagMat[D,])
+zCpu = as.matrix(zMatGpu)
+resCpu = diag( sqrt(diagGpu)) %*% zCpu
+
+
+resGpu[c(1:6),]
+(resGpu - resCpu )[c(1:6),]
+
+resGpu[830+1:8,]
+resCpu[830+1:8,]
+
+
+
+plot(apply(resGpu - resCpu, 1, sum)[1:800])
+
+
+range(resGpu - resCpu)
+
 ```
 
-```{r checkMultiplyLower}
-D=5
+```{r checkMultiplyLower, eval=FALSE}
+D=1
 resGpu = simMat[seq( (D-1) * ncol(outputBatchF)+1, len=ncol(outputBatchF)),]
 theMaternGpu = as.matrix(outputBatchF[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
 fromGpuOrig = chol4gpu = as.matrix(outputChol[seq(1+(D-1)*nrow(coordsGpu), len=nrow(coordsGpu)),])
@@ -275,6 +281,7 @@ zCpu = as.matrix(zMatGpu)
 resCpu = chol4gpu %*% diag(sqrt(diagGpu)) %*% zCpu
 quantile(resGpu - resCpu)
 
+range(resGpu - diag(sqrt(diagGpu)) %*% zCpu )
 ```
 
 
