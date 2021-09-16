@@ -1,7 +1,8 @@
 #include "gpuRandom.hpp"
 #define DEBUG
 
-// dimension 0 is row, local dimension 1 inner loop over columns, group 0 is matrix
+// Nlocal[0] is Drow, Nlocal[1] inner loop over columns, 
+// Nglobal[0] is Dmatrix
 // local and global work sizes should be identical for dimension 1 (second dimension), only 1 group for dimension 1
 
 
@@ -49,9 +50,9 @@ template <typename T> std::string cholBatchKernelString(
     result += 
       ",\n	__global " + typeString + " *logDet,\n"
       "                int logDetIndex\n";
-    }
-
-    
+  }
+  
+  
   result += "\n){\n"
   " const int localIndex = get_local_id(0)*get_local_size(1) + get_local_id(1);\n"
   " const int localIndexIsZero = (localIndex==0);\n"
@@ -75,23 +76,28 @@ template <typename T> std::string cholBatchKernelString(
     result += typeString  + " logDetHere;\n";
   }
   result +=   " barrier(CLK_LOCAL_MEM_FENCE);\n\n";
-result +=  
-  "for(DmatrixBlock=0, Dmatrix = get_group_id(0);\n"
-  "     DmatrixBlock < Nmatrix;\n"
-  "     Dmatrix+= get_num_groups(0),DmatrixBlock+= get_num_groups(0)){\n"
- 
-  " diagHere = Dmatrix*NpadDiag + NstartD;\n"
-  " AHere = (Dmatrix < Nmatrix) * Dmatrix*NpadBetweenMatrices + NstartA;\n";
+  result +=  
+    "for(Dmatrix = get_group_id(0);\n "
+    "    Dmatrix < Nmatrix;\n "
+    "    Dmatrix+= get_num_groups(0)){\n\n"
+    
+    // "for(DmatrixBlock=0, Dmatrix = get_group_id(0);\n"
+    // "     DmatrixBlock < Nmatrix;\n"
+    // "     DmatrixBlock+= get_num_groups(0), Dmatrix+= get_num_groups(0)){\n"
+    
+    " diagHere = Dmatrix*NpadDiag + NstartD;\n"
+    " AHere = (Dmatrix < Nmatrix) * Dmatrix*NpadBetweenMatrices + NstartA;\n";
   if(logDet){
     result += " logDetHere = 0.0;\n";
   }
   result +=
     "\n for(Dcol = colStart; Dcol < colEnd; Dcol++) {\n"
     "  DcolNpad = Dcol*Npad;\n"
-  "  AHereDcol = AHere+DcolNpad;\n"
-  "  DL = 0.0;\n"
-  "  diagLocal[localIndex]=0.0;\n"
-  "  toAddLocal[localIndex]=0.0;\n";
+    "  AHereDcol = AHere+DcolNpad;\n"
+    //"  Dcolm1 = Dcol - 1;\n"
+    "  DL = 0.0;\n"
+    "  diagLocal[localIndex]=0.0;\n"
+    "  toAddLocal[localIndex]=0.0;\n";
   
   
   if(allowOverflow) {
@@ -118,9 +124,9 @@ result +=
       "  }// Dk\n";
   }
   
-   result +=  
-  "\n// reduction on dimension 1\n";
-
+  result +=  
+    "\n// reduction on dimension 1\n";
+  
   result += "  barrier(CLK_LOCAL_MEM_FENCE);\n"
   "  if( (get_local_id(1) == 0) & (Dmatrix < Nmatrix) ){\n"
   "   for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
@@ -128,48 +134,48 @@ result +=
   "   }//for Dk\n"
   "  }//get_local_id(1) == 0\n"
   "  barrier(CLK_LOCAL_MEM_FENCE);\n\n";
-
+  
   result +=     
-  "// final reduction on dimension 0\n"
-  "  if(localIndexIsZero & (Dmatrix < Nmatrix) ){\n";
-
+    "// final reduction on dimension 0\n"
+    "  if(localIndexIsZero & (Dmatrix < Nmatrix) ){\n";
+  
   result +=     
-    "   for(Dk = localIndex + get_local_size(1); Dk < NlocalTotal; Dk+= get_local_size(1)) {\n"
-  "    toAddLocal[localIndex] +=  toAddLocal[Dk];\n"
-  "   } //Dk\n";
-
-result +=     
+    "   for(Dk = get_local_size(1); Dk < NlocalTotal; Dk+= get_local_size(1)) {\n"   //   localIndex + get_local_size(1)
+    "    toAddLocal[localIndex] +=  toAddLocal[Dk];\n"
+    "   } //Dk\n";
+  
+  result +=     
     "   diagDcol = A[AHereDcol+Dcol] - toAddLocal[localIndex];\n"
-  "   diag[diagHere+Dcol] = diagDcol;\n";
-
+    "   diag[diagHere+Dcol] = diagDcol;\n";
+  
   if(logDet){
     result += "  logDetHere += log(diagDcol);\n";
   }
   
   result +=  
-  "#ifdef diagToOne\n"
-  "   A[AHereDcol+Dcol] = 1.0;\n"
-  "#endif\n"
-  "  }  //localIndex==0 and Dmatrix < Nmatrix\n"
-  "  barrier(CLK_LOCAL_MEM_FENCE);\n\n";
+    "#ifdef diagToOne\n"
+    "   A[AHereDcol+Dcol] = 1.0;\n"
+    "#endif\n"
+    "  }  //localIndex==0 and Dmatrix < Nmatrix\n"
+    "  barrier(CLK_LOCAL_MEM_FENCE);\n\n";
   //"  diagDcol = diagHere[Dcol];\n"
-
-    result += "// off diagonals\n";
-//  result += " for(Drow = Dcol+get_local_id(0)+1; Drow < N; Drow += get_local_size(0)) {\n";
-
-// DrowBlock is the Drow for the first work item.  
-// sometimes DrowBlock < N but Drow > N
-// need if statement to stop those rows from being computed
-// can't have condition Drow < N in loop
-// because some work items won't do the loop and 
-// memory fence won't work
-
-result += " for(DrowBlock = Dcol+1; DrowBlock < N; DrowBlock += get_local_size(0)) {\n";
-
-result += "  Drow = DrowBlock + get_local_id(0);\n";
-
-    result +=
-      "  AHereDrow = AHere+Drow*Npad;\n"
+  
+  result += "// off diagonals\n";
+  //  result += " for(Drow = Dcol+get_local_id(0)+1; Drow < N; Drow += get_local_size(0)) {\n";
+  
+  // DrowBlock is the Drow for the first work item.  
+  // sometimes DrowBlock < N but Drow > N
+  // need if statement to stop those rows from being computed
+  // can't have condition Drow < N in loop
+  // because some work items won't do the loop and 
+  // memory fence won't work
+  
+  result += " for(DrowBlock = Dcol+1; DrowBlock < N; DrowBlock += get_local_size(0)) {\n";
+  
+  result += "  Drow = DrowBlock + get_local_id(0);\n";
+  
+  result +=
+    "  AHereDrow = AHere+Drow*Npad;\n"
     "  DL = 0.0;\n";
   
   result += "  if( (Drow < N) & (Dmatrix < Nmatrix) & (Drow < N) ){\n";
@@ -186,57 +192,57 @@ result += "  Drow = DrowBlock + get_local_id(0);\n";
     "   DL += A[AHereDrow+Dk] * diagLocal[Dk];\n"
     // DL -= A[Drow + Dk * Npad] * A[Dcol + DkNpad] * diag[Dk];"
     "  } // Dk\n";
-
-
-    
+  
+  
+  
   if(allowOverflow) {
     result +=
       "	 for(minDcolNcache + get_local_id(1); Dk < Dcol; Dk+=get_local_size(1)) {\n"
       "    DL += A[AHereDrow+Dk] * diag[diagHere+Dk] * A[AHereDcol+Dk];\n"
       "  }// Dk\n"; 
   }
-
-
+  
+  
   result += "   }//Drow < N\n";
-
+  
   result +=
     "  toAddLocal[localIndex] = DL;\n\n";
   
-      
+  
   result +=
-  "  // local reduction\n"
+    "  // local reduction\n"
     "  barrier(CLK_LOCAL_MEM_FENCE);\n";
   result +=
     "  if( (get_local_id(1) == 0) & (Dmatrix < Nmatrix)  & (Drow < N)){\n"
     "   DL = toAddLocal[localIndex];\n";
-
-result +=    "   for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
-    "    DL +=  toAddLocal[localIndex + Dk];\n"
-    "   }//Dk\n"; 
-
-result +=    
+  
+  result +=    "   for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
+  "    DL +=  toAddLocal[localIndex + Dk];\n"
+  "   }//Dk\n"; 
+  
+  result +=    
     "   A[AHereDrow+Dcol] = (A[AHereDrow+Dcol] - DL)/diagDcol;\n"
     "  }//get_local_id(1) == 0\n" 
     "  barrier(CLK_GLOBAL_MEM_FENCE);\n\n";
-
+  
   result +=
     " }//DrowBlock\n";
-
+  
   result +=  
     "barrier(CLK_GLOBAL_MEM_FENCE);\n"
     "} // Dcol loop\n\n";
   
-    if(logDet){
-        result +=  "if(localIndexIsZero & (Dmatrix < Nmatrix)  & (Drow < N)){\n"
-          " logDet[logDetIndex + Dmatrix] = logDetHere;\n"
-          "}\n";
-    }
-
-result += "barrier(CLK_GLOBAL_MEM_FENCE);\n"
-    "} // Dmatrix loop\n\n";
-    
-    result +=   "barrier(CLK_LOCAL_MEM_FENCE);\n"
-    "}// kernel\n";
+  if(logDet){
+    result +=  "if(localIndexIsZero & (Dmatrix < Nmatrix)  & (Drow < N)){\n"
+    " logDet[logDetIndex + Dmatrix] = logDetHere;\n"
+    "}\n";
+  }
+  
+  result += "barrier(CLK_GLOBAL_MEM_FENCE);\n"
+  "} // Dmatrix loop\n\n";
+  
+  result +=   "barrier(CLK_LOCAL_MEM_FENCE);\n"
+  "}// kernel\n";
   return(result);
 }
 
@@ -247,10 +253,10 @@ result += "barrier(CLK_GLOBAL_MEM_FENCE);\n"
 
 
 /*
-const std::vector<int> &Nglobal,
-const std::vector<int> &Nlocal, 
-const std::vector<int> &NlocalCache,
-*/
+ const std::vector<int> &Nglobal,
+ const std::vector<int> &Nlocal, 
+ const std::vector<int> &NlocalCache,
+ */
 
 
 
@@ -266,23 +272,23 @@ int cholBatchVcl(
     Rcpp::IntegerVector Nlocal, 
     Rcpp::IntegerVector NlocalCache,
     const int ctx_id) {
- 
+  
   const int NstartA = A.internal_size2() * Astartend[0] + Astartend[2];
   const int NstartD = D.internal_size2() * Dstartend[0] + Dstartend[2];
   
   std::string cholClString = cholBatchKernelString<T>(
     0L, // start
-    Astartend[3], // end
-    Astartend[3], // N
-    A.internal_size2(), // Npad
-    D.internal_size2(),
-    A.size2() * A.internal_size2(),// NpadBetweenMatrices,
-    NstartA,
-    NstartD,
-    NlocalCache, 
-    Nlocal,
-    ((int) A.size2() ) > NlocalCache[0], // allow overflow  // needs change?
-    0L // logDet
+    Astartend[3], // colEnd  
+             Astartend[3], // N
+                      A.internal_size2(), // Npad
+                      D.internal_size2(),
+                      A.size2() * A.internal_size2(),// NpadBetweenMatrices,
+                      NstartA,
+                      NstartD,
+                      NlocalCache, 
+                      Nlocal,
+                      ((int) A.size2() ) > NlocalCache[0], // allow overflow  // needs change?
+                                                      0L // logDet
   );
   
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
@@ -336,7 +342,7 @@ void cholBatchTemplated(
     Rcpp::IntegerVector Nglobal,
     Rcpp::IntegerVector Nlocal, 
     Rcpp::IntegerVector NlocalCache) {
-
+  
   const bool BisVCL=1;
   const int ctx_id = INTEGER(A.slot(".context_index"))[0]-1;
   std::shared_ptr<viennacl::matrix<T> > vclA = getVCLptr<T>(A.slot("address"), BisVCL, ctx_id);
