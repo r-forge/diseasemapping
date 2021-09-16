@@ -9,6 +9,7 @@ likfitGpu_2 <- function(spatialmodel,     #data,
                         ParamsGpu, #a vclmatrix, consists of all the parameters
                         betas=NULL, #a vclmatrix  #given by the user or provided from formula
                         BoxCox, # an R vector, will always be c(1,0,.....)
+                        Nbetahats, # a number, how many betahats do you want to calculate for one dataset? 
                         form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),
                         NparamPerIter,  # how many sets of params to be evaluated in each loop
                         minustwotimes=TRUE,
@@ -95,26 +96,20 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   
   temp <- vclMatrix(0, Nparam, Ndata, type=type)  
   
-  
-  
   if(form ==1 | form ==3){
     if(is.null(betas)){
       stop("must supply betas for this likelihood")
-    }else{
-      
+    }else{    
       one <- ssqY - 2*aTDinvb_beta + ssqBeta
       
-      
       if(form ==1){
-        mat_vec_eledivideBackend(one, variances, temp,  Nglobal)
-        
+        mat_vec_eledivideBackend(one, variances, temp,  Nglobal)    
         matrix_vector_sumBackend(temp,
                                  detVar + n*log(variances),
                                  jacobian,  
                                  n*log(2*pi),
                                  minusTwoLogLik,
-                                 Nglobal)   
-        
+                                 Nglobal)        
       }else if(form == 3){
         matrix_vector_sumBackend(n*log(one/n),
                                  detVar,
@@ -127,15 +122,12 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   }
   
   
-  
   # resid^T V^(-1) resid, resid = Y - X betahat = two
   two <- ssqY - ssqBetahat
   minusTwoLogLik <- vclMatrix(0, Nparam, Ndata, type=type)
   
-  
   if(form ==2){ #ml
-    # = n*log(two/n) + logD + jacobian +n + n*log(2*pi)
-    
+    # = n*log(two/n) + logD + jacobian +n + n*log(2*pi)  
     matrix_vector_sumBackend(n*log(two/n),
                              detVar,
                              jacobian,  
@@ -143,12 +135,9 @@ likfitGpu_2 <- function(spatialmodel,     #data,
                              minusTwoLogLik,
                              Nglobal)
     
-    
   }else if(form==4){ #mlFixBeta
-    # two/variances + n*log(variances) + logD + jacobian + n*log(2*pi)
-    
-    mat_vec_eledivideBackend(two, variances, temp,  Nglobal)
-    
+    # two/variances + n*log(variances) + logD + jacobian + n*log(2*pi)    
+    mat_vec_eledivideBackend(two, variances, temp,  Nglobal)  
     
     matrix_vector_sumBackend(temp,
                              n*log(variances)+detVar,
@@ -157,11 +146,9 @@ likfitGpu_2 <- function(spatialmodel,     #data,
                              minusTwoLogLik,
                              Nglobal)
     
-    
   }else if(form==5){ #reml
     #first_part <- (n-p)*log(variances) + logD + logP
-    #minusTwoLogLik=first_part + two/variances +jacobian + n*log(2*pi)
-    
+    #minusTwoLogLik=first_part + two/variances +jacobian + n*log(2*pi)   
     mat_vec_eledivideBackend(two, variances, temp,  Nglobal)
     
     matrix_vector_sumBackend(temp,
@@ -169,28 +156,53 @@ likfitGpu_2 <- function(spatialmodel,     #data,
                              jacobian,  
                              n*log(2*pi),
                              minusTwoLogLik,
-                             Nglobal)
-    
+                             Nglobal) 
     
   }else if(form==6){ # remlPro
-    # minusTwoLogLik= (n-p)*log(two/(n-p)) + logD + logP + jacobian + n*log(2*pi) + n-p
-    
+    # minusTwoLogLik= (n-p)*log(two/(n-p)) + logD + logP + jacobian + n*log(2*pi) + n-p    
     matrix_vector_sumBackend((n-p)*log(two/(n-p)),
                              detVar+detReml,
                              jacobian,  
                              n*log(2*pi)+n-p,
                              minusTwoLogLik,
                              Nglobal)
-    
   }
   
   
-  minusTwoLogLik
+  
+  ##### calculate betahat #####################
+  ####### (X^T V^(-1)X)^(-1) * (X^T V^(-1) y)
+  if (Nbetahats > 0){
+    Betahat <- matrix(0, nrow=Nbetahats, ncol=Ndata)
+    
+    if(Nbetahats > 10 | Nbetahats > Nparam){
+      stop("too many Betahats required")
+    }
+    #Nbetahats = min(Nbetahats, Nparam)
+    
+    for (j in 1:Ndata){
+      index <- order(minusTwoLogLik[,j], decreasing = FALSE)[1:Nbetahats]  #from small to large
+      
+      for (i in 1:Nbetahats){       
+        a<-c((index[i]-1)*Ncov+1, index[i]*Ncov)
+        Betahat[i,j] <- solve(XVYXVX[a,(Ndata+1):ncol(yx)]) %*% XVYXVX[a,j]
+        
+      }
+    }
+  }
+  
+  
+  
+  List <- list("minusTwoLogLik" = minusTwoLogLik, "Betahat" = Betahat)
+  
+  
+  List
   
   
   
   
 }
+
 
 
 
