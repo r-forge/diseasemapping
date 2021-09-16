@@ -37,7 +37,7 @@ library("MASS")
 \Plainauthor{Ruoyong Xu, Patrick Brown}
 
 
-\title{Random number simulation and applications on GPU’s in R?}
+\title{Random number generation and applications on GPU’s in R?}
 \Plaintitle{}
 \Shorttitle{}
 
