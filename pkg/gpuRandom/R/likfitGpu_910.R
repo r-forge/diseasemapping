@@ -173,7 +173,7 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   ##### calculate betahat #####################
   ####### (X^T V^(-1)X)^(-1) * (X^T V^(-1) y)
   if (Nbetahats > 0){
-    Betahat <- matrix(0, nrow=Nbetahats, ncol=Ndata)
+    Betahat <- matrix(0, nrow=Nbetahats*Ncov, ncol=Ndata)
     
     if(Nbetahats > 10 | Nbetahats > Nparam){
       stop("too many Betahats required")
@@ -185,7 +185,7 @@ likfitGpu_2 <- function(spatialmodel,     #data,
       
       for (i in 1:Nbetahats){       
         a<-c((index[i]-1)*Ncov+1, index[i]*Ncov)
-        Betahat[i,j] <- solve(XVYXVX[a,(Ndata+1):ncol(yx)]) %*% XVYXVX[a,j]
+        Betahat[a,j] <- solve(XVYXVX[a,(Ndata+1):ncol(yx)]) %*% XVYXVX[a,j]
         
       }
     }
