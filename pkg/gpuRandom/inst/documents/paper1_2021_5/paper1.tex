@@ -81,7 +81,7 @@
 \Plainauthor{Ruoyong Xu, Patrick Brown}
 
 
-\title{Random number simulation and applications on GPU’s in R?}
+\title{Random number generation and applications on GPU’s in R?}
 \Plaintitle{}
 \Shorttitle{}
 
@@ -474,10 +474,10 @@ Let's compare the time of generating a large-size matrix of more than 26.8 milli
 system.time(gpuRandom::rnorm(c(16384,16384), streams=streams, 
                              Nglobal=c(512,128), type="double"))
 ##    user  system elapsed 
-##   0.112   0.001   1.279
+##   0.102   0.008   1.278
 system.time(matrix(stats::rnorm(16384*16384),16384,16384))
 ##    user  system elapsed 
-##  11.962   0.898  12.838
+##  12.028   0.857  12.862
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -559,7 +559,7 @@ month_GPU<-vclMatrix(month,type="integer")
 system.time(gpuRandom::fisher.sim(month_GPU, 1e6, streams=streams, 
             type="double", returnStatistics=FALSE, Nglobal = Nglobal))
 ##    user  system elapsed 
-##   0.680   0.008   2.291
+##   0.672   0.012   2.287
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -635,7 +635,7 @@ week_GPU<-gpuR::vclMatrix(week,type="integer")
 system.time(gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
             type="double", returnStatistics=FALSE,Nglobal = Nglobal))
 ##    user  system elapsed 
-##   0.613   0.010  10.839
+##   0.598   0.017  10.831
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
