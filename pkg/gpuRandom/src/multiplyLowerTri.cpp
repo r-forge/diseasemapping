@@ -272,6 +272,9 @@ result +=
 
 result += 
   "    Drow = DrowBlock + get_global_id(0);\n";
+
+result +=  "     DrowBlockEnd = DrowBlock + get_local_size(0)-1;\n";
+
 result += 
   "    if(DmatrixInBounds & (Drow < DinnerStop) ){\n"
   "       DrowInBounds = 1;\n"
@@ -310,11 +313,11 @@ if(diagIsOne) {
 }
 
 result +=
-  "      for(Dinner = 0,DinnerCache=0; Dinner < DrowBlock; Dinner++,DinnerCache += NcolInCache){\n";
+  "      for(Dinner = 0,DinnerCache=0; Dinner < DrowBlockEnd; Dinner++,DinnerCache += NcolInCache){\n";
 
 result +="        barrier(CLK_LOCAL_MEM_FENCE);\n";
 result +=  
-  "        if( doCacheAhere & (Dinner < Drow) ) {\n"
+  "        if( doCache & DcolInBounds & (Dinner < Drow) ) {\n"
   "           Acache[get_local_id(0)] = A[Dinner + DrowNpadA];\n"
   "        }\n";
   result +=
@@ -378,7 +381,6 @@ if(NpadD) {
 
 result += 
   "    Dcol = DcolBlock + get_global_id(1);\n";
-#ifdef UNDEF
 result += 
   "    if(DrowInBounds & (Dcol < Ncol) ){\n"
   "       DcolInBounds = 1;\n"
@@ -386,6 +388,7 @@ result +=
   "       DcolInBounds = 0;\n"
   "       Dcol = 0;\n"
   "     }\n";
+#ifdef UNDEF
 
 result += 
   "      doCacheAhere = doCacheA & DcolInBounds;\n";
