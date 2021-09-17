@@ -330,11 +330,11 @@ gpuRandom::qqnorm(avector, Nglobal=c(128,64), main="Q-Q Plot")
 @
 \caption{\label{fig2} Histogram and Q-Q plot of the GPU-generated random numbers.}
 \end{figure}
-Let's compare the time of generating a large-size matrix of more than 26.8 million Gaussian random numbers of double precision using the \fct{stats::rnorm} and using the \fct{gpuRandom::rnorm}. Both process are not time-consuming, however, using \fct{gpuRandom::rnorm} with $128 \times 128$ work-items is about 10 times (the number may fluctuate a bit from executions) faster than using the \fct{stats::rnorm}. The difference in elapsed time becomes larger when matrix size goes larger.
-<<random normal time compare, eval=TRUE, cache=FALSE>>=
-system.time(gpuRandom::rnorm(c(16384,16384), streams=streams, 
+Let's compare the time of generating a large-size matrix of 100 million Gaussian random numbers of double precision using the \fct{stats::rnorm} and using the \fct{gpuRandom::rnorm}. Both process are not time-consuming, however, using \fct{gpuRandom::rnorm} with $512 \times 128$ work-items is 117.6 times (the number may fluctuate a bit from executions) faster than using the \fct{stats::rnorm}. The difference in elapsed time becomes larger when matrix size goes larger.
+<<random normal time compare, eval=TRUE, cache=TRUE>>=
+system.time(gpuRandom::rnorm(c(10000,10000), streams=streams, 
                              Nglobal=c(512,128), type="double"))
-system.time(matrix(stats::rnorm(16384*16384),16384,16384))
+system.time(matrix(stats::rnorm(10000^2),10000,10000))
 @
 
 
@@ -350,11 +350,22 @@ One application of GPU-generated random numbers in \pkg{gpuRandom} is Monte Carl
 \end{enumerate}
 The Monte Carlo simulation solves the computational problem of Fisher's exact test but can still take long running time when $B$ reaches millions in scale, thus we make the function \fct{gpuRandom::fisher.sim} that does the steps 1, 2 and 3 parallelly on GPU, and step 2 of saving the test statistics from the random tables as an option in \fct{gpuRandom::fisher.sim}, which largely saves processing time. 
 
-Next we compare the run time between using \fct{gpuRandom::fisher.sim} and \fct{stats::fisher.test} using two real data examples with small and large p-values respectively. These 2-way contingency tables (\ref{tab:month} and \ref{tab:week}) consists of selected data from the 2018 Natality public use file \citep{National2018} from the Centers for Disease Control and Prevention’s National Center for Health Statistics, the 2018 natality data file may be downloaded at \url{https://www.cdc.gov/nchs/data_access/VitalStatsOnline.htm}. The row variable of the first table represents the twelve months: from January to December, and for the second table it represents the seven weekdays: Monday to Sunday. The column variables of these two tables represent the twelve categories of congenital anomalies of the newborn: 1) Anencephaly; 2) Meningomyelocele/Spina bifida; 3) Cyanotic congenital heart disease; 4) Congenital diaphragmatic hernia; 5) Omphalocele; 6) Gastrochisis; 7) Limb reduction defect; 8) Cleft lip with or without cleft palate; 9) Cleft palate alone; 10) Down syndrome; 11) Suspected chromosomal disorder; and 12) Hypospadias.
+We show the usage and advantage of \fct{gpuRandom::fisher.sim} by computing the p-values for two real data real data examples: one with a relatively big p-value and another with a very small p-value, and compare the run time with using \fct{stats::fisher.test} for each of the data sets on two computers: one with a very good CPU and a normal GPU, the other is equipped with an excellent GPU and a normal CPU. The device information is included in the table \ref{tab:device}. The \proglang{R} outputs for testing on computer 1 is shown in the following sections. 
+\begin{table}[H]
+\begin{tabular}{ |c|c|c|c|c|c| } 
+\hline
+           & CPU   & GPU \\ \hline
+ Computer1 & pthread-Intel(R) Xeon(R) W-2145 CPU @ 3.70GHz & 2 Radeon VII's : ROCm AMDGPU  \\ \hline
+ Computer2 & dontknow & GRID V100D-8C \\ \hline
+\end{tabular}
+\caption{\label{tab:device} Device information for run-time compare.}
+\end{table}
+
+These 2-way contingency tables (\ref{tab:month} and \ref{tab:week}) consists of selected data from the 2018 Natality public use file \citep{National2018} from the Centers for Disease Control and Prevention’s National Center for Health Statistics, the 2018 natality data file may be downloaded at \url{https://www.cdc.gov/nchs/data_access/VitalStatsOnline.htm}. The row variable of the first table represents the twelve months: from January to December, and for the second table it represents the seven weekdays: Monday to Sunday. The column variables of these two tables represent the twelve categories of congenital anomalies of the newborn: 1) Anencephaly; 2) Meningomyelocele/Spina bifida; 3) Cyanotic congenital heart disease; 4) Congenital diaphragmatic hernia; 5) Omphalocele; 6) Gastrochisis; 7) Limb reduction defect; 8) Cleft lip with or without cleft palate; 9) Cleft palate alone; 10) Down syndrome; 11) Suspected chromosomal disorder; and 12) Hypospadias.
 
 \subsection{Comparing running time: Month data example}
 <<Timecomparemonth,echo=FALSE,eval=TRUE, results="hide">>=
-data2<-read.csv("/home/ruoyong/paper2/month.csv") 
+data2<-read.csv("/home/ruoyong/paper1_2021_5/month.csv") 
 data2<-data2[,-1]
 month<-as.matrix(data2)
 rownames(month) <- c("Jan", "Feb","Mar","Apr","May","Jun","Jul","Aug","Sept","Oct","Nov","Dec")
@@ -380,17 +391,17 @@ almost.1 <- 1 + 64 * .Machine$double.eps
 observed_m= -gpuRandom::logfactSum(month, c(16,16))/almost.1
 month_GPU<-vclMatrix(month,type="integer")
 system.time(gpuRandom::fisher.sim(month_GPU, 1e6, streams=streams, 
-            type="double", returnStatistics=FALSE, Nglobal = Nglobal))
+            type="double", returnStatistics=FALSE, Nglobal = c(128,128)))
 @
 \fct{gpuRandom::fisher.sim} takes about 2.3 seconds, compared to the elapsed time of \fct{gpuRandom::fisher.sim},  \fct{gpuRandom::fisher.sim} takes less than a quater of the time. 
-<<timecomparemonth3Gpu, eval=TRUE,cache=TRUE>>=
+<<timecomparemonth3Gpu, eval=TRUE,cache=FALSE>>=
 result_monthgpu <- gpuRandom::fisher.sim(month_GPU, 1e6, streams=streams,
-                   type="double", returnStatistics=TRUE,  Nglobal = Nglobal)
+                   type="double", returnStatistics=TRUE,  Nglobal = c(128,128))
 result_monthgpu$simnum
 result_monthgpu$counts
 result_monthgpu$p.value
 @
-We requested one million simulations on GPU while the actual number of simulation is 999424, and got 403274 cases whose test statitsic is below the observed threshold, so the p-value from \fct{gpuRandom::fisher.sim} for this table is about 0.4035, which is close enough to the p-value from \fct{stats::fisher.test}: 0.4035.  
+We requested one million simulations on GPU while the actual number of simulation is 999424, and got 403274 cases whose test statitsic is below the observed threshold, so the p-value from \fct{gpuRandom::fisher.sim} for this table is about 0.4035, which is close enough to the p-value from \fct{stats::fisher.test}: 0.4034.  
 <<timecomparemonth4Gpu, eval=TRUE,echo=FALSE, cache=TRUE>>=
 result_monthgpu$cpu <- as.vector(result_monthgpu$sim)
 @
@@ -399,7 +410,7 @@ result_monthgpu$cpu <- as.vector(result_monthgpu$sim)
 \subsection{Comparing running time: Week data example}
 <<Timecompareweek, echo=FALSE, eval=TRUE, results="hide">>=
 library(latex2exp)
-data<-read.csv("/home/ruoyong/paper2/weekday.csv") 
+data<-read.csv("/home/ruoyong/paper1_2021_5/weekday.csv") 
 #exampletwo<-as.matrix(as.data.frame(lapply(data, as.numeric)))
 data<-data[,-1]
 week<-as.matrix(data)
@@ -411,14 +422,14 @@ colnames(week) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal
 knitr::kable(head(week, n=7),format="latex",caption = "Week\\label{tab:week}") %>%
   kable_styling(bootstrap_options = "striped", full_width = F, position = "center",latex_options = "HOLD_position")
 @
-
-<<Timecompareweek2Cpu, cache=TRUE, eval=TRUE>>=
+We perform 10 million simulations for the ``week'' table.
+<<TimecompareweekCpu, cache=TRUE, eval=TRUE>>=
 #using CPU
 fisher.test(week,simulate.p.value = TRUE,B=1e7)$p.value
 system.time(fisher.test(week,simulate.p.value = TRUE,B=1e7))
 @
 The ``week'' table has a much smaller p-value: around 0.000119, which should require a larger number of simulations to get a more accurate p-value.
-<<Timecompareweek2Gpu, eval=TRUE, cache=FALSE>>=
+<<TimecompareweekGpu, eval=TRUE, cache=FALSE>>=
 #using GPU
 observed_w= -gpuRandom::logfactSum(week, c(16,16))/almost.1
 week_GPU<-gpuR::vclMatrix(week,type="integer")
@@ -426,25 +437,38 @@ system.time(gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
             type="double", returnStatistics=FALSE,Nglobal = Nglobal))
 @
 \fct{stats::fisher.test} takes 60.4 seconds, while \fct{fisher.sim} takes about 10.8 seconds, the elapsed time is decreased to about 20\% of the time taken on CPU. 
-<<Timecompareweek2GpuTest, eval=TRUE, cache=TRUE>>=
+<<TimecompareweekGpu2, eval=TRUE, cache=FALSE>>=
 result_weekgpu<-gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
                 type="double",returnStatistics=TRUE,Nglobal = Nglobal)
 result_weekgpu$simnum
 result_weekgpu$counts
 result_weekgpu$p.value
 @
-With about ten million simulations, we get 1272 cases and a p-value around 0.0001273. We summarized the results in Table \ref{tab:summary}.
-<<Timecompareweek3GpuTest, echo=FALSE, eval=TRUE, cache=TRUE>>=
+With about ten million simulations, we get 1272 cases and a p-value around 0.0001274. We summarized the results in Table \ref{tab:summary}.
+<<TimecompareweekGpu3, echo=FALSE, eval=TRUE, cache=TRUE>>=
 result_weekgpu$cpu = as.vector(result_weekgpu$sim)
 @
 \begin{table}[H]
+\centering
 \begin{tabular}{ |c|c|c|c|c|c| } 
  \hline
- test example & B & p-value stats & p-value gpuRandom & time stats & time gpuRandom \\ \hline
- Month & 1e6 & 0.4029 & 0.4035 & 9.8 & 2.3\\ \hline
- Week & 1e7 & 0.000119 & 0.000127 & 60.4 & 10.8\\ \hline
+ data &   B  & Intel CPU &  AMD GPU & NVIDIA GPU \\ \hline
+ Month & 1e6 & 0.4038 & 0.403507  & 0.403507     \\ \hline
+ Week &  1e7  & 0.0001208 & 0.0001274 & 0.0001274\\ \hline
 \end{tabular}
-\caption{\label{tab:summary} Comparison summary of \fct{gpuRandom::fisher.sim} and \fct{stats::fisher.test}.}
+\caption{\label{tab:summary} Summary of p-values obtained on different devices.}
+\end{table}
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ |c|c|c|c|c|c| } 
+ \hline
+ data &   B  & Intel CPU & sencha CPU & AMD GPU & NVIDIA GPU \\ \hline
+ Month & 1e6 & 9.74 & 14.58 & 2.28 & 0.31\\ \hline
+ Week &  1e7  & 60.19 & 90.19 & 10.82 & 1.90\\ \hline
+\end{tabular}
+\caption{\label{tab:summary} Run-time compare of Fisher's test simulation on different devices, all numbers are in seconds.}
 \end{table}
 
 Figure \ref{fig4} visualizes the approximate sampling distributions of the test statistics from the two examples "Month" and "Week", by plotting a histogram for each of the example. The values of observed statistics are calculated by \fct{gpuRandom::logfactSum} and are marked with a blue line on each plot. 
@@ -504,12 +528,10 @@ Ngrid = c(60, 80)
 NlocalCache = 1000
 Nglobal = c(128, 64, 2)
 Nlocal = c(4, 2, 2)
-theType = "float"
-myRaster = raster(
-  extent(0,Ngrid[1]/Ngrid[2],5,6),
-  Ngrid[2], Ngrid[1]
-)
-coordsSp = sp::SpatialPoints(xyFromCell(myRaster, 1:ncell(myRaster)))
+theType = "double"
+
+myRaster = raster::raster( raster::extent(0,Ngrid[1]/Ngrid[2],5,6),Ngrid[1], Ngrid[2])
+coordsSp = sp::SpatialPoints(raster::xyFromCell(myRaster, 1:raster::ncell(myRaster)))
 coordsGpu = vclMatrix(coordsSp@coords, 
                       nrow(coordsSp@coords), 
                       ncol(coordsSp@coords), type=theType)
@@ -534,13 +556,15 @@ maternCov = vclMatrix(0, nrow(paramsGpu)*nrow(coordsGpu),
                          nrow(coordsGpu),type=theType)
 dim(maternCov)
 gpuRandom::maternBatch(maternCov, coordsGpu, paramsGpu,
-                       Nglobal=c(64,64,16), Nlocal=c(4,4,4))
+                       Nglobal=c(128,64), Nlocal=c(16,4))
 @
 Step 4, the first argument \code{maternCov} in \fct{gpuRandom::cholBatch} specifies the matrix object to take Cholesky decomposition. Unit lower triangular matrices $L_i$'s are returned and stacked by row in \code{maternCov}, \code{diagMat} stores the diagonal values of each $D_i$ in a row, for example, if each batch $\Sigma_i$ is of size $n \times n$, then each batch $L_i$ is $n \times n$, and each batch $D_i$ is $1 \times n$.
 <<r cholBach, eval=TRUE>>=
 diagMat = vclMatrix(0, nrow(paramsGpu), ncol(maternCov), type = theType)
 gpuRandom::cholBatch(maternCov, diagMat, numbatchD=nrow(myParamsBatch),
-                     Nglobal,Nlocal,NlocalCache)
+                     Nglobal= c(512, 8),
+                     Nlocal= c(32, 8),
+                     NlocalCache=2000)
 @
 % \begin{gather}
 % \begin{bmatrix} \Sigma_{1} \\ \Sigma_2 \\ \Sigma_3 \\ \vdots
@@ -594,7 +618,7 @@ gpuRandom::multiplyLowerDiagonalBatch(
   \end{bmatrix}
 \end{gather}
 Step 7, Finally, plot the 10 simulated Gaussian random surfaces.
-<<r plotSimSetup, echo=TRUE, eval=TRUE, cache=TRUE>>=
+<<r plotSimSetup, echo=TRUE, eval=TRUE, cache=FALSE>>=
 library(raster)
 simRaster = brick(myRaster, nl = ncol(simMat)*nrow(paramsGpu))
 values(simRaster) = as.vector(as.matrix(simMat))
@@ -603,7 +627,7 @@ names(simRaster) = apply(expand.grid('par',1:nrow(paramsGpu),
 @
 \begin{figure}[H]
 \centering
-<<maternplot, echo=TRUE, fig.show='hold', eval=TRUE, dev='pdf',cache=TRUE>>=
+<<maternplot, echo=TRUE, fig.show='hold', eval=TRUE, dev='pdf',cache=FALSE>>=
 par(mar=rep(0.1, 4))
 for(D in names(simRaster)) {
   plot(extent(simRaster))
