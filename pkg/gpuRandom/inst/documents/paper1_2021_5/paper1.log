@@ -1,25 +1,26 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.8.27)  2 SEP 2021 06:06
+This is XeTeX, Version 3.14159265-2.6-0.999991 (TeX Live 2019/Debian) (preloaded format=xelatex 2021.9.16)  17 SEP 2021 17:20
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
 **paper1.tex
 (./paper1.tex
 LaTeX2e <2020-02-02> patch level 2
-L3 programming layer <2020-02-14> (/usr/share/R/share/texmf/tex/latex/jss.cls
+L3 programming layer <2020-02-14>
+(/usr/share/texmf/tex/latex/R/tex/latex/jss.cls
 Document Class: jss 2020/12/09 3.2 jss class by Achim Zeileis
 (/usr/share/texlive/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2019/12/20 v1.4l Standard LaTeX document class
 (/usr/share/texlive/texmf-dist/tex/latex/base/size11.clo
 File: size11.clo 2019/12/20 v1.4l Standard LaTeX file (size option)
 )
-\c@part=\count167
-\c@section=\count168
-\c@subsection=\count169
-\c@subsubsection=\count170
-\c@paragraph=\count171
-\c@subparagraph=\count172
-\c@figure=\count173
-\c@table=\count174
+\c@part=\count163
+\c@section=\count164
+\c@subsection=\count165
+\c@subsubsection=\count166
+\c@paragraph=\count167
+\c@subparagraph=\count168
+\c@figure=\count169
+\c@table=\count170
 \abovecaptionskip=\skip47
 \belowcaptionskip=\skip48
 \bibindent=\dimen134
@@ -40,10 +41,10 @@ Package: trig 2016/01/03 v1.10 sin cos tan (DPC)
 (/usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
 File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
 )
-Package graphics Info: Driver file: pdftex.def on input line 105.
+Package graphics Info: Driver file: xetex.def on input line 105.
 
-(/usr/share/texlive/texmf-dist/tex/latex/graphics-def/pdftex.def
-File: pdftex.def 2018/01/08 v1.0l Graphics/color driver for pdftex
+(/usr/share/texlive/texmf-dist/tex/latex/graphics-def/xetex.def
+File: xetex.def 2017/06/24 v5.0h Graphics/color driver for xetex
 ))
 \Gin@req@height=\dimen135
 \Gin@req@width=\dimen136
@@ -54,21 +55,26 @@ Package: color 2019/11/23 v1.2a Standard LaTeX Color (DPC)
 (/usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/color.cfg
 File: color.cfg 2016/01/02 v1.6 sample color configuration
 )
-Package color Info: Driver file: pdftex.def on input line 147.
+Package color Info: Driver file: xetex.def on input line 147.
 )
 (/usr/share/texlive/texmf-dist/tex/latex/ae/ae.sty
 Package: ae 2001/02/12 1.3 Almost European Computer Modern
 
 (/usr/share/texlive/texmf-dist/tex/latex/base/fontenc.sty
 Package: fontenc 2020/02/11 v2.0o Standard LaTeX package
-))
+LaTeX Font Info:    Trying to load font information for T1+lmr on input line 11
+2.
+
+(/usr/share/texmf/tex/latex/lm/t1lmr.fd
+File: t1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
+)))
 (/usr/share/texlive/texmf-dist/tex/latex/fancyvrb/fancyvrb.sty
 Package: fancyvrb 2020/01/13 v3.5 verbatim text (tvz,hv)
-\FV@CodeLineNo=\count175
+\FV@CodeLineNo=\count171
 \FV@InFile=\read2
 \FV@TabBox=\box45
-\c@FancyVerbLine=\count176
-\FV@StepNumber=\count177
+\c@FancyVerbLine=\count172
+\FV@StepNumber=\count173
 \FV@OutFile=\write3
 )
 (/usr/share/texlive/texmf-dist/tex/latex/base/fontenc.sty
@@ -126,7 +132,7 @@ Package: natbib 2010/09/13 8.31b (PWD, AO)
 \bibhang=\skip49
 \bibsep=\skip50
 LaTeX Info: Redefining \cite on input line 694.
-\c@NAT@ctr=\count178
+\c@NAT@ctr=\count174
 )
 \footerskip=\skip51
 
@@ -148,7 +154,7 @@ Package: infwarerr 2019/12/03 v1.5 Providing info/warning/error messages (HO)
 )
 Package pdftexcmds Info: \pdf@primitive is available.
 Package pdftexcmds Info: \pdf@ifprimitive is available.
-Package pdftexcmds Info: \pdfdraftmode found.
+Package pdftexcmds Info: \pdfdraftmode not found.
 )
 (/usr/share/texlive/texmf-dist/tex/generic/kvsetkeys/kvsetkeys.sty
 Package: kvsetkeys 2019/12/15 v1.18 Key value parser (HO)
@@ -172,13 +178,11 @@ Package: auxhook 2019-12-17 v1.6 Hooks for auxiliary files (HO)
 Package: kvoptions 2019/11/29 v3.13 Key value format for package options (HO)
 )
 \@linkdim=\dimen137
-\Hy@linkcounter=\count179
-\Hy@pagecounter=\count180
+\Hy@linkcounter=\count175
+\Hy@pagecounter=\count176
 
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/pd1enc.def
 File: pd1enc.def 2020/01/14 v7.00d Hyperref: PDFDocEncoding definition (HO)
-Now handling font encoding PD1 ...
-... no UTF-8 mapping file for font encoding PD1
 )
 (/usr/share/texlive/texmf-dist/tex/generic/intcalc/intcalc.sty
 Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
@@ -186,8 +190,7 @@ Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
 (/usr/share/texlive/texmf-dist/tex/generic/etexcmds/etexcmds.sty
 Package: etexcmds 2019/12/15 v1.7 Avoid name clashes with e-TeX commands (HO)
 )
-\Hy@SavedSpaceFactor=\count181
-\pdfmajorversion=\count182
+\Hy@SavedSpaceFactor=\count177
 Package hyperref Info: Hyper figures OFF on input line 4547.
 Package hyperref Info: Link nesting OFF on input line 4552.
 Package hyperref Info: Hyper index ON on input line 4555.
@@ -195,7 +198,7 @@ Package hyperref Info: Plain pages OFF on input line 4562.
 Package hyperref Info: Backreferencing OFF on input line 4567.
 Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
 Package hyperref Info: Bookmarks ON on input line 4800.
-\c@Hy@tempcnt=\count183
+\c@Hy@tempcnt=\count178
 
 (/usr/share/texlive/texmf-dist/tex/latex/url/url.sty
 \Urlmuskip=\muskip16
@@ -211,7 +214,7 @@ Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
 Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO
 )
 ))
-\Fld@menulength=\count184
+\Fld@menulength=\count179
 \Field@Width=\dimen139
 \Fld@charsize=\dimen140
 Package hyperref Info: Hyper figures OFF on input line 6430.
@@ -227,25 +230,35 @@ LaTeX Info: Redefining \pageref on input line 6504.
 (/usr/share/texlive/texmf-dist/tex/generic/atbegshi/atbegshi.sty
 Package: atbegshi 2019/12/05 v1.19 At begin shipout hook (HO)
 )
-\Hy@abspage=\count185
-\c@Item=\count186
-\c@Hfootnote=\count187
+\Hy@abspage=\count180
+\c@Item=\count181
+\c@Hfootnote=\count182
 )
-Package hyperref Info: Driver (autodetected): hpdftex.
+Package hyperref Info: Driver (autodetected): hxetex.
 
-(/usr/share/texlive/texmf-dist/tex/latex/hyperref/hpdftex.def
-File: hpdftex.def 2020/01/14 v7.00d Hyperref driver for pdfTeX
+(/usr/share/texlive/texmf-dist/tex/latex/hyperref/hxetex.def
+File: hxetex.def 2020/01/14 v7.00d Hyperref driver for XeTeX
+
+(/usr/share/texlive/texmf-dist/tex/latex/hyperref/puenc.def
+File: puenc.def 2020/01/14 v7.00d Hyperref: PDF Unicode definition (HO)
+)
+(/usr/share/texlive/texmf-dist/tex/generic/stringenc/stringenc.sty
+Package: stringenc 2019/11/29 v1.12 Convert strings between diff. encodings (HO
+)
+)
+\pdfm@box=\box46
+\c@Hy@AnnotLevel=\count183
+\HyField@AnnotCount=\count184
+\Fld@listcount=\count185
+\c@bookmark@seq@number=\count186
+
+(/usr/share/texlive/texmf-dist/tex/latex/rerunfilecheck/rerunfilecheck.sty
+Package: rerunfilecheck 2019/12/05 v1.9 Rerun checks for auxiliary files (HO)
 
 (/usr/share/texlive/texmf-dist/tex/latex/atveryend/atveryend.sty
 Package: atveryend 2019-12-11 v1.11 Hooks at the very end of document (HO)
 Package atveryend Info: \enddocument detected (standard20110627).
 )
-\Fld@listcount=\count188
-\c@bookmark@seq@number=\count189
-
-(/usr/share/texlive/texmf-dist/tex/latex/rerunfilecheck/rerunfilecheck.sty
-Package: rerunfilecheck 2019/12/05 v1.9 Rerun checks for auxiliary files (HO)
-
 (/usr/share/texlive/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty
 Package: uniquecounter 2019/12/15 v1.4 Provide unlimited unique counter (HO)
 )
@@ -281,11 +294,11 @@ Package: alltt 1997/06/16 v2.0g defines alltt environment
 )
 (/usr/share/texlive/texmf-dist/tex/latex/float/float.sty
 Package: float 2001/11/08 v1.3d Float enhancements (AL)
-\c@float@type=\count190
+\c@float@type=\count187
 \float@exts=\toks15
-\float@box=\box46
+\float@box=\box47
 \@float@everytoks=\toks16
-\@floatcapt=\box47
+\@floatcapt=\box48
 )
 (/usr/share/texlive/texmf-dist/tex/latex/caption/subcaption.sty
 Package: subcaption 2020/01/22 v1.3d Sub-captions (AR)
@@ -305,13 +318,13 @@ Package caption3 Info: TeX engine: e-TeX on input line 61.
 \caption@hangindent=\dimen151
 Package caption Info: Standard document class detected.
 )
-\c@caption@flags=\count191
-\c@continuedfloat=\count192
+\c@caption@flags=\count188
+\c@continuedfloat=\count189
 Package caption Info: float package is loaded.
 Package caption Info: hyperref package is loaded.
 )
-\c@subfigure=\count193
-\c@subtable=\count194
+\c@subfigure=\count190
+\c@subtable=\count191
 )
 (/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsmath.sty
 Package: amsmath 2020/01/20 v2.17e AMS math features
@@ -333,30 +346,30 @@ Package: amsbsy 1999/11/29 v1.2d Bold Symbols
 (/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsopn.sty
 Package: amsopn 2016/03/08 v2.02 operator names
 )
-\inf@bad=\count195
+\inf@bad=\count192
 LaTeX Info: Redefining \frac on input line 227.
-\uproot@=\count196
-\leftroot@=\count197
+\uproot@=\count193
+\leftroot@=\count194
 LaTeX Info: Redefining \overline on input line 389.
-\classnum@=\count198
-\DOTSCASE@=\count199
+\classnum@=\count195
+\DOTSCASE@=\count196
 LaTeX Info: Redefining \ldots on input line 486.
 LaTeX Info: Redefining \dots on input line 489.
 LaTeX Info: Redefining \cdots on input line 610.
-\Mathstrutbox@=\box48
-\strutbox@=\box49
+\Mathstrutbox@=\box49
+\strutbox@=\box50
 \big@size=\dimen154
 LaTeX Font Info:    Redeclaring font encoding OML on input line 733.
 LaTeX Font Info:    Redeclaring font encoding OMS on input line 734.
-\macc@depth=\count266
-\c@MaxMatrixCols=\count267
+\macc@depth=\count197
+\c@MaxMatrixCols=\count198
 \dotsspace@=\muskip17
-\c@parentequation=\count268
-\dspbrk@lvl=\count269
+\c@parentequation=\count199
+\dspbrk@lvl=\count266
 \tag@help=\toks18
-\row@=\count270
-\column@=\count271
-\maxfields@=\count272
+\row@=\count267
+\column@=\count268
+\maxfields@=\count269
 \andhelp@=\toks19
 \eqnshift@=\dimen155
 \alignsep@=\dimen156
@@ -372,8 +385,11 @@ LaTeX Info: Redefining \[ on input line 2859.
 LaTeX Info: Redefining \] on input line 2860.
 )
 (/usr/share/texlive/texmf-dist/tex/latex/algorithm2e/algorithm2e.sty
+Invalid UTF-8 byte or sequence at line 284 replaced by U+FFFD.
+Invalid UTF-8 byte or sequence at line 299 replaced by U+FFFD.
+Invalid UTF-8 byte or sequence at line 550 replaced by U+FFFD.
 Package: algorithm2e 2017/07/18 v5.2 algorithms environments
-\c@AlgoLine=\count273
+\c@AlgoLine=\count270
 
 (/usr/share/texlive/texmf-dist/tex/latex/base/ifthen.sty
 Package: ifthen 2014/09/29 v1.1c Standard LaTeX ifthen package (DPC)
@@ -382,7 +398,7 @@ Package: ifthen 2014/09/29 v1.1c Standard LaTeX ifthen package (DPC)
 
 (/usr/share/texlive/texmf-dist/tex/latex/ifoddpage/ifoddpage.sty
 Package: ifoddpage 2016/04/23 v1.1 Conditionals for odd/even page detection
-\c@checkoddpage=\count274
+\c@checkoddpage=\count271
 )
 (/usr/share/texlive/texmf-dist/tex/latex/tools/xspace.sty
 Package: xspace 2014/10/28 v1.13 Space after command names (DPC,MH)
@@ -405,58 +421,64 @@ Package: relsize 2013/03/29 ver 4.1
 \interspacealgoruled=\dimen165
 \interspacetitleboxruled=\dimen166
 \algocf@ruledwidth=\skip72
-\algocf@inoutbox=\box50
-\algocf@inputbox=\box51
+\algocf@inoutbox=\box51
+\algocf@inputbox=\box52
 \AlCapSkip=\skip73
 \AlCapHSkip=\skip74
 \algoskipindent=\skip75
-\algocf@nlbox=\box52
-\algocf@hangingbox=\box53
-\algocf@untilbox=\box54
+\algocf@nlbox=\box53
+\algocf@hangingbox=\box54
+\algocf@untilbox=\box55
 \algocf@skipuntil=\skip76
-\algocf@capbox=\box55
+\algocf@capbox=\box56
 \algocf@lcaptionbox=\skip77
 \algoheightruledefault=\skip78
 \algoheightrule=\skip79
 \algotitleheightruledefault=\skip80
 \algotitleheightrule=\skip81
-\c@algocfline=\count275
-\c@algocfproc=\count276
-\c@algocf=\count277
-\algocf@algoframe=\box56
-\algocf@algobox=\box57
+\c@algocfline=\count272
+\c@algocfproc=\count273
+\c@algocf=\count274
+\algocf@algoframe=\box57
+\algocf@algobox=\box58
 )
 (/usr/share/texlive/texmf-dist/tex/latex/listings/listings.sty
-\lst@mode=\count278
-\lst@gtempboxa=\box58
+\lst@mode=\count275
+\lst@gtempboxa=\box59
 \lst@token=\toks22
-\lst@length=\count279
+\lst@length=\count276
 \lst@currlwidth=\dimen167
-\lst@column=\count280
-\lst@pos=\count281
+\lst@column=\count277
+\lst@pos=\count278
 \lst@lostspace=\dimen168
 \lst@width=\dimen169
-\lst@newlines=\count282
-\lst@lineno=\count283
+\lst@newlines=\count279
+\lst@lineno=\count280
 \lst@maxwidth=\dimen170
 
 (/usr/share/texlive/texmf-dist/tex/latex/listings/lstmisc.sty
 File: lstmisc.sty 2019/09/10 1.8c (Carsten Heinz)
-\c@lstnumber=\count284
-\lst@skipnumbers=\count285
-\lst@framebox=\box59
+\c@lstnumber=\count281
+\lst@skipnumbers=\count282
+\lst@framebox=\box60
 )
 (/usr/share/texlive/texmf-dist/tex/latex/listings/listings.cfg
 File: listings.cfg 2019/09/10 1.8c listings configuration
 ))
 Package: listings 2019/09/10 1.8c (Carsten Heinz)
 
-(/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-pdfmode.def
-File: l3backend-pdfmode.def 2020-02-03 L3 backend support: PDF mode
-\l__kernel_color_stack_int=\count286
-\l__pdf_internal_box=\box60
+(/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-xdvipdfmx.def
+File: l3backend-xdvipdfmx.def 2020-02-03 L3 backend support: xdvipdfmx
+\g__graphics_track_int=\count283
+\l__pdf_internal_box=\box61
+\g__pdf_backend_object_int=\count284
+\g__pdf_backend_annotation_int=\count285
 )
-(./paper1.aux)
+(./paper1.aux
+
+LaTeX Warning: Label `tab:summary' multiply defined.
+
+)
 \openout1 = `paper1.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 119.
@@ -468,6 +490,13 @@ LaTeX Font Info:    ... okay on input line 119.
 LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 119.
 LaTeX Font Info:    ... okay on input line 119.
 LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 119.
+LaTeX Font Info:    Trying to load font information for TS1+cmr on input line 1
+19.
+ (/usr/share/texlive/texmf-dist/tex/latex/base/ts1cmr.fd
+File: ts1cmr.fd 2019/12/16 v2.5j Standard LaTeX font definitions
+)
+LaTeX Font Info:    ... okay on input line 119.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 119.
 LaTeX Font Info:    ... okay on input line 119.
 LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 119.
 LaTeX Font Info:    ... okay on input line 119.
@@ -475,33 +504,8 @@ LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 119.
 LaTeX Font Info:    ... okay on input line 119.
 LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 119.
 LaTeX Font Info:    ... okay on input line 119.
-LaTeX Font Info:    Trying to load font information for T1+lmr on input line 11
-9.
- (/usr/share/texmf/tex/latex/lm/t1lmr.fd
-File: t1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
-)
-(/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
-[Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count287
-\scratchdimen=\dimen171
-\scratchbox=\box61
-\nofMPsegments=\count288
-\nofMParguments=\count289
-\everyMPshowfont=\toks23
-\MPscratchCnt=\count290
-\MPscratchDim=\dimen172
-\MPnumerator=\count291
-\makeMPintoPDFobject=\count292
-\everyMPtoPDFconversion=\toks24
-) (/usr/share/texlive/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
-Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
-Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
-85.
-
-(/usr/share/texlive/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
-File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
-e
-))
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 119.
+LaTeX Font Info:    ... okay on input line 119.
 \AtBeginShipoutBox=\box62
 Package hyperref Info: Link coloring ON on input line 119.
 
@@ -514,7 +518,7 @@ Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
 (/usr/share/texlive/texmf-dist/tex/generic/gettitlestring/gettitlestring.sty
 Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
-\c@section@level=\count293
+\c@section@level=\count286
 )
 LaTeX Info: Redefining \ref on input line 119.
 LaTeX Info: Redefining \pageref on input line 119.
@@ -524,9 +528,16 @@ LaTeX Info: Redefining \nameref on input line 119.
 \@outlinefile=\write4
 \openout4 = `paper1.out'.
 
+
+(/usr/share/texlive/texmf-dist/tex/generic/stringenc/se-ascii-print.def
+File: se-ascii-print.def 2019/11/29 v1.12 stringenc: Printable ASCII characters
+
+)
+Missing character: There is no ’ in font ec-lmbx12!
 LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 1
 19.
- (/usr/share/texmf/tex/latex/lm/ot1lmr.fd
+
+(/usr/share/texmf/tex/latex/lm/ot1lmr.fd
 File: ot1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OML+lmm on input line 1
@@ -559,32 +570,78 @@ LaTeX Font Info:    Trying to load font information for T1+lmss on input line 1
 (/usr/share/texmf/tex/latex/lm/t1lmss.fd
 File: t1lmss.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
+Missing character: There is no ’ in font ec-lmr10!
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: listings package is loaded.
 Package caption Info: End \AtBeginDocument code.
-\c@lstlisting=\count294
-LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 1
+\c@lstlisting=\count287
+
+
+Package natbib Warning: Citation `r2021' on page 1 undefined on input line 135.
+
+
+
+Package natbib Warning: Citation `eddelbuettel2021parallel' on page 1 undefined
+ on input line 135.
+
+
+Package natbib Warning: Citation `zhao_2016' on page 1 undefined on input line 
+135.
+
+
+Package natbib Warning: Citation `cran2021' on page 1 undefined on input line 1
 35.
 
+LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 1
+35.
 (/usr/share/texmf/tex/latex/lm/t1lmtt.fd
 File: t1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
-Overfull \vbox (1.21272pt too high) detected at line 147
+
+Package natbib Warning: Citation `tensorflow1' on page 1 undefined on input lin
+e 135.
+
+
+Package natbib Warning: Citation `gpur1' on page 1 undefined on input line 135.
+
+
+
+Package natbib Warning: Citation `rupp2016viennacl' on page 1 undefined on inpu
+t line 135.
+
+
+Package natbib Warning: Citation `rcpp1' on page 1 undefined on input line 135.
+
+
+
+Package natbib Warning: Citation `l2015clrng' on page 1 undefined on input line
+ 137.
+
+Missing character: There is no ’ in font ec-lmr10!
+
+Overfull \vbox (1.82108pt too high) detected at line 147
  []
 
 [1
 
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
-LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 1
-55.
+]
 
-(/usr/share/texmf/tex/latex/lm/ts1lmr.fd
-File: ts1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
-)
+Package natbib Warning: Citation `l2012random' on page 2 undefined on input lin
+e 151.
+
+
+Package natbib Warning: Citation `l2012random' on page 2 undefined on input lin
+e 152.
+
+
+Package natbib Warning: Citation `robert2004random' on page 2 undefined on inpu
+t line 152.
+
+
+Package natbib Warning: Citation `box1958note' on page 2 undefined on input lin
+e 152.
+
 Package color Info: Redefining color shadecolor on input line 161.
-
-Underfull \vbox (badness 5388) has occurred while \output is active []
-
 
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 2 []
@@ -605,11 +662,11 @@ ms=4, keepInitial=TRUE)[]
 
 Package color Info: Redefining color shadecolor on input line 202.
 
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 236.
 
 
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 236.
 
 LaTeX Font Info:    External font `lmex10' loaded for size
@@ -630,25 +687,20 @@ Overfull \hbox (5.47499pt too wide) has occurred while \output is active
  []
 
 [5]
-</home/ruoyong/paper1_2021_5/f1.png, id=165, 626.34pt x 256.96pt>
-File: /home/ruoyong/paper1_2021_5/f1.png Graphic file (type png)
-<use /home/ruoyong/paper1_2021_5/f1.png>
-Package pdftex.def Info: /home/ruoyong/paper1_2021_5/f1.png  used on input line
- 279.
-(pdftex.def)             Requested size: 227.62204pt x 93.3838pt.
-</home/ruoyong/paper1_2021_5/f2.png, id=167, 343.2825pt x 223.83624pt>
-File: /home/ruoyong/paper1_2021_5/f2.png Graphic file (type png)
-<use /home/ruoyong/paper1_2021_5/f2.png>
-Package pdftex.def Info: /home/ruoyong/paper1_2021_5/f2.png  used on input line
- 281.
-(pdftex.def)             Requested size: 227.62204pt x 148.41888pt.
+File: /home/ruoyong/paper1_2021_5/f1.png Graphic file (type bmp)
+</home/ruoyong/paper1_2021_5/f1.png>
+File: /home/ruoyong/paper1_2021_5/f2.png Graphic file (type bmp)
+</home/ruoyong/paper1_2021_5/f2.png>
 Package color Info: Redefining color shadecolor on input line 287.
+
+Underfull \vbox (badness 1888) has occurred while \output is active []
+
 
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 6 []
  []
 
-[6 </home/ruoyong/paper1_2021_5/f1.png> </home/ruoyong/paper1_2021_5/f2.png>]
+[6]
 Package color Info: Redefining color shadecolor on input line 305.
 Package color Info: Redefining color shadecolor on input line 316.
 Package color Info: Redefining color shadecolor on input line 335.
@@ -661,33 +713,29 @@ Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 Package color Info: Redefining color shadecolor on input line 343.
 Package color Info: Redefining color shadecolor on input line 356.
 Package color Info: Redefining color shadecolor on input line 368.
-<figure/largenumberuniforms-1.pdf, id=182, 289.08pt x 289.08pt>
 File: figure/largenumberuniforms-1.pdf Graphic file (type pdf)
 <use figure/largenumberuniforms-1.pdf>
-Package pdftex.def Info: figure/largenumberuniforms-1.pdf  used on input line 3
-69.
-(pdftex.def)             Requested size: 199.19283pt x 199.19193pt.
-<figure/largenumberuniforms-2.pdf, id=183, 289.08pt x 289.08pt>
 File: figure/largenumberuniforms-2.pdf Graphic file (type pdf)
 <use figure/largenumberuniforms-2.pdf>
-Package pdftex.def Info: figure/largenumberuniforms-2.pdf  used on input line 3
-70.
-(pdftex.def)             Requested size: 199.19283pt x 199.19193pt.
 
 
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 376.
 
 
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 376.
+
+
+Package natbib Warning: Citation `howes2007efficient' on page 8 undefined on in
+put line 377.
 
 
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 8 []
  []
 
-[8 <./figure/largenumberuniforms-1.pdf> <./figure/largenumberuniforms-2.pdf>]
+[8]
 LaTeX Font Info:    External font `lmex10' loaded for size
 (Font)              <10> on input line 411.
 LaTeX Font Info:    External font `lmex10' loaded for size
@@ -700,55 +748,39 @@ Overfull \hbox (5.47499pt too wide) has occurred while \output is active
  []
 
 [9]
-</home/ruoyong/paper1_2021_5/f3.png, id=247, 905.3825pt x 321.2pt>
-File: /home/ruoyong/paper1_2021_5/f3.png Graphic file (type png)
-<use /home/ruoyong/paper1_2021_5/f3.png>
-Package pdftex.def Info: /home/ruoyong/paper1_2021_5/f3.png  used on input line
- 431.
-(pdftex.def)             Requested size: 227.62204pt x 80.7507pt.
-</home/ruoyong/paper1_2021_5/f4.png, id=248, 758.835pt x 525.965pt>
-File: /home/ruoyong/paper1_2021_5/f4.png Graphic file (type png)
-<use /home/ruoyong/paper1_2021_5/f4.png>
-Package pdftex.def Info: /home/ruoyong/paper1_2021_5/f4.png  used on input line
- 433.
-(pdftex.def)             Requested size: 227.62204pt x 157.76663pt.
+File: /home/ruoyong/paper1_2021_5/f3.png Graphic file (type bmp)
+</home/ruoyong/paper1_2021_5/f3.png>
+File: /home/ruoyong/paper1_2021_5/f4.png Graphic file (type bmp)
+</home/ruoyong/paper1_2021_5/f4.png>
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 10 []
  []
 
-[10 </home/ruoyong/paper1_2021_5/f3.png> </home/ruoyong/paper1_2021_5/f4.png>]
+[10]
 Package color Info: Redefining color shadecolor on input line 441.
 Package color Info: Redefining color shadecolor on input line 450.
 Package color Info: Redefining color shadecolor on input line 459.
-<figure/histAndQQ-1.pdf, id=263, 289.08pt x 289.08pt>
 File: figure/histAndQQ-1.pdf Graphic file (type pdf)
 <use figure/histAndQQ-1.pdf>
-Package pdftex.def Info: figure/histAndQQ-1.pdf  used on input line 465.
-(pdftex.def)             Requested size: 199.19283pt x 199.19193pt.
-<figure/histAndQQ-2.pdf, id=264, 289.08pt x 289.08pt>
 File: figure/histAndQQ-2.pdf Graphic file (type pdf)
 <use figure/histAndQQ-2.pdf>
-Package pdftex.def Info: figure/histAndQQ-2.pdf  used on input line 466.
-(pdftex.def)             Requested size: 199.19283pt x 199.19193pt.
 Package color Info: Redefining color shadecolor on input line 472.
-
-Overfull \hbox (28.77188pt too wide) in paragraph at lines 470--472
-\T1/lmr/m/n/10.95 ran-dom num-bers of dou-ble pre-ci-sion us-ing the \T1/lmtt/m
-/n/10.95 stats::rnorm() \T1/lmr/m/n/10.95 and us-ing the \T1/lmtt/m/n/10.95 gpu
-Random::rnorm()\T1/lmr/m/n/10.95 .
- []
-
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 11
  []
 
-[11 <./figure/histAndQQ-1.pdf> <./figure/histAndQQ-2.pdf>]
-Overfull \hbox (38.8709pt too wide) in paragraph at lines 498--499
-[]\T1/lmr/m/n/10.95 Next we com-pare the run time be-tween us-ing \T1/lmtt/m/n/
-10.95 gpuRandom::fisher.sim() \T1/lmr/m/n/10.95 and \T1/lmtt/m/n/10.95 stats::f
-isher.test()
+[11]
+Missing character: There is no ’ in font ec-lmr10!
+
+
+Package natbib Warning: Citation `mehta2011ibm' on page 12 undefined on input l
+ine 489.
+
+
+Overfull \hbox (67.66191pt too wide) in paragraph at lines 500--506
+[][] 
  []
 
 
@@ -757,145 +789,213 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
  []
 
 [12]
-Package color Info: Redefining color shadecolor on input line 503.
-Package color Info: Redefining color shadecolor on input line 540.
-Package color Info: Redefining color shadecolor on input line 553.
-Package color Info: Redefining color shadecolor on input line 568.
 
-Overfull \hbox (93.0132pt too wide) in paragraph at lines 566--568
-[]\T1/lmtt/m/n/10.95 gpuRandom::fisher.sim() \T1/lmr/m/n/10.95 takes about 2.3 
-sec-onds, com-pared to the elapsed time of \T1/lmtt/m/n/10.95 gpuRandom::fisher
-.sim()\T1/lmr/m/n/10.95 ,
- []
+Package natbib Warning: Citation `National2018' on page 13 undefined on input l
+ine 509.
 
+Missing character: There is no ’ in font ec-lmr10!
+Package color Info: Redefining color shadecolor on input line 514.
+Package color Info: Redefining color shadecolor on input line 551.
+Package color Info: Redefining color shadecolor on input line 564.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 13
  []
 
 [13]
-Package color Info: Redefining color shadecolor on input line 589.
-Package color Info: Redefining color shadecolor on input line 617.
-Package color Info: Redefining color shadecolor on input line 630.
+Package color Info: Redefining color shadecolor on input line 579.
+
+Overfull \hbox (93.0132pt too wide) in paragraph at lines 577--579
+[]\T1/lmtt/m/n/10.95 gpuRandom::fisher.sim() \T1/lmr/m/n/10.95 takes about 2.3 
+sec-onds, com-pared to the elapsed time of \T1/lmtt/m/n/10.95 gpuRandom::fisher
+.sim()\T1/lmr/m/n/10.95 ,
+ []
+
+
+Overfull \hbox (11.4962pt too wide) in paragraph at lines 589--589
+[]                   \T1/lmtt/m/n/10.95 type="double", returnStatistics=TRUE,  
+Nglobal = c(128,128))[] 
+ []
+
+Package color Info: Redefining color shadecolor on input line 600.
+Package color Info: Redefining color shadecolor on input line 628.
+Package color Info: Redefining color shadecolor on input line 641.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 14 []
  []
 
 [14]
-Package color Info: Redefining color shadecolor on input line 644.
-Package color Info: Redefining color shadecolor on input line 673.
-<figure/fighistMonth-1.pdf, id=318, 433.62pt x 289.08pt>
+Package color Info: Redefining color shadecolor on input line 655.
+Package color Info: Redefining color shadecolor on input line 697.
 File: figure/fighistMonth-1.pdf Graphic file (type pdf)
 <use figure/fighistMonth-1.pdf>
-Package pdftex.def Info: figure/fighistMonth-1.pdf  used on input line 674.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/fighistMonth-2.pdf, id=319, 433.62pt x 289.08pt>
 File: figure/fighistMonth-2.pdf Graphic file (type pdf)
 <use figure/fighistMonth-2.pdf>
-Package pdftex.def Info: figure/fighistMonth-2.pdf  used on input line 675.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 15
  []
 
-[15 <./figure/fighistMonth-1.pdf> <./figure/fighistMonth-2.pdf>]
+[15]
+
+Package natbib Warning: Citation `abrahamsen1997review' on page 16 undefined on
+ input line 711.
+
+
+Package natbib Warning: Citation `matern1960spatial' on page 16 undefined on in
+put line 716.
+
+
+Package natbib Warning: Citation `haskard2007anisotropic' on page 16 undefined 
+on input line 722.
+
+
+Package natbib Warning: Citation `LiuandLi2019' on page 16 undefined on input l
+ine 725.
+
+
+Package natbib Warning: Citation `matheron_1973' on page 16 undefined on input 
+line 725.
+
+
+Package natbib Warning: Citation `Meja1974OnTS' on page 16 undefined on input l
+ine 725.
+
+
+Package natbib Warning: Citation `1972JSV' on page 16 undefined on input line 7
+25.
+
+
+Package natbib Warning: Citation `davis1987' on page 16 undefined on input line
+ 725.
+
+
+Package natbib Warning: Citation `LoeveM:1978' on page 16 undefined on input li
+ne 725.
+
+
+Package natbib Warning: Citation `journel1974' on page 16 undefined on input li
+ne 725.
+
+
+Package natbib Warning: Citation `oliver1995moving' on page 16 undefined on inp
+ut line 725.
+
+
+Package natbib Warning: Citation `johnson1987multivariate' on page 16 undefined
+ on input line 725.
+
+
+Package natbib Warning: Citation `gomez1993joint' on page 16 undefined on input
+ line 725.
+
+
+Package natbib Warning: Citation `pebesma2004multivariable' on page 16 undefine
+d on input line 725.
+
+
+Package natbib Warning: Citation `fenton1990simulation' on page 16 undefined on
+ input line 725.
+
+
+Package natbib Warning: Citation `geoR2001' on page 16 undefined on input line 
+725.
+
+
+Package natbib Warning: Citation `RandomFields2015' on page 16 undefined on inp
+ut line 725.
+
+
+Package natbib Warning: Citation `RandomFields2020' on page 16 undefined on inp
+ut line 725.
+
+
+Package natbib Warning: Citation `Dietrich1997FastAE' on page 16 undefined on i
+nput line 725.
+
+
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 16 []
  []
 
 [16]
-Package color Info: Redefining color shadecolor on input line 716.
-Package color Info: Redefining color shadecolor on input line 737.
+
+Package natbib Warning: Citation `LiuandLi2019' on page 17 undefined on input l
+ine 734.
+
+Package color Info: Redefining color shadecolor on input line 740.
+
+Overfull \hbox (51.73734pt too wide) in paragraph at lines 753--753
+[]\T1/lmtt/m/n/10.95 myRaster = raster::raster( raster::extent(0,Ngrid[1]/Ngrid
+[2],5,6),Ngrid[1], Ngrid[2])[] 
+ []
+
+
+Overfull \hbox (45.9886pt too wide) in paragraph at lines 753--753
+[]\T1/lmtt/m/n/10.95 coordsSp = sp::SpatialPoints(raster::xyFromCell(myRaster, 
+1:raster::ncell(myRaster)))[] 
+ []
+
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 17
  []
 
 [17]
-Package color Info: Redefining color shadecolor on input line 753.
-Package color Info: Redefining color shadecolor on input line 766.
-Package color Info: Redefining color shadecolor on input line 787.
+Package color Info: Redefining color shadecolor on input line 759.
+Package color Info: Redefining color shadecolor on input line 775.
+Package color Info: Redefining color shadecolor on input line 788.
+Package color Info: Redefining color shadecolor on input line 811.
 
-Overfull \hbox (34.07611pt too wide) in paragraph at lines 785--787
+Overfull \hbox (34.07611pt too wide) in paragraph at lines 809--811
 []\T1/lmr/m/n/10.95 Step 5, gen-er-ate 2 stan-dard Gaus-sian ran-dom vec-tors \
 T1/lmtt/m/n/10.95 zmatGpu$\OT1/lmr/m/n/10.95 = (\OML/lmm/m/it/10.95 Z[]; Z[]\OT
 1/lmr/m/n/10.95 )$ \T1/lmr/m/n/10.95 us-ing \T1/lmtt/m/n/10.95 gpuRandom::rnorm
 ()\T1/lmr/m/n/10.95 ,
  []
 
-Package color Info: Redefining color shadecolor on input line 794.
-Package color Info: Redefining color shadecolor on input line 804.
+Package color Info: Redefining color shadecolor on input line 818.
+Package color Info: Redefining color shadecolor on input line 828.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 18 []
  []
 
 [18]
-Package color Info: Redefining color shadecolor on input line 839.
+Package color Info: Redefining color shadecolor on input line 863.
 LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
-846.
+870.
  (/usr/share/texmf/tex/latex/lm/ts1lmtt.fd
 File: ts1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
-Overfull \hbox (34.49113pt too wide) in paragraph at lines 846--846
+Overfull \hbox (34.49113pt too wide) in paragraph at lines 870--870
 []                                     \TS1/lmtt/m/n/10.95 '\T1/lmtt/m/n/10.95 
 sim\TS1/lmtt/m/n/10.95 '\T1/lmtt/m/n/10.95 , 1:ncol(simMat)), 1, paste, collaps
 e=\TS1/lmtt/m/n/10.95 ''\T1/lmtt/m/n/10.95 )[] 
  []
 
-Package color Info: Redefining color shadecolor on input line 852.
-<figure/maternplot-1.pdf, id=418, 433.62pt x 289.08pt>
+Package color Info: Redefining color shadecolor on input line 876.
 File: figure/maternplot-1.pdf Graphic file (type pdf)
 <use figure/maternplot-1.pdf>
-Package pdftex.def Info: figure/maternplot-1.pdf  used on input line 861.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-2.pdf, id=419, 433.62pt x 289.08pt>
 File: figure/maternplot-2.pdf Graphic file (type pdf)
 <use figure/maternplot-2.pdf>
-Package pdftex.def Info: figure/maternplot-2.pdf  used on input line 862.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-3.pdf, id=420, 433.62pt x 289.08pt>
 File: figure/maternplot-3.pdf Graphic file (type pdf)
 <use figure/maternplot-3.pdf>
-Package pdftex.def Info: figure/maternplot-3.pdf  used on input line 863.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-4.pdf, id=421, 433.62pt x 289.08pt>
 File: figure/maternplot-4.pdf Graphic file (type pdf)
 <use figure/maternplot-4.pdf>
-Package pdftex.def Info: figure/maternplot-4.pdf  used on input line 864.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-5.pdf, id=422, 433.62pt x 289.08pt>
 File: figure/maternplot-5.pdf Graphic file (type pdf)
 <use figure/maternplot-5.pdf>
-Package pdftex.def Info: figure/maternplot-5.pdf  used on input line 865.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-6.pdf, id=423, 433.62pt x 289.08pt>
 File: figure/maternplot-6.pdf Graphic file (type pdf)
 <use figure/maternplot-6.pdf>
-Package pdftex.def Info: figure/maternplot-6.pdf  used on input line 866.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-7.pdf, id=424, 433.62pt x 289.08pt>
 File: figure/maternplot-7.pdf Graphic file (type pdf)
 <use figure/maternplot-7.pdf>
-Package pdftex.def Info: figure/maternplot-7.pdf  used on input line 867.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-8.pdf, id=425, 433.62pt x 289.08pt>
 File: figure/maternplot-8.pdf Graphic file (type pdf)
 <use figure/maternplot-8.pdf>
-Package pdftex.def Info: figure/maternplot-8.pdf  used on input line 868.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-9.pdf, id=426, 433.62pt x 289.08pt>
 File: figure/maternplot-9.pdf Graphic file (type pdf)
 <use figure/maternplot-9.pdf>
-Package pdftex.def Info: figure/maternplot-9.pdf  used on input line 869.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-10.pdf, id=427, 433.62pt x 289.08pt>
 File: figure/maternplot-10.pdf Graphic file (type pdf)
 <use figure/maternplot-10.pdf>
-Package pdftex.def Info: figure/maternplot-10.pdf  used on input line 870.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
@@ -912,72 +1012,43 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 20 []
  []
 
-[20 <./figure/maternplot-1.pdf> <./figure/maternplot-2.pdf> <./figure/maternplo
-t-3.pdf> <./figure/maternplot-4.pdf> <./figure/maternplot-5.pdf> <./figure/mate
-rnplot-6.pdf> <./figure/maternplot-7.pdf> <./figure/maternplot-8.pdf> <./figure
-/maternplot-9.pdf> <./figure/maternplot-10.pdf>] (./paper1.bbl
+[20]
+Missing character: There is no ’ in font ec-lmr10!
+ (./paper1.bbl)
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 21
  []
 
 [21]
+
+Package natbib Warning: There were undefined citations.
+
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 934.
+
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 22 []
  []
 
-[22])
-Overfull \hbox (10.94998pt too wide) has occurred while \output is active
-[] \T1/lmr/m/n/10.95 23
- []
-
-[23]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 910.
-
-Overfull \hbox (10.94998pt too wide) has occurred while \output is active
-\T1/lmr/m/n/10.95 24 []
- []
-
-[24]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 910.
+[22]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 934.
  (./paper1.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 910.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 910.
+Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 934.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 934.
 Package rerunfilecheck Info: File `paper1.out' has not changed.
-(rerunfilecheck)             Checksum: 09C1E3E765F4CC28E69868AB9023D836;1551.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 910.
+(rerunfilecheck)             Checksum: 491E8769450FDD1BA1E4E06D1CAC89CE;1681.
+
+
+LaTeX Warning: There were multiply-defined labels.
+
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 934.
  ) 
 Here is how much of TeX's memory you used:
- 11760 strings out of 483040
- 180004 string characters out of 5962426
- 633736 words of memory out of 5000000
- 26384 multiletter control sequences out of 15000+600000
- 626257 words of font info for 73 fonts, out of 8000000 for 9000
- 81 hyphenation exceptions out of 8191
- 48i,15n,53p,2287b,1247s stack positions out of 5000i,500n,10000p,200000b,80000s
-pdfTeX warning (dest): name{Subsection.4.0.Simulating\040Gaussian\040random\0
-40fields\040with\040Mat\351rn\040covariances.2} has been referenced but does no
-t exist, replaced by a fixed one
+ 13940 strings out of 481772
+ 208438 string characters out of 5936451
+ 658676 words of memory out of 5000000
+ 30688 multiletter control sequences out of 15000+600000
+ 625556 words of font info for 73 fonts, out of 8000000 for 9000
+ 14 hyphenation exceptions out of 8191
+ 48i,15n,53p,2287b,1119s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-{/usr/share/texmf/fonts/enc/dvips/lm/lm-ts1.enc}{/usr/share/texmf/fonts/enc/dvi
-ps/lm/lm-mathit.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm-rm.enc}{/usr/share/
-texmf/fonts/enc/dvips/lm/lm-ec.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm-math
-sy.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm-mathex.enc}</usr/share/texmf/fon
-ts/type1/public/lm/lmb10.pfb></usr/share/texmf/fonts/type1/public/lm/lmbx10.pfb
-></usr/share/texmf/fonts/type1/public/lm/lmbx12.pfb></usr/share/texmf/fonts/typ
-e1/public/lm/lmex10.pfb></usr/share/texmf/fonts/type1/public/lm/lmmi10.pfb></us
-r/share/texmf/fonts/type1/public/lm/lmmi12.pfb></usr/share/texmf/fonts/type1/pu
-blic/lm/lmmi6.pfb></usr/share/texmf/fonts/type1/public/lm/lmmi8.pfb></usr/share
-/texmf/fonts/type1/public/lm/lmr10.pfb></usr/share/texmf/fonts/type1/public/lm/
-lmr12.pfb></usr/share/texmf/fonts/type1/public/lm/lmr6.pfb></usr/share/texmf/fo
-nts/type1/public/lm/lmr8.pfb></usr/share/texmf/fonts/type1/public/lm/lmri10.pfb
-></usr/share/texmf/fonts/type1/public/lm/lmri8.pfb></usr/share/texmf/fonts/type
-1/public/lm/lmro10.pfb></usr/share/texmf/fonts/type1/public/lm/lmss10.pfb></usr
-/share/texmf/fonts/type1/public/lm/lmsy10.pfb></usr/share/texmf/fonts/type1/pub
-lic/lm/lmsy8.pfb></usr/share/texmf/fonts/type1/public/lm/lmtt10.pfb>
-Output written on paper1.pdf (24 pages, 30098119 bytes).
-PDF statistics:
- 640 PDF objects out of 1000 (max. 8388607)
- 539 compressed objects within 6 object streams
- 162 named destinations out of 1000 (max. 500000)
- 189 words of extra memory for PDF output out of 10000 (max. 10000000)
-
+Output written on paper1.pdf (22 pages).

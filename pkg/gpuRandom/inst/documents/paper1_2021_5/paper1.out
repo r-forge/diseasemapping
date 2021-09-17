@@ -1,0 +1,11 @@
+\BOOKMARK [1][-]{Section.0.Introduction.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{Section.1.Generating random numbers.1}{Generating\040random\040numbers}{}% 2
+\BOOKMARK [2][-]{Subsection.2.0.Creating streams.2}{Creating\040streams}{Section.1.Generating random numbers.1}% 3
+\BOOKMARK [2][-]{Subsection.2.1.Using streams to generate i.i.d. $U (0, 1)$ random numbers on GPU.2}{Using\040streams\040to\040generate\040i.i.d.\040U\040\(0,\0401\)\040random\040numbers\040on\040GPU}{Section.1.Generating random numbers.1}% 4
+\BOOKMARK [2][-]{Subsection.2.2.Using streams to generate i.i.d. $N (0, 1)$ random numbers on GPU.2}{Using\040streams\040to\040generate\040i.i.d.\040N\040\(0,\0401\)\040random\040numbers\040on\040GPU}{Section.1.Generating random numbers.1}% 5
+\BOOKMARK [1][-]{Section.2.Monte Carlo simulation for Fisher's exact test.1}{Monte\040Carlo\040simulation\040for\040Fisher's\040exact\040test}{}% 6
+\BOOKMARK [2][-]{Subsection.3.0.Comparing running time: Month data example.2}{Comparing\040running\040time:\040Month\040data\040example}{Section.2.Monte Carlo simulation for Fisher's exact test.1}% 7
+\BOOKMARK [2][-]{Subsection.3.1.Comparing running time: Week data example.2}{Comparing\040running\040time:\040Week\040data\040example}{Section.2.Monte Carlo simulation for Fisher's exact test.1}% 8
+\BOOKMARK [1][-]{Section.3.Generating Gaussian random fields.1}{Generating\040Gaussian\040random\040fields}{}% 9
+\BOOKMARK [2][-]{Subsection.4.0.Simulating Gaussian random fields with Mat\'ern covariances.2}{Simulating Gaussian random fields with Matérn covariances}{Section.3.Generating Gaussian random fields.1}% 10
+\BOOKMARK [1][-]{Section.4.Discussion.1}{Discussion}{}% 11
