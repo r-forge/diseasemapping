@@ -78,7 +78,7 @@ std::string mrg31k3pMatrixString(
   
   if(random_type == "normal"){  
     result += 
-      "local " + typeString + " part[2], cosPart1;\n";// local size must be 1,2
+      "local " + typeString + "  part[0], cosPart1, sinPart1;\n";// local size must be 1,2
   }
   
   
@@ -150,6 +150,7 @@ std::string mrg31k3pMatrixString(
       "    if(get_local_id(1)) {\n"
       "      part[1] = TWOPI_mrg31k3p_NORM_cl * temp;\n"
       "      cosPart1 = cos(part[1]);\n"
+      "      sinPart1 = sin(part[1]);\n"
       "    } else {\n"
       "      part[0] = sqrt(-2.0*log(temp * mrg31k3p_NORM_cl));\n"
       "    }\n"
@@ -157,7 +158,7 @@ std::string mrg31k3pMatrixString(
     
     result += 
       "    if(get_local_id(1)) {\n"
-      "      out[Dentry] = part[0]*sin(part[1]);\n"
+      "      out[Dentry] = part[0]*sinPart1;\n"
       "    } else {\n"
       "      out[Dentry] = part[0]*cosPart1;\n"
       "    }\n"
