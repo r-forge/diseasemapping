@@ -2,7 +2,7 @@
 #'
 #'
 #' @param x a vclMatrix for Fisher's test
-#' @param C requested number of simulations.
+#' @param N requested number of simulations.
 #' @param streams streams objects. 
 #' @param type "double" or "float" of test statistics.
 #' @param Nglobal the size of the index space for use.
@@ -18,7 +18,7 @@
 
 fisher.sim=function(
   x, # a vclMatrix
-  C, # requested number of simualtion,
+  N, # requested number of simualtion,
   streams, 
   type = c('float','double')[1+gpuR::gpuInfo()$double_support],
   returnStatistics = FALSE,
@@ -99,7 +99,7 @@ fisher.sim=function(
   
 #  print(class(xVcl))
 
-  simnumber<-round(C/prod(Nglobal))
+  simnumber<-round(N/prod(Nglobal))
   iterations<-simnumber*prod(Nglobal)
   #remainder<-C%%prod(Nglobal)
   

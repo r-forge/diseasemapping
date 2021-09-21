@@ -4,65 +4,6 @@
 -->
 
 
-```{r test, eval=FALSE}
-
-library(gpuRandom)
-library(gpuR)
-
-
-
-seedR <- c(12345, 12345, 12345, 12345, 12345, 12345)
-is.double(seedR)
-is.integer(seedR)
-
-
-seedR <- 12345
-seedR <- as.integer(seedR)
-
-intToBits(seedR)
-
-
-
-
-
-
-
-seedR <- c(12345L, 12345L, 12345L, 12345L, 12345L, 12345L)
-packBits(intToBits(seedR), type = 'double')
-
-
-seedR <- 12345L
-packBits(intToBits(seedR), type = 'integer')
-
-
-seedR <- c(12345L, 12345L, 12345L, 12345L, 12345L, 12345L)
-packBits(intToBits(seedR), type = 'integer')
-
-
-seedR <- c(12345L)
-packBits(intToBits(seedR), type = 'double')
-
-as.vector(rbind(0L, seedR))
-packBits( intToBits(as.vector(rbind(0L, seedR))), type = 'double')
-
-
-seedR <- 12345
-packBits(numToBits(seedR), type = 'double')
-
-
-seedR <- 12345
-packBits(intToBits(c(seedR,seedR)), type = 'double')
-
-
-packBits(numToBits(2.619604e-310), type = 'integer')
-
-
-Nglobal = 4
-streams = gpuRandom::CreateStreams(Nglobal);
-t(streams)
-```
-
-
 
 
 
@@ -75,27 +16,20 @@ library(gpuR)
 ###GPU stream
 seedR<-gpuR::vclVector(c(12345, 12345, 12345, 12345, 12345, 12345),type="integer")
 streamsGPU<-vclMatrix(0L, nrow=4, ncol=18, type="integer")
-gpuRandom:::CreateStreamsGpuBackend(seedR, streamsGPU, keepInitial=1)
+gpuRandom:::CreateStreamsGpuBackend(creatorInitialGlobalR=seedR, 
+                                    streamsR=streamsGPU, 
+                                    keepInitial=1)
 t(as.matrix(streamsGPU))
 
 
-random_vector<-gpuRandom::runif(5, workgroupSize=c(2,4), type="double")
-random_vector<-as.vector(as.matrix(random_vector))
-hist(random_vector, prob = TRUE, main="Histogram")
-
-
-
-library(gpuRandom)
-library(gpuR)
 
 seedR <- c(12345L, 12345L, 12345L, 12345L, 12345L, 12345L)
-seedR <- c(12345, 12345, 12345, 12345, 12345, 12345)
 streamsGpu <- gpuRandom::CreateStreamsGpu(seedR, 5L, keepInitial=TRUE)
-t(as.matrix(streamsGpu))
+streams <- as.matrix(streamsGpu)
 gpuR::colnames(streams) = c("current.g1.1", "current.g1.2", "current.g1.3", "current.g2.1", "current.g2.2", "current.g2.3",
-                                 "initial.g1.1", "initial.g1.2", "initial.g1.3", "initial.g2.1", "initial.g2.2", "initial.g2.3",
-                                 "substream.g1.1", "substream.g1.2", "substream.g1.3", "substream.g2.1", "substream.g2.2", "substream.g2.3")
-t(streams)    
+                             "initial.g1.1", "initial.g1.2", "initial.g1.3", "initial.g2.1", "initial.g2.2", "initial.g2.3",
+                             "substream.g1.1", "substream.g1.2", "substream.g1.3", "substream.g2.1", "substream.g2.2", "substream.g2.3")
+t(streams) 
 
 t(gpuRandom::CreateStreamsCpu(5))
 ```
