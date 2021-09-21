@@ -24,7 +24,7 @@ fisher.sim=function(
   returnStatistics = FALSE,
   Nglobal,
   verbose = FALSE){
-
+  
   # METHOD <- "Fisher's Exact Test for Count Data"
   
   # if (is.data.frame(x))
@@ -49,7 +49,7 @@ fisher.sim=function(
   # 
   #  }else{stop("'x'  must be matrix")}
   
-
+  
   # lfactorial(x)=lgamma(x+1)
   # STATISTIC <- -sum(lfactorial(x))          ##STATISTIC is negative
   # almost.1 <- 1 + 64 * .Machine$double.eps
@@ -63,7 +63,7 @@ fisher.sim=function(
       seed <- gpuR::vclVector(seedR, type="integer")  
       streams<-vclMatrix(0L, nrow=1024, ncol=18, type="integer")
       CreateStreamsGpuBackend(seed, streams, keepInitial=1)
-   
+      
     }else{
       seedR = as.integer(as.integer(2^31-1)*(2*stats::runif(6) - 1) ) 
       seed <- gpuR::vclVector(seedR, type="integer")  
@@ -87,7 +87,7 @@ fisher.sim=function(
         '\n streams ', toString(dim(streams)), '\n')
   }
   
-
+  
   # sr0 <- rowSums(x)
   # sc0 <- colSums(x)
   # 
@@ -97,14 +97,14 @@ fisher.sim=function(
   # 
   # xVcl<-gpuR::vclMatrix(x, type='integer') 
   
-#  print(class(xVcl))
-
-  simnumber<-round(N/prod(Nglobal))
-  iterations<-simnumber*prod(Nglobal)
+  #  print(class(xVcl))
+  
+  simPerWork<-ceiling(N/prod(Nglobal))
+  TotalSim<-simPerWork*prod(Nglobal)
   #remainder<-C%%prod(Nglobal)
   
   if(returnStatistics) {
-    results <- gpuR::vclVector(length=as.integer(iterations), type=type)
+    results <- gpuR::vclVector(length=as.integer(TotalSim), type=type)
   } else {
     results <- gpuR::vclVector(length=as.integer(1), type=type)
   }
@@ -112,16 +112,16 @@ fisher.sim=function(
   
   PVAL <- NULL
   
-  counts<-cpp_gpuFisher_test(x, results, simnumber, streams, Nglobal,Nlocal)
+  counts<-cpp_gpuFisher_test(x, results, simPerWork, streams, Nglobal,Nlocal)
   
   #theTime<-system.time(cpp_gpuFisher_test(x, results, as.integer(B), streams, Nglobal,Nlocal))
   
   
   # if(verbose)
-     #print(theTime)
+  #print(theTime)
   #time 
   
-  PVAL <- (1 + counts ) / (iterations + 1)
+  PVAL <- (1 + counts ) / (TotalSim + 1)
   #counts<-10
   #PVAL<-0.1
   # format(PVAL, digits=5)
@@ -129,17 +129,17 @@ fisher.sim=function(
   #  PVAL = counts
   #}
   
-
+  
   
   if (returnStatistics){
-  
-  theResult = list(p.value = PVAL, simnum=iterations, sim = results, counts=counts, streams=streams)
+    
+    theResult = list(p.value = PVAL, simnum=TotalSim, sim = results, counts=counts, streams=streams)
     
   }else {
     
-  theResult = list(p.value=PVAL, simnum=iterations, counts=counts, streams=streams)
+    theResult = list(p.value=PVAL, simnum=TotalSim, counts=counts, streams=streams)
   }
-
+  
   theResult
   
   
