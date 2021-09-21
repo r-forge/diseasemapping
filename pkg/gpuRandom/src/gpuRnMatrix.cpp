@@ -78,7 +78,7 @@ std::string mrg31k3pMatrixString(
   
   if(random_type == "normal"){  
     result += 
-      "local " + typeString + "  part[0], cosPart1, sinPart1;\n";// local size must be 1,2
+      "local " + typeString + "  part[2], cosPart1, sinPart1;\n";// local size must be 1,2
   }
   
   
