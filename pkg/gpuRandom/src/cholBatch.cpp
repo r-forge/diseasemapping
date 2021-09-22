@@ -86,7 +86,7 @@ template <typename T> std::string cholBatchKernelString(
     // "     DmatrixBlock+= get_num_groups(0), Dmatrix+= get_num_groups(0)){\n"
     
     " diagHere = Dmatrix*NpadDiag + NstartD;\n"
-    " AHere = (Dmatrix < Nmatrix) * Dmatrix*NpadBetweenMatrices + NstartA;\n";
+    " AHere =  Dmatrix*NpadBetweenMatrices + NstartA;\n";
   if(logDet){
     result += " logDetHere = 0.0;\n";
   }
@@ -128,7 +128,7 @@ template <typename T> std::string cholBatchKernelString(
     "\n// reduction on dimension 1\n";
   
   result += "  barrier(CLK_LOCAL_MEM_FENCE);\n"
-  "  if( (get_local_id(1) == 0) & (Dmatrix < Nmatrix) ){\n"
+  "  if( (get_local_id(1) == 0)){\n"
   "   for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
   "    toAddLocal[localIndex] +=  toAddLocal[localIndex + Dk];\n"
   "   }//for Dk\n"
@@ -137,7 +137,7 @@ template <typename T> std::string cholBatchKernelString(
   
   result +=     
     "// final reduction on dimension 0\n"
-    "  if(localIndexIsZero & (Dmatrix < Nmatrix) ){\n";
+    "  if(localIndexIsZero ){\n";
   
   result +=     
     "   for(Dk = get_local_size(1); Dk < NlocalTotal; Dk+= get_local_size(1)) {\n"   //   localIndex + get_local_size(1)
@@ -178,7 +178,7 @@ template <typename T> std::string cholBatchKernelString(
     "  AHereDrow = AHere+Drow*Npad;\n"
     "  DL = 0.0;\n";
   
-  result += "  if( (Drow < N) & (Dmatrix < Nmatrix) & (Drow < N) ){\n";
+  result += "  if(Drow < N){\n";
   
   if(allowOverflow) {
     result +=
@@ -213,7 +213,7 @@ template <typename T> std::string cholBatchKernelString(
     "  // local reduction\n"
     "  barrier(CLK_LOCAL_MEM_FENCE);\n";
   result +=
-    "  if( (get_local_id(1) == 0) & (Dmatrix < Nmatrix)  & (Drow < N)){\n"
+    "  if( (get_local_id(1) == 0) & (Drow < N)){\n"
     "   DL = toAddLocal[localIndex];\n";
   
   result +=    "   for(Dk = 1; Dk < get_local_size(1); Dk++) {\n"
@@ -233,7 +233,7 @@ template <typename T> std::string cholBatchKernelString(
     "} // Dcol loop\n\n";
   
   if(logDet){
-    result +=  "if(localIndexIsZero & (Dmatrix < Nmatrix)  & (Drow < N)){\n"
+    result +=  "if(localIndexIsZero & (Drow < N)){\n"
     " logDet[logDetIndex + Dmatrix] = logDetHere;\n"
     "}\n";
   }
