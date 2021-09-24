@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-#define DEBUG
+//#define DEBUG
 //#define NOKERNELS
 
 // C = A^T A or A^T D A or A^T D^(-1) A 
@@ -92,7 +92,7 @@ std::string crossprodBatchString(
   
   
   result +=
-    "const int DrowNpadCInc = get_local_size(1)*NpadC;\n"
+   // "const int DrowNpadCInc = get_local_size(1)*NpadC;\n"
     
     "const int localIndex = get_local_id(0) * get_local_size(1) + get_local_id(1);\n"
     "const int NlocalTotal = get_local_size(1)*get_local_size(0);\n"
@@ -402,7 +402,7 @@ void crossprodBatch(
   const int NstartA = A.internal_size2() * Astartend[0] + Astartend[2];
   const int NstartD = D.internal_size2() * Dstartend[0] + Dstartend[2];
   
-  std::cout<< Nmatrix << "\n\n\n";  
+  //std::cout<< Nmatrix << "\n\n\n";  
   
   // the context
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));

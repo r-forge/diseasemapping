@@ -8,7 +8,7 @@
 
 
  
-crossprodBatch <- function(C,   # must be a batch of square matrices 
+crossprodBatch <- function(C,   # must be batch of square matrices 
                            A,
                            D,
                            invertD,
