@@ -11,7 +11,9 @@
 
 
 
-backsolveBatch <- function(C, A, B,  #vclmatrices
+backsolveBatch <- function(C, 
+                           A,  # must be batches of square matrices
+                           B,  #vclmatrices
                            numbatchB, #sometimes B can have only 1 batch, for repeated same batches
                            diagIsOne,
                            Nglobal, 
