@@ -1,4 +1,5 @@
-// DrowBlock and DinnerBlock
+//   all 
+
 
 #include "gpuRandom.hpp"
 #define DEBUG
@@ -10,7 +11,7 @@
  
  
  
- - Dgroup[0] is matrix, Dlocal[0] is row of A and C
+ - Dgroup[0] is matrix Dlocal[0] is row of A and C
  - Dgroup[1] is a column of B, Dlocal[1] is Dinner
  - each Dgroup[1] does NcolsGroup columns of B
  - NcolsPerGroup = ceil( Ncol/Ngroup[1])
@@ -83,16 +84,17 @@ std::string backsolveBatchString(
     "#define NpadBetweenMatricesSum " + std::to_string(NpadBetweenMatricesSum) + "\n\n";
   
   result += "__kernel void backsolveBatch(\n"
-  " __global " + typeString+ " *C,\n"
-  " __global "+ typeString+ " *A,\n"
-  " __global "+ typeString+ " *B,\n"
+  "	__global " + typeString+ " *C,\n"
+  "	__global "+ typeString+ " *A,\n"
+  "	__global "+ typeString+ " *B,\n"
   "           int Nmatrix) {\n\n"
   "local int AHere, BHere, CHere, DrowZero;\n"
   "int AHereRow, BHereRow, CHereRow, CcacheHereRow;\n"
   "local "+ typeString+ " Ccache[NlocalCacheC];\n" 
   "local "+ typeString+ " cacheSum[NlocalCacheSum];\n"
   + typeString + " Acache;\n" 
-  "int Dmatrix, Drow, DrowBlock, DrowInBounds, Dcol, Dinner, DinnerBlock, DinnerC, DcolCache, Dsum;\n"
+  "int DmatrixBlock, Dmatrix, DmatrixInBounds, Drow, DrowBlock, DrowInBounds;\n"
+  "int Dcol,DcolBlock, DcolInBounds, Dinner, DinnerBlock, DinnerC, DcolCache, Dsum;\n"
   "local int DCrowInc, DArowInc, DBrowInc, DinnerCinc, DCcacheRowInc;\n"
   "const int DlocalCache = get_local_id(0) * get_local_size(1) + get_local_id(1);\n"
   "const int localIsFirstCol = (get_local_id(1) == 0);\n"
@@ -111,9 +113,25 @@ std::string backsolveBatchString(
   
   // loop through matrix
   result +=  "\n"
-  "for(Dmatrix = get_group_id(0); Dmatrix < Nmatrix; Dmatrix += get_num_groups(1)){\n"
-  "    barrier(CLK_LOCAL_MEM_FENCE);\n"
-  "  if(localIsFirstItem) {\n"
+  // "for(Dmatrix = get_group_id(0); Dmatrix < Nmatrix; Dmatrix += get_num_groups(1)){\n"
+  
+  "for(DmatrixBlock=0;\n "
+  "DmatrixBlock < Nmatrix;\n "
+  "DmatrixBlock += get_num_groups(0)){\n"
+  
+  
+  " Dmatrix = DmatrixBlock + get_group_id(0);\n"
+  "  barrier(CLK_LOCAL_MEM_FENCE);\n"
+  "  if(Dmatrix < Nmatrix) {\n"
+  " DmatrixInBounds = 1;\n"
+  "   } else {\n"
+  "    DmatrixInBounds = 0;\n"
+  "    Dmatrix = 0;\n"
+  "   }\n"
+  
+  
+  
+  "  if(localIsFirstItem & DmatrixInBounds) {\n"
   "    AHere = Dmatrix*NpadBetweenMatricesA + NstartA;\n"
   "    CHere = Dmatrix*NpadBetweenMatricesC + NstartC;\n";
   if(sameB){
@@ -131,7 +149,7 @@ std::string backsolveBatchString(
     // "      CHereRow = CHere + get_local_id(0) * NpadC,\n"
     // "      CcacheHereRow = get_local_id(0) * NpadCcache,\n"
     // "      AHereRow = AHere + get_local_id(0) * NpadA;\n"
-    // "      Drow < NrowStop;\n" 
+    // "      Drow < NrowStop;\n"
     // "      Drow += get_local_size(0), \n"
     // "      BHereRow += DBrowInc,\n"
     // "      AHereRow += DArowInc, CHereRow += DCrowInc,\n"
@@ -150,7 +168,7 @@ std::string backsolveBatchString(
     "       CcacheHereRow += DCcacheRowInc){\n"
     
     "        Drow = DrowBlock + get_local_id(0);\n"
-    "        if(Drow < NrowStop){\n"
+    "        if((Drow < NrowStop) & DmatrixInBounds){\n"
     "               DrowInBounds = 1;\n"
     "            } else {\n"
     "               DrowInBounds = 0;\n"
@@ -164,16 +182,28 @@ std::string backsolveBatchString(
     "    barrier(CLK_LOCAL_MEM_FENCE);\n";
   
   result += 
+    "    if(DrowInBounds){\n"
     "    // initialize cacheSum\n"
-    "    for(Dcol = get_group_id(1), DcolCache=DlocalCache;\n"
-    "      Dcol < Ncol;\n"
-    "      Dcol += get_num_groups(1), DcolCache+=NpadBetweenMatricesSum){\n";
+    // "    for(Dcol = get_group_id(1), DcolCache=DlocalCache;\n"
+    // "      Dcol < Ncol;\n"
+    // "      Dcol += get_num_groups(1), DcolCache+=NpadBetweenMatricesSum){\n";
+    
+    "    for(DcolBlock = 0, DcolCache=DlocalCache;\n"
+    "        DcolBlock < Ncol;\n"
+    "        DcolBlock += get_num_groups(1), DcolCache+=NpadBetweenMatricesSum){\n"
+    "        Dcol = DcolBlock + get_group_id(1);\n"    
+    "        if(Dcol < Ncol ){\n"
+    "        DcolInBounds = 1;\n"
+    "        } else {\n"
+    "        DcolInBounds = 0;\n"
+    "        Dcol = 0;\n"
+    "}\n";
   
   result += 
-    "       if(DrowInBounds)\n"
     "      cacheSum[DcolCache] = 0.0;\n";
   result += 
     "    }//for Dcol\n"
+    "   }// if\n"
     "    barrier(CLK_LOCAL_MEM_FENCE);\n";
   
   result += 
@@ -185,21 +215,29 @@ std::string backsolveBatchString(
     
     "     for(DinnerBlock = 0;\n"
     "         DinnerBlock < DrowZero;\n"
-    "         DinnerBlock += get_local_size(1)){\n"
-    
+    "         DinnerBlock += get_local_size(1)){\n"  
     "         Dinner = DinnerBlock + get_local_id(1);\n"
+    
     "         if((Dinner < DrowZero) & DrowInBounds){\n"
-    "         DinnerC = Dinner*NpadCcache;\n";  
-  
+    "         DinnerC = Dinner*NpadCcache;\n";
   result += 
     "      Acache = A[AHereRow + Dinner];\n"; 
   //"      Acache = A[AHere + Drow*NpadA + Dinner];\n"; 
   
   result += 
     "      // loop through columns of B and C\n"
-    "      for(Dcol = get_group_id(1),DcolCache=0, Dsum=DlocalCache;\n"
-    "        Dcol < Ncol;\n"
-    "        Dcol += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n";
+    // "      for(Dcol = get_group_id(1),DcolCache=0, Dsum=DlocalCache;\n"
+    // "        Dcol < Ncol;\n"
+    // "        Dcol += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n";
+    "    for(DcolBlock = 0, DcolCache=0, Dsum=DlocalCache;\n"
+    "        DcolBlock < Ncol;\n"
+    "        DcolBlock += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n"
+    "        Dcol = DcolBlock + get_group_id(1);\n"      
+    "        if(Dcol < Ncol )\n";
+  
+  
+  
+  
   
   result += 
     "        cacheSum[Dsum] += \n"
@@ -219,13 +257,18 @@ std::string backsolveBatchString(
   
   
   result += 
-    "    // loop columns again\n"
-    "    for(Dcol = get_group_id(1),DcolCache=0;\n"
-    "      Dcol < Ncol;\n"
-    "      Dcol += get_num_groups(1), DcolCache++){\n";
+    // "    // loop columns again\n"
+    // "    for(Dcol = get_group_id(1),DcolCache=0;\n"
+    // "      Dcol < Ncol;\n"
+    // "      Dcol += get_num_groups(1), DcolCache++){\n";
+    
+    "    for(DcolBlock = 0, DcolCache=0;\n"
+    "        DcolBlock < Ncol;\n"
+    "        DcolBlock += get_num_groups(1), DcolCache++){\n"
+    "        Dcol = DcolBlock + get_group_id(1);\n";      
   
   result += "\n"
-  "      if(localIsFirstCol & DrowInBounds){\n";
+  "      if(localIsFirstCol & DrowInBounds & (Dcol < Ncol)){\n";
   
   result += 
     "        for(Dinner = 1, DinnerC = DlocalCache+1;\n"
@@ -261,15 +304,13 @@ std::string backsolveBatchString(
     "            cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n";
   
   result +=  
-    "          C[CHereRow + Dcol] = Ccache[CcacheHereRow + DcolCache];\n";
-  
+    "          C[CHereRow + Dcol] = Ccache[CcacheHereRow + DcolCache];\n"; 
   
   //    "          C[CHereRow + Dcol] = 100*(1 + Dmatrix) + 10*(1+Drow) + (1+Dcol);\n";
   //"          C[CHereRow + Dcol] = A[AHereRow + Dcol];\n"
   result +=  
     "        } //if(get_local_id(0) == Dinner)\n"
     "        barrier(CLK_LOCAL_MEM_FENCE);\n"; 
-  
   
   result +=
     "        // update A[Drow, ] * B[, Dcol] \n"
@@ -278,7 +319,6 @@ std::string backsolveBatchString(
     "            A[AHereRow + DrowZero + Dinner] * cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
     "        }//if(get_local_id(0) > Dinner)\n"
     "        barrier(CLK_LOCAL_MEM_FENCE);\n"; 
-  
   
   result +=
     "        }//Dinner\n";
@@ -300,9 +340,15 @@ std::string backsolveBatchString(
   
   
   
+  
+  
+  
+  
+  
+  
+  
   result += 
     "/*\n Now rows that aren't all cached\n*/\n";
-  
   result +=
     // "  for(Drow = NrowStop + get_local_id(0),\n"
     // "      BHereRow = BHere + Drow * NpadB,\n"
@@ -310,29 +356,31 @@ std::string backsolveBatchString(
     // // "      CcacheHereRow = Drow * NpadCcache,\n"
     // "      CcacheHereRow = get_local_id(0) * NpadCcache,\n"
     // "      AHereRow = AHere + Drow * NpadA;\n"
-    // "      Drow < Nrow;\n" 
+    // "      Drow < Nrow;\n"
     // "      Drow += get_local_size(0), \n"
     // "      BHereRow += DBrowInc,\n"
     // "      AHereRow += DArowInc, CHereRow += DCrowInc,\n"
     // "      CcacheHereRow += DCcacheRowInc){\n"
+    
     "    for(DrowBlock = NrowStop;\n"
     "        DrowBlock < Nrow;\n"
     "        DrowBlock += get_local_size(0)){\n"
     
-    "      Drow = DrowBlock + get_local_id(0);\n"
-    
-    "      if(Drow < Nrow ){\n"
+    "      Drow = DrowBlock + get_local_id(0);\n"   
+    "      if((Drow < Nrow) & DmatrixInBounds){\n"
     "        DrowInBounds = 1;\n"
     "      } else {\n"
     "        DrowInBounds = 0;\n"
     "        Drow = 0;\n"
     "      }\n"
+    
     "        BHereRow = BHere + Drow * NpadB,\n"
     "        CHereRow = CHere + Drow * NpadC,\n"
     "        CcacheHereRow = get_local_id(0) * NpadCcache,\n"
-    "        AHereRow = AHere + Drow * NpadA;\n"
-    
+    "        AHereRow = AHere + Drow * NpadA;\n"    
     "    barrier(CLK_LOCAL_MEM_FENCE);\n"
+    
+    
     "    if(localIsFirstItem & DrowInBounds) {\n"
     "      DrowZero = Drow;\n"
     "    };\n"
@@ -340,16 +388,24 @@ std::string backsolveBatchString(
   
   result += 
     "    // initialize cacheSum\n"
-    "    for(Dcol = get_group_id(1), DcolCache=DlocalCache;\n"
-    "      Dcol < Ncol;\n"
-    "      Dcol += get_num_groups(1), DcolCache+=NpadBetweenMatricesSum){\n";
+    "    if(DrowInBounds) {\n"    
+    // "    for(Dcol = get_group_id(1), DcolCache=DlocalCache;\n"
+    // "        Dcol < Ncol;\n"
+    // "        Dcol += get_num_groups(1), DcolCache+=NpadBetweenMatricesSum){\n";
+    "    for(DcolBlock = 0, DcolCache=DlocalCache;\n"
+    "        DcolBlock < Ncol;\n"
+    "        DcolBlock += get_num_groups(1), DcolCache+=NpadBetweenMatricesSum){\n"
+    "        Dcol = DcolBlock + get_group_id(1);\n"   
+    "        if(Dcol < Ncol )\n";     
   
-  //    result += "cacheSum[DcolCache] = 0.0;\n";
+  
+  
+  
   result += 
-    "        if(DrowInBounds)\n"
-    "      cacheSum[DcolCache] = 0.0;\n";
+    "        cacheSum[DcolCache] = 0.0;\n";
   result += 
     "    }//for Dcol\n"
+    "   }// if \n"
     "    barrier(CLK_LOCAL_MEM_FENCE);\n";
   
   result += 
@@ -366,30 +422,25 @@ std::string backsolveBatchString(
     "    Dinner = DinnerBlock + get_local_id(1);\n"
     "    if((Dinner < NrowStop) & DrowInBounds){\n";        
   
-  
-  
-  
-  
-  
-  
-  
   result += 
     "      Acache = A[AHereRow + Dinner];\n"; 
   //"      Acache = A[AHere + Drow*NpadA + Dinner];\n"; 
   
   result += 
     "      // loop through columns of B and C\n"
-    "      for(Dcol = get_group_id(1),DcolCache=0, Dsum=DlocalCache;\n"
-    "        Dcol < Ncol;\n"
-    "        Dcol += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n";
-  
+    // "      for(Dcol = get_group_id(1),DcolCache=0, Dsum=DlocalCache;\n"
+    // "        Dcol < Ncol;\n"
+    // "        Dcol += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n";
+    "    for(DcolBlock = 0, DcolCache=0, Dsum=DlocalCache;\n"
+    "        DcolBlock < Ncol;\n"
+    "        DcolBlock += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n"
+    "        Dcol = DcolBlock + get_group_id(1);\n"      
+    "        if(Dcol < Ncol )\n";
   
   result +=     
     "        cacheSum[Dsum] += Acache * Ccache[DinnerC + DcolCache];\n";
   //    "        cacheSum[DlocalCache + DcolCache * NpadBetweenMatricesSum] +=\n"
-  //  "           Acache * Ccache[Dinner * NpadCcache + DcolCache];\n";
-  
-  
+  //  "           Acache * Ccache[Dinner * NpadCcache + DcolCache];\n"; 
   result += 
     "      }//for Dcol\n"
     "       }// if\n";
@@ -402,7 +453,6 @@ std::string backsolveBatchString(
   result += 
     // "    for(Dinner = NrowStop + get_local_id(1),\n"
     // "      DinnerC = Dinner*NpadCcache;\n"
-    // //    "      Dinner < Nrow;\n"
     // "      Dinner < DrowZero;\n"
     // "      Dinner += get_local_size(1), DinnerC += DinnerCinc){\n";
     
@@ -411,42 +461,52 @@ std::string backsolveBatchString(
     "        DinnerBlock += get_local_size(1)){\n"
     
     "      Dinner = DinnerBlock + get_local_id(1);\n"
-    "      DinnerC = Dinner*NpadCcache;\n"
     "      if((Dinner < DrowZero) & DrowInBounds){\n";
-  
   result += 
+    "      DinnerC = Dinner*NpadCcache;\n"
     "      Acache = A[AHereRow + Dinner];\n"; 
-  //"      Acache = A[AHere + Drow*NpadA + Dinner];\n"; 
-  
+  //"      Acache = A[AHere + Drow*NpadA + Dinner];\n";  
   result += 
     "      // loop through columns of B and C\n"
-    "      for(Dcol = get_group_id(1),DcolCache=0, Dsum=DlocalCache;\n"
-    "        Dcol < Ncol;\n"
-    "        Dcol += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n";
+    // "      for(Dcol = get_group_id(1),DcolCache=0, Dsum=DlocalCache;\n"
+    // "        Dcol < Ncol;\n"
+    // "        Dcol += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n";
+    
+    "    for(DcolBlock = 0, DcolCache=0, Dsum=DlocalCache;\n"
+    "        DcolBlock < Ncol;\n"
+    "        DcolBlock += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n"
+    "        Dcol = DcolBlock + get_group_id(1);\n"      
+    "        if(Dcol < Ncol )\n";
+  
   
   
   result += 
     "        cacheSum[Dsum] += Acache * C[CHere + Dcol + NpadC * Dinner];\n";
   //    "        cacheSum[DlocalCache + DcolCache * NpadBetweenMatricesSum] +=\n"
   //  "           Acache * Ccache[Dinner * NpadCcache + DcolCache];\n";
-  
-  
   result += 
     "      }//for Dcol\n"
-    "      }// if\n";
-  
+    "      }// if\n"; 
   result += 
     "    }//for Dinner\n"
     "    barrier(CLK_LOCAL_MEM_FENCE);\n";
   
+  
+  
+  
+  
   result += 
     "    // loop columns again\n"
-    "    for(Dcol = get_group_id(1),DcolCache=0;\n"
-    "      Dcol < Ncol;\n"
-    "      Dcol += get_num_groups(1), DcolCache++){\n";
+    // "    for(Dcol = get_group_id(1),DcolCache=0;\n"
+    // "      Dcol < Ncol;\n"
+    // "      Dcol += get_num_groups(1), DcolCache++){\n";
+    "    for(DcolBlock = 0, DcolCache=0;\n"
+    "        DcolBlock < Ncol;\n"
+    "        DcolBlock += get_num_groups(1), DcolCache++){\n"
+    "        Dcol = DcolBlock + get_group_id(1);\n";      
   
   result += "\n"
-  "      if(localIsFirstCol & DrowInBounds){\n";
+  "      if(localIsFirstCol & DrowInBounds & (Dcol < Ncol)){\n";
   
   result += 
     "        for(Dinner = 1, DinnerC = DlocalCache+1;\n"
@@ -469,8 +529,7 @@ std::string backsolveBatchString(
   
   result +=
     "        // create C in cache and copy to C\n"
-    "        if(get_local_id(0) == Dinner){\n"
-    
+    "        if(get_local_id(0) == Dinner){\n"  
     "       cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC] = (B[BHereRow + Dcol] -\n"
     "           cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC])";
   
@@ -487,8 +546,6 @@ std::string backsolveBatchString(
   result +=
     "        } //if(get_local_id(0) == Dinner)\n"
     "        barrier(CLK_LOCAL_MEM_FENCE);\n"; 
-  
-  
   result +=
     "        // update A[Drow, ] * B[, Dcol] \n"
     "        if(get_local_id(0) > Dinner){\n"
@@ -512,8 +569,7 @@ std::string backsolveBatchString(
     "  }//for Drow\n";
   
   result += 
-    "}// Dmatrix\n" 
-    
+    "}\n" // Dmatrix
     "}";
   /*
    * TO DO: do remaining rows
@@ -693,6 +749,8 @@ SEXP backsolveBatchBackend(
   return(result);
   
 }
+
+
 
 
 

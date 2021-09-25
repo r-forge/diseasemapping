@@ -244,9 +244,7 @@ std::string crossprodBatchString(
       "      DrowBlock < Ncol;\n "
       "      DrowBlock += get_local_size(1)) {\n\n"
       
-      "      Drow = DrowBlock + get_local_id(1);\n"
-      "      DrowNpadC = CHere + Drow * NpadC;\n"
-      "      A0Drow = AHere + Drow;\n";
+      "      Drow = DrowBlock + get_local_id(1);\n";
   }
   
   result += 
@@ -254,9 +252,11 @@ std::string crossprodBatchString(
   // "  barrier(CLK_LOCAL_MEM_FENCE);\n";   // no useful
   result += 
     "      if(Drow < Ncol){\n"
+    "      DrowNpadC = CHere + Drow * NpadC;\n"
+    "      A0Drow = AHere + Drow;\n"
     "      // cached parts\n";
   if(onlyDiagC) {
-    result +=      "      for(Dinner = localIndex,\n";
+    result +=  "      for(Dinner = localIndex,\n";
   } else {
     result +=  "      for(Dinner = get_local_id(0),\n";
   }
