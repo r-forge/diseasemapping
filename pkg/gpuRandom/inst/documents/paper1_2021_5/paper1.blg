@@ -1,5 +1,0 @@
-[1] Config.pm:304> INFO - This is Biber 2.14 (beta)
-[1] Config.pm:307> INFO - Logfile is 'paper1.blg'
-[74] biber:322> INFO - === Fri Sep 17, 2021, 17:21:01
-[149] Utils.pm:309> ERROR - Cannot find 'paper1.bcf'!
-[149] Biber.pm:132> INFO - ERRORS: 1

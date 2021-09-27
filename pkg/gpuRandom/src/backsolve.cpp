@@ -262,8 +262,6 @@ std::string backsolveBatchString(
     "        DcolBlock < Ncol;\n"
     "        DcolBlock += get_num_groups(1), DcolCache++){\n"
     "        Dcol = DcolBlock + get_group_id(1);\n";
-  
-  
   result +=
     "      if(Dcol < Ncol){\n";  
 #ifdef UNDEF 
