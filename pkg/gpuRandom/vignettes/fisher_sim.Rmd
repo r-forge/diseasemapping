@@ -73,7 +73,7 @@ result3$p.value
 
 
 result3$counts
-result3$simnum
+result3$simNum
 ```
 
 
