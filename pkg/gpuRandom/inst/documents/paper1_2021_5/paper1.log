@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2021.9.16)  28 SEP 2021 08:54
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2021.9.16)  28 SEP 2021 09:05
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -857,24 +857,88 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [18]
 Package color Info: Redefining color shadecolor on input line 841.
 Package color Info: Redefining color shadecolor on input line 854.
+Package color Info: Redefining color shadecolor on input line 877.
 
-Overfull \hbox (11.4962pt too wide) in paragraph at lines 979--979
-[]\T1/lmtt/m/n/10.95 ##  const int localIndex = get_local_id(0)*get_local_size(
-1) + get_local_id(1);[] 
+Overfull \hbox (34.07611pt too wide) in paragraph at lines 875--877
+[]\T1/lmr/m/n/10.95 Step 5, gen-er-ate 2 stan-dard Gaus-sian ran-dom vec-tors \
+T1/lmtt/m/n/10.95 zmatGpu$\OT1/lmr/m/n/10.95 = (\OML/lmm/m/it/10.95 Z[]; Z[]\OT
+1/lmr/m/n/10.95 )$ \T1/lmr/m/n/10.95 us-ing \T1/lmtt/m/n/10.95 gpuRandom::rnorm
+()\T1/lmr/m/n/10.95 ,
  []
 
+Package color Info: Redefining color shadecolor on input line 884.
+Package color Info: Redefining color shadecolor on input line 894.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 19
  []
 
 [19]
-Underfull \vbox (badness 10000) detected at line 980
+Package color Info: Redefining color shadecolor on input line 929.
+LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
+936.
+ (/usr/share/texmf/tex/latex/lm/ts1lmtt.fd
+File: ts1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
+)
+Overfull \hbox (34.49113pt too wide) in paragraph at lines 936--936
+[]                                     \TS1/lmtt/m/n/10.95 '\T1/lmtt/m/n/10.95 
+sim\TS1/lmtt/m/n/10.95 '\T1/lmtt/m/n/10.95 , 1:ncol(simMat)), 1, paste, collaps
+e=\TS1/lmtt/m/n/10.95 ''\T1/lmtt/m/n/10.95 )[] 
  []
 
+Package color Info: Redefining color shadecolor on input line 942.
+<figure/maternplot-1.pdf, id=446, 433.62pt x 289.08pt>
+File: figure/maternplot-1.pdf Graphic file (type pdf)
+<use figure/maternplot-1.pdf>
+Package pdftex.def Info: figure/maternplot-1.pdf  used on input line 951.
+(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
+<figure/maternplot-2.pdf, id=447, 433.62pt x 289.08pt>
+File: figure/maternplot-2.pdf Graphic file (type pdf)
+<use figure/maternplot-2.pdf>
+Package pdftex.def Info: figure/maternplot-2.pdf  used on input line 952.
+(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
+<figure/maternplot-3.pdf, id=448, 433.62pt x 289.08pt>
+File: figure/maternplot-3.pdf Graphic file (type pdf)
+<use figure/maternplot-3.pdf>
+Package pdftex.def Info: figure/maternplot-3.pdf  used on input line 953.
+(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
+<figure/maternplot-4.pdf, id=449, 433.62pt x 289.08pt>
+File: figure/maternplot-4.pdf Graphic file (type pdf)
+<use figure/maternplot-4.pdf>
+Package pdftex.def Info: figure/maternplot-4.pdf  used on input line 954.
+(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
+<figure/maternplot-5.pdf, id=450, 433.62pt x 289.08pt>
+File: figure/maternplot-5.pdf Graphic file (type pdf)
+<use figure/maternplot-5.pdf>
+Package pdftex.def Info: figure/maternplot-5.pdf  used on input line 955.
+(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
+<figure/maternplot-6.pdf, id=451, 433.62pt x 289.08pt>
+File: figure/maternplot-6.pdf Graphic file (type pdf)
+<use figure/maternplot-6.pdf>
+Package pdftex.def Info: figure/maternplot-6.pdf  used on input line 956.
+(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
+<figure/maternplot-7.pdf, id=452, 433.62pt x 289.08pt>
+File: figure/maternplot-7.pdf Graphic file (type pdf)
+<use figure/maternplot-7.pdf>
+Package pdftex.def Info: figure/maternplot-7.pdf  used on input line 957.
+(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
+<figure/maternplot-8.pdf, id=453, 433.62pt x 289.08pt>
+File: figure/maternplot-8.pdf Graphic file (type pdf)
+<use figure/maternplot-8.pdf>
+Package pdftex.def Info: figure/maternplot-8.pdf  used on input line 958.
+(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
+<figure/maternplot-9.pdf, id=454, 433.62pt x 289.08pt>
+File: figure/maternplot-9.pdf Graphic file (type pdf)
+<use figure/maternplot-9.pdf>
+Package pdftex.def Info: figure/maternplot-9.pdf  used on input line 959.
+(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
+<figure/maternplot-10.pdf, id=455, 433.62pt x 289.08pt>
+File: figure/maternplot-10.pdf Graphic file (type pdf)
+<use figure/maternplot-10.pdf>
+Package pdftex.def Info: figure/maternplot-10.pdf  used on input line 960.
+(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
 
-Underfull \vbox (badness 10000) detected at line 980
- []
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
@@ -882,152 +946,51 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
  []
 
 [20]
-Underfull \vbox (badness 10000) detected at line 980
- []
-
-
-Underfull \vbox (badness 10000) detected at line 980
- []
+Overfull \vbox (133.90417pt too high) has occurred while \output is active []
 
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 21
  []
 
-[21]
-Package color Info: Redefining color shadecolor on input line 995.
-
-Overfull \hbox (34.07611pt too wide) in paragraph at lines 993--995
-[]\T1/lmr/m/n/10.95 Step 5, gen-er-ate 2 stan-dard Gaus-sian ran-dom vec-tors \
-T1/lmtt/m/n/10.95 zmatGpu$\OT1/lmr/m/n/10.95 = (\OML/lmm/m/it/10.95 Z[]; Z[]\OT
-1/lmr/m/n/10.95 )$ \T1/lmr/m/n/10.95 us-ing \T1/lmtt/m/n/10.95 gpuRandom::rnorm
-()\T1/lmr/m/n/10.95 ,
- []
-
-Package color Info: Redefining color shadecolor on input line 1002.
-Package color Info: Redefining color shadecolor on input line 1012.
-Package color Info: Redefining color shadecolor on input line 1047.
-LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
-1054.
-(/usr/share/texmf/tex/latex/lm/ts1lmtt.fd
-File: ts1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
-)
-Overfull \hbox (34.49113pt too wide) in paragraph at lines 1054--1054
-[]                                     \TS1/lmtt/m/n/10.95 '\T1/lmtt/m/n/10.95 
-sim\TS1/lmtt/m/n/10.95 '\T1/lmtt/m/n/10.95 , 1:ncol(simMat)), 1, paste, collaps
-e=\TS1/lmtt/m/n/10.95 ''\T1/lmtt/m/n/10.95 )[] 
- []
-
-Package color Info: Redefining color shadecolor on input line 1060.
-<figure/maternplot-1.pdf, id=454, 433.62pt x 289.08pt>
-File: figure/maternplot-1.pdf Graphic file (type pdf)
-<use figure/maternplot-1.pdf>
-Package pdftex.def Info: figure/maternplot-1.pdf  used on input line 1069.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-2.pdf, id=455, 433.62pt x 289.08pt>
-File: figure/maternplot-2.pdf Graphic file (type pdf)
-<use figure/maternplot-2.pdf>
-Package pdftex.def Info: figure/maternplot-2.pdf  used on input line 1070.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-3.pdf, id=456, 433.62pt x 289.08pt>
-File: figure/maternplot-3.pdf Graphic file (type pdf)
-<use figure/maternplot-3.pdf>
-Package pdftex.def Info: figure/maternplot-3.pdf  used on input line 1071.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-4.pdf, id=457, 433.62pt x 289.08pt>
-File: figure/maternplot-4.pdf Graphic file (type pdf)
-<use figure/maternplot-4.pdf>
-Package pdftex.def Info: figure/maternplot-4.pdf  used on input line 1072.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-5.pdf, id=458, 433.62pt x 289.08pt>
-File: figure/maternplot-5.pdf Graphic file (type pdf)
-<use figure/maternplot-5.pdf>
-Package pdftex.def Info: figure/maternplot-5.pdf  used on input line 1073.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-6.pdf, id=459, 433.62pt x 289.08pt>
-File: figure/maternplot-6.pdf Graphic file (type pdf)
-<use figure/maternplot-6.pdf>
-Package pdftex.def Info: figure/maternplot-6.pdf  used on input line 1074.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-7.pdf, id=460, 433.62pt x 289.08pt>
-File: figure/maternplot-7.pdf Graphic file (type pdf)
-<use figure/maternplot-7.pdf>
-Package pdftex.def Info: figure/maternplot-7.pdf  used on input line 1075.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-8.pdf, id=461, 433.62pt x 289.08pt>
-File: figure/maternplot-8.pdf Graphic file (type pdf)
-<use figure/maternplot-8.pdf>
-Package pdftex.def Info: figure/maternplot-8.pdf  used on input line 1076.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-9.pdf, id=462, 433.62pt x 289.08pt>
-File: figure/maternplot-9.pdf Graphic file (type pdf)
-<use figure/maternplot-9.pdf>
-Package pdftex.def Info: figure/maternplot-9.pdf  used on input line 1077.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-10.pdf, id=463, 433.62pt x 289.08pt>
-File: figure/maternplot-10.pdf Graphic file (type pdf)
-<use figure/maternplot-10.pdf>
-Package pdftex.def Info: figure/maternplot-10.pdf  used on input line 1078.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-
+[21 <./figure/maternplot-1.pdf> <./figure/maternplot-2.pdf> <./figure/maternplo
+t-3.pdf> <./figure/maternplot-4.pdf> <./figure/maternplot-5.pdf> <./figure/mate
+rnplot-6.pdf> <./figure/maternplot-7.pdf> <./figure/maternplot-8.pdf> <./figure
+/maternplot-9.pdf> <./figure/maternplot-10.pdf>] (./paper1.bbl
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 22 []
  []
 
 [22]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 23
  []
 
-[23]
-Overfull \vbox (133.90417pt too high) has occurred while \output is active []
-
-
+[23])
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 24 []
  []
 
-[24 <./figure/maternplot-1.pdf> <./figure/maternplot-2.pdf> <./figure/maternplo
-t-3.pdf> <./figure/maternplot-4.pdf> <./figure/maternplot-5.pdf> <./figure/mate
-rnplot-6.pdf> <./figure/maternplot-7.pdf> <./figure/maternplot-8.pdf> <./figure
-/maternplot-9.pdf> <./figure/maternplot-10.pdf>] (./paper1.bbl
+[24]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1000.
+
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 25
  []
 
 [25]
-Overfull \hbox (10.94998pt too wide) has occurred while \output is active
-\T1/lmr/m/n/10.95 26 []
- []
-
-[26])
-Overfull \hbox (10.94998pt too wide) has occurred while \output is active
-[] \T1/lmr/m/n/10.95 27
- []
-
-[27]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1118.
-
-Overfull \hbox (10.94998pt too wide) has occurred while \output is active
-\T1/lmr/m/n/10.95 28 []
- []
-
-[28]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 1118.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 1000.
  (./paper1.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1118.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1118.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1000.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1000.
 
 Package rerunfilecheck Info: File `paper1.out' has not changed.
 (rerunfilecheck)             Checksum: 7E31B8F16366A784A74EC9BD6575C521;1699.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1118.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1000.
  ) 
 Here is how much of TeX's memory you used:
- 11861 strings out of 483107
- 181619 string characters out of 5964630
+ 11858 strings out of 483107
+ 181598 string characters out of 5964630
  647506 words of memory out of 5000000
  26437 multiletter control sequences out of 15000+600000
  626257 words of font info for 73 fonts, out of 8000000 for 9000
@@ -1053,10 +1016,10 @@ nts/type1/public/lm/lmr8.pfb></usr/share/texmf/fonts/type1/public/lm/lmri10.pfb
 1/public/lm/lmro10.pfb></usr/share/texmf/fonts/type1/public/lm/lmss10.pfb></usr
 /share/texmf/fonts/type1/public/lm/lmsy10.pfb></usr/share/texmf/fonts/type1/pub
 lic/lm/lmsy8.pfb></usr/share/texmf/fonts/type1/public/lm/lmtt10.pfb>
-Output written on paper1.pdf (28 pages, 30064469 bytes).
+Output written on paper1.pdf (25 pages, 30061239 bytes).
 PDF statistics:
- 686 PDF objects out of 1000 (max. 8388607)
- 581 compressed objects within 6 object streams
- 188 named destinations out of 1000 (max. 500000)
+ 673 PDF objects out of 1000 (max. 8388607)
+ 571 compressed objects within 6 object streams
+ 185 named destinations out of 1000 (max. 500000)
  197 words of extra memory for PDF output out of 10000 (max. 10000000)
 
