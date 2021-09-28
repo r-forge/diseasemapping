@@ -121,7 +121,8 @@ firstSample = RFsimulate(
 )
 
 secondSample = RFsimulate(
-	model = cbind(var=5:3, range=seq(0.1, 1.5, len=3), shape=seq(0.5, 1.5, len=3)),
+	model = cbind(var=5:3, range=seq(1.5, 0.5, len=3), shape=seq(0.5, 1.5, len=3)),
+  err.model = 1,
 	x= myraster,
 	data=firstSample,n=4
 )
