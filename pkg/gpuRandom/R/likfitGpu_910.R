@@ -7,9 +7,9 @@
 likfitGpu_2 <- function(spatialmodel,     #data,
                         type = c("double","float"),
                         ParamsGpu, #a vclmatrix, consists of all the parameters
-                        betas=NULL, #a vclmatrix  #given by the user or provided from formula
+                        #betas=NULL, #a vclmatrix  #only one row batch, but many colbatches
                         BoxCox, # an R vector, will always be c(1,0,.....)
-                        Nbetahats, # a number, how many betahats do you want to calculate for one dataset? 
+                        Nbetahats = 1, # a number, how many betahats do you want to calculate for one dataset? 
                         form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),
                         NparamPerIter,  # how many sets of params to be evaluated in each loop
                         minustwotimes=TRUE,
@@ -43,9 +43,9 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   
   coordsGpu<-vclMatrix(spatialmodel$data@coords,type=type)  
   boxcoxGpu = vclVector(BoxCox, type=type)
-  if(is.null(betas)){
+#  if(is.null(betas)){
     betas = vclMatrix(0, Nparam, Ncov * Ndata, type=type)
-  }
+#  }
   ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
   XVYXVX = vclMatrix(-77, Nparam * Ncov, ncol(yx), type=type)
   ssqBetahat <- vclMatrix(0, Nparam, Ndata, type=type)
@@ -96,30 +96,30 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   
   temp <- vclMatrix(0, Nparam, Ndata, type=type)  
   
-  if(form ==1 | form ==3){
-    if(is.null(betas)){
-      stop("must supply betas for this likelihood")
-    }else{    
-      one <- ssqY - 2*aTDinvb_beta + ssqBeta
-      
-      if(form ==1){
-        mat_vec_eledivideBackend(one, variances, temp,  Nglobal)    
-        matrix_vector_sumBackend(temp,
-                                 detVar + n*log(variances),
-                                 jacobian,  
-                                 n*log(2*pi),
-                                 minusTwoLogLik,
-                                 Nglobal)        
-      }else if(form == 3){
-        matrix_vector_sumBackend(n*log(one/n),
-                                 detVar,
-                                 jacobian,  
-                                 n + n*log(2*pi),
-                                 minusTwoLogLik,
-                                 Nglobal)    
-      }
-    }
-  }
+  # if(form ==1 | form ==3){
+  #   if(is.null(betas)){
+  #     stop("must supply betas for this likelihood")
+  #   }else{    
+  #     one <- ssqY - 2*aTDinvb_beta + ssqBeta
+  #     
+  #     if(form ==1){
+  #       mat_vec_eledivideBackend(one, variances, temp,  Nglobal)    
+  #       matrix_vector_sumBackend(temp,
+  #                                detVar + n*log(variances),
+  #                                jacobian,  
+  #                                n*log(2*pi),
+  #                                minusTwoLogLik,
+  #                                Nglobal)        
+  #     }else if(form == 3){
+  #       matrix_vector_sumBackend(n*log(one/n),
+  #                                detVar,
+  #                                jacobian,  
+  #                                n + n*log(2*pi),
+  #                                minusTwoLogLik,
+  #                                Nglobal)    
+  #     }
+  #   }
+  # }
   
   
   # resid^T V^(-1) resid, resid = Y - X betahat = two

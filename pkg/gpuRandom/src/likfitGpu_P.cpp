@@ -786,8 +786,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     // save bottom block of ssqYX to XVYXVX
     viennacl::ocl::enqueue(extractBlockKernel(XVYXVX, ssqYX, DiterIndex, NthisIteration),
                            theQueue);  
-    
-    
+
     
     
     // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part
