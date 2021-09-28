@@ -513,10 +513,10 @@ We generate a large-size matrix of 100 million double-precision Gaussian random 
 system.time(gpuRandom::rnorm(c(10000,10000), streams=streams, 
                              Nglobal=c(512,128), type="double"))
 ##    user  system elapsed 
-##   0.140   0.004   0.143
+##   0.141   0.004   0.145
 system.time(matrix(stats::rnorm(10000^2),10000,10000))
 ##    user  system elapsed 
-##   6.610   0.862   7.466
+##   6.600   0.743   7.338
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -599,10 +599,10 @@ Dec & 23 & 48 & 196 & 31 & 31 & 71 & 31 & 177 & 86 & 86 & 73 & 156\\
 \begin{verbatim}
 #using CPU
 stats::fisher.test(month,simulate.p.value = TRUE,B=1e6)$p.value
-## [1] 0.4042196
+## [1] 0.4037316
 system.time(stats::fisher.test(month,simulate.p.value = TRUE,B=1e6))
 ##    user  system elapsed 
-##  14.578   0.002  14.569
+##  14.505   0.008  14.530
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -633,7 +633,7 @@ We requested one million simulations on GPU while the actual number of simulatio
 system.time(gpuRandom::fisher.sim(month_GPU, 1e6, streams=streams, 
             type="double", returnStatistics=FALSE, Nglobal = c(128,128)))
 ##    user  system elapsed 
-##   0.702   0.005   0.706
+##   0.734   0.005   0.737
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -677,10 +677,10 @@ We perform 10 million simulations for the ``week'' table.
 \begin{verbatim}
 #using CPU
 fisher.test(week,simulate.p.value = TRUE,B=1e7)$p.value
-## [1] 0.0001284
+## [1] 0.0001274
 system.time(fisher.test(week,simulate.p.value = TRUE,B=1e7))
 ##    user  system elapsed 
-##  90.259   0.150  90.439
+##  90.278   0.157  90.506
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -692,7 +692,7 @@ observed_w= -gpuRandom::logfactSum(week, c(16,16))/almost.1
 
 week_GPU<-gpuR::vclMatrix(week,type="integer")
 result_weekgpu<-gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
-                type="double",returnStatistics=TRUE,Nglobal = Nglobal)
+                type="double",returnStatistics=TRUE,Nglobal = c(128,128))
 result_weekgpu$simNum
 ## [1] 10010624
 result_weekgpu$counts
@@ -708,9 +708,9 @@ With about ten million simulations, we get 1223 cases and a p-value around 0.000
 \begin{verbatim}
 #using GPU
 system.time(gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
-            type="double", returnStatistics=FALSE,Nglobal = Nglobal))
+            type="double", returnStatistics=FALSE,Nglobal = c(128,128)))
 ##    user  system elapsed 
-##   4.477   0.009   4.483
+##   4.148   0.008   4.153
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
