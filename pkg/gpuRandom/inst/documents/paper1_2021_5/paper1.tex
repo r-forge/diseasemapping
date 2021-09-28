@@ -164,25 +164,19 @@ In \proglang{clRNG} library, a stream object is a structure that contains three 
 # Create streams on host
 streams_on_CPU<-gpuRandom::CreateStreamsCpu(Nstreams=4)
 t(streams_on_CPU)
-##                 [,1]       [,2]       [,3]       [,4]
-## current.g1.1   12345  336690377  502033783  739421137
-## current.g1.2   12345  597094797 1322587635 1475938232
-## current.g1.3   12345 1245771585 1964121530  730262207
-## current.g2.1   12345   85196284 1949818481 1630192198
-## current.g2.2   12345  523477687 1607232546  324551134
-## current.g2.3   12345 2094976052 1462898381  795289868
-## initial.g1.1   12345  336690377  502033783  739421137
-## initial.g1.2   12345  597094797 1322587635 1475938232
-## initial.g1.3   12345 1245771585 1964121530  730262207
-## initial.g2.1   12345   85196284 1949818481 1630192198
-## initial.g2.2   12345  523477687 1607232546  324551134
-## initial.g2.3   12345 2094976052 1462898381  795289868
-## substream.g1.1 12345  336690377  502033783  739421137
-## substream.g1.2 12345  597094797 1322587635 1475938232
-## substream.g1.3 12345 1245771585 1964121530  730262207
-## substream.g2.1 12345   85196284 1949818481 1630192198
-## substream.g2.2 12345  523477687 1607232546  324551134
-## substream.g2.3 12345 2094976052 1462898381  795289868
+##               [,1]       [,2]       [,3]       [,4]
+## current.g1.1 12345  336690377  502033783  739421137
+## current.g1.2 12345  597094797 1322587635 1475938232
+## current.g1.3 12345 1245771585 1964121530  730262207
+## current.g2.1 12345   85196284 1949818481 1630192198
+## current.g2.2 12345  523477687 1607232546  324551134
+## current.g2.3 12345 2094976052 1462898381  795289868
+## initial.g1.1 12345  336690377  502033783  739421137
+## initial.g1.2 12345  597094797 1322587635 1475938232
+## initial.g1.3 12345 1245771585 1964121530  730262207
+## initial.g2.1 12345   85196284 1949818481 1630192198
+## initial.g2.2 12345  523477687 1607232546  324551134
+## initial.g2.3 12345 2094976052 1462898381  795289868
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -203,25 +197,19 @@ streams2 = deepcopy(streams1)
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
 t(streams_from_GPU)   
-##                 [,1]       [,2]       [,3]       [,4]
-## current.g1.1   12345  336690377  502033783  739421137
-## current.g1.2   12345  597094797 1322587635 1475938232
-## current.g1.3   12345 1245771585 1964121530  730262207
-## current.g2.1   12345   85196284 1949818481 1630192198
-## current.g2.2   12345  523477687 1607232546  324551134
-## current.g2.3   12345 2094976052 1462898381  795289868
-## initial.g1.1   12345  336690377  502033783  739421137
-## initial.g1.2   12345  597094797 1322587635 1475938232
-## initial.g1.3   12345 1245771585 1964121530  730262207
-## initial.g2.1   12345   85196284 1949818481 1630192198
-## initial.g2.2   12345  523477687 1607232546  324551134
-## initial.g2.3   12345 2094976052 1462898381  795289868
-## substream.g1.1 12345  336690377  502033783  739421137
-## substream.g1.2 12345  597094797 1322587635 1475938232
-## substream.g1.3 12345 1245771585 1964121530  730262207
-## substream.g2.1 12345   85196284 1949818481 1630192198
-## substream.g2.2 12345  523477687 1607232546  324551134
-## substream.g2.3 12345 2094976052 1462898381  795289868
+##               [,1]       [,2]       [,3]       [,4]
+## current.g1.1 12345  336690377  502033783  739421137
+## current.g1.2 12345  597094797 1322587635 1475938232
+## current.g1.3 12345 1245771585 1964121530  730262207
+## current.g2.1 12345   85196284 1949818481 1630192198
+## current.g2.2 12345  523477687 1607232546  324551134
+## current.g2.3 12345 2094976052 1462898381  795289868
+## initial.g1.1 12345  336690377  502033783  739421137
+## initial.g1.2 12345  597094797 1322587635 1475938232
+## initial.g1.3 12345 1245771585 1964121530  730262207
+## initial.g2.1 12345   85196284 1949818481 1630192198
+## initial.g2.2 12345  523477687 1607232546  324551134
+## initial.g2.3 12345 2094976052 1462898381  795289868
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -540,24 +528,8 @@ One application of GPU-generated random numbers in \pkg{gpuRandom} is Monte Carl
 \end{enumerate}
 The Monte Carlo simulation solves the computational problem of Fisher's exact test but can still take long running time when $B$ reaches millions in scale, thus we make the function \fct{gpuRandom::fisher.sim} that does the steps 1, 2 and 3 parallelly on GPU, and step 2 of saving the test statistics from the random tables as an option in \fct{gpuRandom::fisher.sim}, which largely saves processing time. 
 
-We show the usage and advantage of \fct{gpuRandom::fisher.sim} by computing the p-values for two real data examples: one with a relatively big p-value and another with a very small p-value, and compare the runtime with using \fct{stats::fisher.test} for each of the data sets on two computers: one with a very good CPU and an ordinary GPU, the other is equipped with an excellent GPU and an ordinary CPU. The device information is included in table \ref{tab:device}. The \proglang{R} outputs for testing on computer 2 is shown in the following. 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{table}[H]
+We show the usage and advantage of \fct{gpuRandom::fisher.sim} by computing the p-values for two real data examples: one with a relatively big p-value and another with a very small p-value, and compare the runtime with using \fct{stats::fisher.test} for each of the data sets on two computers: one with a very good CPU and an ordinary GPU, the other is equipped with an excellent GPU and an ordinary CPU. The \proglang{R} outputs for testing on computer 2 is shown in the following. 
 
-\caption{\label{tab:deviceinfo}Device information for run-time comparison.\label{tab:device}}
-\centering
-\begin{tabular}[t]{c|c|c}
-\hline
- & Host & Device\\
-\hline
-Computer1 & Intel Xenon W-2145 3.7Ghz & AMD Radeon VII\\
-\hline
-Computer2 & VCPU Intel Xenon Skylake 2.5Ghz & VGPU Nvidia Tesla V100\\
-\hline
-\end{tabular}
-\end{table}
-
-\end{knitrout}
 % \begin{table}[H]
 % \begin{tabular}{ |c|c|c|c|c|c| } 
 % \hline
@@ -649,7 +621,7 @@ We requested one million simulations on GPU while the actual number of simulatio
 system.time(gpuRandom::fisher.sim(month_GPU, 1e6, streams=streams, 
             type="double", returnStatistics=FALSE, Nglobal = c(128,128)))
 ##    user  system elapsed 
-##   0.355   0.006   0.361
+##   0.699   0.005   0.703
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -696,7 +668,7 @@ fisher.test(week,simulate.p.value = TRUE,B=1e7)$p.value
 ## [1] 0.0001208
 system.time(fisher.test(week,simulate.p.value = TRUE,B=1e7))
 ##    user  system elapsed 
-##  90.024   0.080  90.069
+##  90.691   0.126  90.750
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -737,7 +709,7 @@ system.time(gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{table}[H]
 
-\caption{\label{tab:summarycompare}Summary of comparions of Fisher's test simulation on different devices.\label{tab:summary}}
+\caption{\label{tab:summarycompare}Summary of comparions of Fisher's test simulation on different devices. Computer 1 is equipped with CPU Intel Xenon W-2145 3.7Ghz and AMD Radeon VII. Computer 2 is equipped with	VCPU Intel Xenon Skylake 2.5Ghz and VGPU Nvidia Tesla V100.\label{tab:summary}}
 \centering
 \begin{tabular}[t]{l|l|l|l|l|l}
 \hline
@@ -884,8 +856,126 @@ Step 4, the first argument \code{maternCov} in \fct{gpuRandom::cholBatch} specif
 diagMat = vclMatrix(0, nrow(paramsGpu), ncol(maternCov), type = theType)
 gpuRandom::cholBatch(maternCov, diagMat, numbatchD=nrow(myParamsBatch),
                      Nglobal= c(512, 8),
-                     Nlocal= c(32, 8),
+                     Nlocal= c(128, 8),
                      NlocalCache=2000)
+## 
+## #pragma OPENCL EXTENSION cl_khr_fp64 : enable
+## 
+## 
+## #define N 4800  //dimension of matrix
+## #define colStart 0  //column to start at
+## #define colEnd 4800
+## //internal number of columns
+## #define Npad 4864
+## //internal columns for matrix holding diagonals
+## #define NpadDiag 4864
+## #define NstartA 0
+## #define NstartD 0
+## //elements in internal cache
+## #define Ncache 2000
+## //extra rows between stacked matrices
+## #define NpadBetweenMatrices 23347200
+## #define maxLocalItems 1024
+## 
+## __kernel void cholBatch(
+## 	__global double *A,
+## 	__global double *diag,
+##               int Nmatrix
+## ){
+##  const int localIndex = get_local_id(0)*get_local_size(1) + get_local_id(1);
+##  const int localIndexIsZero = (localIndex==0);
+##  const int NlocalTotal = get_local_size(0)*get_local_size(1);
+##  local double diagLocal[Ncache];//local cache of diagonals
+##  local double toAddLocal[maxLocalItems];
+##  int Dcol, DcolNpad;
+##  int Drow, DrowBlock, Dk, Dmatrix, DmatrixBlock;
+## int minDcolNcache;
+##  double DL;
+##  local double diagDcol;
+##  int AHere, AHereDcol, AHereDrow, diagHere;
+##  barrier(CLK_LOCAL_MEM_FENCE);
+## 
+## for(Dmatrix = get_group_id(0);
+##      Dmatrix < Nmatrix;
+##      Dmatrix+= get_num_groups(0)){
+## 
+##  diagHere = Dmatrix*NpadDiag + NstartD;
+##  AHere =  Dmatrix*NpadBetweenMatrices + NstartA;
+## 
+##  for(Dcol = colStart; Dcol < colEnd; Dcol++) {
+##   DcolNpad = Dcol*Npad;
+##   AHereDcol = AHere+DcolNpad;
+##   DL = 0.0;
+##   diagLocal[localIndex]=0.0;
+##   toAddLocal[localIndex]=0.0;
+##   minDcolNcache = min(Dcol, Ncache);
+##   for(Dk = localIndex; Dk < minDcolNcache; Dk += NlocalTotal) {
+##     DL = A[AHereDcol+Dk];
+##     diagLocal[Dk] = diag[diagHere+Dk] * DL;
+##     toAddLocal[localIndex] += diagLocal[Dk] * DL;
+##   }// Dk
+##   for(Dk=minDcolNcache+localIndex; Dk < Dcol; Dk += NlocalTotal) {
+##     DL = A[AHereDcol+Dk];
+##     toAddLocal[localIndex] += diag[diagHere+Dk] * DL * DL;
+##   }// Dk
+## 
+## // reduction on dimension 1
+##   barrier(CLK_LOCAL_MEM_FENCE);
+##   if( (get_local_id(1) == 0)){
+##    for(Dk = 1; Dk < get_local_size(1); Dk++) {
+##     toAddLocal[localIndex] +=  toAddLocal[localIndex + Dk];
+##    }//for Dk
+##   }//get_local_id(1) == 0
+##   barrier(CLK_LOCAL_MEM_FENCE);
+## 
+## // final reduction on dimension 0
+##   if(localIndexIsZero ){
+##    for(Dk = get_local_size(1); Dk < NlocalTotal; Dk+= get_local_size(1)) {
+##     toAddLocal[localIndex] +=  toAddLocal[Dk];
+##    } //Dk
+##    diagDcol = A[AHereDcol+Dcol] - toAddLocal[localIndex];
+##    diag[diagHere+Dcol] = diagDcol;
+## #ifdef diagToOne
+##    A[AHereDcol+Dcol] = 1.0;
+## #endif
+##   }  //localIndex==0 and Dmatrix < Nmatrix
+##   barrier(CLK_LOCAL_MEM_FENCE);
+## 
+## // off diagonals
+##  for(DrowBlock = Dcol+1; DrowBlock < N; DrowBlock += get_local_size(0)) {
+##   Drow = DrowBlock + get_local_id(0);
+##   AHereDrow = AHere+Drow*Npad;
+##   DL = 0.0;
+##   if(Drow < N){
+##   for(Dk = get_local_id(1); Dk < minDcolNcache; Dk+=get_local_size(1)) {
+##    DL += A[AHereDrow+Dk] * diagLocal[Dk];
+##   } // Dk
+## 	 for(minDcolNcache + get_local_id(1); Dk < Dcol; Dk+=get_local_size(1)) {
+##     DL += A[AHereDrow+Dk] * diag[diagHere+Dk] * A[AHereDcol+Dk];
+##   }// Dk
+##    }//Drow < N
+##   toAddLocal[localIndex] = DL;
+## 
+##   // local reduction
+##   barrier(CLK_LOCAL_MEM_FENCE);
+##   if( (get_local_id(1) == 0) & (Drow < N)){
+##    DL = toAddLocal[localIndex];
+##    for(Dk = 1; Dk < get_local_size(1); Dk++) {
+##     DL +=  toAddLocal[localIndex + Dk];
+##    }//Dk
+##    A[AHereDrow+Dcol] = (A[AHereDrow+Dcol] - DL)/diagDcol;
+##   }//get_local_id(1) == 0
+##   barrier(CLK_GLOBAL_MEM_FENCE);
+## 
+##  }//DrowBlock
+## barrier(CLK_GLOBAL_MEM_FENCE);
+## } // Dcol loop
+## 
+## barrier(CLK_GLOBAL_MEM_FENCE);
+## } // Dmatrix loop
+## 
+## barrier(CLK_LOCAL_MEM_FENCE);
+## }// kernel
 \end{verbatim}
 \end{kframe}
 \end{knitrout}

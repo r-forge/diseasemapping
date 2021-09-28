@@ -49,8 +49,8 @@ gemmBatch2backend <- function(A, B, C, transposeABC, submatrixA, submatrixB, sub
     .Call('_gpuRandom_gemmBatch2backend', PACKAGE = 'gpuRandom', A, B, C, transposeABC, submatrixA, submatrixB, submatrixC, batches, workgroupSize, NlocalCache, verbose)
 }
 
-cpp_gpuFisher_test <- function(xR, resultsR, B, streamsR, max_global_size, max_local_size) {
-    .Call('_gpuRandom_cpp_gpuFisher_test', PACKAGE = 'gpuRandom', xR, resultsR, B, streamsR, max_global_size, max_local_size)
+cpp_gpuFisher_test <- function(xR, resultsR, NstartofResult, B, streamsR, max_global_size, max_local_size) {
+    .Call('_gpuRandom_cpp_gpuFisher_test', PACKAGE = 'gpuRandom', xR, resultsR, NstartofResult, B, streamsR, max_global_size, max_local_size)
 }
 
 #' Random number generation

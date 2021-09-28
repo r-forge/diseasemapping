@@ -134,8 +134,7 @@ streams2 = deepcopy(streams1)
 @ 
 <<streams on GPU2, eval=TRUE, echo=FALSE>>=
 gpuR::colnames(streams_from_GPU) = c("current.g1.1", "current.g1.2", "current.g1.3", "current.g2.1", "current.g2.2", "current.g2.3",
-"initial.g1.1", "initial.g1.2", "initial.g1.3", "initial.g2.1", "initial.g2.2", "initial.g2.3",
-"substream.g1.1", "substream.g1.2", "substream.g1.3", "substream.g2.1", "substream.g2.2", "substream.g2.3")   
+"initial.g1.1", "initial.g1.2", "initial.g1.3", "initial.g2.1", "initial.g2.2", "initial.g2.3")   
 @ 
 <<streams on GPU3,eval=TRUE>>=
 t(streams_from_GPU)   
@@ -395,8 +394,8 @@ One application of GPU-generated random numbers in \pkg{gpuRandom} is Monte Carl
 \end{enumerate}
 The Monte Carlo simulation solves the computational problem of Fisher's exact test but can still take long running time when $B$ reaches millions in scale, thus we make the function \fct{gpuRandom::fisher.sim} that does the steps 1, 2 and 3 parallelly on GPU, and step 2 of saving the test statistics from the random tables as an option in \fct{gpuRandom::fisher.sim}, which largely saves processing time. 
 
-We show the usage and advantage of \fct{gpuRandom::fisher.sim} by computing the p-values for two real data examples: one with a relatively big p-value and another with a very small p-value, and compare the runtime with using \fct{stats::fisher.test} for each of the data sets on two computers: one with a very good CPU and an ordinary GPU, the other is equipped with an excellent GPU and an ordinary CPU. The device information is included in table \ref{tab:device}. The \proglang{R} outputs for testing on computer 2 is shown in the following. 
-<<deviceinfo, echo=FALSE,cache=TRUE>>=
+We show the usage and advantage of \fct{gpuRandom::fisher.sim} by computing the p-values for two real data examples: one with a relatively big p-value and another with a very small p-value, and compare the runtime with using \fct{stats::fisher.test} for each of the data sets on two computers: one with a very good CPU and an ordinary GPU, the other is equipped with an excellent GPU and an ordinary CPU. The \proglang{R} outputs for testing on computer 2 is shown in the following. 
+<<deviceinfo, include=FALSE,cache=FALSE>>=
 library(kableExtra)
 a <- data.frame(
   var1 = c(" ", "Computer1", "Computer2"),
@@ -520,7 +519,7 @@ dt <- data.frame(
   var6 = c('Data','month','week','month','week')
 )
 
-knitr::kable(dt, col.names = NULL, caption = "Summary of comparions of Fisher's test simulation on different devices.\\label{tab:summary}") %>%
+knitr::kable(dt, col.names = NULL, caption = "Summary of comparions of Fisher's test simulation on different devices. Computer 1 is equipped with CPU Intel Xenon W-2145 3.7Ghz and AMD Radeon VII. Computer 2 is equipped with	VCPU Intel Xenon Skylake 2.5Ghz and VGPU Nvidia Tesla V100.\\label{tab:summary}") %>%
   kable_styling(full_width = FALSE, position = "center",latex_options = "HOLD_position") %>%
   kableExtra::group_rows(index = c("P-value" = 2, "Run-time" = 2)) %>%
   add_header_above(c(" " = 1, "Computer 1" = 2, "Computer 2" = 2, " " = 1))
