@@ -20,7 +20,8 @@ Suggests:
     htmlTable,
     sp,
     lme4,
-    glmmTMB
+    glmmTMB,
+    markdown
 Enhances:
 	reshape2
 Author: Patrick Brown <patrick.brown@utoronto.ca>[aut, cre]

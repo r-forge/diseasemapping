@@ -10,6 +10,8 @@ BIBTEX = bibtex
 RM = rm
 SED = sed
 PANDOCCROSSREF =
+CITEPROC = --citeproc
+#CITEPROC = --filter=pandoc-citeproc
 
 ## end of header
 
@@ -89,31 +91,31 @@ clean:
 # html from md
 #
 %.html: %.md
-	$(PANDOC) --self-contained --mathml $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --to=html5 --output=$@ $<
+	$(PANDOC) --self-contained --mathml $(PANDOCCROSSREF) $(CITEPROC) $(pandocArgs) --to=html5 --output=$@ $<
 
 # 
 # libreoffice document
 #
 %.odt: %.md
-	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
+	$(PANDOC) --standalone $(PANDOCCROSSREF) $(CITEPROC) $(pandocArgs) --output=$@ $<
 # --reference-doc=$$($(ODTTEMPLATE))  no currently working
 #
 # MS Word document
 #
 %.docx: %.md
-	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --reference-doc=$$($(DOCXTEMPLATE)) --output=$@ $<
+	$(PANDOC) --standalone $(PANDOCCROSSREF) $(CITEPROC) $(pandocArgs) --reference-doc=$$($(DOCXTEMPLATE)) --output=$@ $<
 
 # 
 # rtf
 # 
 %.rtf: %.md
-	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --output=$@ $<
+	$(PANDOC) --standalone $(PANDOCCROSSREF) $(CITEPROC) $(pandocArgs) --output=$@ $<
 
 # 
 # plain text
 # 
 %.txt: %.md
-	$(PANDOC) --standalone $(PANDOCCROSSREF) --filter=pandoc-citeproc $(pandocArgs) --to=plain --output=$@ $<
+	$(PANDOC) --standalone $(PANDOCCROSSREF) $(CITEPROC) $(pandocArgs) --to=plain --output=$@ $<
 
 
 #

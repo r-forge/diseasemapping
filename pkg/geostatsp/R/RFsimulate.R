@@ -505,7 +505,7 @@ setMethod("RFsimulate",
     
     for(D in rev(Siter)) {
       
-      resHere = 	callGeneric(
+      resHere = callGeneric(
         model=model[D,], 
         x, data= data[,D], 
         err.model= err.model[D], n=1, ...)

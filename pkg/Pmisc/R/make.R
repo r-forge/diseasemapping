@@ -79,7 +79,10 @@ Makefile = function(x, suffix,
   }
 
   before = c(before, list(
-    pandocTo = c('beamer', 'latex')[2L-beamer]
+    pandocTo = c('beamer', 'latex')[2L-beamer],
+    NEWCITEPROC = '--citeproc',
+    OLDCITEPROC = '--filter=pandoc-citeproc',
+    CITEPROC = '$(NEWCITEPROC)'
     ))
 
    # if can find pandoc-crossref, create the filter string
