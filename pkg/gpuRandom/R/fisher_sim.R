@@ -112,7 +112,7 @@ fisher.sim=function(
   
   PVAL <- NULL
   
-  counts<-cpp_gpuFisher_test(x, results, 0, simPerWork, streams, Nglobal,Nlocal)
+  counts<-cpp_gpuFisher_test(x, results, simPerWork, streams, Nglobal,Nlocal)
   
   #theTime<-system.time(cpp_gpuFisher_test(x, results, as.integer(B), streams, Nglobal,Nlocal))
   
