@@ -144,6 +144,7 @@ std::string FisherSimkernelString(const int NR, const int NC, const int NpadStre
   + typeString + " threshold,\n"
   " __global  " + typeString + "  *fact,\n"
   " __global  " + typeString + "  *results,\n" // fisher log p
+  "           const int NstartofResult,\n"
   " __global int *streams" 
   ") { \n\n";
   //#ifdef UNDEF  
@@ -153,7 +154,7 @@ std::string FisherSimkernelString(const int NR, const int NC, const int NpadStre
     "   int u, D; \n"  //original ii changed to u, added a D here
     "   " + typeString + "  ans;\n"
     "   const int globalSize = get_global_size(1)*get_global_size(0);\n"
-    "   const int index=get_global_id(1)*get_global_size(0) + get_global_id(0);\n"
+    "   const int index = get_global_id(1)*get_global_size(0) + get_global_id(0);\n"
     "   local int jjj, l, m, ia, ib, ic, jc, id, ie, ii, nll, nlm;\n" //original j changed to jjj 
     "   local " + typeString + " x, y, dummy, sumprb;\n"
     "   bool lsm, lsp;\n\n"
@@ -303,7 +304,7 @@ std::string FisherSimkernelString(const int NR, const int NC, const int NpadStre
   
   result += "\n" 
   "#ifdef returnResults\n"
-  "results[index + D*globalSize] = ans;\n"   
+  "results[NstartofResult + index + D*globalSize] = ans;\n"   
   "#endif\n";
   
   
@@ -332,7 +333,8 @@ std::string FisherSimkernelString(const int NR, const int NC, const int NpadStre
 template<typename T> 
 int gpuFisher_test(
     viennacl::matrix<int> &x, //  viennacl::vector_base<int> &sr,  //  viennacl::vector_base<int> &sc,
-    viennacl::vector_base<T> &results,  
+    viennacl::vector_base<T> &results, 
+    int NstartofResult,
     int B, //number of simualtion each work item, // int remainder,
     viennacl::matrix<int> &streams,
     Rcpp::IntegerVector numWorkItems,
@@ -440,7 +442,8 @@ int gpuFisher_test(
    }
    */
   viennacl::ocl::enqueue(lfactorialKernel(factTrue, (n+1)),theQueue);
-  viennacl::ocl::enqueue(fisher_sim(sr, sc, n, B, count, threshold, factTrue, results, streams),theQueue); 
+  viennacl::ocl::enqueue(fisher_sim(sr, sc, n, B, count, threshold, factTrue, results, NstartofResult, streams),
+                         theQueue); 
   
   clFinish(theQueue.handle().get());
   
@@ -466,6 +469,7 @@ template<typename T>
 SEXP gpuFisher_test_Templated(
     Rcpp::S4  xR, 
     Rcpp::S4  resultsR,
+    int NstartofResult,
     int B,// int remainder,
     Rcpp::S4 streamsR,   
     Rcpp::IntegerVector max_global_size,
@@ -479,7 +483,7 @@ SEXP gpuFisher_test_Templated(
   std::shared_ptr<viennacl::vector_base<T> > results = getVCLVecptr<T>(resultsR.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<int> > streams = getVCLptr<int>(streamsR.slot("address"), BisVCL, ctx_id);
   
-  countss=gpuFisher_test<T>(*x, *results, B, *streams, max_global_size, max_local_size, ctx_id);
+  countss=gpuFisher_test<T>(*x, *results, NstartofResult, B, *streams, max_global_size, max_local_size, ctx_id);
   
   return (Rcpp::wrap(countss));
 }
@@ -491,6 +495,7 @@ SEXP gpuFisher_test_Templated(
 SEXP cpp_gpuFisher_test(
     Rcpp::S4  xR, 
     Rcpp::S4  resultsR,
+    int NstartofResult,
     int B,// int remainder,
     Rcpp::S4 streamsR,  
     Rcpp::IntegerVector max_global_size,
@@ -501,9 +506,9 @@ SEXP cpp_gpuFisher_test(
   
   //#ifdef UNDEF    
   if(precision_type == "fvclVector") {
-    return (gpuFisher_test_Templated<float>(xR,resultsR, B, streamsR, max_global_size, max_local_size));
+    return (gpuFisher_test_Templated<float>(xR,resultsR, NstartofResult, B, streamsR, max_global_size, max_local_size));
   } else if (precision_type == "dvclVector") {
-    return (gpuFisher_test_Templated<double>(xR,resultsR, B, streamsR, max_global_size, max_local_size));
+    return (gpuFisher_test_Templated<double>(xR,resultsR, NstartofResult, B, streamsR, max_global_size, max_local_size));
   } else {
     Rcpp::warning("class of var must be fvclVector or dvclVector");
   }
