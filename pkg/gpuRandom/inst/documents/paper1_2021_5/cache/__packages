@@ -1,11 +1,7 @@
 base
+knitr
 MASS
 gpuR
 gpuRandom
-knitr
 kableExtra
 latex2exp
-Matrix
-sp
-raster
-geostatsp
