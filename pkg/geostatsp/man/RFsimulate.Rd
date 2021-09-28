@@ -101,7 +101,7 @@ where a Raster is returned.
 
 \examples{
 library('geostatsp')
-model <- c(var=5, range=1,shape=0.5)
+model1 <- c(var=5, range=1,shape=0.5)
 
 
 myraster = raster(nrows=20,ncols=30,xmn=0,ymn=0,xmx=6,ymx=4, 
@@ -109,13 +109,13 @@ myraster = raster(nrows=20,ncols=30,xmn=0,ymn=0,xmx=6,ymx=4,
 
 set.seed(0) 
 
-simu <- RFsimulate(model, x=myraster, n=3)
+simu <- RFsimulate(model1, x=myraster, n=3)
 
 plot(simu[['sim2']])
 
 # conditional simulation
 firstSample = RFsimulate(
-	model, 
+	c(model1, nugget=1), 
 	x=SpatialPoints(myraster)[seq(1,ncell(myraster), len=100), ],
 	n=3
 )
