@@ -287,9 +287,9 @@ setMethod("RFsimulate",
         Linv = matern(data, param=paramForData, type='inverseCholesky')
         covpreddata = matern(res2, y=data, param=model)
         xcov =  tcrossprod(covpreddata,Linv)
-        xcov = tcrossprod(xcov)
+        xcov2 = tcrossprod(xcov)
 
-        theCov  =theCov - xcov
+        theCov  =theCov - xcov2
         theChol = chol(theCov)
         
       } else {
@@ -302,7 +302,7 @@ setMethod("RFsimulate",
       
       if(!is.null(data)) {
         theSim = theSim + xcov %*% 
-          (Linv %*% data.frame(data)[,1])	
+          (Linv %*% as.matrix(data.frame(data)[,1]))	
       }
       theSim = as.data.frame(as.matrix(theSim))
       
