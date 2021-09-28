@@ -605,7 +605,7 @@ month_GPU<-vclMatrix(month,type="integer")
 result_monthgpu <- gpuRandom::fisher.sim(month_GPU, 1e6, streams=streams,
                    type="double", returnStatistics=TRUE,  Nglobal = c(128,128))
 result_monthgpu$simNum
-## NULL
+## [1] 1000064
 result_monthgpu$counts
 ## [1] 403788
 result_monthgpu$p.value
@@ -621,7 +621,7 @@ We requested one million simulations on GPU while the actual number of simulatio
 system.time(gpuRandom::fisher.sim(month_GPU, 1e6, streams=streams, 
             type="double", returnStatistics=FALSE, Nglobal = c(128,128)))
 ##    user  system elapsed 
-##   0.975   0.002   1.043
+##   0.793   0.000   0.792
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -858,124 +858,6 @@ gpuRandom::cholBatch(maternCov, diagMat, numbatchD=nrow(myParamsBatch),
                      Nglobal= c(512, 8),
                      Nlocal= c(128, 8),
                      NlocalCache=2000)
-## 
-## #pragma OPENCL EXTENSION cl_khr_fp64 : enable
-## 
-## 
-## #define N 4800  //dimension of matrix
-## #define colStart 0  //column to start at
-## #define colEnd 4800
-## //internal number of columns
-## #define Npad 4864
-## //internal columns for matrix holding diagonals
-## #define NpadDiag 4864
-## #define NstartA 0
-## #define NstartD 0
-## //elements in internal cache
-## #define Ncache 2000
-## //extra rows between stacked matrices
-## #define NpadBetweenMatrices 23347200
-## #define maxLocalItems 1024
-## 
-## __kernel void cholBatch(
-## 	__global double *A,
-## 	__global double *diag,
-##               int Nmatrix
-## ){
-##  const int localIndex = get_local_id(0)*get_local_size(1) + get_local_id(1);
-##  const int localIndexIsZero = (localIndex==0);
-##  const int NlocalTotal = get_local_size(0)*get_local_size(1);
-##  local double diagLocal[Ncache];//local cache of diagonals
-##  local double toAddLocal[maxLocalItems];
-##  int Dcol, DcolNpad;
-##  int Drow, DrowBlock, Dk, Dmatrix, DmatrixBlock;
-## int minDcolNcache;
-##  double DL;
-##  local double diagDcol;
-##  int AHere, AHereDcol, AHereDrow, diagHere;
-##  barrier(CLK_LOCAL_MEM_FENCE);
-## 
-## for(Dmatrix = get_group_id(0);
-##      Dmatrix < Nmatrix;
-##      Dmatrix+= get_num_groups(0)){
-## 
-##  diagHere = Dmatrix*NpadDiag + NstartD;
-##  AHere =  Dmatrix*NpadBetweenMatrices + NstartA;
-## 
-##  for(Dcol = colStart; Dcol < colEnd; Dcol++) {
-##   DcolNpad = Dcol*Npad;
-##   AHereDcol = AHere+DcolNpad;
-##   DL = 0.0;
-##   diagLocal[localIndex]=0.0;
-##   toAddLocal[localIndex]=0.0;
-##   minDcolNcache = min(Dcol, Ncache);
-##   for(Dk = localIndex; Dk < minDcolNcache; Dk += NlocalTotal) {
-##     DL = A[AHereDcol+Dk];
-##     diagLocal[Dk] = diag[diagHere+Dk] * DL;
-##     toAddLocal[localIndex] += diagLocal[Dk] * DL;
-##   }// Dk
-##   for(Dk=minDcolNcache+localIndex; Dk < Dcol; Dk += NlocalTotal) {
-##     DL = A[AHereDcol+Dk];
-##     toAddLocal[localIndex] += diag[diagHere+Dk] * DL * DL;
-##   }// Dk
-## 
-## // reduction on dimension 1
-##   barrier(CLK_LOCAL_MEM_FENCE);
-##   if( (get_local_id(1) == 0)){
-##    for(Dk = 1; Dk < get_local_size(1); Dk++) {
-##     toAddLocal[localIndex] +=  toAddLocal[localIndex + Dk];
-##    }//for Dk
-##   }//get_local_id(1) == 0
-##   barrier(CLK_LOCAL_MEM_FENCE);
-## 
-## // final reduction on dimension 0
-##   if(localIndexIsZero ){
-##    for(Dk = get_local_size(1); Dk < NlocalTotal; Dk+= get_local_size(1)) {
-##     toAddLocal[localIndex] +=  toAddLocal[Dk];
-##    } //Dk
-##    diagDcol = A[AHereDcol+Dcol] - toAddLocal[localIndex];
-##    diag[diagHere+Dcol] = diagDcol;
-## #ifdef diagToOne
-##    A[AHereDcol+Dcol] = 1.0;
-## #endif
-##   }  //localIndex==0 and Dmatrix < Nmatrix
-##   barrier(CLK_LOCAL_MEM_FENCE);
-## 
-## // off diagonals
-##  for(DrowBlock = Dcol+1; DrowBlock < N; DrowBlock += get_local_size(0)) {
-##   Drow = DrowBlock + get_local_id(0);
-##   AHereDrow = AHere+Drow*Npad;
-##   DL = 0.0;
-##   if(Drow < N){
-##   for(Dk = get_local_id(1); Dk < minDcolNcache; Dk+=get_local_size(1)) {
-##    DL += A[AHereDrow+Dk] * diagLocal[Dk];
-##   } // Dk
-## 	 for(minDcolNcache + get_local_id(1); Dk < Dcol; Dk+=get_local_size(1)) {
-##     DL += A[AHereDrow+Dk] * diag[diagHere+Dk] * A[AHereDcol+Dk];
-##   }// Dk
-##    }//Drow < N
-##   toAddLocal[localIndex] = DL;
-## 
-##   // local reduction
-##   barrier(CLK_LOCAL_MEM_FENCE);
-##   if( (get_local_id(1) == 0) & (Drow < N)){
-##    DL = toAddLocal[localIndex];
-##    for(Dk = 1; Dk < get_local_size(1); Dk++) {
-##     DL +=  toAddLocal[localIndex + Dk];
-##    }//Dk
-##    A[AHereDrow+Dcol] = (A[AHereDrow+Dcol] - DL)/diagDcol;
-##   }//get_local_id(1) == 0
-##   barrier(CLK_GLOBAL_MEM_FENCE);
-## 
-##  }//DrowBlock
-## barrier(CLK_GLOBAL_MEM_FENCE);
-## } // Dcol loop
-## 
-## barrier(CLK_GLOBAL_MEM_FENCE);
-## } // Dmatrix loop
-## 
-## barrier(CLK_LOCAL_MEM_FENCE);
-## }// kernel
 \end{verbatim}
 \end{kframe}
 \end{knitrout}

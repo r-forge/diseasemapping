@@ -2,7 +2,7 @@
 #'
 #'
 #' @param x a vclMatrix for Fisher's test
-#' @param B requested number of simulations.
+#' @param N requested number of simulations.
 #' @param streams streams objects. 
 #' @param type "double" or "float" of test statistics.
 #' @param Nglobal the size of the index space for use.
@@ -18,7 +18,7 @@
 
 fisher.sim=function(
   x, # a vclMatrix
-  B, # requested number of simualtion,
+  N, # requested number of simualtion,
   streams, 
   type = c('float','double')[1+gpuR::gpuInfo()$double_support],
   returnStatistics = FALSE,
@@ -47,7 +47,9 @@ fisher.sim=function(
   #       storage.mode(x) <- "integer"
   #   }
   # 
-  #  }else{stop("'x'  must be matrix")}  
+  #  }else{stop("'x'  must be matrix")}
+  
+  
   # lfactorial(x)=lgamma(x+1)
   # STATISTIC <- -sum(lfactorial(x))          ##STATISTIC is negative
   # almost.1 <- 1 + 64 * .Machine$double.eps
@@ -59,13 +61,13 @@ fisher.sim=function(
       Nglobal = c(64,16)
       seedR = as.integer(as.integer(2^31-1)*(2*stats::runif(6) - 1) ) 
       seed <- gpuR::vclVector(seedR, type="integer")  
-      streams<-vclMatrix(0L, nrow=1024, ncol=12, type="integer")
+      streams<-vclMatrix(0L, nrow=1024, ncol=18, type="integer")
       CreateStreamsGpuBackend(seed, streams, keepInitial=1)
       
     }else{
       seedR = as.integer(as.integer(2^31-1)*(2*stats::runif(6) - 1) ) 
       seed <- gpuR::vclVector(seedR, type="integer")  
-      streams<-vclMatrix(0L, nrow=prod(Nglobal), ncol=12, type="integer")
+      streams<-vclMatrix(0L, nrow=prod(Nglobal), ncol=18, type="integer")
       CreateStreamsGpuBackend(seed, streams, keepInitial=1)
     }
   }else {
@@ -97,50 +99,29 @@ fisher.sim=function(
   
   #  print(class(xVcl))
   
-  TotalWorkItems <- prod(Nglobal)
-  
-  
-  simPerItem1<-B %/% TotalWorkItems  
-  if(simPerItem1==0){
-    warning("Number of simulations should be larger than number of workitems")
-  }
-  TotalSim1<-simPerItem1 * TotalWorkItems
-  remainder1<-B %% TotalWorkItems
-  
-  
-  if(remainder1 >0){
-    dim2 <- ceiling(remainder1/128)
-    Nglobal2 <- c(128,dim2)
-    TotalSim2 <- prod(Nglobal2)
-  }else{
-    TotalSim2 <- 0  
-  }
-  
-  
+  simPerWork<-ceiling(N/prod(Nglobal))
+  TotalSim<-simPerWork*prod(Nglobal)
+  #remainder<-C%%prod(Nglobal)
   
   if(returnStatistics) {
-    results <- gpuR::vclVector(length=as.integer(TotalSim1+TotalSim2), type=type)
+    results <- gpuR::vclVector(length=as.integer(TotalSim), type=type)
   } else {
     results <- gpuR::vclVector(length=as.integer(1), type=type)
   }
   
   
   PVAL <- NULL
-  counts1<-cpp_gpuFisher_test(x, results, 0, simPerItem1, streams, Nglobal, Nlocal)
+  
+  counts<-cpp_gpuFisher_test(x, results, 0, simPerWork, streams, Nglobal,Nlocal)
+  
+  #theTime<-system.time(cpp_gpuFisher_test(x, results, as.integer(B), streams, Nglobal,Nlocal))
   
   
+  # if(verbose)
+  #print(theTime)
+  #time 
   
-  if(remainder1 >0){
-    seedR <- as.integer(as.integer(2^31-1)*(2*stats::runif(6) - 1) ) 
-    seed <- gpuR::vclVector(seedR, type="integer")  
-    streams2<-vclMatrix(0L, nrow=prod(Nglobal2), ncol=12, type="integer")
-    CreateStreamsGpuBackend(seed, streams2, keepInitial=1)  
-    counts2<-cpp_gpuFisher_test(x, results, TotalSim1, 1, streams2, Nglobal2, Nlocal)
-  }else{
-    counts2 <- 0
-  }
-  
-  PVAL <- (1 + counts1 + counts2) / (TotalSim1 + TotalSim2 + 1)
+  PVAL <- (1 + counts ) / (TotalSim + 1)
   #counts<-10
   #PVAL<-0.1
   # format(PVAL, digits=5)
@@ -150,19 +131,19 @@ fisher.sim=function(
   
   
   
-  if (returnStatistics){   
-    theResult = list(p.value = PVAL, simNum=(TotalSim1 + TotalSim2), sim = results, counts=(counts1 + counts2), streams=streams)
+  if (returnStatistics){
+    
+    theResult = list(p.value = PVAL, simNum=TotalSim, sim = results, counts=counts, streams=streams)
     
   }else {
     
-    theResult = list(p.value=PVAL, simNum=(TotalSim1 + TotalSim2), counts=(counts1 + counts2), streams=streams)
+    theResult = list(p.value=PVAL, simNum=TotalSim, counts=counts, streams=streams)
   }
   
   theResult
   
   
 }
-
 
 
 
