@@ -245,11 +245,11 @@ void convertclRngMat(clrngMrg31k3pStream* streams, Rcpp::IntegerMatrix result) {
       Dg=1;
       result(Ditem,Dcis*6 + Dg*3 + Delement) = streams[Ditem].initial.g2[Delement];//0,9; 0,10
       
-      Dcis=2;
-      Dg=0;
-      result(Ditem,Dcis*6 + Dg*3 + Delement) = streams[Ditem].substream.g1[Delement];//0,12
-      Dg=1;
-      result(Ditem,Dcis*6 + Dg*3 + Delement) = streams[Ditem].substream.g2[Delement];//0,15
+      // Dcis=2;
+      // Dg=0;
+      // result(Ditem,Dcis*6 + Dg*3 + Delement) = streams[Ditem].substream.g1[Delement];//0,12
+      // Dg=1;
+      // result(Ditem,Dcis*6 + Dg*3 + Delement) = streams[Ditem].substream.g2[Delement];//0,15
   
     }
   }

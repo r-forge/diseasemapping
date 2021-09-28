@@ -134,8 +134,8 @@ streams2 = deepcopy(streams1)
 @ 
 <<streams on GPU2, eval=TRUE, echo=FALSE>>=
 gpuR::colnames(streams_from_GPU) = c("current.g1.1", "current.g1.2", "current.g1.3", "current.g2.1", "current.g2.2", "current.g2.3",
-"initial.g1.1", "initial.g1.2", "initial.g1.3", "initial.g2.1", "initial.g2.2", "initial.g2.3",
-"substream.g1.1", "substream.g1.2", "substream.g1.3", "substream.g2.1", "substream.g2.2", "substream.g2.3")   
+"initial.g1.1", "initial.g1.2", "initial.g1.3", "initial.g2.1", "initial.g2.2", "initial.g2.3")
+#"substream.g1.1", "substream.g1.2", "substream.g1.3", "substream.g2.1", "substream.g2.2", "substream.g2.3")   
 @ 
 <<streams on GPU3,eval=TRUE>>=
 t(streams_from_GPU)   
@@ -492,7 +492,7 @@ observed_w= -gpuRandom::logfactSum(week, c(16,16))/almost.1
 
 week_GPU<-gpuR::vclMatrix(week,type="integer")
 result_weekgpu<-gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
-                type="double",returnStatistics=TRUE,Nglobal = Nglobal)
+                type="double",returnStatistics=TRUE,Nglobal = c(128,128))
 result_weekgpu$simNum
 result_weekgpu$counts
 result_weekgpu$p.value
@@ -501,7 +501,7 @@ With about ten million simulations, we get 1223 cases and a p-value around 0.000
 <<TimecompareweekGpu, eval=TRUE, cache=FALSE>>=
 #using GPU
 system.time(gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
-            type="double", returnStatistics=FALSE,Nglobal = Nglobal))
+            type="double", returnStatistics=FALSE,Nglobal = c(128,128)))
 @
 \fct{stats::fisher.test} takes 90.1 seconds, while \fct{fisher.sim} takes about 1.90 seconds, the elapsed time is decreased to about 20\% of the time taken on CPU. 
 <<TimecompareweekGpu3, echo=FALSE, eval=TRUE, cache=TRUE>>=
