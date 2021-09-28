@@ -603,13 +603,13 @@ observed_m= -gpuRandom::logfactSum(month, c(16,16))/almost.1
 
 month_GPU<-vclMatrix(month,type="integer")
 result_monthgpu <- gpuRandom::fisher.sim(month_GPU, 1e6, streams=streams,
-                   type="double", returnStatistics=TRUE,  Nglobal = c(128,128))
+                   type="double", returnStatistics=TRUE,  Nglobal = c(512,128))
 result_monthgpu$simNum
-## [1] 1000064
+## [1] 1048576
 result_monthgpu$counts
-## [1] 403788
+## [1] 422440
 result_monthgpu$p.value
-## [1] 0.4037628
+## [1] 0.4028707
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -619,9 +619,9 @@ We requested one million simulations on GPU while the actual number of simulatio
 \begin{verbatim}
 #using GPU
 system.time(gpuRandom::fisher.sim(month_GPU, 1e6, streams=streams, 
-            type="double", returnStatistics=FALSE, Nglobal = c(128,128)))
+            type="double", returnStatistics=FALSE, Nglobal = c(512,128)))
 ##    user  system elapsed 
-##   0.793   0.000   0.792
+##   0.719   0.011   0.730
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -682,11 +682,11 @@ week_GPU<-gpuR::vclMatrix(week,type="integer")
 result_weekgpu<-gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
                 type="double",returnStatistics=TRUE,Nglobal = Nglobal)
 result_weekgpu$simNum
-## NULL
+## [1] 10027008
 result_weekgpu$counts
-## [1] 1224
+## [1] 1226
 result_weekgpu$p.value
-## [1] 0.0001225
+## [1] 0.0001223695
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -698,7 +698,7 @@ With about ten million simulations, we get 1223 cases and a p-value around 0.000
 system.time(gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
             type="double", returnStatistics=FALSE,Nglobal = Nglobal))
 ##    user  system elapsed 
-##   1.899   0.000   1.898
+##   4.649   0.004   4.710
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
