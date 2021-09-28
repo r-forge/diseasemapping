@@ -129,10 +129,6 @@ secondSample = RFsimulate(
 
 plot(secondSample)
 
-# convert the model to RandomFields format and plot
-if(requireNamespace('RandomFields', quietly=TRUE)) {
-	RandomFields::plot(modelRandomFields(model))
-}
 
 
 }
