@@ -164,19 +164,25 @@ In \proglang{clRNG} library, a stream object is a structure that contains three 
 # Create streams on host
 streams_on_CPU<-gpuRandom::CreateStreamsCpu(Nstreams=4)
 t(streams_on_CPU)
-##               [,1]       [,2]       [,3]       [,4]
-## current.g1.1 12345  336690377  502033783  739421137
-## current.g1.2 12345  597094797 1322587635 1475938232
-## current.g1.3 12345 1245771585 1964121530  730262207
-## current.g2.1 12345   85196284 1949818481 1630192198
-## current.g2.2 12345  523477687 1607232546  324551134
-## current.g2.3 12345 2094976052 1462898381  795289868
-## initial.g1.1 12345  336690377  502033783  739421137
-## initial.g1.2 12345  597094797 1322587635 1475938232
-## initial.g1.3 12345 1245771585 1964121530  730262207
-## initial.g2.1 12345   85196284 1949818481 1630192198
-## initial.g2.2 12345  523477687 1607232546  324551134
-## initial.g2.3 12345 2094976052 1462898381  795289868
+##                 [,1]       [,2]       [,3]       [,4]
+## current.g1.1   12345  336690377  502033783  739421137
+## current.g1.2   12345  597094797 1322587635 1475938232
+## current.g1.3   12345 1245771585 1964121530  730262207
+## current.g2.1   12345   85196284 1949818481 1630192198
+## current.g2.2   12345  523477687 1607232546  324551134
+## current.g2.3   12345 2094976052 1462898381  795289868
+## initial.g1.1   12345  336690377  502033783  739421137
+## initial.g1.2   12345  597094797 1322587635 1475938232
+## initial.g1.3   12345 1245771585 1964121530  730262207
+## initial.g2.1   12345   85196284 1949818481 1630192198
+## initial.g2.2   12345  523477687 1607232546  324551134
+## initial.g2.3   12345 2094976052 1462898381  795289868
+## substream.g1.1 12345  336690377  502033783  739421137
+## substream.g1.2 12345  597094797 1322587635 1475938232
+## substream.g1.3 12345 1245771585 1964121530  730262207
+## substream.g2.1 12345   85196284 1949818481 1630192198
+## substream.g2.2 12345  523477687 1607232546  324551134
+## substream.g2.3 12345 2094976052 1462898381  795289868
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -197,19 +203,25 @@ streams2 = deepcopy(streams1)
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
 t(streams_from_GPU)   
-##               [,1]       [,2]       [,3]       [,4]
-## current.g1.1 12345  336690377  502033783  739421137
-## current.g1.2 12345  597094797 1322587635 1475938232
-## current.g1.3 12345 1245771585 1964121530  730262207
-## current.g2.1 12345   85196284 1949818481 1630192198
-## current.g2.2 12345  523477687 1607232546  324551134
-## current.g2.3 12345 2094976052 1462898381  795289868
-## initial.g1.1 12345  336690377  502033783  739421137
-## initial.g1.2 12345  597094797 1322587635 1475938232
-## initial.g1.3 12345 1245771585 1964121530  730262207
-## initial.g2.1 12345   85196284 1949818481 1630192198
-## initial.g2.2 12345  523477687 1607232546  324551134
-## initial.g2.3 12345 2094976052 1462898381  795289868
+##                 [,1]       [,2]       [,3]       [,4]
+## current.g1.1   12345  336690377  502033783  739421137
+## current.g1.2   12345  597094797 1322587635 1475938232
+## current.g1.3   12345 1245771585 1964121530  730262207
+## current.g2.1   12345   85196284 1949818481 1630192198
+## current.g2.2   12345  523477687 1607232546  324551134
+## current.g2.3   12345 2094976052 1462898381  795289868
+## initial.g1.1   12345  336690377  502033783  739421137
+## initial.g1.2   12345  597094797 1322587635 1475938232
+## initial.g1.3   12345 1245771585 1964121530  730262207
+## initial.g2.1   12345   85196284 1949818481 1630192198
+## initial.g2.2   12345  523477687 1607232546  324551134
+## initial.g2.3   12345 2094976052 1462898381  795289868
+## substream.g1.1 12345  336690377  502033783  739421137
+## substream.g1.2 12345  597094797 1322587635 1475938232
+## substream.g1.3 12345 1245771585 1964121530  730262207
+## substream.g2.1 12345   85196284 1949818481 1630192198
+## substream.g2.2 12345  523477687 1607232546  324551134
+## substream.g2.3 12345 2094976052 1462898381  795289868
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -501,10 +513,10 @@ We generate a large-size matrix of 100 million double-precision Gaussian random 
 system.time(gpuRandom::rnorm(c(10000,10000), streams=streams, 
                              Nglobal=c(512,128), type="double"))
 ##    user  system elapsed 
-##   0.056   0.008   0.064
+##   0.140   0.004   0.143
 system.time(matrix(stats::rnorm(10000^2),10000,10000))
 ##    user  system elapsed 
-##   6.932   0.942   7.870
+##   6.610   0.862   7.466
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -587,10 +599,10 @@ Dec & 23 & 48 & 196 & 31 & 31 & 71 & 31 & 177 & 86 & 86 & 73 & 156\\
 \begin{verbatim}
 #using CPU
 stats::fisher.test(month,simulate.p.value = TRUE,B=1e6)$p.value
-## [1] 0.4038036
+## [1] 0.4042196
 system.time(stats::fisher.test(month,simulate.p.value = TRUE,B=1e6))
 ##    user  system elapsed 
-##  14.591   0.006  14.590
+##  14.578   0.002  14.569
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -603,13 +615,13 @@ observed_m= -gpuRandom::logfactSum(month, c(16,16))/almost.1
 
 month_GPU<-vclMatrix(month,type="integer")
 result_monthgpu <- gpuRandom::fisher.sim(month_GPU, 1e6, streams=streams,
-                   type="double", returnStatistics=TRUE,  Nglobal = c(512,128))
+                   type="double", returnStatistics=TRUE,  Nglobal = c(128,128))
 result_monthgpu$simNum
-## [1] 1048576
+## [1] 1015808
 result_monthgpu$counts
-## [1] 422440
+## [1] 410098
 result_monthgpu$p.value
-## [1] 0.4028707
+## [1] 0.4037166
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -619,9 +631,9 @@ We requested one million simulations on GPU while the actual number of simulatio
 \begin{verbatim}
 #using GPU
 system.time(gpuRandom::fisher.sim(month_GPU, 1e6, streams=streams, 
-            type="double", returnStatistics=FALSE, Nglobal = c(512,128)))
+            type="double", returnStatistics=FALSE, Nglobal = c(128,128)))
 ##    user  system elapsed 
-##   0.719   0.011   0.730
+##   0.702   0.005   0.706
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -665,10 +677,10 @@ We perform 10 million simulations for the ``week'' table.
 \begin{verbatim}
 #using CPU
 fisher.test(week,simulate.p.value = TRUE,B=1e7)$p.value
-## [1] 0.0001208
+## [1] 0.0001284
 system.time(fisher.test(week,simulate.p.value = TRUE,B=1e7))
 ##    user  system elapsed 
-##  90.691   0.126  90.750
+##  90.259   0.150  90.439
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -682,11 +694,11 @@ week_GPU<-gpuR::vclMatrix(week,type="integer")
 result_weekgpu<-gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
                 type="double",returnStatistics=TRUE,Nglobal = Nglobal)
 result_weekgpu$simNum
-## [1] 10027008
+## [1] 10010624
 result_weekgpu$counts
-## [1] 1226
+## [1] 1260
 result_weekgpu$p.value
-## [1] 0.0001223695
+## [1] 0.0001259662
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -698,7 +710,7 @@ With about ten million simulations, we get 1223 cases and a p-value around 0.000
 system.time(gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
             type="double", returnStatistics=FALSE,Nglobal = Nglobal))
 ##    user  system elapsed 
-##   4.649   0.004   4.710
+##   4.477   0.009   4.483
 \end{verbatim}
 \end{kframe}
 \end{knitrout}

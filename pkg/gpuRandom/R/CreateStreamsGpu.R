@@ -28,7 +28,7 @@ CreateStreamsGpu = function(seedR=c(12345, 12345, 12345, 12345, 12345, 12345),
   
   
     myseed <- gpuR::vclVector(as.integer(seedR), type="integer")  
-    streamsR<-gpuR::vclMatrix(0L, nrow=Nstreams, ncol=12, type="integer")
+    streamsR<-gpuR::vclMatrix(0L, nrow=Nstreams, ncol=18, type="integer")
     
     gpuRandom:::CreateStreamsGpuBackend(myseed, streamsR, keepInitial)
   

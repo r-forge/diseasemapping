@@ -37,12 +37,12 @@ rnorm = function(
       Nglobal = c(64,8)
       seedR = as.integer(as.integer(2^31-1)*(2*stats::runif(6) - 1) ) 
       seed <- gpuR::vclVector(seedR, type="integer")  
-      streams<-vclMatrix(0L, nrow=512, ncol=12, type="integer")
+      streams<-vclMatrix(0L, nrow=512, ncol=18, type="integer")
       CreateStreamsGpuBackend(seed, streams, keepInitial=1)
     }else{
       seedR = as.integer(as.integer(2^31-1)*(2*stats::runif(6) - 1) ) 
       seed <- gpuR::vclVector(seedR, type="integer")  
-      streams<-vclMatrix(0L, nrow=prod(Nglobal), ncol=12, type="integer")
+      streams<-vclMatrix(0L, nrow=prod(Nglobal), ncol=18, type="integer")
       CreateStreamsGpuBackend(seed, streams, keepInitial=1)
     }
   }else if(missing(Nglobal)){
