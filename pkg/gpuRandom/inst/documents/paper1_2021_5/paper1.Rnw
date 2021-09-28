@@ -448,7 +448,7 @@ observed_m= -gpuRandom::logfactSum(month, c(16,16))/almost.1
 month_GPU<-vclMatrix(month,type="integer")
 result_monthgpu <- gpuRandom::fisher.sim(month_GPU, 1e6, streams=streams,
                    type="double", returnStatistics=TRUE,  Nglobal = c(128,128))
-result_monthgpu$simnum
+result_monthgpu$simNum
 result_monthgpu$counts
 result_monthgpu$p.value
 @
@@ -492,7 +492,7 @@ observed_w= -gpuRandom::logfactSum(week, c(16,16))/almost.1
 week_GPU<-gpuR::vclMatrix(week,type="integer")
 result_weekgpu<-gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
                 type="double",returnStatistics=TRUE,Nglobal = Nglobal)
-result_weekgpu$simnum
+result_weekgpu$simNum
 result_weekgpu$counts
 result_weekgpu$p.value
 @
