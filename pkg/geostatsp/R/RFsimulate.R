@@ -279,7 +279,7 @@ setMethod("RFsimulate",
             as.integer(1)
           )
         
-        theCov =  new("dsyMatrix", 
+        theCov =  new("dpoMatrix", 
           Dim = as.integer(rep(ncell(xRaster),2)), 
           uplo="L",
           x=resC$result)
@@ -287,8 +287,9 @@ setMethod("RFsimulate",
         Linv = matern(data, param=paramForData, type='inverseCholesky')
         covpreddata = matern(res2, y=data, param=model)
         xcov =  tcrossprod(covpreddata,Linv)
-        
-        theCov  =theCov - tcrossprod(xcov)
+        xcov = tcrossprod(xcov)
+
+        theCov  =theCov - xcov
         theChol = chol(theCov)
         
       } else {
