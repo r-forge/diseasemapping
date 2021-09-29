@@ -3,7 +3,7 @@
 #' @export
 
 
-#before start, we have a spatial model 
+
 likfit_givenBeta <- function(Betas, #a p x m matrix  given by the user 
                              Nparam,
                              DatasetIndex,     #an integer, which dataset are the betas for?,
