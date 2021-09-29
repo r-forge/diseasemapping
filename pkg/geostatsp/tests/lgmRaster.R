@@ -199,7 +199,7 @@ swissResR =  lgm(
 #'
 
 #+ swissRainPlot
-if(requireNamespace("mapmisc", quietly=TRUE))
+if(requireNamespace("mapmisc", quietly=TRUE)) {
 myCol = mapmisc::colourScale(
     breaks = Sbreaks + max(swissResR$array[,-1,'logLreml',], na.rm=TRUE),
     style='fixed',
@@ -214,6 +214,7 @@ image(
     log='xy',
     col=myCol$col, breaks=myCol$breaks)
 mapmisc::legendBreaks("topright", breaks = Sbreaks, col=myCol$col)
+}
 #'
 
 
