@@ -6,16 +6,16 @@
 #before start, we have a spatial model 
 likfitGpu_2 <- function(spatialmodel,     #data,
                         type = c("double","float"),
-                        ParamsGpu, #a vclmatrix, consists of all the parameters
-                        #betas=NULL, #a vclmatrix  #only one row batch, but many colbatches
-                        BoxCox, # an R vector, will always be c(1,0,.....)
-                        Nbetahats = 1, # a number, how many betahats do you want to calculate for one dataset? 
+                        paramsGpu, #a vclmatrix, consists of all the parameters
+                        betas=NULL, #a vclmatrix  #only one row batch, but many colbatches
+                        BoxCox, # an R vector, will always be c(1,0,.....)#Nbetahats = 1, # a number, how many betahats do you want to calculate for one dataset? 
                         form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),
                         NparamPerIter,  # how many sets of params to be evaluated in each loop
                         minustwotimes=TRUE,
                         Nglobal,
                         Nlocal,
-                        NlocalCache){
+                        NlocalCache,
+                        verbose=0){
   
   form = c(loglik=1, ml=2, mlFixSigma=3, mlFixBeta=4, reml=5, remlPro=6)[form]
   
@@ -23,7 +23,7 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   temp = model.frame(spatialmodel$model$formula, data=spatialmodel$data)
   y = temp[,as.character(attributes(terms(temp))$variables)[2]]
   n = length(y)
-  variances <- vclVector(ParamsGpu[,3],type=type)     # a vclvector
+  variances <- vclVector(paramsGpu[,3],type=type)     # a vclvector
   
   
   
@@ -33,7 +33,7 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   
   Ncov = ncol(covariates)
   Ndata = length(BoxCox)
-  Nparam = nrow(ParamsGpu)
+  Nparam = nrow(paramsGpu)
   
   yx = vclMatrix(cbind(y,
                        matrix(0, n, length(BoxCox)-1),
@@ -43,9 +43,9 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   
   coordsGpu<-vclMatrix(spatialmodel$data@coords,type=type)  
   boxcoxGpu = vclVector(BoxCox, type=type)
-#  if(is.null(betas)){
-    betas = vclMatrix(0, Nparam, Ncov * Ndata, type=type)
-#  }
+  if(is.null(betas)){
+    betas = vclMatrix(0, Ncov, Ndata, type=type)
+  }
   ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
   XVYXVX = vclMatrix(-77, Nparam * Ncov, ncol(yx), type=type)
   ssqBetahat <- vclMatrix(0, Nparam, Ndata, type=type)
@@ -55,41 +55,40 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   jacobian = vclVector(0, Ndata, type=type)   
   ssqYX = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
   aTDinvb_beta = vclMatrix(0, Nparam, Ndata, type=type)
-  ssqYXcopy = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
+  #ssqYXcopy = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
   LinvYX = vclMatrix(0, nrow(yx) * NparamPerIter, ncol(yx), type=type)
   QinvSsqYx = vclMatrix(0, NparamPerIter*Ncov, Ndata, type = type)
-  cholXVXdiag = vclMatrix(0, NparamPerIter, Ndata, type=type)
-  varMat = vclMatrix(0, nrow(yx)*NparamPerIter, nrow(coords), type=type)
-  cholDiagMat = vclMatrix(0, NparamPerIter, nrow(coords), type=type)
+  cholXVXdiag = vclMatrix(0, NparamPerIter, Ncov, type=type)
+  varMat = vclMatrix(0, n*NparamPerIter, n, type=type)
+  cholDiagMat = vclMatrix(0, NparamPerIter, n, type=type)
   b_beta = vclMatrix(0, NparamPerIter*n, Ndata, type=type)
   
   gpuRandom:::likfitGpu_BackendP(
     yx,        #1
     coordsGpu, #2
-    ParamsGpu, #3
+    paramsGpu, #3
     boxcoxGpu,   #4
     betas,  #5
     ssqY,     #6
     aTDinvb_beta,
     XVYXVX,
-    ssqBetahat, #8
+    ssqBetahat, #9
     ssqBeta,
     detVar,    #9
     detReml,   #10
-    jacobian,  #11
-    NparamPerIter,  #12
-    Nglobal,  #13
-    Nlocal,  #14
-    NlocalCache,  #15
-    verbose = 2,  #16
-    ssqYX, 
-    ssqYXcopy,  #new
+    jacobian,  #13
+    NparamPerIter,  #14
+    Nglobal,  #15
+    Nlocal,  #16
+    NlocalCache,  #17
+    verbose,  #18
+    ssqYX, #ssqYXcopy,  #new
     LinvYX,  #19
     QinvSsqYx, 
     cholXVXdiag, #21
-    varMat,        #22     Vbatch
+    varMat,        #24     Vbatch
     cholDiagMat,
-    b_beta)   #new
+    b_beta)   #new 25
   
   
   
@@ -172,28 +171,28 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   
   ##### calculate betahat #####################
   ####### (X^T V^(-1)X)^(-1) * (X^T V^(-1) y)
-  if (Nbetahats > 0){
-    Betahat <- matrix(0, nrow=Nbetahats*Ncov, ncol=Ndata)
-    
-    if(Nbetahats > 10 | Nbetahats > Nparam){
-      stop("too many Betahats required")
-    }
-    #Nbetahats = min(Nbetahats, Nparam)
-    
-    for (j in 1:Ndata){
-      index <- order(minusTwoLogLik[,j], decreasing = FALSE)[1:Nbetahats]  #from small to large
-      
-      for (i in 1:Nbetahats){       
-        a<-c((index[i]-1)*Ncov+1, index[i]*Ncov)
-        Betahat[a,j] <- solve(XVYXVX[a,(Ndata+1):ncol(yx)]) %*% XVYXVX[a,j]
-        
-      }
-    }
-  }
+  # if (Nbetahats > 0){
+  #   Betahat <- matrix(0, nrow=Nbetahats*Ncov, ncol=Ndata)
+  #   
+  #   if(Nbetahats > 10 | Nbetahats > Nparam){
+  #     stop("too many Betahats required")
+  #   }
+  #   #Nbetahats = min(Nbetahats, Nparam)
+  #   
+  #   for (j in 1:Ndata){
+  #     index <- order(minusTwoLogLik[,j], decreasing = FALSE)[1:Nbetahats]  #from small to large
+  #     
+  #     for (i in 1:Nbetahats){       
+  #       a<-c((index[i]-1)*Ncov+1, index[i]*Ncov)
+  #       Betahat[a,j] <- solve(XVYXVX[a,(Ndata+1):ncol(yx)]) %*% XVYXVX[a,j]
+  #       
+  #     }
+  #   }
+  # }
   
   
   
-  List <- list("minusTwoLogLik" = minusTwoLogLik, "Betahat" = Betahat)
+  List <- list("minusTwoLogLik" = minusTwoLogLik, "XVYXVX"=XVYXVX)
   
   
   List

@@ -6,7 +6,7 @@
 \usage{
 fisher.sim(
   x,
-  C,
+  N,
   streams,
   type = c("float", "double")[1 + gpuR::gpuInfo()$double_support],
   returnStatistics = FALSE,
@@ -17,7 +17,7 @@ fisher.sim(
 \arguments{
 \item{x}{a vclMatrix for Fisher's test}
 
-\item{C}{requested number of simulations.}
+\item{N}{requested number of simulations.}
 
 \item{streams}{streams objects.}
 
