@@ -18,7 +18,7 @@ likfit_givenBeta <- function(Betas, #a p x m matrix  given by the user
   
   m = ncol(Betas)
   
-  
+  detVar <- as.vector(derVar)
   detVar <- matrix(rep(detVar, m), nrow=Nparam)
   aTDinva <- matrix(rep(ssqY[,DatasetIndex],m),nrow=Nparam) 
   XTVinvX <- XVYXVX[ , (ncol(XVYXVX)-Ncov+1):ncol(XVYXVX)]

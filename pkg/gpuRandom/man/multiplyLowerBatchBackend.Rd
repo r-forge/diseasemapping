@@ -13,9 +13,9 @@ multiplyLowerBatchBackend(C, A, B, diagIsOne, Nglobal, Nlocal, NlocalCache)
 
 \item{B}{rectangular matrix or matrices}
 
-\item{Nglobal}{vector of number of global work items}
+\item{Nglobal}{vector of number of global work items: Drow, Dcol, Dmatrix}
 
-\item{Nlocal}{vector of number of local work items}
+\item{Nlocal}{vector of number of local work items anything, anything, 1}
 
 \item{NlocalCache}{elements in local cache}
 }
