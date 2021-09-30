@@ -481,7 +481,8 @@ void maternBatchVcl(
     viennacl::matrix_base<T> &vclCoords, // 2 columns
     viennacl::matrix_base<T> &param, // Nmat rows, 22 columns
     viennacl::ocl::kernel & maternKernel,
-    int startrow, int Nmatrix){ // param[seq(startrow, len=Nmatrix),]
+    int startrow, 
+    int Nmatrix){ // param[seq(startrow, len=Nmatrix),]
   
   fill22params(param);
   viennacl::ocl::command_queue theQueue = maternKernel.context().get_queue();
@@ -509,7 +510,7 @@ void maternBatchVcl(
     Npad = vclVar.internal_size2(),
     NpadBetweenMatrices = Npad*N; // change to Npad*(Nmat+k) to insert extra rows between matrices
   
-  const int Ncell = N * (N - 1)/2, maxIter = 1500;
+    const int Ncell = N * (N - 1)/2, maxIter = 1500;
   
   
   //  cl_device_type type_check = ctx.current_device().type();
@@ -517,14 +518,15 @@ void maternBatchVcl(
 
   std::string maternClString = maternBatchKernelString<T>(
     maxIter,
-    N, Ncell, 
-    numberofrows,
+    N, 
+    Ncell, 
+    Nmatrix,
     Npad,
     NpadBetweenMatrices, 
     vclCoords.internal_size2(), //NpadCoords, 
     param.internal_size2(),// NpadParams
     numLocalItems[0],
-    NlocalParams * numLocalItems[1] * (1+ numberofrows * numLocalItems[1] / numWorkItems[1]),// local params cache
+    NlocalParams * numLocalItems[1] * (1+ Nmatrix * numLocalItems[1] / numWorkItems[1]),// local params cache
     1L, 1L, 1L, 0L
       );
   
@@ -563,10 +565,10 @@ if(verbose) {
   }
   
   if(verbose) {
-    Rcpp::Rcout << startrow << " " << numberofrows << " " << param.size1() << "\n";
+    Rcpp::Rcout << startrow << " " << Nmatrix << " " << param.size1() << "\n";
   }
   
-  maternBatchVcl(vclVar, vclCoords, param, maternKernel, startrow, numberofrows);
+  maternBatchVcl(vclVar, vclCoords, param, maternKernel, startrow, Nmatrix);
   
 }
 
@@ -600,7 +602,8 @@ void maternBatchTemplated(
     Nlocal,
     ctx_id,
     startrow,   // indexing from 0 rather than from 1
-    numberofrows, verbose);
+    numberofrows, 
+    verbose);
 }
 
 
