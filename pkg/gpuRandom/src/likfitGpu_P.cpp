@@ -1,6 +1,4 @@
-// likfitGpu_p 9.13 5pm version
-
-
+// likfitGpu_p 9.30 10pm version
 #include "lgmlikFit.hpp"
 
 
@@ -8,7 +6,7 @@ using namespace Rcpp;
 using namespace viennacl; 
 using namespace viennacl::linalg;
 
-
+//#define NlocalParams 22
 
 template <typename T> 
 std::string extract_block_string(int Ncovariates,    // number of Y's
@@ -371,15 +369,16 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   
   std::string maternClString = maternBatchKernelString<T>(
     maxIter,
-    Nobs, Ncell, 
+    Nobs, 
+    Ncell, 
     NparamPerIter[0],//NmatrixMax
-                 Vbatch.internal_size2(), //NpadVbatch
-                 Vbatch.internal_size2()*Nobs, //NpadBetweenMatrices,
-                 coords.internal_size2(), 
-                 params.internal_size2(), //NpadParams,
-                 localSize[0],
-                          NlocalCache[0],
-                                     1L, 1L, 1L, 0L);
+    Vbatch.internal_size2(), //NpadVbatch
+    Vbatch.internal_size2()*Nobs, //NpadBetweenMatrices,
+    coords.internal_size2(), //NpadCoords
+    params.internal_size2(), //NpadParams,
+    localSize[0], //Nlocal0 
+    NlocalCache[0],//NlocalParams * localSize[1] * (1+ NparamPerIter[0] * localSize[1] / workgroupSize[1])/2, // int NlocalParamsCache
+    1L, 1L, 1L, 0L); // assignUpper, assignLower, assignDiagonals, assignDistUpper
   
   int allowOverflow = ( ((int) Vbatch.size2() ) > NlocalCache[0] );
   
@@ -542,7 +541,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   Rcpp::IntegerVector submatrixB = {0,Ncovariates,Ncovariates,0,Ndatasets,Ndatasets};
   Rcpp::IntegerVector submatrixC = {0,Ndatasets,Ndatasets,0,Ndatasets,Ndatasets};
   Rcpp::IntegerVector recycle = {1,0,0,1,0};   // nColBatch, recycleArow, recycleAcol, recycleBrow, recycleBcol
-  Rcpp::IntegerVector NlocalCachegemm = {NlocalCache[0],NlocalCache[0]};
+  Rcpp::IntegerVector NlocalCachegemm = {NlocalCache[0]/2,NlocalCache[0]/2};
   
   std::string aTDinvb_beta_KernelString = gemmBatch2String<T>(
     1,  //  onlyDiagC
