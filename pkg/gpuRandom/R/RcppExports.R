@@ -134,8 +134,14 @@ multiplyLowerBatchBackend <- function(C, A, B, diagIsOne, Nglobal, Nlocal, Nloca
     .Call('_gpuRandom_multiplyLowerBatchBackend', PACKAGE = 'gpuRandom', C, A, B, diagIsOne, Nglobal, Nlocal, NlocalCache)
 }
 
-cpp_mrg31k3pCreateStreams <- function(result) {
-    .Call('_gpuRandom_cpp_mrg31k3pCreateStreams', PACKAGE = 'gpuRandom', result)
+#' @name createStreamsCpu
+#' @title create streams stored on the CPU
+#' @description streams for random numbers
+#' @param n number of streams to create
+#' @param seed random seed, length 6, recycled if shorter
+#' @export
+createStreamsCpu <- function(n, seed) {
+    .Call('_gpuRandom_createStreamsCpu', PACKAGE = 'gpuRandom', n, seed)
 }
 
 CreateStreamsGpuBackend <- function(creatorInitialGlobalR, streamsR, keepInitial) {
