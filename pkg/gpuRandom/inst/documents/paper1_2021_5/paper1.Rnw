@@ -118,10 +118,44 @@ in computational statistics: (1) generating independent and identically distribu
 
 
 \subsection{Creating streams}
+
+{\tt changed createStreams functions to be compatible with each other}
+
+create streams on cpu
+<<createStreams, size="tiny">>=
+library("gpuRandom")
+myStreamsCpu <- createStreamsCpu(n=4, seed = 12345)
+myStreamsCpu
+@
+
+streams on gpu
+<<createStreamsGpu>>=
+myStreamsGpu1 = vclMatrix(myStreamsCpu)
+myStreamsGpu2 = createStreams(n=4, seed=12345)
+range(as.matrix(myStreamsGpu1 - myStreamsGpu2))
+@
+
+<<simStuff, eval=TRUE,tidy=TRUE>>=
+sim_2 <-gpuRandom::runif(n=6, streams=myStreamsGpu1, Nglobal=c(1,nrow(myStreamsGpu1)), type = "double")
+as.vector(sim_2)
+@
+
+check seed
+<<simSeed, size='tiny'>>=
+matrix(as.matrix(myStreamsGpu1), nrow(myStreamsCpu), ncol(myStreamsCpu), dimnames = dimnames(myStreamsCpu))
+@
+
+check reproducibility
+<<simStuff, eval=TRUE,tidy=TRUE>>=
+c(as.vector(sim_2), as.vector(gpuRandom::runif(n=6, streams=myStreamsGpu1, Nglobal=c(1,nrow(myStreamsGpu1)), type = "double")))
+as.vector(gpuRandom::runif(n=12, streams=vclMatrix(myStreamsCpu), Nglobal=c(1,nrow(myStreamsGpu1)), type = "double"))
+@
+
+
 In \proglang{clRNG} library, a stream object is a structure that contains three states (see the first column in the \proglang{R} output below): the current state of the stream, the initial state (or seed) of the stream , and the initial state of the current substream. The function \fct{clrngMrg31k3pCreateStreams} from \proglang{clRNG} creates streams on the host computer using the MRG31k3p RNG. If we want to use the streams in work items on a GPU device, the streams have to be copied from the host to the global memory of the GPU device, and then each work item picks streams from the global memory and copies their current states only to its private memory. In \pkg{gpuRandom}, to avoid unnecessary data transfer between host and device, we are able to create streams both on the host computer and on the GPU device. \fct{gpuRandom::CreateStreamsCpu} is an \proglang{R} interface function of \fct{clrngMrg31k3pCreateStreams} that creates streams on the host as \proglang{R} matrices, so that users can easily view the streams. \fct{gpuRandom::CreateStreamsGpu} is adapted from \fct{clrngMrg31k3pCreateStreams} with the advantage of creating streams directly on GPU device. From our experience, transferring a large-size matrix of streams from host to device by converting it to a `\code{vclMatrix}' object can take very long time, hence, \fct{gpuRandom::CreateStreamsGpu} is more efficient and more frequently used. In the following, we demonstrate the usage of these two functions by generating 4 streams on the host and on the device respectively.
 <<streams on CPU>>=
 # Create streams on host
-streams_on_CPU<-gpuRandom::CreateStreamsCpu(Nstreams=4)
+streams_on_CPU<-gpuRandom::CreateStreamsCpu(seed = rep(12345, 6), Nstreams=4)
 t(streams_on_CPU)
 @
 \fct{gpuRandom::CreateStreamsCpu} has only one argument \code{Nstreams}, which is the number of streams to create. For the MRG31k3p RNG, each state of the stream object is comprised of six 31-bit integers, the state of the first stream (seed of the \proglang{clRNG} library) is by default ``12345''. By setting a seed same as the MRG31k3p default seed in \fct{gpuRandom::CreateStreamsGpu}, we can produce on device exactly the same streams as those created on host as follows,

@@ -321,26 +321,58 @@ static clrngMrg31k3pStreamCreator defaultStreamCreator = {
 
 
 
-//[[Rcpp::export]]
-Rcpp::IntegerMatrix  cpp_mrg31k3pCreateStreams(Rcpp::IntegerMatrix result) //this function returns a R_stream not clrng stream
+clrngMrg31k3pStreamCreator buildStreamCreator(Rcpp::IntegerVector seed){
+  int Ditem;
+  
+  clrngMrg31k3pStreamCreator streamCreatorHere = {
+    BASE_CREATOR_STATE,
+    BASE_CREATOR_STATE,
+    BASE_CREATOR_JUMP_MATRIX_1,
+    BASE_CREATOR_JUMP_MATRIX_2
+  };
+  
+    for(Ditem = 0; Ditem < 3; Ditem++) {
+      streamCreatorHere.initialState.g1[Ditem] = seed[Ditem];
+      streamCreatorHere.initialState.g2[Ditem] = seed[Ditem+3];
+      streamCreatorHere.nextState.g1[Ditem] = seed[Ditem];
+      streamCreatorHere.nextState.g2[Ditem] = seed[Ditem+3];
+    }
+  return streamCreatorHere;
+}
+
+//' @name createStreamsCpu
+//' @title create streams stored on the CPU
+//' @description streams for random numbers
+//' @param n number of streams to create
+//' @param seed random seed, length 6, recycled if shorter
+//' @export
+// [[Rcpp::export]]
+Rcpp::IntegerMatrix  createStreamsCpu(
+    Rcpp::IntegerVector n,
+    Rcpp::IntegerVector seed)
 {
-  /*
-  Rcpp::IntegerMatrix result=Rcpp::IntegerMatrix(numWorkItems,18L);
+  IntegerVector seed2 = rep_len(seed, 6);
+  Rcpp::IntegerMatrix result=Rcpp::IntegerMatrix(n[0],12L);
    
   colnames(result) = CharacterVector::create(
     "current.g1.1", "current.g1.2", "current.g1.3", "current.g2.1", "current.g2.2", "current.g2.3",
-    "initial.g1.1", "initial.g1.2", "initial.g1.3", "initial.g2.1", "initial.g2.2", "initial.g2.3",
-    "substream.g1.1", "substream.g1.2", "substream.g1.3", "substream.g2.1", "substream.g2.2", "substream.g2.3");
-  */
+    "initial.g1.1", "initial.g1.2", "initial.g1.3", "initial.g2.1", "initial.g2.2", "initial.g2.3");
+  //,
+  //  "substream.g1.1", "substream.g1.2", "substream.g1.3", "substream.g2.1", "substream.g2.2", "substream.g2.3");
+
   size_t streamBufferSize;
   clrngStatus err;
-  int Ditem,Delement,Dcis,Dg;
-  
-  int numWorkItems =result.nrow();
+
+//  int numWorkItems =result.nrow();
   //  int Ditem,Delement,Dcis,Dg;
   
+  clrngMrg31k3pStreamCreator streamCreatorHere = buildStreamCreator(seed2);
   
-  clrngMrg31k3pStream* streams = clrngMrg31k3pCreateStreams(&defaultStreamCreator, numWorkItems, &streamBufferSize, &err);//line 299 in mrg31k3p.c
+  Rcpp::Rcout << "a" << streamCreatorHere.initialState.g1[0]<< " " << streamCreatorHere.initialState.g1[1]<< " " << streamCreatorHere.initialState.g1[2]<< "\n";
+  Rcpp::Rcout << "b" << streamCreatorHere.initialState.g2[0]<< " " << streamCreatorHere.initialState.g2[1]<< " " << streamCreatorHere.initialState.g2[2]<< "\n";
+
+  clrngMrg31k3pStream* streams = clrngMrg31k3pCreateStreams(&streamCreatorHere, n[0], 
+                                                            &streamBufferSize, &err);//line 299 in mrg31k3p.c
  
 
   convertclRngMat(streams, result);

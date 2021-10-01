@@ -12,31 +12,18 @@
 
 
 
-CreateStreamsGpu = function(seedR=c(12345, 12345, 12345, 12345, 12345, 12345), 
-                            Nstreams, 
-                            keepInitial=1) {
+createStreams = function(n, 
+                        seed=12345) {
 
+    seed = rep_len(seed, 6)
+    seedVec <- gpuR::vclVector(as.integer(seed), type="integer")  
+    streamsR<-gpuR::vclMatrix(0L, nrow=as.integer(n), ncol=12, type="integer")
 
-  
-   # if(typeof(seedR)=="integer"){
-   #  
-   #  myseedR = packBits( intToBits(as.vector(rbind(0L, seedR))), type = 'double')
-   #  
-   #  }else if (typeof(seedR)=="double"){
-   #  myseedR = packBits( numToBits(seedR), type = 'double')  
-   #  }
-  
-  
-    myseed <- gpuR::vclVector(as.integer(seedR), type="integer")  
-    streamsR<-gpuR::vclMatrix(0L, nrow=Nstreams, ncol=12, type="integer")
-    
-    gpuRandom:::CreateStreamsGpuBackend(myseed, streamsR, keepInitial)
-  
+    keepInitial=1
+    gpuRandom:::CreateStreamsGpuBackend(seedVec, streamsR, keepInitial)
   
     streamsR
   
-  
-
 }
 
 
