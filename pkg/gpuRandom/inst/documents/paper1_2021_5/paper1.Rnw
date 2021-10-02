@@ -147,8 +147,8 @@ matrix(as.matrix(myStreamsGpu1), nrow(myStreamsCpu), ncol(myStreamsCpu), dimname
 
 check reproducibility
 <<simStuff, eval=TRUE,tidy=TRUE>>=
-c(as.vector(sim_2), as.vector(gpuRandom::runif(n=6, streams=myStreamsGpu1, Nglobal=c(1,nrow(myStreamsGpu1)), type = "double")))
-as.vector(gpuRandom::runif(n=12, streams=vclMatrix(myStreamsCpu), Nglobal=c(1,nrow(myStreamsGpu1)), type = "double"))
+as.vector(gpuRandom::runif(n=4, streams=myStreamsGpu1, Nglobal=c(1,nrow(myStreamsGpu1)), type = "double"))
+as.vector(gpuRandom::runif(n=10, streams=myStreamsGpu2, Nglobal=c(1,nrow(myStreamsGpu1)), type = "double"))[-(1:6)]
 @
 
 
