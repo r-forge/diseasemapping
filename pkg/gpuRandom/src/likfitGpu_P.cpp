@@ -6,7 +6,7 @@ using namespace Rcpp;
 using namespace viennacl; 
 using namespace viennacl::linalg;
 
-//#define NlocalParams 22
+#define NlocalParams 22
 
 template <typename T> 
 std::string extract_block_string(int Ncovariates,    // number of Y's
@@ -377,7 +377,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     coords.internal_size2(), //NpadCoords
     params.internal_size2(), //NpadParams,
     localSize[0], //Nlocal0 
-    NlocalCache[0],//NlocalParams * localSize[1] * (1+ NparamPerIter[0] * localSize[1] / workgroupSize[1])/2, // int NlocalParamsCache
+    NlocalParams * localSize[1] * (1+ NparamPerIter[0] * localSize[1] / workgroupSize[1]), // int NlocalParamsCache
     1L, 1L, 1L, 0L); // assignUpper, assignLower, assignDiagonals, assignDistUpper
   
   int allowOverflow = ( ((int) Vbatch.size2() ) > NlocalCache[0] );

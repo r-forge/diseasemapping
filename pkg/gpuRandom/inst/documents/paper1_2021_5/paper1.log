@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2021.9.16)  28 SEP 2021 16:07
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2021.9.16)  4 OCT 2021 12:31
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -592,14 +592,6 @@ LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 1
 (/usr/share/texmf/tex/latex/lm/ts1lmr.fd
 File: ts1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
-Package color Info: Redefining color shadecolor on input line 162.
-
-Overfull \hbox (2.81766pt too wide) in paragraph at lines 160--162
-\T1/lmr/m/n/10.95 , and the ini-tial state of the cur-rent sub-stream. The func
--tion \T1/lmtt/m/n/10.95 clrngMrg31k3pCreateStreams()
- []
-
-
 Underfull \vbox (badness 5388) has occurred while \output is active []
 
 
@@ -608,63 +600,124 @@ Overfull \hbox (5.47499pt too wide) has occurred while \output is active
  []
 
 [2]
-Package color Info: Redefining color shadecolor on input line 191.
+Package color Info: Redefining color shadecolor on input line 165.
+Package color Info: Redefining color shadecolor on input line 188.
+Package color Info: Redefining color shadecolor on input line 199.
+Package color Info: Redefining color shadecolor on input line 211.
+Package color Info: Redefining color shadecolor on input line 235.
+Package color Info: Redefining color shadecolor on input line 250.
+
+Overfull \hbox (2.81766pt too wide) in paragraph at lines 248--250
+\T1/lmr/m/n/10.95 , and the ini-tial state of the cur-rent sub-stream. The func
+-tion \T1/lmtt/m/n/10.95 clrngMrg31k3pCreateStreams()
+ []
+
 
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 3
  []
 
 [3]
-Overfull \hbox (22.99367pt too wide) in paragraph at lines 198--198
+LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10.95> not available
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 257.
+
+Overfull \hbox (28.7424pt too wide) in paragraph at lines 257--257
+[]\T1/lmtt/b/n/10.95 ## Error: 'CreateStreamsCpu' is not an exported object fro
+m 'namespace:gpuRandom'[] 
+ []
+
+
+Overfull \hbox (11.4962pt too wide) in paragraph at lines 262--262
+[]\T1/lmtt/b/n/10.95 ## Error in h(simpleError(msg, call)): error in evaluating
+ the argument 'x' in
+ []
+
+Package color Info: Redefining color shadecolor on input line 266.
+
+Overfull \hbox (22.99367pt too wide) in paragraph at lines 271--271
 []\T1/lmtt/m/n/10.95 streams1 <- gpuRandom::CreateStreamsGpu(seedR=seed, Nstrea
 ms=4, keepInitial=TRUE)[] 
  []
 
-Package color Info: Redefining color shadecolor on input line 203.
 
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 246.
+Overfull \hbox (28.7424pt too wide) in paragraph at lines 274--274
+[]\T1/lmtt/b/n/10.95 ## Error: 'CreateStreamsGpu' is not an exported object fro
+m 'namespace:gpuRandom'[] 
+ []
 
 
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 246.
+Overfull \hbox (22.99367pt too wide) in paragraph at lines 284--284
+[]\T1/lmtt/b/n/10.95 ## Error in h(simpleError(msg, call)): error in evaluating
+ the argument 'object'
+ []
 
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <12> on input line 246.
+Package color Info: Redefining color shadecolor on input line 287.
 
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 4 []
  []
 
-[4] (/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
+[4]
+Overfull \hbox (17.24493pt too wide) in paragraph at lines 290--290
+[]\T1/lmtt/b/n/10.95 ## Error in gpuR::colnames(streams_from_GPU) = c("current.
+g1.1", "current.g1.2",
+ []
+
+Package color Info: Redefining color shadecolor on input line 293.
+
+Overfull \hbox (11.4962pt too wide) in paragraph at lines 299--299
+[]\T1/lmtt/b/n/10.95 ## Error in h(simpleError(msg, call)): error in evaluating
+ the argument 'x' in
+ []
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 319.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 319.
+
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <12> on input line 319.
+(/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2019/09/10 1.8c listings language file
 )
 (/usr/share/texlive/texmf-dist/tex/latex/listings/lstmisc.sty
 File: lstmisc.sty 2019/09/10 1.8c (Carsten Heinz)
 )
 Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
-nput line 249.
-</home/ruoyong/paper1_2021_5/f1.png, id=131, 384.43625pt x 142.5325pt>
-File: /home/ruoyong/paper1_2021_5/f1.png Graphic file (type png)
-<use /home/ruoyong/paper1_2021_5/f1.png>
-Package pdftex.def Info: /home/ruoyong/paper1_2021_5/f1.png  used on input line
- 285.
-(pdftex.def)             Requested size: 227.62204pt x 84.39355pt.
-</home/ruoyong/paper1_2021_5/f2.png, id=133, 343.2825pt x 223.83624pt>
-File: /home/ruoyong/paper1_2021_5/f2.png Graphic file (type png)
-<use /home/ruoyong/paper1_2021_5/f2.png>
-Package pdftex.def Info: /home/ruoyong/paper1_2021_5/f2.png  used on input line
- 287.
-(pdftex.def)             Requested size: 227.62204pt x 148.41888pt.
+nput line 322.
 
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 5
  []
 
 [5]
-Package color Info: Redefining color shadecolor on input line 293.
+</home/ruoyong/paper1_2021_5/f1.png, id=138, 384.43625pt x 142.5325pt>
+File: /home/ruoyong/paper1_2021_5/f1.png Graphic file (type png)
+<use /home/ruoyong/paper1_2021_5/f1.png>
+Package pdftex.def Info: /home/ruoyong/paper1_2021_5/f1.png  used on input line
+ 358.
+(pdftex.def)             Requested size: 227.62204pt x 84.39355pt.
+</home/ruoyong/paper1_2021_5/f2.png, id=140, 343.2825pt x 223.83624pt>
+File: /home/ruoyong/paper1_2021_5/f2.png Graphic file (type png)
+<use /home/ruoyong/paper1_2021_5/f2.png>
+Package pdftex.def Info: /home/ruoyong/paper1_2021_5/f2.png  used on input line
+ 360.
+(pdftex.def)             Requested size: 227.62204pt x 148.41888pt.
 
-Overfull \hbox (0.68971pt too wide) in paragraph at lines 291--293
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
+Overfull \hbox (5.47499pt too wide) has occurred while \output is active
+\T1/lmr/m/n/10.95 6 []
+ []
+
+[6]
+Package color Info: Redefining color shadecolor on input line 366.
+
+Overfull \hbox (0.68971pt too wide) in paragraph at lines 364--366
 \T1/lmr/m/n/10.95 ate a vec-tor \T1/lmtt/m/n/10.95 sim_1 \T1/lmr/m/n/10.95 of 6
  i.i.d. $\OML/lmm/m/it/10.95 U\OT1/lmr/m/n/10.95 (0\OML/lmm/m/it/10.95 ; \OT1/l
 mr/m/n/10.95 1)$ \T1/lmr/m/n/10.95 ran-dom num-bers us-ing the func-tion \T1/lm
@@ -673,263 +726,223 @@ tt/m/n/10.95 gpuRandom::runif()\T1/lmr/m/n/10.95 .
 
 
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
-\T1/lmr/m/n/10.95 6 []
- []
-
-[6 </home/ruoyong/paper1_2021_5/f1.png> </home/ruoyong/paper1_2021_5/f2.png>]
-Package color Info: Redefining color shadecolor on input line 311.
-Package color Info: Redefining color shadecolor on input line 322.
-Package color Info: Redefining color shadecolor on input line 341.
-
-Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 7
  []
 
-[7]
-Package color Info: Redefining color shadecolor on input line 348.
-Package color Info: Redefining color shadecolor on input line 362.
-Package color Info: Redefining color shadecolor on input line 374.
-<figure/largenumberuniforms-1.pdf, id=185, 289.08pt x 289.08pt>
-File: figure/largenumberuniforms-1.pdf Graphic file (type pdf)
-<use figure/largenumberuniforms-1.pdf>
-Package pdftex.def Info: figure/largenumberuniforms-1.pdf  used on input line 3
-75.
-(pdftex.def)             Requested size: 199.19283pt x 199.19193pt.
-<figure/largenumberuniforms-2.pdf, id=186, 289.08pt x 289.08pt>
-File: figure/largenumberuniforms-2.pdf Graphic file (type pdf)
-<use figure/largenumberuniforms-2.pdf>
-Package pdftex.def Info: figure/largenumberuniforms-2.pdf  used on input line 3
-76.
-(pdftex.def)             Requested size: 199.19283pt x 199.19193pt.
+[7 </home/ruoyong/paper1_2021_5/f1.png> </home/ruoyong/paper1_2021_5/f2.png>]
+Package color Info: Redefining color shadecolor on input line 389.
+Package color Info: Redefining color shadecolor on input line 404.
+
+Overfull \hbox (11.4962pt too wide) in paragraph at lines 421--421
+[]\T1/lmtt/b/n/10.95 ## Error in h(simpleError(msg, call)): error in evaluating
+ the argument 'x' in
+ []
+
+Package color Info: Redefining color shadecolor on input line 425.
+Package color Info: Redefining color shadecolor on input line 432.
+Package color Info: Redefining color shadecolor on input line 446.
 
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 8 []
  []
 
-[8 <./figure/largenumberuniforms-1.pdf> <./figure/largenumberuniforms-2.pdf>]
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 443.
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 443.
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 443.
+[8]
+Overfull \hbox (5.74747pt too wide) in paragraph at lines 452--452
+[]\T1/lmtt/b/n/10.95 ## Error in CreateStreamsGpu(Nstreams = 512, keepInitial =
+ 1): could not find
+ []
+
+Package color Info: Redefining color shadecolor on input line 468.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
 
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 9
  []
 
 [9]
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <10> on input line 542.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <7> on input line 542.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <5> on input line 542.
+
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 10 []
  []
 
 [10]
-</home/ruoyong/paper1_2021_5/f3.png, id=282, 905.3825pt x 321.2pt>
+</home/ruoyong/paper1_2021_5/f3.png, id=239, 905.3825pt x 321.2pt>
 File: /home/ruoyong/paper1_2021_5/f3.png Graphic file (type png)
 <use /home/ruoyong/paper1_2021_5/f3.png>
 Package pdftex.def Info: /home/ruoyong/paper1_2021_5/f3.png  used on input line
- 469.
+ 568.
 (pdftex.def)             Requested size: 227.62204pt x 80.7507pt.
-</home/ruoyong/paper1_2021_5/f4.png, id=283, 758.835pt x 525.965pt>
+</home/ruoyong/paper1_2021_5/f4.png, id=240, 758.835pt x 525.965pt>
 File: /home/ruoyong/paper1_2021_5/f4.png Graphic file (type png)
 <use /home/ruoyong/paper1_2021_5/f4.png>
 Package pdftex.def Info: /home/ruoyong/paper1_2021_5/f4.png  used on input line
- 471.
+ 570.
 (pdftex.def)             Requested size: 227.62204pt x 157.76663pt.
-Package color Info: Redefining color shadecolor on input line 479.
-Package color Info: Redefining color shadecolor on input line 488.
-Package color Info: Redefining color shadecolor on input line 497.
-<figure/histAndQQ-1.pdf, id=286, 289.08pt x 289.08pt>
-File: figure/histAndQQ-1.pdf Graphic file (type pdf)
-<use figure/histAndQQ-1.pdf>
-Package pdftex.def Info: figure/histAndQQ-1.pdf  used on input line 503.
-(pdftex.def)             Requested size: 199.19283pt x 199.19193pt.
-<figure/histAndQQ-2.pdf, id=287, 289.08pt x 289.08pt>
-File: figure/histAndQQ-2.pdf Graphic file (type pdf)
-<use figure/histAndQQ-2.pdf>
-Package pdftex.def Info: figure/histAndQQ-2.pdf  used on input line 504.
-(pdftex.def)             Requested size: 199.19283pt x 199.19193pt.
 
-Underfull \vbox (badness 1092) has occurred while \output is active []
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 11
  []
 
-[11 </home/ruoyong/paper1_2021_5/f3.png> </home/ruoyong/paper1_2021_5/f4.png>]
-Package color Info: Redefining color shadecolor on input line 511.
+[11]
+Package color Info: Redefining color shadecolor on input line 578.
+
+Overfull \hbox (11.4962pt too wide) in paragraph at lines 584--584
+[]\T1/lmtt/b/n/10.95 ## Error in CreateStreamsGpu(Nstreams = 512 * 128, keepIni
+tial = 1): could not
+ []
+
+Package color Info: Redefining color shadecolor on input line 593.
+Package color Info: Redefining color shadecolor on input line 602.
+<figure/histAndQQ-1.pdf, id=277, 289.08pt x 289.08pt>
+File: figure/histAndQQ-1.pdf Graphic file (type pdf)
+<use figure/histAndQQ-1.pdf>
+Package pdftex.def Info: figure/histAndQQ-1.pdf  used on input line 608.
+(pdftex.def)             Requested size: 199.19283pt x 199.19193pt.
+<figure/histAndQQ-2.pdf, id=278, 289.08pt x 289.08pt>
+File: figure/histAndQQ-2.pdf Graphic file (type pdf)
+<use figure/histAndQQ-2.pdf>
+Package pdftex.def Info: figure/histAndQQ-2.pdf  used on input line 609.
+(pdftex.def)             Requested size: 199.19283pt x 199.19193pt.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 12 []
  []
 
-[12 <./figure/histAndQQ-1.pdf> <./figure/histAndQQ-2.pdf>]
-Package color Info: Redefining color shadecolor on input line 560.
-
-Underfull \vbox (badness 1675) has occurred while \output is active []
-
+[12 </home/ruoyong/paper1_2021_5/f3.png> </home/ruoyong/paper1_2021_5/f4.png>]
+Package color Info: Redefining color shadecolor on input line 616.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 13
  []
 
-[13]
-Package color Info: Redefining color shadecolor on input line 598.
-Package color Info: Redefining color shadecolor on input line 611.
+[13 <./figure/histAndQQ-1.pdf> <./figure/histAndQQ-2.pdf>]
+Package color Info: Redefining color shadecolor on input line 664.
 
-Overfull \hbox (11.4962pt too wide) in paragraph at lines 625--625
-[]                   \T1/lmtt/m/n/10.95 type="double", returnStatistics=TRUE,  
-Nglobal = c(128,128))[] 
+Overfull \hbox (17.24493pt too wide) in paragraph at lines 667--667
+[]\T1/lmtt/b/n/10.95 ## Error in CreateStreamsGpu(Nstreams = 128^2, keepInitial
+ = 1): could not find
  []
 
-Package color Info: Redefining color shadecolor on input line 630.
+Package color Info: Redefining color shadecolor on input line 670.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 14 []
  []
 
 [14]
-Package color Info: Redefining color shadecolor on input line 648.
-Package color Info: Redefining color shadecolor on input line 676.
-Package color Info: Redefining color shadecolor on input line 689.
-Package color Info: Redefining color shadecolor on input line 707.
+Package color Info: Redefining color shadecolor on input line 708.
+Package color Info: Redefining color shadecolor on input line 721.
+
+Overfull \hbox (11.4962pt too wide) in paragraph at lines 729--729
+[]                   \T1/lmtt/m/n/10.95 type="double", returnStatistics=TRUE,  
+Nglobal = c(128,128))[] 
+ []
+
+
+Overfull \hbox (57.48607pt too wide) in paragraph at lines 732--732
+[]\T1/lmtt/b/n/10.95 ## Error in gpuRandom::fisher.sim(month_GPU, 1e+06, stream
+s = streams, type = "double",
+ []
+
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 15
  []
 
 [15]
-Package color Info: Redefining color shadecolor on input line 722.
-Package color Info: Redefining color shadecolor on input line 775.
-<figure/fighistMonth-1.pdf, id=344, 433.62pt x 289.08pt>
-File: figure/fighistMonth-1.pdf Graphic file (type pdf)
-<use figure/fighistMonth-1.pdf>
-Package pdftex.def Info: figure/fighistMonth-1.pdf  used on input line 776.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/fighistMonth-2.pdf, id=345, 433.62pt x 289.08pt>
-File: figure/fighistMonth-2.pdf Graphic file (type pdf)
-<use figure/fighistMonth-2.pdf>
-Package pdftex.def Info: figure/fighistMonth-2.pdf  used on input line 777.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
+Package color Info: Redefining color shadecolor on input line 751.
 
-Underfull \vbox (badness 1448) has occurred while \output is active []
+Overfull \hbox (57.48607pt too wide) in paragraph at lines 759--760
+[]\T1/lmtt/b/n/10.95 ## Error in gpuRandom::fisher.sim(month_GPU, 1e+06, stream
+s = streams, type = "double",
+ []
+
+Package color Info: Redefining color shadecolor on input line 771.
+Package color Info: Redefining color shadecolor on input line 799.
+Package color Info: Redefining color shadecolor on input line 812.
+
+Overfull \hbox (51.73734pt too wide) in paragraph at lines 822--822
+[]\T1/lmtt/b/n/10.95 ## Error in gpuRandom::fisher.sim(week_GPU, 1e+07, streams
+ = streams, type = "double",
+ []
 
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 16 []
  []
 
-[16 <./figure/fighistMonth-1.pdf> <./figure/fighistMonth-2.pdf>]
+[16]
+Package color Info: Redefining color shadecolor on input line 841.
+
+Overfull \hbox (51.73734pt too wide) in paragraph at lines 849--850
+[]\T1/lmtt/b/n/10.95 ## Error in gpuRandom::fisher.sim(week_GPU, 1e+07, streams
+ = streams, type = "double",
+ []
+
+Package color Info: Redefining color shadecolor on input line 858.
+Package color Info: Redefining color shadecolor on input line 911.
+<figure/fighistMonth-1.pdf, id=337, 433.62pt x 289.08pt>
+File: figure/fighistMonth-1.pdf Graphic file (type pdf)
+<use figure/fighistMonth-1.pdf>
+Package pdftex.def Info: figure/fighistMonth-1.pdf  used on input line 912.
+(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
+<figure/fighistMonth-2.pdf, id=338, 433.62pt x 289.08pt>
+File: figure/fighistMonth-2.pdf Graphic file (type pdf)
+<use figure/fighistMonth-2.pdf>
+Package pdftex.def Info: figure/fighistMonth-2.pdf  used on input line 913.
+(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
+
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 17
  []
 
 [17]
-Package color Info: Redefining color shadecolor on input line 818.
+Overfull \hbox (10.94998pt too wide) has occurred while \output is active
+\T1/lmr/m/n/10.95 18 []
+ []
 
-Overfull \hbox (51.73734pt too wide) in paragraph at lines 831--831
+[18 <./figure/fighistMonth-1.pdf> <./figure/fighistMonth-2.pdf>]
+Package color Info: Redefining color shadecolor on input line 954.
+
+Overfull \hbox (51.73734pt too wide) in paragraph at lines 967--967
 []\T1/lmtt/m/n/10.95 myRaster = raster::raster( raster::extent(0,Ngrid[1]/Ngrid
 [2],5,6),Ngrid[1], Ngrid[2])[] 
  []
 
 
-Overfull \hbox (45.9886pt too wide) in paragraph at lines 831--831
+Overfull \hbox (45.9886pt too wide) in paragraph at lines 967--967
 []\T1/lmtt/m/n/10.95 coordsSp = sp::SpatialPoints(raster::xyFromCell(myRaster, 
 1:raster::ncell(myRaster)))[] 
  []
 
-Package color Info: Redefining color shadecolor on input line 837.
-
-Overfull \hbox (10.94998pt too wide) has occurred while \output is active
-\T1/lmr/m/n/10.95 18 []
- []
-
-[18]
-Package color Info: Redefining color shadecolor on input line 853.
-Package color Info: Redefining color shadecolor on input line 866.
-Package color Info: Redefining color shadecolor on input line 889.
-
-Overfull \hbox (34.07611pt too wide) in paragraph at lines 887--889
-[]\T1/lmr/m/n/10.95 Step 5, gen-er-ate 2 stan-dard Gaus-sian ran-dom vec-tors \
-T1/lmtt/m/n/10.95 zmatGpu$\OT1/lmr/m/n/10.95 = (\OML/lmm/m/it/10.95 Z[]; Z[]\OT
-1/lmr/m/n/10.95 )$ \T1/lmr/m/n/10.95 us-ing \T1/lmtt/m/n/10.95 gpuRandom::rnorm
-()\T1/lmr/m/n/10.95 ,
- []
-
-Package color Info: Redefining color shadecolor on input line 896.
-Package color Info: Redefining color shadecolor on input line 906.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 19
  []
 
 [19]
-Package color Info: Redefining color shadecolor on input line 941.
-LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
-948.
- (/usr/share/texmf/tex/latex/lm/ts1lmtt.fd
-File: ts1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
-)
-Overfull \hbox (34.49113pt too wide) in paragraph at lines 948--948
-[]                                     \TS1/lmtt/m/n/10.95 '\T1/lmtt/m/n/10.95 
-sim\TS1/lmtt/m/n/10.95 '\T1/lmtt/m/n/10.95 , 1:ncol(simMat)), 1, paste, collaps
-e=\TS1/lmtt/m/n/10.95 ''\T1/lmtt/m/n/10.95 )[] 
+Package color Info: Redefining color shadecolor on input line 973.
+Package color Info: Redefining color shadecolor on input line 989.
+Package color Info: Redefining color shadecolor on input line 1002.
+Package color Info: Redefining color shadecolor on input line 1025.
+
+Overfull \hbox (34.07611pt too wide) in paragraph at lines 1023--1025
+[]\T1/lmr/m/n/10.95 Step 5, gen-er-ate 2 stan-dard Gaus-sian ran-dom vec-tors \
+T1/lmtt/m/n/10.95 zmatGpu$\OT1/lmr/m/n/10.95 = (\OML/lmm/m/it/10.95 Z[]; Z[]\OT
+1/lmr/m/n/10.95 )$ \T1/lmr/m/n/10.95 us-ing \T1/lmtt/m/n/10.95 gpuRandom::rnorm
+()\T1/lmr/m/n/10.95 ,
  []
-
-Package color Info: Redefining color shadecolor on input line 954.
-<figure/maternplot-1.pdf, id=446, 433.62pt x 289.08pt>
-File: figure/maternplot-1.pdf Graphic file (type pdf)
-<use figure/maternplot-1.pdf>
-Package pdftex.def Info: figure/maternplot-1.pdf  used on input line 963.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-2.pdf, id=447, 433.62pt x 289.08pt>
-File: figure/maternplot-2.pdf Graphic file (type pdf)
-<use figure/maternplot-2.pdf>
-Package pdftex.def Info: figure/maternplot-2.pdf  used on input line 964.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-3.pdf, id=448, 433.62pt x 289.08pt>
-File: figure/maternplot-3.pdf Graphic file (type pdf)
-<use figure/maternplot-3.pdf>
-Package pdftex.def Info: figure/maternplot-3.pdf  used on input line 965.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-4.pdf, id=449, 433.62pt x 289.08pt>
-File: figure/maternplot-4.pdf Graphic file (type pdf)
-<use figure/maternplot-4.pdf>
-Package pdftex.def Info: figure/maternplot-4.pdf  used on input line 966.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-5.pdf, id=450, 433.62pt x 289.08pt>
-File: figure/maternplot-5.pdf Graphic file (type pdf)
-<use figure/maternplot-5.pdf>
-Package pdftex.def Info: figure/maternplot-5.pdf  used on input line 967.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-6.pdf, id=451, 433.62pt x 289.08pt>
-File: figure/maternplot-6.pdf Graphic file (type pdf)
-<use figure/maternplot-6.pdf>
-Package pdftex.def Info: figure/maternplot-6.pdf  used on input line 968.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-7.pdf, id=452, 433.62pt x 289.08pt>
-File: figure/maternplot-7.pdf Graphic file (type pdf)
-<use figure/maternplot-7.pdf>
-Package pdftex.def Info: figure/maternplot-7.pdf  used on input line 969.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-8.pdf, id=453, 433.62pt x 289.08pt>
-File: figure/maternplot-8.pdf Graphic file (type pdf)
-<use figure/maternplot-8.pdf>
-Package pdftex.def Info: figure/maternplot-8.pdf  used on input line 970.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-9.pdf, id=454, 433.62pt x 289.08pt>
-File: figure/maternplot-9.pdf Graphic file (type pdf)
-<use figure/maternplot-9.pdf>
-Package pdftex.def Info: figure/maternplot-9.pdf  used on input line 971.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/maternplot-10.pdf, id=455, 433.62pt x 289.08pt>
-File: figure/maternplot-10.pdf Graphic file (type pdf)
-<use figure/maternplot-10.pdf>
-Package pdftex.def Info: figure/maternplot-10.pdf  used on input line 972.
-(pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
@@ -937,54 +950,105 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
  []
 
 [20]
-Overfull \vbox (133.90417pt too high) has occurred while \output is active []
+Overfull \hbox (28.7424pt too wide) in paragraph at lines 1031--1031
+[]\T1/lmtt/b/n/10.95 ## Error: 'CreateStreamsGpu' is not an exported object fro
+m 'namespace:gpuRandom'[] 
+ []
+
+Package color Info: Redefining color shadecolor on input line 1034.
+Package color Info: Redefining color shadecolor on input line 1046.
+
+Overfull \hbox (11.4962pt too wide) in paragraph at lines 1053--1053
+[]\T1/lmtt/b/n/10.95 ## Error in h(simpleError(msg, call)): error in evaluating
+ the argument 'x' in
+ []
+
+
+Overfull \hbox (40.23987pt too wide) in paragraph at lines 1064--1064
+[]\T1/lmtt/b/n/10.95 ## Error in gpuRandom:::multiplyLowerDiagonalBatchBackend(
+output, L, D, B, : object
+ []
+
+Package color Info: Redefining color shadecolor on input line 1086.
+
+Overfull \hbox (11.4962pt too wide) in paragraph at lines 1093--1093
+[]\T1/lmtt/b/n/10.95 ## Error in h(simpleError(msg, call)): error in evaluating
+ the argument 'x' in
+ []
+
+
+Overfull \hbox (11.4962pt too wide) in paragraph at lines 1098--1098
+[]\T1/lmtt/b/n/10.95 ## Error in h(simpleError(msg, call)): error in evaluating
+ the argument 'x' in
+ []
+
+LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
+1101.
+(/usr/share/texmf/tex/latex/lm/ts1lmtt.fd
+File: ts1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
+)
+Overfull \hbox (34.49113pt too wide) in paragraph at lines 1101--1101
+[]                                     \TS1/lmtt/m/n/10.95 '\T1/lmtt/m/n/10.95 
+sim\TS1/lmtt/m/n/10.95 '\T1/lmtt/m/n/10.95 , 1:ncol(simMat)), 1, paste, collaps
+e=\TS1/lmtt/m/n/10.95 ''\T1/lmtt/m/n/10.95 )[] 
+ []
+
+
+Overfull \hbox (11.4962pt too wide) in paragraph at lines 1104--1104
+[]\T1/lmtt/b/n/10.95 ## Error in h(simpleError(msg, call)): error in evaluating
+ the argument 'x' in
+ []
 
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 21
  []
 
-[21 <./figure/maternplot-1.pdf> <./figure/maternplot-2.pdf> <./figure/maternplo
-t-3.pdf> <./figure/maternplot-4.pdf> <./figure/maternplot-5.pdf> <./figure/mate
-rnplot-6.pdf> <./figure/maternplot-7.pdf> <./figure/maternplot-8.pdf> <./figure
-/maternplot-9.pdf> <./figure/maternplot-10.pdf>] (./paper1.bbl
+[21]
+Package color Info: Redefining color shadecolor on input line 1109.
+
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 22 []
  []
 
-[22]
+[22] (./paper1.bbl
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 23
  []
 
-[23])
+[23]
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 24 []
  []
 
-[24]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1012.
-
+[24])
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 25
  []
 
 [25]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 1012.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1159.
+
+Overfull \hbox (10.94998pt too wide) has occurred while \output is active
+\T1/lmr/m/n/10.95 26 []
+ []
+
+[26]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 1159.
  (./paper1.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1012.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1012.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1159.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1159.
 
 Package rerunfilecheck Info: File `paper1.out' has not changed.
 (rerunfilecheck)             Checksum: 7E31B8F16366A784A74EC9BD6575C521;1699.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1012.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1159.
  ) 
 Here is how much of TeX's memory you used:
- 11858 strings out of 483107
- 181598 string characters out of 5964630
- 649314 words of memory out of 5000000
- 26437 multiletter control sequences out of 15000+600000
- 626257 words of font info for 73 fonts, out of 8000000 for 9000
+ 11782 strings out of 483107
+ 179249 string characters out of 5964630
+ 650069 words of memory out of 5000000
+ 26369 multiletter control sequences out of 15000+600000
+ 627215 words of font info for 76 fonts, out of 8000000 for 9000
  59 hyphenation exceptions out of 8191
  48i,15n,53p,2287b,1249s stack positions out of 5000i,500n,10000p,200000b,80000s
 pdfTeX warning (dest): name{Subsection.4.0.Simulating\040Gaussian\040random\0
@@ -1006,11 +1070,13 @@ nts/type1/public/lm/lmr8.pfb></usr/share/texmf/fonts/type1/public/lm/lmri10.pfb
 ></usr/share/texmf/fonts/type1/public/lm/lmri8.pfb></usr/share/texmf/fonts/type
 1/public/lm/lmro10.pfb></usr/share/texmf/fonts/type1/public/lm/lmss10.pfb></usr
 /share/texmf/fonts/type1/public/lm/lmsy10.pfb></usr/share/texmf/fonts/type1/pub
-lic/lm/lmsy8.pfb></usr/share/texmf/fonts/type1/public/lm/lmtt10.pfb>
-Output written on paper1.pdf (25 pages, 30061322 bytes).
+lic/lm/lmsy8.pfb></usr/share/texmf/fonts/type1/public/lm/lmtk10.pfb></usr/share
+/texmf/fonts/type1/public/lm/lmtt10.pfb></usr/share/texmf/fonts/type1/public/lm
+/lmtt8.pfb></usr/share/texmf/fonts/type1/public/lm/lmtti10.pfb>
+Output written on paper1.pdf (26 pages, 29909642 bytes).
 PDF statistics:
- 673 PDF objects out of 1000 (max. 8388607)
- 571 compressed objects within 6 object streams
- 185 named destinations out of 1000 (max. 500000)
- 197 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 605 PDF objects out of 1000 (max. 8388607)
+ 533 compressed objects within 6 object streams
+ 186 named destinations out of 1000 (max. 500000)
+ 137 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -106,7 +106,7 @@ Finally, the paper concludes with a short summary and a discussion in Section 5.
 library("gpuR")
 library("gpuRandom")
 setContext(   grep('gpu', listContexts()$device_type) [1]    )
-setwd("/home/ruoyong/paper1_2021_5")
+#setwd("/home/ruoyong/paper1_2021_5")
 @
 
 \section{Generating random numbers} \label{}
@@ -123,9 +123,8 @@ in computational statistics: (1) generating independent and identically distribu
 
 create streams on cpu
 <<createStreams, size="tiny">>=
-library("gpuRandom")
 myStreamsCpu <- createStreamsCpu(n=4, seed = 12345)
-myStreamsCpu
+t(myStreamsCpu)
 @
 
 streams on gpu
@@ -146,7 +145,7 @@ matrix(as.matrix(myStreamsGpu1), nrow(myStreamsCpu), ncol(myStreamsCpu), dimname
 @
 
 check reproducibility
-<<simStuff, eval=TRUE,tidy=TRUE>>=
+<<simStuff2, eval=TRUE,tidy=TRUE>>=
 as.vector(gpuRandom::runif(n=4, streams=myStreamsGpu1, Nglobal=c(1,nrow(myStreamsGpu1)), type = "double"))
 as.vector(gpuRandom::runif(n=10, streams=myStreamsGpu2, Nglobal=c(1,nrow(myStreamsGpu1)), type = "double"))[-(1:6)]
 @
