@@ -6,7 +6,7 @@
 
 likfit_givenBeta <- function(Betas, #a p x m matrix  given by the user 
                              Nparam,
-                             DatasetIndex,     #an integer, which dataset are the betas for?,
+                             DatasetIndex=NA,     #an integer, which dataset are the betas for?,
                              Nobs,  # number of observations.
                              detVar,
                              ssqY,
@@ -43,7 +43,7 @@ likfit_givenBeta <- function(Betas, #a p x m matrix  given by the user
       ssqBeta[i,j] <- t(Betas[ ,j]) %*% XTVinvX_i %*% Betas[ ,j]
     }
   }
-  
+   
   
   one <- aTDinva - 2*middleItem + ssqBeta
   

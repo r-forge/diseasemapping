@@ -340,6 +340,8 @@ clrngMrg31k3pStreamCreator buildStreamCreator(Rcpp::IntegerVector seed){
   return streamCreatorHere;
 }
 
+
+
 //' @name createStreamsCpu
 //' @title create streams stored on the CPU
 //' @description streams for random numbers
@@ -357,7 +359,6 @@ Rcpp::IntegerMatrix  createStreamsCpu(
   colnames(result) = CharacterVector::create(
     "current.g1.1", "current.g1.2", "current.g1.3", "current.g2.1", "current.g2.2", "current.g2.3",
     "initial.g1.1", "initial.g1.2", "initial.g1.3", "initial.g2.1", "initial.g2.2", "initial.g2.3");
-  //,
   //  "substream.g1.1", "substream.g1.2", "substream.g1.3", "substream.g2.1", "substream.g2.2", "substream.g2.3");
 
   size_t streamBufferSize;
@@ -368,8 +369,8 @@ Rcpp::IntegerMatrix  createStreamsCpu(
   
   clrngMrg31k3pStreamCreator streamCreatorHere = buildStreamCreator(seed2);
   
-  Rcpp::Rcout << "a" << streamCreatorHere.initialState.g1[0]<< " " << streamCreatorHere.initialState.g1[1]<< " " << streamCreatorHere.initialState.g1[2]<< "\n";
-  Rcpp::Rcout << "b" << streamCreatorHere.initialState.g2[0]<< " " << streamCreatorHere.initialState.g2[1]<< " " << streamCreatorHere.initialState.g2[2]<< "\n";
+  // Rcpp::Rcout << "a" << streamCreatorHere.initialState.g1[0]<< " " << streamCreatorHere.initialState.g1[1]<< " " << streamCreatorHere.initialState.g1[2]<< "\n";
+  // Rcpp::Rcout << "b" << streamCreatorHere.initialState.g2[0]<< " " << streamCreatorHere.initialState.g2[1]<< " " << streamCreatorHere.initialState.g2[2]<< "\n";
 
   clrngMrg31k3pStream* streams = clrngMrg31k3pCreateStreams(&streamCreatorHere, n[0], 
                                                             &streamBufferSize, &err);//line 299 in mrg31k3p.c

@@ -2,9 +2,8 @@
 #'
 #' @description Create streams in R.
 #' 
-#' @param seedR an R vector, which is the initial seed of streams.
-#' @param Nstreams number of streams to create.
-#' @param keepinitial logical, whether to keep the initial seed in the created stream.
+#' @param n number of streams to create.
+#' @param seed the initial seed of streams.
 #' @return A stream object on GPU.
 #' @useDynLib gpuRandom
 #' @export
@@ -12,8 +11,8 @@
 
 
 
-createStreams = function(n, 
-                        seed=12345) {
+createStreamsGpu = function(n, 
+                        seed=12345){
 
     seed = rep_len(seed, 6)
     seedVec <- gpuR::vclVector(as.integer(seed), type="integer")  
