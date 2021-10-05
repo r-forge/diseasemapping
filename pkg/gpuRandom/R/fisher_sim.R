@@ -99,8 +99,8 @@ fisher.sim=function(
   
   #  print(class(xVcl))
   
-  simPerWork<-ceiling(N/prod(Nglobal))
-  TotalSim<-simPerWork*prod(Nglobal)
+  simPerItem<-ceiling(N/prod(Nglobal))
+  TotalSim<-simPerItem*prod(Nglobal)
   #remainder<-C%%prod(Nglobal)
   
   if(returnStatistics) {
@@ -112,7 +112,7 @@ fisher.sim=function(
   
   PVAL <- NULL
   
-  counts<-cpp_gpuFisher_test(x, results, simPerWork, streams, Nglobal,Nlocal)
+  counts<-cpp_gpuFisher_test(x, results, simPerItem, streams, Nglobal,Nlocal)
   
   #theTime<-system.time(cpp_gpuFisher_test(x, results, as.integer(B), streams, Nglobal,Nlocal))
   
@@ -137,7 +137,7 @@ fisher.sim=function(
     
   }else {
     
-    theResult = list(p.value=PVAL, simNum=TotalSim, counts=counts, streams=streams)
+    theResult = list(p.value = PVAL, simNum=TotalSim, counts=counts, streams=streams)
   }
   
   theResult

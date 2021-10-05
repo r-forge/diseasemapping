@@ -12,14 +12,13 @@
 
 
 createStreamsGpu = function(n, 
-                        seed=12345){
+                            seed=12345){
 
     seed = rep_len(seed, 6)
     seedVec <- gpuR::vclVector(as.integer(seed), type="integer")  
     streamsR<-gpuR::vclMatrix(0L, nrow=as.integer(n), ncol=12, type="integer")
 
-    keepInitial=1
-    gpuRandom:::CreateStreamsGpuBackend(seedVec, streamsR, keepInitial)
+    gpuRandom:::CreateStreamsGpuBackend(seedVec, streamsR, keepInitial=1)
   
     streamsR
   

@@ -212,7 +212,6 @@ void CreateStreamsGpuTemplated(
   //std::cout<< "in CreateStreamsGpuTemplated\n\n\n";    
   CreateStreamsGpu(*creatorInitialGlobal, *streams, keepInitial, ctx_id);
   
-  //std::cout<< "end of CreateStreamsGpuTemplated\n\n\n";  
   
   
   //return Rcpp::wrap(0L);
@@ -228,22 +227,10 @@ void CreateStreamsGpuBackend(
     Rcpp::S4 streamsR,
     const int keepInitial){
   
-  
-  /*
-   Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(creatorInitialGlobalR));
-   std::string precision_type = (std::string) classVarR;
-   */
-  
-  //Rcpp::traits::input_parameter< std::string >::type classstream(RCPP_GET_CLASS(streamsR));
-  //std::string precision_type_stream = (std::string) classstream;
-  
-  
   //Rcpp::Rcout << "in CreateStreamsGpuBackend" << "\n\n";
   
   
   CreateStreamsGpuTemplated(creatorInitialGlobalR, streamsR, keepInitial);
-  
-  //Rcpp::Rcout << "end of CreateStreamsGpuBackend" << "\n\n";
   
   
 }

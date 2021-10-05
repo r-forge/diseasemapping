@@ -138,7 +138,7 @@ In recent years, parallel computing with R \citep{r2021} has become a very impor
 Random number generator (RNG) is critical in simulation-based statistical inference, there is not yet an \proglang{R} package that is able to generate random numbers on GPU. This is complicate to do on GPU because multiple streams will be needed for parallel generation of random numbers, and the stream states need to be able to be restored for reproducibility of simulation results. We introduce the \pkg{gpuRandom} \proglang{R} package that leverages the \pkg{gpuR} package, and can generate random numbers on GPU by using the \pkg{clRNG} \citep{l2015clrng} library, and can thus accelerate several types of statistical simulation and modelling.
 
 The remaining sections are organized as follows. 
-In Section 2, we introduce streams and the use of streams in work items on a GPU device, and describe and check the functions for generating uniform and Normal random numbers.
+In Section 2, we introduce streams and the use of streams in work-items on GPU device, and describe and check the functions for generating uniform and Normal random numbers.
 In Section 3, we apply GPU-generated uniform random numbers in Monte Carlo simulation for Fisher’s exact test, we parallelise this Monte Carlo simulation task and implement it on GPU, then we provide two real data examples to demonstrate the function usage and test its R performance.
 Section 4 simulates simultaneously multiple Gaussian random surfaces by applying GPU-generated Normal random numbers and GPU-computed batches of Mat\'ern covariance matrices, then we plot the generated random surfaces in the end. 
 Finally, the paper concludes with a short summary and a discussion in Section 5.
@@ -156,15 +156,13 @@ in computational statistics: (1) generating independent and identically distribu
 \proglang{clRNG} is an \proglang{OpenCL} library for uniform random number generation, it provides four different RNGs: the MRG31k3p, MRG32k3a, LFSR113, and Philox-4×32-10 generators, these RNGs are actually stream objects of different forms. \pkg{gpuRandom} package uses the MRG31k3p RNG from the \proglang{clRNG} library, making it able to generate random numbers on GPUs. In what follows, we will illustrate how to create stream objects and how to use streams to generate (standard) Uniform and (standard) Gaussian random numbers. 
 
 
-\subsection{Creating streams}
-
-{\tt changed createStreams functions to be compatible with each other}
-
-create streams on cpu
-\begin{knitrout}\tiny
+\subsection{Creating streams}\label{create_streams}
+In \proglang{clRNG} library, a stream object is a structure that contains three states: the current state of the stream, the initial state (or seed) of the stream , and the initial state of the current substream. The function \fct{clrngMrg31k3pCreateStreams} from \proglang{clRNG} creates streams on the host computer using the MRG31k3p RNG. If we want to use the streams in work-items on a GPU device, the streams have to be copied from the host to the global memory of the GPU device, and then each work-item picks streams from the global memory and copies their current states only to its private memory. \pkg{gpuRandom} is able to create streams both on the host computer and on the GPU device. \fct{createStreamsCpu} is an \proglang{R} interface function of \fct{clrngMrg31k3pCreateStreams} that creates streams on CPU as \proglang{R} matrices (see the \proglang{R} output below), in which the substreams are not created because they are not actually used in random number generation. \fct{createStreamsGpu} adapted the \fct{clrngMrg31k3pCreateStreams} and creates streams directly on GPU device, so that it can avoid unnecessary data transfer between host and device. From our experience, transferring a large-size matrix of streams from host to device by converting it to a `\code{vclMatrix}' object can take very long time, hence, \fct{createStreamsGpu} is more efficient and more frequently used. In the following, we demonstrate the usage of these two functions by generating 4 streams on the host and on the device respectively.
+\begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
-myStreamsCpu <- createStreamsCpu(n=4, seed = 12345)
+# creating streams on cpu
+myStreamsCpu <- createStreamsCpu(n=4)
 t(myStreamsCpu)
 ##               [,1]       [,2]       [,3]       [,4]
 ## current.g1.1 12345  336690377  502033783  739421137
@@ -182,142 +180,30 @@ t(myStreamsCpu)
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
-
-streams on gpu
+\fct{createStreamsCpu} has two arguments:
+\begin{itemize}
+  \item \code{n}: number of streams to create.
+  \item \code{seed}: random seed of streams of length 6, recycled if shorter. Default is set to a vector of six ``12345''.
+\end{itemize}
+For the MRG31k3p RNG, each state of the stream is comprised of six 31-bit integers, the state of the first stream (seed of the \proglang{clRNG} library) is by default ``12345''. By setting a seed same as the MRG31k3p default seed in \fct{createStreamsGpu}, we can produce on device exactly the same streams as those created on host as follows,
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
-myStreamsGpu1 = vclMatrix(myStreamsCpu)
-myStreamsGpu2 = createStreams(n=4, seed=12345)
-range(as.matrix(myStreamsGpu1 - myStreamsGpu2))
+# creating streams on gpu
+#myStreamsGpu1 = vclMatrix(myStreamsCpu)
+myStreamsGpu1 = createStreamsGpu(n=4, seed=12345)
+range(as.matrix(myStreamsGpu1) - myStreamsCpu)
 ## [1] 0 0
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
-
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-sim_2 <- gpuRandom::runif(n = 6, streams = myStreamsGpu1, Nglobal = c(1,
-    nrow(myStreamsGpu1)), type = "double")
-as.vector(sim_2)
-## [1] 0.7353245 0.5180770 0.6142074 0.2319392 0.1100781 0.3619766
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-check seed
-\begin{knitrout}\tiny
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-matrix(as.matrix(myStreamsGpu1), nrow(myStreamsCpu), ncol(myStreamsCpu), dimnames = dimnames(myStreamsCpu))
-##      current.g1.1 current.g1.2 current.g1.3 current.g2.1 current.g2.2
-## [1,]    878672095    240667857    240667857    642281259   1069151070
-## [2,]   2113333390    559530223   1309565828   1335994581     61444481
-## [3,]    502033783   1322587635   1964121530   1949818481   1607232546
-## [4,]    739421137   1475938232    730262207   1630192198    324551134
-##      current.g2.3 initial.g1.1 initial.g1.2 initial.g1.3 initial.g2.1
-## [1,]    809054265        12345        12345        12345        12345
-## [2,]    197003928    336690377    597094797   1245771585     85196284
-## [3,]   1462898381    502033783   1322587635   1964121530   1949818481
-## [4,]    795289868    739421137   1475938232    730262207   1630192198
-##      initial.g2.2 initial.g2.3
-## [1,]        12345        12345
-## [2,]    523477687   2094976052
-## [3,]   1607232546   1462898381
-## [4,]    324551134    795289868
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-check reproducibility
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-as.vector(gpuRandom::runif(n = 4, streams = myStreamsGpu1, Nglobal = c(1,
-    nrow(myStreamsGpu1)), type = "double"))
-## [1] 0.6487742 0.1112075 0.3661944 0.5018562
-as.vector(gpuRandom::runif(n = 10, streams = myStreamsGpu2, Nglobal = c(1,
-    nrow(myStreamsGpu1)), type = "double"))[-(1:6)]
-## [1] 0.6487742 0.1112075 0.3661944 0.5018562
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-
-In \proglang{clRNG} library, a stream object is a structure that contains three states (see the first column in the \proglang{R} output below): the current state of the stream, the initial state (or seed) of the stream , and the initial state of the current substream. The function \fct{clrngMrg31k3pCreateStreams} from \proglang{clRNG} creates streams on the host computer using the MRG31k3p RNG. If we want to use the streams in work items on a GPU device, the streams have to be copied from the host to the global memory of the GPU device, and then each work item picks streams from the global memory and copies their current states only to its private memory. In \pkg{gpuRandom}, to avoid unnecessary data transfer between host and device, we are able to create streams both on the host computer and on the GPU device. \fct{gpuRandom::CreateStreamsCpu} is an \proglang{R} interface function of \fct{clrngMrg31k3pCreateStreams} that creates streams on the host as \proglang{R} matrices, so that users can easily view the streams. \fct{gpuRandom::CreateStreamsGpu} is adapted from \fct{clrngMrg31k3pCreateStreams} with the advantage of creating streams directly on GPU device. From our experience, transferring a large-size matrix of streams from host to device by converting it to a `\code{vclMatrix}' object can take very long time, hence, \fct{gpuRandom::CreateStreamsGpu} is more efficient and more frequently used. In the following, we demonstrate the usage of these two functions by generating 4 streams on the host and on the device respectively.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-# Create streams on host
-streams_on_CPU<-gpuRandom::CreateStreamsCpu(seed = rep(12345, 6), Nstreams=4)
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error: 'CreateStreamsCpu' is not an exported object from 'namespace:gpuRandom'}}\begin{verbatim}
-t(streams_on_CPU)
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 't': object 'streams\_on\_CPU' not found}}\end{kframe}
-\end{knitrout}
-\fct{gpuRandom::CreateStreamsCpu} has only one argument \code{Nstreams}, which is the number of streams to create. For the MRG31k3p RNG, each state of the stream object is comprised of six 31-bit integers, the state of the first stream (seed of the \proglang{clRNG} library) is by default ``12345''. By setting a seed same as the MRG31k3p default seed in \fct{gpuRandom::CreateStreamsGpu}, we can produce on device exactly the same streams as those created on host as follows,
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-# Create streams on GPU
-seed <- c(12345, 12345, 12345, 12345, 12345, 12345)
-streams1 <- gpuRandom::CreateStreamsGpu(seedR=seed, Nstreams=4, keepInitial=TRUE)
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error: 'CreateStreamsGpu' is not an exported object from 'namespace:gpuRandom'}}\begin{verbatim}
-streams_from_GPU <- as.matrix(streams1)
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in as.matrix(streams1): object 'streams1' not found}}\begin{verbatim}
-streams2 = deepcopy(streams1)
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'object' in selecting a method for function 'deepcopy': object 'streams1' not found}}\end{kframe}
-\end{knitrout}
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in gpuR::colnames(streams\_from\_GPU) = c("{}current.g1.1"{}, "{}current.g1.2"{}, : object 'streams\_from\_GPU' not found}}\end{kframe}
-\end{knitrout}
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-t(streams_from_GPU)   
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 't': object 'streams\_from\_GPU' not found}}\end{kframe}
-\end{knitrout}
-The \fct{gpuRandom::CreateStreamsGpu} has three arguments:
-\begin{itemize}
-  \item \code{seedR}: an R vector of length 6, which is the seed of streams. Default is set to a vector of six ``12345''.
-  \item \code{Nstreams}: number of streams to create.
-  \item \code{keepInitial}: logical specifying whether to keep the seed in generated streams. Default is set to TRUE.
-\end{itemize}
-\fct{CreateStreamsGpu} in \pkg{gpuRandom} are similar to \code{.Random.seed} in \proglang{R}. By setting the RNG status with the \fct{set.seed} function in \proglang{R}, we are able to repeat the sequence of random seeds, which is an important quality criteria of RNGs. Similarly in \pkg{gpuRandom}, with the \code{seedR} argument, we are able to produce exactly the same sequence of streams as many times as we want.
-
-
-
-
-
-
-
+\fct{createStreamsGpu} also has the two arguments \code{n}, which is the number of streams to create, and \code{seed}, which is the seed of streams, and is also by default a vector of six ``12345''. \fct{createStreamsGpu} is similar to \code{.Random.seed} in \proglang{R}. By setting the RNG status with the \proglang{R} function \fct{set.seed}, we are able to repeat the sequence of random seeds, which is an important quality criteria of RNGs. Similarly in \fct{createStreamsGpu} and \fct{createStreamsCpu}, with the \code{seed} argument, we are able to produce exactly the same sequence of streams as many times as we want.
 
 
 
 
 \subsection{Using streams to generate  i.i.d. $U (0, 1)$ random numbers on GPU}
-The streams created on GPU are then used in work items that executes in parallel on GPU device. In \pkg{gpuRandom} each work item takes one distinct stream to generate random numbers, it is important to notice that the number of streams should always be equal to the number of total work items in use. The main part of the kernel (\proglang{OpenCL} functions for execution on the device) for generating uniform random numbers is shown in Listing \ref{lst:uniformkernel}. Kernels are written in the \proglang{OpenCL C} language, in which \code{__kernel} declares a function as a kernel, pointer kernel arguments must be declared with an address space qualifier, for example \code{__global} and \code{__local}. Here the pointers to \code{streams} and to the matrix \code{out} on the global memory are passed to the kernel as arguments. \code{Nrow} and \code{Ncol} represent number of rows and columns of the matrix \code{out} respectively. \code{NpadCol} is the internal number of columns of \code{out}, \code{NpadStreams} is internal number of columns of the \code{streams} matrix (these variables are defined in macros not shown here). Each stream's current state is copied to the private memory of each work item by the function \fct{streamsToPrivate}. \code{index} represents the position of the work item when mapping it to a one-dimensional data structure. The function \fct{clrngMrg31k3pNextState} generates a uniform random integer named \code{temp} between 0 and 4294967295,  the value of \code{temp} is then scaled to be in the interval $(0,1)$ by multiplying it by a constant \code{mrg31k3p\_NORM\_cl}, which is defined to be $1/4294967295$ in macro not shown here. At the end of generating random numbers, streams are transferred back to global memory through the function \fct{streamsFromPrivate}.
+The streams created on GPU are then used in work-items that executes in parallel on GPU device. In \pkg{gpuRandom} each work-item takes one distinct stream to generate random numbers, it is important to notice that the number of streams should always be equal to the number of total work-items in use. The main part of the kernel (\proglang{OpenCL} functions for execution on the device) for generating uniform random numbers is shown in Listing \ref{lst:uniformkernel}. Kernels are written in the \proglang{OpenCL C} language, in which \code{__kernel} declares a function as a kernel, pointer kernel arguments must be declared with an address space qualifier, for example \code{__global} and \code{__local}. Here the pointers to \code{streams} and to the matrix \code{out} on the global memory are passed to the kernel as arguments. \code{Nrow} and \code{Ncol} represent number of rows and columns of the matrix \code{out} respectively. \code{NpadCol} is the internal number of columns of \code{out}, \code{NpadStreams} is internal number of columns of the \code{streams} matrix (these variables are defined in macros not shown here). Each stream's current state is copied to the private memory of each work-item by the function \fct{streamsToPrivate}. \code{index} represents the position of the work-item when mapping it to a one-dimensional data structure. The function \fct{clrngMrg31k3pNextState} generates a uniform random integer named \code{temp} between 0 and 4294967295,  the value of \code{temp} is then scaled to be in the interval $(0,1)$ by multiplying it by a constant \code{mrg31k3p\_NORM\_cl}, which is defined to be $1/4294967295$ in macro not shown here. At the end of generating random numbers, streams are transferred back to global memory through the function \fct{streamsFromPrivate}.
 \begin{framed}
 \begin{lstlisting}[caption={captiontext},language=C,basicstyle=\small,label={lst:uniformkernel}]
  __kernel void mrg31k3pMatrix(
@@ -352,7 +238,7 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 }
 \end{lstlisting}
 \end{framed}
-This kernel executes over a 2-dimensional index space. Figure \ref{fig:1} illustrates how this kernel executes in practice with a simple example. Suppose we have a $2 \times 4$ NDRange (index space size) ((a) in Figure \ref{fig:1}) and want to create a $4 \times 6$ matrix ((b) in Figure \ref{fig:1}) of uniform random numbers using 8 streams. In each grid of (a) that represents a work item, there are two rows of numbers, the number in the above row is the stream index (from 0 to 7), and a pair of numbers in the second row is the 2-dimensional global ID of the work item. Each stream object is passed to each work item. The number in a cell of the matrix in (b) corresponds to the stream, it indicates which stream does the random number generation for this matrix cell. For example, stream 0 which is allocated in work item $(0,0)$ generates a random number in matrix $(0,0)$ in the first iteration, then moves on to matrix $(0,2)$ and generates a random number there in the second iteration, in the third iteration it generates a random number in matrix $(0,4)$ and so on until it goes out of the matrix range in the next iteration.
+This kernel executes over a 2-dimensional index space. Figure \ref{fig:1} illustrates how this kernel executes in practice with a simple example. Suppose we have a $2 \times 4$ NDRange ((a) in Figure \ref{fig:1}) and want to create a $4 \times 6$ matrix ((b) in Figure \ref{fig:1}) of uniform random numbers. In each grid of (a) that represents a work-item, there are two rows of numbers, the number in the above row is the stream index (from 0 to 7), and a pair of numbers in the second row is the 2-dimensional global ID of the work-item. Each stream object is passed to each work-item. The number in a cell of the matrix corresponds to the stream index, it indicates which stream does the random number generation for this matrix cell. For example, stream 0 which is allocated in work-item $(0,0)$ generates a random number in matrix $(0,0)$ in the first iteration, then moves on to matrix $(0,2)$ and generates a random number there in the second iteration, in the third iteration it generates a random number in matrix $(0,4)$ and so on until it goes out of the matrix range in the next iteration.
 \begin{figure}[H]%
     \centering
     \subfloat[]{{\includegraphics[width=8cm]{/home/ruoyong/paper1_2021_5/f1} }}%
@@ -361,126 +247,85 @@ This kernel executes over a 2-dimensional index space. Figure \ref{fig:1} illust
     \caption{name?\label{fig:1}}%
 \end{figure}
 
-Now we use the 4 streams created in Section 2.1 and an NDRange of 1 by 4 work items to generate a vector \code{sim_1} of 6 i.i.d. $U (0,1)$ random numbers using the function \fct{gpuRandom::runif}. If \code{streams} and \code{Nglobal} are both missing, then by default \code{Nglobal} is set as (64,8), and a `vclMatrix' of \code{prod(Nglobal)} streams is supplied. The output is an S4 object (a `\code{vclVector}' or a `\code{vclMatrix}'), to view the generated random numbers, we need to convert it to an R vector or matrix, in this way, the random numbers are moved from the global memory of device to the host.
+Now we use the 4 streams created in section \ref{create_streams} and an NDRange of 1 by 4 work-items to generate a vector \code{sim_1} of 6 i.i.d. $U (0,1)$ random numbers using the function \fct{gpuRandom::runif}. If \code{streams} and \code{Nglobal} are both missing, then by default \code{Nglobal} is set as (64,8), and a `vclMatrix' of \code{prod(Nglobal)} streams is supplied. The output is an S4 object (a `\code{vclVector}' or a `\code{vclMatrix}'), to view the generated random numbers, we need to convert it to an R vector or matrix, in this way, the random numbers are moved from the global memory of device to the host.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
-sim_1 = gpuRandom::runif(n = 6, streams = streams1, Nglobal = c(1, 4),
-    type = "double")
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in nrow(streams): object 'streams1' not found}}\begin{verbatim}
+myStreamsGpu2 = deepcopy(myStreamsGpu1)
+sim_1 = runif(n = 6, streams = myStreamsGpu1, Nglobal = c(1, 4), type = "double")
 as.vector(sim_1)
+## [1] 0.7353245 0.5180770 0.6142074 0.2319392 0.1100781 0.3619766
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in as.vector(sim\_1): object 'sim\_1' not found}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 The arguments of the \fct{gpuRandom::runif} are described as follows:
 \begin{itemize}
-  \item \code{n}: a vector of length 2 specifying the row and column number if to create a matrix, or specifying the length if to create a vector.
+  \item \code{n}: a vector of length 2 specifying the row and column number if to create a matrix, or a number specifying the length if to create a vector.
   \item \code{streams}: streams used for random number generation.
-  \item \code{Nglobal}: global index space that defines the total work-items that execute in parallel. Default is set as $(64,8)$.
+  \item \code{Nglobal}: global index space (NDRange). Default is set as $(64,8)$.
   \item \code{type}: ``double'' or ``float'' format of generated random numbers.
 \end{itemize}
-Next we show that by using a same stream \code{streams2} as \code{streams1},  \fct{gpuRandom::runif} returns a vector \code{sim_2} of same random numbers as \code{sim_1}. 
+Next we show that by using a stream \code{myStreamsGpu2} same as \code{myStreamsGpu1},  \fct{runif} returns a vector \code{sim_2} of same random numbers as \code{sim_1}. 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
-sim_2 <- gpuRandom::runif(n = 6, streams = streams2, Nglobal = c(1, 4),
-    type = "double")
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in nrow(streams): object 'streams2' not found}}\begin{verbatim}
+sim_2 <- runif(n = 6, streams = myStreamsGpu2, Nglobal = c(1, 4), type = "double")
 as.vector(sim_2)
 ## [1] 0.7353245 0.5180770 0.6142074 0.2319392 0.1100781 0.3619766
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
-Notice that \code{streams2} is a \code{deepcopy} of \code{streams1} before \code{streams1} is used. Reusing \code{streams1} will produce a vector different from \code{sim_1} (see \code{sim_3}). Because each time a random number is generated, the current state of the stream is changed (advances by one position), below shows the first six rows (current states) of \code{streams1} after it being used.
+Notice that \code{myStreamsGpu2} is a \code{deepcopy} of \code{myStreamsGpu1} before \code{myStreamsGpu1} is used. Reusing \code{myStreamsGpu1} will produce a vector different from \code{sim_1} (see \code{sim_3}). Because each time a random number is generated, the current state of the stream is changed (advances by one position), below shows the first six rows (current states) of \code{myStreamsGpu1} after it being used.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
-sim_3 = gpuRandom::runif(n = 6, streams = streams1, Nglobal = c(1, 4),
-    type = "double")
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in nrow(streams): object 'streams1' not found}}\begin{verbatim}
+sim_3 = runif(n = 6, streams = myStreamsGpu1, Nglobal = c(1, 4), type = "double")
 as.vector(sim_3)
+## [1] 0.6487742 0.1112075 0.3661944 0.5018562 0.1088229 0.3114331
+t(as.matrix(myStreamsGpu1))[1:6, ]
+##            [,1]       [,2]       [,3]       [,4]
+## [1,] 1167281028  640923766  502033783  739421137
+## [2,] 1918428443 1912157188 1322587635 1475938232
+## [3,] 1858462085  286315187 1964121530  730262207
+## [4,]  933585541 2119609883 1949818481 1630192198
+## [5,] 1132031887  834429287 1607232546  324551134
+## [6,]  465230163   47498872 1462898381  795289868
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in as.vector(sim\_3): object 'sim\_3' not found}}\begin{verbatim}
-t(as.matrix(streams1))[1:6, ]
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 't': object 'streams1' not found}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 Unlike the objects created by \proglang{R}, by default they remain in the memory after a restart. Streams created on GPU does not remain in the memory when a new \proglang{R} session begins. However, we can save the streams on the CPU in a file using the \fct{save} function, and later recall the streams with the \fct{load} function, in this way we can reproduce the same sequence of random numbers in simulations. Below is a trivial example, in which we demonstrate saving \code{streams1} to a data file called \code{streams_from_GPU.rds} on CPU and then load it back and transfer it to GPU to produce the vector called \code{sim_saved}, which is also the same as \code{sim_1}.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
-saveRDS(streams_from_GPU, "streams_from_GPU.rds")
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
+saveRDS(as.matrix(createStreamsGpu(n=4)), "myStreams.rds")
 # Load the streams object as streams_saved
-streams_saved <- gpuR::vclMatrix(readRDS("streams_from_GPU.rds"))
-sim_saved = gpuRandom::runif(n=6,streams=streams_saved, 
-                             Nglobal=c(1,4), type="double")
+streams_saved <- vclMatrix(readRDS("myStreams.rds"))
+sim_saved = runif(n=6,streams=streams_saved, Nglobal=c(1,4), type="double")
 as.vector(sim_saved)
 ## [1] 0.7353245 0.5180770 0.6142074 0.2319392 0.1100781 0.3619766
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
 
-We evaluate the distribution of 50000 GPU-generated double-precision uniform random numbers by making a density histogram  (the left panel in Figure \ref{fig0}), and plotting its empirical cumulative distribution and overlaying the theoretical cumulative distribution (the right panel in Figure \ref{fig0}). The two cumulative distribution lines seem to overlap completely, suggesting the data generated by \fct{gpuRandom::runif} does come from a standard uniform distribution.
+We evaluate the distribution of 50000 GPU-generated double-precision uniform random numbers by making a density histogram  (the left panel in Figure \ref{fig0}), and plotting its empirical cumulative distribution and overlaying the theoretical cumulative distribution (the right panel in Figure \ref{fig0}). The two cumulative distribution lines seem to overlap completely, suggesting the data generated by \fct{runif} does come from a standard uniform distribution.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
-streams <- CreateStreamsGpu(Nstreams =512, keepInitial=1)
+streams <- createStreamsGpu(n = 512)
+random_u<-runif(n=50000, streams=streams, Nglobal=c(64,8), type="double")
+random_u<-as.vector(random_u)
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in CreateStreamsGpu(Nstreams = 512, keepInitial = 1): could not find function "{}CreateStreamsGpu"{}}}\begin{verbatim}
-random_vector<-gpuRandom::runif(n=50000, streams=streams, 
-                                Nglobal=c(64,8), type="double")
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in nrow(streams): object 'streams' not found}}\begin{verbatim}
-random_vector<-as.vector(random_vector)
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in as.vector(random\_vector): object 'random\_vector' not found}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 \begin{figure}[H]
 \centering
 \begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in hist(random\_vector, prob = TRUE, main = "{}Histogram"{}): object 'random\_vector' not found}}
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in sort(x): object 'random\_vector' not found}}
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in plot.xy(xy.coords(x, y), type = type, ...): plot.new has not been called yet}}\end{kframe}
+\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}
+\includegraphics[width=0.45\textwidth]{figure/largenumberuniforms-1} 
+\includegraphics[width=0.45\textwidth]{figure/largenumberuniforms-2} 
 \end{knitrout}
-\caption{histogram and empirical cumulative distribution of the GPU-generated random numbers.\label{fig0}}
+\caption{Histogram and empirical cumulative distribution of the GPU-generated random numbers.\label{fig0}}
 \end{figure}
-
-
-
-
-
 
 
 
@@ -503,7 +348,7 @@ We apply the Box-Muller transformation to $U (0,1)$ random numbers to generate G
 \end{algorithm*}
 
 
-Listing \ref{lst:normal} shows a fragment of the kernel that generates standard Gaussian random numbers. Aside from using local memory and the part that does the Box-Muller transformation, this kernel is the same with the kernel for generating uniform random numbers shown in Listing \ref{lst:uniformkernel}. If developers want to use other Gaussian transform methods, this kernel is easy to be modified and incorporated in other \proglang{R} packages. The kernel executes over a 2-dimensional index space of $1 \times 2$ work-groups. \code{part[0]} and \code{part[1]} correspond to $R$ and $\Theta$ in the formulas respectively. As the work-items in each work-group proceed at differing rates, \code{barrier(CLK_LOCAL_MEM_FENCE)} ensures correct ordering of memory operations to local memory, so that Gaussian random numbers $(X_1,Y_1), (X_2,Y_2), \dots, (X_n,Y_n)$ are generated in pairs correctly, errors such as $(X_n, Y_{(n-1)})$ or $(X_{(n-1)}, Y_{(n)})$ are avoided.
+Listing \ref{lst:normal} shows a fragment of the kernel that generates standard Gaussian random numbers. Aside from using local memory and the part that does the Box-Muller transformation, this kernel is the same with the kernel for generating uniform random numbers shown in Listing \ref{lst:uniformkernel}. If developers want to use other Gaussian transform methods, this kernel is easy to be modified and incorporated in other \proglang{R} packages. The kernel executes over a 2-dimensional index space of $1 \times 2$ work-groups. \code{part[0]} and \code{part[1]} correspond to $R$ and $\Theta$ in the formulas respectively. As the work-items in a work-group proceed at differing rates, \code{barrier(CLK_LOCAL_MEM_FENCE)} ensures correct ordering of memory operations to local memory, so that Gaussian random numbers $(X_1,Y_1), \dots, (X_n,Y_n)$ are generated in pairs correctly, errors such as $(X_n, Y_{(n-1)})$ or $(X_{(n-1)}, Y_{(n)})$ are avoided.
 %
 \begin{framed}
 \begin{lstlisting}[language=C,basicstyle=\small,caption={name},label={lst:normal}]
@@ -515,7 +360,6 @@ int Drow, Dcol, DrowStart, Dentry;
 uint temp;
 uint g1[3], g2[3];
 const int startvalue=index * NpadStreams;
-
 local double part[2], cosPart1, sinPart1;
 
 streamsToPrivate(streams,g1,g2,startvalue);
@@ -552,7 +396,6 @@ for(Drow=2*get_global_id(0),
     } else {
       out[Dentry] = part[0]*cosPart1;
     }
-    
     barrier(CLK_LOCAL_MEM_FENCE);
     
   }//Dcol
@@ -561,7 +404,7 @@ for(Drow=2*get_global_id(0),
 streamsFromPrivate(streams,g1,g2,startvalue);
 \end{lstlisting}
 \end{framed}
-We illustrate in Figure \ref{fig3} how this kernel executes in practice with the previous toy example: to create a $4 \times 6$ matrix of Gaussian random numbers using a $2 \times 4$ NDRange and 8 streams. Work items are organized to be 1 by 2 work groups as Gaussian numbers are generated in pairs using the Box-Muller method. The shading on the grids in the NDRange distinguishes work groups. Each work group generates a pair of Gaussian random numbers \code{(X,Y)} in each iteration, where work item of `\code{get_local_id(1)}$=0$' generates the \code{X} of a pair, and work item of `\code{get_local_id(1)}$=1$' generates the \code{Y} of a pair. The numbers in the third row in each gird of NDRange represents the local index of each work item. Here with the loop iterating over columns, the cells of matrix are filled from left to right, that is, in the first iteration, the 8 work items generate random numbers in the leftmost two columns (8 cells) of matrix simultaneously, the second iteration fills random numbers in the middle two columns of the matrix, and the third iteration fills the rest two columns of the matrix simultaneously. Therefore, each work item generates one Gaussian random number in each iteration, the matrix filling process is the same as that shown in Figure \ref{fig:1}. 
+We illustrate in Figure \ref{fig3} how this kernel executes in practice with the previous toy example: to create a $4 \times 6$ matrix of Gaussian random numbers using a $2 \times 4$ NDRange. Each stream is copied to the private memory of each work-item. Work-items are organized to be 1 by 2 work-groups as the random numbers are generated in pairs using the Box-Muller method. The shading on the grids in the NDRange distinguishes work-groups. The numbers in the third row in each gird of NDRange represents the local index of each work-item. Each work-group generates a pair of Gaussian random numbers \code{(X,Y)} in each iteration, where work-item of `\code{get_local_id(1)}$=0$' generates the \code{X} of a pair, and work-item of `\code{get_local_id(1)}$=1$' generates the \code{Y} of a pair. Here with the loop iterating over columns, the cells of matrix are filled from left to right, that is, in the first iteration, the 8 work-items generate random numbers in the leftmost two columns (8 cells) of matrix simultaneously, the second iteration fills random numbers in the middle two columns of the matrix, and the third iteration fills the rest two columns of the matrix simultaneously. Therefore, each work-item generates one Gaussian random number in each iteration, the matrix filling process is the same as that shown in Figure \ref{fig:1}. 
 
 \begin{figure}[H]%
     \centering
@@ -577,21 +420,9 @@ In the following code, We create a $1024 \times 512$ matrix named \code{normal_m
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
-streams <- CreateStreamsGpu(Nstreams =512*128, keepInitial=1)
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in CreateStreamsGpu(Nstreams = 512 * 128, keepInitial = 1): could not find function "{}CreateStreamsGpu"{}}}\begin{verbatim}
+streams <- createStreamsGpu(n =512*128)
 normal_matrix<-gpuRandom::rnorm(c(1024,512), streams=streams, 
                                 Nglobal=c(512,128), type="float")
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in nrow(streams): object 'streams' not found}}\end{kframe}
-\end{knitrout}
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
 avector<-as.vector(as.matrix(normal_matrix))
 \end{verbatim}
 \end{kframe}
@@ -618,10 +449,10 @@ We generate a large-size matrix of 100 million double-precision Gaussian random 
 system.time(gpuRandom::rnorm(c(10000,10000), streams=streams, 
                              Nglobal=c(512,128), type="double"))
 ##    user  system elapsed 
-##   0.141   0.004   0.145
+##   0.143   0.004   0.147
 system.time(matrix(stats::rnorm(10000^2),10000,10000))
 ##    user  system elapsed 
-##   6.600   0.743   7.338
+##   6.678   0.850   7.522
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -660,12 +491,7 @@ We show the usage and advantage of \fct{gpuRandom::fisher.sim} by computing the 
 The 2-way contingency table \ref{tab:month} and table \ref{tab:week} consist of selected data from the 2018 Natality public use file \citep{National2018} from the Centers for Disease Control and Prevention’s National Center for Health Statistics, the 2018 natality data file may be downloaded at \url{https://www.cdc.gov/nchs/data_access/VitalStatsOnline.htm}. The row variable of the first table represents the twelve months: from January to December, and for the second table it represents the seven weekdays: Monday to Sunday. The column variables of these two tables represent the twelve categories of congenital anomalies of the newborn: 1) Anencephaly; 2) Meningomyelocele/Spina bifida; 3) Cyanotic congenital heart disease; 4) Congenital diaphragmatic hernia; 5) Omphalocele; 6) Gastrochisis; 7) Limb reduction defect; 8) Cleft lip with or without cleft palate; 9) Cleft palate alone; 10) Down syndrome; 11) Suspected chromosomal disorder; and 12) Hypospadias.
 
 \subsection{Comparing running time: Month data example}
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in CreateStreamsGpu(Nstreams = 128\textasciicircum{}2, keepInitial = 1): could not find function "{}CreateStreamsGpu"{}}}\end{kframe}
-\end{knitrout}
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{table}[H]
 
@@ -704,68 +530,56 @@ Dec & 23 & 48 & 196 & 31 & 31 & 71 & 31 & 177 & 86 & 86 & 73 & 156\\
 
 \end{knitrout}
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-#using CPU
-stats::fisher.test(month,simulate.p.value = TRUE,B=1e6)$p.value
-## [1] 0.4037316
-system.time(stats::fisher.test(month,simulate.p.value = TRUE,B=1e6))
-##    user  system elapsed 
-##  14.505   0.008  14.530
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-\fct{stats::fisher.test} takes about 9.8 seconds (time varies a little bit from executions) for one million simulations, has a p-value of 0.4035.
+
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
 almost.1 <- 1 + 64 * .Machine$double.eps
-observed_m= -gpuRandom::logfactSum(month, c(16,16))/almost.1
+observed_m= -logfactSum(month, c(16,16))/almost.1
 
-month_GPU<-vclMatrix(month,type="integer")
-result_monthgpu <- gpuRandom::fisher.sim(month_GPU, 1e6, streams=streams,
-                   type="double", returnStatistics=TRUE,  Nglobal = c(128,128))
+month_gpu<-vclMatrix(month,type="integer")
+result_month <- fisher.sim(month_gpu, 1e6, streams=streams,
+                   type="double", returnStatistics=TRUE,  Nglobal = c(256,128))
+result_month$simNum
+## [1] 1015808
+result_month$counts
+## [1] 410644
+result_month$p.value
+## [1] 0.4042541
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in gpuRandom::fisher.sim(month\_GPU, 1e+06, streams = streams, type = "{}double"{}, : object 'streams' not found}}\begin{verbatim}
-result_monthgpu$simNum
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): object 'result\_monthgpu' not found}}\begin{verbatim}
-result_monthgpu$counts
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): object 'result\_monthgpu' not found}}\begin{verbatim}
-result_monthgpu$p.value
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): object 'result\_monthgpu' not found}}\end{kframe}
+\end{kframe}
 \end{knitrout}
-We requested one million simulations on GPU while the actual number of simulation is 999424, and got 403274 cases whose test statitsic is below the observed threshold, so the p-value from \fct{gpuRandom::fisher.sim} for this table is about 0.40375, which is close enough to the p-value from \fct{stats::fisher.test}: 0.40380.  
+We requested one million simulations on GPU while the actual number of simulation is 1015808, and got 403274 cases whose test statitsic is below the observed threshold, so the p-value from \fct{gpuRandom::fisher.sim} for this table is about 0.40375, which is close enough to the p-value from \fct{stats::fisher.test}: 0.40380.  
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
 #using GPU
-system.time(gpuRandom::fisher.sim(month_GPU, 1e6, streams=streams, 
-            type="double", returnStatistics=FALSE, Nglobal = c(128,128)))
+system.time(fisher.sim(month_gpu, 1e6, streams=streams, 
+            type="double", returnStatistics=FALSE, Nglobal = c(256,128)))
+##    user  system elapsed 
+##   0.769   0.001   0.770
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in gpuRandom::fisher.sim(month\_GPU, 1e+06, streams = streams, type = "{}double"{}, : object 'streams' not found}}
-
-{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Timing stopped at: 0.001 0 0}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 \fct{gpuRandom::fisher.sim} takes about 0.32 seconds, \pkg{gpuRandom} accounts for 2.2\% of the elapsed time on CPU. 
 
 
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+#using CPU
+stats::fisher.test(month,simulate.p.value = TRUE,B=1015808)$p.value
+## [1] 0.4037993
+system.time(stats::fisher.test(month,simulate.p.value = TRUE,B=1015808))
+##    user  system elapsed 
+##  14.962   0.017  14.970
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+\fct{stats::fisher.test} takes about 9.8 seconds (time varies a little bit from executions) for 1015808 simulations, has a p-value of 0.4035.
+
 
 \subsection{Comparing running time: Week data example}
-
 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{table}[H]
@@ -794,47 +608,23 @@ Sun & 49 & 51 & 211 & 40 & 32 & 96 & 69 & 216 & 108 & 143 & 130 & 258\\
 \end{table}
 
 \end{knitrout}
-We perform 10 million simulations for the ``week'' table.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-#using CPU
-fisher.test(week,simulate.p.value = TRUE,B=1e7)$p.value
-## [1] 0.0001274
-system.time(fisher.test(week,simulate.p.value = TRUE,B=1e7))
-##    user  system elapsed 
-##  90.278   0.157  90.506
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-The ``week'' table has a much smaller p-value: around 0.0001208, which should require a larger number of simulations to get a more accurate p-value.
+
+
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
 observed_w= -gpuRandom::logfactSum(week, c(16,16))/almost.1
-
 week_GPU<-gpuR::vclMatrix(week,type="integer")
 result_weekgpu<-gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
-                type="double",returnStatistics=TRUE,Nglobal = c(128,128))
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in gpuRandom::fisher.sim(week\_GPU, 1e+07, streams = streams, type = "{}double"{}, : object 'streams' not found}}\begin{verbatim}
+                type="double",returnStatistics=TRUE,Nglobal = c(256,128))
 result_weekgpu$simNum
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): object 'result\_weekgpu' not found}}\begin{verbatim}
+## [1] 10027008
 result_weekgpu$counts
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): object 'result\_weekgpu' not found}}\begin{verbatim}
+## [1] 1242
 result_weekgpu$p.value
+## [1] 0.0001239652
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): object 'result\_weekgpu' not found}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 With about ten million simulations, we get 1223 cases and a p-value around 0.0001224705. We summarized the results in Table \ref{tab:summary}.
 \begin{knitrout}
@@ -842,16 +632,28 @@ With about ten million simulations, we get 1223 cases and a p-value around 0.000
 \begin{verbatim}
 #using GPU
 system.time(gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
-            type="double", returnStatistics=FALSE,Nglobal = c(128,128)))
+            type="double", returnStatistics=FALSE,Nglobal = c(256,128)))
+##    user  system elapsed 
+##   4.640   0.012   4.649
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in gpuRandom::fisher.sim(week\_GPU, 1e+07, streams = streams, type = "{}double"{}, : object 'streams' not found}}
-
-{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Timing stopped at: 0 0 0.001}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 \fct{stats::fisher.test} takes 90.1 seconds, while \fct{fisher.sim} takes about 1.90 seconds, the elapsed time is decreased to about 20\% of the time taken on CPU. 
 
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+#using CPU
+fisher.test(week,simulate.p.value = TRUE,B=10010624)$p.value
+## [1] 0.0001263657
+system.time(fisher.test(week,simulate.p.value = TRUE,B=10010624))
+##    user  system elapsed 
+##  90.996   0.170  91.109
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+The ``week'' table has a much smaller p-value: around 0.0001208, which should require a larger number of simulations to get a more accurate p-value.
 
 \subsection{A summary of the results}
 \begin{knitrout}
@@ -1024,22 +826,17 @@ Step 5, generate 2 standard Gaussian random vectors \code{zmatGpu}$=(Z_1, Z_2)$ 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
-streamsGpu <- gpuRandom::CreateStreamsGpu(Nstreams=128*64, keepInitial=TRUE)
+streamsGpu <- createStreamsGpu(n=128*64)
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error: 'CreateStreamsGpu' is not an exported object from 'namespace:gpuRandom'}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
-zmatGpu = gpuRandom::rnorm(c(nrow(maternCov),2), 
-                           streams=streamsGpu, Nglobal=c(128,64),
-                           type = theType)
+zmatGpu = rnorm(c(nrow(maternCov),2), streams=streamsGpu, Nglobal=c(128,64),
+                 type = theType)
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in nrow(streams): object 'streamsGpu' not found}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 Step 6, use \fct{gpuRandom::multiplyLowerDiagonalBatch} to compute $U = L * D^{(1/2)}* Z$ in batches, see the following illustration. \code{simMat} is the output matrix for $U$, \code{maternCov}, \code{diagMat}, and \code{zmatGpu} correspond to the matrices of $L$, $D$ and $Z=(Z_1, Z_2)$ respectively.
 \begin{knitrout}
@@ -1047,10 +844,7 @@ Step 6, use \fct{gpuRandom::multiplyLowerDiagonalBatch} to compute $U = L * D^{(
 \begin{verbatim}
 simMat = vclMatrix(0, nrow(zmatGpu), ncol(zmatGpu), 
                    type = theType)
-\end{verbatim}
 
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'nrow': object 'zmatGpu' not found}}\begin{verbatim}
 gpuRandom::multiplyLowerDiagonalBatch(
   simMat, maternCov, diagMat, zmatGpu,
   diagIsOne = 1L, # diagonal of L is one
@@ -1059,9 +853,7 @@ gpuRandom::multiplyLowerDiagonalBatch(
   Nlocal,
   NlocalCache)
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in gpuRandom:::multiplyLowerDiagonalBatchBackend(output, L, D, B, : object 'simMat' not found}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 \begin{gather}
  \begin{bmatrix}  L_{1} \\ L_{2} \\L_{3} \\ \vdots
@@ -1087,21 +879,11 @@ Step 7, Finally, plot the 10 simulated Gaussian random surfaces.
 \begin{verbatim}
 library(raster)
 simRaster = brick(myRaster, nl = ncol(simMat)*nrow(paramsGpu))
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'ncol': object 'simMat' not found}}\begin{verbatim}
 values(simRaster) = as.vector(as.matrix(simMat))
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'as.matrix': object 'simMat' not found}}\begin{verbatim}
 names(simRaster) = apply(expand.grid('par',1:nrow(paramsGpu), 
                                      'sim', 1:ncol(simMat)), 1, paste, collapse='')
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'ncol': object 'simMat' not found}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 \begin{figure}[H]
 \centering
@@ -1114,9 +896,17 @@ for(D in names(simRaster)) {
   plot(simRaster[[D]], legend=FALSE, add=TRUE)
 }
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): object 'simRaster' not found}}\end{kframe}
+\end{kframe}
+\includegraphics[width=0.45\textwidth]{figure/maternplot-1} 
+\includegraphics[width=0.45\textwidth]{figure/maternplot-2} 
+\includegraphics[width=0.45\textwidth]{figure/maternplot-3} 
+\includegraphics[width=0.45\textwidth]{figure/maternplot-4} 
+\includegraphics[width=0.45\textwidth]{figure/maternplot-5} 
+\includegraphics[width=0.45\textwidth]{figure/maternplot-6} 
+\includegraphics[width=0.45\textwidth]{figure/maternplot-7} 
+\includegraphics[width=0.45\textwidth]{figure/maternplot-8} 
+\includegraphics[width=0.45\textwidth]{figure/maternplot-9} 
+\includegraphics[width=0.45\textwidth]{figure/maternplot-10} 
 \end{knitrout}
 \caption{\label{fig:5} }
 \end{figure}

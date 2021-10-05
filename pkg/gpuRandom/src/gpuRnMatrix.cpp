@@ -265,16 +265,9 @@ SEXP gpuRnMatrixTyped(
 }
 
 
-//' Random number generation
-//' 
-//' Fills a matrix with random numbers
-//'
-//' @param x output matrix
-//' @param streams matrix of random number seeds
-//' @param max_global_size vector of length 2, number of work items
-//' @param random_type one of "uniform" or "normal"
-//' 
-//' @export
+
+
+
 // [[Rcpp::export]]
 SEXP gpuRnBackend(
     Rcpp::S4  x,

@@ -351,10 +351,10 @@ clrngMrg31k3pStreamCreator buildStreamCreator(Rcpp::IntegerVector seed){
 // [[Rcpp::export]]
 Rcpp::IntegerMatrix  createStreamsCpu(
     Rcpp::IntegerVector n,
-    Rcpp::IntegerVector seed)
-{
+    Rcpp::IntegerVector seed=Rcpp::IntegerVector::create(12345,12345,12345,12345,12345,12345)){
+  
   IntegerVector seed2 = rep_len(seed, 6);
-  Rcpp::IntegerMatrix result=Rcpp::IntegerMatrix(n[0],12L);
+  Rcpp::IntegerMatrix result=Rcpp::IntegerMatrix(n[0], 12L);
    
   colnames(result) = CharacterVector::create(
     "current.g1.1", "current.g1.2", "current.g1.3", "current.g2.1", "current.g2.2", "current.g2.3",
