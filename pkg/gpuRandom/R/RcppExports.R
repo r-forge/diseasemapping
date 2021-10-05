@@ -140,7 +140,7 @@ multiplyLowerBatchBackend <- function(C, A, B, diagIsOne, Nglobal, Nlocal, Nloca
 #' @param n number of streams to create
 #' @param seed random seed, length 6, recycled if shorter
 #' @export
-createStreamsCpu <- function(n, seed) {
+createStreamsCpu <- function(n, seed = as.integer( c(12345,12345,12345,12345,12345,12345))) {
     .Call('_gpuRandom_createStreamsCpu', PACKAGE = 'gpuRandom', n, seed)
 }
 

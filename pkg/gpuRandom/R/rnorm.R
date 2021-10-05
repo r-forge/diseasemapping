@@ -1,9 +1,9 @@
 #' @title rnorm
 #' 
 #' @param n a number or a vector specifying the size of output matrix
-#' @param streams streams object
-#' @param Nglobal the size of the index space for use
-#' @param "double" or "float" format of generated random numbers
+#' @param streams streams matrix of random number seeds
+#' @param Nglobal vector of length 2, number of work items
+#' @param type random number type, one of "uniform" or "normal"
 #' 
 #' @return a vclVector or vclMatrix of normal random numbers
 #' 
