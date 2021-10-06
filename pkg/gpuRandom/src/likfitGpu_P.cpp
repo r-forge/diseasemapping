@@ -349,7 +349,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   viennacl::ocl::switch_context(ctx_id);
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   
-  viennacl::ocl::local_mem localMemory(localSize[0]);
+  viennacl::ocl::local_mem localMemory(localSize[0] *sizeof(yx(0,0) ) );
   
   
     //  viennacl::matrix<T> Vbatch(NparamPerIter[0]*Nobs, Nobs);
