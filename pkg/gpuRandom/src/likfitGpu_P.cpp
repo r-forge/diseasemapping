@@ -349,7 +349,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   viennacl::ocl::switch_context(ctx_id);
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   
-  viennacl::ocl::local_mem localMemory(localSize[0] *sizeof(yx(0,0) ) );
+  viennacl::ocl::local_mem localMemory(NlocalCache[0] *sizeof(yx(0,0) ) );
   
   
     //  viennacl::matrix<T> Vbatch(NparamPerIter[0]*Nobs, Nobs);
@@ -624,7 +624,6 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   cholKernel.local_work_size(1, chol_localSize[1]);
   
     
-  /*
   viennacl::ocl::program & my_prog_backsolve = viennacl::ocl::current_context().add_program(backsolveString, "mykernelbacksolve");
   viennacl::ocl::program & my_prog_crossprod = viennacl::ocl::current_context().add_program(crossprodKernelString, "mykernelcrossprod");
   viennacl::ocl::program & my_prog_cholxvx = viennacl::ocl::current_context().add_program(cholXVXkernelString, "mykernelcholxvx");
@@ -708,7 +707,6 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   ssqBetaKernel.global_work_size(1, workgroupSize[1] ); 
   ssqBetaKernel.local_work_size(0, localSize[0]);
   ssqBetaKernel.local_work_size(1, localSize[1]);          
-   */  
   
   
   
@@ -730,6 +728,11 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     endThisIteration = std::min(DiterIndex + NparamPerIter[0], Nparams);
     NthisIteration = endThisIteration - DiterIndex;
     
+      if(verbose[0]>1) {
+    Rcpp::Rcout << "\n" << " Diter " << 
+      Diter << " endThisIteration " <<  endThisIteration <<
+        " NthisIteration " << NthisIteration << " localMemorySize " << localMemory.size() << " DiterIndex " << DiterIndex <<"\n";
+  }
 
     viennacl::ocl::enqueue(maternKernel(Vbatch, coords, params, 
                                         localMemory,
@@ -748,7 +751,6 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     //   Rcpp::Rcout << "c";
     // }
 #ifdef UNDEF    
-    
     // LinvYX = L^(-1) YX,   Nobs by (Ndatasets + Ncovariates)
     viennacl::ocl::enqueue(backsolveKernel(LinvYX, Vbatch, yx, NthisIteration),
                            theQueue);
@@ -825,7 +827,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     // Rcpp::Rcout << "crossprod_ssqBeta_KernelString\n" << crossprod_ssqBeta_KernelString << "\n";
 #endif    
     
-    if(verbose[0]) {
+    if(verbose[0]>1) {
       Rcpp::Rcout << "\n" << "Diter " << Diter <<" DiterIndex " << DiterIndex << " endThisIteration " << 
         endThisIteration << " Nthisiteration " << NthisIteration  << "\n";
     }

@@ -258,12 +258,12 @@ std::string maternBatchKernelString(
       "// copy parameters to local storage\n";
   result += 
     "if(get_local_id(0)==0){\n"
-    " for(DmatrixLocal = get_local_id(1),Dmatrix = get_global_id(1) + startrow;\n"
+    " for(DmatrixLocal = get_local_id(1),Dmatrix = get_global_id(1);\n"
     "     Dmatrix < Nmatrix;\n"
     "     DmatrixLocal+= get_local_size(1), Dmatrix += get_global_size(1)){\n"
     "   for(Dcell=0;Dcell < NlocalParams;Dcell++){\n"
     "     localParams[DmatrixLocal * NlocalParams + Dcell]=\n"
-    "        params[Dmatrix * NpadParams + Dcell];\n"  
+    "        params[(startrow + Dmatrix) * NpadParams + Dcell];\n"  
     "  }//Dcell\n"
     " }//Dmatrix\n"
     "}//if\n";
@@ -534,7 +534,10 @@ if(verbose) {
     localParameters.size() << " " 
   << ceil(Nmatrix * numLocalItems[1] / numWorkItems[1]) << " " <<
     NlocalParams * ceil(Nmatrix * numLocalItems[1] / numWorkItems[1])  << 
-      "\n" << maternClString << "\n";
+      "\n";
+}
+if(verbose > 1) {
+ Rcpp::Rcout << maternClString << "\n";
 }
 
   if(numberofrows > param.size1()) {
