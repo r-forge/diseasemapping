@@ -89,8 +89,8 @@ c(shape=1, range=1, variance = 1, nugget = 10, anisoRatio = 2, anisoAngleRadians
  c(shape=1.5, range=5, variance = 1.5, nugget = 30, anisoRatio = 1, anisoAngleRadians = 0) #16
 )
 
-
-
+myParamsBatch[,'variance'] = 1:nrow(myParamsBatch)
+myParamsBatch[,'nugget'] = myParamsBatch[,'variance']/100
 
 myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
 
@@ -111,25 +111,27 @@ colnames(paramsGpu)= c(colnames(myParamsBatch)[1:7],
  ' varscale', 'logxscale', 'sinrat','mu', 'muSq', 'mup1', 'nuround', 'g1', 
  'g2', 'g1pnu', 'g1mnu', 'variancePlusNugget'))
 
-
+startrow = 2
 gpuRandom:::maternBatchBackend(
     outputBatchF,
     coordsGpu, 
     paramsGpu,  
     c(64,64),#NglobalMatern, 
     c(16,8),#c(16,16),#NlocalMatern,
-    startrow = 0,
-    numberofrows = nrow(paramsGpu),
-    verbose = 0)
+    startrow = startrow,
+    numberofrows = nrow(paramsGpu)-startrow,
+    verbose = 1)
 ```
 
 ```{r outputBatchShowStuff, eval=FALSE}
-dim(outputBatchF)
-t(as.matrix(outputBatchF[1:10,1:9]))
-as.matrix(outputBatchF[(6-1)*ncol(outputBatchF) + 1:7,1:7])
-cbind(
-as.matrix(outputBatchF[seq(1, by=ncol(outputBatchF), len=nrow(paramsGpu)),1]),
-myParamsBatch[,c('variance','nugget')])
+#dim(outputBatchF)
+#t(as.matrix(outputBatchF[1:10,1:9]))
+as.matrix(outputBatchF[(13-1)*ncol(outputBatchF) + 1:7,1:7])
+(xx = cbind(
+as.matrix(
+    outputBatchF[seq(1, by=ncol(outputBatchF), len=nrow(paramsGpu)-startrow),1]
+    ),
+myParamsBatch[(1+startrow):nrow(paramsGpu),c('variance','nugget')]))
 ```
 
 ```{r showfromcpu, eval=FALSE}
