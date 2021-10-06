@@ -1,4 +1,3 @@
-
 #include "lgmlikFit.hpp"
 //#include "gpuRandom.hpp"
 //#include<Rmath.h>
@@ -628,7 +627,6 @@ void likfitGpu_Backend(
 }
 
 
-//#endif
 
 
 

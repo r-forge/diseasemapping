@@ -117,7 +117,7 @@ gpuRandom:::maternBatchBackend(
     coordsGpu, 
     paramsGpu,  
     c(64,64),#NglobalMatern, 
-    c(16,16),#c(16,16),#NlocalMatern,
+    c(16,8),#c(16,16),#NlocalMatern,
     startrow = 0,
     numberofrows = nrow(paramsGpu),
     verbose = 0)
@@ -125,10 +125,11 @@ gpuRandom:::maternBatchBackend(
 
 ```{r outputBatchShowStuff, eval=FALSE}
 dim(outputBatchF)
-as.matrix(outputBatchF[1:7,1:7])
-as.matrix(outputBatchF[(2-1)*ncol(outputBatchF) + 1:7,1:7])
-as.matrix(outputBatchF[seq(1, by=ncol(outputBatchF), len=nrow(paramsGpu)),1])
-myParamsBatch[,c('variance','nugget')]
+t(as.matrix(outputBatchF[1:10,1:9]))
+as.matrix(outputBatchF[(6-1)*ncol(outputBatchF) + 1:7,1:7])
+cbind(
+as.matrix(outputBatchF[seq(1, by=ncol(outputBatchF), len=nrow(paramsGpu)),1]),
+myParamsBatch[,c('variance','nugget')])
 ```
 
 ```{r showfromcpu, eval=FALSE}

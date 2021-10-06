@@ -53,16 +53,6 @@ cpp_gpuFisher_test <- function(xR, resultsR, B, streamsR, max_global_size, max_l
     .Call('_gpuRandom_cpp_gpuFisher_test', PACKAGE = 'gpuRandom', xR, resultsR, B, streamsR, max_global_size, max_local_size)
 }
 
-#' Random number generation
-#' 
-#' Fills a matrix with random numbers
-#'
-#' @param x output matrix
-#' @param streams matrix of random number seeds
-#' @param max_global_size vector of length 2, number of work items
-#' @param random_type one of "uniform" or "normal"
-#' 
-#' @export
 gpuRnBackend <- function(x, streams, max_global_size, random_type) {
     .Call('_gpuRandom_gpuRnBackend', PACKAGE = 'gpuRandom', x, streams, max_global_size, random_type)
 }

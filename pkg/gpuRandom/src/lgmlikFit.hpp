@@ -122,7 +122,7 @@ std::string maternBatchKernelString(
     int NpadCoords,
     int NpadParams,
     int Nlocal0,
-    int NlocalParamsCache,
+//    int NlocalParamsCache,
     int assignUpper,
     int assignLower,
     int assignDiagonals,
