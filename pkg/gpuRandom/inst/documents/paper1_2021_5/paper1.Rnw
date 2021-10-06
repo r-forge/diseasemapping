@@ -118,7 +118,7 @@ in computational statistics: (1) generating independent and identically distribu
 
 
 \subsection{Creating streams}\label{create_streams}
-In \proglang{clRNG} library, a stream object is a structure that contains three states: the current state of the stream, the initial state (or seed) of the stream , and the initial state of the current substream. The function \fct{clrngMrg31k3pCreateStreams} from \proglang{clRNG} creates streams on the host computer using the MRG31k3p RNG. If we want to use the streams in work-items on a GPU device, the streams have to be copied from the host to the global memory of the GPU device, and then each work-item picks streams from the global memory and copies their current states only to its private memory. \pkg{gpuRandom} is able to create streams both on the host computer and on the GPU device. \fct{createStreamsCpu} is an \proglang{R} interface function of \fct{clrngMrg31k3pCreateStreams} that creates streams on CPU as \proglang{R} matrices (see the \proglang{R} output below), in which the substreams are not created because they are not actually used in random number generation. \fct{createStreamsGpu} adapted the \fct{clrngMrg31k3pCreateStreams} and creates streams directly on GPU device, so that it can avoid unnecessary data transfer between host and device. From our experience, transferring a large-size matrix of streams from host to device by converting it to a `\code{vclMatrix}' object can take very long time, hence, \fct{createStreamsGpu} is more efficient and more frequently used. In the following, we demonstrate the usage of these two functions by generating 4 streams on the host and on the device respectively.
+In \proglang{clRNG} library, a stream object is a structure that contains three states: the current state of the stream, the initial state (or seed) of the stream, and the initial state of the current substream. The function \fct{clrngMrg31k3pCreateStreams} from \proglang{clRNG} creates streams on the host computer using the MRG31k3p RNG. If we want to use the streams in work-items on a GPU device, the streams have to be copied from the host to the global memory of the GPU device, and then each work-item picks streams from the global memory and copies their current states only to its private memory. \pkg{gpuRandom} is able to create streams both on the host computer and on the GPU device. \fct{createStreamsCpu} is an \proglang{R} interface function of \fct{clrngMrg31k3pCreateStreams} that creates streams on CPU as \proglang{R} matrices (see the \proglang{R} output below), in which the substreams are not created because they are not actually used in random number generation. \fct{createStreamsGpu} adapted the \fct{clrngMrg31k3pCreateStreams} and creates streams directly on GPU device, so that it can avoid unnecessary data transfer between host and device. From our experience, transferring a large-size matrix of streams from host to device by converting it to a `\code{vclMatrix}' object can take very long time, hence, \fct{createStreamsGpu} is more efficient and more frequently used. In the following, we demonstrate the usage of these two functions by generating 4 streams on the host and on the device respectively.
 <<createStreams_CPU>>=
 # creating streams on cpu
 myStreamsCpu <- createStreamsCpu(n=4)
@@ -129,15 +129,14 @@ t(myStreamsCpu)
   \item \code{n}: number of streams to create.
   \item \code{seed}: random seed of streams of length 6, recycled if shorter. Default is set to a vector of six ``12345''.
 \end{itemize}
-For the MRG31k3p RNG, each state of the stream is comprised of six 31-bit integers, the state of the first stream (seed of the \proglang{clRNG} library) is by default ``12345''. By setting a seed same as the MRG31k3p default seed in \fct{createStreamsGpu}, we can produce on device exactly the same streams as those created on host as follows,
+For the MRG31k3p RNG, each state of the stream is comprised of six 31-bit integers, the state of the first stream (seed of the \proglang{clRNG} library) is by default ``12345''. We can have streams on GPU by either converting the \code{myStreamsCpu} to a `\code{vclMatrix}' or producing streams directly on GPU using \fct{createStreamsGpu}. Setting a seed same as the MRG31k3p default seed in \fct{createStreamsGpu}, we can produce on device exactly the same streams as those created on host as follows,
 <<createStreams_Gpu>>=
 # creating streams on gpu
 myStreamsGpu1 = vclMatrix(myStreamsCpu)
-myStreamsGpu2 = createStreamsGpu(n=4, seed=12345)
-matrix(as.matrix(myStreamsGpu2), nrow(myStreamsCpu), ncol(myStreamsCpu), dimnames = dimnames(myStreamsCpu))
-range(as.matrix(myStreamsGpu2) - myStreamsCpu)
+myStreamsGpu2 = createStreamsGpu(n=4)
+range(as.matrix(myStreamsGpu1 - myStreamsGpu2))
 @
-\fct{createStreamsGpu} also has the two arguments \code{n}, which is the number of streams to create, and \code{seed}, which is the seed of streams, and is also by default a vector of six ``12345''. \fct{createStreamsGpu} is similar to \code{.Random.seed} in \proglang{R}. By setting the RNG status with the \proglang{R} function \fct{set.seed}, we are able to repeat the sequence of random seeds, which is an important quality criteria of RNGs. Similarly in \fct{createStreamsGpu} and \fct{createStreamsCpu}, with the \code{seed} argument, we are able to produce exactly the same sequence of streams as many times as we want.
+\fct{createStreamsGpu} also has the two arguments \code{n} and \code{seed}, \code{seed} is by default a vector of six ``12345''. \fct{createStreamsGpu} is similar to \code{.Random.seed} in \proglang{R}. By setting the RNG status with the \proglang{R} function \fct{set.seed}, we are able to repeat the sequence of random seeds, which is an important quality criteria of RNGs. Similarly in \fct{createStreamsGpu} and \fct{createStreamsCpu}, with the \code{seed} argument, we are able to produce exactly the same sequence of streams as many times as we want.
 
 
 \subsection{Using streams to generate  i.i.d. $U (0, 1)$ random numbers on GPU}
@@ -185,42 +184,32 @@ This kernel executes over a 2-dimensional index space. Figure \ref{fig:1} illust
     \caption{name?\label{fig:1}}%
 \end{figure}
 
-Now we use the 4 streams created in section \ref{create_streams} and an NDRange of 1 by 4 work-items to generate a vector \code{sim_1} of 6 i.i.d. $U (0,1)$ random numbers using the function \fct{gpuRandom::runif}. If \code{streams} and \code{Nglobal} are both missing, then by default \code{Nglobal} is set as (64,8), and a `vclMatrix' of \code{prod(Nglobal)} streams is supplied. The output is an S4 object (a `\code{vclVector}' or a `\code{vclMatrix}'), to view the generated random numbers, we need to convert it to an R vector or matrix, in this way, the random numbers are moved from the global memory of device to the host.
+Now we use the streams created in section \ref{create_streams} to generate a vector \code{sim_1} of 6 i.i.d. $U (0,1)$ random numbers using the function \fct{runif}. If \code{streams} and \code{Nglobal} are both missing, then by default \code{Nglobal} is set as (64,8), and a `vclMatrix' of \code{prod(Nglobal)} streams is supplied. The output is an S4 object (a `\code{vclVector}' or a `\code{vclMatrix}'), to view the generated random numbers, we need to convert it to an R vector or matrix, in this way, the random numbers are moved from the global memory of device to the host.
 <<simStuff2, eval=TRUE,tidy=TRUE>>=
-as.vector(gpuRandom::runif(n=4, streams=myStreamsGpu1, Nglobal=c(1,nrow(myStreamsGpu1)), type = "double"))
-as.vector(gpuRandom::runif(n=10, streams=myStreamsGpu2, Nglobal=c(1,nrow(myStreamsGpu1)), type = "double"))[-(1:6)]
-@
-
-<<eval=TRUE, tidy=TRUE>>=
-myStreamsGpu3 = deepcopy(myStreamsGpu2)
-sim_1 = runif(n=6,streams=myStreamsGpu2, Nglobal=c(1,4), type="double")
+sim_1 <-runif(n=6, streams=myStreamsGpu1, Nglobal=c(1,nrow(myStreamsGpu1)), type="double")
 as.vector(sim_1)
 @
 The arguments of the \fct{gpuRandom::runif} are described as follows:
 \begin{itemize}
   \item \code{n}: a vector of length 2 specifying the row and column number if to create a matrix, or a number specifying the length if to create a vector.
-  \item \code{streams}: streams used for random number generation.
-  \item \code{Nglobal}: global index space (NDRange). Default is set as $(64,8)$.
+  \item \code{streams}: streams for random number generation.
+  \item \code{Nglobal}: global index space. Default is set as $(64,8)$.
   \item \code{type}: ``double'' or ``float'' format of generated random numbers.
 \end{itemize}
-Next we show that by using a stream \code{myStreamsGpu3} same as \code{myStreamsGpu2},  \fct{runif} returns a vector \code{sim_2} of same random numbers as \code{sim_1}. 
-<<eval=TRUE,tidy=TRUE>>=
-sim_2 <-runif(n=6, streams=myStreamsGpu3, Nglobal=c(1,4), type = "double")
+Next we show that by using \code{myStreamsGpu2} which is the same as \code{myStreamsGpu1},  \fct{runif} returns the same sequence of random numbers as \code{sim_1}. 
+<<eval=TRUE, tidy=TRUE>>=
+sim_2 = runif(n=7,streams=myStreamsGpu2, Nglobal=c(1,nrow(myStreamsGpu1)), type="double")
 as.vector(sim_2)
 @
-Notice that \code{myStreamsGpu2} is a \code{deepcopy} of \code{myStreamsGpu2} before \code{myStreamsGpu2} is used. Reusing \code{myStreamsGpu2} will produce a vector different from \code{sim_1} (see \code{sim_3}). Because each time a random number is generated, the current state of the stream is changed (advances by one position), below shows the first six rows (current states) of \code{myStreamsGpu2} after it being used.
+Reusing \code{myStreamsGpu1} will produce a vector different from \code{sim_1}. Because each time a random number is generated, the current state of the stream is changed (advances by one position), below shows the \code{myStreamsGpu1} after it being used.
 <<eval=TRUE,tidy=TRUE>>=
-sim_3 = runif(n=6,streams=myStreamsGpu2, Nglobal=c(1,4), type="double")
-as.vector(sim_3)
-t(as.matrix(myStreamsGpu2))[1:6,]
+t(matrix(as.matrix(myStreamsGpu1), nrow(myStreamsCpu), ncol(myStreamsCpu), dimnames = dimnames(myStreamsCpu)))
 @
-Unlike the objects created by \proglang{R}, by default they remain in the memory after a restart. Streams created on GPU does not remain in the memory when a new \proglang{R} session begins. However, we can save the streams on the CPU in a file using the \fct{save} function, and later recall the streams with the \fct{load} function, in this way we can reproduce the same sequence of random numbers in simulations. Below is a trivial example, in which we demonstrate saving \code{streams1} to a data file called \code{streams_from_GPU.rds} on CPU and then load it back and transfer it to GPU to produce the vector called \code{sim_saved}, which is also the same as \code{sim_1}.
+Unlike the objects created by \proglang{R}, by default they remain in the memory after a restart. Streams created on GPU does not remain in the memory when a new \proglang{R} session begins. However, we can save the streams on the CPU in a file using the \fct{save} function, and later recall the streams with the \fct{load} function, in this way we can reproduce the same sequence of random numbers in simulations. Below is a trivial example, in which we demonstrate saving streams to a data file called \code{streams_from_GPU.rds} on CPU and then load it back and transfer it to GPU.
 <<save streams,echo=TRUE,eval=TRUE>>=
 saveRDS(as.matrix(createStreamsGpu(n=4)), "myStreams.rds")
 # Load the streams object as streams_saved
 streams_saved <- vclMatrix(readRDS("myStreams.rds"))
-sim_saved = runif(n=6,streams=streams_saved, Nglobal=c(1,4), type="double")
-as.vector(sim_saved)
 @
 
 We evaluate the distribution of 50000 GPU-generated double-precision uniform random numbers by making a density histogram  (the left panel in Figure \ref{fig0}), and plotting its empirical cumulative distribution and overlaying the theoretical cumulative distribution (the right panel in Figure \ref{fig0}). The two cumulative distribution lines seem to overlap completely, suggesting the data generated by \fct{runif} does come from a standard uniform distribution.
