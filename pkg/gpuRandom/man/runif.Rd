@@ -9,11 +9,11 @@ runif(n, streams, Nglobal, type = c("double", "float"))
 \arguments{
 \item{n}{a number or a vector specifying the size of output matrix}
 
-\item{streams}{streams object}
+\item{streams}{streams matrix of random number seeds}
 
-\item{Nglobal}{the size of the index space for use}
+\item{Nglobal}{vector of length 2, number of work items}
 
-\item{type}{"double" or "float" format of generated random numbers}
+\item{type}{random number type, one of "uniform" or "normal"}
 }
 \value{
 a vclVector or vclMatrix of uniform random numbers

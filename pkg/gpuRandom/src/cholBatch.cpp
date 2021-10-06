@@ -44,6 +44,7 @@ template <typename T> std::string cholBatchKernelString(
   result += "\n__kernel void cholBatch(\n"
   "	__global " + typeString + " *A,\n" 
   "	__global " + typeString + " *diag,\n"
+  " __local " + typeString + "*diagLocal,\n"
   "              int Nmatrix";
   
   if(logDet){
@@ -58,7 +59,7 @@ template <typename T> std::string cholBatchKernelString(
   " const int localIndexIsZero = (localIndex==0);\n"
   " const int NlocalTotal = get_local_size(0)*get_local_size(1);\n"
   
-  " local " + typeString + " diagLocal[Ncache];//local cache of diagonals\n"
+//  " local " + typeString + " diagLocal[Ncache];//local cache of diagonals\n"
   
   " local " + typeString + " toAddLocal[maxLocalItems];\n"
   " int Dcol, DcolNpad;\n"
@@ -276,6 +277,8 @@ int cholBatchVcl(
   const int NstartA = A.internal_size2() * Astartend[0] + Astartend[2];
   const int NstartD = D.internal_size2() * Dstartend[0] + Dstartend[2];
   
+  viennacl::ocl::local_mem localCache(NlocalCache[0]);
+  
   std::string cholClString = cholBatchKernelString<T>(
     0L, // start
     Astartend[3], // colEnd  
@@ -314,7 +317,7 @@ int cholBatchVcl(
   cholKernel.local_work_size(1, (cl_uint) (Nlocal[1]));
   
   viennacl::ocl::command_queue theQueue = cholKernel.context().get_queue();
-  viennacl::ocl::enqueue(cholKernel(A, D, numbatchD), theQueue);  
+  viennacl::ocl::enqueue(cholKernel(A, D, localCache, numbatchD), theQueue);  
   clFinish(theQueue.handle().get());
   //viennacl::ocl::enqueue(cholKernel(A, D, numbatchD));
   return 0L;

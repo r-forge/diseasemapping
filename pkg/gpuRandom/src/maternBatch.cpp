@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-//#define DEBUG
+#define DEBUG
 
 #define NlocalParams 22
 /*
@@ -42,8 +42,8 @@ std::string maternBatchKernelString(
     int NpadBetweenMatrices,
     int NpadCoords,
     int NpadParams,
-    int Nlocal0,
-    int NlocalParamsCache,
+    int Nlocal0,  // can be greater than number of local items
+//    int NlocalParamsCache,
     int assignUpper, // last four default to     1L, 1L, 1L, 0L
     int assignLower,
     int assignDiagonals,
@@ -94,7 +94,7 @@ std::string maternBatchKernelString(
     "#define NpadBetweenMatrices " + std::to_string(NpadBetweenMatrices) + "\n"
     "#define NpadCoords " + std::to_string(NpadCoords) + "\n"
     "#define NpadParams " + std::to_string(NpadParams) + "\n"
-    "#define NlocalParamsCache "+ std::to_string(NlocalParamsCache) + "\n"
+//    "#define NlocalParamsCache "+ std::to_string(NlocalParamsCache) + "\n"
     "#define NlocalParams " + std::to_string(NlocalParams) + "\n\n";
   
   
@@ -229,6 +229,7 @@ std::string maternBatchKernelString(
     "__global " + typeString + " *result,\n"
     "__global " + typeString + " *coords,\n"  
     "__global " + typeString + " *params,\n"
+    "__local " + typeString + " *localParams,\n"
     "int startrow, int Nmatrix) {\n\n";
   
   
@@ -242,7 +243,7 @@ std::string maternBatchKernelString(
     typeString + "2 K_nuK_nup1;\n\n";
   
   result +=
-    "__local " + typeString + " localParams[NlocalParamsCache];\n"
+//    "__local " + typeString + " localParams[NlocalParamsCache];\n"
   "__local " + typeString + "2 localDist[NlocalStorage];\n"
   "__local int Drow[NlocalStorage], Dcol[NlocalStorage];\n";
   
@@ -257,38 +258,22 @@ std::string maternBatchKernelString(
       "// copy parameters to local storage\n";
   result += 
     "if(get_local_id(0)==0){\n"
-    " for(DmatrixLocal = get_local_id(1),Dmatrix = get_global_id(1);\n"
+    " for(DmatrixLocal = get_local_id(1),Dmatrix = get_global_id(1) + startrow;\n"
     "     Dmatrix < Nmatrix;\n"
     "     DmatrixLocal+= get_local_size(1), Dmatrix += get_global_size(1)){\n"
     "   for(Dcell=0;Dcell < NlocalParams;Dcell++){\n"
     "     localParams[DmatrixLocal * NlocalParams + Dcell]=\n"
-    "        params[(startrow + Dmatrix) * NpadParams + Dcell];\n"  
+    "        params[Dmatrix * NpadParams + Dcell];\n"  
     "  }//Dcell\n"
     " }//Dmatrix\n"
     "}//if\n";
 result +=  "barrier(CLK_LOCAL_MEM_FENCE);\n\n";
   
-// old stuff
-#ifdef UNDEF  
-  result += 
-    "//Dcell is really DmatrixLocal\n"
-    "for(Dcell = 0,Dmatrix = get_group_id(1)*get_local_size(1);\n"
-    "     Dmatrix < Nmatrix;\n"
-    "     Dcell++,Dmatrix += get_global_size(1)){\n"
-    // number of sets of parameters to copy over
-    "   k = min((int) get_local_size(1), Nmatrix - Dmatrix);\n"
-    "   for(DmatrixLocal = 0; DmatrixLocal < k; DmatrixLocal++){\n"
-    "      wait = async_work_group_copy(\n"
-    "        &localParams[(Dcell * get_local_size(1) + DmatrixLocal) * NlocalParams],\n"
-    "        &params[(startrow + Dmatrix + DmatrixLocal) * NpadParams],\n"  
-    "        NlocalParams, wait);\n"
-    "  }\n"//DmatrixLocal
-    "}\n";//Dcell,Dmatrix
-#endif
-  
-    result += "wait_group_events (1, &wait);\n\n";
 
   
+//    result += "wait_group_events (1, &wait);\n\n";
+
+
   result +=    
     "for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += get_global_size(0)) {\n";
   
@@ -375,12 +360,13 @@ result +=  "barrier(CLK_LOCAL_MEM_FENCE);\n\n";
     "  result[Dmatrix * NpadBetweenMatrices + Drow[get_local_id(0)] + Dcol[get_local_id(0)] * Npad] ="
     "    K_nuK_nup1.x;\n"//K_nu;\n" // upper triangle
     "#endif\n\n";
-
+  
   result += "} // Dmatrix\n";
   result += "barrier(CLK_LOCAL_MEM_FENCE);\n";
   
   result += "} // Dcell\n\n";
 
+  
   result +=     "\n#ifdef assignDiag\n";
   
   result += 
@@ -389,11 +375,13 @@ result +=  "barrier(CLK_LOCAL_MEM_FENCE);\n\n";
   "  Dmatrix < Nmatrix;\n" 
   "  Dmatrix += get_global_size(1),DmatrixLocal+= get_local_size(1) ) {\n"
   "    maternBit = localParams[NlocalParams*DmatrixLocal+21];\n"
-  "    DlocalParam = Dmatrix * NpadBetweenMatrices;\n"
-  "  for(Dcell = 0; Dcell < N; Dcell ++) {\n"
+  "    DlocalParam = Dmatrix * NpadBetweenMatrices;\n";
+  
+result +=
+    "  for(Dcell = 0; Dcell < N; Dcell ++) {\n"
   "	   result[DlocalParam + Dcell * Npad + Dcell] = maternBit;\n"
-  "  }//Dcell\n" // Dcell
-  "}//Dmatrix\n" // Dmatrix
+  "  }//Dcell\n"; // Dcell
+result +=  "}//Dmatrix\n" // Dmatrix
   "}//if\n" // Dmatrix
   "#endif\n\n"; // assign diagonals
   
@@ -475,20 +463,6 @@ void fill22params(
   
 }
 
-template<typename T> 
-void maternBatchVcl(
-    viennacl::matrix_base<T> &vclVar, // Nmat columns N^2 rows
-    viennacl::matrix_base<T> &vclCoords, // 2 columns
-    viennacl::matrix_base<T> &param, // Nmat rows, 22 columns
-    viennacl::ocl::kernel & maternKernel,
-    int startrow, 
-    int Nmatrix){ // param[seq(startrow, len=Nmatrix),]
-  
-  fill22params(param);
-  viennacl::ocl::command_queue theQueue = maternKernel.context().get_queue();
-  viennacl::ocl::enqueue(maternKernel(vclVar, vclCoords, param, startrow, Nmatrix), theQueue);
-  clFinish(theQueue.handle().get());
-}
 
 
 
@@ -512,6 +486,12 @@ void maternBatchVcl(
   
     const int Ncell = N * (N - 1)/2, maxIter = 1500;
   
+  fill22params(param);
+      // memory for local copies of parameters
+  
+  viennacl::ocl::local_mem localParameters(sizeof(param(0,0)) *
+            NlocalParams * numLocalItems[1] * 
+            (1+ Nmatrix * numLocalItems[1] / numWorkItems[1]));
   
   //  cl_device_type type_check = ctx.current_device().type();
 
@@ -526,7 +506,7 @@ void maternBatchVcl(
     vclCoords.internal_size2(), //NpadCoords, 
     param.internal_size2(),// NpadParams
     numLocalItems[0],
-    NlocalParams * numLocalItems[1] * (1+ Nmatrix * numLocalItems[1] / numWorkItems[1]),// local params cache
+//    NlocalParams * numLocalItems[1] * (1+ Nmatrix * numLocalItems[1] / numWorkItems[1]),// local params cache
     1L, 1L, 1L, 0L
       );
   
@@ -534,12 +514,7 @@ void maternBatchVcl(
   viennacl::ocl::switch_context(ctx_id);
   viennacl::ocl::program & my_prog = viennacl::ocl::current_context().add_program(maternClString, "my_kernel");
   
-#ifdef DEBUG
-  
-  Rcpp::Rcout << maternClString << "\n\n";
-  
-#endif  
-  
+
   
   
   
@@ -555,8 +530,10 @@ void maternBatchVcl(
   maternKernel.local_work_size(1, (cl_uint) (numLocalItems[1]));
   
 if(verbose) {
-  Rcpp::Rcout << "\n" << 
-    NlocalParams * numLocalItems[1] * ceil(Nmatrix * numLocalItems[1] / numWorkItems[1])  << 
+  Rcpp::Rcout << "\n" << NlocalParams << " "<< Nmatrix << " " <<
+    localParameters.size() << " " 
+  << ceil(Nmatrix * numLocalItems[1] / numWorkItems[1]) << " " <<
+    NlocalParams * ceil(Nmatrix * numLocalItems[1] / numWorkItems[1])  << 
       "\n" << maternClString << "\n";
 }
 
@@ -568,7 +545,11 @@ if(verbose) {
     Rcpp::Rcout << startrow << " " << Nmatrix << " " << param.size1() << "\n";
   }
   
-  maternBatchVcl(vclVar, vclCoords, param, maternKernel, startrow, Nmatrix);
+  
+  viennacl::ocl::command_queue theQueue = maternKernel.context().get_queue();
+  viennacl::ocl::enqueue(maternKernel(vclVar, vclCoords, param, localParameters,
+                                      startrow, Nmatrix), theQueue);
+  clFinish(theQueue.handle().get());
   
 }
 

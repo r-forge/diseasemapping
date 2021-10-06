@@ -38,7 +38,7 @@ otherparams = c(shape=1, variance=1.840997, anisoRatio = 1, anisoAngleRadians = 
 otherparams = matrix(rep(otherparams,each=nrow(newParam)),nrow=nrow(newParam))
 colnames(otherparams) <- c("shape", "variance", "anisoRatio", "anisoAngleRadians")
 
-paramsBatch0 = cbind(newParam, otherparams)
+paramsBatch0 = cbind(newParam, otherparams)[1:20,]
 paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
 paramsGpu = gpuR::vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0),22-ncol(paramsBatch0))),type="double")
 
@@ -80,7 +80,13 @@ detVar = vclVector(0, Nparam,type=type)
 detReml = vclVector(0, Nparam, type=type)
 jacobian = vclVector(0, Ndata, type=type)
 ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
-ssqBetahat <- vclMatrix(0, Nparam+2, Ndata+2, type=type)
+ssqX <- vclMatrix(0, Nparam, Ndata, type=type)
+ssqBeta = deepcopy(ssqX)
+ssqBetaHat = deepcopy(ssqX)
+aTDinvb_beta = vclMatrix(0, Nparam, Ndata, type=type)
+XVYXVX = vclMatrix(-77, Nparam * Ncov, ncol(yx), type=type)
+
+
 
 NparamPerIter = 5
 
@@ -93,37 +99,43 @@ varMat = vclMatrix(0, nrow(yx)*NparamPerIter, nrow(coords), type=type)
 cholXVXdiag = vclMatrix(0, NparamPerIter, Ndata, type=type)
 cholDiagMat = vclMatrix(0, NparamPerIter, nrow(coords), type=type)
 
+b_beta = vclMatrix(0, NparamPerIter*nrow(yx), Ndata, type=type)
+
+
 gpuRandom:::likfitGpu_BackendP(
   yx,  #1
   coords,
   paramsGpu,
   boxcoxGpu,  
   betas,  #5
-  ssqY,
-  ssqBetahat,
+  ssqY, #6
+  aTDinvb_beta, #7
+  XVYXVX,  #8 
+  ssqBetaHat, #9
+  ssqBeta, #10
   detVar,
-  detReml,
-  jacobian,  #10
+  detReml, 
+  jacobian,  #13
   NparamPerIter,  
   workgroupSize,  
   localSize,  
   NlocalCache,  
-  verbose = 2,  #15
+  verbose = 2,  #18
   ssqYX, 
-  ssqYXcopy,  #new
-  LinvYX,  #18
+  LinvYX,  #20
   QinvSsqYx, 
   cholXVXdiag, #20
-  varMat, #new
-  cholDiagMat)   #new
+  varMat, #23
+  cholDiagMat,   #new
+  b_beta)   #new
 
 
 
 as.vector(detVar)
 as.vector(detReml)
-as.matrix(ssqBetahat)
-as.matrix(ssqY)
-as.matrix(ssqYX)
+#as.matrix(ssqBetahat)
+#as.matrix(ssqY)
+#as.matrix(ssqYX)
 ```
 
 
@@ -214,11 +226,16 @@ detReml = vclVector(0, Nparam, type=type)
 jacobian = vclVector(0, Ndata, type=type)
 ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
 ssqX <- vclMatrix(0, Nparam, Ndata, type=type)
+ssqBeta = deepcopy(ssqX)
+ssqBetaHat = deepcopy(ssqXs)
 
 # objects for debugging
 ssqYX = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
 LinvYX = vclMatrix(0, nrow(yx) * NparamPerIter, ncol(yx), type=type)
 varMat = vclMatrix(0, nrow(yx)*NparamPerIter, nrow(coords), type=type)
+
+cholDiagMat = vclMatrix(0, NparamPerIter, nrow(coords), type=type)
+b_beta = vclMatrix(0, NparamPerIter*nrow(yx), Ndata, type=type)
 
 gpuRandom:::likfitGpu_BackendP(
   yx,
@@ -236,7 +253,10 @@ gpuRandom:::likfitGpu_BackendP(
   localSize,
   NlocalCache,
   verbose = 20,
-  ssqYX, LinvYX
+  ssqYX, LinvYX,
+  cholDiagMat,
+  b_beta  #new  26
+
 )
 
 
@@ -378,12 +398,15 @@ gpuRandom:::likfitGpu_BackendP(
   varMat, #new
   cholDiagMat,
   b_beta)   #new  26
+
 any(is.na(as.vector(detVar)))
 any(is.na(as.matrix(varMat)))
 
-
 as.vector(detVar)[1:50]
 as.vector(detReml)
+
+
+if(FALSE) {
 as.matrix(ssqBetahat)[1:10,]
 is.na(as.matrix(ssqBetahat))
 as.matrix(ssqBeta)
@@ -400,7 +423,7 @@ as.matrix(varMat)
 any(is.na(as.matrix(varMat)))
 which(is.na(as.matrix(varMat)))
 
-
+}
 
 
 
