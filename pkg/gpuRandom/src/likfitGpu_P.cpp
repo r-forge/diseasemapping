@@ -750,14 +750,12 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     // if(verbose[0]>3) {
     //   Rcpp::Rcout << "c";
     // }
-#ifdef UNDEF    
+   
     // LinvYX = L^(-1) YX,   Nobs by (Ndatasets + Ncovariates)
     viennacl::ocl::enqueue(backsolveKernel(LinvYX, Vbatch, yx, NthisIteration),
                            theQueue);
     
-    // if(verbose[0]>3) {
-    //   Rcpp::Rcout << "b";
-    // }
+
     // ssqYX = YX^Y L^(-1)T D^(-1) L^(-1) YX  square matrix, (Ndatasets + Ncovariates)
     viennacl::ocl::enqueue(crossprodKernel(ssqYX, LinvYX, cholDiagMat, 0, NthisIteration),
                            theQueue);
@@ -765,7 +763,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     //   Rcpp::Rcout << "cr";
     // }
     
-    
+   
     // save diagonals of ssqYX to ssqY
     viennacl::ocl::enqueue(extractSomeDiagKernel(ssqY, ssqYX, DiterIndex, NthisIteration),
                            theQueue);  
@@ -787,15 +785,15 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                            theQueue);  
 
     
-    
+   
     // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part
-    viennacl::ocl::enqueue(cholXvxKernel(ssqYX, cholXVXdiag, NthisIteration, detReml, DiterIndex),
+    viennacl::ocl::enqueue(cholXvxKernel(ssqYX, cholXVXdiag, localMemory, NthisIteration, detReml, DiterIndex),
                            theQueue);
     
     // if(verbose[0]>3) {
     //   Rcpp::Rcout << "cxy";
     // }
-    
+//#ifdef UNDEF      
     // backsolve QinvSsqYx = Q^(-1) ssqYX[(Ndatasets+1):nrow(ssqYX),1:Ndatasets]  
     // Ncovariates by Ndatasets
     viennacl::ocl::enqueue(
@@ -825,7 +823,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     
     // if(Diter ==1)
     // Rcpp::Rcout << "crossprod_ssqBeta_KernelString\n" << crossprod_ssqBeta_KernelString << "\n";
-#endif    
+//#endif    
     
     if(verbose[0]>1) {
       Rcpp::Rcout << "\n" << "Diter " << Diter <<" DiterIndex " << DiterIndex << " endThisIteration " << 
