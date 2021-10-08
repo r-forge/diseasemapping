@@ -11,6 +11,7 @@ likfit_givenBeta <- function(Betas, #a p x m matrix  given by the user
                              detVar,
                              ssqY,
                              XVYXVX,
+                             jacobian,
                              minustwotimes=TRUE){
   
   

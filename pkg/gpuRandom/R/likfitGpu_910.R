@@ -7,10 +7,11 @@
 likfitGpu_2 <- function(spatialmodel,     #data,
                         type = c("double","float"),
                         paramsGpu, #a vclmatrix, consists of all the parameters
+                        BoxCox, # an R vector, will always be c(1,0,.....)
                         betas=NULL, #a vclmatrix  #only one row batch, but many colbatches
-                        BoxCox, # an R vector, will always be c(1,0,.....)#Nbetahats = 1, # a number, how many betahats do you want to calculate for one dataset? 
                         form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),
                         NparamPerIter,  # how many sets of params to be evaluated in each loop
+                        nBetahats =1,  # how many betahats do you want to calculate for one dataset? 
                         minustwotimes=TRUE,
                         Nglobal,
                         Nlocal,
@@ -44,10 +45,11 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   coordsGpu<-vclMatrix(spatialmodel$data@coords,type=type)  
   boxcoxGpu = vclVector(BoxCox, type=type)
   if(is.null(betas)){
-    betas = vclMatrix(0, Ncov, Ndata, type=type)
+    #betas = vclMatrix(0, Ncov, Ndata, type=type)
+    verbose[3]=0
   }
   ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
-  XVYXVX = vclMatrix(-77, Nparam * Ncov, ncol(yx), type=type)
+  XVYXVX = vclMatrix(0, Nparam * Ncov, ncol(yx), type=type)
   ssqBetahat <- vclMatrix(0, Nparam, Ndata, type=type)
   ssqBeta <- vclMatrix(0, Nparam, Ndata, type=type)
   detVar = vclVector(0, Nparam,type=type)
@@ -74,8 +76,8 @@ likfitGpu_2 <- function(spatialmodel,     #data,
     XVYXVX,
     ssqBetahat, #9
     ssqBeta,
-    detVar,    #9
-    detReml,   #10
+    detVar,    #11
+    detReml,   #12
     jacobian,  #13
     NparamPerIter,  #14
     Nglobal,  #15
@@ -85,42 +87,15 @@ likfitGpu_2 <- function(spatialmodel,     #data,
     ssqYX, #ssqYXcopy,  #new
     LinvYX,  #19
     QinvSsqYx, 
-    cholXVXdiag, #21
-    varMat,        #24     Vbatch
+    cholXVXdiag, #22
+    varMat,        #23     Vbatch
     cholDiagMat,
-    b_beta)   #new 25
+    b_beta)   #new 245
   
   
   
   
   temp <- vclMatrix(0, Nparam, Ndata, type=type)  
-  
-  # if(form ==1 | form ==3){
-  #   if(is.null(betas)){
-  #     stop("must supply betas for this likelihood")
-  #   }else{    
-  #     one <- ssqY - 2*aTDinvb_beta + ssqBeta
-  #     
-  #     if(form ==1){
-  #       mat_vec_eledivideBackend(one, variances, temp,  Nglobal)    
-  #       matrix_vector_sumBackend(temp,
-  #                                detVar + n*log(variances),
-  #                                jacobian,  
-  #                                n*log(2*pi),
-  #                                minusTwoLogLik,
-  #                                Nglobal)        
-  #     }else if(form == 3){
-  #       matrix_vector_sumBackend(n*log(one/n),
-  #                                detVar,
-  #                                jacobian,  
-  #                                n + n*log(2*pi),
-  #                                minusTwoLogLik,
-  #                                Nglobal)    
-  #     }
-  #   }
-  # }
-  
-  
   # resid^T V^(-1) resid, resid = Y - X betahat = two
   two <- ssqY - ssqBetahat
   minusTwoLogLik <- vclMatrix(0, Nparam, Ndata, type=type)
@@ -170,29 +145,71 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   
   
   ##### calculate betahat #####################
-  ####### (X^T V^(-1)X)^(-1) * (X^T V^(-1) y)
-  # if (Nbetahats > 0){
-  #   Betahat <- matrix(0, nrow=Nbetahats*Ncov, ncol=Ndata)
-  #   
-  #   if(Nbetahats > 10 | Nbetahats > Nparam){
-  #     stop("too many Betahats required")
-  #   }
-  #   #Nbetahats = min(Nbetahats, Nparam)
-  #   
-  #   for (j in 1:Ndata){
-  #     index <- order(minusTwoLogLik[,j], decreasing = FALSE)[1:Nbetahats]  #from small to large
-  #     
-  #     for (i in 1:Nbetahats){       
-  #       a<-c((index[i]-1)*Ncov+1, index[i]*Ncov)
-  #       Betahat[a,j] <- solve(XVYXVX[a,(Ndata+1):ncol(yx)]) %*% XVYXVX[a,j]
-  #       
-  #     }
-  #   }
-  # }
+  ###### (X^T V^(-1)X)^(-1) * (X^T V^(-1) y)
+  if (nBetahats > 0){
+    Betahat <- matrix(0, nrow=nBetahats*Ncov, ncol=Ndata)
+
+    if(nBetahats > 5 | nBetahats > Nparam){
+      stop("too many Betahats required")
+    }
+
+    for (j in 1:Ndata){
+      index <- order(minusTwoLogLik[,j], decreasing = FALSE)[1:nBetahats]  #from small to large
+
+      for (i in 1:nBetahats){
+        a<-c((index[i]-1)*Ncov+1, index[i]*Ncov)
+        Betahat[a,j] <- solve(XVYXVX[a,(Ndata+1):ncol(yx)]) %*% XVYXVX[a,j]
+
+      }
+    }
+  }
+  
+  if(form ==1 | form ==3){
+    if(is.null(betas)){
+      stop("must supply betas for this likelihood")
+    }else{
+      one <- ssqY - 2*aTDinvb_beta + ssqBeta
+      
+      if(form == 1){
+        mat_vec_eledivideBackend(one, variances, temp,  Nglobal)
+        matrix_vector_sumBackend(temp,
+                                 detVar + n*log(variances),
+                                 jacobian,
+                                 n*log(2*pi),
+                                 minusTwoLogLik,
+                                 Nglobal)
+      }else if(form == 3){
+        matrix_vector_sumBackend(n*log(one/n),
+                                 detVar,
+                                 jacobian,
+                                 n + n*log(2*pi),
+                                 minusTwoLogLik,
+                                 Nglobal)
+      }
+    }
+  }
   
   
   
-  List <- list("minusTwoLogLik" = minusTwoLogLik, "XVYXVX"=XVYXVX)
+  
+  
+  if(is.null(betas)){  
+    List <- list("minusTwoLogLik" = minusTwoLogLik, 
+                 "ssqBetahat" = ssqBetahat,
+                 "ssqY"=ssqY,     
+                 "detVar" = detVar,   # log |D|
+                 "detReml" = detReml,   # log |P|
+                 "jacobian" = jacobian,
+                 "XVYXVX"=XVYXVX)
+  }else{
+    List <- list("minusTwoLogLik" = minusTwoLogLik, 
+                 "ssqBeta" =ssqBeta,
+                 "ssqY"=ssqY,     
+                 "detVar" = detVar,   
+                 "detReml" = detReml,   
+                 "jacobian" = jacobian,
+                 "XVYXVX"=XVYXVX)
+  }
   
   
   List
