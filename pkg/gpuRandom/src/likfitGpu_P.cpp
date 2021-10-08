@@ -722,7 +722,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   
   viennacl::ocl::command_queue theQueue = maternKernel.context().get_queue();
   
-  if(verbose[1]>=1){
+  if(verbose[1]==1){  // given betas
   for (Diter=0,DiterIndex=0; 
        Diter< Niter; 
        Diter++,DiterIndex += NparamPerIter[0]){
