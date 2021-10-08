@@ -69,8 +69,8 @@ likfitGpu_0 <- function(Vbatch,
   #Vbatch=LDL^T, cholesky decomposition
   gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=rowbatch, Nglobal=Nglobal, Nlocal=localSizechol, NlocalCache=NlocalCache)
 
-  #logD_temp <- apply(log(diagMat),1,sum)   half log determinant of V
-  gpuRandom:::rowsumBackend(diagMat, logD_temp, type="row", log=TRUE)
+  logD_temp <- apply(log(diagMat),1,sum)   #half log determinant of V
+  #gpuRandom:::rowsumBackend(diagMat, logD_temp, type="row", log=TRUE)
   #logD_i[] <- logD_temp
 
   #L(a1,a2,a3, b) = (y1,y2,y3, X)
@@ -143,7 +143,8 @@ likfitGpu_0 <- function(Vbatch,
 
 
   # store determinant for REML
-  gpuRandom:::rowsumBackend(diagP, logP_temp, type="row",log=1L)
+  #gpuRandom:::rowsumBackend(diagP, logP_temp, type="row",log=1L)
+  logP_temp <- apply(log(diagP),1,sum)
   #logP_i[] <- logP_temp
 
 
