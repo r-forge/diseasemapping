@@ -121,7 +121,7 @@ in computational statistics: (1) generating independent and identically distribu
 In \proglang{clRNG} library, a stream object is a structure that contains three states: the current state of the stream, the initial state (or seed) of the stream, and the initial state of the current substream. The function \fct{clrngMrg31k3pCreateStreams} from \proglang{clRNG} creates streams on the host computer using the MRG31k3p RNG. If we want to use the streams in work-items on a GPU device, the streams have to be copied from the host to the global memory of the GPU device, and then each work-item picks streams from the global memory and copies their current states only to its private memory. \pkg{gpuRandom} is able to create streams both on the host computer and on the GPU device. \fct{createStreamsCpu} is an \proglang{R} interface function of \fct{clrngMrg31k3pCreateStreams} that creates streams on CPU as \proglang{R} matrices (see the \proglang{R} output below), in which the substreams are not created because they are not actually used in random number generation. \fct{createStreamsGpu} adapted the \fct{clrngMrg31k3pCreateStreams} and creates streams directly on GPU device, so that it can avoid unnecessary data transfer between host and device. From our experience, transferring a large-size matrix of streams from host to device by converting it to a `\code{vclMatrix}' object can take very long time, hence, \fct{createStreamsGpu} is more efficient and more frequently used. In the following, we demonstrate the usage of these two functions by generating 4 streams on the host and on the device respectively.
 <<createStreams_CPU>>=
 # creating streams on cpu
-myStreamsCpu <- createStreamsCpu(n=4)
+myStreamsCpu <- createStreamsCpu(n=4, seed=12345)
 t(myStreamsCpu)
 @
 \fct{createStreamsCpu} has two arguments:
@@ -133,14 +133,12 @@ For the MRG31k3p RNG, each state of the stream is comprised of six 31-bit intege
 <<createStreams_Gpu>>=
 # creating streams on gpu
 myStreamsGpu1 = vclMatrix(myStreamsCpu)
-myStreamsGpu2 = createStreamsGpu(n=4)
+myStreamsGpu2 = createStreamsGpu(n=4, seed=12345)
 range(as.matrix(myStreamsGpu1 - myStreamsGpu2))
 @
 \fct{createStreamsGpu} also has the two arguments \code{n} and \code{seed}, \code{seed} is by default a vector of six ``12345''. \fct{createStreamsGpu} is similar to \code{.Random.seed} in \proglang{R}. By setting the RNG status with the \proglang{R} function \fct{set.seed}, we are able to repeat the sequence of random seeds, which is an important quality criteria of RNGs. Similarly in \fct{createStreamsGpu} and \fct{createStreamsCpu}, with the \code{seed} argument, we are able to produce exactly the same sequence of streams as many times as we want.
 
 
-
-\subsection{Using streams to generate  i.i.d. $U (0, 1)$ random numbers on GPU}
 \subsection{Using streams to generate  i.i.d. $U (0, 1)$ random numbers on GPU}
 The streams created on GPU are then used in work-items that executes in parallel on GPU device. In \pkg{gpuRandom} each work-item takes one distinct stream to generate random numbers, it is important to notice that the number of streams should always be equal to the number of total work-items in use. The main part of the kernel (\proglang{OpenCL} functions for execution on the device) for generating uniform random numbers is shown in Listing \ref{lst:uniformkernel}. Kernels are written in the \proglang{OpenCL C} language, in which \code{__kernel} declares a function as a kernel, pointer kernel arguments must be declared with an address space qualifier, for example \code{__global} and \code{__local}. Here the pointers to \code{streams} and to the matrix \code{out} on the global memory are passed to the kernel as arguments. \code{Nrow} and \code{Ncol} represent number of rows and columns of the matrix \code{out} respectively. \code{NpadCol} is the internal number of columns of \code{out}, \code{NpadStreams} is internal number of columns of the \code{streams} matrix (these variables are defined in macros not shown here). Each stream's current state is copied to the private memory of each work-item by the function \fct{streamsToPrivate}. \code{index} represents the position of the work-item when mapping it to a one-dimensional data structure. The function \fct{clrngMrg31k3pNextState} generates a uniform random integer named \code{temp} between 0 and 4294967295,  the value of \code{temp} is then scaled to be in the interval $(0,1)$ by multiplying it by a constant \code{mrg31k3p\_NORM\_cl}, which is defined to be $1/4294967295$ in macro not shown here. At the end of generating random numbers, streams are transferred back to global memory through the function \fct{streamsFromPrivate}.
 \begin{framed}
@@ -186,10 +184,10 @@ This kernel executes over a 2-dimensional index space. Figure \ref{fig:1} illust
     \caption{name?\label{fig:1}}%
 \end{figure}
 
-Now we use the streams created in section \ref{create_streams} to generate a vector \code{sim_1} of 6 i.i.d. $U (0,1)$ random numbers using the function \fct{runif}. If \code{streams} and \code{Nglobal} are both missing, then by default \code{Nglobal} is set as (64,8), and a `vclMatrix' of \code{prod(Nglobal)} streams is supplied. The output is an S4 object (a `\code{vclVector}' or a `\code{vclMatrix}'), to view the generated random numbers, we need to convert it to an R vector or matrix, in this way, the random numbers are moved from the global memory of device to the host.
+Now we use the streams created in section \ref{create_streams} to generate two vectors of 6 i.i.d. $U (0,1)$ random numbers using the function \fct{runif}. If \code{streams} and \code{Nglobal} are both missing, then by default \code{Nglobal} is set as (64,8), and a `vclMatrix' of \code{prod(Nglobal)} streams is supplied. The output is an S4 object (a `\code{vclVector}' or a `\code{vclMatrix}'), to view the generated random numbers, we need to convert it to an R vector or matrix, in this way, the random numbers are moved from the global memory of device to the host. By using \code{myStreamsGpu2} which is the same as \code{myStreamsGpu1},  \fct{runif} returns the same sequence of random numbers. 
 <<simStuff2, eval=TRUE,tidy=TRUE>>=
-sim_1 <-runif(n=6, streams=myStreamsGpu1, Nglobal=c(1,nrow(myStreamsGpu1)), type="double")
-as.vector(sim_1)
+as.vector(gpuRandom::runif(n=4, streams=myStreamsGpu1, Nglobal=c(1,nrow(myStreamsGpu1)), type = "double"))
+as.vector(gpuRandom::runif(n=10, streams=myStreamsGpu2, Nglobal=c(1,nrow(myStreamsGpu1)), type = "double"))[-(1:6)]
 @
 The arguments of the \fct{gpuRandom::runif} are described as follows:
 \begin{itemize}
@@ -198,8 +196,7 @@ The arguments of the \fct{gpuRandom::runif} are described as follows:
   \item \code{Nglobal}: global index space. Default is set as $(64,8)$.
   \item \code{type}: ``double'' or ``float'' format of generated random numbers.
 \end{itemize}
-Next we show that by using \code{myStreamsGpu2} which is the same as \code{myStreamsGpu1},  \fct{runif} returns the same sequence of random numbers as \code{sim_1}. 
-<<eval=TRUE, tidy=TRUE>>=
+<<include=FALSE, tidy=TRUE>>=
 sim_2 = runif(n=7,streams=myStreamsGpu2, Nglobal=c(1,nrow(myStreamsGpu1)), type="double")
 as.vector(sim_2)
 @
