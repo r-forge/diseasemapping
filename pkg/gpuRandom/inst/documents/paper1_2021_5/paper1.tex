@@ -162,7 +162,7 @@ In \proglang{clRNG} library, a stream object is a structure that contains three 
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
 # creating streams on cpu
-myStreamsCpu <- createStreamsCpu(n=4)
+myStreamsCpu <- createStreamsCpu(n=4, seed=12345)
 t(myStreamsCpu)
 ##               [,1]       [,2]       [,3]       [,4]
 ## current.g1.1 12345  336690377  502033783  739421137
@@ -191,7 +191,7 @@ For the MRG31k3p RNG, each state of the stream is comprised of six 31-bit intege
 \begin{verbatim}
 # creating streams on gpu
 myStreamsGpu1 = vclMatrix(myStreamsCpu)
-myStreamsGpu2 = createStreamsGpu(n=4)
+myStreamsGpu2 = createStreamsGpu(n=4, seed=12345)
 range(as.matrix(myStreamsGpu1 - myStreamsGpu2))
 ## [1] 0 0
 \end{verbatim}
@@ -245,14 +245,16 @@ This kernel executes over a 2-dimensional index space. Figure \ref{fig:1} illust
     \caption{name?\label{fig:1}}%
 \end{figure}
 
-Now we use the streams created in section \ref{create_streams} to generate a vector \code{sim_1} of 6 i.i.d. $U (0,1)$ random numbers using the function \fct{runif}. If \code{streams} and \code{Nglobal} are both missing, then by default \code{Nglobal} is set as (64,8), and a `vclMatrix' of \code{prod(Nglobal)} streams is supplied. The output is an S4 object (a `\code{vclVector}' or a `\code{vclMatrix}'), to view the generated random numbers, we need to convert it to an R vector or matrix, in this way, the random numbers are moved from the global memory of device to the host.
+Now we use the streams created in section \ref{create_streams} to generate two vectors of 6 i.i.d. $U (0,1)$ random numbers using the function \fct{runif}. If \code{streams} and \code{Nglobal} are both missing, then by default \code{Nglobal} is set as (64,8), and a `vclMatrix' of \code{prod(Nglobal)} streams is supplied. The output is an S4 object (a `\code{vclVector}' or a `\code{vclMatrix}'), to view the generated random numbers, we need to convert it to an R vector or matrix, in this way, the random numbers are moved from the global memory of device to the host. By using \code{myStreamsGpu2} which is the same as \code{myStreamsGpu1},  \fct{runif} returns the same sequence of random numbers. 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
-sim_1 <- runif(n = 6, streams = myStreamsGpu1, Nglobal = c(1, nrow(myStreamsGpu1)),
-    type = "double")
-as.vector(sim_1)
-## [1] 0.7353245 0.5180770 0.6142074 0.2319392 0.1100781 0.3619766
+as.vector(gpuRandom::runif(n = 4, streams = myStreamsGpu1, Nglobal = c(1,
+    nrow(myStreamsGpu1)), type = "double"))
+## [1] 0.7353245 0.5180770 0.6142074 0.2319392
+as.vector(gpuRandom::runif(n = 10, streams = myStreamsGpu2, Nglobal = c(1,
+    nrow(myStreamsGpu1)), type = "double"))[-(1:6)]
+## [1] 0.6487742 0.1112075 0.3661944 0.5018562
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -263,18 +265,7 @@ The arguments of the \fct{gpuRandom::runif} are described as follows:
   \item \code{Nglobal}: global index space. Default is set as $(64,8)$.
   \item \code{type}: ``double'' or ``float'' format of generated random numbers.
 \end{itemize}
-Next we show that by using \code{myStreamsGpu2} which is the same as \code{myStreamsGpu1},  \fct{runif} returns the same sequence of random numbers as \code{sim_1}. 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-sim_2 = runif(n = 7, streams = myStreamsGpu2, Nglobal = c(1, nrow(myStreamsGpu1)),
-    type = "double")
-as.vector(sim_2)
-## [1] 0.7353245 0.5180770 0.6142074 0.2319392 0.1100781 0.3619766
-## [7] 0.6487742
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+
 Reusing \code{myStreamsGpu1} will produce a vector different from \code{sim_1}. Because each time a random number is generated, the current state of the stream is changed (advances by one position), below shows the \code{myStreamsGpu1} after it being used.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
@@ -282,12 +273,12 @@ Reusing \code{myStreamsGpu1} will produce a vector different from \code{sim_1}. 
 t(matrix(as.matrix(myStreamsGpu1), nrow(myStreamsCpu), ncol(myStreamsCpu),
     dimnames = dimnames(myStreamsCpu)))
 ##                    [,1]       [,2]       [,3]       [,4]
-## current.g1.1  878672095 2113333390  502033783  739421137
-## current.g1.2  240667857  559530223 1322587635 1475938232
-## current.g1.3  240667857 1309565828 1964121530  730262207
-## current.g2.1  642281259 1335994581 1949818481 1630192198
-## current.g2.2 1069151070   61444481 1607232546  324551134
-## current.g2.3  809054265  197003928 1462898381  795289868
+## current.g1.1  240667857  559530223  502033783  739421137
+## current.g1.2  240667857 1309565828 1322587635 1475938232
+## current.g1.3      12345  336690377 1964121530  730262207
+## current.g2.1 1069151070   61444481 1949818481 1630192198
+## current.g2.2  809054265  197003928 1607232546  324551134
+## current.g2.3      12345   85196284 1462898381  795289868
 ## initial.g1.1      12345  336690377  502033783  739421137
 ## initial.g1.2      12345  597094797 1322587635 1475938232
 ## initial.g1.3      12345 1245771585 1964121530  730262207
@@ -558,7 +549,7 @@ We requested one million simulations on GPU while the actual number of simulatio
 system.time(fisher.sim(month_gpu, 1e6, streams=streams, 
             type="double", returnStatistics=FALSE, Nglobal = c(256,128)))
 ##    user  system elapsed 
-##   0.844   0.004   0.847
+##   0.764   0.000   0.764
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -573,7 +564,7 @@ stats::fisher.test(month,simulate.p.value = TRUE,B=1015808)$p.value
 ## [1] 0.4037993
 system.time(stats::fisher.test(month,simulate.p.value = TRUE,B=1015808))
 ##    user  system elapsed 
-##  14.962   0.017  14.970
+##  14.747   0.004  14.743
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -635,7 +626,7 @@ With about ten million simulations, we get 1223 cases and a p-value around 0.000
 system.time(gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
             type="double", returnStatistics=FALSE,Nglobal = c(256,128)))
 ##    user  system elapsed 
-##   4.555   0.012   4.564
+##   4.343   0.012   4.352
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -650,7 +641,7 @@ fisher.test(week,simulate.p.value = TRUE,B=10010624)$p.value
 ## [1] 0.0001263657
 system.time(fisher.test(week,simulate.p.value = TRUE,B=10010624))
 ##    user  system elapsed 
-##  90.996   0.170  91.109
+##  90.524   0.155  90.629
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -829,7 +820,9 @@ Step 5, generate 2 standard Gaussian random vectors \code{zmatGpu}$=(Z_1, Z_2)$ 
 \begin{verbatim}
 streamsGpu <- createStreamsGpu(n=128*64)
 \end{verbatim}
-\end{kframe}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in vectorToVCL(data, 4L, context\_index - 1): ViennaCL: FATAL ERROR: CL\_OUT\_OF\_RESOURCES \\\#\# \ ViennaCL tried to launch a compute kernel, but the device does not provide enough resources. Try changing the global and local work item sizes.\\\#\# If you think that this is a bug in ViennaCL, please report it at viennacl-support@lists.sourceforge.net and supply at least the following information:\\\#\# \ * Operating System\\\#\# \ * Which OpenCL implementation (AMD, NVIDIA, etc.)\\\#\# \ * ViennaCL version\\\#\# Many thanks in advance!}}\end{kframe}
 \end{knitrout}
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
@@ -837,7 +830,9 @@ streamsGpu <- createStreamsGpu(n=128*64)
 zmatGpu = rnorm(c(nrow(maternCov),2), streams=streamsGpu, Nglobal=c(128,64),
                  type = theType)
 \end{verbatim}
-\end{kframe}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in nrow(streams): object 'streamsGpu' not found}}\end{kframe}
 \end{knitrout}
 Step 6, use \fct{gpuRandom::multiplyLowerDiagonalBatch} to compute $U = L * D^{(1/2)}* Z$ in batches, see the following illustration. \code{simMat} is the output matrix for $U$, \code{maternCov}, \code{diagMat}, and \code{zmatGpu} correspond to the matrices of $L$, $D$ and $Z=(Z_1, Z_2)$ respectively.
 \begin{knitrout}
@@ -845,7 +840,10 @@ Step 6, use \fct{gpuRandom::multiplyLowerDiagonalBatch} to compute $U = L * D^{(
 \begin{verbatim}
 simMat = vclMatrix(0, nrow(zmatGpu), ncol(zmatGpu), 
                    type = theType)
+\end{verbatim}
 
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'nrow': object 'zmatGpu' not found}}\begin{verbatim}
 gpuRandom::multiplyLowerDiagonalBatch(
   simMat, maternCov, diagMat, zmatGpu,
   diagIsOne = 1L, # diagonal of L is one
@@ -854,7 +852,9 @@ gpuRandom::multiplyLowerDiagonalBatch(
   Nlocal,
   NlocalCache)
 \end{verbatim}
-\end{kframe}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in gpuRandom:::multiplyLowerDiagonalBatchBackend(output, L, D, B, : object 'simMat' not found}}\end{kframe}
 \end{knitrout}
 \begin{gather}
  \begin{bmatrix}  L_{1} \\ L_{2} \\L_{3} \\ \vdots
@@ -880,11 +880,21 @@ Step 7, Finally, plot the 10 simulated Gaussian random surfaces.
 \begin{verbatim}
 library(raster)
 simRaster = brick(myRaster, nl = ncol(simMat)*nrow(paramsGpu))
+\end{verbatim}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'ncol': object 'simMat' not found}}\begin{verbatim}
 values(simRaster) = as.vector(as.matrix(simMat))
+\end{verbatim}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'as.matrix': object 'simMat' not found}}\begin{verbatim}
 names(simRaster) = apply(expand.grid('par',1:nrow(paramsGpu), 
                                      'sim', 1:ncol(simMat)), 1, paste, collapse='')
 \end{verbatim}
-\end{kframe}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'ncol': object 'simMat' not found}}\end{kframe}
 \end{knitrout}
 \begin{figure}[H]
 \centering
@@ -897,17 +907,9 @@ for(D in names(simRaster)) {
   plot(simRaster[[D]], legend=FALSE, add=TRUE)
 }
 \end{verbatim}
-\end{kframe}
-\includegraphics[width=0.45\textwidth]{figure/maternplot-1} 
-\includegraphics[width=0.45\textwidth]{figure/maternplot-2} 
-\includegraphics[width=0.45\textwidth]{figure/maternplot-3} 
-\includegraphics[width=0.45\textwidth]{figure/maternplot-4} 
-\includegraphics[width=0.45\textwidth]{figure/maternplot-5} 
-\includegraphics[width=0.45\textwidth]{figure/maternplot-6} 
-\includegraphics[width=0.45\textwidth]{figure/maternplot-7} 
-\includegraphics[width=0.45\textwidth]{figure/maternplot-8} 
-\includegraphics[width=0.45\textwidth]{figure/maternplot-9} 
-\includegraphics[width=0.45\textwidth]{figure/maternplot-10} 
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): object 'simRaster' not found}}\end{kframe}
 \end{knitrout}
 \caption{\label{fig:5} }
 \end{figure}
