@@ -27,7 +27,6 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   variances <- vclVector(paramsGpu[,3],type=type)     # a vclvector
   
   
-  
   if(BoxCox[1] != 1) {
     BoxCox = c(1, 0, setdiff(BoxCox, c(0,1)))
   }
@@ -35,7 +34,7 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   Ncov = ncol(covariates)
   Ndata = length(BoxCox)
   Nparam = nrow(paramsGpu)
-  print (c(Ncov, Ndata, Nparam))
+
   
   yx = vclMatrix(cbind(y,
                        matrix(0, n, length(BoxCox)-1),
@@ -45,11 +44,11 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   
   coordsGpu<-vclMatrix(spatialmodel$data@coords,type=type)  
   boxcoxGpu = vclVector(BoxCox, type=type)
-  if(is.null(betas)){
-    verbose[2]=0
-    betas = vclMatrix(0, Ncov, Ndata, type=type)
-  }else{
+  if(!is.null(betas)){  # do betas computation
     verbose[2]=1
+  }else{
+    verbose[2]=0
+    betasGpu = vclMatrix(0, Ncov, Ndata, type=type)
   }
   ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
   XVYXVX = vclMatrix(0, Nparam * Ncov, ncol(yx), type=type)
@@ -73,7 +72,7 @@ likfitGpu_2 <- function(spatialmodel,     #data,
     coordsGpu, #2
     paramsGpu, #3
     boxcoxGpu,   #4
-    betas,  #5
+    betasGpu,  #5
     ssqY,     #6
     aTDinvb_beta,
     XVYXVX,
@@ -150,8 +149,8 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   
   ##### calculate betahat #####################
   ###### (X^T V^(-1)X)^(-1) * (X^T V^(-1) y)
-  Betahat <- matrix(0, nrow=nBetahats*Ncov, ncol=Ndata)
   if (nBetahats > 0){
+    Betahat <- matrix(0, nrow=nBetahats*Ncov, ncol=Ndata)
     if(nBetahats > 5 | nBetahats > Nparam){
       stop("too many Betahats required")
     }
@@ -199,26 +198,27 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   
   
   if(is.null(betas)){  
-    List <- list("minusTwoLogLik" = minusTwoLogLik, 
-                 "Betahats"=Betahat,
-                 "ssqBetahat" = ssqBetahat,
-                 "ssqY"=ssqY,     
-                 "detVar" = detVar,   # log |D|
-                 "detReml" = detReml,   # log |P|
-                 "jacobian" = jacobian,
-                 "XVYXVX"=XVYXVX)
+    Theoutput <- list(minusTwoLogLik = minusTwoLogLik, 
+                      Betahats=Betahat,
+                      ssqBetahat = ssqBetahat,
+                      ssqY=ssqY,     
+                      detVar = detVar,   # log |D|
+                      detReml = detReml,   # log |P|
+                      jacobian = jacobian,
+                      XVYXVX=XVYXVX)
   }else{
-    List <- list("minusTwoLogLik" = minusTwoLogLik, 
-                 "ssqBeta" =ssqBeta,
-                 "ssqY"=ssqY,     
-                 "detVar" = detVar,   
-                 "detReml" = detReml,   
-                 "jacobian" = jacobian,
-                 "XVYXVX"=XVYXVX)
+    Theoutput <- list(minusTwoLogLik = minusTwoLogLik, 
+                      Betahats=Betahat,
+                      ssqBeta =ssqBeta,
+                      ssqY=ssqY,     
+                      detVar = detVar,   
+                      detReml = detReml,   
+                      jacobian = jacobian,
+                      XVYXVX=XVYXVX)
   }
   
   
-  List
+  Theoutput
   
   
   
