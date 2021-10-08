@@ -201,7 +201,7 @@ likfitGpu_2 <- function(spatialmodel,     #data,
     Theoutput <- list(minusTwoLogLik = minusTwoLogLik, 
                       Betahats=Betahat,
                       ssqBetahat = ssqBetahat,
-                      ssqY=ssqY,     
+                      ssqY=ssqY, 
                       detVar = detVar,   # log |D|
                       detReml = detReml,   # log |P|
                       jacobian = jacobian,
