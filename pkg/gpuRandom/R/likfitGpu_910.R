@@ -8,7 +8,6 @@ likfitGpu_2 <- function(spatialmodel,     #data,
                         type = c("double","float"),
                         paramsGpu, #a vclmatrix, consists of all the parameters
                         BoxCox, # an R vector, will always be c(1,0,.....)
-                        betas=NULL, #a vclmatrix  #only one row batch, but many colbatches
                         form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),
                         NparamPerIter,  # how many sets of params to be evaluated in each loop
                         nBetahats =1,  # how many betahats do you want to calculate for one dataset? 
@@ -16,6 +15,7 @@ likfitGpu_2 <- function(spatialmodel,     #data,
                         Nglobal,
                         Nlocal,
                         NlocalCache,
+                        betas=NULL, #a vclmatrix  #only one row batch, but many colbatches
                         verbose=1){
   
   form = c(loglik=1, ml=2, mlFixSigma=3, mlFixBeta=4, reml=5, remlPro=6)[form]
@@ -150,8 +150,8 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   
   ##### calculate betahat #####################
   ###### (X^T V^(-1)X)^(-1) * (X^T V^(-1) y)
+  Betahat <- matrix(0, nrow=nBetahats*Ncov, ncol=Ndata)
   if (nBetahats > 0){
-    Betahat <- matrix(0, nrow=nBetahats*Ncov, ncol=Ndata)
     if(nBetahats > 5 | nBetahats > Nparam){
       stop("too many Betahats required")
     }
@@ -200,7 +200,7 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   
   if(is.null(betas)){  
     List <- list("minusTwoLogLik" = minusTwoLogLik, 
-                 "Betahat"=Betahat,
+                 "Betahats"=Betahat,
                  "ssqBetahat" = ssqBetahat,
                  "ssqY"=ssqY,     
                  "detVar" = detVar,   # log |D|
