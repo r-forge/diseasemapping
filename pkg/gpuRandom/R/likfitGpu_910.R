@@ -16,7 +16,7 @@ likfitGpu_2 <- function(spatialmodel,     #data,
                         Nglobal,
                         Nlocal,
                         NlocalCache,
-                        verbose=0){
+                        verbose=1){
   
   form = c(loglik=1, ml=2, mlFixSigma=3, mlFixBeta=4, reml=5, remlPro=6)[form]
   
@@ -35,6 +35,7 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   Ncov = ncol(covariates)
   Ndata = length(BoxCox)
   Nparam = nrow(paramsGpu)
+  print (c(Ncov, Ndata, Nparam))
   
   yx = vclMatrix(cbind(y,
                        matrix(0, n, length(BoxCox)-1),
@@ -45,8 +46,10 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   coordsGpu<-vclMatrix(spatialmodel$data@coords,type=type)  
   boxcoxGpu = vclVector(BoxCox, type=type)
   if(is.null(betas)){
-    #betas = vclMatrix(0, Ncov, Ndata, type=type)
-    verbose[3]=0
+    verbose[2]=0
+    betas = vclMatrix(0, Ncov, Ndata, type=type)
+  }else{
+    verbose[2]=1
   }
   ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
   XVYXVX = vclMatrix(0, Nparam * Ncov, ncol(yx), type=type)
@@ -144,25 +147,27 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   
   
   
+  
   ##### calculate betahat #####################
   ###### (X^T V^(-1)X)^(-1) * (X^T V^(-1) y)
   if (nBetahats > 0){
     Betahat <- matrix(0, nrow=nBetahats*Ncov, ncol=Ndata)
-
     if(nBetahats > 5 | nBetahats > Nparam){
       stop("too many Betahats required")
     }
-
     for (j in 1:Ndata){
       index <- order(minusTwoLogLik[,j], decreasing = FALSE)[1:nBetahats]  #from small to large
-
+      #print(index)
       for (i in 1:nBetahats){
         a<-c((index[i]-1)*Ncov+1, index[i]*Ncov)
-        Betahat[a,j] <- solve(XVYXVX[a,(Ndata+1):ncol(yx)]) %*% XVYXVX[a,j]
-
+        Betahat[c((i-1)*Ncov+1, i*Ncov),j] <- solve(XVYXVX[a,((Ndata+1):ncol(yx))]) %*% XVYXVX[a,j]
       }
     }
   }
+  
+  
+  
+  
   
   if(form ==1 | form ==3){
     if(is.null(betas)){
@@ -195,6 +200,7 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   
   if(is.null(betas)){  
     List <- list("minusTwoLogLik" = minusTwoLogLik, 
+                 "Betahat"=Betahat,
                  "ssqBetahat" = ssqBetahat,
                  "ssqY"=ssqY,     
                  "detVar" = detVar,   # log |D|
