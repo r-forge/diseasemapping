@@ -330,6 +330,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                 viennacl::matrix_base<T> &cholDiagMat,
                 viennacl::matrix_base<T> &b_beta){                //viennacl::matrix_base<T> &aTDinvb_beta,
   //viennacl::matrix_base<T> &aTDinvb_beta_diag
+  
   int Nobs = yx.size1();
   int Nparams = params.size1();
   int Ncovariates = yx.size2() - Ndatasets;
@@ -536,7 +537,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   
   
   
-  if(verbose[3]){
+  //if(verbose[1]>=1){
   // when beta is supplied by user
   // a^TD^(-1)b * beta = aTDinvb_beta
   Rcpp::IntegerVector transposeABC = {1,0,0};// transposeA, transposeB, transposeC
@@ -598,7 +599,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     NlocalCache[0]/2, // NlocalCacheA,  
     localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
   );     
-  }
+  //}
 
   // if(verbose[0]>1) {
   //   Rcpp::Rcout << "maternClString\n" << maternClString << "\n";
@@ -630,11 +631,11 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   viennacl::ocl::program & my_prog_crossprodSsqYx = viennacl::ocl::current_context().add_program(crossprodSsqYxKernelString, "mykernelcrossprodssqyx");
   viennacl::ocl::program & my_prog_extractSomeDiag = viennacl::ocl::current_context().add_program(extractSomeDiagKernelString, "mykernelextract_some_diag");
   viennacl::ocl::program & my_prog_extractBlock = viennacl::ocl::current_context().add_program(extractBlockKernelString, "mykernelextract_Block");
-if(verbose[3]){
+//if(verbose[1]>=1){
   viennacl::ocl::program & my_prog_aTDinvb_beta = viennacl::ocl::current_context().add_program(aTDinvb_beta_KernelString, "mykernelaTDinvb_beta");
   viennacl::ocl::program & my_prog_bTimesbeta = viennacl::ocl::current_context().add_program(b_betas_KernelString, "mykernel_b_betas");
   viennacl::ocl::program & my_prog_ssqBeta = viennacl::ocl::current_context().add_program(crossprod_ssqBeta_KernelString, "mykernel_ssqBeta");
-}
+//}
 
 
   viennacl::ocl::kernel & cholXvxKernel = my_prog_cholxvx.get_kernel("cholBatch");
@@ -644,12 +645,13 @@ if(verbose[3]){
   viennacl::ocl::kernel & crossprodSsqYxKernel = my_prog_crossprodSsqYx.get_kernel("crossprodBatch");
   viennacl::ocl::kernel & extractSomeDiagKernel = my_prog_extractSomeDiag.get_kernel("extract_some_diag");
   viennacl::ocl::kernel & extractBlockKernel = my_prog_extractBlock.get_kernel("extract_block");
-if(verbose[3]){
+
+  //if(verbose[1]>=1){
   viennacl::ocl::kernel & aTDinvb_betaKernel = my_prog_aTDinvb_beta.get_kernel("gemm");  
   viennacl::ocl::kernel & b_betasKernel = my_prog_bTimesbeta.get_kernel("gemm");  
   viennacl::ocl::kernel & ssqBetaKernel = my_prog_ssqBeta.get_kernel("crossprodBatch");   
-  }
-  
+// }
+
   
   
   cholXvxKernel.global_work_size(0, workgroupSize[0] ); 
@@ -687,8 +689,8 @@ if(verbose[3]){
   extractBlockKernel.global_work_size(1, workgroupSize[1] );   
   extractBlockKernel.local_work_size(0, 1L);
   extractBlockKernel.local_work_size(1, 1L);
-  
-  if(verbose[3]){  
+
+//if(verbose[1]>=1){  
   aTDinvb_betaKernel.global_work_size(0, workgroupSize[0] ); 
   aTDinvb_betaKernel.global_work_size(1, workgroupSize[1] ); 
   aTDinvb_betaKernel.global_work_size(2, workgroupSize[2] ); 
@@ -708,8 +710,7 @@ if(verbose[3]){
   ssqBetaKernel.global_work_size(1, workgroupSize[1] ); 
   ssqBetaKernel.local_work_size(0, localSize[0]);
   ssqBetaKernel.local_work_size(1, localSize[1]);          
-  }
-  
+ //}
   
   if(verbose[0]) {
     Rcpp::Rcout << "\n" << " Nparams " << 
@@ -721,7 +722,7 @@ if(verbose[3]){
   
   viennacl::ocl::command_queue theQueue = maternKernel.context().get_queue();
   
-  if(verbose[3]){
+  if(verbose[1]>=1){
   for (Diter=0,DiterIndex=0; 
        Diter< Niter; 
        Diter++,DiterIndex += NparamPerIter[0]){
@@ -731,10 +732,10 @@ if(verbose[3]){
     NthisIteration = endThisIteration - DiterIndex;
     
       if(verbose[0]>1) {
-    Rcpp::Rcout << "\n" << " Diter " << 
+      Rcpp::Rcout << "\n" << " Diter " << 
       Diter << " endThisIteration " <<  endThisIteration <<
         " NthisIteration " << NthisIteration << " localMemorySize " << localMemory.size() << " DiterIndex " << DiterIndex <<"\n";
-  }
+      }
 
     viennacl::ocl::enqueue(maternKernel(Vbatch, coords, params, 
                                         localMemory,
@@ -1056,7 +1057,7 @@ void likfitGpu_BackendP(
     Rcpp::IntegerVector workgroupSize,//15
     Rcpp::IntegerVector localSize,//16
     Rcpp::IntegerVector NlocalCache,//17
-    Rcpp::IntegerVector verbose,//18    verbose[3]=betasgiven, true or false
+    Rcpp::IntegerVector verbose,//18    verbose[2]=betasgiven, true or false
     Rcpp::S4 ssqYX, //19         col number must be exactly Ncovariates + Ndatasets  //Rcpp::S4 ssqYXcopy, //20   not really used? cannot exist an empty line here 
     Rcpp::S4 LinvYX, //20
     Rcpp::S4 QinvSsqYx, //21
@@ -1119,7 +1120,7 @@ void likfitGpu_BackendP(
 }
 
 
-//#endif
+
 
 
 
