@@ -9,6 +9,50 @@ library('gpuR')
 ```
 
 
+```{r crossprod_test10.10}
+
+library("gpuR")
+library("gpuRandom")
+nrow = 30
+ncol=5
+A = matrix(0.01*sample(100, nrow*ncol, replace=TRUE),
+           nrow, ncol, byrow = TRUE) 
+
+
+D1 = matrix(0,nrow=nrow, ncol=nrow, byrow = TRUE) 
+diag(D1)<-sample(100, nrow, replace=TRUE)
+
+C = matrix(0, nrow=ncol, ncol=ncol)
+
+
+Nparam = 66
+bigA <- do.call(rbind, replicate(Nparam, A, simplify=FALSE))
+bigD <- do.call(rbind, replicate(Nparam, diag(D1), simplify = FALSE))
+bigC <- do.call(rbind, replicate(Nparam, C, simplify=FALSE))
+
+
+gpuA = vclMatrix(bigA, type='double')
+gpuD = vclMatrix(bigD, type='double')
+gpuC = vclMatrix(bigC, type='double')
+
+#C = D1^(-1) B
+realC = t(A)%*% D1%*%A
+realC[upper.tri(realC)] <- 0
+cpuC = do.call(rbind, replicate(Nparam, realC, simplify=FALSE))
+
+gpuRandom::crossprodBatch(gpuC, 
+                          gpuA, 
+                          gpuD,
+                          invertD = FALSE,
+                          Nglobal = c(64, 16), 
+                          Nlocal =  c(8, 1),
+                          NlocalCache = 100)
+
+#cbind(as.matrix(gpuC), cpuC)
+range(as.matrix(gpuC)-cpuC)
+```
+
+
 ```{r crossprodbatch_more, eval=F}
 D <- matrix(0,nrow=5, ncol=5)
 diag(D)<-c(1:5)

@@ -3,32 +3,30 @@
 %\VignetteIndexEntry{loglikelihood_p}
 -->
 
-```{r test_4.28,eval=TRUE}
+```{r makeplots,eval=TRUE}
+# isotropic
 library(gpuRandom)
 library(gpuR)
 library('geostatsp')
 data('swissRain')
-sr2 = swissRain[0:20,]
+sr2 = swissRain[0:30,]
 
 # extract variables for modeling
 sr2$sqrtY = sqrt(sr2$rain)
 sr2$elev = raster::extract(swissAltitude, sr2)
-# swissFitIso = geostatsp::likfitLgm(
-#   data=sr2,
-#   formula=sqrtY ~ elev,
-#   param=c(range=50000,shape=1),
-#   reml=FALSE,
-#   verbose=FALSE
-# )
-# swissFitIso$parameters
 
-# myParamsBatch = rbind(c(shape=1, range=34358, variance = 1.840997, nugget = 0.11, anisoRatio = 1, anisoAngleRadians = 0))
-# myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
-# myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch)))
-# paramsBatch  = vclMatrix(myParamsBatch, type=type)
+
+spatialmodel = geostatsp::likfitLgm(
+  data=sr2,
+  formula=sqrtY ~ elev,
+  param=c(range=50000,shape=1),
+  reml=FALSE,
+  verbose=FALSE
+)
+spatialmodel$parameters
 newParamList = list(
-  range=seq(30000, 80000 , len=4),
-  nugget = seq(0,0.25,len=5)
+  range=seq(30000, 80000 , len=40),
+  nugget = seq(0,0.25,len=10)
 ) 
 
 
@@ -39,104 +37,54 @@ otherparams = matrix(rep(otherparams,each=nrow(newParam)),nrow=nrow(newParam))
 colnames(otherparams) <- c("shape", "variance", "anisoRatio", "anisoAngleRadians")
 
 paramsBatch0 = cbind(newParam, otherparams)
-paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
-paramsGpu = gpuR::vclMatrix(cbind(paramsBatch0, matrix(0, nrow(paramsBatch0),22-ncol(paramsBatch0))),type="double")
+paramsGpu = gpuRandom::maternGpuParam(paramsBatch0, type="double")
+
+type = "double"
+BoxCox=c(1,0)
+form = "ml"
+NparamPerIter=40  # how many sets of params to be evaluated in each loop
 
 
 
-
-x = sr2
-boxcox = c(0, 0.5)
-Scov = c('elev')
-yvar = 'sqrtY'
-
-
-workgroupSize = c(32,4,4)
-localSize = c(8,2,1)
-NlocalCache=1000
-verbose = 9L
-NparamPerIter = 12
-
-
-if(boxcox[1] != 1) {
-  boxcox = c(1, 0, setdiff(boxcox, c(0,1)))
-}
-Ncov = length(Scov)+1
-Ndata = length(boxcox)
-Nparam = nrow(paramsGpu)
+result<-gpuRandom::likfitGpu_2(spatialmodel,     #data,
+            type = "double",
+            paramsGpu, #a vclmatrix, consists of all the parameters#betas=NULL, #a vclmatrix  #only one row batch, but many colbatches
+            BoxCox=c(1,0), # an R vector, will always be c(1,0,.....)
+            form = "ml",
+            NparamPerIter,  # how many sets of params to be evaluated in each loop
+            nBetahats =1,
+            minustwotimes=TRUE,
+            Nglobal=c(64,32,2),
+            Nlocal=c(8,16,1),
+            NlocalCache=1000)
 
 
-type="double"
-yx = vclMatrix(cbind(
-  as.vector(x@data[,yvar]),
-  matrix(0, nrow(x@data), length(boxcox)-1),
-  1,
-  as.matrix(x@data[,Scov])
-), type=type)
-coords = vclMatrix(x@coords, type =type)
-
-boxcoxGpu = vclVector(boxcox, type=type)
-betas = vclMatrix(0, Nparam, Ncov * Ndata, type=type)
-detVar = vclVector(0, Nparam,type=type)
-detReml = vclVector(0, Nparam, type=type)
-jacobian = vclVector(0, Ndata, type=type)
-ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
-ssqX <- vclMatrix(0, Nparam, Ndata, type=type)
-ssqBeta = deepcopy(ssqX)
-ssqBetaHat = deepcopy(ssqX)
-aTDinvb_beta = vclMatrix(0, Nparam, Ndata, type=type)
-XVYXVX = vclMatrix(-77, Nparam * Ncov, ncol(yx), type=type)
+mTwoLogLik <- as.matrix(result$minusTwoLogLik)
 
 
 
-
-# objects for debugging
-ssqYX = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
-ssqYXcopy = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
-LinvYX = vclMatrix(0, nrow(yx) * NparamPerIter, ncol(yx), type=type)
-QinvSsqYx = vclMatrix(0, NparamPerIter*Ncov, Ndata, type = type);
-varMat = vclMatrix(0, nrow(yx)*NparamPerIter, nrow(coords), type=type)
-cholXVXdiag = vclMatrix(0, NparamPerIter, Ndata, type=type)
-cholDiagMat = vclMatrix(0, NparamPerIter, nrow(coords), type=type)
-
-b_beta = vclMatrix(0, NparamPerIter*nrow(yx), Ndata, type=type)
-
-if(NlocalCache < 22*nrow(paramsGpu)) warning("make NlocalCache bigger")
-
-gpuRandom:::likfitGpu_BackendP(
-  yx,  #1
-  coords,
-  paramsGpu,
-  boxcoxGpu,  
-  betas,  #5
-  ssqY, #6
-  aTDinvb_beta, #7
-  XVYXVX,  #8 
-  ssqBetaHat, #9
-  ssqBeta, #10
-  detVar,
-  detReml, 
-  jacobian,  #13
-  NparamPerIter,  
-  workgroupSize,  
-  localSize,  
-  NlocalCache,  
-  verbose = 2,  #18
-  ssqYX, 
-  LinvYX,  #20
-  QinvSsqYx, 
-  cholXVXdiag, #20
-  varMat, #23
-  cholDiagMat,   #new
-  b_beta)   #new
+lMatrix = matrix(mTwoLogLik[,1], length(newParamList[[1]]), length(newParamList[[2]]))
+# 
+myCol = mapmisc::colourScale(lMatrix, breaks=8, dec=0)
+image(
+  newParamList[[1]]/1000, newParamList[[2]], lMatrix,
+  col = myCol$col, breaks=myCol$breaks,
+  xlab = names(newParamList)[1],
+  ylab = names(newParamList)[2]
+)
+mapmisc::legendBreaks('topright', myCol)
 
 
+#mTwoLogLik 
+as.vector(result$detVar)[1:50]
 
-as.vector(detVar)
-as.vector(detReml)
-#as.matrix(ssqBetahat)
-#as.matrix(ssqY)
-#as.matrix(ssqYX)
+as.vector(result$detReml)[1:50]
+
+
+as.matrix(result$ssqY)[1:50,]
+as.matrix(result$ssqYX)[1:50,]
+result$Betahats
+
 ```
 
 
@@ -284,19 +232,7 @@ sr2 = swissRain[0:20,]
 # extract variables for modeling
 sr2$sqrtY = sqrt(sr2$rain)
 sr2$elev = raster::extract(swissAltitude, sr2)
-# swissFitIso = geostatsp::likfitLgm(
-#   data=sr2,
-#   formula=sqrtY ~ elev,
-#   param=c(range=50000,shape=1),
-#   reml=FALSE,
-#   verbose=FALSE
-# )
-# swissFitIso$parameters
 
-# myParamsBatch = rbind(c(shape=1, range=34358, variance = 1.840997, nugget = 0.11, anisoRatio = 1, anisoAngleRadians = 0))
-# myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
-# myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch)))
-# paramsBatch  = vclMatrix(myParamsBatch, type=type)
 newParamList = list(
   range=seq(30000, 80000 , len=20),
   nugget = seq(0,0.25,len=10)
