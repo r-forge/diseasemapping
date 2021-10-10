@@ -1,0 +1,351 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{overallcheck}
+-->
+
+```{r sencha_runthis}
+library(gpuRandom)
+library(gpuR)
+library('geostatsp')
+data('swissRain')
+sr2 = swissRain[0:10,]
+
+# extract variables for modeling
+sr2$sqrtY = sqrt(sr2$rain)
+sr2$elev = raster::extract(swissAltitude, sr2)
+
+
+swissFitIso = geostatsp::likfitLgm(
+  data=sr2,
+  formula=sqrtY ~ elev,
+  param=c(range=50000,shape=1),
+  reml=FALSE,
+  verbose=FALSE
+)
+
+type="double"
+covariates = model.matrix(swissFitIso$model$formula, data=swissFitIso$data)
+temp = model.frame(swissFitIso$model$formula, data=swissFitIso$data)
+response=temp[,as.character(attributes(terms(temp))$variables)[2]]
+n = length(response)
+p = ncol(covariates)
+yXcpu=cbind(response,covariates)  
+
+
+boxcox = c(1, 0)
+colbatch<- as.integer(length(boxcox))
+# box cox transform
+transformed_y = matrix(0,n,length(boxcox))
+for (i in 1:length(boxcox)){
+  transformed_y[ ,i] <- ((yXcpu[ ,1]^boxcox[i]) - 1)/boxcox[i]
+}
+closetozeroindex <- which(abs(boxcox)<0.001)
+closetooneindex <- which(abs(boxcox - 1 ) < 0.001)
+transformed_y[ ,closetozeroindex] = log(yXcpu[,1])
+transformed_y[ ,closetooneindex] = yXcpu[,1]
+yX <- vclMatrix(cbind(transformed_y,yXcpu[,-1]),type=type)
+
+
+newParamList = list(
+  range=seq(30000, 80000 , len=5),
+  nugget = seq(0,0.25,len=3)
+) 
+
+newParam= do.call(expand.grid, newParamList)
+otherparams = c(shape=1, variance=1.840997, anisoRatio = 1, anisoAngleRadians = 0)
+otherparams = matrix(rep(otherparams,each=nrow(newParam)),nrow=nrow(newParam))
+colnames(otherparams) <- c("shape", "variance", "anisoRatio", "anisoAngleRadians")
+paramsBatch0 = cbind(newParam, otherparams)
+paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
+paramsBatch0 = cbind(paramsBatch0, matrix(0, nrow(paramsBatch0),22-ncol(paramsBatch0)))
+paramsBatch = gpuR::vclMatrix(paramsBatch0,type="double")
+
+groupsize=15
+
+
+Nglobal=c(64,64,2)
+localSize = c(8,16,1)
+localSizechol =c(8,64,1)
+NlocalCache=1000
+
+
+############################test matern matrix
+Vbatch <- vclMatrix(0, groupsize*n, n, type = type)
+coordsGpu = vclMatrix(sr2@coords, type =type)
+dim(Vbatch)
+gpuRandom::maternBatch(Vbatch, coordsGpu, paramsBatch,  Nglobal, localSize)
+#Vbatch=LDL^T, cholesky decomposition
+
+for(D in unique(round(seq(1L,nrow(paramsBatch), len=min(c(3, nrow(paramsBatch))))))) {
+  print(D)
+  fromCpu = geostatsp::matern(
+    x=sr2,
+    param=drop(paramsBatch0[D,1:7])
+  )
+  fromGpu = as.matrix(Vbatch)[
+    seq(from=1+ncol(Vbatch) * (D-1), len=ncol(Vbatch)),]
+  print(quantile(as.vector(fromCpu - fromGpu), na.rm=TRUE))
+}
+
+
+set=12
+var4cpu = geostatsp::matern(
+  x=sr2,
+  param=drop(paramsBatch0[set,1:7])
+)
+dim(var4cpu)
+start<-n*(set-1)+1;    end<-n*set
+
+
+
+var4gpu = Vbatch[c(start:end), ]
+range(var4gpu-var4cpu)
+
+
+
+
+
+#####################################test chol
+diagMat <- vclMatrix(0, groupsize, n, type = type)
+gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=groupsize, Nglobal=c(128,16), Nlocal=c(8,16), NlocalCache=NlocalCache)
+
+cholCpu = as.matrix((chol(var4cpu)))            #cholCpu[1:6,1:6]
+theDiag = diag(cholCpu)
+cholCpu = cholCpu %*% diag(1/theDiag)
+theDiag = theDiag^2
+
+tempv = as.matrix(Vbatch)
+chol4gpu = tempv[c(start:end), ]
+chol4gpu[upper.tri(chol4gpu)] = 0
+diag(chol4gpu) = 1
+
+range(cholCpu - chol4gpu)
+range(theDiag - as.matrix(diagMat)[set,])
+
+
+
+
+#logD_temp <- apply(log(diagMat),1,sum)   #half log determinant of V
+#logD_temp <- vclVector(0, length=groupsize, type=type)
+#gpuRandom:::rowsumBackend(diagMat, logD_temp, type="row", log=TRUE)
+#as.vector(logD_temp)
+
+
+
+#######################################test backsolve
+#L(a1,a2,a3, b) = (y1,y2,y3, X)
+ab <- vclMatrix(0, groupsize*n, colbatch+p, type = type)
+gpuRandom::backsolveBatch(ab, Vbatch, yX, numbatchB=1L, diagIsOne=TRUE, Nglobal=Nglobal, Nlocal=localSize, NlocalCache)
+dim(ab)
+
+L <- Vbatch[c(start:end), ]
+diag(L)<-1
+
+abCPU <- backsolve(L, as.matrix(yX), upper.tri = FALSE)
+cbind(ab[c(start:end),],abCPU)
+range(ab[c(start:end),]-abCPU)
+
+
+
+
+#########################test crossprod
+# temp2 = (ab)^T * D^(-1) *ab  = (Y X)^T V^{-1} (YX)
+temp2 <- vclMatrix(0, (colbatch+p)*groupsize, (colbatch+p), type = type)
+abcopy <- deepcopy(ab)
+gpuRandom::crossprodBatch(temp2, abcopy, diagMat, invertD=TRUE, Nglobal=c(64,64,1), Nlocal=c(16,16,1), NlocalCache)
+
+
+Dcpu <- matrix(0, n, n)
+diag(Dcpu)<-diagMat[set,]
+temp2CPU <- t(abcopy[start:end,]) %*% solve(Dcpu) %*% abcopy[start:end,]
+temp2CPU[upper.tri(temp2CPU)]=0
+
+
+start2<-ncol(abcopy)*(set-1)+1
+end2<-ncol(abcopy)*set
+range(temp2CPU - temp2[start2:end2,])
+cbind(temp2CPU, temp2[start2:end2,])
+
+
+```
+
+
+
+
+
+
+
+
+
+```{r englishbreakfast_runthis}
+library(gpuRandom)
+library(gpuR)
+library('geostatsp')
+data('swissRain')
+sr2 = swissRain[0:30,]
+
+# extract variables for modeling
+sr2$sqrtY = sqrt(sr2$rain)
+sr2$elev = raster::extract(swissAltitude, sr2)
+
+
+swissFitIso = geostatsp::likfitLgm(
+  data=sr2,
+  formula=sqrtY ~ elev,
+  param=c(range=50000,shape=1),
+  reml=FALSE,
+  verbose=FALSE
+)
+
+type="double"
+covariates = model.matrix(swissFitIso$model$formula, data=swissFitIso$data)
+temp = model.frame(swissFitIso$model$formula, data=swissFitIso$data)
+response=temp[,as.character(attributes(terms(temp))$variables)[2]]
+n = length(response)
+p = ncol(covariates)
+yXcpu=cbind(response,covariates)  
+
+
+boxcox = c(1, 0)
+colbatch<- as.integer(length(boxcox))
+# box cox transform
+transformed_y = matrix(0,n,length(boxcox))
+for (i in 1:length(boxcox)){
+  transformed_y[ ,i] <- ((yXcpu[ ,1]^boxcox[i]) - 1)/boxcox[i]
+}
+closetozeroindex <- which(abs(boxcox)<0.001)
+closetooneindex <- which(abs(boxcox - 1 ) < 0.001)
+transformed_y[ ,closetozeroindex] = log(yXcpu[,1])
+transformed_y[ ,closetooneindex] = yXcpu[,1]
+yX <- vclMatrix(cbind(transformed_y,yXcpu[,-1]),type=type)
+
+
+newParamList = list(
+  range=seq(30000, 80000 , len=8),
+  nugget = seq(0,0.25,len=5)
+) 
+
+newParam= do.call(expand.grid, newParamList)
+otherparams = c(shape=1, variance=1.840997, anisoRatio = 1, anisoAngleRadians = 0)
+otherparams = matrix(rep(otherparams,each=nrow(newParam)),nrow=nrow(newParam))
+colnames(otherparams) <- c("shape", "variance", "anisoRatio", "anisoAngleRadians")
+paramsBatch0 = cbind(newParam, otherparams)
+paramsBatch0 = t(apply(paramsBatch0, 1, geostatsp::fillParam))
+paramsBatch0 = cbind(paramsBatch0, matrix(0, nrow(paramsBatch0),22-ncol(paramsBatch0)))
+paramsBatch = gpuR::vclMatrix(paramsBatch0,type="double")
+
+groupsize=40
+
+
+Nglobal=c(64,64,2)
+localSize = c(8,16,1)
+localSizechol =c(8,64,1)
+NlocalCache=1000
+
+
+############################test matern matrix
+Vbatch <- vclMatrix(0, groupsize*n, n, type = type)
+coordsGpu = vclMatrix(sr2@coords, type =type)
+dim(Vbatch)
+gpuRandom::maternBatch(Vbatch, coordsGpu, paramsBatch,  Nglobal, localSize)
+#Vbatch=LDL^T, cholesky decomposition
+
+for(D in unique(round(seq(1L,nrow(paramsBatch), len=min(c(3, nrow(paramsBatch))))))) {
+  print(D)
+  fromCpu = geostatsp::matern(
+    x=sr2,
+    param=drop(paramsBatch0[D,1:7])
+  )
+  fromGpu = as.matrix(Vbatch)[
+    seq(from=1+ncol(Vbatch) * (D-1), len=ncol(Vbatch)),]
+  print(quantile(as.vector(fromCpu - fromGpu), na.rm=TRUE))
+}
+
+
+set=26
+var4cpu = geostatsp::matern(
+  x=sr2,
+  param=drop(paramsBatch0[set,1:7])
+)
+dim(var4cpu)
+start<-n*(set-1)+1;    end<-n*set
+
+
+
+var4gpu = Vbatch[c(start:end), ]
+range(var4gpu-var4cpu)
+
+
+
+
+
+#####################################test chol
+diagMat <- vclMatrix(0, groupsize, n, type = type)
+gpuRandom::cholBatch(Vbatch, diagMat, numbatchD=groupsize, Nglobal=c(64,16), Nlocal=c(8,16), NlocalCache=NlocalCache)
+
+cholCpu = as.matrix((chol(var4cpu)))            #cholCpu[1:6,1:6]
+theDiag = diag(cholCpu)
+cholCpu = cholCpu %*% diag(1/theDiag)
+theDiag = theDiag^2
+
+
+chol4gpu = Vbatch[start:end, ]
+chol4gpu[upper.tri(chol4gpu)] = 0
+diag(chol4gpu) = 1
+
+range(cholCpu - chol4gpu)
+range(theDiag - as.matrix(diagMat)[set,])
+
+
+
+
+#logD_temp <- apply(log(diagMat),1,sum)   #half log determinant of V
+logD_temp <- vclVector(0, length=groupsize, type=type)
+gpuRandom:::rowsumBackend(diagMat, logD_temp, type="row", log=TRUE)
+#as.vector(logD_temp)
+
+
+
+#######################################test backsolve
+#L(a1,a2,a3, b) = (y1,y2,y3, X)
+ab <- vclMatrix(0, groupsize*n, colbatch+p, type = type)
+gpuRandom::backsolveBatch(ab, Vbatch, yX, numbatchB=1L, diagIsOne=TRUE, Nglobal=Nglobal, Nlocal=localSize, NlocalCache)
+dim(ab)
+
+L <- Vbatch[c(start:end), ]
+diag(L)<-1
+
+abCPU <- backsolve(L, as.matrix(yX), upper.tri = FALSE)
+cbind(ab[c(start:end),],abCPU)
+range(ab[c(start:end),]-abCPU)
+
+
+
+
+#########################test crossprod
+# temp2 = (ab)^T * D^(-1) *ab  = (Y X)^T V^{-1} (YX)
+temp2 <- vclMatrix(0, (colbatch+p)*groupsize, (colbatch+p), type = type)
+abcopy <- deepcopy(ab)
+gpuRandom::crossprodBatch(temp2, abcopy, diagMat, invertD=TRUE, Nglobal=c(64,64,1), Nlocal=c(16,16,1), NlocalCache)
+
+
+Dcpu <- matrix(0, n, n)
+diag(Dcpu)<-diagMat[set,]
+temp2CPU <- t(abcopy[start:end,]) %*% solve(Dcpu) %*% abcopy[start:end,]
+temp2CPU[upper.tri(temp2CPU)]=0
+
+
+start2<-ncol(abcopy)*(set-1)+1
+end2<-ncol(abcopy)*set
+range(temp2CPU - temp2[start2:end2,])
+cbind(temp2CPU, temp2[start2:end2,])
+
+
+
+
+```
+
+
+
+
+

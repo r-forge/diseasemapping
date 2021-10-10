@@ -1,8 +1,13 @@
 #' @title crossprodBatch function on GPU
 #'
-
+#' @param A rectangular matrices
+#' @param D rectangular matrix, columns are diagonals
+#' @param invertD set to 1 for C = t(A) D^(-1) A
+#' @param Nglobal vector of number of global work items
+#' @param Nlocal vector of number of local work items
+#' @param NlocalCache elements in local cache
 #' 
-#' @return  C = A^T A or A^T D A or A^T D^(-1) A 
+#' @return  C = A^T A or A^T D A or A^T D^(-1) A, output matrices, stacked row-wise 
 #' @useDynLib gpuRandom
 #' @export
 
