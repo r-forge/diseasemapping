@@ -441,10 +441,10 @@ We generate a large-size matrix of 100 million double-precision Gaussian random 
 system.time(gpuRandom::rnorm(c(10000,10000), streams=streams, 
                              Nglobal=c(512,128), type="double"))
 ##    user  system elapsed 
-##   0.143   0.004   0.147
+##   0.087   0.009   0.096
 system.time(matrix(stats::rnorm(10000^2),10000,10000))
 ##    user  system elapsed 
-##   6.678   0.850   7.522
+##   6.695   0.819   7.511
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -549,7 +549,7 @@ We requested one million simulations on GPU while the actual number of simulatio
 system.time(fisher.sim(month_gpu, 1e6, streams=streams, 
             type="double", returnStatistics=FALSE, Nglobal = c(256,128)))
 ##    user  system elapsed 
-##   0.764   0.000   0.764
+##   0.819   0.000   0.819
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -561,10 +561,10 @@ system.time(fisher.sim(month_gpu, 1e6, streams=streams,
 \begin{verbatim}
 #using CPU
 stats::fisher.test(month,simulate.p.value = TRUE,B=1015808)$p.value
-## [1] 0.4037993
+## [1] 0.4042226
 system.time(stats::fisher.test(month,simulate.p.value = TRUE,B=1015808))
 ##    user  system elapsed 
-##  14.747   0.004  14.743
+##  14.841   0.027  14.860
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -626,7 +626,7 @@ With about ten million simulations, we get 1223 cases and a p-value around 0.000
 system.time(gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
             type="double", returnStatistics=FALSE,Nglobal = c(256,128)))
 ##    user  system elapsed 
-##   4.343   0.012   4.352
+##   4.638   0.001   4.637
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -638,10 +638,10 @@ system.time(gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
 \begin{verbatim}
 #using CPU
 fisher.test(week,simulate.p.value = TRUE,B=10010624)$p.value
-## [1] 0.0001263657
+## [1] 0.0001221702
 system.time(fisher.test(week,simulate.p.value = TRUE,B=10010624))
 ##    user  system elapsed 
-##  90.524   0.155  90.629
+##  90.222   0.098  90.305
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
