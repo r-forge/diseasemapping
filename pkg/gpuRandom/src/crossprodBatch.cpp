@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-//#define DEBUG
+#define DEBUG
 //#define NOKERNELS
 
 // C = A^T A or A^T D A or A^T D^(-1) A 
@@ -391,7 +391,7 @@ void crossprodBatch(
     Rcpp::IntegerVector Dstartend,  
     Rcpp::IntegerVector Nglobal,
     Rcpp::IntegerVector Nlocal,
-    const int NlocalCache, //int NrowStartC,
+    const int NlocalCache, 
     const int ctx_id) {
   
   const int Ncol = Astartend[3];
@@ -469,7 +469,7 @@ SEXP crossprodBatchTyped(
     Rcpp::IntegerVector Dstartend,  
     Rcpp::IntegerVector Nglobal,
     Rcpp::IntegerVector Nlocal, 
-    const int NlocalCache    //, int NrowStartC
+    const int NlocalCache    
 ) {
   /*
    std::vector<int> Nglobal = Rcpp::as<std::vector<int> >(NglobalR);
@@ -508,7 +508,7 @@ SEXP crossprodBatchBackend(
     Rcpp::IntegerVector Dstartend, 
     Rcpp::IntegerVector Nglobal,
     Rcpp::IntegerVector Nlocal, 
-    const int NlocalCache  //, int NrowStartC
+    const int NlocalCache  
 ) {
   
   SEXP result;

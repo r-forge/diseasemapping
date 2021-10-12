@@ -186,8 +186,8 @@ This kernel executes over a 2-dimensional index space. Figure \ref{fig:1} illust
 
 Now we use the streams created in section \ref{create_streams} to generate two vectors of 6 i.i.d. $U (0,1)$ random numbers using the function \fct{runif}. If \code{streams} and \code{Nglobal} are both missing, then by default \code{Nglobal} is set as (64,8), and a `vclMatrix' of \code{prod(Nglobal)} streams is supplied. The output is an S4 object (a `\code{vclVector}' or a `\code{vclMatrix}'), to view the generated random numbers, we need to convert it to an R vector or matrix, in this way, the random numbers are moved from the global memory of device to the host. By using \code{myStreamsGpu2} which is the same as \code{myStreamsGpu1},  \fct{runif} returns the same sequence of random numbers. 
 <<simStuff2, eval=TRUE,tidy=TRUE>>=
-as.vector(gpuRandom::runif(n=4, streams=myStreamsGpu1, Nglobal=c(1,nrow(myStreamsGpu1)), type = "double"))
-as.vector(gpuRandom::runif(n=10, streams=myStreamsGpu2, Nglobal=c(1,nrow(myStreamsGpu1)), type = "double"))[-(1:6)]
+as.vector(gpuRandom::runif(n=10, streams=myStreamsGpu1, Nglobal=c(1,nrow(myStreamsGpu1)), type = "double"))
+as.vector(gpuRandom::runif(n=10, streams=myStreamsGpu2, Nglobal=c(1,nrow(myStreamsGpu1)), type = "double"))
 @
 The arguments of the \fct{gpuRandom::runif} are described as follows:
 \begin{itemize}
@@ -196,10 +196,6 @@ The arguments of the \fct{gpuRandom::runif} are described as follows:
   \item \code{Nglobal}: global index space. Default is set as $(64,8)$.
   \item \code{type}: ``double'' or ``float'' format of generated random numbers.
 \end{itemize}
-<<include=FALSE, tidy=TRUE>>=
-sim_2 = runif(n=7,streams=myStreamsGpu2, Nglobal=c(1,nrow(myStreamsGpu1)), type="double")
-as.vector(sim_2)
-@
 Reusing \code{myStreamsGpu1} will produce a vector different from \code{sim_1}. Because each time a random number is generated, the current state of the stream is changed (advances by one position), below shows the \code{myStreamsGpu1} after it being used.
 <<eval=TRUE,tidy=TRUE>>=
 t(matrix(as.matrix(myStreamsGpu1), nrow(myStreamsCpu), ncol(myStreamsCpu), dimnames = dimnames(myStreamsCpu)))
