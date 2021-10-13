@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-#define DEBUG
+//#define DEBUG
 //#define NOKERNELS
 
 // C = A^T A or A^T D A or A^T D^(-1) A 
@@ -185,7 +185,9 @@ std::string crossprodBatchString(
   "  } else {\n"
   "  DcolInBounds = 0;\n"
   "  Dcol = 0;\n"
-  "  }\n";
+  "  }\n"
+  
+  "      A0Dcol = AHere + Dcol;\n";
   
   
   
@@ -247,7 +249,7 @@ std::string crossprodBatchString(
         }
         result +=
           "    }\n"
-          " barrier(CLK_LOCAL_MEM_FENCE);\n\n"; 
+          " barrier(CLK_LOCAL_MEM_FENCE);\n\n";
       }else{
         result +=
           // "    // multiply by D\n"
@@ -477,7 +479,7 @@ void crossprodBatch(
     A.internal_size2(), 
     D.internal_size2(),
     invertD, // A^T D^(-1) A
-    1, // don't only compute diagonals of C,  onlyDiagC, // set to 1 to only compute diagonals of C
+    0, // don't only compute diagonals of C,  onlyDiagC, // set to 1 to only compute diagonals of C
     NstartC,
     NstartA,
     NstartD,
