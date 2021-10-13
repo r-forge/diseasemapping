@@ -322,7 +322,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                 const int ctx_id, 
                 Rcpp::IntegerVector verbose,
                 viennacl::matrix_base<T> &ssqYX,
-                //viennacl::matrix_base<T> &ssqYXcopy,
+                viennacl::matrix_base<T> &ssqYXcopy,
                 viennacl::matrix_base<T> &LinvYX,
                 viennacl::matrix_base<T> &QinvSsqYx,
                 viennacl::matrix_base<T> &cholXVXdiag, 
@@ -856,9 +856,13 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       // ssqYX = YX^Y L^(-1)T D^(-1) L^(-1) YX  square matrix, (Ndatasets + Ncovariates)
       viennacl::ocl::enqueue(crossprodKernel(ssqYX, LinvYX, cholDiagMat, 0, NthisIteration),
                              theQueue);
-      if(verbose[0]>=1)
+      if(verbose[0]>=2)
       Rcpp::Rcout << "crossprodKernelString\n" << crossprodKernelString << "\n";
       
+      for(Dy1 = 0; Dy1 < ssqYXcopy.size1(); Dy1++) {
+        for(Dy2 = 0; Dy2 < ssqYXcopy.size2(); Dy2++) {
+          ssqYXcopy(Dy1, Dy2) = ssqYX(Dy1, Dy2);
+        }}
       
       // save diagonals of ssqYX to ssqY
       viennacl::ocl::enqueue(extractSomeDiagKernel(ssqY, ssqYX, DiterIndex, NthisIteration),
@@ -937,7 +941,8 @@ void likfitGpuP_Templated(
     Rcpp::IntegerVector localSize,
     Rcpp::IntegerVector NlocalCache,
     Rcpp::IntegerVector verbose,
-    Rcpp::S4 ssqYX,        //Rcpp::S4 ssqYXcopy,
+    Rcpp::S4 ssqYX,        
+    Rcpp::S4 ssqYXcopy,
     Rcpp::S4 LinvYX, 
     Rcpp::S4 QinvSsqYx, 
     Rcpp::S4 cholXVXdiag,
@@ -963,7 +968,7 @@ void likfitGpuP_Templated(
   std::shared_ptr<viennacl::vector_base<T> > jacobianGpu = getVCLVecptr<T>(jacobian.slot("address"), BisVCL, ctx_id);
   
   std::shared_ptr<viennacl::matrix<T> > ssqYXgpu = getVCLptr<T>(ssqYX.slot("address"), BisVCL, ctx_id);
-  //std::shared_ptr<viennacl::matrix<T> > ssqYXcopyGpu= getVCLptr<T>(ssqYXcopy.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix<T> > ssqYXcopyGpu= getVCLptr<T>(ssqYXcopy.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<T> > LinvYXgpu = getVCLptr<T>(LinvYX.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<T> > QinvSsqYxgpu = getVCLptr<T>(QinvSsqYx.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<T> > cholXVXdiaggpu = getVCLptr<T>(cholXVXdiag.slot("address"), BisVCL, ctx_id);
@@ -1007,7 +1012,7 @@ void likfitGpuP_Templated(
     ctx_id, 
     verbose, 
     *ssqYXgpu, 
-    //*ssqYXcopyGpu, 
+    *ssqYXcopyGpu, 
     *LinvYXgpu, 
     *QinvSsqYxgpu,
     *cholXVXdiaggpu, 
@@ -1059,7 +1064,8 @@ void likfitGpu_BackendP(
     Rcpp::IntegerVector localSize,//16
     Rcpp::IntegerVector NlocalCache,//17
     Rcpp::IntegerVector verbose,//18    verbose[2]=betasgiven, true or false
-    Rcpp::S4 ssqYX, //19         col number must be exactly Ncovariates + Ndatasets  //Rcpp::S4 ssqYXcopy, //20   not really used? cannot exist an empty line here 
+    Rcpp::S4 ssqYX, //19         col number must be exactly Ncovariates + Ndatasets  
+    Rcpp::S4 ssqYXcopy, //20   not really used? cannot exist an empty line here 
     Rcpp::S4 LinvYX, //20
     Rcpp::S4 QinvSsqYx, //21
     Rcpp::S4 cholXVXdiag,//22
@@ -1092,7 +1098,7 @@ void likfitGpu_BackendP(
                                   workgroupSize,
                                   localSize,
                                   NlocalCache,
-                                  verbose, ssqYX, //ssqYXcopy,
+                                  verbose, ssqYX, ssqYXcopy,
                                   LinvYX, QinvSsqYx, cholXVXdiag, varMat, cholDiagMat,b_beta); 
   } 
   else if (precision_type == "dvclMatrix") {
@@ -1113,7 +1119,7 @@ void likfitGpu_BackendP(
                                    workgroupSize,
                                    localSize,
                                    NlocalCache,
-                                   verbose, ssqYX, //ssqYXcopy, 
+                                   verbose, ssqYX, ssqYXcopy, 
                                    LinvYX, QinvSsqYx, cholXVXdiag, varMat, cholDiagMat,b_beta); 
   } else {
     Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");

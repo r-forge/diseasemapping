@@ -59,7 +59,7 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   jacobian = vclVector(0, Ndata, type=type)   
   ssqYX = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
   aTDinvb_beta = vclMatrix(0, Nparam, Ndata, type=type)
-  #ssqYXcopy = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
+  ssqYXcopy = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
   LinvYX = vclMatrix(0, nrow(yx) * NparamPerIter, ncol(yx), type=type)
   QinvSsqYx = vclMatrix(0, NparamPerIter*Ncov, Ndata, type = type)
   cholXVXdiag = vclMatrix(0, NparamPerIter, Ncov, type=type)
@@ -86,7 +86,8 @@ likfitGpu_2 <- function(spatialmodel,     #data,
     Nlocal,  #16
     NlocalCache,  #17
     verbose,  #18
-    ssqYX, #ssqYXcopy,  #new
+    ssqYX, 
+    ssqYXcopy,  #new
     LinvYX,  #19
     QinvSsqYx, 
     cholXVXdiag, #22
