@@ -78,31 +78,31 @@ std::string crossprodBatchString(
   "event_t ev;\n"
   "int AHere, CHere;\n"
   "int Dmatrix, Drow, Dcol, DrowNpadC, Dinner, DinnerA, DinnerAcol, DrowBlock, DinnerBlock, DcolBlock, DmatrixBlock, DcolInBounds, DmatrixInBounds;\n"
-  "int A0Dcol, A0Drow;// location of elements A[0,Dcol] and A[0,Drow]\n" 
-  "const int AHereInc = get_num_groups(1)*NpadBetweenMatricesA;\n";
+  "int A0Dcol, A0Drow;// location of elements A[0,Dcol] and A[0,Drow]\n";
+  //"const int AHereInc = get_num_groups(1)*NpadBetweenMatricesA;\n";
   
   
-  if(onlyDiagC) {
-    result +=
-      "const int CHereInc = get_num_groups(1)*NpadC;\n"; // made changes here
-  }else{
-    result +=  
-      "const int CHereInc = get_num_groups(1)*NpadBetweenMatricesC;\n"; // made changes here
-  }
+  // if(onlyDiagC) {
+  //   result +=
+  //     "const int CHereInc = get_num_groups(1)*NpadC;\n"; // made changes here
+  // }else{
+  //   result +=  
+  //     "const int CHereInc = get_num_groups(1)*NpadBetweenMatricesC;\n"; // made changes here
+  // }
   
   
   result +=
-    "const int DrowNpadCInc = get_local_size(1)*NpadC;\n"
+   // "const int DrowNpadCInc = get_local_size(1)*NpadC;\n"
     "const int localIndex = get_local_id(0) * get_local_size(1) + get_local_id(1);\n"
     "const int NlocalTotal = get_local_size(1)*get_local_size(0);\n"
     "const int cacheIndex = get_local_id(1)+NpadLocal*get_local_id(0);\n";
   
   if(onlyDiagC) {
     result +=    "const int doLocalSum = (localIndex==0);\n"
-    "const int DinnerAinc = NlocalTotal*NpadA;\n";
+   // "const int DinnerAinc = NlocalTotal*NpadA;\n";
   } else {
     result +=    "const int doLocalSum = (get_local_id(0)==0);\n"
-    "const int DinnerAinc = get_local_size(0)*NpadA;\n";
+   // "const int DinnerAinc = get_local_size(0)*NpadA;\n";
   }
   
   
