@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-//#define DEBUG
+#define DEBUG
 //#define NOKERNELS
 
 // C = A^T A or A^T D A or A^T D^(-1) A 
@@ -98,10 +98,10 @@ std::string crossprodBatchString(
     "const int cacheIndex = get_local_id(1)+NpadLocal*get_local_id(0);\n";
   
   if(onlyDiagC) {
-    result +=    "const int doLocalSum = (localIndex==0);\n"
+    result +=    "const int doLocalSum = (localIndex==0);\n";
    // "const int DinnerAinc = NlocalTotal*NpadA;\n";
   } else {
-    result +=    "const int doLocalSum = (get_local_id(0)==0);\n"
+    result +=    "const int doLocalSum = (get_local_id(0)==0);\n";
    // "const int DinnerAinc = get_local_size(0)*NpadA;\n";
   }
   
@@ -477,7 +477,7 @@ void crossprodBatch(
     A.internal_size2(), 
     D.internal_size2(),
     invertD, // A^T D^(-1) A
-    0, // don't only compute diagonals of C,  onlyDiagC, // set to 1 to only compute diagonals of C
+    1, // don't only compute diagonals of C,  onlyDiagC, // set to 1 to only compute diagonals of C
     NstartC,
     NstartA,
     NstartD,
