@@ -421,8 +421,14 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
 
   int Ngroups1 = static_cast<T>(workgroupSize[1]) / static_cast<T>(localSize[1]);
   int NcolsPerGroup = std::ceil( static_cast<T>(Ncol) / static_cast<T>(Ngroups1));
-  int NrowsToCache = std::floor(static_cast<T>(NlocalCache[0]) /static_cast<T>(NcolsPerGroup));
-  
+  int NlocalCacheSum = Nlocal[0] * Nlocal[1] * NcolsPerGroup;
+  int NrowsToCache = std::floor(static_cast<T>(NlocalCache[0] - NlocalCacheSum) / static_cast<T>(NcolsPerGroup));
+  int NlocalCacheC  NcolsPerGroup * NrowsToCache;
+
+  if(NrowsToCache < 0) {
+    Rcpp::warning("NlocaalCache too small for this number of work groups");
+  }
+
   std::string backsolveString = backsolveBatchString<T>(
     1,// sameB,
     1,// diagIsOne,
@@ -439,18 +445,16 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     0,// NstartB,
     NrowsToCache, 
     NcolsPerGroup,
-    NcolsPerGroup * NrowsToCache,// NlocalCacheC,  
-    localSize[0] * localSize[1] * NcolsPerGroup,// NlocalCacheSum,   
+    NlocalCacheC,  
+    NlocalCacheSum,   
     localSize[0] * localSize[1]//NpadBetweenMatricesSum 
   );  
+
   // QinvSsqYx = Qinv SsqYx[-(1:Ndatasets), 1:Ncovariates]
   // Qinv stored in ssqYX[-(1:Ndatasets), -(1:Ndatasets)]
   Ncol = Ndatasets;
-  Ngroups1 = static_cast<T>(workgroupSize[1]) / static_cast<T>(localSize[1]);
   NcolsPerGroup = std::ceil( static_cast<T>(Ncol) / static_cast<T>(Ngroups1));
   NrowsToCache = std::floor(static_cast<T>(NlocalCache[0]) /static_cast<T>(NcolsPerGroup));
-  
-  
   
   
   // backsolve QinvSsqYx = Q^(-1) ssqYX[(Ndatasets+1):nrow(ssqYX),1:Ndatasets]  
@@ -754,8 +758,10 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                            theQueue);
 
     // backsolve  LinvYX = L^(-1) YX,   Nobs by (Ndatasets + Ncovariates)
-    viennacl::ocl::enqueue(backsolveKernel(LinvYX, Vbatch, yx, NthisIteration),
-                           theQueue);
+    viennacl::ocl::enqueue(backsolveKernel(LinvYX, Vbatch, yx, 
+      localMemory,
+      NthisIteration),
+    theQueue);
     
 
     // crossprod  ssqYX = YX^Y L^(-1)T D^(-1) L^(-1) YX  square matrix, (Ndatasets + Ncovariates)
