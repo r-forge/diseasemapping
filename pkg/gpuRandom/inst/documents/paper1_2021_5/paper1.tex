@@ -249,12 +249,14 @@ Now we use the streams created in section \ref{create_streams} to generate two v
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
-as.vector(gpuRandom::runif(n = 4, streams = myStreamsGpu1, Nglobal = c(1,
+as.vector(gpuRandom::runif(n = 10, streams = myStreamsGpu1, Nglobal = c(1,
     nrow(myStreamsGpu1)), type = "double"))
-## [1] 0.7353245 0.5180770 0.6142074 0.2319392
+##  [1] 0.7353245 0.5180770 0.6142074 0.2319392 0.1100781 0.3619766
+##  [7] 0.6487742 0.1112075 0.3661944 0.5018562
 as.vector(gpuRandom::runif(n = 10, streams = myStreamsGpu2, Nglobal = c(1,
-    nrow(myStreamsGpu1)), type = "double"))[-(1:6)]
-## [1] 0.6487742 0.1112075 0.3661944 0.5018562
+    nrow(myStreamsGpu1)), type = "double"))
+##  [1] 0.7353245 0.5180770 0.6142074 0.2319392 0.1100781 0.3619766
+##  [7] 0.6487742 0.1112075 0.3661944 0.5018562
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -265,7 +267,6 @@ The arguments of the \fct{gpuRandom::runif} are described as follows:
   \item \code{Nglobal}: global index space. Default is set as $(64,8)$.
   \item \code{type}: ``double'' or ``float'' format of generated random numbers.
 \end{itemize}
-
 Reusing \code{myStreamsGpu1} will produce a vector different from \code{sim_1}. Because each time a random number is generated, the current state of the stream is changed (advances by one position), below shows the \code{myStreamsGpu1} after it being used.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
@@ -273,12 +274,12 @@ Reusing \code{myStreamsGpu1} will produce a vector different from \code{sim_1}. 
 t(matrix(as.matrix(myStreamsGpu1), nrow(myStreamsCpu), ncol(myStreamsCpu),
     dimnames = dimnames(myStreamsCpu)))
 ##                    [,1]       [,2]       [,3]       [,4]
-## current.g1.1  240667857  559530223  502033783  739421137
-## current.g1.2  240667857 1309565828 1322587635 1475938232
-## current.g1.3      12345  336690377 1964121530  730262207
-## current.g2.1 1069151070   61444481 1949818481 1630192198
-## current.g2.2  809054265  197003928 1607232546  324551134
-## current.g2.3      12345   85196284 1462898381  795289868
+## current.g1.1 1918428443 1912157188  502033783  739421137
+## current.g1.2 1858462085  286315187 1322587635 1475938232
+## current.g1.3  878672095 2113333390 1964121530  730262207
+## current.g2.1 1132031887  834429287 1949818481 1630192198
+## current.g2.2  465230163   47498872 1607232546  324551134
+## current.g2.3  642281259 1335994581 1462898381  795289868
 ## initial.g1.1      12345  336690377  502033783  739421137
 ## initial.g1.2      12345  597094797 1322587635 1475938232
 ## initial.g1.3      12345 1245771585 1964121530  730262207
@@ -441,10 +442,10 @@ We generate a large-size matrix of 100 million double-precision Gaussian random 
 system.time(gpuRandom::rnorm(c(10000,10000), streams=streams, 
                              Nglobal=c(512,128), type="double"))
 ##    user  system elapsed 
-##   0.087   0.009   0.096
+##   0.122   0.009   0.130
 system.time(matrix(stats::rnorm(10000^2),10000,10000))
 ##    user  system elapsed 
-##   6.695   0.819   7.511
+##   6.592   0.867   7.529
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -549,7 +550,7 @@ We requested one million simulations on GPU while the actual number of simulatio
 system.time(fisher.sim(month_gpu, 1e6, streams=streams, 
             type="double", returnStatistics=FALSE, Nglobal = c(256,128)))
 ##    user  system elapsed 
-##   0.819   0.000   0.819
+##   0.746   0.005   0.750
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -561,10 +562,10 @@ system.time(fisher.sim(month_gpu, 1e6, streams=streams,
 \begin{verbatim}
 #using CPU
 stats::fisher.test(month,simulate.p.value = TRUE,B=1015808)$p.value
-## [1] 0.4042226
+## [1] 0.4037127
 system.time(stats::fisher.test(month,simulate.p.value = TRUE,B=1015808))
 ##    user  system elapsed 
-##  14.841   0.027  14.860
+##  14.913   0.030  14.980
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -626,7 +627,7 @@ With about ten million simulations, we get 1223 cases and a p-value around 0.000
 system.time(gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
             type="double", returnStatistics=FALSE,Nglobal = c(256,128)))
 ##    user  system elapsed 
-##   4.638   0.001   4.637
+##   4.570   0.013   4.579
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -638,16 +639,17 @@ system.time(gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
 \begin{verbatim}
 #using CPU
 fisher.test(week,simulate.p.value = TRUE,B=10010624)$p.value
-## [1] 0.0001221702
+## [1] 0.0001141787
 system.time(fisher.test(week,simulate.p.value = TRUE,B=10010624))
 ##    user  system elapsed 
-##  90.222   0.098  90.305
+##  91.084   0.186  91.258
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
 The ``week'' table has a much smaller p-value: around 0.0001208, which should require a larger number of simulations to get a more accurate p-value.
 
 \subsection{A summary of the results}
+(Results obtained in first week of October)
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{table}[H]
 

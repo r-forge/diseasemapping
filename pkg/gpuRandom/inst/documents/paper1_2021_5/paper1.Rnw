@@ -470,6 +470,7 @@ system.time(fisher.test(week,simulate.p.value = TRUE,B=10010624))
 The ``week'' table has a much smaller p-value: around 0.0001208, which should require a larger number of simulations to get a more accurate p-value.
 
 \subsection{A summary of the results}
+(Results obtained in first week of October)
 <<summarycompare, echo=FALSE, eval=TRUE, cache=TRUE>>=
 library(kableExtra)
 dt <- data.frame(
