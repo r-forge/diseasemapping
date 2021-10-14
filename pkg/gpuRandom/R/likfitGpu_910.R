@@ -67,6 +67,11 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   cholDiagMat = vclMatrix(0, NparamPerIter, n, type=type)
   b_beta = vclMatrix(0, NparamPerIter*n, Ndata, type=type)
   
+  
+  
+  
+  
+  
   gpuRandom:::likfitGpu_BackendP(
     yx,        #1
     coordsGpu, #2
@@ -82,8 +87,8 @@ likfitGpu_2 <- function(spatialmodel,     #data,
     detReml,   #12
     jacobian,  #13
     NparamPerIter,  #14
-    Nglobal,  #15
-    Nlocal,  #16
+    as.integer(Nglobal),  #15
+    as.integer(Nlocal),  #16
     NlocalCache,  #17
     verbose,  #18
     ssqYX, 

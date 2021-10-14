@@ -610,10 +610,15 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   viennacl::ocl::program & my_prog_matern = viennacl::ocl::current_context().add_program(maternClString, "mykernelmatern");
   viennacl::ocl::kernel & maternKernel = my_prog_matern.get_kernel("maternBatch");
   // dimension 0 is cell, dimension 1 is matrix
+  
+  Rcpp::Rcout << "workgroupSize[0]\n" << workgroupSize[0] << "\n";
+  
+  
   maternKernel.global_work_size(0, workgroupSize[0] ); 
   maternKernel.global_work_size(1, workgroupSize[1] ); 
   maternKernel.local_work_size(0, localSize[0]);
   maternKernel.local_work_size(1, localSize[1]);
+
 
   viennacl::ocl::program & my_prog_chol = viennacl::ocl::current_context().add_program(cholClString, "mykernelchol");
   viennacl::ocl::kernel & cholKernel = my_prog_chol.get_kernel("cholBatch");

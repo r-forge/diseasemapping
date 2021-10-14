@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-//#define DEBUG
+#define DEBUG
 //#define NOKERNELS
 
 // C = A^T A or A^T D A or A^T D^(-1) A 
@@ -116,6 +116,7 @@ std::string crossprodBatchString(
   "    DmatrixBlock < Nmatrix;\n"
   "    DmatrixBlock += get_num_groups(1)\n"
   "    ){\n"
+  "    barrier(CLK_LOCAL_MEM_FENCE);\n"
   "    Dmatrix = DmatrixBlock + get_group_id(1);\n"
   "    if(Dmatrix < Nmatrix) {\n"
   "     DmatrixInBounds = 1;\n"
@@ -140,8 +141,6 @@ std::string crossprodBatchString(
   // "    Dmatrix < Nmatrix;\n"
   // "    Dmatrix += get_num_groups(1),\n"
   // "    AHere += AHereInc,\n";
-  
-  
   // if(NpadD) {
   //   result += "    DHere += DHereInc,\n";
   // }
@@ -179,6 +178,7 @@ std::string crossprodBatchString(
   "      DcolBlock < Ncol;\n"
   "      DcolBlock += get_num_groups(0)\n"
   "      ){\n\n"
+  "  barrier(CLK_LOCAL_MEM_FENCE);\n"
   "  Dcol = DcolBlock + get_group_id(0);\n"
   "  if((Dcol < Ncol) && DmatrixInBounds){\n"
   "  DcolInBounds = 1;\n"
@@ -186,8 +186,7 @@ std::string crossprodBatchString(
   "  DcolInBounds = 0;\n"
   "  Dcol = 0;\n"
   "  }\n"
-  
-  "      A0Dcol = AHere + Dcol;\n";
+  "   A0Dcol = AHere + Dcol;\n";
   
   
   
@@ -300,11 +299,11 @@ std::string crossprodBatchString(
     "  for(DrowBlock = Dcol;\n"
     "      DrowBlock < Ncol;\n "
     "      DrowBlock += get_local_size(1)) {\n"
+    "      barrier(CLK_LOCAL_MEM_FENCE);\n"
     "      Drow = DrowBlock + get_local_id(1);\n";
   }
   result += 
     "      Cout=0.0;\n\n";
-  // "  barrier(CLK_LOCAL_MEM_FENCE);\n";   // no useful
   result += 
     "      if((Drow < Ncol) && DcolInBounds){\n"
     "      DrowNpadC = CHere + Drow * NpadC;\n"
@@ -411,16 +410,14 @@ std::string crossprodBatchString(
   
   if(!onlyDiagC) {
     result += 
-      "    }// Drow\n"
-      "  barrier(CLK_LOCAL_MEM_FENCE);\n\n";
+      "    }// Drow\n";
   }
   result += 
     "  }// Dcol\n";
   
   result += 
-    "  barrier(CLK_LOCAL_MEM_FENCE);\n" 
-    "  }// Dmatrix\n"
-    "  barrier(CLK_LOCAL_MEM_FENCE);\n";
+   // "  barrier(CLK_LOCAL_MEM_FENCE);\n" 
+    "  }// Dmatrix\n";
   result += 
     "}";
   
