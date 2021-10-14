@@ -76,8 +76,11 @@ std::string backsolveBatchString(
     "#define NstartA " + std::to_string(NstartA) + "\n"   
     "#define NstartB " + std::to_string(NstartB) + "\n"   
     "#define NrowsToCache " + std::to_string(NrowsToCache) + "\n"
+    "// min(Nrow, NrowsToCache)\n"
     "#define NrowStop " + std::to_string(std::min(Nrow, NrowsToCache)) + "\n"
+    "// NrowsToCache by NcolsPerGroup\n"
     "#define NlocalCacheC " + std::to_string(NlocalCacheC) + "\n"    
+    "// Nlocal(0) * Nlocal(1) * NcolsPerGroup \n"
     "#define NlocalCacheSum " + std::to_string(NlocalCacheSum) + "\n"
     "#define NpadBetweenMatricesSum " + std::to_string(NpadBetweenMatricesSum) + "\n\n";
   
@@ -85,11 +88,10 @@ std::string backsolveBatchString(
   " __global " + typeString+ " *C,\n"
   " __global "+ typeString+ " *A,\n"
   " __global "+ typeString+ " *B,\n"
+  " __local " + typeString + "*localCache,\n"
   "           int Nmatrix) {\n\n"
   "local int AHere, BHere, CHere, DrowZero;\n"
   "int AHereRow, BHereRow, CHereRow, CcacheHereRow;\n"
-  "local "+ typeString+ " Ccache[NlocalCacheC];\n" 
-  "local "+ typeString+ " cacheSum[NlocalCacheSum];\n"
   + typeString + " Acache;\n" 
   "int DmatrixBlock, Dmatrix, DmatrixInBounds, Drow, DrowBlock, DrowInBounds;\n"
   "int Dcol,DcolBlock, DcolInBounds, Dinner, DinnerBlock, DinnerC, DcolCache, Dsum;\n"
@@ -97,7 +99,14 @@ std::string backsolveBatchString(
   "const int DlocalCache = get_local_id(0) * get_local_size(1) + get_local_id(1);\n"
   "const int localIsFirstCol = (get_local_id(1) == 0);\n"
   "const int localIsFirstItem = (get_local_id(0) == 0) & (get_local_id(1) == 0);\n";
-  
+
+reult +=   
+  "/*"
+  " * local cache, size of localCache must exceed NlocalChaceC + NlocalCacheSum"
+  " */"
+  "local "+ typeString+ " *Ccache = localCache;\n" 
+  "local "+ typeString+ " *cacheSum = &localCache[NlocalCacheC+1];\n"
+
   
   result += 
     "if (localIsFirstItem) {\n"
@@ -569,6 +578,7 @@ void backsolveBatch(
     Rcpp::IntegerVector Nglobal,
     Rcpp::IntegerVector Nlocal,
     const int NlocalCache,
+    const int verbose,
     const int ctx_id) {
   
   
@@ -583,15 +593,19 @@ void backsolveBatch(
   
   const int Ngroups1 = static_cast<T>(Nglobal[1]) / static_cast<T>(Nlocal[1]);
   const int NcolsPerGroup = std::ceil( static_cast<T>(Ncol) / static_cast<T>(Ngroups1));
-  const int NrowsToCache = std::floor(static_cast<T>(NlocalCache) /static_cast<T>(NcolsPerGroup));
+  const int NlocalCacheSum = Nlocal[0] * Nlocal[1] * NcolsPerGroup;
+
+  const int NrowsToCache = std::floor(static_cast<T>(NlocalCache - NlocalCacheSum) / static_cast<T>(NcolsPerGroup));
+  const int NlocalCacheC  NcolsPerGroup * NrowsToCache;
+
   
-  
-#ifdef DEBUG
+  viennacl::ocl::local_mem localCache(NlocalCache);
+
+if(verbose) {
   
   Rcpp::Rcout << "\nNrow " << Nrow  << " Nmatrix " << Nmatrix << " Ncol " << Ncol << "\n\n";
-  
-#endif  
-  
+
+}  
   
   // the context
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
@@ -616,17 +630,16 @@ void backsolveBatch(
     NstartB,
     NrowsToCache, 
     NcolsPerGroup, 
-    NcolsPerGroup * NrowsToCache,//    NlocalCacheC, 
-    Nlocal[0] * Nlocal[1] * NcolsPerGroup, //    NlocalCacheSum 
+    NlocalCacheC, 
+    NlocalCacheSum, 
     Nlocal[0] * Nlocal[1] //NpadBetweenMatricesSum
   );  //NcolsInCache
   
-#ifdef DEBUG
+if(verbose > 2) {
   
   Rcpp::Rcout << clString << "\n\n";
   
-#endif  
-  
+}  
   
   
   viennacl::ocl::program & my_prog = ctx.add_program(clString, "my_kernel");
@@ -640,7 +653,7 @@ void backsolveBatch(
   backsolveKernel.local_work_size(1, Nlocal[1]);
   
   viennacl::ocl::command_queue theQueue = backsolveKernel.context().get_queue();
-  viennacl::ocl::enqueue(backsolveKernel(C, A, B, Nmatrix));
+  viennacl::ocl::enqueue(backsolveKernel(C, A, B, localCache, Nmatrix));
   clFinish(theQueue.handle().get());
   
 }
@@ -662,7 +675,8 @@ SEXP backsolveBatchTyped(
     const int diagIsOne,
     Rcpp::IntegerVector Nglobal,
     Rcpp::IntegerVector Nlocal, 
-    const int NlocalCache) {
+    const int NlocalCache,
+    const int verbose) {
   /*
    std::vector<int> Nglobal = Rcpp::as<std::vector<int> >(NglobalR);
    std::vector<int> Nlocal = Rcpp::as<std::vector<int> >(NlocalR);*/
@@ -679,7 +693,8 @@ SEXP backsolveBatchTyped(
   backsolveBatch<T>(*CG, *AG, *BG, 
                     Cstartend, Astartend, Bstartend,
                     numbatchB,diagIsOne, 
-                    Nglobal, Nlocal, NlocalCache, ctx_id);
+                    Nglobal, Nlocal, NlocalCache, verbose,
+                    ctx_id);
   
   return Rcpp::wrap(0L);
   
@@ -700,7 +715,8 @@ SEXP backsolveBatchBackend(
     const int diagIsOne,
     Rcpp::IntegerVector Nglobal,
     Rcpp::IntegerVector Nlocal, 
-    const int NlocalCache) {
+    const int NlocalCache = 1000L,
+    const int verbose =0L) {
   
   SEXP result;
   
@@ -710,11 +726,11 @@ SEXP backsolveBatchBackend(
   if(precision_type == "fvclMatrix") {
     result = backsolveBatchTyped<float>(
       C, A, B, Cstartend, Astartend, Bstartend,
-      numbatchB, diagIsOne, Nglobal, Nlocal, NlocalCache);
+      numbatchB, diagIsOne, Nglobal, Nlocal, NlocalCache, verbose);
   } else if (precision_type == "dvclMatrix") {
     result = backsolveBatchTyped<double>(
       C, A, B, Cstartend, Astartend, Bstartend,
-      numbatchB, diagIsOne, Nglobal, Nlocal, NlocalCache);
+      numbatchB, diagIsOne, Nglobal, Nlocal, NlocalCache, verbose);
   } else {
     result = Rcpp::wrap(1L);
   }
