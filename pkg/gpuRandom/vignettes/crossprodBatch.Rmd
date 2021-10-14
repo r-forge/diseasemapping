@@ -10,10 +10,9 @@ library('gpuR')
 
 
 ```{r crossprod_test10.10}
-
 library("gpuR")
 library("gpuRandom")
-nrow = 30
+nrow = 20
 ncol=5
 A = matrix(0.01*sample(100, nrow*ncol, replace=TRUE),
            nrow, ncol, byrow = TRUE) 
@@ -25,81 +24,42 @@ diag(D1)<-sample(100, nrow, replace=TRUE)
 C = matrix(0, nrow=ncol, ncol=ncol)
 
 
-Nparam = 66
+Nparam = 8
 bigA <- do.call(rbind, replicate(Nparam, A, simplify=FALSE))
 bigD <- do.call(rbind, replicate(Nparam, diag(D1), simplify = FALSE))
 bigC <- do.call(rbind, replicate(Nparam, C, simplify=FALSE))
 
 
-gpuA = vclMatrix(bigA, type='double')
+gpuA = vclMatrix(bigA, type='double'); dim(gpuA)
 gpuD = vclMatrix(bigD, type='double')
 gpuC = vclMatrix(bigC, type='double')
 
 #C = D1^(-1) B
-realC = t(A)%*% D1%*%A
+realC = t(A)%*% solve(D1) %*%A
 realC[upper.tri(realC)] <- 0
 cpuC = do.call(rbind, replicate(Nparam, realC, simplify=FALSE))
 
 gpuRandom::crossprodBatch(gpuC, 
                           gpuA, 
                           gpuD,
-                          invertD = FALSE,
-                          Nglobal = c(64, 16), 
-                          Nlocal =  c(8, 1),
-                          NlocalCache = 100)
+                          invertD = TRUE,
+                          Nglobal = c(64, 64,2), 
+                          Nlocal =  c(8,4,1),
+                          NlocalCache = 1000)
 
 #cbind(as.matrix(gpuC), cpuC)
 range(as.matrix(gpuC)-cpuC)
+
 ```
 
 
 ```{r crossprodbatch_more, eval=F}
-D <- matrix(0,nrow=5, ncol=5)
-diag(D)<-c(1:5)
-D
-a = matrix(1:15,nrow=5,ncol=3, byrow=T)
-a
-result<- t(a)%*% D%*%a
-result     # 3x3
-
-
-zerorow=integer(3)
-zerocol=integer(7)
-A= cbind(zerocol,rbind(zerorow,a,zerorow))
-
-Nglobal = c(16,8) 
-Nlocal = c(2, 2)
-NlocalCache = 40
-
-
-gpuC<-vclMatrix(0, nrow=12, ncol=6,type="float")   
-gpuA<-vclMatrix(rbind(A,A),type="float")
-gpuD<-vclMatrix(rbind(diag(D),diag(D)), nrow=2,ncol=nrow(D),type='float')
-gpuRandom:::crossprodBatchBackend(gpuC,gpuA,gpuD,invertD=F, 
-                                  c(1,3,1,3),
-                                  c(1,5,1,3),
-                                  c(0,1,0,5),
-                                  Nglobal,Nlocal, NlocalCache)
-as.matrix(gpuC)
-
-
-
-gpuC2<-vclMatrix(0, nrow=1, ncol=1,type="float")
-gpuA2<-vclMatrix(a,type="float")
-gpuD2<-vclMatrix(diag(D), nrow=1,ncol=40,type='float')
-gpuRandom:::crossprodBatchBackend(gpuC2,gpuA2,gpuD2,invertD=F, NglobalChol,NlocalChol, NlocalCache)
-as.matrix(gpuC2)
-
-```
-
-
-```{r checkAug26}
 library("gpuR")
 library("gpuRandom")
 
 
 D1 <- matrix(0,nrow=5, ncol=5)
-diag(D1)<-c(1,2,3,4,300)
+diag(D1)<-c(1,2,3,4,30)
 D1
 #a = matrix(c(1,0,0,0,1,0,0,0,1,1,0,0,0,1,0),nrow=5,ncol=3, byrow=T)
 a = matrix(rep(1,15),nrow=5,ncol=3, byrow=T)
@@ -112,6 +72,43 @@ diag(D2)<-c(10.6,1,1,1, 1)
 result2<- t(a)%*% D2%*%a
 result2
 
+gpuC<-vclMatrix(0, nrow=24, ncol=3,type="float")   
+gpuA<-vclMatrix(rbind(a,a,a,a,a,a,a,a),type="float")
+gpuD<-vclMatrix(rbind(diag(D1),diag(D2),diag(D1),diag(D2),diag(D1),diag(D2),diag(D1),diag(D2)), nrow=8,ncol=nrow(D2),type='float')
+
+gpuRandom::crossprodBatch(gpuC, 
+                          gpuA,
+                          gpuD,
+                          invertD = FALSE,
+                          Nglobal = c(64, 64), 
+                          Nlocal =  c(8, 16),
+                          NlocalCache = 1000)
+
+as.matrix(gpuC)
+
+```
+
+
+```{r checkAug26}
+library("gpuR")
+library("gpuRandom")
+
+
+D1 <- matrix(0,nrow=5, ncol=5)
+diag(D1)<-c(1,2,3,1,3)
+D1
+#a = matrix(c(1,0,0,0,1,0,0,0,1,1,0,0,0,1,0),nrow=5,ncol=3, byrow=T)
+a = matrix(sample(50, 15, replace=TRUE),nrow=5,ncol=3, byrow=T)
+a
+result<- t(a)%*% D1%*%a
+     # 3x3
+D2 <- matrix(0,nrow=5, ncol=5)
+diag(D2)<-c(2,1,3,1, 2)
+#D2
+result2<- t(a)%*% D2%*%a
+result
+result2
+
 gpuC<-vclMatrix(0, nrow=24, ncol=3,type="double")   
 gpuA<-vclMatrix(rbind(a,a,a,a,a,a,a,a),type="double")
 gpuD<-vclMatrix(rbind(diag(D1),diag(D2),diag(D1),diag(D2),diag(D1),diag(D2),diag(D1),diag(D2)), nrow=8,ncol=nrow(D2),type='double')
@@ -120,29 +117,11 @@ gpuRandom::crossprodBatch(gpuC,
                           gpuA,
                           gpuD,
                           invertD = FALSE,
-                          Nglobal = c(64, 4), 
-                          Nlocal =  c(8, 4),
-                          NlocalCache = 20)
+                          Nglobal = c(64, 64), 
+                          Nlocal =  c(4, 32),
+                          NlocalCache = 100)
 
 as.matrix(gpuC)
-
-
-
-# gpuRandom:::crossprodBatchBackend(
-#                           gpuC, 
-#                           gpuA,
-#                           gpuD,
-#                           invertD = FALSE,
-#                           Cstartend=c(0,1,0,3),
-#                           Astartend=c(0,5,0,3),
-#                           Dstartend=c(0,1,0,3), 
-#                           Nglobal = c(64, 4), 
-#                           Nlocal =  c(8, 4),
-#                           NlocalCache = 20,
-#                           NrowStartC=11)
-# 
-# as.matrix(gpuC)
-
 
 ```
 
