@@ -87,7 +87,7 @@ void likfitGpu_0(viennacl::matrix<T> &Vbatch,
   Rcpp::IntegerVector Cstartend =IntegerVector::create(0, n,0, colbatch+p);
   //Astartend = IntegerVector::create(0, n,0, n);
   Rcpp::IntegerVector Bstartend =IntegerVector::create(0,n,0,colbatch+p);
-  backsolveBatch(ab, Vbatch, yX, Cstartend, Astartend, Bstartend, 1, 1, workgroupSize, localSize, NlocalCache[0], ctx_id);
+  backsolveBatch(ab, Vbatch, yX, Cstartend, Astartend, Bstartend, 1, 1, workgroupSize, localSize, NlocalCache[0], 0, ctx_id);
 
 
 
@@ -137,7 +137,7 @@ void likfitGpu_0(viennacl::matrix<T> &Vbatch,
   // temp3 = Q^(-1) * (b^T * D^(-1) *a), backsolve for temp3    2 by 1
   Cstartend =IntegerVector::create(0,p,0,colbatch);  //Astartend = IntegerVector::create(colbatch, p, colbatch, p);
   Bstartend =IntegerVector::create(colbatch, p, 0, colbatch);
-  backsolveBatch(temp3, temp2, temp2, Cstartend, Astartend, Bstartend, rowbatch, 1, workgroupSize, localSize, NlocalCache[0], ctx_id);
+  backsolveBatch(temp3, temp2, temp2, Cstartend, Astartend, Bstartend, rowbatch, 1, workgroupSize, localSize, NlocalCache[0], 0, ctx_id);
 
 
 
@@ -164,7 +164,7 @@ void likfitGpu_0(viennacl::matrix<T> &Vbatch,
   Cstartend = IntegerVector::create(0, p, 0, p);
   Astartend = IntegerVector::create(colbatch, p, colbatch, p);
   Bstartend = IntegerVector::create(0, p, 0, p);
-  backsolveBatch(Qinverse, temp2, identity,Cstartend, Astartend, Bstartend, 1,  1, workgroupSize, localSize, NlocalCache[0], ctx_id);
+  backsolveBatch(Qinverse, temp2, identity,Cstartend, Astartend, Bstartend, 1,  1, workgroupSize, localSize, NlocalCache[0], 0, ctx_id);
 
 
   // Q^(-T) P^(-1) Q^(-1) = QPQinverse = SSQX^(-1)

@@ -25,7 +25,8 @@ Rcpp::IntegerVector Nlocal, // length 2
 int allowOverflow,
 int logDet);
 
-template <typename T> std::string backsolveBatchString(
+template <typename T> 
+std::string backsolveBatchString(
     const int sameB,
     const int diagIsOne,
     const int Nrow, 
@@ -69,7 +70,7 @@ template<typename T> void fill22params(
     viennacl::matrix_base<T> &param
 ); 
 
-std::string backsolveBatchString();
+
 std::string crossprodBatchString();
 std::string matrix_plus_vectorString();
 std::string matrix_plus_scalarString();
@@ -175,7 +176,8 @@ void maternBatchVcl(
             Rcpp::IntegerVector Nglobal,
             Rcpp::IntegerVector Nlocal,
             const int NlocalCache,
-            const int ctx_id);     
+            const int verbose,
+            const int ctx_id);    
         
         
         template <typename T> 
