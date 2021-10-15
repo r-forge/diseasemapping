@@ -353,7 +353,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   viennacl::ocl::local_mem localMemory(NlocalCache[0] *sizeof(yx(0,0) ) );
   
   
-    //  viennacl::matrix<T> Vbatch(NparamPerIter[0]*Nobs, Nobs);
+  //  viennacl::matrix<T> Vbatch(NparamPerIter[0]*Nobs, Nobs);
   //  viennacl::matrix<T> cholDiagMat(NparamPerIter[0], Nobs);
   //    viennacl::matrix<T> LinvYX(NparamPerIter[0]*Nobs, yx.size2());
   //    viennacl::matrix<T> ssqYX(NparamPerIter[0]*yx.size2(), yx.size2());
@@ -376,13 +376,13 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     Nobs, 
     Ncell, 
     NparamPerIter[0],//NmatrixMax
-    Vbatch.internal_size2(), //NpadVbatch
-    Vbatch.internal_size2()*Nobs, //NpadBetweenMatrices,
-    coords.internal_size2(), //NpadCoords
-    params.internal_size2(), //NpadParams,
-    localSize[0], //Nlocal0 
-//    NlocalParams * localSize[1] * (1+ NparamPerIter[0] * localSize[1] / workgroupSize[1]), // int NlocalParamsCache
-    1L, 1L, 1L, 0L); // assignUpper, assignLower, assignDiagonals, assignDistUpper
+                 Vbatch.internal_size2(), //NpadVbatch
+                 Vbatch.internal_size2()*Nobs, //NpadBetweenMatrices,
+                 coords.internal_size2(), //NpadCoords
+                 params.internal_size2(), //NpadParams,
+                 localSize[0], //Nlocal0 
+                          //    NlocalParams * localSize[1] * (1+ NparamPerIter[0] * localSize[1] / workgroupSize[1]), // int NlocalParamsCache
+                          1L, 1L, 1L, 0L); // assignUpper, assignLower, assignDiagonals, assignDistUpper
   
   int allowOverflow = ( ((int) Vbatch.size2() ) > NlocalCache[0] );
   
@@ -418,17 +418,17 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   );
   
   
-
+  
   int Ngroups1 = static_cast<T>(workgroupSize[1]) / static_cast<T>(localSize[1]);
   int NcolsPerGroup = std::ceil( static_cast<T>(Ncol) / static_cast<T>(Ngroups1));
-  int NlocalCacheSum = Nlocal[0] * Nlocal[1] * NcolsPerGroup;
+  int NlocalCacheSum = localSize[0] * localSize[1] * NcolsPerGroup;
   int NrowsToCache = std::floor(static_cast<T>(NlocalCache[0] - NlocalCacheSum) / static_cast<T>(NcolsPerGroup));
-  int NlocalCacheC  NcolsPerGroup * NrowsToCache;
-
+  int NlocalCacheC = NcolsPerGroup * NrowsToCache;
+  
   if(NrowsToCache < 0) {
     Rcpp::warning("NlocaalCache too small for this number of work groups");
   }
-
+  
   std::string backsolveString = backsolveBatchString<T>(
     1,// sameB,
     1,// diagIsOne,
@@ -449,7 +449,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     NlocalCacheSum,   
     localSize[0] * localSize[1]//NpadBetweenMatricesSum 
   );  
-
+  
   // QinvSsqYx = Qinv SsqYx[-(1:Ndatasets), 1:Ncovariates]
   // Qinv stored in ssqYX[-(1:Ndatasets), -(1:Ndatasets)]
   Ncol = Ndatasets;
@@ -495,7 +495,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     ssqYX.internal_size2()*yx.size2(), //const int NpadBetweenMatricesC,
     LinvYX.internal_size2()*Nobs, //const int NpadBetweenMatricesA,
     NlocalCache[0], // NlocalCacheA, 
-    localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
+               localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
   );
   
   // ssqBetahat     p*Ndatasets
@@ -604,26 +604,28 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
   );     
   //}
-
+  
   // if(verbose[0]>1) {
   //   Rcpp::Rcout << "maternClString\n" << maternClString << "\n";
   //   Rcpp::Rcout << "cholClString\n" << cholClString << "\n";
   // }
   
-
+  
   viennacl::ocl::program & my_prog_matern = viennacl::ocl::current_context().add_program(maternClString, "mykernelmatern");
   viennacl::ocl::kernel & maternKernel = my_prog_matern.get_kernel("maternBatch");
   // dimension 0 is cell, dimension 1 is matrix
   
   Rcpp::Rcout << "workgroupSize[0]\n" << workgroupSize[0] << "\n";
-  
+  Rcpp::Rcout << "workgroupSize[1]\n" << workgroupSize[1] << "\n";
+  Rcpp::Rcout << "localSize[0]\n" << localSize[0] << "\n";  
+  Rcpp::Rcout << "localSize[1]\n" << localSize[1] << "\n";   
   
   maternKernel.global_work_size(0, workgroupSize[0] ); 
   maternKernel.global_work_size(1, workgroupSize[1] ); 
   maternKernel.local_work_size(0, localSize[0]);
   maternKernel.local_work_size(1, localSize[1]);
-
-
+  
+  
   viennacl::ocl::program & my_prog_chol = viennacl::ocl::current_context().add_program(cholClString, "mykernelchol");
   viennacl::ocl::kernel & cholKernel = my_prog_chol.get_kernel("cholBatch");
   
@@ -632,7 +634,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   cholKernel.local_work_size(0, chol_localSize[0]);
   cholKernel.local_work_size(1, chol_localSize[1]);
   
-    
+  
   viennacl::ocl::program & my_prog_backsolve = viennacl::ocl::current_context().add_program(backsolveString, "mykernelbacksolve");
   viennacl::ocl::program & my_prog_crossprod = viennacl::ocl::current_context().add_program(crossprodKernelString, "mykernelcrossprod");
   viennacl::ocl::program & my_prog_cholxvx = viennacl::ocl::current_context().add_program(cholXVXkernelString, "mykernelcholxvx");
@@ -640,13 +642,13 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   viennacl::ocl::program & my_prog_crossprodSsqYx = viennacl::ocl::current_context().add_program(crossprodSsqYxKernelString, "mykernelcrossprodssqyx");
   viennacl::ocl::program & my_prog_extractSomeDiag = viennacl::ocl::current_context().add_program(extractSomeDiagKernelString, "mykernelextract_some_diag");
   viennacl::ocl::program & my_prog_extractBlock = viennacl::ocl::current_context().add_program(extractBlockKernelString, "mykernelextract_Block");
-//if(verbose[1]>=1){
+  //if(verbose[1]>=1){
   viennacl::ocl::program & my_prog_aTDinvb_beta = viennacl::ocl::current_context().add_program(aTDinvb_beta_KernelString, "mykernelaTDinvb_beta");
   viennacl::ocl::program & my_prog_bTimesbeta = viennacl::ocl::current_context().add_program(b_betas_KernelString, "mykernel_b_betas");
   viennacl::ocl::program & my_prog_ssqBeta = viennacl::ocl::current_context().add_program(crossprod_ssqBeta_KernelString, "mykernel_ssqBeta");
-//}
-
-
+  //}
+  
+  
   viennacl::ocl::kernel & cholXvxKernel = my_prog_cholxvx.get_kernel("cholBatch");
   viennacl::ocl::kernel & backsolveKernel = my_prog_backsolve.get_kernel("backsolveBatch");
   viennacl::ocl::kernel & crossprodKernel = my_prog_crossprod.get_kernel("crossprodBatch");
@@ -654,13 +656,13 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   viennacl::ocl::kernel & crossprodSsqYxKernel = my_prog_crossprodSsqYx.get_kernel("crossprodBatch");
   viennacl::ocl::kernel & extractSomeDiagKernel = my_prog_extractSomeDiag.get_kernel("extract_some_diag");
   viennacl::ocl::kernel & extractBlockKernel = my_prog_extractBlock.get_kernel("extract_block");
-
+  
   //if(verbose[1]>=1){
   viennacl::ocl::kernel & aTDinvb_betaKernel = my_prog_aTDinvb_beta.get_kernel("gemm");  
   viennacl::ocl::kernel & b_betasKernel = my_prog_bTimesbeta.get_kernel("gemm");  
   viennacl::ocl::kernel & ssqBetaKernel = my_prog_ssqBeta.get_kernel("crossprodBatch");   
-// }
-
+  // }
+  
   
   
   cholXvxKernel.global_work_size(0, workgroupSize[0] ); 
@@ -698,8 +700,8 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   extractBlockKernel.global_work_size(1, workgroupSize[1] );   
   extractBlockKernel.local_work_size(0, 1L);
   extractBlockKernel.local_work_size(1, 1L);
-
-//if(verbose[1]>=1){  
+  
+  //if(verbose[1]>=1){  
   aTDinvb_betaKernel.global_work_size(0, workgroupSize[0] ); 
   aTDinvb_betaKernel.global_work_size(1, workgroupSize[1] ); 
   aTDinvb_betaKernel.global_work_size(2, workgroupSize[2] ); 
@@ -719,7 +721,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   ssqBetaKernel.global_work_size(1, workgroupSize[1] ); 
   ssqBetaKernel.local_work_size(0, localSize[0]);
   ssqBetaKernel.local_work_size(1, localSize[1]);          
- //}
+  //}
   
   if(verbose[0]) {
     Rcpp::Rcout << "\n" << " Nparams " << 
@@ -732,107 +734,107 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   viennacl::ocl::command_queue theQueue = maternKernel.context().get_queue();
 #ifdef UNDEF 
   if(verbose[1]==1){  // given betas
-  for (Diter=0,DiterIndex=0; 
-       Diter< Niter; 
-       Diter++,DiterIndex += NparamPerIter[0]){
-    
-    
-    endThisIteration = std::min(DiterIndex + NparamPerIter[0], Nparams);
-    NthisIteration = endThisIteration - DiterIndex;
-    
+    for (Diter=0,DiterIndex=0; 
+         Diter< Niter; 
+         Diter++,DiterIndex += NparamPerIter[0]){
+      
+      
+      endThisIteration = std::min(DiterIndex + NparamPerIter[0], Nparams);
+      NthisIteration = endThisIteration - DiterIndex;
+      
       if(verbose[0]>1) {
-      Rcpp::Rcout << "\n" << " Diter " << 
-      Diter << " endThisIteration " <<  endThisIteration <<
-        " NthisIteration " << NthisIteration << " localMemorySize " << localMemory.size() << " DiterIndex " << DiterIndex <<"\n";
+        Rcpp::Rcout << "\n" << " Diter " << 
+          Diter << " endThisIteration " <<  endThisIteration <<
+            " NthisIteration " << NthisIteration << " localMemorySize " << localMemory.size() << " DiterIndex " << DiterIndex <<"\n";
       }
-    // matern
-    viennacl::ocl::enqueue(maternKernel(Vbatch, coords, params, 
-                                        localMemory,
-                                        DiterIndex, NthisIteration),
-                           theQueue);
-
-    // cholesky Vbatch=LDL^T, cholesky decomposition
-    viennacl::ocl::enqueue(cholKernel(Vbatch, cholDiagMat, 
-                                      localMemory, 
-                                      NthisIteration, detVar, DiterIndex),
-                           theQueue);
-
-    // backsolve  LinvYX = L^(-1) YX,   Nobs by (Ndatasets + Ncovariates)
-    viennacl::ocl::enqueue(backsolveKernel(LinvYX, Vbatch, yx, 
-      localMemory,
-      NthisIteration),
-    theQueue);
-    
-
-    // crossprod  ssqYX = YX^Y L^(-1)T D^(-1) L^(-1) YX  square matrix, (Ndatasets + Ncovariates)
-    viennacl::ocl::enqueue(crossprodKernel(ssqYX, LinvYX, cholDiagMat, 0, NthisIteration),
-                           theQueue);
-
-   
-    // save diagonals of ssqYX to ssqY
-    viennacl::ocl::enqueue(extractSomeDiagKernel(ssqY, ssqYX, DiterIndex, NthisIteration),
-                           theQueue);  
-    
-    // for(Dy1 = 0; Dy1 < Ndatasets; Dy1++) {
-    //   for(Dy2 = 0; Dy2 < NthisIteration; Dy2++) {
-    //     ssqY(DiterIndex + Dy2,Dy1) = ssqYX( Dy2 * ssqYX.size2() + Dy1, Dy1);
-    //   }
-    // }
-    
-    // for(Dy1 = 0; Dy1 < ssqYXcopy.size1(); Dy1++) {
-    //   for(Dy2 = 0; Dy2 < ssqYXcopy.size2(); Dy2++) {
-    //     ssqYXcopy(Dy1, Dy2) = ssqYX(Dy1, Dy2);
-    //   }}
-    
-    
-    // save bottom block of ssqYX to XVYXVX
-    viennacl::ocl::enqueue(extractBlockKernel(XVYXVX, ssqYX, DiterIndex, NthisIteration),
-                           theQueue);  
-
-    
-   
-    // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part
-    viennacl::ocl::enqueue(cholXvxKernel(ssqYX, cholXVXdiag, localMemory, NthisIteration, detReml, DiterIndex),
-                           theQueue);
-    
-    // if(verbose[0]>3) {
-    //   Rcpp::Rcout << "cxy";
-    // }
-  
-    // backsolve QinvSsqYx = Q^(-1) ssqYX[(Ndatasets+1):nrow(ssqYX),1:Ndatasets]  
-    // Ncovariates by Ndatasets
-    viennacl::ocl::enqueue(backsolveSsqYxKernel(QinvSsqYx, ssqYX, ssqYX, NthisIteration),
-                           theQueue);
-    
-    
-    
-    // crossprod QinvSsqYx^T P^(-1) QinvSsqYx,   Ndatasets by Ndatasets
-    viennacl::ocl::enqueue(crossprodSsqYxKernel(ssqBetahat, QinvSsqYx, cholXVXdiag, DiterIndex, NthisIteration),
-      theQueue); 
-    
-    
-    
-    // gemmBatch2  a^TD^(-1)b * beta = aTDinvb_beta         
-    viennacl::ocl::enqueue(aTDinvb_betaKernel(ssqYX, betas, aTDinvb_beta, DiterIndex, NthisIteration), //nRowBatch
-                           theQueue);     
-    
-    // gemmBatch2   b*beta    
-    viennacl::ocl::enqueue(b_betasKernel(LinvYX, betas, b_beta, 0, NthisIteration), //nRowBatch
-                           theQueue);   
-    
-    // ssqBeta_crossprod      ssqBeta = (X beta)^T V^(-1) (X beta) = (b_beta)^T D^(-1) (b_beta) 
-    viennacl::ocl::enqueue(ssqBetaKernel(ssqBeta, b_beta, cholDiagMat, DiterIndex, NthisIteration), //nRowBatch
-                           theQueue);
-    
-    // if(Diter ==1)
-    // Rcpp::Rcout << "crossprod_ssqBeta_KernelString\n" << crossprod_ssqBeta_KernelString << "\n";
-
-    
-    if(verbose[0]>1) {
-      Rcpp::Rcout << "\n" << "Diter " << Diter <<" DiterIndex " << DiterIndex << " endThisIteration " << 
-        endThisIteration << " Nthisiteration " << NthisIteration  << "\n";
-    }
-  } // Diter
+      // matern
+      viennacl::ocl::enqueue(maternKernel(Vbatch, coords, params, 
+                                          localMemory,
+                                          DiterIndex, NthisIteration),
+                                          theQueue);
+      
+      // cholesky Vbatch=LDL^T, cholesky decomposition
+      viennacl::ocl::enqueue(cholKernel(Vbatch, cholDiagMat, 
+                                        localMemory, 
+                                        NthisIteration, detVar, DiterIndex),
+                                        theQueue);
+      
+      // backsolve  LinvYX = L^(-1) YX,   Nobs by (Ndatasets + Ncovariates)
+      viennacl::ocl::enqueue(backsolveKernel(LinvYX, Vbatch, yx, 
+                                             localMemory,
+                                             NthisIteration),
+                                             theQueue);
+      
+      
+      // crossprod  ssqYX = YX^Y L^(-1)T D^(-1) L^(-1) YX  square matrix, (Ndatasets + Ncovariates)
+      viennacl::ocl::enqueue(crossprodKernel(ssqYX, LinvYX, cholDiagMat, 0, NthisIteration),
+                             theQueue);
+      
+      
+      // save diagonals of ssqYX to ssqY
+      viennacl::ocl::enqueue(extractSomeDiagKernel(ssqY, ssqYX, DiterIndex, NthisIteration),
+                             theQueue);  
+      
+      // for(Dy1 = 0; Dy1 < Ndatasets; Dy1++) {
+      //   for(Dy2 = 0; Dy2 < NthisIteration; Dy2++) {
+      //     ssqY(DiterIndex + Dy2,Dy1) = ssqYX( Dy2 * ssqYX.size2() + Dy1, Dy1);
+      //   }
+      // }
+      
+      // for(Dy1 = 0; Dy1 < ssqYXcopy.size1(); Dy1++) {
+      //   for(Dy2 = 0; Dy2 < ssqYXcopy.size2(); Dy2++) {
+      //     ssqYXcopy(Dy1, Dy2) = ssqYX(Dy1, Dy2);
+      //   }}
+      
+      
+      // save bottom block of ssqYX to XVYXVX
+      viennacl::ocl::enqueue(extractBlockKernel(XVYXVX, ssqYX, DiterIndex, NthisIteration),
+                             theQueue);  
+      
+      
+      
+      // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part
+      viennacl::ocl::enqueue(cholXvxKernel(ssqYX, cholXVXdiag, localMemory, NthisIteration, detReml, DiterIndex),
+                             theQueue);
+      
+      // if(verbose[0]>3) {
+      //   Rcpp::Rcout << "cxy";
+      // }
+      
+      // backsolve QinvSsqYx = Q^(-1) ssqYX[(Ndatasets+1):nrow(ssqYX),1:Ndatasets]  
+      // Ncovariates by Ndatasets
+      viennacl::ocl::enqueue(backsolveSsqYxKernel(QinvSsqYx, ssqYX, ssqYX, NthisIteration),
+                             theQueue);
+      
+      
+      
+      // crossprod QinvSsqYx^T P^(-1) QinvSsqYx,   Ndatasets by Ndatasets
+      viennacl::ocl::enqueue(crossprodSsqYxKernel(ssqBetahat, QinvSsqYx, cholXVXdiag, DiterIndex, NthisIteration),
+                             theQueue); 
+      
+      
+      
+      // gemmBatch2  a^TD^(-1)b * beta = aTDinvb_beta         
+      viennacl::ocl::enqueue(aTDinvb_betaKernel(ssqYX, betas, aTDinvb_beta, DiterIndex, NthisIteration), //nRowBatch
+                             theQueue);     
+      
+      // gemmBatch2   b*beta    
+      viennacl::ocl::enqueue(b_betasKernel(LinvYX, betas, b_beta, 0, NthisIteration), //nRowBatch
+                             theQueue);   
+      
+      // ssqBeta_crossprod      ssqBeta = (X beta)^T V^(-1) (X beta) = (b_beta)^T D^(-1) (b_beta) 
+      viennacl::ocl::enqueue(ssqBetaKernel(ssqBeta, b_beta, cholDiagMat, DiterIndex, NthisIteration), //nRowBatch
+                             theQueue);
+      
+      // if(Diter ==1)
+      // Rcpp::Rcout << "crossprod_ssqBeta_KernelString\n" << crossprod_ssqBeta_KernelString << "\n";
+      
+      
+      if(verbose[0]>1) {
+        Rcpp::Rcout << "\n" << "Diter " << Diter <<" DiterIndex " << DiterIndex << " endThisIteration " << 
+          endThisIteration << " Nthisiteration " << NthisIteration  << "\n";
+      }
+    } // Diter
   }else{
 #endif
     for (Diter=0,DiterIndex=0; 
@@ -852,13 +854,13 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                                           localMemory,
                                           DiterIndex, NthisIteration),
                                           theQueue);
-
+      
       //#Vbatch=LDL^T, cholesky decomposition
       viennacl::ocl::enqueue(cholKernel(Vbatch, cholDiagMat, 
                                         localMemory, 
                                         NthisIteration, detVar, DiterIndex),
                                         theQueue);
-     
+      
       // backsolve  LinvYX = L^(-1) YX,   Nobs by (Ndatasets + Ncovariates)
       viennacl::ocl::enqueue(backsolveKernel(LinvYX, Vbatch, yx, NthisIteration),
                              theQueue);
@@ -868,7 +870,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       viennacl::ocl::enqueue(crossprodKernel(ssqYX, LinvYX, cholDiagMat, 0, NthisIteration),
                              theQueue);
       if(verbose[0]>=2)
-      Rcpp::Rcout << "crossprodKernelString\n" << crossprodKernelString << "\n";
+        Rcpp::Rcout << "crossprodKernelString\n" << crossprodKernelString << "\n";
       
       for(Dy1 = 0; Dy1 < ssqYXcopy.size1(); Dy1++) {
         for(Dy2 = 0; Dy2 < ssqYXcopy.size2(); Dy2++) {
@@ -889,7 +891,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       viennacl::ocl::enqueue(cholXvxKernel(ssqYX, cholXVXdiag, localMemory, NthisIteration, detReml, DiterIndex),
                              theQueue);
       
-    
+      
       // backsolve QinvSsqYx = Q^(-1) ssqYX[(Ndatasets+1):nrow(ssqYX),1:Ndatasets]  , Ncovariates by Ndatasets
       viennacl::ocl::enqueue(
         backsolveSsqYxKernel(QinvSsqYx, ssqYX, ssqYX, NthisIteration),
@@ -906,237 +908,239 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
         Rcpp::Rcout << "\n" << "Diter " << Diter <<" DiterIndex " << DiterIndex << " endThisIteration " << 
           endThisIteration << " Nthisiteration " << NthisIteration  << "\n";
       }
-
+      
+    }
+    
+    clFinish(theQueue.handle().get());
+    
+    
+    
   }
   
-  clFinish(theQueue.handle().get());
-  
-  
-  
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-template<typename T> 
-void likfitGpuP_Templated(
-    Rcpp::S4 yx,
-    Rcpp::S4 coords,
-    Rcpp::S4 params,
-    Rcpp::S4 boxcox,
-    Rcpp::S4 betas,
-    Rcpp::S4 ssqY,
-    Rcpp::S4 aTDinvb_beta,
-    Rcpp::S4 XVYXVX,
-    Rcpp::S4 ssqBetahat,
-    Rcpp::S4 ssqBeta,
-    Rcpp::S4 detVar,
-    Rcpp::S4 detReml,
-    Rcpp::S4 jacobian,
-    Rcpp::IntegerVector NparamPerIter,
-    Rcpp::IntegerVector workgroupSize,
-    Rcpp::IntegerVector localSize,
-    Rcpp::IntegerVector NlocalCache,
-    Rcpp::IntegerVector verbose,
-    Rcpp::S4 ssqYX,        
-    Rcpp::S4 ssqYXcopy,
-    Rcpp::S4 LinvYX, 
-    Rcpp::S4 QinvSsqYx, 
-    Rcpp::S4 cholXVXdiag,
-    Rcpp::S4 varMat,
-    Rcpp::S4 cholDiagMat,
-    Rcpp::S4 b_beta){  //Rcpp::S4 aTDinvb_beta,Rcpp::S4 aTDinvb_beta_diag
-  
-  
-  const bool BisVCL=1;
-  const int ctx_id = INTEGER(yx.slot(".context_index"))[0]-1;
-  std::shared_ptr<viennacl::matrix<T> > yxGpu = getVCLptr<T>(yx.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > coordsGpu = getVCLptr<T>(coords.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > paramsGpu = getVCLptr<T>(params.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > betasGpu = getVCLptr<T>(betas.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > ssqYGpu = getVCLptr<T>(ssqY.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > aTDinvb_betaGpu = getVCLptr<T>(aTDinvb_beta.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > XVYXVXGpu = getVCLptr<T>(XVYXVX.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > ssqBetahatGpu = getVCLptr<T>(ssqBetahat.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > ssqBetaGpu = getVCLptr<T>(ssqBeta.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::vector_base<T> > detVarGpu = getVCLVecptr<T>(detVar.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::vector_base<T> > detRemlGpu = getVCLVecptr<T>(detReml.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::vector_base<T> > boxcoxGpu = getVCLVecptr<T>(boxcox.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::vector_base<T> > jacobianGpu = getVCLVecptr<T>(jacobian.slot("address"), BisVCL, ctx_id);
-  
-  std::shared_ptr<viennacl::matrix<T> > ssqYXgpu = getVCLptr<T>(ssqYX.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > ssqYXcopyGpu= getVCLptr<T>(ssqYXcopy.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > LinvYXgpu = getVCLptr<T>(LinvYX.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > QinvSsqYxgpu = getVCLptr<T>(QinvSsqYx.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > cholXVXdiaggpu = getVCLptr<T>(cholXVXdiag.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > varMatgpu = getVCLptr<T>(varMat.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > cholDiagMatgpu= getVCLptr<T>(cholDiagMat.slot("address"), BisVCL, ctx_id);
-  std::shared_ptr<viennacl::matrix<T> > b_betagpu= getVCLptr<T>(b_beta.slot("address"), BisVCL, ctx_id);
-  //  std::shared_ptr<viennacl::matrix<T> > aTDinvb_betagpu = getVCLptr<T>(aTDinvb_beta.slot("address"), BisVCL, ctx_id);
-  //  std::shared_ptr<viennacl::matrix<T> > aTDinvb_beta_diaggpu = getVCLptr<T>(aTDinvb_beta_diag.slot("address"), BisVCL, ctx_id);
-  
-  
-  addBoxcoxToData<T>(
-    *yxGpu,
-    *boxcoxGpu,
-    *jacobianGpu,
-    workgroupSize, 
-    localSize,
-    NlocalCache,
-    ctx_id,
-    verbose);
   
   
   
   
-  likfitGpuP<T>(
-    *yxGpu, 
-    *coordsGpu, 
-    *paramsGpu, 
-    *betasGpu,
-    *ssqYGpu, 
-    *aTDinvb_betaGpu,
-    *XVYXVXGpu,
-    *ssqBetahatGpu,
-    *ssqBetaGpu,
-    *detVarGpu, 
-    *detRemlGpu,
-    (*boxcoxGpu).size(),// Ndatasets
-    NparamPerIter,
-    workgroupSize, 
-    localSize, 
-    NlocalCache, 
-    ctx_id, 
-    verbose, 
-    *ssqYXgpu, 
-    *ssqYXcopyGpu, 
-    *LinvYXgpu, 
-    *QinvSsqYxgpu,
-    *cholXVXdiaggpu, 
-    *varMatgpu, 
-    *cholDiagMatgpu,
-    *b_betagpu);
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  template<typename T> 
+  void likfitGpuP_Templated(
+      Rcpp::S4 yx,
+      Rcpp::S4 coords,
+      Rcpp::S4 params,
+      Rcpp::S4 boxcox,
+      Rcpp::S4 betas,
+      Rcpp::S4 ssqY,
+      Rcpp::S4 aTDinvb_beta,
+      Rcpp::S4 XVYXVX,
+      Rcpp::S4 ssqBetahat,
+      Rcpp::S4 ssqBeta,
+      Rcpp::S4 detVar,
+      Rcpp::S4 detReml,
+      Rcpp::S4 jacobian,
+      Rcpp::IntegerVector NparamPerIter,
+      Rcpp::IntegerVector workgroupSize,
+      Rcpp::IntegerVector localSize,
+      Rcpp::IntegerVector NlocalCache,
+      Rcpp::IntegerVector verbose,
+      Rcpp::S4 ssqYX,        
+      Rcpp::S4 ssqYXcopy,
+      Rcpp::S4 LinvYX, 
+      Rcpp::S4 QinvSsqYx, 
+      Rcpp::S4 cholXVXdiag,
+      Rcpp::S4 varMat,
+      Rcpp::S4 cholDiagMat,
+      Rcpp::S4 b_beta){  //Rcpp::S4 aTDinvb_beta,Rcpp::S4 aTDinvb_beta_diag
     
-    // *aTDinvb_betagpu,
-    // *aTDinvb_beta_diaggpu
     
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//[[Rcpp::export]]
-void likfitGpu_BackendP(
-    Rcpp::S4 yx,   //1
-    Rcpp::S4 coords,  //2
-    Rcpp::S4 params,  //3
-    Rcpp::S4 boxcox,  //4
-    Rcpp::S4 betas,   //5    not used
-    Rcpp::S4 ssqY,  //6
-    Rcpp::S4 aTDinvb_beta, //7
-    Rcpp::S4 XVYXVX,  //8 
-    Rcpp::S4 ssqBetahat, //9
-    Rcpp::S4 ssqBeta,  //10
-    Rcpp::S4 detVar, //11
-    Rcpp::S4 detReml, //12
-    Rcpp::S4 jacobian,  //13
-    Rcpp::IntegerVector NparamPerIter,//14
-    Rcpp::IntegerVector workgroupSize,//15
-    Rcpp::IntegerVector localSize,//16
-    Rcpp::IntegerVector NlocalCache,//17
-    Rcpp::IntegerVector verbose,//18    verbose[2]=betasgiven, true or false
-    Rcpp::S4 ssqYX, //19         col number must be exactly Ncovariates + Ndatasets  
-    Rcpp::S4 ssqYXcopy, //20   not really used? cannot exist an empty line here 
-    Rcpp::S4 LinvYX, //20
-    Rcpp::S4 QinvSsqYx, //21
-    Rcpp::S4 cholXVXdiag,//22
-    Rcpp::S4 varMat, //23      Vbatch
-    Rcpp::S4 cholDiagMat,
-    Rcpp::S4 b_beta) { //25
-  //    Rcpp::S4 aTDinvb_beta,
-  //    Rcpp::S4 aTDinvb_beta_diag
-  
-  
-  Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(yx));
-  std::string precision_type = (std::string) classVarR;
-  
-  
-  if(precision_type == "fvclMatrix") {
-    likfitGpuP_Templated<float>(  yx,
-                                  coords,
-                                  params,
-                                  boxcox,
-                                  betas,
-                                  ssqY,
-                                  aTDinvb_beta,
-                                  XVYXVX,
-                                  ssqBetahat,
-                                  ssqBeta,
-                                  detVar,
-                                  detReml,
-                                  jacobian,
-                                  NparamPerIter,
-                                  workgroupSize,
-                                  localSize,
-                                  NlocalCache,
-                                  verbose, ssqYX, ssqYXcopy,
-                                  LinvYX, QinvSsqYx, cholXVXdiag, varMat, cholDiagMat,b_beta); 
-  } 
-  else if (precision_type == "dvclMatrix") {
-    likfitGpuP_Templated<double>(  yx,
-                                   coords,
-                                   params,
-                                   boxcox,
-                                   betas,
-                                   ssqY,
-                                   aTDinvb_beta,
-                                   XVYXVX,
-                                   ssqBetahat,
-                                   ssqBeta,
-                                   detVar,
-                                   detReml,
-                                   jacobian,
-                                   NparamPerIter,
-                                   workgroupSize,
-                                   localSize,
-                                   NlocalCache,
-                                   verbose, ssqYX, ssqYXcopy, 
-                                   LinvYX, QinvSsqYx, cholXVXdiag, varMat, cholDiagMat,b_beta); 
-  } else {
-    Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
+    const bool BisVCL=1;
+    const int ctx_id = INTEGER(yx.slot(".context_index"))[0]-1;
+    std::shared_ptr<viennacl::matrix<T> > yxGpu = getVCLptr<T>(yx.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::matrix<T> > coordsGpu = getVCLptr<T>(coords.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::matrix<T> > paramsGpu = getVCLptr<T>(params.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::matrix<T> > betasGpu = getVCLptr<T>(betas.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::matrix<T> > ssqYGpu = getVCLptr<T>(ssqY.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::matrix<T> > aTDinvb_betaGpu = getVCLptr<T>(aTDinvb_beta.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::matrix<T> > XVYXVXGpu = getVCLptr<T>(XVYXVX.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::matrix<T> > ssqBetahatGpu = getVCLptr<T>(ssqBetahat.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::matrix<T> > ssqBetaGpu = getVCLptr<T>(ssqBeta.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::vector_base<T> > detVarGpu = getVCLVecptr<T>(detVar.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::vector_base<T> > detRemlGpu = getVCLVecptr<T>(detReml.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::vector_base<T> > boxcoxGpu = getVCLVecptr<T>(boxcox.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::vector_base<T> > jacobianGpu = getVCLVecptr<T>(jacobian.slot("address"), BisVCL, ctx_id);
+    
+    std::shared_ptr<viennacl::matrix<T> > ssqYXgpu = getVCLptr<T>(ssqYX.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::matrix<T> > ssqYXcopyGpu= getVCLptr<T>(ssqYXcopy.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::matrix<T> > LinvYXgpu = getVCLptr<T>(LinvYX.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::matrix<T> > QinvSsqYxgpu = getVCLptr<T>(QinvSsqYx.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::matrix<T> > cholXVXdiaggpu = getVCLptr<T>(cholXVXdiag.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::matrix<T> > varMatgpu = getVCLptr<T>(varMat.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::matrix<T> > cholDiagMatgpu= getVCLptr<T>(cholDiagMat.slot("address"), BisVCL, ctx_id);
+    std::shared_ptr<viennacl::matrix<T> > b_betagpu= getVCLptr<T>(b_beta.slot("address"), BisVCL, ctx_id);
+    //  std::shared_ptr<viennacl::matrix<T> > aTDinvb_betagpu = getVCLptr<T>(aTDinvb_beta.slot("address"), BisVCL, ctx_id);
+    //  std::shared_ptr<viennacl::matrix<T> > aTDinvb_beta_diaggpu = getVCLptr<T>(aTDinvb_beta_diag.slot("address"), BisVCL, ctx_id);
+    
+    
+    addBoxcoxToData<T>(
+      *yxGpu,
+      *boxcoxGpu,
+      *jacobianGpu,
+      workgroupSize, 
+      localSize,
+      NlocalCache,
+      ctx_id,
+      verbose);
+    
+    
+    
+    
+    likfitGpuP<T>(
+      *yxGpu, 
+      *coordsGpu, 
+      *paramsGpu, 
+      *betasGpu,
+      *ssqYGpu, 
+      *aTDinvb_betaGpu,
+      *XVYXVXGpu,
+      *ssqBetahatGpu,
+      *ssqBetaGpu,
+      *detVarGpu, 
+      *detRemlGpu,
+      (*boxcoxGpu).size(),// Ndatasets
+      NparamPerIter,
+      workgroupSize, 
+      localSize, 
+      NlocalCache, 
+      ctx_id, 
+      verbose, 
+      *ssqYXgpu, 
+      *ssqYXcopyGpu, 
+      *LinvYXgpu, 
+      *QinvSsqYxgpu,
+      *cholXVXdiaggpu, 
+      *varMatgpu, 
+      *cholDiagMatgpu,
+      *b_betagpu);
+      
+      // *aTDinvb_betagpu,
+      // *aTDinvb_beta_diaggpu
+      
   }
-}
-
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  //[[Rcpp::export]]
+  void likfitGpu_BackendP(
+      Rcpp::S4 yx,   //1
+      Rcpp::S4 coords,  //2
+      Rcpp::S4 params,  //3
+      Rcpp::S4 boxcox,  //4
+      Rcpp::S4 betas,   //5    not used
+      Rcpp::S4 ssqY,  //6
+      Rcpp::S4 aTDinvb_beta, //7
+      Rcpp::S4 XVYXVX,  //8 
+      Rcpp::S4 ssqBetahat, //9
+      Rcpp::S4 ssqBeta,  //10
+      Rcpp::S4 detVar, //11
+      Rcpp::S4 detReml, //12
+      Rcpp::S4 jacobian,  //13
+      Rcpp::IntegerVector NparamPerIter,//14
+      Rcpp::IntegerVector workgroupSize,//15
+      Rcpp::IntegerVector localSize,//16
+      Rcpp::IntegerVector NlocalCache,//17
+      Rcpp::IntegerVector verbose,//18    verbose[2]=betasgiven, true or false
+      Rcpp::S4 ssqYX, //19         col number must be exactly Ncovariates + Ndatasets  
+      Rcpp::S4 ssqYXcopy, //20   not really used? cannot exist an empty line here 
+      Rcpp::S4 LinvYX, //20
+      Rcpp::S4 QinvSsqYx, //21
+      Rcpp::S4 cholXVXdiag,//22
+      Rcpp::S4 varMat, //23      Vbatch
+      Rcpp::S4 cholDiagMat,
+      Rcpp::S4 b_beta) { //25
+    //    Rcpp::S4 aTDinvb_beta,
+    //    Rcpp::S4 aTDinvb_beta_diag
+    
+    
+    Rcpp::traits::input_parameter< std::string >::type classVarR(RCPP_GET_CLASS(yx));
+    std::string precision_type = (std::string) classVarR;
+    
+    
+    if(precision_type == "fvclMatrix") {
+      likfitGpuP_Templated<float>(  yx,
+                                    coords,
+                                    params,
+                                    boxcox,
+                                    betas,
+                                    ssqY,
+                                    aTDinvb_beta,
+                                    XVYXVX,
+                                    ssqBetahat,
+                                    ssqBeta,
+                                    detVar,
+                                    detReml,
+                                    jacobian,
+                                    NparamPerIter,
+                                    workgroupSize,
+                                    localSize,
+                                    NlocalCache,
+                                    verbose, ssqYX, ssqYXcopy,
+                                    LinvYX, QinvSsqYx, cholXVXdiag, varMat, cholDiagMat,b_beta); 
+    } 
+    else if (precision_type == "dvclMatrix") {
+      likfitGpuP_Templated<double>(  yx,
+                                     coords,
+                                     params,
+                                     boxcox,
+                                     betas,
+                                     ssqY,
+                                     aTDinvb_beta,
+                                     XVYXVX,
+                                     ssqBetahat,
+                                     ssqBeta,
+                                     detVar,
+                                     detReml,
+                                     jacobian,
+                                     NparamPerIter,
+                                     workgroupSize,
+                                     localSize,
+                                     NlocalCache,
+                                     verbose, ssqYX, ssqYXcopy, 
+                                     LinvYX, QinvSsqYx, cholXVXdiag, varMat, cholDiagMat,b_beta); 
+    } else {
+      Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
+    }
+  }
+  
+  
+  
 
 
 

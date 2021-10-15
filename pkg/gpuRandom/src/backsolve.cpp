@@ -1,6 +1,5 @@
-//   all 
 #include "gpuRandom.hpp"
-//#define DEBUG
+#define DEBUG
 
 
 /*
@@ -34,25 +33,25 @@
 
 template <typename T> 
 std::string backsolveBatchString(
-    const int sameB,
+    const int sameB,   //1
     const int diagIsOne,
-    const int Nrow, 
+    const int Nrow,    //3
     const int Ncol,
     //    const int Nmatrix, 
-    const int NpadC, 
-    const int NpadA, 
-    const int NpadB,
-    const int NpadBetweenMatricesC,
-    const int NpadBetweenMatricesA,
+    const int NpadC,   //5
+    const int NpadA,   
+    const int NpadB,   //7
+    const int NpadBetweenMatricesC, 
+    const int NpadBetweenMatricesA, //9
     const int NpadBetweenMatricesB,
-    const int NstartC,
-    const int NstartA,
-    const int NstartB,
-    const int NrowsToCache, 
-    const int NcolsPerGroup,
-    const int NlocalCacheC,  // NrowsToCache by NcolsPerGroup
-    const int NlocalCacheSum, // Nlocal(0) * Nlocal(1) * NcolsPerGroup 
-    const int NpadBetweenMatricesSum // Nlocal(0) * Nlocal(1)
+    const int NstartC,  //11
+    const int NstartA,  
+    const int NstartB,  //13
+    const int NrowsToCache,  
+    const int NcolsPerGroup,  //15
+    const int NlocalCacheC,  // NrowsToCache by NcolsPerGroup 
+    const int NlocalCacheSum, // Nlocal(0) * Nlocal(1) * NcolsPerGroup 17
+    const int NpadBetweenMatricesSum // Nlocal(0) * Nlocal(1)  18
 ) {
   
   std::string typeString = openclTypeString<T>();
@@ -99,14 +98,14 @@ std::string backsolveBatchString(
   "const int DlocalCache = get_local_id(0) * get_local_size(1) + get_local_id(1);\n"
   "const int localIsFirstCol = (get_local_id(1) == 0);\n"
   "const int localIsFirstItem = (get_local_id(0) == 0) & (get_local_id(1) == 0);\n";
-
-reult +=   
-  "/*"
-  " * local cache, size of localCache must exceed NlocalChaceC + NlocalCacheSum"
-  " */"
-  "local "+ typeString+ " *Ccache = localCache;\n" 
-  "local "+ typeString+ " *cacheSum = &localCache[NlocalCacheC+1];\n"
-
+  
+  result +=   
+    "/*"
+    " * local cache, size of localCache must exceed NlocalChaceC + NlocalCacheSum"
+    " */"
+    "local "+ typeString+ " *Ccache = localCache;\n" 
+    "local "+ typeString+ " *cacheSum = &localCache[NlocalCacheC+1];\n";
+  
   
   result += 
     "if (localIsFirstItem) {\n"
@@ -266,7 +265,7 @@ reult +=
     "        Dcol = DcolBlock + get_group_id(1);\n";
   result +=
     "        if((Dcol < Ncol) & DrowInBounds & localIsFirstCol){\n";  
-//#ifdef UNDEF 
+  //#ifdef UNDEF 
   result += 
     "        for(Dinner = 1, DinnerC = DlocalCache+1;\n"
     "            Dinner < get_local_size(1);\n"
@@ -280,8 +279,8 @@ reult +=
     "        }//Dinner\n"
     "        }// if(Dcol < Ncol) & DrowInBounds & localIsFirstCol\n"
     "        barrier(CLK_LOCAL_MEM_FENCE);\n";
-//#endif  
-//#ifdef UNDEF  
+  //#endif  
+  //#ifdef UNDEF  
   result +=
     "       // last bit of the triangle\n"    
     "       for(Dinner = 0,DinnerC = 0;\n"
@@ -324,7 +323,7 @@ reult +=
     "        }//Dinner\n";
   result +=
     "      barrier(CLK_LOCAL_MEM_FENCE);\n";  
-//#endif   
+  //#endif   
   result += 
     "    }//for DcolBlock\n";
   
@@ -594,18 +593,18 @@ void backsolveBatch(
   const int Ngroups1 = static_cast<T>(Nglobal[1]) / static_cast<T>(Nlocal[1]);
   const int NcolsPerGroup = std::ceil( static_cast<T>(Ncol) / static_cast<T>(Ngroups1));
   const int NlocalCacheSum = Nlocal[0] * Nlocal[1] * NcolsPerGroup;
-
+  
   const int NrowsToCache = std::floor(static_cast<T>(NlocalCache - NlocalCacheSum) / static_cast<T>(NcolsPerGroup));
-  const int NlocalCacheC  NcolsPerGroup * NrowsToCache;
-
+  const int NlocalCacheC = NcolsPerGroup * NrowsToCache;
+  
   
   viennacl::ocl::local_mem localCache(NlocalCache);
-
-if(verbose) {
   
-  Rcpp::Rcout << "\nNrow " << Nrow  << " Nmatrix " << Nmatrix << " Ncol " << Ncol << "\n\n";
-
-}  
+  if(verbose) {
+    
+    Rcpp::Rcout << "\nNrow " << Nrow  << " Nmatrix " << Nmatrix << " Ncol " << Ncol << "\n\n";
+    
+  }  
   
   // the context
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
@@ -614,32 +613,32 @@ if(verbose) {
   
   
   std::string clString =  backsolveBatchString<T>(  
-    numbatchB == 1,        //Nrow == B.size1(),  
-    diagIsOne,
-    Nrow, 
-    Ncol, // ncol
-    //    Nmatrix,
-    C.internal_size2(),   
-    A.internal_size2(), 
-    B.internal_size2(),
-    C.internal_size2()*C.size1()/Nmatrix,//NpadBetweenMatricesC,
-    A.internal_size2()*A.size2(),//NpadBetweenMatricesA,
-    B.internal_size2()*B.size1()/numbatchB,//NpadBetweenMatricesB,
-    NstartC,
-    NstartA,
-    NstartB,
-    NrowsToCache, 
-    NcolsPerGroup, 
-    NlocalCacheC, 
-    NlocalCacheSum, 
-    Nlocal[0] * Nlocal[1] //NpadBetweenMatricesSum
+    numbatchB,        //Nrow == B.size1(),    //1
+    diagIsOne,  //2
+    Nrow, //3
+    Ncol, // ncol   4
+    //    Nmatrix,  
+    C.internal_size2(),     //5
+    A.internal_size2(),     //6
+    B.internal_size2(),     //7
+    C.internal_size2()*C.size1()/Nmatrix,//NpadBetweenMatricesC,  8
+    A.internal_size2()*A.size2(),//NpadBetweenMatricesA,          9
+    B.internal_size2()*B.size1()/numbatchB,//NpadBetweenMatricesB,  10
+    NstartC,        // 11
+    NstartA,        // 12
+    NstartB,        // 13
+    NrowsToCache,   // 14
+    NcolsPerGroup,  // 15
+    NlocalCacheC,   // 16
+    NlocalCacheSum, // 17
+    Nlocal[0] * Nlocal[1] //NpadBetweenMatricesSum   18
   );  //NcolsInCache
   
-if(verbose > 2) {
-  
-  Rcpp::Rcout << clString << "\n\n";
-  
-}  
+  if(verbose > 2) {
+    
+    Rcpp::Rcout << clString << "\n\n";
+    
+  }  
   
   
   viennacl::ocl::program & my_prog = ctx.add_program(clString, "my_kernel");
@@ -737,7 +736,6 @@ SEXP backsolveBatchBackend(
   return(result);
   
 }
-
 
 
 
