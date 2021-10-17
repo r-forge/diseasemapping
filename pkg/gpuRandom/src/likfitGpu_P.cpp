@@ -867,7 +867,6 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                                              NthisIteration),
                              theQueue);
       
-#ifdef UNDEF      
       // ssqYX = YX^Y L^(-1)T D^(-1) L^(-1) YX  square matrix, (Ndatasets + Ncovariates)
       viennacl::ocl::enqueue(crossprodKernel(ssqYX, LinvYX, cholDiagMat, 0, NthisIteration),
                              theQueue);
@@ -887,6 +886,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       viennacl::ocl::enqueue(extractBlockKernel(XVYXVX, ssqYX, DiterIndex, NthisIteration),
                              theQueue);  
       
+#ifdef UNDEF      
       
       
       // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part

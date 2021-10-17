@@ -47,7 +47,6 @@ gpuRandom::crossprodBatch(gpuC,
                           Nlocal =  c(8,4,1),
                           NlocalCache = 1000)
 
-#cbind(as.matrix(gpuC), cpuC)
 range(as.matrix(gpuC)-cpuC)
 
 ```
@@ -89,7 +88,7 @@ as.matrix(gpuC)
 ```
 
 
-```{r checkAug26}
+```{r checkAug26, eval=FALSE}
 library("gpuR")
 library("gpuRandom")
 

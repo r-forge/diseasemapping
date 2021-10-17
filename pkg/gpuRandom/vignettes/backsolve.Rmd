@@ -20,7 +20,7 @@ NlocalCache = 18
 ```{r  test_check2}
 
 A = matrix(0.1,#0.01*sample(100, 25, replace=TRUE),
-            nrow=5, ncol=5, byrow = TRUE) 
+            nrow=12, ncol=12, byrow = TRUE) 
 A[upper.tri(A)] <- 0
 diag(A)<-1
 nrow = nrow(A)
@@ -44,9 +44,9 @@ junk = gpuRandom:::backsolveBatchBackend(gpuC, gpuA, gpuB,
                                 c(0, nrow(B), 0, ncol(B)),
                                 numbatchB = nrow(A) / ncol(A), 
                                 diagIsOne=TRUE, 
-                                c(1,1,1), c(1,1,1),
-                                #Nglobal, Nlocal, 
-                                NlocalCache=50,#000,
+                                #c(1,1,1), c(1,1,1),
+                                Nglobal, Nlocal, 
+                                NlocalCache=1000,
                                 verbose=5)
 
 as.matrix(gpuC)
