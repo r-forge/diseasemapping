@@ -765,7 +765,6 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                                              NthisIteration),
                                              theQueue);
       
-      
       // crossprod  ssqYX = YX^Y L^(-1)T D^(-1) L^(-1) YX  square matrix, (Ndatasets + Ncovariates)
       viennacl::ocl::enqueue(crossprodKernel(ssqYX, LinvYX, cholDiagMat, 0, NthisIteration),
                              theQueue);
@@ -828,7 +827,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       
       // if(Diter ==1)
       // Rcpp::Rcout << "crossprod_ssqBeta_KernelString\n" << crossprod_ssqBeta_KernelString << "\n";
-      
+     
       
       if(verbose[0]>1) {
         Rcpp::Rcout << "\n" << "Diter " << Diter <<" DiterIndex " << DiterIndex << " endThisIteration " << 
@@ -837,6 +836,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     } // Diter
   }else{
 #endif
+    
     for (Diter=0,DiterIndex=0; 
          Diter< Niter; 
          Diter++,DiterIndex += NparamPerIter[0]){
@@ -862,10 +862,12 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                                         theQueue);
       
       // backsolve  LinvYX = L^(-1) YX,   Nobs by (Ndatasets + Ncovariates)
-      viennacl::ocl::enqueue(backsolveKernel(LinvYX, Vbatch, yx, NthisIteration),
+      viennacl::ocl::enqueue(backsolveKernel(LinvYX, Vbatch, yx,
+                                             localMemory,
+                                             NthisIteration),
                              theQueue);
       
-      
+#ifdef UNDEF      
       // ssqYX = YX^Y L^(-1)T D^(-1) L^(-1) YX  square matrix, (Ndatasets + Ncovariates)
       viennacl::ocl::enqueue(crossprodKernel(ssqYX, LinvYX, cholDiagMat, 0, NthisIteration),
                              theQueue);
