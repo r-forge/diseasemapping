@@ -19,21 +19,21 @@ NlocalCache = 18
 
 ```{r  test_check2}
 
-A = matrix(0.01*sample(100, 25, replace=TRUE),
+A = matrix(0.1,#0.01*sample(100, 25, replace=TRUE),
             nrow=5, ncol=5, byrow = TRUE) 
 A[upper.tri(A)] <- 0
 diag(A)<-1
-nrow = 5
+nrow = nrow(A)
 D1 = matrix(0.01*sample(100, nrow^2, replace=TRUE),
             nrow=nrow, ncol=nrow, byrow = TRUE) 
 D1[upper.tri(D1)] <- 0
 diag(D1)<-10
 
-B = matrix(1:nrow(A), ncol=1)
-C = 99*B
-gpuA = vclMatrix(rbind(A, A), type='double')
+B = matrix(2*(1:nrow(A)), ncol=1)
+C = -99*B
+gpuA = vclMatrix(rbind(A), type='double')
 gpuB = vclMatrix(rbind(B), type='double')
-gpuC = vclMatrix(rbind(C,C), type='double')
+gpuC = vclMatrix(rbind(C), type='double')
 
 #C = D1^(-1) B
 realC = solve(A, B)
@@ -42,15 +42,22 @@ junk = gpuRandom:::backsolveBatchBackend(gpuC, gpuA, gpuB,
                                 c(0, nrow(C), 0, ncol(C)),
                                 c(0, nrow(A), 0, ncol(A)),
                                 c(0, nrow(B), 0, ncol(B)),
-                                1L, diagIsOne=TRUE, 
-                                Nglobal, Nlocal, 1)
+                                numbatchB = nrow(A) / ncol(A), 
+                                diagIsOne=TRUE, 
+                                c(1,1,1), c(1,1,1),
+                                #Nglobal, Nlocal, 
+                                NlocalCache=50,#000,
+                                verbose=5)
 
-cbind(as.matrix(gpuC), rbind(realC, realC),
-      as.matrix(gpuC) - rbind(realC,realC))
+as.matrix(gpuC)
+solve(A[1:2,1:2], B[1:2,])
+
+cbind(as.matrix(gpuC), NA,rbind(realC), NA,
+      as.matrix(gpuC) - rbind(realC))
+
 ```
 
-
-```{r two_function_test2}
+```{r two_function_test2, eval=FALSE}
 a1 = matrix( c(3, 0,0,0, 3,0, 3, 66, 3), nrow=3, ncol=3, byrow = TRUE) 
 a2 = matrix( c(1, 0,0,6, 1,0, 18, 8, 1), nrow=3, ncol=3, byrow = TRUE) 
 
@@ -83,7 +90,7 @@ as.matrix(gpuC)
 ```
 
 
-```{r test3}
+```{r test3, eval=FALSE}
 a1 = matrix( c(5, 0,0,2, 5,0, 5, 66, 5), nrow=3, ncol=3, byrow = TRUE) 
 a2 = matrix( c(1, 0,0,6, 1,0, 18, 8, 1), nrow=3, ncol=3, byrow = TRUE) 
 A1 = cbind(c(0,0,0,0), rbind(c(0,0,0), a1))  #4x4
@@ -117,7 +124,7 @@ as.matrix(gpuC)
 
 
 
-```{r testP}
+```{r testP, eval=FALSE}
 N = 4
 
 oneLwer = matrix(0, N, N)
