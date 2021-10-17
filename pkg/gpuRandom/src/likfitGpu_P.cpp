@@ -905,7 +905,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       viennacl::ocl::enqueue(
         crossprodSsqYxKernel(ssqBetahat, QinvSsqYx, cholXVXdiag, DiterIndex, NthisIteration),
         theQueue); 
-      
+#endif      
       if(verbose[0]>1) {
         Rcpp::Rcout << "\n" << "Diter " << Diter <<" DiterIndex " << DiterIndex << " endThisIteration " << 
           endThisIteration << " Nthisiteration " << NthisIteration  << "\n";
