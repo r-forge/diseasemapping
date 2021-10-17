@@ -49,7 +49,7 @@ std::string crossprodBatchString(
     "#define NstartC " + std::to_string(NstartC) + "\n"   
     "#define NstartA " + std::to_string(NstartA) + "\n" 
     "#define NstartD " + std::to_string(NstartD) + "\n" 
-    "#define NpadLocal " + std::to_string(Nlocal[1]) + "\n"    
+//    "#define NpadLocal " + std::to_string(Nlocal[1]) + "\n"    
     "#define NpadBetweenMatricesC " + std::to_string(NpadBetweenMatricesC) + "\n"    
     "#define NpadBetweenMatricesA " + std::to_string(NpadBetweenMatricesA) + "\n"    
     "#define NrowStop " + std::to_string(NrowStop) + "\n"    
@@ -63,19 +63,20 @@ std::string crossprodBatchString(
   if (NpadD >0 ) {
     result +=  "const global " + typeString + " *D,\n";
   }
-  
-  result += "int NrowStartC,\n"
+  result +=
+    " __local " + typeString + " *localCache,\n"
+ "int NrowStartC,\n"
   "int Nmatrix) {\n\n"
   
-  "local " + typeString + " Acache[" + 
+  "local " + typeString + " *Acache=localCache;\n" 
+  "local " + typeString + " *Dcache = &localCache[" + 
     std::to_string(NlocalCacheA) + "];\n" 
-  "local " + typeString + " Dcache[" + 
-    std::to_string(NlocalCacheA) + "];\n" 
-  "local " + typeString + " Ccache[" + 
-    std::to_string(Nlocal[0] * Nlocal[1]) + "];\n" +
+  "local " + typeString + " *Ccache = &localCache[" + 
+    std::to_string(2*NlocalCacheA) + "];\n" +
     
     typeString + " Cout, Ctemp;\n"
   "event_t ev;\n"
+  "const int NpadLocal = get_local_size(1);"
   "int AHere, CHere;\n"
   "int Dmatrix, Drow, Dcol, DrowNpadC, Dinner, DinnerA, DinnerAcol, DrowBlock, DinnerBlock, DcolBlock, DmatrixBlock, DcolInBounds, DmatrixInBounds;\n"
   "int A0Dcol, A0Drow;// location of elements A[0,Dcol] and A[0,Drow]\n";
@@ -445,8 +446,8 @@ void crossprodBatch(
     Rcpp::IntegerVector Astartend,
     Rcpp::IntegerVector Dstartend,  
     Rcpp::IntegerVector Nglobal,
-    Rcpp::IntegerVector Nlocal,
-    const int NlocalCache, //int NrowStartC,
+    Rcpp::IntegerVector Nlocal, 
+    const int NlocalCache, // rows cached are (NlocalCache - prod(Nlcoal))/2
     const int ctx_id) {
   
   const int Ncol = Astartend[3];
@@ -457,10 +458,14 @@ void crossprodBatch(
   const int NstartA = A.internal_size2() * Astartend[0] + Astartend[2];
   const int NstartD = D.internal_size2() * Dstartend[0] + Dstartend[2];
   
+  const int NlocalCacheAD = (NlocalCache - Nlocal[0]*Nlocal[1])/2;
+  
   std::cout<< Nmatrix << "\n\n\n";  
   
   // the context
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
+  
+  viennacl::ocl::local_mem localCache(NlocalCache*sizeof(A(0,0) ) );
   
   //  cl_device_type type_check = ctx.current_device().type();
   
@@ -485,7 +490,7 @@ void crossprodBatch(
     NstartD,
     C.internal_size2()*C.size2(),//NpadBetweenMatricesC,
     A.internal_size2()*A.size1()/Nmatrix,//NpadBetweenMatricesA,
-    NlocalCache,
+    NlocalCacheAD,
     Nlocal);
   
 #ifdef DEBUG
@@ -507,7 +512,7 @@ void crossprodBatch(
   multiplyKernel.local_work_size(1, Nlocal[1]);
   
   // diagonals and diagTimesRowOfA
-  viennacl::ocl::enqueue(multiplyKernel( C, A, D, 0, Nmatrix));
+  viennacl::ocl::enqueue(multiplyKernel( C, A, D, localCache, 0, Nmatrix));
 #endif  
 }
 
