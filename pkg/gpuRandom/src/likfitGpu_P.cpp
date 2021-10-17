@@ -513,7 +513,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     0,//const int NstartD,  
     ssqBetahat.internal_size2(), //const int NpadBetweenMatricesC
     QinvSsqYx.internal_size2()*Ncovariates, //const int NpadBetweenMatricesA,  made changes here
-    NlocalCache[0]/2, // NlocalCacheA, 
+    (NlocalCache[0] - localSize[0]*localSize[1])/2, // NlocalCacheA, 
     localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
   );
   
@@ -868,7 +868,9 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                              theQueue);
       
       // ssqYX = YX^Y L^(-1)T D^(-1) L^(-1) YX  square matrix, (Ndatasets + Ncovariates)
-      viennacl::ocl::enqueue(crossprodKernel(ssqYX, LinvYX, cholDiagMat, 0, NthisIteration),
+      viennacl::ocl::enqueue(crossprodKernel(ssqYX, LinvYX, cholDiagMat, 
+                                             localMemory,
+                                             0, NthisIteration),
                              theQueue);
       if(verbose[0]>=2)
         Rcpp::Rcout << "crossprodKernelString\n" << crossprodKernelString << "\n";
