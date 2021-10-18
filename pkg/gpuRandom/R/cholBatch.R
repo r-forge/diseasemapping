@@ -30,7 +30,12 @@ cholBatch <- function(A,
     Dstartend=c(0, numbatchD, 0, ncol(D))
   }
   
-  Nlocal[2]=Nglobal[2]
+  
+   if(Nlocal[2]!=Nglobal[2]){
+     warning("local and global work sizes should be identical for dimension 2, ignoring local")
+     Nlocal[2]=Nglobal[2]
+   }
+  
  
   
   if(verbose){ message(paste('global work items', Nglobal,
