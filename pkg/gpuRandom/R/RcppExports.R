@@ -16,15 +16,6 @@ cholBatchBackend <- function(A, D, Astartend, Dstartend, numbatchD, Nglobal, Nlo
 #' Multiply crossproduct matrices
 #' 
 #' Computes C = t(A) D A
-#'
-#' @param C output matrices, stacked row-wise
-#' @param A rectangular matrices
-#' @param D rectangular matrix, columns are diagonals
-#' @param invertD set to 1 for C = t(A) D^(-1) A
-#' @param Nglobal vector of number of global work items
-#' @param Nlocal vector of number of local work items
-#' @param NlocalCache elements in local cache
-#' @export
 crossprodBatchBackend <- function(C, A, D, invertD, Cstartend, Astartend, Dstartend, Nglobal, Nlocal, NlocalCache) {
     .Call('_gpuRandom_crossprodBatchBackend', PACKAGE = 'gpuRandom', C, A, D, invertD, Cstartend, Astartend, Dstartend, Nglobal, Nlocal, NlocalCache)
 }
