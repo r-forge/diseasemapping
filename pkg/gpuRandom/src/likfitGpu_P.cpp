@@ -9,7 +9,7 @@ using namespace viennacl::linalg;
 #define NlocalParams 22
 
 template <typename T> 
-std::string extract_block_string(int Ncovariates,    // number of Y's
+std::string extract_block_string(int Ncovariates,    
                                  int Ndatasets,
                                  int NpadColXVYXVX, 
                                  int NpadColYX,
@@ -495,7 +495,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     ssqYX.internal_size2()*yx.size2(), //const int NpadBetweenMatricesC,
     LinvYX.internal_size2()*Nobs, //const int NpadBetweenMatricesA,
     NlocalCache[0], // NlocalCacheA, 
-               localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
+    localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
   );
   
   // ssqBetahat     p*Ndatasets

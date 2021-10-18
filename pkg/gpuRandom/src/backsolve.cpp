@@ -8,18 +8,18 @@
  
  
  
- - Dgroup[0] is matrix Dlocal[0] is row of A and C
- - Dgroup[1] is column of B, Dlocal[1] is Dinner
- - each Dgroup[1] does NcolsGroup columns of B
- - NcolsPerGroup = ceil( Ncol/Ngroup[1])
+ - Dglobal[0] is matrix, Dlocal[0] is row of A and C
+ - Dglobal[1] is column of B, Dlocal[1] is Dinner
+ - each Dglobal[1] does NcolsGroup columns of B
+ - NcolsPerGroup = ceil( Ncol/Nglobal[1])
  - local cache Nlocal[1] submatrices of size Nlocal[0] by NcolsPerGroup of C
  - don't cache A ?
  
- - loop Dmatrix = Dgroup[0]
+ - loop Dmatrix = Dglobal[0]
  - loop Drow = Dlocal[0]
  - loop Dinner = Dlocal[1]
  - cache A ?
- - loop DcolB = Dgroup[1]
+ - loop DcolB = Dglobal[1]
  - compute part of Linv b
  - end Dinner, DcolB, 
  - sum Linv b over Dlocal[1] in cache
@@ -275,7 +275,7 @@ result +=
   
   result +=
     "        // create C in cache and copy to C\n"
-    "        if((Dcol < Ncol) & DrowInBounds & localIsFirstCol){\n"
+    "        if( DrowInBounds & localIsFirstCol){\n"
     "        if((get_local_id(0) == Dinner)){\n"   
 
     "          cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC] = (B[BHereRow + Dcol] -\n"
@@ -294,16 +294,16 @@ result +=
 
   result +=  
     "        } //if(get_local_id(0) == Dinner)\n"
-    "        }// if(Dcol < Ncol) & DrowInBounds & localIsFirstCol\n"
+    "        }// if DrowInBounds & localIsFirstCol\n"
     "        barrier(CLK_LOCAL_MEM_FENCE);\n";  
   result +=
     "        // update A[Drow, ] * B[, Dcol] \n"
-    "        if((Dcol < Ncol) & DrowInBounds & localIsFirstCol){\n"    
+    "        if( DrowInBounds & localIsFirstCol){\n"    
     "        if((get_local_id(0) > Dinner)){\n"
     "          cacheSum[NpadBetweenMatricesSum*DcolCache + DlocalCache] +=\n"
     "            A[AHereRow + DrowZero + Dinner] * cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
     "        }//if(get_local_id(0) > Dinner)\n"
-    "        }// if(Dcol < Ncol) & DrowInBounds & localIsFirstCol\n"    
+    "        }// if DrowInBounds & localIsFirstCol\n"    
     "        barrier(CLK_LOCAL_MEM_FENCE);\n"; 
   
   result +=
@@ -363,18 +363,20 @@ result +=
   
   result += 
     "    // initialize cacheSum\n"
-    // "    for(Dcol = get_group_id(1), DcolCache=DlocalCache;\n"
-    // "        Dcol < Ncol;\n"
-    // "        Dcol += get_num_groups(1), DcolCache+=NpadBetweenMatricesSum){\n";
-    "    for(DcolBlock = 0, DcolCache=DlocalCache;\n"
-    "        DcolBlock < Ncol;\n"
-    "        DcolBlock += get_num_groups(1), DcolCache+=NpadBetweenMatricesSum){\n"
-    "        Dcol = DcolBlock + get_group_id(1);\n"   
-    "        if((Dcol < Ncol) & DrowInBounds)\n";     
+    "        if(DrowInBounds){\n"
+    "    for(Dcol = get_group_id(1), DcolCache=DlocalCache;\n"
+    "        Dcol < Ncol;\n"
+    "        Dcol += get_num_groups(1), DcolCache+=NpadBetweenMatricesSum){\n";
+    // "    for(DcolBlock = 0, DcolCache=DlocalCache;\n"
+    // "        DcolBlock < Ncol;\n"
+    // "        DcolBlock += get_num_groups(1), DcolCache+=NpadBetweenMatricesSum){\n"
+    // "        Dcol = DcolBlock + get_group_id(1);\n"   
+    // "        if((Dcol < Ncol) & DrowInBounds)\n";     
   result += 
     "        cacheSum[DcolCache] = 0.0;\n";
   result += 
     "    }//for Dcol\n"
+    "    }// if\n"
     "    barrier(CLK_LOCAL_MEM_FENCE);\n";
   
   result += 
@@ -396,14 +398,14 @@ result +=
   
   result += 
     "      // loop through columns of B and C\n"
-    // "      for(Dcol = get_group_id(1),DcolCache=0, Dsum=DlocalCache;\n"
-    // "        Dcol < Ncol;\n"
-    // "        Dcol += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n";
-    "    for(DcolBlock = 0, DcolCache=0, Dsum=DlocalCache;\n"
-    "        DcolBlock < Ncol;\n"
-    "        DcolBlock += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n"
-    "        Dcol = DcolBlock + get_group_id(1);\n"      
-    "        if(Dcol < Ncol)\n";
+    "      for(Dcol = get_group_id(1),DcolCache=0, Dsum=DlocalCache;\n"
+    "        Dcol < Ncol;\n"
+    "        Dcol += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n";
+    // "    for(DcolBlock = 0, DcolCache=0, Dsum=DlocalCache;\n"
+    // "        DcolBlock < Ncol;\n"
+    // "        DcolBlock += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n"
+    // "        Dcol = DcolBlock + get_group_id(1);\n"      
+    // "        if(Dcol < Ncol)\n";
   
   result +=     
     "        cacheSum[Dsum] += Acache * Ccache[DinnerC + DcolCache];\n";
@@ -432,14 +434,14 @@ result +=
   //"      Acache = A[AHere + Drow*NpadA + Dinner];\n";  
   result += 
     "      // loop through columns of B and C\n"
-    // "      for(Dcol = get_group_id(1),DcolCache=0, Dsum=DlocalCache;\n"
-    // "        Dcol < Ncol;\n"
-    // "        Dcol += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n";
-    "    for(DcolBlock = 0, DcolCache=0, Dsum=DlocalCache;\n"
-    "        DcolBlock < Ncol;\n"
-    "        DcolBlock += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n"
-    "        Dcol = DcolBlock + get_group_id(1);\n"      
-    "        if(Dcol < Ncol)\n";
+    "      for(Dcol = get_group_id(1),DcolCache=0, Dsum=DlocalCache;\n"
+    "        Dcol < Ncol;\n"
+    "        Dcol += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n";
+    // "    for(DcolBlock = 0, DcolCache=0, Dsum=DlocalCache;\n"
+    // "        DcolBlock < Ncol;\n"
+    // "        DcolBlock += get_num_groups(1), DcolCache++, Dsum+=NpadBetweenMatricesSum){\n"
+    // "        Dcol = DcolBlock + get_group_id(1);\n"      
+    // "        if(Dcol < Ncol)\n";
   result += 
     "        cacheSum[Dsum] += Acache * C[CHere + Dcol + NpadC * Dinner];\n";
   //    "        cacheSum[DlocalCache + DcolCache * NpadBetweenMatricesSum] +=\n"
@@ -455,16 +457,16 @@ result +=
   
   result += 
     "    // loop columns again\n"
-    // "    for(Dcol = get_group_id(1),DcolCache=0;\n"
-    // "      Dcol < Ncol;\n"
-    // "      Dcol += get_num_groups(1), DcolCache++){\n";
-    "    for(DcolBlock = 0, DcolCache=0;\n"
-    "        DcolBlock < Ncol;\n"
-    "        DcolBlock += get_num_groups(1), DcolCache++){\n"
-    "        Dcol = DcolBlock + get_group_id(1);\n";      
+    "    for(Dcol = get_group_id(1),DcolCache=0;\n"
+    "      Dcol < Ncol;\n"
+    "      Dcol += get_num_groups(1), DcolCache++){\n";
+    // "    for(DcolBlock = 0, DcolCache=0;\n"
+    // "        DcolBlock < Ncol;\n"
+    // "        DcolBlock += get_num_groups(1), DcolCache++){\n"
+    // "        Dcol = DcolBlock + get_group_id(1);\n";      
   
   result += "\n"
-  "      if((Dcol < Ncol) & localIsFirstCol & DrowInBounds){\n";
+  "      if(localIsFirstCol & DrowInBounds){\n";
   result += 
     "        for(Dinner = 1, DinnerC = DlocalCache+1;\n"
     "            Dinner < get_local_size(1);\n"
@@ -475,7 +477,7 @@ result +=
   
   result += 
     "        }//Dinner\n"
-    "        }// if(Dcol < Ncol) & DrowInBounds & localIsFirstCol\n"    
+    "        }// if DrowInBounds & localIsFirstCol\n"    
     "        barrier(CLK_LOCAL_MEM_FENCE);\n";
   
   result +=
@@ -486,7 +488,7 @@ result +=
   
   result +=
     "        // create C in cache and copy to C\n"
-    "      if((Dcol < Ncol) & localIsFirstCol & DrowInBounds){\n"
+    "      if(localIsFirstCol & DrowInBounds){\n"
     "          if(get_local_id(0) == Dinner){\n"  
     "          cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC] = (B[BHereRow + Dcol] -\n"
     "           cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC])";
@@ -501,16 +503,16 @@ result +=
   
   result +=
     "        } //if(get_local_id(0) == Dinner)\n"
-    "        }// if(Dcol < Ncol) & DrowInBounds & localIsFirstCol\n"       
+    "        }// if DrowInBounds & localIsFirstCol\n"       
     "        barrier(CLK_LOCAL_MEM_FENCE);\n"; 
   result +=
     "        // update A[Drow, ] * B[, Dcol] \n"
-    "      if((Dcol < Ncol) & localIsFirstCol & DrowInBounds){\n"
+    "      if(localIsFirstCol & DrowInBounds){\n"
     "        if(get_local_id(0) > Dinner){\n"
     "          cacheSum[NpadBetweenMatricesSum*DcolCache + DlocalCache] +=\n"
     "            A[AHereRow + DrowZero + Dinner] * cacheSum[NpadBetweenMatricesSum*DcolCache + DinnerC];\n"
     "        }//if(get_local_id(0) > Dinner)\n"
-    "        }//if(Dcol < Ncol) & DrowInBounds & localIsFirstCol\n"  
+    "        }//if DrowInBounds & localIsFirstCol\n"  
     "        barrier(CLK_LOCAL_MEM_FENCE);\n"; 
   
   
