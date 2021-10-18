@@ -44,9 +44,11 @@ type = "double"
 
 
 
+```
 
 
 
+```{r likfitGpu_2, eval=FALSE}
 
 result<-gpuRandom::likfitGpu_2(spatialmodel,     #data,
             type = "double",
@@ -129,7 +131,7 @@ mydat$Yexp = exp(mydat$Y)
 
 
 
-```{r patrickTest, eval=F}
+```{r patrickTest, eval=TRUE}
 library(gpuR)
 
 params = rbind(c(shape=1.25, range=0.2641423, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
@@ -180,36 +182,50 @@ jacobian = vclVector(0, Ndata, type=type)
 ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
 ssqX <- vclMatrix(0, Nparam, Ndata, type=type)
 ssqBeta = deepcopy(ssqX)
-ssqBetaHat = deepcopy(ssqXs)
+ssqBetaHat = deepcopy(ssqX)
 
 # objects for debugging
 ssqYX = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
+ssqYXcopy = deepcopy(ssqYX)
 LinvYX = vclMatrix(0, nrow(yx) * NparamPerIter, ncol(yx), type=type)
 varMat = vclMatrix(0, nrow(yx)*NparamPerIter, nrow(coords), type=type)
 
+  QinvSsqYx = vclMatrix(0, NparamPerIter*Ncov, Ndata, type = type)
+  cholXVXdiag = vclMatrix(0, NparamPerIter, Ncov, type=type)
+
 cholDiagMat = vclMatrix(0, NparamPerIter, nrow(coords), type=type)
 b_beta = vclMatrix(0, NparamPerIter*nrow(yx), Ndata, type=type)
+
+  XVYXVX = vclMatrix(0, Nparam * Ncov, ncol(yx), type=type)
+  aTDinvb_beta = vclMatrix(0, Nparam, Ndata, type=type)
 
 gpuRandom:::likfitGpu_BackendP(
   yx,
   coords,
   paramsBatch,
   boxcoxGpu,
-  betas,
+  betas,#5
   ssqY,
-  ssqX,
-  detVar,
+  aTDinvb_beta,
+  XVYXVX,
+  ssqBeta,
+  ssqBetaHat, # 10
+  detVar, # 11
   detReml,
-  jacobian,
+  jacobian,#13
   NparamPerIter,
-  workgroupSize,
+  workgroupSize, # 15
   localSize,
-  NlocalCache,
-  verbose = 20,
-  ssqYX, LinvYX,
-  cholDiagMat,
-  b_beta  #new  26
-
+  NlocalCache = 1000,
+  verbose = 0, 
+  ssqYX, 
+  ssqYXcopy, # 20 
+  LinvYX,
+  QinvSsqYx, 
+  cholXVXdiag, 
+  varMat,
+  cholDiagMat, #25
+  b_beta  #  26
 )
 
 
@@ -226,7 +242,7 @@ head(as.matrix(yx))
 
 
 
-```{r test10.5}
+```{r test10.5, eval=FALSE}
 library(gpuRandom)
 library(gpuR)
 library('geostatsp')

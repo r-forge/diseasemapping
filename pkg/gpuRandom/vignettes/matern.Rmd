@@ -216,8 +216,7 @@ create a matrix of independent normals
 
 
 ```{r randomNormalsSim}
-streamsGpu <- gpuRandom::CreateStreamsGpu(Nstreams=128*64, keepInitial=TRUE)
-
+streamsGpu <- gpuRandom::createStreamsGpu(128*64)
 zMatGpu = gpuRandom::rnorm(c(ncol(outputBatchF), Nsim), 
                            streams=streamsGpu, Nglobal=c(128,64),
                            type = theType)
@@ -256,7 +255,6 @@ resCpu = chol4gpu %*% diag( sqrt(diagGpu)) %*% zCpu
 
 
 quantile(resGpu - resCpu)
-
 ```
 
 ```{r checkMultiplyLower, eval=FALSE}

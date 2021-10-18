@@ -888,26 +888,28 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       viennacl::ocl::enqueue(extractBlockKernel(XVYXVX, ssqYX, DiterIndex, NthisIteration),
                              theQueue);  
       
-#ifdef UNDEF      
       
       
       // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part
-      viennacl::ocl::enqueue(cholXvxKernel(ssqYX, cholXVXdiag, localMemory, NthisIteration, detReml, DiterIndex),
+      viennacl::ocl::enqueue(cholXvxKernel(ssqYX, cholXVXdiag, localMemory, 
+                                           NthisIteration, detReml, DiterIndex),
                              theQueue);
       
       
       // backsolve QinvSsqYx = Q^(-1) ssqYX[(Ndatasets+1):nrow(ssqYX),1:Ndatasets]  , Ncovariates by Ndatasets
       viennacl::ocl::enqueue(
-        backsolveSsqYxKernel(QinvSsqYx, ssqYX, ssqYX, NthisIteration),
+        backsolveSsqYxKernel(QinvSsqYx, ssqYX, ssqYX, localMemory, NthisIteration),
         theQueue);
       
       
-      
+
       // crossprod QinvSsqYx^T P^(-1) QinvSsqYx,   NthisIteration by Ndatasets    ssqBetahat
       viennacl::ocl::enqueue(
-        crossprodSsqYxKernel(ssqBetahat, QinvSsqYx, cholXVXdiag, DiterIndex, NthisIteration),
+        crossprodSsqYxKernel(ssqBetahat, QinvSsqYx, cholXVXdiag, 
+                             localMemory,
+                             DiterIndex, NthisIteration),
         theQueue); 
-#endif      
+
       if(verbose[0]>1) {
         Rcpp::Rcout << "\n" << "Diter " << Diter <<" DiterIndex " << DiterIndex << " endThisIteration " << 
           endThisIteration << " Nthisiteration " << NthisIteration  << "\n";
@@ -1083,12 +1085,12 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       Rcpp::IntegerVector verbose,//18    verbose[2]=betasgiven, true or false
       Rcpp::S4 ssqYX, //19         col number must be exactly Ncovariates + Ndatasets  
       Rcpp::S4 ssqYXcopy, //20   not really used? cannot exist an empty line here 
-      Rcpp::S4 LinvYX, //20
-      Rcpp::S4 QinvSsqYx, //21
-      Rcpp::S4 cholXVXdiag,//22
-      Rcpp::S4 varMat, //23      Vbatch
-      Rcpp::S4 cholDiagMat,
-      Rcpp::S4 b_beta) { //25
+      Rcpp::S4 LinvYX, //21
+      Rcpp::S4 QinvSsqYx, //22
+      Rcpp::S4 cholXVXdiag,//23
+      Rcpp::S4 varMat, //24      Vbatch
+      Rcpp::S4 cholDiagMat, //25
+      Rcpp::S4 b_beta) { //26
     //    Rcpp::S4 aTDinvb_beta,
     //    Rcpp::S4 aTDinvb_beta_diag
     
