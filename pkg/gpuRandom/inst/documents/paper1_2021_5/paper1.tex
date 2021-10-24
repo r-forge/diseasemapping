@@ -82,7 +82,7 @@
 \Plainauthor{Ruoyong Xu, Patrick Brown}
 
 
-\title{Random number generation and applications on GPU’s in R?}
+\title{Random number generation and applications on GPU’s in R(?)}
 \Plaintitle{}
 \Shorttitle{}
 
@@ -133,13 +133,18 @@ Parallel processing by graphics processing unit (GPU) can be used to speed up co
 % no random numbers yet.  complicated to do on gpu, need multiple seeds becuase of parallel generation
 % reproducability: need to save current state and restore
 
-In recent years, parallel computing with R \citep{r2021} has become a very important topic and attracted lots of interest from researchers \citep[see][for a review]{eddelbuettel2021parallel}. Although \proglang{R} is one of the most popular statistical software with many advantages, it has drawbacks in memory usage and computation mode aspects \citep{zhao_2016}. To be more specific, (1) \proglang{R} requires all data to be loaded into the main memory (RAM) and thus can handle a very limited size of data; (2) \proglang{R} is a single-threaded program, it can not effectively use all the computing cores of multi-core processors. Parallel computing is the solution to these drawbacks of \proglang{R}, for an overview of current parallel computing approaches with \proglang{R}, see CRAN Task View by \citet{cran2021} at \url{https://cran.r-project.org/web/views/HighPerformanceComputing.html}. One major way of parallel computing with \proglang{R} is using Graphics Processing Units (GPUs). GPUs can perform thousands of tests simultaneously, which makes them powerful at doing massive parallel computing and they are relatively cheap compared to multicore CPU's. Although there has been a few \proglang{R} packages developed that provide some GPU capability in the past years, they come with some restrictions. Packages such as \pkg{gputools}, \pkg{gpumatrix}, \pkg{cudaBayesreg}, \pkg{rpud} (available on github), are now no longer maintained, the popular \pkg{tensorflow} \citep{tensorflow1} package uses GPU via \proglang{Python}, which makes it hard to be incorporated in a new \proglang{R} package that uses GPU. All of these mentioned packages are restricted to \proglang{R} users with NVIDIA GPUs. \pkg{gpuR} \citep{gpur1} is the only \proglang{R} package with a convenient interface between \proglang{R} and GPUs and it is created for any \proglang{R} user with a GPU device. By utilizing the \pkg{ViennaCL} \citep*{rupp2016viennacl} library, it provides a bridge between \proglang{R} and non-proprietary GPUs through an \proglang{OpenCL} (Open Computing Language) backend, which when combined with \pkg{Rcpp} \citep{rcpp1} gives a building block for other \proglang{R} packages. 
+In recent years, parallel computing with \proglang{R} \citep{r2021} has become a very important topic and attracted lots of interest from researchers \citep[see][for a review]{eddelbuettel2021parallel}. Although \proglang{R} is one of the most popular statistical software with many advantages, it has drawbacks in memory usage and computation mode aspects \citep{zhao_2016}. To be more specific, (1) \proglang{R} requires all data to be loaded into the main memory (RAM) and thus can handle a very limited size of data; (2) \proglang{R} is a single-threaded program, it can not effectively use all the computing cores of multi-core processors. Parallel computing is the solution to these drawbacks of \proglang{R}, for an overview of current parallel computing approaches with \proglang{R}, see CRAN Task View by \citet{cran2021} at \url{https://cran.r-project.org/web/views/HighPerformanceComputing.html}. 
 
-Random number generator (RNG) is critical in simulation-based statistical inference, there is not yet an \proglang{R} package that is able to generate random numbers on GPU. This is complicate to do on GPU because multiple streams will be needed for parallel generation of random numbers, and the stream states need to be able to be restored for reproducibility of simulation results. We introduce the \pkg{gpuRandom} \proglang{R} package that leverages the \pkg{gpuR} package, and can generate random numbers on GPU by using the \pkg{clRNG} \citep{l2015clrng} library, and can thus accelerate several types of statistical simulation and modelling.
+An important way of parallel computing with \proglang{R} is using Graphics Processing Units (GPUs). GPUs can perform thousands of tests simultaneously, which makes them powerful at doing massive parallel computing and they are relatively cheap compared to multicore CPU's. Although there has been a few \proglang{R} packages developed that provide some GPU capability in the past years, they come with some restrictions. Packages such as \pkg{gputools}, \pkg{gpumatrix}, \pkg{cudaBayesreg}, \pkg{rpud} (available on github), are now no longer maintained, the popular \pkg{tensorflow} \citep{tensorflow1} package uses GPU via \proglang{Python}, which makes it hard to be incorporated in a new \proglang{R} package that uses GPU. All of these mentioned packages are restricted to \proglang{R} users with NVIDIA GPUs. \pkg{gpuR} \citep{gpur1} is the only \proglang{R} package with a convenient interface between \proglang{R} and GPUs and it is created for any \proglang{R} user with a GPU device. By utilizing the \pkg{ViennaCL} \citep*{rupp2016viennacl} library, it provides a bridge between \proglang{R} and non-proprietary GPUs through the \proglang{OpenCL} (Open Computing Language) backend, which when combined with \pkg{Rcpp} \citep{rcpp1} gives a building block for other \proglang{R} packages. 
 
-The remaining sections are organized as follows. 
-In Section 2, we introduce streams and the use of streams in work-items on GPU device, and describe and check the functions for generating uniform and Normal random numbers.
-In Section 3, we apply GPU-generated uniform random numbers in Monte Carlo simulation for Fisher’s exact test, we parallelise this Monte Carlo simulation task and implement it on GPU, then we provide two real data examples to demonstrate the function usage and test its R performance.
+Random number generation is critical in simulation-based statistical inference, machine learning and many other scientific fields. While most random number generators are sequential, the \proglang{R} packages \pkg{parallel} (not on cran, how to cite?) and \pkg{future} \citep*{future1.19.1} are able to generate random numbers in parallel on multicore CPUs. More specifically, \pkg{parallel} writes an interface for the \pkg{RngStreams}, a \proglang{\texttt{C++}} library by \cite{l2002object} which is based on a combined multiple-recursive generator (MRG), \pkg{future} also uses the combined MRG algorithm for generating random numbers, however, it is not very clear how the streams are implemented (?).
+
+
+There is not yet an \proglang{R} package that is able to generate random numbers on GPU, this is complicated to do because multiple streams will be needed for parallel generation of random numbers, and the stream states need to be able to be restored for reproducibility of results, which is essential in many simulation applications. We introduce the \proglang{R} package \pkg{gpuRandom} that leverages the \pkg{gpuR} package, and can generate random numbers on GPU by using the \pkg{clRNG} \citep{l2015clrng} library, and can thus accelerate several types of statistical simulation and modelling.
+
+The remaining sections are organized as follows:
+In Section 2, we introduce streams and the use of streams in work-items on GPU device, and describe and check the functions for generating uniform and normal random numbers.
+In Section 3, we apply GPU-generated uniform random numbers in Monte Carlo simulation for Fisher’s exact test, we parallelise this Monte Carlo simulation and implement it on GPU, then we provide two real data examples to demonstrate the function usage and test its R performance.
 Section 4 simulates simultaneously multiple Gaussian random surfaces by applying GPU-generated Normal random numbers and GPU-computed batches of Mat\'ern covariance matrices, then we plot the generated random surfaces in the end. 
 Finally, the paper concludes with a short summary and a discussion in Section 5.
 
@@ -149,19 +154,27 @@ Finally, the paper concludes with a short summary and a discussion in Section 5.
 
 
 \section{Generating random numbers} \label{}
-Random numbers are the basis in statistical simulations methods, and are critical in many other fields. \cite{l2012random} summarized the usual two steps to generate a random variable %from a specified distribution 
-in computational statistics: (1) generating independent and identically distributed (i.i.d.) uniform random variables on the interval $(0, 1)$, (2) applying transformations to these i.i.d. $U(0, 1)$ random variables to get samples from the desired distribution. \cite{l2012random} and \cite{robert2004random} present several general transformation methods for generating non-uniform random variables, for example, the most frequently used inverse transform method for generating a random variable $X$ from some arbitrary distribution function $F$; The Box-Muller algorithm \citep{box1958note} for Gaussian random variable generation, and so on, which are all built on uniform random variables. Therefore, uniform random number generators (RNGs) are essential in simulating random numbers from all types of probability distributions. In the rest paper, ``RNG'' refers to uniform pseudo random number generator.
+Uniform random number generators (RNGs) are essential in simulating random numbers from all types of probability distributions. \cite{l2012random} summarized the usual two steps to generate a random variable in computational statistics: (1) generating independent and identically distributed (i.i.d.) uniform random variables on the interval $(0, 1)$, (2) applying transformations to these i.i.d. $U(0, 1)$ random variables to get samples from the desired distribution. \cite{l2012random} and \cite{robert2004random} present many general transformation methods for generating non-uniform random variables, for example, the most frequently used inverse transform method, the Box-Muller algorithm \citep{box1958note} for Gaussian random variable generation, and so on, which are all built on uniform random variables. %In the rest paper, ``RNG'' refers to uniform pseudo random number generator.
 
 
-\proglang{clRNG} is an \proglang{OpenCL} library for uniform random number generation, it provides four different RNGs: the MRG31k3p, MRG32k3a, LFSR113, and Philox-4×32-10 generators, these RNGs are actually stream objects of different forms. \pkg{gpuRandom} package uses the MRG31k3p RNG from the \proglang{clRNG} library, making it able to generate random numbers on GPUs. In what follows, we will illustrate how to create stream objects and how to use streams to generate (standard) Uniform and (standard) Gaussian random numbers. 
+\pkg{clRNG} is an \proglang{OpenCL} library for uniform random number generation, it provides four different RNGs: the MRG31k3p, MRG32k3a, LFSR113, and Philox-4×32-10 generators, these RNGs are actually stream objects of different forms. \pkg{gpuRandom} package uses the MRG31k3p RNG from the \proglang{clRNG}, making it able to generate random numbers on GPUs. In what follows, we will illustrate how to create streams and how to use streams to generate (standard) uniform and (standard) Gaussian random numbers by \pkg{gpuRandom}. 
 
 
 \subsection{Creating streams}\label{create_streams}
-In \proglang{clRNG} library, a stream object is a structure that contains three states: the current state of the stream, the initial state (or seed) of the stream, and the initial state of the current substream. The function \fct{clrngMrg31k3pCreateStreams} from \proglang{clRNG} creates streams on the host computer using the MRG31k3p RNG. If we want to use the streams in work-items on a GPU device, the streams have to be copied from the host to the global memory of the GPU device, and then each work-item picks streams from the global memory and copies their current states only to its private memory. \pkg{gpuRandom} is able to create streams both on the host computer and on the GPU device. \fct{createStreamsCpu} is an \proglang{R} interface function of \fct{clrngMrg31k3pCreateStreams} that creates streams on CPU as \proglang{R} matrices (see the \proglang{R} output below), in which the substreams are not created because they are not actually used in random number generation. \fct{createStreamsGpu} adapted the \fct{clrngMrg31k3pCreateStreams} and creates streams directly on GPU device, so that it can avoid unnecessary data transfer between host and device. From our experience, transferring a large-size matrix of streams from host to device by converting it to a `\code{vclMatrix}' object can take very long time, hence, \fct{createStreamsGpu} is more efficient and more frequently used. In the following, we demonstrate the usage of these two functions by generating 4 streams on the host and on the device respectively.
+The popular way of obtaining multiple streams is to take an RNG with a long period and cut the RNG's sequence into very long pieces, these pieces are adjacent and of equal length $Z$, so each piece can be used as a separate stream. Creating a new stream amounts to computing its starting point (seed). Each of these streams can also be partitioned into substreams with equally-spaced starting points \citep{l2002object}, which are occasionally useful.
+
+In general, a stream object contains three states: the initial state of the stream (or seed), the initial state of the current substream (by default it is equal to the seed), and the current state of the stream. Whenever the user creates a new stream, the software automatically jumps ahead by Z steps to find its initial state, and the three states in the stream object are set to it. 
+
+In \proglang{clRNG} library, the initial state of the first stream has a default value (12345). For the MRG31k3p RNG, the entire period length of approximately $2^{185}$ is divided into approximately $2^{51}$ non-overlapping streams of length $Z = 2^{134}$. Each stream is further partitioned into substreams of length $W = 2^{72}$. The state (and seed) of each stream is a vector of six 31-bit integers. This size of state is appropriate for having streams running in work items on GPU cards, for example, while providing a sufficient period length for most applications.
+
+The function \fct{clrngMrg31k3pCreateStreams} from \proglang{clRNG} creates streams on the host using the MRG31k3p RNG. If we want to use the streams in work-items on a GPU device, the streams have to be copied from the host to the global memory of the GPU device, and then each work-item copies the current states only of the streams to its private memory. \pkg{gpuRandom} is able to create streams both on the host and on the GPU device. \fct{createStreamsCpu} is an interface function of \fct{clrngMrg31k3pCreateStreams} that creates streams on host as \proglang{R} matrices (see the \proglang{R} output below), creating streams on host makes it easy for us to view and check the streams behavior.  \fct{createStreamsGpu} is adapted from the \fct{clrngMrg31k3pCreateStreams} and creates streams directly on a GPU device. Substreams are not created because currently we use one stream per work-item. %(From our experience, transferring a large-size matrix of streams from host to device by converting it to a `\code{vclMatrix}' object can take very long time, hence, \fct{createStreamsGpu} is more efficient and more frequently used. delete?) 
+In the following, we demonstrate the usage of these two functions by generating 4 streams on the host and on the device respectively. 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
-# creating streams on cpu
+# creating streams on CPU
+library("gpuR")
+library("gpuRandom")
 myStreamsCpu <- createStreamsCpu(n=4, seed=12345)
 t(myStreamsCpu)
 ##               [,1]       [,2]       [,3]       [,4]
@@ -183,13 +196,13 @@ t(myStreamsCpu)
 \fct{createStreamsCpu} has two arguments:
 \begin{itemize}
   \item \code{n}: number of streams to create.
-  \item \code{seed}: random seed of streams of length 6, recycled if shorter. Default is set to a vector of six ``12345''.
+  \item \code{seed}: vector of length 6, recycled if shorter. Default is set to a vector of six ``12345''.
 \end{itemize}
-For the MRG31k3p RNG, each state of the stream is comprised of six 31-bit integers, the state of the first stream (seed of the \proglang{clRNG} library) is by default ``12345''. We can have streams on GPU by either converting the \code{myStreamsCpu} to a `\code{vclMatrix}' or producing streams directly on GPU using \fct{createStreamsGpu}. Setting a seed same as the MRG31k3p default seed in \fct{createStreamsGpu}, we can produce on device exactly the same streams as those created on host as follows,
+We can have streams on GPU by either converting the \code{myStreamsCpu} to a `\code{vclMatrix}' or producing streams directly on GPU using \fct{createStreamsGpu}. Setting a seed same as the MRG31k3p default seed in \fct{createStreamsGpu}, we can produce on device exactly the same streams as those created on host as follows,
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
-# creating streams on gpu
+# creating streams on GPU
 myStreamsGpu1 = vclMatrix(myStreamsCpu)
 myStreamsGpu2 = createStreamsGpu(n=4, seed=12345)
 range(as.matrix(myStreamsGpu1 - myStreamsGpu2))
@@ -201,7 +214,7 @@ range(as.matrix(myStreamsGpu1 - myStreamsGpu2))
 
 
 \subsection{Using streams to generate  i.i.d. $U (0, 1)$ random numbers on GPU}
-The streams created on GPU are then used in work-items that executes in parallel on GPU device. In \pkg{gpuRandom} each work-item takes one distinct stream to generate random numbers, it is important to notice that the number of streams should always be equal to the number of total work-items in use. The main part of the kernel (\proglang{OpenCL} functions for execution on the device) for generating uniform random numbers is shown in Listing \ref{lst:uniformkernel}. Kernels are written in the \proglang{OpenCL C} language, in which \code{__kernel} declares a function as a kernel, pointer kernel arguments must be declared with an address space qualifier, for example \code{__global} and \code{__local}. Here the pointers to \code{streams} and to the matrix \code{out} on the global memory are passed to the kernel as arguments. \code{Nrow} and \code{Ncol} represent number of rows and columns of the matrix \code{out} respectively. \code{NpadCol} is the internal number of columns of \code{out}, \code{NpadStreams} is internal number of columns of the \code{streams} matrix (these variables are defined in macros not shown here). Each stream's current state is copied to the private memory of each work-item by the function \fct{streamsToPrivate}. \code{index} represents the position of the work-item when mapping it to a one-dimensional data structure. The function \fct{clrngMrg31k3pNextState} generates a uniform random integer named \code{temp} between 0 and 4294967295,  the value of \code{temp} is then scaled to be in the interval $(0,1)$ by multiplying it by a constant \code{mrg31k3p\_NORM\_cl}, which is defined to be $1/4294967295$ in macro not shown here. At the end of generating random numbers, streams are transferred back to global memory through the function \fct{streamsFromPrivate}.
+The streams created sequentially on a GPU are then used in work-items that executes in parallel on a GPU device. In \pkg{gpuRandom} each work-item takes one distinct stream to generate random numbers, so the number of streams should always be equal to the number of total work-items in use. The main part of the kernel (\proglang{OpenCL} functions for execution on the device) for generating uniform random numbers is shown in Listing \ref{lst:uniformkernel}. Kernels are written in the \proglang{OpenCL C} language, in which \code{__kernel} declares a function as a kernel, pointer kernel arguments must be declared with an address space qualifier, for example \code{__global} and \code{__local}. Here the pointers to \code{streams} and to the output matrix \code{out} on the global memory are passed to the kernel as arguments. \code{Nrow} and \code{Ncol} represent row and column number of the matrix \code{out} respectively. \code{NpadCol} is the internal number of columns of \code{out}, \code{NpadStreams} is the internal number of columns of the \code{streams} (these variables are defined in macros not shown here). Each stream's current state is copied to the private memory of each work-item by the function \fct{streamsToPrivate}. \code{index} represents the position of the work-item when mapping it to a one-dimensional data structure. The function \fct{clrngMrg31k3pNextState} generates an uniform random integer called \code{temp} between 0 and 4294967295,  the value of \code{temp} is then scaled to be in the interval $(0,1)$ by multiplying it by a constant \code{mrg31k3p\_NORM\_cl}, which is defined to be $1/4294967295$ in macro not shown here. At the end of generating random numbers, streams are transferred back to global memory through the function \fct{streamsFromPrivate}.
 \begin{framed}
 \begin{lstlisting}[caption={captiontext},language=C,basicstyle=\small,label={lst:uniformkernel}]
  __kernel void mrg31k3pMatrix(
@@ -236,27 +249,25 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 }
 \end{lstlisting}
 \end{framed}
-This kernel executes over a 2-dimensional index space. Figure \ref{fig:1} illustrates how this kernel executes in practice with a simple example. Suppose we have a $2 \times 4$ NDRange ((a) in Figure \ref{fig:1}) and want to create a $4 \times 6$ matrix ((b) in Figure \ref{fig:1}) of uniform random numbers. In each grid of (a) that represents a work-item, there are two rows of numbers, the number in the above row is the stream index (from 0 to 7), and a pair of numbers in the second row is the 2-dimensional global ID of the work-item. Each stream object is passed to each work-item. The number in a cell of the matrix corresponds to the stream index, it indicates which stream does the random number generation for this matrix cell. For example, stream 0 which is allocated in work-item $(0,0)$ generates a random number in matrix $(0,0)$ in the first iteration, then moves on to matrix $(0,2)$ and generates a random number there in the second iteration, in the third iteration it generates a random number in matrix $(0,4)$ and so on until it goes out of the matrix range in the next iteration.
+This kernel executes over a 2-dimensional NDRange. Figure \ref{fig:1} illustrates how this kernel executes in practice with a simple example. Suppose we have a $2 \times 4$ NDRange ((a) in Figure \ref{fig:1}) and want to create a $4 \times 6$ matrix ((b) in Figure \ref{fig:1}) of uniform random numbers. In each grid of (a) that represents a work-item, there are two rows of numbers, the number in the above row is the stream index (from 0 to 7), and a pair of numbers in the second row is the 2-dimensional global ID of the work-item. Each stream object is passed to each work-item. The number in a cell of the matrix corresponds to the stream index, it indicates which stream generates a random number for this matrix cell. For example, stream 0 which is allocated in work-item $(0,0)$ generates a random number in matrix $(0,0)$ in the first iteration, then moves on to matrix $(0,2)$ and generates a random number there in the second iteration, in the third iteration it generates a random number in matrix $(0,4)$ and so on until it goes out of the matrix range in the next iteration.
 \begin{figure}[H]%
     \centering
-    \subfloat[]{{\includegraphics[width=8cm]{/home/ruoyong/paper1_2021_5/f1} }}%
+    \subfloat[]{{\includegraphics[width=8cm]{/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/f1} }}%
     \qquad
-    \subfloat[]{{\includegraphics[width=8cm]{/home/ruoyong/paper1_2021_5/f2} }}%
+    \subfloat[]{{\includegraphics[width=8cm]{/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/f2} }}%
     \caption{name?\label{fig:1}}%
 \end{figure}
 
-Now we use the streams created in section \ref{create_streams} to generate two vectors of 6 i.i.d. $U (0,1)$ random numbers using the function \fct{runif}. If \code{streams} and \code{Nglobal} are both missing, then by default \code{Nglobal} is set as (64,8), and a `vclMatrix' of \code{prod(Nglobal)} streams is supplied. The output is an S4 object (a `\code{vclVector}' or a `\code{vclMatrix}'), to view the generated random numbers, we need to convert it to an R vector or matrix, in this way, the random numbers are moved from the global memory of device to the host. By using \code{myStreamsGpu2} which is the same as \code{myStreamsGpu1},  \fct{runif} returns the same sequence of random numbers. 
+Now we use the streams created in section \ref{create_streams} to generate two vectors of double-precison i.i.d. $U(0,1)$ random numbers with the function \fct{runif}. To view the generated random numbers, we need to convert them to R vectors or matrices, by doing this, the random numbers are moved from the global memory of the GPU device to the host.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
-as.vector(gpuRandom::runif(n = 10, streams = myStreamsGpu1, Nglobal = c(1,
+as.vector(gpuRandom::runif(n = 6, streams = myStreamsGpu1, Nglobal = c(1,
     nrow(myStreamsGpu1)), type = "double"))
-##  [1] 0.7353245 0.5180770 0.6142074 0.2319392 0.1100781 0.3619766
-##  [7] 0.6487742 0.1112075 0.3661944 0.5018562
+## [1] 0.7353245 0.5180770 0.6142074 0.2319392 0.1100781 0.3619766
 as.vector(gpuRandom::runif(n = 10, streams = myStreamsGpu2, Nglobal = c(1,
-    nrow(myStreamsGpu1)), type = "double"))
-##  [1] 0.7353245 0.5180770 0.6142074 0.2319392 0.1100781 0.3619766
-##  [7] 0.6487742 0.1112075 0.3661944 0.5018562
+    nrow(myStreamsGpu1)), type = "double"))[-(1:6)]
+## [1] 0.6487742 0.1112075 0.3661944 0.5018562
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -265,21 +276,21 @@ The arguments of the \fct{gpuRandom::runif} are described as follows:
   \item \code{n}: a vector of length 2 specifying the row and column number if to create a matrix, or a number specifying the length if to create a vector.
   \item \code{streams}: streams for random number generation.
   \item \code{Nglobal}: global index space. Default is set as $(64,8)$.
-  \item \code{type}: ``double'' or ``float'' format of generated random numbers.
+  \item \code{type}: ``double'' or ``float'' or ``integer'' format of generated random numbers.
 \end{itemize}
-Reusing \code{myStreamsGpu1} will produce a vector different from \code{sim_1}. Because each time a random number is generated, the current state of the stream is changed (advances by one position), below shows the \code{myStreamsGpu1} after it being used.
+\fct{runif} returns the same sequence of random numbers if it uses the same streams in the same current state (here \code{myStreamsGpu1} and \code{myStreamsGpu2}), not streams starting from the same states. Reusing \code{myStreamsGpu1} will produce a vector different from \code{sim_1}. Because each time a random number is generated, the current state of the stream advances by one position. Below shows the \code{myStreamsGpu1} after it being used.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
 t(matrix(as.matrix(myStreamsGpu1), nrow(myStreamsCpu), ncol(myStreamsCpu),
     dimnames = dimnames(myStreamsCpu)))
 ##                    [,1]       [,2]       [,3]       [,4]
-## current.g1.1 1918428443 1912157188  502033783  739421137
-## current.g1.2 1858462085  286315187 1322587635 1475938232
-## current.g1.3  878672095 2113333390 1964121530  730262207
-## current.g2.1 1132031887  834429287 1949818481 1630192198
-## current.g2.2  465230163   47498872 1607232546  324551134
-## current.g2.3  642281259 1335994581 1462898381  795289868
+## current.g1.1  878672095 2113333390  502033783  739421137
+## current.g1.2  240667857  559530223 1322587635 1475938232
+## current.g1.3  240667857 1309565828 1964121530  730262207
+## current.g2.1  642281259 1335994581 1949818481 1630192198
+## current.g2.2 1069151070   61444481 1607232546  324551134
+## current.g2.3  809054265  197003928 1462898381  795289868
 ## initial.g1.1      12345  336690377  502033783  739421137
 ## initial.g1.2      12345  597094797 1322587635 1475938232
 ## initial.g1.3      12345 1245771585 1964121530  730262207
@@ -289,7 +300,7 @@ t(matrix(as.matrix(myStreamsGpu1), nrow(myStreamsCpu), ncol(myStreamsCpu),
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
-Unlike the objects created by \proglang{R}, by default they remain in the memory after a restart. Streams created on GPU does not remain in the memory when a new \proglang{R} session begins. However, we can save the streams on the CPU in a file using the \fct{save} function, and later recall the streams with the \fct{load} function, in this way we can reproduce the same sequence of random numbers in simulations. Below is a trivial example, in which we demonstrate saving streams to a data file called \code{streams_from_GPU.rds} on CPU and then load it back and transfer it to GPU.
+Unlike the objects created by \proglang{R}, by default they remain in the memory after a restart. Streams created on GPU does not remain in the memory when a new \proglang{R} session begins. However, we can save the streams on the CPU in a file using the \fct{saveRDS} function, and later recall the streams with the \fct{readRDS} function, in this way we can reproduce the exact same sequence of random numbers in simulations. Below is a trivial example, in which we demonstrate saving streams to a data file called \code{streams_from_GPU.rds} on CPU and then load it back and transfer it to GPU.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
@@ -305,8 +316,8 @@ We evaluate the distribution of 50000 GPU-generated double-precision uniform ran
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
 streams <- createStreamsGpu(n = 512)
-random_u<-runif(n=50000, streams=streams, Nglobal=c(64,8), type="double")
-random_u<-as.vector(random_u)
+
+random_u<-as.vector(runif(n=50000, streams=streams, Nglobal=c(64,8), type="double"))
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -325,8 +336,9 @@ random_u<-as.vector(random_u)
 
 
 
-\subsection{Using streams to generate i.i.d. N (0, 1) random numbers on GPU}
-We apply the Box-Muller transformation to $U (0,1)$ random numbers to generate Gaussian random numbers. As shown in Algorithm \ref{algorithm1}, Box-Muller algorithm takes two independent, standard uniform random variables $U_1$ and $U_2$ and produces two independent, standard Gaussian random variables $X$ and $Y$, where $R$ and $\Theta$ are polar coordinate random variables. The derivation basically uses transformation from Cartesian coordinates to polar coordinates to represent two independent, Normally distributed random variables. The Box-Muller algorithm turns out to be the best choice for Gaussian transform on GPU compared to other transform methods \citep{howes2007efficient}, because this algorithm has no branching or looping, which are the things GPU is not good at, but GPU is good at the high computational load of sine and cosine functions in the algorithm. 
+\subsection{Using streams to generate i.i.d. N(0, 1) random numbers on GPU}
+We apply the Box-Muller transformation to $U(0,1)$ random numbers to generate standard Gaussian random numbers. As shown in Algorithm \ref{algorithm1}, Box-Muller algorithm takes two independent, standard uniform random variables $U_1$ and $U_2$ and produces two independent, standard Gaussian random variables $X$ and $Y$, where $R$ and $\Theta$ are polar coordinate random variables. %The derivation basically uses transformation from Cartesian coordinates to polar coordinates to represent two independent, Normally distributed random variables. 
+The Box-Muller algorithm turns out to be the best choice for Gaussian transform on GPU compared to other transform methods \citep{howes2007efficient}, because this algorithm has no branching or looping, which are the things GPU is not good at. %but GPU is good at the high computational load of sine and cosine functions in the algorithm. 
 
 \begin{algorithm*}[H] \label{algorithm1}
 \SetAlgoLined
@@ -341,7 +353,7 @@ We apply the Box-Muller transformation to $U (0,1)$ random numbers to generate G
 \end{algorithm*}
 
 
-Listing \ref{lst:normal} shows a fragment of the kernel that generates standard Gaussian random numbers. Aside from using local memory and the part that does the Box-Muller transformation, this kernel is the same with the kernel for generating uniform random numbers shown in Listing \ref{lst:uniformkernel}. If developers want to use other Gaussian transform methods, this kernel is easy to be modified and incorporated in other \proglang{R} packages. The kernel executes over a 2-dimensional index space of $1 \times 2$ work-groups. \code{part[0]} and \code{part[1]} correspond to $R$ and $\Theta$ in the formulas respectively. As the work-items in a work-group proceed at differing rates, \code{barrier(CLK_LOCAL_MEM_FENCE)} ensures correct ordering of memory operations to local memory, so that Gaussian random numbers $(X_1,Y_1), \dots, (X_n,Y_n)$ are generated in pairs correctly, errors such as $(X_n, Y_{(n-1)})$ or $(X_{(n-1)}, Y_{(n)})$ are avoided.
+Listing \ref{lst:normal} shows a fragment of the kernel that generates standard Gaussian random numbers. Aside from using local memory and the part that does the transformation, this kernel is the same with the kernel for generating uniform random numbers shown in Listing \ref{lst:uniformkernel}. If developers want to use other Gaussian transform methods, this kernel is easy to be adapted and incorporated in other \proglang{R} packages. The kernel executes over a 2-dimensional NDRange with $1 \times 2$ work-groups. \code{part[0]} and \code{part[1]} correspond to $R$ and $\Theta$ in the formulas respectively. As the work-items in a work-group proceed at differing rates, \code{barrier(CLK_LOCAL_MEM_FENCE)} ensures correct ordering of memory operations to local memory, so that Gaussian random numbers $(X_1,Y_1), \dots, (X_n,Y_n)$ are generated in pairs correctly, errors such as $(X_n, Y_{(n-1)})$ or $(X_{(n-1)}, Y_{(n)})$ are avoided.
 %
 \begin{framed}
 \begin{lstlisting}[language=C,basicstyle=\small,caption={name},label={lst:normal}]
@@ -397,19 +409,22 @@ for(Drow=2*get_global_id(0),
 streamsFromPrivate(streams,g1,g2,startvalue);
 \end{lstlisting}
 \end{framed}
-We illustrate in Figure \ref{fig3} how this kernel executes in practice with the previous toy example: to create a $4 \times 6$ matrix of Gaussian random numbers using a $2 \times 4$ NDRange. Each stream is copied to the private memory of each work-item. Work-items are organized to be 1 by 2 work-groups as the random numbers are generated in pairs using the Box-Muller method. The shading on the grids in the NDRange distinguishes work-groups. The numbers in the third row in each gird of NDRange represents the local index of each work-item. Each work-group generates a pair of Gaussian random numbers \code{(X,Y)} in each iteration, where work-item of `\code{get_local_id(1)}$=0$' generates the \code{X} of a pair, and work-item of `\code{get_local_id(1)}$=1$' generates the \code{Y} of a pair. Here with the loop iterating over columns, the cells of matrix are filled from left to right, that is, in the first iteration, the 8 work-items generate random numbers in the leftmost two columns (8 cells) of matrix simultaneously, the second iteration fills random numbers in the middle two columns of the matrix, and the third iteration fills the rest two columns of the matrix simultaneously. Therefore, each work-item generates one Gaussian random number in each iteration, the matrix filling process is the same as that shown in Figure \ref{fig:1}. 
+We illustrate in Figure \ref{fig3} how this kernel executes in practice with the previous toy example: to create a $4 \times 6$ matrix of Gaussian random numbers using a $2 \times 4$ NDRange. %Each stream is copied to the private memory of each work-item. 
+Work-items are organized to be in 1 by 2 work-groups as the random numbers are generated in pairs using the Box-Muller method. The shading on the grids in the NDRange distinguishes work-groups. The numbers in the third row in each gird of NDRange represents the local index of each work-item. Each work-group generates a pair of Gaussian random numbers \code{(X,Y)} in each iteration, where work-item of `\code{get_local_id(1)}$=0$' generates the \code{X} of a pair, and work-item of `\code{get_local_id(1)}$=1$' generates the \code{Y} of a pair. Here with the loop iterating over columns, the cells of matrix are filled from left to right, that is, in the first iteration, the 8 work-items generate random numbers in the leftmost two columns (8 cells) of the matrix simultaneously, the second iteration fills random numbers in the middle two columns of the matrix, and the third iteration fills the rest two columns of the matrix simultaneously. %Therefore, each work-item generates one Gaussian random number in each iteration, 
+The matrix filling process is the same as that shown in Figure \ref{fig:1}. 
 
 \begin{figure}[H]%
     \centering
-    \subfloat[]{{\includegraphics[width=8cm]{/home/ruoyong/paper1_2021_5/f3} }}%
+    \subfloat[]{{\includegraphics[width=8cm]{/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/f3} }}%
     \qquad
-    \subfloat[]{{\includegraphics[width=8cm]{/home/ruoyong/paper1_2021_5/f4} }}%
+    \subfloat[]{{\includegraphics[width=8cm]{/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/f4} }}%
     \caption{name???}%
     \label{fig3}
 \end{figure}
  
 
-In the following code, We create a $1024 \times 512$ matrix named \code{normal_matrix} of single-precision floating-point Gaussian random numbers, and assess Normality by making a histogram and a Q-Q plot of the generated random numbers in Figure \ref{fig2}. The points in the Q-Q plot shown in the right panel of Figure \ref{fig2} fall along the diagonal line, we have good evidence the generated data are from Gaussian distribution. We find doing a Q-Q plot can occupy a large amount of time in the process of producing an R markdown file, so as an incidental work, we adapted the \proglang{R} function \fct{stat::qnorm} to make the function \fct{gpuRandom::qqnorm} that does the quantile computation for the normal distribution part on GPU, which can speed up the Q-Q plot greatly.
+In the following code, We create a $1024 \times 512$ matrix %named \code{normal_matrix} 
+of single-precision floating-point Gaussian random numbers, and assess Normality by making a histogram and a Q-Q plot of the generated random numbers in Figure \ref{fig2}. The points in the Q-Q plot shown in the right panel of Figure \ref{fig2} fall along the diagonal line, we have good evidence the generated data are from Gaussian distribution. We find doing a Q-Q plot can occupy a large amount of time in the process of producing an \proglang{R} markdown file, so as an incidental work, we adapted the \fct{stat::qnorm} to make the function \fct{gpuRandom::qqnorm} that does the quantile computation for the normal distribution part on a GPU device, which can speed up the Q-Q plot.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
@@ -435,17 +450,17 @@ gpuRandom::qqnorm(avector, Nglobal=c(128,64), main="Q-Q Plot")
 \caption{Histogram and Q-Q plot of the GPU-generated random numbers.\label{fig2}}
 \end{figure}
 
-We generate a large-size matrix of 100 million double-precision Gaussian random numbers, and compare the runtime between using \fct{stats::rnorm} and \fct{gpuRandom::rnorm}. Both process are not time-consuming, however, using \fct{gpuRandom::rnorm} with $512 \times 128$ work-items is around 120 times (the number may fluctuate a bit from executions) faster than using the \fct{stats::rnorm}. The difference in elapsed time becomes larger when matrix size goes larger.
+We generate a large-size matrix of 100 million double-precision Gaussian random numbers, and compare the run-time between using \fct{stats::rnorm} and \fct{gpuRandom::rnorm}. Both process are not time-consuming, however, using \fct{gpuRandom::rnorm} with $512 \times 128$ work-items is around 120 times (the number may fluctuate a bit from executions) faster than using the \fct{stats::rnorm}. The difference in elapsed time becomes larger when matrix size goes larger.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
 system.time(gpuRandom::rnorm(c(10000,10000), streams=streams, 
                              Nglobal=c(512,128), type="double"))
 ##    user  system elapsed 
-##   0.122   0.009   0.130
+##   0.100   0.004   0.459
 system.time(matrix(stats::rnorm(10000^2),10000,10000))
 ##    user  system elapsed 
-##   6.592   0.867   7.529
+##   4.640   0.304   4.939
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -460,16 +475,19 @@ system.time(matrix(stats::rnorm(10000^2),10000,10000))
 
 
 \section{Monte Carlo simulation for Fisher's exact test}
-One application of GPU-generated random numbers in \pkg{gpuRandom} is Monte Carlo simulation for Fisher's exact test. Fisher’s exact test is usually applied for analyzing $2 \times 2$ contingency tables when one of the expected values in table is less than 5. Different from methods which rely on approximation, Fisher's exact test computes directly the probability of obtaining each possible combination of the data for the same row and column totals (marginal totals) as the observed table, and get the exact p-value by adding together all the probabilities of tables as extreme or more extreme than the one observed. However, when the observed table gets large in terms of sample size and table dimensions, the number of combinations of cell frequencies with the same marginal totals gets very large, \cite[][p. 23]{mehta2011ibm} shows a $5 \times 6$ observed table that has 1.6 billion possible tables. Calculating the exact P-values may lead to very long running time and can sometimes exceed the memory limits of your computer. Hence, the option \code{simulate.p.value = TRUE} in \fct{stats::fisher.test} is provided, which enables computing p-values by Monte Carlo simulation for tables larger than 2 $\times$ 2. Given an observed table and a number of replicates $B$, the Monte Carlo simulation does the following steps: 
+One application of GPU-generated random numbers in \pkg{gpuRandom} is Monte Carlo simulation for Fisher's exact test. Fisher’s exact test is applied for analyzing usually $2 \times 2$ contingency tables when one of the expected values in table is less than 5. Different from methods which rely on approximation, Fisher's exact test computes directly the probability of obtaining each possible combination of the data for the same row and column totals (marginal totals) as the observed table, and get the exact p-value by adding together all the probabilities of tables as extreme or more extreme than the one observed. However, when the observed table gets large in terms of sample size and table dimensions, the number of combinations of cell frequencies with the same marginal totals gets very large, \cite[][p. 23]{mehta2011ibm} shows a $5 \times 6$ observed table that has 1.6 billion possible tables. Calculating the exact P-values may lead to very long run-time and can sometimes exceed the memory limits of your computer. Hence, the option \code{simulate.p.value = TRUE} in \fct{stats::fisher.test} is provided, which enables computing p-values by Monte Carlo simulation for tables larger than 2 $\times$ 2. Given an observed table and a number of replicates $B$, the Monte Carlo simulation for Fisher's exact test does the following steps: 
 \begin{enumerate}
   \item Calculate the test statistic for the observed table.
-	\item In each iteration, simulate a random table with the same dimensions and marginal totals as the observed table, compute and sometimes save the test statistic (minus log-factorial of table) from the random table.
-	\item Count the number of iterations (\emph{Counts}) that have test statistics less or equal to the one from the observed table.
+	\item In each iteration, simulate a random table with the same dimensions and marginal totals as the observed table, compute and sometimes save the test statistic from the random table.
+	\item Count the number of iterations that have test statistics less or equal to the one from the observed table (\emph{Counts}).
 	\item Estimate p-value using $\frac{1 + \emph{Counts}}{B + 1}$.
 \end{enumerate}
-The Monte Carlo simulation solves the computational problem of Fisher's exact test but can still take long running time when $B$ reaches millions in scale, thus we make the function \fct{gpuRandom::fisher.sim} that does the steps 1, 2 and 3 parallelly on GPU, and step 2 of saving the test statistics from the random tables as an option in \fct{gpuRandom::fisher.sim}, which largely saves processing time. 
+The test statistic calculated for each random table is $-\sum_{i,j}\log(n_{ij}!), i=(1,\dots, I), j=(1,\dots,J)$, (i.e., minus log-factorial of table), where $I$ and $J$ are the row and column number of the observed table. This test statistic can also be independently calculated for a table by \fct{gpuRandom::logfactSum}.  
 
-We show the usage and advantage of \fct{gpuRandom::fisher.sim} by computing the p-values for two real data examples: one with a relatively big p-value and another with a very small p-value, and compare the runtime with using \fct{stats::fisher.test} for each of the data sets on two computers: one with a very good CPU and an ordinary GPU, the other is equipped with an excellent GPU and an ordinary CPU. The \proglang{R} outputs for testing on computer 2 is shown in the following. 
+\fct{stats::fisher.test} can take a long running time when $B$ reaches millions as the $B$ random tables are constructed sequentially, one in each iteration. \fct{gpuRandom::fisher.sim} adapted the backend function \fct{rcont2} used by \fct{stats::fisher.test} for constructing random tables, so that it generates \code{prod(Nglobal)} random tables in parallel in each iteration (i.e., one random table each work-item per iteration), and the steps 2 and 3 
+are also done in parallel by work-items at each iteration on GPU. Step 2 of saving test statistics from the random tables is made optional, which can reduce the run-time. 
+
+We show the usage and advantage of \fct{gpuRandom::fisher.sim} by computing the p-values for two real data examples: one with a relatively big p-value and another with a very small p-value, and compare the run-time with using \fct{stats::fisher.test} for each of the data sets on two computers: one with a very good CPU and an ordinary GPU, the other is equipped with an excellent GPU and an ordinary CPU. The \proglang{R} outputs for testing on computer 2 is shown in the following. 
 
 % \begin{table}[H]
 % \begin{tabular}{ |c|c|c|c|c|c| } 
@@ -550,7 +568,7 @@ We requested one million simulations on GPU while the actual number of simulatio
 system.time(fisher.sim(month_gpu, 1e6, streams=streams, 
             type="double", returnStatistics=FALSE, Nglobal = c(256,128)))
 ##    user  system elapsed 
-##   0.746   0.005   0.750
+##   0.693   0.008   2.317
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -562,10 +580,10 @@ system.time(fisher.sim(month_gpu, 1e6, streams=streams,
 \begin{verbatim}
 #using CPU
 stats::fisher.test(month,simulate.p.value = TRUE,B=1015808)$p.value
-## [1] 0.4037127
+## [1] 0.4039421
 system.time(stats::fisher.test(month,simulate.p.value = TRUE,B=1015808))
 ##    user  system elapsed 
-##  14.913   0.030  14.980
+##  10.248   0.000  10.242
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -627,7 +645,7 @@ With about ten million simulations, we get 1223 cases and a p-value around 0.000
 system.time(gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
             type="double", returnStatistics=FALSE,Nglobal = c(256,128)))
 ##    user  system elapsed 
-##   4.570   0.013   4.579
+##   0.589   0.025  10.759
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -639,10 +657,10 @@ system.time(gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
 \begin{verbatim}
 #using CPU
 fisher.test(week,simulate.p.value = TRUE,B=10010624)$p.value
-## [1] 0.0001141787
+## [1] 0.0001263657
 system.time(fisher.test(week,simulate.p.value = TRUE,B=10010624))
 ##    user  system elapsed 
-##  91.084   0.186  91.258
+##  62.792   0.036  62.770
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -718,21 +736,24 @@ Figure \ref{fig4} visualizes the approximate sampling distributions of the test 
 
 
 \section{Generating Gaussian random fields} 
-Given a parameter space $X$, a random field $U$ on $X$ is a collection of random variables $\{U_x :x\in X\}$. A Gaussian random field is a random field with the property that for any positive integer $n$ and any set of locations $x_1,\dots,x_n \in X$, the joint distribution of $U=(U_{x_1},\dots,U_{x_n})$ is multivariate Gaussian. One reason that Gaussian random fields play an important role is that the specification of their finite-dimensional distributions is simple \citep{abrahamsen1997review}, the expectation $\mu(x)$ and covariance function $\Sigma$ completely determine the distribution of $U$, where 
+Given a parameter space $X$, a random field $U$ on $X$ is a collection of random variables $\{U_x :x\in X\}$. A Gaussian random field is a random field with the property that for any positive integer $n$ and any set of locations $x_1,\dots,x_n \in X$, the joint distribution of $U=(U_{x_1},\dots,U_{x_n})$ is multivariate Gaussian. %One reason that Gaussian random fields play an important role is that the specification of their finite-dimensional distributions is simple \citep{abrahamsen1997review}, 
+The expectation $\mu(x)$ and covariance function $\Sigma$ completely determine the distribution of $U$, where 
 \begin{gather*} 
 \mu(x) = \E (U(x)),\\
 \Sigma_{ij} = \cov (U(x_i),U(x_j)).
 \end{gather*}
-There exist many choices for the covariance function $\Sigma$, one common choice is the Mat\'ern covariance function \citep{matern1960spatial}. The Mat\'ern covariance between $U(x)$ and $U(x')$ takes the form 
+The common choice for the covariance function $\Sigma$ is the Mat\'ern covariance function \citep{matern1960spatial}. The Mat\'ern covariance between $U(x)$ and $U(x')$ takes the form 
 \begin{equation*}
 \Sigma(d;\sigma^2,\phi,\kappa)=\sigma^2*\frac{2^{\kappa-1}}{\Gamma(\kappa)} (\sqrt{8\kappa} \frac{d}{\phi})^\kappa  K_\kappa(\sqrt{8\kappa}  \frac{d}{\phi}),  \quad \text{where} \quad \phi 	\geq 0,  \kappa 	\geq 0,
 \end{equation*} 
 $d =\|x-x'\|$ is the Euclidean distance between two spatial points, 
 $\sigma^2$ the variance of the random field $U$.
-$\Gamma(\cdot)$ is the standard gamma function,  $\phi$ is the range parameter or scale parameter with the dimension of distance, it controls the rate of decay of the correlation as $d$ increases. $K_\kappa(\cdot)$ is the modified Bessel function of the second kind with order $\kappa$, $\kappa$ is the shape parameter which determines the smoothness of $U(x)$, specifically, $U(x)$ is $m$ times mean-square differentiable if and only if $\kappa > m$. (For $\kappa=0.5$, the Mat\'ern covariance function reduces to the exponential covariance function $\sigma^2*\exp(-d/\phi)$, when $\kappa \rightarrow \infty$, $\Sigma(d) \rightarrow \sigma^2*\exp{-(\|d\|/\phi)^2}$, which is called the Gaussian covariance.)  There are several alternative parameterisations of Mat\'ern covariance functions appeared in literatures  \citep[see][]{haskard2007anisotropic}. In \pkg{gpuRandom}, we use the above form for computing Mat\'ern covariance.
+$\Gamma(\cdot)$ is the standard gamma function,  $\phi$ is the range parameter or scale parameter with the dimension of distance, it controls the rate of decay of the correlation as $d$ increases. $K_\kappa(\cdot)$ is the modified Bessel function of the second kind with order $\kappa$, $\kappa$ is the shape parameter which determines the smoothness of $U(x)$, specifically, $U(x)$ is $m$ times mean-square differentiable if and only if $\kappa > m$. %(For $\kappa=0.5$, the Mat\'ern covariance function reduces to the exponential covariance function $\sigma^2*\exp(-d/\phi)$, when $\kappa \rightarrow \infty$, $\Sigma(d) \rightarrow \sigma^2*\exp{-(\|d\|/\phi)^2}$, which is called the Gaussian covariance.)  
+There are several alternative parameterisations of Mat\'ern covariance functions in literatures  \citep[see][]{haskard2007anisotropic}. In \pkg{gpuRandom}, we use the above form for computing Mat\'ern covariance.
 
 
-Due to the importance of Gaussian random field, there are a large amount of studies devoted to Gaussian random field generation techniques. \cite{LiuandLi2019} gives a comprehensive review on 7 popular methods for Gaussian random field generation, which are the turning bands method \citep{matheron_1973}, spectral method \citep{Meja1974OnTS,1972JSV}, matrix decomposition method \citep{davis1987}, Karhunen-Lo\'eve expansion \citep{LoeveM:1978}, moving average method \citep{journel1974, oliver1995moving}, sequential simulation \citep{johnson1987multivariate, gomez1993joint, pebesma2004multivariable}, and local average subdivision \citep{fenton1990simulation}. All of these methods except matrix decomposition method, are approximations and has specific requirements on the type of grid or covariance functions. The matrix decomposition method is exact, it works for all covariance functions and can generate random field on all types of grids. Other \proglang{R} packages that offer simulation of Gaussian random fields like \pkg{geoR} \citep{geoR2001}, does not work for large number of locations; the \pkg{RandomFields} \citep{RandomFields2015,RandomFields2020} package can use different methods for simulation of Gaussian fields, among which the (modified) circulant embedding method \citep{Dietrich1997FastAE} for covariance matrix decomposition is also an exact method (need to confirm???), however, it works only for isotropic Gaussian fields and on rectangular grids. \pkg{gpuRandom} does exact simulation of exact Gaussian fields on the GPU as it relies on the matrix decomposition method. The implementation of this method is as follows.
+%Due to the importance of Gaussian random field, there are a large amount of studies devoted to Gaussian random field generation techniques. 
+\cite{LiuandLi2019} gives a comprehensive review on 7 popular methods for Gaussian random field generation, which are the turning bands method \citep{matheron_1973}, spectral method \citep{Meja1974OnTS,1972JSV}, matrix decomposition method \citep{davis1987}, Karhunen-Lo\'eve expansion \citep{LoeveM:1978}, moving average method \citep{journel1974, oliver1995moving}, sequential simulation \citep{johnson1987multivariate, gomez1993joint, pebesma2004multivariable}, and local average subdivision \citep{fenton1990simulation}. All of these methods except matrix decomposition method, are approximations and has specific requirements on the type of grid or covariance functions. The matrix decomposition method is exact, it works for all covariance functions and can generate random field on all types of grids. Other \proglang{R} packages that offer simulation of Gaussian random fields like \pkg{geoR} \citep{geoR2001}, does not work for large number of locations; the \pkg{RandomFields} \citep{RandomFields2015,RandomFields2020} package can use different methods for simulation of Gaussian fields, among which the (modified) circulant embedding method \citep{Dietrich1997FastAE} for covariance matrix decomposition is also an exact method (need to confirm???), however, it works only for isotropic Gaussian fields and on rectangular grids. \pkg{gpuRandom} does exact simulation of exact Gaussian fields on the GPU as it relies on the matrix decomposition method. The implementation of this method is as follows.
 
 
 Suppose $U=(U_1, U_2, \dots, U_n)$ is a Gaussian random field with mean $\mu$ and covariance matrix $\Sigma$, without loss of generality, we assume mean value zero $(\mu = 0)$. Since covariance matrix $\Sigma$ is symmetric and positive-definite, we can take Cholesky decomposition of $\Sigma$, then we can simulate random samples from $U$ using $U=L*D^{1/2}*Z$, where 
@@ -741,10 +762,18 @@ Suppose $U=(U_1, U_2, \dots, U_n)$ is a Gaussian random field with mean $\mu$ an
 \item $D$ is a diagonal matrix.
 \item $Z=(Z_1, Z_2, \dots, Z_n) \sim \text{MVN}(0,I_n)$, where $I_n$ is a $n \times n$ identity matrix.
 \end{itemize}
-The matrix decomposition method is straightforward to implement, however, when a large number ($n$) of locations is involved, the cost of Cholesky decomposition of the covariance matrix is $\mathcal{O}(n^3)$,  and the cost of matrix-vector multiplication $L*Z$ to generate the random field $U$ is $\mathcal{O}(n^2)$ \citep{LiuandLi2019}.  \pkg{gpuRandom} package takes advantage of GPU's parallel computing power to not only do the matrices decomposition (Cholesky decomposition and matrix-vector multiplication) in parallel, but also computes the covariance matrices in parallel on GPU. The following shows an example, in which we simulate 10 Gaussian random fields of mat\'ern covariance with 5 sets of parameters at one time, and introduces several GPU functions used in the simulation process.
+The matrix decomposition method is straightforward to implement, however, when a large number of locations ($n$) is involved, the cost of Cholesky decomposition of the covariance matrix is $\mathcal{O}(n^3)$ \citep{LiuandLi2019},  and the cost of matrix-vector multiplication $L*Z$ to generate the random field $U$ is $\mathcal{O}(n^2)$ \citep{LiuandLi2019}.  \pkg{gpuRandom} package not only does the matrices decomposition (Cholesky decomposition and matrix-vector multiplication) in parallel, but also computes the covariance matrices in parallel on GPU. The following shows an example, in which we simulate 10 Gaussian random fields of mat\'ern covariance with 5 sets of parameters at one time. %and introduces several GPU functions used in the simulation process.
 
 \subsection{Simulating Gaussian random fields with Mat\'ern covariances}
-
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+library("gpuR")
+library("gpuRandom")
+library('geostatsp')
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
 Step 1, set up a $60 \times 80$ raster and coordinates on the raster, convert the matrix of coordinates \code{coordsSp@coords} to a ``vclMatrix'' object for later use.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
@@ -799,9 +828,9 @@ Step 4, the first argument \code{maternCov} in \fct{gpuRandom::cholBatch} specif
 \begin{verbatim}
 diagMat = vclMatrix(0, nrow(paramsGpu), ncol(maternCov), type = theType)
 gpuRandom::cholBatch(maternCov, diagMat, numbatchD=nrow(myParamsBatch),
-                     Nglobal= c(512, 8),
-                     Nlocal= c(128, 8),
-                     NlocalCache=2000)
+                     Nglobal= c(128, 8),
+                     Nlocal= c(32, 8),
+                     NlocalCache=1000)
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -822,9 +851,7 @@ Step 5, generate 2 standard Gaussian random vectors \code{zmatGpu}$=(Z_1, Z_2)$ 
 \begin{verbatim}
 streamsGpu <- createStreamsGpu(n=128*64)
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in vectorToVCL(data, 4L, context\_index - 1): ViennaCL: FATAL ERROR: CL\_OUT\_OF\_RESOURCES \\\#\# \ ViennaCL tried to launch a compute kernel, but the device does not provide enough resources. Try changing the global and local work item sizes.\\\#\# If you think that this is a bug in ViennaCL, please report it at viennacl-support@lists.sourceforge.net and supply at least the following information:\\\#\# \ * Operating System\\\#\# \ * Which OpenCL implementation (AMD, NVIDIA, etc.)\\\#\# \ * ViennaCL version\\\#\# Many thanks in advance!}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
@@ -832,9 +859,7 @@ streamsGpu <- createStreamsGpu(n=128*64)
 zmatGpu = rnorm(c(nrow(maternCov),2), streams=streamsGpu, Nglobal=c(128,64),
                  type = theType)
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in nrow(streams): object 'streamsGpu' not found}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 Step 6, use \fct{gpuRandom::multiplyLowerDiagonalBatch} to compute $U = L * D^{(1/2)}* Z$ in batches, see the following illustration. \code{simMat} is the output matrix for $U$, \code{maternCov}, \code{diagMat}, and \code{zmatGpu} correspond to the matrices of $L$, $D$ and $Z=(Z_1, Z_2)$ respectively.
 \begin{knitrout}
@@ -842,10 +867,7 @@ Step 6, use \fct{gpuRandom::multiplyLowerDiagonalBatch} to compute $U = L * D^{(
 \begin{verbatim}
 simMat = vclMatrix(0, nrow(zmatGpu), ncol(zmatGpu), 
                    type = theType)
-\end{verbatim}
 
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'nrow': object 'zmatGpu' not found}}\begin{verbatim}
 gpuRandom::multiplyLowerDiagonalBatch(
   simMat, maternCov, diagMat, zmatGpu,
   diagIsOne = 1L, # diagonal of L is one
@@ -854,9 +876,7 @@ gpuRandom::multiplyLowerDiagonalBatch(
   Nlocal,
   NlocalCache)
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in gpuRandom:::multiplyLowerDiagonalBatchBackend(output, L, D, B, : object 'simMat' not found}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 \begin{gather}
  \begin{bmatrix}  L_{1} \\ L_{2} \\L_{3} \\ \vdots
@@ -882,21 +902,11 @@ Step 7, Finally, plot the 10 simulated Gaussian random surfaces.
 \begin{verbatim}
 library(raster)
 simRaster = brick(myRaster, nl = ncol(simMat)*nrow(paramsGpu))
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'ncol': object 'simMat' not found}}\begin{verbatim}
 values(simRaster) = as.vector(as.matrix(simMat))
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'as.matrix': object 'simMat' not found}}\begin{verbatim}
 names(simRaster) = apply(expand.grid('par',1:nrow(paramsGpu), 
                                      'sim', 1:ncol(simMat)), 1, paste, collapse='')
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'ncol': object 'simMat' not found}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 \begin{figure}[H]
 \centering
@@ -909,9 +919,17 @@ for(D in names(simRaster)) {
   plot(simRaster[[D]], legend=FALSE, add=TRUE)
 }
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): object 'simRaster' not found}}\end{kframe}
+\end{kframe}
+\includegraphics[width=0.45\textwidth]{figure/maternplot-1} 
+\includegraphics[width=0.45\textwidth]{figure/maternplot-2} 
+\includegraphics[width=0.45\textwidth]{figure/maternplot-3} 
+\includegraphics[width=0.45\textwidth]{figure/maternplot-4} 
+\includegraphics[width=0.45\textwidth]{figure/maternplot-5} 
+\includegraphics[width=0.45\textwidth]{figure/maternplot-6} 
+\includegraphics[width=0.45\textwidth]{figure/maternplot-7} 
+\includegraphics[width=0.45\textwidth]{figure/maternplot-8} 
+\includegraphics[width=0.45\textwidth]{figure/maternplot-9} 
+\includegraphics[width=0.45\textwidth]{figure/maternplot-10} 
 \end{knitrout}
 \caption{\label{fig:5} }
 \end{figure}
@@ -926,11 +944,19 @@ for(D in names(simRaster)) {
 
 
 \section{Discussion}
-The package \pkg{gpuRandom} has been created to make GPU-generated uniform and normal random numbers accessible for \proglang{R} users, it enables reproducible research in simulations by setting seeds in streams on GPU. We further applied the GPU-generated random numbers in suitable statistical simulations, such as the Monte Carlo simulation for Fisher’s exact test, and (exact) Gaussian spatial surfaces simulation, for which we are able to calculate quantiles for the Normal distribution, compute mat\'ern covariance matrices, do Cholesky decomposition and matrix multiplication in batches on GPU. Most of these functions uses local memory on GPU, all of them uses parallel programming and avoids unnecessary data transfers between host and device. Comparison of performance between using \pkg{gpuRandom} and using classic \proglang{R} on CPU for some real data examples has demonstrated significant improvement in execution time. 
+The package \pkg{gpuRandom} has been created to make GPU-generated uniform and normal random numbers accessible for \proglang{R} users, it enables reproducible research in simulations by setting seeds in streams on GPU. We further applied the GPU-generated random numbers in suitable statistical simulations, such as the Monte Carlo simulation for Fisher’s exact test, and (exact) Gaussian spatial surfaces simulation, for which we are able to calculate quantiles for the Normal distribution, compute mat\'ern covariance matrices, do Cholesky decomposition and matrix multiplication in batches on GPU. Most of these functions uses local memory on GPU %all of them uses parallel programming and avoids unnecessary data transfers between host and device.
+Comparison of performance between using \pkg{gpuRandom} and using classic \proglang{R} on CPU for some real data examples has demonstrated significant improvement in execution time. 
 
 By leveraging the \pkg{gpuR} package, \pkg{gpuRandom} provides a user-friendly interface that bridges \proglang{R} and \proglang{OpenCL}, users can use the facilities in our package without the need to know the complex \proglang{OpenCL} or even the \proglang{\texttt{C++}} code.  \pkg{gpuRandom} is portable as its backend \proglang{OpenCL} supports multiple types of processors, and it is also flexible as its kernels can be incorporated or reconstructed in other \proglang{R} packages for further development. 
 
-One of the main difficulties in developing the package is bug fixes and uncertain software behaviors. Error messages are often vague and it is time-consuming to locate the error within the backend \proglang{C} program. The usual steps that we take to debug is commenting out some parts of codes and then recompile many times until we find the problem, or printing out flag messages in several places in the code to find out where the program stops at due to error. \pkg{gpuRandom} is limited by the number and type of \proglang{OpenCL} RNGs used and the features of the \pkg{gpuR} package, as it depends upon the \pkg{gpuR} package, if developers wants to use our package to do something that's not supported in \pkg{gpuR}, for example ``sparse'' class objects, they would have to write \proglang{OpenCL} code to implement it.
+One of the main difficulties in developing the package is bug fixes and uncertain software behaviors. Error messages are often vague and it is time-consuming to locate the error within the backend \proglang{C} program. The usual steps that we take to debug is commenting out some parts of codes and then recompile many times until we find the problem, or printing out flag messages in several places in the code to find out where the program stops at due to error. 
+
+talk about using substreams in future?
+
+
+
+
+\pkg{gpuRandom} is limited by the number and type of \proglang{OpenCL} RNGs used and the features of the \pkg{gpuR} package, as it depends upon the \pkg{gpuR} package, if developers wants to use our package to do something that's not supported in \pkg{gpuR}, for example ``sparse'' class objects, they would have to write \proglang{OpenCL} code to implement it.
 
 Future work on \pkg{gpuRandom} package could be: (1) Explore other RNGs, for example the MRG32k3a, LFSR113, and Philox-4×32-10 generators in \proglang{clRNG} library, and compare the \proglang{R} performance between using different GPU RNGs. (2) Now that the package can do Cholesky decomposition and matrix multiplication in batches on GPU, which is a motivation for us to work on parallel likelihood evaluations on GPU for Gaussian spatial models in the next step. (3) Create a ``sparse'' matrix class on GPU and use it for simulating Gaussian random fields with sparse correlation structures such as the Gaussian Markov random fields.
 

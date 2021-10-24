@@ -1,4 +1,4 @@
-\begin{thebibliography}{34}
+\begin{thebibliography}{35}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
@@ -9,17 +9,18 @@
   \urlstyle{rm}\Url}\fi
 \providecommand{\eprint}[2][]{\url{#2}}
 
-\bibitem[{Abrahamsen(1997)}]{abrahamsen1997review}
-Abrahamsen P (1997).
-\newblock \enquote{A review of Gaussian random fields and correlation
-  functions.}
-\newblock \emph{Norsk Regnesentral/Norwegian Computing Center}, p.~64.
-
 \bibitem[{Allaire \emph{et~al.}(2016)Allaire, Eddelbuettel, Golding, and
   Tang}]{tensorflow1}
 Allaire J, Eddelbuettel D, Golding N, Tang Y (2016).
 \newblock \emph{tensorflow: R Interface to TensorFlow}.
 \newblock \urlprefix\url{https://github.com/rstudio/tensorflow}.
+
+\bibitem[{Bengtsson(2021)}]{future1.19.1}
+Bengtsson H (2021).
+\newblock \enquote{A Unifying Framework for Parallel and Distributed Processing
+  in R using Futures.}
+\newblock 10.32614/RJ-2021-048,
+  \urlprefix\url{https://journal.r-project.org/archive/2021/RJ-2021-048/index.html}.
 
 \bibitem[{Box(1958)}]{box1958note}
 Box GE (1958).
@@ -102,6 +103,13 @@ Johnson ME (1987).
 Journel AG (1974).
 \newblock \enquote{Geostatistics for conditional simulation of ore bodies.}
 \newblock \emph{Economic Geology}, \textbf{69}(5), 673--687.
+
+\bibitem[{L'ecuyer \emph{et~al.}(2002)L'ecuyer, Simard, Chen, and
+  Kelton}]{l2002object}
+L'ecuyer P, Simard R, Chen EJ, Kelton WD (2002).
+\newblock \enquote{An object-oriented random-number package with many long
+  streams and substreams.}
+\newblock \emph{Operations research}, \textbf{50}(6), 1073--1075.
 
 \bibitem[{Liu \emph{et~al.}(2019)Liu, Li, Sun, and Yu}]{LiuandLi2019}
 Liu Y, Li J, Sun S, Yu B (2019).
