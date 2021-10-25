@@ -343,8 +343,6 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   int DiterIndex, NthisIteration;
   //int verboseMatern = verbose[0]>1;
   
-  Rcpp::IntegerVector chol_workgroupSize=workgroupSize;
-  chol_workgroupSize[1]=localSize[1];
   
   
   viennacl::ocl::switch_context(ctx_id);
@@ -615,10 +613,9 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   viennacl::ocl::kernel & maternKernel = my_prog_matern.get_kernel("maternBatch");
   // dimension 0 is cell, dimension 1 is matrix
   
-  Rcpp::Rcout << "workgroupSize[0]\n" << workgroupSize[0] << "\n";
-  Rcpp::Rcout << "workgroupSize[1]\n" << workgroupSize[1] << "\n";
-  Rcpp::Rcout << "localSize[0]\n" << localSize[0] << "\n";  
-  Rcpp::Rcout << "localSize[1]\n" << localSize[1] << "\n";   
+  Rcpp::Rcout << "workgroupSize\n" << workgroupSize << "\n";
+  Rcpp::Rcout << "localSize\n" << localSize << "\n";  
+  
   
   maternKernel.global_work_size(0, workgroupSize[0] ); 
   maternKernel.global_work_size(1, workgroupSize[1] ); 
@@ -629,12 +626,19 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   viennacl::ocl::program & my_prog_chol = viennacl::ocl::current_context().add_program(cholClString, "mykernelchol");
   viennacl::ocl::kernel & cholKernel = my_prog_chol.get_kernel("cholBatch");
   
-  cholKernel.global_work_size(0, chol_workgroupSize[0] ); 
-  cholKernel.global_work_size(1, chol_workgroupSize[1] ); 
+  // Rcpp::IntegerVector chol_workgroupSize=workgroupSize;
+  // chol_workgroupSize[1]=localSize[1];
+  
+  Rcpp::Rcout << "workgroupSize\n" << workgroupSize << "\n";
+  Rcpp::Rcout << "localSize\n" << localSize << "\n";  
+
+
+  cholKernel.global_work_size(0, workgroupSize[0] ); 
+  cholKernel.global_work_size(1, localSize[1] ); 
   cholKernel.local_work_size(0,  localSize[0]);
   cholKernel.local_work_size(1,  localSize[1]);
   
-  
+
   viennacl::ocl::program & my_prog_backsolve = viennacl::ocl::current_context().add_program(backsolveString, "mykernelbacksolve");
   viennacl::ocl::program & my_prog_crossprod = viennacl::ocl::current_context().add_program(crossprodKernelString, "mykernelcrossprod");
   viennacl::ocl::program & my_prog_cholxvx = viennacl::ocl::current_context().add_program(cholXVXkernelString, "mykernelcholxvx");
@@ -665,8 +669,8 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   
   
   
-  cholXvxKernel.global_work_size(0, chol_workgroupSize[0] ); 
-  cholXvxKernel.global_work_size(1, chol_workgroupSize[1] ); 
+  cholXvxKernel.global_work_size(0, workgroupSize[0] ); 
+  cholXvxKernel.global_work_size(1, localSize[1] ); 
   cholXvxKernel.local_work_size(0,  localSize[0]);
   cholXvxKernel.local_work_size(1,  localSize[1]);
   
