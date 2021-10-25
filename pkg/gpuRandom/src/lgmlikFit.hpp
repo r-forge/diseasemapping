@@ -181,7 +181,7 @@ void maternBatchVcl(
         
         
         template <typename T> 
-        void crossprodBatch(
+        int crossprodBatch(
             viennacl::matrix<T> &C,  // must be a batch of square matrices 
             viennacl::matrix<T> &A,
             viennacl::matrix<T> &D,
