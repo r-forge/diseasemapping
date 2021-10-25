@@ -38,7 +38,7 @@ crossprodBatch <- function(C,   # must be batch of square matrices
   
   
   if((NlocalCache - Nlocal[1]*Nlocal[2])<0){
-    stop("a larger NlocalCache required")
+    warning("a larger NlocalCache required")
   }
   
   crossprodBatchBackend(C,A,D,invertD,Cstartend,Astartend,Dstartend, Nglobal,Nlocal, NlocalCache)

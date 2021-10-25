@@ -62,18 +62,13 @@ template <typename T> std::string crossprodBatchString(
     const int NstartD,  // new
     const int NpadBetweenMatricesC,
     const int NpadBetweenMatricesA,
-    const int NlocalCacheA, // numbers of rows to cache of A
-    Rcpp::IntegerVector Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
+    const int NlocalCacheA // numbers of rows to cache of A.  Rcpp::IntegerVector Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
 );
 
 template<typename T> void fill22params(
     viennacl::matrix_base<T> &param
 ); 
 
-
-std::string crossprodBatchString();
-std::string matrix_plus_vectorString();
-std::string matrix_plus_scalarString();
 
 template <typename T> std::string openclTypeString();
 
