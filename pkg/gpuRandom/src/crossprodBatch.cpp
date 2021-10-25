@@ -440,7 +440,7 @@ int crossprodBatch(
     NlocalCacheAD = 0;
   }
   
-  std::cout << "NlocalCacheAD" << NlocalCacheAD << "\n\n";
+  std::cout << "NlocalCacheAD\n " << NlocalCacheAD << "\n\n";
   
   // the context
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
