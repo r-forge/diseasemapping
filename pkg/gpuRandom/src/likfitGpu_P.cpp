@@ -343,8 +343,8 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   int DiterIndex, NthisIteration;
   //int verboseMatern = verbose[0]>1;
   
-  Rcpp::IntegerVector chol_localSize=localSize;
-  chol_localSize[1]=workgroupSize[1];
+  Rcpp::IntegerVector chol_workgroupSize=workgroupSize;
+  chol_workgroupSize[1]=localSize[1];
   
   
   viennacl::ocl::switch_context(ctx_id);
@@ -397,7 +397,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     0,//NstartA
     0,// NstartD
     NlocalCache, //Ncache
-    chol_localSize, //Nlocal
+    localSize, //Nlocal
     1,//allowOverflow, // allowoverflow
     1 // do log determinant
   );
@@ -412,7 +412,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     Ndatasets * ssqYX.internal_size2() + Ndatasets,//NstartA start at entry ssqYX[Ndatasets, Ndatasets]
     0,// NstartD
     NlocalCache, //Ncache
-    chol_localSize, //Nlocal
+    localSize, //Nlocal
     1, // allowoverflow
     1 // do log determinant
   );
@@ -629,10 +629,10 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   viennacl::ocl::program & my_prog_chol = viennacl::ocl::current_context().add_program(cholClString, "mykernelchol");
   viennacl::ocl::kernel & cholKernel = my_prog_chol.get_kernel("cholBatch");
   
-  cholKernel.global_work_size(0, workgroupSize[0] ); 
-  cholKernel.global_work_size(1, workgroupSize[1] ); 
-  cholKernel.local_work_size(0, chol_localSize[0]);
-  cholKernel.local_work_size(1, chol_localSize[1]);
+  cholKernel.global_work_size(0, chol_workgroupSize[0] ); 
+  cholKernel.global_work_size(1, chol_workgroupSize[1] ); 
+  cholKernel.local_work_size(0,  localSize[0]);
+  cholKernel.local_work_size(1,  localSize[1]);
   
   
   viennacl::ocl::program & my_prog_backsolve = viennacl::ocl::current_context().add_program(backsolveString, "mykernelbacksolve");
@@ -665,10 +665,10 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   
   
   
-  cholXvxKernel.global_work_size(0, workgroupSize[0] ); 
-  cholXvxKernel.global_work_size(1, workgroupSize[1] ); 
-  cholXvxKernel.local_work_size(0, chol_localSize[0]);
-  cholXvxKernel.local_work_size(1, chol_localSize[1]);
+  cholXvxKernel.global_work_size(0, chol_workgroupSize[0] ); 
+  cholXvxKernel.global_work_size(1, chol_workgroupSize[1] ); 
+  cholXvxKernel.local_work_size(0,  localSize[0]);
+  cholXvxKernel.local_work_size(1,  localSize[1]);
   
   backsolveKernel.global_work_size(0, workgroupSize[0] ); 
   backsolveKernel.global_work_size(1, workgroupSize[1] ); 

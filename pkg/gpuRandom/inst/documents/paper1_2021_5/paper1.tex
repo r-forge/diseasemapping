@@ -157,13 +157,13 @@ Finally, the paper concludes with a short summary and a discussion in Section 5.
 Uniform random number generators (RNGs) are essential in simulating random numbers from all types of probability distributions. \cite{l2012random} summarized the usual two steps to generate a random variable in computational statistics: (1) generating independent and identically distributed (i.i.d.) uniform random variables on the interval $(0, 1)$, (2) applying transformations to these i.i.d. $U(0, 1)$ random variables to get samples from the desired distribution. \cite{l2012random} and \cite{robert2004random} present many general transformation methods for generating non-uniform random variables, for example, the most frequently used inverse transform method, the Box-Muller algorithm \citep{box1958note} for Gaussian random variable generation, and so on, which are all built on uniform random variables. %In the rest paper, ``RNG'' refers to uniform pseudo random number generator.
 
 
-\pkg{clRNG} is an \proglang{OpenCL} library for uniform random number generation, it provides four different RNGs: the MRG31k3p, MRG32k3a, LFSR113, and Philox-4×32-10 generators, these RNGs are actually stream objects of different forms. \pkg{gpuRandom} package uses the MRG31k3p RNG from the \proglang{clRNG}, making it able to generate random numbers on GPUs. In what follows, we will illustrate how to create streams and how to use streams to generate (standard) uniform and (standard) Gaussian random numbers by \pkg{gpuRandom}. 
+\pkg{clRNG} is an \proglang{OpenCL} library for uniform random number generation, it provides four different RNGs: the MRG31k3p, MRG32k3a, LFSR113, and Philox-4×32-10 generators. \pkg{gpuRandom} package uses the MRG31k3p RNG from the \proglang{clRNG}, making it able to generate random numbers on GPUs. In what follows, we will illustrate how to create streams and how to use streams to generate (standard) uniform and (standard) Gaussian random numbers. 
 
 
 \subsection{Creating streams}\label{create_streams}
 The popular way of obtaining multiple streams is to take an RNG with a long period and cut the RNG's sequence into very long pieces, these pieces are adjacent and of equal length $Z$, so each piece can be used as a separate stream. Creating a new stream amounts to computing its starting point (seed). Each of these streams can also be partitioned into substreams with equally-spaced starting points \citep{l2002object}, which are occasionally useful.
 
-In general, a stream object contains three states: the initial state of the stream (or seed), the initial state of the current substream (by default it is equal to the seed), and the current state of the stream. Whenever the user creates a new stream, the software automatically jumps ahead by Z steps to find its initial state, and the three states in the stream object are set to it. 
+In general, a stream object contains three states: the current state of the stream, the initial state of the stream (or seed), and the initial state of the current substream (by default it is equal to the seed). Whenever the user creates a new stream, the software automatically jumps ahead by Z steps to find its initial state, and the three states in the stream object are set to it. 
 
 In \proglang{clRNG} library, the initial state of the first stream has a default value (12345). For the MRG31k3p RNG, the entire period length of approximately $2^{185}$ is divided into approximately $2^{51}$ non-overlapping streams of length $Z = 2^{134}$. Each stream is further partitioned into substreams of length $W = 2^{72}$. The state (and seed) of each stream is a vector of six 31-bit integers. This size of state is appropriate for having streams running in work items on GPU cards, for example, while providing a sufficient period length for most applications.
 
@@ -210,7 +210,7 @@ range(as.matrix(myStreamsGpu1 - myStreamsGpu2))
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
-\fct{createStreamsGpu} also has the two arguments \code{n} and \code{seed}, \code{seed} is by default a vector of six ``12345''. \fct{createStreamsGpu} is similar to \code{.Random.seed} in \proglang{R}. By setting the RNG status with the \proglang{R} function \fct{set.seed}, we are able to repeat the sequence of random seeds, which is an important quality criteria of RNGs. Similarly in \fct{createStreamsGpu} and \fct{createStreamsCpu}, with the \code{seed} argument, we are able to produce exactly the same sequence of streams as many times as we want.
+\fct{createStreamsGpu} also has the two arguments \code{n} and \code{seed}, \code{seed} is by default a vector of six ``12345''. \fct{createStreamsGpu} is similar to \code{.Random.seed} in \proglang{R}. By setting the RNG status with the \proglang{R} function \fct{set.seed}, we are able to repeat the sequence of random seeds, which is an important quality criteria of RNGs. Similarly in \fct{createStreamsGpu} and \fct{createStreamsCpu}, with the \code{seed} argument, we make the sequence of streams repeatable.
 
 
 \subsection{Using streams to generate  i.i.d. $U (0, 1)$ random numbers on GPU}
@@ -568,7 +568,7 @@ We requested one million simulations on GPU while the actual number of simulatio
 system.time(fisher.sim(month_gpu, 1e6, streams=streams, 
             type="double", returnStatistics=FALSE, Nglobal = c(256,128)))
 ##    user  system elapsed 
-##   0.693   0.008   2.317
+##   0.709   0.004   2.326
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -645,7 +645,7 @@ With about ten million simulations, we get 1223 cases and a p-value around 0.000
 system.time(gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
             type="double", returnStatistics=FALSE,Nglobal = c(256,128)))
 ##    user  system elapsed 
-##   0.589   0.025  10.759
+##   0.607   0.012  10.764
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
