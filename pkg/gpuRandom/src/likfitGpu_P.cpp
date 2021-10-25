@@ -478,6 +478,16 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     localSize[0] * localSize[1]//NpadBetweenMatricesSum 
   );
   
+  
+  int NlocalCacheAD;
+  
+  if ((NlocalCache[0] - localSize[0]*localSize[1]) > 0) {
+    NlocalCacheAD = (NlocalCache[0] - localSize[0]*localSize[1])/2;
+  }else{
+    NlocalCacheAD = 0;
+  }
+  
+  
   std::string crossprodKernelString = crossprodBatchString<T>(
     Nobs,//const int Nrow, 
     yx.size2(),//const int Ncol,
@@ -492,7 +502,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     0,//const int NstartD,  
     ssqYX.internal_size2()*yx.size2(), //const int NpadBetweenMatricesC,
     LinvYX.internal_size2()*Nobs, //const int NpadBetweenMatricesA,
-    NlocalCache[0] // NlocalCacheA, localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
+    NlocalCacheAD // NlocalCacheA, localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
   );
   
   // ssqBetahat     p*Ndatasets
@@ -510,7 +520,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     0,//const int NstartD,  
     ssqBetahat.internal_size2(), //const int NpadBetweenMatricesC
     QinvSsqYx.internal_size2()*Ncovariates, //const int NpadBetweenMatricesA,  made changes here
-    (NlocalCache[0] - localSize[0]*localSize[1])/2 // NlocalCacheA, localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
+    NlocalCacheAD // NlocalCacheA, localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
   );
   
   
@@ -596,7 +606,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     0,//const int NstartD,  
     ssqBeta.internal_size2(), //const int NpadBetweenMatricesC,
     b_beta.internal_size2()*Nobs, //const int NpadBetweenMatricesA,
-    NlocalCache[0]/2 // NlocalCacheA,  localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
+    NlocalCacheAD // NlocalCacheA,  localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
   );     
   //}
   
