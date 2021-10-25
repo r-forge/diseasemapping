@@ -111,7 +111,7 @@ colnames(paramsGpu)= c(colnames(myParamsBatch)[1:7],
  ' varscale', 'logxscale', 'sinrat','mu', 'muSq', 'mup1', 'nuround', 'g1', 
  'g2', 'g1pnu', 'g1mnu', 'variancePlusNugget'))
 
-startrow = 2
+startrow = 0
 gpuRandom:::maternBatchBackend(
     outputBatchF,
     coordsGpu, 
@@ -161,9 +161,9 @@ outputChol = deepcopy(outputBatchF)
 gpuRandom::cholBatch(
   outputChol, diagMat, 
   numbatchD=nrow(myParamsBatch),
-  Nglobal = c(256L, 16L),#NglobalChol,
+  Nglobal = c(128L, 16L),#NglobalChol,
   Nlocal = c(16L, 16L),#NlocalChol,
-  NlocalCache = 5000)#NlocalCache)
+  NlocalCache = 2000)#NlocalCache)
 as.matrix(diagMat)[,1:4]
 ```
 
