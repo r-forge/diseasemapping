@@ -490,8 +490,8 @@ void maternBatchVcl(
       // memory for local copies of parameters
   
   viennacl::ocl::local_mem localParameters(sizeof(param(0,0)) *
-            NlocalParams * numLocalItems[1] * 
-            (1+ Nmatrix * numLocalItems[1] / numWorkItems[1]));
+                           NlocalParams * numLocalItems[1] * 
+                           (1+ Nmatrix * numLocalItems[1] / numWorkItems[1]));
   
   //  cl_device_type type_check = ctx.current_device().type();
 
