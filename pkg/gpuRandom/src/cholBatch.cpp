@@ -277,7 +277,7 @@ int cholBatchVcl(
   const int NstartA = A.internal_size2() * Astartend[0] + Astartend[2];
   const int NstartD = D.internal_size2() * Dstartend[0] + Dstartend[2];
   
-  viennacl::ocl::local_mem localCache(NlocalCache[0]);
+  viennacl::ocl::local_mem localCache( NlocalCache[0]*sizeof(A(0,0)) );
   
   std::string cholClString = cholBatchKernelString<T>(
     0L, // start
