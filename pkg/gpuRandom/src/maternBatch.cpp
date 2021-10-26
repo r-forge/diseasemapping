@@ -485,13 +485,17 @@ void maternBatchVcl(
     NpadBetweenMatrices = Npad*N; // change to Npad*(Nmat+k) to insert extra rows between matrices
   
     const int Ncell = N * (N - 1)/2, maxIter = 1500;
+    int NgroupsOfParameters = numWorkItems[1]/numLocalItems[1];
+    int NparametersPerGroup = std::min(
+      numLocalItems[1], 
+      ( (int) ceil( ((T) Nmatrix) / ((T) NgroupsOfParameters) ) )
+    );
   
   fill22params(param);
       // memory for local copies of parameters
   
   viennacl::ocl::local_mem localParameters(sizeof(param(0,0)) *
-                           NlocalParams * numLocalItems[1] * 
-                           (1+ Nmatrix * numLocalItems[1] / numWorkItems[1]));
+                           NlocalParams * NparametersPerGroup);
   
   //  cl_device_type type_check = ctx.current_device().type();
 
@@ -545,7 +549,9 @@ if(verbose > 1) {
   }
   
   if(verbose) {
-    Rcpp::Rcout << startrow << " " << Nmatrix << " " << param.size1() << "\n";
+    Rcpp::Rcout << startrow << " " << Nmatrix << " " << param.size1() << " " <<
+      NgroupsOfParameters << " " << NparametersPerGroup << " " <<
+        localParameters.size() / sizeof(param(0,0)) << " " << sizeof(param(0,0)) <<  "\n";
   }
   
   
@@ -639,8 +645,8 @@ void maternBatchBackend(
     Rcpp::S4 var,
     Rcpp::S4 coords,
     Rcpp::S4 param, //22 columns 
-    Rcpp::IntegerVector Nglobal,
-    Rcpp::IntegerVector Nlocal,
+    Rcpp::IntegerVector Nglobal, // dimension 0 cells, dimension 1 parameter sets
+    Rcpp::IntegerVector Nlocal, // groups in 0 share coordinates, groups 1 share parameters
     int startrow,   // new added
     int numberofrows,
     int verbose=0) {
