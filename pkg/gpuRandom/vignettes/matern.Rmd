@@ -435,7 +435,14 @@ NlocalCache=1000
 Vbatch <- vclMatrix(0, groupsize*n, n, type = type)
 coordsGpu = vclMatrix(sr2@coords, type =type)
 dim(Vbatch)
-gpuRandom::maternBatch(Vbatch, coordsGpu, paramsBatch,  c(64,64), c(16,16))
+
+
+gpuRandom:::maternBatchBackend(Vbatch, coordsGpu, paramsBatch,  c(1,1), c(1,1),#c(64,64), c(16,16), 
+                               0, nrow(paramsBatch), 10)
+
+gpuRandom::maternBatch(Vbatch, coordsGpu, paramsBatch,  c(64,64), c(16,16), 1, nrow(coordsGpu))
+
+
 any(is.na(as.matrix(Vbatch)))
 
 for(D in unique(round(seq(1L,nrow(paramsBatch), len=min(c(10, nrow(paramsBatch))))))) {
