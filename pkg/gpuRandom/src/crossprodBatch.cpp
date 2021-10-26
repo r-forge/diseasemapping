@@ -432,15 +432,9 @@ int crossprodBatch(
   const int NstartA = A.internal_size2() * Astartend[0] + Astartend[2];
   const int NstartD = D.internal_size2() * Dstartend[0] + Dstartend[2];
   
-  int NlocalCacheAD;
+  const int NlocalCacheAD = std::max( 0, (NlocalCache - Nlocal[0]*Nlocal[1])/2 );
   
-  if ((NlocalCache - Nlocal[0]*Nlocal[1]) > 0) {
-    NlocalCacheAD = (NlocalCache - Nlocal[0]*Nlocal[1])/2;
-  }else{
-    NlocalCacheAD = 0;
-  }
-  
-  std::cout << "NlocalCacheAD " << NlocalCacheAD << "\n\n";
+  std::cout << "NlocalCacheAD " << NlocalCacheAD << "\n";
   
   // the context
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
@@ -470,7 +464,8 @@ int crossprodBatch(
     NstartD,
     C.internal_size2()*C.size2(),//NpadBetweenMatricesC,
     A.internal_size2()*A.size1()/Nmatrix,//NpadBetweenMatricesA,
-    NlocalCacheAD  // Nlocal
+    NlocalCacheAD  
+    // Nlocal
     );
   
 #ifdef DEBUG

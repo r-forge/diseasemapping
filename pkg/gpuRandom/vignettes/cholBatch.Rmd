@@ -138,7 +138,7 @@ range(var4gpu-var4cpu)
 ###########################################################################################################
 diagMat = vclMatrix(0, nrow(paramsGpu), ncol(maternCov), type = theType)
 outputChol = deepcopy(maternCov)
-gpuRandom::cholBatch(outputChol, diagMat, numbatchD=nrow(myParamsBatch), Nglobal = c(64,16,1), Nlocal = c(16,16,1),NlocalCache = 3000)
+gpuRandom::cholBatch(outputChol, diagMat, numbatchD=nrow(myParamsBatch), Nglobal = c(64,16,1), Nlocal = c(4,16,1),NlocalCache = 1000)
 dim(outputChol)
 
 cholCpu = as.matrix((chol(var4cpu)))            #cholCpu[1:6,1:6]

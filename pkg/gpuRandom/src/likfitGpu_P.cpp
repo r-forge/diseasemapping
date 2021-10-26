@@ -479,14 +479,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   );
   
   
-  int NlocalCacheAD;
-  
-  if ((NlocalCache[0] - localSize[0]*localSize[1]) > 0) {
-    NlocalCacheAD = (NlocalCache[0] - localSize[0]*localSize[1])/2;
-  }else{
-    NlocalCacheAD = 0;
-  }
-  
+  const int NlocalCacheAD = std::max( 0, (NlocalCache[0] - localSize[0]*localSize[1])/2 );
   
   std::string crossprodKernelString = crossprodBatchString<T>(
     Nobs,//const int Nrow, 
