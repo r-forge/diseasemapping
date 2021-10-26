@@ -486,7 +486,7 @@ void maternBatchVcl(
   
     const int Ncell = N * (N - 1)/2, maxIter = 1500;
     int NgroupsOfParameters = numWorkItems[1]/numLocalItems[1];
-    int NparametersPerGroup = std::min(
+    int NparametersPerGroup = std::max(
       numLocalItems[1], 
       ( (int) ceil( ((T) Nmatrix) / ((T) NgroupsOfParameters) ) )
     );
