@@ -36,9 +36,9 @@ std::string mrg31k3pMatrixString(
     "\n#define mrg31k3p_NORM_cl 4.6566126e-10\n\n"
     "//TWOPI * mrg31k3p_NORM_cl\n"
     "#define TWOPI_mrg31k3p_NORM_cl 2.9258361e-09\n\n";
-  } else if(typeString == "int"){
+  } else {
     result += 
-      "\n#define mrg31k3p_NORM_cl 9.31322574615478515625e-10\n";    // 2 * 1/(2^31)
+      "\n#define mrg31k3p_NORM_cl 4.656612873077392578125e-10\n";    
   }
   
   result += 
@@ -170,7 +170,7 @@ std::string mrg31k3pMatrixString(
         "out[Dentry] = mrg31k3p_NORM_cl * temp;\n";
     } else if(typeString == "int"){
       result += 
-        "  out[Dentry] = (int) (mrg31k3p_M1 * (mrg31k3p_NORM_cl * temp - 1));\n";
+        "  out[Dentry] = (uint) ((2*mrg31k3p_M1 + 1) * mrg31k3p_NORM_cl * temp);\n";
     }
   }
   
