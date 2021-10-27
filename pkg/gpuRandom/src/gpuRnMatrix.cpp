@@ -43,7 +43,7 @@ std::string mrg31k3pMatrixString(
   
   result += 
     "\n#define mrg31k3p_M1 2147483647\n"             /* 2^31 - 1 */
-  "#define mrg31k3p_M2 2147462579\n"             /* 2^31 - 21069 */
+    "#define mrg31k3p_M2 2147462579\n"             /* 2^31 - 21069 */
   
   "#define mrg31k3p_MASK12 511  \n"              /* 2^9 - 1 */
   "#define mrg31k3p_MASK13 16777215  \n"         /* 2^24 - 1 */
