@@ -16,7 +16,7 @@ runif = function(
   n, 
   streams, 
   Nglobal,
-  type=c("double","float")) {
+  type=c("double","float","integer")) {
   
   
   if(length(n)>=3){
@@ -50,14 +50,15 @@ runif = function(
   
 
 
-  xVcl<-gpuR::vclMatrix(0, nrow=n[1], ncol=n[2], type=type[1])    
+  xVcl<-gpuR::vclMatrix(0L, nrow=n[1], ncol=n[2], type=type[1])    
   
   
   gpuRnBackend(xVcl,streams,Nglobal,"uniform") 
   
   invisible(streams)
   
-  if(ncol(xVcl)==1) xVcl <- as.vclVector(xVcl)
+  if(ncol(xVcl)==1) capture.output(xVcl <- as.vclVector(xVcl), file='NUL')      #xVcl <- as.vclVector(xVcl)
+  
   xVcl
   
 }

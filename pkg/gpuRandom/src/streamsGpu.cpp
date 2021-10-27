@@ -227,9 +227,6 @@ void CreateStreamsGpuBackend(
     Rcpp::S4 streamsR,
     const int keepInitial){
   
-  //Rcpp::Rcout << "in CreateStreamsGpuBackend" << "\n\n";
-  
-  
   CreateStreamsGpuTemplated(creatorInitialGlobalR, streamsR, keepInitial);
   
   

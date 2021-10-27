@@ -36,9 +36,9 @@ std::string mrg31k3pMatrixString(
     "\n#define mrg31k3p_NORM_cl 4.6566126e-10\n\n"
     "//TWOPI * mrg31k3p_NORM_cl\n"
     "#define TWOPI_mrg31k3p_NORM_cl 2.9258361e-09\n\n";
-  } else {
+  } else if(typeString == "int"){
     result += 
-      "\n#define mrg31k3p_NORM_cl 1L\n\n";
+      "\n#define mrg31k3p_NORM_cl 9.31322574615478515625e-10\n";    // 2 * 1/(2^31)
   }
   
   result += 
@@ -152,7 +152,7 @@ std::string mrg31k3pMatrixString(
       "      cosPart1 = cos(part[1]);\n"
       "      sinPart1 = sin(part[1]);\n"
       "    } else {\n"
-      "      part[0] = sqrt(-2.0*log(temp * mrg31k3p_NORM_cl));\n"
+      "      part[0] = sqrt(-2.0*log(mrg31k3p_NORM_cl * temp));\n"
       "    }\n"
       "    barrier(CLK_LOCAL_MEM_FENCE);\n";
     
@@ -168,9 +168,9 @@ std::string mrg31k3pMatrixString(
     if(typeString == "double" | typeString == "float") {
       result += 
         "out[Dentry] = mrg31k3p_NORM_cl * temp;\n";
-    } else {
+    } else if(typeString == "int"){
       result += 
-        "  out[Dentry] = temp;\n";
+        "  out[Dentry] = (int) (mrg31k3p_M1 * (mrg31k3p_NORM_cl * temp - 1));\n";
     }
   }
   
@@ -216,8 +216,6 @@ int gpuMatrixRn(
   Rcpp::Rcout << mrg31k3pkernelString << "\n\n";
 #endif  
   
-  //Rcpp::Rcout << "666" << "\n\n";
-  
   // the context
   viennacl::ocl::switch_context(ctx_id);
   viennacl::ocl::program & my_prog = viennacl::ocl::current_context().add_program(mrg31k3pkernelString, "my_kernel");
@@ -231,8 +229,6 @@ int gpuMatrixRn(
   random_number.local_work_size(0, 1L);
   random_number.local_work_size(1, 2L);
   
-  
-  //Rcpp::Rcout << "555" << "\n\n";
   
   
   viennacl::ocl::command_queue theQueue = random_number.context().get_queue();
@@ -251,14 +247,14 @@ SEXP gpuRnMatrixTyped(
     Rcpp::IntegerVector max_global_size,
     std::string  random_type) 
 {
-  //Rcpp::Rcout << "444" << "\n\n"; 
+
   const bool BisVCL=1;
   const int ctx_id = INTEGER(xR.slot(".context_index"))[0]-1;
-  //Rcpp::Rcout << "332" << "\n\n";
+
   std::shared_ptr<viennacl::matrix<T> > x = getVCLptr<T>(xR.slot("address"), BisVCL, ctx_id);
-  //Rcpp::Rcout << "331" << "\n\n";
+
   std::shared_ptr<viennacl::matrix<int> > streams = getVCLptr<int>(streamsR.slot("address"), BisVCL, ctx_id);
-  //Rcpp::Rcout << "330" << "\n\n";
+
   
   return(Rcpp::wrap(gpuMatrixRn<T>(*x, *streams, max_global_size, ctx_id, random_type)));	
 
@@ -289,7 +285,6 @@ SEXP gpuRnBackend(
     result = gpuRnMatrixTyped<float>(x, streams, max_global_size, random_type);
   } else if (classInputString == "dvclMatrix") {
     result = gpuRnMatrixTyped<double>(x, streams, max_global_size, random_type);
-    //Rcpp::Rcout << "111" << "\n\n";
   } else if (classInputString == "ivclMatrix") {
     result = gpuRnMatrixTyped<int>(x, streams, max_global_size, random_type);
   } else {
