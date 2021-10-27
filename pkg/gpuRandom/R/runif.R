@@ -57,7 +57,14 @@ runif = function(
   
   invisible(streams)
   
-  if(ncol(xVcl)==1) capture.output(xVcl <- as.vclVector(xVcl), file='NUL')      #xVcl <- as.vclVector(xVcl)
+  if(ncol(xVcl)==1) {
+    if (type == "float"){
+      invisible(capture.output(xVcl <- as.vclVector(xVcl)))     # an needed message from gpuR if float
+    }else{
+      xVcl <- as.vclVector(xVcl)
+    }
+      
+  }
   
   xVcl
   
