@@ -214,7 +214,7 @@ range(as.matrix(myStreamsGpu1 - myStreamsGpu2))
 
 
 \subsection{Using streams to generate  i.i.d. $U (0, 1)$ random numbers on GPU}
-The streams created sequentially on a GPU are then used in work-items that executes in parallel on a GPU device. In \pkg{gpuRandom} each work-item takes one distinct stream to generate random numbers, so the number of streams should always be equal to the number of total work-items in use. The main part of the kernel (\proglang{OpenCL} functions for execution on the device) for generating uniform random numbers is shown in Listing \ref{lst:uniformkernel}. Kernels are written in the \proglang{OpenCL C} language, in which \code{__kernel} declares a function as a kernel, pointer kernel arguments must be declared with an address space qualifier, for example \code{__global} and \code{__local}. Here the pointers to \code{streams} and to the output matrix \code{out} on the global memory are passed to the kernel as arguments. \code{Nrow} and \code{Ncol} represent row and column number of the matrix \code{out} respectively. \code{NpadCol} is the internal number of columns of \code{out}, \code{NpadStreams} is the internal number of columns of the \code{streams} (these variables are defined in macros not shown here). Each stream's current state is copied to the private memory of each work-item by the function \fct{streamsToPrivate}. \code{index} represents the position of the work-item when mapping it to a one-dimensional data structure. The function \fct{clrngMrg31k3pNextState} generates an uniform random integer called \code{temp} between 0 and 4294967295,  the value of \code{temp} is then scaled to be in the interval $(0,1)$ by multiplying it by a constant \code{mrg31k3p\_NORM\_cl}, which is defined to be $1/4294967295$ in macro not shown here. At the end of generating random numbers, streams are transferred back to global memory through the function \fct{streamsFromPrivate}.
+The streams created sequentially on a GPU are then used in work-items that executes in parallel on a GPU device. In \pkg{gpuRandom} each work-item takes one distinct stream to generate random numbers, so the number of streams should always be equal to the number of total work-items in use. The main part of the kernel (\proglang{OpenCL} functions for execution on the device) for generating uniform random numbers is shown in Listing \ref{lst:uniformkernel}. Kernels are written in the \proglang{OpenCL C} language, in which \code{__kernel} declares a function as a kernel, pointer kernel arguments must be declared with an address space qualifier, for example \code{__global} and \code{__local}. Here the pointers to \code{streams} and to the output matrix \code{out} on the global memory are passed to the kernel as arguments. \code{Nrow} and \code{Ncol} represent row and column number of the matrix \code{out} respectively. \code{NpadCol} is the internal number of columns of \code{out}, \code{NpadStreams} is the internal number of columns of the \code{streams} (these variables are defined in macros not shown here). Each stream's current state is copied to the private memory of each work-item by the function \fct{streamsToPrivate}. \code{index} represents the position of the work-item when mapping it to a one-dimensional data structure. The function \fct{clrngMrg31k3pNextState} generates an uniform random integer called \code{temp} between 0 and 2147483648,  the value of \code{temp} is then scaled to be in the interval $(0,1)$ by multiplying it by a constant \code{mrg31k3p\_NORM\_cl}, which is defined to be $1/2147483648$ in macro not shown here. At the end of generating random numbers, streams are transferred back to global memory through the function \fct{streamsFromPrivate}.
 \begin{framed}
 \begin{lstlisting}[caption={captiontext},language=C,basicstyle=\small,label={lst:uniformkernel}]
  __kernel void mrg31k3pMatrix(
@@ -457,10 +457,10 @@ We generate a large-size matrix of 100 million double-precision Gaussian random 
 system.time(gpuRandom::rnorm(c(10000,10000), streams=streams, 
                              Nglobal=c(512,128), type="double"))
 ##    user  system elapsed 
-##   0.144   0.004   0.189
+##   0.221   0.008   0.241
 system.time(matrix(stats::rnorm(10000^2),10000,10000))
 ##    user  system elapsed 
-##   6.762   0.868   7.624
+##   6.549   0.997   7.544
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -568,7 +568,7 @@ We requested one million simulations on GPU while the actual number of simulatio
 system.time(fisher.sim(month_gpu, 1e6, streams=streams, 
             type="double", returnStatistics=FALSE, Nglobal = c(256,128)))
 ##    user  system elapsed 
-##   0.720   0.001   0.721
+##   0.691   0.006   0.697
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -580,10 +580,10 @@ system.time(fisher.sim(month_gpu, 1e6, streams=streams,
 \begin{verbatim}
 #using CPU
 stats::fisher.test(month,simulate.p.value = TRUE,B=1015808)$p.value
-## [1] 0.4035335
+## [1] 0.403125
 system.time(stats::fisher.test(month,simulate.p.value = TRUE,B=1015808))
 ##    user  system elapsed 
-##  14.706   0.004  14.730
+##  14.814   0.007  14.814
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -645,7 +645,7 @@ With about ten million simulations, we get 1223 cases and a p-value around 0.000
 system.time(gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
             type="double", returnStatistics=FALSE,Nglobal = c(256,128)))
 ##    user  system elapsed 
-##   4.585   0.001   4.582
+##   4.591   0.004   4.595
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -657,10 +657,10 @@ system.time(gpuRandom::fisher.sim(week_GPU, 1e7, streams=streams,
 \begin{verbatim}
 #using CPU
 fisher.test(week,simulate.p.value = TRUE,B=10010624)$p.value
-## [1] 0.0001292627
+## [1] 0.0001293626
 system.time(fisher.test(week,simulate.p.value = TRUE,B=10010624))
 ##    user  system elapsed 
-##  90.434   0.196  90.561
+##  90.558   0.102  90.615
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -831,124 +831,6 @@ gpuRandom::cholBatch(maternCov, diagMat, numbatchD=nrow(myParamsBatch),
                      Nglobal= c(128, 8),
                      Nlocal= c(32, 8),
                      NlocalCache=1000)
-## 
-## #pragma OPENCL EXTENSION cl_khr_fp64 : enable
-## 
-## 
-## #define N 4800  //dimension of matrix
-## #define colStart 0  //column to start at
-## #define colEnd 4800
-## //internal number of columns
-## #define Npad 4864
-## //internal columns for matrix holding diagonals
-## #define NpadDiag 4864
-## #define NstartA 0
-## #define NstartD 0
-## //elements in internal cache
-## #define Ncache 1000
-## //extra rows between stacked matrices
-## #define NpadBetweenMatrices 23347200
-## #define maxLocalItems 256
-## 
-## __kernel void cholBatch(
-## 	__global double *A,
-## 	__global double *diag,
-##  __local double*diagLocal,
-##               int Nmatrix
-## ){
-##  const int localIndex = get_local_id(0)*get_local_size(1) + get_local_id(1);
-##  const int localIndexIsZero = (localIndex==0);
-##  const int NlocalTotal = get_local_size(0)*get_local_size(1);
-##  local double toAddLocal[maxLocalItems];
-##  int Dcol, DcolNpad;
-##  int Drow, DrowBlock, Dk, Dmatrix, DmatrixBlock;
-## int minDcolNcache;
-##  double DL;
-##  local double diagDcol;
-##  int AHere, AHereDcol, AHereDrow, diagHere;
-##  barrier(CLK_LOCAL_MEM_FENCE);
-## 
-## for(Dmatrix = get_group_id(0);
-##      Dmatrix < Nmatrix;
-##      Dmatrix+= get_num_groups(0)){
-## 
-##  diagHere = Dmatrix*NpadDiag + NstartD;
-##  AHere =  Dmatrix*NpadBetweenMatrices + NstartA;
-## 
-##  for(Dcol = colStart; Dcol < colEnd; Dcol++) {
-##   DcolNpad = Dcol*Npad;
-##   AHereDcol = AHere+DcolNpad;
-##   DL = 0.0;
-##   diagLocal[localIndex]=0.0;
-##   toAddLocal[localIndex]=0.0;
-##   minDcolNcache = min(Dcol, Ncache);
-##   for(Dk = localIndex; Dk < minDcolNcache; Dk += NlocalTotal) {
-##     DL = A[AHereDcol+Dk];
-##     diagLocal[Dk] = diag[diagHere+Dk] * DL;
-##     toAddLocal[localIndex] += diagLocal[Dk] * DL;
-##   }// Dk
-##   for(Dk=minDcolNcache+localIndex; Dk < Dcol; Dk += NlocalTotal) {
-##     DL = A[AHereDcol+Dk];
-##     toAddLocal[localIndex] += diag[diagHere+Dk] * DL * DL;
-##   }// Dk
-## 
-## // reduction on dimension 1
-##   barrier(CLK_LOCAL_MEM_FENCE);
-##   if( (get_local_id(1) == 0)){
-##    for(Dk = 1; Dk < get_local_size(1); Dk++) {
-##     toAddLocal[localIndex] +=  toAddLocal[localIndex + Dk];
-##    }//for Dk
-##   }//get_local_id(1) == 0
-##   barrier(CLK_LOCAL_MEM_FENCE);
-## 
-## // final reduction on dimension 0
-##   if(localIndexIsZero ){
-##    for(Dk = get_local_size(1); Dk < NlocalTotal; Dk+= get_local_size(1)) {
-##     toAddLocal[localIndex] +=  toAddLocal[Dk];
-##    } //Dk
-##    diagDcol = A[AHereDcol+Dcol] - toAddLocal[localIndex];
-##    diag[diagHere+Dcol] = diagDcol;
-## #ifdef diagToOne
-##    A[AHereDcol+Dcol] = 1.0;
-## #endif
-##   }  //localIndex==0 and Dmatrix < Nmatrix
-##   barrier(CLK_LOCAL_MEM_FENCE);
-## 
-## // off diagonals
-##  for(DrowBlock = Dcol+1; DrowBlock < N; DrowBlock += get_local_size(0)) {
-##   Drow = DrowBlock + get_local_id(0);
-##   AHereDrow = AHere+Drow*Npad;
-##   DL = 0.0;
-##   if(Drow < N){
-##   for(Dk = get_local_id(1); Dk < minDcolNcache; Dk+=get_local_size(1)) {
-##    DL += A[AHereDrow+Dk] * diagLocal[Dk];
-##   } // Dk
-## 	 for(minDcolNcache + get_local_id(1); Dk < Dcol; Dk+=get_local_size(1)) {
-##     DL += A[AHereDrow+Dk] * diag[diagHere+Dk] * A[AHereDcol+Dk];
-##   }// Dk
-##    }//Drow < N
-##   toAddLocal[localIndex] = DL;
-## 
-##   // local reduction
-##   barrier(CLK_LOCAL_MEM_FENCE);
-##   if( (get_local_id(1) == 0) & (Drow < N)){
-##    DL = toAddLocal[localIndex];
-##    for(Dk = 1; Dk < get_local_size(1); Dk++) {
-##     DL +=  toAddLocal[localIndex + Dk];
-##    }//Dk
-##    A[AHereDrow+Dcol] = (A[AHereDrow+Dcol] - DL)/diagDcol;
-##   }//get_local_id(1) == 0
-##   barrier(CLK_GLOBAL_MEM_FENCE);
-## 
-##  }//DrowBlock
-## barrier(CLK_GLOBAL_MEM_FENCE);
-## } // Dcol loop
-## 
-## barrier(CLK_GLOBAL_MEM_FENCE);
-## } // Dmatrix loop
-## 
-## barrier(CLK_LOCAL_MEM_FENCE);
-## }// kernel
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
