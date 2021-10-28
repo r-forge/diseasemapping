@@ -36,7 +36,7 @@ std::string mrg31k3pMatrixString(
     "\n#define mrg31k3p_NORM_cl 4.6566126e-10\n\n"
     "//TWOPI * mrg31k3p_NORM_cl\n"
     "#define TWOPI_mrg31k3p_NORM_cl 2.9258361e-09\n\n";
-  } else {
+  } else if (typeString == "int"){
     result += 
       "\n#define mrg31k3p_NORM_cl 4.656612873077392578125e-10\n";    
   }
@@ -168,9 +168,10 @@ std::string mrg31k3pMatrixString(
     if(typeString == "double" | typeString == "float") {
       result += 
         "out[Dentry] = mrg31k3p_NORM_cl * temp;\n";
-    } else if(typeString == "int"){
+    } else if (typeString == "int"){
       result += 
-        "  out[Dentry] = (uint) ((2*mrg31k3p_M1 + 1) * mrg31k3p_NORM_cl * temp);\n";
+     //  "  out[Dentry] = (int) ((2*mrg31k3p_M1 + 1) * mrg31k3p_NORM_cl * temp);\n";
+        "  out[Dentry] = (int) ( (mrg31k3p_M1 + 1)  * (2 * mrg31k3p_NORM_cl * temp - 1));\n";
     }
   }
   
@@ -199,7 +200,7 @@ std::string mrg31k3pMatrixString(
 template<typename T>
 int gpuMatrixRn(
     viennacl::matrix<T> &x,
-    viennacl::matrix<int> &streams,
+    viennacl::matrix<cl_uint> &streams,
     const IntegerVector numWorkItems,
     const int ctx_id,
     const std::string random_type){
@@ -253,7 +254,7 @@ SEXP gpuRnMatrixTyped(
 
   std::shared_ptr<viennacl::matrix<T> > x = getVCLptr<T>(xR.slot("address"), BisVCL, ctx_id);
 
-  std::shared_ptr<viennacl::matrix<int> > streams = getVCLptr<int>(streamsR.slot("address"), BisVCL, ctx_id);
+  std::shared_ptr<viennacl::matrix<cl_uint> > streams = getVCLptr<cl_uint>(streamsR.slot("address"), BisVCL, ctx_id);
 
   
   return(Rcpp::wrap(gpuMatrixRn<T>(*x, *streams, max_global_size, ctx_id, random_type)));	
