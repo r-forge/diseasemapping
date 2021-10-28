@@ -45,11 +45,6 @@ std::string openclTypeString<int>(){
   return(result);
 }
 
-template <>
-std::string openclTypeString<ulong>(){
-  std::string result = "ulong";
-  return(result);
-}
 
 template <typename T> 
 T maternClEpsilon(){

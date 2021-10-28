@@ -59,7 +59,7 @@ runif = function(
   
   if(ncol(xVcl)==1) {
     if (type == "float"){
-      invisible(capture.output(xVcl <- as.vclVector(xVcl)))     # an needed message from gpuR if float
+      invisible(capture.output(xVcl <- as.vclVector(xVcl)))     # an unneeded message from gpuR if float
     }else{
       xVcl <- as.vclVector(xVcl)
     }
