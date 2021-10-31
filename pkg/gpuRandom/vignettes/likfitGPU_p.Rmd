@@ -5,12 +5,11 @@
 
 ```{r makeplots,eval=TRUE}
 # isotropic
-# isotropic
 library(gpuRandom)
 library(gpuR)
 library('geostatsp')
 data('swissRain')
-sr2 = swissRain[0:30,]
+sr2 = swissRain[0:100,]
 
 # extract variables for modeling
 sr2$sqrtY = sqrt(sr2$rain)
@@ -25,15 +24,16 @@ spatialmodel = geostatsp::likfitLgm(
   verbose=FALSE
 )
 spatialmodel$parameters
+
 newParamList = list(
-  range=seq(30000, 80000 , len=16),
-  nugget = seq(0,0.25,len=4)
+  range=seq(30000, 80000 , len=20),
+  nugget = seq(0,0.25,len=10)
 ) 
 
 
 newParam= do.call(expand.grid, newParamList)
 
-otherparams = c(shape=1, variance=1.840997, anisoRatio = 1, anisoAngleRadians = 0)
+otherparams = c(shape=1, variance=2.016713, anisoRatio = 1, anisoAngleRadians = 0)
 otherparams = matrix(rep(otherparams,each=nrow(newParam)),nrow=nrow(newParam))
 colnames(otherparams) <- c("shape", "variance", "anisoRatio", "anisoAngleRadians")
 
@@ -43,24 +43,17 @@ paramsGpu = gpuRandom::maternGpuParam(paramsBatch0, type="double")
 type = "double"
 
 
-
-```
-
-
-
-```{r likfitGpu_2, eval=FALSE}
-
-result<-gpuRandom::likfitGpu_2(spatialmodel,     #data,
-            type = "double",
-            paramsGpu, #a vclmatrix, consists of all the parameters#betas=NULL, #a vclmatrix  #only one row batch, but many colbatches
-            BoxCox=c(1,0), # an R vector, will always be c(1,0,.....)
-            form = "ml",
-            NparamPerIter=64,  # how many sets of params to be evaluated in each loop
-            nBetahats =1,
-            minustwotimes=TRUE,
-            Nglobal=c(64,64,1),
-            Nlocal=c(8,8,1),
-            NlocalCache=1024)
+result<-gpuRandom::likfitGpu(spatialmodel,     #data,
+                               type = "double",
+                               paramsGpu, #a vclmatrix, consists of all the parameters#betas=NULL, #a vclmatrix  #only one row batch, but many colbatches
+                               BoxCox=c(1,0), # an R vector, will always be c(1,0,.....)
+                               form = "ml",
+                               NparamPerIter=50,  # how many sets of params to be evaluated in each loop
+                               nBetahats =1,
+                               minustwotimes=TRUE,
+                               Nglobal=c(64,64,1),
+                               Nlocal=c(16,16,1),
+                               NlocalCache=1000)
 
 
 mTwoLogLik <- as.matrix(result$minusTwoLogLik)
@@ -79,17 +72,34 @@ image(
 mapmisc::legendBreaks('topright', myCol)
 
 
+```
 
 
-mTwoLogLik 
-as.vector(result$detVar)[1:50]
-
-as.vector(result$detReml)[1:50]
-
-
-as.matrix(result$ssqY)[1:50,]
-as.matrix(result$ssqYX)[1:50,]
+```{r test1031}
 result$Betahats
+as.matrix(result$ssqBetahat)
+as.vector(result$detVar)
+as.vector(result$jacobian)
+as.vector(result$detReml)
+as.matrix(result$ssqY)
+as.matrix(result$XVYXVX)
+
+```
+
+```{r likfit_givenBeta}
+Betas <- t(expand.grid(intercept = seq(3,4,len=1), elevation = 5.4e-05))
+
+result2<-gpuRandom::likfit_givenBeta(Betas = Betas,
+                                     variances = paramsBatch0[,4],
+                                     Nobs = 100,
+                                     detVar=result$detVar,
+                                     ssqY=result$ssqY,
+                                     XVYXVX=result$XVYXVX,
+                                     jacobian=result$jacobian,
+                                     form = "mlFixSigma",
+                                     minustwotimes=TRUE)
+
+result2$likForBeta
 
 ```
 
@@ -99,21 +109,6 @@ result$Betahats
 
 
 
-```{r setup, include=FALSE}
-library(geostatsp)
-set.seed(1)
-n=20
-mydat = SpatialPointsDataFrame(cbind(stats::runif(n), seq(0,1,len=n)),
-                               data=data.frame(cov1 = stats::rnorm(n), cov2 = stats::rpois(n, 2)))
-
-# simulate a random field
-mydat@data= cbind(mydat@data , RFsimulate(model=c(variance=1.5,range=0.5,nugget=0.25,shape=1.25,anisoRatio = 1, anisoAngleRadins=0),x=mydat)@data)
-
-# add fixed effects
-# exponentiate to make positive and enable boxcox
-mydat$Y = -3 + 0.5*mydat$cov1 + 0.2*mydat$cov2 + mydat$sim + stats::rnorm(length(mydat), 0, sd=sqrt(0.25))
-mydat$Yexp = exp(mydat$Y)
-```
 
 
 
@@ -122,121 +117,6 @@ mydat$Yexp = exp(mydat$Y)
 
 
 
-
-
-
-
-
-
-
-
-
-```{r patrickTest, eval=TRUE}
-library(gpuR)
-
-params = rbind(c(shape=1.25, range=0.2641423, variance = 1.5, nugget = 0, anisoRatio = 1, anisoAngleRadians = 0),
-                    c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0),
-                    c(shape=2.25, range=0.5, variance = 2.5, nugget = 2.25, anisoRatio = 1, anisoAngleRadians = 0))
- # c(shape=1.25, range=0.5, variance = 1.5, nugget = 0.25, anisoRatio = 1, anisoAngleRadians = 0))
-#paramsBatch = rbind(c(shape=3, range=11.5247874, variance = 5.5, nugget = 0.6932729, anisoRatio = 1, anisoAngleRadians = 0))
-
-
-x = mydat
-boxcox = c(0, 0.5)
-Scov = c('cov1','cov2')
-yvar = 'Yexp'
-NparamPerIter = 2
-
-workgroupSize = c(1,1,1)
-  localSize = c(1,1,1)
-NlocalCache=500
-type='double'
-verbose = 9L
-
-
-if(boxcox[1] != 1) {
-  boxcox = c(1, 0, setdiff(boxcox, c(0,1)))
-}
-Ncov = length(Scov)+1
-Ndata = length(boxcox)
-Nparam = nrow(params)
-
-paramsBatch1 = t(apply(params, 1, geostatsp::fillParam))
-paramsBatch = vclMatrix(
-  cbind(paramsBatch1, matrix(0, nrow(paramsBatch1), 22-ncol(paramsBatch1))),
-  type=type)
-
-yx = vclMatrix(cbind(
-  as.vector(x@data[,yvar]),
-  matrix(0, nrow(x@data), length(boxcox)-1),
-  1,
-  as.matrix(x@data[,Scov])
-), type=type)
-coords = vclMatrix(x@coords, type =type)
-
-boxcoxGpu = vclVector(boxcox, type=type)
-betas = vclMatrix(0, Nparam, Ncov * Ndata, type=type)
-detVar = vclVector(0, Nparam,type=type)
-detReml = vclVector(0, Nparam, type=type)
-jacobian = vclVector(0, Ndata, type=type)
-ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
-ssqX <- vclMatrix(0, Nparam, Ndata, type=type)
-ssqBeta = deepcopy(ssqX)
-ssqBetaHat = deepcopy(ssqX)
-
-# objects for debugging
-ssqYX = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
-ssqYXcopy = deepcopy(ssqYX)
-LinvYX = vclMatrix(0, nrow(yx) * NparamPerIter, ncol(yx), type=type)
-varMat = vclMatrix(0, nrow(yx)*NparamPerIter, nrow(coords), type=type)
-
-  QinvSsqYx = vclMatrix(0, NparamPerIter*Ncov, Ndata, type = type)
-  cholXVXdiag = vclMatrix(0, NparamPerIter, Ncov, type=type)
-
-cholDiagMat = vclMatrix(0, NparamPerIter, nrow(coords), type=type)
-b_beta = vclMatrix(0, NparamPerIter*nrow(yx), Ndata, type=type)
-
-  XVYXVX = vclMatrix(0, Nparam * Ncov, ncol(yx), type=type)
-  aTDinvb_beta = vclMatrix(0, Nparam, Ndata, type=type)
-
-gpuRandom:::likfitGpu_BackendP(
-  yx,
-  coords,
-  paramsBatch,
-  boxcoxGpu,
-  betas,#5
-  ssqY,
-  aTDinvb_beta,
-  XVYXVX,
-  ssqBeta,
-  ssqBetaHat, # 10
-  detVar, # 11
-  detReml,
-  jacobian,#13
-  NparamPerIter,
-  workgroupSize, # 15
-  localSize,
-  NlocalCache = 1000,
-  verbose = 0, 
-  ssqYX, 
-  ssqYXcopy, # 20 
-  LinvYX,
-  QinvSsqYx, 
-  cholXVXdiag, 
-  varMat,
-  cholDiagMat, #25
-  b_beta  #  26
-)
-
-
-as.vector(detVar)
-as.vector(detReml)
-as.matrix(ssqX)
-as.matrix(ssqY)
-
-as.vector(jacobian)
-head(as.matrix(yx)) 
-```
 
 
 
@@ -252,19 +132,7 @@ sr2 = swissRain[0:30,]
 # extract variables for modeling
 sr2$sqrtY = sqrt(sr2$rain)
 sr2$elev = raster::extract(swissAltitude, sr2)
-# swissFitIso = geostatsp::likfitLgm(
-#   data=sr2,
-#   formula=sqrtY ~ elev,
-#   param=c(range=50000,shape=1),
-#   reml=FALSE,
-#   verbose=FALSE
-# )
-# swissFitIso$parameters
 
-# myParamsBatch = rbind(c(shape=1, range=34358, variance = 1.840997, nugget = 0.11, anisoRatio = 1, anisoAngleRadians = 0))
-# myParamsBatch = t(apply(myParamsBatch, 1, geostatsp::fillParam))
-# myParamsBatch = cbind(myParamsBatch, matrix(0, nrow(myParamsBatch), 22-ncol(myParamsBatch)))
-# paramsBatch  = vclMatrix(myParamsBatch, type=type)
 newParamList = list(
   range=seq(30000, 80000 , len=10),
   nugget = seq(0,0.25,len=5)
@@ -291,7 +159,7 @@ Scov = c('elev')
 yvar = 'sqrtY'
 
 # this setting works
-workgroupSize = c(64,64,2)
+workgroupSize = c(64,16,2)
 localSize = c(4,8,1)
 NlocalCache=1000
 verbose = 9L
@@ -321,7 +189,7 @@ boxcoxGpu = vclVector(boxcox, type=type)
 #betas <- matrix(c(4.441053, 5.809251e-05),nrow=Ncov, ncol=Ndata)
 betas <- matrix(0,nrow=Ncov, ncol=Ndata)
 betas = vclMatrix(betas, type=type)
-#betas = vclMatrix(0,0,0, type=type)
+
 
 detVar = vclVector(0, Nparam,type=type)
 detReml = vclVector(0, Nparam, type=type)
@@ -363,51 +231,37 @@ gpuRandom:::likfitGpu_BackendP(
   localSize,  
   NlocalCache,  
   verbose=c(1,0),  #18
-  ssqYX, 
-  ssqYXcopy,  #new
+  ssqYX, #ssqYXcopy,  #new
   LinvYX,  #21
   QinvSsqYx, 
   cholXVXdiag, #23
   varMat, #new
   cholDiagMat,
   b_beta)   #new  26
+
+
+
 any(is.na(as.vector(detVar)))
 any(is.na(as.matrix(varMat)))
-
-
-
-
-
-
-
-
-
-
-
-
-
-as.vector(detVar)[51:100]
-as.vector(detReml)[51:100]
-as.matrix(ssqBetahat)[40:70,]
-is.na(as.matrix(ssqBetahat))
-as.matrix(ssqBeta)[1:10,]
-as.matrix(aTDinvb_beta)[33:65,]
-as.matrix(b_beta)[1:10,]
-as.matrix(LinvYX)[30:60,]
-as.matrix(ssqYX)
-as.matrix(ssqY)[80:110,]
-any(is.na(as.matrix(ssqYX)))
-as.matrix(XVYXVX)
-as.vector(jacobian)
-as.matrix(cholDiagMat)
-as.matrix(varMat)[10:30,]
-as.matrix(cholDiagMat)
-
-any(is.na(as.matrix(varMat)))
-which(is.na(as.matrix(varMat)))
-
 dim(XVYXVX)
 dim(ssqBeta)
+# as.vector(detVar)[51:100]
+# as.vector(detReml)[51:100]
+# as.matrix(ssqBetahat)[40:70,]
+# is.na(as.matrix(ssqBetahat))
+# as.matrix(ssqBeta)[1:10,]
+# as.matrix(aTDinvb_beta)[33:65,]
+# as.matrix(b_beta)[1:10,]
+# as.matrix(LinvYX)[30:60,]
+# as.matrix(ssqYX)
+# as.matrix(ssqY)[80:110,]
+# any(is.na(as.matrix(ssqYX)))
+# as.matrix(XVYXVX)
+# as.vector(jacobian)
+# as.matrix(cholDiagMat)
+# as.matrix(varMat)[10:30,]
+# as.matrix(cholDiagMat)
+
 ```
 
 

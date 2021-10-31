@@ -4,7 +4,7 @@
 \alias{runif}
 \title{runif}
 \usage{
-runif(n, streams, Nglobal, type = c("double", "float"))
+runif(n, streams, Nglobal, type = c("double", "float", "integer"))
 }
 \arguments{
 \item{n}{a number or a vector specifying the size of output matrix}
