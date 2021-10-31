@@ -87,7 +87,7 @@ as.matrix(result$XVYXVX)
 ```
 
 ```{r likfit_givenBeta}
-Betas <- t(expand.grid(intercept = seq(3,4,len=1), elevation = 5.4e-05))
+Betas <- t(expand.grid(intercept = seq(3,4,len=5), elevation = 5.4e-05))
 
 result2<-gpuRandom::likfit_givenBeta(Betas = Betas,
                                      variances = paramsBatch0[,4],
