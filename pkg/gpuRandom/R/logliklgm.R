@@ -280,7 +280,7 @@ likfitGpu_0 <- function(Vbatch,
 #' @title Estimate Log-likelihood for Gaussian random fields
 #' @useDynLib gpuRandom
 #' @export
-likfitGpu <- function(modelname, mydat, type=c("double", "float"),
+likfitGpu_1 <- function(modelname, mydat, type=c("double", "float"),
                       completeparamsBatch, #a vclmatrix
                       betas=NULL, #a vclmatrix  #given by the user or provided from formula
                       ssqYX,

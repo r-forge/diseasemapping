@@ -4,7 +4,7 @@
 
 
 #before start, we have a spatial model 
-likfitGpu_2 <- function(spatialmodel,     #data,
+likfitGpu <- function(spatialmodel,     #data,
                         type = c("double","float"),
                         paramsGpu, #a vclmatrix, consists of all the parameters
                         BoxCox, # an R vector, will always be c(1,0,.....)
@@ -59,7 +59,7 @@ likfitGpu_2 <- function(spatialmodel,     #data,
   jacobian = vclVector(0, Ndata, type=type)   
   ssqYX = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
   aTDinvb_beta = vclMatrix(0, Nparam, Ndata, type=type)
-  ssqYXcopy = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
+  #ssqYXcopy = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
   LinvYX = vclMatrix(0, nrow(yx) * NparamPerIter, ncol(yx), type=type)
   QinvSsqYx = vclMatrix(0, NparamPerIter*Ncov, Ndata, type = type)
   cholXVXdiag = vclMatrix(0, NparamPerIter, Ncov, type=type)
@@ -91,8 +91,7 @@ likfitGpu_2 <- function(spatialmodel,     #data,
     as.integer(Nlocal),  #16
     NlocalCache,  #17
     verbose,  #18
-    ssqYX, 
-    ssqYXcopy,  #new
+    ssqYX, #ssqYXcopy,  #new
     LinvYX,  #19
     QinvSsqYx, 
     cholXVXdiag, #22
