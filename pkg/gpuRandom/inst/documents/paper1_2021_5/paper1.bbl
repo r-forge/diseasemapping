@@ -1,4 +1,4 @@
-\begin{thebibliography}{35}
+\begin{thebibliography}{26}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
@@ -26,12 +26,6 @@ Bengtsson H (2021).
 Box GE (1958).
 \newblock \enquote{A note on the generation of random normal deviates.}
 \newblock \emph{Ann. Math. Statist.}, \textbf{29}, 610--611.
-
-\bibitem[{Davis(1987)}]{davis1987}
-Davis MW (1987).
-\newblock \enquote{Production of conditional simulations via the LU triangular
-  decomposition of the covariance matrix.}
-\newblock \emph{Mathematical geology}, \textbf{19}(2), 91--98.
 
 \bibitem[{{Determan Jr.}(2017)}]{gpur1}
 {Determan Jr} C (2017).
@@ -65,21 +59,11 @@ Eddelbuettel D, Fran\c{c}ois R (2011).
 \newblock \doi{10.18637/jss.v040.i08}.
 \newblock \urlprefix\url{https://www.jstatsoft.org/v40/i08/}.
 
-\bibitem[{Fenton and Vanmarcke(1990)}]{fenton1990simulation}
-Fenton GA, Vanmarcke EH (1990).
-\newblock \enquote{Simulation of random fields via local average subdivision.}
-\newblock \emph{Journal of Engineering Mechanics}, \textbf{116}(8), 1733--1749.
-
 \bibitem[{for Health~Statistics()}]{National2018}
 for Health~Statistics NC (????).
 \newblock \enquote{Natality 2018. Public use file.}
 \newblock Annual internet product. 2019. Available at
   \url{http://www.cdc.gov/nchs/data_access/VitalStatsOnline.htm}.
-
-\bibitem[{G{\'o}mez-Hern{\'a}ndez and Journel(1993)}]{gomez1993joint}
-G{\'o}mez-Hern{\'a}ndez JJ, Journel AG (1993).
-\newblock \enquote{Joint sequential simulation of multigaussian fields.}
-\newblock In \emph{Geostatistics Troia’92}, pp. 85--94. Springer.
 
 \bibitem[{Haskard(2007)}]{haskard2007anisotropic}
 Haskard KA (2007).
@@ -93,16 +77,14 @@ Howes L, Thomas D (2007).
   CUDA.}
 \newblock \emph{GPU gems}, \textbf{3}, 805--830.
 
-\bibitem[{Johnson(1987)}]{johnson1987multivariate}
-Johnson ME (1987).
-\newblock \emph{Multivariate statistical simulation: A guide to selecting and
-  generating continuous multivariate distributions}, volume 192.
-\newblock John Wiley \& Sons.
-
-\bibitem[{Journel(1974)}]{journel1974}
-Journel AG (1974).
-\newblock \enquote{Geostatistics for conditional simulation of ore bodies.}
-\newblock \emph{Economic Geology}, \textbf{69}(5), 673--687.
+\bibitem[{L'Ecuyer(2015)}]{rLEC15a}
+L'Ecuyer P (2015).
+\newblock \enquote{Random Number Generation with Multiple Streams for
+  Sequential and Parallel Computers.}
+\newblock In L~Yilmaz, WKV Chan, I~Moon, TMK Roeder, C~Macal, MD~Rossetti
+  (eds.), \emph{Proceedings of the 2015 Winter Simulation Conference}, pp.
+  31--44. Piscataway, New Jersey: Institute of Electrical and Electronics
+  Engineers, Inc.
 
 \bibitem[{L'ecuyer \emph{et~al.}(2002)L'ecuyer, Simard, Chen, and
   Kelton}]{l2002object}
@@ -115,12 +97,6 @@ L'ecuyer P, Simard R, Chen EJ, Kelton WD (2002).
 Liu Y, Li J, Sun S, Yu B (2019).
 \newblock \enquote{Advances in Gaussian random field generation: a review.}
 \newblock \emph{Computational Geosciences}, \textbf{23}(5), 1011--1047.
-
-\bibitem[{Loeve(1978)}]{LoeveM:1978}
-Loeve M (1978).
-\newblock \emph{Probability theory. ii, volume 46 of. Graduate Texts in
-  Mathematics}.
-\newblock 4 edition. Springer-Verlag New York.
 
 \bibitem[{L’Ecuyer(2012)}]{l2012random}
 L’Ecuyer P (2012).
@@ -139,33 +115,16 @@ Mat{\'e}rn B (1960).
 \newblock \enquote{Spatial variation, Technical Report.}
 \newblock \emph{Statens Skogsforsningsinstitut, Stockholm}.
 
-\bibitem[{Matheron(1973)}]{matheron_1973}
-Matheron G (1973).
-\newblock \enquote{The intrinsic random functions and their applications.}
-\newblock \emph{Advances in Applied Probability}, \textbf{5}(3), 439–468.
-\newblock \doi{10.2307/1425829}.
-
 \bibitem[{Mehta and Patel(2011)}]{mehta2011ibm}
 Mehta CR, Patel NR (2011).
 \newblock \enquote{IBM SPSS exact tests.}
 \newblock \emph{Armonk, NY: IBM Corporation}, pp. 23--24.
 
-\bibitem[{Mej{\'i}a and Rodriguez-Iturbe(1974)}]{Meja1974OnTS}
-Mej{\'i}a JM, Rodriguez-Iturbe I (1974).
-\newblock \enquote{On the synthesis of random field sampling from the spectrum:
-  An application to the generation of hydrologic spatial processes.}
-\newblock \emph{Water Resources Research}, \textbf{10}, 705--711.
-
-\bibitem[{Oliver(1995)}]{oliver1995moving}
-Oliver DS (1995).
-\newblock \enquote{Moving averages for Gaussian simulation in two and three
-  dimensions.}
-\newblock \emph{Mathematical Geology}, \textbf{27}(8), 939--960.
-
-\bibitem[{Pebesma(2004)}]{pebesma2004multivariable}
-Pebesma EJ (2004).
-\newblock \enquote{Multivariable geostatistics in S: the gstat package.}
-\newblock \emph{Computers \& geosciences}, \textbf{30}(7), 683--691.
+\bibitem[{Patefield(1981)}]{patefield1981efficient}
+Patefield W (1981).
+\newblock \enquote{Algorithm AS 159: An Efficient Method of Generating Random R
+  × C Tables with Given Row and Column Totals.}
+\newblock \emph{Applied Statistics}, \textbf{30}(1), 91--7.
 
 \bibitem[{{R Core Team}(2021)}]{r2021}
 {R Core Team} (2021).
@@ -211,13 +170,6 @@ Schlather M, Malinowski A, Oesting M, Boecker D, Strokorb K, Engelke S, Martini
 \newblock \emph{{RandomFields}: Simulation and Analysis of Random Fields}.
 \newblock R package version 3.3.8,
   \urlprefix\url{https://cran.r-project.org/package=RandomFields}.
-
-\bibitem[{{Shinozuka} and {Jan}(1972)}]{1972JSV}
-{Shinozuka} M, {Jan} CM (1972).
-\newblock \enquote{{Digital simulation of random processes and its
-  applications}.}
-\newblock \emph{Journal of Sound Vibration}, \textbf{25}(1), 111--128.
-\newblock \doi{10.1016/0022-460X(72)90600-1}.
 
 \bibitem[{Zhao(2016)}]{zhao_2016}
 Zhao P (2016).

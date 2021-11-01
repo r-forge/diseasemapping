@@ -142,7 +142,7 @@ std::string FisherSimkernelString(const int NR, const int NC, const int NpadStre
   "   const int vsize,\n"   //number of simulations
   " __global  int *count, \n" // number of work items
   + typeString + " threshold,\n"
-  " __global  " + typeString + "  *fact,\n"
+  " __global  double  *fact,\n"
   " __global  " + typeString + "  *results,\n" // fisher log p
   " __global int *streams" 
   ") { \n\n";
@@ -355,28 +355,28 @@ int gpuFisher_test(
   
   
   viennacl::vector<int> count(numWorkItems[0]*numWorkItems[1]); 
-  
-  
-  
-  std::string Fisher_kernel_string = FisherSimkernelString<T>(nr, nc, streams.internal_size2());
-  if(resultSize >= B) {
-    Fisher_kernel_string = "\n#define returnResults\n" + Fisher_kernel_string;
-  }
-#ifdef DEBUGKERNEL
-  Rcpp::Rcout << Fisher_kernel_string << "\n\n";
-#endif  
-  
-  
+
+  ///////
   std::string sumlfKernelString = sum_of_LfactorialString<double>(
     x.size1(), 
     x.size2(),
     x.internal_size2() 
   );
   
-  
+  //////
   std::string lfactorialKernelString = logfactString<double>();
 #ifdef DEBUGKERNEL
   Rcpp::Rcout << lfactorialKernelString << "\n\n";
+#endif  
+  
+  
+  ///////
+  std::string Fisher_kernel_string = FisherSimkernelString<T>(nr, nc, streams.internal_size2());
+  if(resultSize >= B) {
+    Fisher_kernel_string = "\n#define returnResults\n" + Fisher_kernel_string;
+  }
+#ifdef DEBUGKERNEL
+  Rcpp::Rcout << Fisher_kernel_string << "\n\n";
 #endif  
   
   // the context//////////////////////////////////////////////////////
@@ -412,11 +412,7 @@ int gpuFisher_test(
   
   viennacl::ocl::command_queue theQueue = sumLfactorialKernel.context().get_queue();
   viennacl::ocl::enqueue(sumLfactorialKernel(x, logFactorials), theQueue);
-  
-  
-  
-  
-  
+
   statistics = viennacl::linalg::sum(logFactorials);
   threshold = (T) (-statistics)/(1+64 * DOUBLE_EPS);
   row_sum_impl(x, sr);
