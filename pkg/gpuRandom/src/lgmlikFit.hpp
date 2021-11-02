@@ -12,7 +12,7 @@
 
 
 template <typename T> std::string cholBatchKernelString(
-    int colStart,
+int colStart,
 int colEnd,
 int N,
 int Npad,
@@ -150,12 +150,12 @@ void maternBatchVcl(
         const int ctx_id);
     
     
-    template <typename T>
-    void rowsum(
-        viennacl::matrix<T> &x,
-        viennacl::vector_base<T> &Sum,
-        std::string type,
-        int log);
+    // template <typename T>
+    // void rowsum(
+    //     viennacl::matrix<T> &x,
+    //     viennacl::vector_base<T> &Sum,
+    //     std::string type,
+    //     int log);
         
         
         template <typename T> 
@@ -207,23 +207,23 @@ void maternBatchVcl(
         
         
         
-template<typename T> 
-void matrix_vector_sum(
-     viennacl::matrix<T> &matrix,// viennacl::vector_base<int>  rowSum, viennacl::vector_base<int>  colSum,  
-     viennacl::vector_base<T> &vector,
-     viennacl::matrix<T> &sum,
-     const int byrow,
-     Rcpp::IntegerVector numWorkItems,
-     const int ctx_id);            
-                
-                
-                template<typename T> 
-                void matrix_scalar_sum(
-                    viennacl::matrix<T> &matrix,// viennacl::vector_base<int>  rowSum, viennacl::vector_base<int>  colSum,  
-                    T  value,         //viennacl::scalar<T> value,     
-                    viennacl::matrix<T> &sum,
-                    Rcpp::IntegerVector numWorkItems,
-                    const int ctx_id);                
+// template<typename T> 
+// void matrix_vector_sum(
+//      viennacl::matrix<T> &matrix,// viennacl::vector_base<int>  rowSum, viennacl::vector_base<int>  colSum,  
+//      viennacl::vector_base<T> &vector,
+//      viennacl::matrix<T> &sum,
+//      const int byrow,
+//      Rcpp::IntegerVector numWorkItems,
+//      const int ctx_id);            
+//                 
+//                 
+//                 template<typename T> 
+//                 void matrix_scalar_sum(
+//                     viennacl::matrix<T> &matrix,// viennacl::vector_base<int>  rowSum, viennacl::vector_base<int>  colSum,  
+//                     T  value,         //viennacl::scalar<T> value,     
+//                     viennacl::matrix<T> &sum,
+//                     Rcpp::IntegerVector numWorkItems,
+//                     const int ctx_id);                
                 
                 
                 

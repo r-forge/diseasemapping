@@ -34,24 +34,13 @@ template <typename T> std::string mrg31k3pTypeString();
 
 
 std::string mrg31k3pString();
-std::string colsumRowsumString();
+//std::string colsumRowsumString();
 
 double logfactsum(
     viennacl::matrix<int>  &x, //viennacl::vector_base<int>  rowSum,viennacl::vector_base<int>  colSum,   
     Rcpp::IntegerVector numWorkItems,
     int ctx_id);
 
-
-
-template <typename T>  std::string logfactString();
-
-
-//template <typename T> 
-
-void logfactorial(//viennacl::vector<int> &x,    
-    viennacl::vector<double>  &output,  
-    Rcpp::IntegerVector numWorkItems,
-    int ctx_id);
 
 
 

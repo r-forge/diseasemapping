@@ -5,10 +5,6 @@ backsolveBatchBackend <- function(C, A, B, Cstartend, Astartend, Bstartend, numb
     .Call('_gpuRandom_backsolveBatchBackend', PACKAGE = 'gpuRandom', C, A, B, Cstartend, Astartend, Bstartend, numbatchB, diagIsOne, Nglobal, Nlocal, NlocalCache, verbose)
 }
 
-backsolveBatchBackend2 <- function(C, A, B, diagIsOne, Nglobal, Nlocal, NlocalCache) {
-    .Call('_gpuRandom_backsolveBatchBackend2', PACKAGE = 'gpuRandom', C, A, B, diagIsOne, Nglobal, Nlocal, NlocalCache)
-}
-
 cholBatchBackend <- function(A, D, Astartend, Dstartend, numbatchD, Nglobal, Nlocal, NlocalCache) {
     invisible(.Call('_gpuRandom_cholBatchBackend', PACKAGE = 'gpuRandom', A, D, Astartend, Dstartend, numbatchD, Nglobal, Nlocal, NlocalCache))
 }
@@ -18,10 +14,6 @@ cholBatchBackend <- function(A, D, Astartend, Dstartend, numbatchD, Nglobal, Nlo
 #' Computes C = t(A) D A
 crossprodBatchBackend <- function(C, A, D, invertD, Cstartend, Astartend, Dstartend, Nglobal, Nlocal, NlocalCache) {
     .Call('_gpuRandom_crossprodBatchBackend', PACKAGE = 'gpuRandom', C, A, D, invertD, Cstartend, Astartend, Dstartend, Nglobal, Nlocal, NlocalCache)
-}
-
-extractDiagBackend <- function(ssqYXR, ssqYR, NparamPerIter, Ndatasets, numWorkItems) {
-    invisible(.Call('_gpuRandom_extractDiagBackend', PACKAGE = 'gpuRandom', ssqYXR, ssqYR, NparamPerIter, Ndatasets, numWorkItems))
 }
 
 gemmBatchBackend <- function(A, B, C, Arowbatch, Browbatch, Acolbatch, Bcolbatch, need_transpose, Nglobal) {
@@ -52,10 +44,6 @@ cpp_gpu_qqnorm <- function(outR, mu, sigma, lowertail, max_global_size, max_loca
     .Call('_gpuRandom_cpp_gpu_qqnorm', PACKAGE = 'gpuRandom', outR, mu, sigma, lowertail, max_global_size, max_local_size)
 }
 
-likfitGpu_Backend <- function(coordsGpuR, bigparamsBatchR, yXR, betasR, bigvariancesR, jacobianR, finalssqBetaR, finalssqXR, finalssqYR, finallogDR, finallogPR, finalbetahatR, finalLogLikR, n, p, groupsize, colbatch, form, workgroupSize, localSize, NlocalCache, verbose) {
-    invisible(.Call('_gpuRandom_likfitGpu_Backend', PACKAGE = 'gpuRandom', coordsGpuR, bigparamsBatchR, yXR, betasR, bigvariancesR, jacobianR, finalssqBetaR, finalssqXR, finalssqYR, finallogDR, finallogPR, finalbetahatR, finalLogLikR, n, p, groupsize, colbatch, form, workgroupSize, localSize, NlocalCache, verbose))
-}
-
 likfitGpu_BackendP <- function(yx, coords, params, boxcox, betas, ssqY, aTDinvb_beta, XVYXVX, ssqBetahat, ssqBeta, detVar, detReml, jacobian, NparamPerIter, workgroupSize, localSize, NlocalCache, verbose, ssqYX, LinvYX, QinvSsqYx, cholXVXdiag, varMat, cholDiagMat, b_beta) {
     invisible(.Call('_gpuRandom_likfitGpu_BackendP', PACKAGE = 'gpuRandom', yx, coords, params, boxcox, betas, ssqY, aTDinvb_beta, XVYXVX, ssqBetahat, ssqBeta, detVar, detReml, jacobian, NparamPerIter, workgroupSize, localSize, NlocalCache, verbose, ssqYX, LinvYX, QinvSsqYx, cholXVXdiag, varMat, cholDiagMat, b_beta))
 }
@@ -64,20 +52,8 @@ logfactsumBackend <- function(xR, numWorkItems) {
     .Call('_gpuRandom_logfactsumBackend', PACKAGE = 'gpuRandom', xR, numWorkItems)
 }
 
-rowsumBackend <- function(xR, SumR, type, log) {
-    invisible(.Call('_gpuRandom_rowsumBackend', PACKAGE = 'gpuRandom', xR, SumR, type, log))
-}
-
 mat_vec_eledivideBackend <- function(matrixR, rowvectorR, resultR, numWorkItems) {
     invisible(.Call('_gpuRandom_mat_vec_eledivideBackend', PACKAGE = 'gpuRandom', matrixR, rowvectorR, resultR, numWorkItems))
-}
-
-matrix_matrix_sumBackend <- function(aR, bR, sumR, numWorkItems) {
-    invisible(.Call('_gpuRandom_matrix_matrix_sumBackend', PACKAGE = 'gpuRandom', aR, bR, sumR, numWorkItems))
-}
-
-matrix_scalar_sumBackend <- function(matrixR, valueR, sumR, numWorkItems) {
-    invisible(.Call('_gpuRandom_matrix_scalar_sumBackend', PACKAGE = 'gpuRandom', matrixR, valueR, sumR, numWorkItems))
 }
 
 matrix_vector_sumBackend <- function(matrixR, rowvectorR, colvectorR, constantR, sumR, numWorkItems) {
