@@ -1,4 +1,4 @@
-\begin{thebibliography}{26}
+\begin{thebibliography}{30}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
@@ -86,12 +86,44 @@ L'Ecuyer P (2015).
   31--44. Piscataway, New Jersey: Institute of Electrical and Electronics
   Engineers, Inc.
 
+\bibitem[{L'Ecuyer \emph{et~al.}(2017)L'Ecuyer, Munger, Oreshkin, and
+  Simard}]{rLEC17p}
+L'Ecuyer P, Munger D, Oreshkin B, Simard R (2017).
+\newblock \enquote{Random Numbers for Parallel Computers: Requirements and
+  Methods, with Emphasis on {GPUs}.}
+\newblock \emph{Mathematics and Computers in Simulation}, \textbf{135}, 3--17.
+\newblock Open access at \url{http://dx.doi.org/10.1016/j.matcom.2016.05.005}.
+
+\bibitem[{L'Ecuyer \emph{et~al.}(2021)L'Ecuyer, Nadeau-Chamard, Chen, and
+  Lebar}]{rLEC21a}
+L'Ecuyer P, Nadeau-Chamard O, Chen YF, Lebar J (2021).
+\newblock \enquote{Multiple Streams with Recurrence-Based, Counter-Based, and
+  Splittable Random Number Generators.}
+\newblock In \emph{Proceedings of the 2021 Winter Simulation Conference}.
+\newblock To appear, see
+  \url{https://www-labs.iro.umontreal.ca/~lecuyer/myftp/papers/wsc21rng.pdf}.
+
+\bibitem[{L'Ecuyer and Simard(2007)}]{rLEC07b}
+L'Ecuyer P, Simard R (2007).
+\newblock \enquote{{TestU01}: A {C} Library for Empirical Testing of Random
+  Number Generators.}
+\newblock \emph{{ACM} Transactions on Mathematical Software}, \textbf{33}(4),
+  Article 22.
+
 \bibitem[{L'ecuyer \emph{et~al.}(2002)L'ecuyer, Simard, Chen, and
   Kelton}]{l2002object}
 L'ecuyer P, Simard R, Chen EJ, Kelton WD (2002).
 \newblock \enquote{An object-oriented random-number package with many long
   streams and substreams.}
 \newblock \emph{Operations research}, \textbf{50}(6), 1073--1075.
+
+\bibitem[{L'Ecuyer and Touzin(2000)}]{rLEC00b}
+L'Ecuyer P, Touzin R (2000).
+\newblock \enquote{Fast Combined Multiple Recursive Generators with Multipliers
+  of the Form $a = \pm 2^q \pm 2^r$.}
+\newblock In JA~Joines, RR~Barton, K~Kang, PA~Fishwick (eds.),
+  \emph{Proceedings of the 2000 Winter Simulation Conference}, pp. 683--689.
+  {IEEE} Press.
 
 \bibitem[{Liu \emph{et~al.}(2019)Liu, Li, Sun, and Yu}]{LiuandLi2019}
 Liu Y, Li J, Sun S, Yu B (2019).

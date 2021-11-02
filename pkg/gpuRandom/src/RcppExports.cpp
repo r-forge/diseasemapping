@@ -32,23 +32,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// backsolveBatchBackend2
-SEXP backsolveBatchBackend2(Rcpp::S4 C, Rcpp::S4 A, Rcpp::S4 B, const int diagIsOne, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal, const int NlocalCache);
-RcppExport SEXP _gpuRandom_backsolveBatchBackend2(SEXP CSEXP, SEXP ASEXP, SEXP BSEXP, SEXP diagIsOneSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP, SEXP NlocalCacheSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type C(CSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type A(ASEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type B(BSEXP);
-    Rcpp::traits::input_parameter< const int >::type diagIsOne(diagIsOneSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nglobal(NglobalSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type Nlocal(NlocalSEXP);
-    Rcpp::traits::input_parameter< const int >::type NlocalCache(NlocalCacheSEXP);
-    rcpp_result_gen = Rcpp::wrap(backsolveBatchBackend2(C, A, B, diagIsOne, Nglobal, Nlocal, NlocalCache));
-    return rcpp_result_gen;
-END_RCPP
-}
 // cholBatchBackend
 void cholBatchBackend(Rcpp::S4 A, Rcpp::S4 D, Rcpp::IntegerVector Astartend, Rcpp::IntegerVector Dstartend, const int numbatchD, Rcpp::IntegerVector Nglobal, Rcpp::IntegerVector Nlocal, Rcpp::IntegerVector NlocalCache);
 RcppExport SEXP _gpuRandom_cholBatchBackend(SEXP ASEXP, SEXP DSEXP, SEXP AstartendSEXP, SEXP DstartendSEXP, SEXP numbatchDSEXP, SEXP NglobalSEXP, SEXP NlocalSEXP, SEXP NlocalCacheSEXP) {
@@ -84,20 +67,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type NlocalCache(NlocalCacheSEXP);
     rcpp_result_gen = Rcpp::wrap(crossprodBatchBackend(C, A, D, invertD, Cstartend, Astartend, Dstartend, Nglobal, Nlocal, NlocalCache));
     return rcpp_result_gen;
-END_RCPP
-}
-// extractDiagBackend
-void extractDiagBackend(Rcpp::S4 ssqYXR, Rcpp::S4 ssqYR, Rcpp::IntegerVector NparamPerIter, int Ndatasets, Rcpp::IntegerVector numWorkItems);
-RcppExport SEXP _gpuRandom_extractDiagBackend(SEXP ssqYXRSEXP, SEXP ssqYRSEXP, SEXP NparamPerIterSEXP, SEXP NdatasetsSEXP, SEXP numWorkItemsSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type ssqYXR(ssqYXRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type ssqYR(ssqYRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type NparamPerIter(NparamPerIterSEXP);
-    Rcpp::traits::input_parameter< int >::type Ndatasets(NdatasetsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type numWorkItems(numWorkItemsSEXP);
-    extractDiagBackend(ssqYXR, ssqYR, NparamPerIter, Ndatasets, numWorkItems);
-    return R_NilValue;
 END_RCPP
 }
 // gemmBatchBackend
@@ -186,37 +155,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// likfitGpu_Backend
-void likfitGpu_Backend(Rcpp::S4 coordsGpuR, Rcpp::S4 bigparamsBatchR, Rcpp::S4 yXR, Rcpp::S4 betasR, Rcpp::S4 bigvariancesR, Rcpp::S4 jacobianR, Rcpp::S4 finalssqBetaR, Rcpp::S4 finalssqXR, Rcpp::S4 finalssqYR, Rcpp::S4 finallogDR, Rcpp::S4 finallogPR, Rcpp::S4 finalbetahatR, Rcpp::S4 finalLogLikR, const int n, const int p, const int groupsize, const int colbatch, const int form, Rcpp::IntegerVector workgroupSize, Rcpp::IntegerVector localSize, Rcpp::IntegerVector NlocalCache, const int verbose);
-RcppExport SEXP _gpuRandom_likfitGpu_Backend(SEXP coordsGpuRSEXP, SEXP bigparamsBatchRSEXP, SEXP yXRSEXP, SEXP betasRSEXP, SEXP bigvariancesRSEXP, SEXP jacobianRSEXP, SEXP finalssqBetaRSEXP, SEXP finalssqXRSEXP, SEXP finalssqYRSEXP, SEXP finallogDRSEXP, SEXP finallogPRSEXP, SEXP finalbetahatRSEXP, SEXP finalLogLikRSEXP, SEXP nSEXP, SEXP pSEXP, SEXP groupsizeSEXP, SEXP colbatchSEXP, SEXP formSEXP, SEXP workgroupSizeSEXP, SEXP localSizeSEXP, SEXP NlocalCacheSEXP, SEXP verboseSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type coordsGpuR(coordsGpuRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type bigparamsBatchR(bigparamsBatchRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type yXR(yXRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type betasR(betasRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type bigvariancesR(bigvariancesRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type jacobianR(jacobianRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type finalssqBetaR(finalssqBetaRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type finalssqXR(finalssqXRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type finalssqYR(finalssqYRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type finallogDR(finallogDRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type finallogPR(finallogPRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type finalbetahatR(finalbetahatRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type finalLogLikR(finalLogLikRSEXP);
-    Rcpp::traits::input_parameter< const int >::type n(nSEXP);
-    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< const int >::type groupsize(groupsizeSEXP);
-    Rcpp::traits::input_parameter< const int >::type colbatch(colbatchSEXP);
-    Rcpp::traits::input_parameter< const int >::type form(formSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type workgroupSize(workgroupSizeSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type localSize(localSizeSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type NlocalCache(NlocalCacheSEXP);
-    Rcpp::traits::input_parameter< const int >::type verbose(verboseSEXP);
-    likfitGpu_Backend(coordsGpuR, bigparamsBatchR, yXR, betasR, bigvariancesR, jacobianR, finalssqBetaR, finalssqXR, finalssqYR, finallogDR, finallogPR, finalbetahatR, finalLogLikR, n, p, groupsize, colbatch, form, workgroupSize, localSize, NlocalCache, verbose);
-    return R_NilValue;
-END_RCPP
-}
 // likfitGpu_BackendP
 void likfitGpu_BackendP(Rcpp::S4 yx, Rcpp::S4 coords, Rcpp::S4 params, Rcpp::S4 boxcox, Rcpp::S4 betas, Rcpp::S4 ssqY, Rcpp::S4 aTDinvb_beta, Rcpp::S4 XVYXVX, Rcpp::S4 ssqBetahat, Rcpp::S4 ssqBeta, Rcpp::S4 detVar, Rcpp::S4 detReml, Rcpp::S4 jacobian, Rcpp::IntegerVector NparamPerIter, Rcpp::IntegerVector workgroupSize, Rcpp::IntegerVector localSize, Rcpp::IntegerVector NlocalCache, Rcpp::IntegerVector verbose, Rcpp::S4 ssqYX, Rcpp::S4 LinvYX, Rcpp::S4 QinvSsqYx, Rcpp::S4 cholXVXdiag, Rcpp::S4 varMat, Rcpp::S4 cholDiagMat, Rcpp::S4 b_beta);
 RcppExport SEXP _gpuRandom_likfitGpu_BackendP(SEXP yxSEXP, SEXP coordsSEXP, SEXP paramsSEXP, SEXP boxcoxSEXP, SEXP betasSEXP, SEXP ssqYSEXP, SEXP aTDinvb_betaSEXP, SEXP XVYXVXSEXP, SEXP ssqBetahatSEXP, SEXP ssqBetaSEXP, SEXP detVarSEXP, SEXP detRemlSEXP, SEXP jacobianSEXP, SEXP NparamPerIterSEXP, SEXP workgroupSizeSEXP, SEXP localSizeSEXP, SEXP NlocalCacheSEXP, SEXP verboseSEXP, SEXP ssqYXSEXP, SEXP LinvYXSEXP, SEXP QinvSsqYxSEXP, SEXP cholXVXdiagSEXP, SEXP varMatSEXP, SEXP cholDiagMatSEXP, SEXP b_betaSEXP) {
@@ -263,19 +201,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rowsumBackend
-void rowsumBackend(Rcpp::S4 xR, Rcpp::S4 SumR, std::string type, int log);
-RcppExport SEXP _gpuRandom_rowsumBackend(SEXP xRSEXP, SEXP SumRSEXP, SEXP typeSEXP, SEXP logSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type xR(xRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type SumR(SumRSEXP);
-    Rcpp::traits::input_parameter< std::string >::type type(typeSEXP);
-    Rcpp::traits::input_parameter< int >::type log(logSEXP);
-    rowsumBackend(xR, SumR, type, log);
-    return R_NilValue;
-END_RCPP
-}
 // mat_vec_eledivideBackend
 void mat_vec_eledivideBackend(Rcpp::S4 matrixR, Rcpp::S4 rowvectorR, Rcpp::S4 resultR, Rcpp::IntegerVector numWorkItems);
 RcppExport SEXP _gpuRandom_mat_vec_eledivideBackend(SEXP matrixRSEXP, SEXP rowvectorRSEXP, SEXP resultRSEXP, SEXP numWorkItemsSEXP) {
@@ -286,32 +211,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::S4 >::type resultR(resultRSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type numWorkItems(numWorkItemsSEXP);
     mat_vec_eledivideBackend(matrixR, rowvectorR, resultR, numWorkItems);
-    return R_NilValue;
-END_RCPP
-}
-// matrix_matrix_sumBackend
-void matrix_matrix_sumBackend(Rcpp::S4 aR, Rcpp::S4 bR, Rcpp::S4 sumR, Rcpp::IntegerVector numWorkItems);
-RcppExport SEXP _gpuRandom_matrix_matrix_sumBackend(SEXP aRSEXP, SEXP bRSEXP, SEXP sumRSEXP, SEXP numWorkItemsSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type aR(aRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type bR(bRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type sumR(sumRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type numWorkItems(numWorkItemsSEXP);
-    matrix_matrix_sumBackend(aR, bR, sumR, numWorkItems);
-    return R_NilValue;
-END_RCPP
-}
-// matrix_scalar_sumBackend
-void matrix_scalar_sumBackend(Rcpp::S4 matrixR, SEXP valueR, Rcpp::S4 sumR, Rcpp::IntegerVector numWorkItems);
-RcppExport SEXP _gpuRandom_matrix_scalar_sumBackend(SEXP matrixRSEXP, SEXP valueRSEXP, SEXP sumRSEXP, SEXP numWorkItemsSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type matrixR(matrixRSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type valueR(valueRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type sumR(sumRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type numWorkItems(numWorkItemsSEXP);
-    matrix_scalar_sumBackend(matrixR, valueR, sumR, numWorkItems);
     return R_NilValue;
 END_RCPP
 }
@@ -436,22 +335,16 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_backsolveBatchBackend", (DL_FUNC) &_gpuRandom_backsolveBatchBackend, 12},
-    {"_gpuRandom_backsolveBatchBackend2", (DL_FUNC) &_gpuRandom_backsolveBatchBackend2, 7},
     {"_gpuRandom_cholBatchBackend", (DL_FUNC) &_gpuRandom_cholBatchBackend, 8},
     {"_gpuRandom_crossprodBatchBackend", (DL_FUNC) &_gpuRandom_crossprodBatchBackend, 10},
-    {"_gpuRandom_extractDiagBackend", (DL_FUNC) &_gpuRandom_extractDiagBackend, 5},
     {"_gpuRandom_gemmBatchBackend", (DL_FUNC) &_gpuRandom_gemmBatchBackend, 9},
     {"_gpuRandom_gemmBatch2backend", (DL_FUNC) &_gpuRandom_gemmBatch2backend, 11},
     {"_gpuRandom_cpp_gpuFisher_test", (DL_FUNC) &_gpuRandom_cpp_gpuFisher_test, 6},
     {"_gpuRandom_gpuRnBackend", (DL_FUNC) &_gpuRandom_gpuRnBackend, 4},
     {"_gpuRandom_cpp_gpu_qqnorm", (DL_FUNC) &_gpuRandom_cpp_gpu_qqnorm, 6},
-    {"_gpuRandom_likfitGpu_Backend", (DL_FUNC) &_gpuRandom_likfitGpu_Backend, 22},
     {"_gpuRandom_likfitGpu_BackendP", (DL_FUNC) &_gpuRandom_likfitGpu_BackendP, 25},
     {"_gpuRandom_logfactsumBackend", (DL_FUNC) &_gpuRandom_logfactsumBackend, 2},
-    {"_gpuRandom_rowsumBackend", (DL_FUNC) &_gpuRandom_rowsumBackend, 4},
     {"_gpuRandom_mat_vec_eledivideBackend", (DL_FUNC) &_gpuRandom_mat_vec_eledivideBackend, 4},
-    {"_gpuRandom_matrix_matrix_sumBackend", (DL_FUNC) &_gpuRandom_matrix_matrix_sumBackend, 4},
-    {"_gpuRandom_matrix_scalar_sumBackend", (DL_FUNC) &_gpuRandom_matrix_scalar_sumBackend, 4},
     {"_gpuRandom_matrix_vector_sumBackend", (DL_FUNC) &_gpuRandom_matrix_vector_sumBackend, 6},
     {"_gpuRandom_fillParamsExtra", (DL_FUNC) &_gpuRandom_fillParamsExtra, 1},
     {"_gpuRandom_maternBatchBackend", (DL_FUNC) &_gpuRandom_maternBatchBackend, 8},
