@@ -342,18 +342,13 @@ clrngMrg31k3pStreamCreator buildStreamCreator(Rcpp::IntegerVector seed){
 
 
 
-//' @name createStreamsCpu
-//' @title create streams stored on the CPU
-//' @description streams for random numbers
-//' @param n number of streams to create
-//' @param seed random seed, length 6, recycled if shorter
-//' @export
+
 // [[Rcpp::export]]
-Rcpp::IntegerMatrix  createStreamsCpu(
+Rcpp::IntegerMatrix  createStreamsCpuBackend(
     Rcpp::IntegerVector n,
-    Rcpp::IntegerVector seed=Rcpp::IntegerVector::create(12345,12345,12345,12345,12345,12345)){
+    Rcpp::IntegerVector initial){
   
-  IntegerVector seed2 = rep_len(seed, 6);
+  //IntegerVector seed2 = rep_len(initial, 6);
   Rcpp::IntegerMatrix result=Rcpp::IntegerMatrix(n[0], 12L);
    
   colnames(result) = CharacterVector::create(
@@ -367,7 +362,7 @@ Rcpp::IntegerMatrix  createStreamsCpu(
 //  int numWorkItems =result.nrow();
   //  int Ditem,Delement,Dcis,Dg;
   
-  clrngMrg31k3pStreamCreator streamCreatorHere = buildStreamCreator(seed2);
+  clrngMrg31k3pStreamCreator streamCreatorHere = buildStreamCreator(initial);
   
   // Rcpp::Rcout << "a" << streamCreatorHere.initialState.g1[0]<< " " << streamCreatorHere.initialState.g1[1]<< " " << streamCreatorHere.initialState.g1[2]<< "\n";
   // Rcpp::Rcout << "b" << streamCreatorHere.initialState.g2[0]<< " " << streamCreatorHere.initialState.g2[1]<< " " << streamCreatorHere.initialState.g2[2]<< "\n";

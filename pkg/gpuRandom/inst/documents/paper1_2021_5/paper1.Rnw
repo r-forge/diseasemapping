@@ -139,7 +139,7 @@ The function \fct{clrngMrg31k3pCreateStreams} from \proglang{clRNG} creates stre
 # creating streams on CPU
 library("gpuR")
 library("gpuRandom")
-myStreamsCpu <- createStreamsCpu(n=4, seed=12345)
+myStreamsCpu <- createStreamsCpu(n=4, initial=12345)
 t(myStreamsCpu)
 @
 \fct{createStreamsCpu} has two arguments:
@@ -152,7 +152,7 @@ t(myStreamsCpu)
 <<createStreams_Gpu>>=
 # creating streams on GPU
 myStreamsGpu1 = vclMatrix(myStreamsCpu)
-myStreamsGpu2 = createStreamsGpu(n=4, seed=12345)
+myStreamsGpu2 = createStreamsGpu(n=4, initial=12345)
 range(as.matrix(myStreamsGpu1 - myStreamsGpu2))
 @
 \fct{createStreamsGpu} also has the two arguments \code{n} and \code{seed}, \code{seed} is by default a vector of six ``12345''. \fct{createStreamsGpu} is similar to \code{.Random.seed} in \proglang{R}. By setting the RNG status with the \proglang{R} function \fct{set.seed}, we are able to repeat the sequence of random seeds, which is an important quality criteria of RNGs. Similarly in \fct{createStreamsGpu} and \fct{createStreamsCpu}, with the \code{seed} argument, we make the sequence of streams repeatable.
