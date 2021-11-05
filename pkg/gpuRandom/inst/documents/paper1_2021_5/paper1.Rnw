@@ -351,22 +351,7 @@ system.time(matrix(stats::rnorm(10000^2),10000,10000))
 @
 
 
-TO BE PUT IN APPENDIX OR DELETE? \\
-In the following code, We create a $1024 \times 512$ matrix of single-precision floating-point Gaussian random numbers, and assess Normality by making a histogram and a Q-Q plot of the generated random numbers in Figure \ref{fig2}. The points in the Q-Q plot shown in the right panel of Figure \ref{fig2} fall along the diagonal line, we have good evidence the generated data are from Gaussian distribution. We find doing a Q-Q plot can occupy a large amount of time in the process of producing an \proglang{R} markdown file, so as an incidental work, we adapted the \fct{stat::qnorm} to make the function \fct{gpuRandom::qqnorm} that does the quantile computation for the normal distribution part on a GPU device, which can speed up the Q-Q plot.
-<<histAndQQ_prepare,eval=FALSE,cache=TRUE>>=
-streams <- createStreamsGpu(n =512*128)
-normal_matrix<-gpuRandom::rnorm(c(1024,512), streams=streams, 
-                                Nglobal=c(512,128), type="float")
-avector<-as.vector(as.matrix(normal_matrix))
-@
-\begin{figure}[H]
-\centering
- <<histAndQQ, echo=TRUE, eval=FALSE, cache=TRUE, fig.height=4, fig.width=4, fig.show='hold',dev='png'>>=
-hist(avector,breaks=40, main = "histogram")
-gpuRandom::qqnorm(avector, Nglobal=c(128,64), main="Q-Q Plot")
-@
-\caption{Histogram and Q-Q plot of the GPU-generated random numbers.\label{fig2}}
-\end{figure}
+
 
 
 
@@ -388,7 +373,17 @@ The test statistic calculated for each random table is $-\sum_{i,j}\log(n_{ij}!)
 
 Step 1 and step 2-3 are done on a GPU with two kernels enqueued sequentially. For step 2, \fct{gpuRandom::fisher.sim} adapted the function \fct{rcont2} used by \fct{stats::fisher.test} for constructing random two-way tables with given marginal totals. The algorithm \citep[see][]{patefield1981efficient} samples the entries row by row, one at a time, conditional on the values of the entries already sampled. The conditional probabilities for the possible values of the next entry are updated dynamically each time a new entry is sampled. Then this entry is sampled by standard inversion of the cumulative distribution function, using one $U(0,1)$ random number.  For an $I \times J$ table, this requires $(I-1)(J-1)$ random numbers (the last column and last row do not need to be sampled). Finally, one can compute the test statistic for this newly sampled table. On a GPU, this step can be replicated say $n$ times in parallel by creating $n$ distinct random streams and launching $n$ separate work-items. Each work-item takes a random stream as input, performs all of Step 2 and 3, and returns the value of the test statistic and count on the GPU. Computing the p-value on the CPU (Step 4) is then a trivial operation.  Step 2 of saving test statistics from the random tables is made optional, which can reduce the run-time. %There are a lot of other more recent methods for sampling (larger) contingency tables, many of them use Markov Chain Monte Carlo. The use of streams and GPU would be quite different in that case.  See for example 
 
-We show the usage and advantage of \fct{gpuRandom::fisher.sim} by computing the p-values for two real data examples: one with a relatively big p-value and another with a very small p-value, and compare the run-time with using \fct{stats::fisher.test} for each of the data sets on two computers: one with a very good CPU and an ordinary GPU, the other is equipped with an excellent GPU and an ordinary CPU. The \proglang{R} outputs for testing on computer 2 is shown in the following. 
+The arguments of the \fct{gpuRandom::fisher.sim} are described as follows:
+\begin{itemize}
+\itemsep0em 
+  \item \code{x}: a vclMatrix.
+  \item \code{N}: number of simulation runs.
+  \item \code{streams}: streams.
+  \item \code{type}: ``double'' or ``float'' or returned test statistics.
+  \item \code{returnStatistics}: if TRUE, return all test statistics. 
+  \item \code{Nglobal}: global index space. Default is set as $(64,16)$.
+\end{itemize}
+We show the advantage of \fct{gpuRandom::fisher.sim} by computing the p-values for two real data examples: one with a relatively big p-value and another with a very small p-value, and compare the run-time with using \fct{stats::fisher.test} for each of the data sets on two computers: one with a very good CPU and an ordinary GPU, the other is equipped with an excellent GPU and an ordinary CPU. The \proglang{R} outputs for testing on computer 2 is shown in the following. 
 <<deviceinfo, include=FALSE,cache=FALSE>>=
 library(kableExtra)
 a <- data.frame(
@@ -400,17 +395,8 @@ a <- data.frame(
 knitr::kable(a, col.names = NULL, align='c', caption = "Device information for run-time comparison.\\label{tab:device}") %>%
   kable_styling(full_width = FALSE, position = "center",latex_options = "HOLD_position")
 @
-% \begin{table}[H]
-% \begin{tabular}{ |c|c|c|c|c|c| } 
-% \hline
-%            & host   &                     device \\ \hline
-%  Computer1 & INtel Xenon W-2145 3.7 Ghz & Amd Radeon VII  \\ \hline
-%  Computer2 & VCPU Intel Xenon Skylake 2.5ghz & VGPU Nvidia Tesla V100 \\ \hline
-% \end{tabular}
-% \caption{ Device information for run-time compare.\label{tab:device}}
-% \end{table}
-
-The 2-way contingency table \ref{tab:month} and table \ref{tab:week} consist of selected data from the 2018 Natality public use file \citep{National2018} from the Centers for Disease Control and Prevention’s National Center for Health Statistics, the 2018 natality data file may be downloaded at \url{https://www.cdc.gov/nchs/data_access/VitalStatsOnline.htm}. %The row variable of the first table represents the twelve months: from January to December, and for the second table it represents the seven weekdays: Monday to Sunday. The column variables of these two tables represent the twelve categories of congenital anomalies of the newborn: 1) Anencephaly; 2) Meningomyelocele/Spina bifida; 3) Cyanotic congenital heart disease; 4) Congenital diaphragmatic hernia; 5) Omphalocele; 6) Gastrochisis; 7) Limb reduction defect; 8) Cleft lip with or without cleft palate; 9) Cleft palate alone; 10) Down syndrome; 11) Suspected chromosomal disorder; and 12) Hypospadias.
+The 2-way contingency tables %\ref{tab:month} and table \ref{tab:week} 
+consist of selected data from the 2018 Natality public use file \citep{National2018} from the Centers for Disease Control and Prevention’s National Center for Health Statistics, the 2018 natality data file may be downloaded at \url{https://www.cdc.gov/nchs/data_access/VitalStatsOnline.htm}. 
 
 \subsection{Comparing run-time: Month data example}
 <<Timecomparemonth,echo=FALSE,eval=TRUE, cache=FALSE, results="hide">>=
@@ -422,12 +408,7 @@ colnames(month) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pa
 Nglobal = c(256,128)
 streams <- createStreamsGpu(n =256*128)
 @
-<<monthdata,eval=TRUE,include=FALSE, cache=TRUE>>=
-library(knitr)
-library(kableExtra)
-knitr::kable(month,format="latex",  caption = "Month\\label{tab:month}") %>%
-  kable_styling(full_width = F, position = "center",latex_options = "HOLD_position")
-@
+
 
 
 <<timecomparemonth3Gpu, eval=TRUE,cache=FALSE>>=
@@ -469,10 +450,6 @@ data<-data[,-1]
 week<-as.matrix(data)
 rownames(week) <- c("Mon", "Tue","Wed","Thu","Fri","Sat","Sun")
 colnames(week) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal", "Down", "Chro", "Hypo")
-@
-<<weekdata, eval=TRUE, include=FALSE, cache=TRUE>>=
-knitr::kable(week,format="latex",caption = "Week\\label{tab:week}") %>%
-  kable_styling(full_width = F, position = "center",latex_options = "HOLD_position")
 @
 
 
@@ -521,30 +498,8 @@ knitr::kable(dt, col.names = NULL, caption = "Summary of comparions of Fisher's 
   kableExtra::group_rows(index = c("P-value" = 2, "Run-time" = 2)) %>%
   add_header_above(c(" " = 1, "Computer 1" = 2, "Computer 2" = 2, " " = 1))
 @
-% \begin{table}[H]
-% \centering
-% \begin{tabular}{ |c|c|c|c|c|c| } 
-%  \hline
-%  data &   B  & Intel CPU &  AMD GPU & NVIDIA GPU \\ \hline
-%  Month & 1e6 & 0.403804 & 0.403507  & 0.403507     \\ \hline
-%  Week &  1e7  & 0.0001251 & 0.0001274 & 0.0001274\\ \hline
-% \end{tabular}
-% \caption{ Summary of p-values obtained on different devices.\label{tab:summary}}
-% \end{table}
-% 
-% 
-% \begin{table}[H]
-% \centering
-% \begin{tabular}{ |c|c|c|c|c|c| } 
-%  \hline
-%  data &   B  & Intel CPU & sencha CPU & AMD GPU & NVIDIA GPU \\ \hline
-%  Month & 1e6 & 9.74 & 14.58 & 2.28 & 0.31\\ \hline
-%  Week &  1e7  & 60.19 & 90.38 & 10.82 & 1.90\\ \hline
-% \end{tabular}
-% \caption{ Run-time compare of Fisher's test simulation on different devices, all numbers are in seconds.\label{tab:compare time}}
-% \end{table}
 
-Figure \ref{fig4} visualizes the approximate sampling distributions of the test statistics from the two examples "Month" and "Week", by plotting a histogram for each of the example. The values of observed statistics are calculated by \fct{gpuRandom::logfactSum} and are marked with a blue line on each plot. 
+
 \begin{figure}[H]
 \centering
 <<fighistMonth, eval=TRUE, echo=FALSE, fig.show='hold', cache=TRUE, dev='png'>>=
@@ -554,7 +509,7 @@ abline(v = observed_m, col = "blue", lwd = 1.5)
 hist(result_weekgpu$cpu, xlab=TeX('-$\\sum(\\log(n_{ij}!))$'), ylab="Frequency", main="Week data")
 abline(v = observed_w, col = "blue", lwd = 1.5)
 @
-\caption{ Frequency distribution for test statistics from month and week data tables.\label{fig4}}
+\caption{Frequency distribution for test statistics from month and week data tables. Figure \ref{fig4} visualizes the approximate sampling distributions of the test statistics from the two examples "Month" and "Week", by plotting a histogram for each of the example. The values of observed statistics are calculated by \fct{gpuRandom::logfactSum} and are marked with a blue line on each plot. \label{fig4}}
 \end{figure}
 
 
@@ -750,8 +705,37 @@ Future work on \pkg{gpuRandom} package could be: (1) Explore other RNGs, for exa
 \newpage
 
 \begin{appendix}
+TO BE PUT IN APPENDIX OR DELETE? \\
+In the following code, We create a $1024 \times 512$ matrix of single-precision floating-point Gaussian random numbers, and assess Normality by making a histogram and a Q-Q plot of the generated random numbers in Figure \ref{fig2}. The points in the Q-Q plot shown in the right panel of Figure \ref{fig2} fall along the diagonal line, we have good evidence the generated data are from Gaussian distribution. We find doing a Q-Q plot can occupy a large amount of time in the process of producing an \proglang{R} markdown file, so as an incidental work, we adapted the \fct{stat::qnorm} to make the function \fct{gpuRandom::qqnorm} that does the quantile computation for the normal distribution part on a GPU device, which can speed up the Q-Q plot.
+<<histAndQQ_prepare,eval=FALSE,cache=TRUE>>=
+streams <- createStreamsGpu(n =512*128)
+normal_matrix<-gpuRandom::rnorm(c(1024,512), streams=streams, 
+                                Nglobal=c(512,128), type="float")
+avector<-as.vector(as.matrix(normal_matrix))
+@
+\begin{figure}[H]
+\centering
+ <<histAndQQ, echo=TRUE, eval=FALSE, cache=TRUE, fig.height=4, fig.width=4, fig.show='hold',dev='png'>>=
+hist(avector,breaks=40, main = "histogram")
+gpuRandom::qqnorm(avector, Nglobal=c(128,64), main="Q-Q Plot")
+@
+\caption{Histogram and Q-Q plot of the GPU-generated random numbers.\label{fig2}}
+\end{figure}
 
 
+The row variable of the first table represents the twelve months: from January to December, and for the second table it represents the seven weekdays: Monday to Sunday. The column variables of these two tables represent the twelve categories of congenital anomalies of the newborn: 1) Anencephaly; 2) Meningomyelocele/Spina bifida; 3) Cyanotic congenital heart disease; 4) Congenital diaphragmatic hernia; 5) Omphalocele; 6) Gastrochisis; 7) Limb reduction defect; 8) Cleft lip with or without cleft palate; 9) Cleft palate alone; 10) Down syndrome; 11) Suspected chromosomal disorder; and 12) Hypospadias.
+<<monthdata,eval=TRUE,echo=FALSE, cache=TRUE>>=
+library(knitr)
+library(kableExtra)
+knitr::kable(month,format="latex",  caption = "Month\\label{tab:month}") %>%
+  kable_styling(full_width = F, position = "center",latex_options = "HOLD_position")
+@
+
+
+<<weekdata, eval=TRUE, echo=FALSE, cache=TRUE>>=
+knitr::kable(week,format="latex",caption = "Week\\label{tab:week}") %>%
+  kable_styling(full_width = F, position = "center",latex_options = "HOLD_position")
+@
 \end{appendix}
 
 
