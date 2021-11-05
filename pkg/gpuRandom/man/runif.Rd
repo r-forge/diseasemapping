@@ -13,7 +13,7 @@ runif(n, streams, Nglobal, type = c("double", "float", "integer"))
 
 \item{Nglobal}{vector of length 2, number of work items}
 
-\item{type}{random number type, one of "uniform" or "normal"}
+\item{type}{precision type of random numbers, "double" or "float" or "integer"}
 }
 \value{
 a vclVector or vclMatrix of uniform random numbers

@@ -13,10 +13,10 @@ rnorm(n, streams, Nglobal, type = c("double", "float"))
 
 \item{Nglobal}{vector of length 2, number of work items}
 
-\item{type}{random number type, one of "uniform" or "normal"}
+\item{type}{precision type of random numbers, "double" or "float"}
 }
 \value{
-a vclVector or vclMatrix of normal random numbers
+a vclVector or vclMatrix of standard normal random numbers
 }
 \description{
 rnorm

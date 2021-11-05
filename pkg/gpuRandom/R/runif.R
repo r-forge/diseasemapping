@@ -3,7 +3,7 @@
 #' @param n a number or a vector specifying the size of output matrix
 #' @param streams streams matrix of random number seeds
 #' @param Nglobal vector of length 2, number of work items
-#' @param type random number type, one of "uniform" or "normal"
+#' @param type precision type of random numbers, "double" or "float" or "integer"
 #' 
 #' @return a vclVector or vclMatrix of uniform random numbers
 #' 

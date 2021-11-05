@@ -5,3 +5,7 @@ gpuR
 gpuRandom
 kableExtra
 latex2exp
+Matrix
+sp
+raster
+geostatsp

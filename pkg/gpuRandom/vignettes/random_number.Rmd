@@ -40,7 +40,7 @@ theType
 #new random normals
 ```{r rnorm}
 
-streams <- CreateStreamsGpu(Nstreams =512*128, keepInitial=1)
+streams <- createStreamsGpu(n =512*128, keepInitial=1)
 
 a<-gpuRandom::rnorm(c(1024,512), streams=streams, 
                                 Nglobal=c(512,128), type="float")
@@ -63,7 +63,12 @@ hist(bvector, breaks=40)
 
 
 
-
+#new random exponentials
+```{r exp}
+b<-gpuRandom::rexp(c(200,44), rate=1, Nglobal=c(64,4), type="double")
+bvector<-as.vector(as.matrix(b))
+hist(bvector, breaks=40)
+```
 
 
 

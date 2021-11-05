@@ -1,11 +1,12 @@
-#' @title rnorm
+#' @title rexp
 #' 
 #' @param n a number or a vector specifying the size of output matrix
-#' @param streams streams matrix of random number seeds
+#' @param streams streams 
+#' @param rate mean equals to 1/rate
 #' @param Nglobal vector of length 2, number of work items
-#' @param type precision type of random numbers, "double" or "float"
+#' @param type random number type, one of "uniform" or "normal"
 #' 
-#' @return a vclVector or vclMatrix of standard normal random numbers
+#' @return a vclVector or vclMatrix of exponential random numbers
 #' 
 #' @useDynLib gpuRandom
 #' @export
@@ -13,8 +14,9 @@
 
 
 
-rnorm = function(
+rexp = function(
   n, 
+  rate,
   streams, 
   Nglobal,
   type=c("double","float")) {
@@ -29,8 +31,7 @@ rnorm = function(
   if(length(n)==1){
     n<-c(n,1)
   }
-  
-  #x<-matrix(0,nrow=n[1],ncol=n[2])
+
   
   if(missing(streams)) {
     if(missing(Nglobal)) {
@@ -52,12 +53,12 @@ rnorm = function(
   }
   
   
-
+  
   
   xVcl<-gpuR::vclMatrix(0, nrow=n[1], ncol=n[2], type=type[1])     
   
   
-  gpuRnBackend(xVcl,streams,Nglobal,"normal") 
+  gpuRnBackend(xVcl,streams,rate, Nglobal,"exponential") 
   
   invisible(streams)
   
@@ -66,9 +67,4 @@ rnorm = function(
   xVcl
   
 }
-
-
-
-
-
 
