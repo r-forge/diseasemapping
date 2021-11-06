@@ -126,17 +126,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // gpuRnBackend
-SEXP gpuRnBackend(Rcpp::S4 x, Rcpp::S4 streams, SEXP lambdaR, IntegerVector max_global_size, std::string random_type);
-RcppExport SEXP _gpuRandom_gpuRnBackend(SEXP xSEXP, SEXP streamsSEXP, SEXP lambdaRSEXP, SEXP max_global_sizeSEXP, SEXP random_typeSEXP) {
+SEXP gpuRnBackend(Rcpp::S4 x, Rcpp::S4 streams, IntegerVector max_global_size, std::string random_type);
+RcppExport SEXP _gpuRandom_gpuRnBackend(SEXP xSEXP, SEXP streamsSEXP, SEXP max_global_sizeSEXP, SEXP random_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type x(xSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type streams(streamsSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type lambdaR(lambdaRSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type max_global_size(max_global_sizeSEXP);
     Rcpp::traits::input_parameter< std::string >::type random_type(random_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(gpuRnBackend(x, streams, lambdaR, max_global_size, random_type));
+    rcpp_result_gen = Rcpp::wrap(gpuRnBackend(x, streams, max_global_size, random_type));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -341,7 +340,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_gemmBatchBackend", (DL_FUNC) &_gpuRandom_gemmBatchBackend, 9},
     {"_gpuRandom_gemmBatch2backend", (DL_FUNC) &_gpuRandom_gemmBatch2backend, 11},
     {"_gpuRandom_cpp_gpuFisher_test", (DL_FUNC) &_gpuRandom_cpp_gpuFisher_test, 6},
-    {"_gpuRandom_gpuRnBackend", (DL_FUNC) &_gpuRandom_gpuRnBackend, 5},
+    {"_gpuRandom_gpuRnBackend", (DL_FUNC) &_gpuRandom_gpuRnBackend, 4},
     {"_gpuRandom_cpp_gpu_qqnorm", (DL_FUNC) &_gpuRandom_cpp_gpu_qqnorm, 6},
     {"_gpuRandom_likfitGpu_BackendP", (DL_FUNC) &_gpuRandom_likfitGpu_BackendP, 25},
     {"_gpuRandom_logfactsumBackend", (DL_FUNC) &_gpuRandom_logfactsumBackend, 2},

@@ -36,8 +36,8 @@ cpp_gpuFisher_test <- function(xR, resultsR, B, streamsR, max_global_size, max_l
     .Call('_gpuRandom_cpp_gpuFisher_test', PACKAGE = 'gpuRandom', xR, resultsR, B, streamsR, max_global_size, max_local_size)
 }
 
-gpuRnBackend <- function(x, streams, lambdaR, max_global_size, random_type) {
-    .Call('_gpuRandom_gpuRnBackend', PACKAGE = 'gpuRandom', x, streams, lambdaR, max_global_size, random_type)
+gpuRnBackend <- function(x, streams, max_global_size, random_type) {
+    .Call('_gpuRandom_gpuRnBackend', PACKAGE = 'gpuRandom', x, streams, max_global_size, random_type)
 }
 
 cpp_gpu_qqnorm <- function(outR, mu, sigma, lowertail, max_global_size, max_local_size) {

@@ -65,9 +65,19 @@ hist(bvector, breaks=40)
 
 #new random exponentials
 ```{r exp}
-b<-gpuRandom::rexp(c(200,44), rate=1, Nglobal=c(64,4), type="double")
+library("gpuR")
+library("gpuRandom")
+b<-gpuRandom::rexp(c(2000,600), rate=1, Nglobal=c(64,4), type="double")
 bvector<-as.vector(as.matrix(b))
-hist(bvector, breaks=40)
+hist(bvector,probability = TRUE)
+
+c<-gpuRandom::rexp(c(2000,600), rate=2, Nglobal=c(64,4), type="double")
+cvector<-as.vector(as.matrix(c))
+hist(bvector,probability = TRUE)
+
+plot(density(bvector))
+
+hist(cvector,probability  = TRUE)
 ```
 
 
