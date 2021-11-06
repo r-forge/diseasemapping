@@ -72,7 +72,7 @@ rexp = function(
   
   if(ncol(xVcl)==1) xVcl = xVcl[,1]
   
-  rate * xVcl
+  (1/rate) * xVcl
   
 }
 
