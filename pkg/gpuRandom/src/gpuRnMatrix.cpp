@@ -1,7 +1,7 @@
 #include "gpuRandom.hpp"
 
 //#define DEBUG
-#define DEBUGKERNEL
+//#define DEBUGKERNEL
 
 
 
@@ -39,11 +39,15 @@ std::string mrg31k3pMatrixString(
   } else if (typeString == "int"){
     result += 
       "\n#define mrg31k3p_NORM_cl 1L\n";    
-  }
+  } 
+  // else if (random_type == "exponential"){
+  //   result +=
+  //  "#define mrg31k3p_NORM_cl 4.656612875245796923096e-10\n";
+  // }
   
   result += 
     "\n#define mrg31k3p_M1 2147483647\n"             /* 2^31 - 1 */
-    "#define mrg31k3p_M2 2147462579\n"             /* 2^31 - 21069 */
+  "#define mrg31k3p_M2 2147462579\n"             /* 2^31 - 21069 */
   
   "#define mrg31k3p_MASK12 511  \n"              /* 2^9 - 1 */
   "#define mrg31k3p_MASK13 16777215  \n"         /* 2^24 - 1 */
@@ -56,30 +60,7 @@ std::string mrg31k3pMatrixString(
     "#define NpadStreams " + std::to_string(NpadStreams) + "\n"
     "#define NpadCol " + std::to_string(NpadCol) + "\n";    
   
-    result += mrg31k3pString();
-  
-  if(random_type == "exponential"){
-    result += 
-      "__global double q[]= {\n"
-      " 0.6931471805599453,\n"
-      " 0.9333736875190459,\n"
-      " 0.9888777961838675,\n"
-      " 0.9984959252914960,\n"
-      " 0.9998292811061389,\n"
-      " 0.9999833164100727,\n"
-      " 0.9999985691438767,\n"
-      " 0.9999998906925558,\n"
-      " 0.9999999924734159,\n"
-      " 0.9999999995283275,\n"
-      " 0.9999999999728814,\n"
-      " 0.9999999999985598,\n"
-      " 0.9999999999999289,\n"
-      " 0.9999999999999968,\n"
-      " 0.9999999999999999,\n"
-      " 1.0000000000000000"
-      "};\n";
-  }
-  
+  result += mrg31k3pString();
   
   result += 
     "\n\n__kernel void mrg31k3pMatrix(\n"
@@ -96,7 +77,7 @@ std::string mrg31k3pMatrixString(
   
   result += "uint temp;\n";
   result += "uint g1[3], g2[3];\n"
-            "const int startvalue=index * NpadStreams;\n";
+  "const int startvalue=index * NpadStreams;\n";
   
   
   if(random_type == "normal"){  
@@ -104,13 +85,12 @@ std::string mrg31k3pMatrixString(
       "local " + typeString + "  part[2], cosPart1, sinPart1;\n";// local size must be 1,2
   }
   
-
   
   /*result +=  " for(Drow = 0, DrowStart = startvalue, Dcol = DrowStart + 3;\n"
-      "   Drow < 3; Drow++, DrowStart++, Dcol++){\n"
-      "   g1[Drow] = streams[DrowStart];\n"
-      "   g2[Drow] = streams[Dcol];\n"
-      " }\n";    */
+   "   Drow < 3; Drow++, DrowStart++, Dcol++){\n"
+   "   g1[Drow] = streams[DrowStart];\n"
+   "   g2[Drow] = streams[Dcol];\n"
+   " }\n";    */
   
   result += "streamsToPrivate(streams,g1,g2,startvalue);\n";
   
@@ -125,49 +105,49 @@ std::string mrg31k3pMatrixString(
     "  for(Dcol=get_group_id(1), Dentry = DrowStart + Dcol;\n" 
     "      Dcol < Ncol;\n" 
     "      Dcol += get_num_groups(1), Dentry += get_num_groups(1)) {\n"
+    
+    "    temp = clrngMrg31k3pNextState(g1, g2);\n";
   
-     "    temp = clrngMrg31k3pNextState(g1, g2);\n";
-  
- /* result += 
-    
-    // first component
-    "	y1 = ((g1[1] & mrg31k3p_MASK12) << 22) + (g1[1] >> 9)\n"
-    "		+ ((g1[2] & mrg31k3p_MASK13) << 7) + (g1[2] >> 24);\n"
-    
-    "	if (y1 >= mrg31k3p_M1)\n"
-    "		y1 -= mrg31k3p_M1;\n"
-    
-    "	y1 += g1[2];\n"
-    "	if (y1 >= mrg31k3p_M1)\n"
-    "		y1 -= mrg31k3p_M1;\n"
-    
-    "	g1[2] = g1[1];\n"
-    "	g1[1] = g1[0];\n"
-    "	g1[0] = y1;\n"
-    
-    // second component
-    "	y1 = ((g2[0] & mrg31k3p_MASK2) << 15) + (mrg31k3p_MULT2 * (g2[0] >> 16));\n"
-    "	if (y1 >= mrg31k3p_M2)\n"
-    "		y1 -= mrg31k3p_M2;\n"
-    "	y2 = ((g2[2] & mrg31k3p_MASK2) << 15) + (mrg31k3p_MULT2 * (g2[2] >> 16));\n"
-    "	if (y2 >= mrg31k3p_M2)\n"
-    "		y2 -= mrg31k3p_M2;\n"
-    "	y2 += g2[2];\n"
-    "	if (y2 >= mrg31k3p_M2)\n"
-    "		y2 -= mrg31k3p_M2;\n"
-    "	y2 += y1;\n"
-    "	if (y2 >= mrg31k3p_M2)\n"
-    "		y2 -= mrg31k3p_M2;\n"
-    
-    "	g2[2] = g2[1];\n"
-    "	g2[1] = g2[0];\n"
-    "	g2[0] = y2;\n"
-    
-    "	if (g1[0] <= g2[0]){\n"
-    "		temp= g1[0] - g2[0] + mrg31k3p_M1;\n"
-    "	} else {\n"
-    "		temp = g1[0] - g2[0];\n"
-    " }\n";*/
+  /* result += 
+   
+   // first component
+   "	y1 = ((g1[1] & mrg31k3p_MASK12) << 22) + (g1[1] >> 9)\n"
+   "		+ ((g1[2] & mrg31k3p_MASK13) << 7) + (g1[2] >> 24);\n"
+   
+   "	if (y1 >= mrg31k3p_M1)\n"
+   "		y1 -= mrg31k3p_M1;\n"
+   
+   "	y1 += g1[2];\n"
+   "	if (y1 >= mrg31k3p_M1)\n"
+   "		y1 -= mrg31k3p_M1;\n"
+   
+   "	g1[2] = g1[1];\n"
+   "	g1[1] = g1[0];\n"
+   "	g1[0] = y1;\n"
+   
+   // second component
+   "	y1 = ((g2[0] & mrg31k3p_MASK2) << 15) + (mrg31k3p_MULT2 * (g2[0] >> 16));\n"
+   "	if (y1 >= mrg31k3p_M2)\n"
+   "		y1 -= mrg31k3p_M2;\n"
+   "	y2 = ((g2[2] & mrg31k3p_MASK2) << 15) + (mrg31k3p_MULT2 * (g2[2] >> 16));\n"
+   "	if (y2 >= mrg31k3p_M2)\n"
+   "		y2 -= mrg31k3p_M2;\n"
+   "	y2 += g2[2];\n"
+   "	if (y2 >= mrg31k3p_M2)\n"
+   "		y2 -= mrg31k3p_M2;\n"
+   "	y2 += y1;\n"
+   "	if (y2 >= mrg31k3p_M2)\n"
+   "		y2 -= mrg31k3p_M2;\n"
+   
+   "	g2[2] = g2[1];\n"
+   "	g2[1] = g2[0];\n"
+   "	g2[0] = y2;\n"
+   
+   "	if (g1[0] <= g2[0]){\n"
+   "		temp= g1[0] - g2[0] + mrg31k3p_M1;\n"
+   "	} else {\n"
+   "		temp = g1[0] - g2[0];\n"
+   " }\n";*/
   
   if(random_type == "normal"){  
     result += 
@@ -187,49 +167,20 @@ std::string mrg31k3pMatrixString(
       "      out[Dentry] = part[0]*cosPart1;\n"
       "    }\n"
       "    barrier(CLK_LOCAL_MEM_FENCE);\n";
-  
+    
   } else if (random_type == "uniform"){ // uniform
     if(typeString == "double" | typeString == "float") {
       result += 
         "out[Dentry] = mrg31k3p_NORM_cl * temp;\n";
     } else if (typeString == "int"){
-      result +=               // "  out[Dentry] = (uint) ((2 * mrg31k3p_M1 + 1) * mrg31k3p_NORM_cl * temp);\n";
+      result += 
+        // "  out[Dentry] = (uint) ((2 * mrg31k3p_M1 + 1) * mrg31k3p_NORM_cl * temp);\n";
         "  out[Dentry] = (int) temp;\n";
     }
     
   }else if(random_type == "exponential"){
-    result +=
-    "double a = 0.;\n" +
-    typeString + " u = mrg31k3p_NORM_cl * temp;\n"    /* precaution if u = 0 is ever returned */
- 
-    //"while(u <= 0. || u >= 1.) u = mrg31k3p_NORM_cl * temp;\n"
-    
-    "for (;;) {\n"
-      "u += u;\n"
-      "if (u > 1.)\n"
-      "break;\n"
-    "a += q[0];\n"
-    "}\n"
-   
-    "u -= 1.;\n"
- 
-   "if (u <= q[0]){\n"
-     "out[Dentry] = a + u;\n"
-   "}else{\n" +
-    typeString + " ustar = mrg31k3p_NORM_cl * temp, umin = ustar;\n"
-     "int i = 0;\n"
-     "do {\n"
-     "  ustar = mrg31k3p_NORM_cl * temp;\n"
-     "   if (umin > ustar)\n"
-     "   umin = ustar;\n"
-     "   i++;\n"
-     "} while (u > q[i]);\n"
-    
-     "out[Dentry] = a + umin * q[0];\n"
-   "}\n";
-
-      // result += 
-      //   "out[Dentry] = - (1/lambda) * log(1 - mrg31k3p_NORM_cl * temp);\n";
+    result +=    // "if (mrg31k3p_NORM_cl * temp < 1)\n"
+      "out[Dentry] = - log( mrg31k3p_NORM_cl * temp);\n";
   }
   
   result += 
@@ -240,15 +191,15 @@ std::string mrg31k3pMatrixString(
   result += "streamsFromPrivate(streams,g1,g2,startvalue);\n";
   
   /*
-    " for(Drow = 0,DrowStart = index * NpadStreams,Dcol = DrowStart + 3;\n"
-    "     Drow < 3; Drow++, DrowStart++, Dcol++){\n"
-    "   streams[DrowStart] = g1[Drow];\n"
-    "   streams[Dcol] = g2[Drow];\n"
-    " }\n";
+   " for(Drow = 0,DrowStart = index * NpadStreams,Dcol = DrowStart + 3;\n"
+   "     Drow < 3; Drow++, DrowStart++, Dcol++){\n"
+   "   streams[DrowStart] = g1[Drow];\n"
+   "   streams[Dcol] = g2[Drow];\n"
+   " }\n";
    */ 
   
   result += 
-    "}//kernel\n";
+  "}//kernel\n";
   
   return(result);
 }
@@ -305,16 +256,16 @@ SEXP gpuRnMatrixTyped(
     Rcpp::IntegerVector max_global_size,
     std::string  random_type) 
 {
-
+  
   const bool BisVCL=1;
   const int ctx_id = INTEGER(xR.slot(".context_index"))[0]-1;
   
   std::shared_ptr<viennacl::matrix<T> > x = getVCLptr<T>(xR.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<cl_uint> > streams = getVCLptr<cl_uint>(streamsR.slot("address"), BisVCL, ctx_id);
-
+  
   
   return(Rcpp::wrap(gpuMatrixRn<T>(*x, *streams, max_global_size, ctx_id, random_type)));	
-
+  
 }
 
 
@@ -336,7 +287,7 @@ SEXP gpuRnBackend(
   Rcpp::traits::input_parameter< std::string >::type classInput(RCPP_GET_CLASS(x));
   std::string classInputString = (std::string) classInput;
   
-
+  
   
   if(classInputString == "fvclMatrix") {
     result = gpuRnMatrixTyped<float>(x, streams, max_global_size, random_type);
@@ -345,12 +296,10 @@ SEXP gpuRnBackend(
   } else if (classInputString == "ivclMatrix") {
     result = gpuRnMatrixTyped<int>(x, streams, max_global_size, random_type);
   } else {
-    result = Rcpp::wrap(-1L);
+    result = Rcpp::wrap(1L);
   }
   return(result);
 }
-
-
 
 
 
