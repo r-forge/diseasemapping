@@ -30,7 +30,9 @@ rnorm = function(
     n<-c(n,1)
   }
   
-  #x<-matrix(0,nrow=n[1],ncol=n[2])
+  if(Nglobal[2]<2){
+    stop("Nglobal[2] should be larger than 1")
+  }
   
   if(missing(streams)) {
     if(missing(Nglobal)) {
@@ -57,7 +59,7 @@ rnorm = function(
   xVcl<-gpuR::vclMatrix(0, nrow=n[1], ncol=n[2], type=type[1])     
   
   
-  gpuRnBackend(xVcl,streams,Nglobal,"normal") 
+  gpuRnBackend(xVcl, streams, Nglobal,"normal") 
   
   invisible(streams)
   

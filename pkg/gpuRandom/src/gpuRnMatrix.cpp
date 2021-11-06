@@ -1,7 +1,7 @@
 #include "gpuRandom.hpp"
 
 //#define DEBUG
-//#define DEBUGKERNEL
+#define DEBUGKERNEL
 
 
 
@@ -18,8 +18,7 @@ std::string mrg31k3pMatrixString(
     const int Ncol,
     const int NpadCol,
     const int NpadStreams,
-    const std::string random_type,
-    T lambda) { 
+    const std::string random_type) { 
   
   std::string typeString = openclTypeString<T>();
   std::string result = "";
@@ -55,10 +54,32 @@ std::string mrg31k3pMatrixString(
     "\n#define Nrow " + std::to_string(Nrow) + "\n"    
     "#define Ncol " + std::to_string(Ncol) + "\n"
     "#define NpadStreams " + std::to_string(NpadStreams) + "\n"
-    "#define NpadCol " + std::to_string(NpadCol) + "\n"
-    "#define lambda " + std::to_string(lambda) + "\n";    
+    "#define NpadCol " + std::to_string(NpadCol) + "\n";    
   
     result += mrg31k3pString();
+  
+  if(random_type == "exponential"){
+    result += 
+      "__global double q[]= {\n"
+      " 0.6931471805599453,\n"
+      " 0.9333736875190459,\n"
+      " 0.9888777961838675,\n"
+      " 0.9984959252914960,\n"
+      " 0.9998292811061389,\n"
+      " 0.9999833164100727,\n"
+      " 0.9999985691438767,\n"
+      " 0.9999998906925558,\n"
+      " 0.9999999924734159,\n"
+      " 0.9999999995283275,\n"
+      " 0.9999999999728814,\n"
+      " 0.9999999999985598,\n"
+      " 0.9999999999999289,\n"
+      " 0.9999999999999968,\n"
+      " 0.9999999999999999,\n"
+      " 1.0000000000000000"
+      "};\n";
+  }
+  
   
   result += 
     "\n\n__kernel void mrg31k3pMatrix(\n"
@@ -83,6 +104,7 @@ std::string mrg31k3pMatrixString(
       "local " + typeString + "  part[2], cosPart1, sinPart1;\n";// local size must be 1,2
   }
   
+
   
   /*result +=  " for(Drow = 0, DrowStart = startvalue, Dcol = DrowStart + 3;\n"
       "   Drow < 3; Drow++, DrowStart++, Dcol++){\n"
@@ -171,14 +193,43 @@ std::string mrg31k3pMatrixString(
       result += 
         "out[Dentry] = mrg31k3p_NORM_cl * temp;\n";
     } else if (typeString == "int"){
-      result += 
-      // "  out[Dentry] = (uint) ((2 * mrg31k3p_M1 + 1) * mrg31k3p_NORM_cl * temp);\n";
+      result +=               // "  out[Dentry] = (uint) ((2 * mrg31k3p_M1 + 1) * mrg31k3p_NORM_cl * temp);\n";
         "  out[Dentry] = (int) temp;\n";
     }
     
   }else if(random_type == "exponential"){
-      result += 
-        "out[Dentry] = - (1/lambda) * log(1 - mrg31k3p_NORM_cl * temp);\n";
+    result +=
+    "double a = 0.;\n" +
+    typeString + " u = mrg31k3p_NORM_cl * temp;\n"    /* precaution if u = 0 is ever returned */
+ 
+    //"while(u <= 0. || u >= 1.) u = mrg31k3p_NORM_cl * temp;\n"
+    
+    "for (;;) {\n"
+      "u += u;\n"
+      "if (u > 1.)\n"
+      "break;\n"
+    "a += q[0];\n"
+    "}\n"
+   
+    "u -= 1.;\n"
+ 
+   "if (u <= q[0]){\n"
+     "out[Dentry] = a + u;\n"
+   "}else{\n" +
+    typeString + " ustar = mrg31k3p_NORM_cl * temp, umin = ustar;\n"
+     "int i = 0;\n"
+     "do {\n"
+     "  ustar = mrg31k3p_NORM_cl * temp;\n"
+     "   if (umin > ustar)\n"
+     "   umin = ustar;\n"
+     "   i++;\n"
+     "} while (u > q[i]);\n"
+    
+     "out[Dentry] = a + umin * q[0];\n"
+   "}\n";
+
+      // result += 
+      //   "out[Dentry] = - (1/lambda) * log(1 - mrg31k3p_NORM_cl * temp);\n";
   }
   
   result += 
@@ -207,7 +258,6 @@ template<typename T>
 int gpuMatrixRn(
     viennacl::matrix<T> &x,
     viennacl::matrix<cl_uint> &streams,
-    T lambda,
     const IntegerVector numWorkItems,
     const int ctx_id,
     const std::string random_type){
@@ -218,8 +268,7 @@ int gpuMatrixRn(
     x.size2(),
     x.internal_size2(),
     streams.internal_size2(),
-    random_type,
-    lambda);
+    random_type);
   
 #ifdef DEBUGKERNEL
   Rcpp::Rcout << mrg31k3pkernelString << "\n\n";
@@ -253,20 +302,18 @@ template<typename T>
 SEXP gpuRnMatrixTyped(
     Rcpp::S4  xR,
     Rcpp::S4  streamsR,
-    SEXP lambdaR,
     Rcpp::IntegerVector max_global_size,
     std::string  random_type) 
 {
 
   const bool BisVCL=1;
   const int ctx_id = INTEGER(xR.slot(".context_index"))[0]-1;
-  T lambda = Rcpp::as<T>(lambdaR); 
   
   std::shared_ptr<viennacl::matrix<T> > x = getVCLptr<T>(xR.slot("address"), BisVCL, ctx_id);
   std::shared_ptr<viennacl::matrix<cl_uint> > streams = getVCLptr<cl_uint>(streamsR.slot("address"), BisVCL, ctx_id);
 
   
-  return(Rcpp::wrap(gpuMatrixRn<T>(*x, *streams, lambda, max_global_size, ctx_id, random_type)));	
+  return(Rcpp::wrap(gpuMatrixRn<T>(*x, *streams, max_global_size, ctx_id, random_type)));	
 
 }
 
@@ -278,7 +325,6 @@ SEXP gpuRnMatrixTyped(
 SEXP gpuRnBackend(
     Rcpp::S4  x,
     Rcpp::S4  streams,
-    SEXP lambdaR,
     IntegerVector max_global_size,
     std::string  random_type) {
   
@@ -293,13 +339,13 @@ SEXP gpuRnBackend(
 
   
   if(classInputString == "fvclMatrix") {
-    result = gpuRnMatrixTyped<float>(x, streams, lambdaR, max_global_size, random_type);
+    result = gpuRnMatrixTyped<float>(x, streams, max_global_size, random_type);
   } else if (classInputString == "dvclMatrix") {
-    result = gpuRnMatrixTyped<double>(x, streams, lambdaR, max_global_size, random_type);
+    result = gpuRnMatrixTyped<double>(x, streams, max_global_size, random_type);
   } else if (classInputString == "ivclMatrix") {
-    result = gpuRnMatrixTyped<int>(x, streams, lambdaR, max_global_size, random_type);
+    result = gpuRnMatrixTyped<int>(x, streams, max_global_size, random_type);
   } else {
-    result = Rcpp::wrap(1L);
+    result = Rcpp::wrap(-1L);
   }
   return(result);
 }

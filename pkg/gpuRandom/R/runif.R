@@ -29,6 +29,10 @@ runif = function(
     n<-c(n,1)
   }
   
+  if(Nglobal[2]<2){
+    stop("Nglobal[2] should be larger than 1")
+  }
+  
   if(missing(streams)) {
     if(missing(Nglobal)) {
       Nglobal = c(64,8)
@@ -53,7 +57,7 @@ runif = function(
   xVcl<-gpuR::vclMatrix(0L, nrow=n[1], ncol=n[2], type=type[1])    
   
   
-  gpuRnBackend(xVcl,streams,Nglobal,"uniform") 
+  gpuRnBackend(xVcl, streams, Nglobal,"uniform") 
   
   invisible(streams)
   
