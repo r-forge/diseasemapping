@@ -44,8 +44,8 @@ cpp_gpu_qqnorm <- function(outR, mu, sigma, lowertail, max_global_size, max_loca
     .Call('_gpuRandom_cpp_gpu_qqnorm', PACKAGE = 'gpuRandom', outR, mu, sigma, lowertail, max_global_size, max_local_size)
 }
 
-likfitGpu_BackendP <- function(yx, coords, params, boxcox, betas, ssqY, aTDinvb_beta, XVYXVX, ssqBetahat, ssqBeta, detVar, detReml, jacobian, NparamPerIter, workgroupSize, localSize, NlocalCache, verbose, ssqYX, LinvYX, QinvSsqYx, cholXVXdiag, varMat, cholDiagMat, b_beta) {
-    invisible(.Call('_gpuRandom_likfitGpu_BackendP', PACKAGE = 'gpuRandom', yx, coords, params, boxcox, betas, ssqY, aTDinvb_beta, XVYXVX, ssqBetahat, ssqBeta, detVar, detReml, jacobian, NparamPerIter, workgroupSize, localSize, NlocalCache, verbose, ssqYX, LinvYX, QinvSsqYx, cholXVXdiag, varMat, cholDiagMat, b_beta))
+likfitGpu_BackendP <- function(yx, coords, params, boxcox, betas, ssqY, aTDinvb_beta, XVYXVX, ssqBetahat, ssqBeta, detVar, detReml, jacobian, NparamPerIter, workgroupSize, localSize, NlocalCache, verbose, ssqYX, ssqYXcopy, LinvYX, QinvSsqYx, cholXVXdiag, varMat, cholDiagMat, b_beta) {
+    invisible(.Call('_gpuRandom_likfitGpu_BackendP', PACKAGE = 'gpuRandom', yx, coords, params, boxcox, betas, ssqY, aTDinvb_beta, XVYXVX, ssqBetahat, ssqBeta, detVar, detReml, jacobian, NparamPerIter, workgroupSize, localSize, NlocalCache, verbose, ssqYX, ssqYXcopy, LinvYX, QinvSsqYx, cholXVXdiag, varMat, cholDiagMat, b_beta))
 }
 
 logfactsumBackend <- function(xR, numWorkItems) {

@@ -60,3 +60,20 @@ template <>
 float maternClEpsilon<float>(){
   return(GSL_FLT_EPSILON);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

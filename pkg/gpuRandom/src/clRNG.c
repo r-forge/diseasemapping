@@ -1,6 +1,4 @@
-
- /*
- ***********************************************************************
+/************************************************************************
  Copyright (c) 2015 Advanced Micro Devices, Inc. 
  All rights reserved.
  
@@ -27,8 +25,7 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  
- ***********************************************************************
- */
+ ************************************************************************/
 
 /* @file clRNG.c
 * @brief Implementation of functions defined in clRNG.h and private.h
@@ -111,3 +108,19 @@ const char* clrngGetLibraryDeviceIncludes(cl_int* err)
 	}
 	return lib_includes;
 	}
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

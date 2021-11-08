@@ -141,3 +141,13 @@ void Rtemme_gamma(double *nu, double * g_1pnu, double * g_1mnu, double *g1, doub
 	*g_1mnu = 1.0/(r_g2.val + *nu * r_g1.val);
 	*g_1pnu = 1.0/(r_g2.val - *nu * r_g1.val);
 }
+
+
+
+
+
+
+
+
+
+
