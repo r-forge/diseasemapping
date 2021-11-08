@@ -424,7 +424,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   int NlocalCacheC = NcolsPerGroup * NrowsToCache;
   
   if(NrowsToCache < 0) {
-    Rcpp::warning("NlocaalCache too small for this number of work groups");
+    Rcpp::warning("NlocalCache too small for this number of work groups");
   }
   
   std::string backsolveString = backsolveBatchString<T>(
@@ -480,6 +480,10 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   
   
   const int NlocalCacheAD = std::max( 0, (NlocalCache[0] - localSize[0]*localSize[1])/2 );
+  
+  if((NlocalCache[0] - localSize[0]*localSize[1]) < 0) {
+    Rcpp::warning("NlocalCache too small for this number of work groups");
+  }
   
   std::string crossprodKernelString = crossprodBatchString<T>(
     Nobs,//const int Nrow, 

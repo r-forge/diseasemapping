@@ -52,8 +52,8 @@ result<-gpuRandom::likfitGpu(spatialmodel,     #data,
                                nBetahats =1,
                                minustwotimes=TRUE,
                                Nglobal=c(64,64,1),
-                               Nlocal=c(16,16,1),
-                               NlocalCache=1000)
+                               Nlocal=c(16,32,1),
+                               NlocalCache=2000)
 
 
 mTwoLogLik <- as.matrix(result$minusTwoLogLik)
