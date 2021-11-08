@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-//#define DEBUG
+#define DEBUG
 //#define NOKERNELS
 
 // C = A^T A or A^T D A or A^T D^(-1) A 
@@ -77,18 +77,18 @@ std::string crossprodBatchString(
   "event_t ev;\n"
   "const int NpadLocal = get_local_size(1);\n"
   "int AHere, CHere;\n"
-  "int Dmatrix, Drow, Dcol, DrowNpadC, Dinner, DinnerA, DinnerAcol, DrowBlock, DinnerBlock;\n"
+  "int Dmatrix, Drow, Dcol, DrowNpadC, Dinner, DinnerA, DinnerAcol, DrowBlock, DinnerBlock, DcolBlock, DmatrixBlock, DcolInBounds, DmatrixInBounds;\n"
   "int A0Dcol, A0Drow;// location of elements A[0,Dcol] and A[0,Drow]\n"
   "const int AHereInc = get_num_groups(1)*NpadBetweenMatricesA;\n";
   
   
-  if(onlyDiagC) {
-    result +=
-      "const int CHereInc = get_num_groups(1)*NpadC;\n"; // made changes here
-  }else{
-    result +=
-      "const int CHereInc = get_num_groups(1)*NpadBetweenMatricesC;\n"; // made changes here
-  }
+  // if(onlyDiagC) {
+  //   result +=
+  //     "const int CHereInc = get_num_groups(1)*NpadC;\n"; // made changes here
+  // }else{
+  //   result +=
+  //     "const int CHereInc = get_num_groups(1)*NpadBetweenMatricesC;\n"; // made changes here
+  // }
   
   
   result +=
@@ -112,34 +112,59 @@ std::string crossprodBatchString(
   }
   
 
+  // result +=  "\n\n"
+  // "for(Dmatrix = get_group_id(1),\n"
+  // "    AHere = Dmatrix * NpadBetweenMatricesA + NstartA,\n"; // made changes here
+  // if(NpadD) {
+  //   result +=
+  //     "    DHere = Dmatrix * NpadD + NstartD,\n"; // made changes here
+  // }
+  
+  // if(onlyDiagC) {
+  //   result +=
+  //     "    CHere = (Dmatrix + NrowStartC) * NpadC + NstartC;\n"; // made changes here
+  // }else{
+  //   result +=  
+  //     "    CHere = (Dmatrix + NrowStartC) * NpadBetweenMatricesC + NstartC;\n"; // made changes here
+  // }
+  // 
+  // result += 
+  //   "  Dmatrix < Nmatrix;\n"
+  //   "  Dmatrix += get_num_groups(1),\n"
+  //   "  AHere += AHereInc,\n";  
+  // 
+  // if(NpadD) {
+  //   result += "    DHere += DHereInc,\n";
+  // }
+  // result +=
+  //   "    CHere += CHereInc\n"
+  //   "  ){\n";
+  
   result +=  "\n\n"
-  "for(Dmatrix = get_group_id(1),\n"
-  "    AHere = Dmatrix * NpadBetweenMatricesA + NstartA,\n"; // made changes here
+  "   for(DmatrixBlock = 0;\n"
+  "    DmatrixBlock < Nmatrix;\n"
+  "    DmatrixBlock += get_num_groups(1)\n"
+  "    ){\n"
+  "    Dmatrix = DmatrixBlock + get_group_id(1);\n"
+  "    if(Dmatrix < Nmatrix) {\n"
+  "     DmatrixInBounds = 1;\n"
+  "     } else {\n"
+  "     DmatrixInBounds = 0;\n"
+  "     Dmatrix = 0;\n"
+  "     }\n"
+  
+  "     AHere = Dmatrix * NpadBetweenMatricesA + NstartA;\n";
   if(NpadD) {
     result +=
-      "    DHere = Dmatrix * NpadD + NstartD,\n"; // made changes here
+      "    DHere = Dmatrix * NpadD + NstartD,\n"; 
   }
-  
-  
   if(onlyDiagC) {
     result +=
-      "    CHere = (Dmatrix + NrowStartC) * NpadC + NstartC;\n"; // made changes here
+      "    CHere = (Dmatrix + NrowStartC) * NpadC + NstartC;\n"; 
   }else{
     result +=  
-      "    CHere = (Dmatrix + NrowStartC) * NpadBetweenMatricesC + NstartC;\n"; // made changes here
+      "    CHere = (Dmatrix + NrowStartC) * NpadBetweenMatricesC + NstartC;\n"; 
   }
-  
-  result += 
-    "  Dmatrix < Nmatrix;\n"
-    "  Dmatrix += get_num_groups(1),\n"
-    "  AHere += AHereInc,\n";  
-
-  if(NpadD) {
-    result += "    DHere += DHereInc,\n";
-  }
-  result +=
-    "    CHere += CHereInc\n"
-    "  ){\n";
   
   
   if(NpadD && NrowStop) {
@@ -155,25 +180,25 @@ std::string crossprodBatchString(
   }
   
   result +=  "\n"
-  "  for(Dcol = get_group_id(0),\n"
-  "      A0Dcol = AHere + Dcol;\n"
-  "    Dcol < Ncol;\n"
-  "    Dcol += get_num_groups(0),\n"
-  "    A0Dcol += get_num_groups(0)){\n\n";
+  // "  for(Dcol = get_group_id(0),\n"
+  // "      A0Dcol = AHere + Dcol;\n"
+  // "    Dcol < Ncol;\n"
+  // "    Dcol += get_num_groups(0),\n"
+  // "    A0Dcol += get_num_groups(0)){\n\n";
   
-  // "  for(DcolBlock = 0;\n"
-  // "      DcolBlock < Ncol;\n"
-  // "      DcolBlock += get_num_groups(0)\n"
-  // "      ){\n\n"
-  // "  Dcol = DcolBlock + get_group_id(0);\n"
-  // "  if((Dcol < Ncol) && DmatrixInBounds){\n"
-  // "  DcolInBounds = 1;\n"
-  // "  } else {\n"
-  // "  DcolInBounds = 0;\n"
-  // "  Dcol = 0;\n"
-  // "  }\n"
-  // 
-  // "      A0Dcol = AHere + Dcol;\n";
+  "  for(DcolBlock = 0;\n"
+  "      DcolBlock < Ncol;\n"
+  "      DcolBlock += get_num_groups(0)\n"
+  "      ){\n\n"
+  "  Dcol = DcolBlock + get_group_id(0);\n"
+  "  if((Dcol < Ncol) && DmatrixInBounds){\n"
+  "  DcolInBounds = 1;\n"
+  "  } else {\n"
+  "  DcolInBounds = 0;\n"
+  "  Dcol = 0;\n"
+  "  }\n"
+
+  "      A0Dcol = AHere + Dcol;\n";
   
   
   
@@ -201,7 +226,7 @@ std::string crossprodBatchString(
         "    ){\n"
         "      Dinner = DinnerBlock + localIndex;\n";   
       result +=
-        "      if(Dinner < NrowStop)\n"
+        "      if((Dinner < NrowStop) && DcolInBounds)\n"
         "      Acache[Dinner] *= Acache[Dinner];\n";
       result +=
         "      barrier(CLK_LOCAL_MEM_FENCE);\n"
@@ -216,7 +241,7 @@ std::string crossprodBatchString(
           "        DinnerBlock += NlocalTotal\n"
           "    ){\n"
           "         Dinner = DinnerBlock + localIndex;\n  "
-          "         if(Dinner < NrowStop)\n";
+          "         if((Dinner < NrowStop) && DcolInBounds)\n";
         if(invertD) {
           result +=
             "      Acache[Dinner] /= Dcache[Dinner];\n";
@@ -240,7 +265,7 @@ std::string crossprodBatchString(
           "        DinnerBlock += get_local_size(0)\n"
           "    ){\n"
           "         Dinner = DinnerBlock + get_local_id(0);\n  "
-          "         if(Dinner < NrowStop)\n";
+          "         if((Dinner < NrowStop) && DcolInBounds)\n";
         if(invertD) {
           result +=
             "      Acache[Dinner] /= Dcache[Dinner];\n";
@@ -281,7 +306,7 @@ std::string crossprodBatchString(
   result += 
     "      Cout=0.0;\n\n";
   result += 
-    "      if(Drow < Ncol){\n"
+    "      if((Drow < Ncol) && DcolInBounds){\n"
     "      DrowNpadC = CHere + Drow * NpadC;\n"
     "      A0Drow = AHere + Drow;\n"
     "      // cached parts\n"
@@ -317,7 +342,7 @@ std::string crossprodBatchString(
   
   
   result +=
-    "       if(Drow < Ncol){\n"
+    "       if((Drow < Ncol) && DcolInBounds){\n"
     "       // un-cached parts\n"
     "       for(DinnerBlock = NrowStop;\n"
     "           DinnerBlock < Nrow;\n";
@@ -360,7 +385,7 @@ std::string crossprodBatchString(
     "      barrier(CLK_LOCAL_MEM_FENCE);\n\n\n";    //no useful
   
   result +=
-    "      if(doLocalSum && (Drow < Ncol)){\n";
+    "      if(doLocalSum && (Drow < Ncol) && DcolInBounds){\n";
   if(onlyDiagC) {
     result +=
       "        for(Dinner = 1;Dinner < NlocalTotal;Dinner++){\n"
