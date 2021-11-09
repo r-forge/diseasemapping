@@ -22,7 +22,7 @@ std::string crossprodBatchString(
     const int NstartD,  // new
     const int NpadBetweenMatricesC,
     const int NpadBetweenMatricesA,
-    const int NlocalCacheA // numbers of rows to cache of A  Rcpp::IntegerVector Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
+    const int NlocalCacheD // numbers of rows to cache of A  Rcpp::IntegerVector Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
 ) { 
   
   /*
@@ -33,7 +33,7 @@ std::string crossprodBatchString(
   
   std::string typeString = openclTypeString<T>();
   std::string result = "";
-  const int NrowStop = std::min(NlocalCacheA, Nrow);
+  const int NrowStop = std::min(NlocalCacheD, Nrow);
   
   if(typeString == "double") {
     result += "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n";
@@ -52,7 +52,7 @@ std::string crossprodBatchString(
     "#define NpadBetweenMatricesC " + std::to_string(NpadBetweenMatricesC) + "\n"    
     "#define NpadBetweenMatricesA " + std::to_string(NpadBetweenMatricesA) + "\n"    
     "#define NrowStop " + std::to_string(NrowStop) + "\n"    
-    "#define NlocalCacheA "  + std::to_string(NlocalCacheA) + "\n\n";   
+    "#define NlocalCacheD "  + std::to_string(NlocalCacheD) + "\n\n";   
   
   result +=
     "__kernel void crossprodBatch(\n"
@@ -69,9 +69,9 @@ std::string crossprodBatchString(
   
   "local " + typeString + " *Acache=localCache;\n" 
   "local " + typeString + " *Dcache = &localCache[" + 
-    std::to_string(NlocalCacheA) + "];\n" 
+    std::to_string(NlocalCacheD) + "];\n" 
   "local " + typeString + " *Ccache = &localCache[" + 
-    std::to_string(2*NlocalCacheA) + "];\n" +
+    std::to_string(2*NlocalCacheD) + "];\n" +
     
     typeString + " Cout, Ctemp;\n"
   "event_t ev;\n"
@@ -457,9 +457,9 @@ int crossprodBatch(
   const int NstartA = A.internal_size2() * Astartend[0] + Astartend[2];
   const int NstartD = D.internal_size2() * Dstartend[0] + Dstartend[2];
   
-  const int NlocalCacheAD = std::max( 0, (NlocalCache - Nlocal[0]*Nlocal[1])/2 );
+  const int NlocalCacheD = std::max( 0, (NlocalCache - Nlocal[0]*Nlocal[1])/2 );
   
-  std::cout << "NlocalCacheAD " << NlocalCacheAD << "\n";
+  std::cout << "NlocalCacheD " << NlocalCacheD << "\n";
   
   // the context
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
@@ -489,7 +489,7 @@ int crossprodBatch(
     NstartD,
     C.internal_size2()*C.size2(),//NpadBetweenMatricesC,
     A.internal_size2()*A.size1()/Nmatrix,//NpadBetweenMatricesA,
-    NlocalCacheAD  
+    NlocalCacheD  
     // Nlocal
     );
   

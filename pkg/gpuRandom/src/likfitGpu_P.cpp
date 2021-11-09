@@ -348,6 +348,16 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   viennacl::ocl::switch_context(ctx_id);
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   
+  
+  int NgroupsOfParameters = workgroupSize[1]/localSize[1];
+  int NparametersPerGroup = std::max(localSize[1], 
+                                     ( (int) ceil( ((T) NparamPerIter[0]) / ((T) NgroupsOfParameters) ) )
+  );
+  
+  if(NlocalCache[0] < (NlocalParams * NparametersPerGroup)){
+    Rcpp::warning("NlocalCache too small for this number of parameters");
+  }
+  
   viennacl::ocl::local_mem localMemory(NlocalCache[0] *sizeof(yx(0,0) ) );
   
   
@@ -423,10 +433,9 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   int NrowsToCache = std::floor(static_cast<T>(NlocalCache[0] - NlocalCacheSum) / static_cast<T>(NcolsPerGroup));
   int NlocalCacheC = NcolsPerGroup * NrowsToCache;
   
-  if(NrowsToCache < 0) {
+  if(NrowsToCache < 0 || (NlocalCache[0] - localSize[0]*localSize[1]) < 0) {
     Rcpp::warning("NlocalCache too small for this number of work groups");
   }
-  
   std::string backsolveString = backsolveBatchString<T>(
     1,// sameB,
     1,// diagIsOne,
@@ -479,11 +488,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   );
   
   
-  const int NlocalCacheAD = std::max( 0, (NlocalCache[0] - localSize[0]*localSize[1])/2 );
-  
-  if((NlocalCache[0] - localSize[0]*localSize[1]) < 0) {
-    Rcpp::warning("NlocalCache too small for this number of work groups");
-  }
+  const int NlocalCacheD = std::max( 0, (NlocalCache[0] - localSize[0]*localSize[1])/2 );
   
   std::string crossprodKernelString = crossprodBatchString<T>(
     Nobs,//const int Nrow, 
@@ -499,7 +504,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     0,//const int NstartD,  
     ssqYX.internal_size2()*yx.size2(), //const int NpadBetweenMatricesC,
     LinvYX.internal_size2()*Nobs, //const int NpadBetweenMatricesA,
-    NlocalCacheAD // NlocalCacheA, localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
+    NlocalCacheD // NlocalCacheA, localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
   );
   
   // ssqBetahat     p*Ndatasets
@@ -517,7 +522,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     0,//const int NstartD,  
     ssqBetahat.internal_size2(), //const int NpadBetweenMatricesC
     QinvSsqYx.internal_size2()*Ncovariates, //const int NpadBetweenMatricesA,  made changes here
-    NlocalCacheAD // NlocalCacheA, localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
+    NlocalCacheD // NlocalCacheA, localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
   );
   
   
@@ -603,7 +608,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     0,//const int NstartD,  
     ssqBeta.internal_size2(), //const int NpadBetweenMatricesC,
     b_beta.internal_size2()*Nobs, //const int NpadBetweenMatricesA,
-    NlocalCacheAD // NlocalCacheA,  localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
+    NlocalCacheD // NlocalCacheA,  localSize// Nlocal// cache a Nlocal[0] by Nlocal[1] submatrix of C
   );     
   //}
   
@@ -630,8 +635,6 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   viennacl::ocl::program & my_prog_chol = viennacl::ocl::current_context().add_program(cholClString, "mykernelchol");
   viennacl::ocl::kernel & cholKernel = my_prog_chol.get_kernel("cholBatch");
   
-  // Rcpp::IntegerVector chol_workgroupSize=workgroupSize;
-  // chol_workgroupSize[1]=localSize[1];
   
   Rcpp::Rcout << "workgroupSize\n" << workgroupSize << "\n";
   Rcpp::Rcout << "localSize\n" << localSize << "\n";  
@@ -734,7 +737,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   if(verbose[0]) {
     Rcpp::Rcout << "\n" << " Nparams " << 
       Nparams << " NparamsPerIter " <<  NparamPerIter[0] <<
-        " Niter " << Niter << " Ncovariates " << Ncovariates << " Ndatasets " << Ndatasets <<"\n";
+        " Niter " << Niter << " Ncovariates " << Ncovariates << " Ndatasets " << Ndatasets << " NlocalCacheD " << NlocalCacheD << "\n";
   }
   
   ///////////////////////////Loop starts !!!//////////////////////////////////////////////////////////////////////////
@@ -753,7 +756,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       if(verbose[0]>1) {
         Rcpp::Rcout << "\n" << " Diter " << 
           Diter << " endThisIteration " <<  endThisIteration <<
-            " NthisIteration " << NthisIteration << " localMemorySize " << localMemory.size() << " DiterIndex " << DiterIndex <<"\n";
+            " NthisIteration " << NthisIteration << " localMemorySize " << localMemory.size() << " DiterIndex " << DiterIndex << "\n";
       }
       // matern
       viennacl::ocl::enqueue(maternKernel(Vbatch, coords, params, 
