@@ -42,8 +42,8 @@ std::string maternBatchKernelString(
     int NpadBetweenMatrices,
     int NpadCoords,
     int NpadParams,
-    int Nlocal0,  // can be greater than number of local items
-//    int NlocalParamsCache,
+    int Nlocal0,  // can be greater than number of local items  
+    //    int NlocalParamsCache,
     int assignUpper, // last four default to     1L, 1L, 1L, 0L
     int assignLower,
     int assignDiagonals,
@@ -541,15 +541,16 @@ if(verbose) {
     NlocalParams * ceil(Nmatrix * numLocalItems[1] / numWorkItems[1])  << 
       "\n";
 }
+
 if(verbose > 1) {
  Rcpp::Rcout << maternClString << "\n";
 }
 
-  if(numberofrows > param.size1()) {
+if(numberofrows > param.size1()) {
    Rcpp::stop("Warning: numberofrows must be less than nrow(param)");
   }
   
-  if(verbose) {
+if(verbose) {
     Rcpp::Rcout << startrow << " " << Nmatrix << " " << param.size1() << " " <<
       NgroupsOfParameters << " " << NparametersPerGroup << " " <<
         localParameters.size() / sizeof(param(0,0)) << " " << sizeof(param(0,0)) <<  "\n";

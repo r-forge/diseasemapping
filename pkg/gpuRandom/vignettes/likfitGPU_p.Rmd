@@ -48,12 +48,12 @@ result<-gpuRandom::likfitGpu(spatialmodel,     #data,
                                paramsGpu, #a vclmatrix, consists of all the parameters#betas=NULL, #a vclmatrix  #only one row batch, but many colbatches
                                BoxCox=c(1,0), # an R vector, will always be c(1,0,.....)
                                form = "ml",
-                               NparamPerIter=50,  # how many sets of params to be evaluated in each loop
+                               NparamPerIter=200,  # how many sets of params to be evaluated in each loop
                                nBetahats =1,
                                minustwotimes=TRUE,
                                Nglobal=c(64,64,1),
-                               Nlocal=c(16,32,1),
-                               NlocalCache=2000)
+                               Nlocal=c(16,16,1),
+                               NlocalCache=1000)
 
 
 mTwoLogLik <- as.matrix(result$minusTwoLogLik)

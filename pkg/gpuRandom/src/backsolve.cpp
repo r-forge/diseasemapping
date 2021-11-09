@@ -611,7 +611,7 @@ void backsolveBatch(
     NcolsPerGroup,  // 15
     NlocalCacheC,   // 16
     NlocalCacheSum, // 17
-    Nlocal[0] * Nlocal[1] //NpadBetweenMatricesSum   18
+    Nlocal[0] * Nlocal[1] //  18
   );  //NcolsInCache
   
   if(verbose > 2) {

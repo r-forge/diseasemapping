@@ -44,7 +44,7 @@ template <typename T> std::string cholBatchKernelString(
   result += "\n__kernel void cholBatch(\n"
   "	__global " + typeString + " *A,\n" 
   "	__global " + typeString + " *diag,\n"
-  " __local " + typeString + "*diagLocal,\n"
+  " __local " + typeString + " *diagLocal,\n"
   "              int Nmatrix";
   
   if(logDet){
