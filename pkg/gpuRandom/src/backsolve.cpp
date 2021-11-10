@@ -1,5 +1,5 @@
 #include "gpuRandom.hpp"
-//#define DEBUG
+#define DEBUG
 
 
 /*
@@ -593,7 +593,7 @@ void backsolveBatch(
   
   
   std::string clString =  backsolveBatchString<T>(  
-    numbatchB,        //Nrow == B.size1(),    //1
+    numbatchB==1,        //Nrow == B.size1(),    //1
     diagIsOne,  //2
     Nrow, //3
     Ncol, // ncol   4
