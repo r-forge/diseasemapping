@@ -6,6 +6,7 @@
 
 ```{r setup, include=FALSE}
 library('gpuR')
+library("gpuRandom")
 ```
 
 
@@ -91,6 +92,8 @@ as.matrix(gpuC)
 
 
 ```{r test3, eval=FALSE}
+library('gpuR')
+library("gpuRandom")
 a1 = matrix( c(5, 0,0,2, 5,0, 5, 66, 5), nrow=3, ncol=3, byrow = TRUE) 
 a2 = matrix( c(1, 0,0,6, 1,0, 18, 8, 1), nrow=3, ncol=3, byrow = TRUE) 
 A1 = cbind(c(0,0,0,0), rbind(c(0,0,0), a1))  #4x4
@@ -115,7 +118,7 @@ gpuB <- vclMatrix(B, type="double")
 gpuC <- vclMatrix(0,nrow=6, ncol=3, type="double")  #gpuC2 <- vclMatrix(0,nrow=6, ncol=2, type="double")
 gpuRandom:::backsolveBatchBackend(gpuC, gpuA, gpuB, 
                                   c(0,3,0,2),c(1,3,1,3),c(0,3,1,2),2L,
-                                  diagIsOne=FALSE, Nglobal, Nlocal, NlocalCache)
+                                  diagIsOne=FALSE, Nglobal=c(64L, 64L), Nlocal=c(4,4), NlocalCache=100, verbose=3)
 as.matrix(gpuC)
 
 ```
