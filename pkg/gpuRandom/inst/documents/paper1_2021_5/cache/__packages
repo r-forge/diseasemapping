@@ -2,9 +2,10 @@ base
 knitr
 MASS
 gpuR
-gpuRandom
+clrng
 kableExtra
 latex2exp
+gpuBatchMatrix
 Matrix
 sp
 raster

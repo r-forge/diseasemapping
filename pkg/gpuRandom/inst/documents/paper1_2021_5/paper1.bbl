@@ -1,4 +1,4 @@
-\begin{thebibliography}{31}
+\begin{thebibliography}{34}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
@@ -39,6 +39,11 @@ Dietrich C, Newsam G (1997).
   through Circulant Embedding of the Covariance Matrix.}
 \newblock \emph{SIAM J. Sci. Comput.}, \textbf{18}, 1088--1107.
 
+\bibitem[{Dyer \emph{et~al.}(1997)Dyer, Kannan, and Mount}]{dyer1997sampling}
+Dyer M, Kannan R, Mount J (1997).
+\newblock \enquote{Sampling contingency tables.}
+\newblock \emph{Random Structures \& Algorithms}, \textbf{10}(4), 487--506.
+
 \bibitem[{Eddelbuettel()}]{cran2021}
 Eddelbuettel D (????).
 \newblock \enquote{CRAN Task View: High-Performance and Parallel Computing with
@@ -76,6 +81,17 @@ Howes L, Thomas D (2007).
 \newblock \enquote{Efficient random number generation and application using
   CUDA.}
 \newblock \emph{GPU gems}, \textbf{3}, 805--830.
+
+\bibitem[{Kayibi \emph{et~al.}(2018)Kayibi, Pirzada, and
+  Chishti}]{KAYIBI2018298}
+Kayibi KK, Pirzada S, Chishti T (2018).
+\newblock \enquote{Sampling contingency tables.}
+\newblock \emph{AKCE International Journal of Graphs and Combinatorics},
+  \textbf{15}(3), 298--306.
+\newblock ISSN 0972-8600.
+\newblock \doi{https://doi.org/10.1016/j.akcej.2017.10.001}.
+\newblock
+  \urlprefix\url{https://www.sciencedirect.com/science/article/pii/S0972860017302396}.
 
 \bibitem[{L'Ecuyer(2015)}]{rLEC15a}
 L'Ecuyer P (2015).
@@ -151,6 +167,13 @@ Mat{\'e}rn B (1960).
 Mehta CR, Patel NR (2011).
 \newblock \enquote{IBM SPSS exact tests.}
 \newblock \emph{Armonk, NY: IBM Corporation}, pp. 23--24.
+
+\bibitem[{Miller and Harrison(2013)}]{10.1214/13-AOS1131}
+Miller JW, Harrison MT (2013).
+\newblock \enquote{{Exact sampling and counting for fixed-margin matrices}.}
+\newblock \emph{The Annals of Statistics}, \textbf{41}(3), 1569 -- 1592.
+\newblock \doi{10.1214/13-AOS1131}.
+\newblock \urlprefix\url{https://doi.org/10.1214/13-AOS1131}.
 
 \bibitem[{Patefield(1981)}]{patefield1981efficient}
 Patefield W (1981).
