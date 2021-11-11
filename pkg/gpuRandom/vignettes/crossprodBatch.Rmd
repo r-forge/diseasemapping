@@ -14,12 +14,12 @@ library("gpuR")
 library("gpuRandom")
 nrow = 20
 ncol=5
-A = matrix(0.01*sample(100, nrow*ncol, replace=TRUE),
+A = matrix(1:(nrow*ncol), #0.01*sample(100, nrow*ncol, replace=TRUE),
            nrow, ncol, byrow = TRUE) 
 
 
 D1 = matrix(0,nrow=nrow, ncol=nrow, byrow = TRUE) 
-diag(D1)<-sample(100, nrow, replace=TRUE)
+diag(D1)<-seq(1, nrow(D1)) #sample(100, nrow, replace=TRUE)
 
 C = matrix(0, nrow=ncol, ncol=ncol)
 
@@ -39,15 +39,18 @@ realC = t(A)%*% solve(D1) %*%A
 realC[upper.tri(realC)] <- 0
 cpuC = do.call(rbind, replicate(Nparam, realC, simplify=FALSE))
 
-gpuRandom::crossprodBatch(gpuC, 
+gpuRandom:::crossprodBatch(gpuC, 
                           gpuA, 
                           gpuD,
                           invertD = TRUE,
-                          Nglobal = c(64, 64,2), 
-                          Nlocal =  c(8,4,1),
-                          NlocalCache = 1000)
-
+                          Nglobal = c(64, 64), 
+                          Nlocal =  c(16, 16),
+                          NlocalCache = 1000,
+                          verbose = 1)
 range(as.matrix(gpuC)-cpuC)
+as.matrix(gpuC[1:5,1:5])
+cpuC[1:5,1:5]
+
 
 ```
 
