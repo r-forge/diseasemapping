@@ -6,6 +6,7 @@
 #' @param Nglobal vector of number of global work items
 #' @param Nlocal vector of number of local work items
 #' @param NlocalCache elements in local cache
+#' @param verbose display additional information
 #' 
 #' @return  C = A^T A or A^T D A or A^T D^(-1) A, output matrices, stacked row-wise 
 #' @useDynLib gpuRandom
@@ -20,7 +21,8 @@ crossprodBatch <- function(C,   # must be batch of square matrices
                            Nglobal, 
                            Nlocal, 
                            NlocalCache,
-                           Cstartend, Astartend, Dstartend) {
+                           Cstartend, Astartend, Dstartend,
+                           verbose = FALSE) {
   
   Nbatches = nrow(C)/ncol(C)
   
@@ -41,7 +43,10 @@ crossprodBatch <- function(C,   # must be batch of square matrices
     warning("a larger NlocalCache required")
   }
   
-  crossprodBatchBackend(C,A,D,invertD,Cstartend,Astartend,Dstartend, Nglobal,Nlocal, NlocalCache)
+  crossprodBatchBackend(C,A,D,
+                        invertD,Cstartend,Astartend,Dstartend, 
+                        Nglobal,Nlocal, NlocalCache,
+                        verbose)
   
   invisible()
   
