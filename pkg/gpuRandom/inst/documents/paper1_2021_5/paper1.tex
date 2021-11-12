@@ -164,12 +164,14 @@ In what follows, we will illustrate how to create streams and how to use streams
 
 %THE PROBLEM:  each process needs to be independent, there's a risk of overlap.  solution: streams.  mrg31kp3 a stream is a vector of three positive integers.  initial state is first stream, compute new streams sequentially.
 \subsection{Creating streams}\label{createstreams}
-Random number generation is more complicated when the RNG algorithm is run in parallel processes in \proglang{R}, there is a risk that the generated sequences of random numbers have correlation. \pkg{clrng} uses multiple distinct streams that are used in work-items that executes in parallel on a GPU device. The popular way of obtaining multiple streams is to take an RNG with a long period and cut the RNG's sequence into very long pieces, these pieces are adjacent and of equal length $Z$, so each piece can be used as a separate stream. Creating a new stream amounts to computing its starting point (seed). In general, a stream object contains three states: the current state of the stream, the initial state of the stream (or seed), and the initial state of the current substream (by default it is equal to the seed). Streams are created sequentially in the way that whenever the user creates a new stream, the software automatically jumps ahead by Z steps to find its initial state, and the three states in the stream object are set to it. Each of these streams can also be partitioned into substreams with equally-spaced starting points \citep{l2002object, rLEC15a}, which are occasionally useful.
+Random number generation is more complicated when the RNG algorithm is run in parallel processes in \proglang{R}, there is a risk that the generated sequences of random numbers have correlation. \pkg{clrng} uses multiple distinct streams that are used in work-items that executes in parallel on a GPU device. A popular way of obtaining multiple streams is to take an RNG with a long period and cut the RNG's sequence into very long disjoint pieces of equal length $Z$, and use each piece as a separate stream. Creating a new stream amounts to computing its starting point. In general, a stream object contains three elements: the current state of the stream, the initial state of the stream (or seed), and the initial state of the current substream (by default it is equal to the seed). Streams are created sequentially in the way that whenever the user creates a new stream, the software automatically jumps ahead by Z steps to find its initial state, and the three states in the stream object are set to it. Each of these streams can also be partitioned into substreams with equally-spaced starting points \citep{l2002object, rLEC15a}.
 
-In \proglang{clRNG} library, for the MRG31k3p RNG, the entire period length of approximately $2^{185}$ is divided into approximately $2^{51}$ non-overlapping streams of length $Z = 2^{134}$. Each stream can be further partitioned into substreams of length $W = 2^{72}$, although this is not currently implemented in \pkg{clrng}. The state (and seed) of each stream is a vector of six 31-bit integers. This size of state is appropriate for having streams running in work-items on GPU cards, while providing a sufficient period length for most applications. The initial state of the first stream (also called ``initial seed for the package'' in \proglang{clRNG} and ``initial'' in \pkg{clrng}) for the MRG31k3p is by default $(12345, 12345, 12345, 12345, 12345, 12345)$. 
+In \proglang{clRNG} library, the MRG31k3p RNG's entire period of length approximately $2^{185}$ is divided into approximately $2^{51}$ non-overlapping streams of length $Z = 2^{134}$. Each stream can be further partitioned into substreams of length $W = 2^{72}$, although this is not currently implemented in \pkg{clrng}. The state (and seed) of each stream is a vector of six 31-bit integers. This size of state is appropriate for having streams running in work-items on GPU cards, while providing a sufficient period length for most applications. The initial state of the first stream (also called ``initial seed for the package'' in \proglang{clRNG} and ``initial'' in \pkg{clrng}) for the MRG31k3p is by default $(12345, 12345, 12345, 12345, 12345, 12345)$. 
 
 
-The function \fct{clrngMrg31k3pCreateStreams} from \proglang{clRNG} creates streams on the host using the MRG31k3p RNG. If we want to use the streams in work-items on a GPU device, the streams have to be copied from the host to the global memory of the GPU device, and then each work-item copies the current states only of the streams to its private memory. \pkg{clrng} is able to create streams both on the host and on the GPU device. \fct{createStreamsCpu} is an interface function of \fct{clrngMrg31k3pCreateStreams} that creates streams on host as \proglang{R} matrices, see the \proglang{R} output below, where we created 4 streams on the host using \fct{createStreamsCpu}, after transposing \code{myStreamsCpu}, each column of the matrix is a stream, creating streams on host makes it easy for us to view and check the streams behavior. Substreams are not created in \pkg{clrng} because currently we use one stream per work-item. 
+%The function \fct{clrngMrg31k3pCreateStreams} from \proglang{clRNG} creates streams on the host using the MRG31k3p RNG. If we want to use the streams in work-items on a GPU device, the streams have to be copied from the host to the global memory of the GPU device, and then each work-item copies the current states only of the streams to its private memory. 
+\pkg{clrng} is able to create streams both on the host and on the GPU device. The \fct{createStreamsCpu} function does the former. The \proglang{R} output below creates 4 streams on the host.
+%is an interface function of \fct{clrngMrg31k3pCreateStreams} that creates streams on host as \proglang{R} matrices, see the \proglang{R} output below, where we created 4 streams on the host using \fct{createStreamsCpu}, after transposing \code{myStreamsCpu}, each column of the matrix is a stream, creating streams on host makes it easy for us to view and check the streams behavior. Substreams are not created in \pkg{clrng} because currently we use one stream per work-item. 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
@@ -200,19 +202,18 @@ t(myStreamsCpu)
   \item \code{n}: number of streams to create.
   \item \code{initial}: vector of length 6, recycled if shorter.
 \end{itemize}
-We can have streams on GPU by either converting the \code{myStreamsCpu} to a `\code{vclMatrix}' or producing streams using \fct{createStreamsGpu}. \fct{createStreamsGpu} is adapted from the clrngMrg31k3pCreateStreams() and creates streams directly on a GPU device. Setting a seed same as the MRG31k3p default seed in \fct{createStreamsGpu}, we produce on device exactly the same streams as those created on host as follows. Notice that the code is just for showing \fct{createStreamsGpu} and \fct{createStreamsCpu} are \proglang{R} interface functions for \fct{clrngMrg31k3pCreateStreams} on GPU and CPU respectively, in practice it is not recommended to create a new stream that has the same initial seed as another existing stream in one simulation program.
+We move streams to the GPU by converting them to a `\code{vclMatrix}'. %\fct{createStreamsGpu} is adapted from the clrngMrg31k3pCreateStreams() and creates streams directly on a GPU device. Setting a seed same as the MRG31k3p default seed in \fct{createStreamsGpu}, we produce on device exactly the same streams as those created on host as follows. Notice that the code is just for showing \fct{createStreamsGpu} and \fct{createStreamsCpu} are \proglang{R} interface functions for \fct{clrngMrg31k3pCreateStreams} on GPU and CPU respectively, in practice it is not recommended to create a new stream that has the same initial seed as another existing stream in one simulation program.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
 # creating streams on GPU
-myStreamsGpu1 = vclMatrix(myStreamsCpu)
+myStreamsGpu = vclMatrix(myStreamsCpu)
 myStreamsGpu2 = createStreamsGpu(n=4, initial=12345)
-range(as.matrix(myStreamsGpu1 - myStreamsGpu2))
-## [1] 0 0
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
-\fct{createStreamsGpu} also has the two arguments \code{n} and \code{initial}. \fct{createStreamsGpu} is similar to \code{.Random.seed} in \proglang{R}. By setting the RNG status with the \proglang{R} function \fct{set.seed}, we are able to repeat the sequence of random seeds, which is an important quality criteria of RNGs. Similarly in \fct{createStreamsGpu} and \fct{createStreamsCpu}, with the \code{initial} argument, we make the sequence of streams repeatable.
+\fct{createStreamsGpu} creates streams directly on the GPU and returns a `\code{vclMatrix}', which makes it slightly more efficient when the number of streams is large. However, any data is lost when the \proglang{R} session is terminated.
+%also has the two arguments \code{n} and \code{initial}. \fct{createStreamsGpu} is similar to \code{.Random.seed} in \proglang{R}. By setting the RNG status with the \proglang{R} function \fct{set.seed}, we are able to repeat the sequence of random seeds, which is an important quality criteria of RNGs. Similarly in \fct{createStreamsGpu} and \fct{createStreamsCpu}, with the \code{initial} argument, we make the sequence of streams repeatable.
 
 
 
@@ -220,9 +221,9 @@ range(as.matrix(myStreamsGpu1 - myStreamsGpu2))
 
 
 \subsection{Using streams to generate uniform random numbers}
-The streams created sequentially on a GPU are then used in work-items that executes in parallel on a GPU device. In \pkg{clrng} each work-item takes one distinct stream to generate random numbers, so the number of streams should always be equal to the number of total work-items in use. The main part of the kernel (\proglang{OpenCL} functions for execution on the device) for generating uniform random numbers is shown in Listing \ref{lst:uniformkernel}. Users can set \code{verbose>1} in \fct{runif} to print out the kernels. Kernels are written in the \proglang{OpenCL C} language, in which \code{__kernel} declares a function as a kernel, pointer kernel arguments must be declared with an address space qualifier, for example \code{__global} and \code{__local}. Here the pointers to \code{streams} and to the output matrix \code{out} on the global memory are passed to the kernel as arguments. \code{Nrow} and \code{Ncol} represent row and column number of the matrix \code{out} respectively. \code{NpadCol} is the internal number of columns of \code{out}, \code{NpadStreams} is the internal number of columns of \code{streams} (these variables are defined in macros not shown here). Each stream's current state is copied to the private memory of each work-item by the function \fct{streamsToPrivate}, where \code{g1} and \code{g2} point to the first three and second three elements of stream states. \code{index} represents the position of the work-item when mapping it to a one-dimensional data structure. The function \fct{clrngMrg31k3pNextState} generates an uniform random integer called \code{temp} between 1 and 2147483647,  the value of \code{temp} is then scaled to be in the interval $(0,1)$ by multiplying it by a constant \code{mrg31k3p\_NORM\_cl}, which is defined to be $1/2147483648$ for generating double-precision random numbers. If to generate random integers, \code{temp} is not scaled. At the end of generating random numbers, streams are transferred back to global memory through the function \fct{streamsFromPrivate}.
+The streams created sequentially are then used by the GPU's work-items to generate random numbers. In \pkg{clrng} each work-item takes one distinct stream to generate random numbers, so the number of streams should always be greater than the number of total work-items in use. The main part of the kernel (\proglang{OpenCL} functions for execution on the device) for generating uniform random numbers is shown in Listing \ref{lst:uniformkernel}. Users can set \code{verbose>1} in \fct{runif} to print out the kernels. Kernels are written in the \proglang{OpenCL C} language, in which \code{__kernel} declares a function as a kernel, pointer kernel arguments must be declared with an address space qualifier, for example \code{__global} and \code{__local}. Here the pointers to \code{streams} and to the output matrix \code{out} on the global memory are passed to the kernel as arguments. \code{Nrow} and \code{Ncol} represent row and column number of the matrix \code{out} respectively. \code{NpadCol} is the internal number of columns of \code{out}, \code{NpadStreams} is the internal number of columns of \code{streams} (these variables are defined in macros not shown here). Each stream's current state is copied to the private memory of each work-item by the function \fct{streamsToPrivate}, where \code{g1} and \code{g2} point to the first three and second three elements of stream states. \code{index} represents the position of the work-item when mapping it to a one-dimensional data structure. The function \fct{clrngMrg31k3pNextState} generates an uniform random integer called \code{temp} between 1 and 2147483647,  the value of \code{temp} is then scaled to be in the interval $(0,1)$ by multiplying it by a constant \code{mrg31k3p\_NORM\_cl}, which is defined to be $1/2147483648$ for generating double-precision random numbers. If to generate random integers, \code{temp} is not scaled. At the end of generating random numbers, streams are transferred back to global memory through the function \fct{streamsFromPrivate}.
 \begin{framed}
-\begin{lstlisting}[language=C,basicstyle=\small,label={lst:uniformkernel},caption={Using streams to produce random U(0,1) numbers}]
+\begin{lstlisting}[language=C,basicstyle=\small,breaklines=true,label={lst:uniformkernel}]
 __kernel void mrg31k3pMatrix(
   __global int* streams,
   __global float* out){
@@ -239,13 +240,13 @@ streamsToPrivate(streams,g1,g2,startvalue);
 for(DrowBlock = 0, Drow=get_global_id(0), DrowStart = Drow * NpadCol;
     DrowBlock < Nrow;
     Drow += get_global_size(0), 
-    DrowBlock +=get_global_size(0), DrowStart += DrowStartInc) {
+    DrowBlock +=get_global_size(0), DrowStart += DrowStartInc){
     
     DrowInBounds = Drow < Nrow;
     
     for(DcolBlock = 0, Dcol=get_global_id(1), Dentry = DrowStart + Dcol;
         DcolBlock < Ncol;
-        DcolBlock += get_global_size(1), Dentry += get_global_size(1) ) {
+        DcolBlock += get_global_size(1), Dentry += get_global_size(1)){
         temp = fact * clrngMrg31k3pNextState(g1, g2);
         if(DrowInBounds) out[Dentry] = temp;
   }//Dcol
@@ -270,12 +271,9 @@ Now we use the streams created in section \ref{createstreams} to generate two ve
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
-as.vector(clrng::runif(n = 6, streams = myStreamsGpu1, Nglobal = c(1, nrow(myStreamsGpu1)),
+as.vector(clrng::runif(n = 6, streams = myStreamsGpu, Nglobal = c(1, nrow(myStreamsGpu)),
     type = "double"))
 ## [1] 0.7353245 0.6142074 0.1100781 0.6487742 0.3661944 0.1088229
-as.vector(clrng::runif(n = 10, streams = myStreamsGpu2, Nglobal = c(1,
-    nrow(myStreamsGpu1)), type = "double"))[-(1:6)]
-## [1] 0.5330548 0.9783798 0.9151238 0.8509746
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -288,7 +286,7 @@ The arguments of the \fct{clrng::runif} are described as follows:
   \item \code{type}: ``double'' or ``float'' or ``integer'' format of generated random numbers.
   \item \code{verbose}: verbose print extra information if >1.
 \end{itemize}
-\fct{runif} returns the same sequence of random numbers because it uses the same streams \code{myStreamsGpu1} and \code{myStreamsGpu2} here. Reusing \code{myStreamsGpu1} will produce a vector different from \code{sim_1}. Because each time a random number is generated, the current state of the stream advances by one position. %Below shows the \code{myStreamsGpu1} after it being used.
+\fct{runif} returns the same sequence of random numbers because it uses the same streams \code{myStreamsGpu} and \code{myStreamsGpu2} here. Reusing \code{myStreamsGpu} will produce a vector different from \code{sim_1}. Because each time a random number is generated, the current state of the stream advances by one position. %Below shows the \code{myStreamsGpu} after it being used.
 
 Unlike the objects created by \proglang{R}, by default they remain in the memory after a restart. Streams created on GPU does not remain in the memory when a new \proglang{R} session begins. However, we can save the streams on the CPU in a file using the \fct{saveRDS} function, and later recall the streams with the \fct{readRDS} function, in this way we can reproduce the exact same sequence of random numbers in simulations. Below is the code that saves streams to a data file called \code{streams_from_GPU.rds} on CPU and then load it back and transfer it to GPU.
 \begin{knitrout}
@@ -330,12 +328,12 @@ The Box-Muller algorithm turns out to be the best choice for Gaussian transform 
 Listing \ref{lst:normal} shows a fragment of the kernel that generates standard Gaussian random numbers. Aside from using local memory and the part that does the transformation, this kernel is the same with the kernel for generating uniform random numbers shown in Listing \ref{lst:uniformkernel}. If developers want to use other Gaussian transform methods, this kernel is easy to be adapted and incorporated in other \proglang{R} packages. The kernel executes over a 2-dimensional NDRange with $1 \times 2$ work-groups. \code{part[0]} and \code{part[1]} correspond to $R$ and $\Theta$ in the formulas respectively. As the work-items in a work-group proceed at differing rates, \code{barrier(CLK_LOCAL_MEM_FENCE)} ensures correct ordering of memory operations to local memory, so that Gaussian random numbers $(X_1,Y_1), \dots, (X_n,Y_n)$ are generated in pairs correctly, errors such as $(X_n, Y_{(n-1)})$ or $(X_{(n-1)}, Y_{(n)})$ are avoided.
 %
 \begin{framed}
-\begin{lstlisting}[language=C,basicstyle=\small,label={lst:normal},caption={Using streams to produce standard normal random numbers},escapeinside={(*@}{@*)}]
+\begin{lstlisting}[language=C,basicstyle=\small,label={lst:normal},breaklines=true, escapeinside={(*@}{@*)}]
 __kernel void mrg31k3pMatrix(
   __global int* streams,
   __global float* out){
 
-(*@{\hspace*{3cm}\vdots}@*)
+(*@{\hspace*{0cm}\vdots}@*)
 local float part[2];
 float sinOrCosPart1, addForSine = get_local_id(1) * PI;
 if(get_local_id(1)){
@@ -393,7 +391,7 @@ streams <- createStreamsGpu(n = 512 * 128)
 system.time(clrng::rnorm(c(10000,10000), streams=streams, 
                              Nglobal=c(512,128), type="double"))
 ##    user  system elapsed 
-##   0.092   0.004   0.393
+##   0.160   0.004   0.461
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -444,7 +442,7 @@ The test statistic calculated for each random table is $-\sum_{i,j}\log(n_{ij}!)
 \begin{enumerate}
 \setlength\itemsep{0em}
   \item Calculate the test statistic for the observed table.
-    \item In each iteration, simulate a random table with the same dimensions and marginal totals as the observed table, compute and sometimes save the test statistic from the random table. 
+    \item In each iteration, simulate a random table with the same dimensions and marginal totals as the observed table using the \fct{rcont2} algorithm, compute and sometimes save the test statistic from the random table. 
     \item Count the number of iterations (\emph{Counts}) that have test statistics less or equal to the one from the observed table.
     \item Estimate p-value using $\frac{1 + \emph{Counts}}{B + 1}$.
 \end{enumerate}
@@ -497,7 +495,7 @@ result_month$p.value
 system.time(fisher.sim(month_gpu, 1e6, streams=streams, 
             type="double", returnStatistics=FALSE, Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   0.617   0.008   2.156
+##   1.138   0.019   2.691
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -547,7 +545,7 @@ result_weekgpu$p.value
 system.time(clrng::fisher.sim(week_GPU, 1e7, streams=streams,
             type="double", returnStatistics=FALSE,Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   0.491   0.023  10.210
+##   0.895   0.001  10.601
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -636,13 +634,24 @@ There are several alternative parameterisations of Mat\'ern covariance functions
 all of these methods except matrix decomposition method, are approximations and has specific requirements on the type of grid or covariance functions. The matrix decomposition method is exact, it works for all covariance functions and can generate random field on all types of grids. Other \proglang{R} packages that offer simulation of Gaussian random fields like \pkg{geoR} \citep{geoR2001}, does not work for large number of locations; the \pkg{RandomFields} \citep{RandomFields2015,RandomFields2020} package can use different methods for simulation of Gaussian fields, among which the (modified) circulant embedding method \citep{Dietrich1997FastAE} for covariance matrix decomposition is also an exact method (need to confirm???), however, it works only for isotropic Gaussian fields and on rectangular grids. \pkg{clrng} does exact simulation of exact Gaussian fields on the GPU as it relies on the matrix decomposition method. The implementation of this method is as follows.
 
 
-Suppose $U=(U_1, U_2, \dots, U_n)$ is a Gaussian random field with mean $\mu$ and covariance matrix $\Sigma$, without loss of generality, we assume mean value zero $(\mu = 0)$. Since covariance matrix $\Sigma$ is symmetric and positive-definite, we can take Cholesky decomposition of $\Sigma$, then we can simulate random samples from $U$ using $U=L*D^{1/2}*Z$, where 
-\begin{itemize}
-\itemsep0em 
-\item $L$ is the lower unit triangular matrix in Cholesky decomposition of $\Sigma = L*D*L^\top$,
-\item $D$ is a diagonal matrix.
-\item $Z=(Z_1, Z_2, \dots, Z_n) \sim \text{MVN}(0,I_n)$, where $I_n$ is a $n \times n$ identity matrix.
-\end{itemize}
+Suppose $U=(U_1, U_2, \dots, U_n)$ is a Gaussian random field with mean $\mu$ and covariance matrix $\Sigma$, without loss of generality, we assume mean value zero $(\mu = 0)$. Since covariance matrix $\Sigma$ is symmetric and positive-definite, we can take Cholesky decomposition of $\Sigma$, then we can simulate random samples from $U$ using Algorithm \ref{algorithm2},
+
+\begin{algorithm*}[H] \label{algorithm2}
+\SetAlgoLined
+ 1, Calculate the covariance matrix $\Sigma$ between locations\;
+ 2, Compute the Cholesky decomposition of $\Sigma = L \cdot D \cdot L^\top$, $L$ is the lower unit triangular matrix, $D$ is a diagonal matrix\;
+ 3, Generate on GPU a random matrix $Z=(Z_1, Z_2, \dots, Z_n) \sim \text{MVN}(0,I_n)$, where $I_n$ is a $n \times n$ identity matrix\;
+ 4, Compute the random samples from $U$ in batches using $U = L \cdot D^{\frac{1}{2}} \cdot Z$ \;
+ \caption{Gaussian random fields simulation using covariance matrix decomposition method.}
+\end{algorithm*}
+
+% $U=L*D^{1/2}*Z$, where 
+% \begin{itemize}
+% \itemsep0em 
+% \item $L$ is the lower unit triangular matrix in Cholesky decomposition of $\Sigma = L*D*L^\top$,
+% \item $D$ is a diagonal matrix.
+% \item $Z=(Z_1, Z_2, \dots, Z_n) \sim \text{MVN}(0,I_n)$, where $I_n$ is a $n \times n$ identity matrix.
+% \end{itemize}
 The matrix decomposition method is straightforward to implement, however, when a large number of locations ($n$) is involved, the cost of Cholesky decomposition of the covariance matrix is $\mathcal{O}(n^3)$,  and the cost of matrix-vector multiplication $L*Z$ to generate the random field $U$ is $\mathcal{O}(n^2)$ \citep{LiuandLi2019}.  \pkg{clrng} package not only does the matrices decomposition (Cholesky decomposition and matrix-vector multiplication) in parallel, but also computes the covariance matrices in parallel on GPU. The following shows an example, in which we simulate 10 Gaussian random fields of mat\'ern covariance with 5 sets of parameters at one time. %and introduces several GPU functions used in the simulation process.
 
 \subsection{Simulating Gaussian random fields with Mat\'ern covariances}
@@ -778,7 +787,7 @@ gpuBatchMatrix::multiplyLowerDiagonalBatch(
    L_3D_3Z_{11} & L_3D_3Z_{12} 
   \end{bmatrix}
 \end{gather}
-Step 7, Finally, plot the 10 simulated Gaussian random surfaces.
+Step 7, Finally, plot the 10 realizations.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
