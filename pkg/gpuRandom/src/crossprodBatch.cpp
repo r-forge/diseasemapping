@@ -468,7 +468,7 @@ int crossprodBatch(
   
 
 if(verbose)  
-  std::cout << "NlocalCacheD " << NlocalCacheD << "\n";
+  std::cout << "\n NlocalCacheD " << NlocalCacheD << "\n";
 
 if(verbose > 1)
   Rcpp::Rcout << clString << "\n\n";

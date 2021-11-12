@@ -164,13 +164,9 @@ In what follows, we will illustrate how to create streams and how to use streams
 
 %THE PROBLEM:  each process needs to be independent, there's a risk of overlap.  solution: streams.  mrg31kp3 a stream is a vector of three positive integers.  initial state is first stream, compute new streams sequentially.
 \subsection{Creating streams}\label{createstreams}
-Random number generation is more complicated when the RNG algorithm is run in parallel processes in \proglang{R}, there is a risk that the generated sequences of random numbers have correlation. \pkg{clrng} uses multiple distinct streams that are used in work-items that executes in parallel on a GPU device. The popular way of obtaining multiple streams is to take an RNG with a long period and cut the RNG's sequence into very long pieces, these pieces are adjacent and of equal length $Z$, so each piece can be used as a separate stream. Creating a new stream amounts to computing its starting point (seed). In general, a stream object contains three states: the current state of the stream, the initial state of the stream (or seed), and the initial state of the current substream (by default it is equal to the seed). Each of these streams can also be partitioned into substreams with equally-spaced starting points \citep{l2002object, rLEC15a}, which are occasionally useful.
+Random number generation is more complicated when the RNG algorithm is run in parallel processes in \proglang{R}, there is a risk that the generated sequences of random numbers have correlation. \pkg{clrng} uses multiple distinct streams that are used in work-items that executes in parallel on a GPU device. The popular way of obtaining multiple streams is to take an RNG with a long period and cut the RNG's sequence into very long pieces, these pieces are adjacent and of equal length $Z$, so each piece can be used as a separate stream. Creating a new stream amounts to computing its starting point (seed). In general, a stream object contains three states: the current state of the stream, the initial state of the stream (or seed), and the initial state of the current substream (by default it is equal to the seed). Streams are created sequentially in the way that whenever the user creates a new stream, the software automatically jumps ahead by Z steps to find its initial state, and the three states in the stream object are set to it. Each of these streams can also be partitioned into substreams with equally-spaced starting points \citep{l2002object, rLEC15a}, which are occasionally useful.
 
-in \proglang{clRNG} library, for the MRG31k3p RNG, the entire period length of approximately $2^{185}$ is divided into approximately $2^{51}$ non-overlapping streams of length $Z = 2^{134}$. Each stream can be further partitioned into substreams of length $W = 2^{72}$, although this is not currently implemented in \pkg{clrng}. The state (and seed) of each stream is a vector of six 31-bit integers. This size of state is appropriate for having streams running in work-items on GPU cards, while providing a sufficient period length for most applications. The initial state of the first stream (also called ``initial seed for the package'' in \proglang{clRNG} and ``initial'' in \pkg{clrng}) for the MRG31k3p is by default $(12345, 12345, 12345, 12345, 12345, 12345)$. Streams are created sequentially in the way that whenever the user creates a new stream, the software automatically jumps ahead by Z steps to find its initial state, and the three states in the stream object are set to it. 
-
-
-
-
+In \proglang{clRNG} library, for the MRG31k3p RNG, the entire period length of approximately $2^{185}$ is divided into approximately $2^{51}$ non-overlapping streams of length $Z = 2^{134}$. Each stream can be further partitioned into substreams of length $W = 2^{72}$, although this is not currently implemented in \pkg{clrng}. The state (and seed) of each stream is a vector of six 31-bit integers. This size of state is appropriate for having streams running in work-items on GPU cards, while providing a sufficient period length for most applications. The initial state of the first stream (also called ``initial seed for the package'' in \proglang{clRNG} and ``initial'' in \pkg{clrng}) for the MRG31k3p is by default $(12345, 12345, 12345, 12345, 12345, 12345)$. 
 
 
 The function \fct{clrngMrg31k3pCreateStreams} from \proglang{clRNG} creates streams on the host using the MRG31k3p RNG. If we want to use the streams in work-items on a GPU device, the streams have to be copied from the host to the global memory of the GPU device, and then each work-item copies the current states only of the streams to its private memory. \pkg{clrng} is able to create streams both on the host and on the GPU device. \fct{createStreamsCpu} is an interface function of \fct{clrngMrg31k3pCreateStreams} that creates streams on host as \proglang{R} matrices, see the \proglang{R} output below, where we created 4 streams on the host using \fct{createStreamsCpu}, after transposing \code{myStreamsCpu}, each column of the matrix is a stream, creating streams on host makes it easy for us to view and check the streams behavior. Substreams are not created in \pkg{clrng} because currently we use one stream per work-item. 
@@ -224,42 +220,44 @@ range(as.matrix(myStreamsGpu1 - myStreamsGpu2))
 
 
 \subsection{Using streams to generate uniform random numbers}
-The streams created sequentially on a GPU are then used in work-items that executes in parallel on a GPU device. In \pkg{clrng} each work-item takes one distinct stream to generate random numbers, so the number of streams should always be equal to the number of total work-items in use. The main part of the kernel (\proglang{OpenCL} functions for execution on the device) for generating uniform random numbers is shown in Listing \ref{lst:uniformkernel}. Kernels are written in the \proglang{OpenCL C} language, in which \code{__kernel} declares a function as a kernel, pointer kernel arguments must be declared with an address space qualifier, for example \code{__global} and \code{__local}. Here the pointers to \code{streams} and to the output matrix \code{out} on the global memory are passed to the kernel as arguments. \code{Nrow} and \code{Ncol} represent row and column number of the matrix \code{out} respectively. \code{NpadCol} is the internal number of columns of \code{out}, \code{NpadStreams} is the internal number of columns of the \code{streams} (these variables are defined in macros not shown here). Each stream's current state is copied to the private memory of each work-item by the function \fct{streamsToPrivate}. \code{index} represents the position of the work-item when mapping it to a one-dimensional data structure. The function \fct{clrngMrg31k3pNextState} generates an uniform random integer called \code{temp} between 1 and 2147483647,  the value of \code{temp} is then scaled to be in the interval $(0,1)$ by multiplying it by a constant \code{mrg31k3p\_NORM\_cl}, which is defined to be $1/2147483648$, if to generate double-precision random numbers. At the end of generating random numbers, streams are transferred back to global memory through the function \fct{streamsFromPrivate}.
+The streams created sequentially on a GPU are then used in work-items that executes in parallel on a GPU device. In \pkg{clrng} each work-item takes one distinct stream to generate random numbers, so the number of streams should always be equal to the number of total work-items in use. The main part of the kernel (\proglang{OpenCL} functions for execution on the device) for generating uniform random numbers is shown in Listing \ref{lst:uniformkernel}. Users can set \code{verbose>1} in \fct{runif} to print out the kernels. Kernels are written in the \proglang{OpenCL C} language, in which \code{__kernel} declares a function as a kernel, pointer kernel arguments must be declared with an address space qualifier, for example \code{__global} and \code{__local}. Here the pointers to \code{streams} and to the output matrix \code{out} on the global memory are passed to the kernel as arguments. \code{Nrow} and \code{Ncol} represent row and column number of the matrix \code{out} respectively. \code{NpadCol} is the internal number of columns of \code{out}, \code{NpadStreams} is the internal number of columns of \code{streams} (these variables are defined in macros not shown here). Each stream's current state is copied to the private memory of each work-item by the function \fct{streamsToPrivate}, where \code{g1} and \code{g2} point to the first three and second three elements of stream states. \code{index} represents the position of the work-item when mapping it to a one-dimensional data structure. The function \fct{clrngMrg31k3pNextState} generates an uniform random integer called \code{temp} between 1 and 2147483647,  the value of \code{temp} is then scaled to be in the interval $(0,1)$ by multiplying it by a constant \code{mrg31k3p\_NORM\_cl}, which is defined to be $1/2147483648$ for generating double-precision random numbers. If to generate random integers, \code{temp} is not scaled. At the end of generating random numbers, streams are transferred back to global memory through the function \fct{streamsFromPrivate}.
 \begin{framed}
 \begin{lstlisting}[language=C,basicstyle=\small,label={lst:uniformkernel},caption={Using streams to produce random U(0,1) numbers}]
- __kernel void mrg31k3pMatrix(
-    __global int* streams,
-    __global double* out){
- 
-const int 
-index = get_global_id(0)*get_global_size(1) + get_global_id(1),
-DrowInc = 2*get_global_size(0), 
-DrowStartInc = DrowInc * NpadCol,
-startvalue=index * NpadStreams;
-int Drow, Dcol, DrowStart, Dentry;
-uint temp;
+__kernel void mrg31k3pMatrix(
+  __global int* streams,
+  __global float* out){
+
+const int index = get_global_id(0)*get_global_size(1) + get_global_id(1);
+int Drow, Dcol, DrowStart, Dentry, DrowBlock, DcolBlock, DrowInBounds;
+const int DrowStartInc = get_global_size(0) * NpadCol;
 uint g1[3], g2[3];
+const int startvalue=index * NpadStreams;
+float temp, fact = mrg31k3p_NORM_cl;
 streamsToPrivate(streams,g1,g2,startvalue);
 
-//filling in random numbers in the output matrix
-for(Drow=2*get_global_id(0), 
-    DrowStart = (Drow + get_local_id(1))* NpadCol;
-    Drow < Nrow; Drow += DrowInc, DrowStart += DrowStartInc) {
-   
-   for(Dcol=get_group_id(1), Dentry = DrowStart + Dcol;
-       Dcol < Ncol;
-       Dcol += get_num_groups(1), Dentry += get_num_groups(1)) {
-       
-       temp = clrngMrg31k3pNextState(g1, g2);
-       out[Dentry] = mrg31k3p_NORM_cl * temp;
-       
-    }//Dcol
- }//Drow
+// filling in random numbers in the output matrix
+for(DrowBlock = 0, Drow=get_global_id(0), DrowStart = Drow * NpadCol;
+    DrowBlock < Nrow;
+    Drow += get_global_size(0), 
+    DrowBlock +=get_global_size(0), DrowStart += DrowStartInc) {
+    
+    DrowInBounds = Drow < Nrow;
+    
+    for(DcolBlock = 0, Dcol=get_global_id(1), Dentry = DrowStart + Dcol;
+        DcolBlock < Ncol;
+        DcolBlock += get_global_size(1), Dentry += get_global_size(1) ) {
+        temp = fact * clrngMrg31k3pNextState(g1, g2);
+        if(DrowInBounds) out[Dentry] = temp;
+  }//Dcol
+  
+}//Drow
+
 streamsFromPrivate(streams,g1,g2,startvalue);
-}
+
+}//kernel
 \end{lstlisting}
 \end{framed}
-This kernel executes over a 2-dimensional NDRange. Figure \ref{fig:1} illustrates how this kernel executes in practice with a simple example. Suppose we have a $2 \times 4$ NDRange ((a) in Figure \ref{fig:1}) and want to create a $4 \times 6$ matrix ((b) in Figure \ref{fig:1}) of uniform random numbers. In each grid of (a) that represents a work-item, there are two rows of numbers, the number in the above row is the stream index (from 0 to 7), and a pair of numbers in the second row is the 2-dimensional global ID of the work-item. Each stream object is passed to each work-item. The number in a cell of the matrix corresponds to the stream index, it indicates which stream generates a random number for this matrix cell. For example, stream 0 which is allocated in work-item $(0,0)$ generates a random number in matrix $(0,0)$ in the first iteration, then moves on to matrix $(0,2)$ and generates a random number there in the second iteration, in the third iteration it generates a random number in matrix $(0,4)$ and so on until it goes out of the matrix range in the next iteration.
+This kernel executes over a 2-dimensional NDRange. Figure \ref{fig:1} illustrates how this kernel executes in practice with a simple example. Suppose we have a $2 \times 4$ NDRange ((a) in Figure \ref{fig:1}) and want to create a $4 \times 6$ matrix ((b) in Figure \ref{fig:1}) of uniform random numbers. In each grid of (a) that represents a work-item, there are two rows of numbers, the number in the above row is the stream index (from 0 to 7), and a pair of numbers in the second row is the 2-dimensional global ID of the work-item. Each stream object is passed to each work-item. The number in a cell of the matrix corresponds to the stream index, it indicates which stream generates a random number for this matrix cell. %For example, stream 0 which is allocated in work-item $(0,0)$ generates a random number in matrix $(0,0)$ in the first iteration, then moves on to matrix $(0,2)$ and generates a random number there in the second iteration, in the third iteration it generates a random number in matrix $(0,4)$ and so on until it goes out of the matrix range in the next iteration.
 \begin{figure}[H]
     \centering
     \subfloat[]{{\includegraphics[width=8cm]{/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/f1} }}
@@ -268,16 +266,16 @@ This kernel executes over a 2-dimensional NDRange. Figure \ref{fig:1} illustrate
     \caption{Using streams to produce a $4 \times 6$ matrix of random U(0,1) numbers. \label{fig:1}}
 \end{figure}
 
-Now we use the streams created in section \ref{createstreams} to generate two vectors of double-precision i.i.d. $U(0,1)$ random numbers with the function \fct{runif}. \fct{runif} can also be used to produce random integers in $[1, 2147483647]$. To view the generated random numbers, we need to convert them to R vectors or matrices, by doing this, the random numbers are moved from the global memory of the GPU device to the host.
+Now we use the streams created in section \ref{createstreams} to generate two vectors of double-precision i.i.d. $U(0,1)$ random numbers with the function \fct{runif}. To view the generated random numbers, we need to convert them to R vectors or matrices, by doing this, the random numbers are moved from the global memory of the GPU device to the host.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
 as.vector(clrng::runif(n = 6, streams = myStreamsGpu1, Nglobal = c(1, nrow(myStreamsGpu1)),
     type = "double"))
-## [1] 0.7353245 0.5180770 0.6142074 0.2319392 0.1100781 0.3619766
+## [1] 0.7353245 0.6142074 0.1100781 0.6487742 0.3661944 0.1088229
 as.vector(clrng::runif(n = 10, streams = myStreamsGpu2, Nglobal = c(1,
     nrow(myStreamsGpu1)), type = "double"))[-(1:6)]
-## [1] 0.6487742 0.1112075 0.3661944 0.5018562
+## [1] 0.5330548 0.9783798 0.9151238 0.8509746
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -288,6 +286,7 @@ The arguments of the \fct{clrng::runif} are described as follows:
   \item \code{streams}: streams for random number generation.
   \item \code{Nglobal}: global index space. Default is set as $(64,8)$.
   \item \code{type}: ``double'' or ``float'' or ``integer'' format of generated random numbers.
+  \item \code{verbose}: verbose print extra information if >1.
 \end{itemize}
 \fct{runif} returns the same sequence of random numbers because it uses the same streams \code{myStreamsGpu1} and \code{myStreamsGpu2} here. Reusing \code{myStreamsGpu1} will produce a vector different from \code{sim_1}. Because each time a random number is generated, the current state of the stream advances by one position. %Below shows the \code{myStreamsGpu1} after it being used.
 
@@ -302,7 +301,7 @@ streams_saved <- vclMatrix(readRDS("myStreams.rds"))
 \end{kframe}
 \end{knitrout}
 
-\subsection{Plot the uniform random numbers (now deleted?)}
+%\subsection{Plot the uniform random numbers (now deleted?)}
 
 
 
@@ -331,61 +330,49 @@ The Box-Muller algorithm turns out to be the best choice for Gaussian transform 
 Listing \ref{lst:normal} shows a fragment of the kernel that generates standard Gaussian random numbers. Aside from using local memory and the part that does the transformation, this kernel is the same with the kernel for generating uniform random numbers shown in Listing \ref{lst:uniformkernel}. If developers want to use other Gaussian transform methods, this kernel is easy to be adapted and incorporated in other \proglang{R} packages. The kernel executes over a 2-dimensional NDRange with $1 \times 2$ work-groups. \code{part[0]} and \code{part[1]} correspond to $R$ and $\Theta$ in the formulas respectively. As the work-items in a work-group proceed at differing rates, \code{barrier(CLK_LOCAL_MEM_FENCE)} ensures correct ordering of memory operations to local memory, so that Gaussian random numbers $(X_1,Y_1), \dots, (X_n,Y_n)$ are generated in pairs correctly, errors such as $(X_n, Y_{(n-1)})$ or $(X_{(n-1)}, Y_{(n)})$ are avoided.
 %
 \begin{framed}
-\begin{lstlisting}[language=C,basicstyle=\small,label={lst:normal},caption={Using streams to produce standard normal random numbers}]
-const int 
-index = get_global_id(0)*get_global_size(1) + get_global_id(1);
-const int 
-DrowInc = 2*get_global_size(0), DrowStartInc = DrowInc * NpadCol;
-int Drow, Dcol, DrowStart, Dentry;
-uint temp;
-uint g1[3], g2[3];
-const int startvalue=index * NpadStreams;
-local double part[2], cosPart1, sinPart1;
+\begin{lstlisting}[language=C,basicstyle=\small,label={lst:normal},caption={Using streams to produce standard normal random numbers},escapeinside={(*@}{@*)}]
+__kernel void mrg31k3pMatrix(
+  __global int* streams,
+  __global float* out){
 
+(*@{\hspace*{3cm}\vdots}@*)
+local float part[2];
+float sinOrCosPart1, addForSine = get_local_id(1) * PI;
+if(get_local_id(1)){
+  fact = TWOPI_mrg31k3p_NORM_cl;
+}
 streamsToPrivate(streams,g1,g2,startvalue);
-
-// Iterate for the rows
-for(Drow=2*get_global_id(0), 
-    DrowStart = (Drow + get_local_id(1))* NpadCol;
-    Drow < Nrow; 
-    Drow += DrowInc, DrowStart += DrowStartInc) {
-  // Iterate for the columns
-  for(Dcol=get_group_id(1), Dentry = DrowStart + Dcol;
-      Dcol < Ncol;
-      Dcol += get_num_groups(1), Dentry += get_num_groups(1)) {
-    
-    // Generates an uniform random integer
-    temp = clrngMrg31k3pNextState(g1, g2);
-    
-    if(get_local_id(1)) {
-      // Cache data to local memory
-      part[1] = TWOPI_mrg31k3p_NORM_cl * temp;
-      cosPart1 = cos(part[1]);
-      sinPart1 = sin(part[1]);
-    } else {
-      part[0] = sqrt(-2.0*log(temp * mrg31k3p_NORM_cl));
-    }
-    
-    // Wait until all work items have read the data and 
-    // it becomes visible
-    barrier(CLK_LOCAL_MEM_FENCE);
-    
-    // Perform the operation and output the data
-    if(get_local_id(1)) {
-      out[Dentry] = part[0]*sinPart1;
-    } else {
-      out[Dentry] = part[0]*cosPart1;
-    }
-    barrier(CLK_LOCAL_MEM_FENCE);
-    
+for(DrowBlock = 0, Drow=get_global_id(0), DrowStart = Drow * NpadCol;
+    DrowBlock < Nrow;
+    Drow += get_global_size(0), 
+    DrowBlock +=get_global_size(0), DrowStart += DrowStartInc){
+    DrowInBounds = Drow < Nrow;
+    for(DcolBlock = 0, Dcol=get_global_id(1), Dentry = DrowStart + Dcol;
+        DcolBlock < Ncol;
+        DcolBlock += get_global_size(1), Dentry += get_global_size(1)){
+        
+      temp = fact * clrngMrg31k3pNextState(g1, g2);
+      part[get_local_id(1)] = temp;
+      
+      if(!get_local_id(1)) {
+        part[0] = sqrt(-2.0*log(part[0]));
+      }
+      barrier(CLK_LOCAL_MEM_FENCE);
+      
+      // cos for local0, sine for local1
+      sinOrCosPart1 = cos(part[1] + addForSine);
+      temp = part[0]*sinOrCosPart1;
+        if(DrowInBounds) out[Dentry] = temp;
+      barrier(CLK_LOCAL_MEM_FENCE);
+      
   }//Dcol
 }//Drow
-
 streamsFromPrivate(streams,g1,g2,startvalue);
+}//kernel
 \end{lstlisting}
 \end{framed}
 We illustrate in Figure \ref{fig3} how this kernel executes in practice with the previous toy example: to create a $4 \times 6$ matrix of Gaussian random numbers using a $2 \times 4$ NDRange. %Each stream is copied to the private memory of each work-item. 
-Work-items are organized to be in 1 by 2 work-groups as the random numbers are generated in pairs using the Box-Muller method. The shading on the grids in the NDRange distinguishes work-groups. The numbers in the third row in each gird of NDRange represents the local index of each work-item. Each work-group generates a pair of Gaussian random numbers \code{(X,Y)} in each iteration, where work-item of `\code{get_local_id(1)}$=0$' generates the \code{X} of a pair, and work-item of `\code{get_local_id(1)}$=1$' generates the \code{Y} of a pair. Here with the loop iterating over columns, the cells of matrix are filled from left to right, that is, in the first iteration, the 8 work-items generate random numbers in the leftmost two columns (8 cells) of the matrix simultaneously, the second iteration fills random numbers in the middle two columns of the matrix, and the third iteration fills the rest two columns of the matrix simultaneously. %Therefore, each work-item generates one Gaussian random number in each iteration, 
+Work-items are organized to be in 1 by 2 work-groups as the random numbers are generated in pairs using the Box-Muller method. The shading on the grids in the NDRange distinguishes work-groups. The numbers in the third row in each gird of NDRange represents the local index of each work-item. Each work-group generates a pair of Gaussian random numbers \code{(X,Y)} in each iteration, where work-item of `\code{get_local_id(1)}$=0$' generates the \code{X} of a pair, and work-item of `\code{get_local_id(1)}$=1$' generates the \code{Y} of a pair. %Here with the loop iterating over columns, the cells of matrix are filled from left to right, that is, in the first iteration, the 8 work-items generate random numbers in the leftmost two columns (8 cells) of the matrix simultaneously, the second iteration fills random numbers in the middle two columns of the matrix, and the third iteration fills the rest two columns of the matrix simultaneously. %Therefore, each work-item generates one Gaussian random number in each iteration, 
 The matrix filling process is the same as that shown in Figure \ref{fig:1}. 
 
 \begin{figure}[H]%
@@ -406,7 +393,7 @@ streams <- createStreamsGpu(n = 512 * 128)
 system.time(clrng::rnorm(c(10000,10000), streams=streams, 
                              Nglobal=c(512,128), type="double"))
 ##    user  system elapsed 
-##   0.093   0.008   0.391
+##   0.092   0.004   0.393
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -422,17 +409,17 @@ system.time(matrix(stats::rnorm(10000^2),10000,10000))
 
 
 \subsection{Exponential random number generation}
-The Exponential random variates are produced by applying the inverse transform method on i.i.d. $U(0,1)$ random numbers. The random variable $X \sim \text{Exponential}(\lambda)$ has cumulative distribution function $F_{X}(x)=1-e^{-\lambda x}$ for $x \geq 0$ and $\lambda > 0$. The inverse of $F^{-1}_{X}$ is $F^{-1}_{x}(y)= -(1/ \lambda) \log (1-y)$, for $ 0 \leq y <1$. The kernel is not shown because it is mostly same as the kernel for uniform and normal random numbers, basically just by applying the inverse transform formula to the \code{clrngMrg31k3pNextState(g1, g2)} in the kernel. Developers can make use of our kernel for generating other types of random variables on GPU in \proglang{R}.
+The Exponential random variates are produced by applying the inverse transform method on i.i.d. $U(0,1)$ random numbers. The random variable $X \sim \text{Exponential}(\lambda)$ has cumulative distribution function $F_{X}(x)=1-e^{-\lambda x}$ for $x \geq 0$ and $\lambda > 0$. The inverse of $F_{X}$ is $F^{-1}_{x}(y)= -(1/ \lambda) \log (1-y)$, for $ 0 \leq y <1$. The kernel is not shown because it is mostly same as the kernel for uniform and normal random numbers, except for the part that does the inverse transform. %Developers can make use of our kernel for generating other types of random variables on GPU in \proglang{R}.
 
-Below is the code that we produce a 2 by 2 matrix of exponential random number with expectation 1.
+Below is an example that we produce a 2 by 2 matrix of exponential random number with expectation 1.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
 r_matrix <- clrng::rexp(c(2,2), rate=1, Nglobal=c(1,4), type="double")
 as.matrix(r_matrix)
-##           [,1]      [,2]
-## [1,] 1.2243377 0.9593675
-## [2,] 0.7679958 0.5158689
+##            [,1]      [,2]
+## [1,] 1.22433768 0.7679958
+## [2,] 0.06687963 1.9744549
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -441,7 +428,7 @@ The arguments of the \fct{clrng::rexp} are described as follows:
 \itemsep0em 
   \item \code{n}: a vector of length 2 specifying the row and column number if to create a matrix, or a number specifying the length if to create a vector.
   \item \code{streams}: streams. If missing, a stream with random initial state is supplied.
-  \item \code{Nglobal}: global index space. Default is set as $(64,8)$.
+  \item \code{Nglobal}: global index space. Default is $(64,8)$.
   \item \code{type}: ``double'' or ``float'' format of generated random numbers.
 \end{itemize}
 
@@ -510,7 +497,7 @@ result_month$p.value
 system.time(fisher.sim(month_gpu, 1e6, streams=streams, 
             type="double", returnStatistics=FALSE, Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   0.619   0.009   2.158
+##   0.617   0.008   2.156
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -560,7 +547,7 @@ result_weekgpu$p.value
 system.time(clrng::fisher.sim(week_GPU, 1e7, streams=streams,
             type="double", returnStatistics=FALSE,Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   0.514   0.010  10.215
+##   0.491   0.023  10.210
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
