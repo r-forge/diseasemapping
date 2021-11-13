@@ -132,7 +132,7 @@ In recent years, parallel computing with \proglang{R} \citep{r2021} has become a
 
 Graphics Processing Units (GPUs) have the potential to make important contribution to parallel computing with \proglang{R}. GPUs can perform thousands of tests simultaneously, which makes them powerful for doing massively parallel computing, and they are relatively cheap compared to multicore CPU's. Although there have been a number of \proglang{R} packages developed which provide some GPU capability, they inevitably come with some limitations. Packages such as \pkg{gputools}, \pkg{gpumatrix}, \pkg{cudaBayesreg}, \pkg{rpud} (available on github), are now no longer maintained, the popular \pkg{tensorflow} \citep{tensorflow1} package uses GPU via \proglang{Python}, which makes it difficult to include as a dependency for new \proglang{R} packages. All of these mentioned packages are restricted to \proglang{R} users with NVIDIA GPUs. \pkg{gpuR} \citep{gpur1} is the only \proglang{R} package with a convenient and flexible interface between \proglang{R} and GPUs, and it is compatible with many GPU devices. By utilizing the \pkg{ViennaCL} \citep*{rupp2016viennacl} library, it provides a bridge between \proglang{R} and non-proprietary GPUs through the \proglang{OpenCL} (Open Computing Language) backend, which when combined with \pkg{Rcpp} \citep{rcpp1} gives a building block for other \proglang{R} packages. 
 
-Random number generation is critical in simulation-based statistical inference, machine learning and many other scientific fields. While most random number generators are sequential, the \proglang{R} packages \pkg{parallel}, \pkg{rlecuyer} \citep{sevcikova2015package} and \pkg{future} \citep*{future1.19.1} are able to generate random numbers in parallel on multicore CPUs. More specifically, \pkg{parallel} writes an interface for the \pkg{RngStreams}, a \proglang{\texttt{C++}} library by \cite{l2002object} which is based on a combined multiple-recursive generator (MRG). \pkg{future} also uses the combined MRG algorithm for generating random numbers. For up-to-date review papers on the generation of random numbers on parallel devices, and GPUs in particular, see:  \cite{rLEC15a,rLEC17p,rLEC21a}.
+Random number generation is critical in simulation-based statistical inference, machine learning and many other scientific fields. While most random number generators are sequential, the \proglang{R} packages \pkg{parallel}, pkg{future} \citep*{future1.19.1} and \pkg{rlecuyer} \citep{sevcikova2015package} are able to generate random numbers in parallel on multicore CPUs. More specifically, \pkg{parallel} writes an interface for the \pkg{RngStreams}, a \proglang{\texttt{C++}} library by \cite{l2002object} which is based on a combined multiple-recursive generator (MRG) MRG32k3a. \pkg{future} and \pkg{rlecuyer} also uses the combined MRG algorithm for generating random numbers. For up-to-date review papers on the generation of random numbers on parallel devices, and GPUs in particular, see:  \cite{rLEC15a,rLEC17p,rLEC21a}.
 
 
 The \pkg{clrng} package described here is currently the only \proglang{R} package that is able to generate random numbers on GPUs. Accomplishing this is complicated to do because each process must produce an independent sequence of random numbers, and in order to ensure reproducibility it should be possible to save and restore the current state of each stream of numbers at any point.  Here we introduce the \proglang{R} package \pkg{clrng} that leverages the \pkg{gpuR} package, and can generate random numbers on GPU by using the \pkg{clRNG} \citep{l2015clrng} library, and can thus accelerate several types of statistical simulation and modelling.
@@ -395,7 +395,7 @@ streams <- createStreamsGpu(n = 512 * 128)
 system.time(clrng::rnorm(c(10000,10000), streams=streams, 
                              Nglobal=c(512,128), type="double"))
 ##    user  system elapsed 
-##   0.086   0.011   0.530
+##   0.093   0.000   0.524
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -499,7 +499,7 @@ result_month$p.value
 system.time(fisher.sim(month_gpu, 1e6, streams=streams, 
             type="double", returnStatistics=FALSE, Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   0.620   0.010   2.162
+##   0.603   0.016   2.151
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -549,7 +549,7 @@ result_weekgpu$p.value
 system.time(clrng::fisher.sim(week_GPU, 1e7, streams=streams,
             type="double", returnStatistics=FALSE,Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   0.504   0.015  10.211
+##   0.492   0.032  10.217
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
