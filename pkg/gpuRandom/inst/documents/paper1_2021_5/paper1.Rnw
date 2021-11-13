@@ -518,7 +518,7 @@ Given a parameter space $X$, a random field $U$ on $X$ is a collection of random
 \end{gather*}
 The common choice for the covariance function $\Sigma$ is the Mat\'ern covariance function \citep{matern1960spatial}. The Mat\'ern covariance between $U(x)$ and $U(x')$ takes the form 
 \begin{equation*}
-\Sigma(d;\sigma^2,\phi,\kappa)=\sigma^2*\frac{2^{\kappa-1}}{\Gamma(\kappa)} (\sqrt{8\kappa} \frac{d}{\phi})^\kappa  K_\kappa(\sqrt{8\kappa}  \frac{d}{\phi}),  \quad \text{where} \quad \phi    \geq 0,  \kappa     \geq 0,
+\Sigma(d;\sigma^2,\phi,\kappa)=\sigma^2*\frac{2^{\kappa-1}}{\Gamma(\kappa)} (\sqrt{8\kappa} \frac{d}{\phi})^\kappa  K_\kappa(\sqrt{8\kappa}  \frac{d}{\phi}),  \quad \text{where} \quad \phi> 0,  \kappa > 0,
 \end{equation*} 
 $d =\|x-x'\|$ is the Euclidean distance between two spatial points, 
 $\sigma^2$ the variance of the random field $U$.
