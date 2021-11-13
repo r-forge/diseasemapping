@@ -395,7 +395,7 @@ streams <- createStreamsGpu(n = 512 * 128)
 system.time(clrng::rnorm(c(10000,10000), streams=streams, 
                              Nglobal=c(512,128), type="double"))
 ##    user  system elapsed 
-##   0.096   0.005   0.530
+##   0.083   0.013   0.526
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -499,7 +499,7 @@ result_month$p.value
 system.time(fisher.sim(month_gpu, 1e6, streams=streams, 
             type="double", returnStatistics=FALSE, Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   0.618   0.011   2.160
+##   0.610   0.009   2.150
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -549,7 +549,7 @@ result_weekgpu$p.value
 system.time(clrng::fisher.sim(week_GPU, 1e7, streams=streams,
             type="double", returnStatistics=FALSE,Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   0.496   0.021  10.209
+##   0.485   0.033  10.210
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -625,7 +625,7 @@ Given a parameter space $X$, a random field $U$ on $X$ is a collection of random
 \end{gather*}
 The common choice for the covariance function $\Sigma$ is the Mat\'ern covariance function \citep{matern1960spatial}. The Mat\'ern covariance between $U(x)$ and $U(x')$ takes the form 
 \begin{equation*}
-\Sigma(d;\sigma^2,\phi,\kappa)=\sigma^2*\frac{2^{\kappa-1}}{\Gamma(\kappa)} (\sqrt{8\kappa} \frac{d}{\phi})^\kappa  K_\kappa(\sqrt{8\kappa}  \frac{d}{\phi}),  \quad \text{where} \quad \phi    \geq 0,  \kappa     \geq 0,
+\Sigma(d;\sigma^2,\phi,\kappa)=\sigma^2*\frac{2^{\kappa-1}}{\Gamma(\kappa)} (\sqrt{8\kappa} \frac{d}{\phi})^\kappa  K_\kappa(\sqrt{8\kappa}  \frac{d}{\phi}),  \quad \text{where} \quad \phi> 0,  \kappa > 0,
 \end{equation*} 
 $d =\|x-x'\|$ is the Euclidean distance between two spatial points, 
 $\sigma^2$ the variance of the random field $U$.
