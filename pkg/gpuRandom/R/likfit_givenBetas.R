@@ -33,7 +33,7 @@ likfit_givenBeta <- function(Betas, #a p x m matrix  given by the user
   
 
   XTVinvX <- XVYXVX[ , (ncol(XVYXVX)-Ncov+1):ncol(XVYXVX)]
-  ssqForBeta <- matrix(0, nrow=Nparam, ncol=m)
+  ssqForBetas <- matrix(0, nrow=Nparam, ncol=m)
   #maximized over lambda
   minusTwoLogLikOverLambda <- matrix(0, nrow=Nparam, ncol=m)    #row is param, col is Betas
   index <- matrix(0, nrow=m, ncol=2) #row is Betas, col is row & col index 
@@ -81,7 +81,7 @@ likfit_givenBeta <- function(Betas, #a p x m matrix  given by the user
     #     }
     
   
-  ssqForBeta[,beta] <- ssqBeta0
+  ssqForBetas[,beta] <- ssqBeta0
   
   ssqBeta <- do.call(cbind, replicate(Ndata, ssqBeta0, simplify=FALSE))   # ssq for this Beta only
   
@@ -103,7 +103,7 @@ likfit_givenBeta <- function(Betas, #a p x m matrix  given by the user
   
     if(form == 2){
       temp <- Nobs*log(one/Nobs) + detVar + Nobs + Nobs*log(2*pi) + jacobian
-      index[beta,] <- which(temp == min(temp, na.rm = TRUE), arr.ind = TRUE)
+      index[beta,] <- which(temp == min(temp, na.rm = TRUE), arr.ind = TRUE)   #find the optimized parameter index
       minusTwoLogLikOverLambda[, beta] <-  apply( temp, 1, min, na.rm=TRUE)
     }
   
@@ -115,7 +115,7 @@ likfit_givenBeta <- function(Betas, #a p x m matrix  given by the user
     Theoutput <- list(likForBeta=likForBeta,
                       minusTwoLogLikOverLambda = minusTwoLogLikOverLambda, 
                       index = index,
-                      ssqForBeta = ssqForBeta)
+                      ssqForBetas = ssqForBetas)
     
     
     Theoutput
