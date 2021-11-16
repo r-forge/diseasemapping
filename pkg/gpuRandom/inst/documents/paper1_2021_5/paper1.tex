@@ -397,7 +397,7 @@ streams <- createStreamsGpu(n = 512 * 128)
 system.time(clrng::rnorm(c(10000,10000), streams=streams, 
                              Nglobal=c(512,128), type="double"))
 ##    user  system elapsed 
-##   0.155   0.000   0.585
+##   0.156   0.000   0.586
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -406,7 +406,7 @@ system.time(clrng::rnorm(c(10000,10000), streams=streams,
 \begin{verbatim}
 system.time(matrix(stats::rnorm(10000^2),10000,10000))
 ##    user  system elapsed 
-##   7.388   0.432   7.814
+##   6.951   0.444   7.390
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -421,9 +421,9 @@ Below is an example that we produce a 2 by 2 matrix of exponential random number
 \begin{verbatim}
 r_matrix <- clrng::rexp(c(2,2), rate=1, Nglobal=c(1,4), type="double")
 as.matrix(r_matrix)
-##           [,1]      [,2]
-## [1,] 0.9340107 5.0051762
-## [2,] 3.4506078 0.8855801
+##           [,1]        [,2]
+## [1,] 0.2627643 0.005952261
+## [2,] 0.4535731 0.186351621
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -481,7 +481,7 @@ The 2-way contingency tables consist of selected data from the 2018 Natality pub
 \centering
 \begin{tabular}[t]{lrrrrrrrrrrrr}
 \toprule
-  & Ane & Men & Cya & Her & Omp & Gas & Lim & Cle & Pal & Down & Chro & Hypo\\
+  & Ane & Men & Cya & Her & Omp & Gas & Lim & Cle & Pal & Dow & Chr & Hyp\\
 \midrule
 Jan & 29 & 55 & 172 & 46 & 39 & 73 & 48 & 183 & 77 & 103 & 102 & 174\\
 Feb & 25 & 45 & 175 & 35 & 31 & 55 & 34 & 142 & 81 & 115 & 100 & 180\\
@@ -506,7 +506,7 @@ month_gpu<-vclMatrix(month,type="integer")
 system.time(result_month <- fisher.sim(month_gpu, 1e6, streams=streams,
                    type="double", returnStatistics=TRUE,  Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   1.057   0.004   2.596
+##   1.023   0.028   2.587
 result_month$simNum
 ## [1] 1015808
 result_month$counts
@@ -516,7 +516,7 @@ result_month$p.value
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
-We got 409524 cases whose test statistics are below the observed threshold based on an actual number of 1015808 simulations executed, so the p-value from \fct{clrng::fisher.sim} for this table is about 0.40443, which is close enough to the p-value from \fct{stats::fisher.test}. \fct{clrng::fisher.sim} takes about 0.69 seconds, \pkg{clrng} accounts for 4.64\% of the elapsed time on CPU. 
+We got 409524 cases whose test statistics are below the observed threshold based on an actual number of 1015808 simulations, so the p-value from \fct{clrng::fisher.sim} for this table is about 0.40443, which is close enough to the p-value from \fct{stats::fisher.test}. \fct{clrng::fisher.sim} takes about 0.69 seconds, \pkg{clrng} accounts for 4.64\% of the elapsed time on CPU. 
 
  
 \begin{knitrout}
@@ -525,9 +525,9 @@ We got 409524 cases whose test statistics are below the observed threshold based
 #using CPU
 system.time(result_monthcpu<-stats::fisher.test(month,simulate.p.value = TRUE,B=1015808))
 ##    user  system elapsed 
-##  18.606   0.027  18.626
+##  18.341   0.008  18.336
 result_monthcpu$p.value
-## [1] 0.4036733
+## [1] 0.4039637
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -545,7 +545,7 @@ Table \ref{tab:week} is a $7 \times 12$ table shows frequencies for congenital a
 \centering
 \begin{tabular}[t]{lrrrrrrrrrrrr}
 \toprule
-  & Ane & Men & Cya & Her & Omp & Gas & Lim & Cle & Pal & Down & Chro & Hypo\\
+  & Ane & Men & Cya & Her & Omp & Gas & Lim & Cle & Pal & Dow & Chr & Hyp\\
 \midrule
 Mon & 30 & 34 & 173 & 37 & 23 & 80 & 49 & 191 & 83 & 122 & 109 & 216\\
 Tue & 60 & 121 & 383 & 80 & 83 & 131 & 71 & 349 & 146 & 164 & 168 & 352\\
@@ -569,7 +569,7 @@ week_GPU<-gpuR::vclMatrix(week,type="integer")
 system.time(result_weekgpu<-clrng::fisher.sim(week_GPU, 1e7, streams=streams,
                 type="double",returnStatistics=TRUE,Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   0.925   0.012  10.653
+##   0.869   0.013  10.601
 result_weekgpu$simNum
 ## [1] 10010624
 result_weekgpu$counts
@@ -588,9 +588,9 @@ The ``week'' table has a much smaller p-value: around 0.0001249672, which should
 #using CPU
 system.time(result_weekcpu<-fisher.test(week,simulate.p.value = TRUE,B=10010624))
 ##    user  system elapsed 
-## 117.213   0.152 117.289
+## 115.767   0.111 115.784
 result_weekcpu$p.value
-## [1] 0.0001249672
+## [1] 0.0001297621
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -924,7 +924,7 @@ Future work on \pkg{clrng} package could be: (1) Explore other RNGs, for example
 
 % \begin{figure}[H]
 % \centering
-
+ 
 % \caption{Histogram and Q-Q plot of the GPU-generated random numbers.\label{fig2}}
 % \end{figure}
 
