@@ -286,7 +286,7 @@ The arguments of the \fct{clrng::runif} are described as follows:
   \item \code{streams}: streams for random number generation.
   \item \code{Nglobal}: global index space. Default is set as $(64,8)$.
   \item \code{type}: ``double'' or ``float'' or ``integer'' format of generated random numbers.
-  \item \code{verbose}: print extra information if $\text{verbose} > 1$.
+  \item \code{verbose}: print extra information if $\text{verbose} > 1$. Default is FALSE.
 \end{itemize}
 %\fct{runif} returns the same sequence of random numbers because it uses the same streams \code{myStreamsGpu} and \code{myStreamsGpu2} here. 
 Reusing \code{myStreamsGpu} will produce a vector different from \code{sim_1}. Because each time a random number is generated, the current state of the stream advances by one position. %Below shows the \code{myStreamsGpu} after it being used.
@@ -397,7 +397,7 @@ streams <- createStreamsGpu(n = 512 * 128)
 system.time(clrng::rnorm(c(10000,10000), streams=streams, 
                              Nglobal=c(512,128), type="double"))
 ##    user  system elapsed 
-##   0.149   0.008   0.587
+##   0.148   0.008   0.585
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -434,6 +434,7 @@ The arguments of the \fct{clrng::rexp} are described as follows:
   \item \code{streams}: streams. If missing, a stream with random initial state is supplied.
   \item \code{Nglobal}: global index space. Default is $(64,8)$.
   \item \code{type}: ``double'' or ``float'' format of generated random numbers.
+  \item \code{verbose}: print extra information if $\text{verbose} > 1$. Default is FALSE.
 \end{itemize}
 
 
@@ -505,7 +506,7 @@ month_gpu<-vclMatrix(month,type="integer")
 system.time(result_month <- fisher.sim(month_gpu, 1e6, streams=streams,
                    type="double", returnStatistics=TRUE,  Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   1.064   0.008   2.607
+##   1.030   0.024   2.590
 result_month$simNum
 ## [1] 1015808
 result_month$counts
@@ -584,7 +585,7 @@ result_weekgpu$p.value
 system.time(clrng::fisher.sim(week_GPU, 1e7, streams=streams,
             type="double", returnStatistics=FALSE,Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   0.535   0.016  10.259
+##   0.874   0.030  10.610
 \end{verbatim}
 \end{kframe}
 \end{knitrout}

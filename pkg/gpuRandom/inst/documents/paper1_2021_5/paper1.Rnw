@@ -220,7 +220,7 @@ The arguments of the \fct{clrng::runif} are described as follows:
   \item \code{streams}: streams for random number generation.
   \item \code{Nglobal}: global index space. Default is set as $(64,8)$.
   \item \code{type}: ``double'' or ``float'' or ``integer'' format of generated random numbers.
-  \item \code{verbose}: print extra information if $\text{verbose} > 1$.
+  \item \code{verbose}: print extra information if $\text{verbose} > 1$. Default is FALSE.
 \end{itemize}
 %\fct{runif} returns the same sequence of random numbers because it uses the same streams \code{myStreamsGpu} and \code{myStreamsGpu2} here. 
 Reusing \code{myStreamsGpu} will produce a vector different from \code{sim_1}. Because each time a random number is generated, the current state of the stream advances by one position. %Below shows the \code{myStreamsGpu} after it being used.
@@ -347,6 +347,7 @@ The arguments of the \fct{clrng::rexp} are described as follows:
   \item \code{streams}: streams. If missing, a stream with random initial state is supplied.
   \item \code{Nglobal}: global index space. Default is $(64,8)$.
   \item \code{type}: ``double'' or ``float'' format of generated random numbers.
+  \item \code{verbose}: print extra information if $\text{verbose} > 1$. Default is FALSE.
 \end{itemize}
 
 
