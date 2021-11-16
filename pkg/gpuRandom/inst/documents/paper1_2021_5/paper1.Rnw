@@ -595,28 +595,30 @@ are each of size $4800 \times 4800$ and are stacked by row in the output \code{m
 maternCov = vclMatrix(0, nrow(paramsGpu)*nrow(coordsGpu), 
                          nrow(coordsGpu),type=theType)
 dim(maternCov)
-gpuBatchMatrix::maternBatch(maternCov, coordsGpu, paramsGpu,
-                       Nglobal=c(128,64), Nlocal=c(16,4))
+gpuBatchMatrix::maternBatch(var=maternCov, coords=coordsGpu, 
+                            param=paramsGpu,
+                            Nglobal=c(128,64), Nlocal=c(16,4))
 @
-Step 4, the first argument \code{maternCov} in \fct{gpuBatchMatrix::cholBatch} specifies the matrix object to take Cholesky decomposition. Unit lower triangular matrices $L_i$'s are returned and stacked by row in \code{maternCov}, \code{diagMat} stores the diagonal values of each $D_i$ in a row, for example, if each batch $\Sigma_i$ is of size $n \times n$, then each batch $L_i$ is $n \times n$, and each batch $D_i$ is $1 \times n$.
+Step 4, the first argument \code{A} in \fct{gpuBatchMatrix::cholBatch} specifies the object to take Cholesky decomposition. Computed unit lower triangular matrices $L_i$'s are stacked by row and stored in \code{maternCov}. Each row of \code{diagMat} stores the diagonal values of each $D_i$, for example, if each batch $\Sigma_i$ is of size $n \times n$, then each batch $L_i$ is $n \times n$, and each batch $D_i$ is $1 \times n$.
 <<r cholBach, eval=TRUE>>=
 diagMat = vclMatrix(0, nrow(paramsGpu), ncol(maternCov), type = theType)
-gpuBatchMatrix::cholBatch(maternCov, diagMat, numbatchD=nrow(myParamsBatch),
-                     Nglobal= c(128, 8),
-                     Nlocal= c(32, 8),
-                     NlocalCache=1000)
+gpuBatchMatrix::cholBatch(A=maternCov, 
+                          D=diagMat, 
+                          numbatchD=nrow(myParamsBatch),
+                          Nglobal= c(128, 8), Nlocal= c(32, 8),
+                          NlocalCache=1000)
 @
-% \begin{gather}
-% \begin{bmatrix} \Sigma_{1} \\ \Sigma_2 \\ \Sigma_3 \\ \vdots
-% \end{bmatrix}
-%  \rightarrow
-%  \begin{bmatrix}
-%   L_{1} \\ L_{2} \\L_{3} \\ \vdots
-%   \end{bmatrix} \text{and}
-%   \begin{bmatrix}
-%   D_{1} \\ D_{2} \\D_{3} \\ \vdots
-%   \end{bmatrix}
-% \end{gather}
+\begin{gather}
+\begin{bmatrix} \Sigma_{1} \\ \Sigma_2 \\ \Sigma_3 \\ \vdots
+\end{bmatrix}
+ \rightarrow
+ \begin{bmatrix}
+  L_{1} \\ L_{2} \\L_{3} \\ \vdots
+  \end{bmatrix} \text{and}
+  \begin{bmatrix}
+  D_{1} \\ D_{2} \\D_{3} \\ \vdots
+  \end{bmatrix}
+\end{gather}
 Step 5, generate 2 standard Gaussian random vectors \code{zmatGpu}$=(Z_1, Z_2)$ using \fct{clrng::rnorm}, in which \code{c(nrow(materCov),2)} specifies the number of rows and columns of \code{zmatGpu}.
 <<r randomNormalsSim1, eval=TRUE, cache=FALSE>>=
 streamsGpu <- createStreamsGpu(n=128*64)
@@ -631,7 +633,8 @@ simMat = vclMatrix(0, nrow(zmatGpu), ncol(zmatGpu),
                    type = theType)
 
 gpuBatchMatrix::multiplyLowerDiagonalBatch(
-  simMat, maternCov, diagMat, zmatGpu,
+  output=simMat, L=maternCov, 
+  D=diagMat, B=zmatGpu,
   diagIsOne = 1L, # diagonal of L is one
   transformD = "sqrt", # take the square root of each element of D
   Nglobal,
@@ -653,7 +656,8 @@ gpuBatchMatrix::multiplyLowerDiagonalBatch(
  \begin{bmatrix}
    L_1D_1Z_{11} & L_1D_1Z_{12} \\
    L_2D_2Z_{11} & L_2D_2Z_{12} \\
-   L_3D_3Z_{11} & L_3D_3Z_{12} 
+   L_3D_3Z_{11} & L_3D_3Z_{12} \\
+   \vdots  &   \vdots
   \end{bmatrix}
 \end{gather}
 Step 7, Finally, plot the 10 realizations.
@@ -666,7 +670,7 @@ names(simRaster) = apply(expand.grid('par',1:nrow(paramsGpu),
 @
 \begin{figure}[H]
 \centering
-<<maternplot, echo=FALSE,eval=TRUE, fig.show='hold', dev='pdf',cache=FALSE,dev='png'>>=
+<<maternplot, echo=TRUE,eval=TRUE, fig.show='hold', dev='pdf',cache=FALSE,dev='png'>>=
 par(mar=rep(0.1, 4))
 for(D in names(simRaster)) {
   plot(extent(simRaster))
@@ -706,6 +710,17 @@ Future work on \pkg{clrng} package could be: (1) Explore other RNGs, for example
 
 
 \newpage
+
+
+
+
+
+
+
+
+
+
+
 
 \begin{appendix}
 
