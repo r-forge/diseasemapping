@@ -452,17 +452,11 @@ knitr::kable(week,format="latex",align = c("rrrrrrrrrrrr"), caption = "Week\\lab
 <<TimecompareweekGpu2, eval=TRUE, cache=FALSE>>=
 observed_w= -clrng::logfactSum(week, c(16,16))/almost.1
 week_GPU<-gpuR::vclMatrix(week,type="integer")
-result_weekgpu<-clrng::fisher.sim(week_GPU, 1e7, streams=streams,
-                type="double",returnStatistics=TRUE,Nglobal = c(256,64))
+system.time(result_weekgpu<-clrng::fisher.sim(week_GPU, 1e7, streams=streams,
+                type="double",returnStatistics=TRUE,Nglobal = c(256,64)))
 result_weekgpu$simNum
 result_weekgpu$counts
 result_weekgpu$p.value
-@
-
-<<TimecompareweekGpu, eval=TRUE, cache=FALSE>>=
-#using GPU
-system.time(clrng::fisher.sim(week_GPU, 1e7, streams=streams,
-            type="double", returnStatistics=FALSE,Nglobal = c(256,64)))
 @
 The ``week'' table has a much smaller p-value: around 0.0001249672, which should require a larger number of simulations to get a more accurate p-value. With more than ten million simulations, we get 1205 cases and a p-value around 0.000120472 by \fct{fisher.sim}. \fct{stats::fisher.test} takes 91.6 seconds, while \fct{fisher.sim} takes about 4.282 seconds, the elapsed time is decreased to about 4.67\% of the time taken on CPU. 
 <<TimecompareweekGpu3, echo=FALSE, eval=TRUE, cache=TRUE>>=
