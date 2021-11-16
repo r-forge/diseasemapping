@@ -169,7 +169,8 @@ __kernel void mrg31k3pMatrix(
   __global int* streams,
   __global float* out){
 
-const int index = get_global_id(0)*get_global_size(1) + get_global_id(1);
+const int index = get_global_id(0)*get_global_size(1) + 
+                  get_global_id(1);
 int Drow, Dcol, DrowStart, Dentry, DrowBlock, DcolBlock, DrowInBounds;
 const int DrowStartInc = get_global_size(0) * NpadCol;
 uint g1[3], g2[3];
@@ -208,7 +209,7 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 %     \caption{Using streams to produce a $4 \times 6$ matrix of random U(0,1) numbers. \label{fig:1}}
 % \end{figure}
 
-Now we use the streams created in section \ref{createstreams} to generate two vectors of double-precision i.i.d. $U(0,1)$ random numbers with the function \fct{runif}. To view the generated random numbers, we need to convert them to R vectors or matrices, by doing this, the random numbers are moved from the global memory of the GPU device to the host.
+Now we use the streams created in section \ref{createstreams} to generate a vector of double-precision i.i.d. $U(0,1)$ random numbers with the function \fct{runif}. To view the generated random numbers, we need to convert them to R vectors or matrices, by doing this, the random numbers are moved from the global memory of the GPU device to the host.
 <<simStuff2, eval=TRUE,tidy=TRUE>>=
 as.vector(clrng::runif(n=6, streams=myStreamsGpu, Nglobal=c(1,nrow(myStreamsGpu)), type = "double"))
 @
@@ -219,7 +220,7 @@ The arguments of the \fct{clrng::runif} are described as follows:
   \item \code{streams}: streams for random number generation.
   \item \code{Nglobal}: global index space. Default is set as $(64,8)$.
   \item \code{type}: ``double'' or ``float'' or ``integer'' format of generated random numbers.
-  \item \code{verbose}: verbose print extra information if >1.
+  \item \code{verbose}: print extra information if $\text{verbose} > 1$.
 \end{itemize}
 %\fct{runif} returns the same sequence of random numbers because it uses the same streams \code{myStreamsGpu} and \code{myStreamsGpu2} here. 
 Reusing \code{myStreamsGpu} will produce a vector different from \code{sim_1}. Because each time a random number is generated, the current state of the stream advances by one position. %Below shows the \code{myStreamsGpu} after it being used.
@@ -259,7 +260,7 @@ The Box-Muller algorithm is a very good choice for Gaussian transform on GPU com
 \end{algorithm*}
 
 
-Listing \ref{lst:normal} shows a fragment of the kernel that generates standard Gaussian random numbers. Aside from using local memory and the part that does the transformation, this kernel is the same with the kernel for generating uniform random numbers shown in Listing \ref{lst:uniformkernel}. If developers want to use other Gaussian transform methods, this kernel is easy to be adapted and incorporated in other \proglang{R} packages. The kernel executes over a 2-dimensional index space with $1 \times 2$ work-groups. \code{part[0]} and \code{part[1]} correspond to $R$ and $\Theta$ in the formulas respectively. \code{PI_2} equals to $\pi/2$. As the work-items in a work-group proceed at differing rates, \code{barrier(CLK_LOCAL_MEM_FENCE)} ensures correct ordering of memory operations to local memory, so that Gaussian random numbers $(X_1,Y_1), \dots, (X_n,Y_n)$ are generated in pairs correctly, errors such as $(X_n, Y_{(n-1)})$ or $(X_{(n-1)}, Y_{(n)})$ are avoided.
+Listing \ref{lst:normal} shows a fragment of the kernel that generates standard Gaussian random numbers. Aside from using local memory and the part that does the transformation, this kernel is the same with the kernel for generating uniform random numbers shown in Listing \ref{lst:uniformkernel}. If developers want to use other Gaussian transform methods, this kernel is easy to be adapted and incorporated in other \proglang{R} packages. The kernel executes over a 2-dimensional index space with $1 \times 2$ work-groups. \code{part[0]} and \code{part[1]} correspond to $R$ and $\Theta$ in the formulas respectively. \code{PI_2} is defined to be $\pi/2$. As the work-items in a work-group proceed at differing rates, \code{barrier(CLK_LOCAL_MEM_FENCE)} ensures correct ordering of memory operations to local memory, so that Gaussian random numbers $(X_1,Y_1), \dots, (X_n,Y_n)$ are generated in pairs correctly, errors such as $(X_n, Y_{(n-1)})$ or $(X_{(n-1)}, Y_{(n)})$ are avoided.
 %
 \begin{framed}
 \begin{lstlisting}[language=C,basicstyle=\small,label={lst:normal},breaklines=true, escapeinside={(*@}{@*)}]
@@ -377,7 +378,7 @@ The arguments of the \fct{clrng::fisher.sim} are described as follows:
   \item \code{returnStatistics}: if TRUE, return all test statistics. 
   \item \code{Nglobal}: global index space. Default is set as $(64,16)$.
 \end{itemize}
-We show the advantage of \fct{clrng::fisher.sim} by computing the p-values for two real data examples: one with a relatively big p-value and another with a very small p-value, and compare the run-time with using \fct{stats::fisher.test} for each of the data sets on two computers: one with a very good CPU and an ordinary GPU, the other is equipped with an excellent GPU and an ordinary CPU. The \proglang{R} outputs for testing on computer 2 is shown in the following. 
+Users request $N$ number of replicates, while the actual number of replicates to be executed on GPU is \code{ceiling(N/prod(Nglobal))*prod(Nglobal)}. We show the advantage of \fct{clrng::fisher.sim} by computing the p-values for two real data examples: one with a relatively big p-value and another with a very small p-value, and compare the run-time with using \fct{stats::fisher.test} for each of the data sets on two computers: one with a very good CPU and an ordinary GPU, the other is equipped with an excellent GPU and an ordinary CPU. The \proglang{R} outputs for testing on computer 2 is shown in the following. 
 <<deviceinfo, include=FALSE,cache=FALSE>>=
 library(kableExtra)
 a <- data.frame(
@@ -418,7 +419,7 @@ knitr::kable(head(month),format="latex", align = c("rrrrrrrrrrrr"), caption = "M
  result_month$counts
  result_month$p.value
  @
-We requested one million simulations on GPU while the actual number of simulation is 1015808, and got 409524 cases whose test statitsic is below the observed threshold, so the p-value from \fct{clrng::fisher.sim} for this table is about 0.40443, which is close enough to the p-value from \fct{stats::fisher.test}: 0.40448. \fct{clrng::fisher.sim} takes about 0.69 seconds, \pkg{clrng} accounts for 4.64\% of the elapsed time on CPU. 
+We got 409524 cases whose test statistics are below the observed threshold when there are an actual number of 1015808 simulations executed, so the p-value from \fct{clrng::fisher.sim} for this table is about 0.40443, which is close enough to the p-value from \fct{stats::fisher.test}. \fct{clrng::fisher.sim} takes about 0.69 seconds, \pkg{clrng} accounts for 4.64\% of the elapsed time on CPU. 
  <<timecomparemonth3Gpu, eval=TRUE,echo=FALSE, cache=TRUE>>=
  month_stats <- as.vector(result_month$sim)
  @
@@ -432,7 +433,7 @@ We requested one million simulations on GPU while the actual number of simulatio
 
 
 \subsection{Comparing run-time: Week data example}\label{fisher_week}
-Table \ref{tab:week} is a $7 \times 12$ table shows frequencies for congenital anomalies of the newborn by birth day of week in 2018 within the United States. The first 5 rows are displayed below.
+Table \ref{tab:week} is a $7 \times 12$ table shows frequencies for congenital anomalies of the newborn by birth day of week in 2018 within the United States. 
 <<Timecompareweek, echo=FALSE, eval=TRUE, cache=TRUE,results="hide">>=
 library(latex2exp)
 dataweek<-read.csv("/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/weekday.csv") 
@@ -442,7 +443,7 @@ colnames(week) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal
 @
 
 <<weekdata, eval=TRUE, echo=FALSE, cache=TRUE>>=
-knitr::kable(head(week),format="latex",align = c("rrrrrrrrrrrr"), caption = "Week\\label{tab:week}", booktabs=TRUE,linesep = "") %>%
+knitr::kable(week,format="latex",align = c("rrrrrrrrrrrr"), caption = "Week\\label{tab:week}", booktabs=TRUE,linesep = "") %>%
   kable_styling(full_width = F, position = "center", latex_options = "HOLD_position")
 @
 
@@ -664,7 +665,7 @@ names(simRaster) = apply(expand.grid('par',1:nrow(paramsGpu),
 @
 \begin{figure}[H]
 \centering
-<<maternplot, echo=TRUE,eval=TRUE, fig.show='hold', dev='pdf',cache=FALSE,dev='png'>>=
+<<maternplot, echo=FALSE,eval=TRUE, fig.show='hold', dev='pdf',cache=FALSE,dev='png'>>=
 par(mar=rep(0.1, 4))
 for(D in names(simRaster)) {
   plot(extent(simRaster))
