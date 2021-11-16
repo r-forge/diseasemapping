@@ -397,7 +397,7 @@ streams <- createStreamsGpu(n = 512 * 128)
 system.time(clrng::rnorm(c(10000,10000), streams=streams, 
                              Nglobal=c(512,128), type="double"))
 ##    user  system elapsed 
-##   0.180   0.008   0.617
+##   0.155   0.000   0.585
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -506,7 +506,7 @@ month_gpu<-vclMatrix(month,type="integer")
 system.time(result_month <- fisher.sim(month_gpu, 1e6, streams=streams,
                    type="double", returnStatistics=TRUE,  Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   1.075   0.012   2.621
+##   1.057   0.004   2.596
 result_month$simNum
 ## [1] 1015808
 result_month$counts
@@ -516,18 +516,18 @@ result_month$p.value
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
-We got 409524 cases whose test statistics are below the observed threshold when there are an actual number of 1015808 simulations executed, so the p-value from \fct{clrng::fisher.sim} for this table is about 0.40443, which is close enough to the p-value from \fct{stats::fisher.test}. \fct{clrng::fisher.sim} takes about 0.69 seconds, \pkg{clrng} accounts for 4.64\% of the elapsed time on CPU. 
+We got 409524 cases whose test statistics are below the observed threshold based on an actual number of 1015808 simulations executed, so the p-value from \fct{clrng::fisher.sim} for this table is about 0.40443, which is close enough to the p-value from \fct{stats::fisher.test}. \fct{clrng::fisher.sim} takes about 0.69 seconds, \pkg{clrng} accounts for 4.64\% of the elapsed time on CPU. 
 
  
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
 #using CPU
-stats::fisher.test(month,simulate.p.value = TRUE,B=1015808)$p.value
-## [1] 0.4036733
-system.time(stats::fisher.test(month,simulate.p.value = TRUE,B=1015808))
+system.time(result_monthcpu<-stats::fisher.test(month,simulate.p.value = TRUE,B=1015808))
 ##    user  system elapsed 
-##  18.468   0.016  18.468
+##  18.606   0.027  18.626
+result_monthcpu$p.value
+## [1] 0.4036733
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -569,7 +569,7 @@ week_GPU<-gpuR::vclMatrix(week,type="integer")
 system.time(result_weekgpu<-clrng::fisher.sim(week_GPU, 1e7, streams=streams,
                 type="double",returnStatistics=TRUE,Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   0.849   0.017  10.583
+##   0.925   0.012  10.653
 result_weekgpu$simNum
 ## [1] 10010624
 result_weekgpu$counts
@@ -579,8 +579,6 @@ result_weekgpu$p.value
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
-
-
 The ``week'' table has a much smaller p-value: around 0.0001249672, which should require a larger number of simulations to get a more accurate p-value. With more than ten million simulations, we get 1205 cases and a p-value around 0.000120472 by \fct{fisher.sim}. \fct{stats::fisher.test} takes 91.6 seconds, while \fct{fisher.sim} takes about 4.282 seconds, the elapsed time is decreased to about 4.67\% of the time taken on CPU. 
 
 
@@ -588,11 +586,11 @@ The ``week'' table has a much smaller p-value: around 0.0001249672, which should
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
 #using CPU
-fisher.test(week,simulate.p.value = TRUE,B=10010624)$p.value
-## [1] 0.0001249672
-system.time(fisher.test(week,simulate.p.value = TRUE,B=10010624))
+system.time(result_weekcpu<-fisher.test(week,simulate.p.value = TRUE,B=10010624))
 ##    user  system elapsed 
-##  64.151   0.080  64.172
+## 117.213   0.152 117.289
+result_weekcpu$p.value
+## [1] 0.0001249672
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
