@@ -399,7 +399,7 @@ The 2-way contingency tables consist of selected data from the 2018 Natality pub
  datamonth<-read.csv("/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/month.csv") 
  month<-as.matrix(datamonth[,-1])
  rownames(month) <- c("Jan", "Feb","Mar","Apr","May","Jun","Jul","Aug","Sept","Oct","Nov","Dec")
- colnames(month) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal", "Down", "Chro", "Hypo")
+ colnames(month) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal", "Dow", "Chr", "Hyp")
  @
  
  <<monthdata,eval=TRUE,echo=FALSE, cache=TRUE>>=
@@ -420,15 +420,15 @@ knitr::kable(head(month),format="latex", align = c("rrrrrrrrrrrr"), caption = "M
  result_month$counts
  result_month$p.value
  @
-We got 409524 cases whose test statistics are below the observed threshold when there are an actual number of 1015808 simulations executed, so the p-value from \fct{clrng::fisher.sim} for this table is about 0.40443, which is close enough to the p-value from \fct{stats::fisher.test}. \fct{clrng::fisher.sim} takes about 0.69 seconds, \pkg{clrng} accounts for 4.64\% of the elapsed time on CPU. 
+We got 409524 cases whose test statistics are below the observed threshold based on an actual number of 1015808 simulations, so the p-value from \fct{clrng::fisher.sim} for this table is about 0.40443, which is close enough to the p-value from \fct{stats::fisher.test}. \fct{clrng::fisher.sim} takes about 0.69 seconds, \pkg{clrng} accounts for 4.64\% of the elapsed time on CPU. 
  <<timecomparemonth3Gpu, eval=TRUE,echo=FALSE, cache=TRUE>>=
  month_stats <- as.vector(result_month$sim)
  @
  
  <<timecomparemonth4Cpu, cache=TRUE, eval=TRUE>>=
  #using CPU
- stats::fisher.test(month,simulate.p.value = TRUE,B=1015808)$p.value
- system.time(stats::fisher.test(month,simulate.p.value = TRUE,B=1015808))
+ system.time(result_monthcpu<-stats::fisher.test(month,simulate.p.value = TRUE,B=1015808))
+ result_monthcpu$p.value
  @
 
 
@@ -440,7 +440,7 @@ library(latex2exp)
 dataweek<-read.csv("/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/weekday.csv") 
 week<-as.matrix(dataweek[,-1])
 rownames(week) <- c("Mon", "Tue","Wed","Thu","Fri","Sat","Sun")
-colnames(week) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal", "Down", "Chro", "Hypo")
+colnames(week) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal", "Dow", "Chr", "Hyp")
 @
 
 <<weekdata, eval=TRUE, echo=FALSE, cache=TRUE>>=
@@ -465,8 +465,8 @@ result_weekgpu$cpu = as.vector(result_weekgpu$sim)
 
 <<TimecompareweekCpu, cache=TRUE, eval=TRUE>>=
 #using CPU
-fisher.test(week,simulate.p.value = TRUE,B=10010624)$p.value
-system.time(fisher.test(week,simulate.p.value = TRUE,B=10010624))
+system.time(result_weekcpu<-fisher.test(week,simulate.p.value = TRUE,B=10010624))
+result_weekcpu$p.value
 @
 
 
