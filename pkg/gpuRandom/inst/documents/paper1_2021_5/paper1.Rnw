@@ -9,6 +9,7 @@
 \usepackage[ruled,vlined]{algorithm2e}
 \usepackage{listings}
 \usepackage[shortcuts]{extdash}
+\usepackage{booktabs}
 \renewcommand{\subfloat}[2][need a sub-caption]{ \subcaptionbox{#1}{#2} }
 
 
@@ -388,37 +389,34 @@ a <- data.frame(
 knitr::kable(a, col.names = NULL, align='c', caption = "Device information for run-time comparison.\\label{tab:device}") %>%
   kable_styling(full_width = FALSE, position = "center",latex_options = "HOLD_position")
 @
-The 2-way contingency tables %\ref{tab:month} and table \ref{tab:week} 
-consist of selected data from the 2018 Natality public use file \citep{National2018} from the Centers for Disease Control and Prevention’s National Center for Health Statistics, the 2018 natality data file may be downloaded at \url{https://www.cdc.gov/nchs/data_access/VitalStatsOnline.htm}. 
 
+ 
 \subsection{Comparing run-time: Month data example}\label{fisher_month}
+The 2-way contingency tables consist of selected data from the 2018 Natality public use data \citep{National2018} from the Centers for Disease Control and Prevention’s National Center for Health Statistics (NCHS), the 2018 natality data file may be downloaded at \url{https://www.cdc.gov/nchs/data_access/VitalStatsOnline.htm}. Table \ref{tab:month} is a $12 \times 12$ table that shows frequencies for congenital anomalies of the newborn by birth month in 2018 within the United States. The column variables of these two tables represent the twelve categories of congenital anomalies of the newborn: 1) Anencephaly; 2) Meningomyelocele/Spina bifida; 3) Cyanotic congenital heart disease; 4) Congenital diaphragmatic hernia; 5) Omphalocele; 6) Gastrochisis; 7) Limb reduction defect; 8) Cleft lip with or without cleft palate; 9) Cleft palate alone; 10) Down syndrome; 11) Suspected chromosomal disorder; and 12) Hypospadias. The first 5 rows of the table are displayed below.
  <<Timecomparemonth,echo=FALSE,eval=TRUE, cache=FALSE, results="hide">>=
- data2<-read.csv("/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/month.csv") 
- data2<-data2[,-1]
- month<-as.matrix(data2)
+ datamonth<-read.csv("/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/month.csv") 
+ month<-as.matrix(datamonth[,-1])
  rownames(month) <- c("Jan", "Feb","Mar","Apr","May","Jun","Jul","Aug","Sept","Oct","Nov","Dec")
  colnames(month) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal", "Down", "Chro", "Hypo")
- streams <- createStreamsGpu(n =256*64, initial=666)
  @
  
- 
- 
+ <<monthdata,eval=TRUE,echo=FALSE, cache=TRUE>>=
+library(knitr)
+knitr::kable(head(month),format="latex", align = c("rrrrrrrrrrrr"), caption = "Month\\label{tab:month}", booktabs=TRUE,linesep = "") %>%
+  kable_styling(full_width = F, position = "center",latex_options = "HOLD_position")
+@
+
  <<timecomparemonth1Gpu, eval=TRUE,cache=FALSE>>=
+ streams <- createStreamsGpu(n =256*64, initial=666)
  almost.1 <- 1 + 64 * .Machine$double.eps
  observed_m= -logfactSum(month, c(16,16))/almost.1
  
  month_gpu<-vclMatrix(month,type="integer")
- result_month <- fisher.sim(month_gpu, 1e6, streams=streams,
-                    type="double", returnStatistics=TRUE,  Nglobal = c(256,64))
+ system.time(result_month <- fisher.sim(month_gpu, 1e6, streams=streams,
+                    type="double", returnStatistics=TRUE,  Nglobal = c(256,64)))
  result_month$simNum
  result_month$counts
  result_month$p.value
- @
-
- <<timecomparemonth2Gpu, eval=TRUE,cache=FALSE>>=
- #using GPU
- system.time(fisher.sim(month_gpu, 1e6, streams=streams, 
-             type="double", returnStatistics=FALSE, Nglobal = c(256,64)))
  @
 We requested one million simulations on GPU while the actual number of simulation is 1015808, and got 409524 cases whose test statitsic is below the observed threshold, so the p-value from \fct{clrng::fisher.sim} for this table is about 0.40443, which is close enough to the p-value from \fct{stats::fisher.test}: 0.40448. \fct{clrng::fisher.sim} takes about 0.69 seconds, \pkg{clrng} accounts for 4.64\% of the elapsed time on CPU. 
  <<timecomparemonth3Gpu, eval=TRUE,echo=FALSE, cache=TRUE>>=
@@ -434,14 +432,18 @@ We requested one million simulations on GPU while the actual number of simulatio
 
 
 \subsection{Comparing run-time: Week data example}\label{fisher_week}
+Table \ref{tab:week} is a $7 \times 12$ table shows frequencies for congenital anomalies of the newborn by birth day of week in 2018 within the United States. The first 5 rows are displayed below.
 <<Timecompareweek, echo=FALSE, eval=TRUE, cache=TRUE,results="hide">>=
 library(latex2exp)
-data<-read.csv("/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/weekday.csv") 
-#exampletwo<-as.matrix(as.data.frame(lapply(data, as.numeric)))
-data<-data[,-1]
-week<-as.matrix(data)
+dataweek<-read.csv("/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/weekday.csv") 
+week<-as.matrix(dataweek[,-1])
 rownames(week) <- c("Mon", "Tue","Wed","Thu","Fri","Sat","Sun")
 colnames(week) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal", "Down", "Chro", "Hypo")
+@
+
+<<weekdata, eval=TRUE, echo=FALSE, cache=TRUE>>=
+knitr::kable(head(week),format="latex",align = c("rrrrrrrrrrrr"), caption = "Week\\label{tab:week}", booktabs=TRUE,linesep = "") %>%
+  kable_styling(full_width = F, position = "center", latex_options = "HOLD_position")
 @
 
 
@@ -704,6 +706,14 @@ Future work on \pkg{clrng} package could be: (1) Explore other RNGs, for example
 \newpage
 
 \begin{appendix}
+
+
+
+
+
+
+
+
 %We evaluate the distribution of 50000 GPU-generated double-precision uniform random numbers by making a density histogram  (the left panel in Figure \ref{fig0}), and plotting its empirical cumulative distribution and overlaying the theoretical cumulative distribution (the right panel in Figure \ref{fig0}). The two cumulative distribution lines seem to overlap completely, suggesting the data generated by \fct{runif} does come from a standard uniform distribution.
 <<uniforms_random_vector,include=FALSE>>=
 streams <- createStreamsGpu(n = 512)
@@ -737,20 +747,6 @@ clrng::qqnorm(avector, Nglobal=c(128,64), main="Q-Q Plot")
 % \caption{Histogram and Q-Q plot of the GPU-generated random numbers.\label{fig2}}
 % \end{figure}
 
-The ``month'' and ``week'' tables for testing \fct{fisher.sim} in section \ref{fisher_month} and \ref{fisher_week} are shown below, where 
-The row variable of the ``month'' table represents the twelve months: from January to December, and for the ``week'' table it represents the seven weekdays: Monday to Sunday. The column variables of these two tables represent the twelve categories of congenital anomalies of the newborn: 1) Anencephaly; 2) Meningomyelocele/Spina bifida; 3) Cyanotic congenital heart disease; 4) Congenital diaphragmatic hernia; 5) Omphalocele; 6) Gastrochisis; 7) Limb reduction defect; 8) Cleft lip with or without cleft palate; 9) Cleft palate alone; 10) Down syndrome; 11) Suspected chromosomal disorder; and 12) Hypospadias.
-<<monthdata,eval=TRUE,echo=FALSE, cache=TRUE>>=
-library(knitr)
-library(kableExtra)
-knitr::kable(month,format="latex",  caption = "Month\\label{tab:month}") %>%
-  kable_styling(full_width = F, position = "center",latex_options = "HOLD_position")
-@
-
-
-<<weekdata, eval=TRUE, echo=FALSE, cache=TRUE>>=
-knitr::kable(week,format="latex",caption = "Week\\label{tab:week}") %>%
-  kable_styling(full_width = F, position = "center",latex_options = "HOLD_position")
-@
 \end{appendix}
 
 
