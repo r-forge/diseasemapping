@@ -53,7 +53,7 @@ result<-gpuRandom::likfitGpu(spatialmodel,     #data,
                                minustwotimes=TRUE,
                                Nglobal=c(64,64,1),
                                Nlocal=c(16,16,1),
-                               NlocalCache=1000)
+                               NlocalCache=2000)
 
 
 mTwoLogLik <- as.matrix(result$minusTwoLogLik)
@@ -109,7 +109,60 @@ result2$index
 
 
 
+```{r test11.17}
+# isotropic
+library(gpuRandom)
+library(gpuR)
+library('geostatsp')
+data('swissRain')
+sr2 = swissRain[0:100,]
 
+# extract variables for modeling
+sr2$sqrtY = sqrt(sr2$rain)
+sr2$elev = raster::extract(swissAltitude, sr2)
+
+
+spatialmodel = geostatsp::likfitLgm(
+  data=sr2,
+  formula=sqrtY ~ elev,
+  param=c(range=50000,shape=1),
+  reml=FALSE,
+  verbose=FALSE
+)
+spatialmodel$parameters
+
+newParamList = list(
+  range=seq(30000, 80000 , len=20),
+  nugget = seq(0,0.25,len=10)
+) 
+
+
+newParam= do.call(expand.grid, newParamList)
+
+otherparams = c(shape=1, variance=2.016713, anisoRatio = 1, anisoAngleRadians = 0)
+otherparams = matrix(rep(otherparams,each=nrow(newParam)),nrow=nrow(newParam))
+colnames(otherparams) <- c("shape", "variance", "anisoRatio", "anisoAngleRadians")
+
+paramsBatch0 = cbind(newParam, otherparams)
+paramsGpu = gpuRandom::maternGpuParam(paramsBatch0, type="double")
+
+type = "double"
+
+
+result<-gpuRandom::likfitGpu(spatialmodel,     #data,
+                               type = "double",
+                               paramsGpu, #a vclmatrix, consists of all the parameters#betas=NULL, #a vclmatrix  #only one row batch, but many colbatches
+                               BoxCox=c(1,0), # an R vector, will always be c(1,0,.....)
+                               form = "NULL",
+                               NparamPerIter=200,  # how many sets of params to be evaluated in each loop
+                               nBetahats =1,
+                               minustwotimes=TRUE,
+                               Nglobal=c(64,64,1),
+                               Nlocal=c(16,16,1),
+                               NlocalCache=2000)
+
+
+```
 
 
 

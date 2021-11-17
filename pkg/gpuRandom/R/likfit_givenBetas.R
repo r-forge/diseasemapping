@@ -12,10 +12,10 @@ likfit_givenBeta <- function(Betas, #a p x m matrix  given by the user
                              ssqY,
                              XVYXVX,
                              jacobian,
-                             form = c("loglik", "mlFixSigma"),
+                             form = c("loglik", "profileforBeta"),
                              minustwotimes=TRUE){
 
-  form = c(loglik=1, mlFixSigma=2)[form]
+  form = c(loglik=1, profileforBeta=2)[form]
 
   Ncov = nrow(Betas)
   m = ncol(Betas)   # number of sets of Betas

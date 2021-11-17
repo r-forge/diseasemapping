@@ -8,7 +8,7 @@ likfitGpu <- function(spatialmodel,     #data,
                         type = c("double","float"),
                         paramsGpu, #a vclmatrix, consists of all the parameters
                         BoxCox, # an R vector, will always be c(1,0,.....)
-                        form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro"),
+                        form = c("loglik", "ml", "mlFixSigma", "mlFixBeta", "reml", "remlPro", "NULL"),
                         NparamPerIter,  # how many sets of params to be evaluated in each loop
                         nBetahats =1,  # how many betahats do you want to calculate for one dataset? 
                         minustwotimes=TRUE,
@@ -18,7 +18,10 @@ likfitGpu <- function(spatialmodel,     #data,
                         betas=NULL, #a vclmatrix  #only one row batch, but many colbatches
                         verbose=1){
   
-  form = c(loglik=1, ml=2, mlFixSigma=3, mlFixBeta=4, reml=5, remlPro=6)[form]
+  form = c(loglik=1, ml=2, mlFixSigma=3, mlFixBeta=4, reml=5, remlPro=6, NULL=7)[form]
+  if (form==7){
+    nBetahats = 0
+  }
   
   covariates = model.matrix(spatialmodel$model$formula, data=spatialmodel$data)
   temp = model.frame(spatialmodel$model$formula, data=spatialmodel$data)
@@ -102,11 +105,12 @@ likfitGpu <- function(spatialmodel,     #data,
   
   
   
-  
+  if(form != 7){
   temp <- vclMatrix(0, Nparam, Ndata, type=type)  
   # resid^T V^(-1) resid, resid = Y - X betahat = two
   two <- ssqY - ssqBetahat
   minusTwoLogLik <- vclMatrix(0, Nparam, Ndata, type=type)
+  }
   
   if(form ==2){ #ml
     # = n*log(two/n) + logD + jacobian +n + n*log(2*pi)  
@@ -203,7 +207,7 @@ likfitGpu <- function(spatialmodel,     #data,
   
   
   
-  if(is.null(betas)){  
+  if(is.null(betas) & form !=7){  
     Theoutput <- list(minusTwoLogLik = minusTwoLogLik, 
                       Betahats=Betahat,
                       ssqBetahat = ssqBetahat,
@@ -212,10 +216,17 @@ likfitGpu <- function(spatialmodel,     #data,
                       detReml = detReml,   # log |P|
                       jacobian = jacobian,
                       XVYXVX=XVYXVX)
-  }else{
+  }else if(form ==1 | form ==3){
     Theoutput <- list(minusTwoLogLik = minusTwoLogLik, 
                       Betahats=Betahat,
                       ssqBeta =ssqBeta,
+                      ssqY=ssqY,     
+                      detVar = detVar,   
+                      detReml = detReml,   
+                      jacobian = jacobian,
+                      XVYXVX=XVYXVX)
+  }else if(form ==7){
+    Theoutput <- list(
                       ssqY=ssqY,     
                       detVar = detVar,   
                       detReml = detReml,   
