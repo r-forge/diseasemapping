@@ -30,9 +30,9 @@ likfitGpu <- function(spatialmodel,     #data,
   variances <- vclVector(paramsGpu[,3],type=type)     # a vclvector
   
   
-  if(BoxCox[1] != 1) {
-    BoxCox = c(1, 0, setdiff(BoxCox, c(0,1)))
-  }
+  # if(BoxCox[1] != 1) {
+     BoxCox = c(1, 0, setdiff(BoxCox, c(0,1)))
+  # }
   
   Ncov = ncol(covariates)
   Ndata = length(BoxCox)

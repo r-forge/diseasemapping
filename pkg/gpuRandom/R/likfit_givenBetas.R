@@ -6,12 +6,12 @@
 
 likfit_givenBeta <- function(Betas, #a p x m matrix  given by the user 
                              #DatasetIndex=NA,     #an integer, which dataset are the betas for?,
-                             variances,
+                             variances=NULL,
                              Nobs,  # number of observations.
-                             detVar,
-                             ssqY,
-                             XVYXVX,
-                             jacobian,
+                             detVar, # vclVector
+                             ssqY,   # vclMatrix
+                             XVYXVX,   # vclMatrix
+                             jacobian, # vclVector
                              form = c("loglik", "profileforBeta"),
                              minustwotimes=TRUE){
 
@@ -34,52 +34,52 @@ likfit_givenBeta <- function(Betas, #a p x m matrix  given by the user
 
   XTVinvX <- XVYXVX[ , (ncol(XVYXVX)-Ncov+1):ncol(XVYXVX)]
   ssqForBetas <- matrix(0, nrow=Nparam, ncol=m)
+  likForBeta<- matrix(0, nrow=1, ncol=m)
   #maximized over lambda
   minusTwoLogLikOverLambda <- matrix(0, nrow=Nparam, ncol=m)    #row is param, col is Betas
   index <- matrix(0, nrow=m, ncol=2) #row is Betas, col is row & col index 
   
-  
-  for(beta in 1:m){  
-    
   param_vec  <- rep(seq_len(Nparam), each = Ndata)
   lambda_vec <- rep(seq_len(Ndata), times = Nparam)
-
-  midItem <- parallel::mcmapply(param_vec, lambda_vec,
-                      FUN = function(i, j) {
-                        # This is where expensive operations should go
-                        t(XVYXVX[((i-1)*Ncov+1) : (i*Ncov), j] ) %*% Betas[ ,beta]
-                      }
-                      )
-
-  # computed was a vector, but we need to put it in the correct-size matrix
-  midItem <- matrix(midItem, ncol = Ndata, byrow=TRUE)
+  param_vec  <- seq_len(Nparam)
+  midItem <- matrix(-66, nrow=Nparam, ncol=Ndata)
+  
+  for(beta in 1:m){  
+  # aTDinvb * Beta    Nparam by m
+  # midItem <- parallel::mcmapply(param_vec, lambda_vec,
+  #                     FUN = function(i, j) {
+  #                       t(XVYXVX[((i-1)*Ncov+1) : (i*Ncov), j] ) %*% Betas[ ,beta]
+  #                     }
+  #                     )
+  # 
+  # # computed was a vector, but we need to put it in the correct-size matrix
+  # midItem <- matrix(midItem, ncol = Ndata, byrow=TRUE)
     
+    ###
     
-    # midItem <- matrix(-66, nrow=Nparam, ncol=Ndata)
-    # # to calculate aTDinvb * Beta    Nparam by m
-    #  for(lambda in 1:Ndata){
-    #  for(i in 1:Nparam){
-    #    midItem[i,lambda] <- t(XVYXVX[((i-1)*Ncov+1) : (i*Ncov), lambda]) %*% Betas[ ,beta]    # to check
-    #  }
-    #  }
-     
+    # to calculate aTDinvb * Beta    Nparam by m
+     for(lambda in 1:Ndata){
+     for(i in 1:Nparam){
+       midItem[i,lambda] <- t(XVYXVX[((i-1)*Ncov+1) : (i*Ncov), lambda]) %*% Betas[ ,beta]    # to check
+     }
+     }
+    #### 
 
 
   # ssqBeta = beta^T * (b^T D^(-1) b) * beta
-  param_vec  <- seq_len(Nparam)
-  ssqBeta0 <- parallel::mcmapply(param_vec,
-                 FUN = function(i) {
-                   t(Betas[ ,beta]) %*% XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ] %*% Betas[ ,beta]
-                 }
-                 )
+  # ssqBeta0 <- parallel::mcmapply(param_vec,
+  #                FUN = function(i) {
+  #                  t(Betas[ ,beta]) %*% XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ] %*% Betas[ ,beta]
+  #                }
+  #                )
     
-    
-    # ssqBeta0 <- seq(0, length=Nparam)   # dosen't depend on lambda
-    # # ssqBeta = beta^T * (b^T D^(-1) b) * beta
-    #  for (i in 1:Nparam){
-    #         ssqBeta0[i] <- t(Betas[ ,beta]) %*% XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ] %*% Betas[ ,beta]
-    #     }
-    
+    ###
+    ssqBeta0 <- seq(0, length=Nparam)   # dosen't depend on lambda
+    # ssqBeta = beta^T * (b^T D^(-1) b) * beta
+     for (i in 1:Nparam){
+            ssqBeta0[i] <- t(Betas[ ,beta]) %*% XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ] %*% Betas[ ,beta]
+        }
+    ####
   
   ssqForBetas[,beta] <- ssqBeta0
   
@@ -96,7 +96,8 @@ likfit_givenBeta <- function(Betas, #a p x m matrix  given by the user
         variances <- do.call(cbind, replicate(Ndata, variances, simplify=FALSE)) 
         temp <- Nobs*log(variances) + detVar + one/variances + Nobs*log(2*pi) + jacobian
         index[beta,] <- which(temp == min(temp), arr.ind = TRUE)
-        minusTwoLogLikOverLambda[, beta] <-  apply( Nobs*log(variances) + detVar + one/variances + Nobs*log(2*pi) + jacobian, 1, min)
+       # minusTwoLogLikOverLambda[, beta] <-  apply( temp, 1, min)
+        likForBeta[,beta] = min(temp)
       }
     }
   
@@ -104,13 +105,14 @@ likfit_givenBeta <- function(Betas, #a p x m matrix  given by the user
     if(form == 2){
       temp <- Nobs*log(one/Nobs) + detVar + Nobs + Nobs*log(2*pi) + jacobian
       index[beta,] <- which(temp == min(temp, na.rm = TRUE), arr.ind = TRUE)   #find the optimized parameter index
-      minusTwoLogLikOverLambda[, beta] <-  apply( temp, 1, min, na.rm=TRUE)
+      #minusTwoLogLikOverLambda[, beta] <-  apply( temp, 1, min, na.rm=TRUE)
+      likForBeta[,beta] = min(temp)
     }
   
   
   } 
   
-    likForBeta = apply( minusTwoLogLikOverLambda, 2, min )  # over parameters     # the maximized or minimized loglikelihood for the given Betas
+    #likForBeta = apply( minusTwoLogLikOverLambda, 2, min )  # over parameters     # the maximized or minimized loglikelihood for the given Betas
   
     Theoutput <- list(likForBeta=likForBeta,
                       minusTwoLogLikOverLambda = minusTwoLogLikOverLambda, 

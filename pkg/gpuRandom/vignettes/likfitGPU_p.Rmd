@@ -19,7 +19,7 @@ sr2$elev = raster::extract(swissAltitude, sr2)
 spatialmodel = geostatsp::likfitLgm(
   data=sr2,
   formula=sqrtY ~ elev,
-  param=c(range=50000,shape=1),
+  param=c(range=50000,shape=1.5),
   reml=FALSE,
   verbose=FALSE
 )
@@ -161,7 +161,7 @@ result<-gpuRandom::likfitGpu(spatialmodel,     #data,
                                Nlocal=c(16,16,1),
                                NlocalCache=2000)
 
-
+result
 ```
 
 
