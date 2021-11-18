@@ -26,14 +26,14 @@ spatialmodel = geostatsp::likfitLgm(
 spatialmodel$parameters
 
 newParamList = list(
-  range=seq(30000, 80000 , len=20),
-  nugget = seq(0,0.25,len=10)
+  range=seq(28000, 80000 , len=40),
+  nugget = seq(0,0.3,len=30)
 ) 
 
 
 newParam= do.call(expand.grid, newParamList)
 
-otherparams = c(shape=1, variance=2.016713, anisoRatio = 1, anisoAngleRadians = 0)
+otherparams = c(shape=1, variance=1.894534, anisoRatio = 1, anisoAngleRadians = 0)
 otherparams = matrix(rep(otherparams,each=nrow(newParam)),nrow=nrow(newParam))
 colnames(otherparams) <- c("shape", "variance", "anisoRatio", "anisoAngleRadians")
 
@@ -46,21 +46,19 @@ type = "double"
 result<-gpuRandom::likfitGpu(spatialmodel,     #data,
                                type = "double",
                                paramsGpu, #a vclmatrix, consists of all the parameters#betas=NULL, #a vclmatrix  #only one row batch, but many colbatches
-                               BoxCox=c(1,0), # an R vector, will always be c(1,0,.....)
+                               BoxCox=c(1,0.5), # an R vector, will always be c(1,0,.....)
                                form = "ml",
-                               NparamPerIter=200,  # how many sets of params to be evaluated in each loop
+                               NparamPerIter=400,  # how many sets of params to be evaluated in each loop
                                nBetahats =1,
                                minustwotimes=TRUE,
-                               Nglobal=c(64,64,1),
+                               Nglobal=c(64,64,2),
                                Nlocal=c(16,16,1),
-                               NlocalCache=2000)
+                               NlocalCache=2600)
 
 
 mTwoLogLik <- as.matrix(result$minusTwoLogLik)
 
-
-
-lMatrix = matrix(mTwoLogLik[,1], length(newParamList[[1]]), length(newParamList[[2]]))
+lMatrix = matrix(mTwoLogLik[,3], length(newParamList[[1]]), length(newParamList[[2]]))
 # 
 myCol = mapmisc::colourScale(lMatrix, breaks=8, dec=0)
 image(
