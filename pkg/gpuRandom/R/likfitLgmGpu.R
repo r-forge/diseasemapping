@@ -1,35 +1,22 @@
-#' @title Estimate Log-likelihood for Gaussian random fields
+#' @title Estimate profile Log-likelihood for covariance parameters and lambda
 #' @useDynLib gpuRandom
 #' @export
 
 
 
-
-
-
-
-
-
-
-
-
-library(data.table)
-
 # betahat and sigmahat 
 # profile log-likelihood for each covariance parameters + lambda
 likfitLgmGpu <- function(data,
                         formula, 
-                        coordinates=data,
+                        coordinates,
                         paramToEstimate = c("range","shape","nugget","anisoAngleDegrees", "anisoRatio"), 
                         #variance and regression parameters are always estimated
                         params=NULL, # CPU matrix for now, users need to provide proper parameters given their specific need
                         BoxCox = c(1, 0, 0.5),
                         type = c("double","float"),
-                        reml=TRUE, 
+                        reml=FALSE, 
                         minustwotimes=TRUE,
                         NparamPerIter,
-                        upper=NULL,
-                        lower=NULL, 
                         Nglobal,
                         Nlocal,
                         NlocalCache,
@@ -37,6 +24,13 @@ likfitLgmGpu <- function(data,
   
        # will always be c(1,0,.......)
        BoxCox = c(1, 0, setdiff(BoxCox, c(0,1)))
+       
+       if(length(paramToEstimate)>2)
+       {
+         warning("change param matrix for another profile log-likelihood\n")
+       }
+       
+       
        
        # get rid of NAs in data
        data = data.frame(data)
@@ -48,7 +42,7 @@ likfitLgmGpu <- function(data,
        
        covariates = model.matrix(formula, data[noNA,])
        observations = all.vars(formula)[1]
-       observations = data[noNA, observations, drop=FALSE]
+       observations = data.matrix(data[noNA, observations, drop=FALSE])
   
        Nobs = nrow(data)
        Ncov = ncol(covariates)
@@ -59,7 +53,6 @@ likfitLgmGpu <- function(data,
        yx = vclMatrix(cbind(observations, matrix(0, Nobs, Ndata-1), covariates), 
                       type=type)
        
-
        
        # coordinates
        coordsGpu = vclMatrix(coordinates, type=type)  
@@ -71,7 +64,8 @@ likfitLgmGpu <- function(data,
        paramsGpu = vclMatrix(cbind(params0, matrix(0, nrow(params0), 22-ncol(params0))),type=type)
        gpuR::colnames(paramsGpu) = colnames(params0)
        
-       
+       betas <- matrix(0,nrow=Ncov, ncol=Ndata)
+       betasGpu = vclMatrix(betas, type=type)
        ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
        XVYXVX = vclMatrix(0, Nparam * Ncov, ncol(yx), type=type)
        ssqBetahat <- vclMatrix(0, Nparam, Ndata, type=type)
@@ -131,97 +125,182 @@ likfitLgmGpu <- function(data,
        # resid^T V^(-1) resid, resid = Y - X betahat = two
        two <- ssqY - ssqBetahat
        
- 
-       
-       gpuRandom:::matrix_vector_sumBackend(n*log(two/n),
+       if(reml== FALSE){ # ml
+       gpuRandom:::matrix_vector_sumBackend(Nobs*log(two/Nobs),
                                 detVar,
                                 jacobian,  
-                                n + n*log(2*pi),
+                                Nobs + Nobs*log(2*pi),
                                 minusTwoLogLik,
                                 Nglobal)
-       
-       
-        Betahat <- matrix(0, nrow=Ncov, ncol=Ndata)
-        LogLikcpu <- as.matrix(-0.5*minusTwoLogLik)
-        index <- which(LogLikcpu == max(LogLikcpu, na.rm = TRUE), arr.ind = TRUE)
-
-        a<-c((index[1]-1)*Ncov+1, index[i]*Ncov)
-        Betahat[c((i-1)*Ncov+1, i*Ncov),index[2]] <- solve(XVYXVX[a,((Ndata+1):ncol(yx))]) %*% XVYXVX[a,index[2]]
+       }else if(reml==TRUE){ # remlpro
+         # minusTwoLogLik= (n-p)*log(two/(n-p)) + logD + logP + jacobian + n*log(2*pi) + n-p    
+         gpuRandom:::matrix_vector_sumBackend((Nobs-Ncov)*log(two/(Nobs-Ncov)),
+                                  detVar+detReml,
+                                  jacobian,  
+                                  Nobs*log(2*pi)+Nobs-Ncov,
+                                  minusTwoLogLik,
+                                  Nglobal)
          
- 
+         sigmahat <- as.matrix(two)/(n-p)
+         
+       }
+
        
-       output <- matrix(NA, nrow=7, ncol=4)
-       rownames(output) <-  c("range","shape","nugget","anisoRatio", "anisoAngleDegrees", "variance", "betas")
+       
+       
+       
+       
+       ##############output matrix####################
+       output <- matrix(NA, nrow=7+Ncov, ncol=4)
+       rownames(output) <-  c("range","shape","nugget","anisoRatio", "anisoAngleDegrees", "variance", paste(c('betahat'),seq_len(Ncov),sep = ''), "BoxCox")
        colnames(output) <-  c("estimate", "LogLik", "95Lowerci", "95Upperci")
        
        
        
-       
-       if(is.element('range',paramToEstimate)){
-         result = as.data.table(cbind(LogLikcpu, params0[,"range"]))
-         colnames(result) <- c(paste(c('boxcox'),boxcox,sep = ''), "range")
-         profileLogLik <- result[, .(profile=max(.SD)), by=range]
-         maximum <- max(profileLogLik$profile)
-         MLE_range <- profileLogLik$range[which.max(profileLogLik$profile)]
+       ###############lambda hat#####################
+        LogLikcpu <- as.matrix(-0.5*minusTwoLogLik)
+        likForBoxCox = apply( LogLikcpu, 2, max )
+        index <- which(LogLikcpu == max(LogLikcpu, na.rm = TRUE), arr.ind = TRUE)
+        
+        output["BoxCox"] <- c(BoxCox[index[2]], max(LogLikcpu))
+        
+        
+        
+        ###############betahat#####################
+        Betahat <- matrix(0, nrow=Ncov, ncol=Ndata)
+        a<-c((index[1]-1)*Ncov+1, index[1]*Ncov)
+        Betahat <- solve(XVYXVX[a,((Ndata+1):ncol(yx))]) %*% XVYXVX[a,index[2]]
          
-         af <- approxfun(profileLogLik$range, profileLogLik$profile)   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
+        output[paste(c('betahat'),seq_len(Ncov),sep = ''),1] <- Betahat
+       
+      
+       #################sigma hat#########################
+        if(reml==FALSE)  {
+          output["variance"] <- two[index[1],index[2]]/Nobs
+        }
+        else if(reml==TRUE) {         
+          output["variance"] <- two[index[1],index[2]]/(Nobs - Ncov)
+        }
+        
+        
+        
+       
+       
+      ###############profile for covariance parameters#####################
+       if(is.element('range',paramToEstimate)){
+         # get profile log-lik for range values
+         result = data.table::as.data.table(cbind(LogLikcpu, params0[,"range"]))
+         colnames(result) <- c(paste(c('boxcox'),BoxCox,sep = ''), "range")
+         profileLogLik <- result[, .(profile=max(.SD)), by=range]
+ 
+         maximum <- max(profileLogLik$profile)
+         MLE <- profileLogLik$range[which.max(profileLogLik$profile)]
+         
+         leftOfMax = profileLogLik$range < profileLogLik$range[which.max(profileLogLik$profile)]
+         afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$range[leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
+         afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$range[!leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
          breaks = maximum - qchisq(0.95,  df = 1)/2
-         ci<-uniroot(function(x) {af(x)-breaks}, interval=c(1,10)
-                 )$root
+         ci = c(afLeft(breaks), afRight(breaks))
+         if (any(is.na(ci))){
+           warning("'range' scope too small for 95% ci")
+         }
+         
+         # ci<-uniroot(function(x) {af(x)-breaks}, interval=c(1,10)
+         #         )$root
 
-         output["range",] <- c(MLE_range, maximum, ci, NA)
+         output["range",] <- c(MLE, maximum, ci)
         }
        
+       
+       
+       
+       
        if(is.element('shape',paramToEstimate)){
-         result = as.data.table(cbind(as.matrix(-0.5*minusTwoLogLik), params0[,"shape"]))
+         result = as.data.table(cbind(LogLikcpu, params0[,"shape"]))
          colnames(result) <- c(paste(c('boxcox'),boxcox,sep = ''), "shape")
-         result[, .(profile=max(.SD)), by=shape]
+         profileLogLik <- result[, .(profile=max(.SD)), by=shape]
+
+         maximum <- max(profileLogLik$profile)
+         MLE <- profileLogLik$shape[which.max(profileLogLik$profile)]
          
+         leftOfMax = profileLogLik$shape < profileLogLik$shape[which.max(profileLogLik$profile)]
+         afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$shape[leftOfMax])  
+         afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$shape[!leftOfMax])   
+         breaks = maximum - qchisq(0.95,  df = 1)/2
+         ci= c(afLeft(breaks), afRight(breaks))
+         if (any(is.na(ci)))
+           warning("'shape' scope too small for 95% ci")
+         output["shape",] <- c(MLE, maximum, ci)
        }       
   
   
        if(is.element('nugget',paramToEstimate)){
-         result = as.data.table(cbind(as.matrix(-0.5*minusTwoLogLik), params0[,"nugget"]))
+         result = as.data.table(cbind(LogLikcpu, params0[,"nugget"]))
          colnames(result) <- c(paste(c('boxcox'),boxcox,sep = ''), "nugget")
-         result[, .(profile=max(.SD)), by=nugget]
+
+         profileLogLik <-result[, .(profile=max(.SD)), by=nugget]
+         maximum <- max(profileLogLik$profile)
+         MLE <- profileLogLik$nugget[which.max(profileLogLik$profile)]
          
+         leftOfMax = profileLogLik$nugget < profileLogLik$nugget[which.max(profileLogLik$profile)]
+         afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$nugget[leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
+         afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$nugget[!leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
+         breaks = maximum - qchisq(0.95,  df = 1)/2
+         ci= c(afLeft(breaks), afRight(breaks))
+         if (any(is.na(ci)))
+           warning("'nugget' scope too small for 95% ci")
+         
+         output["nugget",] <- c(MLE, maximum, ci)
        }
   
+       
+       
+       
        if(is.element('anisoRatio',paramToEstimate)){
-         result = as.data.table(cbind(as.matrix(-0.5*minusTwoLogLik), params0[,"anisoRatio"]))
+         result = as.data.table(cbind(LogLikcpu, params0[,"anisoRatio"]))
          colnames(result) <- c(paste(c('boxcox'),boxcox,sep = ''), "anisoRatio")
-         result[, .(profile=max(.SD)), by=anisoRatio]
+         profileLogLik <- result[, .(profile=max(.SD)), by=anisoRatio]
+         maximum <- max(profileLogLik$profile)
+         MLE <- profileLogLik$anisoRatio[which.max(profileLogLik$profile)]
          
+         leftOfMax = profileLogLik$anisoRatio < profileLogLik$anisoRatio[which.max(profileLogLik$profile)]
+         afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$anisoRatio[leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
+         afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$anisoRatio[!leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
+         
+         breaks = maximum - qchisq(0.95,  df = 1)/2
+         ci= c(afLeft(breaks), afRight(breaks))
+         if (any(is.na(ci)))
+           warning("'anisoRatio' scope too small for 95% ci")
+         
+         output["anisoRatio",] <- c(MLE, maximum, ci)
        }
        
-       
-       
-       if(is.element('anisoAngleRadians',paramToEstimate)){
-         result = as.data.table(cbind(as.matrix(-0.5*minusTwoLogLik), params0[,"anisoAngleRadians"]))
-         colnames(result) <- c(paste(c('boxcox'),boxcox,sep = ''), "anisoAngleRadians")
-         result[, .(profile=max(.SD)), by=anisoAngleRadians]
-         
-       }
        
        
        if(is.element('anisoAngleDegrees',paramToEstimate)){
-         result = as.data.table(cbind(as.matrix(-0.5*minusTwoLogLik), params0[,"anisoAngleDegrees"]))
+         result = as.data.table(cbind(LogLikcpu, params0[,"anisoAngleDegrees"]))
          colnames(result) <- c(paste(c('boxcox'),boxcox,sep = ''), "anisoAngleDegrees")
-         result[, .(profile=max(.SD)), by=anisoAngleDegrees]
+         profileLogLik <- result[, .(profile=max(.SD)), by=anisoAngleDegrees]
          
+         maximum <- max(profileLogLik$profile)
+         MLE <- profileLogLik$anisoAngleDegrees[which.max(profileLogLik$profile)]
+         
+         leftOfMax = profileLogLik$anisoAngleDegrees < profileLogLik$anisoAngleDegrees[which.max(profileLogLik$profile)]
+         afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$anisoAngleDegrees[leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
+         afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$anisoAngleDegrees[!leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
+         
+         breaks = maximum - qchisq(0.95,  df = 1)/2
+         ci= c(afLeft(breaks), afRight(breaks))
+         if (any(is.na(ci)))
+           warning("'anisoAngleDegrees' scope too small for 95% ci")
+         
+         output["anisoAngleDegrees",] <- c(MLE, maximum, ci)
        }
        
+  
+
+
        
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
+       output
 }
 
