@@ -1,4 +1,5 @@
 #' @title Estimate profile Log-likelihood for covariance parameters and lambda
+#' @import data.table
 #' @useDynLib gpuRandom
 #' @export
 
@@ -120,10 +121,25 @@ likfitLgmGpu <- function(data,
          cholDiagMat,
          b_beta)   #new 245
        
-
+       # any(is.na(as.vector(detVar)))
+       # any(is.na(as.matrix(varMat)))
+       # any(is.na(as.matrix(ssqYX)))
+       # any(is.na(as.matrix(ssqYXcopy)))
+       # any(is.na(as.matrix(ssqBetahat)))
+       # any(is.na(as.vector(detReml)))
+       # any(is.na(as.matrix(cholXVXdiag)))
+       # 
+       # 
+       # any(is.na(as.matrix(Nobs*log(two/Nobs))))
        
        # resid^T V^(-1) resid, resid = Y - X betahat = two
        two <- ssqY - ssqBetahat
+       #any(is.na(as.matrix(two)))
+       
+       
+    
+       
+       
        
        if(reml== FALSE){ # ml
        gpuRandom:::matrix_vector_sumBackend(Nobs*log(two/Nobs),
@@ -141,8 +157,6 @@ likfitLgmGpu <- function(data,
                                   minusTwoLogLik,
                                   Nglobal)
          
-         sigmahat <- as.matrix(two)/(n-p)
-         
        }
 
        
@@ -152,8 +166,8 @@ likfitLgmGpu <- function(data,
        
        ##############output matrix####################
        output <- matrix(NA, nrow=7+Ncov, ncol=4)
-       rownames(output) <-  c("range","shape","nugget","anisoRatio", "anisoAngleDegrees", "variance", paste(c('betahat'),seq_len(Ncov),sep = ''), "BoxCox")
-       colnames(output) <-  c("estimate", "LogLik", "95Lowerci", "95Upperci")
+       rownames(output) <-  c("range","shape","nugget","anisoRatio", "anisoAngleDegrees", "sdSpatial", paste(c('betahat'),seq_len(Ncov),sep = ''), "BoxCox")
+       colnames(output) <-  c("estimate", "LogLik", "99Lowerci", "99Upperci") #"95Lowerci", "95Upperci")
        
        
        
@@ -162,9 +176,9 @@ likfitLgmGpu <- function(data,
         likForBoxCox = apply( LogLikcpu, 2, max )
         index <- which(LogLikcpu == max(LogLikcpu, na.rm = TRUE), arr.ind = TRUE)
         
-        output["BoxCox"] <- c(BoxCox[index[2]], max(LogLikcpu))
+        output["BoxCox",1:2] <- c(BoxCox[index[2]], max(LogLikcpu))
         
-        
+        #any(is.na(as.matrix(minusTwoLogLik)))
         
         ###############betahat#####################
         Betahat <- matrix(0, nrow=Ncov, ncol=Ndata)
@@ -176,10 +190,10 @@ likfitLgmGpu <- function(data,
       
        #################sigma hat#########################
         if(reml==FALSE)  {
-          output["variance"] <- two[index[1],index[2]]/Nobs
+          output["sdSpatial",1] <- sqrt(two[index[1],index[2]]/Nobs)
         }
         else if(reml==TRUE) {         
-          output["variance"] <- two[index[1],index[2]]/(Nobs - Ncov)
+          output["sdSpatial",1] <- sqrt(two[index[1],index[2]]/(Nobs - Ncov))
         }
         
         
@@ -197,18 +211,27 @@ likfitLgmGpu <- function(data,
          MLE <- profileLogLik$range[which.max(profileLogLik$profile)]
          
          leftOfMax = profileLogLik$range < profileLogLik$range[which.max(profileLogLik$profile)]
+         if(length(which(leftOfMax)) <2 | length(which(!leftOfMax)) <2){
+           ci99 = c(NA,NA)
+           print("Not enought data for CI calculation")
+         }else{
          afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$range[leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
          afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$range[!leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
-         breaks = maximum - qchisq(0.95,  df = 1)/2
-         ci = c(afLeft(breaks), afRight(breaks))
-         if (any(is.na(ci))){
-           warning("'range' scope too small for 95% ci")
-         }
-         
+         # breaks = maximum - qchisq(0.95,  df = 1)/2
+         # ci = c(afLeft(breaks), afRight(breaks))
+         # if (any(is.na(ci))){
+         #   warning("'range' scope too small for 95% ci")
+         # }
+         # 
          # ci<-uniroot(function(x) {af(x)-breaks}, interval=c(1,10)
          #         )$root
-
-         output["range",] <- c(MLE, maximum, ci)
+         breaks99 = maximum - qchisq(0.99,  df = 1)/2
+         ci99= c(afLeft(breaks99), afRight(breaks99))
+         if (any(is.na(ci99))){
+              warning("'range' scope too small for 99% ci")
+           }
+         }
+         output["range",] <- c(MLE, maximum, ci99)
         }
        
        
@@ -226,11 +249,18 @@ likfitLgmGpu <- function(data,
          leftOfMax = profileLogLik$shape < profileLogLik$shape[which.max(profileLogLik$profile)]
          afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$shape[leftOfMax])  
          afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$shape[!leftOfMax])   
-         breaks = maximum - qchisq(0.95,  df = 1)/2
-         ci= c(afLeft(breaks), afRight(breaks))
-         if (any(is.na(ci)))
-           warning("'shape' scope too small for 95% ci")
-         output["shape",] <- c(MLE, maximum, ci)
+         # breaks95 = maximum - qchisq(0.95,  df = 1)/2
+         # ci95= c(afLeft(breaks95), afRight(breaks95))
+
+         
+         
+         breaks99 = maximum - qchisq(0.99,  df = 1)/2
+         ci99= c(afLeft(breaks99), afRight(breaks99))
+         if (any(is.na(ci99)))
+           warning("'shape' scope too small for 99% ci")
+         
+         
+         output["shape",] <- c(MLE, maximum, ci99)
        }       
   
   
@@ -245,12 +275,12 @@ likfitLgmGpu <- function(data,
          leftOfMax = profileLogLik$nugget < profileLogLik$nugget[which.max(profileLogLik$profile)]
          afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$nugget[leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
          afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$nugget[!leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
-         breaks = maximum - qchisq(0.95,  df = 1)/2
-         ci= c(afLeft(breaks), afRight(breaks))
-         if (any(is.na(ci)))
-           warning("'nugget' scope too small for 95% ci")
+         breaks99 = maximum - qchisq(0.99,  df = 1)/2
+         ci99= c(afLeft(breaks99), afRight(breaks99))
+         if (any(is.na(ci99)))
+           warning("'nugget' scope too small for 99% ci")
          
-         output["nugget",] <- c(MLE, maximum, ci)
+         output["nugget",] <- c(MLE, maximum, ci99)
        }
   
        
@@ -267,12 +297,12 @@ likfitLgmGpu <- function(data,
          afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$anisoRatio[leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
          afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$anisoRatio[!leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
          
-         breaks = maximum - qchisq(0.95,  df = 1)/2
-         ci= c(afLeft(breaks), afRight(breaks))
-         if (any(is.na(ci)))
-           warning("'anisoRatio' scope too small for 95% ci")
+         breaks99 = maximum - qchisq(0.99,  df = 1)/2
+         ci99= c(afLeft(breaks99), afRight(breaks99))
+         if (any(is.na(ci99)))
+           warning("'anisoRatio' scope too small for 99% ci")
          
-         output["anisoRatio",] <- c(MLE, maximum, ci)
+         output["anisoRatio",] <- c(MLE, maximum, ci99)
        }
        
        
@@ -289,12 +319,12 @@ likfitLgmGpu <- function(data,
          afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$anisoAngleDegrees[leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
          afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$anisoAngleDegrees[!leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
          
-         breaks = maximum - qchisq(0.95,  df = 1)/2
-         ci= c(afLeft(breaks), afRight(breaks))
-         if (any(is.na(ci)))
-           warning("'anisoAngleDegrees' scope too small for 95% ci")
+         breaks99 = maximum - qchisq(0.99,  df = 1)/2
+         ci99= c(afLeft(breaks99), afRight(breaks99))
+         if (any(is.na(ci99)))
+           warning("'anisoAngleDegrees' scope too small for 99% ci")
          
-         output["anisoAngleDegrees",] <- c(MLE, maximum, ci)
+         output["anisoAngleDegrees",] <- c(MLE, maximum, ci99)
        }
        
   
