@@ -173,7 +173,7 @@ likfitLgmGpu <- function(data,
        
        ###############lambda hat#####################
         LogLikcpu <- as.matrix(-0.5*minusTwoLogLik)
-        likForBoxCox = apply( LogLikcpu, 2, max )
+        #likForBoxCox = apply( LogLikcpu, 2, max )
         index <- which(LogLikcpu == max(LogLikcpu, na.rm = TRUE), arr.ind = TRUE)
         
         output["BoxCox",1:2] <- c(BoxCox[index[2]], max(LogLikcpu))
