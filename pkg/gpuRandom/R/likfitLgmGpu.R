@@ -126,16 +126,16 @@ likfitLgmGpu <- function(data,
        # any(is.na(as.matrix(ssqBetahat)))
        # any(is.na(as.vector(detReml)))
        # any(is.na(as.matrix(cholXVXdiag)))
-       # 
-       # 
-       # any(is.na(as.matrix(Nobs*log(two/Nobs))))
+
+
        
+
        # resid^T V^(-1) resid, resid = Y - X betahat = ssqResidual
        ssqResidual <- ssqY - ssqBetahat
        #any(is.na(as.matrix(ssqResidual)))
        
        
-    
+       #any(is.na(as.matrix(Nobs*log(ssqResidual/Nobs))))
        
        
        
@@ -147,7 +147,7 @@ likfitLgmGpu <- function(data,
                                 minusTwoLogLik,
                                 Nglobal)
        }else if(reml==TRUE){ # remlpro
-         # minusTwoLogLik= (n-p)*log(two/(n-p)) + logD + logP + jacobian + n*log(2*pi) + n-p    
+         # minusTwoLogLik= (n-p)*log(ssqResidual/(n-p)) + logD + logP + jacobian + n*log(2*pi) + n-p    
          gpuRandom:::matrix_vector_sumBackend((Nobs-Ncov)*log(ssqResidual/(Nobs-Ncov)),
                                   detVar+detReml,
                                   jacobian,  
@@ -194,7 +194,9 @@ likfitLgmGpu <- function(data,
          }else{
          afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$range[leftOfMax])   
          # plot(profileLogLik$profile[leftOfMax], profileLogLik$range[leftOfMax])# curve(afLeft, add=TRUE)
-         afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$range[!leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
+         afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$range[!leftOfMax])   
+         # plot(profileLogLik$profile[!leftOfMax], profileLogLik$range[!leftOfMax])
+         # curve(afRight, add=TRUE)
          # breaks = maximum - qchisq(0.95,  df = 1)/2
          # ci = c(afLeft(breaks), afRight(breaks))
          # if (any(is.na(ci))){
