@@ -157,20 +157,17 @@ BEGIN_RCPP
 END_RCPP
 }
 // likfitGpu_BackendP
-void likfitGpu_BackendP(Rcpp::S4 yx, Rcpp::S4 coords, Rcpp::S4 params, Rcpp::S4 boxcox, Rcpp::S4 betas, Rcpp::S4 ssqY, Rcpp::S4 aTDinvb_beta, Rcpp::S4 XVYXVX, Rcpp::S4 ssqBetahat, Rcpp::S4 ssqBeta, Rcpp::S4 detVar, Rcpp::S4 detReml, Rcpp::S4 jacobian, Rcpp::IntegerVector NparamPerIter, Rcpp::IntegerVector workgroupSize, Rcpp::IntegerVector localSize, Rcpp::IntegerVector NlocalCache, Rcpp::IntegerVector verbose, Rcpp::S4 ssqYX, Rcpp::S4 ssqYXcopy, Rcpp::S4 LinvYX, Rcpp::S4 QinvSsqYx, Rcpp::S4 cholXVXdiag, Rcpp::S4 varMat, Rcpp::S4 cholDiagMat, Rcpp::S4 b_beta);
-RcppExport SEXP _gpuRandom_likfitGpu_BackendP(SEXP yxSEXP, SEXP coordsSEXP, SEXP paramsSEXP, SEXP boxcoxSEXP, SEXP betasSEXP, SEXP ssqYSEXP, SEXP aTDinvb_betaSEXP, SEXP XVYXVXSEXP, SEXP ssqBetahatSEXP, SEXP ssqBetaSEXP, SEXP detVarSEXP, SEXP detRemlSEXP, SEXP jacobianSEXP, SEXP NparamPerIterSEXP, SEXP workgroupSizeSEXP, SEXP localSizeSEXP, SEXP NlocalCacheSEXP, SEXP verboseSEXP, SEXP ssqYXSEXP, SEXP ssqYXcopySEXP, SEXP LinvYXSEXP, SEXP QinvSsqYxSEXP, SEXP cholXVXdiagSEXP, SEXP varMatSEXP, SEXP cholDiagMatSEXP, SEXP b_betaSEXP) {
+void likfitGpu_BackendP(Rcpp::S4 yx, Rcpp::S4 coords, Rcpp::S4 params, Rcpp::S4 boxcox, Rcpp::S4 ssqY, Rcpp::S4 XVYXVX, Rcpp::S4 ssqBetahat, Rcpp::S4 detVar, Rcpp::S4 detReml, Rcpp::S4 jacobian, Rcpp::IntegerVector NparamPerIter, Rcpp::IntegerVector workgroupSize, Rcpp::IntegerVector localSize, Rcpp::IntegerVector NlocalCache, Rcpp::IntegerVector verbose, Rcpp::S4 ssqYX, Rcpp::S4 ssqYXcopy, Rcpp::S4 LinvYX, Rcpp::S4 QinvSsqYx, Rcpp::S4 cholXVXdiag, Rcpp::S4 varMat, Rcpp::S4 cholDiagMat);
+RcppExport SEXP _gpuRandom_likfitGpu_BackendP(SEXP yxSEXP, SEXP coordsSEXP, SEXP paramsSEXP, SEXP boxcoxSEXP, SEXP ssqYSEXP, SEXP XVYXVXSEXP, SEXP ssqBetahatSEXP, SEXP detVarSEXP, SEXP detRemlSEXP, SEXP jacobianSEXP, SEXP NparamPerIterSEXP, SEXP workgroupSizeSEXP, SEXP localSizeSEXP, SEXP NlocalCacheSEXP, SEXP verboseSEXP, SEXP ssqYXSEXP, SEXP ssqYXcopySEXP, SEXP LinvYXSEXP, SEXP QinvSsqYxSEXP, SEXP cholXVXdiagSEXP, SEXP varMatSEXP, SEXP cholDiagMatSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type yx(yxSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type coords(coordsSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type params(paramsSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type boxcox(boxcoxSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type betas(betasSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type ssqY(ssqYSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type aTDinvb_beta(aTDinvb_betaSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type XVYXVX(XVYXVXSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type ssqBetahat(ssqBetahatSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type ssqBeta(ssqBetaSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type detVar(detVarSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type detReml(detRemlSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type jacobian(jacobianSEXP);
@@ -186,8 +183,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::S4 >::type cholXVXdiag(cholXVXdiagSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type varMat(varMatSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type cholDiagMat(cholDiagMatSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4 >::type b_beta(b_betaSEXP);
-    likfitGpu_BackendP(yx, coords, params, boxcox, betas, ssqY, aTDinvb_beta, XVYXVX, ssqBetahat, ssqBeta, detVar, detReml, jacobian, NparamPerIter, workgroupSize, localSize, NlocalCache, verbose, ssqYX, ssqYXcopy, LinvYX, QinvSsqYx, cholXVXdiag, varMat, cholDiagMat, b_beta);
+    likfitGpu_BackendP(yx, coords, params, boxcox, ssqY, XVYXVX, ssqBetahat, detVar, detReml, jacobian, NparamPerIter, workgroupSize, localSize, NlocalCache, verbose, ssqYX, ssqYXcopy, LinvYX, QinvSsqYx, cholXVXdiag, varMat, cholDiagMat);
     return R_NilValue;
 END_RCPP
 }
@@ -344,7 +340,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gpuRandom_cpp_gpuFisher_test", (DL_FUNC) &_gpuRandom_cpp_gpuFisher_test, 6},
     {"_gpuRandom_gpuRnBackend", (DL_FUNC) &_gpuRandom_gpuRnBackend, 4},
     {"_gpuRandom_cpp_gpu_qqnorm", (DL_FUNC) &_gpuRandom_cpp_gpu_qqnorm, 6},
-    {"_gpuRandom_likfitGpu_BackendP", (DL_FUNC) &_gpuRandom_likfitGpu_BackendP, 26},
+    {"_gpuRandom_likfitGpu_BackendP", (DL_FUNC) &_gpuRandom_likfitGpu_BackendP, 22},
     {"_gpuRandom_logfactsumBackend", (DL_FUNC) &_gpuRandom_logfactsumBackend, 2},
     {"_gpuRandom_mat_vec_eledivideBackend", (DL_FUNC) &_gpuRandom_mat_vec_eledivideBackend, 4},
     {"_gpuRandom_matrix_vector_sumBackend", (DL_FUNC) &_gpuRandom_matrix_vector_sumBackend, 6},

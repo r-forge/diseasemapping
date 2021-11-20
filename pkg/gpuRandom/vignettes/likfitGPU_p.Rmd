@@ -3,7 +3,67 @@
 %\VignetteIndexEntry{loglikelihood_p}
 -->
 
-```{r makeplots,eval=TRUE}
+```{r makeplotsCPU,eval=TRUE}
+library('geostatsp')
+data('swissRain')
+sr2 = swissRain
+sr2$sqrtY = sqrt(sr2$rain)
+sr2$elev = raster::extract(swissAltitude, sr2)
+
+spatialmodel = likfitLgm(
+  data=sr2,
+  formula=sqrtY ~ elev,
+  param=c(range=50000,shape=1.5),
+  reml=FALSE,
+  verbose=FALSE
+)
+# spatialmodel = likfitLgm(
+#   data=sr2, 
+#   formula=rain ~ elev,
+#   param=c(range=50000,shape=1.5),
+#   reml=FALSE,
+#   verbose=FALSE
+# )
+spatialmodel$parameters
+
+newParamList = list(
+  range=seq(20000, 90000 , len=50),
+  nugget = seq(0,0.3,len=30)
+) 
+newParam= do.call(expand.grid, newParamList)
+
+res= mapply(
+  function(range, nugget) {
+    loglikLgm(
+      c(spatialmodel$parameters[c('shape')], 
+        range = unname(range), nugget = unname(nugget)),
+      data = sr2,
+      formula = spatialmodel$model$formula,
+      reml = spatialmodel$model$reml,
+      minustwotimes=TRUE)
+  },
+  range = newParam$range,
+  nugget = newParam$nugget
+)
+
+lMatrix = matrix(res, length(newParamList[[1]]), length(newParamList[[2]]))
+
+myCol = mapmisc::colourScale(lMatrix, breaks=8, dec=0)
+image(
+  newParamList[[1]]/1000, newParamList[[2]], lMatrix,
+  col = myCol$col, breaks=myCol$breaks,
+  xlab = names(newParamList)[1],
+  ylab = names(newParamList)[2]	
+)
+mapmisc::legendBreaks('topright', myCol)
+
+
+```
+
+
+
+
+```{r makeplotsGPU,eval=TRUE}
 # isotropic
 library(gpuRandom)
 library(gpuR)
@@ -11,54 +71,45 @@ library('geostatsp')
 data('swissRain')
 sr2 = swissRain[0:100,]
 
-# extract variables for modeling
-sr2$sqrtY = sqrt(sr2$rain)
-sr2$elev = raster::extract(swissAltitude, sr2)
 
+######### note whether a variance is present here makes a difference in plots
+# newParamList = list(
+#   range=seq(20000, 90000 , len=50),
+#   nugget = seq(0,0.3,len=30),
+#   shape = 1.5,
+#   variance=1.894534,
+#   anisoRatio = 1, 
+#   anisoAngleRadians = 0
+# ) 
 
-spatialmodel = geostatsp::likfitLgm(
-  data=sr2,
-  formula=sqrtY ~ elev,
-  param=c(range=50000,shape=1.5),
-  reml=FALSE,
-  verbose=FALSE
-)
-spatialmodel$parameters
 
 newParamList = list(
-  range=seq(28000, 80000 , len=40),
-  nugget = seq(0,0.3,len=30)
+  range=seq(20000, 90000 , len=50),
+  nugget = seq(0,0.3,len=30),
+  shape = 1.5,
+  anisoRatio = 1, 
+  anisoAngleRadians = 0
 ) 
-
-
 newParam= do.call(expand.grid, newParamList)
 
-otherparams = c(shape=1, variance=1.894534, anisoRatio = 1, anisoAngleRadians = 0)
-otherparams = matrix(rep(otherparams,each=nrow(newParam)),nrow=nrow(newParam))
-colnames(otherparams) <- c("shape", "variance", "anisoRatio", "anisoAngleRadians")
 
-paramsBatch0 = cbind(newParam, otherparams)
-paramsGpu = gpuRandom::maternGpuParam(paramsBatch0, type="double")
-
-type = "double"
-
-
+paramsGpu = gpuRandom::maternGpuParam(newParam, type="double")
 result<-gpuRandom::likfitGpu(spatialmodel,     #data,
                                type = "double",
                                paramsGpu, #a vclmatrix, consists of all the parameters#betas=NULL, #a vclmatrix  #only one row batch, but many colbatches
                                BoxCox=c(1,0.5), # an R vector, will always be c(1,0,.....)
                                form = "ml",
-                               NparamPerIter=400,  # how many sets of params to be evaluated in each loop
+                               NparamPerIter=100,  # how many sets of params to be evaluated in each loop
                                nBetahats =1,
                                minustwotimes=TRUE,
                                Nglobal=c(64,64,2),
                                Nlocal=c(16,16,1),
                                NlocalCache=2600)
 
-
+result$Betahats
 mTwoLogLik <- as.matrix(result$minusTwoLogLik)
 
-lMatrix = matrix(mTwoLogLik[,3], length(newParamList[[1]]), length(newParamList[[2]]))
+lMatrix = matrix(mTwoLogLik[,1], length(newParamList[[1]]), length(newParamList[[2]]))
 # 
 myCol = mapmisc::colourScale(lMatrix, breaks=8, dec=0)
 image(
@@ -71,6 +122,9 @@ mapmisc::legendBreaks('topright', myCol)
 
 
 ```
+
+
+
 
 
 ```{r test1031}

@@ -41,6 +41,8 @@ likfitLgmGpu <- function(data,
                     )
        noNA = !theNA
        
+       
+       ############## the X matrix #################################
        covariates = model.matrix(formula, data[noNA,])
        observations = all.vars(formula)[1]
        observations = data.matrix(data[noNA, observations, drop=FALSE])
@@ -65,8 +67,8 @@ likfitLgmGpu <- function(data,
        paramsGpu = vclMatrix(cbind(params0, matrix(0, nrow(params0), 22-ncol(params0))),type=type)
        gpuR::colnames(paramsGpu) = colnames(params0)
        
-       betas <- matrix(0,nrow=Ncov, ncol=Ndata)
-       betasGpu = vclMatrix(betas, type=type)
+       #betas <- matrix(0,nrow=Ncov, ncol=Ndata)
+       #betasGpu = vclMatrix(betas, type=type)
        ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
        XVYXVX = vclMatrix(0, Nparam * Ncov, ncol(yx), type=type)
        ssqBetahat <- vclMatrix(0, Nparam, Ndata, type=type)
@@ -75,14 +77,14 @@ likfitLgmGpu <- function(data,
        detReml = vclVector(0, Nparam, type=type)
        jacobian = vclVector(0, Ndata, type=type)   
        ssqYX = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
-       aTDinvb_beta = vclMatrix(0, Nparam, Ndata, type=type)
+       #aTDinvb_beta = vclMatrix(0, Nparam, Ndata, type=type)
        ssqYXcopy = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
        LinvYX = vclMatrix(0, nrow(yx) * NparamPerIter, ncol(yx), type=type)
        QinvSsqYx = vclMatrix(0, NparamPerIter*Ncov, Ndata, type = type)
        cholXVXdiag = vclMatrix(0, NparamPerIter, Ncov, type=type)
        varMat = vclMatrix(0, Nobs*NparamPerIter, Nobs, type=type)
        cholDiagMat = vclMatrix(0, NparamPerIter, Nobs, type=type)
-       b_beta = vclMatrix(0, NparamPerIter*Nobs, Ndata, type=type)
+       #b_beta = vclMatrix(0, NparamPerIter*Nobs, Ndata, type=type)
        minusTwoLogLik <- vclMatrix(0, Nparam, Ndata, type=type)
   
        # paramDefaults = c(
@@ -97,29 +99,25 @@ likfitLgmGpu <- function(data,
          yx,        #1
          coordsGpu, #2
          paramsGpu, #3
-         boxcoxGpu,   #4
-         betasGpu,  #5
-         ssqY,     #6
-         aTDinvb_beta,
+         boxcoxGpu,   #4#betasGpu,  #5
+         ssqY,     #5#aTDinvb_beta,
          XVYXVX,
-         ssqBetahat, #9
-         ssqBeta,
+         ssqBetahat, #7#ssqBeta,
          detVar,    #11
          detReml,   #12
          jacobian,  #13
          NparamPerIter,  #14
-         as.integer(Nglobal),  #15
+         as.integer(Nglobal),  #12
          as.integer(Nlocal),  #16
-         NlocalCache,  #17
-         verbose,  #18
+         NlocalCache,  #14
+         verbose,  #15
          ssqYX, #
          ssqYXcopy,  #new
-         LinvYX,  #19
+         LinvYX,  #18
          QinvSsqYx, 
-         cholXVXdiag, #22
-         varMat,        #23     Vbatch
-         cholDiagMat,
-         b_beta)   #new 245
+         cholXVXdiag, #20
+         varMat,        #21     Vbatch
+         cholDiagMat)
        
        # any(is.na(as.vector(detVar)))
        # any(is.na(as.matrix(varMat)))
@@ -132,9 +130,9 @@ likfitLgmGpu <- function(data,
        # 
        # any(is.na(as.matrix(Nobs*log(two/Nobs))))
        
-       # resid^T V^(-1) resid, resid = Y - X betahat = two
-       two <- ssqY - ssqBetahat
-       #any(is.na(as.matrix(two)))
+       # resid^T V^(-1) resid, resid = Y - X betahat = ssqResidual
+       ssqResidual <- ssqY - ssqBetahat
+       #any(is.na(as.matrix(ssqResidual)))
        
        
     
@@ -142,7 +140,7 @@ likfitLgmGpu <- function(data,
        
        
        if(reml== FALSE){ # ml
-       gpuRandom:::matrix_vector_sumBackend(Nobs*log(two/Nobs),
+       gpuRandom:::matrix_vector_sumBackend(Nobs*log(ssqResidual/Nobs),
                                 detVar,
                                 jacobian,  
                                 Nobs + Nobs*log(2*pi),
@@ -150,7 +148,7 @@ likfitLgmGpu <- function(data,
                                 Nglobal)
        }else if(reml==TRUE){ # remlpro
          # minusTwoLogLik= (n-p)*log(two/(n-p)) + logD + logP + jacobian + n*log(2*pi) + n-p    
-         gpuRandom:::matrix_vector_sumBackend((Nobs-Ncov)*log(two/(Nobs-Ncov)),
+         gpuRandom:::matrix_vector_sumBackend((Nobs-Ncov)*log(ssqResidual/(Nobs-Ncov)),
                                   detVar+detReml,
                                   jacobian,  
                                   Nobs*log(2*pi)+Nobs-Ncov,
@@ -160,44 +158,17 @@ likfitLgmGpu <- function(data,
        }
 
        
-       
+       LogLikcpu <- as.matrix(-0.5*minusTwoLogLik)
        
        
        
        ##############output matrix####################
-       output <- matrix(NA, nrow=7+Ncov, ncol=4)
-       rownames(output) <-  c("range","shape","nugget","anisoRatio", "anisoAngleDegrees", "sdSpatial", paste(c('betahat'),seq_len(Ncov),sep = ''), "BoxCox")
-       colnames(output) <-  c("estimate", "LogLik", "99Lowerci", "99Upperci") #"95Lowerci", "95Upperci")
+       Table <- matrix(NA, nrow=length(paramToEstimate)+Ncov+2, ncol=3)
+       rownames(Table) <-  c(paste(c('betahat'), seq_len(Ncov),sep = ''), "sdSpatial", paramToEstimate,  "BoxCox")
+       colnames(Table) <-  c("estimate", "Lower95ci", "Upper95ci") #"95Lowerci", "95Upperci")
        
        
-       
-       ###############lambda hat#####################
-        LogLikcpu <- as.matrix(-0.5*minusTwoLogLik)
-        #likForBoxCox = apply( LogLikcpu, 2, max )
-        index <- which(LogLikcpu == max(LogLikcpu, na.rm = TRUE), arr.ind = TRUE)
-        
-        output["BoxCox",1:2] <- c(BoxCox[index[2]], max(LogLikcpu))
-        
-        #any(is.na(as.matrix(minusTwoLogLik)))
-        
-        ###############betahat#####################
-        Betahat <- matrix(0, nrow=Ncov, ncol=Ndata)
-        a<-c((index[1]-1)*Ncov+1, index[1]*Ncov)
-        Betahat <- solve(XVYXVX[a,((Ndata+1):ncol(yx))]) %*% XVYXVX[a,index[2]]
-         
-        output[paste(c('betahat'),seq_len(Ncov),sep = ''),1] <- Betahat
-       
-      
-       #################sigma hat#########################
-        if(reml==FALSE)  {
-          output["sdSpatial",1] <- sqrt(two[index[1],index[2]]/Nobs)
-        }
-        else if(reml==TRUE) {         
-          output["sdSpatial",1] <- sqrt(two[index[1],index[2]]/(Nobs - Ncov))
-        }
-        
-        
-        
+  
        
        
       ###############profile for covariance parameters#####################
@@ -207,15 +178,22 @@ likfitLgmGpu <- function(data,
          colnames(result) <- c(paste(c('boxcox'),BoxCox,sep = ''), "range")
          profileLogLik <- result[, .(profile=max(.SD)), by=range]
  
-         maximum <- max(profileLogLik$profile)
-         MLE <- profileLogLik$range[which.max(profileLogLik$profile)]
+         #maximum <- max(profileLogLik$profile)
+         #MLE <- profileLogLik$range[which.max(profileLogLik$profile)]
+         # plot(profileLogLik$range, profileLogLik$profile)
+         f1<-approxfun(profileLogLik$range, profileLogLik$profile)  
+         # curve(f1, add=TRUE)
+         optimization <- optimize(f1, interval = c(min(profileLogLik$range), max(profileLogLik$range)),maximum = TRUE)
+         MLE <- optimization$maximum 
+         maximum <- optimization$objective
          
          leftOfMax = profileLogLik$range < profileLogLik$range[which.max(profileLogLik$profile)]
-         if(length(which(leftOfMax)) <2 | length(which(!leftOfMax)) <2){
-           ci99 = c(NA,NA)
-           print("Not enought data for CI calculation")
+         if(length(which(leftOfMax)) <=2 | length(which(!leftOfMax)) <=2){
+           ci95 = c(NA,NA)
+           print("Not enough data for CI calculation")
          }else{
-         afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$range[leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
+         afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$range[leftOfMax])   
+         # plot(profileLogLik$profile[leftOfMax], profileLogLik$range[leftOfMax])# curve(afLeft, add=TRUE)
          afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$range[!leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
          # breaks = maximum - qchisq(0.95,  df = 1)/2
          # ci = c(afLeft(breaks), afRight(breaks))
@@ -225,13 +203,13 @@ likfitLgmGpu <- function(data,
          # 
          # ci<-uniroot(function(x) {af(x)-breaks}, interval=c(1,10)
          #         )$root
-         breaks99 = maximum - qchisq(0.99,  df = 1)/2
-         ci99= c(afLeft(breaks99), afRight(breaks99))
-         if (any(is.na(ci99))){
-              warning("'range' scope too small for 99% ci")
+         breaks95 = maximum - qchisq(0.95,  df = 1)/2
+         ci95= c(afLeft(breaks95), afRight(breaks95))
+         if (any(is.na(ci95))){
+              warning("'range' scope too small for 95% ci")
            }
          }
-         output["range",] <- c(MLE, maximum, ci99)
+         Table["range",] <- c(MLE, ci95)
         }
        
        
@@ -240,7 +218,7 @@ likfitLgmGpu <- function(data,
        
        if(is.element('shape',paramToEstimate)){
          result = as.data.table(cbind(LogLikcpu, params0[,"shape"]))
-         colnames(result) <- c(paste(c('boxcox'),boxcox,sep = ''), "shape")
+         colnames(result) <- c(paste(c('boxcox'),BoxCox,sep = ''), "shape")
          profileLogLik <- result[, .(profile=max(.SD)), by=shape]
 
          maximum <- max(profileLogLik$profile)
@@ -252,15 +230,15 @@ likfitLgmGpu <- function(data,
          # breaks95 = maximum - qchisq(0.95,  df = 1)/2
          # ci95= c(afLeft(breaks95), afRight(breaks95))
 
+         #plot(profileLogLik$shape, profileLogLik$profile)
+         
+         breaks95 = maximum - qchisq(0.95,  df = 1)/2
+         ci95= c(afLeft(breaks95), afRight(breaks95))
+         if (any(is.na(ci95)))
+           warning("'shape' scope too small for 95% ci")
          
          
-         breaks99 = maximum - qchisq(0.99,  df = 1)/2
-         ci99= c(afLeft(breaks99), afRight(breaks99))
-         if (any(is.na(ci99)))
-           warning("'shape' scope too small for 99% ci")
-         
-         
-         output["shape",] <- c(MLE, maximum, ci99)
+         Table["shape",] <- c(MLE,  ci95)
        }       
   
   
@@ -275,12 +253,12 @@ likfitLgmGpu <- function(data,
          leftOfMax = profileLogLik$nugget < profileLogLik$nugget[which.max(profileLogLik$profile)]
          afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$nugget[leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
          afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$nugget[!leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
-         breaks99 = maximum - qchisq(0.99,  df = 1)/2
-         ci99= c(afLeft(breaks99), afRight(breaks99))
-         if (any(is.na(ci99)))
-           warning("'nugget' scope too small for 99% ci")
+         breaks95 = maximum - qchisq(0.95,  df = 1)/2
+         ci95= c(afLeft(breaks95), afRight(breaks95))
+         if (any(is.na(ci95)))
+           warning("'nugget' scope too small for 95% ci")
          
-         output["nugget",] <- c(MLE, maximum, ci99)
+         Table["nugget",] <- c(MLE,  ci95)
        }
   
        
@@ -297,12 +275,12 @@ likfitLgmGpu <- function(data,
          afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$anisoRatio[leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
          afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$anisoRatio[!leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
          
-         breaks99 = maximum - qchisq(0.99,  df = 1)/2
-         ci99= c(afLeft(breaks99), afRight(breaks99))
-         if (any(is.na(ci99)))
-           warning("'anisoRatio' scope too small for 99% ci")
+         breaks95 = maximum - qchisq(0.95,  df = 1)/2
+         ci95= c(afLeft(breaks95), afRight(breaks95))
+         if (any(is.na(ci95)))
+           warning("'anisoRatio' scope too small for 95% ci")
          
-         output["anisoRatio",] <- c(MLE, maximum, ci99)
+         Table["anisoRatio",] <- c(MLE,  ci95)
        }
        
        
@@ -319,18 +297,67 @@ likfitLgmGpu <- function(data,
          afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$anisoAngleDegrees[leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
          afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$anisoAngleDegrees[!leftOfMax])   # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
          
-         breaks99 = maximum - qchisq(0.99,  df = 1)/2
-         ci99= c(afLeft(breaks99), afRight(breaks99))
-         if (any(is.na(ci99)))
-           warning("'anisoAngleDegrees' scope too small for 99% ci")
+         breaks95 = maximum - qchisq(0.95,  df = 1)/2
+         ci95= c(afLeft(breaks95), afRight(breaks95))
+         if (any(is.na(ci95)))
+           warning("'anisoAngleDegrees' scope too small for 95% ci")
          
-         output["anisoAngleDegrees",] <- c(MLE, maximum, ci99)
+         Table["anisoAngleDegrees",] <- c(MLE,  ci95)
        }
        
   
+       
+       
+       
+       ###############lambda hat#####################
+    
+       #likForBoxCox = apply( LogLikcpu, 2, max )
+       index <- which(LogLikcpu == max(LogLikcpu, na.rm = TRUE), arr.ind = TRUE)
+       
+       Table["BoxCox",1] <- BoxCox[index[2]]
+       
+       #any(is.na(as.matrix(minusTwoLogLik)))
+       
+       ###############betahat#####################
+       Betahat <- matrix(0, nrow=Ncov, ncol=Ndata)
+       a<-c((index[1]-1)*Ncov+1, index[1]*Ncov)
+       Betahat <- solve(XVYXVX[a,((Ndata+1):ncol(yx))]) %*% XVYXVX[a,index[2]]
+       
+       Table[paste(c('betahat'),seq_len(Ncov),sep = ''),1] <- Betahat
+       
+       
+       #################sigma hat#########################
+       if(reml==FALSE)  {
+         Table["sdSpatial",1] <- sqrt(ssqResidual[index[1],index[2]]/Nobs)
+       }
+       else if(reml==TRUE) {         
+         Table["sdSpatial",1] <- sqrt(ssqResidual[index[1],index[2]]/(Nobs - Ncov))
+       }
+       
 
+
+       Output <- list(LogLik=LogLikcpu,
+                      minusTwoLogLik = minusTwoLogLik,
+                      table = Table,
+                      ssqY=ssqY,     
+                      ssqBetahat = ssqBetahat,
+                      detVar = detVar,   
+                      detReml = detReml,   
+                      jacobian = jacobian,
+                      XVYXVX=XVYXVX)
+       
+       Output
 
        
-       output
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
 }
 
