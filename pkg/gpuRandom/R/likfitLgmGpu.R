@@ -95,7 +95,7 @@ likfitLgmGpu <- function(data,
        #   range=maxDist/10
        # )
        
-       gpuRandom:::likfitGpu_BackendP(
+       system.time(gpuRandom:::likfitGpu_BackendP(
          yx,        #1
          coordsGpu, #2
          paramsGpu, #3
@@ -117,26 +117,50 @@ likfitLgmGpu <- function(data,
          QinvSsqYx, 
          cholXVXdiag, #20
          varMat,        #21     Vbatch
-         cholDiagMat)
+         cholDiagMat))
        
-       # any(is.na(as.vector(detVar)))
-       # any(is.na(as.matrix(varMat)))
-       # any(is.na(as.matrix(ssqYX)))
-       # any(is.na(as.matrix(ssqYXcopy)))
-       # any(is.na(as.matrix(ssqBetahat)))
-       # any(is.na(as.vector(detReml)))
-       # any(is.na(as.matrix(cholXVXdiag)))
+       
 
 
        
 
        # resid^T V^(-1) resid, resid = Y - X betahat = ssqResidual
        ssqResidual <- ssqY - ssqBetahat
-       #any(is.na(as.matrix(ssqResidual)))
        
        
-       #any(is.na(as.matrix(Nobs*log(ssqResidual/Nobs))))
+       # any(is.na(as.vector(detVar)))
+       # any(is.nan(as.vector(detVar)))
+       # any(is.na(as.matrix(varMat)))
+       # any(is.nan(as.matrix(varMat)))
+       # any(is.na(as.matrix(ssqYX)))
+       # any(is.na(as.matrix(ssqYXcopy)))
+       # any(is.na(as.matrix(ssqBetahat)))
+       # any(is.na(as.vector(detReml)))
+       # any(is.na(as.matrix(cholXVXdiag)))
+        any(is.na(as.matrix(ssqResidual)))
+        any(is.nan(as.matrix(ssqResidual)))
+       # any(is.nan(as.matrix(log(ssqResidual/Nobs))))
+        
+       any(is.nan(as.matrix(ssqResidual/Nobs)))
+       any(is.na(as.matrix(ssqResidual/Nobs)))
+       any(is.na(as.matrix(log(ssqResidual/Nobs))))
+       any(is.nan(as.matrix(log(ssqResidual/Nobs))))
        
+       debug <- as.matrix(log(ssqResidual/Nobs))
+       any(is.na(debug))
+       which(is.na(debug),arr.ind = TRUE)
+       params0[which(is.na(debug),arr.ind = TRUE)[1],]
+      
+       
+       
+       ssqResidualcpu= as.matrix(ssqResidual)
+       any(is.na(as.matrix(ssqResidualcpu/Nobs)))
+       any(is.na(as.matrix(log(ssqResidualcpu/Nobs))))
+       
+       debugcpu = log(ssqResidualcpu/Nobs)
+       ssqResidualcpu[which(is.na(debug),arr.ind = TRUE)[1],]     # row 20803 col 1  -4.530054e+20
+       ssqY[which(is.na(debug),arr.ind = TRUE)[1],]
+       ssqBetahat[which(is.na(debug),arr.ind = TRUE)[1],]    # problem arises from here! 4.530057e+20
        
        
        if(reml== FALSE){ # ml
