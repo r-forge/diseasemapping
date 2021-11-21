@@ -322,13 +322,10 @@ gpuRandom:::likfitGpu_BackendP(
   yx,  #1
   coords,
   paramsGpu,
-  boxcoxGpu,  
-  betas,  #5
-  ssqY,
-  aTDinvb_beta,
+  boxcoxGpu,  #betas,  #5
+  ssqY,#aTDinvb_beta,
   XVYXVX,
-  ssqBetahat,
-  ssqBeta,
+  ssqBetahat, #ssqBeta,
   detVar,
   detReml,
   jacobian,  #13
@@ -337,13 +334,14 @@ gpuRandom:::likfitGpu_BackendP(
   localSize,  
   NlocalCache,  
   verbose=c(1,0),  #18
-  ssqYX, #ssqYXcopy,  #new
+  ssqYX, #
+  ssqYXcopy,  #new
   LinvYX,  #21
   QinvSsqYx, 
   cholXVXdiag, #23
   varMat, #new
-  cholDiagMat,
-  b_beta)   #new  26
+  cholDiagMat)
+  #b_beta)   #new  26
 
 
 
