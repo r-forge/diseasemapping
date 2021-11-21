@@ -15,6 +15,10 @@ likLgm_betaProfile <- function(Betas, #a m x p R matrix  given by the user
                                minustwotimes=TRUE){
   
   
+  if(!is.matrix(Betas))
+  Betas<-as.matrix(Betas)
+  
+  BoxCox = c(1, 0, setdiff(BoxCox, c(0,1)))
   Ncov = ncol(Betas)
   Ndata = length(BoxCox)
   m = nrow(Betas)
@@ -40,6 +44,7 @@ likLgm_betaProfile <- function(Betas, #a m x p R matrix  given by the user
   
   # one = ssqY - 2*beta^T * bTDinva + ssqBeta
   # n*log(one/n)+ logD +jacobian + n*log(2*pi) + n
+  # takes about over 7 minutes for 126,000 params
   for(beta in 1:m){  
     
     for (i in 1:Nparam){
@@ -52,7 +57,7 @@ likLgm_betaProfile <- function(Betas, #a m x p R matrix  given by the user
       ssqBeta0[i] <- Betas[beta, ] %*% mat %*% (Betas[beta, ])
     }
     
-    ssqBeta <- do.call(cbind, replicate(Ndata, ssqBeta0, simplify=FALSE))   # ssq for this Beta only
+    ssqBeta <- do.call(cbind, replicate(Ndata, ssqBeta0, simplify=FALSE))   # ssq same for different data sets
     one <- ssqY - 2*midItem + ssqBeta
     
     temp <- Nobs*log(one/Nobs) + detVar + Nobs + Nobs*log(2*pi) + jacobian
