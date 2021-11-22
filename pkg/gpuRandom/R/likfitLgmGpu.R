@@ -121,59 +121,41 @@ likfitLgmGpu <- function(data,
        
        # resid^T V^(-1) resid, resid = Y - X betahat = ssqResidual
        ssqResidual <- ssqY - ssqBetahat
-       any(is.na(as.matrix(log(ssqResidual/Nobs))))
-       any(is.nan(as.matrix(log(ssqResidual/Nobs))))
-       
-       
-       
-        any(is.na(as.vector(detVar)))
-        any(is.nan(as.vector(detVar)))
-        any(is.na(as.matrix(varMat)))
-        any(is.nan(as.matrix(varMat)))
-        any(is.na(as.matrix(ssqYX)))
-        any(is.na(as.matrix(ssqYXcopy)))
-        any(is.na(as.matrix(ssqBetahat)))
-        any(is.na(as.vector(detReml)))
-        any(is.na(as.matrix(cholXVXdiag)))
-        any(is.na(as.matrix(ssqResidual)))
+       # any(is.na(as.matrix(log(ssqResidual/Nobs))))
        # any(is.nan(as.matrix(log(ssqResidual/Nobs))))
-        
-       any(is.nan(as.matrix(ssqResidual/Nobs)))
-       any(is.na(as.matrix(ssqResidual/Nobs)))
-    
+       # 
+       # 
+       # 
+       #  any(is.na(as.vector(detVar)))
+       #  any(is.nan(as.vector(detVar)))
+       #  any(is.na(as.matrix(varMat)))
+       #  any(is.nan(as.matrix(varMat)))
+       #  any(is.na(as.matrix(ssqYX)))
+       #  any(is.na(as.matrix(ssqYXcopy)))
+       #  any(is.na(as.matrix(ssqBetahat)))
+       #  any(is.na(as.vector(detReml)))
+       #  any(is.na(as.matrix(cholXVXdiag)))
+       #  any(is.na(as.matrix(ssqResidual)))
+       # # any(is.nan(as.matrix(log(ssqResidual/Nobs))))
+       #  
+       # any(is.nan(as.matrix(ssqResidual/Nobs)))
+       # any(is.na(as.matrix(ssqResidual/Nobs)))
+       # 
+       # 
+       # debug <- as.matrix(log(ssqResidual/Nobs))
+       # any(is.na(debug))
+       # which(is.na(debug),arr.ind = TRUE)
+       # params0[which(is.na(debug),arr.ind = TRUE)[1],]
+       # 
        
-       debug <- as.matrix(log(ssqResidual/Nobs))
-       any(is.na(debug))
-       which(is.na(debug),arr.ind = TRUE)
-       params0[which(is.na(debug),arr.ind = TRUE)[1],]
-      
-       
-      
-       ssqResidual[which(is.na(debug),arr.ind = TRUE)[,1],]     # row 20803 col 1  -4.530054e+20
-       ssqY[which(is.na(debug),arr.ind = TRUE)[,1],]
-       ssqBetahat[which(is.na(debug),arr.ind = TRUE)[,1],]    # problem arises from here! 4.530057e+20
-       
-       ssqY[108390:108430,]-ssqBetahat[108390:108430,]
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
+       # 
+       # ssqResidual[which(is.na(debug),arr.ind = TRUE)[,1],]     # row 20803 col 1  -4.530054e+20
+       # ssqY[which(is.na(debug),arr.ind = TRUE)[,1],]
+       # ssqBetahat[which(is.na(debug),arr.ind = TRUE)[,1],]    # problem arises from here! 4.530057e+20
+       # 
+       # 
+       # 
+
        if(reml== FALSE){ # ml
        gpuRandom:::matrix_vector_sumBackend(Nobs*log(ssqResidual/Nobs),
                                 detVar,
@@ -364,7 +346,9 @@ likfitLgmGpu <- function(data,
        ###############betahat#####################
        Betahat <- matrix(0, nrow=Ncov, ncol=Ndata)
        a<-c((index[1]-1)*Ncov+1, index[1]*Ncov)
-       Betahat <- solve(XVYXVX[a,((Ndata+1):ncol(yx))]) %*% XVYXVX[a,index[2]]
+       mat <- XVYXVX[a,((Ndata+1):ncol(yx))]
+       mat[upper.tri(mat)] <- mat[lower.tri(mat)]
+       Betahat <- solve(mat) %*% XVYXVX[a,index[2]]
        
        Table[c("intercept", paste(c('betahat'), seq_len(Ncov-1),sep = '')),1] <- Betahat
        
