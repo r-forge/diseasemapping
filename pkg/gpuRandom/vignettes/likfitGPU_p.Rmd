@@ -28,7 +28,7 @@ spatialmodel$parameters
 
 newParamList = list(
   range=seq(20000, 90000 , len=50),
-  nugget = seq(0,0.3,len=30)
+  nugget = seq(0,0.5,len=30)
 ) 
 newParam= do.call(expand.grid, newParamList)
 
@@ -56,10 +56,60 @@ image(
   ylab = names(newParamList)[2]	
 )
 mapmisc::legendBreaks('topright', myCol)
-
-
 ```
+```{r makeplots newGPU11.22}
+library(gpuRandom)
+library(gpuR)
+library('geostatsp')
+data('swissRain')
 
+swissRain$sqrtY = sqrt(swissRain$rain)
+swissRain$elevation = extract(swissAltitude, swissRain)
+
+
+newParamList = list(
+  range=seq(20000, 90000 , len=50),
+  nugget = seq(0,0.5,len=30),
+  shape = 1.5,
+  anisoRatio = 1, 
+  anisoAngleRadians = 0
+) 
+newParam= do.call(expand.grid, newParamList)
+
+
+library(data.table)
+system.time(result3 <- gpuRandom::likfitLgmGpu(data=swissRain,
+                        formula=sqrtY~ elevation, 
+                        coordinates=swissRain@coords,
+                        paramToEstimate = NULL, 
+                        #variance and regression parameters are always estimated
+                        params=newParam, # CPU matrix for now, users need to provide proper parameters given their specific need
+                        BoxCox = c(1, 0),
+                        type = "double",
+                        reml=FALSE, 
+                        minustwotimes=TRUE,
+                        NparamPerIter=100,
+                        Nglobal=c(128,64),
+                        Nlocal=c(16,16),
+                        NlocalCache=2600,
+                        verbose=FALSE))
+
+# result3$table
+# result3$LogLik
+minusTwoLogLik=as.matrix(result3$minusTwoLogLik)
+
+
+lMatrix = matrix(minusTwoLogLik[,1], length(newParamList[[1]]), length(newParamList[[2]]))
+# 
+myCol = mapmisc::colourScale(lMatrix, breaks=8, dec=0)
+image(
+  newParamList[[1]]/1000, newParamList[[2]], lMatrix,
+  col = myCol$col, breaks=myCol$breaks,
+  xlab = names(newParamList)[1],
+  ylab = names(newParamList)[2]
+)
+mapmisc::legendBreaks('topright', myCol)
+```
 
 
 
@@ -85,7 +135,7 @@ sr2 = swissRain[0:100,]
 
 newParamList = list(
   range=seq(20000, 90000 , len=50),
-  nugget = seq(0,0.3,len=30),
+  nugget = seq(0,0.5,len=30),
   shape = 1.5,
   anisoRatio = 1, 
   anisoAngleRadians = 0
@@ -94,7 +144,7 @@ newParam= do.call(expand.grid, newParamList)
 
 
 paramsGpu = gpuRandom::maternGpuParam(newParam, type="double")
-result<-gpuRandom::likfitGpu(spatialmodel,     #data,
+system.time(result<-gpuRandom::likfitGpu(spatialmodel,     #data,
                                type = "double",
                                paramsGpu, #a vclmatrix, consists of all the parameters#betas=NULL, #a vclmatrix  #only one row batch, but many colbatches
                                BoxCox=c(1,0.5), # an R vector, will always be c(1,0,.....)
@@ -104,8 +154,8 @@ result<-gpuRandom::likfitGpu(spatialmodel,     #data,
                                minustwotimes=TRUE,
                                Nglobal=c(128,64,2),
                                Nlocal=c(16,16,1),
-                               NlocalCache=2600)
-
+                               NlocalCache=2600))
+#as.matrix(result$XVYXVX)
 result$Betahats
 mTwoLogLik <- as.matrix(result$minusTwoLogLik)
 

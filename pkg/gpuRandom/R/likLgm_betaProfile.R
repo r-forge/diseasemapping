@@ -1,4 +1,5 @@
 #' @title Estimate Log-likelihood for Gaussian random fields when Betas are given
+#' @import data.table
 #' @useDynLib gpuRandom
 #' @export
 
@@ -66,7 +67,22 @@ likLgm_betaProfile <- function(Betas, #a m x p R matrix  given by the user
     
   }
   
+  resultbeta1 = data.table::as.data.table(cbind(-0.5*likForBetas, Betas[,"beta1"]))
+  colnames(resultbeta1) <- c("lik", "beta1")
+  profileLogLik_beta1 <- resultbeta1[, .(profile=max(.SD)), by=beta1]
+  
+  
+  resultintercept = data.table::as.data.table(cbind(-0.5*likForBetas, Betas[,1]))
+  colnames(resultintercept) <- c("lik", "intercept")
+  profileLogLik_intercept <- resultintercept[, .(profile=max(.SD)), by=intercept]
+  
+  
+  #plot(profileLogLik_beta1$beta1,profileLogLik_beta1$profile)
+  #plot(profileLogLik_intercept$intercept,profileLogLik_intercept$profile)
+  
   Theoutput <- list(likForBetas=likForBetas,
+                    profileLogLik_beta1 =profileLogLik_beta1,
+                    resultintercept=resultintercept,
                     ssqForBetas = ssqForBetas)
   
   
@@ -77,6 +93,25 @@ likLgm_betaProfile <- function(Betas, #a m x p R matrix  given by the user
   
   
   
-  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
   

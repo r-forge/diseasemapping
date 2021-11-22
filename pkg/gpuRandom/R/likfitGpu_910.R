@@ -22,8 +22,16 @@ likfitGpu <- function(spatialmodel,     #data,
   if (form==7){
     nBetahats = 0
   }
+  
+  
+  data = data.frame(spatialmodel$data)
+  theNA = apply(  data[,all.vars(formula),drop=FALSE],
+                  1, 
+                  function(qq) any(is.na(qq))
+  )
+  noNA = !theNA
 
-  covariates = model.matrix(spatialmodel$model$formula, data=spatialmodel$data)
+  covariates = model.matrix(spatialmodel$model$formula, data[noNA,])
   temp = model.frame(spatialmodel$model$formula, data=spatialmodel$data)
   y = temp[,as.character(attributes(terms(temp))$variables)[2]]
   n = length(y)
@@ -166,7 +174,9 @@ likfitGpu <- function(spatialmodel,     #data,
       #print(index)
       for (i in 1:nBetahats){
         a<-c((index[i]-1)*Ncov+1, index[i]*Ncov)
-        Betahat[c((i-1)*Ncov+1, i*Ncov),j] <- solve(XVYXVX[a,((Ndata+1):ncol(yx))]) %*% XVYXVX[a,j]
+        mat <- XVYXVX[a,((Ndata+1):ncol(yx))]
+        mat[upper.tri(mat)] <- mat[lower.tri(mat)]
+        Betahat[c((i-1)*Ncov+1, i*Ncov),j] <- solve(mat) %*% XVYXVX[a,j]
       }
     }
   }
