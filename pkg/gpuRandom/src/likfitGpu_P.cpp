@@ -894,10 +894,10 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     viennacl::ocl::enqueue(extractBlockKernel(XVYXVX, ssqYX, DiterIndex, NthisIteration),
                            theQueue);
 
-       if(Diter ==1){
-         Rcpp::Rcout << "crossprodKernelString\n" << crossprodKernelString << "\n";
-         Rcpp::Rcout << "crossprodSsqYxKernelString\n" << crossprodSsqYxKernelString << "\n";
-       }
+       // if(Diter ==1){
+       //   Rcpp::Rcout << "crossprodKernelString\n" << crossprodKernelString << "\n";
+       //   Rcpp::Rcout << "crossprodSsqYxKernelString\n" << crossprodSsqYxKernelString << "\n";
+       // }
       
       
       
