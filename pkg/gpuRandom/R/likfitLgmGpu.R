@@ -69,6 +69,8 @@ likfitLgmGpu <- function(data,
        
        #betas <- matrix(0,nrow=Ncov, ncol=Ndata)
        #betasGpu = vclMatrix(betas, type=type)
+       varMat = vclMatrix(0, Nobs*NparamPerIter, Nobs, type=type)
+       cholDiagMat = vclMatrix(0, NparamPerIter, Nobs, type=type)
        ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
        XVYXVX = vclMatrix(0, Nparam * Ncov, ncol(yx), type=type)
        ssqBetahat <- vclMatrix(0, Nparam, Ndata, type=type)
@@ -79,11 +81,9 @@ likfitLgmGpu <- function(data,
        ssqYX = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
        #aTDinvb_beta = vclMatrix(0, Nparam, Ndata, type=type)
        ssqYXcopy = vclMatrix(0, ncol(yx) * NparamPerIter, ncol(yx), type=type)
-       LinvYX = vclMatrix(0, nrow(yx) * NparamPerIter, ncol(yx), type=type)
+       LinvYX = vclMatrix(0, Nobs * NparamPerIter, ncol(yx), type=type)
        QinvSsqYx = vclMatrix(0, NparamPerIter*Ncov, Ndata, type = type)
        cholXVXdiag = vclMatrix(0, NparamPerIter, Ncov, type=type)
-       varMat = vclMatrix(0, Nobs*NparamPerIter, Nobs, type=type)
-       cholDiagMat = vclMatrix(0, NparamPerIter, Nobs, type=type)
        #b_beta = vclMatrix(0, NparamPerIter*Nobs, Ndata, type=type)
        minusTwoLogLik <- vclMatrix(0, Nparam, Ndata, type=type)
   
@@ -119,32 +119,28 @@ likfitLgmGpu <- function(data,
          varMat,        #21     Vbatch
          cholDiagMat))
        
-       
-
-
-       
-
        # resid^T V^(-1) resid, resid = Y - X betahat = ssqResidual
        ssqResidual <- ssqY - ssqBetahat
+       any(is.na(as.matrix(log(ssqResidual/Nobs))))
+       any(is.nan(as.matrix(log(ssqResidual/Nobs))))
        
        
-       # any(is.na(as.vector(detVar)))
-       # any(is.nan(as.vector(detVar)))
-       # any(is.na(as.matrix(varMat)))
-       # any(is.nan(as.matrix(varMat)))
-       # any(is.na(as.matrix(ssqYX)))
-       # any(is.na(as.matrix(ssqYXcopy)))
-       # any(is.na(as.matrix(ssqBetahat)))
-       # any(is.na(as.vector(detReml)))
-       # any(is.na(as.matrix(cholXVXdiag)))
+       
+        any(is.na(as.vector(detVar)))
+        any(is.nan(as.vector(detVar)))
+        any(is.na(as.matrix(varMat)))
+        any(is.nan(as.matrix(varMat)))
+        any(is.na(as.matrix(ssqYX)))
+        any(is.na(as.matrix(ssqYXcopy)))
+        any(is.na(as.matrix(ssqBetahat)))
+        any(is.na(as.vector(detReml)))
+        any(is.na(as.matrix(cholXVXdiag)))
         any(is.na(as.matrix(ssqResidual)))
-        any(is.nan(as.matrix(ssqResidual)))
        # any(is.nan(as.matrix(log(ssqResidual/Nobs))))
         
        any(is.nan(as.matrix(ssqResidual/Nobs)))
        any(is.na(as.matrix(ssqResidual/Nobs)))
-       any(is.na(as.matrix(log(ssqResidual/Nobs))))
-       any(is.nan(as.matrix(log(ssqResidual/Nobs))))
+    
        
        debug <- as.matrix(log(ssqResidual/Nobs))
        any(is.na(debug))
@@ -152,15 +148,30 @@ likfitLgmGpu <- function(data,
        params0[which(is.na(debug),arr.ind = TRUE)[1],]
       
        
+      
+       ssqResidual[which(is.na(debug),arr.ind = TRUE)[,1],]     # row 20803 col 1  -4.530054e+20
+       ssqY[which(is.na(debug),arr.ind = TRUE)[,1],]
+       ssqBetahat[which(is.na(debug),arr.ind = TRUE)[,1],]    # problem arises from here! 4.530057e+20
        
-       ssqResidualcpu= as.matrix(ssqResidual)
-       any(is.na(as.matrix(ssqResidualcpu/Nobs)))
-       any(is.na(as.matrix(log(ssqResidualcpu/Nobs))))
+       ssqY[108390:108430,]-ssqBetahat[108390:108430,]
        
-       debugcpu = log(ssqResidualcpu/Nobs)
-       ssqResidualcpu[which(is.na(debug),arr.ind = TRUE)[1],]     # row 20803 col 1  -4.530054e+20
-       ssqY[which(is.na(debug),arr.ind = TRUE)[1],]
-       ssqBetahat[which(is.na(debug),arr.ind = TRUE)[1],]    # problem arises from here! 4.530057e+20
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
        
        
        if(reml== FALSE){ # ml

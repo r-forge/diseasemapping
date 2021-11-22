@@ -895,7 +895,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                            theQueue);
 
        if(Diter ==1){
-      // Rcpp::Rcout << "extract Diag Kernel String\n" << extractSomeDiagKernelString << "\n";
+         Rcpp::Rcout << "crossprodKernelString\n" << crossprodKernelString << "\n";
          Rcpp::Rcout << "crossprodSsqYxKernelString\n" << crossprodSsqYxKernelString << "\n";
        }
       

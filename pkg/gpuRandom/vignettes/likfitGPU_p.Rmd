@@ -102,7 +102,7 @@ result<-gpuRandom::likfitGpu(spatialmodel,     #data,
                                NparamPerIter=100,  # how many sets of params to be evaluated in each loop
                                nBetahats =1,
                                minustwotimes=TRUE,
-                               Nglobal=c(64,64,2),
+                               Nglobal=c(128,64,2),
                                Nlocal=c(16,16,1),
                                NlocalCache=2600)
 
