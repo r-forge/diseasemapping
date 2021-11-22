@@ -94,7 +94,7 @@ system.time(result3 <- gpuRandom::likfitLgmGpu(data=swissRain,
                         NlocalCache=2600,
                         verbose=FALSE))
 
-# result3$table
+result3$table
 # result3$LogLik
 minusTwoLogLik=as.matrix(result3$minusTwoLogLik)
 
