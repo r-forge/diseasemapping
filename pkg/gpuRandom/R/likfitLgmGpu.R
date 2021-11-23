@@ -12,7 +12,7 @@ likfitLgmGpu <- function(data,
                         coordinates,
                         params=NULL, # CPU matrix for now, users need to provide proper parameters given their specific need
                         fixVariance = FALSE, 
-                        BoxCox = c(1, 0, 0.5),  # boxcox is always estimated
+                        BoxCox,  # boxcox is always estimated
                         paramToEstimate = c("range","shape","nugget","anisoAngleDegrees", "anisoRatio"), 
                         #variance and regression parameters are always estimated if not given,
                         type = c("double","float"),
@@ -211,7 +211,7 @@ likfitLgmGpu <- function(data,
        if(is.element('range',paramToEstimate)){
          # get profile log-lik for range values
          result = data.table::as.data.table(cbind(LogLikcpu, params0[,"range"]))
-         colnames(result) <- c(paste(c('boxcox'),BoxCox,sep = ''), "range")
+         colnames(result) <- c(paste(c('boxcox'), BoxCox,sep = ''), "range")
          profileLogLik <- result[, .(profile=max(.SD)), by=range]
  
 
