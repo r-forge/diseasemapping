@@ -167,32 +167,25 @@ The streams created sequentially are then used by the GPU's work-items to genera
 \begin{lstlisting}[language=C,basicstyle=\small,label={lst:uniformkernel}]
 __kernel void mrg31k3pMatrix(
   __global int* streams,
-  __global float* out){
+  __global float* out,
+  int Nrow, int Ncol, int Npad){
 
-const int index = get_global_id(0)*get_global_size(1) + 
-                  get_global_id(1);
-int Drow, Dcol, DrowStart, Dentry, DrowBlock, DcolBlock, DrowInBounds;
-const int DrowStartInc = get_global_size(0) * NpadCol;
+int Drow, Dcol;
 uint g1[3], g2[3];
-const int startvalue=index * NpadStreams;
 float temp, fact = mrg31k3p_NORM_cl;
+
 streamsToPrivate(streams,g1,g2,startvalue);
 
-// filling in random numbers in the output matrix
-for(DrowBlock = 0, Drow=get_global_id(0), DrowStart = Drow * NpadCol;
-    DrowBlock < Nrow;
-    Drow += get_global_size(0), 
-    DrowBlock +=get_global_size(0), DrowStart += DrowStartInc){
-    
-    DrowInBounds = Drow < Nrow;
-    
-    for(DcolBlock = 0, Dcol=get_global_id(1), Dentry = DrowStart + Dcol;
-        DcolBlock < Ncol;
-        DcolBlock += get_global_size(1), Dentry += get_global_size(1)){
+for(Drow=get_global_id(0); Drow < Nrow;
+    Drow += get_global_size(0)){
+
+    for(Dcol=get_global_id(1); DcolBlock < Ncol; 
+        Dcol += get_global_size(1)){
+
         temp = fact * clrngMrg31k3pNextState(g1, g2);
-        if(DrowInBounds) out[Dentry] = temp;
+        out[Drow * Npad + Dcol] = temp;
+
   }//Dcol
-  
 }//Drow
 
 streamsFromPrivate(streams,g1,g2,startvalue);
@@ -210,8 +203,9 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 % \end{figure}
 
 Now we use the streams created in section \ref{createstreams} to generate a vector of double-precision i.i.d. $U(0,1)$ random numbers with the function \fct{runif}. To view the generated random numbers, we need to convert them to R vectors or matrices, by doing this, the random numbers are moved from the global memory of the GPU device to the host.
-<<simStuff2, eval=TRUE,tidy=TRUE>>=
-as.vector(clrng::runif(n=6, streams=myStreamsGpu, Nglobal=c(1,nrow(myStreamsGpu)), type = "double"))
+<<simStuff2, eval=TRUE,tidy=FALSE>>=
+as.vector(
+  clrng::runif(n=6, streams=myStreamsGpu, Nglobal=c(2,2), type = "double"))
 @
 The arguments of the \fct{clrng::runif} are described as follows:
 \begin{itemize}
@@ -266,27 +260,29 @@ Listing \ref{lst:normal} shows a fragment of the kernel that generates standard 
 \begin{lstlisting}[language=C,basicstyle=\small,label={lst:normal},breaklines=true, escapeinside={(*@}{@*)}]
 __kernel void mrg31k3pMatrix(
   __global int* streams,
-  __global double* out){
+  __global double* out,
+  int Nrow, int Ncol, int Npad, int NpadStreams){
 
-(*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
-
-double temp, fact = mrg31k3p_NORM_cl;
+int Drow, Dcol;
+uint g1[3], g2[3];
 local double part[2];
+int startvalue = (
+    get_global_id (0)∗ get_global_size (1) + get_global_id (1)
+  ) * NpadStreams;
+
 double sinOrCosPart1, addForSine = - get_local_id(1) * PI_2;
+double temp, fact = mrg31k3p_NORM_cl;
 if(get_local_id(1)){
   fact = TWOPI_mrg31k3p_NORM_cl;
 }
-streamsToPrivate(streams,g1,g2,startvalue);
 
-for(DrowBlock = 0, Drow=get_global_id(0), DrowStart = Drow * NpadCol;
-    DrowBlock < Nrow;
-    Drow += get_global_size(0), DrowBlock +=get_global_size(0), 
-    DrowStart += DrowStartInc) {
-    
-    DrowInBounds = Drow < Nrow;
-    for(DcolBlock = 0, Dcol=get_global_id(1), Dentry = DrowStart + Dcol;
-        DcolBlock < Ncol;
-        DcolBlock += get_global_size(1), Dentry += get_global_size(1) ){
+streamsToPrivate(streams,g1,g2, startvalue);
+
+for(Drow=get_global_id(0); Drow < Nrow;
+    Drow += get_global_size(0)){
+
+    for(Dcol=get_global_id(1); DcolBlock < Ncol; 
+        Dcol += get_global_size(1)){
         
       temp = fact * clrngMrg31k3pNextState(g1, g2);
       part[get_local_id(1)] = temp;
@@ -298,10 +294,9 @@ for(DrowBlock = 0, Drow=get_global_id(0), DrowStart = Drow * NpadCol;
       
       // sine for local[1], cos for local[0]
       sinOrCosPart1 = cos(part[1] + addForSine);
-      temp = part[0]*sinOrCosPart1;
-      if(DrowInBounds) out[Dentry] = temp;
+      out[Drow * Npad + Dcol] = part[0]*sinOrCosPart1;
+
       barrier(CLK_LOCAL_MEM_FENCE);
-      
   }//Dcol
 }//Drow
 streamsFromPrivate(streams,g1,g2,startvalue);
@@ -335,9 +330,9 @@ system.time(matrix(stats::rnorm(10000^2),10000,10000))
 \subsection{Exponential random number generation}
 The Exponential random variates are produced by applying the inverse transform method on i.i.d. $U(0,1)$ random numbers. The random variable $X \sim \text{Exponential}(\lambda)$ has cumulative distribution function $F_{X}(x)=1-e^{-\lambda x}$ for $x \geq 0$ and $\lambda > 0$. The inverse of $F_{X}$ is $F^{-1}_{x}(y)= -(1/ \lambda) \log (1-y)$, for $ 0 \leq y <1$. The kernel is not shown because it is mostly same as the kernel for uniform and normal random numbers, except for the part that does the inverse transform. %Developers can make use of our kernel for generating other types of random variables on GPU in \proglang{R}.
 
-Below is an example that we produce a 2 by 2 matrix of exponential random number with expectation 1.
+Below is an example that we produce a matrix of exponential random number with expectation 1.
 <<random exponential, eval=TRUE, cache=FALSE>>=
-r_matrix <- clrng::rexp(c(2,2), rate=1, Nglobal=c(1,4), type="double")
+r_matrix <- clrng::rexp(c(2,4), rate=1, Nglobal=c(2,2), type="double")
 as.matrix(r_matrix)
 @
 The arguments of the \fct{clrng::rexp} are described as follows:
@@ -404,17 +399,18 @@ The 2-way contingency tables consist of selected data from the 2018 Natality pub
  
  <<monthdata,eval=TRUE,echo=FALSE, cache=TRUE>>=
 library(knitr)
-knitr::kable(head(month),format="latex", align = c("rrrrrrrrrrrr"), caption = "Month\\label{tab:month}", booktabs=TRUE,linesep = "") %>%
+knitr::kable(month,format="latex", align = c("rrrrrrrrrrrr"), 
+  caption = "Monthly birth anomaly data\\label{tab:month}", booktabs=TRUE,linesep = "") %>%
   kable_styling(full_width = F, position = "center",latex_options = "HOLD_position")
 @
 
  <<timecomparemonth1Gpu, eval=TRUE,cache=FALSE>>=
  streams <- createStreamsGpu(n =256*64, initial=666)
- almost.1 <- 1 + 64 * .Machine$double.eps
- observed_m= -logfactSum(month, c(16,16))/almost.1
+# almost.1 <- 1 + 64 * .Machine$double.eps
+# observed_m= -logfactSum(month, c(16,16))/almost.1
  
  month_gpu<-vclMatrix(month,type="integer")
- system.time(result_month <- fisher.sim(month_gpu, 1e6, streams=streams,
+ system.time(result_month <- clrng::fisher.sim(month_gpu, 1e6, streams=streams,
                     type="double", returnStatistics=TRUE,  Nglobal = c(256,64)))
  result_month$simNum
  result_month$counts
@@ -427,7 +423,7 @@ We got 409524 cases whose test statistics are below the observed threshold based
  
  <<timecomparemonth4Cpu, cache=TRUE, eval=TRUE>>=
  #using CPU
- system.time(result_monthcpu<-stats::fisher.test(month,simulate.p.value = TRUE,B=1015808))
+ system.time(result_monthcpu<-stats::fisher.test(month,simulate.p.value = TRUE, B=1e6))
  result_monthcpu$p.value
  @
 
@@ -444,13 +440,13 @@ colnames(week) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal
 @
 
 <<weekdata, eval=TRUE, echo=FALSE, cache=TRUE>>=
-knitr::kable(week,format="latex",align = c("rrrrrrrrrrrr"), caption = "Week\\label{tab:week}", booktabs=TRUE,linesep = "") %>%
+knitr::kable(week,format="latex",align = c("rrrrrrrrrrrr"), caption = "Day-of-week birth anomaly data\\label{tab:week}", booktabs=TRUE,linesep = "") %>%
   kable_styling(full_width = F, position = "center", latex_options = "HOLD_position")
 @
 
 
 <<TimecompareweekGpu2, eval=TRUE, cache=FALSE>>=
-observed_w= -clrng::logfactSum(week, c(16,16))/almost.1
+#observed_w= -clrng::logfactSum(week, c(16,16))/almost.1
 week_GPU<-gpuR::vclMatrix(week,type="integer")
 system.time(result_weekgpu<-clrng::fisher.sim(week_GPU, 1e7, streams=streams,
                 type="double",returnStatistics=TRUE,Nglobal = c(256,64)))
@@ -475,7 +471,7 @@ We summarized the comparison results in the table \ref{tab:summary} and plot the
 <<summarycompare, echo=FALSE, eval=TRUE, cache=TRUE>>=
 library(kableExtra)
 dt <- data.frame(
-  var1 = c("B", "1m", "10m", "1m", "10m"),
+  var1 = c("B", "1M", "10M", "1M", "10M"),
   var2 = c('Intel 2.5ghz', 0.403804, 0.0001251, 10.74,  63.24),
   var3 = c('AMD Radeon', 0.403507, 0.0001274,   2.28,    10.82),
   var4 = c('Intel 3.7ghz', 0.4035606,0.0001202, 15.00,  91.58),
@@ -511,13 +507,11 @@ abline(v = observed_w, col = "blue", lwd = 1.5)
 \section{An application of normal RNG: Gaussian surface simulation} 
 Given a parameter space $X$, a random field $U$ on $X$ is a collection of random variables $\{U_x :x\in X\}$. A Gaussian random field is a random field with the property that for any positive integer $n$ and any set of locations $x_1,\dots,x_n \in X$, the joint distribution of $U=(U_{x_1},\dots,U_{x_n})$ is multivariate Gaussian. The expectation $\mu(x)$ and covariance function $\Sigma$ completely determine the distribution of $U$, where 
 \begin{gather*} 
-\mu(x) = \E (U(x)),\\
-\Sigma_{ij} = \cov (U(x_i),U(x_j)).
+[U(s_1) \ldots U(s_N)] \sim \text{MVN}(0, \Sigma) \\
+\Sigma_{ij} = \cov[ U(x_i),U(x_j) ] = \sigma^2 \frac{2^{\kappa-1}}{\Gamma(\kappa)} \left(\sqrt{8\kappa} \frac{|s_i = s_j|}{\phi}\right)^\kappa  K_\kappa\left(\sqrt{8\kappa}  \frac{|s_i = s_j|}{\phi}\right)
 \end{gather*}
+
 The common choice for the covariance function $\Sigma$ is the Mat\'ern covariance function \citep{matern1960spatial}. The Mat\'ern covariance between $U(x)$ and $U(x')$ takes the form 
-\begin{equation*}
-\Sigma(d;\sigma^2,\phi,\kappa)=\sigma^2*\frac{2^{\kappa-1}}{\Gamma(\kappa)} (\sqrt{8\kappa} \frac{d}{\phi})^\kappa  K_\kappa(\sqrt{8\kappa}  \frac{d}{\phi}),  \quad \text{where} \quad \phi> 0,  \kappa > 0,
-\end{equation*} 
 $d =\|x-x'\|$ is the Euclidean distance between two spatial points, 
 $\sigma^2$ the variance of the random field $U$.
 $\Gamma(\cdot)$ is the standard gamma function,  $\phi$ is the range parameter or scale parameter with the dimension of distance, it controls the rate of decay of the correlation as $d$ increases. $K_\kappa(\cdot)$ is the modified Bessel function of the second kind with order $\kappa$, $\kappa$ is the shape parameter which determines the smoothness of $U(x)$, specifically, $U(x)$ is $m$ times mean-square differentiable if and only if $\kappa > m$. %(For $\kappa=0.5$, the Mat\'ern covariance function reduces to the exponential covariance function $\sigma^2*\exp(-d/\phi)$, when $\kappa \rightarrow \infty$, $\Sigma(d) \rightarrow \sigma^2*\exp{-(\|d\|/\phi)^2}$, which is called the Gaussian covariance.)  
@@ -572,7 +566,7 @@ coordsGpu = vclMatrix(coordsSp@coords,
 @
 Step 2, create 5 parameter sets as a small example, in practical studies, there can be hundreds or thousands of parameter sets. Then, convert the matrix of parameters to a ``vclMatrix'' for later use by \fct{gpuBatchMatrix::maternGpuParam}.
 <<setup paramsBatch, eval=TRUE,echo=FALSE>>=
-myParamsBatch = 
+params = 
 rbind(c(shape=1.25, range=0.5, variance = 1.5, nugget = 0,anisoRatio = 1, anisoAngleRadians = 0), 
 c(shape=2.15, range=0.25, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = pi/7),
 c(shape=0.55, range=1.5, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = pi/7),
@@ -580,27 +574,27 @@ c(shape=2.15, range=0.5, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRad
 c(shape=2.15, range=0.5, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/4))
 @
 <<show parameterBatch,eval=TRUE>>=
-myParamsBatch
-paramsGpu = gpuBatchMatrix::maternGpuParam(myParamsBatch, type=theType)
+params
+#paramsGpu = gpuBatchMatrix::maternGpuParam(myParamsBatch, type=theType)
 @
 Step 3, compute Mat\'ern covariance matrices using \fct{gpuBatchMatrix::maternBatch}, the returned Mat\'ern covariance matrices %$\Sigma_1, \Sigma_2, \dots, \Sigma_5$ correspond to the 5 parameter sets respectively, the matrices 
 are each of size $4800 \times 4800$ and are stacked by row in the output \code{maternCov}. 
 <<r outputBatchCreate, eval=TRUE>>=
-maternCov = vclMatrix(0, nrow(paramsGpu)*nrow(coordsGpu), 
-                         nrow(coordsGpu),type=theType)
+#maternCov = vclMatrix(0, nrow(paramsGpu)*nrow(coordsGpu), 
+#                         nrow(coordsGpu),type=theType)
+maternCov = gpuBatchMatrix::maternBatch(
+  params, coordsSp,           
+  Nglobal=c(128,64), Nlocal=c(16,4))
 dim(maternCov)
-gpuBatchMatrix::maternBatch(var=maternCov, coords=coordsGpu, 
-                            param=paramsGpu,
-                            Nglobal=c(128,64), Nlocal=c(16,4))
 @
 Step 4, the first argument \code{A} in \fct{gpuBatchMatrix::cholBatch} specifies the object to take Cholesky decomposition. Computed unit lower triangular matrices $L_i$'s are stacked by row and stored in \code{maternCov}. Each row of \code{diagMat} stores the diagonal values of each $D_i$, for example, if each batch $\Sigma_i$ is of size $n \times n$, then each batch $L_i$ is $n \times n$, and each batch $D_i$ is $1 \times n$.
 <<r cholBach, eval=TRUE>>=
-diagMat = vclMatrix(0, nrow(paramsGpu), ncol(maternCov), type = theType)
-gpuBatchMatrix::cholBatch(A=maternCov, 
-                          D=diagMat, 
-                          numbatchD=nrow(myParamsBatch),
-                          Nglobal= c(128, 8), Nlocal= c(32, 8),
-                          NlocalCache=1000)
+# diagMat = vclMatrix(0, nrow(paramsGpu), ncol(maternCov), type = theType)
+diagMat = gpuBatchMatrix::cholBatch(A=maternCov,
+#                          D=diagMat, 
+                          numbatchD=nrow(params),
+                          Nglobal= c(128, 8), Nlocal= c(32, 8)
+                        )
 @
 \begin{gather}
 \begin{bmatrix} \Sigma_{1} \\ \Sigma_2 \\ \Sigma_3 \\ \vdots
