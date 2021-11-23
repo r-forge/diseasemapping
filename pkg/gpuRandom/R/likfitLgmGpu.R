@@ -10,10 +10,11 @@
 likfitLgmGpu <- function(data,
                         formula, 
                         coordinates,
-                        paramToEstimate = c("range","shape","nugget","anisoAngleDegrees", "anisoRatio"), 
-                        #variance and regression parameters are always estimated
                         params=NULL, # CPU matrix for now, users need to provide proper parameters given their specific need
-                        BoxCox = c(1, 0, 0.5),
+                        fixVariance = FALSE, 
+                        BoxCox = c(1, 0, 0.5),  # boxcox is always estimated
+                        paramToEstimate = c("range","shape","nugget","anisoAngleDegrees", "anisoRatio"), 
+                        #variance and regression parameters are always estimated if not given,
                         type = c("double","float"),
                         reml=FALSE, 
                         minustwotimes=TRUE,
@@ -65,7 +66,7 @@ likfitLgmGpu <- function(data,
        # prepare 
        params0 = geostatsp::fillParam(params)
        paramsGpu = vclMatrix(cbind(params0, matrix(0, nrow(params0), 22-ncol(params0))),type=type)
-       gpuR::colnames(paramsGpu) = colnames(params0)
+       #gpuR::colnames(paramsGpu) = colnames(params0)
        
        #betas <- matrix(0,nrow=Ncov, ncol=Ndata)
        #betasGpu = vclMatrix(betas, type=type)
@@ -123,10 +124,6 @@ likfitLgmGpu <- function(data,
        ssqResidual <- ssqY - ssqBetahat
        # any(is.na(as.matrix(log(ssqResidual/Nobs))))
        # any(is.nan(as.matrix(log(ssqResidual/Nobs))))
-       # 
-       # 
-       # 
-       #  any(is.na(as.vector(detVar)))
        #  any(is.nan(as.vector(detVar)))
        #  any(is.na(as.matrix(varMat)))
        #  any(is.nan(as.matrix(varMat)))
@@ -139,31 +136,44 @@ likfitLgmGpu <- function(data,
        # # any(is.nan(as.matrix(log(ssqResidual/Nobs))))
        #  
        # any(is.nan(as.matrix(ssqResidual/Nobs)))
-       # any(is.na(as.matrix(ssqResidual/Nobs)))
        # 
        # 
        # debug <- as.matrix(log(ssqResidual/Nobs))
        # any(is.na(debug))
        # which(is.na(debug),arr.ind = TRUE)
        # params0[which(is.na(debug),arr.ind = TRUE)[1],]
-       # 
-       
-       # 
+
        # ssqResidual[which(is.na(debug),arr.ind = TRUE)[,1],]     # row 20803 col 1  -4.530054e+20
        # ssqY[which(is.na(debug),arr.ind = TRUE)[,1],]
        # ssqBetahat[which(is.na(debug),arr.ind = TRUE)[,1],]    # problem arises from here! 4.530057e+20
        # 
        # 
        # 
+       if(fixVariance >0){
+         temp <- vclMatrix(0, Nparam, Ndata, type=type)
+         variances <- vclVector(params0[,3],type=type)
+         mat_vec_eledivideBackend(ssqResidual, variances, temp,  Nglobal)
+       }
 
-       if(reml== FALSE){ # ml
+       if(reml== FALSE){ 
+         if(fixVariance == FALSE){ # ml
        gpuRandom:::matrix_vector_sumBackend(Nobs*log(ssqResidual/Nobs),
                                 detVar,
                                 jacobian,  
                                 Nobs + Nobs*log(2*pi),
                                 minusTwoLogLik,
                                 Nglobal)
-       }else if(reml==TRUE){ # remlpro
+         }else{  #fixVariance == TRUE
+           matrix_vector_sumBackend(temp,
+                                    Nobs*log(variances)+detVar,
+                                    jacobian,
+                                    Nobs*log(2*pi),
+                                    minusTwoLogLik,
+                                    Nglobal)
+           }
+         
+       }else if(reml==TRUE){
+         if(fixVariance == FALSE){# remlpro
          # minusTwoLogLik= (n-p)*log(ssqResidual/(n-p)) + logD + logP + jacobian + n*log(2*pi) + n-p    
          gpuRandom:::matrix_vector_sumBackend((Nobs-Ncov)*log(ssqResidual/(Nobs-Ncov)),
                                   detVar+detReml,
@@ -171,11 +181,19 @@ likfitLgmGpu <- function(data,
                                   Nobs*log(2*pi)+Nobs-Ncov,
                                   minusTwoLogLik,
                                   Nglobal)
-         
+         }else{
+           matrix_vector_sumBackend(temp,
+                                    detVar+detReml+(Nobs-Ncov)*log(variances),
+                                    jacobian,
+                                    Nobs*log(2*pi),
+                                    minusTwoLogLik,
+                                    Nglobal)
+           
+           }
        }
 
        
-       LogLikcpu <- -0.5*as.matrix(minusTwoLogLik)
+       LogLikcpu <- as.matrix(-0.5*minusTwoLogLik)
        maximum <- max(LogLikcpu)
        breaks95 = maximum - qchisq(0.95,  df = 1)/2
        
