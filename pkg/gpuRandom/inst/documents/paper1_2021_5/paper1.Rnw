@@ -413,6 +413,7 @@ knitr::kable(month,format="latex", align = c("rrrrrrrrrrrr"),
  month_gpu<-vclMatrix(month,type="integer")
  system.time(result_month <- clrng::fisher.sim(month_gpu, 1e6, streams=streams,
                     type="double", returnStatistics=TRUE,  Nglobal = c(256,64)))
+ result_month$threshold
  result_month$simNum
  result_month$counts
  result_month$p.value
@@ -449,15 +450,16 @@ knitr::kable(week,format="latex",align = c("rrrrrrrrrrrr"), caption = "Day-of-we
 <<TimecompareweekGpu2, eval=TRUE, cache=FALSE>>=
 #observed_w= -clrng::logfactSum(week, c(16,16))/almost.1
 week_GPU<-gpuR::vclMatrix(week,type="integer")
-system.time(result_weekgpu<-clrng::fisher.sim(week_GPU, 1e7, streams=streams,
+system.time(result_week<-clrng::fisher.sim(week_GPU, 1e7, streams=streams,
                 type="double",returnStatistics=TRUE,Nglobal = c(256,64)))
-result_weekgpu$simNum
-result_weekgpu$counts
-result_weekgpu$p.value
+result_week$threshold
+result_week$simNum
+result_week$counts
+result_week$p.value
 @
 The ``week'' table has a much smaller p-value: around 0.0001249672, which should require a larger number of simulations to get a more accurate p-value. With more than ten million simulations, we get 1205 cases and a p-value around 0.000120472 by \fct{fisher.sim}. \fct{stats::fisher.test} takes 91.6 seconds, while \fct{fisher.sim} takes about 4.282 seconds, the elapsed time is decreased to about 4.67\% of the time taken on CPU. 
 <<TimecompareweekGpu3, echo=FALSE, eval=TRUE, cache=TRUE>>=
-result_weekgpu$cpu = as.vector(result_weekgpu$sim)
+result_week$cpu = as.vector(result_week$sim)
 @
 
 <<TimecompareweekCpu, cache=TRUE, eval=TRUE>>=
@@ -491,10 +493,10 @@ knitr::kable(dt, col.names = NULL, caption = "Summary of comparions of Fisher's 
 \centering
 <<fighistMonth, eval=TRUE, echo=FALSE, fig.show='hold', cache=TRUE, dev='png'>>=
 hist(month_stats, xlab=TeX('-$\\sum(\\log(n_{ij}!))$'), breaks=40, ylab="Frequency", main="Month data")
-abline(v = observed_m, col = "blue", lwd = 1.5)
+abline(v = result_month$threshold, col = "blue", lwd = 1.5)
 
-hist(result_weekgpu$cpu, xlab=TeX('-$\\sum(\\log(n_{ij}!))$'), ylab="Frequency", main="Week data")
-abline(v = observed_w, col = "blue", lwd = 1.5)
+hist(result_week$cpu, xlab=TeX('-$\\sum(\\log(n_{ij}!))$'), ylab="Frequency", main="Week data")
+abline(v = result_week$threshold, col = "blue", lwd = 1.5)
 @
 \caption{Approximate sampling distributions of the test statistics from the two examples ``Month'' and ``Week''. The test statistic values of the observed tables are calculated by \fct{clrng::logfactSum} and are marked with a blue line on each plot. \label{fig4}}
 \end{figure}
