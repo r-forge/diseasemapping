@@ -17,11 +17,14 @@ likLgm_betascalarProfile <- function(Betas, #a m x 1 R vector  given by the user
                                      minustwotimes=TRUE){
   
 
-  XVYXVX <- as.matrix(XVYXVX)
-  ssqY   <- as.matrix(ssqY)
+  ssqY <- as.matrix(ssqY)
+  detVar <- as.vector(detVar)
+  detVar <- matrix(rep(detVar, Ndata), nrow=Nparam)
+  jacobian <- as.vector(jacobian)
+  jacobian <- do.call(rbind, replicate(Nparam, jacobian, simplify = FALSE))
   #dim(XVYXVX)
   Ucov <- Ncov-1
-
+  m <- length(Betas)
   
   XTVinvX <- XVYXVX[ , (ncol(XVYXVX)-Ncov+1):ncol(XVYXVX)]
   XVY <- XVYXVX[ , 1:Ndata]
@@ -47,7 +50,7 @@ likLgm_betascalarProfile <- function(Betas, #a m x 1 R vector  given by the user
     partC = matrix(0, nrow=Nparam, ncol=Ndata)
     partD = matrix(0, nrow=Nparam, ncol=Ndata)
     partE = matrix(0, nrow=Nparam, ncol=Ndata)
-    LogLik_optimized = matrix(0, nrow=Nparam, ncol=1)
+    LogLik_optimized = matrix(0, nrow=m, ncol=1)
     
     
   for (i in 1:Nparam){
@@ -68,7 +71,7 @@ likLgm_betascalarProfile <- function(Betas, #a m x 1 R vector  given by the user
     
     
     for (bet in 1:m){
-    ssqResidual <- ssqY + Betas[bet] *partD + Betas[bet]^2 *partE - (partA + Betas[bet]* partB + beta^2 * partC)
+    ssqResidual <- ssqY + Betas[bet] *partD + Betas[bet]^2 *partE - (partA + Betas[bet]* partB + Betas[bet]^2 * partC)
     All_min2loglik_forthisbeta <- Nobs*log(ssqResidual/Nobs) + detVar + Nobs + Nobs*log(2*pi) + jacobian
     LogLik_optimized[bet,] = min(All_min2loglik_forthisbeta)
     }
