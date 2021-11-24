@@ -315,11 +315,15 @@ likfitLgmGpu <- function(data,
          MLE <- profileLogLik$anisoRatio[which.max(profileLogLik$profile)]
          
          leftOfMax = profileLogLik$anisoRatio < MLE
+         if(length(which(leftOfMax)) <=2 | length(which(!leftOfMax)) <=2){
+           ci95 = c(NA,NA)
+           print("Not enough data for CI calculation")
+         }else{
          afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$anisoRatio[leftOfMax])   
          # plot(profileLogLik$anisoRatio, profileLogLik$profile)# curve(af, add=TRUE)
          afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$anisoRatio[!leftOfMax])   
          
-         ci95= c(afLeft(breaks95), afRight(breaks95))
+         ci95= c(afLeft(breaks95), afRight(breaks95))}
          if (any(is.na(ci95)))
            warning("'anisoRatio' scope too small for 95% ci")
          
@@ -336,13 +340,14 @@ likfitLgmGpu <- function(data,
        
          MLE <- profileLogLik$anisoAngleDegrees[which.max(profileLogLik$profile)]
          leftOfMax = profileLogLik$anisoAngleDegrees < MLE
-        
+         if(length(which(leftOfMax)) <=2 | length(which(!leftOfMax)) <=2){
+           ci95 = c(NA,NA)
+           print("Not enough data for CI calculation")
+         }else{
          afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$anisoAngleDegrees[leftOfMax])   
          # plot(profileLogLik$anisoAngleDegrees, profileLogLik$profile)# curve(af, add=TRUE)
          afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$anisoAngleDegrees[!leftOfMax])   
-         
-     
-         ci95= c(afLeft(breaks95), afRight(breaks95))
+         ci95= c(afLeft(breaks95), afRight(breaks95))}
          if (any(is.na(ci95)))
            warning("'anisoAngleDegrees' scope too small for 95% ci")
          
