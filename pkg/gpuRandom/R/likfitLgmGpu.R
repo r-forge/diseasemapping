@@ -311,14 +311,13 @@ likfitLgmGpu <- function(data,
          result = as.data.table(cbind(LogLikcpu, params0[,"anisoRatio"]))
          colnames(result) <- c(paste(c('boxcox'),BoxCox,sep = ''), "anisoRatio")
          profileLogLik <- result[, .(profile=max(.SD)), by=anisoRatio]
-         maximum <- max(profileLogLik$profile)
+         #maximum <- max(profileLogLik$profile)
          MLE <- profileLogLik$anisoRatio[which.max(profileLogLik$profile)]
          
          leftOfMax = profileLogLik$anisoRatio < MLE
          afLeft <- approxfun(profileLogLik$profile[leftOfMax], profileLogLik$anisoRatio[leftOfMax])   
          # plot(profileLogLik$anisoRatio, profileLogLik$profile)# curve(af, add=TRUE)
          afRight <- approxfun(profileLogLik$profile[!leftOfMax], profileLogLik$anisoRatio[!leftOfMax])   
-         # plot(profileLogLik$range, profileLogLik$profile)# curve(af, add=TRUE)
          
          ci95= c(afLeft(breaks95), afRight(breaks95))
          if (any(is.na(ci95)))
