@@ -30,15 +30,16 @@ likLgm_betascalarProfile <- function(Betas, #a m x 1 R vector  given by the user
   XVY <- XVYXVX[ , 1:Ndata]
   
   ## make each symmetric
-  for (i in 1:Nparam){
-    #mat <- XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ]
-    XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ][upper.tri(XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ])] <- XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ][lower.tri(XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ])]
-  }
+  # for (i in 1:Nparam){
+  #   #mat <- XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ]
+  #   XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ][upper.tri(XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ])] <- XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ][lower.tri(XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ])]
+  # }
   
   
   selectedrows <- seq_len(Nparam)*a
   XTVinvX_deleted <- matrix(XTVinvX[-selectedrows,-a],ncol=Ucov, byrow=TRUE)
-  XTVinvX_a <- matrix(XTVinvX[-selectedrows, a], nrow=Ucov*Nparam, ncol=1)
+  XTVinvX_a <- matrix(XTVinvX[selectedrows, -a], nrow=Nparam, ncol=Ucov)
+  #XTVinvX_a <- matrix(XTVinvX[-selectedrows, a], nrow=Nparam*Ucov, ncol=1)[1:10,]
   XVY_deleted <- XVY[-selectedrows, ]
   X_aVY <- XVY[selectedrows, ]
   X_aVX_a <- XTVinvX[selectedrows, a]
@@ -60,11 +61,12 @@ likLgm_betascalarProfile <- function(Betas, #a m x 1 R vector  given by the user
     # part (A) have 2 data sets
     partA[i,] = rowSums(XVY_deleted[interval,] %*% temp) * XVY_deleted[interval,]
     # part (B) have 2 data sets.   has beta
-    partB[i,] = -2*XVY_deleted[interval,] %*% temp %*% XTVinvX_a[interval,]
+    partB[i,] = -2*XVY_deleted[interval,] %*% temp %*% XTVinvX_a[i,]
     # part (C) no data sets.  has beta
-    partC[i,] = XTVinvX_a[interval, ] %*% temp %*% XTVinvX_a[interval, ]
+    partC[i,] = XTVinvX_a[i, ] %*% temp %*% XTVinvX_a[i, ]
+    #partC[i,] = XTVinvX_a[interval, ] %*% temp %*% XTVinvX_a[interval, ]
     # part (D) have 2 data sets.    has beta
-    partD[i,] = -2* X_aVY[interval, ]
+    partD[i,] = -2* X_aVY[i, ]
     # part (E)
     partE[i,] = X_aVX_a[i]
   }
