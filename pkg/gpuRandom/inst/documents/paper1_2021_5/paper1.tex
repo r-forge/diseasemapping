@@ -1,4 +1,54 @@
-\documentclass[article,nojss]{jss}
+\documentclass[article,nojss]{jss}\usepackage[]{graphicx}\usepackage[]{color}
+% maxwidth is the original width if it is less than linewidth
+% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
 
 
 
@@ -62,9 +112,10 @@ We introduce the \proglang{R} package \pkg{clrng} that leverages the \pkg{gpuR} 
   University of Montr\'eal\\
   Pavillon André-Aisenstadt 2920, chemin de la Tour Montréal QCH3T 1J4\\
   E-mail: \email{lecuyer@iro.umontreal.ca}}
-
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
-%\SweaveOpts{concordance=FALSE}
+%\SweaveOpts{concordance=TRUE}
+
 
 
 
@@ -341,7 +392,7 @@ streams <- createStreamsGpu(n = 512 * 128)
 system.time(clrng::rnorm(c(10000,10000), streams=streams, 
                              Nglobal=c(512,128), type="double"))
 ##    user  system elapsed 
-##   0.094   0.004   0.528
+##   0.078   0.000   0.078
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -350,7 +401,7 @@ system.time(clrng::rnorm(c(10000,10000), streams=streams,
 \begin{verbatim}
 system.time(matrix(stats::rnorm(10000^2),10000,10000))
 ##    user  system elapsed 
-##   6.951   0.444   7.390
+##   6.658   1.125   7.779
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -365,9 +416,9 @@ Below is an example that we produce a matrix of exponential random number with e
 \begin{verbatim}
 r_matrix <- clrng::rexp(c(2,4), rate=1, Nglobal=c(2,2), type="double")
 as.matrix(r_matrix)
-##           [,1]        [,2]      [,3]      [,4]
-## [1,] 0.2627643 0.005952261 0.4535731 0.1863516
-## [2,] 0.5783051 0.241706604 1.2820227 0.4889530
+##            [,1]      [,2]     [,3]       [,4]
+## [1,] 0.05469212 0.6969336 1.089906 0.78689966
+## [2,] 0.04188041 0.1686520 1.905295 0.03536933
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -456,15 +507,15 @@ month_gpu<-vclMatrix(month,type="integer")
 system.time(result_month <- clrng::fisher.sim(month_gpu, 1e6, streams=streams,
                    type="double", returnStatistics=TRUE,  Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   0.593   0.020   2.148
+##   0.317   0.004   0.321
 result_month$threshold
 ## [1] -47954.8
 result_month$simNum
 ## [1] 1015808
 result_month$counts
-## [1] 4.34485e-309
+## [1] 410825
 result_month$p.value
-## [1] 9.84437e-07
+## [1] 0.4044323
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -477,9 +528,9 @@ We got 409524 cases whose test statistics are below the observed threshold based
 #using CPU
 system.time(result_monthcpu<-stats::fisher.test(month,simulate.p.value = TRUE, B=1e6))
 ##    user  system elapsed 
-##  10.081   0.008  10.084
+##  14.445   0.036  14.473
 result_monthcpu$p.value
-## [1] 0.4039026
+## [1] 0.4034616
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -521,15 +572,15 @@ week_GPU<-gpuR::vclMatrix(week,type="integer")
 system.time(result_week<-clrng::fisher.sim(week_GPU, 1e7, streams=streams,
                 type="double",returnStatistics=TRUE,Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   0.512   0.009  10.241
+##   1.926   0.025   1.949
 result_week$threshold
 ## [1] -54989.56
 result_week$simNum
 ## [1] 10010624
 result_week$counts
-## [1] 1.266831e-311
+## [1] 1193
 result_week$p.value
-## [1] 9.989386e-08
+## [1] 0.0001192733
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -542,9 +593,9 @@ The ``week'' table has a much smaller p-value: around 0.0001249672, which should
 #using CPU
 system.time(result_weekcpu<-fisher.test(week,simulate.p.value = TRUE,B=10010624))
 ##    user  system elapsed 
-## 115.767   0.111 115.784
+##  89.981   0.158  90.071
 result_weekcpu$p.value
-## [1] 0.0001297621
+## [1] 0.0001243679
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -700,31 +751,20 @@ are each of size $4800 \times 4800$ and are stacked by row in the output \code{m
 maternCov = gpuBatchMatrix::maternBatch(
   params, myRaster,          
   Nglobal=c(128,64), Nlocal=c(16,4))
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in nrow(param): argument "{}param"{} is missing, with no default}}\begin{verbatim}
 dim(maternCov)
+## [1] 20400  4080
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): object 'maternCov' not found}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 Step 4, the first argument \code{A} in \fct{gpuBatchMatrix::cholBatch} specifies the object to take Cholesky decomposition. Computed unit lower triangular matrices $L_i$'s are stacked by row and stored in \code{maternCov}. Each row of \code{diagMat} stores the diagonal values of each $D_i$, for example, if each batch $\Sigma_i$ is of size $n \times n$, then each batch $L_i$ is $n \times n$, and each batch $D_i$ is $1 \times n$.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
 # diagMat = vclMatrix(0, nrow(paramsGpu), ncol(maternCov), type = theType)
-diagMat = gpuBatchMatrix::cholBatch(
-  maternCov,
-#                          D=diagMat, 
-#                          numbatchD=nrow(params),
-                          Nglobal= c(128, 8), Nlocal= c(32, 8)
-                        )
+diagMat = gpuBatchMatrix::cholBatch(maternCov, # D=diagMat,  # numbatchD=nrow(params),
+                          Nglobal= c(128, 8), Nlocal= c(32, 8))
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in nrow(A): object 'maternCov' not found}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 \begin{gather}
 \begin{bmatrix} \Sigma_{1} \\ \Sigma_2 \\ \Sigma_3 \\ \vdots
@@ -751,9 +791,7 @@ streamsGpu <- createStreamsGpu(n=128*64)
 zmatGpu = rnorm(c(nrow(maternCov),2), streams=streamsGpu, Nglobal=c(128,64),
                  type = theType)
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'nrow': object 'maternCov' not found}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 Step 6, use \fct{gpuBatchMatrix::multiplyLowerDiagonalBatch} to compute $U = L * D^{(1/2)}* Z$ in batches, see the following illustration. \code{simMat} is the output matrix for $U$, \code{maternCov}, \code{diagMat}, and \code{zmatGpu} correspond to the matrices of $L$, $D$ and $Z=(Z_1, Z_2)$ respectively.
 \begin{knitrout}
@@ -761,10 +799,7 @@ Step 6, use \fct{gpuBatchMatrix::multiplyLowerDiagonalBatch} to compute $U = L *
 \begin{verbatim}
 simMat = vclMatrix(0, nrow(zmatGpu), ncol(zmatGpu), 
                    type = theType)
-\end{verbatim}
 
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'nrow': object 'zmatGpu' not found}}\begin{verbatim}
 gpuBatchMatrix::multiplyLowerDiagonalBatch(
   output=simMat, L=maternCov, 
   D=diagMat, B=zmatGpu,
@@ -774,9 +809,7 @@ gpuBatchMatrix::multiplyLowerDiagonalBatch(
   Nlocal,
   NlocalCache)
 \end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in gpuBatchMatrix:::multiplyLowerDiagonalBatchBackend(output, L, : object 'simMat' not found}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 \begin{gather}
  \begin{bmatrix}  L_{1} \\ L_{2} \\L_{3} \\ \vdots
@@ -802,21 +835,39 @@ Step 7, Finally, plot the 10 realizations.
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
 simRaster = raster::brick(myRaster, nl = ncol(simMat)*nrow(params))
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'ncol': object 'simMat' not found}}\begin{verbatim}
 values(simRaster) = as.vector(as.matrix(simMat))
-\end{verbatim}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'as.matrix': object 'simMat' not found}}\begin{verbatim}
 names(simRaster) = apply(expand.grid('par',1:nrow(paramsGpu), 
                                      'sim', 1:ncol(simMat)), 1, paste, collapse='')
 \end{verbatim}
 
 
 {\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in h(simpleError(msg, call)): error in evaluating the argument 'x' in selecting a method for function 'nrow': object 'paramsGpu' not found}}\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
+\begin{figure}
+\subfloat[layer.1\label{fig:maternplot-1}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-1} }\subfloat[layer.2\label{fig:maternplot-2}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-2} }\subfloat[layer.3\label{fig:maternplot-3}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-3} }\subfloat[layer.4\label{fig:maternplot-4}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-4} }\subfloat[layer.5\label{fig:maternplot-5}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-5} }\subfloat[layer.6\label{fig:maternplot-6}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-6} }\subfloat[layer.7\label{fig:maternplot-7}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-7} }\subfloat[layer.8\label{fig:maternplot-8}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-8} }\subfloat[layer.9\label{fig:maternplot-9}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-9} }\subfloat[layer.10\label{fig:maternplot-10}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-10} }\caption[Simulated Gaussian random fields]{Simulated Gaussian random fields}\label{fig:maternplot}
+\end{figure}
+\end{kframe}
+\end{knitrout}
+
+
+
+
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+myCol = mapmisc::colourScale(simRaster, breaks=9, type='equal', dec=2)
+for(D in names(simRaster)) {
+  mapmisc::map.new(simRaster)
+  plot(simRaster[[D]], legend=FALSE, add=TRUE, col=myCol$col, breaks=myCol$breaks)
+  plot(swissBorder, add=TRUE)
+}
+mapmisc::legendBreaks("right", myCol)
+\end{verbatim}
+\end{kframe}
 \end{knitrout}
 
 
@@ -826,6 +877,70 @@ names(simRaster) = apply(expand.grid('par',1:nrow(paramsGpu),
 
 
 
+\section{Discussion}
+The package \pkg{clrng} has been created to make GPU-generated uniform and normal random numbers accessible for \proglang{R} users, it enables reproducible research in simulations by setting seeds in streams on GPU. We further applied the GPU-generated random numbers in suitable statistical simulations, such as the Monte Carlo simulation for Fisher’s exact test, and (exact) Gaussian spatial surfaces simulation, for which we are able to calculate quantiles for the normal distribution, compute mat\'ern covariance matrices, do Cholesky decomposition and matrix multiplication in batches on GPU. Most of these functions uses local memory on GPU. Comparison of performance between using \pkg{clrng} and using classic \proglang{R} on CPU for some real data examples has demonstrated significant improvement in execution time. 
+
+By leveraging the \pkg{gpuR} package, \pkg{clrng} provides a user-friendly interface that bridges \proglang{R} and \proglang{OpenCL}, users can use the facilities in our package without the need to know the complex \proglang{OpenCL} or even the \proglang{\texttt{C++}} code.  \pkg{clrng} is portable as its backend \proglang{OpenCL} supports multiple types of processors, and it is also flexible as its kernels can be incorporated or reconstructed in other \proglang{R} packages for other applications. 
+
+%One of the main difficulties in developing the package is bug fixes and uncertain software behaviors. Error messages are often vague and it is time-consuming to locate the error within the backend \proglang{C} program. The usual steps that we take to debug is commenting out some parts of codes and then recompile many times until we find the problem, or printing out flag messages in several places in the code to find out where the program stops at due to error. 
+
+\pkg{clrng} is limited by the number and type of \proglang{OpenCL} RNGs used and the features of the \pkg{gpuR} package, as it depends upon the \pkg{gpuR} package, if developers wants to use our package to do something that's not supported in \pkg{gpuR}, for example ``sparse'' class objects, they would have to write \proglang{OpenCL} code to implement it.
+
+Future work on \pkg{clrng} package could be: (1) Explore other RNGs, for example the MRG32k3a, LFSR113, and Philox-4×32-10 generators in \proglang{clRNG} library, and compare the \proglang{R} performance between using different GPU RNGs. (2) Now that the package can do Cholesky decomposition and matrix multiplication in batches on GPU, which is a motivation for us to work on parallel likelihood evaluations on GPU for Gaussian spatial models in the next step. (3) Create a ``sparse'' matrix class on GPU and use it for simulating Gaussian random fields with sparse correlation structures such as the Gaussian Markov random fields.
+
+
+
+
+
+\bibliography{paper1}
+
+
+
+
+\newpage
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{appendix}
+
+
+
+
+
+
+
+
+%We evaluate the distribution of 50000 GPU-generated double-precision uniform random numbers by making a density histogram  (the left panel in Figure \ref{fig0}), and plotting its empirical cumulative distribution and overlaying the theoretical cumulative distribution (the right panel in Figure \ref{fig0}). The two cumulative distribution lines seem to overlap completely, suggesting the data generated by \fct{runif} does come from a standard uniform distribution.
+
+%\begin{figure}[H]
+%\centering
+
+%\caption{Histogram and empirical cumulative distribution of the GPU-generated random numbers.\label{fig0}}
+%\end{figure}
+
+
+
+%In the following code, We create a $1024 \times 512$ matrix of single-precision floating-point Gaussian random numbers, and assess Normality by making a histogram and a Q-Q plot of the generated random numbers in Figure \ref{fig2}. The points in the Q-Q plot shown in the right panel of Figure \ref{fig2} fall along the diagonal line, we have good evidence the generated data are from Gaussian distribution. We find doing a Q-Q plot can occupy a large amount of time in the process of producing an \proglang{R} markdown file, so as an incidental work, we adapted the \fct{stat::qnorm} to make the function \fct{clrng::qqnorm} that does the quantile computation for the normal distribution part on a GPU device, which can speed up the Q-Q plot.
+
+% \begin{figure}[H]
+% \centering
+
+% \caption{Histogram and Q-Q plot of the GPU-generated random numbers.\label{fig2}}
+% \end{figure}
+
+\end{appendix}
+
+
+\end{document}
 
 
 
