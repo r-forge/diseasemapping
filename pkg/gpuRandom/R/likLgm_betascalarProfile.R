@@ -14,7 +14,7 @@ likLgm_betascalarProfile <- function(Betas, #a m x 1 R vector  given by the user
                                      ssqY,   # vclMatrix
                                      XVYXVX,   # vclMatrix
                                      jacobian, # vclVector  #form = c("loglik", "profileforBeta"),
-                                     minustwotimes=TRUE){
+                                     minustwotimes=TRUE){ 
   
 
   ssqY <- as.matrix(ssqY)
