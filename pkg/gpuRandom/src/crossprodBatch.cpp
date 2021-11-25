@@ -99,10 +99,10 @@ std::string crossprodBatchString(
   
   if(onlyDiagC) {
     result +=    "const int doLocalSum = (localIndex==0);\n";
-     "const int DinnerAinc = NlocalTotal*NpadA;\n";
+    "const int DinnerAinc = NlocalTotal*NpadA;\n";
   } else {
     result +=    "const int doLocalSum = (get_local_id(0)==0);\n";
-     "const int DinnerAinc = get_local_size(0)*NpadA;\n";
+    "const int DinnerAinc = get_local_size(0)*NpadA;\n";
   }
   
   
@@ -112,53 +112,53 @@ std::string crossprodBatchString(
   }
   
   
-   result +=  "\n\n"
-   "for(Dmatrix = get_group_id(1),\n"
-   "    AHere = Dmatrix * NpadBetweenMatricesA + NstartA,\n"; // made changes here
-   if(NpadD) {
-     result +=
-       "    DHere = Dmatrix * NpadD + NstartD,\n"; // made changes here
-   }
-
-   if(onlyDiagC) {
-     result +=
-       "    CHere = (Dmatrix + NrowStartC) * NpadC + NstartC;\n"; // made changes here
-   }else{
-     result +=
-       "    CHere = (Dmatrix + NrowStartC) * NpadBetweenMatricesC + NstartC;\n"; // made changes here
-   }
+  result +=  "\n\n"
+  "for(Dmatrix = get_group_id(1),\n"
+  "    AHere = Dmatrix * NpadBetweenMatricesA + NstartA,\n"; // made changes here
+  if(NpadD) {
+    result +=
+      "    DHere = Dmatrix * NpadD + NstartD,\n"; // made changes here
+  }
   
-   result +=
-     "     Dmatrix < Nmatrix;\n"
-     "     Dmatrix += get_num_groups(1),\n"
-     "     AHere += AHereInc,\n";
+  if(onlyDiagC) {
+    result +=
+      "    CHere = (Dmatrix + NrowStartC) * NpadC + NstartC;\n"; // made changes here
+  }else{
+    result +=
+      "    CHere = (Dmatrix + NrowStartC) * NpadBetweenMatricesC + NstartC;\n"; // made changes here
+  }
   
-   if(NpadD) {
-     result += "    DHere += DHereInc,\n";
-   }
-   result +=
-     "    CHere += CHereInc\n"
-     "  ){\n";
+  result +=
+    "     Dmatrix < Nmatrix;\n"
+    "     Dmatrix += get_num_groups(1),\n"
+    "     AHere += AHereInc,\n";
   
-   // result +=  "\n\n"
-   // "   for(Dmatrix = get_group_id(1);\n"
-   // "       Dmatrix < Nmatrix;\n"
-   // "       Dmatrix += get_num_groups(1)\n"
-   // "    ){\n";
-   // 
-   // result += 
-   //   "     AHere = Dmatrix * NpadBetweenMatricesA + NstartA;\n";
-   // if(NpadD) {
-   //   result +=
-   //     "     DHere = Dmatrix * NpadD + NstartD,\n"; 
-   // }
-   // if(onlyDiagC) {
-   //   result +=
-   //     "     CHere = (Dmatrix + NrowStartC) * NpadC + NstartC;\n"; 
-   // }else{
-   //   result +=  
-   //     "     CHere = (Dmatrix + NrowStartC) * NpadBetweenMatricesC + NstartC;\n"; 
-   // }
+  if(NpadD) {
+    result += "    DHere += DHereInc,\n";
+  }
+  result +=
+    "    CHere += CHereInc\n"
+    "  ){\n";
+  
+  // result +=  "\n\n"
+  // "   for(Dmatrix = get_group_id(1);\n"
+  // "       Dmatrix < Nmatrix;\n"
+  // "       Dmatrix += get_num_groups(1)\n"
+  // "    ){\n";
+  // 
+  // result += 
+  //   "     AHere = Dmatrix * NpadBetweenMatricesA + NstartA;\n";
+  // if(NpadD) {
+  //   result +=
+  //     "     DHere = Dmatrix * NpadD + NstartD,\n"; 
+  // }
+  // if(onlyDiagC) {
+  //   result +=
+  //     "     CHere = (Dmatrix + NrowStartC) * NpadC + NstartC;\n"; 
+  // }else{
+  //   result +=  
+  //     "     CHere = (Dmatrix + NrowStartC) * NpadBetweenMatricesC + NstartC;\n"; 
+  // }
   
   
   if(NpadD && NrowStop) {
@@ -391,9 +391,9 @@ std::string crossprodBatchString(
     "  }// Dcol\n";
   
   result += 
-  //  "  barrier(CLK_LOCAL_MEM_FENCE);\n" 
+    //  "  barrier(CLK_LOCAL_MEM_FENCE);\n" 
     "  }// Dmatrix\n";
-    //"  barrier(CLK_LOCAL_MEM_FENCE);\n";
+  //"  barrier(CLK_LOCAL_MEM_FENCE);\n";
   result += 
     "}";
   
@@ -564,7 +564,6 @@ SEXP crossprodBatchBackend(
   return(result);
   
 }
-
 
 
 

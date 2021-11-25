@@ -57,6 +57,7 @@ image(
 )
 mapmisc::legendBreaks('topright', myCol)
 ```
+
 ```{r makeplots newGPU11.22}
 library(gpuRandom)
 library(gpuR)
@@ -143,6 +144,10 @@ newParamList = list(
 newParam= do.call(expand.grid, newParamList)
 
 
+# params0 = geostatsp::fillParam(newParam)
+# paramsGpu = gpuR::vclMatrix(cbind(params0, matrix(0, nrow(params0), 22-ncol(params0))),type=type)
+
+
 paramsGpu = gpuRandom::maternGpuParam(newParam, type="double")
 system.time(result<-gpuRandom::likfitGpu(spatialmodel,     #data,
                                type = "double",
@@ -152,11 +157,22 @@ system.time(result<-gpuRandom::likfitGpu(spatialmodel,     #data,
                                NparamPerIter=100,  # how many sets of params to be evaluated in each loop
                                nBetahats =1,
                                minustwotimes=TRUE,
-                               Nglobal=c(128,64,2),
+                               Nglobal=c(128,64,1),
                                Nlocal=c(16,16,1),
                                NlocalCache=2600))
 #as.matrix(result$XVYXVX)
-result$Betahats
+#result$Betahats
+result<-gpuRandom::likfitGpu(spatialmodel,     #data,
+                               type = "double",
+                               paramsGpu, #a vclmatrix, consists of all the parameters#betas=NULL, #a vclmatrix  #only one row batch, but many colbatches
+                               BoxCox=c(1,0.5), # an R vector, will always be c(1,0,.....)
+                               form = "ml",
+                               NparamPerIter=100,  # how many sets of params to be evaluated in each loop
+                               nBetahats =1,
+                               minustwotimes=TRUE,
+                               Nglobal=c(128,64,1),
+                               Nlocal=c(16,32,1),
+                               NlocalCache=2600)
 mTwoLogLik <- as.matrix(result$minusTwoLogLik)
 
 lMatrix = matrix(mTwoLogLik[,1], length(newParamList[[1]]), length(newParamList[[2]]))

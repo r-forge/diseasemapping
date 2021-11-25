@@ -71,7 +71,8 @@ We introduce the \proglang{R} package \pkg{clrng} that leverages the \pkg{gpuR} 
   E-mail: \email{lecuyer@iro.umontreal.ca}}
 
 \begin{document}
-%\SweaveOpts{concordance=FALSE}
+%\SweaveOpts{concordance=TRUE}
+
 
 
 
@@ -205,8 +206,7 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 
 Now we use the streams created in section \ref{createstreams} to generate a vector of double-precision i.i.d. $U(0,1)$ random numbers with the function \fct{runif}. To view the generated random numbers, we need to convert them to R vectors or matrices, by doing this, the random numbers are moved from the global memory of the GPU device to the host.
 <<simStuff2, eval=TRUE,tidy=FALSE>>=
-as.vector(
-  clrng::runif(n=6, streams=myStreamsGpu, Nglobal=c(2,2), type = "double"))
+as.vector(clrng::runif(n=6, streams=myStreamsGpu, Nglobal=c(2,2), type = "double"))
 @
 The arguments of the \fct{clrng::runif} are described as follows:
 \begin{itemize}
@@ -593,12 +593,8 @@ dim(maternCov)
 Step 4, the first argument \code{A} in \fct{gpuBatchMatrix::cholBatch} specifies the object to take Cholesky decomposition. Computed unit lower triangular matrices $L_i$'s are stacked by row and stored in \code{maternCov}. Each row of \code{diagMat} stores the diagonal values of each $D_i$, for example, if each batch $\Sigma_i$ is of size $n \times n$, then each batch $L_i$ is $n \times n$, and each batch $D_i$ is $1 \times n$.
 <<r cholBach, eval=TRUE>>=
 # diagMat = vclMatrix(0, nrow(paramsGpu), ncol(maternCov), type = theType)
-diagMat = gpuBatchMatrix::cholBatch(
-  maternCov,
-#                          D=diagMat, 
-#                          numbatchD=nrow(params),
-                          Nglobal= c(128, 8), Nlocal= c(32, 8)
-                        )
+diagMat = gpuBatchMatrix::cholBatch(maternCov, # D=diagMat,  # numbatchD=nrow(params),
+                          Nglobal= c(128, 8), Nlocal= c(32, 8))
 @
 \begin{gather}
 \begin{bmatrix} \Sigma_{1} \\ \Sigma_2 \\ \Sigma_3 \\ \vdots
@@ -656,12 +652,12 @@ Step 7, Finally, plot the 10 realizations.
 <<r plotSimSetup, echo=TRUE, eval=TRUE, cache=FALSE>>=
 simRaster = raster::brick(myRaster, nl = ncol(simMat)*nrow(params))
 values(simRaster) = as.vector(as.matrix(simMat))
-names(simRaster) = apply(expand.grid('par',1:nrow(paramsGpu), 
+names(simRaster) = apply(expand.grid('par',1:nrow(params), 
                                      'sim', 1:ncol(simMat)), 1, paste, collapse='')
 @
 
 <<maternplot, echo=FALSE, eval=TRUE, cache=FALSE,dev='png', out.width = '0.45\\textwidth', fig.height=3, fig.width=6, fig.cap="Simulated Gaussian random fields", fig.subcap = names(simRaster)>>=
-myCol = mapmisc::colourScale(simRaster, breaks=9, type='equal', dec=0)
+myCol = mapmisc::colourScale(simRaster, breaks=9, type='equal', dec=2)
 for(D in names(simRaster)) {
   mapmisc::map.new(simRaster)
   plot(simRaster[[D]], legend=FALSE, add=TRUE, col=myCol$col, breaks=myCol$breaks)
@@ -763,5 +759,8 @@ clrng::qqnorm(avector, Nglobal=c(128,64), main="Q-Q Plot")
 
 
 \end{document}
+
+
+
 
 
