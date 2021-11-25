@@ -570,11 +570,11 @@ myRaster
 Step 2, create 5 parameter sets as a small example, in practical studies, there can be hundreds or thousands of parameter sets. Then, convert the matrix of parameters to a ``vclMatrix'' for later use by \fct{gpuBatchMatrix::maternGpuParam}.
 <<setup paramsBatch, eval=TRUE,echo=FALSE>>=
 params = 
-rbind(c(shape=1.25, range=0.5, variance = 1.5, nugget = 0,anisoRatio = 1, anisoAngleRadians = 0), 
-c(shape=2.15, range=0.25, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = pi/7),
-c(shape=0.55, range=1.5, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = pi/7),
-c(shape=2.15, range=0.5, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = -pi/7),
-c(shape=2.15, range=0.5, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/4))
+rbind(c(shape=1.25, range=0.5*1e04, variance = 1.5, nugget = 0,anisoRatio = 1, anisoAngleRadians = 0), 
+c(shape=2.15, range=0.25*1e04, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = pi/7),
+c(shape=0.55, range=1.5*1e04, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = pi/7),
+c(shape=2.15, range=0.5*1e04, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = -pi/7),
+c(shape=2.15, range=0.5*1e04, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/4))
 @
 <<show parameterBatch,eval=TRUE>>=
 params
