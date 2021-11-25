@@ -390,7 +390,7 @@ streams <- createStreamsGpu(n = 512 * 128)
 system.time(clrng::rnorm(c(10000,10000), streams=streams, 
                              Nglobal=c(512,128), type="double"))
 ##    user  system elapsed 
-##   0.068   0.004   0.072
+##   0.073   0.000   0.072
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -505,7 +505,7 @@ month_gpu<-vclMatrix(month,type="integer")
 system.time(result_month <- clrng::fisher.sim(month_gpu, 1e6, streams=streams,
                    type="double", returnStatistics=TRUE,  Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   0.315   0.000   0.314
+##   0.308   0.008   0.316
 result_month$threshold
 ## [1] -47954.8
 result_month$simNum
@@ -570,7 +570,7 @@ week_GPU<-gpuR::vclMatrix(week,type="integer")
 system.time(result_week<-clrng::fisher.sim(week_GPU, 1e7, streams=streams,
                 type="double",returnStatistics=TRUE,Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   1.932   0.015   1.947
+##   1.937   0.011   1.947
 result_week$threshold
 ## [1] -54989.56
 result_week$simNum
@@ -840,13 +840,7 @@ names(simRaster) = apply(expand.grid('par',1:nrow(params),
 \end{kframe}
 \end{knitrout}
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{figure}
-\subfloat[par1sim1\label{fig:maternplot-1}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-1} }\subfloat[par2sim1\label{fig:maternplot-2}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-2} }\subfloat[par3sim1\label{fig:maternplot-3}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-3} }\subfloat[par4sim1\label{fig:maternplot-4}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-4} }\subfloat[par5sim1\label{fig:maternplot-5}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-5} }\subfloat[par1sim2\label{fig:maternplot-6}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-6} }\subfloat[par2sim2\label{fig:maternplot-7}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-7} }\subfloat[par3sim2\label{fig:maternplot-8}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-8} }\subfloat[par4sim2\label{fig:maternplot-9}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-9} }\subfloat[par5sim2\label{fig:maternplot-10}]{\includegraphics[width=0.45\textwidth]{figure/maternplot-10} }\caption[Simulated Gaussian random fields]{Simulated Gaussian random fields}\label{fig:maternplot}
-\end{figure}
-\end{kframe}
-\end{knitrout}
+
 
 
 

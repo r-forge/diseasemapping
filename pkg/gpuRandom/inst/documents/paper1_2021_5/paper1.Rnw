@@ -655,7 +655,7 @@ names(simRaster) = apply(expand.grid('par',1:nrow(params),
                                      'sim', 1:ncol(simMat)), 1, paste, collapse='')
 @
 
-<<maternplot, echo=FALSE, eval=TRUE, cache=FALSE,dev='png', out.width = '0.45\\textwidth', fig.height=3, fig.width=6, fig.cap="Simulated Gaussian random fields", fig.subcap = names(simRaster)>>=
+<<maternplot, echo=FALSE, eval=FALSE, cache=FALSE,dev='png', out.width = '0.45\\textwidth', fig.height=3, fig.width=6, fig.cap="Simulated Gaussian random fields", fig.subcap = names(simRaster)>>=
 myCol = mapmisc::colourScale(simRaster, breaks=9, type='equal', dec=1)
 for(D in names(simRaster)) {
   mapmisc::map.new(simRaster)
