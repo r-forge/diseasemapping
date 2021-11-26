@@ -14,6 +14,7 @@ spatialmodel = likfitLgm(
   data=sr2,
   formula=sqrtY ~ elev,
   param=c(range=50000,shape=1.5),
+  paramToEstimate = c("range", "nugget", "shape"),
   reml=FALSE,
   verbose=FALSE
 )
