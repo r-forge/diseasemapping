@@ -122,7 +122,7 @@ maternCov = vclMatrix(0, nrow(paramsGpu)*nrow(coordsGpu), nrow(coordsGpu),type=t
 dim(maternCov)
 gpuRandom::maternBatch(maternCov, coordsGpu, paramsGpu, Nglobal=c(128,64,16), Nlocal=c(4,4,4))
 
-set=3
+set=5
 var4cpu = geostatsp::matern(
   x=coordsSp,
   param=drop(myParamsBatch[set,1:7])
