@@ -119,7 +119,7 @@ setContext(   grep('gpu', listContexts()$device_type) [1]    )
 Uniform random number generators (RNGs) are the foundation for simulating random numbers from all types of probability distributions. \cite{l2012random} summarized the usual two steps to generate a random variable in computational statistics: (1) generating independent and identically distributed (i.i.d.) uniform random variables on the interval $(0, 1)$, (2) applying transformations to these i.i.d. $U(0, 1)$ random variables to get samples from the desired distribution. \cite{l2012random} and \cite{robert2004random} present many general transformation methods for generating non-uniform random variables, for example, the most frequently used inverse transform method, the Box-Muller algorithm \citep{box1958note} for Gaussian random variable generation, and so on, which are all built on uniform random variables. %In the rest paper, ``RNG'' refers to uniform pseudo random number generator.
 
 
-\pkg{clRNG} is an \proglang{OpenCL} library for uniform random number generation, it provides four different RNGs: the MRG31k3p, MRG32k3a, LFSR113, and Philox-4×32-10 generators. These four RNGs use different types of constructions. \pkg{clrng} package uses the MRG31k3p RNG, making it able to generate random numbers on GPUs. We choose MRG31k3p as the base generator for the following reasons:  the original \pkg{RNGStreams} package \citep{l2002object} was built with MRG32k3a, which was designed to be implemented in double precision, and not with 32-bit integers. The MRG31k3p generator was designed later, specifically for 32-bit integer arithmetic, so it runs faster on the 32-bit GPUs.  It is also faster than Philox-4×32-10 \citep{rLEC00b}. MRG31k3p was also statistically tested extensively and successfully, \cite[see][]{rLEC07b}.    
+\proglang{clRNG} is an \proglang{OpenCL} library for uniform random number generation, it provides four different RNGs: the MRG31k3p, MRG32k3a, LFSR113, and Philox-4×32-10 generators. These four RNGs use different types of constructions. \pkg{clrng} package uses the MRG31k3p RNG, making it able to generate random numbers on GPUs. We choose MRG31k3p as the base generator for the following reasons:  the original \pkg{RNGStreams} package \citep{l2002object} was built with MRG32k3a, which was designed to be implemented in double precision, and not with 32-bit integers. The MRG31k3p generator was designed later, specifically for 32-bit integer arithmetic, so it runs faster on the 32-bit GPUs.  It is also faster than Philox-4×32-10 \citep{rLEC00b}. MRG31k3p was also statistically tested extensively and successfully, \cite[see][]{rLEC07b}.    
 
 
 
@@ -164,7 +164,7 @@ myStreamsGpu2 = createStreamsGpu(n=4, initial=12345)
 
 
 \subsection{Using streams to generate uniform random numbers}
-The streams created sequentially are then used by the GPU's work-items to generate random numbers. In \pkg{clrng} each work-item takes one distinct stream to generate random numbers, so the number of streams should always be greater than the number of total work-items in use. The main part of the kernel (\proglang{OpenCL} functions for execution on the device) for generating uniform random numbers is shown in Listing \ref{lst:uniformkernel}. Users can set \code{verbose=2} in \fct{runif} to print out the kernels. Kernels are written in the \proglang{OpenCL C} language, in which \code{__kernel} declares a function as a kernel, pointer kernel arguments must be declared with an address space qualifier, for example \code{__global} and \code{__local}. Here the pointers to \code{streams} and to the output matrix \code{out} on the global memory are passed to the kernel as arguments. \code{Nrow} and \code{Ncol} represent row and column number of the matrix \code{out} respectively. \code{NpadCol} is the internal number of columns of \code{out}, \code{NpadStreams} is the internal number of columns of \code{streams} (these variables are defined in macros not shown here). Each stream's current state is copied to the private memory of each work-item by the function \fct{streamsToPrivate}, where \code{g1} and \code{g2} point to the first three and second three elements of stream states. \code{index} represents the position of the work-item when mapping it to a one-dimensional data structure. The function \fct{clrngMrg31k3pNextState} generates an uniform random integer called \code{temp} between 1 and 2147483647,  the value of \code{temp} is then scaled to be in the interval $(0,1)$ by multiplying it by a constant \code{mrg31k3p\_NORM\_cl}, which is defined to be $1/2147483648$ depending on the precision type. If to generate random integers, \code{temp} is not scaled. At the end of generating random numbers, streams are transferred back to global memory through the function \fct{streamsFromPrivate}.
+The streams created sequentially are then used by the GPU's work-items to generate random numbers. In \pkg{clrng} each work-item takes one distinct stream to generate random numbers, so the number of streams should always be greater than the number of total work-items in use. The main part of the kernel (\proglang{OpenCL} functions for execution on the device) for generating uniform random numbers is shown in Listing \ref{lst:uniformkernel}. Users can set \code{verbose=2} in \fct{runif} to print out the kernels. Kernels are written in the \proglang{OpenCL C} language, in which \code{__kernel} declares a function as a kernel, pointer kernel arguments must be declared with an address space qualifier, for example \code{__global} and \code{__local}. Here the pointers to \code{streams} and to the output matrix \code{out} on the global memory are passed to the kernel as arguments. \code{Nrow} and \code{Ncol} represent row and column number of the matrix \code{out} respectively. \code{Npad} is the internal number of columns of \code{out}, \code{NpadStreams} is the internal number of columns of \code{streams} (these variables are defined in macros not shown here). \code{index} represents the position of a work-item when mapping it to a one-dimensional data structure. Each stream's current state is copied to the private memory of each work-item by the function \fct{streamsToPrivate}, in which \code{g1} and \code{g2} point to the first three and second three elements of stream states, respectively, and \code{startvalue} tells the starting position of the particular stream to be copied to the work-item. The function \fct{clrngMrg31k3pNextState} generates an uniform random integer named \code{temp} between 1 and 2147483647,  the value of \code{temp} is then scaled to be in the interval $(0,1)$ by multiplying it by a constant \code{mrg31k3p\_NORM\_cl}, which is defined to be $1/2147483648$ depending on the precision type. If to generate random integers, \code{temp} is not scaled. At the end of generating random numbers, streams are transferred back to global memory through the function \fct{streamsFromPrivate}.
 \begin{framed}
 \begin{lstlisting}[language=C,basicstyle=\small,label={lst:uniformkernel}]
 __kernel void mrg31k3pMatrix(
@@ -204,7 +204,7 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 %     \caption{Using streams to produce a $4 \times 6$ matrix of random U(0,1) numbers. \label{fig:1}}
 % \end{figure}
 
-Now we use the streams created in section \ref{createstreams} to generate a vector of double-precision i.i.d. $U(0,1)$ random numbers with the function \fct{runif}. To view the generated random numbers, we need to convert them to R vectors or matrices, by doing this, the random numbers are moved from the global memory of the GPU device to the host.
+Now we use the streams created in section \ref{createstreams} to generate a vector of double-precision i.i.d. $U(0,1)$ random numbers with \fct{clrng::runif}. To view the generated random numbers, we need to convert them to \proglang{R} vectors or matrices, by doing this, the random numbers are moved from the global memory of the GPU device to the host.
 <<simStuff2, eval=TRUE,tidy=FALSE>>=
 as.vector(clrng::runif(n=6, streams=myStreamsGpu, Nglobal=c(2,2), type = "double"))
 @
@@ -328,9 +328,9 @@ system.time(matrix(stats::rnorm(10000^2),10000,10000))
 
 
 \subsection{Exponential random number generation}
-The Exponential random variates are produced by applying the inverse transform method on i.i.d. $U(0,1)$ random numbers. The random variable $X \sim \text{Exponential}(\lambda)$ has cumulative distribution function $F_{X}(x)=1-e^{-\lambda x}$ for $x \geq 0$ and $\lambda > 0$. The inverse of $F_{X}$ is $F^{-1}_{x}(y)= -(1/ \lambda) \log (1-y)$, for $ 0 \leq y <1$. The kernel is not shown because it is mostly same as the kernel for uniform and normal random numbers, except for the part that does the inverse transform. %Developers can make use of our kernel for generating other types of random variables on GPU in \proglang{R}.
+The exponential random variates are produced by applying the inverse transform method on i.i.d. $U(0,1)$ random numbers. The random variable $X \sim \text{Exponential}(\lambda)$ has cumulative distribution function $F_{X}(x)=1-e^{-\lambda x}$ for $x \geq 0$ and $\lambda > 0$. The inverse of $F_{X}(\cdot)$ is $F^{-1}_{X}(y)= -(1/ \lambda) \log (1-y)$, for $ 0 \leq y <1$. The kernel is not shown because it is mostly same as the kernel for uniform and normal random numbers, except for the part that does the inverse transform. %Developers can make use of our kernel for generating other types of random variables on GPU in \proglang{R}.
 
-Below is an example that we produce a matrix of exponential random number with expectation 1.
+Below is an example that produces a matrix of Exponential random numbers with expectation equal to 1.
 <<random exponential, eval=TRUE, cache=FALSE>>=
 r_matrix <- clrng::rexp(c(2,4), rate=1, Nglobal=c(2,2), type="double")
 as.matrix(r_matrix)
@@ -366,26 +366,16 @@ Step 1 and step 2-3 are done on a GPU with two kernels enqueued sequentially. Fo
 
 The arguments of the \fct{clrng::fisher.sim} are described as follows:
 \begin{itemize}
-\itemsep0em 
-  \item \code{x}: a ``vclMatrix''.
+\setlength{\parskip}{0pt}
+  \item \code{x}: a contingency table, a ``vclMatrix'' object.
   \item \code{N}: number of simulation runs.
   \item \code{streams}: streams.
   \item \code{type}: ``double'' or ``float'' of returned test statistics.
   \item \code{returnStatistics}: if TRUE, return all test statistics. 
   \item \code{Nglobal}: global index space. Default is set as $(64,16)$.
 \end{itemize}
-Users request $N$ number of replicates, while the actual number of replicates to be executed on GPU is \code{ceiling(N/prod(Nglobal))*prod(Nglobal)}. We show the advantage of \fct{clrng::fisher.sim} by computing the p-values for two real data examples: one with a relatively big p-value and another with a very small p-value, and compare the run-time with using \fct{stats::fisher.test} for each of the data sets on two computers: one with a very good CPU and an ordinary GPU, the other is equipped with an excellent GPU and an ordinary CPU. The \proglang{R} outputs for testing on computer 2 is shown in the following. 
-<<deviceinfo, include=FALSE,cache=FALSE>>=
-library(kableExtra)
-a <- data.frame(
-  var1 = c(" ", "Computer1", "Computer2"),
-  var2 = c('Host', 'Intel Xenon W-2145 3.7Ghz',     'VCPU Intel Xenon Skylake 2.5Ghz'),
-  var3 = c('Device', 'AMD Radeon VII', 'VGPU Nvidia Tesla V100')
-)
+Users request $N$ number of replicates, while the actual number of replicates to be executed on GPU is larger (\code{ceiling(N/prod(Nglobal))*prod(Nglobal)}). We show the advantage of \fct{clrng::fisher.sim} by computing the p-values for two real data examples: one with a relatively big p-value and another with a very small p-value, and compare the run-time with using \fct{stats::fisher.test} for each of the data sets on two computers: one with a very good CPU and an ordinary GPU, the other is equipped with an excellent GPU and an ordinary CPU. The \proglang{R} outputs for testing on computer 2 is shown in the following. 
 
-knitr::kable(a, col.names = NULL, align='c', caption = "Device information for run-time comparison.\\label{tab:device}") %>%
-  kable_styling(full_width = FALSE, position = "center",latex_options = "HOLD_position")
-@
 
  
 \subsection{Comparing run-time: Month data example}\label{fisher_month}
@@ -406,9 +396,6 @@ knitr::kable(month,format="latex", align = c("rrrrrrrrrrrr"),
 
  <<timecomparemonth1Gpu, eval=TRUE,cache=FALSE>>=
  streams <- createStreamsGpu(n =256*64, initial=666)
-# almost.1 <- 1 + 64 * .Machine$double.eps
-# observed_m= -logfactSum(month, c(16,16))/almost.1
- 
  month_gpu<-vclMatrix(month,type="integer")
  system.time(result_month <- clrng::fisher.sim(month_gpu, 1e6, streams=streams,
                     type="double", returnStatistics=TRUE,  Nglobal = c(256,64)))
@@ -417,7 +404,7 @@ knitr::kable(month,format="latex", align = c("rrrrrrrrrrrr"),
  result_month$counts
  result_month$p.value
  @
-We got 409524 cases whose test statistics are below the observed threshold based on an actual number of 1015808 simulations, so the p-value from \fct{clrng::fisher.sim} for this table is about 0.40443, which is close enough to the p-value from \fct{stats::fisher.test}. \fct{clrng::fisher.sim} takes about 0.69 seconds, \pkg{clrng} accounts for 4.64\% of the elapsed time on CPU. 
+We got 410825 cases whose test statistics are below the observed threshold based on an actual number of 1015808 simulations, so the p-value from \fct{clrng::fisher.sim} for this table is about 0.40443, which is close enough to the p-value from \fct{stats::fisher.test}. \fct{clrng::fisher.sim} takes about 0.31 seconds, \pkg{clrng} accounts for 2.17\% of the elapsed time on CPU. 
  <<timecomparemonth3Gpu, eval=TRUE,echo=FALSE, cache=TRUE>>=
  month_stats <- as.vector(result_month$sim)
  @
@@ -447,7 +434,6 @@ knitr::kable(week,format="latex",align = c("rrrrrrrrrrrr"), caption = "Day-of-we
 
 
 <<TimecompareweekGpu2, eval=TRUE, cache=FALSE>>=
-#observed_w= -clrng::logfactSum(week, c(16,16))/almost.1
 week_GPU<-gpuR::vclMatrix(week,type="integer")
 system.time(result_week<-clrng::fisher.sim(week_GPU, 1e7, streams=streams,
                 type="double",returnStatistics=TRUE,Nglobal = c(256,64)))
@@ -497,7 +483,7 @@ abline(v = result_month$threshold, col = "blue", lwd = 1.5)
 hist(result_week$cpu, xlab=TeX('-$\\sum(\\log(n_{ij}!))$'), ylab="Frequency", main="Week data")
 abline(v = result_week$threshold, col = "blue", lwd = 1.5)
 @
-\caption{Approximate sampling distributions of the test statistics from the two examples ``Month'' and ``Week''. The test statistic values of the observed tables are calculated by \fct{clrng::logfactSum} and are marked with a blue line on each plot. \label{fig4}}
+\caption{Approximate sampling distributions of the test statistics from the two examples ``Month'' and ``Week''. The test statistic values of the observed tables are marked with a blue line on each plot. \label{fig4}}
 \end{figure}
 
 
