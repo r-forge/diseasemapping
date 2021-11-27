@@ -390,7 +390,7 @@ streams <- createStreamsGpu(n = 512 * 128)
 system.time(clrng::rnorm(c(10000,10000), streams=streams, 
                              Nglobal=c(512,128), type="double"))
 ##    user  system elapsed 
-##   0.071   0.003   0.073
+##   0.072   0.000   0.072
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -502,7 +502,7 @@ month_gpu<-vclMatrix(month,type="integer")
 system.time(result_month <- clrng::fisher.sim(month_gpu, 1e6, streams=streams,
                    type="double", returnStatistics=TRUE,  Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   0.315   0.000   0.315
+##   0.303   0.012   0.315
 result_month$threshold
 ## [1] -47954.8
 result_month$simNum
@@ -566,7 +566,7 @@ week_GPU<-gpuR::vclMatrix(week,type="integer")
 system.time(result_week<-clrng::fisher.sim(week_GPU, 1e7, streams=streams,
                 type="double",returnStatistics=TRUE,Nglobal = c(256,64)))
 ##    user  system elapsed 
-##   1.968   0.022   1.991
+##   1.950   0.001   1.952
 result_week$threshold
 ## [1] -54989.56
 result_week$simNum
@@ -643,16 +643,15 @@ B & Intel 2.5ghz & AMD Radeon & Intel 3.7ghz & NVIDIA V100 & Data\\
 
 
 \section{An application of normal RNG: Gaussian surface simulation} 
-Given a parameter space $X$, a random field $U$ on $X$ is a collection of random variables $\{U_x :x\in X\}$. A Gaussian random field is a random field with the property that for any positive integer $n$ and any set of locations $x_1,\dots,x_n \in X$, the joint distribution of $U=(U_{x_1},\dots,U_{x_n})$ is multivariate Gaussian. The expectation $\mu(x)$ and covariance function $\Sigma$ completely determine the distribution of $U$, where 
+Given a parameter space $X$, a random field $U$ on $X$ is a collection of random variables $\{U_x :x\in X\}$. A Gaussian random field is a random field with the property that for any positive integer $n$ and any set of locations $x_1,\dots,x_n \in X$, the joint distribution of $U=(U_{x_1},\dots,U_{x_n})$ is multivariate Gaussian. The expectation of $U$ and covariance function $\Sigma$ completely determine the distribution of $U$, where 
 \begin{gather*} 
-[U(s_1) \ldots U(s_N)] \sim \text{MVN}(0, \Sigma) \\
-\Sigma_{ij} = \cov[ U(x_i),U(x_j) ] = \sigma^2 \frac{2^{\kappa-1}}{\Gamma(\kappa)} \left(\sqrt{8\kappa} \frac{|s_i = s_j|}{\phi}\right)^\kappa  K_\kappa\left(\sqrt{8\kappa}  \frac{|s_i = s_j|}{\phi}\right)
+U = [U(x_1), \ldots, U(x_n)]^\top \sim \text{MVN}(0, \Sigma) \\
+\Sigma_{ij} = \cov[ U(x_i),U(x_j) ] = \sigma^2 \frac{2^{\kappa-1}}{\Gamma(\kappa)} \left(\sqrt{8\kappa} \frac{|x_i = x_j|}{\phi}\right)^\kappa  K_\kappa\left(\sqrt{8\kappa}  \frac{|x_i = x_j|}{\phi}\right).
 \end{gather*}
-
-The common choice for the covariance function $\Sigma$ is the Mat\'ern covariance function \citep{matern1960spatial}. The Mat\'ern covariance between $U(x)$ and $U(x')$ takes the form 
-$d =\|x-x'\|$ is the Euclidean distance between two spatial points, 
+The common choice for the covariance function $\Sigma$ is the Mat\'ern covariance function \citep{matern1960spatial}. The Mat\'ern covariance between $U(x_i)$ and $U(x_j)$ takes the above form.
+%$d =\|x-x'\|$ is the Euclidean distance between two spatial points, 
 $\sigma^2$ the variance of the random field $U$.
-$\Gamma(\cdot)$ is the standard gamma function,  $\phi$ is the range parameter or scale parameter with the dimension of distance, it controls the rate of decay of the correlation as $d$ increases. $K_\kappa(\cdot)$ is the modified Bessel function of the second kind with order $\kappa$, $\kappa$ is the shape parameter which determines the smoothness of $U(x)$, specifically, $U(x)$ is $m$ times mean-square differentiable if and only if $\kappa > m$. %(For $\kappa=0.5$, the Mat\'ern covariance function reduces to the exponential covariance function $\sigma^2*\exp(-d/\phi)$, when $\kappa \rightarrow \infty$, $\Sigma(d) \rightarrow \sigma^2*\exp{-(\|d\|/\phi)^2}$, which is called the Gaussian covariance.)  
+$\Gamma(\cdot)$ is the standard gamma function,  $\phi$ is the range parameter or scale parameter with the dimension of distance, it controls the rate of decay of the correlation as distance increases. $K_\kappa(\cdot)$ is the modified Bessel function of the second kind with order $\kappa$, $\kappa$ is the shape parameter which determines the smoothness of $U(x)$, specifically, $U(x)$ is $m$ times mean-square differentiable if and only if $\kappa > m$. %(For $\kappa=0.5$, the Mat\'ern covariance function reduces to the exponential covariance function $\sigma^2*\exp(-d/\phi)$, when $\kappa \rightarrow \infty$, $\Sigma(d) \rightarrow \sigma^2*\exp{-(\|d\|/\phi)^2}$, which is called the Gaussian covariance.)  
 There are several alternative parameterisations of Mat\'ern covariance functions in literatures  \citep[see][]{haskard2007anisotropic}. In \pkg{clrng}, we use the above form for computing Mat\'ern covariance.
 
 
