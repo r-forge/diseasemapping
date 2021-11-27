@@ -35,7 +35,7 @@ likLgm_variancePro <- function(stderror, #a vector  given by the user
   result = cbind(stderror, LogLik_optimized)
   colnames(result) <- c("stderror",'LogL')
   MLE <- result[,'stderror'][which.max(result[,'LogL'])]
-  # plot(result[,'stderror']^2, result[,'LogL'])
+  # plot(result[,'stderror'], result[,'LogL'])
   maximum <- max(LogLik_optimized)
   breaks95 = maximum - qchisq(0.95,  df = 1)/2
   
@@ -52,11 +52,11 @@ likLgm_variancePro <- function(stderror, #a vector  given by the user
   }
     
   
-  output = list(LogLik_optimized=LogLik_optimized,
+  Output = list(LogLik_optimized=LogLik_optimized,
                   ci95=ci95
                   )
      
-  output
+  Output
   
 }
 

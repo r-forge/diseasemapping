@@ -13,8 +13,7 @@ sr2$elev = raster::extract(swissAltitude, sr2)
 spatialmodel = likfitLgm(
   data=sr2,
   formula=sqrtY ~ elev,
-  param=c(range=50000,shape=1.5),
-  paramToEstimate = c("range", "nugget", "shape"),
+  param=c(range=50000,shape=0.5),  #paramToEstimate = c("range", "nugget", "shape"),  #will make it different
   reml=FALSE,
   verbose=FALSE
 )
@@ -72,7 +71,7 @@ swissRain$elevation = extract(swissAltitude, swissRain)
 newParamList = list(
   range=seq(20000, 90000 , len=50),
   nugget = seq(0,0.5,len=30),
-  shape = 1.5,
+  shape = 0.5,
   anisoRatio = 1, 
   anisoAngleRadians = 0
 ) 
@@ -434,10 +433,6 @@ dim(ssqBeta)
 # as.matrix(cholDiagMat)
 
 ```
-
-
-
-
 
 
 
