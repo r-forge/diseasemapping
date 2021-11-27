@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2021.11.25)  25 NOV 2021 18:32
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2021.11.25)  27 NOV 2021 15:30
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -687,20 +687,20 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [10]
 Package color Info: Redefining color shadecolor on input line 498.
 
-Overfull \hbox (5.74747pt too wide) in paragraph at lines 517--517
+Overfull \hbox (5.74747pt too wide) in paragraph at lines 514--514
 []\T1/lmtt/m/n/10.95 system.time(result_month <- clrng::fisher.sim(month_gpu, 1
 e6, streams=streams,[] 
  []
 
 
-Overfull \hbox (11.4962pt too wide) in paragraph at lines 517--517
+Overfull \hbox (11.4962pt too wide) in paragraph at lines 514--514
 []                   \T1/lmtt/m/n/10.95 type="double", returnStatistics=TRUE,  
 Nglobal = c(256,64)))[] 
  []
 
-Package color Info: Redefining color shadecolor on input line 524.
+Package color Info: Redefining color shadecolor on input line 521.
 
-Overfull \hbox (51.73734pt too wide) in paragraph at lines 532--532
+Overfull \hbox (51.73734pt too wide) in paragraph at lines 529--529
 []\T1/lmtt/m/n/10.95 system.time(result_monthcpu<-stats::fisher.test(month,simu
 late.p.value = TRUE, B=1e6))[] 
  []
@@ -711,32 +711,32 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
  []
 
 [11]
-Package color Info: Redefining color shadecolor on input line 543.
-Package color Info: Redefining color shadecolor on input line 566.
-Package color Info: Redefining color shadecolor on input line 589.
+Package color Info: Redefining color shadecolor on input line 540.
+Package color Info: Redefining color shadecolor on input line 563.
+Package color Info: Redefining color shadecolor on input line 585.
 
-Overfull \hbox (22.99367pt too wide) in paragraph at lines 597--597
+Overfull \hbox (22.99367pt too wide) in paragraph at lines 593--593
 []\T1/lmtt/m/n/10.95 system.time(result_weekcpu<-fisher.test(week,simulate.p.va
 lue = TRUE,B=10010624))[] 
  []
 
-Package color Info: Redefining color shadecolor on input line 605.
+Package color Info: Redefining color shadecolor on input line 601.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 12 []
  []
 
 [12]
-Package color Info: Redefining color shadecolor on input line 636.
-<figure/fighistMonth-1.pdf, id=323, 433.62pt x 289.08pt>
+Package color Info: Redefining color shadecolor on input line 632.
+<figure/fighistMonth-1.pdf, id=326, 433.62pt x 289.08pt>
 File: figure/fighistMonth-1.pdf Graphic file (type pdf)
 <use figure/fighistMonth-1.pdf>
-Package pdftex.def Info: figure/fighistMonth-1.pdf  used on input line 638.
+Package pdftex.def Info: figure/fighistMonth-1.pdf  used on input line 634.
 (pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
-<figure/fighistMonth-2.pdf, id=324, 433.62pt x 289.08pt>
+<figure/fighistMonth-2.pdf, id=327, 433.62pt x 289.08pt>
 File: figure/fighistMonth-2.pdf Graphic file (type pdf)
 <use figure/fighistMonth-2.pdf>
-Package pdftex.def Info: figure/fighistMonth-2.pdf  used on input line 638.
+Package pdftex.def Info: figure/fighistMonth-2.pdf  used on input line 634.
 (pdftex.def)             Requested size: 199.19283pt x 132.79755pt.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
@@ -744,7 +744,7 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
  []
 
 [13 <./figure/fighistMonth-1.pdf> <./figure/fighistMonth-2.pdf>]
-Package color Info: Redefining color shadecolor on input line 690.
+Package color Info: Redefining color shadecolor on input line 686.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 14 []
@@ -752,54 +752,52 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 
 [14]
 LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
-696.
+692.
  (/usr/share/texmf/tex/latex/lm/ts1lmtt.fd
 File: ts1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
-Package color Info: Redefining color shadecolor on input line 701.
-Package color Info: Redefining color shadecolor on input line 713.
+Package color Info: Redefining color shadecolor on input line 697.
+Package color Info: Redefining color shadecolor on input line 709.
 
-Overfull \hbox (362.16895pt too wide) in paragraph at lines 723--723
+Overfull \hbox (362.16895pt too wide) in paragraph at lines 719--719
 []\T1/lmtt/m/n/10.95 ## crs        : +proj=somerc +lat_0=46.9524055555556 +lon_
 0=7.43958333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=GRS80 +units=m +no_d
 efs[] 
  []
 
-Package color Info: Redefining color shadecolor on input line 729.
-Package color Info: Redefining color shadecolor on input line 745.
+Package color Info: Redefining color shadecolor on input line 725.
+Package color Info: Redefining color shadecolor on input line 741.
+Package color Info: Redefining color shadecolor on input line 755.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 15
  []
 
 [15]
-Package color Info: Redefining color shadecolor on input line 759.
-
-Overfull \hbox (51.73734pt too wide) in paragraph at lines 764--764
+Overfull \hbox (51.73734pt too wide) in paragraph at lines 760--760
 []\T1/lmtt/m/n/10.95 diagMat = gpuBatchMatrix::cholBatch(maternCov, # D=diagMat
 ,  # numbatchD=nrow(params),[] 
  []
 
-Package color Info: Redefining color shadecolor on input line 780.
+Package color Info: Redefining color shadecolor on input line 776.
 
-Overfull \hbox (11.08118pt too wide) in paragraph at lines 777--780
+Overfull \hbox (11.08118pt too wide) in paragraph at lines 773--776
 \T1/lmr/m/n/10.95 Step 5, gen-er-ate 2 stan-dard Gaus-sian ran-dom vec-tors \T1
 /lmtt/m/n/10.95 zmatGpu$\OT1/lmr/m/n/10.95 = (\OML/lmm/m/it/10.95 Z[]; Z[]\OT1/
 lmr/m/n/10.95 )$ \T1/lmr/m/n/10.95 us-ing \T1/lmtt/m/n/10.95 clrng::rnorm()\T1/
 lmr/m/n/10.95 ,
  []
 
-Package color Info: Redefining color shadecolor on input line 787.
-Package color Info: Redefining color shadecolor on input line 796.
+Package color Info: Redefining color shadecolor on input line 783.
+Package color Info: Redefining color shadecolor on input line 792.
+Package color Info: Redefining color shadecolor on input line 829.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 16 []
  []
 
 [16]
-Package color Info: Redefining color shadecolor on input line 833.
-
-Overfull \hbox (34.49113pt too wide) in paragraph at lines 839--839
+Overfull \hbox (34.49113pt too wide) in paragraph at lines 835--835
 []                                     \TS1/lmtt/m/n/10.95 '\T1/lmtt/m/n/10.95 
 sim\TS1/lmtt/m/n/10.95 '\T1/lmtt/m/n/10.95 , 1:ncol(simMat)), 1, paste, collaps
 e=\TS1/lmtt/m/n/10.95 ''\T1/lmtt/m/n/10.95 )[] 
@@ -826,29 +824,29 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
  []
 
 [20]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 888.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 884.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 21
  []
 
 [21]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 888.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 884.
  (./paper1.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 888.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 888.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 884.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 884.
 Package rerunfilecheck Info: File `paper1.out' has not changed.
 (rerunfilecheck)             Checksum: 3E66D66DF06847BE0621FB0193AC907E;2009.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 888.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 884.
  ) 
 Here is how much of TeX's memory you used:
  11720 strings out of 483107
  177363 string characters out of 5964629
- 699999 words of memory out of 5000000
+ 699998 words of memory out of 5000000
  26337 multiletter control sequences out of 15000+600000
  622648 words of font info for 70 fonts, out of 8000000 for 9000
  59 hyphenation exceptions out of 8191
- 48i,15n,53p,2051b,1245s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 48i,15n,53p,2168b,1245s stack positions out of 5000i,500n,10000p,200000b,80000s
 pdfTeX warning (dest): name{Subsection.5.0.Simulating\040Gaussian\040random\0
 40fields\040with\040Mat\351rn\040covariances.2} has been referenced but does no
 t exist, replaced by a fixed one
@@ -868,7 +866,7 @@ ts/type1/public/lm/lmri8.pfb></usr/share/texmf/fonts/type1/public/lm/lmro10.pfb
 ></usr/share/texmf/fonts/type1/public/lm/lmss10.pfb></usr/share/texmf/fonts/typ
 e1/public/lm/lmsy10.pfb></usr/share/texmf/fonts/type1/public/lm/lmsy8.pfb></usr
 /share/texmf/fonts/type1/public/lm/lmtt10.pfb>
-Output written on paper1.pdf (21 pages, 383023 bytes).
+Output written on paper1.pdf (21 pages, 382921 bytes).
 PDF statistics:
  546 PDF objects out of 1000 (max. 8388607)
  497 compressed objects within 5 object streams
