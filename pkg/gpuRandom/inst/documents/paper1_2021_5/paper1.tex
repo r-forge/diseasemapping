@@ -1,4 +1,4 @@
-\documentclass[article,nojss]{jss}\usepackage[]{graphicx}\usepackage[]{color}
+\documentclass[article]{jss}\usepackage[]{graphicx}\usepackage[]{color}
 % maxwidth is the original width if it is less than linewidth
 % otherwise use linewidth (to make sure the graphics do not exceed the margin)
 \makeatletter
@@ -11,56 +11,25 @@
 }
 \makeatother
 
-\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
-\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
-\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
-\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
-\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
-\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
-\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
-\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
-\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
-\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
-\let\hlipl\hlkwb
-
-\usepackage{framed}
-\makeatletter
-\newenvironment{kframe}{%
- \def\at@end@of@kframe{}%
- \ifinner\ifhmode%
-  \def\at@end@of@kframe{\end{minipage}}%
-  \begin{minipage}{\columnwidth}%
- \fi\fi%
- \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
- \colorbox{shadecolor}{##1}\hskip-\fboxsep
-     % There is no \\@totalrightmargin, so:
-     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
- \MakeFramed {\advance\hsize-\width
-   \@totalleftmargin\z@ \linewidth\hsize
-   \@setminipage}}%
- {\par\unskip\endMakeFramed%
- \at@end@of@kframe}
-\makeatother
-
-\definecolor{shadecolor}{rgb}{.97, .97, .97}
-\definecolor{messagecolor}{rgb}{0, 0, 0}
-\definecolor{warningcolor}{rgb}{1, 0, 1}
-\definecolor{errorcolor}{rgb}{1, 0, 0}
-\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
 
 \usepackage{alltt}
 
 
 
-\usepackage{float}
-\usepackage{framed}
+
+
+
+%\usepackage{float}
+%\usepackage{framed}
 \usepackage{subcaption}
+\renewcommand{\subfloat}[2][need a sub-caption]{ \subcaptionbox{#1}{#2} }
 \usepackage{amsmath}
 \usepackage[ruled,vlined]{algorithm2e}
 \usepackage{listings}
 \usepackage[shortcuts]{extdash}
 \usepackage{booktabs}
-\renewcommand{\subfloat}[2][need a sub-caption]{ \subcaptionbox{#1}{#2} }
+
+
 
 
 %\addbibresource{paper2.bib}
@@ -75,6 +44,10 @@
 
 \newcommand{\class}[1]{`\code{#1}'}
 \newcommand{\fct}[1]{\code{#1()}}
+
+
+
+
 
 
 
@@ -122,7 +95,6 @@ We introduce the \proglang{R} package \pkg{clrng} that leverages the \pkg{gpuR} 
 
 \section[Introduction]{Introduction}
 
-\begin{leftbar}
 % Why?
 % 
 % gpu massively parallel and relatively cheap, useful for stats
@@ -150,7 +122,7 @@ Finally, the paper concludes with a short summary and a discussion in Section 6.
 
 
 
-\end{leftbar}
+
 
 
 \section{Uniform random number generation} \label{}
@@ -174,14 +146,8 @@ In \proglang{clRNG} library, the MRG31k3p RNG's entire period of length approxim
 %The function \fct{clrngMrg31k3pCreateStreams} from \proglang{clRNG} creates streams on the host using the MRG31k3p RNG. If we want to use the streams in work-items on a GPU device, the streams have to be copied from the host to the global memory of the GPU device, and then each work-item copies the current states only of the streams to its private memory. 
 \pkg{clrng} is able to create streams both on the host and on the GPU device. The \fct{createStreamsCpu} function does the former. The \proglang{R} output below creates 4 streams on the host.
 %is an interface function of \fct{clrngMrg31k3pCreateStreams} that creates streams on host as \proglang{R} matrices, see the \proglang{R} output below, where we created 4 streams on the host using \fct{createStreamsCpu}, after transposing \code{myStreamsCpu}, each column of the matrix is a stream, creating streams on host makes it easy for us to view and check the streams behavior. Substreams are not created in \pkg{clrng} because currently we use one stream per work-item. 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-# creating streams on CPU
-library("gpuR")
-library("clrng")
-myStreamsCpu <- createStreamsCpu(n=4, initial=12345)
-t(myStreamsCpu)
+\begin{CodeChunk}
+\begin{CodeOutput}
 ##               [,1]       [,2]       [,3]       [,4]
 ## current.g1.1 12345  336690377  502033783  739421137
 ## current.g1.2 12345  597094797 1322587635 1475938232
@@ -195,9 +161,9 @@ t(myStreamsCpu)
 ## initial.g2.1 12345   85196284 1949818481 1630192198
 ## initial.g2.2 12345  523477687 1607232546  324551134
 ## initial.g2.3 12345 2094976052 1462898381  795289868
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+\end{CodeOutput} 
+\end{CodeChunk} 
+
 \fct{createStreamsCpu} has two arguments:
 \begin{itemize}
 \itemsep0em 
@@ -205,15 +171,7 @@ t(myStreamsCpu)
   \item \code{initial}: vector of length 6, recycled if shorter.
 \end{itemize}
 We move streams to the GPU by converting them to a `\code{vclMatrix}'. %\fct{createStreamsGpu} is adapted from the clrngMrg31k3pCreateStreams() and creates streams directly on a GPU device. Setting a seed same as the MRG31k3p default seed in \fct{createStreamsGpu}, we produce on device exactly the same streams as those created on host as follows. Notice that the code is just for showing \fct{createStreamsGpu} and \fct{createStreamsCpu} are \proglang{R} interface functions for \fct{clrngMrg31k3pCreateStreams} on GPU and CPU respectively, in practice it is not recommended to create a new stream that has the same initial seed as another existing stream in one simulation program.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-# creating streams on GPU
-myStreamsGpu = vclMatrix(myStreamsCpu)
-myStreamsGpu2 = createStreamsGpu(n=4, initial=12345)
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+
 \fct{createStreamsGpu} creates streams directly on the GPU and returns a `\code{vclMatrix}', which makes it slightly more efficient when the number of streams is large. However, any data is lost when the \proglang{R} session is terminated.
 %also has the two arguments \code{n} and \code{initial}. \fct{createStreamsGpu} is similar to \code{.Random.seed} in \proglang{R}. By setting the RNG status with the \proglang{R} function \fct{set.seed}, we are able to repeat the sequence of random seeds, which is an important quality criteria of RNGs. Similarly in \fct{createStreamsGpu} and \fct{createStreamsCpu}, with the \code{initial} argument, we make the sequence of streams repeatable.
 
@@ -224,7 +182,7 @@ myStreamsGpu2 = createStreamsGpu(n=4, initial=12345)
 
 \subsection{Using streams to generate uniform random numbers}
 The streams created sequentially are then used by the GPU's work-items to generate random numbers. In \pkg{clrng} each work-item takes one distinct stream to generate random numbers, so the number of streams should always be greater than the number of total work-items in use. The main part of the kernel (\proglang{OpenCL} functions for execution on the device) for generating uniform random numbers is shown in Listing \ref{lst:uniformkernel}. Users can set \code{verbose=2} in \fct{runif} to print out the kernels. Kernels are written in the \proglang{OpenCL C} language, in which \code{__kernel} declares a function as a kernel, pointer kernel arguments must be declared with an address space qualifier, for example \code{__global} and \code{__local}. Here the pointers to \code{streams} and to the output matrix \code{out} on the global memory are passed to the kernel as arguments. \code{Nrow} and \code{Ncol} represent row and column number of the matrix \code{out} respectively. \code{Npad} is the internal number of columns of \code{out}, \code{NpadStreams} is the internal number of columns of \code{streams} (these variables are defined in macros not shown here). \code{index} represents the position of a work-item when mapping it to a one-dimensional data structure. Each stream's current state is copied to the private memory of each work-item by the function \fct{streamsToPrivate}, in which \code{g1} and \code{g2} point to the first three and second three elements of stream states, respectively, and \code{startvalue} tells the starting position of the particular stream to be copied to the work-item. The function \fct{clrngMrg31k3pNextState} generates an uniform random integer named \code{temp} between 1 and 2147483647,  the value of \code{temp} is then scaled to be in the interval $(0,1)$ by multiplying it by a constant \code{mrg31k3p\_NORM\_cl}, which is defined to be $1/2147483648$ depending on the precision type. If to generate random integers, \code{temp} is not scaled. At the end of generating random numbers, streams are transferred back to global memory through the function \fct{streamsFromPrivate}.
-\begin{framed}
+
 \begin{lstlisting}[language=C,basicstyle=\small,label={lst:uniformkernel}]
 __kernel void mrg31k3pMatrix(
   __global int* streams,
@@ -253,9 +211,9 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 
 }//kernel
 \end{lstlisting}
-\end{framed}
+
 %Figure \ref{fig:1} illustrates how this kernel executes in practice with a simple example. Suppose we have a $2 \times 4$ NDRange ((a) in Figure \ref{fig:1}) and want to create a $4 \times 6$ matrix ((b) in Figure \ref{fig:1}) of uniform random numbers. In each grid of (a) that represents a work-item, there are two rows of numbers, the number in the above row is the stream index (from 0 to 7), and a pair of numbers in the second row is the 2-dimensional global ID of the work-item. Each stream object is passed to each work-item. The number in a cell of the matrix corresponds to the stream index, it indicates which stream generates a random number for this matrix cell. %For example, stream 0 which is allocated in work-item $(0,0)$ generates a random number in matrix $(0,0)$ in the first iteration, then moves on to matrix $(0,2)$ and generates a random number there in the second iteration, in the third iteration it generates a random number in matrix $(0,4)$ and so on until it goes out of the matrix range in the next iteration.
-% \begin{figure}[H]
+% \begin{figure}[ht]
 %     \centering
 %     \subfloat[]{{\includegraphics[width=8cm]{/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/f1} }}
 %     \qquad
@@ -264,14 +222,12 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 % \end{figure}
 
 Now we use the streams created in section \ref{createstreams} to generate a vector of double-precision i.i.d. $U(0,1)$ random numbers with \fct{clrng::runif}. To view the generated random numbers, we need to convert them to \proglang{R} vectors or matrices, by doing this, the random numbers are moved from the global memory of the GPU device to the host.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-as.vector(clrng::runif(n=6, streams=myStreamsGpu, Nglobal=c(2,2), type = "double"))
-## [1] 0.7353245 0.8423426 0.6142074 0.2159195 0.1100781 0.8698300
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+\begin{CodeChunk}
+\begin{CodeOutput}
+## [1] 0.735 0.842 0.614 0.216 0.110 0.870
+\end{CodeOutput} 
+\end{CodeChunk} 
+
 The arguments of the \fct{clrng::runif} are described as follows:
 \begin{itemize}
 \itemsep0em 
@@ -285,15 +241,14 @@ The arguments of the \fct{clrng::runif} are described as follows:
 Reusing \code{myStreamsGpu} will produce a vector different from \code{sim_1}. Because each time a random number is generated, the current state of the stream advances by one position. %Below shows the \code{myStreamsGpu} after it being used.
 
 Unlike the objects created by \proglang{R}, by default they remain in the memory after a restart. Streams created on GPU does not remain in the memory when a new \proglang{R} session begins. However, we can save the streams on the CPU in a file using the \fct{saveRDS} function, and later recall the streams with the \fct{readRDS} function, in this way we can reproduce the exact same sequence of random numbers in simulations. Below is the code that saves streams to a data file called \code{streams_from_GPU.rds} on CPU and then load it back and transfer it to GPU.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-saveRDS(as.matrix(createStreamsGpu(n=4)), "myStreams.rds")
-# Load the streams object as streams_saved
-streams_saved <- vclMatrix(readRDS("myStreams.rds"))
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+\begin{CodeChunk}
+\begin{CodeInput}
+R> saveRDS(as.matrix(createStreamsGpu(n = 4)), "myStreams.rds")
+R> # Load the streams object as streams_saved
+R> streams_saved <- vclMatrix(readRDS("myStreams.rds"))
+\end{CodeInput} 
+\end{CodeChunk} 
+
 
 %\subsection{Plot the uniform random numbers (now deleted?)}
 
@@ -308,7 +263,7 @@ streams_saved <- vclMatrix(readRDS("myStreams.rds"))
 We apply the Box-Muller transformation to $U(0,1)$ random numbers to generate standard normal random numbers. As shown in Algorithm \ref{algorithm1}, Box-Muller algorithm takes two independent, standard uniform random variables $U_1$ and $U_2$ and produces two independent, standard Gaussian random variables $X$ and $Y$, where $R$ and $\Theta$ are polar coordinate random variables. %The derivation basically uses transformation from Cartesian coordinates to polar coordinates to represent two independent, Normally distributed random variables. 
 The Box-Muller algorithm is a very good choice for Gaussian transform on GPU compared to other transform methods \citep{howes2007efficient}, because this algorithm has no branching or looping, which are the things GPU is not good at. %but GPU is good at the high computational load of sine and cosine functions in the algorithm. 
 
-\begin{algorithm*}[H] \label{algorithm1}
+\begin{algorithm*}[ht] \label{algorithm1}
 \SetAlgoLined
  1, Generate $U_1$, $U_2$ i.i.d. from $U (0,1)$ \;
  2, Define \begin{align*} 
@@ -323,7 +278,7 @@ The Box-Muller algorithm is a very good choice for Gaussian transform on GPU com
 
 Listing \ref{lst:normal} shows a fragment of the kernel that generates standard Gaussian random numbers. Aside from using local memory and the part that does the transformation, this kernel is the same with the kernel for generating uniform random numbers shown in Listing \ref{lst:uniformkernel}. If developers want to use other Gaussian transform methods, this kernel is easy to be adapted and incorporated in other \proglang{R} packages. The kernel executes over a 2-dimensional index space with $1 \times 2$ work-groups. \code{part[0]} and \code{part[1]} correspond to $R$ and $\Theta$ in the formulas respectively. \code{PI_2} is defined to be $\pi/2$. As the work-items in a work-group proceed at differing rates, \code{barrier(CLK_LOCAL_MEM_FENCE)} ensures correct ordering of memory operations to local memory, so that Gaussian random numbers $(X_1,Y_1), \dots, (X_n,Y_n)$ are generated in pairs correctly, errors such as $(X_n, Y_{(n-1)})$ or $(X_{(n-1)}, Y_{(n)})$ are avoided.
 %
-\begin{framed}
+
 \begin{lstlisting}[language=C,basicstyle=\small,label={lst:normal},breaklines=true, escapeinside={(*@}{@*)}]
 __kernel void mrg31k3pMatrix(
   __global int* streams,
@@ -368,11 +323,11 @@ for(Drow=get_global_id(0); Drow < Nrow;
 streamsFromPrivate(streams,g1,g2,startvalue);
 }//kernel
 \end{lstlisting}
-\end{framed}
+
 %We illustrate in Figure \ref{fig3} how this kernel executes in practice with the previous toy example: to create a $4 \times 6$ matrix of Gaussian random numbers using a $2 \times 4$ NDRange. %Each stream is copied to the private memory of each work-item. 
 %Work-items are organized to be in 1 by 2 work-groups as the random numbers are generated in pairs using the Box-Muller method. The shading on the grids in the NDRange distinguishes work-groups. The numbers in the third row in each gird of NDRange represents the local index of each work-item. Each work-group generates a pair of Gaussian random numbers \code{(X,Y)} in each iteration, where work-item of `\code{get_local_id(1)}$=0$' generates the \code{X} of a pair, and work-item of `\code{get_local_id(1)}$=1$' generates the \code{Y} of a pair. %Here with the loop iterating over columns, the cells of matrix are filled from left to right, that is, in the first iteration, the 8 work-items generate random numbers in the leftmost two columns (8 cells) of the matrix simultaneously, the second iteration fills random numbers in the middle two columns of the matrix, and the third iteration fills the rest two columns of the matrix simultaneously. %Therefore, each work-item generates one Gaussian random number in each iteration, The matrix filling process is the same as that shown in Figure \ref{fig:1}. 
 
-% \begin{figure}[H]%
+% \begin{figure}[ht]%
 %     \centering
 %     \subfloat[]{{\includegraphics[width=8cm]{/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/f3} }}%
 %     \qquad
@@ -383,43 +338,34 @@ streamsFromPrivate(streams,g1,g2,startvalue);
  
 
 We generate a large-size matrix of 100 million double-precision Gaussian random numbers, and compare the run-time between using \fct{stats::rnorm} and \fct{clrng::rnorm}. The best performance we have seen using \fct{clrng::rnorm} is around 120 times faster with $512 \times 128$ work-items than using the \fct{stats::rnorm}. The difference in elapsed time becomes larger when matrix size goes larger.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-streams <- createStreamsGpu(n = 512 * 128)
-system.time(clrng::rnorm(c(10000,10000), streams=streams, 
-                             Nglobal=c(512,128), type="double"))
+\begin{CodeChunk}
+\begin{CodeOutput}
 ##    user  system elapsed 
-##   0.070   0.002   0.073
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-system.time(matrix(stats::rnorm(10000^2),10000,10000))
+##   0.074   0.000   0.075
+\end{CodeOutput} 
+\end{CodeChunk} 
+
+\begin{CodeChunk}
+\begin{CodeOutput}
 ##    user  system elapsed 
-##   6.658   1.125   7.779
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+##   7.030   0.712   7.738
+\end{CodeOutput} 
+\end{CodeChunk} 
+
 
 
 \subsection{Exponential random number generation}
 The exponential random variates are produced by applying the inverse transform method on i.i.d. $U(0,1)$ random numbers. The random variable $X \sim \text{Exponential}(\lambda)$ has cumulative distribution function $F_{X}(x)=1-e^{-\lambda x}$ for $x \geq 0$ and $\lambda > 0$. The inverse of $F_{X}(\cdot)$ is $F^{-1}_{X}(y)= -(1/ \lambda) \log (1-y)$, for $ 0 \leq y <1$. The kernel is not shown because it is mostly same as the kernel for uniform and normal random numbers, except for the part that does the inverse transform. %Developers can make use of our kernel for generating other types of random variables on GPU in \proglang{R}.
 
 Below is an example that produces a matrix of Exponential random numbers with expectation equal to 1.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-r_matrix <- clrng::rexp(c(2,4), rate=1, Nglobal=c(2,2), type="double")
-as.matrix(r_matrix)
-##            [,1]      [,2]     [,3]       [,4]
-## [1,] 0.05469212 0.6969336 1.089906 0.78689966
-## [2,] 0.04188041 0.1686520 1.905295 0.03536933
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+\begin{CodeChunk}
+\begin{CodeOutput}
+##       [,1]  [,2]  [,3]  [,4]
+## [1,] 0.183 2.025 0.323 1.861
+## [2,] 0.356 0.288 0.213 0.475
+\end{CodeOutput} 
+\end{CodeChunk} 
+
 The arguments of the \fct{clrng::rexp} are described as follows:
 \begin{itemize}
 \itemsep0em 
@@ -467,8 +413,7 @@ Users request $N$ number of replicates, while the actual number of replicates to
 The 2-way contingency tables consist of selected data from the 2018 Natality public use data \citep{National2018} from the Centers for Disease Control and Prevention’s National Center for Health Statistics (NCHS), the 2018 natality data file may be downloaded at \url{https://www.cdc.gov/nchs/data_access/VitalStatsOnline.htm}. Table \ref{tab:month} is a $12 \times 12$ table that shows frequencies for congenital anomalies of the newborn by birth month in 2018 within the United States. The column variables of these two tables represent the twelve categories of congenital anomalies of the newborn: 1) Anencephaly; 2) Meningomyelocele/Spina bifida; 3) Cyanotic congenital heart disease; 4) Congenital diaphragmatic hernia; 5) Omphalocele; 6) Gastrochisis; 7) Limb reduction defect; 8) Cleft lip with or without cleft palate; 9) Cleft palate alone; 10) Down syndrome; 11) Suspected chromosomal disorder; and 12) Hypospadias. The first 5 rows of the table are displayed below.
 
  
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{table}[H]
+\begin{table}
 
 \caption{\label{tab:monthdata}Monthly birth anomaly data\label{tab:month}}
 \centering
@@ -492,43 +437,40 @@ Dec & 23 & 48 & 196 & 31 & 31 & 71 & 31 & 177 & 86 & 86 & 73 & 156\\
 \end{tabular}
 \end{table}
 
-\end{knitrout}
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-streams <- createStreamsGpu(n =256*64, initial=666)
-month_gpu<-vclMatrix(month,type="integer")
-system.time(result_month <- clrng::fisher.sim(month_gpu, 1e6, streams=streams,
-                   type="double", returnStatistics=TRUE,  Nglobal = c(256,64)))
+
+\begin{CodeChunk}
+\begin{CodeOutput}
 ##    user  system elapsed 
-##   0.303   0.012   0.315
-result_month$threshold
-## [1] -47954.8
-result_month$simNum
+##   0.313   0.003   0.315
+\end{CodeOutput}
+\begin{CodeOutput}
+## [1] -47955
+\end{CodeOutput}
+\begin{CodeOutput}
 ## [1] 1015808
-result_month$counts
+\end{CodeOutput}
+\begin{CodeOutput}
 ## [1] 410825
-result_month$p.value
-## [1] 0.4044323
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+\end{CodeOutput}
+\begin{CodeOutput}
+## [1] 0.404
+\end{CodeOutput} 
+\end{CodeChunk} 
+
 We got 410825 cases whose test statistics are below the observed threshold based on an actual number of 1015808 simulations, so the p-value from \fct{clrng::fisher.sim} for this table is about 0.40443, which is close enough to the p-value from \fct{stats::fisher.test}. \fct{clrng::fisher.sim} takes about 0.31 seconds, \pkg{clrng} accounts for 2.17\% of the elapsed time on CPU. 
 
  
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-#using CPU
-system.time(result_monthcpu<-stats::fisher.test(month,simulate.p.value = TRUE, B=1e6))
+\begin{CodeChunk}
+\begin{CodeOutput}
 ##    user  system elapsed 
-##  14.445   0.036  14.473
-result_monthcpu$p.value
-## [1] 0.4034616
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+##  14.405   0.014  14.417
+\end{CodeOutput}
+\begin{CodeOutput}
+## [1] 0.403
+\end{CodeOutput} 
+\end{CodeChunk} 
+
 
 
 
@@ -536,8 +478,7 @@ result_monthcpu$p.value
 Table \ref{tab:week} is a $7 \times 12$ table shows frequencies for congenital anomalies of the newborn by birth day of week in 2018 within the United States. 
 
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{table}[H]
+\begin{table}
 
 \caption{\label{tab:weekdata}Day-of-week birth anomaly data\label{tab:week}}
 \centering
@@ -556,49 +497,46 @@ Sun & 49 & 51 & 211 & 40 & 32 & 96 & 69 & 216 & 108 & 143 & 130 & 258\\
 \end{tabular}
 \end{table}
 
-\end{knitrout}
 
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-week_GPU<-gpuR::vclMatrix(week,type="integer")
-system.time(result_week<-clrng::fisher.sim(week_GPU, 1e7, streams=streams,
-                type="double",returnStatistics=TRUE,Nglobal = c(256,64)))
+
+\begin{CodeChunk}
+\begin{CodeOutput}
 ##    user  system elapsed 
-##   1.934   0.016   1.949
-result_week$threshold
-## [1] -54989.56
-result_week$simNum
-## [1] 10010624
-result_week$counts
+##   1.927   0.015   1.942
+\end{CodeOutput}
+\begin{CodeOutput}
+## [1] -54990
+\end{CodeOutput}
+\begin{CodeOutput}
+## [1] 1e+07
+\end{CodeOutput}
+\begin{CodeOutput}
 ## [1] 1193
-result_week$p.value
-## [1] 0.0001192733
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+\end{CodeOutput}
+\begin{CodeOutput}
+## [1] 0.000119
+\end{CodeOutput} 
+\end{CodeChunk} 
+
 The ``week'' table has a much smaller p-value: around 0.0001249672, which should require a larger number of simulations to get a more accurate p-value. With more than ten million simulations, we get 1205 cases and a p-value around 0.000120472 by \fct{fisher.sim}. \fct{stats::fisher.test} takes 91.6 seconds, while \fct{fisher.sim} takes about 4.282 seconds, the elapsed time is decreased to about 4.67\% of the time taken on CPU. 
 
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-#using CPU
-system.time(result_weekcpu<-fisher.test(week,simulate.p.value = TRUE,B=10010624))
+\begin{CodeChunk}
+\begin{CodeOutput}
 ##    user  system elapsed 
-##  89.981   0.158  90.071
-result_weekcpu$p.value
-## [1] 0.0001243679
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+##  89.719   0.116  89.817
+\end{CodeOutput}
+\begin{CodeOutput}
+## [1] 0.000127
+\end{CodeOutput} 
+\end{CodeChunk} 
+
 
 
 \subsection{A summary of the results}
 We summarized the comparison results in the table \ref{tab:summary} and plot the test statistics in Figure \ref{fig4}.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{table}[H]
+\begin{table}
 
 \caption{\label{tab:summarycompare}Summary of comparions of Fisher's test simulation on different devices. Computer 1 is equipped with CPU Intel Xenon W-2145 3.7Ghz and AMD Radeon VII. Computer 2 is equipped with VCPU Intel Xenon Skylake 2.5Ghz and VGPU Nvidia Tesla V100.\label{tab:summary}}
 \centering
@@ -623,18 +561,21 @@ B & Intel 2.5ghz & AMD Radeon & Intel 3.7ghz & NVIDIA V100 & Data\\
 \end{tabular}
 \end{table}
 
-\end{knitrout}
 
 
-\begin{figure}[H]
-\centering
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 
-\includegraphics[width=0.45\textwidth]{figure/fighistMonth-1} \includegraphics[width=0.45\textwidth]{figure/fighistMonth-2} \end{kframe}
-\end{knitrout}
-\caption{Approximate sampling distributions of the test statistics from the two examples ``Month'' and ``Week''. The test statistic values of the observed tables are marked with a blue line on each plot. \label{fig4}}
+
+\begin{figure}
+
+{\centering \subfloat[Month data\label{fig:fighistMonth-1}]{\includegraphics[width=0.47\textwidth]{Figures/GfighistMonth-1} }
+\subfloat[week data\label{fig:fighistMonth-2}]{\includegraphics[width=0.47\textwidth]{Figures/GfighistMonth-2} }
+
+}
+
+\caption[Approximate sampling distributions of the test statistics from the two examples Month and Week]{Approximate sampling distributions of the test statistics from the two examples Month and Week. The test statistic values of the observed tables are marked with a blue line on each plot.}\label{fig:fighistMonth}
 \end{figure}
+
+
 
 
 
@@ -662,7 +603,7 @@ all of these methods except matrix decomposition method, are approximations and 
 
 Suppose $U=(U_1, U_2, \dots, U_n)$ is a Gaussian random field with mean $\mu$ and covariance matrix $\Sigma$, without loss of generality, we assume mean value zero $(\mu = 0)$. Since covariance matrix $\Sigma$ is symmetric and positive-definite, we can take Cholesky decomposition of $\Sigma$, then we can simulate random samples from $U$ using Algorithm \ref{algorithm2},
 
-\begin{algorithm*}[H] \label{algorithm2}
+\begin{algorithm*}[ht] \label{algorithm2}
 \SetAlgoLined
  1, Calculate the covariance matrix $\Sigma$ between locations\;
  2, Compute the Cholesky decomposition of $\Sigma = L \cdot D \cdot L^\top$, $L$ is the lower unit triangular matrix, $D$ is a diagonal matrix\;
@@ -682,84 +623,60 @@ The matrix decomposition method is straightforward to implement. However, when a
 %\pkg{clrng} package not only does the matrices decomposition (Cholesky decomposition and matrix-vector multiplication) in parallel, but also computes the covariance matrices in parallel on GPU. 
 
 \subsection{Simulating Gaussian random fields with Mat\'ern covariances}
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-library("gpuR")
-library("clrng")
-library("gpuBatchMatrix")
-library('geostatsp')
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-Step 1, set up a $60 \times 80$ raster and coordinates on the raster, convert the matrix of coordinates \code{coordsSp@coords} to a ``vclMatrix'' object for later use.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-Ngrid = 80
-NlocalCache = 1000
-Nglobal = c(128, 64, 2)
-Nlocal = c(4, 2, 2)
-theType = "double"
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+\begin{CodeChunk}
+\begin{CodeInput}
+R> library("gpuR")
+R> library("clrng")
+R> library("gpuBatchMatrix")
+R> library("geostatsp")
+\end{CodeInput} 
+\end{CodeChunk} 
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-data("swissRain", package="geostatsp")
-myRaster = geostatsp::squareRaster(swissBorder, Ngrid)
-myRaster
+Step 1, set up a $60 \times 80$ raster and coordinates on the raster, convert the matrix of coordinates \code{coordsSp@coords} to a ``vclMatrix'' object for later use.
+
+
+\begin{CodeChunk}
+\begin{CodeInput}
+R> data("swissRain", package = "geostatsp")
+R> myRaster = geostatsp::squareRaster(swissBorder, 40)
+R> myRaster
+\end{CodeInput}
+\begin{CodeOutput}
 ## class      : RasterLayer 
-## dimensions : 51, 80, 4080  (nrow, ncol, ncell)
-## resolution : 4358.065, 4358.065  (x, y)
-## extent     : 2485351, 2833996, 1075013, 1297275  (xmin, xmax, ymin, ymax)
+## dimensions : 26, 40, 1040  (nrow, ncol, ncell)
+## resolution : 8716, 8716  (x, y)
+## extent     : 2485351, 2833996, 1075013, 1301633  (xmin, xmax, ymin, ymax)
 ## crs        : +proj=somerc +lat_0=46.9524055555556 +lon_0=7.43958333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=GRS80 +units=m +no_defs
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+\end{CodeOutput} 
+\end{CodeChunk} 
+
 Step 2, create 5 parameter sets as a small example, in practical studies, there can be hundreds or thousands of parameter sets. Then, convert the matrix of parameters to a ``vclMatrix'' for later use by \fct{gpuBatchMatrix::maternGpuParam}.
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-params
-##      shape range variance nugget anisoRatio anisoAngleRadians
-## [1,]  1.25  5000      1.5      0          1         0.0000000
-## [2,]  2.15  2500      2.0      0          4         0.4487990
-## [3,]  0.55 15000      2.0      0          4         0.4487990
-## [4,]  2.15  5000      2.0      0          4        -0.4487990
-## [5,]  2.15  5000      2.0      0          2         0.7853982
-#paramsGpu = gpuBatchMatrix::maternGpuParam(myParamsBatch, type=theType)
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+\begin{CodeChunk}
+\begin{CodeOutput}
+##      shape range variance nugget anisoRatio
+## [1,]  1.25 50000      1.5      0          1
+## [2,]  2.15 60000      2.0      0          4
+## [3,]  0.60 30000      2.0      0          2
+## [4,]  3.00 30000      2.0      0          2
+##      anisoAngleRadians
+## [1,]             0.000
+## [2,]             0.449
+## [3,]             0.449
+## [4,]             0.449
+\end{CodeOutput} 
+\end{CodeChunk} 
+
 Step 3, compute Mat\'ern covariance matrices using \fct{gpuBatchMatrix::maternBatch}, the returned Mat\'ern covariance matrices %$\Sigma_1, \Sigma_2, \dots, \Sigma_5$ correspond to the 5 parameter sets respectively, the matrices 
 are each of size $4800 \times 4800$ and are stacked by row in the output \code{maternCov}. 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-#maternCov = vclMatrix(0, nrow(paramsGpu)*nrow(coordsGpu), 
-#                         nrow(coordsGpu),type=theType)
-maternCov = gpuBatchMatrix::maternBatch(
-  params, myRaster,          
-  Nglobal=c(128,64), Nlocal=c(16,4))
-dim(maternCov)
-## [1] 20400  4080
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+\begin{CodeChunk}
+\begin{CodeOutput}
+## [1] 4160 1040
+\end{CodeOutput} 
+\end{CodeChunk} 
+
 Step 4, the first argument \code{A} in \fct{gpuBatchMatrix::cholBatch} specifies the object to take Cholesky decomposition. Computed unit lower triangular matrices $L_i$'s are stacked by row and stored in \code{maternCov}. Each row of \code{diagMat} stores the diagonal values of each $D_i$, for example, if each batch $\Sigma_i$ is of size $n \times n$, then each batch $L_i$ is $n \times n$, and each batch $D_i$ is $1 \times n$.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-# diagMat = vclMatrix(0, nrow(paramsGpu), ncol(maternCov), type = theType)
-diagMat = gpuBatchMatrix::cholBatch(maternCov, # D=diagMat,  # numbatchD=nrow(params),
-                          Nglobal= c(128, 8), Nlocal= c(32, 8))
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+
 \begin{gather}
 \begin{bmatrix} \Sigma_{1} \\ \Sigma_2 \\ \Sigma_3 \\ \vdots
 \end{bmatrix}
@@ -772,39 +689,10 @@ diagMat = gpuBatchMatrix::cholBatch(maternCov, # D=diagMat,  # numbatchD=nrow(pa
   \end{bmatrix}
 \end{gather}
 Step 5, generate 2 standard Gaussian random vectors \code{zmatGpu}$=(Z_1, Z_2)$ using \fct{clrng::rnorm}, in which \code{c(nrow(materCov),2)} specifies the number of rows and columns of \code{zmatGpu}.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-streamsGpu <- createStreamsGpu(n=128*64)
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-zmatGpu = rnorm(c(nrow(maternCov),2), streams=streamsGpu, Nglobal=c(128,64),
-                 type = theType)
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-Step 6, use \fct{gpuBatchMatrix::multiplyLowerDiagonalBatch} to compute $U = L * D^{(1/2)}* Z$ in batches, see the following illustration. \code{simMat} is the output matrix for $U$, \code{maternCov}, \code{diagMat}, and \code{zmatGpu} correspond to the matrices of $L$, $D$ and $Z=(Z_1, Z_2)$ respectively.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-simMat = vclMatrix(0, nrow(zmatGpu), ncol(zmatGpu), 
-                   type = theType)
 
-gpuBatchMatrix::multiplyLowerDiagonalBatch(
-  output=simMat, L=maternCov, 
-  D=diagMat, B=zmatGpu,
-  diagIsOne = 1L, # diagonal of L is one
-  transformD = "sqrt", # take the square root of each element of D
-  Nglobal,
-  Nlocal,
-  NlocalCache)
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+
+Step 6, use \fct{gpuBatchMatrix::multiplyLowerDiagonalBatch} to compute $U = L * D^{(1/2)}* Z$ in batches, see the following illustration. \code{simMat} is the output matrix for $U$, \code{maternCov}, \code{diagMat}, and \code{zmatGpu} correspond to the matrices of $L$, $D$ and $Z=(Z_1, Z_2)$ respectively.
+
 \begin{gather}
  \begin{bmatrix}  L_{1} \\ L_{2} \\L_{3} \\ \vdots
  \end{bmatrix} 
@@ -825,16 +713,28 @@ gpuBatchMatrix::multiplyLowerDiagonalBatch(
   \end{bmatrix}
 \end{gather}
 Step 7, Finally, plot the 10 realizations.
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-simRaster = raster::brick(myRaster, nl = ncol(simMat)*nrow(params))
-values(simRaster) = as.vector(as.matrix(simMat))
-names(simRaster) = apply(expand.grid('par',1:nrow(params), 
-                                     'sim', 1:ncol(simMat)), 1, paste, collapse='')
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+\begin{CodeChunk}
+\begin{CodeInput}
+R> simRaster = raster::brick(myRaster, nl = ncol(simMat) * nrow(params))
+R> values(simRaster) = as.vector(as.matrix(simMat))
+R> names(simRaster) = apply(expand.grid("par", 1:nrow(params),
++    "sim", 1:ncol(simMat)), 1, paste, collapse = "")
+R> theSubcap = gsub("par", "parameter ", names(simRaster))
+R> theSubcap = gsub("sim", ", simuation ", theSubcap)
+\end{CodeInput} 
+\end{CodeChunk} 
+
+
+\begin{figure}
+\subfloat[parameter 1, simuation 1\label{fig:maternplot-1}]{\includegraphics[width=0.47\textwidth]{Figures/Gmaternplot-1} }
+\subfloat[parameter 2, simuation 1\label{fig:maternplot-2}]{\includegraphics[width=0.47\textwidth]{Figures/Gmaternplot-2} }
+\subfloat[parameter 3, simuation 1\label{fig:maternplot-3}]{\includegraphics[width=0.47\textwidth]{Figures/Gmaternplot-3} }
+\subfloat[parameter 4, simuation 1\label{fig:maternplot-4}]{\includegraphics[width=0.47\textwidth]{Figures/Gmaternplot-4} }
+\subfloat[parameter 1, simuation 2\label{fig:maternplot-5}]{\includegraphics[width=0.47\textwidth]{Figures/Gmaternplot-5} }
+\subfloat[parameter 2, simuation 2\label{fig:maternplot-6}]{\includegraphics[width=0.47\textwidth]{Figures/Gmaternplot-6} }
+\subfloat[parameter 3, simuation 2\label{fig:maternplot-7}]{\includegraphics[width=0.47\textwidth]{Figures/Gmaternplot-7} }
+\subfloat[parameter 4, simuation 2\label{fig:maternplot-8}]{\includegraphics[width=0.47\textwidth]{Figures/Gmaternplot-8} }\caption[Simulated Gaussian random fields]{Simulated Gaussian random fields}\label{fig:maternplot}
+\end{figure}
 
 
 
