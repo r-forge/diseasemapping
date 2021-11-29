@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.14159265-2.6-0.999991 (TeX Live 2019/Debian) (preloaded format=xelatex 2021.11.25)  29 NOV 2021 21:23
+This is XeTeX, Version 3.14159265-2.6-0.999991 (TeX Live 2019/Debian) (preloaded format=xelatex 2021.11.25)  29 NOV 2021 21:38
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -896,7 +896,7 @@ File: Figures/Gmaternplot-7.png Graphic file (type bmp)
 File: Figures/Gmaternplot-8.png Graphic file (type bmp)
 <Figures/Gmaternplot-8.png>
 
-LaTeX Warning: Float too large for page by 16.80043pt on input line 737.
+LaTeX Warning: Float too large for page by 16.80043pt on input line 735.
 
 Missing character: There is no ’ in font ec-lmr10!
 
@@ -920,25 +920,25 @@ Package natbib Warning: There were undefined citations.
 
 Missing character: There is no ’ in font ec-lmr10!
 LaTeX Font Info:    Font shape `T1/pzc/m/n' in size <13> not available
-(Font)              Font shape `T1/pzc/mb/it' tried instead on input line 784.
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 784.
+(Font)              Font shape `T1/pzc/mb/it' tried instead on input line 782.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 782.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 18 []
  []
 
 [18]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 784.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 782.
  (./paper1.aux)
-Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 784.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 784.
+Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 782.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 782.
 Package rerunfilecheck Info: File `paper1.out' has not changed.
 (rerunfilecheck)             Checksum: E1EF636253441A096499BB99247A59C3;2142.
 
 
 LaTeX Warning: There were undefined references.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 784.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 782.
  ) 
 Here is how much of TeX's memory you used:
  13873 strings out of 481772

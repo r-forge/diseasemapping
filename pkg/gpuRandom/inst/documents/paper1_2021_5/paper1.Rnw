@@ -485,7 +485,7 @@ We got 410825 cases whose test statistics are below the observed threshold based
  
  <<timecomparemonth4Cpu, cache=TRUE, eval=TRUE>>=
  #using CPU
- system.time(result_monthcpu<-stats::fisher.test(month,simulate.p.value = TRUE, B=1e6))
+ system.time(result_monthcpu<-stats::fisher.test(month,simulate.p.value = TRUE, B=1e4))#B=1e6))
  result_monthcpu$p.value
  @
 
@@ -523,7 +523,7 @@ result_week$cpu = as.vector(result_week$sim)
 
 <<TimecompareweekCpu, cache=TRUE, eval=TRUE>>=
 #using CPU
-system.time(result_weekcpu<-fisher.test(week,simulate.p.value = TRUE,B=10010624))
+system.time(result_weekcpu<-fisher.test(week,simulate.p.value = TRUE,B=1000))#B=10010624))
 result_weekcpu$p.value
 @
 
@@ -708,8 +708,9 @@ Step 7, Finally, plot the 10 realizations.
 <<r plotSimSetup, echo=TRUE, eval=TRUE, cache=FALSE>>=
 simRaster = raster::brick(myRaster, nl = ncol(simMat)*nrow(params))
 values(simRaster) = as.vector(as.matrix(simMat))
-```
-```{r theSubcapName, include=FALSE}
+@
+
+<<r theSubcapName, include=FALSE>>=
 names(simRaster) = apply(expand.grid('par',1:nrow(params), 
                                      'sim', 1:ncol(simMat)), 1, paste, collapse='')
 theSubcap = gsub("par", "parameter ", names(simRaster))
