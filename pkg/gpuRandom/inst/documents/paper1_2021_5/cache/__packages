@@ -1,12 +1,6 @@
 base
 knitr
-MASS
 gpuR
 clrng
-kableExtra
 latex2exp
-gpuBatchMatrix
-Matrix
-sp
-raster
-geostatsp
+kableExtra
