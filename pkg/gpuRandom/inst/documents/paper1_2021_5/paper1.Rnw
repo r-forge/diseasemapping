@@ -46,7 +46,7 @@ options(width=65)
 library('knitr')
 options(continue="+  ",  prompt="R> ", digits=3, width=57) 
 
-opts_chunk$set(echo=FALSE,fig.path='Figures/G', fig.height=3,
+opts_chunk$set(echo=TRUE,fig.path='Figures/G', fig.height=3,
                 fig.width=4.5,dev='png',tidy=TRUE,fig.align='center',
                 tidy.opts=list(blank=FALSE, width.cutoff=57),
                 prompt=TRUE, highlight=FALSE,cache.stuff=1)
@@ -277,7 +277,7 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 % \end{figure}
 
 Now we use the streams created in section \ref{createstreams} to generate a vector of double-precision i.i.d. $U(0,1)$ random numbers with \fct{clrng::runif}. To view the generated random numbers, we need to convert them to \proglang{R} vectors or matrices, by doing this, the random numbers are moved from the global memory of the GPU device to the host.
-<<simStuff2, eval=TRUE,tidy=TRUE>>=
+<<simStuff2, eval=TRUE,tidy=TRUE, echo=TRUE>>=
 as.vector(clrng::runif(n=6, streams=myStreamsGpu, Nglobal=c(2,2)))
 @
 The arguments of the \fct{clrng::runif} are described as follows:
