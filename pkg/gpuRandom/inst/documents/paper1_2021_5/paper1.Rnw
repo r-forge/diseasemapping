@@ -464,7 +464,7 @@ The 2-way contingency tables consist of selected data from the 2018 Natality pub
  <<monthdata,eval=TRUE,echo=FALSE, cache=TRUE, fig.pos='h'>>=
 library(knitr)
 knitr::kable(month,format="latex", align = c("rrrrrrrrrrrr"), 
-  caption = "Monthly birth anomaly data\\label{tab:month}", booktabs=TRUE,linesep = "") %>%
+  caption = "\\label{tab:month}Monthly birth anomaly data", booktabs=TRUE,linesep = "") %>%
   kable_styling(full_width = F, position = "center")#latex_options = "HOLD_position")
 @
 
@@ -503,7 +503,7 @@ colnames(week) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal
 
 <<weekdata, eval=TRUE, echo=FALSE, cache=TRUE>>=
 knitr::kable(week,format="latex",align = c("rrrrrrrrrrrr"), caption = "Day-of-week birth anomaly data\\label{tab:week}", booktabs=TRUE,linesep = "") %>%
-  kable_styling(full_width = F, position = "center")#, latex_options = "HOLD_position")
+kable_styling(full_width = F, position = "center")#, latex_options = "HOLD_position")
 @
 
 
@@ -529,7 +529,7 @@ result_weekcpu$p.value
 
 
 \subsection{A summary of the results}
-We summarized the comparison results in the table \ref{tab:summary} and plot the test statistics in Figure \ref{fig4}.
+We summarized the comparison results in the table \ref{tab:summary} and plot the test statistics in Figure %\ref{fig4}.
 <<summarycompare, echo=FALSE, eval=TRUE, cache=TRUE, fig.pos='h'>>=
 library(kableExtra)
 dt <- data.frame(
@@ -670,8 +670,8 @@ streamsGpu <- createStreamsGpu(n=128*64)
 <<r randomNormalsSim2, eval=TRUE, cache=FALSE>>=
 zmatGpu = clrng::rnorm(
   c(nrow(maternCov),2), streams=streamsGpu, 
-                Nglobal=c(128,2),
-                 type = theType)
+                Nglobal=c(128,64),
+                type = theType)
 @
 Step 6, use \fct{gpuBatchMatrix::multiplyLowerDiagonalBatch} to compute $U = L * D^{(1/2)}* Z$ in batches, see the following illustration. \code{simMat} is the output matrix for $U$, \code{maternCov}, \code{diagMat}, and \code{zmatGpu} correspond to the matrices of $L$, $D$ and $Z=(Z_1, Z_2)$ respectively.
 <<r multLowerdiag_LDZ, eval=TRUE, cache=FALSE, results='hide'>>=
