@@ -2,5 +2,14 @@ base
 knitr
 gpuR
 clrng
-latex2exp
+tidyverse
+ggplot2
+tibble
+tidyr
+readr
+purrr
+dplyr
+stringr
+forcats
 kableExtra
+latex2exp
