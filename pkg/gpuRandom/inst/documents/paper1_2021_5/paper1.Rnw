@@ -277,7 +277,7 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 % \end{figure}
 
 Now we use the streams created in section \ref{createstreams} to generate a vector of double-precision i.i.d. $U(0,1)$ random numbers with \fct{clrng::runif}. To view the generated random numbers, we need to convert them to \proglang{R} vectors or matrices, by doing this, the random numbers are moved from the global memory of the GPU device to the host.
-<<simStuff2, eval=TRUE,tidy=FALSE>>=
+<<simStuff2, eval=TRUE,tidy=TRUE>>=
 as.vector(clrng::runif(n=6, streams=myStreamsGpu, Nglobal=c(2,2)))
 @
 The arguments of the \fct{clrng::runif} are described as follows:
