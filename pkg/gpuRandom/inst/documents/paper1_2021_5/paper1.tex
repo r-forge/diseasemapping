@@ -28,8 +28,7 @@
 \usepackage{listings}
 \usepackage[shortcuts]{extdash}
 \usepackage{booktabs}
-\usepackage[dvipsnames]{xcolor}
-\usepackage{pdfpages}
+
 
 
 
@@ -342,14 +341,14 @@ We generate a large-size matrix of 100 million double-precision Gaussian random 
 \begin{CodeChunk}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.060   0.009   0.069
+##   0.050   0.000   0.051
 \end{CodeOutput} 
 \end{CodeChunk} 
 
 \begin{CodeChunk}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##    6.61    0.80    7.41
+##   6.599   0.762   7.358
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -361,9 +360,9 @@ The exponential random variates are produced by applying the inverse transform m
 Below is an example that produces a matrix of Exponential random numbers with expectation equal to 1.
 \begin{CodeChunk}
 \begin{CodeOutput}
-##       [,1]  [,2]  [,3]  [,4]
-## [1,] 0.095 0.132 0.679 0.458
-## [2,] 0.275 0.132 1.118 0.111
+##       [,1] [,2]   [,3]  [,4]
+## [1,] 0.707 1.58 0.1815 0.387
+## [2,] 1.131 6.38 0.0157 2.768
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -414,14 +413,36 @@ Users request $N$ number of replicates, while the actual number of replicates to
 The 2-way contingency tables consist of selected data from the 2018 Natality public use data \citep{National2018} from the Centers for Disease Control and Prevention’s National Center for Health Statistics (NCHS), the 2018 natality data file may be downloaded at \url{https://www.cdc.gov/nchs/data_access/VitalStatsOnline.htm}. Table \ref{tab:month} is a $12 \times 12$ table that shows frequencies for congenital anomalies of the newborn by birth month in 2018 within the United States. The column variables of these two tables represent the twelve categories of congenital anomalies of the newborn: 1) Anencephaly; 2) Meningomyelocele/Spina bifida; 3) Cyanotic congenital heart disease; 4) Congenital diaphragmatic hernia; 5) Omphalocele; 6) Gastrochisis; 7) Limb reduction defect; 8) Cleft lip with or without cleft palate; 9) Cleft palate alone; 10) Down syndrome; 11) Suspected chromosomal disorder; and 12) Hypospadias. The first 5 rows of the table are displayed below.
 
  
+\begin{table}
+
+\caption{\label{tab:monthdata}Monthly birth anomaly data\label{tab:month}}
+\centering
+\begin{tabular}[t]{lrrrrrrrrrrrr}
+\toprule
+  & Ane & Men & Cya & Her & Omp & Gas & Lim & Cle & Pal & Dow & Chr & Hyp\\
+\midrule
+Jan & 29 & 55 & 172 & 46 & 39 & 73 & 48 & 183 & 77 & 103 & 102 & 174\\
+Feb & 25 & 45 & 175 & 35 & 31 & 55 & 34 & 142 & 81 & 115 & 100 & 180\\
+Mar & 31 & 48 & 182 & 41 & 47 & 72 & 40 & 200 & 86 & 90 & 96 & 180\\
+Apr & 34 & 45 & 186 & 36 & 32 & 75 & 42 & 173 & 56 & 87 & 90 & 193\\
+May & 33 & 40 & 187 & 46 & 24 & 80 & 35 & 180 & 75 & 91 & 100 & 197\\
+Jun & 34 & 48 & 189 & 35 & 33 & 75 & 45 & 154 & 74 & 102 & 100 & 182\\
+Jul & 26 & 43 & 198 & 34 & 21 & 74 & 36 & 179 & 79 & 86 & 92 & 193\\
+Aug & 24 & 41 & 189 & 44 & 43 & 62 & 48 & 183 & 88 & 109 & 94 & 194\\
+Sept & 34 & 44 & 147 & 40 & 37 & 66 & 36 & 158 & 73 & 112 & 103 & 196\\
+Oct & 25 & 43 & 207 & 45 & 31 & 65 & 49 & 181 & 77 & 108 & 115 & 220\\
+Nov & 36 & 55 & 188 & 39 & 39 & 62 & 43 & 144 & 68 & 98 & 79 & 173\\
+Dec & 23 & 48 & 196 & 31 & 31 & 71 & 31 & 177 & 86 & 86 & 73 & 156\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in knitr::kable(month, format = "{}latex"{}, align = c("{}rrrrrrrrrrrr"{}), : could not find function "{}\%>\%"{}}}
 
 \begin{CodeChunk}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.342   0.005   0.348
+##    0.32    0.00    0.32
 \end{CodeOutput}
 \begin{CodeOutput}
 ## [1] -47955
@@ -443,7 +464,7 @@ We got 410825 cases whose test statistics are below the observed threshold based
 \begin{CodeChunk}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##  14.346   0.012  14.351
+##  14.448   0.018  14.457
 \end{CodeOutput}
 \begin{CodeOutput}
 ## [1] 0.404
@@ -457,15 +478,32 @@ We got 410825 cases whose test statistics are below the observed threshold based
 Table \ref{tab:week} is a $7 \times 12$ table shows frequencies for congenital anomalies of the newborn by birth day of week in 2018 within the United States. 
 
 
+\begin{table}
+
+\caption{\label{tab:weekdata}Day-of-week birth anomaly data\label{tab:week}}
+\centering
+\begin{tabular}[t]{lrrrrrrrrrrrr}
+\toprule
+  & Ane & Men & Cya & Her & Omp & Gas & Lim & Cle & Pal & Dow & Chr & Hyp\\
+\midrule
+Mon & 30 & 34 & 173 & 37 & 23 & 80 & 49 & 191 & 83 & 122 & 109 & 216\\
+Tue & 60 & 121 & 383 & 80 & 83 & 131 & 71 & 349 & 146 & 164 & 168 & 352\\
+Wed & 51 & 106 & 417 & 92 & 73 & 145 & 72 & 333 & 136 & 179 & 196 & 351\\
+Thu & 60 & 86 & 362 & 69 & 74 & 120 & 85 & 326 & 132 & 220 & 187 & 359\\
+Fri & 52 & 94 & 347 & 87 & 59 & 123 & 68 & 323 & 145 & 170 & 166 & 345\\
+Sat & 52 & 63 & 323 & 67 & 64 & 135 & 73 & 316 & 170 & 189 & 188 & 357\\
+Sun & 49 & 51 & 211 & 40 & 32 & 96 & 69 & 216 & 108 & 143 & 130 & 258\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in knitr::kable(week, format = "{}latex"{}, align = c("{}rrrrrrrrrrrr"{}), : could not find function "{}\%>\%"{}}}
 
 
 \begin{CodeChunk}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   1.941   0.009   1.949
+##   1.936   0.005   1.940
 \end{CodeOutput}
 \begin{CodeOutput}
 ## [1] -54990
@@ -487,10 +525,10 @@ The ``week'' table has a much smaller p-value: around 0.0001249672, which should
 \begin{CodeChunk}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##  89.759   0.096  89.810
+##  89.796   0.107  89.865
 \end{CodeOutput}
 \begin{CodeOutput}
-## [1] 0.000117
+## [1] 0.000125
 \end{CodeOutput} 
 \end{CodeChunk} 
 

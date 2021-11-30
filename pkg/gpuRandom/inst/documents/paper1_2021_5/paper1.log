@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2021.11.25)  30 NOV 2021 07:21
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2021.11.25)  30 NOV 2021 08:02
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -466,98 +466,48 @@ Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
 \@lastruleclass=\count288
 \@thisrulewidth=\dimen179
 )
-
-! LaTeX Error: Option clash for package xcolor.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.32 \usepackage
-                {pdfpages}
-The package xcolor has already been loaded with options:
-  []
-There has now been an attempt to load it with options
-  [dvipsnames]
-Adding the global options:
-  ,dvipsnames
-to your \documentclass declaration may fix this.
-Try typing  <return>  to proceed.
-
-(/usr/share/texlive/texmf-dist/tex/latex/pdfpages/pdfpages.sty
-Package: pdfpages 2020/01/28 v0.5q Insert pages of external PDF documents (AM)
-
-(/usr/share/texlive/texmf-dist/tex/latex/tools/calc.sty
-Package: calc 2017/05/25 v4.3 Infix arithmetic (KKT,FJ)
-\calc@Acount=\count289
-\calc@Bcount=\count290
-\calc@Adimen=\dimen180
-\calc@Bdimen=\dimen181
-\calc@Askip=\skip81
-\calc@Bskip=\skip82
-LaTeX Info: Redefining \setlength on input line 80.
-LaTeX Info: Redefining \addtolength on input line 81.
-\calc@Ccount=\count291
-\calc@Cskip=\skip83
-)
-(/usr/share/texlive/texmf-dist/tex/latex/eso-pic/eso-pic.sty
-Package: eso-pic 2018/04/12 v2.0h eso-pic (RN)
-)
-\AM@pagewidth=\dimen182
-\AM@pageheight=\dimen183
-
-(/usr/share/texlive/texmf-dist/tex/latex/pdfpages/pppdftex.def
-File: pppdftex.def 2020/01/28 v0.5q Pdfpages driver for pdfTeX (AM)
-)
-\AM@pagebox=\box58
-\AM@global@opts=\toks21
-\AM@pagecnt=\count292
-\AM@toc@title=\toks22
-\c@AM@survey=\count293
-\AM@templatesizebox=\box59
-)
 (/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-pdfmode.def
 File: l3backend-pdfmode.def 2020-02-03 L3 backend support: PDF mode
-\l__kernel_color_stack_int=\count294
-\l__pdf_internal_box=\box60
+\l__kernel_color_stack_int=\count289
+\l__pdf_internal_box=\box58
 )
 (./paper1.aux)
 \openout1 = `paper1.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 90.
-LaTeX Font Info:    ... okay on input line 90.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 90.
-LaTeX Font Info:    ... okay on input line 90.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 90.
-LaTeX Font Info:    ... okay on input line 90.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 90.
-LaTeX Font Info:    ... okay on input line 90.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 90.
-LaTeX Font Info:    ... okay on input line 90.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 90.
-LaTeX Font Info:    ... okay on input line 90.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 90.
-LaTeX Font Info:    ... okay on input line 90.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 90.
-LaTeX Font Info:    ... okay on input line 90.
-LaTeX Font Info:    Trying to load font information for T1+lmr on input line 90
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 89.
+LaTeX Font Info:    ... okay on input line 89.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 89.
+LaTeX Font Info:    ... okay on input line 89.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 89.
+LaTeX Font Info:    ... okay on input line 89.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 89.
+LaTeX Font Info:    ... okay on input line 89.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 89.
+LaTeX Font Info:    ... okay on input line 89.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 89.
+LaTeX Font Info:    ... okay on input line 89.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 89.
+LaTeX Font Info:    ... okay on input line 89.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 89.
+LaTeX Font Info:    ... okay on input line 89.
+LaTeX Font Info:    Trying to load font information for T1+lmr on input line 89
 .
  (/usr/share/texmf/tex/latex/lm/t1lmr.fd
 File: t1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count295
-\scratchdimen=\dimen184
-\scratchbox=\box61
-\nofMPsegments=\count296
-\nofMParguments=\count297
-\everyMPshowfont=\toks23
-\MPscratchCnt=\count298
-\MPscratchDim=\dimen185
-\MPnumerator=\count299
-\makeMPintoPDFobject=\count300
-\everyMPtoPDFconversion=\toks24
+\scratchcounter=\count290
+\scratchdimen=\dimen180
+\scratchbox=\box59
+\nofMPsegments=\count291
+\nofMParguments=\count292
+\everyMPshowfont=\toks21
+\MPscratchCnt=\count293
+\MPscratchDim=\dimen181
+\MPnumerator=\count294
+\makeMPintoPDFobject=\count295
+\everyMPtoPDFconversion=\toks22
 ) (/usr/share/texlive/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
 Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
@@ -567,8 +517,8 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-\AtBeginShipoutBox=\box62
-Package hyperref Info: Link coloring ON on input line 90.
+\AtBeginShipoutBox=\box60
+Package hyperref Info: Link coloring ON on input line 89.
 
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2019/09/16 v2.46 Cross-referencing by name of section
@@ -579,11 +529,11 @@ Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
 (/usr/share/texlive/texmf-dist/tex/generic/gettitlestring/gettitlestring.sty
 Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
-\c@section@level=\count301
+\c@section@level=\count296
 )
-LaTeX Info: Redefining \ref on input line 90.
-LaTeX Info: Redefining \pageref on input line 90.
-LaTeX Info: Redefining \nameref on input line 90.
+LaTeX Info: Redefining \ref on input line 89.
+LaTeX Info: Redefining \pageref on input line 89.
+LaTeX Info: Redefining \nameref on input line 89.
 
 (./paper1.out) (./paper1.out)
 \@outlinefile=\write4
@@ -592,48 +542,48 @@ LaTeX Info: Redefining \nameref on input line 90.
 <jsslogo.jpg, id=60, 540.0175pt x 393.47pt>
 File: jsslogo.jpg Graphic file (type jpg)
 <use jsslogo.jpg>
-Package pdftex.def Info: jsslogo.jpg  used on input line 90.
+Package pdftex.def Info: jsslogo.jpg  used on input line 89.
 (pdftex.def)             Requested size: 89.80768pt x 65.43607pt.
-LaTeX Font Info:    Trying to load font information for T1+pzc on input line 90
+LaTeX Font Info:    Trying to load font information for T1+pzc on input line 89
 .
 
 (/usr/share/texlive/texmf-dist/tex/latex/psnfss/t1pzc.fd
 File: t1pzc.fd 2001/06/04 font definitions for T1/pzc.
 )
 LaTeX Font Info:    Font shape `T1/pzc/m/n' in size <28> not available
-(Font)              Font shape `T1/pzc/mb/it' tried instead on input line 90.
-LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 9
-0.
+(Font)              Font shape `T1/pzc/mb/it' tried instead on input line 89.
+LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 8
+9.
 
 (/usr/share/texmf/tex/latex/lm/ot1lmr.fd
 File: ot1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for OML+lmm on input line 9
-0.
+LaTeX Font Info:    Trying to load font information for OML+lmm on input line 8
+9.
 
 (/usr/share/texmf/tex/latex/lm/omllmm.fd
 File: omllmm.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 
-90.
+89.
 
 (/usr/share/texmf/tex/latex/lm/omslmsy.fd
 File: omslmsy.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 
-90.
+89.
 
 (/usr/share/texmf/tex/latex/lm/omxlmex.fd
 File: omxlmex.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10.95> on input line 90.
+(Font)              <10.95> on input line 89.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <8> on input line 90.
+(Font)              <8> on input line 89.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <6> on input line 90.
-LaTeX Font Info:    Trying to load font information for T1+lmss on input line 9
-0.
+(Font)              <6> on input line 89.
+LaTeX Font Info:    Trying to load font information for T1+lmss on input line 8
+9.
 
 (/usr/share/texmf/tex/latex/lm/t1lmss.fd
 File: t1lmss.fd 2009/10/30 v1.6 Font defs for Latin Modern
@@ -641,18 +591,9 @@ File: t1lmss.fd 2009/10/30 v1.6 Font defs for Latin Modern
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: listings package is loaded.
 Package caption Info: End \AtBeginDocument code.
-\c@lstlisting=\count302
-
-(/usr/share/texlive/texmf-dist/tex/latex/pdflscape/pdflscape.sty
-Package: pdflscape 2019/12/05 v0.12 Display of landscape pages in PDF (HO)
-
-(/usr/share/texlive/texmf-dist/tex/latex/graphics/lscape.sty
-Package: lscape 2000/10/22 v3.01 Landscape Pages (DPC)
-)
-Package pdflscape Info: Auto-detected driver: pdftex on input line 81.
-)
+\c@lstlisting=\count297
 LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 1
-06.
+05.
 
 (/usr/share/texmf/tex/latex/lm/t1lmtt.fd
 File: t1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
@@ -671,11 +612,11 @@ Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 
 [2]
 LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 1
-33.
+32.
  (/usr/share/texmf/tex/latex/lm/ts1lmr.fd
 File: ts1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
-Overfull \hbox (16.94566pt too wide) in paragraph at lines 148--151
+Overfull \hbox (16.94566pt too wide) in paragraph at lines 147--150
 []\T1/lmr/b/n/10.95 clrng \T1/lmr/m/n/10.95 is able to cre-ate streams both on 
 the host and on the GPU de-vice. The \T1/lmtt/m/n/10.95 createStreamsCpu()
  []
@@ -702,11 +643,11 @@ Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 
 [5]
 
-Package caption Warning: \label without proper reference on input line 267.
+Package caption Warning: \label without proper reference on input line 266.
 See the caption package documentation for explanation.
 
 
-LaTeX Warning: Reference `algorithm1' on page 6 undefined on input line 264.
+LaTeX Warning: Reference `algorithm1' on page 6 undefined on input line 263.
 
 
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
@@ -715,11 +656,11 @@ Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 
 [6]
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 295.
+(Font)              <10> on input line 294.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 295.
+(Font)              <7> on input line 294.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 295.
+(Font)              <5> on input line 294.
 
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 7
@@ -736,85 +677,41 @@ Overfull \hbox (5.47499pt too wide) has occurred while \output is active
  []
 
 [9]
-
-LaTeX Warning: Reference `tab:month' on page 10 undefined on input line 414.
-
-LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10.95> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 419.
-
-! Package xcolor Error: Undefined color `errorcolor'.
-
-See the xcolor package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.419 ...amily\noindent\bfseries\color{errorcolor}
-                                                  {\#\# Error in knitr::kabl...
-
-Try typing  <return>  to proceed.
-If that doesn't work, type  X <return>  to quit.
-
-
-Overfull \hbox (5.74747pt too wide) in paragraph at lines 419--420
-[]\T1/lmtt/b/n/10.95 ## Error in knitr::kable(month, format = "latex", align = 
-c("rrrrrrrrrrrr"), :
- []
-
-
-LaTeX Warning: Reference `tab:week' on page 10 undefined on input line 457.
-
-
-! Package xcolor Error: Undefined color `errorcolor'.
-
-See the xcolor package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.462 ...amily\noindent\bfseries\color{errorcolor}
-                                                  {\#\# Error in knitr::kabl...
-
-Try typing  <return>  to proceed.
-If that doesn't work, type  X <return>  to quit.
-
-
-Overfull \hbox (40.23987pt too wide) in paragraph at lines 462--463
-[]\T1/lmtt/b/n/10.95 ## Error in knitr::kable(week, format = "latex", align = c
-("rrrrrrrrrrrr"), : could
- []
-
-
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 10 []
  []
 
 [10]
-<Figures/GfighistMonth-1.pdf, id=316, 325.215pt x 216.81pt>
-File: Figures/GfighistMonth-1.pdf Graphic file (type pdf)
-<use Figures/GfighistMonth-1.pdf>
-Package pdftex.def Info: Figures/GfighistMonth-1.pdf  used on input line 532.
-(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
-<Figures/GfighistMonth-2.pdf, id=317, 325.215pt x 216.81pt>
-File: Figures/GfighistMonth-2.pdf Graphic file (type pdf)
-<use Figures/GfighistMonth-2.pdf>
-Package pdftex.def Info: Figures/GfighistMonth-2.pdf  used on input line 533.
-(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
-
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 11
  []
 
 [11]
+<Figures/GfighistMonth-1.pdf, id=323, 325.215pt x 216.81pt>
+File: Figures/GfighistMonth-1.pdf Graphic file (type pdf)
+<use Figures/GfighistMonth-1.pdf>
+Package pdftex.def Info: Figures/GfighistMonth-1.pdf  used on input line 570.
+(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
+<Figures/GfighistMonth-2.pdf, id=324, 325.215pt x 216.81pt>
+File: Figures/GfighistMonth-2.pdf Graphic file (type pdf)
+<use Figures/GfighistMonth-2.pdf>
+Package pdftex.def Info: Figures/GfighistMonth-2.pdf  used on input line 571.
+(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 12 []
  []
 
 [12 <./Figures/GfighistMonth-1.pdf> <./Figures/GfighistMonth-2.pdf>]
 
-Package caption Warning: \label without proper reference on input line 568.
+Package caption Warning: \label without proper reference on input line 606.
 See the caption package documentation for explanation.
 
 
-LaTeX Warning: Reference `algorithm2' on page 13 undefined on input line 566.
+LaTeX Warning: Reference `algorithm2' on page 13 undefined on input line 604.
 
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
@@ -822,64 +719,62 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
  []
 
 [13]
-Overfull \hbox (11.08118pt too wide) in paragraph at lines 652--654
+Overfull \hbox (10.94998pt too wide) has occurred while \output is active
+\T1/lmr/m/n/10.95 14 []
+ []
+
+[14]
+Overfull \hbox (11.08118pt too wide) in paragraph at lines 690--692
 \T1/lmr/m/n/10.95 Step 5, gen-er-ate 2 stan-dard Gaus-sian ran-dom vec-tors \T1
 /lmtt/m/n/10.95 zmatGpu$\OT1/lmr/m/n/10.95 = (\OML/lmm/m/it/10.95 Z[]; Z[]\OT1/
 lmr/m/n/10.95 )$ \T1/lmr/m/n/10.95 us-ing \T1/lmtt/m/n/10.95 clrng::rnorm()\T1/
 lmr/m/n/10.95 ,
  []
 
-
-Overfull \hbox (10.94998pt too wide) has occurred while \output is active
-\T1/lmr/m/n/10.95 14 []
- []
-
-[14]
-<Figures/Gmaternplot-1.png, id=383, 325.215pt x 216.81pt>
+<Figures/Gmaternplot-1.png, id=384, 325.215pt x 216.81pt>
 File: Figures/Gmaternplot-1.png Graphic file (type png)
 <use Figures/Gmaternplot-1.png>
-Package pdftex.def Info: Figures/Gmaternplot-1.png  used on input line 689.
+Package pdftex.def Info: Figures/Gmaternplot-1.png  used on input line 727.
 (pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
-<Figures/Gmaternplot-2.png, id=384, 325.215pt x 216.81pt>
+<Figures/Gmaternplot-2.png, id=385, 325.215pt x 216.81pt>
 File: Figures/Gmaternplot-2.png Graphic file (type png)
 <use Figures/Gmaternplot-2.png>
-Package pdftex.def Info: Figures/Gmaternplot-2.png  used on input line 690.
+Package pdftex.def Info: Figures/Gmaternplot-2.png  used on input line 728.
 (pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
-<Figures/Gmaternplot-3.png, id=385, 325.215pt x 216.81pt>
+<Figures/Gmaternplot-3.png, id=386, 325.215pt x 216.81pt>
 File: Figures/Gmaternplot-3.png Graphic file (type png)
 <use Figures/Gmaternplot-3.png>
-Package pdftex.def Info: Figures/Gmaternplot-3.png  used on input line 691.
+Package pdftex.def Info: Figures/Gmaternplot-3.png  used on input line 729.
 (pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
-<Figures/Gmaternplot-4.png, id=386, 325.215pt x 216.81pt>
+<Figures/Gmaternplot-4.png, id=387, 325.215pt x 216.81pt>
 File: Figures/Gmaternplot-4.png Graphic file (type png)
 <use Figures/Gmaternplot-4.png>
-Package pdftex.def Info: Figures/Gmaternplot-4.png  used on input line 692.
+Package pdftex.def Info: Figures/Gmaternplot-4.png  used on input line 730.
 (pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
-<Figures/Gmaternplot-5.png, id=387, 325.215pt x 216.81pt>
+<Figures/Gmaternplot-5.png, id=388, 325.215pt x 216.81pt>
 File: Figures/Gmaternplot-5.png Graphic file (type png)
 <use Figures/Gmaternplot-5.png>
-Package pdftex.def Info: Figures/Gmaternplot-5.png  used on input line 693.
+Package pdftex.def Info: Figures/Gmaternplot-5.png  used on input line 731.
 (pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
-<Figures/Gmaternplot-6.png, id=388, 325.215pt x 216.81pt>
+<Figures/Gmaternplot-6.png, id=389, 325.215pt x 216.81pt>
 File: Figures/Gmaternplot-6.png Graphic file (type png)
 <use Figures/Gmaternplot-6.png>
-Package pdftex.def Info: Figures/Gmaternplot-6.png  used on input line 694.
+Package pdftex.def Info: Figures/Gmaternplot-6.png  used on input line 732.
 (pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
-<Figures/Gmaternplot-7.png, id=389, 325.215pt x 216.81pt>
+<Figures/Gmaternplot-7.png, id=390, 325.215pt x 216.81pt>
 File: Figures/Gmaternplot-7.png Graphic file (type png)
 <use Figures/Gmaternplot-7.png>
-Package pdftex.def Info: Figures/Gmaternplot-7.png  used on input line 695.
+Package pdftex.def Info: Figures/Gmaternplot-7.png  used on input line 733.
 (pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
-<Figures/Gmaternplot-8.png, id=390, 325.215pt x 216.81pt>
+<Figures/Gmaternplot-8.png, id=391, 325.215pt x 216.81pt>
 File: Figures/Gmaternplot-8.png Graphic file (type png)
 <use Figures/Gmaternplot-8.png>
-Package pdftex.def Info: Figures/Gmaternplot-8.png  used on input line 696.
+Package pdftex.def Info: Figures/Gmaternplot-8.png  used on input line 734.
 (pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
 
+LaTeX Warning: Float too large for page by 16.80641pt on input line 735.
 
-LaTeX Warning: Float too large for page by 16.80641pt on input line 697.
 
-(./paper1.bbl
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 15
  []
@@ -893,44 +788,49 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 copy)> <./Figures/Gmaternplot-3.png (PNG copy)> <./Figures/Gmaternplot-4.png (P
 NG copy)> <./Figures/Gmaternplot-5.png (PNG copy)> <./Figures/Gmaternplot-6.png
  (PNG copy)> <./Figures/Gmaternplot-7.png (PNG copy)> <./Figures/Gmaternplot-8.
-png (PNG copy)>]
+png (PNG copy)>] (./paper1.bbl
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 17
  []
 
-[17])
+[17]
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 18 []
  []
 
-[18]
-LaTeX Font Info:    Font shape `T1/pzc/m/n' in size <13> not available
-(Font)              Font shape `T1/pzc/mb/it' tried instead on input line 744.
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 744.
-
+[18])
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 19
  []
 
 [19]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 744.
+LaTeX Font Info:    Font shape `T1/pzc/m/n' in size <13> not available
+(Font)              Font shape `T1/pzc/mb/it' tried instead on input line 782.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 782.
+
+Overfull \hbox (10.94998pt too wide) has occurred while \output is active
+\T1/lmr/m/n/10.95 20 []
+ []
+
+[20]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 782.
  (./paper1.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 744.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 744.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 782.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 782.
 Package rerunfilecheck Info: File `paper1.out' has not changed.
 (rerunfilecheck)             Checksum: 3E66D66DF06847BE0621FB0193AC907E;2009.
 
 
 LaTeX Warning: There were undefined references.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 744.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 782.
  ) 
 Here is how much of TeX's memory you used:
- 12804 strings out of 483107
- 193809 string characters out of 5964629
- 718829 words of memory out of 5000000
- 27392 multiletter control sequences out of 15000+600000
- 627194 words of font info for 75 fonts, out of 8000000 for 9000
+ 12086 strings out of 483107
+ 182267 string characters out of 5964629
+ 704697 words of memory out of 5000000
+ 26694 multiletter control sequences out of 15000+600000
+ 626876 words of font info for 74 fonts, out of 8000000 for 9000
  59 hyphenation exceptions out of 8191
  48i,15n,53p,2168b,1862s stack positions out of 5000i,500n,10000p,200000b,80000s
 pdfTeX warning (dest): name{Subsection.5.0.Simulating\040Gaussian\040random\0
@@ -952,13 +852,12 @@ exmf/fonts/type1/public/lm/lmri10.pfb></usr/share/texmf/fonts/type1/public/lm/l
 mri8.pfb></usr/share/texmf/fonts/type1/public/lm/lmro10.pfb></usr/share/texmf/f
 onts/type1/public/lm/lmss10.pfb></usr/share/texmf/fonts/type1/public/lm/lmsy10.
 pfb></usr/share/texmf/fonts/type1/public/lm/lmsy8.pfb></usr/share/texmf/fonts/t
-ype1/public/lm/lmtk10.pfb></usr/share/texmf/fonts/type1/public/lm/lmtt10.pfb></
-usr/share/texmf/fonts/type1/public/lm/lmtto10.pfb></usr/share/texlive/texmf-dis
-t/fonts/type1/urw/zapfchan/uzcmi8a.pfb>
-Output written on paper1.pdf (19 pages, 610179 bytes).
+ype1/public/lm/lmtt10.pfb></usr/share/texmf/fonts/type1/public/lm/lmtto10.pfb><
+/usr/share/texlive/texmf-dist/fonts/type1/urw/zapfchan/uzcmi8a.pfb>
+Output written on paper1.pdf (20 pages, 585372 bytes).
 PDF statistics:
- 555 PDF objects out of 1000 (max. 8388607)
- 496 compressed objects within 5 object streams
- 168 named destinations out of 1000 (max. 500000)
+ 561 PDF objects out of 1000 (max. 8388607)
+ 501 compressed objects within 6 object streams
+ 171 named destinations out of 1000 (max. 500000)
  168 words of extra memory for PDF output out of 10000 (max. 10000000)
 

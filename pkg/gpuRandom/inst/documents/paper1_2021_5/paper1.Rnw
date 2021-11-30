@@ -44,8 +44,6 @@ options(width=65)
 
 <<setup, cache=FALSE,include=FALSE>>=
 library('knitr')
-
-
 options(continue="+  ",  prompt="R> ", digits=3, width=57) 
 
 opts_chunk$set(echo=FALSE,fig.path='Figures/G', fig.height=3,
@@ -461,10 +459,12 @@ The 2-way contingency tables consist of selected data from the 2018 Natality pub
  colnames(month) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal", "Dow", "Chr", "Hyp")
  @
  
- <<monthdata,eval=TRUE,echo=FALSE, cache=TRUE, fig.pos='h'>>=
+ <<monthdata,eval=TRUE,echo=FALSE, cache=TRUE, fig.pos='h', message=FALSE>>=
 library(knitr)
-knitr::kable(month,format="latex", align = c("rrrrrrrrrrrr"), 
-  caption = "\\label{tab:month}Monthly birth anomaly data", booktabs=TRUE,linesep = "") %>%
+library(tidyverse)
+library(kableExtra)
+knitr::kable(month,format="latex", align = c("rrrrrrrrrrrr"), #label="tab:month"
+  caption = "Monthly birth anomaly data\\label{tab:month}", booktabs=TRUE,linesep = "") %>%
   kable_styling(full_width = F, position = "center")#latex_options = "HOLD_position")
 @
 
@@ -502,7 +502,8 @@ colnames(week) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal
 @
 
 <<weekdata, eval=TRUE, echo=FALSE, cache=TRUE>>=
-knitr::kable(week,format="latex",align = c("rrrrrrrrrrrr"), caption = "Day-of-week birth anomaly data\\label{tab:week}", booktabs=TRUE,linesep = "") %>%
+knitr::kable(week,format="latex",align = c("rrrrrrrrrrrr"),  #label = "tab:week",
+             caption = "Day-of-week birth anomaly data\\label{tab:week}", booktabs=TRUE,linesep = "") %>%
 kable_styling(full_width = F, position = "center")#, latex_options = "HOLD_position")
 @
 
