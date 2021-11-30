@@ -221,13 +221,13 @@ t(myStreamsCpu)
   \item \code{n}: number of streams to create.
   \item \code{initial}: vector of length 6, recycled if shorter.
 \end{itemize}
-We move streams to the GPU by converting them to a `\code{vclMatrix}'. %\fct{createStreamsGpu} is adapted from the clrngMrg31k3pCreateStreams() and creates streams directly on a GPU device. Setting a seed same as the MRG31k3p default seed in \fct{createStreamsGpu}, we produce on device exactly the same streams as those created on host as follows. Notice that the code is just for showing \fct{createStreamsGpu} and \fct{createStreamsCpu} are \proglang{R} interface functions for \fct{clrngMrg31k3pCreateStreams} on GPU and CPU respectively, in practice it is not recommended to create a new stream that has the same initial seed as another existing stream in one simulation program.
+We move streams to the GPU by converting them to a `\code{vclMatrix}'. \fct{createStreamsGpu} creates streams directly on the GPU and returns a `\code{vclMatrix}', which makes it slightly more efficient when the number of streams is large. However, any data is lost when the \proglang{R} session is terminated. %\fct{createStreamsGpu} is adapted from the clrngMrg31k3pCreateStreams() and creates streams directly on a GPU device. Setting a seed same as the MRG31k3p default seed in \fct{createStreamsGpu}, we produce on device exactly the same streams as those created on host as follows. Notice that the code is just for showing \fct{createStreamsGpu} and \fct{createStreamsCpu} are \proglang{R} interface functions for \fct{clrngMrg31k3pCreateStreams} on GPU and CPU respectively, in practice it is not recommended to create a new stream that has the same initial seed as another existing stream in one simulation program.
 <<createStreams_Gpu>>=
 # creating streams on GPU
 myStreamsGpu = vclMatrix(myStreamsCpu)
 myStreamsGpu2 = createStreamsGpu(n=4, initial=12345)
 @
-\fct{createStreamsGpu} creates streams directly on the GPU and returns a `\code{vclMatrix}', which makes it slightly more efficient when the number of streams is large. However, any data is lost when the \proglang{R} session is terminated.
+
 %also has the two arguments \code{n} and \code{initial}. \fct{createStreamsGpu} is similar to \code{.Random.seed} in \proglang{R}. By setting the RNG status with the \proglang{R} function \fct{set.seed}, we are able to repeat the sequence of random seeds, which is an important quality criteria of RNGs. Similarly in \fct{createStreamsGpu} and \fct{createStreamsCpu}, with the \code{initial} argument, we make the sequence of streams repeatable.
 
 
@@ -278,7 +278,7 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 
 Now we use the streams created in section \ref{createstreams} to generate a vector of double-precision i.i.d. $U(0,1)$ random numbers with \fct{clrng::runif}. To view the generated random numbers, we need to convert them to \proglang{R} vectors or matrices, by doing this, the random numbers are moved from the global memory of the GPU device to the host.
 <<simStuff2, eval=TRUE,tidy=FALSE>>=
-as.vector(clrng::runif(n=6, streams=myStreamsGpu, Nglobal=c(2,2), type = "double"))
+as.vector(clrng::runif(n=6, streams=myStreamsGpu, Nglobal=c(2,2)))
 @
 The arguments of the \fct{clrng::runif} are described as follows:
 \begin{itemize}
