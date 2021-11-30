@@ -485,7 +485,7 @@ We got 410825 cases whose test statistics are below the observed threshold based
  
  <<timecomparemonth4Cpu, cache=TRUE, eval=TRUE>>=
  #using CPU
- system.time(result_monthcpu<-stats::fisher.test(month,simulate.p.value = TRUE, B=1e4))#B=1e6))
+ system.time(result_monthcpu<-stats::fisher.test(month,simulate.p.value = TRUE, B=1e6))
  result_monthcpu$p.value
  @
 
@@ -523,7 +523,7 @@ result_week$cpu = as.vector(result_week$sim)
 
 <<TimecompareweekCpu, cache=TRUE, eval=TRUE>>=
 #using CPU
-system.time(result_weekcpu<-fisher.test(week,simulate.p.value = TRUE,B=1000))#B=10010624))
+system.time(result_weekcpu<-fisher.test(week,simulate.p.value = TRUE,B=10010624))
 result_weekcpu$p.value
 @
 
@@ -620,7 +620,7 @@ theType = "double"
 
 <<swissRainBoundary, echo=TRUE>>=
 data("swissRain", package="geostatsp")
-myRaster = geostatsp::squareRaster(swissBorder, 60)
+myRaster = geostatsp::squareRaster(swissBorder, 80)
 myRaster
 @
 Step 2, create 5 parameter sets as a small example, in practical studies, there can be hundreds or thousands of parameter sets. Then, convert the matrix of parameters to a ``vclMatrix'' for later use by \fct{gpuBatchMatrix::maternGpuParam}.
@@ -668,7 +668,9 @@ Step 5, generate 2 standard Gaussian random vectors \code{zmatGpu}$=(Z_1, Z_2)$ 
 streamsGpu <- createStreamsGpu(n=128*64)
 @
 <<r randomNormalsSim2, eval=TRUE, cache=FALSE>>=
-zmatGpu = rnorm(c(nrow(maternCov),2), streams=streamsGpu, Nglobal=c(128,64),
+zmatGpu = clrng::rnorm(
+  c(nrow(maternCov),2), streams=streamsGpu, 
+                Nglobal=c(128,2),
                  type = theType)
 @
 Step 6, use \fct{gpuBatchMatrix::multiplyLowerDiagonalBatch} to compute $U = L * D^{(1/2)}* Z$ in batches, see the following illustration. \code{simMat} is the output matrix for $U$, \code{maternCov}, \code{diagMat}, and \code{zmatGpu} correspond to the matrices of $L$, $D$ and $Z=(Z_1, Z_2)$ respectively.
