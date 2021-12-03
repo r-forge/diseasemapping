@@ -210,8 +210,6 @@ In \proglang{clRNG} library, the MRG31k3p RNG's entire period of length approxim
 %is an interface function of \fct{clrngMrg31k3pCreateStreams} that creates streams on host as \proglang{R} matrices, see the \proglang{R} output below, where we created 4 streams on the host using \fct{createStreamsCpu}, after transposing \code{myStreamsCpu}, each column of the matrix is a stream, creating streams on host makes it easy for us to view and check the streams behavior. Substreams are not created in \pkg{clrng} because currently we use one stream per work-item. 
 <<createStreams_CPU>>=
 # creating streams on CPU
-library("gpuR")
-library("clrng")
 myStreamsCpu <- createStreamsCpu(n=4, initial=12345)
 t(myStreamsCpu)
 @
@@ -392,8 +390,7 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 We generate a large-size matrix of 100 million double-precision Gaussian random numbers, and compare the run-time between using \fct{stats::rnorm} and \fct{clrng::rnorm}. The best performance we have seen using \fct{clrng::rnorm} is around 120 times faster with $512 \times 128$ work-items than using the \fct{stats::rnorm}. The difference in elapsed time becomes larger when matrix size goes larger.
 <<random normal time compare, eval=TRUE, cache=FALSE>>=
 streams <- createStreamsGpu(n = 512 * 128)
-system.time(clrng::rnorm(c(10000,10000), streams=streams, 
-                             Nglobal=c(512,128), type="double"))
+system.time(clrng::rnorm(c(10000,10000), streams=streams, Nglobal=c(512,128), type="double"))
 @
 <<random normal time compare2, eval=TRUE, cache=TRUE>>=
 system.time(matrix(stats::rnorm(10000^2),10000,10000))
