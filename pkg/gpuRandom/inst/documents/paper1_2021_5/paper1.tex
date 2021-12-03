@@ -1,4 +1,4 @@
-\documentclass[article]{jss}\usepackage[]{graphicx}\usepackage[]{color}
+\documentclass[article,nojss]{jss}\usepackage[]{graphicx}\usepackage[]{color}
 % maxwidth is the original width if it is less than linewidth
 % otherwise use linewidth (to make sure the graphics do not exceed the margin)
 \makeatletter
@@ -147,6 +147,13 @@ In \proglang{clRNG} library, the MRG31k3p RNG's entire period of length approxim
 \pkg{clrng} is able to create streams both on the host and on the GPU device. The \fct{createStreamsCpu} function does the former. The \proglang{R} output below creates 4 streams on the host.
 %is an interface function of \fct{clrngMrg31k3pCreateStreams} that creates streams on host as \proglang{R} matrices, see the \proglang{R} output below, where we created 4 streams on the host using \fct{createStreamsCpu}, after transposing \code{myStreamsCpu}, each column of the matrix is a stream, creating streams on host makes it easy for us to view and check the streams behavior. Substreams are not created in \pkg{clrng} because currently we use one stream per work-item. 
 \begin{CodeChunk}
+\begin{CodeInput}
+R> # creating streams on CPU
+R> library("gpuR")
+R> library("clrng")
+R> myStreamsCpu <- createStreamsCpu(n = 4, initial = 12345)
+R> t(myStreamsCpu)
+\end{CodeInput}
 \begin{CodeOutput}
 ##               [,1]       [,2]       [,3]       [,4]
 ## current.g1.1 12345  336690377  502033783  739421137
@@ -171,6 +178,13 @@ In \proglang{clRNG} library, the MRG31k3p RNG's entire period of length approxim
   \item \code{initial}: vector of length 6, recycled if shorter.
 \end{itemize}
 We move streams to the GPU by converting them to a `\code{vclMatrix}'. \fct{createStreamsGpu} creates streams directly on the GPU and returns a `\code{vclMatrix}', which makes it slightly more efficient when the number of streams is large. However, any data is lost when the \proglang{R} session is terminated. %\fct{createStreamsGpu} is adapted from the clrngMrg31k3pCreateStreams() and creates streams directly on a GPU device. Setting a seed same as the MRG31k3p default seed in \fct{createStreamsGpu}, we produce on device exactly the same streams as those created on host as follows. Notice that the code is just for showing \fct{createStreamsGpu} and \fct{createStreamsCpu} are \proglang{R} interface functions for \fct{clrngMrg31k3pCreateStreams} on GPU and CPU respectively, in practice it is not recommended to create a new stream that has the same initial seed as another existing stream in one simulation program.
+\begin{CodeChunk}
+\begin{CodeInput}
+R> # creating streams on GPU
+R> myStreamsGpu = vclMatrix(myStreamsCpu)
+R> myStreamsGpu2 = createStreamsGpu(n = 4, initial = 12345)
+\end{CodeInput} 
+\end{CodeChunk} 
 
 
 %also has the two arguments \code{n} and \code{initial}. \fct{createStreamsGpu} is similar to \code{.Random.seed} in \proglang{R}. By setting the RNG status with the \proglang{R} function \fct{set.seed}, we are able to repeat the sequence of random seeds, which is an important quality criteria of RNGs. Similarly in \fct{createStreamsGpu} and \fct{createStreamsCpu}, with the \code{initial} argument, we make the sequence of streams repeatable.
@@ -223,6 +237,10 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 
 Now we use the streams created in section \ref{createstreams} to generate a vector of double-precision i.i.d. $U(0,1)$ random numbers with \fct{clrng::runif}. To view the generated random numbers, we need to convert them to \proglang{R} vectors or matrices, by doing this, the random numbers are moved from the global memory of the GPU device to the host.
 \begin{CodeChunk}
+\begin{CodeInput}
+R> as.vector(clrng::runif(n = 6, streams = myStreamsGpu, Nglobal = c(2,
++    2)))
+\end{CodeInput}
 \begin{CodeOutput}
 ## [1] 0.735 0.842 0.614 0.216 0.110 0.870
 \end{CodeOutput} 
@@ -263,7 +281,7 @@ R> streams_saved <- vclMatrix(readRDS("myStreams.rds"))
 We apply the Box-Muller transformation to $U(0,1)$ random numbers to generate standard normal random numbers. As shown in Algorithm \ref{algorithm1}, Box-Muller algorithm takes two independent, standard uniform random variables $U_1$ and $U_2$ and produces two independent, standard Gaussian random variables $X$ and $Y$, where $R$ and $\Theta$ are polar coordinate random variables. %The derivation basically uses transformation from Cartesian coordinates to polar coordinates to represent two independent, Normally distributed random variables. 
 The Box-Muller algorithm is a very good choice for Gaussian transform on GPU compared to other transform methods \citep{howes2007efficient}, because this algorithm has no branching or looping, which are the things GPU is not good at. %but GPU is good at the high computational load of sine and cosine functions in the algorithm. 
 
-\begin{algorithm*}[ht] \label{algorithm1}
+\begin{algorithm}[ht] 
 \SetAlgoLined
  1, Generate $U_1$, $U_2$ i.i.d. from $U (0,1)$ \;
  2, Define \begin{align*} 
@@ -273,7 +291,8 @@ The Box-Muller algorithm is a very good choice for Gaussian transform on GPU com
 & Y=R*\sin(\Theta);\;\end{align*}
  3, Take $X$ and $Y$ as two independent draws from $N(0,1)$\;
  \caption{Box-Muller algorithm.}
-\end{algorithm*}
+ \label{algorithm1}
+\end{algorithm}
 
 
 Listing \ref{lst:normal} shows a fragment of the kernel that generates standard Gaussian random numbers. Aside from using local memory and the part that does the transformation, this kernel is the same with the kernel for generating uniform random numbers shown in Listing \ref{lst:uniformkernel}. If developers want to use other Gaussian transform methods, this kernel is easy to be adapted and incorporated in other \proglang{R} packages. The kernel executes over a 2-dimensional index space with $1 \times 2$ work-groups. \code{part[0]} and \code{part[1]} correspond to $R$ and $\Theta$ in the formulas respectively. \code{PI_2} is defined to be $\pi/2$. As the work-items in a work-group proceed at differing rates, \code{barrier(CLK_LOCAL_MEM_FENCE)} ensures correct ordering of memory operations to local memory, so that Gaussian random numbers $(X_1,Y_1), \dots, (X_n,Y_n)$ are generated in pairs correctly, errors such as $(X_n, Y_{(n-1)})$ or $(X_{(n-1)}, Y_{(n)})$ are avoided.
@@ -339,16 +358,24 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 
 We generate a large-size matrix of 100 million double-precision Gaussian random numbers, and compare the run-time between using \fct{stats::rnorm} and \fct{clrng::rnorm}. The best performance we have seen using \fct{clrng::rnorm} is around 120 times faster with $512 \times 128$ work-items than using the \fct{stats::rnorm}. The difference in elapsed time becomes larger when matrix size goes larger.
 \begin{CodeChunk}
+\begin{CodeInput}
+R> streams <- createStreamsGpu(n = 512 * 128)
+R> system.time(clrng::rnorm(c(10000, 10000), streams = streams,
++    Nglobal = c(512, 128), type = "double"))
+\end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.046   0.003   0.050
+##   0.043   0.004   0.047
 \end{CodeOutput} 
 \end{CodeChunk} 
 
 \begin{CodeChunk}
+\begin{CodeInput}
+R> system.time(matrix(stats::rnorm(10000^2), 10000, 10000))
+\end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   6.572   0.891   7.460
+##   6.700   0.828   7.526
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -359,10 +386,15 @@ The exponential random variates are produced by applying the inverse transform m
 
 Below is an example that produces a matrix of Exponential random numbers with expectation equal to 1.
 \begin{CodeChunk}
+\begin{CodeInput}
+R> r_matrix <- clrng::rexp(c(2, 4), rate = 1, Nglobal = c(2,
++    2), type = "double")
+R> as.matrix(r_matrix)
+\end{CodeInput}
 \begin{CodeOutput}
-##       [,1]  [,2]   [,3]  [,4]
-## [1,] 1.108 0.279 0.1244 0.329
-## [2,] 0.296 1.456 0.0504 3.717
+##      [,1]  [,2]   [,3]  [,4]
+## [1,] 1.48 1.916 1.0358 0.469
+## [2,] 1.90 0.297 0.0868 0.161
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -440,19 +472,38 @@ Dec & 23 & 48 & 196 & 31 & 31 & 71 & 31 & 177 & 86 & 86 & 73 & 156\\
 
 
 \begin{CodeChunk}
+\begin{CodeInput}
+R> streams <- createStreamsGpu(n = 256 * 64, initial = 666)
+R> month_gpu <- vclMatrix(month, type = "integer")
+R> system.time(result_month <- clrng::fisher.sim(month_gpu, 1e+06,
++    streams = streams, type = "double", returnStatistics = TRUE,
++    Nglobal = c(256, 64)))
+\end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.319   0.000   0.318
+##   0.322   0.011   0.333
 \end{CodeOutput}
+\begin{CodeInput}
+R> result_month$threshold
+\end{CodeInput}
 \begin{CodeOutput}
 ## [1] -47955
 \end{CodeOutput}
+\begin{CodeInput}
+R> result_month$simNum
+\end{CodeInput}
 \begin{CodeOutput}
 ## [1] 1015808
 \end{CodeOutput}
+\begin{CodeInput}
+R> result_month$counts
+\end{CodeInput}
 \begin{CodeOutput}
 ## [1] 410825
 \end{CodeOutput}
+\begin{CodeInput}
+R> result_month$p.value
+\end{CodeInput}
 \begin{CodeOutput}
 ## [1] 0.404
 \end{CodeOutput} 
@@ -462,12 +513,20 @@ We got 410825 cases whose test statistics are below the observed threshold based
 
  
 \begin{CodeChunk}
+\begin{CodeInput}
+R> # using CPU
+R> system.time(result_monthcpu <- stats::fisher.test(month, simulate.p.value = TRUE,
++    B = 1e+06))
+\end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##  14.308   0.013  14.319
+##  14.455   0.028  14.478
 \end{CodeOutput}
+\begin{CodeInput}
+R> result_monthcpu$p.value
+\end{CodeInput}
 \begin{CodeOutput}
-## [1] 0.404
+## [1] 0.403
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -501,19 +560,37 @@ Sun & 49 & 51 & 211 & 40 & 32 & 96 & 69 & 216 & 108 & 143 & 130 & 258\\
 
 
 \begin{CodeChunk}
+\begin{CodeInput}
+R> week_GPU <- gpuR::vclMatrix(week, type = "integer")
+R> system.time(result_week <- clrng::fisher.sim(week_GPU, 1e+07,
++    streams = streams, type = "double", returnStatistics = TRUE,
++    Nglobal = c(256, 64)))
+\end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##    1.94    0.01    1.95
+##   1.930   0.021   1.950
 \end{CodeOutput}
+\begin{CodeInput}
+R> result_week$threshold
+\end{CodeInput}
 \begin{CodeOutput}
 ## [1] -54990
 \end{CodeOutput}
+\begin{CodeInput}
+R> result_week$simNum
+\end{CodeInput}
 \begin{CodeOutput}
 ## [1] 1e+07
 \end{CodeOutput}
+\begin{CodeInput}
+R> result_week$counts
+\end{CodeInput}
 \begin{CodeOutput}
 ## [1] 1193
 \end{CodeOutput}
+\begin{CodeInput}
+R> result_week$p.value
+\end{CodeInput}
 \begin{CodeOutput}
 ## [1] 0.000119
 \end{CodeOutput} 
@@ -523,12 +600,20 @@ The ``week'' table has a much smaller p-value: around 0.0001249672, which should
 
 
 \begin{CodeChunk}
+\begin{CodeInput}
+R> # using CPU
+R> system.time(result_weekcpu <- fisher.test(week, simulate.p.value = TRUE,
++    B = 10010624))
+\end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##  89.629   0.085  89.713
+##  89.968   0.096  90.031
 \end{CodeOutput}
+\begin{CodeInput}
+R> result_weekcpu$p.value
+\end{CodeInput}
 \begin{CodeOutput}
-## [1] 0.000124
+## [1] 0.000132
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -603,14 +688,15 @@ all of these methods except matrix decomposition method, are approximations and 
 
 Suppose $U=(U_1, U_2, \dots, U_n)$ is a Gaussian random field with mean $\mu$ and covariance matrix $\Sigma$, without loss of generality, we assume mean value zero $(\mu = 0)$. Since covariance matrix $\Sigma$ is symmetric and positive-definite, we can take Cholesky decomposition of $\Sigma$, then we can simulate random samples from $U$ using Algorithm \ref{algorithm2},
 
-\begin{algorithm*}[ht] \label{algorithm2}
+\begin{algorithm}[ht]
 \SetAlgoLined
  1, Calculate the covariance matrix $\Sigma$ between locations\;
  2, Compute the Cholesky decomposition of $\Sigma = L \cdot D \cdot L^\top$, $L$ is the lower unit triangular matrix, $D$ is a diagonal matrix\;
  3, Generate on GPU a random matrix $Z=(Z_1, Z_2, \dots, Z_n) \sim \text{MVN}(0,I_n)$, where $I_n$ is a $n \times n$ identity matrix\;
  4, Compute the random samples from $U$ in batches using $U = L \cdot D^{\frac{1}{2}} \cdot Z$ \;
  \caption{Gaussian random fields simulation using covariance matrix decomposition method.}
-\end{algorithm*}
+ \label{algorithm2}
+\end{algorithm}
 
 % $U=L*D^{1/2}*Z$, where 
 % \begin{itemize}
@@ -633,6 +719,14 @@ R> library("geostatsp")
 \end{CodeChunk} 
 
 Step 1, set up a $60 \times 80$ raster and coordinates on the raster, convert the matrix of coordinates \code{coordsSp@coords} to a ``vclMatrix'' object for later use.
+\begin{CodeChunk}
+\begin{CodeInput}
+R> NlocalCache = 1000
+R> Nglobal = c(128, 64, 2)
+R> Nlocal = c(4, 2, 2)
+R> theType = "double"
+\end{CodeInput} 
+\end{CodeChunk} 
 
 
 \begin{CodeChunk}
@@ -653,6 +747,9 @@ R> myRaster
 Step 2, create 5 parameter sets as a small example, in practical studies, there can be hundreds or thousands of parameter sets. Then, convert the matrix of parameters to a ``vclMatrix'' for later use by \fct{gpuBatchMatrix::maternGpuParam}.
 
 \begin{CodeChunk}
+\begin{CodeInput}
+R> params
+\end{CodeInput}
 \begin{CodeOutput}
 ##      shape range variance nugget anisoRatio
 ## [1,]  1.25 50000      1.5      0          1
@@ -664,18 +761,37 @@ Step 2, create 5 parameter sets as a small example, in practical studies, there 
 ## [2,]             0.449
 ## [3,]             0.449
 ## [4,]             0.449
-\end{CodeOutput} 
+\end{CodeOutput}
+\begin{CodeInput}
+R> # paramsGpu =
+R> # gpuBatchMatrix::maternGpuParam(myParamsBatch,
+R> # type=theType)
+\end{CodeInput} 
 \end{CodeChunk} 
 
 Step 3, compute Mat\'ern covariance matrices using \fct{gpuBatchMatrix::maternBatch}, the returned Mat\'ern covariance matrices %$\Sigma_1, \Sigma_2, \dots, \Sigma_5$ correspond to the 5 parameter sets respectively, the matrices 
 are each of size $4800 \times 4800$ and are stacked by row in the output \code{maternCov}. 
 \begin{CodeChunk}
+\begin{CodeInput}
+R> # maternCov = vclMatrix(0,
+R> # nrow(paramsGpu)*nrow(coordsGpu),
+R> # nrow(coordsGpu),type=theType)
+R> maternCov = gpuBatchMatrix::maternBatch(params, myRaster,
++    Nglobal = c(128, 64), Nlocal = c(16, 4))
+R> dim(maternCov)
+\end{CodeInput}
 \begin{CodeOutput}
 ## [1] 16320  4080
 \end{CodeOutput} 
 \end{CodeChunk} 
 
 Step 4, the first argument \code{A} in \fct{gpuBatchMatrix::cholBatch} specifies the object to take Cholesky decomposition. Computed unit lower triangular matrices $L_i$'s are stacked by row and stored in \code{maternCov}. Each row of \code{diagMat} stores the diagonal values of each $D_i$, for example, if each batch $\Sigma_i$ is of size $n \times n$, then each batch $L_i$ is $n \times n$, and each batch $D_i$ is $1 \times n$.
+\begin{CodeChunk}
+\begin{CodeInput}
+R> diagMat = gpuBatchMatrix::cholBatch(maternCov, Nglobal = c(128,
++    8), Nlocal = c(32, 8))
+\end{CodeInput} 
+\end{CodeChunk} 
 
 \begin{gather}
 \begin{bmatrix} \Sigma_{1} \\ \Sigma_2 \\ \Sigma_3 \\ \vdots
@@ -689,9 +805,28 @@ Step 4, the first argument \code{A} in \fct{gpuBatchMatrix::cholBatch} specifies
   \end{bmatrix}
 \end{gather}
 Step 5, generate 2 standard Gaussian random vectors \code{zmatGpu}$=(Z_1, Z_2)$ using \fct{clrng::rnorm}, in which \code{c(nrow(materCov),2)} specifies the number of rows and columns of \code{zmatGpu}.
+\begin{CodeChunk}
+\begin{CodeInput}
+R> streamsGpu <- createStreamsGpu(n = 128 * 64)
+\end{CodeInput} 
+\end{CodeChunk} 
 
+\begin{CodeChunk}
+\begin{CodeInput}
+R> zmatGpu = clrng::rnorm(c(nrow(maternCov), 2), streams = streamsGpu,
++    Nglobal = c(128, 64), type = theType)
+\end{CodeInput} 
+\end{CodeChunk} 
 
 Step 6, use \fct{gpuBatchMatrix::multiplyLowerDiagonalBatch} to compute $U = L * D^{(1/2)}* Z$ in batches, see the following illustration. \code{simMat} is the output matrix for $U$, \code{maternCov}, \code{diagMat}, and \code{zmatGpu} correspond to the matrices of $L$, $D$ and $Z=(Z_1, Z_2)$ respectively.
+\begin{CodeChunk}
+\begin{CodeInput}
+R> simMat = vclMatrix(0, nrow(zmatGpu), ncol(zmatGpu), type = gpuR::typeof(zmatGpu))
+R> gpuBatchMatrix::multiplyLowerDiagonalBatch(output = simMat,
++    L = maternCov, D = diagMat, B = zmatGpu, diagIsOne = TRUE,
++    transformD = "sqrt", Nglobal, Nlocal, NlocalCache)
+\end{CodeInput} 
+\end{CodeChunk} 
 
 \begin{gather}
  \begin{bmatrix}  L_{1} \\ L_{2} \\L_{3} \\ \vdots
@@ -780,7 +915,6 @@ Future work on \pkg{clrng} package could be: (1) Explore other RNGs, for example
 
 
 \end{document}
-
 
 
 
