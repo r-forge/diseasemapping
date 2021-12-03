@@ -1,5 +1,6 @@
 #' @title Estimate profile Log-likelihood for covariance parameters and lambda
 #' @import data.table
+#' @importFrom rootSolve uniroot.all
 #' @useDynLib gpuRandom
 #' @export
 
@@ -10,14 +11,14 @@
 likfitLgmGpu <- function(data,
                          formula, 
                          coordinates,
-                         params=NULL, # CPU matrix for now, users need to provide proper parameters given their specific need
+                         params, # CPU matrix for now, users need to provide proper parameters given their specific need
                          #fixVariance = FALSE, 
-                         BoxCox,  # boxcox is always estimated
-                         paramToEstimate = c("range","shape","nugget","anisoAngleDegrees", "anisoRatio"), #variance and regression parameters are always estimated if not given,
-                         cilevel,  # decimal
+                         boxcox,  # boxcox is always estimated
+                         paramToEstimate = c("range","shape","nugget","anisoAngleDegrees", "anisoRatio", "boxcox"), #variance and regression parameters are always estimated if not given,
+                         cilevel=0.95,  # decimal
                          type = c("float", "double")[1+gpuInfo()$double_support],
                          reml=FALSE, 
-                         minustwotimes=TRUE,
+                         minustwotimes=FALSE,
                          NparamPerIter,
                          Nglobal,
                          Nlocal,
@@ -25,11 +26,11 @@ likfitLgmGpu <- function(data,
                          verbose=FALSE){
   
   # will always be c(1,0,.......)
-  BoxCox = c(1, 0, setdiff(BoxCox, c(0,1)))
+  boxcox = c(1, 0, setdiff(boxcox, c(0,1)))
   
-  if(length(paramToEstimate)>2)
+  if(length(boxcox)<=3 & is.element('boxcox',paramToEstimate))
   {
-    warning("change param matrix for another profile log-likelihood\n")
+    warning("need more params to estimate boxcox")
   }
   
   
@@ -50,7 +51,7 @@ likfitLgmGpu <- function(data,
   
   Nobs = nrow(data)
   Ncov = ncol(covariates)
-  Ndata = length(BoxCox)
+  Ndata = length(boxcox)
   Nparam = nrow(params)
   
   # whole data set including columns for transformed y's
@@ -61,7 +62,7 @@ likfitLgmGpu <- function(data,
   # coordinates
   coordsGpu = vclMatrix(coordinates, type=type)  
   # box-cox
-  boxcoxGpu = vclVector(BoxCox, type=type)
+  boxcoxGpu = vclVector(boxcox, type=type)
   
   # prepare params, make sure variance=1 in params
   params0 = geostatsp::fillParam(params)
@@ -84,13 +85,6 @@ likfitLgmGpu <- function(data,
   cholXVXdiag = vclMatrix(0, NparamPerIter, Ncov, type=type)
   minusTwoLogLik <- vclMatrix(0, Nparam, Ndata, type=type)
   
-  # paramDefaults = c(
-  #   nugget=0,
-  #   anisoRatio=1, 
-  #   anisoAngleRadians=0,
-  #   shape=1.5, boxcox=1,
-  #   range=maxDist/10
-  # )
   
   system.time(gpuRandom:::likfitGpu_BackendP(
     yx,        #1
@@ -129,7 +123,6 @@ likfitLgmGpu <- function(data,
   #  any(is.na(as.vector(detReml)))
   #  any(is.na(as.matrix(cholXVXdiag)))
   #  any(is.na(as.matrix(ssqResidual)))
-  #  any(is.nan(as.matrix(log(ssqResidual/Nobs))))
   #  
   # any(is.nan(as.matrix(ssqResidual/Nobs)))
   # 
@@ -193,8 +186,8 @@ likfitLgmGpu <- function(data,
   breaks = maximum - qchisq(cilevel,  df = 1)/2
   
   ##############output matrix####################
-  Table <- matrix(NA, nrow=length(paramToEstimate)+Ncov+2, ncol=3)
-  rownames(Table) <-  c("intercept", paste(c('betahat'), seq_len(Ncov-1),sep = ''), "sdSpatial", paramToEstimate,  "BoxCox")
+  Table <- matrix(NA, nrow=length(union(paramToEstimate, 'boxcox'))+Ncov+1, ncol=3)
+  rownames(Table) <-  c("intercept", paste(c('betahat'), seq_len(Ncov-1),sep = ''), "sdSpatial", union(paramToEstimate, 'boxcox'))
   colnames(Table) <-  c("estimate", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
   
   
@@ -205,10 +198,11 @@ likfitLgmGpu <- function(data,
   if(is.element('range',paramToEstimate)){
     # get profile log-lik for range values
     result = data.table::as.data.table(cbind(LogLikcpu, params0[,"range"]))
-    colnames(result) <- c(paste(c('boxcox'), round(BoxCox, digits = 2) ,sep = ''), "range")
+    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "range")
     profileLogLik <- result[, .(profile=max(.SD)), by=range]
     f1 <- splinefun(profileLogLik$range, profileLogLik$profile-breaks, method = "fmm")
     # plot(profileLogLik$range, profileLogLik$profile-breaks)
+    # plot(profileLogLik$range, profileLogLik$profile)
     # curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
     # abline(h =0, lty = 2)
     # rangeresults <- optim(26000, f1, method = "L-BFGS-B",lower = 20000, upper = 240000, hessian = FALSE, control=list(fnscale=-1) )
@@ -218,6 +212,9 @@ likfitLgmGpu <- function(data,
     # maxvalue <- rangeresults$objective
     # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+    if(length(ci)==1){
+      ci <- c(lower, ci)
+    }
     Table["range",] <- c(MLE, ci)
     # MLE <- profileLogLik$range[which.max(profileLogLik$profile)]
     # plot(profileLogLik$range, profileLogLik$profile)
@@ -261,23 +258,26 @@ likfitLgmGpu <- function(data,
   
   if(is.element('shape',paramToEstimate)){
     result = as.data.table(cbind(LogLikcpu, params0[,"shape"]))
-    colnames(result) <- c(paste(c('boxcox'), round(BoxCox, digits = 2) ,sep = ''), "shape")
+    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "shape")
     profileLogLik <- result[, .(profile=max(.SD)), by=shape]
-    #plot(profileLogLik$shape, profileLogLik$profile-breaks)
+    # plot(profileLogLik$shape, profileLogLik$profile-breaks)
     f1 <- splinefun(profileLogLik$shape, profileLogLik$profile-breaks, method = "fmm")
     # curve(f1, add = TRUE, col = 2) 
     # abline(h =0, lty = 2)
     # shaperesults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
     lower = min(profileLogLik$shape)
     upper = max(profileLogLik$shape)
-    MLE <- round(optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum,digits=2)
+    MLE <- round(optimize(f1, c(lower, 5.5), maximum = TRUE, tol = 0.0001)$maximum,digits=4)
     # maxvalue <- shaperesults$objective
     # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+    if(length(ci)==1){
+      ci <- c(lower, ci)
+    }
     Table["shape",] <- c(MLE, ci)
 
     # result = as.data.table(cbind(LogLikcpu, params0[,"shape"]))
-    # colnames(result) <- c(paste(c('boxcox'),BoxCox,sep = ''), "shape")
+    # colnames(result) <- c(paste(c('boxcox'),boxcox,sep = ''), "shape")
     # profileLogLik <- result[, .(profile=max(.SD)), by=shape]
     # MLE <- profileLogLik$shape[which.max(profileLogLik$profile)]
     # #plot(profileLogLik$shape, profileLogLik$profile)
@@ -303,16 +303,16 @@ likfitLgmGpu <- function(data,
   
   if(is.element('nugget',paramToEstimate)){
     result = as.data.table(cbind(LogLikcpu, params0[,"nugget"]))
-    colnames(result) <- c(paste(c('boxcox'), round(BoxCox, digits = 2) ,sep = ''), "nugget")
+    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "nugget")
     profileLogLik <-result[, .(profile=max(.SD)), by=nugget]
-    #plot(profileLogLik$nugget, profileLogLik$profile-breaks)
+    # plot(profileLogLik$nugget, profileLogLik$profile-breaks)
     f1 <- splinefun(profileLogLik$nugget, profileLogLik$profile-breaks, method = "fmm")
     # curve(f1, add = TRUE, col = 2, n=1001) 
     # abline(h =0, lty = 2)
     # nuggetresults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
     lower = min(profileLogLik$nugget)
     upper = max(profileLogLik$nugget)
-    MLE <- round(optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum,digits=2)
+    MLE <- round(optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum,digits=4)
     # maxvalue <- nuggetresults$objective
     # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
@@ -343,18 +343,16 @@ likfitLgmGpu <- function(data,
   
   if(is.element('anisoRatio',paramToEstimate)){
     result = as.data.table(cbind(LogLikcpu, params0[,"anisoRatio"]))
-    colnames(result) <- c(paste(c('boxcox'), round(BoxCox, digits = 2) ,sep = ''), "anisoRatio")
+    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoRatio")
     profileLogLik <- result[, .(profile=max(.SD)), by=anisoRatio]
-    
-    
-    #plot(profileLogLik$anisoRatio, profileLogLik$profile-breaks)
+    # plot(profileLogLik$anisoRatio, profileLogLik$profile-breaks)
     f1 <- splinefun(profileLogLik$anisoRatio, profileLogLik$profile-breaks, method = "fmm")
     # curve(f1, add = TRUE, col = 2, n=1001) 
     # abline(h =0, lty = 2)
     # anisoRatioresults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
     lower = min(profileLogLik$anisoRatio)
     upper = max(profileLogLik$anisoRatio)
-    MLE <- round(optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum,digits=2)
+    MLE <- round(optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum,digits=4)
     # maxvalue <- anisoRatioresults$objective
     # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
@@ -385,9 +383,8 @@ likfitLgmGpu <- function(data,
   
   if(is.element('anisoAngleDegrees',paramToEstimate)){
     result = as.data.table(cbind(LogLikcpu, params0[,"anisoAngleDegrees"]))
-    colnames(result) <- c(paste(c('boxcox'), round(BoxCox, digits = 2) ,sep = ''), "anisoAngleDegrees")
+    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoAngleDegrees")
     profileLogLik <- result[, .(profile=max(.SD)), by=anisoAngleDegrees]
-    
     #plot(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks)
     f1 <- splinefun(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks, method = "fmm")
     # curve(f1, add = TRUE, col = 2, n=1001) 
@@ -395,7 +392,7 @@ likfitLgmGpu <- function(data,
     # anisoAngleDegreesresults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
     lower = min(profileLogLik$anisoAngleDegrees)
     upper = max(profileLogLik$anisoAngleDegrees)
-    MLE <- round(optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum,digits=2)
+    MLE <- round(optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum,digits=4)
     # maxvalue <- anisoAngleDegreesresults$objective
     # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
@@ -422,31 +419,30 @@ likfitLgmGpu <- function(data,
   
   
   
-  
+  index <- which(LogLikcpu == max(LogLikcpu, na.rm = TRUE), arr.ind = TRUE)
   
   ###############lambda hat#####################
-  if(is.element('BoxCox',paramToEstimate)){
-    likForBoxCox = cbind(BoxCox, apply(LogLikcpu, 2, max) )
-    f1 <- splinefun(likForBoxCox[,1], likForBoxCox[,2]-breaks, method = "fmm")
-    # plot(likForBoxCox[,1], likForBoxCox[,2]-breaks)
+  if(is.element('boxcox',paramToEstimate)  & length(boxcox)>3 ){
+    likForboxcox = cbind(boxcox, apply(LogLikcpu, 2, max) )
+    f1 <- splinefun(likForboxcox[,1], likForboxcox[,2]-breaks, method = "fmm")
+    # plot(likForboxcox[,1], likForboxcox[,2]-breaks)
     # curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
     # abline(h =0, lty = 2)
     # rangeresults <- optim(26000, f1, method = "L-BFGS-B",lower = 20000, upper = 240000, hessian = FALSE, control=list(fnscale=-1) )
-    lower = min(BoxCox)
-    upper = max(BoxCox)
+    lower = min(boxcox)
+    upper = max(boxcox)
     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
     # maxvalue <- rangeresults$objective
     # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-    Table["BoxCox",] <- c(MLE, ci)
-
-    
+    Table["boxcox",] <- c(MLE, ci)
+  }else{
+    Table["BoxCox",1] <- BoxCox[index[2]]
   }
   
 
 
   ###############betahat#####################
-  index <- which(LogLikcpu == max(LogLikcpu, na.rm = TRUE), arr.ind = TRUE)
   Betahat <- matrix(0, nrow=Ncov, ncol=Ndata)
   a<-c((index[1]-1)*Ncov+1, index[1]*Ncov)
   mat <- XVYXVX[a,((Ndata+1):ncol(yx))]

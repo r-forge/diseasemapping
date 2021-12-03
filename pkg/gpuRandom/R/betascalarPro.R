@@ -4,19 +4,25 @@
 
 
 
-likLgm_betascalarProfile <- function(Betas, #a m x 1 R vector  given by the user 
-                                     a,     # which beta_i?
-                                     Nobs,  # number of observations.
-                                     Ndata,
-                                     Nparam,
-                                     Ncov,
-                                     detVar, # vclVector
-                                     ssqY,   # vclMatrix
-                                     XVYXVX,   # vclMatrix
-                                     jacobian, # vclVector  #form = c("loglik", "profileforBeta"),
-                                     minustwotimes=TRUE){ 
+  betascalarProfile <- function(Betas, #a m x 1 R vector  given by the user 
+                                cilevel=0.95,
+                                a,     # which beta_i?
+                                Nobs,  # number of observations.
+                                Ndata,
+                                Nparam,
+                                Ncov,
+                                detVar, # vclVector
+                                ssqY,   # vclMatrix
+                                XVYXVX,   # vclMatrix
+                                jacobian # vclVector  #form = c("loglik", "profileforBeta"),
+                                ){ 
   
-
+  m <- length(Betas)
+  if(m < 5){
+    warning("need more values for accurate estimate")
+  }
+  
+  
   ssqY <- as.matrix(ssqY)
   detVar <- as.vector(detVar)
   detVar <- matrix(rep(detVar, Ndata), nrow=Nparam)
@@ -24,8 +30,6 @@ likLgm_betascalarProfile <- function(Betas, #a m x 1 R vector  given by the user
   jacobian <- do.call(rbind, replicate(Nparam, jacobian, simplify = FALSE))
   #dim(XVYXVX)
   Ucov <- Ncov-1
-  m <- length(Betas)
-  
   XTVinvX <- XVYXVX[ , (ncol(XVYXVX)-Ncov+1):ncol(XVYXVX)]
   XVY <- XVYXVX[ , 1:Ndata]
   
@@ -51,7 +55,7 @@ likLgm_betascalarProfile <- function(Betas, #a m x 1 R vector  given by the user
     partC = matrix(0, nrow=Nparam, ncol=Ndata)
     partD = matrix(0, nrow=Nparam, ncol=Ndata)
     partE = matrix(0, nrow=Nparam, ncol=Ndata)
-    LogLik_optimized = matrix(0, nrow=m, ncol=1)
+    minus2LogLik_optimized = matrix(0, nrow=m, ncol=1)
     
     
   for (i in 1:Nparam){
@@ -75,11 +79,45 @@ likLgm_betascalarProfile <- function(Betas, #a m x 1 R vector  given by the user
     for (bet in 1:m){
     ssqResidual <- ssqY + Betas[bet] *partD + Betas[bet]^2 *partE - (partA + Betas[bet]* partB + Betas[bet]^2 * partC)
     All_min2loglik_forthisbeta <- Nobs*log(ssqResidual/Nobs) + detVar + Nobs + Nobs*log(2*pi) + jacobian
-    LogLik_optimized[bet,] = min(All_min2loglik_forthisbeta)
+    minus2LogLik_optimized[bet,] = min(All_min2loglik_forthisbeta)
     }
-  
-  
-    LogLik_optimized
+    
+    ############### ci ###########################################
+    lower = min(Betas)
+    upper = max(Betas)
+    LogLik <- -0.5*minus2LogLik_optimized
+    f1 <- splinefun(Betas, LogLik, method = "fmm")
+    #plot(Betas,LogLik)
+    #curve(f1(x), add = TRUE, col = 2, n = 1001)
+    
+    result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)
+    MLE <- result$maximum
+    breaks <- result$objective - qchisq(cilevel,  df = 1)/2
+    #abline(h=breaks)
+    f2 <- splinefun(Betas, LogLik-breaks, method = "fmm")
+    #plot(Betas,LogLik-breaks)
+    #abline(h=0)
+    ci <- rootSolve::uniroot.all(f2, lower = lower, upper = upper)
+    
+    if(length(ci)==1){
+      if((abs(ci-lower)) > (abs(ci-upper))){
+      ci <- c(lower, ci)
+      }else{
+      ci <- c(ci, upper)}
+    }
+    
+
+    ############### output #####################################
+    Table <- matrix(NA, nrow=1, ncol=3)
+    colnames(Table) <-  c("MLE", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
+    Table[1,] <- c(MLE, ci)
+    
+    
+    Output <- list(LogLik=LogLik,
+                   estimates = Table)
+    
+    Output
+
   
 }  
   

@@ -5,48 +5,144 @@
 
 
 
-```{r ,eval=TRUE}
+```{r test1,eval=TRUE}
 library(gpuRandom)
 library(gpuR)
 library(data.table)
 library('geostatsp')
 data('swissRain')
-swissRain$sqrtY = sqrt(swissRain$rain)
 swissRain$elevation = extract(swissAltitude, swissRain)
 
 params = expand.grid(
-  range = c(25, 30, 35, 40, 60, 70, 80, 100, 110, 120, 130, 140, 150, 170, 180, 190, 200, 220, 250)*1000,
+  range = exp(seq(log(15), log(260), len=13))*1000, #c(15, 20, 25, 30, 35, 40,  60,  80, 100, 120, 130, 140, 150, 170, 180, 190, 200, 220, 250)*1000,#exp(seq(log(10), log(250), len=12)), #
   shape = c(0.1, 0.3, 0.5, 1, 1.5, 2, 2.5, 3, 4),
   anisoRatio = seq(1, 15,len=10),
-  anisoAngleDegrees = seq(25,45, len=10),
-  nugget = seq(0, 2,len=5)
+  anisoAngleDegrees = seq(26,45, len=10),
+  nugget = seq(0, 10,len=5)     # at least c(0,5) to avoid that strange profile
 )
 
-cilevel=0.95
-data=swissRain
-formula=sqrtY~ elevation
-coordinates=swissRain@coords
-paramToEstimate = c("range")
-params=params # CPU matrix for now, users need to provide proper parameters given their specific need
-BoxCox = seq(0,2,len=8)
-type = "double"
-reml=FALSE
-minustwotimes=FALSE
-NparamPerIter=400
-Nglobal=c(128,64)
-Nlocal=c(16,16)
-NlocalCache=2800
-verbose=FALSE
+# cilevel=0.95
+# data=swissRain
+# formula=rain~ elevation
+# coordinates=swissRain@coords
+# paramToEstimate = c("range")
+# params=params # CPU matrix for now, users need to provide proper parameters given their specific need
+# boxcox = seq(0,3,len=8)
+# type = "double"
+# reml=FALSE
+# minustwotimes=FALSE
+# NparamPerIter=400
+# Nglobal=c(128,64)
+# Nlocal=c(16,16)
+# NlocalCache=2800
+# verbose=FALSE
 
 
+#########################################################
+system.time(result1<-gpuRandom::likfitLgmGpu(
+                         data=swissRain,
+                         formula=rain~ elevation, 
+                         coordinates=swissRain@coords,
+                         params=params, # CPU matrix for now, users need to provide proper parameters given their specific need
+                         boxcox = seq(0,3,len=8),
+                         paramToEstimate = c("range","shape","nugget","anisoAngleDegrees", "anisoRatio", "boxcox"), #variance and regression parameters are always estimated
+                         cilevel=0.95,
+                         type = "double",
+                         reml=FALSE, 
+                         minustwotimes=FALSE,
+                         NparamPerIter=400,
+                         Nglobal=c(128,64),
+                         Nlocal=c(16,16),
+                         NlocalCache=2800,
+                         verbose=FALSE))
+
+
+result1$table
 ```
 
 
 
 
+```{r betascalar}
+Betas <- seq(0, 9, len=25)*1e-04
+
+system.time(result2<-gpuRandom::betascalarProfile(Betas, #a m x 1 R vector  given by the user 
+                         cilevel=0.95,                         
+                         a=2,     # which beta?   beta1 is intercept, beta2 is first covariate
+                         Nobs=result1$Nobs,  # number of observations.
+                         Ndata=result1$Ndata,
+                         Nparam=result1$Nparam,
+                         Ncov=result1$Ncov,
+                         result1$detVar, # vclVector
+                         result1$ssqY,   # vclMatrix
+                         result1$XVYXVX,   # vclMatrix
+                         result1$jacobian # vclVector  #form = c("loglik", "profileforBeta"),
+                         ))
+
+result2$estimates
+#0.0001791278
+# plot(Betas,result2$LogLik)
+# max(result2)
+# f1 <- splinefun(Betas, result2, method = "fmm")
+# curve(f1(x), add = TRUE, col = 2, n = 1001)
+# a<-optimize(f1, c(min(Betas), max(Betas)), maximum = TRUE, tol = 0.0001)
+# breaks <- a$objective - qchisq(0.95,  df = 1)/2
+# 
+# plot(Betas,result2-breaks)
+# f2 <- splinefun(Betas, -0.5*result2-breaks, method = "fmm")
+# curve(f2(x), add = TRUE, col = 2, n = 1001)
+# abline(h=0)
+#  ci<-rootSolve::uniroot.all(f2, lower = min(Betas, upper = max(Betas))
+#     if(length(ci)==1){
+#       ci <- c(lower, ci)
+#     }
+
+```
+
+
+
+```{r variance}
+  stderror <- seq(0, 18, len=25)
+
+
+  system.time(result3<-gpuRandom::variancePro(stderror, #a vector  given by the user 
+                                              cilevel=0.95,
+                               Nobs=result1$Nobs,  # number of observations.
+                               Nparam=result1$Nparam,
+                               Ndata=result1$Ndata,
+                               detVar=result1$detVar, # vclVector
+                               ssqResidual=result1$ssqResidual,   # vclMatrix
+                               jacobian=result1$jacobian # vclVector  #form = c("loglik", "profileforBeta"),
+                               ))
+
+
+  plot(stderror,result3$LogLik)
+  result3$estimates
+
+
+  stderror <- seq(0, 16, len=25)
+
+
+  system.time(result3<-gpuRandom::variancePro(stderror, #a vector  given by the user 
+                                              cilevel=0.95,
+                               Nobs=result1$Nobs,  # number of observations.
+                               Nparam=result1$Nparam,
+                               Ndata=result1$Ndata,
+                               detVar=result1$detVar, # vclVector
+                               ssqResidual=result1$ssqResidual,   # vclMatrix
+                               jacobian=result1$jacobian # vclVector  #form = c("loglik", "profileforBeta"),
+                               ))
+
+
+  plot(stderror,result3$LogLik)
+  result3$estimates
 
 
 
 
 
+
+
+
+```
 
