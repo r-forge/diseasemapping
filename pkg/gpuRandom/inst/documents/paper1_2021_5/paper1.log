@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2021.11.25)  30 NOV 2021 09:17
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2021.11.25)  3 DEC 2021 07:32
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -6,7 +6,7 @@ entering extended mode
 (./paper1.tex
 LaTeX2e <2020-02-02> patch level 2
 L3 programming layer <2020-02-14> (./jss.cls
-Document Class: jss 2021/05/23 3.3 jss class by Achim Zeileis
+Document Class: jss 2020/08/03 3.1 jss class by Achim Zeileis
 (/usr/share/texlive/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2019/12/20 v1.4l Standard LaTeX document class
 (/usr/share/texlive/texmf-dist/tex/latex/base/size11.clo
@@ -48,22 +48,13 @@ File: pdftex.def 2018/01/08 v1.0l Graphics/color driver for pdftex
 \Gin@req@height=\dimen135
 \Gin@req@width=\dimen136
 )
-(/usr/share/texlive/texmf-dist/tex/latex/xcolor/xcolor.sty
-Package: xcolor 2016/05/11 v2.12 LaTeX color extensions (UK)
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/color.sty
+Package: color 2019/11/23 v1.2a Standard LaTeX Color (DPC)
 
 (/usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/color.cfg
 File: color.cfg 2016/01/02 v1.6 sample color configuration
 )
-Package xcolor Info: Driver file: pdftex.def on input line 225.
-Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1348.
-Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1352.
-Package xcolor Info: Model `RGB' extended on input line 1364.
-Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1366.
-Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1367.
-Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1368.
-Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1369.
-Package xcolor Info: Model `Gray' substituted by `gray' on input line 1370.
-Package xcolor Info: Model `wave' substituted by `hsb' on input line 1371.
+Package color Info: Driver file: pdftex.def on input line 147.
 )
 (/usr/share/texlive/texmf-dist/tex/latex/ae/ae.sty
 Package: ae 2001/02/12 1.3 Almost European Computer Modern
@@ -272,11 +263,11 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 
 
 Package hyperref Warning: Option `hyperindex' has already been used,
-(hyperref)                setting the option has no effect on input line 447.
+(hyperref)                setting the option has no effect on input line 467.
 
-Package hyperref Info: Option `colorlinks' set `true' on input line 447.
-Package hyperref Info: Option `linktocpage' set `true' on input line 447.
-Package hyperref Info: Option `plainpages' set `false' on input line 447.
+Package hyperref Info: Option `colorlinks' set `true' on input line 467.
+Package hyperref Info: Option `linktocpage' set `true' on input line 467.
+Package hyperref Info: Option `plainpages' set `false' on input line 467.
 ) (/usr/share/texlive/texmf-dist/tex/latex/base/alltt.sty
 Package: alltt 1997/06/16 v2.0g defines alltt environment
 )
@@ -539,23 +530,9 @@ LaTeX Info: Redefining \nameref on input line 89.
 \@outlinefile=\write4
 \openout4 = `paper1.out'.
 
-<jsslogo.jpg, id=60, 540.0175pt x 393.47pt>
-File: jsslogo.jpg Graphic file (type jpg)
-<use jsslogo.jpg>
-Package pdftex.def Info: jsslogo.jpg  used on input line 89.
-(pdftex.def)             Requested size: 89.80768pt x 65.43607pt.
-LaTeX Font Info:    Trying to load font information for T1+pzc on input line 89
-.
-
-(/usr/share/texlive/texmf-dist/tex/latex/psnfss/t1pzc.fd
-File: t1pzc.fd 2001/06/04 font definitions for T1/pzc.
-)
-LaTeX Font Info:    Font shape `T1/pzc/m/n' in size <28> not available
-(Font)              Font shape `T1/pzc/mb/it' tried instead on input line 89.
 LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 8
 9.
-
-(/usr/share/texmf/tex/latex/lm/ot1lmr.fd
+ (/usr/share/texmf/tex/latex/lm/ot1lmr.fd
 File: ot1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OML+lmm on input line 8
@@ -597,13 +574,15 @@ LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 1
 
 (/usr/share/texmf/tex/latex/lm/t1lmtt.fd
 File: t1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
+) [1
+
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
+LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 1
+32.
+ (/usr/share/texmf/tex/latex/lm/ts1lmr.fd
+File: ts1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
-Underfull \vbox (badness 2753) has occurred while \output is active []
-
- [1
-
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <./jsslogo.jpg>]
-Underfull \vbox (badness 2119) has occurred while \output is active []
+Underfull \vbox (badness 1286) has occurred while \output is active []
 
 
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
@@ -611,11 +590,6 @@ Overfull \hbox (5.47499pt too wide) has occurred while \output is active
  []
 
 [2]
-LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 1
-32.
- (/usr/share/texmf/tex/latex/lm/ts1lmr.fd
-File: ts1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
-)
 Overfull \hbox (16.94566pt too wide) in paragraph at lines 147--150
 []\T1/lmr/b/n/10.95 clrng \T1/lmr/m/n/10.95 is able to cre-ate streams both on 
 the host and on the GPU de-vice. The \T1/lmtt/m/n/10.95 createStreamsCpu()
@@ -626,41 +600,33 @@ Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 3
  []
 
-[3] (/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
+[3]
+Overfull \hbox (5.47499pt too wide) has occurred while \output is active
+\T1/lmr/m/n/10.95 4 []
+ []
+
+[4] (/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2019/09/10 1.8c listings language file
 )
 (/usr/share/texlive/texmf-dist/tex/latex/listings/lstmisc.sty
 File: lstmisc.sty 2019/09/10 1.8c (Carsten Heinz)
 )
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
-\T1/lmr/m/n/10.95 4 []
- []
-
-[4]
-Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 5
  []
 
 [5]
-
-Package caption Warning: \label without proper reference on input line 266.
-See the caption package documentation for explanation.
-
-
-LaTeX Warning: Reference `algorithm1' on page 6 undefined on input line 263.
-
-
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 6 []
  []
 
 [6]
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 294.
+(Font)              <10> on input line 313.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 294.
+(Font)              <7> on input line 313.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 294.
+(Font)              <5> on input line 313.
 
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 7
@@ -687,108 +653,95 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
  []
 
 [11]
-<Figures/GfighistMonth-1.pdf, id=323, 325.215pt x 216.81pt>
-File: Figures/GfighistMonth-1.pdf Graphic file (type pdf)
-<use Figures/GfighistMonth-1.pdf>
-Package pdftex.def Info: Figures/GfighistMonth-1.pdf  used on input line 570.
-(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
-<Figures/GfighistMonth-2.pdf, id=324, 325.215pt x 216.81pt>
-File: Figures/GfighistMonth-2.pdf Graphic file (type pdf)
-<use Figures/GfighistMonth-2.pdf>
-Package pdftex.def Info: Figures/GfighistMonth-2.pdf  used on input line 571.
-(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 12 []
  []
 
-[12 <./Figures/GfighistMonth-1.pdf> <./Figures/GfighistMonth-2.pdf>]
-
-Package caption Warning: \label without proper reference on input line 606.
-See the caption package documentation for explanation.
-
-
-LaTeX Warning: Reference `algorithm2' on page 13 undefined on input line 604.
-
+[12]
+<Figures/GfighistMonth-1.pdf, id=325, 325.215pt x 216.81pt>
+File: Figures/GfighistMonth-1.pdf Graphic file (type pdf)
+<use Figures/GfighistMonth-1.pdf>
+Package pdftex.def Info: Figures/GfighistMonth-1.pdf  used on input line 655.
+(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
+<Figures/GfighistMonth-2.pdf, id=326, 325.215pt x 216.81pt>
+File: Figures/GfighistMonth-2.pdf Graphic file (type pdf)
+<use Figures/GfighistMonth-2.pdf>
+Package pdftex.def Info: Figures/GfighistMonth-2.pdf  used on input line 656.
+(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 13
  []
 
-[13]
+[13 <./Figures/GfighistMonth-1.pdf> <./Figures/GfighistMonth-2.pdf>]
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 14 []
  []
 
 [14]
-Overfull \hbox (11.08118pt too wide) in paragraph at lines 690--692
+Overfull \hbox (10.94998pt too wide) has occurred while \output is active
+[] \T1/lmr/m/n/10.95 15
+ []
+
+[15]
+Overfull \hbox (11.08118pt too wide) in paragraph at lines 806--809
 \T1/lmr/m/n/10.95 Step 5, gen-er-ate 2 stan-dard Gaus-sian ran-dom vec-tors \T1
 /lmtt/m/n/10.95 zmatGpu$\OT1/lmr/m/n/10.95 = (\OML/lmm/m/it/10.95 Z[]; Z[]\OT1/
 lmr/m/n/10.95 )$ \T1/lmr/m/n/10.95 us-ing \T1/lmtt/m/n/10.95 clrng::rnorm()\T1/
 lmr/m/n/10.95 ,
  []
 
-<Figures/Gmaternplot-1.png, id=384, 325.215pt x 216.81pt>
-File: Figures/Gmaternplot-1.png Graphic file (type png)
-<use Figures/Gmaternplot-1.png>
-Package pdftex.def Info: Figures/Gmaternplot-1.png  used on input line 727.
-(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
-<Figures/Gmaternplot-2.png, id=385, 325.215pt x 216.81pt>
-File: Figures/Gmaternplot-2.png Graphic file (type png)
-<use Figures/Gmaternplot-2.png>
-Package pdftex.def Info: Figures/Gmaternplot-2.png  used on input line 728.
-(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
-<Figures/Gmaternplot-3.png, id=386, 325.215pt x 216.81pt>
-File: Figures/Gmaternplot-3.png Graphic file (type png)
-<use Figures/Gmaternplot-3.png>
-Package pdftex.def Info: Figures/Gmaternplot-3.png  used on input line 729.
-(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
-<Figures/Gmaternplot-4.png, id=387, 325.215pt x 216.81pt>
-File: Figures/Gmaternplot-4.png Graphic file (type png)
-<use Figures/Gmaternplot-4.png>
-Package pdftex.def Info: Figures/Gmaternplot-4.png  used on input line 730.
-(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
-<Figures/Gmaternplot-5.png, id=388, 325.215pt x 216.81pt>
-File: Figures/Gmaternplot-5.png Graphic file (type png)
-<use Figures/Gmaternplot-5.png>
-Package pdftex.def Info: Figures/Gmaternplot-5.png  used on input line 731.
-(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
-<Figures/Gmaternplot-6.png, id=389, 325.215pt x 216.81pt>
-File: Figures/Gmaternplot-6.png Graphic file (type png)
-<use Figures/Gmaternplot-6.png>
-Package pdftex.def Info: Figures/Gmaternplot-6.png  used on input line 732.
-(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
-<Figures/Gmaternplot-7.png, id=390, 325.215pt x 216.81pt>
-File: Figures/Gmaternplot-7.png Graphic file (type png)
-<use Figures/Gmaternplot-7.png>
-Package pdftex.def Info: Figures/Gmaternplot-7.png  used on input line 733.
-(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
-<Figures/Gmaternplot-8.png, id=391, 325.215pt x 216.81pt>
-File: Figures/Gmaternplot-8.png Graphic file (type png)
-<use Figures/Gmaternplot-8.png>
-Package pdftex.def Info: Figures/Gmaternplot-8.png  used on input line 734.
-(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
 
-LaTeX Warning: Float too large for page by 16.80641pt on input line 735.
-
-
-Overfull \hbox (10.94998pt too wide) has occurred while \output is active
-[] \T1/lmr/m/n/10.95 15
- []
-
-[15]
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 16 []
  []
 
-[16 <./Figures/Gmaternplot-1.png (PNG copy)> <./Figures/Gmaternplot-2.png (PNG 
-copy)> <./Figures/Gmaternplot-3.png (PNG copy)> <./Figures/Gmaternplot-4.png (P
-NG copy)> <./Figures/Gmaternplot-5.png (PNG copy)> <./Figures/Gmaternplot-6.png
- (PNG copy)> <./Figures/Gmaternplot-7.png (PNG copy)> <./Figures/Gmaternplot-8.
-png (PNG copy)>] (./paper1.bbl
+[16]
+<Figures/Gmaternplot-1.png, id=391, 325.215pt x 216.81pt>
+File: Figures/Gmaternplot-1.png Graphic file (type png)
+<use Figures/Gmaternplot-1.png>
+Package pdftex.def Info: Figures/Gmaternplot-1.png  used on input line 862.
+(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
+<Figures/Gmaternplot-2.png, id=392, 325.215pt x 216.81pt>
+File: Figures/Gmaternplot-2.png Graphic file (type png)
+<use Figures/Gmaternplot-2.png>
+Package pdftex.def Info: Figures/Gmaternplot-2.png  used on input line 863.
+(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
+<Figures/Gmaternplot-3.png, id=393, 325.215pt x 216.81pt>
+File: Figures/Gmaternplot-3.png Graphic file (type png)
+<use Figures/Gmaternplot-3.png>
+Package pdftex.def Info: Figures/Gmaternplot-3.png  used on input line 864.
+(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
+<Figures/Gmaternplot-4.png, id=394, 325.215pt x 216.81pt>
+File: Figures/Gmaternplot-4.png Graphic file (type png)
+<use Figures/Gmaternplot-4.png>
+Package pdftex.def Info: Figures/Gmaternplot-4.png  used on input line 865.
+(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
+<Figures/Gmaternplot-5.png, id=395, 325.215pt x 216.81pt>
+File: Figures/Gmaternplot-5.png Graphic file (type png)
+<use Figures/Gmaternplot-5.png>
+Package pdftex.def Info: Figures/Gmaternplot-5.png  used on input line 866.
+(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
+<Figures/Gmaternplot-6.png, id=396, 325.215pt x 216.81pt>
+File: Figures/Gmaternplot-6.png Graphic file (type png)
+<use Figures/Gmaternplot-6.png>
+Package pdftex.def Info: Figures/Gmaternplot-6.png  used on input line 867.
+(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
+<Figures/Gmaternplot-7.png, id=397, 325.215pt x 216.81pt>
+File: Figures/Gmaternplot-7.png Graphic file (type png)
+<use Figures/Gmaternplot-7.png>
+Package pdftex.def Info: Figures/Gmaternplot-7.png  used on input line 868.
+(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
+<Figures/Gmaternplot-8.png, id=398, 325.215pt x 216.81pt>
+File: Figures/Gmaternplot-8.png Graphic file (type png)
+<use Figures/Gmaternplot-8.png>
+Package pdftex.def Info: Figures/Gmaternplot-8.png  used on input line 869.
+(pdftex.def)             Requested size: 208.04779pt x 138.70168pt.
+
+
+LaTeX Warning: Float too large for page by 16.80641pt on input line 870.
+
+
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 17
  []
@@ -798,41 +751,49 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 18 []
  []
 
-[18])
+[18 <./Figures/Gmaternplot-1.png (PNG copy)> <./Figures/Gmaternplot-2.png (PNG 
+copy)> <./Figures/Gmaternplot-3.png (PNG copy)> <./Figures/Gmaternplot-4.png (P
+NG copy)> <./Figures/Gmaternplot-5.png (PNG copy)> <./Figures/Gmaternplot-6.png
+ (PNG copy)> <./Figures/Gmaternplot-7.png (PNG copy)> <./Figures/Gmaternplot-8.
+png (PNG copy)>] (./paper1.bbl
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 19
  []
 
 [19]
-LaTeX Font Info:    Font shape `T1/pzc/m/n' in size <13> not available
-(Font)              Font shape `T1/pzc/mb/it' tried instead on input line 782.
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 782.
-
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 20 []
  []
 
-[20]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 782.
+[20])
+Overfull \hbox (10.94998pt too wide) has occurred while \output is active
+[] \T1/lmr/m/n/10.95 21
+ []
+
+[21]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 917.
+
+Overfull \hbox (10.94998pt too wide) has occurred while \output is active
+\T1/lmr/m/n/10.95 22 []
+ []
+
+[22]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 917.
  (./paper1.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 782.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 782.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 917.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 917.
 Package rerunfilecheck Info: File `paper1.out' has not changed.
 (rerunfilecheck)             Checksum: 3E66D66DF06847BE0621FB0193AC907E;2009.
-
-
-LaTeX Warning: There were undefined references.
-
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 782.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 917.
  ) 
 Here is how much of TeX's memory you used:
- 12086 strings out of 483107
- 182267 string characters out of 5964629
- 707505 words of memory out of 5000000
- 26694 multiletter control sequences out of 15000+600000
- 626876 words of font info for 74 fonts, out of 8000000 for 9000
+ 11659 strings out of 483107
+ 177468 string characters out of 5964629
+ 696028 words of memory out of 5000000
+ 26275 multiletter control sequences out of 15000+600000
+ 622664 words of font info for 70 fonts, out of 8000000 for 9000
  59 hyphenation exceptions out of 8191
- 48i,15n,53p,2168b,1862s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 48i,15n,53p,2168b,1208s stack positions out of 5000i,500n,10000p,200000b,80000s
 pdfTeX warning (dest): name{Subsection.5.0.Simulating\040Gaussian\040random\0
 40fields\040with\040Mat\351rn\040covariances.2} has been referenced but does no
 t exist, replaced by a fixed one
@@ -840,24 +801,23 @@ t exist, replaced by a fixed one
 {/usr/share/texmf/fonts/enc/dvips/lm/lm-mathit.enc}{/usr/share/texmf/fonts/enc/
 dvips/lm/lm-rm.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm-ec.enc}{/usr/share/t
 exmf/fonts/enc/dvips/lm/lm-mathsy.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm-m
-athex.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm-ts1.enc}{/usr/share/texlive/t
-exmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texmf/fonts/type1/public/lm/l
-mb10.pfb></usr/share/texmf/fonts/type1/public/lm/lmbx10.pfb></usr/share/texmf/f
-onts/type1/public/lm/lmbx12.pfb></usr/share/texmf/fonts/type1/public/lm/lmex10.
-pfb></usr/share/texmf/fonts/type1/public/lm/lmmi10.pfb></usr/share/texmf/fonts/
-type1/public/lm/lmmi6.pfb></usr/share/texmf/fonts/type1/public/lm/lmmi8.pfb></u
-sr/share/texmf/fonts/type1/public/lm/lmr10.pfb></usr/share/texmf/fonts/type1/pu
-blic/lm/lmr6.pfb></usr/share/texmf/fonts/type1/public/lm/lmr8.pfb></usr/share/t
-exmf/fonts/type1/public/lm/lmri10.pfb></usr/share/texmf/fonts/type1/public/lm/l
-mri8.pfb></usr/share/texmf/fonts/type1/public/lm/lmro10.pfb></usr/share/texmf/f
-onts/type1/public/lm/lmss10.pfb></usr/share/texmf/fonts/type1/public/lm/lmsy10.
-pfb></usr/share/texmf/fonts/type1/public/lm/lmsy8.pfb></usr/share/texmf/fonts/t
-ype1/public/lm/lmtt10.pfb></usr/share/texmf/fonts/type1/public/lm/lmtto10.pfb><
-/usr/share/texlive/texmf-dist/fonts/type1/urw/zapfchan/uzcmi8a.pfb>
-Output written on paper1.pdf (20 pages, 585317 bytes).
+athex.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm-ts1.enc}</usr/share/texmf/fon
+ts/type1/public/lm/lmb10.pfb></usr/share/texmf/fonts/type1/public/lm/lmbx10.pfb
+></usr/share/texmf/fonts/type1/public/lm/lmbx12.pfb></usr/share/texmf/fonts/typ
+e1/public/lm/lmex10.pfb></usr/share/texmf/fonts/type1/public/lm/lmmi10.pfb></us
+r/share/texmf/fonts/type1/public/lm/lmmi6.pfb></usr/share/texmf/fonts/type1/pub
+lic/lm/lmmi8.pfb></usr/share/texmf/fonts/type1/public/lm/lmr10.pfb></usr/share/
+texmf/fonts/type1/public/lm/lmr6.pfb></usr/share/texmf/fonts/type1/public/lm/lm
+r8.pfb></usr/share/texmf/fonts/type1/public/lm/lmri10.pfb></usr/share/texmf/fon
+ts/type1/public/lm/lmri8.pfb></usr/share/texmf/fonts/type1/public/lm/lmro10.pfb
+></usr/share/texmf/fonts/type1/public/lm/lmss10.pfb></usr/share/texmf/fonts/typ
+e1/public/lm/lmsy10.pfb></usr/share/texmf/fonts/type1/public/lm/lmsy8.pfb></usr
+/share/texmf/fonts/type1/public/lm/lmtt10.pfb></usr/share/texmf/fonts/type1/pub
+lic/lm/lmtto10.pfb>
+Output written on paper1.pdf (22 pages, 558179 bytes).
 PDF statistics:
- 561 PDF objects out of 1000 (max. 8388607)
- 501 compressed objects within 6 object streams
- 171 named destinations out of 1000 (max. 500000)
- 168 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 559 PDF objects out of 1000 (max. 8388607)
+ 500 compressed objects within 5 object streams
+ 173 named destinations out of 1000 (max. 500000)
+ 163 words of extra memory for PDF output out of 10000 (max. 10000000)
 

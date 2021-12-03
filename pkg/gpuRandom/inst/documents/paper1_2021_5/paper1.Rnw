@@ -314,7 +314,7 @@ streams_saved <- vclMatrix(readRDS("myStreams.rds"))
 We apply the Box-Muller transformation to $U(0,1)$ random numbers to generate standard normal random numbers. As shown in Algorithm \ref{algorithm1}, Box-Muller algorithm takes two independent, standard uniform random variables $U_1$ and $U_2$ and produces two independent, standard Gaussian random variables $X$ and $Y$, where $R$ and $\Theta$ are polar coordinate random variables. %The derivation basically uses transformation from Cartesian coordinates to polar coordinates to represent two independent, Normally distributed random variables. 
 The Box-Muller algorithm is a very good choice for Gaussian transform on GPU compared to other transform methods \citep{howes2007efficient}, because this algorithm has no branching or looping, which are the things GPU is not good at. %but GPU is good at the high computational load of sine and cosine functions in the algorithm. 
 
-\begin{algorithm*}[ht] \label{algorithm1}
+\begin{algorithm}[ht] 
 \SetAlgoLined
  1, Generate $U_1$, $U_2$ i.i.d. from $U (0,1)$ \;
  2, Define \begin{align*} 
@@ -324,7 +324,8 @@ The Box-Muller algorithm is a very good choice for Gaussian transform on GPU com
 & Y=R*\sin(\Theta);\;\end{align*}
  3, Take $X$ and $Y$ as two independent draws from $N(0,1)$\;
  \caption{Box-Muller algorithm.}
-\end{algorithm*}
+ \label{algorithm1}
+\end{algorithm}
 
 
 Listing \ref{lst:normal} shows a fragment of the kernel that generates standard Gaussian random numbers. Aside from using local memory and the part that does the transformation, this kernel is the same with the kernel for generating uniform random numbers shown in Listing \ref{lst:uniformkernel}. If developers want to use other Gaussian transform methods, this kernel is easy to be adapted and incorporated in other \proglang{R} packages. The kernel executes over a 2-dimensional index space with $1 \times 2$ work-groups. \code{part[0]} and \code{part[1]} correspond to $R$ and $\Theta$ in the formulas respectively. \code{PI_2} is defined to be $\pi/2$. As the work-items in a work-group proceed at differing rates, \code{barrier(CLK_LOCAL_MEM_FENCE)} ensures correct ordering of memory operations to local memory, so that Gaussian random numbers $(X_1,Y_1), \dots, (X_n,Y_n)$ are generated in pairs correctly, errors such as $(X_n, Y_{(n-1)})$ or $(X_{(n-1)}, Y_{(n)})$ are avoided.
@@ -494,7 +495,6 @@ We got 410825 cases whose test statistics are below the observed threshold based
 \subsection{Comparing run-time: Week data example}\label{fisher_week}
 Table \ref{tab:week} is a $7 \times 12$ table shows frequencies for congenital anomalies of the newborn by birth day of week in 2018 within the United States. 
 <<Timecompareweek, echo=FALSE, eval=TRUE, cache=TRUE,results="hide", fig.pos='h'>>=
-library(latex2exp)
 dataweek<-read.csv("/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/weekday.csv") 
 week<-as.matrix(dataweek[,-1])
 rownames(week) <- c("Mon", "Tue","Wed","Thu","Fri","Sat","Sun")
@@ -585,14 +585,15 @@ all of these methods except matrix decomposition method, are approximations and 
 
 Suppose $U=(U_1, U_2, \dots, U_n)$ is a Gaussian random field with mean $\mu$ and covariance matrix $\Sigma$, without loss of generality, we assume mean value zero $(\mu = 0)$. Since covariance matrix $\Sigma$ is symmetric and positive-definite, we can take Cholesky decomposition of $\Sigma$, then we can simulate random samples from $U$ using Algorithm \ref{algorithm2},
 
-\begin{algorithm*}[ht] \label{algorithm2}
+\begin{algorithm}[ht]
 \SetAlgoLined
  1, Calculate the covariance matrix $\Sigma$ between locations\;
  2, Compute the Cholesky decomposition of $\Sigma = L \cdot D \cdot L^\top$, $L$ is the lower unit triangular matrix, $D$ is a diagonal matrix\;
  3, Generate on GPU a random matrix $Z=(Z_1, Z_2, \dots, Z_n) \sim \text{MVN}(0,I_n)$, where $I_n$ is a $n \times n$ identity matrix\;
  4, Compute the random samples from $U$ in batches using $U = L \cdot D^{\frac{1}{2}} \cdot Z$ \;
  \caption{Gaussian random fields simulation using covariance matrix decomposition method.}
-\end{algorithm*}
+ \label{algorithm2}
+\end{algorithm}
 
 % $U=L*D^{1/2}*Z$, where 
 % \begin{itemize}
@@ -682,11 +683,9 @@ simMat = vclMatrix(0, nrow(zmatGpu), ncol(zmatGpu),
 gpuBatchMatrix::multiplyLowerDiagonalBatch(
   output=simMat, L=maternCov, 
   D=diagMat, B=zmatGpu,
-  diagIsOne = 1L, # diagonal of L is one
-  transformD = "sqrt", # take the square root of each element of D
-  Nglobal,
-  Nlocal,
-  NlocalCache)
+  diagIsOne = TRUE,   
+  transformD = "sqrt", 
+  Nglobal, Nlocal, NlocalCache)
 @
 \begin{gather}
  \begin{bmatrix}  L_{1} \\ L_{2} \\L_{3} \\ \vdots
@@ -774,7 +773,6 @@ Future work on \pkg{clrng} package could be: (1) Explore other RNGs, for example
 
 
 \end{document}
-
 
 
 
