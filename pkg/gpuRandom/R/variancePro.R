@@ -6,15 +6,15 @@
 
 ######## this function will be incorporated in the other function later i think
 
-likLgm_variancePro <- function(stderror, #a vector  given by the user 
+       variancePro <- function(stderror, #a vector  given by the user 
+                               cilevel=0.95,
                                Nobs,  # number of observations.
                                Nparam,
                                Ndata,
-                               BoxCox,
                                detVar, # vclVector
                                ssqResidual,   # vclMatrix
-                               jacobian, # vclVector  #form = c("loglik", "profileforBeta"),
-                               minustwotimes=FALSE){
+                               jacobian # vclVector  #form = c("loglik", "profileforBeta"),
+                               ){
   
   
   ssqResidual <- as.matrix(ssqResidual)
@@ -23,41 +23,102 @@ likLgm_variancePro <- function(stderror, #a vector  given by the user
   jacobian <- as.vector(jacobian)
   jacobian <- do.call(rbind, replicate(Nparam, jacobian, simplify = FALSE))
   m <- length(stderror)
-  LogLik_optimized = matrix(0, nrow=m, ncol=1)
+  LogLik = matrix(0, nrow=m, ncol=1)
   
   
   
   for (var in 1:m){
     All_min2loglik_forthisvar <- ssqResidual/(stderror[var]^2) + Nobs*log(stderror[var]^2) + detVar + jacobian + Nobs*log(2*pi) 
-    LogLik_optimized[var,] <- -0.5*min(All_min2loglik_forthisvar)
+    LogLik[var,] <- -0.5*min(All_min2loglik_forthisvar)
   }
 
-  result = cbind(stderror, LogLik_optimized)
-  colnames(result) <- c("stderror",'LogL')
-  MLE <- result[,'stderror'][which.max(result[,'LogL'])]
-  # plot(result[,'stderror'], result[,'LogL'])
-  maximum <- max(LogLik_optimized)
-  breaks95 = maximum - qchisq(0.95,  df = 1)/2
   
+  lower = min(stderror)
+  upper = max(stderror)
+  f1 <- splinefun(stderror, LogLik, method = "fmm")
+  #plot(stderror,LogLik)
+  #curve(f1(x), add = TRUE, col = 2, n = 1001)
   
-  leftOfMax = result[,'stderror'] < MLE
-  if(length(which(leftOfMax)) <=2 | length(which(!leftOfMax)) <=2){
-    ci95 = c(NA,NA)
-    print("Not enough data for CI calculation")
-  }else{
-    afLeft <- approxfun(result[,'LogL'][leftOfMax], result[,'stderror'][leftOfMax])   
-    afRight <- approxfun(result[,'LogL'][!leftOfMax], result[,'stderror'][!leftOfMax])   
+  result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)
+  MLE <- result$maximum
+  breaks <- result$objective - qchisq(cilevel,  df = 1)/2
+  #abline(h=breaks)
+  f2 <- splinefun(stderror, LogLik-breaks, method = "monoH.FC")
+  #plot(stderror,LogLik-breaks)
+  #curve(f2(x), add = TRUE, col = 2, n = 1001)
+  #abline(h=0)
+  ci <- rootSolve::uniroot.all(f2, lower = lower, upper = upper)
   
-    ci95= c(afLeft(breaks95), afRight(breaks95))
+  if(length(ci)==1){
+    if((abs(ci-lower)) > (abs(ci-upper))){
+      ci <- c(lower, ci)
+    }else{
+      ci <- c(ci, upper)}
   }
-    
   
-  Output = list(LogLik_optimized=LogLik_optimized,
-                  ci95=ci95
-                  )
-     
+  
+  ############### output #####################################
+  Table <- matrix(NA, nrow=1, ncol=3)
+  colnames(Table) <-  c("MLE", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
+  Table[1,] <- c(MLE, ci)
+  
+  
+  Output <- list(LogLik=LogLik,
+                 estimates = Table)
+  
   Output
   
 }
 
+       
 
+       # result = cbind(stderror, LogLik_optimized)
+       # colnames(result) <- c("stderror",'LogL')
+       # MLE <- result[,'stderror'][which.max(result[,'LogL'])]
+       # # plot(result[,'stderror'], result[,'LogL'])
+       # maximum <- max(LogLik_optimized)
+       # breaks95 = maximum - qchisq(0.95,  df = 1)/2
+       # 
+       # 
+       # leftOfMax = result[,'stderror'] < MLE
+       # if(length(which(leftOfMax)) <=2 | length(which(!leftOfMax)) <=2){
+       #   ci95 = c(NA,NA)
+       #   print("Not enough data for CI calculation")
+       # }else{
+       #   afLeft <- approxfun(result[,'LogL'][leftOfMax], result[,'stderror'][leftOfMax])   
+       #   afRight <- approxfun(result[,'LogL'][!leftOfMax], result[,'stderror'][!leftOfMax])   
+       #   
+       #   ci95= c(afLeft(breaks95), afRight(breaks95))
+       # }
+       
+       
+       # Output = list(LogLik_optimized=LogLik_optimized,
+       #               ci95=ci95
+       # )
+       # 
+       # Output
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
