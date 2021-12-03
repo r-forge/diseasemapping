@@ -21,85 +21,6 @@ if("gpuBatchMatrix" %in% rownames(installed.packages()) == FALSE)
 
 
 
-## ----downloadJssClassFile, eval=FALSE, include=FALSE-------------------------------------------------------------------------------------------------------
-## zUrl = 'http://www.jstatsoft.org/public/journals/1/jss-style.zip'
-## zFile = basename(zUrl)
-## if(!file.exists(zFile))
-##         download.file(zUrl, zFile)
-## unzip(zFile, exdir='.',
-##                 files = grep("^jss", unzip(zFile, list=TRUE)$Name, value=TRUE)
-## )
-
-
-## ----echo=FALSE,results="hide"-----------------------------------------------------------------------------------------------------------------------------
-options(width=65)
-
-
-## ----setup, cache=FALSE,include=FALSE----------------------------------------------------------------------------------------------------------------------
-library('knitr')
-options(continue="+  ",  prompt="R> ", digits=3, width=57) 
-
-opts_chunk$set(echo=TRUE,fig.path='Figures/G', fig.height=3,
-                fig.width=4.5,dev='png',tidy=TRUE,fig.align='center',
-                tidy.opts=list(blank=FALSE, width.cutoff=57),
-                prompt=TRUE, highlight=FALSE,cache.stuff=1)
-
-hook_output <- function(x, options) {
-        if (knitr:::output_asis(x, options)) return(x)
-        paste0('\\begin{CodeOutput}\n', x, '\\end{CodeOutput}\n')
-}
-
-knit_hooks$set(output = hook_output)
-knit_hooks$set(message = hook_output)
-knit_hooks$set(warning = hook_output)
-
-
-knit_hooks$set(source  =function(x, options) {
-        x = gsub("\n", "\n+", x)
-        x = paste("R>",paste(x, collapse='\nR> '))
-#       paste0(c('\\begin{example*}', x, '\\end{example*}', ''),
-#                       collapse = '\n')
-x =  paste0(c('\\begin{CodeInput}', x, '\\end{CodeInput}', ''),
-                        collapse = '\n')
-                        x               
-})
-
-knit_hooks$set(plot = function (x, options) 
-                {
-                        paste( hook_plot_tex(x, options), "\n", 
-                                        sep = "")
-                }
-)
-
-knit_hooks$set(chunk  = function(x, options) {
-        if (knitr:::output_asis(x, options)) return(x)
-        theend = gregexpr("end\\{Code(Input|Output)\\}", x)
-        theend=theend[[1]]
-        if(theend[1]>0){
-                theend = theend[length(theend)] + attributes(theend)$match.length[length(theend)]
-                x = paste(substr(x,1,theend-1),"\n\\end{CodeChunk}", substr(x,theend, nchar(x)))
-                x=sub('begin\\{Code', 'begin{CodeChunk}\n\\\\begin{Code', x)
-        }
-        x
-})
-knitr::knit_hooks$set(margins = function(before, options, envir) {
-    if (!before) 
-        return()
-    graphics::par(mar = c(1.5 + 0.9 * options$margins, 1.5 + 
-        0.9 * options$margins, 0.2, 0.2), mgp = c(1.45, 0.45, 
-        0), cex = 1.25)
-})
-opts_knit$set(header='')
-
-
-
-## ----preliminaries, echo=FALSE, results="hide", eval=FALSE-------------------------------------------------------------------------------------------------
-##   knitr::knit_hooks$set(plot=knitr::hook_plot_tex)
-##   options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE)
-## knitr::opts_chunk$set(highlight=FALSE, background='#FFFFFF00', fig.height=4, fig.width=6, out.width='0.45\\textwidth')
-## library("MASS")
-
-
 ## ----echo=FALSE, results="hide", message=FALSE-------------------------------------------------------------------------------------------------------------
 library("gpuR")
 library("clrng")
@@ -109,8 +30,6 @@ setContext(   grep('gpu', listContexts()$device_type) [1]    )
 
 ## ----createStreams_CPU-------------------------------------------------------------------------------------------------------------------------------------
 # creating streams on CPU
-library("gpuR")
-library("clrng")
 myStreamsCpu <- createStreamsCpu(n=4, initial=12345)
 t(myStreamsCpu)
 
@@ -137,8 +56,7 @@ streams_saved <- vclMatrix(readRDS("myStreams.rds"))
 
 ## ----random normal time compare, eval=TRUE, cache=FALSE----------------------------------------------------------------------------------------------------
 streams <- createStreamsGpu(n = 512 * 128)
-system.time(clrng::rnorm(c(10000,10000), streams=streams, 
-                             Nglobal=c(512,128), type="double"))
+system.time(clrng::rnorm(c(10000,10000), streams=streams, Nglobal=c(512,128), type="double"))
 
 ## ----random normal time compare2, eval=TRUE, cache=TRUE----------------------------------------------------------------------------------------------------
 system.time(matrix(stats::rnorm(10000^2),10000,10000))
@@ -201,8 +119,7 @@ kable_styling(full_width = F, position = "center")#, latex_options = "HOLD_posit
 
 ## ----TimecompareweekGpu2, eval=TRUE, cache=FALSE-----------------------------------------------------------------------------------------------------------
 week_GPU<-gpuR::vclMatrix(week,type="integer")
-system.time(result_week<-clrng::fisher.sim(week_GPU, 1e7, streams=streams,
-                type="double",returnStatistics=TRUE,Nglobal = c(256,64)))
+system.time(result_week<-clrng::fisher.sim(week_GPU, 1e7, streams=streams, type="double",returnStatistics=TRUE,Nglobal = c(256,64)))
 result_week$threshold
 result_week$simNum
 result_week$counts

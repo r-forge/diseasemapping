@@ -149,8 +149,6 @@ In \proglang{clRNG} library, the MRG31k3p RNG's entire period of length approxim
 \begin{CodeChunk}
 \begin{CodeInput}
 R> # creating streams on CPU
-R> library("gpuR")
-R> library("clrng")
 R> myStreamsCpu <- createStreamsCpu(n = 4, initial = 12345)
 R> t(myStreamsCpu)
 \end{CodeInput}
@@ -365,7 +363,7 @@ R> system.time(clrng::rnorm(c(10000, 10000), streams = streams,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.043   0.004   0.047
+##   0.046   0.000   0.047
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -481,7 +479,7 @@ R> system.time(result_month <- clrng::fisher.sim(month_gpu, 1e+06,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.322   0.011   0.333
+##   0.314   0.003   0.318
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_month$threshold
@@ -568,7 +566,7 @@ R> system.time(result_week <- clrng::fisher.sim(week_GPU, 1e+07,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   1.930   0.021   1.950
+##   1.940   0.014   1.952
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_week$threshold
