@@ -185,7 +185,7 @@ likfitLgmGpu <- function(data,
   maximum <- max(LogLikcpu)
   breaks = maximum - qchisq(cilevel,  df = 1)/2
   
-  ##############output matrix####################
+  ############## output matrix ####################
   Table <- matrix(NA, nrow=length(union(paramToEstimate, 'boxcox'))+Ncov+1, ncol=3)
   rownames(Table) <-  c("intercept", paste(c('betahat'), seq_len(Ncov-1),sep = ''), "sdSpatial", union(paramToEstimate, 'boxcox'))
   colnames(Table) <-  c("estimate", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
@@ -194,7 +194,7 @@ likfitLgmGpu <- function(data,
   
   
   
-  ###############profile for covariance parameters#####################
+  ############### profile for covariance parameters #####################
   if(is.element('range',paramToEstimate)){
     # get profile log-lik for range values
     result = data.table::as.data.table(cbind(LogLikcpu, params0[,"range"]))
@@ -261,7 +261,7 @@ likfitLgmGpu <- function(data,
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "shape")
     profileLogLik <- result[, .(profile=max(.SD)), by=shape]
     # plot(profileLogLik$shape, profileLogLik$profile-breaks)
-    f1 <- splinefun(profileLogLik$shape, profileLogLik$profile-breaks, method = "fmm")
+    f1 <- splinefun(profileLogLik$shape, profileLogLik$profile-breaks, method = "natural")
     # curve(f1, add = TRUE, col = 2) 
     # abline(h =0, lty = 2)
     # shaperesults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
@@ -466,7 +466,7 @@ likfitLgmGpu <- function(data,
   
   Output <- list(LogLik=LogLikcpu,
                  minusTwoLogLik = minusTwoLogLik,
-                 table = Table,
+                 estimates = Table,
                  Nobs = Nobs,
                  Ncov = Ncov,
                  Ndata = Ndata,

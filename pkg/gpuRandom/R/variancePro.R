@@ -35,7 +35,7 @@
   
   lower = min(stderror)
   upper = max(stderror)
-  f1 <- splinefun(stderror, LogLik, method = "fmm")
+  f1 <- splinefun(stderror, LogLik, method = "monoH.FC")
   #plot(stderror,LogLik)
   #curve(f1(x), add = TRUE, col = 2, n = 1001)
   
@@ -56,15 +56,20 @@
       ci <- c(ci, upper)}
   }
   
+  if(length(ci)>2){
+    ci <- ci[3:4]
+    warning("spline approximation is not good")
+  }
   
   ############### output #####################################
-  Table <- matrix(NA, nrow=1, ncol=3)
-  colnames(Table) <-  c("MLE", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
-  Table[1,] <- c(MLE, ci)
+  Table <- matrix(NA, nrow=1, ncol=4)
+  colnames(Table) <-  c("MLE", "maximum", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
+  Table[1,] <- c(MLE, result$objective, ci)
   
   
-  Output <- list(LogLik=LogLik,
-                 estimates = Table)
+  Output <- list(estimates = Table,
+                 LogLik = LogLik,
+                 breaks = breaks)
   
   Output
   

@@ -15,7 +15,7 @@ swissRain$elevation = extract(swissAltitude, swissRain)
 
 params = expand.grid(
   range = exp(seq(log(15), log(260), len=13))*1000, #c(15, 20, 25, 30, 35, 40,  60,  80, 100, 120, 130, 140, 150, 170, 180, 190, 200, 220, 250)*1000,#exp(seq(log(10), log(250), len=12)), #
-  shape = c(0.1, 0.3, 0.5, 1, 1.5, 2, 2.5, 3, 4),
+  shape = c(0.1, 0.3, 0.5, 1, 1.5, 2, 2.5, 3, 4),   
   anisoRatio = seq(1, 15,len=10),
   anisoAngleDegrees = seq(26,45, len=10),
   nugget = seq(0, 10,len=5)     # at least c(0,5) to avoid that strange profile
@@ -25,9 +25,9 @@ params = expand.grid(
 # data=swissRain
 # formula=rain~ elevation
 # coordinates=swissRain@coords
-# paramToEstimate = c("range")
+# paramToEstimate = c("range","shape","nugget","anisoAngleDegrees", "anisoRatio", "boxcox")
 # params=params # CPU matrix for now, users need to provide proper parameters given their specific need
-# boxcox = seq(0,3,len=8)
+# boxcox = seq(-1,3,len=8)
 # type = "double"
 # reml=FALSE
 # minustwotimes=FALSE
@@ -37,7 +37,8 @@ params = expand.grid(
 # NlocalCache=2800
 # verbose=FALSE
 
-
+# adding shape = 0.2 ? or boxcox = (-1,2) will make beta's and stderror's profile strange,
+# try boxcox = (-1,2) or (-1, 3) will see stderror strange profile
 #########################################################
 system.time(result1<-gpuRandom::likfitLgmGpu(
                          data=swissRain,
@@ -56,15 +57,22 @@ system.time(result1<-gpuRandom::likfitLgmGpu(
                          NlocalCache=2800,
                          verbose=FALSE))
 
+result1$Ncov
+result1$Ndata
+result1$estimates
+temp=as.matrix(result1$XVYXVX)
+as.matrix(result1$ssqY)[1,]
+dim(temp)
+temp[1:12,1:12]
 
-result1$table
+#1.479909e-04
 ```
 
 
 
 
 ```{r betascalar}
-Betas <- seq(0, 9, len=25)*1e-04
+Betas <- seq(-1, 18, len=25)*1e-04
 
 system.time(result2<-gpuRandom::betascalarProfile(Betas, #a m x 1 R vector  given by the user 
                          cilevel=0.95,                         
@@ -80,7 +88,9 @@ system.time(result2<-gpuRandom::betascalarProfile(Betas, #a m x 1 R vector  give
                          ))
 
 result2$estimates
+result2$breaks
 #0.0001791278
+#0.0001513466
 # plot(Betas,result2$LogLik)
 # max(result2)
 # f1 <- splinefun(Betas, result2, method = "fmm")
@@ -96,7 +106,22 @@ result2$estimates
 #     if(length(ci)==1){
 #       ci <- c(lower, ci)
 #     }
+Betas <- seq(0, 12, len=20)
 
+system.time(result22<-gpuRandom::betascalarProfile(Betas, #a m x 1 R vector  given by the user 
+                         cilevel=0.95,                         
+                         a=1,     # which beta?   beta1 is intercept, beta2 is first covariate
+                         Nobs=result1$Nobs,  # number of observations.
+                         Ndata=result1$Ndata,
+                         Nparam=result1$Nparam,
+                         Ncov=result1$Ncov,
+                         result1$detVar, # vclVector
+                         result1$ssqY,   # vclMatrix
+                         result1$XVYXVX,   # vclMatrix
+                         result1$jacobian # vclVector  #form = c("loglik", "profileforBeta"),
+                         ))
+
+result22$estimates
 ```
 
 
@@ -107,17 +132,18 @@ result2$estimates
 
   system.time(result3<-gpuRandom::variancePro(stderror, #a vector  given by the user 
                                               cilevel=0.95,
-                               Nobs=result1$Nobs,  # number of observations.
-                               Nparam=result1$Nparam,
-                               Ndata=result1$Ndata,
-                               detVar=result1$detVar, # vclVector
-                               ssqResidual=result1$ssqResidual,   # vclMatrix
-                               jacobian=result1$jacobian # vclVector  #form = c("loglik", "profileforBeta"),
-                               ))
+                                              Nobs=result1$Nobs,  # number of observations.
+                                              Nparam=result1$Nparam,
+                                              Ndata=result1$Ndata,
+                                              detVar=result1$detVar, # vclVector
+                                              ssqResidual=result1$ssqResidual,   # vclMatrix
+                                              jacobian=result1$jacobian # vclVector  #form = c("loglik", "profileforBeta"),
+                                              ))
 
 
   plot(stderror,result3$LogLik)
   result3$estimates
+  result3$breaks
 
 
   stderror <- seq(0, 16, len=25)

@@ -5,7 +5,7 @@
 
 
 
-likLgm_betavectorProfile <- function(Betas, #a m x p R matrix  given by the user 
+ betavectorProfile <- function(Betas, #a m x p R matrix  given by the user 
                                Nobs,  # number of observations.
                                Nparam,
                                BoxCox,
