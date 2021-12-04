@@ -33,6 +33,7 @@
   XTVinvX <- XVYXVX[ , (ncol(XVYXVX)-Ncov+1):ncol(XVYXVX)]
   XVY <- XVYXVX[ , 1:Ndata]
   
+  dim(XTVinvX)
   ## make each symmetric
   # for (i in 1:Nparam){
   #   #mat <- XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ]
@@ -40,7 +41,7 @@
   # }
   
   
-  selectedrows <- seq_len(Nparam)*a
+  selectedrows <- (seq_len(Nparam)-1) * Ncov + a
   XTVinvX_deleted <- matrix(XTVinvX[-selectedrows,-a],ncol=Ucov, byrow=TRUE)
   XTVinvX_a <- matrix(XTVinvX[selectedrows, -a], nrow=Nparam, ncol=Ucov)
   #XTVinvX_a <- matrix(XTVinvX[-selectedrows, a], nrow=Nparam*Ucov, ncol=1)[1:10,]
@@ -96,6 +97,7 @@
     #abline(h=breaks)
     f2 <- splinefun(Betas, LogLik-breaks, method = "fmm")
     #plot(Betas,LogLik-breaks)
+    #curve(f2(x), add = TRUE, col = 2, n = 1001)
     #abline(h=0)
     ci <- rootSolve::uniroot.all(f2, lower = lower, upper = upper)
     
@@ -106,15 +108,20 @@
       ci <- c(ci, upper)}
     }
     
+    if(length(ci)==0){
+      warning("need wider range of beta to search ci's")
+      ci <- c(NA, NA)
+    }
 
     ############### output #####################################
-    Table <- matrix(NA, nrow=1, ncol=3)
-    colnames(Table) <-  c("MLE", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
-    Table[1,] <- c(MLE, ci)
+    Table <- matrix(NA, nrow=1, ncol=4)
+    colnames(Table) <-  c("MLE", "maximum", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
+    Table[1,] <- c(MLE, result$objective, ci)
     
     
-    Output <- list(LogLik=LogLik,
-                   estimates = Table)
+    Output <- list(estimates = Table,
+                   LogLik = LogLik,
+                   breaks = breaks)
     
     Output
 
