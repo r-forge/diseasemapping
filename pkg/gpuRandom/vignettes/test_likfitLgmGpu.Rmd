@@ -72,29 +72,32 @@ temp[1:12,1:12]
 
 
 ```{r betascalar}
-Betas <- seq(-1, 18, len=25)*1e-04
-
+Betas <- seq(-6, 18, len=25)*1e-04
 system.time(result2<-gpuRandom::betascalarProfile(Betas, #a m x 1 R vector  given by the user 
-                         cilevel=0.95,                         
-                         a=2,     # which beta?   beta1 is intercept, beta2 is first covariate
-                         Nobs=result1$Nobs,  # number of observations.
-                         Ndata=result1$Ndata,
-                         Nparam=result1$Nparam,
-                         Ncov=result1$Ncov,
-                         result1$detVar, # vclVector
-                         result1$ssqY,   # vclMatrix
-                         result1$XVYXVX,   # vclMatrix
-                         result1$jacobian # vclVector  #form = c("loglik", "profileforBeta"),
-                         ))
+                                        cilevel=0.95,                         
+                                        a=2,     # which beta?   beta1 is intercept, beta2 is first covariate
+                                        Nobs=result1$Nobs,  # number of observations.
+                                        Ndata=result1$Ndata,
+                                        Nparam=result1$Nparam,
+                                        Ncov=result1$Ncov,
+                                        result1$detVar, # vclVector
+                                        result1$ssqY,   # vclMatrix
+                                        result1$XVYXVX,   # vclMatrix
+                                        result1$jacobian # vclVector  #form = c("loglik", "profileforBeta"),
+                                        ))
+
 
 result2$estimates
 result2$breaks
 #0.0001791278
 #0.0001513466
-# plot(Betas,result2$LogLik)
+#0.0001757909
+#0.0001825992
+plot(Betas,result2$LogLik)
+abline(h=result2$breaks)
 # max(result2)
-# f1 <- splinefun(Betas, result2, method = "fmm")
-# curve(f1(x), add = TRUE, col = 2, n = 1001)
+f1 <- splinefun(Betas, result2$LogLik, method = "natural")
+curve(f1(x), add = TRUE, col = 2, n = 1001)
 # a<-optimize(f1, c(min(Betas), max(Betas)), maximum = TRUE, tol = 0.0001)
 # breaks <- a$objective - qchisq(0.95,  df = 1)/2
 # 
@@ -106,8 +109,9 @@ result2$breaks
 #     if(length(ci)==1){
 #       ci <- c(lower, ci)
 #     }
-Betas <- seq(0, 12, len=20)
 
+############################## intercept ########################################
+Betas <- seq(0, 12, len=20)
 system.time(result22<-gpuRandom::betascalarProfile(Betas, #a m x 1 R vector  given by the user 
                          cilevel=0.95,                         
                          a=1,     # which beta?   beta1 is intercept, beta2 is first covariate
@@ -122,14 +126,17 @@ system.time(result22<-gpuRandom::betascalarProfile(Betas, #a m x 1 R vector  giv
                          ))
 
 result22$estimates
+#4.404231
+plot(Betas,result22$LogLik)
+abline(h=result22$breaks)
+f2 <- splinefun(Betas, result22$LogLik, method = "natural")
+curve(f2(x), add = TRUE, col = 2, n = 1001)
 ```
 
 
 
 ```{r variance}
   stderror <- seq(0, 18, len=25)
-
-
   system.time(result3<-gpuRandom::variancePro(stderror, #a vector  given by the user 
                                               cilevel=0.95,
                                               Nobs=result1$Nobs,  # number of observations.
@@ -146,22 +153,21 @@ result22$estimates
   result3$breaks
 
 
-  stderror <- seq(0, 16, len=25)
-
-
-  system.time(result3<-gpuRandom::variancePro(stderror, #a vector  given by the user 
+ stderror <-c( seq(0,2, len=7), seq(3,18,len=9))
+ system.time(result3<-gpuRandom::variancePro(stderror, #a vector  given by the user 
                                               cilevel=0.95,
-                               Nobs=result1$Nobs,  # number of observations.
-                               Nparam=result1$Nparam,
-                               Ndata=result1$Ndata,
-                               detVar=result1$detVar, # vclVector
-                               ssqResidual=result1$ssqResidual,   # vclMatrix
-                               jacobian=result1$jacobian # vclVector  #form = c("loglik", "profileforBeta"),
-                               ))
+                                              Nobs=result1$Nobs,  # number of observations.
+                                              Nparam=result1$Nparam,
+                                              Ndata=result1$Ndata,
+                                              detVar=result1$detVar, # vclVector
+                                              ssqResidual=result1$ssqResidual,   # vclMatrix
+                                              jacobian=result1$jacobian # vclVector  #form = c("loglik", "profileforBeta"),
+                                              ))
 
 
   plot(stderror,result3$LogLik)
   result3$estimates
+  abline(h=result3$breaks)
 
 ```
 

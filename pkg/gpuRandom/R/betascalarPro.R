@@ -1,9 +1,14 @@
 #' @title Estimate Log-likelihood for Gaussian random fields when Betas are given
 #' @useDynLib gpuRandom
+
+
+     makeSymm <- function(m) {
+         m[upper.tri(m)] <- t(m)[upper.tri(m)]
+         return(m)
+     }
+     
+     
 #' @export
-
-
-
   betascalarProfile <- function(Betas, #a m x 1 R vector  given by the user 
                                 cilevel=0.95,
                                 a,     # which beta_i?
@@ -33,16 +38,20 @@
   XTVinvX <- XVYXVX[ , (ncol(XVYXVX)-Ncov+1):ncol(XVYXVX)]
   XVY <- XVYXVX[ , 1:Ndata]
   
-  dim(XTVinvX)
+  #dim(XTVinvX)
   ## make each symmetric
-  # for (i in 1:Nparam){
-  #   #mat <- XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ]
-  #   XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ][upper.tri(XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ])] <- XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ][lower.tri(XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ])]
-  # }
+  for (i in 1:Nparam){
+    XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ] <- makeSymm(XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ])
+    #mat <- XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ]
+    #XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ] <-as.matrix(forceSymmetric(mat, "L"))
+    #XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ][upper.tri(XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ])] <- XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ][lower.tri(XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ])]
+  }
   
-  
+  #  XTVinvX[1:10,]
+  # matrix(XTVinvX[-selectedrows,-a], ncol=Ucov, byrow=TRUE)[1:5,]
+  # matrix(XTVinvX[selectedrows, -a], nrow=Nparam, ncol=Ucov)[1:5,]
   selectedrows <- (seq_len(Nparam)-1) * Ncov + a
-  XTVinvX_deleted <- matrix(XTVinvX[-selectedrows,-a],ncol=Ucov, byrow=TRUE)
+  XTVinvX_deleted <- matrix(XTVinvX[-selectedrows,-a], ncol=Ucov, byrow=TRUE)
   XTVinvX_a <- matrix(XTVinvX[selectedrows, -a], nrow=Nparam, ncol=Ucov)
   #XTVinvX_a <- matrix(XTVinvX[-selectedrows, a], nrow=Nparam*Ucov, ncol=1)[1:10,]
   XVY_deleted <- XVY[-selectedrows, ]
@@ -102,7 +111,7 @@
     ci <- rootSolve::uniroot.all(f2, lower = lower, upper = upper)
     
     if(length(ci)==1){
-      if((abs(ci-lower)) > (abs(ci-upper))){
+      if( ci > MLE){
       ci <- c(lower, ci)
       }else{
       ci <- c(ci, upper)}
