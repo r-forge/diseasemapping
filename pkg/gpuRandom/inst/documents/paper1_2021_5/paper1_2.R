@@ -1,0 +1,263 @@
+## check if needee packages are installed
+packagesList <- c("knitr", "tidyverse", "kableExtra", "devtools")
+
+for (i in 1:length(packagesList)){
+  if(packagesList[i] %in% rownames(installed.packages()) == FALSE) 
+  {install.packages(packagesList[i])}
+}
+
+if("gpuR" %in% rownames(installed.packages()) == FALSE) 
+{devtools::install_github("cdeterman/gpuR")}    #{install.packages("gpuR", repos='https://github.com/cdeterman/gpuR')}
+
+if("geostatsp" %in% rownames(installed.packages()) == FALSE) 
+{install.packages("geostatsp", repos='http://r-forge.r-project.org')}
+
+if("clrng" %in% rownames(installed.packages()) == FALSE) 
+{devtools::install_github("Ruoyong/clrng")}
+
+if("gpuBatchMatrix" %in% rownames(installed.packages()) == FALSE) 
+{devtools::install_github("Ruoyong/gpuBatchMatrix")}
+
+
+
+
+## -----------------------------------------------------------------------------------
+library("gpuR")
+setContext(   grep('gpu', listContexts()$device_type) [1]    )
+
+
+
+## Section 2.1
+# Creating streams on CPU
+library("clrng")
+myStreamsCpu <- createStreamsCpu(n=4, initial=12345)
+t(myStreamsCpu)
+
+
+# Creating streams on GPU
+myStreamsGpu = vclMatrix(myStreamsCpu)
+myStreamsGpu2 = createStreamsGpu(n=4, initial=12345)
+
+
+## Section 2.2
+# Generate 6 i.i.d. U (0,1) random numbers
+as.vector(clrng::runif(n=6, streams=myStreamsGpu, Nglobal=c(2,2)))
+
+
+## ----eval=TRUE,tidy=TRUE, include=FALSE--------------------------------------------------------------------------------------------------------------------
+t(matrix(as.matrix(myStreamsGpu), nrow(myStreamsCpu), ncol(myStreamsCpu), dimnames = dimnames(myStreamsCpu)))
+
+
+# Save streams on CPU
+saveRDS(as.matrix(createStreamsGpu(n=4)), "myStreams.rds")
+# Load the streams object and transfer it to GPU
+streams_saved <- vclMatrix(readRDS("myStreams.rds"))
+
+
+## Section 3.1
+# Generate a large matrix of normal random numbers, test the run time
+streams <- createStreamsGpu(n = 512 * 128)
+system.time(clrng::rnorm(c(10000,10000), streams=streams, Nglobal=c(512,128), type="double"))
+
+# Compare run time with using CPU
+system.time(matrix(stats::rnorm(10000^2),10000,10000))
+
+
+## Section 3.2
+# Generate exponential random numbers
+r_matrix <- clrng::rexp(c(2,4), rate=1, Nglobal=c(2,2), type="double")
+as.matrix(r_matrix)
+
+
+## Section 4.1
+month <- readRDS(system.file("data/month.Rds", package = "clrng"))
+# datamonth<-read.csv("/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/month.csv") 
+# month<-as.matrix(datamonth[,-1])
+# rownames(month) <- c("Jan", "Feb","Mar","Apr","May","Jun","Jul","Aug","Sept","Oct","Nov","Dec")
+# colnames(month) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal", "Dow", "Chr", "Hyp")
+
+
+
+## ----monthdata,eval=TRUE,echo=FALSE, cache=TRUE, fig.pos='h', message=FALSE--------------------------------------------------------------------------------
+library(knitr)
+library(tidyverse)
+library(kableExtra)
+knitr::kable(month,format="latex", align = c("rrrrrrrrrrrr"), #label="tab:month"
+             caption = "Monthly birth anomaly data\\label{tab:month}", booktabs=TRUE,linesep = "") %>%
+  kable_styling(full_width = F, position = "center")#latex_options = "HOLD_position")
+
+
+# using GPU
+streams <- createStreamsGpu(n =256*64, initial=666)
+month_gpu<-vclMatrix(month,type="integer")
+system.time(result_month <- clrng::fisher.sim(month_gpu, 1e6, streams=streams,
+                                              type="double", returnStatistics=TRUE,  Nglobal = c(256,64)))
+result_month$threshold
+result_month$simNum
+result_month$counts
+result_month$p.value
+
+
+# save test statistics for plot
+month_stats <- as.vector(result_month$sim)
+
+
+
+# using CPU
+system.time(result_monthcpu<-stats::fisher.test(month,simulate.p.value = TRUE, B=1e6))
+result_monthcpu$p.value
+
+
+## Section 4.2
+week <- readRDS(system.file("data", "week.Rds", package = "clrng"))
+# dataweek<-read.csv("/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/weekday.csv") 
+# week<-as.matrix(dataweek[,-1])
+# rownames(week) <- c("Mon", "Tue","Wed","Thu","Fri","Sat","Sun")
+# colnames(week) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal", "Dow", "Chr", "Hyp")
+
+
+## ----weekdata, eval=TRUE, echo=FALSE, cache=TRUE-----------------------------------------------------------------------------------------------------------
+knitr::kable(week,format="latex",align = c("rrrrrrrrrrrr"),  #label = "tab:week",
+             caption = "Day-of-week birth anomaly data\\label{tab:week}", booktabs=TRUE,linesep = "") %>%
+  kable_styling(full_width = F, position = "center")#, latex_options = "HOLD_position")
+
+
+# using GPU
+week_GPU<-gpuR::vclMatrix(week,type="integer")
+system.time(result_week<-clrng::fisher.sim(week_GPU, 1e7, streams=streams, type="double",returnStatistics=TRUE,Nglobal = c(256,64)))
+result_week$threshold
+result_week$simNum
+result_week$counts
+result_week$p.value
+
+
+# save test statistics for plot
+result_week$cpu = as.vector(result_week$sim)
+
+
+# using CPU
+system.time(result_weekcpu<-fisher.test(week,simulate.p.value = TRUE,B=10010624))
+result_weekcpu$p.value
+
+
+## summary table
+library(kableExtra)
+dt <- data.frame(
+  var1 = c("B", "1M", "10M", "1M", "10M"),
+  var2 = c('Intel 2.5ghz', 0.403804, 0.0001251, 10.74,  63.24),
+  var3 = c('AMD Radeon', 0.403507, 0.0001274,   2.28,    10.82),
+  var4 = c('Intel 3.7ghz', 0.4035606,0.0001202, 15.00,  91.58),
+  var5 = c('NVIDIA V100', 0.403507,0.0001274,   0.72,   4.18),
+  var6 = c('Data','month','week','month','week')
+)
+
+knitr::kable(dt, col.names = NULL, caption = "Summary of comparions of Fisher's test simulation on different devices. Computer 1 is equipped with CPU Intel Xenon W-2145 3.7Ghz and AMD Radeon VII. Computer 2 is equipped with VCPU Intel Xenon Skylake 2.5Ghz and VGPU Nvidia Tesla V100.\\label{tab:summary}") %>%
+  kable_styling(full_width = FALSE, position = "center") %>%
+  kableExtra::group_rows(index = c("P-value" = 2, "Run-time" = 2)) %>%
+  add_header_above(c(" " = 1, "Computer 1" = 2, "Computer 2" = 2, " " = 1))
+
+
+## test statistics plot
+hist(month_stats, xlab="test statistic",#TeX('-$\\sum(\\log(n_{ij}!))$'),
+     breaks=40, ylab="proportion", main="", prob=TRUE)
+abline(v = result_month$threshold, col = "blue", lwd = 1.5)
+
+hist(result_week$cpu, xlab='test statistic', ylab="proportion", prob=TRUE, main="")
+abline(v = result_week$threshold, col = "blue", lwd = 1.5)
+
+
+## Section 5.1
+library("gpuBatchMatrix")
+library('geostatsp')
+
+
+# setupcoords
+NlocalCache = 1000
+Nglobal = c(128, 64, 2)
+Nlocal = c(4, 2, 2)
+theType = "double"
+
+
+# swissRainBoundary
+data("swissRain", package="geostatsp")
+myRaster = geostatsp::squareRaster(swissBorder, 80)
+myRaster
+
+
+# setup paramsBatch
+params = 
+  rbind(c(shape=1.25, range=50*1000, variance = 1.5, nugget = 0,anisoRatio = 1, anisoAngleRadians = 0), 
+        c(shape=2.15, range=60*1000, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = pi/7),
+        c(shape=0.6, range=30*1000, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/7),
+        c(shape=3, range=30*1000, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/7)
+  )
+#c(shape=2.15, range=40*1000, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/4))
+
+# show parameterBatch
+params
+
+
+
+# matern batches
+maternCov = gpuBatchMatrix::maternBatch(
+  params, myRaster,          
+  Nglobal=c(128,64), Nlocal=c(16,4))
+dim(maternCov)
+
+
+# take cholesky decomposition
+diagMat = gpuBatchMatrix::cholBatch(maternCov, 
+                                    Nglobal= c(128, 8), Nlocal= c(32, 8))
+
+
+# simulate random normal vectors
+streamsGpu <- createStreamsGpu(n=128*64)
+zmatGpu = clrng::rnorm(
+  c(nrow(maternCov),2), streams=streamsGpu, 
+  Nglobal=c(128,64),
+  type = theType)
+
+
+# L*D*Z
+simMat = vclMatrix(0, nrow(zmatGpu), ncol(zmatGpu), 
+                   type = gpuR::typeof(zmatGpu))
+
+gpuBatchMatrix::multiplyLowerDiagonalBatch(
+  output=simMat, L=maternCov, 
+  D=diagMat, B=zmatGpu,
+  diagIsOne = TRUE,   
+  transformD = "sqrt", 
+  Nglobal, Nlocal, NlocalCache)
+
+
+# plot Setup
+simRaster = raster::brick(myRaster, nl = ncol(simMat)*nrow(params))
+values(simRaster) = as.vector(as.matrix(simMat))
+names(simRaster) = apply(expand.grid('par',1:nrow(params), 
+                                     'sim', 1:ncol(simMat)), 1, paste, collapse='')
+theSubcap = gsub("par", "parameter ", names(simRaster))
+theSubcap = gsub("sim", ", simuation ", theSubcap)
+
+
+# random surfaces plot
+myCol = mapmisc::colourScale(breaks=sort(unique(c(-6, -4, seq(-2, 2), 4, 6))), style='fixed', col='Spectral')
+for(D in names(simRaster)) {
+  mapmisc::map.new(simRaster)
+  plot(simRaster[[D]], legend=FALSE, add=TRUE, col=myCol$col, breaks=myCol$breaks)
+  plot(swissBorder, add=TRUE)
+}
+mapmisc::legendBreaks("right", myCol, inset=0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
