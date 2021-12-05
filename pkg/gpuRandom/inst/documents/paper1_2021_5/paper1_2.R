@@ -70,7 +70,7 @@ as.matrix(r_matrix)
 
 
 ## Section 4.1
-month <- readRDS(system.file("data/month.Rds", package = "clrng"))
+month <- as.matrix(readRDS(system.file("data/month.Rds", package = "clrng")))
 # datamonth<-read.csv("/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/month.csv") 
 # month<-as.matrix(datamonth[,-1])
 # rownames(month) <- c("Jan", "Feb","Mar","Apr","May","Jun","Jul","Aug","Sept","Oct","Nov","Dec")
@@ -109,7 +109,7 @@ result_monthcpu$p.value
 
 
 ## Section 4.2
-week <- readRDS(system.file("data", "week.Rds", package = "clrng"))
+week <- as.matrix(readRDS(system.file("data", "week.Rds", package = "clrng")))
 # dataweek<-read.csv("/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/weekday.csv") 
 # week<-as.matrix(dataweek[,-1])
 # rownames(week) <- c("Mon", "Tue","Wed","Thu","Fri","Sat","Sun")

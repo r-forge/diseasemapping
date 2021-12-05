@@ -182,7 +182,6 @@ Finally, the paper concludes with a short summary and a discussion in Section 6.
 
 <<echo=FALSE, results="hide", message=FALSE>>=
 library("gpuR")
-library("clrng")
 setContext(   grep('gpu', listContexts()$device_type) [1]    )
 #setwd("/home/ruoyong/diseasemapping/pkg/clrng/inst/documents/paper1_2021_5")
 @
@@ -208,8 +207,9 @@ In \proglang{clRNG} library, the MRG31k3p RNG's entire period of length approxim
 %The function \fct{clrngMrg31k3pCreateStreams} from \proglang{clRNG} creates streams on the host using the MRG31k3p RNG. If we want to use the streams in work-items on a GPU device, the streams have to be copied from the host to the global memory of the GPU device, and then each work-item copies the current states only of the streams to its private memory. 
 \pkg{clrng} is able to create streams both on the host and on the GPU device. The \fct{createStreamsCpu} function does the former. The \proglang{R} output below creates 4 streams on the host.
 %is an interface function of \fct{clrngMrg31k3pCreateStreams} that creates streams on host as \proglang{R} matrices, see the \proglang{R} output below, where we created 4 streams on the host using \fct{createStreamsCpu}, after transposing \code{myStreamsCpu}, each column of the matrix is a stream, creating streams on host makes it easy for us to view and check the streams behavior. Substreams are not created in \pkg{clrng} because currently we use one stream per work-item. 
-<<createStreams_CPU>>=
+<<createStreams_CPU, message=FALSE>>=
 # creating streams on CPU
+library("clrng")
 myStreamsCpu <- createStreamsCpu(n=4, initial=12345)
 t(myStreamsCpu)
 @
@@ -451,10 +451,11 @@ Users request $N$ number of replicates, while the actual number of replicates to
 \subsection{Comparing run-time: Month data example}\label{fisher_month}
 The 2-way contingency tables consist of selected data from the 2018 Natality public use data \citep{National2018} from the Centers for Disease Control and Prevention’s National Center for Health Statistics (NCHS), the 2018 natality data file may be downloaded at \url{https://www.cdc.gov/nchs/data_access/VitalStatsOnline.htm}. Table \ref{tab:month} is a $12 \times 12$ table that shows frequencies for congenital anomalies of the newborn by birth month in 2018 within the United States. The column variables of these two tables represent the twelve categories of congenital anomalies of the newborn: 1) Anencephaly; 2) Meningomyelocele/Spina bifida; 3) Cyanotic congenital heart disease; 4) Congenital diaphragmatic hernia; 5) Omphalocele; 6) Gastrochisis; 7) Limb reduction defect; 8) Cleft lip with or without cleft palate; 9) Cleft palate alone; 10) Down syndrome; 11) Suspected chromosomal disorder; and 12) Hypospadias. The first 5 rows of the table are displayed below.
  <<Timecomparemonth,echo=FALSE,eval=TRUE, cache=FALSE, results="hide">>=
- datamonth<-read.csv("/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/month.csv") 
- month<-as.matrix(datamonth[,-1])
- rownames(month) <- c("Jan", "Feb","Mar","Apr","May","Jun","Jul","Aug","Sept","Oct","Nov","Dec")
- colnames(month) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal", "Dow", "Chr", "Hyp")
+ # datamonth<-read.csv("/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/month.csv")
+ # month<-as.matrix(datamonth[,-1])
+ # rownames(month) <- c("Jan", "Feb","Mar","Apr","May","Jun","Jul","Aug","Sept","Oct","Nov","Dec")
+ # colnames(month) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal", "Dow", "Chr", "Hyp")
+ month <- as.matrix(readRDS(system.file("data/month.Rds", package = "clrng")))
  @
  
  <<monthdata,eval=TRUE,echo=FALSE, cache=TRUE, fig.pos='h', message=FALSE>>=
@@ -492,10 +493,11 @@ We got 410825 cases whose test statistics are below the observed threshold based
 \subsection{Comparing run-time: Week data example}\label{fisher_week}
 Table \ref{tab:week} is a $7 \times 12$ table shows frequencies for congenital anomalies of the newborn by birth day of week in 2018 within the United States. 
 <<Timecompareweek, echo=FALSE, eval=TRUE, cache=TRUE,results="hide", fig.pos='h'>>=
-dataweek<-read.csv("/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/weekday.csv") 
-week<-as.matrix(dataweek[,-1])
-rownames(week) <- c("Mon", "Tue","Wed","Thu","Fri","Sat","Sun")
-colnames(week) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal", "Dow", "Chr", "Hyp")
+# dataweek<-read.csv("/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/weekday.csv")
+# week<-as.matrix(dataweek[,-1])
+# rownames(week) <- c("Mon", "Tue","Wed","Thu","Fri","Sat","Sun")
+# colnames(week) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal", "Dow", "Chr", "Hyp")
+week <- as.matrix(readRDS(system.file("data", "week.Rds", package = "clrng")))
 @
 
 <<weekdata, eval=TRUE, echo=FALSE, cache=TRUE>>=

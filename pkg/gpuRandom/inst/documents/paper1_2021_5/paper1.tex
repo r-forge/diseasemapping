@@ -149,6 +149,7 @@ In \proglang{clRNG} library, the MRG31k3p RNG's entire period of length approxim
 \begin{CodeChunk}
 \begin{CodeInput}
 R> # creating streams on CPU
+R> library("clrng")
 R> myStreamsCpu <- createStreamsCpu(n = 4, initial = 12345)
 R> t(myStreamsCpu)
 \end{CodeInput}
@@ -363,7 +364,7 @@ R> system.time(clrng::rnorm(c(10000, 10000), streams = streams,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.046   0.000   0.047
+##   0.045   0.001   0.047
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -373,7 +374,7 @@ R> system.time(matrix(stats::rnorm(10000^2), 10000, 10000))
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   6.700   0.828   7.526
+##   6.629   0.804   7.428
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -390,9 +391,9 @@ R> r_matrix <- clrng::rexp(c(2, 4), rate = 1, Nglobal = c(2,
 R> as.matrix(r_matrix)
 \end{CodeInput}
 \begin{CodeOutput}
-##      [,1]  [,2]   [,3]  [,4]
-## [1,] 1.48 1.916 1.0358 0.469
-## [2,] 1.90 0.297 0.0868 0.161
+##       [,1] [,2] [,3]  [,4]
+## [1,] 0.942 1.68 2.65 1.372
+## [2,] 0.132 1.03 1.31 0.478
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -479,7 +480,7 @@ R> system.time(result_month <- clrng::fisher.sim(month_gpu, 1e+06,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.314   0.003   0.318
+##   0.327   0.003   0.330
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_month$threshold
@@ -518,7 +519,7 @@ R> system.time(result_monthcpu <- stats::fisher.test(month, simulate.p.value = T
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##  14.455   0.028  14.478
+##  14.413   0.021  14.428
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_monthcpu$p.value
@@ -566,7 +567,7 @@ R> system.time(result_week <- clrng::fisher.sim(week_GPU, 1e+07,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   1.940   0.014   1.952
+##   1.945   0.009   1.953
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_week$threshold
@@ -605,13 +606,13 @@ R> system.time(result_weekcpu <- fisher.test(week, simulate.p.value = TRUE,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##  89.968   0.096  90.031
+##  89.721   0.103  89.802
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_weekcpu$p.value
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 0.000132
+## [1] 0.000119
 \end{CodeOutput} 
 \end{CodeChunk} 
 
