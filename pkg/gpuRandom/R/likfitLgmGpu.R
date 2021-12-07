@@ -86,7 +86,7 @@ likfitLgmGpu <- function(data,
   minusTwoLogLik <- vclMatrix(0, Nparam, Ndata, type=type)
   
   
-  system.time(gpuRandom:::likfitGpu_BackendP(
+  gpuRandom:::likfitGpu_BackendP(
     yx,        #1
     coordsGpu, #2
     paramsGpu, #3
@@ -108,25 +108,26 @@ likfitLgmGpu <- function(data,
     QinvSsqYx, 
     cholXVXdiag, #20
     varMat,        #21     Vbatch
-    cholDiagMat))
+    cholDiagMat)
   
   # resid^T V^(-1) resid, resid = Y - X betahat = ssqResidual
   ssqResidual <- ssqY - ssqBetahat
   # any(is.na(as.matrix(log(ssqResidual/Nobs))))
-  # any(is.nan(as.matrix(log(ssqResidual/Nobs))))
-  #  any(is.nan(as.vector(detVar)))
-  #  any(is.na(as.matrix(varMat)))
-  #  any(is.nan(as.matrix(varMat)))
-  #  any(is.na(as.matrix(ssqYX)))
-  #  any(is.na(as.matrix(ssqYXcopy)))
-  #  any(is.na(as.matrix(ssqBetahat)))
-  #  any(is.na(as.vector(detReml)))
-  #  any(is.na(as.matrix(cholXVXdiag)))
-  #  any(is.na(as.matrix(ssqResidual)))
+  any(is.nan(as.matrix(log(ssqResidual/Nobs))))
+   any(is.nan(as.vector(detVar)))
+   any(is.na(as.matrix(varMat)))
+   any(is.nan(as.matrix(varMat)))
+   any(is.na(as.matrix(ssqYX)))
+   any(is.na(as.matrix(ssqY)))
+   any(is.na(as.matrix(ssqYXcopy)))
+   any(is.na(as.matrix(ssqBetahat)))
+   any(is.na(as.vector(detReml)))
+   any(is.na(as.matrix(cholXVXdiag)))
+   any(is.na(as.matrix(ssqResidual)))
   #  
   # any(is.nan(as.matrix(ssqResidual/Nobs)))
   # 
-  # 
+  # which(is.na(as.vector(detVar)))
   # debug <- as.matrix(log(ssqResidual/Nobs))
   # any(is.na(debug))
   # which(is.na(debug),arr.ind = TRUE)
@@ -191,8 +192,7 @@ likfitLgmGpu <- function(data,
   colnames(Table) <-  c("estimate", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
   
   
-  
-  
+
   
   ############### profile for covariance parameters #####################
   if(is.element('range',paramToEstimate)){
@@ -200,7 +200,8 @@ likfitLgmGpu <- function(data,
     result = data.table::as.data.table(cbind(LogLikcpu, params0[,"range"]))
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "range")
     profileLogLik <- result[, .(profile=max(.SD)), by=range]
-    f1 <- splinefun(profileLogLik$range, profileLogLik$profile-breaks, method = "fmm")
+    f1 <- approxfun(profileLogLik$range, profileLogLik$profile-breaks)  
+    # f1 <- splinefun(profileLogLik$range, profileLogLik$profile-breaks, method = "monoH.FC")
     # plot(profileLogLik$range, profileLogLik$profile-breaks)
     # plot(profileLogLik$range, profileLogLik$profile)
     # curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
@@ -213,12 +214,22 @@ likfitLgmGpu <- function(data,
     # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
     if(length(ci)==1){
-      ci <- c(lower, ci)
+      if( ci > MLE){
+        ci <- c(lower, ci)
+        warning("did not find lower ci for range, require more params")
+      }else{
+        ci <- c(ci, upper)
+        warning("did not find upper ci for range, require more params")}
+    }
+    
+    if(length(ci)==0 | length(ci)>2){
+      warning("require a better param matrix")
+      ci <- c(NA, NA)
     }
     Table["range",] <- c(MLE, ci)
     # MLE <- profileLogLik$range[which.max(profileLogLik$profile)]
     # plot(profileLogLik$range, profileLogLik$profile)
-    # f1<-approxfun(profileLogLik$range, profileLogLik$profile)  
+    # f1<-approxfun(profileLogLik$range, profileLogLik$profile-breaks)  
     # optimization <- optimize(f1, interval = c(min(profileLogLik$range), max(profileLogLik$range)),maximum = TRUE)
     # MLE <- optimization$maximum 
     # uniroot(f1, lower = 20000, upper = 80000)$root
@@ -261,18 +272,29 @@ likfitLgmGpu <- function(data,
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "shape")
     profileLogLik <- result[, .(profile=max(.SD)), by=shape]
     # plot(profileLogLik$shape, profileLogLik$profile-breaks)
-    f1 <- splinefun(profileLogLik$shape, profileLogLik$profile-breaks, method = "natural")
+    f1 <- approxfun(profileLogLik$shape, profileLogLik$profile-breaks)  
+    #f1 <- splinefun(profileLogLik$shape, profileLogLik$profile-breaks, method = "monoH.FC")
     # curve(f1, add = TRUE, col = 2) 
     # abline(h =0, lty = 2)
     # shaperesults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
     lower = min(profileLogLik$shape)
     upper = max(profileLogLik$shape)
-    MLE <- round(optimize(f1, c(lower, 5.5), maximum = TRUE, tol = 0.0001)$maximum,digits=4)
+    MLE <- optimize(f1, c(lower, 5.5), maximum = TRUE, tol = 0.0001)$maximum
     # maxvalue <- shaperesults$objective
     # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
     if(length(ci)==1){
-      ci <- c(lower, ci)
+      if( ci > MLE){
+        ci <- c(lower, ci)
+        warning("did not find lower ci for shape, require more params")
+      }else{
+        ci <- c(ci, upper)
+        warning("did not find upper ci for shape, require more params")}
+    }
+    
+    if(length(ci)==0 | length(ci)>2){
+      warning("require a better param matrix")
+      ci <- c(NA, NA)
     }
     Table["shape",] <- c(MLE, ci)
 
@@ -306,18 +328,29 @@ likfitLgmGpu <- function(data,
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "nugget")
     profileLogLik <-result[, .(profile=max(.SD)), by=nugget]
     # plot(profileLogLik$nugget, profileLogLik$profile-breaks)
-    f1 <- splinefun(profileLogLik$nugget, profileLogLik$profile-breaks, method = "fmm")
+    f1 <- approxfun(profileLogLik$nugget, profileLogLik$profile-breaks)  
+    # f1 <- splinefun(profileLogLik$nugget, profileLogLik$profile-breaks, method = "monoH.FC")
     # curve(f1, add = TRUE, col = 2, n=1001) 
     # abline(h =0, lty = 2)
     # nuggetresults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
     lower = min(profileLogLik$nugget)
     upper = max(profileLogLik$nugget)
-    MLE <- round(optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum,digits=4)
+    MLE <-  optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
     # maxvalue <- nuggetresults$objective
     # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
     if(length(ci)==1){
-      ci <- c(lower, ci)
+      if( ci > MLE){
+        ci <- c(lower, ci)
+        warning("did not find lower ci for nugget, require more params")
+      }else{
+        ci <- c(ci, upper)
+        warning("did not find upper ci for nugget, require more params")}
+    }
+    
+    if(length(ci)==0 | length(ci)>2){
+      warning("require a better param matrix")
+      ci <- c(NA, NA)
     }
     Table["nugget",] <- c(MLE, ci)
     
@@ -346,7 +379,8 @@ likfitLgmGpu <- function(data,
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoRatio")
     profileLogLik <- result[, .(profile=max(.SD)), by=anisoRatio]
     # plot(profileLogLik$anisoRatio, profileLogLik$profile-breaks)
-    f1 <- splinefun(profileLogLik$anisoRatio, profileLogLik$profile-breaks, method = "fmm")
+    f1 <- approxfun(profileLogLik$anisoRatio, profileLogLik$profile-breaks)  
+    # f1 <- splinefun(profileLogLik$anisoRatio, profileLogLik$profile-breaks, method = "monoH.FC")
     # curve(f1, add = TRUE, col = 2, n=1001) 
     # abline(h =0, lty = 2)
     # anisoRatioresults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
@@ -357,7 +391,17 @@ likfitLgmGpu <- function(data,
     # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
     if(length(ci)==1){
-      ci <- c(lower, ci)
+      if( ci > MLE){
+        ci <- c(lower, ci)
+        warning("did not find lower ci for anisoRatio, require more params")
+      }else{
+        ci <- c(ci, upper)
+        warning("did not find upper ci for anisoRatio, require more params")}
+    }
+    
+    if(length(ci)==0 | length(ci)>2){
+      warning("require a better param matrix")
+      ci <- c(NA, NA)
     }
     Table["anisoRatio",] <- c(MLE, ci)
 
@@ -386,7 +430,8 @@ likfitLgmGpu <- function(data,
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoAngleDegrees")
     profileLogLik <- result[, .(profile=max(.SD)), by=anisoAngleDegrees]
     #plot(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks)
-    f1 <- splinefun(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks, method = "fmm")
+    f1 <- approxfun(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks)
+    # f1 <- splinefun(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks, method = "monoH.FC")
     # curve(f1, add = TRUE, col = 2, n=1001) 
     # abline(h =0, lty = 2)
     # anisoAngleDegreesresults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
@@ -397,7 +442,17 @@ likfitLgmGpu <- function(data,
     # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
     if(length(ci)==1){
-      ci <- c(lower, ci)
+      if( ci > MLE){
+        ci <- c(lower, ci)
+        warning("did not find lower ci, require more params")
+      }else{
+        ci <- c(ci, upper)
+        warning("did not find upper ci, require more params")}
+    }
+    
+    if(length(ci)==0 | length(ci)>2){
+      warning("require a better param matrix")
+      ci <- c(NA, NA)
     }
     Table["anisoAngleDegrees",] <- c(MLE, ci)
 
@@ -424,7 +479,8 @@ likfitLgmGpu <- function(data,
   ###############lambda hat#####################
   if(is.element('boxcox',paramToEstimate)  & length(boxcox)>3 ){
     likForboxcox = cbind(boxcox, apply(LogLikcpu, 2, max) )
-    f1 <- splinefun(likForboxcox[,1], likForboxcox[,2]-breaks, method = "fmm")
+    f1 <- approxfun(likForboxcox[,1], likForboxcox[,2]-breaks)
+    # f1 <- splinefun(likForboxcox[,1], likForboxcox[,2]-breaks, method = "monoH.FC")
     # plot(likForboxcox[,1], likForboxcox[,2]-breaks)
     # curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
     # abline(h =0, lty = 2)
@@ -435,8 +491,20 @@ likfitLgmGpu <- function(data,
     # maxvalue <- rangeresults$objective
     # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+    if(length(ci)==1){
+      if( ci > MLE){
+        ci <- c(lower, ci)
+        warning("did not find lower ci for boxcox, require more params")
+      }else{
+        ci <- c(ci, upper)
+        warning("did not find upper ci for boxcox, require more params")}
+    }else if(length(ci)>2){
+      warning("error in param matrix")
+      ci <- c(NA, NA)
+    }
     Table["boxcox",] <- c(MLE, ci)
-  }else{
+    
+    if (length(ci)==0)
     Table["BoxCox",1] <- BoxCox[index[2]]
   }
   
