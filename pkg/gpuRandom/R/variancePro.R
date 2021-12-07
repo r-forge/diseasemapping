@@ -50,15 +50,18 @@
   ci <- rootSolve::uniroot.all(f2, lower = lower, upper = upper)
   
   if(length(ci)==1){
-    if((abs(ci-lower)) > (abs(ci-upper))){
+    if( ci > MLE){
       ci <- c(lower, ci)
     }else{
       ci <- c(ci, upper)}
   }
-  
+  if(length(ci)==0){
+    warning("require a better param matrix")
+    ci <- c(NA, NA)
+  }
   if(length(ci)>2){
+    warning("need wider range of beta to search ci's")
     ci <- ci[3:4]
-    warning("spline approximation is not good")
   }
   
   ############### output #####################################

@@ -4,7 +4,7 @@
 
 
 #before start, we have a spatial model
-likfitGpu <- function(spatialmodel,     #data,
+ loglikLgmGpu <- function(spatialmodel,     #data,
                         type = c("double","float"),
                         paramsGpu, #a vclmatrix, consists of all the parameters
                         BoxCox, # an R vector, will always be c(1,0,.....)

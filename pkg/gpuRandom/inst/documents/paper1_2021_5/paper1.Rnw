@@ -458,13 +458,16 @@ The 2-way contingency tables consist of selected data from the 2018 Natality pub
  month <- as.matrix(readRDS(system.file("data/month.Rds", package = "clrng")))
  @
  
- <<monthdata,eval=TRUE,echo=FALSE, cache=TRUE, fig.pos='h', message=FALSE>>=
+ <<monthdata,eval=TRUE,echo=FALSE, cache=TRUE, fig.pos='h', message=FALSE,purl=FALSE>>=
 library(knitr)
 library(tidyverse)
 library(kableExtra)
 knitr::kable(month,format="latex", align = c("rrrrrrrrrrrr"), #label="tab:month"
   caption = "Monthly birth anomaly data\\label{tab:month}", booktabs=TRUE,linesep = "") %>%
   kable_styling(full_width = F, position = "center")#latex_options = "HOLD_position")
+@
+<<monthDataForScript, include=FALSE, purl=TRUE>>-
+knitr::kable(month)
 @
 
  <<timecomparemonth1Gpu, eval=TRUE,cache=FALSE>>=

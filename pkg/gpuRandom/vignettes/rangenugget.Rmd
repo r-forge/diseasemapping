@@ -162,7 +162,7 @@ system.time(result<-gpuRandom::likfitGpu(spatialmodel,     #data,
                                NlocalCache=2600))
 #as.matrix(result$XVYXVX)
 #result$Betahats
-result<-gpuRandom::likfitGpu(spatialmodel,     #data,
+result<-gpuRandom::loglikLgmGpu(spatialmodel,     #data,
                                type = "double",
                                paramsGpu, #a vclmatrix, consists of all the parameters#betas=NULL, #a vclmatrix  #only one row batch, but many colbatches
                                BoxCox=c(1,0.5), # an R vector, will always be c(1,0,.....)
@@ -267,7 +267,7 @@ paramsGpu = gpuRandom::maternGpuParam(paramsBatch0, type="double")
 type = "double"
 
 
-result<-gpuRandom::likfitGpu(spatialmodel,     #data,
+result<-gpuRandom::loglikLgmGpu(spatialmodel,     #data,
                                type = "double",
                                paramsGpu, #a vclmatrix, consists of all the parameters#betas=NULL, #a vclmatrix  #only one row batch, but many colbatches
                                BoxCox=c(1,0), # an R vector, will always be c(1,0,.....)
