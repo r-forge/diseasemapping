@@ -864,8 +864,8 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       
       // Vbatch=LDL^T, cholesky decomposition
       viennacl::ocl::enqueue(cholKernel(Vbatch, cholDiagMat, 
-                                        localMemory, 
-                                        NthisIteration, detVar, DiterIndex),
+                                        localMemory, NthisIteration, 
+                                        detVar, DiterIndex),
                                         theQueue);
       
       // backsolve  LinvYX = L^(-1) YX,   Nobs by (Ndatasets + Ncovariates)
@@ -894,10 +894,12 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
     viennacl::ocl::enqueue(extractBlockKernel(XVYXVX, ssqYX, DiterIndex, NthisIteration),
                            theQueue);
 
-       // if(Diter ==1){
+        if(Diter ==1 & verbose[0]>1){
+          Rcpp::Rcout << "maternClString\n" << maternClString << "\n";
+          Rcpp::Rcout << "cholClString\n" << cholClString << "\n";
        //   Rcpp::Rcout << "crossprodKernelString\n" << crossprodKernelString << "\n";
        //   Rcpp::Rcout << "crossprodSsqYxKernelString\n" << crossprodSsqYxKernelString << "\n";
-       // }
+        }
       
       
       

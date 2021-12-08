@@ -1,7 +1,3 @@
-//9.13   3pm
-
-
-
 /*
  Rcpp::IntegerVector workgroupSize,   // global 0 1 2, local 0 1 2
  Rcpp::IntegerVector transposeABC, // transposeA, transposeB, transposeC
@@ -223,7 +219,7 @@ std::string gemmBatch2String(
     result +=   "   DrowBlock < NrowStop;\n";
   }else{
     result +=
-    "   DrowBlock < Nrow;\n";
+      "   DrowBlock < Nrow;\n";
   }
   
   result +=
@@ -237,10 +233,10 @@ std::string gemmBatch2String(
       "       DcolBlock = Dcol;\n";
   }else{
     result +=
-    "   for(DcolBlock = get_group_id(2)*get_local_size(2);\n" // col for work item ?,?,0
-    "     DcolBlock < Ncol;\n"
-    "     DcolBlock += get_global_size(2)) {\n"
-    "     Dcol = DcolBlock + get_local_id(2);\n";
+      "   for(DcolBlock = get_group_id(2)*get_local_size(2);\n" // col for work item ?,?,0
+      "     DcolBlock < Ncol;\n"
+      "     DcolBlock += get_global_size(2)) {\n"
+      "     Dcol = DcolBlock + get_local_id(2);\n";
   }
   
   
@@ -457,7 +453,7 @@ int gemmBatch2(
   
   viennacl::ocl::enqueue(gemmKernel(A, B, C, 0, batches[0]));
   
-  return 1;
+  return 0;
 }
 
 
@@ -532,11 +528,13 @@ SEXP gemmBatch2backend(
                                    workgroupSize, NlocalCache, verbose);
   } else {
     Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
+    result = Rcpp::wrap(1L);
   }
   //#endif  
   return result;
   
 }
+
 
 
 
