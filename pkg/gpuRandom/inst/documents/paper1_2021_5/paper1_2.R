@@ -12,10 +12,10 @@ if (!requireNamespace("geostatsp", quietly = TRUE))
   install.packages("geostatsp", repos='http://r-forge.r-project.org')
 
 if (!requireNamespace("clrng", quietly = TRUE))
-  devtools::install_github("Ruoyong/clrng")
+  devtools::install_github("ruoyongxu/clrng")
 
 if (!requireNamespace("gpuBatchMatrix", quietly = TRUE))
-  devtools::install_github("Ruoyong/gpuBatchMatrix")
+  devtools::install_github("ruoyongxu/gpuBatchMatrix")
 
 
 
