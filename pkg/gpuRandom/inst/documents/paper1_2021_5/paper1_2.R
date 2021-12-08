@@ -1,23 +1,21 @@
 ## check if needee packages are installed
 packagesList <- c("knitr", "tidyverse", "kableExtra", "devtools")
-
 for (i in 1:length(packagesList)){
-  if(packagesList[i] %in% rownames(installed.packages()) == FALSE) 
-  {install.packages(packagesList[i])}
+  if (!requireNamespace(packagesList[i], quietly = TRUE))
+    install.packages(packagesList[i])
 }
 
-if("gpuR" %in% rownames(installed.packages()) == FALSE) 
-{devtools::install_github("cdeterman/gpuR")}    #{install.packages("gpuR", repos='https://github.com/cdeterman/gpuR')}
+if (!requireNamespace("gpuR", quietly = TRUE))
+  devtools::install_github("cdeterman/gpuR")
 
-if("geostatsp" %in% rownames(installed.packages()) == FALSE) 
-{install.packages("geostatsp", repos='http://r-forge.r-project.org')}
+if (!requireNamespace("geostatsp", quietly = TRUE))
+  install.packages("geostatsp", repos='http://r-forge.r-project.org')
 
-if("clrng" %in% rownames(installed.packages()) == FALSE) 
-{devtools::install_github("Ruoyong/clrng")}
+if (!requireNamespace("clrng", quietly = TRUE))
+  devtools::install_github("Ruoyong/clrng")
 
-if("gpuBatchMatrix" %in% rownames(installed.packages()) == FALSE) 
-{devtools::install_github("Ruoyong/gpuBatchMatrix")}
-
+if (!requireNamespace("gpuBatchMatrix", quietly = TRUE))
+  devtools::install_github("Ruoyong/gpuBatchMatrix")
 
 
 
@@ -33,30 +31,23 @@ library("clrng")
 myStreamsCpu <- createStreamsCpu(n=4, initial=12345)
 t(myStreamsCpu)
 
-
 # Creating streams on GPU
 myStreamsGpu = vclMatrix(myStreamsCpu)
 myStreamsGpu2 = createStreamsGpu(n=4, initial=12345)
 
-
 ## Section 2.2
 # Generate 6 i.i.d. U (0,1) random numbers
 as.vector(clrng::runif(n=6, streams=myStreamsGpu, Nglobal=c(2,2)))
-
-
 
 # Save streams on CPU
 saveRDS(as.matrix(createStreamsGpu(n=4)), "myStreams.rds")
 # Load the streams object and transfer it to GPU
 streams_saved <- vclMatrix(readRDS("myStreams.rds"))
 
-
 ## Section 3.1
 # Generate a large matrix of normal random numbers, test the run time
 streams <- createStreamsGpu(n = 512 * 128)
 system.time(clrng::rnorm(c(10000,10000), streams=streams, Nglobal=c(512,128), type="double"))
-
-# Compare run time with using CPU
 system.time(matrix(stats::rnorm(10000^2),10000,10000))
 
 
@@ -87,8 +78,6 @@ result_month$p.value
 
 # save test statistics for plot
 month_stats <- as.vector(result_month$sim)
-
-
 
 # using CPU
 system.time(result_monthcpu<-stats::fisher.test(month,simulate.p.value = TRUE, B=1e6))
@@ -169,7 +158,6 @@ params =
         c(shape=0.6, range=30*1000, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/7),
         c(shape=3, range=30*1000, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/7)
   )
-# show parameterBatch
 params
 
 
