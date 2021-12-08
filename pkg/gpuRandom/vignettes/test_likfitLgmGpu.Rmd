@@ -36,7 +36,7 @@ swissRain$elevation = extract(swissAltitude, swissRain)
 
 # params = expand.grid(
 #   range = exp(seq(log(15), log(260), len=11))*1000, #c(15, 20, 25, 30, 35, 40,  60,  80, 100, 120, 130, 140, 150, 170, 180, 190, 200, 220, 250)*1000,#exp(seq(log(10), log(250), len=12)), #
-#   shape = c(0.1, 0.3, 0.5, 1, 1.5, 2, 2.5, 3, 4),   
+#   shape = c(0.1, 0.3, 0.5, 1, 1.5, 2, 2.5, 3, 4),
 #   anisoRatio = seq(1, 15,len=10),
 #   anisoAngleDegrees = seq(27,46, len=10),
 #   nugget = c(0, exp(seq(log(0.05), log(6), len=12)))#seq(0, 10,len=5)     # at least c(0,5) to avoid that strange profile
@@ -48,11 +48,18 @@ swissRain$elevation = extract(swissAltitude, swissRain)
 
 params = expand.grid(
   range = c(exp(seq(log(15), log(swissRes$parameters['range']/1000), len=6))*1000, exp(seq(log(swissRes$parameters['range']/1000+5), log(250), len=6))*1000),
-  shape = c(seq(0.1, swissRes$parameters['shape'], len=5), seq(swissRes$parameters['shape']+0.5, 5, len=5)),
+  shape = c(seq(0.1, swissRes$parameters['shape'], len=5), seq(swissRes$parameters['shape']+0.5, 6, len=5)),
   anisoRatio =c( seq(1, swissRes$parameters['anisoRatio'], len=5), seq(swissRes$parameters['anisoRatio']+1, 12, len=5) ),
   anisoAngleDegrees = c( seq(27,swissRes$parameters['anisoAngleDegrees'], len=5),  seq(swissRes$parameters['anisoAngleDegrees']+2, 46, len=5)),
   nugget = c(seq(0, swissRes$optim$mle['nugget'], len=3), seq(swissRes$optim$mle['nugget']+0.5, 8, len=8))
 )
+params = expand.grid(
+  range = c(exp(seq(log(15), log(swissRes$parameters['range']/1000), len=6))*1000, exp(seq(log(swissRes$parameters['range']/1000+5), log(250), len=6))*1000),
+  shape = c(seq(0.1, swissRes$parameters['shape'], len=5), seq(swissRes$parameters['shape']+0.5, 6, len=5)),
+  nugget = c(seq(0, swissRes$optim$mle['nugget'], len=3), seq(swissRes$optim$mle['nugget']+0.5, 8, len=8))
+)
+
+
 
 cilevel=0.95
 data=swissRain

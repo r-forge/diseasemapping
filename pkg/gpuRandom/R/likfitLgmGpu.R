@@ -101,7 +101,7 @@ likfitLgmGpu <- function(data,
     as.integer(Nglobal),  #12
     as.integer(Nlocal),  #16
     NlocalCache,  #14
-    verbose,  #15
+    verbose=2,  #15
     ssqYX, #
     ssqYXcopy,  #new
     LinvYX,  #18
@@ -113,7 +113,8 @@ likfitLgmGpu <- function(data,
   # resid^T V^(-1) resid, resid = Y - X betahat = ssqResidual
   ssqResidual <- ssqY - ssqBetahat
   # any(is.na(as.matrix(log(ssqResidual/Nobs))))
-  any(is.nan(as.matrix(log(ssqResidual/Nobs))))
+   as.matrix(cholDiagMat)[]
+   any(is.nan(as.matrix(log(ssqResidual/Nobs))))
    any(is.nan(as.vector(detVar)))
    any(is.na(as.matrix(varMat)))
    any(is.nan(as.matrix(varMat)))
@@ -124,9 +125,8 @@ likfitLgmGpu <- function(data,
    any(is.na(as.vector(detReml)))
    any(is.na(as.matrix(cholXVXdiag)))
    any(is.na(as.matrix(ssqResidual)))
-  #  
-  # any(is.nan(as.matrix(ssqResidual/Nobs)))
-  # 
+   any(is.nan(as.matrix(ssqResidual/Nobs)))
+   as.matrix(ssqY)[which(is.na(as.vector(detVar))),]
   # which(is.na(as.vector(detVar)))
   # debug <- as.matrix(log(ssqResidual/Nobs))
   # any(is.na(debug))
@@ -137,7 +137,7 @@ likfitLgmGpu <- function(data,
   # ssqY[which(is.na(debug),arr.ind = TRUE)[,1],]
   # ssqBetahat[which(is.na(debug),arr.ind = TRUE)[,1],]    # problem arises from here! 4.530057e+20
   # 
-  # 
+  # params0[which(is.na(as.vector(detVar))),]
   # 
   # if(fixVariance >0){
   #   temp <- vclMatrix(0, Nparam, Ndata, type=type)

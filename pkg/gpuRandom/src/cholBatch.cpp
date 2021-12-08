@@ -234,7 +234,7 @@ template <typename T> std::string cholBatchKernelString(
     "} // Dcol loop\n\n";
   
   if(logDet){
-    result +=  "if(localIndexIsZero & (Drow < N)){\n"
+    result +=  "if(localIndexIsZero){\n"   //& (Drow < N)
     " logDet[logDetIndex + Dmatrix] = logDetHere;\n"
     "}\n";
   }
