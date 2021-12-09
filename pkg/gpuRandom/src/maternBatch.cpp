@@ -315,7 +315,7 @@ result +=  "barrier(CLK_LOCAL_MEM_FENCE);\n\n";
 
   
   result +=
-    "	if(logthisx > 1.0) {\n" // was 2.0 gsl_sf_bessel_K_scaled_steed_temme_CF2
+    "	if(logthisx > 1.5) {\n" // was 2.0 gsl_sf_bessel_K_scaled_steed_temme_CF2
     
     //	"   maternLong(thisx, expMaternBit, nu[Dmatrix], mu[Dmatrix], muSq[Dmatrix], &K_nu, &K_nup1);\n"
     "   K_nuK_nup1=maternLong(\n"
@@ -484,7 +484,7 @@ void maternBatchVcl(
     Npad = vclVar.internal_size2(),
     NpadBetweenMatrices = Npad*N; // change to Npad*(Nmat+k) to insert extra rows between matrices
   
-    const int Ncell = N * (N - 1)/2, maxIter = 1500;
+    const int Ncell = N * (N - 1)/2, maxIter = 4000;
     int NgroupsOfParameters = numWorkItems[1]/numLocalItems[1];
     
     int NparametersPerGroup = std::max(
