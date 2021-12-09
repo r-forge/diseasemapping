@@ -58,7 +58,7 @@ as.matrix(r_matrix)
 
 
 ## Section 4.1
-month <- as.matrix(readRDS(system.file("data/month.Rds", package = "clrng")))
+month <- as.matrix(readRDS(system.file("extdata", "month.Rds", package = "clrng")))
 library(knitr)
 kable(month, format = "markdown", caption = "Monthly birth anomaly data")
 
@@ -80,12 +80,13 @@ result_month$p.value
 month_stats <- as.vector(result_month$sim)
 
 # using CPU
+# notice this can take about more than 1 minute
 system.time(result_monthcpu<-stats::fisher.test(month,simulate.p.value = TRUE, B=1e6))
 result_monthcpu$p.value
 
 
 ## Section 4.2
-week <- as.matrix(readRDS(system.file("data", "week.Rds", package = "clrng")))
+week <- as.matrix(readRDS(system.file("extdata", "week.Rds", package = "clrng")))
 kable(week, format = "markdown", caption = "Day-of-week birth anomaly data") 
 
 # using GPU
@@ -102,6 +103,8 @@ result_week$cpu = as.vector(result_week$sim)
 
 
 # using CPU
+# notice that running in rstudio can take about 10 minutes 
+# set a smaller number for B if you think that's too long time
 system.time(result_weekcpu<-fisher.test(week,simulate.p.value = TRUE,B=10010624))
 result_weekcpu$p.value
 

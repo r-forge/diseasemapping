@@ -101,7 +101,7 @@ likfitLgmGpu <- function(data,
     as.integer(Nglobal),  #12
     as.integer(Nlocal),  #16
     NlocalCache,  #14
-    verbose=2,  #15
+    verbose=1,  #15
     ssqYX, #
     ssqYXcopy,  #new
     LinvYX,  #18
@@ -113,20 +113,20 @@ likfitLgmGpu <- function(data,
   # resid^T V^(-1) resid, resid = Y - X betahat = ssqResidual
   ssqResidual <- ssqY - ssqBetahat
   # any(is.na(as.matrix(log(ssqResidual/Nobs))))
-   as.matrix(cholDiagMat)[]
-   any(is.nan(as.matrix(log(ssqResidual/Nobs))))
-   any(is.nan(as.vector(detVar)))
-   any(is.na(as.matrix(varMat)))
-   any(is.nan(as.matrix(varMat)))
-   any(is.na(as.matrix(ssqYX)))
-   any(is.na(as.matrix(ssqY)))
-   any(is.na(as.matrix(ssqYXcopy)))
-   any(is.na(as.matrix(ssqBetahat)))
-   any(is.na(as.vector(detReml)))
-   any(is.na(as.matrix(cholXVXdiag)))
-   any(is.na(as.matrix(ssqResidual)))
-   any(is.nan(as.matrix(ssqResidual/Nobs)))
-   as.matrix(ssqY)[which(is.na(as.vector(detVar))),]
+   # as.matrix(cholDiagMat)[]
+   # any(is.nan(as.matrix(log(ssqResidual/Nobs))))
+   # any(is.nan(as.vector(detVar)))
+   # any(is.na(as.matrix(varMat)))
+   # any(is.nan(as.matrix(varMat)))
+   # any(is.na(as.matrix(ssqYX)))
+   # any(is.na(as.matrix(ssqY)))
+   # any(is.na(as.matrix(ssqYXcopy)))
+   # any(is.na(as.matrix(ssqBetahat)))
+   # any(is.na(as.vector(detReml)))
+   # any(is.na(as.matrix(cholXVXdiag)))
+   # any(is.na(as.matrix(ssqResidual)))
+   # any(is.nan(as.matrix(ssqResidual/Nobs)))
+   # as.matrix(ssqY)[which(is.na(as.vector(detVar))),]
   # which(is.na(as.vector(detVar)))
   # debug <- as.matrix(log(ssqResidual/Nobs))
   # any(is.na(debug))
@@ -279,7 +279,7 @@ likfitLgmGpu <- function(data,
     # shaperesults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
     lower = min(profileLogLik$shape)
     upper = max(profileLogLik$shape)
-    MLE <- optimize(f1, c(lower, 5.5), maximum = TRUE, tol = 0.0001)$maximum
+    MLE <- optimize(f1, c(lower, 4.5), maximum = TRUE, tol = 0.0001)$maximum
     # maxvalue <- shaperesults$objective
     # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
@@ -503,16 +503,15 @@ likfitLgmGpu <- function(data,
       ci <- c(NA, NA)
     }
     Table["boxcox",] <- c(MLE, ci)
-    
-    if (length(ci)==0)
-    Table["BoxCox",1] <- BoxCox[index[2]]
+  }else{
+    Table["boxcox",1] <- boxcox[index[2]]
   }
   
 
 
   ###############betahat#####################
   Betahat <- matrix(0, nrow=Ncov, ncol=Ndata)
-  a<-c((index[1]-1)*Ncov+1, index[1]*Ncov)
+  a<-c( ((index[1]-1)*Ncov+1) : (index[1]*Ncov) )
   mat <- XVYXVX[a,((Ndata+1):ncol(yx))]
   mat[upper.tri(mat)] <- mat[lower.tri(mat)]
   Betahat <- solve(mat) %*% XVYXVX[a,index[2]]

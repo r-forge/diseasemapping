@@ -455,7 +455,7 @@ The 2-way contingency tables consist of selected data from the 2018 Natality pub
  # month<-as.matrix(datamonth[,-1])
  # rownames(month) <- c("Jan", "Feb","Mar","Apr","May","Jun","Jul","Aug","Sept","Oct","Nov","Dec")
  # colnames(month) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal", "Dow", "Chr", "Hyp")
- month <- as.matrix(readRDS(system.file("data/month.Rds", package = "clrng")))
+ month <- as.matrix(readRDS(system.file("extdata", "month.Rds", package = "clrng")))
  @
  
  <<monthdata,eval=TRUE,echo=FALSE, cache=TRUE, fig.pos='h', message=FALSE,purl=FALSE>>=
@@ -500,7 +500,7 @@ Table \ref{tab:week} is a $7 \times 12$ table shows frequencies for congenital a
 # week<-as.matrix(dataweek[,-1])
 # rownames(week) <- c("Mon", "Tue","Wed","Thu","Fri","Sat","Sun")
 # colnames(week) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal", "Dow", "Chr", "Hyp")
-week <- as.matrix(readRDS(system.file("data", "week.Rds", package = "clrng")))
+week <- as.matrix(readRDS(system.file("extdata", "week.Rds", package = "clrng")))
 @
 
 <<weekdata, eval=TRUE, echo=FALSE, cache=TRUE>>=
