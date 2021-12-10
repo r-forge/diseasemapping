@@ -202,6 +202,7 @@ theDiag = theDiag^2
 #quantile(cholCpu - chol4gpu, prob = Sprob)
 #quantile(theDiag - as.matrix(diagMat)[D,], prob=Sprob)
 plot(theDiag - diagGpu)
+quantile(theDiag - diagGpu)
 #plot(cholCpu[600,] - chol4gpu[600,])
 #cbind(theDiag, diagGpu, theDiag - diagGpu)[seq(178,len=20),]
 ```
