@@ -355,7 +355,7 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 % \end{figure}
  
 
-We generate a large-size matrix of 100 million double-precision Gaussian random numbers, and compare the run-time between using \fct{stats::rnorm} and \fct{clrng::rnorm}. The best performance we have seen using \fct{clrng::rnorm} is around 120 times faster with $512 \times 128$ work-items than using the \fct{stats::rnorm}. The difference in elapsed time becomes larger when matrix size goes larger.
+We generate a large-size matrix of 100 million double-precision Gaussian random numbers, and compare the run-time between using \fct{stats::rnorm} and \fct{clrng::rnorm}. The best performance we have seen using \fct{clrng::rnorm} is above 160 times faster with $512 \times 128$ work-items than using the \fct{stats::rnorm}. The difference in elapsed time becomes larger when matrix size goes larger.
 \begin{CodeChunk}
 \begin{CodeInput}
 R> streams <- createStreamsGpu(n = 512 * 128)
@@ -364,7 +364,7 @@ R> system.time(clrng::rnorm(c(10000, 10000), streams = streams,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.045   0.001   0.047
+##   0.047   0.000   0.047
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -374,7 +374,7 @@ R> system.time(matrix(stats::rnorm(10000^2), 10000, 10000))
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   6.629   0.804   7.428
+##   6.567   0.818   7.378
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -391,9 +391,9 @@ R> r_matrix <- clrng::rexp(c(2, 4), rate = 1, Nglobal = c(2,
 R> as.matrix(r_matrix)
 \end{CodeInput}
 \begin{CodeOutput}
-##       [,1] [,2] [,3]  [,4]
-## [1,] 0.942 1.68 2.65 1.372
-## [2,] 0.132 1.03 1.31 0.478
+##       [,1]   [,2]  [,3]  [,4]
+## [1,] 0.367 0.0488 0.490 0.308
+## [2,] 0.671 3.1532 0.831 0.281
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -469,18 +469,21 @@ Dec & 23 & 48 & 196 & 31 & 31 & 71 & 31 & 177 & 86 & 86 & 73 & 156\\
 \end{table}
 
 
+<<monthDataForScript, include=FALSE, purl=TRUE>>-
+knitr::kable(month)
+@
 
 \begin{CodeChunk}
 \begin{CodeInput}
 R> streams <- createStreamsGpu(n = 256 * 64, initial = 666)
 R> month_gpu <- vclMatrix(month, type = "integer")
-R> system.time(result_month <- clrng::fisher.sim(month_gpu, 1e+06,
+R> system.time(result_month <- clrng::fisher.sim(month_gpu, 1000000,
 +    streams = streams, type = "double", returnStatistics = TRUE,
 +    Nglobal = c(256, 64)))
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.327   0.003   0.330
+##   0.319   0.000   0.318
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_month$threshold
@@ -519,7 +522,7 @@ R> system.time(result_monthcpu <- stats::fisher.test(month, simulate.p.value = T
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##  14.413   0.021  14.428
+##  14.478   0.012  14.480
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_monthcpu$p.value
@@ -561,13 +564,13 @@ Sun & 49 & 51 & 211 & 40 & 32 & 96 & 69 & 216 & 108 & 143 & 130 & 258\\
 \begin{CodeChunk}
 \begin{CodeInput}
 R> week_GPU <- gpuR::vclMatrix(week, type = "integer")
-R> system.time(result_week <- clrng::fisher.sim(week_GPU, 1e+07,
+R> system.time(result_week <- clrng::fisher.sim(week_GPU, 10000000,
 +    streams = streams, type = "double", returnStatistics = TRUE,
 +    Nglobal = c(256, 64)))
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   1.945   0.009   1.953
+##   1.941   0.015   1.954
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_week$threshold
@@ -579,7 +582,7 @@ R> result_week$threshold
 R> result_week$simNum
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 1e+07
+## [1] 10010624
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_week$counts
@@ -606,13 +609,13 @@ R> system.time(result_weekcpu <- fisher.test(week, simulate.p.value = TRUE,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##  89.721   0.103  89.802
+##   90.70    0.12   90.82
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_weekcpu$p.value
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 0.000119
+## [1] 0.000121
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -638,9 +641,9 @@ B & Intel 2.5ghz & AMD Radeon & Intel 3.7ghz & NVIDIA V100 & Data\\
 \hline
 \multicolumn{6}{l}{\textbf{Run-time}}\\
 \hline
-\hspace{1em}1M & 10.74 & 2.28 & 15 & 0.72 & month\\
+\hspace{1em}1M & 10.74 & 2.28 & 14.48 & 0.34 & month\\
 \hline
-\hspace{1em}10M & 63.24 & 10.82 & 91.58 & 4.18 & week\\
+\hspace{1em}10M & 63.24 & 10.82 & 91 & 1.95 & week\\
 \hline
 \end{tabular}
 \end{table}
