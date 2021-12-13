@@ -5,6 +5,24 @@
 
 
 
+```{r test uint3, eval=FALSE}
+library(clrng)
+library(gpuR)
+
+###CPU streams
+streams1 <- createStreamsCpu(n=4, initial=12345)
+
+
+
+###GPU streams
+myStreamsGpu1 = vclMatrix(streams1, type="double")
+
+myStreamsGpu2 = createStreamsGpu(n=4, initial=c(12345,12345,22,44,33,88))
+t(as.matrix(myStreamsGpu2))
+
+myStreamsGpu3 = createStreamsGpu(n=4)
+t(as.matrix(myStreamsGpu3))
+```
 
 
 

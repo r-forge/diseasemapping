@@ -114,17 +114,17 @@ likfitLgmGpu <- function(data,
   ssqResidual <- ssqY - ssqBetahat
   # any(is.na(as.matrix(log(ssqResidual/Nobs))))
    # as.matrix(cholDiagMat)[]
-   # any(is.nan(as.matrix(log(ssqResidual/Nobs))))
-   # any(is.nan(as.vector(detVar)))
-   # any(is.na(as.matrix(varMat)))
-   # any(is.nan(as.matrix(varMat)))
-   # any(is.na(as.matrix(ssqYX)))
-   # any(is.na(as.matrix(ssqY)))
-   # any(is.na(as.matrix(ssqYXcopy)))
-   # any(is.na(as.matrix(ssqBetahat)))
-   # any(is.na(as.vector(detReml)))
-   # any(is.na(as.matrix(cholXVXdiag)))
-   # any(is.na(as.matrix(ssqResidual)))
+   any(is.nan(as.matrix(log(ssqResidual/Nobs))))
+   any(is.nan(as.vector(detVar)))
+   any(is.na(as.matrix(varMat)))
+   any(is.nan(as.matrix(varMat)))
+   any(is.na(as.matrix(ssqYX)))
+   any(is.na(as.matrix(ssqY)))
+   any(is.na(as.matrix(ssqYXcopy)))
+   any(is.na(as.matrix(ssqBetahat)))
+   any(is.na(as.vector(detReml)))
+   any(is.na(as.matrix(cholXVXdiag)))
+   any(is.na(as.matrix(ssqResidual)))
    # any(is.nan(as.matrix(ssqResidual/Nobs)))
    # as.matrix(ssqY)[which(is.na(as.vector(detVar))),]
   # which(is.na(as.vector(detVar)))
@@ -207,8 +207,8 @@ likfitLgmGpu <- function(data,
     # curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
     # abline(h =0, lty = 2)
     # rangeresults <- optim(26000, f1, method = "L-BFGS-B",lower = 20000, upper = 240000, hessian = FALSE, control=list(fnscale=-1) )
-    lower = min(profileLogLik$range)+10
-    upper = max(profileLogLik$range)-10
+    lower = min(profileLogLik$range)
+    upper = max(profileLogLik$range)
     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
     # maxvalue <- rangeresults$objective
     # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
@@ -279,7 +279,7 @@ likfitLgmGpu <- function(data,
     # shaperesults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
     lower = min(profileLogLik$shape)
     upper = max(profileLogLik$shape)
-    MLE <- optimize(f1, c(lower, 4.5), maximum = TRUE, tol = 0.0001)$maximum
+    MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
     # maxvalue <- shaperesults$objective
     # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
@@ -538,6 +538,7 @@ likfitLgmGpu <- function(data,
                  Ncov = Ncov,
                  Ndata = Ndata,
                  Nparam = Nparam,
+                 breaks = breaks,
                  ssqY=ssqY,     
                  ssqBetahat = ssqBetahat,
                  ssqResidual = ssqResidual,
