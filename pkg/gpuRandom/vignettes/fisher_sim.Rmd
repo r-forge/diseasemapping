@@ -110,8 +110,27 @@ result
 
 
 
+```{r Dec10}
+
+Convictions <- matrix(c(2, 10, 15, 3), nrow = 2,
+	              dimnames =list(c("Dizygotic", "Monozygotic"),c("Convicted", "Not convicted")))
+Convictions
+fisher.test(Convictions, simulate.p.value = TRUE, B = 2e4)$p.value 
+#0.0005367241
+Convictions<-vclMatrix(Convictions, type="integer")
+
+streams <-  gpuR::vclMatrix(clrng::createStreamsCpu(n=64*8))
+result<-clrng::fisher.sim(Convictions, 500000, returnStatistics=TRUE, type="double", streams=streams, Nglobal = c(64,8))
+result$p.value
+t(as.matrix(streams))[,11:16]
+result$counts
+result$simNum
+```
 
 
-
-
-
+```{r}
+streams <-  gpuRandom::createStreamsGpu(n=64*8)
+Convictions<-vclMatrix(Convictions, type="integer")
+result<-fisher.sim(Convictions, 100000, returnStatistics=TRUE, type="double", streams=streams, Nglobal = c(64,8))
+result$p.value
+```

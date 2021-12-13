@@ -35,7 +35,8 @@
   
   lower = min(stderror)
   upper = max(stderror)
-  f1 <- splinefun(stderror, LogLik, method = "monoH.FC")
+  #f1 <- splinefun(stderror, LogLik, method = "monoH.FC")
+  f1 <- approxfun(stderror, LogLik)
   #plot(stderror,LogLik)
   #curve(f1(x), add = TRUE, col = 2, n = 1001)
   
@@ -43,7 +44,8 @@
   MLE <- result$maximum
   breaks <- result$objective - qchisq(cilevel,  df = 1)/2
   #abline(h=breaks)
-  f2 <- splinefun(stderror, LogLik-breaks, method = "monoH.FC")
+  #f2 <- splinefun(stderror, LogLik-breaks, method = "monoH.FC")
+  f2 <- approxfun(stderror, LogLik-breaks)
   #plot(stderror,LogLik-breaks)
   #curve(f2(x), add = TRUE, col = 2, n = 1001)
   #abline(h=0)

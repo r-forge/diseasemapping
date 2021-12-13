@@ -96,7 +96,8 @@
     lower = min(Betas)
     upper = max(Betas)
     LogLik <- -0.5*minus2LogLik_optimized
-    f1 <- splinefun(Betas, LogLik, method = "fmm")
+    #f1 <- splinefun(Betas, LogLik, method = "fmm")
+    f1 <- approxfun(Betas, LogLik)
     #plot(Betas,LogLik)
     #curve(f1(x), add = TRUE, col = 2, n = 1001)
     
@@ -104,7 +105,8 @@
     MLE <- result$maximum
     breaks <- result$objective - qchisq(cilevel,  df = 1)/2
     #abline(h=breaks)
-    f2 <- splinefun(Betas, LogLik-breaks, method = "fmm")
+    #f2 <- splinefun(Betas, LogLik-breaks, method = "fmm")
+    f2 <- approxfun(Betas, LogLik-breaks)
     #plot(Betas,LogLik-breaks)
     #curve(f2(x), add = TRUE, col = 2, n = 1001)
     #abline(h=0)

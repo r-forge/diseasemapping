@@ -537,4 +537,3 @@ SEXP gemmBatch2backend(
 
 
 
-

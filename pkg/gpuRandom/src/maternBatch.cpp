@@ -484,7 +484,7 @@ void maternBatchVcl(
     Npad = vclVar.internal_size2(),
     NpadBetweenMatrices = Npad*N; // change to Npad*(Nmat+k) to insert extra rows between matrices
   
-    const int Ncell = N * (N - 1)/2, maxIter = 4000;
+    const int Ncell = N * (N - 1)/2, maxIter = 5000;
     int NgroupsOfParameters = numWorkItems[1]/numLocalItems[1];
     
     int NparametersPerGroup = std::max(
