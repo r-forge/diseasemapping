@@ -316,13 +316,13 @@ std::string maternBatchKernelString(
   
   result +=
     "if(params[(startrow + Dmatrix) * NpadParams + 1] >= 100){\n"
-      "K_nuK_nup1.x = exp(- 0.5 * (thisx * thisx) / (params[(startrow + Dmatrix) * NpadParams] * params[(startrow + Dmatrix) * NpadParams] ));\n" //(thisx * thisx) / (params[(startrow + Dmatrix) * NpadParams] * params[(startrow + Dmatrix) * NpadParams] ))
+      "K_nuK_nup1.x = exp(- 0.5 * (thisx * thisx) / (localParams[DlocalParam] * localParams[DlocalParam + 0] ) );\n" //(thisx * thisx) / (params[(startrow + Dmatrix) * NpadParams] * params[(startrow + Dmatrix) * NpadParams] ))
     "}else{\n"
     "	if(logthisx > 1.5) {\n" // was 2.0 gsl_sf_bessel_K_scaled_steed_temme_CF2
     
     //	"   maternLong(thisx, expMaternBit, nu[Dmatrix], mu[Dmatrix], muSq[Dmatrix], &K_nu, &K_nup1);\n"
-    "   K_nuK_nup1=maternLong(\n"
-    "		thisx,\n"
+    "K_nuK_nup1=maternLong(\n"
+    "		    thisx,\n"
     "       expMaternBit, localParams[DlocalParam + 1],\n"
     "       (localParams[DlocalParam + 13]),\n"
     "       localParams[DlocalParam + 14]);\n"//, &K_nu, &K_nup1);\n"
@@ -338,7 +338,6 @@ std::string maternBatchKernelString(
     //			" g_1pnu[Dmatrix], g_1mnu[Dmatrix]," 
     " localParams[DlocalParam + 19], localParams[DlocalParam + 20]);\n"
     //    " &K_nu, &K_nup1);\n"
-    
     "   }\n";
   
   result +=
