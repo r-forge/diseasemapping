@@ -29,8 +29,8 @@
  */
 
 /* TO FIX!!!
-crashes if global size bigger than number of parameter sets
-*/
+ crashes if global size bigger than number of parameter sets
+ */
 
 template <typename T> 
 std::string maternBatchKernelString(
@@ -51,8 +51,8 @@ std::string maternBatchKernelString(
   
   std::string typeString = openclTypeString<T>();
   std::string result = "";
-
-    
+  
+  
   if(typeString == "double") {
     result += "\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n\n"
     "#define logSqrtHalfPi " + std::to_string(M_LN_SQRT_PId2) + "\n" // Rmath.h
@@ -94,7 +94,7 @@ std::string maternBatchKernelString(
     "#define NpadBetweenMatrices " + std::to_string(NpadBetweenMatrices) + "\n"
     "#define NpadCoords " + std::to_string(NpadCoords) + "\n"
     "#define NpadParams " + std::to_string(NpadParams) + "\n"
-//    "#define NlocalParamsCache "+ std::to_string(NlocalParamsCache) + "\n"
+    //    "#define NlocalParamsCache "+ std::to_string(NlocalParamsCache) + "\n"
     "#define NlocalParams " + std::to_string(NlocalParams) + "\n\n";
   
   
@@ -243,9 +243,9 @@ std::string maternBatchKernelString(
     typeString + "2 K_nuK_nup1;\n\n";
   
   result +=
-//    "__local " + typeString + " localParams[NlocalParamsCache];\n"
-  "__local " + typeString + "2 localDist[NlocalStorage];\n"
-  "__local int Drow[NlocalStorage], Dcol[NlocalStorage];\n";
+    //    "__local " + typeString + " localParams[NlocalParamsCache];\n"
+    "__local " + typeString + "2 localDist[NlocalStorage];\n"
+    "__local int Drow[NlocalStorage], Dcol[NlocalStorage];\n";
   
   result += "event_t wait;\n\n";
   
@@ -253,9 +253,9 @@ std::string maternBatchKernelString(
     "// dimension 0 is cell, dimension 1 is matrix\n"
     "const int isFirstLocal = (get_local_id(0)==0 & get_local_id(1)==0);\n"
     "const int isFirstLocal1 = (get_local_id(1)==0);\n\n";
-    
-    result +=
-      "// copy parameters to local storage\n";
+  
+  result +=
+    "// copy parameters to local storage\n";
   result += 
     "if(get_local_id(0)==0){\n"
     " for(DmatrixLocal = get_local_id(1),Dmatrix = get_global_id(1);\n"
@@ -267,13 +267,13 @@ std::string maternBatchKernelString(
     "  }//Dcell\n"
     " }//Dmatrix\n"
     "}//if\n";
-result +=  "barrier(CLK_LOCAL_MEM_FENCE);\n\n";
+  result +=  "barrier(CLK_LOCAL_MEM_FENCE);\n\n";
   
-
   
-//    result += "wait_group_events (1, &wait);\n\n";
-
-
+  
+  //    result += "wait_group_events (1, &wait);\n\n";
+  
+  
   result +=    
     "for(Dcell = get_global_id(0); Dcell < Ncell; Dcell += get_global_size(0)) {\n";
   
@@ -311,15 +311,15 @@ result +=  "barrier(CLK_LOCAL_MEM_FENCE);\n\n";
     "	thisx = exp(logthisx);\n"
     "	maternBit = localParams[DlocalParam + 10] + localParams[DlocalParam + 1] * logthisx;\n"
     "	expMaternBit = exp(maternBit);\n";
-
-
+  
+  
   
   result +=
-    " if(localParams[DlocalParam + 1] >= 100){\n"
-    "   K_nuK_nup1.x = exp(- 0.5 * (thisx * thisx) / (localParams[DlocalParam + 0] * localParams[DlocalParam + 0]));\n" 
-    " }else{\n"
-    
+    "if(params[(startrow + Dmatrix) * NpadParams + 1] >= 100){\n"
+      "K_nuK_nup1.x = exp(- 0.5 * (thisx * thisx) / (params[(startrow + Dmatrix) * NpadParams] * params[(startrow + Dmatrix) * NpadParams] ));\n" //(thisx * thisx) / (params[(startrow + Dmatrix) * NpadParams] * params[(startrow + Dmatrix) * NpadParams] ))
+    "}else{\n"
     "	if(logthisx > 1.5) {\n" // was 2.0 gsl_sf_bessel_K_scaled_steed_temme_CF2
+    
     //	"   maternLong(thisx, expMaternBit, nu[Dmatrix], mu[Dmatrix], muSq[Dmatrix], &K_nu, &K_nup1);\n"
     "   K_nuK_nup1=maternLong(\n"
     "		thisx,\n"
@@ -338,6 +338,7 @@ result +=  "barrier(CLK_LOCAL_MEM_FENCE);\n\n";
     //			" g_1pnu[Dmatrix], g_1mnu[Dmatrix]," 
     " localParams[DlocalParam + 19], localParams[DlocalParam + 20]);\n"
     //    " &K_nu, &K_nup1);\n"
+    
     "   }\n";
   
   result +=
@@ -350,8 +351,8 @@ result +=  "barrier(CLK_LOCAL_MEM_FENCE);\n\n";
     
     //   "      K_nup1 = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nu + K_num1;\n"
     "       K_nuK_nup1.y = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nuK_nup1.x  + K_num1;\n"
-    "   }\n"
-    "}\n";
+    "}\n"
+   " }\n";
   
   result +=
     
@@ -364,31 +365,27 @@ result +=  "barrier(CLK_LOCAL_MEM_FENCE);\n\n";
     "    K_nuK_nup1.x;\n"//K_nu;\n" // upper triangle
     "#endif\n\n";
   
-  result +=  "} // Dmatrix\n";
+  result += "} // Dmatrix\n";
   result += "barrier(CLK_LOCAL_MEM_FENCE);\n";
   
   result += "} // Dcell\n\n";
-
+  
   
   result +=     "\n#ifdef assignDiag\n";
   
   result += 
-  "if(get_local_id(0)==0){\n"
-  "for(Dmatrix = get_global_id(1),DmatrixLocal = get_local_id(1);\n"
-  "    Dmatrix < Nmatrix;\n" 
-  "    Dmatrix += get_global_size(1),DmatrixLocal+= get_local_size(1) ) {\n"
-  "    maternBit = localParams[NlocalParams * DmatrixLocal+21];\n"
-  "    DlocalParam = Dmatrix * NpadBetweenMatrices;\n";
+    "if(get_local_id(0)==0){\n"
+    "for(Dmatrix = get_global_id(1),DmatrixLocal = get_local_id(1);\n"
+    "  Dmatrix < Nmatrix;\n" 
+    "  Dmatrix += get_global_size(1),DmatrixLocal+= get_local_size(1) ) {\n"
+    "    maternBit = localParams[NlocalParams*DmatrixLocal+21];\n"
+    "    DlocalParam = Dmatrix * NpadBetweenMatrices;\n";
   
-result +=
+  result +=
     "  for(Dcell = 0; Dcell < N; Dcell ++) {\n"
-    "  if(localParams[DlocalParam + 1] >= 100){\n"
-    "   result[DlocalParam + Dcell * Npad + Dcell] = exp(- 0.5 * (thisx * thisx) / (localParams[DlocalParam + 0] * localParams[DlocalParam + 0]));\n" 
-    "  }else{\n"    
-  "	   result[DlocalParam + Dcell * Npad + Dcell] = maternBit;\n"
-  "   }\n"
-  "  }//Dcell\n"; // Dcell
-result +=  "}//Dmatrix\n" // Dmatrix
+    "	   result[DlocalParam + Dcell * Npad + Dcell] = maternBit;\n"
+    "  }//Dcell\n"; // Dcell
+  result +=  "}//Dmatrix\n" // Dmatrix
   "}//if\n" // Dmatrix
   "#endif\n\n"; // assign diagonals
   
@@ -405,7 +402,7 @@ void fill22params(
   // Nmat rows, 22 columns
   // 0 range, 1 shape, 2 variance, 3 nugget, 
   // 4 anisoRatio 5 anisoAngleRadians  6 anisoAngleDegrees
-  // 7 sintheta, 8 costheta 9 anisoRatioSq
+  // 7 costheta, 8 sintheta 9 anisoRatioSq
   // 10 varscale
   // 11 logxscale
   // 12 sinrat 13 mu 14 muSq 15 mup1 16 nuround
@@ -486,28 +483,28 @@ void maternBatchVcl(
     int verbose){ 
   
   const int 
-    N = vclCoords.size1(),
+  N = vclCoords.size1(),
     Nmatrix = numberofrows,  // made changes here
     Npad = vclVar.internal_size2(),
     NpadBetweenMatrices = Npad*N; // change to Npad*(Nmat+k) to insert extra rows between matrices
   
-    const int Ncell = N * (N - 1)/2, maxIter = 5000;
-    int NgroupsOfParameters = numWorkItems[1]/numLocalItems[1];
-    
-    int NparametersPerGroup = std::max(
-      numLocalItems[1], 
-      ( (int) ceil( ((T) Nmatrix) / ((T) NgroupsOfParameters) ) )
-    );
+  const int Ncell = N * (N - 1)/2, maxIter = 5000;
+  int NgroupsOfParameters = numWorkItems[1]/numLocalItems[1];
+  
+  int NparametersPerGroup = std::max(
+    numLocalItems[1], 
+                 ( (int) ceil( ((T) Nmatrix) / ((T) NgroupsOfParameters) ) )
+  );
   
   fill22params(param);
-      // memory for local copies of parameters
+  // memory for local copies of parameters
   
   viennacl::ocl::local_mem localParameters(sizeof(param(0,0)) *
-                           NlocalParams * NparametersPerGroup);
+    NlocalParams * NparametersPerGroup);
   
   //  cl_device_type type_check = ctx.current_device().type();
-
-
+  
+  
   std::string maternClString = maternBatchKernelString<T>(
     maxIter,
     N, 
@@ -518,15 +515,15 @@ void maternBatchVcl(
     vclCoords.internal_size2(), //NpadCoords, 
     param.internal_size2(),// NpadParams
     numLocalItems[0],
-//    NlocalParams * numLocalItems[1] * (1+ Nmatrix * numLocalItems[1] / numWorkItems[1]),// local params cache
-    1L, 1L, 1L, 0L
-      );
+                 //    NlocalParams * numLocalItems[1] * (1+ Nmatrix * numLocalItems[1] / numWorkItems[1]),// local params cache
+                 1L, 1L, 1L, 0L
+  );
   
   // the context
   viennacl::ocl::switch_context(ctx_id);
   viennacl::ocl::program & my_prog = viennacl::ocl::current_context().add_program(maternClString, "my_kernel");
   
-
+  
   
   
   
@@ -541,26 +538,26 @@ void maternBatchVcl(
   maternKernel.local_work_size(0, (cl_uint) (numLocalItems[0]));
   maternKernel.local_work_size(1, (cl_uint) (numLocalItems[1]));
   
-if(verbose) {
-  Rcpp::Rcout << "\n" << NlocalParams << " "<< Nmatrix << " " <<
-    localParameters.size() << " " 
-  << ceil(Nmatrix * numLocalItems[1] / numWorkItems[1]) << " " <<
-    NlocalParams * ceil(Nmatrix * numLocalItems[1] / numWorkItems[1])  << 
-      "\n";
-}
-
-if(verbose > 1) {
- Rcpp::Rcout << maternClString << "\n";
-}
-
-if(numberofrows > param.size1()) {
-   Rcpp::stop("Warning: numberofrows must be less than nrow(param)");
+  if(verbose) {
+    Rcpp::Rcout << "\n" << NlocalParams << " "<< Nmatrix << " " <<
+      localParameters.size() << " " 
+                             << ceil(Nmatrix * numLocalItems[1] / numWorkItems[1]) << " " <<
+      NlocalParams * ceil(Nmatrix * numLocalItems[1] / numWorkItems[1])  << 
+        "\n";
   }
   
-if(verbose) {
-    Rcpp::Rcout << "startrow " << startrow << "\n Nmatrix " << Nmatrix << "\n param.size1() " << param.size1() << "\n NgroupsOfParameters " <<
-      NgroupsOfParameters << "\n NparametersPerGroup " << NparametersPerGroup << "\n " <<
-        localParameters.size() / sizeof(param(0,0)) << "\n izeof(param(0,0)) " << sizeof(param(0,0)) <<  "\n";
+  if(verbose > 1) {
+    Rcpp::Rcout << maternClString << "\n";
+  }
+  
+  if(numberofrows > param.size1()) {
+    Rcpp::stop("Warning: numberofrows must be less than nrow(param)");
+  }
+  
+  if(verbose) {
+    Rcpp::Rcout << startrow << " " << Nmatrix << " " << param.size1() << " " <<
+      NgroupsOfParameters << " " << NparametersPerGroup << " " <<
+        localParameters.size() / sizeof(param(0,0)) << " " << sizeof(param(0,0)) <<  "\n";
   }
   
   
@@ -584,8 +581,8 @@ void maternBatchTemplated(
     int numberofrows, 
     int verbose) {
   /*
-  std::vector<int> numWorkItemsStd = Rcpp::as<std::vector<int> >(Nglobal);
-  std::vector<int> numLocalItemsStd = Rcpp::as<std::vector<int> >(Nlocal);*/
+   std::vector<int> numWorkItemsStd = Rcpp::as<std::vector<int> >(Nglobal);
+   std::vector<int> numLocalItemsStd = Rcpp::as<std::vector<int> >(Nlocal);*/
   
   // data
   const bool BisVCL=1;
@@ -613,7 +610,7 @@ void fillParamsExtraTemplated(
   const bool BisVCL=1;
   const int ctx_id = INTEGER(paramR.slot(".context_index"))[0]-1;
   std::shared_ptr<viennacl::matrix<T> > param = getVCLptr<T>(paramR.slot("address"), BisVCL, ctx_id);
-
+  
   fill22params(*param);  
 }
 
@@ -672,8 +669,6 @@ void maternBatchBackend(
     Rcpp::warning("class of var must be fvclMatrix or dvclMatrix");
   }
 }
-
-
 
 
 
