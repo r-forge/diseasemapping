@@ -296,6 +296,7 @@ std::string maternBatchKernelString(
     "    Dmatrix += get_global_size(1),DmatrixLocal+= get_local_size(1) ) {\n";
   result +=    
     " DlocalParam = NlocalParams*DmatrixLocal;\n"
+    " nuround = (int) (localParams[DlocalParam+16]);\n"
     // cos element 7, sin element 8
     " sincos.x = localParams[DlocalParam+8];\n"
     " sincos.y = localParams[DlocalParam+7];\n"
@@ -315,9 +316,9 @@ std::string maternBatchKernelString(
   
   
   result +=
-    "if(params[(startrow + Dmatrix) * NpadParams + 1] >= 100){\n"
-      "K_nuK_nup1.x = exp(- 0.5 * (thisx * thisx) / (localParams[DlocalParam] * localParams[DlocalParam + 0] ) );\n" //(thisx * thisx) / (params[(startrow + Dmatrix) * NpadParams] * params[(startrow + Dmatrix) * NpadParams] ))
-    "}else{\n"
+    "if(nuround >= 100){// gaussian\n"
+      "K_nuK_nup1.x = localParams[DlocalParam + 2]*exp(- 2 * distSq/(localParams[DlocalParam]*localParams[DlocalParam]) );\n" //(thisx * thisx) / (params[(startrow + Dmatrix) * NpadParams] * params[(startrow + Dmatrix) * NpadParams] ))
+    "}else{// not gaussian\n"
     "	if(logthisx > 1.5) {\n" // was 2.0 gsl_sf_bessel_K_scaled_steed_temme_CF2
     
     //	"   maternLong(thisx, expMaternBit, nu[Dmatrix], mu[Dmatrix], muSq[Dmatrix], &K_nu, &K_nup1);\n"
@@ -338,10 +339,9 @@ std::string maternBatchKernelString(
     //			" g_1pnu[Dmatrix], g_1mnu[Dmatrix]," 
     " localParams[DlocalParam + 19], localParams[DlocalParam + 20]);\n"
     //    " &K_nu, &K_nup1);\n"
-    "   }\n";
+    "   }// short or long distance\n";
   
   result +=
-    " nuround = (int) (localParams[DlocalParam+16]);\n"
     "for(k=0; k<nuround; k++) {\n"
     //    "      K_num1 = K_nu;\n"
     "       K_num1 = K_nuK_nup1.x;\n"
@@ -350,8 +350,8 @@ std::string maternBatchKernelString(
     
     //   "      K_nup1 = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nu + K_num1;\n"
     "       K_nuK_nup1.y = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nuK_nup1.x  + K_num1;\n"
-    "}\n"
-   " }\n";
+    "}// k loop\n"
+   " }// not gaussian\n";
   
   result +=
     
