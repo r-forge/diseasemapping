@@ -316,7 +316,7 @@ std::string maternBatchKernelString(
   
   
   result +=
-    "if(nuround >= 100){// gaussian\n"
+    "if(nuround >= 1000){// gaussian\n"
       "K_nuK_nup1.x = localParams[DlocalParam + 2]*exp(- 2 * distSq/(localParams[DlocalParam]*localParams[DlocalParam]) );\n" //(thisx * thisx) / (params[(startrow + Dmatrix) * NpadParams] * params[(startrow + Dmatrix) * NpadParams] ))
     "}else{// not gaussian\n"
     "	if(logthisx > 1.5) {\n" // was 2.0 gsl_sf_bessel_K_scaled_steed_temme_CF2
