@@ -315,8 +315,11 @@ result +=  "barrier(CLK_LOCAL_MEM_FENCE);\n\n";
 
   
   result +=
-    "	if(logthisx > 1.5) {\n" // was 2.0 gsl_sf_bessel_K_scaled_steed_temme_CF2
+    " if(localParams[DlocalParam + 1] >= 100){\n"
+    "   K_nuK_nup1.x = exp(- 0.5 * (thisx * thisx) / (localParams[DlocalParam + 0] * localParams[DlocalParam + 0]));\n" 
+    " }else{\n"
     
+    "	if(logthisx > 1.5) {\n" // was 2.0 gsl_sf_bessel_K_scaled_steed_temme_CF2
     //	"   maternLong(thisx, expMaternBit, nu[Dmatrix], mu[Dmatrix], muSq[Dmatrix], &K_nu, &K_nup1);\n"
     "   K_nuK_nup1=maternLong(\n"
     "		thisx,\n"
@@ -324,7 +327,7 @@ result +=  "barrier(CLK_LOCAL_MEM_FENCE);\n\n";
     "       (localParams[DlocalParam + 13]),\n"
     "       localParams[DlocalParam + 14]);\n"//, &K_nu, &K_nup1);\n"
     
-    "	} else { \n"// if short distance gsl_sf_bessel_K_scaled_temme
+    "	}else { \n"// if short distance gsl_sf_bessel_K_scaled_temme
     
     "K_nuK_nup1=maternShort(ln_half_x, maternBit, expMaternBit,\n"
     //" mu[Dmatrix], muSq[Dmatrix]," 
@@ -335,7 +338,6 @@ result +=  "barrier(CLK_LOCAL_MEM_FENCE);\n\n";
     //			" g_1pnu[Dmatrix], g_1mnu[Dmatrix]," 
     " localParams[DlocalParam + 19], localParams[DlocalParam + 20]);\n"
     //    " &K_nu, &K_nup1);\n"
-    
     "   }\n";
   
   result +=
@@ -348,6 +350,7 @@ result +=  "barrier(CLK_LOCAL_MEM_FENCE);\n\n";
     
     //   "      K_nup1 = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nu + K_num1;\n"
     "       K_nuK_nup1.y = exp(log(localParams[DlocalParam + 15]+k) - ln_half_x) * K_nuK_nup1.x  + K_num1;\n"
+    "   }\n"
     "}\n";
   
   result +=
@@ -361,7 +364,7 @@ result +=  "barrier(CLK_LOCAL_MEM_FENCE);\n\n";
     "    K_nuK_nup1.x;\n"//K_nu;\n" // upper triangle
     "#endif\n\n";
   
-  result += "} // Dmatrix\n";
+  result +=  "} // Dmatrix\n";
   result += "barrier(CLK_LOCAL_MEM_FENCE);\n";
   
   result += "} // Dcell\n\n";
@@ -372,14 +375,18 @@ result +=  "barrier(CLK_LOCAL_MEM_FENCE);\n\n";
   result += 
   "if(get_local_id(0)==0){\n"
   "for(Dmatrix = get_global_id(1),DmatrixLocal = get_local_id(1);\n"
-  "  Dmatrix < Nmatrix;\n" 
-  "  Dmatrix += get_global_size(1),DmatrixLocal+= get_local_size(1) ) {\n"
-  "    maternBit = localParams[NlocalParams*DmatrixLocal+21];\n"
+  "    Dmatrix < Nmatrix;\n" 
+  "    Dmatrix += get_global_size(1),DmatrixLocal+= get_local_size(1) ) {\n"
+  "    maternBit = localParams[NlocalParams * DmatrixLocal+21];\n"
   "    DlocalParam = Dmatrix * NpadBetweenMatrices;\n";
   
 result +=
     "  for(Dcell = 0; Dcell < N; Dcell ++) {\n"
+    "  if(localParams[DlocalParam + 1] >= 100){\n"
+    "   result[DlocalParam + Dcell * Npad + Dcell] = exp(- 0.5 * (thisx * thisx) / (localParams[DlocalParam + 0] * localParams[DlocalParam + 0]));\n" 
+    "  }else{\n"    
   "	   result[DlocalParam + Dcell * Npad + Dcell] = maternBit;\n"
+  "   }\n"
   "  }//Dcell\n"; // Dcell
 result +=  "}//Dmatrix\n" // Dmatrix
   "}//if\n" // Dmatrix
@@ -551,9 +558,9 @@ if(numberofrows > param.size1()) {
   }
   
 if(verbose) {
-    Rcpp::Rcout << startrow << " " << Nmatrix << " " << param.size1() << " " <<
-      NgroupsOfParameters << " " << NparametersPerGroup << " " <<
-        localParameters.size() / sizeof(param(0,0)) << " " << sizeof(param(0,0)) <<  "\n";
+    Rcpp::Rcout << "startrow " << startrow << "\n Nmatrix " << Nmatrix << "\n param.size1() " << param.size1() << "\n NgroupsOfParameters " <<
+      NgroupsOfParameters << "\n NparametersPerGroup " << NparametersPerGroup << "\n " <<
+        localParameters.size() / sizeof(param(0,0)) << "\n izeof(param(0,0)) " << sizeof(param(0,0)) <<  "\n";
   }
   
   
