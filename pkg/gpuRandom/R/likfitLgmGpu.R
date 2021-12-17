@@ -14,12 +14,13 @@ likfitLgmGpu <- function(data,
                          params, # CPU matrix for now, users need to provide proper parameters given their specific need
                          #fixVariance = FALSE, 
                          boxcox,  # boxcox is always estimated
-                         paramToEstimate = c("range","shape","nugget","anisoAngleDegrees", "anisoRatio", "boxcox"), #variance and regression parameters are always estimated if not given,
+                         paramToEstimate = c("range","nugget"), #variance and regression parameters are always estimated if not given,
                          cilevel=0.95,  # decimal
                          type = c("float", "double")[1+gpuInfo()$double_support],
                          reml=FALSE, 
-                         minustwotimes=FALSE,
                          NparamPerIter,
+                         minustwotimes=FALSE,
+                         twoDbreak = FALSE,
                          Nglobal,
                          Nlocal,
                          NlocalCache,
@@ -101,7 +102,7 @@ likfitLgmGpu <- function(data,
     as.integer(Nglobal),  #12
     as.integer(Nlocal),  #16
     NlocalCache,  #14
-    verbose=2,  #15
+    verbose=1,  #15
     ssqYX, #
     ssqYXcopy,  #new
     LinvYX,  #18
@@ -114,17 +115,17 @@ likfitLgmGpu <- function(data,
   ssqResidual <- ssqY - ssqBetahat
   # any(is.na(as.matrix(log(ssqResidual/Nobs))))
    # as.matrix(cholDiagMat)[]
-   # any(is.nan(as.matrix(log(ssqResidual/Nobs))))
-   # any(is.nan(as.vector(detVar)))
-   # any(is.na(as.matrix(varMat)))
-   # any(is.nan(as.matrix(varMat)))
-   # any(is.na(as.matrix(ssqYX)))
-   # any(is.na(as.matrix(ssqY)))
-   # any(is.na(as.matrix(ssqYXcopy)))
-   # any(is.na(as.matrix(ssqBetahat)))
-   # any(is.na(as.vector(detReml)))
-   # any(is.na(as.matrix(cholXVXdiag)))
-   # any(is.na(as.matrix(ssqResidual)))
+   any(is.nan(as.matrix(log(ssqResidual/Nobs))))
+   any(is.nan(as.vector(detVar)))
+   any(is.na(as.matrix(varMat)))
+   any(is.nan(as.matrix(varMat)))
+   any(is.na(as.matrix(ssqYX)))
+   any(is.na(as.matrix(ssqY)))
+   any(is.na(as.matrix(ssqYXcopy)))
+   any(is.na(as.matrix(ssqBetahat)))
+   any(is.na(as.vector(detReml)))
+   any(is.na(as.matrix(cholXVXdiag)))
+   any(is.na(as.matrix(ssqResidual)))
    # any(is.nan(as.matrix(ssqResidual/Nobs)))
    # as.matrix(ssqY)[which(is.na(as.vector(detVar))),]
   # which(is.na(as.vector(detVar)))
@@ -136,7 +137,7 @@ likfitLgmGpu <- function(data,
   # ssqResidual[which(is.na(debug),arr.ind = TRUE)[,1],]     # row 20803 col 1  -4.530054e+20
   # ssqY[which(is.na(debug),arr.ind = TRUE)[,1],]
   # ssqBetahat[which(is.na(debug),arr.ind = TRUE)[,1],]    # problem arises from here! 4.530057e+20
-  # 
+  # as.vector(detVar)[840]
   # params0[which(is.na(as.vector(detVar))),]
   # 
   # if(fixVariance >0){
@@ -185,6 +186,13 @@ likfitLgmGpu <- function(data,
   LogLikcpu <- as.matrix(-0.5*minusTwoLogLik)
   maximum <- max(LogLikcpu)
   breaks = maximum - qchisq(cilevel,  df = 1)/2
+  
+  if(twoDbreak == TRUE){
+    breaks2D = maximum - qchisq(cilevel,  df = 2)/2 
+  }
+  
+  
+  
   
   ############## output matrix ####################
   Table <- matrix(NA, nrow=length(union(paramToEstimate, 'boxcox'))+Ncov+1, ncol=3)
@@ -530,7 +538,24 @@ likfitLgmGpu <- function(data,
   }
   
   
-  
+  if(twoDbreak == TRUE){
+    Output <- list(LogLik=LogLikcpu,
+                   minusTwoLogLik = minusTwoLogLik,
+                   estimates = Table,
+                   Nobs = Nobs,
+                   Ncov = Ncov,
+                   Ndata = Ndata,
+                   Nparam = Nparam,
+                   breaks = breaks,
+                   breaks2D = breaks2D,
+                   ssqY=ssqY,     
+                   ssqBetahat = ssqBetahat,
+                   ssqResidual = ssqResidual,
+                   detVar = detVar,   
+                   detReml = detReml,   
+                   jacobian = jacobian,
+                   XVYXVX=XVYXVX)
+  }else{
   Output <- list(LogLik=LogLikcpu,
                  minusTwoLogLik = minusTwoLogLik,
                  estimates = Table,
@@ -546,6 +571,8 @@ likfitLgmGpu <- function(data,
                  detReml = detReml,   
                  jacobian = jacobian,
                  XVYXVX=XVYXVX)
+  }
+  
   
   Output
   
