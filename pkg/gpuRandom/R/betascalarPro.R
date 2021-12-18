@@ -54,8 +54,8 @@
   XTVinvX_deleted <- matrix(XTVinvX[-selectedrows,-a], ncol=Ucov, byrow=TRUE)
   XTVinvX_a <- matrix(XTVinvX[selectedrows, -a], nrow=Nparam, ncol=Ucov)
   #XTVinvX_a <- matrix(XTVinvX[-selectedrows, a], nrow=Nparam*Ucov, ncol=1)[1:10,]
-  XVY_deleted <- XVY[-selectedrows, ]
-  X_aVY <- XVY[selectedrows, ]
+  XVY_deleted <- matrix(XVY[-selectedrows, ], nrow = Ucov, byrow=TRUE)
+  X_aVY <- matrix(XVY[selectedrows, ], nrow=1, byrow=TRUE)
   X_aVX_a <- XTVinvX[selectedrows, a]
   #dim(XVY_deleted)
   
