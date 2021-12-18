@@ -66,8 +66,8 @@ likfitLgmGpu <- function(data,
   boxcoxGpu = vclVector(boxcox, type=type)
   
   # prepare params, make sure variance=1 in params
+  params[,"variance"]=1 
   params0 = geostatsp::fillParam(params)
-  params0[,"variance"]=1    
   paramsGpu = vclMatrix(cbind(params0, matrix(0, nrow(params0), 22-ncol(params0))),type=type)
   
   varMat = vclMatrix(0, Nobs*NparamPerIter, Nobs, type=type)
@@ -532,8 +532,7 @@ likfitLgmGpu <- function(data,
   #################sigma hat#########################
   if(reml==FALSE)  {
     Table["sdSpatial",1] <- sqrt(ssqResidual[index[1],index[2]]/Nobs)
-  }
-  else if(reml==TRUE) {         
+  }else{         
     Table["sdSpatial",1] <- sqrt(ssqResidual[index[1],index[2]]/(Nobs - Ncov))
   }
   
