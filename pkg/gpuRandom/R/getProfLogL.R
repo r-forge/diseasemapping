@@ -64,7 +64,7 @@
      ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
      XVYXVX <- vclMatrix(0, Nparam * Ncov, ncol(yx), type=type)
      ssqBetahat <- vclMatrix(0, Nparam, Ndata, type=type)
-     ssqBeta <- vclMatrix(0, Nparam, Ndata, type=type)
+     #ssqBeta <- vclMatrix(0, Nparam, Ndata, type=type)
      detVar <- vclVector(0, Nparam,type=type)
      detReml <- vclVector(0, Nparam, type=type)
      jacobian <- vclVector(0, Ndata, type=type)   

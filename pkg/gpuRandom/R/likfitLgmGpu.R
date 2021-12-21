@@ -139,7 +139,7 @@ likfitLgmGpu <- function(data,
   # ssqBetahat[which(is.na(debug),arr.ind = TRUE)[,1],]    # problem arises from here! 4.530057e+20
   # as.vector(detVar)[840]
   # params0[which(is.na(as.vector(detVar))),]
-  # 
+  # params[which(is.na(result1$ssqY),arr.ind = TRUE)[1],]
   # if(fixVariance >0){
   #   temp <- vclMatrix(0, Nparam, Ndata, type=type)
   #   variances <- vclVector(params0[,3],type=type)
