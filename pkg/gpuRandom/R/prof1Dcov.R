@@ -15,6 +15,7 @@
                          cilevel=0.95,  # decimal
                          params, # cpu matrix, 
                          boxcox,  # boxcox vallues, consistent with other functions
+                         Ndata,
                          Nobs,
                          Ncov,
                          reml=FALSE, 

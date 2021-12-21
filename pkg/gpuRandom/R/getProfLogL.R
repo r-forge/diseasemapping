@@ -59,7 +59,6 @@
      params[,"variance"]=1 
      params0 = geostatsp::fillParam(params)
      paramsGpu = vclMatrix(cbind(params0, matrix(0, nrow(params0), 22-ncol(params0))),type=type)
-  
      varMat <- vclMatrix(0, Nobs*NparamPerIter, Nobs, type=type)
      cholDiagMat <- vclMatrix(0, NparamPerIter, Nobs, type=type)
      ssqY <- vclMatrix(0, Nparam, Ndata, type=type)
@@ -129,7 +128,7 @@
 
 
      LogLikcpu <- as.matrix(-0.5*minusTwoLogLik)
-
+     colnames(LogLikcpu) <- paste(c('boxcox'), round(boxcox, digits = 2) ,sep = '')
 
      Output <- list(LogLik=LogLikcpu,
                     minusTwoLogLikgpu = minusTwoLogLik,
@@ -138,6 +137,7 @@
                     Ncov = Ncov,
                     Ndata = Ndata,
                     Nparam = Nparam,
+                    boxcox = boxcox,
                     jacobian = as.vector(jacobian),
                     detVar = as.vector(detVar),   
                     detReml = as.vector(detReml),   
