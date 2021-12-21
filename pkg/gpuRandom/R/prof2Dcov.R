@@ -11,12 +11,8 @@
         prof2Dcov <- function(LogLik,  # cpu matrix
                               paramToEstimate = c("range","nugget"),
                               cilevel,  # decimal
-                              ParamList, 
-                              params, # cpu matrix, 
-                              Ndata,
-                              Nobs,
-                              Ncov,
-                              verbose=FALSE){
+                              #ParamList, 
+                              params){
             
           
           if (length(paramToEstimate) > 2){
