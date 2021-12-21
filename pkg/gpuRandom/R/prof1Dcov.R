@@ -20,6 +20,9 @@
                          reml=FALSE, 
                          verbose=FALSE){
   
+         
+     
+     
           
          maximum <- max(LogLik)
          breaks = maximum - qchisq(cilevel,  df = 1)/2
@@ -279,15 +282,7 @@
          
          
          
+   }      
          
          
-         
-         
-         
-         
-         
-         
-         
-         
-         
-         
+        

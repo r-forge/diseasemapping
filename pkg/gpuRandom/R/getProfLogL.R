@@ -6,7 +6,7 @@
 
 
 
-getCrossprodsGpu <- function(data,
+  getProfLogL <- function(data,
                           formula, 
                           coordinates,
                           params,  # CPU matrix 
