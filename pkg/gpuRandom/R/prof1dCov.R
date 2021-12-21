@@ -8,7 +8,7 @@
 
 
 
-   prof1Dcov <- function(LogLik,  # cpu matrix
+   prof1dCov <- function(LogLik,  # cpu matrix
                          XVYXVX,  # cpu matrix
                          ssqResidual,  # cpu matrix
                          paramToEstimate = c("range","shape","nugget","anisoAngleDegrees", "anisoRatio", "boxcox"),
