@@ -128,7 +128,7 @@
 
 
      LogLikcpu <- as.matrix(-0.5*minusTwoLogLik)
-     colnames(LogLikcpu) <- paste(c('boxcox'), round(boxcox, digits = 2) ,sep = '')
+     colnames(LogLikcpu) <- paste(c('boxcox'), round(boxcox, digits = 3) ,sep = '')
 
      Output <- list(LogLik=LogLikcpu,
                     minusTwoLogLikgpu = minusTwoLogLik,

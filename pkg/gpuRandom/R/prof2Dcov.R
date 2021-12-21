@@ -1,0 +1,66 @@
+#' @title 2D profile Log-likelihood for covariance parameters and lambda
+#' @import ggplot2
+#' @importFrom rootSolve uniroot.all
+#' @useDynLib gpuRandom
+#' @export
+
+
+
+
+
+        prof2Dcov <- function(LogLik,  # cpu matrix
+                              XVYXVX,  # cpu matrix
+                              ssqResidual,  # cpu matrix
+                              paramToEstimate = c("range","nugget"),
+                              cilevel,  # decimal
+                              params, # cpu matrix, 
+                              boxcox,  # boxcox vallues, consistent with other functions
+                              Ndata,
+                              Nobs,
+                              Ncov,
+                              verbose=FALSE){
+            
+          
+          if (length(paramToEstimate) > 2){
+            warning('should fix the rest params for a 2D plot')
+          }
+          maximum <- max(LogLik)
+          breaks = maximum - qchisq(cilevel,  df = 2)/2
+          index <- which(LogLik == max(LogLik, na.rm = TRUE), arr.ind = TRUE)
+ 
+          makedata <- data.frame(cbind(params[,paramToEstimate], LogLik[,index[2]]))
+          colnames(makedata) <- c(paramToEstimate, 'LogLik')
+          x = noquote(paramToEstimate[1])
+          lowx = min(params[,paramToEstimate[1]])
+          uppx = max(params[,paramToEstimate[1]])
+          lowy = min(params[,paramToEstimate[2]])
+          uppy = max(params[,paramToEstimate[2]])
+          
+          
+          contourplot <- ggplot(makedata, aes_string(x = paramToEstimate[1], y = paramToEstimate[2], z='LogLik')) + theme_bw() +
+            scale_y_continuous(limits=c(lowy, uppy))+
+            scale_x_continuous(limits=c(lowx, uppx) )+
+            theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+            geom_point(size = 0.5, colour='grey') +
+            stat_contour(breaks=breaks) 
+          
+
+          
+          
+          contourplot
+          
+          
+          
+          
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
