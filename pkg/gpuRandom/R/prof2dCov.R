@@ -8,7 +8,7 @@
 
 
 
-        prof2Dcov <- function(LogLik,  # cpu matrix
+        prof2dCov <- function(LogLik,  # cpu matrix
                               paramToEstimate = c("range","nugget"),
                               cilevel,  # decimal
                               #ParamList, 
