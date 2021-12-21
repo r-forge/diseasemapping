@@ -34,7 +34,8 @@
          colnames(Table) <-  c("estimate", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
          
          
-         
+         # myplots <- vector("list", length(paramToEstimate))
+         # names(myplots) <- paramToEstimate
          ############### profile for covariance parameters #####################
          if(is.element('range',paramToEstimate)){
            # get profile log-lik for range values
@@ -42,10 +43,11 @@
            colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "range")
            profileLogLik <- result[, .(profile=max(.SD)), by=range]
            f1 <- approxfun(profileLogLik$range, profileLogLik$profile-breaks)  
-           plot.range <- plot(profileLogLik$range, profileLogLik$profile-breaks, main="Profile LogL for range, y axis adjusted")
+           plot(profileLogLik$range, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='range')
            # plot(profileLogLik$range, profileLogLik$profile)
            curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
-           # abline(h =0, lty = 2)
+           abline(h =0, lty = 2)
+           #myplots[['range']] <- plot.range
            # rangeresults <- optim(26000, f1, method = "L-BFGS-B",lower = 20000, upper = 240000, hessian = FALSE, control=list(fnscale=-1) )
            lower = min(profileLogLik$range)
            upper = max(profileLogLik$range)
@@ -76,11 +78,12 @@
            result = as.data.table(cbind(LogLik, params[,"shape"]))
            colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "shape")
            profileLogLik <- result[, .(profile=max(.SD)), by=shape]
-           # plot(profileLogLik$shape, profileLogLik$profile-breaks)
+           plot(profileLogLik$shape, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab="shape")
            f1 <- approxfun(profileLogLik$shape, profileLogLik$profile-breaks)  
            #f1 <- splinefun(profileLogLik$shape, profileLogLik$profile-breaks, method = "monoH.FC")
-           # curve(f1, add = TRUE, col = 2) 
-           # abline(h =0, lty = 2)
+           curve(f1, add = TRUE, col = 2) 
+           abline(h =0, lty = 2)
+           #myplots[['shape']] <- plot.shape
            # shaperesults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
            lower = min(profileLogLik$shape)
            upper = max(profileLogLik$shape)
@@ -91,10 +94,10 @@
            if(length(ci)==1){
              if( ci > MLE){
                ci <- c(lower, ci)
-               message("did not find lower ci for shape, require more params")
+               message("did not find lower ci for shape")
              }else{
                ci <- c(ci, upper)
-               message("did not find upper ci for shape, require more params")}
+               message("did not find upper ci for shape")}
            }
            
            if(length(ci)==0 | length(ci)>2){
@@ -112,11 +115,12 @@
            result = as.data.table(cbind(LogLik, params[,"nugget"]))
            colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "nugget")
            profileLogLik <-result[, .(profile=max(.SD)), by=nugget]
-           # plot(profileLogLik$nugget, profileLogLik$profile-breaks)
+           plot(profileLogLik$nugget, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='nugget')
            f1 <- approxfun(profileLogLik$nugget, profileLogLik$profile-breaks)  
            # f1 <- splinefun(profileLogLik$nugget, profileLogLik$profile-breaks, method = "monoH.FC")
-           # curve(f1, add = TRUE, col = 2, n=1001) 
-           # abline(h =0, lty = 2)
+           curve(f1, add = TRUE, col = 2, n=1001) 
+           abline(h =0, lty = 2)
+           #myplots[['nugget']] <- plot.nugget
            # nuggetresults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
            lower = min(profileLogLik$nugget)
            upper = max(profileLogLik$nugget)
@@ -127,10 +131,10 @@
            if(length(ci)==1){
              if( ci > MLE){
                ci <- c(lower, ci)
-               message("did not find lower ci for nugget, require more params")
+               message("did not find lower ci for nugget")
              }else{
                ci <- c(ci, upper)
-               message("did not find upper ci for nugget, require more params")}
+               message("did not find upper ci for nugget")}
            }
            
            if(length(ci)==0 | length(ci)>2){
@@ -148,11 +152,12 @@
            result = as.data.table(cbind(LogLik, params[,"anisoRatio"]))
            colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoRatio")
            profileLogLik <- result[, .(profile=max(.SD)), by=anisoRatio]
-           # plot(profileLogLik$anisoRatio, profileLogLik$profile-breaks)
+           plot(profileLogLik$anisoRatio, profileLogLik$profile-breaks,main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='anisoRatio')
            f1 <- approxfun(profileLogLik$anisoRatio, profileLogLik$profile-breaks)  
            # f1 <- splinefun(profileLogLik$anisoRatio, profileLogLik$profile-breaks, method = "monoH.FC")
-           # curve(f1, add = TRUE, col = 2, n=1001) 
-           # abline(h =0, lty = 2)
+           curve(f1, add = TRUE, col = 2, n=1001) 
+           abline(h =0, lty = 2)
+           #myplots[['anisoRatio']] <- plot.anisoRatio
            # anisoRatioresults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
            lower = min(profileLogLik$anisoRatio)
            upper = max(profileLogLik$anisoRatio)
@@ -163,10 +168,10 @@
            if(length(ci)==1){
              if( ci > MLE){
                ci <- c(lower, ci)
-               message("did not find lower ci for anisoRatio, require more params")
+               message("did not find lower ci for anisoRatio")
              }else{
                ci <- c(ci, upper)
-               message("did not find upper ci for anisoRatio, require more params")}
+               message("did not find upper ci for anisoRatio")}
            }
            
            if(length(ci)==0 | length(ci)>2){
@@ -183,11 +188,12 @@
            result = as.data.table(cbind(LogLik, params[,"anisoAngleDegrees"]))
            colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoAngleDegrees")
            profileLogLik <- result[, .(profile=max(.SD)), by=anisoAngleDegrees]
-           #plot(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks)
+           plot(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='anisoAngleDegrees')
            f1 <- approxfun(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks)
            # f1 <- splinefun(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks, method = "monoH.FC")
-           # curve(f1, add = TRUE, col = 2, n=1001) 
-           # abline(h =0, lty = 2)
+           curve(f1, add = TRUE, col = 2, n=1001) 
+           abline(h =0, lty = 2)
+           #myplots[['anisoAngleDegrees']] <- plot.Degrees
            # anisoAngleDegreesresults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
            lower = min(profileLogLik$anisoAngleDegrees)
            upper = max(profileLogLik$anisoAngleDegrees)
@@ -198,10 +204,10 @@
            if(length(ci)==1){
              if( ci > MLE){
                ci <- c(lower, ci)
-               message("did not find lower ci, require more params")
+               message("did not find lower ci")
              }else{
                ci <- c(ci, upper)
-               message("did not find upper ci, require more params")}
+               message("did not find upper ci")}
            }
            
            if(length(ci)==0 | length(ci)>2){
@@ -218,13 +224,14 @@
          
          index <- which(LogLik == max(LogLik, na.rm = TRUE), arr.ind = TRUE)
          ###############lambda hat#####################
-         if(is.element('boxcox',paramToEstimate)  & length(boxcox)>3 ){
+         if(is.element('boxcox',paramToEstimate)  & length(boxcox)>5 ){
            likForboxcox = cbind(boxcox, apply(LogLik, 2, max) )
            f1 <- approxfun(likForboxcox[,1], likForboxcox[,2]-breaks)
            # f1 <- splinefun(likForboxcox[,1], likForboxcox[,2]-breaks, method = "monoH.FC")
-           # plot(likForboxcox[,1], likForboxcox[,2]-breaks)
-           # curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
-           # abline(h =0, lty = 2)
+           plot(likForboxcox[,1], likForboxcox[,2]-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='boxcox')
+           curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
+           abline(h =0, lty = 2)
+           #myplots[['boxcox']] <- plot.boxcox
            # rangeresults <- optim(26000, f1, method = "L-BFGS-B",lower = 20000, upper = 240000, hessian = FALSE, control=list(fnscale=-1) )
            lower = min(boxcox)
            upper = max(boxcox)
@@ -235,10 +242,10 @@
            if(length(ci)==1){
              if( ci > MLE){
                ci <- c(lower, ci)
-               message("did not find lower ci for boxcox, require more params")
+               message("did not find lower ci for boxcox")
              }else{
                ci <- c(ci, upper)
-               message("did not find upper ci for boxcox, require more params")}
+               message("did not find upper ci for boxcox")}
            }else if(length(ci)>2){
              warning("error in param matrix")
              ci <- c(NA, NA)
@@ -249,12 +256,12 @@
            Table["boxcox",1] <- boxcox[index[2]]
          }
          
-         
+         NcolTotal = Ndata + Ncov
          
          ###############betahat#####################
          Betahat <- matrix(0, nrow=Ncov, ncol=Ndata)
          a<-c( ((index[1]-1)*Ncov+1) : (index[1]*Ncov) )
-         mat <- XVYXVX[a,((Ndata+1):ncol(yx))]
+         mat <- XVYXVX[a,((Ndata+1):NcolTotal)]
          mat[upper.tri(mat)] <- mat[lower.tri(mat)]
          Betahat <- solve(mat) %*% XVYXVX[a,index[2]]
          
@@ -273,8 +280,8 @@
          
          
          Output <- list(estimates = Table,
-                        breaks = breaks,
-                        plot.range = plot.range)
+                        breaks = breaks
+                        )
          
          
          
