@@ -6,32 +6,28 @@
          m[upper.tri(m)] <- t(m)[upper.tri(m)]
          return(m)
      }
-     
-     
+  
 #' @export
-  betascalarProfile <- function(Betas, #a m x 1 R vector  given by the user 
+
+        Prof1dBetas <- function(Betas, #a m x 1 R vector  given by the user 
                                 cilevel=0.95,
                                 a,     # which beta_i?
                                 Nobs,  # number of observations.
                                 Ndata,
                                 Nparam,
                                 Ncov,
-                                detVar, # vclVector
-                                ssqY,   # vclMatrix
-                                XVYXVX,   # vclMatrix
-                                jacobian # vclVector  #form = c("loglik", "profileforBeta"),
-                                ){ 
+                                detVar, # 
+                                ssqY,   # 
+                                XVYXVX,   # 
+                                jacobian){ 
   
   m <- length(Betas)
   if(m < 5){
     warning("need more values for accurate estimate")
   }
   
-  
-  ssqY <- as.matrix(ssqY)
-  detVar <- as.vector(detVar)
+
   detVar <- matrix(rep(detVar, Ndata), nrow=Nparam)
-  jacobian <- as.vector(jacobian)
   jacobian <- do.call(rbind, replicate(Nparam, jacobian, simplify = FALSE))
   #dim(XVYXVX)
   Ucov <- Ncov-1

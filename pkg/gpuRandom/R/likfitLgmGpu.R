@@ -19,8 +19,8 @@ likfitLgmGpu <- function(data,
                          type = c("float", "double")[1+gpuInfo()$double_support],
                          reml=FALSE, 
                          NparamPerIter,
+                         df=1,
                          minustwotimes=FALSE,
-                         twoDbreak = FALSE,
                          Nglobal,
                          Nlocal,
                          NlocalCache,
@@ -115,17 +115,17 @@ likfitLgmGpu <- function(data,
   ssqResidual <- ssqY - ssqBetahat
   # any(is.na(as.matrix(log(ssqResidual/Nobs))))
    # as.matrix(cholDiagMat)[]
-   any(is.nan(as.matrix(log(ssqResidual/Nobs))))
-   any(is.nan(as.vector(detVar)))
-   any(is.na(as.matrix(varMat)))
-   any(is.nan(as.matrix(varMat)))
-   any(is.na(as.matrix(ssqYX)))
-   any(is.na(as.matrix(ssqY)))
-   any(is.na(as.matrix(ssqYXcopy)))
-   any(is.na(as.matrix(ssqBetahat)))
-   any(is.na(as.vector(detReml)))
-   any(is.na(as.matrix(cholXVXdiag)))
-   any(is.na(as.matrix(ssqResidual)))
+   # any(is.nan(as.matrix(log(ssqResidual/Nobs))))
+   # any(is.nan(as.vector(detVar)))
+   # any(is.na(as.matrix(varMat)))
+   # any(is.nan(as.matrix(varMat)))
+   # any(is.na(as.matrix(ssqYX)))
+   # any(is.na(as.matrix(ssqY)))
+   # any(is.na(as.matrix(ssqYXcopy)))
+   # any(is.na(as.matrix(ssqBetahat)))
+   # any(is.na(as.vector(detReml)))
+   # any(is.na(as.matrix(cholXVXdiag)))
+   # any(is.na(as.matrix(ssqResidual)))
    # any(is.nan(as.matrix(ssqResidual/Nobs)))
    # as.matrix(ssqY)[which(is.na(as.vector(detVar))),]
   # which(is.na(as.vector(detVar)))
@@ -185,11 +185,11 @@ likfitLgmGpu <- function(data,
   
   LogLikcpu <- as.matrix(-0.5*minusTwoLogLik)
   maximum <- max(LogLikcpu)
-  breaks = maximum - qchisq(cilevel,  df = 1)/2
+  breaks = maximum - qchisq(cilevel,  df = df)/2
   
-  if(twoDbreak == TRUE){
-    breaks2D = maximum - qchisq(cilevel,  df = 2)/2 
-  }
+  # if(twoDbreak == TRUE){
+  #   breaks2D = maximum - qchisq(cilevel,  df = 2)/2 
+  # }
   
   
   
@@ -537,24 +537,7 @@ likfitLgmGpu <- function(data,
   }
   
   
-  if(twoDbreak == TRUE){
-    Output <- list(LogLik=LogLikcpu,
-                   minusTwoLogLik = minusTwoLogLik,
-                   estimates = Table,
-                   Nobs = Nobs,
-                   Ncov = Ncov,
-                   Ndata = Ndata,
-                   Nparam = Nparam,
-                   breaks = breaks,
-                   breaks2D = breaks2D,
-                   ssqY=ssqY,     
-                   ssqBetahat = ssqBetahat,
-                   ssqResidual = ssqResidual,
-                   detVar = detVar,   
-                   detReml = detReml,   
-                   jacobian = jacobian,
-                   XVYXVX=XVYXVX)
-  }else{
+
   Output <- list(LogLik=LogLikcpu,
                  minusTwoLogLik = minusTwoLogLik,
                  estimates = Table,
@@ -570,7 +553,7 @@ likfitLgmGpu <- function(data,
                  detReml = detReml,   
                  jacobian = jacobian,
                  XVYXVX=XVYXVX)
-  }
+  
   
   
   Output
