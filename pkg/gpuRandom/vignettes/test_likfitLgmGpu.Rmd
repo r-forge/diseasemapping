@@ -71,6 +71,7 @@ boxcox =  c(seq(0.1, 0.8, len=8), swissRes$parameters['boxcox'])
 type = "double"
 reml=FALSE
 minustwotimes=FALSE
+df=1
 NparamPerIter=400
 Nglobal=c(128,64)
 Nlocal=c(16,16)
@@ -92,6 +93,7 @@ system.time(result1<-gpuRandom::likfitLgmGpu(
                          reml=FALSE, 
                          minustwotimes=FALSE,
                          NparamPerIter=400,
+                         df=1,
                          Nglobal=c(128,64),
                          Nlocal=c(16,16),
                          NlocalCache=2800,

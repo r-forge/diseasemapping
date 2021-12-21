@@ -6,7 +6,7 @@
 
 ######## this function will be incorporated in the other function later i think
 
-       variancePro <- function(stderror, #a vector  given by the user 
+       ProfVariance<- function(stderror, #a vector  given by the user 
                                cilevel=0.95,
                                Nobs,  # number of observations.
                                Nparam,
@@ -17,10 +17,10 @@
                                ){
   
   
-  ssqResidual <- as.matrix(ssqResidual)
-  detVar <- as.vector(detVar)
+  #ssqResidual <- as.matrix(ssqResidual)
+  #detVar <- as.vector(detVar)
   detVar <- matrix(rep(detVar, Ndata), nrow=Nparam)
-  jacobian <- as.vector(jacobian)
+  #jacobian <- as.vector(jacobian)
   jacobian <- do.call(rbind, replicate(Nparam, jacobian, simplify = FALSE))
   m <- length(stderror)
   LogLik = matrix(0, nrow=m, ncol=1)
