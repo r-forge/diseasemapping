@@ -18,7 +18,7 @@
                          Ndata,
                          Nobs,
                          Ncov,
-                         reml=FALSE, 
+                         reml, 
                          verbose=FALSE){
   
          
