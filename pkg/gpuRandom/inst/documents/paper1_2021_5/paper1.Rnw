@@ -649,7 +649,7 @@ maternCov = gpuBatchMatrix::maternBatch(
   Nglobal=c(128,64), Nlocal=c(16,4))
 dim(maternCov)
 @
-Step 4, perform Cholesky decomposition of \code{maternCov}. The first argument in \fct{gpuBatchMatrix::cholBatch} specifies the object to take Cholesky decomposition. Computed unit lower triangular matrices $L_i$'s are stacked by row and stored in \code{maternCov}. The diagonal values of each $D_i$ are returned and stored in each row of \code{diagMat}. For example, if each batch $\Sigma_i$ is of size $n \times n$, then each batch $D_i$ is $1 \times n$.
+Step 4, perform Cholesky decomposition of \code{maternCov}. The first argument in \fct{cholBatch} specifies the object to take Cholesky decomposition. Computed unit lower triangular matrices $L_i$'s are stacked by row and stored in \code{maternCov}. The diagonal values of each $D_i$ are returned and stored in each row of \code{diagMat}. For example, if each batch $\Sigma_i$ is of size $n \times n$, then each batch $D_i$ is $1 \times n$.
 <<r cholBach, eval=TRUE>>=
 diagMat = gpuBatchMatrix::cholBatch(maternCov, Nglobal= c(128, 8), Nlocal= c(32, 8))
 @

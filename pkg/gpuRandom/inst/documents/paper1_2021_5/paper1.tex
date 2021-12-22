@@ -364,7 +364,7 @@ R> system.time(clrng::rnorm(c(10000, 10000), streams = streams,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.046   0.000   0.046
+##   0.049   0.000   0.049
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -483,7 +483,7 @@ R> system.time(result_month <- clrng::fisher.sim(month_gpu, 1000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.326   0.013   0.338
+##   0.316   0.000   0.316
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_month$threshold
@@ -570,7 +570,7 @@ R> system.time(result_week <- clrng::fisher.sim(week_GPU, 10000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##    1.95    0.00    1.95
+##   1.943   0.004   1.948
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_week$threshold
@@ -780,7 +780,7 @@ R> dim(maternCov)
 \end{CodeOutput} 
 \end{CodeChunk} 
 
-Step 4, perform Cholesky decomposition of \code{maternCov}. The first argument in \fct{gpuBatchMatrix::cholBatch} specifies the object to take Cholesky decomposition. Computed unit lower triangular matrices $L_i$'s are stacked by row and stored in \code{maternCov}. The diagonal values of each $D_i$ are returned and stored in each row of \code{diagMat}. For example, if each batch $\Sigma_i$ is of size $n \times n$, then each batch $D_i$ is $1 \times n$.
+Step 4, perform Cholesky decomposition of \code{maternCov}. The first argument in \fct{cholBatch} specifies the object to take Cholesky decomposition. Computed unit lower triangular matrices $L_i$'s are stacked by row and stored in \code{maternCov}. The diagonal values of each $D_i$ are returned and stored in each row of \code{diagMat}. For example, if each batch $\Sigma_i$ is of size $n \times n$, then each batch $D_i$ is $1 \times n$.
 \begin{CodeChunk}
 \begin{CodeInput}
 R> diagMat = gpuBatchMatrix::cholBatch(maternCov, Nglobal = c(128,
