@@ -364,7 +364,7 @@ R> system.time(clrng::rnorm(c(10000, 10000), streams = streams,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.051   0.000   0.052
+##   0.046   0.000   0.046
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -483,7 +483,7 @@ R> system.time(result_month <- clrng::fisher.sim(month_gpu, 1000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.319   0.003   0.321
+##   0.326   0.013   0.338
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_month$threshold
@@ -570,7 +570,7 @@ R> system.time(result_week <- clrng::fisher.sim(week_GPU, 10000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##    1.93    0.02    1.95
+##    1.95    0.00    1.95
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_week$threshold
@@ -641,9 +641,9 @@ B & Intel 2.5ghz & AMD Radeon & Intel 3.7ghz & NVIDIA V100 & Data\\
 \hline
 \multicolumn{6}{l}{\textbf{Run-time}}\\
 \hline
-\hspace{1em}1M & 10.74 & 2.28 & 14.48 & 0.32 & month\\
+\hspace{1em}1M & 10.74 & 2.28 & 14.8 & 0.32 & month\\
 \hline
-\hspace{1em}10M & 63.24 & 10.82 & 91 & 1.95 & week\\
+\hspace{1em}10M & 63.24 & 10.82 & 92 & 1.95 & week\\
 \hline
 \end{tabular}
 \end{table}
