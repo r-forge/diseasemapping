@@ -21,31 +21,47 @@
 # Summary = swissRes$summary
 
 
-  dynamicParams <- function(Summary,      #lgm model
+  ParamsFromLgm <- function(Summary,      #lgm model
                             optimMle,
                             paramToEstimate){
   
   
-    # temp = rbind(c('range', Summary['range','Estimated']),
-    #       c('shape', Summary['shape','Estimated']),
-    #       c('nugget', Summary['sdNugget','Estimated']),
-    #       c('anisoRatio', Summary['anisoRatio','Estimated']),
-    #       c('anisoAngleRadians', Summary['anisoAngleRadians','Estimated']),
-    #       c('anisoAngleDegrees', Summary['anisoAngleDegrees','Estimated']))
-    # 
-    # paramToEstimate = temp[which(temp[,2]=='TRUE')]
+
+    
+    if(is.element('anisoAngleRadians',paramToEstimate)){
+      paramToEstimate = union(paramToEstimate, 'anisoAngleDegrees')
+    }
+    
+    if(is.element('anisoAngleDegrees',paramToEstimate)){
+      paramToEstimate = union(paramToEstimate, 'anisoAngleRadians')
+    }
     
     
-    ParamList = list(
-      range = c(seq(Summary["range", 'ci0.005'], Summary["range", 'estimate'], len = 10),   seq(Summary["range", 'estimate']*1.1, Summary["range", 'ci0.995'], len=10)),
-      nugget = c(seq(0, optimMle['nugget'], len=5),  seq(optimMle['nugget']*1.2, Summary["sdNugget", 'ci0.995'], len=5)),
-      shape = c(seq(Summary["shape", 'ci0.005'], Summary["shape", 'estimate'], len = 10),   seq(Summary["shape", 'estimate']*1.1, Summary["shape", 'ci0.995'], len=10)),
-      anisoRatio = c(seq(Summary['anisoRatio', 'ci0.005'], Summary['anisoRatio', 'estimate'], len = 10),   seq(Summary['anisoRatio', 'estimate']*1.1, Summary['anisoRatio', 'ci0.995'], len=10)),
-      anisoAngleRadians = c(seq(Summary['anisoAngleRadians', 'ci0.005'], Summary['anisoAngleRadians', 'estimate'], len = 10),   seq(Summary['anisoAngleRadians', 'estimate']*1.1, Summary['anisoAngleRadians', 'ci0.995'], len=10)),
-      anisoAngleDegrees = c(seq(Summary['anisoAngleDegrees', 'ci0.005'], Summary['anisoAngleDegrees', 'estimate'], len = 10),   seq(Summary['anisoAngleDegrees', 'estimate']*1.1, Summary['anisoAngleDegrees', 'ci0.995'], len=10))
+    
+    optimMle_degree <-  Summary['anisoAngleDegrees', 'estimate']
+    
+    ParamList1 = list(
+      range = c(seq(Summary["range", 'ci0.005'], optimMle['range'], len = 10),   seq(optimMle['range']*1.1, Summary["range", 'ci0.995'], len=10)),
+      shape = c(seq(0.1, optimMle['shape'], len = 8),   seq(optimMle['shape']*1.1, Summary["shape", 'ci0.995'], len=8)),
+      nugget = c(seq(0, optimMle['nugget'], len=5),    seq(optimMle['nugget']*1.2, Summary["sdNugget", 'ci0.995'], len=5)),
+      anisoRatio = c(seq(Summary['anisoRatio', 'ci0.005'], optimMle['anisoRatio'], len = 10),   seq(optimMle['anisoRatio']*1.1, Summary['anisoRatio', 'ci0.995'], len=10)),
+      anisoAngleRadians = c(seq(Summary['anisoAngleRadians', 'ci0.005'], optimMle['anisoAngleRadians'], len = 10),   seq(optimMle['anisoAngleRadians']*1.1, Summary['anisoAngleRadians', 'ci0.995'], len=10)),
+      anisoAngleDegrees = c(seq(Summary['anisoAngleDegrees', 'ci0.005'], optimMle_degree, len = 10),   seq(optimMle_degree*1.1, Summary['anisoAngleDegrees', 'ci0.995'], len=10))
     )
     
-    ParamList = ParamList[paramToEstimate]
+    ParamList2 = list(
+      range = unname(optimMle['range']),
+      shape = unname(optimMle['shape']), 
+      nugget = unname(optimMle['nugget']),
+      anisoRatio = unname(optimMle['anisoRatio']), 
+      anisoAngleRadians = unname(optimMle['anisoAngleRadians']), 
+      anisoAngleDegrees = optimMle_degree
+    )
+    
+    theOrder = c('range','shape','nugget','anisoRatio','anisoAngleRadians', 'anisoAngleDegrees')
+    noEstimate = setdiff(theOrder, paramToEstimate)
+    
+    ParamList = c(ParamList1[paramToEstimate], ParamList2[noEstimate])
     
     params = do.call(expand.grid, ParamList)
     
@@ -59,13 +75,23 @@
 
     output
     
-  #theOrder = c('range','shape','variance','nugget','anisoRatio','anisoAngleRadians')
+
   
 }
 
 
 
-
+  
+  #theOrder = c('range','shape','variance','nugget','anisoRatio','anisoAngleRadians')
+  
+  # temp = rbind(c('range', Summary['range','Estimated']),
+  #       c('shape', Summary['shape','Estimated']),
+  #       c('nugget', Summary['sdNugget','Estimated']),
+  #       c('anisoRatio', Summary['anisoRatio','Estimated']),
+  #       c('anisoAngleRadians', Summary['anisoAngleRadians','Estimated']),
+  #       c('anisoAngleDegrees', Summary['anisoAngleDegrees','Estimated']))
+  # 
+  # paramToEstimate = temp[which(temp[,2]=='TRUE')]
 
 
 

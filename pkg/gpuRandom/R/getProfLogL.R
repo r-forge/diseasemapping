@@ -13,6 +13,7 @@
                           boxcox,  # boxcox is always estimated
                           type = c("float", "double")[1+gpuInfo()$double_support],
                           NparamPerIter,
+                          gpuElementsOnly = FALSE,
                           reml = FALSE,
                           Nglobal,
                           Nlocal,
@@ -102,8 +103,10 @@
   
   # resid^T V^(-1) resid, resid = Y - X betahat = ssqResidual
   ssqResidual <- ssqY - ssqBetahat
-
-
+  #params0[which(is.na(as.vector(detVar))),]
+  
+  
+  if(gpuElementsOnly==FALSE){
   if(reml== FALSE){ 
     # ml
     gpuRandom:::matrix_vector_sumBackend(Nobs*log(ssqResidual/Nobs),
@@ -124,12 +127,14 @@
                                          Nglobal)
 
   }
-  
+    
+      LogLikcpu <- as.matrix(-0.5*minusTwoLogLik)
+      colnames(LogLikcpu) <- paste(c('boxcox'), round(boxcox, digits = 3) ,sep = '')
+  }
 
 
-     LogLikcpu <- as.matrix(-0.5*minusTwoLogLik)
-     colnames(LogLikcpu) <- paste(c('boxcox'), round(boxcox, digits = 3) ,sep = '')
 
+  if(gpuElementsOnly==FALSE){
      Output <- list(LogLik=LogLikcpu,
                     minusTwoLogLikgpu = minusTwoLogLik,
                     params = params0,
@@ -146,7 +151,21 @@
                     ssqBetahat = as.matrix(ssqBetahat),
                     ssqResidual = as.matrix(ssqResidual)
                     )
-     
+  }else{
+    Output <- list(params = params0,
+                   Nobs = Nobs,
+                   Ncov = Ncov,
+                   Ndata = Ndata,
+                   Nparam = Nparam,
+                   boxcox = boxcox,
+                   jacobian = as.vector(jacobian),
+                   detVar = as.vector(detVar),   
+                   detReml = as.vector(detReml),   
+                   ssqY = as.matrix(ssqY),    
+                   XVYXVX = as.matrix(XVYXVX),
+                   ssqBetahat = as.matrix(ssqBetahat),
+                   ssqResidual = as.matrix(ssqResidual)) 
+     }
      
      
      Output

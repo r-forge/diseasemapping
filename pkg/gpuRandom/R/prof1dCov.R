@@ -266,7 +266,7 @@
          index <- which(LogLik == max(LogLik, na.rm = TRUE), arr.ind = TRUE)
          ###############lambda hat#####################
          if(is.element('boxcox',paramToEstimate)  & length(boxcox)>5 ){
-           likForboxcox = cbind(boxcox, apply(LogLik, 2, max) )
+           likForboxcox = cbind(boxcox, apply(LogLik, 2,  max) )
            f1 <- approxfun(likForboxcox[,1], likForboxcox[,2]-breaks)
            # f1 <- splinefun(likForboxcox[,1], likForboxcox[,2]-breaks, method = "monoH.FC")
            plot(likForboxcox[,1], likForboxcox[,2]-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='boxcox')
@@ -292,8 +292,9 @@
              ci <- c(NA, NA)
            }
            Table["boxcox",] <- c(MLE, ci)
-         }else{
+         }else if(is.element('boxcox',paramToEstimate)  & length(boxcox) <= 5){
            message("boxcox: not enough values for interpolation!")
+         }else{
            Table["boxcox",1] <- boxcox[index[2]]
          }
          
