@@ -364,7 +364,7 @@ R> system.time(clrng::rnorm(c(10000, 10000), streams = streams,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.047   0.000   0.047
+##   0.045   0.004   0.048
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -374,7 +374,7 @@ R> system.time(matrix(stats::rnorm(10000^2), 10000, 10000))
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   6.567   0.818   7.378
+##   6.978   0.847   7.821
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -391,9 +391,9 @@ R> r_matrix <- clrng::rexp(c(2, 4), rate = 1, Nglobal = c(2,
 R> as.matrix(r_matrix)
 \end{CodeInput}
 \begin{CodeOutput}
-##       [,1]   [,2]  [,3]  [,4]
-## [1,] 0.367 0.0488 0.490 0.308
-## [2,] 0.671 3.1532 0.831 0.281
+##       [,1]  [,2]  [,3]   [,4]
+## [1,] 0.565 0.333 0.395 0.0932
+## [2,] 1.535 0.866 0.124 0.0315
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -483,7 +483,7 @@ R> system.time(result_month <- clrng::fisher.sim(month_gpu, 1000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.319   0.000   0.318
+##   0.332   0.008   0.340
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_month$threshold
@@ -518,17 +518,17 @@ We got 410825 cases whose test statistics are below the observed threshold based
 \begin{CodeInput}
 R> # using CPU
 R> system.time(result_monthcpu <- stats::fisher.test(month, simulate.p.value = TRUE,
-+    B = 1e+06))
++    B = 1000000))
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##  14.478   0.012  14.480
+##  14.876   0.016  14.879
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_monthcpu$p.value
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 0.403
+## [1] 0.405
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -570,7 +570,7 @@ R> system.time(result_week <- clrng::fisher.sim(week_GPU, 10000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   1.941   0.015   1.954
+##   1.938   0.014   1.951
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_week$threshold
@@ -609,13 +609,13 @@ R> system.time(result_weekcpu <- fisher.test(week, simulate.p.value = TRUE,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   90.70    0.12   90.82
+##  92.369   0.143  92.455
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_weekcpu$p.value
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 0.000121
+## [1] 0.000127
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -641,7 +641,7 @@ B & Intel 2.5ghz & AMD Radeon & Intel 3.7ghz & NVIDIA V100 & Data\\
 \hline
 \multicolumn{6}{l}{\textbf{Run-time}}\\
 \hline
-\hspace{1em}1M & 10.74 & 2.28 & 14.48 & 0.34 & month\\
+\hspace{1em}1M & 10.74 & 2.28 & 14.48 & 0.32 & month\\
 \hline
 \hspace{1em}10M & 63.24 & 10.82 & 91 & 1.95 & week\\
 \hline
