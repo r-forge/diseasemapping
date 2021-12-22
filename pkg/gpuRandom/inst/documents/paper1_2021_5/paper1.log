@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2021.11.25)  22 DEC 2021 07:35
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2021.11.25)  22 DEC 2021 07:42
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -687,13 +687,6 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
  []
 
 [15]
-Overfull \hbox (76.82027pt too wide) in paragraph at lines 783--785
-[]\T1/lmr/m/n/10.95 Step 4, per-form Cholesky de-com-po-si-tion of \T1/lmtt/m/n
-/10.95 maternCov\T1/lmr/m/n/10.95 . The first ar-gu-ment in \T1/lmtt/m/n/10.95 
-gpuBatchMatrix::cholBatch()
- []
-
-
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/lmr/m/n/10.95 16 []
  []
@@ -816,7 +809,7 @@ ts/type1/public/lm/lmri8.pfb></usr/share/texmf/fonts/type1/public/lm/lmro10.pfb
 e1/public/lm/lmsy10.pfb></usr/share/texmf/fonts/type1/public/lm/lmsy8.pfb></usr
 /share/texmf/fonts/type1/public/lm/lmtt10.pfb></usr/share/texmf/fonts/type1/pub
 lic/lm/lmtto10.pfb>
-Output written on paper1.pdf (22 pages, 558631 bytes).
+Output written on paper1.pdf (22 pages, 558632 bytes).
 PDF statistics:
  558 PDF objects out of 1000 (max. 8388607)
  499 compressed objects within 5 object streams
