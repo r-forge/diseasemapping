@@ -589,7 +589,7 @@ all of these methods except matrix decomposition method, are approximations and 
 
 Suppose $U=(U_1, U_2, \dots, U_n)$ is a Gaussian random field with mean $\mu$ and covariance matrix $\Sigma$, without loss of generality, we assume mean value zero $(\mu = 0)$. Since covariance matrix $\Sigma$ is symmetric and positive-definite, we can take Cholesky decomposition of $\Sigma$, then we can simulate random samples from $U$ using Algorithm \ref{algorithm2},
 
-\begin{algorithm}[ht]
+\begin{algorithm}[H]
 \SetAlgoLined
  1, Calculate the covariance matrix $\Sigma$ between locations\;
  2, Compute the Cholesky decomposition of $\Sigma = L \cdot D \cdot L^\top$, $L$ is the lower unit triangular matrix, $D$ is a diagonal matrix\;
@@ -637,17 +637,13 @@ c(shape=2.15, range=60*1000, variance = 2, nugget = 0, anisoRatio = 4, anisoAngl
 c(shape=0.6, range=30*1000, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/7),
 c(shape=3, range=30*1000, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/7)
 )
-#c(shape=2.15, range=40*1000, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/4))
 @
 <<show parameterBatch,eval=TRUE>>=
 params
-#paramsGpu = gpuBatchMatrix::maternGpuParam(myParamsBatch, type=theType)
 @
 Step 3, compute the Mat\'ern covariance matrices using \fct{gpuBatchMatrix::maternBatch}, the returned Mat\'ern covariance matrices %$\Sigma_1, \Sigma_2, \dots, \Sigma_5$ correspond to the 5 parameter sets respectively, the matrices 
 are each of size $4080 \times 4080$ and are stacked by row in the output \code{maternCov}. 
 <<r outputBatchCreate, eval=TRUE>>=
-#maternCov = vclMatrix(0, nrow(paramsGpu)*nrow(coordsGpu), 
-#                         nrow(coordsGpu),type=theType)
 maternCov = gpuBatchMatrix::maternBatch(
   params, myRaster,          
   Nglobal=c(128,64), Nlocal=c(16,4))
