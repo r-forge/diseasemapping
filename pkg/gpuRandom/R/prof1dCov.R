@@ -184,6 +184,47 @@
          
          
          
+         if(is.element('anisoAngleRadians',paramToEstimate)){
+            result = as.data.table(cbind(LogLik, params[,"anisoAngleRadians"]))
+            colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoAngleRadians")
+            profileLogLik <- result[, .(profile=max(.SD)), by=anisoAngleRadians]
+            plot(profileLogLik$anisoAngleRadians, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='anisoAngleRadians')
+            f1 <- approxfun(profileLogLik$anisoAngleRadians, profileLogLik$profile-breaks)
+            # f1 <- splinefun(profileLogLik$anisoAngleRadians, profileLogLik$profile-breaks, method = "monoH.FC")
+            curve(f1, add = TRUE, col = 2, n=1001) 
+            abline(h =0, lty = 2)
+            #myplots[['anisoAngleRadians']] <- plot.Degrees
+            # anisoAngleRadiansresults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
+            lower = min(profileLogLik$anisoAngleRadians)
+            upper = max(profileLogLik$anisoAngleRadians)
+            MLE <- round(optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum,digits=4)
+            # maxvalue <- anisoAngleRadiansresults$objective
+            # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
+            ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+            if(length(ci)==1){
+               if( ci > MLE){
+                  ci <- c(lower, ci)
+                  message("did not find lower ci")
+               }else{
+                  ci <- c(ci, upper)
+                  message("did not find upper ci")}
+            }
+            
+            if(length(ci)==0 | length(ci)>2){
+               warning("require a better param matrix")
+               ci <- c(NA, NA)
+            }
+            Table["anisoAngleRadians",] <- c(MLE, ci)
+            
+            
+         }
+         
+         
+         
+         
+         
+         
+         
          if(is.element('anisoAngleDegrees',paramToEstimate)){
            result = as.data.table(cbind(LogLik, params[,"anisoAngleDegrees"]))
            colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoAngleDegrees")
@@ -279,7 +320,7 @@
          
          
          
-         Output <- list(estimates = Table,
+         Output <- list(summary = Table,
                         breaks = breaks
                         )
          
