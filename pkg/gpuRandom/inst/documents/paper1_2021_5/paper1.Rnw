@@ -574,16 +574,17 @@ Given a parameter space $X$, a random field $U$ on $X$ is a collection of random
 U = [U(x_1), \ldots, U(x_n)]^\top \sim \text{MVN}(0, \Sigma) \\
 \Sigma_{ij} = \cov[ U(x_i),U(x_j) ] = \sigma^2 \frac{2^{\kappa-1}}{\Gamma(\kappa)} \left(\sqrt{8\kappa} \frac{|x_i = x_j|}{\phi}\right)^\kappa  K_\kappa\left(\sqrt{8\kappa}  \frac{|x_i = x_j|}{\phi}\right).
 \end{gather*}
-The common choice for the covariance function $\Sigma$ is the Mat\'ern covariance function \citep{matern1960spatial}. The Mat\'ern covariance between $U(x_i)$ and $U(x_j)$ takes the above form.
+A common choice for the covariance function $\Sigma$ is the Mat\'ern covariance \citep{matern1960spatial}. The Mat\'ern covariance between $U(x_i)$ and $U(x_j)$ takes the above form,
 %$d =\|x-x'\|$ is the Euclidean distance between two spatial points, 
-$\sigma^2$ the variance of the random field $U$.
-$\Gamma(\cdot)$ is the standard gamma function,  $\phi$ is the range parameter or scale parameter with the dimension of distance, it controls the rate of decay of the correlation as distance increases. $K_\kappa(\cdot)$ is the modified Bessel function of the second kind with order $\kappa$, $\kappa$ is the shape parameter which determines the smoothness of $U(x)$, specifically, $U(x)$ is $m$ times mean-square differentiable if and only if $\kappa > m$. %(For $\kappa=0.5$, the Mat\'ern covariance function reduces to the exponential covariance function $\sigma^2*\exp(-d/\phi)$, when $\kappa \rightarrow \infty$, $\Sigma(d) \rightarrow \sigma^2*\exp{-(\|d\|/\phi)^2}$, which is called the Gaussian covariance.)  
+where $\sigma^2$ the variance of the random field $U$.
+$\Gamma(\cdot)$ is the standard gamma function.  
+$\phi$ is the range parameter or scale parameter with the dimension of distance, it controls the rate of decay of the correlation as distance increases. $K_\kappa(\cdot)$ is the modified Bessel function of the second kind with order $\kappa$, $\kappa$ is the shape parameter which determines the smoothness of $U(x)$, specifically, $U(x)$ is $m$ times mean-square differentiable if and only if $\kappa > m$. %(For $\kappa=0.5$, the Mat\'ern covariance function reduces to the exponential covariance function $\sigma^2*\exp(-d/\phi)$, when $\kappa \rightarrow \infty$, $\Sigma(d) \rightarrow \sigma^2*\exp{-(\|d\|/\phi)^2}$, which is called the Gaussian covariance.)  
 There are several alternative parameterisations of Mat\'ern covariance functions in literatures  \citep[see][]{haskard2007anisotropic}. In \pkg{clrng}, we use the above form for computing Mat\'ern covariance.
 
 
 %Due to the importance of Gaussian random field, there are a large amount of studies devoted to Gaussian random field generation techniques. 
 \cite{LiuandLi2019} gives a comprehensive review on 7 popular methods for Gaussian random field generation, %which are the turning bands method \citep{matheron_1973}, spectral method \citep{Meja1974OnTS,1972JSV}, matrix decomposition method \citep{davis1987}, Karhunen-Lo\'eve expansion \citep{LoeveM:1978}, moving average method \citep{journel1974, oliver1995moving}, sequential simulation \citep{johnson1987multivariate, gomez1993joint, pebesma2004multivariable}, and local average subdivision \citep{fenton1990simulation}. 
-all of these methods except matrix decomposition method, are approximations and has specific requirements on the type of grid or covariance functions. The matrix decomposition method is exact, it works for all covariance functions and can generate random field on all types of grids. Other \proglang{R} packages that offer simulation of Gaussian random fields like \pkg{geoR} \citep{geoR2001}, does not work for large number of locations; the \pkg{RandomFields} \citep{RandomFields2015,RandomFields2020} package can use different methods for simulation of Gaussian fields, among which the (modified) circulant embedding method \citep{Dietrich1997FastAE} for covariance matrix decomposition is also an exact method (need to confirm???), however, it works only for isotropic Gaussian fields and on rectangular grids. \pkg{clrng} does exact simulation of exact Gaussian fields on the GPU as it relies on the matrix decomposition method. The implementation of this method is as follows.
+all of these methods except matrix decomposition method, are approximations and has specific requirements on the type of grid or covariance functions. The matrix decomposition method is exact, it works for all covariance functions and can generate random field on all types of grids. Other \proglang{R} packages that offer simulation of Gaussian random fields such as \pkg{geoR} \citep{geoR2001}, does not work for large number of locations; the \pkg{RandomFields} \citep{RandomFields2015,RandomFields2020} package can use different methods for simulation of Gaussian fields, among which the modified circulant embedding method \citep{Dietrich1997FastAE} for covariance matrix decomposition is also an exact method, however, it works only for isotropic Gaussian fields and on rectangular grids. \pkg{clrng} does simulation of exact Gaussian fields on the GPU as it relies on the matrix decomposition method. The implementation of this method is as follows.
 
 
 Suppose $U=(U_1, U_2, \dots, U_n)$ is a Gaussian random field with mean $\mu$ and covariance matrix $\Sigma$, without loss of generality, we assume mean value zero $(\mu = 0)$. Since covariance matrix $\Sigma$ is symmetric and positive-definite, we can take Cholesky decomposition of $\Sigma$, then we can simulate random samples from $U$ using Algorithm \ref{algorithm2},
@@ -605,7 +606,7 @@ Suppose $U=(U_1, U_2, \dots, U_n)$ is a Gaussian random field with mean $\mu$ an
 % \item $D$ is a diagonal matrix.
 % \item $Z=(Z_1, Z_2, \dots, Z_n) \sim \text{MVN}(0,I_n)$, where $I_n$ is a $n \times n$ identity matrix.
 % \end{itemize}
-The matrix decomposition method is straightforward to implement. However, when a large number of locations $n$ is involved, the cost of Cholesky decomposition of the covariance matrix is $\mathcal{O}(n^3)$,  and the cost of matrix-vector multiplication $L*Z$ to generate the random field $U$ is $\mathcal{O}(n^2)$ \citep{LiuandLi2019}.  Our another \proglang{R} package \pkg{gpuBatchMatrix} is able to compute batches of Mat\'ern covariance matrices in parallel, and do Cholesky decomposition and matrix-matrix multiplication in batches in parallel on GPU. The following shows an example, in which we simulate on GPU 10 Gaussian random fields of mat\'ern covariance at one time with 5 sets of parameters, by taking advantage of the GPU-capabilities provided by \pkg{clrng} and \pkg{gpuBatchMatrix} together.
+The matrix decomposition method is straightforward to implement. However, when the number of locations $n$ is large, the cost of Cholesky decomposition of the covariance matrix is $\mathcal{O}(n^3)$,  and the cost of matrix-vector multiplication $L*Z$ to generate the random field $U$ is $\mathcal{O}(n^2)$ \citep{LiuandLi2019}.  Our another \proglang{R} package \pkg{gpuBatchMatrix} is able to compute batches of Mat\'ern covariance matrices in parallel, and do Cholesky decomposition and matrix-matrix multiplication in batches in parallel on GPU. The following shows an example, in which we simulate on GPU 10 Gaussian random fields of mat\'ern covariance at one time with 5 sets of parameters, by taking advantage of the GPU-capabilities offered by \pkg{clrng} and \pkg{gpuBatchMatrix} together.
 %\pkg{clrng} package not only does the matrices decomposition (Cholesky decomposition and matrix-vector multiplication) in parallel, but also computes the covariance matrices in parallel on GPU. 
 
 \subsection{Simulating Gaussian random fields with Mat\'ern covariances}
@@ -615,7 +616,7 @@ library("clrng")
 library("gpuBatchMatrix")
 library('geostatsp')
 @
-Step 1, set up a $60 \times 80$ raster and coordinates on the raster, convert the matrix of coordinates \code{coordsSp@coords} to a ``vclMatrix'' object for later use.
+Step 1, set up a $51 \times 80$ raster using the 'swissRain' data from \pkg{geostatsp}.
 <<setupcoords, eval=TRUE>>=
 NlocalCache = 1000
 Nglobal = c(128, 64, 2)
@@ -628,7 +629,7 @@ data("swissRain", package="geostatsp")
 myRaster = geostatsp::squareRaster(swissBorder, 80)
 myRaster
 @
-Step 2, create 5 parameter sets as a small example, in practical studies, there can be hundreds or thousands of parameter sets. Then, convert the matrix of parameters to a ``vclMatrix'' for later use by \fct{gpuBatchMatrix::maternGpuParam}.
+Step 2, create 4 parameter sets as a small example. 
 <<setup paramsBatch, eval=TRUE,echo=FALSE>>=
 params = 
 rbind(c(shape=1.25, range=50*1000, variance = 1.5, nugget = 0,anisoRatio = 1, anisoAngleRadians = 0), 
@@ -642,8 +643,8 @@ c(shape=3, range=30*1000, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRa
 params
 #paramsGpu = gpuBatchMatrix::maternGpuParam(myParamsBatch, type=theType)
 @
-Step 3, compute Mat\'ern covariance matrices using \fct{gpuBatchMatrix::maternBatch}, the returned Mat\'ern covariance matrices %$\Sigma_1, \Sigma_2, \dots, \Sigma_5$ correspond to the 5 parameter sets respectively, the matrices 
-are each of size $4800 \times 4800$ and are stacked by row in the output \code{maternCov}. 
+Step 3, compute the Mat\'ern covariance matrices using \fct{gpuBatchMatrix::maternBatch}, the returned Mat\'ern covariance matrices %$\Sigma_1, \Sigma_2, \dots, \Sigma_5$ correspond to the 5 parameter sets respectively, the matrices 
+are each of size $4080 \times 4080$ and are stacked by row in the output \code{maternCov}. 
 <<r outputBatchCreate, eval=TRUE>>=
 #maternCov = vclMatrix(0, nrow(paramsGpu)*nrow(coordsGpu), 
 #                         nrow(coordsGpu),type=theType)
@@ -652,10 +653,9 @@ maternCov = gpuBatchMatrix::maternBatch(
   Nglobal=c(128,64), Nlocal=c(16,4))
 dim(maternCov)
 @
-Step 4, the first argument \code{A} in \fct{gpuBatchMatrix::cholBatch} specifies the object to take Cholesky decomposition. Computed unit lower triangular matrices $L_i$'s are stacked by row and stored in \code{maternCov}. Each row of \code{diagMat} stores the diagonal values of each $D_i$, for example, if each batch $\Sigma_i$ is of size $n \times n$, then each batch $L_i$ is $n \times n$, and each batch $D_i$ is $1 \times n$.
+Step 4, perform Cholesky decomposition of \code{maternCov}. The first argument in \fct{gpuBatchMatrix::cholBatch} specifies the object to take Cholesky decomposition. Computed unit lower triangular matrices $L_i$'s are stacked by row and stored in \code{maternCov}. The diagonal values of each $D_i$ are returned and stored in each row of \code{diagMat}. For example, if each batch $\Sigma_i$ is of size $n \times n$, then each batch $D_i$ is $1 \times n$.
 <<r cholBach, eval=TRUE>>=
-diagMat = gpuBatchMatrix::cholBatch(maternCov, 
-                          Nglobal= c(128, 8), Nlocal= c(32, 8))
+diagMat = gpuBatchMatrix::cholBatch(maternCov, Nglobal= c(128, 8), Nlocal= c(32, 8))
 @
 \begin{gather}
 \begin{bmatrix} \Sigma_{1} \\ \Sigma_2 \\ \Sigma_3 \\ \vdots
@@ -668,27 +668,25 @@ diagMat = gpuBatchMatrix::cholBatch(maternCov,
   D_{1} \\ D_{2} \\D_{3} \\ \vdots
   \end{bmatrix}
 \end{gather}
-Step 5, generate 2 standard Gaussian random vectors \code{zmatGpu}$=(Z_1, Z_2)$ using \fct{clrng::rnorm}, in which \code{c(nrow(materCov),2)} specifies the number of rows and columns of \code{zmatGpu}.
+Step 5, create some streams on GPU to generate 2 standard Gaussian random vectors \code{zmatGpu}$=(Z_1, Z_2)$ using \fct{clrng::rnorm}, in which \code{c(nrow(materCov),2)} specifies the number of rows and columns of \code{zmatGpu}.
 <<r randomNormalsSim1, eval=TRUE, cache=FALSE>>=
 streamsGpu <- createStreamsGpu(n=128*64)
 @
 <<r randomNormalsSim2, eval=TRUE, cache=FALSE>>=
 zmatGpu = clrng::rnorm(
-  c(nrow(maternCov),2), streams=streamsGpu, 
+                c(nrow(maternCov),2), streams=streamsGpu, 
                 Nglobal=c(128,64),
                 type = theType)
 @
-Step 6, use \fct{gpuBatchMatrix::multiplyLowerDiagonalBatch} to compute $U = L * D^{(1/2)}* Z$ in batches, see the following illustration. \code{simMat} is the output matrix for $U$, \code{maternCov}, \code{diagMat}, and \code{zmatGpu} correspond to the matrices of $L$, $D$ and $Z=(Z_1, Z_2)$ respectively.
+Step 6, compute $U = L * D^{(1/2)}* Z$ in batches, see the following illustration for the matrix operation that \fct{multiplyLowerDiagonalBatch} does.  \code{maternCov}, \code{diagMat}, and \code{zmatGpu} correspond to the matrices $L$, $D$ and $Z=(Z_1, Z_2)$ respectively.
 <<r multLowerdiag_LDZ, eval=TRUE, cache=FALSE, results='hide'>>=
-simMat = vclMatrix(0, nrow(zmatGpu), ncol(zmatGpu), 
-                   type = gpuR::typeof(zmatGpu))
-
-gpuBatchMatrix::multiplyLowerDiagonalBatch(
-  output=simMat, L=maternCov, 
-  D=diagMat, B=zmatGpu,
+simMat = gpuBatchMatrix::multiplyLowerDiagonalBatch(maternCov, 
+  diagMat, zmatGpu,
   diagIsOne = TRUE,   
   transformD = "sqrt", 
-  Nglobal, Nlocal, NlocalCache)
+  Nglobal=c(128, 64, 2), 
+  Nlocal= c(8, 2, 1), 
+  NlocalCache=1000)
 @
 \begin{gather}
  \begin{bmatrix}  L_{1} \\ L_{2} \\L_{3} \\ \vdots
