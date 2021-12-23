@@ -78,7 +78,7 @@
     
     params = do.call(expand.grid, ParamList)
     
-    boxcox = c(seq(Summary["boxcox", 'ci0.005'], Summary["boxcox", 'estimate'], len=3), seq(Summary["boxcox", 'estimate']+0.3, Summary["boxcox", 'ci0.995'], len=3))
+    boxcox = c(seq(Summary["boxcox", 'ci0.005']-0.5, Summary["boxcox", 'estimate'], len=3), seq(Summary["boxcox", 'estimate']+0.3, Summary["boxcox", 'ci0.995']+0.5, len=3))
     
 
   
