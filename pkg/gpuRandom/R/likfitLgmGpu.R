@@ -8,18 +8,18 @@
 
 # betahat and sigmahat 
 # profile log-likelihood for each covariance parameters + lambda
-likfitLgmGpu <- function(data,
+ likfitLgmGpu <- function(data,
                          formula, 
                          coordinates,
                          params, # CPU matrix for now, users need to provide proper parameters given their specific need
                          #fixVariance = FALSE, 
                          boxcox,  # boxcox is always estimated
-                         paramToEstimate = c("range","nugget"), #variance and regression parameters are always estimated if not given,
+                         paramToEstimate = c("range", "shape", "nugget", "anisoRatio", "anisoAngleDegrees", "boxcox"), #variance and regression parameters are always estimated if not given,
                          cilevel=0.95,  # decimal
                          type = c("float", "double")[1+gpuInfo()$double_support],
                          reml=FALSE, 
                          NparamPerIter,
-                         df=1,
+                         df,
                          minustwotimes=FALSE,
                          Nglobal,
                          Nlocal,
