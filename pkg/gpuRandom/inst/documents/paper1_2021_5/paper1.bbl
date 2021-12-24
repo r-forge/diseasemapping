@@ -71,12 +71,6 @@ for Health~Statistics NC (2019).
 \newblock Annual internet product. 2019. Available at
   \url{http://www.cdc.gov/nchs/data_access/VitalStatsOnline.htm}.
 
-\bibitem[{Hana~Sevcikova(2015)}]{sevcikova2015package}
-Hana~Sevcikova Tony~Rossini PL (2015).
-\newblock \enquote{Package ‘rlecuyer’.}
-\newblock
-  \urlprefix\url{https://cran.r-project.org/web/packages/rlecuyer/index.html}.
-
 \bibitem[{Haskard(2007)}]{haskard2007anisotropic}
 Haskard KA (2007).
 \newblock \emph{An anisotropic Matern spatial covariance model: REML estimation
@@ -156,8 +150,8 @@ Liu Y, Li J, Sun S, Yu B (2019).
 \bibitem[{L’Ecuyer(2012)}]{l2012random}
 L’Ecuyer P (2012).
 \newblock \enquote{Random number generation.}
-\newblock In G~J, H~W, M~Y (eds.), \emph{Handbook of computational statistics},
-  pp. 35--71. Springer, Berlin, Heidelberg.
+\newblock In JE~Gentle, WK~Härdle, Y~Mori (eds.), \emph{Handbook of
+  computational statistics}, pp. 35--71. Springer, Berlin, Heidelberg.
 
 \bibitem[{L’{E}cuyer \emph{et~al.}(2015)L’{E}cuyer, Munger, and
   Kemerchou}]{l2015clrng}
@@ -234,6 +228,13 @@ Schlather M, Malinowski A, Oesting M, Boecker D, Strokorb K, Engelke S, Martini
 \newblock \emph{{RandomFields}: Simulation and Analysis of Random Fields}.
 \newblock R package version 3.3.8,
   \urlprefix\url{https://cran.r-project.org/package=RandomFields}.
+
+\bibitem[{Sevcikova \emph{et~al.}(2015)Sevcikova, Rossini, and
+  L'Ecuyer}]{sevcikova2015package}
+Sevcikova H, Rossini T, L'Ecuyer P (2015).
+\newblock \enquote{Package ‘rlecuyer’.}
+\newblock
+  \urlprefix\url{https://cran.r-project.org/web/packages/rlecuyer/index.html}.
 
 \bibitem[{Zhao(2016)}]{zhao_2016}
 Zhao P (2016).

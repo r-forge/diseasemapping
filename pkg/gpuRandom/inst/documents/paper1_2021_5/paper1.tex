@@ -368,7 +368,7 @@ R> system.time(clrng::rnorm(c(10000, 10000), streams = streams,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.038   0.010   0.049
+##   0.069   0.012   0.080
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -487,7 +487,7 @@ R> system.time(result_month <- clrng::fisher.sim(month_gpu, 1000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.323   0.003   0.325
+##   0.327   0.007   0.333
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_month$threshold
@@ -574,7 +574,7 @@ R> system.time(result_week <- clrng::fisher.sim(week_GPU, 10000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   1.932   0.025   1.955
+##   1.940   0.013   1.950
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_week$threshold
