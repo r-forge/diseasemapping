@@ -81,7 +81,7 @@ month_stats <- as.vector(result_month$sim)
 
 # using CPU
 # notice this can take about more than 1 minute
-system.time(result_monthcpu<-stats::fisher.test(month,simulate.p.value = TRUE, B=1e6))
+system.time(result_monthcpu<-stats::fisher.test(month,simulate.p.value = TRUE, B=1015808))
 result_monthcpu$p.value
 
 
