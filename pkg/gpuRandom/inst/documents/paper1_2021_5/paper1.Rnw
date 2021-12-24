@@ -142,7 +142,9 @@ We introduce the \proglang{R} package \pkg{clrng} that leverages the \pkg{gpuR} 
   Pierre L’Ecuyer\\
   Department of Computer Science and Operations Research\\
   University of Montr\'eal\\
-  Pavillon André-Aisenstadt 2920, chemin de la Tour Montréal QCH3T 1J4\\
+  Pavillon André-Aisenstadt, 
+   2920 chemin de la Tour, 
+   Montréal, QC,  Canada,  H3T 1J4\\
   E-mail: \email{lecuyer@iro.umontreal.ca}}
 
 \begin{document}

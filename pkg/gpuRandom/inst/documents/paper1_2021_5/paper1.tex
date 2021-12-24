@@ -84,7 +84,9 @@ We introduce the \proglang{R} package \pkg{clrng} that leverages the \pkg{gpuR} 
   Pierre L’Ecuyer\\
   Department of Computer Science and Operations Research\\
   University of Montr\'eal\\
-  Pavillon André-Aisenstadt 2920, chemin de la Tour Montréal QCH3T 1J4\\
+  Pavillon André-Aisenstadt, 
+   2920 chemin de la Tour, 
+   Montréal, QC,  Canada,  H3T 1J4\\
   E-mail: \email{lecuyer@iro.umontreal.ca}}
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
@@ -366,7 +368,7 @@ R> system.time(clrng::rnorm(c(10000, 10000), streams = streams,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.047   0.000   0.048
+##   0.038   0.010   0.049
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -485,7 +487,7 @@ R> system.time(result_month <- clrng::fisher.sim(month_gpu, 1000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.311   0.004   0.315
+##   0.323   0.003   0.325
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_month$threshold
@@ -572,7 +574,7 @@ R> system.time(result_week <- clrng::fisher.sim(week_GPU, 10000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   1.944   0.021   1.963
+##   1.932   0.025   1.955
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_week$threshold
