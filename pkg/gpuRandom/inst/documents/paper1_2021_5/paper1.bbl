@@ -126,9 +126,9 @@ L'Ecuyer P, Simard R (2007).
 \newblock \emph{{ACM} Transactions on Mathematical Software}, \textbf{33}(4),
   Article 22.
 
-\bibitem[{L'ecuyer \emph{et~al.}(2002)L'ecuyer, Simard, Chen, and
+\bibitem[{L'Ecuyer \emph{et~al.}(2002)L'Ecuyer, Simard, Chen, and
   Kelton}]{l2002object}
-L'ecuyer P, Simard R, Chen EJ, Kelton WD (2002).
+L'Ecuyer P, Simard R, Chen EJ, Kelton WD (2002).
 \newblock \enquote{An object-oriented random-number package with many long
   streams and substreams.}
 \newblock \emph{Operations research}, \textbf{50}(6), 1073--1075.
