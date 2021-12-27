@@ -124,12 +124,23 @@
   }
     
       LogLikcpu <- as.matrix(-0.5*minusTwoLogLik)
-      
+      colnames(LogLikcpu) <- paste(c('boxcox'), round(boxcox, digits = 3) ,sep = '')
       # remove NAs
       selected_rows <- which(is.na(as.vector(detVar)))
+      if(length(selected_rows)==0){
+        paramsRenew <- params0
+
+        
+        detVar2 <- as.vector(detVar)
+        detReml2 <- as.vector(detReml)
+        ssqY2 <- as.matrix(ssqY)
+        ssqBetahat2 = as.matrix(ssqBetahat)
+        ssqResidual2 = as.matrix(ssqResidual)
+        XVYXVX2 <- as.matrix(XVYXVX)
+      }else{
       paramsRenew <- params0[-selected_rows,]
       LogLikcpu <- LogLikcpu[-selected_rows,] 
-      colnames(LogLikcpu) <- paste(c('boxcox'), round(boxcox, digits = 3) ,sep = '')
+
       
       detVar2 <- as.vector(detVar)[-selected_rows]
       detReml2 <- as.vector(detReml)[-selected_rows]
@@ -141,6 +152,7 @@
       for (j in 1:length(selected_rows)){
         a<-c((selected_rows[j]-1)*Ncov+1, selected_rows[j]*Ncov)
         XVYXVX2 <- XVYXVX2[-a,   ]
+      }
       }
   }
 
@@ -163,7 +175,7 @@
                     XVYXVX = XVYXVX2,
                     ssqBetahat = ssqBetahat2,
                     ssqResidual = ssqResidual2,
-                    colnames_cov = colnames(covariates)
+                    predictors = colnames(covariates)
                     )
      
   }else{
@@ -181,7 +193,7 @@
                    XVYXVX = as.matrix(XVYXVX),
                    ssqBetahat = as.matrix(ssqBetahat),
                    ssqResidual = as.matrix(ssqResidual),
-                   colnames_cov = colnames(covariates)) 
+                   predictors = colnames(covariates)) 
      }
      
      
@@ -219,7 +231,7 @@
                        Nobs,
                        Ncov,
                        reml, 
-                       colnames_cov,  # character string
+                       predictors,  # character string
                        verbose=FALSE){
    
     
@@ -230,12 +242,20 @@
    
    ############## output matrix ####################
    Table <- matrix(NA, nrow=length(union(paramToEstimate, 'boxcox'))+Ncov+1, ncol=3)
-   rownames(Table) <-  c(colnames_cov, "sdSpatial", union(paramToEstimate, 'boxcox'))
+   rownames(Table) <-  c(predictors, "sdSpatial", union(paramToEstimate, 'boxcox'))
    colnames(Table) <-  c("estimate", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
    
    
    # myplots <- vector("list", length(paramToEstimate))
    # names(myplots) <- paramToEstimate
+   if(length(paramToEstimate)==2){
+   par(mfrow = c(1, 2))
+   }else if(length(paramToEstimate)==3 | length(paramToEstimate)==4){
+     par(mfrow = c(2, 2))
+   }else if(length(paramToEstimate)==5 | length(paramToEstimate)==6){
+     par(mfrow = c(2, 3))
+   }
+  
    ############### profile for covariance parameters #####################
    if('range' %in% paramToEstimate){
      # get profile log-lik for range values
@@ -258,10 +278,10 @@
      if(length(ci)==1){
        if( ci > MLE){
          ci <- c(lower, ci)
-         message("can not find lower ci for range")
+         message("did not find lower ci for range")
        }else{
          ci <- c(ci, upper)
-         message("can not find upper ci for range")}
+         message("did not find upper ci for range")}
      }
      
      if(length(ci)==0 | length(ci)>2){
@@ -294,10 +314,10 @@
      if(length(ci)==1){
        if( ci > MLE){
          ci <- c(lower, ci)
-         message("can not find lower ci for shape")
+         message("did not find lower ci for shape")
        }else{
          ci <- c(ci, upper)
-         message("can not find upper ci for shape")}
+         message("did not find upper ci for shape")}
      }
      
      if(length(ci)==0 | length(ci)>2){
@@ -331,10 +351,10 @@
      if(length(ci)==1){
        if( ci > MLE){
          ci <- c(lower, ci)
-         message("can not find lower ci for nugget")
+         message("did not find lower ci for nugget")
        }else{
          ci <- c(ci, upper)
-         message("can not find upper ci for nugget")}
+         message("did not find upper ci for nugget")}
      }
      
      if(length(ci)==0 | length(ci)>2){
@@ -368,10 +388,10 @@
      if(length(ci)==1){
        if( ci > MLE){
          ci <- c(lower, ci)
-         message("can not find lower ci for anisoRatio")
+         message("did not find lower ci for anisoRatio")
        }else{
          ci <- c(ci, upper)
-         message("can not find upper ci for anisoRatio")}
+         message("did not find upper ci for anisoRatio")}
      }
      
      if(length(ci)==0 | length(ci)>2){
@@ -404,10 +424,10 @@
      if(length(ci)==1){
        if( ci > MLE){
          ci <- c(lower, ci)
-         message("can not find lower ci")
+         message("did not find lower ci")
        }else{
          ci <- c(ci, upper)
-         message("can not find upper ci")}
+         message("did not find upper ci")}
      }
      
      if(length(ci)==0 | length(ci)>2){
@@ -445,10 +465,10 @@
      if(length(ci)==1){
        if( ci > MLE){
          ci <- c(lower, ci)
-         message("can not find lower ci")
+         message("did not find lower ci")
        }else{
          ci <- c(ci, upper)
-         message("can not find upper ci")}
+         message("did not find upper ci")}
      }
      
      if(length(ci)==0 | length(ci)>2){
@@ -483,10 +503,10 @@
      if(length(ci)==1){
        if( ci > MLE){
          ci <- c(lower, ci)
-         message("can not find lower ci for boxcox")
+         message("did not find lower ci for boxcox")
        }else{
          ci <- c(ci, upper)
-         message("can not find upper ci for boxcox")}
+         message("did not find upper ci for boxcox")}
      }else if(length(ci)>2){
        warning("error in param matrix")
        ci <- c(NA, NA)
@@ -507,7 +527,7 @@
    mat[upper.tri(mat)] <- mat[lower.tri(mat)]
    Betahat <- solve(mat) %*% XVYXVX[a,index[2]]
    
-   Table[colnames_cov, 1] <- Betahat
+   Table[predictors, 1] <- Betahat
    #################sigma hat#########################
    
    if(reml==FALSE)  {
@@ -605,7 +625,7 @@
                                   Nobs = result1$Nobs,
                                   Ncov = result1$Ncov,
                                   reml = reml, 
-                                  colnames_cov = result1$colnames_cov,
+                                  predictors = result1$predictors,
                                   verbose=FALSE)
              
               
