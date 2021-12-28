@@ -375,7 +375,7 @@ R> system.time(clrng::rnorm(c(10000, 10000), streams = streams,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.052   0.000   0.051
+##   0.051   0.001   0.052
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -494,7 +494,7 @@ R> system.time(result_month <- clrng::fisher.sim(month_gpu, 1000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.321   0.003   0.324
+##   0.315   0.008   0.322
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_month$threshold
@@ -581,7 +581,7 @@ R> system.time(result_week <- clrng::fisher.sim(week_GPU, 10000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   1.934   0.021   1.953
+##   1.927   0.019   1.945
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_week$threshold
@@ -682,23 +682,24 @@ B & Intel 2.5ghz & AMD Radeon & Intel 3.7ghz & NVIDIA V100 & Data\\
 
 
 \section{An application of normal RNG: Gaussian surface simulation} 
-Given a parameter space $X$, a random field $U$ on $X$ is a collection of random variables $\{U_x :x\in X\}$. A Gaussian random field is a random field with the property that for any positive integer $n$ and any set of locations $x_1,\dots,x_n \in X$, the joint distribution of $U=(U_{x_1},\dots,U_{x_n})$ is multivariate Gaussian. The expectation of $U$ and covariance function $\Sigma$ completely determine the distribution of $U$, where 
+Given a parameter space $X$, a random field $U$ on $X$ is a collection of random variables $\{U_x :x\in X\}$. A Gaussian random field is a random field with the property that for any positive integer $n$ and any set of locations $x_1,\dots,x_n \in X$, the joint distribution of $U=(U_{x_1},\dots,U_{x_n})^\top$ is multivariate Gaussian. The expectation and covariance function of $U$ completely determine the distribution of $U$, 
 \begin{gather*} 
 U = [U(x_1), \ldots, U(x_n)]^\top \sim \text{MVN}(0, \Sigma), \\
 \Sigma_{ij} = \cov[ U(x_i),U(x_j) ] = \sigma^2 \frac{2^{\kappa-1}}{\Gamma(\kappa)} \left(\sqrt{8\kappa} \frac{|x_i = x_j|}{\phi}\right)^\kappa  K_\kappa\left(\sqrt{8\kappa}  \frac{|x_i = x_j|}{\phi}\right),
 \end{gather*}
-where \text{MVN} standards for the multivariate normal distribution, and $\Sigma$ is the covariance matrix. A common choice for $\Sigma$ is the Mat\'ern covariance \citep{matern1960spatial}. The Mat\'ern covariance between $U(x_i)$ and $U(x_j)$ takes the above form,
+where \text{MVN} standards for the multivariate normal distribution, and $\Sigma$ standards for the covariance matrix of $U$. A common choice for $\Sigma$ is the Mat\'ern covariance \citep{matern1960spatial}. The Mat\'ern covariance between $U(x_i)$ and $U(x_j)$ takes the above form,
 %$d =\|x-x'\|$ is the Euclidean distance between two spatial points, 
 where $\sigma^2$ the variance of the random field $U$.
 $\Gamma(\cdot)$ is the standard gamma function.  
-$\phi$ is the range parameter or scale parameter with the dimension of distance, it controls the rate of decay of the correlation as distance increases. $K_\kappa(\cdot)$ is the modified Bessel function of the second kind with order $\kappa$, $\kappa$ is the shape parameter which determines the smoothness of $U(x)$, specifically, $U(x)$ is $m$ times mean-square differentiable if and only if $\kappa > m$. %(For $\kappa=0.5$, the Mat\'ern covariance function reduces to the exponential covariance function $\sigma^2*\exp(-d/\phi)$, when $\kappa \rightarrow \infty$, $\Sigma(d) \rightarrow \sigma^2*\exp{-(\|d\|/\phi)^2}$, which is called the Gaussian covariance.)  
+$\phi$ is the range parameter or scale parameter with the dimension of distance, it controls the rate of decay of the correlation as distance increases. $K_\kappa(\cdot)$ is the modified Bessel function of the second kind with order $\kappa$, $\kappa$ is the shape parameter which determines the smoothness of $U(x)$. %specifically, $U(x)$ is $m$ times mean-square differentiable if and only if $\kappa > m$. %(For $\kappa=0.5$, the Mat\'ern covariance function reduces to the exponential covariance function $\sigma^2*\exp(-d/\phi)$, when $\kappa \rightarrow \infty$, $\Sigma(d) \rightarrow \sigma^2*\exp{-(\|d\|/\phi)^2}$, which is called the Gaussian covariance.)  
 There are several alternative parameterisations of Mat\'ern covariance functions in literature  \citep[see][]{haskard2007anisotropic}. In \pkg{clrng}, we use the above form for computing Mat\'ern covariance.
 
 
 %Due to the importance of Gaussian random field, there are a large amount of studies devoted to Gaussian random field generation techniques. 
 \cite{LiuandLi2019} gives a comprehensive review on seven popular methods for Gaussian random field generation, %which are the turning bands method \citep{matheron_1973}, spectral method \citep{Meja1974OnTS,1972JSV}, matrix decomposition method \citep{davis1987}, Karhunen-Lo\'eve expansion \citep{LoeveM:1978}, moving average method \citep{journel1974, oliver1995moving}, sequential simulation \citep{johnson1987multivariate, gomez1993joint, pebesma2004multivariable}, and local average subdivision \citep{fenton1990simulation}. 
-all of these methods except matrix decomposition method, are approximations and has specific requirements on the type of grid or covariance functions. The matrix decomposition method is exact, it works for all covariance functions and can generate random field on all types of grids. Other \proglang{R} packages that offer simulation of Gaussian random fields such as \pkg{geoR} \citep{geoR2001}, does not work for large number of locations; the \pkg{RandomFields} \citep{RandomFields2015,RandomFields2020} package can use different methods for simulation of Gaussian fields, among which the modified circulant embedding method \citep{Dietrich1997FastAE} for covariance matrix decomposition is also an exact method, however, it works only for isotropic Gaussian fields and on rectangular grids. \pkg{clrng} does simulation of exact Gaussian fields on the GPU as it relies on the matrix decomposition method. The implementation of this method is as follows.
+all of these methods except the matrix decomposition method, are approximations to the random field and have specific requirements on the type of grid or covariance functions. The matrix decomposition method is exact, it works for all covariance functions and can generate random fields on arbitrary grids, and is straightforward to implement \cite{LiuandLi2019}. Other \proglang{R} packages that offer simulation of Gaussian random fields such as \pkg{geoR} \citep{geoR2001}, does not work for large number of locations. The \pkg{RandomFields} \citep{RandomFields2015} package has several different methods for simulation of Gaussian fields, among which the circulant embedding, which is an improved method on direct matrix decomposition, and some variants of the method like the cut-off embedding \citep{gneiting2006fast} are also exact and fast for isotropic Gaussian random fields, however, they work only on rectangular grids. \pkg{clrng} is able to simulate on the GPU exact Gaussian fields on arbitrary grids as it relies on the matrix decomposition method. The implementation of this method is as follows.
 
+%it can generate random fields on arbitrary position Circulant embedding is a fast simulation method for stationary (possibly anisotropic) Gaussian ran- dom fields on regular grids based on Fourier transformations. Cut-off embedding is a fast simulation method for stationary, isotropic Gaussian random fields on square lattices based on the standard RPcirculant method, so that exact simulation is garantueed for further covariance models
 
 Suppose $U=(U_1, U_2, \dots, U_n)^\top$ is a Gaussian random field with mean $\mu$ and covariance matrix $\Sigma$, without loss of generality, we assume mean value zero $(\mu = 0)$. Since covariance matrix $\Sigma$ is symmetric and positive-definite, we can take Cholesky decomposition of $\Sigma$, then we can simulate random samples from $U$ using Algorithm \ref{algorithm2},
 
@@ -719,7 +720,7 @@ Suppose $U=(U_1, U_2, \dots, U_n)^\top$ is a Gaussian random field with mean $\m
 % \item $D$ is a diagonal matrix.
 % \item $Z=(Z_1, Z_2, \dots, Z_n) \sim \text{MVN}(0,I_n)$, where $I_n$ is a $n \times n$ identity matrix.
 % \end{itemize}
-The matrix decomposition method is straightforward to implement. However, when the number of locations $n$ is large, the cost of Cholesky decomposition of the covariance matrix is $\mathcal{O}(n^3)$,  and the cost of matrix-vector multiplication $L*Z$ to generate the random field $U$ is $\mathcal{O}(n^2)$ \citep{LiuandLi2019}.  Our other \proglang{R} package \pkg{gpuBatchMatrix} is able to compute batches of Mat\'ern covariance matrices in parallel, and do Cholesky decomposition and matrix-matrix multiplication in batches in parallel on GPU. The following shows an example, in which we simulate on GPU eight Gaussian random fields of Mat\'ern covariance at one time with four sets of parameters, by taking advantage of the GPU-capabilities offered by \pkg{clrng} and \pkg{gpuBatchMatrix} together.
+The downside of this method is that it's computationally expensive and is thus very slow. When the number of locations $n$ is large, the time cost of Cholesky decomposition of the covariance matrix is $\mathcal{O}(n^3)$,  and is $\mathcal{O}(n^2)$ for the matrix-vector multiplication $L*Z$ \citep{LiuandLi2019}.  Our other \proglang{R} package \pkg{gpuBatchMatrix} is able to address this issue since it computes batches of Mat\'ern covariance matrices in parallel, and does Cholesky decomposition and matrix-matrix multiplication in batches in parallel on GPU. The following shows an example, in which we simulate on GPU eight Gaussian random fields of Mat\'ern covariance at one time with four sets of parameters, by taking advantage of the GPU-capabilities offered by \pkg{clrng} and \pkg{gpuBatchMatrix} together.
 %\pkg{clrng} package not only does the matrices decomposition (Cholesky decomposition and matrix-vector multiplication) in parallel, but also computes the covariance matrices in parallel on GPU. 
 
 \subsection{Simulating Gaussian random fields with Mat\'ern covariances}
@@ -732,7 +733,7 @@ R> library("geostatsp")
 \end{CodeInput} 
 \end{CodeChunk} 
 
-Step 1, set up a $51 \times 80$ raster using the 'swissRain' data from \pkg{geostatsp}.
+Step 1, set up a $51 \times 80$ raster using the `swissBorder' coordinates from \pkg{geostatsp}.
 \begin{CodeChunk}
 \begin{CodeInput}
 R> NlocalCache = 1000
@@ -758,7 +759,7 @@ R> myRaster
 \end{CodeOutput} 
 \end{CodeChunk} 
 
-Step 2, create 4 parameter sets as a small example. 
+Step 2, create four parameter sets as a small example. 
 
 \begin{CodeChunk}
 \begin{CodeInput}
@@ -791,7 +792,7 @@ R> dim(maternCov)
 \end{CodeOutput} 
 \end{CodeChunk} 
 
-Step 4, perform Cholesky decomposition of \code{maternCov}. The first argument in \fct{cholBatch} specifies the object to take Cholesky decomposition. Computed unit lower triangular matrices $L_i$'s are stacked by row and stored in \code{maternCov}. The diagonal values of each $D_i$ are returned and stored in each row of \code{diagMat}. For example, if each batch $\Sigma_i$ is of size $n \times n$, then each batch $D_i$ is $1 \times n$.
+Step 4, perform Cholesky decomposition on \code{maternCov}. The first argument in \fct{cholBatch} specifies the object to take Cholesky decomposition. Computed unit lower triangular matrices $L_i$'s are stacked by row in \code{maternCov}. The diagonal values of each $D_i$ are returned and stored in each row of \code{diagMat}. So if each batch $\Sigma_i$ is of size $n \times n$, then each batch $D_i$ is $1 \times n$.
 \begin{CodeChunk}
 \begin{CodeInput}
 R> diagMat = gpuBatchMatrix::cholBatch(maternCov, Nglobal = c(128,
@@ -810,7 +811,7 @@ R> diagMat = gpuBatchMatrix::cholBatch(maternCov, Nglobal = c(128,
   D_{1} \\ D_{2} \\D_{3} \\ \vdots
   \end{bmatrix}
 \end{gather}
-Step 5, create some streams on GPU to generate 2 standard Gaussian random vectors \code{zmatGpu}$=(Z_1, Z_2)$ using \fct{clrng::rnorm}, in which \code{c(nrow(materCov),2)} specifies the number of rows and columns of \code{zmatGpu}.
+Step 5, create some streams on GPU to generate two standard Gaussian random vectors \code{zmatGpu}$=(Z_1, Z_2)$ using \fct{clrng::rnorm}, in which \code{c(nrow(materCov),2)} specifies the number of rows and columns of \code{zmatGpu}.
 \begin{CodeChunk}
 \begin{CodeInput}
 R> streamsGpu <- createStreamsGpu(n = 128 * 64)
@@ -852,7 +853,7 @@ R> simMat = gpuBatchMatrix::multiplyLowerDiagonalBatch(maternCov,
    \vdots  &   \vdots
   \end{bmatrix}
 \end{gather}
-Step 7, Finally, plot the 10 realizations.
+Step 7, Finally, plot the ten realizations.
 \begin{CodeChunk}
 \begin{CodeInput}
 R> simRaster = raster::brick(myRaster, nl = ncol(simMat) * nrow(params))
@@ -882,7 +883,8 @@ R> values(simRaster) = as.vector(as.matrix(simMat))
 
 
 \section{Discussion}
-The package \pkg{clrng} has been created to make GPU-generated uniform and normal random numbers accessible for \proglang{R} users, it enables reproducible research in simulations by setting seeds in streams on GPU. We further applied the GPU-generated random numbers in suitable statistical simulations, such as the Monte Carlo simulation for Fisher’s exact test, and (exact) Gaussian spatial surfaces simulation, for which we are able to calculate quantiles for the normal distribution, compute Mat\'ern covariance matrices, do Cholesky decomposition and matrix multiplication in batches on GPU. Most of these functions uses local memory on GPU. Comparison of performance between using \pkg{clrng} and using classic \proglang{R} on CPU for some real data examples has demonstrated significant improvement in execution time. 
+The package \pkg{clrng} has been created to make GPU-generated uniform and some non-uniform random numbers accessible for \proglang{R} users, it enables reproducible research in simulations by setting initial seeds in streams and saving and reloading the current states of streams. We further applied the GPU-generated random numbers in suitable statistical simulations, such as the Monte Carlo simulation for Fisher’s exact test, and exact Gaussian spatial surfaces simulation, for which we are able to calculate quantiles for the normal distribution, our package \pkg{gpuBatchMatrix} adds additional help in the second application by taking the computational work for batches of Mat\'ern covariance matrices, Cholesky decomposition and matrix multiplication on GPU. %Most of these functions uses local memory on GPU. 
+Comparison of performance between using \pkg{clrng} and using classic \proglang{R} on CPU for some real data examples has demonstrated significant improvement in execution time. 
 
 By leveraging the \pkg{gpuR} package, \pkg{clrng} provides a user-friendly interface that bridges \proglang{R} and \proglang{OpenCL}, users can use the facilities in our package without the need to know the complex \proglang{OpenCL} or even the \proglang{\texttt{C++}} code.  \pkg{clrng} is portable as its backend \proglang{OpenCL} supports multiple types of processors, and it is also flexible as its kernels can be incorporated or reconstructed in other \proglang{R} packages for other applications. 
 
