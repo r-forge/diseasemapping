@@ -1,4 +1,4 @@
-\begin{thebibliography}{34}
+\begin{thebibliography}{33}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
@@ -33,12 +33,6 @@ Box GE (1958).
 \newblock R package version 2.0.0,
   \urlprefix\url{http://github.com/cdeterman/gpuR}.
 
-\bibitem[{Dietrich and Newsam(1997)}]{Dietrich1997FastAE}
-Dietrich C, Newsam G (1997).
-\newblock \enquote{Fast and Exact Simulation of Stationary Gaussian Processes
-  through Circulant Embedding of the Covariance Matrix.}
-\newblock \emph{SIAM J. Sci. Comput.}, \textbf{18}, 1088--1107.
-
 \bibitem[{Dyer \emph{et~al.}(1997)Dyer, Kannan, and Mount}]{dyer1997sampling}
 Dyer M, Kannan R, Mount J (1997).
 \newblock \enquote{Sampling contingency tables.}
@@ -70,6 +64,15 @@ for Health~Statistics NC (2019).
 \newblock \enquote{Natality 2018. Public use file.}
 \newblock Annual internet product. 2019. Available at
   \url{http://www.cdc.gov/nchs/data_access/VitalStatsOnline.htm}.
+
+\bibitem[{Gneiting \emph{et~al.}(2006)Gneiting, {\v{S}}ev{\v{c}}{\'\i}kov{\'a},
+  Percival, Schlather, and Jiang}]{gneiting2006fast}
+Gneiting T, {\v{S}}ev{\v{c}}{\'\i}kov{\'a} H, Percival DB, Schlather M, Jiang Y
+  (2006).
+\newblock \enquote{Fast and exact simulation of large Gaussian lattice systems
+  in $R^2$: exploring the limits.}
+\newblock \emph{Journal of Computational and Graphical Statistics},
+  \textbf{15}(3), 483--501.
 
 \bibitem[{Haskard(2007)}]{haskard2007anisotropic}
 Haskard KA (2007).
@@ -218,16 +221,6 @@ Schlather M, Malinowski A, Menck PJ, Oesting M, Strokorb K (2015).
   Fields with Package {RandomFields}.}
 \newblock \emph{Journal of Statistical Software}, \textbf{63}(8), 1--25.
 \newblock \urlprefix\url{http://www.jstatsoft.org/v63/i08/}.
-
-\bibitem[{Schlather \emph{et~al.}(2020)Schlather, Malinowski, Oesting, Boecker,
-  Strokorb, Engelke, Martini, Ballani, Moreva, Auel, Menck, Gross, Ober,
-  Ribeiro, Ripley, Singleton, Pfaff, and {R Core Team}}]{RandomFields2020}
-Schlather M, Malinowski A, Oesting M, Boecker D, Strokorb K, Engelke S, Martini
-  J, Ballani F, Moreva O, Auel J, Menck PJ, Gross S, Ober U, Ribeiro P, Ripley
-  BD, Singleton R, Pfaff B, {R Core Team} (2020).
-\newblock \emph{{RandomFields}: Simulation and Analysis of Random Fields}.
-\newblock R package version 3.3.8,
-  \urlprefix\url{https://cran.r-project.org/package=RandomFields}.
 
 \bibitem[{Sevcikova \emph{et~al.}(2015)Sevcikova, Rossini, and
   L'Ecuyer}]{sevcikova2015package}
