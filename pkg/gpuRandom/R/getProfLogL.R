@@ -140,8 +140,6 @@
       }else{
       paramsRenew <- params0[-selected_rows,]
       LogLikcpu <- LogLikcpu[-selected_rows,] 
-
-      
       detVar2 <- as.vector(detVar)[-selected_rows]
       detReml2 <- as.vector(detReml)[-selected_rows]
       ssqY2 <- as.matrix(ssqY)[-selected_rows,]
@@ -565,7 +563,7 @@
   likfitLgmCov <- function(spatialmodel,
                            params=NULL, # CPU matrix for now, users need to provide proper parameters given their specific need
                            boxcox,  # boxcox is always estimated
-                           paramToEstimate = c("range","nugget"), #variance and regression parameters are always estimated if not given,
+                           paramToEstimate, #variance and regression parameters are always estimated if not given,
                            cilevel=0.95,  # decimal
                            type = c("float", "double")[1+gpuInfo()$double_support],
                            reml=FALSE, 
