@@ -109,7 +109,7 @@ Graphics Processing Units (GPUs) have the potential to make an important contrib
 Random number generation is critical in simulation-based statistical inference, machine learning and many other scientific fields. While most random number generators are sequential, the \proglang{R} packages \pkg{parallel}, \pkg{future} \citep*{future1.19.1} and \pkg{rlecuyer} \citep{sevcikova2015package} are able to generate random numbers in parallel on multicore CPUs. More specifically, \pkg{parallel} writes an interface for the \pkg{RngStreams}, a \proglang{\texttt{C++}} library by \cite{l2002object} which is based on a combined multiple-recursive generator (MRG) MRG32k3a. \pkg{future} and \pkg{rlecuyer} also uses the combined MRG algorithm for generating random numbers. For up-to-date review papers on the generation of random numbers on parallel devices, and GPUs in particular, see:  \cite{rLEC15a,rLEC17p,rLEC21a}.
 
 
-The \pkg{clrng} package described here is currently the only \proglang{R} package that is able to generate random numbers on GPUs. Accomplishing this is complicated because each process must produce an independent (non-overlapping) sequence of random numbers, and in order to ensure reproducibility it should be possible to save and restore the current state of each stream of random numbers at any point.  Here we introduce the \proglang{R} package \pkg{clrng} that leverages the \pkg{gpuR} package, and can generate random numbers on GPU by using the \proglang{clRNG} \citep{l2015clrng} library, and can thus accelerate several types of statistical simulation and modelling.
+The \pkg{clrng} package described here is currently the only \proglang{R} package that is able to generate random numbers on GPUs. Accomplishing this is complicated because each process must produce an independent (non-overlapping) sequence of random numbers, and in order to ensure reproducibility it should be possible to save and restore the current state of each stream of random numbers at any point.  Here we introduce the \proglang{R} package \pkg{clrng} that leverages the \pkg{gpuR} package, and can generate random numbers on GPU by using the \proglang{clRNG} \citep{l2015clrng} library in \proglang{OpenCL}, and can thus accelerate several types of statistical simulation and modelling.
 
 
 
@@ -138,7 +138,7 @@ In what follows, we will illustrate how to create streams and how to use streams
 
 %THE PROBLEM:  each process needs to be independent, there's a risk of overlap.  solution: streams.  mrg31kp3 a stream is a vector of three positive integers.  initial state is first stream, compute new streams sequentially.
 \subsection{Creating streams}\label{createstreams}
-When a RNG is called in parallel processes or successively called at several places in a program in \proglang{R}, random number generation would be more complicated because there is no guarantee that the streams (or similarly \code{.Random.seed} in \proglang{R}) do not overlap, and thus the generated sequences of random numbers is possible to have correlation. \pkg{clrng} uses multiple distinct streams that are used in work-items that executes in parallel on a GPU device. A popular way of obtaining multiple streams is to take an RNG with a long period and cut the RNG's sequence into very long disjoint pieces of equal length $Z$, and use each piece as a separate stream. Creating a new stream amounts to computing its starting point. Each of these streams can also be partitioned into substreams with equally-spaced starting points \citep{l2002object, rLEC15a}, although this is not currently implemented in \pkg{clrng}. In general, a stream object contains three elements: the current state of the stream, the initial state of the stream (or seed), and the initial state of the current substream (by default it is equal to the seed). Streams are created sequentially in the way that whenever the user creates a new stream, the software automatically jumps ahead by $Z$ steps to find its initial state, and the three states in the stream object are set to it. 
+When a RNG is called in parallel processes or successively called at several places in a program in \proglang{R}, random number generation would be more complicated because there is no guarantee that the streams (analogous to \code{.Random.seed} in \proglang{R}) do not overlap, and thus the generated sequences of random numbers is possible to have correlation. \pkg{clrng} uses multiple distinct streams that are used in work-items that executes in parallel on a GPU device. A popular way of obtaining multiple streams is to take an RNG with a long period and cut the RNG's sequence into very long disjoint pieces of equal length $Z$, and use each piece as a separate stream. Creating a new stream amounts to computing its starting point. Each of these streams can also be partitioned into substreams with equally-spaced starting points \citep{l2002object, rLEC15a}, although this is not currently implemented in \pkg{clrng}. In general, a stream object contains three elements: the current state of the stream, the initial state of the stream (or seed), and the initial state of the current substream (by default it is equal to the seed). Streams are created sequentially in the way that whenever the user creates a new stream, the software automatically jumps ahead by $Z$ steps to find its initial state, and the three states in the stream object are set to it. 
 
 In the \proglang{clRNG} library, the MRG31k3p RNG's entire period of length approximately $2^{185}$ is divided into approximately $2^{51}$ non-overlapping streams of length $Z = 2^{134}$. %Each stream can be further partitioned into substreams of length $2^{72}$. 
 The state (and seed) of each stream is a vector of six 31-bit integers. This size of state is appropriate for having streams running in work-items on GPU cards, while providing a sufficient period length for most applications. The initial state of the first stream (also called ``initial seed of the package'' or ``initial seed of the stream creator'' in \proglang{clRNG}) for the MRG31k3p RNG is by default $(12345, 12345, 12345, 12345, 12345, 12345)$. 
@@ -372,7 +372,7 @@ R> system.time(clrng::rnorm(c(10000, 10000), streams = streams,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.044   0.004   0.047
+##   0.045   0.004   0.048
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -491,7 +491,7 @@ R> system.time(result_month <- clrng::fisher.sim(month_gpu, 1000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.312   0.006   0.319
+##   0.316   0.001   0.318
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_month$threshold
@@ -578,7 +578,7 @@ R> system.time(result_week <- clrng::fisher.sim(week_GPU, 10000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##    1.94    0.01    1.95
+##    1.95    0.01    1.95
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_week$threshold
