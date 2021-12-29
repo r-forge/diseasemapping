@@ -92,7 +92,7 @@ std::string crossprodBatchString(
   
   
   result +=
-    // "const int DrowNpadCInc = get_local_size(1)*NpadC;\n"
+    //"const int DrowNpadCInc = get_local_size(1)*NpadC;\n"
     "const int localIndex = get_local_id(0) * get_local_size(1) + get_local_id(1);\n"
     "const int NlocalTotal = get_local_size(1)*get_local_size(0);\n"
     "const int cacheIndex = get_local_id(1)+NpadLocal*get_local_id(0);\n";
@@ -265,8 +265,12 @@ std::string crossprodBatchString(
   
   
   if(onlyDiagC) {
-    result += 
+    result +=
       "      Drow = Dcol;\n";
+    // result += 
+    //   "     Drow = Dcol;\n"
+    //   "     A0Drow = AHere + Drow;\n"
+    //   "     DrowNpadC = CHere + Drow * NpadC;\n\n";
   }  else {
     
     result +=
@@ -274,14 +278,65 @@ std::string crossprodBatchString(
       "        DrowBlock < Ncol;\n "
       "        DrowBlock += get_local_size(1)) {\n"
       "      Drow = DrowBlock + get_local_id(1);\n";
-  }
-  result += 
+    
+    // result += 
+    //   "   for(Drow = Dcol + get_local_id(1),\n"
+    //   "       DrowNpadC = CHere + Drow * NpadC,\n"
+    //   "       A0Drow = AHere + Drow;\n"
+    //   "     Drow < Ncol;\n"
+    //   "     Drow += get_local_size(1),\n" 
+    //   "       DrowNpadC += DrowNpadCInc,\n"
+    //   "       A0Drow +=  get_local_size(1)\n"
+    //   "   ){\n\n";
+        }
+   
+   result +=
     "      DrowInBounds = Drow < Ncol;\n"
     "      DrowNpadC = CHere + Drow * NpadC;\n"
     "      A0Drow = AHere + Drow;\n"
+    //"      barrier(CLK_LOCAL_MEM_FENCE);\n"
     "      Cout=0.0;\n\n";
   
-  result += 
+  // result += 
+  //   "      Cout=0.0;\n\n";
+
+
+  // if(onlyDiagC) {
+  //   result +=
+  //     "      // cached parts\n"
+  //     "     for(Dinner = localIndex;\n"
+  //     "         Dinner < NrowStop;\n"
+  //     "         Dinner += NlocalTotal\n"
+  //     "      ){\n";
+  // }else {
+  //   result +=
+  //     "      // cached parts\n"
+  //     "     for(Dinner =  get_local_id(0);\n"
+  //     "         Dinner < NrowStop;\n"
+  //     "         Dinner += get_local_size(0)\n"
+  //     "      ){\n";
+  // }
+  // 
+  // result += "         DinnerA = A0Drow + Dinner*NpadA;\n";
+  // 
+  // result +=
+  //   "         if(DrowInBounds) {\n";
+  // 
+  // if(onlyDiagC) {    
+  //   result += 
+  //     "           Cout += Acache[Dinner];\n"; 
+  // } else {
+  //   result += 
+  //     "          Cout += A[DinnerA] * Acache[Dinner];\n";
+  //   //    "          Cout += A[Dmatrix * NpadBetweenMatricesA + Dinner*NpadA + Drow] * Acache[Dinner];\n";
+  // }
+  // result +=     
+  //   "        } // if in bounds \n"
+  //   "      } // Dinner\n\n";    
+  // 
+  
+  
+  result +=
     "      // cached parts\n"
     "     for(DinnerBlock = 0;\n"
     "         DinnerBlock < NrowStop;\n";
@@ -296,24 +351,25 @@ std::string crossprodBatchString(
       "      ){\n"
       "         Dinner = DinnerBlock + get_local_id(0);\n";
   }
-  
+
   result += "         DinnerA = A0Drow + Dinner*NpadA;\n";
-  
+
   result +=
     "         if(DrowInBounds & (Dinner < NrowStop) ) {\n";
-  
-  if(onlyDiagC) {    
-    result += 
-      "           Cout += Acache[Dinner];\n"; 
+
+  if(onlyDiagC) {
+    result +=
+      "           Cout += Acache[Dinner];\n";
   } else {
-    result += 
+    result +=
       "          Cout += A[DinnerA] * Acache[Dinner];\n";
     //    "          Cout += A[Dmatrix * NpadBetweenMatricesA + Dinner*NpadA + Drow] * Acache[Dinner];\n";
   }
-  result +=     
+  result +=
     "        } // if in bounds \n"
-    "      } // DinnerBlock\n\n";    
-  
+    "      } // DinnerBlock\n\n";
+   // "      barrier(CLK_LOCAL_MEM_FENCE);\n\n\n";
+
   result +=
     "       // un-cached parts\n"
     "       for(DinnerBlock = NrowStop;\n"
@@ -393,7 +449,7 @@ std::string crossprodBatchString(
   result += 
     //  "  barrier(CLK_LOCAL_MEM_FENCE);\n" 
     "  }// Dmatrix\n";
-  //"  barrier(CLK_LOCAL_MEM_FENCE);\n";
+    //"  barrier(CLK_LOCAL_MEM_FENCE);\n";
   result += 
     "}";
   
@@ -564,8 +620,6 @@ SEXP crossprodBatchBackend(
   return(result);
   
 }
-
-
 
 
 
