@@ -615,7 +615,8 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
   //   Rcpp::Rcout << "maternClString\n" << maternClString << "\n";
   //   Rcpp::Rcout << "cholClString\n" << cholClString << "\n";
   // }
-  
+  if(verbose[0]>1)
+  Rcpp::Rcout << "crossprodKernelString\n" << crossprodKernelString << "\n";
   
   viennacl::ocl::program & my_prog_matern = viennacl::ocl::current_context().add_program(maternClString, "mykernelmatern");
   viennacl::ocl::kernel & maternKernel = my_prog_matern.get_kernel("maternBatch");
