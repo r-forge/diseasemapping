@@ -63,7 +63,7 @@
 
 
 \Abstract{
-We introduce the \proglang{R} package \pkg{clrng} that leverages the \pkg{gpuR} package, and can generate random numbers on GPU by utilizing the \pkg{clRNG} (OpenCL) library. Parallel processing by graphics processing unit (GPU) can be used to speed up computationally intensive tasks, which when combined with \proglang{R}, it can largely improve \proglang{R}’s downsides in terms of slow speed, memory usage and computation mode.  %There is currently no \proglang{R} package that does random number generation on GPU, while random number generation is critical in simulation-based statistical inference and modeling. 
+We introduce the \proglang{R} package \pkg{clrng} which leverages the \pkg{gpuR} package to generate random numbers on a Graphics Processing Unit (GPU) with the \pkg{clRNG} (OpenCL) library. Parallel processing with GPU's can speed up computationally intensive tasks, which when combined with \proglang{R}, it can largely improve \proglang{R}’s downsides in terms of slow speed, memory usage and computation mode.  %There is currently no \proglang{R} package that does random number generation on GPU, while random number generation is critical in simulation-based statistical inference and modeling. 
 \pkg{clrng} enables reproducible research by setting random streams on GPU and can thus accelerate several types of simulation and modelling. This package is portable and flexible, developers can use its random number generation kernel for various other purposes and applications. 
 }
 
@@ -140,6 +140,7 @@ In what follows, we will illustrate how to create streams and how to use streams
 \subsection{Creating streams}\label{createstreams}
 When a RNG is called in parallel processes or successively called at several places in a program in \proglang{R}, random number generation would be more complicated because there is no guarantee that the streams (analogous to \code{.Random.seed} in \proglang{R}) do not overlap, and thus the generated sequences of random numbers is possible to have correlation. \pkg{clrng} uses multiple distinct streams that are used in work-items that executes in parallel on a GPU device. A popular way of obtaining multiple streams is to take an RNG with a long period and cut the RNG's sequence into very long disjoint pieces of equal length $Z$, and use each piece as a separate stream. Creating a new stream amounts to computing its starting point. Each of these streams can also be partitioned into substreams with equally-spaced starting points \citep{l2002object, rLEC15a}, although this is not currently implemented in \pkg{clrng}. In general, a stream object contains three elements: the current state of the stream, the initial state of the stream (or seed), and the initial state of the current substream (by default it is equal to the seed). Streams are created sequentially in the way that whenever the user creates a new stream, the software automatically jumps ahead by $Z$ steps to find its initial state, and the three states in the stream object are set to it. 
 
+
 In the \proglang{clRNG} library, the MRG31k3p RNG's entire period of length approximately $2^{185}$ is divided into approximately $2^{51}$ non-overlapping streams of length $Z = 2^{134}$. %Each stream can be further partitioned into substreams of length $2^{72}$. 
 The state (and seed) of each stream is a vector of six 31-bit integers. This size of state is appropriate for having streams running in work-items on GPU cards, while providing a sufficient period length for most applications. The initial state of the first stream (also called ``initial seed of the package'' or ``initial seed of the stream creator'' in \proglang{clRNG}) for the MRG31k3p RNG is by default $(12345, 12345, 12345, 12345, 12345, 12345)$. 
 
@@ -151,47 +152,59 @@ The state (and seed) of each stream is a vector of six 31-bit integers. This siz
 \begin{CodeInput}
 R> # creating streams on CPU
 R> library("clrng")
-R> myStreamsCpu <- createStreamsCpu(n = 4, initial = 12345)
+R> setBaseCreator(c(111, 222, 333, 444, 555, 666))
+R> myStreamsCpu <- createStreamsCpu(4)
 R> t(myStreamsCpu)
 \end{CodeInput}
 \begin{CodeOutput}
-##               [,1]       [,2]       [,3]       [,4]
-## current.g1.1 12345  336690377  502033783  739421137
-## current.g1.2 12345  597094797 1322587635 1475938232
-## current.g1.3 12345 1245771585 1964121530  730262207
-## current.g2.1 12345   85196284 1949818481 1630192198
-## current.g2.2 12345  523477687 1607232546  324551134
-## current.g2.3 12345 2094976052 1462898381  795289868
-## initial.g1.1 12345  336690377  502033783  739421137
-## initial.g1.2 12345  597094797 1322587635 1475938232
-## initial.g1.3 12345 1245771585 1964121530  730262207
-## initial.g2.1 12345   85196284 1949818481 1630192198
-## initial.g2.2 12345  523477687 1607232546  324551134
-## initial.g2.3 12345 2094976052 1462898381  795289868
+##              [,1]       [,2]       [,3]       [,4]
+## current.g1.1  111  272931565 1097663848  628119774
+## current.g1.2  222  750526866  712444468  211319804
+## current.g1.3  333 1340941094  522805545  147140763
+## current.g2.1  444 1101709871  362320065 1665200176
+## current.g2.2  555 1485736734 1950619531  892386138
+## current.g2.3  666  375100068 1839101248  734766081
+## initial.g1.1  111  272931565 1097663848  628119774
+## initial.g1.2  222  750526866  712444468  211319804
+## initial.g1.3  333 1340941094  522805545  147140763
+## initial.g2.1  444 1101709871  362320065 1665200176
+## initial.g2.2  555 1485736734 1950619531  892386138
+## initial.g2.3  666  375100068 1839101248  734766081
 \end{CodeOutput} 
 \end{CodeChunk} 
 
-\fct{createStreamsCpu} has two arguments:
+\fct{setBaseCreator} has one argument:
+\begin{itemize}
+\itemsep0em 
+  \item \code{initial}: a vector of six 31-bit integers, recycled if length is shorter. Default is set to \code{c(12345, 12345, 12345, 12345, 12345, 12345)}.
+\end{itemize}
+\fct{createStreamsCpu} has one argument:
 \begin{itemize}
 \itemsep0em 
   \item \code{n}: number of streams to create.
-  \item \code{initial}: a vector of six 31-bit integers, recycled if length is shorter. Default is set to \code{c(12345, 12345, 12345, 12345, 12345, 12345)}.
 \end{itemize}
-We move streams to the GPU by converting them to a `\code{vclMatrix}'. \fct{createStreamsGpu} creates streams directly on the GPU and returns a `\code{vclMatrix}', which makes it slightly more efficient when the number of streams is large. Users may choose to use either \fct{createStreamsCpu} or \fct{createStreamsGpu} and stick with that choice for their entire program, as we want to avoid the very small possibility of overlap between the streams with different initial seeds. The `\code{initial}' argument should be set only once at the very beginning of the program in each \proglang{R} session if users want to supply their own initial seed of the stream creator, or never, in which case users would go with the package default initial seed. After the `\code{initial}' argument is set, we can ignore the `\code{initial}' argument and call \fct{createStreamsCpu} or \fct{createStreamsGpu} once or several times to create various matrices of streams in the same program.
-
-%However, any data is lost when the \proglang{R} session is terminated. %\fct{createStreamsGpu} is adapted from the clrngMrg31k3pCreateStreams() and creates streams directly on a GPU device. Setting a seed same as the MRG31k3p default seed in \fct{createStreamsGpu}, we produce on device exactly the same streams as those created on host as follows. Notice that the code is just for showing \fct{createStreamsGpu} and \fct{createStreamsCpu} are \proglang{R} interface functions for \fct{clrngMrg31k3pCreateStreams} on GPU and CPU respectively, in practice it is not recommended to create a new stream that has the same initial seed as another existing stream in one simulation program.
+We move streams to the GPU by converting them to a `\code{vclMatrix}'.
 \begin{CodeChunk}
 \begin{CodeInput}
-R> # creating streams on GPU
 R> myStreamsGpu = vclMatrix(myStreamsCpu)
 \end{CodeInput} 
 \end{CodeChunk} 
 
+Equivalently, \fct{createStreamsGpu} creates streams directly on the GPU and returns a `\code{vclMatrix}', which makes it slightly more efficient when the number of streams is large.
 \begin{CodeChunk}
 \begin{CodeInput}
-R> myStreamsGpu2 = createStreamsGpu(n = 4, initial = 12345)
+R> myStreamsGpu2 = createStreamsGpu(4)
 \end{CodeInput} 
 \end{CodeChunk} 
+
+
+
+%Users should run either \fct{createStreamsCpu} or \fct{createStreamsGpu} at the beginning of a task and retain these streams for all of the random number generation the task requires.  Creating new streams with different initial states introduces the very small possibility of overlap between the original and new streams. If an \proglang{R} session is restarted during a task, perhaps because a preliminary analysis is done following an initial set of simulations and the full set of simulations continued at a later date, the state of the streams should be transferred to the CPU and saved to disk.  The `\code{initial}' argument to the stream creator should be used with caution and we recommend using the default.  It bears repeating that two sets of streams with different initial states may produce overlapping numbers, the probability is small but increases when the number of streams is large.
+
+There are a few important notes on the usage of these functions. (1), Users should run the function \fct{setBaseCreator} once at the very beginning of a \proglang{R} session if they would like to choose their own initial seeds. If \fct{setBaseCreator} is not called before \fct{createStreamsCpu} or \fct{createStreamsGpu}, then streams are created using the package's default initial seed. (2), Users may choose either \fct{createStreamsCpu} or \fct{createStreamsGpu} to run and must stick with that choice for their entire program, switching between \fct{createStreamsCpu} and \fct{createStreamsGpu} in the same program will create some of the streams twice.  When you create a new stream, it should not have the same seed as another existing stream, just like when you create a new car, it must have a distinct serial number. Streams should be created only once, and moved or copied if needed. 
+
+
+%However, any data is lost when the \proglang{R} session is terminated. %\fct{createStreamsGpu} is adapted from the clrngMrg31k3pCreateStreams() and creates streams directly on a GPU device. Setting a seed same as the MRG31k3p default seed in \fct{createStreamsGpu}, we produce on device exactly the same streams as those created on host as follows. Notice that the code is just for showing \fct{createStreamsGpu} and \fct{createStreamsCpu} are \proglang{R} interface functions for \fct{clrngMrg31k3pCreateStreams} on GPU and CPU respectively, in practice it is not recommended to create a new stream that has the same initial seed as another existing stream in one simulation program.
 
 
 %also has the two arguments \code{n} and \code{initial}. \fct{createStreamsGpu} is similar to \code{.Random.seed} in \proglang{R}. By setting the RNG status with the \proglang{R} function \fct{set.seed}, we are able to repeat the sequence of random seeds, which is an important quality criteria of RNGs. Similarly in \fct{createStreamsGpu} and \fct{createStreamsCpu}, with the \code{initial} argument, we make the sequence of streams repeatable.
@@ -201,8 +214,17 @@ R> myStreamsGpu2 = createStreamsGpu(n = 4, initial = 12345)
 
 
 
-\subsection{Using streams to generate uniform random numbers}
-The streams created sequentially are then used by the GPU's work-items to generate random numbers. In \pkg{clrng} each work-item takes one distinct stream to generate random numbers, so the number of streams should always be at least the number of total work-items in use. The main part of the kernel (\proglang{OpenCL} functions for execution on the device) for generating uniform random numbers is shown in Listing \ref{lst:uniformkernel}. Users can set \code{verbose=2} in \fct{runif} to print out the kernels. Kernels are written in the \proglang{OpenCL C} language, in which \code{__kernel} declares a function as a kernel, pointer kernel arguments must be declared with an address space qualifier, for example \code{__global} and \code{__local}. Here the pointers to \code{streams} and to the output matrix \code{out} on the global memory are passed to the kernel as arguments. \code{Nrow} and \code{Ncol} represent row and column number of the matrix \code{out} respectively. \code{Npad} is the internal number of columns of \code{out}, \code{NpadStreams} is the internal number of columns of \code{streams} (these variables are defined in macros not shown here). \code{index} represents the position of a work-item when mapping it to a one-dimensional data structure. Each stream's current state is copied to the private memory of each work-item by the function \fct{streamsToPrivate}, in which \code{g1} and \code{g2} point to the first three and second three elements of stream states, respectively, and \code{startvalue} tells the starting position of the particular stream to be copied to its corresponding work-item. The function \fct{clrngMrg31k3pNextState} generates an uniform random integer named \code{temp} between 1 and 2147483647,  the value of \code{temp} is then scaled to be in the interval $(0,1)$ by multiplying it by a constant \code{mrg31k3p\_NORM\_cl}, which is defined to be $1/2147483648$ depending on the precision type. If to generate random integers, \code{temp} is not scaled. At the end of generating random numbers, streams are transferred back to global memory through the function \fct{streamsFromPrivate}.
+\subsection{Generating uniform random numbers}
+
+The streams created sequentially are used by work-items on a GPU (the GPU analogy of CPU cores) to generate random numbers. In \pkg{clrng} each work-item takes one distinct stream to generate random numbers, so the number of streams should always be at least the number of total work-items in use. The main part of the kernel (functions for execution on the GPU) for generating uniform random numbers is shown in Listing \ref{lst:uniformkernel}. Kernels are written in the \proglang{C}-like \proglang{OpenCL} language, in which \code{__kernel} declares a function as a kernel, and the \code{__global} prefix to the pointer kernel arguments specifies that they point to global memory space accessible to all work items.  Users can set the argument \code{verbose=2} in the random number generator to print out the kernel, which is slightly more complex than the code in Listing \ref{lst:uniformkernel}. 
+  
+Here the pointers \code{streams} and \code{out} refer to the streams and the  output matrix respectively, which are stored in global memory. \code{Nrow} and \code{Ncol} represent row and column number of the matrix \code{out} respectively.   \code{Npad} is the "internal" number of columns, and \code{out} is an \code{Nrow} by \code{Ncol} submatrix of a larger \code{Nrow} by \code{Npad} matrix.
+
+Each stream's current state is copied to the private memory of each work-item by the function \fct{streamsToPrivate}, in which \code{g1} and \code{g2} point to the first three and second three elements of stream states.
+The object \code{startvalue} gives the position of the work item's stream in the \code{streams} object and is computed with the
+\code{NpadStreams} object defined in a macro not shown here.   
+
+The function \fct{clrngMrg31k3pNextState} generates an uniform random integer between 1 and 2147483647,  and then scaled to be in the interval $(0,1)$ by multiplying it by a constant \code{mrg31k3p\_NORM\_cl} (defined to be $1/2147483648$). If to generate random integers, \code{temp} is not scaled. At the end of generating random numbers, streams are transferred back to global memory through the function \fct{streamsFromPrivate}.
 
 \begin{lstlisting}[language=C,basicstyle=\small,label={lst:uniformkernel}]
 __kernel void mrg31k3pMatrix(
@@ -212,14 +234,15 @@ __kernel void mrg31k3pMatrix(
 
 int Drow, Dcol;
 uint g1[3], g2[3];
-float temp, fact = mrg31k3p_NORM_cl;
+double temp, fact = mrg31k3p_NORM_cl;
+const int startvalue = (get_global_id(0) + get_global_size(0) * get_global_id(1)) * NpadStreams;
 
 streamsToPrivate(streams,g1,g2,startvalue);
 
-for(Drow=get_global_id(0); Drow < Nrow;
+for(Drow = get_global_id(0); Drow < Nrow;
     Drow += get_global_size(0)){
 
-    for(Dcol=get_global_id(1); DcolBlock < Ncol; 
+    for(Dcol = get_global_id(1); Dcol < Ncol; 
         Dcol += get_global_size(1)){
 
         temp = fact * clrngMrg31k3pNextState(g1, g2);
@@ -249,7 +272,7 @@ R> as.vector(clrng::runif(n = 6, streams = myStreamsGpu2, Nglobal = c(2,
 +    2)))
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 0.735 0.842 0.614 0.216 0.110 0.870
+## [1] 0.417 0.298 0.193 0.778 0.953 0.856
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -372,7 +395,7 @@ R> system.time(clrng::rnorm(c(10000, 10000), streams = streams,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.045   0.004   0.048
+##   0.048   0.004   0.052
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -394,14 +417,15 @@ The exponential random variates are produced by applying the inverse transform m
 Below is an example that produces a $2 \times 4$ matrix of Exponential random numbers with expectation equal to 1.
 \begin{CodeChunk}
 \begin{CodeInput}
-R> r_matrix <- clrng::rexp(c(2, 4), rate = 1, Nglobal = c(2,
+R> streams <- createStreamsGpu(4)
+R> r_matrix <- clrng::rexp(c(2, 4), rate = 1, streams, Nglobal = c(2,
 +    2), type = "double")
 R> as.matrix(r_matrix)
 \end{CodeInput}
 \begin{CodeOutput}
-##        [,1]  [,2]  [,3]  [,4]
-## [1,] 0.1187 0.187 1.079 0.112
-## [2,] 0.0501 0.369 0.411 1.880
+##       [,1]   [,2] [,3]    [,4]
+## [1,] 0.479 0.6886  1.2 0.62493
+## [2,] 0.721 0.0265  2.3 0.00598
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -491,7 +515,7 @@ R> system.time(result_month <- clrng::fisher.sim(month_gpu, 1000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.316   0.001   0.318
+##   0.313   0.008   0.320
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_month$threshold
@@ -509,13 +533,13 @@ R> result_month$simNum
 R> result_month$counts
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 409435
+## [1] 410423
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_month$p.value
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 0.403
+## [1] 0.404
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -578,7 +602,7 @@ R> system.time(result_week <- clrng::fisher.sim(week_GPU, 10000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##    1.95    0.01    1.95
+##   1.936   0.013   1.949
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_week$threshold
@@ -596,13 +620,13 @@ R> result_week$simNum
 R> result_week$counts
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 1351
+## [1] 1303
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_week$p.value
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 0.000135
+## [1] 0.00013
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -811,7 +835,7 @@ R> diagMat = gpuBatchMatrix::cholBatch(maternCov, Nglobal = c(128,
 Step 5, create some streams on GPU to generate two standard Gaussian random vectors \code{zmatGpu}$=(Z_1, Z_2)$ using \fct{clrng::rnorm}, in which \code{c(nrow(materCov),2)} specifies the number of rows and columns of \code{zmatGpu}.
 \begin{CodeChunk}
 \begin{CodeInput}
-R> streamsGpu <- createStreamsGpu(n = 128 * 64)
+R> streamsGpu <- createStreamsGpu(128 * 64)
 \end{CodeInput} 
 \end{CodeChunk} 
 
