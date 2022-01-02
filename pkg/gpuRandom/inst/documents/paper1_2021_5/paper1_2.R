@@ -28,21 +28,22 @@ setContext(   grep('gpu', listContexts()$device_type) [1]    )
 ## Section 2.1
 # Creating streams on CPU
 library("clrng")
-myStreamsCpu <- createStreamsCpu(n=4, initial=12345)
+setBaseCreator(c(111,222,333,444,555,666))
+myStreamsCpu <- createStreamsCpu(4)
 t(myStreamsCpu)
 
 # Creating streams on GPU
-myStreamsGpu = vclMatrix(myStreamsCpu)
-myStreamsGpu2 = createStreamsGpu(n=4, initial=12345)
+#myStreamsGpu = vclMatrix(myStreamsCpu)
+myStreamsGpu2 = createStreamsGpu(4)
 
 ## Section 2.2
 # Generate 6 i.i.d. U (0,1) random numbers
-as.vector(clrng::runif(n=6, streams=myStreamsGpu, Nglobal=c(2,2)))
+as.vector(clrng::runif(n=6, streams=myStreamsGpu2, Nglobal=c(2,2)))
 
 # Save streams on CPU
-saveRDS(as.matrix(createStreamsGpu(n=4)), "myStreams.rds")
+# saveRDS(as.matrix(createStreamsGpu(n=4)), "myStreams.rds")
 # Load the streams object and transfer it to GPU
-streams_saved <- vclMatrix(readRDS("myStreams.rds"))
+# streams_saved <- vclMatrix(readRDS("myStreams.rds"))
 
 ## Section 3.1
 # Generate a large matrix of normal random numbers, test the run time
@@ -53,7 +54,7 @@ system.time(matrix(stats::rnorm(10000^2),10000,10000))
 
 ## Section 3.2
 # Generate exponential random numbers
-r_matrix <- clrng::rexp(c(2,4), rate=1, Nglobal=c(2,2), type="double")
+r_matrix <- clrng::rexp(c(2,4), rate=1, myStreamsGpu2, Nglobal=c(2,2), type="double")
 as.matrix(r_matrix)
 
 
@@ -66,7 +67,7 @@ kable(month, format = "markdown", caption = "Monthly birth anomaly data")
 
 
 # using GPU
-streams <- createStreamsGpu(n =256*64, initial=666)
+streams <- createStreamsGpu(n =256*64)
 month_gpu<-vclMatrix(month,type="integer")
 system.time(result_month <- clrng::fisher.sim(month_gpu, 1e6, streams=streams,
                                               type="double", returnStatistics=TRUE,  Nglobal = c(256,64)))
@@ -186,15 +187,13 @@ zmatGpu = clrng::rnorm(
 
 
 # L*D*Z
-simMat = vclMatrix(0, nrow(zmatGpu), ncol(zmatGpu), 
-                   type = gpuR::typeof(zmatGpu))
-
-gpuBatchMatrix::multiplyLowerDiagonalBatch(
-  output=simMat, L=maternCov, 
-  D=diagMat, B=zmatGpu,
-  diagIsOne = TRUE,   
-  transformD = "sqrt", 
-  Nglobal, Nlocal, NlocalCache)
+simMat = gpuBatchMatrix::multiplyLowerDiagonalBatch(maternCov, 
+                diagMat, zmatGpu,
+                diagIsOne = TRUE,   
+                transformD = "sqrt", 
+                Nglobal=c(128, 64, 2), 
+                Nlocal= c(8, 2, 1), 
+                NlocalCache=1000)
 
 
 # plot Setup

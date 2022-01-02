@@ -431,8 +431,7 @@ The exponential random variates are produced by applying the inverse transform m
 
 Below is an example that produces a $2 \times 4$ matrix of Exponential random numbers with expectation equal to 1.
 <<random exponential, eval=TRUE, cache=FALSE>>=
-streams <- createStreamsGpu(4)
-r_matrix <- clrng::rexp(c(2,4), rate=1, streams, Nglobal=c(2,2), type="double")
+r_matrix <- clrng::rexp(c(2,4), rate=1, myStreamsGpu2, Nglobal=c(2,2), type="double")
 as.matrix(r_matrix)
 @
 The arguments of the \fct{clrng::rexp} are described as follows:
@@ -641,8 +640,6 @@ The downside of this method is that it's computationally expensive and is thus v
 
 \subsection{Simulating Gaussian random fields with Mat\'ern covariances}
 <<setupData, eval=TRUE,echo=TRUE, message=FALSE>>=
-library("gpuR")
-library("clrng")
 library("gpuBatchMatrix")
 library('geostatsp')
 @
