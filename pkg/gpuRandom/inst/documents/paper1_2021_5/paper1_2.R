@@ -28,12 +28,13 @@ setContext(   grep('gpu', listContexts()$device_type) [1]    )
 ## Section 2.1
 # Creating streams on CPU
 library("clrng")
-setBaseCreator(c(111,222,333,444,555,666))
+setBaseCreator(rep(12345,6))
 myStreamsCpu <- createStreamsCpu(4)
 t(myStreamsCpu)
 
 # Creating streams on GPU
 #myStreamsGpu = vclMatrix(myStreamsCpu)
+rm(myStreamsCpu)
 myStreamsGpu2 = createStreamsGpu(4)
 
 ## Section 2.2
@@ -41,7 +42,7 @@ myStreamsGpu2 = createStreamsGpu(4)
 as.vector(clrng::runif(n=6, streams=myStreamsGpu2, Nglobal=c(2,2)))
 
 # Save streams on CPU
-# saveRDS(as.matrix(createStreamsGpu(n=4)), "myStreams.rds")
+# saveRDS(as.matrix(myStreamsGpu2), "myStreams.rds")
 # Load the streams object and transfer it to GPU
 # streams_saved <- vclMatrix(readRDS("myStreams.rds"))
 
@@ -188,12 +189,12 @@ zmatGpu = clrng::rnorm(
 
 # L*D*Z
 simMat = gpuBatchMatrix::multiplyLowerDiagonalBatch(maternCov, 
-                diagMat, zmatGpu,
-                diagIsOne = TRUE,   
-                transformD = "sqrt", 
-                Nglobal=c(128, 64, 2), 
-                Nlocal= c(8, 2, 1), 
-                NlocalCache=1000)
+                                                    diagMat, zmatGpu,
+                                                    diagIsOne = TRUE,   
+                                                    transformD = "sqrt", 
+                                                    Nglobal=c(128, 64, 2), 
+                                                    Nlocal= c(8, 2, 1), 
+                                                    NlocalCache=1000)
 
 
 # plot Setup
@@ -213,8 +214,6 @@ for(D in names(simRaster)) {
   plot(swissBorder, add=TRUE)
 }
 mapmisc::legendBreaks("right", myCol, inset=0)
-
-
 
 
 
