@@ -233,6 +233,7 @@ myStreamsGpu = vclMatrix(myStreamsCpu)
 @
 Equivalently, \fct{createStreamsGpu} creates streams directly on the GPU and returns a `\code{vclMatrix}', which makes it slightly more efficient when the number of streams is large.
 <<createStreams_Gpu2>>=
+rm(myStreamsCpu)
 myStreamsGpu2 = createStreamsGpu(4)
 @
 %Users should run either \fct{createStreamsCpu} or \fct{createStreamsGpu} at the beginning of a task and retain these streams for all of the random number generation the task requires.  Creating new streams with different initial states introduces the very small possibility of overlap between the original and new streams. If an \proglang{R} session is restarted during a task, perhaps because a preliminary analysis is done following an initial set of simulations and the full set of simulations continued at a later date, the state of the streams should be transferred to the CPU and saved to disk.  The `\code{initial}' argument to the stream creator should be used with caution and we recommend using the default.  It bears repeating that two sets of streams with different initial states may produce overlapping numbers, the probability is small but increases when the number of streams is large.
@@ -251,7 +252,7 @@ There are a few important notes on the usage of these above functions. (1), User
 
 \subsection{Generating uniform random numbers}
 
-The streams created sequentially are used by work-items on a GPU (the GPU analogy of CPU cores) to generate random numbers. In \pkg{clrng} each work-item takes one distinct stream to generate random numbers, so the number of streams should always be at least the number of total work-items in use. The main part of the kernel (functions for execution on the GPU) for generating uniform random numbers is shown in Listing \ref{lst:uniformkernel}. Kernels are written in the \proglang{C}-like \proglang{OpenCL} language, in which \code{__kernel} declares a function as a kernel, and the \code{__global} prefix to the pointer kernel arguments specifies that they point to global memory space accessible to all work items.  Users can set the argument \code{verbose=2} in the random number generator to print out the kernel, which is slightly more complex than the code in Listing \ref{lst:uniformkernel}. 
+The streams created sequentially are used by work-items (the GPU analogy of CPU cores) on a GPU to generate random numbers. In \pkg{clrng} each work-item takes one distinct stream to generate random numbers, so the number of streams should always be at least the number of total work-items in use. The main part of the kernel (functions for execution on the GPU) for generating uniform random numbers is shown in Listing \ref{lst:uniformkernel}. Kernels are written in the \proglang{C}-like \proglang{OpenCL} language, in which \code{__kernel} declares a function as a kernel, and the \code{__global} prefix to the pointer kernel arguments specifies that they point to global memory space accessible to all work items.  Users can set the argument \code{verbose=2} in the random number generator to print out the kernel, which is slightly more complex than the code in Listing \ref{lst:uniformkernel}. 
   
 Here the pointers \code{streams} and \code{out} refer to the streams and the  output matrix respectively, which are stored in global memory. \code{Nrow} and \code{Ncol} represent row and column number of the matrix \code{out} respectively.   \code{Npad} is the "internal" number of columns, and \code{out} is an \code{Nrow} by \code{Ncol} submatrix of a larger \code{Nrow} by \code{Npad} matrix.
 
@@ -270,7 +271,8 @@ __kernel void mrg31k3pMatrix(
 int Drow, Dcol;
 uint g1[3], g2[3];
 double temp, fact = mrg31k3p_NORM_cl;
-const int startvalue = (get_global_id(0) + get_global_size(0) * get_global_id(1)) * NpadStreams;
+const int startvalue = (get_global_id(0) + 
+get_global_size(0) * get_global_id(1)) * NpadStreams;
 
 streamsToPrivate(streams,g1,g2,startvalue);
 
@@ -318,9 +320,9 @@ Reusing \code{myStreamsGpu} will produce a vector different from \code{sim_1}. B
 <<eval=FALSE,tidy=TRUE, include=FALSE>>=
 t(matrix(as.matrix(myStreamsGpu), nrow(myStreamsCpu), ncol(myStreamsCpu), dimnames = dimnames(myStreamsCpu)))
 @
-Unlike the objects created by \proglang{R}, by default they remain in the memory after a restart. Streams created on GPU does not remain in the memory when a new \proglang{R} session begins. However, we can save the streams' current states and initial states in matrix form on the CPU in a file using the \fct{saveRDS} function, and later recall the streams with the \fct{readRDS} function, the streams will restart from the current states after they are reloaded. In this way we can reproduce the exact same sequence of random numbers in simulations. Below is the code that saves streams to a data file called \code{streams_from_GPU.rds} on CPU and then load it back and transfer it to GPU.
+Unlike the objects created by \proglang{R}, by default they remain in the memory after a restart. Streams created on GPU does not remain in the memory when a new \proglang{R} session begins. However, we can save the streams' current states and initial states in matrix form on the CPU in a file using the \fct{saveRDS} function, and later recall the streams with the \fct{readRDS} function, the streams will start from the current states after they are loaded. In this way we can reproduce the exact same sequence of random numbers in simulations. Below is the code that saves streams to a data file called \code{streams_from_GPU.rds} on CPU and then load it back and transfer it to GPU.
 <<save streams,echo=TRUE,eval=FALSE>>=
-saveRDS(as.matrix(createStreamsGpu(n=4)), "myStreams.rds")
+saveRDS(as.matrix(myStreamsGpu2), "myStreams.rds")
 # Load the streams object as streams_saved
 streams_saved <- vclMatrix(readRDS("myStreams.rds"))
 @
