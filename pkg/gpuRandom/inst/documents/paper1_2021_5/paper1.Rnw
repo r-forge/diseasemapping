@@ -208,12 +208,12 @@ The state (and seed) of each stream is a vector of six 31-bit integers. This siz
 
 
 %The function \fct{clrngMrg31k3pCreateStreams} from \proglang{clRNG} creates streams on the host using the MRG31k3p RNG. If we want to use the streams in work-items on a GPU device, the streams have to be copied from the host to the global memory of the GPU device, and then each work-item copies the current states only of the streams to its private memory. 
-\pkg{clrng} is able to create streams both on the host and on the GPU device. The \fct{createStreamsCpu} function does the former. The \proglang{R} output below creates 4 streams on the host. 
+\fct{setBaseCreator} sets the initial seed of the package, it plays a role in \pkg{clrng} like the function \fct{SetPackageSeed} in \pkg{RngStreams} and \fct{clrngSetBaseCreatorState} in \pkg{clRNG}. \pkg{clrng} is able to create streams both on the host and on the GPU device. The \fct{createStreamsCpu} function does the former. The \proglang{R} output below creates 4 streams on the host. 
 %is an interface function of \fct{clrngMrg31k3pCreateStreams} that creates streams on host as \proglang{R} matrices, see the \proglang{R} output below, where we created 4 streams on the host using \fct{createStreamsCpu}, after transposing \code{myStreamsCpu}, each column of the matrix is a stream, creating streams on host makes it easy for us to view and check the streams behavior. Substreams are not created in \pkg{clrng} because currently we use one stream per work-item. 
 <<createStreams_CPU, message=FALSE>>=
 # creating streams on CPU
 library("clrng")
-setBaseCreator(c(111,222,333,444,555,666))
+setBaseCreator(rep(12345,6))
 myStreamsCpu <- createStreamsCpu(4)
 t(myStreamsCpu)
 @
@@ -235,11 +235,8 @@ Equivalently, \fct{createStreamsGpu} creates streams directly on the GPU and ret
 <<createStreams_Gpu2>>=
 myStreamsGpu2 = createStreamsGpu(4)
 @
-
-
 %Users should run either \fct{createStreamsCpu} or \fct{createStreamsGpu} at the beginning of a task and retain these streams for all of the random number generation the task requires.  Creating new streams with different initial states introduces the very small possibility of overlap between the original and new streams. If an \proglang{R} session is restarted during a task, perhaps because a preliminary analysis is done following an initial set of simulations and the full set of simulations continued at a later date, the state of the streams should be transferred to the CPU and saved to disk.  The `\code{initial}' argument to the stream creator should be used with caution and we recommend using the default.  It bears repeating that two sets of streams with different initial states may produce overlapping numbers, the probability is small but increases when the number of streams is large.
-
-There are a few important notes on the usage of these functions. (1), Users should run the function \fct{setBaseCreator} once at the very beginning of a \proglang{R} session if they would like to choose their own initial seeds. If \fct{setBaseCreator} is not called before \fct{createStreamsCpu} or \fct{createStreamsGpu}, then streams take the package's default initial seed. (2), Users may choose either \fct{createStreamsCpu} or \fct{createStreamsGpu} to run and must stick with that choice for their entire program, switching between \fct{createStreamsCpu} and \fct{createStreamsGpu} in the same program results in creating some of the streams twice.  A newly created stream should not have the same seed as another existing stream, just like when you create a new car, it must have a distinct serial number. Streams should be created only once, and moved or copied if needed. 
+There are a few important notes on the usage of these above functions. (1), Users should run \fct{setBaseCreator} once at the very beginning of a \proglang{R} session if they would like to choose their own initial seeds. If \fct{setBaseCreator} is not called before \fct{createStreamsCpu} or \fct{createStreamsGpu}, then streams take the package's default initial seed. (2), Users may choose either \fct{createStreamsCpu} or \fct{createStreamsGpu} to create streams and must stick with that choice for their entire program, switching between \fct{createStreamsCpu} and \fct{createStreamsGpu} in the same program is very likely to create some streams twice.  A newly created stream should not have the same seed as another existing stream, just like when you create a new car, it must have a distinct serial number. Streams should be created only once, and moved or copied if needed. And also it causes unnecessary data transfer between host and device if users switch often between \fct{createStreamsCpu} and \fct{createStreamsGpu}.
 
 
 %However, any data is lost when the \proglang{R} session is terminated. %\fct{createStreamsGpu} is adapted from the clrngMrg31k3pCreateStreams() and creates streams directly on a GPU device. Setting a seed same as the MRG31k3p default seed in \fct{createStreamsGpu}, we produce on device exactly the same streams as those created on host as follows. Notice that the code is just for showing \fct{createStreamsGpu} and \fct{createStreamsCpu} are \proglang{R} interface functions for \fct{clrngMrg31k3pCreateStreams} on GPU and CPU respectively, in practice it is not recommended to create a new stream that has the same initial seed as another existing stream in one simulation program.

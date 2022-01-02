@@ -146,30 +146,30 @@ The state (and seed) of each stream is a vector of six 31-bit integers. This siz
 
 
 %The function \fct{clrngMrg31k3pCreateStreams} from \proglang{clRNG} creates streams on the host using the MRG31k3p RNG. If we want to use the streams in work-items on a GPU device, the streams have to be copied from the host to the global memory of the GPU device, and then each work-item copies the current states only of the streams to its private memory. 
-\pkg{clrng} is able to create streams both on the host and on the GPU device. The \fct{createStreamsCpu} function does the former. The \proglang{R} output below creates 4 streams on the host. 
+\fct{setBaseCreator} sets the initial seed of the package, it plays a role in \pkg{clrng} like the function \fct{SetPackageSeed} in \pkg{RngStreams} and \fct{clrngSetBaseCreatorState} in \pkg{clRNG}. \pkg{clrng} is able to create streams both on the host and on the GPU device. The \fct{createStreamsCpu} function does the former. The \proglang{R} output below creates 4 streams on the host. 
 %is an interface function of \fct{clrngMrg31k3pCreateStreams} that creates streams on host as \proglang{R} matrices, see the \proglang{R} output below, where we created 4 streams on the host using \fct{createStreamsCpu}, after transposing \code{myStreamsCpu}, each column of the matrix is a stream, creating streams on host makes it easy for us to view and check the streams behavior. Substreams are not created in \pkg{clrng} because currently we use one stream per work-item. 
 \begin{CodeChunk}
 \begin{CodeInput}
 R> # creating streams on CPU
 R> library("clrng")
-R> setBaseCreator(c(111, 222, 333, 444, 555, 666))
+R> setBaseCreator(rep(12345, 6))
 R> myStreamsCpu <- createStreamsCpu(4)
 R> t(myStreamsCpu)
 \end{CodeInput}
 \begin{CodeOutput}
-##              [,1]       [,2]       [,3]       [,4]
-## current.g1.1  111  272931565 1097663848  628119774
-## current.g1.2  222  750526866  712444468  211319804
-## current.g1.3  333 1340941094  522805545  147140763
-## current.g2.1  444 1101709871  362320065 1665200176
-## current.g2.2  555 1485736734 1950619531  892386138
-## current.g2.3  666  375100068 1839101248  734766081
-## initial.g1.1  111  272931565 1097663848  628119774
-## initial.g1.2  222  750526866  712444468  211319804
-## initial.g1.3  333 1340941094  522805545  147140763
-## initial.g2.1  444 1101709871  362320065 1665200176
-## initial.g2.2  555 1485736734 1950619531  892386138
-## initial.g2.3  666  375100068 1839101248  734766081
+##               [,1]       [,2]       [,3]       [,4]
+## current.g1.1 12345  336690377  502033783  739421137
+## current.g1.2 12345  597094797 1322587635 1475938232
+## current.g1.3 12345 1245771585 1964121530  730262207
+## current.g2.1 12345   85196284 1949818481 1630192198
+## current.g2.2 12345  523477687 1607232546  324551134
+## current.g2.3 12345 2094976052 1462898381  795289868
+## initial.g1.1 12345  336690377  502033783  739421137
+## initial.g1.2 12345  597094797 1322587635 1475938232
+## initial.g1.3 12345 1245771585 1964121530  730262207
+## initial.g2.1 12345   85196284 1949818481 1630192198
+## initial.g2.2 12345  523477687 1607232546  324551134
+## initial.g2.3 12345 2094976052 1462898381  795289868
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -197,11 +197,8 @@ R> myStreamsGpu2 = createStreamsGpu(4)
 \end{CodeInput} 
 \end{CodeChunk} 
 
-
-
 %Users should run either \fct{createStreamsCpu} or \fct{createStreamsGpu} at the beginning of a task and retain these streams for all of the random number generation the task requires.  Creating new streams with different initial states introduces the very small possibility of overlap between the original and new streams. If an \proglang{R} session is restarted during a task, perhaps because a preliminary analysis is done following an initial set of simulations and the full set of simulations continued at a later date, the state of the streams should be transferred to the CPU and saved to disk.  The `\code{initial}' argument to the stream creator should be used with caution and we recommend using the default.  It bears repeating that two sets of streams with different initial states may produce overlapping numbers, the probability is small but increases when the number of streams is large.
-
-There are a few important notes on the usage of these functions. (1), Users should run the function \fct{setBaseCreator} once at the very beginning of a \proglang{R} session if they would like to choose their own initial seeds. If \fct{setBaseCreator} is not called before \fct{createStreamsCpu} or \fct{createStreamsGpu}, then streams are created using the package's default initial seed. (2), Users may choose either \fct{createStreamsCpu} or \fct{createStreamsGpu} to run and must stick with that choice for their entire program, switching between \fct{createStreamsCpu} and \fct{createStreamsGpu} in the same program will create some of the streams twice.  When you create a new stream, it should not have the same seed as another existing stream, just like when you create a new car, it must have a distinct serial number. Streams should be created only once, and moved or copied if needed. 
+There are a few important notes on the usage of these above functions. (1), Users should run \fct{setBaseCreator} once at the very beginning of a \proglang{R} session if they would like to choose their own initial seeds. If \fct{setBaseCreator} is not called before \fct{createStreamsCpu} or \fct{createStreamsGpu}, then streams take the package's default initial seed. (2), Users may choose either \fct{createStreamsCpu} or \fct{createStreamsGpu} to create streams and must stick with that choice for their entire program, switching between \fct{createStreamsCpu} and \fct{createStreamsGpu} in the same program is very likely to create some streams twice.  A newly created stream should not have the same seed as another existing stream, just like when you create a new car, it must have a distinct serial number. Streams should be created only once, and moved or copied if needed. And also it causes unnecessary data transfer between host and device if users switch often between \fct{createStreamsCpu} and \fct{createStreamsGpu}.
 
 
 %However, any data is lost when the \proglang{R} session is terminated. %\fct{createStreamsGpu} is adapted from the clrngMrg31k3pCreateStreams() and creates streams directly on a GPU device. Setting a seed same as the MRG31k3p default seed in \fct{createStreamsGpu}, we produce on device exactly the same streams as those created on host as follows. Notice that the code is just for showing \fct{createStreamsGpu} and \fct{createStreamsCpu} are \proglang{R} interface functions for \fct{clrngMrg31k3pCreateStreams} on GPU and CPU respectively, in practice it is not recommended to create a new stream that has the same initial seed as another existing stream in one simulation program.
@@ -272,7 +269,7 @@ R> as.vector(clrng::runif(n = 6, streams = myStreamsGpu2, Nglobal = c(2,
 +    2)))
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 0.417 0.298 0.193 0.778 0.953 0.856
+## [1] 0.735 0.842 0.614 0.216 0.110 0.870
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -395,7 +392,7 @@ R> system.time(clrng::rnorm(c(10000, 10000), streams = streams,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.048   0.004   0.052
+##   0.050   0.000   0.051
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -417,15 +414,14 @@ The exponential random variates are produced by applying the inverse transform m
 Below is an example that produces a $2 \times 4$ matrix of Exponential random numbers with expectation equal to 1.
 \begin{CodeChunk}
 \begin{CodeInput}
-R> streams <- createStreamsGpu(4)
-R> r_matrix <- clrng::rexp(c(2, 4), rate = 1, streams, Nglobal = c(2,
-+    2), type = "double")
+R> r_matrix <- clrng::rexp(c(2, 4), rate = 1, myStreamsGpu2,
++    Nglobal = c(2, 2), type = "double")
 R> as.matrix(r_matrix)
 \end{CodeInput}
 \begin{CodeOutput}
-##       [,1]   [,2] [,3]    [,4]
-## [1,] 0.479 0.6886  1.2 0.62493
-## [2,] 0.721 0.0265  2.3 0.00598
+##       [,1] [,2] [,3]  [,4]
+## [1,] 0.433 2.20 1.00 0.689
+## [2,] 1.770 1.13 1.48 1.205
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -515,7 +511,7 @@ R> system.time(result_month <- clrng::fisher.sim(month_gpu, 1000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.313   0.008   0.320
+##   0.311   0.006   0.317
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_month$threshold
@@ -533,13 +529,13 @@ R> result_month$simNum
 R> result_month$counts
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 410423
+## [1] 409429
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_month$p.value
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 0.404
+## [1] 0.403
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -602,7 +598,7 @@ R> system.time(result_week <- clrng::fisher.sim(week_GPU, 10000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   1.936   0.013   1.949
+##   1.940   0.013   1.951
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_week$threshold
@@ -620,13 +616,13 @@ R> result_week$simNum
 R> result_week$counts
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 1303
+## [1] 1350
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_week$p.value
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 0.00013
+## [1] 0.000135
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -747,8 +743,6 @@ The downside of this method is that it's computationally expensive and is thus v
 \subsection{Simulating Gaussian random fields with Mat\'ern covariances}
 \begin{CodeChunk}
 \begin{CodeInput}
-R> library("gpuR")
-R> library("clrng")
 R> library("gpuBatchMatrix")
 R> library("geostatsp")
 \end{CodeInput} 
