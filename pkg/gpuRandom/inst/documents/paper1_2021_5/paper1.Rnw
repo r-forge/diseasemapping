@@ -45,7 +45,7 @@ options(scipen=999)
 
 <<setup, cache=FALSE,include=FALSE>>=
 library('knitr')
-options(continue="+  ",  prompt="R> ", digits=3, width=57) 
+options(continue="+  ",  prompt="R> ", digits=3, width=60) 
 
 opts_chunk$set(echo=TRUE,fig.path='Figures/G', fig.height=3,
                 fig.width=4.5,dev='png',tidy=TRUE,fig.align='center',
