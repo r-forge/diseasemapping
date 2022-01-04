@@ -177,7 +177,7 @@
                     )
      
   }else{
-    Output <- list(paramsRenew = paramsRenew,
+    Output <- list(paramsRenew = paramsRenew,  # deleted Na
                    Infindex = selected_rows,
                    Nobs = Nobs,
                    Ncov = Ncov,
@@ -240,7 +240,7 @@
    
    ############## output matrix ####################
    Table <- matrix(NA, nrow=length(union(paramToEstimate, 'boxcox'))+Ncov+1, ncol=3)
-   rownames(Table) <-  c(predictors, "sdSpatial", union(paramToEstimate, 'boxcox'))
+   rownames(Table) <-  c(predictors, "sdSpatial", union(paramToEstimate, 'boxcox'), 'sdNugget')
    colnames(Table) <-  c("estimate", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
    
    
@@ -254,6 +254,17 @@
      par(mfrow = c(2, 3))
    }
   
+   
+   index <- which(LogLik == max(LogLik, na.rm = TRUE), arr.ind = TRUE)
+   #################sigma hat#########################
+   if(reml==FALSE)  {
+     Table["sdSpatial",1] <- sqrt(ssqResidual[index[1],index[2]]/Nobs)
+   }else{         
+     Table["sdSpatial",1] <- sqrt(ssqResidual[index[1],index[2]]/(Nobs - Ncov))
+   }
+   
+   params$sdNugget <- sqrt(params[,"nugget"]) * Table["sdSpatial",1]
+   
    ############### profile for covariance parameters #####################
    if('range' %in% paramToEstimate){
      # get profile log-lik for range values
@@ -328,6 +339,41 @@
    
    
    
+   if('sdNugget' %in% paramToEstimate){
+     result = as.data.table(cbind(LogLik, params[,"sdNugget"]))
+     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "sdNugget")
+     profileLogLik <-result[, .(profile=max(.SD)), by=sdNugget]
+     plot(profileLogLik$sdNugget, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='sdNugget')
+     f1 <- approxfun(profileLogLik$sdNugget, profileLogLik$profile-breaks)  
+     # f1 <- splinefun(profileLogLik$sdNugget, profileLogLik$profile-breaks, method = "monoH.FC")
+     curve(f1, add = TRUE, col = 2, n=1001) 
+     abline(h =0, lty = 2)
+     #myplots[['sdNugget']] <- plot.sdNugget
+     # sdNuggetresults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
+     lower = min(profileLogLik$sdNugget)
+     upper = max(profileLogLik$sdNugget)
+     MLE <-  optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+     # maxvalue <- sdNuggetresults$objective
+     # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
+     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+     if(length(ci)==1){
+       if( ci > MLE){
+         ci <- c(lower, ci)
+         message("did not find lower ci for sdNugget")
+       }else{
+         ci <- c(ci, upper)
+         message("did not find upper ci for sdNugget")}
+     }
+     
+     if(length(ci)==0 | length(ci)>2){
+       warning("require a better param matrix")
+       ci <- c(NA, NA)
+     }
+     Table["sdNugget",] <- c(MLE, ci)
+     
+   }
+   
+   
    
    if('nugget' %in% paramToEstimate){
      result = as.data.table(cbind(LogLik, params[,"nugget"]))
@@ -360,7 +406,6 @@
        ci <- c(NA, NA)
      }
      Table["nugget",] <- c(MLE, ci)
-     
    }
    
    
@@ -481,7 +526,6 @@
    
    
    
-   index <- which(LogLik == max(LogLik, na.rm = TRUE), arr.ind = TRUE)
    ###############lambda hat#####################
    if(('boxcox'%in% paramToEstimate)  & length(boxcox)>5 ){
      likForboxcox = cbind(boxcox, apply(LogLik, 2,  max) )
@@ -526,13 +570,7 @@
    Betahat <- solve(mat) %*% XVYXVX[a,index[2]]
    
    Table[predictors, 1] <- Betahat
-   #################sigma hat#########################
-   
-   if(reml==FALSE)  {
-     Table["sdSpatial",1] <- sqrt(ssqResidual[index[1],index[2]]/Nobs)
-   }else{         
-     Table["sdSpatial",1] <- sqrt(ssqResidual[index[1],index[2]]/(Nobs - Ncov))
-   }
+
    
    
    
