@@ -45,7 +45,7 @@ options(scipen=999)
 
 <<setup, cache=FALSE,include=FALSE>>=
 library('knitr')
-options(continue="+  ",  prompt="R> ", digits=3, width=60) 
+options(continue="+  ",  prompt="R> ", digits=3, width=58) 
 
 opts_chunk$set(echo=TRUE,fig.path='Figures/G', fig.height=3,
                 fig.width=4.5,dev='png',tidy=TRUE,fig.align='center',
@@ -121,9 +121,14 @@ library("MASS")
 
 
 \Abstract{
-We introduce the \proglang{R} package \pkg{clrng} which leverages the \pkg{gpuR} package to generate random numbers on a Graphics Processing Unit (GPU) with the \pkg{clRNG} (OpenCL) library. Parallel processing with GPU's can speed up computationally intensive tasks, which when combined with \proglang{R}, it can largely improve \proglang{R}’s downsides in terms of slow speed, memory usage and computation mode.  %There is currently no \proglang{R} package that does random number generation on GPU, while random number generation is critical in simulation-based statistical inference and modeling. 
-\pkg{clrng} enables reproducible research by setting random streams on GPU and can thus accelerate several types of simulation and modelling. This package is portable and flexible, developers can use its random number generation kernel for various other purposes and applications. 
+We introduce the \proglang{R} package \pkg{clrng} which leverages the \pkg{gpuR} package and is able to generate random numbers in parallel on a Graphics Processing Unit (GPU) with the \pkg{clRNG} (OpenCL) library.  Parallel processing with GPU's can speed up computationally intensive tasks, which when combined with \proglang{R}, it can largely improve \proglang{R}’s downsides in terms of slow speed, memory usage and computation mode.  
+%There is currently no \proglang{R} package that does random number generation on GPU, while random number generation is critical in simulation-based statistical inference and modeling. 
+\pkg{clrng} enables reproducible research by setting random initial seeds for streams on GPU and CPU, and can thus accelerate several types of statistical simulation and modelling. 
+The random number generator in \pkg{clrng} guarantees independent parallel samples even when \proglang{R} is used interactively in an ad-hoc manner, with sessions being interrupted and restored. This package is portable and flexible, developers can use its random number generation kernel for various other purposes and applications.  
 }
+
+
+
 
 
 \Keywords{GPU, \pkg{clrng} package, parallel computing, \pkg{clRNG} library}
@@ -167,8 +172,8 @@ Graphics Processing Units (GPUs) have the potential to make an important contrib
 Random number generation is critical in simulation-based statistical inference, machine learning and many other scientific fields. While most random number generators are sequential, the \proglang{R} packages \pkg{parallel}, \pkg{future} \citep*{future1.19.1} and \pkg{rlecuyer} \citep{sevcikova2015package} are able to generate random numbers in parallel on multicore CPUs. More specifically, \pkg{parallel} writes an interface for the \pkg{RngStreams}, a \proglang{\texttt{C++}} library by \cite{l2002object} which is based on a combined multiple-recursive generator (MRG) MRG32k3a. \pkg{future} and \pkg{rlecuyer} also uses the combined MRG algorithm for generating random numbers. For up-to-date review papers on the generation of random numbers on parallel devices, and GPUs in particular, see:  \cite{rLEC15a,rLEC17p,rLEC21a}.
 
 
-The \pkg{clrng} package described here is currently the only \proglang{R} package that is able to generate random numbers on GPUs. Accomplishing this is complicated because each process must produce an independent (non-overlapping) sequence of random numbers, and in order to ensure reproducibility it should be possible to save and restore the current state of each stream of random numbers at any point.  Here we introduce the \proglang{R} package \pkg{clrng} that leverages the \pkg{gpuR} package, and can generate random numbers on GPU by using the \proglang{clRNG} \citep{l2015clrng} library in \proglang{OpenCL}, and can thus accelerate several types of statistical simulation and modelling.
-
+The \pkg{clrng} package described here is currently the only \proglang{R} package that provides facilities for generating random numbers in parallel on GPU. Accomplishing this is complicated because each process must produce an independent (non-overlapping) sequence of random numbers, and in order to ensure reproducibility it should be possible to save and restore the current state of each stream of random numbers at any point.  By leveraging the \pkg{gpuR} package, \pkg{clrng} provides an extensible framework for \proglang{R} package developers to make use of these facilities in \proglang{C} or \proglang{OpenCL} code, and the random number generators guarantee independent parallel samples even when \proglang{R} is used interactively in an ad-hoc manner, with sessions being interrupted and restored.
+%and can generate random numbers on GPU by using the \proglang{clRNG} \citep{l2015clrng} library in \proglang{OpenCL}, and can thus accelerate several types of statistical simulation and modelling.
 
 
 The remaining sections are organized as follows:
@@ -228,7 +233,7 @@ t(myStreamsCpu)
   \item \code{n}: number of streams to create.
 \end{itemize}
 We move streams to the GPU by converting them to a `\code{vclMatrix}'.
-<<createStreams_Gpu, eval=FALSE>>=
+<<createStreams_Gpu, eval=TRUE>>=
 myStreamsGpu = vclMatrix(myStreamsCpu)
 @
 Equivalently, \fct{createStreamsGpu} creates streams directly on the GPU and returns a `\code{vclMatrix}', which makes it slightly more efficient when the number of streams is large.
@@ -319,7 +324,7 @@ The arguments of the \fct{clrng::runif} are described as follows:
 %\fct{runif} returns the same sequence of random numbers because it uses the same streams \code{myStreamsGpu} and \code{myStreamsGpu2} here. 
 Reusing \code{myStreamsGpu} will produce a vector different from \code{sim_1}. Because each time a random number is generated, the current state of the stream advances by one position. %Below shows the \code{myStreamsGpu} after it being used.
 <<eval=FALSE,tidy=TRUE, include=FALSE>>=
-t(matrix(as.matrix(myStreamsGpu), nrow(myStreamsCpu), ncol(myStreamsCpu), dimnames = dimnames(myStreamsCpu)))
+t(matrix(as.matrix(myStreamsGpu2), nrow(myStreamsCpu), ncol(myStreamsCpu), dimnames = dimnames(myStreamsCpu)))
 @
 Unlike the objects created by \proglang{R}, by default they remain in the memory after a restart. Streams created on GPU does not remain in the memory when a new \proglang{R} session begins. There are two ways to reproduce results, depending on how the program calls streams creator. The simpler way to reproduce is just to restart the program with the same initial seed for the creator.  But it is important that the program always creates the streams in exactly the same order, for example, like the toy \proglang{R} program for demonstration below, we can reproduce the random matrix \code{sim_mat} just by keeping a record of the initial seed \code{c(11,22,33,44,55,66)}.
 <<showreproduce1, echo=TRUE, eval=FALSE>>=
@@ -438,7 +443,7 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 
 We generate a large-size matrix of 100 million double-precision Gaussian random numbers, and compare the run-time between using \fct{stats::rnorm} and \fct{clrng::rnorm}. The best performance we have seen using \fct{clrng::rnorm} is above 160 times faster with $512 \times 128$ work-items than using the \fct{stats::rnorm}. The difference in elapsed time becomes larger when matrix size goes larger.
 <<random normal time compare, eval=TRUE, cache=FALSE>>=
-streams <- createStreamsGpu(n = 512 * 128)
+streams <- createStreamsGpu(512 * 128)
 system.time(clrng::rnorm(c(10000,10000), streams=streams, Nglobal=c(512,128), type="double"))
 @
 <<random normal time compare2, eval=TRUE, cache=TRUE>>=
@@ -515,7 +520,7 @@ knitr::kable(month,format="latex", align = c("rrrrrrrrrrrr"), #label="tab:month"
   caption = "Monthly birth anomaly data\\label{tab:month}", booktabs=TRUE,linesep = "") %>%
   kable_styling(full_width = F, position = "center")#latex_options = "HOLD_position")
 @
-<<monthDataForScript, include=FALSE, purl=TRUE>>-
+<<monthDataForScript, include=FALSE, purl=TRUE>>=
 knitr::kable(month)
 @
 
