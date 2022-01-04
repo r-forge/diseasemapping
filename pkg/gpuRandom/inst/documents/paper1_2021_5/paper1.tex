@@ -421,13 +421,13 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 We generate a large-size matrix of 100 million double-precision Gaussian random numbers, and compare the run-time between using \fct{stats::rnorm} and \fct{clrng::rnorm}. The best performance we have seen using \fct{clrng::rnorm} is above 160 times faster with $512 \times 128$ work-items than using the \fct{stats::rnorm}. The difference in elapsed time becomes larger when matrix size goes larger.
 \begin{CodeChunk}
 \begin{CodeInput}
-R> streams <- createStreamsGpu(n = 512 * 128)
+R> streams <- createStreamsGpu(512 * 128)
 R> system.time(clrng::rnorm(c(10000, 10000), streams = streams,
 +    Nglobal = c(512, 128), type = "double"))
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.045   0.004   0.049
+##   0.049   0.000   0.048
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -532,9 +532,7 @@ Dec & 23 & 48 & 196 & 31 & 31 & 71 & 31 & 177 & 86 & 86 & 73 & 156\\
 \end{table}
 
 
-<<monthDataForScript, include=FALSE, purl=TRUE>>-
-knitr::kable(month)
-@
+
 
 \begin{CodeChunk}
 \begin{CodeInput}
@@ -546,7 +544,7 @@ R> system.time(result_month <- clrng::fisher.sim(month_gpu, 1000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.320   0.002   0.322
+##   0.319   0.002   0.320
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_month$threshold
@@ -633,7 +631,7 @@ R> system.time(result_week <- clrng::fisher.sim(week_GPU, 10000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   1.949   0.008   1.960
+##   1.942   0.007   1.948
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_week$threshold
