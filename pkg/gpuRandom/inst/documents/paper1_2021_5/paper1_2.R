@@ -33,22 +33,17 @@ myStreamsCpu <- createStreamsCpu(4)
 t(myStreamsCpu)
 
 # Creating streams on GPU
-#myStreamsGpu = vclMatrix(myStreamsCpu)
-rm(myStreamsCpu)
+myStreamsGpu = vclMatrix(myStreamsCpu)
 myStreamsGpu2 = createStreamsGpu(4)
 
 ## Section 2.2
 # Generate 6 i.i.d. U (0,1) random numbers
 as.vector(clrng::runif(n=6, streams=myStreamsGpu2, Nglobal=c(2,2)))
-
-# Save streams on CPU
-# saveRDS(as.matrix(myStreamsGpu2), "myStreams.rds")
-# Load the streams object and transfer it to GPU
-# streams_saved <- vclMatrix(readRDS("myStreams.rds"))
+t(matrix(as.matrix(myStreamsGpu2), nrow(myStreamsCpu), ncol(myStreamsCpu), dimnames = dimnames(myStreamsCpu)))
 
 ## Section 3.1
 # Generate a large matrix of normal random numbers, test the run time
-streams <- createStreamsGpu(n = 512 * 128)
+streams <- createStreamsGpu(512 * 128)
 system.time(clrng::rnorm(c(10000,10000), streams=streams, Nglobal=c(512,128), type="double"))
 system.time(matrix(stats::rnorm(10000^2),10000,10000))
 
