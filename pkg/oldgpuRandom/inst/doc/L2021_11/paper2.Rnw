@@ -57,7 +57,7 @@ opts_chunk$set(fig.height=3,
 
 @
 
-\title{A title}
+\title{Profile likelihoods for geostatsistical models using GPU's}
 \date{}
 
 \author{
@@ -95,6 +95,25 @@ some keypoints to mention:\\
 
 
 \section{Introduction}
+Profile likelihoods are rarely used in geostatistical models due to the computational burden imposed by repeated likelihood evaluations.
+Accounting for uncertainty in covariance parameters can be highly consequential in geostatistical models as some covariance parameters are poorly identified, 
+the problem is severe enough that the differentiability parameter of the Matern correlation function is
+typically treated as fixed.  
+The problem is compounded with anisotropic spatial models as there are two additional parameters to consider.  
+This paper makes the following three contributions:
+
+1- a methodology and software implementation for highly parallel
+computing profile likelihoods on GPU's is presented;
+2- as expected, the profile-based confidence intervals have superior
+coverage to the more standard Wald-type intervals; and
+3- a simulation study shows that despite the inconsistency inherent in
+maximum likelihood estimation of geostatistical models, MLE's of covariance parameters (including the shape parameter) are unbiased and
+credible regions have the desired coverage.
+
+
+
+
+
 1- cI for the betas for the geostapsp package\\
 2- Ci’s using profile likelihoods from gpuBatchMatrix
 … second CI’s will be wider\\
@@ -308,22 +327,29 @@ Compared to the ``ml'' profile log-likelihood given in \eqref{profile}, the effe
 
 
 \subsection{Parameter estimation}
+%The following are two important theorems in likelihood-based inference, which lead to two ways of calculating likelihood-based confidence intervals (CIs). 
+We write $I(\theta)$ for the expected Fisher information, here $\theta$ represents the true parameter value. $I(\hat{\theta})$ is the observed Fisher information evaluated at the MLE of $\theta$.
+\begin{description}[style=unboxed,leftmargin=0cm]
+\item[Wald confidence interval] $\{\hat{\theta} \pm z_{1-\alpha/2} * I(\hat{\theta})^{-1/2}\}$ is a $100(1 - \alpha)\%$ confidence interval for $\theta$, where $z_{1-\alpha/2}$ is the $1-\alpha/2$ percentile of the standard normal distribution.
+
+\item[Likelihood-based confidence interval] $\{\theta: \ell(\theta) \geq \ell(\hat{\theta}) - c_p(\beta)/2 \}$ is asymptotically, a $\beta$-level confidence set for $\theta$, where $c_p(\beta)$ is the $\beta$-quantile of $\chi^2_p$, i.e., $\Pr(\chi^2_p \leq c_p(\beta))=\beta$. 
+\end{description}
+Wald intervals are always symmetric, and computationally much easier than likelihood-based confidence intervals, as quantities need to be calculated are all available from the algorithm used to find the MLEs of the model parameters. However, Wald intervals may include values which are not valid for the parameter in question. And if the likelihood function is not regular (cannot be well approximated by a quadratic function), then the curvature of the log-likelihood at the MLE ($I(\hat{\theta})$) or the standard error is not meaningful, which is often the case for spatial models where the parameter estimate is near a boundary, and the likelihood function is quite flat. In this case, Wald interval is deficient, likelihood ratio based confidence interval is a better and safer choice \cite{pawitan2001all}. For that reason, plotting the profile likelihood function in unfamiliar problems is generally advised.
+
+
+% \begin{theorem}
+% \label{R1}
+% $\hat{\theta}(Y) \sim \MVN(\theta, I(\theta)^{-1})$.
+% \end{theorem}
+% %
+% \begin{theorem}
+% \label{R2}
+% $2\{\ell(\hat\theta(Y); Y)-\ell(\theta;Y) \} \sim \chi^2_p ,$ where $p$ is the dimension of $\theta$.
+% \end{theorem}
 \textit{Geostatsp's methods}\vspace{0.5cm}\\
-The following are two important theorems in likelihood-based inference, which lead to two ways of calculating likelihood-based confidence intervals (CIs). %We write θˆ(y) for an observed value of θˆ and θˆ(Y ) for the corresponding random variable. 
-We write $I(\theta)$ for the expected Fisher's information matrix, and $\theta$ is the true parameter value. 
-\begin{theorem}
-\label{R1}
-$\hat{\theta}(Y) \sim \MVN(\theta, I(\theta)^{-1})$.
-\end{theorem}
-%
-\begin{theorem}
-\label{R2}
-$2\{\ell(\hat\theta(Y); Y)-\ell(\theta;Y) \} \sim \chi^2_p ,$ where $p$ is the dimension of $\theta$.
-\end{theorem}
-The \fct{lgm} function in \pkg{geostatsp} package estimates the correlation parameters $\omega=(\phi,\kappa,\nu^2, \varphi, \psi)$ and the transformation parameter $\lambda$ by maximization of the likelihood. Specifically, \fct{lgm} uses the \textit{optim} function to optimize the equation \eqref{profile} (if \fct{reml}=FALSE)  numerically over $\omega$ and $\lambda$ to find $(\hat{\omega},\hat{\lambda}) = \argmax_{\omega,\lambda} \ell_p(\omega, \lambda; y')$.  \pkg{geostatsp} treats $\hat{\omega}$ and $\hat{\lambda}$ as fixed and back substitute them into \eqref{betahat} and \eqref{eq:4} to obtain the maximum likelihood estimates (MLEs) $\hat{\beta}_{\omega,\lambda}$ and $\hat{{\sigma}}^2_{\omega,\lambda}$. The \fct{optim} function returns the Hessian evaluated at $\hat{\omega}$ and $\hat{\lambda}$.  Conventionally, \fct{lgm} calculates CIs based on Theorem \ref{R1}. The 95\% confidence intervals for each of the parameters are calculated by $\hat{\theta_i} \pm 1.96 \sqrt{\var(\hat{\theta_i})}$, where $\theta_i$ represents any of the parameter in $(\beta,\sigma, \omega,\lambda)$, and  $\var(\hat{\theta}_i)$ is approximated by the diagonals of the inverse of the negative Hessian. This way of lcnaelcac does not take into account of uncertainty in correlation parameters.
+The \fct{lgm} function in \pkg{geostatsp} package estimates the correlation parameters $\omega=(\phi,\kappa,\nu^2, \varphi, \psi)$ and the transformation parameter $\lambda$ by maximization of the likelihood. Specifically, \fct{lgm} uses the \textit{optim} function to optimize the equation \eqref{profile} (if \fct{reml}=FALSE)  numerically over many different sets of $(\omega, \lambda)$ to find $(\hat{\omega},\hat{\lambda}) = \argmax_{\omega,\lambda} \ell_p(\omega, \lambda; y')$.  \pkg{geostatsp} then treats $\hat{\omega}$ and $\hat{\lambda}$ as fixed known parameters and back substitute them into \eqref{betahat} and \eqref{eq:4} to obtain the MLEs $\hat{\beta}_{\omega,\lambda}$ and $\hat{\sigma}^2_{\omega,\lambda}$.  \pkg{geostatsp} calculates Wald confidence intervals for model parameters in \fct{lgm}. The \fct{numderiv} function inside \fct{lgm} returns the Hessian matrix evaluated at $\hat{\omega}$ and $\hat{\lambda}$, the diagonals of the inverse of the negative Hessian is used for approximating the variance of the parameters.This way does not take into account of uncertainty in correlation parameters. \pkg{geostatsp} does the above computation process in \prog{C}, and (ADD LATER!) which has achieved a great perfomance in terms of speed.      
 
-
-There is the other function \fct{profLlgm} in \pkg{geostatsp} that calculates confidence intervals or joint confidence regions based on the likelihood-ratio method \ref{R2}. If $c$ represents the $\beta$-quantile of $\chi^2_p$, i.e., $\Pr(\chi^2_p \leq c)=\beta$, then the set $\{\theta: \ell(\theta) \geq \ell(\hat{\theta}) - c/2 \}$ is asymptotically, a $\beta$-level confidence set for $\theta$. For a fixed $\phi$ value, \fct{optim} evaluates \eqref{profile} for different combinations of $(\kappa,\nu^2, \varphi, \psi)$ and finds the optim Log-likelihood value, repeat this process for a number of $\phi$ values to finally get the profile log-likelihood and MLE of $\phi$.  \fct{profLlgm} runs \fct{optim} a great many of times and thus is very slow.
+The other function \fct{profLlgm} in \pkg{geostatsp} calculates Likelihood-based confidence intervals. \fct{profLlgm} calculates the profile log-likelihood for each of the correlation parameter $\omega$ and $\lambda$, specifically, for estimating for example the range parameter $\phi$, for a fixed value of $\phi$, it uses \fct{optim} to maximize \eqref{profile} over a number of different combinations of $(\kappa,\nu^2, \varphi, \psi)$, and repeat this process for a number of $\phi$ values, and use \fct{approxfun} to get curve of the profile log-likelihood and MLE of $\phi$, then computes the confidence interval based on the profile log-likelihood.  \fct{profLlgm} runs \fct{optim} a great many of times and can be time-consuming.
 
 %We can estimate $\lambda$ by maximization of the likelihood, since $\lambda$ is usually a nuisance parameter, an alternative and more pragmatic approach is to restrict $\lambda$ to a discrete set of values, for example $\{-1, 0, 1/2, 1\}$ \cite{laga2020model}. $\lambda = -1$ (reciprocal), $\lambda = 0$ (logarithm), $\lambda = 1/2$ (square-root) and $\lambda = 1$ (no transformation). 
 
@@ -369,279 +395,23 @@ SHOW ALL LIKELIHOODS PLOT VS BETA'S
 
 
 \subsection{CI’s comparison for model parameters}
-%TWO WAYS OF CALCULATING CI IN LIKELIHOOD METHODS CI USING INFORMATION MATRIX: BOUNDRY PROBLEMS AND dimensional ambiguities.\\
-%The meaning of a confidence interval is a random set of values, constructed in such a way that, over repeated sampling of the data from the underlying model, that will contain the true, fixed but unknown value of the parameter with some specified probability. \cite{pd2007}
-%
 
-%
-%Conventionally, \pkg{geostatsp} uses the function \fct{lgm} to return CIs for parameters, which is based on the \ref{R1} method. Confidence intervals for individual parameter $\varphi_i$ would be $\hat{\varphi_i} \pm 1.96*\sqrt{\var(\hat{\varphi_i})}$, where $\var(\hat{\varphi}_i)$ can be approximated by the diagonals of inverted observed information matrix $\frac{\partial^2 l(\varphi)}{\partial\varphi \partial\varphi^\top}\big |_{\varphi=\hat{\varphi}_i}$.
 
 SHOW A TABLE OF CI compare between \pkg{geostatsp} and \pkg{gpuBatchMatrix}
 %"Calculating a likelihood-based confidence region is straightforward in principle but difficult in practice, rapidly becoming impossible as the number of elements of $\varphi$ grows. However, a more general version of the result also holds, and is extremely useful in practice." The results R1 and R2 are invoked routinely in modern statistical practice, but they rely on assumptions that are not always satisfied. In a geostatistical context, the two most common situations in which these assumptions do not hold are boundary problems and dimensional ambiguities. 
 
 
 <<packages, results='hide', message=FALSE>>=
-library(gpuRandom)
-library(gpuR)
-library(data.table)
-library('geostatsp')
+ library(gpuRandom)
+ library(gpuR)
+ library(data.table)
+ #library(geostatsp)
 @
 
 % swissrain matplot over betas
-<<params, echo=FALSE, results='hide',eval=TRUE>>=
-data('swissRain')
-swissRain$elevation = extract(swissAltitude, swissRain)
-
-params = rbind(
-  c(shape=1.826358, range=20000, variance = 1, nugget = 0, anisoRatio = 10, anisoAngleRadians = 0.08),  
-  c(shape=4, range=3.861873e+04, variance = 1, nugget = 15, anisoRatio = 16, anisoAngleRadians = 0.7),  
-  c(shape=3, range=90*1000, variance = 1, nugget = 1.369707e-01, anisoRatio = 25, anisoAngleRadians = 0.3),
-  c(shape=2, range=250*1000, variance = 1, nugget = 20, anisoRatio = 8.09, anisoAngleRadians = 0.5), 
-  c(shape=0.2, range=15*1000, variance = 1, nugget = 0.02, anisoRatio = 65, anisoAngleRadians = 6.5),
-  c(shape=0.3, range=20*1000, variance = 1, nugget = 0.08, anisoRatio = 45, anisoAngleRadians = 12.5)
-)
-colnames(params) <- c('shape','range', 'variance', 'nugget', 'anisoRatio', 'anisoAngleRadians')
-@
-<<showparams, eval=TRUE>>=
-params
-@
-
-<<compute, echo=FALSE, results='hide', eval=TRUE>>=
-result5<-gpuRandom::likfitLgmCov2d(
-  data=swissRain,
-  formula=rain~ elevation, 
-  coordinates=swissRain@coords,
-  params=params, 
-  boxcox = c(1,0,4.962398e-01),
-  cilevel=0.9,
-  type = "double",
-  reml=FALSE, 
-  NparamPerIter=400,
-  Nglobal=c(128,128),
-  Nlocal=c(16,16),
-  NlocalCache=2800,
-  verbose=FALSE)
-
-Betas <- seq(-12, 12, len=40)*1e-03
-
-m <- length(Betas)
-makeSymm <- function(m) {
-  m[upper.tri(m)] <- t(m)[upper.tri(m)]
-  return(m)
-}
-a=2 # which beta_i?
-Nobs=result5$Nobs  # number of observations.
-Ndata=result5$Ndata
-Nparam=result5$Nparam
-Ncov=result5$Ncov
-XVYXVX=result5$XVYXVX
-ssqY <- as.matrix(result5$ssqY)
-detVar <- as.vector(result5$detVar)
-detVar <- matrix(rep(detVar, Ndata), nrow=Nparam)
-jacobian <- as.vector(result5$jacobian)
-jacobian <- do.call(rbind, replicate(Nparam, jacobian, simplify = FALSE))  #dim(XVYXVX)
-Ucov <- Ncov-1
-XTVinvX <- XVYXVX[ , (ncol(XVYXVX)-Ncov+1):ncol(XVYXVX)]
-XVY <- XVYXVX[ , 1:Ndata]
-
-
-for (i in 1:Nparam){
-  XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ] <- makeSymm(XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ])
-}
-
-selectedrows <- (seq_len(Nparam)-1) * Ncov + a
-XTVinvX_deleted <- matrix(XTVinvX[-selectedrows,-a], ncol=Ucov, byrow=TRUE)
-XTVinvX_a <- matrix(XTVinvX[selectedrows, -a], nrow=Nparam, ncol=Ucov)
-XVY_deleted <- XVY[-selectedrows, ]
-X_aVY <- XVY[selectedrows, ]
-X_aVX_a <- XTVinvX[selectedrows, a]
-
-partA = matrix(0, nrow=Nparam, ncol=Ndata)
-partB = matrix(0, nrow=Nparam, ncol=Ndata)
-partC = matrix(0, nrow=Nparam, ncol=Ndata)
-partD = matrix(0, nrow=Nparam, ncol=Ndata)
-partE = matrix(0, nrow=Nparam, ncol=Ndata)
-
-for (i in 1:Nparam){
-  interval <- c(((i-1)*Ucov+1) : (i*Ucov))
-  temp <- solve(XTVinvX_deleted[interval, ]) 
-  
-  # part (A) have 2 data sets
-  partA[i,] = rowSums(XVY_deleted[interval,] %*% temp) * XVY_deleted[interval,]
-  # part (B) have 2 data sets.   has beta
-  partB[i,] = -2*XVY_deleted[interval,] %*% temp %*% XTVinvX_a[i,]
-  # part (C) no data sets.  has beta
-  partC[i,] = XTVinvX_a[i, ] %*% temp %*% XTVinvX_a[i, ]
-  #partC[i,] = XTVinvX_a[interval, ] %*% temp %*% XTVinvX_a[interval, ]
-  # part (D) have 2 data sets.    has beta
-  partD[i,] = -2* X_aVY[i, ]
-  # part (E)
-  partE[i,] = X_aVX_a[i]
-}
-
-
-All_min2loglik_forthisbeta = matrix(0, nrow=m, ncol=Nparam)
-for (bet in 1:m){
-  ssqResidual <- ssqY + Betas[bet] *partD + Betas[bet]^2 *partE - (partA + Betas[bet]* partB + Betas[bet]^2 * partC)
-    All_min2loglik_forthisbeta[bet,] <- -0.5*(Nobs*log(ssqResidual/Nobs) + detVar + Nobs + Nobs*log(2*pi) + jacobian)[,3]
-}
-colnames(All_min2loglik_forthisbeta) <- c('1','2','3','4','5','6')
-@
-
-
-<<matplot_beta, eval=TRUE,echo=FALSE, fig.height =4.5, fig.width=6, cache=TRUE, fig.cap='profile log-Likelihoods of slope parameter for six covariance parameter sets',fig.pos='H'>>=
-matplot(Betas,All_min2loglik_forthisbeta, type="l", lty=1, xlab="beta_2", ylab = 'profile LogL')
-legend("topleft", cex = 0.75, legend = colnames(All_min2loglik_forthisbeta)[1:6], col = 1:6, lty = 1)
-@
-% swissrain matplot over betas
 
 %meuse data
-<<compare_mle, eval=TRUE,echo=FALSE>>=
-rm(list=ls(all=TRUE))
-library("sp")
-data(meuse)
-class(meuse)
-coordinates(meuse) <- c("x", "y")
-class(meuse)
-library('geostatsp')
-meuse$Y = log(meuse$zinc)
-meuse$sqrtdist = sqrt(meuse$dist)
 
-Res1 =  geostatsp::lgm( formula=Y~sqrtdist, 
-                        data=meuse, 
-                        grid=20,
-                        reml = FALSE,
-                        fixBoxcox=FALSE, fixShape=FALSE, fixNugget = FALSE,  #Set to FALSE to estimate the nugget effect parameter.
-                        aniso=TRUE )
-Res1$summary[,c('estimate','ci0.005', 'ci0.995')]
-Res1$optim$mle
-@
-
-\pkg{gpuBatchMatrix} give wider ci and more accurate MLE's, expecially for the shape parameter.
-<<compare_gpurandom, cache=FALSE, eval=FALSE,echo=FALSE>>=
-library('gpuRandom')
-library('gpuR')
-  ParamList = list(
-    range = c(exp(seq(log(100), log(173.1643928), len=6)), exp(seq(log(185), log(330), len=8))),
-    shape = c(seq(0.1,3.5, len=4), seq(4, 6, len=4)),
-    anisoRatio =c( seq(1, 2.301060332, len=3), seq(2.8, 7, len=4)),
-    anisoAngleRadians = c( seq(0, 0.274896758, len=4), seq(0.4, 0.8, len=4)),
-    nugget = c(seq(0,0.3946587, len=3), seq(0.5, 3, len=5))
-  ) 
-  params = do.call(expand.grid, ParamList)
-  
-result3<- gpuRandom::likfitLgmCov(spatialmodel=Res1,
-                           params=params, # CPU matrix for now, users need to provide proper parameters given their specific need
-                           boxcox=c(seq(-3, -0.903901505, len=4), seq(-0.5,1,len=4)),  
-                           paramToEstimate = c('range','shape','nugget','anisoRatio','anisoAngleRadians','boxcox'), 
-                           cilevel=0.95, 
-                           type = "double",
-                           reml=FALSE, 
-                           NparamPerIter=400,
-                           Nglobal=c(128,64),
-                           Nlocal=c(16,16),
-                           NlocalCache=2800,
-                           verbose=FALSE)
-  
-
-cbind(Res1$summary[c('range','shape','nugget','anisoRatio','anisoAngleRadians','boxcox'),c('estimate','ci0.005', 'ci0.995')], result3$summary[c('range','shape','nugget','anisoRatio','anisoAngleRadians','boxcox'),])
-@
-
-
-
-
-
-<<matplotmeuse, echo=FALSE, eval=TRUE>>=
-result1<-gpuRandom::getProfLogL(data=meuse,
-                                formula=Y~sqrtdist, 
-                                coordinates=meuse@coords,
-                                params=params, 
-                                boxcox = -0.903901505,
-                                type = "double",
-                                NparamPerIter=400,
-                                gpuElementsOnly=FALSE,
-                                reml=FALSE, 
-                                Nglobal=c(128,64),
-                                Nlocal=c(16,16),
-                                NlocalCache=2800)
-
-
-LogLik = result1$LogLik[seq(1,50176,400),3]
-length(LogLik) 
-Betas <- seq(-12, 12, len=40)*1e-03
-m <- length(Betas)
-makeSymm <- function(m) {
-  m[upper.tri(m)] <- t(m)[upper.tri(m)]
-  return(m)
-}
-a=2 # which beta_i?
-Nobs=result1$Nobs  # number of observations.
-Ndata=result1$Ndata
-Nparam=result1$Nparam[seq(1,50176,400),]
-Ncov=result1$Ncov
-XVYXVX=result1$XVYXVX
-ssqY <- as.matrix(result1$ssqY)
-detVar <- as.vector(result1$detVar)
-detVar <- matrix(rep(detVar, Ndata), nrow=Nparam)
-jacobian <- as.vector(result1$jacobian)
-jacobian <- do.call(rbind, replicate(Nparam, jacobian, simplify = FALSE))  #dim(XVYXVX)
-Ucov <- Ncov-1
-XTVinvX <- XVYXVX[ , (ncol(XVYXVX)-Ncov+1):ncol(XVYXVX)]
-XVY <- XVYXVX[ , 1:Ndata]
-
-
-for (i in 1:Nparam){
-  XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ] <- makeSymm(XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ])
-}
-
-
-selectedrows <- (seq_len(Nparam)-1) * Ncov + a
-XTVinvX_deleted <- matrix(XTVinvX[-selectedrows,-a], ncol=Ucov, byrow=TRUE)
-XTVinvX_a <- matrix(XTVinvX[selectedrows, -a], nrow=Nparam, ncol=Ucov)
-#XTVinvX_a <- matrix(XTVinvX[-selectedrows, a], nrow=Nparam*Ucov, ncol=1)[1:10,]
-XVY_deleted <- XVY[-selectedrows, ]
-X_aVY <- XVY[selectedrows, ]
-X_aVX_a <- XTVinvX[selectedrows, a]
-
-
-
-partA = matrix(0, nrow=Nparam, ncol=Ndata)
-partB = matrix(0, nrow=Nparam, ncol=Ndata)
-partC = matrix(0, nrow=Nparam, ncol=Ndata)
-partD = matrix(0, nrow=Nparam, ncol=Ndata)
-partE = matrix(0, nrow=Nparam, ncol=Ndata)
-
-
-
-for (i in 1:Nparam){
-  interval <- c(((i-1)*Ucov+1) : (i*Ucov))
-  temp <- solve(XTVinvX_deleted[interval, ]) 
-  
-  # part (A) have 2 data sets
-  partA[i,] = rowSums(XVY_deleted[interval,] %*% temp) * XVY_deleted[interval,]
-  # part (B) have 2 data sets.   has beta
-  partB[i,] = -2*XVY_deleted[interval,] %*% temp %*% XTVinvX_a[i,]
-  # part (C) no data sets.  has beta
-  partC[i,] = XTVinvX_a[i, ] %*% temp %*% XTVinvX_a[i, ]
-  #partC[i,] = XTVinvX_a[interval, ] %*% temp %*% XTVinvX_a[interval, ]
-  # part (D) have 2 data sets.    has beta
-  partD[i,] = -2* X_aVY[i, ]
-  # part (E)
-  partE[i,] = X_aVX_a[i]
-}
-
-
-All_min2loglik_forthisbeta = matrix(0, nrow=m, ncol=Nparam)
-for (bet in 1:m){
-  ssqResidual <- ssqY + Betas[bet] *partD + Betas[bet]^2 *partE - (partA + Betas[bet]* partB + Betas[bet]^2 * partC)
-    All_min2loglik_forthisbeta[bet,] <- -0.5*(Nobs*log(ssqResidual/Nobs) + detVar + Nobs + Nobs*log(2*pi) + jacobian)[,3]
-}
-colnames(All_min2loglik_forthisbeta) <- c('1','2','3','4','5', '6')
-matplot(Betas,All_min2loglik_forthisbeta, type="l", lty=1, xlab="beta_2", ylab = 'profile LogL')
-legend("topleft", cex = 0.75, legend = colnames(All_min2loglik_forthisbeta)[1:6], col = 1:6, lty = 1)
-
-@
-%meuse data
 
 
 

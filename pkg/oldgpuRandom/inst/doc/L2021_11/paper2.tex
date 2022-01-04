@@ -112,7 +112,7 @@
 
 
 
-\title{A title}
+\title{Profile likelihoods for geostatsistical models using GPU's}
 \date{}
 
 \author{
@@ -150,6 +150,25 @@ some keypoints to mention:\\
 
 
 \section{Introduction}
+Profile likelihoods are rarely used in geostatistical models due to the computational burden imposed by repeated likelihood evaluations.
+Accounting for uncertainty in covariance parameters can be highly consequential in geostatistical models as some covariance parameters are poorly identified, 
+the problem is severe enough that the differentiability parameter of the Matern correlation function is
+typically treated as fixed.  
+The problem is compounded with anisotropic spatial models as there are two additional parameters to consider.  
+This paper makes the following three contributions:
+
+1- a methodology and software implementation for highly parallel
+computing profile likelihoods on GPU's is presented;
+2- as expected, the profile-based confidence intervals have superior
+coverage to the more standard Wald-type intervals; and
+3- a simulation study shows that despite the inconsistency inherent in
+maximum likelihood estimation of geostatistical models, MLE's of covariance parameters (including the shape parameter) are unbiased and
+credible regions have the desired coverage.
+
+
+
+
+
 1- cI for the betas for the geostapsp package\\
 2- Ci’s using profile likelihoods from gpuBatchMatrix
 … second CI’s will be wider\\
@@ -363,22 +382,29 @@ Compared to the ``ml'' profile log-likelihood given in \eqref{profile}, the effe
 
 
 \subsection{Parameter estimation}
+%The following are two important theorems in likelihood-based inference, which lead to two ways of calculating likelihood-based confidence intervals (CIs). 
+We write $I(\theta)$ for the expected Fisher information, here $\theta$ represents the true parameter value. $I(\hat{\theta})$ is the observed Fisher information evaluated at the MLE of $\theta$.
+\begin{description}[style=unboxed,leftmargin=0cm]
+\item[Wald confidence interval] $\{\hat{\theta} \pm z_{1-\alpha/2} * I(\hat{\theta})^{-1/2}\}$ is a $100(1 - \alpha)\%$ confidence interval for $\theta$, where $z_{1-\alpha/2}$ is the $1-\alpha/2$ percentile of the standard normal distribution.
+
+\item[Likelihood-based confidence interval] $\{\theta: \ell(\theta) \geq \ell(\hat{\theta}) - c_p(\beta)/2 \}$ is asymptotically, a $\beta$-level confidence set for $\theta$, where $c_p(\beta)$ is the $\beta$-quantile of $\chi^2_p$, i.e., $\Pr(\chi^2_p \leq c_p(\beta))=\beta$. 
+\end{description}
+Wald intervals are always symmetric, and computationally much easier than likelihood-based confidence intervals, as quantities need to be calculated are all available from the algorithm used to find the MLEs of the model parameters. However, Wald intervals may include values which are not valid for the parameter in question. And if the likelihood function is not regular (cannot be well approximated by a quadratic function), then the curvature of the log-likelihood at the MLE ($I(\hat{\theta})$) or the standard error is not meaningful, which is often the case for spatial models where the parameter estimate is near a boundary, and the likelihood function is quite flat. In this case, Wald interval is deficient, likelihood ratio based confidence interval is a better and safer choice \cite{pawitan2001all}. For that reason, plotting the profile likelihood function in unfamiliar problems is generally advised.
+
+
+% \begin{theorem}
+% \label{R1}
+% $\hat{\theta}(Y) \sim \MVN(\theta, I(\theta)^{-1})$.
+% \end{theorem}
+% %
+% \begin{theorem}
+% \label{R2}
+% $2\{\ell(\hat\theta(Y); Y)-\ell(\theta;Y) \} \sim \chi^2_p ,$ where $p$ is the dimension of $\theta$.
+% \end{theorem}
 \textit{Geostatsp's methods}\vspace{0.5cm}\\
-The following are two important theorems in likelihood-based inference, which lead to two ways of calculating likelihood-based confidence intervals (CIs). %We write θˆ(y) for an observed value of θˆ and θˆ(Y ) for the corresponding random variable. 
-We write $I(\theta)$ for the expected Fisher's information matrix, and $\theta$ is the true parameter value. 
-\begin{theorem}
-\label{R1}
-$\hat{\theta}(Y) \sim \MVN(\theta, I(\theta)^{-1})$.
-\end{theorem}
-%
-\begin{theorem}
-\label{R2}
-$2\{\ell(\hat\theta(Y); Y)-\ell(\theta;Y) \} \sim \chi^2_p ,$ where $p$ is the dimension of $\theta$.
-\end{theorem}
-The \fct{lgm} function in \pkg{geostatsp} package estimates the correlation parameters $\omega=(\phi,\kappa,\nu^2, \varphi, \psi)$ and the transformation parameter $\lambda$ by maximization of the likelihood. Specifically, \fct{lgm} uses the \textit{optim} function to optimize the equation \eqref{profile} (if \fct{reml}=FALSE)  numerically over $\omega$ and $\lambda$ to find $(\hat{\omega},\hat{\lambda}) = \argmax_{\omega,\lambda} \ell_p(\omega, \lambda; y')$.  \pkg{geostatsp} treats $\hat{\omega}$ and $\hat{\lambda}$ as fixed and back substitute them into \eqref{betahat} and \eqref{eq:4} to obtain the maximum likelihood estimates (MLEs) $\hat{\beta}_{\omega,\lambda}$ and $\hat{{\sigma}}^2_{\omega,\lambda}$. The \fct{optim} function returns the Hessian evaluated at $\hat{\omega}$ and $\hat{\lambda}$.  Conventionally, \fct{lgm} calculates CIs based on Theorem \ref{R1}. The 95\% confidence intervals for each of the parameters are calculated by $\hat{\theta_i} \pm 1.96 \sqrt{\var(\hat{\theta_i})}$, where $\theta_i$ represents any of the parameter in $(\beta,\sigma, \omega,\lambda)$, and  $\var(\hat{\theta}_i)$ is approximated by the diagonals of the inverse of the negative Hessian. This way of lcnaelcac does not take into account of uncertainty in correlation parameters.
+The \fct{lgm} function in \pkg{geostatsp} package estimates the correlation parameters $\omega=(\phi,\kappa,\nu^2, \varphi, \psi)$ and the transformation parameter $\lambda$ by maximization of the likelihood. Specifically, \fct{lgm} uses the \textit{optim} function to optimize the equation \eqref{profile} (if \fct{reml}=FALSE)  numerically over many different sets of $(\omega, \lambda)$ to find $(\hat{\omega},\hat{\lambda}) = \argmax_{\omega,\lambda} \ell_p(\omega, \lambda; y')$.  \pkg{geostatsp} then treats $\hat{\omega}$ and $\hat{\lambda}$ as fixed known parameters and back substitute them into \eqref{betahat} and \eqref{eq:4} to obtain the MLEs $\hat{\beta}_{\omega,\lambda}$ and $\hat{\sigma}^2_{\omega,\lambda}$.  \pkg{geostatsp} calculates Wald confidence intervals for model parameters in \fct{lgm}. The \fct{numderiv} function inside \fct{lgm} returns the Hessian matrix evaluated at $\hat{\omega}$ and $\hat{\lambda}$, the diagonals of the inverse of the negative Hessian is used for approximating the variance of the parameters.This way does not take into account of uncertainty in correlation parameters. \pkg{geostatsp} does the above computation process in \prog{C}, and (ADD LATER!) which has achieved a great perfomance in terms of speed.      
 
-
-There is the other function \fct{profLlgm} in \pkg{geostatsp} that calculates confidence intervals or joint confidence regions based on the likelihood-ratio method \ref{R2}. If $c$ represents the $\beta$-quantile of $\chi^2_p$, i.e., $\Pr(\chi^2_p \leq c)=\beta$, then the set $\{\theta: \ell(\theta) \geq \ell(\hat{\theta}) - c/2 \}$ is asymptotically, a $\beta$-level confidence set for $\theta$. For a fixed $\phi$ value, \fct{optim} evaluates \eqref{profile} for different combinations of $(\kappa,\nu^2, \varphi, \psi)$ and finds the optim Log-likelihood value, repeat this process for a number of $\phi$ values to finally get the profile log-likelihood and MLE of $\phi$.  \fct{profLlgm} runs \fct{optim} a great many of times and thus is very slow.
+The other function \fct{profLlgm} in \pkg{geostatsp} calculates Likelihood-based confidence intervals. \fct{profLlgm} calculates the profile log-likelihood for each of the correlation parameter $\omega$ and $\lambda$, specifically, for estimating for example the range parameter $\phi$, for a fixed value of $\phi$, it uses \fct{optim} to maximize \eqref{profile} over a number of different combinations of $(\kappa,\nu^2, \varphi, \psi)$, and repeat this process for a number of $\phi$ values, and use \fct{approxfun} to get curve of the profile log-likelihood and MLE of $\phi$, then computes the confidence interval based on the profile log-likelihood.  \fct{profLlgm} runs \fct{optim} a great many of times and can be time-consuming.
 
 %We can estimate $\lambda$ by maximization of the likelihood, since $\lambda$ is usually a nuisance parameter, an alternative and more pragmatic approach is to restrict $\lambda$ to a discrete set of values, for example $\{-1, 0, 1/2, 1\}$ \cite{laga2020model}. $\lambda = -1$ (reciprocal), $\lambda = 0$ (logarithm), $\lambda = 1/2$ (square-root) and $\lambda = 1$ (no transformation). 
 
@@ -424,12 +450,7 @@ SHOW ALL LIKELIHOODS PLOT VS BETA'S
 
 
 \subsection{CI’s comparison for model parameters}
-%TWO WAYS OF CALCULATING CI IN LIKELIHOOD METHODS CI USING INFORMATION MATRIX: BOUNDRY PROBLEMS AND dimensional ambiguities.\\
-%The meaning of a confidence interval is a random set of values, constructed in such a way that, over repeated sampling of the data from the underlying model, that will contain the true, fixed but unknown value of the parameter with some specified probability. \cite{pd2007}
-%
 
-%
-%Conventionally, \pkg{geostatsp} uses the function \fct{lgm} to return CIs for parameters, which is based on the \ref{R1} method. Confidence intervals for individual parameter $\varphi_i$ would be $\hat{\varphi_i} \pm 1.96*\sqrt{\var(\hat{\varphi_i})}$, where $\var(\hat{\varphi}_i)$ can be approximated by the diagonals of inverted observed information matrix $\frac{\partial^2 l(\varphi)}{\partial\varphi \partial\varphi^\top}\big |_{\varphi=\hat{\varphi}_i}$.
 
 SHOW A TABLE OF CI compare between \pkg{geostatsp} and \pkg{gpuBatchMatrix}
 %"Calculating a likelihood-based confidence region is straightforward in principle but difficult in practice, rapidly becoming impossible as the number of elements of $\varphi$ grows. However, a more general version of the result also holds, and is extremely useful in practice." The results R1 and R2 are invoked routinely in modern statistical practice, but they rely on assumptions that are not always satisfied. In a geostatistical context, the two most common situations in which these assumptions do not hold are boundary problems and dimensional ambiguities. 
@@ -441,82 +462,15 @@ SHOW A TABLE OF CI compare between \pkg{geostatsp} and \pkg{gpuBatchMatrix}
 R> library(gpuRandom)
 R> library(gpuR)
 R> library(data.table)
-R> library("geostatsp")
+R> # library(geostatsp)
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
 
 % swissrain matplot over betas
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-R> params
-##      shape  range variance nugget anisoRatio anisoAngleRadians
-## [1,]  1.83  20000        1  0.000      10.00              0.08
-## [2,]  4.00  38619        1 15.000      16.00              0.70
-## [3,]  3.00  90000        1  0.137      25.00              0.30
-## [4,]  2.00 250000        1 20.000       8.09              0.50
-## [5,]  0.20  15000        1  0.020      65.00              6.50
-## [6,]  0.30  20000        1  0.080      45.00             12.50
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-
-
-
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{figure}[H]
-
-{\centering \includegraphics[width=\maxwidth]{figure/matplot_beta-1} 
-
-}
-
-\caption[profile log-Likelihoods of slope parameter for six covariance parameter sets]{profile log-Likelihoods of slope parameter for six covariance parameter sets}\label{fig:matplot_beta}
-\end{figure}
-
-\end{knitrout}
-% swissrain matplot over betas
-
 %meuse data
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-## [1] "data.frame"
-## [1] "SpatialPointsDataFrame"
-## attr(,"package")
-## [1] "sp"
-##                    estimate   ci0.005 ci0.995
-## (Intercept)         0.91634  0.121205   1.711
-## sqrtdist           -0.08445 -1.623508   1.455
-## sdNugget            0.00785  0.000379   0.163
-## sdSpatial           0.01250  0.000690   0.227
-## range             173.16439 92.775636 323.209
-## shape               4.00000 -9.880685  17.881
-## anisoRatio          2.30106  1.138810   4.649
-## anisoAngleRadians   0.27490 -0.167582   0.717
-## anisoAngleDegrees  15.75042 -9.601751  41.103
-## boxcox             -0.90390 -2.558961   0.751
-##            nugget          variance             range 
-##             0.395             1.000           173.164 
-##             shape        anisoRatio anisoAngleRadians 
-##             4.000             2.301             0.275 
-##            boxcox 
-##            -0.904
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
 
-\pkg{gpuBatchMatrix} give wider ci and more accurate MLE's, expecially for the shape parameter.
-
-
-
-
-
-
-
-%meuse data
 
 
 
