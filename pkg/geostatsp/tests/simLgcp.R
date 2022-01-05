@@ -1,5 +1,9 @@
 options("rgdal_show_exportToProj4_warnings"="none") 
 library('geostatsp')
+
+# exclude this line to use the RandomFields package
+options(useRandomFields = FALSE)
+
 mymodel = c(mean=-1.5, variance=1, 
 				range=2, shape=2)
 
