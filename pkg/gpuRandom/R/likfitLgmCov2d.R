@@ -97,7 +97,7 @@
     as.integer(Nglobal),  #12
     as.integer(Nlocal),  #16
     NlocalCache,  #14
-    verbose=3,  #15
+    verbose=verbose,  #15
     ssqYX, #
     ssqYXcopy,  #new
     LinvYX,  #18

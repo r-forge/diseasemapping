@@ -52,38 +52,27 @@ newParamList = list(
 ) 
 params = do.call(expand.grid, newParamList)
 
-result<-gpuRandom::likfitLgmCov2d(
-  data= mydat,
-  formula= as.formula(paste(colnames(mydat@data)[i+2], "~", "cov1 + cov2")), 
-  coordinates=mydat@coords,
-  params=params, # CPU matrix for now, users need to provide proper parameters given their specific need
-  paramToEstimate = c('range','nugget'),
-  boxcox = c(1,0),# (seq(-1,3,len=8),
-  cilevel=0.8,
-  type = "double",
-  reml=FALSE, 
-  NparamPerIter=400,
-  Nglobal=c(128,64),
-  Nlocal=c(16,16),
-  NlocalCache=2800,
-  verbose=FALSE)
-
-library(gpuRandom)
-library(gpuR)
 
 count = 0
 breaksf = rep(0, 10)
 makedata <- rep(0, 4)
 estimates <- rep(0, 6)
+
+library(gpuRandom)
+library(gpuR)
+count = 0
+breaksf = rep(0, 10)
+makedata <- rep(0, 4)
+estimates <- rep(0, 6)
 ## calculate logl
-for (i in 1:5){
+for (i in 1:Nsim){
   result<-gpuRandom::likfitLgmCov2d(
     data= mydat,
     formula= as.formula(paste(colnames(mydat@data)[i+2], "~", "cov1 + cov2")), 
     coordinates=mydat@coords,
-    params=params, # CPU matrix for now, users need to provide proper parameters given their specific need
+    params=params, 
     paramToEstimate = c('range','nugget'),
-    boxcox = 1,# (seq(-1,3,len=8),
+    boxcox = 1,
     cilevel=0.8,
     type = "double",
     reml=FALSE, 
@@ -92,11 +81,7 @@ for (i in 1:5){
     Nlocal=c(16,16),
     NlocalCache=2800,
     verbose=FALSE)
-
-  breaksf[i] = result$breaks
-  LogLik = result$LogLik[,1]
-  #max(result$LogLik[,1])-qchisq(0.8,  df = 2)/2
-  #as.vector(result$jacobian)
+  
   a <- geostatsp::loglikLgm(
     c(trueParam['range'],
       trueParam['shape'],
@@ -112,18 +97,18 @@ for (i in 1:5){
   if (a  >= result$breaks){
     count = count +1
   }
-  makedata0 <- cbind(params[,1:2], result$LogLik[,1], D=i)
+  breaksf[i] = result$breaks
+  makedata0 <- cbind(params[,1:2], result$LogLik, D=i)
   makedata <- rbind(makedata, makedata0)
   estimates <- cbind(estimates, result$summary)
 }
-
-
-
-
-count/Nsim
 colnames(makedata) <- c("range",'nugget', 'LogLik', 'D')
 makedatahey <- makedata[-1,]
 estimates_summary <- estimates[,-1]
+mean_estimates <- apply(estimates_summary, 1, mean)
+count/Nsim
+mean_estimates
+
 
 library(RColorBrewer)
 library('ggplot2')
