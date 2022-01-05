@@ -137,23 +137,9 @@
 
 
 \begin{abstract}
-some keypoints to mention:\\
-1, anisotropic spatial models are important but diffcult to evaluate because it consists of many covariance parameters.\\
-2, standard approximations of spatial models (GMRF) don’t allow for anisotropy (at least as implemented). \\
-3, gpuBatchMatrix is able to compute the profile LogL for each of the parameters in linear anisotropic spatial models, for dense matrix, use no approximation methods. allow for uncertainty in covariance parameters\\
-4, investigated likelihood-based CI’s for variance parameters, wider than using information matrix based methods (gepstatsp)\\
-\end{abstract}
-
-
-% keywords can be removed
-\keywords{First keyword \and Second keyword \and More}
-
-
-\section{Introduction}
 Profile likelihoods are rarely used in geostatistical models due to the computational burden imposed by repeated likelihood evaluations.
 Accounting for uncertainty in covariance parameters can be highly consequential in geostatistical models as some covariance parameters are poorly identified, 
-the problem is severe enough that the differentiability parameter of the Matern correlation function is
-typically treated as fixed.  
+the problem is severe enough that the differentiability parameter of the Matern correlation function is typically treated as fixed.  
 The problem is compounded with anisotropic spatial models as there are two additional parameters to consider.  
 This paper makes the following three contributions:
 
@@ -165,8 +151,19 @@ coverage to the more standard Wald-type intervals; and
 maximum likelihood estimation of geostatistical models, MLE's of covariance parameters (including the shape parameter) are unbiased and
 credible regions have the desired coverage.
 
+\end{abstract}
 
 
+% keywords can be removed
+\keywords{First keyword \and Second keyword \and More}
+
+
+\section{Introduction}
+some keypoints to mention:\\
+1, anisotropic spatial models are important but diffcult to evaluate because it consists of many covariance parameters.\\
+2, standard approximations of spatial models (GMRF) don’t allow for anisotropy (at least as implemented). \\
+3, gpuBatchMatrix is able to compute the profile LogL for each of the parameters in linear anisotropic spatial models, for dense matrix, use no approximation methods. allow for uncertainty in covariance parameters\\
+4, investigated likelihood-based CI’s for variance parameters, wider than using information matrix based methods (gepstatsp)\\
 
 
 1- cI for the betas for the geostapsp package\\
@@ -390,7 +387,7 @@ We write $I(\theta)$ for the expected Fisher information, here $\theta$ represen
 \item[Likelihood-based confidence interval] $\{\theta: \ell(\theta) \geq \ell(\hat{\theta}) - c_p(\beta)/2 \}$ is asymptotically, a $\beta$-level confidence set for $\theta$, where $c_p(\beta)$ is the $\beta$-quantile of $\chi^2_p$, i.e., $\Pr(\chi^2_p \leq c_p(\beta))=\beta$. 
 \end{description}
 Wald intervals are always symmetric, and computationally much easier than likelihood-based confidence intervals, as quantities need to be calculated are all available from the algorithm used to find the MLEs of the model parameters. However, Wald intervals may include values which are not valid for the parameter in question. And if the likelihood function is not regular (cannot be well approximated by a quadratic function), then the curvature of the log-likelihood at the MLE ($I(\hat{\theta})$) or the standard error is not meaningful, which is often the case for spatial models where the parameter estimate is near a boundary, and the likelihood function is quite flat. In this case, Wald interval is deficient, likelihood ratio based confidence interval is a better and safer choice \cite{pawitan2001all}. For that reason, plotting the profile likelihood function in unfamiliar problems is generally advised.
-
+"Further, a situation in which the Wald approach completely fails while the likelihood ratio approach is still (often) reasonable is when testing whether a parameter lies on the boundary of its parameter space"
 
 % \begin{theorem}
 % \label{R1}
