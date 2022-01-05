@@ -16,8 +16,12 @@
                           verbose=FALSE){
   
   
-    # will always be c(1,0,.......)
-     boxcox = c(1, 0, setdiff(boxcox, c(0,1)))
+    if(0 %in% boxcox){
+      boxcox = c(1,0, setdiff(boxcox, c(1,0)))
+    }else{
+      # will always be c(1,.......)
+      boxcox = c(1, setdiff(boxcox, 1))
+    }
     
 
   
@@ -240,7 +244,7 @@
    
    ############## output matrix ####################
    Table <- matrix(NA, nrow=length(union(paramToEstimate, 'boxcox'))+Ncov+1, ncol=3)
-   rownames(Table) <-  c(predictors, "sdSpatial", union(paramToEstimate, 'boxcox'), 'sdNugget')
+   rownames(Table) <-  c(predictors, "sdSpatial", union(paramToEstimate, 'boxcox'))
    colnames(Table) <-  c("estimate", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
    
    
@@ -263,7 +267,9 @@
      Table["sdSpatial",1] <- sqrt(ssqResidual[index[1],index[2]]/(Nobs - Ncov))
    }
    
-   params$sdNugget <- sqrt(params[,"nugget"]) * Table["sdSpatial",1]
+   params <- cbind(sqrt(params[,"nugget"]) * Table["sdSpatial",1], params)
+   colnames(params)[1] <- 'sdNugget'
+   
    
    ############### profile for covariance parameters #####################
    if('range' %in% paramToEstimate){

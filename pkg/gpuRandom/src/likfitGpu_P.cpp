@@ -182,7 +182,8 @@ std::string logRowSumString(int NlocalCache) {
 template <typename T> 
 std::string boxcoxKernelString(int NlocalCache, int zeroCol,
                                int Nobs, int Nboxcox,
-                               int Npad) {
+                               int Npad,
+                               int boxcoxHasZero) {
   
   std::string typeString = openclTypeString<T>();
   std::string result = "";
@@ -211,6 +212,7 @@ std::string boxcoxKernelString(int NlocalCache, int zeroCol,
     + typeString + " logYhere, boxcoxHere;\n"
   "local " + typeString + " sumLogY[NlocalCache];\n";
   
+  if (boxcoxHasZero == 1) {
   result +=
     " if(get_global_id(1)==0 & get_group_id(0) == 0){\n"
     "  sumLogY[get_local_id(0)] = 0.0;\n"
@@ -243,6 +245,41 @@ std::string boxcoxKernelString(int NlocalCache, int zeroCol,
     "    }// for Dobs\n"
     "  }// if zerocol\n"
     "}// for Dboxcox\n";
+  }else if (boxcoxHasZero == 0) {
+    result +=
+      " if(get_global_id(1)==0 & get_group_id(0) == 0){\n"
+      "  sumLogY[get_local_id(0)] = 0.0;\n"
+      "  for(Dobs=get_local_id(0);Dobs < Nobs; Dobs+= get_local_size(0)){\n"
+      "    logYhere = log(y[DstartObs + Npad * Dobs]);\n"
+      "    sumLogY[get_local_id(0)] += logYhere;\n"
+     // "    if(zeroCol) y[DstartObs + zeroCol + Npad * Dobs] = logYhere;\n"
+      "  }// for Dobs\n"
+      "  if(get_local_id(0)==0){\n"
+      "    for(Dobs=1;Dobs < get_local_size(0);Dobs++){\n"
+      "     sumLogY[0] += sumLogY[Dobs];\n"
+      "    }// for Dobs\n"
+      "    if(get_global_id(0)==0){\n"
+      "     for(Dboxcox=0;Dboxcox < Nboxcox;Dboxcox++){\n"
+      " //   jacobian = -2*(BoxCox-1)* sum(log(yXcpu[,1]))\n"
+      "      jacobian[DstartBoxcox + Dboxcox] =  -2*(param[DstartBoxcox + Dboxcox]-1)*sumLogY[0];\n"
+      "     }// for Dboxcox\n"
+      "    }// if global0\n"
+      "  }// if local0\n"
+      "}// if global and group\n";
+
+    result +=
+      "for(Dboxcox = get_global_id(1); Dboxcox < Nboxcox; Dboxcox+= get_global_size(1)){\n"
+      " boxcoxHere = param[DstartBoxcox + Dboxcox];\n"
+      //" if(Dboxcox != zeroCol) {\n"
+      "  for(Dobs=get_global_id(0);Dobs < Nobs; Dobs+= get_global_size(0)){\n"
+      "//    transformed_y[ ,i] <- ((yXcpu[ ,1]^BoxCox[i]) - 1)/BoxCox[i]\n"
+      "      y[DstartObs + Dboxcox + Npad * Dobs] = \n"
+      "        (pow(y[DstartObs + Npad * Dobs],boxcoxHere)-1)/boxcoxHere;\n"
+      "    }// for Dobs\n"
+      //"  }// if zerocol\n"
+      "}// for Dboxcox\n";
+  }
+  
   
   result +=   "}// kernel\n";
   return(result);
@@ -263,16 +300,21 @@ void addBoxcoxToData(
   viennacl::ocl::switch_context(ctx_id);
   viennacl::ocl::context ctx(viennacl::ocl::get_context(ctx_id));
   const int Ndatasets = boxcox.size();
-  if( (verbose[0] >10) & (boxcox.size() > 1) ) {
-    if(boxcox[1] != 0){
-      Rcpp::warning("second entry of boxcox parameters should be zero");
+  int boxcoxHasZero;
+  if(  boxcox.size() > 1 ) {
+    if(boxcox[1] == 0){
+      //Rcpp::warning("second entry of boxcox parameters should be zero");
+      boxcoxHasZero = 1;
+    }else{
+      boxcoxHasZero = 0;
     }
   }
   
   std::string theBoxcoxKernel = boxcoxKernelString<T>(
     NlocalCache[0],
                1, yx.size1(), Ndatasets, 
-               yx.internal_size2());
+               yx.internal_size2(),
+               boxcoxHasZero);
   
   if(verbose[0]>2) {
     Rcpp::Rcout << "\n" << theBoxcoxKernel << "\n";
