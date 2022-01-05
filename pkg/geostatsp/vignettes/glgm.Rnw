@@ -41,7 +41,7 @@ if(Sys.info()['sysname'] =='Linux' &
           'bit/inla.static', sep=''),
         package="INLA")) 
 }
-if(!exists('fact')) fact = 1
+
 @    
 
 <<packages>>=
@@ -64,6 +64,7 @@ swissAltitudeCrop = raster::mask(swissAltitude,swissBorder)
 
 number of cells... smaller is faster but less interesting
 <<cells>>=
+if(!exists('fact')) fact = 1
 fact
 (Ncell = 25*fact)
 @
@@ -691,7 +692,7 @@ if(requireNamespace('INLA', quietly=TRUE) ) {
       control.inla = list(strategy='gaussian'),
 )
 
-if(!is.null(swissFit$inla$summary.random$space)) {
+if(length(swissFit$parameters)) {
   swissFit$rasterTwo = setValues(
     raster::brick(swissFit$raster, nl=2),
     as.matrix(swissFit$inla$summary.random$space[
