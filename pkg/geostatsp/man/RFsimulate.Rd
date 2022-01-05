@@ -101,6 +101,10 @@ where a Raster is returned.
 
 \examples{
 library('geostatsp')
+
+# exclude this line to use the RandomFields package
+options(useRandomFields = FALSE)
+
 model1 <- c(var=5, range=1,shape=0.5)
 
 
