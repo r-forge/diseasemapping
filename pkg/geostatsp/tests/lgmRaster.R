@@ -5,13 +5,11 @@ library('geostatsp')
 
 #' # simulated data
 
+# exclude this line to use the RandomFields package
+options(useRandomFields = FALSE)
 
-#+ simData
-if(.Platform$OS.type == 'windows') {
-	Ncell =  30
-} else {
-	Ncell = 40
-}
+Ncell =  40
+
 myRaster = squareRaster(extent(0,6000,0,6000), Ncell)
 
 myParam=c(oneminusar=0.1, conditionalVariance=2.5^2,shape=2)

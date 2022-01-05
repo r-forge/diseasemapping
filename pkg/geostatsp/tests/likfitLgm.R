@@ -1,6 +1,9 @@
 options("rgdal_show_exportToProj4_warnings"="none") 
 library('geostatsp')
 
+# exclude this line to use the RandomFields package
+options(useRandomFields = FALSE)
+
 if(interactive()  | Sys.info()['user'] =='patrick') {
   n=300
 } else {
