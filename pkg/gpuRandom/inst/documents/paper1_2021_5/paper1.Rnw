@@ -177,7 +177,7 @@ The \pkg{clrng} package described here is currently the only \proglang{R} packag
 
 
 The remaining sections are organized as follows:
-In Section 2, we introduce streams and the use of streams in work-items on a GPU device for generating uniform random numbers, and the usage of \fct{clrng::runif}.
+In Section 2, we introduce streams and the use of streams in work-items on a GPU device for generating uniform random numbers, and the usage of \fct{runifGpu}.
 In Section 3, we introduce two non-uniform RNGs in \pkg{clrng}, as examples for users to develop other RNGs of interest on GPUs in \proglang{R}.
 In Section 4, we apply GPU-generated uniform random numbers in Monte Carlo simulation for Fisher’s exact test, we introduce how the random numbers are used and how the algorithm is parallelized and implemented on GPU. Then we provide two real data examples to demonstrate the function usage and its \proglang{R} performance.
 In Section 5, we show a useful application of normal random numbers on GPU, using them to simulate batches of Gaussian random surfaces with Mat\'ern covariance matrices simultaneously, the simulation also uses GPU-enabled functions from our other package \pkg{gpuBatchMatrix}.
@@ -241,7 +241,7 @@ Equivalently, \fct{createStreamsGpu} creates streams directly on the GPU and ret
 myStreamsGpu2 = createStreamsGpu(4)
 @
 %Users should run either \fct{createStreamsCpu} or \fct{createStreamsGpu} at the beginning of a task and retain these streams for all of the random number generation the task requires.  Creating new streams with different initial states introduces the very small possibility of overlap between the original and new streams. If an \proglang{R} session is restarted during a task, perhaps because a preliminary analysis is done following an initial set of simulations and the full set of simulations continued at a later date, the state of the streams should be transferred to the CPU and saved to disk.  The `\code{initial}' argument to the stream creator should be used with caution and we recommend using the default.  It bears repeating that two sets of streams with different initial states may produce overlapping numbers, the probability is small but increases when the number of streams is large.
-There are a few important notes on the usage of these above functions. (1), We allow users to call \fct{setBaseCreator}  at any time. \fct{setBaseCreator} should be called once before \fct{createStreamsCpu} or \fct{createStreamsGpu} if they would like to select their own initial seeds, or never, in which case streams take the package's default initial seed. (2), Users may switching between \fct{createStreamsCpu} and \fct{createStreamsGpu} in the same program, however, this is not recommended as it causes unnecessary data transfer between host and device. (3), If an \proglang{R} session is restarted during a task, as long as users saved the \proglang{R} environment, the initial states (seeds) of the newly created streams will carry on from the last streams' seed from the previous \proglang{R} session.
+There are a few important notes on the usage of these above functions. (1), We allow users to call \fct{setBaseCreator}  at any time. \fct{setBaseCreator} should be called once before \fct{createStreamsCpu} and \fct{createStreamsGpu} if they would like to select their own initial seeds, or never, in which case streams take the package's default initial seed. (2), Users may switching between \fct{createStreamsCpu} and \fct{createStreamsGpu} in the same program, however, this is not recommended as it causes unnecessary data transfer between host and device. (3), If an \proglang{R} session is restarted during a task, as long as users saved the \proglang{R} environment, the initial states (seeds) of the newly created streams will carry on from the last streams' seed from the previous \proglang{R} session.
 
 %A newly created stream should not have the same seed as another existing stream, just like when you create a new car, it must have a distinct serial number. Streams should be created only once, and moved or copied if needed. And also it causes unnecessary data transfer between host and device if users switch often between \fct{createStreamsCpu} and \fct{createStreamsGpu}.
 
@@ -308,11 +308,11 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 %     \caption{Using streams to produce a $4 \times 6$ matrix of random U(0,1) numbers. \label{fig:1}}
 % \end{figure}
 
-Now we use the 4 streams created in section \ref{createstreams} to generate a vector of double-precision i.i.d. $U(0,1)$ random numbers with \fct{clrng::runif}. To view the generated random numbers, we need to convert them to \proglang{R} vectors or matrices, by doing this, the random numbers are moved from the global memory of the GPU device to the host.
+Now we use the 4 streams created in section \ref{createstreams} to generate a vector of double-precision i.i.d. $U(0,1)$ random numbers with \fct{runifGpu}. To view the generated random numbers, we need to convert them to \proglang{R} vectors or matrices, by doing this, the random numbers are moved from the global memory of the GPU device to the host.
 <<simStuff2, eval=TRUE,tidy=TRUE, echo=TRUE>>=
-as.vector(clrng::runif(n=6, streams=myStreamsGpu2, Nglobal=c(2,2)))
+as.vector(runifGpu(n=6, streams=myStreamsGpu2, Nglobal=c(2,2)))
 @
-The arguments of the \fct{clrng::runif} are described as follows:
+The arguments of the \fct{runifGpu} are described as follows:
 \begin{itemize}
 \itemsep0em 
   \item \code{n}: A vector of length 2 specifying the row and column number if to create a matrix, or a number specifying the length if to create a vector.
@@ -321,7 +321,7 @@ The arguments of the \fct{clrng::runif} are described as follows:
   \item \code{type}: ``double'' or ``float'' or ``integer'' format of generated random numbers.
   \item \code{verbose}: Print extra information if $\text{verbose} > 1$. Default is FALSE.
 \end{itemize}
-%\fct{runif} returns the same sequence of random numbers because it uses the same streams \code{myStreamsGpu} and \code{myStreamsGpu2} here. 
+%\fct{runifGpu} returns the same sequence of random numbers because it uses the same streams \code{myStreamsGpu} and \code{myStreamsGpu2} here. 
 Reusing \code{myStreamsGpu} will produce a vector different from \code{sim_1}. Because each time a random number is generated, the current state of the stream advances by one position. %Below shows the \code{myStreamsGpu} after it being used.
 <<eval=FALSE,tidy=TRUE, include=FALSE>>=
 t(matrix(as.matrix(myStreamsGpu2), nrow(myStreamsCpu), ncol(myStreamsCpu), dimnames = dimnames(myStreamsCpu)))
@@ -334,13 +334,13 @@ sim_mat <- matrix(0, nrow=10, ncol= 6)
 for (i in 1:10){
   if( i %% 2 == 0){
     streams1 <- createStreamsGpu(4)
-    sim_mat[i,] <- as.vector(clrng::rnorm(n=6, streams=streams1, Nglobal=c(2,2)))
+    sim_mat[i,] <- as.vector(clrng::rnormGpu(n=6, streams=streams1, Nglobal=c(2,2)))
   }else if(i==3){
     streams2 <- createStreamsGpu(4)
-    sim_mat[i,] <- as.vector(clrng::runif(n=6, streams=streams2, Nglobal=c(2,2)))
+    sim_mat[i,] <- as.vector(runifGpu(n=6, streams=streams2, Nglobal=c(2,2)))
   }else{
     streams3 <- createStreamsGpu(8)
-    sim_mat[i,] <- as.vector(clrng::rexp(n=6, streams=streams3, Nglobal=c(4,2)))
+    sim_mat[i,] <- as.vector(rexpGpu(n=6, streams=streams3, Nglobal=c(4,2)))
 }
 }
 sim_mat
@@ -350,7 +350,7 @@ For more complicated applications, we recommend users to save the matrix of stre
 saveRDS(as.matrix(myStreamsGpu2), "myStreams.rds")
 # Load the streams object as streams_saved
 streams_saved <- vclMatrix(readRDS("myStreams.rds"))
-clrng::rnorm(n=6, streams=streams_saved, Nglobal=c(2,2))
+clrng::rnormGpu(n=6, streams=streams_saved, Nglobal=c(2,2))
 @
 
 %\subsection{Plot the uniform random numbers (now deleted?)}
@@ -441,13 +441,13 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 % \end{figure}
  
 
-We generate a large-size matrix of 100 million double-precision Gaussian random numbers, and compare the run-time between using \fct{stats::rnorm} and \fct{clrng::rnorm}. The best performance we have seen using \fct{clrng::rnorm} is above 160 times faster with $512 \times 128$ work-items than using the \fct{stats::rnorm}. The difference in elapsed time becomes larger when matrix size goes larger.
+We generate a large-size matrix of 100 million double-precision Gaussian random numbers, and compare the run-time between using \fct{stats::rnorm} and \fct{rnormGpu}. The best performance we have seen using \fct{rnormGpu} is above 160 times faster with $512 \times 128$ work-items than using the \fct{stats::rnorm}. The difference in elapsed time becomes larger when matrix size goes larger.
 <<random normal time compare, eval=TRUE, cache=FALSE>>=
 streams <- createStreamsGpu(512 * 128)
-system.time(clrng::rnorm(c(10000,10000), streams=streams, Nglobal=c(512,128), type="double"))
+system.time(rnormGpu(c(10000,10000), streams=streams, Nglobal=c(512,128), type="double"))
 @
 <<random normal time compare2, eval=TRUE, cache=TRUE>>=
-system.time(matrix(stats::rnorm(10000^2),10000,10000))
+system.time(matrix(rnorm(10000^2),10000,10000))
 @
 
 
@@ -456,10 +456,10 @@ The exponential random variates are produced by applying the inverse transform m
 
 Below is an example that produces a $2 \times 4$ matrix of Exponential random numbers with expectation equal to 1.
 <<random exponential, eval=TRUE, cache=FALSE>>=
-r_matrix <- clrng::rexp(c(2,4), rate=1, myStreamsGpu2, Nglobal=c(2,2), type="double")
+r_matrix <- rexpGpu(c(2,4), rate=1, myStreamsGpu2, Nglobal=c(2,2), type="double")
 as.matrix(r_matrix)
 @
-The arguments of the \fct{clrng::rexp} are described as follows:
+The arguments of the \fct{rexpGpu} are described as follows:
 \begin{itemize}
 \itemsep0em 
   \item \code{n}: A vector of length 2 specifying the row and column number if to create a matrix, or a number specifying the length if to create a vector.
@@ -716,12 +716,12 @@ diagMat = gpuBatchMatrix::cholBatch(maternCov, Nglobal= c(128, 8), Nlocal= c(32,
   D_{1} \\ D_{2} \\D_{3} \\ \vdots
   \end{bmatrix}
 \end{gather}
-Step 5, create some streams on GPU to generate two standard Gaussian random vectors \code{zmatGpu}$=(Z_1, Z_2)$ using \fct{clrng::rnorm}, in which \code{c(nrow(materCov),2)} specifies the number of rows and columns of \code{zmatGpu}.
+Step 5, create some streams on GPU to generate two standard Gaussian random vectors \code{zmatGpu}$=(Z_1, Z_2)$ using \fct{clrng::rnormGpu}, in which \code{c(nrow(materCov),2)} specifies the number of rows and columns of \code{zmatGpu}.
 <<r randomNormalsSim1, eval=TRUE, cache=FALSE>>=
 streamsGpu <- createStreamsGpu(128*64)
 @
 <<r randomNormalsSim2, eval=TRUE, cache=FALSE>>=
-zmatGpu = clrng::rnorm(
+zmatGpu = clrng::rnormGpu(
                 c(nrow(maternCov),2), streams=streamsGpu, 
                 Nglobal=c(128,64),
                 type = theType)
