@@ -18,6 +18,13 @@ Converts a summary table for model parameters on the log scale to the natural or
 	\item{invLogit}{Converts intercept parameter to inverse-logit scale when \code{TRUE}.  Can also be a vector of parameters to inverse-logit transform.}
 }
 
+
+\value{a summary table for log or exponentially transformed model parameters}
+
+
+
+
+
 \examples{
 require("geostatsp")
 data("swissRain")
