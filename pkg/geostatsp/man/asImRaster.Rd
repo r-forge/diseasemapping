@@ -20,4 +20,4 @@ A RasterLayer}
 This function is deceased.  use \code{as.im.RasterLayer} in \code{maptools}
 }
 
-
+\value{returns spatstat’s im objects}
