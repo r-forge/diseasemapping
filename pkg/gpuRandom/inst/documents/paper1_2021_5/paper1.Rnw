@@ -269,7 +269,7 @@ __kernel void mrg31k3pMatrix(
 
 int Drow, Dcol;
 uint g1[3], g2[3];
-double temp, fact = mrg31k3p_NORM_cl;
+double temp;
 const int startvalue = (get_global_id(0) + 
 get_global_size(0) * get_global_id(1)) * NpadStreams;
 
@@ -303,7 +303,7 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 
 Now we use the 4 streams created in section \ref{createstreams} to generate a vector of double-precision i.i.d. $U(0,1)$ random numbers with \fct{runifGpu}. To view the generated random numbers, we need to convert them to \proglang{R} vectors or matrices, by doing this, the random numbers are moved from the global memory of the GPU device to the host.
 <<simStuff2, eval=TRUE,tidy=TRUE, echo=TRUE>>=
-sim_1 =  runifGpu(n = 8, streams = myStreamsGpu, Nglobal = c(2,2)))
+sim_1 =  runifGpu(n = 8, streams = myStreamsGpu, Nglobal = c(2,2))
 as.vector(sim_1)
 @
 The arguments of the \fct{runifGpu} are described as follows:
@@ -383,8 +383,7 @@ __kernel void mrg31k3pMatrix(
 int Drow, Dcol;
 uint g1[3], g2[3];
 int startvalue = (get_global_id(0) * get_global_size(1) + 
-get_global_id(1)) * NpadStreams;
-double temp;
+  get_global_id(1)) * NpadStreams;
 
 const double fact[2] = { mrg31k3p_NORM_cl, TWOPI * mrg31k3p_NORM_cl };
 const double addForSine[2] = { 0.0, - PI_2 };
@@ -392,17 +391,16 @@ local double part[2];
 
 streamsToPrivate(streams,g1,g2, startvalue);
 
-for(Drow=get_global_id(0); Drow < Nrow;
-    Drow += get_global_size(0)){
-
-    for(Dcol=get_global_id(1); Dcol < Ncol; 
-        Dcol += get_global_size(1)){
+for(Drow=get_global_id(0); Drow < Nrow; Drow += get_global_size(0)){
+  for(Dcol=get_global_id(1); Dcol < Ncol; Dcol += get_global_size(1)){
         
-      part[get_local_id(1)] = fact[get_local_id(1)] * clrngMrg31k3pNextState(g1, g2);
-      barrier(CLK_LOCAL_MEM_FENCE);
-      temp = sqrt( -2.0*log(part[0]) ) * cos(part[1] + addForSine[get_local_id(1)] );
-      out[Dentry] = temp;
-      barrier(CLK_LOCAL_MEM_FENCE);
+    part[get_local_id(1)] = fact[get_local_id(1)] * 
+      clrngMrg31k3pNextState(g1, g2);
+    barrier(CLK_LOCAL_MEM_FENCE);
+    out[Drow * Npad + Dcol] = sqrt( -2.0*log(part[0]) ) * 
+      cos(part[1] + addForSine[get_local_id(1)] );
+    barrier(CLK_LOCAL_MEM_FENCE);
+    
   }//Dcol
 }//Drow
 streamsFromPrivate(streams,g1,g2,startvalue);
@@ -437,7 +435,7 @@ The exponential random variates are produced by applying the inverse transform m
 
 Below is an example that produces a $2 \times 4$ matrix of Exponential random numbers with expectation equal to 1.
 <<random exponential, eval=TRUE, cache=FALSE>>=
-r_matrix <- rexpGpu(c(2,4), rate=1, myStreamsGpu2, Nglobal=c(2,2), type="double")
+r_matrix <- rexpGpu(c(2,4), rate=1, myStreamsGpu, Nglobal=c(2,2), type="double")
 as.matrix(r_matrix)
 @
 The arguments of the \fct{rexpGpu} are described as follows:
@@ -483,8 +481,10 @@ Users request $N$ number of replicates, while the actual number of replicates to
 
 
  
-\subsection{Comparing run-time: Month data example}\label{fisher_month}
-The 2-way contingency tables consist of selected data from the 2018 Natality public use data \citep{National2018} from the Centers for Disease Control and Prevention’s National Center for Health Statistics (NCHS), the 2018 natality data file may be downloaded at \url{https://www.cdc.gov/nchs/data_access/VitalStatsOnline.htm}. Table \ref{tab:month} is a $12 \times 12$ table that shows frequencies for congenital anomalies of the newborn by birth month in 2018 within the United States. The column variables of these two tables represent the twelve categories of congenital anomalies of the newborn: 1) Anencephaly; 2) Meningomyelocele/Spina bifida; 3) Cyanotic congenital heart disease; 4) Congenital diaphragmatic hernia; 5) Omphalocele; 6) Gastrochisis; 7) Limb reduction defect; 8) Cleft lip with or without cleft palate; 9) Cleft palate alone; 10) Down syndrome; 11) Suspected chromosomal disorder; and 12) Hypospadias. The first 5 rows of the table are displayed below.
+\subsection{Comparing run-time: Monthly birth anomolies}\label{fisher_month}
+
+The 2-way contingency table in Table \ref{tab:monthdata} comes from the 2018 Natality public use data from the Centers for Disease Control and Prevention’s National Center for Health Statistics \citep{National2018}.  The 2018 natality data file may be downloaded at \url{https://www.cdc.gov/nchs/data_access/VitalStatsOnline.htm}. Table \ref{tab:month} is a $12 \times 12$ table that shows frequencies for congenital anomalies of the newborn by birth month in 2018 within the United States. The column variables of these two tables represent the twelve categories of congenital anomalies of the newborn: 1) Anencephaly; 2) Meningomyelocele/Spina bifida; 3) Cyanotic congenital heart disease; 4) Congenital diaphragmatic hernia; 5) Omphalocele; 6) Gastrochisis; 7) Limb reduction defect; 8) Cleft lip with or without cleft palate; 9) Cleft palate alone; 10) Down syndrome; 11) Suspected chromosomal disorder; and 12) Hypospadias. 
+
  <<Timecomparemonth,echo=FALSE,eval=TRUE, cache=FALSE, results="hide">>=
  # datamonth<-read.csv("/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/month.csv")
  # month<-as.matrix(datamonth[,-1])
@@ -498,23 +498,26 @@ library(knitr)
 library(tidyverse)
 library(kableExtra)
 knitr::kable(month,format="latex", align = c("rrrrrrrrrrrr"), #label="tab:month"
-  caption = "Monthly birth anomaly data\\label{tab:month}", booktabs=TRUE,linesep = "") %>%
+  caption = "Monthly counts of birth anomalies.\\label{tab:month}", booktabs=TRUE,linesep = "") %>%
   kable_styling(full_width = F, position = "center")#latex_options = "HOLD_position")
 @
+
 <<monthDataForScript, include=FALSE, purl=TRUE>>=
 knitr::kable(month)
 @
 
- <<timecomparemonth1Gpu, eval=TRUE,cache=FALSE>>=
- streams <- createStreamsGpu(n =256*64)
- month_gpu<-vclMatrix(month,type="integer")
- system.time(result_month <- clrng::fisher.sim(month_gpu, 1e6, streams=streams,
-                    type="double", returnStatistics=TRUE,  Nglobal = c(256,64)))
- result_month$threshold
- result_month$simNum
- result_month$counts
- result_month$p.value
+ <<timecomparemonth1Gpu, eval=TRUE,cache=FALSE, tidy=FALSE>>=
+ streams <- createStreamsGpu(n = 256*64)
+ month_gpu <- vclMatrix(month, type = "integer")
+ system.time(result_month <- 
+   clrng::fisher.sim(month_gpu, 1e6, 
+      streams=streams, type="double", 
+      returnStatistics=TRUE,  Nglobal = c(256,64)))
  @
+<<timecomparemonth1Gpuresult>>=
+unlist(result_month[c('threshold','simNum','counts')])
+result_month$p.value
+@
 We got 410825 cases whose test statistics are below the observed threshold based on an actual number of 1015808 simulations, so the p-value from \fct{clrng::fisher.sim} for this table is about 0.40443, which is close enough to the p-value from \fct{stats::fisher.test}. \fct{clrng::fisher.sim} takes about 0.31 seconds, \pkg{clrng} accounts for 2.17\% of the elapsed time on CPU. 
  <<timecomparemonth3Gpu, eval=TRUE,echo=FALSE, cache=TRUE>>=
  month_stats <- as.vector(result_month$sim)
@@ -528,7 +531,8 @@ We got 410825 cases whose test statistics are below the observed threshold based
 
 
 
-\subsection{Comparing run-time: Week data example}\label{fisher_week}
+\subsection{Comparing run-time: Day-of-week birth anomolies}\label{fisher_week}
+
 Table \ref{tab:week} is a $7 \times 12$ table shows frequencies for congenital anomalies of the newborn by birth day of week in 2018 within the United States. 
 <<Timecompareweek, echo=FALSE, eval=TRUE, cache=TRUE,results="hide", fig.pos='h'>>=
 # dataweek<-read.csv("/home/ruoyong/diseasemapping/pkg/gpuRandom/inst/documents/paper1_2021_5/weekday.csv")
@@ -547,16 +551,16 @@ kable_styling(full_width = F, position = "center")#, latex_options = "HOLD_posit
 
 <<TimecompareweekGpu2, eval=TRUE, cache=FALSE>>=
 week_GPU<-gpuR::vclMatrix(week,type="integer")
-system.time(result_week<-clrng::fisher.sim(week_GPU, 1e7, streams=streams,
+system.time(resultWeek<-clrng::fisher.sim(week_GPU, 1e7, streams=streams,
                 type="double",returnStatistics=TRUE,Nglobal = c(256,64)))
-result_week$threshold
-result_week$simNum
-result_week$counts
-result_week$p.value
+unlist(resultWeek[c('threshold','simNum','counts')])
+resultWeek$p.value
 @
-The ``week'' table has a much smaller p-value: around 0.000125, which should require a larger number of simulations to get a more accurate p-value. With more than ten million simulations, we get 1205 cases and a p-value around 0.000120472 by \fct{fisher.sim}. \fct{stats::fisher.test} takes 92.45 seconds, while \fct{fisher.sim} takes about 1.95 seconds, the GPU elapsed time is decreased to about 2.10\% of the time taken on CPU. 
+The ``week'' table has a much smaller p-value: around 0.000125, which should require a larger number of simulations to get a more accurate p-value. With more than ten million simulations, we get 1205 cases and a p-value around
+\Sexpr{resultWeek$p.value}
+with \fct{fisher.sim}. \fct{stats::fisher.test} takes 92.45 seconds, while \fct{fisher.sim} takes about 1.95 seconds, the GPU elapsed time is decreased to about 2.10\% of the time taken on CPU. 
 <<TimecompareweekGpu3, echo=FALSE, eval=TRUE, cache=TRUE>>=
-result_week$cpu = as.vector(result_week$sim)
+resultWeek$cpu = as.vector(resultWeek$sim)
 @
 
 <<TimecompareweekCpu, cache=TRUE, eval=TRUE>>=
@@ -592,8 +596,8 @@ hist(month_stats, xlab="test statistic",#TeX('-$\\sum(\\log(n_{ij}!))$'),
      breaks=40, ylab="proportion", main="", prob=TRUE)
 abline(v = result_month$threshold, col = "blue", lwd = 1.5)
 
-hist(result_week$cpu, xlab='test statistic', ylab="proportion", prob=TRUE, main="")
-abline(v = result_week$threshold, col = "blue", lwd = 1.5)
+hist(resultWeek$cpu, xlab='test statistic', ylab="proportion", prob=TRUE, main="")
+abline(v = resultWeek$threshold, col = "blue", lwd = 1.5)
 @
 
 
@@ -602,11 +606,17 @@ abline(v = result_week$threshold, col = "blue", lwd = 1.5)
 
 
 
-\section{An application of normal RNG: Gaussian surface simulation} 
-Given a parameter space $X$, a random field $U$ on $X$ is a collection of random variables $\{U_x :x\in X\}$. A Gaussian random field is a random field with the property that for any positive integer $n$ and any set of locations $x_1,\dots,x_n \in X$, the joint distribution of $U=(U_{x_1},\dots,U_{x_n})^\top$ is multivariate Gaussian. The expectation and covariance function of $U$ completely determine the distribution of $U$, 
+\section{Simulating Gaussian Random Fields} 
+
+Simulating Gaussian random fields (GRF's) is computationally intensive due the high dimensionality of the problem, a 100 by 100 grid has 10,000 cells and a 10,000 by 10,000 variance matrix.  Writing $x_1,\dots, x_n$ as point locations (i.e.\ centres of grid cells), the joint distribution of $U=(U_{x_1},\dots,U_{x_n})^\top$ is multivariate Gaussian. 
+
+GEOMETRIC ANISOTROPY
+
+
+The expectation and covariance function of $U$ completely determine the distribution of $U$, 
 \begin{gather*} 
 U = [U(x_1), \ldots, U(x_n)]^\top \sim \text{MVN}(0, \Sigma), \\
-\Sigma_{ij} = \cov[ U(x_i),U(x_j) ] = \sigma^2 \frac{2^{\kappa-1}}{\Gamma(\kappa)} \left(\sqrt{8\kappa} \frac{|x_i = x_j|}{\phi}\right)^\kappa  K_\kappa\left(\sqrt{8\kappa}  \frac{|x_i = x_j|}{\phi}\right),
+\Sigma_{ij} = \cov[ U(x_i),U(x_j) ] = \sigma^2 \frac{2^{\kappa-1}}{\Gamma(\kappa)} \left(\sqrt{8\kappa} \frac{|x_i - x_j|}{\phi}\right)^\kappa  K_\kappa\left(\sqrt{8\kappa}  \frac{|x_i - x_j|}{\phi}\right),
 \end{gather*}
 where \text{MVN} standards for the multivariate normal distribution, and $\Sigma$ standards for the covariance matrix of $U$. A common choice for $\Sigma$ is the Mat\'ern covariance \citep{matern1960spatial}. The Mat\'ern covariance between $U(x_i)$ and $U(x_j)$ takes the above form,
 %$d =\|x-x'\|$ is the Euclidean distance between two spatial points, 
@@ -653,14 +663,14 @@ Step 1, set up a $51 \times 80$ raster using the `swissBorder' coordinates from 
 <<setupcoords, eval=TRUE>>=
 NlocalCache = 1000
 Nglobal = c(128, 64, 2)
-Nlocal = c(4, 2, 2)
+Nlocal = c(16, 8, 2)
 theType = "double"
 @
 
 <<swissRainBoundary, echo=TRUE>>=
 data("swissRain", package="geostatsp")
-myRaster = geostatsp::squareRaster(swissBorder, 80)
-myRaster
+myRaster = geostatsp::squareRaster(swissBorder, 90)
+dim(myRaster)
 @
 Step 2, create four parameter sets as a small example. 
 <<setup paramsBatch, eval=TRUE,echo=FALSE>>=
@@ -671,7 +681,7 @@ c(shape=0.6, range=30*1000, variance = 2, nugget = 0, anisoRatio = 2, anisoAngle
 c(shape=3, range=30*1000, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/7)
 )
 @
-<<show parameterBatch,eval=TRUE>>=
+<<show parameterBatch,eval=TRUE,R.options=list(width=100)>>=
 params
 @
 Step 3, compute the Mat\'ern covariance matrices using \fct{gpuBatchMatrix::maternBatch}, the returned Mat\'ern covariance matrices %$\Sigma_1, \Sigma_2, \dots, \Sigma_5$ correspond to the 5 parameter sets respectively, the matrices 
@@ -750,7 +760,7 @@ theSubcap = gsub("sim", ", simuation ", theSubcap)
 @
 
 <<maternplot, echo=FALSE, eval=TRUE, cache=FALSE, dev='png', out.width = '0.47\\textwidth', fig.height=3, fig.width=4.5, fig.cap="Simulated Gaussian random fields", fig.subcap = theSubcap, fig.align='default'>>=
-myCol = mapmisc::colourScale(breaks=sort(unique(c(-6, -4, seq(-2, 2), 4, 6))), style='fixed', col='Spectral')
+myCol = mapmisc::colourScale(breaks=sort(unique(c(-7, -4, seq(-2, 2), 4, 7))), style='fixed', col='Spectral')
 for(D in names(simRaster)) {
   mapmisc::map.new(simRaster)
   plot(simRaster[[D]], legend=FALSE, add=TRUE, col=myCol$col, breaks=myCol$breaks)
