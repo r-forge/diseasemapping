@@ -159,6 +159,17 @@ credible regions have the desired coverage.
 
 
 \section{Introduction}
+
+
+
+
+
+
+
+
+
+
+
 some keypoints to mention:\\
 1, anisotropic spatial models are important but diffcult to evaluate because it consists of many covariance parameters.\\
 2, standard approximations of spatial models (GMRF) don’t allow for anisotropy (at least as implemented). \\
@@ -399,7 +410,7 @@ Wald intervals are always symmetric, and computationally much easier than likeli
 % $2\{\ell(\hat\theta(Y); Y)-\ell(\theta;Y) \} \sim \chi^2_p ,$ where $p$ is the dimension of $\theta$.
 % \end{theorem}
 \textit{Geostatsp's methods}\vspace{0.5cm}\\
-The \fct{lgm} function in \pkg{geostatsp} package estimates the correlation parameters $\omega=(\phi,\kappa,\nu^2, \varphi, \psi)$ and the transformation parameter $\lambda$ by maximization of the likelihood. Specifically, \fct{lgm} uses the \textit{optim} function to optimize the equation \eqref{profile} (if \fct{reml}=FALSE)  numerically over many different sets of $(\omega, \lambda)$ to find $(\hat{\omega},\hat{\lambda}) = \argmax_{\omega,\lambda} \ell_p(\omega, \lambda; y')$.  \pkg{geostatsp} then treats $\hat{\omega}$ and $\hat{\lambda}$ as fixed known parameters and back substitute them into \eqref{betahat} and \eqref{eq:4} to obtain the MLEs $\hat{\beta}_{\omega,\lambda}$ and $\hat{\sigma}^2_{\omega,\lambda}$.  \pkg{geostatsp} calculates Wald confidence intervals for model parameters in \fct{lgm}. The \fct{numderiv} function inside \fct{lgm} returns the Hessian matrix evaluated at $\hat{\omega}$ and $\hat{\lambda}$, the diagonals of the inverse of the negative Hessian is used for approximating the variance of the parameters.This way does not take into account of uncertainty in correlation parameters. \pkg{geostatsp} does the above computation process in \prog{C}, and (ADD LATER!) which has achieved a great perfomance in terms of speed.      
+The \fct{lgm} function in \pkg{geostatsp} package estimates the correlation parameters $\omega=(\phi,\kappa,\nu^2, \varphi, \psi)$ and the transformation parameter $\lambda$ by maximization of the likelihood. Specifically, \fct{lgm} uses the \textit{optim} function to optimize the equation \eqref{profile} (if \fct{reml}=FALSE)  numerically over many different sets of $(\omega, \lambda)$ to find $(\hat{\omega},\hat{\lambda}) = \argmax_{\omega,\lambda} \ell_p(\omega, \lambda; y')$.  \pkg{geostatsp} then treats $\hat{\omega}$ and $\hat{\lambda}$ as fixed known parameters and back substitute them into \eqref{betahat} and \eqref{eq:4} to obtain the MLEs $\hat{\beta}_{\omega,\lambda}$ and $\hat{\sigma}^2_{\omega,\lambda}$.  \pkg{geostatsp} calculates Wald confidence intervals for model parameters in \fct{lgm}. The \fct{numderiv} function inside \fct{lgm} returns the Hessian matrix evaluated at $\hat{\omega}$ and $\hat{\lambda}$, the diagonals of the inverse of the negative Hessian is used for approximating the variance of the parameters. In this procedure, the uncertainty of the (estimated) correlation parameters is ignored . \pkg{geostatsp} does the above computation process in \prog{C}, and (ADD LATER!) which has achieved a great perfomance in terms of speed.      
 
 The other function \fct{profLlgm} in \pkg{geostatsp} calculates Likelihood-based confidence intervals. \fct{profLlgm} calculates the profile log-likelihood for each of the correlation parameter $\omega$ and $\lambda$, specifically, for estimating for example the range parameter $\phi$, for a fixed value of $\phi$, it uses \fct{optim} to maximize \eqref{profile} over a number of different combinations of $(\kappa,\nu^2, \varphi, \psi)$, and repeat this process for a number of $\phi$ values, and use \fct{approxfun} to get curve of the profile log-likelihood and MLE of $\phi$, then computes the confidence interval based on the profile log-likelihood.  \fct{profLlgm} runs \fct{optim} a great many of times and can be time-consuming.
 
@@ -446,35 +457,129 @@ SHOW ALL LIKELIHOODS PLOT VS BETA'S
 
 
 
-\subsection{CI’s comparison for model parameters}
+
+\subsection{swissRain example}
+
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{table}[H]
+
+\caption{\label{tab:swisssummarycompare}Summary comparison}
+\centering
+\begin{tabular}[t]{rcccc}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{geostatsp} & \multicolumn{2}{c}{gpuBatchMatrix} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5}
+Parameter & Estimate & 95\% CI & Estimate & 95\% CI\\
+\midrule
+range & 38618.730 & (21805.93, 68394.54) & 38618.730 & NA\\
+sdNugget & 0.992 & (0.684,1.439) & 0.992 & NA\\
+shape & 1.826 & (-0.574,4.227) & 1.826 & NA\\
+anisoRatio & 8.092 & (5.321,12.305) & 8.092 & NA\\
+anisoAngleRadians & 0.652 & (0.595, 0.709) & 0.652 & NA\\
+boxcox & 0.496 & (0.373,0.620) & 0.496 & NA\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{figure}[H]
+
+{\centering \includegraphics[width=0.5\linewidth]{profile_logl_swiss} 
+
+}
+
+\caption[profile LogL of slope parameter]{profile LogL of slope parameter}\label{fig:swiss_profile_many}
+\end{figure}
+
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}
+
+{\centering \includegraphics[width=1\linewidth]{swiss_pro_4} 
+
+}
+
+
+\end{knitrout}
+
+
+
+
+
+
+\subsection{meuse example}
 
 
 SHOW A TABLE OF CI compare between \pkg{geostatsp} and \pkg{gpuBatchMatrix}
 %"Calculating a likelihood-based confidence region is straightforward in principle but difficult in practice, rapidly becoming impossible as the number of elements of $\varphi$ grows. However, a more general version of the result also holds, and is extremely useful in practice." The results R1 and R2 are invoked routinely in modern statistical practice, but they rely on assumptions that are not always satisfied. In a geostatistical context, the two most common situations in which these assumptions do not hold are boundary problems and dimensional ambiguities. 
 
 
+
+Estimates by \pkg{geostatsp}
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
-R> library(gpuRandom)
-R> library(gpuR)
-R> library(data.table)
-R> # library(geostatsp)
+##                    estimate   ci0.005 ci0.995
+## (Intercept)         0.91634  0.121205   1.711
+## sqrtdist           -0.08445 -1.623508   1.455
+## sdNugget            0.00785  0.000379   0.163
+## sdSpatial           0.01250  0.000690   0.227
+## range             173.16439 92.775636 323.209
+## shape               4.00000 -9.880685  17.881
+## anisoRatio          2.30106  1.138810   4.649
+## anisoAngleRadians   0.27490 -0.167582   0.717
+## anisoAngleDegrees  15.75042 -9.601751  41.103
+## boxcox             -0.90390 -2.558961   0.751
+## m2logL.ml   logL.ml 
+##     133.4     -66.7
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
 
-% swissrain matplot over betas
-
-%meuse data
 
 
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+R> result3 <- gpuRandom::likfitLgmCov(spatialmodel = Res1, params = params,
++      boxcox = c(1, 0, -0.903901505), paramToEstimate = c("range", "shape",
++          "nugget", "sdNugget", "anisoRatio", "anisoAngleRadians"), cilevel = 0.95,
++      type = "double", reml = FALSE, NparamPerIter = 400, Nglobal = c(128,
++          64), Nlocal = c(16, 16), NlocalCache = 2800, verbose = FALSE)
+## workgroupSize
+## 128 64
+## localSize
+## 16 16
+## 
+##  Nparams 50176 NparamsPerIter 400 Niter 126 Ncovariates 2 Ndatasets 3 NlocalCacheD 1272
+\end{verbatim}
+\end{kframe}
+
+{\centering \includegraphics[width=\maxwidth]{figure/meuse_logl-1} 
+
+}
 
 
-
-
-
-
+\begin{kframe}\begin{verbatim}
+R> result3$summary
+##                   estimate lower95ci upper95ci
+## (Intercept)         0.9162        NA        NA
+## sqrtdist           -0.0843        NA        NA
+## sdSpatial           0.0126        NA        NA
+## range             173.1644   100.000  277.7688
+## shape               6.0000     0.784    6.0000
+## nugget              0.3947     0.000    1.1582
+## sdNugget            0.0079     0.000    0.0135
+## anisoRatio          2.3011     1.469    5.5220
+## anisoAngleRadians   0.2749     0.000    0.5604
+## boxcox             -0.9039        NA        NA
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
 
 
 
@@ -492,26 +597,28 @@ R> # library(geostatsp)
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
 R> count/Nsim
-## [1] 0.84
+## [1] 0.81
 R> mean_estimates
 ## (Intercept)        cov1        cov2   sdSpatial       range 
-##       3.119       1.000       0.499       0.510    1006.381 
+##       2.992       1.000       0.500       0.492     986.372 
 ##      nugget 
-##       4.084
+##       4.427
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
 
 
 
+
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{figure}
 
-{\centering \includegraphics[width=\maxwidth]{figure/showgraphs1-1} 
+{\centering \includegraphics[width=0.5\linewidth]{p2Rplot_100} 
+\includegraphics[width=0.5\linewidth]{rsplot} 
 
 }
 
-\caption[title]{title}\label{fig:showgraphs1}
+\caption[range and nugget contours]{range and nugget contours}\label{fig:showgraphs}
 \end{figure}
 
 \end{knitrout}
