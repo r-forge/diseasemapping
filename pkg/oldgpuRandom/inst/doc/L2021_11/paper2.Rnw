@@ -51,7 +51,7 @@
 
 <<preliminaries, echo=FALSE, include=TRUE>>=
 options(continue="+  ",  prompt="R> ", digits=3, width=66) 
-
+options(scipen=999)
 opts_chunk$set(fig.height=3,
 		fig.width=4.5,dev='png',tidy=TRUE,fig.align='center',background='#FFFFFF00', prompt=TRUE, highlight=FALSE)
 
@@ -104,6 +104,17 @@ credible regions have the desired coverage.
 
 
 \section{Introduction}
+
+
+
+
+
+
+
+
+
+
+
 some keypoints to mention:\\
 1, anisotropic spatial models are important but diffcult to evaluate because it consists of many covariance parameters.\\
 2, standard approximations of spatial models (GMRF) don’t allow for anisotropy (at least as implemented). \\
@@ -344,7 +355,7 @@ Wald intervals are always symmetric, and computationally much easier than likeli
 % $2\{\ell(\hat\theta(Y); Y)-\ell(\theta;Y) \} \sim \chi^2_p ,$ where $p$ is the dimension of $\theta$.
 % \end{theorem}
 \textit{Geostatsp's methods}\vspace{0.5cm}\\
-The \fct{lgm} function in \pkg{geostatsp} package estimates the correlation parameters $\omega=(\phi,\kappa,\nu^2, \varphi, \psi)$ and the transformation parameter $\lambda$ by maximization of the likelihood. Specifically, \fct{lgm} uses the \textit{optim} function to optimize the equation \eqref{profile} (if \fct{reml}=FALSE)  numerically over many different sets of $(\omega, \lambda)$ to find $(\hat{\omega},\hat{\lambda}) = \argmax_{\omega,\lambda} \ell_p(\omega, \lambda; y')$.  \pkg{geostatsp} then treats $\hat{\omega}$ and $\hat{\lambda}$ as fixed known parameters and back substitute them into \eqref{betahat} and \eqref{eq:4} to obtain the MLEs $\hat{\beta}_{\omega,\lambda}$ and $\hat{\sigma}^2_{\omega,\lambda}$.  \pkg{geostatsp} calculates Wald confidence intervals for model parameters in \fct{lgm}. The \fct{numderiv} function inside \fct{lgm} returns the Hessian matrix evaluated at $\hat{\omega}$ and $\hat{\lambda}$, the diagonals of the inverse of the negative Hessian is used for approximating the variance of the parameters.This way does not take into account of uncertainty in correlation parameters. \pkg{geostatsp} does the above computation process in \prog{C}, and (ADD LATER!) which has achieved a great perfomance in terms of speed.      
+The \fct{lgm} function in \pkg{geostatsp} package estimates the correlation parameters $\omega=(\phi,\kappa,\nu^2, \varphi, \psi)$ and the transformation parameter $\lambda$ by maximization of the likelihood. Specifically, \fct{lgm} uses the \textit{optim} function to optimize the equation \eqref{profile} (if \fct{reml}=FALSE)  numerically over many different sets of $(\omega, \lambda)$ to find $(\hat{\omega},\hat{\lambda}) = \argmax_{\omega,\lambda} \ell_p(\omega, \lambda; y')$.  \pkg{geostatsp} then treats $\hat{\omega}$ and $\hat{\lambda}$ as fixed known parameters and back substitute them into \eqref{betahat} and \eqref{eq:4} to obtain the MLEs $\hat{\beta}_{\omega,\lambda}$ and $\hat{\sigma}^2_{\omega,\lambda}$.  \pkg{geostatsp} calculates Wald confidence intervals for model parameters in \fct{lgm}. The \fct{numderiv} function inside \fct{lgm} returns the Hessian matrix evaluated at $\hat{\omega}$ and $\hat{\lambda}$, the diagonals of the inverse of the negative Hessian is used for approximating the variance of the parameters. In this procedure, the uncertainty of the (estimated) correlation parameters is ignored . \pkg{geostatsp} does the above computation process in \prog{C}, and (ADD LATER!) which has achieved a great perfomance in terms of speed.      
 
 The other function \fct{profLlgm} in \pkg{geostatsp} calculates Likelihood-based confidence intervals. \fct{profLlgm} calculates the profile log-likelihood for each of the correlation parameter $\omega$ and $\lambda$, specifically, for estimating for example the range parameter $\phi$, for a fixed value of $\phi$, it uses \fct{optim} to maximize \eqref{profile} over a number of different combinations of $(\kappa,\nu^2, \varphi, \psi)$, and repeat this process for a number of $\phi$ values, and use \fct{approxfun} to get curve of the profile log-likelihood and MLE of $\phi$, then computes the confidence interval based on the profile log-likelihood.  \fct{profLlgm} runs \fct{optim} a great many of times and can be time-consuming.
 
@@ -388,41 +399,114 @@ SHOW ALL LIKELIHOODS PLOT VS BETA'S
 %  \end{equation} 
 
 
+<<packages, echo=FALSE,results='hide', message=FALSE>>=
+ library(gpuRandom)
+ library(gpuR)
+ library(data.table)
+ library(geostatsp)
+ library("sp")
+library(knitr)
+library(kableExtra)
+@
 
 
 
-\subsection{CI’s comparison for model parameters}
+\subsection{swissRain example}
+<<swissgeostatsp, echo=FALSE, cache=TRUE>>=
+data("swissRain")
+swissRain$elevation = extract(swissAltitude, swissRain)
+swissRes =  lgm( formula=rain~ elevation, 
+                     data=swissRain, 
+                     grid=20,
+                     covariates=swissAltitude, 
+                     reml = FALSE,
+                     fixBoxcox=FALSE, fixShape=FALSE, fixNugget = FALSE,  #Set to FALSE to estimate the nugget effect parameter.
+                     aniso=TRUE )
+A<-swissRes$summary[,c('estimate','ci0.1', 'ci0.9')]
+@
+
+<<swisssummarycompare, echo=FALSE>>=
+table1 <- read.csv("Book1.csv")
+colnames(table1) <- c('Parameter','Estimate','95% CI', 'Estimate','95% CI')
+knitr::kable(table1, format = "latex", align = c("rcccc"),booktabs = T, linesep = "", caption= "Summary comparison", digits=3)%>%
+ kable_styling(full_width = FALSE, position = "center", latex_options = "HOLD_position") %>%
+ add_header_above(c(" ", "geostatsp" = 2, "gpuBatchMatrix" = 2)) 
+@
+
+<<swiss_profile_many,echo = FALSE, eval=TRUE, cache=TRUE, fig.width=4,fig.height=3, fig.show ="hold", fig.align='center', fig.cap = "profile LogL of slope parameter", out.width = "50%",dev='pdf',fig.pos="H">>=
+setwd("/home/ruoyong/diseasemapping/pkg/oldgpuRandom/inst/doc/L2021_11")
+knitr::include_graphics(c('profile_logl_swiss.png'))
+@
+
+<<swiss_profile_sole_prep, out.width = "100%", fig.align = "center",echo=FALSE>>=
+knitr::include_graphics(c('swiss_pro_4.png'))
+@
+
+
+<<range>>=
+
+@
+
+
+
+\subsection{meuse example}
 
 
 SHOW A TABLE OF CI compare between \pkg{geostatsp} and \pkg{gpuBatchMatrix}
 %"Calculating a likelihood-based confidence region is straightforward in principle but difficult in practice, rapidly becoming impossible as the number of elements of $\varphi$ grows. However, a more general version of the result also holds, and is extremely useful in practice." The results R1 and R2 are invoked routinely in modern statistical practice, but they rely on assumptions that are not always satisfied. In a geostatistical context, the two most common situations in which these assumptions do not hold are boundary problems and dimensional ambiguities. 
 
 
-<<packages, results='hide', message=FALSE>>=
- library(gpuRandom)
- library(gpuR)
- library(data.table)
- library(geostatsp)
+
+Estimates by \pkg{geostatsp}
+<<meusedata, echo=FALSE, cache=TRUE>>=
+data(meuse)
+coordinates(meuse) <- c("x", "y")
+meuse$Y = log(meuse$zinc)
+meuse$sqrtdist = sqrt(meuse$dist)
+
+Res1 =  geostatsp::lgm( formula=Y~sqrtdist, 
+                        data=meuse, 
+                        grid=20,
+                        reml = FALSE,
+                        fixBoxcox=FALSE, fixShape=FALSE, fixNugget = FALSE,  #Set to FALSE to estimate the nugget effect parameter.
+                        aniso=TRUE )
+Res1$summary[,c('estimate','ci0.005', 'ci0.995')]
+Res1$optim$logL
 @
 
-% swissrain matplot over betas
+<<meuse_params, cache=TRUE, echo=FALSE>>=
+  ParamList = list(
+    range = c(exp(seq(log(100), log(173.1643928), len=6)), exp(seq(log(185), log(330), len=8))),
+    shape = c(seq(0.1,3.5, len=4), seq(4, 6, len=4)),
+    anisoRatio =c( seq(1, 2.301060332, len=3), seq(2.8, 7, len=4)),
+    anisoAngleRadians = c( seq(0, 0.274896758, len=4), seq(0.4, 0.8, len=4)),
+    nugget = c(seq(0,0.3946587, len=3), seq(0.5, 3, len=5))
+  ) 
+  params = do.call(expand.grid, ParamList)
+@
 
-%meuse data
-
-
-
-
-
-
-
-
+<<meuse_logl, cache=TRUE, message=FALSE>>=
+result3<- gpuRandom::likfitLgmCov(spatialmodel=Res1,
+                  params=params, 
+                  boxcox=c(1,0,-0.903901505),  
+                  paramToEstimate = c('range','shape','nugget','sdNugget', 'anisoRatio','anisoAngleRadians'), 
+                  cilevel=0.95, 
+                  type = "double",
+                  reml=FALSE, 
+                  NparamPerIter=400,
+                  Nglobal=c(128,64),
+                  Nlocal=c(16,16),
+                  NlocalCache=2800,
+                  verbose=FALSE)
+result3$summary
+@
 
 
 
 \section{A simulation study}
 <<simulate_datasets, echo=FALSE, cache=TRUE, results='hide', message=FALSE>>=
 ############### A SIMULATION STUDY IN THE PAPER 2 ####################################
-Nsim=25
+Nsim=100
 set.seed(88)
 mydat = SpatialPointsDataFrame(cbind(seq(100*1e3,140*1e3, len=500), seq(100*1e3,120*1e3, len=500)), 
                                data=data.frame(cov1 =stats::rnorm(500, 120, 20), cov2 = stats::rpois(500, 50))
@@ -457,26 +541,19 @@ swissRes$optim$mle
 @
 
 
-<<set params, echo=FALSE, cache=TRUE>>=
-newParamList = list(
+<<ranuparams, echo=FALSE, cache=TRUE>>=
+newParamListrn = list(
   range = c(exp(seq(log(0.3), log(1), len=10))*1000, exp(seq(log(1.2), log(2.9), len=12))*1000),  
   nugget = c(seq(0, 4, len=8), seq(4.5, 20, len=12)),  
   shape = 2,
   anisoRatio =1,
   anisoAngleRadians = 0.0
 ) 
-params = do.call(expand.grid, newParamList)
+paramsrn = do.call(expand.grid, newParamListrn)
 @
 
 
 <<run_forloop, echo=FALSE, results='hide', message=FALSE, warning=FALSE, cache=TRUE>>=
-count = 0
-breaksf = rep(0, 10)
-makedata <- rep(0, 4)
-estimates <- rep(0, 6)
-
-library(gpuRandom)
-library(gpuR)
 count = 0
 breaksf = rep(0, 10)
 makedata <- rep(0, 4)
@@ -487,7 +564,7 @@ for (i in 1:Nsim){
     data= mydat,
     formula= as.formula(paste(colnames(mydat@data)[i+2], "~", "cov1 + cov2")), 
     coordinates=mydat@coords,
-    params=params, 
+    params=paramsrn, 
     paramToEstimate = c('range','nugget'),
     boxcox = 1,
     cilevel=0.8,
@@ -515,7 +592,7 @@ for (i in 1:Nsim){
     count = count +1
   }
   breaksf[i] = result$breaks
-  makedata0 <- cbind(params[,1:2], result$LogLik, D=i)
+  makedata0 <- cbind(paramsrn[,1:2], result$LogLik, D=i)
   makedata <- rbind(makedata, makedata0)
   estimates <- cbind(estimates, result$summary)
 }
@@ -532,7 +609,7 @@ mean_estimates
 @
 
 
-<<graphs1, echo = FALSE, eval=TRUE, cache=TRUE>>=
+<<graphs, echo = FALSE, eval=TRUE, cache=TRUE>>=
 library(RColorBrewer)
 library('ggplot2')
 forigin <- ggplot(subset(makedatahey, D==1), aes(x = range, y = nugget, z=LogLik)) + theme_bw() + 
@@ -543,13 +620,16 @@ forigin <- ggplot(subset(makedatahey, D==1), aes(x = range, y = nugget, z=LogLik
   stat_contour(breaks=breaksf[1])  + 
   geom_vline(xintercept = trueParam['range'])+
   geom_hline(yintercept=nugget)
-cols <- rainbow(Nsim/2)
-for (i in 2:Nsim/2){
+cols <- rainbow(Nsim)
+for (i in 2:Nsim){
   forigin <- forigin + geom_contour(data = subset(makedatahey, D==i), aes(x = range, y = nugget, z=LogLik), breaks=breaksf[i], col= cols[i])
 }
 @
-<<showgraphs1, echo = FALSE, eval=TRUE, cache=TRUE, fig.height =3, fig.width =4, fig.show ="hold",  fig.cap = "title", dev='png'>>=
-forigin
+
+<<showgraphs, echo = FALSE, eval=TRUE, cache=TRUE, fig.width=4,fig.height=3, fig.show ="hold", fig.align='center', fig.cap = "range and nugget contours", out.width = "50%",dev='pdf'>>=
+#par(mfrow = c(1, 2))
+#forigin
+knitr::include_graphics(c('p2Rplot_100.png','rsplot.png'))
 @
 
 

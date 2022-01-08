@@ -1,10 +1,26 @@
 ############### A SIMULATION STUDY IN THE PAPER 2 ####################################
 library('geostatsp')
-Nsim=10
+Nsim=15
+Ngrid=40
 set.seed(88)
-mydat = SpatialPointsDataFrame(cbind(seq(100*1e3,140*1e3, len=500), seq(100*1e3,120*1e3, len=500)), 
-                               data=data.frame(cov1 =stats::rnorm(500, 120, 20), cov2 = stats::rpois(500, 50))
+pointsGrid = expand.grid(seq(100*1e3,140*1e3, len=Ngrid), seq(100*1e3,120*1e3, len=Ngrid))
+#plot(pointsGrid,cex=0.3)
+pointsGrid = pointsGrid[,1] + 1i*pointsGrid[,2]
+pointsRandom = pointsGrid + stats::runif(length(pointsGrid), 50, 500) * exp(stats::runif(length(pointsGrid), 0, 2*pi)*1i)
+#plot(pointsRandom,cex=0.3)
+#plot(Re(pointsRandom),Im(pointsRandom),cex=0.3)
+mydat = SpatialPointsDataFrame(cbind(Re(pointsRandom),Im(pointsRandom)),
+                               data=data.frame(cov1 =stats::rnorm(Ngrid^2, 120, 20), cov2 = stats::rpois(Ngrid^2, 50))
 )
+
+
+# mydat = SpatialPointsDataFrame(cbind(seq(100*1e3,140*1e3, len=1000), seq(100*1e3,120*1e3, len=500)), 
+#                                data=data.frame(cov1 =stats::rnorm(500, 120, 20), cov2 = stats::rpois(500, 50))
+# )
+# plot(cbind(seq(100*1e3,140*1e3, len=500), seq(100*1e3,120*1e3, len=500)), xlab="",ylab="")
+
+
+
 #mydat@data
 #mydat@coords
 
@@ -27,36 +43,29 @@ colnames(mydat@data) <- c("cov1", "cov2", paste("Y", c(1:Nsim), sep=""))
 #mydat$Y3
 
 ## geostatsp's estimates
-swissRes =  lgm( formula=Y10~ cov1 + cov2,
+swissRes =  lgm( formula=Y15~ cov1 + cov2,
                  data=mydat,
                  grid=20,
                  reml = FALSE,
+                 shape=2,
                  boxcox=1,
-                 fixBoxcox=TRUE, fixShape=FALSE, fixNugget = FALSE,  #Set to FALSE to estimate the nugget effect parameter.
+                 fixBoxcox=TRUE, fixShape=TRUE, fixNugget = FALSE,  #Set to FALSE to estimate the nugget effect parameter.
                  aniso=FALSE )
 swissRes$summary[,c('estimate','ci0.005', 'ci0.995')]
 swissRes$optim$mle
 
 
 
-
-
-## ---gpuRandom------range vs nugget conntour--------------------------------------------------------------
+## ---gpuRandom------range vs nugget contour--------------------------------------------------------------
 ## set params
 newParamList = list(
-  range = c(exp(seq(log(0.3), log(1), len=10))*1000, exp(seq(log(1.2), log(2.9), len=12))*1000),  #22
+  range = c(exp(seq(log(0.2), log(1), len=10))*1000, exp(seq(log(1.2), log(3), len=12))*1000),  #22
   nugget = c(seq(0, 4, len=8), seq(4.5, 20, len=12)),  #20
   shape = 2,
   anisoRatio =1,
   anisoAngleRadians = 0.0
 ) 
 params = do.call(expand.grid, newParamList)
-
-
-count = 0
-breaksf = rep(0, 10)
-makedata <- rep(0, 4)
-estimates <- rep(0, 6)
 
 library(gpuRandom)
 library(gpuR)
@@ -102,6 +111,8 @@ for (i in 1:Nsim){
   makedata <- rbind(makedata, makedata0)
   estimates <- cbind(estimates, result$summary)
 }
+
+
 colnames(makedata) <- c("range",'nugget', 'LogLik', 'D')
 makedatahey <- makedata[-1,]
 estimates_summary <- estimates[,-1]
@@ -114,8 +125,6 @@ library(RColorBrewer)
 library('ggplot2')
 #rm(forigin)
 forigin <- ggplot(subset(makedatahey, D==1), aes(x = range, y = nugget, z=LogLik)) + theme_bw() + 
-  scale_y_continuous(limits=c(0,20))+
-  scale_x_continuous(limits=c(300,3000) )+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
   geom_point(size = 0.5, colour='grey') + 
   stat_contour(breaks=breaksf[1])  + 
@@ -128,11 +137,301 @@ forigin <- ggplot(subset(makedatahey, D==1), aes(x = range, y = nugget, z=LogLik
 # #ggsave("filename", plot = myPlot)
 # cols <- cols(Nsim)
 # cols <- brewer.pal(14,'Set5')
-cols <- rainbow(Nsim/2)
-for (i in 2:Nsim/2){
+cols <- rainbow(15)
+i=4
+for (i in 2:Nsim){
   forigin <- forigin + geom_contour(data = subset(makedatahey, D==i), aes(x = range, y = nugget, z=LogLik), breaks=breaksf[i], col= cols[i])
 }
 forigin
+# (Intercept)         cov1         cov2    sdSpatial        range       nugget 
+# 3.0807703    0.9996489    0.5005081    0.5338107 1040.7750111    3.9151560 
+# 
+# i=1
+# a <- subset(makedatahey, D==i)[,3]
+# lMatrix = matrix(a, length(newParamList[[1]]), length(newParamList[[2]]))
+# contour(newParamList[[1]], newParamList[[2]], lMatrix,
+#         col = par("fg"), lty = par("lty"), lwd = par("lwd"),
+#         add = FALSE, levels = c(
+#                                 breaksf[i]),  xlab = "range", ylab = "nugget")
+# 
+# abline(h=2, col='red')
+# abline(v=1000, col='red')
+# points(x = params[,1], y = params[,2], pch=20, col='grey', cex=0.5)
+
+
+
+
+
+
+
+
+
+## ---gpuRandom------range vs shape contour--------------------------------------------------------------
+## set params
+newParamListrs = list(
+    range = c(exp(seq(log(0.3), log(1), len=8))*1000, exp(seq(log(1.2), log(3), len=12))*1000),  
+    shape = c(0.1, 0.15, 0.2, 0.23, 0.3, 0.4, 0.5, 0.75, 0.9, 1, 2, 2.5, 3, 4, 2000),
+    nugget = 4,  
+    anisoRatio =1,
+    anisoAngleRadians = 0.0
+  ) 
+paramsrs = do.call(expand.grid, newParamListrs)
+
+count = 0
+breaksf = rep(0, 10)
+makedata <- rep(0, 4)
+estimates <- rep(0, 6)
+## calculate logl
+for (i in 1:10){
+  result<-gpuRandom::likfitLgmCov2d(
+    data= mydat,
+    formula= as.formula(paste(colnames(mydat@data)[i+2], "~", "cov1 + cov2")), 
+    coordinates=mydat@coords,
+    params=paramsrs, 
+    paramToEstimate = c('range','shape'),
+    boxcox = 1,
+    cilevel=0.8,
+    type = "double",
+    reml=FALSE, 
+    NparamPerIter=400,
+    Nglobal=c(128,64),
+    Nlocal=c(16,16),
+    NlocalCache=2800,
+    verbose=FALSE)
+  
+  a <- geostatsp::loglikLgm(
+    c(trueParam['range'],
+      trueParam['shape'],
+      nugget,
+      trueParam[c('anisoRatio')],
+      trueParam[c('anisoAngleRadians')],
+      boxcox),
+    data = mydat,
+    formula = as.formula(paste(colnames(mydat@data)[i+2], "~", "cov1 + cov2")),
+    reml = FALSE,
+    minustwotimes=FALSE)[['logLik']]
+  
+  if (a  >= result$breaks){
+    count = count +1
+  }
+  breaksf[i] = result$breaks
+  makedata0 <- cbind(paramsrs[,1:2], result$LogLik, D=i)
+  makedata <- rbind(makedata, makedata0)
+  estimates <- cbind(estimates, result$summary)
+}
+colnames(makedata) <- c("range",'shape', 'LogLik', 'D')
+makedatahey <- makedata[-1,]
+estimates_summary <- estimates[,-1]
+mean_estimates <- apply(estimates_summary, 1, mean)
+count/15
+mean_estimates
+
+
+library(RColorBrewer)
+library('ggplot2')
+#rm(forigin_s)
+forigin_s <- ggplot(subset(makedatahey, D==1), aes(x = range, y = shape, z=LogLik)) + theme_bw() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  geom_point(size = 0.5, colour='grey') + 
+  stat_contour(breaks=breaksf[1])  + 
+  geom_vline(xintercept = trueParam['range'])+
+  geom_hline(yintercept=trueParam['shape'])
+
+cols <- rainbow(15)
+for (i in 2:15){
+  forigin_s <- forigin_s + geom_contour(data = subset(makedatahey, D==i), aes(x = range, y = shape, z=LogLik), breaks=breaksf[i], col= cols[i])
+}
+forigin_s
+
+
+par(mfrow = c(2, 3))
+i=2
+a <- subset(makedatahey, D==i)[,3]
+lMatrix = matrix(a, length(newParamListrs[[1]]), length(newParamListrs[[2]]))
+contour(newParamListrs[[1]], newParamListrs[[2]], lMatrix,
+        col = par("fg"), lty = par("lty"), lwd = par("lwd"),
+        add = FALSE, levels = c(breaksf[i]-4, breaksf[i]-3, 
+                                breaksf[i]-2, breaksf[i]-1,
+                                breaksf[i]),  xlab = "range", ylab = "shape")
+
+abline(h=2, col='red')
+abline(v=1000, col='red')
+points(x = paramsrs[,1], y = paramsrs[,2], pch=20, col='grey', cex=0.5)
+
+####################################################################
+
+
+
+
+
+
+
+########################################################################################################################################
+## ---gpuRandom------nugget vs shape contour--------------------------------------------------------------
+## set params
+newParamListsn = list(
+  nugget = c(seq(0,4,len=8), seq(5,20, len=8)),  
+  shape = c(0.1, 0.15, 0.2, 0.23, 0.3, 0.4, 0.45, 0.5, 0.75, 0.9, 1, 2, 3, 5),
+  range = 1000,  
+  anisoRatio =1,
+  anisoAngleRadians = 0.0
+) 
+paramssn = do.call(expand.grid, newParamListsn)
+
+count = 0
+breaksf = rep(0, 10)
+makedata <- rep(0, 4)
+estimates <- rep(0, 6)
+## calculate logl
+for (i in 1:15){
+  result<-gpuRandom::likfitLgmCov2d(
+    data= mydat,
+    formula= as.formula(paste(colnames(mydat@data)[i+2], "~", "cov1 + cov2")), 
+    coordinates=mydat@coords,
+    params=paramssn, 
+    paramToEstimate = c('nugget','shape'),
+    boxcox = 1,
+    cilevel=0.8,
+    type = "double",
+    reml=FALSE, 
+    NparamPerIter=400,
+    Nglobal=c(128,64),
+    Nlocal=c(16,16),
+    NlocalCache=2800,
+    verbose=FALSE)
+  
+  a <- geostatsp::loglikLgm(
+    c(trueParam['range'],
+      trueParam['shape'],
+      nugget,
+      trueParam[c('anisoRatio')],
+      trueParam[c('anisoAngleRadians')],
+      boxcox),
+    data = mydat,
+    formula = as.formula(paste(colnames(mydat@data)[i+2], "~", "cov1 + cov2")),
+    reml = FALSE,
+    minustwotimes=FALSE)[['logLik']]
+  
+  if (a  >= result$breaks){
+    count = count +1
+  }
+  breaksf[i] = result$breaks
+  makedata0 <- cbind(paramssn[,1:2], result$LogLik, D=i)
+  makedata <- rbind(makedata, makedata0)
+  estimates <- cbind(estimates, result$summary)
+}
+colnames(makedata) <- c("nugget",'shape', 'LogLik', 'D')
+makedatahey <- makedata[-1,]
+estimates_summary <- estimates[,-1]
+mean_estimates <- apply(estimates_summary, 1, mean)
+count/15
+mean_estimates
+
+
+library(RColorBrewer)
+library('ggplot2')
+#rm(forigin_ns)
+forigin_ns <- ggplot(subset(makedatahey, D==1), aes(x = nugget, y = shape, z=LogLik)) + theme_bw() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  geom_point(size = 0.5, colour='grey') + 
+  stat_contour(breaks=breaksf[1])  + 
+  geom_vline(xintercept = nugget)+
+  geom_hline(yintercept=trueParam['shape'])
+
+cols <- rainbow(15)
+for (i in 2:15){
+  forigin_ns <- forigin_ns + geom_contour(data = subset(makedatahey, D==i), aes(x = nugget, y = shape, z=LogLik), breaks=breaksf[i], col= cols[i])
+}
+forigin_ns
+
+
+
+
+
+
+
+
+
+########################################################################################################################################
+## ---gpuRandom------nugget vs shape contour--------------------------------------------------------------
+## set params
+newParamListsn = list(
+  nugget = c(seq(0,4,len=8), seq(5,20, len=8)),  
+  shape = c(0.1, 0.15, 0.2, 0.23, 0.3, 0.4, 0.45, 0.5, 0.75, 0.9, 1, 2, 3, 5),
+  range = 1000,  
+  anisoRatio =1,
+  anisoAngleRadians = 0.0
+) 
+paramssn = do.call(expand.grid, newParamListsn)
+
+count = 0
+breaksf = rep(0, 10)
+makedata <- rep(0, 4)
+estimates <- rep(0, 6)
+## calculate logl
+for (i in 1:15){
+  result<-gpuRandom::likfitLgmCov2d(
+    data= mydat,
+    formula= as.formula(paste(colnames(mydat@data)[i+2], "~", "cov1 + cov2")), 
+    coordinates=mydat@coords,
+    params=paramssn, 
+    paramToEstimate = c('nugget','shape'),
+    boxcox = 1,
+    cilevel=0.8,
+    type = "double",
+    reml=FALSE, 
+    NparamPerIter=400,
+    Nglobal=c(128,64),
+    Nlocal=c(16,16),
+    NlocalCache=2800,
+    verbose=FALSE)
+  
+  a <- geostatsp::loglikLgm(
+    c(trueParam['range'],
+      trueParam['shape'],
+      nugget,
+      trueParam[c('anisoRatio')],
+      trueParam[c('anisoAngleRadians')],
+      boxcox),
+    data = mydat,
+    formula = as.formula(paste(colnames(mydat@data)[i+2], "~", "cov1 + cov2")),
+    reml = FALSE,
+    minustwotimes=FALSE)[['logLik']]
+  
+  if (a  >= result$breaks){
+    count = count +1
+  }
+  breaksf[i] = result$breaks
+  makedata0 <- cbind(paramssn[,1:2], result$LogLik, D=i)
+  makedata <- rbind(makedata, makedata0)
+  estimates <- cbind(estimates, result$summary)
+}
+colnames(makedata) <- c("nugget",'shape', 'LogLik', 'D')
+makedatahey <- makedata[-1,]
+estimates_summary <- estimates[,-1]
+mean_estimates <- apply(estimates_summary, 1, mean)
+count/15
+mean_estimates
+
+
+library(RColorBrewer)
+library('ggplot2')
+#rm(forigin_ns)
+forigin_ns <- ggplot(subset(makedatahey, D==1), aes(x = nugget, y = shape, z=LogLik)) + theme_bw() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  geom_point(size = 0.5, colour='grey') + 
+  stat_contour(breaks=breaksf[1])  + 
+  geom_vline(xintercept = nugget)+
+  geom_hline(yintercept=trueParam['shape'])
+
+cols <- rainbow(15)
+for (i in 2:15){
+  forigin_ns <- forigin_ns + geom_contour(data = subset(makedatahey, D==i), aes(x = nugget, y = shape, z=LogLik), breaks=breaksf[i], col= cols[i])
+}
+forigin_ns
+
+
+
 
 
 

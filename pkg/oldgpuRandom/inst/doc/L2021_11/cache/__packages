@@ -8,3 +8,4 @@ raster
 geostatsp
 RColorBrewer
 ggplot2
+kableExtra
