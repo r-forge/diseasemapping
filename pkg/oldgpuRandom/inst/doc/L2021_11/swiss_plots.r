@@ -9,26 +9,19 @@ swissRes =  lgm( formula=rain~ elevation,
                      fixBoxcox=FALSE, fixShape=FALSE, fixNugget = FALSE,  #Set to FALSE to estimate the nugget effect parameter.
                      aniso=TRUE )
 swissRes$summary[,c('estimate','ci0.025', 'ci0.975')]
-swissRes$summary[,c('estimate','ci0.1', 'ci0.9')]
+swissRes$summary[,c('estimate','ci0.05', 'ci0.95')]
 
 
 ## ---gpuRandom------range vs nugget contour--------------------------------------------------------------
 ## set params
 library(gpuRandom)
-# params = expand.grid(
-#   range = c(exp(seq(log(15), log(swissRes$parameters['range']/1000), len=6))*1000, exp(seq(log(swissRes$parameters['range']/1000+5), log(250), len=6))*1000),
-#   shape = c(seq(0.1, swissRes$parameters['shape'], len=5), seq(swissRes$parameters['shape']+0.5, 5, len=5)),
-#   anisoRatio =c( seq(1, swissRes$parameters['anisoRatio'], len=5), seq(swissRes$parameters['anisoRatio']+1, 12, len=5) ),
-#   anisoAngleDegrees = c( seq(27,swissRes$parameters['anisoAngleDegrees'], len=5),  seq(swissRes$parameters['anisoAngleDegrees']+2, 46, len=5)),
-#   nugget = c(seq(0, swissRes$optim$mle['nugget'], len=3), seq(swissRes$optim$mle['nugget']+0.5, 8, len=8))
-# )
 
 ParamList = list(
-  range = c(exp(seq(log(15), log(swissRes$parameters['range']/1000), len=6))*1000, exp(seq(log(swissRes$parameters['range']/1000+5), log(240), len=5))*1000),
-  shape = c(seq(0.1, swissRes$parameters['shape'], len=5), seq(swissRes$parameters['shape']+0.5, 4.5, len=4)),
-  anisoRatio =c( seq(1, swissRes$parameters['anisoRatio'], len=5), seq(swissRes$parameters['anisoRatio']+1, 16, len=6) ),
-  anisoAngleDegrees = c( seq(27,swissRes$parameters['anisoAngleDegrees'], len=5),  seq(swissRes$parameters['anisoAngleDegrees']+2, 46, len=5)),
-  nugget = c(seq(0, swissRes$optim$mle['nugget'], len=3), seq(swissRes$optim$mle['nugget']+0.5, 8, len=8))
+  range = c(exp(seq(log(15), log(swissRes$parameters['range']/1000), len=5))*1000, exp(seq(log(swissRes$parameters['range']/1000+20), log(240), len=5))*1000),
+  shape = c(0.1,0.25, 0.4, seq(0.8, swissRes$parameters['shape'], len=3), seq(swissRes$parameters['shape']+0.6, 4.5, len=3)),
+  anisoRatio =c( 1,1.5,2,3,seq(4, swissRes$parameters['anisoRatio'], len=4), seq(swissRes$parameters['anisoRatio']+1, 16, len=4) ),
+  anisoAngleDegrees = c( seq(25,swissRes$parameters['anisoAngleDegrees'], len=5),  seq(swissRes$parameters['anisoAngleDegrees']+2, 45, len=5)),
+  nugget = c(seq(0, swissRes$optim$mle['nugget'], len=4), seq(swissRes$optim$mle['nugget']+0.5, 8, len=5))
 ) 
 params = do.call(expand.grid, ParamList)
 
@@ -37,10 +30,10 @@ params = do.call(expand.grid, ParamList)
 
 
 
-output <- gpuRandom::likfitLgmCov(spatialmodel,
+output <- gpuRandom::likfitLgmCov(swissRes,
                                   params=params, # CPU matrix for now, users need to provide proper parameters given their specific need
-                                  boxcox=c(seq(0, swissResl$parameters['boxcox'], len=5), seq(0.6, 1.5, len=3)),  # boxcox is always estimated
-                                  paramToEstimate = c("range", "shape", "nugget", "sdNugget","anisoRatio", "anisoAngleDegrees", "boxcox"), #variance and regression parameters are always estimated if not given,
+                                  boxcox=c(-1, -0.5, seq(0, swissRes$parameters['boxcox'], len=3), seq(0.6, 1, len=2),1.5),  # boxcox is always estimated
+                                  paramToEstimate = c("range", "shape", "nugget", "sdNugget","anisoRatio", "anisoAngleRadians",'anisoAngleDegrees', "boxcox"), #variance and regression parameters are always estimated if not given,
                                   cilevel=0.9,  # decimal
                                   type = "double",
                                   reml=FALSE, 
@@ -50,6 +43,16 @@ output <- gpuRandom::likfitLgmCov(spatialmodel,
                                   NlocalCache=2800,
                                   verbose=FALSE)
 output$summary
+
+
+# ParamList = list(
+#   range = c(exp(seq(log(15), log(swissRes$parameters['range']/1000), len=5))*1000, exp(seq(log(swissRes$parameters['range']/1000+20), log(240), len=5))*1000),
+#   shape = swissRes$parameters['shape'],
+#   anisoRatio = swissRes$parameters['anisoRatio'],
+#   anisoAngleRadians = swissRes$parameters['anisoAngleRadians'],
+#   nugget = swissRes$optim$mle['nugget']
+# ) 
+# params = do.call(expand.grid, ParamList)
 
 result1<-gpuRandom::getProfLogL(data=swissRain,
                                 formula=rain~ elevation,
@@ -66,7 +69,7 @@ result1<-gpuRandom::getProfLogL(data=swissRain,
 
 
 
-result1$Infindex
+length(result1$Infindex)
 predictors = result1$predictors
 LogLik = result1$LogLik # cpu matrix
 XVYXVX = result1$XVYXVX  # cpu matrix
@@ -95,7 +98,7 @@ if(reml==FALSE)  {
 params <- cbind(sqrt(params[,"nugget"]) * Table["sdSpatial",1], params)
 colnames(params)[1] <- 'sdNugget'
 
-
+library(data.table)
 
 par(mfrow = c(2, 2))
 par(mar = c(2.5, 3.5, 2, 0.5))
@@ -166,7 +169,8 @@ abline(v =ci[1], lty = 2)
   result = as.data.table(cbind(LogLik, params[,"anisoRatio"]))
   colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoRatio")
   profileLogLik <- result[, .(profile=max(.SD)), by=anisoRatio]
-  plot(profileLogLik$anisoRatio, profileLogLik$profile-breaks,ylab= "proLogL", xlab='anisoRatio')
+  plot(profileLogLik$anisoRatio, profileLogLik$profile-breaks,ylab= "proLogL", xlab='anisoRatio',xlim=c(1, 16), xaxt='n')
+  axis(1,at=seq(0, 16, 5),labels=TRUE)
   f1 <- approxfun(profileLogLik$anisoRatio, profileLogLik$profile-breaks)  
   curve(f1, add = TRUE, col = 2, n=1001) 
   abline(h =0, lty = 2)
@@ -179,98 +183,47 @@ abline(v =ci[1], lty = 2)
   
   
   
-  
-  
-if('anisoAngleRadians' %in% paramToEstimate){
+
   result = as.data.table(cbind(LogLik, params[,"anisoAngleRadians"]))
   colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoAngleRadians")
   profileLogLik <- result[, .(profile=max(.SD)), by=anisoAngleRadians]
-  plot(profileLogLik$anisoAngleRadians, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='anisoAngleRadians')
+  plot(profileLogLik$anisoAngleRadians, profileLogLik$profile-breaks, ylab= "proLogL", xlab='anisoAngleRadians')
   f1 <- approxfun(profileLogLik$anisoAngleRadians, profileLogLik$profile-breaks)
-  # f1 <- splinefun(profileLogLik$anisoAngleRadians, profileLogLik$profile-breaks, method = "monoH.FC")
   curve(f1, add = TRUE, col = 2, n=1001) 
   abline(h =0, lty = 2)
-  #myplots[['anisoAngleRadians']] <- plot.Degrees
-  # anisoAngleRadiansresults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
   lower = min(profileLogLik$anisoAngleRadians)
   upper = max(profileLogLik$anisoAngleRadians)
-  MLE <- round(optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum,digits=4)
-  # maxvalue <- anisoAngleRadiansresults$objective
-  # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
   ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-  if(length(ci)==1){
-    if( ci > MLE){
-      ci <- c(lower, ci)
-      message("did not find lower ci")
-    }else{
-      ci <- c(ci, upper)
-      message("did not find upper ci")}
-  }
-  
-  if(length(ci)==0 | length(ci)>2){
-    warning("require a better param matrix")
-    ci <- c(NA, NA)
-  }
-  Table["anisoAngleRadians",] <- c(MLE, ci)
+  abline(v =ci[1], lty = 2)
+  abline(v =ci[2], lty = 2)
   
   
-}
 
-
-
-
-
-
-
-if('anisoAngleDegrees' %in% paramToEstimate){
   result = as.data.table(cbind(LogLik, params[,"anisoAngleDegrees"]))
   colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoAngleDegrees")
   profileLogLik <- result[, .(profile=max(.SD)), by=anisoAngleDegrees]
-  plot(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='anisoAngleDegrees')
+  plot(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks, ylab= "proLogL", xlab='anisoAngleDegrees')
   f1 <- approxfun(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks)
-  # f1 <- splinefun(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks, method = "monoH.FC")
   curve(f1, add = TRUE, col = 2, n=1001) 
   abline(h =0, lty = 2)
-  #myplots[['anisoAngleDegrees']] <- plot.Degrees
-  # anisoAngleDegreesresults <- optim(0.1, f1, method = "L-BFGS-B",lower = 0.1, upper = 1.5, hessian = FALSE, control=list(fnscale=-1) )
   lower = min(profileLogLik$anisoAngleDegrees)
   upper = max(profileLogLik$anisoAngleDegrees)
-  MLE <- round(optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum,digits=4)
-  # maxvalue <- anisoAngleDegreesresults$objective
-  # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
   ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-  if(length(ci)==1){
-    if( ci > MLE){
-      ci <- c(lower, ci)
-      message("did not find lower ci")
-    }else{
-      ci <- c(ci, upper)
-      message("did not find upper ci")}
-  }
-  
-  if(length(ci)==0 | length(ci)>2){
-    warning("require a better param matrix")
-    ci <- c(NA, NA)
-  }
-  Table["anisoAngleDegrees",] <- c(MLE, ci)
-  
-  
-}
+  abline(v =ci[1], lty = 2)
+  abline(v =ci[2], lty = 2)
 
 
 
-result = as.data.table(cbind(LogLik, params[,"anisoRatio"]))
-colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoRatio")
-profileLogLik <- result[, .(profile=max(.SD)), by=anisoRatio]
-plot(profileLogLik$anisoRatio, profileLogLik$profile-breaks, ylab= "proLogL", xlab='anisoRatio')
-f1 <- approxfun(profileLogLik$anisoRatio, profileLogLik$profile-breaks)  
-curve(f1, add = TRUE, col = 2, n=1001) 
-abline(h =0, lty = 2)
-lower = min(profileLogLik$anisoRatio)
-upper = max(profileLogLik$anisoRatio)
-MLE <- round(optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum,digits=4)
-ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-
+  likForboxcox = cbind(boxcox, apply(LogLik, 2,  max) )
+  f1 <- approxfun(likForboxcox[,1], likForboxcox[,2]-breaks)
+  plot(likForboxcox[,1], likForboxcox[,2]-breaks, ylab= "proLogL", xlab='boxcox')
+  curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
+  abline(h =0, lty = 2)
+  lower = min(boxcox)
+  upper = max(boxcox)
+  ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+  abline(v =ci[1], lty = 2)
+  abline(v =ci[2], lty = 2)
 
 
 

@@ -427,7 +427,7 @@ A<-swissRes$summary[,c('estimate','ci0.1', 'ci0.9')]
 
 <<swisssummarycompare, echo=FALSE>>=
 table1 <- read.csv("Book1.csv")
-colnames(table1) <- c('Parameter','Estimate','95% CI', 'Estimate','95% CI')
+colnames(table1) <- c('Parameter','Estimate','90% CI', 'Estimate','90% CI')
 knitr::kable(table1, format = "latex", align = c("rcccc"),booktabs = T, linesep = "", caption= "Summary comparison", digits=3)%>%
  kable_styling(full_width = FALSE, position = "center", latex_options = "HOLD_position") %>%
  add_header_above(c(" ", "geostatsp" = 2, "gpuBatchMatrix" = 2)) 
@@ -435,11 +435,11 @@ knitr::kable(table1, format = "latex", align = c("rcccc"),booktabs = T, linesep 
 
 <<swiss_profile_many,echo = FALSE, eval=TRUE, cache=TRUE, fig.width=4,fig.height=3, fig.show ="hold", fig.align='center', fig.cap = "profile LogL of slope parameter", out.width = "50%",dev='pdf',fig.pos="H">>=
 setwd("/home/ruoyong/diseasemapping/pkg/oldgpuRandom/inst/doc/L2021_11")
-knitr::include_graphics(c('profile_logl_swiss.png'))
+knitr::include_graphics(c('profile_logl_swiss.png','betaprofile.png'))
 @
 
-<<swiss_profile_sole_prep, out.width = "100%", fig.align = "center",echo=FALSE>>=
-knitr::include_graphics(c('swiss_pro_4.png'))
+<<swiss_profile_sole_prep, out.width = "50%", fig.align = "center",fig.pos="H",echo=FALSE>>=
+knitr::include_graphics(c('swiss_pro_4.png','swiss_pro_2.png'))
 @
 
 
