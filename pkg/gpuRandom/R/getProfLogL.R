@@ -133,8 +133,6 @@
       selected_rows <- which(is.na(as.vector(detVar)))
       if(length(selected_rows)==0){
         paramsRenew <- params0
-
-        
         detVar2 <- as.vector(detVar)
         detReml2 <- as.vector(detReml)
         ssqY2 <- as.matrix(ssqY)
@@ -142,6 +140,7 @@
         ssqResidual2 = as.matrix(ssqResidual)
         XVYXVX2 <- as.matrix(XVYXVX)
       }else{
+      Nparam = Nparam - length(selected_rows)
       paramsRenew <- params0[-selected_rows,]
       LogLikcpu <- LogLikcpu[-selected_rows,] 
       detVar2 <- as.vector(detVar)[-selected_rows]
@@ -278,7 +277,7 @@
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "range")
      profileLogLik <- result[, .(profile=max(.SD)), by=range]
      f1 <- approxfun(profileLogLik$range, profileLogLik$profile-breaks)  
-     plot(profileLogLik$range, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='range')
+     plot(profileLogLik$range, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='range', cex=0.6)
      # plot(profileLogLik$range, profileLogLik$profile)
      curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
      abline(h =0, lty = 2)
@@ -313,7 +312,7 @@
      result = as.data.table(cbind(LogLik, params[,"shape"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "shape")
      profileLogLik <- result[, .(profile=max(.SD)), by=shape]
-     plot(profileLogLik$shape, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab="shape")
+     plot(profileLogLik$shape, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab="shape", cex=0.6)
      f1 <- approxfun(profileLogLik$shape, profileLogLik$profile-breaks)  
      #f1 <- splinefun(profileLogLik$shape, profileLogLik$profile-breaks, method = "monoH.FC")
      curve(f1, add = TRUE, col = 2) 
@@ -349,7 +348,7 @@
      result = as.data.table(cbind(LogLik, params[,"sdNugget"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "sdNugget")
      profileLogLik <-result[, .(profile=max(.SD)), by=sdNugget]
-     plot(profileLogLik$sdNugget, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='sdNugget')
+     plot(profileLogLik$sdNugget, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='sdNugget', cex=0.6)
      f1 <- approxfun(profileLogLik$sdNugget, profileLogLik$profile-breaks)  
      # f1 <- splinefun(profileLogLik$sdNugget, profileLogLik$profile-breaks, method = "monoH.FC")
      curve(f1, add = TRUE, col = 2, n=1001) 
@@ -385,7 +384,7 @@
      result = as.data.table(cbind(LogLik, params[,"nugget"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "nugget")
      profileLogLik <-result[, .(profile=max(.SD)), by=nugget]
-     plot(profileLogLik$nugget, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='nugget')
+     plot(profileLogLik$nugget, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='nugget', cex=0.6)
      f1 <- approxfun(profileLogLik$nugget, profileLogLik$profile-breaks)  
      # f1 <- splinefun(profileLogLik$nugget, profileLogLik$profile-breaks, method = "monoH.FC")
      curve(f1, add = TRUE, col = 2, n=1001) 
@@ -421,7 +420,7 @@
      result = as.data.table(cbind(LogLik, params[,"anisoRatio"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoRatio")
      profileLogLik <- result[, .(profile=max(.SD)), by=anisoRatio]
-     plot(profileLogLik$anisoRatio, profileLogLik$profile-breaks,main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='anisoRatio')
+     plot(profileLogLik$anisoRatio, profileLogLik$profile-breaks,main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='anisoRatio', cex=0.6)
      f1 <- approxfun(profileLogLik$anisoRatio, profileLogLik$profile-breaks)  
      # f1 <- splinefun(profileLogLik$anisoRatio, profileLogLik$profile-breaks, method = "monoH.FC")
      curve(f1, add = TRUE, col = 2, n=1001) 
@@ -457,7 +456,7 @@
      result = as.data.table(cbind(LogLik, params[,"anisoAngleRadians"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoAngleRadians")
      profileLogLik <- result[, .(profile=max(.SD)), by=anisoAngleRadians]
-     plot(profileLogLik$anisoAngleRadians, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='anisoAngleRadians')
+     plot(profileLogLik$anisoAngleRadians, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='anisoAngleRadians', cex=0.6)
      f1 <- approxfun(profileLogLik$anisoAngleRadians, profileLogLik$profile-breaks)
      # f1 <- splinefun(profileLogLik$anisoAngleRadians, profileLogLik$profile-breaks, method = "monoH.FC")
      curve(f1, add = TRUE, col = 2, n=1001) 
@@ -498,7 +497,7 @@
      result = as.data.table(cbind(LogLik, params[,"anisoAngleDegrees"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoAngleDegrees")
      profileLogLik <- result[, .(profile=max(.SD)), by=anisoAngleDegrees]
-     plot(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='anisoAngleDegrees')
+     plot(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='anisoAngleDegrees', cex=0.6)
      f1 <- approxfun(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks)
      # f1 <- splinefun(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks, method = "monoH.FC")
      curve(f1, add = TRUE, col = 2, n=1001) 
@@ -537,7 +536,7 @@
      likForboxcox = cbind(boxcox, apply(LogLik, 2,  max) )
      f1 <- approxfun(likForboxcox[,1], likForboxcox[,2]-breaks)
      # f1 <- splinefun(likForboxcox[,1], likForboxcox[,2]-breaks, method = "monoH.FC")
-     plot(likForboxcox[,1], likForboxcox[,2]-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='boxcox')
+     plot(likForboxcox[,1], likForboxcox[,2]-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='boxcox', cex=0.6)
      curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
      abline(h =0, lty = 2)
      #myplots[['boxcox']] <- plot.boxcox

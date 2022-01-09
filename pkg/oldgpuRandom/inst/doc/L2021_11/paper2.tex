@@ -470,14 +470,14 @@ SHOW ALL LIKELIHOODS PLOT VS BETA'S
 \toprule
 \multicolumn{1}{c}{ } & \multicolumn{2}{c}{geostatsp} & \multicolumn{2}{c}{gpuBatchMatrix} \\
 \cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5}
-Parameter & Estimate & 95\% CI & Estimate & 95\% CI\\
+Parameter & Estimate & 90\% CI & Estimate & 90\% CI\\
 \midrule
-range & 38618.730 & (21805.93, 68394.54) & 38618.730 & NA\\
-sdNugget & 0.992 & (0.684,1.439) & 0.992 & NA\\
-shape & 1.826 & (-0.574,4.227) & 1.826 & NA\\
-anisoRatio & 8.092 & (5.321,12.305) & 8.092 & NA\\
-anisoAngleRadians & 0.652 & (0.595, 0.709) & 0.652 & NA\\
-boxcox & 0.496 & (0.373,0.620) & 0.496 & NA\\
+range & 38618.730 & (18544.14 ,80424.68) & 38618.730 & (24202.12, 130428.60)\\
+sdNugget & 0.992 & (0.615,1.599) & 0.992 & (0, 1.236)\\
+shape & 1.826 & (-1.255,4.907) & 1.826 & (4.540, 6.000)\\
+anisoRatio & 8.092 & (4.725,13.386) & 8.092 & (4.721, 14.124)\\
+anisoAngleRadians & 0.652 & (0.578, 0.725) & 0.652 & (0.567,0.723)\\
+boxcox & 0.496 & (0.375,0.655) & 0.496 & (0.403, 0.628)\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -488,6 +488,7 @@ boxcox & 0.496 & (0.373,0.620) & 0.496 & NA\\
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{figure}[H]
 
 {\centering \includegraphics[width=0.5\linewidth]{profile_logl_swiss} 
+\includegraphics[width=0.5\linewidth]{betaprofile} 
 
 }
 
@@ -499,7 +500,14 @@ boxcox & 0.496 & (0.373,0.620) & 0.496 & NA\\
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}
 
-{\centering \includegraphics[width=1\linewidth]{swiss_pro_4} 
+{\centering \includegraphics[width=0.5\linewidth]{swiss_pro_4} 
+
+}
+
+
+
+
+{\centering \includegraphics[width=0.5\linewidth]{swiss_pro_2} 
 
 }
 
