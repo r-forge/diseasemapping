@@ -169,4 +169,13 @@ if(interactive()  | Sys.info()['user'] =='patrick') {
   plot(swissRes$predict[["predict"]])
   plot(swissBorder, add=TRUE)
   points(swissLocation)
+  
+  options(original)
+  
+  
 }
+
+
+
+
+

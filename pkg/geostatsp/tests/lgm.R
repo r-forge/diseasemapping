@@ -148,3 +148,5 @@ fitMLE =  lgm(y~ cov1 + cov2,  myPoints, grid=10,
 c(fitMLE$summary["range","estimate"], fitLikfit$summary["range","estimate"])
 bob(fitMLE)
 }
+options(original)
+

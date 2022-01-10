@@ -95,5 +95,5 @@ sum((myMatern1 - myMatern2)^2)
 sum((myMatern1 - myMatern3)^2, na.rm=TRUE)
 
 
-
+options(original)
 

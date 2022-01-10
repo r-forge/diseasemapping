@@ -123,3 +123,5 @@ swissFitAgain = likfitLgm(data=sr2,
 )
 swissFitAgain$par		
 }
+
+options(original)
