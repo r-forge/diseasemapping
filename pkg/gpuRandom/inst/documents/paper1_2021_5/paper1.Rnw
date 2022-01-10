@@ -608,49 +608,24 @@ abline(v = resultWeek$threshold, col = "blue", lwd = 1.5)
 
 \section{Simulating Gaussian Random Fields} 
 
-Simulating Gaussian random fields (GRF's) is computationally intensive due the high dimensionality of the problem, a 100 by 100 grid has 10,000 cells and a 10,000 by 10,000 variance matrix.  Writing $x_1,\dots, x_n$ as point locations (i.e.\ centres of grid cells), the joint distribution of $U=(U_{x_1},\dots,U_{x_n})^\top$ is multivariate Gaussian. 
+Simulating Gaussian random fields (GRF's) is computationally intensive due the high dimensionality of the problem, a 100 by 100 grid has 10,000 cells and a 10,000 by 10,000 variance matrix.  Writing $x_1,\dots, x_n$ as point locations (i.e.\ centres of grid cells), the joint distribution of $U=(U_{x_1},\dots,U_{x_n})^\top$ is multivariate Normal (MVN). 
 
-GEOMETRIC ANISOTROPY
-Geometrical anisotropy is defined by two additional parameters in the correlation function. Let $(x_1, x_2)$ represent the original coordinates, which is rotated counterclockwise by $\varphi$, then the new coordinates $(x'_1, x'_2)$ is given by
-%
-  \begin{equation*}\label{eq:matrixeqn}
-    \begin{pmatrix}
-      x'_{1} \\
-      x'_{2}  
-    \end{pmatrix}
-    =
-    \begin{pmatrix}
-      1/\phi_{1} & 0 \\
-      0 & 1/ \phi_{2} 
-    \end{pmatrix}
-    \cdot
-    \begin{pmatrix}
-      \cos \varphi & -\sin \varphi \\
-      \sin \varphi & \cos \varphi 
-    \end{pmatrix}
-    \cdot
-      \begin{pmatrix}
-      x_1 \\
-      x_2 
-    \end{pmatrix},
-  \end{equation*}
-
-The expectation and covariance function of $U$ completely determine the distribution of $U$, 
 \begin{gather*} 
 U = [U(x_1), \ldots, U(x_n)]^\top \sim \text{MVN}(0, \Sigma), \\
 \Sigma_{ij} = \cov[ U(x_i),U(x_j) ] = \sigma^2 \frac{2^{\kappa-1}}{\Gamma(\kappa)} \left(\sqrt{8\kappa} \frac{|x_i - x_j|}{\phi}\right)^\kappa  K_\kappa\left(\sqrt{8\kappa}  \frac{|x_i - x_j|}{\phi}\right),
 \end{gather*}
-where \text{MVN} standards for the multivariate normal distribution, and $\Sigma$ standards for the covariance matrix of $U$. A common choice for $\Sigma$ is the Mat\'ern covariance \citep{matern1960spatial}. The Mat\'ern covariance between $U(x_i)$ and $U(x_j)$ takes the above form,
+where $\Sigma$ standards for the covariance matrix of $U$. A common choice for $\Sigma$ is the Mat\'ern covariance \citep{matern1960spatial}. The Mat\'ern covariance between $U(x_i)$ and $U(x_j)$ takes the above form,
 %$d =\|x-x'\|$ is the Euclidean distance between two spatial points, 
 where $\sigma^2$ the variance of the random field $U$.
 $\Gamma(\cdot)$ is the standard gamma function.  
-$\phi$ is the range parameter or scale parameter with the dimension of distance, it controls the rate of decay of the correlation as distance increases. $K_\kappa(\cdot)$ is the modified Bessel function of the second kind with order $\kappa$, $\kappa$ is the shape parameter which determines the smoothness of $U(x)$. %specifically, $U(x)$ is $m$ times mean-square differentiable if and only if $\kappa > m$. %(For $\kappa=0.5$, the Mat\'ern covariance function reduces to the exponential covariance function $\sigma^2*\exp(-d/\phi)$, when $\kappa \rightarrow \infty$, $\Sigma(d) \rightarrow \sigma^2*\exp{-(\|d\|/\phi)^2}$, which is called the Gaussian covariance.)  
-There are several alternative parameterisations of Mat\'ern covariance functions in literature  \citep[see][]{haskard2007anisotropic}. In \pkg{clrng}, we use the above form for computing Mat\'ern covariance.
-
+$\phi$ is the range parameter or scale parameter, it controls the rate of decay of the correlation as distance increases. $K_\kappa(\cdot)$ is the modified Bessel function of the second kind with order $\kappa$, $\kappa$ is the shape parameter which determines the smoothness of $U(x)$. %specifically, $U(x)$ is $m$ times mean-square differentiable if and only if $\kappa > m$. %(For $\kappa=0.5$, the Mat\'ern covariance function reduces to the exponential covariance function $\sigma^2*\exp(-d/\phi)$, when $\kappa \rightarrow \infty$, $\Sigma(d) \rightarrow \sigma^2*\exp{-(\|d\|/\phi)^2}$, which is called the Gaussian covariance.)  
+There are several alternative parameterisations of Mat\'ern covariance functions in literature  \citep[see][]{haskard2007anisotropic}. In \pkg{gpuBatchMatrix}, we use the above form for computing Mat\'ern covariance.
+GEOMETRIC ANISOTROPY
+Geometrical anisotropy is defined by two additional parameters (`anisoRatio' and `anisoAngle') in the correlation function, which makes the resulting multidimensional probability surface even more complex to evaluate. 
 
 %Due to the importance of Gaussian random field, there are a large amount of studies devoted to Gaussian random field generation techniques. 
 \cite{LiuandLi2019} gives a comprehensive review on seven popular methods for Gaussian random field generation, %which are the turning bands method \citep{matheron_1973}, spectral method \citep{Meja1974OnTS,1972JSV}, matrix decomposition method \citep{davis1987}, Karhunen-Lo\'eve expansion \citep{LoeveM:1978}, moving average method \citep{journel1974, oliver1995moving}, sequential simulation \citep{johnson1987multivariate, gomez1993joint, pebesma2004multivariable}, and local average subdivision \citep{fenton1990simulation}. 
-all of these methods except the matrix decomposition method, are approximations to the random field and have specific requirements on the type of grid or covariance functions. The matrix decomposition method is exact, it works for all covariance functions and can generate random fields on arbitrary grids, and is straightforward to implement \citep{LiuandLi2019}. Other \proglang{R} packages that offer simulation of Gaussian random fields such as \pkg{geoR} \citep{geoR2001}, does not work for large number of locations. The \pkg{RandomFields} \citep{RandomFields2015} package has several different methods for simulation of Gaussian fields, among which the circulant embedding, which is an improved method on direct matrix decomposition, and some variants of the method like the cut-off embedding \citep{gneiting2006fast} are also exact and fast for isotropic Gaussian random fields, however, they work only on rectangular grids. \pkg{clrng} is able to simulate on the GPU exact Gaussian fields on arbitrary grids as it relies on the matrix decomposition method. The implementation of this method is as follows.
+all of these methods except the direct matrix decomposition method, are approximations to the random field and have specific requirements on the type of grid or covariance functions. The direct matrix decomposition method is exact, it works for all covariance functions and can generate random fields on arbitrary grids, and is straightforward to implement \citep{LiuandLi2019}. Other \proglang{R} packages that offer simulation of Gaussian random fields such as \pkg{geoR} \citep{geoR2001}, does not work for large number of locations. The \pkg{RandomFields} \citep{RandomFields2015} package has several different methods for simulation of Gaussian fields, among which the circulant embedding, which is an improved method on direct matrix decomposition, and some variants of the method like the cut-off embedding \citep{gneiting2006fast} are also exact and fast for isotropic Gaussian random fields, however, they work only on rectangular grids. We are able to simulate on GPU exact Gaussian fields on arbitrary grids by using the direct matrix decomposition method. The implementation of this method is as follows.
 
 %it can generate random fields on arbitrary position Circulant embedding is a fast simulation method for stationary (possibly anisotropic) Gaussian ran- dom fields on regular grids based on Fourier transformations. Cut-off embedding is a fast simulation method for stationary, isotropic Gaussian random fields on square lattices based on the standard RPcirculant method, so that exact simulation is garantueed for further covariance models
 
