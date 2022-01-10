@@ -18,16 +18,12 @@ library(gpuRandom)
 
 ParamList = list(
   range = c(exp(seq(log(15), log(swissRes$parameters['range']/1000), len=5))*1000, exp(seq(log(swissRes$parameters['range']/1000+20), log(240), len=5))*1000),
-  shape = c(0.1,0.25, 0.4, seq(0.8, swissRes$parameters['shape'], len=3), seq(swissRes$parameters['shape']+0.6, 4.5, len=3)),
+  shape = c(0.1,0.25, 0.4, seq(0.8, swissRes$parameters['shape'], len=3), seq(swissRes$parameters['shape']+0.5, 4.5, len=3)),
   anisoRatio =c( 1,1.5,2,3,seq(4, swissRes$parameters['anisoRatio'], len=4), seq(swissRes$parameters['anisoRatio']+1, 16, len=4) ),
   anisoAngleDegrees = c( seq(25,swissRes$parameters['anisoAngleDegrees'], len=5),  seq(swissRes$parameters['anisoAngleDegrees']+2, 45, len=5)),
   nugget = c(seq(0, swissRes$optim$mle['nugget'], len=4), seq(swissRes$optim$mle['nugget']+0.5, 8, len=5))
 ) 
 params = do.call(expand.grid, ParamList)
-
-
-
-
 
 
 output <- gpuRandom::likfitLgmCov(swissRes,

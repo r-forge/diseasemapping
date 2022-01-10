@@ -255,6 +255,11 @@
      par(mfrow = c(2, 2))
    }else if(length(paramToEstimate)==5 | length(paramToEstimate)==6){
      par(mfrow = c(2, 3))
+   }else if(length(paramToEstimate)==7 | length(paramToEstimate)==8){
+     par(mfrow = c(2, 2))
+     par(mar = c(2.5, 3.5, 2, 0.5))
+     par(mgp = c(1.5, 0.5, 0))
+     par(oma = c(3, 0, 3, 0))
    }
   
    
@@ -277,7 +282,7 @@
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "range")
      profileLogLik <- result[, .(profile=max(.SD)), by=range]
      f1 <- approxfun(profileLogLik$range, profileLogLik$profile-breaks)  
-     plot(profileLogLik$range, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='range', cex=0.6)
+     plot(profileLogLik$range, profileLogLik$profile-breaks, ylab= "proLogL-breaks", xlab='range', cex=0.5)
      # plot(profileLogLik$range, profileLogLik$profile)
      curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
      abline(h =0, lty = 2)
@@ -289,6 +294,8 @@
      # maxvalue <- rangeresults$objective
      # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+     abline(v =ci[1], lty = 2)
+     abline(v =ci[2], lty = 2)
      if(length(ci)==1){
        if( ci > MLE){
          ci <- c(lower, ci)
@@ -312,7 +319,7 @@
      result = as.data.table(cbind(LogLik, params[,"shape"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "shape")
      profileLogLik <- result[, .(profile=max(.SD)), by=shape]
-     plot(profileLogLik$shape, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab="shape", cex=0.6)
+     plot(profileLogLik$shape, profileLogLik$profile-breaks, ylab= "proLogL-breaks", xlab="shape", cex=0.5)
      f1 <- approxfun(profileLogLik$shape, profileLogLik$profile-breaks)  
      #f1 <- splinefun(profileLogLik$shape, profileLogLik$profile-breaks, method = "monoH.FC")
      curve(f1, add = TRUE, col = 2) 
@@ -325,6 +332,8 @@
      # maxvalue <- shaperesults$objective
      # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+     abline(v =ci[1], lty = 2)
+     abline(v =ci[2], lty = 2)
      if(length(ci)==1){
        if( ci > MLE){
          ci <- c(lower, ci)
@@ -348,7 +357,7 @@
      result = as.data.table(cbind(LogLik, params[,"sdNugget"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "sdNugget")
      profileLogLik <-result[, .(profile=max(.SD)), by=sdNugget]
-     plot(profileLogLik$sdNugget, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='sdNugget', cex=0.6)
+     plot(profileLogLik$sdNugget, profileLogLik$profile-breaks, ylab= "proLogL-breaks", xlab=bquote(tau), cex=0.5)
      f1 <- approxfun(profileLogLik$sdNugget, profileLogLik$profile-breaks)  
      # f1 <- splinefun(profileLogLik$sdNugget, profileLogLik$profile-breaks, method = "monoH.FC")
      curve(f1, add = TRUE, col = 2, n=1001) 
@@ -361,6 +370,8 @@
      # maxvalue <- sdNuggetresults$objective
      # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+     abline(v =ci[1], lty = 2)
+     abline(v =ci[2], lty = 2)
      if(length(ci)==1){
        if( ci > MLE){
          ci <- c(lower, ci)
@@ -384,7 +395,7 @@
      result = as.data.table(cbind(LogLik, params[,"nugget"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "nugget")
      profileLogLik <-result[, .(profile=max(.SD)), by=nugget]
-     plot(profileLogLik$nugget, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='nugget', cex=0.6)
+     plot(profileLogLik$nugget, profileLogLik$profile-breaks, ylab= "proLogL-breaks", xlab=expression(nu^2), cex=0.5)
      f1 <- approxfun(profileLogLik$nugget, profileLogLik$profile-breaks)  
      # f1 <- splinefun(profileLogLik$nugget, profileLogLik$profile-breaks, method = "monoH.FC")
      curve(f1, add = TRUE, col = 2, n=1001) 
@@ -397,6 +408,8 @@
      # maxvalue <- nuggetresults$objective
      # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+     abline(v =ci[1], lty = 2)
+     abline(v =ci[2], lty = 2)
      if(length(ci)==1){
        if( ci > MLE){
          ci <- c(lower, ci)
@@ -420,7 +433,7 @@
      result = as.data.table(cbind(LogLik, params[,"anisoRatio"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoRatio")
      profileLogLik <- result[, .(profile=max(.SD)), by=anisoRatio]
-     plot(profileLogLik$anisoRatio, profileLogLik$profile-breaks,main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='anisoRatio', cex=0.6)
+     plot(profileLogLik$anisoRatio, profileLogLik$profile-breaks,ylab= "proLogL-breaks", xlab='anisoRatio', cex=0.5)
      f1 <- approxfun(profileLogLik$anisoRatio, profileLogLik$profile-breaks)  
      # f1 <- splinefun(profileLogLik$anisoRatio, profileLogLik$profile-breaks, method = "monoH.FC")
      curve(f1, add = TRUE, col = 2, n=1001) 
@@ -433,6 +446,8 @@
      # maxvalue <- anisoRatioresults$objective
      # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+     abline(v =ci[1], lty = 2)
+     abline(v =ci[2], lty = 2)
      if(length(ci)==1){
        if( ci > MLE){
          ci <- c(lower, ci)
@@ -456,7 +471,7 @@
      result = as.data.table(cbind(LogLik, params[,"anisoAngleRadians"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoAngleRadians")
      profileLogLik <- result[, .(profile=max(.SD)), by=anisoAngleRadians]
-     plot(profileLogLik$anisoAngleRadians, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='anisoAngleRadians', cex=0.6)
+     plot(profileLogLik$anisoAngleRadians, profileLogLik$profile-breaks, ylab= "proLogL-breaks", xlab='anisoAngleRadians', cex=0.5)
      f1 <- approxfun(profileLogLik$anisoAngleRadians, profileLogLik$profile-breaks)
      # f1 <- splinefun(profileLogLik$anisoAngleRadians, profileLogLik$profile-breaks, method = "monoH.FC")
      curve(f1, add = TRUE, col = 2, n=1001) 
@@ -469,6 +484,8 @@
      # maxvalue <- anisoAngleRadiansresults$objective
      # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+     abline(v =ci[1], lty = 2)
+     abline(v =ci[2], lty = 2)
      if(length(ci)==1){
        if( ci > MLE){
          ci <- c(lower, ci)
@@ -497,7 +514,7 @@
      result = as.data.table(cbind(LogLik, params[,"anisoAngleDegrees"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoAngleDegrees")
      profileLogLik <- result[, .(profile=max(.SD)), by=anisoAngleDegrees]
-     plot(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='anisoAngleDegrees', cex=0.6)
+     plot(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks, ylab= "proLogL-breaks", xlab='anisoAngleDegrees', cex=0.5)
      f1 <- approxfun(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks)
      # f1 <- splinefun(profileLogLik$anisoAngleDegrees, profileLogLik$profile-breaks, method = "monoH.FC")
      curve(f1, add = TRUE, col = 2, n=1001) 
@@ -510,6 +527,8 @@
      # maxvalue <- anisoAngleDegreesresults$objective
      # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+     abline(v =ci[1], lty = 2)
+     abline(v =ci[2], lty = 2)
      if(length(ci)==1){
        if( ci > MLE){
          ci <- c(lower, ci)
@@ -536,7 +555,7 @@
      likForboxcox = cbind(boxcox, apply(LogLik, 2,  max) )
      f1 <- approxfun(likForboxcox[,1], likForboxcox[,2]-breaks)
      # f1 <- splinefun(likForboxcox[,1], likForboxcox[,2]-breaks, method = "monoH.FC")
-     plot(likForboxcox[,1], likForboxcox[,2]-breaks, main="Profile LogL, y axis adjusted", ylab= "proLogL-breaks", xlab='boxcox', cex=0.6)
+     plot(likForboxcox[,1], likForboxcox[,2]-breaks, ylab= "proLogL-breaks", xlab='boxcox', cex=0.5)
      curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
      abline(h =0, lty = 2)
      #myplots[['boxcox']] <- plot.boxcox
@@ -547,6 +566,8 @@
      # maxvalue <- rangeresults$objective
      # breaks = maxvalue - qchisq(cilevel,  df = 1)/2
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+     abline(v =ci[1], lty = 2)
+     abline(v =ci[2], lty = 2)
      if(length(ci)==1){
        if( ci > MLE){
          ci <- c(lower, ci)

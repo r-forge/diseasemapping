@@ -1,13 +1,13 @@
 ############### A SIMULATION STUDY IN THE PAPER 2 ####################################
 library('geostatsp')
 Nsim=15
-Ngrid=40
+Ngrid=20
 set.seed(88)
-pointsGrid = expand.grid(seq(100*1e3,140*1e3, len=Ngrid), seq(100*1e3,120*1e3, len=Ngrid))
+pointsGrid = expand.grid(seq(100*1e4,120*1e4, len=Ngrid), seq(100*1e4,120*1e4, len=Ngrid))
 #plot(pointsGrid,cex=0.3)
 pointsGrid = pointsGrid[,1] + 1i*pointsGrid[,2]
-pointsRandom = pointsGrid + stats::runif(length(pointsGrid), 50, 500) * exp(stats::runif(length(pointsGrid), 0, 2*pi)*1i)
-#plot(pointsRandom,cex=0.3)
+pointsRandom = pointsGrid + stats::runif(length(pointsGrid), 500, 600) * exp(stats::runif(length(pointsGrid), 0, 2*pi)*1i)
+plot(pointsRandom,cex=0.3)
 #plot(Re(pointsRandom),Im(pointsRandom),cex=0.3)
 mydat = SpatialPointsDataFrame(cbind(Re(pointsRandom),Im(pointsRandom)),
                                data=data.frame(cov1 =stats::rnorm(Ngrid^2, 120, 20), cov2 = stats::rpois(Ngrid^2, 50))
@@ -19,13 +19,19 @@ mydat = SpatialPointsDataFrame(cbind(Re(pointsRandom),Im(pointsRandom)),
 # )
 # plot(cbind(seq(100*1e3,140*1e3, len=500), seq(100*1e3,120*1e3, len=500)), xlab="",ylab="")
 
+par(mfrow = c(1, 2))
+library('geoR')
+sim1 <- grf(400, cov.pars = c(1, 0.25))
+points.geodata(sim1, main = "simulated locations and values")
+plot(sim1, max.dist = 1, main = "true and empirical variograms")
 
+pict
 
 #mydat@data
 #mydat@coords
 
 ## simulate a random field
-trueParam = c(range=1000, shape=2, variance=0.5^2, tauSq=1^2, anisoRatio=1, anisoAngleRadians=0)
+trueParam = c(range=1000, shape=2, variance=0.5^2, tauSq=1^2, anisoRatio=2, anisoAngleRadians=0.3)
 nugget = trueParam['tauSq']/trueParam['variance']
 names(nugget) <- "nugget"
 nugget   #4
@@ -43,15 +49,15 @@ colnames(mydat@data) <- c("cov1", "cov2", paste("Y", c(1:Nsim), sep=""))
 #mydat$Y3
 
 ## geostatsp's estimates
-swissRes =  lgm( formula=Y15~ cov1 + cov2,
+swissRes =  lgm( formula=Y1~ cov1 + cov2,
                  data=mydat,
                  grid=20,
                  reml = FALSE,
                  shape=2,
                  boxcox=1,
                  fixBoxcox=TRUE, fixShape=TRUE, fixNugget = FALSE,  #Set to FALSE to estimate the nugget effect parameter.
-                 aniso=FALSE )
-swissRes$summary[,c('estimate','ci0.005', 'ci0.995')]
+                 aniso=TRUE )
+swissRes$summary[,c('estimate','ci0.05', 'ci0.95')]
 swissRes$optim$mle
 
 
@@ -59,11 +65,11 @@ swissRes$optim$mle
 ## ---gpuRandom------range vs nugget contour--------------------------------------------------------------
 ## set params
 newParamList = list(
-  range = c(exp(seq(log(0.2), log(1), len=10))*1000, exp(seq(log(1.2), log(3), len=12))*1000),  #22
+  range = c(exp(seq(log(0.1), log(1), len=10))*1000, exp(seq(log(1.2), log(4), len=10))*1000),  #22
   nugget = c(seq(0, 4, len=8), seq(4.5, 20, len=12)),  #20
   shape = 2,
-  anisoRatio =1,
-  anisoAngleRadians = 0.0
+  anisoRatio =2,
+  anisoAngleRadians = 0.3
 ) 
 params = do.call(expand.grid, newParamList)
 
@@ -147,16 +153,16 @@ forigin
 # 3.0807703    0.9996489    0.5005081    0.5338107 1040.7750111    3.9151560 
 # 
 # i=1
-# a <- subset(makedatahey, D==i)[,3]
-# lMatrix = matrix(a, length(newParamList[[1]]), length(newParamList[[2]]))
-# contour(newParamList[[1]], newParamList[[2]], lMatrix,
-#         col = par("fg"), lty = par("lty"), lwd = par("lwd"),
-#         add = FALSE, levels = c(
-#                                 breaksf[i]),  xlab = "range", ylab = "nugget")
-# 
-# abline(h=2, col='red')
-# abline(v=1000, col='red')
-# points(x = params[,1], y = params[,2], pch=20, col='grey', cex=0.5)
+a <- subset(makedatahey, D==i)[,3]
+lMatrix = matrix(a, length(newParamList[[1]]), length(newParamList[[2]]))
+contour(newParamList[[1]], newParamList[[2]], lMatrix,
+        col = par("fg"), lty = par("lty"), lwd = par("lwd"),
+        add = FALSE, levels = c(
+                                breaksf[i]),  xlab = "range", ylab = "nugget")
+
+abline(h=2, col='red')
+abline(v=1000, col='red')
+points(x = params[,1], y = params[,2], pch=20, col='grey', cex=0.5)
 
 
 
@@ -169,8 +175,8 @@ forigin
 ## ---gpuRandom------range vs shape contour--------------------------------------------------------------
 ## set params
 newParamListrs = list(
-    range = c(exp(seq(log(0.3), log(1), len=8))*1000, exp(seq(log(1.2), log(3), len=12))*1000),  
-    shape = c(0.1, 0.15, 0.2, 0.23, 0.3, 0.4, 0.5, 0.75, 0.9, 1, 2, 2.5, 3, 4, 2000),
+    range = c(exp(seq(log(0.2), log(1), len=8))*1000, exp(seq(log(1.2), log(4), len=12))*1000),  
+    shape = c(0.1, 0.15, 0.2, 0.23, 0.3, 0.4, 0.5, 0.75, 0.9, 1, 2, 2.5, 3, 4),
     nugget = 4,  
     anisoRatio =1,
     anisoAngleRadians = 0.0
@@ -246,7 +252,7 @@ forigin_s
 
 par(mfrow = c(2, 3))
 i=2
-a <- subset(makedatahey, D==i)[,3]
+`a <- subset(makedatahey, D==i)[,3]
 lMatrix = matrix(a, length(newParamListrs[[1]]), length(newParamListrs[[2]]))
 contour(newParamListrs[[1]], newParamListrs[[2]], lMatrix,
         col = par("fg"), lty = par("lty"), lwd = par("lwd"),
@@ -257,7 +263,7 @@ contour(newParamListrs[[1]], newParamListrs[[2]], lMatrix,
 abline(h=2, col='red')
 abline(v=1000, col='red')
 points(x = paramsrs[,1], y = paramsrs[,2], pch=20, col='grey', cex=0.5)
-
+`
 ####################################################################
 
 

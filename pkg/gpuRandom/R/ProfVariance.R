@@ -62,7 +62,7 @@
     ci <- c(NA, NA)
   }
   if(length(ci)>2){
-    warning("need wider range of beta to search ci's")
+    warning("invalid ci's retruned")
     ci <- ci[3:4]
   }
   

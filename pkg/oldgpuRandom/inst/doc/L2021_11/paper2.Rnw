@@ -433,9 +433,10 @@ knitr::kable(table1, format = "latex", align = c("rcccc"),booktabs = T, linesep 
  add_header_above(c(" ", "geostatsp" = 2, "gpuBatchMatrix" = 2)) 
 @
 
-<<swiss_profile_many,echo = FALSE, eval=TRUE, cache=TRUE, fig.width=4,fig.height=3, fig.show ="hold", fig.align='center', fig.cap = "profile LogL of slope parameter", out.width = "50%",dev='pdf',fig.pos="H">>=
-setwd("/home/ruoyong/diseasemapping/pkg/oldgpuRandom/inst/doc/L2021_11")
-knitr::include_graphics(c('profile_logl_swiss.png','betaprofile.png'))
+<<swiss_profile_many,echo = FALSE, eval=TRUE, cache=TRUE, fig.width=4,fig.height=3, fig.show ="hold", fig.align='center', fig.cap = "profile LogL of slope parameter", out.width = "33%",dev='pdf',fig.pos="H">>=
+#setwd("/home/ruoyong/diseasemapping/pkg/oldgpuRandom/inst/doc/L2021_11")
+setwd("/home/ruoyong/L2021_11")
+knitr::include_graphics(c('profile_logl_swiss.png','betaprofile.png','varprofile.png'))
 @
 
 <<swiss_profile_sole_prep, out.width = "50%", fig.align = "center",fig.pos="H",echo=FALSE>>=
