@@ -52,6 +52,7 @@
   partC = matrix(0, nrow=Nparam, ncol=Ndata)
   partD = matrix(0, nrow=Nparam, ncol=Ndata)
   partE = matrix(0, nrow=Nparam, ncol=Ndata)
+  minus2LogLik_optimized = matrix(0, nrow=m, ncol=1)
   
   for (i in 1:Nparam){
     interval <- c(((i-1)*Ucov+1) : (i*Ucov))
@@ -104,8 +105,8 @@
       ci <- c(ci, upper)}
     }
     
-    if(length(ci)==0){
-      warning("need wider range of beta to search ci's")
+    if(length(ci)==0 | length(ci)>2){
+      warning("invalid ci returned")
       ci <- c(NA, NA)
     }
 

@@ -1,22 +1,18 @@
-
-
-
 Betas <- seq(-6, 15, len=20)*1e-04
-
 a=2
 cilevel=0.9
 Nobs = result1$Nobs
 Ndata = result1$Ndata
-Nparam = nrow(result1$param)
+Nparam = result1$Nparam
 Ncov = result1$Ncov
 detVar = result1$detVar
 ssqY = result1$ssqY
 XVYXVX = result1$XVYXVX
 jacobian = result1$jacobian
 
-result1$ssqResidual
 
-gpuRandom::Prof1dBetas(Betas, cilevel=0.9,a=2,  Nobs,  
+
+probetaresult<-gpuRandom::Prof1dBetas(Betas, cilevel=0.9,a=2,  Nobs,  
                         Ndata,
                         Nparam,
                         Ncov,
@@ -24,6 +20,19 @@ gpuRandom::Prof1dBetas(Betas, cilevel=0.9,a=2,  Nobs,
                         ssqY,   
                         XVYXVX,   
                         jacobian)
+
+
+
+probetaresult$estimates[3]
+probetaresult$breaks
+LogLik <- probetaresult$LogLik
+f1 <- approxfun(Betas, LogLik)
+plot(Betas,LogLik)
+curve(f1(x), add = TRUE, col = 2, n = 1001)
+abline(h=probetaresult$breaks, lty = 2)
+abline(v=probetaresult$estimates[3], lty = 2)
+abline(v=probetaresult$estimates[4], lty = 2)
+abline(v=probetaresult$estimates[1], lty = 2)
 
 
 m <- length(Betas)
