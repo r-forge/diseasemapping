@@ -625,9 +625,7 @@ Geometrical anisotropy is defined by two additional parameters (`anisoRatio' and
 
 %Due to the importance of Gaussian random field, there are a large amount of studies devoted to Gaussian random field generation techniques. 
 \cite{LiuandLi2019} gives a comprehensive review on seven popular methods for Gaussian random field generation, %which are the turning bands method \citep{matheron_1973}, spectral method \citep{Meja1974OnTS,1972JSV}, matrix decomposition method \citep{davis1987}, Karhunen-Lo\'eve expansion \citep{LoeveM:1978}, moving average method \citep{journel1974, oliver1995moving}, sequential simulation \citep{johnson1987multivariate, gomez1993joint, pebesma2004multivariable}, and local average subdivision \citep{fenton1990simulation}. 
-all of these methods except the direct matrix decomposition method, are approximations to the random field and have specific requirements on the type of grid or covariance functions. The direct matrix decomposition method is exact, it works for all covariance functions and can generate random fields on arbitrary grids, and is straightforward to implement \citep{LiuandLi2019}. Other \proglang{R} packages that offer simulation of Gaussian random fields such as \pkg{geoR} \citep{geoR2001}, does not work for large number of locations. The \pkg{RandomFields} \citep{RandomFields2015} package has several different methods for simulation of Gaussian fields, among which the circulant embedding, which is an improved method on direct matrix decomposition, and some variants of the method like the cut-off embedding \citep{gneiting2006fast} are also exact and fast for isotropic Gaussian random fields, however, they work only on rectangular grids. We are able to simulate on GPU exact Gaussian fields on arbitrary grids by using the direct matrix decomposition method. The implementation of this method is as follows.
-
-%it can generate random fields on arbitrary position Circulant embedding is a fast simulation method for stationary (possibly anisotropic) Gaussian ran- dom fields on regular grids based on Fourier transformations. Cut-off embedding is a fast simulation method for stationary, isotropic Gaussian random fields on square lattices based on the standard RPcirculant method, so that exact simulation is garantueed for further covariance models
+all of these methods except the direct matrix decomposition method, are approximations to the random field and have specific requirements on the type of grid or covariance functions. The direct matrix decomposition method is exact, it works for all covariance functions and can generate random fields on arbitrary grids, and is straightforward to implement \citep{LiuandLi2019}. By using this method, we are able to simulate on GPU exact Gaussian fields on arbitrary grids. The implementation of this method is as follows.
 
 Suppose $U=(U_1, U_2, \dots, U_n)^\top$ is a Gaussian random field with mean $\mu$ and covariance matrix $\Sigma$, without loss of generality, we assume mean value zero $(\mu = 0)$. Since covariance matrix $\Sigma$ is symmetric and positive-definite, we can take Cholesky decomposition of $\Sigma$, then we can simulate random samples from $U$ using Algorithm \ref{algorithm2},
 
@@ -641,6 +639,14 @@ Suppose $U=(U_1, U_2, \dots, U_n)^\top$ is a Gaussian random field with mean $\m
  \label{algorithm2}
 \end{algorithm}
 
+The downside of this method is that it's computationally expensive and is thus very slow. When the number of locations $n$ is large, the time cost of Cholesky decomposition of the covariance matrix is $\mathcal{O}(n^3)$,  and is $\mathcal{O}(n^2)$ for the matrix-vector multiplication $L*Z$ \citep{LiuandLi2019}. Methods employing approximations gain benefits in computations while sacrificing exactness, we preserve the exactness and also largely reduce the computation burden by utilizing our other \proglang{R} package \pkg{gpuBatchMatrix}. \pkg{gpuBatchMatrix} address this issue since it computes batches of Mat\'ern covariance matrices in parallel, and does Cholesky decomposition and matrix-matrix multiplication in batches in parallel on GPU. 
+
+
+Other \proglang{R} packages that offer simulation of Gaussian random fields such as \pkg{geoR} \citep{geoR2001}, does not work for large number of locations. The \pkg{RandomFields} \citep{RandomFields2015} package has several different methods for simulation of Gaussian fields, among which the circulant embedding, which is an improved method on direct matrix decomposition, and some variants of the method like the cut-off embedding \citep{gneiting2006fast} are also exact and fast for isotropic Gaussian random fields, however, they work only on rectangular grids. 
+
+%it can generate random fields on arbitrary position Circulant embedding is a fast simulation method for stationary (possibly anisotropic) Gaussian ran- dom fields on regular grids based on Fourier transformations. Cut-off embedding is a fast simulation method for stationary, isotropic Gaussian random fields on square lattices based on the standard RPcirculant method, so that exact simulation is garantueed for further covariance models
+
+
 % $U=L*D^{1/2}*Z$, where 
 % \begin{itemize}
 % \itemsep0em 
@@ -648,10 +654,10 @@ Suppose $U=(U_1, U_2, \dots, U_n)^\top$ is a Gaussian random field with mean $\m
 % \item $D$ is a diagonal matrix.
 % \item $Z=(Z_1, Z_2, \dots, Z_n) \sim \text{MVN}(0,I_n)$, where $I_n$ is a $n \times n$ identity matrix.
 % \end{itemize}
-The downside of this method is that it's computationally expensive and is thus very slow. When the number of locations $n$ is large, the time cost of Cholesky decomposition of the covariance matrix is $\mathcal{O}(n^3)$,  and is $\mathcal{O}(n^2)$ for the matrix-vector multiplication $L*Z$ \citep{LiuandLi2019}.  Our other \proglang{R} package \pkg{gpuBatchMatrix} is able to address this issue since it computes batches of Mat\'ern covariance matrices in parallel, and does Cholesky decomposition and matrix-matrix multiplication in batches in parallel on GPU. The following shows an example, in which we simulate on GPU eight Gaussian random fields of Mat\'ern covariance at one time with four sets of parameters, by taking advantage of the GPU-capabilities offered by \pkg{clrng} and \pkg{gpuBatchMatrix} together.
 %\pkg{clrng} package not only does the matrices decomposition (Cholesky decomposition and matrix-vector multiplication) in parallel, but also computes the covariance matrices in parallel on GPU. 
 
 \subsection{Simulating Gaussian random fields with Mat\'ern covariances}
+The following shows an example, in which we simulate on GPU eight Gaussian random fields of Mat\'ern covariance at one time with four sets of parameters, by taking advantage of the GPU-capabilities offered by \pkg{clrng} and \pkg{gpuBatchMatrix} together.
 <<setupData, eval=TRUE,echo=TRUE, message=FALSE>>=
 library("gpuBatchMatrix")
 library('geostatsp')
