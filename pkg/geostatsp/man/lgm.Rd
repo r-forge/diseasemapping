@@ -217,7 +217,7 @@ plot(gadm, add=TRUE)
 }
 
 
-
+options(original)
 
 }
 

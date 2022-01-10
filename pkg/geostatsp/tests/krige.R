@@ -99,3 +99,9 @@ plot(swissBorder, add=TRUE)
 dev.off()
 
 }
+
+options(original)
+
+
+
+

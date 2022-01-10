@@ -143,3 +143,6 @@ if(requireNamespace('diseasemapping', quietly=TRUE)){
 			
 }
 	
+options(original)
+
+

@@ -52,7 +52,7 @@ plot(lgcpRoc[,'onemspec'] ,
 }
 
  
-
+options(original)
 
 
 
