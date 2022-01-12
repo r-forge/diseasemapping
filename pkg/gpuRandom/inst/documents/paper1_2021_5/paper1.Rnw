@@ -384,7 +384,6 @@ int Drow, Dcol;
 uint g1[3], g2[3];
 int startvalue = (get_global_id(0) * get_global_size(1) + 
   get_global_id(1)) * NpadStreams;
-
 const double fact[2] = { mrg31k3p_NORM_cl, TWOPI * mrg31k3p_NORM_cl };
 const double addForSine[2] = { 0.0, - PI_2 };
 local double part[2];
