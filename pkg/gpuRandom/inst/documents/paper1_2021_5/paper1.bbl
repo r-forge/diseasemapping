@@ -1,4 +1,4 @@
-\begin{thebibliography}{32}
+\begin{thebibliography}{33}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
@@ -26,6 +26,12 @@ Bengtsson H (2021).
 Box GE (1958).
 \newblock \enquote{A note on the generation of random normal deviates.}
 \newblock \emph{Ann. Math. Statist.}, \textbf{29}, 610--611.
+
+\bibitem[{Brown(2021)}]{mapmiscPackage}
+Brown PE (2021).
+\newblock \emph{mapmisc: Utilities for Producing Maps}.
+\newblock R package version 1.8.0,
+  \urlprefix\url{https://CRAN.R-project.org/package=mapmisc}.
 
 \bibitem[{{Determan Jr.}(2017)}]{gpur1}
 {Determan Jr} C (2017).

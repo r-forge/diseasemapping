@@ -31,10 +31,10 @@
 
 
 
-
 %\addbibresource{paper2.bib}
 \def\cov{{\text{COV}}}
 \def\E{{\text{E}}}
+\def\var{{\text{var}}}
 \def\T{{\footnotesize{^{_{\sf T}}}}}
 \setkeys{Gin}{width=0.45\textwidth}
 \setcitestyle{square}
@@ -360,7 +360,6 @@ int Drow, Dcol;
 uint g1[3], g2[3];
 int startvalue = (get_global_id(0) * get_global_size(1) + 
   get_global_id(1)) * NpadStreams;
-
 const double fact[2] = { mrg31k3p_NORM_cl, TWOPI * mrg31k3p_NORM_cl };
 const double addForSine[2] = { 0.0, - PI_2 };
 local double part[2];
@@ -405,7 +404,7 @@ R> system.time(rnormGpu(c(10000, 10000), streams = streams, Nglobal = c(512,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.045   0.004   0.049
+##   0.053   0.000   0.053
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -526,7 +525,7 @@ R> system.time(result_month <-
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.319   0.000   0.319
+##   0.335   0.000   0.335
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -606,7 +605,7 @@ R> system.time(resultWeek <- clrng::fisher.sim(week_GPU, 10000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   1.923   0.023   1.949
+##   1.934   0.016   1.948
 \end{CodeOutput}
 \begin{CodeInput}
 R> unlist(resultWeek[c("threshold", "simNum", "counts")])
@@ -699,26 +698,43 @@ B & Intel 2.5ghz & AMD Radeon & Intel 3.7ghz & NVIDIA V100 & Data\\
 
 \section{Simulating Gaussian Random Fields} 
 
-Simulating Gaussian random fields (GRF's) is computationally intensive due the high dimensionality of the problem, a 100 by 100 grid has 10,000 cells and a 10,000 by 10,000 variance matrix.  Writing $x_1,\dots, x_n$ as point locations (i.e.\ centres of grid cells), the joint distribution of $U=(U_{x_1},\dots,U_{x_n})^\top$ is multivariate Normal (MVN). 
+Simulating Gaussian random fields (GRF's) is computationally intensive due the high dimensionality of the problem, a 100 by 100 grid has 10,000 cells and a 10,000 by 10,000 variance matrix.  Writing $x_1,\dots, x_n$ as point locations (i.e.\ centres of grid cells), the joint distribution of $U=(U_{x_1},\dots,U_{x_n})^\top$ is multivariate Normal (MVN).  An isotropic random field has a variance matrix  with entries which depend on the distances between point locations, and a GRF with geometric anisotoropy has entries depending on the direction as well as the distance.  
+A geometrically anisotropic GRF with a \citet{matern1960spatial} correlation function is defined as
+\begin{align*}
+U &= [U(x_1), \ldots, U(x_n)]^\top \sim \text{MVN}(0, \Sigma), \\
+\Sigma_{ij} &= \cov[ U(x_i),U(x_j) ]= \sigma^2 \frac{2^{\kappa-1}}{\Gamma(\kappa)} \left(\sqrt{8\kappa} ||d_{ij}||/\phi \right)^\kappa  K_\kappa\left(\sqrt{8\kappa} ||d_{ij}||/\phi \right),\\
+d_{ij} &= 
+        \left[
+          \begin{array}{rr}
+            1 & 0 \\
+            0 & \omega
+          \end{array}
+        \right]
+        \left[
+          \begin{array}{rr}
+            \cos(\theta) & -\sin(\theta) \\
+            \sin(\theta) & \cos(\theta)
+          \end{array}
+        \right]
+(x_i - x_j)
+\end{align*}
+where $K_\kappa(\cdot)$  is a modified Bessel function of the second kind with order $\kappa$ and $\Gamma(\cdot)$ is the standard gamma function.  The model parameters are:
+\begin{itemize}
+\setlength{\parskip}{0pt}
+\item $\sigma$, the (marginal) variance  $\var(U_i) = \sigma$;
+\item $\kappa$, the shape parameter controlling the differentiability of $U(\cdot)$;
+\item $\phi$, the range parameter controlling how quickly correlation decays with distance in the direction where correlation is strongest;
+\item $\omega \geq 1$, a parameter controlling how much faster correlation decays in the direction where correlation is weakest; and 
+\item $\theta$, the angle of rotation  required to put the direction of maximum correlation on the x-axis.
+\end{itemize}
+The standard isotropic Mat\'ern model is obtained by setting $\omega = 1$.
+There are several alternative parameterisations of Mat\'ern covariance functions in literature  \citep[see][]{haskard2007anisotropic}. In \pkg{gpuBatchMatrix}, we use the above form with the $\sqrt{8\kappa}$ term as it allows $\phi$ to be interpretable as the distance beyond which correlation is less than 0.14.
 
-\begin{gather*} 
-U = [U(x_1), \ldots, U(x_n)]^\top \sim \text{MVN}(0, \Sigma), \\
-\Sigma_{ij} = \cov[ U(x_i),U(x_j) ] = \sigma^2 \frac{2^{\kappa-1}}{\Gamma(\kappa)} \left(\sqrt{8\kappa} \frac{|x_i - x_j|}{\phi}\right)^\kappa  K_\kappa\left(\sqrt{8\kappa}  \frac{|x_i - x_j|}{\phi}\right),
-\end{gather*}
-where $\Sigma$ standards for the covariance matrix of $U$. A common choice for $\Sigma$ is the Mat\'ern covariance \citep{matern1960spatial}. The Mat\'ern covariance between $U(x_i)$ and $U(x_j)$ takes the above form,
-%$d =\|x-x'\|$ is the Euclidean distance between two spatial points, 
-where $\sigma^2$ the variance of the random field $U$.
-$\Gamma(\cdot)$ is the standard gamma function.  
-$\phi$ is the range parameter or scale parameter, it controls the rate of decay of the correlation as distance increases. $K_\kappa(\cdot)$ is the modified Bessel function of the second kind with order $\kappa$, $\kappa$ is the shape parameter which determines the smoothness of $U(x)$. %specifically, $U(x)$ is $m$ times mean-square differentiable if and only if $\kappa > m$. %(For $\kappa=0.5$, the Mat\'ern covariance function reduces to the exponential covariance function $\sigma^2*\exp(-d/\phi)$, when $\kappa \rightarrow \infty$, $\Sigma(d) \rightarrow \sigma^2*\exp{-(\|d\|/\phi)^2}$, which is called the Gaussian covariance.)  
-There are several alternative parameterisations of Mat\'ern covariance functions in literature  \citep[see][]{haskard2007anisotropic}. In \pkg{gpuBatchMatrix}, we use the above form for computing Mat\'ern covariance.
-GEOMETRIC ANISOTROPY
-Geometrical anisotropy is defined by two additional parameters (`anisoRatio' and `anisoAngle') in the correlation function, which makes the resulting multidimensional probability surface even more complex to evaluate. 
+The conceptually simplest way of simulating a GRF is to multiply a vector of independent standard Normals by the Cholesky decomposition of $\Sigma$.  This is the direct matrix decomposition method.  
+\cite{LiuandLi2019} gives a comprehensive review on seven popular methods for GRF generation, %which are the turning bands method \citep{matheron_1973}, spectral method \citep{Meja1974OnTS,1972JSV}, matrix decomposition method \citep{davis1987}, Karhunen-Lo\'eve expansion \citep{LoeveM:1978}, moving average method \citep{journel1974, oliver1995moving}, sequential simulation \citep{johnson1987multivariate, gomez1993joint, pebesma2004multivariable}, and local average subdivision \citep{fenton1990simulation}. 
+all of these methods other than the matrix decomposition method, involve approximations to the random field and have specific requirements on the type of grid or covariance functions. The direct matrix decomposition method is exact, it works for all covariance functions and can generate random fields on arbitrary point locations, and is straightforward to implement. 
 
-%Due to the importance of Gaussian random field, there are a large amount of studies devoted to Gaussian random field generation techniques. 
-\cite{LiuandLi2019} gives a comprehensive review on seven popular methods for Gaussian random field generation, %which are the turning bands method \citep{matheron_1973}, spectral method \citep{Meja1974OnTS,1972JSV}, matrix decomposition method \citep{davis1987}, Karhunen-Lo\'eve expansion \citep{LoeveM:1978}, moving average method \citep{journel1974, oliver1995moving}, sequential simulation \citep{johnson1987multivariate, gomez1993joint, pebesma2004multivariable}, and local average subdivision \citep{fenton1990simulation}. 
-all of these methods except the direct matrix decomposition method, are approximations to the random field and have specific requirements on the type of grid or covariance functions. The direct matrix decomposition method is exact, it works for all covariance functions and can generate random fields on arbitrary grids, and is straightforward to implement \citep{LiuandLi2019}. By using this method, we are able to simulate on GPU exact Gaussian fields on arbitrary grids. The implementation of this method is as follows.
 
-Suppose $U=(U_1, U_2, \dots, U_n)^\top$ is a Gaussian random field with mean $\mu$ and covariance matrix $\Sigma$, without loss of generality, we assume mean value zero $(\mu = 0)$. Since covariance matrix $\Sigma$ is symmetric and positive-definite, we can take Cholesky decomposition of $\Sigma$, then we can simulate random samples from $U$ using Algorithm \ref{algorithm2},
 
 \begin{algorithm}[H]
 \SetAlgoLined
@@ -726,14 +742,14 @@ Suppose $U=(U_1, U_2, \dots, U_n)^\top$ is a Gaussian random field with mean $\m
  2, Compute the Cholesky decomposition of $\Sigma = L \cdot D \cdot L^\top$, where $L$ is a lower unit triangular matrix, and $D$ is a diagonal matrix\;
  3, Generate on GPU a random matrix $Z=(Z_1, Z_2, \dots, Z_n) \sim \text{MVN}(0,I_n)$, where $I_n$ is a $n \times n$ identity matrix\;
  4, Compute the random samples from $U$ in batches using $U = L \cdot D^{\frac{1}{2}} \cdot Z$ \;
- \caption{Gaussian random fields simulation using covariance matrix decomposition method.}
+ \caption{Gaussian random fields simulation using the direct matrix decomposition method.}
  \label{algorithm2}
 \end{algorithm}
 
-The downside of this method is that it's computationally expensive and is thus very slow. When the number of locations $n$ is large, the time cost of Cholesky decomposition of the covariance matrix is $\mathcal{O}(n^3)$,  and is $\mathcal{O}(n^2)$ for the matrix-vector multiplication $L*Z$ \citep{LiuandLi2019}. Methods employing approximations gain benefits in computations while sacrificing exactness, we preserve the exactness and also largely reduce the computation burden by utilizing our other \proglang{R} package \pkg{gpuBatchMatrix}. \pkg{gpuBatchMatrix} address this issue since it computes batches of Mat\'ern covariance matrices in parallel, and does Cholesky decomposition and matrix-matrix multiplication in batches in parallel on GPU. 
+ The direct method is detailed in Algorithm \ref{algorithm2}.  It is computationally demanding for two reasons.  First, evaluating the Bessel function is an iterative procedure that must be done for each of the $n^2/2$ entries of $\Sigma$.  Second, the time cost of Cholesky decomposition of the covariance matrix is $\mathcal{O}(n^3)$,  and is $\mathcal{O}(n^2)$ for the matrix-vector multiplication $L*Z$ \citep{LiuandLi2019}. Methods employing approximations gain benefits in computations while sacrificing exactness, we preserve the exactness and also largely reduce the computation burden by utilizing our other \proglang{R} package \pkg{gpuBatchMatrix}. \pkg{gpuBatchMatrix} address this issue since it computes batches of Mat\'ern covariance matrices in parallel, and does Cholesky decomposition and matrix-matrix multiplication in batches in parallel on GPU. 
 
 
-Other \proglang{R} packages that offer simulation of Gaussian random fields such as \pkg{geoR} \citep{geoR2001}, does not work for large number of locations. The \pkg{RandomFields} \citep{RandomFields2015} package has several different methods for simulation of Gaussian fields, among which the circulant embedding, which is an improved method on direct matrix decomposition, and some variants of the method like the cut-off embedding \citep{gneiting2006fast} are also exact and fast for isotropic Gaussian random fields, however, they work only on rectangular grids. 
+Other \proglang{R} packages that offer simulation of GRF's such as \pkg{geoR} \citep{geoR2001}, does not work for large number of locations. The \pkg{RandomFields} \citep{RandomFields2015} package has several different methods for simulation of Gaussian fields, among which the circulant embedding, which is an improved method on direct matrix decomposition, and some variants of the method like the cut-off embedding \citep{gneiting2006fast} are also exact and fast for isotropic GRF's, however, they work only on rectangular grids. 
 
 %it can generate random fields on arbitrary position Circulant embedding is a fast simulation method for stationary (possibly anisotropic) Gaussian ran- dom fields on regular grids based on Fourier transformations. Cut-off embedding is a fast simulation method for stationary, isotropic Gaussian random fields on square lattices based on the standard RPcirculant method, so that exact simulation is garantueed for further covariance models
 
@@ -748,27 +764,17 @@ Other \proglang{R} packages that offer simulation of Gaussian random fields such
 %\pkg{clrng} package not only does the matrices decomposition (Cholesky decomposition and matrix-vector multiplication) in parallel, but also computes the covariance matrices in parallel on GPU. 
 
 \subsection{Simulating Gaussian random fields with Mat\'ern covariances}
-The following shows an example, in which we simulate on GPU eight Gaussian random fields of Mat\'ern covariance at one time with four sets of parameters, by taking advantage of the GPU-capabilities offered by \pkg{clrng} and \pkg{gpuBatchMatrix} together.
+
+The following shows an example, in which we simulate on GPU eight GRF's of Mat\'ern covariance at one time with four sets of parameters, by taking advantage of the GPU-capabilities offered by \pkg{clrng} and \pkg{gpuBatchMatrix} together.  Motivated by the classic Swiss rain dataset, we simluate random fields on a grid of points covering Switzerland.  
+
+
+
+Step 1, we create a grid of points covering Switzerland using the the \code{swissBorder} object from \pkg{geostatsp}.  The grid is specified as having 90 cells in the horizontal direction.
+
+
 \begin{CodeChunk}
 \begin{CodeInput}
-R> library("gpuBatchMatrix")
 R> library("geostatsp")
-\end{CodeInput} 
-\end{CodeChunk} 
-
-Step 1, set up a $51 \times 80$ raster using the `swissBorder' coordinates from \pkg{geostatsp}.
-\begin{CodeChunk}
-\begin{CodeInput}
-R> NlocalCache = 1000
-R> Nglobal = c(128, 64, 2)
-R> Nlocal = c(16, 8, 2)
-R> theType = "double"
-\end{CodeInput} 
-\end{CodeChunk} 
-
-
-\begin{CodeChunk}
-\begin{CodeInput}
 R> data("swissRain", package = "geostatsp")
 R> myRaster = geostatsp::squareRaster(swissBorder, 90)
 R> dim(myRaster)
@@ -778,23 +784,31 @@ R> dim(myRaster)
 \end{CodeOutput} 
 \end{CodeChunk} 
 
-Step 2, create four parameter sets as a small example. 
+Step 2, create a matrix with four different parameter sets.  The five parameters named are $\kappa$, $\phi$, $\sigma^2$, $\omega$ and $\theta$.  
+\begin{CodeChunk}
+\begin{CodeInput}
+R> params = rbind(c(shape = 1.25, range = 50 * 1000, variance = 1.5,
++    anisoRatio = 1, anisoAngleRadians = 0), c(2.15, 60 * 1000,
++    2, 4, pi/7), c(0.6, 30 * 1000, 2, 2, pi/5), c(3, 30 *
++    1000, 2, 2, pi/7))
+\end{CodeInput} 
+\end{CodeChunk} 
 
 \begin{CodeChunk}
 \begin{CodeInput}
 R> params
 \end{CodeInput}
 \begin{CodeOutput}
-##      shape range variance nugget anisoRatio anisoAngleRadians
-## [1,]  1.25 50000      1.5      0          1             0.000
-## [2,]  2.15 60000      2.0      0          4             0.449
-## [3,]  0.60 30000      2.0      0          2             0.449
-## [4,]  3.00 30000      2.0      0          2             0.449
+##      shape range variance anisoRatio anisoAngleRadians
+## [1,]  1.25 50000      1.5          1             0.000
+## [2,]  2.15 60000      2.0          4             0.449
+## [3,]  0.60 30000      2.0          2             0.628
+## [4,]  3.00 30000      2.0          2             0.449
 \end{CodeOutput} 
 \end{CodeChunk} 
 
 Step 3, compute the Mat\'ern covariance matrices using \fct{gpuBatchMatrix::maternBatch}, the returned Mat\'ern covariance matrices %$\Sigma_1, \Sigma_2, \dots, \Sigma_5$ correspond to the 5 parameter sets respectively, the matrices 
-are each of size $4080 \times 4080$ and are stacked by row in the output \code{maternCov}. 
+are each of size $5130 \times 5130$ and are stacked by row in the output \code{maternCov}. 
 \begin{CodeChunk}
 \begin{CodeInput}
 R> maternCov = gpuBatchMatrix::maternBatch(params, myRaster,
@@ -825,17 +839,12 @@ R> diagMat = gpuBatchMatrix::cholBatch(maternCov, Nglobal = c(128,
   D_{1} \\ D_{2} \\D_{3} \\ \vdots
   \end{bmatrix}
 \end{gather}
-Step 5, create some streams on GPU to generate two standard Gaussian random vectors \code{zmatGpu}$=(Z_1, Z_2)$ using \fct{clrng::rnormGpu}, in which \code{c(nrow(materCov),2)} specifies the number of rows and columns of \code{zmatGpu}.
+Step 5, create some streams on GPU and generate two standard Gaussian random vectors \code{zmatGpu}$=(Z_1, Z_2)$ using \fct{clrng::rnormGpu}, in which \code{c(nrow(materCov),2)} specifies the number of rows and columns of \code{zmatGpu}.
 \begin{CodeChunk}
 \begin{CodeInput}
-R> streamsGpu <- createStreamsGpu(128 * 64)
-\end{CodeInput} 
-\end{CodeChunk} 
-
-\begin{CodeChunk}
-\begin{CodeInput}
-R> zmatGpu = clrng::rnormGpu(c(nrow(maternCov), 2), streams = streamsGpu,
-+    Nglobal = c(128, 64), type = theType)
+R> streamsForGrf <- createStreamsGpu(128 * 64)
+R> zmatGpu = clrng::rnormGpu(c(nrow(maternCov), 2), streams = streamsForGrf,
++    Nglobal = c(128, 64), type = "double")
 \end{CodeInput} 
 \end{CodeChunk} 
 
@@ -867,7 +876,7 @@ R> simMat = gpuBatchMatrix::multiplyLowerDiagonalBatch(maternCov,
    \vdots  &   \vdots
   \end{bmatrix}
 \end{gather}
-Step 7, Finally, plot the ten realizations.
+Step 7, Finally, convert the results to a spatial \code{raster} object and plot them.
 \begin{CodeChunk}
 \begin{CodeInput}
 R> simRaster = raster::brick(myRaster, nl = ncol(simMat) * nrow(params))
@@ -875,10 +884,18 @@ R> values(simRaster) = as.vector(as.matrix(simMat))
 \end{CodeInput} 
 \end{CodeChunk} 
 
+A simple plot can be produced with
+\begin{CodeChunk}
+\begin{CodeInput}
+R> plot(simRaster)
+\end{CodeInput} 
+\end{CodeChunk} 
+
+and
+Figure \ref{fig:maternplot} uses some facilities from the \pkg{mapmisc} \citep{mapmiscPackage} package.
 
 
-
-\begin{figure}
+\begin{figure}[p]
 \subfloat[parameter 1, simuation 1\label{fig:maternplot-1}]{\includegraphics[width=0.47\textwidth]{Figures/Gmaternplot-1} }
 \subfloat[parameter 2, simuation 1\label{fig:maternplot-2}]{\includegraphics[width=0.47\textwidth]{Figures/Gmaternplot-2} }
 \subfloat[parameter 3, simuation 1\label{fig:maternplot-3}]{\includegraphics[width=0.47\textwidth]{Figures/Gmaternplot-3} }
