@@ -404,7 +404,7 @@ R> system.time(rnormGpu(c(10000, 10000), streams = streams, Nglobal = c(512,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.045   0.007   0.052
+##   0.060   0.011   0.071
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -525,7 +525,7 @@ R> system.time(result_month <-
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.317   0.000   0.317
+##   0.318   0.000   0.318
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -605,7 +605,7 @@ R> system.time(resultWeek <- clrng::fisher.sim(week_GPU, 10000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   1.962   0.002   1.966
+##   1.925   0.027   1.951
 \end{CodeOutput}
 \begin{CodeInput}
 R> unlist(resultWeek[c("threshold", "simNum", "counts")])
@@ -651,7 +651,7 @@ R> result_weekcpu$p.value
 We summarized the comparison results in Table \ref{tab:summary} and plot the test statistics in Figure \ref{fig4}.
 \begin{table}[H]
 
-\caption{\label{tab:summarycompare}Summary of comparions of Fisher's test simulation on different devices. Computer 1 is equipped with CPU Intel Xenon W-2145 3.7Ghz and AMD Radeon VII. Computer 2 is equipped with VCPU Intel Xenon Skylake 2.5Ghz and VGPU Nvidia Tesla V100.\label{tab:summary}, run-time varies a little bit for each execution.}
+\caption{\label{tab:summarycompare}Summary of comparions of Fisher's test simulation on different devices. Computer 1 is equipped with CPU Intel Xenon W-2145 3.7Ghz and AMD Radeon VII. Computer 2 is equipped with VCPU Intel Xenon Skylake 2.5Ghz and VGPU Nvidia Tesla V100 \label{tab:summary}. Run-time varies a little bit for each execution.}
 \centering
 \begin{tabular}[t]{l|l|l|l|l|l}
 \hline
