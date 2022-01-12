@@ -28,7 +28,7 @@
 \usepackage{listings}
 \usepackage[shortcuts]{extdash}
 \usepackage{booktabs}
-
+\usepackage{enumitem}
 
 
 %\addbibresource{paper2.bib}
@@ -525,7 +525,7 @@ R> system.time(result_month <-
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.335   0.000   0.335
+##   0.337   0.008   0.344
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -605,7 +605,7 @@ R> system.time(resultWeek <- clrng::fisher.sim(week_GPU, 10000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   1.934   0.016   1.948
+##   1.938   0.017   1.954
 \end{CodeOutput}
 \begin{CodeInput}
 R> unlist(resultWeek[c("threshold", "simNum", "counts")])
@@ -719,14 +719,18 @@ d_{ij} &=
 (x_i - x_j)
 \end{align*}
 where $K_\kappa(\cdot)$  is a modified Bessel function of the second kind with order $\kappa$ and $\Gamma(\cdot)$ is the standard gamma function.  The model parameters are:
+\vspace{-\topsep}
 \begin{itemize}
 \setlength{\parskip}{0pt}
+\itemsep0em 
+%\setlength{\itemsep}{0.5pt plus 1pt}
 \item $\sigma$, the (marginal) variance  $\var(U_i) = \sigma$;
 \item $\kappa$, the shape parameter controlling the differentiability of $U(\cdot)$;
 \item $\phi$, the range parameter controlling how quickly correlation decays with distance in the direction where correlation is strongest;
 \item $\omega \geq 1$, a parameter controlling how much faster correlation decays in the direction where correlation is weakest; and 
 \item $\theta$, the angle of rotation  required to put the direction of maximum correlation on the x-axis.
 \end{itemize}
+\vspace{-\topsep}
 The standard isotropic Mat\'ern model is obtained by setting $\omega = 1$.
 There are several alternative parameterisations of Mat\'ern covariance functions in literature  \citep[see][]{haskard2007anisotropic}. In \pkg{gpuBatchMatrix}, we use the above form with the $\sqrt{8\kappa}$ term as it allows $\phi$ to be interpretable as the distance beyond which correlation is less than 0.14.
 
@@ -891,9 +895,7 @@ R> plot(simRaster)
 \end{CodeInput} 
 \end{CodeChunk} 
 
-and
-Figure \ref{fig:maternplot} uses some facilities from the \pkg{mapmisc} \citep{mapmiscPackage} package.
-
+and Figure \ref{fig:maternplot} uses some facilities from the \pkg{mapmisc} \citep{mapmiscPackage} package.
 
 \begin{figure}[p]
 \subfloat[parameter 1, simuation 1\label{fig:maternplot-1}]{\includegraphics[width=0.47\textwidth]{Figures/Gmaternplot-1} }
