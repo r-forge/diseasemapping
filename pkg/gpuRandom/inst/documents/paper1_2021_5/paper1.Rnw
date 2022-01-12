@@ -575,14 +575,14 @@ We summarized the comparison results in Table \ref{tab:summary} and plot the tes
 library(kableExtra)
 dt <- data.frame(
   var1 = c("B", "1M", "10M", "1M", "10M"),
-  var2 = c('Intel 2.5ghz', 0.403804, 0.0001251, 49.33,  327.27),
-  var3 = c('AMD Radeon', 0.403507, 0.0001274,   2.15,    10.23),
-  var4 = c('Intel 3.7ghz', 0.4035606,0.0001202, 14.80,  92.00),
-  var5 = c('NVIDIA V100', 0.403507,0.0001274,   0.32,   1.95),
+  var2 = c('Intel 2.5ghz', 0.403804, 0.0001251, 49.3,  327.3),
+  var3 = c('AMD Radeon', 0.403507, 0.0001274,   2.2,    10.2),
+  var4 = c('Intel 3.7ghz', 0.4035606,0.0001202, 14.8,  91.5),
+  var5 = c('NVIDIA V100', 0.403507,0.0001274,   0.3,   1.9),
   var6 = c('Data','month','week','month','week')
 )
 
-knitr::kable(dt, col.names = NULL, caption = "Summary of comparions of Fisher's test simulation on different devices. Computer 1 is equipped with CPU Intel Xenon W-2145 3.7Ghz and AMD Radeon VII. Computer 2 is equipped with VCPU Intel Xenon Skylake 2.5Ghz and VGPU Nvidia Tesla V100.\\label{tab:summary}") %>%
+knitr::kable(dt, col.names = NULL, caption = "Summary of comparions of Fisher's test simulation on different devices. Computer 1 is equipped with CPU Intel Xenon W-2145 3.7Ghz and AMD Radeon VII. Computer 2 is equipped with VCPU Intel Xenon Skylake 2.5Ghz and VGPU Nvidia Tesla V100.\\label{tab:summary}, run-time varies a little bit for each execution.") %>%
   kable_styling(full_width = FALSE, position = "center", latex_options = "HOLD_position") %>%
   kableExtra::group_rows(index = c("P-value" = 2, "Run-time" = 2)) %>%
   add_header_above(c(" " = 1, "Computer 1" = 2, "Computer 2" = 2, " " = 1))
@@ -659,7 +659,7 @@ all of these methods other than the matrix decomposition method, involve approxi
  \label{algorithm2}
 \end{algorithm}
 
- The direct method is detailed in Algorithm \ref{algorithm2}.  It is computationally demanding for two reasons.  First, evaluating the Bessel function is an iterative procedure that must be done for each of the $n^2/2$ entries of $\Sigma$.  Second, the time cost of Cholesky decomposition of the covariance matrix is $\mathcal{O}(n^3)$,  and is $\mathcal{O}(n^2)$ for the matrix-vector multiplication $L*Z$ \citep{LiuandLi2019}. Methods employing approximations gain benefits in computations while sacrificing exactness, we preserve the exactness and also largely reduce the computation burden by utilizing our other \proglang{R} package \pkg{gpuBatchMatrix}. \pkg{gpuBatchMatrix} address this issue since it computes batches of Mat\'ern covariance matrices in parallel, and does Cholesky decomposition and matrix-matrix multiplication in batches in parallel on GPU. 
+The direct method is detailed in Algorithm \ref{algorithm2}.  It is computationally demanding for two reasons.  First, evaluating the Bessel function is an iterative procedure that must be done for each of the $n^2/2$ entries of $\Sigma$.  Second, the time cost of Cholesky decomposition of the covariance matrix is $\mathcal{O}(n^3)$,  and is $\mathcal{O}(n^2)$ for the matrix-vector multiplication $L*Z$ \citep{LiuandLi2019}. Methods employing approximations gain benefits in computations while sacrificing exactness, we preserve the exactness and also largely reduce the computation burden by utilizing our other \proglang{R} package \pkg{gpuBatchMatrix}. \pkg{gpuBatchMatrix} address this issue since it computes batches of Mat\'ern covariance matrices in parallel, and does Cholesky decomposition and matrix-matrix multiplication in batches in parallel on GPU. 
 
 
 Other \proglang{R} packages that offer simulation of GRF's such as \pkg{geoR} \citep{geoR2001}, does not work for large number of locations. The \pkg{RandomFields} \citep{RandomFields2015} package has several different methods for simulation of Gaussian fields, among which the circulant embedding, which is an improved method on direct matrix decomposition, and some variants of the method like the cut-off embedding \citep{gneiting2006fast} are also exact and fast for isotropic GRF's, however, they work only on rectangular grids. 
