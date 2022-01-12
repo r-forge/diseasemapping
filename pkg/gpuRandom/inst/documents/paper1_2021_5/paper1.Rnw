@@ -812,7 +812,7 @@ By leveraging the \pkg{gpuR} package, \pkg{clrng} provides a user-friendly inter
 
 \pkg{clrng} is limited by the number and type of \proglang{OpenCL} RNGs used and the features of the \pkg{gpuR} package, as it depends upon the \pkg{gpuR} package. If developers wants to use our package to do something that's not supported in \pkg{gpuR}, for example ``sparse'' class objects, they would have to write \proglang{OpenCL} code to implement it.
 
-Future work on \pkg{clrng} package could be: (1) Explore other RNGs, for example the MRG32k3a, LFSR113, and Philox-4×32-10 generators in \proglang{clRNG} library, and compare the \proglang{R} performance between using different GPU RNGs. (2) Now that the package can do Cholesky decomposition and matrix multiplication in batches on GPU, which is a motivation for us to work on parallel likelihood evaluations on GPU for Gaussian spatial models in the next step. (3) Create a ``sparse'' matrix class on GPU and use it for simulating Gaussian random fields with sparse correlation structures such as the Gaussian Markov random fields.
+Some possible future work on \pkg{clrng} package could be: (1) Incorporate other RNGs, for example the MRG32k3a, LFSR113, and Philox-4×32-10 generators from \proglang{clRNG} library, and compare the \proglang{R} performance between using different RNGs on GPU. (2) Create a ``sparse'' matrix class on GPU and use it for simulating Gaussian random fields with sparse correlation structures such as the Gaussian Markov random fields. (3) Apply GPU-generated random numbers in suitable Monte Carlo simulations to speed up the performance.
 
 
 
