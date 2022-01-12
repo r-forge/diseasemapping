@@ -582,7 +582,7 @@ dt <- data.frame(
   var6 = c('Data','month','week','month','week')
 )
 
-knitr::kable(dt, col.names = NULL, caption = "Summary of comparions of Fisher's test simulation on different devices. Computer 1 is equipped with CPU Intel Xenon W-2145 3.7Ghz and AMD Radeon VII. Computer 2 is equipped with VCPU Intel Xenon Skylake 2.5Ghz and VGPU Nvidia Tesla V100.\\label{tab:summary}, run-time varies a little bit for each execution.") %>%
+knitr::kable(dt, col.names = NULL, caption = "Summary of comparions of Fisher's test simulation on different devices. Computer 1 is equipped with CPU Intel Xenon W-2145 3.7Ghz and AMD Radeon VII. Computer 2 is equipped with VCPU Intel Xenon Skylake 2.5Ghz and VGPU Nvidia Tesla V100 \\label{tab:summary}. Run-time varies a little bit for each execution.") %>%
   kable_styling(full_width = FALSE, position = "center", latex_options = "HOLD_position") %>%
   kableExtra::group_rows(index = c("P-value" = 2, "Run-time" = 2)) %>%
   add_header_above(c(" " = 1, "Computer 1" = 2, "Computer 2" = 2, " " = 1))
