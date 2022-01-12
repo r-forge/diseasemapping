@@ -694,7 +694,6 @@ theType = "double"
 @
 
 <<swissRainBoundary, echo=TRUE>>=
-library('geostatsp')
 data("swissRain", package="geostatsp")
 myRaster = geostatsp::squareRaster(swissBorder, 90)
 dim(myRaster)

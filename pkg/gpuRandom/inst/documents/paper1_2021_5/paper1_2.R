@@ -34,23 +34,22 @@ t(myStreamsCpu)
 
 # Creating streams on GPU
 myStreamsGpu = vclMatrix(myStreamsCpu)
-myStreamsGpu2 = createStreamsGpu(4)
 
 ## Section 2.2
 # Generate 6 i.i.d. U (0,1) random numbers
-as.vector(clrng::runif(n=6, streams=myStreamsGpu2, Nglobal=c(2,2)))
-t(matrix(as.matrix(myStreamsGpu2), nrow(myStreamsCpu), ncol(myStreamsCpu), dimnames = dimnames(myStreamsCpu)))
+sim_1 =  runifGpu(n = 8, streams = myStreamsGpu, Nglobal = c(2,2))
+as.vector(sim_1)
 
 ## Section 3.1
 # Generate a large matrix of normal random numbers, test the run time
 streams <- createStreamsGpu(512 * 128)
-system.time(clrng::rnorm(c(10000,10000), streams=streams, Nglobal=c(512,128), type="double"))
-system.time(matrix(stats::rnorm(10000^2),10000,10000))
+system.time(rnormGpu(c(10000,10000), streams=streams, Nglobal=c(512,128), type="double"))
+system.time(matrix(rnorm(10000^2),10000,10000))
 
 
 ## Section 3.2
 # Generate exponential random numbers
-r_matrix <- clrng::rexp(c(2,4), rate=1, myStreamsGpu2, Nglobal=c(2,2), type="double")
+r_matrix <- rexpGpu(c(2,4), rate=1, myStreamsGpu, Nglobal=c(2,2), type="double")
 as.matrix(r_matrix)
 
 
@@ -63,13 +62,11 @@ kable(month, format = "markdown", caption = "Monthly birth anomaly data")
 
 
 # using GPU
-streams <- createStreamsGpu(n =256*64)
-month_gpu<-vclMatrix(month,type="integer")
-system.time(result_month <- clrng::fisher.sim(month_gpu, 1e6, streams=streams,
-                                              type="double", returnStatistics=TRUE,  Nglobal = c(256,64)))
-result_month$threshold
-result_month$simNum
-result_month$counts
+streams <- createStreamsGpu(n = 256*64)
+month_gpu <- vclMatrix(month, type = "integer")
+system.time(result_month <- clrng::fisher.sim(month_gpu, 1e6, streams=streams, type="double", returnStatistics=TRUE,  Nglobal = c(256,64)))
+
+unlist(result_month[c('threshold','simNum','counts')])
 result_month$p.value
 
 
@@ -88,15 +85,13 @@ kable(week, format = "markdown", caption = "Day-of-week birth anomaly data")
 
 # using GPU
 week_GPU<-gpuR::vclMatrix(week,type="integer")
-system.time(result_week<-clrng::fisher.sim(week_GPU, 1e7, streams=streams, type="double",returnStatistics=TRUE,Nglobal = c(256,64)))
-result_week$threshold
-result_week$simNum
-result_week$counts
-result_week$p.value
+system.time(resultWeek<-clrng::fisher.sim(week_GPU, 1e7, streams=streams, type="double",returnStatistics=TRUE,Nglobal = c(256,64)))
+unlist(resultWeek[c('threshold','simNum','counts')])
+resultWeek$p.value
 
 
 # save test statistics for plot
-result_week$cpu = as.vector(result_week$sim)
+resultWeek$cpu = as.vector(resultWeek$sim)
 
 
 # using CPU
@@ -129,8 +124,8 @@ hist(month_stats, xlab="test statistic",#TeX('-$\\sum(\\log(n_{ij}!))$'),
      breaks=40, ylab="proportion", main="", prob=TRUE)
 abline(v = result_month$threshold, col = "blue", lwd = 1.5)
 
-hist(result_week$cpu, xlab='test statistic', ylab="proportion", prob=TRUE, main="")
-abline(v = result_week$threshold, col = "blue", lwd = 1.5)
+hist(resultWeek$cpu, xlab='test statistic', ylab="proportion", prob=TRUE, main="")
+abline(v = resultWeek$threshold, col = "blue", lwd = 1.5)
 
 
 ## Section 5.1
@@ -141,22 +136,22 @@ library('geostatsp')
 # setupcoords
 NlocalCache = 1000
 Nglobal = c(128, 64, 2)
-Nlocal = c(4, 2, 2)
+Nlocal = c(16, 8, 2)
 theType = "double"
 
 
 # swissRainBoundary
 data("swissRain", package="geostatsp")
-myRaster = geostatsp::squareRaster(swissBorder, 80)
-myRaster
+myRaster = geostatsp::squareRaster(swissBorder, 90)
+dim(myRaster)
 
 
 # setup paramsBatch
 params = 
-  rbind(c(shape=1.25, range=50*1000, variance = 1.5, nugget = 0,anisoRatio = 1, anisoAngleRadians = 0), 
-        c(shape=2.15, range=60*1000, variance = 2, nugget = 0, anisoRatio = 4, anisoAngleRadians = pi/7),
-        c(shape=0.6, range=30*1000, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/7),
-        c(shape=3, range=30*1000, variance = 2, nugget = 0, anisoRatio = 2, anisoAngleRadians = pi/7)
+  rbind(c(shape=1.25, range=50*1000, variance = 1.5, anisoRatio = 1, anisoAngleRadians = 0), 
+        c(2.15, 60*1000, 2,  4, pi/7),
+        c(0.6, 30*1000, 2,  2, pi/5),
+        c(3, 30*1000, 2,   2, pi/7)
   )
 params
 
@@ -170,16 +165,15 @@ dim(maternCov)
 
 
 # take cholesky decomposition
-diagMat = gpuBatchMatrix::cholBatch(maternCov, 
-                                    Nglobal= c(128, 8), Nlocal= c(32, 8))
+diagMat = gpuBatchMatrix::cholBatch(maternCov, Nglobal= c(128, 8), Nlocal= c(32, 8))
 
 
 # simulate random normal vectors
-streamsGpu <- createStreamsGpu(n=128*64)
-zmatGpu = clrng::rnorm(
-  c(nrow(maternCov),2), streams=streamsGpu, 
-  Nglobal=c(128,64),
-  type = theType)
+streamsForGrf <- createStreamsGpu(128*64)
+zmatGpu = clrng::rnormGpu(
+                c(nrow(maternCov),2), streams=streamsForGrf, 
+                Nglobal=c(128,64),
+                type = 'double')
 
 
 # L*D*Z
@@ -195,20 +189,20 @@ simMat = gpuBatchMatrix::multiplyLowerDiagonalBatch(maternCov,
 # plot Setup
 simRaster = raster::brick(myRaster, nl = ncol(simMat)*nrow(params))
 values(simRaster) = as.vector(as.matrix(simMat))
+plot(simRaster)
 names(simRaster) = apply(expand.grid('par',1:nrow(params), 
                                      'sim', 1:ncol(simMat)), 1, paste, collapse='')
 theSubcap = gsub("par", "parameter ", names(simRaster))
 theSubcap = gsub("sim", ", simuation ", theSubcap)
 
-
 # random surfaces plot
-myCol = mapmisc::colourScale(breaks=sort(unique(c(-6, -4, seq(-2, 2), 4, 6))), style='fixed', col='Spectral')
+myCol = mapmisc::colourScale(breaks=c(-7, -4, seq(-2, 2), 4, 7), style='fixed', col='Spectral')
 for(D in names(simRaster)) {
   mapmisc::map.new(simRaster)
   plot(simRaster[[D]], legend=FALSE, add=TRUE, col=myCol$col, breaks=myCol$breaks)
   plot(swissBorder, add=TRUE)
 }
-mapmisc::legendBreaks("right", myCol, inset=0)
+mapmisc::legendBreaks("topleft", myCol, inset=0)
 
 
 
