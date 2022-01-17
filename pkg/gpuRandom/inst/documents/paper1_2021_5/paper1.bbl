@@ -1,4 +1,4 @@
-\begin{thebibliography}{33}
+\begin{thebibliography}{34}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
@@ -161,6 +161,14 @@ L’Ecuyer P (2012).
 \newblock \enquote{Random number generation.}
 \newblock In JE~Gentle, WK~Härdle, Y~Mori (eds.), \emph{Handbook of
   computational statistics}, pp. 35--71. Springer, Berlin, Heidelberg.
+
+\bibitem[{L’{E}cuyer \emph{et~al.}(2015)L’{E}cuyer, Munger, and
+  Kemerchou}]{l2015clrng}
+L’{E}cuyer P, Munger D, Kemerchou N (2015).
+\newblock \enquote{{clRNG}: a random number {API} with multiple streams for
+  {OpenCL}.}
+\newblock Report,
+  \urlprefix\url{https://www-labs.iro.umontreal.ca/~lecuyer/myftp/papers/clrng-api.pdf}.
 
 \bibitem[{Mat{\'e}rn(1960)}]{matern1960spatial}
 Mat{\'e}rn B (1960).

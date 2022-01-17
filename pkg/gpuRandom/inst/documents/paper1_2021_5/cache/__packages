@@ -1,3 +1,4 @@
+base
 knitr
 gpuR
 clrng
@@ -11,4 +12,3 @@ dplyr
 stringr
 forcats
 kableExtra
-base

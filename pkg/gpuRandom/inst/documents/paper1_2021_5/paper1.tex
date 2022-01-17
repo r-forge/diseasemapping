@@ -51,6 +51,7 @@
 
 
 
+
 \author{Ruoyong Xu\\University of Toronto
    \And Patrick Brown\\University of Toronto
    \And Pierre L’Ecuyer\\University of Montr\'eal}
@@ -96,8 +97,6 @@ The random number generator in \pkg{clrng} guarantees independent parallel sampl
 
 
 
-
-
 \section[Introduction]{Introduction}
 
 % Why?
@@ -134,7 +133,7 @@ Finally, the paper concludes with a short summary and a discussion in Section 6.
 Uniform random number generators (RNGs) are the foundation for simulating random numbers from all types of probability distributions. \cite{l2012random} summarized the usual two steps to generate a random variable in computational statistics: (1) generating independent and identically distributed (i.i.d.) uniform random variables on the interval $(0, 1)$, (2) applying transformations to these i.i.d. $U(0, 1)$ random variables to get samples from the desired distribution. \cite{l2012random} and \cite{robert2004random} present many general transformation methods for generating non-uniform random variables, for example, the most frequently used inverse transform method, the Box-Muller algorithm \citep{box1958note} for Gaussian random variable generation, and so on, which are all built on uniform random variables. %In the rest paper, ``RNG'' refers to uniform pseudo random number generator.
 
 
-\proglang{clRNG} is an \proglang{OpenCL} library for uniform random number generation, it provides four different RNGs: the MRG31k3p, MRG32k3a, LFSR113, and Philox-4×32-10 generators. These four RNGs use different types of constructions. The \pkg{clrng} package uses the MRG31k3p RNG, making it able to generate random numbers on GPUs. We choose MRG31k3p as the base generator for the following reasons:  the original \pkg{RNGStreams} package \citep{l2002object} was built with MRG32k3a, which was designed to be implemented in double precision, and not with 32-bit integers. The MRG31k3p generator was designed later, specifically for 32-bit integer arithmetic, so it runs faster on the 32-bit GPUs. It is also faster than Philox-4×32-10. The MRG31k3p generator was introduced in the paper \citep{rLEC00b}. MRG31k3p was also statistically tested extensively and successfully, \cite[see][]{rLEC07b}.    
+\proglang{clRNG} \citep{l2015clrng} is an \proglang{OpenCL} library for uniform random number generation, it provides four different RNGs: the MRG31k3p, MRG32k3a, LFSR113, and Philox-4×32-10 generators. These four RNGs use different types of constructions. The \pkg{clrng} package uses the MRG31k3p RNG, making it able to generate random numbers on GPUs. We choose MRG31k3p as the base generator for the following reasons:  the original \pkg{RNGStreams} package \citep{l2002object} was built with MRG32k3a, which was designed to be implemented in double precision, and not with 32-bit integers. The MRG31k3p generator was designed later, specifically for 32-bit integer arithmetic, so it runs faster on the 32-bit GPUs. It is also faster than Philox-4×32-10. The MRG31k3p generator was introduced by \cite{rLEC00b}. MRG31k3p was also statistically tested extensively and successfully, \cite[see][]{rLEC07b}.    
 
 
 
@@ -143,7 +142,7 @@ In what follows, we will illustrate how to create streams and how to use streams
 
 %THE PROBLEM:  each process needs to be independent, there's a risk of overlap.  solution: streams.  mrg31kp3 a stream is a vector of three positive integers.  initial state is first stream, compute new streams sequentially.
 \subsection{Creating streams}\label{createstreams}
-When a RNG is called in parallel processes or successively called at several places in a program in \proglang{R}, random number generation would be more complicated because there is no guarantee that the streams (analogous to \code{.Random.seed} in \proglang{R}) do not overlap, and thus the generated sequences of random numbers is possible to have correlation. \pkg{clrng} uses multiple distinct streams that are used in work-items that executes in parallel on a GPU device. A popular way of obtaining multiple streams is to take an RNG with a long period and cut the RNG's sequence into very long disjoint pieces of equal length $Z$, and use each piece as a separate stream. Creating a new stream amounts to computing its starting point. Each of these streams can also be partitioned into substreams with equally-spaced starting points \citep{l2002object, rLEC15a}, although this is not currently implemented in \pkg{clrng}. In general, a stream object contains three elements: the current state of the stream, the initial state of the stream (or seed), and the initial state of the current substream (by default it is equal to the seed). Streams are created sequentially in the way that whenever the user creates a new stream, the software automatically jumps ahead by $Z$ steps to find its initial state, and the three states in the stream object are set to it. 
+When a RNG is called in parallel processes or successively called at several places in a program in \proglang{R}, random number generation would be more complicated because there is no guarantee that the streams (analogous to \code{.Random.seed} in \proglang{R}) do not overlap, and thus the generated sequences of random numbers may have dependence. \pkg{clrng} uses multiple distinct streams that are used in work-items that executes in parallel on a GPU device. A popular way of obtaining multiple streams is to take an RNG with a long period and cut the RNG's sequence into very long disjoint pieces of equal length $Z$, and use each piece as a separate stream. Creating a new stream amounts to computing its starting point. Each of these streams can also be partitioned into substreams with equally-spaced starting points \citep{l2002object, rLEC15a}, although this is not currently implemented in \pkg{clrng}. In general, a stream object contains three elements: the current state of the stream, the initial state of the stream (or seed). Streams are created sequentially in the way that whenever the user creates a new stream, the software automatically jumps ahead by $Z$ steps to find its initial state, and the three states in the stream object are set to it. 
 
 
 In the \proglang{clRNG} library, the MRG31k3p RNG's entire period of length approximately $2^{185}$ is divided into approximately $2^{51}$ non-overlapping streams of length $Z = 2^{134}$. %Each stream can be further partitioned into substreams of length $2^{72}$. 
@@ -193,7 +192,7 @@ Equivalently, \fct{createStreamsGpu} creates streams directly on the GPU and ret
 
 There are a few important notes on the usage of these above functions.
 \begin{itemize}
-\item Calling \fct{setBaseCreator} creates a hidden object \code{.Random.seed.clrng}, which (unlike the standard \code{.Random.seed}) controls the creation of new streams (not random number).   We allow users to call \fct{setBaseCreator}  at any time. \fct{setBaseCreator} should be called once before \fct{createStreamsCpu} and \fct{createStreamsGpu} if they would like to select their own initial seeds, or never, in which case streams take the package's default initial seed.  Otherwise, there is a small probability of producing streams which overlap.
+\item Calling \fct{setBaseCreator} creates a hidden object \code{.Random.seed.clrng}, which (unlike the standard \code{.Random.seed}) controls the creation of new streams (not random numbers).   We allow users to call \fct{setBaseCreator}  at any time. \fct{setBaseCreator} should be called once before \fct{createStreamsCpu} and \fct{createStreamsGpu} if they would like to select their own initial seeds, or never, in which case streams take the package's default initial seed.  Otherwise, there is a small probability of producing streams which overlap.
 \item Users may switch between \fct{createStreamsCpu} and \fct{createStreamsGpu} in the same program, calling either will read and update \code{.Random.seed.clrng}.  This is not recommended as it causes unnecessary data transfer between host and device.
 \item If an \proglang{R} session is restarted during a task, as long as users saved the \proglang{R} environment (which Rstudio does automatically), the initial states (seeds) of the newly created streams will carry on from the last streams' seed from the previous \proglang{R} session.
 \item Objects on the GPU are lost when an R session is restarted, even if the workspace is saved.  The object \code{myStreamsGpu} will remain in the workspace if the session is restarted, but the GPU memory containing \code{myStreamsGpu}'s data will no longer be accessible and an error will occur if the object is accessed.  To retain streams when a session is restarted the streams should be copied to the CPU with \code{as.matrix}.
@@ -220,7 +219,7 @@ The object \code{startvalue} gives the position of the work item's stream in the
 
 The function \fct{clrngMrg31k3pNextState} generates an uniform random integer between 1 and 2147483647,  and then scaled to be in the interval $(0,1)$ by multiplying it by a constant \code{mrg31k3p\_NORM\_cl} (defined to be $1/2147483648$). If to generate random integers, \code{temp} is not scaled. At the end of generating random numbers, streams are transferred back to global memory through the function \fct{streamsFromPrivate}.
 
-\begin{lstlisting}[language=C,basicstyle=\small,label={lst:uniformkernel}]
+\begin{lstlisting}[language=C,basicstyle=\small,label={lst:uniformkernel},caption= Uniform random numbers generation kernel.]
 __kernel void mrg31k3pMatrix(
   __global int* streams,
   __global float* out,
@@ -311,7 +310,7 @@ R> sim_mat
 \end{CodeChunk} 
 
 
-Were we to replace the \code{for} loop above with a parallel equivalent (i.e.\ \code{mcmapply}), the order of stream creation could change with each program execution and the result would not be reproducible.  For more complicated applications, we recommend users to save the matrix of streams (current states and initial states) on the CPU in a file as a \code{.rds} object. And later recall the saved streams for regenerating results, the streams will start from their current states after they are loaded. This is a safer way than the previous one for reproducing results in simulations. Below shows the code that saves streams to a data file called \code{myStreams.rds} on CPU and then load it back and transfer it to a `vclMatrix' \code{streams_saved} on GPU, and using it to (re)generate some Normal random numbers.
+Were we to replace the \code{for} loop above with a parallel equivalent (i.e.\ \code{mcmapply}), the order of stream creation could change with each program execution and the result would not be reproducible.  For more complicated applications, we recommend users to save the matrix of streams (current states and initial states) on the CPU in a file as a \code{.rds} object. And later recall the saved streams for regenerating results, the streams will start from their current states after they are loaded. This is a safer way than the previous one for reproducing results in simulations. Below we show the code that saves streams to a data file called \code{myStreams.rds} on CPU and then load it back and transfer it to a `vclMatrix' \code{streams_saved} on GPU, and using it to (re)generate some Normal random numbers.
 \begin{CodeChunk}
 \begin{CodeInput}
 R> saveRDS(as.matrix(myStreamsGpu), "myStreams.rds")
@@ -350,7 +349,7 @@ Listing \ref{lst:normal} shows a fragment of the kernel that generates standard 
 
 
 
-\begin{lstlisting}[language=C,basicstyle=\small,label={lst:normal},breaklines=true, escapeinside={(*@}{@*)}]
+\begin{lstlisting}[language=C,basicstyle=\small,label={lst:normal},breaklines=true, escapeinside={(*@}{@*)}, caption = Normal random numbers generation kernel.]
 __kernel void mrg31k3pMatrix(
   __global int* streams,
   __global double* out,
@@ -395,7 +394,7 @@ streamsFromPrivate(streams,g1,g2,startvalue);
 % \end{figure}
  
 
-Below we generate a large-size matrix of 100 million double-precision Gaussian random numbers, and compare the run-time between using \fct{stats::rnorm} and \fct{rnormGpu}. The best performance we have seen using \fct{rnormGpu} is above over 100 times faster with $512 \times 128$ work-items than using the standard (and single-threaded) \fct{stats::rnorm}. The difference in elapsed time becomes larger when matrix size increases.
+Below we generate a large-size matrix of 100 million double-precision Gaussian random numbers, and compare the run-time between using \fct{stats::rnorm} and \fct{rnormGpu}. The best performance we have seen using \fct{rnormGpu} is above 170 times faster with $512 \times 128$ work-items than using the standard (and single-threaded) \fct{stats::rnorm}. The difference in elapsed time becomes larger when matrix size increases.
 \begin{CodeChunk}
 \begin{CodeInput}
 R> streams <- createStreamsGpu(512 * 128)
@@ -404,7 +403,7 @@ R> system.time(rnormGpu(c(10000, 10000), streams = streams, Nglobal = c(512,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.060   0.011   0.071
+##   0.045   0.004   0.049
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -414,7 +413,7 @@ R> system.time(matrix(rnorm(10000^2), 10000, 10000))
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   7.006   0.777   7.782
+##   6.615   0.828   7.437
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -444,7 +443,7 @@ The arguments of the \fct{rexpGpu} are described as follows:
   \item \code{streams}: Streams for random number generation, streams cannot be missing.
   \item \code{Nglobal}: Global index space. Default is $(64,8)$.
   \item \code{type}: ``double'' or ``float'' format of generated random numbers.
-  \item \code{verbose}: Print extra information if $\text{verbose} > 1$. Default is FALSE.
+  \item \code{verbose}: Print extra information if $\text{verbose} > 1$. Default is set to 0.
 \end{itemize}
 
 
@@ -485,7 +484,7 @@ Users request $N$ number of replicates, while the actual number of replicates to
 The 2-way contingency table in Table \ref{tab:monthdata} comes from the 2018 Natality public use data from the Centers for Disease Control and Prevention’s National Center for Health Statistics \citep{National2018}.  The 2018 natality data file may be downloaded at \url{https://www.cdc.gov/nchs/data_access/VitalStatsOnline.htm}. Table \ref{tab:month} is a $12 \times 12$ table that shows frequencies for congenital anomalies of the newborn by birth month in 2018 within the United States. The column variables of these two tables represent the twelve categories of congenital anomalies of the newborn: 1) Anencephaly; 2) Meningomyelocele/Spina bifida; 3) Cyanotic congenital heart disease; 4) Congenital diaphragmatic hernia; 5) Omphalocele; 6) Gastrochisis; 7) Limb reduction defect; 8) Cleft lip with or without cleft palate; 9) Cleft palate alone; 10) Down syndrome; 11) Suspected chromosomal disorder; and 12) Hypospadias. 
 
 
- 
+
 \begin{table}
 
 \caption{\label{tab:monthdata}Monthly counts of birth anomalies.\label{tab:month}}
@@ -525,7 +524,7 @@ R> system.time(result_month <-
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.318   0.000   0.318
+##   0.311   0.010   0.320
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -545,7 +544,7 @@ R> result_month$p.value
 \end{CodeOutput} 
 \end{CodeChunk} 
 
-We got 410825 cases whose test statistics are below the observed threshold based on an actual number of 1015808 simulations, so the p-value from \fct{clrng::fisher.sim} for this table is about 0.40443, which is close enough to the p-value from \fct{stats::fisher.test}. \fct{clrng::fisher.sim} takes about 0.31 seconds, \pkg{clrng} accounts for 2.17\% of the elapsed time on CPU. 
+We got 410825 cases whose test statistics are below the observed threshold based on an actual number of 1015808 simulations, so the p-value from \fct{clrng::fisher.sim} for this table is about $4.03\times 10^{-1}$, which is close enough to the p-value from \fct{stats::fisher.test}. \fct{clrng::fisher.sim} takes about 0.3 seconds, \pkg{clrng} accounts for 2.1\% of the elapsed time on CPU. 
 
  
 \begin{CodeChunk}
@@ -556,13 +555,13 @@ R> system.time(result_monthcpu <- stats::fisher.test(month, simulate.p.value = T
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##  14.859   0.014  14.874
+##  14.852   0.031  14.873
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_monthcpu$p.value
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 0.405
+## [1] 0.403
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -572,7 +571,6 @@ R> result_monthcpu$p.value
 \subsection{Comparing run-time: Day-of-week birth anomolies}\label{fisher_week}
 
 Table \ref{tab:week} is a $7 \times 12$ table shows frequencies for congenital anomalies of the newborn by birth day of week in 2018 within the United States. 
-
 
 \begin{table}
 
@@ -594,8 +592,6 @@ Sun & 49 & 51 & 211 & 40 & 32 & 96 & 69 & 216 & 108 & 143 & 130 & 258\\
 \end{table}
 
 
-
-
 \begin{CodeChunk}
 \begin{CodeInput}
 R> week_GPU <- gpuR::vclMatrix(week, type = "integer")
@@ -605,7 +601,7 @@ R> system.time(resultWeek <- clrng::fisher.sim(week_GPU, 10000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   1.925   0.027   1.951
+##   1.934   0.015   1.947
 \end{CodeOutput}
 \begin{CodeInput}
 R> unlist(resultWeek[c("threshold", "simNum", "counts")])
@@ -622,10 +618,6 @@ R> resultWeek$p.value
 \end{CodeOutput} 
 \end{CodeChunk} 
 
-The ``week'' table has a much smaller p-value: around 0.000125, which should require a larger number of simulations to get a more accurate p-value. With more than ten million simulations, we get 1205 cases and a p-value around
-0
-with \fct{fisher.sim}. \fct{stats::fisher.test} takes 92.45 seconds, while \fct{fisher.sim} takes about 1.95 seconds, the GPU elapsed time is decreased to about 2.10\% of the time taken on CPU. 
-
 
 \begin{CodeChunk}
 \begin{CodeInput}
@@ -635,17 +627,17 @@ R> system.time(result_weekcpu <- fisher.test(week, simulate.p.value = TRUE,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##  91.311   0.186  91.432
+##  91.312   0.139  91.367
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_weekcpu$p.value
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 0.000127
+## [1] 0.000121
 \end{CodeOutput} 
 \end{CodeChunk} 
 
-
+The ``week'' table has a much smaller p-value: around $1.21\times 10^{-4}$, which should require a larger number of simulations to get a more accurate p-value. With more than ten million simulations, we get 1350 cases and a p-value around $1.35\times 10^{-4}$ with \fct{fisher.sim}. \fct{stats::fisher.test} takes about 91.4 seconds, while \fct{fisher.sim} takes about 1.9 seconds, the GPU elapsed time is decreased to about 2.1\% of the time taken on CPU. 
 
 \subsection{A summary of the results}
 We summarized the comparison results in Table \ref{tab:summary} and plot the test statistics in Figure \ref{fig4}.
@@ -669,7 +661,7 @@ B & Intel 2.5ghz & AMD Radeon & Intel 3.7ghz & NVIDIA V100 & Data\\
 \hline
 \hspace{1em}1M & 49.3 & 2.2 & 14.8 & 0.3 & month\\
 \hline
-\hspace{1em}10M & 327.3 & 10.2 & 91.5 & 1.9 & week\\
+\hspace{1em}10M & 327.3 & 10.2 & 91.4 & 1.9 & week\\
 \hline
 \end{tabular}
 \end{table}
@@ -719,10 +711,10 @@ d_{ij} &=
 (x_i - x_j)
 \end{align*}
 where $K_\kappa(\cdot)$  is a modified Bessel function of the second kind with order $\kappa$ and $\Gamma(\cdot)$ is the standard gamma function.  The model parameters are:
-\vspace{-\topsep}
+%\vspace{-\topsep}
 \begin{itemize}
-\setlength{\parskip}{0pt}
-\itemsep0em 
+%\setlength{\parskip}{0pt}
+%\itemsep0em 
 %\setlength{\itemsep}{0.5pt plus 1pt}
 \item $\sigma$, the (marginal) variance  $\var(U_i) = \sigma$;
 \item $\kappa$, the shape parameter controlling the differentiability of $U(\cdot)$;
@@ -730,7 +722,7 @@ where $K_\kappa(\cdot)$  is a modified Bessel function of the second kind with o
 \item $\omega \geq 1$, a parameter controlling how much faster correlation decays in the direction where correlation is weakest; and 
 \item $\theta$, the angle of rotation  required to put the direction of maximum correlation on the x-axis.
 \end{itemize}
-\vspace{-\topsep}
+%\vspace{-\topsep}
 The standard isotropic Mat\'ern model is obtained by setting $\omega = 1$.
 There are several alternative parameterisations of Mat\'ern covariance functions in literature  \citep[see][]{haskard2007anisotropic}. In \pkg{gpuBatchMatrix}, we use the above form with the $\sqrt{8\kappa}$ term as it allows $\phi$ to be interpretable as the distance beyond which correlation is less than 0.14.
 
@@ -778,7 +770,6 @@ Step 1, we create a grid of points covering Switzerland using the the \code{swis
 
 \begin{CodeChunk}
 \begin{CodeInput}
-R> library("geostatsp")
 R> data("swissRain", package = "geostatsp")
 R> myRaster = geostatsp::squareRaster(swissBorder, 90)
 R> dim(myRaster)
@@ -925,10 +916,7 @@ By leveraging the \pkg{gpuR} package, \pkg{clrng} provides a user-friendly inter
 
 \pkg{clrng} is limited by the number and type of \proglang{OpenCL} RNGs used and the features of the \pkg{gpuR} package, as it depends upon the \pkg{gpuR} package. If developers wants to use our package to do something that's not supported in \pkg{gpuR}, for example ``sparse'' class objects, they would have to write \proglang{OpenCL} code to implement it.
 
-Future work on \pkg{clrng} package could be: (1) Explore other RNGs, for example the MRG32k3a, LFSR113, and Philox-4×32-10 generators in \proglang{clRNG} library, and compare the \proglang{R} performance between using different GPU RNGs. (2) Now that the package can do Cholesky decomposition and matrix multiplication in batches on GPU, which is a motivation for us to work on parallel likelihood evaluations on GPU for Gaussian spatial models in the next step. (3) Create a ``sparse'' matrix class on GPU and use it for simulating Gaussian random fields with sparse correlation structures such as the Gaussian Markov random fields.
-
-
-
+Some possible future work on \pkg{clrng} package could be: (1) Incorporate other RNGs, for example the MRG32k3a, LFSR113, and Philox-4×32-10 generators from \proglang{clRNG} library, and compare the \proglang{R} performance between using different RNGs on GPU. (2) Create a ``sparse'' matrix class on GPU and use it for simulating Gaussian random fields with sparse correlation structures such as the Gaussian Markov random fields. (3) Apply GPU-generated random numbers in suitable Monte Carlo simulations to speed up the performance.
 
 
 \bibliography{paper1}
