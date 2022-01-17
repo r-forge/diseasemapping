@@ -516,6 +516,7 @@ knitr::kable(month)
 @
 
  <<timecomparemonth1Gpu, eval=TRUE,cache=FALSE, tidy=FALSE>>=
+# using GPU
  streams <- createStreamsGpu(n = 256*64)
  month_gpu <- vclMatrix(month, type = "integer")
  system.time(result_month <- 
@@ -527,13 +528,13 @@ knitr::kable(month)
 unlist(result_month[c('threshold','simNum','counts')])
 result_month$p.value
 @
-We got 410825 cases whose test statistics are below the observed threshold based on an actual number of 1015808 simulations, so the p-value from \fct{clrng::fisher.sim} for this table is about $\Sexpr{sn(result_month$p.value,3)}$, which is close enough to the p-value from \fct{stats::fisher.test}. \fct{clrng::fisher.sim} takes about 0.3 seconds, \pkg{clrng} accounts for 2.1\% of the elapsed time on CPU. 
+We got 409429 cases whose test statistics are below the observed threshold based on an actual number of 1015808 simulations, so the p-value from \fct{clrng::fisher.sim} for this table is about $\Sexpr{sn(result_month$p.value,3)}$, which is close enough to the p-value from \fct{stats::fisher.test}. \fct{clrng::fisher.sim} takes about 0.3 seconds, \pkg{clrng} accounts for 2.1\% of the elapsed time on CPU. 
  <<timecomparemonth3Gpu, eval=TRUE,echo=FALSE, cache=TRUE>>=
  month_stats <- as.vector(result_month$sim)
  @
  
  <<timecomparemonth4Cpu, cache=TRUE, eval=TRUE>>=
- #using CPU
+ # using CPU
  system.time(result_monthcpu<-stats::fisher.test(month,simulate.p.value = TRUE, B=1015808))
  result_monthcpu$p.value
  @
@@ -556,6 +557,7 @@ knitr::kable(week,format="latex",align = c("rrrrrrrrrrrr"),  #label = "tab:week"
 kable_styling(full_width = F, position = "center")#, latex_options = "HOLD_position")
 @
 <<TimecompareweekGpu2, eval=TRUE, cache=FALSE>>=
+# using GPU
 week_GPU<-gpuR::vclMatrix(week,type="integer")
 system.time(resultWeek<-clrng::fisher.sim(week_GPU, 1e7, streams=streams,
                 type="double",returnStatistics=TRUE,Nglobal = c(256,64)))
@@ -566,11 +568,11 @@ resultWeek$p.value
 resultWeek$cpu = as.vector(resultWeek$sim)
 @
 <<TimecompareweekCpu, cache=TRUE, eval=TRUE>>=
-#using CPU
+# using CPU
 system.time(result_weekcpu<-fisher.test(week,simulate.p.value = TRUE,B=10010624))
 result_weekcpu$p.value
 @
-The ``week'' table has a much smaller p-value: around $\Sexpr{sn(result_weekcpu$p.value,3)}$, which should require a larger number of simulations to get a more accurate p-value. With more than ten million simulations, we get 1350 cases and a p-value around $\Sexpr{sn(resultWeek$p.value,3)}$ with \fct{fisher.sim}. \fct{stats::fisher.test} takes about 91.4 seconds, while \fct{fisher.sim} takes about 1.9 seconds, the GPU elapsed time is decreased to about 2.1\% of the time taken on CPU. 
+The ``week'' table has a much smaller p-value: around $\Sexpr{sn(result_weekcpu$p.value,3)}$, which should require a larger number of simulations to get a more accurate p-value. With more than ten million simulations, we get 1350 cases and a p-value around $\Sexpr{sn(resultWeek$p.value,3)}$ with \fct{fisher.sim}. \fct{stats::fisher.test} takes about 91.8 seconds, while \fct{fisher.sim} takes about 1.9 seconds, the GPU elapsed time is decreased to about 2.1\% of the time taken on CPU. 
 
 \subsection{A summary of the results}
 We summarized the comparison results in Table \ref{tab:summary} and plot the test statistics in Figure \ref{fig4}.
@@ -580,7 +582,7 @@ dt <- data.frame(
   var1 = c("B", "1M", "10M", "1M", "10M"),
   var2 = c('Intel 2.5ghz', 0.403804, 0.0001251, 49.3,  327.3),
   var3 = c('AMD Radeon', 0.403507, 0.0001274,   2.2,    10.2),
-  var4 = c('Intel 3.7ghz', 0.4035606,0.0001202, 14.8,  91.4),
+  var4 = c('Intel 3.7ghz', 0.4035606,0.0001202, 15.0,  91.8),
   var5 = c('NVIDIA V100', 0.403507,0.0001274,   0.3,   1.9),
   var6 = c('Data','month','week','month','week')
 )
@@ -593,7 +595,7 @@ knitr::kable(dt, col.names = NULL, caption = "Summary of comparions of Fisher's 
 
 
 
-<<fighistMonth, eval=TRUE, echo=FALSE, dev='pdf', fig.cap = "\\label{fig4}Approximate sampling distributions of the test statistics from the two examples Month and Week. The test statistic values of the observed tables are marked with a blue vertical line on each plot.", fig.subcap = c('Month data', 'week data'), out.width="0.47\\textwidth", margins=1,fig.pos='H'>>=
+<<fighistMonth, eval=TRUE, echo=FALSE, dev='pdf', fig.cap = "\\label{fig4}Approximate sampling distributions of the test statistics from the two examples Month and Week. The test statistic values of the observed tables are marked with a blue vertical line on each plot.", fig.subcap = c('Month data', 'week data'), out.width="0.47\\textwidth", margins=1,fig.pos='t'>>=
 hist(month_stats, xlab="test statistic",#TeX('-$\\sum(\\log(n_{ij}!))$'),
      breaks=40, ylab="proportion", main="", prob=TRUE)
 abline(v = result_month$threshold, col = "blue", lwd = 1.5)
@@ -841,7 +843,5 @@ Some possible future work on \pkg{clrng} package could be: (1) Incorporate other
 
 
 \end{document}
-
-
 
 

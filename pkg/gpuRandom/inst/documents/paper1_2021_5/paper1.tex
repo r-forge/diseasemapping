@@ -403,7 +403,7 @@ R> system.time(rnormGpu(c(10000, 10000), streams = streams, Nglobal = c(512,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.045   0.004   0.049
+##   0.044   0.004   0.049
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -413,7 +413,7 @@ R> system.time(matrix(rnorm(10000^2), 10000, 10000))
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   6.615   0.828   7.437
+##   6.686   0.799   7.478
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -515,6 +515,7 @@ Dec & 23 & 48 & 196 & 31 & 31 & 71 & 31 & 177 & 86 & 86 & 73 & 156\\
 
 \begin{CodeChunk}
 \begin{CodeInput}
+R> # using GPU
 R> streams <- createStreamsGpu(n = 256*64)
 R> month_gpu <- vclMatrix(month, type = "integer")
 R> system.time(result_month <- 
@@ -524,7 +525,7 @@ R> system.time(result_month <-
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.311   0.010   0.320
+##   0.335   0.014   0.348
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -544,7 +545,7 @@ R> result_month$p.value
 \end{CodeOutput} 
 \end{CodeChunk} 
 
-We got 410825 cases whose test statistics are below the observed threshold based on an actual number of 1015808 simulations, so the p-value from \fct{clrng::fisher.sim} for this table is about $4.03\times 10^{-1}$, which is close enough to the p-value from \fct{stats::fisher.test}. \fct{clrng::fisher.sim} takes about 0.3 seconds, \pkg{clrng} accounts for 2.1\% of the elapsed time on CPU. 
+We got 409429 cases whose test statistics are below the observed threshold based on an actual number of 1015808 simulations, so the p-value from \fct{clrng::fisher.sim} for this table is about $4.03\times 10^{-1}$, which is close enough to the p-value from \fct{stats::fisher.test}. \fct{clrng::fisher.sim} takes about 0.3 seconds, \pkg{clrng} accounts for 2.1\% of the elapsed time on CPU. 
 
  
 \begin{CodeChunk}
@@ -555,13 +556,13 @@ R> system.time(result_monthcpu <- stats::fisher.test(month, simulate.p.value = T
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##  14.852   0.031  14.873
+##  15.019   0.016  15.024
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_monthcpu$p.value
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 0.403
+## [1] 0.404
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -594,6 +595,7 @@ Sun & 49 & 51 & 211 & 40 & 32 & 96 & 69 & 216 & 108 & 143 & 130 & 258\\
 
 \begin{CodeChunk}
 \begin{CodeInput}
+R> # using GPU
 R> week_GPU <- gpuR::vclMatrix(week, type = "integer")
 R> system.time(resultWeek <- clrng::fisher.sim(week_GPU, 10000000,
 +    streams = streams, type = "double", returnStatistics = TRUE,
@@ -601,7 +603,7 @@ R> system.time(resultWeek <- clrng::fisher.sim(week_GPU, 10000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   1.934   0.015   1.947
+##   1.934   0.014   1.947
 \end{CodeOutput}
 \begin{CodeInput}
 R> unlist(resultWeek[c("threshold", "simNum", "counts")])
@@ -627,17 +629,17 @@ R> system.time(result_weekcpu <- fisher.test(week, simulate.p.value = TRUE,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##  91.312   0.139  91.367
+##  91.768   0.108  91.828
 \end{CodeOutput}
 \begin{CodeInput}
 R> result_weekcpu$p.value
 \end{CodeInput}
 \begin{CodeOutput}
-## [1] 0.000121
+## [1] 0.000129
 \end{CodeOutput} 
 \end{CodeChunk} 
 
-The ``week'' table has a much smaller p-value: around $1.21\times 10^{-4}$, which should require a larger number of simulations to get a more accurate p-value. With more than ten million simulations, we get 1350 cases and a p-value around $1.35\times 10^{-4}$ with \fct{fisher.sim}. \fct{stats::fisher.test} takes about 91.4 seconds, while \fct{fisher.sim} takes about 1.9 seconds, the GPU elapsed time is decreased to about 2.1\% of the time taken on CPU. 
+The ``week'' table has a much smaller p-value: around $1.29\times 10^{-4}$, which should require a larger number of simulations to get a more accurate p-value. With more than ten million simulations, we get 1350 cases and a p-value around $1.35\times 10^{-4}$ with \fct{fisher.sim}. \fct{stats::fisher.test} takes about 91.8 seconds, while \fct{fisher.sim} takes about 1.9 seconds, the GPU elapsed time is decreased to about 2.1\% of the time taken on CPU. 
 
 \subsection{A summary of the results}
 We summarized the comparison results in Table \ref{tab:summary} and plot the test statistics in Figure \ref{fig4}.
@@ -659,9 +661,9 @@ B & Intel 2.5ghz & AMD Radeon & Intel 3.7ghz & NVIDIA V100 & Data\\
 \hline
 \multicolumn{6}{l}{\textbf{Run-time}}\\
 \hline
-\hspace{1em}1M & 49.3 & 2.2 & 14.8 & 0.3 & month\\
+\hspace{1em}1M & 49.3 & 2.2 & 15 & 0.3 & month\\
 \hline
-\hspace{1em}10M & 327.3 & 10.2 & 91.4 & 1.9 & week\\
+\hspace{1em}10M & 327.3 & 10.2 & 91.8 & 1.9 & week\\
 \hline
 \end{tabular}
 \end{table}
@@ -670,7 +672,7 @@ B & Intel 2.5ghz & AMD Radeon & Intel 3.7ghz & NVIDIA V100 & Data\\
 
 
 
-\begin{figure}[H]
+\begin{figure}[t]
 
 {\centering \subfloat[Month data\label{fig:fighistMonth-1}]{\includegraphics[width=0.47\textwidth]{Figures/GfighistMonth-1} }
 \subfloat[week data\label{fig:fighistMonth-2}]{\includegraphics[width=0.47\textwidth]{Figures/GfighistMonth-2} }
@@ -943,7 +945,5 @@ Some possible future work on \pkg{clrng} package could be: (1) Incorporate other
 
 
 \end{document}
-
-
 
 
