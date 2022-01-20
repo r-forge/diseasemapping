@@ -32,7 +32,7 @@
   #dim(XVYXVX)
   Ucov <- Ncov-1
   XTVinvX <- XVYXVX[ , (ncol(XVYXVX)-Ncov+1):ncol(XVYXVX)]
-  XVY <- XVYXVX[ , 1:Ndata]
+  XVY <- matrix(XVYXVX[ , 1:Ndata], ncol=Ndata)
   
   #dim(XTVinvX)
   ## make each symmetric
@@ -41,10 +41,10 @@
   }
   
   selectedrows <- (seq_len(Nparam)-1) * Ncov + a
-  XTVinvX_deleted <- matrix(XTVinvX[-selectedrows,-a], ncol=Ucov, byrow=TRUE)
+  XTVinvX_deleted <- matrix(XTVinvX[-selectedrows,-a], ncol=Ucov)
   XTVinvX_a <- matrix(XTVinvX[selectedrows, -a], nrow=Nparam, ncol=Ucov)
-  XVY_deleted <- XVY[-selectedrows, ]
-  X_aVY <- XVY[selectedrows, ]
+  XVY_deleted <- matrix(XVY[-selectedrows, ],ncol=Ndata)
+  X_aVY <- matrix(XVY[selectedrows, ], ncol=Ndata)
   X_aVX_a <- XTVinvX[selectedrows, a]
   
   partA = matrix(0, nrow=Nparam, ncol=Ndata)
@@ -54,22 +54,42 @@
   partE = matrix(0, nrow=Nparam, ncol=Ndata)
   minus2LogLik_optimized = matrix(0, nrow=m, ncol=1)
   
-  for (i in 1:Nparam){
-    interval <- c(((i-1)*Ucov+1) : (i*Ucov))
-    temp <- solve(XTVinvX_deleted[interval, ]) 
-    
-    # part (A) have 2 data sets
-    partA[i,] = rowSums(XVY_deleted[interval,] %*% temp) * XVY_deleted[interval,]
-    # part (B) have 2 data sets.   has beta
-    partB[i,] = -2*XVY_deleted[interval,] %*% temp %*% XTVinvX_a[i,]
-    # part (C) no data sets.  has beta
-    partC[i,] = XTVinvX_a[i, ] %*% temp %*% XTVinvX_a[i, ]
-    #partC[i,] = XTVinvX_a[interval, ] %*% temp %*% XTVinvX_a[interval, ]
-    # part (D) have 2 data sets.    has beta
-    partD[i,] = -2* X_aVY[i, ]
-    # part (E)
-    partE[i,] = X_aVX_a[i]
+  if(Ndata == 1){
+    for (i in 1:Nparam){
+      interval <- c(((i-1)*Ucov+1) : (i*Ucov))
+      temp <- solve(XTVinvX_deleted[interval, ]) 
+      
+      # part (A) have 2 data sets
+      partA[i,] = XVY_deleted[interval,] %*% temp %*% XVY_deleted[interval,]
+      # part (B) have 2 data sets.   has beta
+      partB[i,] = -2*XVY_deleted[interval,] %*% temp %*% XTVinvX_a[i,]
+      # part (C) no data sets.  has beta
+      partC[i,] = XTVinvX_a[i, ] %*% temp %*% XTVinvX_a[i, ]
+      #partC[i,] = XTVinvX_a[interval, ] %*% temp %*% XTVinvX_a[interval, ]
+      # part (D) have 2 data sets.    has beta
+      partD[i,] = -2* X_aVY[i, ]
+      # part (E)
+      partE[i,] = X_aVX_a[i]
+    }
+  }else{
+    for (i in 1:Nparam){
+      interval <- c(((i-1)*Ucov+1) : (i*Ucov))
+      temp <- solve(XTVinvX_deleted[interval, ]) 
+      
+      # part (A) have 2 data sets
+      partA[i,] = rowSums(XVY_deleted[interval,] %*% temp) * XVY_deleted[interval,]
+      # part (B) have 2 data sets.   has beta
+      partB[i,] = -2*XVY_deleted[interval,] %*% temp %*% XTVinvX_a[i,]
+      # part (C) no data sets.  has beta
+      partC[i,] = XTVinvX_a[i, ] %*% temp %*% XTVinvX_a[i, ]
+      #partC[i,] = XTVinvX_a[interval, ] %*% temp %*% XTVinvX_a[interval, ]
+      # part (D) have 2 data sets.    has beta
+      partD[i,] = -2* X_aVY[i, ]
+      # part (E)
+      partE[i,] = X_aVX_a[i]
+    }
   }
+  
   
   for (bet in 1:m){
       ssqResidual <- ssqY + Betas[bet] *partD + Betas[bet]^2 *partE - (partA + Betas[bet]* partB + Betas[bet]^2 * partC)

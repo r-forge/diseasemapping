@@ -56,8 +56,8 @@
      boxcoxGpu = vclVector(boxcox, type=type)
   
      # prepare params, make sure variance=1 in params
-     params[,"variance"]=1 
      params0 = geostatsp::fillParam(params)
+     params0[,"variance"]=1 
      paramsGpu = vclMatrix(cbind(params0, matrix(0, nrow(params0), 22-ncol(params0))),type=type)
      varMat <- vclMatrix(0, Nobs*NparamPerIter, Nobs, type=type)
      cholDiagMat <- vclMatrix(0, NparamPerIter, Nobs, type=type)

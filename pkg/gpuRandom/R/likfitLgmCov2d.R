@@ -331,13 +331,13 @@
                  Ncov = Ncov,
                  Ndata = Ndata,
                  Nparam = Nparam,
-                 ssqY=ssqY,     
+                 ssqY = as.matrix(ssqY),     
                  ssqBetahat = ssqBetahat,
                  ssqResidual = ssqResidual,
-                 detVar = detVar,   
-                 detReml = detReml,   
-                 jacobian = jacobian,
-                 XVYXVX=XVYXVX)
+                 detVar = as.vector(detVar),   
+                 detReml = as.vector(detReml),   
+                 jacobian = as.vector(jacobian),
+                 XVYXVX = as.matrix(XVYXVX))
   
   
   

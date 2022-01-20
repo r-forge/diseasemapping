@@ -1,40 +1,37 @@
 ############### A SIMULATION STUDY IN THE PAPER 2 ####################################
 library('geostatsp')
-Nsim=15
+Nsim=10
 Ngrid=20
 set.seed(88)
-pointsGrid = expand.grid(seq(100*1e4,120*1e4, len=Ngrid), seq(100*1e4,120*1e4, len=Ngrid))
-#plot(pointsGrid,cex=0.3)
-pointsGrid = pointsGrid[,1] + 1i*pointsGrid[,2]
-pointsRandom = pointsGrid + stats::runif(length(pointsGrid), 500, 600) * exp(stats::runif(length(pointsGrid), 0, 2*pi)*1i)
-plot(pointsRandom,cex=0.3)
-#plot(Re(pointsRandom),Im(pointsRandom),cex=0.3)
-mydat = SpatialPointsDataFrame(cbind(Re(pointsRandom),Im(pointsRandom)),
-                               data=data.frame(cov1 =stats::rnorm(Ngrid^2, 120, 20), cov2 = stats::rpois(Ngrid^2, 50))
-)
-
-
-# mydat = SpatialPointsDataFrame(cbind(seq(100*1e3,140*1e3, len=1000), seq(100*1e3,120*1e3, len=500)), 
-#                                data=data.frame(cov1 =stats::rnorm(500, 120, 20), cov2 = stats::rpois(500, 50))
+# pointsGrid = expand.grid(seq(100*1e4,120*1e4, len=Ngrid), seq(100*1e4,120*1e4, len=Ngrid))
+# #plot(pointsGrid,cex=0.3)
+# pointsGrid = pointsGrid[,1] + 1i*pointsGrid[,2]
+# pointsRandom = pointsGrid + stats::runif(length(pointsGrid), 500, 600) * exp(stats::runif(length(pointsGrid), 0, 2*pi)*1i)
+# plot(pointsRandom,cex=0.3)
+# #plot(Re(pointsRandom),Im(pointsRandom),cex=0.3)
+# mydat = SpatialPointsDataFrame(cbind(Re(pointsRandom),Im(pointsRandom)),
+#                                data=data.frame(cov1 =stats::rnorm(Ngrid^2, 120, 20), cov2 = stats::rpois(Ngrid^2, 50))
 # )
-# plot(cbind(seq(100*1e3,140*1e3, len=500), seq(100*1e3,120*1e3, len=500)), xlab="",ylab="")
 
-par(mfrow = c(1, 2))
-library('geoR')
-sim1 <- grf(400, cov.pars = c(1, 0.25))
-points.geodata(sim1, main = "simulated locations and values")
-plot(sim1, max.dist = 1, main = "true and empirical variograms")
 
-pict
+mydat = SpatialPointsDataFrame(cbind(seq(100*1e3,140*1e3, len=500), seq(100*1e3,120*1e3, len=500)),
+                               data=data.frame(cov1 =stats::rnorm(500, 120, 20), cov2 = stats::rpois(500, 50))
+)
+plot(cbind(seq(100*1e3,140*1e3, len=500), seq(100*1e3,120*1e3, len=500)), xlab="",ylab="")
+
+# par(mfrow = c(1, 2))
+# library('geoR')
+# sim1 <- grf(400, cov.pars = c(1, 0.25))
+# points.geodata(sim1, main = "simulated locations and values")
+# plot(sim1, max.dist = 1, main = "true and empirical variograms")
+
 
 #mydat@data
 #mydat@coords
 
 ## simulate a random field
 trueParam = c(range=1000, shape=2, variance=0.5^2, tauSq=1^2, anisoRatio=2, anisoAngleRadians=0.3)
-nugget = trueParam['tauSq']/trueParam['variance']
-names(nugget) <- "nugget"
-nugget   #4
+trueParam['nugget'] = trueParam['tauSq']/trueParam['variance']
 boxcox = c(boxcox=1)
 options("useRandomFields" = FALSE)
 for (i in 1:Nsim){
@@ -65,7 +62,7 @@ swissRes$optim$mle
 ## ---gpuRandom------range vs nugget contour--------------------------------------------------------------
 ## set params
 newParamList = list(
-  range = c(exp(seq(log(0.1), log(1), len=10))*1000, exp(seq(log(1.2), log(4), len=10))*1000),  #22
+  range = c(exp(seq(log(0.2), log(1), len=10))*1000, exp(seq(log(1.2), log(4), len=10))*1000),  #22
   nugget = c(seq(0, 4, len=8), seq(4.5, 20, len=12)),  #20
   shape = 2,
   anisoRatio =2,
@@ -80,7 +77,7 @@ breaksf = rep(0, 10)
 makedata <- rep(0, 4)
 estimates <- rep(0, 6)
 ## calculate logl
-for (i in 1:Nsim){
+for (i in 1:5){
   result<-gpuRandom::likfitLgmCov2d(
     data= mydat,
     formula= as.formula(paste(colnames(mydat@data)[i+2], "~", "cov1 + cov2")), 
@@ -100,7 +97,7 @@ for (i in 1:Nsim){
   a <- geostatsp::loglikLgm(
     c(trueParam['range'],
       trueParam['shape'],
-      nugget,
+      trueParam['nugget'],
       trueParam[c('anisoRatio')],
       trueParam[c('anisoAngleRadians')],
       boxcox),
@@ -123,8 +120,9 @@ colnames(makedata) <- c("range",'nugget', 'LogLik', 'D')
 makedatahey <- makedata[-1,]
 estimates_summary <- estimates[,-1]
 mean_estimates <- apply(estimates_summary, 1, mean)
-count/Nsim
+count/5
 mean_estimates
+
 
 
 library(RColorBrewer)
@@ -135,17 +133,11 @@ forigin <- ggplot(subset(makedatahey, D==1), aes(x = range, y = nugget, z=LogLik
   geom_point(size = 0.5, colour='grey') + 
   stat_contour(breaks=breaksf[1])  + 
   geom_vline(xintercept = trueParam['range'])+
-  geom_hline(yintercept=nugget)
+  geom_hline(yintercept=trueParam['nugget'])
 
-# cols <- c("#FFDB6D", "#C4961A", "#F4EDCA", "#CC79A7","#999999",
-#           "#D16103", "#C3D7A4", "#52854C", "#4E84C4", "#293352")
-# cols <- function(n) hcl.colors(n, "ag_Sunset")
-# #ggsave("filename", plot = myPlot)
-# cols <- cols(Nsim)
-# cols <- brewer.pal(14,'Set5')
-cols <- rainbow(15)
-i=4
-for (i in 2:Nsim){
+
+cols <- rainbow(5)
+for (i in 2:5){
   forigin <- forigin + geom_contour(data = subset(makedatahey, D==i), aes(x = range, y = nugget, z=LogLik), breaks=breaksf[i], col= cols[i])
 }
 forigin
