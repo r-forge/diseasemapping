@@ -313,7 +313,7 @@ The arguments of the \fct{runifGpu} are described as follows:
   \item \code{streams}: Streams for random number generation, which must be stored on the GPU as a \code{vclMatrix} object.
   \item \code{Nglobal}: Number of work items, by default it is set as $(64,8)$.
   \item \code{type}: \code{double}, \code{float} or \code{integer}, the format of generated random numbers, defaults to \code{double}.
-  \item \code{verbose}: Print extra information if $\text{verbose} > 1$.
+  \item \code{verbose}: Print extra information if $\text{verbose} > 1$, default is set to 0.
 \end{itemize}
 
 The object returned is either a \code{vclMatrix} or \code{vclVector}, depending on whether \code{n} is two- or one-dimensional.  Reusing \code{myStreamsGpu} will produce a vector different from \code{sim_1}, as the current states of the streams in \code{myStreamsGpu} have advanced by two positions (each of the 4 work item generated 2 random numbers).  
