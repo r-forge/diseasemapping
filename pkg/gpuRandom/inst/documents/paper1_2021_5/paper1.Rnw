@@ -180,7 +180,7 @@ The remaining sections are organized as follows:
 In Section 2, we introduce streams and the use of streams in work-items on a GPU device for generating uniform random numbers, and the usage of \fct{runifGpu}.
 In Section 3, we introduce two non-uniform RNGs in \pkg{clrng}, as examples for users to develop other RNGs of interest on GPUs in \proglang{R}.
 In Section 4, we apply GPU-generated uniform random numbers in Monte Carlo simulation for Fisher’s exact test, we introduce how the random numbers are used and how the algorithm is parallelized and implemented on GPU. Then we provide two real data examples to demonstrate the function usage and its \proglang{R} performance.
-In Section 5, we show a useful application of normal random numbers on GPU, using them to simulate batches of Gaussian random surfaces with Mat\'ern covariance matrices simultaneously, the simulation also uses GPU-enabled functions from our other package \pkg{gpuBatchMatrix}.
+In Section 5, we show a useful application of Normal random numbers on GPU, using them to simulate batches of Gaussian random surfaces with Mat\'ern covariance matrices simultaneously, the simulation also uses GPU-enabled functions from our other package \pkg{gpuBatchMatrix}.
 Finally, the paper concludes with a short summary and a discussion in Section 6.
 
 
@@ -205,7 +205,7 @@ In what follows, we will illustrate how to create streams and how to use streams
 
 %THE PROBLEM:  each process needs to be independent, there's a risk of overlap.  solution: streams.  mrg31kp3 a stream is a vector of three positive integers.  initial state is first stream, compute new streams sequentially.
 \subsection{Creating streams}\label{createstreams}
-When a RNG is called in parallel processes or successively called at several places in a program in \proglang{R}, random number generation would be more complicated because there is no guarantee that the streams (analogous to \code{.Random.seed} in \proglang{R}) do not overlap, and thus the generated sequences of random numbers may have dependence. \pkg{clrng} uses multiple distinct streams that are used in work-items that executes in parallel on a GPU device. A popular way of obtaining multiple streams is to take an RNG with a long period and cut the RNG's sequence into very long disjoint pieces of equal length $Z$, and use each piece as a separate stream. Creating a new stream amounts to computing its starting point. Each of these streams can also be partitioned into substreams with equally-spaced starting points \citep{l2002object, rLEC15a}, although this is not currently implemented in \pkg{clrng}. In general, a stream object contains three elements: the current state of the stream, the initial state of the stream (or seed). Streams are created sequentially in the way that whenever the user creates a new stream, the software automatically jumps ahead by $Z$ steps to find its initial state, and the three states in the stream object are set to it. 
+When a RNG is called in parallel processes or successively called at several places in a program in \proglang{R}, random number generation would be more complicated because there is no guarantee that the streams (analogous to \code{.Random.seed} in \proglang{R}) do not overlap, and thus the generated sequences of random numbers may have dependence. \pkg{clrng} uses multiple distinct streams that are used in work-items that executes in parallel on a GPU device. A popular way of obtaining multiple streams is to take an RNG with a long period and cut the RNG's sequence into very long disjoint pieces of equal length $Z$, and use each piece as a separate stream. Creating a new stream amounts to computing its starting point. Each of these streams can also be partitioned into substreams with equally-spaced starting points \citep{l2002object, rLEC15a}, although this is not currently implemented in \pkg{clrng}. In general, a stream object contains three elements: the current state of the stream, the initial state of the stream (or seed). Streams are created sequentially in the way that whenever the user creates a new stream, the software automatically jumps ahead by $Z$ steps to find its initial state, and the two states in the stream object are set to it. 
 
 
 In the \proglang{clRNG} library, the MRG31k3p RNG's entire period of length approximately $2^{185}$ is divided into approximately $2^{51}$ non-overlapping streams of length $Z = 2^{134}$. %Each stream can be further partitioned into substreams of length $2^{72}$. 
@@ -316,7 +316,7 @@ The arguments of the \fct{runifGpu} are described as follows:
   \item \code{verbose}: Print extra information if $\text{verbose} > 1$.
 \end{itemize}
 
-The object returned is either a \code{vclMatrix} or \code{vclVector}, depending on whether \code{n} is two- or one-dimensional.  Reusing \code{myStreamsGpu} will produce a vector different form \code{sim_1}, as the current states of the streams in \code{myStreamsGpu} have advanced by two positions (each of the 4 work item generated 2 random numbers).  
+The object returned is either a \code{vclMatrix} or \code{vclVector}, depending on whether \code{n} is two- or one-dimensional.  Reusing \code{myStreamsGpu} will produce a vector different from \code{sim_1}, as the current states of the streams in \code{myStreamsGpu} have advanced by two positions (each of the 4 work item generated 2 random numbers).  
 
 As mentioned earlier, streams on the GPU do not remain in the memory when an \proglang{R} session is restarted. There are two ways to reproduce results, depending on how the program calls streams creator.
 The simpler way to reproduce is just to have a single program in an \proglang{R} script file with the initial seed for the creator set at the beginning.  But it is important that the program always creates the streams in exactly the same order, for example, like the toy \proglang{R} program for demonstration below, we can reproduce the random matrix \code{sim_mat} just by keeping a record of the initial seed \code{c(11,22,33,44,55,66)}.
@@ -576,7 +576,7 @@ The ``week'' table has a much smaller p-value: around $\Sexpr{sn(result_weekcpu$
 
 \subsection{A summary of the results}
 We summarized the comparison results in Table \ref{tab:summary} and plot the test statistics in Figure \ref{fig4}.
-<<summarycompare, echo=FALSE, eval=TRUE, cache=TRUE,fig.pos='H'>>=
+<<summarycompare, echo=FALSE, eval=TRUE, cache=TRUE,fig.pos='h'>>=
 library(kableExtra)
 dt <- data.frame(
   var1 = c("B", "1M", "10M", "1M", "10M"),
@@ -594,7 +594,7 @@ knitr::kable(dt, col.names = NULL, digits = c(7, 7, 1, 1), caption = "Summary of
 
 
 
-<<fighistMonth, eval=TRUE, echo=FALSE, dev='pdf', fig.cap = "\\label{fig4}Approximate sampling distributions of the test statistics from the two examples Month and Week. The test statistic values of the observed tables are marked with a blue vertical line on each plot.", fig.subcap = c('Month data', 'week data'), out.width="0.47\\textwidth", margins=1,fig.pos='t'>>=
+<<fighistMonth, eval=TRUE, echo=FALSE, dev='pdf', fig.cap = "\\label{fig4}Approximate sampling distributions of the test statistics from the two examples Month and Week. The test statistic values of the observed tables are marked with a blue vertical line on each plot.", fig.subcap = c('Month data', 'week data'), out.width="0.47\\textwidth", margins=1,fig.pos='h'>>=
 hist(month_stats, xlab="test statistic",#TeX('-$\\sum(\\log(n_{ij}!))$'),
      breaks=40, ylab="proportion", main="", prob=TRUE)
 abline(v = result_month$threshold, col = "blue", lwd = 1.5)
