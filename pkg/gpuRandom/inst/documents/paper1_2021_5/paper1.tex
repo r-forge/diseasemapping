@@ -278,7 +278,7 @@ The arguments of the \fct{runifGpu} are described as follows:
   \item \code{streams}: Streams for random number generation, which must be stored on the GPU as a \code{vclMatrix} object.
   \item \code{Nglobal}: Number of work items, by default it is set as $(64,8)$.
   \item \code{type}: \code{double}, \code{float} or \code{integer}, the format of generated random numbers, defaults to \code{double}.
-  \item \code{verbose}: Print extra information if $\text{verbose} > 1$.
+  \item \code{verbose}: Print extra information if $\text{verbose} > 1$, default is set to 0.
 \end{itemize}
 
 The object returned is either a \code{vclMatrix} or \code{vclVector}, depending on whether \code{n} is two- or one-dimensional.  Reusing \code{myStreamsGpu} will produce a vector different from \code{sim_1}, as the current states of the streams in \code{myStreamsGpu} have advanced by two positions (each of the 4 work item generated 2 random numbers).  
@@ -403,7 +403,7 @@ R> system.time(rnormGpu(c(10000, 10000), streams = streams, Nglobal = c(512,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.044   0.005   0.049
+##   0.047   0.000   0.047
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -525,7 +525,7 @@ R> system.time(result_month <-
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   0.317   0.000   0.318
+##   0.306   0.013   0.318
 \end{CodeOutput} 
 \end{CodeChunk} 
 
@@ -603,7 +603,7 @@ R> system.time(resultWeek <- clrng::fisher.sim(week_GPU, 10000000,
 \end{CodeInput}
 \begin{CodeOutput}
 ##    user  system elapsed 
-##   1.942   0.015   1.955
+##   1.939   0.006   1.944
 \end{CodeOutput}
 \begin{CodeInput}
 R> unlist(resultWeek[c("threshold", "simNum", "counts")])
