@@ -257,9 +257,9 @@
      par(mfrow = c(2, 3))
    }else if(length(paramToEstimate)==7 | length(paramToEstimate)==8){
      par(mfrow = c(2, 2))
-     par(mar = c(2.5, 3.5, 2, 0.5))
+     par(mar = c(2.5, 3.5, 1, 0.5))
      par(mgp = c(1.5, 0.5, 0))
-     par(oma = c(3, 0, 3, 0))
+     par(oma = c(0, 0, 3, 0))
    }
   
    
@@ -277,13 +277,52 @@
    
    ############### profile for covariance parameters #####################
    if('range' %in% paramToEstimate){
+     result = data.table::as.data.table(cbind(LogLik, params[,"range"]))
+     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "range")
+     profileLogLik <- result[, .(profile=max(.SD)), by=range]
+     # plot(profileLogLik$range, profileLogLik$profile, cex=.2)
+     
+     
+     
+     
+     datC1= geometry::convhulln(profileLogLik)
+     allPoints1 = unique(as.vector(datC1))
+     toTest = profileLogLik[allPoints1,]
+     toTest[,'profile'] = toTest[,'profile'] + 0.01
+     inHull1 = geometry::inhulln(datC1, as.matrix(toTest))
+     toUse = toTest[!inHull1,]
+     
+     library("mgcv")
+     interp1 = mgcv::gam(profile ~ s(range, k=nrow(toUse), fx=TRUE), data=toUse)
+     prof1 = data.frame(range=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=1001))
+     prof1$z = predict(interp1, prof1)
+     
+     plot(profileLogLik[,c('range','profile')],cex=.2)
+     points(toTest, col='red')
+     points(toUse, col='blue', pch=3)
+     lines(prof1$range, prof1$z, col='green')
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
      # get profile log-lik for range values
      result = data.table::as.data.table(cbind(LogLik, params[,"range"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "range")
      profileLogLik <- result[, .(profile=max(.SD)), by=range]
      f1 <- approxfun(profileLogLik$range, profileLogLik$profile-breaks)  
-     plot(profileLogLik$range, profileLogLik$profile-breaks, ylab= "proLogL-breaks", xlab='range', cex=0.5)
-     # plot(profileLogLik$range, profileLogLik$profile)
+     plot(profileLogLik$range/1000, profileLogLik$profile-breaks, ylab= "proLogL-breaks", xlab='range', cex=0.5)
+     # plot(profileLogLik$range, profileLogLik$profile, cex=.2)
      curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
      abline(h =0, lty = 2)
      #myplots[['range']] <- plot.range

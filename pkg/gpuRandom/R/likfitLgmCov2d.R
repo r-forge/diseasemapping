@@ -193,6 +193,7 @@
     result = data.table::as.data.table(cbind(LogLikcpu, params[,"range"]))
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "range")
     profileLogLik <- result[, .(profile=max(.SD)), by=range]
+    #plot(profileLogLik$range, profileLogLik$profile-breaks, ylab= "proLogL-breaks", xlab='range', cex=0.5)
     f1 <- approxfun(profileLogLik$range, profileLogLik$profile)  
     lower = min(profileLogLik$range)
     upper = max(profileLogLik$range)
