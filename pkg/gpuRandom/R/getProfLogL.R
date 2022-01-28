@@ -816,12 +816,17 @@
    Output
  }      
 
- 
+
  
  # 2d
- result = as.data.table(cbind(LogLik, params[,c("anisoRatio","anisoAngleRadians")]))
- colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "anisoRatio","anisoAngleRadians")
- profileLogLik <- result[, .(profile=max(.SD)), by=.(anisoRatio,anisoAngleRadians)]
+ gamma3 <-  unname(sqrt(params[,'anisoRatio']-1) * cos(2*params[,'anisoAngleRadians']))
+ gamma4 <-  unname(sqrt(params[,'anisoRatio']-1) * sin(2*params[,'anisoAngleRadians']))
+ aniso <- cbind(gamma3, gamma4)
+ 
+ 
+ result = as.data.table(cbind(LogLik, aniso[,c('gamma3','gamma4')]))
+ colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), 'gamma3','gamma4')
+ profileLogLik <- result[, .(profile=max(.SD)), by=.(gamma3, gamma4)]
  profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
  profileLogLik <- as.data.frame(profileLogLik)
  
@@ -835,30 +840,147 @@
  
  profileLogLik <- profileLogLik[order(profileLogLik[,1],decreasing=FALSE),]
  colDat2 = mapmisc::colourScale(profileLogLik[,'profile'], style='equal', dec=1, breaks=11, col='Spectral', rev=TRUE)
- plot(profileLogLik[,c('anisoRatio','anisoAngleRadians')], col = colDat2$plot, pch=16, cex=0.5)
+ plot(profileLogLik[,c('gamma3','gamma4')], col = colDat2$plot, pch=16, cex=0.5)
  mapmisc::legendBreaks('topright', colDat2)
- points(toTest2[,c('anisoRatio','anisoAngleRadians')], col='black', cex=0.8)
- points(toUse2[,c('anisoRatio','anisoAngleRadians')], col='blue', pch=3, cex=0.8)
+ points(toTest2[,c('gamma3','gamma4')], col='black', cex=0.8)
+ points(toUse2[,c('gamma3','gamma4')], col='blue', pch=3, cex=0.8)
  
 
- interp2 = mgcv::gam(profile ~ s(anisoRatio,anisoAngleRadians, k=nrow(toUse2), fx=TRUE), data=toUse2)
- prof2list = list(anisoRatio=seq(min(toUse2[,1])-0.1, max(toUse2[,1])+0.1, len=101),
-                  anisoAngleRadians=seq(min(toUse2[,2])-0.1, max(toUse2[,2])+0.1, len=101))
+ interp2 = mgcv::gam(profile ~ s(gamma3, gamma4, k=nrow(toUse2), fx=TRUE), data=toUse2)
+ prof2list = list(gamma3=seq(min(toUse2[,1])-0.1, max(toUse2[,1])+0.1, len=101),
+                  gamma4=seq(min(toUse2[,2])-0.1, max(toUse2[,2])+0.1, len=101))
  prof2 = do.call(expand.grid, prof2list)
  prof2$z = predict(interp2, prof2)
  
  col2 = mapmisc::colourScale(prof2[,'z'], breaks= 11, dec=1, col='Spectral', rev=TRUE, style='equal')
  colPoints = mapmisc::colourScale(toUse2[,'profile'], breaks=col2$breaks, col=col2$col, style='fixed')
- plot(toUse2[,c('anisoRatio','anisoAngleRadians')], col=colPoints$plot, pch=15, cex=1)
+ plot(toUse2[,c('gamma3','gamma4')], col=colPoints$plot, pch=15, cex=1)
+ 
+ plot(prof2[,c('gamma3','gamma4')], col=col2$plot, cex=2, pch=15)
+ points(toUse2[,c('gamma3','gamma4')], col='black')
  
  
- plot(prof2[,c('anisoRatio','anisoAngleRadians')], col=col2$plot, cex=2, pch=15)
- points(toUse2[,c('anisoRatio','anisoAngleRadians')], col='black')
+ 
+ temp <- as.data.frame(prof2[,'gamma3'] + 1i * prof2[,'gamma4'])
+ naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+ colnames(naturalspace) <- c('anisoRatio','anisoAngleRadians')
+ prof2new <- cbind(prof2, naturalspace)
+ plot(prof2new[,c('anisoRatio','anisoAngleRadians')], col=col2$plot, cex=2, pch=15)
+ plot(prof2new[,c('anisoRatio','z')],  cex=0.5)
+ 
+ 
+ prof2new <- as.data.table(prof2new)
+ profileLogLik1 <- prof2new[, .(profile=max(z)), by=anisoRatio]    #as.matrix(profileLogLik1[order(profileLogLik1$anisoRatio)])
+ profileLogLik2 <- prof2new[, .(profile=max(z)), by=anisoAngleRadians]
+ 
+
+ 
+ datC2 = geometry::convhulln(profileLogLik1)
+ allPoints2 = unique(as.vector(datC2))
+ toTest2 = profileLogLik1[allPoints2,]
+ toTest2[,'profile'] = toTest2[,'profile'] - 0.1
+ inHull2 = geometry::inhulln(datC2, as.matrix(toTest2))
+ toUse2 = profileLogLik1[allPoints2,][inHull2,]
+ toTest2[,'profile'] = toTest2[,'profile'] + 0.1
+ 
+ interpRatio = mgcv::gam(profile ~ s(anisoRatio, k=nrow(toUse2), fx=TRUE), data=toUse2)
+ profRatio = data.frame(anisoRatio=seq(min(toUse2[,1])-0.1, max(toUse2[,1])+0.1, len=501))
+ profRatio$z = predict(interpRatio, profRatio)
+ 
+ plot(profileLogLik1$anisoRatio,profileLogLik1$profile,  cex=0.5,  xlab="anisoRatio", ylab="profileLogL")
+ points(toTest2, col='red', cex=0.6)
+ points(toUse2, col='blue', cex=0.6, pch=3)
+ lines(profRatio$anisoRatio, profRatio$z, col='green')
+ f1 <- approxfun(prof1$anisoAngleDegrees, prof1$z)
+ abline(h =0, lty = 2, col='red')
+ 
+ #############
+ datC2 = geometry::convhulln(profileLogLik2)
+ allPoints2 = unique(as.vector(datC2))
+ toTest2 = profileLogLik2[allPoints2,]
+ toTest2[,'profile'] = toTest2[,'profile'] - 0.1
+ inHull2 = geometry::inhulln(datC2, as.matrix(toTest2))
+ toUse2 = profileLogLik2[allPoints2,][inHull2,]
+ toTest2[,'profile'] = toTest2[,'profile'] + 0.1
+ 
+ interpRadians = mgcv::gam(profile ~ s(anisoAngleRadians, k=nrow(toUse2), fx=TRUE), data=toUse2)
+ profRadians = data.frame(anisoAngleRadians=seq(min(toUse2[,1])-0.1, max(toUse2[,1])+0.1, len=501))
+ profRadians$z = predict(interpRadians, profRadians)
+ 
+ plot(profileLogLik2$anisoAngleRadians, profileLogLik2$profile,  cex=0.5)
+ points(toTest2, col='red', cex=0.6)
+ points(toUse2, col='blue', cex=0.6, pch=3)
+ lines(profRadians$anisoAngleRadians, profRadians$z, col='green')
+ f1 <- approxfun(profRadians$anisoAngleRadians, profRadians$z)
+ abline(h =0, lty = 2, col='red')
+ 
+ 
  
  prof2 <- as.data.table(prof2)
- profileLogLik <- prof2[, .(profile=max(z)), by=anisoRatio]
- plot(profileLogLik[,c('anisoRatio','profile')],  cex=1, pch=15)
- plot(profileLogLik$anisoRatio, profileLogLik$profile, col='green')
+ profileLogLik1 <- prof2[, .(profile=max(z)), by=gamma3]
+ profileLogLik2 <- prof2[, .(profile=max(z)), by=gamma4]
+ plot(profileLogLik1[,c('gamma3','profile')],  cex=0.5, pch=15)
+ plot(profileLogLik2[,c('gamma4','profile')],  cex=0.5, pch=15)
+
+ 
+ prof12<- prof2[which((prof2$gamma3==profileLogLik1$gamma3) & (prof2$z==profileLogLik1$profile))]
+ setkey(prof2,gamma3)
+ prof14<- prof2[which((prof2$gamma4==profileLogLik2$gamma4) & (prof2$z==profileLogLik2$profile))]
+ plot(prof14[,c('gamma4','z')],  cex=0.5, pch=15)
+
+ #plot(prof22[,c('gamma3','z')],  cex=0.5, pch=15)
+ #plot(prof22[,c('gamma4','z')],  cex=0.5, pch=15)
+ 
+ 
+ 
+
+
+ temp <- as.data.frame(prof14[,'gamma3'] + 1i * prof14[,'gamma4'])
+ naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+ colnames(naturalspace) <- c('anisoRatio','anisoAngleRadians')
+ prof24 <- cbind(prof14, naturalspace)
+ plot(prof24[,c('anisoAngleRadians','z')],  cex=0.5)
+ 
+ 
+ #######################
+ result = as.data.table(cbind(LogLik, params[,c('anisoRatio', 'anisoAngleRadians')]))
+ colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), 'anisoRatio', 'anisoAngleRadians')
+ profileLogLik <- result[, .(profile=max(.SD)), by=.(anisoRatio, anisoAngleRadians)]
+ profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+ profileLogLik <- as.data.frame(profileLogLik)
+ plot3d(profileLogLik$anisoRatio, profileLogLik$anisoAngleRadians,profileLogLik$profile, col=colPoints$plot, type='s', radius=0.06, lwd=0)
+ rglwidget()
+ 
+ 
+ datC2 = geometry::convhulln(profileLogLik)
+ allPoints2 = unique(as.vector(datC2))
+ toTest2 = dat[allPoints2,c('x1','x2','z')]
+ toTest2[,'z'] = toTest2[,'z'] + 0.01
+ inHull2 = geometry::inhulln(datC2, as.matrix(toTest2))
+ toUse2 = toTest2[!inHull2,]
+ 
+ 
+ 
+ colDat2 = mapmisc::colourScale(dat[,'z'], style='equal', dec=1, breaks=11, col='Spectral', rev=TRUE)
+ plot(dat[,c('x1','x2')], col = colDat2$plot, pch=16, cex=1)
+ mapmisc::legendBreaks('topright', colDat2)
+ points(toTest2[,c('x1','x2')], col='black')
+ points(toUse2[,c('x1','x2')], col='blue', pch=3)
+ 
+ library("mgcv")
+ interp2 = mgcv::gam(z ~ s(x1, x2, k=nrow(toUse2), fx=TRUE), data=toUse2)
+ prof2list = list(x1=seq(min(toUse2[,1])-0.1, max(toUse2[,1])+0.1, len=101),
+                  x2=seq(min(toUse2[,2])-0.1, max(toUse2[,2])+0.1, len=101))
+ prof2 = do.call(expand.grid, prof2list)
+ prof2$z = predict(interp2, prof2)
+ 
+ col2 = mapmisc::colourScale(prof2[,'z'], breaks= 11, dec=1, col='Spectral', rev=TRUE, style='equal')
+ colPoints = mapmisc::colourScale(toUse2[,'z'], breaks=col2$breaks, col=col2$col, style='fixed')
+ plot(toUse2[,c('x1','x2')], col=colPoints$plot, pch=15, cex=2)
+ 
+ 
+ plot(prof2[,c('x1','x2')], col=col2$plot, cex=2, pch=15)
+ points(toUse2[,c('x1','x2')], col='black')
  
  
  
