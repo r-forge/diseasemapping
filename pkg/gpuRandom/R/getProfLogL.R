@@ -207,15 +207,17 @@
   
   
  get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table # 2 column names must be x1 and profile
-                                 a=0.01    # minus a little thing
-                                 ){
+                                 a=0.01,    # minus a little thing
+                                 b=0){
     datC1= geometry::convhulln(profileLogLik)
     allPoints1 = unique(as.vector(datC1))
     toTest = profileLogLik[allPoints1,]
     toTest[,'profile'] = toTest[,'profile'] - a
+    toTest[,'x1'] = toTest[,'x1'] + b
     inHull1 = geometry::inhulln(datC1, as.matrix(toTest))
     toUse = profileLogLik[allPoints1,][inHull1,]
     toTest[,'profile'] = toTest[,'profile'] + a
+    toTest[,'x1'] = toTest[,'x1'] - b
     
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), fx=TRUE), data=toUse)
     prof1 = data.frame(x1=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=501))
@@ -239,7 +241,7 @@
  prof1dCov <- function(LogLik,  # cpu matrix
                        XVYXVX,  # cpu matrix
                        ssqResidual,  # cpu matrix
-                       paramToEstimate = c("range","shape","nugget","anisoAngleDegrees", "anisoRatio", "boxcox"),
+                       paramToEstimate = c("range", "shape", "nugget", "sdNugget","anisoRatio", "anisoAngleRadians", "boxcox"),
                        cilevel=0.95,  # decimal
                        params, # cpu matrix, 
                        boxcox,  # boxcox vallues, consistent with other functions
@@ -295,7 +297,7 @@
      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
 
-     inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+     inter <- get1dCovexhullinter(profileLogLik,b=10)     # a data frame or data.table # 2 column names must be x1 and profile
      
      toTest <- inter$toTest
      toUse <- inter$toUse
@@ -331,7 +333,7 @@
      profileLogLik$logrange <- log(profileLogLik$x1)
      newdata <- profileLogLik[,c('logrange','profile')]
      colnames(newdata)[1]<-"x1"
-     interlog <- get1dCovexhullinter(newdata)
+     interlog <- get1dCovexhullinter(newdata, b=0.0001)
 
      plot(profileLogLik$logrange, profileLogLik$profile, cex=.2, xlab="log(range)", ylab="profileLogL")
      points(interlog$toTest, col='red', cex=0.6)
@@ -347,71 +349,69 @@
    
 ################shape ##############   
    if('shape' %in% paramToEstimate){
-     result = as.data.table(cbind(LogLik, params[,"shape"]))
-     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "shape")
-     profileLogLik <- result[, .(profile=max(.SD)), by=shape]
-     profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
-     
-     inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
-     
-     toTest <- inter$toTest
-     toUse <- inter$toUse
-     prof1 <- inter$prof
-     
-     
-     plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="range", ylab="profileLogL")
-     points(toTest, col='red', cex=0.6)
-     points(toUse, col='blue', cex=0.6, pch=3)
-     lines(prof1$x1, prof1$z, col='green')
-     f1 <- approxfun(prof1$x1, prof1$z)
-     
-     plot(profileLogLik$shape, profileLogLik$profile, cex=.2, xlab="shape", ylab="profileLogL", xlim=c(0,50))
-     points(toTest, col='red', cex=0.6)
-     points(toUse, col='blue', cex=0.6, pch=3)
-     lines(prof1$shape, prof1$z, col='green')
-     f1 <- approxfun(prof1$shape, prof1$z)
-     #f1 <- approxfun(toUse$shape, toUse$profile)
-     #curve(f1(x), add = TRUE, col = 'green', n = 1001)   #the number of x values at which to evaluate
-     abline(h =0, lty = 2, col='red')
-     lower = min(profileLogLik$shape)
-     upper = 50
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
-     
-     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-     abline(v =ci[1], lty = 2, col='red')
-     abline(v =ci[2], lty = 2, col='red')
-     if(length(ci)==1){
-        if(ci > MLE){
-           ci <- c(lower, ci)
-           message("did not find lower ci for shape")
-        }else{
-           ci <- c(ci, upper)
-           message("did not find upper ci for shape")}
-     }
-     
-     if(length(ci)==0 | length(ci)>2){
-        warning("error in params")
-        ci <- c(NA, NA)
-     }
-     Table["shape",] <- c(MLE, ci)
-     ####################### log plot ##############################
-     profileLogLik$logshape <- log(profileLogLik$shape)
-     datC1= geometry::convhulln(profileLogLik[,c('logshape','profile')])
-     allPoints1 = unique(as.vector(datC1))
-     toTest = profileLogLik[allPoints1,c('logshape','profile')]
-     toTest[,'profile'] = toTest[,'profile'] - 0.01
-     inHull1 = geometry::inhulln(datC1, as.matrix(toTest))
-     toUse = profileLogLik[allPoints1,c('logshape','profile')][inHull1,]
-     
-     interp1 = mgcv::gam(profile ~ s(logshape, k=nrow(toUse), fx=TRUE), data=toUse)
-     prof1 = data.frame(logshape=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=501))
-     prof1$z = predict(interp1, prof1)
-     
-     plot(profileLogLik$logshape, profileLogLik$profile, cex=.2, xlab="log(shape)", ylab="profileLogL")
-     points(toTest, col='red', cex=0.6)
-     points(toUse, col='blue', cex=0.6, pch=3)
-     lines(prof1$logshape, prof1$z, col='green')
-     abline(h =0, lty = 2, col='red')
+      result = data.table::as.data.table(cbind(LogLik, params[,"shape"]))
+      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
+      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
+      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+      
+      inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+      
+      toTest <- inter$toTest
+      toUse <- inter$toUse
+      prof1 <- inter$prof
+      
+      plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="shape", ylab="profileLogL", xlim=c(0,50))
+      points(toTest, col='red', cex=0.6)
+      points(toUse, col='blue', cex=0.6, pch=3)
+      #lines(prof1$x1, prof1$z, col='green')
+      #prof1 <- prof1[prof1$x1>0,]
+      f2 <- approxfun(prof1$x1, prof1$z)
+      f1 <- approxfun(toUse$x1, toUse$profile)
+      curve(f1(x), add = TRUE, col = 'green', n = 1001)   #the number of x values at which to evaluate
+      abline(h =0, lty = 2, col='red')
+      lower = min(profileLogLik$x1)
+      upper = 50
+      MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+      ci<-rootSolve::uniroot.all(f2, lower = lower, upper = upper)
+      abline(v =ci[1], lty = 2, col='red')
+      abline(v =ci[2], lty = 2, col='red')
+      if(length(ci)==1){
+         if(ci > MLE){
+            ci <- c(lower, ci)
+            message("did not find lower ci for shape")
+         }else{
+            ci <- c(ci, upper)
+            message("did not find upper ci for shape")
+            }
+      }
+      
+      if(length(ci)==0 | length(ci)>2){
+         warning("error in params")
+         ci <- c(NA, NA)
+      }
+      Table["shape",] <- c(MLE, ci)
+      ####################### log plot ##############################
+      profileLogLik$logshape <- log(profileLogLik$x1)
+      newdata <- profileLogLik[,c('logshape','profile')]
+      colnames(newdata)[1]<-"x1"
+      interlog <- get1dCovexhullinter(newdata)
+      
+      plot(newdata$x1, profileLogLik$profile, cex=.2, xlab="log(shape)", ylab="profileLogL")
+      points(interlog$toTest, col='red', cex=0.6)
+      points(interlog$toUse, col='blue', cex=0.6, pch=3)
+      #lines(interlog$prof$x1, interlog$prof$z, col='green')
+      f1 <- approxfun(interlog$toUse$x1, interlog$toUse$profile)
+      curve(f1(x), add = TRUE, col = 'green', n = 1001) 
+      abline(h =0, lty = 2, col='red') 
+     # interp1 = mgcv::gam(profile ~ s(logshape, k=nrow(toUse), fx=TRUE), data=toUse)
+     # prof1 = data.frame(logshape=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=501))
+     # prof1$z = predict(interp1, prof1)
+     # 
+     # plot(profileLogLik$logshape, profileLogLik$profile, cex=.2, xlab="log(shape)", ylab="profileLogL")
+     # points(toTest, col='red', cex=0.6)
+     # points(toUse, col='blue', cex=0.6, pch=3)
+     # lines(prof1$logshape, prof1$z, col='green')
+     # abline(h =0, lty = 2, col='red')
      
    }       
    
@@ -423,31 +423,26 @@
    
    if('sdNugget' %in% paramToEstimate){
       result = data.table::as.data.table(cbind(LogLik, params[,"sdNugget"]))
-      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "sdNugget")
-      profileLogLik <- result[, .(profile=max(.SD)), by=sdNugget]
+      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
+      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
       profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+      inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
       
-      datC1= geometry::convhulln(profileLogLik)
-      allPoints1 = unique(as.vector(datC1))
-      toTest = profileLogLik[allPoints1,]
-      toTest[,'profile'] = toTest[,'profile'] - 0.01
-      inHull1 = geometry::inhulln(datC1, as.matrix(toTest))
-      toUse = profileLogLik[allPoints1,][inHull1,]
-      toUse = toUse[order(toUse[,1])]
-      interp1 = mgcv::gam(profile ~ s(sdNugget, k=nrow(toUse), fx=TRUE), data=toUse)
-      prof1 = data.frame(sdNugget=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=1001))
-      prof1$z = predict(interp1, prof1)
+      toTest <- inter$toTest
+      toUse <- inter$toUse
+      prof1 <- inter$prof
       
-      plot(profileLogLik$sdNugget, profileLogLik$profile, cex=.2, xlab="sdNugget", ylab="profileLogL")
+      plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="sdNugget", ylab="profileLogL")
       points(toTest, col='red', cex=0.6)
       points(toUse, col='blue', cex=0.6, pch=3)
-      lines(prof1$sdNugget, prof1$z, col='green')
-      f1 <- approxfun(prof1$sdNugget, prof1$z)
-      #f1 <- approxfun(toUse$sdNugget, toUse$profile)
-      #curve(f1(x), add = TRUE, col = 'green', n = 1001)   #the number of x values at which to evaluate
+      lines(prof1$x1, prof1$z, col='green')
       abline(h =0, lty = 2, col='red')
-      lower = min(profileLogLik$sdNugget)
-      upper = max(profileLogLik$sdNugget)
+      prof1 <- prof1[prof1$x1>0,]
+      #f1 <- approxfun(prof1$x1, prof1$z)
+      f1 <- approxfun(toUse$x1, toUse$profile)
+      #curve(f1(x), add = TRUE, col = 'green', n = 1001)
+      lower = min(profileLogLik$x1)
+      upper = max(profileLogLik$x1)
       MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
       
       ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
@@ -482,35 +477,27 @@
    
    
    if('nugget' %in% paramToEstimate){
-      result = as.data.table(cbind(LogLik, params[,"nugget"]))
-      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "nugget")
-      profileLogLik <- result[, .(profile=max(.SD)), by=nugget]
+      result = data.table::as.data.table(cbind(LogLik, params[,"nugget"]))
+      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
+      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
       profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+      inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+      toTest <- inter$toTest
+      toUse <- inter$toUse
+      prof1 <- inter$prof
       
-      datC1= geometry::convhulln(profileLogLik)
-      allPoints1 = unique(as.vector(datC1))
-      toTest = profileLogLik[allPoints1,]
-      toTest[,'profile'] = toTest[,'profile'] - 0.01
-      inHull1 = geometry::inhulln(datC1, as.matrix(toTest))
-      toUse = profileLogLik[allPoints1,][inHull1,]
-      
-      interp1 = mgcv::gam(profile ~ s(nugget, k=nrow(toUse), fx=TRUE), data=toUse)
-      prof1 = data.frame(nugget=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=501))
-      prof1$z = predict(interp1, prof1)
-      
-      plot(profileLogLik$nugget, profileLogLik$profile, cex=.2, xlab="nugget", ylab="profileLogL")
+      plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="nugget", ylab="profileLogL")
       points(toTest, col='red', cex=0.6)
       points(toUse, col='blue', cex=0.6, pch=3)
-      lines(prof1$nugget, prof1$z, col='green')
-      prof1 <- prof1[prof1$nugget>0,]
-      f1 <- approxfun(prof1$nugget, prof1$z)
-      #f1 <- approxfun(toUse$nugget, toUse$profile)
+      lines(prof1$x1, prof1$z, col='green')
+      prof1 <- prof1[prof1$x1>0,]
+      f1 <- approxfun(prof1$x1, prof1$z)
+      #f1 <- approxfun(toUse$x1, toUse$profile)
       #curve(f1(x), add = TRUE, col = 'green', n = 1001)   #the number of x values at which to evaluate
       abline(h =0, lty = 2, col='red')
-      lower = min(profileLogLik$nugget)
-      upper = max(profileLogLik$nugget)
+      lower = min(profileLogLik$x1)
+      upper = max(profileLogLik$x1)
       MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
-      
       ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
       abline(v =ci[1], lty = 2, col='red')
       abline(v =ci[2], lty = 2, col='red')
@@ -529,23 +516,17 @@
       }
       Table["nugget",] <- c(MLE, ci)
       ####################### log plot ##############################
-      profileLogLik$lognugget <- log(profileLogLik$nugget)
-      datC1= geometry::convhulln(profileLogLik[,c('lognugget','profile')])
-      allPoints1 = unique(as.vector(datC1))
-      toTest = profileLogLik[allPoints1,c('lognugget','profile')]
-      toTest[,'profile'] = toTest[,'profile'] - 0.01
-      inHull1 = geometry::inhulln(datC1, as.matrix(toTest))
-      toUse = profileLogLik[allPoints1,c('lognugget','profile')][inHull1,]
-      
-      interp1 = mgcv::gam(profile ~ s(lognugget, k=nrow(toUse), fx=TRUE), data=toUse)
-      prof1 = data.frame(lognugget=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=501))
-      prof1$z = predict(interp1, prof1)
+      profileLogLik$lognugget <- log(profileLogLik$x1)
+      newdata <- profileLogLik[,c('lognugget','profile')]
+      colnames(newdata)[1]<-"x1"
+      interlog <- get1dCovexhullinter(newdata)
       
       plot(profileLogLik$lognugget, profileLogLik$profile, cex=.2, xlab="log(nugget)", ylab="profileLogL")
-      points(toTest, col='red', cex=0.6)
-      points(toUse, col='blue', cex=0.6, pch=3)
-      lines(prof1$lognugget, prof1$z, col='green')
-      abline(h =0, lty = 2, col='red')
+      points(interlog$toTest, col='red', cex=0.6)
+      points(interlog$toUse, col='blue', cex=0.6, pch=3)
+      f1 <- approxfun(interlog$toUse$x1, interlog$toUse$profile)
+      curve(f1(x), add = TRUE, col = 'green', n = 1001) 
+      abline(h =0, lty = 2, col='red') 
 
    }
    
@@ -554,32 +535,25 @@
    
    if('anisoRatio' %in% paramToEstimate){
       result = as.data.table(cbind(LogLik, params[,"anisoRatio"]))
-      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "anisoRatio")
-      profileLogLik <- result[, .(profile=max(.SD)), by=anisoRatio]
+      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
+      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
       profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+      inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+      toTest <- inter$toTest
+      toUse <- inter$toUse
+      prof1 <- inter$prof
       
-      datC1= geometry::convhulln(profileLogLik)
-      allPoints1 = unique(as.vector(datC1))
-      toTest = profileLogLik[allPoints1,]
-      toTest[,'profile'] = toTest[,'profile'] - 0.01
-      inHull1 = geometry::inhulln(datC1, as.matrix(toTest))
-      toUse = profileLogLik[allPoints1,][inHull1,]
-      
-      interp1 = mgcv::gam(profile ~ s(anisoRatio, k=nrow(toUse), fx=TRUE), data=toUse)
-      prof1 = data.frame(anisoRatio=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=501))
-      prof1$z = predict(interp1, prof1)
-      
-      plot(profileLogLik$anisoRatio, profileLogLik$profile, cex=.2, xlab="anisoRatio", ylab="profileLogL")
+      plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="anisoRatio", ylab="profileLogL")
       points(toTest, col='red', cex=0.6)
       points(toUse, col='blue', cex=0.6, pch=3)
-      lines(prof1$anisoRatio, prof1$z, col='green')
-      prof1 <- prof1[prof1$anisoRatio>0,]
-      f1 <- approxfun(prof1$anisoRatio, prof1$z)
-      #f1 <- approxfun(toUse$anisoRatio, toUse$profile)
-      #curve(f1(x), add = TRUE, col = 'green', n = 1001)   #the number of x values at which to evaluate
+      #lines(prof1$x1, prof1$z, col='green')
+      prof1 <- prof1[prof1$x1>0,]
+      #f1 <- approxfun(prof1$x1, prof1$z)
+      f1 <- approxfun(toUse$x1, toUse$profile)
+      curve(f1(x), add = TRUE, col = 'green', n = 1001)   #the number of x values at which to evaluate
       abline(h =0, lty = 2, col='red')
-      lower = min(profileLogLik$anisoRatio)
-      upper = max(profileLogLik$anisoRatio)
+      lower = min(profileLogLik$x1)
+      upper = max(profileLogLik$x1)
       MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
       
       ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
@@ -623,33 +597,24 @@
    
    
    if('anisoAngleRadians' %in% paramToEstimate){
-      result = as.data.table(cbind(LogLik, params[,"anisoAngleRadians"]))
-      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "anisoAngleRadians")
-      profileLogLik <- result[, .(profile=max(.SD)), by=anisoAngleRadians]
-      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
-      
-      datC1= geometry::convhulln(profileLogLik)
-      allPoints1 = unique(as.vector(datC1))
-      toTest = profileLogLik[allPoints1,]
-      toTest[,'profile'] = toTest[,'profile'] - 18
-      inHull1 = geometry::inhulln(datC1, as.matrix(toTest))
-      toUse = profileLogLik[allPoints1,][inHull1,]
-      toTest[,'profile'] = toTest[,'profile'] + 18
-      
-      interp1 = mgcv::gam(profile ~ s(anisoAngleRadians, k=nrow(toUse), fx=TRUE), data=toUse)
-      prof1 = data.frame(anisoAngleRadians=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=501))
-      prof1$z = predict(interp1, prof1)
-      
-      plot(profileLogLik$anisoAngleRadians, profileLogLik$profile, cex=.2, xlab="anisoAngleRadians", ylab="profileLogL")
-      points(toTest, col='red', cex=0.6)
-      points(toUse, col='blue', cex=0.6, pch=3)
-      lines(prof1$anisoAngleRadians, prof1$z, col='green')
-      f1 <- approxfun(prof1$anisoAngleRadians, prof1$z)
-      #f1 <- approxfun(toUse$anisoAngleRadians, toUse$profile)
-      #curve(f1(x), add = TRUE, col = 'green', n = 1001)   #the number of x values at which to evaluate
+     result = as.data.table(cbind(LogLik, params[,"anisoAngleRadians"]))
+     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
+     profileLogLik <- result[, .(profile=max(.SD)), by=x1]
+     profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+     inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+     toTest <- inter$toTest
+     toUse <- inter$toUse
+     prof1 <- inter$prof
+     
+     plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="anisoRatio", ylab="profileLogL")
+     points(toTest, col='red', cex=0.6)
+     points(toUse, col='blue', cex=0.6, pch=3)
+     lines(prof1$x1, prof1$z, col='green')
+     prof1 <- prof1[prof1$x1>0,]
+     f1 <- approxfun(prof1$x1, prof1$z)
       abline(h =0, lty = 2, col='red')
-      lower = min(profileLogLik$anisoAngleRadians)
-      upper = max(profileLogLik$anisoAngleRadians)
+      lower = min(profileLogLik$x1)
+      upper = max(profileLogLik$x1)
       MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
       
       ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
@@ -697,34 +662,24 @@
    
    
    if('anisoAngleDegrees' %in% paramToEstimate){
-      result = as.data.table(cbind(LogLik, params[,"anisoAngleDegrees"]))
-      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "anisoAngleDegrees")
-      profileLogLik <- result[, .(profile=max(.SD)), by=anisoAngleDegrees]
-      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
-      
-      datC1= geometry::convhulln(profileLogLik)
-      allPoints1 = unique(as.vector(datC1))
-      toTest = profileLogLik[allPoints1,]
-      toTest[,'profile'] = toTest[,'profile'] - 0.1
-      inHull1 = geometry::inhulln(datC1, as.matrix(toTest))
-      toUse = profileLogLik[allPoints1,][inHull1,]
-      toTest[,'profile'] = toTest[,'profile'] + 0.1
-      
-      interp1 = mgcv::gam(profile ~ s(anisoAngleDegrees, k=nrow(toUse), fx=TRUE), data=toUse)
-      prof1 = data.frame(anisoAngleDegrees=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=501))
-      prof1$z = predict(interp1, prof1)
-      
-      plot(profileLogLik$anisoAngleDegrees, profileLogLik$profile, cex=.2, xlab="anisoAngleDegrees", ylab="profileLogL")
-      points(toTest, col='red', cex=0.6)
-      points(toUse, col='blue', cex=0.6, pch=3)
-      lines(prof1$anisoAngleDegrees, prof1$z, col='green')
-      f1 <- approxfun(prof1$anisoAngleDegrees, prof1$z)
-      #f1 <- approxfun(toUse$anisoAngleDegrees, toUse$profile)
-      #curve(f1(x), add = TRUE, col = 'green', n = 1001)   #the number of x values at which to evaluate
-      abline(h =0, lty = 2, col='red')
-      lower = min(profileLogLik$anisoAngleDegrees)
-      upper = max(profileLogLik$anisoAngleDegrees)
-      MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+     result = as.data.table(cbind(LogLik, params[,"anisoAngleDegrees"]))
+     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
+     profileLogLik <- result[, .(profile=max(.SD)), by=x1]
+     profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+     inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+     toTest <- inter$toTest
+     toUse <- inter$toUse
+     prof1 <- inter$prof
+     
+     plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="anisoRatio", ylab="profileLogL")
+     points(toTest, col='red', cex=0.6)
+     points(toUse, col='blue', cex=0.6, pch=3)
+     lines(prof1$x1, prof1$z, col='green')
+     f1 <- approxfun(prof1$x1, prof1$z)
+     abline(h =0, lty = 2, col='red')
+     lower = min(profileLogLik$x1)
+     upper = max(profileLogLik$x1)
+     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
       
       ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
       abline(v =ci[1], lty = 2, col='red')
@@ -827,170 +782,7 @@
 
 
  
- # 2d
- gamma3 <-  unname(sqrt(params[,'anisoRatio']-1) * cos(2*params[,'anisoAngleRadians']))
- gamma4 <-  unname(sqrt(params[,'anisoRatio']-1) * sin(2*params[,'anisoAngleRadians']))
- aniso <- cbind(gamma3, gamma4)
- 
- 
- result = as.data.table(cbind(LogLik, aniso[,c('gamma3','gamma4')]))
- colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), 'gamma3','gamma4')
- profileLogLik <- result[, .(profile=max(.SD)), by=.(gamma3, gamma4)]
- profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
- profileLogLik <- as.data.frame(profileLogLik)
- 
- datC2 = geometry::convhulln(profileLogLik)
- allPoints2 = unique(as.vector(datC2))
- toTest2 = profileLogLik[allPoints2,]
- toTest2[,'profile'] = toTest2[,'profile'] - 0.1
- inHull2 = geometry::inhulln(datC2, as.matrix(toTest2))
- toUse2 = profileLogLik[allPoints2,][inHull2,]
- toTest2[,'profile'] = toTest2[,'profile'] + 0.1
- 
- profileLogLik <- profileLogLik[order(profileLogLik[,1],decreasing=FALSE),]
- colDat2 = mapmisc::colourScale(profileLogLik[,'profile'], style='equal', dec=1, breaks=11, col='Spectral', rev=TRUE)
- plot(profileLogLik[,c('gamma3','gamma4')], col = colDat2$plot, pch=16, cex=0.5)
- mapmisc::legendBreaks('topright', colDat2)
- points(toTest2[,c('gamma3','gamma4')], col='black', cex=0.8)
- points(toUse2[,c('gamma3','gamma4')], col='blue', pch=3, cex=0.8)
- 
 
- interp2 = mgcv::gam(profile ~ s(gamma3, gamma4, k=nrow(toUse2), fx=TRUE), data=toUse2)
- prof2list = list(gamma3=seq(min(toUse2[,1])-0.1, max(toUse2[,1])+0.1, len=101),
-                  gamma4=seq(min(toUse2[,2])-0.1, max(toUse2[,2])+0.1, len=101))
- prof2 = do.call(expand.grid, prof2list)
- prof2$z = predict(interp2, prof2)
- 
- col2 = mapmisc::colourScale(prof2[,'z'], breaks= 11, dec=1, col='Spectral', rev=TRUE, style='equal')
- colPoints = mapmisc::colourScale(toUse2[,'profile'], breaks=col2$breaks, col=col2$col, style='fixed')
- plot(toUse2[,c('gamma3','gamma4')], col=colPoints$plot, pch=15, cex=1)
- 
- plot(prof2[,c('gamma3','gamma4')], col=col2$plot, cex=2, pch=15)
- points(toUse2[,c('gamma3','gamma4')], col='black')
- 
- 
- 
- temp <- as.data.frame(prof2[,'gamma3'] + 1i * prof2[,'gamma4'])
- naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
- colnames(naturalspace) <- c('anisoRatio','anisoAngleRadians')
- prof2new <- cbind(prof2, naturalspace)
- plot(prof2new[,c('anisoRatio','anisoAngleRadians')], col=col2$plot, cex=2, pch=15)
- plot(prof2new[,c('anisoRatio','z')],  cex=0.5)
- 
- 
- prof2new <- as.data.table(prof2new)
- profileLogLik1 <- prof2new[, .(profile=max(z)), by=anisoRatio]    #as.matrix(profileLogLik1[order(profileLogLik1$anisoRatio)])
- profileLogLik2 <- prof2new[, .(profile=max(z)), by=anisoAngleRadians]
- 
-
- 
- datC2 = geometry::convhulln(profileLogLik1)
- allPoints2 = unique(as.vector(datC2))
- toTest2 = profileLogLik1[allPoints2,]
- toTest2[,'profile'] = toTest2[,'profile'] - 0.1
- inHull2 = geometry::inhulln(datC2, as.matrix(toTest2))
- toUse2 = profileLogLik1[allPoints2,][inHull2,]
- toTest2[,'profile'] = toTest2[,'profile'] + 0.1
- 
- interpRatio = mgcv::gam(profile ~ s(anisoRatio, k=nrow(toUse2), fx=TRUE), data=toUse2)
- profRatio = data.frame(anisoRatio=seq(min(toUse2[,1])-0.1, max(toUse2[,1])+0.1, len=501))
- profRatio$z = predict(interpRatio, profRatio)
- 
- plot(profileLogLik1$anisoRatio,profileLogLik1$profile,  cex=0.5,  xlab="anisoRatio", ylab="profileLogL")
- points(toTest2, col='red', cex=0.6)
- points(toUse2, col='blue', cex=0.6, pch=3)
- lines(profRatio$anisoRatio, profRatio$z, col='green')
- f1 <- approxfun(prof1$anisoAngleDegrees, prof1$z)
- abline(h =0, lty = 2, col='red')
- 
- #############
- datC2 = geometry::convhulln(profileLogLik2)
- allPoints2 = unique(as.vector(datC2))
- toTest2 = profileLogLik2[allPoints2,]
- toTest2[,'profile'] = toTest2[,'profile'] - 0.1
- inHull2 = geometry::inhulln(datC2, as.matrix(toTest2))
- toUse2 = profileLogLik2[allPoints2,][inHull2,]
- toTest2[,'profile'] = toTest2[,'profile'] + 0.1
- 
- interpRadians = mgcv::gam(profile ~ s(anisoAngleRadians, k=nrow(toUse2), fx=TRUE), data=toUse2)
- profRadians = data.frame(anisoAngleRadians=seq(min(toUse2[,1])-0.1, max(toUse2[,1])+0.1, len=501))
- profRadians$z = predict(interpRadians, profRadians)
- 
- plot(profileLogLik2$anisoAngleRadians, profileLogLik2$profile,  cex=0.5)
- points(toTest2, col='red', cex=0.6)
- points(toUse2, col='blue', cex=0.6, pch=3)
- lines(profRadians$anisoAngleRadians, profRadians$z, col='green')
- f1 <- approxfun(profRadians$anisoAngleRadians, profRadians$z)
- abline(h =0, lty = 2, col='red')
- 
- 
- 
- prof2 <- as.data.table(prof2)
- profileLogLik1 <- prof2[, .(profile=max(z)), by=gamma3]
- profileLogLik2 <- prof2[, .(profile=max(z)), by=gamma4]
- plot(profileLogLik1[,c('gamma3','profile')],  cex=0.5, pch=15)
- plot(profileLogLik2[,c('gamma4','profile')],  cex=0.5, pch=15)
-
- 
- prof12<- prof2[which((prof2$gamma3==profileLogLik1$gamma3) & (prof2$z==profileLogLik1$profile))]
- setkey(prof2,gamma3)
- prof14<- prof2[which((prof2$gamma4==profileLogLik2$gamma4) & (prof2$z==profileLogLik2$profile))]
- plot(prof14[,c('gamma4','z')],  cex=0.5, pch=15)
-
- #plot(prof22[,c('gamma3','z')],  cex=0.5, pch=15)
- #plot(prof22[,c('gamma4','z')],  cex=0.5, pch=15)
- 
- 
- 
-
-
- temp <- as.data.frame(prof14[,'gamma3'] + 1i * prof14[,'gamma4'])
- naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
- colnames(naturalspace) <- c('anisoRatio','anisoAngleRadians')
- prof24 <- cbind(prof14, naturalspace)
- plot(prof24[,c('anisoAngleRadians','z')],  cex=0.5)
- 
- 
- #######################
- result = as.data.table(cbind(LogLik, params[,c('anisoRatio', 'anisoAngleRadians')]))
- colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), 'anisoRatio', 'anisoAngleRadians')
- profileLogLik <- result[, .(profile=max(.SD)), by=.(anisoRatio, anisoAngleRadians)]
- profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
- profileLogLik <- as.data.frame(profileLogLik)
- plot3d(profileLogLik$anisoRatio, profileLogLik$anisoAngleRadians,profileLogLik$profile, col=colPoints$plot, type='s', radius=0.06, lwd=0)
- rglwidget()
- 
- 
- datC2 = geometry::convhulln(profileLogLik)
- allPoints2 = unique(as.vector(datC2))
- toTest2 = dat[allPoints2,c('x1','x2','z')]
- toTest2[,'z'] = toTest2[,'z'] + 0.01
- inHull2 = geometry::inhulln(datC2, as.matrix(toTest2))
- toUse2 = toTest2[!inHull2,]
- 
- 
- 
- colDat2 = mapmisc::colourScale(dat[,'z'], style='equal', dec=1, breaks=11, col='Spectral', rev=TRUE)
- plot(dat[,c('x1','x2')], col = colDat2$plot, pch=16, cex=1)
- mapmisc::legendBreaks('topright', colDat2)
- points(toTest2[,c('x1','x2')], col='black')
- points(toUse2[,c('x1','x2')], col='blue', pch=3)
- 
- library("mgcv")
- interp2 = mgcv::gam(z ~ s(x1, x2, k=nrow(toUse2), fx=TRUE), data=toUse2)
- prof2list = list(x1=seq(min(toUse2[,1])-0.1, max(toUse2[,1])+0.1, len=101),
-                  x2=seq(min(toUse2[,2])-0.1, max(toUse2[,2])+0.1, len=101))
- prof2 = do.call(expand.grid, prof2list)
- prof2$z = predict(interp2, prof2)
- 
- col2 = mapmisc::colourScale(prof2[,'z'], breaks= 11, dec=1, col='Spectral', rev=TRUE, style='equal')
- colPoints = mapmisc::colourScale(toUse2[,'z'], breaks=col2$breaks, col=col2$col, style='fixed')
- plot(toUse2[,c('x1','x2')], col=colPoints$plot, pch=15, cex=2)
- 
- 
- plot(prof2[,c('x1','x2')], col=col2$plot, cex=2, pch=15)
- points(toUse2[,c('x1','x2')], col='black')
- 
  
  
  
