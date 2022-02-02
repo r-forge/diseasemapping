@@ -219,7 +219,7 @@
     toTest[,'profile'] = toTest[,'profile'] + a
     toTest[,'x1'] = toTest[,'x1'] - b
     
-    interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), fx=TRUE), data=toUse)
+    interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
     prof1 = data.frame(x1=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=501))
     prof1$z = predict(interp1, prof1)
     
@@ -297,7 +297,7 @@
      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
 
-     inter <- get1dCovexhullinter(profileLogLik,b=10)     # a data frame or data.table # 2 column names must be x1 and profile
+     inter <- get1dCovexhullinter(profileLogLik)    # a data frame or data.table # 2 column names must be x1 and profile
      
      toTest <- inter$toTest
      toUse <- inter$toUse
@@ -306,8 +306,10 @@
      plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="range", ylab="profileLogL")
      points(toTest, col='red', cex=0.6)
      points(toUse, col='blue', cex=0.6, pch=3)
+     
      f1 <- approxfun(toUse$x1, toUse$profile)
-     curve(f1(x), add = TRUE, col = 'green', n = 1001)   #the number of x values at which to evaluate
+     #f1 <- approxfun(prof1$x1, prof1$z)
+     curve(f1(x), add = TRUE, col = 'green', n = 1001)
      abline(h =0, lty = 2, col='red')
      lower = min(profileLogLik$x1)
      upper = max(profileLogLik$x1)
@@ -363,15 +365,15 @@
       plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="shape", ylab="profileLogL", xlim=c(0,50))
       points(toTest, col='red', cex=0.6)
       points(toUse, col='blue', cex=0.6, pch=3)
-      #lines(prof1$x1, prof1$z, col='green')
+      lines(prof1$x1, prof1$z, col='green')
       #prof1 <- prof1[prof1$x1>0,]
       f2 <- approxfun(prof1$x1, prof1$z)
-      f1 <- approxfun(toUse$x1, toUse$profile)
-      curve(f1(x), add = TRUE, col = 'green', n = 1001)   #the number of x values at which to evaluate
+      #f1 <- approxfun(toUse$x1, toUse$profile)
+      #curve(f1(x), add = TRUE, col = 'green', n = 1001)   #the number of x values at which to evaluate
       abline(h =0, lty = 2, col='red')
       lower = min(profileLogLik$x1)
       upper = 50
-      MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+      MLE <- optimize(f2, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
       ci<-rootSolve::uniroot.all(f2, lower = lower, upper = upper)
       abline(v =ci[1], lty = 2, col='red')
       abline(v =ci[2], lty = 2, col='red')
@@ -399,10 +401,27 @@
       plot(newdata$x1, profileLogLik$profile, cex=.2, xlab="log(shape)", ylab="profileLogL")
       points(interlog$toTest, col='red', cex=0.6)
       points(interlog$toUse, col='blue', cex=0.6, pch=3)
-      #lines(interlog$prof$x1, interlog$prof$z, col='green')
-      f1 <- approxfun(interlog$toUse$x1, interlog$toUse$profile)
-      curve(f1(x), add = TRUE, col = 'green', n = 1001) 
+      lines(interlog$prof$x1, interlog$prof$z, col='green')
+      f1 <- approxfun(interlog$prof$x1, interlog$prof$z)
+      #curve(f1(x), add = TRUE, col = 'green', n = 1001) 
       abline(h =0, lty = 2, col='red') 
+      
+      
+      
+      # profileLogLik$logshape <- sqrt(profileLogLik$x1)
+      # newdata <- profileLogLik[,c('logshape','profile')]
+      # colnames(newdata)[1]<-"x1"
+      # interlog <- get1dCovexhullinter(newdata)
+      # plot(newdata$x1, profileLogLik$profile, cex=.2, xlab="sqrt(shape)", ylab="profileLogL", xlim=c(1,80))
+      # points(interlog$toTest, col='red', cex=0.6)
+      # points(interlog$toUse, col='blue', cex=0.6, pch=3)
+      # #lines(interlog$prof$x1, interlog$prof$z, col='green')
+      # f1 <- approxfun(interlog$toUse$x1, interlog$toUse$profile)
+      # curve(f1(x), add = TRUE, col = 'green', n = 1001) 
+      # abline(h =0, lty = 2, col='red') 
+      
+      
+      
      # interp1 = mgcv::gam(profile ~ s(logshape, k=nrow(toUse), fx=TRUE), data=toUse)
      # prof1 = data.frame(logshape=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=501))
      # prof1$z = predict(interp1, prof1)
@@ -438,8 +457,8 @@
       lines(prof1$x1, prof1$z, col='green')
       abline(h =0, lty = 2, col='red')
       prof1 <- prof1[prof1$x1>0,]
-      #f1 <- approxfun(prof1$x1, prof1$z)
-      f1 <- approxfun(toUse$x1, toUse$profile)
+      f1 <- approxfun(prof1$x1, prof1$z)
+      #f1 <- approxfun(toUse$x1, toUse$profile)
       #curve(f1(x), add = TRUE, col = 'green', n = 1001)
       lower = min(profileLogLik$x1)
       upper = max(profileLogLik$x1)
@@ -517,11 +536,12 @@
       Table["nugget",] <- c(MLE, ci)
       ####################### log plot ##############################
       profileLogLik$lognugget <- log(profileLogLik$x1)
+      #profileLogLik$lognugget <- sqrt(profileLogLik$x1)
       newdata <- profileLogLik[,c('lognugget','profile')]
       colnames(newdata)[1]<-"x1"
-      interlog <- get1dCovexhullinter(newdata)
+      interlog <- get1dCovexhullinter(newdata,a=0.01)
       
-      plot(profileLogLik$lognugget, profileLogLik$profile, cex=.2, xlab="log(nugget)", ylab="profileLogL")
+      plot(profileLogLik$lognugget, profileLogLik$profile, cex=.2, xlab="log(nugget)", ylab="profileLogL", ylim=c(-5,2))
       points(interlog$toTest, col='red', cex=0.6)
       points(interlog$toUse, col='blue', cex=0.6, pch=3)
       f1 <- approxfun(interlog$toUse$x1, interlog$toUse$profile)
@@ -601,16 +621,16 @@
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
-     inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+     inter <- get1dCovexhullinter(profileLogLik, a=0.001)     # a data frame or data.table # 2 column names must be x1 and profile
      toTest <- inter$toTest
      toUse <- inter$toUse
      prof1 <- inter$prof
      
-     plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="anisoRatio", ylab="profileLogL")
+     plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="anisoAngleRadians", ylab="profileLogL")
      points(toTest, col='red', cex=0.6)
      points(toUse, col='blue', cex=0.6, pch=3)
      lines(prof1$x1, prof1$z, col='green')
-     prof1 <- prof1[prof1$x1>0,]
+     #prof1 <- prof1[prof1$x1>0,]
      f1 <- approxfun(prof1$x1, prof1$z)
       abline(h =0, lty = 2, col='red')
       lower = min(profileLogLik$x1)
