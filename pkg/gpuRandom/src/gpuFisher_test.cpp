@@ -9,7 +9,7 @@ using namespace viennacl::linalg;
 
 
 
-
+#define DOUBLE_EPS 2.220446049250313080847e-16
 
 template <typename T> 
 std::string sum_of_LfactorialString(const int Nrow, const int Ncol, const int NpadCol) {  //internal column size
