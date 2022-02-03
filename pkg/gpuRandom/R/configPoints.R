@@ -115,8 +115,8 @@ configMidPoint <- function(Model,
    }
    
    deltas = rep(0.01, length(Mle))
-   names(deltas) = names(MleGamma)
-   deltas['gamma4'] = 0.1
+   #names(deltas) = names(MleGamma)
+   #deltas['gamma4'] = 0.01
    ParamsetGamma <- matrix(MleGamma, nrow=nrow(derivGridDf), ncol=length(Mle), byrow=TRUE, dimnames = list(NULL, names(MleGamma))) + 
       derivGridDf %*% diag(deltas)
 
