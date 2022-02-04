@@ -25,6 +25,7 @@ configMidPoint <- function(Model,
    
    #parToLog = intersect(names(Mle), parToLog)
    whichLogged = which(names(Mle) %in% parToLog)
+   whichAniso = which(names(Mle) %in% c('anisoRatio', 'anisoAngleRadians'))
 
    if('anisoRatio' %in% names(Mle)){
      if(Mle['anisoRatio'] <= 1) {
@@ -35,7 +36,7 @@ configMidPoint <- function(Model,
    gamma4 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*Mle['anisoAngleRadians']))
      }
    aniso <- c(gamma3 = gamma3, gamma4 = gamma4)
-   MleGamma = c(log(Mle[whichLogged]), Mle[-c(whichLogged, 4, 5)], aniso)
+   MleGamma = c(log(Mle[whichLogged]), Mle[-c(whichLogged, whichAniso)], aniso)
    }else{
    MleGamma = c(log(Mle[whichLogged]),  Mle[-whichLogged])
    }
@@ -115,12 +116,12 @@ configMidPoint <- function(Model,
    }
    
    deltas = rep(0.01, length(Mle))
-   #names(deltas) = names(MleGamma)
-   #deltas['gamma4'] = 0.01
+   # names(deltas) = names(MleGamma)
+   # deltas['gamma4'] = 0.02
    ParamsetGamma <- matrix(MleGamma, nrow=nrow(derivGridDf), ncol=length(Mle), byrow=TRUE, dimnames = list(NULL, names(MleGamma))) + 
       derivGridDf %*% diag(deltas)
 
-   if(length(Mle)==2 | length(Mle)==3){
+   if(!('anisoRatio' %in% names(Mle))){
    Paramset <- cbind(exp(ParamsetGamma[,paste("log(", names(Mle)[whichLogged], ")",sep="")]), ParamsetGamma[,-whichLogged])   
    }else{
    #    if(Mle['anisoRatio'] <= 1) {
@@ -129,12 +130,12 @@ configMidPoint <- function(Model,
    #    }else{
       temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
       naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
-      Paramset <- cbind(exp(ParamsetGamma[,paste("log(", parToLog, ")",sep="")]), naturalspace)
+      Paramset <- cbind(exp(ParamsetGamma[, whichLogged]), naturalspace)
       } 
       
    colnames(Paramset) <- names(Mle)  
    toAdd = setdiff(c('range','shape','nugget','anisoRatio', 'anisoAngleRadians'), names(Mle))
-   otherParams = matrix(Model$parameters[toAdd], nrow=nrow(Paramset), ncol = length(toAdd),
+   otherParams = matrix(Model$opt$mle[toAdd], nrow=nrow(Paramset), ncol = length(toAdd),
                         dimnames = list(rownames(Paramset), toAdd), byrow=TRUE)
    Params <- cbind(Paramset, otherParams)
    
@@ -232,10 +233,22 @@ configMidPoint <- function(Model,
    out_list <- list()
 
    if(length(Mle)==2){
-      pointsSphere = exp(1i*seq(0, 2*pi, len=15))
+      pointsSphere = exp(1i*seq(0, 2*pi, len=25))
       pointsSphere = pointsSphere[-length(pointsSphere)]
       pointsSphere2d = cbind(Re(pointsSphere), Im(pointsSphere))
       #plot(pointsSphere2d)
+      if('anisoRatio' %in% names(Mle)){
+         for(i in 1:length(alpha)){
+            clevel <- stats::qchisq(1 - alpha[i], df = 2)
+            pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(pointsSphere2d) + MleGamma)
+            colnames(pointsEllipseGammaspace) <- names(MleGamma)
+            temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+            naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+            pointsEllipse <- cbind(exp(pointsEllipseGammaspace[,whichLogged]),naturalspace)
+            colnames(pointsEllipse) <- names(Mle)
+            out_list[[i]] = pointsEllipse
+         }         
+      }else{
       for(i in 1:length(alpha)){
          clevel <- stats::qchisq(1 - alpha[i], df = 2)
          pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(pointsSphere2d) + MleGamma)
@@ -243,7 +256,8 @@ configMidPoint <- function(Model,
          pointsEllipse <- cbind(exp(pointsEllipseGammaspace[,paste("log(", parToLog[whichLogged], ")",sep="")]))
          colnames(pointsEllipse) <- names(Mle)
          out_list[[i]] = pointsEllipse
-      }   
+      } 
+      }
    }else if(length(Mle)==3){
       load('/home/ruoyong/diseasemapping/pkg/gpuRandom/data/coords3d.RData')
       for(i in 1:length(alpha)){
