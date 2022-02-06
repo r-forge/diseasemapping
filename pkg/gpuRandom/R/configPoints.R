@@ -236,6 +236,18 @@ configMidPoint <- function(Model,
    }
    
    
+   temp1 <- rbind(HessianMat2[1,], rep(0,4), HessianMat2[2:4,])
+   
+   temp2 <- cbind(temp1[,1], rep(0,5), temp1[,2:4])
+   
+   temp2[2,2] <- HessianMat
+   
+   colnames(temp2)[1:2] <- c('log(range)','log(shape)')
+   rownames(temp2) <- colnames(temp2)
+   HessianMat <- temp2
+   
+   
+   
    Sigma <- -solve(HessianMat)
    eig <- eigen(Sigma)
    
@@ -330,7 +342,7 @@ configMidPoint <- function(Model,
    }
    
    out_list[length(alpha)+1] = HessianMat
-   names(out_list) <- c(paste0("alpha", alpha, sep=""), 'hessian')
+   names(out_list) <- paste0("alpha", alpha, sep="")
    out_list
 }
 
@@ -376,7 +388,7 @@ configFirstStep <- function(Model,
    whichAniso = which(names(Mle) %in% c('anisoRatio', 'anisoAngleRadians'))
    
    if('anisoRatio' %in% names(Mle)){
-      if(Mle['anisoRatio'] <= 1) {
+      if(Mle['anisoRatio'] <= 1){
          gamma3 <-  unname(sqrt(1/Mle['anisoRatio']-1) * cos(2*Mle['anisoAngleRadians']))
          gamma4 <-  unname(sqrt(1/Mle['anisoRatio']-1) * sin(2*Mle['anisoAngleRadians']))
       }else{
@@ -442,9 +454,8 @@ configFirstStep <- function(Model,
    
    #result$paramsRenew
    A <- result$LogLik[, 2]
-
-   FirstDeri <- matrix(0, nrow=1, ncol=length(Mle))
-   colnames(FirstDeri) <- names(MleGamma)
+   FirstDeri <- rep(0, length(Mle))
+   names(FirstDeri) <- names(MleGamma)
    
    
    FirstDeri[1] <- (A[1] - A[2])/(2*deltas[1])
@@ -453,8 +464,25 @@ configFirstStep <- function(Model,
    FirstDeri[4] <- (A[7] - A[8])/(2*deltas[4])
    FirstDeri[5] <- (A[9] - A[10])/(2*deltas[5])
    
- 
-  any(abs(FirstDeri) >= 0.01)
+  
+  if(any(abs(FirstDeri) >= 0.01)){
+    ToFix <- names(FirstDeri)[which(abs(FirstDeri) <= 0.01)]
+     
+    if(length(ToFix)==1){
+       
+    }else if(length(ToFix)==2){
+       
+       
+       
+       
+    }
+  }
+   
+   
+   
+   
+   
+   
    
    
  
