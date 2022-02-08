@@ -395,7 +395,7 @@
       colnames(newdata)[1]<-"x1"
       interlog <- get1dCovexhullinter(newdata)
       
-      plot(newdata$x1, profileLogLik$profile, cex=.2, xlab="log(shape)", ylab="profileLogL")
+      plot(newdata$x1, newdata$profile, cex=.2, xlab="log(shape)", ylab="profileLogL")
       points(interlog$toTest, col='red', cex=0.6)
       points(interlog$toUse, col='blue', cex=0.6, pch=3)
       lines(interlog$prof$x1, interlog$prof$z, col='green')

@@ -101,6 +101,8 @@
                        c(0,-1,0,0,0),
                        c(0,0,1,0,0),
                        c(0,0,-1,0,0),
+                       c(0,0,0,1,0),
+                       c(0,0,0,-1,0),
                        c(0,0,0,0,1),
                        c(0,0,0,0,-1))
     
@@ -209,16 +211,16 @@
     HessianMat[4,4] <- (A[7] + A[8] -2*Origin)/(deltas[4]^2)
     HessianMat[5,5] <- (A[9] + A[10] -2*Origin)/(deltas[5]^2)
     
-    HessianMat[1,2] <- (A[9] - A[10] - A[11] + A[12])/(4*deltas[1]*deltas[2])
-    HessianMat[1,3] <- (A[13] - A[14] - A[15] + A[16])/(4*deltas[1]*deltas[3])
-    HessianMat[1,4] <- (A[17] - A[18] - A[19] + A[20])/(4*deltas[1]*deltas[4])
-    HessianMat[1,5] <- (A[21] - A[22] - A[23] + A[24])/(4*deltas[1]*deltas[5])
-    HessianMat[2,3] <- (A[25] - A[26] - A[27] + A[28])/(4*deltas[2]*deltas[3])
-    HessianMat[2,4] <- (A[29] - A[30] - A[31] + A[32])/(4*deltas[2]*deltas[4])
-    HessianMat[2,5] <- (A[33] - A[34] - A[35] + A[36])/(4*deltas[2]*deltas[5])
-    HessianMat[3,4] <- (A[37] - A[38] - A[39] + A[40])/(4*deltas[3]*deltas[4])
-    HessianMat[3,5] <- (A[41] - A[42] - A[43] + A[44])/(4*deltas[3]*deltas[5])
-    HessianMat[4,5] <- (A[45] - A[46] - A[47] + A[48])/(4*deltas[4]*deltas[5])
+    HessianMat[1,2] <- (A[11] - A[12] - A[13] + A[14])/(4*deltas[1]*deltas[2])
+    HessianMat[1,3] <- (A[15] - A[16] - A[17] + A[18])/(4*deltas[1]*deltas[3])
+    HessianMat[1,4] <- (A[19] - A[20] - A[21] + A[22])/(4*deltas[1]*deltas[4])
+    HessianMat[1,5] <- (A[23] - A[24] - A[25] + A[26])/(4*deltas[1]*deltas[5])
+    HessianMat[2,3] <- (A[27] - A[28] - A[29] + A[30])/(4*deltas[2]*deltas[3])
+    HessianMat[2,4] <- (A[31] - A[32] - A[33] + A[34])/(4*deltas[2]*deltas[4])
+    HessianMat[2,5] <- (A[35] - A[36] - A[37] + A[38])/(4*deltas[2]*deltas[5])
+    HessianMat[3,4] <- (A[39] - A[40] - A[41] + A[42])/(4*deltas[3]*deltas[4])
+    HessianMat[3,5] <- (A[43] - A[44] - A[45] + A[46])/(4*deltas[3]*deltas[5])
+    HessianMat[4,5] <- (A[47] - A[48] - A[49] + A[50])/(4*deltas[4]*deltas[5])
     
     HessianMat[5,1] <- HessianMat[1,5]
     HessianMat[5,2] <- HessianMat[2,5]
@@ -236,10 +238,11 @@
   }
   
   HessianMat
-  
-
 }
 
+    
+    
+    
     
 #' @title set loglikelihood locations
 #' @useDynLib gpuRandom
@@ -345,7 +348,7 @@
       ## find the stationary points/new Mles if first derivative not close to 0
       if(any(abs(FirstDeri) >= 0.01)){
         index <- which(abs(FirstDeri) >= 0.01)
-        #ToFix <- FirstDeri[index]
+        ToFix <- FirstDeri[index]
         
        for(i in 1:length(index)){
           theta0 <- Mle[index[i]]
@@ -366,33 +369,33 @@
       ## fix first derivative ends  
       
       
-      ## calculates Hessian for renewed Mles
-      if('shape' %in% names(Mle)){
-        Mle1 <- Mle['shape']
-        Mle2 <- Mle[-which(names(Mle)=='shape')]
-        othersLength <- length(Mle2)
-        
-        shapeHessian <- getHessian(Model,
-                                   alpha=alpha,  # a vector of confidence levels 1-alpha
-                                   Mle = Mle1)
-        otherHessian <- getHessian(Model,
-                                   alpha=alpha,  # a vector of confidence levels 1-alpha
-                                   Mle = Mle2)
-        
-        
-        temp1 <- rbind(otherHessian[1,], rep(0,othersLength), otherHessian[2:othersLength,])
-        
-        HessianMat <- cbind(temp1[,1], rep(0,othersLength+1), temp1[,2:othersLength])
-        
-        HessianMat[2,2] <- shapeHessian
-        
-        colnames(HessianMat)[1:2] <- c('log(range)','log(shape)')
-        rownames(HessianMat) <- colnames(HessianMat)
-      }else{
+      # ## calculates Hessian for renewed Mles
+      # if('shape' %in% names(Mle)){
+      #   Mle1 <- Mle['shape']
+      #   Mle2 <- Mle[-which(names(Mle)=='shape')]
+      #   othersLength <- length(Mle2)
+      #   
+      #   shapeHessian <- getHessian(Model,
+      #                              alpha=alpha,  # a vector of confidence levels 1-alpha
+      #                              Mle = Mle1)
+      #   otherHessian <- getHessian(Model,
+      #                              alpha=alpha,  # a vector of confidence levels 1-alpha
+      #                              Mle = Mle2)
+      #   
+      #   
+      #   temp1 <- rbind(otherHessian[1,], rep(0,othersLength), otherHessian[2:othersLength,])
+      #   
+      #   HessianMat <- cbind(temp1[,1], rep(0,othersLength+1), temp1[,2:othersLength])
+      #   
+      #   HessianMat[2,2] <- shapeHessian
+      #   
+      #   colnames(HessianMat)[1:2] <- c('log(range)','log(shape)')
+      #   rownames(HessianMat) <- colnames(HessianMat)
+      # }else{
         HessianMat <- getHessian(Model,
-                                   alpha=alpha,  # a vector of confidence levels 1-alpha
-                                   Mle = Mle2)
-      }
+                                 alpha=alpha,  # a vector of confidence levels 1-alpha
+                                 Mle = Mle2)
+      # }
       
       
       
@@ -488,16 +491,8 @@
       #out_list[length(alpha)+1] = HessianMat
       names(out_list) <- paste0("alpha", alpha, sep="")
       out_list
-      
-      
-        
-      
-      
-      
-      
-      
-      
-}
+    
+   }
     
 
     
@@ -525,15 +520,7 @@
     
     
     
-    temp1 <- rbind(HessianMat2[1,], rep(0,4), HessianMat2[2:4,])
-    
-    temp2 <- cbind(temp1[,1], rep(0,5), temp1[,2:4])
-    
-    temp2[2,2] <- HessianMat
-    
-    colnames(temp2)[1:2] <- c('log(range)','log(shape)')
-    rownames(temp2) <- colnames(temp2)
-    HessianMat <- temp2
+
     
     
     
