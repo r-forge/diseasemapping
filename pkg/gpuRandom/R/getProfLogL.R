@@ -208,7 +208,8 @@
   
   get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table # 2 column names must be x1 and profile
                                   a=0.01,    # minus a little thing
-                                  b=0){
+                                  b=0,
+                                  m=1){
     datC1= geometry::convhulln(profileLogLik)
     allPoints1 = unique(as.vector(datC1))
     toTest = profileLogLik[allPoints1,]
@@ -219,7 +220,7 @@
     toTest[,'profile'] = toTest[,'profile'] + a
     toTest[,'x1'] = toTest[,'x1'] - b
     
-    interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=3, fx=TRUE), data=toUse)
+    interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=m, fx=TRUE), data=toUse)
     prof1 = data.frame(x1=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=1001))
     prof1$z = predict(interp1, prof1)
     
@@ -227,7 +228,6 @@
     
     output
   }
-  
 
   
   
