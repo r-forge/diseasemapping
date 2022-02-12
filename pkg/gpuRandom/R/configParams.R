@@ -172,7 +172,7 @@
                                  reml=FALSE,
                                  Nglobal=c(128,64),
                                  Nlocal=c(16,16),
-                                 NlocalCache=2800)
+                                 NlocalCache=2000)
   
   
   #result$paramsRenew
@@ -326,7 +326,7 @@
                                   reml=FALSE,
                                   Nglobal=c(128,64),
                                   Nlocal=c(16,16),
-                                  NlocalCache=2800)
+                                  NlocalCache=2000)
   
   
   A <- result2$LogLik[, 2]
