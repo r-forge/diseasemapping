@@ -36,20 +36,20 @@
   lower = min(stderror)
   upper = max(stderror)
   #f1 <- splinefun(stderror, LogLik, method = "monoH.FC")
-  f1 <- approxfun(stderror, LogLik)
+  breaks <- max(LogLik) - qchisq(cilevel,  df = 1)/2
+  f1 <- approxfun(stderror, LogLik-breaks)
   #plot(stderror,LogLik)
   #curve(f1(x), add = TRUE, col = 2, n = 1001)
   
   result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)
   MLE <- result$maximum
-  breaks <- result$objective - qchisq(cilevel,  df = 1)/2
   #abline(h=breaks)
   #f2 <- splinefun(stderror, LogLik-breaks, method = "monoH.FC")
-  f2 <- approxfun(stderror, LogLik-breaks)
+  #f2 <- approxfun(stderror, LogLik-breaks)
   #plot(stderror,LogLik-breaks)
   #curve(f2(x), add = TRUE, col = 2, n = 1001)
   #abline(h=0)
-  ci <- rootSolve::uniroot.all(f2, lower = lower, upper = upper)
+  ci <- rootSolve::uniroot.all(f1, lower = lower, upper = upper)
   
   if(length(ci)==1){
     if( ci > MLE){

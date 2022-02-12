@@ -103,20 +103,21 @@
     upper = max(Betas)
     LogLik <- -0.5*minus2LogLik_optimized
     #f1 <- splinefun(Betas, LogLik, method = "fmm")
-    f1 <- approxfun(Betas, LogLik)
+    breaks <- max(LogLik) - qchisq(cilevel,  df = 1)/2
+    f1 <- approxfun(Betas, LogLik-breaks)
     #plot(Betas,LogLik)
     #curve(f1(x), add = TRUE, col = 2, n = 1001)
     
     result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)
     MLE <- result$maximum
-    breaks <- result$objective - qchisq(cilevel,  df = 1)/2
+    
     #abline(h=breaks, lty = 2)
     #f2 <- splinefun(Betas, LogLik-breaks, method = "fmm")
-    f2 <- approxfun(Betas, LogLik-breaks)
+    #f2 <- approxfun(Betas, LogLik-breaks)
     #plot(Betas,LogLik-breaks)
     #curve(f2(x), add = TRUE, col = 2, n = 1001)
     #abline(v=ci[1], lty=2); abline(v=ci[2], lty=2); abline(v=MLE, lty=2)
-    ci <- rootSolve::uniroot.all(f2, lower = lower, upper = upper)
+    ci <- rootSolve::uniroot.all(f1, lower = lower, upper = upper)
     
     if(length(ci)==1){
       if( ci > MLE){
@@ -133,7 +134,7 @@
     ############### output #####################################
     Table <- matrix(NA, nrow=1, ncol=4)
     colnames(Table) <-  c("MLE", "maximum", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
-    Table[1,] <- c(MLE, result$objective, ci)
+    Table[1,] <- c(MLE, result$objective+breaks, ci)
     
     
     Output <- list(estimates = Table,

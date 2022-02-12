@@ -17,24 +17,12 @@
       Mle <- Mle[order(match(names(Mle), Theorder))]
       Mle <- Mle[!names(Mle) %in% c('boxcox')]
       
-      
       ## check mle nugget    
       if(Mle['nugget'] < delta){
         Mle['nugget'] = delta 
         parToLog <- parToLog[!parToLog %in% 'nugget']
       }  
       
-      ## check mle shape
-      if(Mle['shape'] >= kappa){
-        Mle['shape'] = 1/Mle['shape']
-        if(Mle['shape'] <= delta)
-          Mle['shape'] = delta+0.001
-        parToLog <- parToLog[!parToLog %in% 'shape']
-      }
-      
-      
-      ## get the First derivative
-      # check if shape and nugget's mle is close to 0
       whichLogged = which(names(Mle) %in% parToLog)
       whichAniso = which(names(Mle) %in% c('anisoRatio', 'anisoAngleRadians'))
       
@@ -61,86 +49,6 @@
       }
       names(MleGamma)[whichLogged] = paste("log(", names(Mle)[whichLogged], ")",sep="")
       
-      
-      # frst detivatives
-      derivGridDf1 <- rbind(c(1,0,0,0,0),
-                           c(-1, 0,0,0,0),
-                           c(0, 1, 0,0,0),
-                           c(0,-1, 0,0,0),
-                           c(0, 0, 1,0,0),
-                           c(0, 0,-1,0,0),
-                           c(0, 0, 0,1,0),
-                           c(0, 0, 0,-1,0),
-                           c(0, 0, 0, 0,1),
-                           c(0, 0, 0, 0,-1))
-      
-      deltas = rep(delta, length(Mle))
-      # names(deltas) = names(MleGamma)
-      # deltas['gamma4'] = 0.02
-      ParamsetGamma <- matrix(MleGamma, nrow=nrow(derivGridDf1), ncol=length(Mle), byrow=TRUE, dimnames = list(NULL, names(MleGamma))) + 
-        derivGridDf1 %*% diag(deltas)
-      
-      if(!('anisoRatio' %in% names(Mle))){
-        Paramset <- cbind(exp(ParamsetGamma[,paste("log(", names(Mle)[whichLogged], ")",sep="")]), ParamsetGamma[,-whichLogged])   
-      }else{
-        temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
-        naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
-        Paramset <- cbind(exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,-c(whichLogged, whichAniso)], naturalspace)
-      } 
-      
-      colnames(Paramset) <- names(Mle)  
-      toAdd = setdiff(c('range','shape','nugget','anisoRatio', 'anisoAngleRadians'), names(Mle))
-      otherParams = matrix(Model$opt$mle[toAdd], nrow=nrow(Paramset), ncol = length(toAdd),
-                           dimnames = list(rownames(Paramset), toAdd), byrow=TRUE)
-      Params <- cbind(Paramset, otherParams)
-      
-      result1<-gpuRandom::getProfLogL(data= Model$data,
-                                     formula=Model$model$formula,
-                                     coordinates=Model$data@coords,
-                                     params=Params,
-                                     boxcox = Model$parameters['boxcox'],
-                                     type = "double",
-                                     NparamPerIter=400,
-                                     gpuElementsOnly=FALSE,
-                                     reml=FALSE,
-                                     Nglobal=c(128,64),
-                                     Nlocal=c(16,16),
-                                     NlocalCache=2800)
-      
-      
-      A <- result1$LogLik[, 2]
-      FirstDeri <- rep(0, length(Mle))
-      names(FirstDeri) <- names(MleGamma)
-      
-      FirstDeri[1] <- (A[1] - A[2])/(2*deltas[1])
-      FirstDeri[2] <- (A[3] - A[4])/(2*deltas[2])
-      FirstDeri[3] <- (A[5] - A[6])/(2*deltas[3])
-      FirstDeri[4] <- (A[7] - A[8])/(2*deltas[4])
-      FirstDeri[5] <- (A[9] - A[10])/(2*deltas[5])
-      
-      
-      
-      
-      
-
-  # whichLogged = which(names(Mle) %in% parToLog)
-  # whichAniso = which(names(Mle) %in% c('anisoRatio', 'anisoAngleRadians'))
-  # 
-  # if('anisoRatio' %in% names(Mle)){
-  #   if(Mle['anisoRatio'] <= 1) {
-  #     gamma3 <-  unname(sqrt(1/Mle['anisoRatio']-1) * cos(2*Mle['anisoAngleRadians']))
-  #     gamma4 <-  unname(sqrt(1/Mle['anisoRatio']-1) * sin(2*Mle['anisoAngleRadians']))
-  #   }else{
-  #     gamma3 <-  unname(sqrt(Mle['anisoRatio']-1) * cos(2*Mle['anisoAngleRadians']))
-  #     gamma4 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*Mle['anisoAngleRadians']))
-  #   }
-  #   aniso <- c(gamma3 = gamma3, gamma4 = gamma4)
-  #   MleGamma = c(log(Mle[whichLogged]), Mle[-c(whichLogged, whichAniso)], aniso)
-  # }else{
-  #   MleGamma = c(log(Mle[whichLogged]),  Mle[-whichLogged])
-  # }
-  # names(MleGamma)[whichLogged] = paste("log(", names(Mle)[whichLogged], ")",sep="")
-  
   ## center approximation
   a1 <- c(1,1,-1,-1)
   a2 <- c(1,-1,1,-1)
@@ -238,24 +146,28 @@
     #    }else{
     temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
     naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
-    Paramset <- cbind(exp(ParamsetGamma[, whichLogged]), naturalspace)
+    if(whichLogged[2]-whichLogged[1]>1){
+      Paramset <- cbind(exp(ParamsetGamma[, whichLogged[1]]), ParamsetGamma[,-c(whichLogged, whichAniso)], exp(ParamsetGamma[, whichLogged[2]]), naturalspace)
+    }else{
+      Paramset <- cbind(exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,-c(whichLogged, whichAniso)], naturalspace)
+    }
   } 
   
   colnames(Paramset) <- names(Mle)  
   toAdd = setdiff(c('range','shape','nugget','anisoRatio', 'anisoAngleRadians'), names(Mle))
   otherParams = matrix(Model$opt$mle[toAdd], nrow=nrow(Paramset), ncol = length(toAdd),
                        dimnames = list(rownames(Paramset), toAdd), byrow=TRUE)
-  Params <- cbind(Paramset, otherParams)
+  Params1 <- cbind(Paramset, otherParams)
   
   
   
-  result2<-gpuRandom::getProfLogL(data= Model$data,
+  result1<-gpuRandom::getProfLogL(data= Model$data,
                                  formula=Model$model$formula,
                                  coordinates=Model$data@coords,
-                                 params=Params,
+                                 params=Params1,
                                  boxcox = Model$parameters['boxcox'],
                                  type = "double",
-                                 NparamPerIter=400,
+                                 NparamPerIter=100,
                                  gpuElementsOnly=FALSE,
                                  reml=FALSE,
                                  Nglobal=c(128,64),
@@ -264,8 +176,8 @@
   
   
   #result$paramsRenew
-  A <- result2$LogLik[-1, 2]
-  Origin <- result2$LogLik[1, 2]
+  A <- result1$LogLik[-1, 2]
+  Origin <- result1$LogLik[1, 2]
   #plot(result$LogLik)
   
   HessianMat <- matrix(0, nrow=length(Mle), ncol=length(Mle))
@@ -335,6 +247,97 @@
     HessianMat[4,2] <- HessianMat[2,4]
     HessianMat[4,3] <- HessianMat[3,4]
   }
+
+  
+  
+  ## get the First derivative
+  # check if shape and nugget's mle is close to 0
+  # whichLogged = which(names(Mle) %in% parToLog)
+  # whichAniso = which(names(Mle) %in% c('anisoRatio', 'anisoAngleRadians'))
+  # 
+  # if('anisoRatio' %in% names(Mle)){
+  #   if(!('anisoAngleRadians' %in% names(Mle))){
+  #     stop('anisoRatio and anisoAngleRadians must be together')
+  #   }
+  #   
+  #   if(Mle['anisoRatio'] <= 1){
+  #     gamma3 <-  unname(sqrt(1/Mle['anisoRatio']-1) * cos(2*Mle['anisoAngleRadians']))
+  #     gamma4 <-  unname(sqrt(1/Mle['anisoRatio']-1) * sin(2*Mle['anisoAngleRadians']))
+  #   }else{
+  #     gamma3 <-  unname(sqrt(Mle['anisoRatio']-1) * cos(2*Mle['anisoAngleRadians']))
+  #     gamma4 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*Mle['anisoAngleRadians']))
+  #   }
+  #   aniso <- c(gamma3 = gamma3, gamma4 = gamma4)
+  #   if(whichLogged[2]-whichLogged[1]>1){
+  #     MleGamma = c(log(Mle[whichLogged[1]]), Mle[-c(whichLogged, whichAniso)],log(Mle[whichLogged[2]]), aniso) 
+  #   }else{
+  #     MleGamma = c(log(Mle[whichLogged]), Mle[-c(whichLogged, whichAniso)], aniso)
+  #   }
+  # }else{
+  #   MleGamma = c(log(Mle[whichLogged]),  Mle[-whichLogged])
+  # }
+  # names(MleGamma)[whichLogged] = paste("log(", names(Mle)[whichLogged], ")",sep="")
+  
+  
+  # frst detivatives
+  derivGridDf1 <- rbind(c(1,0,0,0,0),
+                        c(-1, 0,0,0,0),
+                        c(0, 1, 0,0,0),
+                        c(0,-1, 0,0,0),
+                        c(0, 0, 1,0,0),
+                        c(0, 0,-1,0,0),
+                        c(0, 0, 0,1,0),
+                        c(0, 0, 0,-1,0),
+                        c(0, 0, 0, 0,1),
+                        c(0, 0, 0, 0,-1))
+  
+  deltas = rep(delta, length(Mle))
+  # names(deltas) = names(MleGamma)
+  # deltas['gamma4'] = 0.02
+  ParamsetGamma <- matrix(MleGamma, nrow=nrow(derivGridDf1), ncol=length(Mle), byrow=TRUE, dimnames = list(NULL, names(MleGamma))) + 
+    derivGridDf1 %*% diag(deltas)
+  
+  if(!('anisoRatio' %in% names(Mle))){
+    Paramset <- cbind(exp(ParamsetGamma[,paste("log(", names(Mle)[whichLogged], ")",sep="")]), ParamsetGamma[,-whichLogged])   
+  }else{
+    temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
+    naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+    if(whichLogged[2]-whichLogged[1]>1){
+      Paramset <- cbind(exp(ParamsetGamma[, whichLogged[1]]), ParamsetGamma[,-c(whichLogged, whichAniso)], exp(ParamsetGamma[, whichLogged[2]]), naturalspace)
+    }else{
+      Paramset <- cbind(exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,-c(whichLogged, whichAniso)], naturalspace)
+    }
+  } 
+  
+  colnames(Paramset) <- names(Mle)  
+  toAdd = setdiff(c('range','shape','nugget','anisoRatio', 'anisoAngleRadians'), names(Mle))
+  otherParams = matrix(Model$opt$mle[toAdd], nrow=nrow(Paramset), ncol = length(toAdd),
+                       dimnames = list(rownames(Paramset), toAdd), byrow=TRUE)
+  Params2 <- cbind(Paramset, otherParams)
+  
+  result2<-gpuRandom::getProfLogL(data= Model$data,
+                                  formula=Model$model$formula,
+                                  coordinates=Model$data@coords,
+                                  params=Params2,
+                                  boxcox = Model$parameters['boxcox'],
+                                  type = "double",
+                                  NparamPerIter=100,
+                                  gpuElementsOnly=FALSE,
+                                  reml=FALSE,
+                                  Nglobal=c(128,64),
+                                  Nlocal=c(16,16),
+                                  NlocalCache=2800)
+  
+  
+  A <- result2$LogLik[, 2]
+  FirstDeri <- rep(0, length(Mle))
+  names(FirstDeri) <- names(MleGamma)
+  
+  FirstDeri[1] <- (A[1] - A[2])/(2*deltas[1])
+  FirstDeri[2] <- (A[3] - A[4])/(2*deltas[2])
+  FirstDeri[3] <- (A[5] - A[6])/(2*deltas[3])
+  FirstDeri[4] <- (A[7] - A[8])/(2*deltas[4])
+  FirstDeri[5] <- (A[9] - A[10])/(2*deltas[5])
   
   
   Sigma <- -solve(HessianMat)
@@ -358,6 +361,14 @@
     newMle['shape'] = 0
   }
   
+  # check mle shape
+  if(newMle['shape'] >= kappa){
+    newMle['shape'] = 1/newMle['shape']
+    # if(Mle['shape'] <= delta)
+    #   Mle['shape'] = delta
+    #parToLog <- parToLog[!parToLog %in% 'shape']
+  }
+  
   
   output = list(Gradiant= FirstDeri,
                 HessianMat = HessianMat,
@@ -365,13 +376,27 @@
                 originalPoint = Mle,
                 centralPoint = newMle,
                 parToLog = parToLog,
-                whichLogged = whichLogged,
                 whichAniso = whichAniso,
-                data = cbind(Params, result2$LogLik[, 2]))
+                data = cbind(Params1, result1$LogLik[, 2]))
   
   output
 }
 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
@@ -393,14 +418,18 @@
    
       newMle <- output$centralPoint
       Sigma <- output$Sigma
-      whichLogged <- output$whichLogged
       whichAniso <- output$whichAniso
+      parToLog <- output$parToLog
       
       ## always find the stationary points/new Mles 
       # for(i in 1:length(index)){
       #   newMle[index[i]] <- Mle[index[i]] + Sigma[index[i],index[i]]*FirstDeri[index[i]]
       # } 
-
+      if(newMle['nugget'] < 0.01){
+        parToLog <- parToLog[!parToLog %in% 'nugget']
+      }  
+      whichLogged = which(names(newMle) %in% parToLog)
+      
       
       if('anisoRatio' %in% names(newMle)){
         if(!('anisoAngleRadians' %in% names(newMle))){
@@ -414,7 +443,11 @@
           gamma4 <-  unname(sqrt(newMle['anisoRatio']-1) * sin(2*newMle['anisoAngleRadians']))
         }
         aniso <- c(gamma3 = gamma3, gamma4 = gamma4)
-        newMleGamma = c(log(newMle[whichLogged]), newMle[-c(whichLogged, whichAniso)], aniso)
+        if(whichLogged[2]-whichLogged[1]>1){
+          newMleGamma = c(log(newMle[whichLogged[1]]), newMle[-c(whichLogged, whichAniso)],log(newMle[whichLogged[2]]), aniso) 
+        }else{
+          newMleGamma = c(log(newMle[whichLogged]), newMle[-c(whichLogged, whichAniso)], aniso)
+        }
       }else{
         newMleGamma = c(log(newMle[whichLogged]),  newMle[-whichLogged])
       }
@@ -527,7 +560,7 @@
       }
       }
       
-      if(newMle['shape'] == 0){
+      if(abs(newMle['shape']) < 0.1){
       for(i in 1:length(alpha)){
         vector <- 1/out_list[[i]][,'shape']
         vector2 <- rep(1000, length(vector))
