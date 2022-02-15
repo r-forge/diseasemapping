@@ -289,7 +289,7 @@ std::string boxcoxKernelString(int NlocalCache, int zeroCol,
 template<typename T> 
 void addBoxcoxToData(
     viennacl::matrix_base<T> &yx,
-    viennacl::vector_base<T>  &boxcox,
+    viennacl::vector_base<T> &boxcox,
     viennacl::vector_base<T> &jacobian,
     Rcpp::IntegerVector workgroupSize, 
     Rcpp::IntegerVector localSize, 

@@ -130,33 +130,33 @@
       LogLikcpu <- as.matrix(-0.5*minusTwoLogLik)
       colnames(LogLikcpu) <- paste(c('boxcox'), round(boxcox, digits = 3) ,sep = '')
       # remove NAs
-      selected_rows <- which(is.na(as.vector(detVar)))
-      if(length(selected_rows)==0){
-        paramsRenew <- params0
-        detVar2 <- as.vector(detVar)
-        detReml2 <- as.vector(detReml)
-        ssqY2 <- as.matrix(ssqY)
-        ssqBetahat2 = as.matrix(ssqBetahat)
-        ssqResidual2 = as.matrix(ssqResidual)
-        XVYXVX2 <- as.matrix(XVYXVX)
-      }else{
-      Nparam = Nparam - length(selected_rows)
-      paramsRenew <- params0[-selected_rows,]
-      LogLikcpu <- LogLikcpu[-selected_rows,] 
-      detVar2 <- as.vector(detVar)[-selected_rows]
-      detReml2 <- as.vector(detReml)[-selected_rows]
-      ssqY2 <- as.matrix(ssqY)[-selected_rows,]
-      ssqBetahat2 = as.matrix(ssqBetahat)[-selected_rows,]
-      ssqResidual2 = as.matrix(ssqResidual)[-selected_rows,]
-      
-      XVYXVX2 <- as.matrix(XVYXVX)
-      for (j in 1:length(selected_rows)){
-        a<-c((selected_rows[j]-1)*Ncov+1, selected_rows[j]*Ncov)
-        XVYXVX2 <- XVYXVX2[-a,   ]
-      }
-      }
   }
-
+       
+  selected_rows <- which(is.na(as.vector(detVar)))
+  if(length(selected_rows)==0){
+    paramsRenew <- params0
+    detVar2 <- as.vector(detVar)
+    detReml2 <- as.vector(detReml)
+    ssqY2 <- as.matrix(ssqY)
+    ssqBetahat2 = as.matrix(ssqBetahat)
+    ssqResidual2 = as.matrix(ssqResidual)
+    XVYXVX2 <- as.matrix(XVYXVX)
+  }else{
+    Nparam = Nparam - length(selected_rows)
+    paramsRenew <- params0[-selected_rows,]
+    LogLikcpu <- LogLikcpu[-selected_rows,] 
+    detVar2 <- as.vector(detVar)[-selected_rows]
+    detReml2 <- as.vector(detReml)[-selected_rows]
+    ssqY2 <- as.matrix(ssqY)[-selected_rows,]
+    ssqBetahat2 = as.matrix(ssqBetahat)[-selected_rows,]
+    ssqResidual2 = as.matrix(ssqResidual)[-selected_rows,]
+    
+    XVYXVX2 <- as.matrix(XVYXVX)
+    for (j in 1:length(selected_rows)){
+      a<-c((selected_rows[j]-1)*Ncov+1, selected_rows[j]*Ncov)
+      XVYXVX2 <- XVYXVX2[-a,   ]
+    }
+  }
 
 
   if(gpuElementsOnly==FALSE){
@@ -206,19 +206,51 @@
   
   
   
+  # get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table # 2 column names must be x1 and profile
+  #                                 a=0.01,    # minus a little thing
+  #                                 b=0,
+  #                                 m=1){
+  #   datC1= geometry::convhulln(profileLogLik)
+  #   allPoints1 = unique(as.vector(datC1))
+  #   toTest = profileLogLik[allPoints1,]
+  #   toTest[,'profile'] = toTest[,'profile'] - a
+  #   toTest[,'x1'] = toTest[,'x1'] + b
+  #   inHull1 = geometry::inhulln(datC1, as.matrix(toTest))
+  #   toUse = profileLogLik[allPoints1,][inHull1,]
+  #   toTest[,'profile'] = toTest[,'profile'] + a
+  #   toTest[,'x1'] = toTest[,'x1'] - b
+  #   
+  #   interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=m, fx=TRUE), data=toUse)
+  #   prof1 = data.frame(x1=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=1001))
+  #   prof1$z = predict(interp1, prof1)
+  #   
+  #   output <- list(toUse = toUse, toTest = toTest, prof=prof1)
+  #   
+  #   output
+  # }
+
+  
   get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table # 2 column names must be x1 and profile
                                   a=0.01,    # minus a little thing
-                                  b=0,
-                                  m=1){
-    datC1= geometry::convhulln(profileLogLik)
-    allPoints1 = unique(as.vector(datC1))
-    toTest = profileLogLik[allPoints1,]
-    toTest[,'profile'] = toTest[,'profile'] - a
-    toTest[,'x1'] = toTest[,'x1'] + b
-    inHull1 = geometry::inhulln(datC1, as.matrix(toTest))
-    toUse = profileLogLik[allPoints1,][inHull1,]
+                                  m=2){
+    
+    datC2 = geometry::convhulln(profileLogLik)
+    allPoints = unique(as.vector(datC2))
+    toTest = profileLogLik[allPoints,]
     toTest[,'profile'] = toTest[,'profile'] + a
-    toTest[,'x1'] = toTest[,'x1'] - b
+    inHull = geometry::inhulln(datC2, as.matrix(toTest))
+    toUse = profileLogLik[allPoints,][!inHull,]
+    toTest = profileLogLik[allPoints,]
+    
+    # datC1= geometry::convhulln(profileLogLik)
+    # allPoints1 = unique(as.vector(datC1))
+    # toTest = profileLogLik[allPoints1,]
+    # toTest[,'profile'] = toTest[,'profile'] - a
+    # toTest[,'x1'] = toTest[,'x1'] + b
+    # inHull1 = geometry::inhulln(datC1, as.matrix(toTest))
+    # toUse = profileLogLik[allPoints1,][inHull1,]
+    # toTest[,'profile'] = toTest[,'profile'] + a
+    # toTest[,'x1'] = toTest[,'x1'] - b
     
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=m, fx=TRUE), data=toUse)
     prof1 = data.frame(x1=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=1001))
@@ -227,10 +259,7 @@
     output <- list(toUse = toUse, toTest = toTest, prof=prof1)
     
     output
-  }
-
-  
-  
+  }  
 
   
   
@@ -335,7 +364,7 @@
      profileLogLik$logrange <- log(profileLogLik$x1)
      newdata <- profileLogLik[,c('logrange','profile')]
      colnames(newdata)[1]<-"x1"
-     interlog <- get1dCovexhullinter(newdata, b=0.0001)
+     interlog <- get1dCovexhullinter(newdata)
      
      plot(profileLogLik$logrange, profileLogLik$profile, cex=.2, xlab="log(range)", ylab="profileLogL")
      points(interlog$toTest, col='red', cex=0.6)
