@@ -16,6 +16,9 @@
       }
       Mle <- Mle[order(match(names(Mle), Theorder))]
       Mle <- Mle[!names(Mle) %in% c('boxcox')]
+      #Mle <- Mle[!names(Mle) %in% c('shape')]
+      
+      
       
       ## check mle nugget    
       if(Mle['nugget'] < delta){
@@ -291,6 +294,8 @@
                         c(0, 0, 0, 0,1),
                         c(0, 0, 0, 0,-1))
   
+  #derivGridDf1 <- derivGridDf1[-c(9,10), -5]
+  
   deltas = rep(delta, length(Mle))
   # names(deltas) = names(MleGamma)
   # deltas['gamma4'] = 0.02
@@ -416,6 +421,7 @@
       output <- getHessian(Model = Model,
                            Mle = Mle)
    
+      Mle <- output$originalPoint
       newMle <- output$centralPoint
       Sigma <- output$Sigma
       whichAniso <- output$whichAniso
@@ -488,18 +494,18 @@
         }
       }else if(length(newMle)==3){
         load('/home/ruoyong/diseasemapping/pkg/gpuRandom/data/coords3d.RData')
-        if('anisoRatio' %in% names(newMle)){
-          for(i in 1:length(alpha)){
-            clevel <- stats::qchisq(1 - alpha[i], df = 3)
-            pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords3d) + newMleGamma)
-            colnames(pointsEllipseGammaspace) <- names(newMleGamma)
-            temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
-            naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
-            pointsEllipse <- cbind(exp(pointsEllipseGammaspace[,whichLogged]),naturalspace)
-            colnames(pointsEllipse) <- names(newMle)
-            out_list[[i]] = pointsEllipse
-          }   
-        }else{
+        # if('anisoRatio' %in% names(newMle)){
+        #   for(i in 1:length(alpha)){
+        #     clevel <- stats::qchisq(1 - alpha[i], df = 3)
+        #     pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords3d) + newMleGamma)
+        #     colnames(pointsEllipseGammaspace) <- names(newMleGamma)
+        #     temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+        #     naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+        #     pointsEllipse <- cbind(exp(pointsEllipseGammaspace[,whichLogged]),naturalspace)
+        #     colnames(pointsEllipse) <- names(newMle)
+        #     out_list[[i]] = pointsEllipse
+        #   }   
+        # }else{
           for(i in 1:length(alpha)){
             clevel <- stats::qchisq(1 - alpha[i], df = 3)
             pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords3d) + newMleGamma)
@@ -508,7 +514,7 @@
             colnames(pointsEllipse) <- names(newMle)
             out_list[[i]] = pointsEllipse
           }
-        }
+        #}
       }else if(length(newMle)==4){
         load('/home/ruoyong/diseasemapping/pkg/gpuRandom/data/coords4d.RData')
         for(i in 1:length(alpha)){
@@ -560,7 +566,7 @@
       }
       }
       
-      if(abs(newMle['shape']) < 0.1){
+      if(abs(Mle['shape']) >= 60){
       for(i in 1:length(alpha)){
         vector <- 1/out_list[[i]][,'shape']
         vector2 <- rep(1000, length(vector))
