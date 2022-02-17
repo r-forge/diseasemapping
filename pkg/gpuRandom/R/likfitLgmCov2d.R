@@ -5,7 +5,39 @@
 #' @export
 
 
+get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table # 2 column names must be x1 and profile
+                                a=0.01,    # minus a little thing
+                                m=1){
+  
+  datC2 = geometry::convhulln(profileLogLik)
+  allPoints = unique(as.vector(datC2))
+  toTest = profileLogLik[allPoints,]
+  toTest[,'profile'] = toTest[,'profile'] + a
+  inHull = geometry::inhulln(datC2, as.matrix(toTest))
+  toUse = profileLogLik[allPoints,][!inHull,]
+  toTest = profileLogLik[allPoints,]
+  
+  # datC1= geometry::convhulln(profileLogLik)
+  # allPoints1 = unique(as.vector(datC1))
+  # toTest = profileLogLik[allPoints1,]
+  # toTest[,'profile'] = toTest[,'profile'] - a
+  # toTest[,'x1'] = toTest[,'x1'] + b
+  # inHull1 = geometry::inhulln(datC1, as.matrix(toTest))
+  # toUse = profileLogLik[allPoints1,][inHull1,]
+  # toTest[,'profile'] = toTest[,'profile'] + a
+  # toTest[,'x1'] = toTest[,'x1'] - b
+  
+  interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=m, fx=TRUE), data=toUse)
+  prof1 = data.frame(x1=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=1001))
+  prof1$z = predict(interp1, prof1)
+  
+  output <- list(toUse = toUse, toTest = toTest, prof=prof1)
+  
+  output
+}
 
+
+#' @export
 # betahat and sigmahat 
 # profile log-likelihood for each covariance parameters + lambda
  likfitLgmCov2d <- function(data,
@@ -108,40 +140,9 @@
   
   # resid^T V^(-1) resid, resid = Y - X betahat = ssqResidual
   ssqResidual <- ssqY - ssqBetahat
-  # any(is.na(as.matrix(log(ssqResidual/Nobs))))
-   # as.matrix(cholDiagMat)[]
-   # any(is.nan(as.matrix(log(ssqResidual/Nobs))))
-   # as.vector(jacobian)
-   # as.matrix(yx)
-   # any(is.nan(as.vector(detVar)))
-   # any(is.na(as.matrix(varMat)))
-   # any(is.nan(as.matrix(varMat)))
-   # any(is.na(as.matrix(ssqYX)))
-   # any(is.na(as.matrix(ssqY)))
-   # any(is.na(as.matrix(ssqYXcopy)))
-   # any(is.na(as.matrix(ssqBetahat)))
-   # any(is.na(as.vector(detReml)))
-   # any(is.na(as.matrix(cholXVXdiag)))
-   # any(is.na(as.matrix(ssqResidual)))
-   # any(is.nan(as.matrix(ssqResidual/Nobs)))
-   # as.matrix(ssqY)[which(is.na(as.vector(detVar))),]
-  # which(is.na(as.vector(detVar)))
-  # debug <- as.matrix(log(ssqResidual/Nobs))
-  # any(is.na(debug))
-  # which(is.na(debug),arr.ind = TRUE)
-  # params0[which(is.na(debug),arr.ind = TRUE)[1],]
-  
-  # ssqResidual[which(is.na(debug),arr.ind = TRUE)[,1],]     # row 20803 col 1  -4.530054e+20
-  # ssqY[which(is.na(debug),arr.ind = TRUE)[,1],]
-  # ssqBetahat[which(is.na(debug),arr.ind = TRUE)[,1],]    # problem arises from here! 4.530057e+20
-  # as.vector(detVar)[840]
+
   # params0[which(is.na(as.vector(detVar))),]
-  # params[which(is.na(result1$ssqY),arr.ind = TRUE)[1],]
-  # if(fixVariance >0){
-  #   temp <- vclMatrix(0, Nparam, Ndata, type=type)
-  #   variances <- vclVector(params0[,3],type=type)
-  #   mat_vec_eledivideBackend(ssqResidual, variances, temp,  Nglobal)
-  # }
+
   
   if(reml== FALSE){ 
     # if(fixVariance == FALSE){ # ml
@@ -188,48 +189,124 @@
   
   
   ############### profile for covariance parameters #####################
+  ######################range ########
   if('range' %in% paramToEstimate){
-    # get profile log-lik for range values
     result = data.table::as.data.table(cbind(LogLikcpu, params[,"range"]))
-    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "range")
-    profileLogLik <- result[, .(profile=max(.SD)), by=range]
-    #plot(profileLogLik$range, profileLogLik$profile-breaks, ylab= "proLogL-breaks", xlab='range', cex=0.5)
-    f1 <- approxfun(profileLogLik$range, profileLogLik$profile)  
-    lower = min(profileLogLik$range)
-    upper = max(profileLogLik$range)
-    MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
-
-    Table["range",] <- c(MLE)
+    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
+    profileLogLik <- result[, .(profile=max(.SD)), by=x1]
+    profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
     
+    inter <- get1dCovexhullinter(profileLogLik)    # a data frame or data.table # 2 column names must be x1 and profile
+    
+    toTest <- inter$toTest
+    toUse <- inter$toUse
+    prof1 <- inter$prof
+    
+    # plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="range", ylab="profileLogL")
+    # points(toTest, col='red', cex=0.6)
+    # points(toUse, col='blue', cex=0.6, pch=3)
+    f1 <- approxfun(prof1$x1, prof1$z)
+    # curve(f1(x), add = TRUE, col = 'green', n = 1001)
+    # abline(h =0, lty = 2, col='red')
+    lower = min(profileLogLik$x1)
+    upper = max(profileLogLik$x1)
+    MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+    Table["range",] <- MLE
+    ####################### log plot ##############################
+    profileLogLik$logrange <- log(profileLogLik$x1)
+    newdata <- profileLogLik[,c('logrange','profile')]
+    colnames(newdata)[1]<-"x1"
+    interlog <- get1dCovexhullinter(newdata)
+    
+    # plot(profileLogLik$logrange, profileLogLik$profile, cex=.2, xlab="log(range)", ylab="profileLogL")
+    # points(interlog$toTest, col='red', cex=0.6)
+    # points(interlog$toUse, col='blue', cex=0.6, pch=3)
+    # lines(interlog$prof$x1, interlog$prof$z, col='green')
+    # abline(h =0, lty = 2, col='red')
+
   }
   
   
   
+  
+  ################shape ##############   
   if('shape' %in% paramToEstimate){
-    result = as.data.table(cbind(LogLikcpu, params[,"shape"]))
-    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "shape")
-    profileLogLik <- result[, .(profile=max(.SD)), by=shape]
-    f1 <- approxfun(profileLogLik$shape, profileLogLik$profile)  
-    lower = min(profileLogLik$shape)
-    upper = max(profileLogLik$shape)
+    result = data.table::as.data.table(cbind(LogLikcpu, params[,"shape"]))
+    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
+    profileLogLik <- result[, .(profile=max(.SD)), by=x1]
+    profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+    
+    inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+    
+    toTest <- inter$toTest
+    toUse <- inter$toUse
+    prof1 <- inter$prof
+    
+    # plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="shape", ylab="profileLogL")
+    # points(toTest, col='red', cex=0.6)
+    # points(toUse, col='blue', cex=0.6, pch=3)
+    # f1 <- approxfun(inter$prof$x1, inter$prof$z)
+    # curve(f1(x), add = TRUE, col = 'green', n = 1001) 
+    # abline(h =0, lty = 2, col='red')
+    ####################### log plot ##############################
+    profileLogLik$logshape <- log(profileLogLik$x1)
+    newdata <- profileLogLik[,c('logshape','profile')]
+    colnames(newdata)[1]<-"x1"
+    interlog <- get1dCovexhullinter(newdata,a=0.2)
+    
+    # plot(newdata$x1, newdata$profile, cex=.2, xlab="log(shape)", ylab="profileLogL")
+    # points(interlog$toTest, col='red', cex=0.6)
+    # points(interlog$toUse, col='blue', cex=0.6, pch=3)
+    f1 <- approxfun(interlog$prof$x1, interlog$prof$z)
+    # curve(f1(x), add = TRUE, col = 'green', n = 1001) 
+    # abline(h =0, lty = 2, col='red') 
+    lower = log(min(profileLogLik$x1))
+    upper = log(50)
     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
-
-    Table["shape",] <- c(MLE)
+    Table["shape",] <- c(exp(MLE))
+    
     
   }       
   
   
   
+  ################sd nugget ##############     
+  params <- cbind(params, sqrt(params[,"nugget"]) * Table["sdSpatial",1])
+  colnames(params)[ncol(params)] <- 'sdNugget'
+  
   if('sdNugget' %in% paramToEstimate){
-    result = as.data.table(cbind(LogLikcpu, params[,"sdNugget"]))
-    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "sdNugget")
-    profileLogLik <-result[, .(profile=max(.SD)), by=sdNugget]
-    f1 <- approxfun(profileLogLik$sdNugget, profileLogLik$profile)  
-    lower = min(profileLogLik$sdNugget)
-    upper = max(profileLogLik$sdNugget)
-    MLE <-  optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+    result = data.table::as.data.table(cbind(LogLikcpu, params[,"sdNugget"]))
+    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
+    profileLogLik <- result[, .(profile=max(.SD)), by=x1]
+    profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+    inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+    
+    toTest <- inter$toTest
+    toUse <- inter$toUse
+    prof1 <- inter$prof
+    
+    # plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="sdNugget", ylab="profileLogL")
+    # points(toTest, col='red', cex=0.6)
+    # points(toUse, col='blue', cex=0.6, pch=3)
+    # abline(h =0, lty = 2, col='red')
+    prof1 <- prof1[prof1$x1>0,]
+    f1 <- approxfun(prof1$x1, prof1$z)
+    # curve(f1(x), add = TRUE, col = 'green', n = 1001)
+    lower = min(prof1$x1)
+    upper = max(prof1$x1)
+    MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+    
 
     Table["sdNugget",] <- c(MLE)
+    ####################### log plot ##############################
+    # plot(log(profileLogLik$sdNugget), profileLogLik$profile, cex=.2, xlab="log(sdNugget)", ylab="profileLogL")
+    # toTestLog = cbind(log(toTest[,'sdNugget']), toTest[,'profile'])
+    # toUseLog = cbind(log(toUse[,'sdNugget']), toUse[,'profile'])
+    # points(toTestLog, col='red', cex=0.6)
+    # points(toUseLog, col='blue', cex=0.6, pch=3)
+    # toUseLog <- toUseLog[order(toUseLog[,1],decreasing=FALSE)]
+    # lines(toUseLog$sdNugget, toUseLog$profile, col='green')   #the number of x values at which to evaluate
+    # abline(h =0, lty = 2, col='red')
     
   }
   
@@ -237,13 +314,53 @@
   
   if('nugget' %in% paramToEstimate){
     result = data.table::as.data.table(cbind(LogLikcpu, params[,"nugget"]))
-    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "nugget")
-    profileLogLik <-result[, .(profile=max(.SD)), by=nugget]
-    f1 <- approxfun(profileLogLik$nugget, profileLogLik$profile)  
-    lower = min(profileLogLik$nugget)
-    upper = max(profileLogLik$nugget)
-    MLE <-  optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
+    profileLogLik <- result[, .(profile=max(.SD)), by=x1]
+    profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+    inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+    toTest <- inter$toTest
+    toUse <- inter$toUse
+    prof1 <- inter$prof
+    
+    # plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="nugget", ylab="profileLogL")
+    # points(toTest, col='red', cex=0.6)
+    # points(toUse, col='blue', cex=0.6, pch=3)
+    prof1 <- prof1[prof1$x1>0,]
+    f1 <- approxfun(prof1$x1, prof1$z)
+    # curve(f1(x), add = TRUE, col = 'green', n = 1001)   #the number of x values at which to evaluate
+    # abline(h =0, lty = 2, col='red')
+    lower = min(prof1$x1)
+    upper = max(prof1$x1)
+    MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+    # ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+    # abline(v =ci[1], lty = 2, col='red')
+    # abline(v =ci[2], lty = 2, col='red')
+    # if(length(ci)==1){
+    #   if(ci > MLE){
+    #     ci <- c(lower, ci)
+    #     message("did not find lower ci for nugget")
+    #   }else{
+    #     ci <- c(ci, upper)
+    #     message("did not find upper ci for nugget")}
+    # }
+    # 
+    # if(length(ci)==0 | length(ci)>2){
+    #   warning("error in params")
+    #   ci <- c(NA, NA)
+    # }
     Table["nugget",] <- c(MLE)
+    ####################### log plot ##############################
+    # profileLogLik$lognugget <- log(profileLogLik$x1)
+    # newdata <- profileLogLik[,c('lognugget','profile')]
+    # colnames(newdata)[1]<-"x1"
+    # interlog <- get1dCovexhullinter(newdata,a=0.01)
+    
+    # plot(profileLogLik$lognugget, profileLogLik$profile, cex=.2, xlab="log(nugget)", ylab="profileLogL")
+    # points(interlog$toTest, col='red', cex=0.6)
+    # points(interlog$toUse, col='blue', cex=0.6, pch=3)
+    # lines(interlog$prof$x1, interlog$prof$z, col='green')
+    # abline(h =0, lty = 2, col='red') 
+    
   }
   
   
@@ -251,13 +368,27 @@
   
   if('anisoRatio' %in% paramToEstimate){
     result = as.data.table(cbind(LogLikcpu, params[,"anisoRatio"]))
-    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoRatio")
-    profileLogLik <- result[, .(profile=max(.SD)), by=anisoRatio]
-    f1 <- approxfun(profileLogLik$anisoRatio, profileLogLik$profile)  
-    lower = min(profileLogLik$anisoRatio)
-    upper = max(profileLogLik$anisoRatio)
-    MLE <- round(optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum,digits=4)
+    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
+    profileLogLik <- result[, .(profile=max(.SD)), by=x1]
+    profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+    inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+    toTest <- inter$toTest
+    toUse <- inter$toUse
+    prof1 <- inter$prof
+    
+    # plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="anisoRatio", ylab="profileLogL")
+    # points(toTest, col='red', cex=0.6)
+    # points(toUse, col='blue', cex=0.6, pch=3)
+
+    prof1 <- prof1[prof1$x1>0,]
+    f1 <- approxfun(prof1$x1, prof1$z)
+    # curve(f1(x), add = TRUE, col = 'green', n = 1001)   #the number of x values at which to evaluate
+    # abline(h =0, lty = 2, col='red')
+    lower = min(prof1$x1)
+    upper = max(prof1$x1)
+    MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
     Table["anisoRatio",] <- c(MLE)
+    ####################### log plot ##############################
     
   }
   
@@ -265,14 +396,25 @@
   
   if('anisoAngleRadians' %in% paramToEstimate){
     result = as.data.table(cbind(LogLikcpu, params[,"anisoAngleRadians"]))
-    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoAngleRadians")
-    profileLogLik <- result[, .(profile=max(.SD)), by=anisoAngleRadians]
-    f1 <- approxfun(profileLogLik$anisoAngleRadians, profileLogLik$profile)
-    lower = min(profileLogLik$anisoAngleRadians)
-    upper = max(profileLogLik$anisoAngleRadians)
-    MLE <- round(optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum,digits=4)
-    Table["anisoAngleRadians",] <- c(MLE)
+    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
+    profileLogLik <- result[, .(profile=max(.SD)), by=x1]
+    profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+    inter <- get1dCovexhullinter(profileLogLik, a=0.001)     # a data frame or data.table # 2 column names must be x1 and profile
+    toTest <- inter$toTest
+    toUse <- inter$toUse
+    prof1 <- inter$prof
     
+    # plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="anisoAngleRadians", ylab="profileLogL")
+    # points(toTest, col='red', cex=0.6)
+    # points(toUse, col='blue', cex=0.6, pch=3)
+    # lines(prof1$x1, prof1$z, col='green')
+    f1 <- approxfun(prof1$x1, prof1$z)
+    # abline(h =0, lty = 2, col='red')
+    lower = min(profileLogLik$x1)
+    upper = max(profileLogLik$x1)
+    MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+    Table["anisoAngleRadians",] <- c(MLE)
+    ####################### log plot ##############################
     
   }
   
@@ -284,13 +426,25 @@
   
   if('anisoAngleDegrees' %in% paramToEstimate){
     result = as.data.table(cbind(LogLikcpu, params[,"anisoAngleDegrees"]))
-    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 2) ,sep = ''), "anisoAngleDegrees")
-    profileLogLik <- result[, .(profile=max(.SD)), by=anisoAngleDegrees]
-    f1 <- approxfun(profileLogLik$anisoAngleDegrees, profileLogLik$profile)
-    lower = min(profileLogLik$anisoAngleDegrees)
-    upper = max(profileLogLik$anisoAngleDegrees)
-    MLE <- round(optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum,digits=4)
+    colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
+    profileLogLik <- result[, .(profile=max(.SD)), by=x1]
+    profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+    inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+    toTest <- inter$toTest
+    toUse <- inter$toUse
+    prof1 <- inter$prof
+    
+    # plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="anisoAngleDegrees", ylab="profileLogL")
+    # points(toTest, col='red', cex=0.6)
+    # points(toUse, col='blue', cex=0.6, pch=3)
+    # lines(prof1$x1, prof1$z, col='green')
+    f1 <- approxfun(prof1$x1, prof1$z)
+    # abline(h =0, lty = 2, col='red')
+    lower = min(profileLogLik$x1)
+    upper = max(profileLogLik$x1)
+    MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
     Table["anisoAngleDegrees",] <- c(MLE)
+
     
     
   }
@@ -299,15 +453,22 @@
   
   
   ###############lambda hat#####################
-  if(('boxcox'  %in% paramToEstimate)  & length(boxcox)>5 ){
+  if(('boxcox'%in% paramToEstimate)  & length(boxcox)>5 ){
     likForboxcox = cbind(boxcox, apply(LogLikcpu, 2,  max) )
-    f1 <- approxfun(likForboxcox[,1], likForboxcox[,2])
+    f1 <- approxfun(likForboxcox[,1], likForboxcox[,2]-breaks)
+    # plot(likForboxcox[,1], likForboxcox[,2]-breaks, ylab= "proLogL", xlab='boxcox', cex=0.5)
+    # curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
+    # abline(h =0, lty = 2)
+
     lower = min(boxcox)
     upper = max(boxcox)
     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+
     Table["boxcox",] <- c(MLE)
   }else if(is.element('boxcox',paramToEstimate)  & length(boxcox) <= 5){
     message("boxcox: not enough values for interpolation!")
+  }else if(is.element('boxcox',paramToEstimate)){
+    Table["boxcox",1] <- boxcox[index[2]]
   }
   
   NcolTotal = Ndata + Ncov

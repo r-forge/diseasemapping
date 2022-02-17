@@ -232,7 +232,7 @@
   
   get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table # 2 column names must be x1 and profile
                                   a=0.01,    # minus a little thing
-                                  m=2){
+                                  m=1){
     
     datC2 = geometry::convhulln(profileLogLik)
     allPoints = unique(as.vector(datC2))
@@ -259,8 +259,8 @@
     output <- list(toUse = toUse, toTest = toTest, prof=prof1)
     
     output
-  }  
-
+  }
+  
   
   
  
@@ -369,11 +369,11 @@
      plot(profileLogLik$logrange, profileLogLik$profile, cex=.2, xlab="log(range)", ylab="profileLogL")
      points(interlog$toTest, col='red', cex=0.6)
      points(interlog$toUse, col='blue', cex=0.6, pch=3)
-     lines(interlog$prof$x1, interlog$prof$z, col='green')
+     #lines(interlog$prof$x1, interlog$prof$z, col='green')
      #f1 <- approxfun(interlog$toUse$x1, interlog$toUse$profile)
-     #curve(f1(x), add = TRUE, col = 'green', n = 1001) 
      abline(h =0, lty = 2, col='red')
      f1 <- approxfun(interlog$prof$x1, interlog$prof$z)
+     curve(f1(x), add = TRUE, col = 'green', n = 1001) 
      lower = log(min(profileLogLik$x1))
      upper = log(max(profileLogLik$x1))
      MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
@@ -427,9 +427,9 @@
       plot(newdata$x1, newdata$profile, cex=.2, xlab="log(shape)", ylab="profileLogL")
       points(interlog$toTest, col='red', cex=0.6)
       points(interlog$toUse, col='blue', cex=0.6, pch=3)
-      lines(interlog$prof$x1, interlog$prof$z, col='green')
+      #lines(interlog$prof$x1, interlog$prof$z, col='green')
       f1 <- approxfun(interlog$prof$x1, interlog$prof$z)
-      #curve(f1(x), add = TRUE, col = 'green', n = 1001) 
+      curve(f1(x), add = TRUE, col = 'green', n = 1001) 
       abline(h =0, lty = 2, col='red') 
       lower = log(min(profileLogLik$x1))
       upper = log(50)
@@ -476,12 +476,12 @@
       plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="sdNugget", ylab="profileLogL")
       points(toTest, col='red', cex=0.6)
       points(toUse, col='blue', cex=0.6, pch=3)
-      lines(prof1$x1, prof1$z, col='green')
+      #lines(prof1$x1, prof1$z, col='green')
       abline(h =0, lty = 2, col='red')
       prof1 <- prof1[prof1$x1>0,]
       f1 <- approxfun(prof1$x1, prof1$z)
       #f1 <- approxfun(toUse$x1, toUse$profile)
-      #curve(f1(x), add = TRUE, col = 'green', n = 1001)
+      curve(f1(x), add = TRUE, col = 'green', n = 1001)
       lower = min(prof1$x1)
       upper = max(prof1$x1)
       MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
