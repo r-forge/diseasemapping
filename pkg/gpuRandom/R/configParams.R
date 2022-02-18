@@ -614,12 +614,19 @@
       
       if('shape' %in% names(Mle) & abs(Mle['shape']) >= 60){
       for(i in 1:length(alpha)){
-        vector <- 1/out_list[[i]][,'shape']
+        vector1 <- 1/out_list[[i]][,'shape']
         vector2 <- rep(1000, length(vector))
-        out_list[[i]][,'shape'] = pmin(vector, vector2)
+        out_list[[i]][,'shape'] = pmin(vector1, vector2)
       }
+      }else if('shape' %in% names(Mle) & abs(Mle['shape']) < 60){
+        for(i in 1:length(alpha)){
+          vector1 <- out_list[[i]][,'shape']
+          vector2 <- rep(1000, length(vector))
+          out_list[[i]][,'shape'] = pmin(vector1, vector2)
+        }
       }
-
+      
+      
       names(out_list) <- paste0("alpha", alpha, sep="")
       out_list
     

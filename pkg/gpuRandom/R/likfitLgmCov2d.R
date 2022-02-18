@@ -6,7 +6,7 @@
 
 
 get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table # 2 column names must be x1 and profile
-                                a=0.01,    # minus a little thing
+                                a=0.1,    # minus a little thing
                                 m=1){
   
   datC2 = geometry::convhulln(profileLogLik)
@@ -47,6 +47,7 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
                          paramToEstimate = c('range','nugget'),
                          boxcox,  # boxcox is always estimated
                          cilevel,  # decimal
+                         df = 2,
                          type = c("float", "double")[1+gpuInfo()$double_support],
                          reml=FALSE, 
                          NparamPerIter,
@@ -167,15 +168,40 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
   
   
   LogLikcpu <- as.matrix(-0.5*minusTwoLogLik)
-  maximum <- max(LogLikcpu)
-  breaks = maximum - qchisq(cilevel,  df = 2)/2
 
+
+  selected_rows <- which(is.na(as.vector(detVar)))
+  if(length(selected_rows)==0){
+    paramsRenew <- params
+    detVar2 <- as.vector(detVar)
+    detReml2 <- as.vector(detReml)
+    ssqY2 <- as.matrix(ssqY)
+    ssqBetahat2 = as.matrix(ssqBetahat)
+    ssqResidual2 = as.matrix(ssqResidual)
+    XVYXVX2 <- as.matrix(XVYXVX)
+  }else{
+    Nparam = Nparam - length(selected_rows)
+    paramsRenew <- params[-selected_rows,]
+    LogLikcpu <- as.matrix(LogLikcpu[-selected_rows,]) 
+    detVar2 <- as.vector(detVar)[-selected_rows]
+    detReml2 <- as.vector(detReml)[-selected_rows]
+    ssqY2 <- as.matrix(ssqY)[-selected_rows,]
+    ssqBetahat2 = as.matrix(ssqBetahat)[-selected_rows,]
+    ssqResidual2 = as.matrix(ssqResidual)[-selected_rows,]
+    
+    XVYXVX2 <- as.matrix(XVYXVX)
+    for (j in 1:length(selected_rows)){
+      a<-c((selected_rows[j]-1)*Ncov+1, selected_rows[j]*Ncov)
+      XVYXVX2 <- XVYXVX2[-a,   ]
+    }
+  }
+  
   ############## output matrix ####################
   Table <- matrix(NA, nrow=length(paramToEstimate) + Ncov + 1, ncol=1)
   rownames(Table) <-  c(colnames(covariates), "sdSpatial", paramToEstimate)
   colnames(Table) <-  c("estimate")
   
-
+  
   index <- which(LogLikcpu == max(LogLikcpu, na.rm = TRUE), arr.ind = TRUE)
   #################sigma hat#########################
   if(reml==FALSE)  {
@@ -184,14 +210,13 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
     Table["sdSpatial",1] <- sqrt(ssqResidual[index[1],index[2]]/(Nobs - Ncov))
   }
   
-  params <- cbind(sqrt(params[,"nugget"]) * Table["sdSpatial",1], params)
-  colnames(params)[1] <- 'sdNugget'
   
-  
+  maximum <- max(LogLikcpu)
+  breaks = maximum - qchisq(cilevel,  df = df)/2
   ############### profile for covariance parameters #####################
   ######################range ########
   if('range' %in% paramToEstimate){
-    result = data.table::as.data.table(cbind(LogLikcpu, params[,"range"]))
+    result = data.table::as.data.table(cbind(LogLikcpu, paramsRenew[,"range"]))
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
     profileLogLik <- result[, .(profile=max(.SD)), by=x1]
     profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
@@ -213,10 +238,10 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
     Table["range",] <- MLE
     ####################### log plot ##############################
-    profileLogLik$logrange <- log(profileLogLik$x1)
-    newdata <- profileLogLik[,c('logrange','profile')]
-    colnames(newdata)[1]<-"x1"
-    interlog <- get1dCovexhullinter(newdata)
+    # profileLogLik$logrange <- log(profileLogLik$x1)
+    # newdata <- profileLogLik[,c('logrange','profile')]
+    # colnames(newdata)[1]<-"x1"
+    # interlog <- get1dCovexhullinter(newdata)
     
     # plot(profileLogLik$logrange, profileLogLik$profile, cex=.2, xlab="log(range)", ylab="profileLogL")
     # points(interlog$toTest, col='red', cex=0.6)
@@ -231,18 +256,18 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
   
   ################shape ##############   
   if('shape' %in% paramToEstimate){
-    result = data.table::as.data.table(cbind(LogLikcpu, params[,"shape"]))
+    result = data.table::as.data.table(cbind(LogLikcpu, paramsRenew[,"shape"]))
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
     profileLogLik <- result[, .(profile=max(.SD)), by=x1]
     profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
     
-    inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+    # inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+    # 
+    # toTest <- inter$toTest
+    # toUse <- inter$toUse
+    # prof1 <- inter$prof
     
-    toTest <- inter$toTest
-    toUse <- inter$toUse
-    prof1 <- inter$prof
-    
-    # plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="shape", ylab="profileLogL")
+    # plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="shape", ylab="profileLogL", xlim=c(0,100))
     # points(toTest, col='red', cex=0.6)
     # points(toUse, col='blue', cex=0.6, pch=3)
     # f1 <- approxfun(inter$prof$x1, inter$prof$z)
@@ -271,11 +296,11 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
   
   
   ################sd nugget ##############     
-  params <- cbind(params, sqrt(params[,"nugget"]) * Table["sdSpatial",1])
-  colnames(params)[ncol(params)] <- 'sdNugget'
+  paramsRenew <- cbind(paramsRenew, sqrt(paramsRenew[,"nugget"]) * Table["sdSpatial",1])
+  colnames(paramsRenew)[ncol(paramsRenew)] <- 'sdNugget'
   
   if('sdNugget' %in% paramToEstimate){
-    result = data.table::as.data.table(cbind(LogLikcpu, params[,"sdNugget"]))
+    result = data.table::as.data.table(cbind(LogLikcpu, paramsRenew[,"sdNugget"]))
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
     profileLogLik <- result[, .(profile=max(.SD)), by=x1]
     profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
@@ -313,7 +338,7 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
   
   
   if('nugget' %in% paramToEstimate){
-    result = data.table::as.data.table(cbind(LogLikcpu, params[,"nugget"]))
+    result = data.table::as.data.table(cbind(LogLikcpu, paramsRenew[,"nugget"]))
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
     profileLogLik <- result[, .(profile=max(.SD)), by=x1]
     profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
@@ -367,7 +392,7 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
   
   
   if('anisoRatio' %in% paramToEstimate){
-    result = as.data.table(cbind(LogLikcpu, params[,"anisoRatio"]))
+    result = as.data.table(cbind(LogLikcpu, paramsRenew[,"anisoRatio"]))
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
     profileLogLik <- result[, .(profile=max(.SD)), by=x1]
     profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
@@ -395,7 +420,7 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
   
   
   if('anisoAngleRadians' %in% paramToEstimate){
-    result = as.data.table(cbind(LogLikcpu, params[,"anisoAngleRadians"]))
+    result = as.data.table(cbind(LogLikcpu, paramsRenew[,"anisoAngleRadians"]))
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
     profileLogLik <- result[, .(profile=max(.SD)), by=x1]
     profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
@@ -425,7 +450,7 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
   
   
   if('anisoAngleDegrees' %in% paramToEstimate){
-    result = as.data.table(cbind(LogLikcpu, params[,"anisoAngleDegrees"]))
+    result = as.data.table(cbind(LogLikcpu, paramsRenew[,"anisoAngleDegrees"]))
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
     profileLogLik <- result[, .(profile=max(.SD)), by=x1]
     profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
@@ -482,24 +507,23 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
   
   Table[colnames(covariates), 1] <- Betahat
   
-  
-  
 
   Output <- list(LogLik=LogLikcpu,
-                 minusTwoLogLik = minusTwoLogLik,
                  breaks = breaks,
                  summary = Table,
+                 params = paramsRenew,
+                 Infindex = selected_rows,
                  Nobs = Nobs,
                  Ncov = Ncov,
                  Ndata = Ndata,
                  Nparam = Nparam,
-                 ssqY = as.matrix(ssqY),     
-                 ssqBetahat = ssqBetahat,
-                 ssqResidual = ssqResidual,
-                 detVar = as.vector(detVar),   
-                 detReml = as.vector(detReml),   
+                 ssqY = as.matrix(ssqY2),     
+                 ssqBetahat = ssqBetahat2,
+                 ssqResidual = ssqResidual2,
+                 detVar = as.vector(detVar2),   
+                 detReml = as.vector(detReml2),   
                  jacobian = as.vector(jacobian),
-                 XVYXVX = as.matrix(XVYXVX))
+                 XVYXVX = as.matrix(XVYXVX2))
   
   
   
