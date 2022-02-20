@@ -5,42 +5,41 @@
 
 
 
- betavectorProfile <- function(Betas, #a m x p R matrix  given by the user 
+ betavectorProfile <- function(Betas, #a p x 1 R matrix  given by the user 
+                               prof2list,
                                Nobs,  # number of observations.
                                Nparam,
-                               BoxCox,
+                               boxcox,
                                detVar, # vclVector
                                ssqY,   # vclMatrix
                                XVYXVX,   # vclMatrix
                                jacobian, # vclVector  #form = c("loglik", "profileforBeta"),
-                               minustwotimes=TRUE){
+                               cilevel){
   
+   # prof2list = list(Betas1 <- Betas1,
+   #                  Betas2 <- Betas2)
+   # 
+   # Betas = do.call(expand.grid, prof2list)  
   
   if(!is.matrix(Betas))
   Betas<-as.matrix(Betas)
   
-  BoxCox = c(1, 0, setdiff(BoxCox, c(0,1)))
+  #boxcox = c(1, 0, setdiff(boxcox, c(0,1)))
   Ncov = ncol(Betas)
-  Ndata = length(BoxCox)
+  Ndata = length(boxcox)
   m = nrow(Betas)
   #Nparam = nrow(params)
   
   
   
-  ssqY <- as.matrix(ssqY)
-  detVar <- as.vector(detVar)
   detVar <- matrix(rep(detVar, Ndata), nrow=Nparam)
-  jacobian <- as.vector(jacobian)
   jacobian <- do.call(rbind, replicate(Nparam, jacobian, simplify = FALSE))
-  #XVYXVX <- as.matrix(XVYXVX)
   XTVinvX <- XVYXVX[ , (ncol(XVYXVX)-Ncov+1):ncol(XVYXVX)]
-  # bTDinva
-  bTDinva <- XVYXVX[ , 1:Ndata]
+  bTDinva <- as.matrix(XVYXVX[ , 1:Ndata], nrow=Ncov, Ncol=Ndata)
   midItem <- matrix(88, nrow=Nparam, ncol=Ndata)
   ssqBeta0 <- rep(0, length=Nparam)   # dosen't depend on lambda
   ssqForBetas <- matrix(0, nrow=m, ncol=1)
   likForBetas<- matrix(0, nrow=m, ncol=1)
-  
   
   
   # one = ssqY - 2*beta^T * bTDinva + ssqBeta
@@ -50,7 +49,7 @@
     
     for (i in 1:Nparam){
       # for each of the beta, calculate the beta^T * bTDinva, 1 x Ndata
-      midItem[i,] <- Betas[beta, ] %*% bTDinva[((i-1)*Ncov+1) : (i*Ncov), ]
+      midItem[i,] <- Betas[beta, ] %*% as.matrix(bTDinva[((i-1)*Ncov+1) : (i*Ncov), ], nrow=Ncov)
       
       # ssqBeta = beta^T * (b^T D^(-1) b) * beta
       mat <- XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ]
@@ -67,22 +66,49 @@
     
   }
   
-  resultbeta1 = data.table::as.data.table(cbind(-0.5*likForBetas, Betas[,"beta1"]))
-  colnames(resultbeta1) <- c("lik", "beta1")
-  profileLogLik_beta1 <- resultbeta1[, .(profile=max(.SD)), by=beta1]
+  LogLikBetas = -0.5*likForBetas
+  result = data.frame(cbind(Betas,LogLikBetas))
+  colnames(result) <- c('Betas1','Betas2',"LogLik")
+  
+  maximum <- max(LogLikBetas)
+  breaks = maximum - qchisq(cilevel,  df = Ncov)/2
+ 
+  lMatrix = matrix(result[,'LogLik'], length(prof2list[[1]]), length(prof2list[[2]]))
+  contour(prof2list[[1]], prof2list[[2]], lMatrix,
+          col = par("fg"), lty = par("lty"), lwd = par("lwd"), #levels = c(breaks), 
+          add = FALSE, xlab = "Beta1", ylab = "Beta2")
+  
+  # filled.contour(prof2list[[1]], prof2list[[2]], lMatrix, levels = c(breaks-4, breaks-3, 
+  #                                                                    breaks-2, breaks-1, breaks),
+  #                color = function(n) hcl.colors(n, "ag_Sunset"),
+  #                plot.title={
+  #                  title(xlab = "Intercept", ylab = "Elevation",main = "contour plot")
+  #                  #abline(h=trueParam['nugget'], col='red')
+  #                  #abline(v=trueParam['range']/100, col = "red")
+  #                  })
+  
+
+  Sprob = c(0,0.2, 0.5, 0.8, 0.9, 0.95, 0.999)
+  likCol = mapmisc::colourScale(drop(result$LogLik), breaks=max(lMatrix, na.rm=TRUE)- qchisq(Sprob, df=2), style='fixed', col='Spectral')
+  points(x = result[,1], y = result[,2], pch=20, col=likCol$plot, cex=0.8)
+  points(result[which.max(result$LogLik),],pch=20)
+  mapmisc::legendBreaks('bottomright', breaks = rev(Sprob), col=likCol$col)
+
+  # resultbeta1 = data.table::as.data.table(cbind(-0.5*LogLikBetas, Betas[,1]))
+  # colnames(resultbeta1) <- c("LogLik", "Beta1")
+  # profileLogLik_beta1 <- resultbeta1[, .(profile=max(.SD)), by=Beta1]
+  # 
+  # 
+  # resultintercept = data.table::as.data.table(cbind(-0.5*LogLikBetas, Betas[,1]))
+  # colnames(resultintercept) <- c("LogLik", "intercept")
+  # profileLogLik_intercept <- resultintercept[, .(profile=max(.SD)), by=intercept]
   
   
-  resultintercept = data.table::as.data.table(cbind(-0.5*likForBetas, Betas[,1]))
-  colnames(resultintercept) <- c("lik", "intercept")
-  profileLogLik_intercept <- resultintercept[, .(profile=max(.SD)), by=intercept]
-  
-  
-  #plot(profileLogLik_beta1$beta1,profileLogLik_beta1$profile)
+  #plot(profileLogLik_beta1$Beta1,profileLogLik_beta1$profile)
   #plot(profileLogLik_intercept$intercept,profileLogLik_intercept$profile)
   
-  Theoutput <- list(likForBetas=likForBetas,
-                    profileLogLik_beta1 =profileLogLik_beta1,
-                    resultintercept=resultintercept,
+  Theoutput <- list(dataforplot=result,
+                    breaks =breaks,
                     ssqForBetas = ssqForBetas)
   
   

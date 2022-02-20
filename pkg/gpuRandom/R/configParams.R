@@ -22,7 +22,7 @@
       
       ## check mle nugget    
       if(('nugget' %in% names(Mle)) & Mle['nugget'] < delta){
-        Mle['nugget'] = delta 
+        Mle['nugget'] = 0.1 
         parToLog <- parToLog[!parToLog %in% 'nugget']
       }  
       
@@ -62,6 +62,7 @@
       }
       names(MleGamma)[whichLogged] = paste("log(", names(Mle)[whichLogged], ")",sep="")
       
+  # if(Mle['nugget'] > delta){
   ## center approximation
   a1 <- c(1,1,-1,-1)
   a2 <- c(1,-1,1,-1)
@@ -139,6 +140,73 @@
       cbind(a0, a0, a1, a0, a2),
       cbind(a0, a0, a0, a1, a2))
   }
+  # }else{
+  # ## forward approximation
+  # a0 <- rep(0,4)
+  # a06 <- rep(0,6)
+  # a1 <- c(0,1,2, 0, 1, 2)
+  # a2 <- c(1,1,1,-1,-1,-1)
+  # a3 <- c(1,1,-1,-1)
+  # a4 <- c(1,-1,1,-1)
+  # if(length(Mle)==2){
+  #   diagonals <- rbind(rep(0,4),
+  #                      c(1,0,0,0),
+  #                      c(-1,0,0,0),
+  #                      c(0,1,0,0),
+  #                      c(0,2,0,0),
+  #                      c(0,3,0,0))
+  #   derivGridDf <- rbind(
+  #     diagonals,
+  #     cbind(a2, a1, a06, a06))[,1:2]
+  #   
+  # }else if(length(Mle)==4){
+  #   diagonals <- rbind(rep(0,4),
+  #                      c(1,0,0,0),
+  #                      c(-1,0,0,0),
+  #                      c(0,1,0,0),
+  #                      c(0,2,0,0),
+  #                      c(0,3,0,0),
+  #                      c(0,0,1,0),
+  #                      c(0,0,-1,0),
+  #                      c(0,0,0,1),
+  #                      c(0,0,0,-1))
+  #   derivGridDf <- rbind(
+  #     diagonals,
+  #     cbind(a2, a1, a06, a06),
+  #     cbind(a3, a0, a4, a0),
+  #     cbind(a3, a0, a0, a4),
+  #     cbind(a06, a1, a2, a06),
+  #     cbind(a06, a1, a06, a2),
+  #     cbind(a0, a0, a3, a4))
+  # }else if(length(Mle)==5){
+  #   diagonals <- rbind(rep(0,5),
+  #                      c(1,0,0,0,0),
+  #                      c(-1,0,0,0,0),
+  #                      c(0,1,0, 0,0),
+  #                      c(0,-1,0, 0,0),
+  #                      c(0,0,1,0,0),
+  #                      c(0,0,2,0,0),
+  #                      c(0,0,3,0,0),
+  #                      c(0,0,0,1,0),
+  #                      c(0,0,0,-1,0),
+  #                      c(0,0,0,0,1),
+  #                      c(0,0,0,0,-1))
+  #   derivGridDf <- rbind(
+  #     diagonals,
+  #     cbind(a3, a4, a0, a0, a0),
+  #     cbind(a2, a06, a1, a06, a06),
+  #     cbind(a3, a0, a0, a4, a0),
+  #     cbind(a3, a0, a0, a0, a4),
+  #     cbind(a06, a2, a1, a06, a06),
+  #     cbind(a0, a3, a0, a4, a0),
+  #     cbind(a0, a3, a0, a0, a4),
+  #     cbind(a06, a06, a1, a2, a06),
+  #     cbind(a06, a06, a1, a06, a2),
+  #     cbind(a0, a0, a0, a3, a4))
+  # }
+  # }
+  
+
   
   deltas = rep(0.01, length(Mle))
   # names(deltas) = names(MleGamma)
@@ -146,8 +214,7 @@
   if(length(Mle)<=1){
     ParamsetGamma <- matrix(MleGamma, nrow=nrow(derivGridDf), ncol=length(Mle), byrow=TRUE, dimnames = list(NULL, names(MleGamma))) + derivGridDf*deltas
   }else{
-    ParamsetGamma <- matrix(MleGamma, nrow=nrow(derivGridDf), ncol=length(Mle), byrow=TRUE, dimnames = list(NULL, names(MleGamma))) + 
-      derivGridDf %*% diag(deltas)
+    ParamsetGamma <- matrix(MleGamma, nrow=nrow(derivGridDf), ncol=length(Mle), byrow=TRUE, dimnames = list(NULL, names(MleGamma))) + derivGridDf %*% diag(deltas)
   }
   
   if(!('anisoRatio' %in% names(Mle))){
@@ -203,7 +270,7 @@
   rownames(HessianMat) <- names(MleGamma)
   colnames(HessianMat) <- names(MleGamma)
   
-  
+  # if(Mle['nugget'] > delta){
   if(length(Mle)==1){
     HessianMat[1,1] <- (result$LogLik[1, 2] - 2*result$LogLik[2, 2] + result$LogLik[3, 2])/(deltas[1]^2)
   }else if(length(Mle)==2){
@@ -266,38 +333,56 @@
     HessianMat[4,2] <- HessianMat[2,4]
     HessianMat[4,3] <- HessianMat[3,4]
   }
-
-  
-  
-  ## get the First derivative
-  # check if shape and nugget's mle is close to 0
-  # whichLogged = which(names(Mle) %in% parToLog)
-  # whichAniso = which(names(Mle) %in% c('anisoRatio', 'anisoAngleRadians'))
-  # 
-  # if('anisoRatio' %in% names(Mle)){
-  #   if(!('anisoAngleRadians' %in% names(Mle))){
-  #     stop('anisoRatio and anisoAngleRadians must be together')
-  #   }
-  #   
-  #   if(Mle['anisoRatio'] <= 1){
-  #     gamma3 <-  unname(sqrt(1/Mle['anisoRatio']-1) * cos(2*Mle['anisoAngleRadians']))
-  #     gamma4 <-  unname(sqrt(1/Mle['anisoRatio']-1) * sin(2*Mle['anisoAngleRadians']))
-  #   }else{
-  #     gamma3 <-  unname(sqrt(Mle['anisoRatio']-1) * cos(2*Mle['anisoAngleRadians']))
-  #     gamma4 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*Mle['anisoAngleRadians']))
-  #   }
-  #   aniso <- c(gamma3 = gamma3, gamma4 = gamma4)
-  #   if(whichLogged[2]-whichLogged[1]>1){
-  #     MleGamma = c(log(Mle[whichLogged[1]]), Mle[-c(whichLogged, whichAniso)],log(Mle[whichLogged[2]]), aniso) 
-  #   }else{
-  #     MleGamma = c(log(Mle[whichLogged]), Mle[-c(whichLogged, whichAniso)], aniso)
-  #   }
   # }else{
-  #   MleGamma = c(log(Mle[whichLogged]),  Mle[-whichLogged])
+  #   if(length(Mle)==4){
+  #   HessianMat[1,1] <- (A[1] + A[2] -2*Origin)/(0.01^2)
+  #   HessianMat[2,2] <- (2*Origin - 5*A[3] + 4*A[4] - A[5])/(0.01^2)
+  #   HessianMat[3,3] <- (A[6] + A[7] -2*Origin)/(0.01^2)
+  #   HessianMat[4,4] <- (A[8] + A[9] -2*Origin)/(0.01^2)
+  #   
+  #   HessianMat[1,2] <- (-3*A[10] + 4*A[11] - A[12] + 3*A[13] - 4*A[14] + A[15])/(4*0.01^2)
+  #   HessianMat[1,3] <- (A[16] - A[17] - A[18] + A[19])/(4*0.01^2)
+  #   HessianMat[1,4] <- (A[20] - A[21] - A[22] + A[23])/(4*0.01^2)
+  #   HessianMat[2,3] <- (-3*A[24] + 4*A[25] - A[26] + 3*A[27] - 4*A[28] + A[29])/(4*0.01^2)
+  #   HessianMat[2,4] <- (-3*A[30] + 4*A[31] - A[32] + 3*A[33] - 4*A[34] + A[35])/(4*0.01^2)
+  #   HessianMat[3,4] <- (A[36] - A[37] - A[38] + A[39])/(4*0.01^2)
+  #   
+  #   }else if(length(Mle)==5){
+  #     HessianMat[1,1] <- (A[1] + A[2] -2*Origin)/(0.01^2)
+  #     HessianMat[2,2] <- (A[3] + A[4] -2*Origin)/(0.01^2)
+  #     HessianMat[3,3] <- (2*Origin - 5*A[5] + 4*A[6] - A[7])/(0.01^2)
+  #     HessianMat[4,4] <- (A[8] + A[9] -2*Origin)/(0.01^2)
+  #     HessianMat[5,5] <- (A[10] + A[11] -2*Origin)/(0.01^2)
+  #     
+  #     HessianMat[1,2] <- (A[12] - A[13] - A[14] + A[15])/(4*0.01^2)
+  #     HessianMat[1,3] <- (-3*A[16] + 4*A[17] - A[18] + 3*A[19] - 4*A[20] + A[21])/(4*0.01^2)
+  #     HessianMat[1,4] <- (A[22] - A[23] - A[24] + A[25])/(4*0.01^2)
+  #     HessianMat[1,5] <- (A[26] - A[27] - A[28] + A[29])/(4*0.01^2)
+  #     HessianMat[2,3] <- (-3*A[30] + 4*A[31] - A[32] + 3*A[33] - 4*A[34] + A[35])/(4*0.01^2)
+  #     HessianMat[2,4] <- (A[36] - A[37] - A[38] + A[39])/(4*0.01^2)
+  #     HessianMat[2,5] <- (A[40] - A[41] - A[42] + A[43])/(4*0.01^2)
+  #     HessianMat[3,4] <- (-3*A[44] + 4*A[45] - A[46] + 3*A[47] - 4*A[48] + A[49])/(4*0.01^2)
+  #     HessianMat[3,5] <- (-3*A[50] + 4*A[51] - A[52] + 3*A[53] - 4*A[54] + A[55])/(4*0.01^2)
+  #     HessianMat[4,5] <- (A[56] - A[57] - A[58] + A[59])/(4*0.01^2)
+  #     
+  #     HessianMat[5,1] <- HessianMat[1,5]
+  #     HessianMat[5,2] <- HessianMat[2,5]
+  #     HessianMat[5,3] <- HessianMat[3,5]
+  #     HessianMat[5,4] <- HessianMat[4,5]  
+  #     
+  #     if(length(Mle)==4 | length(Mle)==5){
+  #       HessianMat[2,1] <- HessianMat[1,2]
+  #       HessianMat[3,1] <- HessianMat[1,3]
+  #       HessianMat[3,2] <- HessianMat[2,3]
+  #       HessianMat[4,1] <- HessianMat[1,4]
+  #       HessianMat[4,2] <- HessianMat[2,4]
+  #       HessianMat[4,3] <- HessianMat[3,4]
+  #     }      
+  #     
   # }
-  # names(MleGamma)[whichLogged] = paste("log(", names(Mle)[whichLogged], ")",sep="")
+  # }  
   
-  
+
   # frst detivatives
   derivGridDf1 <- rbind(c(1,0,0,0,0),
                         c(-1, 0,0,0,0),
