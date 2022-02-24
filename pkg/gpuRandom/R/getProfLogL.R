@@ -339,7 +339,7 @@
      #curve(f1(x), add = TRUE, col = 'green', n = 1001)
      #f1 <- approxfun(toUse$x1, toUse$profile)
      # f1 <- approxfun(prof1$x1, prof1$z)
-     # abline(h =0, lty = 2, col='red')
+     abline(h =0, lty = 2, col='red')
      # lower = min(profileLogLik$x1)
      # upper = max(profileLogLik$x1)
      # MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum

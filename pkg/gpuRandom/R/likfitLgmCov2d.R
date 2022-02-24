@@ -2,10 +2,10 @@
 #' @import data.table
 #' @importFrom rootSolve uniroot.all
 #' @useDynLib gpuRandom
-#' @export
 
 
-get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table # 2 column names must be x1 and profile
+
+get2dCovexhullinter <- function(profileLogLik,     # a data frame or data.table # 2 column names must be x1 and profile
                                 a=0.1,    # minus a little thing
                                 m=1){
   
@@ -168,7 +168,7 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
   
   
   LogLikcpu <- as.matrix(-0.5*minusTwoLogLik)
-
+  colnames(LogLikcpu) <- paste(c('boxcox'), round(boxcox, digits = 3) ,sep = '')
 
   selected_rows <- which(is.na(as.vector(detVar)))
   if(length(selected_rows)==0){
@@ -221,7 +221,7 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
     profileLogLik <- result[, .(profile=max(.SD)), by=x1]
     profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
     
-    inter <- get1dCovexhullinter(profileLogLik)    # a data frame or data.table # 2 column names must be x1 and profile
+    inter <- get2dCovexhullinter(profileLogLik)    # a data frame or data.table # 2 column names must be x1 and profile
     
     toTest <- inter$toTest
     toUse <- inter$toUse
@@ -241,7 +241,7 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
     # profileLogLik$logrange <- log(profileLogLik$x1)
     # newdata <- profileLogLik[,c('logrange','profile')]
     # colnames(newdata)[1]<-"x1"
-    # interlog <- get1dCovexhullinter(newdata)
+    # interlog <- get2dCovexhullinter(newdata)
     
     # plot(profileLogLik$logrange, profileLogLik$profile, cex=.2, xlab="log(range)", ylab="profileLogL")
     # points(interlog$toTest, col='red', cex=0.6)
@@ -261,7 +261,7 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
     profileLogLik <- result[, .(profile=max(.SD)), by=x1]
     profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
     
-    # inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+    # inter <- get2dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
     # 
     # toTest <- inter$toTest
     # toUse <- inter$toUse
@@ -277,7 +277,7 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
     profileLogLik$logshape <- log(profileLogLik$x1)
     newdata <- profileLogLik[,c('logshape','profile')]
     colnames(newdata)[1]<-"x1"
-    interlog <- get1dCovexhullinter(newdata,a=0.2)
+    interlog <- get2dCovexhullinter(newdata,a=0.2)
     
     # plot(newdata$x1, newdata$profile, cex=.2, xlab="log(shape)", ylab="profileLogL")
     # points(interlog$toTest, col='red', cex=0.6)
@@ -296,15 +296,17 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
   
   
   ################sd nugget ##############     
-  paramsRenew <- cbind(paramsRenew, sqrt(paramsRenew[,"nugget"]) * Table["sdSpatial",1])
-  colnames(paramsRenew)[ncol(paramsRenew)] <- 'sdNugget'
+
   
   if('sdNugget' %in% paramToEstimate){
+    paramsRenew <- cbind(paramsRenew, sqrt(paramsRenew[,"nugget"]) * Table["sdSpatial",1])
+    colnames(paramsRenew)[ncol(paramsRenew)] <- 'sdNugget'
+    
     result = data.table::as.data.table(cbind(LogLikcpu, paramsRenew[,"sdNugget"]))
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
     profileLogLik <- result[, .(profile=max(.SD)), by=x1]
     profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
-    inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+    inter <- get2dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
     
     toTest <- inter$toTest
     toUse <- inter$toUse
@@ -342,7 +344,7 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
     profileLogLik <- result[, .(profile=max(.SD)), by=x1]
     profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
-    inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+    inter <- get2dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
     toTest <- inter$toTest
     toUse <- inter$toUse
     prof1 <- inter$prof
@@ -378,7 +380,7 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
     # profileLogLik$lognugget <- log(profileLogLik$x1)
     # newdata <- profileLogLik[,c('lognugget','profile')]
     # colnames(newdata)[1]<-"x1"
-    # interlog <- get1dCovexhullinter(newdata,a=0.01)
+    # interlog <- get2dCovexhullinter(newdata,a=0.01)
     
     # plot(profileLogLik$lognugget, profileLogLik$profile, cex=.2, xlab="log(nugget)", ylab="profileLogL")
     # points(interlog$toTest, col='red', cex=0.6)
@@ -396,7 +398,7 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
     profileLogLik <- result[, .(profile=max(.SD)), by=x1]
     profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
-    inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+    inter <- get2dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
     toTest <- inter$toTest
     toUse <- inter$toUse
     prof1 <- inter$prof
@@ -424,7 +426,7 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
     profileLogLik <- result[, .(profile=max(.SD)), by=x1]
     profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
-    inter <- get1dCovexhullinter(profileLogLik, a=0.001)     # a data frame or data.table # 2 column names must be x1 and profile
+    inter <- get2dCovexhullinter(profileLogLik, a=0.001)     # a data frame or data.table # 2 column names must be x1 and profile
     toTest <- inter$toTest
     toUse <- inter$toUse
     prof1 <- inter$prof
@@ -454,7 +456,7 @@ get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table 
     colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
     profileLogLik <- result[, .(profile=max(.SD)), by=x1]
     profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
-    inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
+    inter <- get2dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
     toTest <- inter$toTest
     toUse <- inter$toUse
     prof1 <- inter$prof

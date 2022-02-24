@@ -4,7 +4,8 @@
 
 
     getHessian <- function(Model,
-                           Mle = NULL){
+                           Mle = NULL,
+                           boxcox = NULL){
   
       delta = 0.01  
       kappa = 60
@@ -22,14 +23,13 @@
       
       ## check mle nugget    
       if(('nugget' %in% names(Mle)) & Mle['nugget'] < delta){
-        Mle['nugget'] = 0.1 
+        Mle['nugget'] = delta 
         parToLog <- parToLog[!parToLog %in% 'nugget']
       }  
-      
+     
       if(!('nugget' %in% names(Mle))){
         parToLog <- parToLog[!parToLog %in% 'nugget']
       }
-      
       if(!('shape' %in% names(Mle))){
         parToLog <- parToLog[!parToLog %in% 'shape']
       }      
@@ -44,8 +44,8 @@
         }
         
         if(Mle['anisoRatio'] <= 1){
-          gamma3 <-  unname(sqrt(1/Mle['anisoRatio']-1) * cos(2*Mle['anisoAngleRadians']))
-          gamma4 <-  unname(sqrt(1/Mle['anisoRatio']-1) * sin(2*Mle['anisoAngleRadians']))
+          gamma3 <-  unname(sqrt(1/Mle['anisoRatio']-1) * cos(2*(Mle['anisoAngleRadians']+ pi/2)))
+          gamma4 <-  unname(sqrt(1/Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians']+ pi/2)))
         }else{
           gamma3 <-  unname(sqrt(Mle['anisoRatio']-1) * cos(2*Mle['anisoAngleRadians']))
           gamma4 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*Mle['anisoAngleRadians']))
@@ -222,7 +222,7 @@
   }else{
     temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
     if(Mle['anisoRatio'] <= 1){
-    naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2)
+    naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2-pi/2)
     Paramset <- cbind(exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,-c(whichLogged, whichAniso)], naturalspace)
     }else{
     naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
@@ -240,13 +240,17 @@
                        dimnames = list(rownames(Paramset), toAdd), byrow=TRUE)
   Params1 <- cbind(Paramset, otherParams)
   
+  if(is.null(boxcox)){
+    boxcox = Model$parameters['boxcox']
+  }
+  
   
   
   result1<-gpuRandom::getProfLogL(data= Model$data,
                                  formula=Model$model$formula,
                                  coordinates=Model$data@coords,
                                  params=Params1,
-                                 boxcox = Model$parameters['boxcox'],
+                                 boxcox = boxcox,
                                  type = "double",
                                  NparamPerIter=100,
                                  gpuElementsOnly=FALSE,
@@ -264,7 +268,7 @@
   A <- result1$LogLik[-1, 1]
   Origin <- result1$LogLik[1, 1]  
   }
-  #plot(result$LogLik)
+  #plot(result$LogLik[])
   
   HessianMat <- matrix(0, nrow=length(Mle), ncol=length(Mle))
   rownames(HessianMat) <- names(MleGamma)
@@ -384,6 +388,7 @@
   
 
   # frst detivatives
+  if((('nugget' %in% names(Mle)) & Mle['nugget'] < delta) | ('shape' %in% names(Mle)) & Mle['shape'] >= kappa){
   derivGridDf1 <- rbind(c(1,0,0,0,0),
                         c(-1, 0,0,0,0),
                         c(0, 1, 0,0,0),
@@ -414,7 +419,7 @@
   }else{
     temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
     if(Mle['anisoRatio'] <= 1){
-      naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2)
+      naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2- pi/2)
       Paramset <- cbind(exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,-c(whichLogged, whichAniso)], naturalspace)
     }else{
       naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
@@ -459,29 +464,50 @@
   FirstDeri[4] <- (A[7] - A[8])/(2*deltas[4])
   FirstDeri[5] <- (A[9] - A[10])/(2*deltas[5])
   
+  index <- which(abs(FirstDeri) > 0.01)
+  }
   
   Sigma <- -solve(HessianMat)
-  index <- which(abs(FirstDeri) > 0.01)
+
   newMle <- Mle
+  newMleGamma <- MleGamma
+  
+  
+  if((('nugget' %in% names(Mle)) & Mle['nugget'] < delta) | ('shape' %in% names(Mle)) & Mle['shape'] >= kappa){
   
   for(i in 1:length(index)){
-    newMle[index[i]] <- Mle[index[i]] + Sigma[index[i],index[i]]*FirstDeri[index[i]]
+    #newMle[index[i]] <- Mle[index[i]] + Sigma[index[i],index[i]]*FirstDeri[index[i]]
+    newMleGamma[index[i]] <- MleGamma[index[i]] + Sigma[index[i],index[i]]*FirstDeri[index[i]]
   } 
   
-  # for(i in 1:length(Mle)){
-  #   newMle[i] <- Mle[i] + Sigma[i,i]*FirstDeri[i]
-  # } 
+  if(!('anisoRatio' %in% names(Mle))){
+    newMle <- c(exp(newMleGamma[paste("log(", names(Mle)[whichLogged], ")",sep="")]), newMleGamma[-whichLogged])
+  }else{
+    temp <- as.data.frame(newMleGamma['gamma3'] + 1i * newMleGamma['gamma4'])
+    if(Mle['anisoRatio'] <= 1){
+      naturalspace <- c(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 - pi/2)
+      newMle <- c(exp(newMleGamma[whichLogged]), newMleGamma[-c(whichLogged, whichAniso)], naturalspace)
+    }else{
+      naturalspace <- c(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+      if(length(whichLogged)>=2 & whichLogged[2]-whichLogged[1]>1){
+        newMle <- c(exp(newMleGamma[whichLogged[1]]), newMleGamma[-c(whichLogged, whichAniso)], exp(newMleGamma[ whichLogged[2]]), naturalspace)
+      }else{
+        newMle <- c(exp(newMleGamma[whichLogged]), newMleGamma[-c(whichLogged, whichAniso)], naturalspace)
+      }
+    }
+  }
+  names(newMle) <- names(Mle)
   
   ## check if newMle's are on boundary
-  if('nugget' %in% names(Mle) & newMle['nugget'] < 0){
-    newMle['nugget'] = 0
-  }
-  
-
-  if('shape' %in% names(Mle) & newMle['shape'] < 0){
-    newMle['shape'] = 0
-  }
-  
+  # if('nugget' %in% names(Mle) & newMle['nugget'] < 0){
+  #   newMle['nugget'] = 0
+  # }
+  # 
+  # 
+  # if('shape' %in% names(Mle) & newMle['shape'] < 0){
+  #   newMle['shape'] = 0
+  # }
+  # 
   # check mle shape
   if('shape' %in% names(Mle) & newMle['shape'] >= kappa){
     newMle['shape'] = 1/newMle['shape']
@@ -489,16 +515,29 @@
     #   Mle['shape'] = delta
     #parToLog <- parToLog[!parToLog %in% 'shape']
   }
+  }
   
   
+  if((('nugget' %in% names(Mle)) & Mle['nugget'] < delta) | ('shape' %in% names(Mle)) & Mle['shape'] >= kappa){
   output = list(Gradiant= FirstDeri,
                 HessianMat = HessianMat,
                 Sigma = Sigma,
                 originalPoint = Mle,
                 centralPoint = newMle,
+                centralPointGamma = newMleGamma,
                 parToLog = parToLog,
                 whichAniso = whichAniso,
                 data = cbind(Params1, result1$LogLik))
+  }else{
+    output = list(HessianMat = HessianMat,
+                  Sigma = Sigma,
+                  originalPoint = Mle,
+                  centralPoint = newMle,
+                  centralPointGamma = newMleGamma,
+                  parToLog = parToLog,
+                  whichAniso = whichAniso,
+                  data = cbind(Params1, result1$LogLik))  
+  }
   
   output
 }
@@ -528,60 +567,61 @@
 
     configParams <- function(Model,
                              alpha=c(0.0001, 0.01, 0.1, 0.2, 0.5, 0.8, 0.95, 0.99),
-                             Mle = NULL# a vector of confidence levels 1-alpha
+                             Mle = NULL,
+                             boxcox = NULL# a vector of confidence levels 1-alpha
     ){
       
 
       
       ## get the Hessian
       output <- getHessian(Model = Model,
-                           Mle = Mle)
+                           Mle = Mle, 
+                           boxcox = boxcox)
    
       Mle <- output$originalPoint
       newMle <- output$centralPoint
+      newMleGamma <- output$centralPointGamma
       Sigma <- output$Sigma
       whichAniso <- output$whichAniso
       parToLog <- output$parToLog
       
-      ## always find the stationary points/new Mles 
-      # for(i in 1:length(index)){
-      #   newMle[index[i]] <- Mle[index[i]] + Sigma[index[i],index[i]]*FirstDeri[index[i]]
-      # } 
-      if(('nugget' %in% names(Mle)) & newMle['nugget'] < 0.01){
-        parToLog <- parToLog[!parToLog %in% 'nugget']
-      }  
+
       whichLogged = which(names(newMle) %in% parToLog)
       
       
-      if('anisoRatio' %in% names(Mle)){
-        if(!('anisoAngleRadians' %in% names(Mle))){
-          stop('anisoRatio and anisoAngleRadians must be together')
-        }
-        
-        if(newMle['anisoRatio'] <= 1){
-          gamma3 <-  unname(sqrt(1/newMle['anisoRatio']-1) * cos(2*newMle['anisoAngleRadians']))
-          gamma4 <-  unname(sqrt(1/newMle['anisoRatio']-1) * sin(2*newMle['anisoAngleRadians']))
-        }else{
-          gamma3 <-  unname(sqrt(newMle['anisoRatio']-1) * cos(2*newMle['anisoAngleRadians']))
-          gamma4 <-  unname(sqrt(newMle['anisoRatio']-1) * sin(2*newMle['anisoAngleRadians']))
-        }
-        aniso <- c(gamma3 = gamma3, gamma4 = gamma4)
-        
-        if(length(whichLogged)>=2 & whichLogged[2]-whichLogged[1]>1){
-          newMleGamma = c(log(newMle[whichLogged[1]]), newMle[-c(whichLogged, whichAniso)],log(newMle[whichLogged[2]]), aniso) 
-        }else{
-          newMleGamma = c(log(newMle[whichLogged]), newMle[-c(whichLogged, whichAniso)], aniso)
-        }
-      }else{
-        newMleGamma = c(log(newMle[whichLogged]),  newMle[-whichLogged])
-      }
-      names(newMleGamma)[whichLogged] = paste("log(", names(newMle)[whichLogged], ")",sep="")
+      # if('anisoRatio' %in% names(Mle)){
+      #   if(!('anisoAngleRadians' %in% names(Mle))){
+      #     stop('anisoRatio and anisoAngleRadians must be together')
+      #   }
+      #   
+      #   if(newMle['anisoRatio'] <= 1){
+      #     gamma3 <-  unname(sqrt(1/newMle['anisoRatio']-1) * cos(2*newMle['anisoAngleRadians']))
+      #     gamma4 <-  unname(sqrt(1/newMle['anisoRatio']-1) * sin(2*newMle['anisoAngleRadians']))
+      #   }else{
+      #     gamma3 <-  unname(sqrt(newMle['anisoRatio']-1) * cos(2*newMle['anisoAngleRadians']))
+      #     gamma4 <-  unname(sqrt(newMle['anisoRatio']-1) * sin(2*newMle['anisoAngleRadians']))
+      #   }
+      #   aniso <- c(gamma3 = gamma3, gamma4 = gamma4)
+      #   
+      #   if(length(whichLogged)>=2 & whichLogged[2]-whichLogged[1]>1){
+      #     newMleGamma = c(log(newMle[whichLogged[1]]), newMle[-c(whichLogged, whichAniso)],log(newMle[whichLogged[2]]), aniso) 
+      #   }else{
+      #     newMleGamma = c(log(newMle[whichLogged]), newMle[-c(whichLogged, whichAniso)], aniso)
+      #   }
+      # }else{
+      #   newMleGamma = c(log(newMle[whichLogged]),  newMle[-whichLogged])
+      # }
+      # names(newMleGamma)[whichLogged] = paste("log(", names(newMle)[whichLogged], ")",sep="")
       
       
 
        
       ## fix first derivative ends  
       eig <- eigen(Sigma)
+      if(length(Mle)==5 & eig$values[5] < 0){
+        eig$values[5] = 0.01
+      }
+      
       out_list <- list()
       
       if(length(newMle)==2){
@@ -619,7 +659,7 @@
               pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords3d) + newMleGamma)
               colnames(pointsEllipseGammaspace) <- names(newMleGamma)
               temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
-              naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2)
+              naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 - pi/2)
               pointsEllipse <- cbind(exp(pointsEllipseGammaspace[,whichLogged]),naturalspace)
               colnames(pointsEllipse) <- names(newMle)
               out_list[[i]] = pointsEllipse
@@ -681,7 +721,7 @@
         }
       }
       
-      if(('nugget' %in% names(Mle)) & newMle['nugget'] == 0){
+      if(('nugget' %in% names(newMle)) & newMle['nugget'] == 0){
       for(i in 1:length(alpha)){
          vector <- out_list[[i]][,'nugget']
          for(j in 1:length(vector)/3){
@@ -691,19 +731,19 @@
          }
          for(j in (length(vector)/3+1):length(vector)){
            if(vector[j]<0){
-             vector[j] = stats::runif(1, 0, delta)
+             vector[j] = stats::runif(1, 0, 1)
            }
          }
       }
       }
       
-      if('shape' %in% names(Mle) & abs(Mle['shape']) >= 60){
+      if('shape' %in% names(newMle) & newMle['shape'] >= 60){
       for(i in 1:length(alpha)){
         vector1 <- 1/out_list[[i]][,'shape']
         vector2 <- rep(1000, length(vector))
         out_list[[i]][,'shape'] = pmin(vector1, vector2)
       }
-      }else if('shape' %in% names(Mle) & abs(Mle['shape']) < 60){
+      }else if('shape' %in% names(newMle) & newMle['shape'] < 60){
         for(i in 1:length(alpha)){
           vector1 <- out_list[[i]][,'shape']
           vector2 <- rep(1000, length(vector))

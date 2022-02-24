@@ -9,7 +9,7 @@
                                prof2list,
                                Nobs,  # number of observations.
                                Nparam,
-                               boxcox,
+                               Ndata,
                                detVar, # vclVector
                                ssqY,   # vclMatrix
                                XVYXVX,   # vclMatrix
@@ -26,7 +26,6 @@
   
   #boxcox = c(1, 0, setdiff(boxcox, c(0,1)))
   Ncov = ncol(Betas)
-  Ndata = length(boxcox)
   m = nrow(Betas)
   #Nparam = nrow(params)
   
@@ -53,7 +52,7 @@
       
       # ssqBeta = beta^T * (b^T D^(-1) b) * beta
       mat <- XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ]
-      mat[upper.tri(mat)] <- mat[lower.tri(mat)]
+      mat[upper.tri(mat)] <- t(mat)[upper.tri(mat)]
       ssqBeta0[i] <- Betas[beta, ] %*% mat %*% (Betas[beta, ])
     }
     
@@ -88,11 +87,11 @@
   #                  })
   
 
-  Sprob = c(0,0.2, 0.5, 0.8, 0.9, 0.95, 0.999)
-  likCol = mapmisc::colourScale(drop(result$LogLik), breaks=max(lMatrix, na.rm=TRUE)- qchisq(Sprob, df=2), style='fixed', col='Spectral')
-  points(x = result[,1], y = result[,2], pch=20, col=likCol$plot, cex=0.8)
-  points(result[which.max(result$LogLik),],pch=20)
-  mapmisc::legendBreaks('bottomright', breaks = rev(Sprob), col=likCol$col)
+  # Sprob = c(0,0.2, 0.5, 0.8, 0.9, 0.95, 0.999)
+  # likCol = mapmisc::colourScale(drop(result$LogLik), breaks=max(lMatrix, na.rm=TRUE)- qchisq(Sprob, df=2), style='fixed', col='Spectral')
+  # points(x = result[,1], y = result[,2], pch=20, col=likCol$plot, cex=0.8)
+  # points(result[which.max(result$LogLik),],pch=20)
+  # mapmisc::legendBreaks('bottomright', breaks = rev(Sprob), col=likCol$col)
 
   # resultbeta1 = data.table::as.data.table(cbind(-0.5*LogLikBetas, Betas[,1]))
   # colnames(resultbeta1) <- c("LogLik", "Beta1")
