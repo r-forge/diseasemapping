@@ -47,8 +47,8 @@
           gamma3 <-  unname(sqrt(1/Mle['anisoRatio']-1) * cos(2*(Mle['anisoAngleRadians']+ pi/2)))
           gamma4 <-  unname(sqrt(1/Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians']+ pi/2)))
         }else{
-          gamma3 <-  unname(sqrt(Mle['anisoRatio']-1) * cos(2*Mle['anisoAngleRadians']))
-          gamma4 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*Mle['anisoAngleRadians']))
+          gamma3 <-  unname(sqrt(Mle['anisoRatio']-1) * cos(2*(Mle['anisoAngleRadians']+ pi/2)))
+          gamma4 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians']+ pi/2)))
         }
         aniso <- c(gamma3 = gamma3, gamma4 = gamma4)
         
@@ -222,10 +222,10 @@
   }else{
     temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
     if(Mle['anisoRatio'] <= 1){
-    naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2-pi/2)
+    naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), atan(ParamsetGamma[,'gamma4']/ParamsetGamma[,'gamma3'])/2)
     Paramset <- cbind(exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,-c(whichLogged, whichAniso)], naturalspace)
     }else{
-    naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+    naturalspace <- cbind(Mod(temp[,1])^2 + 1, atan(ParamsetGamma[,'gamma4']/ParamsetGamma[,'gamma3'])/2)
     if(length(whichLogged)>=2 & whichLogged[2]-whichLogged[1]>1){
       Paramset <- cbind(exp(ParamsetGamma[, whichLogged[1]]), ParamsetGamma[,-c(whichLogged, whichAniso)], exp(ParamsetGamma[, whichLogged[2]]), naturalspace)
     }else{
@@ -419,10 +419,10 @@
   }else{
     temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
     if(Mle['anisoRatio'] <= 1){
-      naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2- pi/2)
+      naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), atan(ParamsetGamma[,'gamma4']/ParamsetGamma[,'gamma3'])/2)
       Paramset <- cbind(exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,-c(whichLogged, whichAniso)], naturalspace)
     }else{
-      naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+      naturalspace <- cbind(Mod(temp[,1])^2 + 1, atan(ParamsetGamma[,'gamma4']/ParamsetGamma[,'gamma3'])/2)
       if(length(whichLogged)>=2 & whichLogged[2]-whichLogged[1]>1){
         Paramset <- cbind(exp(ParamsetGamma[, whichLogged[1]]), ParamsetGamma[,-c(whichLogged, whichAniso)], exp(ParamsetGamma[, whichLogged[2]]), naturalspace)
       }else{
@@ -485,10 +485,10 @@
   }else{
     temp <- as.data.frame(newMleGamma['gamma3'] + 1i * newMleGamma['gamma4'])
     if(Mle['anisoRatio'] <= 1){
-      naturalspace <- c(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 - pi/2)
+      naturalspace <- c(1/(Mod(temp[,1])^2 + 1), atan(ParamsetGamma[,'gamma4']/ParamsetGamma[,'gamma3'])/2)
       newMle <- c(exp(newMleGamma[whichLogged]), newMleGamma[-c(whichLogged, whichAniso)], naturalspace)
     }else{
-      naturalspace <- c(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+      naturalspace <- c(Mod(temp[,1])^2 + 1, atan(ParamsetGamma[,'gamma4']/ParamsetGamma[,'gamma3'])/2)
       if(length(whichLogged)>=2 & whichLogged[2]-whichLogged[1]>1){
         newMle <- c(exp(newMleGamma[whichLogged[1]]), newMleGamma[-c(whichLogged, whichAniso)], exp(newMleGamma[ whichLogged[2]]), naturalspace)
       }else{
@@ -635,7 +635,7 @@
             pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(pointsSphere2d) + newMleGamma)
             colnames(pointsEllipseGammaspace) <- names(newMleGamma)
             temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
-            naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+            naturalspace <- cbind(Mod(temp[,1])^2 + 1, atan(pointsEllipseGammaspace[,'gamma4']/pointsEllipseGammaspace[,'gamma3'])/2)
             pointsEllipse <- cbind(exp(pointsEllipseGammaspace[,whichLogged]),naturalspace)
             colnames(pointsEllipse) <- names(newMle)
             out_list[[i]] = pointsEllipse
@@ -659,7 +659,7 @@
               pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords3d) + newMleGamma)
               colnames(pointsEllipseGammaspace) <- names(newMleGamma)
               temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
-              naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 - pi/2)
+              naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), atan(pointsEllipseGammaspace[,'gamma4']/pointsEllipseGammaspace[,'gamma3'])/2)
               pointsEllipse <- cbind(exp(pointsEllipseGammaspace[,whichLogged]),naturalspace)
               colnames(pointsEllipse) <- names(newMle)
               out_list[[i]] = pointsEllipse
@@ -670,7 +670,7 @@
               pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords3d) + newMleGamma)
               colnames(pointsEllipseGammaspace) <- names(newMleGamma)
               temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
-              naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+              naturalspace <- cbind(Mod(temp[,1])^2 + 1, atan(pointsEllipseGammaspace[,'gamma4']/pointsEllipseGammaspace[,'gamma3'])/2)
               pointsEllipse <- cbind(exp(pointsEllipseGammaspace[,whichLogged]),naturalspace)
               colnames(pointsEllipse) <- names(newMle)
               out_list[[i]] = pointsEllipse
@@ -693,31 +693,34 @@
           pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords4d) + newMleGamma)
           colnames(pointsEllipseGammaspace) <- names(newMleGamma)
           temp <- pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4']
-          pointsEllipse <- cbind(exp(pointsEllipseGammaspace[,whichLogged]), Mod(temp)^2 + 1, Arg(temp)/2)
+          pointsEllipse <- cbind(exp(pointsEllipseGammaspace[,whichLogged]), Mod(temp)^2 + 1, atan(pointsEllipseGammaspace[,'gamma4']/pointsEllipseGammaspace[,'gamma3'])/2)
           colnames(pointsEllipse) <- names(newMle)
           out_list[[i]] = pointsEllipse
         }
       }else if(length(newMle)==5){
         load('/home/ruoyong/diseasemapping/pkg/gpuRandom/data/coords5d.RData')
-        # if(newMle['anisoRatio'] <= 1) {
-        #    for(i in 1:length(alpha)){
-        #       clevel <- stats::qchisq(1 - alpha[i], df = 5)
-        #       pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords5d) + newMleGamma)
-        #       colnames(pointsEllipseGammaspace) <- names(newMleGamma)
-        #       temp <- pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4']
-        #       pointsEllipse <- cbind(exp(pointsEllipseGammaspace[,paste("log(", parToLog, ")",sep="")]), 1/(Mod(temp) + 1), Arg(temp)/2)
-        #       colnames(pointsEllipse) <- names(newMle)
-        #       out_list[[i]] = pointsEllipse
-        #    }
-        # }else{
-        for(i in 1:length(alpha)){
-          clevel <- stats::qchisq(1 - alpha[i], df = 5)
-          pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords5d) + newMleGamma)
-          colnames(pointsEllipseGammaspace) <- names(newMleGamma)
-          temp <- pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4']
-          pointsEllipse <- cbind(exp(pointsEllipseGammaspace[,paste("log(", parToLog, ")",sep="")]), Mod(temp)^2 + 1, Arg(temp)/2)
-          colnames(pointsEllipse) <- names(newMle)
-          out_list[[i]] = pointsEllipse
+        if(Mle['anisoRatio'] <= 1){
+          for(i in 1:length(alpha)){
+            clevel <- stats::qchisq(1 - alpha[i], df = 5)
+            pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords5d) + newMleGamma)
+            colnames(pointsEllipseGammaspace) <- names(newMleGamma)
+            temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+            naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), atan(pointsEllipseGammaspace[,'gamma4']/pointsEllipseGammaspace[,'gamma3'])/2)
+            pointsEllipse <- cbind(exp(pointsEllipseGammaspace[,whichLogged]),naturalspace)
+            colnames(pointsEllipse) <- names(newMle)
+            out_list[[i]] = pointsEllipse
+          }
+        }else{
+          for(i in 1:length(alpha)){
+            clevel <- stats::qchisq(1 - alpha[i], df = 5)
+            pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords5d) + newMleGamma)
+            colnames(pointsEllipseGammaspace) <- names(newMleGamma)
+            temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+            naturalspace <- cbind(Mod(temp[,1])^2 + 1, atan(pointsEllipseGammaspace[,'gamma4']/pointsEllipseGammaspace[,'gamma3'])/2)
+            pointsEllipse <- cbind(exp(pointsEllipseGammaspace[,whichLogged]),naturalspace)
+            colnames(pointsEllipse) <- names(newMle)
+            out_list[[i]] = pointsEllipse
+          }
         }
       }
       
