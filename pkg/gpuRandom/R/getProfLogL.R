@@ -231,26 +231,27 @@
 
   
   get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table # 2 column names must be x1 and profile
-                                  a=0.01,    # minus a little thing
-                                  m=1){
+                                  a=0.1,    # minus a little thing
+                                  b=0,
+                                  m=2){
     
-    datC2 = geometry::convhulln(profileLogLik)
-    allPoints = unique(as.vector(datC2))
-    toTest = profileLogLik[allPoints,]
-    toTest[,'profile'] = toTest[,'profile'] + a
-    inHull = geometry::inhulln(datC2, as.matrix(toTest))
-    toUse = profileLogLik[allPoints,][!inHull,]
-    toTest = profileLogLik[allPoints,]
-    
-    # datC1= geometry::convhulln(profileLogLik)
-    # allPoints1 = unique(as.vector(datC1))
-    # toTest = profileLogLik[allPoints1,]
-    # toTest[,'profile'] = toTest[,'profile'] - a
-    # toTest[,'x1'] = toTest[,'x1'] + b
-    # inHull1 = geometry::inhulln(datC1, as.matrix(toTest))
-    # toUse = profileLogLik[allPoints1,][inHull1,]
+    # datC2 = geometry::convhulln(profileLogLik)
+    # allPoints = unique(as.vector(datC2))
+    # toTest = profileLogLik[allPoints,]
     # toTest[,'profile'] = toTest[,'profile'] + a
-    # toTest[,'x1'] = toTest[,'x1'] - b
+    # inHull = geometry::inhulln(datC2, as.matrix(toTest))
+    # toUse = profileLogLik[allPoints,][!inHull,]
+    # toTest = profileLogLik[allPoints,]
+    
+    datC1= geometry::convhulln(profileLogLik)
+    allPoints1 = unique(as.vector(datC1))
+    toTest = profileLogLik[allPoints1,]
+    toTest[,'profile'] = toTest[,'profile'] - a
+    toTest[,'x1'] = toTest[,'x1'] + b
+    inHull1 = geometry::inhulln(datC1, as.matrix(toTest))
+    toUse = profileLogLik[allPoints1,][inHull1,]
+    toTest[,'profile'] = toTest[,'profile'] + a
+    toTest[,'x1'] = toTest[,'x1'] - b
     
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=m, fx=TRUE), data=toUse)
     prof1 = data.frame(x1=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=1001))
@@ -325,8 +326,9 @@
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+     profileLogLik <- profileLogLik[profile > -20]
 
-     inter <- get1dCovexhullinter(profileLogLik)    # a data frame or data.table # 2 column names must be x1 and profile
+     inter <- get1dCovexhullinter(profileLogLik, a=0.5)    # a data frame or data.table # 2 column names must be x1 and profile
      
      toTest <- inter$toTest
      toUse <- inter$toUse
@@ -405,6 +407,7 @@
       colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
       profileLogLik <- result[, .(profile=max(.SD)), by=x1]
       profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+      profileLogLik <- profileLogLik[profile > -20]
       
       inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
       
@@ -467,6 +470,8 @@
       colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
       profileLogLik <- result[, .(profile=max(.SD)), by=x1]
       profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+      profileLogLik <- profileLogLik[profile > -20]
+      
       inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
       
       toTest <- inter$toTest
@@ -522,6 +527,8 @@
       colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
       profileLogLik <- result[, .(profile=max(.SD)), by=x1]
       profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+      profileLogLik <- profileLogLik[profile > -20]
+      
       inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
       toTest <- inter$toTest
       toUse <- inter$toUse
@@ -581,6 +588,8 @@
       colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
       profileLogLik <- result[, .(profile=max(.SD)), by=x1]
       profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+      profileLogLik <- profileLogLik[profile > -20]
+      
       inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
       toTest <- inter$toTest
       toUse <- inter$toUse
@@ -637,6 +646,8 @@
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+     profileLogLik <- profileLogLik[profile > -20]
+     
      inter <- get1dCovexhullinter(profileLogLik, a=0.001)     # a data frame or data.table # 2 column names must be x1 and profile
      toTest <- inter$toTest
      toUse <- inter$toUse
@@ -702,6 +713,8 @@
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
+     profileLogLik <- profileLogLik[profile > -20]
+     
      inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
      toTest <- inter$toTest
      toUse <- inter$toUse
