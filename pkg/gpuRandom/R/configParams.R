@@ -31,12 +31,8 @@ getHessianNolog <- function(Model,
   ## check mle nugget    
   if(('nugget' %in% names(Mle)) & Mle['nugget'] < delta){
     Mle['nugget'] = delta 
-    parToLog <- parToLog[!parToLog %in% 'nugget']
   }  
   
-  if(!('nugget' %in% names(Mle))){
-    parToLog <- parToLog[!parToLog %in% 'nugget']
-  }
   if(!('shape' %in% names(Mle))){
     parToLog <- parToLog[!parToLog %in% 'shape']
   }      
@@ -58,10 +54,10 @@ getHessianNolog <- function(Model,
       gamma4 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians']+ pi/2)))
     }
     aniso <- c(gamma3 = gamma3, gamma4 = gamma4)
-    MleGamma = c(alphaR, log(Mle[whichLogged]),  aniso)
+    MleGamma = c(alphaR, log(Mle[whichLogged]), Mle['nugget'], aniso)
     
   }else{
-    MleGamma = c(alphaR, log(Mle[whichLogged]) )
+    MleGamma = c(alphaR, log(Mle[whichLogged]), Mle['nugget'])
   }
   
   names(MleGamma)[whichLogged] = paste("log(", names(Mle)[whichLogged], ")",sep="")
@@ -156,19 +152,18 @@ getHessianNolog <- function(Model,
     ParamsetGamma <- matrix(MleGamma, nrow=nrow(derivGridDf), ncol=length(Mle), byrow=TRUE, dimnames = list(NULL, names(MleGamma))) + derivGridDf %*% diag(deltas)
   }
   
-  if(!('anisoRatio' %in% names(Mle))){
-    Paramset <- cbind(ParamsetGamma[,-whichLogged], exp(ParamsetGamma[,paste("log(", names(Mle)[whichLogged], ")",sep="")]))   
-  }else{
+  # if(!('anisoRatio' %in% names(Mle))){
+  #   Paramset <- cbind(ParamsetGamma[,-whichLogged], exp(ParamsetGamma[,paste("log(", names(Mle)[whichLogged], ")",sep="")]))   
+  # }else{
     temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
     if(Mle['anisoRatio'] <= 1){
       naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
-      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), naturalspace)
+      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,'nugget'], naturalspace)
     }else{
       naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2 + pi/2)
-      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), naturalspace)
-      
+      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,'nugget'], naturalspace)
     }
-  } 
+  # } 
   
   colnames(Paramset) <- names(Mle)  
   toAdd = setdiff(c('range','shape','nugget','anisoRatio', 'anisoAngleRadians'), names(Mle))
@@ -301,19 +296,19 @@ getHessianNolog <- function(Model,
     ParamsetGamma <- matrix(MleGamma, nrow=nrow(derivGridDf1), ncol=length(Mle), byrow=TRUE, dimnames = list(NULL, names(MleGamma))) + 
       derivGridDf1 %*% diag(deltas)
     
-    if(!('anisoRatio' %in% names(Mle))){
-      Paramset <- cbind(ParamsetGamma[,-whichLogged], exp(ParamsetGamma[,paste("log(", names(Mle)[whichLogged], ")",sep="")]))   
-    }else{
+    # if(!('anisoRatio' %in% names(Mle))){
+    #   Paramset <- cbind(ParamsetGamma[,-whichLogged], exp(ParamsetGamma[,paste("log(", names(Mle)[whichLogged], ")",sep="")]))   
+    # }else{
       temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
       if(Mle['anisoRatio'] <= 1){
         naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
-        Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), naturalspace)
+        Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]),ParamsetGamma[,'nugget'], naturalspace)
       }else{
         naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2 + pi/2)
-        Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), naturalspace)
+        Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]),ParamsetGamma[,'nugget'], naturalspace)
 
       }
-    } 
+    # } 
     
     colnames(Paramset) <- names(Mle)  
     toAdd = setdiff(c('range','shape','nugget','anisoRatio', 'anisoAngleRadians'), names(Mle))
@@ -373,11 +368,11 @@ getHessianNolog <- function(Model,
         newMle <- c(exp(newMleGamma[whichLogged]), newMleGamma[-c(whichLogged, whichAniso)], naturalspace)
       }else{
         naturalspace <- c(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2 + pi/2)
-        if(length(whichLogged)>=2 & whichLogged[2]-whichLogged[1]>1){
-          newMle <- c(exp(newMleGamma[whichLogged[1]]), newMleGamma[-c(whichLogged, whichAniso)], exp(newMleGamma[ whichLogged[2]]), naturalspace)
-        }else{
+        # if(length(whichLogged)>=2 & whichLogged[2]-whichLogged[1]>1){
+        #   newMle <- c(exp(newMleGamma[whichLogged[1]]), newMleGamma[-c(whichLogged, whichAniso)], exp(newMleGamma[ whichLogged[2]]), naturalspace)
+        # }else{
           newMle <- c(exp(newMleGamma[whichLogged]), newMleGamma[-c(whichLogged, whichAniso)], naturalspace)
-        }
+        # }
       }
     }
     names(newMle) <- names(Mle)
@@ -1059,6 +1054,7 @@ getHessianNolog <- function(Model,
 
     configParams <- function(Model,
                              alpha=c(0.001, 0.01, 0.1, 0.2, 0.5, 0.8, 0.95, 0.99),
+                             logNugget = FALSE,
                              Mle = NULL,
                              boxcox = NULL# a vector of confidence levels 1-alpha
     ){
@@ -1066,9 +1062,15 @@ getHessianNolog <- function(Model,
 
       
       ## get the Hessian
+      if(logNugget == TRUE){
       output <- getHessianLog(Model = Model,
                            Mle = Mle, 
                            boxcox = boxcox)
+      }else{
+       output <- getHessianNolog(Model = Model,
+                           Mle = Mle, 
+                           boxcox = boxcox) 
+      }
    
       Mle <- output$originalPoint
       newMle <- output$centralPoint
@@ -1096,6 +1098,8 @@ getHessianNolog <- function(Model,
       # }
       #eig$values <- abs(eig$values)
 
+      
+      if(logNugget == TRUE){
 
       if(length(newMle)==2){
         pointsSphere = exp(1i*seq(0, 2*pi, len=25))
@@ -1210,19 +1214,46 @@ getHessianNolog <- function(Model,
           }
         }
       }
-      
+      }else{
+        if(length(newMle)==5){
+          load('/home/ruoyong/diseasemapping/pkg/gpuRandom/data/coords5d.RData')
+          if(Mle['anisoRatio'] <= 1){
+            for(i in 1:length(alpha)){
+              clevel <- stats::qchisq(1 - alpha[i], df = 5)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords5d) + newMleGamma)
+              colnames(pointsEllipseGammaspace) <- names(newMleGamma)
+              temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+              naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),pointsEllipseGammaspace[,'nugget'], naturalspace)
+              colnames(pointsEllipse) <- names(newMle)
+              out_list[[i]] = pointsEllipse
+            }
+          }else{
+            for(i in 1:length(alpha)){
+              clevel <- stats::qchisq(1 - alpha[i], df = 5)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords5d) + newMleGamma)
+              colnames(pointsEllipseGammaspace) <- names(newMleGamma)
+              temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+              naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2 + pi/2)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]), pointsEllipseGammaspace[,'nugget'], naturalspace)
+              colnames(pointsEllipse) <- names(newMle)
+              out_list[[i]] = pointsEllipse
+            }
+          }
+        }
+      }
       
     for(i in 1:length(alpha)){
         vector1 <- out_list[[i]][,'anisoAngleRadians']
         for(j in 1:length(vector1)){
           if(vector1[j] > pi/2){
             vector1[j] <- vector1[j] - pi
-            if (vector1[j] > pi/2)
-              vector1[j] <- vector1[j] - pi
+            # if (vector1[j] > pi/2)
+            #   vector1[j] <- vector1[j] - pi
             }else if (vector1[j] < -pi/2){
             vector1[j] <- vector1[j] + pi 
-            if (vector1[j] < -pi/2)
-              vector1[j] <- vector1[j] + pi 
+            # if (vector1[j] < -pi/2)
+            #   vector1[j] <- vector1[j] + pi 
             }
         }
       out_list[[i]][,'anisoAngleRadians'] <- vector1
@@ -1232,19 +1263,20 @@ getHessianNolog <- function(Model,
       
       
       
-      if(('nugget' %in% names(newMle)) & newMle['nugget'] == 0){
+      if(('nugget' %in% names(newMle))){
       for(i in 1:length(alpha)){
          vector <- out_list[[i]][,'nugget']
-         for(j in 1:length(vector)/3){
-           if(vector[j]<0){
-             vector[j] = 0
-           }
-         }
-         for(j in (length(vector)/3+1):length(vector)){
-           if(vector[j]<0){
-             vector[j] = stats::runif(1, 0, 1)
-           }
-         }
+         out_list[[i]][,'nugget'] <- pmax(0, vector)
+         # for(j in 1:length(vector)*2/3){
+         #   if(vector[j]<0){
+         #     vector[j] = 0
+         #   }
+         # }
+         # for(j in (length(vector)*2/3+1):length(vector)){
+         #   if(vector[j]<0){
+         #     vector[j] = stats::runif(1, 0, 1)
+         #   }
+         # }
       }
       }
       
