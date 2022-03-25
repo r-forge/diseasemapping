@@ -21,7 +21,6 @@ getHessianNolog <- function(Model,
   }
   Mle <- Mle[order(match(names(Mle), Theorder))]
   Mle <- Mle[!names(Mle) %in% c('boxcox')]
-  #Mle <- Mle[!names(Mle) %in% c('shape')]
   
   if('range' %in% names(Mle)){
     alphaR <- log(Mle['range']^2/Mle['anisoRatio'])
@@ -38,29 +37,61 @@ getHessianNolog <- function(Model,
   }      
   
   
+  # if( ('shape' %in% names(Mle)) & Mle['shape'] >= 4){
+  #   Mle['shape'] = 999
+  # }
+  
+  
+  
   whichLogged = which(names(Mle) %in% parToLog)
   whichAniso = which(names(Mle) %in% c('anisoRatio', 'anisoAngleRadians'))
   
+ if(('shape' %in% names(Mle)) & Mle['shape'] < 4){
   if('anisoRatio' %in% names(Mle)){
     if(!('anisoAngleRadians' %in% names(Mle))){
       stop('anisoRatio and anisoAngleRadians must be together')
     }
-    
     if(Mle['anisoRatio'] <= 1){
       gamma3 <-  unname(sqrt(1/Mle['anisoRatio']-1) * cos(2*(Mle['anisoAngleRadians'] + pi/2)))
-      gamma4 <-  unname(sqrt(1/Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians']+ pi/2)))
+      gamma4 <-  unname(sqrt(1/Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians'] + pi/2)))
     }else{
-      gamma3 <-  unname(sqrt(Mle['anisoRatio']-1) * cos(2*(Mle['anisoAngleRadians']+ pi/2)))
-      gamma4 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians']+ pi/2)))
+      gamma3 <-  unname(sqrt(Mle['anisoRatio']-1) * cos(2*(Mle['anisoAngleRadians'])))
+      gamma4 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians'])))
     }
     aniso <- c(gamma3 = gamma3, gamma4 = gamma4)
     MleGamma = c(alphaR, log(Mle[whichLogged]), Mle['nugget'], aniso)
-    
+
   }else{
     MleGamma = c(alphaR, log(Mle[whichLogged]), Mle['nugget'])
   }
-  
   names(MleGamma)[whichLogged] = paste("log(", names(Mle)[whichLogged], ")",sep="")
+
+  }else{
+  if('anisoRatio' %in% names(Mle)){
+    if(!('anisoAngleRadians' %in% names(Mle))){
+      stop('anisoRatio and anisoAngleRadians must be together')
+    }
+    if(Mle['anisoRatio'] <= 1){
+      gamma3 <-  unname(sqrt(1/Mle['anisoRatio']-1) * cos(2*(Mle['anisoAngleRadians'] + pi/2)))
+      gamma4 <-  unname(sqrt(1/Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians'] + pi/2)))
+    }else{
+      gamma3 <-  unname(sqrt(Mle['anisoRatio']-1) * cos(2*(Mle['anisoAngleRadians'])))
+      gamma4 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians'])))
+    }
+    aniso <- c(gamma3 = gamma3, gamma4 = gamma4)
+    MleGamma = c(alphaR, 1/sqrt(Mle[whichLogged]), Mle['nugget'], aniso)
+
+  }else{
+    MleGamma = c(alphaR, 1/sqrt(Mle[whichLogged]), Mle['nugget'])
+  }
+  names(MleGamma)[whichLogged] = paste("1/sqrt(", names(Mle)[whichLogged], ")",sep="")
+  }
+  
+  
+  
+  
+  
+  
   
   # if(Mle['nugget'] > delta){
   ## center approximation
@@ -152,19 +183,26 @@ getHessianNolog <- function(Model,
     ParamsetGamma <- matrix(MleGamma, nrow=nrow(derivGridDf), ncol=length(Mle), byrow=TRUE, dimnames = list(NULL, names(MleGamma))) + derivGridDf %*% diag(deltas)
   }
   
-  # if(!('anisoRatio' %in% names(Mle))){
-  #   Paramset <- cbind(ParamsetGamma[,-whichLogged], exp(ParamsetGamma[,paste("log(", names(Mle)[whichLogged], ")",sep="")]))   
-  # }else{
+
     temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
+    if(('shape' %in% names(Mle)) & Mle['shape'] < 4){
     if(Mle['anisoRatio'] <= 1){
       naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
       Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,'nugget'], naturalspace)
     }else{
-      naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2 + pi/2)
+      naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
       Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,'nugget'], naturalspace)
     }
-  # } 
-  
+    }else{
+    if(Mle['anisoRatio'] <= 1){
+      naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
+      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,'nugget'], naturalspace)
+    }else{
+      naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,'nugget'], naturalspace)
+    }
+    }
+ 
   colnames(Paramset) <- names(Mle)  
   toAdd = setdiff(c('range','shape','nugget','anisoRatio', 'anisoAngleRadians'), names(Mle))
   otherParams = matrix(Model$opt$mle[toAdd], nrow=nrow(Paramset), ncol = length(toAdd),
@@ -172,7 +210,7 @@ getHessianNolog <- function(Model,
   Params1 <- cbind(Paramset, otherParams)
   
   if(is.null(boxcox)){
-    boxcox = Model$parameters['boxcox']
+    boxcox = c(Model$parameters['boxcox'], Model$parameters['boxcox']-0.05, Model$parameters['boxcox']+0.05)
   }
   
   
@@ -192,12 +230,14 @@ getHessianNolog <- function(Model,
   
   
   #result$paramsRenew
-  if(length(result1$boxcox)==2){
+  if(length(result1$boxcox)==4){
     A <- result1$LogLik[-1, 2]
     Origin <- result1$LogLik[1, 2]
-  }else{
+    boxcoxHessian <- unname((result1$LogLik[1, 4] - 2*result1$LogLik[1, 2] + result1$LogLik[1, 3])/(0.05^2))
+  }else if(length(result1$boxcox)==3){
     A <- result1$LogLik[-1, 1]
     Origin <- result1$LogLik[1, 1]  
+    boxcoxHessian <- unname((result1$LogLik[1, 3] - 2*result1$LogLik[1, 1] + result1$LogLik[1, 2])/(0.05^2))
   }
   #plot(result$LogLik[])
   
@@ -207,7 +247,7 @@ getHessianNolog <- function(Model,
   
   # if(Mle['nugget'] > delta){
   if(length(Mle)==1){
-    HessianMat[1,1] <- (result$LogLik[1, 2] - 2*result$LogLik[2, 2] + result$LogLik[3, 2])/(deltas[1]^2)
+    HessianMat[1,1] <- (result1$LogLik[1, 2] - 2*result1$LogLik[2, 2] + result1$LogLik[3, 2])/(deltas[1]^2)
   }else if(length(Mle)==2){
     HessianMat[1,1] <- (A[1] + A[2] -2*Origin)/(deltas[1]^2)
     HessianMat[2,2] <- (A[3] + A[4] -2*Origin)/(deltas[2]^2)
@@ -268,146 +308,141 @@ getHessianNolog <- function(Model,
     HessianMat[4,2] <- HessianMat[2,4]
     HessianMat[4,3] <- HessianMat[3,4]
   }
+  
+  
+
+  boxcoxSetup <- stats::qnorm(c(0.01, 0.1, 0.25, 0.4, 0.5, 0.6, 0.75, 0.9,0.99), mean=Model$parameters['boxcox'], sd = sqrt(solve((-boxcoxHessian))))
+  
+  
+
 
   # frst detivatives
-  if((('nugget' %in% names(Mle)) & Mle['nugget'] < delta) | ('shape' %in% names(Mle)) & Mle['shape'] >= kappa){
-    derivGridDf1 <- rbind(c(1,0,0,0,0),
-                          c(-1, 0,0,0,0),
-                          c(0, 1, 0,0,0),
-                          c(0,-1, 0,0,0),
-                          c(0, 0, 1,0,0),
-                          c(0, 0,-1,0,0),
-                          c(0, 0, 0,1,0),
-                          c(0, 0, 0,-1,0),
-                          c(0, 0, 0, 0,1),
-                          c(0, 0, 0, 0,-1))
-    if(length(Mle)==4){
-      derivGridDf1 <- derivGridDf1[-c(9,10), -5]
-    }else if(length(Mle)==2){
-      derivGridDf1 <- derivGridDf1[c(1:4), 1:2]  
-    }else if(length(Mle) == 3){
-      derivGridDf1 <- derivGridDf1[1:6, 1:3]
-    }
-    
-    
-    deltas = rep(delta, length(Mle))
-    # names(deltas) = names(MleGamma)
-    # deltas['gamma4'] = 0.02
-    ParamsetGamma <- matrix(MleGamma, nrow=nrow(derivGridDf1), ncol=length(Mle), byrow=TRUE, dimnames = list(NULL, names(MleGamma))) + 
-      derivGridDf1 %*% diag(deltas)
-    
-    # if(!('anisoRatio' %in% names(Mle))){
-    #   Paramset <- cbind(ParamsetGamma[,-whichLogged], exp(ParamsetGamma[,paste("log(", names(Mle)[whichLogged], ")",sep="")]))   
-    # }else{
-      temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
-      if(Mle['anisoRatio'] <= 1){
-        naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
-        Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]),ParamsetGamma[,'nugget'], naturalspace)
-      }else{
-        naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2 + pi/2)
-        Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]),ParamsetGamma[,'nugget'], naturalspace)
-
-      }
-    # } 
-    
-    colnames(Paramset) <- names(Mle)  
-    toAdd = setdiff(c('range','shape','nugget','anisoRatio', 'anisoAngleRadians'), names(Mle))
-    otherParams = matrix(Model$opt$mle[toAdd], nrow=nrow(Paramset), ncol = length(toAdd),
-                         dimnames = list(rownames(Paramset), toAdd), byrow=TRUE)
-    Params2 <- cbind(Paramset, otherParams)
-    
-    result2<-gpuRandom::getProfLogL(data= Model$data,
-                                    formula=Model$model$formula,
-                                    coordinates=Model$data@coords,
-                                    params=Params2,
-                                    boxcox = Model$parameters['boxcox'],
-                                    type = "double",
-                                    NparamPerIter=20,
-                                    gpuElementsOnly=FALSE,
-                                    reml=FALSE,
-                                    Nglobal=c(128,64),
-                                    Nlocal=c(16,16),
-                                    NlocalCache=2000)
-    
-    if(length(result1$boxcox)==2){
-      A <- result2$LogLik[, 2]
-    }else{
-      A <- result2$LogLik[, 1]
-    }
-    FirstDeri <- rep(0, length(Mle))
-    names(FirstDeri) <- names(MleGamma)
-    
-    FirstDeri[1] <- (A[1] - A[2])/(2*deltas[1])
-    FirstDeri[2] <- (A[3] - A[4])/(2*deltas[2])
-    FirstDeri[3] <- (A[5] - A[6])/(2*deltas[3])
-    FirstDeri[4] <- (A[7] - A[8])/(2*deltas[4])
-    FirstDeri[5] <- (A[9] - A[10])/(2*deltas[5])
-    
-    index <- which(abs(FirstDeri) > 0.01)
-  }
-  
-  #Sigma <- -solve(HessianMat)
-  
-  newMle <- Mle
-  newMleGamma <- MleGamma
-  
-  
-  if((('nugget' %in% names(Mle)) & Mle['nugget'] < delta) | ('shape' %in% names(Mle)) & Mle['shape'] >= kappa){
-    
-    for(i in 1:length(index)){
-      #newMle[index[i]] <- Mle[index[i]] + Sigma[index[i],index[i]]*FirstDeri[index[i]]
-      newMleGamma[index[i]] <- MleGamma[index[i]] + Sigma[index[i],index[i]]*FirstDeri[index[i]]
-    } 
-    
-    if(!('anisoRatio' %in% names(Mle))){
-      newMle <- c(exp(newMleGamma[paste("log(", names(Mle)[whichLogged], ")",sep="")]), newMleGamma[-whichLogged])
-    }else{
-      temp <- as.data.frame(newMleGamma['gamma3'] + 1i * newMleGamma['gamma4'])
-      if(Mle['anisoRatio'] <= 1){
-        naturalspace <- c(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
-        newMle <- c(exp(newMleGamma[whichLogged]), newMleGamma[-c(whichLogged, whichAniso)], naturalspace)
-      }else{
-        naturalspace <- c(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2 + pi/2)
-        # if(length(whichLogged)>=2 & whichLogged[2]-whichLogged[1]>1){
-        #   newMle <- c(exp(newMleGamma[whichLogged[1]]), newMleGamma[-c(whichLogged, whichAniso)], exp(newMleGamma[ whichLogged[2]]), naturalspace)
-        # }else{
-          newMle <- c(exp(newMleGamma[whichLogged]), newMleGamma[-c(whichLogged, whichAniso)], naturalspace)
-        # }
-      }
-    }
-    names(newMle) <- names(Mle)
-    
-
-    # check mle shape
-    if('shape' %in% names(Mle) & newMle['shape'] >= kappa){
-      newMle['shape'] = 1/newMle['shape']
-      # if(Mle['shape'] <= delta)
-      #   Mle['shape'] = delta
-      #parToLog <- parToLog[!parToLog %in% 'shape']
-    }
-  }
+  # if((('nugget' %in% names(Mle)) & Mle['nugget'] < delta) | ('shape' %in% names(Mle)) & Mle['shape'] >= 4){
+  #   derivGridDf1 <- rbind(c(1,0,0,0,0),
+  #                         c(-1, 0,0,0,0),
+  #                         c(0, 1, 0,0,0),
+  #                         c(0,-1, 0,0,0),
+  #                         c(0, 0, 1,0,0),
+  #                         c(0, 0,-1,0,0),
+  #                         c(0, 0, 0,1,0),
+  #                         c(0, 0, 0,-1,0),
+  #                         c(0, 0, 0, 0,1),
+  #                         c(0, 0, 0, 0,-1))
+  #   if(length(Mle)==4){
+  #     derivGridDf1 <- derivGridDf1[-c(9,10), -5]
+  #   }else if(length(Mle)==2){
+  #     derivGridDf1 <- derivGridDf1[c(1:4), 1:2]
+  #   }else if(length(Mle) == 3){
+  #     derivGridDf1 <- derivGridDf1[1:6, 1:3]
+  #   }
+  # 
+  # 
+  #   deltas = rep(delta, length(Mle))
+  #   # names(deltas) = names(MleGamma)
+  #   # deltas['gamma4'] = 0.02
+  #   ParamsetGamma <- matrix(MleGamma, nrow=nrow(derivGridDf1), ncol=length(Mle), byrow=TRUE, dimnames = list(NULL, names(MleGamma))) +
+  #     derivGridDf1 %*% diag(deltas)
+  # 
+  #   # if(!('anisoRatio' %in% names(Mle))){
+  #   #   Paramset <- cbind(ParamsetGamma[,-whichLogged], exp(ParamsetGamma[,paste("log(", names(Mle)[whichLogged], ")",sep="")]))
+  #   # }else{
+  #   temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
+  #     if(Mle['anisoRatio'] <= 1){
+  #       naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
+  #       Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,'nugget'], naturalspace)
+  #     }else{
+  #       naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+  #       Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,'nugget'], naturalspace)
+  #     }
+  #   # }
+  # 
+  #   colnames(Paramset) <- names(Mle)
+  #   toAdd = setdiff(c('range','shape','nugget','anisoRatio', 'anisoAngleRadians'), names(Mle))
+  #   otherParams = matrix(Model$opt$mle[toAdd], nrow=nrow(Paramset), ncol = length(toAdd),
+  #                        dimnames = list(rownames(Paramset), toAdd), byrow=TRUE)
+  #   Params2 <- cbind(Paramset, otherParams)
+  # 
+  #   result2<-gpuRandom::getProfLogL(data= Model$data,
+  #                                   formula=Model$model$formula,
+  #                                   coordinates=Model$data@coords,
+  #                                   params=Params2,
+  #                                   boxcox = Model$parameters['boxcox'],
+  #                                   type = "double",
+  #                                   NparamPerIter=20,
+  #                                   gpuElementsOnly=FALSE,
+  #                                   reml=FALSE,
+  #                                   Nglobal=c(128,64),
+  #                                   Nlocal=c(16,16),
+  #                                   NlocalCache=2000)
+  # 
+  #   if(length(result1$boxcox)==2){
+  #     A <- result2$LogLik[, 2]
+  #   }else{
+  #     A <- result2$LogLik[, 1]
+  #   }
+  #   FirstDeri <- rep(0, length(Mle))
+  #   names(FirstDeri) <- names(MleGamma)
+  # 
+  #   FirstDeri[1] <- (A[1] - A[2])/(2*deltas[1])
+  #   FirstDeri[2] <- (A[3] - A[4])/(2*deltas[2])
+  #   FirstDeri[3] <- (A[5] - A[6])/(2*deltas[3])
+  #   FirstDeri[4] <- (A[7] - A[8])/(2*deltas[4])
+  #   FirstDeri[5] <- (A[9] - A[10])/(2*deltas[5])
+  # 
+  #   index <- which(abs(FirstDeri) > 0.01)
+  # }
+  # 
+  # #Sigma <- -solve(HessianMat)
+  # 
+  # newMle <- Mle
+  # newMleGamma <- MleGamma
+  # 
+  # 
+  # if((('nugget' %in% names(Mle)) & Mle['nugget'] < delta) | ('shape' %in% names(Mle)) & Mle['shape'] >= 4){
+  # 
+  #   for(i in 1:length(index)){
+  #     #newMle[index[i]] <- Mle[index[i]] + Sigma[index[i],index[i]]*FirstDeri[index[i]]
+  #     newMleGamma[index[i]] <- MleGamma[index[i]] + solve(-HessianMat)[index[i],index[i]]*FirstDeri[index[i]]
+  #   }
+  # 
+  # 
+  #     temp <- as.data.frame(newMleGamma['gamma3'] + 1i * newMleGamma['gamma4'])
+  #     if(Mle['anisoRatio'] <= 1){
+  #       naturalspace <- c(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
+  #       newMle <- c(sqrt(exp(newMleGamma['alphaR'])*naturalspace[1]), (1/newMleGamma[ whichLogged])^2, newMleGamma['nugget'], naturalspace)
+  #     }else{
+  #       naturalspace <- c(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2 )
+  #       newMle <- c(sqrt(exp(newMleGamma['alphaR'])*naturalspace[1]), (1/newMleGamma[ whichLogged])^2, newMleGamma['nugget'], naturalspace)
+  #     }
+  # 
+  #   names(newMle) <- names(Mle)
+  # 
+  # 
+  #   # check mle shape
+  #   # if('shape' %in% names(Mle) & newMle['shape'] >= kappa){
+  #   #   newMle['shape'] = 1/newMle['shape']
+  #   # }
+  # }
   
   
-  if((('nugget' %in% names(Mle)) & Mle['nugget'] < delta) | ('shape' %in% names(Mle)) & Mle['shape'] >= kappa){
-    output = list(Gradiant= FirstDeri,
-                  HessianMat = HessianMat,
-                  #Sigma = Sigma,
-                  originalPoint = Mle,
-                  centralPoint = newMle,
-                  centralPointGamma = newMleGamma,
-                  parToLog = parToLog,
-                  whichAniso = whichAniso,
-                  data = cbind(Params1, result1$LogLik))
-  }else{
+  # if((('nugget' %in% names(Mle)) & Mle['nugget'] < delta) | ('shape' %in% names(Mle)) & Mle['shape'] >= kappa){
+  #   output = list(Gradiant= FirstDeri,
+  #                 HessianMat = HessianMat,
+  #                 originalPoint = Mle,
+  #                 centralPoint = newMle,
+  #                 centralPointGamma = newMleGamma,
+  #                 parToLog = parToLog,
+  #                 whichAniso = whichAniso,
+  #                 data = cbind(Params1, result1$LogLik))
+  # }else{
     output = list(HessianMat = HessianMat,
-                  #Sigma = Sigma,
                   originalPoint = Mle,
-                  centralPoint = newMle,
-                  centralPointGamma = newMleGamma,
+                  boxcoxSetup = boxcoxSetup,
+                  centralPointGamma = MleGamma,
                   parToLog = parToLog,
                   whichAniso = whichAniso,
                   data = cbind(Params1, result1$LogLik))  
-  }
+  # }
   
   output
 }
@@ -438,7 +473,7 @@ getHessianNolog <- function(Model,
       kappa = 60
       # order the params
       Theorder <- c('range', 'shape', 'nugget', 'anisoRatio', 'anisoAngleRadians')
-      parToLog <- c('shape', "nugget")
+      parToLog <- c( "nugget")
       if(is.null(Mle)){
         Mle <- Model$optim$options[,'opt']
       }
@@ -460,34 +495,54 @@ getHessianNolog <- function(Model,
       if(!('nugget' %in% names(Mle))){
         parToLog <- parToLog[!parToLog %in% 'nugget']
       }
-      if(!('shape' %in% names(Mle))){
-        parToLog <- parToLog[!parToLog %in% 'shape']
-      }      
+      # if(!('shape' %in% names(Mle))){
+      #   parToLog <- parToLog[!parToLog %in% 'shape']
+      # }      
       
       
       whichLogged = which(names(Mle) %in% parToLog)
       whichAniso = which(names(Mle) %in% c('anisoRatio', 'anisoAngleRadians'))
       
-      if('anisoRatio' %in% names(Mle)){
-        if(!('anisoAngleRadians' %in% names(Mle))){
-          stop('anisoRatio and anisoAngleRadians must be together')
-        }
-        
-        if(Mle['anisoRatio'] <= 1){
-          gamma3 <-  unname(sqrt(1/Mle['anisoRatio']-1) * cos(2*(Mle['anisoAngleRadians'] + pi/2)))
-          gamma4 <-  unname(sqrt(1/Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians']+ pi/2)))
+      if(('shape' %in% names(Mle)) & Mle['shape'] < 4){
+        if('anisoRatio' %in% names(Mle)){
+          if(!('anisoAngleRadians' %in% names(Mle))){
+            stop('anisoRatio and anisoAngleRadians must be together')
+          }
+          if(Mle['anisoRatio'] <= 1){
+            gamma3 <-  unname(sqrt(1/Mle['anisoRatio']-1) * cos(2*(Mle['anisoAngleRadians'] + pi/2)))
+            gamma4 <-  unname(sqrt(1/Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians'] + pi/2)))
+          }else{
+            gamma3 <-  unname(sqrt(Mle['anisoRatio']-1) * cos(2*(Mle['anisoAngleRadians'])))
+            gamma4 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians'])))
+          }
+          aniso <- c(gamma3 = gamma3, gamma4 = gamma4)
+          MleGamma = c(alphaR, log(Mle[whichLogged]), Mle['nugget'], aniso)
+          
         }else{
-          gamma3 <-  unname(sqrt(Mle['anisoRatio']-1) * cos(2*(Mle['anisoAngleRadians']+ pi/2)))
-          gamma4 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians']+ pi/2)))
+          MleGamma = c(alphaR, log(Mle[whichLogged]), Mle['nugget'])
         }
-        aniso <- c(gamma3 = gamma3, gamma4 = gamma4)
-        MleGamma = c(alphaR, log(Mle[whichLogged]),  aniso)
-
+        names(MleGamma)[whichLogged] = paste("log(", names(Mle)[whichLogged], ")",sep="")
+        
       }else{
-        MleGamma = c(alphaR, log(Mle[whichLogged]) )
+        if('anisoRatio' %in% names(Mle)){
+          if(!('anisoAngleRadians' %in% names(Mle))){
+            stop('anisoRatio and anisoAngleRadians must be together')
+          }
+          if(Mle['anisoRatio'] <= 1){
+            gamma3 <-  unname(sqrt(1/Mle['anisoRatio']-1) * cos(2*(Mle['anisoAngleRadians'] + pi/2)))
+            gamma4 <-  unname(sqrt(1/Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians'] + pi/2)))
+          }else{
+            gamma3 <-  unname(sqrt(Mle['anisoRatio']-1) * cos(2*(Mle['anisoAngleRadians'])))
+            gamma4 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians'])))
+          }
+          aniso <- c(gamma3 = gamma3, gamma4 = gamma4)
+          MleGamma = c(alphaR, 1/sqrt(Mle[whichLogged]), Mle['nugget'], aniso)
+          
+        }else{
+          MleGamma = c(alphaR, 1/sqrt(Mle[whichLogged]), Mle['nugget'])
+        }
+        names(MleGamma)[whichLogged] = paste("1/sqrt(", names(Mle)[whichLogged], ")",sep="")
       }
-      
-      names(MleGamma)[whichLogged] = paste("log(", names(Mle)[whichLogged], ")",sep="")
       
   # if(Mle['nugget'] > delta){
   ## center approximation
@@ -698,6 +753,7 @@ getHessianNolog <- function(Model,
     ParamsetGamma <- matrix(MleGamma, nrow=nrow(derivGridDf), ncol=length(Mle), byrow=TRUE, dimnames = list(NULL, names(MleGamma))) + derivGridDf %*% diag(deltas)
   }
   
+  if(('shape' %in% names(Mle)) & Mle['shape'] < 4){  
   if(!('anisoRatio' %in% names(Mle))){
     Paramset <- cbind(ParamsetGamma[,-whichLogged], exp(ParamsetGamma[,paste("log(", names(Mle)[whichLogged], ")",sep="")]))   
   }else{
@@ -706,14 +762,24 @@ getHessianNolog <- function(Model,
     naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
     Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), naturalspace)
     }else{
-    naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2 + pi/2)
+    naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2 )
     if(length(whichLogged)>=2 & whichLogged[2]-whichLogged[1]>1){
       Paramset <- cbind(exp(ParamsetGamma[, whichLogged[1]]), ParamsetGamma[,-c(whichLogged, whichAniso)], exp(ParamsetGamma[, whichLogged[2]]), naturalspace)
     }else{
       Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), naturalspace)
     }
     }
-  } 
+  }
+  }else{
+    temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
+    if(Mle['anisoRatio'] <= 1){
+      naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
+      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,'nugget'], naturalspace)
+    }else{
+      naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,'nugget'], naturalspace)
+    }    
+  }
   
   colnames(Paramset) <- names(Mle)  
   toAdd = setdiff(c('range','shape','nugget','anisoRatio', 'anisoAngleRadians'), names(Mle))
@@ -908,7 +974,7 @@ getHessianNolog <- function(Model,
       naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
       Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), naturalspace)
     }else{
-      naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2 + pi/2)
+      naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
       if(length(whichLogged)>=2 & whichLogged[2]-whichLogged[1]>1){
         Paramset <- cbind(exp(ParamsetGamma[, whichLogged[1]]), ParamsetGamma[,-c(whichLogged, whichAniso)], exp(ParamsetGamma[, whichLogged[2]]), naturalspace)
       }else{
@@ -953,7 +1019,7 @@ getHessianNolog <- function(Model,
   index <- which(abs(FirstDeri) > 0.01)
   }
   
-  #Sigma <- -solve(HessianMat)
+  #Sigma <- solve(-HessianMat)
 
   newMle <- Mle
   newMleGamma <- MleGamma
@@ -963,25 +1029,35 @@ getHessianNolog <- function(Model,
   
   for(i in 1:length(index)){
     #newMle[index[i]] <- Mle[index[i]] + Sigma[index[i],index[i]]*FirstDeri[index[i]]
-    newMleGamma[index[i]] <- MleGamma[index[i]] + Sigma[index[i],index[i]]*FirstDeri[index[i]]
+    newMleGamma[index[i]] <- MleGamma[index[i]] + solve(-HessianMat)[index[i],index[i]]*FirstDeri[index[i]]
   } 
   
-  if(!('anisoRatio' %in% names(Mle))){
-    newMle <- c(exp(newMleGamma[paste("log(", names(Mle)[whichLogged], ")",sep="")]), newMleGamma[-whichLogged])
-  }else{
-    temp <- as.data.frame(newMleGamma['gamma3'] + 1i * newMleGamma['gamma4'])
-    if(Mle['anisoRatio'] <= 1){
-      naturalspace <- c(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
-      newMle <- c(exp(newMleGamma[whichLogged]), newMleGamma[-c(whichLogged, whichAniso)], naturalspace)
-    }else{
-      naturalspace <- c(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2 + pi/2)
-      if(length(whichLogged)>=2 & whichLogged[2]-whichLogged[1]>1){
-        newMle <- c(exp(newMleGamma[whichLogged[1]]), newMleGamma[-c(whichLogged, whichAniso)], exp(newMleGamma[ whichLogged[2]]), naturalspace)
+
+    if(('shape' %in% names(Mle)) & Mle['shape'] < 4){
+      if(!('anisoRatio' %in% names(Mle))){
+        newMle <- c(exp(newMleGamma[paste("log(", names(Mle)[whichLogged], ")",sep="")]), newMleGamma[-whichLogged])
       }else{
-        newMle <- c(exp(newMleGamma[whichLogged]), newMleGamma[-c(whichLogged, whichAniso)], naturalspace)
+      temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
+      if(Mle['anisoRatio'] <= 1){
+        naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
+        Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,'nugget'], naturalspace)
+      }else{
+        naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+        Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,'nugget'], naturalspace)
       }
+    }}else{
+      if(!('anisoRatio' %in% names(Mle))){
+        newMle <- c(exp(newMleGamma[paste("log(", names(Mle)[whichLogged], ")",sep="")]), newMleGamma[-whichLogged])
+      }else{
+      if(Mle['anisoRatio'] <= 1){
+        naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
+        Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,'nugget'], naturalspace)
+      }else{
+        naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+        Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,'nugget'], naturalspace)
+      }      
     }
-  }
+    }
   names(newMle) <- names(Mle)
   
   ## check if newMle's are on boundary
@@ -1073,20 +1149,28 @@ getHessianNolog <- function(Model,
       }
    
       Mle <- output$originalPoint
-      newMle <- output$centralPoint
-      newMleGamma <- output$centralPointGamma
+      #newMle <- output$centralPoint
+      MleGamma <- output$centralPointGamma
       #Sigma <- output$Sigma
       whichAniso <- output$whichAniso
       parToLog <- output$parToLog
       HessianMat <- output$HessianMat
+      boxcoxSetup <- output$boxcoxSetup
 
-      whichLogged = which(names(newMle) %in% parToLog)
+      whichLogged = which(names(Mle) %in% parToLog)
       
       
       eigenH = eigen(-HessianMat)
-      eigenH$values = pmax(0.01, eigenH$values)
+      if(any(eigenH$values>100)){
+      eigenH$values = pmax(0.1, eigenH$values) 
+      }else{
+        eigenH$values = abs(eigenH$values)
+      }
+      #eigenH$values = pmax(0.01, eigenH$values)
       
       eig = list(values=1/eigenH$values, vectors=eigenH$vectors)
+      
+      #eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
       
       out_list <- list()
       ## fix first derivative ends  
@@ -1099,198 +1183,434 @@ getHessianNolog <- function(Model,
       #eig$values <- abs(eig$values)
 
       
-      if(logNugget == TRUE){
+      if(logNugget == TRUE & Mle['shape'] < 4){
 
-      if(length(newMle)==2){
+      if(length(Mle)==2){
         pointsSphere = exp(1i*seq(0, 2*pi, len=25))
         pointsSphere = pointsSphere[-length(pointsSphere)]
         pointsSphere2d = cbind(Re(pointsSphere), Im(pointsSphere))
         #plot(pointsSphere2d)
-        if('anisoRatio' %in% names(newMle)){
+        if('anisoRatio' %in% names(Mle)){
           for(i in 1:length(alpha)){
             clevel <- stats::qchisq(1 - alpha[i], df = 2)
-            pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(pointsSphere2d) + newMleGamma)
-            colnames(pointsEllipseGammaspace) <- names(newMleGamma)
+            pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(pointsSphere2d) + MleGamma)
+            colnames(pointsEllipseGammaspace) <- names(MleGamma)
             temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
-            naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2 + pi/2)
+            naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
             pointsEllipse <- cbind(exp(pointsEllipseGammaspace[,whichLogged]),naturalspace)
-            colnames(pointsEllipse) <- names(newMle)
+            colnames(pointsEllipse) <- names(Mle)
             out_list[[i]] = pointsEllipse
           }         
         }else{
           for(i in 1:length(alpha)){
             clevel <- stats::qchisq(1 - alpha[i], df = 2)
-            pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(pointsSphere2d) + newMleGamma)
-            colnames(pointsEllipseGammaspace) <- names(newMleGamma)
+            pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(pointsSphere2d) + MleGamma)
+            colnames(pointsEllipseGammaspace) <- names(MleGamma)
             pointsEllipse <- cbind(exp(pointsEllipseGammaspace[,paste("log(", names(Mle)[whichLogged], ")",sep="")]))
-            colnames(pointsEllipse) <- names(newMle)
+            colnames(pointsEllipse) <- names(Mle)
             out_list[[i]] = pointsEllipse
           } 
         }
-      }else if(length(newMle)==3){
+      }else if(length(Mle)==3){
         load('/home/ruoyong/diseasemapping/pkg/gpuRandom/data/coords3d.RData')
-        if('anisoRatio' %in% names(newMle)){
+        if('anisoRatio' %in% names(Mle)){
           if(Mle['anisoRatio'] <= 1){
             for(i in 1:length(alpha)){
               clevel <- stats::qchisq(1 - alpha[i], df = 3)
-              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords3d) + newMleGamma)
-              colnames(pointsEllipseGammaspace) <- names(newMleGamma)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords3d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
               temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
               naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
               pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),naturalspace)
-              colnames(pointsEllipse) <- names(newMle)
+              colnames(pointsEllipse) <- names(Mle)
               out_list[[i]] = pointsEllipse
             }
           }else{
             for(i in 1:length(alpha)){
               clevel <- stats::qchisq(1 - alpha[i], df = 3)
-              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords3d) + newMleGamma)
-              colnames(pointsEllipseGammaspace) <- names(newMleGamma)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords3d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
               temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
-              naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2 + pi/2)
+              naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
               pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),naturalspace)
-              colnames(pointsEllipse) <- names(newMle)
+              colnames(pointsEllipse) <- names(Mle)
               out_list[[i]] = pointsEllipse
             }
           }
         }else{
           for(i in 1:length(alpha)){
             clevel <- stats::qchisq(1 - alpha[i], df = 3)
-            pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords3d) + newMleGamma)
-            colnames(pointsEllipseGammaspace) <- names(newMleGamma)
+            pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords3d) + MleGamma)
+            colnames(pointsEllipseGammaspace) <- names(MleGamma)
             pointsEllipse <- cbind(exp(pointsEllipseGammaspace[,paste("log(", names(Mle)[whichLogged], ")",sep="")]))
-            colnames(pointsEllipse) <- names(newMle)
+            colnames(pointsEllipse) <- names(Mle)
             out_list[[i]] = pointsEllipse
           }
           }
-        }else if(length(newMle)==4){
+        }else if(length(Mle)==4){
         load('/home/ruoyong/diseasemapping/pkg/gpuRandom/data/coords4d.RData')
           if(Mle['anisoRatio'] <= 1){
             for(i in 1:length(alpha)){
               clevel <- stats::qchisq(1 - alpha[i], df = 4)
-              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords4d) + newMleGamma)
-              colnames(pointsEllipseGammaspace) <- names(newMleGamma)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords4d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
               temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
               naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
               pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),naturalspace)
-              colnames(pointsEllipse) <- names(newMle)
+              colnames(pointsEllipse) <- names(Mle)
               out_list[[i]] = pointsEllipse
             }
           }else{          
             for(i in 1:length(alpha)){
               clevel <- stats::qchisq(1 - alpha[i], df = 4)
-              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords4d) + newMleGamma)
-              colnames(pointsEllipseGammaspace) <- names(newMleGamma)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords4d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
               temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
-              naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2 + pi/2)
+              naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
               pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),naturalspace)
-              colnames(pointsEllipse) <- names(newMle)
+              colnames(pointsEllipse) <- names(Mle)
               out_list[[i]] = pointsEllipse
             }
         }
-      }else if(length(newMle)==5){
+      }else if(length(Mle)==5){
         load('/home/ruoyong/diseasemapping/pkg/gpuRandom/data/coords5d.RData')
         if(Mle['anisoRatio'] <= 1){
           for(i in 1:length(alpha)){
             clevel <- stats::qchisq(1 - alpha[i], df = 5)
-            pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords5d) + newMleGamma)
-            colnames(pointsEllipseGammaspace) <- names(newMleGamma)
+            pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords5d) + MleGamma)
+            colnames(pointsEllipseGammaspace) <- names(MleGamma)
             temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
             naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
             pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),naturalspace)
-            colnames(pointsEllipse) <- names(newMle)
+            colnames(pointsEllipse) <- names(Mle)
             out_list[[i]] = pointsEllipse
           }
         }else{
           for(i in 1:length(alpha)){
             clevel <- stats::qchisq(1 - alpha[i], df = 5)
-            pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords5d) + newMleGamma)
-            colnames(pointsEllipseGammaspace) <- names(newMleGamma)
+            pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords5d) + MleGamma)
+            colnames(pointsEllipseGammaspace) <- names(MleGamma)
             temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
-            naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2 + pi/2)
+            naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
             pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),naturalspace)
-            colnames(pointsEllipse) <- names(newMle)
+            colnames(pointsEllipse) <- names(Mle)
             out_list[[i]] = pointsEllipse
           }
         }
       }
-      }else{
-        if(length(newMle)==5){
+      }
+      
+      
+      if(logNugget == TRUE & Mle['shape'] >= 4){
+
+        if(length(Mle)==2){
+          pointsSphere = exp(1i*seq(0, 2*pi, len=25))
+          pointsSphere = pointsSphere[-length(pointsSphere)]
+          pointsSphere2d = cbind(Re(pointsSphere), Im(pointsSphere))
+          #plot(pointsSphere2d)
+          if('anisoRatio' %in% names(Mle)){
+            for(i in 1:length(alpha)){
+              clevel <- stats::qchisq(1 - alpha[i], df = 2)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(pointsSphere2d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
+              temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+              naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+              pointsEllipse <- cbind((1/pointsEllipseGammaspace[, whichLogged])^2,naturalspace)
+              colnames(pointsEllipse) <- names(Mle)
+              out_list[[i]] = pointsEllipse
+            }
+          }else{
+            for(i in 1:length(alpha)){
+              clevel <- stats::qchisq(1 - alpha[i], df = 2)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(pointsSphere2d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
+              pointsEllipse <- cbind((1/pointsEllipseGammaspace[, whichLogged])^2)
+              colnames(pointsEllipse) <- names(Mle)
+              out_list[[i]] = pointsEllipse
+            }
+          }
+        }else if(length(Mle)==3){
+          load('/home/ruoyong/diseasemapping/pkg/gpuRandom/data/coords3d.RData')
+          if('anisoRatio' %in% names(Mle)){
+            if(Mle['anisoRatio'] <= 1){
+              for(i in 1:length(alpha)){
+                clevel <- stats::qchisq(1 - alpha[i], df = 3)
+                pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords3d) + MleGamma)
+                colnames(pointsEllipseGammaspace) <- names(MleGamma)
+                temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+                naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
+                pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), (1/pointsEllipseGammaspace[, whichLogged])^2,naturalspace)
+                colnames(pointsEllipse) <- names(Mle)
+                out_list[[i]] = pointsEllipse
+              }
+            }else{
+              for(i in 1:length(alpha)){
+                clevel <- stats::qchisq(1 - alpha[i], df = 3)
+                pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords3d) + MleGamma)
+                colnames(pointsEllipseGammaspace) <- names(MleGamma)
+                temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+                naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+                pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), (1/pointsEllipseGammaspace[, whichLogged])^2,naturalspace)
+                colnames(pointsEllipse) <- names(Mle)
+                out_list[[i]] = pointsEllipse
+              }
+            }
+          }else{
+            for(i in 1:length(alpha)){
+              clevel <- stats::qchisq(1 - alpha[i], df = 3)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords3d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
+              pointsEllipse <- cbind((1/pointsEllipseGammaspace[, whichLogged])^2)
+              colnames(pointsEllipse) <- names(Mle)
+              out_list[[i]] = pointsEllipse
+            }
+          }
+        }else if(length(Mle)==4){
+          load('/home/ruoyong/diseasemapping/pkg/gpuRandom/data/coords4d.RData')
+          if(Mle['anisoRatio'] <= 1){
+            for(i in 1:length(alpha)){
+              clevel <- stats::qchisq(1 - alpha[i], df = 4)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords4d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
+              temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+              naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), (1/pointsEllipseGammaspace[, whichLogged])^2,naturalspace)
+              colnames(pointsEllipse) <- names(Mle)
+              out_list[[i]] = pointsEllipse
+            }
+          }else{
+            for(i in 1:length(alpha)){
+              clevel <- stats::qchisq(1 - alpha[i], df = 4)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords4d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
+              temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+              naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), (1/pointsEllipseGammaspace[, whichLogged])^2,naturalspace)
+              colnames(pointsEllipse) <- names(Mle)
+              out_list[[i]] = pointsEllipse
+            }
+          }
+        }else if(length(Mle)==5){
           load('/home/ruoyong/diseasemapping/pkg/gpuRandom/data/coords5d.RData')
           if(Mle['anisoRatio'] <= 1){
             for(i in 1:length(alpha)){
               clevel <- stats::qchisq(1 - alpha[i], df = 5)
-              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords5d) + newMleGamma)
-              colnames(pointsEllipseGammaspace) <- names(newMleGamma)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords5d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
               temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
               naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
-              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),pointsEllipseGammaspace[,'nugget'], naturalspace)
-              colnames(pointsEllipse) <- names(newMle)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), (1/pointsEllipseGammaspace[, whichLogged])^2,naturalspace)
+              colnames(pointsEllipse) <- names(Mle)
               out_list[[i]] = pointsEllipse
             }
           }else{
             for(i in 1:length(alpha)){
               clevel <- stats::qchisq(1 - alpha[i], df = 5)
-              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords5d) + newMleGamma)
-              colnames(pointsEllipseGammaspace) <- names(newMleGamma)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords5d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
               temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
-              naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2 + pi/2)
-              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]), pointsEllipseGammaspace[,'nugget'], naturalspace)
-              colnames(pointsEllipse) <- names(newMle)
+              naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), (1/pointsEllipseGammaspace[, whichLogged])^2,naturalspace)
+              colnames(pointsEllipse) <- names(Mle)
               out_list[[i]] = pointsEllipse
             }
           }
         }
       }
       
-    for(i in 1:length(alpha)){
-        vector1 <- out_list[[i]][,'anisoAngleRadians']
-        for(j in 1:length(vector1)){
-          if(vector1[j] > pi/2){
-            vector1[j] <- vector1[j] - pi
-            # if (vector1[j] > pi/2)
-            #   vector1[j] <- vector1[j] - pi
-            }else if (vector1[j] < -pi/2){
-            vector1[j] <- vector1[j] + pi 
-            # if (vector1[j] < -pi/2)
-            #   vector1[j] <- vector1[j] + pi 
+      
+      if(logNugget == FALSE & ('shape' %in% names(Mle)) & Mle['shape'] < 4){
+        if(length(Mle)==4){
+          load('/home/ruoyong/diseasemapping/pkg/gpuRandom/data/coords4d.RData')
+          if(Mle['anisoRatio'] <= 1){
+            for(i in 1:length(alpha)){
+              clevel <- stats::qchisq(1 - alpha[i], df = 4)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords4d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
+              temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+              naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),pointsEllipseGammaspace[,'nugget'], naturalspace)
+              colnames(pointsEllipse) <- names(Mle)
+              out_list[[i]] = pointsEllipse
             }
+          }else{          
+            for(i in 1:length(alpha)){
+              clevel <- stats::qchisq(1 - alpha[i], df = 4)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords4d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
+              temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+              naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),pointsEllipseGammaspace[,'nugget'], naturalspace)
+              colnames(pointsEllipse) <- names(Mle)
+              out_list[[i]] = pointsEllipse
+            }
+          }
+        }else if(length(Mle)==5){
+          load('/home/ruoyong/diseasemapping/pkg/gpuRandom/data/coords5d.RData')
+          if(Mle['anisoRatio'] <= 1){
+            for(i in 1:length(alpha)){
+              clevel <- stats::qchisq(1 - alpha[i], df = 5)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords5d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
+              temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+              naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),pointsEllipseGammaspace[,'nugget'], naturalspace)
+              colnames(pointsEllipse) <- names(Mle)
+              out_list[[i]] = pointsEllipse
+            }
+          }else{
+            for(i in 1:length(alpha)){
+              clevel <- stats::qchisq(1 - alpha[i], df = 5)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords5d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
+              temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+              naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]), pointsEllipseGammaspace[,'nugget'], naturalspace)
+              colnames(pointsEllipse) <- names(Mle)
+              out_list[[i]] = pointsEllipse
+            }
+          }
         }
-      out_list[[i]][,'anisoAngleRadians'] <- vector1
-    }
+      }
+      
+      
+      if(logNugget == FALSE & ('shape' %in% names(Mle)) & Mle['shape'] >= 4){
+        if(length(Mle)==4){
+          load('/home/ruoyong/diseasemapping/pkg/gpuRandom/data/coords4d.RData')
+          if(Mle['anisoRatio'] <= 1){
+            for(i in 1:length(alpha)){
+              clevel <- stats::qchisq(1 - alpha[i], df = 4)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords4d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
+              temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+              naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), (1/pointsEllipseGammaspace[, whichLogged])^2, pointsEllipseGammaspace[,'nugget'], naturalspace)
+              colnames(pointsEllipse) <- names(Mle)
+              out_list[[i]] = pointsEllipse
+            }
+          }else{
+            for(i in 1:length(alpha)){
+              clevel <- stats::qchisq(1 - alpha[i], df = 4)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords4d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
+              temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+              naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), (1/pointsEllipseGammaspace[, whichLogged])^2,pointsEllipseGammaspace[,'nugget'], naturalspace)
+              colnames(pointsEllipse) <- names(Mle)
+              out_list[[i]] = pointsEllipse
+            }
+          }
+        }else if(length(Mle)==5){
+          load('/home/ruoyong/diseasemapping/pkg/gpuRandom/data/coords5d.RData')
+          if(Mle['anisoRatio'] <= 1){
+            for(i in 1:length(alpha)){
+              clevel <- stats::qchisq(1 - alpha[i], df = 5)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords5d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
+              temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+              naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), (1/pointsEllipseGammaspace[, whichLogged])^2,pointsEllipseGammaspace[,'nugget'], naturalspace)
+              colnames(pointsEllipse) <- names(Mle)
+              out_list[[i]] = pointsEllipse
+            }
+          }else{
+            for(i in 1:length(alpha)){
+              clevel <- stats::qchisq(1 - alpha[i], df = 5)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords5d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
+              temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+              naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), (1/pointsEllipseGammaspace[, whichLogged])^2, pointsEllipseGammaspace[,'nugget'], naturalspace)
+              colnames(pointsEllipse) <- names(Mle)
+              out_list[[i]] = pointsEllipse
+            }
+          }
+        }
+      }
+      
+      if(logNugget == FALSE & !('shape' %in% names(Mle))){
+        if(length(Mle)==4){
+          load('/home/ruoyong/diseasemapping/pkg/gpuRandom/data/coords4d.RData')
+          if(Mle['anisoRatio'] <= 1){
+            for(i in 1:length(alpha)){
+              clevel <- stats::qchisq(1 - alpha[i], df = 4)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords4d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
+              temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+              naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),pointsEllipseGammaspace[,'nugget'], naturalspace)
+              colnames(pointsEllipse) <- names(Mle)
+              out_list[[i]] = pointsEllipse
+            }
+          }else{          
+            for(i in 1:length(alpha)){
+              clevel <- stats::qchisq(1 - alpha[i], df = 4)
+              pointsEllipseGammaspace = t(sqrt(clevel) * eig$vectors %*% diag(sqrt(eig$values)) %*%  t(coords4d) + MleGamma)
+              colnames(pointsEllipseGammaspace) <- names(MleGamma)
+              temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
+              naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),pointsEllipseGammaspace[,'nugget'], naturalspace)
+              colnames(pointsEllipse) <- names(Mle)
+              out_list[[i]] = pointsEllipse
+            }
+          }
+        }
+      }      
+      
+      
+     
+    # for(i in 1:length(alpha)){
+    #     vector1 <- out_list[[i]][,'anisoAngleRadians']
+    #     for(j in 1:length(vector1)){
+    #       if(vector1[j] > pi/2){
+    #         vector1[j] <- vector1[j] - pi
+    #         # if (vector1[j] > pi/2)
+    #         #   vector1[j] <- vector1[j] - pi
+    #         }else if (vector1[j] < -pi/2){
+    #         vector1[j] <- vector1[j] + pi 
+    #         # if (vector1[j] < -pi/2)
+    #         #   vector1[j] <- vector1[j] + pi 
+    #         }
+    #     }
+    #   out_list[[i]][,'anisoAngleRadians'] <- vector1
+    # }
       
       
       
       
       
-      if(('nugget' %in% names(newMle))){
+      if(('nugget' %in% names(Mle))){
       for(i in 1:length(alpha)){
          vector <- out_list[[i]][,'nugget']
-         out_list[[i]][,'nugget'] <- pmax(0, vector)
-         # for(j in 1:length(vector)*2/3){
-         #   if(vector[j]<0){
-         #     vector[j] = 0
-         #   }
-         # }
-         # for(j in (length(vector)*2/3+1):length(vector)){
-         #   if(vector[j]<0){
-         #     vector[j] = stats::runif(1, 0, 1)
-         #   }
-         # }
+         for(j in 1:(length(vector)*1/2)){
+           if(vector[j]<0){
+             vector[j] = 0
+           }
+         }
+         for(j in (length(vector)*1/2+1):length(vector)){
+           if(vector[j]<0){
+             vector[j] = stats::runif(1, 0, 0.5)
+           }
+         }
+      out_list[[i]][,'nugget'] <- vector
       }
       }
       
-      if('shape' %in% names(newMle) & newMle['shape'] >= 60){
-      for(i in 1:length(alpha)){
-        vector1 <- 1/out_list[[i]][,'shape']
-        vector2 <- rep(1000, length(vector))
-        out_list[[i]][,'shape'] = pmin(vector1, vector2)
-      }
-      }else if('shape' %in% names(newMle) & newMle['shape'] < 60){
+      # if('shape' %in% names(Mle) & Mle['shape'] >= 4){
+      # for(i in 1:length(alpha)){
+      #   vector1 <- 1/out_list[[i]][,'shape']
+      #   vector2 <- rep(1000, length(vector))
+      #   out_list[[i]][,'shape'] = pmin(vector1, vector2)
+      # }
+      # }
+      if('shape' %in% names(Mle) & Mle['shape'] >= 4){
         for(i in 1:length(alpha)){
-          vector1 <- out_list[[i]][,'shape']
-          vector2 <- rep(1000, length(vector))
-          out_list[[i]][,'shape'] = pmin(vector1, vector2)
+          vector <- out_list[[i]][,'shape']
+          for(j in 1:length(vector)){
+          if(vector[j]>4)
+            vector[j] = stats::runif(1, 0.1, 4.05)
+          }
+          out_list[[i]][,'shape'] = vector
         }
       }
       
@@ -1298,8 +1618,11 @@ getHessianNolog <- function(Model,
       names(out_list) <- paste0("alpha", alpha, sep="")
       
       
-      out_list
+      out_list[[length(alpha)+1]] <- boxcoxSetup
     
+      out_list
+      
+      
    }
     
 

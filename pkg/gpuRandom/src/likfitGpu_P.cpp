@@ -227,7 +227,7 @@ std::string boxcoxKernelString(int NlocalCache, int zeroCol,
     "    }// for Dobs\n"
     "    if(get_global_id(0)==0){\n"
     "     for(Dboxcox=0;Dboxcox < Nboxcox;Dboxcox++){\n"
-    " //   jacobian = -2*(BoxCox-1)* sum(log(yXcpu[,1]))\n"
+   // " //   jacobian = -2*(BoxCox-1)* sum(log(yXcpu[,1]))\n"
     "      jacobian[DstartBoxcox + Dboxcox] =  -2*(param[DstartBoxcox + Dboxcox]-1)*sumLogY[0];\n"
     "     }// for Dboxcox\n"
     "    }// if global0\n"
@@ -260,7 +260,7 @@ std::string boxcoxKernelString(int NlocalCache, int zeroCol,
       "    }// for Dobs\n"
       "    if(get_global_id(0)==0){\n"
       "     for(Dboxcox=0;Dboxcox < Nboxcox;Dboxcox++){\n"
-      " //   jacobian = -2*(BoxCox-1)* sum(log(yXcpu[,1]))\n"
+     // " //   jacobian = -2*(BoxCox-1)* sum(log(yXcpu[,1]))\n"
       "      jacobian[DstartBoxcox + Dboxcox] =  -2*(param[DstartBoxcox + Dboxcox]-1)*sumLogY[0];\n"
       "     }// for Dboxcox\n"
       "    }// if global0\n"
@@ -268,7 +268,7 @@ std::string boxcoxKernelString(int NlocalCache, int zeroCol,
       "}// if global and group\n";
 
     result +=
-      "for(Dboxcox = get_global_id(1); Dboxcox < Nboxcox; Dboxcox+= get_global_size(1)){\n"
+      "for(Dboxcox = get_global_id(1)+1; Dboxcox < Nboxcox; Dboxcox+= get_global_size(1)){\n"
       " boxcoxHere = param[DstartBoxcox + Dboxcox];\n"
       //" if(Dboxcox != zeroCol) {\n"
       "  for(Dobs=get_global_id(0);Dobs < Nobs; Dobs+= get_global_size(0)){\n"
@@ -311,7 +311,7 @@ void addBoxcoxToData(
   }
   
   std::string theBoxcoxKernel = boxcoxKernelString<T>(
-    NlocalCache[0],
+               NlocalCache[0],
                1, yx.size1(), Ndatasets, 
                yx.internal_size2(),
                boxcoxHasZero);
