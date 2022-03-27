@@ -235,7 +235,7 @@ std::string boxcoxKernelString(int NlocalCache, int zeroCol,
     "}// if global and group\n";
   
   result +=
-    "for(Dboxcox = get_global_id(1)+1; Dboxcox < Nboxcox; Dboxcox+= get_global_size(1)){\n"
+    "for(Dboxcox = get_global_id(1)+1; Dboxcox < Nboxcox; Dboxcox+= get_global_size(1)){\n"   // +1
     " boxcoxHere = param[DstartBoxcox + Dboxcox];\n"
     " if(Dboxcox != zeroCol) {\n"
     "  for(Dobs=get_global_id(0);Dobs < Nobs; Dobs+= get_global_size(0)){\n"
@@ -268,7 +268,7 @@ std::string boxcoxKernelString(int NlocalCache, int zeroCol,
       "}// if global and group\n";
 
     result +=
-      "for(Dboxcox = get_global_id(1)+1; Dboxcox < Nboxcox; Dboxcox+= get_global_size(1)){\n"
+      "for(Dboxcox = get_global_id(1)+1; Dboxcox < Nboxcox; Dboxcox+= get_global_size(1)){\n"   // +1
       " boxcoxHere = param[DstartBoxcox + Dboxcox];\n"
       //" if(Dboxcox != zeroCol) {\n"
       "  for(Dobs=get_global_id(0);Dobs < Nobs; Dobs+= get_global_size(0)){\n"

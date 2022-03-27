@@ -43,7 +43,7 @@
   breaks <- rep(0, ncol(Betas))
   Table <- matrix(NA, nrow=ncol(Betas), ncol=4)
   colnames(Table) <-  c("MLE", "maximum", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
-  
+  index <- matrix(0, nrow=m, ncol=2)
   
   for (a in 1:ncol(Betas)){
   BetaSlice <- Betas[,a]
@@ -115,29 +115,55 @@
     }
   }
   
-  # loglikAll = array(NA, c(m,Nparam,Ndata))
-  # 
-  # for (bet in 1:m){
-  #     ssqResidual <- ssqY + Betas[bet] *partD + Betas[bet]^2 *partE - (partA + Betas[bet]* partB + Betas[bet]^2 * partC)
-  #     loglik_forthisbeta <- (-0.5)*(Nobs*log(ssqResidual/Nobs) + detVar + Nobs + Nobs*log(2*pi) + jacobian)
-  #     
-  #     loglikAll[bet,,] = loglik_forthisbeta
-  #     
-  #     #LogLik_optimized[bet,] = max(loglik_forthisbeta)
-  # }
-  
-#   plot(Betas, loglikAll[,1,12], col='red', lwd=2, type='l', ylim = c(-50,0) + max(loglikAll))
-#   abline(v=6.04, col='blue')
-#   
+# loglikAll = array(NA, c(m,Nparam,Ndata))
+# 
+# for (bet in 1:m){
+#     ssqResidual <- ssqY + BetaSlice[bet] *partD + BetaSlice[bet]^2 *partE - (partA + BetaSlice[bet]* partB + BetaSlice[bet]^2 * partC)
+#     loglik_forthisbeta <- (-0.5)*(Nobs*log(ssqResidual/Nobs) + detVar + Nobs + Nobs*log(2*pi) + jacobian)
+# 
+#     loglikAll[bet,,] = loglik_forthisbeta
+# 
+#     #LogLik_optimized[bet,] = max(loglik_forthisbeta)
+# }
+# 
+# 
+#    aaa<-matrix(loglikAll[,,1], nrow=m, ncol=Nparam)
+#    matplot(BetaSlice, aaa , type='l', xlab='intercept', lty=1,  col='#00000040')
+#    abline(v=c(simRes$summary['(Intercept)',c('estimate','ci0.1','ci0.9')]))
+#    breaks[a] <- max(aaa) - qchisq(cilevel,  df = 1)/2
+# #  lines(BetaSlice, LogLik_optimized, col='red')
+#    plot(BetaSlice, LogLik_optimized[,1], lwd=2, type='l',col='red')
+#    lines(BetaSlice, loglikAll[,1,1], col='green', lwd=2, type='l')
+#   lines(BetaSlice, loglikAll[,1,17], col='blue', lwd=2, type='l')   #, ylim = c(-50,0) + max(loglikAll)
+#   lines(BetaSlice, loglikAll[,1,1], col='green', lwd=2, type='l')
+#   lines(BetaSlice, loglikAll[,5979,1], col='black', lwd=2, type='l')
+#   lines(BetaSlice, loglikAll[,149,32], col='blue', lwd=2, type='l')
+#   lines(BetaSlice, loglikAll[,7246,32], col='blue', lwd=2, type='l')
+#   lines(BetaSlice, loglikAll[,6967,32], col='blue', lwd=2, type='l')
+#   lines(BetaSlice, loglikAll[,7246,1], col='yellow', lwd=2, type='l')
+#   lines(BetaSlice, loglikAll[,6268,1], col='blue', lwd=2, type='l')
+#   lines(BetaSlice, loglikAll[,2330,1], col='blue', lwd=2, type='l')
+#   lines(BetaSlice, loglikAll[,7246,32], col='blue', lwd=2, type='l')
+# 
+#   lines(BetaSlice, loglikAll[,878,32], col='green', lwd=2, type='l'), ylim = c(-50,0) + max(loglikAll))
+# 
+#   abline(h=breaks[a], col='blue')
+#   result$params[c(1,5979),]
 # bestParam =   which.max(apply(loglikAll, c(1,3), max))
-# bestBocxox = which.max(apply(loglikAll[,bestParam,], 2, max))  
+# bestBocxox = which.max(apply(loglikAll[,bestParam,], 2, max))
 # lines(Betas, loglikAll[,bestParam, bestBocxox], col='blue')
 
   for (bet in 1:m){
     ssqResidual <- ssqY + BetaSlice[bet] *partD + BetaSlice[bet]^2 *partE - (partA + BetaSlice[bet]* partB + BetaSlice[bet]^2 * partC)
     loglik_forthisbeta <- (-0.5)*(Nobs*log(ssqResidual/Nobs) + detVar + Nobs + Nobs*log(2*pi) + jacobian)
-    LogLik_optimized[bet,a] = max(loglik_forthisbeta)
+    if(a==1){
+    index[bet,] <- which(loglik_forthisbeta == max(loglik_forthisbeta, na.rm = TRUE), arr.ind = TRUE)
+    }
+    LogLik_optimized[bet,a] = max(loglik_forthisbeta[,])
   }
+  
+  # result$params
+  
   
 
   
@@ -175,7 +201,7 @@
     #f1 <- splinefun(Betas, LogLik, method = "fmm")
     breaks[a] <- max(LogLik) - qchisq(cilevel,  df = 1)/2
     f1 <- approxfun(BetaSlice, LogLik-breaks[a])
-    #plot(BetaSlice,LogLik-breaks[a], cex=0.2, ylim=c(0.45,0.85), xlim=c(5,7.5))
+    #plot(BetaSlice,LogLik-breaks[a], cex=0.2)
     #curve(f1(x), add = TRUE, col = 2, n = 1001)
     
     result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)
@@ -208,7 +234,8 @@
   }    
     Output <- list(estimates = Table,
                    LogLik = LogLik_optimized,
-                   breaks = breaks)
+                   breaks = breaks,
+                   index = index)
     
     Output
 

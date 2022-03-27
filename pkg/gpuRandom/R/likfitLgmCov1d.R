@@ -11,23 +11,23 @@ get1dCovexhull <- function(profileLogLik,     # a data frame or data.table # 2 c
                                 m=1,
                                 seqvalue){
   
-  # datC2 = geometry::convhulln(profileLogLik)
-  # allPoints = unique(as.vector(datC2))
-  # toTest = profileLogLik[allPoints,]
-  # toTest[,'profile'] = toTest[,'profile'] + a
-  # inHull = geometry::inhulln(datC2, as.matrix(toTest))
-  # toUse = profileLogLik[allPoints,][!inHull,]
-  # toTest = profileLogLik[allPoints,]
-  
-  datC1= geometry::convhulln(profileLogLik)
-  allPoints1 = unique(as.vector(datC1))
-  toTest = profileLogLik[allPoints1,]
-  toTest[,'profile'] = toTest[,'profile'] - a
-  toTest[,'x1'] = toTest[,'x1'] + b
-  inHull1 = geometry::inhulln(datC1, as.matrix(toTest))
-  toUse = profileLogLik[allPoints1,][inHull1,]
+  datC2 = geometry::convhulln(profileLogLik)
+  allPoints = unique(as.vector(datC2))
+  toTest = profileLogLik[allPoints,]
   toTest[,'profile'] = toTest[,'profile'] + a
-  toTest[,'x1'] = toTest[,'x1'] - b
+  inHull = geometry::inhulln(datC2, as.matrix(toTest))
+  toUse = profileLogLik[allPoints,][!inHull,]
+  toTest = profileLogLik[allPoints,]
+  
+  # datC1= geometry::convhulln(profileLogLik)
+  # allPoints1 = unique(as.vector(datC1))
+  # toTest = profileLogLik[allPoints1,]
+  # toTest[,'profile'] = toTest[,'profile'] - a
+  # toTest[,'x1'] = toTest[,'x1'] + b
+  # inHull1 = geometry::inhulln(datC1, as.matrix(toTest))
+  # toUse = profileLogLik[allPoints1,][inHull1,]
+  # toTest[,'profile'] = toTest[,'profile'] + a
+  # toTest[,'x1'] = toTest[,'x1'] - b
   
   interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=m, fx=TRUE), data=toUse)
   prof1 = data.frame(x1=seq(seqvalue[1], seqvalue[2], len=101))
@@ -71,6 +71,15 @@ likfitLgmCov1d <- function(data,
                            Nlocal,
                            NlocalCache,
                            verbose=FALSE){
+  
+  
+  
+  if(1 %in% boxcox){
+    HasOne==TRUE
+  }else{
+    HasOne==FALSE
+  }
+  
   
   if(0 %in% boxcox){
     boxcox = c(1, 0, setdiff(boxcox, c(1,0)))
@@ -220,6 +229,14 @@ likfitLgmCov1d <- function(data,
     a <- a[-1]
     XVYXVX2 <- XVYXVX2[-a,   ]
   }
+  
+  if(HasOne==FALSE){
+    LogLikcpu <- LogLikcpu[,-1] 
+    ssqY2 <- ssqY2[,-1]
+    ssqBetahat2 <- ssqBetahat2[,-1]
+    ssqResidual2 <- ssqResidual2[,-1]
+  }
+  
   ############## output matrix ####################
   Table <- matrix(NA, nrow=length(paramToEstimate) + Ncov + 1, ncol=3)
   rownames(Table) <-  c(colnames(covariates), "sdSpatial", paramToEstimate)
@@ -437,7 +454,7 @@ likfitLgmCov1d <- function(data,
     toUse = newdata[allPoints,][!inHull,]
     toTest = newdata[allPoints,]
     toUse <- toUse[order(toUse$x1),]
-    toUse <- head(toUse, - 1)
+    #toUse <- head(toUse, - 1)
     
     plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="shape", ylab="profileLogL",  log='x')
     points(exp(toTest[,1]),toTest[,2], col='red', cex=0.6)
@@ -955,9 +972,9 @@ likfitLgmCov1d <- function(data,
   if(('boxcox'%in% paramToEstimate)  & length(boxcox)>5 ){
     likForboxcox = cbind(boxcox, apply(LogLikcpu, 2,  max) )
     f1 <- approxfun(likForboxcox[,1], likForboxcox[,2]-breaks)
-    #plot(likForboxcox[,1], likForboxcox[,2]-breaks, ylab= "proLogL", xlab='boxcox', cex=0.5)
-    #curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
-    #abline(h =0, lty = 2)
+    plot(likForboxcox[,1], likForboxcox[,2]-breaks, ylab= "proLogL", xlab='boxcox', cex=0.5)
+    curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
+    abline(h =0, lty = 2)
     
     lower = min(boxcox)
     upper = max(boxcox)

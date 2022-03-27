@@ -1132,7 +1132,8 @@ getHessianNolog <- function(Model,
                              alpha=c(0.001, 0.01, 0.1, 0.2, 0.5, 0.8, 0.95, 0.99),
                              logNugget = FALSE,
                              Mle = NULL,
-                             boxcox = NULL# a vector of confidence levels 1-alpha
+                             boxcox = NULL,# a vector of confidence levels 1-alpha
+                             shapeRestrict = NULL
     ){
       
 
@@ -1603,12 +1604,12 @@ getHessianNolog <- function(Model,
       #   out_list[[i]][,'shape'] = pmin(vector1, vector2)
       # }
       # }
-      if('shape' %in% names(Mle) & Mle['shape'] >= 4){
+      if('shape' %in% names(Mle) & !is.null(shapeRestrict) ){
         for(i in 1:length(alpha)){
           vector <- out_list[[i]][,'shape']
           for(j in 1:length(vector)){
-          if(vector[j]>4)
-            vector[j] = stats::runif(1, 0.1, 4.05)
+          if(vector[j]>shapeRestrict)
+            vector[j] = stats::runif(1, 0.1, shapeRestrict)
           }
           out_list[[i]][,'shape'] = vector
         }
