@@ -72,12 +72,12 @@ likfitLgmCov1d <- function(data,
                            NlocalCache,
                            verbose=FALSE){
   
-  
+
   
   if(1 %in% boxcox){
-    HasOne==TRUE
+    HasOne=TRUE
   }else{
-    HasOne==FALSE
+    HasOne=FALSE 
   }
   
   
@@ -194,7 +194,6 @@ likfitLgmCov1d <- function(data,
   
   LogLikcpu <- as.matrix(-0.5*minusTwoLogLik)
   colnames(LogLikcpu) <- paste(c('boxcox'), round(boxcox, digits = 3) ,sep = '')
-  
   selected_rows <- which(is.na(as.vector(detVar)))
   if(length(selected_rows)==0){
     paramsRenew <- params
@@ -213,7 +212,6 @@ likfitLgmCov1d <- function(data,
     ssqY2 <- as.matrix(ssqY)[-selected_rows,]
     ssqBetahat2 = as.matrix(ssqBetahat)[-selected_rows,]
     ssqResidual2 = as.matrix(ssqResidual)[-selected_rows,]
-    
     XVYXVX2 <- as.matrix(XVYXVX)
     #XVYXVX3 <- as.matrix(XVYXVX)
     #which(is.na(XVYXVX2),arr.ind = TRUE)[,1]
@@ -231,10 +229,14 @@ likfitLgmCov1d <- function(data,
   }
   
   if(HasOne==FALSE){
-    LogLikcpu <- LogLikcpu[,-1] 
+    LogLikcpu <- as.matrix(LogLikcpu[,-1])
     ssqY2 <- ssqY2[,-1]
     ssqBetahat2 <- ssqBetahat2[,-1]
     ssqResidual2 <- ssqResidual2[,-1]
+    Ndata <- length(boxcox) - 1
+    XVYXVX2 <- XVYXVX2[,-1]
+    jacobian <- as.vector(jacobian)[-1]
+    boxcox <- boxcox[-1]
   }
   
   ############## output matrix ####################
@@ -242,7 +244,7 @@ likfitLgmCov1d <- function(data,
   rownames(Table) <-  c(colnames(covariates), "sdSpatial", paramToEstimate)
   colnames(Table) <-  c("estimate", "lci", "uci")
   
-  
+
   index <- which(LogLikcpu == max(LogLikcpu, na.rm = TRUE), arr.ind = TRUE)
   #################sigma hat#########################
   if(reml==FALSE)  {
@@ -979,12 +981,24 @@ likfitLgmCov1d <- function(data,
     lower = min(boxcox)
     upper = max(boxcox)
     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
-    
-    Table["boxcox",] <- c(MLE)
+    ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+    abline(v =ci, lty = 2)
+
+    if(length(ci)==1){
+      if( ci > MLE){
+        ci <- c(lower, ci)
+        message("did not find lower ci for boxcox")
+      }else{
+        ci <- c(ci, upper)
+        message("did not find upper ci for boxcox")}
+    }else if(length(ci)>2){
+      warning("error in param matrix")
+      ci <- c(NA, NA)
+    }
+    Table["boxcox",] <- c(MLE, ci)
+  
   }else if(is.element('boxcox',paramToEstimate)  & length(boxcox) <= 5){
     message("boxcox: not enough values for interpolation!")
-  }else if(is.element('boxcox',paramToEstimate)){
-    Table["boxcox",1] <- boxcox[index[2]]
   }
   
   NcolTotal = Ndata + Ncov
@@ -1015,7 +1029,7 @@ likfitLgmCov1d <- function(data,
   
   Table[colnames(covariates), 1] <- Betahat
   
-  if(all(c('sdNugget','shape') %in% paramToEstimate)){
+  if(all(c('sdNugget','shape', 'gamma3') %in% paramToEstimate)){
   Output <- list(LogLik=LogLikcpu,
                  breaks = breaks,
                  mleIndex = index,
