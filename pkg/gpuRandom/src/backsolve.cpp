@@ -173,7 +173,7 @@ result +=
   
 
 
-  // 没问题
+
   result += 
     "    // initialize cacheSum\n"
 
@@ -192,7 +192,7 @@ result +=
   
   
   
-  //  #ifdef UNDEF 这部分没问题
+  //  #ifdef UNDEF 
 //  result += 
  //   "     for(DinnerBlock = 0;\n"
   //  "         DinnerBlock < DrowZero;\n"

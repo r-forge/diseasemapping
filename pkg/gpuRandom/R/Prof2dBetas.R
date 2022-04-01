@@ -93,19 +93,46 @@
   # points(result[which.max(result$LogLik),],pch=20)
   # mapmisc::legendBreaks('bottomright', breaks = rev(Sprob), col=likCol$col)
 
-  # resultbeta1 = data.table::as.data.table(cbind(-0.5*LogLikBetas, Betas[,1]))
-  # colnames(resultbeta1) <- c("LogLik", "Beta1")
-  # profileLogLik_beta1 <- resultbeta1[, .(profile=max(.SD)), by=Beta1]
+
+  # cov1 <- apply(lMatrix, 2, max)
+  # plot(prof2list$Betas2,cov1 -breaks)
+  # f1 <- approxfun(prof2list$Betas2,cov1 -breaks)
+  # curve(f1(x), add = TRUE, col = 2, n = 1001)
+  # abline (h=0)
+  # ci <- rootSolve::uniroot.all(f1, lower = -1, upper = 3)
+  # abline(v=c(ci), lty=2)
+  # intercept <- apply(lMatrix, 1, max)
+  # plot(prof2list$Betas1,intercept-breaks)
   # 
+  # profileLogLik <- as.data.frame(cbind(prof2list$Betas1,intercept-breaks))
+  # colnames(profileLogLik) <- c("x1",'profile')
+  # datC2 = geometry::convhulln(profileLogLik)
+  # allPoints = unique(as.vector(datC2))
+  # toTest = profileLogLik[allPoints,]
+  # toTest[,'profile'] = toTest[,'profile'] + 0.1
+  # inHull = geometry::inhulln(datC2, as.matrix(toTest))
+  # toUse = profileLogLik[allPoints,][!inHull,]
+  # toTest = profileLogLik[allPoints,]
   # 
-  # resultintercept = data.table::as.data.table(cbind(-0.5*LogLikBetas, Betas[,1]))
-  # colnames(resultintercept) <- c("LogLik", "intercept")
-  # profileLogLik_intercept <- resultintercept[, .(profile=max(.SD)), by=intercept]
+  # plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="Betas1", ylab="profileLogL")
+  # points(toTest, col='red', cex=0.6)
+  # points(toUse, col='blue', cex=0.6, pch=3)
+  # abline(h =0, lty = 2, col='red')
+  # 
+  # interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
+  # prof = data.frame(x1=seq(min(toUse$x1)-0.2, max(toUse$x1)+0.2, len=101))
+  # prof$z = predict(interp1, prof)
+  # 
+  # lines(prof$x1, prof$z, col = 'green')
+  # lower = min(profileLogLik$x1)
+  # upper = max(profileLogLik$x1)
+  # f1 <- approxfun(prof$x1, prof$z)
+  # MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+  # ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+  # abline(v =c(MLE,ci), lty = 2, col='red')
   
-  
-  #plot(profileLogLik_beta1$Beta1,profileLogLik_beta1$profile)
   #plot(profileLogLik_intercept$intercept,profileLogLik_intercept$profile)
-  
+
   Theoutput <- list(dataforplot=result,
                     breaks =breaks,
                     ssqForBetas = ssqForBetas)
@@ -123,7 +150,15 @@
 
 
 
-
+ # resultbeta1 = data.table::as.data.table(cbind(-0.5*LogLikBetas, Betas[,2]))
+ # colnames(resultbeta1) <- c("LogLik", "Beta1")
+ # profileLogLik_beta1 <- resultbeta1[, .(profile=max(.SD)), by=Beta1]
+ # 
+ # 
+ # resultintercept = data.table::as.data.table(cbind(-0.5*LogLikBetas, Betas[,1]))
+ # colnames(resultintercept) <- c("LogLik", "intercept")
+ # profileLogLik_intercept <- resultintercept[, .(profile=max(.SD)), by=intercept]
+ 
 
 
 

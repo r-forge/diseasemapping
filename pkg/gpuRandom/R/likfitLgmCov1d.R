@@ -30,7 +30,7 @@ get1dCovexhull <- function(profileLogLik,     # a data frame or data.table # 2 c
   # toTest[,'x1'] = toTest[,'x1'] - b
   
   interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=m, fx=TRUE), data=toUse)
-  prof1 = data.frame(x1=seq(seqvalue[1], seqvalue[2], len=101))
+  prof1 = data.frame(x1=seq(seqvalue[1], seqvalue[2], len=201))
   prof1$z = predict(interp1, prof1)
   
   output <- list(toUse = toUse, toTest = toTest, prof=prof1)
@@ -55,15 +55,15 @@ likfitLgmCov1d <- function(data,
                            paramToEstimate = c('range','nugget'),
                            boxcox,  # boxcox is always estimated
                            cilevel,  # decimal
-                           seqNewRange,
-                           seqRange,
-                           seqShapelog,
-                           seqNugget,
-                           seqsdNugget,
-                           seqGamma3,
-                           seqGamma4,
-                           seqRatio,
-                           seqRadians,
+                           # seqNewRange,
+                           # seqRange,
+                           # seqShapelog,
+                           # seqNugget,
+                           # seqsdNugget,
+                           # seqGamma3,
+                           # seqGamma4,
+                           # seqRatio,
+                           # seqRadians,
                            type = c("float", "double")[1+gpuInfo()$double_support],
                            reml=FALSE, 
                            NparamPerIter,
@@ -248,9 +248,9 @@ likfitLgmCov1d <- function(data,
   index <- which(LogLikcpu == max(LogLikcpu, na.rm = TRUE), arr.ind = TRUE)
   #################sigma hat#########################
   if(reml==FALSE)  {
-    Table["sdSpatial",1] <- sqrt(ssqResidual[index[1],index[2]]/Nobs)
+    Table["sdSpatial",1] <- sqrt(ssqResidual2[index[1],index[2]]/Nobs)
   }else{         
-    Table["sdSpatial",1] <- sqrt(ssqResidual[index[1],index[2]]/(Nobs - Ncov))
+    Table["sdSpatial",1] <- sqrt(ssqResidual2[index[1],index[2]]/(Nobs - Ncov))
   }
   
   
@@ -306,7 +306,7 @@ likfitLgmCov1d <- function(data,
     toTest = profileLogLik[allPoints,]
 
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
-    profNewrange = data.frame(x1=seq(seqNewRange[1], seqNewRange[2], len=101))
+    profNewrange = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
     profNewrange$z = predict(interp1, profNewrange)
 
     # points(exp(0.5*toTest[,1]), toTest[,2], col='red', cex=0.6)
@@ -375,7 +375,7 @@ likfitLgmCov1d <- function(data,
     toTest = profileLogLik[allPoints,]
     #
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
-    profrange = data.frame(x1=seq(min(toUse$x1)-0.2, max(toUse$x1)+0.2, len=101))
+    profrange = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
     profrange$z = predict(interp1, profrange)
     
     
@@ -463,7 +463,7 @@ likfitLgmCov1d <- function(data,
     points(exp(toUse[,1]), toUse[,2], col='blue', cex=0.6, pch=3)
     
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
-    profShapeLog = data.frame(x1=seq(min(toUse$x1)-0.1, max(toUse$x1)+0.1, len=101))
+    profShapeLog = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
     profShapeLog$z = predict(interp1, profShapeLog)
   
     #plot(newdata$x1, newdata$profile, cex=.2, xlab="log(shape)", ylab="profileLogL")
@@ -580,7 +580,7 @@ likfitLgmCov1d <- function(data,
     if(nrow(toUse)>2){
     
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-    profNugget = data.frame(x1=seq(min(toUse$x1)-0.2, max(toUse$x1)+0.2, len=101))
+    profNugget = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
     profNugget$z = predict(interp1, profNugget)
     
     points(toTest, col='red', cex=0.6)
@@ -613,7 +613,7 @@ likfitLgmCov1d <- function(data,
     }
     }else{
       interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-      profNugget = data.frame(x1=seq(min(toUse$x1)-0.2, max(toUse$x1)+0.2, len=101))
+      profNugget = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
       profNugget$z = predict(interp1, profNugget)
       
       #plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="nugget", ylab="profileLogL", log='x')
@@ -677,7 +677,7 @@ likfitLgmCov1d <- function(data,
     toTest = profileLogLik[allPoints,]
 
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-    profRatio = data.frame(x1=seq(min(toUse$x1)-0.2, max(toUse$x1)+0.2, len=101))
+    profRatio = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
     profRatio$z = predict(interp1, profRatio)
     #
     plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="anisoRatio", ylab="profileLogL")
@@ -725,7 +725,7 @@ likfitLgmCov1d <- function(data,
     toTest = profileLogLik[allPoints,]
 
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-    profRadians = data.frame(x1=seq(min(toUse$x1)-0.2, max(toUse$x1)+0.2, len=101))
+    profRadians = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
     profRadians$z = predict(interp1, profRadians)
     #
     plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="anisoAngleRadians", ylab="profileLogL")
@@ -780,8 +780,8 @@ likfitLgmCov1d <- function(data,
     #  
     #  
     #  fit = mgcv::gam(profile ~ s(gamma3, gamma4, k=nrow(toUse), m=1,fx=TRUE), data=toUse)
-    #  toPredict = list(gamma3=seq(seqGamma3[1], seqGamma3[2], len=101),
-    #                   gamma4=seq(seqGamma4[1], seqGamma4[2], len=101))
+    #  toPredict = list(gamma3=seq(seqGamma3[1], seqGamma3[2], len=501),
+    #                   gamma4=seq(seqGamma4[1], seqGamma4[2], len=501))
     #  toPredict = do.call(expand.grid, toPredict)
     #  toPredict$z = predict(fit, toPredict)
     # 
@@ -798,8 +798,8 @@ likfitLgmCov1d <- function(data,
     # points(toUse2[,c('gamma3','gamma4')], col='black', cex=0.8)
     # mapmisc::legendBreaks('bottomright', breaks = Sprob, col=colDat2$col, bty='n')
     
-    # prof2list = list(anisoRatio=seq(seqRatio[1], seqRatio[2], len=101),
-    #                  anisoAngleRadians=seq(-0.5,0.5, len=101))
+    # prof2list = list(anisoRatio=seq(seqRatio[1], seqRatio[2], len=501),
+    #                  anisoAngleRadians=seq(-0.5,0.5, len=501))
     # prof2natural = do.call(expand.grid, prof2list)
     # 
     # prof2naturalC = sqrt(prof2natural[,'anisoRatio']-1)* cos(2*(prof2natural[,'anisoAngleRadians'] + pi/2))+
@@ -848,7 +848,7 @@ likfitLgmCov1d <- function(data,
     toTest = profileLogLik[allPoints,]
     
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-    profGamma3 = data.frame(x1=seq(seqGamma3[1], seqGamma3[2], len=101))
+    profGamma3 = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
     profGamma3$z = predict(interp1, profGamma3)
     
     plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="gamma3", ylab="profileLogL")
@@ -903,7 +903,7 @@ likfitLgmCov1d <- function(data,
     toTest = profileLogLik[allPoints,]
     
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-    profGamma4 = data.frame(x1=seq(seqGamma4[1], seqGamma4[2], len=101))
+    profGamma4 = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
     profGamma4$z = predict(interp1, profGamma4)
     
     # inter <- get1dCovexhull(profileLogLik, seqvalue = seqGamma4, a=0.00, m=1)     # a data frame or data.table # 2 column names must be x1 and profile
@@ -982,7 +982,7 @@ likfitLgmCov1d <- function(data,
     upper = max(boxcox)
     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-    abline(v =ci, lty = 2)
+    abline(v =c(MLE,ci), lty = 2)
 
     if(length(ci)==1){
       if( ci > MLE){
@@ -1006,34 +1006,91 @@ likfitLgmCov1d <- function(data,
   ###############betahat#####################
   Betahat <- matrix(0, nrow=Ncov, ncol=Ndata)
   a<-c( ((index[1]-1)*Ncov+1) : (index[1]*Ncov) )
-  mat <- XVYXVX[a,((Ndata+1):NcolTotal)]
+  mat <- XVYXVX2[a,((Ndata+1):NcolTotal)]
   mat[upper.tri(mat)] <- mat[lower.tri(mat)]
-  Betahat <- solve(mat) %*% XVYXVX[a,index[2]]
+  Betahat <- solve(mat) %*% XVYXVX2[a,index[2]]
+  Table[colnames(covariates), 1] <- Betahat
   
-  # Betahat <- rep(0,3)
+  # Betahat <- rep(0, Ncov)
   # for(i in 1:Nparam){
   #   a<-c( ((i-1)*Ncov+1) : (i*Ncov) )
-  #   mat <- XVYXVX[a,((Ndata+1):NcolTotal)]
+  #   mat <- XVYXVX2[a,((Ndata+1):NcolTotal)]
   #   mat[upper.tri(mat)] <- mat[lower.tri(mat)]
-  #   Betahat0 <- t(solve(mat) %*% XVYXVX[a,index[2]])
+  #   Betahat0 <- t(solve(mat) %*% XVYXVX2[a,index[2]])
   #   Betahat <- rbind(Betahat,Betahat0)
   # }
-  # 
-  # x<- cbind(Betahat[-1,], LogLikcpu)
-  # colnames(x)[1:3] <- c('intercept', 'cov1', 'cov2')
-  # x <- as.data.frame(x)
-  # xSub= x[x$boxcox1 > (maximum - 10), ]
-  # plot(xSub$cov1, xSub$boxcox1, cex=0.2)
-  # plot(xSub$intercept, xSub$boxcox1, cex=0.2)
-  # plot(xSub$cov2, xSub$boxcox1, cex=0.2)
+  # # 
+  #  x<- cbind(Betahat[-1,], LogLikcpu)
+  #  colnames(x)[1:Ncov] <- c('intercept',colnames(covariates)[-1])
+  #  x <- as.data.frame(x)
+   # xSub = x[x$boxcox1 > (maximum - 10), ]
+   
+   #####
+   # selected_rows2 <- which(x$boxcox1 > (maximum - 10))
+   # a <- 0   
+   # for (j in 1:length(selected_rows2)){
+   #   a<-c(a, c(((selected_rows2[j]-1)*Ncov+1): (selected_rows2[j]*Ncov)))
+   # }
+   # a <- a[-1]
+   # XTVinvX3 <- XVYXVX2[a, (ncol(XVYXVX2)-Ncov+1):ncol(XVYXVX2)  ]
+   # #####
+   # head( XTVinvX3)
+   # appendBetaMatrix <- matrix(0, nrow=2*nrow(xSub), ncol=4)
+   # colnames(appendBetaMatrix) <- colnames(x)
+   # 
+   # 
+   # intercept <- seq(0.5,3.5, len=100)
+   # quadratic = 0.5*(- covarianceInv[1,1]  ) * (intercept-xSub[i,'intercept'])^2 + maximum
+   # lines(intercept, quadratic, col="green")
+   # points(xSub[i,'intercept'] + 2*interceptsd,  0.5*(- covarianceInv[1,1] ) * (2*interceptsd)^2 + maximum, col='red')
+   # 
+   # 
+   # for(i in 1:nrow(xSub)){
+   #   interval <- c(((i-1)*Ncov+1) : (i*Ncov))
+   #   covarianceInv <- XTVinvX[interval, ]
+   #   covariance <- solve(covarianceInv)
+   #   interceptsd <- sqrt(covariance[1,1])
+   #   cov1sd <- sqrt(covariance[2,2])
+   #   #onesd <- xSub[i, 'intercept'] + interceptsd
+   #   
+   #   LogLikI <- 0.5*(-covarianceInv[1,1]) * (2*interceptsd)^2 + maximum
+   #   appendBetaMatrix[2*i-1, 1:2] <- c( unlist(xSub[i,'intercept']) + 2*interceptsd, LogLikI)
+   #   appendBetaMatrix[2*i, 1:2] <- c( unlist(xSub[i,'intercept']) - 2*interceptsd, LogLikI)
+   #   
+   #   LogLikC <- 0.5*(-covarianceInv[2,2]) * (2*cov1sd)^2 + maximum
+   #   appendBetaMatrix[2*i-1, 3:4] <- c( unlist(xSub[i,'cov1']) + 2*cov1sd, LogLikC)
+   #   appendBetaMatrix[2*i, 3:4] <- c( unlist(xSub[i,'cov1']) - 2*cov1sd, LogLikC)
+   # 
+   #   #qnorm(c(0.09, 0.999), mean = x[i, 'intercept'], sd = interceptsd)
+   #   #LogLik_i <- 0.5* 2*c(interceptsd,cov1sd) %*% (-covarianceInv) %*% (2*c(interceptsd,cov1sd)) + maximum
+   #   #appendBetaMatrix[2*i-1,] <- c( unlist(xSub[i, c('intercept', 'cov1')]) + 2*c(interceptsd,  cov1sd), LogLik_i)
+   #   #appendBetaMatrix[2*i,] <- c( unlist(xSub[i, c('intercept', 'cov1')]) - 2*c(interceptsd,  cov1sd), LogLik_i)
+   # }
+   # head(appendBetaMatrix)
+   # colnames(appendBetaMatrix) <- c('intercept','boxcox1' ,'cov1', 'boxcox1')
+   # head(xSub)
+   # 
+   # 
+   # xfinalI <- rbind(xSub[,c(1,3)], appendBetaMatrix[,1:2])
+   # plot(xfinal$cov1, xfinal$boxcox1, cex=0.2)
+   # plot(xfinalI$intercept, xfinalI$boxcox1, cex=0.2)
+   
+  #  plot(xSub$cov1, xSub$boxcox1, cex=0.2)
+  #  plot(xSub$intercept, xSub$boxcox1 - breaks, cex=0.2)
+  #  abline(h = 0, lty = 2, col='red')
+  #  abline(v = c(0.4660031, 3.196358), lty = 2, col='red')
+  #  abline(v = c(0.8043255,  2.849402), col='purple')
+  # # plot(xSub$cov2, xSub$boxcox1, cex=0.2)
+  #  plot(x$`(Intercept)`, x$boxcox1, cex=0.2) 
   
-  Table[colnames(covariates), 1] <- Betahat
+
   
   if(all(c('sdNugget','shape', 'gamma3') %in% paramToEstimate)){
   Output <- list(LogLik=LogLikcpu,
                  breaks = breaks,
                  mleIndex = index,
                  summary = Table,
+                 #BetahatTable = x,
                  profNewrange = profNewrange,
                  profShapeLog = profShapeLog,
                  profNugget = profNugget,
@@ -1060,6 +1117,7 @@ likfitLgmCov1d <- function(data,
                    breaks = breaks,
                    mleIndex = index,
                    summary = Table,
+                   #BetahatTable = x,
                    profNewrange = profNewrange,
                    profNugget = profNugget,
                    profGamma3 = profGamma3,
@@ -1087,6 +1145,7 @@ likfitLgmCov1d <- function(data,
                    breaks = breaks,
                    mleIndex = index,
                    summary = Table,
+                   #BetahatTable = x,
                    profrange = profrange,
                    profShapeLog = profShapeLog,
                    profNugget = profNugget,
@@ -1113,6 +1172,7 @@ likfitLgmCov1d <- function(data,
                    breaks = breaks,
                    mleIndex = index,
                    summary = Table,
+                   #BetahatTable = x,
                    profNewrange = profNewrange,
                    profShapeLog = profShapeLog,
                    profNugget = profNugget,

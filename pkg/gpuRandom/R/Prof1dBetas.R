@@ -140,9 +140,9 @@
 # loglikAll = array(NA, c(m,Nparam,Ndata))
 # 
 # for (bet in 1:m){
-#     ssqResidual <- ssqY + BetaSlice[bet] *partD + BetaSlice[bet]^2 *partE - (partA + BetaSlice[bet]* partB + BetaSlice[bet]^2 * partC)
-#     loglik_forthisbeta <- (-0.5)*(Nobs*log(ssqResidual/Nobs) + detVar + Nobs + Nobs*log(2*pi) + jacobian)
-# 
+#   ssqResidual <- ssqY + 2* BetaSlice[bet] *partD + BetaSlice[bet]^2 *partE - (partA + 2*BetaSlice[bet]* partB + BetaSlice[bet]^2 * partC)
+#   loglik_forthisbeta <- (-0.5)*(Nobs*log(ssqResidual/Nobs) + detVar + Nobs + Nobs*log(2*pi) + jacobian)
+#   
 #     loglikAll[bet,,] = loglik_forthisbeta
 # 
 #     #LogLik_optimized[bet,] = max(loglik_forthisbeta)
@@ -150,7 +150,7 @@
 # 
 # 
 #    aaa<-matrix(loglikAll[,,1], nrow=m, ncol=Nparam)
-#    matplot(BetaSlice, aaa , type='l', xlab='intercept', lty=1,  col='#00000040')
+#    matplot(BetaSlice, aaa , type='l', xlab='intercept', lty=1,  col='#00000040', ylim=c(-350, ))
 #    abline(v=c(simRes$summary['(Intercept)',c('estimate','ci0.1','ci0.9')]))
 #    breaks[a] <- max(aaa) - qchisq(cilevel,  df = 1)/2
 # #  lines(BetaSlice, LogLik_optimized, col='red')
@@ -168,7 +168,7 @@
 #   lines(BetaSlice, loglikAll[,7246,32], col='blue', lwd=2, type='l')
 # 
 #   lines(BetaSlice, loglikAll[,878,32], col='green', lwd=2, type='l'), ylim = c(-50,0) + max(loglikAll))
-# 
+
 #   abline(h=breaks[a], col='blue')
 #   result$params[c(1,5979),]
 # bestParam =   which.max(apply(loglikAll, c(1,3), max))
@@ -178,9 +178,9 @@
   for (bet in 1:m){
     ssqResidual <- ssqY + 2* BetaSlice[bet] *partD + BetaSlice[bet]^2 *partE - (partA + 2*BetaSlice[bet]* partB + BetaSlice[bet]^2 * partC)
     loglik_forthisbeta <- (-0.5)*(Nobs*log(ssqResidual/Nobs) + detVar + Nobs + Nobs*log(2*pi) + jacobian)
-    if(a==1){
-    index[bet,] <- which(loglik_forthisbeta == max(loglik_forthisbeta, na.rm = TRUE), arr.ind = TRUE)
-    }
+    # if(a==1){
+    # index[bet,] <- which(loglik_forthisbeta == max(loglik_forthisbeta, na.rm = TRUE), arr.ind = TRUE)
+    # }
     LogLik_optimized[bet,a] = max(loglik_forthisbeta[,])
   }
   
@@ -222,22 +222,51 @@
     LogLik <- LogLik_optimized[,a]
     #f1 <- splinefun(Betas, LogLik, method = "fmm")
     breaks[a] <- max(LogLik) - qchisq(cilevel,  df = 1)/2
-    f1 <- approxfun(BetaSlice, LogLik-breaks[a])
-    #plot(BetaSlice,LogLik-breaks[a], cex=0.2)
-    #curve(f1(x), add = TRUE, col = 2, n = 1001)
+    plot(BetaSlice, LogLik-breaks[a],  ylim = max(LogLik-breaks[a]) + c(-3, 0.2), xlim = range(BetaSlice[max(LogLik-breaks[a]) - LogLik+breaks[a] < 3]), cex=0.2, xlab=paste('beta',a), col='green')
+    abline(h=0, lty = 2, col=2)
     
+    if(a > 1){
+    profileLogLik <- as.data.frame(cbind(BetaSlice, LogLik-breaks[a]))
+    colnames(profileLogLik) <- c("x1",'profile')
+    datC2 = geometry::convhulln(profileLogLik)
+    allPoints = unique(as.vector(datC2))
+    toTest = profileLogLik[allPoints,]
+    toTest[,'profile'] = toTest[,'profile'] + 0.1
+    inHull = geometry::inhulln(datC2, as.matrix(toTest))
+    toUse = profileLogLik[allPoints,][!inHull,]
+    toTest = profileLogLik[allPoints,]
+    
+    points(toTest, col='red', cex=0.6)
+    points(toUse, col='blue', cex=0.6, pch=3)
+    
+    
+    interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
+    prof = data.frame(x1=seq(min(toUse$x1)-0.1, max(toUse$x1)+0.1, len=1001))
+    prof$z = predict(interp1, prof)
+
+    lines(prof$x1, prof$z, col = 'black')
+    lower = min(profileLogLik$x1)
+    upper = max(profileLogLik$x1)
+    f1 <- approxfun(prof$x1, prof$z)
+    }else if(a==1){
+      f1 <- approxfun(BetaSlice, LogLik-breaks[a])
+      #plot(BetaSlice,LogLik-breaks[a], cex=0.2)
+      #curve(f1(x), add = TRUE, col = 2, n = 1001)
+    }
     result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)
     MLE <- result$maximum
+    ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+    abline(v =c(MLE,ci), lty = 2, col='red')
     
-    plot(BetaSlice, LogLik-breaks[a],  ylim = max(LogLik-breaks[a]) + c(-3, 0.2), xlim = range(BetaSlice[max(LogLik-breaks[a]) - LogLik+breaks[a] < 3]), cex=0.2, xlab=paste('beta',a))
-    abline(h=0, lty = 2, col=2)
+
+    
     #abline(h=breaks[a], lty = 2)
     #f2 <- splinefun(Betas, LogLik-breaks[a], method = "fmm")
     #f2 <- approxfun(Betas, LogLik-breaks[a])
     #plot(Betas,LogLik-breaks[a])
     #curve(f2(x), add = TRUE, col = 2, n = 1001)
-    ci <- rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-    abline(v=c(MLE,ci), lty=2)
+    # ci <- rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+
     if(length(ci)==1){
       if( ci > MLE){
       ci <- c(lower, ci)
@@ -253,7 +282,8 @@
     ############### output #####################################
     Table[a,] <- c(MLE, result$objective+breaks[a], ci)
     
-  }    
+  }
+  
     Output <- list(estimates = Table,
                    LogLik = LogLik_optimized,
                    breaks = breaks,
