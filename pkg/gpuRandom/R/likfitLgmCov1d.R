@@ -463,7 +463,7 @@ likfitLgmCov1d <- function(data,
     points(exp(toUse[,1]), toUse[,2], col='blue', cex=0.6, pch=3)
     
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
-    profShapeLog = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
+    profShapeLog = data.frame(x1=seq(min(toUse$x1), max(toUse$x1)-0.05, len=501))
     profShapeLog$z = predict(interp1, profShapeLog)
   
     #plot(newdata$x1, newdata$profile, cex=.2, xlab="log(shape)", ylab="profileLogL")
