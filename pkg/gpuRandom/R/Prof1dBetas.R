@@ -274,11 +274,14 @@
       ci <- c(ci, upper)}
     }
     
-    if(length(ci)==0 | length(ci)>2){
-      warning("invalid ci returned")
-      ci <- c(NA, NA)
+    if(length(ci)==0){
+      ci <- c(lower, upper)
     }
-
+    
+    if(length(ci)>2){
+    warning("invalid ci returned")
+    ci <- c(NA, NA)
+    }
     ############### output #####################################
     Table[a,] <- c(MLE, result$objective+breaks[a], ci)
     
