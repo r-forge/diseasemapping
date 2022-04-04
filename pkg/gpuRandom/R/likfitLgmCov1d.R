@@ -256,7 +256,7 @@ likfitLgmCov1d <- function(data,
   
   maximum <- max(LogLikcpu)
   breaks = maximum - qchisq(cilevel,  df = 1)/2
-  
+  breaks2d = maximum - qchisq(cilevel,  df = 2)/2
   par(mfrow = c(3, 2))
   
   
@@ -1088,6 +1088,7 @@ likfitLgmCov1d <- function(data,
   if(all(c('sdNugget','shape', 'gamma3') %in% paramToEstimate)){
   Output <- list(LogLik=LogLikcpu,
                  breaks = breaks,
+                 breaks2d = breaks2d,
                  mleIndex = index,
                  summary = Table,
                  #BetahatTable = x,
@@ -1115,6 +1116,7 @@ likfitLgmCov1d <- function(data,
   if(!('shape' %in% paramToEstimate)){
     Output <- list(LogLik=LogLikcpu,
                    breaks = breaks,
+                   breaks2d = breaks2d,
                    mleIndex = index,
                    summary = Table,
                    #BetahatTable = x,
@@ -1143,6 +1145,7 @@ likfitLgmCov1d <- function(data,
  if('anisoRatio' %in% paramToEstimate & ('anisoAngleRadians' %in% paramToEstimate)){
       Output <- list(LogLik=LogLikcpu,
                    breaks = breaks,
+                   breaks2d = breaks2d,
                    mleIndex = index,
                    summary = Table,
                    #BetahatTable = x,
@@ -1170,6 +1173,7 @@ likfitLgmCov1d <- function(data,
   if('gamma3' %in% paramToEstimate & ('gamma4' %in% paramToEstimate)){
     Output <- list(LogLik=LogLikcpu,
                    breaks = breaks,
+                   breaks2d = breaks2d,
                    mleIndex = index,
                    summary = Table,
                    #BetahatTable = x,
