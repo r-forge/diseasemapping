@@ -43,7 +43,9 @@
   breaks <- rep(0, ncol(Betas))
   Table <- matrix(NA, nrow=ncol(Betas), ncol=4)
   colnames(Table) <-  c("MLE", "maximum", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
-  index <- matrix(0, nrow=m, ncol=2)
+  #index <- matrix(0, nrow=m, ncol=2)
+  profBetas <- matrix(0, nrow=1001, ncol=2*Ncov)
+  
   
   for (a in 1:ncol(Betas)){
   BetaSlice <- Betas[,a]
@@ -225,7 +227,7 @@
     plot(BetaSlice, LogLik-breaks[a],  ylim = max(LogLik-breaks[a]) + c(-3, 0.2), xlim = range(BetaSlice[max(LogLik-breaks[a]) - LogLik+breaks[a] < 3]), cex=0.2, xlab=paste('beta',a), col='green')
     abline(h=0, lty = 2, col=2)
     
-    if(a > 1){
+    #if(a > 1){
     profileLogLik <- as.data.frame(cbind(BetaSlice, LogLik-breaks[a]))
     colnames(profileLogLik) <- c("x1",'profile')
     datC2 = geometry::convhulln(profileLogLik)
@@ -241,18 +243,20 @@
     
     
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
-    prof = data.frame(x1=seq(min(toUse$x1)-0.1, max(toUse$x1)+0.1, len=1001))
+    prof = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
     prof$z = predict(interp1, prof)
 
     lines(prof$x1, prof$z, col = 'black')
     lower = min(profileLogLik$x1)
     upper = max(profileLogLik$x1)
     f1 <- approxfun(prof$x1, prof$z)
-    }else if(a==1){
-      f1 <- approxfun(BetaSlice, LogLik-breaks[a])
-      #plot(BetaSlice,LogLik-breaks[a], cex=0.2)
-      #curve(f1(x), add = TRUE, col = 2, n = 1001)
-    }
+    #}
+  
+    # else if(a==1){
+    #   f1 <- approxfun(BetaSlice, LogLik-breaks[a])
+    #   #plot(BetaSlice,LogLik-breaks[a], cex=0.2)
+    #   #curve(f1(x), add = TRUE, col = 2, n = 1001)
+    # }
     result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)
     MLE <- result$maximum
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
@@ -283,14 +287,15 @@
     ci <- c(NA, NA)
     }
     ############### output #####################################
+    profBetas[,c((2*a-1):(2*a))] <- as.matrix(prof)
     Table[a,] <- c(MLE, result$objective+breaks[a], ci)
     
   }
   
     Output <- list(estimates = Table,
+                   profBetas = profBetas,
                    LogLik = LogLik_optimized,
-                   breaks = breaks,
-                   index = index)
+                   breaks = breaks)
     
     Output
 

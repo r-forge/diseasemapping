@@ -306,7 +306,7 @@ likfitLgmCov1d <- function(data,
     toTest = profileLogLik[allPoints,]
 
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
-    profNewrange = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
+    profNewrange = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
     profNewrange$z = predict(interp1, profNewrange)
 
     # points(exp(0.5*toTest[,1]), toTest[,2], col='red', cex=0.6)
@@ -375,7 +375,7 @@ likfitLgmCov1d <- function(data,
     toTest = profileLogLik[allPoints,]
     #
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
-    profrange = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
+    profrange = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
     profrange$z = predict(interp1, profrange)
     
     
@@ -435,7 +435,7 @@ likfitLgmCov1d <- function(data,
     # prof1 <- inter$prof
     # 
     # plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="shape", ylab="profileLogL", xlim=c(0,30))
-    #plot(log(profileLogLik$x1), profileLogLik$profile, cex=.2, xlab="logshape", ylab="profileLogL")
+    # plot(log(profileLogLik$x1), profileLogLik$profile, cex=.2, xlab="logshape", ylab="profileLogL")
     # # points(toTest, col='red', cex=0.6)
     # # points(toUse, col='blue', cex=0.6, pch=3)
     # # f1 <- approxfun(inter$prof$x1, inter$prof$z)
@@ -455,7 +455,7 @@ likfitLgmCov1d <- function(data,
     inHull = geometry::inhulln(datC2, as.matrix(toTest))
     toUse = newdata[allPoints,][!inHull,]
     toTest = newdata[allPoints,]
-    toUse <- toUse[order(toUse$x1),]
+    #toUse <- toUse[order(toUse$x1),]
     #toUse <- head(toUse, - 1)
     
     plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="shape", ylab="profileLogL",  log='x')
@@ -463,7 +463,7 @@ likfitLgmCov1d <- function(data,
     points(exp(toUse[,1]), toUse[,2], col='blue', cex=0.6, pch=3)
     
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
-    profShapeLog = data.frame(x1=seq(min(toUse$x1), max(toUse$x1)-0.02, len=501))
+    profShapeLog = data.frame(x1=seq(min(toUse$x1), max(toUse$x1)-0.05, len=1001))
     profShapeLog$z = predict(interp1, profShapeLog)
   
     #plot(newdata$x1, newdata$profile, cex=.2, xlab="log(shape)", ylab="profileLogL")
@@ -580,7 +580,7 @@ likfitLgmCov1d <- function(data,
     if(nrow(toUse)>2){
     
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-    profNugget = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
+    profNugget = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
     profNugget$z = predict(interp1, profNugget)
     
     points(toTest, col='red', cex=0.6)
@@ -613,7 +613,7 @@ likfitLgmCov1d <- function(data,
     }
     }else{
       interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-      profNugget = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
+      profNugget = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
       profNugget$z = predict(interp1, profNugget)
       
       #plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="nugget", ylab="profileLogL", log='x')
@@ -677,7 +677,7 @@ likfitLgmCov1d <- function(data,
     toTest = profileLogLik[allPoints,]
 
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-    profRatio = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
+    profRatio = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
     profRatio$z = predict(interp1, profRatio)
     #
     plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="anisoRatio", ylab="profileLogL")
@@ -725,7 +725,7 @@ likfitLgmCov1d <- function(data,
     toTest = profileLogLik[allPoints,]
 
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-    profRadians = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
+    profRadians = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
     profRadians$z = predict(interp1, profRadians)
     #
     plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="anisoAngleRadians", ylab="profileLogL")
@@ -780,8 +780,8 @@ likfitLgmCov1d <- function(data,
     #  
     #  
     #  fit = mgcv::gam(profile ~ s(gamma3, gamma4, k=nrow(toUse), m=1,fx=TRUE), data=toUse)
-    #  toPredict = list(gamma3=seq(seqGamma3[1], seqGamma3[2], len=501),
-    #                   gamma4=seq(seqGamma4[1], seqGamma4[2], len=501))
+    #  toPredict = list(gamma3=seq(seqGamma3[1], seqGamma3[2], len=1001),
+    #                   gamma4=seq(seqGamma4[1], seqGamma4[2], len=1001))
     #  toPredict = do.call(expand.grid, toPredict)
     #  toPredict$z = predict(fit, toPredict)
     # 
@@ -798,8 +798,8 @@ likfitLgmCov1d <- function(data,
     # points(toUse2[,c('gamma3','gamma4')], col='black', cex=0.8)
     # mapmisc::legendBreaks('bottomright', breaks = Sprob, col=colDat2$col, bty='n')
     
-    # prof2list = list(anisoRatio=seq(seqRatio[1], seqRatio[2], len=501),
-    #                  anisoAngleRadians=seq(-0.5,0.5, len=501))
+    # prof2list = list(anisoRatio=seq(seqRatio[1], seqRatio[2], len=1001),
+    #                  anisoAngleRadians=seq(-0.5,0.5, len=1001))
     # prof2natural = do.call(expand.grid, prof2list)
     # 
     # prof2naturalC = sqrt(prof2natural[,'anisoRatio']-1)* cos(2*(prof2natural[,'anisoAngleRadians'] + pi/2))+
@@ -848,7 +848,7 @@ likfitLgmCov1d <- function(data,
     toTest = profileLogLik[allPoints,]
     
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-    profGamma3 = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
+    profGamma3 = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
     profGamma3$z = predict(interp1, profGamma3)
     
     plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="gamma3", ylab="profileLogL")
@@ -903,7 +903,7 @@ likfitLgmCov1d <- function(data,
     toTest = profileLogLik[allPoints,]
     
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-    profGamma4 = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
+    profGamma4 = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
     profGamma4$z = predict(interp1, profGamma4)
     
     # inter <- get1dCovexhull(profileLogLik, seqvalue = seqGamma4, a=0.00, m=1)     # a data frame or data.table # 2 column names must be x1 and profile
@@ -1104,13 +1104,13 @@ likfitLgmCov1d <- function(data,
                  Ncov = Ncov,
                  Ndata = Ndata,
                  Nparam = Nparam,
-                 ssqY = as.matrix(ssqY2),     
+                 ssqY = ssqY2,     
                  ssqBetahat = ssqBetahat2,
                  ssqResidual = ssqResidual2,
                  detVar = as.vector(detVar2),   
                  detReml = as.vector(detReml2),   
                  jacobian = as.vector(jacobian),
-                 XVYXVX = as.matrix(XVYXVX2))
+                 XVYXVX = XVYXVX2)
   }
   
   if(!('shape' %in% paramToEstimate)){
@@ -1131,13 +1131,13 @@ likfitLgmCov1d <- function(data,
                    Ncov = Ncov,
                    Ndata = Ndata,
                    Nparam = Nparam,
-                   ssqY = as.matrix(ssqY2),     
+                   ssqY = ssqY2,     
                    ssqBetahat = ssqBetahat2,
                    ssqResidual = ssqResidual2,
                    detVar = as.vector(detVar2),   
                    detReml = as.vector(detReml2),   
                    jacobian = as.vector(jacobian),
-                   XVYXVX = as.matrix(XVYXVX2))  
+                   XVYXVX = XVYXVX2)  
   
     }
   
@@ -1161,13 +1161,13 @@ likfitLgmCov1d <- function(data,
                    Ncov = Ncov,
                    Ndata = Ndata,
                    Nparam = Nparam,
-                   ssqY = as.matrix(ssqY2),     
+                   ssqY = ssqY2,     
                    ssqBetahat = ssqBetahat2,
                    ssqResidual = ssqResidual2,
                    detVar = as.vector(detVar2),   
                    detReml = as.vector(detReml2),   
                    jacobian = as.vector(jacobian),
-                   XVYXVX = as.matrix(XVYXVX2))    
+                   XVYXVX = XVYXVX2)    
   }
   
   if('gamma3' %in% paramToEstimate & ('gamma4' %in% paramToEstimate)){
@@ -1189,13 +1189,13 @@ likfitLgmCov1d <- function(data,
                    Ncov = Ncov,
                    Ndata = Ndata,
                    Nparam = Nparam,
-                   ssqY = as.matrix(ssqY2),     
+                   ssqY = ssqY2,     
                    ssqBetahat = ssqBetahat2,
                    ssqResidual = ssqResidual2,
                    detVar = as.vector(detVar2),   
                    detReml = as.vector(detReml2),   
                    jacobian = as.vector(jacobian),
-                   XVYXVX = as.matrix(XVYXVX2))    
+                   XVYXVX = XVYXVX2)    
   }  
   Output
   

@@ -211,13 +211,13 @@
                    Ndata = Ndata,
                    Nparam = Nparam,
                    boxcox = boxcox,
+                   ssqY = ssqY2,     
+                   ssqBetahat = ssqBetahat2,
+                   ssqResidual = ssqResidual2,
+                   detVar = as.vector(detVar2),   
+                   detReml = as.vector(detReml2),   
                    jacobian = as.vector(jacobian),
-                   detVar = as.vector(detVar),   
-                   detReml = as.vector(detReml),   
-                   ssqY = as.matrix(ssqY),    
-                   XVYXVX = as.matrix(XVYXVX),
-                   ssqBetahat = as.matrix(ssqBetahat),
-                   ssqResidual = as.matrix(ssqResidual),
+                   XVYXVX = XVYXVX2,
                    predictors = colnames(covariates)) 
      }
      
@@ -279,7 +279,7 @@
     
    ############## output matrix ####################
    Table <- matrix(NA, nrow=length(paramToEstimate) + Ncov + 1, ncol=3)
-   rownames(Table) <-  c(colnames(covariates), "sdSpatial", paramToEstimate)
+   rownames(Table) <-  c(predictors, "sdSpatial", paramToEstimate)
    colnames(Table) <-  c("estimate", "lci", "uci")
    
    

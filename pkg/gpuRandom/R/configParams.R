@@ -1560,21 +1560,21 @@ getHessianNolog <- function(Model,
       
       
      
-    # for(i in 1:length(alpha)){
-    #     vector1 <- out_list[[i]][,'anisoAngleRadians']
-    #     for(j in 1:length(vector1)){
-    #       if(vector1[j] > pi/2){
-    #         vector1[j] <- vector1[j] - pi
-    #         # if (vector1[j] > pi/2)
-    #         #   vector1[j] <- vector1[j] - pi
-    #         }else if (vector1[j] < -pi/2){
-    #         vector1[j] <- vector1[j] + pi 
-    #         # if (vector1[j] < -pi/2)
-    #         #   vector1[j] <- vector1[j] + pi 
-    #         }
-    #     }
-    #   out_list[[i]][,'anisoAngleRadians'] <- vector1
-    # }
+    for(i in 1:length(alpha)){
+        vector1 <- out_list[[i]][,'anisoAngleRadians']
+        for(j in 1:length(vector1)){
+          if(vector1[j] > pi/2){
+            vector1[j] <- vector1[j] - pi
+            # if (vector1[j] > pi/2)
+            #   vector1[j] <- vector1[j] - pi
+            }else if (vector1[j] < -pi/2){
+            vector1[j] <- vector1[j] + pi
+            # if (vector1[j] < -pi/2)
+            #   vector1[j] <- vector1[j] + pi
+            }
+        }
+      out_list[[i]][,'anisoAngleRadians'] <- vector1
+    }
       
       
       
