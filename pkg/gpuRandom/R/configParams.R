@@ -59,10 +59,10 @@ getHessianNolog <- function(Model,
       gamma4 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians'])))
     }
     aniso <- c(gamma3 = gamma3, gamma4 = gamma4)
-    MleGamma = c(alphaR, log(Mle[whichLogged]), Mle['nugget'], aniso)
+    MleGamma = c(alphaR, log(Mle[whichLogged]), Mle[-c(1,whichLogged,whichAniso)], aniso)
 
   }else{
-    MleGamma = c(alphaR, log(Mle[whichLogged]), Mle['nugget'])
+    MleGamma = c(alphaR, log(Mle[whichLogged]), Mle[-c(1,whichLogged,whichAniso)])
   }
   names(MleGamma)[whichLogged] = paste("log(", names(Mle)[whichLogged], ")",sep="")
 
@@ -79,10 +79,10 @@ getHessianNolog <- function(Model,
       gamma4 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians'])))
     }
     aniso <- c(gamma3 = gamma3, gamma4 = gamma4)
-    MleGamma = c(alphaR, 1/sqrt(Mle[whichLogged]), Mle['nugget'], aniso)
+    MleGamma = c(alphaR, 1/sqrt(Mle[whichLogged]), Mle[-c(1,whichLogged,whichAniso)], aniso)
 
   }else{
-    MleGamma = c(alphaR, 1/sqrt(Mle[whichLogged]), Mle['nugget'])
+    MleGamma = c(alphaR, 1/sqrt(Mle[whichLogged]), Mle[-c(1,whichLogged,whichAniso)])
   }
   names(MleGamma)[whichLogged] = paste("1/sqrt(", names(Mle)[whichLogged], ")",sep="")
   }
@@ -182,24 +182,24 @@ getHessianNolog <- function(Model,
   }else{
     ParamsetGamma <- matrix(MleGamma, nrow=nrow(derivGridDf), ncol=length(Mle), byrow=TRUE, dimnames = list(NULL, names(MleGamma))) + derivGridDf %*% diag(deltas)
   }
-  
+  Mle[-c(1,whichLogged,whichAniso)]
 
     temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
     if(('shape' %in% names(Mle)) & Mle['shape'] < 4){
     if(Mle['anisoRatio'] <= 1){
       naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
-      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,'nugget'], naturalspace)
+      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,-c(1,whichLogged,whichAniso)], naturalspace)
     }else{
       naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
-      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,'nugget'], naturalspace)
+      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,-c(1,whichLogged,whichAniso)], naturalspace)
     }
     }else{
     if(Mle['anisoRatio'] <= 1){
       naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
-      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,'nugget'], naturalspace)
+      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,-c(1,whichLogged,whichAniso)], naturalspace)
     }else{
       naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
-      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,'nugget'], naturalspace)
+      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,-c(1,whichLogged,whichAniso)], naturalspace)
     }
     }
  
@@ -774,10 +774,10 @@ getHessianNolog <- function(Model,
     temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
     if(Mle['anisoRatio'] <= 1){
       naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
-      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,'nugget'], naturalspace)
+      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,-c(1,whichLogged,whichAniso)], naturalspace)
     }else{
       naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
-      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,'nugget'], naturalspace)
+      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,-c(1,whichLogged,whichAniso)], naturalspace)
     }    
   }
   
@@ -1430,7 +1430,7 @@ getHessianNolog <- function(Model,
               colnames(pointsEllipseGammaspace) <- names(MleGamma)
               temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
               naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
-              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),pointsEllipseGammaspace[,'nugget'], naturalspace)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),pointsEllipseGammaspace[,-c(1,whichLogged,whichAniso)], naturalspace)
               colnames(pointsEllipse) <- names(Mle)
               out_list[[i]] = pointsEllipse
             }
@@ -1441,7 +1441,7 @@ getHessianNolog <- function(Model,
               colnames(pointsEllipseGammaspace) <- names(MleGamma)
               temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
               naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
-              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),pointsEllipseGammaspace[,'nugget'], naturalspace)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),pointsEllipseGammaspace[,-c(1,whichLogged,whichAniso)], naturalspace)
               colnames(pointsEllipse) <- names(Mle)
               out_list[[i]] = pointsEllipse
             }
@@ -1455,7 +1455,7 @@ getHessianNolog <- function(Model,
               colnames(pointsEllipseGammaspace) <- names(MleGamma)
               temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
               naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
-              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),pointsEllipseGammaspace[,'nugget'], naturalspace)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]),pointsEllipseGammaspace[,-c(1,whichLogged,whichAniso)], naturalspace)
               colnames(pointsEllipse) <- names(Mle)
               out_list[[i]] = pointsEllipse
             }
@@ -1466,7 +1466,7 @@ getHessianNolog <- function(Model,
               colnames(pointsEllipseGammaspace) <- names(MleGamma)
               temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
               naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
-              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]), pointsEllipseGammaspace[,'nugget'], naturalspace)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), exp(pointsEllipseGammaspace[,whichLogged]), pointsEllipseGammaspace[,-c(1,whichLogged,whichAniso)], naturalspace)
               colnames(pointsEllipse) <- names(Mle)
               out_list[[i]] = pointsEllipse
             }
@@ -1485,7 +1485,7 @@ getHessianNolog <- function(Model,
               colnames(pointsEllipseGammaspace) <- names(MleGamma)
               temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
               naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
-              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), (1/pointsEllipseGammaspace[, whichLogged])^2, pointsEllipseGammaspace[,'nugget'], naturalspace)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), (1/pointsEllipseGammaspace[, whichLogged])^2, pointsEllipseGammaspace[,-c(1,whichLogged,whichAniso)], naturalspace)
               colnames(pointsEllipse) <- names(Mle)
               out_list[[i]] = pointsEllipse
             }
@@ -1496,7 +1496,7 @@ getHessianNolog <- function(Model,
               colnames(pointsEllipseGammaspace) <- names(MleGamma)
               temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
               naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
-              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), (1/pointsEllipseGammaspace[, whichLogged])^2,pointsEllipseGammaspace[,'nugget'], naturalspace)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), (1/pointsEllipseGammaspace[, whichLogged])^2,pointsEllipseGammaspace[,-c(1,whichLogged,whichAniso)], naturalspace)
               colnames(pointsEllipse) <- names(Mle)
               out_list[[i]] = pointsEllipse
             }
@@ -1510,7 +1510,7 @@ getHessianNolog <- function(Model,
               colnames(pointsEllipseGammaspace) <- names(MleGamma)
               temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
               naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
-              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), (1/pointsEllipseGammaspace[, whichLogged])^2,pointsEllipseGammaspace[,'nugget'], naturalspace)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), (1/pointsEllipseGammaspace[, whichLogged])^2,pointsEllipseGammaspace[,-c(1,whichLogged,whichAniso)], naturalspace)
               colnames(pointsEllipse) <- names(Mle)
               out_list[[i]] = pointsEllipse
             }
@@ -1521,7 +1521,7 @@ getHessianNolog <- function(Model,
               colnames(pointsEllipseGammaspace) <- names(MleGamma)
               temp <- as.data.frame(pointsEllipseGammaspace[,'gamma3'] + 1i * pointsEllipseGammaspace[,'gamma4'])
               naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
-              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), (1/pointsEllipseGammaspace[, whichLogged])^2, pointsEllipseGammaspace[,'nugget'], naturalspace)
+              pointsEllipse <- cbind(sqrt(exp(pointsEllipseGammaspace[,'alphaR'])*naturalspace[,1]), (1/pointsEllipseGammaspace[, whichLogged])^2, pointsEllipseGammaspace[,-c(1,whichLogged,whichAniso)], naturalspace)
               colnames(pointsEllipse) <- names(Mle)
               out_list[[i]] = pointsEllipse
             }
@@ -1529,8 +1529,7 @@ getHessianNolog <- function(Model,
         }
       }
       
-      if(logNugget == FALSE & !('shape' %in% names(Mle))){
-        if(length(Mle)==4){
+      if(logNugget == FALSE & !('shape' %in% names(Mle)) & length(Mle)==4){
           load('/home/ruoyong/diseasemapping/pkg/gpuRandom/data/coords4d.RData')
           if(Mle['anisoRatio'] <= 1){
             for(i in 1:length(alpha)){
@@ -1555,9 +1554,9 @@ getHessianNolog <- function(Model,
               out_list[[i]] = pointsEllipse
             }
           }
-        }
       }      
       
+
       
      
     for(i in 1:length(alpha)){

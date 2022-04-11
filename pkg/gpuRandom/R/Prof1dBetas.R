@@ -18,7 +18,8 @@
                                 detVar, # 
                                 ssqY,   # 
                                 XVYXVX,   # 
-                                jacobian){ 
+                                jacobian,
+                                interpolate = TRUE){ 
   
   m <- nrow(Betas)
   # if(m < 5){
@@ -227,7 +228,7 @@
     plot(BetaSlice, LogLik-breaks[a],  ylim = max(LogLik-breaks[a]) + c(-3, 0.2), xlim = range(BetaSlice[max(LogLik-breaks[a]) - LogLik+breaks[a] < 3]), cex=0.2, xlab=paste('beta',a), col='green')
     abline(h=0, lty = 2, col=2)
     
-    #if(a > 1){
+    if(interpolate == TRUE){
     profileLogLik <- as.data.frame(cbind(BetaSlice, LogLik-breaks[a]))
     colnames(profileLogLik) <- c("x1",'profile')
     datC2 = geometry::convhulln(profileLogLik)
@@ -250,13 +251,11 @@
     lower = min(profileLogLik$x1)
     upper = max(profileLogLik$x1)
     f1 <- approxfun(prof$x1, prof$z)
-    #}
-  
-    # else if(a==1){
-    #   f1 <- approxfun(BetaSlice, LogLik-breaks[a])
-    #   #plot(BetaSlice,LogLik-breaks[a], cex=0.2)
-    #   #curve(f1(x), add = TRUE, col = 2, n = 1001)
-    # }
+    }else if(interpolate == FALSE){
+      f1 <- approxfun(BetaSlice, LogLik-breaks[a])
+      plot(BetaSlice,LogLik-breaks[a], cex=0.2)
+      curve(f1(x), add = TRUE, col = 2, n = 1001)
+    }
     result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)
     MLE <- result$maximum
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
