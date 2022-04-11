@@ -612,15 +612,16 @@ likfitLgmCov1d <- function(data,
       ci <- c(NA, NA)
     }
     }else{
-      interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-      profNugget = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
-      profNugget$z = predict(interp1, profNugget)
+      # interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
+        profNugget = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
+      # profNugget$z = predict(interp1, profNugget)
       
       #plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="nugget", ylab="profileLogL", log='x')
       points(toTest, col='red', cex=0.6)
       points(toUse, col='blue', cex=0.6, pch=3)
       #profNugget <- profNugget[profNugget$x1>0,]
       f1 <- approxfun(toUse$x1, toUse$profile)
+      profNugget$z = f1(profNugget$x1)
       #toUse <- toUse[order(toUse$x1),]
       #lines(profNugget$x1, profNugget$z, col = 'green')
       lines(toUse$x1, toUse$profile, col = 'green')
@@ -1149,7 +1150,7 @@ likfitLgmCov1d <- function(data,
                    mleIndex = index,
                    summary = Table,
                    #BetahatTable = x,
-                   profrange = profrange,
+                   profNewrange = profNewrange,
                    profShapeLog = profShapeLog,
                    profNugget = profNugget,
                    profRatio = profRatio,
