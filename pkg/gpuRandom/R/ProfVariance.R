@@ -6,14 +6,16 @@
 
 ######## this function will be incorporated in the other function later i think
 
-       ProfVariance<- function(stderror, #a vector  given by the user 
+       profVariance<- function(stderror, #a vector  given by the user 
                                cilevel=0.95,
-                               Nobs,  # number of observations.
+                               Nobs, 
                                Nparam,
                                Ndata,
-                               detVar, # vclVector
-                               ssqResidual,   # vclMatrix
-                               jacobian # vclVector  #form = c("loglik", "profileforBeta"),
+                               detVar, 
+                               detReml,
+                               ssqResidual, 
+                               jacobian, 
+                               REML=FALSE
                                ){
   
   
@@ -26,12 +28,17 @@
   LogLik = matrix(0, nrow=m, ncol=1)
   
   
-  
+if(REML==FALSE){
   for (var in 1:m){
     All_min2loglik_forthisvar <- ssqResidual/(stderror[var]^2) + Nobs*log(stderror[var]^2) + detVar + jacobian + Nobs*log(2*pi) 
     LogLik[var,] <- -0.5*min(All_min2loglik_forthisvar)
   }
-
+}else if(REML==TRUE){
+  for (var in 1:m){
+    All_min2loglik_forthisvar <- ssqResidual/(stderror[var]^2) + (Nobs-Ncov)*log(stderror[var]^2) + detVar +detReml + jacobian + Nobs*log(2*pi) 
+    LogLik[var,] <- -0.5*min(All_min2loglik_forthisvar)
+  }  
+}
   
   lower = min(stderror)
   upper = max(stderror)

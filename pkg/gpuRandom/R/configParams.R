@@ -2,17 +2,11 @@
 #' @useDynLib gpuRandom
 #' @export
 
-
-
-
-
-
 getHessianNolog <- function(Model,
                        Mle = NULL,
                        boxcox = NULL){
   
   delta = 0.01  
-  kappa = 60
   # order the params
   Theorder <- c('range', 'shape', 'nugget', 'anisoRatio', 'anisoAngleRadians')
   parToLog <- c('shape')
@@ -230,15 +224,15 @@ getHessianNolog <- function(Model,
   
   
   #result$paramsRenew
-  if(length(result1$boxcox)==4){
-    A <- result1$LogLik[-1, 2]
-    Origin <- result1$LogLik[1, 2]
-    boxcoxHessian <- unname((result1$LogLik[1, 4] - 2*result1$LogLik[1, 2] + result1$LogLik[1, 3])/(0.05^2))
-  }else if(length(result1$boxcox)==3){
+  # if(length(result1$boxcox)==4){
+  #   A <- result1$LogLik[-1, 2]
+  #   Origin <- result1$LogLik[1, 2]
+  #   boxcoxHessian <- unname((result1$LogLik[1, 4] - 2*result1$LogLik[1, 2] + result1$LogLik[1, 3])/(0.05^2))
+  # }else if(length(result1$boxcox)==3){
     A <- result1$LogLik[-1, 1]
     Origin <- result1$LogLik[1, 1]  
     boxcoxHessian <- unname((result1$LogLik[1, 3] - 2*result1$LogLik[1, 1] + result1$LogLik[1, 2])/(0.05^2))
-  }
+  # }
   #plot(result$LogLik[])
   
   HessianMat <- matrix(0, nrow=length(Mle), ncol=length(Mle))
@@ -247,7 +241,7 @@ getHessianNolog <- function(Model,
   
   # if(Mle['nugget'] > delta){
   if(length(Mle)==1){
-    HessianMat[1,1] <- (result1$LogLik[1, 2] - 2*result1$LogLik[2, 2] + result1$LogLik[3, 2])/(deltas[1]^2)
+    HessianMat[1,1] <- (result1$LogLik[1, 1] - 2*result1$LogLik[2, 1] + result1$LogLik[3, 1])/(deltas[1]^2)
   }else if(length(Mle)==2){
     HessianMat[1,1] <- (A[1] + A[2] -2*Origin)/(deltas[1]^2)
     HessianMat[2,2] <- (A[3] + A[4] -2*Origin)/(deltas[2]^2)
@@ -473,7 +467,7 @@ getHessianNolog <- function(Model,
       kappa = 60
       # order the params
       Theorder <- c('range', 'shape', 'nugget', 'anisoRatio', 'anisoAngleRadians')
-      parToLog <- c( "nugget")
+      parToLog <- c('shape', "nugget")
       if(is.null(Mle)){
         Mle <- Model$optim$options[,'opt']
       }
@@ -516,10 +510,10 @@ getHessianNolog <- function(Model,
             gamma4 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians'])))
           }
           aniso <- c(gamma3 = gamma3, gamma4 = gamma4)
-          MleGamma = c(alphaR, log(Mle[whichLogged]), Mle['nugget'], aniso)
+          MleGamma = c(alphaR, log(Mle[whichLogged]), Mle[-c(1,whichLogged,whichAniso)], aniso)
           
         }else{
-          MleGamma = c(alphaR, log(Mle[whichLogged]), Mle['nugget'])
+          MleGamma = c(alphaR, log(Mle[whichLogged]), Mle[-c(1,whichLogged,whichAniso)])
         }
         names(MleGamma)[whichLogged] = paste("log(", names(Mle)[whichLogged], ")",sep="")
         
@@ -536,14 +530,15 @@ getHessianNolog <- function(Model,
             gamma4 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians'])))
           }
           aniso <- c(gamma3 = gamma3, gamma4 = gamma4)
-          MleGamma = c(alphaR, 1/sqrt(Mle[whichLogged]), Mle['nugget'], aniso)
+          MleGamma = c(alphaR, 1/sqrt(Mle[whichLogged]), Mle[-c(1,whichLogged,whichAniso)], aniso)
           
         }else{
-          MleGamma = c(alphaR, 1/sqrt(Mle[whichLogged]), Mle['nugget'])
+          MleGamma = c(alphaR, 1/sqrt(Mle[whichLogged]), Mle[-c(1,whichLogged,whichAniso)])
         }
         names(MleGamma)[whichLogged] = paste("1/sqrt(", names(Mle)[whichLogged], ")",sep="")
       }
       
+
   # if(Mle['nugget'] > delta){
   ## center approximation
   a1 <- c(1,1,-1,-1)
@@ -808,13 +803,13 @@ getHessianNolog <- function(Model,
   
   
   #result$paramsRenew
-  if(length(result1$boxcox)==2){
-  A <- result1$LogLik[-1, 2]
-  Origin <- result1$LogLik[1, 2]
-  }else{
+  # if(length(result1$boxcox)==2){
+  # A <- result1$LogLik[-1, 2]
+  # Origin <- result1$LogLik[1, 2]
+  # }else{
   A <- result1$LogLik[-1, 1]
   Origin <- result1$LogLik[1, 1]  
-  }
+  # }
   #plot(result$LogLik[])
   
   HessianMat <- matrix(0, nrow=length(Mle), ncol=length(Mle))
@@ -940,166 +935,164 @@ getHessianNolog <- function(Model,
 #   #HessianMat2 <- diag(c(1, 0.5,1,1,1)) %*% HessianMat %*% diag(c(1, 0.5,1,1,1))
 # }
   # frst detivatives
-  if((('nugget' %in% names(Mle)) & Mle['nugget'] < delta) | ('shape' %in% names(Mle)) & Mle['shape'] >= kappa){
-  derivGridDf1 <- rbind(c(1,0,0,0,0),
-                        c(-1, 0,0,0,0),
-                        c(0, 1, 0,0,0),
-                        c(0,-1, 0,0,0),
-                        c(0, 0, 1,0,0),
-                        c(0, 0,-1,0,0),
-                        c(0, 0, 0,1,0),
-                        c(0, 0, 0,-1,0),
-                        c(0, 0, 0, 0,1),
-                        c(0, 0, 0, 0,-1))
-  if(length(Mle)==4){
-  derivGridDf1 <- derivGridDf1[-c(9,10), -5]
-  }else if(length(Mle)==2){
-  derivGridDf1 <- derivGridDf1[c(1:4), 1:2]  
-  }else if(length(Mle) == 3){
-  derivGridDf1 <- derivGridDf1[1:6, 1:3]
-  }
-  
-  
-  deltas = rep(delta, length(Mle))
-  # names(deltas) = names(MleGamma)
-  # deltas['gamma4'] = 0.02
-  ParamsetGamma <- matrix(MleGamma, nrow=nrow(derivGridDf1), ncol=length(Mle), byrow=TRUE, dimnames = list(NULL, names(MleGamma))) + 
-    derivGridDf1 %*% diag(deltas)
-  
-  if(!('anisoRatio' %in% names(Mle))){
-    Paramset <- cbind(ParamsetGamma[,-whichLogged], exp(ParamsetGamma[,paste("log(", names(Mle)[whichLogged], ")",sep="")]))   
-  }else{
-    temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
-    if(Mle['anisoRatio'] <= 1){
-      naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
-      Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), naturalspace)
-    }else{
-      naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
-      if(length(whichLogged)>=2 & whichLogged[2]-whichLogged[1]>1){
-        Paramset <- cbind(exp(ParamsetGamma[, whichLogged[1]]), ParamsetGamma[,-c(whichLogged, whichAniso)], exp(ParamsetGamma[, whichLogged[2]]), naturalspace)
-      }else{
-        Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), naturalspace)
-      }
-    }
-  } 
-  
-  colnames(Paramset) <- names(Mle)  
-  toAdd = setdiff(c('range','shape','nugget','anisoRatio', 'anisoAngleRadians'), names(Mle))
-  otherParams = matrix(Model$opt$mle[toAdd], nrow=nrow(Paramset), ncol = length(toAdd),
-                       dimnames = list(rownames(Paramset), toAdd), byrow=TRUE)
-  Params2 <- cbind(Paramset, otherParams)
-  
-  result2<-gpuRandom::getProfLogL(data= Model$data,
-                                  formula=Model$model$formula,
-                                  coordinates=Model$data@coords,
-                                  params=Params2,
-                                  boxcox = Model$parameters['boxcox'],
-                                  type = "double",
-                                  NparamPerIter=20,
-                                  gpuElementsOnly=FALSE,
-                                  reml=FALSE,
-                                  Nglobal=c(128,64),
-                                  Nlocal=c(16,16),
-                                  NlocalCache=2000)
-  
-  if(length(result1$boxcox)==2){
-    A <- result2$LogLik[, 2]
-  }else{
-    A <- result2$LogLik[, 1]
-  }
-  FirstDeri <- rep(0, length(Mle))
-  names(FirstDeri) <- names(MleGamma)
-  
-  FirstDeri[1] <- (A[1] - A[2])/(2*deltas[1])
-  FirstDeri[2] <- (A[3] - A[4])/(2*deltas[2])
-  FirstDeri[3] <- (A[5] - A[6])/(2*deltas[3])
-  FirstDeri[4] <- (A[7] - A[8])/(2*deltas[4])
-  FirstDeri[5] <- (A[9] - A[10])/(2*deltas[5])
-  
-  index <- which(abs(FirstDeri) > 0.01)
-  }
-  
-  #Sigma <- solve(-HessianMat)
-
-  newMle <- Mle
-  newMleGamma <- MleGamma
-  
-  
-  if((('nugget' %in% names(Mle)) & Mle['nugget'] < delta) | ('shape' %in% names(Mle)) & Mle['shape'] >= kappa){
-  
-  for(i in 1:length(index)){
-    #newMle[index[i]] <- Mle[index[i]] + Sigma[index[i],index[i]]*FirstDeri[index[i]]
-    newMleGamma[index[i]] <- MleGamma[index[i]] + solve(-HessianMat)[index[i],index[i]]*FirstDeri[index[i]]
-  } 
-  
-
-    if(('shape' %in% names(Mle)) & Mle['shape'] < 4){
-      if(!('anisoRatio' %in% names(Mle))){
-        newMle <- c(exp(newMleGamma[paste("log(", names(Mle)[whichLogged], ")",sep="")]), newMleGamma[-whichLogged])
-      }else{
-      temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
-      if(Mle['anisoRatio'] <= 1){
-        naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
-        Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,'nugget'], naturalspace)
-      }else{
-        naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
-        Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,'nugget'], naturalspace)
-      }
-    }}else{
-      if(!('anisoRatio' %in% names(Mle))){
-        newMle <- c(exp(newMleGamma[paste("log(", names(Mle)[whichLogged], ")",sep="")]), newMleGamma[-whichLogged])
-      }else{
-      if(Mle['anisoRatio'] <= 1){
-        naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
-        Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,'nugget'], naturalspace)
-      }else{
-        naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
-        Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,'nugget'], naturalspace)
-      }      
-    }
-    }
-  names(newMle) <- names(Mle)
-  
-  ## check if newMle's are on boundary
-  # if('nugget' %in% names(Mle) & newMle['nugget'] < 0){
-  #   newMle['nugget'] = 0
+  # if((('nugget' %in% names(Mle)) & Mle['nugget'] < delta) | ('shape' %in% names(Mle)) & Mle['shape'] >= kappa){
+  # derivGridDf1 <- rbind(c(1,0,0,0,0),
+  #                       c(-1, 0,0,0,0),
+  #                       c(0, 1, 0,0,0),
+  #                       c(0,-1, 0,0,0),
+  #                       c(0, 0, 1,0,0),
+  #                       c(0, 0,-1,0,0),
+  #                       c(0, 0, 0,1,0),
+  #                       c(0, 0, 0,-1,0),
+  #                       c(0, 0, 0, 0,1),
+  #                       c(0, 0, 0, 0,-1))
+  # if(length(Mle)==4){
+  # derivGridDf1 <- derivGridDf1[-c(9,10), -5]
+  # }else if(length(Mle)==2){
+  # derivGridDf1 <- derivGridDf1[c(1:4), 1:2]  
+  # }else if(length(Mle) == 3){
+  # derivGridDf1 <- derivGridDf1[1:6, 1:3]
   # }
   # 
   # 
-  # if('shape' %in% names(Mle) & newMle['shape'] < 0){
-  #   newMle['shape'] = 0
+  # deltas = rep(delta, length(Mle))
+  # # names(deltas) = names(MleGamma)
+  # # deltas['gamma4'] = 0.02
+  # ParamsetGamma <- matrix(MleGamma, nrow=nrow(derivGridDf1), ncol=length(Mle), byrow=TRUE, dimnames = list(NULL, names(MleGamma))) + 
+  #   derivGridDf1 %*% diag(deltas)
+  # 
+  # if(!('anisoRatio' %in% names(Mle))){
+  #   Paramset <- cbind(ParamsetGamma[,-whichLogged], exp(ParamsetGamma[,paste("log(", names(Mle)[whichLogged], ")",sep="")]))   
+  # }else{
+  #   temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
+  #   if(Mle['anisoRatio'] <= 1){
+  #     naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
+  #     Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), naturalspace)
+  #   }else{
+  #     naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+  #     if(length(whichLogged)>=2 & whichLogged[2]-whichLogged[1]>1){
+  #       Paramset <- cbind(exp(ParamsetGamma[, whichLogged[1]]), ParamsetGamma[,-c(whichLogged, whichAniso)], exp(ParamsetGamma[, whichLogged[2]]), naturalspace)
+  #     }else{
+  #       Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), naturalspace)
+  #     }
+  #   }
+  # } 
+  # 
+  # colnames(Paramset) <- names(Mle)  
+  # toAdd = setdiff(c('range','shape','nugget','anisoRatio', 'anisoAngleRadians'), names(Mle))
+  # otherParams = matrix(Model$opt$mle[toAdd], nrow=nrow(Paramset), ncol = length(toAdd),
+  #                      dimnames = list(rownames(Paramset), toAdd), byrow=TRUE)
+  # Params2 <- cbind(Paramset, otherParams)
+  # 
+  # result2<-gpuRandom::getProfLogL(data= Model$data,
+  #                                 formula=Model$model$formula,
+  #                                 coordinates=Model$data@coords,
+  #                                 params=Params2,
+  #                                 boxcox = Model$parameters['boxcox'],
+  #                                 type = "double",
+  #                                 NparamPerIter=20,
+  #                                 gpuElementsOnly=FALSE,
+  #                                 reml=FALSE,
+  #                                 Nglobal=c(128,64),
+  #                                 Nlocal=c(16,16),
+  #                                 NlocalCache=2000)
+  # 
+  # if(length(result1$boxcox)==2){
+  #   A <- result2$LogLik[, 2]
+  # }else{
+  #   A <- result2$LogLik[, 1]
+  # }
+  # FirstDeri <- rep(0, length(Mle))
+  # names(FirstDeri) <- names(MleGamma)
+  # 
+  # FirstDeri[1] <- (A[1] - A[2])/(2*deltas[1])
+  # FirstDeri[2] <- (A[3] - A[4])/(2*deltas[2])
+  # FirstDeri[3] <- (A[5] - A[6])/(2*deltas[3])
+  # FirstDeri[4] <- (A[7] - A[8])/(2*deltas[4])
+  # FirstDeri[5] <- (A[9] - A[10])/(2*deltas[5])
+  # 
+  # index <- which(abs(FirstDeri) > 0.01)
   # }
   # 
-  # check mle shape
-  if('shape' %in% names(Mle) & newMle['shape'] >= kappa){
-    newMle['shape'] = 1/newMle['shape']
-    # if(Mle['shape'] <= delta)
-    #   Mle['shape'] = delta
-    #parToLog <- parToLog[!parToLog %in% 'shape']
-  }
-  }
+  # #Sigma <- solve(-HessianMat)
+  # 
+  # newMle <- Mle
+  # newMleGamma <- MleGamma
+  # 
+  # 
+  # if((('nugget' %in% names(Mle)) & Mle['nugget'] < delta) | ('shape' %in% names(Mle)) & Mle['shape'] >= kappa){
+  # 
+  # for(i in 1:length(index)){
+  #   #newMle[index[i]] <- Mle[index[i]] + Sigma[index[i],index[i]]*FirstDeri[index[i]]
+  #   newMleGamma[index[i]] <- MleGamma[index[i]] + solve(-HessianMat)[index[i],index[i]]*FirstDeri[index[i]]
+  # } 
+  # 
+  # 
+  #   if(('shape' %in% names(Mle)) & Mle['shape'] < 4){
+  #     if(!('anisoRatio' %in% names(Mle))){
+  #       newMle <- c(exp(newMleGamma[paste("log(", names(Mle)[whichLogged], ")",sep="")]), newMleGamma[-whichLogged])
+  #     }else{
+  #     temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
+  #     if(Mle['anisoRatio'] <= 1){
+  #       naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
+  #       Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,'nugget'], naturalspace)
+  #     }else{
+  #       naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+  #       Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), exp(ParamsetGamma[, whichLogged]), ParamsetGamma[,'nugget'], naturalspace)
+  #     }
+  #   }}else{
+  #     if(!('anisoRatio' %in% names(Mle))){
+  #       newMle <- c(exp(newMleGamma[paste("log(", names(Mle)[whichLogged], ")",sep="")]), newMleGamma[-whichLogged])
+  #     }else{
+  #     if(Mle['anisoRatio'] <= 1){
+  #       naturalspace <- cbind(1/(Mod(temp[,1])^2 + 1), Arg(temp[,1])/2 + pi/2)
+  #       Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,'nugget'], naturalspace)
+  #     }else{
+  #       naturalspace <- cbind(Mod(temp[,1])^2 + 1, Arg(temp[,1])/2)
+  #       Paramset <- cbind(sqrt(exp(ParamsetGamma[,'alphaR'])*naturalspace[,1]), (1/ParamsetGamma[, whichLogged])^2, ParamsetGamma[,'nugget'], naturalspace)
+  #     }      
+  #   }
+  #   }
+  # names(newMle) <- names(Mle)
+  # 
+  # ## check if newMle's are on boundary
+  # # if('nugget' %in% names(Mle) & newMle['nugget'] < 0){
+  # #   newMle['nugget'] = 0
+  # # }
+  # # 
+  # # 
+  # # if('shape' %in% names(Mle) & newMle['shape'] < 0){
+  # #   newMle['shape'] = 0
+  # # }
+  # # 
+  # # check mle shape
+  # if('shape' %in% names(Mle) & newMle['shape'] >= kappa){
+  #   newMle['shape'] = 1/newMle['shape']
+  #   # if(Mle['shape'] <= delta)
+  #   #   Mle['shape'] = delta
+  #   #parToLog <- parToLog[!parToLog %in% 'shape']
+  # }
+  # }
+
   
-  
-  if((('nugget' %in% names(Mle)) & Mle['nugget'] < delta) | ('shape' %in% names(Mle)) & Mle['shape'] >= kappa){
-  output = list(Gradiant= FirstDeri,
-                HessianMat = HessianMat,
-                #Sigma = Sigma,
-                originalPoint = Mle,
-                centralPoint = newMle,
-                centralPointGamma = newMleGamma,
-                parToLog = parToLog,
-                whichAniso = whichAniso,
-                data = cbind(Params1, result1$LogLik))
-  }else{
+  # if((('nugget' %in% names(Mle)) & Mle['nugget'] < delta) | ('shape' %in% names(Mle)) & Mle['shape'] >= kappa){
+  # output = list(Gradiant= FirstDeri,
+  #               HessianMat = HessianMat,
+  #               #Sigma = Sigma,
+  #               originalPoint = Mle,
+  #               centralPoint = newMle,
+  #               centralPointGamma = newMleGamma,
+  #               parToLog = parToLog,
+  #               whichAniso = whichAniso,
+  #               data = cbind(Params1, result1$LogLik))
+  # }else{
     output = list(HessianMat = HessianMat,
-                  #Sigma = Sigma,
                   originalPoint = Mle,
-                  centralPoint = newMle,
                   centralPointGamma = newMleGamma,
                   parToLog = parToLog,
                   whichAniso = whichAniso,
                   data = cbind(Params1, result1$LogLik))  
-  }
+  # }
   
   output
 }

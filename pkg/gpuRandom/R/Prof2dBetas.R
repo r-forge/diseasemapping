@@ -5,7 +5,7 @@
 
 
 
- betavectorProfile <- function(Betas, #a p x 1 R matrix  given by the user 
+       Prof2dBetas <- function(Betas, #a p x 1 R matrix  given by the user 
                                prof2list,
                                Nobs,  # number of observations.
                                Nparam,
@@ -73,8 +73,10 @@
   breaks = maximum - qchisq(cilevel,  df = Ncov)/2
  
   lMatrix = matrix(result[,'LogLik'], length(prof2list[[1]]), length(prof2list[[2]]))
+  # par(cex.lab=1.2)
+  # par(mfrow = c(1, 1))
   contour(prof2list[[1]], prof2list[[2]], lMatrix,
-          col = par("fg"), lty = par("lty"), lwd = par("lwd"), #levels = c(breaks), 
+          col = par("fg"), lty = par("lty"), lwd = par("lwd"), levels = c(breaks+1, breaks+2, breaks-3, breaks-2, breaks-1, breaks), 
           add = FALSE, xlab = "Beta1", ylab = "Beta2")
   
   # filled.contour(prof2list[[1]], prof2list[[2]], lMatrix, levels = c(breaks-4, breaks-3, 

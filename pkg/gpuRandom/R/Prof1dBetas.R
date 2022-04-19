@@ -16,9 +16,11 @@
                                 Nparam,
                                 Ncov,
                                 detVar, # 
+                                detReml,
                                 ssqY,   # 
                                 XVYXVX,   # 
                                 jacobian,
+                                REML = FALSE,
                                 interpolate = TRUE){ 
   
   m <- nrow(Betas)
@@ -40,15 +42,15 @@
     XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ] <- makeSymm(XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ])
   }
   
-  LogLik_optimized = matrix(0, nrow=m, ncol=ncol(Betas))
-  breaks <- rep(0, ncol(Betas))
-  Table <- matrix(NA, nrow=ncol(Betas), ncol=4)
+  LogLik_optimized = matrix(0, nrow=m, ncol=Ncov)
+  breaks <- rep(0, Ncov)
+  Table <- matrix(NA, nrow=Ncov, ncol=4)
   colnames(Table) <-  c("MLE", "maximum", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
   #index <- matrix(0, nrow=m, ncol=2)
   profBetas <- matrix(0, nrow=1001, ncol=2*Ncov)
   
   
-  for (a in 1:ncol(Betas)){
+  for (a in 1:Ncov){
   BetaSlice <- Betas[,a]
   selectedrows <- (seq_len(Nparam)-1) * Ncov + a
   XTVinvX_deleted <- matrix(XTVinvX[-selectedrows,-a], ncol=Ucov)
@@ -177,7 +179,7 @@
 # bestParam =   which.max(apply(loglikAll, c(1,3), max))
 # bestBocxox = which.max(apply(loglikAll[,bestParam,], 2, max))
 # lines(Betas, loglikAll[,bestParam, bestBocxox], col='blue')
-
+if(REML==FALSE){
   for (bet in 1:m){
     ssqResidual <- ssqY + 2* BetaSlice[bet] *partD + BetaSlice[bet]^2 *partE - (partA + 2*BetaSlice[bet]* partB + BetaSlice[bet]^2 * partC)
     loglik_forthisbeta <- (-0.5)*(Nobs*log(ssqResidual/Nobs) + detVar + Nobs + Nobs*log(2*pi) + jacobian)
@@ -186,7 +188,16 @@
     # }
     LogLik_optimized[bet,a] = max(loglik_forthisbeta[,])
   }
-  
+}else if(REML==TRUE){
+  for (bet in 1:m){
+    ssqResidual <- ssqY + 2* BetaSlice[bet] *partD + BetaSlice[bet]^2 *partE - (partA + 2*BetaSlice[bet]* partB + BetaSlice[bet]^2 * partC)
+    loglik_forthisbeta <- (-0.5)*((Nobs-Ncov)*log(ssqResidual/(Nobs-Ncov)) + detVar +detReml+ jacobian + Nobs*log(2*pi) + Nobs-Ncov)
+    # if(a==1){
+    # index[bet,] <- which(loglik_forthisbeta == max(loglik_forthisbeta, na.rm = TRUE), arr.ind = TRUE)
+    # }
+    LogLik_optimized[bet,a] = max(loglik_forthisbeta[,])
+  }  
+}  
   # result$params
   
   
@@ -226,7 +237,14 @@
     #f1 <- splinefun(Betas, LogLik, method = "fmm")
     breaks[a] <- max(LogLik) - qchisq(cilevel,  df = 1)/2
     plot(BetaSlice, LogLik-breaks[a],  ylim = max(LogLik-breaks[a]) + c(-3, 0.2), xlim = range(BetaSlice[max(LogLik-breaks[a]) - LogLik+breaks[a] < 3]), cex=0.2, xlab=paste('beta',a), col='green')
-    abline(h=0, lty = 2, col=2)
+    abline(h=0, lty = 2, col='black')
+    
+    # temp <- qchisq(cilevel,  df = 1)/2
+    # plot(BetaSlice*1e03, LogLik-breaks[a]-temp,  ylim = max(LogLik-breaks[a]-temp) + c(-3, 0.2), xlim = range(BetaSlice[max(LogLik-breaks[a]-temp) - LogLik+breaks[a]+temp < 3]*1e03), cex=0.2, xlab='elevation*1000', col='green', ylab='profileLogL')
+    # abline(h=-temp, lty = 2, col='black')
+    
+    
+    
     
     if(interpolate == TRUE){
     profileLogLik <- as.data.frame(cbind(BetaSlice, LogLik-breaks[a]))
@@ -251,17 +269,20 @@
     lower = min(profileLogLik$x1)
     upper = max(profileLogLik$x1)
     f1 <- approxfun(prof$x1, prof$z)
+    
+    profBetas[,c((2*a-1):(2*a))] <- as.matrix(prof)
     }else if(interpolate == FALSE){
       f1 <- approxfun(BetaSlice, LogLik-breaks[a])
-      plot(BetaSlice,LogLik-breaks[a], cex=0.2)
+      #plot(BetaSlice,LogLik-breaks[a], cex=0.2)
       curve(f1(x), add = TRUE, col = 2, n = 1001)
     }
     result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)
     MLE <- result$maximum
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-    abline(v =c(MLE,ci), lty = 2, col='red')
-    
-
+    abline(v =c(MLE,ci), lty = 2, col='black')
+    # text(MLE, -2.9, round(MLE,digits = 2))
+    # text(ci[1], -2.9, round(ci[1],digits = 2))
+    # text(ci[2], -2.9, round(ci[2],digits = 3))
     
     #abline(h=breaks[a], lty = 2)
     #f2 <- splinefun(Betas, LogLik-breaks[a], method = "fmm")
@@ -286,15 +307,20 @@
     ci <- c(NA, NA)
     }
     ############### output #####################################
-    profBetas[,c((2*a-1):(2*a))] <- as.matrix(prof)
     Table[a,] <- c(MLE, result$objective+breaks[a], ci)
     
   }
   
+  if(interpolate == TRUE){
     Output <- list(estimates = Table,
                    profBetas = profBetas,
                    LogLik = LogLik_optimized,
                    breaks = breaks)
+  }else{
+    Output <- list(estimates = Table,
+                   LogLik = LogLik_optimized,
+                   breaks = breaks)    
+  }
     
     Output
 
@@ -304,155 +330,3 @@
   
   
   
-# likLgm_betascalarProfile <- function(Betas, #a m x 1 R vector  given by the user 
-#                                      a,     # which beta_i?
-#                                      Nobs,  # number of observations.
-#                                      Ndata,
-#                                      Nparam,
-#                                      Ncov,
-#                                      detVar, # vclVector
-#                                      ssqY,   # vclMatrix
-#                                      XVYXVX,   # vclMatrix
-#                                      jacobian, # vclVector  #form = c("loglik", "profileforBeta"),
-#                                      minustwotimes=TRUE){
-#   
-#   
-#   ssqY <- as.matrix(ssqY)
-#   detVar <- as.vector(detVar)
-#   detVar <- matrix(rep(detVar, Ndata), nrow=Nparam)
-#   jacobian <- as.vector(jacobian)
-#   jacobian <- do.call(rbind, replicate(Nparam, jacobian, simplify = FALSE))
-#   #dim(XVYXVX)
-#   Ucov <- Ncov-1
-#   m <- length(Betas)
-#   
-#   XTVinvX <- XVYXVX[ , (ncol(XVYXVX)-Ncov+1):ncol(XVYXVX)]
-#   XVY <- XVYXVX[ , 1:Ndata]
-#   
-#   ## make each symmetric
-#   # for (i in 1:Nparam){
-#   #   #mat <- XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ]
-#   #   XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ][upper.tri(XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ])] <- XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ][lower.tri(XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ])]
-#   # }
-#   
-#   
-#   selectedrows <- seq_len(Nparam)*a
-#   XTVinvX_deleted <- matrix(XTVinvX[-selectedrows,-a],ncol=Ucov, byrow=TRUE)
-#   XTVinvX_a <- matrix(XTVinvX[selectedrows, -a], nrow=Nparam, ncol=Ucov)
-#   #XTVinvX_a <- matrix(XTVinvX[-selectedrows, a], nrow=Nparam*Ucov, ncol=1)[1:10,]
-#   XVY_deleted <- XVY[-selectedrows, ]
-#   X_aVY <- XVY[selectedrows, ]
-#   X_aVX_a <- XTVinvX[selectedrows, a]
-#   #dim(XVY_deleted)
-#   
-#   
-#   partA = matrix(0, nrow=Nparam, ncol=Ndata)
-#   partB = matrix(0, nrow=Nparam, ncol=Ndata)
-#   partC = matrix(0, nrow=Nparam, ncol=Ndata)
-#   partD = matrix(0, nrow=Nparam, ncol=Ndata)
-#   partE = matrix(0, nrow=Nparam, ncol=Ndata)
-#   LogLik_optimized = matrix(0, nrow=m, ncol=1)
-#   
-#   
-#   
-#   
-#   i_vec <- seq_len(Nparam)
-#   computed <- parallel::mcmapply(i_vec,  
-#                                  FUN = function(i) {
-#                                    interval <- c(((i-1)*Ucov+1) : (i*Ucov))
-#                                    solve(XTVinvX_deleted[interval, ]) 
-#                                  }
-#   )
-#   
-#   computed = matrix(computed, ncol = Nparam)
-#   
-#   for (i in 1:Nparam){
-#     interval <- c(((i-1)*Ucov+1) : (i*Ucov))
-#     temp <- matrix(computed[,i], ncol = Ucov)
-#     
-#     # part (A) have 2 data sets
-#     partA[i,] = rowSums(XVY_deleted[interval,] %*% temp) * XVY_deleted[interval,]
-#     # part (B) have 2 data sets.   has beta
-#     partB[i,] = -2*XVY_deleted[interval,] %*% temp %*% XTVinvX_a[i,]
-#     # part (C) no data sets.  has beta
-#     partC[i,] = XTVinvX_a[i, ] %*% temp %*% XTVinvX_a[i, ]
-#     #partC[i,] = XTVinvX_a[interval, ] %*% temp %*% XTVinvX_a[interval, ]
-#     # part (D) have 2 data sets.    has beta
-#     partD[i,] = -2* X_aVY[i, ]
-#     # part (E)
-#     partE[i,] = X_aVX_a[i]
-#   }
-#   
-#   
-#   for (bet in 1:m){
-#     ssqResidual <- ssqY + Betas[bet] *partD + Betas[bet]^2 *partE - (partA + Betas[bet]* partB + Betas[bet]^2 * partC)
-#     loglik_forthisbeta <- Nobs*log(ssqResidual/Nobs) + detVar + Nobs + Nobs*log(2*pi) + jacobian
-#     LogLik_optimized[bet,] = min(loglik_forthisbeta)
-#   }
-#   
-#   
-#   LogLik_optimized
-#   
-# }  
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        # for (i in 1:Nparam){
-        #   XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ] <- makeSymm(XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ])
-        #   #mat <- XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ]
-        #   #XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ] <-as.matrix(forceSymmetric(mat, "L"))
-        #   #XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ][upper.tri(XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ])] <- XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ][lower.tri(XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ])]
-        # }
-        # 
-        # #  XTVinvX[1:10,]
-        # # matrix(XTVinvX[-selectedrows,-a], ncol=Ucov, byrow=TRUE)[1:5,]
-        # # matrix(XTVinvX[selectedrows, -a], nrow=Nparam, ncol=Ucov)[1:5,]
-        # selectedrows <- (seq_len(Nparam)-1) * Ncov + a
-        # XTVinvX_deleted <- matrix(XTVinvX[-selectedrows,-a], ncol=Ucov, byrow=TRUE)
-        # XTVinvX_a <- matrix(XTVinvX[selectedrows, -a], nrow=Nparam, ncol=Ucov)
-        # #XTVinvX_a <- matrix(XTVinvX[-selectedrows, a], nrow=Nparam*Ucov, ncol=1)[1:10,]
-        # XVY_deleted <- matrix(XVY[-selectedrows, ], nrow = Nparam*Ucov, byrow=TRUE)
-        # X_aVY <- matrix(XVY[selectedrows, ], nrow=Nparam, byrow=TRUE)
-        # X_aVX_a <- XTVinvX[selectedrows, a]
-        # #dim(XVY_deleted)
-        # 
-        # 
-        # partA = matrix(0, nrow=Nparam, ncol=Ndata)
-        # partB = matrix(0, nrow=Nparam, ncol=Ndata)
-        # partC = matrix(0, nrow=Nparam, ncol=Ndata)
-        # partD = matrix(0, nrow=Nparam, ncol=Ndata)
-        # partE = matrix(0, nrow=Nparam, ncol=Ndata)
-        # LogLik_optimized = matrix(0, nrow=m, ncol=1)
-        # 
-        # 
-        # for (i in 1:Nparam){
-        #   interval <- c(((i-1)*Ucov+1) : (i*Ucov))
-        #   temp <- solve(XTVinvX_deleted[interval, ]) 
-        #   
-        #   # part (A) have 2 data sets
-        #   partA[i,] = rowSums(XVY_deleted[interval,] %*% temp) * XVY_deleted[interval,]
-        #   # part (B) have 2 data sets.   has beta
-        #   partB[i,] = -2*XVY_deleted[interval,] %*% temp %*% XTVinvX_a[i,]
-        #   # part (C) no data sets.  has beta
-        #   partC[i,] = XTVinvX_a[i, ] %*% temp %*% XTVinvX_a[i, ]
-        #   #partC[i,] = XTVinvX_a[interval, ] %*% temp %*% XTVinvX_a[interval, ]
-        #   # part (D) have 2 data sets.    has beta
-        #   partD[i,] = -2* X_aVY[i, ]
-        #   # part (E)
-        #   partE[i,] = X_aVX_a[i]
-        # }
-        # 
-        # 
-        # for (bet in 1:m){
-        #   ssqResidual <- ssqY + Betas[bet] *partD + Betas[bet]^2 *partE - (partA + Betas[bet]* partB + Betas[bet]^2 * partC)
-        #   loglik_forthisbeta <- Nobs*log(ssqResidual/Nobs) + detVar + Nobs + Nobs*log(2*pi) + jacobian
-        #   LogLik_optimized[bet,] = min(loglik_forthisbeta)
-        # }
-        

@@ -185,7 +185,6 @@
 
   if(gpuElementsOnly==FALSE){
      Output <- list(LogLik=LogLikcpu,
-                    minusTwoLogLikgpu = minusTwoLogLik,
                     paramsRenew = paramsRenew,
                     Infindex = selected_rows,
                     Nobs = Nobs,
@@ -233,26 +232,26 @@
 
 
   
-  get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table # 2 column names must be x1 and profile
-                                  a=0.1,    # minus a little thing
-                                  m=1){
-    
-    datC2 = geometry::convhulln(profileLogLik)
-    allPoints = unique(as.vector(datC2))
-    toTest = profileLogLik[allPoints,]
-    toTest[,'profile'] = toTest[,'profile'] + a
-    inHull = geometry::inhulln(datC2, as.matrix(toTest))
-    toUse = profileLogLik[allPoints,][!inHull,]
-    toTest = profileLogLik[allPoints,]
-    
-    interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=m, fx=TRUE), data=toUse)
-    prof1 = data.frame(x1=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=1001))
-    prof1$z = predict(interp1, prof1)
-    
-    output <- list(toUse = toUse, toTest = toTest, prof=prof1)
-    
-    output
-  }
+  # get1dCovexhullinter <- function(profileLogLik,     # a data frame or data.table # 2 column names must be x1 and profile
+  #                                 a=0.1,    # minus a little thing
+  #                                 m=1){
+  #   
+  #   datC2 = geometry::convhulln(profileLogLik)
+  #   allPoints = unique(as.vector(datC2))
+  #   toTest = profileLogLik[allPoints,]
+  #   toTest[,'profile'] = toTest[,'profile'] + a
+  #   inHull = geometry::inhulln(datC2, as.matrix(toTest))
+  #   toUse = profileLogLik[allPoints,][!inHull,]
+  #   toTest = profileLogLik[allPoints,]
+  #   
+  #   interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=m, fx=TRUE), data=toUse)
+  #   prof1 = data.frame(x1=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=1001))
+  #   prof1$z = predict(interp1, prof1)
+  #   
+  #   output <- list(toUse = toUse, toTest = toTest, prof=prof1)
+  #   
+  #   output
+  # }
   
   
   
@@ -276,7 +275,6 @@
    
     
     
-    
    ############## output matrix ####################
    Table <- matrix(NA, nrow=length(paramToEstimate) + Ncov + 1, ncol=3)
    rownames(Table) <-  c(predictors, "sdSpatial", paramToEstimate)
@@ -286,9 +284,9 @@
    index <- which(LogLik == max(LogLik, na.rm = TRUE), arr.ind = TRUE)
    #################sigma hat#########################
    if(reml==FALSE)  {
-     Table["sdSpatial",1] <- sqrt(ssqResidual2[index[1],index[2]]/Nobs)
+     Table["sdSpatial",1] <- sqrt(ssqResidual[index[1],index[2]]/Nobs)
    }else{         
-     Table["sdSpatial",1] <- sqrt(ssqResidual2[index[1],index[2]]/(Nobs - Ncov))
+     Table["sdSpatial",1] <- sqrt(ssqResidual[index[1],index[2]]/(Nobs - Ncov))
    }
    
    maximum <- max(LogLik)
@@ -389,17 +387,6 @@
      }
      Table["Newrange",] <- c(MLE,ci)
      
-     ####################### log plot ##############################
-     # profileLogLik$logrange <- log(profileLogLik$x1)
-     # newdata <- profileLogLik[,c('logrange','profile')]
-     # colnames(newdata)[1]<-"x1"
-     # interlog <- get1dCovexhull(newdata)
-     
-     # plot(profileLogLik$logrange, profileLogLik$profile, cex=.2, xlab="log(range)", ylab="profileLogL")
-     # points(interlog$toTest, col='red', cex=0.6)
-     # points(interlog$toUse, col='blue', cex=0.6, pch=3)
-     # lines(interlog$prof$x1, interlog$prof$z, col='green')
-     # abline(h =0, lty = 2, col='red')
      
    }
    
@@ -410,12 +397,7 @@
      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
      profileLogLik <- profileLogLik[profile > maximum- breaks -10]
-     #
-     #  inter <- get1dCovexhull(profileLogLik, seqvalue = seqRange)    # a data frame or data.table # 2 column names must be x1 and profile
-     # # #
-     #   toTest <- inter$toTest
-     #   toUse <- inter$toUse
-     #   profRange <- inter$prof
+
      
      datC2 = geometry::convhulln(profileLogLik)
      allPoints = unique(as.vector(datC2))
@@ -456,18 +438,6 @@
        ci <- c(NA, NA)
      }
      Table["range",] <- c(MLE, ci)
-     ####################### log plot ##############################
-     # profileLogLik$logrange <- log(profileLogLik$x1)
-     # newdata <- profileLogLik[,c('logrange','profile')]
-     # colnames(newdata)[1]<-"x1"
-     # interlog <- get1dCovexhull(newdata)
-     
-     # plot(profileLogLik$logrange, profileLogLik$profile, cex=.2, xlab="log(range)", ylab="profileLogL")
-     # points(interlog$toTest, col='red', cex=0.6)
-     # points(interlog$toUse, col='blue', cex=0.6, pch=3)
-     # lines(interlog$prof$x1, interlog$prof$z, col='green')
-     # abline(h =0, lty = 2, col='red')
-     
    }
    
    
@@ -556,6 +526,7 @@
    if('sdNugget' %in% paramToEstimate){
      paramsRenew <- cbind(paramsRenew, sqrt(paramsRenew[,"nugget"]) * Table["sdSpatial",1])
      colnames(paramsRenew)[ncol(paramsRenew)] <- 'sdNugget'
+
      
      result = data.table::as.data.table(cbind(LogLikcpu, paramsRenew[,"sdNugget"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
@@ -563,36 +534,45 @@
      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
      profileLogLik <- profileLogLik[profile > maximum- breaks -10]
      
-     inter <- get1dCovexhull(profileLogLik, seqvalue = seqsdNugget)     # a data frame or data.table # 2 column names must be x1 and profile
+     datC2 = geometry::convhulln(profileLogLik)
+     allPoints = unique(as.vector(datC2))
+     toTest = profileLogLik[allPoints,]
+     toTest[,'profile'] = toTest[,'profile'] + 0.1
+     inHull = geometry::inhulln(datC2, as.matrix(toTest))
+     toUse = profileLogLik[allPoints,][!inHull,]
+     toTest = profileLogLik[allPoints,]
+     #
+     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
+     profsdNugget = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
+     profsdNugget$z = predict(interp1, profsdNugget)
      
-     toTest <- inter$toTest
-     toUse <- inter$toUse
-     profsdNugget <- inter$prof
      
-     # plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="sdNugget", ylab="profileLogL")
-     # points(toTest, col='red', cex=0.6)
-     # points(toUse, col='blue', cex=0.6, pch=3)
-     # abline(h =0, lty = 2, col='red')
-     profsdNugget <- profsdNugget[profsdNugget$x1>0,]
+     plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="sdNugget", ylab="profileLogL")
+     points(toTest, col='red', cex=0.6)
+     points(toUse, col='blue', cex=0.6, pch=3)
+     lines(profsdNugget$x1, profsdNugget$z, col = 'green')
+     abline(h =0, lty = 2, col='red')
+     lower = min(profileLogLik$x1)
+     upper = max(profileLogLik$x1)
      f1 <- approxfun(profsdNugget$x1, profsdNugget$z)
-     curve(f1(x), add = TRUE, col = 'green', n = 1001)
-     lower = min(profsdNugget$x1)
-     upper = max(profsdNugget$x1)
      MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-     #abline(v =ci[1], lty = 2, col='red')
-     #abline(v =ci[2], lty = 2, col='red')
+     abline(v =c(MLE,ci), lty = 2, col='red')
      
+     if(length(ci)==1){
+       if(ci > MLE){
+         ci <- c(lower, ci)
+         message("did not find lower ci for sdNugget")
+       }else{
+         ci <- c(ci, upper)
+         message("did not find upper ci for sdNugget")}
+     }
+     
+     if(length(ci)==0 | length(ci)>2){
+       warning("error in params")
+       ci <- c(NA, NA)
+     }
      Table["sdNugget",] <- c(MLE, ci)
-     ####################### log plot ##############################
-     # plot(log(profileLogLik$sdNugget), profileLogLik$profile, cex=.2, xlab="log(sdNugget)", ylab="profileLogL")
-     # toTestLog = cbind(log(toTest[,'sdNugget']), toTest[,'profile'])
-     # toUseLog = cbind(log(toUse[,'sdNugget']), toUse[,'profile'])
-     # points(toTestLog, col='red', cex=0.6)
-     # points(toUseLog, col='blue', cex=0.6, pch=3)
-     # toUseLog <- toUseLog[order(toUseLog[,1],decreasing=FALSE)]
-     # lines(toUseLog$sdNugget, toUseLog$profile, col='green')   #the number of x values at which to evaluate
-     # abline(h =0, lty = 2, col='red')
      
    }
    
@@ -992,76 +972,7 @@
      
    }
    
-   
-   
-   
-   
-   
-   
-   # if('anisoAngleDegrees' %in% paramToEstimate){
-   #   result = as.data.table(cbind(LogLik, params[,"anisoAngleDegrees"]))
-   #   colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
-   #   profileLogLik <- result[, .(profile=max(.SD)), by=x1]
-   #   profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
-   #   profileLogLik <- profileLogLik[profile > -20]
-   #   
-   #   inter <- get1dCovexhullinter(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
-   #   toTest <- inter$toTest
-   #   toUse <- inter$toUse
-   #   prof1 <- inter$prof
-   #   
-   #   plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="anisoAngleDegrees", ylab="profileLogL")
-   #   points(toTest, col='red', cex=0.6)
-   #   points(toUse, col='blue', cex=0.6, pch=3)
-   #   lines(prof1$x1, prof1$z, col='green')
-   #   f1 <- approxfun(prof1$x1, prof1$z)
-   #   abline(h =0, lty = 2, col='red')
-   #   lower = min(profileLogLik$x1)
-   #   upper = max(profileLogLik$x1)
-   #   MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
-   #    
-   #    ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-   #    abline(v =ci[1], lty = 2, col='red')
-   #    abline(v =ci[2], lty = 2, col='red')
-   #    if(length(ci)==1){
-   #       if(ci > MLE){
-   #          ci <- c(lower, ci)
-   #          message("did not find lower ci for anisoAngleDegrees")
-   #       }else{
-   #          ci <- c(ci, upper)
-   #          message("did not find upper ci for anisoAngleDegrees")}
-   #    }
-   #    
-   #    if(length(ci)==0 | length(ci)>2){
-   #       warning("error in params")
-   #       ci <- c(NA, NA)
-   #    }
-   #    Table["anisoAngleDegrees",] <- c(MLE, ci)
-   #    ####################### log plot ##############################
-   #    # profileLogLik$loganisoAngleDegrees <- log(profileLogLik$anisoAngleDegrees)
-   #    # datC1= geometry::convhulln(profileLogLik[,c('loganisoAngleDegrees','profile')])
-   #    # allPoints1 = unique(as.vector(datC1))
-   #    # toTest = profileLogLik[allPoints1,c('loganisoAngleDegrees','profile')]
-   #    # toTest[,'profile'] = toTest[,'profile'] - 0.01
-   #    # inHull1 = geometry::inhulln(datC1, as.matrix(toTest))
-   #    # toUse = profileLogLik[allPoints1,c('loganisoAngleDegrees','profile')][inHull1,]
-   #    # 
-   #    # interp1 = mgcv::gam(profile ~ s(loganisoAngleDegrees, k=nrow(toUse), fx=TRUE), data=toUse)
-   #    # prof1 = data.frame(loganisoAngleDegrees=seq(min(toUse[,1])-0.1, max(toUse[,1])+0.1, len=501))
-   #    # prof1$z = predict(interp1, prof1)
-   #    # 
-   #    # plot(profileLogLik$loganisoAngleDegrees, profileLogLik$profile, cex=.2, xlab="log(anisoAngleDegrees)", ylab="profileLogL")
-   #    # points(toTest, col='red', cex=0.6)
-   #    # points(toUse, col='blue', cex=0.6, pch=3)
-   #    # lines(prof1$loganisoAngleDegrees, prof1$z, col='green')
-   #    # abline(h =0, lty = 2, col='red')  
-   #   
-   #   
-   # }
-   
-   
-   
-   
+
    ###############lambda hat#####################
    if(('boxcox'%in% paramToEstimate)  & length(boxcox)>5 ){
      likForboxcox = cbind(boxcox, apply(LogLikcpu, 2,  max) )
@@ -1098,9 +1009,9 @@
    ###############betahat#####################
    Betahat <- matrix(0, nrow=Ncov, ncol=Ndata)
    a<-c( ((index[1]-1)*Ncov+1) : (index[1]*Ncov) )
-   mat <- XVYXVX2[a,((Ndata+1):NcolTotal)]
+   mat <- XVYXVX[a,((Ndata+1):NcolTotal)]
    mat[upper.tri(mat)] <- mat[lower.tri(mat)]
-   Betahat <- solve(mat) %*% XVYXVX2[a,index[2]]
+   Betahat <- solve(mat) %*% XVYXVX[a,index[2]]
    Table[colnames(covariates), 1] <- Betahat
    
    
@@ -1127,10 +1038,12 @@
  
  
 #' @export
-  likfitLgmCov <- function(spatialmodel,
-                           params=NULL, # CPU matrix for now, users need to provide proper parameters given their specific need
+  likfitLgmCov <- function(model,
+                           params = NULL, # CPU matrix for now, users need to provide proper parameters given their specific need
                            paramToEstimate, #variance and regression parameters are always estimated if not given,
                            boxcox,  # boxcox is always estimated
+                           alpha,
+                           shapeRestrict=1000,
                            cilevel=0.95,  # decimal
                            type = c("float", "double")[1+gpuInfo()$double_support],
                            reml=FALSE, 
@@ -1141,36 +1054,28 @@
                            verbose=FALSE){
 
 
-             data = spatialmodel$data
-             formula = spatialmodel$model$formula
-             coordinates = spatialmodel$data@coords
+             data = model$data
+             formula = model$model$formula
+             coordinates = model$data@coords
              
              if(isTRUE(params==NULL) & isTRUE(boxcox==NULL)){
-               PaM <- ParamsFromLgm(spatialmodel$summary,      
-                             spatialmodel$optim$mle,
-                             paramToEstimate)
-               ParamList <- PaM$ParamList
-               params <- PaM$params
-               boxcox <- PaM$boxcox
+               a <- gpuRandom::configParams(simRes, alpha=alpha, shapeRestrict=shapeRestrict)
+               params = do.call(rbind, a[1:length(alpha)])
+               paramsUse = rbind(model$opt$mle[colnames(params)],
+                                 params)
+               b <- unlist(a[length(alpha)+1])
              }
              
-             if(isTRUE(params==NULL) & isTRUE(boxcox!=NULL)){
-               PaM <- ParamsFromLgm(spatialmodel$summary,      
-                                    spatialmodel$optim$mle,
-                                    paramToEstimate)
-               ParamList <- PaM$ParamList
-               params <- PaM$params
-             }
              
              if(isTRUE(params!=NULL) & isTRUE(boxcox==NULL)){
-              stop("require boxcox values to proceed")
+              stop("require boxcox values")
              }
              
              result1 <- getProfLogL(data=data,
                                     formula=formula, 
                                     coordinates=coordinates,
-                                    params=params,  # CPU matrix 
-                                    boxcox=boxcox,  # boxcox is always estimated
+                                    params=paramsUse,  # CPU matrix 
+                                    boxcox=c(seq(b[1],b[9],len=31),model$parameters['boxcox']),  # boxcox is always estimated
                                     type = type,
                                     NparamPerIter = NparamPerIter,
                                     gpuElementsOnly = FALSE,
@@ -1180,7 +1085,6 @@
                                     NlocalCache, 
                                     verbose=FALSE)
              
-
              
              result2 <- prof1dCov(LogLik = result1$LogLik,  # cpu matrix
                                   XVYXVX = result1$XVYXVX,  # cpu matrix
@@ -1202,7 +1106,6 @@
                Output <- list(summary = result2$summary,
                               breaks = result2$breaks,
                               LogLik = result1$LogLik,
-                              minusTwoLogLikgpu = result1$minusTwoLogLikgpu,
                               params = result1$params,
                               ParamList = ParamList,
                               boxcox = result1$boxcox,
@@ -1222,7 +1125,6 @@
              Output <- list(summary = result2$summary,
                             breaks = result2$breaks,
                             LogLik = result1$LogLik,
-                            minusTwoLogLikgpu = result1$minusTwoLogLikgpu,
                             boxcox = result1$boxcox,
                             Nobs = result1$Nobs,
                             Ncov = result1$Ncov,
