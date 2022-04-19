@@ -1012,7 +1012,7 @@
    mat <- XVYXVX[a,((Ndata+1):NcolTotal)]
    mat[upper.tri(mat)] <- mat[lower.tri(mat)]
    Betahat <- solve(mat) %*% XVYXVX[a,index[2]]
-   Table[colnames(covariates), 1] <- Betahat
+   Table[predictors, 1] <- Betahat
    
    
    
