@@ -220,7 +220,8 @@ getHessianNolog <- function(Model,
                                   reml=FALSE,
                                   Nglobal=c(128,64),
                                   Nlocal=c(16,16),
-                                  NlocalCache=2000)
+                                  NlocalCache=2000,
+                                  verbose=c(0,0))
   
   
   #result$paramsRenew

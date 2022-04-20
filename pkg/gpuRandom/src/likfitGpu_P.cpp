@@ -316,7 +316,7 @@ void addBoxcoxToData(
                yx.internal_size2(),
                boxcoxHasZero);
   
-  if(verbose[0]>=2) {
+  if(verbose[0]>=3) {
     Rcpp::Rcout << "\n" << theBoxcoxKernel << "\n";
   }
   viennacl::ocl::program & my_prog_boxcox = viennacl::ocl::current_context().add_program(theBoxcoxKernel, "mkb");
@@ -905,7 +905,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                                           DiterIndex, NthisIteration),
                                           theQueue);
      
-     if(Diter ==1 & verbose[1]>=2){
+     if( verbose[1]>=2){
        Rcpp::Rcout << "maternkernel finished\n" << "\n\n";
      }
      
@@ -916,7 +916,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                                         theQueue);
      
      
-     if(Diter ==1 & verbose[1]>=2){
+     if( verbose[1]>=2){
        Rcpp::Rcout << "cholKernel finished\n" << "\n\n";
      }
      
@@ -927,7 +927,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                                              NthisIteration),
                              theQueue);
      
-     if(Diter ==1 & verbose[1]>=2){
+     if( verbose[1]>=2){
        Rcpp::Rcout << "backsolveKernel finished\n" << "\n\n";
      }     
      
@@ -937,7 +937,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                                              localMemory,
                                              0, NthisIteration),
                              theQueue);
-     if(Diter ==1 & verbose[1]>=2){
+     if( verbose[1]>=2){
        Rcpp::Rcout << "crossprodKernel finished\n" << "\n\n";
      }
 
@@ -949,7 +949,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       // save diagonals of ssqYX to ssqY
     viennacl::ocl::enqueue(extractSomeDiagKernel(ssqY, ssqYX, DiterIndex, NthisIteration),
                            theQueue);
-     if(Diter ==1 & verbose[1]>=2){
+     if( verbose[1]>=2){
        Rcpp::Rcout << "extractSomeDiagKernel finished\n" << "\n\n";
      }     
      
@@ -957,11 +957,11 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       // save bottom block of ssqYX to XVYXVX
     viennacl::ocl::enqueue(extractBlockKernel(XVYXVX, ssqYX, DiterIndex, NthisIteration),
                            theQueue);
-     if(Diter ==1 & verbose[1]>=2){
+     if( verbose[1]>=2){
        Rcpp::Rcout << "extractBlockKernel finished\n" << "\n\n";
      }     
 
-        if(Diter ==1 & verbose[0]>=3){
+        if( verbose[0]>=3){
           Rcpp::Rcout << "maternClString\n" << maternClString << "\n";
           Rcpp::Rcout << "cholClString\n" << cholClString << "\n";
         }
@@ -991,14 +991,14 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                              localMemory,
                              DiterIndex, NthisIteration),
         theQueue);
-        if(Diter ==1 & verbose[1]>=2){
+        if( verbose[1]>=2){
           Rcpp::Rcout << "crossprod for ssqBetahat finished\n" << "\n\n";
         }  
 
-      if(verbose[0]>=2) {
-        Rcpp::Rcout << "\n" << "Diter " << Diter <<" DiterIndex " << DiterIndex << " endThisIteration " << 
-          endThisIteration << " Nthisiteration " << NthisIteration  << "\n";
-      }
+      // if(verbose[0]>=2) {
+      //   Rcpp::Rcout << "\n" << "Diter " << Diter <<" DiterIndex " << DiterIndex << " endThisIteration " << 
+      //     endThisIteration << " Nthisiteration " << NthisIteration  << "\n";
+      // }
       
     }
     

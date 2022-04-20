@@ -13,7 +13,7 @@
                           Nglobal,
                           Nlocal,
                           NlocalCache,
-                          verbose=FALSE){
+                          verbose=c(1,0)){
   
   
     if(1 %in% boxcox){
@@ -38,15 +38,19 @@
                     1, 
                     function(qq) any(is.na(qq))
     )
-    noNA = !theNA
     
+    noNA = !theNA
+
     
     ############## the X matrix #################################
     covariates = model.matrix(formula, data[noNA,])
+    #covariates = model.matrix(formula, data)
     observations = all.vars(formula)[1]
     observations = data.matrix(data[noNA, observations, drop=FALSE])
+    #observations = data.matrix(data[, observations, drop=FALSE])
     
     Nobs = nrow(covariates)
+    #Nobs = nrow(data)
     Ncov = ncol(covariates)
     Ndata = length(boxcox)
     Nparam = nrow(params)
@@ -55,9 +59,10 @@
     yx = vclMatrix(cbind(observations, matrix(0, Nobs, Ndata-1), covariates), 
                    type=type)
     
-    
+    #dim(coordinates)
+    #dim(coordinates[noNA,])
     # coordinates
-    coordsGpu = vclMatrix(coordinates, type=type)  
+    coordsGpu = vclMatrix(coordinates[noNA,], type=type)  
     # box-cox
     boxcoxGpu = vclVector(boxcox, type=type)
     
@@ -326,14 +331,14 @@
    # Nconfig = c(NA,NA,NA,608, 740)[length(paramToEstimate)]
    # alphas = c(0.001,0.01, 0.1, 0.2, 0.5, 0.8, 0.9, 0.95, 0.99, 0.999)
    # Salphas = c(NA, rep(alphas, each=Nconfig))
-   # length(Salphas) == nrow(LogLikcpu)
+   # length(Salphas) == nrow(LogLik)
    # colAlpha = mapmisc::colourScale(Salphas, style='unique', breaks = length(alphas), col='Spectral', opacity = 0.7)
    # colAlpha$plot[is.na(colAlpha$plot)] = '#000000FF'
    #xx = tapply(toPredictNatural$z, toPredictNatural$range, max)
    #par(mar = c(3,3,0.1, 0.1))
    ######################range ########
    if('Newrange' %in% paramToEstimate){
-     result = as.data.table(cbind(Newrange, LogLikcpu))
+     result = as.data.table(cbind(Newrange, LogLik))
      #head(result)
      colnames(result) <- c("x1", paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''))
      profileLogLik <- result[, .(profile=max(.SD)), by=.(x1)]
@@ -392,7 +397,7 @@
    
    
    if('range' %in% paramToEstimate){
-     result = data.table::as.data.table(cbind(LogLikcpu, paramsRenew[,"range"]))
+     result = data.table::as.data.table(cbind(LogLik, paramsRenew[,"range"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
@@ -443,7 +448,7 @@
    
    ################shape ##############   
    if('shape' %in% paramToEstimate){
-     result = data.table::as.data.table(cbind(LogLikcpu, paramsRenew[,"shape"]))
+     result = data.table::as.data.table(cbind(LogLik, paramsRenew[,"shape"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
@@ -528,7 +533,7 @@
      colnames(paramsRenew)[ncol(paramsRenew)] <- 'sdNugget'
 
      
-     result = data.table::as.data.table(cbind(LogLikcpu, paramsRenew[,"sdNugget"]))
+     result = data.table::as.data.table(cbind(LogLik, paramsRenew[,"sdNugget"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
@@ -579,7 +584,7 @@
    
    
    if('nugget' %in% paramToEstimate){
-     result = data.table::as.data.table(cbind(LogLikcpu, paramsRenew[,"nugget"]))
+     result = data.table::as.data.table(cbind(LogLik, paramsRenew[,"nugget"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
@@ -693,7 +698,7 @@
    }
    
    if('anisoRatio' %in% paramToEstimate){
-     result = as.data.table(cbind(LogLikcpu, paramsRenew[,"anisoRatio"]))
+     result = as.data.table(cbind(LogLik, paramsRenew[,"anisoRatio"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
@@ -741,7 +746,7 @@
    
    
    if('anisoAngleRadians' %in% paramToEstimate){
-     result = as.data.table(cbind(LogLikcpu, paramsRenew[,"anisoAngleRadians"]))
+     result = as.data.table(cbind(LogLik, paramsRenew[,"anisoAngleRadians"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
@@ -792,7 +797,7 @@
    }
    
    if('gamma3' %in% paramToEstimate){
-     #  result = as.data.table(cbind(LogLikcpu, aniso))
+     #  result = as.data.table(cbind(LogLik, aniso))
      #  colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), 'gamma3','gamma4')
      #  profileLogLik <- result[, .(profile=max(.SD)), by=.(gamma3, gamma4)]
      #  profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
@@ -843,7 +848,7 @@
      # Sbreaks =qchisq(Sprob, df=2)/2
      # Sbreaks = pmin(Sbreaks, 1000)
      # Sbreaks[1] = -10
-     # SbreaksC = rev(max(LogLikcpu) - breaks-Sbreaks)
+     # SbreaksC = rev(max(LogLik) - breaks-Sbreaks)
      # colDat2 = mapmisc::colourScale(profileLogLik[,'profile'], style='fixed',
      #                                breaks=SbreaksC, 
      #                                col='Spectral', rev=TRUE)
@@ -858,7 +863,7 @@
      # xx = tapply(prof2natural$z, prof2natural$anisoAngleRadians, max)
      # plot(as.numeric(names(xx)), xx) 
      
-     result = as.data.table(cbind(LogLikcpu, aniso[,"gamma3"]))
+     result = as.data.table(cbind(LogLik, aniso[,"gamma3"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
@@ -916,7 +921,7 @@
    
    
    if('gamma4' %in% paramToEstimate){
-     result = as.data.table(cbind(LogLikcpu, aniso[,"gamma4"]))
+     result = as.data.table(cbind(LogLik, aniso[,"gamma4"]))
      colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
      profileLogLik <- result[, .(profile=max(.SD)), by=x1]
      profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
@@ -975,7 +980,7 @@
 
    ###############lambda hat#####################
    if(('boxcox'%in% paramToEstimate)  & length(boxcox)>5 ){
-     likForboxcox = cbind(boxcox, apply(LogLikcpu, 2,  max) )
+     likForboxcox = cbind(boxcox, apply(LogLik, 2,  max) )
      f1 <- approxfun(likForboxcox[,1], likForboxcox[,2]-breaks)
      plot(likForboxcox[,1], likForboxcox[,2]-breaks, ylab= "proLogL", xlab='boxcox', cex=0.5)
      curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
@@ -1018,6 +1023,7 @@
    
    
    Output <- list(summary = Table,
+                  mleIndex = index,
                   breaks = breaks
    )
 
@@ -1051,7 +1057,7 @@
                            Nglobal,
                            Nlocal,
                            NlocalCache,
-                           verbose=FALSE){
+                           verbose=c(1,0)){
 
 
              data = model$data
