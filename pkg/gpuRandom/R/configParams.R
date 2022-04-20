@@ -176,7 +176,7 @@ getHessianNolog <- function(Model,
   }else{
     ParamsetGamma <- matrix(MleGamma, nrow=nrow(derivGridDf), ncol=length(Mle), byrow=TRUE, dimnames = list(NULL, names(MleGamma))) + derivGridDf %*% diag(deltas)
   }
-  Mle[-c(1,whichLogged,whichAniso)]
+  #Mle[-c(1,whichLogged,whichAniso)]
 
     temp <- as.data.frame(ParamsetGamma[,'gamma3'] + 1i * ParamsetGamma[,'gamma4'])
     if(('shape' %in% names(Mle)) & Mle['shape'] < 4){

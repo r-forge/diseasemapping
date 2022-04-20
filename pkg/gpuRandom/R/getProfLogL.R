@@ -46,7 +46,7 @@
     observations = all.vars(formula)[1]
     observations = data.matrix(data[noNA, observations, drop=FALSE])
     
-    Nobs = nrow(data)
+    Nobs = nrow(covariates)
     Ncov = ncol(covariates)
     Ndata = length(boxcox)
     Nparam = nrow(params)
