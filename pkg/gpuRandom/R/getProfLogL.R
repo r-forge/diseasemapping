@@ -316,7 +316,7 @@
    profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
    profileLogLik <- profileLogLik[profile > maximum- breaks-10]  #maximum- breaks 
    profileLogLik <- as.data.frame(profileLogLik)
-   head(profileLogLik)
+   #head(profileLogLik)
    
    # Nconfig = c(NA,NA,NA,608, 740)[length(paramToEstimate)]
    # alphas = c(0.001,0.01, 0.1, 0.2, 0.5, 0.8, 0.9, 0.95, 0.99, 0.999)
@@ -453,13 +453,11 @@
      lines(exp(profShapeLog$x1), profShapeLog$z, col = 'green')
      abline(h =0, lty = 2, col='red') 
      f1 <- approxfun(profShapeLog$x1, profShapeLog$z)
-     #curve(f1(x), add = TRUE, col = 'green', n = 1001) 
      
      lower = min(toUse$x1)
      upper = max(toUse$x1)-0.02
      MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-     #abline(v =c(MLE,ci), lty = 2, col='red')
      abline(v =exp(c(MLE,ci)), lty = 2, col='red')
      if(length(ci)==1){
        if(ci > MLE){
@@ -474,7 +472,7 @@
        warning("error in params")
        ci <- c(NA, NA)
      }
-     Table["shape",] <- c(exp(MLE, ci))
+     Table["shape",] <- exp(c(MLE,ci))
      
      
    }       
