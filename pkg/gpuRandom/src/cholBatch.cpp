@@ -109,8 +109,9 @@ template <typename T> std::string cholBatchKernelString(
   }
   
   
-  // diagonals
+  
   result += 
+    "\n // diagonals\n"
     "    DL = A[AHereDcol+Dk];\n"
     "    diagLocal[Dk] = diag[diagHere+Dk] * DL;\n"// cached A[Dcol, 1:Dcol] D[1:Dcol]
     "    toAddLocal[localIndex] += diagLocal[Dk] * DL;\n"

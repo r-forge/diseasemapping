@@ -15,8 +15,7 @@
                                detReml,
                                ssqResidual, 
                                jacobian, 
-                               REML=FALSE
-                               ){
+                               REML=FALSE){
   
   
   #ssqResidual <- as.matrix(ssqResidual)
@@ -45,7 +44,7 @@ if(REML==FALSE){
   #f1 <- splinefun(stderror, LogLik, method = "monoH.FC")
   breaks <- max(LogLik) - qchisq(cilevel,  df = 1)/2
   f1 <- approxfun(stderror, LogLik-breaks)
-  #plot(stderror,LogLik)
+  plot(stderror,LogLik-breaks)
   #curve(f1(x), add = TRUE, col = 2, n = 1001)
   
   result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)
@@ -57,7 +56,7 @@ if(REML==FALSE){
   #curve(f2(x), add = TRUE, col = 2, n = 1001)
   #abline(h=0)
   ci <- rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-  
+  abline(v =c(MLE,ci), lty = 2, col='black')
   if(length(ci)==1){
     if( ci > MLE){
       ci <- c(lower, ci)

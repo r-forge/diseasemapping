@@ -21,6 +21,7 @@
                                 XVYXVX,   # 
                                 jacobian,
                                 REML = FALSE,
+                                I = NULL,
                                 interpolate = TRUE){ 
   
   m <- nrow(Betas)
@@ -42,16 +43,25 @@
     XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ] <- makeSymm(XTVinvX[((i-1)*Ncov+1) : (i*Ncov), ])
   }
   
-  LogLik_optimized = matrix(0, nrow=m, ncol=Ncov)
-  breaks <- rep(0, Ncov)
-  Table <- matrix(NA, nrow=Ncov, ncol=4)
+  if(!is.null(I)){
+    Ncov = 1
+  }
+
+  LogLik_optimized = matrix(0, nrow=m, ncol=ncol(Betas))
+  breaks <- rep(0, ncol(Betas))
+  Table <- matrix(NA, nrow=ncol(Betas), ncol=4)
   colnames(Table) <-  c("MLE", "maximum", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
   #index <- matrix(0, nrow=m, ncol=2)
-  profBetas <- matrix(0, nrow=1001, ncol=2*Ncov)
+  profBetas <- matrix(0, nrow=1001, ncol=2*ncol(Betas))
   
-  
-  for (a in 1:Ncov){
-  BetaSlice <- Betas[,a]
+
+  for (a in 1:ncol(Betas)){
+    if(!is.null(I)){
+      a = I
+      BetaSlice <- Betas
+    }else{
+      BetaSlice <- Betas[,a]
+    }
   selectedrows <- (seq_len(Nparam)-1) * Ncov + a
   XTVinvX_deleted <- matrix(XTVinvX[-selectedrows,-a], ncol=Ucov)
   XTVinvX_a <- matrix(XTVinvX[-selectedrows, a],  ncol=1)
@@ -186,15 +196,16 @@ if(REML==FALSE){
     # if(a==1){
     # index[bet,] <- which(loglik_forthisbeta == max(loglik_forthisbeta, na.rm = TRUE), arr.ind = TRUE)
     # }
+    if(!is.null(I)){
+    LogLik_optimized[bet,1] = max(loglik_forthisbeta[,]) 
+    }else{
     LogLik_optimized[bet,a] = max(loglik_forthisbeta[,])
+    }
   }
 }else if(REML==TRUE){
   for (bet in 1:m){
     ssqResidual <- ssqY + 2* BetaSlice[bet] *partD + BetaSlice[bet]^2 *partE - (partA + 2*BetaSlice[bet]* partB + BetaSlice[bet]^2 * partC)
     loglik_forthisbeta <- (-0.5)*((Nobs-Ncov)*log(ssqResidual/(Nobs-Ncov)) + detVar +detReml+ jacobian + Nobs*log(2*pi) + Nobs-Ncov)
-    # if(a==1){
-    # index[bet,] <- which(loglik_forthisbeta == max(loglik_forthisbeta, na.rm = TRUE), arr.ind = TRUE)
-    # }
     LogLik_optimized[bet,a] = max(loglik_forthisbeta[,])
   }  
 }  
@@ -273,8 +284,9 @@ if(REML==FALSE){
     profBetas[,c((2*a-1):(2*a))] <- as.matrix(prof)
     }else if(interpolate == FALSE){
       f1 <- approxfun(BetaSlice, LogLik-breaks[a])
+      lines(BetaSlice, LogLik-breaks[a],col='green')
       #plot(BetaSlice,LogLik-breaks[a], cex=0.2)
-      curve(f1(x), add = TRUE, col = 2, n = 1001)
+      #curve(f1(x), add = TRUE, col = 2, n = 1001)
     }
     result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)
     MLE <- result$maximum

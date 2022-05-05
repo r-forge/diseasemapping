@@ -37,4 +37,4 @@ Description: Geostatistical modelling facilities using 'Raster' and 'SpatialPoin
 License: GPL
 NeedsCompilation: yes
 VignetteBuilder: knitr
-RoxygenNote: 5.0.1
+RoxygenNote: 7.1.2

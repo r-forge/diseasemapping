@@ -106,7 +106,7 @@ likfitLgmCov1d <- function(data,
   
   
   # coordinates
-  coordsGpu = vclMatrix(coordinates, type=type)  
+  coordsGpu = vclMatrix(coordinates[noNA,], type=type)  
   # box-cox
   boxcoxGpu = vclVector(boxcox, type=type)
   
@@ -260,9 +260,9 @@ likfitLgmCov1d <- function(data,
     gamma4 <-  unname(sqrt(paramsRenew[,'anisoRatio']-1) * sin(2*(paramsRenew[,'anisoAngleRadians'])))
   }
   aniso <- cbind(gamma3, gamma4)
-  Newrange <- log(paramsRenew[,'range']^2/paramsRenew[,'anisoRatio'])
-  paramsRenew <- cbind(paramsRenew, Newrange, aniso)
-  #names(Newrange) <- 'Newrange'
+  combinedRange <- sqrt(paramsRenew[,'range']^2/paramsRenew[,'anisoRatio'])
+  paramsRenew <- cbind(paramsRenew, combinedRange, aniso)
+  #names(combinedRange) <- 'combinedRange'
 
   
   # Nconfig = c(NA,NA,NA,608, 740)[length(paramToEstimate)]
@@ -274,19 +274,19 @@ likfitLgmCov1d <- function(data,
   #xx = tapply(toPredictNatural$z, toPredictNatural$range, max)
   #par(mar = c(3,3,0.1, 0.1))
   ######################range ########
-  if('Newrange' %in% paramToEstimate){
-    result = as.data.table(cbind(Newrange, LogLikcpu))
+  if('combinedRange' %in% paramToEstimate){
+    result = as.data.table(cbind(combinedRange, LogLikcpu))
     #head(result)
     colnames(result) <- c("x1", paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''))
     profileLogLik <- result[, .(profile=max(.SD)), by=.(x1)]
     profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
-    #profileLogLik$col = colAlpha$plot
+
 
     profileLogLik <- profileLogLik[profile > maximum- breaks -10]  #
     profileLogLik <- as.data.frame(profileLogLik)
 
-    #plot(exp(0.5*profileLogLik$x1), profileLogLik$profile, cex=.4, xlab="Newrange",pch=16, ylab="profileLogL", log='x') #,col=profileLogLik$col)
-    plot(profileLogLik$x1, profileLogLik$profile, cex=.4, xlab="Newrange",pch=16, ylab="profileLogL") #,col=profileLogLik$col)
+    #plot(exp(0.5*profileLogLik$x1), profileLogLik$profile, cex=.4, xlab="combinedRange",pch=16, ylab="profileLogL", log='x') #,col=profileLogLik$col)
+    plot(profileLogLik$x1, profileLogLik$profile, cex=.4, xlab="combinedRange",pch=16, ylab="profileLogL") #,col=profileLogLik$col)
     #mapmisc::legendBreaks('right', colAlpha, bty='n')
     datC2 = geometry::convhulln(profileLogLik)
     allPoints = unique(as.vector(datC2))
@@ -297,19 +297,16 @@ likfitLgmCov1d <- function(data,
     toTest = profileLogLik[allPoints,]
 
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
-    profNewrange = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
-    profNewrange$z = predict(interp1, profNewrange)
+    profcombinedRange = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
+    profcombinedRange$z = predict(interp1, profcombinedRange)
 
-    # points(exp(0.5*toTest[,1]), toTest[,2], col='red', cex=0.6)
-    # points(exp(0.5*toUse[,1]), toUse[,2], col='blue', cex=0.6, pch=3)
-    # lines(exp(0.5*profNewrange$x1), profNewrange$z, col = 'green')
-    points(toTest[,1], toTest[,2], col='red', cex=0.6)
-    points(toUse[,1], toUse[,2], col='blue', cex=0.6, pch=3)
-    lines(profNewrange$x1, profNewrange$z, col = 'green')
+    points(exp(0.5*toTest[,1]), toTest[,2], col='red', cex=0.6)
+    points(exp(0.5*toUse[,1]), toUse[,2], col='blue', cex=0.6, pch=3)
+    lines(exp(0.5*profcombinedRange$x1), profcombinedRange$z, col = 'green')
     abline(h =0, lty = 2, col='red')
     lower = min(profileLogLik$x1)
     upper = max(profileLogLik$x1)
-    f1 <- approxfun(profNewrange$x1, profNewrange$z)
+    f1 <- approxfun(profcombinedRange$x1, profcombinedRange$z)
     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
     #abline(v =exp(0.5*c(MLE,ci)), lty = 2, col='red')
@@ -317,17 +314,17 @@ likfitLgmCov1d <- function(data,
     if(length(ci)==1){
       if(ci > MLE){
         ci <- c(lower, ci)
-        message("did not find lower ci for Newrange")
+        message("did not find lower ci for combinedRange")
       }else{
         ci <- c(ci, upper)
-        message("did not find upper ci for Newrange")}
+        message("did not find upper ci for combinedRange")}
     }
 
     if(length(ci)==0 | length(ci)>2){
       warning("error in params")
       ci <- c(NA, NA)
     }
-    Table["Newrange",] <- c(MLE,ci)
+    Table["combinedRange",] <- c(MLE,ci)
 
     ####################### log plot ##############################
     # profileLogLik$logrange <- log(profileLogLik$x1)
@@ -1083,7 +1080,7 @@ likfitLgmCov1d <- function(data,
                  breaks2d = breaks2d,
                  mleIndex = index,
                  summary = Table,
-                 profNewrange = profNewrange,
+                 profcombinedRange = profcombinedRange,
                  profShapeLog = profShapeLog,
                  profNugget = profNugget,
                  profsdNugget = profsdNugget,
@@ -1110,7 +1107,7 @@ likfitLgmCov1d <- function(data,
                    breaks2d = breaks2d,
                    mleIndex = index,
                    summary = Table,
-                   profNewrange = profNewrange,
+                   profcombinedRange = profcombinedRange,
                    profNugget = profNugget,
                    profGamma3 = profGamma3,
                    profGamma4 = profGamma4,
@@ -1139,7 +1136,7 @@ likfitLgmCov1d <- function(data,
                    mleIndex = index,
                    summary = Table,
                    #BetahatTable = x,
-                   profNewrange = profNewrange,
+                   profcombinedRange = profcombinedRange,
                    profShapeLog = profShapeLog,
                    profNugget = profNugget,
                    profRatio = profRatio,
@@ -1167,7 +1164,7 @@ likfitLgmCov1d <- function(data,
                    mleIndex = index,
                    summary = Table,
                    #BetahatTable = x,
-                   profNewrange = profNewrange,
+                   profcombinedRange = profcombinedRange,
                    profShapeLog = profShapeLog,
                    profNugget = profNugget,
                    profGamma3 = profGamma3,

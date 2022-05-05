@@ -431,7 +431,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
                  params.internal_size2(), //NpadParams,
                  localSize[0], //Nlocal0 
                           //    NlocalParams * localSize[1] * (1+ NparamPerIter[0] * localSize[1] / workgroupSize[1]), // int NlocalParamsCache
-                          1L, 1L, 1L, 0L); // assignUpper, assignLower, assignDiagonals, assignDistUpper
+                 1L, 1L, 1L, 0L); // assignUpper, assignLower, assignDiagonals, assignDistUpper
   
   int allowOverflow = ( ((int) Vbatch.size2() ) > NlocalCache[0] );
   

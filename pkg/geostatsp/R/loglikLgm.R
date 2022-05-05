@@ -515,6 +515,18 @@ if(all(paramToEstimate=='variance') &
 
 	names(fromOptim$start) = names(paramsForC)
 
+	if(fromOptim$start['anisoRatio']<1){
+	  fromOptim$start['anisoRatio'] <- 1/fromOptim$start['anisoRatio']
+	  if(fromOptim$start['anisoAngleRadians'] + pi/2 >= pi/2){
+	    fromOptim$start['anisoAngleRadians'] <- fromOptim$start['anisoAngleRadians'] - pi/2 
+	  }else{
+	    fromOptim$start['anisoAngleRadians'] <- fromOptim$start['anisoAngleRadians'] + pi/2  
+	  }
+	}
+	
+	
+	
+	
 	result = list(
 		optim = list(
 			mle=fromOptim$start,
