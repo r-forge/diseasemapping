@@ -265,7 +265,7 @@
  prof1dCov <- function(LogLik,  # cpu matrix
                        XVYXVX,  # cpu matrix
                        ssqResidual,  # cpu matrix
-                       paramToEstimate = c("range", "shape", "nugget", "sdNugget","anisoRatio", "anisoAngleRadians", "boxcox"),
+                       paramToEstimate = c('combinedRange','shape','nugget', 'aniso1', 'aniso2','boxcox'),
                        cilevel=0.95,  # decimal
                        params, # cpu matrix, 
                        boxcox,  # boxcox vallues, consistent with other functions
@@ -334,7 +334,7 @@
      newdata <- profileLogLik[,c('sumLogRange','profile')]
      colnames(newdata)[1]<-"x1"     
      
-
+     
      datC2 = geometry::convhulln(newdata)
      allPoints = unique(as.vector(datC2))
      toTest = newdata[allPoints,]
@@ -343,17 +343,21 @@
      toUse = newdata[allPoints,][!inHull,]
      toTest = newdata[allPoints,]
 
+     
+     #plot(profileLogLik$sumLogRange, profileLogLik$profile,cex=.4, xlab="sumLogRange",pch=16, ylab="profileLogL", col = colAlpha$plot)
      interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
-     profcombinedRange = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
-     profcombinedRange$z = predict(interp1, profcombinedRange)
+     profsumLogRange = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
+     profsumLogRange$z = predict(interp1, profsumLogRange)
      
      points(exp(0.5*toTest[,1]), toTest[,2], col='red', cex=0.6)
      points(exp(0.5*toUse[,1]), toUse[,2], col='blue', cex=0.6, pch=3)
-     lines(exp(0.5*profcombinedRange$x1), profcombinedRange$z, col = 'green')
-     abline(h =0, lty = 2, col='red')
+     lines(profsumLogRange$x1, profsumLogRange$z, col = 'green')
+     lines(exp(0.5*profsumLogRange$x1), profsumLogRange$z, col = 'green')
+     abline(h = 0, lty = 2, col='red')
      lower = min(newdata$x1)
      upper = max(newdata$x1)
-     f1 <- approxfun(profcombinedRange$x1, profcombinedRange$z)
+     #f1 <- approxfun(profsumLogRange$x1, profsumLogRange$z)
+     f1 <- approxfun(toUse[,1], toUse[,2])
      MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =exp(0.5*c(MLE,ci)), lty = 2, col='red')
@@ -371,7 +375,6 @@
        ci <- c(NA, NA)
      }
      Table["combinedRange",] <- exp(0.5*c(MLE,ci))
-     
      
    }
    
@@ -391,7 +394,7 @@
      toTest = profileLogLik1[allPoints,]
 
      interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
-     profrange = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
+     profrange = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
      profrange$z = predict(interp1, profrange)
      
      
@@ -401,7 +404,8 @@
      abline(h =0, lty = 2, col='red')
      lower = min(profileLogLik1$x1)
      upper = max(profileLogLik1$x1)
-     f1 <- approxfun(profrange$x1, profrange$z)
+     #f1 <- approxfun(profrange$x1, profrange$z)
+     f1 <- approxfun(toUse[,1], toUse[,2])
      MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =c(MLE,ci), lty = 2, col='red')
@@ -426,7 +430,6 @@
    ################shape ##############   
    if('shape' %in% paramToEstimate){
      plot(profileLogLik$shape, profileLogLik$profile, cex=.2, xlab="shape", ylab="profileLogL",  log='x')
-     ####################### log  ##############################
      profileLogLik$logshape <- log(profileLogLik$shape)
      newdata <- profileLogLik[,c('logshape','profile')]
      colnames(newdata)[1]<-"x1"
@@ -445,17 +448,18 @@
      points(exp(toUse[,1]), toUse[,2], col='blue', cex=0.6, pch=3)
      
      interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
-     profShapeLog = data.frame(x1=seq(min(toUse$x1), max(toUse$x1)-0.02, len=501))
+     profShapeLog = data.frame(x1=seq(min(toUse$x1), max(toUse$x1)-0.02, len=1001))
      profShapeLog$z = predict(interp1, profShapeLog)
      
      #plot(newdata$x1, newdata$profile, cex=.2, xlab="log(shape)", ylab="profileLogL")
      
      lines(exp(profShapeLog$x1), profShapeLog$z, col = 'green')
      abline(h =0, lty = 2, col='red') 
-     f1 <- approxfun(profShapeLog$x1, profShapeLog$z)
+     #f1 <- approxfun(profShapeLog$x1, profShapeLog$z)
+     f1 <- approxfun(toUse[,1], toUse[,2])
      
      lower = min(toUse$x1)
-     upper = max(toUse$x1)-0.02
+     upper = max(toUse$x1)-0.01
      MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =exp(c(MLE,ci)), lty = 2, col='red')
@@ -473,8 +477,6 @@
        ci <- c(NA, NA)
      }
      Table["shape",] <- exp(c(MLE,ci))
-     
-     
    }       
    
    
@@ -495,7 +497,7 @@
      toTest = profileLogLik1[allPoints,]
 
      interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
-     profsdNugget = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
+     profsdNugget = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
      profsdNugget$z = predict(interp1, profsdNugget)
      
      points(toTest, col='red', cex=0.6)
@@ -504,7 +506,9 @@
      abline(h =0, lty = 2, col='red')
      lower = min(profileLogLik1$x1)
      upper = max(profileLogLik1$x1)
-     f1 <- approxfun(profsdNugget$x1, profsdNugget$z)
+     #f1 <- approxfun(profsdNugget$x1, profsdNugget$z)
+     f1 <- approxfun(toUse[,1], toUse[,2])
+     
      MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =c(MLE,ci), lty = 2, col='red')
@@ -544,14 +548,16 @@
      if(nrow(toUse)>2){
        
        interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-       profNugget = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
+       profNugget = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
        profNugget$z = predict(interp1, profNugget)
        
        points(toTest, col='red', cex=0.6)
        points(toUse, col='blue', cex=0.6, pch=3)
        lines(profNugget$x1, profNugget$z, col = 'green')
        abline(h =0, lty = 2, col='red')
-       f1 <- approxfun(profNugget$x1, profNugget$z)
+       #f1 <- approxfun(profNugget$x1, profNugget$z)
+       f1 <- approxfun(toUse[,1], toUse[,2])
+       
        lower = min(profileLogLik1$x1)
        upper = max(profileLogLik1$x1)
        MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
@@ -606,12 +612,13 @@
      points(toUse[,1], toUse[,2], col='blue', cex=0.6, pch=3)
  
      interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-     profaniso1 = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
+     profaniso1 = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
      profaniso1$z = predict(interp1, profaniso1)
 
      lines(profaniso1$x1, profaniso1$z, col = 'green')
      abline(h =0, lty = 2, col='red')
-     f1 <- approxfun(profaniso1$x1, profaniso1$z)
+     #f1 <- approxfun(profaniso1$x1, profaniso1$z)
+     f1 <- approxfun(toUse[,1], toUse[,2])
      lower = min(profaniso1$x1)
      upper = max(profaniso1$x1)
      MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
@@ -656,7 +663,9 @@
      profaniso2 = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
      profaniso2$z = predict(interp1, profaniso2)
      
-     f1 <- approxfun(profaniso2$x1, profaniso2$z)
+     #f1 <- approxfun(profaniso2$x1, profaniso2$z)
+     f1 <- approxfun(toUse[,1], toUse[,2])
+     
      lines(profaniso2$x1, profaniso2$z, col = 'green')
      abline(h = 0, lty = 2, col='black')
      lower = min(profileLogLik1$x1)
@@ -734,11 +743,13 @@
       points(toUse, col='blue', cex=0.6, pch=3)     
    
      interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-     profRatio = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
+     profRatio = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
      profRatio$z = predict(interp1, profRatio)
 
      lines(profRatio$x1, profRatio$z, col='green')
-     f1 <- approxfun(profRatio$x1, profRatio$z)
+     #f1 <- approxfun(profRatio$x1, profRatio$z)
+     f1 <- approxfun(toUse[,1], toUse[,2])
+     
      abline(h =0, lty = 2, col='red')
      lower = min(profileLogLik1$x1)
      upper = max(profileLogLik1$x1)
@@ -780,11 +791,12 @@
      points(toUse, col='blue', cex=0.6, pch=3)
 
      interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-     profRadians = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=501))
+     profRadians = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
      profRadians$z = predict(interp1, profRadians)
      lines(profRadians$x1, profRadians$z, col='green')
      
-     f1 <- approxfun(profRadians$x1, profRadians$z)
+     #f1 <- approxfun(profRadians$x1, profRadians$z)
+     f1 <- approxfun(toUse[,1], toUse[,2])
      curve(f1(x), add = TRUE, col = 'green', n = 1001)
      abline(h =0, lty = 2, col='red')
      lower = min(profileLogLik1$x1)
