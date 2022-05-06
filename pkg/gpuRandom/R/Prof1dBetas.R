@@ -25,9 +25,9 @@
                                 interpolate = TRUE){ 
   
   m <- nrow(Betas)
-  # if(m < 5){
-  #   warning("need more values for accurate estimate")
-  # }
+  if(m < 6){
+    stop("need more values for accurate estimate")
+  }
   
 
   detVar <- matrix(rep(detVar, Ndata), nrow=Nparam)
@@ -244,7 +244,12 @@ if(REML==FALSE){
     ############### ci ###########################################
     lower = min(BetaSlice)
     upper = max(BetaSlice)
-    LogLik <- LogLik_optimized[,a]
+    if(!is.null(I)){
+    LogLik <- LogLik_optimized[,1]        
+    }else{
+    #which.max(LogLik_optimized[,a])
+    LogLik <- LogLik_optimized[,a]      
+    }
     #f1 <- splinefun(Betas, LogLik, method = "fmm")
     breaks[a] <- max(LogLik) - qchisq(cilevel,  df = 1)/2
     plot(BetaSlice, LogLik-breaks[a],  ylim = max(LogLik-breaks[a]) + c(-3, 0.2), xlim = range(BetaSlice[max(LogLik-breaks[a]) - LogLik+breaks[a] < 3]), cex=0.2, xlab=paste('beta',a), col='green')
@@ -267,6 +272,7 @@ if(REML==FALSE){
     inHull = geometry::inhulln(datC2, as.matrix(toTest))
     toUse = profileLogLik[allPoints,][!inHull,]
     toTest = profileLogLik[allPoints,]
+    toUse <- toUse[order(toUse$x1),]
     
     points(toTest, col='red', cex=0.6)
     points(toUse, col='blue', cex=0.6, pch=3)
@@ -284,9 +290,11 @@ if(REML==FALSE){
     profBetas[,c((2*a-1):(2*a))] <- as.matrix(prof)
     }else if(interpolate == FALSE){
       f1 <- approxfun(BetaSlice, LogLik-breaks[a])
-      lines(BetaSlice, LogLik-breaks[a],col='green')
+      curve(f1(x), add = TRUE, col = 2, n = 1001)
+      # BetaSlice2 <- sort(BetaSlice)
+      # cc <- (LogLik-breaks[a])[order(BetaSlice,decreasing = F)]
+      # lines(BetaSlice2, cc,col='green')
       #plot(BetaSlice,LogLik-breaks[a], cex=0.2)
-      #curve(f1(x), add = TRUE, col = 2, n = 1001)
     }
     result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)
     MLE <- result$maximum

@@ -1,4 +1,4 @@
-#' @title Estimate Log-likelihood for Gaussian random fields when stderror are given
+#' @title Estimate Log-likelihood for Gaussian random fields when sdSpatial are given
 #' @import data.table
 #' @useDynLib gpuRandom
 #' @export
@@ -6,7 +6,7 @@
 
 ######## this function will be incorporated in the other function later i think
 
-       profVariance<- function(stderror, #a vector  given by the user 
+       profVariance<- function(sdSpatial, #a vector  given by the user 
                                cilevel=0.95,
                                Nobs, 
                                Nparam,
@@ -18,41 +18,39 @@
                                REML=FALSE){
   
   
-  #ssqResidual <- as.matrix(ssqResidual)
-  #detVar <- as.vector(detVar)
+
   detVar <- matrix(rep(detVar, Ndata), nrow=Nparam)
-  #jacobian <- as.vector(jacobian)
   jacobian <- do.call(rbind, replicate(Nparam, jacobian, simplify = FALSE))
-  m <- length(stderror)
+  m <- length(sdSpatial)
   LogLik = matrix(0, nrow=m, ncol=1)
   
   
 if(REML==FALSE){
   for (var in 1:m){
-    All_min2loglik_forthisvar <- ssqResidual/(stderror[var]^2) + Nobs*log(stderror[var]^2) + detVar + jacobian + Nobs*log(2*pi) 
+    All_min2loglik_forthisvar <- ssqResidual/(sdSpatial[var]^2) + Nobs*log(sdSpatial[var]^2) + detVar + jacobian + Nobs*log(2*pi) 
     LogLik[var,] <- -0.5*min(All_min2loglik_forthisvar)
   }
 }else if(REML==TRUE){
   for (var in 1:m){
-    All_min2loglik_forthisvar <- ssqResidual/(stderror[var]^2) + (Nobs-Ncov)*log(stderror[var]^2) + detVar +detReml + jacobian + Nobs*log(2*pi) 
+    All_min2loglik_forthisvar <- ssqResidual/(sdSpatial[var]^2) + (Nobs-Ncov)*log(sdSpatial[var]^2) + detVar +detReml + jacobian + Nobs*log(2*pi) 
     LogLik[var,] <- -0.5*min(All_min2loglik_forthisvar)
   }  
 }
   
-  lower = min(stderror)
-  upper = max(stderror)
-  #f1 <- splinefun(stderror, LogLik, method = "monoH.FC")
+  lower = min(sdSpatial)
+  upper = max(sdSpatial)
+  #f1 <- splinefun(sdSpatial, LogLik, method = "monoH.FC")
   breaks <- max(LogLik) - qchisq(cilevel,  df = 1)/2
-  f1 <- approxfun(stderror, LogLik-breaks)
-  plot(stderror,LogLik-breaks)
-  #curve(f1(x), add = TRUE, col = 2, n = 1001)
+  f1 <- approxfun(sdSpatial, LogLik-breaks)
+  plot(sdSpatial,LogLik-breaks)
+  curve(f1(x), add = TRUE, col = 2, n = 1001)
   
-  result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)
+  result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.000001)
   MLE <- result$maximum
   #abline(h=breaks)
-  #f2 <- splinefun(stderror, LogLik-breaks, method = "monoH.FC")
-  #f2 <- approxfun(stderror, LogLik-breaks)
-  #plot(stderror,LogLik-breaks)
+  #f2 <- splinefun(sdSpatial, LogLik-breaks, method = "monoH.FC")
+  #f2 <- approxfun(sdSpatial, LogLik-breaks)
+  #plot(sdSpatial,LogLik-breaks)
   #curve(f2(x), add = TRUE, col = 2, n = 1001)
   #abline(h=0)
   ci <- rootSolve::uniroot.all(f1, lower = lower, upper = upper)
@@ -88,21 +86,21 @@ if(REML==FALSE){
 
        
 
-       # result = cbind(stderror, LogLik_optimized)
-       # colnames(result) <- c("stderror",'LogL')
-       # MLE <- result[,'stderror'][which.max(result[,'LogL'])]
-       # # plot(result[,'stderror'], result[,'LogL'])
+       # result = cbind(sdSpatial, LogLik_optimized)
+       # colnames(result) <- c("sdSpatial",'LogL')
+       # MLE <- result[,'sdSpatial'][which.max(result[,'LogL'])]
+       # # plot(result[,'sdSpatial'], result[,'LogL'])
        # maximum <- max(LogLik_optimized)
        # breaks95 = maximum - qchisq(0.95,  df = 1)/2
        # 
        # 
-       # leftOfMax = result[,'stderror'] < MLE
+       # leftOfMax = result[,'sdSpatial'] < MLE
        # if(length(which(leftOfMax)) <=2 | length(which(!leftOfMax)) <=2){
        #   ci95 = c(NA,NA)
        #   print("Not enough data for CI calculation")
        # }else{
-       #   afLeft <- approxfun(result[,'LogL'][leftOfMax], result[,'stderror'][leftOfMax])   
-       #   afRight <- approxfun(result[,'LogL'][!leftOfMax], result[,'stderror'][!leftOfMax])   
+       #   afLeft <- approxfun(result[,'LogL'][leftOfMax], result[,'sdSpatial'][leftOfMax])   
+       #   afRight <- approxfun(result[,'LogL'][!leftOfMax], result[,'sdSpatial'][!leftOfMax])   
        #   
        #   ci95= c(afLeft(breaks95), afRight(breaks95))
        # }
