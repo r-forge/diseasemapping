@@ -20,7 +20,7 @@
                                 ssqY,   # 
                                 XVYXVX,   # 
                                 jacobian,
-                                REML = FALSE,
+                                reml = FALSE,
                                 I = NULL,
                                 interpolate = TRUE){ 
   
@@ -189,7 +189,7 @@
 # bestParam =   which.max(apply(loglikAll, c(1,3), max))
 # bestBocxox = which.max(apply(loglikAll[,bestParam,], 2, max))
 # lines(Betas, loglikAll[,bestParam, bestBocxox], col='blue')
-if(REML==FALSE){
+if(reml==FALSE){
   for (bet in 1:m){
     ssqResidual <- ssqY + 2* BetaSlice[bet] *partD + BetaSlice[bet]^2 *partE - (partA + 2*BetaSlice[bet]* partB + BetaSlice[bet]^2 * partC)
     loglik_forthisbeta <- (-0.5)*(Nobs*log(ssqResidual/Nobs) + detVar + Nobs + Nobs*log(2*pi) + jacobian)
@@ -202,7 +202,7 @@ if(REML==FALSE){
     LogLik_optimized[bet,a] = max(loglik_forthisbeta[,])
     }
   }
-}else if(REML==TRUE){
+}else if(reml==TRUE){
   for (bet in 1:m){
     ssqResidual <- ssqY + 2* BetaSlice[bet] *partD + BetaSlice[bet]^2 *partE - (partA + 2*BetaSlice[bet]* partB + BetaSlice[bet]^2 * partC)
     loglik_forthisbeta <- (-0.5)*((Nobs-Ncov)*log(ssqResidual/(Nobs-Ncov)) + detVar +detReml+ jacobian + Nobs*log(2*pi) + Nobs-Ncov)

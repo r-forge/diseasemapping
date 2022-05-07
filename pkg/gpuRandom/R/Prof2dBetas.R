@@ -62,7 +62,6 @@
     temp <- Nobs*log(one/Nobs) + detVar + Nobs + Nobs*log(2*pi) + jacobian
     likForBetas[beta,] = min(temp)
     ssqForBetas[beta,] <- ssqBeta0[which(temp == min(temp, na.rm = TRUE), arr.ind = TRUE)[1]]
-    
   }
   
   LogLikBetas = -0.5*likForBetas
@@ -70,7 +69,7 @@
   colnames(result) <- c('Betas1','Betas2',"LogLik")
   
   maximum <- max(LogLikBetas)
-  breaks = maximum - qchisq(cilevel,  df = Ncov)/2
+  breaks = maximum - qchisq(cilevel,  df = 2)/2
  
   lMatrix = matrix(result[,'LogLik'], length(prof2list[[1]]), length(prof2list[[2]]))
   # par(cex.lab=1.2)

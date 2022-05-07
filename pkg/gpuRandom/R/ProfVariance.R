@@ -15,7 +15,7 @@
                                detReml,
                                ssqResidual, 
                                jacobian, 
-                               REML=FALSE){
+                               reml=FALSE){
   
   
 
@@ -25,12 +25,12 @@
   LogLik = matrix(0, nrow=m, ncol=1)
   
   
-if(REML==FALSE){
+if(reml==FALSE){
   for (var in 1:m){
     All_min2loglik_forthisvar <- ssqResidual/(sdSpatial[var]^2) + Nobs*log(sdSpatial[var]^2) + detVar + jacobian + Nobs*log(2*pi) 
     LogLik[var,] <- -0.5*min(All_min2loglik_forthisvar)
   }
-}else if(REML==TRUE){
+}else if(reml==TRUE){
   for (var in 1:m){
     All_min2loglik_forthisvar <- ssqResidual/(sdSpatial[var]^2) + (Nobs-Ncov)*log(sdSpatial[var]^2) + detVar +detReml + jacobian + Nobs*log(2*pi) 
     LogLik[var,] <- -0.5*min(All_min2loglik_forthisvar)

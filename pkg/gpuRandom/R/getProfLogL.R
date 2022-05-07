@@ -358,7 +358,7 @@
      upper = max(newdata$x1)
      #f1 <- approxfun(profsumLogRange$x1, profsumLogRange$z)
      f1 <- approxfun(toUse[,1], toUse[,2])
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =exp(0.5*c(MLE,ci)), lty = 2, col='red')
      if(length(ci)==1){
@@ -380,35 +380,37 @@
    
    
    if('range' %in% paramToEstimate){
-     plot(profileLogLik$range, profileLogLik$profile, cex=.2, xlab="range", ylab="profileLogL")
+     plot(profileLogLik$range, profileLogLik$profile, log='x', cex=.2, xlab="range", ylab="profileLogL")
      
-     profileLogLik1 <- profileLogLik[,c('range','profile')]
-     colnames(profileLogLik1) <- c("x1", 'profile')
+     profileLogLik$logrange <- log(profileLogLik$range)
+     newdata <- profileLogLik[,c('logrange','profile')]
+     colnames(newdata)[1]<-"x1"
      
-     datC2 = geometry::convhulln(profileLogLik1)
+     datC2 = geometry::convhulln(newdata)
      allPoints = unique(as.vector(datC2))
-     toTest = profileLogLik1[allPoints,]
+     toTest = newdata[allPoints,]
      toTest[,'profile'] = toTest[,'profile'] + 0.1
      inHull = geometry::inhulln(datC2, as.matrix(toTest))
-     toUse = profileLogLik1[allPoints,][!inHull,]
-     toTest = profileLogLik1[allPoints,]
+     toUse = newdata[allPoints,][!inHull,]
+     toTest = newdata[allPoints,]
 
      interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
      profrange = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
      profrange$z = predict(interp1, profrange)
      
      
-     points(toTest, col='red', cex=0.6)
-     points(toUse, col='blue', cex=0.6, pch=3)
-     lines(profrange$x1, profrange$z, col = 'green')
+     points(exp(toTest[,1]),toTest[,2], col='red', cex=0.6)
+     points(exp(toUse[,1]), toUse[,2], col='blue', cex=0.6, pch=3)
+     
+     lines(exp(profrange$x1), profrange$z, col = 'green')
      abline(h =0, lty = 2, col='red')
-     lower = min(profileLogLik1$x1)
-     upper = max(profileLogLik1$x1)
+     lower = min(newdata$x1)
+     upper = max(newdata$x1)
      #f1 <- approxfun(profrange$x1, profrange$z)
      f1 <- approxfun(toUse[,1], toUse[,2])
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-     abline(v =c(MLE,ci), lty = 2, col='red')
+     abline(v =exp(c(MLE,ci)), lty = 2, col='red')
      
      if(length(ci)==1){
        if(ci > MLE){
@@ -423,7 +425,7 @@
        warning("error in params")
        ci <- c(NA, NA)
      }
-     Table["range",] <- c(MLE, ci)
+     Table["range",] <- exp(c(MLE,ci))
    }
    
    
@@ -460,7 +462,7 @@
      
      lower = min(toUse$x1)
      upper = max(toUse$x1)-0.01
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =exp(c(MLE,ci)), lty = 2, col='red')
      if(length(ci)==1){
@@ -509,7 +511,7 @@
      #f1 <- approxfun(profsdNugget$x1, profsdNugget$z)
      f1 <- approxfun(toUse[,1], toUse[,2])
      
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =c(MLE,ci), lty = 2, col='red')
      
@@ -560,7 +562,7 @@
        
        lower = min(profileLogLik1$x1)
        upper = max(profileLogLik1$x1)
-       MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+       MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
        ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
        abline(v =c(MLE,ci), lty = 2,  col='red')
      }else{
@@ -573,7 +575,7 @@
        abline(h =0, lty = 2, col='red')
        lower = min(profileLogLik$x1)
        upper = max(profileLogLik$x1)
-       MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+       MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
        ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
        abline(v =c(0,ci), lty = 2,  col='red')
      }
@@ -621,7 +623,7 @@
      f1 <- approxfun(toUse[,1], toUse[,2])
      lower = min(profaniso1$x1)
      upper = max(profaniso1$x1)
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =c(MLE,ci), lty = 2, col='red')
      if(length(ci)==1){
@@ -670,7 +672,7 @@
      abline(h = 0, lty = 2, col='black')
      lower = min(profileLogLik1$x1)
      upper = max(profileLogLik1$x1)
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =c(MLE,ci), lty = 2, col='black')
      if(length(ci)==1){
@@ -753,7 +755,7 @@
      abline(h =0, lty = 2, col='red')
      lower = min(profileLogLik1$x1)
      upper = max(profileLogLik1$x1)
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =c(MLE,ci), lty = 2, col='red')
      if(length(ci)==1){
@@ -801,7 +803,7 @@
      abline(h =0, lty = 2, col='red')
      lower = min(profileLogLik1$x1)
      upper = max(profileLogLik1$x1)
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =c(MLE,ci), lty = 2, col='red')
      if(length(ci)==1){
@@ -830,7 +832,7 @@
      
      lower = min(boxcox)
      upper = max(boxcox)
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =c(MLE,ci), lty = 2)
      
@@ -886,15 +888,18 @@
  
  
 #' @export
-  likfitLgmCov <- function(model,
+  likfitLgmGpu <- function(model,
                            params = NULL, # CPU matrix for now, users need to provide proper parameters given their specific need
-                           paramToEstimate, #variance and regression parameters are always estimated if not given,
-                           boxcox,  # boxcox is always estimated
                            alpha,
                            shapeRestrict=1000,
+                           paramToEstimate, #variance and regression parameters are always estimated if not given,
+                           boxcox,  # boxcox is always estimated
+                           Betas,
+                           sdSpatial,
                            cilevel=0.95,  # decimal
                            type = c("float", "double")[1+gpuInfo()$double_support],
                            reml=FALSE, 
+                           interpolateForBetas = FALSE,
                            NparamPerIter,
                            Nglobal,
                            Nlocal,
@@ -907,7 +912,7 @@
              coordinates = model$data@coords
              
              if(isTRUE(params==NULL) & isTRUE(boxcox==NULL)){
-               a <- gpuRandom::configParams(simRes, alpha=alpha, shapeRestrict=shapeRestrict)
+               a <- gpuRandom::configParams(model, alpha=alpha, shapeRestrict=shapeRestrict)
                params = do.call(rbind, a[1:length(alpha)])
                paramsUse = rbind(model$opt$mle[colnames(params)],
                                  params)
@@ -919,11 +924,21 @@
               stop("require boxcox values")
              }
              
+             
+             if(missing(Betas)){
+               stop('Betas matrix missing')
+             }
+             
+             if(missing(sdSpatial)){
+               stop('variance matrix missing')
+             }             
+             
+             
              result1 <- getProfLogL(data=data,
                                     formula=formula, 
                                     coordinates=coordinates,
                                     params=paramsUse,  # CPU matrix 
-                                    boxcox=c(seq(b[1],b[9],len=31),model$parameters['boxcox']),  # boxcox is always estimated
+                                    boxcox=c(seq(b[1],b[9],len=32),model$parameters['boxcox']),  # boxcox is always estimated
                                     type = type,
                                     NparamPerIter = NparamPerIter,
                                     gpuElementsOnly = FALSE,
@@ -948,10 +963,38 @@
                                   predictors = result1$predictors,
                                   verbose=FALSE)
              
-              
+             
+             
+             Betasoutput<-gpuRandom::Prof1dBetas(Betas=Betas, 
+                                                 cilevel=cilevel,  
+                                            result1$Nobs,  
+                                            result1$Ndata,
+                                            result1$Nparam,
+                                            result1$Ncov,
+                                            result1$detVar,
+                                            result1$detReml,
+                                            result1$ssqY,   
+                                            result1$XVYXVX,   
+                                            result1$jacobian,
+                                            interpolate = interpolateForBetas)
+             
+             
+             
+             sigmaoutput <- gpuRandom::profVariance(sdSpatial, 
+                                                     cilevel=cilevel,
+                                                     Nobs = result1$Nobs,
+                                                     Nparam = result1$Nparam,
+                                                     Ndata = result1$Ndata,
+                                                     detVar = result1$detVar,
+                                                     detReml = result1$detReml,
+                                                     ssqResidual = result1$ssqResidual,
+                                                     jacobian = result1$jacobian)
+             
+             finalTable <- result2$summary
+             finalTable[1:3,]<-rbind(Betasoutput$estimates[,c(1,3,4)],sigmaoutput$estimates[,c(1,3,4)])
 
              if(isTRUE(params==NULL)){
-               Output <- list(summary = result2$summary,
+               Output <- list(summary = finalTable,
                               breaks = result2$breaks,
                               mleIndex = result1$mleIndex,
                               LogLik = result1$LogLik,
@@ -971,7 +1014,7 @@
                               ssqResidual = result1$ssqResidual)   
                
              }else{
-             Output <- list(summary = result2$summary,
+             Output <- list(summary = finalTable,
                             breaks = result2$breaks,
                             mleIndex = result1$mleIndex,
                             LogLik = result1$LogLik,
