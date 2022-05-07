@@ -302,15 +302,15 @@
    
    
    ############### profile for covariance parameters #####################
-   aniso1 <-  unname(sqrt(paramsRenew[,'anisoRatio']-1) * cos(2*(paramsRenew[,'anisoAngleRadians'])))
-   aniso2 <-  unname(sqrt(paramsRenew[,'anisoRatio']-1) * sin(2*(paramsRenew[,'anisoAngleRadians'])))
+   aniso1 <-  unname(sqrt(params[,'anisoRatio']-1) * cos(2*(params[,'anisoAngleRadians'])))
+   aniso2 <-  unname(sqrt(params[,'anisoRatio']-1) * sin(2*(params[,'anisoAngleRadians'])))
    aniso <- cbind(aniso1, aniso2)
-   combinedRange <- sqrt(paramsRenew[,'range']^2/paramsRenew[,'anisoRatio'])
-   paramsRenew <- cbind(paramsRenew, combinedRange, aniso, sqrt(paramsRenew[,"nugget"]) * Table["sdSpatial",1])
-   colnames(paramsRenew)[ncol(paramsRenew)] <- 'sdNugget'
+   combinedRange <- sqrt(params[,'range']^2/params[,'anisoRatio'])
+   params <- cbind(params, combinedRange, aniso, sqrt(params[,"nugget"]) * Table["sdSpatial",1])
+   colnames(params)[ncol(params)] <- 'sdNugget'
    
    Spars = c("range","combinedRange","nugget",'sdNugget',"shape",'aniso1','aniso2','anisoRatio','anisoAngleRadians')
-   result = data.table::as.data.table(cbind(LogLik, paramsRenew[,Spars]))
+   result = data.table::as.data.table(cbind(LogLik, params[,Spars]))
    profileLogLik <- result[, .(profile=max(.SD)), by=Spars]
    
    profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
@@ -358,7 +358,7 @@
      upper = max(newdata$x1)
      #f1 <- approxfun(profsumLogRange$x1, profsumLogRange$z)
      f1 <- approxfun(toUse[,1], toUse[,2])
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
+     MLE <- sqrt(paramsRenew[index[1],'range']^2/paramsRenew[index[1],'anisoRatio'])
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =exp(0.5*c(MLE,ci)), lty = 2, col='red')
      if(length(ci)==1){
@@ -408,7 +408,8 @@
      upper = max(newdata$x1)
      #f1 <- approxfun(profrange$x1, profrange$z)
      f1 <- approxfun(toUse[,1], toUse[,2])
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
+     MLE <- paramsRenew[index[1],'range']
+     #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =exp(c(MLE,ci)), lty = 2, col='red')
      
@@ -462,7 +463,8 @@
      
      lower = min(toUse$x1)
      upper = max(toUse$x1)-0.01
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
+     MLE <- paramsRenew[index[1],'shape']
+     #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =exp(c(MLE,ci)), lty = 2, col='red')
      if(length(ci)==1){
@@ -511,7 +513,8 @@
      #f1 <- approxfun(profsdNugget$x1, profsdNugget$z)
      f1 <- approxfun(toUse[,1], toUse[,2])
      
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
+     MLE <- sqrt(paramsRenew[index[1],"nugget"]) * Table["sdSpatial",1]
+     #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =c(MLE,ci), lty = 2, col='red')
      
@@ -546,7 +549,7 @@
      inHull = geometry::inhulln(datC2, as.matrix(toTest))
      toUse = profileLogLik1[allPoints,][!inHull,]
      toTest = profileLogLik1[allPoints,]
-
+     MLE <- paramsRenew[index[1],'nugget']
      if(nrow(toUse)>2){
        
        interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
@@ -562,7 +565,7 @@
        
        lower = min(profileLogLik1$x1)
        upper = max(profileLogLik1$x1)
-       MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
+       #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
        ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
        abline(v =c(MLE,ci), lty = 2,  col='red')
      }else{
@@ -575,7 +578,7 @@
        abline(h =0, lty = 2, col='red')
        lower = min(profileLogLik$x1)
        upper = max(profileLogLik$x1)
-       MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
+       #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
        ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
        abline(v =c(0,ci), lty = 2,  col='red')
      }
@@ -623,7 +626,9 @@
      f1 <- approxfun(toUse[,1], toUse[,2])
      lower = min(profaniso1$x1)
      upper = max(profaniso1$x1)
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
+     
+     MLE <- sqrt(paramsRenew[index[1],'anisoRatio']-1) * cos(2*(paramsRenew[index[1],'anisoAngleRadians']))
+     #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =c(MLE,ci), lty = 2, col='red')
      if(length(ci)==1){
@@ -672,7 +677,9 @@
      abline(h = 0, lty = 2, col='black')
      lower = min(profileLogLik1$x1)
      upper = max(profileLogLik1$x1)
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
+     
+     MLE <- sqrt(paramsRenew[index[1],'anisoRatio']-1) * sin(2*(paramsRenew[index[1],'anisoAngleRadians']))
+     #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =c(MLE,ci), lty = 2, col='black')
      if(length(ci)==1){
@@ -755,7 +762,9 @@
      abline(h =0, lty = 2, col='red')
      lower = min(profileLogLik1$x1)
      upper = max(profileLogLik1$x1)
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
+     
+     MLE <- paramsRenew[index[1],'anisoRatio']
+     #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =c(MLE,ci), lty = 2, col='red')
      if(length(ci)==1){
@@ -803,7 +812,9 @@
      abline(h =0, lty = 2, col='red')
      lower = min(profileLogLik1$x1)
      upper = max(profileLogLik1$x1)
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
+     
+     MLE <- paramsRenew[index[1],'anisoAngleRadians']
+     #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =c(MLE,ci), lty = 2, col='red')
      if(length(ci)==1){
@@ -899,7 +910,7 @@
                            cilevel=0.95,  # decimal
                            type = c("float", "double")[1+gpuInfo()$double_support],
                            reml=FALSE, 
-                           interpolateForBetas = FALSE,
+                           convexHullForBetas = FALSE,
                            NparamPerIter,
                            Nglobal,
                            Nlocal,
@@ -976,7 +987,7 @@
                                             result1$ssqY,   
                                             result1$XVYXVX,   
                                             result1$jacobian,
-                                            interpolate = interpolateForBetas)
+                                            convexHull = convexHullForBetas)
              
              
              

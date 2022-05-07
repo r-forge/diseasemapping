@@ -45,8 +45,8 @@ if(reml==FALSE){
   plot(sdSpatial,LogLik-breaks)
   curve(f1(x), add = TRUE, col = 2, n = 1001)
   
-  result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.000001)
-  MLE <- result$maximum
+  #result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.000001)
+  MLE <- sdSpatial[which.max(LogLik)]
   #abline(h=breaks)
   #f2 <- splinefun(sdSpatial, LogLik-breaks, method = "monoH.FC")
   #f2 <- approxfun(sdSpatial, LogLik-breaks)

@@ -22,7 +22,7 @@
                                 jacobian,
                                 reml = FALSE,
                                 I = NULL,
-                                interpolate = TRUE){ 
+                                convexHull = FALSE){ 
   
   m <- nrow(Betas)
   if(m < 6){
@@ -250,6 +250,7 @@ if(reml==FALSE){
     #which.max(LogLik_optimized[,a])
     LogLik <- LogLik_optimized[,a]      
     }
+    index<-which.max(LogLik)
     #f1 <- splinefun(Betas, LogLik, method = "fmm")
     breaks[a] <- max(LogLik) - qchisq(cilevel,  df = 1)/2
     plot(BetaSlice, LogLik-breaks[a],  ylim = max(LogLik-breaks[a]) + c(-3, 0.2), xlim = range(BetaSlice[max(LogLik-breaks[a]) - LogLik+breaks[a] < 3]), cex=0.2, xlab=paste('beta',a), col='green')
@@ -282,11 +283,9 @@ if(reml==FALSE){
     prof = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
     prof$z = predict(interp1, prof)
 
-    lines(prof$x1, prof$z, col = 'black')
-    lower = min(profileLogLik$x1)
-    upper = max(profileLogLik$x1)
-    f1 <- approxfun(prof$x1, prof$z)
-    
+    #lines(prof$x1, prof$z, col = 'black')
+    f1 <- approxfun(toUse[,1], toUse[,2])
+    curve(f1(x), add = TRUE, col = 2, n = 1001)
     profBetas[,c((2*a-1):(2*a))] <- as.matrix(prof)
     }else if(interpolate == FALSE){
       f1 <- approxfun(BetaSlice, LogLik-breaks[a])
@@ -296,8 +295,8 @@ if(reml==FALSE){
       # lines(BetaSlice2, cc,col='green')
       #plot(BetaSlice,LogLik-breaks[a], cex=0.2)
     }
-    result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)
-    MLE <- result$maximum
+    MLE <- BetaSlice[index]
+    #result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0000001)
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
     abline(v =c(MLE,ci), lty = 2, col='black')
     # text(MLE, -2.9, round(MLE,digits = 2))
@@ -327,7 +326,7 @@ if(reml==FALSE){
     ci <- c(NA, NA)
     }
     ############### output #####################################
-    Table[a,] <- c(MLE, result$objective+breaks[a], ci)
+    Table[a,] <- c(MLE, ci, result$objective+breaks[a])
     
   }
   
