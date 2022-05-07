@@ -50,7 +50,7 @@
   LogLik_optimized = matrix(0, nrow=m, ncol=ncol(Betas))
   breaks <- rep(0, ncol(Betas))
   Table <- matrix(NA, nrow=ncol(Betas), ncol=4)
-  colnames(Table) <-  c("MLE", "maximum", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
+  colnames(Table) <-  c("MLE", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''),"maximum")
   #index <- matrix(0, nrow=m, ncol=2)
   profBetas <- matrix(0, nrow=1001, ncol=2*ncol(Betas))
   
@@ -263,7 +263,7 @@ if(reml==FALSE){
     
     
     
-    if(interpolate == TRUE){
+    if(convexHull == TRUE){
     profileLogLik <- as.data.frame(cbind(BetaSlice, LogLik-breaks[a]))
     colnames(profileLogLik) <- c("x1",'profile')
     datC2 = geometry::convhulln(profileLogLik)
@@ -287,7 +287,7 @@ if(reml==FALSE){
     f1 <- approxfun(toUse[,1], toUse[,2])
     curve(f1(x), add = TRUE, col = 2, n = 1001)
     profBetas[,c((2*a-1):(2*a))] <- as.matrix(prof)
-    }else if(interpolate == FALSE){
+    }else if(convexHull == FALSE){
       f1 <- approxfun(BetaSlice, LogLik-breaks[a])
       curve(f1(x), add = TRUE, col = 2, n = 1001)
       # BetaSlice2 <- sort(BetaSlice)
@@ -326,11 +326,11 @@ if(reml==FALSE){
     ci <- c(NA, NA)
     }
     ############### output #####################################
-    Table[a,] <- c(MLE, ci, result$objective+breaks[a])
+    Table[a,] <- c(MLE, ci, max(LogLik))
     
   }
   
-  if(interpolate == TRUE){
+  if(convexHull == TRUE){
     Output <- list(estimates = Table,
                    profBetas = profBetas,
                    LogLik = LogLik_optimized,

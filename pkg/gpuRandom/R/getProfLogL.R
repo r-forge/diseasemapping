@@ -360,7 +360,7 @@
      f1 <- approxfun(toUse[,1], toUse[,2])
      MLE <- sqrt(paramsRenew[index[1],'range']^2/paramsRenew[index[1],'anisoRatio'])
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-     abline(v =exp(0.5*c(MLE,ci)), lty = 2, col='red')
+     abline(v = c(MLE,exp(0.5*ci)), lty = 2, col='red')
      if(length(ci)==1){
        if(ci > MLE){
          ci <- c(lower, ci)
@@ -374,7 +374,7 @@
        warning("error in params")
        ci <- c(NA, NA)
      }
-     Table["combinedRange",] <- exp(0.5*c(MLE,ci))
+     Table["combinedRange",] <- c(MLE,exp(0.5*ci))
      
    }
    
@@ -411,7 +411,7 @@
      MLE <- paramsRenew[index[1],'range']
      #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-     abline(v =exp(c(MLE,ci)), lty = 2, col='red')
+     abline(v =c(MLE,exp(ci)), lty = 2, col='red')
      
      if(length(ci)==1){
        if(ci > MLE){
@@ -426,7 +426,7 @@
        warning("error in params")
        ci <- c(NA, NA)
      }
-     Table["range",] <- exp(c(MLE,ci))
+     Table["range",] <- c(MLE,exp(ci))
    }
    
    
@@ -843,7 +843,8 @@
      
      lower = min(boxcox)
      upper = max(boxcox)
-     MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
+     MLE <- boxcox[index[2]]
+     #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
      abline(v =c(MLE,ci), lty = 2)
      

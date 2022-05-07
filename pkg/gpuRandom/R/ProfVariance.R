@@ -52,7 +52,7 @@ if(reml==FALSE){
   #f2 <- approxfun(sdSpatial, LogLik-breaks)
   #plot(sdSpatial,LogLik-breaks)
   #curve(f2(x), add = TRUE, col = 2, n = 1001)
-  #abline(h=0)
+  abline(h=0, lty = 2, col='black')
   ci <- rootSolve::uniroot.all(f1, lower = lower, upper = upper)
   abline(v =c(MLE,ci), lty = 2, col='black')
   if(length(ci)==1){
@@ -72,8 +72,8 @@ if(reml==FALSE){
   
   ############### output #####################################
   Table <- matrix(NA, nrow=1, ncol=4)
-  colnames(Table) <-  c("MLE", "maximum", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
-  Table[1,] <- c(MLE, result$objective, ci)
+  colnames(Table) <-  c("MLE",paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''),"maximum")
+  Table[1,] <- c(MLE, ci, max(LogLik))
   
   
   Output <- list(estimates = Table,
