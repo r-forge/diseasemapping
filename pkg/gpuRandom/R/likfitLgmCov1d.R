@@ -568,8 +568,8 @@ likfitLgmCov1d <- function(data,
     
     xx = tapply(prof2natural$z, prof2natural$anisoRatio, max)
     ratiovalues<- as.numeric(names(xx))
-    plot(ratiovalues, xx-chisqValue,   xlab="anisoRatio", ylab="profileLogL", ylim=c(-10,0.1))
-    abline(h =-chisqValue, lty = 2)
+    plot(ratiovalues, xx,   xlab="anisoRatio", ylab="profileLogL", ylim=c(-10,0.1))
+    abline(h =0, lty = 2)
     f1 <- approxfun(ratiovalues, xx)
     lower = min(ratiovalues)
     upper = max(ratiovalues)
@@ -582,8 +582,8 @@ likfitLgmCov1d <- function(data,
     ##########################################################
     yy = tapply(prof2natural$z, prof2natural$anisoAngleRadians, max)
     radiansvalues<- as.numeric(names(yy))
-    plot(radiansvalues, yy-chisqValue,xlab="anisoAngleRadians", ylab="profileLogL")
-    abline(h =-chisqValue, lty = 2)
+    plot(radiansvalues, yy,xlab="anisoAngleRadians", ylab="profileLogL")
+    abline(h =0, lty = 2)
     f1 <- approxfun(radiansvalues, yy)
     lower = min(radiansvalues)
     upper = max(radiansvalues)

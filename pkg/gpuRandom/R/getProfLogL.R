@@ -281,7 +281,7 @@
    ############## output matrix ####################
    Table <- matrix(NA, nrow=length(paramToEstimate) + Ncov + 1, ncol=3)
    rownames(Table) <-  c(predictors, "sdSpatial", paramToEstimate)
-   colnames(Table) <-  c("estimate", "lci", "uci")
+   colnames(Table) <-  c("estimate", paste(c('lower', 'upper'), cilevel*100, 'ci', sep = ''))
    
    
    index <- which(LogLik == max(LogLik, na.rm = TRUE), arr.ind = TRUE)
@@ -445,7 +445,7 @@
      points(exp(toUse[,1]), toUse[,2], col='blue', cex=0.6, pch=3)
      
      interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
-     profShapeLog = data.frame(x1=seq(min(toUse$x1), max(toUse$x1)-0.02, len=1001))
+     profShapeLog = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
      profShapeLog$z = predict(interp1, profShapeLog)
      
      #plot(newdata$x1, newdata$profile, cex=.2, xlab="log(shape)", ylab="profileLogL")
@@ -456,7 +456,7 @@
      f1 <- approxfun(toUse[,1], toUse[,2])
      
      lower = min(toUse$x1)
-     upper = max(toUse$x1)-0.01
+     upper = max(toUse$x1)
      MLE <- params[index[1],'shape']
      #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
      ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
@@ -724,8 +724,8 @@
      
      xx = tapply(prof2natural$z, prof2natural$anisoRatio, max)
      ratiovalues<- as.numeric(names(xx))
-     plot(ratiovalues, xx-chisqValue,   xlab="anisoRatio", ylab="profileLogL", ylim=c(-10,0.1))
-     abline(h =-chisqValue, lty = 2)
+     plot(ratiovalues, xx,   xlab="anisoRatio", ylab="profileLogL", ylim=c(-10,0.1))
+     abline(h =0, lty = 2)
      f1 <- approxfun(ratiovalues, xx)
      lower = min(ratiovalues)
      upper = max(ratiovalues)
@@ -738,8 +738,8 @@
      ##########################################################
      yy = tapply(prof2natural$z, prof2natural$anisoAngleRadians, max)
      radiansvalues<- as.numeric(names(yy))
-     plot(radiansvalues, yy-chisqValue,xlab="anisoAngleRadians", ylab="profileLogL")
-     abline(h =-chisqValue, lty = 2)
+     plot(radiansvalues, yy,xlab="anisoAngleRadians", ylab="profileLogL")
+     abline(h =0, lty = 2)
      f1 <- approxfun(radiansvalues, yy)
      lower = min(radiansvalues)
      upper = max(radiansvalues)
@@ -916,7 +916,7 @@
 #' @export
   likfitLgmGpu <- function(model,
                            params = NULL, # CPU matrix for now, users need to provide proper parameters given their specific need
-                           alpha,
+                           alpha = NULL,
                            shapeRestrict=1000,
                            paramToEstimate, #variance and regression parameters are always estimated if not given,
                            boxcox,  # boxcox is always estimated
@@ -938,6 +938,9 @@
              coordinates = model$data@coords
              
              if(isTRUE(params==NULL) & isTRUE(boxcox==NULL)){
+               if(isTRUE(alpha==NULL)){
+                 stop('alpha is not provided')
+               }
                a <- gpuRandom::configParams(model, alpha=alpha, shapeRestrict=shapeRestrict)
                params = do.call(rbind, a[1:length(alpha)])
                paramsUse = rbind(model$opt$mle[colnames(params)],
@@ -1017,7 +1020,7 @@
                                                      jacobian = result1$jacobian)
              
              finalTable <- result2$summary
-             finalTable[1:3,]<-rbind(Betasoutput$estimates[,c(1,3,4)],sigmaoutput$estimates[,c(1,3,4)])
+             finalTable[1:3,]<-rbind(Betasoutput$estimates[,c(1:3)],sigmaoutput$estimates[,c(1:3)])
 
              if(isTRUE(params==NULL)){
                Output <- list(summary = finalTable,
