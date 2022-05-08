@@ -276,7 +276,6 @@ likfitLgmCov1d <- function(data,
     newdata <- profileLogLik[,c('sumLogRange','profile')]
     colnames(newdata)[1]<-"x1"     
     
-    
     datC2 = geometry::convhulln(newdata)
     allPoints = unique(as.vector(datC2))
     toTest = newdata[allPoints,]
@@ -300,9 +299,9 @@ likfitLgmCov1d <- function(data,
     upper = max(newdata$x1)
     #f1 <- approxfun(profsumLogRange$x1, profsumLogRange$z)
     f1 <- approxfun(toUse[,1], toUse[,2])
-    MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+    MLE <- sqrt(paramsRenew[index[1],'range']^2/paramsRenew[index[1],'anisoRatio'])
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-    abline(v =exp(0.5*c(MLE,ci)), lty = 2, col='red')
+    abline(v = c(MLE,exp(0.5*ci)), lty = 2, col='red')
     if(length(ci)==1){
       if(ci > MLE){
         ci <- c(lower, ci)
@@ -316,40 +315,42 @@ likfitLgmCov1d <- function(data,
       warning("error in params")
       ci <- c(NA, NA)
     }
-    Table["combinedRange",] <- exp(0.5*c(MLE,ci))
+    Table["combinedRange",] <- c(MLE,exp(0.5*ci))
   }
   
   
   if('range' %in% paramToEstimate){
-    plot(profileLogLik$range, profileLogLik$profile, cex=.2, xlab="range", ylab="profileLogL")
+    plot(profileLogLik$range, profileLogLik$profile, log='x', cex=.2, xlab="range", ylab="profileLogL")
     
-    profileLogLik1 <- profileLogLik[,c('range','profile')]
-    colnames(profileLogLik1) <- c("x1", 'profile')
+    profileLogLik$logrange <- log(profileLogLik$range)
+    newdata <- profileLogLik[,c('logrange','profile')]
+    colnames(newdata)[1]<-"x1"
     
-    datC2 = geometry::convhulln(profileLogLik1)
+    datC2 = geometry::convhulln(newdata)
     allPoints = unique(as.vector(datC2))
-    toTest = profileLogLik1[allPoints,]
+    toTest = newdata[allPoints,]
     toTest[,'profile'] = toTest[,'profile'] + 0.1
     inHull = geometry::inhulln(datC2, as.matrix(toTest))
-    toUse = profileLogLik1[allPoints,][!inHull,]
-    toTest = profileLogLik1[allPoints,]
+    toUse = newdata[allPoints,][!inHull,]
+    toTest = newdata[allPoints,]
     
     interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse),  m=1, fx=TRUE), data=toUse)
     profrange = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
     profrange$z = predict(interp1, profrange)
     
+    points(exp(toTest[,1]),toTest[,2], col='red', cex=0.6)
+    points(exp(toUse[,1]), toUse[,2], col='blue', cex=0.6, pch=3)
     
-    points(toTest, col='red', cex=0.6)
-    points(toUse, col='blue', cex=0.6, pch=3)
-    lines(profrange$x1, profrange$z, col = 'green')
+    lines(exp(profrange$x1), profrange$z, col = 'green')
     abline(h =0, lty = 2, col='red')
-    lower = min(profileLogLik1$x1)
-    upper = max(profileLogLik1$x1)
+    lower = min(newdata$x1)
+    upper = max(newdata$x1)
     #f1 <- approxfun(profrange$x1, profrange$z)
     f1 <- approxfun(toUse[,1], toUse[,2])
-    MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+    MLE <- paramsRenew[index[1],'range']
+    #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-    abline(v =c(MLE,ci), lty = 2, col='red')
+    abline(v =c(MLE,exp(ci)), lty = 2, col='red')
     
     if(length(ci)==1){
       if(ci > MLE){
@@ -364,7 +365,7 @@ likfitLgmCov1d <- function(data,
       warning("error in params")
       ci <- c(NA, NA)
     }
-    Table["range",] <- c(MLE, ci)
+    Table["range",] <- c(MLE,exp(ci))
   }
   
   
@@ -401,7 +402,8 @@ likfitLgmCov1d <- function(data,
     
     lower = min(toUse$x1)
     upper = max(toUse$x1)-0.01
-    MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+    MLE <- paramsRenew[index[1],'shape']
+    #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
     abline(v =exp(c(MLE,ci)), lty = 2, col='red')
     if(length(ci)==1){
@@ -417,7 +419,7 @@ likfitLgmCov1d <- function(data,
       warning("error in params")
       ci <- c(NA, NA)
     }
-    Table["shape",] <- exp(c(MLE,ci))
+    Table["shape",] <- c(MLE,exp(ci))
   }       
   
   
@@ -450,7 +452,8 @@ likfitLgmCov1d <- function(data,
     #f1 <- approxfun(profsdNugget$x1, profsdNugget$z)
     f1 <- approxfun(toUse[,1], toUse[,2])
     
-    MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+    MLE <- sqrt(paramsRenew[index[1],"nugget"]) * Table["sdSpatial",1]
+    #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
     abline(v =c(MLE,ci), lty = 2, col='red')
     
@@ -484,8 +487,9 @@ likfitLgmCov1d <- function(data,
     inHull = geometry::inhulln(datC2, as.matrix(toTest))
     toUse = profileLogLik1[allPoints,][!inHull,]
     toTest = profileLogLik1[allPoints,]
-    
+    MLE <- paramsRenew[index[1],'nugget']
     if(nrow(toUse)>2){
+      
       interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
       profNugget = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
       profNugget$z = predict(interp1, profNugget)
@@ -499,7 +503,7 @@ likfitLgmCov1d <- function(data,
       
       lower = min(profileLogLik1$x1)
       upper = max(profileLogLik1$x1)
-      MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+      #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
       ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
       abline(v =c(MLE,ci), lty = 2,  col='red')
     }else{
@@ -512,7 +516,7 @@ likfitLgmCov1d <- function(data,
       abline(h =0, lty = 2, col='red')
       lower = min(profileLogLik$x1)
       upper = max(profileLogLik$x1)
-      MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+      #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
       ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
       abline(v =c(0,ci), lty = 2,  col='red')
     }
@@ -534,99 +538,109 @@ likfitLgmCov1d <- function(data,
   
   
   
-  if('anisoRatio' %in% paramToEstimate){
-    plot(profileLogLik$anisoRatio, profileLogLik$profile, cex=.2, xlab="anisoRatio", ylab="profileLogL")
-    profileLogLik1 <- profileLogLik[,c('anisoRatio','profile')]
-    colnames(profileLogLik1) <- c("x1", 'profile')
+  if(('anisoRatio' %in% paramToEstimate)   &  ('anisoAngleRadians' %in% paramToEstimate)){
+    profileLogL <- profileLogLik[,c('aniso1','aniso2','profile')]
+    datC2 = geometry::convhulln(profileLogL)
+    allPoints2 = unique(as.vector(datC2))
+    toTest2 = profileLogL[allPoints2,]
+    toTest2[,'profile'] = toTest2[,'profile'] - 0.1
+    inHull2 = geometry::inhulln(datC2, as.matrix(toTest2))
+    toUse2 = profileLogL[allPoints2,][inHull2,]
+    toTest2 = profileLogL[allPoints2,]
     
-    datC2 = geometry::convhulln(profileLogLik1)
-    allPoints = unique(as.vector(datC2))
-    toTest = profileLogLik1[allPoints,]
-    toTest[,'profile'] = toTest[,'profile'] + 0.1
-    inHull = geometry::inhulln(datC2, as.matrix(toTest))
-    toUse = profileLogLik1[allPoints,][!inHull,]
-    toTest = profileLogLik1[allPoints,]
     
-    points(toTest, col='red', cex=0.6)
-    points(toUse, col='blue', cex=0.6, pch=3)     
+    interp2 = mgcv::gam(profile ~ s(aniso1, aniso2, k=nrow(toUse2), m=1,fx=TRUE), data=toUse2)
+    prof2list = list(aniso1=seq(min(toUse2[,1])-0.1, max(toUse2[,1])+0.4, len=101),
+                     aniso2=seq(min(toUse2[,2])-0.1, max(toUse2[,2])+0.4, len=101))
+    prof2 = do.call(expand.grid, prof2list)
+    prof2$z = predict(interp2, prof2)
     
-    interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-    profRatio = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
-    profRatio$z = predict(interp1, profRatio)
+    prof2list = list(anisoRatio=sort(c(swissRes$summary['anisoRatio','estimate'],anisoRatio=seq(min(paramsRenew[,'anisoRatio']),max(paramsRenew[,'anisoRatio']), len=100))),
+                     anisoAngleRadians=sort(c(swissRes$summary['anisoAngleRadians','estimate'],anisoAngleRadians=seq(min(paramsRenew[,'anisoAngleRadians']),max(paramsRenew[,'anisoAngleRadians']), len=100))))
+    prof2natural = do.call(expand.grid, prof2list)
     
-    lines(profRatio$x1, profRatio$z, col='green')
-    #f1 <- approxfun(profRatio$x1, profRatio$z)
-    f1 <- approxfun(toUse[,1], toUse[,2])
+    prof2naturalC = sqrt(prof2natural[,'anisoRatio']-1)* cos(2*(prof2natural[,'anisoAngleRadians']))+
+      1i* sqrt(prof2natural[,'anisoRatio']-1)* sin(2*(prof2natural[,'anisoAngleRadians']))
     
-    abline(h =0, lty = 2, col='red')
-    lower = min(profileLogLik1$x1)
-    upper = max(profileLogLik1$x1)
-    MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+    prof2naturalAsGamma = data.frame(aniso1=Re(prof2naturalC), aniso2=Im(prof2naturalC))
+    prof2natural$z = predict(interp2, prof2naturalAsGamma)
+    
+    
+    xx = tapply(prof2natural$z, prof2natural$anisoRatio, max)
+    ratiovalues<- as.numeric(names(xx))
+    plot(ratiovalues, xx-chisqValue,   xlab="anisoRatio", ylab="profileLogL", ylim=c(-10,0.1))
+    abline(h =-chisqValue, lty = 2)
+    f1 <- approxfun(ratiovalues, xx)
+    lower = min(ratiovalues)
+    upper = max(ratiovalues)
+    MLE <- paramsRenew[index[1],'anisoRatio']
+    #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-    abline(v =c(MLE,ci), lty = 2, col='red')
-    if(length(ci)==1){
-      if(ci > MLE){
-        ci <- c(lower, ci)
-        message("did not find lower ci for anisoRatio")
-      }else{
-        ci <- c(ci, upper)
-        message("did not find upper ci for anisoRatio")}
-    }
-    
-    if(length(ci)==0 | length(ci)>2){
-      warning("error in params")
-      ci <- c(NA, NA)
-    }
+    abline(v =c(MLE,ci), lty = 2)
     Table["anisoRatio",] <- c(MLE, ci)
-  }
-  
-  
-  if('anisoAngleRadians' %in% paramToEstimate){
-    plot(profileLogLik$anisoAngleRadians, profileLogLik$profile, cex=.2, xlab="anisoAngleRadians", ylab="profileLogL")
     
-    profileLogLik1 <- profileLogLik[,c('anisoAngleRadians','profile')]
-    colnames(profileLogLik1) <- c("x1", 'profile')
-    
-    datC2 = geometry::convhulln(profileLogLik1)
-    allPoints = unique(as.vector(datC2))
-    toTest = profileLogLik1[allPoints,]
-    toTest[,'profile'] = toTest[,'profile'] + 0.1
-    inHull = geometry::inhulln(datC2, as.matrix(toTest))
-    toUse = profileLogLik1[allPoints,][!inHull,]
-    toTest = profileLogLik1[allPoints,]
-    
-    points(toTest, col='red', cex=0.6)
-    points(toUse, col='blue', cex=0.6, pch=3)
-    
-    interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
-    profRadians = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
-    profRadians$z = predict(interp1, profRadians)
-    lines(profRadians$x1, profRadians$z, col='green')
-    
-    #f1 <- approxfun(profRadians$x1, profRadians$z)
-    f1 <- approxfun(toUse[,1], toUse[,2])
-    curve(f1(x), add = TRUE, col = 'green', n = 1001)
-    abline(h =0, lty = 2, col='red')
-    lower = min(profileLogLik1$x1)
-    upper = max(profileLogLik1$x1)
-    MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+    ##########################################################
+    yy = tapply(prof2natural$z, prof2natural$anisoAngleRadians, max)
+    radiansvalues<- as.numeric(names(yy))
+    plot(radiansvalues, yy-chisqValue,xlab="anisoAngleRadians", ylab="profileLogL")
+    abline(h =-chisqValue, lty = 2)
+    f1 <- approxfun(radiansvalues, yy)
+    lower = min(radiansvalues)
+    upper = max(radiansvalues)
+    MLE <- paramsRenew[index[1],'anisoAngleRadians']
+    #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-    abline(v =c(MLE,ci), lty = 2, col='red')
-    if(length(ci)==1){
-      if(ci > MLE){
-        ci <- c(lower, ci)
-        message("did not find lower ci for anisoAngleRadians")
-      }else{
-        ci <- c(ci, upper)
-        message("did not find upper ci for anisoAngleRadians")}
-    }
-    
-    if(length(ci)==0 | length(ci)>2){
-      warning("error in params")
-      ci <- c(NA, NA)
-    }
+    abline(v =c(MLE,ci), lty = 2)
     Table["anisoAngleRadians",] <- c(MLE, ci)
   }
+  
+  
+  # if('anisoAngleRadians' %in% paramToEstimate){
+  #   plot(profileLogLik$anisoAngleRadians, profileLogLik$profile, cex=.2, xlab="anisoAngleRadians", ylab="profileLogL")
+  #   
+  #   profileLogLik1 <- profileLogLik[,c('anisoAngleRadians','profile')]
+  #   colnames(profileLogLik1) <- c("x1", 'profile')
+  #   
+  #   datC2 = geometry::convhulln(profileLogLik1)
+  #   allPoints = unique(as.vector(datC2))
+  #   toTest = profileLogLik1[allPoints,]
+  #   toTest[,'profile'] = toTest[,'profile'] + 0.1
+  #   inHull = geometry::inhulln(datC2, as.matrix(toTest))
+  #   toUse = profileLogLik1[allPoints,][!inHull,]
+  #   toTest = profileLogLik1[allPoints,]
+  #   
+  #   points(toTest, col='red', cex=0.6)
+  #   points(toUse, col='blue', cex=0.6, pch=3)
+  #   
+  #   interp1 = mgcv::gam(profile ~ s(x1, k=nrow(toUse), m=1, fx=TRUE), data=toUse)
+  #   profRadians = data.frame(x1=seq(min(toUse$x1), max(toUse$x1), len=1001))
+  #   profRadians$z = predict(interp1, profRadians)
+  #   lines(profRadians$x1, profRadians$z, col='green')
+  #   
+  #   #f1 <- approxfun(profRadians$x1, profRadians$z)
+  #   f1 <- approxfun(toUse[,1], toUse[,2])
+  #   curve(f1(x), add = TRUE, col = 'green', n = 1001)
+  #   abline(h =0, lty = 2, col='red')
+  #   lower = min(profileLogLik1$x1)
+  #   upper = max(profileLogLik1$x1)
+  #   MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+  #   ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
+  #   abline(v =c(MLE,ci), lty = 2, col='red')
+  #   if(length(ci)==1){
+  #     if(ci > MLE){
+  #       ci <- c(lower, ci)
+  #       message("did not find lower ci for anisoAngleRadians")
+  #     }else{
+  #       ci <- c(ci, upper)
+  #       message("did not find upper ci for anisoAngleRadians")}
+  #   }
+  #   
+  #   if(length(ci)==0 | length(ci)>2){
+  #     warning("error in params")
+  #     ci <- c(NA, NA)
+  #   }
+  #   Table["anisoAngleRadians",] <- c(MLE, ci)
+  # }
   
   
   if('aniso1' %in% paramToEstimate){
@@ -653,10 +667,11 @@ likfitLgmCov1d <- function(data,
     abline(h =0, lty = 2, col='red')
     #f1 <- approxfun(profaniso1$x1, profaniso1$z)
     f1 <- approxfun(toUse[,1], toUse[,2])
-    
     lower = min(profaniso1$x1)
     upper = max(profaniso1$x1)
-    MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+    
+    MLE <- sqrt(paramsRenew[index[1],'anisoRatio']-1) * cos(2*(paramsRenew[index[1],'anisoAngleRadians']))
+    #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
     abline(v =c(MLE,ci), lty = 2, col='red')
     if(length(ci)==1){
@@ -704,7 +719,9 @@ likfitLgmCov1d <- function(data,
     abline(h = 0, lty = 2, col='black')
     lower = min(profileLogLik1$x1)
     upper = max(profileLogLik1$x1)
-    MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+    
+    MLE <- sqrt(paramsRenew[index[1],'anisoRatio']-1) * sin(2*(paramsRenew[index[1],'anisoAngleRadians']))
+    #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
     abline(v =c(MLE,ci), lty = 2, col='black')
     if(length(ci)==1){
@@ -723,37 +740,13 @@ likfitLgmCov1d <- function(data,
     Table["aniso2",] <- c(MLE, ci)     
   }
   
-  # if('anisoAngleDegrees' %in% paramToEstimate){
-  #   result = as.data.table(cbind(LogLikcpu, paramsRenew[,"anisoAngleDegrees"]))
-  #   colnames(result) <- c(paste(c('boxcox'), round(boxcox, digits = 3) ,sep = ''), "x1")
-  #   profileLogLik <- result[, .(profile=max(.SD)), by=x1]
-  #   profileLogLik[,'profile'] <- profileLogLik[,'profile'] - breaks
-  #   inter <- get1dCovexhull(profileLogLik)     # a data frame or data.table # 2 column names must be x1 and profile
-  #   toTest <- inter$toTest
-  #   toUse <- inter$toUse
-  #   prof1 <- inter$prof
-  #   
-  #   # plot(profileLogLik$x1, profileLogLik$profile, cex=.2, xlab="anisoAngleDegrees", ylab="profileLogL")
-  #   # points(toTest, col='red', cex=0.6)
-  #   # points(toUse, col='blue', cex=0.6, pch=3)
-  #   # lines(prof1$x1, prof1$z, col='green')
-  #   f1 <- approxfun(prof1$x1, prof1$z)
-  #   # abline(h =0, lty = 2, col='red')
-  #   lower = min(profileLogLik$x1)
-  #   upper = max(profileLogLik$x1)
-  #   MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
-  #   Table["anisoAngleDegrees",] <- c(MLE)
-  #   
-  #   
-  #   
-  # }
-  
+
   
   
   
   ###############lambda hat#####################
   if(('boxcox'%in% paramToEstimate)  & length(boxcox)>5 ){
-    likForboxcox = cbind(boxcox, apply(LogLikcpu, 2,  max) )
+    likForboxcox = cbind(boxcox, apply(LogLik, 2,  max) )
     f1 <- approxfun(likForboxcox[,1], likForboxcox[,2]-breaks)
     plot(likForboxcox[,1], likForboxcox[,2]-breaks, ylab= "proLogL", xlab='boxcox', cex=0.5)
     curve(f1(x), add = TRUE, col = 2, n = 1001)   #the number of x values at which to evaluate
@@ -761,7 +754,8 @@ likfitLgmCov1d <- function(data,
     
     lower = min(boxcox)
     upper = max(boxcox)
-    MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0001)$maximum
+    MLE <- boxcox[index[2]]
+    #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
     abline(v =c(MLE,ci), lty = 2)
 
