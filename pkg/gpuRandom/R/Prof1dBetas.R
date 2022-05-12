@@ -296,7 +296,8 @@ if(reml==FALSE){
       #plot(BetaSlice,LogLik-breaks[a], cex=0.2)
     }
     MLE <- BetaSlice[index]
-    #result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0000001)
+    #result <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.0000000001)  # added 3 more 0s to get a accurate MLE for beta2 in swiss
+    # result$maximum
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
     abline(v =c(MLE,ci), lty = 2, col='black')
     # text(MLE, -2.9, round(MLE,digits = 2))

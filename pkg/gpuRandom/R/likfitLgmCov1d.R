@@ -405,7 +405,7 @@ likfitLgmCov1d <- function(data,
     MLE <- paramsRenew[index[1],'shape']
     #MLE <- optimize(f1, c(lower, upper), maximum = TRUE, tol = 0.00000001)$maximum
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
-    abline(v =exp(c(MLE,ci)), lty = 2, col='red')
+    abline(v =c(MLE,exp(ci)), lty = 2, col='red')
     if(length(ci)==1){
       if(ci > MLE){
         ci <- c(lower, ci)

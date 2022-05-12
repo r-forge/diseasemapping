@@ -48,13 +48,9 @@ getHessianNolog <- function(Model,
     if(!('anisoAngleRadians' %in% names(Mle))){
       stop('anisoRatio and anisoAngleRadians must be together')
     }
-    # if(Mle['anisoRatio'] <= 1){
-    #   aniso1 <-  unname(sqrt(1/Mle['anisoRatio']-1) * cos(2*(Mle['anisoAngleRadians'] + pi/2)))
-    #   aniso2 <-  unname(sqrt(1/Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians'] + pi/2)))
-    # }else{
-      aniso1 <-  unname(sqrt(Mle['anisoRatio']-1) * cos(2*(Mle['anisoAngleRadians'])))
-      aniso2 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians'])))
-    # }
+    aniso1 <-  unname(sqrt(Mle['anisoRatio']-1) * cos(2*(Mle['anisoAngleRadians'])))
+    aniso2 <-  unname(sqrt(Mle['anisoRatio']-1) * sin(2*(Mle['anisoAngleRadians'])))
+
     aniso <- c(aniso1 = aniso1, aniso2 = aniso2)
     MleGamma = c(sumLogRange, log(Mle[whichLogged]), Mle[-c(1,whichLogged,whichAniso)], aniso)
 
