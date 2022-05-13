@@ -947,7 +947,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
         }}
       
       // save diagonals of ssqYX to ssqY
-    viennacl::ocl::enqueue(extractSomeDiagKernel(ssqY, ssqYX, DiterIndex, NthisIteration),
+    viennacl::ocl::enqueue(extractSomeDiagKernel(ssqY, ssqYX, DiterIndex, NthisIteration),  // put 0 on diterindex
                            theQueue);
      if( verbose[1]>=2){
        Rcpp::Rcout << "extractSomeDiagKernel finished\n" << "\n\n";
@@ -970,7 +970,7 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       
       // cholesky X^T V^(-1) X = QPQ^T, save determinant as detReml, changes Ncovariates by Ncovariates part
       viennacl::ocl::enqueue(cholXvxKernel(ssqYX, cholXVXdiag, localMemory,
-                                           NthisIteration, detReml, DiterIndex),
+                                           NthisIteration, detReml, DiterIndex),   // put 0
                              theQueue);
         if(Diter ==1 & verbose[1]>=2){
           Rcpp::Rcout << "cholesky ssqX finished\n" << "\n\n";
@@ -999,6 +999,12 @@ void likfitGpuP(viennacl::matrix_base<T> &yx,
       //   Rcpp::Rcout << "\n" << "Diter " << Diter <<" DiterIndex " << DiterIndex << " endThisIteration " << 
       //     endThisIteration << " Nthisiteration " << NthisIteration  << "\n";
       // }
+      
+      // do loglik calculation
+      // copy to cpu
+       
+      
+      
       
     }
     
