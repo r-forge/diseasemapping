@@ -582,6 +582,9 @@ if(estimateVariance) {
 	result$parameters[c('nugget', 'variance')] = 
 	result$parameters[c('nugget', 'variance')] * 
 	result$optim$totalVarHat  
+
+	result$varBetaHat = result$varBetaHat*	result$optim$totalVarHat  
+}
 }
 
 names(result$optim$logL) = paste(
