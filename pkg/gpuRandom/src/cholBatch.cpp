@@ -1,4 +1,4 @@
-#include "gpuRandom.hpp"
+#include "lgmlikFit.hpp"
 //#define DEBUG
 
 // Nlocal[0] is Drow, Nlocal[1] inner loop over columns, 

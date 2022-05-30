@@ -204,8 +204,8 @@ getHessianNolog <- function(Model,
                                   NparamPerIter=100,
                                   gpuElementsOnly=FALSE,
                                   reml=FALSE,
-                                  Nglobal=c(128,64),
-                                  Nlocal=c(16,16),
+                                  Nglobal=c(64,64),
+                                  Nlocal=c(16,8),
                                   NlocalCache=2000,
                                   verbose=c(0,0))
   
@@ -786,7 +786,7 @@ getHessianNolog <- function(Model,
                                  gpuElementsOnly=FALSE,
                                  reml=FALSE,
                                  Nglobal=c(128,64),
-                                 Nlocal=c(16,16),
+                                 Nlocal=c(16,8),
                                  NlocalCache=2000)
   
   
@@ -1113,7 +1113,8 @@ getHessianNolog <- function(Model,
                              logNugget = FALSE,
                              Mle = NULL,
                              boxcox = NULL,# a vector of confidence levels 1-alpha
-                             shapeRestrict = 1000
+                             shapeRestrict = 1000,
+                             randomNugget = 0
     ){
       
 
@@ -1447,7 +1448,7 @@ getHessianNolog <- function(Model,
          }
          for(j in (length(vector)*1/2+1):length(vector)){
            if(vector[j]<0){
-             vector[j] = stats::runif(1, 0, 0.5)
+             vector[j] = stats::runif(1, 0, randomNugget)
            }
          }
       out_list[[i]][,'nugget'] <- vector

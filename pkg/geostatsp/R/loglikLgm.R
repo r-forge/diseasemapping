@@ -585,7 +585,7 @@ if(estimateVariance) {
 
 	result$varBetaHat = result$varBetaHat*	result$optim$totalVarHat  
 }
-}
+
 
 names(result$optim$logL) = paste(
 	names(result$optim$logL),

@@ -253,11 +253,11 @@ if(reml==FALSE){
     index<-which.max(LogLik)
     #f1 <- splinefun(Betas, LogLik, method = "fmm")
     breaks[a] <- max(LogLik) - qchisq(cilevel,  df = 1)/2
-    plot(BetaSlice, LogLik-breaks[a],  ylim = max(LogLik-breaks[a]) + c(-3, 0.2), xlim = range(BetaSlice[max(LogLik-breaks[a]) - LogLik+breaks[a] < 3]), cex=0.2, xlab=paste('beta',a), col='green')
+    plot(BetaSlice, LogLik-breaks[a],  ylim = max(LogLik-breaks[a]) + c(-3, 0.2), xlim = range(BetaSlice[max(LogLik-breaks[a]) - LogLik+breaks[a] < 3]), cex=0.2, xlab=paste('beta',a), col='blue')
     abline(h=0, lty = 2, col='black')
     
     # temp <- qchisq(cilevel,  df = 1)/2
-    # plot(BetaSlice*1e03, LogLik-breaks[a]-temp,  ylim = max(LogLik-breaks[a]-temp) + c(-3, 0.2), xlim = range(BetaSlice[max(LogLik-breaks[a]-temp) - LogLik+breaks[a]+temp < 3]*1e03), cex=0.2, xlab='elevation*1000', col='green', ylab='profileLogL')
+    # plot(BetaSlice*1e03, LogLik-breaks[a]-temp,  ylim = max(LogLik-breaks[a]-temp) + c(-3, 0.2), xlim = range(BetaSlice[max(LogLik-breaks[a]-temp) - LogLik+breaks[a]+temp < 3]*1e03), cex=0.2, xlab='elevation*1000', col='blue', ylab='profileLogL')
     # abline(h=-temp, lty = 2, col='black')
     
     
@@ -300,10 +300,10 @@ if(reml==FALSE){
     # result$maximum
     ci<-rootSolve::uniroot.all(f1, lower = lower, upper = upper)
     abline(v =c(MLE,ci), lty = 2, col='black')
-    # text(MLE, -2.9, round(MLE,digits = 2))
-    # text(ci[1], -2.9, round(ci[1],digits = 2))
-    # text(ci[2], -2.9, round(ci[2],digits = 3))
-    
+    # text(MLE, -3, round(MLE,digits = 3))
+    # text(ci[1], -3, round(ci[1],digits = 3))
+    # text(ci[2], -3, round(ci[2],digits = 3))
+
     #abline(h=breaks[a], lty = 2)
     #f2 <- splinefun(Betas, LogLik-breaks[a], method = "fmm")
     #f2 <- approxfun(Betas, LogLik-breaks[a])
