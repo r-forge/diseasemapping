@@ -23,7 +23,8 @@ if (!requireNamespace("gpuBatchMatrix", quietly = TRUE))
 library("gpuR")
 setContext(   grep('gpu', listContexts()$device_type) [1]    )
 
-
+sessionInfo()
+gpuInfo()
 
 ## Section 2.1
 # Creating streams on CPU
@@ -54,7 +55,8 @@ as.matrix(r_matrix)
 
 
 ## Section 4.1
-month <- as.matrix(readRDS(system.file("extdata", "month.Rds", package = "clrng")))
+data("month")
+month <- as.matrix(month)
 library(knitr)
 kable(month, format = "markdown", caption = "Monthly birth anomaly data")
 
@@ -80,7 +82,8 @@ result_monthcpu$p.value
 
 
 ## Section 4.2
-week <- as.matrix(readRDS(system.file("extdata", "week.Rds", package = "clrng")))
+data("week")
+week <- as.matrix(week)
 kable(week, format = "markdown", caption = "Day-of-week birth anomaly data") 
 
 # using GPU
@@ -205,7 +208,8 @@ for(D in names(simRaster)) {
 mapmisc::legendBreaks("topleft", myCol, inset=0)
 
 
-
+sessionInfo()
+gpuInfo()
 
 
 

@@ -489,7 +489,9 @@ The 2-way contingency table in Table \ref{tab:monthdata} comes from the 2018 Nat
  # month<-as.matrix(datamonth[,-1])
  # rownames(month) <- c("Jan", "Feb","Mar","Apr","May","Jun","Jul","Aug","Sept","Oct","Nov","Dec")
  # colnames(month) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal", "Dow", "Chr", "Hyp")
- month <- as.matrix(readRDS(system.file("extdata", "month.Rds", package = "clrng")))
+ #month <- as.matrix(readRDS(system.file("extdata", "month.Rds", package = "clrng")))
+ data("month")
+ month <- as.matrix(month)
  @
  <<echo=FALSE,eval=TRUE>>= 
 sn <- function(x,digits)
@@ -549,7 +551,9 @@ Table \ref{tab:week} is a $7 \times 12$ table shows frequencies for congenital a
 # week<-as.matrix(dataweek[,-1])
 # rownames(week) <- c("Mon", "Tue","Wed","Thu","Fri","Sat","Sun")
 # colnames(week) <- c("Ane", "Men", "Cya", "Her", "Omp", "Gas", "Lim", "Cle", "Pal", "Dow", "Chr", "Hyp")
-week <- as.matrix(readRDS(system.file("extdata", "week.Rds", package = "clrng")))
+#week <- as.matrix(readRDS(system.file("extdata", "week.Rds", package = "clrng")))
+data("week")
+as.matrix(week)
 @
 <<weekdata, eval=TRUE, echo=FALSE, cache=TRUE>>=
 knitr::kable(week,format="latex",align = c("rrrrrrrrrrrr"),  #label = "tab:week",
