@@ -527,8 +527,7 @@ knitr::kable(month)
       returnStatistics=TRUE,  Nglobal = c(256,64)))
  @
 <<timecomparemonth1Gpuresult>>=
-unlist(result_month[c('threshold','simNum','counts')])
-result_month$p.value
+unlist(result_month[c('p.value','threshold','simNum','counts')])
 @
 We got 409429 cases whose test statistics are below the observed threshold based on an actual number of 1015808 simulations, so the p-value from \fct{clrng::fisher.sim} for this table is about $\Sexpr{sn(result_month$p.value,3)}$, which is close enough to the p-value from \fct{stats::fisher.test}. \fct{clrng::fisher.sim} takes about 0.3 seconds, \pkg{clrng} accounts for 2.1\% of the elapsed time on CPU. 
  <<timecomparemonth3Gpu, eval=TRUE,echo=FALSE, cache=TRUE>>=
@@ -565,8 +564,7 @@ kable_styling(full_width = F, position = "center")#, latex_options = "HOLD_posit
 week_GPU<-gpuR::vclMatrix(week,type="integer")
 system.time(resultWeek<-clrng::fisher.sim(week_GPU, 1e7, streams=streams,
                 type="double",returnStatistics=TRUE,Nglobal = c(256,64)))
-unlist(resultWeek[c('threshold','simNum','counts')])
-resultWeek$p.value
+unlist(resultWeek[c('p.value','threshold','simNum','counts')])
 @
 <<TimecompareweekGpu3, echo=FALSE, eval=TRUE, cache=TRUE>>=
 resultWeek$cpu = as.vector(resultWeek$sim)
