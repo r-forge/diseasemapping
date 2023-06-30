@@ -1,0 +1,49 @@
+export(crsLL, crsMerc)
+export(map.new, col2html)
+importFrom('terra', 'vect', 'crs','crds','extend','ext')
+importMethodsFrom('terra',"[", "[[",'plot')
+importClassesFrom('terra',"SpatVector")
+
+import(methods)
+
+importFrom("stats", "quantile")
+
+export(scaleBar)
+export(legendBreaks)
+export(breaksForRates)
+export(colorScale)
+export(colourScale)
+#export(crsModis, modisRaster, degreeRaster, getModisTiles)
+
+S3method(colourScale, SpatRaster)
+S3method(colourScale, numeric)
+S3method(colourScale, factor)
+S3method(colourScale, NULL)
+S3method(colourScale, logical)
+
+
+#export(openmap, osmTiles,insetMap, omerc,openmapAttribution, legendTable, tonerToTrans, rgbtToIndex)
+#export(tpeqd, tpers, persistentCache)
+
+#export(ocea, moll, wrapPoly, gridlinesWrap)
+
+#export( GNcities, GNsearch, geocode)
+
+
+  
+importFrom(grDevices, rgb, col2rgb, heat.colors)
+
+#importFrom('methods', 'as')
+#importFrom("methods", "slotNames")
+
+importFrom('stats', 'na.omit')
+importFrom("stats", "approx", "optim")
+
+importFrom(graphics, par, strwidth, polygon, legend)
+
+importFrom(utils, download.file)
+
+
+ # brewer.pal from RColorBrewer referenced by ::
+ # geocode from dismo referenced by ::
+
