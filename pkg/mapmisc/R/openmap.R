@@ -9,6 +9,8 @@ osmTiles = function(name, xyz, suffix) {
     "osm-de"="http://c.tile.openstreetmap.de/tiles/osmde/",
     "osm-ru" = "http://a.tiles.wmflabs.org/osm-multilingual/ru,_/",
     "osm-transport"="http://tile2.opencyclemap.org/transport/",
+    "stamen-toner" = "https://stamen-tiles-d.a.ssl.fastly.net/toner/"
+    "stamen-watercolor" = "https://tiles.stadiamaps.com/styles/stamen_watercolor/",
     "bw-mapnik"="http://b.tiles.wmflabs.org/bw-mapnik2/",
 #			mapquest="http://otile1.mqcdn.com/tiles/1.0.0/osm/",
 #			"mapquest-sat"="http://otile1.mqcdn.com/tiles/1.0.0/sat",
@@ -69,13 +71,6 @@ osmTiles = function(name, xyz, suffix) {
   names(toadd) = paste("osm-labels-", languages, sep="")
 #	result = c(result, toadd)
   
-  stamen = c("toner","watercolor",
-    "terrain", "terrain-labels")
-  toadd = paste("http://d.tile.stamen.com/", stamen, "/",sep="")
-  names(toadd) = paste("stamen-", stamen, sep="")
-  
-  toadd = c(toadd, 
-    "stamen-terrain-background"='http://d.b.tile.stamen.com/terrain-background')
   
   result = c(result, toadd)
   
@@ -189,6 +184,12 @@ openmap = function(x, zoom,
     } else if(
       length(grep(
           '[.]arcgisonline[.]com', Durl
+        ))) {
+      suffix='.jpg'
+      tileNames = 'zyx'
+    } else if(
+      length(grep(
+          'stamen.watercolor', Durl
         ))) {
       suffix='.jpg'
       tileNames = 'zyx'
