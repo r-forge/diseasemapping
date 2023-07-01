@@ -105,27 +105,14 @@ getRowColNrcanDontNeed <- function(
 
 nTilesMerc <- function(extMerc,zoom){
   
-  SrowCol = terra::getRowCol(extMerc, zoom=zoom)
+  SrowCol = getRowCol(extMerc, zoom=zoom)
   
   length(SrowCol[[1]])*length(SrowCol[[2]])
   
 }
 
-if(F){
- x = vect(as.matrix(expand.grid(seq(-5e6,-1e6,len=100), seq(-3e6,3e6,len=100))), crs='EPSG:3573')
- xLL = project(x, crsLL)
- zoom=4
- theExt = ext(-4e6,-1e6,-3e6,0e6)
- xx = getTilesFromPoints(
-  outraster=rast(theExt, res = (xmax(theExt)-xmin(theExt))/460, crs=crs('EPSG:3573')),
-  path="https://stamen-tiles-d.a.ssl.fastly.net/toner/",  
-#  path="https://tiles.stadiamaps.com/styles/stamen_watercolor/", suffix='.jpg',
-  zoom=3, verbose=TRUE)
 
-}
-
-
-getTilesFromPoints = function(
+getTiles = function(
   outraster, 
   zoom=1, 
   path="http://tile.openstreetmap.org/",
@@ -136,7 +123,8 @@ getTilesFromPoints = function(
   verbose=FALSE, suffix = '.png',
   tileNames = 'zxy'){
   
-  NrowsPerCycle = 20 # number of rows of out raster to process simultaneously
+  maxPixelsPerCycle = 4e5
+  NrowsPerCycle = floor(maxPixelsPerCycle/terra::ncol(outraster)) # number of rows of out raster to process simultaneously
 
   cacheDir2 = file.path(cachePath, cacheDir)
   
@@ -150,9 +138,9 @@ getTilesFromPoints = function(
   SrowColFull = terra::extract(rasterSphere, xMerc, cells=TRUE)[,'cell']
   SrowColFull = cbind(cell = SrowColFull, row = rowFromCell(rasterSphere, SrowColFull), col = colFromCell(rasterSphere, SrowColFull))
 
-  SrowColFull = SrowColFull[!is.na(SrowColFull[,1]), ]
-  SrowCol = SrowColFull[!duplicated(SrowColFull[,c('row','col')]), ]#c('row','col')]
-  SrowCol = SrowCol[order(SrowCol[,'col'], SrowCol[,'row']),]
+  SrowColFull = SrowColFull[!is.na(SrowColFull[,1]), ,drop=FALSE]
+  SrowCol = SrowColFull[!duplicated(SrowColFull[,c('row','col')]), ,drop=FALSE]#c('row','col')]
+  SrowCol = SrowCol[order(SrowCol[,'col'], SrowCol[,'row']),,drop=FALSE]
   SrowCol = as.data.frame(SrowCol)
 #  SrowCol$newBlock = !c(FALSE, diff(SrowCol[,'col'])==0 & diff(SrowCol[,'row'])==1)
 #  SrowCol$block = cumsum(SrowCol$newBlock)
@@ -258,9 +246,9 @@ getTilesFromPoints = function(
       colourtable = cbind(colourtable, value = NA)
       colourtable[!theDup, 'value'] = seq(0, len=sum(!theDup), by=1)
 
-      colourtableUnique = colourtable[!theDup, ]
-      colourtableDup = colourtable[theDup, setdiff(names(colourtable), c('value'))]
-      colourtableMerge = merge(colourtableDup, colourtableUnique[, setdiff(names(colourtableUnique), c('tile','value.old','row'))], 
+      colourtableUnique = colourtable[!theDup, ,drop=FALSE]
+      colourtableDup = colourtable[theDup, setdiff(names(colourtable), c('value')),drop=FALSE]
+      colourtableMerge = merge(colourtableDup, colourtableUnique[, setdiff(names(colourtableUnique), c('tile','value.old','row')),drop=FALSE], 
         by = c('red','green','blue','alpha'), suffixes = c('.old','.new'))
 
       colourtableAll = rbind(colourtableUnique[names(colourtable)], colourtableMerge[,names(colourtable)])
@@ -270,13 +258,14 @@ getTilesFromPoints = function(
 
 #      xx = rasters
       for(Dtile in Stiles) {
-        toSub = colourtableAll[colourtableAll$tile == Dtile, ]
+        toSub = colourtableAll[colourtableAll$tile == Dtile, ,drop=FALSE]
         rasters[[Dtile]] = terra::subst(rasters[[Dtile]], from=toSub[,'value.old'], to=toSub[,'value'])
         terra::coltab(rasters[[Dtile]]) = colourtableFinal
       }
-    } # if have colourtable
+    }  else {# if have colourtable
 
-
+      colourtableFinal = NULL
+    }
     # merge into blocks
 
     SrowCol$newBlock = c(TRUE, !(diff(SrowCol$col)==0 & diff(SrowCol$row)==1))
@@ -284,7 +273,7 @@ getTilesFromPoints = function(
 
     rastersMerged = list()
     for(Dblock in unique(SrowCol$block)) {
-      blockHere = SrowCol[SrowCol$block == Dblock, ]
+      blockHere = SrowCol[SrowCol$block == Dblock, ,drop=FALSE]
       toMerge = rasters[blockHere$index]
       if(length(toMerge) > 1) {
         names(toMerge)[1:2] = c('x', 'y')
@@ -301,7 +290,7 @@ getTilesFromPoints = function(
     terra::nlyr(outraster) = terra::nlyr(rastersMerged[[1]])
     values(outraster) = NA
     xSeq = xFromCol(outraster)
-    SrowColSub = SrowCol[,c('row','col','cell','index','block')]
+    SrowColSub = SrowCol[,c('row','col','cell','index','block'),drop=FALSE]
 
     SoutRows = unique(c(seq(1, nrow(outraster), by=NrowsPerCycle), nrow(outraster)+1))
     SoutCells = cellFromRowCol(outraster, SoutRows, 1)
