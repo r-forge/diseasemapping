@@ -124,19 +124,22 @@ getTiles = function(
   tileNames = 'zxy'){
   
   maxPixelsPerCycle = 4e5
+  NtestCols = 100
   NrowsPerCycle = floor(maxPixelsPerCycle/terra::ncol(outraster)) # number of rows of out raster to process simultaneously
 
   cacheDir2 = file.path(cachePath, cacheDir)
   
   rasterSphere = .getRasterMerc(zoom)  
   
-  samplePoints = rast(ext(outraster), res= (xmax(x)-xmin(x))/100, crs=crs(outraster))
-  samplePoints = vect(xyFromCell(samplePoints, 1:terra::ncell(samplePoints)), crs=crs(outraster))
+  samplePoints = rast(terra::ext(outraster), res= (terra::xmax(outraster)-terra::xmin(outraster))/NtestCols, crs=terra::crs(outraster))
+  samplePoints = vect(terra::xyFromCell(samplePoints, 1:terra::ncell(samplePoints)), crs=terra::crs(outraster))
   xMerc = terra::project(samplePoints, crsMerc)
 
-  values(rasterSphere) = NA
-  SrowColFull = terra::extract(rasterSphere, xMerc, cells=TRUE)[,'cell']
-  SrowColFull = cbind(cell = SrowColFull, row = rowFromCell(rasterSphere, SrowColFull), col = colFromCell(rasterSphere, SrowColFull))
+
+  SrowColFull = cellFromXY(rasterSphere, terra::crds(xMerc))
+#  SrowColFull = terra::extract(rasterSphere, xMerc, cells=TRUE)[,'cell']
+  SrowColFull = cbind(cell = SrowColFull, row = terra::rowFromCell(rasterSphere, SrowColFull), 
+    col = terra::colFromCell(rasterSphere, SrowColFull))
 
   SrowColFull = SrowColFull[!is.na(SrowColFull[,1]), ,drop=FALSE]
   SrowCol = SrowColFull[!duplicated(SrowColFull[,c('row','col')]), ,drop=FALSE]#c('row','col')]
@@ -282,19 +285,19 @@ getTiles = function(
         rastersMerged[[Dblock]] = rasters[[blockHere$index]]
       }
     }
-#    plot(worldMap);for(D in 1:length(rastersMerged)) {plotRGB(rastersMerged[[D]], add=TRUE)}      
+#    map.new(outraster, buffer=50*1000);plot(worldMap,add=TRUE);for(D in 1:length(rastersMerged)) {plot(rastersMerged[[D]], add=TRUE)}      
 
 
     # fill in values of the cells for output raster
     if(verbose) cat('reprojecting\n')
     terra::nlyr(outraster) = terra::nlyr(rastersMerged[[1]])
-    values(outraster) = NA
-    xSeq = xFromCol(outraster)
+    terra::values(outraster) = NA
+    xSeq = terra::xFromCol(outraster)
     SrowColSub = SrowCol[,c('row','col','cell','index','block'),drop=FALSE]
 
-    SoutRows = unique(c(seq(1, nrow(outraster), by=NrowsPerCycle), nrow(outraster)+1))
-    SoutCells = cellFromRowCol(outraster, SoutRows, 1)
-    SoutCells[length(SoutCells)] = ncell(outraster)+1
+    SoutRows = unique(c(seq(1, terra::nrow(outraster), by=NrowsPerCycle), terra::nrow(outraster)+1))
+    SoutCells = terra::cellFromRowCol(outraster, SoutRows, 1)
+    SoutCells[length(SoutCells)] = terra::ncell(outraster)+1
 
     if(verbose) cat('reprojecting:  ', length(SoutRows), ' cycles:')
     for(Dcycle in seq(1,length(SoutRows)-1) ) {
@@ -302,14 +305,14 @@ getTiles = function(
 
       ScellOut = seq(SoutCells[Dcycle], SoutCells[Dcycle+1]-1)
       thisRow = terra::project(
-        vect(xyFromCell(outraster, ScellOut), crs=crs(outraster)), 
+        vect(terra::xyFromCell(outraster, ScellOut), crs=crs(outraster)), 
         crsMerc)
 
 
       SrowColHere = cbind(
         indexOut = 1:length(ScellOut),
         ScellOut = ScellOut,
-        cell = terra::extract(rasterSphere, thisRow, cells=TRUE)[,'cell'])
+        cell = terra::cellFromXY(rasterSphere, terra::crds(thisRow)))
 
       SrowColHere = merge(SrowColHere, SrowColSub, all.x=TRUE, all.y=FALSE)
       SrowColHere = split(SrowColHere, SrowColHere$block)
@@ -321,10 +324,10 @@ getTiles = function(
       })
       outValuesHere = do.call(rbind, outValuesHere)
       outValuesHere = outValuesHere[order(outValuesHere[,1]), ]
-      if(inMemory(outraster)) {
-        values(outraster)[outValuesHere[,1],] = outValuesHere[,-1]
+      if(terra::inMemory(outraster)) {
+        terra::values(outraster)[outValuesHere[,1],] = outValuesHere[,-1]
       } else {
-        writeValues(outraster, outValuesHere[,2], outValuesHere[1,1], 1)
+        terra::writeValues(outraster, outValuesHere[,2], outValuesHere[1,1], 1)
       } 
 
     }
@@ -338,11 +341,11 @@ getTiles = function(
 
   if(terra::nlyr(outraster)== 3) {
     names(outraster) = c('red','green','blue')
-    RGB(outraster) = 1:3
+    terra::RGB(outraster) = 1:3
   }
   if(terra::nlyr(outraster)== 4) {
     names(outraster) = c('red','green','blue', 'alpha')
-    RGB(outraster) = 1:4
+    terra::RGB(outraster) = 1:4
   }
 
   attributes(outraster)$tiles = 

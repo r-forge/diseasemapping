@@ -37,7 +37,6 @@ See examples.
 data("netherlands")
 meuse = terra::unwrap(meuse)
 nldTiles = terra::unwrap(nldTiles)
-coltab(nldTiles) = nldCmap     
 nldCities = terra::unwrap(nldCities)
 
 map.new(meuse, buffer=1*1000)

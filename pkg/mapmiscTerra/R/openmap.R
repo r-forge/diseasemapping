@@ -31,11 +31,11 @@ osmTiles = function(name, xyz, suffix) {
     'cartodb-dark'='http://c.basemaps.cartocdn.com/dark_all/',
 #  historical='http://www.openhistoricalmap.org/ohm_tiles/',
     nrcan = 
-      'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_CBCT_GEOM_3857/MapServer/tile/',
+    'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_CBCT_GEOM_3857/MapServer/tile/',
     'nrcan-text' = 
-      'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_TXT_3857/MapServer/tile/',
+    'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_TXT_3857/MapServer/tile/',
     'nrcan-text-fr' = 
-      'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBCT_TXT_3857/MapServer/tile/',
+    'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBCT_TXT_3857/MapServer/tile/',
     spinal = 'http://c.tile.thunderforest.com/spinal-map/',
     neighbourhood = 'https://a.tile.thunderforest.com/neighbourhood/',
     pioneer = 'https://b.tile.thunderforest.com/pioneer/',
@@ -94,16 +94,16 @@ osmTiles = function(name, xyz, suffix) {
 
 
 
-if(F){
+if(FALSE){
  x = vect(as.matrix(expand.grid(seq(-5e6,-1e6,len=100), seq(-3e6,3e6,len=100))), crs='EPSG:3573')
  xLL = project(x, crsLL)
  zoom=4
  theExt = ext(-6e6,6e6,-6e6,6e6)
- xx = getTilesFromPoints(
-  outraster=rast(theExt, res = (xmax(theExt)-xmin(theExt))/1200, crs=crs('EPSG:3031')),
+ xx = openmap(
+  x=rast(theExt, res = (xmax(theExt)-xmin(theExt))/1200, crs=crs('EPSG:3031')),
   path="https://stamen-tiles-d.a.ssl.fastly.net/toner/",  
 #  path="https://tiles.stadiamaps.com/styles/stamen_watercolor/", suffix='.jpg',
-  zoom=3, verbose=TRUE)
+  zoom=2, verbose=TRUE, fact=2)
 
 }
 
@@ -118,35 +118,14 @@ openmap = function(
   verbose=getOption('mapmiscVerbose'),
   cachePath=getOption('mapmiscCachePath')
 ) {
-  
+
 
 
   verbose = max(c(0, verbose))
   
-  if(is.null(cachePath)) {
-    cachePath = tempdir()
-  }
-  if(!nchar(cachePath)) {
-    cachePath = '.'
-  }
-  
-  alltiles = osmTiles()
-  pathOrig = path
-  pathisname = gsub("-", ".", pathOrig) %in% 
-    gsub("-", ".", names(alltiles))
-  path[pathisname] = alltiles[path[pathisname]]
-  
-  if(length(grep("[[:punct:]]$", path, invert=TRUE)))
-    path[ grep("[[:punct:]]$", path, invert=TRUE)] =
-      paste(path[ grep("[[:punct:]]$", path, invert=TRUE)], 
-        "/", sep="")
-  
-  if(length(grep("^http[s]*://", path, invert=TRUE)))
-    path[ grep("^http[s]*://", path, invert=TRUE)] = 
-      paste("http://", 
-        path[ grep("^http[s]*://", path, invert=TRUE)], sep="")
-  names(path) = pathOrig
-  
+
+  NtestCols = 100
+
   
   if(all(class(x) == 'CRS')) {
     # x is a crs object
@@ -168,39 +147,111 @@ openmap = function(
     if(is.vector(x)){
       crsIn=crsLL
     } else{
-      crsIn = crs	
+      crsIn = crs 
     }
   }
   
 
-  extMerc = .getExtent(x,crsIn, buffer, crsMerc)
-  extMerc = .cropExtent(extMerc, extentMerc)
+# get extent of output
+
+# get output raster
+  testRast = rast(terra::ext(x), res = (terra::xmax(x) - terra::xmin(x))/NtestCols, crs = crs(x))
+  testPoints = vect(terra::xyFromCell(testRast, 1:terra::ncell(testRast)), crs=terra::crs(testRast))
+
+  testPointsMerc = project(testPoints, crsMerc)
+  testPointsOut = terra::project(testPoints, crsOut)
+  outExtent= terra::ext(testPointsOut)
+
+# buffer
+  if(terra::is.lonlat(crsOut) & any(buffer > 90)) {
+          # assume buffer is in km
+          # transform to merc , buffer, transform back
+          outExtentMerc = terra::extend(terra::ext(testPointsMerc), buffer)
+          outPointsMerc = vect(matrix(as.vector(outExtentMerc), ncol=2), crsMerc)
+          outPointsLL = project(outPointsMerc, crsOut)
+          outExtent = terra::ext(outPointsLL)
+
+    } else {
+          outExtent = terra::extend(outExtent, buffer)
+    }
+
+  testRast = rast(outExtent, res = (terra::xmax(outExtent) - terra::xmin(outExtent))/NtestCols, crs = crsOut)
+  testPoints = vect(terra::xyFromCell(testRast, 1:terra::ncell(testRast)), crs=terra::crs(testRast))
+  testPointsMerc = project(testPoints, crsMerc)
 
   if(missing(zoom)) {
-    zoom = 1
-    while(nTilesMerc(extMerc, zoom) <= maxTiles & zoom <= 18) {
+
+
+    # get zoom
+
+    zoom = 0
+    Ntiles = 0
+    while(Ntiles < maxTiles & zoom <= 18) {
       zoom = zoom + 1
+      Ntiles = length(unique(cellFromXY(.getRasterMerc(zoom), terra::crds(testPointsMerc))))
     }
-    zoom = min(c(18,max(c(1, zoom-1))))
+    if(verbose) cat("zoom is ", zoom, ", ", Ntiles, "tiles\n")
   }
-  if(verbose) cat("zoom is ", zoom, ", ", nTilesMerc(extMerc, zoom), "tiles\n")
-  
+
+
 
   # create out raster
   # find average area of pixels in downloaded tiles
-  rasterSphere = terra::crop(.getRasterMerc(zoom), extMerc)
-  cellSizeMerc = mean(terra::values(terra::cellSize(rasterSphere)))/(256^2)
-    # each tile is 256 by 256
-  
-  # get cell size if testX cells in x direction of output raster
-      testX = 100
-      testRast = rast(terra::ext(x), res = (terra::xmax(x) - terra::xmin(x))/testX, crs = crsOut)
-      testArea = quantile(unlist(terra::spatSample(terra::cellSize(testRast), size=200)), prob=0.5)
-      # find number of cells so pixel area matches dowloaded tiles pixel area
-      areaRatio = testArea/cellSizeMerc
-      newX = fact*round(testX*sqrt(areaRatio))
 
-      outraster = rast(terra::ext(x), res = (terra::xmax(x) - terra::xmin(x))/newX, crs = crsOut)
+    mercHere = .getRasterMerc(zoom)
+    theTable = as.data.frame(table(cellFromXY(mercHere, terra::crds(testPointsMerc))))
+    theTable$cell = as.numeric(as.character(theTable[,1]))
+
+    mercHere = terra::crop(mercHere, 
+      terra::ext(rep(terra::xyFromCell(mercHere, theTable[which.max(theTable$Freq), 'cell']), each=2) + 
+        0.6*rep(terra::res(mercHere), each=2)*c(-1,1,-1,1)))
+    # each tile is 256 x 256
+    mercHere = disagg(mercHere, 256)
+
+    # width of the cell with the most test points in it
+    cellWidthMerc = quantile(values(cellSize(mercHere, unit='m')), 0.5)
+
+
+    areaRast = terra::cellSize(testRast, unit='m')
+    cellWidthRast = quantile(unlist(terra::spatSample(areaRast,  size=200)), prob=0.5)
+
+
+    areaRatio = cellWidthRast/cellWidthMerc
+
+    newNumberOfCells = fact*NtestCols*sqrt(areaRatio)
+
+
+    outraster = rast(outExtent, res = (terra::xmax(outExtent) - terra::xmin(outExtent))/newNumberOfCells, crs = crsOut)
+
+
+# cache
+
+
+  if(is.null(cachePath)) {
+    cachePath = tempdir()
+  }
+  if(!nchar(cachePath)) {
+    cachePath = '.'
+  }
+  
+  alltiles = osmTiles()
+  pathOrig = path
+  pathisname = gsub("-", ".", pathOrig) %in% 
+  gsub("-", ".", names(alltiles))
+  path[pathisname] = alltiles[path[pathisname]]
+  
+  if(length(grep("[[:punct:]]$", path, invert=TRUE)))
+    path[ grep("[[:punct:]]$", path, invert=TRUE)] =
+  paste(path[ grep("[[:punct:]]$", path, invert=TRUE)], 
+    "/", sep="")
+  
+  if(length(grep("^http[s]*://", path, invert=TRUE)))
+    path[ grep("^http[s]*://", path, invert=TRUE)] = 
+  paste("http://", 
+    path[ grep("^http[s]*://", path, invert=TRUE)], sep="")
+  names(path) = pathOrig
+  
+
 
 
 
@@ -208,62 +259,62 @@ openmap = function(
   Dpath = names(path)[1]
   Durl = path[1]
 
-    if(verbose){
-      cat(Dpath, '\n')
-      cat(Durl, '\n')
-    }
-    
-    if(length(grep(
-        'nrcan\\.gc\\.ca|gov\\.bc\\.ca', Durl))
-      ){
-      suffix = ''
-      tileNames = 'zyx'
-    } else if(
-      length(grep(
-          '[.]arcgisonline[.]com', Durl
-        ))) {
-      suffix='.jpg'
-      tileNames = 'zyx'
-    } else if(
-      length(grep(
-          'stamen.watercolor', Durl
-        ))) {
-      suffix='.jpg'
-      tileNames = 'zyx'
-    } else if(
-      length(grep(
-          'heidelberg.de/tiles/(hybrid|adminb|roadsg|roads)/?$', 
-          Durl)) |
-      length(grep(
-          '&$',Durl))
-      ){
-      tileNames = 'xyz='
-      suffix = ''
-    } else {
-      suffix = '.png'
-      tileNames = 'zxy'
-    }
-    
-    if(length(attributes(pathOrig)$tileNames))
-      tileNames = attributes(pathOrig)$tileNames
-    if(length(attributes(pathOrig)$suffix))
-      suffix = attributes(pathOrig)$suffix
-    
+  if(verbose){
+    cat(Dpath, '\n')
+    cat(Durl, '\n')
+  }
+
+  if(length(grep(
+    'nrcan\\.gc\\.ca|gov\\.bc\\.ca', Durl))
+){
+    suffix = ''
+    tileNames = 'zyx'
+  } else if(
+    length(grep(
+      '[.]arcgisonline[.]com', Durl
+    ))) {
+    suffix='.jpg'
+    tileNames = 'zyx'
+  } else if(
+    length(grep(
+      'stamen.watercolor', Durl
+    ))) {
+    suffix='.jpg'
+    tileNames = 'zyx'
+  } else if(
+    length(grep(
+      'heidelberg.de/tiles/(hybrid|adminb|roadsg|roads)/?$', 
+      Durl)) |
+    length(grep(
+      '&$',Durl))
+  ){
+    tileNames = 'xyz='
+    suffix = ''
+  } else {
+    suffix = '.png'
+    tileNames = 'zxy'
+  }
+
+  if(length(attributes(pathOrig)$tileNames))
+    tileNames = attributes(pathOrig)$tileNames
+  if(length(attributes(pathOrig)$suffix))
+    suffix = attributes(pathOrig)$suffix
 
 
 
-    result = try(
-      getTiles(outraster, 
-        zoom=zoom,
-        path=Durl,
-        verbose=verbose,
-        suffix=suffix,
-        tileNames = tileNames,
-        cachePath = cachePath),
-      silent=!verbose)
-    
-    if(any(class(result)=="try-error")){
-      message(paste(Durl, "not accessible"))
+
+  result = try(
+    getTiles(outraster, 
+      zoom=zoom,
+      path=Durl,
+      verbose=verbose,
+      suffix=suffix,
+      tileNames = tileNames,
+      cachePath = cachePath),
+    silent=!verbose)
+
+  if(any(class(result)=="try-error")){
+    message(paste(Durl, "not accessible"))
     # create an empty raster
     result = outraster
     attributes(result)$openmap = list(
@@ -280,7 +331,7 @@ openmap = function(
       zoom=zoom
     )
   }
-   
+
 
 
   result

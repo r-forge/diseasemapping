@@ -89,8 +89,6 @@ Be sure to attribute any maps you publish, the \code{osmAttribution} function wi
 
 data("netherlands")
 nldTiles = terra::unwrap(nldTiles)
-coltab(nldTiles) = nldCmap   
-
 plot(nldTiles)
 
 openmapAttribution(nldTiles, short=TRUE, type='markdown')
@@ -105,21 +103,20 @@ myPoints = as.points(myraster)[seq(1, ncell(myraster), len=12)]
 names(osmTiles())
 
 
-	mytiles = openmap(myraster, zoom=5, verbose=TRUE)
+	mytiles = try(openmap(myraster, zoom=5, verbose=TRUE))
 
 	map.new(myraster)
 	plot(mytiles, add=TRUE)
 	points(myPoints,col='red')
 
-	mytiles = openmap(myPoints,
-		path='waze', verbose=TRUE, buffer=5)
+	myPoints = project(myPoints, crsMerc)
+	x = myPoints;path='waze'
+	mytiles = try(openmap(myPoints,
+		path='waze', verbose=TRUE, buffer=5))
 	map.new(myPoints)
 	plot(mytiles, add=TRUE)
 	points(myPoints, col='red')
 	openmapAttribution(mytiles)
-}
-
-
 
 
 

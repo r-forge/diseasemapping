@@ -1,22 +1,4 @@
 
-# extent of the Earth in the spherical mercator projection
-if(FALSE) {
-# need rgdal for this	
-createExtentMerc  = function(){
-
-	latlim = atan(sinh(pi))*360/(2*pi)
-	lonlim = 180
-
-	openmapExtentLL = extent(-lonlim, lonlim,-latlim,latlim)
-
-	extentMerc = extent(projectExtent(raster(openmapExtentLL, crs=crsLL), crs=crsMerc))
-
-	extentMerc
-}
-
-extentMerc = createExtentMerc()
-dput(extentMerc, file='')
-}
 
 extentMerc = terra::ext(-20037508.3427892, 20037508.3427892, -20037508.3427893, 20037508.3427892)
 
@@ -32,7 +14,7 @@ extentMerc = terra::ext(-20037508.3427892, 20037508.3427892, -20037508.3427893, 
 		return(NULL)
 	
   # find the CRS's
-  crsUse = crs(x)
+  crsUse = terra::crs(x)
   
 #	if(is.logical(crs)) { # it's probably NA,
   if(all(is.na(crs))) {
@@ -49,21 +31,17 @@ extentMerc = terra::ext(-20037508.3427892, 20037508.3427892, -20037508.3427893, 
 		}
 	}
 
-		# if long-lat coordinates and buffer is large, assume buffer is metres 
-		if(terra::is.lonlat(crs) & any(extend > 80)) {
-    	x = terra::vect(
+		# if long-lat coordinates and buffer is large, assume buffer is metres, do in mercator coords
+		if(terra::is.lonlat(crsUse) & any(extend > 80)) {
+
+    	testPointsOut = terra::vect(
     		matrix(as.vector(terra::ext(x)), ncol=2),
     		crs = crsUse
     	)
-
-
-    	x = terra::vect(
-	  		geosphere::destPoint(
-    			    		matrix(as.vector(terra::ext(x)), ncol=2),
-									c(-45,45, 135,-135),
-									extend * sqrt(2)
-    			),
-    		crs = crsLL)
+          testPointsOutMerc = project(testPointsOut, crsMerc)
+          outExtentMerc = terra::extend(terra::ext(testPointsOutMerc), extend)
+          outPointsMerc = vect(matrix(as.vector(outExtentMerc), ncol=2), crsMerc)
+          x = project(outPointsMerc, crsUse)
 
 
 		} else {

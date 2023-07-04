@@ -343,55 +343,57 @@ openmapAttribution = function(name, type=c('text','latex','markdown','html','aut
       type ='markdown'
     }
   }
-  
+
+  name = name[1]
+
   if(!is.null(attributes(name)$openmap) ){
-    name = attributes(name)$openmap$pathOrig
+        name = attributes(name)$openmap$openmap$path
+  } else if(!is.character(name)) {
+        name = names(name)[1]
   }
-  
+
   shortlong = c('long','short')[short+1]
   
-  result = c()
-  for(D in name){
+  D = name
     
     if(length(grep('^nrcan', D))) {
-      result[D] = nrcan[[shortlong]][[type]]
+      result = nrcan[[shortlong]][[type]]
       
     } else if(length(grep(
-            "^osm|wikimedia|hyda|opentopomap|openstreetmap|historical|bw.mapnik", 
+            "^osm|wikimedia|hyda|opentopomap|openstreetmap|historical|bw.mapnik|tile.openstreetmap.org", 
             D))){        # openstreetmap
-      result[D] = osm[[shortlong]][[type]]
+      result = osm[[shortlong]][[type]]
     } else if(length(grep("humanitarian",D))){
-      result[D] = osmHumanitarian[[shortlong]][[type]]          
+      result = osmHumanitarian[[shortlong]][[type]]          
     } else if(length(grep("sputnik",D))){
-      result[D] = sputnik[[shortlong]][[type]]          
+      result = sputnik[[shortlong]][[type]]          
     } else if(length(grep("landscape",D))){
-      result[D] = osmLandscape[[shortlong]][[type]]
+      result = osmLandscape[[shortlong]][[type]]
       
     } else if(length(grep("mapquest|mqcdn",D))){ # mapquest
       if(length(grep("sat/?$",D))){
-        result[D] = mapquestSat[[shortlong]][[type]]
+        result = mapquestSat[[shortlong]][[type]]
       } else {
-        result[D] = mapquest[[shortlong]][[type]]
+        result = mapquest[[shortlong]][[type]]
       }
     } else if(length(grep("^waze",D))){ # waze
-      result[D] = waze[[shortlong]][[type]]
+      result = waze[[shortlong]][[type]]
     } else if(length(grep("maptoolkit",D))){ 
-      result[D] = maptoolkit[[shortlong]][[type]]
+      result = maptoolkit[[shortlong]][[type]]
     } else if(length(grep("thunderforest|^(spinal|neighbourhood|mobile.atlas|pioneer)$",D))){ 
-      result[D] = thunderforest[[shortlong]][[type]]
+      result = thunderforest[[shortlong]][[type]]
     } else if(length(grep("stamen",D))){ # stamen
       if(length(grep("stamen-toner",D))){
-        result[D] = stamenToner[[shortlong]][[type]]
+        result = stamenToner[[shortlong]][[type]]
       } else {
-        result[D] = stamen[[shortlong]][[type]]
+        result = stamen[[shortlong]][[type]]
       }
     } else if(length(grep("cartodb",D))){ 
-      result[D] = cartodb[[shortlong]][[type]]
+      result = cartodb[[shortlong]][[type]]
     } else if(length(grep("^esri",D))){
-      result[[D]] =  esriAttribution(D)[[shortlong]][[type]]    
+      result =  esriAttribution(D)[[shortlong]][[type]]    
     } else {
-      result[D] = NA
+      result = NA
     }
-  } # loop through name
   result
 }
