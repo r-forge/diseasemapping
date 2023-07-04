@@ -344,10 +344,9 @@ openmapAttribution = function(name, type=c('text','latex','markdown','html','aut
     }
   }
 
-  name = name[1]
 
   if(!is.null(attributes(name)$openmap) ){
-        name = attributes(name)$openmap$openmap$path
+        name = attributes(name)$openmap$path
   } else if(!is.character(name)) {
         name = names(name)[1]
   }
@@ -376,7 +375,7 @@ openmapAttribution = function(name, type=c('text','latex','markdown','html','aut
       } else {
         result = mapquest[[shortlong]][[type]]
       }
-    } else if(length(grep("^waze",D))){ # waze
+    } else if(length(grep("waze",D))){ # waze
       result = waze[[shortlong]][[type]]
     } else if(length(grep("maptoolkit",D))){ 
       result = maptoolkit[[shortlong]][[type]]
