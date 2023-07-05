@@ -19,7 +19,7 @@ scaleBar(crs, pos = "bottomright",
 insetMap(crs, pos="bottomright",map="osm",zoom=0, 
 		width=max(c(0.2, 1-par('plt')[2])), 
 		col="#FF000090", borderMap=NULL,
-			cropInset = extent(-180,xmax=180, ymin=-47, ymax=71),
+			cropInset = terra::ext(-180,xmax=180, ymin=-47, ymax=71),
 			outer=TRUE, ...) 
 }
 
@@ -66,7 +66,7 @@ Patrick Brown
 
 Npoints = 20
 myPoints = vect(
-	cbind(runif(Npoints), 51+runif(Npoints)), 
+	cbind(runif(Npoints)-0.1, 51+runif(Npoints)), 
 	atts=data.frame(
 		y1=c(NA, rnorm(Npoints-1)), 
 	    y2=c(sample(0:5, Npoints-1,replace=TRUE), NA)
@@ -86,6 +86,9 @@ plot(myPoints,col = as.character(cut(
 scaleBar(myPoints, "bottomright",cex=1.25, seg.len=2)
 legendBreaks("topleft", legend=breaks, col=thecol)
 
+#crs=myPoints;map='osm';zoom=1 ; outer=TRUE; width=0.5;cropInset = terra::ext(-180,180, -47, 71);pos='bottomleft';borderMap=NULL
+thedot = insetMap(crs=myPoints, pos="bottomleft",col='#00000000', lty=0, outer=FALSE, width=0.5)
+points(thedot)
 
 }
 

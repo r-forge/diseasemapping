@@ -127,7 +127,8 @@ openmap = function(
   NtestCols = 100
 
   
-  if(all(class(x) == 'CRS')) {
+  if(!is.null(attributes(x)$ellipse) ) {
+    # to do: check for ellipses
     # x is a crs object
     # get the ellipse
     crs = x
@@ -186,11 +187,13 @@ openmap = function(
 
     zoom = 0
     Ntiles = 0
-    while(Ntiles < maxTiles & zoom <= 18) {
+    while(Ntiles <= maxTiles & zoom <= 18) {
       zoom = zoom + 1
+      Ntilesm1 = Ntiles
       Ntiles = length(unique(cellFromXY(.getRasterMerc(zoom), terra::crds(testPointsMerc))))
     }
-    if(verbose) cat("zoom is ", zoom, ", ", Ntiles, "tiles\n")
+    zoom = zoom - 1
+    if(verbose) cat("zoom is ", zoom, ", ", Ntilesm1, "tiles\n")
   }
 
 
@@ -199,9 +202,15 @@ openmap = function(
   # find average area of pixels in downloaded tiles
 
     mercHere = .getRasterMerc(zoom)
+   if(identical(crsOut, crsMerc)) {
+        # output crs is mercator, return tiles as-is
+        outraster = terra::crop(mercHere, testRast, snap='out')
+        outraster = terra::disagg(outraster, 256)
+
+    } else {
     theTable = as.data.frame(table(cellFromXY(mercHere, terra::crds(testPointsMerc))))
     theTable$cell = as.numeric(as.character(theTable[,1]))
-
+ 
     mercHere = terra::crop(mercHere, 
       terra::ext(rep(terra::xyFromCell(mercHere, theTable[which.max(theTable$Freq), 'cell']), each=2) + 
         0.6*rep(terra::res(mercHere), each=2)*c(-1,1,-1,1)))
@@ -222,7 +231,7 @@ openmap = function(
 
 
     outraster = rast(outExtent, res = (terra::xmax(outExtent) - terra::xmin(outExtent))/newNumberOfCells, crs = crsOut)
-
+  } # end not merc
 
 # cache
 

@@ -187,6 +187,10 @@ getTiles = function(
 #    colourtableList[[Dblock]] = list()
 #    rasters[[Dblock]] = list()
 
+  if(nrow(SrowCol) > 50) {
+    warning("number of map tiles is large, zoom ", zoom, " and ", nrow(SrowCol), " tiles")
+  }
+
     for(Drow in SrowCol$index) {
       Dx = SrowCol[Drow, 'col']
       Dy = SrowCol[Drow, 'row']
@@ -232,7 +236,7 @@ getTiles = function(
       rasters[[Drow]] = thisimage
     } # end Drow
 
-#    plot(worldMap);for(D in 1:length(rasters)) {plotRGB(rasters[[D]], add=TRUE, legend=FALSE)}      
+#    map.new(rasters[[1]], buffer=20*(xmax(rasters[[1]])-xmin(rasters[[1]])));plot(worldMap, add=TRUE);for(D in 1:length(rasters)) {plot(rasters[[D]], add=TRUE, legend=FALSE)}      
 
     colourTableList = lapply(rasters, terra::coltab)
     for(D in 1:length(colourTableList)) {
@@ -269,7 +273,7 @@ getTiles = function(
 
       colourtableFinal = NULL
     }
-    # merge into blocks
+    # merge rows into blocks
 
     SrowCol$newBlock = c(TRUE, !(diff(SrowCol$col)==0 & diff(SrowCol$row)==1))
     SrowCol$block = cumsum(SrowCol$newBlock)
@@ -285,7 +289,36 @@ getTiles = function(
         rastersMerged[[Dblock]] = rasters[[blockHere$index]]
       }
     }
-#    map.new(outraster, buffer=50*1000);plot(worldMap,add=TRUE);for(D in 1:length(rastersMerged)) {plot(rastersMerged[[D]], add=TRUE)}      
+#   map.new(rasters[[1]], buffer=20*(xmax(rasters[[1]])-xmin(rasters[[1]])));plot(worldMap, add=TRUE);plot(worldMap,add=TRUE);for(D in 1:length(rastersMerged)) {plot(rastersMerged[[D]], add=TRUE)}      
+    # merge columns if possible
+    Nblocks = length(rastersMerged)
+    if(Nblocks > 1) {
+    toMerge = matrix(FALSE, Nblocks, Nblocks)
+    for(DblockCol in seq(from=1,by=1, length=Nblocks-1)) { # won't do if Nblocks=1
+      for(DblockRow in seq(DblockCol+1, Nblocks)) {
+        bmat1 = SrowCol[SrowCol$block == DblockCol, ]
+        bmat2 = SrowCol[SrowCol$block == DblockRow, ]
+        toMerge[DblockRow, DblockCol] = all(bmat1$row == bmat2$row) & all(abs(bmat1$col - bmat2$col) ==1)
+      }
+    }
+
+   
+    toMerge = toMerge + t(toMerge)
+    toMerge = toMerge >= 1
+    blockToMerge = blockToMergeOrig = which.max(apply(toMerge, 2, sum))
+    for(D in seq(1, nrow(toMerge)^2)) {
+      blockToMerge = unique(c(blockToMerge, unlist(apply(toMerge[, blockToMerge,drop=FALSE], 2, which))))
+    }
+    blockToMerge = sort(blockToMerge)
+
+    rastersMerged[[blockToMergeOrig]] = do.call(terra::merge, rastersMerged[blockToMerge])
+    rastersMerged = rastersMerged[sort(unique(c(blockToMergeOrig, setdiff(1:length(rastersMerged), blockToMerge))))]
+    } # more than one block
+
+
+    if(identical(crs(rastersMerged[[1]]), crs(outraster)) & (length(rastersMerged)==1) ) {
+        outraster = rastersMerged[[1]]
+    } else { # need to reproject
 
 
     # fill in values of the cells for output raster
@@ -333,7 +366,7 @@ getTiles = function(
     }
     if(verbose) cat(Dcycle, '\n')
 
-
+  } # end reproject
 
 
   terra::coltab(outraster) = colourtableFinal
