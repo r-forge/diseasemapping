@@ -16,11 +16,11 @@ scaleBar(crs, pos = "bottomright",
     seg.len=5*cex,
     title.cex=cex,
     outer=TRUE,...)
-insetMap(crs, pos="bottomright",map="osm",zoom=1, 
+insetMap(crs, pos="bottomright",map="osm",zoom=0, 
 		width=max(c(0.2, 1-par('plt')[2])), 
 		col="#FF000090", borderMap=NULL,
 			cropInset = terra::ext(-180, 180,  -47, 71),
-			outer=TRUE, ...) 
+			outer=TRUE, inset = c(0.1, 0.1), ...) 
 }
 
 \arguments{
@@ -45,6 +45,7 @@ passed to \code{\link{openmap}}'s path argument}
 \item{col}{Colour for shaded region of inset map}
 \item{borderMap}{border style for the inset map (passed to \code{\link[graphics]{polygon}})}
 \item{cropInset}{Crop the insert map to this extent}
+\item{inset}{how far from the border to put the inset map}
 \item{\dots}{
 Additional arguments passed to \code{\link[graphics]{legend}} for \code{scaleBar} 
 or \code{\link[graphics]{polygon}} (for \code{insetMap}).

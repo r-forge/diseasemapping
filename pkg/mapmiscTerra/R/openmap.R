@@ -208,7 +208,7 @@ openmap = function(
         outraster = terra::disagg(outraster, 256)
 
     } else {
-    theTable = as.data.frame(table(cellFromXY(mercHere, terra::crds(testPointsMerc))))
+    theTable = as.data.frame(table(terra::cellFromXY(mercHere, terra::crds(testPointsMerc))))
     theTable$cell = as.numeric(as.character(theTable[,1]))
  
     mercHere = terra::crop(mercHere, 

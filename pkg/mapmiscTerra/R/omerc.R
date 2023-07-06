@@ -95,10 +95,11 @@ omerc = function(
   if(!is.numeric(x)){
     # centre of the bounding box
     theCentre = terra::ext(x)
-    theCentre = c(xmin(theCentre), ymin(theCentre)) +
+    theCentre = c(terra::xmin(theCentre), terra::ymin(theCentre)) +
         diff(as.vector(theCentre))[-2]/2
   } else {
     theCentre = x[1:2]
+    x = vect(matrix(x, ncol=2), crs=crsLL)
     # use preserve for finding best bounding box
     if(!is.null(preserve)){
       x = preserve
@@ -224,7 +225,7 @@ omerc = function(
       
       xTrans = mapply(
           function(CRSobj) {
-            prod(abs(diff(ext(
+            prod(abs(diff(terra::ext(
                             project(x, CRSobj)           
                         ))[-2]
                 ))
@@ -326,7 +327,7 @@ omerc = function(
     )
     bbarea = mapply(
         function(CRSobj) {
-          thebb = as.matrix(ext(
+          thebb = as.matrix(terra::ext(
               project(x, CRSobj)           
           ), ncol=2)
           thebb = apply(thebb, 1, diff)

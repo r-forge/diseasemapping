@@ -16,12 +16,12 @@ for a supplied Spatial object
 }
 
 \arguments{
-	\item{x}{A \code{\link[terra::SpatVector-class]{SpatVector}} object or a vector of length 2 giving the 
+	\item{x}{A \code{\link[terra]{SpatVector}} object or a vector of length 2 giving the 
 	centroid of the projection. }
 \item{angle}{angle of rotation or vector of angles}
 \item{post}{post-projection angle rotation}
 \item{flip}{post-projection flipping of coordinates}
-\item{preserve}{A \code{\link[terra::SpatVector-class]{SpatVector}}object, the resulting projection is scaled
+\item{preserve}{A \code{\link[terra]{SpatVector}} object, the resulting projection is scaled
 so as to preserve the distances between these points as best as possible. }
 }
 
@@ -45,13 +45,17 @@ If \code{post} is numeric, it specifies an angle for inverse rotation.
 
 
 \value{
-	An object of class \code{\link[terra::crs]{crs}}.
+	An object of class \code{\link[terra]{crs}}.
 }	
 
 \references{
 \url{https://en.wikipedia.org/wiki/Space-oblique_Mercator_projection/}
 }
-\seealso{\\code{\link[terra::crs]{crs},\code{\link[terra]{project}}}
+
+\seealso{
+  \code{\link[terra]{crs}},
+  \code{\link[terra]{project}}
+}
 
 \examples{
 
@@ -72,10 +76,9 @@ plot(nldTiles2, add=TRUE)
 points(nldUtm)
 text(nldUtm,labels=nldUtm$name, pos=4)
 scaleBar(nldUtm, 'topright')
-insetMap(nldUtm, 'bottomright', cropInset = 20*1000*c(2,2,2,1), zoom=7, 
-	inset=c(0.01, 0.1), width=0.3)
-insetMap(nldUtm, 'right', cropInset = 100*1000, zoom=3, 
-	inset=c(0.01, 0.1), width=0.3)
+insetMap(nldUtm, 'bottomright', cropInset = 20*1000*c(2,2,1,3), zoom=7, 
+	inset=c(0.01, 0.1), width=0.25)
+insetMap(nldUtm, 'right', cropInset = 500*1000, zoom=4, width=0.25, inset = 0)
 
 
 nldRot = project(nldCities, omerc(nldCities, angle=seq(25,45,by=5)))

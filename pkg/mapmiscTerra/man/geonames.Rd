@@ -41,17 +41,18 @@ options(geonamesUsername="myusernamehere")
 if(file.exists("~/geonamesUsername.R")) source("~/geonamesUsername.R")
 
 if(requireNamespace("geonames", quietly = TRUE)) { 
-cities=GNcities(myraster, max=5)
+cities=try(GNcities(myraster, max=5), silent=TRUE)
 mytiles = openmap(myraster, buffer= 2)
 
 map.new(mytiles)
 plot(mytiles, add=TRUE)
+if(!all(class(cities)=='try-error')) {
 points(cities, col='red')
 text(cities, labels=cities$name, col='red',pos=4)
+}
 
 
-
-GNsearch(q="Toronto Ontario", maxRows = 3)
+try(GNsearch(q="Toronto Ontario", maxRows = 3), silent=TRUE)
 }
 
 

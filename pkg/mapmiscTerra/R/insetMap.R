@@ -84,7 +84,7 @@ if(all(class(cropInset)=='SpatExtent')){
 } 
 # map = 'osm'
 if(is.character(map)) {
-	cropInsetVec = vect(xyFromCell(cropInset, 1:ncell(cropInset)), crs=crs(cropInset))
+	cropInsetVec = terra::vect(terra::xyFromCell(cropInset, 1:terra::ncell(cropInset)), crs=crs(cropInset))
 	forMap = terra::union(mapExtent, project(cropInsetVec, crs(mapExtent)))
   map = openmap(x=forMap, path=map, zoom=zoom,crs=crsMerc, verbose=TRUE)
   mapOrig = terra::deepcopy(map)
@@ -114,7 +114,7 @@ mapOrig = terra::deepcopy(map)
 usr = par('usr')
 
 plotCellRatio = diff(usr)[-2]/par('pin')
-mapSize = diff(as.vector(ext(map)))[-2]
+mapSize = diff(as.vector(terra::ext(map)))[-2]
 
 mapXwidth = diff(usr[1:2])*width
 mapYwidth = mapXwidth * (plotCellRatio[2]/plotCellRatio[1]) * (mapSize[2]/mapSize[1])
@@ -175,8 +175,8 @@ xsp = terra::crds(xsp)
 theCol = do.call(grDevices::rgb, 
 	c(as.list(terra::coltab(map)[[1]][,-1]), list(maxColorValue=255)))
 do.call(graphics::clip, as.list(par('usr')))
-graphics::image(xFromCol(map), yFromRow(map, nrow(map):1), 
-	matrix(values(map), ncol(map), nrow(map) )[, nrow(map):1],
+graphics::image(terra::xFromCol(map), terra::yFromRow(map, nrow(map):1), 
+	matrix(terra::values(map), ncol(map), nrow(map) )[, nrow(map):1],
 	useRaster=TRUE, add=TRUE, col=theCol)
 # for some reason, the code below crops the map
 #plot(map, add=TRUE)
