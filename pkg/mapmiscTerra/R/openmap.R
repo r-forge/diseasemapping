@@ -190,7 +190,7 @@ openmap = function(
     while(Ntiles <= maxTiles & zoom <= 18) {
       zoom = zoom + 1
       Ntilesm1 = Ntiles
-      Ntiles = length(unique(cellFromXY(.getRasterMerc(zoom), terra::crds(testPointsMerc))))
+      Ntiles = length(unique(terra::cellFromXY(.getRasterMerc(zoom), terra::crds(testPointsMerc))))
     }
     zoom = zoom - 1
     if(verbose) cat("zoom is ", zoom, ", ", Ntilesm1, "tiles\n")
@@ -215,10 +215,10 @@ openmap = function(
       terra::ext(rep(terra::xyFromCell(mercHere, theTable[which.max(theTable$Freq), 'cell']), each=2) + 
         0.6*rep(terra::res(mercHere), each=2)*c(-1,1,-1,1)))
     # each tile is 256 x 256
-    mercHere = disagg(mercHere, 256)
+    mercHere = terra::disagg(mercHere, 256)
 
     # width of the cell with the most test points in it
-    cellWidthMerc = quantile(values(cellSize(mercHere, unit='m')), 0.5)
+    cellWidthMerc = quantile(terra::values(terra::cellSize(mercHere, unit='m')), 0.5)
 
 
     areaRast = terra::cellSize(testRast, unit='m')

@@ -169,10 +169,7 @@ geocode = function(x,
       downloadFileMapmisc(url = xDf[D,'url'], destfile = xDf[D,'file'],
         quiet=!verbose)
     }
-    x3[[D]] = vect(
-        cacheFile,
-        verbose=verbose, 
-        stringsAsFactors=FALSE)
+    x3[[D]] = vect(cacheFile)
 
     # there might be more than one result
     # get rid of ways
@@ -219,9 +216,9 @@ x4$name[is.na(x4$name)] = gsub(", .*", "", x4$display_name[is.na(x4$name)])
 firstCols = c('name','orig','type','category','importance')
 omitCols = c('namedetails','icon')
 
-x4@data = cbind(
-  x4@data[,intersect(firstCols, names(x4))],
-  x4@data[,setdiff(names(x4), c(omitCols, firstCols))]
+terra::values(x4) = cbind(
+  terra::values(x4)[,intersect(firstCols, names(x4))],
+  terra::values(x4)[,setdiff(names(x4), c(omitCols, firstCols))]
   )
 
 x4

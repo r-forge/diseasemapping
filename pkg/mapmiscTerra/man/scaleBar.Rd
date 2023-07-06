@@ -16,10 +16,10 @@ scaleBar(crs, pos = "bottomright",
     seg.len=5*cex,
     title.cex=cex,
     outer=TRUE,...)
-insetMap(crs, pos="bottomright",map="osm",zoom=0, 
+insetMap(crs, pos="bottomright",map="osm",zoom=1, 
 		width=max(c(0.2, 1-par('plt')[2])), 
 		col="#FF000090", borderMap=NULL,
-			cropInset = terra::ext(-180,xmax=180, ymin=-47, ymax=71),
+			cropInset = terra::ext(-180, 180,  -47, 71),
 			outer=TRUE, ...) 
 }
 

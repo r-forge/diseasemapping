@@ -27,7 +27,7 @@ export(openmap, openmapAttribution, osmTiles, insetMap)#, omerc,, legendTable, t
 
 #export(ocea, moll, wrapPoly, gridlinesWrap)
 
-#export( GNcities, GNsearch, geocode)
+export( GNcities, GNsearch, geocode)
 
 
   

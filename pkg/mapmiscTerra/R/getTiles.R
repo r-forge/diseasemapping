@@ -136,7 +136,7 @@ getTiles = function(
   xMerc = terra::project(samplePoints, crsMerc)
 
 
-  SrowColFull = cellFromXY(rasterSphere, terra::crds(xMerc))
+  SrowColFull = terra::cellFromXY(rasterSphere, terra::crds(xMerc))
 #  SrowColFull = terra::extract(rasterSphere, xMerc, cells=TRUE)[,'cell']
   SrowColFull = cbind(cell = SrowColFull, row = terra::rowFromCell(rasterSphere, SrowColFull), 
     col = terra::colFromCell(rasterSphere, SrowColFull))

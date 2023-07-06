@@ -4,7 +4,7 @@ Title: Utilities for Producing Maps
 Version: 2.0.0
 Date: 2023-06-28
 Depends: terra, R (>= 3.5.0)
-Imports: methods, grDevices, stats, utils, graphics, geosphere
+Imports: methods, grDevices, stats, utils, graphics, geosphere, geonames
 Suggests: RColorBrewer, classInt, knitr
 Author: Patrick Brown <patrick.brown@utoronto.ca> 
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
