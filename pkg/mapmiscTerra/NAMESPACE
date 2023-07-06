@@ -22,7 +22,7 @@ S3method(colourScale, NULL)
 S3method(colourScale, logical)
 
 
-export(openmap, openmapAttribution, osmTiles)#, insetMap, omerc,, legendTable, tonerToTrans, rgbtToIndex)
+export(openmap, openmapAttribution, osmTiles, insetMap)#, omerc,, legendTable, tonerToTrans, rgbtToIndex)
 #export(tpeqd, tpers, persistentCache)
 
 #export(ocea, moll, wrapPoly, gridlinesWrap)

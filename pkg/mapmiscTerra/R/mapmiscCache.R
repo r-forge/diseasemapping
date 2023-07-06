@@ -30,10 +30,10 @@ dirCreateMapmisc = function(path, ...) {
 #  dismo::geocode(...)
 #}
 
-#mapmiscGNcities = function(...) {
-#  mapmiscCacheCheck()
-#  geonames::GNcities(...)
-#}
+mapmiscGNcities = function(...) {
+  mapmiscCacheCheck()
+  geonames::GNcities(...)
+}
 
 persistentCache = function(verbose=TRUE) {
   

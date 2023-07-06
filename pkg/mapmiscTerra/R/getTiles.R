@@ -289,7 +289,7 @@ getTiles = function(
         rastersMerged[[Dblock]] = rasters[[blockHere$index]]
       }
     }
-#   map.new(rasters[[1]], buffer=20*(xmax(rasters[[1]])-xmin(rasters[[1]])));plot(worldMap, add=TRUE);plot(worldMap,add=TRUE);for(D in 1:length(rastersMerged)) {plot(rastersMerged[[D]], add=TRUE)}      
+#   map.new(rasters[[1]], buffer=20*(xmax(rasters[[1]])-xmin(rasters[[1]])));for(D in 1:length(rastersMerged)) {plot(rastersMerged[[D]], add=TRUE)};plot(worldMap,add=TRUE)      
     # merge columns if possible
     Nblocks = length(rastersMerged)
     if(Nblocks > 1) {
@@ -310,9 +310,11 @@ getTiles = function(
       blockToMerge = unique(c(blockToMerge, unlist(apply(toMerge[, blockToMerge,drop=FALSE], 2, which))))
     }
     blockToMerge = sort(blockToMerge)
+    blockToMergeOrig = min(blockToMerge)
 
     rastersMerged[[blockToMergeOrig]] = do.call(terra::merge, rastersMerged[blockToMerge])
     rastersMerged = rastersMerged[sort(unique(c(blockToMergeOrig, setdiff(1:length(rastersMerged), blockToMerge))))]
+    SrowCol[SrowCol$block %in% blockToMerge, 'block'] = blockToMergeOrig
     } # more than one block
 
 
@@ -350,10 +352,10 @@ getTiles = function(
       SrowColHere = merge(SrowColHere, SrowColSub, all.x=TRUE, all.y=FALSE)
       SrowColHere = split(SrowColHere, SrowColHere$block)
       outValuesHere = lapply(SrowColHere, function(xx) {
-          cbind(ScellOut = xx[,'ScellOut'], 
+            cbind(ScellOut = xx[,'ScellOut', drop=FALSE], 
             terra::extract(
               rastersMerged[[xx[1,'block']]], 
-              thisRow[xx[, 'indexOut']], cells=FALSE, xy=FALSE, ID=FALSE, raw=TRUE))
+              thisRow[xx[, 'indexOut',drop=FALSE]], cells=FALSE, xy=FALSE, ID=FALSE, raw=TRUE))
       })
       outValuesHere = do.call(rbind, outValuesHere)
       outValuesHere = outValuesHere[order(outValuesHere[,1]), ]
