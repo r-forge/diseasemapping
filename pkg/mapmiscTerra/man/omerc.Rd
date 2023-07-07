@@ -61,6 +61,10 @@ If \code{post} is numeric, it specifies an angle for inverse rotation.
 
 omerc(c(10,50), angle=c(0,45,80))
 
+data('worldMap')
+worldMap = terra::unwrap(worldMap)
+
+
 data('netherlands')
 nldCities = terra::unwrap(nldCities)
 nldTiles = terra::unwrap(nldTiles)
@@ -88,6 +92,23 @@ map.new(nldRot)
 text(nldRot,labels=nldRot$name)
 scaleBar(nldRot, 'topright')
 insetMap(nldRot, 'bottomright')
+
+crsMoll = moll()
+worldMap2 = project(worldMap, crsMoll)
+plot(attributes(crsMoll)$ellipse, col='lightblue')
+plot(worldMap2, add=TRUE, col='yellow')
+
+crsMoll3 = moll(-100)
+
+worldMap3 = wrapPoly(worldMap, crsMoll3, buffer.width=200*1000)
+plot(attributes(crsMoll3)$ellipse, col='lightblue')
+plot(worldMap3, add=TRUE, col='yellow')
+
+
+crsO = ocea(c(0,1), flip=TRUE)
+worldMapO = wrapPoly(worldMap, crsO)
+plot(attributes(crsO)$ellipse, col='lightblue')
+plot(worldMapO, add=TRUE, col='yellow')
 
 
 

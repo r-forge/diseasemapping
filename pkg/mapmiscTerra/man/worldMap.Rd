@@ -1,6 +1,7 @@
 \name{worldMap}
 \alias{worldMap}
 \alias{worldmap}
+\alias{isohedron}
 
 \docType{data}
 \title{
