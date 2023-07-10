@@ -96,7 +96,7 @@ cs=colourScale(x=someData$y,breaks=4,style='equal',exclude='nothing',dec=2)
 plot(someData, pch=16, col=cs$plot)
 legendBreaks('topleft', cs)
 
-myraster = raster(matrix(c(0:7,2), 3, 3))
+myraster = rast(matrix(c(0:7,2), 3, 3))
 cs=colourScale(x=myraster,breaks=4,style='equal',dec=2)
 plot(myraster, breaks=cs$breaks, col=cs$col,legend=FALSE)
 legendBreaks('topright', cs)
