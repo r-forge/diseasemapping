@@ -28,7 +28,7 @@ A coordinate reference system is returned
 	Caracther string representing a \code{\link[terra:crs]{crs}}.
 }	
 \references{
-\url{https://en.wikipedia.org/wiki/Two-point_equidistant_projection/}
+\url{https://en.wikipedia.org/wiki/Two-point_equidistant_projection}
 \url{https://proj.org/operations/projections/tpers.html}
 }
 \seealso{\code{\link[terra:crs]{crs}},\code{\link[terra]{project}}}

@@ -22,16 +22,15 @@ getDegreeRaster()
 \details{
 	\code{getModisTiles} returns a matrix with modis tiles.
 
-	\code{modisRaster} shows horizontal and vertical tile names for downloading data from MODIS
-	at, for example, \url{http://e4ftl01.cr.usgs.gov/MOTA}.
+	\code{getModisRaster} shows horizontal and vertical tile names for downloading data from MODIS.
 	
-	\code{degreeRaster} shows horizontal and vertical tiles in long-lat, for downloading elevation.
+	\code{getDegreeRaster} shows horizontal and vertical tiles in long-lat, for downloading elevation.
 }
 
 
 
 \references{
-\url{https://nsidc.org/data/docs/daac/mod10_modis_snow/landgrid.html},
+\url{https://modis-land.gsfc.nasa.gov/MODLAND_grid.html},
 \url{https://spatialreference.org/ref/sr-org/modis-sinusoidal/}
 }
 
