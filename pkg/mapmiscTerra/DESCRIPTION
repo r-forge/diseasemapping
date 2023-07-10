@@ -4,8 +4,8 @@ Title: Utilities for Producing Maps
 Version: 2.0.0
 Date: 2023-07-10
 Depends: terra, R (>= 3.5.0)
-Imports: methods, grDevices, stats, utils, graphics, geosphere, geonames
-Suggests: RColorBrewer, classInt, knitr
+Imports: methods, grDevices, stats, utils, graphics, geosphere
+Suggests: RColorBrewer, geonames, classInt, knitr
 Author: Patrick Brown <patrick.brown@utoronto.ca> 
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
 Description: A minimal, light-weight set of tools for producing nice looking maps in R, with support for map projections. 
