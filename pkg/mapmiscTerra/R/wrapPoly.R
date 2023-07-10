@@ -12,9 +12,12 @@ save(isohedron, file='pkg/mapmiscTerra/data/isohedron.RData', compress='xz')
 
 polesLLPolyFun = function(buffer.width) {
    polesLLPoly = vect(
-    c(buffer(vect(cbind(0,90), crs=crsLL), buffer.width, quadsegs=100)  ,
-      buffer(vect(cbind(0,-90), crs=crsLL), buffer.width, quadsegs=100)))
-  sides = terra::crds(terra::as.points(terra::buffer(vect(  cbind(0, seq(-89.9, 89.9,len=300)), type='lines', crs=crsLL), buffer.width)))
+    c(terra::buffer(vect(cbind(0,90), crs=crsLL), width=buffer.width, quadsegs=100)  ,
+      terra::buffer(vect(cbind(0,-90), crs=crsLL), width=buffer.width, quadsegs=100))
+      )
+  sides = terra::crds(terra::as.points(terra::buffer(
+        vect(cbind(0, seq(-89.9, 89.9,len=300)), type='lines', crs=crsLL), 
+      width=buffer.width)))
   sides = sides[sides[,1]>0,]
   sides = rbind(c(-0.1, sides[1,2]), sides, c(-0.1, sides[nrow(sides),2]))
   sidesRight = cbind(180-sides[,1], sides[,2])
@@ -39,23 +42,22 @@ wrapPoly = function(x, crs, buffer.width) {
 
   xCrop = terra::erase(toCropX, toCrop)
 
-  xCrop = terra::crop(xCrop, bboxLLsafe)
+  xCrop = terra::crop(xCrop, terra::unwrap(bboxLLsafe))
   # plot(xCrop)
 
 
  project(xCrop, crs)
 }
 
-llCropBox = function(crs, buffer.width=100*1000, densify.interval = 25*1000) {
+llCropBox = function(crs, buffer.width=100*1000, densify.interval = 25*1000, crop.distance = 2e7, crop.poles = TRUE) {
   
    
-  polesAndSidesLLpoly=polesLLPolyFun(buffer.width)
 
-  data('isohedron')
+  utils::data('isohedron')
   isohedron[,2] = pmin(pmax(-89.9, isohedron[,2]), 89.9)
 
   LLborderInner = list()
-  for(D in c(2,5,10, 15)) {
+  for(D in c(1,2,5)) {
    xx  = terra::buffer(vect(llBorder, type='polygon', crs=crsLL), width=-D*buffer.width)
    LLborderInner[[as.character(D)]] = terra::crds(terra::densify(xx, densify.interval))
   }
@@ -66,8 +68,8 @@ llCropBox = function(crs, buffer.width=100*1000, densify.interval = 25*1000) {
 
   
   pointsInRegion = is.finite(pointsTransIn[[1]]) &
-    is.finite(pointsTransIn[[2]]) & abs(pointsTransIn[,1]) < 2e7 &
-       abs(pointsTransIn[,2]) < 2e7
+    is.finite(pointsTransIn[[2]]) & abs(pointsTransIn[,1]) < crop.distance  &
+       abs(pointsTransIn[,2]) < crop.distance 
   
 
   transInRegion =  pointsTransIn[pointsInRegion,]
@@ -127,8 +129,10 @@ llCropBox = function(crs, buffer.width=100*1000, densify.interval = 25*1000) {
   borderLLlinesListDens = lapply(borderLLlinesList, function(xx) {
        terra::densify(xx, densify.interval)
   })
-  allPoints = vect(as.matrix(do.call(rbind, lapply(borderLLlinesListDens, crds))), crs=crsLL)
+  allPoints = vect(as.matrix(do.call(rbind, lapply(borderLLlinesListDens, terra::crds))), crs=crsLL)
 
+  if(crop.poles) {
+  polesAndSidesLLpoly=polesLLPolyFun(buffer.width)
   pointsOnBorders = terra::crop(allPoints, polesAndSidesLLpoly)
   safePoints = terra::erase(allPoints, polesAndSidesLLpoly)
   edgeLL = terra::aggregate(terra::buffer(safePoints, buffer.width))
@@ -142,7 +146,7 @@ llCropBox = function(crs, buffer.width=100*1000, densify.interval = 25*1000) {
     if(length(toKeep))
       edgeLL = terra::aggregate(vect(c(edgeLL, polesAndSidesLLpolySplit[toKeep])))
   }
-
+  }
 # plot(project(worldMap, crsLL), ylim = c(-92, 92));plot(edgeLL, add=TRUE, col='blue')
 
   if(!all(pointsInRegion)) {
@@ -156,7 +160,7 @@ llCropBox = function(crs, buffer.width=100*1000, densify.interval = 25*1000) {
 
   return(list(
     crop = edgeLL,
-    ellipse = terra::as.polygons(terra::as.lines(regionTransPoly2))
+    ellipse = regionTransOrig
   ))
 
 }

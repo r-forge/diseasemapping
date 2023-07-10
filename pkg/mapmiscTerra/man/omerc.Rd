@@ -100,12 +100,12 @@ plot(worldMap2, add=TRUE, col='yellow')
 
 crsMoll3 = moll(-100)
 
-worldMap3 = wrapPoly(worldMap, crsMoll3, buffer.width=200*1000)
+worldMap3 = wrapPoly(worldMap, crsMoll3, buffer.width=150*1000)
 plot(attributes(crsMoll3)$ellipse, col='lightblue')
 plot(worldMap3, add=TRUE, col='yellow')
 
 
-crsO = ocea(c(0,1), flip=TRUE)
+crsO = ocea(c(0,1), flip='wsu')
 worldMapO = wrapPoly(worldMap, crsO)
 plot(attributes(crsO)$ellipse, col='lightblue')
 plot(worldMapO, add=TRUE, col='yellow')

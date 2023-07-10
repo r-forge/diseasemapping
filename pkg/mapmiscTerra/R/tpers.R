@@ -21,17 +21,11 @@ tpers = function(x,
       " +y_0=", offset[2],
       sep=""))
   
-  cropBox = llCropBox(crs=myCrs, res=1)
+  cropBox = llCropBox(crs=myCrs)
   
-  attributes(myCrs)$regionLL = cropBox$poly
   attributes(myCrs)$ellipse = cropBox$ellipse
-  allLL = as(terra::ext(-181,181,-91,91), 'SpatialPolygons')
-  allLL@proj4string = crsLL
-  attributes(myCrs)$crop = rgeos::gDifference(
-    allLL, attributes(myCrs)$regionLL
-    )
-  attributes(myCrs)$crop@proj4string = crsLL
-  attributes(myCrs)$ellipseSafeLL = cropBox$polyTrans
+  attributes(myCrs)$crop = cropBox$crop
+
   
   myCrs
 }

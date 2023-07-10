@@ -13,7 +13,7 @@ export(legendBreaks)
 export(breaksForRates)
 export(colorScale)
 export(colourScale)
-#export(crsModis, modisRaster, degreeRaster, getModisTiles)
+export(crsModis, modisRaster, degreeRaster, getModisTiles)
 
 S3method(colourScale, SpatRaster)
 S3method(colourScale, numeric)
@@ -22,11 +22,10 @@ S3method(colourScale, NULL)
 S3method(colourScale, logical)
 
 
-export(openmap, openmapAttribution, osmTiles, insetMap, omerc)#,, legendTable, tonerToTrans, rgbtToIndex)
-export(tpeqd, # tpers, 
-persistentCache)
+export(openmap, openmapAttribution, osmTiles, insetMap, omerc, legendTable)#, tonerToTrans, rgbtToIndex)
+export(tpeqd, tpers, persistentCache)
 
-#export(ocea, moll, wrapPoly, gridlinesWrap)
+export(ocea, moll, wrapPoly)#, gridlinesWrap)
 
 export( GNcities, GNsearch, geocode)
 

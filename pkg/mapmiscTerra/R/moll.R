@@ -198,6 +198,7 @@ ocea = function(x, angle=0, flip=FALSE) {
 	}
 	
 	if(is.numeric(x)){
+		if(length(x)==1) x = c(x,0)
 		if(length(x)==2) x = c(x,x+10^(-2))
 		x = terra::ext(x)
 	}
@@ -240,16 +241,19 @@ ocea = function(x, angle=0, flip=FALSE) {
 					eastShiftS, ",0",
 					sep='') 
 
-	if(flip){
+	if(identical(flip, TRUE)){
 		if(midY >= 0) {
 			myCrs = paste(as.character(myCrs), "+axis=esu")
 		} else {
 			myCrs = paste(as.character(myCrs), "+axis=nwu")
 		}
 	}
+	if(is.character(flip))
+		myCrs = paste0(as.character(myCrs), " +axis=", flip)
+
 	myCrs = crs(myCrs)
 
-	cropBox = llCropBox(crs=myCrs)
+	cropBox = llCropBox(crs=myCrs, crop.distance = Inf)
 	
 	attributes(myCrs)$crop = cropBox$crop
 	attributes(myCrs)$ellipse = cropBox$ellipse
