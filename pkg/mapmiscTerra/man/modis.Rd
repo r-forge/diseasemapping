@@ -1,9 +1,9 @@
 \name{modis}
 \alias{modis}
 \alias{crsModis}
-\alias{modisRaster}
+\alias{getModisRaster}
 \alias{getModisTiles}
-\alias{degreeRaster}
+\alias{getDegreeRaster}
 \title{MODIS tiles and projection}
 \description{
 Raster containing MODIS tile ID's
@@ -11,8 +11,8 @@ Raster containing MODIS tile ID's
 \usage{
 getModisTiles(x, tiles)
 crsModis
-modisRaster
-degreeRaster
+getModisRaster()
+getDegreeRaster()
 }
 \arguments{
 \item{x}{A spatial object which modis tiles will cover.}
@@ -43,9 +43,9 @@ crsModis
 myPointLL = vect(cbind(c(5:6),10:11), crs = crsLL)
 
 
-  getModisTiles(myPointLL)
+getModisTiles(myPointLL)
 
-  getModisTiles(myPointLL, degreeRaster)
+getModisTiles(myPointLL, getDegreeRaster())
 
 
 

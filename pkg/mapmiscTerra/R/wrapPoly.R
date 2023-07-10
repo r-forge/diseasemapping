@@ -30,7 +30,7 @@ polesLLPolyFun = function(buffer.width) {
    terra::aggregate(vect(c(polesLLPoly, sidesLLPoly)))
 }
 
-wrapPoly = function(x, crs, buffer.width) {
+wrapPoly = function(x, crs, buffer.width = 100*1000) {
 
   if (is.null(attributes(crs)$crop) | !missing(buffer.width)) {
     attributes(crs)$crop = llCropBox(crs, buffer.width=buffer.width)$crop

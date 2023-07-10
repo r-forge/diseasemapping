@@ -13,7 +13,7 @@ export(legendBreaks)
 export(breaksForRates)
 export(colorScale)
 export(colourScale)
-export(crsModis, modisRaster, degreeRaster, getModisTiles)
+export(crsModis, getModisRaster, getDegreeRaster, getModisTiles)
 
 S3method(colourScale, SpatRaster)
 S3method(colourScale, numeric)

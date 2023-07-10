@@ -6,7 +6,7 @@
 Reprojects a SpatialPolygons object to a projection with longitude wrapping other than 180 degreess
 }
 \usage{
-wrapPoly(x,crs, buffer.width)
+wrapPoly(x,crs, buffer.width = 100*1000)
 	}
 
 \arguments{

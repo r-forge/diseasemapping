@@ -25,14 +25,14 @@ gridlinesWrap = function(crs,
 		atts =data.frame(type='east', loc=horizLines[,'norths']))
 	horizLines = terra::split(horizLines,'loc')
 
-	glines = vect(lapply(c(horizLines, vertLines), as.lines))
-	values(glines) = data.frame(type = rep(c('north','east'), c(length(norths), length(easts))), loc = c(norths, easts))
+	glines = vect(lapply(c(horizLines, vertLines), terra::as.lines))
+	terra::values(glines) = data.frame(type = rep(c('north','east'), c(length(norths), length(easts))), loc = c(norths, easts))
 	glines$neg = glines$loc < 0
 	glines$degrees = abs(glines$loc)
 	glines$direction = c(north="N",east="E")[glines$type]
 	glines[glines$type == 'north' & glines$neg, 'direction'] = 'S'
 	glines[glines$type == 'east' & glines$neg, 'direction'] = 'W'
-	values(glines)$ID = paste0(glines$degrees, glines$direction)
+	terra::values(glines)$ID = paste0(glines$degrees, glines$direction)
 
 	glinesT = wrapPoly(x=glines, crsT)
 
@@ -62,15 +62,15 @@ gridlinesWrap = function(crs,
 	okPoints = c(okPoints, unlist(lapply(split(toTrim$index, toTrim$ID), function(xx) xx[seq(from=1, len=3, by=pmax(1,floor(length(xx)/3)))] )))
 
 	legendPoints[okPoints]
-	legendPoints$minDist = apply(distance(legendPoints, legendPoints), 2, function(xx) min(xx[xx>0]))
+	legendPoints$minDist = apply(terra::distance(legendPoints, legendPoints), 2, function(xx) min(xx[xx>0]))
 
 
 	if(plotLines){
-		lines(glinesT, ...)
+		graphics::lines(glinesT, ...)
 	}		
 	if(plotLabels){
 		legendPoints$isClose = legendPoints$minDist < strwidth('XX')
-		text(legendPoints[!legendPoints$isClose], labels=legendPoints$ID[!legendPoints$isClose], ...)
+		terra::text(legendPoints[!legendPoints$isClose], labels=legendPoints$ID[!legendPoints$isClose], halo=TRUE,  ...)
 	}
 	
 	invisible(list(

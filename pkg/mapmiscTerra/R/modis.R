@@ -50,12 +50,10 @@ getDegreeRaster = function() {
   degreeRaster
 }
 
-modisRaster = getModisRaster()
-degreeRaster = getDegreeRaster()
 
 getModisTiles = function(x, tiles) {
  
-  if(missing(tiles)) tiles = degreeRaster
+  if(missing(tiles)) tiles = getDegreeRaster()
 
   xModis = project(x, crs(tiles))
   
