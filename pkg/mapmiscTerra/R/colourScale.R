@@ -115,7 +115,6 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 		}
 	}
 
-
 	if(style == "equal") {
 		if(length(exclude)) {
 			x = unique(x)
@@ -123,7 +122,7 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 
 			x = try(range(terra::minmax(x)), silent=TRUE)
 			if(any(class(x)=='try-error'))
-				x = range(stats::quantile(unlist(terra::spatSample(x, size=NforSample, method='regular'))))
+				x = range(stats::quantile(unlist(terra::spatSample(x, size=pmin(terra::ncell(x), NforSample), method='regular'))))
 		}
 	} else if(style=='fixed') {
 		x = NULL
@@ -204,7 +203,6 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 		} # end different numbers of levels and breaks
 	} # levels not null
 	
-
 	if(terra::ncell(x)<1e+06) {
 		x = terra::freq(x, useNA='no')[,-1]
 		weights = x[,2]
@@ -260,17 +258,21 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 	weights = levelsx$freq
 	x=levelsx$ID
 	labels = levelsx$label
-
+# end style unique
 } else { # not unique or equal or fixed, take a sample
+
 Nsample = 20000
 xVec= c()
+if(Nsample > terra::ncell(x)) xVec = values(x)
 Diter = 0
+
 while(length(xVec)<Nsample & Diter < 5){
 	xVec = c(xVec,
-		na.omit(terra::spatSample(x, size = min(c(terra::ncell(x),Nsample), method='regular')))
+		na.omit(terra::spatSample(x, size = min(c(terra::ncell(x),Nsample)), method='regular'))
 		)
 	Diter = Diter + 1
 }
+
 x = c(xVec, as.vector(terra::minmax(x)))
 } # end if style== stuff
 
@@ -295,6 +297,7 @@ colourScale.numeric = function(x=NULL, breaks=5,
 	xOrig = x
 	style = style[1]
 	eps=0.01
+
 
 	 # radar colours
 	if(is.character(col)){
@@ -483,6 +486,7 @@ colourScale.numeric = function(x=NULL, breaks=5,
 }
 xOrig = x
 x = transform[[1]](xOrig)
+
 
 if(style=="quantile"){
 	breaks = stats::quantile(x, prob=seq(0,1,len=breaks[1]), na.rm=TRUE)
