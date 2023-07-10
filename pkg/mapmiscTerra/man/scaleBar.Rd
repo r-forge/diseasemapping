@@ -87,8 +87,8 @@ plot(myPoints,col = as.character(cut(
 scaleBar(myPoints, "bottomright",cex=1.25, seg.len=2)
 legendBreaks("topleft", legend=breaks, col=thecol)
 
-#crs=myPoints;map='osm';zoom=1 ; outer=TRUE; width=0.5;cropInset = terra::ext(-180,180, -47, 71);pos='bottomleft';borderMap=NULL
-thedot = insetMap(crs=myPoints, pos="bottomleft",col='#00000000', lty=0, outer=FALSE, width=0.5)
+thedot = insetMap(crs=myPoints, pos="bottomleft",
+	 col='#00000000', lty=0, outer=FALSE, width=0.5)
 points(thedot)
 
 }

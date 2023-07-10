@@ -49,7 +49,7 @@ If \code{post} is numeric, it specifies an angle for inverse rotation.
 }	
 
 \references{
-\url{https://en.wikipedia.org/wiki/Space-oblique_Mercator_projection/}
+\url{https://en.wikipedia.org/w/index.php?title=Space-oblique_Mercator_projection}
 }
 
 \seealso{
@@ -98,6 +98,7 @@ worldMap2 = project(worldMap, crsMoll)
 plot(attributes(crsMoll)$ellipse, col='lightblue')
 plot(worldMap2, add=TRUE, col='yellow')
 
+\dontrun{
 crsMoll3 = moll(-100)
 
 worldMap3 = wrapPoly(worldMap, crsMoll3, buffer.width=150*1000)
@@ -109,7 +110,7 @@ crsO = ocea(c(0,1), flip='wsu')
 worldMapO = wrapPoly(worldMap, crsO)
 plot(attributes(crsO)$ellipse, col='lightblue')
 plot(worldMapO, add=TRUE, col='yellow')
-
+}
 
 
 }
