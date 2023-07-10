@@ -22,10 +22,10 @@ S3method(colourScale, NULL)
 S3method(colourScale, logical)
 
 
-export(openmap, openmapAttribution, osmTiles, insetMap, omerc, legendTable)#, tonerToTrans, rgbtToIndex)
+export(openmap, openmapAttribution, osmTiles, insetMap, omerc, legendTable, tonerToTrans)#, rgbtToIndex)
 export(tpeqd, tpers, persistentCache)
 
-export(ocea, moll, wrapPoly)#, gridlinesWrap)
+export(ocea, moll, wrapPoly, gridlinesWrap)
 
 export( GNcities, GNsearch, geocode)
 
@@ -40,7 +40,6 @@ importFrom('stats', 'na.omit')
 importFrom("stats", "approx", "optim")
 
 importFrom(graphics, par, strwidth, polygon, legend)
-#importFrom(geosphere, )
 
 importFrom(utils, download.file)
 

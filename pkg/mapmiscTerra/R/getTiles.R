@@ -352,12 +352,13 @@ getTiles = function(
       SrowColHere = merge(SrowColHere, SrowColSub, all.x=TRUE, all.y=FALSE)
       SrowColHere = split(SrowColHere, SrowColHere$block)
       outValuesHere = lapply(SrowColHere, function(xx) {
-            cbind(ScellOut = xx[,'ScellOut', drop=FALSE], 
-            terra::extract(
-              rastersMerged[[xx[1,'block']]], 
-              thisRow[xx[, 'indexOut',drop=FALSE]], cells=FALSE, xy=FALSE, ID=FALSE, raw=TRUE))
+            cbind(
+              ScellOut = xx[,'ScellOut', drop=FALSE], 
+              terra::extract(
+                rastersMerged[[xx[1,'block']]], 
+                thisRow[xx[, 'indexOut',drop=FALSE]], cells=FALSE, xy=FALSE, ID=FALSE, raw=TRUE))
       })
-      outValuesHere = do.call(rbind, outValuesHere)
+      outValuesHere = as.matrix(do.call(rbind, outValuesHere))
       outValuesHere = outValuesHere[order(outValuesHere[,1]), ]
       if(terra::inMemory(outraster)) {
         terra::values(outraster)[outValuesHere[,1],] = outValuesHere[,-1]

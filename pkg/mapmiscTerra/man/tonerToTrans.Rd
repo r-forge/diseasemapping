@@ -1,0 +1,58 @@
+\name{tonerToTrans}
+\alias{tonerToTrans}
+\alias{rgbtToIndex}
+\title{
+ Convert RGB maps to semi-transparent
+}
+\description{
+Stamen-toner maps are 3-layer RGB rasters, which are converted
+to single-layer rasters with indexed colours with whites becoming transparent. 
+}
+\usage{
+tonerToTrans(x,  pattern="(red|green|blue)$", power = 0.5, col='black',  threshold=Inf)
+rgbtToIndex(x,  pattern="(red|green|blue|trans)$")
+}
+\arguments{
+  \item{x}{
+	A \code{RasterStack} with RGB colours, such as from \code{\link{openmap}} with \code{path='stamen-toner'}}
+	\item{pattern}{string passed to \code{\link[base]{grep}} to find RGB layers.}
+  \item{power}{
+	Values below 1 increase opacity, above 1 increases transparency
+}
+\item{col}{colour for resulting map}
+\item{threshold}{colours above this value are transparent}
+}
+
+\details{
+The difference between these functions is that \code{tonerToTrans} converts white to transparent, whereas \code{rgbtToIndex} uses the transparency layer.  The former is intended for \code{'stamen-toner'} maps.
+}
+
+\value{
+A \code{RasterLayer} with indexed colours
+}
+
+\author{
+Patrick Brown
+}
+
+
+\seealso{
+\code{\link{openmap}}
+}
+\examples{
+
+\dontrun{
+	data('worldMap')
+	rgbMap = openmap(worldMap[worldMap$NAME == 'Sierra Leone',], zoom=6, path='stamen-toner')
+	names(rgbMap)
+	plot(rgbMap)
+	
+	transMap = tonerToTrans(rgbMap)
+	names(transMap)
+	par(bg='red')
+	plot(transMap)
+
+
+}
+}
+
