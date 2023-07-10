@@ -1,6 +1,5 @@
 \name{tonerToTrans}
 \alias{tonerToTrans}
-\alias{rgbtToIndex}
 \title{
  Convert RGB maps to semi-transparent
 }
@@ -10,7 +9,6 @@ to single-layer rasters with indexed colours with whites becoming transparent.
 }
 \usage{
 tonerToTrans(x,  pattern="(red|green|blue)$", power = 0.5, col='black',  threshold=Inf)
-rgbtToIndex(x,  pattern="(red|green|blue|trans)$")
 }
 \arguments{
   \item{x}{
@@ -24,11 +22,11 @@ rgbtToIndex(x,  pattern="(red|green|blue|trans)$")
 }
 
 \details{
-The difference between these functions is that \code{tonerToTrans} converts white to transparent, whereas \code{rgbtToIndex} uses the transparency layer.  The former is intended for \code{'stamen-toner'} maps.
+Intended for \code{'stamen-toner'} maps.
 }
 
 \value{
-A \code{RasterLayer} with indexed colours
+A \code{SpatRast} with indexed colours
 }
 
 \author{
