@@ -40,8 +40,8 @@ points(nldCities, pch=4, col='blue')
 text(nldCities,label=nldCities$name, pos=2, col='blue')
 points(meuse, pch=15, col=as.integer(meuse$soil))
 
-legend('topleft', fill=1:nlevels(meuse$soil),l
-	egend=levels(meuse$soil), inset=0.2, bg='white', title='Soil type')
+legend('topleft', fill=1:nlevels(meuse$soil),
+	legend=levels(meuse$soil), inset=0.2, bg='white', title='Soil type')
 
 
 
