@@ -49,8 +49,9 @@ someData = vect(cbind(
 				sample(1:4, 12,replace=TRUE), 
 				sample(1:4, 12,replace=TRUE)),
 		atts=data.frame(y=sample(0:5, 12,replace=TRUE)))
+
 cs=colourScale(x=someData$y,
-		breaks=1:4,style='unique',labels=c('a','b','c','d'),ß
+		breaks=1:4,style='unique',labels=c('a','b','c','d'),
 		col=t(col2rgb(heat.colors(4))), opacity=0.5,exclude='a')
 plot(someData, pch=16, col=cs$plot)
 legendBreaks('topleft', cs)
@@ -129,7 +130,7 @@ legendBreaks('topright', cs)
 
 cs=colourScale(x=myraster,breaks=4,style='unique',exclude=0)
 legendBreaks('topright', cs)
-forLegend = na.omit(cs$levels)
+forLegend = na.omit(cs$levels)	
 legend('bottomright', fill=forLegend$col, legend=forLegend$label)
 
 someData = vect(cbind(
