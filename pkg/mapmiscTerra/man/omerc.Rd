@@ -71,7 +71,7 @@ nldTiles = terra::unwrap(nldTiles)
 
 
 nldUtm = project(nldCities, omerc(nldCities, angle=0))
-crs(nldUtm)
+cat(crs(nldUtm))
 nldTiles2 = project(nldTiles, crs(nldUtm), method='near')
 
 
@@ -86,7 +86,9 @@ insetMap(nldUtm, 'right', cropInset = 500*1000, zoom=4, width=0.25, inset = 0)
 
 
 nldRot = project(nldCities, omerc(nldCities, angle=seq(25,45,by=5)))
-crs(nldRot)
+cat(crs(nldRot))
+
+\dontrun{
 
 map.new(nldRot)
 text(nldRot,labels=nldRot$name)
@@ -98,7 +100,6 @@ worldMap2 = project(worldMap, crsMoll)
 plot(attributes(crsMoll)$ellipse, col='lightblue')
 plot(worldMap2, add=TRUE, col='yellow')
 
-\dontrun{
 crsMoll3 = moll(-100)
 
 worldMap3 = wrapPoly(worldMap, crsMoll3, buffer.width=150*1000)
