@@ -41,6 +41,7 @@ options(geonamesUsername="myusernamehere")
 if(file.exists("~/geonamesUsername.R")) source("~/geonamesUsername.R")
 
 if(requireNamespace("geonames", quietly = TRUE)) { 
+
 cities=try(GNcities(myraster, max=5), silent=TRUE)
 mytiles = openmap(myraster, buffer= 2)
 
@@ -53,6 +54,7 @@ text(cities, labels=cities$name, col='red',pos=4)
 
 
 try(GNsearch(q="Toronto Ontario", maxRows = 3), silent=TRUE)
+
 }
 
 

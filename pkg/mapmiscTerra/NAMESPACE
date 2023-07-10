@@ -18,6 +18,7 @@ export(crsModis, getModisRaster, getDegreeRaster, getModisTiles)
 S3method(colourScale, SpatRaster)
 S3method(colourScale, numeric)
 S3method(colourScale, factor)
+S3method(colourScale, character)
 S3method(colourScale, NULL)
 S3method(colourScale, logical)
 
