@@ -263,7 +263,7 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 
 Nsample = 20000
 xVec= c()
-if(Nsample > terra::ncell(x)) xVec = values(x)
+if(Nsample > terra::ncell(x)) xVec = terra::values(x)
 Diter = 0
 
 while(length(xVec)<Nsample & Diter < 5){
