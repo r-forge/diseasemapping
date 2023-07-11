@@ -140,16 +140,12 @@ openmap = function(
   
 
 
-  crsOut=crs
 
-  crsIn = terra::crs(x)
-
-  if(all(is.na(crsIn))) {
-    if(is.vector(x)){
-      crsIn=crsLL
-    } else{
-      crsIn = crs 
-    }
+  if(crs=="") {
+      crsIn=crsOut = crsLL
+  } else {
+    crsOut=crs
+    crsIn = terra::crs(x)    
   }
   
 
