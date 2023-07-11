@@ -142,7 +142,7 @@ openmap = function(
 
 
   if(crs=="") {
-      crsIn=crsOut = crsLL
+      crs=crsIn=crsOut = crsLL
   } else {
     crsOut=crs
     crsIn = terra::crs(x)    
@@ -152,7 +152,7 @@ openmap = function(
 # get extent of output
 
 # get output raster
-  testRast = rast(terra::ext(x), res = (terra::xmax(x) - terra::xmin(x))/NtestCols, crs = crs(x))
+  testRast = rast(terra::ext(x), res = (terra::xmax(x) - terra::xmin(x))/NtestCols, crs = crs)
   testPoints = vect(terra::xyFromCell(testRast, 1:terra::ncell(testRast)), crs=terra::crs(testRast))
 
   testPointsMerc = project(testPoints, crsMerc)
