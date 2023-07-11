@@ -338,7 +338,7 @@ getTiles = function(
 
     if(verbose) cat('reprojecting:  ', length(SoutRows), ' cycles:')
 
-    values(rasterSphere) = 1:ncell(rasterSphere)
+    terra::values(rasterSphere) = 1:terra::ncell(rasterSphere)
     for(Dcycle in seq(1,length(SoutRows)-1) ) {
       if(verbose) cat(Dcycle, ' ')
 

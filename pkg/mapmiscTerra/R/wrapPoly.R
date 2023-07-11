@@ -109,8 +109,8 @@ for(DprojIter in 1:4) {
 
 
 
-  LLpoints = suppressWarnings(project(as.points(regionTransOrigPoints), crsLL))
-  LLpoints = as.points(buffer(LLpoints, buffer.width))
+  LLpoints = suppressWarnings(project(terra::as.points(regionTransOrigPoints), crsLL))
+  LLpoints = terra::as.points(terra::buffer(LLpoints, buffer.width))
 }
 
 
