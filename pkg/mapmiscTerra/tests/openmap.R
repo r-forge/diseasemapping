@@ -2,20 +2,20 @@
 
 library('mapmiscTerra')
 
-if(!exists('mapmiscCachePath'))
-  mapmiscCachePath = system.file('extdata', package='mapmisc')
+#if(!exists('mapmiscCachePath'))
+#  mapmiscCachePath = system.file('extdata', package='mapmisc')
 
-if(!exists('mapmiscCacheReadOnly'))
-  mapmiscCacheReadOnly = TRUE
+#if(!exists('mapmiscCacheReadOnly'))
+#  mapmiscCacheReadOnly = TRUE
 
 
 options(
-  mapmiscCachePath = mapmiscCachePath,
-  mapmiscCacheReadOnly = mapmiscCacheReadOnly,
+#  mapmiscCachePath = mapmiscCachePath,
+#  mapmiscCacheReadOnly = mapmiscCacheReadOnly,
   mapmiscVerbose=TRUE)
 
-getOption("mapmiscCachePath")
-getOption("mapmiscCacheReadOnly")
+#getOption("mapmiscCachePath")
+#getOption("mapmiscCacheReadOnly")
 #'
 
 
