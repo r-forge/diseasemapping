@@ -117,7 +117,7 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 
 	if(style == "equal") {
 		if(length(exclude)) {
-			x = unique(x)
+			x = unlist(terra::unique(x))
 		} else {
 
 			x = try(range(terra::minmax(x)), silent=TRUE)
@@ -131,7 +131,8 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 	   # if labels is missing, take labels from the raster
 		if(is.null(labels)){
 
-				labels = levels(x)[[1]]
+				labels = terra::levels(x)[[1]]
+				if(identical(labels, "")) labels = NULL
 
 		}
 
@@ -188,9 +189,9 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 				label=as.character(labels)
 				)
 		} else { # different number of labels and breaks
-		levelsx = data.frame(
-			ID=sort(unique(x))
-			)
+
+		levelsx = data.frame(ID=sort(unlist(terra::unique(x))))
+
 		if(is.null(labels)) {
 			levelsx$label = as.character(levelsx$ID)
 		} else {
@@ -204,7 +205,7 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 	} # levels not null
 	
 	if(terra::ncell(x)<1e+06) {
-		x = terra::freq(x, useNA='no')[,-1]
+		x = terra::freq(x)[,-1]
 		weights = x[,2]
 		x=x[,1]
 	} else {
@@ -263,17 +264,20 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 
 Nsample = 20000
 xVec= c()
-if(Nsample > terra::ncell(x)) xVec = terra::values(x)
-Diter = 0
+if(Nsample > terra::ncell(x)) {
+	xVec = terra::values(x)
+} else {
+	Diter = 0
 
-while(length(xVec)<Nsample & Diter < 5){
-	xVec = c(xVec,
-		na.omit(terra::spatSample(x, size = min(c(terra::ncell(x),Nsample)), method='regular'))
-		)
-	Diter = Diter + 1
+	while(length(xVec)<Nsample & Diter < 5){
+		xVec = c(xVec,
+			na.omit(terra::spatSample(x, size = min(c(terra::ncell(x),Nsample)), method='regular'))
+			)	
+		Diter = Diter + 1
+	}
 }
 
-x = c(xVec, as.vector(terra::minmax(x)))
+	x = c(xVec, as.vector(terra::minmax(x)))
 } # end if style== stuff
 
 res=colourScale(x, breaks, 
@@ -424,7 +428,7 @@ colourScale.numeric = function(x=NULL, breaks=5,
 		names(colVec) =as.character(thetable$ID)
 		breaks = thetable$ID
 		breaks = c(breaks[1]-1/2, breaks+c(diff(breaks)/2,1/2))
-	} else { # not unique breaks
+	} else { # style not unique 
 
 
 	if(length(exclude) & length(x)) {

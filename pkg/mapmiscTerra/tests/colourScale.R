@@ -101,7 +101,6 @@ cs=colourScale(x=myraster,breaks=4,style='equal',dec=2)
 plot(myraster, breaks=cs$breaks, col=cs$col,legend=FALSE)
 legendBreaks('topright', cs)
 
-# breaks here
 
 cs=colourScale(x=myraster,breaks=4,style='quantile',dec=2)
 plot(myraster, breaks=cs$breaks, col=cs$col,legend=FALSE)
