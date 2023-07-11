@@ -299,7 +299,7 @@ omerc = function(
               pointNorth,
               crs
               )
-          terra::crds(pn2) = round(terra::crds(pn2), digits)
+          pn2 = vect(round(terra::crds(pn2), digits), crs=crs)
               
           # find their distance in new projection
           pnDist =apply(terra::crds(pn2),2,diff)
@@ -311,7 +311,7 @@ omerc = function(
  
     inverseAngle = round(adjust, digits)
  
-  }
+  } # end post n orth
   
   if(post=='wide' | post=='tall' & (length(angle)==1)) {
     Sgamma = seq(-90,90,)
@@ -327,10 +327,9 @@ omerc = function(
     )
     bbarea = mapply(
         function(CRSobj) {
-          thebb = as.matrix(terra::ext(
+          thebb = diff(as.vector(terra::ext(
               project(x, CRSobj)           
-          ), ncol=2)
-          thebb = apply(thebb, 1, diff)
+          )))[-2]
           c(area= abs(prod(thebb)),
               ratio = as.numeric(abs(thebb[2]/thebb[1]))
           )

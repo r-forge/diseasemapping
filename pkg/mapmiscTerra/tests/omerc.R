@@ -66,7 +66,7 @@ par(mfrow=c(3,2))
 N = 12
 somePoints = vect(
     cbind(runif(N,-5,40), runif(N,40,70)),
-    data=data.frame(name=1:N),
+    atts=data.frame(name=1:N),
     crs=crsLL
     )
     x=somePoints
