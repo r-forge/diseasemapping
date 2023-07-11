@@ -2,7 +2,7 @@
 library('mapmiscTerra')
 
 
-pdf("colourScaleFile1.pdf",height=12,width=12)
+if(!interactive()) pdf("colourScaleFile1.pdf",height=12,width=12)
 par(mfrow=c(3,3))
 
 someData = vect(cbind(1:4, 1:4),atts=data.frame(y=1:4))
@@ -146,5 +146,5 @@ legendBreaks('topleft', cs)
 forLegend = na.omit(cs$levels)
 legend('bottomright', fill=forLegend$col, legend=forLegend$label)
 
-dev.off()
+if(!interactive()) dev.off()
 

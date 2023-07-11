@@ -18,6 +18,7 @@ options(
 #getOption("mapmiscCacheReadOnly")
 #'
 
+if(!interactive()) pdf("openmap.pdf")
 
 #+ simplePlot
 myraster = rast(ext(8,18,0,10), crs=crsLL)
@@ -165,4 +166,4 @@ print(12)
   scaleBar(mytiles, 'topleft', bty='n', col='red')
 #'  
   
-
+  if(!interactive()) dev.off()

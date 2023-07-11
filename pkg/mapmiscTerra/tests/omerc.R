@@ -26,8 +26,7 @@ bob=function(angle, ...){
 
 
 
-if(!interactive())
-  pdf("omerc.pdf")
+if(!interactive()) pdf("omerc.pdf")
 
   par(mfrow=c(3,3))
 
