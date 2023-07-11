@@ -139,9 +139,11 @@ openmap = function(
   }
   
 
+  if(is.numeric(x)) x = vect(matrix(x, ncol=2), crs=crs)
 
+  if(all(class(x) == 'SpatExtent')) x = rast(extent = x, crs = crs)
 
-  if(crs=="") {
+  if(identical(crs, "")) {
       crs=crsIn=crsOut = crsLL
   } else {
     crsOut=crs
@@ -152,7 +154,11 @@ openmap = function(
 # get extent of output
 
 # get output raster
-  testRast = rast(terra::ext(x), res = (terra::xmax(x) - terra::xmin(x))/NtestCols, crs = crs)
+  extentTestRast = terra::ext(x)
+  if(any(diff(as.vector(extentTestRast))[-2] <= 0)) {
+      extentTestRast = terra::extend(extentTestRast, 1)
+  }
+  testRast = rast(extentTestRast, res = (terra::xmax(extentTestRast) - terra::xmin(extentTestRast))/NtestCols, crs = crsIn)
   testPoints = vect(terra::xyFromCell(testRast, 1:terra::ncell(testRast)), crs=terra::crs(testRast))
 
   testPointsMerc = project(testPoints, crsMerc)

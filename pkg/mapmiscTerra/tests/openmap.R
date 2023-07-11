@@ -137,7 +137,7 @@ print(10)
 
   
   # specify different output crs
-  mytiles = openmap(myPointsUTM, crs=mapmisc::crsLL)
+  mytiles = openmap(myPointsUTM, crs=crsLL)
 #	mycities = GNcities(myPoints,max=5)
   myplot(myPoints)
 
@@ -145,7 +145,7 @@ print(11)
 
   
   # one point only
-  mytiles = openmap(crds(myPoints)[1,], zoom=4)
+  mytiles = openmap(crds(myPoints)[1,], zoom=4, crs=crs(myPoints), buffer=10, fact=2)
   myplot(myPoints)
 
 print(12)  
@@ -156,13 +156,13 @@ print(12)
   cityHall = vect(cbind(4.891111, 52.373056),
     crs=crsLL)
 #  cityHall = spTransform(cityHall,CRS("+init=epsg:28992"))
-  cityHall = project(cityHall,CRS("+init=epsg:32631"))
+  cityHall = project(cityHall,crs("+init=epsg:32631"))
   mytiles = openmap(cityHall, buffer=50)
 
   map.new(mytiles)
   plot(mytiles, add=TRUE)
   points(cityHall, pch=3, col='blue',cex=4)
-  scaleBar(mytiles, 'topleft')
+  scaleBar(mytiles, 'topleft', bty='n', col='red')
 #'  
   
 

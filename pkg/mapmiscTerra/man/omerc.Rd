@@ -59,7 +59,7 @@ If \code{post} is numeric, it specifies an angle for inverse rotation.
 
 \examples{
 
-omerc(c(10,50), angle=c(0,45,80))
+cat(omerc(c(10,50), angle=c(0,45,80)))
 
 data('worldMap')
 worldMap = terra::unwrap(worldMap)
@@ -80,7 +80,7 @@ plot(nldTiles2, add=TRUE)
 points(nldUtm)
 text(nldUtm,labels=nldUtm$name, pos=4)
 scaleBar(nldUtm, 'topright')
-insetMap(nldUtm, 'bottomright', cropInset = 20*1000*c(2,2,1,3), zoom=7, 
+insetMap(crs=nldUtm, pos='bottomright', cropInset = 20*1000*c(2,2,1,3), zoom=7, 
 	inset=c(0.01, 0.1), width=0.25)
 insetMap(nldUtm, 'right', cropInset = 500*1000, zoom=4, width=0.25, inset = 0)
 

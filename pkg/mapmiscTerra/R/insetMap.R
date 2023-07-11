@@ -74,7 +74,7 @@ xsp = vect(polySmall, 	crs = crs)
   # and crop the inset map
 	
 if(is.numeric(cropInset)) {
-  cropInset = rast(terra::extend(extentSmall, cropInset), crs=crs)
+  cropInset = rast(nrows=40, ncols=40, extent=terra::extend(extentSmall, cropInset), crs=crs)
 }
 
 	mapExtent = xsp
@@ -85,7 +85,7 @@ if(all(class(cropInset)=='SpatExtent')){
 # map = 'osm'
 if(is.character(map)) {
 	cropInsetVec = terra::vect(terra::xyFromCell(cropInset, 1:terra::ncell(cropInset)), crs=crs(cropInset))
-	forMap = terra::union(mapExtent, project(cropInsetVec, crs(mapExtent)))
+	forMap = terra::union(project(mapExtent, crsMerc), project(cropInsetVec, crsMerc))
   map = openmap(x=forMap, path=map, zoom=zoom,crs=crsMerc, verbose=TRUE)
   mapOrig = terra::deepcopy(map)
 }
