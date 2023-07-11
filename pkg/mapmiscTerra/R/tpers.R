@@ -25,6 +25,7 @@ tpers = function(x,
   
   attributes(myCrs)$ellipse = cropBox$ellipse
   attributes(myCrs)$crop = cropBox$crop
+   attributes(myCrs)$regionLL = cropBox$regionLL
 
   
   myCrs

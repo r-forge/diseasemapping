@@ -10,6 +10,7 @@ gridlinesWrap = function(crs,
 	
 	pointPos = 2 # 1 for x direction
 	
+	crsOrig = crs
 	crsT = crs(crs)
 	
 	
@@ -36,7 +37,7 @@ gridlinesWrap = function(crs,
 
 	glinesT = wrapPoly(x=glines, crsT)
 
-	if(!all(c('ellipse','crop') %in% names(attributes(crsT)$ellipse))) {
+	if(!all(c('ellipse','crop') %in% names(attributes(crsT)))) {
 		ellipseAndCrop = llCropBox(crsT)
 		attributes(crsT)$ellipse = ellipseAndCrop$ellipse
 		attributes(crsT)$crop = ellipseAndCrop$crop
@@ -66,7 +67,7 @@ gridlinesWrap = function(crs,
 
 
 	if(plotLines){
-		graphics::lines(glinesT, ...)
+		terra::plot(glinesT, add=TRUE, ...)
 	}		
 	if(plotLabels){
 		legendPoints$isClose = legendPoints$minDist < strwidth('XX')

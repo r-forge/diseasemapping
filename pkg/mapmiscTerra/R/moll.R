@@ -66,11 +66,11 @@ moll = function(x=0, angle=NULL, flip=FALSE) {
 		if(any(class(x)=='SpatExtent')){
 			xExtent = rast(x,crs=crsLL)
 		} else if(length(grep("^SpatVector", class(x)))){
-			if(length(x)==1){
+			if(terra::is.points(x) & length(x)==1){
 				x = rast(terra::extend(terra::ext(x), 10^(-4)), crs=crs(x))
 			}
 		}
-		xExtent = project(terra::ext(x), terra::crds(x), crsLL)
+		xExtent = project(terra::ext(x), terra::crs(x), crsLL)
 		midX = mean(c(terra::xmin(xExtent),terra::xmax(xExtent)))
 		midY = mean(c(terra::ymin(xExtent),terra::ymax(xExtent)))
 	}
@@ -165,9 +165,12 @@ moll = function(x=0, angle=NULL, flip=FALSE) {
 	}
   result  = crs(result)
 
-  theBox = llCropBox(crs=result)
+  theBox = llCropBox(crs=result, 
+  	crop.poles=TRUE, crop.leftright=FALSE, remove.holes = TRUE,  
+  	buffer.width = 50*1000,  densify.interval = 20*1000, 
+  	crop.distance=Inf)
   
-#	 attributes(result)$regionLL = theBox$poly
+	 attributes(result)$regionLL = theBox$regionLL
 		attributes(result)$ellipse = theBox$ellipse
 	 
 	 attributes(result)$crop = theBox$crop
@@ -257,6 +260,7 @@ ocea = function(x, angle=0, flip=FALSE) {
 	
 	attributes(myCrs)$crop = cropBox$crop
 	attributes(myCrs)$ellipse = cropBox$ellipse
+	 attributes(myCrs)$regionLL = cropBox$regionLL
 
 	
 	circleLLp = vect(

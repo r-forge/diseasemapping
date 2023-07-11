@@ -238,6 +238,8 @@ getTiles = function(
 
 #    map.new(rasters[[1]], buffer=20*(xmax(rasters[[1]])-xmin(rasters[[1]])));plot(worldMap, add=TRUE);for(D in 1:length(rasters)) {plot(rasters[[D]], add=TRUE, legend=FALSE)}      
 
+#    map.new(worldMap);plot(worldMap, add=TRUE);for(D in 1:length(rasters)) {plot(rasters[[D]], add=TRUE, legend=FALSE)}      
+
     colourTableList = lapply(rasters, terra::coltab)
     for(D in 1:length(colourTableList)) {
       colourTableList[[D]] = as.data.frame(colourTableList[[D]][[1]])
@@ -289,7 +291,7 @@ getTiles = function(
         rastersMerged[[Dblock]] = rasters[[blockHere$index]]
       }
     }
-#   map.new(rasters[[1]], buffer=20*(xmax(rasters[[1]])-xmin(rasters[[1]])));for(D in 1:length(rastersMerged)) {plot(rastersMerged[[D]], add=TRUE)};plot(worldMap,add=TRUE)      
+#   map.new(rasters[[1]], buffer=2*(xmax(rasters[[1]])-xmin(rasters[[1]])));for(D in 1:length(rastersMerged)) {plot(rastersMerged[[D]], add=TRUE)};plot(worldMap,add=TRUE)      
     # merge columns if possible
     Nblocks = length(rastersMerged)
     if(Nblocks > 1) {
@@ -335,19 +337,24 @@ getTiles = function(
     SoutCells[length(SoutCells)] = terra::ncell(outraster)+1
 
     if(verbose) cat('reprojecting:  ', length(SoutRows), ' cycles:')
+
+    values(rasterSphere) = 1:ncell(rasterSphere)
     for(Dcycle in seq(1,length(SoutRows)-1) ) {
       if(verbose) cat(Dcycle, ' ')
 
       ScellOut = seq(SoutCells[Dcycle], SoutCells[Dcycle+1]-1)
       thisRow = terra::project(
         vect(terra::xyFromCell(outraster, ScellOut), crs=crs(outraster)), 
-        crsMerc)
+        crsMerc, partial=TRUE)
 
+#      theCell = terra::cellFromXY(rasterSphere, crds(thisRow))
+#      if(length(theCell) < length(thisRow))
+        theCell = unlist(terra::extract(rasterSphere, thisRow, ID=FALSE))
 
       SrowColHere = cbind(
         indexOut = 1:length(ScellOut),
         ScellOut = ScellOut,
-        cell = terra::cellFromXY(rasterSphere, terra::crds(thisRow)))
+        cell = theCell)
 
       SrowColHere = merge(SrowColHere, SrowColSub, all.x=TRUE, all.y=FALSE)
       SrowColHere = split(SrowColHere, SrowColHere$block)

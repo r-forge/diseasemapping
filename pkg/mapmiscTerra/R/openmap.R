@@ -223,8 +223,8 @@ openmap = function(
     cellWidthMerc = quantile(terra::values(terra::cellSize(mercHere, unit='m')), 0.5)
 
 
-    areaRast = terra::cellSize(testRast, unit='m')
-    cellWidthRast = quantile(unlist(terra::spatSample(areaRast,  size=200)), prob=0.5)
+    areaRast = suppressWarnings(terra::cellSize(testRast, unit='m'))
+    cellWidthRast = quantile(unlist(terra::spatSample(areaRast,  size=2000)), prob=0.6)
 
 
     areaRatio = cellWidthRast/cellWidthMerc

@@ -85,8 +85,8 @@ insetMap(crs=nldUtm, pos='bottomright', cropInset = 20*1000*c(2,2,1,3), zoom=7,
 insetMap(nldUtm, 'right', cropInset = 500*1000, zoom=4, width=0.25, inset = 0)
 
 
-nldRot = project(nldCities, omerc(nldCities, angle=seq(25,45,by=5)))
-cat(crs(nldRot))
+	nldRot = project(nldCities, omerc(nldCities, angle=seq(25,45,by=5)))
+	cat(crs(nldRot))
 
 \dontrun{
 
