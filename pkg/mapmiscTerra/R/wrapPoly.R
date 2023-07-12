@@ -73,7 +73,7 @@ wrapPoly = function(x, crs, buffer.width = 100*1000) {
 llCropBox = function(crs, 
   buffer.width=50*1000, densify.interval = 25*1000, 
   crop.distance = 2.1e7, crop.poles = TRUE, crop.leftright=TRUE,
-  remove.holes=FALSE) {
+  remove.holes=FALSE, cycles = 4) {
 
 
 
@@ -88,7 +88,7 @@ llCropBox = function(crs,
  LLpoints = vect(rbind(isohedron, llBorder, do.call(rbind, LLborderInner)),crs=crsLL)
 
 
-for(DprojIter in 1:4) {
+for(DprojIter in 1:cycles) {
  suppressWarnings(pointsTransIn <- 
   terra::crds(project(LLpoints,  crs, partial=FALSE)))
 

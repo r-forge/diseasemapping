@@ -19,7 +19,6 @@ library('mapmiscTerra')
 #getOption("mapmiscCacheReadOnly")
 #'
 
-if(!interactive()) pdf("worldMap.pdf")
 #+ themaps, fig.cap='some maps', fig.subcap = c('projectable region', 'projected, with bg','projected, with world countries','projectable madagascar','madagascar')
 
 
@@ -31,6 +30,7 @@ if(!interactive()) pdf("worldMap.pdf")
 		x=world[grep(country, world$NAME)]
 
 		myCrsO = moll(x)
+if(!interactive()) pdf("worldMap.pdf")
 
  plot(world, ylim = 90.5*c(-1,1))
  plot(attributes(myCrsO)$regionLL, 
@@ -103,3 +103,5 @@ if(!interactive()) pdf("worldMap.pdf")
 	if(!interactive()) dev.off()
 	
 #'
+
+
