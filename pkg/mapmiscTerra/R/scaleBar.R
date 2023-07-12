@@ -158,7 +158,7 @@ if(!noScale) {
 	forLegend$legend = ' '
 	forLegend$lwd=3
 
-	
+	if(par('bg')=='transparent' & !any(c('bg','bty') %in% names(forLegend))) forLegend$bty = 'n'
 	
 	thelegend = do.call(graphics::legend, forLegend)
   
