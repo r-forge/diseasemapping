@@ -1,3 +1,5 @@
+
+# https://mc.bbbike.org/mc/?num=2&mt0=mapnik&mt1=maptiler_streets
 osmTiles = function(name, xyz, suffix) {
   result = c(
     osm = "http://tile.openstreetmap.org",
@@ -5,16 +7,22 @@ osmTiles = function(name, xyz, suffix) {
     'osm-roads-grey' = 'http://korona.geog.uni-heidelberg.de/tiles/roadsg/',
     'osm-roads' = 'http://korona.geog.uni-heidelberg.de/tiles/roads',
     'osm-semitransparent' = 'http://korona.geog.uni-heidelberg.de/tiles/hybrid/',
-    "osm-no-labels"="http://c.tiles.wmflabs.org/osm-no-labels/",
+#    "osm-no-labels"="http://c.tiles.wmflabs.org/osm-no-labels/",
     "osm-de"="http://c.tile.openstreetmap.de/tiles/osmde/",
     "osm-ru" = "http://a.tiles.wmflabs.org/osm-multilingual/ru,_/",
     "osm-transport"="http://tile2.opencyclemap.org/transport/",
     "stamen-toner" = "https://stamen-tiles-d.a.ssl.fastly.net/toner/",
     "stamen-watercolor" = "https://tiles.stadiamaps.com/styles/stamen_watercolor/",
+    'stamen-terrain' = 'https://stamen-tiles-c.a.ssl.fastly.net/terrain/',
     "bw-mapnik"="http://b.tiles.wmflabs.org/bw-mapnik2/",
-#			mapquest="http://otile1.mqcdn.com/tiles/1.0.0/osm/",
-#			"mapquest-sat"="http://otile1.mqcdn.com/tiles/1.0.0/sat",
-#      "mapquest-labels"='http://otile3.mqcdn.com/tiles/1.0.0/hyb/',
+    'bvg' = 'https://bvg-gis-c.hafas.de/hafas-tiles/inno2017/',
+    'esri' = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/',
+    'esri-satellite' = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/',
+    'esri-natgeo' = 'https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/',
+    'esri-overlay' = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Reference_Overlay/MapServer/tile/',
+    'esri-topo' = 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/',
+    'komoot' = 'https://a.tile.hosted.thunderforest.com/komoot-2/',
+#    soviet = 'https://y.tile.bbbike.org/cgi-bin/tapp/tilecache.py/1.0.0/topomapper_v2/',
     'osm-cyclemap' = 'http://a.tile.opencyclemap.org/cycle/',
     'osm-seamap' = 'http://tiles.openseamap.org/seamark/',
     'osm-fr' = 'http://a.tile.openstreetmap.fr/osmfr/',
@@ -22,8 +30,8 @@ osmTiles = function(name, xyz, suffix) {
     'hyda' = 'http://c.tile.openstreetmap.se/hydda/full/',
     'hyda-base' = 'http://c.tile.openstreetmap.se/hydda/base/',
     'hyda-roads' = 'http://c.tile.openstreetmap.se/hydda/roads_and_labels/',
-    "opentopomap" = "http://opentopomap.org/",
-    "maptoolkit"="http://tile2.maptoolkit.net/terrain/",
+    "opentopomap" = "https://a.tile.opentopomap.org/",
+    "maptoolkit"="https://rtc-cdn.maptoolkit.net/rtc/toursprung-terrain/",
     waze="https://worldtiles2.waze.com/tiles/",
     'waze-us'='https://livemap-tiles2.waze.com/tiles/',
     humanitarian="http://a.tile.openstreetmap.fr/hot/",
@@ -154,9 +162,9 @@ openmap = function(
 # get extent of output
 
 # get output raster
-  extentTestRast = terra::ext(x)
-  if(any(diff(as.vector(extentTestRast))[-2] <= 0)) {
-      extentTestRast = terra::extend(extentTestRast, 1)
+  extentTestRast = terra::extend(terra::ext(x), buffer)
+  if(any(diff(as.vector(extentTestRast))[-2] <= 1e-4)) {
+      extentTestRast = terra::extend(extentTestRast, 1e-4)
   }
   testRast = rast(extentTestRast, res = (terra::xmax(extentTestRast) - terra::xmin(extentTestRast))/NtestCols, crs = crsIn)
   testPoints = vect(terra::xyFromCell(testRast, 1:terra::ncell(testRast)), crs=terra::crs(testRast))
@@ -176,6 +184,9 @@ openmap = function(
 
     } else {
           outExtent = terra::extend(outExtent, buffer)
+    }
+    if(terra::is.lonlat(crsOut)) {
+      outExtent = terra::intersect(outExtent, terra::unwrap(bboxLL))
     }
 
   testRast = rast(outExtent, res = (terra::xmax(outExtent) - terra::xmin(outExtent))/NtestCols, crs = crsOut)
@@ -214,17 +225,18 @@ openmap = function(
     theTable$cell = as.numeric(as.character(theTable[,1]))
  
     mercHere = terra::crop(mercHere, 
-      terra::ext(rep(terra::xyFromCell(mercHere, theTable[which.max(theTable$Freq), 'cell']), each=2) + 
+      terra::ext(
+        rep(terra::xyFromCell(mercHere, theTable[which.max(theTable$Freq), 'cell']), each=2) + 
         0.6*rep(terra::res(mercHere), each=2)*c(-1,1,-1,1)))
     # each tile is 256 x 256
     mercHere = terra::disagg(mercHere, 256)
 
     # width of the cell with the most test points in it
-    cellWidthMerc = quantile(terra::values(terra::cellSize(mercHere, unit='m')), 0.5)
+    cellWidthMerc = quantile(terra::values(terra::cellSize(mercHere, unit='m')), 0.5, na.rm=TRUE)
 
 
     areaRast = suppressWarnings(terra::cellSize(testRast, unit='m'))
-    cellWidthRast = quantile(unlist(terra::spatSample(areaRast,  size=2000)), prob=0.6)
+    cellWidthRast = quantile(unlist(terra::spatSample(areaRast,  size=min(c(terra::ncell(areaRast), 2000)))), prob=0.6, na.rm=TRUE)
 
 
     areaRatio = cellWidthRast/cellWidthMerc
@@ -282,7 +294,7 @@ openmap = function(
     tileNames = 'zyx'
   } else if(
     length(grep(
-      '[.]arcgisonline[.]com', Durl
+      '[.]arcgisonline[.]com|bbbike', Durl
     ))) {
     suffix='.jpg'
     tileNames = 'zyx'

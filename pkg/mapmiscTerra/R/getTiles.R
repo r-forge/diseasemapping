@@ -123,7 +123,7 @@ getTiles = function(
   verbose=FALSE, suffix = '.png',
   tileNames = 'zxy'){
   
-  maxPixelsPerCycle = 4e5
+  maxPixelsPerCycle = 1e5
   NtestCols = 100
   NrowsPerCycle = floor(maxPixelsPerCycle/terra::ncol(outraster)) # number of rows of out raster to process simultaneously
 
@@ -275,7 +275,7 @@ getTiles = function(
 
       colourtableFinal = NULL
     }
-    # merge rows into blocks
+    # merge columns into blocks
 
     SrowCol$newBlock = c(TRUE, !(diff(SrowCol$col)==0 & diff(SrowCol$row)==1))
     SrowCol$block = cumsum(SrowCol$newBlock)
@@ -290,9 +290,10 @@ getTiles = function(
       } else {
         rastersMerged[[Dblock]] = rasters[[blockHere$index]]
       }
+#      plot(rastersMerged[[Dblock]], add=TRUE)
     }
-#   map.new(rasters[[1]], buffer=2*(xmax(rasters[[1]])-xmin(rasters[[1]])));for(D in 1:length(rastersMerged)) {plot(rastersMerged[[D]], add=TRUE)};plot(worldMap,add=TRUE)      
-    # merge columns if possible
+#   map.new(worldMap);for(D in 1:length(rastersMerged)) {plot(rastersMerged[[D]], add=TRUE)};plot(worldMap,add=TRUE)      
+    # merge rows if possible
     Nblocks = length(rastersMerged)
     if(Nblocks > 1) {
     toMerge = matrix(FALSE, Nblocks, Nblocks)
@@ -300,7 +301,8 @@ getTiles = function(
       for(DblockRow in seq(DblockCol+1, Nblocks)) {
         bmat1 = SrowCol[SrowCol$block == DblockCol, ]
         bmat2 = SrowCol[SrowCol$block == DblockRow, ]
-        toMerge[DblockRow, DblockCol] = all(bmat1$row == bmat2$row) & all(abs(bmat1$col - bmat2$col) ==1)
+        if(nrow(bmat1) == nrow(bmat2))
+          toMerge[DblockRow, DblockCol] = all(bmat1$row == bmat2$row) & all(abs(bmat1$col - bmat2$col) ==1)
       }
     }
 
@@ -314,8 +316,10 @@ getTiles = function(
     blockToMerge = sort(blockToMerge)
     blockToMergeOrig = min(blockToMerge)
 
-    rastersMerged[[blockToMergeOrig]] = do.call(terra::merge, rastersMerged[blockToMerge])
-    rastersMerged = rastersMerged[sort(unique(c(blockToMergeOrig, setdiff(1:length(rastersMerged), blockToMerge))))]
+    if(length(blockToMerge)>1) {
+      rastersMerged[[blockToMergeOrig]] = do.call(terra::merge, rastersMerged[blockToMerge])
+    }
+#    rastersMerged = rastersMerged[sort(unique(c(blockToMergeOrig, setdiff(1:length(rastersMerged), blockToMerge))))]
     SrowCol[SrowCol$block %in% blockToMerge, 'block'] = blockToMergeOrig
     } # more than one block
 
@@ -364,6 +368,8 @@ getTiles = function(
               terra::extract(
                 rastersMerged[[xx[1,'block']]], 
                 thisRow[xx[, 'indexOut',drop=FALSE]], cells=FALSE, xy=FALSE, ID=FALSE, raw=TRUE))
+#            result[is.nan(result[,2]),2] = NA
+#            result
       })
       outValuesHere = as.matrix(do.call(rbind, outValuesHere))
       outValuesHere = outValuesHere[order(outValuesHere[,1]), ]

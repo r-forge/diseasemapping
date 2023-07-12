@@ -88,6 +88,8 @@ if(is.character(map)) {
 	forMap = terra::union(project(mapExtent, crsMerc), project(cropInsetVec, crsMerc))
   map = openmap(x=forMap, path=map, zoom=zoom,crs=crsMerc, verbose=TRUE)
   mapOrig = terra::deepcopy(map)
+} else {
+	mapOrig = map
 }
 
 

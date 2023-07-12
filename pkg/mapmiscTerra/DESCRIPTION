@@ -10,3 +10,5 @@ Author: Patrick Brown <patrick.brown@utoronto.ca>
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
 Description: A minimal, light-weight set of tools for producing nice looking maps in R, with support for map projections. 
 License: GPL
+VignetteBuilder: knitr
+
