@@ -35,19 +35,20 @@ gridlinesWrap = function(crs,
 	glines[glines$type == 'east' & glines$neg, 'direction'] = 'W'
 	terra::values(glines)$ID = paste0(glines$degrees, glines$direction)
 
-	glinesT = wrapPoly(x=glines, crsT)
-
 	if(!all(c('ellipse','crop') %in% names(attributes(crsT)))) {
 		ellipseAndCrop = llCropBox(crsT)
 		attributes(crsT)$ellipse = ellipseAndCrop$ellipse
 		attributes(crsT)$crop = ellipseAndCrop$crop
 	} 
 
+	glinesT = wrapPoly(x=glines, crsT)
+
+
 	
-	ellipseSmall =  attributes(crsT)$ellipse
-	if(!is.null(ellipseSmall)) {
-		glinesT = terra::crop(glinesT, ellipseSmall)
-	}
+#	ellipseSmall =  attributes(crsT)$ellipse
+#	if(!is.null(ellipseSmall)) {
+#		glinesT = terra::crop(glinesT, ellipseSmall)
+#	}
 
 	
 	legendPoints = terra::centroids(glinesT, inside=TRUE)

@@ -71,7 +71,7 @@ wrapPoly = function(x, crs, buffer.width = 100*1000) {
 }
 
 llCropBox = function(crs, 
-  buffer.width=50*1000, densify.interval = 25*1000, 
+  buffer.width=100*1000, densify.interval = 25*1000, 
   crop.distance = 2.1e7, crop.poles = TRUE, crop.leftright=TRUE,
   remove.holes=FALSE, cycles = 4) {
 
@@ -179,9 +179,13 @@ if(crop.poles) {
 
 # plot(project(worldMap, crsLL), ylim = c(-92, 92));plot(edgeLL, add=TRUE, col='blue')
 
-if(!all(pointsInRegion)) {
+if(!all(pointsInRegion) & FALSE) { # not needed?
   excludedFromLL =  LLpoints[!pointsInRegion]
-  exclBuf = terra::buffer(terra::erase(excludedFromLL, polesAndSidesLLpoly), buffer.width)
+  if(crop.poles) {
+    exclBuf = terra::buffer(terra::erase(excludedFromLL, polesAndSidesLLpoly), buffer.width)
+  } else {
+    exclBuf = terra::buffer(excludedFromLL, buffer.width)
+  }
   theHullLL = terra::convHull(vect(c(excludedFromLL, terra::as.points(exclBuf))))
   edgeLL =  terra::aggregate(terra::vect(c(edgeLL, theHullLL)))
 } 

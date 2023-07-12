@@ -58,7 +58,9 @@ coords = rbind(Alert = c(-62.338889, 82.501389),
 x = vect(coords, 
   atts=data.frame(name=rownames(coords)),
   crs=crsLL)
+data('worldMap');worldMap = unwrap(worldMap)
 ```
+
 
 
 
@@ -83,6 +85,7 @@ x = vect(coords,
   scaleBar(x, 'bottom')
   scaleBar(x, 'left', seg.len=0, bty='n')
 ```
+
 
 
 
@@ -124,10 +127,13 @@ x = vect(coords,
   map.new(mapMerc)
   plot(mapMerc,add=TRUE)
   points(xMerc)
+  plot(wrapPoly(worldMap, xMerc), add=TRUE)
   text(xMerc, label=xMerc$name, pos=4, halo=TRUE)
-  scaleBar(xMerc, 'bottomleft', bty='n')
+  scaleBar(xMerc, 'bottom', bty='n')
   scaleBar(xMerc, 'left', seg.len=0, bty='n')
 ```
+
+
 
 
 
@@ -147,17 +153,29 @@ x = vect(coords,
 
 
 ```{r arcticCRS}
-  x2 = project(x, crs("+init=epsg:6103"))
+  crsA = crs("+init=epsg:3573")
+  theBox = llCropBox(crsA, buffer.width=100*1000,  crop.distance = 5e7, crop.poles = FALSE, crop.leftright=TRUE, remove.holes=TRUE, cycles=4)
+  attributes(crsA)[names(theBox)] = theBox
+
+  x2 = project(x, crsA)
   map = openmap(x2,     
     path='opentopomap', zoom=3, fact=fact, 
-    buffer=c(6,3)*100*1000)   
+    buffer=c(5,9,3,9)*100*1000)   
   map.new(map)
   plot(map, add=TRUE)
+  plot(wrapPoly(worldMap, crsA), add=TRUE)
+  gridlinesWrap(crsA,norths = seq(70,90,by=5), easts=0)
   points(x2, pch=4, col='red', cex=2)
   text(x2, label=x2$name, pos=1, col='red', halo=TRUE)
-  scaleBar(x2, 'topleft', bty='n')
-  scaleBar(x2, 'bottomright', bty='n')
+  scaleBar(crsA, 'topleft', bty='n')
+  scaleBar(crsA, 'bottomright', bty='n')
 ```
+
+
+
+
+
+
 
 
 
