@@ -88,6 +88,22 @@ insetMap(nldUtm, 'right', cropInset = 500*1000, zoom=4, width=0.25, inset = 0)
 	nldRot = project(nldCities, omerc(nldCities, angle=seq(25,45,by=5)))
 	cat(crs(nldRot))
 
+
+# testing the wrapping of polygons with an ugly projection
+crsMollRot = moll(nldCities, angle = 70)
+map.new(crsMollRot, col='lightblue')
+plot(wrapPoly(worldMap, crsMollRot), col='red', add=TRUE)
+
+plot(project(worldMap, crsLL))
+plot(attributes(crsMollRot)$crop, add=TRUE, col='red')
+
+crsMollRot = moll(worldMap[grep("Sierra Leone", worldMap$NAME)] , angle = -45)
+map.new(crsMollRot, col='lightblue')
+plot(wrapPoly(worldMap, crsMollRot), col='red', add=TRUE)
+
+plot(project(worldMap, crsLL))
+plot(attributes(crsMollRot)$crop, add=TRUE, col='red')
+
 \dontrun{
 
 map.new(nldRot)
@@ -101,8 +117,7 @@ plot(attributes(crsMoll)$ellipse, col='lightblue')
 plot(worldMap2, add=TRUE, col='yellow')
 
 crsMoll3 = moll(-100)
-
-worldMap3 = wrapPoly(worldMap, crsMoll3, buffer.width=150*1000)
+worldMap3 = wrapPoly(worldMap, crsMoll3)
 plot(attributes(crsMoll3)$ellipse, col='lightblue')
 plot(worldMap3, add=TRUE, col='yellow')
 

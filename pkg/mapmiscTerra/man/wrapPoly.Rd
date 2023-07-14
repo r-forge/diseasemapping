@@ -10,8 +10,8 @@ Reprojects a SpatialPolygons object to a projection with longitude wrapping othe
 wrapPoly(x,crs, buffer.width = 100*1000)
 llCropBox(crs, 
   buffer.width=100*1000, densify.interval = 25*1000, 
-  crop.distance = 2.1e7, crop.poles = TRUE, crop.leftright=TRUE,
-  remove.holes=FALSE, cycles = 4)
+  crop.distance = 2.1e7, crop.poles = FALSE, crop.leftright=FALSE,
+  remove.holes=TRUE, cycles = 2, ellipse=NULL)
 }
 
 \arguments{
@@ -24,6 +24,7 @@ llCropBox(crs,
 \item{crop.leftright}{remove points near 180 longitute line}
 \item{remove.holes}{fill holes in the crop region}
 \item{cycles}{iterations adding denser points}
+\item{ellipse}{boundary of the world in crs coordinates}
 }
 
 \value{
