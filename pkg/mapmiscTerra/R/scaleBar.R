@@ -58,7 +58,7 @@ scaleBar = function(crs,
 	
 # how long (in m) is our target dash
 	dashTargetDist = as.matrix(terra::distance(xll))[1,2]
-	desiredLen = strwidth("x")*forLegend$seg.len 
+	desiredLen = strwidth("m")*forLegend$seg.len 
 	
 	theb = log10(dashTargetDist)
 	candidates = 10^c(floor(theb), ceiling(theb))

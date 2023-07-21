@@ -72,6 +72,7 @@ data('worldMap');worldMap = unwrap(worldMap)
 
 
 
+
         
 ```{r osm}
   map = openmap(x, 
@@ -160,7 +161,7 @@ data('worldMap');worldMap = unwrap(worldMap)
   x2 = project(x, crsA)
   map = openmap(x2,     
     path='opentopomap', zoom=3, fact=fact, 
-    buffer=c(5,9,3,9)*100*1000)   
+    buffer=c(5,7,3,7)*100*1000)   
   map.new(map)
   plot(map, add=TRUE)
   plot(wrapPoly(worldMap, crsA), add=TRUE)
@@ -186,40 +187,48 @@ data('worldMap');worldMap = unwrap(worldMap)
 Check to see that Mount Waterhouse and a rocky island are correctly positioned
 
 ```{r southData}
-
 waterhouseLL = vect(
   cbind(x=178.7729285, y=-49.6941201), 
-  crs=crsLL
-)
+  crs=crsLL)
 
 rockLL = vect(
-  cbind(x=178.80112, y=-49.69171), 
-  crs=crsLL
-)
+  cbind(x=178.78542, y=-49.70003), 
+  crs=crsLL)
 
 
-  waterhouseMerc <- project(waterhouseLL, crsMerc)
+
+waterhouseMerc <- project(waterhouseLL, crsMerc)
   
   
-  rockMerc = project(rockLL, crsMerc)
+rockMerc = project(rockLL, crsMerc)
 ```
+
+
+
+
+
 
 
 
 
 
 ```{r southInset}
-  mollWaterhouse = moll(178)
+  mollWaterhouse = moll(waterhouseMerc, angle=45, flip=TRUE)
   waterhouseWrap = project(waterhouseMerc, mollWaterhouse)
   
-  
-  # need to fix for larger buffers
   southInset = openmap(x=waterhouseWrap, 
-    path='osm', zoom = 4, fact=2,#fact, 
-    buffer=600*1000, verbose=TRUE)#c(4,1,2,1)*1)
-  
-
+    path='osm', zoom = 3, fact=2,#fact, 
+    buffer=c(0.8, 0.2,0.4, 0.6)*1000*1000, verbose=TRUE)#c(4,1,2,1)*1)
 ```
+
+
+
+
+
+
+
+
+
 
 Red circle has radius 1km.
 
@@ -234,22 +243,22 @@ insetMap(crs=mapMerc,
   pos='bottomright', 
   map=southInset, cropInset = NULL)
 #scaleBar(crs=mapMerc,  seg.len=35, pos='center')
-sRes = scaleBar(mapMerc, 'bottomleft', cex=2, bty='n')
+sRes = scaleBar(mapMerc, 'bottomleft', cex=1.5, bty='n', outer=FALSE, inset=0.1)
 
 # scale bar appears off
 scaleCentre = vect(
   cbind(Re(sRes$out$textxy), Im(sRes$out$textxy)), 
   crs=crs(mapMerc))
 
-  scaleCentre = project(
+  scaleCentreLL = project(
     scaleCentre, 
     crsLL
   )	
   circle = vect(
     geosphere::destPoint(
-      crds(scaleCentre),
+      crds(scaleCentreLL),
       seq(0,360,len=100),
-      5000
+      1000
     ),
     crs = crsLL)
   circle = project(circle, crs(mapMerc))
@@ -258,25 +267,27 @@ scaleCentre = vect(
 ```
 
 
-```{r rockMerc, eval=FALSE, purl=FALSE} 
-# doesn't work vector memory exhausted
-mapMercFine = openmap(rockMerc, buffer=100, crs=crsMerc,zoom=18)
+
+```{r rockMerc} 
+mapMercFine = openmap(rockMerc, buffer=50, crs=crsMerc,zoom=19, verbose=TRUE)
 
 map.new(mapMercFine)
 plot(mapMercFine, add=TRUE)
-points(rockMerc, col='blue',cex=5)
-  insetMap(crs=mapMercFine, 
+points(rockMerc, col='blue')
+insetMap(crs=mapMercFine, 
   pos='bottomright', 
-  map=southInset, 
-  lty=0)
-  scaleBar(mapMercFine, 'bottomleft')
+  map=mapMerc, 
+  lty=0,cropInset=NULL)
+scaleBar(mapMercFine, 'bottomleft', inset=0.1)
 ```
 
 
+
+
+
+
 ```{r waterhouseLL}
-  
-  mapLL = openmap(waterhouseLL, buffer=0.02, fact=fact)
-  # inset map not working
+  mapLL = openmap(waterhouseLL, buffer=0.02, fact=2)
   map.new(mapLL)
   plot(mapLL, add=TRUE, maxpixels = 10^6)
   points(waterhouseLL, pch=3, cex=5)
@@ -287,12 +298,12 @@ points(rockMerc, col='blue',cex=5)
   scaleBar(mapLL, 'bottomleft')
 ```
 
-```{r rockLL, eval=FALSE, purl=FALSE}	
-# zoom was 19, not working
-  mapLLfine = openmap(rockLL, zoom=14, fact=2, buffer=1e-3,verbose=TRUE)  
+
+
+```{r rockLL}	
+  mapLLfine = openmap(rockLL, zoom=19, fact=2, buffer=3e-4,verbose=TRUE)  
   map.new(mapLLfine)
   plot(mapLLfine, add=TRUE)	
   points(rockLL, col='blue', pch=3, cex=5)
   scaleBar(mapLL, 'bottomleft')
-
 ```

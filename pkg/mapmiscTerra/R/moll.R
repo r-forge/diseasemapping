@@ -114,7 +114,7 @@ moll = function(x=0, angle=NULL, flip=FALSE) {
 
 
 		fromOptim = optim(
-			c(lon_p=0,lat_p=90, lon_0minuslon_p=0),
+			c(lon_p=midX,lat_p=midY, lon_0minuslon_p=0),
 			testFunCrs,
 			lower = c(-180, -90, -100), upper = c(180, 90, 100),
 			method = 'L-BFGS-B',

@@ -243,7 +243,6 @@ openmap = function(
 
     newNumberOfCells = fact*NtestCols*sqrt(areaRatio)
 
-
     outraster = rast(outExtent, res = (terra::xmax(outExtent) - terra::xmin(outExtent))/newNumberOfCells, crs = crsOut)
   } # end not merc
 

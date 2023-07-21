@@ -342,7 +342,7 @@ getTiles = function(
 
     if(verbose) cat('reprojecting:  ', length(SoutRows), ' cycles:')
 
-    terra::values(rasterSphere) = 1:terra::ncell(rasterSphere)
+#    terra::values(rasterSphere) = 1:terra::ncell(rasterSphere)
     for(Dcycle in seq(1,length(SoutRows)-1) ) {
       if(verbose) cat(Dcycle, ' ')
 
@@ -350,15 +350,16 @@ getTiles = function(
       thisRow = terra::project(
         vect(terra::xyFromCell(outraster, ScellOut), crs=crs(outraster)), 
         crsMerc, partial=TRUE)
+      isIn = relate(thisRow, ext(rasterSphere), 'within')
 
-#      theCell = terra::cellFromXY(rasterSphere, crds(thisRow))
-#      if(length(theCell) < length(thisRow))
-        theCell = unlist(terra::extract(rasterSphere, thisRow, ID=FALSE))
+        theCell = terra::cellFromXY(rasterSphere, terra::crds(thisRow)[isIn,])
+#        theCell = unlist(terra::extract(rasterSphere, thisRow, ID=FALSE))
 
       SrowColHere = cbind(
         indexOut = 1:length(ScellOut),
         ScellOut = ScellOut,
-        cell = theCell)
+        cell = NA)
+      SrowColHere[isIn,'cell'] = theCell
 
       SrowColHere = merge(SrowColHere, SrowColSub, all.x=TRUE, all.y=FALSE)
       SrowColHere = split(SrowColHere, SrowColHere$block)
@@ -371,6 +372,8 @@ getTiles = function(
 #            result[is.nan(result[,2]),2] = NA
 #            result
       })
+      for(D in names(outValuesHere)[-1])
+        names(outValuesHere[[D]]) = names(outValuesHere[[1]])
       outValuesHere = as.matrix(do.call(rbind, outValuesHere))
       outValuesHere = outValuesHere[order(outValuesHere[,1]), ]
       if(terra::inMemory(outraster)) {

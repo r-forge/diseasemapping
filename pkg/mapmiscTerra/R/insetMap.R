@@ -89,7 +89,8 @@ if(is.character(map)) {
   map = openmap(x=forMap, path=map, zoom=zoom,crs=crsMerc, verbose=TRUE)
   mapOrig = terra::deepcopy(map)
 } else {
-	mapOrig = map
+	map = terra::deepcopy(map)
+	mapOrig = terra::deepcopy(map)
 }
 
 
@@ -164,10 +165,11 @@ scale =  apply(bbSmall, 2, diff)/ apply(bbOrig, 2, diff)
 N = length(xsp)
 
 
-
+if(N) {
 xsp = vect(
 	(terra::crds(xsp) - bbOrig[rep(1,N),]) * matrix(scale, N, 2, byrow=TRUE) + bbSmall[rep(1,N),], 
 	crs = crs(mapOrig))
+}
 
 toScale = list(shift1 = bbOrig[1,], scale=scale, shift2 = bbSmall[1,])		
 
@@ -179,7 +181,7 @@ theCol = do.call(grDevices::rgb,
 do.call(graphics::clip, as.list(par('usr')))
 graphics::image(terra::xFromCol(map), terra::yFromRow(map, nrow(map):1), 
 	matrix(terra::values(map), ncol(map), nrow(map) )[, nrow(map):1],
-	useRaster=TRUE, add=TRUE, col=theCol)
+	useRaster=FALSE, add=TRUE, col=theCol)
 # for some reason, the code below crops the map
 #plot(map, add=TRUE)
 

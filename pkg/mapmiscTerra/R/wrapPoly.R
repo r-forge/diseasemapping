@@ -127,8 +127,9 @@ for(DprojIter in 1:cycles) {
 } else {
   regionTransSmooth = terra::densify(regionTransOrig, densify.interval)
 }
-} else {
-  regionTransSmooth = ellipse
+
+} else { # have ellipse
+  regionTransOrig = regionTransSmooth = ellipse
 }
 
 regionTransPoly1 = terra::densify(
@@ -181,16 +182,7 @@ if(crop.poles) {
 
 # plot(project(worldMap, crsLL), ylim = c(-92, 92));plot(edgeLL, add=TRUE, col='blue')
 
-if(!all(pointsInRegion) & FALSE) { # not needed?
-  excludedFromLL =  LLpoints[!pointsInRegion]
-  if(crop.poles) {
-    exclBuf = terra::buffer(terra::erase(excludedFromLL, polesAndSidesLLpoly), buffer.width)
-  } else {
-    exclBuf = terra::buffer(excludedFromLL, buffer.width)
-  }
-  theHullLL = terra::convHull(vect(c(excludedFromLL, terra::as.points(exclBuf))))
-  edgeLL =  terra::aggregate(terra::vect(c(edgeLL, theHullLL)))
-} 
+
 
 
 regionLL = terra::erase(terra::as.polygons(terra::ext(-180, 180, -90, 90), crs = crsLL), edgeLL)
