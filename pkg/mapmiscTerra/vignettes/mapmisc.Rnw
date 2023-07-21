@@ -1,0 +1,301 @@
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Overview of mapping with mapmisc}
+\documentclass[12pt]{article}
+
+
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx,hyperref}
+\DeclareGraphicsExtensions{.png}
+
+\usepackage{caption,subcaption}
+\providecommand{\subfloat}[2][need a sub-caption]{\subcaptionbox{#1}{#2}}
+
+
+\title{The mapmisc package}
+\author{Patrick Brown}
+
+
+\begin{document}
+\maketitle 
+
+<<setup,echo=FALSE,cache=FALSE,results='hide',message=FALSE>>=
+library('knitr')
+opts_chunk$set(echo=TRUE,message=FALSE,
+    dev='png', 
+    fig.align='center',fig.pos='ht',width=80,
+    fig.height=5,fig.width=3,out.width="0.3\\textwidth",
+    dev.args=list(bg='white')
+)
+
+
+
+library('mapmisc')
+
+if(!exists('mapmiscCachePath'))
+  mapmiscCachePath = system.file('extdata', package='mapmisc')
+
+if(!exists('mapmiscCacheReadOnly'))
+  mapmiscCacheReadOnly = TRUE
+
+if(!exists('fact'))
+  fact = 1
+# uncomment for nicer images
+# fact = 2 
+
+options(
+  mapmiscCachePath = mapmiscCachePath,
+  mapmiscCacheReadOnly = mapmiscCacheReadOnly
+  )
+opts_chunk$set(dpi=72*fact)
+@
+
+
+<<mapmiscCache, purl=FALSE, echo=FALSE>>=
+if(!exists('testing')) testing=FALSE
+if(testing) {
+  cat('cache:', getOption('mapmiscCachePath'))
+  cat('\nread only:', getOption('mapmiscCacheReadOnly'))
+  cat('\n')
+options(mapmiscVerbose = TRUE)
+}
+
+@
+
+
+This document will be incomplete if {\tt rgdal} is unavailable or there is on
+internet connection when this document is compiled.  The full document is at
+\url{http://diseasemapping.r-forge.r-project.org/}.
+
+\section{Introduction}
+
+This package provides a few utilities for making nice maps in R, with an
+emphasis on enabling maps in short tidy code chunks which are suitable for
+Sweave and knitr documents.  The package duplicates the capabilities of
+packages such as classInt, geonames, and OpenStreetMap, and the price of having
+tidier code is much of the flexibility from these other packages has been lost
+here.
+
+The meuse data
+<<meusedata,echo=TRUE>>=
+data('netherlands')
+meuse = unwrap(meuse)
+@
+
+
+
+
+<<meuseProj,echo=TRUE>>=
+meuseLL = project(meuse, crsLL)
+@
+
+
+Get elevation data
+
+<<dataneth>>=
+nldElev = unwrap(nldElev)
+@
+
+
+
+
+The elevation data is a Raster.
+<<classElev>>=
+class(nldElev)
+nldElev = crop(nldElev, extend(ext(meuse), 1000))
+@
+
+
+
+
+\section{Downloading background maps and city locations}
+
+Get a background map covering the extent of the meuse data
+<<openmap>>=
+nldTiles = openmap(meuse)
+@
+
+{\tt nldTiles} is a Raster with the same projection as {\tt meuse}
+<<openmapInfo>>=
+class(nldTiles)
+crs(nldTiles, proj=TRUE)
+crs(meuse, proj=TRUE)
+@
+Maps which can be downloaded are shown at
+\url{http://diseasemapping.r-forge.r-project.org/openmap/}
+
+
+
+A list of cities, included in the {\tt netherlands} data.
+<<cities1>>=
+nldCities = unwrap(nldCities)
+@
+
+
+Or download using {\tt GNcities}, a wrapper for the function of the same name in the geonames
+package.
+
+<<cities,eval=FALSE, purl=FALSE>>=
+options(geonamesUsername="myusernamehere") 
+if(file.exists("~/geonamesUsername.R")) source("~/geonamesUsername.R")
+nldCities = GNcities(meuse, maxRows=6)
+@
+
+A SpatVector, with same map projection.
+<<citiesInfo>>=
+class(nldCities)
+names(nldCities)
+crs(nldCities, proj=TRUE)
+@
+
+
+\section{Making maps}
+
+The {\tt map.new} function sets up a map in the current plot window with the
+correct limits and aspect ratio for the object supplied, and without margins or
+white space. {\tt scaleBar} adds a scale and north arrow.  It uses the map
+projection of the argument supplied to calculate distances and find north.
+
+
+
+
+<<simpleMap,fig.cap="simple map", fig.subcap=c("data locations","cities","elevation")>>=
+# plot the data locations
+map.new(meuse)
+plot(nldTiles, add=TRUE)
+points(meuse,col="red", cex=0.3)
+scaleBar(meuse,pos="topleft", bg="white")
+
+# plot city names
+map.new(meuse)
+plot(nldTiles, add=TRUE)
+points(nldCities)
+text(nldCities, labels=nldCities$name, pos=3)
+scaleBar(meuse,pos="topleft", bg="white")
+
+# plot elevation
+map.new(meuse, legendRight=TRUE)
+plot(nldTiles, add=TRUE)
+plot(nldElev,add=TRUE,col=terrain.colors(8),alpha=0.6,legend.mar=2, legend.line=0,)
+scaleBar(meuse,pos="topleft",bg="white")
+
+@
+
+\section{Legends}
+
+
+Create a colour scale for plotting copper  concentrations
+<<meuseScale>>=
+cuScale = colourScale(meuse$copper, breaks=5, style='equal', 
+    opacity=0.8, dec=-1, firstBreak=0)
+@
+and elevation, with transparency decreasing as elevation increases.
+<<elevScale>>=
+elevScale = colourScale(nldElev, style='equal',
+    breaks=6, col=terrain.colors,
+    firstBreak=0, dec=-1,opacity=c(0.2, 0.9))
+@
+
+Soil type is a categorical variable, create a factor and create a colour scale
+of unique values
+<<soilScale>>=
+meuse$soilFac = factor(meuse$soil, levels=c(1,2,3), 
+    labels=c("Calcareous","Non-Calc's","Red Brick"))
+soilScale = colourScale(meuse$soilFac, col="Set2")
+@
+
+
+
+<<meuseLegends,fig.subcap=c("Copper","soil", "elevation"), fig.cap="Meuse data again">>=
+map.new(meuse)
+plot(nldTiles, add=TRUE)
+plot(meuse, col=cuScale$plot,add=TRUE,pch=16)
+legendBreaks("bottomright",  breaks=cuScale,
+    title="gals/firkin")
+
+
+map.new(meuse)
+plot(nldTiles, add=TRUE)
+plot(meuse, col=soilScale$plot,add=TRUE,pch=16)
+legendBreaks("bottomright", breaks=soilScale,
+    title="soil type", cex=0.7,bg="white")
+
+map.new(meuse)
+plot(nldTiles, add=TRUE)
+plot(nldElev, breaks=elevScale$breaks, col=elevScale$colOpacity, 
+    legend=FALSE,add=TRUE)
+legendBreaks("left", breaks=elevScale, title='Metres',bg="white")
+@
+
+
+\section{More plots}
+
+Rotate the data 50 degrees clockwise with an oblique mercator projection.
+
+<<reproj,echo=TRUE>>=
+  meuseRot = project(meuse, omerc(meuse, -50))
+  tilesRot = openmap(meuseRot, fact=2)
+  elevRot = project(nldElev, crs(meuseRot))
+  nldCitiesRot = project(nldCities, crs(meuseRot))
+@
+
+
+
+And create new plots
+
+<<rotatedMap,fig.cap="Rotated map", fig.subcap=c("elevation","data"), fig.height=3,fig.width=4,out.width="0.48\\textwidth">>=
+
+
+# first elevation
+map.new(meuseRot)
+plot(tilesRot, add=TRUE)
+plot(elevRot,add=TRUE,alpha=0.5,col=terrain.colors(8), legend=FALSE)
+points(nldCitiesRot)
+text(nldCitiesRot, labels=nldCitiesRot$name, pos=3)
+
+scaleBar(meuseRot,pos="topleft", bg="white")
+
+
+# then data locations
+map.new(meuseRot)
+plot(tilesRot, add=TRUE)
+points(meuseRot,col="red", cex=0.3)
+
+scaleBar(proj4string(meuseRot), bg="white")
+@
+
+\section{Inset maps}
+
+<<world>>=
+world = openmap(
+    ext(-10,30,40,60),
+    path="osm-no-labels")
+@
+
+
+<<inset,fig.cap="Inset map", fig.subcap=c("elevation","rotated"), fig.height=3,fig.width=4,out.width="0.48\\textwidth">>=
+
+# not rotated
+map.new(meuse,legendRight=TRUE)
+plot(nldTiles, add=TRUE)
+points(meuse)
+
+  scaleBar(meuse,pos="bottomright", bg="white")
+  insetMap(crs=meuse, pos="topright",map=world)
+
+
+# rotated
+map.new(meuseRot)
+plot(tilesRot, add=TRUE)
+points(meuseRot,col="red", cex=0.3)
+
+
+  scaleBar(meuseRot, bg="white")
+  insetMap(meuseRot, "bottomleft",map=world)
+
+@
+
+
+
+
+
+\end{document}
