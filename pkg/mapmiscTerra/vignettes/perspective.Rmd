@@ -146,6 +146,5 @@ plot(myMap2)
   text(yProj, 
       as.character(yProj$name),
       pos=2, col='red')
- 
 }
 ```

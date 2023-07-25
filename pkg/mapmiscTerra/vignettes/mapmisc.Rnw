@@ -189,10 +189,10 @@ elevScale = colourScale(nldElev, style='equal',
 Soil type is a categorical variable, create a factor and create a colour scale
 of unique values
 <<soilScale>>=
-meuse$soilFac = factor(meuse$soil, levels=c(1,2,3), 
-    labels=c("Calcareous","Non-Calc's","Red Brick"))
-soilScale = colourScale(meuse$soilFac, col="Set2")
+soilScale = colourScale(meuse$soil, col="Set2")
 @
+
+
 
 
 
@@ -251,16 +251,19 @@ map.new(meuseRot)
 plot(tilesRot, add=TRUE)
 points(meuseRot,col="red", cex=0.3)
 
-scaleBar(proj4string(meuseRot), bg="white")
+scaleBar(meuseRot, bg="white")
 @
 
 \section{Inset maps}
 
 <<world>>=
 world = openmap(
-    ext(-10,30,40,60),
-    path="osm-no-labels")
+    rast(ext(-10,30,40,60),crs=crsLL),
+    crs=crsMerc,
+    path="osm")
 @
+
+
 
 
 <<inset,fig.cap="Inset map", fig.subcap=c("elevation","rotated"), fig.height=3,fig.width=4,out.width="0.48\\textwidth">>=

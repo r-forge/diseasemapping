@@ -95,7 +95,7 @@ moll = function(x=0, angle=NULL, flip=FALSE) {
 
 		testFunCrs = function(param, testPoints) {
 			crsHere = crsFromNumeric(param)
-			xxx = try(crds(project(testPoints, crsHere)), silent=TRUE)
+			xxx = try(terra::crds(project(testPoints, crsHere)), silent=TRUE)
 			if(all(class(xxx) == 'try-error')) xxx = matrix(NA, 2,2)
 				xxx = xxx/1e6
 	# x coords the same, x point close to origin, dest point above x
@@ -144,8 +144,8 @@ moll = function(x=0, angle=NULL, flip=FALSE) {
 		angleOpposite = Arg(exp(1i*2*pi*(midX + 180)/360))*(360/(2*pi))
 		densify.interval = 10*1000
 		theLine = terra::densify(vect(rbind(cbind(angleOpposite,-89.9), cbind(angleOpposite, 89.9)), type='lines', crs=crsLL), densify.interval)
-		theBox$crop = terra::buffer(theLine, width=buffer.width)
-		theBox$regionLL = terra::erase(terra::as.polygons(ext(-100,180,-90,90), crsLL), theBox$crop)
+		theBox$crop = terra::buffer(theLine, width=50*1000)
+		theBox$regionLL = terra::erase(terra::as.polygons(terra::ext(-100,180,-90,90), crsLL), theBox$crop)
 	} else {
 		theBox = llCropBox(result, ellipse = theBox$ellipse, 
 			buffer.width=75*1000, densify.interval = 20*1000, 

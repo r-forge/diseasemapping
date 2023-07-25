@@ -32,7 +32,7 @@ options(
   mapmiscCacheReadOnly = mapmiscCacheReadOnly
   )
 
-opts_chunk$set(dpi=72*fact,dev.args=list(bg='white'), out.width='55%')	
+knitr::opts_chunk$set(dpi=72*fact,dev.args=list(bg='white'), out.width='55%')	
 ```
 
 ```{r mapmiscCache, purl=FALSE}
@@ -68,18 +68,19 @@ data('worldMap');worldMap = unwrap(worldMap)
 
 
 
+
+
         
 ```{r osm}
-  map = openmap(x, 
-    path='osm', 
+map = openmap(x, path='osm',
     maxTiles=12, buffer=c(30,3), fact=fact)
   
-  map.new(map)
-  plot(map,add=TRUE)
-  points(x)
-  text(x, label=x$name, pos=4)
-  scaleBar(x, 'bottom')
-  scaleBar(x, 'left', seg.len=0, bty='n')
+map.new(map)
+plot(map,add=TRUE)
+points(x)
+text(x, label=x$name, pos=4)
+scaleBar(x, 'bottom')
+scaleBar(x, 'left', seg.len=0, bty='n')
 ```
 
 
@@ -114,8 +115,10 @@ data('worldMap');worldMap = unwrap(worldMap)
 
 
 
+
 ```{r omerc}
-  xMerc = project(x, omerc(x))
+  omercCrs = omerc(x)
+  xMerc = project(x, omercCrs)
   mapMerc = openmap(xMerc, path='opentopomap',
     zoom=3, fact=fact,
     buffer=c(3,2)*100*1000)
@@ -123,12 +126,28 @@ data('worldMap');worldMap = unwrap(worldMap)
   map.new(mapMerc)
   plot(mapMerc,add=TRUE)
   points(xMerc)
-  plot(wrapPoly(worldMap, xMerc), add=TRUE)
+  plot(wrapPoly(worldMap, omercCrs), add=TRUE)
   text(xMerc, label=xMerc$name, pos=4, halo=TRUE)
   scaleBar(xMerc, 'bottom', bty='n')
   scaleBar(xMerc, 'left', seg.len=0, bty='n')
 ```
 
+
+
+
+
+
+
+```{r hansisland}
+map = openmap(xMerc[grep("Hans", xMerc$name),],     
+    path='opentopomap', fact=fact,
+    buffer=500, verbose=TRUE)   
+map.new(map)
+plot(map, add=TRUE)
+points(xMerc, pch=4, col='red', cex=2)
+text(xMerc, label=xMerc$name, pos=1, col='red', halo=TRUE)
+scaleBar(xMerc, 'bottomleft')
+```
 
 
 
@@ -215,6 +234,7 @@ rockMerc = project(rockLL, crsMerc)
     path='osm', zoom = 3, fact=2,#fact, 
     buffer=c(0.8, 0.2,0.4, 0.6)*1000*1000, verbose=TRUE)#c(4,1,2,1)*1)
 ```
+
 
 
 

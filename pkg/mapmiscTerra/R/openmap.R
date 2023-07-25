@@ -337,13 +337,12 @@ openmap = function(
 
   # fill in poles
 
-
   thePoles = as.matrix(expand.grid(seq(-170, 180, by=10), as.vector(outer(c(-1,1),c(84.5, 85.5)))))
   thePolesTrans = project(vect(thePoles, crs=crsLL, atts = data.frame(pole=c('south','north')[1+(thePoles[,2]>0)])), crs(result))
   thePolesSplit = terra::split(thePolesTrans, thePolesTrans$pole)
   names(thePolesSplit) = unlist(lapply(thePolesSplit, function(xx) xx$pole[1]))
   theHull = suppressWarnings(lapply(thePolesSplit, terra::convHull))
-  theHull = theHull[unlist(lapply(theHull, length))>0]
+  theHull = theHull[unlist(lapply(theHull, length))>1]
 
   # replace NA's near north pole with values nearby
   if(!is.null(theHull$north)) {

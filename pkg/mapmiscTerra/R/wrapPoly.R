@@ -54,7 +54,6 @@ result
 wrapPoly = function(x, crs, buffer.width = 100*1000) {
 
   if (is.null(attributes(crs)$crop) ) {
-    print(1)
     attributes(crs)$crop = llCropBox(crs, buffer.width=buffer.width)$crop
   }
   toCrop = attributes(crs)$crop 
@@ -74,18 +73,18 @@ wrapPoly = function(x, crs, buffer.width = 100*1000) {
 llCropBox = function(crs, 
   buffer.width=100*1000, densify.interval = 25*1000, 
   crop.distance = 2.1e7, crop.poles = FALSE, crop.leftright=FALSE,
-  remove.holes=TRUE, cycles = 1, ellipse = NULL) {
+  remove.holes=TRUE, cycles = 2, ellipse = NULL) {
 
 
-  if(is.null(ellipse)) {
+ if(is.null(ellipse)) {
   utils::data('isohedron')
   isohedron[,2] = pmin(pmax(-89.99, isohedron[,2]), 89.99)
 
   LLborderInner = list()
-  for(D in c(1,2,3)) {
-   xx  = terra::buffer(vect(llBorder, type='polygon', crs=crsLL), width=-D*buffer.width)
-   LLborderInner[[as.character(D)]] = terra::crds(terra::densify(xx, densify.interval))
- }
+   for(D in c(1,2,3)) {
+     xx  = terra::buffer(vect(llBorder, type='polygon', crs=crsLL), width=-D*buffer.width)
+     LLborderInner[[as.character(D)]] = terra::crds(terra::densify(xx, densify.interval))
+   }
  LLpointsFull = vect(rbind(isohedron, llBorder, do.call(rbind, LLborderInner)),crs=crsLL)
  LLpoints = terra::deepcopy(LLpointsFull)
 
@@ -106,7 +105,7 @@ for(DprojIter in 1:cycles) {
 
 
   # region in crs
- regionTransOrig = terra::convHull(transInRegion)
+ regionTransOrig = terra::densify(terra::convHull(transInRegion), densify.interval)
  regionTransOrigCoords = terra::crds(regionTransOrig)
 
  theCentroid = apply(apply(regionTransOrigCoords, 2, range),2,mean)
@@ -212,7 +211,7 @@ if(crop.poles) {
 
 regionCrs = rast(regionTransSmooth, nrow=100, ncol=100)
 regionCrs = terra::rasterize(regionTransSmooth, regionCrs)
-regionCrs = vect(c(as.points(regionTransSmooth), as.points(regionCrs)))
+regionCrs = vect(c(terra::as.points(regionTransSmooth), terra::as.points(regionCrs)))
 regionLL = project(regionCrs, crsLL)
 
 

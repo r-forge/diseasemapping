@@ -63,6 +63,7 @@ omerc = function(
     preserve=NULL
 ) {
   
+
   digits=3
   angleOrig = angle
   post = post[1]
@@ -265,7 +266,7 @@ omerc = function(
       }
       if(!is.null(objectiveResult))
         attributes(rotatedCRS)$obj = objectiveResult
-      return(rotatedCRS)
+#      return(rotatedCRS)
     }
     
 # otherwise find a better inverse angle
@@ -365,8 +366,17 @@ omerc = function(
     rotatedCRS = rotatedCRS[[1]]
   }
 
-  if(!is.null(objectiveResult))
+  if(!is.null(objectiveResult)) {
     attributes(rotatedCRS)$obj = objectiveResult
+  }
   
-  rotatedCRS
+  theBox = llCropBox(rotatedCRS, ellipse = NULL, 
+      buffer.width=75*1000, densify.interval = 20*1000, 
+        crop.distance = Inf, crop.poles = FALSE, crop.leftright=TRUE,
+      remove.holes=TRUE)
+
+  attributes(rotatedCRS)[names(theBox)] = theBox
+
+
+  return(rotatedCRS)
 }

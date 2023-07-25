@@ -7,7 +7,7 @@ Defines map projection
 }
 \usage{
 tpeqd(x, offset=c(0,0), axis='enu')
-tpers(x,  hKm = 100*1000, tilt = -10, offset=c(0,0), axis='enu')
+tpers(x,  hKm = 100*1000, tilt = -10,   azi, offset=c(0,0), axis='enu')
 }
 
 \arguments{
@@ -15,6 +15,7 @@ tpers(x,  hKm = 100*1000, tilt = -10, offset=c(0,0), axis='enu')
 	matrix with two columns. }
 	\item{hKm}{Height veiwing the Earth from}
 	\item{tilt}{Viewing angle}
+	\item{azi}{Azimuth, defaults to direction of first two points in x}
 \item{offset}{2 coordinates to define the origin}
 \item{axis}{defaults to east, north, up.  'swu' would rotateo 90 degrees}
 }
