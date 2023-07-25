@@ -53,7 +53,8 @@ result
 
 wrapPoly = function(x, crs, buffer.width = 100*1000) {
 
-  if (is.null(attributes(crs)$crop) | !missing(buffer.width)) {
+  if (is.null(attributes(crs)$crop) ) {
+    print(1)
     attributes(crs)$crop = llCropBox(crs, buffer.width=buffer.width)$crop
   }
   toCrop = attributes(crs)$crop 
@@ -73,7 +74,7 @@ wrapPoly = function(x, crs, buffer.width = 100*1000) {
 llCropBox = function(crs, 
   buffer.width=100*1000, densify.interval = 25*1000, 
   crop.distance = 2.1e7, crop.poles = FALSE, crop.leftright=FALSE,
-  remove.holes=TRUE, cycles = 2, ellipse = NULL) {
+  remove.holes=TRUE, cycles = 1, ellipse = NULL) {
 
 
   if(is.null(ellipse)) {
@@ -81,11 +82,12 @@ llCropBox = function(crs,
   isohedron[,2] = pmin(pmax(-89.99, isohedron[,2]), 89.99)
 
   LLborderInner = list()
-  for(D in c(1,2,5)) {
+  for(D in c(1,2,3)) {
    xx  = terra::buffer(vect(llBorder, type='polygon', crs=crsLL), width=-D*buffer.width)
    LLborderInner[[as.character(D)]] = terra::crds(terra::densify(xx, densify.interval))
  }
- LLpoints = vect(rbind(isohedron, llBorder, do.call(rbind, LLborderInner)),crs=crsLL)
+ LLpointsFull = vect(rbind(isohedron, llBorder, do.call(rbind, LLborderInner)),crs=crsLL)
+ LLpoints = terra::deepcopy(LLpointsFull)
 
 
 for(DprojIter in 1:cycles) {
@@ -105,38 +107,60 @@ for(DprojIter in 1:cycles) {
 
   # region in crs
  regionTransOrig = terra::convHull(transInRegion)
- regionTransOrigPoints = terra::as.points(regionTransOrig)
+ regionTransOrigCoords = terra::crds(regionTransOrig)
+
+ theCentroid = apply(apply(regionTransOrigCoords, 2, range),2,mean)
+ regionTransCentred = regionTransOrigCoords - matrix(theCentroid, nrow(regionTransOrigCoords), 2, byrow=TRUE)
+
+ regionTransPolar = regionTransCentred[,1] + 1i*regionTransCentred[,2]
+
+ # smooth a second time with angles 0 to 2pi, to smooth out end points
+ regionTransPolarAngle2 = Arg(regionTransPolar)
+  regionTransPolarAngle2neg =  regionTransPolarAngle2 < 0
+  regionTransPolarAngle2[regionTransPolarAngle2neg] =   regionTransPolarAngle2[regionTransPolarAngle2neg]+2*pi
+
+# if(length(regionTransPolar)>20) {
+  Nout = 2001
+  newxInner = seq(-pi/2, pi/2, len=Nout)
+  newxEnds = seq(pi/2, 3*pi/2, len=Nout)
+
+  smoothPolar = stats::smooth.spline(
+    Arg(regionTransPolar), 
+    Mod(regionTransPolar), all.knots=TRUE, 
+    df=ceiling(length(regionTransPolar)*0.5))
+
+  smoothPolar2 = stats::smooth.spline(
+    regionTransPolarAngle2, 
+    Mod(regionTransPolar), all.knots=TRUE, 
+    df=ceiling(length(regionTransPolar)*0.5))
 
 
 
-  LLpoints = suppressWarnings(project(terra::as.points(regionTransOrigPoints), crsLL))
-  LLpoints = terra::as.points(terra::buffer(LLpoints, buffer.width))
+  polarDense = 0.999*c(stats::predict(smoothPolar, newxInner)$y * exp(1i*newxInner), 
+    stats::predict(smoothPolar2, newxEnds)$y * exp(1i*newxEnds))
+#  }
+
+ polarDense = polarDense[order(Arg(polarDense))] + theCentroid[1] + 1i*theCentroid[2]
+
+ regionTransOrigPoints = terra::vect(cbind(Re(polarDense), Im(polarDense)), crs=crs, type='points')
+
+  LLpoints1 = suppressWarnings(project(regionTransOrigPoints, crsLL))
+  LLpoints = terra::as.points(terra::buffer(LLpoints1, buffer.width, quadsegs = 5))
 }
 
+regionTransSmooth = terra::vect(cbind(Re(polarDense), Im(polarDense)), crs=crs, type='polygons')
+regionTransSmooth =terra::densify( regionTransSmooth, interval = densify.interval)
 
-
- if(length(regionTransOrigPoints)>100) {
-  Nout = 5000
-  smoothX = stats::smooth.spline(terra::crds(regionTransOrigPoints)[,1], df=length(regionTransOrigPoints)*0.5)
-  smoothY = stats::smooth.spline(terra::crds(regionTransOrigPoints)[,2], df=length(regionTransOrigPoints)*0.5)
-
-  newx = seq(1, length(regionTransOrigPoints), len=Nout)
-  regionTransSmooth = terra::densify(vect(
-    cbind(stats::predict(smoothX, newx)$y, stats::predict(smoothY, newx)$y), 
-    type='polygons', crs=crs), interval = densify.interval)
-} else {
-  regionTransSmooth = terra::densify(regionTransOrig, densify.interval)
-}
 
 } else { # have ellipse
   regionTransOrig = regionTransSmooth = ellipse
 }
 
 regionTransPoly1 = terra::densify(
-  terra::buffer(regionTransSmooth, - 1*densify.interval ), 
+  terra::buffer(regionTransSmooth, - 1*densify.interval, quadsegs = 5 ), 
   interval=densify.interval)
 regionTransPoly2 = terra::densify(
-  terra::buffer(regionTransSmooth, - 2* densify.interval), 
+  terra::buffer(regionTransSmooth, - 1.5* densify.interval, quadsegs = 5), 
   interval=densify.interval)
 
 
@@ -145,7 +169,7 @@ borderLL1 = suppressWarnings(project(terra::as.points(regionTransPoly1), crsLL))
 borderLL2 = suppressWarnings(project(terra::as.points(regionTransPoly2), crsLL))
 
 
-# plot(project(worldMap, crsLL), ylim = c(-95,95));points(borderLL1, cex=0.1,col='blue');points(borderLL2, cex=0.1, col='red')     
+# data('worldMap');worldMap = unwrap(worldMap);plot(project(worldMap, crsLL), ylim = c(-95,95));points(borderLL1, cex=0.1,col='blue');points(borderLL2, cex=0.1, col='red')     
 
 whereIsJump1a = which(abs(diff(terra::crds(borderLL1)[,1])) > 180)
 whereIsJump2a = which(abs(diff(terra::crds(borderLL2)[,1])) > 180)
@@ -158,13 +182,16 @@ theBreaks2 = diff(sort(unique(c(0,whereIsJump2a,whereIsJump2b, length(borderLL2)
 borderLLsplit1 = split(borderLL1, rep(1:length(theBreaks1), theBreaks1))
 borderLLsplit2 = split(borderLL2, rep(1:length(theBreaks2), theBreaks2))
 
-# plot(project(worldMap, crsLL), ylim = c(-92, 92));for(D in 1:length(borderLLsplit2)) {plot(as.lines(borderLLsplit2[[D]]), add=TRUE, col=1+D, lwd=3)}   
+# data(worldMap);worldMap = unwrap(worldMap);plot(project(worldMap, crsLL), ylim = c(-92, 92));for(D in 1:length(borderLLsplit2)) {plot(as.lines(borderLLsplit2[[D]]), add=TRUE, col=1+D, lwd=3)}   
 
-borderLLlinesList = c(lapply(borderLLsplit1, terra::as.lines), lapply(borderLLsplit2, terra::as.lines))
-borderLLlinesListDens = lapply(borderLLlinesList, function(xx) {
- terra::densify(xx, densify.interval)
-})
-allPoints = vect(as.matrix(do.call(rbind, lapply(borderLLlinesListDens, terra::crds))), crs=crsLL)
+borderLLsplit1l = lapply(borderLLsplit1, terra::as.lines)
+borderLLsplit2l = lapply(borderLLsplit2, terra::as.lines)
+
+borderLLsplitL = terra::vect(terra::svc(c(borderLLsplit1l, borderLLsplit2l)))
+
+borderLLlinesListDens = terra::densify(borderLLsplitL, densify.interval)
+
+allPoints = terra::as.points(borderLLlinesListDens) 
 
 if(crop.poles) {
   polesAndSidesLLpoly=polesLLPolyFun(buffer.width, crop.leftright)
@@ -183,13 +210,15 @@ if(crop.poles) {
 # plot(project(worldMap, crsLL), ylim = c(-92, 92));plot(edgeLL, add=TRUE, col='blue')
 
 
+regionCrs = rast(regionTransSmooth, nrow=100, ncol=100)
+regionCrs = terra::rasterize(regionTransSmooth, regionCrs)
+regionCrs = vect(c(as.points(regionTransSmooth), as.points(regionCrs)))
+regionLL = project(regionCrs, crsLL)
 
-
-regionLL = terra::erase(terra::as.polygons(terra::ext(-180, 180, -90, 90), crs = crsLL), edgeLL)
 
 return(list(
   crop = edgeLL,
-  ellipse = regionTransOrig,
+  ellipse = regionTransSmooth,
   regionLL = regionLL
 ))
 

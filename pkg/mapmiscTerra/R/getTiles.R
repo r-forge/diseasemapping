@@ -350,16 +350,16 @@ getTiles = function(
       thisRow = terra::project(
         vect(terra::xyFromCell(outraster, ScellOut), crs=crs(outraster)), 
         crsMerc, partial=TRUE)
-      isIn = relate(thisRow, ext(rasterSphere), 'within')
+      thisRowGeom = terra::geom(thisRow)[,c('x','y')]
+#      isIn = relate(thisRow, ext(rasterSphere), 'within')
 
-        theCell = terra::cellFromXY(rasterSphere, terra::crds(thisRow)[isIn,])
+        theCell = terra::cellFromXY(rasterSphere, thisRowGeom)
 #        theCell = unlist(terra::extract(rasterSphere, thisRow, ID=FALSE))
 
       SrowColHere = cbind(
         indexOut = 1:length(ScellOut),
         ScellOut = ScellOut,
-        cell = NA)
-      SrowColHere[isIn,'cell'] = theCell
+        cell = theCell)
 
       SrowColHere = merge(SrowColHere, SrowColSub, all.x=TRUE, all.y=FALSE)
       SrowColHere = split(SrowColHere, SrowColHere$block)

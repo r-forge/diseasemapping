@@ -8,15 +8,10 @@ title: Mapping Hans Island
 ---
 
 
-This document will be incomplete if `rgdal` is unavailable or there is on
-internet connection when this document is compiled.  The full document is at
-[diseasemapping.r-forge.r-project.org](http://diseasemapping.r-forge.r-project.org).
-
 
 
 ```{r setup, include=FALSE}
 library('mapmiscTerra')
-library('knitr')
 
 if(!exists('mapmiscCachePath'))
   mapmiscCachePath = tempdir()
@@ -25,9 +20,9 @@ if(!exists('mapmiscCacheReadOnly'))
   mapmiscCacheReadOnly = FALSE
 
 if(!exists('fact'))
-  fact = 0.6
+  fact = 1
 # uncomment for nicer images
-# fact = 1 
+# fact = 2 
 
 if(!exists('testing'))
   testing=FALSE

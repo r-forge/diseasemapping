@@ -141,7 +141,7 @@ openmap = function(
     # get the ellipse
     crs = x
     toCrop = attributes(x)$ellipse
-    x = attributes(x)$regionLL
+    x = attributes(x)$ellipse
   } else {
     toCrop = NULL
   }
@@ -334,6 +334,30 @@ openmap = function(
       tileNames = tileNames,
       cachePath = cachePath),
     silent=!verbose)
+
+  # fill in poles
+
+
+  thePoles = as.matrix(expand.grid(seq(-170, 180, by=10), as.vector(outer(c(-1,1),c(84.5, 85.5)))))
+  thePolesTrans = project(vect(thePoles, crs=crsLL, atts = data.frame(pole=c('south','north')[1+(thePoles[,2]>0)])), crs(result))
+  thePolesSplit = terra::split(thePolesTrans, thePolesTrans$pole)
+  names(thePolesSplit) = unlist(lapply(thePolesSplit, function(xx) xx$pole[1]))
+  theHull = suppressWarnings(lapply(thePolesSplit, terra::convHull))
+  theHull = theHull[unlist(lapply(theHull, length))>0]
+
+  # replace NA's near north pole with values nearby
+  if(!is.null(theHull$north)) {
+    toFill = terra::extract(result, thePolesTrans[thePolesTrans$pole=='north'], ID=FALSE)
+    toFill = toFill[min(which(!is.na(toFill[,1]))),,drop=FALSE]
+
+    result = terra::mask(result, theHull$north, updatevalue = (toFill), inverse=TRUE)
+  }
+  if(!is.null(theHull$south)) {
+    toFill = terra::extract(result, thePolesTrans[thePolesTrans$pole=='south'], ID=FALSE)
+    toFill = toFill[min(which(!is.na(toFill[,1]))),,drop=FALSE]
+
+    result= terra::mask(result, theHull$south, updatevalue = unlist(toFill), inverse=TRUE)
+  }
 
   if(any(class(result)=="try-error")){
     message(paste(Durl, "not accessible"))

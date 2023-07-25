@@ -35,22 +35,16 @@ gridlinesWrap = function(crs,
 	glines[glines$type == 'east' & glines$neg, 'direction'] = 'W'
 	terra::values(glines)$ID = paste0(glines$degrees, glines$direction)
 
-	if(!all(c('ellipse','crop') %in% names(attributes(crsT)))) {
-		ellipseAndCrop = llCropBox(crsT)
-		attributes(crsT)$ellipse = ellipseAndCrop$ellipse
-		attributes(crsT)$crop = ellipseAndCrop$crop
+	if(!all(c('ellipse','crop') %in% names(attributes(crsOrig)))) {
+		ellipseAndCrop = llCropBox(crsOrig)
+		attributes(crsOrig)$ellipse = ellipseAndCrop$ellipse
+		attributes(crsOrig)$crop = ellipseAndCrop$crop
 	} 
 
-	glinesT = wrapPoly(x=glines, crsT)
+	glinesT = wrapPoly(x=glines, crsOrig)
 
+	glinesT = glinesT[terra::perim(glinesT)>0]
 
-	
-#	ellipseSmall =  attributes(crsT)$ellipse
-#	if(!is.null(ellipseSmall)) {
-#		glinesT = terra::crop(glinesT, ellipseSmall)
-#	}
-
-	
 	legendPoints = terra::centroids(glinesT, inside=TRUE)
 
 	# at most three labels per line
@@ -63,7 +57,6 @@ gridlinesWrap = function(crs,
 
 	okPoints = c(okPoints, unlist(lapply(split(toTrim$index, toTrim$ID), function(xx) xx[seq(from=1, len=3, by=pmax(1,floor(length(xx)/3)))] )))
 
-	legendPoints[okPoints]
 	legendPoints$minDist = apply(terra::distance(legendPoints, legendPoints), 2, function(xx) min(xx[xx>0]))
 
 
