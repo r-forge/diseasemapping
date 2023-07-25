@@ -29,23 +29,14 @@ opts_chunk$set(echo=TRUE,message=FALSE,
 
 
 
-library('mapmisc')
+library('mapmiscTerra')
 
-if(!exists('mapmiscCachePath'))
-  mapmiscCachePath = system.file('extdata', package='mapmisc')
-
-if(!exists('mapmiscCacheReadOnly'))
-  mapmiscCacheReadOnly = TRUE
 
 if(!exists('fact'))
   fact = 1
 # uncomment for nicer images
 # fact = 2 
 
-options(
-  mapmiscCachePath = mapmiscCachePath,
-  mapmiscCacheReadOnly = mapmiscCacheReadOnly
-  )
 opts_chunk$set(dpi=72*fact)
 @
 
