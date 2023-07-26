@@ -336,7 +336,7 @@ openmap = function(
     silent=!verbose)
 
   # fill in poles
-
+  # TO DO: doesn't work with omerc
   thePoles = as.matrix(expand.grid(seq(-170, 180, by=10), as.vector(outer(c(-1,1),c(84.5, 85.5)))))
   thePolesTrans = project(vect(thePoles, crs=crsLL, atts = data.frame(pole=c('south','north')[1+(thePoles[,2]>0)])), crs(result))
   thePolesSplit = terra::split(thePolesTrans, thePolesTrans$pole)

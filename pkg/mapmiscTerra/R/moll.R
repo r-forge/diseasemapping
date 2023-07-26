@@ -153,6 +153,8 @@ moll = function(x=0, angle=NULL, flip=FALSE) {
 		  remove.holes=TRUE)
 	}
 
+	# to do: ellipse wrong when flip is used
+
 	attributes(result)[names(theBox)] = theBox
 
 	result

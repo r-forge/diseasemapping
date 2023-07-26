@@ -33,7 +33,7 @@ library('mapmiscTerra')
 if(!interactive()) pdf("worldMap.pdf")
 
  plot(world, ylim = 90.5*c(-1,1))
- plot(attributes(myCrsO)$regionLL, 
+ plot(attributes(myCrsO)$crop, 
  	border='red', col='#0000FF10', add=TRUE)
 
 
@@ -60,14 +60,16 @@ if(!interactive()) pdf("worldMap.pdf")
 	Dcountry  = grep(country, world$NAME)
 	x=world[Dcountry,]
 	
-	myCrsMoll = moll(x, flip= 'nwu' )
-	
-	plot(attributes(myCrsMoll)$ellipse)
+	myCrsMoll = moll(x)
 	
 	plot(world)
 	plot(attributes(myCrsMoll)$crop, border='red', col='#0000FF10', add=TRUE)
-	
+
+
 	xTcrop = wrapPoly(x=world, crs=myCrsMoll)
+	plot(attributes(myCrsMoll)$ellipse, col='lightBlue')
+	plot(xTcrop, add=TRUE, col='white')	
+
 	DcountryT  = grep(country, xTcrop$NAME)
 	
 	map.new(xTcrop)
@@ -83,20 +85,19 @@ if(!interactive()) pdf("worldMap.pdf")
 	Dcountry  = grep(country, world$NAME)
 	x=world[Dcountry,]
 	
-	myCrsMoll = moll(x,  flip= 'nwu' )
+	myCrsMoll = moll(x,  angle=10)
+	xTcrop = wrapPoly(x=world, crs=myCrsMoll)
 	
-	plot(attributes(myCrsMoll)$ellipse)
+	plot(attributes(myCrsMoll)$ellipse, col='lightBlue')
+	plot(xTcrop, add=TRUE, col='white')
 	
 	plot(world)
 	plot(attributes(myCrsMoll)$crop, border='red', col='#0000FF10', add=TRUE)
 	
-	xTcrop = wrapPoly(x=world, crs=myCrsMoll)
 	DcountryT  = grep(country, xTcrop$NAME)
 	
-	map.new(xTcrop)
-	plot(attributes(myCrsMoll)$ellipse, add=TRUE, col='lightBlue', border='blue')
+	map.new(myCrsMoll, col='lightBlue')
 	plot(xTcrop,add=TRUE, col='grey')
-	
 	gridlinesWrap(crs=xTcrop, lty=2, col='red')
 	plot(xTcrop[DcountryT,], col='green', add=TRUE)
 	
