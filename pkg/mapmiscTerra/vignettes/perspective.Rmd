@@ -25,9 +25,9 @@ data('worldMap');worldMap = unwrap(worldMap)
 x = vect(cbind(130,15), crs=crsLL)
 
 if(FALSE) {
-okinawa = geocode("Okinawa, Japan")
-hk =  geocode("Hong Kong, China")
-guam = geocode("Guam")
+  okinawa = geocode("Okinawa, Japan")
+  hk =  geocode("Hong Kong, China")
+  guam = geocode("Guam")
 } else {
 okinawa = unwrap(new("PackedSpatVector", type = "points", crs = crsLL, 
     coordinates = structure(c(127.911468664084, 26.4748948), dim = 1:2, dimnames = list(
@@ -54,9 +54,10 @@ guam = unwrap(new("PackedSpatVector", type = "points", crs = crsLL,
         type = "island", category = "place", importance = 0.799784943797409, 
         place_id = 298225988L, osm_type = "relation", osm_id = 1152532L, 
         display_name = "Guam, Chalan Pago-Ordot Municipality, Guam, United States", 
-        place_rank = 17L), class = "data.frame", row.names = c(NA, -1L)))
+        place_rank = 17L), class = "data.frame", row.names = c(NA, -1L))))
 }
 ```
+
 
 
 
