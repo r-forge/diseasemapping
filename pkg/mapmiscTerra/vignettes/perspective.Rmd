@@ -118,6 +118,7 @@ plot(wrapPoly(worldMap, myProj), add=TRUE)
 ```{r projOverDatelineNorth}
 myProjDateLine = tpers(x=c(175,75), azi=40, hKm = 2*1000, tilt =-15, axis='seu')
 myMapDateLine = openmap(myProjDateLine, zoom=2, fact=1)
+map.new(myProjDateLine)
 plot(myMapDateLine, add=TRUE)
 plot(wrapPoly(worldMap, myProjDateLine), add=TRUE)
 ```
