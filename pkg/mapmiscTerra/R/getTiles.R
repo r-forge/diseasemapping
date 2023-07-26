@@ -117,11 +117,15 @@ getTiles = function(
   zoom=1, 
   path="http://tile.openstreetmap.org/",
   cachePath='.',
-  cacheDir= make.names(gsub(
-          "^http.*//([[:alpha:]][.])*((tile|basemap)s?[.][[:digit:]]?)?(openstreetmap[.])?|[[:punct:]]$", 
-          "", path)),
+  cacheDir,
   verbose=FALSE, suffix = '.png',
   tileNames = 'zxy'){
+
+  if(missing(cacheDir)) {
+    cacheDir = make.names(gsub(
+          "^http.*//([[:alpha:]][.])*((tile|basemap)s?[.][[:digit:]]?)?(openstreetmap[.])?|[[:punct:]]$", 
+          "", path))
+  }
   
   maxPixelsPerCycle = 1e5
   NtestCols = 100

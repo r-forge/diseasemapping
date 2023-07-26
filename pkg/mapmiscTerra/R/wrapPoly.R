@@ -1,13 +1,11 @@
 
-if(FALSE) {
-  library(Rpolyhedra)
-  mypoly = getPolyhedron(source='dmccooey', polyhedron.name = 'geodesic icosahedron pattern 223 [26,0]')
-  xx = mypoly$getState()$getVertices()   
-  xxSph = pracma::cart2sph(as.matrix(xx))
-  isohedron = (180/pi)*xxSph[,1:2]
-  isohedron[,1] = isohedron[,1]-mean(isohedron[,1])/2
-  save(isohedron, file='pkg/mapmiscTerra/data/isohedron.RData', compress='xz')
-}
+#  library('Rpolyhedra')
+#  mypoly = getPolyhedron(source='dmccooey', polyhedron.name = 'geodesic icosahedron pattern 223 [26,0]')
+#  xx = mypoly$getState()$getVertices()   
+#  xxSph = pracma::cart2sph(as.matrix(xx))
+#  isohedron = (180/pi)*xxSph[,1:2]
+#  isohedron[,1] = isohedron[,1]-mean(isohedron[,1])/2
+#  save(isohedron, file='pkg/mapmiscTerra/data/isohedron.RData', compress='xz')
 
 
 polesLLPolyFun = function(buffer.width, leftright=TRUE) {
@@ -230,82 +228,6 @@ return(list(
   ellipse = regionTransSmooth,
   regionLL = regionLL
 ))
-
-}
-
-if(FALSE) {
-  holeLL = rgeos::gBuffer(borderLL3,
-    width = res)
-  holeLL@proj4string = bboxLL@proj4string
-  holeLL = rgeos::gIntersection(
-    holeLL, bboxLL)
-  holeLL@proj4string = crsLL
-  
-  # get rid of holes
-  notHoles = which(!unlist(lapply(holeLL@polygons[[1]]@Polygons,
-   function(xx)
-   xx@hole)))
-  edgeLL = SpatialPolygons(
-    list(Polygons(holeLL@polygons[[1]]@Polygons[notHoles], ID=1))
-  )
-  
-
-  llBorderT = suppressWarnings(rgdal::rawTransform(
-    as.character(crsLL),
-    as.character(crs),
-    nrow(llBorder@coords),
-    llBorder@coords[, 1],
-    llBorder@coords[, 2]
-  ))
-  llBorderT = cbind(llBorderT[[1]], llBorderT[[2]])  
-  llBorderT = llBorderT[is.finite(llBorderT[,1]), ]
-  
-  resTrans = res * mean(apply(bbox(regionTransOrig), 1, diff) * (0.25 /
-   180))
-  
-  borderTrans = rgeos::gSimplify(rgeos::gBuffer(
-    SpatialPoints(llBorderT), width =
-    4 * resTrans),
-  tol = 4 * resTrans)
-  crs(borderTrans) = crs
-  
-  regionTrans = rgeos::gSimplify(regionTransOrig,tol=resTrans)
-  
-  regionTransSmallInclude = rgeos::gDifference(
-    regionTrans,
-    borderTrans
-  )
-  
-    # projectable region in LL
-  transInRegion2 = rgeos::gIntersection(
-    transInRegion, regionTransSmallInclude
-  )
-  pointsInLL = suppressWarnings(rgdal::rawTransform(
-    as.character(crs),
-    as.character(crsLL),
-    nrow(transInRegion2@coords),
-    transInRegion2@coords[, 1],
-    transInRegion2@coords[, 2]
-  ))
-  pointsInLL2 = vect(cbind(
-    pointsInLL[[1]], pointsInLL[[2]]))
-
-    # region in crs
-  regionLLOrig = 
-  rgeos::gConvexHull(pointsInLL2, 
-   byid = FALSE)
-  regionLL = rgeos::gDifference(regionLLOrig, edgeLL)
-
-  regionLL@proj4string = edgeLL@proj4string = crsLL
-
-
-
-  result = list(
-    crop = edgeLL,
-    poly = regionLL,
-    ellipse = regionTrans,
-    polyTrans = regionTransSmallInclude
-  )
 
 }
 

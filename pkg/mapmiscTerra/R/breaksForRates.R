@@ -1,4 +1,3 @@
-
 breaksForRates = function(
     x,
     breaks = 10,

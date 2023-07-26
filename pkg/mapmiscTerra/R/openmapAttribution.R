@@ -1,4 +1,100 @@
 
+esriAttribution = function(name) {
+  
+  #'http://downloads2.esri.com/ArcGISOnline/docs/tou_summary.pdf'
+  
+  long=list(
+      'esri'='Esri, HERE, DeLorme, USGS, Intermap, increment P Corp., NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, MapmyIndia, copyright OpenStreetMap contributors, and the GIS User Community',
+      'esri-grey' = 'Esri, HERE, DeLorme, MapmyIndia, copyright OpenStreetMap contributors, and the GIS user community',
+      'esri-topo' = 'Esri, HERE, DeLorme, TomTom, Intermap, increment P Corp., GEBCO, USGS, FAO, NPS, NRCAN, GeoBase, IGN, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), swisstopo, MapmyIndia, copyright OpenStreetMap contributors, and the GIS User Community',
+      'esri-transport' = 'Esri, HERE, DeLorme, MapmyIndia, copyright OpenStreetMap contributors'
+  )
+  
+  short = 'Esri, OpenStreetMap, and others'
+  
+  if(!length(grep("^http", name))){
+    name = gsub("esri\\.", "esri-", name)
+    if(! all(name %in% names(long))){
+      warning('name not an esri tile', name)
+      return(list())
+    }
+    name = osmTiles(name)
+  }
+  
+  if(! all(names(name) %in% names(long))){
+    warning('name not an esri tile', names(name))
+    return(list())
+  }
+  
+  if(!length(grep("esri", names(name)))){
+    return(list()) 
+  }
+  
+  weburl = gsub("/tile/?$", '', name)
+  
+  
+  
+  
+  long = long[names(name)]
+  
+  list(long=list(
+          latex=paste(
+              gsub("copyright", "\\\\copyright", long), 
+              ' see \\href{',weburl,
+              '}{arcgisonline.com}.',
+              sep=''
+          ),
+          markdown=paste(
+              gsub("copyright", '&copy;', long), 
+              ' see [arcgisonline.com](',
+              weburl, ').',
+              sep=''
+          ),
+          html=paste(
+              gsub("copyright", '&copy;', long), 
+              ' see <a href=\"',
+              weburl,
+              '\">arcgisonline.com</a>',
+              sep=''
+          ),
+          text =paste(
+              long, 
+              ' see arcgisonline.com',
+              sep=''
+          )
+      ),
+      short=list(
+          latex = paste('\\copyright \\href{', weburl,
+              '}{', short,'}',sep=''),
+          markdown = paste('&copy;','[', short,'](',
+              weburl, ')',sep=''),
+          html = paste('&copy; <a href=\"', weburl, 
+              '\">', short , '</a>',sep=''),
+          text=paste('copyright', short)
+      )
+  )
+  
+}
+
+openmapAttribution = function(name, type=c('text','latex','markdown','html','auto'), short=FALSE) {
+  
+  type = type[1]
+  if(type == 'auto') {
+    if(all(unlist(mget("mdToTex", envir=.GlobalEnv, ifnotfound=FALSE)) == TRUE ) ) {
+      type = 'latex'  
+    } else {
+      type ='markdown'
+    }
+  }
+
+
+  if(!is.null(attributes(name)$openmap) ){
+        name = attributes(name)$openmap$path
+  } else if(!is.character(name)) {
+        name = names(name)[1]
+  }
+
+
 odl = list(
     latex=paste(
         'Data by \\href{http://openstreetmap.org}{OpenStreetMap}',
@@ -52,7 +148,7 @@ sputnik = list(
         markdown='[corp.sputnik.ru/maps](http://corp.sputnik.ru/maps)',
         html=' <a href="http://corp.sputnik.ru/maps">corp.sputnik.ru/maps</a>.',
         text ='http://corp.sputnik.ru/maps'
-    )		
+    )       
 )
 sputnik$short = sputnik$long
 
@@ -166,7 +262,6 @@ for(D in names(mapquest$short)){
       sep='')
 }
 
-
 stamen = stamenToner = list(
     short=list(
         latex='\\copyright \\href{http://stamen.com}{Stamen Design}',
@@ -256,101 +351,6 @@ for(D in names(cartodb$long)){
 }
 
 
-esriAttribution = function(name) {
-  
-  #'http://downloads2.esri.com/ArcGISOnline/docs/tou_summary.pdf'
-  
-  long=list(
-      'esri'='Esri, HERE, DeLorme, USGS, Intermap, increment P Corp., NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, MapmyIndia, copyright OpenStreetMap contributors, and the GIS User Community',
-      'esri-grey' = 'Esri, HERE, DeLorme, MapmyIndia, copyright OpenStreetMap contributors, and the GIS user community',
-      'esri-topo' = 'Esri, HERE, DeLorme, TomTom, Intermap, increment P Corp., GEBCO, USGS, FAO, NPS, NRCAN, GeoBase, IGN, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), swisstopo, MapmyIndia, copyright OpenStreetMap contributors, and the GIS User Community',
-      'esri-transport' = 'Esri, HERE, DeLorme, MapmyIndia, copyright OpenStreetMap contributors'
-  )
-  
-  short = 'Esri, OpenStreetMap, and others'
-  
-  if(!length(grep("^http", name))){
-    name = gsub("esri\\.", "esri-", name)
-    if(! all(name %in% names(long))){
-      warning('name not an esri tile', name)
-      return(list())
-    }
-    name = osmTiles(name)
-  }
-  
-  if(! all(names(name) %in% names(long))){
-    warning('name not an esri tile', names(name))
-    return(list())
-  }
-  
-  if(!length(grep("esri", names(name)))){
-    return(list()) 
-  }
-  
-  weburl = gsub("/tile/?$", '', name)
-  
-  
-  
-  
-  long = long[names(name)]
-  
-  list(long=list(
-          latex=paste(
-              gsub("copyright", "\\\\copyright", long), 
-              ' see \\href{',weburl,
-              '}{arcgisonline.com}.',
-              sep=''
-          ),
-          markdown=paste(
-              gsub("copyright", '&copy;', long), 
-              ' see [arcgisonline.com](',
-              weburl, ').',
-              sep=''
-          ),
-          html=paste(
-              gsub("copyright", '&copy;', long), 
-              ' see <a href=\"',
-              weburl,
-              '\">arcgisonline.com</a>',
-              sep=''
-          ),
-          text =paste(
-              long, 
-              ' see arcgisonline.com',
-              sep=''
-          )
-      ),
-      short=list(
-          latex = paste('\\copyright \\href{', weburl,
-              '}{', short,'}',sep=''),
-          markdown = paste('&copy;','[', short,'](',
-              weburl, ')',sep=''),
-          html = paste('&copy; <a href=\"', weburl, 
-              '\">', short , '</a>',sep=''),
-          text=paste('copyright', short)
-      )
-  )
-  
-}
-
-openmapAttribution = function(name, type=c('text','latex','markdown','html','auto'), short=FALSE) {
-  
-  type = type[1]
-  if(type == 'auto') {
-    if(all(unlist(mget("mdToTex", envir=.GlobalEnv, ifnotfound=FALSE)) == TRUE ) ) {
-      type = 'latex'  
-    } else {
-      type ='markdown'
-    }
-  }
-
-
-  if(!is.null(attributes(name)$openmap) ){
-        name = attributes(name)$openmap$path
-  } else if(!is.character(name)) {
-        name = names(name)[1]
-  }
-
   shortlong = c('long','short')[short+1]
   
   D = name
@@ -396,3 +396,4 @@ openmapAttribution = function(name, type=c('text','latex','markdown','html','aut
     }
   result
 }
+

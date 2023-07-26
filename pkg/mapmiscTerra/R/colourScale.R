@@ -587,7 +587,7 @@ result
 
 }
 
-colourScale.NULL = colourScale.numeric
+colourScale.NULL = function(...) {colourScale.numeric(...)}
 
 
 
