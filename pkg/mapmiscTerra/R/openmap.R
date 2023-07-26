@@ -227,7 +227,9 @@ openmap = function(
     mercHere = terra::crop(mercHere, 
       terra::ext(
         rep(terra::xyFromCell(mercHere, theTable[which.max(theTable$Freq), 'cell']), each=2) + 
-        0.6*rep(terra::res(mercHere), each=2)*c(-1,1,-1,1)))
+        0.6*rep(terra::res(mercHere), each=2)*c(-1,1,-1,1)
+      )
+    )
     # each tile is 256 x 256
     mercHere = terra::disagg(mercHere, 256)
 
@@ -236,7 +238,13 @@ openmap = function(
 
 
     areaRast = suppressWarnings(terra::cellSize(testRast, unit='m'))
-    cellWidthRast = quantile(unlist(terra::spatSample(areaRast,  size=min(c(terra::ncell(areaRast), 2000)))), prob=0.6, na.rm=TRUE)
+    if(terra::ncell(areaRast) < 1e5) {
+      toQuantile = values(areaRast)
+    } else {
+      toQuantile = unlist(terra::spatSample(areaRast,  size=min(c(terra::ncell(areaRast), 1e5))))
+    }
+    toQuantile = toQuantile[toQuantile > 0]
+    cellWidthRast = quantile(toQuantile, prob=0.5, na.rm=TRUE)
 
 
     areaRatio = cellWidthRast/cellWidthMerc
