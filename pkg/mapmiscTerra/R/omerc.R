@@ -60,7 +60,8 @@ omercProj4string = function(
 omerc = function(
     x, angle=0, 
     post=c('none', 'north', 'wide','tall'),
-    preserve=NULL
+    preserve=NULL,
+    ellipse=TRUE
 ) {
   
 
@@ -370,10 +371,33 @@ omerc = function(
     attributes(rotatedCRS)$obj = objectiveResult
   }
   
-  theBox = llCropBox(rotatedCRS, ellipse = NULL, 
-      buffer.width=75*1000, densify.interval = 20*1000, 
+
+  equatorMeetsGreatCircle = geosphere::gcIntersectBearing(theCentre, angle, c(0,0), 90)
+  if(any(is.na(equatorMeetsGreatCircle)))
+  equatorMeetsGreatCircle = geosphere::gcIntersectBearing(theCentre, angle, c(0,0), -90)
+  if(any(is.na(equatorMeetsGreatCircle))) {
+    theY = 0
+  } else {
+  equatorMeetsGreatCircle = vect(matrix(equatorMeetsGreatCircle, ncol=2, byrow=TRUE), crs=crsLL)
+  equatorMeetsGreatCircleProj = project(equatorMeetsGreatCircle, rotatedCRS)
+  theY = terra::crds(equatorMeetsGreatCircleProj)[,2]
+  theY = theY[which.min(abs(theY))]
+  }
+
+
+#  theEllipse = terra::as.polygons(ext(c(-1.6e7, 1.6e7, -2e7, 2e7) + theY*c(0,0,1,1)), rotatedCRS)
+  theEllipse = terra::as.polygons(terra::ext(as.vector(extentMerc) + theY*c(0,0,1,1)), rotatedCRS)
+
+
+  if(ellipse) {
+  theBox = llCropBox(crs=rotatedCRS, ellipse = theEllipse, 
+      buffer.width=40*1000, densify.interval = 20*1000, 
         crop.distance = Inf, crop.poles = FALSE, crop.leftright=TRUE,
       remove.holes=TRUE)
+} else {
+  theBox = list(ellipse=theEllipse)
+}
+#  plot(project(worldMap, crsLL));plot(theBox$crop, col='red', add=TRUE)   
 
   attributes(rotatedCRS)[names(theBox)] = theBox
 

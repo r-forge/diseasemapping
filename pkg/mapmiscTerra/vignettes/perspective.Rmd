@@ -1,6 +1,7 @@
 <!--
 %\VignetteEngine{knitr::docco_linear}
 %\VignetteIndexEntry{Space Station Map Projections}
+%\VignetteEncoding{UTF-8}
 -->
 
 # Space Station Map Projections
@@ -21,12 +22,42 @@ if(!exists('fact'))
 
 ```{r data}
 data('worldMap');worldMap = unwrap(worldMap)
+x = vect(cbind(130,15), crs=crsLL)
 
+if(FALSE) {
 okinawa = geocode("Okinawa, Japan")
 hk =  geocode("Hong Kong, China")
 guam = geocode("Guam")
-x = vect(cbind(130,15), crs=crsLL)
+} else {
+okinawa = unwrap(new("PackedSpatVector", type = "points", crs = crsLL, 
+    coordinates = structure(c(127.911468664084, 26.4748948), dim = 1:2, dimnames = list(
+        NULL, c("x", "y"))), index = structure(c(1, 1, 0, 1), dim = c(1L, 
+    4L), dimnames = list(NULL, c("geom", "part", "hole", "start"
+    ))), attributes = structure(list(name = "Okinawa Island", 
+        orig = "Okinawa, Japan", type = "island", category = "place", 
+        importance = 0.544839401260831, place_id = 298674558L, 
+        osm_type = "relation", osm_id = 4098955L, display_name = "沖縄本島, 沖縄県, 日本", 
+        place_rank = 17L), class = "data.frame", row.names = c(NA, -1L))))
+hk=unwrap(new("PackedSpatVector", type = "points", crs = crsLL, 
+    coordinates = structure(c(114.1849161, 22.350627), dim = 1:2, dimnames = list(
+        NULL, c("x", "y"))), index = structure(c(1, 1, 0, 1), dim = c(1L, 
+    4L), dimnames = list(NULL, c("geom", "part", "hole", "start"
+    ))), attributes = structure(list(name = "Hong Kong", orig = "Hong Kong, China", 
+        type = "administrative", category = "boundary", importance = 0.964301726010044, 
+        place_id = 368735620L, osm_type = "relation", osm_id = 913110L, 
+        display_name = "香港 Hong Kong, 中国", place_rank = 6L), class = "data.frame", row.names = c(NA, -1L))))
+guam = unwrap(new("PackedSpatVector", type = "points", crs = crsLL, 
+    coordinates = structure(c(144.757551029721, 13.4501257), dim = 1:2, dimnames = list(
+        NULL, c("x", "y"))), index = structure(c(1, 1, 0, 1), dim = c(1L, 
+    4L), dimnames = list(NULL, c("geom", "part", "hole", "start"
+    ))), attributes = structure(list(name = "Guam", orig = "Guam", 
+        type = "island", category = "place", importance = 0.799784943797409, 
+        place_id = 298225988L, osm_type = "relation", osm_id = 1152532L, 
+        display_name = "Guam, Chalan Pago-Ordot Municipality, Guam, United States", 
+        place_rank = 17L), class = "data.frame", row.names = c(NA, -1L)))
+}
 ```
+
 
 
 
@@ -34,6 +65,9 @@ x = vect(cbind(130,15), crs=crsLL)
 ```{r projection}
 myProj = tpers(x=vect(c(x,hk)), hKm = 2*1000, tilt =-15, axis='seu')
 ```
+
+
+
 
 
 
@@ -51,6 +85,8 @@ text(guam, 'guam')
 text(hk, 'hk')
 text(okinawa, 'Okinawa')
 ```
+
+
 
 
 

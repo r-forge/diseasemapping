@@ -105,8 +105,12 @@ for(DprojIter in 1:cycles) {
 
 
   # region in crs
- regionTransOrig = terra::densify(terra::convHull(transInRegion), densify.interval)
- regionTransOrigCoords = terra::crds(regionTransOrig)
+  regionTransOrig = terra::convHull(transInRegion)
+  regionTransOrigCoords = terra::crds(regionTransOrig)
+  if(nrow(regionTransOrigCoords) < 100){
+    regionTransOrig = terra::densify(regionTransOrig, densify.interval)
+    regionTransOrigCoords = terra::crds(regionTransOrig)
+  }
 
  theCentroid = apply(apply(regionTransOrigCoords, 2, range),2,mean)
  regionTransCentred = regionTransOrigCoords - matrix(theCentroid, nrow(regionTransOrigCoords), 2, byrow=TRUE)
@@ -152,23 +156,26 @@ regionTransSmooth =terra::densify( regionTransSmooth, interval = densify.interva
 
 
 } else { # have ellipse
-  regionTransOrig = regionTransSmooth = ellipse
+  regionTransSmooth = ellipse # terra::densify(ellipse, densify.interval)
 }
 
 regionTransPoly1 = terra::densify(
-  terra::buffer(regionTransSmooth, - 1*densify.interval, quadsegs = 5 ), 
+  terra::buffer(regionTransSmooth, - 0.2*buffer.width, quadsegs = 10), 
   interval=densify.interval)
 regionTransPoly2 = terra::densify(
-  terra::buffer(regionTransSmooth, - 1.5* densify.interval, quadsegs = 5), 
+  terra::buffer(regionTransSmooth, - 0.5* buffer.width, quadsegs = 10), 
   interval=densify.interval)
 
 
   # border of crs transformed to LL
-borderLL1 = suppressWarnings(project(terra::as.points(regionTransPoly1), crsLL))
-borderLL2 = suppressWarnings(project(terra::as.points(regionTransPoly2), crsLL))
+borderLL1 = terra::geom(suppressWarnings(project(terra::as.points(regionTransPoly1), crsLL)))
+borderLL1 = terra::vect(borderLL1[!is.nan(borderLL1[,'x']), ], crs=crsLL)
+
+borderLL2 = terra::geom(suppressWarnings(project(terra::as.points(regionTransPoly2), crsLL)))
+borderLL2 = terra::vect(borderLL2[!is.nan(borderLL2[,'x']), ], crs=crsLL)
 
 
-# data('worldMap');worldMap = unwrap(worldMap);plot(project(worldMap, crsLL), ylim = c(-95,95));points(borderLL1, cex=0.1,col='blue');points(borderLL2, cex=0.1, col='red')     
+# data('worldMap');worldMap = unwrap(worldMap);plot(project(worldMap, crsLL), ylim = c(-95,95));points(borderLL1, cex=0.3,col='blue');points(borderLL2, cex=0.1, col='red')     
 
 whereIsJump1a = which(abs(diff(terra::crds(borderLL1)[,1])) > 180)
 whereIsJump2a = which(abs(diff(terra::crds(borderLL2)[,1])) > 180)
@@ -180,6 +187,9 @@ theBreaks2 = diff(sort(unique(c(0,whereIsJump2a,whereIsJump2b, length(borderLL2)
 
 borderLLsplit1 = split(borderLL1, rep(1:length(theBreaks1), theBreaks1))
 borderLLsplit2 = split(borderLL2, rep(1:length(theBreaks2), theBreaks2))
+
+borderLLsplit1 = borderLLsplit1[unlist(lapply(borderLLsplit1, function(xx) nrow(terra::crds(xx))))>0]
+borderLLsplit2 = borderLLsplit2[unlist(lapply(borderLLsplit2, function(xx) nrow(terra::crds(xx))))>0]
 
 # data(worldMap);worldMap = unwrap(worldMap);plot(project(worldMap, crsLL), ylim = c(-92, 92));for(D in 1:length(borderLLsplit2)) {plot(as.lines(borderLLsplit2[[D]]), add=TRUE, col=1+D, lwd=3)}   
 

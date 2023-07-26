@@ -10,7 +10,7 @@ for a supplied Spatial object
 \usage{
 	omerc(x, angle,  
 	post=c('none', 'north', 'wide','tall'),
-    preserve=NULL) 
+    preserve=NULL, ellipse=TRUE) 
     ocea(x, angle, flip=FALSE)
     moll(x=0, angle=NULL, flip=FALSE)
 }
@@ -23,6 +23,7 @@ for a supplied Spatial object
 \item{flip}{post-projection flipping of coordinates}
 \item{preserve}{A \code{\link[terra]{SpatVector}} object, the resulting projection is scaled
 so as to preserve the distances between these points as best as possible. }
+\item{ellipse}{compute projection region and areas to crop when projecting.}
 }
 
 \details{
@@ -59,11 +60,24 @@ If \code{post} is numeric, it specifies an angle for inverse rotation.
 
 \examples{
 
-cat(omerc(c(10,50), angle=c(0,45,80)))
-
 data('worldMap')
 worldMap = terra::unwrap(worldMap)
 
+myProj = omerc(c(0,0), angle=0)
+
+myProj = omerc(c(-100,-70), angle=-45)
+crs(myProj, proj=TRUE)
+
+plot(project(worldMap, crsLL))
+plot(attributes(myProj)$crop, col='red', add=TRUE)
+
+
+
+
+myMap = openmap(myProj, zoom=1, fact=0.5)
+map.new(myProj)
+plot(myMap, add=TRUE)
+plot(wrapPoly(worldMap, myProj), add=TRUE)
 
 data('netherlands')
 nldCities = terra::unwrap(nldCities)
@@ -71,7 +85,7 @@ nldTiles = terra::unwrap(nldTiles)
 
 
 nldUtm = project(nldCities, omerc(nldCities, angle=0))
-cat(crs(nldUtm))
+cat(crs(nldUtm, proj=TRUE))
 nldTiles2 = project(nldTiles, crs(nldUtm), method='near')
 
 
@@ -81,12 +95,12 @@ points(nldUtm)
 text(nldUtm,labels=nldUtm$name, pos=4)
 scaleBar(nldUtm, 'topright')
 insetMap(crs=nldUtm, pos='bottomright', cropInset = 20*1000*c(2,2,1,3), zoom=7, 
-	inset=c(0.01, 0.1), width=0.25)
+	inset=c(0.01, 0.01), width=0.25)
 insetMap(nldUtm, 'right', cropInset = 500*1000, zoom=4, width=0.25, inset = 0)
 
 
 	nldRot = project(nldCities, omerc(nldCities, angle=seq(25,45,by=5)))
-	cat(crs(nldRot))
+	cat(crs(nldRot, proj=TRUE))
 
 
 # testing the wrapping of polygons with an ugly projection
