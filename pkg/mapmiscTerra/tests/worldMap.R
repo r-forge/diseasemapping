@@ -77,7 +77,7 @@ if(!interactive()) pdf("worldMap.pdf")
 	plot(xTcrop,add=TRUE, col='grey')
 	plot(xTcrop[DcountryT,], col='green', add=TRUE)
 	
-	gridlinesWrap(crs=xTcrop, lty=2, col='red')
+	gridlinesWrap(crs=myCrsMoll, lty=2, col='red')
 
 
 	
