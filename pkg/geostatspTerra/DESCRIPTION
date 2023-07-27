@@ -1,0 +1,24 @@
+Package: geostatsp
+Type: Package
+Title: Geostatistical Modelling with Likelihood and Bayes
+Version: 1.9.9
+Date: 2023-07-26
+Depends:
+    terra,
+    Matrix,
+    R (>= 3.5.0)
+Imports:
+    methods,
+    stats
+Suggests:
+    RandomFields (>= 3.3.4),
+    mapmiscTerra,
+LinkingTo: Matrix
+Author: Patrick Brown <patrick.brown@utoronto.ca>
+Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
+Description: Geostatistical modelling facilities using 'terra' 
+    objects are provided. Non-Gaussian models are fit using 'INLA', and Gaussian
+    geostatistical models use Maximum Likelihood Estimation.  For details see Brown (2015) <doi:10.18637/jss.v063.i12>.
+License: GPL
+NeedsCompilation: yes
+VignetteBuilder: knitr
