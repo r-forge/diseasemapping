@@ -41,8 +41,8 @@ citiesT = project(cities, crs(worldMap))
 map.new(citiesT, buffer=5000*1000)
 plot(worldMap, add=TRUE)
 points(citiesT, col='red')
-text(citiesT, labels=citiesT$name, col='red',pos=4)
-text(citiesT, labels=citiesT$display_name, col='red',pos=1)
+suppressWarnings(text(citiesT, labels=citiesT$name, col='red',pos=4))
+suppressWarnings(text(citiesT, labels=citiesT$display_name, col='red',pos=1))
 
 }
 

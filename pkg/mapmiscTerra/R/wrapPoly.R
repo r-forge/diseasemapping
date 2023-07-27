@@ -173,6 +173,7 @@ borderLL2 = terra::geom(suppressWarnings(project(terra::as.points(regionTransPol
 borderLL2 = terra::vect(borderLL2[!is.nan(borderLL2[,'x']), ], crs=crsLL)
 
 
+
 # data('worldMap');worldMap = unwrap(worldMap);plot(project(worldMap, crsLL), ylim = c(-95,95));points(borderLL1, cex=0.3,col='blue');points(borderLL2, cex=0.1, col='red')     
 
 whereIsJump1a = which(abs(diff(terra::crds(borderLL1)[,1])) > 180)
@@ -195,10 +196,10 @@ borderLLsplit1l = lapply(borderLLsplit1, terra::as.lines)
 borderLLsplit2l = lapply(borderLLsplit2, terra::as.lines)
 
 borderLLsplitL = terra::vect(terra::svc(c(borderLLsplit1l, borderLLsplit2l)))
-
+borderLLsplitL = terra::simplifyGeom(borderLLsplitL, tolerance = 0.05, preserveTopology=FALSE)
 borderLLlinesListDens = terra::densify(borderLLsplitL, densify.interval)
 
-allPoints = terra::as.points(borderLLlinesListDens) 
+allPoints =terra::as.points(borderLLlinesListDens)
 
 if(crop.poles) {
   polesAndSidesLLpoly=polesLLPolyFun(buffer.width, crop.leftright)
@@ -210,8 +211,23 @@ if(crop.poles) {
   edgeLL = terra::aggregate(terra::buffer(allPoints, buffer.width))
 }
 
+
   if(remove.holes) {
+    eps = 0.1
+      leftSide = terra::ext(terra::crop(allPoints, terra::ext(-180,-180+eps,-90,90)))
+      rightSide = terra::ext(terra::crop(allPoints, terra::ext(180-eps,180,-90,90)))
+      if(length(leftSide)) {
+        leftSide = terra::densify(vect(cbind(-180, c(terra::ymin(leftSide), terra::ymax(leftSide))), crs=crsLL, type='lines'), densify.interval)
+        edgeLL = terra::aggregate(terra::union(edgeLL, terra::buffer(leftSide, buffer.width)))
+      }
+      if(length(rightSide)) {
+        rightSide = terra::densify(vect(cbind(180, c(terra::ymin(rightSide), terra::ymax(rightSide))), crs=crsLL, type='lines'), densify.interval)
+        edgeLL = terra::aggregate(terra::union(edgeLL, terra::buffer(rightSide, buffer.width)))
+      }
+
+
     edgeLL = terra::fillHoles(edgeLL)
+
   }
 
 # plot(project(worldMap, crsLL), ylim = c(-92, 92));plot(edgeLL, add=TRUE, col='blue')

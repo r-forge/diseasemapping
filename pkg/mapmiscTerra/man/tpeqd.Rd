@@ -36,7 +36,13 @@ A coordinate reference system is returned
 
 \examples{
 
-tpeqd(rbind(c(0,0), c(10,50)))
+data('worldMap');worldMap=unwrap(worldMap)
+
+myCrs = tpeqd(rbind(c(0,0), c(10,50)))
+map.new(myCrs, col='lightblue')
+
+plot(project(worldMap, crsLL))
+plot(attributes(myCrs)$crop, col='red', add=TRUE)
 
 data('netherlands')
 nldCities = terra::unwrap(nldCities)
@@ -50,18 +56,15 @@ map.new(nldT)
 text(nldT,labels=nldT$name)
 scaleBar(nldT, 'topright')
 
-data('worldMap');worldMap=unwrap(worldMap)
 
 thepoints = vect(rbind(cbind(139, 35), cbind(360-118,35)), crs=crsLL)
 crsTwo = tpeqd(thepoints)
 
 
-lims = 12*1000*1000
-plot(attributes(crsTwo)$ellipse, col='lightblue', ylim = lims*c(-1,1), xlim = lims*c(-1,1))
+map.new(crsTwo, col='lightblue')
 plot(project(worldMap, crsTwo), add=TRUE, col='grey')
 points(project(thepoints, crsTwo), col='red')
-# this breaks
-#gridlinesWrap(crsTwo, norths = seq(0, 60,by=30), easts=150)
+gridlinesWrap(crsTwo, col='orange')
 
 }
 
