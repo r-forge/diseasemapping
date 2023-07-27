@@ -61,7 +61,6 @@ of 6 characters times \code{scale.cex}.
 Patrick Brown
 }
 
-\seealso{\code{\link[raster]{scalebar}}, \code{\link[sp]{spplot}}}
 
 \examples{
 

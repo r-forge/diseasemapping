@@ -41,9 +41,8 @@ for instance when \code{x} is a matrix or extent,
 \item{buffer}{Extend the extent for which the map is requested, in units
 of \code{x}.  Can be negative, or a vector of length 2 for different x and y 
 extensions}
-\item{fact}{Passed to \code{\link[raster]{disaggregate}} before 
-	reprojecting if \code{fact>1}, 
-	helps to produce a clearer image.}
+\item{fact}{Passed to increase or decrease resolution, values above 1
+	help to produce a clearer image.}
   \item{verbose}{
     Print information about map images being downloaded, defaults to \code{FALSE}.
   }
