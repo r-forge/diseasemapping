@@ -131,4 +131,18 @@ map.new(myPoints)
 plot(myPoints, col=myscale4$plot, pch=16,add=TRUE)
 legendBreaks("topleft", legend=myscale4$breaks, col=myscale4$col)
 
+
+# raster with colour table
+
+x = rast(extent=ext(0,15,0,10), res=1)
+values(x) = sample(1:4, ncell(x), replace=TRUE)
+myScale = colourScale(x, breaks=3, style='unique', col=c('red','blue','orange'))
+coltab(x) = myScale$colourtable
+plot(x)
+legendBreaks('topright', myScale)
 }
+
+
+
+
+

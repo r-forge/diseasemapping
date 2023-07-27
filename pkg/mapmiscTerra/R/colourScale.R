@@ -563,8 +563,8 @@ result = list(col=colVec, breaks=breaks, colOpacity=colForPlot)
 if(style=="unique") {
 	thetable$colOpacity = colForPlot
 
-	result$colourtable = rep(NA, max(thetable$ID)+1)
-	result$colourtable[1+thetable$ID] = thetable$colOpacity
+	result$colourtable = cbind(ID=thetable$ID, t(grDevices::col2rgb(thetable$col, alpha=TRUE)))
+
 	result$colortable = result$colourtable
 
 	if(length(xOrig))
