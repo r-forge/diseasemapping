@@ -238,10 +238,10 @@ openmap = function(
 
 
     areaRast = suppressWarnings(terra::cellSize(testRast, unit='m'))
-    if(terra::ncell(areaRast) < 1e5) {
-      toQuantile = values(areaRast)
+    if(terra::ncell(areaRast) < 1e4) {
+      toQuantile = terra::values(areaRast)
     } else {
-      toQuantile = unlist(terra::spatSample(areaRast,  size=min(c(terra::ncell(areaRast), 1e5))))
+      toQuantile = unlist(terra::spatSample(areaRast,  size=min(c(terra::ncell(areaRast), 1e4))))
     }
     toQuantile = toQuantile[toQuantile > 0]
     cellWidthRast = quantile(toQuantile, prob=0.5, na.rm=TRUE)
