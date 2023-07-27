@@ -15,7 +15,7 @@
 #include<R_ext/Print.h>
 #include<R_ext/Utils.h>
 #include<Matrix.h>
-
+#include <Rdefines.h>
 
 
 /* type = 0, distances is a vector

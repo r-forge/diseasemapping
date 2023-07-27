@@ -6,7 +6,8 @@ SEXP gmrfEdge(
 		SEXP params
 ){
 
-	SEXP result, typePrecision; // dense symmetric
+	SEXP result;
+	SEXP typePrecision; // dense symmetric
 	int Nrow, Ncol;
 	double one = 1.0;
 
