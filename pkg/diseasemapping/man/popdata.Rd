@@ -17,7 +17,7 @@ This data is from the 2006 Census of canada offering by Statistics Canada web si
 \examples{
 data('popdata')
 popdata = terra::unwrap(popdata)
-head(values(popdata))
+head(terra::values(popdata))
 
 terra::plot(popdata)
 }
