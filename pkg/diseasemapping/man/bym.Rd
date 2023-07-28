@@ -130,10 +130,10 @@ larynxRates = larynxRates[-grep("_(0|5)$",names(larynxRates))]
 kentucky = getSMR(kentucky, larynxRates, larynx, regionCode="County")
 
 kBYM = bym(observed ~ offset(logExpected) + poverty, kentucky,
-	 prior= list(sd=c(0.1, 0.5), propSpatial=c(0.5, 0.5))))
+	 prior= list(sd=c(0.1, 0.5), propSpatial=c(0.5, 0.5))
+  )
 
-kBYM$par$summary[,paste0(c(0.5, 0.025, 0.975), 'quant')]
-	
+kBYM$parameters$summary	
 
 if(require('mapmisc', quietly=TRUE) & length(kBYM$data$fitted.exp)){
 

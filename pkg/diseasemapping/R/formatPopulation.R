@@ -21,7 +21,6 @@ setMethod("formatPopulation",
 		signature("data.frame"),
 		function(popdata, aggregate.by=NULL, breaks=NULL,...) {
 			
-#popdata <- popdata@data
 			ageBreaks = getBreaks(names(popdata), breaks)
 			
 			####reshape the popdata:

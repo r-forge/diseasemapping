@@ -82,7 +82,7 @@ vector of cancer rates, by age and sex group
 
 # won't work if offline or if the iarc web site is down
 
-if(interactive() | Sys.info()['user'] =='patrick') {	 
+if(FALSE) {	 
   qcLungF=cancerRates(area="canada", 
   	year=2001:2002, site="lung", sex="F")
 } else {
@@ -96,6 +96,7 @@ area = "Canada", year = "2001-2002")
 qcLungF
 
 data('popdata')
+popdata = terra::unwrap(popdata)
 
 qcLungExp = getSMR(popdata, qcLungF)
 

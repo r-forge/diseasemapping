@@ -31,9 +31,9 @@ if(useGam & requireNamespace("mgcv", quietly = TRUE)) {
 
 #is SP or not
 if(morethanoneyear){
-  isSP = (class(popdata[[1]])== "SpatialPolygonsDataFrame")
+  isSP = (class(popdata[[1]])== "SpatVector")
 }else{
-  isSP = (class(popdata)== "SpatialPolygonsDataFrame")
+  isSP = (class(popdata)== "SpatVector")
 }
 
 #if years not supplied, use the names of list
@@ -101,7 +101,7 @@ if(length(termsToAdd) ) {
   if(morethanoneyear)
     warning("All covariates must be added to case data if popdata is a list")
    colsToTry = popdata[,-grep("^(M|F)[[:digit:]]", names(popdata))]
-     if(isSP) colsToTry = colsToTry@data
+     if(isSP) colsToTry = terra::values(colsToTry)
 
   # find column to merge on
   commonCol = names(casedata)[(names(casedata) %in% names(popdata))]

@@ -70,6 +70,7 @@ The meuse data
 <<meusedata,echo=TRUE>>=
 data('netherlands')
 meuse = unwrap(meuse)
+nldElev = unwrap(nldElev)
 @
 
 
@@ -79,12 +80,6 @@ meuse = unwrap(meuse)
 meuseLL = project(meuse, crsLL)
 @
 
-
-Get elevation data
-
-<<dataneth>>=
-nldElev = unwrap(nldElev)
-@
 
 
 

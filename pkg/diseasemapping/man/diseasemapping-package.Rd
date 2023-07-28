@@ -36,8 +36,10 @@ if(require('mapmisc', quietly=TRUE)) {
 if(require("INLA", quietly=TRUE)) {
 
 
-kBYM = bym(observed ~ offset(logExpected) + poverty, kentucky2, 
-	 prior = list(sd=c(0.1, 0.5), propSpatial=c(0.5, 0.5)))
+kBYM = bym(observed ~ offset(logExpected) + poverty, 
+	data= kentucky2, 
+	prior = list(sd=c(0.1, 0.5), propSpatial=c(0.5, 0.5))
+)
 
 kBYM$par$summary
 

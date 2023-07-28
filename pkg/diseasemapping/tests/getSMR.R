@@ -5,11 +5,11 @@ kentucky = terra::unwrap(kentucky)
 head(larynx)
 10^5*larynxRates[paste(c("M","F"), 50, sep="_")]
 
-kentucky1 = getSMR(kentucky@data, larynxRates)
+kentucky1 = getSMR(terra::values(kentucky), larynxRates)
 kentucky1[1:4,c(1,2,grep("expected", names(kentucky1),ignore.case=TRUE))]
 
 kentucky1 = getSMR(kentucky, larynxRates)
-kentucky1@data[1:4,c(1,2,grep("expected", names(kentucky1),ignore.case=TRUE))]
+kentucky1[1:4,c(1,2,grep("expected", names(kentucky1),ignore.case=TRUE))]
 
 if(require('mapmisc', quietly=TRUE)) {
 #  kmap = openmap(kentucky)
@@ -29,7 +29,7 @@ if(require('mapmisc', quietly=TRUE)) {
 junk = getSMR(kentucky, larynxRates, regionCode='junk')
 
 
-kentucky2 = getSMR(kentucky@data, larynxRates, 
+kentucky2 = getSMR(terra::values(kentucky), larynxRates, 
     larynx, 
     regionCode="County")
 kentucky2[1:4,c(1,2,grep("expected|observed", names(kentucky2),ignore.case=TRUE))]
@@ -39,7 +39,7 @@ kentucky2 = getSMR(kentucky,
     larynxRates, 
     casedata=larynx, 
     regionCode="County")
-kentucky2@data[1:4,c(1,2,grep("expected|observed", names(kentucky2),ignore.case=TRUE))]
+terra::values(kentucky2)[1:4,c(1,2,grep("expected|observed", names(kentucky2),ignore.case=TRUE))]
 
 if(require('mapmisc', quietly=TRUE)) {
 
@@ -73,7 +73,7 @@ if(require('mapmisc', quietly=TRUE)) {
 }
 
 
-kentucky3 = getSMR(kentucky@data, 
+kentucky3 = getSMR(terra::values(kentucky), 
     model=list(larynxRates, larynxRates*2)
 )
 kentucky3[1:4,c(1,2,grep("expected|observed", names(kentucky3),ignore.case=TRUE))]
@@ -81,7 +81,7 @@ kentucky3[1:4,c(1,2,grep("expected|observed", names(kentucky3),ignore.case=TRUE)
 kentucky3 = getSMR(kentucky, 
     model=list('1990'=larynxRates, '1991'=larynxRates*2)
 )
-kentucky3@data[1:4,c(1,2,grep("expected|observed", names(kentucky3),ignore.case=TRUE))]
+terra::values(kentucky3)[1:4,c(1,2,grep("expected|observed", names(kentucky3),ignore.case=TRUE))]
 
 modelList = list()
 for (D in 3:12) {
@@ -97,10 +97,10 @@ kentucky4 = getSMR(
     ),
     model=modelList
 )
-kentucky4[[1]]@data[1:4,c(1,2,grep("expected|observed", 
+terra::values(kentucky4[[1]])[1:4,c(1,2,grep("expected|observed", 
             names(kentucky4[[1]]),ignore.case=TRUE))
 ]
-kentucky4[[2]]@data[1:4,c(1,2,grep("expected|observed", 
+terra::values(kentucky4[[2]])[1:4,c(1,2,grep("expected|observed", 
             names(kentucky4[[2]]),ignore.case=TRUE))
 ]
  

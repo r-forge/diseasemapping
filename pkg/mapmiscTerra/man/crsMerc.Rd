@@ -8,7 +8,6 @@
 \alias{extentMerc}
 
 
-\docType{data}
 \title{Some coordinate reference systems and bounding boxes}
 \description{
 Defines CRS's for the several map projections.
