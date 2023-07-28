@@ -137,7 +137,7 @@ legendBreaks("topleft", legend=myscale4$breaks, col=myscale4$col)
 x = rast(extent=ext(0,15,0,10), res=1)
 values(x) = sample(1:4, ncell(x), replace=TRUE)
 myScale = colourScale(x, breaks=3, style='unique', col=c('red','blue','orange'))
-coltab(x) = myScale$colourtable
+terra::coltab(x) = myScale$colourtable
 plot(x)
 legendBreaks('topright', myScale)
 }
