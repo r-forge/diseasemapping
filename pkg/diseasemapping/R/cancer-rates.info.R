@@ -117,7 +117,7 @@ usCancer = function(
 				cat('\ndownloading', paste(namesHere, collapse=" "))
 				sRes = try(system(myCommand))
 				cat(' done\n')
-				if(class(sRes)=='try-error') {
+				if(inherits(sRes, 'try-error')) {
 					stop("install httrack from www.httrack.com")
 				}
 				

@@ -80,7 +80,7 @@ Otherwise, \code{model} is passed to the \code{predict} function.
  
 \examples{
 data(kentucky)
-kentucky = unwrap(kentucky)
+kentucky = terra::unwrap(kentucky)
 
 kentucky2 = getSMR(kentucky, larynxRates, larynx, 
 		regionCode="County")

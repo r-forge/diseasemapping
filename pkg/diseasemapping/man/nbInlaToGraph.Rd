@@ -39,7 +39,7 @@ Patrick Brown
 \examples{
 
 data('kentucky')
-kentucky = unwrap(kentucky)
+kentucky = terra::unwrap(kentucky)
 # remove all the neighbours Ballard county
 kSub = kentucky[-c(2,20,79),]
 

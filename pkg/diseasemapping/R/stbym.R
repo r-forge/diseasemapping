@@ -71,7 +71,7 @@ stbym = function(
   }
   region.id = region.id[c('data','spatial')]
 
-  if(class(adjMat) == 'SpatVector') {
+  if(inherits(adjMat, 'SpatVector')) {
     adjMatRegionId = terra::values(adjMat)[, region.id[2]]
     adjMat = terra::adjacent(adjMat)
   }
