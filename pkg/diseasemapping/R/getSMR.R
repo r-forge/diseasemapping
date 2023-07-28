@@ -31,7 +31,7 @@ setMethod("getSMR",
 			
 			forSp <- methods::callGeneric()
 			
-			values(theSP) = forSp
+			terra::values(theSP) = forSp
 
 			theSP
 		}

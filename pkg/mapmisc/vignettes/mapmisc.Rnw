@@ -11,7 +11,7 @@
 \providecommand{\subfloat}[2][need a sub-caption]{\subcaptionbox{#1}{#2}}
 
 
-\title{The mapmisc package}
+\title{The mapmiscSp package}
 \author{Patrick Brown}
 
 
@@ -29,11 +29,11 @@ opts_chunk$set(echo=TRUE,message=FALSE,
 
 options("rgdal_show_exportToProj4_warnings"="none") 
 
-library('mapmisc')
+library('mapmiscSp')
 haveRgdal = requireNamespace('rgdal', quietly=TRUE)
 
 if(!exists('mapmiscCachePath'))
-  mapmiscCachePath = system.file('extdata', package='mapmisc')
+  mapmiscCachePath = system.file('extdata', package='mapmiscSp')
 
 if(!exists('mapmiscCacheReadOnly'))
   mapmiscCacheReadOnly = TRUE

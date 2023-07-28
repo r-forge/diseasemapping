@@ -7,7 +7,7 @@
 # Space Station Map Projections
 
 ```{r setup}
-library('mapmiscTerra', quietly=TRUE)
+library('mapmisc', quietly=TRUE)
 if(!exists('fact'))
   fact = 1
 # uncomment for nicer images

@@ -6,7 +6,7 @@ print(havePackages)
 
 library('diseasemapping')
 data('kentucky')
-kentucky = unwrap(kentucky)
+kentucky = terra::unwrap(kentucky)
 
 
 
@@ -15,12 +15,15 @@ kentucky = unwrap(kentucky)
 kentucky = getSMR(kentucky, larynxRates, larynx,
 		regionCode="County")
 
+kentuckyAdjMat = terra::adjacent(kentucky)
+attributes(kentuckyAdjMat)$region.id = kentucky$County
+
 if(all(havePackages)){
 
   kBYM = bym(
 			formula = observed ~ offset(logExpected) + poverty,
-      data=values(kentucky),
-			adjMat = terra::adjacent(kentucky),
+      data=terra::values(kentucky),
+			adjMat = kentuckyAdjMat,
       prior = list(sd=c(0.1, 5), propSpatial=c(0.1, 5)),
 			region.id='County',
 			control.predictor=list(compute=TRUE)

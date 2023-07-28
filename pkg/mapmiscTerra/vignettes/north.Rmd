@@ -11,7 +11,7 @@ title: Mapping Hans Island
 
 
 ```{r setup, include=FALSE}
-library('mapmiscTerra')
+library('mapmisc')
 
 if(!exists('mapmiscCachePath'))
   mapmiscCachePath = tempdir()

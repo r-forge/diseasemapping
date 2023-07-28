@@ -1,5 +1,5 @@
 
-library('mapmiscTerra')
+library('mapmisc')
 
 
 if(!interactive()) pdf("colourScaleFile1.pdf",height=12,width=12)

@@ -1,5 +1,5 @@
 
-library('mapmiscTerra')
+library('mapmisc')
 data('netherlands')
 
 nldCities = unwrap(nldCities)

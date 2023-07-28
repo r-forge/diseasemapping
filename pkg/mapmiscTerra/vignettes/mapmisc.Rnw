@@ -29,7 +29,7 @@ opts_chunk$set(echo=TRUE,message=FALSE,
 
 
 
-library('mapmiscTerra')
+library('mapmisc')
 
 
 if(!exists('fact'))

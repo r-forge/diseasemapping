@@ -1,6 +1,6 @@
 #+ setup
 
-library('mapmiscTerra')
+library('mapmisc')
 
 #if(!exists('mapmiscCachePath'))
 #  mapmiscCachePath = system.file('extdata', package='mapmisc')

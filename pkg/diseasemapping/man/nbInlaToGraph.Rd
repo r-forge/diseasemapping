@@ -46,9 +46,10 @@ kSub = kentucky[-c(2,20,79),]
 
 
 adjMat = terra::adjacent(kSub)
+attributes(adjMat)$region.id = kentucky$County
 
 nFile = tempfile()
-nbRes = nbToInlaGraph(adjMat, nFile, kSub$County)
+nbRes = nbToInlaGraph(adjMat, nFile)
 
 # Ballard is region 3
 nbRes['Ballard']
@@ -62,7 +63,6 @@ cat(readLines(nFile, n=5), sep='\n')
 junk = bym(poverty ~ 1, data=kSub, family='gaussian')
 }
 
-}
 
 }
 

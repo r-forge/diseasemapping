@@ -20,10 +20,16 @@ setClass('nb',
 )
 
 #' @export
-`nbToInlaGraph` = function(adjMat, graphFile="graph.dat", region.id = 1:max(adjMat))
+`nbToInlaGraph` = function(adjMat, graphFile="graph.dat", region.id = attributes(adjMat)$region.id)
 {
 
-	missingRegions = setdiff(1:length(region.id), adjMat[,'from'])
+	if(!length(region.id)) {
+		region.id = seq(1, max(adjMat[,1]))
+	}
+	region.index = 1:length(region.id)
+
+	missingRegions = setdiff(region.index, adjMat[,'from'])
+	
 	adjMat = rbind(adjMat, cbind(from=missingRegions, to=rep(0, length(missingRegions))))
 	adjMat = adjMat[order(adjMat[,'from']),]
 	nbList = split(adjMat[,'to'], adjMat[,'from'])
@@ -38,7 +44,6 @@ setClass('nb',
 
 	cat(paste(inlaGraph, '\n',sep=''), file=graphFile)
 
-	region.index = 1:length(region.id)
 	names(region.index) = as.character(region.id)
 	
 	attributes(region.index)$Nneighbours = nbLength

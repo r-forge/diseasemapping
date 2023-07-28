@@ -12,7 +12,7 @@ Imports:
 Suggests:
     mgcv,
     geostatsp,
-    mapmiscTerra,
+    mapmisc (>= 1.9.0),
     knitr
 Enhances: INLA, XML
 Additional_repositories: https://inla.r-inla-download.org/R/testing
