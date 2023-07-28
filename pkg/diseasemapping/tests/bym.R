@@ -22,7 +22,7 @@ if(all(havePackages)){
       data=values(kentucky),
 			adjMat = terra::adjacent(kentucky),
       prior = list(sd=c(0.1, 5), propSpatial=c(0.1, 5)),
-			region.id="County",
+			region.id='County',
 			control.predictor=list(compute=TRUE)
   )
 	kBYM$parameters$summary
