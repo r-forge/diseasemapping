@@ -110,12 +110,6 @@ Patrick Brown
 
 
 \seealso{
-\url{https://www.r-inla.org}, 
-\Sexpr[results=rd]{c(
-  '\\\\code{inla}', 
-  '\\\\code{\\\\link[INLA]{inla}}'
-  )[1+requireNamespace('INLA', quietly=TRUE)]
-  }
 \code{\link[diseasemapping]{getSMR}} 
 }
 
@@ -124,29 +118,30 @@ Patrick Brown
 data('kentucky')
 kentucky = terra::unwrap(kentucky)
 
-# get rid of under 10's
+# get rid of under 10s
 larynxRates = larynxRates[-grep("_(0|5)$",names(larynxRates))]
 
 kentucky = getSMR(kentucky, larynxRates, larynx, regionCode="County")
 
-kBYM = try(
+kBYM <- try(
   bym(
     observed ~ offset(logExpected) + poverty, kentucky,
 	  prior= list(sd=c(0.1, 0.5), propSpatial=c(0.5, 0.5))
-   ), 
-  silent=TRUE)
+   ), silent=TRUE)
 
-
-if("parameters" %in% names(kBYM)) {
+if(length(grep("parameters", names(kBYM)))) {
   kBYM$parameters$summary
 }
 
-if( require("mapmisc", quietly=TRUE) && "parameters" %in% names(kBYM) ) {
+
+
+if( require("mapmisc", quietly=TRUE) && length(grep("parameters", names(kBYM))) ) {
   thecol = colourScale(kBYM$data$fitted.exp, breaks=5, dec=1, style="equal")
   map.new(kBYM$data)
   terra::plot(kBYM$data, col=thecol$plot, add=TRUE)
   legendBreaks("topleft", thecol)
 }
+
 
 }
 
