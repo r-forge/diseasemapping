@@ -1,4 +1,4 @@
-export(crsLL, crsMerc,crsModis, crsCanada,bboxLL, bboxLLsafe, extentMerc)
+export(crsLL, crsMerc,crsModis, crsCanada, bboxLL, bboxLLsafe, extentMerc)
 export(map.new, col2html)
 importFrom('terra', 'vect', 'rast', 'crs','project','values','crds','ext')
 importMethodsFrom('terra',"[", "[[",'plot')

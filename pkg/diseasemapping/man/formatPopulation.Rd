@@ -60,8 +60,8 @@ The sex column will have two levels "M" and "F" as factors.
 
 \examples{
 data('kentucky')
-kentucky = unwrap(kentucky)
-head(values(kentucky))
+kentucky = terra::unwrap(kentucky)
+head(terra::values(kentucky))
 poptry <- formatPopulation(kentucky, breaks = c(seq(0, 80, by=10), Inf))
 head(poptry)
 poptryagg <- formatPopulation(kentucky, breaks = c(seq(0, 80, by=10), Inf), 

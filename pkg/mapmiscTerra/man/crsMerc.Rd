@@ -42,7 +42,7 @@ bboxLL
 
 \examples{
 terra::crs(crsMerc, proj=TRUE)
-terra::crs(crsLL, proj=TRUE))
+terra::crs(crsLL, proj=TRUE)
 terra::crs(crsCanada, proj=TRUE)
 terra::ext(extentMerc)
 
