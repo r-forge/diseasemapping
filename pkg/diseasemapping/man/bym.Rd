@@ -116,7 +116,7 @@ Patrick Brown
   '\\\\code{\\\\link[INLA]{inla}}'
   )[1+requireNamespace('INLA', quietly=TRUE)]
   }
-\code{\link[geostatsp]{glgm}}, \code{\link[diseasemapping]{getSMR}} 
+\code{\link[diseasemapping]{getSMR}} 
 }
 
 \examples{
@@ -134,9 +134,12 @@ kBYM = try(bym(observed ~ offset(logExpected) + poverty, kentucky,
   ), silent=TRUE)
 
 
-if("parameters" %in% names(kBYM)) kBYM$parameters$summary	
+if("parameters" %in% names(kBYM)) {kBYM$parameters$summary}
 
-if(require('mapmisc', quietly=TRUE) & ("parameters" %in% names(kBYM))) {
+if(
+  require('mapmisc', quietly=TRUE) & 
+  ("parameters" %in% names(kBYM))
+) {
 
   thecol = colourScale(kBYM$data$fitted.exp, breaks=5, dec=1, style='equal')
 
