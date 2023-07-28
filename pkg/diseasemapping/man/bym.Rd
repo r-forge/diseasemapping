@@ -134,23 +134,18 @@ kBYM = try(bym(observed ~ offset(logExpected) + poverty, kentucky,
   ), silent=TRUE)
 
 
-if("parameters" %in% names(kBYM))
-  kBYM$parameters$summary	
+if("parameters" %in% names(kBYM)) kBYM$parameters$summary	
 
 if(require('mapmisc', quietly=TRUE) & ("parameters" %in% names(kBYM))) {
 
-thecol = colourScale(kBYM$data$fitted.exp, breaks=5, dec=1, style='equal')
+  thecol = colourScale(kBYM$data$fitted.exp, breaks=5, dec=1, style='equal')
 
 
-map.new(kBYM$data)
+  map.new(kBYM$data)
 
-\dontrun{
-kmap = openmap(kBYM$data)
-plot(kmap,add=TRUE)
-}
 
-terra::plot(kBYM$data, col=thecol$plot,add=TRUE)
-legendBreaks("topleft", thecol)
+  terra::plot(kBYM$data, col=thecol$plot,add=TRUE)
+ legendBreaks("topleft", thecol)
 
 }
 
