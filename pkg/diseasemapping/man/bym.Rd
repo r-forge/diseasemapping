@@ -24,7 +24,7 @@ Uses inla to fit a Besag, York and Mollie disease mapping model
 \S4method{bym}{formula,SpatVector,matrix,character}(formula,data,adjMat,region.id,...)
 \S4method{bym}{formula,data.frame,matrix,character}(
 formula,data,adjMat,region.id,
-prior=list(sdSpatial=c(0.01,2),sdIndep=c(0.01,2)),
+prior=list(sd=c(0.1,0.5),propSpatial=c(0.5,0.5)),
 family="poisson",formula.fitted=formula,...)
 }
 
@@ -76,28 +76,15 @@ in \code{formula} on the log scale with \eqn{\log(O_i)}{log(O_i)} an \code{offse
 and a spatially independent variance \eqn{\sigma_2^2}.}
 }
 
-The \code{priorCI} argument can be 
-a \code{list} containing elements named \code{sdSpatial} and \code{sdIndep}, each being a vector of length 2 with 
-2.5pct and 97.5pct quantiles for the prior distributions of the standard deviations
-\eqn{\sigma_1} and \eqn{\sigma_2} respectively. 
-Gamma prior distributions for the precision parameters 
-\eqn{1/\sigma_1^2} and \eqn{1/\sigma_2^2}
-yielding quantiles specified
-for the standard deviations are computed, and used with the \code{model="bym"} option to 
-\Sexpr[results=rd]{c(
-  '\\\\code{f}', 
-  '\\\\code{\\\\link[INLA]{f}}'
-  )[1+requireNamespace('INLA', quietly=TRUE)]
-  }.  
-
-The other possible format for \code{priorCI} is to have elements named \code{sd} and \code{propSpatial}, which 
+The \code{prior} 
+has elements named \code{sd} and \code{propSpatial}, which 
 specifies \code{model="bym2"} should be used with penalized complexity priors.  
 The \code{sd} element gives a prior for the marginal standard deviation
 \eqn{\sigma_0 =\sqrt{\sigma_1^2+\sigma_2^2}}{\sigma_0 = sqrt(\sigma_1^2+\sigma_2^2)}.  
-This prior is approximately exponential, and \code{priorCI$sd = c(1, 0.01)} specifies a 
+This prior is approximately exponential, and \code{prior$sd = c(1, 0.01)} specifies a 
  prior probability \eqn{pr(\sigma_0 > 1) = 0.01}.  
  The \code{propSpatial} element gives the prior for the ratio
- \eqn{\phi = \sigma_1/\sigma_0}.  Having \code{priorCI$propSpatial = c(0.5, 0.9)} implies 
+ \eqn{\phi = \sigma_1/\sigma_0}.  Having \code{prior$propSpatial = c(0.5, 0.9)} implies 
  \eqn{pr(\phi < 0.5) = 0.9}.
 }
  
@@ -142,18 +129,16 @@ larynxRates = larynxRates[-grep("_(0|5)$",names(larynxRates))]
 
 kentucky = getSMR(kentucky, larynxRates, larynx, regionCode="County")
 
-kBYM = bym(observed ~ offset(logExpected) + poverty, kentucky, 
-	 prior= list(sd=c(0.1, 0.5), propSpatial=c(0.1, 0.5)),
-	 control.mode=list(theta=c(3.52, 3.35),restart=TRUE), control.inla = list(int.strategy='eb', strategy='gaussian'))
+kBYM = bym(observed ~ offset(logExpected) + poverty, kentucky,
+	 prior= list(sd=c(0.1, 0.5), propSpatial=c(0.5, 0.5))))
 
 kBYM$par$summary[,paste0(c(0.5, 0.025, 0.975), 'quant')]
 	
 
-
 if(require('mapmisc', quietly=TRUE) & length(kBYM$data$fitted.exp)){
 
-thecol = colourScale(kBYM$data$fitted.exp, 
-	breaks=5, dec=2, opacity = 0.7)
+thecol = colourScale(kBYM$data$fitted.exp, breaks=5, dec=1, style='equal')
+
 
 map.new(kBYM$data)
 
@@ -162,7 +147,7 @@ kmap = openmap(kBYM$data)
 plot(kmap,add=TRUE)
 }
 
-plot(kBYM$data, col=thecol$plot,add=TRUE)
+terra::plot(kBYM$data, col=thecol$plot,add=TRUE)
 legendBreaks("topleft", thecol)
 
 }

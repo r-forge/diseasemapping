@@ -24,27 +24,27 @@ if(all(havePackages)){
 			formula = observed ~ offset(logExpected) + poverty,
       data=terra::values(kentucky),
 			adjMat = kentuckyAdjMat,
-      prior = list(sd=c(0.1, 5), propSpatial=c(0.1, 5)),
+      prior = list(sd=c(0.1, 0.5), propSpatial=c(0.5, 0.5)),
 			region.id='County',
 			control.predictor=list(compute=TRUE)
   )
 	kBYM$parameters$summary
 
-	pdf("priorPostKentucky.pdf")
-	plot(kBYM$parameters$sdSpatial$posterior, type='l', 
-			xlim=c(0,max(kBYM$parameters$sdSpatial$priorCI)))
-	lines(kBYM$parameters$sdSpatial$prior, col='blue')
+	if(!interactive()) pdf("priorPostKentucky.pdf")
+	plot(kBYM$parameters$sd$posterior, type='l', xlim = c(0, 1), lwd=2)
+	lines(kBYM$parameters$sd$prior, col='blue')
 	legend('topright', lty=1, col=c('black','blue'), legend=c('posterior','prior'))
-	dev.off()
+	if(!interactive()) dev.off()
 
 	
 	
 
 
-# also try no covariate or prior
+# also try no covariate or adj mat
 
 kBYM = bym(
 		formula = observed ~ offset(logExpected),
+		prior = list(sd = 0.5, propSpatial = 0.5),
 		data=kentucky)
 
 
@@ -74,25 +74,15 @@ colExc = colourScale(kBYM$data$exc1 ,
 	legendBreaks('topleft', colExc)
  		
 }
-# and try passing a data frame and adjacency matrix
 
 	
-adjMat = terra::adjacent(kentucky)
-attributes(adjMat)$region.id = kentucky$County
-
-kBYM = bym(data=terra::values(kentucky), formula=observed ~ offset(logExpected) + poverty,
-		adjMat = adjMat, region.id="County",
-		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
-
-kBYM$par$summary
-
 # subtract a few regions
 
 kBYM = bym(
     formula=observed ~ offset(logExpected) + poverty,
-    data=kentucky@data[-(1:4),],  
- 	  adjMat = adjMat, region.id="County",
-		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
+    data=terra::values(kentucky)[-(1:4),],  
+ 	  adjMat = kentuckyAdjMat, region.id="County",
+		prior = list(sd=0.1, propSpatial = 0.1))
  
 
 kBYM$par$summary
@@ -101,7 +91,7 @@ kBYM$par$summary
 
 
 kBYM = bym(data=kentucky,  formula=observed ~ 1,
-		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
+		prior = list(sd=1, propSpatial=0.9))
 
 kBYM$par$summary
 
@@ -120,12 +110,12 @@ if(require('mapmisc', quietly=TRUE)) {
 
 # give spdf but some regions have no data
 # but keep the 'county' column as is
-kentucky@data[1:2,-grep("County", names(kentucky))] = NA 
+kentucky[1:2,-grep("County", names(kentucky))] = NA 
 
 kBYM = bym(observed ~ offset(logExpected) + poverty,
 		kentucky, 
 		region.id="County",
-		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
+		prior = list(sd=0.1, propSpatial = 0.5))
 
  
 kBYM$par$summary

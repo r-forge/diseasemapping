@@ -96,7 +96,9 @@ bym.needAdjmat = function(
 			terra::values(data)[,region.id]=1:length(data)
 		}
  	adjMatNB = terra::adjacent(data)
- 	attributes(adjMatNB)$region.id = data[[region.id]]
+ 	attributes(adjMatNB)$region.id = unname(unlist(data[[region.id]]))
+
+ 	stuff <<- adjMatNB
 
 	methods::callGeneric(
 			formula=formula, data=data,
@@ -142,7 +144,7 @@ setMethod("bym",
 			
 
 bym.data.frame = function(formula, data, adjMat,		region.id, 
-		prior=list(sdSpatial = c(0.01, 2), sdIndep = c(0.01, 2)), 
+		prior=list(sd = c(0.1, 0.5), propSpatial = c(0.5, 0.5)), 
 		family="poisson",
 		formula.fitted=formula,
 		...

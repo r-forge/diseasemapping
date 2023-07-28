@@ -1,5 +1,5 @@
 %\VignetteEngine{knitr::knitr}
-%\VignetteIndexEntry{BYM with PC priors}
+%\VignetteIndexEntry{BYM models}
 
 \documentclass[12pt]{article}
 \usepackage[margin=1in]{geometry}
@@ -7,7 +7,7 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \providecommand{\subfloat}[2][need a sub-caption]{\subcaptionbox{#1}{#2}}
-\title{BYM with PC priors}
+\title{BYM models}
 \author{Patrick Brown}
 \date{April 2016}
 
