@@ -19,6 +19,6 @@ data('popdata')
 popdata = terra::unwrap(popdata)
 head(values(popdata))
 
-plot(popdata)
+terra::plot(popdata)
 }
 \keyword{datasets}

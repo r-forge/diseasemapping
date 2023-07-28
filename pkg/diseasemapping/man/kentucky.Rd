@@ -28,6 +28,7 @@ deliberately unspecified year.
 
 
 \examples{
+library('terra')
 data('kentucky')
 kentucky = terra::unwrap(kentucky)
 
