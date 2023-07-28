@@ -98,8 +98,6 @@ bym.needAdjmat = function(
  	adjMatNB = terra::adjacent(data)
  	attributes(adjMatNB)$region.id = unname(unlist(data[[region.id]]))
 
- 	stuff <<- adjMatNB
-
 	methods::callGeneric(
 			formula=formula, data=data,
 			adjMat=adjMatNB, region.id=region.id,

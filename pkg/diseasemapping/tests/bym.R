@@ -133,7 +133,7 @@ kBYM = bym(
 		formula = observed ~ offset(logExpected) + povertyFac,
 		data = kentucky, 
 		region.id="County",
-		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5))
+		prior = list(sd=c(0.1, 0.5), propSpatial=c(0.1, 0.5))
 )
 
 
