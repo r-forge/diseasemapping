@@ -47,7 +47,7 @@ kentuckyTract = unwrap(kentuckyTract)
 
 length(kentuckyTract)
 
-if(require('mapmiscTerra', quietly=TRUE)) {
+if(require('mapmisc', quietly=TRUE)) {
 	mycol = colourScale(kentucky2$SMR, 
 		breaks=10, dec=-log10(0.5), style='quantile')
 	map.new(kentucky2)

@@ -77,8 +77,10 @@ colExc = colourScale(kBYM$data$exc1 ,
 # and try passing a data frame and adjacency matrix
 
 	
-adjMat = spdep::poly2nb(kentucky, row.names =as.character(kentucky$County) )
-kBYM = bym(data=kentucky@data, formula=observed ~ offset(logExpected) + poverty,
+adjMat = terra::adjacent(kentucky)
+attributes(adjMat)$region.id = kentucky$County
+
+kBYM = bym(data=terra::values(kentucky), formula=observed ~ offset(logExpected) + poverty,
 		adjMat = adjMat, region.id="County",
 		priorCI = list(sdSpatial=c(0.1, 5), sdIndep=c(0.1, 5)))
 

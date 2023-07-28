@@ -1,5 +1,6 @@
 library('diseasemapping')
 data('kentucky')
+kentucky = terra::unwrap(kentucky)
 
 head(larynx)
 10^5*larynxRates[paste(c("M","F"), 50, sep="_")]

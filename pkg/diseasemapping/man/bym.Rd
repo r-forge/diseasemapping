@@ -24,7 +24,7 @@ Uses inla to fit a Besag, York and Mollie disease mapping model
 \S4method{bym}{formula,SpatVector,matrix,character}(formula,data,adjMat,region.id,...)
 \S4method{bym}{formula,data.frame,matrix,character}(
 formula,data,adjMat,region.id,
-priorCI=list(sdSpatial=c(0.01,2),sdIndep=c(0.01,2)),
+prior=list(sdSpatial=c(0.01,2),sdIndep=c(0.01,2)),
 family="poisson",formula.fitted=formula,...)
 }
 
@@ -135,7 +135,7 @@ Patrick Brown
 \examples{
 
 data('kentucky')
-kentucky = unwrap(kentucky)
+kentucky = terra::unwrap(kentucky)
 
 # get rid of under 10's
 larynxRates = larynxRates[-grep("_(0|5)$",names(larynxRates))]
@@ -150,10 +150,10 @@ kBYM$par$summary[,paste0(c(0.5, 0.025, 0.975), 'quant')]
 	
 
 
-if(require('mapmiscTerra', quietly=TRUE) & length(kBYM$data$fitted.exp)){
+if(require('mapmisc', quietly=TRUE) & length(kBYM$data$fitted.exp)){
 
 thecol = colourScale(kBYM$data$fitted.exp, 
-	breaks=5, dec=1, opacity = 0.7)
+	breaks=5, dec=2, opacity = 0.7)
 
 map.new(kBYM$data)
 

@@ -18,7 +18,7 @@ tpers = function(x,
   }
   }
 
-  myCrs = crs(paste(
+  myCrs = terra::crs(paste(
       "+proj=tpers +h=",
       hKm*1000,
       " +lat_0=",

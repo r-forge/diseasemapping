@@ -288,13 +288,7 @@ setMethod("getSMR",
 					#casedata = casedataWhenNocases
 				#}
 				
-				# Compute area if spdf not in long-lat
-				if(length(grep("Spatial*DataFrame", class(popdata)))) {
-					if(!length(grep("longlat", popdata@proj4string@projargs))) {
-						areas <- unlist(computeArea(popdata))
-						popdata$sqk <- areas * area.scale
-					}
-				}
+				popdata$sqk = terra::expanse(popdata, unit='km')* area.scale
 				
 				# scaling factor to convert to person years
 				popScale = interval[names(interval)==Dyear]

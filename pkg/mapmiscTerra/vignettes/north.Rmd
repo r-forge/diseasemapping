@@ -53,7 +53,7 @@ coords = rbind(Alert = c(-62.338889, 82.501389),
 x = vect(coords, 
   atts=data.frame(name=rownames(coords)),
   crs=crsLL)
-data('worldMap');worldMap = unwrap(worldMap)
+worldMap = unwrap(worldMap)
 ```
 
 

@@ -10,7 +10,7 @@ Writes a graph file from an adjacency matrix suitable for use with INLA.
 }
 
 \usage{
-nbToInlaGraph(adjMat, graphFile="graph.dat", region.id = 1:max(adjMat))
+nbToInlaGraph(adjMat, graphFile="graph.dat", region.id = attributes(adjMat)$region.id)
 }
 
 \arguments{
@@ -33,8 +33,7 @@ Patrick Brown
 
 
 \seealso{
-\code{\link[spdep]{poly2nb}},
-\code{\link[spdep]{nb2INLA}} 
+\code{\link[terra]{adjacent}}
 }
 
 \examples{
@@ -46,7 +45,7 @@ kSub = kentucky[-c(2,20,79),]
 
 
 adjMat = terra::adjacent(kSub)
-attributes(adjMat)$region.id = kentucky$County
+attributes(adjMat)$region.id = kSub$County
 
 nFile = tempfile()
 nbRes = nbToInlaGraph(adjMat, nFile)

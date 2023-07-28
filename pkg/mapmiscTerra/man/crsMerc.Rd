@@ -1,24 +1,40 @@
 \name{crsMerc}
 \alias{crsMerc}
+\alias{crsCanada}
 \alias{crsLL}
-\title{Spherical Mercator projection}
+\alias{crsModis}
+\alias{bboxLL}
+\alias{bboxLLsafe}
+\alias{extentMerc}
+
+
+\docType{data}
+\title{Some coordinate reference systems and bounding boxes}
 \description{
-Defines CRS's for the Spherical Mercator and long-lat projections.
+Defines CRS's for the several map projections.
 }
 \usage{
-crsMerc
-crsLL
+terra::crs(crsMerc, proj=TRUE)
+terra::crs(crsLL, proj=TRUE))
+terra::crs(crsCanada, proj=TRUE)
+terra::crs(crsModis, proj=TRUE)
+terra::ext(extentMerc)
 }
 
+
+\format{
+\code{crsMerc} spherical Mercator projection used by web mapping services, epsg:3857
+\code{crsLL} long-lat, epsg:4326 
+\code{crsCanada} customized oblique mercator for Canada
+\code{crsModis} used by Modis satellite data
+\code{bboxLL} polygon of bounding box of long-lat, -180 to 180, -90 to 90
+\code{bboxLLsafe} as bboxLL, but slightly away from the edges
+\code{extentMerc} extent of spherical mercator projections
+}
 
 \details{
-CRS objects for epsg:4326 (long-lat) and the spherical Mercator projection used by web mapping services.
+	these objects are used internally and may be of interest to the user
 }
-
-
-\value{
-	Character string suitable for \code{\link[terra:crs]{crs}}.
-}	
 
 \references{
 \url{https://en.wikipedia.org/wiki/Web_Mercator},
@@ -28,8 +44,8 @@ CRS objects for epsg:4326 (long-lat) and the spherical Mercator projection used 
 
 \examples{
 
-crsMerc
-
-crsLL
+bboxLLsafe = terra::unwrap(bboxLLsafe)
+plot(bboxLLsafe)
+plot(terra::project(bboxLLsafe, crsMerc))
 
 }

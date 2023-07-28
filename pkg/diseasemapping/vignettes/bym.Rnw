@@ -34,6 +34,7 @@ if(Sys.info()['sysname'] =='Linux' &
 <<packages>>=
 require('diseasemapping')
 data('kentucky')
+kentucky = terra::unwrap(kentucky)
 @
 
 \section*{Incidence rates}

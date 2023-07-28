@@ -386,7 +386,7 @@ omerc = function(
 
 
 #  theEllipse = terra::as.polygons(ext(c(-1.6e7, 1.6e7, -2e7, 2e7) + theY*c(0,0,1,1)), rotatedCRS)
-  theEllipse = terra::as.polygons(terra::ext(as.vector(extentMerc) + theY*c(0,0,1,1)), rotatedCRS)
+  theEllipse = terra::as.polygons(terra::ext(extentMerc + theY*c(0,0,1,1)), rotatedCRS)
 
 
   if(ellipse) {

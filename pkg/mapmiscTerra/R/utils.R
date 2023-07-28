@@ -1,10 +1,8 @@
 
 
-extentMerc = terra::ext(-20037508.3427892, 20037508.3427892, -20037508.3427893, 20037508.3427892)
-
 .getRasterMerc = function(zoom) {
   N = 2^zoom 
-  terra::rast(extentMerc, nrows = N, ncols=N, crs=crsMerc)
+  terra::rast(ext(extentMerc), nrows = N, ncols=N, crs=crsMerc)
 }
 
 

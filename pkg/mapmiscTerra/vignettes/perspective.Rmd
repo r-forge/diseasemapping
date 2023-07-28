@@ -8,6 +8,7 @@
 
 ```{r setup}
 library('mapmisc', quietly=TRUE)
+library('terra')
 if(!exists('fact'))
   fact = 1
 # uncomment for nicer images
@@ -21,7 +22,7 @@ if(!exists('fact'))
 ```
 
 ```{r data}
-data('worldMap');worldMap = unwrap(worldMap)
+worldMap = unwrap(worldMap)
 x = vect(cbind(130,15), crs=crsLL)
 
 if(FALSE) {
@@ -66,6 +67,7 @@ guam = unwrap(new("PackedSpatVector", type = "points", crs = crsLL,
 ```{r projection}
 myProj = tpers(x=vect(c(x,hk)), hKm = 2*1000, tilt =-15, axis='seu')
 ```
+
 
 
 

@@ -29,7 +29,6 @@ when an internet connection is not present.
 
 \examples{
 
-data("netherlands")
 meuse = terra::unwrap(meuse)
 nldTiles = terra::unwrap(nldTiles)
 nldCities = terra::unwrap(nldCities)

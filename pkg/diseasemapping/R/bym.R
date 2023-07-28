@@ -29,7 +29,7 @@ setClass('nb',
 	region.index = 1:length(region.id)
 
 	missingRegions = setdiff(region.index, adjMat[,'from'])
-	
+
 	adjMat = rbind(adjMat, cbind(from=missingRegions, to=rep(0, length(missingRegions))))
 	adjMat = adjMat[order(adjMat[,'from']),]
 	nbList = split(adjMat[,'to'], adjMat[,'from'])
@@ -96,6 +96,7 @@ bym.needAdjmat = function(
 			terra::values(data)[,region.id]=1:length(data)
 		}
  	adjMatNB = terra::adjacent(data)
+ 	attributes(adjMatNB)$region.id = data[[region.id]]
 
 	methods::callGeneric(
 			formula=formula, data=data,
@@ -152,7 +153,13 @@ bym.data.frame = function(formula, data, adjMat,		region.id,
 		# if using windows, replace back slashes with forward slashes...
 		graphfile = gsub("\\\\", "/", graphfile)
 		
-		region.index = diseasemapping::nbToInlaGraph(adjMat, graphfile, data[[region.id]])
+		if(!missing(region.id) & is.null(attributes(adjMat)$region.id) & (nrow(data) == max(adjMat[,1])) ) {
+			attributes(adjMat)$region.id = data[[region.id]]
+		} else {
+			warning("adjMat should have a region.id attribute")
+		}
+
+		region.index = diseasemapping::nbToInlaGraph(adjMat, graphfile)
 		
 		# check for regions without neighbours
 		badNeighbours = which(

@@ -1,6 +1,6 @@
-export(crsLL, crsMerc)
+#export(crsLL, crsMerc,crsModis)
 export(map.new, col2html)
-importFrom('terra', 'vect', 'rast', 'crs','project')
+importFrom('terra', 'vect', 'rast', 'crs','project','values','crds','ext')
 importMethodsFrom('terra',"[", "[[",'plot')
 importClassesFrom('terra',"SpatVector")
 
@@ -13,7 +13,7 @@ export(legendBreaks)
 export(breaksForRates)
 export(colorScale)
 export(colourScale)
-export(crsModis, getModisRaster, getDegreeRaster, getModisTiles)
+export(getModisRaster, getDegreeRaster, getModisTiles)
 
 S3method(colourScale, SpatRaster)
 S3method(colourScale, numeric)

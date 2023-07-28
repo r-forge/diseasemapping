@@ -20,6 +20,7 @@ Patrick Brown
 \examples{
 # creating SMR's
 data('kentucky')
+kentucky = unwrap(kentucky)
 
 if(FALSE) {
 	# must have an internet connection to do the following
@@ -49,7 +50,7 @@ if(require('mapmisc', quietly=TRUE)) {
 	legendBreaks('topleft', mycol)
 }
 
-if( require("spdep", quietly=TRUE) & require("INLA", quietly=TRUE)) {
+if(require("INLA", quietly=TRUE)) {
 
 
 kBYM = bym(observed ~ offset(logExpected) + poverty, kentucky2, 

@@ -78,12 +78,15 @@ llCropBox = function(crs,
   utils::data('isohedron')
   isohedron[,2] = pmin(pmax(-89.99, isohedron[,2]), 89.99)
 
+  bboxLLsafe = unwrap(bboxLLsafe)
   LLborderInner = list()
    for(D in c(1,2,3)) {
-     xx  = terra::buffer(vect(llBorder, type='polygon', crs=crsLL), width=-D*buffer.width)
+     xx  = terra::buffer(bboxLLsafe, width=-D*buffer.width)
      LLborderInner[[as.character(D)]] = terra::crds(terra::densify(xx, densify.interval))
    }
- LLpointsFull = vect(rbind(isohedron, llBorder, do.call(rbind, LLborderInner)),crs=crsLL)
+   LLborderInner[[length(LLborderInner)+1]] = terra::crds(terra::densify(bboxLLsafe, densify.interval))
+
+ LLpointsFull = vect(rbind(isohedron, do.call(rbind, LLborderInner)),crs=crsLL)
  LLpoints = terra::deepcopy(LLpointsFull)
 
 
