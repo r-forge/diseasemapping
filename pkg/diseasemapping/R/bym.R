@@ -153,10 +153,13 @@ bym.data.frame = function(formula, data, adjMat,		region.id,
 		# if using windows, replace back slashes with forward slashes...
 		graphfile = gsub("\\\\", "/", graphfile)
 		
-		if(!missing(region.id) & is.null(attributes(adjMat)$region.id) & (nrow(data) == max(adjMat[,1])) ) {
+
+		if(missing(region.id)  & is.null(attributes(adjMat)$region.id) ) {
+			if(nrow(data) == max(adjMat[,1])) {
 			attributes(adjMat)$region.id = data[[region.id]]
-		} else {
-			warning("adjMat should have a region.id attribute")
+				} else {
+				warning("adjMat should have a region.id attribute")
+			}
 		}
 
 		region.index = diseasemapping::nbToInlaGraph(adjMat, graphfile)

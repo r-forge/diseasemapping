@@ -85,7 +85,7 @@ kentucky = terra::unwrap(kentucky)
 kentucky2 = getSMR(kentucky, larynxRates, larynx, 
 		regionCode="County")
 
-values(kentucky2)[1:10,grep("^F|^M", names(kentucky2), invert=TRUE)]
+terra::values(kentucky2)[1:10,grep("^F|^M", names(kentucky2), invert=TRUE)]
 
 theBreaks = signif(seq(0, max(kentucky2$SMR, na.rm=TRUE), len=9),1)
 theCol = heat.colors(length(theBreaks)-1)
