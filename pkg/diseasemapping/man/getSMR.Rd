@@ -89,7 +89,7 @@ terra::values(kentucky2)[1:10,grep("^F|^M", names(kentucky2), invert=TRUE)]
 
 theBreaks = signif(seq(0, max(kentucky2$SMR, na.rm=TRUE), len=9),1)
 theCol = heat.colors(length(theBreaks)-1)
-plot(kentucky2, col=theCol, breaks = theBreaks)
+terra::plot(kentucky2, col=theCol, breaks = theBreaks)
 legend('left', fill=theCol, legend = paste(theBreaks[-length(theBreaks)], ' - ', theBreaks[-1]))
 
 
