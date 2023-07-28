@@ -141,7 +141,7 @@ if("parameters" %in% names(kBYM)) {
   kBYM$parameters$summary
 }
 
-if(require('mapmisc', quietly=TRUE) && ("parameters" %in% names(kBYM))) {
+if( require('mapmisc', quietly=TRUE) && "parameters" %in% names(kBYM) ) {
   thecol = colourScale(kBYM$data$fitted.exp, breaks=5, dec=1, style='equal')
   map.new(kBYM$data)
   terra::plot(kBYM$data, col=thecol$plot, add=TRUE)
