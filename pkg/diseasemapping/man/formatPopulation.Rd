@@ -3,7 +3,7 @@
 \alias{formatPopulation}
 \alias{formatPopulation-methods}
 \alias{formatPopulation,data.frame-method}
-\alias{formatPopulation,SpatialPolygonsDataFrame-method}
+\alias{formatPopulation,SpatVector-method}
 \alias{formatPopulation,list-method}
 
 \title{Format a population data set }
@@ -16,7 +16,7 @@ add in 4 columns : GROUP, POPULATION, sex and age.
 \S4method{formatPopulation}{data.frame}(
 popdata, aggregate.by = NULL, breaks = NULL, ...
 )
-\S4method{formatPopulation}{SpatialPolygonsDataFrame}(
+\S4method{formatPopulation}{SpatVector}(
 popdata, aggregate.by = NULL, breaks = NULL, ...
 )
 \S4method{formatPopulation}{list}(
@@ -60,7 +60,8 @@ The sex column will have two levels "M" and "F" as factors.
 
 \examples{
 data('kentucky')
-head(kentucky@data)
+kentucky = unwrap(kentucky)
+head(values(kentucky))
 poptry <- formatPopulation(kentucky, breaks = c(seq(0, 80, by=10), Inf))
 head(poptry)
 poptryagg <- formatPopulation(kentucky, breaks = c(seq(0, 80, by=10), Inf), 

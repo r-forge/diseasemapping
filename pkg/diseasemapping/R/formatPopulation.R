@@ -8,10 +8,10 @@ setGeneric('formatPopulation',
 )
 
 setMethod("formatPopulation", 
-		signature("SpatialPolygonsDataFrame"),
+		signature("SpatVector"),
 		function(popdata, ...) {
 			
-			methods::callGeneric(popdata@data, ...)
+			methods::callGeneric(values(popdata), ...)
 			
 		}                         
 )

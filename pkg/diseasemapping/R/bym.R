@@ -20,10 +20,14 @@ setClass('nb',
 )
 
 #' @export
-`nbToInlaGraph` = function(adjMat, graphFile="graph.dat")
+`nbToInlaGraph` = function(adjMat, graphFile="graph.dat", region.id = 1:max(adjMat))
 {
 
-	nbList = methods::as(adjMat, 'list')
+	missingRegions = setdiff(1:length(region.id), adjMat[,'from'])
+	adjMat = rbind(adjMat, cbind(from=missingRegions, to=rep(0, length(missingRegions))))
+	adjMat = adjMat[order(adjMat[,'from']),]
+	nbList = split(adjMat[,'to'], adjMat[,'from'])
+
 	# get rid of zeros, they mean a region has no neighbours
 	nbList = lapply(nbList, function(x) x[x>0])
 	
@@ -34,10 +38,7 @@ setClass('nb',
 
 	cat(paste(inlaGraph, '\n',sep=''), file=graphFile)
 
-	region.index = 1:length(adjMat)
-	region.id = attributes(adjMat)$region.id
-	if(is.null(region.id))
-		region.id = region.index
+	region.index = 1:length(region.id)
 	names(region.index) = as.character(region.id)
 	
 	attributes(region.index)$Nneighbours = nbLength
@@ -85,19 +86,12 @@ bym.needAdjmat = function(
 			formula, data, adjMat=NULL, region.id,
 		...) {	
  	
-	if(requireNamespace("spdep", quietly=TRUE)) {
 		if(missing(region.id)) {
 			region.id = 'region.id'
-			data[[region.id]]=1:length(data)
+			terra::values(data)[,region.id]=1:length(data)
 		}
-		adjMatNB=spdep::poly2nb(data, row.names =  data[[region.id]] )
-	} else {
-		adjMatNB = NULL
-		warning('spdep package is required for bym if adjMat is missing')
-		return(NULL)
-	}
+ 	adjMatNB = terra::adjacent(data)
 
-	
 	methods::callGeneric(
 			formula=formula, data=data,
 			adjMat=adjMatNB, region.id=region.id,
@@ -106,33 +100,33 @@ bym.needAdjmat = function(
 	
 	}	
 setMethod("bym", 
-			signature("formula", "SpatialPolygonsDataFrame", "missing","character"),
+			signature("formula", "SpatVector", "missing","character"),
 			bym.needAdjmat		
 )
 	
 setMethod("bym", 
-			signature("formula", "SpatialPolygonsDataFrame", "NULL","character"),
+			signature("formula", "SpatVector", "NULL","character"),
 			bym.needAdjmat		
 )
 
 setMethod("bym", 
-		signature("formula", "SpatialPolygonsDataFrame", "nb","character"),
+		signature("formula", "SpatVector", "matrix","character"),
 		function(
 				formula, data, adjMat,region.id,
 				...) {	
 			
-
 			
 			result = methods::callGeneric(
-					formula=formula, data=data@data,
+					formula=formula, data=terra::values(data),
 					adjMat=adjMat,region.id=region.id,
 					...
 			)
-			
+
+
 			if(any(names(result)=="data")) {		
 				# merge data back into SPDF
-				data@data = result$data[as.character(data[[region.id]]),]
-				result$data = data
+				resultSV <- terra::merge(data[,region.id], result$data)
+				result$data = resultSV
 			}
 			
 			result
@@ -141,20 +135,19 @@ setMethod("bym",
 )
 			
 
-bym.data.frame = function(formula, data,adjMat,		region.id, 
-		priorCI=list(sdSpatial = c(0.01, 2), sdIndep = c(0.01, 2)), 
+bym.data.frame = function(formula, data, adjMat,		region.id, 
+		prior=list(sdSpatial = c(0.01, 2), sdIndep = c(0.01, 2)), 
 		family="poisson",
 		formula.fitted=formula,
 		...
 	) {
 		#neighbourhood structure
- 
 		graphfile=tempfile()
 		
 		# if using windows, replace back slashes with forward slashes...
 		graphfile = gsub("\\\\", "/", graphfile)
 		
-		region.index = diseasemapping::nbToInlaGraph(adjMat, graphfile)
+		region.index = diseasemapping::nbToInlaGraph(adjMat, graphfile, data[[region.id]])
 		
 		# check for regions without neighbours
 		badNeighbours = which(
@@ -168,7 +161,7 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 		
 		
 		# check for data regions missing from adj mat
-		data[[region.id]] = as.character(data[[region.id]])
+		data[,region.id] = as.character(data[,region.id])
 		if(!all(data[[region.id]] %in% names(region.index))  )
 			warning("regions in data missing from adjacency matrix")
 		data$region.indexS = data$region.indexI = region.index[data[[region.id]]]
@@ -185,24 +178,24 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 		precPrior = list()
 		
 		# priors
-		if(all(c("sd","propSpatial")%in% names(priorCI))) {
+		if(all(c("sd","propSpatial")%in% names(prior))) {
 			
 			# pc priors
 			# if length zero, set to default
-			if(!length(priorCI$sd)){
-				priorCI$sd = 1
+			if(!length(prior$sd)){
+				prior$sd = 1
 			}	
-			if(!length(priorCI$propSpatial)){
-				priorCI$propSpatial = c(0.5)
+			if(!length(prior$propSpatial)){
+				prior$propSpatial = c(0.5)
 			}	
 			
 		
 			# if length 1, assume u provided and alpha = 0.95
 			for(Dpar in c('sd','propSpatial')){
-				if(length(priorCI[[Dpar]])==1) 
-					priorCI[[Dpar]] = c(priorCI[[Dpar]], 0.05)
-				if(is.null(names(priorCI[[Dpar]]))) 
-					names(priorCI[[Dpar]])[1:2] = c('u','alpha')
+				if(length(prior[[Dpar]])==1) 
+					prior[[Dpar]] = c(prior[[Dpar]], 0.05)
+				if(is.null(names(prior[[Dpar]]))) 
+					names(prior[[Dpar]])[1:2] = c('u','alpha')
 			}	
 	
 
@@ -212,16 +205,16 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 					".~.+f(region.indexS, model='bym2', graph='",
 					graphfile,
 					"', hyper = list(theta1=list(prior='pc.prec', param=c(",
-					paste(priorCI[["sd"]], collapse=","), 
+					paste(prior[["sd"]], collapse=","), 
 					")), theta2=list(prior = 'pc', param=c(", 		
-					paste(priorCI[["propSpatial"]], collapse=","),
+					paste(prior[["propSpatial"]], collapse=","),
 					"))))",
 					sep="")
 			
-		} else if(all(c("sdSpatial","sdIndep")%in% names(priorCI))) {
+		} else if(all(c("sdSpatial","sdIndep")%in% names(prior))) {
 		
 		for(D in c("sdSpatial","sdIndep")) {
-			obj1 = sort(priorCI[[D]]^-2)
+			obj1 = sort(prior[[D]]^-2)
 		
 			startMean = mean(obj1)
 			startSD = diff(obj1)/4
@@ -240,7 +233,7 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 			stats::pgamma(obj1, shape=precPrior[[D]]["shape"], rate=precPrior[[D]]["rate"],log.p=T)
 			log(c(0.025, 0.975)) 
 			1/sqrt(stats::qgamma(c(0.975,0.025), shape=precPrior[[D]]["shape"], rate=precPrior[[D]]["rate"]))
-			priorCI[[D]]
+			prior[[D]]
 			
 		} 
 		
@@ -258,7 +251,7 @@ bym.data.frame = function(formula, data,adjMat,		region.id,
 			"))))",
 			sep="")
 	} else {
-		warning("priorCI needs elements sdSpatial and sdIndep, or sd and propSpatial")
+		warning("prior needs elements sdSpatial and sdIndep, or sd and propSpatial")
 	}	
 	
 	allVars = all.vars(formula)
@@ -400,7 +393,7 @@ formulaForLincombs = gsub("\\+[[:space:]]+?$|^[[:space:]]?\\+[[:space:]]+", "", 
 	inlaRes$graphfile = graphfile
 
 	# posterior distributions of random effect (spatial + independent)
-	Sbym = seq(1, length(adjMat))
+	Sbym = seq(1, length(region.index))
 	thebym = inlaRes$summary.random$region.indexS[Sbym,]
 	
 	inlaRes$marginals.bym = inlaRes$marginals.random$region.indexS[
@@ -423,7 +416,7 @@ formulaForLincombs = gsub("\\+[[:space:]]+?$|^[[:space:]]?\\+[[:space:]]+", "", 
 	thebym = thebym[,!names(thebym) %in% c("ID","kld")]
 	colnames(thebym) = paste("random.",colnames(thebym),sep="")
 	names(inlaRes$marginals.bym) = rownames(thebym) = 
-			attributes(adjMat)$region.id
+			names(region.index)
 	
 
 	# make sure they're in the correct order
@@ -476,6 +469,7 @@ formulaForLincombs = gsub("\\+[[:space:]]+?$|^[[:space:]]?\\+[[:space:]]+", "", 
 	thebym = cbind(thebym, matrix(NA, dim(thebym)[1], dim(theFitted)[2],
 					dimnames=list(NULL, names(theFitted))))
 	thebym[rownames(theFitted), colnames(theFitted)] = theFitted
+	thebym[,region.id] = names(region.index)
 	
 	
 	# make fitted marginals list have same names and order as fitted radom
@@ -513,14 +507,14 @@ formulaForLincombs = gsub("\\+[[:space:]]+?$|^[[:space:]]?\\+[[:space:]]+", "", 
 	sdNames = paste(c(sd="Precision",propSpatial="Phi"), "for region.indexS")
 	names(sdNames)= c('sd','propSpatial')
 	
-	if(all( names(sdNames) %in% names(priorCI))){
+	if(all( names(sdNames) %in% names(prior))){
 		# model='bym2'
 	 # sd
 		params$sd = list(
-				params.intern = priorCI$sd,
-				priorCI = 1/sqrt(
+				params.intern = prior$sd,
+				prior = 1/sqrt(
 					INLA::inla.pc.qprec(c(0.975,0.025),  
-						u = priorCI$sd['u'], alpha = priorCI$sd['alpha'])
+						u = prior$sd['u'], alpha = prior$sd['alpha'])
 				)
 		)
 			
@@ -544,13 +538,13 @@ formulaForLincombs = gsub("\\+[[:space:]]+?$|^[[:space:]]?\\+[[:space:]]+", "", 
 		precLim = range( inlaRes$marginals.hyperpar[[
 						imname
 				]][,1] ) 
-		sdSeq = seq(0, 2*max(params[[Dname]]$priorCI), len=1000)
+		sdSeq = seq(0, 2*max(params[[Dname]]$prior), len=1000)
 		precSeq = sdSeq^(-2)
 				
 		params[[Dname]]$prior=cbind(
 				x=sdSeq,
 				y=INLA::inla.pc.dprec(precSeq, 
-						u = priorCI$sd['u'], alpha = priorCI$sd['alpha']
+						u = prior$sd['u'], alpha = prior$sd['alpha']
 				) * 2 * (precSeq)^(3/2) 
 		)
 
@@ -625,8 +619,8 @@ formulaForLincombs = gsub("\\+[[:space:]]+?$|^[[:space:]]?\\+[[:space:]]+", "", 
 		phiSeq = seq(0,1,len=1000)
 		
 		params$propSpatial = list(
-				params.intern = priorCI$propSpatial,
-				priorCI = stats::approx(priorProp[,'cDens'], 
+				params.intern = prior$propSpatial,
+				prior = stats::approx(priorProp[,'cDens'], 
 						priorProp[,'x'], c(0.025, 0.975))$y,
 				posterior = inlaRes$marginals.hyperpar[[imname]],
 				prior = as.data.frame(stats::approx(
@@ -651,11 +645,11 @@ formulaForLincombs = gsub("\\+[[:space:]]+?$|^[[:space:]]?\\+[[:space:]]+", "", 
 	sdNames = c(S='spatial', I='iid')
 	for(D in c("S","I")) {
 		
-		Dname = grep( paste("^sd",D,sep=""),names(priorCI),value=TRUE)
+		Dname = grep( paste("^sd",D,sep=""),names(prior),value=TRUE)
 		
 		params[[Dname]] = list(
-				userPriorCI=priorCI[[Dname]], 
-				priorCI = 
+				userprior=prior[[Dname]], 
+				prior = 
 						1/sqrt(
 								stats::qgamma(c(0.975,0.025), 
 										shape=precPrior[[Dname]]["shape"], 
@@ -730,6 +724,6 @@ formulaForLincombs = gsub("\\+[[:space:]]+?$|^[[:space:]]?\\+[[:space:]]+", "", 
 }
 
 setMethod("bym", 
-		signature("formula", "data.frame", "nb","character"),
+		signature("formula", "data.frame", "matrix","character"),
 		bym.data.frame
 )

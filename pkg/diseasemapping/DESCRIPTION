@@ -1,20 +1,18 @@
 Package: diseasemapping
 Type: Package
 Title: Modelling Spatial Variation in Disease Risk for Areal Data
-Version: 1.5.1
-Date: 2021-09-09
+Version: 1.9.0
+Date: 2023-07-27
 Depends: R (>= 3.5.0)
 Imports:
     stats,
     utils,
-    sp,
-    methods,
-    rgeos
+    terra,
+    methods
 Suggests:
-    spdep,
     mgcv,
     geostatsp,
-    mapmisc (>= 1.0),
+    mapmiscTerra,
     knitr
 Enhances: INLA, XML
 Additional_repositories: https://inla.r-inla-download.org/R/testing
