@@ -2,7 +2,6 @@
 \alias{crsMerc}
 \alias{crsCanada}
 \alias{crsLL}
-\alias{crsModis}
 \alias{bboxLL}
 \alias{bboxLLsafe}
 \alias{extentMerc}
@@ -13,11 +12,12 @@
 Defines CRS's for the several map projections.
 }
 \usage{
-terra::crs(crsMerc, proj=TRUE)
-terra::crs(crsLL, proj=TRUE))
-terra::crs(crsCanada, proj=TRUE)
-terra::crs(crsModis, proj=TRUE)
-terra::ext(extentMerc)
+crsMerc 
+crsLL 
+crsCanada 
+extentMerc
+bboxLLsafe
+bboxLL
 }
 
 
@@ -25,7 +25,6 @@ terra::ext(extentMerc)
 \code{crsMerc} spherical Mercator projection used by web mapping services, epsg:3857
 \code{crsLL} long-lat, epsg:4326 
 \code{crsCanada} customized oblique mercator for Canada
-\code{crsModis} used by Modis satellite data
 \code{bboxLL} polygon of bounding box of long-lat, -180 to 180, -90 to 90
 \code{bboxLLsafe} as bboxLL, but slightly away from the edges
 \code{extentMerc} extent of spherical mercator projections
@@ -42,6 +41,10 @@ terra::ext(extentMerc)
 \seealso{\code{\link[terra:crs]{crs}}}
 
 \examples{
+terra::crs(crsMerc, proj=TRUE)
+terra::crs(crsLL, proj=TRUE))
+terra::crs(crsCanada, proj=TRUE)
+terra::ext(extentMerc)
 
 bboxLLsafe = terra::unwrap(bboxLLsafe)
 plot(bboxLLsafe)

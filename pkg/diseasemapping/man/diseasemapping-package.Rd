@@ -20,7 +20,7 @@ Patrick Brown
 \examples{
 # creating SMR's
 data('kentucky')
-kentucky = unwrap(kentucky)
+kentucky = terra::unwrap(kentucky)
 
 
 kentucky2 = getSMR(kentucky, larynxRates, larynx, 

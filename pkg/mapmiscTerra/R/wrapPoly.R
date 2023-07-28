@@ -78,7 +78,7 @@ llCropBox = function(crs,
   utils::data('isohedron')
   isohedron[,2] = pmin(pmax(-89.99, isohedron[,2]), 89.99)
 
-  bboxLLsafe = unwrap(bboxLLsafe)
+  bboxLLsafe = terra::unwrap(bboxLLsafe)
   LLborderInner = list()
    for(D in c(1,2,3)) {
      xx  = terra::buffer(bboxLLsafe, width=-D*buffer.width)
