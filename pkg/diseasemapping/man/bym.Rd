@@ -129,13 +129,15 @@ larynxRates = larynxRates[-grep("_(0|5)$",names(larynxRates))]
 
 kentucky = getSMR(kentucky, larynxRates, larynx, regionCode="County")
 
-kBYM = bym(observed ~ offset(logExpected) + poverty, kentucky,
+kBYM = try(bym(observed ~ offset(logExpected) + poverty, kentucky,
 	 prior= list(sd=c(0.1, 0.5), propSpatial=c(0.5, 0.5))
-  )
+  ), silent=TRUE)
 
-kBYM$parameters$summary	
 
-if(require('mapmisc', quietly=TRUE) & length(kBYM$data$fitted.exp)){
+if("parameters" %in% names(kBYM))
+  kBYM$parameters$summary	
+
+if(require('mapmisc', quietly=TRUE) & ("parameters" %in% names(kBYM))) {
 
 thecol = colourScale(kBYM$data$fitted.exp, breaks=5, dec=1, style='equal')
 
@@ -153,6 +155,7 @@ legendBreaks("topleft", thecol)
 }
 
 }
+
 
 \keyword{ Bayesian inference }
 \keyword{ disease mapping }
