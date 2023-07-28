@@ -63,21 +63,12 @@ If \code{post} is numeric, it specifies an angle for inverse rotation.
 data('worldMap')
 worldMap = terra::unwrap(worldMap)
 
-myProj = omerc(c(0,0), angle=0)
 
 myProj = omerc(c(-100,-70), angle=-45)
 crs(myProj, proj=TRUE)
 
 plot(project(worldMap, crsLL))
 plot(attributes(myProj)$crop, col='red', add=TRUE)
-
-
-
-
-myMap = openmap(myProj, zoom=1, fact=0.5)
-map.new(myProj)
-plot(myMap, add=TRUE)
-plot(wrapPoly(worldMap, myProj), add=TRUE)
 
 data('netherlands')
 nldCities = terra::unwrap(nldCities)
