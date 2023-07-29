@@ -3,7 +3,7 @@ Type: Package
 Title: Utilities for Producing Maps 
 Version: 1.9.9
 Date: 2023-07-28
-Depends: terra (>= 1.7.40), R (>= 3.5.0)
+Depends: terra, R (>= 3.5.0)
 Imports: methods, grDevices, stats, utils, graphics, geosphere
 Suggests: RColorBrewer, geonames, classInt, knitr
 Author: Patrick Brown <patrick.brown@utoronto.ca> 

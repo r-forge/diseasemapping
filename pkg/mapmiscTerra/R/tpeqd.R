@@ -45,9 +45,8 @@ tpeqd = function(x, offset=c(0,0), axis='enu'){
     res = res[[1]]
       
   piSeq = seq(0, 2*pi, len=1001)[-1]
-  theEllipse = vect(1.7e7* cbind(cos(piSeq), sin(piSeq)), crs=res, type='polygons')
 
-  thebox = llCropBox(res, buffer.width=100*1000, densify.interval = 50*1000, ellipse=theEllipse, crop.leftright=TRUE, remove.holes=TRUE) 
+  thebox = llCropBox(res, buffer.width=100*1000, densify.interval = 20*1000, crop.leftright=TRUE, remove.holes=TRUE) 
    
   attributes(res)[names(thebox)] = thebox
 
