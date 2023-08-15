@@ -54,18 +54,16 @@ mystack
 
 
 mylist = list(
-	a=raster(matrix(1:36, 6, 6,byrow=TRUE), 0,1000,0,1000, 
+	a=rast(matrix(1:36, 6, 6,byrow=TRUE), 0,1000,0,1000, 
        crs=myCrs),
-	b=raster(matrix(1:144, 12, 12), -200, 200, -200, 200,
+	b=rast(matrix(1:144, 12, 12), -200, 200, -200, 200,
 	   crs=myCrs),
-	c=raster(matrix(1:100, 10, 10), -5000,5000,-5000,5000, 
+	c=rast(matrix(1:100, 10, 10), -5000,5000,-5000,5000, 
        crs=myCrs)
 	)
 	
-if(.Platform$OS.type=='unix' & require('rgdal', quietly=TRUE)) {	
 	mystack = stackRasterList(mylist,mc.cores=2)
 	mystack
-}
 
 plot(mystack[["b"]], main="stack b")
 plot(mystack[['a']],add=TRUE,col=grey(seq(0,1,len=12)),alpha=0.8,legend=FALSE)

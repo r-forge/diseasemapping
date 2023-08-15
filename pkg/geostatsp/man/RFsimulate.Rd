@@ -3,7 +3,7 @@
 \alias{modelRandomFields}
 \alias{RFsimulate}
 \alias{RFsimulate-methods}
-\alias{RFsimulate,ANY,Raster-method}
+\alias{RFsimulate,ANY,SpatRaster-method}
 \alias{RFsimulate,numeric,SpatRaster-method}
 \alias{RFsimulate,numeric,SpatVector-method}
 \alias{RFsimulate,RMmodel,SpatVector-method}
@@ -20,23 +20,19 @@
 }
 
 \usage{
-\S4method{RFsimulate}{ANY,Raster}(model, x,	data=NULL,
+\S4method{RFsimulate}{ANY,SpatRaster}(model, x,	data=NULL,
  err.model=NULL, n = 1, ...)
-\S4method{RFsimulate}{numeric,SpatialGrid}(model, x,data=NULL,
+\S4method{RFsimulate}{numeric,SpatRaster}(model, x,data=NULL,
  err.model=NULL, n = 1, ...)
-\S4method{RFsimulate}{numeric,SpatialPixels}(model, x, data=NULL, 
+\S4method{RFsimulate}{numeric,SpatVector}(model, x, data=NULL, 
 err.model=NULL, n = 1, ...)
-\S4method{RFsimulate}{numeric,SpatialPoints}(model, x, data=NULL, 
- 	err.model=NULL, n = 1, ...)
-\S4method{RFsimulate}{numeric,GridTopology}(model, x, data=NULL, 
+\S4method{RFsimulate}{RMmodel,SpatRaster}(model, x, data=NULL, 
  err.model=NULL, n = 1, ...)
-\S4method{RFsimulate}{RMmodel,GridTopology}(model, x, data=NULL, 
+\S4method{RFsimulate}{RMmodel,SpatVector}(model, x, data=NULL, 
  err.model=NULL, n = 1, ...)
-\S4method{RFsimulate}{RMmodel,SpatialPoints}(model, x, data=NULL, 
- err.model=NULL, n = 1, ...)
-\S4method{RFsimulate}{matrix,Raster}(model, x, 	data=NULL, 
+\S4method{RFsimulate}{matrix,SpatRaster}(model, x, 	data=NULL, 
  err.model=NULL, n = nrow(model), ...)
-\S4method{RFsimulate}{matrix,Spatial}(model, x,	data=NULL, 
+\S4method{RFsimulate}{matrix,SpatVector}(model, x,	data=NULL, 
 	err.model=NULL, n = nrow(model), ...)
 \S4method{RFsimulate}{data.frame,ANY}(model, x,	data=NULL, 
 	err.model=NULL, n = nrow(model), ...)
