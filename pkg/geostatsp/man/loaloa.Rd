@@ -13,7 +13,7 @@ Location and prevalence data from villages, elevation an vegetation index for th
 }
 \usage{data("loaloa")}
 \format{
-\code{loaloa} is a SpatialPolygonsDataFrame of the data, with columns \code{N} being the number 
+\code{loaloa} is a \code{SpatVector} containing the data, with columns \code{N} being the number 
 of individuals tested and \code{y} being the number of positives.
 \code{elevationLoa} is a raster of elevation data.
 \code{eviLoa} is a raster of vegetation index for a specific date. \code{ltLoa} is land type.
@@ -31,16 +31,20 @@ of individuals tested and \code{y} being the number of positives.
 
 
 data("loaloa")
+loaloa = unwrap(loaloa)
 plot(loaloa, main="loaloa villages")
 
 # elevation
+elevationLoa = unwrap(elevationLoa)
 plot(elevationLoa, col=terrain.colors(100), main="elevation")
 points(loaloa)
 
 # vegetation index
+eviLoa = unwrap(eviLoa)
 plot(eviLoa, main="evi")
 points(loaloa)
 
+tempLoa = unwrap(tempLoa)
 plot(tempLoa, main="temperature")
 points(loaloa)
 

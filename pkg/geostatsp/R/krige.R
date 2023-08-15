@@ -165,7 +165,7 @@ krigeLgm = function(
     
 		  if(all(names(covariates)%in% names(data))) {
       
-			   modelMatrixForData = model.matrix(formula, data@data)
+			   modelMatrixForData = model.matrix(formula, values(data))
       
 			   theParams = intersect(colnames(modelMatrixForData), names(param))
       
@@ -217,7 +217,7 @@ krigeLgm = function(
       trendFormula = update.formula(trend, junk ~ . )
       
       
-		    covariatesForData = data@data
+		    covariatesForData = values(data)
  		   
 		    if(is.vector(data)) {
 			     observations = data
@@ -277,7 +277,7 @@ krigeLgm = function(
 	   theFactors = unique(c(factorsInFormula, factorsInData, factorsInTrend))
 	   theFactors = theFactors[theFactors %in% names(covariates) ]
     
- 	  if(length(grep("^Raster|^list", class(covariates)))) { 
+ 	  if(length(grep("SpatRaster|^list", class(covariates)))) { 
  	    # if there's only variable in the model assign it's name to covariates
 	     covariateNames = all.vars(
         update.formula(trendFormula, junk~ . )
@@ -388,7 +388,7 @@ krigeLgm = function(
 		      
 	     } # end loop through factors
 	     
-	     if(length(grep("^Raster|^list", class(covariates))) & length(theVars)) {
+	     if(length(grep("SpatRaster|^list", class(covariates))) & length(theVars)) {
 		      # method for resampling covariate rasters
         
 		      method = resampleMethods(formula, covariates)
@@ -398,7 +398,7 @@ krigeLgm = function(
 		      theVars = do.call('intersect',
           dimnames(attributes(terms(trendFormula))$factors))
         
-		      if(nlayers(covariates)==1 & length(theVars)==1) {
+		      if(nlyr(covariates)==1 & length(theVars)==1) {
 			       names(covariates) = theVars
 		      }
 		      
@@ -415,7 +415,7 @@ krigeLgm = function(
 	   } 
     
 	   # get rid of response variable in trend formula
-    meanRaster = raster(locations)
+    meanRaster = rast(locations)
     names(meanRaster) = "fixed"
     
 	   
@@ -548,8 +548,8 @@ krigeLgm = function(
 				  as.integer(ncoll), 
 				  as.double(yFromRowDrow), 
 				  as.double(0), as.integer(1),
-				  as.double(coordinates@coords[,1]), 
-				  as.double(coordinates@coords[,2]), 
+				  as.double(crds(coordinates)[,1]), 
+				  as.double(crds(coordinates)[,2]), 
 				  N=as.integer(Ny), 
 				  result=as.double(matrix(0, ncoll, 
 								  lengthc)),
@@ -608,7 +608,7 @@ krigeLgm = function(
 	 # row sums of squares
 	 forVar = sums[,'forVar',]
 	 
-	 randomRaster = raster(meanRaster)
+	 randomRaster = rast(meanRaster)
 	 names(randomRaster) = "random"
  	values(randomRaster) = as.vector(forExpected)
 	 
@@ -623,7 +623,7 @@ krigeLgm = function(
 #		forVar = pmin(forVar, param["variance"])	
 	 }
 	 
-	 krigeSd = raster(meanRaster)
+	 krigeSd = rast(meanRaster)
 	 names(krigeSd) = "krigeSd"
   
   if(nuggetInPrediction) {
@@ -636,7 +636,7 @@ krigeLgm = function(
   names(meanRaster) = "fixed"
 
   
-	 result = stack(meanRaster, randomRaster, predRaster,
+	 result = c(meanRaster, randomRaster, predRaster,
 			 krigeSd)
   
 	 # box-cox

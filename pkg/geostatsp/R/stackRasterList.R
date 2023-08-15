@@ -48,7 +48,7 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
  				toAdd = as.numeric(toAdd, 2)
  			}
 		} else { # not a spdf
-			if(compareGeom(rast(x[[D]]), template)) {
+			if(compareGeom(rast(x[[D]]), template, stopOnError=FALSE)) {
 				# same projection, same resolution
 				toAdd =  x[[D]]			
 			}	 else { # different projection or resolution

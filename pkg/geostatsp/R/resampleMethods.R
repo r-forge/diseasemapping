@@ -32,7 +32,7 @@ setMethod("resampleMethods",
 setMethod("resampleMethods", 
     signature("ANY", "SpatRaster", "data.frame"), 
     function(formula, covariates, data=NULL){
-      covariatesList = vector('list', nlayers(covariates))
+      covariatesList = vector('list', nlyr(covariates))
       names(covariatesList) = names(covariates)
       for(D in names(covariates))
         covariatesList[[D]] = covariates[[D]]

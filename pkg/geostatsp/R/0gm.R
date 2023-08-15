@@ -251,7 +251,7 @@ gm.dataRaster = function(
 
   } # end in names(offsetToLogOrig)
   covariatesSP = as(covariatesStack, "SpatialPointsDataFrame")
-  covariatesDF = covariatesSP@data
+  covariatesDF = values(covariatesSP)
 
   data = stack(data, covData)			
 
@@ -267,7 +267,7 @@ data = stack(data, resample(cellsSmall, data, method='ngb'))
 
 
 dataSP = as(data, "SpatialPointsDataFrame")
-dataDF =dataSP@data
+dataDF = values(dataSP)
 
 # get rid of rows with missing response if lgcp with count response
 if(names(dataDF)[1] == 'count')

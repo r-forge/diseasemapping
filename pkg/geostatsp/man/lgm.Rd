@@ -187,6 +187,8 @@ output from the call to the  \code{\link[stats]{optim}} function.
 \examples{
 
 data("swissRain")
+swissRain = unwrap(swissRain)
+swissAltitude = unwrap(swissAltitude)
  
 swissRes =  lgm( formula="rain", 
 	data=swissRain[1:60,], grid=20,
