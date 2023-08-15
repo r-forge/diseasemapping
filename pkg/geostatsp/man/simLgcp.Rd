@@ -41,10 +41,10 @@ containing a raster stack of the covariates, spatial random effect, and intensit
 mymodel = c(mean=-0.5, variance=1, 
 				range=2, shape=2)
 
-myraster = raster(nrows=15,ncols=20,xmn=0,xmx=10,ymn=0,ymx=7.5)
+myraster = rast(nrows=15,ncols=20,xmin=0,xmax=10,ymin=0,ymax=7.5)
 
 # some covariates, deliberately with a different resolution than myraster
-covA = covB = myoffset = raster(extent(myraster), 10, 10)
+covA = covB = myoffset = rast(ext(myraster), 10, 10)
 values(covA) = as.vector(matrix(1:10, 10, 10))
 values(covB) = as.vector(matrix(1:10, 10, 10, byrow=TRUE))
 values(myoffset) = round(seq(-1, 1, len=ncell(myoffset)))

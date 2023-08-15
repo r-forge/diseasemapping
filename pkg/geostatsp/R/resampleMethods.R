@@ -22,7 +22,7 @@ setMethod("resampleMethods",
 setMethod("resampleMethods", 
     signature("ANY", "ANY", "SpatialPointsDataFrame"), 
     function(formula, covariates, data=NULL){
-      data=data@data
+      data=values(data)
       callGeneric(formula, covariates, data)
     }
 )

@@ -30,7 +30,7 @@ spatialRocRasterTemplate = function(
 	
 	# remove cells with no predictions
 
-	if(length(grep("^Raster", class(fit)))) {
+	if(length(grep("SpatRaster", class(fit)))) {
 		template = mask(template, fit[[1]])
 	} else {
 		template = mask(template, fit[[1]]$raster$predict.mean)
@@ -131,7 +131,7 @@ spatialRocSims = function(
 		
 		
 
-		if(length(grep("^Raster", class(marginals[[Dsim]])))) {		
+		if(length(grep("SpatRaster", class(marginals[[Dsim]])))) {		
 			# local-em
 			
 			pMat = cbind('1'=1,as.data.frame(

@@ -62,7 +62,7 @@ matern.dsyMatrix = function(x,
 }
 
 
-matern.SpatialPointsDataFrame = matern.SpatialPoints = 
+matern.SpatVector = 
 function(x, 
 	param=c(range=1, variance=1, shape=1), 
 	type=c('variance','cholesky','precision','inverseCholesky'), 
@@ -78,7 +78,7 @@ function(x,
 }
 
 
-matern.Raster = function(x, 
+matern.SpatRaster = function(x, 
 	param=c(range=1, variance=1, shape=1),
 	type=c('variance','cholesky','precision','inverseCholesky'), 
 	y=NULL) {
@@ -95,7 +95,7 @@ matern.Raster = function(x,
 	}
 	# convert  y to spatial points, no matter what it is
 	if(is.vector(y)) y = matrix(y[1:2], 1,2) 
-		y = SpatialPoints(y)
+		y = as.points(y)
 	
 	Ny = length(y)
 	
@@ -106,8 +106,8 @@ matern.Raster = function(x,
 		as.double(ymax(x)),
 		as.double(yres(x)), 
 		as.integer(nrow(x)),
-		as.double(y@coords[,1]), 
-		as.double(y@coords[,2]), 
+		as.double(crds(y)[,1]), 
+		as.double(crds(y)[,2]), 
 		N=as.integer(Ny), 
 		result=as.double(array(0, c(nrow(x),ncol(x),Ny))),
 		xscale=as.double(param["range"]),
@@ -154,11 +154,11 @@ matern.SpatialPointsXX = function(x,
 	
 	if(!is.null(y)) {	
 		# haven't written this in C yet.. rotate and create distances in R
-		if(length(grep("SpatialPoints", class(y)))) {
-			y = y@coords[,1] + 1i*y@coords[,2]  
+		if(length(grep("SpatVector", class(y)))) {
+			y = crds(y)[,1] + 1i*crds(y)[,2]  
 		}
-		if(length(grep("^Raster", class(y)))) {
-			y = as.data.frame(y, xy=TRUE)
+		if(length(grep("^SpatRaster", class(y)))) {
+			y = crds(y)
 			y = y[,"x"] + 1i*y[,"y"]  
 		}
 		
@@ -166,7 +166,7 @@ matern.SpatialPointsXX = function(x,
 			y = y[1] + 1i*y[2]
 		}
 		
-		x = x@coords[,1] + 1i*x@coords[,2]
+		x = crds(x)[,1] + 1i*crds(x)[,2]
 		
 		
 		x = x * exp(1i*param["anisoAngleRadians"])

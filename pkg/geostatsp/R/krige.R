@@ -176,7 +176,7 @@ krigeLgm = function(
 			   names(meanForData) = rownames(modelMatrixForData)
 			   
 			   haveData = match(names(meanForData), 
-				    rownames(values(data))
+				    rownames(values(data)))
       
       data = data[haveData,]
 			   coordinates=data
@@ -322,8 +322,9 @@ krigeLgm = function(
 			       # stuff like xTrees and xGrassland for covariate x and levels Trees and Grassland
 			       # see if these line up with 
 			       theLevels = gsub(paste("^", D, sep=""),"",paramStartWithD)
-			       levelsTable = covariates[[D]]@data@attributes[[1]]
-			       
+
+			       levelsTable = levels(covariates)[[D]]
+
 			       inId = theLevels %in% as.character(levelsTable[,1])
 			       inLabel = theLevels %in% levelsTable[,2]
           
@@ -342,13 +343,11 @@ krigeLgm = function(
 				        warning("many levels appear missing in covariate", D)
 			       valuesInParams = levelsTable[levelsInTable,1]
           
-			       allValues = raster::unique(covariates[[D]])
+			       allValues = unique(covariates[[D]])
 			       dontHave = allValues[!allValues %in% valuesInParams]
 			       forRecla = cbind(dontHave, min(allValues)-1)
-			       covariates[[D]] = 
-					       raster::reclassify(covariates[[D]], forRecla)
+			       covariates[[D]] = classify(covariates[[D]], forRecla)
 			       
-          
 			       
 			       levelsTable = 
 					       levelsTable[c(1, 1:nrow(levelsTable)),c(1,labelCol)]
@@ -356,23 +355,21 @@ krigeLgm = function(
 			       levelsTable[1,2] = ''
 			       colnames(levelsTable)[2] = "levels"
 			       levels(covariates[[D]]) = levelsTable
-			       covariates[[D]]@data@isfactor = TRUE
 			       
 		      } else if (length(paramFactorCharacter)) {
 			       # stuff like factor(x)Trees and factor(x)Grassland for covariate x and levels Trees and Grassland
 			       theLevels = gsub(paste("^factor\\(", D,"\\)", sep=""),"",
 					       paramFactorCharacter)
-			       levelsTable = covariates[[D]]@data@attributes[[1]]
+			       levelsTable = levels(covariates)
 			       levelsInTable = levelsTable[,2]%in% theLevels
 			       if(mean(theLevels %in% levelsTable[,2]) < 0.4)
 				        warning("many levels appear missing in covariate", D)
 			       valuesInParams = as.numeric(levelsTable[levelsInTable,1])
           
-			       allValues = raster::unique(covariates[[D]])
+			       allValues = unique(covariates[[D]])
 			       dontHave = allValues[!allValues %in% valuesInParams]
 			       forRecla = cbind(dontHave, min(allValues)-1)
-			       covariates[[D]] = 
-					       raster::reclassify(covariates[[D]], forRecla)
+			       covariates[[D]] = classify(covariates[[D]], forRecla)
 			       
 			       
 			       levelsTable = 
@@ -406,7 +403,8 @@ krigeLgm = function(
 		      }
 		      
 		      # construct the fixed effects component
-		      covariatesDF = raster::as.data.frame(covariates, xy=TRUE)
+		      covariatesDF = cbind(values(covariates, dataframe=TRUE), 
+		      	crds(covariates, df=TRUE, na.rm=FALSE))
 		      # get rid of trailing _ created by as.data.frame
 		      names(covariatesDF) = gsub("_levels$", "", names(covariatesDF))
 	     } else {
@@ -495,7 +493,7 @@ krigeLgm = function(
 	   
 	   if(any(theNAdata)) {
 		    noNAdata = !theNAdata
-		    if(length(grep("^SpatialPoints", class(coordinates)))) {
+		    if(length(grep("^SpatVector", class(coordinates)))) {
 			     coordinates = coordinates[noNAdata,]	
 		    } else if(any(class(coordinates)=="dist")){
 			     coordinates = as.matrix(coordinates)
@@ -651,20 +649,18 @@ krigeLgm = function(
       boxcox=param['boxcox']
     )
     
-    newraster=raster(result[["predict.boxcox"]])
+    newraster=rast(result[["predict.boxcox"]])
     names(newraster) = "predict"
     if(is.matrix(bcpred)){
       values(newraster) = bcpred[,'predict']
-      result = addLayer(result, 
-        newraster)
+      add(result) = newraster
 #      names(newraster) = 'probComplex.boxcox'
 #      values(newraster) = bcpred[,'probComplex.boxcox']
 #      result = addLayer(result, 
 #          newraster)
     } else {
       values(newraster) = bcpred
-      result = addLayer(result, 
-        newraster)
+      add(result) = newraster
     }
     
     
@@ -677,7 +673,8 @@ krigeLgm = function(
 		  names(result)[names(result)=="predict"] = "predict.log"
 		  newLayer = exp(result[["predict.log"]]+ 0.5*result[["krigeSd"]]^2 )
 		  names(newLayer) = "predict"
-		  result = addLayer(result, newLayer)
+      add(result) = newLayer
+
 		  
 	 } # end expPred
 		

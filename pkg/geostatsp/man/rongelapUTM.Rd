@@ -23,9 +23,17 @@ the measurement was taken for.  A UTM coordinate reference system is used, where
 
 \examples{
 data("rongelapUTM")
+rongelapUTM = unwrap(rongelapUTM)
 plot(rongelapUTM, main="Rongelap island")
-\dontrun{
-load(url("http://www.filefactory.com/file/54e8egxfddul/n/MHL_adm0_RData"))
+
+if(require('mapmisc')) {
+
+  bgMap = openmap(rongelapUTM, buffer=200)
+  plot(bgMap)
+  points(rongelapUTM)
+  scaleBar(rongelapUTM, 'left')
+
+}
 
 rongelapLL = spTransform(rongelapUTM, gadm@proj4string)
 plot(rongelapLL)

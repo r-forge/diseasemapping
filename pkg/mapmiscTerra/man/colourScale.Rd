@@ -140,6 +140,8 @@ myScale = colourScale(x, breaks=3, style='unique', col=c('red','blue','orange'))
 if(installed.packages()['terra','Version'] >= "1.7-40" ) {
 	terra::coltab(x) = myScale$colourtable
 	plot(x)
+} else {
+	plot(x, breaks = myScale$breaks, col=myScale$col)
 }
 legendBreaks('topright', myScale)
 }

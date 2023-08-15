@@ -8,7 +8,7 @@ grfConditional = function(data, y=1,
 		# locations is number of cells in the x direction
 		Nx = locations[1]
 		myExtent = 	ext(data)
-		Ny = round(locations*diff(ext(data[3:4])/diff(ext(data[1:2]))
+		Ny = round(locations*diff(ext(data)[3:4])/diff(ext(data[1:2])))
 		ymax(myExtent) = ymin(myExtent) + Ny * diff(ext(data[1:2]))/Nx
 		locations = rast(extent=myExtent, nrow=Ny, ncol=Nx,
 				crs=crs(data))	

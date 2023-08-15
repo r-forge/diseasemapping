@@ -11,7 +11,7 @@ for the rasters for all covariates to have the same projection and same resoluti
 
 }
 \usage{
-stackRasterList(x, template = x[[1]], method = "ngb", mc.cores=NULL)
+stackRasterList(x, template = x[[1]], method = "near", mc.cores=NULL)
 spdfToBrick(x, 
     template,
     logSumExpected=FALSE,
@@ -20,14 +20,14 @@ spdfToBrick(x,
 }
 \arguments{
   \item{x}{
-A list of \code{Raster} or \code{SpatialPolygonsDataFrame}s for 
+A list of \code{SpatRaster} or \code{SpatVector}s for 
 \code{stackRasterList} and \code{spdfToBrick} respectively
 }
 \item{template}{
 A raster whose projection and resolution all other rasters will be aligned with.
 }
 \item{method}{
-The method to use, either "ngb", or "bilinear".  Can be a vector of the same length as x to specify different methods for each raster.  If \code{method} has names 
+The method to use, either "near", or "bilinear".  Can be a vector of the same length as x to specify different methods for each raster.  If \code{method} has names 
 which correspond to the names of \code{x}, the names will be used instead of the order to assign methods to rasters.
 }
 \item{mc.cores}{If non-null, \code{\link[parallel:parallel-package]{mclapply}} is used with this argument specifying the number of cores.}
@@ -42,13 +42,13 @@ A raster brick, with one layer for each variable.
 
 \examples{
 
-myCrs = CRS("+proj=utm +zone=17 +ellps=GRS80 +units=m +no_defs")
-mylist = list(a=raster(matrix(1:9, 3, 3), 0,1,0,1, 
+myCrs = crs("+proj=utm +zone=17 +ellps=GRS80 +units=m +no_defs")
+x = list(a=rast(matrix(1:9, 3, 3), extent=ext(0,1,0,1), 
        crs=myCrs),
-	b=raster(matrix(1:25, 5, 5), -1, 2, -1, 2,
+	b=rast(matrix(1:25, 5, 5), extent=ext(-1, 2, -1, 2),
 	   crs=myCrs)
 	)
-mystack = stackRasterList(mylist)
+mystack = stackRasterList(x)
 mystack
 
 

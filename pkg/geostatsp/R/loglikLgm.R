@@ -120,9 +120,9 @@ if(any(class(coordinates)=='matrix')|
 	xcoord = as.vector(coordinates)
 	ycoord = -99
 	aniso=FALSE
-} else if(length(grep("^SpatialPoints", class(coordinates)))){
-	xcoord=coordinates@coords[,1] 
-	ycoord=coordinates@coords[,2]
+} else if(length(grep("^SpatVector", class(coordinates)))){
+	xcoord=crds(coordinates)[,1] 
+	ycoord=crds(coordinates)[,2]
 	aniso=TRUE
 } else {
 	warning('coordinates should be SpatialPoints or matrix')
@@ -284,7 +284,7 @@ if(any(class(trend)=="formula")) {
 }
 
 if(any(theNA)) {
-	if(length(grep("^SpatialPoints", class(coordinates)))) {
+	if(length(grep("^SpatVector", class(coordinates)))) {
 		coordinates = coordinates[noNA]	
 	} else {
 		if(ncol(coordinates) == nrow(coordinates)) {
@@ -621,18 +621,18 @@ result$parameters["boxcox"]
 result$data$resid = result$data$obsBC - result$data$fitted
 
 
-if(length(grep("^Spatial", class(coordinatesOrig)))){
+if(length(grep("^SpatVector", class(coordinatesOrig)))){
 
 	forDf = rep(NA, length(noNA))
 	forDf[noNA] = seq(1, sum(noNA))
 
 	theDf = result$data[forDf,] 
 
-	result$data = SpatialPointsDataFrame(
-		coords=SpatialPoints(coordinatesOrig),
-		data=theDf)
+	result$data = vect(
+		x=crds(coordinatesOrig),
+		atts=theDf,
+		crs = crs(coordinatesOrig))
 
-	result$data@proj4string = coordinatesOrig@proj4string
 }
 
 

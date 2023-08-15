@@ -206,10 +206,7 @@ maternGmrfPrec.dgCMatrix = function(N,
 		
 		Nx = ncol(theraster)
 		Ny = nrow(theraster)
-		param['cellSize'] = 
-				( attributes(theraster)$extent@xmax - 
-					attributes(theraster)$extent@xmin) /
-				Nx		
+		param['cellSize'] = diff(ext(theraster)[1:2])/Nx		
 	}
 	
 	gmrfOrder = param['shape']+1

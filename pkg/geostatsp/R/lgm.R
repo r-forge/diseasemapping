@@ -105,7 +105,7 @@ setMethod("lgm",
 # numeric cells, create raster from data bounding box
 
 setMethod("lgm", 
-	signature("formula", "Spatial", "numeric", "ANY"),
+	signature("formula", "SpatVector", "numeric", "ANY"),
 	function(formula, data, grid, covariates, 
 		buffer=0,
 		shape=1, boxcox=1, nugget = 0, 
@@ -126,7 +126,7 @@ setMethod("lgm",
 
 # missing covariates, create empty list
 setMethod("lgm", 
-	signature("formula", "Spatial", "Raster", "missing"),
+	signature("formula", "SpatVector", "SpatRaster", "missing"),
 	function(formula, data, grid, covariates, 
 		buffer=0,
 		shape=1, boxcox=1, nugget = 0, 
@@ -156,7 +156,7 @@ setMethod("lgm",
 
 
 setMethod("lgm",
-	signature("formula", "Spatial", "Raster", "list"),
+	signature("formula", "SpatVector", "SpatRaster", "list"),
 	function(formula, data, grid, covariates, 
 		buffer=0,
 		shape=1, boxcox=1, nugget = 0, 
@@ -181,7 +181,7 @@ setMethod("lgm",
 	)
 
 setMethod("lgm",
-	signature("formula", "Spatial", "Raster", "Raster"),
+	signature("formula", "SpatVector", "SpatRaster", "SpatRaster"),
 	function(formula, data, grid, covariates, 
 		buffer=0,
 		shape=1, boxcox=1, nugget = 0, 
@@ -207,7 +207,7 @@ setMethod("lgm",
 
 # the real work
 setMethod("lgm", 
-	signature("formula", "Spatial", "Raster","data.frame"), 
+	signature("formula", "SpatVector", "SpatRaster","data.frame"), 
 	function(formula, data, grid, covariates, 
 		buffer=0,
 		shape=1, boxcox=1, nugget = 0, 

@@ -30,40 +30,19 @@ on the malaria data, see Thomson et al. (1999).
 
 \examples{
 data("gambiaUTM")
+gambiaUTM = unwrap(gambiaUTM)
 
 plot(gambiaUTM, main="gambia data")
 
-\dontrun{
-# get the gambia data
-
-gambia = read.table(
-"http://www.leg.ufpr.br/lib/exe/fetch.php/pessoais:paulojus:mbgbook:datasets:gambia.txt",
-header=TRUE)
-
-# create projection without epsg code so rgdal doesn't need to be loaded
-library(sp)
-library(rgdal)
-theproj = CRSargs(CRS("+init=epsg:32628"))
-theproj = gsub("\\+init=epsg:[[:digit:]]+ ", "", theproj)
-theproj = CRS(theproj)
-
-gambiaUTM = SpatialPointsDataFrame(gambia[,c("x","y")], 
-		data=gambia[,-(1:2)], 
-		proj4string = theproj)
-save(gambiaUTM, 		
-	file="~/workspace/diseasemapping/pkg/geostatsp/data/gambiaUTM.RData", 
-	compress="xz")
-
-
-	download.file("http://thematicmapping.org/downloads/TM_WORLD_BORDERS-0.3.zip", 
-  		"borders.zip")
-	unzip("borders.zip")
-	worldBorders = readOGR(".", "TM_WORLD_BORDERS-0.3")
-	africa = worldBorders[worldBorders$REGION ==2,]
-	plot(gambiaUTM)
-	plot(spTransform(africa, gambiaUTM@proj4string),add=TRUE)
+if(require('mapmisc', quietly=TRUE)) {
+  data(worldMap)
+  worldMap = unwrap(worldMap)
+  gambia = project(worldMap[grep("Gambia", worldMap$NAME), ], crs(gambiaUTM))
+  gambiaTiles = openmap(gambia, buffer=100*1000)
+  map.new(gambia)
+  plot(gambiaTiles, add=TRUE)
+  plot(gambiaUTM, add=TRUE)
 }
-
 
 }
 

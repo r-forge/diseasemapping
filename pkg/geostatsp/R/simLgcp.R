@@ -90,7 +90,7 @@ simLgcp = function(param, covariates=NULL, betas=NULL,
   for(Dbeta in names(covariates))
     thefixed = thefixed + betas[Dbeta]*covariates[[Dbeta]]
 
-  linearPredictor = brick(thefixed)[[rep(1, n)]]
+  linearPredictor = thefixed[[rep(1, n)]]
 	linearPredictor = linearPredictor +randomEffect 
 	names(linearPredictor) = gsub("^sim", "linearPredictor", names(randomEffect))
 	
@@ -112,7 +112,7 @@ simLgcp = function(param, covariates=NULL, betas=NULL,
 	return(c(
 			events, 
 			list(
-				raster = stack(randomEffect,
+				raster = c(randomEffect,
 						linearPredictor, intensity,
 						intSansOffset,
 						covariates),

@@ -419,8 +419,9 @@ gm.dataSpatial = function(
 
 
     # reproject data to grid
-      !is.na(crs(cellsSmall))) {
+    if(!is.na(crs(cellsSmall))) {
         data = project(data, crs=crs(cellsSmall))
+    }
     data$space = suppressWarnings(extract(cellsSmall, data))
   # loop through spatial covariates which are factors
     for(D in intersect(Sfactors, names(covariatesDF))) {

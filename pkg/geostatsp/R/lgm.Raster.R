@@ -1,7 +1,7 @@
 
 # data is a raster.  grid is ignored
 setMethod("lgm", 
-  signature("formula", "Raster", "ANY", "ANY"),
+  signature("formula", "SpatRaster", "ANY", "ANY"),
   function(formula, data, grid, 
     covariates, 
     buffer=0,
@@ -19,7 +19,7 @@ setMethod("lgm",
     
     dataCov = gm.dataRaster(
       formula, data,
-      grid=raster(data),
+      grid=rast(data),
       covariates=covariates,
       buffer=0)
     
@@ -43,7 +43,7 @@ setMethod("lgm",
 
 
 setMethod("lgm", 
-  signature("formula", "data.frame", "Raster", "data.frame"), 
+  signature("formula", "data.frame", "SpatRaster", "data.frame"), 
   function(formula, data, grid, 
     covariates, 
     buffer=0,

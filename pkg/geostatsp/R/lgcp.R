@@ -4,7 +4,7 @@ lgcp = function(formula=NULL, data,  grid, covariates=NULL,
 	
 	if(!missing(border)){
 		if(!.compareCRS(data, border))
-			border = spTransform(border, data@proj4string)
+			border = project(border, crs(data))
 	}
 	
 	if(is.numeric(grid)) {
@@ -22,14 +22,13 @@ lgcp = function(formula=NULL, data,  grid, covariates=NULL,
 	if(!missing(border)) {
 		inBorder = over(
 			data, 
-			as(border, 'SpatialPolygons')
+			as.polygons(border)
 			)
 		data = data[!is.na(inBorder),]
 	}
 	
 	counts = rasterize(
-		SpatialPoints(data), 
-		cells, fun="count")
+		data, cells, fun="count")
 	names(counts) = "count"
 	counts[is.na(counts)] = 0
 
@@ -68,12 +67,11 @@ lgcp = function(formula=NULL, data,  grid, covariates=NULL,
 		if(length(offsetToLogOrig)) {
 			if(offsetToMask %in% names(covariates)) {
 				if(!.compareCRS(covariates[[offsetToMask]], border)) {
-					borderM = spTransform(border, 
-						covariates[[offsetToMask]]@crs)
+					borderM = project(border, crs(covariates[[offsetToMask]]))
 				} else {
 					borderM = border
 				}
-				covariates[[offsetToMask]] = raster::mask(
+				covariates[[offsetToMask]] = mask(
 					covariates[[offsetToMask]], borderM
 					)
 			}
@@ -88,7 +86,7 @@ lgcp = function(formula=NULL, data,  grid, covariates=NULL,
 		logCellSize = raster(covariates)
 		values(logCellSize) = sum(log(res(cells)))
 		names(logCellSize) = 'logCellSize'
-		covariates = addLayer(logCellSize, covariates)
+		add(covariates) = logCellSize
 	} else {
 		# create a raster and put it in the covariate list
 		logCellSize = cells

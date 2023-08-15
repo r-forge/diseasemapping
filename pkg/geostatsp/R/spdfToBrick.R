@@ -8,7 +8,7 @@ spdfToBrick = function(x,
   
   
   
-  if(any(class(x)=='SpatialPolygonsDataFrame')){
+  if(any(class(x)=='SpatVector')){
 		if(ncol(x)==1) {
 			pattern=names(x)
 		}
@@ -24,16 +24,14 @@ spdfToBrick = function(x,
   
   forRaster = NULL
   
-  haveRgdal = requireNamespace('rgdal', quietly=TRUE)
 
   for(Dcensus in rev(names(x))){
     
-    if(haveRgdal &
-        !identical(
+    if(!identical(
             crs(x[[Dcensus]]),
             crs(template)
             )){
-      x[[Dcensus]] = spTransform(
+      x[[Dcensus]] = project(
           x[[Dcensus]],
           crs(template)
       )
@@ -66,8 +64,8 @@ spdfToBrick = function(x,
 		# polygons not assigned to cells
 		notInRaster = which(! Sx %in% values(Sid))
 		if(length(notInRaster)){
-			polyCentres = SpatialPoints(x[[Dcensus]][notInRaster,])
-			polyCell = cellFromXY(template, polyCentres@coords)
+			polyCentres = vect(x[[Dcensus]][notInRaster,])
+			polyCell = cellFromXY(template, crds(polyCentres))
 			
 			dataNotInRaster = aggregate(
 					dataHere[notInRaster,,drop=FALSE], 
@@ -97,7 +95,7 @@ spdfToBrick = function(x,
 	}
   
   if(is.matrix(forRaster)){
-    result = brick(template, nl=ncol(forRaster))
+    result = rast(template, nlyrs=ncol(forRaster))
     values(result) = forRaster
   } else if(is.vector(forRaster)){
     result = template
