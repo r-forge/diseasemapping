@@ -70,68 +70,6 @@ crs(myProj, proj=TRUE)
 plot(project(worldMap, crsLL))
 plot(attributes(myProj)$crop, col='red', add=TRUE)
 
-data('netherlands')
-nldCities = terra::unwrap(nldCities)
-nldTiles = terra::unwrap(nldTiles)
-
-
-nldUtm = project(nldCities, omerc(nldCities, angle=0))
-cat(crs(nldUtm, proj=TRUE))
-nldTiles2 = project(nldTiles, crs(nldUtm), method='near')
-
-
-map.new(nldTiles2)
-plot(nldTiles2, add=TRUE)
-points(nldUtm)
-text(nldUtm,labels=nldUtm$name, pos=4)
-scaleBar(nldUtm, 'topright')
-insetMap(crs=nldUtm, pos='bottomright', cropInset = 20*1000*c(2,2,1,3), zoom=7, 
-	inset=c(0.01, 0.01), width=0.25)
-insetMap(nldUtm, 'right', cropInset = 500*1000, zoom=4, width=0.25, inset = 0)
-
-
-	nldRot = project(nldCities, omerc(nldCities, angle=seq(25,45,by=5)))
-	cat(crs(nldRot, proj=TRUE))
-
-
-# testing the wrapping of polygons with an ugly projection
-crsMollRot = moll(nldCities, angle = 70)
-map.new(crsMollRot, col='lightblue')
-plot(wrapPoly(worldMap, crsMollRot), col='red', add=TRUE)
-
-plot(project(worldMap, crsLL))
-plot(attributes(crsMollRot)$crop, add=TRUE, col='red')
-
-crsMollRot = moll(worldMap[grep("Sierra Leone", worldMap$NAME)] , angle = -45)
-map.new(crsMollRot, col='lightblue')
-plot(wrapPoly(worldMap, crsMollRot), col='red', add=TRUE)
-
-plot(project(worldMap, crsLL))
-plot(attributes(crsMollRot)$crop, add=TRUE, col='red')
-
-\dontrun{
-
-map.new(nldRot)
-text(nldRot,labels=nldRot$name)
-scaleBar(nldRot, 'topright')
-insetMap(nldRot, 'bottomright')
-
-crsMoll = moll()
-worldMap2 = project(worldMap, crsMoll)
-plot(attributes(crsMoll)$ellipse, col='lightblue')
-plot(worldMap2, add=TRUE, col='yellow')
-
-crsMoll3 = moll(-100)
-worldMap3 = wrapPoly(worldMap, crsMoll3)
-plot(attributes(crsMoll3)$ellipse, col='lightblue')
-plot(worldMap3, add=TRUE, col='yellow')
-
-
-crsO = ocea(c(0,1), flip='wsu')
-worldMapO = wrapPoly(worldMap, crsO)
-plot(attributes(crsO)$ellipse, col='lightblue')
-plot(worldMapO, add=TRUE, col='yellow')
-}
 
 
 }

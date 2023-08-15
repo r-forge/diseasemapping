@@ -147,9 +147,8 @@ geocode = function(x,
   xDf = data.frame(
   orig = x, 
   url=paste0(
-    'https://nominatim.openstreetmap.org/search/',
-    gsub("[[:space:]]+", "%20", x),  
-    '?format=geojson&limit=5&namedetails=1'),
+    'https://nominatim.openstreetmap.org/search?q=',
+    gsub("[[:space:]]+", "%20", x), '&format=geojson&limit=5&namedetails=1'),
   file = file.path(cachePath, make.names(x)),
   stringsAsFactors=FALSE
   )
@@ -176,7 +175,7 @@ geocode = function(x,
     isNotWay = !x3[[D]]$osm_type == 'way'
     if(any(isNotWay)) {
         x3[[D]] = x3[[D]][isNotWay,]
-      }
+    }
 
 
     # keep only places (not river, etc) if there are places

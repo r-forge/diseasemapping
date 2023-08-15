@@ -160,7 +160,7 @@ krigeLgm = function(
 		  }	
 	 } # end covariates is DF
 	 
-	 if(any(class(data)=="SpatialPointsDataFrame")&
+	 if(any(class(data)=="SpatVector")&
 	 		any(class(formula)=="formula")) {
     
 		  if(all(names(covariates)%in% names(data))) {
@@ -176,13 +176,13 @@ krigeLgm = function(
 			   names(meanForData) = rownames(modelMatrixForData)
 			   
 			   haveData = match(names(meanForData), 
-				    rownames(data@data))
+				    rownames(values(data))
       
       data = data[haveData,]
 			   coordinates=data
       
 			   
-		    observations = drop(data@data[,
+		    observations = drop(values(data)[,
 						    all.vars(formula)[1] ] )
 		    
 		    if(haveBoxCox) {
@@ -308,14 +308,14 @@ krigeLgm = function(
 					       paste("^factor\\(",D,"\\)",sep=""),
 					       "",paramWithFactor)
 			       theLevels = as.integer(theLevels)
-			       allValues = raster::unique(covariates[[D]])
+			       allValues = unique(covariates[[D]])[,1]
 			       dontHave = allValues[!allValues %in% theLevels]
 			       # make values with no data all equal to the lowest value
 		        # so it's the baseline when turning into a factor.
 			       forRecla = cbind(dontHave, min(allValues)-1)
 			       
 			       covariates[[D]] = 
-					       raster::reclassify(covariates[[D]], forRecla)
+					       classify(covariates[[D]], forRecla)
 	         
 		      } else if( length(paramStartWithD) ) {
 			       # not a bunch of digits, 

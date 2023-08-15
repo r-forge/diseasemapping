@@ -15,8 +15,6 @@
 \author{Patrick Brown}
 
 
-\begin{document}
-\maketitle 
 
 <<setup,echo=FALSE,cache=FALSE,results='hide',message=FALSE>>=
 library('knitr')
@@ -24,10 +22,24 @@ opts_chunk$set(echo=TRUE,message=FALSE,
     dev='png', 
     fig.align='center',fig.pos='ht',width=80,
     fig.height=5,fig.width=3,out.width="0.3\\textwidth",
-    dev.args=list(bg='white')
+    dev.args=list(bg='white'), highlight=FALSE
 )
 
+knit_hooks$set(source  =function(x, options) {
+    x = gsub("\n", "\n+", x)
+    x = paste("R>",paste(x, collapse='\nR> '))
+x =  paste0(c('\\begin{verbatim}', x, '\\end{verbatim}', ''),
+            collapse = '\n')
+            x       
+})
 
+
+hook_output <- function(x, options) {
+    if (knitr:::output_asis(x, options)) return(x)
+    paste0('\\begin{verbatim}\n', x, '\\end{verbatim}\n')
+}
+knit_hooks$set(output = hook_output)
+knit_hooks$set(message = hook_output)
 
 library('mapmisc')
 
@@ -51,6 +63,9 @@ options(mapmiscVerbose = TRUE)
 }
 
 @
+
+\begin{document}
+\maketitle 
 
 
 This document will be incomplete if {\tt rgdal} is unavailable or there is on
@@ -161,7 +176,7 @@ scaleBar(meuse,pos="topleft", bg="white")
 # plot elevation
 map.new(meuse, legendRight=TRUE)
 plot(nldTiles, add=TRUE)
-plot(nldElev,add=TRUE,col=terrain.colors(8),alpha=0.6,legend.mar=2, legend.line=0,)
+plot(nldElev,add=TRUE,col=terrain.colors(8),alpha=0.6,legend.mar=2, legend.line=0)
 scaleBar(meuse,pos="topleft",bg="white")
 
 @

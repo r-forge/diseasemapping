@@ -143,24 +143,26 @@ gm.dataRaster = function(
     offsetToLog = covariates[[D]]
 
     toCrop = merge(
-      projectExtent(covariatesStack, 
+      project(
+        ext(covariatesStack),
+        crs(covariatesStack), 
         crs(offsetToLog)
         ),
-      projectExtent(data, 
+      project(data, crs(data),
         crs(offsetToLog)
         )
       )
 
 
-    offsetToLogCrop = raster::crop(
+    offsetToLogCrop = crop(
       offsetToLog, 
       toCrop
       )
 
-    offsetToLogCrop = projectRaster(
+    offsetToLogCrop = project(
       offsetToLogCrop,
       crs=crs(covariatesStack),
-      method='ngb')
+      method='nearest')
 
       # aggregate for covariates
     toAggregate = floor(min(res(covariatesStack)/res(offsetToLogCrop)))
@@ -172,9 +174,9 @@ gm.dataRaster = function(
       toAggregate = 1
       offsetToLogAgg = offsetToLogCrop
     }
-    offsetToLogAgg = projectRaster(offsetToLogAgg, covariatesStack)
+    offsetToLogAgg = project(offsetToLogAgg, covariatesStack)
 
-    offsetToLogAgg = reclassify(
+    offsetToLogAgg = classify(
       offsetToLogAgg, 
       t(c(-Inf,0,NA)) 
       )
@@ -230,8 +232,8 @@ gm.dataRaster = function(
     toAggregateData = floor(min(res(data)/res(offsetToLogCrop)))
     if(toAggregateData != toAggregate & toAggregateData > 1 ){
       offsetToLogAgg = aggregate(offsetToLogCrop, fact=toAggregateData, fun=sum)
-      offsetToLogAgg = projectRaster(offsetToLogAgg, covariatesStack)
-      offsetToLogAgg = reclassify(
+      offsetToLogAgg = project(offsetToLogAgg, covariatesStack)
+      offsetToLogAgg = classify(
         offsetToLogAgg, 
         t(c(-Inf,0,NA)) 
         )
@@ -380,10 +382,10 @@ gm.dataSpatial = function(
         covariates, 
         template=cellsSmall, 
         method=rmethod)
-      covariatesStack = stack(cellsSmall, covariatesStack)
+      covariatesStack = rast(c(cellsSmall, covariatesStack))
 
-      covariatesSP = as(covariatesStack, "SpatialPointsDataFrame")
-      covariatesDF = covariatesSP@data
+      covariatesSP = as.points(covariatesStack)
+      covariatesDF = values(covariatesSP)
     } else {
       covariatesDF = data.frame()
     }
@@ -398,13 +400,13 @@ gm.dataSpatial = function(
       if(!.compareCRS(covariates[[D]], data, unknown=TRUE) ) {
         if(requireNamespace('rgdal', quietly=TRUE) ) {
           # sometimes the names are different and an error results from spTransform
-          extractHere = raster::extract(covariates[[D]], 
-            spTransform(data, CRSobj=crs(covariates[[D]])))
+          extractHere = extract(covariates[[D]], 
+            project(data, crs=crs(covariates[[D]])))
         } else { # don't have gdal
           warning("need rgdal if covariates and data are different projections")
         }
       } else { # identical projections
-        extractHere = raster::extract(covariates[[D]], data) 
+        extractHere = extract(covariates[[D]], data) 
       }
 
       if(is.data.frame(extractHere)) {
@@ -417,10 +419,8 @@ gm.dataSpatial = function(
 
 
     # reproject data to grid
-    if(requireNamespace('rgdal', quietly=TRUE ) &
       !is.na(crs(cellsSmall))) {
-        data = spTransform(data, crs(cellsSmall))
-    }
+        data = project(data, crs=crs(cellsSmall))
     data$space = suppressWarnings(extract(cellsSmall, data))
   # loop through spatial covariates which are factors
     for(D in intersect(Sfactors, names(covariatesDF))) {

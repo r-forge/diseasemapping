@@ -74,7 +74,7 @@ setMethod("glgm",
 
 # extrat covariates for data, convert covariates to a stack
 setMethod("glgm", 
-  signature(formula="formula", data="Raster", grid="ANY", covariates="ANY"),
+  signature(formula="formula", data="SpatRaster", grid="ANY", covariates="ANY"),
   function(
     formula, 
     data,
@@ -114,7 +114,7 @@ setMethod("glgm",
 
 
 setMethod("glgm", 
-  signature(formula="formula", data="Spatial", grid="ANY", covariates="ANY"),
+  signature(formula="formula", data="SpatVector", grid="ANY", covariates="ANY"),
   function(    formula, 
     data,
     grid,
@@ -137,7 +137,7 @@ setMethod("glgm",
 
     callGeneric(
       formula,
-      data=dataCov$data@data,
+      data=values(dataCov$data),
       grid=dataCov$grid,
       covariates=dataCov$covariates,
       buffer,
@@ -156,7 +156,7 @@ setMethod("glgm",
   signature(
     formula="formula", 
     data="data.frame",
-    grid="Raster", 
+    grid="SpatRaster", 
     covariates="data.frame"), 
   function(
     formula, 
@@ -175,7 +175,7 @@ setMethod("glgm",
       'spaceFormula') # override the space formula
 
     if(!any(names(grid)=='space')) {
-      grid = setValues(raster(grid), 1:ncell(grid))
+      grid = setValues(rast(grid), 1:ncell(grid))
       names(grid) = 'space'
     }
 
@@ -522,9 +522,9 @@ setMethod("glgm",
 
     forRast = 	as.matrix(inlaResult$summary.random[["space"]][values(cells),])
     resRasterRandom = 
-    brick(extent(cells), nrows=nrow(cells),
+    rast(extent=ext(cells), nrows=nrow(cells),
       ncols=ncol(cells), crs=crs(cells),
-      nl=dim(forRast)[2])
+      nlyrs=dim(forRast)[2])
     names(resRasterRandom) = 
     paste("random.", colnames(forRast),sep="")
 
@@ -603,9 +603,9 @@ setMethod("glgm",
 
 
     resRasterFitted = 
-    brick(extent(cells), nrows=nrow(cells),
+    rast(extent=ext(cells), nrows=nrow(cells),
       ncols=ncol(cells), crs=crs(cells),
-      nl=ncol(linc))
+      nlyrs=ncol(linc))
     names(resRasterFitted) = 
     paste("predict.", colnames(linc),sep="")
 
@@ -828,7 +828,7 @@ setMethod("glgm",
 
 getRid = c('random.ID', 'predict.ID', 'predict.space', 'predict.kld')
 
-  resRaster=brick(stack(
+  resRaster=rast(c(
     resRasterRandom[[setdiff(names(resRasterRandom), getRid)]], 
     resRasterFitted[[setdiff(names(resRasterFitted), getRid)]], 
     cells[[setdiff(names(cells), getRid)]]))
