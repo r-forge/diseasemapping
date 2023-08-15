@@ -398,13 +398,8 @@ gm.dataSpatial = function(
       if(is.null(covariates[[D]]))
         warning("cant find covariate '", D, "' in covariates or data")
       if(!.compareCRS(covariates[[D]], data, unknown=TRUE) ) {
-        if(requireNamespace('rgdal', quietly=TRUE) ) {
-          # sometimes the names are different and an error results from spTransform
           extractHere = extract(covariates[[D]], 
             project(data, crs=crs(covariates[[D]])))
-        } else { # don't have gdal
-          warning("need rgdal if covariates and data are different projections")
-        }
       } else { # identical projections
         extractHere = extract(covariates[[D]], data) 
       }
