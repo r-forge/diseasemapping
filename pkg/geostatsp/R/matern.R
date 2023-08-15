@@ -10,7 +10,7 @@ matern.dist = function(x,
 	type=c('variance','cholesky','precision','inverseCholesky'), y=NULL) {
 	
 	type = gsub("iance$|esky$|ision", "", tolower(type)[1])    
-	type = c(var=1,chol=2,prec=3,inversechol=4)[type]    
+	type = as.integer(c(var=1,chol=2,prec=3,inversechol=4)[type])    
 
 	param=fillParam(param)
 	x = as.matrix(x)
@@ -27,12 +27,11 @@ matern.dist = function(x,
 
 	
 	if (type==2 | type==4){
-		result = as(
-			new("dtrMatrix", 
+		result = new("dtrMatrix", 
 				Dim = dim(x), 
 				uplo="L",
-				x=cres$result),
-			"Cholesky")
+				x=cres$result)
+		
 		attributes(result)$logDetHalf = cres$halfLogDet	
 		attributes(result)$cholInfo = cres$type
 
@@ -62,19 +61,36 @@ matern.dsyMatrix = function(x,
 }
 
 
-matern.SpatVector = 
-function(x, 
+matern.SpatVector = function(x, 
 	param=c(range=1, variance=1, shape=1), 
 	type=c('variance','cholesky','precision','inverseCholesky'), 
 	y=NULL) {
 
-	.Call(C_maternPoints,
-		x, 
+	typeOrig = type
+	if(is.character(type)) {
+		type = gsub("iance$|esky$|ision", "", tolower(type)[1])    
+		type = as.integer(c(var=1,chol=2,prec=3,inversechol=4)[type])
+	}
+
+	N = length(x)
+	if(type %in% c(2,4)) { # triangular matrix
+		result = new('dtrMatrix', uplo = 'L', diag = 'N', x = rep(0.0, N*N), Dim = rep(N,2))
+	} else {
+		result = new('dsyMatrix', uplo = 'L', x = rep(0.0, N*N), Dim = rep(N,2))
+	}
+
+	halfLogDet = .Call(C_maternPoints,
+		crds(x),
+		result,
 		fillParam(param)[c(
 			'range','shape','variance',
 			'anisoRatio','anisoAngleRadians','nugget')
 		],
-		type)
+		as.integer(type))
+	if(type >1) attributes(result)$halfLogDet = halfLogDet
+	attributes(result)$type = typeOrig
+	attributes(result)$param = param
+	result
 }
 
 
@@ -94,8 +110,12 @@ matern.SpatRaster = function(x,
 		symm=FALSE
 	}
 	# convert  y to spatial points, no matter what it is
-	if(is.vector(y)) y = matrix(y[1:2], 1,2) 
-		y = as.points(y)
+	if(is.vector(y)) y = matrix(y[1:2], 1,2)
+	if(is.matrix(y)) {
+		y = vect(y, crs=crs(x))
+	} else {
+		suppressWarnings(y <- as.points(y))		
+	}
 	
 	Ny = length(y)
 	
@@ -186,8 +206,8 @@ matern.SpatialPointsXX = function(x,
 #				double *anisoRatio, double *anisoAngleRadians) {
 
 	resC = .C(C_maternAniso, 
-		as.double(x@coords[,1]),
-		as.double(x@coords[,2]), 
+		as.double(crds(x)[,1]),
+		as.double(crds(x)[,2]), 
 		N= as.integer(length(x)),
 		result=as.double(rep(-99.9, length(x)^2)),
 		as.double(param["range"]),

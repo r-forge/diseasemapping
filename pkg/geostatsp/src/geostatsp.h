@@ -95,6 +95,7 @@ SEXP maternPoints(
 		// anisoRatio,
 		// anisoAngleRadians,
 		// nugget,
+		SEXP result,
 		SEXP type);
 
 void maternArasterBpoints(
@@ -215,7 +216,8 @@ SEXP gmrfLik(
 SEXP gmrfEdge(
 		SEXP LinvQab, // dense rectangular matrix
 		SEXP points, // SpatialPoints*
-		SEXP params
+		SEXP params,
+		SEXP result
 );
 
 void maternRaster(

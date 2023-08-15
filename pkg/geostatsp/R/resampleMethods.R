@@ -20,7 +20,7 @@ setMethod("resampleMethods",
 )
 
 setMethod("resampleMethods", 
-    signature("ANY", "ANY", "SpatialPointsDataFrame"), 
+    signature("ANY", "ANY", "SpatVector"), 
     function(formula, covariates, data=NULL){
       data=values(data)
       callGeneric(formula, covariates, data)
@@ -30,7 +30,7 @@ setMethod("resampleMethods",
 
 # convert covariates to a list      
 setMethod("resampleMethods", 
-    signature("ANY", "Raster", "data.frame"), 
+    signature("ANY", "SpatRaster", "data.frame"), 
     function(formula, covariates, data=NULL){
       covariatesList = vector('list', nlayers(covariates))
       names(covariatesList) = names(covariates)

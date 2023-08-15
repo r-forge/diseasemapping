@@ -177,7 +177,7 @@ setMethod("RFsimulate",
       names(theSim) = gsub("1$", "", names(theSim)) 
     }
     
-    res = vect(x)
+    res = deepcopy(x)
     values(res) = theSim
     res
   }

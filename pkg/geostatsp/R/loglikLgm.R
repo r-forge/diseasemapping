@@ -33,7 +33,7 @@ loglikLgm = function(param,
 		theNA = NULL
 	}
 	
-	if(length(grep("SpatialPoints", class(coordinates)))) {
+	if(length(grep("SpatVect", class(coordinates)))) {
 		if(length(theNA))
 			coordinates = coordinates[-theNA,]
 	} else if(	any(class(coordinates) == "dist"))	{
@@ -49,7 +49,7 @@ loglikLgm = function(param,
 			coordinates = coordinates[-theNA,-theNA]
 		}
 	} else {
-		warning("coordinates must be a SpatialPoints object\n or matrix a dist object.  It's being assumed \n it's a matrix of coordinates")
+		warning("coordinates must be a SpatVect object\n or matrix a dist object.  It's being assumed \n it's a matrix of coordinates")
 		coordinates = SpatialPoints(coordinates)
 		if(length(theNA))				
 			coordinates = coordinates[-theNA,]
@@ -218,30 +218,33 @@ likfitLgm = function(
 		if(is.matrix(coordinates)){
 			if(ncol(coordinates)!= 2 | nrow(coordinates) != nrow(data))
 				stop("anisotropic model requested but coordinates appears to be a distance matrix")
+		coordinates = vect(coordinates)
 		}
-		coordinates = SpatialPoints(coordinates)
-		maxDist = dist(t(bbox(coordinates)))
+		maxDist = dist(matrix(ext(coordinates), ncol=2) )
 	} else { # isotropic
 
 	if(is.matrix(coordinates)){
 		if(ncol(coordinates)== 2) {# assume the columns are x and y coordinates
-		coordinates = dist(coordinates)
-	} else {
-		coordinates = as(coordinates, 'dsyMatrix')
+			coordinates = dist(coordinates)
+		} else {
+			coordinates = as(coordinates, 'dsyMatrix')
+		}
 	}
-}
 
 if(any(class(coordinates)=='dist'))
 	coordinates = as(as.matrix(coordinates), 'dsyMatrix')
 
 
-if(length(grep("^Spatial", class(coordinates)))) {
-	coordinates = as(Matrix(spDists(coordinates),sparse=FALSE), 'dsyMatrix')
+if(length(grep("SpatVect", class(coordinates)))) {
+	if(!nchar(crs(coordinates))) crs(coordinates) = "+proj=utm +zone=1"
+	coordinates=new("dsyMatrix", Dim = rep(length(coordinates), 2), 
+		x = as.vector(as.matrix(distance(coordinates))), uplo='L')
 }
 
 
-maxDist = max(coordinates,na.rm=TRUE)
-}
+	maxDist = max(coordinates,na.rm=TRUE)
+} # end isotropic
+
 trend = formula
 theFactors = NULL
 if(any(class(trend)=="formula")) {
@@ -459,8 +462,8 @@ forO$pars = c(forO$pars, rep(0.0, ncol(covariates)+ncol(covariates)^2))
 
 
 if(aniso){
-	xcoord=coordinates@coords[,1] 
-	ycoord=coordinates@coords[,2]
+	xcoord=crds(coordinates)[,1] 
+	ycoord=crds(coordinates)[,2]
 } else {
 	xcoord = as.vector(coordinates)
 	ycoord = -99
