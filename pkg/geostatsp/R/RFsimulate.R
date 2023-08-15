@@ -307,7 +307,7 @@ setMethod("RFsimulate",
     }
     
     
-    rast(x, nlyrs = ncol(theSim), vals = theSim)
+    result = rast(x, nlyrs = ncol(theSim), vals = theSim, names = colnames(theSim))
   }
 )
 

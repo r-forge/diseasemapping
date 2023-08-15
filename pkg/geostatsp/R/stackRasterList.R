@@ -51,13 +51,13 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 			if(compareGeom(rast(x[[D]]), template, stopOnError=FALSE)) {
 				# same projection, same resolution
 				toAdd =  x[[D]]			
-			}	 else { # different projection or resolution
+			} else { # different projection or resolution
 				# check to see if it's a categorical variable
-				if(is.factor(x[[D]])) {
+				if(any(is.factor(x[[D]]))) {
 					method[D] = "near"
 				} 
 				
-				thelevels = levels(x[[D]])
+				thelevels = levels(x[[D]])[[1]]
 				
 				# same projection, different resolution
 				testcrs =compareGeom(template, x[[D]],
@@ -82,10 +82,18 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 					toAdd = project(x[[D]], template, method=method[D])
 				} # end different resolution
 				
-				if(!is.null(thelevels))
-					levels(toAdd) = thelevels
+				if(!is.null(thelevels)) {
+					if(!identical(thelevels, '')) {
+						levels(toAdd) = thelevels
+					}
+				}
 			} # end different projection or resolution
 		} # end not SPDF
+		if(nlyr(toAdd)==1) {
+			names(toAdd) = names(x)[D]
+		} else {
+			names(toAdd) = names(x[[D]])
+		}
 		toAdd
 	} # end projfun
 	
@@ -105,12 +113,11 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 	result = resultList[[1]]
 	if(Nlayers >1) {
 		for(D in 2:Nlayers )
-			result = stack(result, resultList[[D]])
+			add(result) = resultList[[D]]
 	}
 	
 	
 	if(Nlayers == (dim(result)[3]-1) )
 		result = result[[-1]]
-	names(result) = names(x)
 	result
 }
