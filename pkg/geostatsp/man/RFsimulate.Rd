@@ -4,14 +4,12 @@
 \alias{RFsimulate}
 \alias{RFsimulate-methods}
 \alias{RFsimulate,ANY,Raster-method}
-\alias{RFsimulate,numeric,SpatialGrid-method}
-\alias{RFsimulate,numeric,SpatialPixels-method}
-\alias{RFsimulate,numeric,SpatialPoints-method}
-\alias{RFsimulate,numeric,GridTopology-method}
-\alias{RFsimulate,RMmodel,GridTopology-method}
-\alias{RFsimulate,RMmodel,SpatialPoints-method}
-\alias{RFsimulate,matrix,Raster-method} 
-\alias{RFsimulate,matrix,Spatial-method} 
+\alias{RFsimulate,numeric,SpatRaster-method}
+\alias{RFsimulate,numeric,SpatVector-method}
+\alias{RFsimulate,RMmodel,SpatVector-method}
+\alias{RFsimulate,RMmodel,SpatRaster-method}
+\alias{RFsimulate,matrix,SpatRaster-method} 
+\alias{RFsimulate,matrix,SpatVector-method} 
 \alias{RFsimulate,data.frame,ANY-method} 
 
 

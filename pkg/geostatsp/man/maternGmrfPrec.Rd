@@ -4,7 +4,7 @@
 \alias{maternGmrfPrec.dgCMatrix}
 \alias{NNmat}
 \alias{NNmat.default}
-\alias{NNmat.Raster}
+\alias{NNmat.SpatRaster}
 \title{Precision matrix for a Matern spatial correlation}
 \description{
 Produces the precision matrix for a Gaussian random field on a regular square lattice, using a Markov random field approximation. 
@@ -19,7 +19,7 @@ maternGmrfPrec(N, ...)
   param=c(variance=1, range=1, shape=1, cellSize=1),
   adjustEdges=FALSE, ...)
 NNmat(N, Ny=N, nearest=3, adjustEdges=FALSE)
-\method{NNmat}{Raster}(N, Ny=N, nearest=3, adjustEdges=FALSE)
+\method{NNmat}{SpatRaster}(N, Ny=N, nearest=3, adjustEdges=FALSE)
 \method{NNmat}{default}(N, Ny=N, nearest=3, adjustEdges=FALSE)
 }
 
