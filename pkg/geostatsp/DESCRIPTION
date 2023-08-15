@@ -1,19 +1,19 @@
 Package: geostatsp
 Type: Package
 Title: Geostatistical Modelling with Likelihood and Bayes
-Version: 1.9.1
-Date: 2022-05-11
+Version: 1.9.8
+Date: 2023-08-15
 Depends:
-    Matrix (>= 1.2.0),
+    Matrix,
     terra,
-    R (>= 3.5.0)
+    R
 Imports:
     abind,
     numDeriv,
     methods,
     stats
 Suggests:
-    RandomFields (>= 3.3.4),
+    RandomFields,
     parallel,
     mapmisc,
     ellipse,
@@ -26,12 +26,11 @@ Enhances:
  	mvtnorm 
 LinkingTo: Matrix
 Additional_repositories: https://inla.r-inla-download.org/R/testing
-Author: Patrick Brown <patrick.brown@utoronto.ca>[aut, cre], Robert Hijmans [ctb]
+Author: Patrick Brown <patrick.brown@utoronto.ca>[aut, cre]
 Maintainer: Patrick Brown <patrick.brown@utoronto.ca>
-Description: Geostatistical modelling facilities using 'Raster' and 'SpatialPoints'
+Description: Geostatistical modelling facilities using 'SpatRaster' and 'SpatVector'
     objects are provided. Non-Gaussian models are fit using 'INLA', and Gaussian
     geostatistical models use Maximum Likelihood Estimation.  For details see Brown (2015) <doi:10.18637/jss.v063.i12>.
 License: GPL
 NeedsCompilation: yes
 VignetteBuilder: knitr
-RoxygenNote: 7.2.0
