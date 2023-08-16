@@ -3,17 +3,12 @@ library("geostatsp")
 model <- c(var=5, range=20,shape=0.5)
 
 # any old crs
-theCrs = CRS("+proj=utm +zone=17 +datum=NAD27 +units=m +no_defs")
+theCrs = "+proj=utm +zone=17 +datum=NAD27 +units=m +no_defs"
 
 # don't test using the randomFields package, it's currently broken on some R builds
 options(useRandomFields = FALSE)
-if (requireNamespace("RandomFields", quietly = TRUE) & FALSE ) { 
-  myraster = raster(nrows=50,ncols=50,xmn=100,ymn=100,xmx=110,ymx=110, 
-    crs=theCrs)
-} else {
   myraster = raster(nrows=20,ncols=20,xmn=100,ymn=100,xmx=110,ymx=110, 
     crs=theCrs)
-}
 
 set.seed(0)
 simu = RFsimulate(rbind(a=model, b=model+0.1), 
