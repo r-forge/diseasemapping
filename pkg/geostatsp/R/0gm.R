@@ -109,7 +109,7 @@ gm.dataRaster = function(
     
     rmethod = rep("bilinear", length(names(covariates)))
     names(rmethod) = names(covariates)
-    rmethod[covFactors] = "ngb"
+    rmethod[covFactors] = "near"
     
     notLogOffset = ! names(covariates) %in% names(offsetToLogOrig)
     if(any(notLogOffset)){
@@ -263,7 +263,7 @@ gm.dataRaster = function(
 if(any(res(data)>1.25*res(cellsSmall)))
   warning("data is coarser than grid")
 
-data = stack(data, resample(cellsSmall, data, method='ngb'))	
+data = stack(data, resample(cellsSmall, data, method='near'))	
 
 
 dataSP = as(data, "SpatialPointsDataFrame")
@@ -375,8 +375,8 @@ gm.dataSpatial = function(
 
       rmethod = rep("bilinear", length(names(covariates)))
       names(rmethod) = names(covariates)
-      rmethod[covFactors] = "ngb"
-      rmethod[intersect(names(covariates), termsInF)] = "ngb"
+      rmethod[covFactors] = "near"
+      rmethod[intersect(names(covariates), termsInF)] = "near"
 
       covariatesStack = stackRasterList(
         covariates, 

@@ -102,8 +102,8 @@ options(useRandomFields = FALSE)
 model1 <- c(var=5, range=1,shape=0.5)
 
 
-myraster = raster(nrows=20,ncols=30,xmn=0,ymn=0,xmx=6,ymx=4, 
-	crs=CRS("+proj=utm +zone=17 +datum=NAD27 +units=m +no_defs"))
+myraster = rast(nrows=20,ncols=30,extent = ext(0,6,0,4), 
+	crs="+proj=utm +zone=17 +datum=NAD27 +units=m +no_defs")
 
 set.seed(0) 
 
@@ -111,10 +111,11 @@ simu <- RFsimulate(model1, x=myraster, n=3)
 
 plot(simu[['sim2']])
 
+xPoints = suppressWarnings(as.points(myraster))
 # conditional simulation
 firstSample = RFsimulate(
 	c(model1, nugget=1), 
-	x=SpatialPoints(myraster)[seq(1,ncell(myraster), len=100), ],
+	x=xPoints[seq(1,ncell(myraster), len=100), ],
 	n=3
 )
 

@@ -62,7 +62,6 @@ lgcp = function(formula=NULL, data,  grid, covariates=NULL,
 
 	if(!missing(border)) {
 		# set values of the offset to zero outside the border
-#	instead of masking as was done formerly with	counts = raster::mask(counts, border)
 		
 		if(length(offsetToLogOrig)) {
 			if(offsetToMask %in% names(covariates)) {

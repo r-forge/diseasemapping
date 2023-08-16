@@ -186,7 +186,6 @@ setMethod("glgm",
         paste(allVars, collapse=" "), ", data: ", 
         paste(names(data), collapse=" "))
 
-#    cells = raster::trim(grid[['space']])
     cells = grid[['space']]
     firstCell = values(cells)[1]
     cellDim = dim(cells)[1:2]

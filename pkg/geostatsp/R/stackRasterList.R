@@ -24,20 +24,32 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 		method = rep(method, Nlayers)
 	}
  	
-	modefun = function(qq, na.rm=NULL) c(as.numeric(names(which.max(table(qq)))), NA)[1]
+	modefun = function(qq, na.rm=NULL) {
+		res = as.data.frame(table(qq))
+		if(nrow(res)) {
+			res = as.numeric(res[which.max(res[,2]),1])
+		} else {
+			res = NA
+		}
+		res
+	}
+
 	funList = list(near=modefun, bilinear=mean)
 	
 	
 	template = rast(template)
 	template2 = rast(template)
 	
+
 	# function to reproject rasters
 	projfun = function(D) {
+
 		if(any(class(x[[D]])=="SpatVector")){
 			if(length(names(x[[D]]))!=1)
 				warning("polygon ", D, "has more than one data column, using the first" )
 			
-			
+
+
 			toAdd =  
 					rasterize(
 							project(x[[D]][,1], 
@@ -56,7 +68,7 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 				if(any(is.factor(x[[D]]))) {
 					method[D] = "near"
 				} 
-				
+
 				thelevels = levels(x[[D]])[[1]]
 				
 				# same projection, different resolution
@@ -69,16 +81,25 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 						dim(x[[D]])[1:2]/dim(template2)[1:2]
 					))
 					if(toAgg > 1) {
+
 						aggFun = funList[[method[D]]]
-						xagg = aggregate(x[[D]], fact=toAgg,
+						if(is.factor(x[[D]])) {
+							xToAgg = as.numeric(x[[D]])
+						} else {
+							xToAgg = x[[D]]
+						}
+						xagg = aggregate(xToAgg, fact=toAgg,
 								fun=aggFun)
+						levels(xagg) = levels(x[[D]])
+
 					} else {
 						xagg = x[[D]]
 					}
-					
+
 					toAdd = resample(xagg, template2, method=method[D])
 				} else { # differenet resolution
 					# different resolution
+
 					toAdd = project(x[[D]], template, method=method[D])
 				} # end different resolution
 				
@@ -90,7 +111,7 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 			} # end different projection or resolution
 		} # end not SPDF
 		if(nlyr(toAdd)==1) {
-			names(toAdd) = names(x)[D]
+			names(toAdd) = D
 		} else {
 			names(toAdd) = names(x[[D]])
 		}
@@ -99,16 +120,14 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 	
 	# reproject all the rasters
 
-	
+
 	if(!is.null(mc.cores)) {
 		resultList = parallel::mcmapply(
-				projfun, D=1:Nlayers,
+				projfun, D=names(x),
 				mc.cores=mc.cores)
 	} else {
-		resultList = mapply(projfun, D=1:Nlayers)
+		resultList = mapply(projfun, D=names(x))
 	}
-	
-	
 
 	result = resultList[[1]]
 	if(Nlayers >1) {

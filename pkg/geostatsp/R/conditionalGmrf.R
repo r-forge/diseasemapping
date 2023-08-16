@@ -134,7 +134,7 @@ conditionalGmrf = function(param,
 	}
 	   
   if(!is.null(template)){
-    resRast = raster::brick(raster(template), nl=prod(dim(result)[-1]))
+    resRast = rast(template, nlyrs=prod(dim(result)[-1]))
     names(resRast) = as.vector(do.call(
 					function(a,b) outer(a,b,paste,sep="_"),
 					dimnames(result)[-1] ))

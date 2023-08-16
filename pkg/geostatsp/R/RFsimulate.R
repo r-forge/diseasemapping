@@ -361,7 +361,7 @@ setMethod("RFsimulate",
         err.model=err.model[D], 
         n=1,
         ...)
-      result = brick( 
+      result = c( 
         resultHere,result
       )
     }

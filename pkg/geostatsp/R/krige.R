@@ -163,7 +163,7 @@ krigeLgm = function(
 	 if(any(class(data)=="SpatVector")&
 	 		any(class(formula)=="formula")) {
     
-		  if(all(names(covariates)%in% names(data))) {
+		  if(all(names(covariates) %in% names(data))) {
       
 			   modelMatrixForData = model.matrix(formula, values(data))
       
@@ -195,7 +195,7 @@ krigeLgm = function(
 						      param["boxcox"]
 			     }
 			     
-		    }
+		    } # have boxcox
 		    observations = observations - meanForData		
 		  } # end all covariates in data
 	 } # end data is spdf	
@@ -360,21 +360,21 @@ krigeLgm = function(
 			       # stuff like factor(x)Trees and factor(x)Grassland for covariate x and levels Trees and Grassland
 			       theLevels = gsub(paste("^factor\\(", D,"\\)", sep=""),"",
 					       paramFactorCharacter)
-			       levelsTable = levels(covariates)
+			       levelsTable = levels(covariates[[D]])[[1]]
 			       levelsInTable = levelsTable[,2]%in% theLevels
 			       if(mean(theLevels %in% levelsTable[,2]) < 0.4)
 				        warning("many levels appear missing in covariate", D)
 			       valuesInParams = as.numeric(levelsTable[levelsInTable,1])
           
-			       allValues = unique(covariates[[D]])
-			       dontHave = allValues[!allValues %in% valuesInParams]
-			       forRecla = cbind(dontHave, min(allValues)-1)
+#			       allValues = unlist(unique(covariates[[D]]))
+#			       dontHave = allValues[!allValues %in% valuesInParams]
+			       forRecla = cbind(levelsTable[!levelsInTable,'ID'], min(levelsTable[,'ID'])-1)
 			       covariates[[D]] = classify(covariates[[D]], forRecla)
 			       
 			       
 			       levelsTable = 
 					       levelsTable[c(1, 1:nrow(levelsTable)),]
-			       levelsTable[1,1]= min(allValues)-1
+			       levelsTable[1,1]= min(levelsTable[,'ID'])-1
 			       levelsTable[1,2] = "0"
 			       colnames(levelsTable)[2]="levels"
 			       levels(covariates[[D]])[[1]] =  levelsTable			
@@ -419,7 +419,7 @@ krigeLgm = function(
     names(meanRaster) = "fixed"
     
 	   
-	   if(length(all.vars(trendFormula))>1){ # if have covariates
+	   if(length(all.vars(trendFormula)) ){ # if have covariates
 	     missingVars = all.vars(trendFormula)[-1] %in% names(covariatesDF)
 	     missingVars = all.vars(trendFormula)[-1][!missingVars]
 	     
@@ -436,9 +436,7 @@ krigeLgm = function(
       
 	     if(!all(colnames(modelMatrixForRaster)%in% names(param))){
 		      warning("cant find coefficients",
-				      paste(names(modelMatrixForRaster)[
-								      !names(modelMatrixForRaster)%in% names(param)
-						      ], collapse=","),
+				      paste(setdiff(colnames(modelMatrixForRaster), names(param)), collapse=", "),
 				      "in param\n")
 	     }
 	     

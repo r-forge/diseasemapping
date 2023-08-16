@@ -37,7 +37,7 @@ spatialRocRasterTemplate = function(
 	}
 	
 	templateID = stackRasterList(
-			list(fitID = template), truth, method='ngb'
+			list(fitID = template), truth, method='near'
 	)
 
 	# and cells with no truth
