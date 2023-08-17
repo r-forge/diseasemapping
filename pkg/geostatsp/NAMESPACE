@@ -49,7 +49,7 @@ S3method(variogMcEnv, default)
 import(
   Matrix, methods
 )
-import(terra)
+import(terra, except='na.omit')
 #, 
 #  ext, values, levels, aggregate, res, xres, yres,
 #  classify, project, crs, yFromRow, colFromCell, rowFromCell,

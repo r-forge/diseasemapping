@@ -651,14 +651,14 @@ krigeLgm = function(
     names(newraster) = "predict"
     if(is.matrix(bcpred)){
       terra::values(newraster) = bcpred[,'predict']
-      terra::add(result) = newraster
+      add(result) = newraster
 #      names(newraster) = 'probComplex.boxcox'
 #      values(newraster) = bcpred[,'probComplex.boxcox']
 #      result = addLayer(result, 
 #          newraster)
     } else {
       terra::values(newraster) = bcpred
-      terra::add(result) = newraster
+      add(result) = newraster
     }
     
     
@@ -671,7 +671,7 @@ krigeLgm = function(
 		  names(result)[names(result)=="predict"] = "predict.log"
 		  newLayer = exp(result[["predict.log"]]+ 0.5*result[["krigeSd"]]^2 )
 		  names(newLayer) = "predict"
-      terra::add(result) = newLayer
+      add(result) = newLayer
 
 		  
 	 } # end expPred

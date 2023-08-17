@@ -42,6 +42,9 @@ Either a vector of exceedance probabilities or an object of the same class as \c
 
 \examples{
 	data('swissRain')
+	swissRain = unwrap(swissRain)
+	swissAltitude = unwrap(swissAltitude)
+	swissBorder = unwrap(swissBorder)
 	swissFit =  lgm("rain", swissRain, grid=30, 
 	boxcox=0.5,fixBoxcox=TRUE,	covariates=swissAltitude)
 	swissExc = excProb(swissFit, 20)

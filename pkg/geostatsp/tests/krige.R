@@ -72,7 +72,6 @@ plot(swissKrige5[["predict"]])
 plot(swissBorder, add=TRUE)
 dev.off()
 
-}
 
 options(original)
 

@@ -24,36 +24,25 @@ for(D in 1:length(names(simu))) {
 }
 
 
-if(interactive()  | Sys.info()['user'] =='patrick') {
   simu2 = RFsimulate(
     model = rbind(a=model, b=model+0.1), 
-    x=as(myraster,"SpatialPoints")[
+    x=as.points(myraster)[
       sample(ncell(myraster), 12),]
    )
   
-  simu2 = RFsimulate(rbind(a=model, b=model+0.1), 
-    x=as(myraster,"SpatialGrid")
-  )
   
-  for(Dn in c(1,3)) {
-    set.seed(0) 
-    simu <- RFsimulate(model, x=myraster, n=Dn)
-    set.seed(0) 
-    simu2 <- RFsimulate(model, x=as(myraster,"SpatialPixels"), n=Dn)
-    
-    print(projection(simu))
-    print(projection(simu2))
-    
     par(mfrow=c(nlayers(simu),2))
     for(D in 1:nlayers(simu)) {
       plot(simu[[D]])
-      plot(raster(simu2,layer=D))
+      plot(simu2)
     }
-  }
   
   
   
   data("swissRain")
+  swissRain = unwrap(swissRain)
+  swissAltitude = unwrap(swissAltitude)
+  swissBorder = unwrap(swissBorder)
   swissRain$sqrtrain = sqrt(swissRain$rain)
   
 # estimate parameters
@@ -153,7 +142,7 @@ if(interactive()  | Sys.info()['user'] =='patrick') {
   }
   
   
-  swissLocation = raster::cellStats(swissSim,   maxRainLocation)
+  swissLocation = global(swissSim,   maxRainLocation)
   swissLocation = xyFromCell(swissSim, swissLocation)
   plot(swissRes$predict[["predict"]])
   plot(swissBorder, add=TRUE)
