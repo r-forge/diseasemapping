@@ -141,7 +141,7 @@ conditionalGmrf = function(param,
 	if(dim(result)[[2]]==1) {
 		names(resRast) = dimnames(result)[[3]]
 	}
-	values(resRast) = as.vector(result)
+	terra::setValues(resRast, as.vector(result))
     result = resRast		
   }
   result

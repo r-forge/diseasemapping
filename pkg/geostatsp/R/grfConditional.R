@@ -9,7 +9,8 @@ grfConditional = function(data, y=1,
 		Nx = locations[1]
 		myExtent = 	ext(data)
 		Ny = round(locations*diff(ext(data)[3:4])/diff(ext(data[1:2])))
-		ymax(myExtent) = ymin(myExtent) + Ny * diff(ext(data[1:2]))/Nx
+		myExtent = ext(c(as.vector(myExtent)[-4], 
+			ymin(myExtent) + Ny * diff(ext(data[1:2]))/Nx))
 		locations = rast(extent=myExtent, nrow=Ny, ncol=Nx,
 				crs=crs(data))	
 	}
@@ -83,8 +84,8 @@ simFun = function(D) {
 	
 	
 	if(nuggetInPrediction){
-		values(rasterCopy) =  
-				rnorm(ncell(res), sd=sqrt(param[,"nugget"]))
+		terra::setValues(rasterCopy,
+				rnorm(ncell(res), sd=sqrt(param[,"nugget"])))
 		res = res + rasterCopy
 	}		
 	if(!is.null(fun)) {

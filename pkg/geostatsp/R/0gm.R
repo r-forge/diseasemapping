@@ -126,7 +126,7 @@ gm.dataRaster = function(
         covariatesForStack,
         cellsSmall, method=rmethod)
       
-      covariatesStack = stack(cellsSmall, covariatesStack)
+      covariatesStack = c(cellsSmall, covariatesStack)
       covData = stackRasterList(
         covariatesForStackData, 
         data, method=rmethod)
