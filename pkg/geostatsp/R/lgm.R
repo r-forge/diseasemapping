@@ -192,7 +192,6 @@ setMethod("lgm",
 		fixBoxcox=TRUE,
 		fixNugget = FALSE,
 		...) {
-
 		dataCov = gm.dataSpatial(
 			formula, data, 
 			grid, covariates, buffer)
@@ -222,11 +221,11 @@ setMethod("lgm",
 		locations = grid
 
 		dots <- list(...)  
+
 		param=dots$param	
 		if(!length(param)) {
 			param=c()
 		}
-
 
 		paramToEstimate	= c(
 			"variance", "range", "shape","nugget","boxcox"
@@ -261,9 +260,7 @@ setMethod("lgm",
 			dots$paramToEstimate=paramToEstimate
 			dots$reml = reml
 
-
 			likRes = do.call(likfitLgm, dots)
-
 # call krige	
 			krigeRes =  krigeLgm(
 				formula=formula,data=data,
@@ -326,7 +323,6 @@ setMethod("lgm",
 				rownames(res$summary) = gsub("^range$", "range/1000", 
 					rownames(res$summary))
 			}
-
 			class(res) = c('lgm',class(res))    
 			return(res)
 		}

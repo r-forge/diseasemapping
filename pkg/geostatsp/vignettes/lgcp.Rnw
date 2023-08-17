@@ -29,11 +29,11 @@ if(Sys.info()['sysname'] =='Linux' & requireNamespace("INLA", quietly=TRUE)) {
 <<packages>>=
 library("geostatsp")
 data('murder')
+data('torontoPop')
 murder = unwrap(murder)
 torontoBorder = unwrap(torontoBorder)
 torontoPdens = unwrap(torontoPdens)
 torontoIncome = unwrap(torontoIncome)
-data('torontoPop')
 @
 
 

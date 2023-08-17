@@ -365,7 +365,7 @@ gm.dataSpatial = function(
       warning("can't find variables", cantFind)
 
   # the grid
-    cellsBoth = cellsBuffer(grid, buffer)			
+    cellsBoth = cellsBuffer(grid, buffer)
     cellsSmall = cellsBoth$small
 
   # 
@@ -383,30 +383,22 @@ gm.dataSpatial = function(
         template=cellsSmall, 
         method=rmethod)
       covariatesStack = rast(c(cellsSmall, covariatesStack))
-
-      covariatesSP = as.points(covariatesStack)
+      stuff <<- covariatesStack
+      covariatesSP = suppressWarnings(as.points(covariatesStack))
       covariatesDF = values(covariatesSP)
     } else {
       covariatesDF = data.frame()
     }
-
-    # ensure row names are identical
-    rownames(terra::values(data)) = rownames(terra::crds(data)) = 
-        1:length(data)
   # loop through covariates which aren't in data, extract it from `covariates`
     for(D in setdiff(alltermsPlain, names(data))){
       if(is.null(covariates[[D]]))
         warning("cant find covariate '", D, "' in covariates or data")
-      if(!.compareCRS(covariates[[D]], data, unknown=TRUE) ) {
-          extractHere = extract(covariates[[D]], 
-            project(data, crs=crs(covariates[[D]])))
-      } else { # identical projections
-        extractHere = extract(covariates[[D]], data) 
-      }
+
+      extractHere = extract(covariates[[D]], 
+            project(data, crs(covariates[[D]])), ID=FALSE)
 
       if(is.data.frame(extractHere)) {
-            # first two columns are poly id and point it
-        data[[D]] = extractHere[,3]
+        data[[D]] = extractHere[,1]
       } else {
         data[[D]] = extractHere
       }
@@ -415,12 +407,13 @@ gm.dataSpatial = function(
 
     # reproject data to grid
     if(!is.na(crs(cellsSmall))) {
-        data = project(data, crs=crs(cellsSmall))
+        data = project(data, crs(cellsSmall))
     }
-    data$space = suppressWarnings(extract(cellsSmall, data))
+    data$space = suppressWarnings(extract(cellsSmall, data, ID=FALSE, mat=FALSE, dataframe=FALSE))
+
+
   # loop through spatial covariates which are factors
     for(D in intersect(Sfactors, names(covariatesDF))) {
-
       theLevels = levels(covariates[[D]])[[1]]
       idCol = grep("^id$", names(theLevels), ignore.case=TRUE)[1]
       if(is.na(idCol)) idCol = 1
@@ -505,7 +498,6 @@ gm.dataSpatial = function(
           labels=theLabels)     
    } # end refactor
    } # end loop D trhoguh factors
-
 
    list(
     data=data,

@@ -201,7 +201,7 @@ krigeLgm = function(
 	 } # end data is spdf	
   
 	 
-	 if(!length(observations) | is.null(meanRaster)) {
+	 if(!length(observations) | is.null(meanRaster)) { # old code, not called from lgm
 		  # the above didn't create observations and meanRaster
 		  # use the old code, probably not being called from lgm
  	  
@@ -642,8 +642,8 @@ krigeLgm = function(
 		  names(result)[names(result)=="predict"] = "predict.boxcox"
 		  
     bcpred = meanBoxCox(
-      pred=values(result[['predict.boxcox']]), 
-      sd=values(result[['krigeSd']]),
+      pred=values(result[['predict.boxcox']], mat=FALSE, dataframe=FALSE), 
+      sd= values(result[['krigeSd']], mat=FALSE, dataframe=FALSE),
       boxcox=param['boxcox']
     )
     
