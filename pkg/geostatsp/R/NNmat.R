@@ -70,8 +70,8 @@ NNmat.default = function(N, Ny=N, nearest=3, adjustEdges=FALSE) {
   Nx = N
   theraster = rast(extent = ext(0,Nx, 0, Ny), nrows = Ny, ncol = Nx)
   Ncell = ncell(theraster)
-  cellSeq = values(theraster) = 1:Ncell
-
+  cellSeq = 1:Ncell
+  values(theraster) = cellSeq
   # find id's of cells on the border (for edge correction)  
 
  if(any(dim(theraster)[1:2] <= 2*nearest)) {
