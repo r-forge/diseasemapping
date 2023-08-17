@@ -20,12 +20,12 @@ spatialRocPolyTemplate = function(
 spatialRocRasterTemplate = function(
 		truth, fit
 ) {
-	if(length(grep("^Raster", class(fit)))) {
-		template = raster(fit)
+	if(length(grep("SpatRaster", class(fit)))) {
+		template = rast(fit)
 	} else {
-		template = raster(fit[[1]]$raster)
+		template = rast(fit[[1]]$raster)
 	}
-	values(template) = seq(1, ncell(template))
+	terra::values(template) = seq(1, ncell(template))
 	names(template) = 'fitID'
 	
 	# remove cells with no predictions

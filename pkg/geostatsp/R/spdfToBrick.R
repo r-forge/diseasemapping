@@ -96,10 +96,10 @@ spdfToBrick = function(x,
   
   if(is.matrix(forRaster)){
     result = rast(template, nlyrs=ncol(forRaster))
-    values(result) = forRaster
+    terra::values(result) = forRaster
   } else if(is.vector(forRaster)){
     result = template
-    values(result) = forRaster
+    terra::values(result) = forRaster
   } else {
     warning("no data extracted")
     result = template

@@ -10,12 +10,12 @@ simPoissonPP = function(intensity) {
   
   
 	NperCell = intensity
-	values(NperCell)= rpois(
+	terra::values(NperCell)= rpois(
       ncell(intensity)*nlyr(intensity), 
       values(intensity))
 	
 	if(any(minmax(NperCell)>1000))
-		warning("A large number of events are being simulated, more than", maxValue(NperCell))
+		warning("A large number of events are being simulated, more than", max(minmax(NperCell)))
 	
 	events= vector('list', nlyr(intensity))
 	for(D in 1:nlyr(intensity)) {
@@ -33,7 +33,7 @@ simPoissonPP = function(intensity) {
 	
   if(nrow(eventsD)){
   	events[[D]] = vect(eventsD)
-	  crs(events[[D]]) = crs(intensity)	
+	  terra::crs(events[[D]]) = crs(intensity)	
   } else {
     events[[D]] = NULL
   }
@@ -86,7 +86,7 @@ simLgcp = function(param, covariates=NULL, betas=NULL,
 	
 	
 	thefixed = rast(randomEffect)
-  values(thefixed) = themean
+  terra::values(thefixed) = themean
   for(Dbeta in names(covariates))
     thefixed = thefixed + betas[Dbeta]*covariates[[Dbeta]]
 
