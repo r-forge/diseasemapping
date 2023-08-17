@@ -114,13 +114,13 @@ if(length(grep("^SpatRaster", class(template)))) {
 				sep='')
 		excProbAll = excProbAll[allNames]
 	}
-	template = rast(template)
+	template = rast(template[[1]])
 	if(elementsColumnwise) {
-		terra::setValues(template, matrix(excProbAll, 
+		terra::values(template) = matrix(excProbAll, 
 							nrow=nrow(template),ncol=ncol(template),
-							byrow=FALSE))
+							byrow=FALSE)
 	} else {
-		terra::setValues(template, excProbAll)
+		terra::values(template) =excProbAll  
 	}
 	excProbAll = template
 	names(excProbAll) = paste("exc","random"[random], threshold, sep="")

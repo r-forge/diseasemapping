@@ -46,7 +46,7 @@ Either a vector of exceedance probabilities or an object of the same class as \c
 	swissAltitude = unwrap(swissAltitude)
 	swissBorder = unwrap(swissBorder)
 	swissFit =  lgm("rain", swissRain, grid=30, 
-	boxcox=0.5,fixBoxcox=TRUE,	covariates=swissAltitude)
+		boxcox=0.5,fixBoxcox=TRUE,	covariates=swissAltitude)
 	swissExc = excProb(swissFit, 20)
 	mycol = c("green","yellow","orange","red")
 	mybreaks = c(0, 0.2, 0.8, 0.9, 1)
