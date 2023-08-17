@@ -184,7 +184,7 @@ gm.dataRaster = function(
     offsetToLogLogged = log(offsetToLogAgg) - 
     sum(log(rep_len(toAggregate,2)))
     names(offsetToLogLogged) = paste('log',D,sep='')
-    covariatesStack = stack(covariatesStack, offsetToLogLogged)
+    covariatesStack = c(covariatesStack, offsetToLogLogged)
     toDrop = which(alltermsFull==offsetToLogOrig[D])
 
       # the offsets
@@ -244,7 +244,7 @@ gm.dataRaster = function(
       names(offsetToLogLogged) = paste('log',D,sep='')
     }
 
-    covData = stack(
+    covData = c(
       covData,
       offsetToLogLogged
       )
@@ -253,7 +253,7 @@ gm.dataRaster = function(
   covariatesSP = as(covariatesStack, "SpatialPointsDataFrame")
   covariatesDF = values(covariatesSP)
 
-  data = stack(data, covData)			
+  data = c(data, covData)			
 
 
 } else {
@@ -263,10 +263,10 @@ gm.dataRaster = function(
 if(any(res(data)>1.25*res(cellsSmall)))
   warning("data is coarser than grid")
 
-data = stack(data, resample(cellsSmall, data, method='near'))	
+data = c(data, resample(cellsSmall, data, method='near'))	
 
 
-dataSP = as(data, "SpatialPointsDataFrame")
+dataSP = as.points(data)
 dataDF = values(dataSP)
 
 # get rid of rows with missing response if lgcp with count response

@@ -238,7 +238,7 @@ if(any(class(coordinates)=='dist'))
 if(length(grep("SpatVect", class(coordinates)))) {
 	if(!nchar(crs(coordinates))) crs(coordinates) = "+proj=utm +zone=1"
 	coordinates=new("dsyMatrix", Dim = rep(length(coordinates), 2), 
-		x = as.vector(as.matrix(distance(coordinates))), uplo='L')
+		x = as.vector(as.matrix(terra::distance(coordinates))), uplo='L')
 }
 
 

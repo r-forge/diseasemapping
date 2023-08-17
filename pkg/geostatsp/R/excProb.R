@@ -120,7 +120,7 @@ if(length(grep("^SpatRaster", class(template)))) {
 							nrow=nrow(template),ncol=ncol(template),
 							byrow=FALSE))
 	} else {
-		values(template) = excProbAll
+		terra::setValues(template, excProbAll)
 	}
 	excProbAll = template
 	names(excProbAll) = paste("exc","random"[random], threshold, sep="")

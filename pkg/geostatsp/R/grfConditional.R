@@ -102,7 +102,7 @@ simFun = function(D) {
 	
 }
 	if(all(unlist(sapply(result, class))=="RasterLayer"))
-		result = do.call(brick, result)
+		result = do.call(terra::c, result)
 
 result	
 }
