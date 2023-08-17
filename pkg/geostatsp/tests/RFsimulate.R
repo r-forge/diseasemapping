@@ -24,10 +24,13 @@ for(D in 1:length(names(simu))) {
 }
 
 
+xPoints = suppressWarnings(
+  as.points(myraster)[
+      sample(ncell(myraster), 12),]
+)
   simu2 = RFsimulate(
     model = rbind(a=model, b=model+0.1), 
-    x=as.points(myraster)[
-      sample(ncell(myraster), 12),]
+    x= xPoints
    )
   
   
@@ -136,23 +139,12 @@ for(D in 1:length(names(simu))) {
     swissRes$param[ "CHE_alt" ] * swissAltSmall
   
 # define a function to identify the location of maximum rainfall	
-  maxRainLocation = function(x, ...) {
-    rain =  (rainMean + x)^2
-    which.max(rain)
-  }
   
-  
-  swissLocation = global(swissSim,   maxRainLocation)
-  swissLocation = xyFromCell(swissSim, swissLocation)
+  swissLocation = terra::global(swissSim,   which.max)
+  swissLocation = xyFromCell(swissSim, unlist(swissLocation))
   plot(swissRes$predict[["predict"]])
   plot(swissBorder, add=TRUE)
   points(swissLocation)
   
   options(original)
   
-
-
-
-
-
-
