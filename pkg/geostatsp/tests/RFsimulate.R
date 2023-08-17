@@ -7,26 +7,20 @@ theCrs = "+proj=utm +zone=17 +datum=NAD27 +units=m +no_defs"
 
 # don't test using the randomFields package, it's currently broken on some R builds
 options(useRandomFields = FALSE)
+
   myraster = raster(nrows=20,ncols=20,xmn=100,ymn=100,xmx=110,ymx=110, 
     crs=theCrs)
 
 set.seed(0)
 simu = RFsimulate(rbind(a=model, b=model+0.1), 
-  x=myraster, n=3
-)
-
-set.seed(0)
-simu2 = RFsimulate(rbind(a=model, b=model+0.1), 
-  x=as(myraster,"SpatialPixels"),
-  n=3
+  x=myraster, n=4
 )
 
 
-par(mfrow=c(length(names(simu2)),2))
+par(mfrow=c(ceiling(length(names(simu))/2), 2))
 
-for(D in 1:length(names(simu2))) {
+for(D in 1:length(names(simu))) {
   plot(simu[[D]])
-  plot(raster(simu2,layer=D))
 }
 
 
