@@ -129,7 +129,7 @@ krigeLgm = function(
 		  meanFixedEffects = 
 				  rep(meanForRaster, ncell(locations))
 		  meanRaster = locations
-		  values(meanRaster) = meanFixedEffects	
+		  terra::values(meanRaster) = meanFixedEffects	
 	 }
 	 
 	 
@@ -154,7 +154,7 @@ krigeLgm = function(
 		    meanFixedEffects = rep(NA, ncell(locations))
 		    meanFixedEffects[as.integer(names(meanForRaster))] = meanForRaster
 		    meanRaster = locations
-		    values(meanRaster) = meanFixedEffects
+		    terra::values(meanRaster) = meanFixedEffects
       
       
 		  }	
@@ -393,7 +393,7 @@ krigeLgm = function(
         
 		      method = resampleMethods(formula, covariates)
 		      
-		      covariates = stackRasterList(covariates,template=locations, method=method)
+		      covariates = stackRasterList(covariates, template=locations, method=method)
         
 		      theVars = do.call('intersect',
           dimnames(attributes(terms(trendFormula))$factors))
@@ -448,9 +448,9 @@ krigeLgm = function(
 	     if(any(anyNA)) {
 		      oldmm = rep(NA, ncell(meanRaster))
 		      oldmm[!anyNA] = meanFixedEffects
-		      values(meanRaster) = oldmm
+		      terra::values(meanRaster) = oldmm
 	     } else {
-		      values(meanRaster) = meanFixedEffects
+		      terra::values(meanRaster) = meanFixedEffects
 	     }
 	     
       
@@ -468,9 +468,9 @@ krigeLgm = function(
 	   } else { #no covariates	
       
 		    if(any(names(param)=='(Intercept)')) {
-			     values(meanRaster) = param['(Intercept)'] 
+			     terra::values(meanRaster) = param['(Intercept)'] 
 		    } else {
-			     values(meanRaster) = 0
+			     terra::values(meanRaster) = 0
 		    }
 		    meanForData = rep(values(meanRaster)[1], length(observations))
 	   }
@@ -608,7 +608,7 @@ krigeLgm = function(
 	 
 	 randomRaster = rast(meanRaster)
 	 names(randomRaster) = "random"
- 	values(randomRaster) = as.vector(forExpected)
+ 	terra::values(randomRaster) = as.vector(forExpected)
 	 
 
 	 predRaster = meanRaster + randomRaster
@@ -625,10 +625,10 @@ krigeLgm = function(
 	 names(krigeSd) = "krigeSd"
   
   if(nuggetInPrediction) {
-		  values(krigeSd) = sqrt(sum(param[c("nugget","variance")]) - 
+		  terra::values(krigeSd) = sqrt(sum(param[c("nugget","variance")]) - 
 						  as.vector(forVar))
 	 } else {
-		  values(krigeSd) = sqrt(param["variance"] - as.vector(forVar))
+		  terra::values(krigeSd) = sqrt(param["variance"] - as.vector(forVar))
 	 }
 	 
   names(meanRaster) = "fixed"
@@ -650,15 +650,15 @@ krigeLgm = function(
     newraster=rast(result[["predict.boxcox"]])
     names(newraster) = "predict"
     if(is.matrix(bcpred)){
-      values(newraster) = bcpred[,'predict']
-      add(result) = newraster
+      terra::values(newraster) = bcpred[,'predict']
+      terra::add(result) = newraster
 #      names(newraster) = 'probComplex.boxcox'
 #      values(newraster) = bcpred[,'probComplex.boxcox']
 #      result = addLayer(result, 
 #          newraster)
     } else {
-      values(newraster) = bcpred
-      add(result) = newraster
+      terra::values(newraster) = bcpred
+      terra::add(result) = newraster
     }
     
     
@@ -671,7 +671,7 @@ krigeLgm = function(
 		  names(result)[names(result)=="predict"] = "predict.log"
 		  newLayer = exp(result[["predict.log"]]+ 0.5*result[["krigeSd"]]^2 )
 		  names(newLayer) = "predict"
-      add(result) = newLayer
+      terra::add(result) = newLayer
 
 		  
 	 } # end expPred

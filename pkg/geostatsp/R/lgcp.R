@@ -20,14 +20,14 @@ lgcp = function(formula=NULL, data,  grid, covariates=NULL,
 # create data
 	
 	if(!missing(border)) {
-		inBorder = over(
+		inBorder = extract(
 			data, 
 			as.polygons(border)
 			)
 		data = data[!is.na(inBorder),]
 	}
 	
-	counts = rasterize(
+	counts = terra::rasterize(
 		data, cells, fun="count")
 	names(counts) = "count"
 	counts[is.na(counts)] = 0
@@ -80,17 +80,17 @@ lgcp = function(formula=NULL, data,  grid, covariates=NULL,
 	
 	# cell size offset
 
-	if(length(grep("^Raster", class(covariates)))) {
+	if(length(grep("SpatRaster", class(covariates)))) {
 		# add a raster layer for log cell size
-		logCellSize = raster(covariates)
-		values(logCellSize) = sum(log(res(cells)))
+		logCellSize = rast(covariates)
+		terra::values(logCellSize) = sum(log(res(cells)))
 		names(logCellSize) = 'logCellSize'
-		add(covariates) = logCellSize
+		terra::add(covariates) = logCellSize
 	} else {
 		# create a raster and put it in the covariate list
 		logCellSize = cells
 		names(logCellSize) = "logCellSize"
-		values(logCellSize) =  sum(log(res(cells)) )
+		terra::values(logCellSize) =  sum(log(res(cells)) )
 		if(length(covariates)){
 			covariates = c(covariates, logCellSize=logCellSize)
 		} else {

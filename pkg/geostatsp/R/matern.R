@@ -138,7 +138,7 @@ matern.SpatRaster = function(x,
 		)
 	
 	if(Ny ==1) {
-		values(x) = resC$result		
+		terra::values(x) = resC$result		
 	} else {
 		if(symm){
 			x = new("dpoMatrix", 

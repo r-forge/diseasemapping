@@ -50,7 +50,7 @@ loglikLgm = function(param,
 		}
 	} else {
 		warning("coordinates must be a SpatVect object\n or matrix a dist object.  It's being assumed \n it's a matrix of coordinates")
-		coordinates = SpatialPoints(coordinates)
+		coordinates = vect(coordinates)
 		if(length(theNA))				
 			coordinates = coordinates[-theNA,]
 	}
@@ -125,7 +125,7 @@ if(any(class(coordinates)=='matrix')|
 	ycoord=crds(coordinates)[,2]
 	aniso=TRUE
 } else {
-	warning('coordinates should be SpatialPoints or matrix')
+	warning('coordinates should be SpatVector or matrix')
 	xcoord=ycoord=aniso=NULL
 }
 
@@ -236,7 +236,7 @@ if(any(class(coordinates)=='dist'))
 
 
 if(length(grep("SpatVect", class(coordinates)))) {
-	if(!nchar(crs(coordinates))) crs(coordinates) = "+proj=utm +zone=1"
+	if(!nchar(crs(coordinates))) terra::crs(coordinates) = "+proj=utm +zone=1"
 	coordinates=new("dsyMatrix", Dim = rep(length(coordinates), 2), 
 		x = as.vector(as.matrix(terra::distance(coordinates))), uplo='L')
 }
