@@ -74,7 +74,7 @@ spatialRocSims = function(
 		
 	templateID = mask(templateID, truthCut[[1]])
 	
-	truthCdf = zonal(
+	truthCdf = terra::zonal(
 			truthCut,
 			templateID,
 			function(x,...) {
@@ -87,14 +87,14 @@ spatialRocSims = function(
 	truthCdf = truthCdf[,grep('zone', colnames(truthCdf), invert=TRUE)]
 	colnames(truthCdf) = paste(
 			rep(names(marginals), 
-					rep(length(Slevels),nlayers(truthCut))
+					rep(length(Slevels),nlyr(truthCut))
 			), 
-			rep(Slevels, nlayers(truthCut)),
+			rep(Slevels, nlyr(truthCut)),
 			sep="_"
 	)
 	truthCdf = array(
 			truthCdf,
-			c(nrow(truthCdf), length(Slevels), nlayers(truthCut)),
+			c(nrow(truthCdf), length(Slevels), nlyr(truthCut)),
 			dimnames = list(
 					rownames(truthCdf),
 					Slevels,

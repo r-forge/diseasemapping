@@ -49,17 +49,20 @@ S3method(variogMcEnv, default)
 import(
   Matrix, methods
 )
-importFrom(terra, 
-  ext, values, levels, aggregate, res, xres, yres,
-  classify, project, crs, yFromRow, colFromCell, rowFromCell,
-  as.polygons, mask, extend, subst,
-  rasterize,
-  xyFromCell, cellFromXY, deepcopy, compareGeom,
-  minmax, nlyr, extract, as.points,
-  rast, vect, setValues, ymax, ymin, xmin, xmax,
-  ncell, crds, crop, resample)
+import(terra)
+#, 
+#  ext, values, levels, aggregate, res, xres, yres,
+#  classify, project, crs, yFromRow, colFromCell, rowFromCell,
+#  as.polygons, mask, extend, subst,
+#  rasterize, zonal, 
+#  xyFromCell, cellFromXY, deepcopy, compareGeom,
+#  minmax, nlyr, extract, as.points,
+#  rast, vect, setValues, ymax, ymin, xmin, xmax,
+#  ncell, crds, crop, resample)
+
 importFrom(numDeriv,hessian)
 importFrom(abind, abind)
+
 #importFrom(pracma, trapz)
 
 

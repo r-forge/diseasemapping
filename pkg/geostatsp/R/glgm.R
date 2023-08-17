@@ -527,7 +527,7 @@ setMethod("glgm",
     names(resRasterRandom) = 
     paste("random.", colnames(forRast),sep="")
 
-    values(resRasterRandom) = as.vector(forRast)
+    terra::values(resRasterRandom) = as.vector(forRast)
 
   } else {
     return(list(inla=inlaResult, parameters=params))
@@ -608,7 +608,7 @@ setMethod("glgm",
     names(resRasterFitted) = 
     paste("predict.", colnames(linc),sep="")
 
-    values(resRasterFitted) = as.vector(linc)
+    terra::values(resRasterFitted) = as.vector(linc)
   }  else {
     resRasterFitted = NULL
   }    

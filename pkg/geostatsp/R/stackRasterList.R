@@ -129,12 +129,12 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 		resultList = mapply(projfun, D=names(x))
 	}
 
-	result = resultList[[1]]
-	if(Nlayers >1) {
-		for(D in 2:Nlayers )
-			add(result) = resultList[[D]]
-	}
-	
+#	result = resultList[[1]]
+#	if(Nlayers >1) {
+#		for(D in 2:Nlayers )
+#			add(result) = resultList[[D]]
+#	}
+result = rast(resultList[[1:Nlayers]])	
 	
 	if(Nlayers == (dim(result)[3]-1) )
 		result = result[[-1]]

@@ -3,9 +3,9 @@
 \alias{glgm}
 \alias{glgm-methods}
 \alias{glgm,ANY,ANY,ANY,ANY-method}
-\alias{glgm,formula,Raster,ANY,ANY-method}
-\alias{glgm,formula,Spatial,ANY,ANY-method}
-\alias{glgm,formula,data.frame,Raster,data.frame-method}
+\alias{glgm,formula,SpatRaster,ANY,ANY-method}
+\alias{glgm,formula,SpatVector,ANY,ANY-method}
+\alias{glgm,formula,data.frame,SpatRaster,data.frame-method}
 
 
 \alias{lgcp}
@@ -18,15 +18,15 @@ Fits a generalized linear geostatistical model or a log-Gaussian Cox process
 using \code{inla} }
 \usage{
 \S4method{glgm}{ANY,ANY,ANY,ANY}(formula, data,  grid, covariates, buffer=0, shape=1, prior, ...) 
-\S4method{glgm}{formula,Raster,ANY,ANY}(formula, data,  grid, covariates, buffer=0, shape=1, prior, ...) 
-\S4method{glgm}{formula,Spatial,ANY,ANY}(formula, data,  grid, covariates, buffer=0, shape=1, prior, ...) 
-\S4method{glgm}{formula,data.frame,Raster,data.frame}(formula, data,  grid, covariates, buffer=0, shape=1, prior, ...) 
+\S4method{glgm}{formula,SpatRaster,ANY,ANY}(formula, data,  grid, covariates, buffer=0, shape=1, prior, ...) 
+\S4method{glgm}{formula,SpatVector,ANY,ANY}(formula, data,  grid, covariates, buffer=0, shape=1, prior, ...) 
+\S4method{glgm}{formula,data.frame,SpatRaster,data.frame}(formula, data,  grid, covariates, buffer=0, shape=1, prior, ...) 
 lgcp(formula=NULL, data,  grid, covariates=NULL, border, ...)
 }
  
 \arguments{
 \item{data}{
-An object of class \code{ SpatialPointsDataFrame} containing the data.
+An object of class \code{ SpatVector} containing the data.
 }
 \item{grid}{Either an integer giving the number of cells in the x direction, or a raster object which 
 will be used for the spatial random effect.  If the cells in the raster are not square, the resolution in the y direction 
@@ -103,7 +103,12 @@ if(Sys.info()['sysname'] =='Linux' &
 
 # geostatistical model for the swiss rainfall data
 require("geostatsp")
+
 data("swissRain")
+swissRain = unwrap(swissRain)
+swissAltitude = unwrap(swissAltitude)
+swissBorder = unwrap(swissBorder)
+
 swissRain$lograin = log(swissRain$rain)
 swissFit =  glgm(formula="lograin", data=swissRain, 
 	grid=30, 

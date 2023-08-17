@@ -178,7 +178,7 @@ setMethod("RFsimulate",
     }
     
     res = deepcopy(x)
-    values(res) = theSim
+    terra::values(res) = theSim
     res
   }
 )

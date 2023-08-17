@@ -13,7 +13,7 @@ result
 			
 variog.SpatVector = function(geodata,formula, ...) {
 	
-  rownames(values(geodata)) =  1:length(geodata)
+  rownames(terra::values(geodata)) =  1:length(geodata)
   theCoords = crds(geodata)
   rownames(theCoords) = 1:length(geodata)
   
@@ -46,7 +46,7 @@ variogMcEnv.default = function(geodata, ...) {
 
 variogMcEnv.SpatVector = function(geodata,formula, ...) {
   
-  rownames(values(geodata)) =  1:length(geodata)
+  rownames(terra::values(geodata)) =  1:length(geodata)
   theCoords = crds(geodata)
   rownames(theCoords) = 1:length(geodata)
   
