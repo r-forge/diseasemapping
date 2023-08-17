@@ -172,7 +172,8 @@ setMethod("glgm",
       'spaceFormula') # override the space formula
 
     if(!any(names(grid)=='space')) {
-      grid = setValues(rast(grid), 1:ncell(grid))
+      grid = rast(grid)
+      setValues(rast(grid), 1:ncell(grid))
       names(grid) = 'space'
     }
 
@@ -517,12 +518,11 @@ setMethod("glgm",
 
 
     forRast = 	as.matrix(inlaResult$summary.random[["space"]][values(cells),])
-    resRasterRandom = 
-    rast(extent=ext(cells), nrows=nrow(cells),
+    resRasterRandom = rast(extent=ext(cells), nrows=nrow(cells),
       ncols=ncol(cells), crs=crs(cells),
       nlyrs=dim(forRast)[2])
-    names(resRasterRandom) = 
-    paste("random.", colnames(forRast),sep="")
+    names(resRasterRandom) = paste("random.", colnames(forRast),sep="")
+
 
     terra::values(resRasterRandom) = as.vector(forRast)
 
@@ -610,11 +610,6 @@ setMethod("glgm",
     resRasterFitted = NULL
   }    
 
-
-
-
-# sum(c(0,diff(params$range$posterior[,"x"])) * params$range$posterior[,"y"])
-# sum(c(0,diff(params$range$prior[,"x"])) * params$range$prior[,"y"])
 
 
   params$summary = inlaResult$summary.fixed
@@ -824,10 +819,11 @@ setMethod("glgm",
 
 getRid = c('random.ID', 'predict.ID', 'predict.space', 'predict.kld')
 
-  resRaster=rast(c(
+  resRaster= c(
     resRasterRandom[[setdiff(names(resRasterRandom), getRid)]], 
     resRasterFitted[[setdiff(names(resRasterFitted), getRid)]], 
-    cells[[setdiff(names(cells), getRid)]]))
+    cells[[setdiff(names(cells), getRid)]])
+
 
   result=list(inla=inlaResult,
     raster=resRaster,

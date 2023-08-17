@@ -266,7 +266,7 @@ if(any(res(data)>1.25*res(cellsSmall)))
 data = c(data, resample(cellsSmall, data, method='near'))	
 
 
-dataSP = as.points(data)
+dataSP = suppressWarnings(as.points(data))
 dataDF = values(dataSP)
 
 # get rid of rows with missing response if lgcp with count response
