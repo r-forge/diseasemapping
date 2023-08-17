@@ -135,7 +135,7 @@ setMethod("RFsimulate",
         warning("error in RandomFields")
         theSim=as.data.frame(matrix(NA, length(x), n))
       } else {
-        theSim = theSim@data
+        theSim = values(theSim)
       }
       names(theSim) = gsub("^variable1(\\.n)?","sim", names(theSim))
       
@@ -256,11 +256,7 @@ setMethod("RFsimulate",
             as.double(ymax(xRaster)), 
             as.double(res(xRaster)[2]), 
             as.integer(nrow(xRaster)),
-            # data 
-# as.double(y@data[,1]),    
-#          as.double(y@coords[,1]), 
-#          as.double(y@coords[,2]), 
-#          N=as.integer(Ny), 
+
             # conditional covariance matrix
             result=as.double(matrix(0, ncell(xRaster), ncell(xRaster))),
             # parameters
@@ -447,7 +443,7 @@ setMethod("RFsimulate",
         err.model= err.model[D], n=1, ...)
       
       result = cbind(
-        resHere@data[,'sim'],
+        values(resHere)[,'sim'],
         result
       )
     }
@@ -455,7 +451,7 @@ setMethod("RFsimulate",
     if(n>1)
       colnames(result) = paste('sim', 1:n, sep='')
     
-    resHere@data	= as.data.frame(result)
+    values(resHere)	= as.data.frame(result)
     
     resHere
   }

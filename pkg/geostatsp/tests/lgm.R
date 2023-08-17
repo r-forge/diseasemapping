@@ -96,13 +96,13 @@ myPoints = SpatialPoints(cbind(runif(Npoints,0,10),
 
 myPoints = RFsimulate(myModel,myPoints)
 
-myPoints@data = cbind(
-    myPoints@data, 
+values(myPoints) = cbind(
+   values(myPoints), 
   as.data.frame(extract(covariates, myPoints))
 )
 
 myPoints$y= myModel["intercept"] +
-		as.matrix(myPoints@data[,names(covariates)]) %*% 
+		as.matrix(values(myPoints)[,names(covariates)]) %*% 
 		myModel[names(covariates)] +
 		myPoints$sim+
 		rnorm(length(myPoints), 0, sqrt(myModel["nugget"]))
@@ -139,7 +139,7 @@ bob(fitMLE)
 
 # not remove covariates from data
 myPoints = SpatialPointsDataFrame(SpatialPoints(myPoints),
-		data=myPoints@data[,"y",drop=FALSE])
+		data=values(myPoints)[,"y",drop=FALSE])
 
 # now give covariates as raster brick
 fitMLE =  lgm(y~ cov1 + cov2,  myPoints, grid=10,  

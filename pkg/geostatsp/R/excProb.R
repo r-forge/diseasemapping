@@ -133,7 +133,7 @@ if(length(grep("SpatVector", class(template)))) {
 		template[[newcol]] = excProbAll
 	} else {
 	template[[newcol]] = 
-			excProbAll[template@data[templateIdCol]]
+			excProbAll[values(template)[templateIdCol]]
 	}
 	excProbAll = template
 } 

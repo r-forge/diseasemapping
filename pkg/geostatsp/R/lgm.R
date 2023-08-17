@@ -250,7 +250,6 @@ setMethod("lgm",
 			param = c(param, Spar)
 
 # to do: make sure factors in rasters are set up correctly
-	   # have baseline as first entry in cov@data@attributes,
 	   # NA's for levels without data
 	   # have most common level the baseline
 

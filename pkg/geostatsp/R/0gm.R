@@ -353,7 +353,7 @@ gm.dataSpatial = function(
 
 
     Sfactors = c(
-      names(data)[unlist(lapply(data@data, is.factor))],
+      names(data)[unlist(lapply(values(data), is.factor))],
       covFactors,
       theFactors
       )
@@ -391,7 +391,7 @@ gm.dataSpatial = function(
     }
 
     # ensure row names are identical
-    rownames(data@data) = rownames(data@coords) = 
+    rownames(values(data)) = rownames(crds(data)) = 
         1:length(data)
   # loop through covariates which aren't in data, extract it from `covariates`
     for(D in setdiff(alltermsPlain, names(data))){

@@ -138,7 +138,7 @@ if(requireNamespace('diseasemapping', quietly=TRUE)){
     	logSumExpected=TRUE
 	)
 	
-	sum(unlist(lapply(popList, function(qq) apply(qq@data, 2, sum, na.rm=TRUE))))
+	sum(unlist(lapply(popList, function(qq) apply(values(qq), 2, sum, na.rm=TRUE))))
 	sum(exp(values(popBrick2)), na.rm=TRUE)*prod(res(popBrick2))
 			
 }

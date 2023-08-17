@@ -50,7 +50,7 @@ spdfToBrick = function(x,
 		nCellTable = table(values(Sid))
 		nCellPerPoly[as.numeric(names(nCellTable))] = nCellTable
 		
-		dataHere = as.matrix(x[[Dcensus]]@data[,
+		dataHere = as.matrix(values(x[[Dcensus]])[,
         grep(pattern, names(x[[Dcensus]])), drop=FALSE
     ]) / nCellPerPoly
 

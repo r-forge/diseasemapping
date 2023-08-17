@@ -85,7 +85,7 @@ lgcp = function(formula=NULL, data,  grid, covariates=NULL,
 		logCellSize = rast(covariates)
 		terra::values(logCellSize) = sum(log(res(cells)))
 		names(logCellSize) = 'logCellSize'
-		terra::add(covariates) = logCellSize
+		add(covariates) = logCellSize
 	} else {
 		# create a raster and put it in the covariate list
 		logCellSize = cells
