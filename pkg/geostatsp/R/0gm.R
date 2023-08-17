@@ -383,7 +383,6 @@ gm.dataSpatial = function(
         template=cellsSmall, 
         method=rmethod)
       covariatesStack = rast(c(cellsSmall, covariatesStack))
-      stuff <<- covariatesStack
       covariatesSP = suppressWarnings(as.points(covariatesStack))
       covariatesDF = values(covariatesSP)
     } else {
