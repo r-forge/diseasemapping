@@ -52,7 +52,7 @@ import(
 importFrom(terra, 
   ext, values, levels, aggregate, res, xres, yres,
   classify, project, crs, yFromRow, colFromCell, rowFromCell,
-  as.polygons, mask, extend, add, subst,
+  as.polygons, mask, extend, subst,
   rasterize,
   xyFromCell, cellFromXY, deepcopy, compareGeom,
   minmax, nlyr, extract, as.points,
