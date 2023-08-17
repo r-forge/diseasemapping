@@ -30,7 +30,7 @@ informationLgm = function(fit, ...) {
   aniso = length(grep("^aniso", reEstimate)) |
     any(abs(moreParams['anisoRatio']-1) > 0.00001,na.rm=TRUE)
   if(!aniso) {
-    coordinates = as(spDists(fit$data), 'dsyMatrix')  
+    coordinates = as(terra::distance(fit$data), 'dsyMatrix')  
   } else{
     coordinates=fit$data
   }
