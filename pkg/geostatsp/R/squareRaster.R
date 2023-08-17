@@ -33,11 +33,11 @@ setMethod("squareRaster",
 	if(is.null(cells)) {
 		cells = ncol(x)
 	} else {
-		ncol(x) = as.integer(cells[1])
+		terra::ncol(x) = as.integer(cells[1])
 	}
 	Ny = ceiling(signif( (ymax(x) - ymin(x))/xres(x), 10) )
-	ymax(x) = ymin(x) + Ny*xres(x)
-	nrow(x) = Ny
+	terra::ymax(x) = ymin(x) + Ny*xres(x)
+	terra::nrow(x) = Ny
 	extend(x, round(buffer/xres(x)))
 })
 
@@ -47,6 +47,6 @@ setMethod("squareRaster",
 	
 	result = squareRaster(ext(x), cells, buffer)
 #	proj4string(result) = proj4string(x)
-	crs(result) = crs(x)
+	terra::crs(result) = crs(x)
 	result
 })
