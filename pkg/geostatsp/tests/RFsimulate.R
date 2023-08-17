@@ -8,7 +8,7 @@ theCrs = "+proj=utm +zone=17 +datum=NAD27 +units=m +no_defs"
 # don't test using the randomFields package, it's currently broken on some R builds
 options(useRandomFields = FALSE)
 
-  myraster = raster(nrows=20,ncols=20,xmn=100,ymn=100,xmx=110,ymx=110, 
+  myraster = rast(nrows=20,ncols=20,extent = ext(100,110,100,110), 
     crs=theCrs)
 
 set.seed(0)
@@ -31,8 +31,8 @@ for(D in 1:length(names(simu))) {
    )
   
   
-    par(mfrow=c(nlayers(simu),2))
-    for(D in 1:nlayers(simu)) {
+    par(mfrow=c(nlyr(simu),2))
+    for(D in 1:nlyr(simu)) {
       plot(simu[[D]])
       plot(simu2)
     }
@@ -150,8 +150,7 @@ for(D in 1:length(names(simu))) {
   
   options(original)
   
-  
-}
+
 
 
 

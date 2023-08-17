@@ -391,7 +391,7 @@ gm.dataSpatial = function(
     }
 
     # ensure row names are identical
-    rownames(values(data)) = rownames(crds(data)) = 
+    rownames(terra::values(data)) = rownames(terra::crds(data)) = 
         1:length(data)
   # loop through covariates which aren't in data, extract it from `covariates`
     for(D in setdiff(alltermsPlain, names(data))){

@@ -50,15 +50,6 @@ import(
   Matrix, methods
 )
 import(terra, except='na.omit')
-#, 
-#  ext, values, levels, aggregate, res, xres, yres,
-#  classify, project, crs, yFromRow, colFromCell, rowFromCell,
-#  as.polygons, mask, extend, subst,
-#  rasterize, zonal, 
-#  xyFromCell, cellFromXY, deepcopy, compareGeom,
-#  minmax, nlyr, extract, as.points,
-#  rast, vect, setValues, ymax, ymin, xmin, xmax,
-#  ncell, crds, crop, resample)
 
 importFrom(numDeriv,hessian)
 importFrom(abind, abind)
