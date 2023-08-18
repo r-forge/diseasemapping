@@ -160,7 +160,7 @@ res = lgcp(
 	data=myPoints, 
 	grid=squareRaster(ext(0,1,0,1), 20), covariates=mycov,
 	prior=list(sd=c(0.9, 1.1), range=c(0.4, 0.41),
-	control.inla = list(strategy='gaussian'))
+	control.inla = list(strategy='gaussian'), verbose=TRUE)
 )
 if(length(res$parameters)) {  
 	plot(res$raster[["predict.exp"]])

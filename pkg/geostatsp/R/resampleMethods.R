@@ -62,7 +62,7 @@ setMethod("resampleMethods",
 		function(formula, covariates, data=NULL){
 
 # decide which method to use when reprojecting covariates
-			# factors must be ngb, numerics are bilinear
+			# factors must be near, numerics are bilinear
       
       allVars = all.vars(formula)
       allVars = intersect(allVars, names(covariates))

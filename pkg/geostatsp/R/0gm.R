@@ -78,11 +78,15 @@ gm.dataRaster = function(
   inModel = gsub(
     "(,([[:alnum:]]|=|[[:space:]])+)?\\)$",#+?[[:space:]]?\\)[[:space:]]?$",
     "", inModel)
-  
+
+
   offsetToLogOrig = grep(
     "^offset\\([[:print:]]+,log=TRUE\\)$", 
     gsub("[[:space:]]+", "", alltermsFull))
+
+
   offsetToLogOrig = alltermsFull[offsetToLogOrig]
+
   if(length(offsetToLogOrig)) {
     names(offsetToLogOrig) = gsub(
       "^[[:space:]]?offset\\(|,[[:space:]]?log[[:space:]]?=[[:space:]]?TRUE[[:space:]]?\\)[[:space:]]?$",
@@ -100,40 +104,54 @@ gm.dataRaster = function(
   
   inModel = intersect(inModel, names(covariates))
 
+  stuffCC <<- covariates
 
-  if(length(inModel)) {	
-    if(length(grep("^Raster", class(covariates)))) {
+  if(length(inModel)) {
+
+    if(length(grep("SpatRaster", class(covariates)))) {
       covariates = covariates[[inModel]]
     } else {
       covariates = covariates[inModel]
     }
+
     dataFactors = intersect(Sfactor, names(data))
+
     notInData = setdiff(names(covariates), names(data))
+
     
     rmethod = rep("bilinear", length(names(covariates)))
     names(rmethod) = names(covariates)
     rmethod[covFactors] = "near"
+
     
     notLogOffset = ! names(covariates) %in% names(offsetToLogOrig)
+
     if(any(notLogOffset)){
       if(length(grep("SpatRaster", class(covariates)))) {
+
         covariatesForStack = covariates[[which(notLogOffset)]]
+
         covariatesForStackData = 
         covariates[[notInData]]
+
       } else {
         covariatesForStack = covariates[notLogOffset]
         covariatesForStackData = 
         covariates[notInData]
       }
+
       covariatesStack = stackRasterList(
         covariatesForStack,
         cellsSmall, method=rmethod)
 
       covariatesStack = c(cellsSmall, covariatesStack)
+
+
       covData = stackRasterList(
         covariatesForStackData, 
         data, method=rmethod)
-      
+
+
     } else { # only log offset
     covariatesStack = cellsSmall
     covData = NULL
@@ -164,7 +182,7 @@ gm.dataRaster = function(
     offsetToLogCrop = project(
       offsetToLogCrop,
       crs=crs(covariatesStack),
-      method='nearest')
+      method='near')
 
       # aggregate for covariates
     toAggregate = floor(min(res(covariatesStack)/res(offsetToLogCrop)))
@@ -252,7 +270,7 @@ gm.dataRaster = function(
       )
 
   } # end D in names(offsetToLogOrig)
-  print('ee')
+
   covariatesSP = as.points(covariatesStack)
   covariatesDF = values(covariatesSP)
 
@@ -263,7 +281,7 @@ gm.dataRaster = function(
   covariatesDF = data.frame()
 }
 
-print("www")
+
 
 if(any(res(data)>1.25*res(cellsSmall)))
   warning("data is coarser than grid")
@@ -275,16 +293,16 @@ dataSP = suppressWarnings(as.points(data))
 dataDF = values(dataSP)
 
 # get rid of rows with missing response if lgcp with count response
+
 if(names(dataDF)[1] == 'count')
   dataDF = dataDF[!is.na(dataDF$count), ]
-
+  
   # redo factors
 # loop through spatial covariates which are factors
 for(D in intersect(Sfactor, names(covariatesDF))) {
-  print(D)
   theTable = sort(table(dataDF[[D]]), decreasing=TRUE)
   theLevels = levels(covariates[[D]])[[1]]
-  if(is.null(theLevels)) {
+  if(identical(theLevels, "")) {
     theLabels = paste("l", names(theTable),sep="")
   } else {
     theLabels = theLevels[
@@ -297,7 +315,7 @@ for(D in intersect(Sfactor, names(covariatesDF))) {
     labels=theLabels)			
 
 }
-print('qq')
+
 
 list(
   data=dataDF,

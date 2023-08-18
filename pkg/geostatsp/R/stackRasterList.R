@@ -4,11 +4,13 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 		x = list(x)
 	
 	if(any(class(x)=="SpatRaster")) {
-		x = list(x)
-		names(x) =names(x[[1]])
+		x = as.list(x)
+		names(x) =unlist(lapply(x, names))
 	}
+	# TO DO: if x is list of rasters where some are multi-layered
 	
-	
+	if(is.null(names(method))) names(method) = names(x)
+
 	if(is.list(x)) {
 		if(is.null(names(x)))
 			names(x) = paste("c", seq(1, length(x)),sep="")	
@@ -36,7 +38,7 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 
 	funList = list(near=modefun, bilinear=mean)
 	
-	
+
 	template = rast(template)
 	template2 = rast(template)
 	
@@ -82,7 +84,6 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 						dim(x[[D]])[1:2]/dim(template2)[1:2]
 					))
 					if(toAgg > 1) {
-
 						aggFun = funList[[method[D]]]
 						if(is.factor(x[[D]])) {
 							xToAgg = as.numeric(x[[D]])
@@ -96,11 +97,9 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 					} else {
 						xagg = x[[D]]
 					}
-
-					toAdd = resample(xagg, template2, method=method[D])
+					toAdd = terra::resample(xagg, template2, method=method[D])
 				} else { # differenet resolution
 					# different resolution
-
 					toAdd = project(x[[D]], template, method=method[D])
 				} # end different resolution
 				
@@ -120,8 +119,6 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 	} # end projfun
 	
 	# reproject all the rasters
-
-
 	if(!is.null(mc.cores)) {
 		resultList = parallel::mcmapply(
 				projfun, D=names(x),
@@ -130,13 +127,9 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 		resultList = mapply(projfun, D=names(x))
 	}
 
-#	result = resultList[[1]]
-#	if(Nlayers >1) {
-#		for(D in 2:Nlayers )
-#			add(result) = resultList[[D]]
-#	}
-result = rast(resultList[[1:Nlayers]])	
-	
+
+result = rast(resultList[1:Nlayers])	
+
 	if(Nlayers == (dim(result)[3]-1) )
 		result = result[[-1]]
 	result

@@ -166,7 +166,6 @@ setMethod("glgm",
     shape=1, 
     prior, 
     ...) {
-print('y')
 # undocumented options for ...
     getRidDots = c(
       'priorCI', # legacy prior specification
@@ -365,13 +364,17 @@ print(1)
     # get rid of observations with NA's in covariates
   allVars = allVarsP(formulaOrig)
 
+print(allVars)
+  stuff <<- data
+  allVars <<- allVars
+
   if(length(allVars)) {
-    theNA = apply(data[,c(allVars,'space'),drop=FALSE], 
+    theNA = apply(data[,unique(c(allVars,'space')),drop=FALSE], 
       1, function(qq) any(is.na(qq)))
   } else {
     theNA = rep(FALSE, ncol(data))
   }
-
+print(2)
   data = data[!theNA,]
   forInla$data = data
   forInla$formula = formula
@@ -380,7 +383,7 @@ print(1)
   if(any(names(thedots)=='weights'))
     forInla$weights = thedots$weights[!theNA]
 
-
+print(5)
 
     # if model is gaussian, add prior for nugget
   if(!is.null(priorList$sdObs)) {
@@ -408,6 +411,7 @@ print(1)
   if(!length(forInla$lincomb)) 
     forInla = forInla[setdiff(names(forInla), 'lincomb')] 
 
+  print('4')
 
   if(requireNamespace("INLA", quietly=TRUE)) {
     if(identical(forInla$verbose, TRUE)) {

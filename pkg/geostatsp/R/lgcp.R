@@ -108,7 +108,7 @@ lgcp = function(formula=NULL, data,  grid, covariates=NULL,
 	dots$covariates=covariates
 
 print('xx')
-	stuff <<- dots
+	stuffXX <<- dots
 
 	result = do.call(glgm, dots)
 
