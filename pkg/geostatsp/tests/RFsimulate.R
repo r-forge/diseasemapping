@@ -146,5 +146,4 @@ xPoints = suppressWarnings(
   plot(swissBorder, add=TRUE)
   points(swissLocation)
   
-  options(original)
   

@@ -85,8 +85,10 @@ setMethod("glgm",
     prior, 
     ...) {
 
+
     if(is.numeric(grid))
       grid = squareRaster(data, grid)
+
 
     dataCov = gm.dataRaster(
       formula, data,
@@ -164,7 +166,7 @@ setMethod("glgm",
     shape=1, 
     prior, 
     ...) {
-
+print('y')
 # undocumented options for ...
     getRidDots = c(
       'priorCI', # legacy prior specification
@@ -173,11 +175,13 @@ setMethod("glgm",
 
     if(!any(names(grid)=='space')) {
       grid = rast(grid)
-      setValues(rast(grid), 1:ncell(grid))
+      terra::values(grid) = 1:ncell(grid)
       names(grid) = 'space'
     }
 
     allVars = allVarsP(formula)
+
+print(0)
 
     if(!all(allVars %in% names(data)) )
       warning("some covariates seem to be missing: formula ", 
@@ -357,6 +361,7 @@ setMethod("glgm",
   } # end adding lincombs unless lincomb is user-supplied
 
 
+print(1)
     # get rid of observations with NA's in covariates
   allVars = allVarsP(formulaOrig)
 

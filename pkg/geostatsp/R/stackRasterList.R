@@ -44,6 +44,7 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 	# function to reproject rasters
 	projfun = function(D) {
 
+		if(!nchar(crs(x[[D]]))) terra::crs(x[[D]]) = crs(template)
 		if(any(class(x[[D]])=="SpatVector")){
 			if(length(names(x[[D]]))!=1)
 				warning("polygon ", D, "has more than one data column, using the first" )

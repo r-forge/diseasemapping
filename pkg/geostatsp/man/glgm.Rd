@@ -97,7 +97,6 @@ A list with two components named  \code{inla}, \code{raster}, and \code{paramete
 
 # geostatistical model for the swiss rainfall data
 require("geostatsp")
-devtools::load_all("geostatsp")
 data("swissRain")
 swissRain = unwrap(swissRain)
 swissAltitude = unwrap(swissAltitude)
@@ -149,17 +148,17 @@ if(!is.null(swissFit$parameters) ) {
 
 # a log-Gaussian Cox process example
 
-myPoints = SpatialPoints(cbind(rbeta(100,2,2), rbeta(100,3,4)))
-myPoints@bbox = cbind(c(0,0), c(1,1))
+myPoints = vect(cbind(rbeta(100,2,2), rbeta(100,3,4)))
 
-mycov = raster(matrix(rbinom(100, 1, 0.5), 10, 10), 0, 1, 0, 1)
+
+mycov = rast(matrix(rbinom(100, 1, 0.5), 10, 10), extent=ext(0, 1, 0, 1))
 names(mycov)="x1"
 
 
 res = lgcp(
 	formula=~factor(x1),
 	data=myPoints, 
-	grid=20, covariates=mycov,
+	grid=squareRaster(ext(0,1,0,1), 20), covariates=mycov,
 	prior=list(sd=c(0.9, 1.1), range=c(0.4, 0.41),
 	control.inla = list(strategy='gaussian'))
 )

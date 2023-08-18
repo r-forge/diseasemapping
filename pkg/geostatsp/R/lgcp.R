@@ -76,7 +76,7 @@ lgcp = function(formula=NULL, data,  grid, covariates=NULL,
 			}
 		}
 	}
-	
+
 	
 	# cell size offset
 
@@ -106,7 +106,9 @@ lgcp = function(formula=NULL, data,  grid, covariates=NULL,
 	dots$data = counts
 	dots$grid = cells
 	dots$covariates=covariates
-	
+
+print('xx')
+	stuff <<- dots
 
 	result = do.call(glgm, dots)
 

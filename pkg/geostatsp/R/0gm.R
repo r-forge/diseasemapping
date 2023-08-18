@@ -41,6 +41,7 @@ gm.dataRaster = function(
   covariates=NULL,
   buffer=0){
 
+
   if(abs(diff(res(grid)))>0.000001 )
     warning("data is not on a square grid")
   
@@ -98,6 +99,8 @@ gm.dataRaster = function(
   dataFactors = intersect(Sfactor,names(data))
   
   inModel = intersect(inModel, names(covariates))
+
+
   if(length(inModel)) {	
     if(length(grep("^Raster", class(covariates)))) {
       covariates = covariates[[inModel]]
@@ -113,7 +116,7 @@ gm.dataRaster = function(
     
     notLogOffset = ! names(covariates) %in% names(offsetToLogOrig)
     if(any(notLogOffset)){
-      if(length(grep("^Raster", class(covariates)))) {
+      if(length(grep("SpatRaster", class(covariates)))) {
         covariatesForStack = covariates[[which(notLogOffset)]]
         covariatesForStackData = 
         covariates[[notInData]]
@@ -125,7 +128,7 @@ gm.dataRaster = function(
       covariatesStack = stackRasterList(
         covariatesForStack,
         cellsSmall, method=rmethod)
-      
+
       covariatesStack = c(cellsSmall, covariatesStack)
       covData = stackRasterList(
         covariatesForStackData, 
@@ -135,7 +138,6 @@ gm.dataRaster = function(
     covariatesStack = cellsSmall
     covData = NULL
   }
-
 
   for(D in names(offsetToLogOrig)) {
       # loop through offsets which should
@@ -249,8 +251,9 @@ gm.dataRaster = function(
       offsetToLogLogged
       )
 
-  } # end in names(offsetToLogOrig)
-  covariatesSP = as(covariatesStack, "SpatialPointsDataFrame")
+  } # end D in names(offsetToLogOrig)
+  print('ee')
+  covariatesSP = as.points(covariatesStack)
   covariatesDF = values(covariatesSP)
 
   data = c(data, covData)			
@@ -259,6 +262,8 @@ gm.dataRaster = function(
 } else {
   covariatesDF = data.frame()
 }
+
+print("www")
 
 if(any(res(data)>1.25*res(cellsSmall)))
   warning("data is coarser than grid")
@@ -276,6 +281,7 @@ if(names(dataDF)[1] == 'count')
   # redo factors
 # loop through spatial covariates which are factors
 for(D in intersect(Sfactor, names(covariatesDF))) {
+  print(D)
   theTable = sort(table(dataDF[[D]]), decreasing=TRUE)
   theLevels = levels(covariates[[D]])[[1]]
   if(is.null(theLevels)) {
@@ -291,6 +297,7 @@ for(D in intersect(Sfactor, names(covariatesDF))) {
     labels=theLabels)			
 
 }
+print('qq')
 
 list(
   data=dataDF,
