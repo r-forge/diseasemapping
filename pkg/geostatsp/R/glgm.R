@@ -180,7 +180,6 @@ setMethod("glgm",
 
     allVars = allVarsP(formula)
 
-print(0)
 
     if(!all(allVars %in% names(data)) )
       warning("some covariates seem to be missing: formula ", 
@@ -360,13 +359,9 @@ print(0)
   } # end adding lincombs unless lincomb is user-supplied
 
 
-print(1)
     # get rid of observations with NA's in covariates
   allVars = allVarsP(formulaOrig)
 
-print(allVars)
-  stuff <<- data
-  allVars <<- allVars
 
   if(length(allVars)) {
     theNA = apply(data[,unique(c(allVars,'space')),drop=FALSE], 
@@ -374,7 +369,7 @@ print(allVars)
   } else {
     theNA = rep(FALSE, ncol(data))
   }
-print(2)
+
   data = data[!theNA,]
   forInla$data = data
   forInla$formula = formula
@@ -383,7 +378,6 @@ print(2)
   if(any(names(thedots)=='weights'))
     forInla$weights = thedots$weights[!theNA]
 
-print(5)
 
     # if model is gaussian, add prior for nugget
   if(!is.null(priorList$sdObs)) {
@@ -411,7 +405,6 @@ print(5)
   if(!length(forInla$lincomb)) 
     forInla = forInla[setdiff(names(forInla), 'lincomb')] 
 
-  print('4')
 
   if(requireNamespace("INLA", quietly=TRUE)) {
     if(identical(forInla$verbose, TRUE)) {

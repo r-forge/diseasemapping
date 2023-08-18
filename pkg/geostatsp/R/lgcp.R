@@ -107,8 +107,6 @@ lgcp = function(formula=NULL, data,  grid, covariates=NULL,
 	dots$grid = cells
 	dots$covariates=covariates
 
-print('xx')
-	stuffXX <<- dots
 
 	result = do.call(glgm, dots)
 

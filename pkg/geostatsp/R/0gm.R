@@ -104,7 +104,6 @@ gm.dataRaster = function(
   
   inModel = intersect(inModel, names(covariates))
 
-  stuffCC <<- covariates
 
   if(length(inModel)) {
 
