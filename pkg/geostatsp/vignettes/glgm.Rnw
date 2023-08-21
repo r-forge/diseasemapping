@@ -339,7 +339,7 @@ covariates in data, factors
 
 <<covInDataLevels>>=
 newdat = swissRain
-newdat$landOrig = factor(unlist(raster::factorValues(swissLandType, raster::extract(swissLandType, swissRain),att='Category')))
+newdat$landOrig = extract(swissLandType, swissRain)
 newdat$landRel = relevel(newdat$landOrig, 'Mixed forests')
 
 
@@ -490,8 +490,8 @@ a model with little data, posterior should be same as prior
 
 <<noData, fig.height=3, fig.width=4, fig.cap = 'no data, pc priors', fig.subcap = c('beta','sd','range','scale')>>=  
   
-  data2 = SpatialPointsDataFrame(cbind(c(1,0), c(0,1)),
-    data=data.frame(y=c(0,0), offset=c(-50,-50), x=c(-1,1)))
+  data2 = vect(cbind(c(1,0), c(0,1)),
+    atts=data.frame(y=c(0,0), offset=c(-50,-50), x=c(-1,1)))
 
 if(requireNamespace('INLA', quietly=TRUE)  & fact > 1) {
   
@@ -681,7 +681,7 @@ if(requireNamespace('INLA', quietly=TRUE) ) {
 
 if(length(swissFit$parameters)) {
   swissFit$rasterTwo = setValues(
-    raster::brick(swissFit$raster, nl=2),
+    rast(swissFit$raster, nlyrs=2),
     as.matrix(swissFit$inla$summary.random$space[
       ncell(theGrid)+values(swissFit$raster[['space']]), 
       c('mean','0.5quant')]))
