@@ -71,14 +71,14 @@ NNmat.default = function(N, Ny=N, nearest=3, adjustEdges=FALSE) {
   theraster = rast(extent = ext(0,Nx, 0, Ny), nrows = Ny, ncol = Nx)
   Ncell = ncell(theraster)
   cellSeq = 1:Ncell
-  terra::setValues(theraster, cellSeq)
+  terra::values(theraster) = cellSeq
   # find id's of cells on the border (for edge correction)  
 
  if(any(dim(theraster)[1:2] <= 2*nearest)) {
   stop("grid too small for this many neighbours") 
  }
   innerCells = crop(theraster, 
-      extend(ext(theraster), as.integer(-nearest))
+    ext(as.vector(ext(theraster)) + nearest * c(1,-1,1,-1))
   )
   
   innerCells = sort(values(innerCells))

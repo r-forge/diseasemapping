@@ -68,7 +68,7 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 
 	params=c(range = 3,	shape=2, variance=5^2)
 	
-	myGrid = squareRaster(extent(0,20,0,10), 40)
+	myGrid = squareRaster(ext(0,20,0,10), 40)
 		
 	# precision matrix without adjusting for edge effects
 	precMat =maternGmrfPrec(N=myGrid, param=params) 

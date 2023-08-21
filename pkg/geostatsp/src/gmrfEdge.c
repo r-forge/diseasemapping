@@ -7,7 +7,6 @@ SEXP gmrfEdge(
 		SEXP result
 ){
 
-	SEXP typePrecision; // dense symmetric
 	int Nrow, Ncol;
 	double one = 1.0;
 
@@ -18,16 +17,11 @@ SEXP gmrfEdge(
 			LinvQab,
 			R_DimSymbol))[1];
 
-	PROTECT(typePrecision = NEW_CHARACTER(1));
-	SET_STRING_ELT(typePrecision, 0, mkChar("precision"));
-
-
-
 	maternPoints(
 			points,
-			params,
 			result,
-			typePrecision);
+			params,
+			ScalarInteger(3));
 
 	//	result = crossprod(LinvQab) + result
 	// blas DSYRK https://www.math.utah.edu/software/lapack/lapack-blas/dsyrk.html
@@ -38,6 +32,5 @@ SEXP gmrfEdge(
 			&Ncol
 			FCONE FCONE);
 
-	UNPROTECT(2);
 	return R_NilValue;
 }
