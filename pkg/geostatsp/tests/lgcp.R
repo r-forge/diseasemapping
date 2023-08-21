@@ -1,16 +1,3 @@
-options("rgdal_show_exportToProj4_warnings"="none") 
-if(Sys.info()['sysname'] =='Linux' &
-  requireNamespace("INLA", quietly=TRUE)) {   
-  INLA::inla.setOption(inla.call = 
-      system.file(paste(
-          "bin/linux/",          
-          ifelse(
-            .Machine$sizeof.pointer == 4, 
-            "32", "64"),
-          'bit/inla.static', sep=''),
-        package="INLA")) 
-}
-
 
 havePackages = c(
     'INLA' = requireNamespace('INLA', quietly=TRUE)
@@ -20,10 +7,9 @@ print(havePackages)
 
 # as in example
 require('geostatsp')
-myPoints = SpatialPoints(cbind(rbeta(100,2,2), rbeta(100,3,4)))
-myPoints@bbox = cbind(c(0,0), c(1,1))
+myPoints = vect(cbind(rbeta(100,2,2), rbeta(100,3,4)))
 
-mycov = raster(matrix(rbinom(100, 1, 0.5), 10, 10), 0, 1, 0, 1)
+mycov = rast(matrix(rbinom(100, 1, 0.5), 10, 10), extent=ext(0, 1, 0, 1))
 names(mycov)="x1"
 
 if(all(havePackages)) {

@@ -28,6 +28,9 @@ Converts a summary table for model parameters on the log scale to the natural or
 \examples{
 require("geostatsp")
 data("swissRain")
+swissRain = unwrap(swissRain)
+swissAltitude = unwrap(swissAltitude)
+
 swissRain$lograin = log(swissRain$rain)
 
 if(requireNamespace('INLA', quietly=TRUE)) {

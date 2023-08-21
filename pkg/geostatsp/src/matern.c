@@ -450,14 +450,9 @@ SEXP maternPoints(
     // nugget,
     SEXP type) {
 
-  SEXP halfLogDet;
-  int N;
-//  double *P;
+  SEXP halfLogDet= NEW_NUMERIC(1);
+  int N= Rf_nrows(points);
 
-
-  N = Rf_nrows(points); 
-
-  halfLogDet = NEW_NUMERIC(1);
 
   maternAniso(
       REAL(points), // x
