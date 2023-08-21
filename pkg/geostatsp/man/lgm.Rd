@@ -189,6 +189,7 @@ output from the call to the  \code{\link[stats]{optim}} function.
 data("swissRain")
 swissRain = unwrap(swissRain)
 swissAltitude = unwrap(swissAltitude)
+swissBorder = unwrap(swissBorder)
  
 swissRes =  lgm( formula="rain", 
 	data=swissRain[1:60,], grid=20,
@@ -202,9 +203,6 @@ swissRes$summary
 
 plot(swissRes$predict[["predict"]], main="predicted rain") 
 plot(swissBorder, add=TRUE)
-
-
-options(original)
 
 }
 

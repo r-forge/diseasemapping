@@ -28,33 +28,20 @@ knitr::knit_hooks$set(
         0), cex = 1.25)
 })
 
-options("rgdal_show_exportToProj4_warnings"="none")
-
-if(Sys.info()['sysname'] =='Linux' &
-  requireNamespace("INLA", quietly=TRUE)) {   
-  INLA::inla.setOption(inla.call = 
-      system.file(paste(
-          "bin/linux/",          
-          ifelse(
-            .Machine$sizeof.pointer == 4, 
-            "32", "64"),
-          'bit/inla.static', sep=''),
-        package="INLA")) 
-}
-
 @    
 
 <<packages>>=
 library("geostatsp")
 data('swissRain')
-
-
+swissRain = unwrap(swissRain)
+swissAltitude = unwrap(swissAltitude)
+swissBorder = unwrap(swissBorder)
 
 print(requireNamespace('INLA', quietly=TRUE))
 
 swissRain$lograin = log(swissRain$rain)
 
-swissAltitudeCrop = raster::mask(swissAltitude,swissBorder)
+swissAltitudeCrop = mask(swissAltitude,swissBorder)
 @
 
 
@@ -137,7 +124,7 @@ altSeq = exp(seq(
     log(100), log(5000),
     by = log(2)/5))
 
-swissAltCut = raster::cut(
+swissAltCut = cut(
   swissAltitudeCrop, 
   breaks=altSeq
 )
