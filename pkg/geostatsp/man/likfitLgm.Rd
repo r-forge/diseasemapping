@@ -220,7 +220,7 @@ myres$summary
 
 par(mfrow=c(1,2))
 
-myraster = raster(nrows=30,ncols=30,xmn=0,xmx=1,ymn=0,ymx=1)
+myraster = rast(nrows=30,ncols=30,xmin=0,xmax=1,ymin=0,ymax=1)
 covEst = matern(myraster, y=c(0.5, 0.5), par=myres$param)
 covTrue = matern(myraster, y=c(0.5, 0.5), par=trueParamAniso)
 
