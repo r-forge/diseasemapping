@@ -1,4 +1,3 @@
-options("rgdal_show_exportToProj4_warnings"="none") 
 #+ setup
 library('geostatsp')
 #'
@@ -10,7 +9,7 @@ options(useRandomFields = FALSE)
 
 Ncell =  40
 
-myRaster = squareRaster(extent(0,6000,0,6000), Ncell)
+myRaster = squareRaster(ext(0,6000,0,6000), Ncell)
 
 myParam=c(oneminusar=0.1, conditionalVariance=2.5^2,shape=2)
 myQ = maternGmrfPrec(myRaster, param=myParam)
@@ -42,7 +41,7 @@ plot(myY)
 
 #+ simGrid
 myResR = lgm(formula = sim ~ x, 
-    data=raster::stack(myY, myCov), 
+    data=c(myY, myCov), 
     oneminusar = exp(seq(log(0.05), log(0.2),len=25)),
     nugget = exp(seq(log(5), log(100),len=21)), shape=2, 
     adjustEdges=TRUE,
@@ -168,12 +167,13 @@ if(requireNamespace("mvtnorm", quietly=TRUE))
 
 #+ swissRain
 data('swissRainR')
+swissRainR= unwrap(swissRainR)
 
-anotherx = raster(swissRainR[['alt']])
+anotherx = rast(swissRainR[['alt']])
 values(anotherx) = seq(0,1,len=ncell(anotherx))
 names(anotherx) = "myvar"
 
-swissRainR2 = brick(swissRainR[['alt']], 
+swissRainR2 = c(swissRainR[['alt']], 
     sqrt(swissRainR[['prec1']]),
     anotherx)
 #'
@@ -181,7 +181,7 @@ swissRainR2 = brick(swissRainR[['alt']],
 #+ aggregateIfWindows
 
 if(.Platform$OS.type=='windows') {
-  swissRainR2 = raster::aggregate(swissRainR2, fact=2)
+  swissRainR2 = aggregate(swissRainR2, fact=2)
 }
 #'
 

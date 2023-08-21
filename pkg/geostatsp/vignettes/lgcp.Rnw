@@ -30,8 +30,8 @@ torontoIncome = unwrap(torontoIncome)
 @
 
 
+
 <<Covariates, tidy=FALSE>>=
-# theCrs = mapmisc::omerc(murder, angle=-20)
 	theCrs = "+proj=omerc +lat_0=43.7117469868935 +lonc=-79.3789787759006 +alpha=-20 +gamma=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
 	murderT = project(murder, theCrs)
 	borderT = project(torontoBorder, crs(murderT))

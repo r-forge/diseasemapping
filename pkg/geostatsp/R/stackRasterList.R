@@ -1,5 +1,7 @@
 stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 
+# TO DO: fix with mc.cores > 1, currently pointer error.
+
 	if(any(class(x)=="SpatVector"))
 		x = list(x)
 	

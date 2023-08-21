@@ -54,15 +54,15 @@ mystack
 
 
 mylist = list(
-	a=rast(matrix(1:36, 6, 6,byrow=TRUE), 0,1000,0,1000, 
+	a=rast(matrix(1:36, 6, 6,byrow=TRUE), extent=ext(0,1000,0,1000), 
        crs=myCrs),
-	b=rast(matrix(1:144, 12, 12), -200, 200, -200, 200,
+	b=rast(matrix(1:144, 12, 12), extent=ext(-200, 200, -200, 200),
 	   crs=myCrs),
-	c=rast(matrix(1:100, 10, 10), -5000,5000,-5000,5000, 
+	c=rast(matrix(1:100, 10, 10), extent=ext(-5000,5000,-5000,5000), 
        crs=myCrs)
 	)
 	
-	mystack = stackRasterList(mylist,mc.cores=2)
+	mystack = stackRasterList(mylist, mc.cores=1)
 	mystack
 
 plot(mystack[["b"]], main="stack b")
