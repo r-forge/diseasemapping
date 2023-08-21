@@ -225,7 +225,7 @@ yBC = sqrt(myY + 1 - minValue(myY))
 names(yBC) = names(myY)
 myResBC = lgm(
     formula = sim ~ x, 
-    data=raster::stack(yBC, myCov), 
+    data=c(yBC, myCov), 
     oneminusar = exp(seq(log(0.05), log(0.15), len=11)),
     nugget = exp(seq(log(5), log(50), len=11)),
     shape=2, reml=FALSE, 
@@ -266,7 +266,7 @@ points(myResBC$param['propNugget'], myResBC$param['oneminusar'])
 if(Sys.info()['user'] =='patrick' & FALSE) {
   myResRopt = lgm(
       formula = sim ~ x, 
-      data=raster::stack(myY, myCov), 
+      data=c(myY, myCov), 
       oneminusar = seq(0.05, 0.2,len=4),
       shape=2)		
   

@@ -1,4 +1,3 @@
-options("rgdal_show_exportToProj4_warnings"="none") 
 library('geostatsp')
 
 # exclude this line to use the RandomFields package
@@ -11,8 +10,8 @@ if(interactive()  | Sys.info()['user'] =='patrick') {
 }
 
 set.seed(0)
-mydat = SpatialPointsDataFrame(cbind(seq(0,1,len=n), runif(n)), 
-		data=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 0.5))
+mydat = vect(cbind(seq(0,1,len=n), runif(n)), 
+		atts=data.frame(cov1 = rnorm(n), cov2 = rpois(n, 0.5))
 )
 
 
@@ -97,7 +96,7 @@ myres = likfitLgm(
 pdf("ligfitLgm.pdf")
 par(mfrow=c(1,2))
 
-myraster = raster(nrows=30,ncols=30,xmn=0,xmx=1,ymn=0,ymx=1)
+myraster = rast(nrows=30,ncols=30,xmin=0,xmax=1,ymin=0,ymax=1)
 covEst = matern(myraster, y=c(0.5, 0.5), par=myres$param)
 covTrue = matern(myraster, y=c(0.5, 0.5), par=trueParamAniso)
 
@@ -115,7 +114,7 @@ data("swissRain")
 
 
 sr2 = swissRain
-sr2$elev = raster::extract(swissAltitude, sr2)
+sr2$elev = extract(swissAltitude, sr2)
 swissFitAgain = likfitLgm(data=sr2, 
 		formula=rain~ elev,
 		param=c(range=1000,shape=1,nugget=0.1,boxcox=0.5),
@@ -124,4 +123,3 @@ swissFitAgain = likfitLgm(data=sr2,
 swissFitAgain$par		
 }
 
-options(original)
