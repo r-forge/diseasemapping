@@ -145,10 +145,13 @@ gm.dataRaster = function(
 
       covariatesStack = c(cellsSmall, covariatesStack)
 
-
-      covData = stackRasterList(
-        covariatesForStackData, 
-        data, method=rmethod)
+      if(length(covariatesForStackData)) {
+        covData = stackRasterList(
+          covariatesForStackData, 
+          data, method=rmethod)
+      } else {
+        covData = NULL
+      }
 
 
     } else { # only log offset
@@ -161,13 +164,13 @@ gm.dataRaster = function(
       # be aggregated before taking logs
     offsetToLog = covariates[[D]]
 
-    toCrop = merge(
+    toCrop = union(
       project(
         ext(covariatesStack),
         crs(covariatesStack), 
         crs(offsetToLog)
         ),
-      project(data, crs(data),
+      project(ext(data), crs(data),
         crs(offsetToLog)
         )
       )
@@ -180,7 +183,7 @@ gm.dataRaster = function(
 
     offsetToLogCrop = project(
       offsetToLogCrop,
-      crs=crs(covariatesStack),
+      y=crs(covariatesStack),
       method='near')
 
       # aggregate for covariates
@@ -224,10 +227,10 @@ gm.dataRaster = function(
       formula = update.formula(
         drop.terms(terms(formula), dropx=toDrop, keep.response=TRUE),
         as.formula(
-          paste(".~.", 
+          gsub("[+]$", "", paste(".~.", 
             paste("offset(log", D, ")", sep=''),
             offsetNotLogged, 
-            sep = '+')
+            sep = '+'))
           ) 	
         )
     } else {

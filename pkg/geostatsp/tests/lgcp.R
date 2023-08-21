@@ -69,7 +69,7 @@ plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
 data('murder')
 murder = unwrap(murder)
 data('torontoPop')
-torontoPop = unwrap(torontoPdens)
+torontoPdens = unwrap(torontoPdens)
 torontoIncome = unwrap(torontoIncome)
 torontoBorder = unwrap(torontoBorder)
 
