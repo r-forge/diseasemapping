@@ -8,9 +8,10 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 		names(x) =unlist(lapply(x, names))
 	}
 	# TO DO: if x is list of rasters where some are multi-layered
-	
-	if(is.null(names(method))) names(method) = names(x)
-
+	if(is.null(names(method))) {
+	  method = rep_len(method, length(x))
+	  names(method) = names(x)
+	}
 	if(is.list(x)) {
 		if(is.null(names(x)))
 			names(x) = paste("c", seq(1, length(x)),sep="")	

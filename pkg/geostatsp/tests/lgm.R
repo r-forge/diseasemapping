@@ -1,6 +1,8 @@
-options("rgdal_show_exportToProj4_warnings"="none") 
 library("geostatsp")
 data("swissRain")
+swissRain = unwrap(swissRain)
+swissAltitude= unwrap(swissAltitude)
+swissLandType = unwrap(swissLandType)
 
 bob = function(x) {
 	thepar = x$param

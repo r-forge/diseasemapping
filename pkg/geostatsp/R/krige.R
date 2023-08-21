@@ -323,7 +323,7 @@ krigeLgm = function(
 			       # see if these line up with 
 			       theLevels = gsub(paste("^", D, sep=""),"",paramStartWithD)
 
-			       levelsTable = levels(covariates)[[D]]
+			       levelsTable = levels(covariates[[D]])[[1]]
 
 			       inId = theLevels %in% as.character(levelsTable[,1])
 			       inLabel = theLevels %in% levelsTable[,2]
@@ -343,9 +343,10 @@ krigeLgm = function(
 				        warning("many levels appear missing in covariate", D)
 			       valuesInParams = levelsTable[levelsInTable,1]
           
-			       allValues = unique(covariates[[D]])
+			       allValues = unlist(unique(covariates[[D]]))
+			       allValues = levelsTable[levelsTable[,2] %in% allValues, 1]
 			       dontHave = allValues[!allValues %in% valuesInParams]
-			       forRecla = cbind(dontHave, min(allValues)-1)
+			       forRecla = cbind(dontHave, min(as.vector(minmax(covariates[[D]])))-1)
 			       covariates[[D]] = classify(covariates[[D]], forRecla)
 			       
 			       

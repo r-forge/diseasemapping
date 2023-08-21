@@ -35,9 +35,6 @@ if(require('mapmisc')) {
 
 }
 
-rongelapLL = spTransform(rongelapUTM, gadm@proj4string)
-plot(rongelapLL)
-plot(gadm, add=T)
 
 
 }

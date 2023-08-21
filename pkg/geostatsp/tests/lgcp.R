@@ -67,7 +67,12 @@ plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
 }
 
 data('murder')
+murder = unwrap(murder)
 data('torontoPop')
+torontoPop = unwrap(torontoPdens)
+torontoIncome = unwrap(torontoIncome)
+torontoBorder = unwrap(torontoBorder)
+
 myCov = list(
     pop=torontoPdens,
     inc = log(torontoIncome)
@@ -102,6 +107,7 @@ if(requireNamespace('diseasemapping', quietly=TRUE)){
 	require('diseasemapping')
 	
 	data('kentucky')
+	kentucky = unwrap(kentucky)
 	
 	popList = list(
 			'2002' = kentucky[,c('M.50', 'M.55', 'M.60')],
