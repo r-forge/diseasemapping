@@ -424,6 +424,11 @@ variable is set to a value above 1.
 
 <<longTestsLoa, fig.cap='categorical', fig.subcap = c('predict','range')>>=
   data('loaloa')
+  loaloa = unwrap(loaloa)
+  ltLoa = unwrap(ltLoa)
+  elevationLoa = unwrap(elevationLoa)
+  eviLoa = unwrap(eviLoa)
+
   rcl = rbind(
     # wedlands and mixed forests to forest
     c(5,2),c(11,2),
@@ -431,13 +436,12 @@ variable is set to a value above 1.
     c(9,8),
     # croplands and urban changed to crop/natural mosaid
     c(12,14),c(13,14))
-  ltLoaR = reclassify(ltLoa, rcl)
+  ltLoaR = classify(ltLoa, rcl)
   levels(ltLoaR) = levels(ltLoa)
-  
-  
+    
   elevationLoa = elevationLoa - 750
-  elevLow = reclassify(elevationLoa, c(0, Inf, 0))
-  elevHigh = reclassify(elevationLoa, c(-Inf, 0, 0))
+  elevLow = min(elevationLoa, 0)
+  elevHigh = max(elevationLoa, 0)
   
   covList = list(elLow = elevLow, elHigh = elevHigh, 
     land = ltLoaR, evi=eviLoa)
@@ -456,7 +460,7 @@ if(requireNamespace('INLA', quietly=TRUE)  & fact > 1) {
     shape=2, buffer=25000,
     prior = list(
       sd=log(2), 
-      range = list(prior = 'invgamma', param = c(shape=2,rate=1))),
+      range = 100*1000),
     control.inla = list(strategy='gaussian')
     )
   
