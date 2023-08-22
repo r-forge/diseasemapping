@@ -44,8 +44,7 @@ myResR = lgm(formula = sim ~ x,
     data=c(myY, myCov), 
     oneminusar = exp(seq(log(0.05), log(0.2),len=25)),
     nugget = exp(seq(log(5), log(100),len=21)), shape=2, 
-    adjustEdges=TRUE,
-    mc.cores=1+(.Platform$OS.type=='unix') )		
+    adjustEdges=TRUE)		
 #'
 
 #+ simPlot
@@ -192,8 +191,7 @@ swissResR =  lgm(
     data=swissRainR2, shape=2,
     oneminusar = exp(seq(log(0.05), log(0.1), len=11)),
     nugget = exp(seq(log(0.25), log(2.5), len=11)),
-    adjustEdges=TRUE,
-    mc.cores=1+(.Platform$OS.type=='unix') )		
+    adjustEdges=TRUE )		
 #'
 
 #+ swissRainPlot
@@ -229,7 +227,7 @@ myResBC = lgm(
     oneminusar = exp(seq(log(0.05), log(0.15), len=11)),
     nugget = exp(seq(log(5), log(50), len=11)),
     shape=2, reml=FALSE, 
-    mc.cores=1+(.Platform$OS.type=='unix'), 
+    mc.cores=1, 
     fixBoxcox=FALSE,
     adjustEdges=FALSE)
 #'
@@ -302,7 +300,7 @@ if(Sys.info()['user'] =='patrick' & FALSE) {
       data=swissRainR2, shape=2,
       oneminusar=seq(0.05, 0.1, len=4),
       adjustEdges=FALSE,fixNugget=TRUE,
-      mc.cores=1+(.Platform$OS.type=='unix')
+      mc.cores=1
   )
   
   plot(swissResROptNug$profL$range, type='l')
