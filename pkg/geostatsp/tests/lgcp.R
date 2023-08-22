@@ -46,16 +46,18 @@ knitr::kable(res$parameters$summary, digits=3)
 plot(res$raster[["predict.exp"]])
 plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
 }
+}
 
-if(interactive()  | Sys.info()['user'] =='patrick') {
 
 # some missing values
-
-temp = values(mycov)
+mycov2 = deepcopy(mycov)
+temp = values(mycov2)
 temp[1:4] = NA
-values(mycov) = temp
+values(mycov2) = temp
 
-res = lgcp(data=myPoints, grid=20, covariates=mycov,
+if(all(havePackages)) {
+
+res = lgcp(data=myPoints, grid=20, covariates=mycov2,
 		formula=~factor(x1),
 		priorCI=list(sd=c(0.9, 1.1), range=c(0.4, 0.41))
 )
@@ -65,6 +67,8 @@ if(length(res$parameters)) {
 plot(res$raster[["predict.exp"]])
 plot(myPoints,add=TRUE,col="#0000FF30",cex=0.5)
 }
+}
+
 
 data('murder')
 murder = unwrap(murder)
@@ -79,6 +83,8 @@ myCov = list(
 )
 
 formula = ~ inc + offset(pop, log=TRUE)
+
+if(all(havePackages)) {
 
 resL=lgcp(formula, data=murder, 
     grid=squareRaster(murder, 30),
@@ -98,7 +104,6 @@ if(length(resL$parameters)) {
 
 
 }	
-}
 
 
 # check spdfToBrock
@@ -135,6 +140,5 @@ if(requireNamespace('diseasemapping', quietly=TRUE)){
 			
 }
 	
-options(original)
 
 

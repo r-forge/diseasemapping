@@ -442,15 +442,17 @@ variable is set to a value above 1.
   elevationLoa = elevationLoa - 750
   elevLow = min(elevationLoa, 0)
   elevHigh = max(elevationLoa, 0)
+
+  eviLoa2 = (eviLoa - 1e7)/1e6
   
   covList = list(elLow = elevLow, elHigh = elevHigh, 
-    land = ltLoaR, evi=eviLoa)
+    land = ltLoaR, evi=eviLoa2)
 
 if(requireNamespace('INLA', quietly=TRUE)  & fact > 1) {
   
   
   loaFit = glgm(
-    y ~ land + evi + elHigh + elLow + 
+    y ~ 1 + land + evi + elHigh + elLow + 
       f(villageID, prior = 'pc.prec', param = c(log(2), 0.5),
        model="iid"),
     loaloa,

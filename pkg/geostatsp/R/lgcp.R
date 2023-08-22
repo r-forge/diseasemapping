@@ -82,7 +82,8 @@ lgcp = function(formula=NULL, data,  grid, covariates=NULL,
 
 	if(length(grep("SpatRaster", class(covariates)))) {
 		# add a raster layer for log cell size
-		logCellSize = rast(covariates)
+		covariates = deepcopy(covariates)
+		logCellSize = rast(covariates, nlyrs=1)
 		terra::values(logCellSize) = sum(log(res(cells)))
 		names(logCellSize) = 'logCellSize'
 		add(covariates) = logCellSize
