@@ -192,6 +192,7 @@ setMethod("lgm",
 		fixBoxcox=TRUE,
 		fixNugget = FALSE,
 		...) {
+
 		dataCov = gm.dataSpatial(
 			formula, data, 
 			grid, covariates, buffer)
@@ -217,6 +218,7 @@ setMethod("lgm",
 		fixBoxcox=TRUE,
 		fixNugget = FALSE,
 		...) {
+
 
 		locations = grid
 
@@ -259,8 +261,8 @@ setMethod("lgm",
 			dots$data=data
 			dots$paramToEstimate=paramToEstimate
 			dots$reml = reml
-
 			likRes = do.call(likfitLgm, dots)
+
 # call krige	
 			krigeRes =  krigeLgm(
 				formula=formula,data=data,
@@ -274,6 +276,7 @@ setMethod("lgm",
 
     # add confidence intervals for covariance parameters
 			theInf=informationLgm(res)
+
 			res$varBetaHat = list(beta=res$varBetaHat)
 			names(res) = gsub("varBetaHat", "varParam", names(res))
 			res$varParam$information = theInf$information
@@ -289,7 +292,6 @@ setMethod("lgm",
 				res$summary ['anisoAngleDegrees','Estimated'] = 
 				res$summary ['anisoAngleRadians','Estimated']
 			}
-
 
 
 			if(FALSE){
@@ -312,7 +314,6 @@ setMethod("lgm",
 			theOrder = na.omit(match(theOrder, rownames(res$summary)))
 			notInOrder = (1:nrow(res$summary))[-theOrder]
 			res$summary = res$summary[c(notInOrder,theOrder),]
-
 
 
 	   # if range is very big, it's probably in metres, convert to km

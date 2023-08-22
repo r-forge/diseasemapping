@@ -339,6 +339,9 @@ gm.dataSpatial = function(
 
   if(missing(covariates)) covariates = list()
 
+
+
+
   # check response variable is in data
     if(!all.vars(formula)[1] %in% names(data)){
       warning(paste(
@@ -363,6 +366,27 @@ gm.dataSpatial = function(
         covariates = list()
       }
     }
+
+  # check for missing CRS
+  
+  if(!nchar(crs(data)) | !nchar(crs(grid)) ) {
+    if(nchar(crs(data))) {
+      warning("assigning crs of grid to data")
+      crs(grid) = crs(data)
+    } else if(nchar(crs(grid))) {
+      crs(grid) = crs(data)
+      warning("assigning crs of data to grid")
+    } else if(length(covariates)) {
+        if(nchar(crs(covariates[[1]]))) {
+          warning("assigning crs of first covariate to data")
+          crs(grid) = crs(data) = crs(covariates[[1]])
+        } else {
+          warning("no crs supplied")
+        }
+    } else {
+      warning("no crs supplied")
+    }
+  }
 
     theFactors = grep("^factor", allterms, value=T)
     theFactors = gsub("^factor\\(|\\)$", "", theFactors)
@@ -409,7 +433,7 @@ gm.dataSpatial = function(
         covariates, 
         template=cellsSmall, 
         method=rmethod)
-      covariatesStack = rast(c(cellsSmall, covariatesStack))
+      covariatesStack = c(cellsSmall, covariatesStack)
       covariatesSP = suppressWarnings(as.points(covariatesStack))
       covariatesDF = values(covariatesSP)
     } else {
@@ -432,7 +456,7 @@ gm.dataSpatial = function(
 
 
     # reproject data to grid
-    if(!is.na(crs(cellsSmall))) {
+    if(!identical(crs(cellsSmall), crs(data))) {
         data = project(data, crs(cellsSmall))
     }
     data$space = suppressWarnings(extract(cellsSmall, data, ID=FALSE, mat=FALSE, dataframe=FALSE))
@@ -441,28 +465,36 @@ gm.dataSpatial = function(
   # loop through spatial covariates which are factors
     for(D in intersect(Sfactors, names(covariatesDF))) {
       theLevels = levels(covariates[[D]])[[1]]
-      idCol = grep("^id$", names(theLevels), ignore.case=TRUE)[1]
+      idCol = grep("^id$", names(theLevels), ignore.case=TRUE, value=TRUE)[1]
       if(is.na(idCol)) idCol = 1
       if(D %in% names(theLevels)) {
           labelCol = D
       } else {
           labelCol = grep("^category$|^label$", 
-            names(theLevels), ignore.case=TRUE)[1]
+            names(theLevels), ignore.case=TRUE, value=TRUE)[1]
       }
       if(is.na(labelCol)) labelCol = 2
 
-      if(is.factor(data[[D]])) {
+      dataD = unlist(data[[D]])
+      if(is.factor(dataD)) {
+
         # give covariatesDF factor levels from data
-        if(all(levels(data[[D]]) %in% theLevels[,labelCol])) {
+        if(all(levels(dataD) %in% theLevels[,labelCol])) {
           # match factor levels in data to 
           # factor levels in raster
+        theTable = table(dataD)
+        # make baseline category the most populous category
+        # unless the variable was supplied as a factor in the 'data' argument
+        if(D %in% covFactors) {
+          theTable = sort(theTable, decreasing=TRUE)
+        }
+        if(theTable[1]==0) warning("no data in baseline level ", D)
+        levelsHave = names(theTable)[theTable > 0]
           covariatesDF[[D]] = factor(
-            covariatesDF[[D]],
-            levels = theLevels[
-              match(theLevels[,labelCol], levels(data[[D]])), 
-              idCol],
-            labels = levels(data[[D]])
+            as.character(covariatesDF[[D]]),
+            levels = levelsHave
             )
+          data[[D]] = factor(as.character(dataD), levels = levelsHave)
         } else { 
           # levels in data can't be found in raster levels
           # ignore raster levels
