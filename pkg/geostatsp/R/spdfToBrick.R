@@ -50,7 +50,10 @@ spdfToBrick = function(x,
 		nCellTable = table(values(Sid))
 		nCellPerPoly[as.numeric(names(nCellTable))] = nCellTable
 		
-		dataHere = as.matrix(values(x[[Dcensus]])[,
+		dataHere = as.matrix(
+			values(
+				x[[Dcensus]]
+			)[,
         grep(pattern, names(x[[Dcensus]])), drop=FALSE
     ]) / nCellPerPoly
 
@@ -64,7 +67,7 @@ spdfToBrick = function(x,
 		# polygons not assigned to cells
 		notInRaster = which(! Sx %in% values(Sid))
 		if(length(notInRaster)){
-			polyCentres = vect(x[[Dcensus]][notInRaster,])
+			polyCentres = centroids(x[[Dcensus]][notInRaster,])
 			polyCell = cellFromXY(template, crds(polyCentres))
 			
 			dataNotInRaster = aggregate(
