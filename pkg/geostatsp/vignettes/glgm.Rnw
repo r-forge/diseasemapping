@@ -123,10 +123,11 @@ non-parametric elevation effect
 altSeq = exp(seq(
     log(100), log(5000),
     by = log(2)/5))
+altMat = cbind(altSeq[-length(altSeq)], altSeq[-1], seq(1,length(altSeq)-1))
 
-swissAltCut = cut(
+swissAltCut = classify(
   swissAltitudeCrop, 
-  breaks=altSeq
+  altMat
 )
 names(swissAltCut) = 'bqrnt'
 
@@ -234,7 +235,8 @@ if(requireNamespace('INLA', quietly=TRUE)) {
 covariates are in data
 <<covInData, fig.cap = 'covaraites in data', fig.subcap = c('predict.mean','range')>>=
 newdat = swissRain
-newdat$elev = extract(swissAltitude, swissRain)
+newdat$elev = extract(swissAltitude, swissRain, ID=FALSE)
+swissLandType = unwrap(swissLandType)
 if(requireNamespace('INLA', quietly=TRUE)) {
   swissFit =  glgm(lograin~ elev + land,
     newdat, Ncell, 
@@ -339,7 +341,7 @@ covariates in data, factors
 
 <<covInDataLevels>>=
 newdat = swissRain
-newdat$landOrig = extract(swissLandType, swissRain)
+newdat$landOrig = extract(swissLandType, swissRain, ID=FALSE)
 newdat$landRel = relevel(newdat$landOrig, 'Mixed forests')
 
 
