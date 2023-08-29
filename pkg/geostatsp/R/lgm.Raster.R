@@ -16,13 +16,15 @@ setMethod("lgm",
     
     if(missing(covariates))
       covariates = list()
-    
+
+   
     dataCov = gm.dataRaster(
       formula, data,
-      grid=rast(data),
+      grid=rast(data, nlyrs=1),
       covariates=covariates,
       buffer=0)
     
+
     data=dataCov$data 
     grid=dataCov$grid 
     covariates=dataCov$covariates

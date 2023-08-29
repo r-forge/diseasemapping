@@ -22,7 +22,7 @@ Murder locations
 }
 
 \source{
-Murder data:\url{https://www.thestar.com/news/crime/torontohomicidemap.html}, 
+Murder data:\url{https://mdl.library.utoronto.ca/collections/geospatial-data/toronto-homicide-data-1990-2013}, 
 
 Lights: \url{https://ngdc.noaa.gov/eog/viirs/download_ut_mos.html}
 

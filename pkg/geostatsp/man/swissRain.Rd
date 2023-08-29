@@ -21,7 +21,7 @@ of land cover types.
 }
 \source{
 \url{https://wiki.52north.org/AI_GEOSTATS/AI_GEOSTATSData} and  \url{https://srtm.csi.cgiar.org} and
-\url{https://lpdaac.usgs.gov/product_search/?collections=Combined+MODIS&collections=Terra+MODIS&collections=Aqua+MODIS&view=list}
+\url{https://lpdaac.usgs.gov/data/}
 }
 
 \examples{

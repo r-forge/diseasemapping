@@ -155,9 +155,9 @@ gm.dataRaster = function(
 
 
     } else { # only log offset
-    covariatesStack = cellsSmall
-    covData = NULL
-  }
+      covariatesStack = cellsSmall
+      covData = NULL
+    }
 
   for(D in names(offsetToLogOrig)) {
       # loop through offsets which should
@@ -279,9 +279,9 @@ gm.dataRaster = function(
   data = c(data, covData)			
 
 
-} else {
-  covariatesDF = data.frame()
-}
+  } else { # if length(inmodel)
+    covariatesDF = data.frame()
+  }
 
 
 

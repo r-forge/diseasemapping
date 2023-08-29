@@ -1,7 +1,7 @@
 library('geostatsp')
 matrix(NNmat(7, 7)[,25], 7, 7)
 
-myr = squareRaster(extent(0,600,0,300), 60)
+myr = squareRaster(ext(0,600,0,300), 60)
 theNN = NNmat(myr)
 
 

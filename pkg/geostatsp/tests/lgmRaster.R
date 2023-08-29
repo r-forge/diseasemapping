@@ -187,9 +187,9 @@ if(.Platform$OS.type=='windows') {
 #+ swissRainFit
 
 swissResR =  lgm(
-    formula=layer ~ alt+ myvar, 
+    formula=prec1 ~ alt+ myvar, 
     data=swissRainR2, shape=2,
-    oneminusar = exp(seq(log(0.05), log(0.1), len=11)),
+    oneminusar = exp(seq(log(0.01), log(0.1), len=11)),
     nugget = exp(seq(log(0.25), log(2.5), len=11)),
     adjustEdges=TRUE )		
 #'
@@ -219,7 +219,7 @@ mapmisc::legendBreaks("topright", breaks = Sbreaks, col=myCol$col)
 #+ boxCox
 
 
-yBC = sqrt(myY + 1 - minValue(myY))
+yBC = sqrt(myY + 1 - min(minmax(myY)))
 names(yBC) = names(myY)
 myResBC = lgm(
     formula = sim ~ x, 
@@ -296,7 +296,7 @@ if(Sys.info()['user'] =='patrick' & FALSE) {
   
 # optimize only nugget
   swissResROptNug =  lgm(
-      formula=layer ~ alt+ myvar, 
+      formula=prec1 ~ alt+ myvar, 
       data=swissRainR2, shape=2,
       oneminusar=seq(0.05, 0.1, len=4),
       adjustEdges=FALSE,fixNugget=TRUE,
