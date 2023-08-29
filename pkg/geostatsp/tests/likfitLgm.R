@@ -111,9 +111,9 @@ if(interactive()  | Sys.info()['user'] =='patrick') {
   
 library("geostatsp")
 data("swissRain")
+swissAltitude = unwrap(swissAltitude)
 
-
-sr2 = swissRain
+sr2 = unwrap(swissRain)
 sr2$elev = extract(swissAltitude, sr2)
 swissFitAgain = likfitLgm(data=sr2, 
 		formula=rain~ elev,

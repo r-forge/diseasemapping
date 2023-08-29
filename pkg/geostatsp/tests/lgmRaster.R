@@ -307,5 +307,4 @@ if(Sys.info()['user'] =='patrick' & FALSE) {
 }
 
 
-options(original)
 #'
