@@ -69,7 +69,7 @@ wrapPoly = function(x, crs, buffer.width = 100*1000) {
 }
 
 llCropBox = function(crs, 
-  buffer.width=100*1000, densify.interval = 25*1000, 
+  buffer.width=50*1000, densify.interval = 25*1000, 
   crop.distance = 2.1e7, crop.poles = FALSE, crop.leftright=FALSE,
   remove.holes=TRUE, cycles = 2, ellipse = NULL) {
 
