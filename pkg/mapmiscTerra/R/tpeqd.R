@@ -45,7 +45,9 @@ tpeqd = function(x, offset=c(0,0), axis='enu'){
     res = res[[1]]
       
 
-  thebox = llCropBox(res, buffer.width=100*1000, densify.interval = 20*1000, crop.leftright=TRUE, remove.holes=TRUE) 
+  thebox = llCropBox(res, buffer.width=100*1000, 
+    densify.interval = 20*1000, 
+    crop.leftright=TRUE, remove.holes=TRUE) 
    
   attributes(res)[names(thebox)] = thebox
 

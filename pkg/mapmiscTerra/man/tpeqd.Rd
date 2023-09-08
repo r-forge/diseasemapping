@@ -38,24 +38,6 @@ A coordinate reference system is returned
 
 data('worldMap');worldMap=unwrap(worldMap)
 
-myCrs = tpeqd(rbind(c(0,0), c(10,50)))
-map.new(myCrs, col='lightblue')
-
-plot(project(worldMap, crsLL))
-plot(attributes(myCrs)$crop, col='red', add=TRUE)
-
-data('netherlands')
-nldCities = terra::unwrap(nldCities)
-
-tcrs = tpeqd(x=nldCities[1:2,])
-
-nldT = project(nldCities, tcrs)
-
-
-map.new(nldT)
-text(nldT,labels=nldT$name)
-scaleBar(nldT, 'topright')
-
 
 thepoints = vect(rbind(cbind(139, 35), cbind(360-118,35)), crs=crsLL)
 crsTwo = tpeqd(thepoints)
