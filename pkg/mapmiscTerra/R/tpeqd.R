@@ -44,7 +44,6 @@ tpeqd = function(x, offset=c(0,0), axis='enu'){
   if(length(res)[[1]])
     res = res[[1]]
       
-  piSeq = seq(0, 2*pi, len=1001)[-1]
 
   thebox = llCropBox(res, buffer.width=100*1000, densify.interval = 20*1000, crop.leftright=TRUE, remove.holes=TRUE) 
    
