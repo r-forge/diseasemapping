@@ -21,13 +21,7 @@ attributes(casedata)$casecol = casecol
 
 morethanoneyear = class(popdata)=="list"
 
-#if s() is in formula, use GAM
-useGam <- length(grep("s\\(",formula))>0
-if(useGam & requireNamespace("mgcv", quietly = TRUE)) {
-  modelFittingFunction = mgcv::gam
-} else {
-  modelFittingFunction = stats::glm
-}
+
 
 #is SP or not
 if(morethanoneyear){
@@ -199,16 +193,24 @@ if(!is.null(fit.numeric)){
 #if(length(S)==1) formula=update.formula(formula, todel)
 
 # add cases and logpop to formula
-formula1 = stats::update.formula(formula, 
+formula1 = stats::update.formula(
+    formula, 
 		stats::as.formula(paste(casecol," ~ offset(logpop) + ."))
 )
 #return(newdata, formula1)
 
+#if s() is in formula, use GAM
+useGam <- length(grep("s\\(",formula))>0
+if(useGam & requireNamespace("mgcv", quietly = TRUE)) {
+  model <-  mgcv::gam(formula = formula1, family = family, data=newdata)
+} else {
+  model <-  stats::glm(formula = formula1, family = family, data=newdata)
+}
 
 #fit model, if there is an error, return data only
 options(show.error.messages = FALSE)
  
-model <- modelFittingFunction(formula1, family=family, data=newdata)
+model <- modelFittingFunction(formula = formula1, family=family, data=newdata)
 
 if(class(model)[1]=="try-error"){
   warning(model[1],"Only Data will be returned")

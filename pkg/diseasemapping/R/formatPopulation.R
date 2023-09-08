@@ -9,9 +9,10 @@ setGeneric('formatPopulation',
 
 setMethod("formatPopulation", 
 		signature("SpatVector"),
-		function(popdata, ...) {
-			
-			methods::callGeneric(values(popdata), ...)
+		function(popdata, aggregate.by=NULL, breaks=NULL, ...) {
+
+			popdata = values(popdata)
+			methods::callGeneric()
 			
 		}                         
 )
@@ -20,7 +21,8 @@ setMethod("formatPopulation",
 setMethod("formatPopulation", 
 		signature("data.frame"),
 		function(popdata, aggregate.by=NULL, breaks=NULL,...) {
-			
+
+
 			ageBreaks = getBreaks(names(popdata), breaks)
 			
 			####reshape the popdata:
@@ -45,24 +47,21 @@ setMethod("formatPopulation",
 			
 			
 			row.names(poplong)<-NULL
+
 			
 			if(length(aggregate.by)) {
 				aggregateByMatch = grep(
 						paste("^(", paste(aggregate.by, collapse='|'), ")$", sep=''),
 						names(poplong),
 						value=TRUE, ignore.case=TRUE)
-				popa <- stats::aggregate(
-						poplong$POPULATION, 
+				poplong <- stats::aggregate(
+						poplong[,'POPULATION', drop=FALSE], 
 						poplong[, aggregateByMatch, drop=FALSE], 
 						sum, na.rm=TRUE)
 				
-				# change x column name to 'population'
-				names(popa)[names(popa)=="x"] = "POPULATION"
-				names(popa)[names(popa)=="poplong[, aggregate.by]"] = aggregate.by
-				poplong<-popa
-				
 			}
 			
+	
 			if(length(sexcol)) poplong[,sexcol] <- toupper(poplong[,sexcol])
 			attributes(poplong)$breaks = ageBreaks
 			

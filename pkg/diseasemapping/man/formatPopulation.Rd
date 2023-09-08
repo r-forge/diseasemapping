@@ -64,8 +64,11 @@ kentucky = terra::unwrap(kentucky)
 head(terra::values(kentucky))
 poptry <- formatPopulation(kentucky, breaks = c(seq(0, 80, by=10), Inf))
 head(poptry)
-poptryagg <- formatPopulation(kentucky, breaks = c(seq(0, 80, by=10), Inf), 
+poptryagg <- formatPopulation(kentucky, 
+  breaks = c(seq(0, 80, by=10), Inf), 
   aggregate.by=c("sex", "age"))
 head(poptryagg)
 }
+
+
  
