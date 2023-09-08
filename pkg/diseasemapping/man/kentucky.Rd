@@ -48,14 +48,14 @@ kentuckyTract = unwrap(kentuckyTract)
 
 length(kentuckyTract)
 
+
 if(require('mapmisc', quietly=TRUE)) {
 	mycol = colourScale(kentucky2$SMR, 
 		breaks=10, dec=-log10(0.5), style='quantile')
-	map.new(kentucky2)
-	plot(kentucky2, col=mycol$plot, border='#00000040',add=TRUE)
+	plot(kentucky2, col=mycol$plot, border='#00000040')
 	legendBreaks('topright', mycol)
 } else {
-	plot(kentucky2)
+	terra::plot(kentucky2)
 }
 
 breaks = c(0,1,seq(2, ceiling(max(kentucky2$SMR,na.rm=TRUE)),by=2))

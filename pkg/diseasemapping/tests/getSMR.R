@@ -20,9 +20,7 @@ if(require('mapmisc', quietly=TRUE)) {
     dec=0,opacity=c(0.6,1)
   )
 
-  map.new(kentucky)
-#  plot(kmap,add=TRUE)
-  plot(kentucky1, col=col$plot,add=TRUE)
+  plot(kentucky1, col=col$plot)
   legendBreaks('topleft', col)
 }
 
@@ -52,9 +50,7 @@ if(require('mapmisc', quietly=TRUE)) {
         rev=TRUE
     )
     
-    map.new(kentucky)
- #   plot(kmap,add=TRUE)
-    plot(kentucky1, col=col$plot,add=TRUE)
+    plot(kentucky1, col=col$plot)
     legendBreaks('topleft', col)
 
     
@@ -65,9 +61,7 @@ if(require('mapmisc', quietly=TRUE)) {
   breaks=col$breaks,opacity=c(0.6,1)
   )
   
-  map.new(kentucky)
-#  plot(kmap,add=TRUE)
-  plot(kentucky2, col=col$plot,add=TRUE)
+  plot(kentucky2, col=col$plot)
   legendBreaks('topleft', col)
   
 }
@@ -115,9 +109,7 @@ if(require('mapmisc', quietly=TRUE)) {
       rev=TRUE
   )
   
-  map.new(kentucky)
-#  plot(kmap,add=TRUE)
-  plot(kentucky4[[1]], col=col$plot,add=TRUE)
+  plot(kentucky4[[1]], col=col$plot)
   legendBreaks('topleft', col)
   
   
@@ -129,9 +121,7 @@ if(require('mapmisc', quietly=TRUE)) {
       rev=TRUE
   )
   
-  map.new(kentucky)
-#  plot(kmap,add=TRUE)
-  plot(kentucky4[[2]], col=col$plot,add=TRUE)
+  plot(kentucky4[[2]], col=col$plot)
   legendBreaks('topleft', col)
   
 }

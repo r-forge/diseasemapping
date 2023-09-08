@@ -252,31 +252,27 @@ colFit = colourScale(kBYM$data$fitted.exp,
 		breaks=6, dec=1, style='equal')
 
 
-map.new(kBYM$data)
-plot(kBYM$data, col=colFit$plot, add=TRUE)
+plot(kBYM$data, col=colFit$plot)
 legendBreaks('topleft', colFit, cex=thecex)
 
 colFitPc = colourScale(kBYMpc$data$fitted.exp,
 		breaks=colFit$breaks, style='fixed',
 		col=colFit$col)
 
-map.new(kBYM$data)
-plot(kBYMpc$data, col=colFitPc$plot, add=TRUE)
+plot(kBYMpc$data, col=colFitPc$plot)
 legendBreaks('topleft', colFitPc, cex=thecex)
 
 colR = colourScale(kBYM$data$random.mean,
 		breaks=12, dec=-log10(0.05), style='equal')
 
-map.new(kBYM$data)
-plot(kBYM$data, col=colR$plot, add=TRUE)
+plot(kBYM$data, col=colR$plot)
 legendBreaks('topleft', colR, cex=thecex)
 
 colRpc = colourScale(kBYMpc$data$random.mean,
 		breaks=colR$breaks, col=colR$col, 
 		style='fixed')
 
-map.new(kBYM$data)
-plot(kBYMpc$data, col=colRpc$plot, add=TRUE)
+plot(kBYMpc$data, col=colRpc$plot)
 legendBreaks('topleft', colRpc, cex=thecex)
 
 
