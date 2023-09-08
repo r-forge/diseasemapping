@@ -207,17 +207,6 @@ if(useGam & requireNamespace("mgcv", quietly = TRUE)) {
   model <-  stats::glm(formula = formula1, family = family, data=newdata)
 }
 
-#fit model, if there is an error, return data only
-options(show.error.messages = FALSE)
- 
-model <- modelFittingFunction(formula = formula1, family=family, data=newdata)
-
-if(class(model)[1]=="try-error"){
-  warning(model[1],"Only Data will be returned")
-  return(newdata)
-}
-
-options(show.error.messages = TRUE)
 model$sexSubset = S
 model$data<-newdata
 #attributes(model)$years = ageBreaks$breaks
