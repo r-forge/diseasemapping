@@ -43,12 +43,11 @@ modelRandomFields(param, includeNugget=FALSE)
  \item{model}{object of class \code{\link[RandomFields]{RMmodel}}, a vector of named model
  parameters, or a matrix where each column is a model parameter
  }
- \item{x}{Object of type \code{\link[sp:GridTopology-class]{GridTopology}} or Raster
-  or \command{\link[sp]{SpatialPoints}} or \command{\link[sp:SpatialPixels-class]{SpatialPixels}}.}
+ \item{x}{Object of type \code{\link[terra]{SpatRaster}} or \command{\link[terra]{SpatVector}}.}
  \item{data}{For conditional simulation and random imputing only.
  If \code{data} is missing, unconditional
- simulation is performed.Object of class
- \command{\link[sp:SpatialPointsDataFrame-class]{SpatialPointsDataFrame}};
+ simulation is performed. Object of class
+ \command{\link[terra]{SpatVector}};
  coordinates and response values of
  measurements in case that conditional simulation is to
  be performed
@@ -74,8 +73,7 @@ a different column \code{i} is used with parameters in row \code{i}.
 }
 
 \value{
-An object of the same class as \code{x}, with the exception of \code{x} being a \code{GridTopology}
-where a Raster is returned.
+An object of the same class as \code{x}.
  }
 
 
