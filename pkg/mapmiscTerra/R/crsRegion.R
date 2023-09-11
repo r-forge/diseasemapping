@@ -17,7 +17,7 @@ crsRegionEllipse = function(x, offset) {
   objFun = function(param, x=isoTc) {
     sum(pmax(0, x[,2] -rfun(x[,1], param[1], param[2]))^2) + sum(log(param))
   }
-  oo = optim(c(axisX, axisX), objFun, x=isoTc)
+  oo = stats::optim(c(axisX, axisX), objFun, x=isoTc)
 
 
   angleSeq = seq(0, 2*pi, len=1001)
