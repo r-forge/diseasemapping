@@ -78,6 +78,7 @@ void maternForL(
 
 SEXP maternDistance(
 		SEXP distance,
+		SEXP result,
 		SEXP params,
 		// range, shape,
 		// variance, nugget,

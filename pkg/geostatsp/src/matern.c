@@ -475,6 +475,7 @@ SEXP maternPoints(
 
 SEXP maternDistance(
     SEXP distance,
+    SEXP result,
     SEXP param,
     // range, shape,
     // variance, nugget,
@@ -482,15 +483,15 @@ SEXP maternDistance(
     //c('variance','cholesky','precision','inverseCholesky')
 ) {
 
-  SEXP result, halfLogDet;
+  SEXP halfLogDet= NEW_NUMERIC(1);
   const char
   *valid[] = {"dsyMatrix"};
   int typeInt=*type, D, D2, N;
-  double *P;
+  double *P, *Presult;
 
   N = INTEGER(GET_SLOT(distance, install("Dim")))[0];
   P = REAL(GET_SLOT(distance, install("x")));
-  halfLogDet = PROTECT(NEW_NUMERIC(1));
+  Presult = REAL(GET_SLOT(result, install("x")));
 
   // check distance is symmetric
   if(R_check_class_etc(distance, valid)) {
@@ -508,40 +509,13 @@ SEXP maternDistance(
           P[D + D2*N] = P[D2 + D*N];
   }
 
-//  typeInt = typeStringToInt(type);
-
-  if( (typeInt == 2) | (typeInt == 4) ) {
-      // lower triangle
-      result = PROTECT(NEW_OBJECT(PROTECT(MAKE_CLASS("dtrMatrix"))));
-  } else {
-      // symmetric
-      result = PROTECT(NEW_OBJECT(PROTECT(MAKE_CLASS("dsyMatrix"))));
-  }
-
-  SEXP x_s = PROTECT(install("x"));
-  SEXP Dim_s = PROTECT(install("Dim"));
-  SEXP Dimnames_s = PROTECT(install("Dimnames"));
-  SEXP uplo_s = PROTECT(install("uplo"));
-  SEXP L_s = PROTECT(ScalarString(mkChar("L")));
 
 
-  SET_SLOT(result, x_s,
-           PROTECT(duplicate(GET_SLOT(distance, x_s))));
-  SET_SLOT(result, Dim_s,
-           PROTECT(duplicate(GET_SLOT(distance, Dim_s))));
-  SET_SLOT(result, Dimnames_s,
-           PROTECT(duplicate(GET_SLOT(distance, Dimnames_s))));
-  SET_SLOT(result, uplo_s, L_s);
-
-  SEXP type_s = PROTECT(install("type"));
-  SEXP param_s = PROTECT(install("param"));
-  setAttrib(result, type_s, PROTECT(duplicate(typeInt)));
-  setAttrib(result, param_s, PROTECT(duplicate(param)));
 
   matern(
       P,
       &N, //N
-      REAL(GET_SLOT(result,  x_s)),
+      Presult,
       &REAL(param)[0],// range,
       &REAL(param)[1],// shape,
       &REAL(param)[2],// variance,
@@ -549,13 +523,7 @@ SEXP maternDistance(
       &typeInt,
       REAL(halfLogDet));
 
-
-  if(typeInt > 1) {
-      setAttrib(result, install("halfLogDet"), halfLogDet);
-  }
-
-  UNPROTECT(16); // was 14?
-  return result;
+  return halfLogDet;
 }
 
 

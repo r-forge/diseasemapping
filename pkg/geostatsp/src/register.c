@@ -50,7 +50,7 @@ static const R_CMethodDef cMethods[] = {
 
 static const R_CallMethodDef callMethods[]  = {
   {"maternPoints", (DL_FUNC) &maternPoints, 4},
-  {"maternDistance", (DL_FUNC) &maternDistance, 3},
+  {"maternDistance", (DL_FUNC) &maternDistance, 4},
   {"gmrfLik", (DL_FUNC) &gmrfLik, 6},
   {"gmrfEdge", (DL_FUNC) &gmrfEdge, 4},
   {NULL, NULL, 0}

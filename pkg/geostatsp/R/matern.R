@@ -57,11 +57,23 @@ matern.dsyMatrix = function(x,
 	type = gsub("iance$|esky$|ision", "", tolower(type)[1])    
 	type = as.integer(c(var=1,chol=2,prec=3,inversechol=4)[type])    
 
-	
-	result = .Call(
+	N = nrow(x)
+	if(type %in% c(2,4)) { # triangular matrix
+		result = new('dtrMatrix', uplo = 'L', diag = 'N', x = rep(0.0, N*N), Dim = rep(N,2))
+	} else {
+		result = new('dsyMatrix', uplo = 'L', x = rep(0.0, N*N), Dim = rep(N,2))
+	}
+	dimnames(result) = dimnames(x)
+
+	halfLogDet = .Call(
 		C_maternDistance,
-		x, param, type
+		x, result, param, type
 		)
+
+	attributes(result)$param = param
+	attributes(result)$type = type
+	attributes(result)$halfLogDet = halfLogDet
+
 	result	
 }
 
