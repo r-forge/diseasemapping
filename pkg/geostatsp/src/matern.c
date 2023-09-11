@@ -535,7 +535,7 @@ SEXP maternDistance(
 
   SEXP type_s = PROTECT(install("type"));
   SEXP param_s = PROTECT(install("param"));
-  setAttrib(result, type_s, PROTECT(duplicate(type)));
+  setAttrib(result, type_s, PROTECT(duplicate(typeInt)));
   setAttrib(result, param_s, PROTECT(duplicate(param)));
 
   matern(
