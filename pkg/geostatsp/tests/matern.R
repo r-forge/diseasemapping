@@ -16,7 +16,7 @@ myraster = rast(nrows=40,ncols=60,xmin=-3,xmax=3,ymin=-2,ymax=2)
 
 # plot correlation of each cell with the origin
 myMatern = matern(myraster, y=c(0,0), param=param)
-as.matrix(myMatern)[1:3,1:3]
+myMatern[1:3,1:3]
 
 
 
