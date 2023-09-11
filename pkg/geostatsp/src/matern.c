@@ -485,7 +485,7 @@ SEXP maternDistance(
   SEXP result, halfLogDet;
   const char
   *valid[] = {"dsyMatrix"};
-  int typeInt=5, D, D2, N;
+  int typeInt=*type, D, D2, N;
   double *P;
 
   N = INTEGER(GET_SLOT(distance, install("Dim")))[0];
@@ -508,7 +508,7 @@ SEXP maternDistance(
           P[D + D2*N] = P[D2 + D*N];
   }
 
-  typeInt = typeStringToInt(type);
+//  typeInt = typeStringToInt(type);
 
   if( (typeInt == 2) | (typeInt == 4) ) {
       // lower triangle
