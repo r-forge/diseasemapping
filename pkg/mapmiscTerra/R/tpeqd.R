@@ -51,7 +51,7 @@ tpeqd = function(x, offset=c(0,0), axis='enu'){
   if(length(res)[[1]])
     res = res[[1]]
       
-  theEllipse = vect(crsRegionEllipse(res), crs=res, type='polygons')
+  theEllipse = vect(crsRegionEllipse(res, offset), crs=res, type='polygons')
 
   thebox = suppressWarnings(llCropBox(res, ellipse = theEllipse, remove.holes=TRUE, crop.poles=TRUE))
   res = terra::crs(res)
