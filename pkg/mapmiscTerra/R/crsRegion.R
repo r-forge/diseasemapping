@@ -1,8 +1,7 @@
 
 crsRegionEllipse = function(x, offset) {
 
-  utils::data('isohedron')
-  isoSp = vect(isohedron, crs=crsLL)
+  isoSp = vect(mapmisc::isohedron, crs=crsLL)
   isoT = project(isoSp, x)
   isoT = crds(isoT) 
   isoT = isoT - matrix(offset, nrow(isoT), 2, byrow=TRUE)
