@@ -1,0 +1,33 @@
+
+crsRegionEllipse = function(x, offset) {
+
+  utils::data('isohedron')
+  isoSp = vect(isohedron, crs=crsLL)
+  isoT = project(isoSp, x)
+  isoT = crds(isoT) 
+  isoT = isoT - matrix(offset, nrow(isoT), 2, byrow=TRUE)
+  isoTc = isoT[,1] + 1i*isoT[,2]
+  isoTc = cbind(abs(Arg(isoTc)), Mod(isoTc))
+  isoTc = isoTc[isoTc[,2] > quantile(isoTc[,2], 0.8),]
+
+  axisX = max(isoTc[,2])
+
+  rfun = function(theta, a, b) sqrt((b*cos(theta))^2 + (a*sin(theta))^2)
+  objFun = function(param, x=isoTc) {
+    sum(pmax(0, x[,2] -rfun(x[,1], param[1], param[2]))^2) + sum(log(param))
+  }
+  (oo = optim(c(axisX, axisX), objFun, x=isoTc))
+
+
+
+#  plot(isoTc)
+#  lines(angleSeq, rfun(angleSeq, oo$par[1], oo$par[2]), col='red')
+
+  angleSeq = seq(0, 2*pi, len=1001)
+  ellipseP = cbind(cos(angleSeq)*oo$par[2], sin(angleSeq)*oo$par[1])
+
+#  plot(isoT)
+#  lines(ellipseP, col='red')
+
+  ellipseP
+}

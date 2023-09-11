@@ -48,11 +48,8 @@ kBYM = bym(
 		data=kentucky)
 
 
-if(require('geostatsp', quietly=TRUE)) {
- 	kBYM$data$exc1 = geostatsp::excProb(kBYM$inla$marginals.fitted.bym, log(1.2))
-} else {
-	kBYM$data$exc1 = rep(NA, length(kBYM$data))
-}
+
+ 	kBYM$data$exc1 =  unlist(lapply(kBYM$inla$marginals.fitted.bym, INLA::inla.pmarginal, q=log(1.2)))
 
 kBYM$par$summary
 
