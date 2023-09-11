@@ -17,18 +17,11 @@ crsRegionEllipse = function(x, offset) {
   objFun = function(param, x=isoTc) {
     sum(pmax(0, x[,2] -rfun(x[,1], param[1], param[2]))^2) + sum(log(param))
   }
-  (oo = optim(c(axisX, axisX), objFun, x=isoTc))
+  oo = optim(c(axisX, axisX), objFun, x=isoTc)
 
-
-
-#  plot(isoTc)
-#  lines(angleSeq, rfun(angleSeq, oo$par[1], oo$par[2]), col='red')
 
   angleSeq = seq(0, 2*pi, len=1001)
   ellipseP = cbind(cos(angleSeq)*oo$par[2], sin(angleSeq)*oo$par[1])
-
-#  plot(isoT)
-#  lines(ellipseP, col='red')
 
   ellipseP
 }
