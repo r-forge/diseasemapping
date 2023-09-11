@@ -69,6 +69,7 @@ param = c(range=0.2, shape=1.5)
 set.seed(0)
 
 mypoints = vect(cbind(runif(10), runif(10)), 
+		crs = "epsg:2000",
 		atts=data.frame(id=1:10))
 
 myDist = forceSymmetric(as.matrix(distance(mypoints)))
