@@ -478,7 +478,7 @@ SEXP maternDistance(
     SEXP param,
     // range, shape,
     // variance, nugget,
-    SEXP type
+    int *type
     //c('variance','cholesky','precision','inverseCholesky')
 ) {
 

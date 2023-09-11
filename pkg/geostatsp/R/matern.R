@@ -52,12 +52,17 @@ matern.dsyMatrix = function(x,
 	y=NULL) {
 	
 	param=fillParam(param)[c('range','shape','variance','nugget')]
+
+
+	type = gsub("iance$|esky$|ision", "", tolower(type)[1])    
+	type = as.integer(c(var=1,chol=2,prec=3,inversechol=4)[type])    
+
 	
-	.Call(
+	result = .Call(
 		C_maternDistance,
 		x, param, type
 		)
-	
+	result	
 }
 
 
