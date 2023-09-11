@@ -5,7 +5,7 @@ gridlinesWrap = function(crs,
 		ndiscr=40, plotLines=TRUE, 
 		plotLabels = TRUE, ...){
 	
-	if(any(easts==180)) easts = easts[easts > -180]
+	if(any(easts==180)) easts = setdiff(easts, -180)
 	norths = norths[abs(norths) < 90]
 	
 	pointPos = 2 # 1 for x direction

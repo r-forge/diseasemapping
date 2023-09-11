@@ -61,7 +61,7 @@ wrapPoly = function(x, crs, buffer.width = 100*1000) {
 
   xCrop = terra::erase(toCropX, toCrop)
 
-  xCrop = terra::crop(xCrop, terra::unwrap(bboxLLsafe))
+#  xCrop = terra::crop(xCrop, terra::unwrap(bboxLLsafe))
   # plot(xCrop)
 
 

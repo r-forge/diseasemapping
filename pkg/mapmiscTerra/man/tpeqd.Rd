@@ -40,22 +40,24 @@ data('worldMap');worldMap=unwrap(worldMap)
 
 thepoints = vect(rbind(cbind(150, -40), cbind(-70,-40)), crs=crsLL)
 crsOne = tpeqd(thepoints)
+worldMapTrans = wrapPoly(worldMap, crsOne)
 
 map.new(crsOne, col='lightblue')
-plot(wrapPoly(worldMap, crsOne), add=TRUE, col='grey')
+plot(worldMapTrans, add=TRUE, col='grey')
 points(project(thepoints, crsOne), col='red')
 gridlinesWrap(crsOne, col='orange')
 
 
 
 thepoints = vect(rbind(cbind(-40, 65), cbind(139,35)), crs=crsLL)
-crsTwo = tpeqd(thepoints, buffer.width=100*1000, crop.poles=TRUE)
+crsTwo = tpeqd(thepoints)
 
 
 map.new(crsTwo, col='lightblue')
 plot(wrapPoly(worldMap, crsTwo), add=TRUE, col='grey')
-points(wrapPoly(thepoints, crsTwo), col='red')
+points(project(thepoints, crsTwo), col='red')
 gridlinesWrap(crsTwo, col='orange')
 
 }
+
 

@@ -26,7 +26,7 @@ tpeqdProj4string = function(
   res
 }
 
-tpeqd = function(x, offset=c(0,0), axis='enu', ...){
+tpeqd = function(x, offset=c(0,0), axis='enu'){
   
   if(length(grep("^SpatVector", class(x)))){
     x = project(x, crsLL)
@@ -51,43 +51,9 @@ tpeqd = function(x, offset=c(0,0), axis='enu', ...){
   if(length(res)[[1]])
     res = res[[1]]
       
-  circle = exp(1i*seq(0, 2*pi, len=1001)[-1])
-  circle = cbind(Re(circle), Im(circle))
-  offsetmat = matrix(offset, nrow(circle), 2, byrow=TRUE)
-  step = 100*1000
-  radiusScale = ceiling(extentMerc[2]/step)*step
-  somePointsOut = TRUE
-  while( (radiusScale > 0) & somePointsOut) {
-    radiusScale = radiusScale - step
-    xxOrig = vect(radiusScale * circle + offsetmat, crs=res, type='points')
-    xxLL = suppressWarnings(project(xxOrig, crsLL))
-    somePointsOut = any(is.nan(as.vector(geom(xxLL)[,c('x', 'y')])))
-  }
-  step = round(step/10)
-  # try to make one axis bigger 
-  radiusScale = rep(radiusScale, 2)
-  noPointsOut = TRUE
-  while(noPointsOut & all(radiusScale < extentMerc[2])) {
-    radiusScale = radiusScale + c(step,0)
-    xxOrig = vect(matrix(radiusScale, nrow(circle), 2, byrow=TRUE) * circle + offsetmat, 
-      crs=res, type='points')
-    xxLL = suppressWarnings(project(xxOrig, crsLL))
-    noPointsOut = !any(is.nan(as.vector(geom(xxLL)[,c('x', 'y')])))
-  }
-  radiusScale = radiusScale - c(step,0)
-  noPointsOut = TRUE
-  while(noPointsOut & all(radiusScale < extentMerc[2])) {
-    radiusScale = radiusScale + c(0,step)
-    xxOrig = vect(matrix(radiusScale, nrow(circle), 2, byrow=TRUE) * circle + offsetmat, 
-      crs=res, type='points')
-    xxLL = suppressWarnings(project(xxOrig, crsLL))
-    noPointsOut = !any(is.nan(as.vector(geom(xxLL)[,c('x', 'y')])))
-  }
-  radiusScale = radiusScale - c(0,step)
+  theEllipse = vect(crsRegionEllipse(res), crs=res, type='polygons')
 
-
-  theEllipse = vect(matrix(radiusScale, nrow(circle), 2, byrow=TRUE) * circle + offsetmat, crs=res, type='polygons')
-  thebox = suppressWarnings(llCropBox(res, ellipse = theEllipse, ...))
+  thebox = suppressWarnings(llCropBox(res, ellipse = theEllipse, remove.holes=TRUE, crop.poles=TRUE))
   res = terra::crs(res)
    
   attributes(res)[names(thebox)] = thebox
