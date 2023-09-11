@@ -1,6 +1,7 @@
 
 crsRegionEllipse = function(x, offset) {
-  ishoedron = NULL 
+  # need this here because of unknown global variable warning in package checks
+  isohedron = NULL 
   utils::data('isohedron')
   isoSp = vect(isohedron, crs=crsLL)
   isoT = project(isoSp, x)
