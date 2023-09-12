@@ -32,6 +32,12 @@ long-lat.}
 
 
 \examples{
+
+\dontrun{
+	GNsearch(q="Toronto Ontario", maxRows = 3)
+}
+
+
 library('terra')
 myraster = rast(
 	matrix(1:100,10,10),
@@ -43,7 +49,7 @@ if(file.exists("~/geonamesUsername.R")) source("~/geonamesUsername.R")
 if(requireNamespace("geonames", quietly = TRUE)) { 
 
 cities=try(GNcities(myraster, max=5), silent=TRUE)
-mytiles = openmap(myraster, buffer= 2)
+mytiles = openmap(myraster, zoom=5, buffer=1)
 
 oldpar=map.new(mytiles)
 plot(mytiles, add=TRUE)
@@ -53,8 +59,8 @@ text(cities, labels=cities$name, col='red',pos=4)
 }
 
 
-try(GNsearch(q="Toronto Ontario", maxRows = 3), silent=TRUE)
 par(oldpar)
+
 }
 
 
