@@ -31,5 +31,5 @@ llCropBox(crs,
 A reprojected Spatial object.
 }
 
-\seealso{\code{\link[terra]{project}}.}
+\seealso{\code{\link[terra]{project}}, examples in \code{\link{tpeqd}}}
 
