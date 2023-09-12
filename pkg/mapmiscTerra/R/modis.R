@@ -62,6 +62,7 @@ getModisTiles = function(x, tiles) {
     snap='out')
 
 	res = terra::cats(tiles)[[1]]
+  names(res) = gsub("lyr.1", "ID", names(res))
   res = res[match(terra::values(modisCrop), res$ID), ]
   
   res

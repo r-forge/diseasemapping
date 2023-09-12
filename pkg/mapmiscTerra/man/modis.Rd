@@ -20,11 +20,7 @@ getDegreeRaster()
 }
 
 \details{
-	\code{getModisTiles} returns a matrix with modis tiles.
-
-	\code{getModisRaster} shows horizontal and vertical tile names for downloading data from MODIS.
-	
-	\code{getDegreeRaster} shows horizontal and vertical tiles in long-lat, for downloading elevation.
+	Provides information on tiles which can be downloaded from MODIS.
 }
 
 
@@ -36,7 +32,11 @@ getDegreeRaster()
 
 
 \value{
-	\code{SpatRast} objects
+	\code{getModisTiles} returns a matrix with modis tiles.
+
+	\code{getModisRaster} shows horizontal and vertical tile names for downloading data from MODIS.
+	
+	\code{getDegreeRaster} shows horizontal and vertical tiles in long-lat, for downloading elevation.
 }
 
 \examples{
@@ -52,14 +52,17 @@ getModisTiles(myPointLL, getDegreeRaster())
 
 
 
-modisUrl = 	'https://e4ftl01.cr.usgs.gov/MOTA/MCD12Q1.006/2002.01.01/'
+modisUrl = 	'https://e4ftl01.cr.usgs.gov/MOTA/MCD12Q1.061/2002.01.01/'
+desiredTiles = paste0("(",
+	paste(getModisTiles(myPointLL, getModisRaster())[,'tile'], collapse='|'), 
+	").*.hdf$")
 
 \donttest{
-theFiles = 	grep(
-		paste0("(",paste(getModisTiles(myPointLL)[,'tile'], collapse='|'), ").*.hdf$"),
+theFiles = 	grep(desiredTiles,
 	XML::getHTMLLinks(RCurl::getURL(
 	    modisUrl,ftp.use.epsv=FALSE,
 	    dirlistonly = TRUE)), value=TRUE)
 paste0(modisUrl, theFiles)
 }
+
 }
