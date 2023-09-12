@@ -23,7 +23,7 @@ spatialRocRasterTemplate = function(
 	if(length(grep("SpatRaster", class(fit)))) {
 		template = rast(fit)
 	} else {
-		template = rast(fit[[1]]$raster)
+		template = rast(fit[[1]]$raster, nlyr=1)
 	}
 	terra::values(template) = seq(1, ncell(template))
 	names(template) = 'fitID'
@@ -83,8 +83,9 @@ spatialRocSims = function(
 	)
 	
 	
-	rownames(truthCdf) = truthCdf[,'zone']
-	truthCdf = truthCdf[,grep('zone', colnames(truthCdf), invert=TRUE)]
+	theRowNames = rownames(truthCdf) = truthCdf[,'fitID']
+	truthCdf = truthCdf[,grep('fitID', colnames(truthCdf), invert=TRUE, value=TRUE)]
+	rownames(truthCdf) = theRowNames
 	colnames(truthCdf) = paste(
 			rep(names(marginals), 
 					rep(length(Slevels),nlyr(truthCut))
@@ -261,15 +262,16 @@ spatialRoc = function(fit,
 		names(truth) = tname
 	} 
 
-	if(is.null(border))
-		if(any(names(fit[[1]])=='data'))
+	if(is.null(border)) {
+		if(any(names(fit[[1]])=='data')) {
 			border = fit[[1]]$data
+		}
+	}
 		
 	if(!is.null(border))
 		truth = mask(truth, border)
 
-	truthCut = cut(truth, breaks=breaks)
-	names(truthCut) = names(truth)
+	truthCut = terra::classify(truth, rcl=breaks)
 	
 	
 	if(isLocalEm) {
@@ -368,10 +370,10 @@ spatialRoc = function(fit,
 				      length(unique(resultOneMSpec[!is.na(resultOneMSpec)])) == 1) {
 				    resultOut[,D] = NA
 				  } else {
-				    resultOut[,D] = approx(
+				    resultOut[,D] = suppressWarnings(approx(
 				      resultOneMSpec, 
 				      resultSens, 
-				      xout = resultOut[,'onemspec'])$y
+				      xout = resultOut[,'onemspec'], rule=2)$y)
 				  }
 				}
 				resultOrig = result

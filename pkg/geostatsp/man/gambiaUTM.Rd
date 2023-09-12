@@ -39,9 +39,10 @@ if(require('mapmisc', quietly=TRUE)) {
   worldMap = unwrap(worldMap)
   gambia = project(worldMap[grep("Gambia", worldMap$NAME), ], crs(gambiaUTM))
   gambiaTiles = openmap(gambia, buffer=100*1000)
-  map.new(gambia)
+  oldpar=map.new(gambia)
   plot(gambiaTiles, add=TRUE)
   plot(gambiaUTM, add=TRUE)
+  par(oldpar)
 }
 
 }

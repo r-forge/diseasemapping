@@ -52,7 +52,9 @@ The cut breaks will get from the breaks of population data set or define by user
 The sex column will have two levels "M" and "F" as factors.
 }
 
-
+\value{
+  A data frame or spatial object, matching the input.
+}
 \author{ Patrick Brown }
 \note{
  If \code{breaks} is not specified, the function will aggregate by "age" as default.
