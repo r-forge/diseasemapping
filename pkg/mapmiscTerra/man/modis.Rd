@@ -35,6 +35,10 @@ getDegreeRaster()
 }
 
 
+\value{
+	\code{SpatRast} objects
+}
+
 \examples{
 
 crsModis
@@ -50,7 +54,7 @@ getModisTiles(myPointLL, getDegreeRaster())
 
 modisUrl = 	'https://e4ftl01.cr.usgs.gov/MOTA/MCD12Q1.006/2002.01.01/'
 
-\dontrun{
+\donttest{
 theFiles = 	grep(
 		paste0("(",paste(getModisTiles(myPointLL)[,'tile'], collapse='|'), ").*.hdf$"),
 	XML::getHTMLLinks(RCurl::getURL(

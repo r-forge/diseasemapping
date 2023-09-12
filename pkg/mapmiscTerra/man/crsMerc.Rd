@@ -34,6 +34,8 @@ bboxLL
 	these objects are used internally and may be of interest to the user
 }
 
+\value{objects of class \code{\link[terra:crs]{crs}} or numeric vectors.}
+
 \references{
 \url{https://en.wikipedia.org/wiki/Web_Mercator},
 \url{https://spatialreference.org/ref/epsg/4326/}

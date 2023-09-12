@@ -16,6 +16,8 @@ Sets a cache folder in temporary space
 \details{
 	The default cache for map images is tempdir()/mapmiscCache, which will be deleted when an R session ends.  Running this function sets a cache in /tmp/mapmiscCache_[username], which will re-use cached data across R sessions.
 }
+
+\value{\code{persistentCache} returns the path to the cach folder.  }
 \examples{
 # current cache
 getOption("mapmiscCachePath")
@@ -27,7 +29,7 @@ options(mapmiscCachePath = myCache)
 getOption("mapmiscCachePath")
 
 # create a persistent cache
-\dontrun{
+\donttest{
 persistentCache(verbose=TRUE)
 }
 getOption("mapmiscCachePath")

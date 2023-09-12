@@ -137,7 +137,7 @@ legendBreaks("topleft", legend=myscale4$breaks, col=myscale4$col)
 x = rast(extent=ext(0,15,0,10), res=1)
 values(x) = sample(1:4, ncell(x), replace=TRUE)
 myScale = colourScale(x, breaks=3, style='unique', col=c('red','blue','orange'))
-if(installed.packages()['terra','Version'] >= "1.7-40" ) {
+if(utils::packageVersion("terra") >= "1.7-40" ) {
 	terra::coltab(x) = myScale$colourtable
 	plot(x)
 } else {

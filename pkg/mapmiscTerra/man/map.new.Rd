@@ -28,6 +28,8 @@ Additional arguments passed to \code{plot}
 \code{map.new} initiates a plot intended to contain a map covering the extent of \code{x}, 
 with no margins.
 }
+
+\value{A list of the graphical parameters prior to calling \code{map.new}}
 \author{
 Patrick Brown
 }

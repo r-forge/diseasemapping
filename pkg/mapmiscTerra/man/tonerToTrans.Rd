@@ -39,18 +39,16 @@ Patrick Brown
 }
 \examples{
 
-\dontrun{
-	data('worldMap')
-	rgbMap = openmap(worldMap[worldMap$NAME == 'Sierra Leone',], zoom=6, path='stamen-toner')
+	data('worldMap');worldMap = unwrap(worldMap)
+	rgbMap = openmap(worldMap[worldMap$NAME == 'Sierra Leone',], path='stamen-toner')
 	names(rgbMap)
 	plot(rgbMap)
 	
 	transMap = tonerToTrans(rgbMap)
 	names(transMap)
-	par(bg='red')
+	map.new(transMap, bg='green')
 	plot(transMap)
 
 
-}
 }
 

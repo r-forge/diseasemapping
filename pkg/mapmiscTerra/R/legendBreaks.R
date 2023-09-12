@@ -180,8 +180,10 @@ legendBreaks = function(pos,
   
   if(outer){
     oldxpd = par("xpd")
+    oldpar = par(no.readonly = TRUE) 
     par(xpd=NA)
-    fromEdge = matrix(par("plt"), 2, 2, 
+  on.exit(par(oldpar))        
+  fromEdge = matrix(par("plt"), 2, 2, 
         dimnames=list(c("min","max"), c("x","y")))
     propIn = apply(fromEdge, 2, diff)
     if(is.character(pos)) {
@@ -243,9 +245,6 @@ legendBreaks = function(pos,
         cex=cex)
   }      
   
-  if(outer){
-    par(xpd=oldxpd)
-  }
   result$legend = legend
   return(invisible(result))
 }

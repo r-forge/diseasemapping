@@ -57,6 +57,9 @@ from the centre of the plot and travelling to the right.  The length of the bar 
 of 6 characters times \code{scale.cex}.  
 
 }
+
+\value{A list containig coordinates of the elements of the scale bar.}
+
 \author{
 Patrick Brown
 }

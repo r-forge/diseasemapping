@@ -31,6 +31,8 @@ for example \code{lty=2}
 }
 }
 
+\value{A list with elements \code{lines}, containg the graticule lines, and \code{points} containing the locations and labels for longitude and latitude values.}
+
 \author{
 Patrick Brown
 }
@@ -38,7 +40,6 @@ Patrick Brown
 \seealso{\code{\link[terra]{graticule}}}
 
 \examples{
-\dontrun{
 data('worldMap')
 worldMap = terra::unwrap(worldMap)
 crsMoll = moll(-100)
@@ -46,8 +47,8 @@ worldMapT = wrapPoly(worldMap, crsMoll, buffer.width=200*1000)
 
 plot(attributes(crsMoll)$ellipse)
 plot(worldMapT, add=TRUE)
-gridlinesWrap(crsMoll, lty=3, col='red', cex=0.6, halo=TRUE)
-}
+gridlinesWrap(crsMoll, lty=3, col='red', cex=0.6)
+
 
 }
 

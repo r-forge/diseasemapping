@@ -1,4 +1,3 @@
-options("rgdal_show_exportToProj4_warnings"="none") 
 library('geostatsp')
 
 # exclude this line to use the RandomFields package
@@ -28,9 +27,7 @@ res = lgcp(data=myLgcp$events,
 		formula = ~ a + b + offset(offsetFooBar),
 		grid=squareRaster(myoffset, 15), 
 		covariates=myCovariate,
-		priorCI=list(sd=c(0.9, 1.1), range=c(0.4, 0.41)),
-		control.mode=list(theta=c(0.022, -0.5),restart=TRUE)
-)
+		prior=list(sd=0.2, range=0.4))
 
 res$parameters$summary[,c(1,3,5)]
 

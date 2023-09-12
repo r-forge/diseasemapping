@@ -80,7 +80,7 @@ openmapAttribution = function(name, type=c('text','latex','markdown','html','aut
   
   type = type[1]
   if(type == 'auto') {
-    if(all(unlist(mget("mdToTex", envir=.GlobalEnv, ifnotfound=FALSE)) == TRUE ) ) {
+    if(all(unlist(mget("mdToTex", ifnotfound=FALSE)) == TRUE ) ) {
       type = 'latex'  
     } else {
       type ='markdown'

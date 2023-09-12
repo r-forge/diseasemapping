@@ -13,7 +13,9 @@ col="#FF000090", borderMap=NULL,
 	oldxpd = par("xpd")
 	usr = par('usr')
 	graphics::clip(usr[1], usr[2], usr[3], usr[4])
+	oldpar = par(no.readonly = TRUE) 
 	par(xpd=NA)
+	on.exit(par(oldpar))    
 }
 fromEdge = matrix(pmax(0.01, par("plt")), 2, 2, 
 		dimnames=list(c("min","max"), c("x","y")))
@@ -204,9 +206,7 @@ if( (diff(range(xsp[,1])))  < (width*dimFull[1]/20) ) {
 	graphics::polygon(xsp, col=col, border=NA, ...)
 }
 
-if(outer) {
-	par(xpd=oldxpd)
-}	
+
 
 attributes(xsp)$toScale = toScale
 
