@@ -104,7 +104,7 @@ names(osmTiles())
 
 	mytiles = try(openmap(myraster, zoom=5, verbose=TRUE))
 
-	map.new(myraster)
+oldpar =	map.new(myraster)
 	plot(mytiles, add=TRUE)
 	points(myPoints,col='red')
 
@@ -117,7 +117,7 @@ names(osmTiles())
 	points(myPoints, col='red')
 	openmapAttribution(mytiles)
 
-
+par(oldpar)
 
 
 }

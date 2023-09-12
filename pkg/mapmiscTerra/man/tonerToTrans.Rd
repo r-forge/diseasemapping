@@ -46,8 +46,9 @@ Patrick Brown
 	
 	transMap = tonerToTrans(rgbMap)
 	names(transMap)
-	map.new(transMap, bg='green')
-	plot(transMap)
+oldpar=	map.new(transMap, bg='green')
+	plot(transMap, add=TRUE)
+par(oldpar)
 
 
 }

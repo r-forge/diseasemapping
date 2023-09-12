@@ -38,17 +38,14 @@ Patrick Brown
 
 \examples{
 
-Npoints = 20
-myPoints = vect(
-	cbind(runif(Npoints), 51+runif(Npoints)), 
-	atts=data.frame(
-		y1=c(NA, rnorm(Npoints-1)), 
-	    y2=c(sample(0:5, Npoints-1,replace=TRUE), NA)
-	),
-	crs=crsLL)
+nldTiles = terra::unwrap(nldTiles)
+nldCities = terra::unwrap(nldCities)
 
 
-points(myPoints)
+oldpar = map.new(nldCities)
+plot(nldTiles, add=TRUE)
+points(nldCities)
+par(oldpar)
 
 }
 

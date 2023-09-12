@@ -42,7 +42,7 @@ thepoints = vect(rbind(cbind(150, -40), cbind(-70,-40)), crs=crsLL)
 crsOne = tpeqd(thepoints)
 worldMapTrans = wrapPoly(worldMap, crsOne)
 
-map.new(crsOne, col='lightblue')
+oldpar=map.new(crsOne, col='lightblue')
 plot(worldMapTrans, add=TRUE, col='grey')
 points(project(thepoints, crsOne), col='red')
 gridlinesWrap(crsOne, col='orange')
@@ -58,6 +58,7 @@ plot(wrapPoly(worldMap, crsTwo), add=TRUE, col='grey')
 points(project(thepoints, crsTwo), col='red')
 gridlinesWrap(crsTwo, col='orange')
 
+par(oldpar)
 }
 
 

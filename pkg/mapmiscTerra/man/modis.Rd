@@ -57,7 +57,7 @@ desiredTiles = paste0("(",
 	paste(getModisTiles(myPointLL, getModisRaster())[,'tile'], collapse='|'), 
 	").*.hdf$")
 
-\donttest{
+if(requireNamespace("RCurl", quietly=TRUE) & requireNamespace("XML", quietly=TRUE)) {
 theFiles = 	grep(desiredTiles,
 	XML::getHTMLLinks(RCurl::getURL(
 	    modisUrl,ftp.use.epsv=FALSE,

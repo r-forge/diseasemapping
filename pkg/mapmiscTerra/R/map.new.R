@@ -13,7 +13,6 @@ map.new = function(x, legendRight=FALSE, buffer=0,
   crs=terra::crs(x))
 
   
-  oldpar = par(no.readonly = TRUE) 
 
   if(is.logical(legendRight))
     legendRight = c(1,0.8)[1+ legendRight ]
@@ -37,9 +36,9 @@ map.new = function(x, legendRight=FALSE, buffer=0,
 	if(!length(ldots$xaxt)) ldots$xaxt = 'n'
 	if(!length(ldots$yaxt)) ldots$yaxt = 'n'
 	
-  do.call(par, ldots[setdiff(names(ldots),'axes')]) #(mar=mar, xaxs='i',yaxs='i',xpd=FALSE, ...)
-	on.exit(par(oldpar))    
+  oldpar = par(no.readonly = TRUE) 
 
+  do.call(par, ldots[setdiff(names(ldots),'axes')]) #(mar=mar, xaxs='i',yaxs='i',xpd=FALSE, ...)
 	do.call(terra::plot, c(list(x=xpoints,pch=NA), ldots))#, axes=TRUE, ...)
 
 	if(!is.null(ellipse)) {

@@ -98,7 +98,7 @@ data("netherlands")
 nldElev = terra::unwrap(nldElev)
 myscale = colourScale(nldElev, breaks=4, col=theCol, style='equal', dec=0)
 
-map.new(myPoints)
+oldpar = map.new(myPoints)
 plot(myPoints, col=myscale$plot, pch=16,add=TRUE)
 legendBreaks("topleft", breaks=myscale)
 
@@ -144,6 +144,8 @@ if(utils::packageVersion("terra") >= "1.7-40" ) {
 	plot(x, breaks = myScale$breaks, col=myScale$col)
 }
 legendBreaks('topright', myScale)
+
+par(oldpar)
 }
 
 

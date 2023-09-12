@@ -23,11 +23,11 @@ Country borders from naturalearthdata.com
 
 data("worldMap")
 worldMap = terra::unwrap(worldMap)
-map.new(worldMap)
+oldpar=map.new(worldMap)
 plot(worldMap, border='red', lwd=3, add=TRUE)
 plot(worldMap[worldMap$NAME ==  'Brazil',],
 	add=TRUE, col='green')
-
+par(oldpar)
 
 }
 

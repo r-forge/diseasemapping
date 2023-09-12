@@ -68,6 +68,7 @@ Patrick Brown
 \examples{
 
 Npoints = 20
+set.seed(0)
 myPoints = vect(
 	cbind(runif(Npoints)-0.1, 51+runif(Npoints)), 
 	atts=data.frame(
@@ -82,7 +83,7 @@ breaks = c(-100, -1, 1, Inf)
 thecol = c('red','orange','blue')
 
 
-map.new(myPoints)
+oldpar = map.new(myPoints)
 plot(myPoints,col = as.character(cut(
 	myPoints$y1, breaks, thecol
 )),add=TRUE)
@@ -93,5 +94,6 @@ thedot = insetMap(crs=myPoints, pos="bottomleft",
 	 col='#00000000', lty=0, outer=FALSE, width=0.5)
 points(thedot)
 
+par(oldpar)
 }
 

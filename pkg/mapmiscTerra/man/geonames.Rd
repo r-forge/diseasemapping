@@ -45,7 +45,7 @@ if(requireNamespace("geonames", quietly = TRUE)) {
 cities=try(GNcities(myraster, max=5), silent=TRUE)
 mytiles = openmap(myraster, buffer= 2)
 
-map.new(mytiles)
+oldpar=map.new(mytiles)
 plot(mytiles, add=TRUE)
 if(!all(class(cities)=='try-error')) {
 points(cities, col='red')
@@ -54,7 +54,7 @@ text(cities, labels=cities$name, col='red',pos=4)
 
 
 try(GNsearch(q="Toronto Ontario", maxRows = 3), silent=TRUE)
-
+par(oldpar)
 }
 
 

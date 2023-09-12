@@ -6,10 +6,11 @@ Date: 2023-08-28
 Depends: terra, R (>= 3.5.0)
 Imports: methods, grDevices, stats, utils, graphics, geosphere
 Suggests: RColorBrewer, geonames, classInt, knitr
+Enhances: XML, RCurl
 Authors@R: c(person("Patrick", "Brown", 
                     role = c("aut", "cre","cph"),
                      email = "patrick.brown@utoronto.ca"))
-Description: A minimal, light-weight set of tools for producing nice looking maps in R, with support for map projections.  See Brown (2016) <doi:10.32614/RJ-2016-005>
+Description: Provides a minimal, light-weight set of tools for producing nice looking maps in R, with support for map projections.  See Brown (2016) <doi:10.32614/RJ-2016-005>.
 License: GPL
 LazyData: true
 LazyDataCompression: xz
