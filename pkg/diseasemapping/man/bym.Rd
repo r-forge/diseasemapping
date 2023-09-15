@@ -137,8 +137,7 @@ if(length(grep("parameters", names(kBYM)))) {
 
 if( require("mapmisc", quietly=TRUE) && length(grep("parameters", names(kBYM))) ) {
   thecol = colourScale(kBYM$data$fitted.exp, breaks=5, dec=1, style="equal")
-  map.new(kBYM$data)
-  terra::plot(kBYM$data, col=thecol$plot, add=TRUE)
+  terra::plot(kBYM$data, col=thecol$plot)
   legendBreaks("topleft", thecol)
 }
 

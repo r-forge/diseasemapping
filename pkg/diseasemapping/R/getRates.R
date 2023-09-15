@@ -113,9 +113,9 @@ if(length(termsToAdd) ) {
   } else {
     colPop = colCase = commonCol[1]
   }
-  cat("adding variable ", toString(termsToAdd), " to case data using \n",
-    "columns ", colPop, " and ", colCase, ".\n")
-  cat("add variable to casedata manually if this is not correct\n")
+  message(paste0("adding variable ", toString(termsToAdd), " to case data using \n",
+    "columns ", colPop, " and ", colCase, ".\n", 
+   "add variable to casedata manually if this is not correct\n"))
     
   casedata = merge(casedata, colsToTry[,c(colPop,termsToAdd)], 
     by.x=colCase, by.y=colPop)

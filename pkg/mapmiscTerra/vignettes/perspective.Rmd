@@ -72,13 +72,6 @@ myProj = tpers(x=vect(c(x,hk)), hKm = 2*1000, tilt =-15, axis='seu')
 
 
 
-
-
-
-
-
-
-
  
 ```{r mapLL}
 map.new(attributes(myProj)$regionLL, buffer=2)
@@ -88,6 +81,7 @@ text(guam, 'guam')
 text(hk, 'hk')
 text(okinawa, 'Okinawa')
 ```
+
 
 
 
@@ -150,7 +144,8 @@ plot(wrapPoly(worldMap, myProjDateLine), add=TRUE)
       crs=crsMerc, zoom=3,
       path='https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&')
   
-  
+  plot(myMap1)
+
   myMap2 = openmap(
       x=attributes(myProj)$regionLL[2,],
       zoom=attributes(myMap1)$tiles$zoom,
@@ -168,7 +163,7 @@ plot(myMap2)
   plot(myMap, add=TRUE)
   plot(wrapPoly(worldMap, myProj), add=TRUE)  
 
-  gridlinesWrap(myProj, col='yellow', 
+  gridlinesWrap(myProj, col='orange', 
       norths=seq(-40,40,by=10), easts=seq(-150,180,by=10),
       lty=2)
   

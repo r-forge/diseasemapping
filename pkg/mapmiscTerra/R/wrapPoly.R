@@ -161,10 +161,10 @@ regionTransSmooth =terra::densify( regionTransSmooth, interval = densify.interva
 }
 
 regionTransPoly1 = terra::densify(
-  terra::buffer(regionTransSmooth, - 0.2*buffer.width, quadsegs = 10), 
+  terra::buffer(regionTransSmooth, - 0.5*densify.interval, quadsegs = 10), 
   interval=densify.interval)
 regionTransPoly2 = terra::densify(
-  terra::buffer(regionTransSmooth, - 0.5* buffer.width, quadsegs = 10), 
+  terra::buffer(regionTransSmooth, - 1*densify.interval, quadsegs = 10), 
   interval=densify.interval)
 
 
@@ -177,7 +177,7 @@ borderLL2 = terra::vect(borderLL2[!is.nan(borderLL2[,'x']), ], crs=crsLL)
 
 
 
-# data('worldMap');worldMap = unwrap(worldMap);plot(project(worldMap, crsLL), ylim = c(-95,95));points(borderLL1, cex=0.3,col='blue');points(borderLL2, cex=0.1, col='red')     
+# data('worldMap');worldMap = unwrap(worldMap);plot(borderLL2, col='white');plot(project(worldMap, crsLL), ylim = c(-95,95), add=TRUE);points(borderLL1, cex=0.2,col='blue');points(borderLL2, cex=0.1, col='red')     
 
 whereIsJump1a = which(abs(diff(terra::crds(borderLL1)[,1])) > 180)
 whereIsJump2a = which(abs(diff(terra::crds(borderLL2)[,1])) > 180)
@@ -193,7 +193,7 @@ borderLLsplit2 = split(borderLL2, rep(1:length(theBreaks2), theBreaks2))
 borderLLsplit1 = borderLLsplit1[unlist(lapply(borderLLsplit1, function(xx) nrow(terra::crds(xx))))>0]
 borderLLsplit2 = borderLLsplit2[unlist(lapply(borderLLsplit2, function(xx) nrow(terra::crds(xx))))>0]
 
-# data(worldMap);worldMap = unwrap(worldMap);plot(project(worldMap, crsLL), ylim = c(-92, 92));for(D in 1:length(borderLLsplit2)) {plot(as.lines(borderLLsplit2[[D]]), add=TRUE, col=1+D, lwd=3)}   
+# data(worldMap);worldMap = unwrap(worldMap);plot(borderLL2, col='white');plot(project(worldMap, crsLL), add=TRUE);for(D in 1:length(borderLLsplit2)) {plot(as.lines(borderLLsplit2[[D]]), add=TRUE, col=1+D, lwd=3)};for(D in 1:length(borderLLsplit1)) {plot(as.lines(borderLLsplit1[[D]]), add=TRUE, col=1+D, lwd=1)}   
 
 borderLLsplit1l = lapply(borderLLsplit1, terra::as.lines)
 borderLLsplit2l = lapply(borderLLsplit2, terra::as.lines)

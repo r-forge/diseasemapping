@@ -32,7 +32,9 @@ tpers = function(x,
       " +y_0=", offset[2],
       sep=""))
   
-  cropBox = llCropBox(crs=myCrs, crop.poles=FALSE, remove.holes=FALSE,  buffer.width=10*1000, densify.interval = 2000)
+  cropBox = llCropBox(crs=myCrs, 
+    ellipse = vect(crsRegionEllipse(myCrs), crs=myCrs, type='polygons'),
+    crop.poles=FALSE, remove.holes=FALSE,  buffer.width=50*1000, densify.interval = 2000)
   
   attributes(myCrs)$ellipse = cropBox$ellipse
   attributes(myCrs)$crop = cropBox$crop
