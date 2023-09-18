@@ -127,7 +127,7 @@ kBYM <- try(
   bym(
     observed ~ offset(logExpected) + poverty, kentucky,
 	  prior= list(sd=c(0.1, 0.5), propSpatial=c(0.5, 0.5)),
-    num.threads=2
+    num.threads=2, blas.num.threads=2
    ), silent=TRUE)
 
 if(length(grep("parameters", names(kBYM)))) {
