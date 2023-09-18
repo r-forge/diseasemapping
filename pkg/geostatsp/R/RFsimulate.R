@@ -91,7 +91,7 @@ setMethod("RFsimulate",
         }
       }
       
-      xCoords = crs(x, list=TRUE)
+      xCoords = crs(x)
       theArgs = list(...)
       theArgs$model = model
       theArgs$x = xCoords[[1]]
