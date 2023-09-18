@@ -23,7 +23,7 @@ opts_chunk$set(out.width='0.48\\textwidth', fig.align='default', fig.height=3, f
 <<inla, include=FALSE>>=
 if(requireNamespace('INLA')) {
 	INLA::inla.setOption(num.threads=2)
-	INLA::inla.getOption(blas.num.threads=2)
+	INLA::inla.setOption(blas.num.threads=2)
 }
 @
 

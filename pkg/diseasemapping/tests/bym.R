@@ -6,7 +6,7 @@ print(havePackages)
 
 if(havePackages) {
 	INLA::inla.setOption(num.threads=2)
-	INLA::inla.getOption(blas.num.threads=2)
+	INLA::inla.setOption(blas.num.threads=2)
 	print(INLA::inla.getOption('num.threads'))
 	print(INLA::inla.getOption('blas.num.threads'))
 }
