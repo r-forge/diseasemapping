@@ -102,9 +102,7 @@ kBYM = try(bym(
 		formula = observed ~ offset(logExpected) + poverty,
     data=kentucky,
     prior = list(sdSpatial=c(0.01, 0.2), sdIndep=c(0.01, 0.2)),
-		region.id="County",
-		num.threads=2, blas.num.threads=2
-))
+		region.id="County"))
 @
 
 
