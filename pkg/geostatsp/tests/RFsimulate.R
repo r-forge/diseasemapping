@@ -12,7 +12,7 @@ options(useRandomFields = FALSE)
     crs=theCrs)
 
 set.seed(0)
-simu = RFsimulate(rbind(a=model, b=model+0.1), 
+simu = RFsimulate(model = rbind(a=model, b=model+0.1), 
   x=myraster, n=4
 )
 

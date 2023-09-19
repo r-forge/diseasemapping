@@ -96,6 +96,9 @@ set.seed(0)
 myPoints = vect(cbind(runif(Npoints,0,10), 
         seq(0,10, len=Npoints)), crs = '+proj=merc')
 
+# don't test using the randomFields package, it's currently broken on some R builds
+options(useRandomFields = FALSE)
+
 myPoints = RFsimulate(myModel,myPoints)
 
 values(myPoints) = cbind(
