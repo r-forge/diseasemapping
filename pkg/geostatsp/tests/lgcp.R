@@ -3,6 +3,12 @@ havePackages = c(
     'INLA' = requireNamespace('INLA', quietly=TRUE)
 )
 
+if(requireNamespace("INLA", quietly=TRUE) ) {
+  INLA::inla.setOption(num.threads=2)
+  # not all versions of INLA support blas.num.threads
+  try(INLA::inla.setOption(blas.num.threads=2), silent=TRUE)
+}
+
 print(havePackages)
 
 # as in example

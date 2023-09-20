@@ -58,6 +58,9 @@ Either a vector of exceedance probabilities or an object of the same class as \c
 \donttest{
 
 if(requireNamespace("INLA", quietly=TRUE) ) {
+  INLA::inla.setOption(num.threads=2)
+  # not all versions of INLA support blas.num.threads
+  try(INLA::inla.setOption(blas.num.threads=2), silent=TRUE)
 
 	swissRain$sqrtrain = sqrt(swissRain$rain)
 	swissFit2 =  glgm(formula="sqrtrain",data=swissRain, grid=40, 
