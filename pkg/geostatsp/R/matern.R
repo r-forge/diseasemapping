@@ -124,60 +124,44 @@ matern.SpatRaster = function(x,
 	
 	param = fillParam(param)
 	if(is.null(y)) {
-		y=x
-		symm=TRUE
+		suppressWarnings(y <- as.points(x))
+		x = matern(y, param, type)
 	} else {
-		symm=FALSE
-	}
-	# convert  y to spatial points, no matter what it is
-	if(is.vector(y)) y = matrix(y[1:2], 1,2)
-	if(is.matrix(y)) {
-		y = vect(y, crs=crs(x))
-	} else {
+		# convert  y to spatial points, no matter what it is
+		if(is.vector(y)) y = matrix(y[1:2], 1,2)
+		if(is.matrix(y)) {
+			y = vect(y, crs=crs(x))
+		}
 		suppressWarnings(y <- as.points(y))		
-	}
 	
-	Ny = length(y)
+		Ny = length(y)
 	
-	resC= .C(C_maternArasterBpoints, 
-		as.double(xmin(x)), 
-		as.double(xres(x)), 
-		as.integer(ncol(x)), 
-		as.double(ymax(x)),
-		as.double(yres(x)), 
-		as.integer(nrow(x)),
-		as.double(crds(y)[,1]), 
-		as.double(crds(y)[,2]), 
-		N=as.integer(Ny), 
-		result=as.double(array(0, c(nrow(x),ncol(x),Ny))),
-		xscale=as.double(param["range"]),
-		varscale=as.double(param["shape"]),
-		as.double(param["variance"]),
-		as.double(param["anisoRatio"]),
-		as.double(param["anisoAngleRadians"])
+		resC= .C(C_maternArasterBpoints, 
+			as.double(xmin(x)), 
+			as.double(xres(x)), 
+			as.integer(ncol(x)), 
+			as.double(ymax(x)),
+			as.double(yres(x)), 
+			as.integer(nrow(x)),
+			as.double(crds(y)[,1]), 
+			as.double(crds(y)[,2]), 
+			N=as.integer(Ny), 
+			result=as.double(array(0, c(nrow(x),ncol(x),Ny))),
+			xscale=as.double(param["range"]),
+			varscale=as.double(param["shape"]),
+			as.double(param["variance"]),
+			as.double(param["anisoRatio"]),
+			as.double(param["anisoAngleRadians"])
 		)
 	
-	if(Ny ==1) {
-		terra::values(x) = resC$result		
-	} else {
-		if(symm){
-			x = new("dpoMatrix", 
-				Dim = as.integer(rep(Ny,2)), 
-				uplo="L",
-				x=resC$result)
-			if((type==2)){
-				x = chol(x)
-				attributes(x)$logDetHalf = sum(log(diag(x)))
-			}  # chol
-			if(type==3){
-				x = solve(x)
-			}
-		} else { # end symm
-		x = matrix(resC$result, nrow=ncell(x), ncol=Ny)
+		if(Ny ==1) {
+			terra::values(x) = resC$result		
+		} else {
+			x = matrix(resC$result, nrow=ncell(x), ncol=Ny)
+		}
 	}
-}
-attributes(x)$param = param
-x
+	attributes(x)$param = param
+	x
 }
 
 
