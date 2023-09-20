@@ -1,5 +1,0 @@
-Makefile
-doc/*.toc$
-doc/*.aux$
-doc/*.log$
-

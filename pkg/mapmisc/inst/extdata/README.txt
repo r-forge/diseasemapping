@@ -1,1 +1,0 @@
-These are cached map tiles for the mapLayers vignette
