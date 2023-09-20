@@ -1,5 +1,0 @@
-
-- simulate grf's on the gpu
-- solve for  b = D^(-1/2) L^1 XY
-- cholesky with cuda
-- sparse matrix
