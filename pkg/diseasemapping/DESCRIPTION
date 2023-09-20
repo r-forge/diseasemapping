@@ -1,8 +1,8 @@
 Package: diseasemapping
 Type: Package
 Title: Modelling Spatial Variation in Disease Risk for Areal Data
-Version: 2.0.2
-Date: 2023-09-18
+Version: 2.0.3
+Date: 2023-09-20
 Depends: R (>= 3.5.0)
 Imports:
     stats,
