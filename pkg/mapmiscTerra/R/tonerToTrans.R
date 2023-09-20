@@ -6,7 +6,10 @@ tonerToTrans = function(x, pattern= "(red|green|blue)$",
   # the colorize function doesn't appear to work
   maxColorValue = max(terra::minmax(x))
   xValues = terra::values(x)
-  xUnique = xValues[!duplicated(xValues),]
+  if(!all(c('red','green','blue') %in% colnames(xValues))) {
+    warning("x needs red, green, blue layers")
+  }
+  xUnique = xValues[!duplicated(xValues[,c('red','green','blue')]),]
   xUnique = cbind(value = seq(0, nrow(xUnique)-1), xUnique)
 
   xMax = apply(xUnique[,2:4], 1, min)
@@ -23,7 +26,7 @@ tonerToTrans = function(x, pattern= "(red|green|blue)$",
 
   result = rast(x, nlyrs=1)
 
-  valuesOfResult = merge(xValues, xUnique, all.x=TRUE, by.x=2:4, by.y=2:4)
+  valuesOfResult = merge(as.data.frame(xValues), as.data.frame(xUnique), by = c('red','green','blue'))
   valuesOfResult = valuesOfResult[match(1:nrow(valuesOfResult), valuesOfResult[,'cell']), ]
 
   terra::values(result) = valuesOfResult[,'value']
