@@ -59,9 +59,9 @@ Either a vector of exceedance probabilities or an object of the same class as \c
 	swissFit2 =  glgm(formula="sqrtrain",data=swissRain, grid=40, 
 	covariates=swissAltitude,family="gaussian")
 	if('raster' %in% names(swissFit2)) {
-	swissExc = excProb(swissFit2, threshold=sqrt(30))
-	swissExc = excProb(swissFit2$inla$marginals.random$space, 0,
-		template=swissFit2$raster)
+		swissExc = excProb(swissFit2, threshold=sqrt(30))
+		swissExc = excProb(swissFit2$inla$marginals.random$space, 0,
+			template=swissFit2$raster)
 	}
 }
 
