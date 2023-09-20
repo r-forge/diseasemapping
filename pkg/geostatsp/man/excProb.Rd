@@ -54,15 +54,20 @@ Either a vector of exceedance probabilities or an object of the same class as \c
 	plot(swissExc, breaks=mybreaks, col=mycol,add=TRUE,legend=FALSE)
 	plot(swissBorder, add=TRUE)
 	legend("topleft",legend=mybreaks, col=c(NA,mycol))
+
 \donttest{
+
+if(requireNamespace("INLA", quietly=TRUE) ) {
+
 	swissRain$sqrtrain = sqrt(swissRain$rain)
 	swissFit2 =  glgm(formula="sqrtrain",data=swissRain, grid=40, 
 	covariates=swissAltitude,family="gaussian")
-	if('raster' %in% names(swissFit2)) {
-		swissExc = excProb(swissFit2, threshold=sqrt(30))
-		swissExc = excProb(swissFit2$inla$marginals.random$space, 0,
-			template=swissFit2$raster)
-	}
+	swissExc = excProb(swissFit2, threshold=sqrt(30))
+	swissExc = excProb(swissFit2$inla$marginals.random$space, 0,
+		template=swissFit2$raster)
+	
+}
+
 }
 
 }
