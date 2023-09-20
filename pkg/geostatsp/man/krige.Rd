@@ -18,13 +18,13 @@ krigeLgm(formula, data, grid,  covariates = NULL,
 \arguments{
 \item{formula}{Either a model formula, or a data frame of linear covariates.}
   \item{data}{
-A SpatialPointsDataFrame containing  the data to be interpolated
+A \code{SpatVector}  containing  the data to be interpolated
 }
-\item{grid}{Either a \code{\link[raster]{raster}}, or a single integer giving the
+\item{grid}{Either a \code{\link[terra]{SpatRaster}} , or a single integer giving the
 number of cells in the X direction which predictions will be made on.  If the later
 the predictions will be a raster of square cells covering the bounding box of \code{data}.}
  \item{covariates}{
-The spatial covariates used in prediction, either a \code{\link[raster]{raster}} stack or list of rasters.
+The spatial covariates used in prediction, either a \code{\link[terra]{SpatRaster}} stack or list of rasters.
 }
 \item{param}{A vector of named model parameters, as produced by \code{\link{likfitLgm}}
 }

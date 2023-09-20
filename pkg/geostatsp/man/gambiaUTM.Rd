@@ -16,7 +16,7 @@ Gambia data
 }
 \usage{data(gambiaUTM)}
 \format{
-  A SpatialPointsDataFrame, with column \code{pos} being the binary response for a malaria 
+  A \code{SpatVector} , with column \code{pos} being the binary response for a malaria 
   diagnosis, as well as other child-level indicators such as \code{netuse} and \code{treated} 
   being measures of bed net use and whether the nets were treated. The column \code{green} is 
   a village-level measure of greenness. A UTM coordinate reference system is used, where 

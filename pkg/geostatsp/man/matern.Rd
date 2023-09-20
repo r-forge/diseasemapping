@@ -53,7 +53,7 @@ Returns the Matern covariance for the distances supplied.
 \value{
 	When \code{x} is a vector or matrix or object of class \code{dist}, a vector or matrix
 	of covariances is returned.  
-	With \code{x} being \code{SpatialPoints},  \code{y} must also be \code{SpatialPoints} and 
+	With \code{x} being \code{SpatVector} ,  \code{y} must also be \code{SpatVector}  and 
 	a matrix of correlations between \code{x} and \code{y}
 	is returned.	
 	When \code{x} is a Raster, and \code{y} is a single location 
@@ -80,7 +80,7 @@ The \code{range} argument is sqrt(8*shape)*phi.geoR, sqrt(8*shape)*scale.whittle
 2*scale.matern.RandomFields.
 
 Geometric anisotropy is only available when 
-\code{x} is a \code{Raster} or \code{SpatialPoints}.  The parameter 'anisoAngle' refers to 
+\code{x} is a \code{SpatRaster} or \code{SpatVector}.  The parameter 'anisoAngle' refers to 
 rotation of the coordinates anti-clockwise by the specified amount prior to 
 calculating distances, which has the effect that the contours of the correlation function
 are rotated clockwise by this amount. \code{anisoRatio} is the amount the Y coordinates are 

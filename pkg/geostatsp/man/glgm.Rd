@@ -46,7 +46,7 @@ can be overridden with a
 \item{prior}{list with elements named \code{range}, \code{sd}, \code{sdObs}.  See Details.}
 \item{shape}{Shape parameter for the Matern correlation function, must be 1 or 2.}
 \item{buffer}{Extra space padded around the data bounding box to reduce edge effects.}
-\item{border}{boundary of the region on which an LGCP is defined, passed to \code{\link[raster]{mask}}}
+\item{border}{boundary of the region on which an LGCP is defined, passed to \code{\link[terra]{mask}}}
 \item{...}{Additional options passed to  
 \Sexpr[results=rd]{c(
   '\\\\code{inla} in the \\\\code{INLA} package', 

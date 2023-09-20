@@ -13,10 +13,10 @@ Murder locations
 }
 \usage{data("murder")}
 \format{
-  \code{murder} is a  SpatialPoints object of murder locations.  \code{torontoPdens}, 
+  \code{murder} is a  \code{SpatVector} object of murder locations.  \code{torontoPdens}, 
   \code{torontoIncome}, and \code{torontoNight} are rasters containing
   population density (per hectare), median household income, and ambient light 
-  respectively.  \code{torontoBorder} is a SpatialPolygonsDataFrame of the boundary of
+  respectively.  \code{torontoBorder} is a \code{SpatVector}  of the boundary of
   the city of Toronto.
 
 }

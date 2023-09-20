@@ -42,7 +42,7 @@ Gaussian random field or (from the \code{NNmat} function)  a matrix denoting nei
 
  }
 \details{ The numbering of cells
-is consistent with the \code{raster} package.  Cell 1 is the top left cell, with cell 2 being the cell to the right and numbering
+is consistent with the \code{terra} package.  Cell 1 is the top left cell, with cell 2 being the cell to the right and numbering
 continuing row-wise.
 
 The 
@@ -91,7 +91,7 @@ if `knight' neighbours; and 6 if third `rook' neighbours.
 		N = myGrid, param=params, 
 		adjustEdges=TRUE) 
 
-if(interactive() | Sys.info()['user'] =='patrick') {	
+\donttest{	
 
 # variance matrices
 	varMat = Matrix::solve(precMat)

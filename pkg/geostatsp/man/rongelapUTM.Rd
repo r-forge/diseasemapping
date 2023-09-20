@@ -12,7 +12,7 @@ Rongelap data
 }
 \usage{data(rongelapUTM)}
 \format{
-A SpatialPolygonsDataFrame, with columns \code{count} being the 
+A \code{SpatVector}, with columns \code{count} being the 
 radiation count and \code{time} being the length of time
 the measurement was taken for.  A UTM coordinate reference system is used, where coordinates are in metres.
 }

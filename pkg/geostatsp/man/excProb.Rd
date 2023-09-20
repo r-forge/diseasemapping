@@ -21,7 +21,7 @@ posterior distributions of random effects, as produced by \code{inla}.
 }
 \item{random}{Calculate exceedances for the random effects, rather than the
 predicted observations (including fixed effects). }
-\item{template}{A \code{Raster} or \code{SpatialPolygonsDataFrame} or \code{SpatialPointsDataFrame} 
+\item{template}{A \code{SpatRaster} or \code{SpatVector}
 object which the results will be contained in.
 }
 \item{templateIdCol}{The data column in \code{template} corresponding to names of \code{marginals}
@@ -54,7 +54,7 @@ Either a vector of exceedance probabilities or an object of the same class as \c
 	plot(swissExc, breaks=mybreaks, col=mycol,add=TRUE,legend=FALSE)
 	plot(swissBorder, add=TRUE)
 	legend("topleft",legend=mybreaks, col=c(NA,mycol))
-\dontrun{
+\donttest{
 	swissRain$sqrtrain = sqrt(swissRain$rain)
 	swissFit2 =  glgm(formula="sqrtrain",data=swissRain, grid=40, 
 	covariates=swissAltitude,family="gaussian")

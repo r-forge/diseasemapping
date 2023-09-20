@@ -22,7 +22,7 @@ Give covariates and model parameters, simulates a log-Gaussian Cox process
 	\code{anisoRatio} and either \code{anisoAngleDegrees} or  
 		\code{anisoAngleRadians}
 	}
-	\item{covariates}{Either a raster stack or list of rasters and SpatialPolygonsDataFrames (with the latter having only a single data column).}
+	\item{covariates}{Either a raster stack or list of rasters and \code{SpatVector}s (with the latter having only a single data column).}
 \item{betas}{Coefficients for the covariates}
 \item{offset}{Vector of character strings corresponding to elements of \code{covariates} which are offsets}
 \item{rasterTemplate}{Raster on which the latent surface is simulated,
@@ -33,7 +33,7 @@ defaults to the first covariate.}
 }
 
 \value{
-A list with a \code{events} element containing the event locations and a \code{raster} element 
+A list with a \code{events} element containing the event locations and a \code{SpatRaster} element 
 containing a raster stack of the covariates, spatial random effect, and intensity.
 }
 

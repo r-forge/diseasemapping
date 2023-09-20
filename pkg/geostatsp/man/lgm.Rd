@@ -159,7 +159,7 @@ done in parallel where possible. }
 specified with a vector \code{param} of named elements}
 }
 \details{
-When \code{data} is a \code{SpatialPointsDataFrame}, parameters are estimated using \code{\link[stats]{optim}} to maximize
+When \code{data} is a \code{SpatVector}, parameters are estimated using \code{\link[stats]{optim}} to maximize
  the
 log-likelihood function computed by  \code{\link{likfitLgm}} and spatial prediction accomplished with \code{\link{krigeLgm}}.
 
