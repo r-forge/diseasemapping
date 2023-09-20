@@ -1,3 +1,11 @@
+typeIntFromString = function(type) {
+	if(is.character(type)) {
+		type = gsub("iance$|esky$|ision", "", tolower(type)[1])    
+		type = as.integer(c(var=1,chol=2,prec=3,inversechol=4)[type])    
+	}
+	type
+}
+
 
 matern = function(x, 
 	param=c(range=1, variance=1, shape=1), 
@@ -9,8 +17,8 @@ matern.dist = function(x,
 	param=c(range=1, variance=1, shape=1),
 	type=c('variance','cholesky','precision','inverseCholesky'), y=NULL) {
 	
-	type = gsub("iance$|esky$|ision", "", tolower(type)[1])    
-	type = as.integer(c(var=1,chol=2,prec=3,inversechol=4)[type])    
+	type = typeIntFromString(type)
+
 
 	param=fillParam(param)
 	x = as.matrix(x)
@@ -53,9 +61,8 @@ matern.dsyMatrix = function(x,
 	
 	param=fillParam(param)[c('range','shape','variance','nugget')]
 
+	type = typeIntFromString(type)
 
-	type = gsub("iance$|esky$|ision", "", tolower(type)[1])    
-	type = as.integer(c(var=1,chol=2,prec=3,inversechol=4)[type])    
 
 	N = nrow(x)
 	if(type %in% c(2,4)) { # triangular matrix
@@ -84,10 +91,7 @@ matern.SpatVector = function(x,
 	y=NULL) {
 
 	typeOrig = type
-	if(is.character(type)) {
-		type = gsub("iance$|esky$|ision", "", tolower(type)[1])    
-		type = as.integer(c(var=1,chol=2,prec=3,inversechol=4)[type])
-	}
+	type = typeIntFromString(type)
 
 	N = length(x)
 	if(type %in% c(2,4)) { # triangular matrix
@@ -116,8 +120,7 @@ matern.SpatRaster = function(x,
 	type=c('variance','cholesky','precision','inverseCholesky'), 
 	y=NULL) {
 
-	type = gsub("iance$|esky$|ision", "", tolower(type)[1])    
-	type = c(var=1,chol=2,prec=3,inversechol=4)[type]    
+	type = typeIntFromString(type)
 	
 	param = fillParam(param)
 	if(is.null(y)) {
@@ -184,8 +187,7 @@ notExportedMaternSpatialPointsXX = function(x,
 	type=c('variance','cholesky','precision','inverseCholesky'), y=NULL
 	){
 	
-	type = gsub("iance$|esky$|ision", "", tolower(type)[1])
-	type = c(var=1,chol=2,prec=3,inversechol=4)[type]    
+	type = typeIntFromString(type)
 
 	param = fillParam(param)		
 	
