@@ -166,17 +166,17 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 				  # convert factor or numbers to character
 			levelsx$label = as.character(levelsx$label)
 
-			rgbCols = mapply(grep, 
+			rgbCols = unlist(mapply(grep, 
 				pattern=paste('^', c("red",'green','blue'), '$', sep=''),
 				MoreArgs = list(x=names(levelsx), ignore.case=TRUE)
-				)
+				))
 				  # if all three (rgb) are found
-			if(is.numeric(rgbCols)){
+			if(length(rgbCols)){
 				col = levelsx[,rgbCols, drop=FALSE]
 				breaks = nrow(col)
 			}
 
-			colCol = grep("^col$", colnames(levelsx), ignore.case=TRUE)
+			colCol = grep("^col$|^Color$|^Colour$", colnames(levelsx), ignore.case=TRUE)
 			if(length(colCol)) {
 				col = levelsx[,colCol]
 				breaks = length(col)
@@ -209,8 +209,9 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 		weights = x[,2]
 		x=x[,1]
 	} else {
+		terra::activeCat(x) = 'ID'
 		weights = table(
-			terra::spatSample(x, size=NforSample, method='regular')
+			unlist(terra::spatSample(x, size=NforSample, method='regular'))
 			)
 		x = as.numeric(names(weights))
 		if(!is.null(levelsx)) {

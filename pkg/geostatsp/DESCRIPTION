@@ -31,7 +31,7 @@ Authors@R: person("Patrick", "Brown",
                      email = "patrick.brown@utoronto.ca")
 Description: Geostatistical modelling facilities using 'SpatRaster' and 'SpatVector'
     objects are provided. Non-Gaussian models are fit using 'INLA', and Gaussian
-    geostatistical models use Maximum Likelihood Estimation.  For details see Brown (2015) <doi:10.18637/jss.v063.i12>. The RandomFields packages is available at <https://www.wim.uni-mannheim.de/schlather/publications/software>.
+    geostatistical models use Maximum Likelihood Estimation.  For details see Brown (2015) <doi:10.18637/jss.v063.i12>. The 'RandomFields' package is available at <https://www.wim.uni-mannheim.de/schlather/publications/software>.
 License: GPL
 NeedsCompilation: yes
 VignetteBuilder: knitr
