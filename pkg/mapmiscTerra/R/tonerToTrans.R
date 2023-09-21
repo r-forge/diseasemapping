@@ -7,9 +7,9 @@ tonerToTrans = function(x, pattern= "(red|green|blue)$",
     xValues = terra::coltab(x)[[1]]    
     result = terra::deepcopy(x)
   } else {
-    xValues = cbind(value=1:ncell(x), terra::values(x))
+    xValues = cbind(value=1:terra::ncell(x), terra::values(x))
     result = rast(x, nlyrs=1)
-    terra::values(result) = 1:ncell(result)
+    terra::values(result) = 1:terra::ncell(result)
   }
   Scol = grep(pattern, colnames(xValues), value=TRUE)
   if(!length(Scol)) {

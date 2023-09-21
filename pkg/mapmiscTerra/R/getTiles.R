@@ -240,7 +240,7 @@ getTiles = function(
       rasters[[Drow]] = thisimage
     } # end Drow
 
-    Snlyrs = unlist(lapply(rasters, nlyr))
+    Snlyrs = unlist(lapply(rasters, terra::nlyr))
     if(any(Snlyrs==1) & any(Snlyrs > 1) ){
       # mixture of colour tables and rgb
       Srow = which(Snlyrs == 1)
