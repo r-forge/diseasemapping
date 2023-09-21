@@ -40,15 +40,17 @@ Patrick Brown
 \examples{
 
 	data('worldMap');worldMap = unwrap(worldMap)
-	rgbMap = openmap(worldMap[worldMap$NAME == 'Sierra Leone',], path='stamen-toner')
-	names(rgbMap)
-	plot(rgbMap)
+
+	origMap = openmap(worldMap[worldMap$NAME == 'Sierra Leone',],
+	 path='stamen-toner', buffer=100*1000)
+	oldpar=	map.new(origMap, bg='green')
+	plot(origMap, add=TRUE)
 	
-	transMap = tonerToTrans(rgbMap)
+	transMap = tonerToTrans(origMap)
 	names(transMap)
-oldpar=	map.new(transMap, bg='green')
+  map.new(transMap, bg='green')
 	plot(transMap, add=TRUE)
-par(oldpar)
+	par(oldpar)
 
 
 }

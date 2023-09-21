@@ -281,10 +281,6 @@ openmap = function(
     path[ grep("^http[s]*://", path, invert=TRUE)], sep="")
   names(path) = pathOrig
   
-
-
-
-
   
   Dpath = names(path)[1]
   Durl = path[1]

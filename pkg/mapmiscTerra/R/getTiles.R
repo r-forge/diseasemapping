@@ -240,7 +240,14 @@ getTiles = function(
       rasters[[Drow]] = thisimage
     } # end Drow
 
-#    map.new(rasters[[1]], buffer=20*(xmax(rasters[[1]])-xmin(rasters[[1]])));plot(worldMap, add=TRUE);for(D in 1:length(rasters)) {plot(rasters[[D]], add=TRUE, legend=FALSE)}      
+    Snlyrs = unlist(lapply(rasters, nlyr))
+    if(any(Snlyrs==1) & any(Snlyrs > 1) ){
+      # mixture of colour tables and rgb
+      Srow = which(Snlyrs == 1)
+      for(Drow in Srow) rasters[[Drow]] = terra::colorize(rasters[[Drow]], 'rgb')
+    }
+
+#    map.new(rasters[[1]], buffer=2*(xmax(rasters[[1]])-xmin(rasters[[1]])));plot(worldMap, add=TRUE);for(D in 1:length(rasters)) {plot(rasters[[D]], add=TRUE, legend=FALSE)}      
 
 #    map.new(worldMap);plot(worldMap, add=TRUE);for(D in 1:length(rasters)) {plot(rasters[[D]], add=TRUE, legend=FALSE)}      
 
