@@ -96,6 +96,13 @@ A list with two components named  \code{inla}, \code{raster}, and \code{paramete
 \examples{
 
 # geostatistical model for the swiss rainfall data
+
+if(requireNamespace("INLA", quietly=TRUE) ) {
+  INLA::inla.setOption(num.threads=2)
+  # not all versions of INLA support blas.num.threads
+  try(INLA::inla.setOption(blas.num.threads=2), silent=TRUE)
+} 
+
 require("geostatsp")
 data("swissRain")
 swissRain = unwrap(swissRain)
