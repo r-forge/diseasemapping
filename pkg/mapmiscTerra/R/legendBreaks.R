@@ -205,23 +205,6 @@ legendBreaks = function(pos,
     }
   }
 
-  stuff <<- list(
-      breaks = breaks,
-      x=pos,
-      legend=legend,
-      bg=bg,
-      col=col,
-      pch=pch,
-      pt.cex=pt.cex,
-      inset=inset,
-      cex=cex,
-      text.col=theTextCol,
-      title.col=title.col,
-      title=title,
-      y.intersp=y.intersp,
-      adj=adj,
-      ...
-  )
   
 #	legend = format(as.character(legend), justify='right')
   result=graphics::legend(
