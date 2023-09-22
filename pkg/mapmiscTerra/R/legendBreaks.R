@@ -20,14 +20,16 @@ legendBreaks = function(pos,
     ...){
   
   if(!missing(breaks)){
-    if(is.factor(breaks)){
-      # if it's a raster
-      if(length(grep("^Raster",class(breaks)))){
-        breaks = levels(breaks)[[1]]
-      } else {
-        breaks=list(legend=levels(breaks))
+    if(length(grep("Raster",class(breaks)))){
+      if(terra::is.factor(breaks)){
+        breaks = merge(terra::levels(breaks)[[1]], terra::coltab(breaks), by=1)
+        breaks$col = grDevices::rgb(breaks[,'red'], breaks[,'green'], breaks[,'blue'],
+          maxColorValue=255)
       }
+    } else if(is.factor(breaks)) {
+        breaks=list(legend=levels(breaks))
     }
+
   }
   
   if( missing(legend) & missing(breaks))
@@ -76,7 +78,7 @@ legendBreaks = function(pos,
   } else { # same number of colours as legend entries
     theTextCol = text.col
     # get rid of entries where col is NA
-    theNA = is.na(col)
+    theNA = is.na(col) | is.na(legend)
     if(any(theNA)){
       col = col[!theNA]
       legend = legend[!theNA]
@@ -84,7 +86,7 @@ legendBreaks = function(pos,
   }
   
 # line wrapping for legend labels
-  if(any(nchar(as.character(legend)) > width)) {
+  if(any(nchar(as.character(legend)) > width, na.rm=TRUE)) {
     legend =  trimws(
         gsub(
             paste('(.{1,', width, '})(\\s|/|$)' ,sep=''), 
@@ -202,9 +204,27 @@ legendBreaks = function(pos,
       inset = forInset/propIn + inset
     }
   }
+
+  stuff <<- list(
+      breaks = breaks,
+      x=pos,
+      legend=legend,
+      bg=bg,
+      col=col,
+      pch=pch,
+      pt.cex=pt.cex,
+      inset=inset,
+      cex=cex,
+      text.col=theTextCol,
+      title.col=title.col,
+      title=title,
+      y.intersp=y.intersp,
+      adj=adj,
+      ...
+  )
   
 #	legend = format(as.character(legend), justify='right')
-  result=legend(
+  result=graphics::legend(
       pos,
       legend=legend,
       bg=bg,
