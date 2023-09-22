@@ -4,6 +4,7 @@
 \documentclass[12pt]{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath}
+\usepackage{graphicx}
 \usepackage{caption}
 \usepackage{subcaption}
 \providecommand{\subfloat}[2][need a sub-caption]{\subcaptionbox{#1}{#2}}
@@ -17,7 +18,30 @@
 
 <<knitr, include=FALSE>>=
 require('knitr')
-opts_chunk$set(out.width='0.48\\textwidth', fig.align='default', fig.height=3, fig.width=6)
+# very basic output that doesnt require extra latex packages
+
+knit_hooks$set(source  =function(x, options) {
+	paste0(c('\\begin{verbatim}', x, '\\end{verbatim}', ''),
+			collapse = '\n')
+})
+knit_hooks$set(plot = function (x, options) 
+		{
+			paste0(knitr::hook_plot_tex(x, options), "\n")
+	 })
+knit_hooks$set(chunk = function(x, options) {x})
+
+hook_output <- function(x, options) {
+	if (knitr:::output_asis(x, options)) return(x)
+	paste0('\\begin{verbatim}\n', x, '\\end{verbatim}\n')
+}
+
+knit_hooks$set(output = hook_output)
+knit_hooks$set(message = hook_output)
+knit_hooks$set(warning = hook_output)
+
+require("terra", quietly=TRUE)
+require("mapmisc", quietly=TRUE)
+opts_chunk$set(out.width='0.48\\textwidth', fig.align='default', fig.height=3, fig.width=4, tidy=FALSE)
 @    
 
 <<inla, include=FALSE>>=
@@ -27,6 +51,8 @@ if(requireNamespace('INLA')) {
 	try(INLA::inla.setOption(blas.num.threads=2), silent=TRUE)
 }
 @
+
+\section*{Data}
 
 <<packages>>=
 require('diseasemapping')
@@ -100,12 +126,12 @@ and a spatially independent variance $\sigma_2^2$
 
 
 
-<<bymGamma, tidy=TRUE>>=
-kBYM = try(bym(
+<<bymGamma>>=
+kBYM = bym(
 		formula = observed ~ offset(logExpected) + poverty,
     data=kentucky,
     prior = list(sdSpatial=c(0.01, 0.2), sdIndep=c(0.01, 0.2)),
-		region.id="County"))
+		region.id="County")
 @
 
 
@@ -129,10 +155,10 @@ if(!is.null(kBYM$parameters))
 
 
 
-<<priorPost, fig.cap="gamma priors sd parameters", fig.height=4, fig.width=3, fig.subcap=c("spatial", "indep"), echo=FALSE>>=
+<<priorPost, fig.cap="gamma priors sd parameters", fig.subcap=c("spatial", "indep"), echo=FALSE>>=
 
 if(!is.null(kBYM$parameters)) {
-	
+	par(mar = c(3,3,0,0))	
 plot(kBYM$parameters$sdSpatial$posterior, type='l', 
 		xlim=c(0,1/4))
 lines(kBYM$parameters$sdSpatial$prior, col='blue')
@@ -156,13 +182,13 @@ legend('topright', lty=1, col=c('black','blue'), legend=c('posterior','prior'))
 
 \section*{BYM with penalised complexity prior}
 
-`propSpatial = c(u=0.5, alpha=0.8)` means $pr(\phi < 0.5) = 0.8$, which is different from the specification of `pc.prec`
+\verb!propSpatial = c(u=0.5, alpha=0.8)! means $pr(\phi < 0.5) = 0.8$, which is different from the specification of `pc.prec`
 
 
-<<bymPc, tidy=TRUE>>=
+<<bymPc>>=
 	kBYMpc = bym(
 	formula = observed ~ offset(logExpected) + poverty,
-    kentucky,
+  kentucky,
 	prior = list(
       sd=c(u=1, alpha=0.05), 
       propSpatial = c(u=0.5, alpha=0.8)))
@@ -187,7 +213,7 @@ if(!is.null(kBYMpc$parameters))
 
 
 
-<<priorPostPc, fig.cap="PC priors variance parameters", fig.height=4, fig.width=3, fig.subcap=c("sd","prop spatial"), echo=FALSE>>=
+<<priorPostPc, fig.cap="PC priors variance parameters", fig.subcap=c("sd","prop spatial"), echo=FALSE>>=
 
 if(!is.null(kBYMpc$parameters)) {
 
@@ -239,36 +265,35 @@ noData = bym(
 
 if(require('mapmisc', quietly=TRUE) & !is.null(kBYMpc$parameters)) {
 	
-thecex=0.6	
-	
 colFitPc = colourScale(kBYMpc$data$fitted.exp,
 				breaks=6, dec=1, style='equal')
 
 colFit = colourScale(kBYM$data$fitted.exp,
-		breaks=colFit$breaks, style='fixed',
-		col=colFit$col)
+		breaks=colFitPc$breaks, style='fixed',
+		col=colFitPc$col)
 
+mapmisc::map.new(kentucky)
+plot(kBYM$data, col=colFit$plot, add=TRUE)
+legendBreaks('topleft', colFit)
 
-plot(kBYM$data, col=colFit$plot)
-legendBreaks('topleft', colFit, cex=thecex)
-
-
-plot(kBYMpc$data, col=colFitPc$plot)
-legendBreaks('topleft', colFitPc, cex=thecex)
+mapmisc::map.new(kentucky)
+plot(kBYMpc$data, col=colFitPc$plot, add=TRUE)
+legendBreaks('topleft', colFitPc)
 
 colRpc = colourScale(kBYMpc$data$random.mean,
-		style='equal', breaks=10,dec=2)
+		style='equal', breaks=8,dec=2)
 
 colR = colourScale(kBYM$data$random.mean,
 			breaks=colRpc$breaks, col=colRpc$col, 
 			style='fixed')
 
-plot(kBYM$data, col=colR$plot)
-legendBreaks('topleft', colR, cex=thecex)
+mapmisc::map.new(kentucky)
+plot(kBYM$data, col=colR$plot, add=TRUE)
+legendBreaks('topleft', colR)
 
-
-plot(kBYMpc$data, col=colRpc$plot)
-legendBreaks('topleft', colRpc, cex=thecex)
+mapmisc::map.new(kentucky)
+plot(kBYMpc$data, col=colRpc$plot, add=TRUE)
+legendBreaks('topleft', colRpc)
 
 
 } else {
