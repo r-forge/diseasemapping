@@ -100,7 +100,7 @@ myscale = colourScale(nldElev, breaks=4, col=theCol, style='equal', dec=0)
 
 oldpar = map.new(myPoints)
 plot(myPoints, col=myscale$plot, pch=16,add=TRUE)
-legendBreaks("topleft", breaks=myscale)
+legendBreaks("topleft", myscale)
 
 
 myscale2 = colourScale(myPoints$y1, breaks=8, col=rainbow, style="equal",
@@ -108,7 +108,7 @@ opacity=0.8, dec=2, revCol=TRUE)
 
 map.new(myPoints)
 plot(myPoints, col=myscale2$plot, pch=16,add=TRUE)
-legendBreaks("topleft", breaks=myscale2)
+legendBreaks("topleft", myscale2)
 
 if(require('RColorBrewer', quietly=TRUE)) {
 	theCol = 'Set2'
@@ -121,7 +121,7 @@ myscale3 = colourScale(myPoints$y2,  breaks=3,col=theCol, style="unique",
 
 map.new(myPoints)
 plot(myPoints, col=myscale3$plot, pch=16,add=TRUE)
-legendBreaks("topleft", breaks=myscale3)
+legendBreaks("topleft", myscale3)
 
 myPoints$y3 = exp(myPoints$y1)
 myscale4 = colourScale(myPoints$y3,  breaks=4, style="equal",
@@ -129,7 +129,7 @@ myscale4 = colourScale(myPoints$y3,  breaks=4, style="equal",
 
 map.new(myPoints)
 plot(myPoints, col=myscale4$plot, pch=16,add=TRUE)
-legendBreaks("topleft", legend=myscale4$breaks, col=myscale4$col)
+legendBreaks("topleft", myscale4)
 
 
 # raster with colour table
