@@ -130,10 +130,10 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 
 	   # if labels is missing, take labels from the raster
 		if(is.null(labels)){
-
-				labels = terra::levels(x)[[1]]
-				if(identical(labels, "")) labels = NULL
-
+			if(terra::is.factor(x)) {
+		        labels = merge(terra::levels(x)[[1]], terra::coltab(x)[[1]], by=1)
+			}
+			if(identical(labels, "")) labels = NULL
 		}
 
     # if labels is a data frame, use it
@@ -206,8 +206,8 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 	
 	if(terra::ncell(x)<1e+06) {
 		x = terra::freq(x)[,-1]
-		weights = x[,2]
-		x=x[,1]
+		weights = x[,'count']
+		x=x[,'value']
 	} else {
 		terra::activeCat(x) = 'ID'
 		weights = table(
@@ -228,7 +228,7 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 		levelsx = data.frame(
 			ID=sort(x))
 	}
-	notInLevels = which(! x %in% levelsx$ID)
+	notInLevels = which(! (x %in% levelsx$ID | x %in% levelsx$label))
 	if(length(notInLevels)){
       # add more values to ID
 		toAdd = matrix(NA,

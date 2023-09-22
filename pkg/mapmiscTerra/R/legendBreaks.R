@@ -22,7 +22,7 @@ legendBreaks = function(pos,
   if(!missing(breaks)){
     if(length(grep("Raster",class(breaks)))){
       if(terra::is.factor(breaks)){
-        breaks = merge(terra::levels(breaks)[[1]], terra::coltab(breaks), by=1)
+        breaks = merge(terra::levels(breaks)[[1]], terra::coltab(breaks)[[1]], by=1)
         breaks$col = grDevices::rgb(breaks[,'red'], breaks[,'green'], breaks[,'blue'],
           maxColorValue=255)
       }

@@ -215,6 +215,7 @@ myres = likfitLgm(
 	)
 
 myres$summary
+
 par(oldpar)
 par(mfrow=c(1,2))
 
