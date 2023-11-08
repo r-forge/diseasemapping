@@ -1,13 +1,24 @@
 
-library("rgdal")
-canada = raster::getData("GADM", country='CAN', level=0, path=rawdir)
-canada = spTransform(canada,CRS("+init=epsg:3347"))
-canadaBg = mapmisc::openmap(canada)
 
 basedir = '/store/census'
 rawdir = file.path(basedir, 'raw')
 dir.create(rawdir)
 dir.create(file.path(basedir, 'CAN'))
+
+
+
+
+library("terra")
+
+data('worldMap', package='mapmisc');worldMap = unwrap(worldMap)
+
+canadaLL = geodata::gadm(country='CAN', level=0, path=rawdir)
+canada = terra::project(canadaLL,terra::crs("epsg:3347"))
+
+canadaBgLL = mapmisc::openmap(canadaLL)
+
+canadaBg = mapmisc::openmap(canada, zoom=1)
+
 
 
 Sid = 		c(
@@ -60,18 +71,19 @@ SidNames = list(
 
 
 
-Syear = c(2006, 2011, 2016) # 2001 has e00 files
-Sprefix = c('2001' = 'g', '2006' = 'g', '2011' = 'g', '2016' = 'l')
-SinsideFolder = c('2001' = '', '2006' = '', '2011' ='' , '2016' = '2016/')
+Syear = c(2001, 2006, 2011, 2016, 2021)  
+Sprefix = c('2001' = 'g', '2006' = 'g', '2011' = 'g', '2016' = 'l', '2021'='l')
+SinsideFolder = c('2001' = '', '2006' = '', '2011' ='' , '2016' = '2016/', '2021'='')
 bndList = list()
-for(Dyear in Syear) {
-
+#for(Dyear in Syear) {
+for(Dyear in 2001) {
 candir = file.path(basedir, 'CAN', Dyear)
 
 dir.create(candir)
 
 Surl = paste(
-		'http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/',
+		'http://www12.statcan.gc.ca/census-recensement/', 2011, 
+		'/geo/bound-limit/files-fichiers/',
 #		Dyear, '/',
 		SinsideFolder[as.character(Dyear)],
 		Sprefix[as.character(Dyear)],
@@ -83,8 +95,16 @@ if(Dyear == 2001) {
 	Surl = gsub("gdb_000b01a", "gdb_000a01a", Surl)
 }
 
+if(Dyear == 2021) {
+	Surl = gsub("bound-limit", "sip-pis/boundary-limites", Surl)
+}
+
 Zfile = file.path(rawdir, basename(Surl))
 
+#for(Dlevel in 1:length(Zfile)) {
+#if(!file.exists(Zfile[Dlevel])) 
+#	download.file(Surl[Dlevel], Zfile[Dlevel])
+#}
 Sfile = Pmisc::downloadIfOld(
 		Surl, path=rawdir,
 		#file=Zfile, 
@@ -92,8 +112,13 @@ Sfile = Pmisc::downloadIfOld(
 )
 
 
+
 SshpFile = grep("[.]shp$", Sfile, value=TRUE)
 SshpFile = gsub("[.]shp$", "", basename(SshpFile))
+
+Se00files =  grep("[.]e00$", Sfile, value=TRUE)
+Se00files = Se00files[nchar(Se00files)!= max(nchar(Se00files))]
+
 
 
 bndList[[Dyear]] = list()
@@ -101,15 +126,38 @@ for(Dlevel in names(Sid)) {
 	cat(Dlevel, ' ')
 	DlevelId = as.numeric(gsub("id", "", Dlevel))
 	leveldir = file.path(candir, DlevelId)
-	dir.create(leveldir)
+	dir.create(leveldir, showWarnings=FALSE)
 	
+if(!length(SshpFile)) {
+
+	De00file =  grep(
+			paste("[a-z]", Sid[Dlevel], sep=''),
+			Se00files, value=TRUE
+	)
+	bnd1 = terra::vect(De00file, layer='ARC')
+	bndLabels = terra::vect(De00file, layer='LAB')
+	if(FALSE) {
+		mapmisc::map.new(extent())
+		plot(bnd1, add=TRUE)
+	}
+
+	values(bnd1) =  values(bndLabels)[bnd1$LPOLY_,grep("NAME|UID", names(bndLabels))]
+
+	bnd = aggregate(bnd1, by=grep(paste0(Sid[Dlevel],'UID'), names(bnd1), ignore.case=TRUE, value=TRUE))
+	
+} else {
+
+
 	DshpFile = grep(
 			paste("[a-z]", Sid[Dlevel], sep=''),
 			SshpFile, value=TRUE
 	)
 	
-	bnd = readOGR(rawdir, DshpFile, stringsAsFactors=FALSE)
-	bnd = spTransform(bnd, CRS("+init=epsg:3347"))
+
+
+	bnd = terra::vect(file.path(rawdir, paste0(DshpFile, '.shp')))
+}
+	bnd = terra::project(bnd, terra::crs("epsg:3347"))
 	
 	bndDf = data.frame(
 			id0 = rep('CAN', length(bnd)),
@@ -122,29 +170,28 @@ for(Dlevel in names(Sid)) {
 		
 		for(Dname in names(idHere)) {
 			if(idHere[Dname] %in% names(bnd))
-				bndDf[[Dname]] = bnd@data[[idHere[Dname]]]
+				bndDf[[Dname]] = values(bnd)[[idHere[Dname]]]
 		}
 		
 	}
-	bndS = rgeos::gSimplify(bnd, tol=50, topologyPreserve=TRUE)
-	rownames(bndDf) = names(bndS)
-	bnd = SpatialPolygonsDataFrame(bndS, bndDf)
-	bndList[[Dyear]][[Dlevel]] = bnd	
+	bndS = terra::simplifyGeom(bnd, tol=50)
+#	rownames(bndDf) = names(bndS)
+	for(D in names(bndDf)) bndS[[D]] = bndDf[[D]]
+	bndList[[Dyear]][[Dlevel]] = bndS	
 	# write map
 	
 	png(file.path(leveldir, "map.png"))
 	mapmisc::map.new(canada, buffer=-c(0,0.5,0.5,5))
 	plot(canadaBg, add=TRUE)
-	plot(bnd, add=TRUE, border='red')
+	plot(bndS, add=TRUE, border='red')
 	dev.off()
 	
 	# write shapefile
 
-	writeOGR(
-			bnd,
-			leveldir,
-			'map',
-			driver= "ESRI Shapefile", overwrite=TRUE
+	writeVector(
+			bndS,
+			file.path(leveldir, 'map.shp'),
+			filetype= "ESRI Shapefile", overwrite=TRUE
 	)
 	
 	
