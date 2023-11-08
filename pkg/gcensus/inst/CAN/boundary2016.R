@@ -75,6 +75,17 @@ Syear = c(2001, 2006, 2011, 2016, 2021)
 Sprefix = c('2001' = 'g', '2006' = 'g', '2011' = 'g', '2016' = 'l', '2021'='l')
 SinsideFolder = c('2001' = '', '2006' = '', '2011' ='' , '2016' = '2016/', '2021'='')
 bndList = list()
+
+
+reversePoly = function(x) {
+  theDf = values(x)
+  toSwap = theDf$TNODE_
+  theDf$TNODE_ = theDf$FNODE_
+  theDf$FNODE_ = toSwap
+  vect(crds(x)[nrow(crds(x)):1, ], atts=theDf, crs=crs(x), type='lines')
+}
+
+
 #for(Dyear in Syear) {
 for(Dyear in 2001) {
 candir = file.path(basedir, 'CAN', Dyear)
@@ -134,17 +145,189 @@ if(!length(SshpFile)) {
 			paste("[a-z]", Sid[Dlevel], sep=''),
 			Se00files, value=TRUE
 	)
-	bnd1 = terra::vect(De00file, layer='ARC')
+	bnd1a = terra::vect(De00file, layer='ARC')
+	
+	
+#	(toronto = values(bndLabels)[bndLabels$CDUID == 3520, ])
+	
+#	plot(bnd1a, xlim = -79.4 + c(-1,1), ylim = 43.6 + c(-1,1))
+	
 	bndLabels = terra::vect(De00file, layer='LAB')
+	
+	IDvar = grep(paste0(Sid[Dlevel], 'UID$'), names(bndLabels), value=TRUE, ignore.case=TRUE)
+	
+	bndLabels1 = split(values(bndLabels), bndLabels[[IDvar]])
+	
+	verbose = FALSE
+	bndPoly = list()
+	for(D in 1:length(bndLabels1)) {
+	  if(verbose) cat(D, " ")
+	  xx = bndLabels1[[D]] #lapply(bndLabels1, function(xx) {
+	  res = bnd1a[bnd1a$RPOLY_ %in% xx$PolyId | bnd1a$LPOLY_ %in% xx$PolyId,]
+	  res$isRight = res$RPOLY_ %in% xx$PolyId
+	  res$isLeft = res$LPOLY_ %in% xx$PolyId
+	  isBoth = which(res$isRight & res$isLeft)
+	  if(length(isBoth)) {
+	    # get rid, it's dividing a region in two
+	    res = res[-isBoth, ]
+	  }
+	  res$isSame = res$FNODE_ == res$TNODE_
+	  res=res[order(!res$isSame, res$FNODE_),]
+	  res$polyId = NA
+	  resOutPoints = res[res$isSame, ]
+	  resOutPoints$polyId = 1:nrow(resOutPoints)
+	  resRemaining = res[!res$isSame, ]
+	  tableOfNodes= sort(table(c(resRemaining$FNODE_, resRemaining$TNODE_)))
+	  theFours = as.numeric(names(tableOfNodes[tableOfNodes==4]))
+	  
+	  
+	  #	  theOnes = as.integer(names(which(table(unlist(values(resRemaining)[!isTheFours,c("FNODE_", 'TNODE_')]))==1)))
+	  
+	  #isTheOnes = resRemaining$FNODE_ %in% theOnes | resRemaining$TNODE_ %in% theOnes
+	  #isTheOnes = isTheOnes & !isTheFours
+	  
+#	  resIsOnes = resRemaining[isTheOnes, ]
+	  resRemainingOrig = resRemaining
+	  if(length(theFours)) {
+	    isTheFours = mapply(function(fourHere) {
+	      which(resRemaining$FNODE_ %in% fourHere | resRemaining$TNODE_ %in% fourHere)
+	    }, fourHere = theFours, SIMPLIFY=TRUE)
+
+	  theFoursReserve = isTheFours#[-1, , drop=FALSE]
+
+	  resRemaining = resRemainingOrig[-as.vector(theFoursReserve), ]
+	  resTheFours = resRemainingOrig[as.vector(theFoursReserve), ]
+	  theFoursReserveId = apply(values(resTheFours)[,c('FNODE_', 'TNODE_')], 1, setdiff, y=theFours)
+	  theFoursIsT = resTheFours$TNODE_ %in% theFoursReserveId
+	} # length(theFours)
+	  
+	  
+	  theTable = table(unlist(values(resRemaining)[,c("FNODE_", 'TNODE_')]))
+	  theOnes = as.numeric(names(which(theTable==1)))
+
+	  resRemaining$oneNeighbour = resRemaining$FNODE_ %in% theOnes | resRemaining$TNODE_ %in% theOnes
+	  
+	  resRemaining$oneNeighbour = resRemaining$oneNeighbour - 5*(resRemaining$FNODE_ %in% theFours) - 5*(resRemaining$TNODE_ %in% theFours)
+	  
+	  resRemaining=resRemaining[order(!resRemaining$oneNeighbour, resRemaining$FNODE_),]
+	  
+	  Dpolygon = nrow(resOutPoints)+1
+	  resOut = resRemaining[1,]
+	  resOut$polyId = Dpolygon
+	  
+	  # reverse if can't find a 'to' node but do have a 'from'
+	  if(nrow(resRemaining)) {
+	  if(!( resOut$TNODE_ %in% resRemaining$FNODE_) ){
+  	  resOut = reversePoly(resOut)
+	  }
+	  }
+	  
+	  resRemaining = resRemaining[-1, ]
+	  Sline  = seq(from=1, len=nrow(resRemaining), by=1)
+	  for(Dline in Sline) {
+	    inTnode = which(resRemaining$TNODE_ == resOut$TNODE_[nrow(resOut)])
+	    TnodeHere = resRemaining$TNODE_[inTnode]
+	    inFnode = which(resRemaining$FNODE_ == resOut$TNODE_[nrow(resOut)])
+	    FnodeHere = resRemaining$FNODE_[inFnode]
+	    inC = c(inFnode, inTnode)
+	    if(length(inC) > 1) {
+	      warning("found two polygons", Dline)
+	      # check if can close a loop
+	      firstInThisPolyid = which.min(resOut$polyId == Dpolygon)
+	      toMatch = values(resOut)[firstInThisPolyid, 'FNODE_']
+	      toMatch1 = values(resRemaining)[inFnode,'TNODE_'] == toMatch
+	      toMatch2 = values(resRemaining)[inTnode,'FNODE_'] == toMatch
+        if(any(toMatch1)) {
+          inC = inFnode[toMatch1][1]
+        } else if(any(toMatch2)) {
+          inC = inTnode[toMatch2][1]
+        }
+	      sameLeft = resRemaining$isLeft[inC] == resOut$isLeft[[nrow(resOut)]]
+	      if(any(sameLeft)) inC = inC[sameLeft]
+	      inC = inC[1]
+	    }
+	    if(!length(inC) ) {
+	      # new polygon
+	      Dpolygon = Dpolygon + 1
+	      inFnode = inC = 1
+	      newRes = resRemaining[1, ]
+	      nodesRemaing = unlist(values(resRemaining)[-1,c('FNODE_', 'TNODE_')])
+	      matchedTnode =  newRes$TNODE_ %in% nodesRemaing
+	      matchedFnode = newRes$TNODE_ %in% nodesRemaing
+	                                          
+	      if(matchedFnode & (!matchedTnode)){
+	        newRes = reversePoly(newRes)
+	      }
+	    } else {
+  	    newRes = resRemaining[inC, ]
+	    }
+	    
+	    newRes$polyId = Dpolygon
+	    resRemaining = resRemaining[-inC, ]
+	    if(length(inTnode)) { # reverse
+	      newRes = reversePoly(newRes)
+	    }
+	    resOut = vect(c(resOut, newRes))
+	  } # Dline
+	  
+	  if(length(theFours)) {
+	    # put nodes with four connections back in
+      for(Dfour in 1:nrow(resTheFours)) {
+        newRes = resTheFours[Dfour,]
+        matchF = which(resOut$FNODE_ == theFoursReserveId[Dfour])
+        matchT = which(resOut$TNODE_ == theFoursReserveId[Dfour])
+
+        newRes$polyId = resOut$polyId[c(matchF, matchT)[1]]
+          
+        if( !(
+          (length(matchF) & (theFoursIsT[Dfour]) ) 
+            | 
+          (length(matchT) & (!theFoursIsT[Dfour]) ) 
+        )
+          ){
+          # reverse
+          newRes = reversePoly(newRes)
+        }
+        if(length(matchT)) { # goes after
+          resOut = vect(c(
+            resOut[seq(from=1, to=matchT[1])],
+            newRes,
+            resOut[seq(from=matchT[1]+1, by=1, len=nrow(resOut)-matchT[1])]
+          ))
+        } else if(length(matchF)) {  # before
+          resOut = vect(c(
+            resOut[seq(from=1, by=1, len=matchF[1]-1)],
+            newRes,
+            resOut[seq(matchF[1], nrow(resOut))]
+          ))
+        }
+      }
+	    
+	  } # adding back in theFours
+	  
+	  resOut2 = vect(c(resOutPoints, resOut))
+	  resOut3 = as.points(resOut2)
+	  resOut4 = split(resOut3, resOut3$polyId)
+
+	  resOut5 = lapply(resOut4, function(xxx) {
+	    vect(crds(xxx), atts=values(xxx), crs=crs(xxx), type='polygons')
+	  })
+	  resOut6 = aggregate(vect(resOut5))	  
+	  values(resOut6) = xx[1,grep("NAME|ID", names(xx))]
+	  bndPoly[[D]] = resOut6
+	}	# D
+	if(verbose) cat("\n ")
+	
+	
+	bnd = vect(bndPoly)
+  
+
 	if(FALSE) {
-		mapmisc::map.new(extent())
-		plot(bnd1, add=TRUE)
+		mapmisc::map.new(bndPoly1[grep("Toronto|Essex|Ottawa", bndPoly1$CDNAME), ])
+		plot(bndPoly1, add=TRUE)
 	}
 
-	values(bnd1) =  values(bndLabels)[bnd1$LPOLY_,grep("NAME|UID", names(bndLabels))]
 
-	bnd = aggregate(bnd1, by=grep(paste0(Sid[Dlevel],'UID'), names(bnd1), ignore.case=TRUE, value=TRUE))
-	
 } else {
 
 
@@ -153,8 +336,6 @@ if(!length(SshpFile)) {
 			SshpFile, value=TRUE
 	)
 	
-
-
 	bnd = terra::vect(file.path(rawdir, paste0(DshpFile, '.shp')))
 }
 	bnd = terra::project(bnd, terra::crs("epsg:3347"))
@@ -201,7 +382,7 @@ if(!length(SshpFile)) {
 
 }
 # population
-Dyear = 2016
+# Dyear = 2016
 
 # canada, province, cd, csd da.  my DA is 5, ct is 4
 SlevelsRecode = c('0' = 0, '1' =1, '2' = 2, '3'=3, '4' = 5)
