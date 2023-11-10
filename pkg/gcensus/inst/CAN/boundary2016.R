@@ -87,7 +87,10 @@ reversePoly = function(x) {
 
 
 #for(Dyear in Syear) {
-for(Dyear in 2001) {
+Dyear = 1991
+
+
+#for(Dyear in 2001) {
 candir = file.path(basedir, 'CAN', Dyear)
 
 dir.create(candir)
@@ -110,6 +113,19 @@ if(Dyear == 2021) {
 	Surl = gsub("bound-limit", "sip-pis/boundary-limites", Surl)
 }
 
+if(Dyear == 1996) { 
+  Surl = c(
+    'https://geo2.scholarsportal.info/proxy.html?https:__maps.scholarsportal.info/files/zips/DLI/DLI_1996_Census_CBF_Eng_Nat_cd.zip',
+    'https://geo2.scholarsportal.info/proxy.html?https:__maps.scholarsportal.info/files/zips/DLI/DLI_1996_Census_CBF_Eng_Nat_ea.zip'
+  )
+}
+  
+if(Dyear == 1991) { 
+  Surl = c(
+    'https://geo2.scholarsportal.info/proxy.html?https:__maps.scholarsportal.info/files/zips/DLI/DLI_1991_Census_DBF_Eng_Nat_ea.zip',
+    'https://geo2.scholarsportal.info/proxy.html?https:__maps.scholarsportal.info/files/zips/DLI/DLI_1991_Census_CBF_Eng_Nat_cd.zip'
+)
+}
 Zfile = file.path(rawdir, basename(Surl))
 
 #for(Dlevel in 1:length(Zfile)) {
@@ -119,21 +135,28 @@ Zfile = file.path(rawdir, basename(Surl))
 Sfile = Pmisc::downloadIfOld(
 		Surl, path=rawdir,
 		#file=Zfile, 
-		verbose=TRUE, exdir=rawdir
+		verbose=TRUE, exdir=rawdir#, age = 0
 )
+
+if(Dyear ==1996 ){
+  xx = as.vector(mapply(unzip, grep("_GeoPortal", Sfile, value=TRUE), MoreArgs = list(exdir=rawdir)))
+  Sfile = xx
+}
 
 
 
 SshpFile = grep("[.]shp$", Sfile, value=TRUE)
-SshpFile = gsub("[.]shp$", "", basename(SshpFile))
+#SshpFile = gsub("[.]shp$", "", basename(SshpFile))
 
 Se00files =  grep("[.]e00$", Sfile, value=TRUE)
 Se00files = Se00files[nchar(Se00files)!= max(nchar(Se00files))]
 
+Dlevel = 'id5'
 
 
 bndList[[Dyear]] = list()
-for(Dlevel in names(Sid)) {
+#for(Dlevel in names(Sid)) {
+#  for(Dlevel in c('id2','id5')) {
 	cat(Dlevel, ' ')
 	DlevelId = as.numeric(gsub("id", "", Dlevel))
 	leveldir = file.path(candir, DlevelId)
@@ -146,6 +169,7 @@ if(!length(SshpFile)) {
 			Se00files, value=TRUE
 	)
 	bnd1a = terra::vect(De00file, layer='ARC')
+	canadaLLe00 = project(canadaLL, crs(bnd1a))
 	
 	
 #	(toronto = values(bndLabels)[bndLabels$CDUID == 3520, ])
@@ -158,8 +182,11 @@ if(!length(SshpFile)) {
 	
 	bndLabels1 = split(values(bndLabels), bndLabels[[IDvar]])
 	
+#	verbose=TRUE
 	verbose = FALSE
+	
 	bndPoly = list()
+	usedConvHull = rep(FALSE, length(bndLabels1))
 	for(D in 1:length(bndLabels1)) {
 	  if(verbose) cat(D, " ")
 	  xx = bndLabels1[[D]] #lapply(bndLabels1, function(xx) {
@@ -214,15 +241,15 @@ if(!length(SshpFile)) {
 	  Dpolygon = nrow(resOutPoints)+1
 	  resOut = resRemaining[1,]
 	  resOut$polyId = Dpolygon
+	  resRemaining = resRemaining[-1, ]
 	  
 	  # reverse if can't find a 'to' node but do have a 'from'
 	  if(nrow(resRemaining)) {
-	  if(!( resOut$TNODE_ %in% resRemaining$FNODE_) ){
+	  if(!( resOut$TNODE_ %in% unlist(values(resRemaining)[,c('FNODE_','TNODE_')]) ) ){
   	  resOut = reversePoly(resOut)
 	  }
 	  }
 	  
-	  resRemaining = resRemaining[-1, ]
 	  Sline  = seq(from=1, len=nrow(resRemaining), by=1)
 	  for(Dline in Sline) {
 	    inTnode = which(resRemaining$TNODE_ == resOut$TNODE_[nrow(resOut)])
@@ -245,7 +272,7 @@ if(!length(SshpFile)) {
 	      sameLeft = resRemaining$isLeft[inC] == resOut$isLeft[[nrow(resOut)]]
 	      if(any(sameLeft)) inC = inC[sameLeft]
 	      inC = inC[1]
-	    }
+	    } # length(inC)>1
 	    if(!length(inC) ) {
 	      # new polygon
 	      Dpolygon = Dpolygon + 1
@@ -253,7 +280,7 @@ if(!length(SshpFile)) {
 	      newRes = resRemaining[1, ]
 	      nodesRemaing = unlist(values(resRemaining)[-1,c('FNODE_', 'TNODE_')])
 	      matchedTnode =  newRes$TNODE_ %in% nodesRemaing
-	      matchedFnode = newRes$TNODE_ %in% nodesRemaing
+	      matchedFnode = newRes$FNODE_ %in% nodesRemaing
 	                                          
 	      if(matchedFnode & (!matchedTnode)){
 	        newRes = reversePoly(newRes)
@@ -276,18 +303,23 @@ if(!length(SshpFile)) {
         newRes = resTheFours[Dfour,]
         matchF = which(resOut$FNODE_ == theFoursReserveId[Dfour])
         matchT = which(resOut$TNODE_ == theFoursReserveId[Dfour])
-
-        newRes$polyId = resOut$polyId[c(matchF, matchT)[1]]
+        
+        if(length(matchF) + length(matchT)) { # matched
+          newRes$polyId = resOut$polyId[c(matchF, matchT)[1]]
           
-        if( !(
-          (length(matchF) & (theFoursIsT[Dfour]) ) 
-            | 
-          (length(matchT) & (!theFoursIsT[Dfour]) ) 
-        )
+          if( !(
+            (length(matchF) & (theFoursIsT[Dfour]) ) 
+              | 
+            (length(matchT) & (!theFoursIsT[Dfour]) ) 
+          )
           ){
           # reverse
           newRes = reversePoly(newRes)
+          } # end reverse
+        } else { # not matched, new poly
+          newRes$polyId = max(resOut$polyId, na.rm=TRUE)+1
         }
+        
         if(length(matchT)) { # goes after
           resOut = vect(c(
             resOut[seq(from=1, to=matchT[1])],
@@ -300,11 +332,14 @@ if(!length(SshpFile)) {
             newRes,
             resOut[seq(matchF[1], nrow(resOut))]
           ))
+        } else {
+          resOut = vect(c(resOut, newRes))
         }
       }
 	    
 	  } # adding back in theFours
-	  
+#  plot(resOut, col=resOut$polyId)
+	 	  
 	  resOut2 = vect(c(resOutPoints, resOut))
 	  resOut3 = as.points(resOut2)
 	  resOut4 = split(resOut3, resOut3$polyId)
@@ -312,7 +347,13 @@ if(!length(SshpFile)) {
 	  resOut5 = lapply(resOut4, function(xxx) {
 	    vect(crds(xxx), atts=values(xxx), crs=crs(xxx), type='polygons')
 	  })
-	  resOut6 = aggregate(vect(resOut5))	  
+	  resOut6 = try(aggregate(vect(resOut5)), silent=TRUE)
+	  # 3732 doesnt work
+	  if(any(class(resOut6)== 'try-error')) {
+	    usedConvHull[D] = TRUE
+	    resOut6 = convHull(resOut3)
+	  }
+	    
 	  values(resOut6) = xx[1,grep("NAME|ID", names(xx))]
 	  bndPoly[[D]] = resOut6
 	}	# D
@@ -332,13 +373,21 @@ if(!length(SshpFile)) {
 
 
 	DshpFile = grep(
-			paste("[a-z]", Sid[Dlevel], sep=''),
+			paste("[a-z]_?", Sid[Dlevel], sep=''),
 			SshpFile, value=TRUE
 	)
-	
-	bnd = terra::vect(file.path(rawdir, paste0(DshpFile, '.shp')))
+  if(!length(DshpFile)) {
+    DshpFile = grep(
+      paste("[a-z]_?", gsub("da", "ea", Sid[Dlevel]), sep=''),
+      SshpFile, value=TRUE
+    )
+  }
+		
+	bnd = terra::vect(DshpFile)
 }
+	
 	bnd = terra::project(bnd, terra::crs("epsg:3347"))
+	bnd = crop(bnd, ext(canada))
 	
 	bndDf = data.frame(
 			id0 = rep('CAN', length(bnd)),
@@ -355,7 +404,10 @@ if(!length(SshpFile)) {
 		}
 		
 	}
-	bndS = terra::simplifyGeom(bnd, tol=50)
+	
+	  names(bnd) = gsub("EAUID", "id5", names(bnd))
+
+	  	bndS = terra::simplifyGeom(bnd, tol=50)
 #	rownames(bndDf) = names(bndS)
 	for(D in names(bndDf)) bndS[[D]] = bndDf[[D]]
 	bndList[[Dyear]][[Dlevel]] = bndS	
@@ -366,6 +418,21 @@ if(!length(SshpFile)) {
 	plot(canadaBg, add=TRUE)
 	plot(bndS, add=TRUE, border='red')
 	dev.off()
+	
+	if(FALSE) {
+	  mapmisc::map.new(ext(c(7227000+ 10*1000*c(-1,1),  935000+5*1000*c(-1,1))))
+	  plot(bndS, add=TRUE, border='red', col='#0000FF30')
+	  
+	 mapmisc::map.new(ext(4750000, 6250000,  2950000, 3640000))
+	                   plot(bndS, add=TRUE, border='red', col='#0000FF30')
+	                   
+for(D in 1:nrow(stuff)) {
+mapmisc::map.new(stuff[D,], buffer=300*1000);plot(stuff, add=TRUE);plot(stuff[D,], add=TRUE, col='red', border='red')
+  mtext(D, side=3, outer=FALSE, line=-2, col='blue')
+  locator(1)
+}
+#	         
+	}
 	
 	# write shapefile
 
@@ -378,9 +445,9 @@ if(!length(SshpFile)) {
 	
 	
 
-}
+ } # level
 
-}
+#} # year
 # population
 # Dyear = 2016
 
