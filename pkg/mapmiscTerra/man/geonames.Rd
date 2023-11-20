@@ -19,7 +19,7 @@
 	\item{east,south,west}{If \code{north} is numeric, decimal degree bounding box.}
 	\item{lang}{Language for internationalised returned text}
 	\item{maxRows}{Limit on returned rows}
-	\item{buffer}{passed to code{\link[terra]{extend}}}
+	\item{buffer}{passed to \code{\link[terra]{extend}}}
 	\item{...}{Various search arguments}
 	\item{crs}{projection for the output}
 }
