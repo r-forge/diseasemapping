@@ -350,7 +350,7 @@ openmap = function(
     suffix = suffixOrig
 
 
-  stuff <<- list(outraster, zoom, Durl, verbose, suffix, tileNames, cachePath)
+#  stuff <<- list(outraster, zoom, Durl, verbose, suffix, tileNames, cachePath)
   # outraster = stuff[[1]];zoom=stuff[[2]]; path = stuff[[3]]; verbose=stuff[[4]]; suffix=stuff[[5]]; tileNames = stuff[[6]]; cachePath = stuff[[7]]
   result = try(
     getTiles(outraster, 
