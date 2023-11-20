@@ -1,3 +1,23 @@
+# stamen https://maps.stamen.com/stadia-partnership/
+
+# Name  Bucket  Prefix  Extension
+#Terrain tile.stamen.com /terrain  png
+#Terrain Background  tile.stamen.com /terrain-background png
+#Terrain Labels  tile.stamen.com /terrain-labels png
+#Terrain Lines tile.stamen.com /terrain-lines  png
+#Toner long-term.cache.maps.stamen.com /toner  png
+#Toner Background  long-term.cache.maps.stamen.com /toner-background png
+#Toner Labels  long-term.cache.maps.stamen.com /toner-labels png
+#Toner Lines long-term.cache.maps.stamen.com /toner-lines  png
+#Toner Lite  long-term.cache.maps.stamen.com /toner-lite png
+#Watercolor  long-term.cache.maps.stamen.com /watercolor jpg
+#Each tile is accessible at an S3 URL with the following format:
+
+#s3://{bucket}{prefix}/{z}/{x}/{y}.{extension}
+#For example, to get the watercolor tile for zoom 2, x 3, and y 1 you would use:
+
+#s3://long-term.cache.maps.stamen.com/watercolor/2/3/1.jpg
+
 
 # https://mc.bbbike.org/mc/?num=2&mt0=mapnik&mt1=maptiler_streets
 osmTiles = function(name, xyz, suffix) {
@@ -11,8 +31,8 @@ osmTiles = function(name, xyz, suffix) {
     "osm-de"="http://c.tile.openstreetmap.de/tiles/osmde/",
     "osm-ru" = "http://a.tiles.wmflabs.org/osm-multilingual/ru,_/",
     "osm-transport"="http://tile2.opencyclemap.org/transport/",
-    "stamen-toner" = "https://stamen-tiles-d.a.ssl.fastly.net/toner/",
-    "stamen-watercolor" = "https://tiles.stadiamaps.com/styles/stamen_watercolor/",
+    "stamen-toner" = "https://tiles.stadiamaps.com/tiles/stamen_toner/",
+    "stamen-watercolor" = "https://watercolormaps.collection.cooperhewitt.org/tile/watercolor/",
     'stamen-terrain' = 'https://stamen-tiles-c.a.ssl.fastly.net/terrain/',
     "bw-mapnik"="http://b.tiles.wmflabs.org/bw-mapnik2/",
     'bvg' = 'https://bvg-gis-c.hafas.de/hafas-tiles/inno2017/',
@@ -124,7 +144,8 @@ openmap = function(
   crs=terra::crs(x),
   buffer=0, fact=1,
   verbose=getOption('mapmiscVerbose'),
-  cachePath=getOption('mapmiscCachePath')
+  cachePath=getOption('mapmiscCachePath'), 
+  suffix=NULL
 ) {
 
 
@@ -285,6 +306,8 @@ openmap = function(
   Dpath = names(path)[1]
   Durl = path[1]
 
+  suffixOrig = suffix
+
   if(verbose){
     cat(Dpath, '\n')
     cat(Durl, '\n')
@@ -323,12 +346,12 @@ openmap = function(
 
   if(length(attributes(pathOrig)$tileNames))
     tileNames = attributes(pathOrig)$tileNames
-  if(length(attributes(pathOrig)$suffix))
-    suffix = attributes(pathOrig)$suffix
+  if(!is.null(suffixOrig))
+    suffix = suffixOrig
 
 
-
-
+  stuff <<- list(outraster, zoom, Durl, verbose, suffix, tileNames, cachePath)
+  # outraster = stuff[[1]];zoom=stuff[[2]]; path = stuff[[3]]; verbose=stuff[[4]]; suffix=stuff[[5]]; tileNames = stuff[[6]]; cachePath = stuff[[7]]
   result = try(
     getTiles(outraster, 
       zoom=zoom,

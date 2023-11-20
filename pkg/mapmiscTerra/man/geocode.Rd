@@ -42,7 +42,10 @@ oldpar=map.new(citiesT, buffer=5000*1000)
 plot(worldMap, add=TRUE)
 points(citiesT, col='red')
 suppressWarnings(text(citiesT, labels=citiesT$name, col='red',pos=4))
-suppressWarnings(text(citiesT, labels=citiesT$display_name, col='red',pos=1))
+\dontrun{
+	# uses unicode symbols
+	text(citiesT, labels=citiesT$display_name, col='red',pos=1))
+}
 par(oldpar)
 }
 

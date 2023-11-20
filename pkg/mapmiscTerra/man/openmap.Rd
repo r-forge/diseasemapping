@@ -13,7 +13,8 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	  crs=terra::crs(x),   
 	  buffer=0, fact=1, 
 	 verbose=getOption('mapmiscVerbose'),
-	  cachePath=getOption('mapmiscCachePath')
+	  cachePath=getOption('mapmiscCachePath'),
+	  suffix=NULL
 )
 
 	osmTiles(name, xyz, suffix)
