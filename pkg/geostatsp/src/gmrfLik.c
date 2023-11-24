@@ -144,9 +144,9 @@ double logLoneNuggetMoreArguments(
   double minusXisqTausq, oneD=1.0;
   double varHatMl, varHatReml;
   double result, *tempPointer;
-  double xisqTausqTwo[2]; // because cholmod wants vector of length 2
   int oneI=1, D;
 
+  double xisqTausqTwo[2]; // because cholmod wants vector of length 2
   xisqTausqTwo[0] = xisqTausq;
   /*
    * V = xisq Q^(-1) + tausq I
