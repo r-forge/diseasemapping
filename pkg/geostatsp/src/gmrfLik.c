@@ -144,8 +144,10 @@ double logLoneNuggetMoreArguments(
   double minusXisqTausq, oneD=1.0;
   double varHatMl, varHatReml;
   double result, *tempPointer;
+  double xisqTausqTwo[2]; // because cholmod wants vector of length 2
   int oneI=1, D;
 
+  xisqTausqTwo[0] = xisqTausq;
   /*
    * V = xisq Q^(-1) + tausq I
    *   =  xisq ( Q^(-1) + (tausq/xisq) I)
@@ -169,7 +171,7 @@ double logLoneNuggetMoreArguments(
   // factorize beta*I+A or beta*I+A’*A
   M_cholmod_factorize_p(
       Q,
-      &xisqTausq, // beta
+      xisqTausqTwo, // beta
       (int*)NULL, 0 /*fsize*/,
       L, // resulting factorization
       &c // common
