@@ -1,8 +1,8 @@
 Package: geostatsp
 Type: Package
 Title: Geostatistical Modelling with Likelihood and Bayes
-Version: 2.0.2
-Date: 2023-09-25
+Version: 2.0.3
+Date: 2023-11-24
 Depends:
     Matrix,
     terra,
@@ -24,7 +24,7 @@ Enhances:
 	diseasemapping, 
 	geoR, 
  	mvtnorm 
-LinkingTo: Matrix
+LinkingTo: Matrix(>= 1.6-2)
 Additional_repositories: https://inla.r-inla-download.org/R/testing
 Authors@R: person("Patrick", "Brown", 
                     role = c("aut", "cre","cph"),
