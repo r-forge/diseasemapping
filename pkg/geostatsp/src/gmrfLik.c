@@ -146,8 +146,8 @@ double logLoneNuggetMoreArguments(
   double result, *tempPointer;
   int oneI=1, D;
 
-  double xisqTausqTwo[2]; // because cholmod wants vector of length 2
-  xisqTausqTwo[0] = xisqTausq;
+  double xisqTausqTwo[2] = {xisqTausq, 0.0}; // because cholmod wants vector of length 2
+
   /*
    * V = xisq Q^(-1) + tausq I
    *   =  xisq ( Q^(-1) + (tausq/xisq) I)
