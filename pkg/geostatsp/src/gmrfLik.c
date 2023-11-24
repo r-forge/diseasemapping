@@ -453,7 +453,7 @@ SEXP gmrfLik(
   // Lx is Q YX
   M_cholmod_sdmult(
       Q,
-      0, &oneD, &zeroD, // transpose, scale, scale
+      0, oneD, zeroD, // transpose, scale, scale
       obsCov,Lx,// in, out
       &c);
   // now compute t(YX) Lx
