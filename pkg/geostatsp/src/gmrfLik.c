@@ -433,13 +433,13 @@ SEXP gmrfLik(
       // nrows of op(A), ncol ob(B), ncol op(A) = nrow(opB)
       &Nxy, &Nxy, &Nobs,
       // alpha
-      &oneD,
+      oneD,
       // A, nrow(A)
       obsCov->x, &Nobs,
       // B, nrow(B)
       obsCov->x, &Nobs,
       // beta
-      &zeroD,
+      zeroD,
       // C, nrow(&c)
       YXYX, &Nxy
       FCONE FCONE);
