@@ -362,7 +362,7 @@ SEXP gmrfLik(
       if(REAL(xisqTausq)[0]>0.0) {
           warning(
               "first element of xisqTausq is %f, must be zero\n",
-              REAL(xisqTausq));
+              REAL(xisqTausq)[0]);
       }
       if(optMin < -998.9) {
           verbose = 1;

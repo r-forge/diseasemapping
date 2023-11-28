@@ -24,7 +24,7 @@ Enhances:
 	diseasemapping, 
 	geoR, 
  	mvtnorm 
-LinkingTo: Matrix(>= 1.6-2)
+LinkingTo: Matrix (>= 1.6-2)
 Additional_repositories: https://inla.r-inla-download.org/R/testing
 Authors@R: person("Patrick", "Brown", 
                     role = c("aut", "cre","cph"),
