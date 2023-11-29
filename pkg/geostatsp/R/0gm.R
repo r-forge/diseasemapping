@@ -445,9 +445,14 @@ gm.dataSpatial = function(
       if(is.null(covariates[[D]]))
         warning("cant find covariate '", D, "' in covariates or data")
 
-      
-      extractHere = terra::extract(covariates[[D]], 
-            project(data, crs(covariates[[D]])))
+      if(any(class(covariates[[D]]) == 'SpatRaster')) {
+        extractHere = terra::extract(covariates[[D]], 
+                                     project(data, crs(covariates[[D]])), ID=FALSE)
+      } else {
+        extractHere = terra::extract(covariates[[D]], 
+                                     project(data, crs(covariates[[D]])))
+        extractHere = extractHere[match(1:length(data), extractHere[,'id.y']), 2]
+      }
       
       
       if(is.data.frame(extractHere)) {
