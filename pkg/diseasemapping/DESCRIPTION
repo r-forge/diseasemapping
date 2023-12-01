@@ -1,8 +1,8 @@
 Package: diseasemapping
 Type: Package
 Title: Modelling Spatial Variation in Disease Risk for Areal Data
-Version: 2.0.4
-Date: 2023-09-25
+Version: 2.0.5
+Date: 2023-12-01
 Depends: R (>= 3.5.0)
 Imports:
     stats,
@@ -12,7 +12,7 @@ Imports:
 Suggests:
     mgcv,
     mapmisc (>= 1.9.0),
-    R.rsp
+    knitr
 Enhances: INLA, XML, R.utils, R.devices
 Authors@R: c(person("Patrick", "Brown", 
                     role = c("aut", "cre","cph"),
@@ -24,4 +24,4 @@ Additional_repositories: https://inla.r-inla-download.org/R/testing
 Description: Formatting of population and case data, calculation of Standardized
     Incidence Ratios, and fitting the BYM model using 'INLA'. For details see Brown (2015) <doi:10.18637/jss.v063.i12>. 
 License: GPL
-VignetteBuilder: R.rsp
+VignetteBuilder: knitr
