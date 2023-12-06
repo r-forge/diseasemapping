@@ -7,7 +7,7 @@
 # Examples of map layers
 
 
-This document will be incomplete if `rgdal` is unavailable or there is on
+This document will be incomplete if there is no
 internet connection when this document is compiled.  The full document is at
 [diseasemapping.r-forge.r-project.org](http://diseasemapping.r-forge.r-project.org).
 
@@ -18,6 +18,10 @@ See [mc.bbbike.org/mc](http://mc.bbbike.org/mc/) for examples more map tiles
 ```{r setup, include=FALSE}
 library('knitr')
 library('mapmisc')
+
+knitr::knit_hooks$set(plot=Pmisc::hook_plot_htmlsubfig)
+knitr::opts_chunk$set(dev='png')
+
 
 fact = 0.5
 allTiles = FALSE
@@ -37,18 +41,17 @@ for(D in theArgs)
 opts_chunk$set(dpi=50*fact, 
   dev.args=list(bg='white'))	
 
-if(allTiles) {
-  theNames = names(osmTiles())
-  cachePath = file.path(tempdir(), 'mapLayersVignetteCache')
-} else {
-  # smaller selection of tiles, which are distributed with the package
-  theNames = names(grep(
-      "cyclemap|thunderforest|waze|wikimedia|korona|opentopomap|maptoolkit|nrcan", 
-    osmTiles(), invert=TRUE, value=TRUE))
-  cachePath = system.file('extdata', package='mapmisc')
-}
+cachePath = "/tmp/cacheLayers/"
+dir.create(cachePath, showWarnings=FALSE)
+
+theNames = names(osmTiles())
 
 ```
+
+```{r theNames}
+theNames
+```
+
 
 ```{r theExtent, include=FALSE}
 africaExtent = c(25, 25)
@@ -59,31 +62,71 @@ stjohns=c(-52.683320, 47.566285)
 
 ```{r downloadTiles,include=FALSE}
 
-  africaTiles = openmap(africaExtent, path=theNames,zoom=2,
+  theNames = grep("sputnik", theNames, invert=TRUE, value=TRUE)
+  print(theNames)
+  print(cachePath)
+
+  africaTiles = mapply(openmap, path=theNames,
+    MoreArgs = list(x=africaExtent, zoom=2,
     verbose=TRUE, 
     crs = crsMerc, 
-    cachePath = cachePath)
+    cachePath = cachePath))
   
-  londonTiles = openmap(trafalgarSquare,zoom=12,path=theNames,
+  londonTiles = mapply(openmap, path=theNames,
+    MoreArgs = list(x=trafalgarSquare,zoom=12, 
     verbose=TRUE, 
     crs = crsMerc, 
-    cachePath = cachePath)
+    cachePath = cachePath))
   
-  nfTiles = openmap(stjohns, zoom=14, path=theNames,
+  nfTiles = mapply(openmap, path=theNames,
+    MoreArgs = list(x=stjohns, zoom=14,
     verbose=TRUE, 
     crs = crsMerc, 
-    cachePath = cachePath)
+    cachePath = cachePath))
   
 ```
 
 
 The following are some examples of maps produced with `mymap=openmap(x, path="something")`
 
+```{r plotSetup, include=FALSE}
+mytiles = list(africa=africaTiles, london=londonTiles, newfoundland = nfTiles)
+theCap = rep(theNames, each=length(mytiles))
+```
 
-```{r someTiles, echo=FALSE, results='asis', fig.height=5, fig.width=5}
+```{r someTiles, echo=FALSE, fig.ncol=3, out.width='32%', fig.cap = 'some tiles', fig.height=4, fig.width=4, dpi=120, fig.subcap = theCap}
 
 
-mytiles = list(africaTiles, londonTiles, nfTiles)
+
+for(D in theNames){
+
+# cat("\n\n# ", D, "\n\n")
+
+      for(Dplot in names(mytiles)) {
+        map.new(mytiles[[Dplot]][[D]])
+        plot(mytiles[[Dplot]][[D]],add=TRUE, maxcells = 1e12)
+    }
+}
+```
+
+# Attributions
+
+```{r attributionsExample, echo=TRUE}
+openmapAttribution('osm', type='text', short=TRUE)
+openmapAttribution('osm', type='text', short=FALSE)
+```
+
+
+```{r theAttributions, echo=FALSE, results='asis'}
+for(D in theNames) {
+  cat("## ", D, '\n\n')
+    cat(openmapAttribution(D, 'html', short=TRUE), '\n\n')
+    cat(openmapAttribution(D, 'html', short=FALSE), '\n\n')
+}
+
+```
+
+```{r someTilesOld, eval=FALSE, echo=FALSE, results='asis', fig.height=5, fig.width=5}
 
 for(D in theNames){
   Dsub = gsub("-",".", D)
@@ -137,100 +180,5 @@ for(D in theNames){
 
 ```
 
-# Additional map layers
-
-See [mc.bbbike.org/mc](http://mc.bbbike.org/mc/) 
-
-Michelin
-    
-```{r additionalMichelin, echo=TRUE, purl=FALSE, eval=unlist(mget("allTiles", ifnotfound=FALSE))}
-
-mPath = osmTiles(paste(
-  'http://map3.viamichelin.com/map/mapdirect?map=',
-  c('light','viamichelin'), '&', sep=''),
-  xyz='zxy=', suffix = 
-    '&format=png&version=201503191157&layer=background')
-
-africaMichelin = openmap(
-  africaExtent, path=mPath,
-  zoom=2,
-  verbose=TRUE, 
-  crs = crsMerc)
-
-
-for(D in names(africaMichelin)) {
-  map.new(africaMichelin)
-  plot(africaMichelin[[D]], add=TRUE)
-  mtext(D, side=3, line=-2, outer=FALSE)
-}
-
-```
-Stamen retina
-
-   
-```{r stamenRetina, echo=TRUE, purl=FALSE, eval=unlist(mget("allTiles", ifnotfound=FALSE))}
-
-sPath = osmTiles('stamen-toner', 
-  suffix = '@2x.png')
-
-africaS = openmap(
-  africaTiles, 
-  buffer=-1,
-  zoom=attributes(africaTiles)$tiles$zoom+1,
-  path=sPath, verbose=TRUE)
-africaS2 = tonerToTrans(africaS)
-
-map.new(africaTiles)
-plot(africaTiles[['opentopomap']], add=TRUE)
-plot(africaS2, add=TRUE)
-
-mtext(sPath, side=3, line=-2, outer=FALSE)
-```
-
-
-Komoot, Yandex, ESRI, F4map, and Sigma
-
-```{r aditionalEsri, echo=TRUE, purl=FALSE, eval=unlist(mget("allTiles", ifnotfound=FALSE))}
-
-otherPaths = c(
-  'https://a.tile.hosted.thunderforest.com/komoot-2/',
-  'https://sat01.maps.yandex.net/tiles?l=sat&v=1.35.0&',
-  'https://vec02.maps.yandex.net/tiles?l=map&v=4.40&',
-  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/',
-  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/',
-  'https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/',
-  'https://tile2.f4map.com/tiles/f4_2d/',
-  'http://tiles1.sigma-dc-control.com/layer8/')
-
-africaExtra = openmap(
-  africaExtent, path=otherPaths,
-  zoom=2,
-  verbose=TRUE, 
-  crs = crsMerc)
-
-Spaths = unique(
-  gsub("(red|green|blue|trans)$", "",
-    names(africaExtra), ignore.case=TRUE)
-)
-
-for(D in Spaths) {
-  
-  oneTileName = grep(paste("^", D, "$", sep=""), 
-    names(africaExtra), value=TRUE)
-  
-  threeTilesName = grep(paste("^", D, 
-      "([rR]ed|[gG]reen|[bB]lue)$", sep=""), 
-    names(africaExtra),value=TRUE)
-  
-  map.new(africaExtra)
-  if(length(threeTilesName)==3) {
-    plotRGB(africaExtra[[threeTilesName]], add=TRUE)
-  } else {
-    plot(africaExtra[[oneTileName]], add=TRUE)
-  }
-  mtext(D, side=3, line=-2, outer=FALSE)
-}
-
-``` 
 
 

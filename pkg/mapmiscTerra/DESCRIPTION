@@ -1,8 +1,8 @@
 Package: mapmisc
 Type: Package
 Title: Utilities for Producing Maps 
-Version: 2.0.3
-Date: 2023-11-20
+Version: 2.0.4
+Date: 2023-13-06
 Depends: terra, R (>= 3.5.0)
 Imports: methods, grDevices, stats, utils, graphics, geosphere
 Suggests: RColorBrewer, geonames, classInt, knitr

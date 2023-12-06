@@ -7,10 +7,13 @@ esriAttribution = function(name) {
       'esri'='Esri, HERE, DeLorme, USGS, Intermap, increment P Corp., NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, MapmyIndia, copyright OpenStreetMap contributors, and the GIS User Community',
       'esri-grey' = 'Esri, HERE, DeLorme, MapmyIndia, copyright OpenStreetMap contributors, and the GIS user community',
       'esri-topo' = 'Esri, HERE, DeLorme, TomTom, Intermap, increment P Corp., GEBCO, USGS, FAO, NPS, NRCAN, GeoBase, IGN, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), swisstopo, MapmyIndia, copyright OpenStreetMap contributors, and the GIS User Community',
-      'esri-transport' = 'Esri, HERE, DeLorme, MapmyIndia, copyright OpenStreetMap contributors'
+      'esri-transport' = 'Esri, HERE, DeLorme, MapmyIndia, copyright OpenStreetMap contributors',
+      'esri-satellite' = 'Esri, Earthstar Geographics and others',
+      'esri-natgeo'=  'Esri, National Geographic and others',
+      'esri-overlay' = 'Esri'
   )
   
-  short = 'Esri, OpenStreetMap, and others'
+  short = 'Esri and others'
   
   if(!length(grep("^http", name))){
     name = gsub("esri\\.", "esri-", name)
@@ -112,6 +115,7 @@ odl = list(
     ),
     text='Data by OpenStreetMap.org available under the Open Database License (opendatacommons.org/licenses/odbl)'
 )
+
 
 # openstreetmap.org
 osm = list(long=list(
@@ -241,6 +245,17 @@ osmLandscape$long$text = gsub("cartography[[:print:]]+$",
 osmLandscape$long$html = gsub("cartography[[:print:]]+$",
     "cartography by <a href=\"http://www.thunderforest.com/\">Thunderforest</a>",
     osmLandscape$long$html)
+ 
+ f4map = list(
+    short = list(text = "f4map.com", 
+        latex = "\\href{http://www.f4map.com}{f4map}",
+        html='<a href="http://f4map">f4map</a>'),
+    long = list(test = "f4map.com",
+           latex = "\\href{http://www.f4map.com}{f4map}",
+        html='<a href="http://f4map">f4map</a>',
+        markdown='[f4map](http://www.f4map.com)'
+        )
+ )
 
 mapquest = mapquestSat = list(
     short=list(
@@ -272,19 +287,19 @@ stamen = stamenToner = list(
     long=list(
         html=paste(
             'Map tiles by <a href="http://stamen.com">Stamen Design</a>',
-            'under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>.'
+            'under <a href="http://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>.'
         ),
         latex=paste(
             'Map tiles by \\href{http://stamen.com}{Stamen Design}',
-            'under \\href{http://creativecommons.org/licenses/by/3.0}{CC BY 3.0}.'
+            'under \\href{http://creativecommons.org/licenses/by/4.0}{CC BY 4.0}.'
         ),
         markdown=paste(
             'Map tiles by [Stamen Design](http://stamen.com)',
-            'under [CC BY 3.0](http://creativecommons.org/licenses/by/3.0).'
+            'under [CC BY 4.0](http://creativecommons.org/licenses/by/4.0).'
         ),
         text=paste(
             'Map tiles by Stamen Design',
-            'under CC BY 3.0 (creativecommons.org/licenses/by/3.0).'
+            'under CC BY 4.0 (creativecommons.org/licenses/by/4.0).'
         )
     )
 )
@@ -359,7 +374,7 @@ for(D in names(cartodb$long)){
       result = nrcan[[shortlong]][[type]]
       
     } else if(length(grep(
-            "^osm|wikimedia|hyda|opentopomap|openstreetmap|historical|bw.mapnik|tile.openstreetmap.org", 
+            "^osm|where|[ck]artogiraffe|rail|bvg|ump|wikimedia|opentopomap|openstreetmap|historical|bw.mapnik|tile.openstreetmap.org", 
             D))){        # openstreetmap
       result = osm[[shortlong]][[type]]
     } else if(length(grep("humanitarian",D))){
@@ -391,6 +406,8 @@ for(D in names(cartodb$long)){
       result = cartodb[[shortlong]][[type]]
     } else if(length(grep("^esri",D))){
       result =  esriAttribution(D)[[shortlong]][[type]]    
+    } else if(length(grep("^f4",D))){
+      result =  f4map[[shortlong]][[type]]    
     } else {
       result = NA
     }

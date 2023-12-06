@@ -19,47 +19,56 @@
 #s3://long-term.cache.maps.stamen.com/watercolor/2/3/1.jpg
 
 
+# TO DO michelin map
+# osm multilingual https://maps.wikimedia.org/osm-intl/7/65/42.png?lang=en
+# https://map3.viamichelin.com/map/mapdirect?map=viamichelin&z=8&x=71&y=93&format=png&version=201503191157&layer=background
+# https://map3.viamichelin.com/map/mapdirect?map=light&z=8&x=71&y=93&format=png&version=201503191157&layer=background
+# https://map3.viamichelin.com/map/mapdirect?map=hybrid&z=8&x=71&y=93&format=png&version=201503191157&layer=network
+
 # https://mc.bbbike.org/mc/?num=2&mt0=mapnik&mt1=maptiler_streets
 osmTiles = function(name, xyz, suffix) {
   result = c(
     osm = "http://tile.openstreetmap.org",
-    'osm-admin' = 'http://korona.geog.uni-heidelberg.de/tiles/adminb',
-    'osm-roads-grey' = 'http://korona.geog.uni-heidelberg.de/tiles/roadsg/',
-    'osm-roads' = 'http://korona.geog.uni-heidelberg.de/tiles/roads',
-    'osm-semitransparent' = 'http://korona.geog.uni-heidelberg.de/tiles/hybrid/',
+#    'osm-admin' = 'http://korona.geog.uni-heidelberg.de/tiles/adminb',
+ #   'osm-roads-grey' = 'http://korona.geog.uni-heidelberg.de/tiles/roadsg/',
+ #   'osm-roads' = 'http://korona.geog.uni-heidelberg.de/tiles/roads',
+ #   'osm-semitransparent' = 'http://korona.geog.uni-heidelberg.de/tiles/hybrid/',
 #    "osm-no-labels"="http://c.tiles.wmflabs.org/osm-no-labels/",
+    'osm-fr' = 'http://a.tile.openstreetmap.fr/osmfr/',
     "osm-de"="http://c.tile.openstreetmap.de/tiles/osmde/",
-    "osm-ru" = "http://a.tiles.wmflabs.org/osm-multilingual/ru,_/",
-    "osm-transport"="http://tile2.opencyclemap.org/transport/",
+#     "osm-ru" = "http://a.tiles.wmflabs.org/osm-multilingual/ru,_/",
+    "osm-transport"="http://tile.memomaps.de/tilegen/",
+    'osm-bw' = "https://tile.openstreetmap.de/tilesbw/osmde/",
     "stamen-toner" = "https://tiles.stadiamaps.com/tiles/stamen_toner/",
     "stamen-watercolor" = "https://watercolormaps.collection.cooperhewitt.org/tile/watercolor/",
-    'stamen-terrain' = 'https://stamen-tiles-c.a.ssl.fastly.net/terrain/',
-    "bw-mapnik"="http://b.tiles.wmflabs.org/bw-mapnik2/",
-    'bvg' = 'https://bvg-gis-c.hafas.de/hafas-tiles/inno2017/',
+    'stamen-terrain' = 'https://tiles.stadiamaps.com/tiles/stamen_terrain/',
+#    "bw-mapnik"="http://b.tiles.wmflabs.org/bw-mapnik2/",
+    'bvg' = 'https://bvg-gis-c.hafas.de/hafas-tiles/inno2017/2/',
     'esri' = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/',
     'esri-satellite' = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/',
     'esri-natgeo' = 'https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/',
-    'esri-overlay' = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Reference_Overlay/MapServer/tile/',
+    'esri-overlay' = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/',
     'esri-topo' = 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/',
-    'komoot' = 'https://a.tile.hosted.thunderforest.com/komoot-2/',
+    kartogiraffe = 'https://tiles.kartogiraffe.de/tiles/map/1',
+ #   'komoot' = 'https://a.tile.hosted.thunderforest.com/komoot-2/',
 #    soviet = 'https://y.tile.bbbike.org/cgi-bin/tapp/tilecache.py/1.0.0/topomapper_v2/',
-    'osm-cyclemap' = 'http://a.tile.opencyclemap.org/cycle/',
+    'osm-cyclemap' = 'https://c.tile.thunderforest.com/cycle/',
     'osm-seamap' = 'http://tiles.openseamap.org/seamark/',
-    'osm-fr' = 'http://a.tile.openstreetmap.fr/osmfr/',
     'landscape'="http://tile.opencyclemap.org/landscape/",
-    'hyda' = 'http://c.tile.openstreetmap.se/hydda/full/',
-    'hyda-base' = 'http://c.tile.openstreetmap.se/hydda/base/',
-    'hyda-roads' = 'http://c.tile.openstreetmap.se/hydda/roads_and_labels/',
+    rail = 'https://map.allrailmap.com/rail/',
+#    'hydda' = 'http://c.tile.openstreetmap.se/hydda/full/',
+#    'hydda-base' = 'http://c.tile.openstreetmap.se/hydda/base/',
+#    'hydda-roads' = 'http://c.tile.openstreetmap.se/hydda/roads_and_labels/',
     "opentopomap" = "https://a.tile.opentopomap.org/",
     "maptoolkit"="https://rtc-cdn.maptoolkit.net/rtc/toursprung-terrain/",
-    waze="https://worldtiles2.waze.com/tiles/",
-    'waze-us'='https://livemap-tiles2.waze.com/tiles/',
+    waze="https://worldtiles3.waze.com/tiles/",
+    'waze-us'='https://livemap-tiles1.waze.com/tiles/',
     humanitarian="http://a.tile.openstreetmap.fr/hot/",
-    cartodb='http://c.basemaps.cartocdn.com/light_all/',
+    cartodb = 'https://cartodb-basemaps-b.global.ssl.fastly.net/light_all/',
+    'cartodb-nolabels' = 'https://cartodb-basemaps-a.global.ssl.fastly.net/light_nolabels/',
     'cartodb-dark'='http://c.basemaps.cartocdn.com/dark_all/',
-#  historical='http://www.openhistoricalmap.org/ohm_tiles/',
-    nrcan = 
-    'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_CBCT_GEOM_3857/MapServer/tile/',
+    'f4' = 'https://tile3.f4map.com/tiles/f4_2d/',
+    nrcan = 'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_CBCT_GEOM_3857/MapServer/tile/',
     'nrcan-text' = 
     'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_TXT_3857/MapServer/tile/',
     'nrcan-text-fr' = 
@@ -68,9 +77,10 @@ osmTiles = function(name, xyz, suffix) {
     neighbourhood = 'https://a.tile.thunderforest.com/neighbourhood/',
     pioneer = 'https://b.tile.thunderforest.com/pioneer/',
     'mobile-atlas'='https://b.tile.thunderforest.com/mobile-atlas/',
-    wikimedia = 'https://maps.wikimedia.org/osm-intl/',
-    'sputnik' = 'http://tiles.maps.sputnik.ru/'
-  )
+#    wikimedia = 'https://maps.wikimedia.org/osm-intl/',
+    'sputnik' = 'http://tiles.maps.sputnik.ru/',
+  ump = 'https://2.tiles.ump.waw.pl/ump_tiles/' ,
+  where = 'https://osm-demo-b.wheregroup.com/tiles/1.0.0/osm/webmercator/' )
 
   # toronto
   #https://gis.toronto.ca/arcgis/rest/services/basemap/cot_topo/MapServer/tile/9/186/142
@@ -94,13 +104,13 @@ osmTiles = function(name, xyz, suffix) {
 # http://server.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer/tile/2/1/1.jpg
   
   # language labels don't appear to be working
-  languages = c("en","fr","de", "it","es","ru")
-  toadd =	paste("http://a.www.toolserver.org/tiles/osm-labels-", languages,"/", sep="")
-  names(toadd) = paste("osm-labels-", languages, sep="")
+#  languages = c("en","fr","de", "it","es","ru")
+#  toadd =	paste("http://a.www.toolserver.org/tiles/osm-labels-", languages,"/", sep="")
+#  names(toadd) = paste("osm-labels-", languages, sep="")
 #	result = c(result, toadd)
   
   
-  result = c(result, toadd)
+#  result = c(result, toadd)
   
   
   
@@ -168,9 +178,9 @@ openmap = function(
   }
   
 
-  if(is.numeric(x)) x = vect(matrix(x, ncol=2), crs=crs)
+  if(is.numeric(x)) x = vect(matrix(x, ncol=2), crs=crsLL)
 
-  if(all(class(x) == 'SpatExtent')) x = rast(extent = x, crs = crs)
+  if(all(class(x) == 'SpatExtent')) x = rast(extent = x, crs = crsLL)
 
   if(identical(crs, "")) {
       crs=crsIn=crsOut = crsLL
@@ -405,7 +415,34 @@ openmap = function(
   }
 
 
+  # if there's only one layer, and no colortable
+  # convert to greyscale
+  if(all(terra::nlyr(result)== 1) & !any(terra::has.colors(result))){
+    theRange = unlist(global(result, range))
+    if(is.integer(theRange) & all(theRange >= 0) & all(theRange < 256)) {
+      # 264 grey scale
+      coltab(result) = data.frame(value = seq(0,255), col = grey(seq(0,1,len=256)) )
+    } 
+  }
 
+  # if there's transparency convert to color table
+  if(all(c('red','green','blue','alpha') %in% names(result) & 
+  terra::nlyr(result) == 4 & 
+  !any(has.colors(result)) )) {
+    theColTab = terra::unique(result)
+    theColTab = cbind(ID = 1:nrow(theColTab), theColTab)
+
+    valuesOrig = values(result, dataframe=TRUE)
+    valuesOrig$idOrig = 1:nrow(valuesOrig)
+
+    newValues = merge(valuesOrig, theColTab)
+    newValues = newValues[order(newValues$idOrig), 'ID']
+
+    result2 = rast(result, nlyrs=1)
+    values(result2) = newValues
+    terra::coltab(result2) = theColTab
+    result = result2
+}
   result
 }
 

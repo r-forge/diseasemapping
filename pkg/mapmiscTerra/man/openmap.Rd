@@ -68,8 +68,7 @@ by \eqn{2^n} tiles. Zoom levels go up to about 17 or 18 depending on the tile
 server.
 
 
-See \url{http://diseasemapping.r-forge.r-project.org/mapLayers.html} for a full set of 
-map tiles.
+See \url{https://mc.bbbike.org/} for a more possible map tiles (not all of which are compatible with openmap)
 
 Be sure to attribute any maps you publish, the \code{osmAttribution} function will assist.  If \code{type = 'auto'} then markdown format will be used unless a variable \code{mdToTex} is defined and equal to \code{TRUE}.
 
@@ -91,7 +90,7 @@ data("netherlands")
 nldTiles = terra::unwrap(nldTiles)
 plot(nldTiles)
 
-openmapAttribution(nldTiles, short=TRUE, type='markdown')
+openmapAttribution('osm', short=TRUE, type='markdown')
 
 openmapAttribution("stamen-toner", type='text')
 
@@ -110,13 +109,13 @@ oldpar =	map.new(myraster)
 	points(myPoints,col='red')
 
 	myPoints = project(myPoints, crsMerc)
-	x = myPoints;path='waze'
-	mytiles = try(openmap(myPoints,
-		path='waze', verbose=TRUE, buffer=5))
 	map.new(myPoints)
+\donttest{
+	mytiles = try(openmap(myPoints,
+		path='https://livemap-tiles1.waze.com/tiles', verbose=TRUE, buffer=5))
 	plot(mytiles, add=TRUE)
+}
 	points(myPoints, col='red')
-	openmapAttribution(mytiles)
 
 par(oldpar)
 
