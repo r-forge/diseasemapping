@@ -447,7 +447,8 @@ gm.dataSpatial = function(
 
       if(any(class(covariates[[D]]) == 'SpatRaster')) {
         extractHere = terra::extract(covariates[[D]], 
-                                     project(data, crs(covariates[[D]])), ID=FALSE)
+                                     project(data, crs(covariates[[D]])), ID=FALSE,
+                                     method = rmethod[D])
       } else {
         extractHere = terra::extract(covariates[[D]], 
                                      project(data, crs(covariates[[D]])))
