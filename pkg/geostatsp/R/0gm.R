@@ -557,8 +557,8 @@ gm.dataSpatial = function(
       } # end else (not is null thelevels)
 
       # re-factor data with new baseline category
-        data[[D]] = factor(
-          data[[D]], 
+        terra::values(data)[[D]] = factor(
+          terra::values(data)[[D]], 
           levels=levelsD,
           labels=theLabels)     
        covariatesDF[[D]] = factor(
