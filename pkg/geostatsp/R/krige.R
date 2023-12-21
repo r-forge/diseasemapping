@@ -136,15 +136,20 @@ krigeLgm = function(
 	 if( is.data.frame(covariates) & any(class(formula)=="formula"))  {
     
 		  if(nrow(covariates)){		
-		    if(nrow(covariates) !=  ncell(locations)) 
-			     warning("covariates and grid aren't compatible")
-# NEED TO FIX!!!!! 		    
 		    # put zeros for covariates not included in the data frame
 		    notInCov = setdiff(all.vars(formula), names(covariates))
 		    for(D in notInCov)
 			     covariates[[D]] = 0
       
 		    modelMatrixForRaster = model.matrix(formula, covariates)
+		    if(nrow(modelMatrixForRaster) < nrow(covariates)) {
+		    	toAdd = setdiff(rownames(covariates), rownames(modelMatrixForRaster))
+		    	toAdd = matrix(NA, length(toAdd), ncol(modelMatrixForRaster),
+		    			dimnames = list(toAdd, colnames(modelMatrixForRaster)))
+		    	modelMatrixForRaster = rbind(
+		    		modelMatrixForRaster, toAdd
+		    	)[rownames(covariates), ]
+		    }
       
 		    theParams = intersect(colnames(modelMatrixForRaster), names(param))
 		    
@@ -152,7 +157,11 @@ krigeLgm = function(
 				    tcrossprod( param[theParams], modelMatrixForRaster[,theParams] )
 		    )
 		    meanFixedEffects = rep(NA, ncell(locations))
-		    meanFixedEffects[as.integer(names(meanForRaster))] = meanForRaster
+		    if(any(names(covariates) == 'space')) {
+		    	meanFixedEffects[covariates$space] = meanForRaster
+		    } else {
+			    meanFixedEffects[as.integer(names(meanForRaster))] = meanForRaster
+			  }
 		    meanRaster = locations
 		    terra::values(meanRaster) = meanFixedEffects
       
