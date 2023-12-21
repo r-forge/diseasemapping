@@ -146,7 +146,7 @@ print(11)
 
   
   # one point only
-  mytiles = openmap(crds(myPoints)[1,], zoom=4, crs=crs(myPoints), buffer=10, fact=2)
+  mytiles = openmap(x=crds(myPoints)[1,], zoom=4, crs=crs(myPoints), buffer=10, fact=2)
   myplot(myPoints)
 
 print(12)  

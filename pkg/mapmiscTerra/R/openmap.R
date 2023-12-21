@@ -183,8 +183,8 @@ openmap = function(
       crs=crsIn=crsOut = crsLL
   } else {
     crsOut=crs
-    crsIn = terra::crs(x)    
-    if(identical(crsIn, "")) crsIn = crs
+    crsIn = try(terra::crs(x), silent=TRUE)    
+    if(identical(crsIn, "") | any(class(crsIn) == 'try-error')) crsIn = crs
 }
   if(is.numeric(x)) x = vect(matrix(x, ncol=2), crs=crsIn)
 
@@ -440,7 +440,7 @@ openmap = function(
     newValues = newValues[order(newValues$idOrig), 'ID']
 
     result2 = rast(result, nlyrs=1)
-    values(result2) = newValues
+    terra::values(result2) = newValues
     terra::coltab(result2) = theColTab
     result = result2
 }
