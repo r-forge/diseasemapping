@@ -138,7 +138,7 @@ krigeLgm = function(
 		  if(nrow(covariates)){		
 		    if(nrow(covariates) !=  ncell(locations)) 
 			     warning("covariates and grid aren't compatible")
-		    
+# NEED TO FIX!!!!! 		    
 		    # put zeros for covariates not included in the data frame
 		    notInCov = setdiff(all.vars(formula), names(covariates))
 		    for(D in notInCov)

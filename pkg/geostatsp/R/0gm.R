@@ -504,12 +504,10 @@ gm.dataSpatial = function(
           # match factor levels in data to 
           # factor levels in raster
         theTable = table(dataD)
-        # make baseline category the most populous category
-        # unless the variable was supplied as a factor in the 'data' argument
-        if(D %in% covFactors) {
+        if(theTable[1]==0) {
+          warning("no data in baseline level ", D)
           theTable = sort(theTable, decreasing=TRUE)
         }
-        if(theTable[1]==0) warning("no data in baseline level ", D)
         levelsHave = names(theTable)[theTable > 0]
           covariatesDF[[D]] = factor(
             as.character(covariatesDF[[D]]),
