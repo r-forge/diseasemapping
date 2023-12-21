@@ -119,7 +119,6 @@ setMethod("lgm",
 
 		grid = squareRaster(data, grid)
 
-
 		callGeneric()
 	}
 	)
@@ -219,7 +218,6 @@ setMethod("lgm",
 		fixNugget = FALSE,
 		...) {
 
-
 		locations = grid
 
 		dots <- list(...)  
@@ -271,7 +269,6 @@ setMethod("lgm",
 				expPred=expPred,
 				nuggetInPrediction=nuggetInPrediction
 				)
-
 			res = c(predict=krigeRes, likRes)
 
     # add confidence intervals for covariance parameters

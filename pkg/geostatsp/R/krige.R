@@ -137,7 +137,7 @@ krigeLgm = function(
 	 }
 	 
 	 
-	 if( is.data.frame(covariates) & any(class(formula)=="formula"))  {
+	 if( is.data.frame(covariates) & any(class(formula)=="formula") & !noCovariates)  {
     
 		    # put zeros for covariates not included in the data frame
 		    notInCov = setdiff(all.vars(formula), names(covariates))
