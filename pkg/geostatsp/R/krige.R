@@ -118,8 +118,12 @@ krigeLgm = function(
 	 
 	 observations = meanRaster = NULL
 	 
+	 noCovariates = length(names(covariates)) == 0
+	 if(is.data.frame(covariates)) {
+	 	if(!nrow(covariates)) noCovariates = TRUE
+	 }
   
-	 if(!length(names(covariates))) {
+	 if(noCovariates) {
 		  # no coariates, mean is intercept
 		  if(any(names(param)=='(Intercept)')) {
 			   meanForRaster = param['(Intercept)']		
@@ -128,14 +132,13 @@ krigeLgm = function(
 		  }
 		  meanFixedEffects = 
 				  rep(meanForRaster, ncell(locations))
-		  meanRaster = locations
+		  meanRaster = terra::rast(locations)
 		  terra::values(meanRaster) = meanFixedEffects	
 	 }
 	 
 	 
 	 if( is.data.frame(covariates) & any(class(formula)=="formula"))  {
     
-		  if(nrow(covariates)){		
 		    # put zeros for covariates not included in the data frame
 		    notInCov = setdiff(all.vars(formula), names(covariates))
 		    for(D in notInCov)
@@ -143,6 +146,7 @@ krigeLgm = function(
       
 		    modelMatrixForRaster = model.matrix(formula, covariates)
 		    if(nrow(modelMatrixForRaster) < nrow(covariates)) {
+		    	# some cells missing covariates
 		    	toAdd = setdiff(rownames(covariates), rownames(modelMatrixForRaster))
 		    	toAdd = matrix(NA, length(toAdd), ncol(modelMatrixForRaster),
 		    			dimnames = list(toAdd, colnames(modelMatrixForRaster)))
@@ -157,22 +161,21 @@ krigeLgm = function(
 				    tcrossprod( param[theParams], modelMatrixForRaster[,theParams] )
 		    )
 		    meanFixedEffects = rep(NA, ncell(locations))
-		    if(any(names(covariates) == 'space')) {
-		    	meanFixedEffects[covariates$space] = meanForRaster
+		    if('space' %in% names(covariates)  & 'space' %in% names(locations)) {
+		    	meanFixedEffects[match(covariates$space, terra::values(locations)[,'space'])] = meanForRaster
 		    } else {
 			    meanFixedEffects[as.integer(names(meanForRaster))] = meanForRaster
 			  }
-		    meanRaster = locations
+		    meanRaster = rast(locations)
 		    terra::values(meanRaster) = meanFixedEffects
       
       
-		  }	
 	 } # end covariates is DF
 	 
 	 if(any(class(data)=="SpatVector")&
 	 		any(class(formula)=="formula")) {
     
-		  if(all(names(covariates) %in% names(data))) {
+		  if(all(setdiff(names(covariates), 'space') %in% names(data))) {
       
 			   modelMatrixForData = model.matrix(formula, values(data))
       
