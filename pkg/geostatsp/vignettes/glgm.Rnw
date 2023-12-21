@@ -67,6 +67,7 @@ swissAltitudeCrop = mask(swissAltitude,swissBorder)
 
 
 
+
 <<inla, include=FALSE>>=
 if(requireNamespace("INLA", quietly=TRUE) ) {
   INLA::inla.setOption(num.threads=2)
