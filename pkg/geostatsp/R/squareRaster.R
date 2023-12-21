@@ -38,7 +38,7 @@ setMethod("squareRaster",
 	Ny = ceiling(signif( (ymax(x) - ymin(x))/xres(x), 10) )
 	terra::ymax(x) = ymin(x) + Ny*xres(x)
 	terra::nrow(x) = Ny
-	extend(x, round(buffer/xres(x)))
+	extend(x, ceiling(buffer/xres(x)))
 })
 
 setMethod("squareRaster", 
