@@ -419,21 +419,21 @@ openmap = function(
   # if there's only one layer, and no colortable
   # convert to greyscale
   if(all(terra::nlyr(result)== 1) & !any(terra::has.colors(result))){
-    theRange = unlist(global(result, range))
+    theRange = unlist(terra::global(result, range))
     if(is.integer(theRange) & all(theRange >= 0) & all(theRange < 256)) {
       # 264 grey scale
-      coltab(result) = data.frame(value = seq(0,255), col = grey(seq(0,1,len=256)) )
+      terra::coltab(result) = data.frame(value = seq(0,255), col = grDevices::grey(seq(0,1,len=256)) )
     } 
   }
 
   # if there's transparency convert to color table
   if(all(c('red','green','blue','alpha') %in% names(result) & 
   terra::nlyr(result) == 4 & 
-  !any(has.colors(result)) )) {
+  !any(terra::has.colors(result)) )) {
     theColTab = terra::unique(result)
     theColTab = cbind(ID = 1:nrow(theColTab), theColTab)
 
-    valuesOrig = values(result, dataframe=TRUE)
+    valuesOrig = terra::values(result, dataframe=TRUE)
     valuesOrig$idOrig = 1:nrow(valuesOrig)
 
     newValues = merge(valuesOrig, theColTab)
