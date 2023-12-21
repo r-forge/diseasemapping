@@ -361,11 +361,9 @@ getTiles = function(
       thisRow = terra::project(
         vect(terra::xyFromCell(outraster, ScellOut), crs=crs(outraster)), 
         crsMerc, partial=TRUE)
-      thisRowGeom = terra::geom(thisRow)[,c('x','y')]
-#      isIn = relate(thisRow, ext(rasterSphere), 'within')
+      thisRowGeom = terra::geom(thisRow)[,c('x','y'), drop=FALSE]
 
         theCell = terra::cellFromXY(rasterSphere, thisRowGeom)
-#        theCell = unlist(terra::extract(rasterSphere, thisRow, ID=FALSE))
 
       SrowColHere = cbind(
         indexOut = 1:length(ScellOut),
