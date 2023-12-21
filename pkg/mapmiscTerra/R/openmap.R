@@ -178,16 +178,17 @@ openmap = function(
   }
   
 
-  if(is.numeric(x)) x = vect(matrix(x, ncol=2), crs=crsLL)
-
-  if(all(class(x) == 'SpatExtent')) x = rast(extent = x, crs = crsLL)
 
   if(identical(crs, "")) {
       crs=crsIn=crsOut = crsLL
   } else {
     crsOut=crs
     crsIn = terra::crs(x)    
-  }
+    if(identical(crsIn, "")) crsIn = crs
+}
+  if(is.numeric(x)) x = vect(matrix(x, ncol=2), crs=crsIn)
+
+  if(all(class(x) == 'SpatExtent')) x = rast(extent = x, crs = crsIn)
   
 
 # get extent of output
