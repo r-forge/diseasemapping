@@ -81,7 +81,8 @@ meanBoxCox=function(pred, sd, boxcox, Nbc = 100) {
 krigeOneRowPar = function(
 	Drow, yFromRowDrow, 
 	locations,
-	param,coordinates,Ny,cholVarData,
+	param,coordinates,Ny,
+	cholVarDataInv,
 	cholVarDatInvData,
 	xminl,xresl,ncoll,
 	lengthc){
@@ -107,8 +108,7 @@ krigeOneRowPar = function(
 	covDataPred = matrix(resC$result, nrow=ncoll, ncol=Ny)
 
 
-	cholVarDataInvCovDataPred = Matrix::solve(cholVarData, 
-		t(covDataPred))
+	cholVarDataInvCovDataPred = tcrossprod(cholVarDataInv, covDataPred)
 
 	x= cbind( # the conditional expectation
 		forExp=as.vector(Matrix::crossprod(cholVarDataInvCovDataPred, 
@@ -257,333 +257,22 @@ krigeLgm = function(
 	 } # end data is spdf	
   
 	 
-	 if(!length(observations) | is.null(meanRaster)) { # old code, not called from lgm
-		  # the above didn't create observations and meanRaster
-		  # use the old code, probably not being called from lgm
- 	  
-	   # find factors, so we reproject rasters using
-	   # the correct method.
-	   # search for factors in the data supplied
-    
-    
-	   
-	   # look for factors in the model formula
-	   if(any(class(trend)=="formula")){
-      
-      trendFormula = update.formula(trend, junk ~ . )
-      
-      
-		    covariatesForData = values(data)
- 		   
-		    if(is.vector(data)) {
-			     observations = data
-		    } else {			
-			     observations = all.vars(trend)[1]
-			     observations = covariatesForData[,observations]
-		    }
-      
-		    theVars = all.vars(trendFormula)[-1]
-      
-		    if(length(theVars)) {
-			     factorsInData = unlist(lapply(
-							     covariatesForData[,theVars,drop=FALSE],
-							     is.factor))
-			     factorsInData = names(factorsInData)[factorsInData]
-		    } else {
-			     factorsInData=NULL
-		    } 
-		    
-		    
-		    allterms = rownames(attributes(terms(trend))$factors)
-		    
-		    factorsInFormula = grep("^factor", allterms, value=TRUE)
-		    factorsInFormula = gsub("^factor\\(", "", factorsInFormula)
-		    factorsInFormula = gsub("\\)$", "", factorsInFormula)
-		    
-		    factorsInTrend=NULL
-		    
-		    allterms = gsub("^[[:alnum:]]+\\(", "", allterms)
-		    allterms = gsub("\\)$", "", allterms)
-		    
-		    if(!all(allterms %in% names(data)))
-			     warning("some covariates don't appear in data")
-	   } else { # trend not formula
-		    # trend is a data frame of covariates
-		    # look for factors in it
-		    covariatesForData = as.data.frame(trend)
-		    
-		    observations = as.data.frame(data)[,1]
-		    
-		    factorsInTrend = unlist(lapply(
-						    covariatesForData, is.factor
-				    ))
-		    factorsInTrend = names(factorsInTrend)[factorsInTrend]
-		    factorsInFormula = factorsInData = NULL
-		    
-		    # guess at the formula
-		    trendFormula = as.formula(paste(
-          "junk ~ ",
-						    paste(c('1', names(covariatesForData)), collapse="+")
-				    )
-      )
-	   } # end trend not a formula
-	   
-   
-	   # we know which variables factors
-	   theFactors = unique(c(factorsInFormula, factorsInData, factorsInTrend))
-	   theFactors = theFactors[theFactors %in% names(covariates) ]
-    
- 	  if(length(grep("SpatRaster|^list", class(covariates)))) { 
- 	    # if there's only variable in the model assign it's name to covariates
-	     covariateNames = all.vars(
-        update.formula(trendFormula, junk~ . )
-      )[-1]
-	     if(length(covariateNames)==1){
-		      # so far only one variable
-		      names(covariates)= covariateNames
-	     } 
-	     # loop through factors
-	     # and make sure integer values in rasters get converted
-	     # to things with parameter values!
-	     for(D in theFactors) {
-		      # is this variable in param with  a factor around it? 
-		      # for instance factor(x)1 and factor(x)2 ?
-		      paramWithFactor = grep(
-				      paste("factor\\(", D, "\\)[[:digit:]]+$", sep=""),
-				      names(param), value=TRUE)
-		      paramStartWithD = grep(
-				      paste("^", D, ".+$", sep=""),
-				      names(param), value=TRUE)
-		      paramFactorCharacter = grep(
-				      paste("factor\\(", D, "\\).+$", sep=""),
-				      names(param), value=TRUE)
-		      if(length(paramWithFactor)) {
-			       # formula will convert to factor, don't 
-			       # create factor beforehand
-			       theLevels = gsub(
-					       paste("^factor\\(",D,"\\)",sep=""),
-					       "",paramWithFactor)
-			       theLevels = as.integer(theLevels)
-			       allValues = unique(covariates[[D]])[,1]
-			       dontHave = allValues[!allValues %in% theLevels]
-			       # make values with no data all equal to the lowest value
-		        # so it's the baseline when turning into a factor.
-			       forRecla = cbind(dontHave, min(allValues)-1)
-			       
-			       covariates[[D]] = 
-					       classify(covariates[[D]], forRecla)
-	         
-		      } else if( length(paramStartWithD) ) {
-			       # not a bunch of digits, 
-			       # stuff like xTrees and xGrassland for covariate x and levels Trees and Grassland
-			       # see if these line up with 
-			       theLevels = gsub(paste("^", D, sep=""),"",paramStartWithD)
+	 if(!length(observations) | is.null(meanRaster)) {
 
-			       levelsTable = levels(covariates[[D]])[[1]]
 
-			       inId = theLevels %in% as.character(levelsTable[,1])
-			       inLabel = theLevels %in% levelsTable[,2]
-          
-			       if(mean(inId) > mean(inLabel)){
-				        levelsTable$levelsInParams =  
-						        as.character(levelsTable[,1])
-				        labelCol = ncol(levelsTable)
-				        levelsInTable = levelsTable[,1] %in% 
-						        theLevels
-			       } else {
-				        levelsInTable = levelsTable[,2]%in% theLevels
-				        labelCol=2
-			       }
-			       
-			       if(mean(theLevels %in% levelsTable[,labelCol]) < 0.4)
-				        warning("many levels appear missing in covariate", D)
-			       valuesInParams = levelsTable[levelsInTable,1]
-          
-			       allValues = unlist(unique(covariates[[D]]))
-			       allValues = levelsTable[levelsTable[,2] %in% allValues, 1]
-			       dontHave = allValues[!allValues %in% valuesInParams]
-			       forRecla = cbind(dontHave, min(as.vector(minmax(covariates[[D]])))-1)
-			       covariates[[D]] = classify(covariates[[D]], forRecla)
-			       
-			       
-			       levelsTable = 
-					       levelsTable[c(1, 1:nrow(levelsTable)),c(1,labelCol)]
-			       levelsTable[1,1]= min(allValues)-1
-			       levelsTable[1,2] = ''
-			       colnames(levelsTable)[2] = "levels"
-			       levels(covariates[[D]]) = levelsTable
-			       
-		      } else if (length(paramFactorCharacter)) {
-			       # stuff like factor(x)Trees and factor(x)Grassland for covariate x and levels Trees and Grassland
-			       theLevels = gsub(paste("^factor\\(", D,"\\)", sep=""),"",
-					       paramFactorCharacter)
-			       levelsTable = levels(covariates[[D]])[[1]]
-			       levelsInTable = levelsTable[,2]%in% theLevels
-			       if(mean(theLevels %in% levelsTable[,2]) < 0.4)
-				        warning("many levels appear missing in covariate", D)
-			       valuesInParams = as.numeric(levelsTable[levelsInTable,1])
-          
-#			       allValues = unlist(unique(covariates[[D]]))
-#			       dontHave = allValues[!allValues %in% valuesInParams]
-			       forRecla = cbind(levelsTable[!levelsInTable,'ID'], min(levelsTable[,'ID'])-1)
-			       covariates[[D]] = classify(covariates[[D]], forRecla)
-			       
-			       
-			       levelsTable = 
-					       levelsTable[c(1, 1:nrow(levelsTable)),]
-			       levelsTable[1,1]= min(levelsTable[,'ID'])-1
-			       levelsTable[1,2] = "0"
-			       colnames(levelsTable)[2]="levels"
-			       levels(covariates[[D]])[[1]] =  levelsTable			
-			       
-			       
-		      } else {
-			       warning("don't know what to do with covariate", D, 
-					       "\n can't assign parameters to levels of this factor")			
-		      }
-		      
-		      
-	     } # end loop through factors
-	     
-	     if(length(grep("SpatRaster|^list", class(covariates))) & length(theVars)) {
-		      # method for resampling covariate rasters
-        
-		      method = resampleMethods(formula, covariates)
-		      
-		      covariates = stackRasterList(covariates, template=locations, method=method)
-        
-		      theVars = do.call('intersect',
-          dimnames(attributes(terms(trendFormula))$factors))
-        
-		      if(nlyr(covariates)==1 & length(theVars)==1) {
-			       names(covariates) = theVars
-		      }
-		      
-		      # construct the fixed effects component
-		      covariatesDF = cbind(values(covariates, dataframe=TRUE), 
-		      	crds(covariates, df=TRUE, na.rm=FALSE))
-		      # get rid of trailing _ created by as.data.frame
-		      names(covariatesDF) = gsub("_levels$", "", names(covariatesDF))
-	     } else {
-		      covariatesDF = as.data.frame(matrix(NA, ncol=0, nrow=ncell(locations)))
-	     }
-	   } else {# end covariates is raster, assume it's a data frame
-		    covariatesDF=covariates
-	   } 
-    
-	   # get rid of response variable in trend formula
-    meanRaster = rast(locations)
-    names(meanRaster) = "fixed"
-    
-	   
-	   if(length(all.vars(trendFormula)) ){ # if have covariates
-	     missingVars = all.vars(trendFormula)[-1] %in% names(covariatesDF)
-	     missingVars = all.vars(trendFormula)[-1][!missingVars]
-	     
-	     # check if all variables are in covariates
-	     if(length(missingVars)) {
-		      cat("cant find covariates ",
-				      paste(missingVars, collapse=","),
-				      " for prediction, imputing zeros\n")		
-		      
-		      covariatesDF[,missingVars]=0	
-	     }
-      
-	     modelMatrixForRaster = model.matrix(trendFormula, cbind(covariatesDF,junk=0))
-      
-	     if(!all(colnames(modelMatrixForRaster)%in% names(param))){
-		      warning("cant find coefficients",
-				      paste(setdiff(colnames(modelMatrixForRaster), names(param)), collapse=", "),
-				      "in param\n")
-	     }
-	     
-	     
-	     meanFixedEffects = 
-			     modelMatrixForRaster %*% param[colnames(modelMatrixForRaster)]
-	     
-	     anyNA = apply(covariatesDF, 1, function(qq) any(is.na(qq)))
-	     if(any(anyNA)) {
-		      oldmm = rep(NA, ncell(meanRaster))
-		      oldmm[!anyNA] = meanFixedEffects
-		      terra::values(meanRaster) = oldmm
-	     } else {
-		      terra::values(meanRaster) = meanFixedEffects
-	     }
-	     
-      
-	     
-	     modelMatrixForData = model.matrix(trendFormula, 
-        cbind(covariatesForData,junk=0))
-	     haveData = match(rownames(modelMatrixForData), 
-			     rownames(covariatesForData))
-	     observations = observations[haveData]
-	     coordinates = coordinates[haveData,]
-	     
-	     meanForData = 
-			     modelMatrixForData %*% param[colnames(modelMatrixForData)]
-      
-	   } else { #no covariates	
-      
-		    if(any(names(param)=='(Intercept)')) {
-			     terra::values(meanRaster) = param['(Intercept)'] 
-		    } else {
-			     terra::values(meanRaster) = 0
-		    }
-		    meanForData = rep(values(meanRaster)[1], length(observations))
-	   }
-	   
-    
-	   
-# subtract mean from data
-    
-	   theNAdata =  
-			   is.na(observations)
-	   
-	   if(all(theNAdata)) {
-		    warning(
-				    'it appears there are no observations without at least one covariate missing')
-	   }
-		  
-    
-	   
-	   if(any(theNAdata)) {
-		    noNAdata = !theNAdata
-		    if(length(grep("^SpatVector", class(coordinates)))) {
-			     coordinates = coordinates[noNAdata,]	
-		    } else if(any(class(coordinates)=="dist")){
-			     coordinates = as.matrix(coordinates)
-			     coordinates = coordinates[noNAdata,noNAdata]
-			     coordinates = as.dist(coordinates)
-		    } else {
-			     warning("missing vlaues in data but unclear how to remove them from coordinates")
-		    }
-		    observations = observations[noNAdata]
-	   }
-	   
-	   
-    
-	   
-	   if(haveBoxCox) {
-		    if(abs(param["boxcox"]) < 0.001) {
-			     observations = log(observations)
-			     expPred = TRUE
-			     haveBoxCox = FALSE
-		    } else {
-			     observations = ((observations^param["boxcox"]) - 1)/
-					     param["boxcox"]
-		    }
-		    
-	   } # end have box cox
-	   
-	   observations = observations - meanForData
+	  # old code, not called from lgm
+	 	# depricated
+	 	warning("no longer supported")
+
     
 	 } # end old code not called from LGM
 	 
-  cholVarData = geostatsp::matern(coordinates, param=param, type='cholesky')
+  cholVarDataInv = geostatsp::matern(
+  	coordinates, 
+  	param=param, type='inverseCholesky')
 
-  observations = as.matrix(observations)
- 	cholVarDatInvData = Matrix::solve(cholVarData, observations)
-  
+  cholVarDatInvData = cholVarDataInv %*% observations
+
 	 Ny = length(observations)
 	 param = fillParam(param)
 	 
@@ -591,7 +280,7 @@ krigeLgm = function(
 	 datForK = list(
 			 locations=locations,param=param,
 			 coordinates=coordinates,Ny=Ny,
-			 cholVarData=cholVarData,
+			 cholVarDataInv=cholVarDataInv,
 			 cholVarDatInvData = cholVarDatInvData,
 			 xminl=xmin(locations),
 			 xresl = xres(locations),
