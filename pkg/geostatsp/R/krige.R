@@ -601,11 +601,12 @@ krigeLgm = function(
 		)
 	 Srow = 1:nrow(locations)
 	 
-  
 	 if(mc.cores ==1 ) {
-	   sums=mapply(krigeOneRowPar, Srow, 
-				  yFromRow(locations,Srow),
-				  MoreArgs=datForK,SIMPLIFY=FALSE)
+	   sums=mapply(krigeOneRowPar, 
+	   	Drow = Srow, 
+				  yFromRowDrow = yFromRow(locations,Srow),
+				  MoreArgs=datForK,
+				  SIMPLIFY=FALSE)
     
 	 } else {
 		  sums=parallel::mcmapply(krigeOneRowPar, Srow, 
@@ -633,7 +634,7 @@ krigeLgm = function(
 		  themax = max(forVar - param["variance"],na.rm=TRUE)
 		  if(themax > 1e-6)
 			   warning("converted variances of ", themax, " to zero")	
-#		forVar = pmin(forVar, param["variance"])	
+		forVar = pmin(forVar, param["variance"])	
 	 }
 	 
 	 krigeSd = rast(meanRaster)
