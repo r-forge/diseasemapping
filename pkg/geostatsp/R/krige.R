@@ -77,6 +77,50 @@ meanBoxCox=function(pred, sd, boxcox, Nbc = 100) {
   result
 }
 
+
+krigeOneRowPar = function(
+	Drow, yFromRowDrow, 
+	locations,
+	param,coordinates,Ny,cholVarData,
+	cholVarDatInvData,
+	xminl,xresl,ncoll,
+	lengthc){
+
+		  # covariance of cells in row Drow with data points
+	resC =  .C(C_maternArasterBpoints, 
+		as.double(xminl), 
+		as.double(xresl), 
+		as.integer(ncoll), 
+		as.double(yFromRowDrow), 
+		as.double(0), as.integer(1),
+		as.double(crds(coordinates)[,1]), 
+		as.double(crds(coordinates)[,2]), 
+		N=as.integer(Ny), 
+		result=as.double(matrix(0, ncoll, 
+			lengthc)),
+		as.double(param["range"]),
+		as.double(param["shape"]),
+		as.double(param["variance"]),
+		as.double(param["anisoRatio"]),
+		as.double(param["anisoAngleRadians"])
+	) 
+	covDataPred = matrix(resC$result, nrow=ncoll, ncol=Ny)
+
+
+	cholVarDataInvCovDataPred = Matrix::solve(cholVarData, 
+		t(covDataPred))
+
+	x= cbind( # the conditional expectation
+		forExp=as.vector(Matrix::crossprod(cholVarDataInvCovDataPred, 
+			cholVarDatInvData)),
+				  # part of the conditional variance
+		forVar=apply(cholVarDataInvCovDataPred^2, 2, sum)
+	) 
+	x
+
+}
+
+
 krigeLgm = function(
 		formula, data, 
 		grid,
@@ -536,56 +580,14 @@ krigeLgm = function(
 	 } # end old code not called from LGM
 	 
   cholVarData = geostatsp::matern(coordinates, param=param, type='cholesky')
-#	if(haveNugget) Matrix::diag(varData) = Matrix::diag(varData) + param["nugget"]
 
-#	cholVarData = Matrix::chol(varData)
   observations = as.matrix(observations)
-	 cholVarDatInvData = Matrix::solve(cholVarData, observations)
+ 	cholVarDatInvData = Matrix::solve(cholVarData, observations)
   
 	 Ny = length(observations)
 	 param = fillParam(param)
 	 
-	 krigeOneRowPar = function(Drow, yFromRowDrow, 
-			 locations,
-			 param,coordinates,Ny,cholVarData,
-			 cholVarDatInvData,
-			 xminl,xresl,ncoll,
-			 lengthc){
-		  
-		  # covariance of cells in row Drow with data points
-		  resC =  .C(C_maternArasterBpoints, 
-				  as.double(xminl), 
-				  as.double(xresl), 
-				  as.integer(ncoll), 
-				  as.double(yFromRowDrow), 
-				  as.double(0), as.integer(1),
-				  as.double(crds(coordinates)[,1]), 
-				  as.double(crds(coordinates)[,2]), 
-				  N=as.integer(Ny), 
-				  result=as.double(matrix(0, ncoll, 
-								  lengthc)),
-				  as.double(param["range"]),
-				  as.double(param["shape"]),
-				  as.double(param["variance"]),
-				  as.double(param["anisoRatio"]),
-				  as.double(param["anisoAngleRadians"])
-		  ) 
-		  covDataPred = matrix(resC$result, nrow=ncoll, ncol=Ny)
-		  
-		  
-		  cholVarDataInvCovDataPred = Matrix::solve(cholVarData, 
-				  t(covDataPred))
-		  
-	   x= cbind( # the conditional expectation
-				  forExp=as.vector(Matrix::crossprod(cholVarDataInvCovDataPred, 
-								  cholVarDatInvData)),
-				  # part of the conditional variance
-				  forVar=apply(cholVarDataInvCovDataPred^2, 2, sum)
-		  ) 
-		  x
-		  
-	 }
-  
+
 	 datForK = list(
 			 locations=locations,param=param,
 			 coordinates=coordinates,Ny=Ny,
@@ -621,7 +623,7 @@ krigeLgm = function(
 	 
 	 randomRaster = rast(meanRaster)
 	 names(randomRaster) = "random"
- 	terra::values(randomRaster) = as.vector(forExpected)
+ 	terra::values(randomRaster) = t(forExpected)
 	 
 
 	 predRaster = meanRaster + randomRaster
