@@ -68,7 +68,7 @@ by \eqn{2^n} tiles. Zoom levels go up to about 17 or 18 depending on the tile
 server.
 
 
-See \url{https://mc.bbbike.org/mc} for a more possible map tiles (not all of which are compatible with openmap)
+See \url{https://mc.bbbike.org/mc/} for a more possible map tiles (not all of which are compatible with openmap)
 
 Be sure to attribute any maps you publish, the \code{osmAttribution} function will assist.  If \code{type = 'auto'} then markdown format will be used unless a variable \code{mdToTex} is defined and equal to \code{TRUE}.
 

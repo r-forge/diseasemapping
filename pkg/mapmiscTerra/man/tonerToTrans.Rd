@@ -42,11 +42,9 @@ Patrick Brown
 	data('worldMap');worldMap = unwrap(worldMap)
 
 	origMap = openmap(worldMap[worldMap$NAME == 'Sierra Leone',],
-	 path='stamen-toner',  
+	 path='cartodb-nolabels',   
 		buffer=100*1000
 	)
-		# path = 'https://tiles.stadiamaps.com/tiles/stamen_toner/')
-	#	suffix = '@2x.png')
 	oldpar=	map.new(origMap, bg='green')
 	plot(origMap, add=TRUE)
 	
