@@ -27,7 +27,7 @@ getDegreeRaster()
 
 \references{
 \url{https://modis-land.gsfc.nasa.gov/MODLAND_grid.html},
-\url{https://spatialreference.org/ref/sr-org/modis-sinusoidal/}
+\url{https://spatialreference.org/ref/esri/54008/}
 }
 
 
