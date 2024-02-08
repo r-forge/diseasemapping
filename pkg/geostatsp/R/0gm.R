@@ -64,7 +64,7 @@ gm.dataRaster = function(
   
   covFactors = NULL
   for(D in names(covariates)) {
-    if(is.factor(covariates[[D]]))
+    if(any(is.factor(covariates[[D]])))
       covFactors = c(D, covFactors)
   }
   dataFactors = NULL
@@ -398,7 +398,7 @@ gm.dataSpatial = function(
 
     covFactors = NULL
     for(D in names(covariates)) {
-      if(is.factor(covariates[[D]]))
+      if(any(is.factor(covariates[[D]])))
         covFactors = c(D, covFactors)
     }
 
@@ -433,7 +433,7 @@ gm.dataSpatial = function(
         covariates, 
         template=cellsSmall, 
         method=rmethod)
-      covariatesStack = c(cellsSmall, covariatesStack)
+      covariatesStack2 = c(cellsSmall, covariatesStack)
       covariatesSP = suppressWarnings(as.points(covariatesStack))
       covariatesDF = values(covariatesSP)
     } else { # else no covariates
