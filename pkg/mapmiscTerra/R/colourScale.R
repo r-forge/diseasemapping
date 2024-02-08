@@ -106,7 +106,7 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 	style = style[1]
 	weights=NULL
 
-	NforSample = 1e+05
+	NforSample = 2e+05
 
 	if(is.character(col) ){
 
@@ -136,10 +136,11 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 			if(identical(labels, "")) labels = NULL
 		}
 
-    # if labels is a data frame, use it
+    	# if labels is a data frame, use it
 		if(is.data.frame(labels)) {
 			levelsx = labels
 				  # ID variable is first column if it's missing
+			colnames(levelsx) = gsub("^Value$", "ID", colnames(levelsx))
 			if(!any(colnames(levelsx)=='ID')){
 				colnames(levelsx)[1] = 'ID'
 			}
@@ -181,87 +182,86 @@ colourScale.SpatRaster = function(x=NULL, breaks=5,
 				col = levelsx[,colCol]
 				breaks = length(col)
 			}
-		} else if( # labels not a data frame
-			length(labels) == length(breaks)
-			){
+		} else if(length(labels) == length(breaks)){
+			# labels not a data frame
 			levelsx = data.frame(
 				ID=breaks,
 				label=as.character(labels)
 				)
 		} else { # different number of labels and breaks
 
-		levelsx = data.frame(ID=sort(unlist(terra::unique(x))))
+		    levelsx = data.frame(ID=sort(unlist(terra::unique(x))))
 
-		if(is.null(labels)) {
-			levelsx$label = as.character(levelsx$ID)
-		} else {
-			if(ncol(levelsx)==length(labels)) {
-				levelsx$label = as.character(labels)
-			} else {
-				warning('labels must be same length as either breaks or unique(x)')
+   			if(is.null(labels)) {
 				levelsx$label = as.character(levelsx$ID)
-			}
-		} # end different numbers of levels and breaks
-	} # levels not null
+			} else {
+				if(ncol(levelsx)==length(labels)) {
+					levelsx$label = as.character(labels)
+				} else {
+					warning('labels must be same length as either breaks or unique(x)')
+					levelsx$label = as.character(levelsx$ID)
+				}
+			} #
+		} #  end different numbers of levels and breaks
 	
-	if(terra::ncell(x)<1e+06) {
-		x = terra::freq(x)[,-1]
-		weights = x[,'count']
-		x=x[,'value']
-	} else {
-		terra::activeCat(x) = 'ID'
-		weights = table(
-			unlist(terra::spatSample(x, size=NforSample, method='regular'))
-			)
-		x = as.numeric(names(weights))
-		if(!is.null(levelsx)) {
+		# get frequencies of values
+		if(terra::ncell(x)< (10*NforSample)) {
+			x = terra::freq(x)[,-1]
+			weights = x[,'count']
+			x=x[,'value']
+		} else {
+			if(is.factor(x)) terra::activeCat(x) = 'ID'
+			weights = table(
+				unlist(terra::spatSample(x, size=NforSample, method='regular'))
+				)
+			x = as.numeric(names(weights))
+			if(!is.null(levelsx)) {
 				    # check for values which are missing
-			toAdd = setdiff(levelsx$ID, x)
-			toAddWeights = rep(0, length(toAdd))
-			names(toAddWeights) = as.character(toAdd)
-			x = c(x, toAdd)
-			weights = c(weights, toAddWeights)
+				toAdd = setdiff(levelsx$ID, x)
+				toAddWeights = rep(0, length(toAdd))
+				names(toAddWeights) = as.character(toAdd)
+				x = c(x, toAdd)
+				weights = c(weights, toAddWeights)
+			}
 		}
-	}
 
-	if(is.null(levelsx)){
-		levelsx = data.frame(
-			ID=sort(x))
-	}
-	notInLevels = which(! (x %in% levelsx$ID | x %in% levelsx$label))
-	if(length(notInLevels)){
-      # add more values to ID
-		toAdd = matrix(NA,
-			length(notInLevels),ncol(levelsx), 
-			dimnames=list(NULL, colnames(levelsx)))
-		toAdd[,1] = x[notInLevels]
-		levelsx = rbind(levelsx, toAdd)
-		levelsx = levelsx[order(levelsx$ID),]
-	} # end add more ID in levels
-	if(is.null(levelsx$label)) {
-		if(is.vector(labels)){
-			if(length(labels)==nrow(levelsx))
-				levelsx$label = labels
-		} # end labels are vector
-	}
-	if(is.null(levelsx$label)) {
-		levelsx$label = as.character(levelsx$ID)
-	}
+		if(is.null(levelsx)){
+			levelsx = data.frame(ID=sort(x))
+		}
+		notInLevels = which(! (x %in% levelsx$ID | x %in% levelsx$label))
+		if(length(notInLevels)){
+      		# add more values to ID
+			toAdd = matrix(NA,
+				length(notInLevels),ncol(levelsx), 
+				dimnames=list(NULL, colnames(levelsx)))
+			toAdd[,1] = x[notInLevels]
+			levelsx = rbind(levelsx, toAdd)
+			levelsx = levelsx[order(levelsx$ID),]
+		} # end add more ID in levels
+		if(is.null(levelsx$label)) {
+			if(is.vector(labels)){
+				if(length(labels)==nrow(levelsx))
+					levelsx$label = labels
+			} # end labels are vector
+		}
+		if(is.null(levelsx$label)) {
+			levelsx$label = as.character(levelsx$ID)
+		}
 
-	levelsx$freq = weights[match(
-		levelsx$ID,
-		x
-		)]
-    # if more breaks than ID's have been requested
-    # set breaks to all ID's
-	if(length(breaks)==1 & all(breaks > nrow(levelsx)))
-		breaks = levelsx$ID
+		levelsx$freq = weights[match(
+			levelsx$ID,
+			x
+			)]
+	    # if more breaks than ID's have been requested
+    	# set breaks to all ID's
+		if(length(breaks)==1 & all(breaks > nrow(levelsx)))
+			breaks = levelsx$ID
 
-	weights = levelsx$freq
-	x=levelsx$ID
-	labels = levelsx$label
-# end style unique
-} else { # not unique or equal or fixed, take a sample
+		weights = levelsx$freq
+		x=levelsx$ID
+		labels = levelsx$label
+		# end style unique
+	} else { # not unique or equal or fixed, take a sample
 
 Nsample = 20000
 xVec= c()
