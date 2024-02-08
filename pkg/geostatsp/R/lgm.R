@@ -348,7 +348,7 @@ logLik.lgm = function(object, ...){
 		'Estimated']
 		)
 		attributes(res)$df = df
-		attributes(res)$nobs = nrow(data.frame(object$data))
+		attributes(res)$nobs = try(nrow(data.frame(object$data)), silent=TRUE)
 		class(res)= 'logLik'
 		res
 	}
