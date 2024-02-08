@@ -9,14 +9,14 @@
  Data set contains the information of population, by age, sex, and census subdivision.
 }
 \usage{data('kentucky')}
-\format{A \code{SpatialPolygonsDataFrame} of Kentucky boundaries and populations, 
+\format{A \code{SpatVect} containing Kentucky boundaries and populations, 
  case numbers for each county, and a vector of cancer rates by age and sex group.
 
 }
 \details{
 
 \code{larynx} is a \code{data.frame} of cancer case counts by county, 
-obtained from \url{http://www.cancer-rates.info} and are for a single  
+obtained from \url{https://www.cancer-rates.info} and are for a single  
 deliberately unspecified year. 
 
 \code{kentucky} contains country boundaries and populations.

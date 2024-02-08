@@ -420,7 +420,7 @@ openmap = function(
   # convert to greyscale
   if(all(terra::nlyr(result)== 1) & !any(terra::has.colors(result))){
     theRange = unlist(terra::global(result, range))
-    if(is.integer(theRange) & all(theRange >= 0) & all(theRange < 256)) {
+    if( all(ceiling(theRange) == floor(theRange), na.rm=TRUE) & all(theRange >= 0) & all(theRange < 256)) {
       # 264 grey scale
       terra::coltab(result) = data.frame(value = seq(0,255), col = grDevices::grey(seq(0,1,len=256)) )
     } 

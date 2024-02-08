@@ -108,9 +108,9 @@ tocrop = terra::rast(
   	terra::ext(cropInset), 
     terra::ext(terra::project(terra::ext(mapExtent), terra::crs(mapExtent), terra::crs(cropInset)))
   ), crs=terra::crs(cropInset))
-tocrop = terra::project(terra::ext(tocrop), terra::crs(tocrop), terra::crs(map))
+tocrop = terra::project(tocrop,   terra::crs(map))
 # if the extents are overlapping, crop
-map = terra::crop(map, tocrop)
+map = terra::crop(map, ext(tocrop))
 mapOrig = terra::deepcopy(map)
 }
 
@@ -177,12 +177,22 @@ toScale = list(shift1 = bbOrig[1,], scale=scale, shift2 = bbSmall[1,])
 
 xsp = terra::crds(xsp)
 
-
+if(has.RGB(map)) {
+	theCol = do.call(grDevices::rgb, 
+		c(as.list(as.data.frame(values(map)[,c('red','green','blue')])), 
+			list(maxColorValue=255))
+	) 
+	theIndex = matrix(1:length(theCol), ncol(map), nrow(map))[,nrow(map):1]
+} else {
 theCol = do.call(grDevices::rgb, 
-	c(as.list(terra::coltab(map)[[1]][,-1]), list(maxColorValue=255)))
+	c(as.list(terra::coltab(map)[[1]][,c('red','green','blue')]), list(maxColorValue=255)))	
+theIndex = 	matrix(terra::values(map), ncol(map), nrow(map) )[, nrow(map):1]
+}
 do.call(graphics::clip, as.list(par('usr')))
-graphics::image(terra::xFromCol(map), terra::yFromRow(map, nrow(map):1), 
-	matrix(terra::values(map), ncol(map), nrow(map) )[, nrow(map):1],
+graphics::image(
+	terra::xFromCol(map), 
+	terra::yFromRow(map, nrow(map):1), 
+	theIndex,
 	useRaster=FALSE, add=TRUE, col=theCol)
 # for some reason, the code below crops the map
 #plot(map, add=TRUE)
@@ -199,11 +209,11 @@ for(D in 1:3)
 	theX = c(theX, anX*exp(-D*2*pi*1i/4))
 theX = theX*exp(-2*pi*1i/8)
 
-if( (diff(range(xsp[,1])))  < (width*dimFull[1]/20) ) {	
+if( (diff(range(xsp[,1])))  < (width*dimFull[1]/2000) ) {	
 	graphics::polygon((1.5*width*dimFull[1]/20) * theX +
 					mean(xsp[,1])+1i*mean(xsp[,2]), col=col, ...)
 } else {
-	graphics::polygon(xsp, col=col, border=NA, ...)
+	graphics::polygon(xsp, col=col, border=substr(col, 1, 7), ...)
 }
 
 
