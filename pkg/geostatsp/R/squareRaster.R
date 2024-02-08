@@ -29,7 +29,7 @@ setMethod("squareRaster",
 setMethod("squareRaster", 
   signature(x="SpatRaster"), 
   function(x, cells=NULL, buffer=0) {
-	x=rast(x)
+	x=rast(x, nl=1)
 	if(is.null(cells)) {
 		cells = ncol(x)
 	} else {
