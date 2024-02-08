@@ -1,3 +1,17 @@
+writeRasterMapTiles = function(x, filename=tempefile(fileext='.tif'), overwrite = TRUE,  ...) {
+    if(length(filename)){
+    	theTiles = attributes(x)$tiles
+      if(any(nrow(coltab(x)[[1]])>255) ) {
+        x = colorize(x, to='rgb', alpha=TRUE, 
+          filename=filename, overwrite=overwrite, ...)
+      } else {
+        x = writeRaster(x, filename, overwrite=overwrite, ...)
+      }
+      attributes(x)$tiles = theTiles
+      attributes(x)$filename = filename
+    }
+  x
+}
 
 
 .getRasterMerc = function(zoom) {

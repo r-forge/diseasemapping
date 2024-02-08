@@ -153,7 +153,7 @@ openmap = function(
   maxTiles = 9,
   crs=terra::crs(x),
   buffer=0, fact=1,
-  filename = tempfile(fileext='.tif'),
+  filename,
   verbose=getOption('mapmiscVerbose'),
   cachePath=getOption('mapmiscCachePath'), 
   suffix=NULL
@@ -440,13 +440,10 @@ openmap = function(
     terra::coltab(result2) = theColTab
     result = result2
 }
-  if(length(filename)){
-    if(any(nrow(coltab(result)[[1]])>255) ) {
-      result = colorize(result, to='rgb', alpha=TRUE, filename=filename, overwrite=TRUE)
-    } else {
-      result = writeRaster(result, filename, overwrite=TRUE)
-    }
-  }
+
+
+  result = writeRasterMapTiles(result, filename)
+
   attributes(result)$openmap = list(
       path=path,
       pathOrig=pathOrig,

@@ -1,7 +1,7 @@
 
 tonerToTrans = function(x, pattern= "(red|green|blue)$", 
   power=0.5, col='black',
-  threshold=Inf) {
+  threshold=Inf, filename) {
 
   if(all(terra::has.colors(x))) {
     xValues = terra::coltab(x)[[1]]    
@@ -51,9 +51,10 @@ tonerToTrans = function(x, pattern= "(red|green|blue)$",
 
   terra::coltab(result) = theColtab
 
+  result = writeRasterMapTiles(result, filename)
+
   attributes(result)$tiles = attributes(x)$tiles
-  attributes(result)$openmap = attributes(x)$openmap
-  
+  attributes(result)$openmap = attributes(x)$openmap  
   attributes(result)$tiles$tonerToTrans = match.call()
   result
 }

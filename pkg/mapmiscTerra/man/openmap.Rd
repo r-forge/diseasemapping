@@ -12,7 +12,7 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	  maxTiles = 9, 
 	  crs=terra::crs(x),   
 	  buffer=0, fact=1, 
-	  filename = tempfile(fileext='.tif'),
+	  filename,
 		verbose=getOption('mapmiscVerbose'),
 	  cachePath=getOption('mapmiscCachePath'),
 	  suffix=NULL
@@ -45,7 +45,7 @@ of \code{x}.  Can be negative, or a vector of length 2 for different x and y
 extensions}
 \item{fact}{Passed to increase or decrease resolution, values above 1
 	help to produce a clearer image.}
-	\item{filename}{file where the output raster is saved}
+	\item{filename}{file where the output raster is saved, defaults to a temporary file}
   \item{verbose}{
     Print information about map images being downloaded, defaults to \code{FALSE}.
   }

@@ -8,7 +8,7 @@ Stamen-toner maps are 3-layer RGB rasters, which are converted
 to single-layer rasters with indexed colours with whites becoming transparent. 
 }
 \usage{
-tonerToTrans(x,  pattern="(red|green|blue)$", power = 0.5, col='black',  threshold=Inf)
+tonerToTrans(x,  pattern="(red|green|blue)$", power = 0.5, col='black',  threshold=Inf, filename)
 }
 \arguments{
   \item{x}{
@@ -19,6 +19,7 @@ tonerToTrans(x,  pattern="(red|green|blue)$", power = 0.5, col='black',  thresho
 }
 \item{col}{colour for resulting map}
 \item{threshold}{colours above this value are transparent}
+	\item{filename}{file where the output raster is saved, defaults to a temporary file}
 }
 
 \details{
