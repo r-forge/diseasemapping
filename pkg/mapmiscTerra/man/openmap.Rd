@@ -12,7 +12,7 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	  maxTiles = 9, 
 	  crs=terra::crs(x),   
 	  buffer=0, fact=1, 
-	  filename,
+	  filename=tempfile(fileext='.tif'),
 		verbose=getOption('mapmiscVerbose'),
 	  cachePath=getOption('mapmiscCachePath'),
 	  suffix=NULL

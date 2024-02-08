@@ -153,7 +153,7 @@ openmap = function(
   maxTiles = 9,
   crs=terra::crs(x),
   buffer=0, fact=1,
-  filename,
+  filename= tempfile(fileext='.png'),
   verbose=getOption('mapmiscVerbose'),
   cachePath=getOption('mapmiscCachePath'), 
   suffix=NULL
@@ -449,7 +449,6 @@ openmap = function(
       pathOrig=pathOrig,
       zoom=zoom
   )
-  attributes(result)$source = sources(result)
 
   result
 }

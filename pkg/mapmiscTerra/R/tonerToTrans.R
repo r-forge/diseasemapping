@@ -1,7 +1,8 @@
 
 tonerToTrans = function(x, pattern= "(red|green|blue)$", 
   power=0.5, col='black',
-  threshold=Inf, filename) {
+  threshold=Inf, mostCommon=1,
+  filename=tempfile(fileext='.png')) {
 
   if(all(terra::has.colors(x))) {
     xValues = terra::coltab(x)[[1]]    
@@ -39,6 +40,8 @@ tonerToTrans = function(x, pattern= "(red|green|blue)$",
     terra::values(result) = xUnique[match(xValues[,'alpha'], xUnique[,'alpha']), 'value']
   }
 
+
+
   if(is.character(col)) {
       col = drop(grDevices::col2rgb(col[1]))
   }
@@ -49,12 +52,18 @@ tonerToTrans = function(x, pattern= "(red|green|blue)$",
       alpha=xUnique[,'alpha']
     )
 
+  xCommon = terra::freq(result)
+
+  xCommon= xCommon[
+    order(xCommon[,'count'], decreasing=TRUE)[mostCommon],
+    'value']
+  theColtab[which(theColtab[,1] %in% xCommon), 'alpha'] = 0
+
+
   terra::coltab(result) = theColtab
 
   result = writeRasterMapTiles(result, filename)
 
-  attributes(result)$tiles = attributes(x)$tiles
-  attributes(result)$openmap = attributes(x)$openmap  
   attributes(result)$tiles$tonerToTrans = match.call()
   result
 }
