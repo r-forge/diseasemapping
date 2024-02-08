@@ -56,7 +56,7 @@ gm.dataRaster = function(
 
   # find factors
   
-  theFactors = grep("^factor", alltermsFull, value=T)
+  theFactors = grep("^factor", alltermsFull, value=TRUE)
   theFactors = gsub("^factor\\(|\\)$", "", theFactors)
   
   termsInF = grep("^f[(]", alltermsFull, value=TRUE)
@@ -130,8 +130,7 @@ gm.dataRaster = function(
 
         covariatesForStack = covariates[[which(notLogOffset)]]
 
-        covariatesForStackData = 
-        covariates[[notInData]]
+        covariatesForStackData = covariates[[notInData]]
 
       } else {
         covariatesForStack = covariates[notLogOffset]
@@ -434,7 +433,7 @@ gm.dataSpatial = function(
         template=cellsSmall, 
         method=rmethod)
       covariatesStack2 = c(cellsSmall, covariatesStack)
-      covariatesSP = suppressWarnings(as.points(covariatesStack))
+      covariatesSP = suppressWarnings(as.points(covariatesStack2))
       covariatesDF = values(covariatesSP)
     } else { # else no covariates
       covariatesDF = data.frame()

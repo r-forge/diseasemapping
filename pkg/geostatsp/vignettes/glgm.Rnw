@@ -95,7 +95,7 @@ fact
 model with standard formula
 
 
-<<swissINla>>=  
+<<swissINla>>=
 swissFit =  glgm(
     formula = lograin~ CHE_alt,
     data = swissRain, 
@@ -110,6 +110,7 @@ swissFit =  glgm(
     control.inla = list(strategy='gaussian')
   )
 @
+
 
 parameters
 <<swissParams>>=
