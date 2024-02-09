@@ -19,7 +19,7 @@ writeRasterMapTiles = function(x, filename, overwrite = TRUE,  ...) {
       	origValues =coltabOrig[,1]
       	if(any(origValues > 255 | origValues < 0,na.rm=TRUE )) warning("raster values outside range 0 to 255")
       	newValues = setdiff(0:255, origValues)
-      if(length(newvalues)) {
+      if(length(newValues)) {
  		   	coltabToAdd = coltabOrig[rep(1, length(newValues)), ]
  		   	coltabToAdd[,1] = newValues 		   	
  		   	coltabToAdd[,-1] = 0
