@@ -62,11 +62,8 @@ points(myPoints)
   # raster, result will be in project of the raster (long-lat)
   mytiles = openmap(
     x=extend(myraster,1),
-    zoom=thezoom, filename=NULL)
-  mytiles2 = openmap(
-    x=extend(myraster,1),
-    zoom=thezoom, filename=tempfile(fileext='.tif'))
-#		mycities = GNcities(extend(myraster,1),max=5)
+    zoom=thezoom)
+
   myplot(myraster, myPoints)
 
 print(2)

@@ -153,7 +153,6 @@ openmap = function(
   maxTiles = 9,
   crs=terra::crs(x),
   buffer=0, fact=1,
-  filename= tempfile(fileext='.png'),
   verbose=getOption('mapmiscVerbose'),
   cachePath=getOption('mapmiscCachePath'), 
   suffix=NULL
@@ -215,12 +214,13 @@ openmap = function(
           outPointsLL = project(outPointsMerc, crsOut)
           outExtent = terra::ext(outPointsLL)
 
-    } else {
+  } else {
           outExtent = terra::extend(outExtent, buffer)
-    }
-    if(terra::is.lonlat(crsOut)) {
+  }
+    
+  if(terra::is.lonlat(crsOut)) {
       outExtent = terra::intersect(outExtent, terra::unwrap(bboxLL))
-    }
+  }
 
   testRast = rast(outExtent, res = (terra::xmax(outExtent) - terra::xmin(outExtent))/NtestCols, crs = crsOut)
   testPoints = vect(terra::xyFromCell(testRast, 1:terra::ncell(testRast)), crs=terra::crs(testRast))
@@ -362,8 +362,6 @@ openmap = function(
     suffix = suffixOrig
 
 
-#  stuff <<- list(outraster, zoom, Durl, verbose, suffix, tileNames, cachePath)
-  # outraster = stuff[[1]];zoom=stuff[[2]]; path = stuff[[3]]; verbose=stuff[[4]]; suffix=stuff[[5]]; tileNames = stuff[[6]]; cachePath = stuff[[7]]
   result = try(
     getTiles(outraster, 
       zoom=zoom,
@@ -441,8 +439,8 @@ openmap = function(
     result = result2
 }
 
-
-  result = writeRasterMapTiles(result, filename)
+  result = writeRasterMapTiles(result, 
+    filename = tempfile(tmpdir=cachePath, fileext='.tif'))
 
   attributes(result)$openmap = list(
       path=path,

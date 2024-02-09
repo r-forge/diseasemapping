@@ -44,6 +44,7 @@ if(testing) {
 ```
 
 
+
 ```{r data}
 coords = rbind(Alert = c(-62.338889, 82.501389),
   Qaanaaq = c(-69.238685,77.466335), 	

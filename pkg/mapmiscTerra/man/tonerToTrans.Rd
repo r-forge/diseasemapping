@@ -8,7 +8,7 @@ Stamen-toner maps are 3-layer RGB rasters, which are converted
 to single-layer rasters with indexed colours with whites becoming transparent. 
 }
 \usage{
-tonerToTrans(x,  pattern="(red|green|blue)$", power = 0.5, col='black',  threshold=Inf,  mostCommon=1,filename=tempfile(fileext='.tif'))
+tonerToTrans(x,  pattern="(red|green|blue)$", power = 0.5, col='black',  threshold=Inf,  mostCommon=1)
 }
 \arguments{
   \item{x}{
@@ -20,14 +20,8 @@ tonerToTrans(x,  pattern="(red|green|blue)$", power = 0.5, col='black',  thresho
 \item{col}{colour for resulting map}
 \item{threshold}{colours above this value are transparent}
 \item{mostCommon}{integer vector, the most common colours are converted to transparent}
-	\item{filename}{file where the output raster is saved, defaults to a temporary file}
-}
-}
 }
 
-\details{
-Intended for \code{'stamen-toner'} maps.
-}
 
 \value{
 A \code{SpatRast} with indexed colours
@@ -52,7 +46,7 @@ Patrick Brown
 	oldpar=	map.new(origMap, bg='green')
 	plot(origMap, add=TRUE)
 	
-	transMap = tonerToTrans(origMap, filename=NULL, mostCommon=2)
+	transMap = tonerToTrans(origMap, mostCommon=2)
 	names(transMap)
   map.new(transMap, bg='green')
 	plot(transMap, add=TRUE)

@@ -62,7 +62,15 @@ tonerToTrans = function(x, pattern= "(red|green|blue)$",
 
   terra::coltab(result) = theColtab
 
-  result = writeRasterMapTiles(result, filename)
+  cachePath = getOption('mapmiscCachePath')
+  if(is.null(cachePath)) {
+    cachePath = tempdir()
+  }
+
+
+  result = writeRasterMapTiles(result, 
+    filename = tempfile(tmpdir=cachePath, fileext='.png')
+  )
 
   attributes(result)$tiles$tonerToTrans = match.call()
   result
