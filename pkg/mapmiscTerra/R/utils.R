@@ -9,13 +9,13 @@ writeRasterMapTiles = function(x, filename, overwrite = TRUE,  ...) {
       	filename = gsub("png$", "tif", filename)
         x = terra::writeRaster(x,  
           filename=filename, overwrite=overwrite, ...)
-    	} else if(any(nrow(coltab(x)[[1]])>256) ) {
+    	} else if(any(nrow(terra::coltab(x)[[1]])>256) ) {
       	# can't write rgb as png, change to tif
       	filename = gsub("png$", "tif", filename)
-        x = colorize(x, to='rgb', alpha=TRUE, 
+        x = terra::colorize(x, to='rgb', alpha=TRUE, 
           filename=filename, overwrite=overwrite, ...)
       } else {
- 		   	coltabOrig = coltab(x)[[1]]
+ 		   	coltabOrig = terra::coltab(x)[[1]]
       	origValues =coltabOrig[,1]
       	if(any(origValues > 255 | origValues < 0,na.rm=TRUE )) warning("raster values outside range 0 to 255")
       	newValues = setdiff(0:255, origValues)
@@ -25,11 +25,11 @@ writeRasterMapTiles = function(x, filename, overwrite = TRUE,  ...) {
  		   	coltabToAdd[,-1] = 0
  		   	newColtab = rbind(coltabOrig, coltabToAdd)
  		   	newColtab = newColtab[order(newColtab[,1]),]
- 		   	coltab(x) = newColtab
+ 		   	terra::coltab(x) = newColtab
 			}
  		   	# can't write color scale to tif, change to png
  		   	filename = gsub("tif$", "png", filename)
-        x = writeRaster(x, filename, overwrite=overwrite, ...)
+        x = terra::writeRaster(x, filename, overwrite=overwrite, ...)
       }
       attributes(x)$tiles = theTiles
       attributes(x)$openmap = theOpenmap
