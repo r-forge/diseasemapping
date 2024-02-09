@@ -281,8 +281,8 @@ getTiles = function(
       for(Dtile in Stiles) {
         toSub = colourtableAll[colourtableAll$tile == Dtile, ,drop=FALSE]
 
-        values(rasters[[Dtile]])[,1] = toSub[
-          match(values(rasters[[Dtile]])[,1], toSub[,'value.old']),
+        terra::values(rasters[[Dtile]])[,1] = toSub[
+          match(terra::values(rasters[[Dtile]])[,1], toSub[,'value.old']),
           'value']
 
 # code below doesn't preserve integers
@@ -387,7 +387,7 @@ getTiles = function(
               crds(thisRow[xx[, 'indexOut',drop=FALSE]]))
             cbind(
               ScellOut = xx[,'ScellOut', drop=FALSE],
-              values(rastersMerged[[xx[1,'block']]])[cellsHere, , drop=FALSE])             
+              terra::values(rastersMerged[[xx[1,'block']]])[cellsHere, , drop=FALSE])             
 # doesn't preserve integers
 #              values=terra::extract(
 #                rastersMerged[[xx[1,'block']]], 

@@ -12,7 +12,7 @@ writeRasterMapTiles = function(x, filename, overwrite = TRUE,  ...) {
         # transparency will be dropped
     filename = gsub("png$", "tif", filename)
     x2 = terra::colorize(x, to = 'rgb', alpha=FALSE)
-    result = writeRaster(x2, filename = filename,
+    result = terra::writeRaster(x2, filename = filename,
       datatype = 'INT1U', overwrite = overwrite, ...)
   } else if(terra::has.RGB(x)) {
     	# save rgb layers as tif
