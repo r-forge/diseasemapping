@@ -1,8 +1,7 @@
 
 tonerToTrans = function(x, pattern= "(red|green|blue)$", 
   power=0.5, col='black',
-  threshold=Inf, mostCommon=1,
-  filename=tempfile(fileext='.png')) {
+  threshold=Inf, mostCommon=1) {
 
   if(all(terra::has.colors(x))) {
     xValues = terra::coltab(x)[[1]]    
