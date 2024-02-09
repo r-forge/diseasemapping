@@ -177,7 +177,7 @@ toScale = list(shift1 = bbOrig[1,], scale=scale, shift2 = bbSmall[1,])
 
 xsp = terra::crds(xsp)
 
-if(has.RGB(map)) {
+if(terra::has.RGB(map)) {
 	theCol = do.call(grDevices::rgb, 
 		c(as.list(as.data.frame(values(map)[,c('red','green','blue')])), 
 			list(maxColorValue=255))
