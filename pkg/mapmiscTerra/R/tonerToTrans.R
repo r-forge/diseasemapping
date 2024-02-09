@@ -16,9 +16,9 @@ tonerToTrans = function(x, pattern= "(red|green|blue)$",
     warning("cant find RGB columns")
     Scol = grep("value$", colnames(xValues), invert=TRUE, value=TRUE)
   }
-  maxColorValue = max(xValues[,Scol])
+  maxColorValue = max(xValues[,Scol], na.rm=TRUE)
 
-  xMax = apply(xValues[,Scol,drop=FALSE], 1, min)
+  xMax = apply(xValues[,Scol,drop=FALSE], 1, min, na.rm=TRUE)
   if(threshold < maxColorValue)
     xMax[which(xMax > threshold)] = maxColorValue 
 

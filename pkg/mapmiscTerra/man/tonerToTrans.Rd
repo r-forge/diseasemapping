@@ -37,19 +37,30 @@ Patrick Brown
 }
 \examples{
 
-	data('worldMap');worldMap = unwrap(worldMap)
 
-	origMap = openmap(worldMap[worldMap$NAME == 'Sierra Leone',],
-	 path='cartodb-nolabels',   
-		buffer=100*1000
+	origMap = openmap(
+		c(-10, 10),
+	  path='cartodb-nolabels',   
+		buffer=2, verbose=TRUE
 	)
+
+
 	oldpar=	map.new(origMap, bg='green')
 	plot(origMap, add=TRUE)
 	
-	transMap = tonerToTrans(origMap, mostCommon=2)
+	transMap = tonerToTrans(origMap, mostCommon=1)
 	names(transMap)
   map.new(transMap, bg='green')
 	plot(transMap, add=TRUE)
+
+	secondMap = openmap(
+		c(-10, 10),
+		buffer=2, verbose=TRUE
+	)
+	transMap2 = tonerToTrans(secondMap, mostCommon=2)
+  map.new(transMap2, bg='green')
+	plot(transMap2, add=TRUE)
+
 	par(oldpar)
 
 

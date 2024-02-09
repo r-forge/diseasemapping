@@ -151,7 +151,7 @@ openmap = function(
   zoom, 
   path="http://tile.openstreetmap.org/",
   maxTiles = 9,
-  crs=terra::crs(x),
+  crs=ifelse(is.numeric(x), mapmisc::crsLL, terra::crs(x)),
   buffer=0, fact=1,
   verbose=getOption('mapmiscVerbose'),
   cachePath=getOption('mapmiscCachePath'), 
@@ -163,7 +163,7 @@ openmap = function(
   verbose = max(c(0, verbose))
   
 
-  NtestCols = 100
+  NtestCols = sqrt(100)
 
   
   if(!is.null(attributes(x)$ellipse) ) {
@@ -210,7 +210,7 @@ openmap = function(
           # assume buffer is in km
           # transform to merc , buffer, transform back
           outExtentMerc = terra::extend(terra::ext(testPointsMerc), buffer)
-          outPointsMerc = vect(matrix(as.vector(outExtentMerc), ncol=2), crsMerc)
+          outPointsMerc = vect(matrix(as.vector(outExtentMerc), ncol=2), crs=crsMerc)
           outPointsLL = project(outPointsMerc, crsOut)
           outExtent = terra::ext(outPointsLL)
 
@@ -247,7 +247,7 @@ openmap = function(
   # create out raster
   # find average area of pixels in downloaded tiles
 
-    mercHere = .getRasterMerc(zoom)
+  mercHere = .getRasterMerc(zoom)
    if(identical(crsOut, crsMerc)) {
         # output crs is mercator, return tiles as-is
         outraster = terra::crop(mercHere, testRast, snap='out')
@@ -437,7 +437,7 @@ openmap = function(
     terra::values(result2) = newValues
     terra::coltab(result2) = theColTab
     result = result2
-}
+  }
 
   result = writeRasterMapTiles(result, 
     filename = tempfile(tmpdir=cachePath, fileext='.tif'))

@@ -142,8 +142,9 @@ getTiles = function(
 
   SrowColFull = terra::cellFromXY(rasterSphere, terra::crds(xMerc))
 #  SrowColFull = terra::extract(rasterSphere, xMerc, cells=TRUE)[,'cell']
-  SrowColFull = cbind(cell = SrowColFull, row = terra::rowFromCell(rasterSphere, SrowColFull), 
-    col = terra::colFromCell(rasterSphere, SrowColFull))
+  SrowColFull = cbind(cell = SrowColFull, 
+    row = as.integer(terra::rowFromCell(rasterSphere, SrowColFull)), 
+    col = as.integer(terra::colFromCell(rasterSphere, SrowColFull)))
 
   SrowColFull = SrowColFull[!is.na(SrowColFull[,1]), ,drop=FALSE]
   SrowCol = SrowColFull[!duplicated(SrowColFull[,c('row','col')]), ,drop=FALSE]#c('row','col')]
@@ -180,7 +181,7 @@ getTiles = function(
       }
       
     SrowCol$file = file.path(SrowCol$cache , SrowCol$tile )
-    SrowCol$index = 1:nrow(SrowCol)
+    SrowCol$index = 1L:nrow(SrowCol)
   rasters = list()
 #  colourtableList = list()
   
@@ -252,7 +253,7 @@ getTiles = function(
 #    map.new(worldMap);plot(worldMap, add=TRUE);for(D in 1:length(rasters)) {plot(rasters[[D]], add=TRUE, legend=FALSE)}      
 
     colourTableList = lapply(rasters, terra::coltab)
-    for(D in 1:length(colourTableList)) {
+    for(D in seq(1, len=length(colourTableList)) ) {
       colourTableList[[D]] = as.data.frame(colourTableList[[D]][[1]])
       if(nrow(colourTableList[[D]])) colourTableList[[D]]$tile = D
     }
@@ -263,8 +264,8 @@ getTiles = function(
     if(nrow(colourtable)) {
       theDup = duplicated(colourtable[,c('red','green','blue','alpha')])
       names(colourtable) = gsub("^value$", "value.old", names(colourtable))
-      colourtable = cbind(colourtable, value = NA)
-      colourtable[!theDup, 'value'] = seq(0, len=sum(!theDup), by=1)
+      colourtable = cbind(colourtable, value = as.integer(NA))
+      colourtable[!theDup, 'value'] = seq(0L, len=as.integer(sum(!theDup)), by=1L)
 
       colourtableUnique = colourtable[!theDup, ,drop=FALSE]
       colourtableDup = colourtable[theDup, setdiff(names(colourtable), c('value')),drop=FALSE]
@@ -279,17 +280,23 @@ getTiles = function(
 #      xx = rasters
       for(Dtile in Stiles) {
         toSub = colourtableAll[colourtableAll$tile == Dtile, ,drop=FALSE]
-        rasters[[Dtile]] = terra::subst(rasters[[Dtile]], from=toSub[,'value.old'], to=toSub[,'value'])
+
+        values(rasters[[Dtile]])[,1] = toSub[
+          match(values(rasters[[Dtile]])[,1], toSub[,'value.old']),
+          'value']
+
+# code below doesn't preserve integers
+#        rasters[[Dtile]] = terra::subst(rasters[[Dtile]], 
+#          from=toSub[,'value.old'], to=as.integer(toSub[,'value']), raw=TRUE)
         terra::coltab(rasters[[Dtile]]) = colourtableFinal
       }
     }  else {# if have colourtable
-
       colourtableFinal = NULL
     }
     # merge columns into blocks
 
     SrowCol$newBlock = c(TRUE, !(diff(SrowCol$col)==0 & diff(SrowCol$row)==1))
-    SrowCol$block = cumsum(SrowCol$newBlock)
+    SrowCol$block = as.integer(cumsum(SrowCol$newBlock))
 
     rastersMerged = list()
     for(Dblock in unique(SrowCol$block)) {
@@ -307,15 +314,17 @@ getTiles = function(
     # merge rows if possible
     Nblocks = length(rastersMerged)
     if(Nblocks > 1) {
-    toMerge = matrix(FALSE, Nblocks, Nblocks)
-    for(DblockCol in seq(from=1,by=1, length=Nblocks-1)) { # won't do if Nblocks=1
-      for(DblockRow in seq(DblockCol+1, Nblocks)) {
-        bmat1 = SrowCol[SrowCol$block == DblockCol, ]
-        bmat2 = SrowCol[SrowCol$block == DblockRow, ]
-        if(nrow(bmat1) == nrow(bmat2))
-          toMerge[DblockRow, DblockCol] = all(bmat1$row == bmat2$row) & all(abs(bmat1$col - bmat2$col) ==1)
+      toMerge = matrix(FALSE, Nblocks, Nblocks)
+      for(DblockCol in seq(from=1,by=1, length=Nblocks-1)) { # won't do if Nblocks=1
+        for(DblockRow in seq(DblockCol+1, Nblocks)) {
+          bmat1 = SrowCol[SrowCol$block == DblockCol, ]
+          bmat2 = SrowCol[SrowCol$block == DblockRow, ]
+         if(nrow(bmat1) == nrow(bmat2)) {
+            toMerge[DblockRow, DblockCol] = 
+              all(bmat1$row == bmat2$row) & all(abs(bmat1$col - bmat2$col) ==1)
+          }
+        }
       }
-    }
 
    
     toMerge = toMerge + t(toMerge)
@@ -343,13 +352,13 @@ getTiles = function(
     # fill in values of the cells for output raster
     if(verbose) cat('reprojecting\n')
     terra::nlyr(outraster) = terra::nlyr(rastersMerged[[1]])
-    terra::values(outraster) = NA
+    terra::values(outraster) = as.integer(NA)
     xSeq = terra::xFromCol(outraster)
     SrowColSub = SrowCol[,c('row','col','cell','index','block'),drop=FALSE]
 
     SoutRows = unique(c(seq(1, terra::nrow(outraster), by=NrowsPerCycle), terra::nrow(outraster)+1))
-    SoutCells = terra::cellFromRowCol(outraster, SoutRows, 1)
-    SoutCells[length(SoutCells)] = terra::ncell(outraster)+1
+    SoutCells = as.integer(terra::cellFromRowCol(outraster, SoutRows, 1))
+    SoutCells[length(SoutCells)] = as.integer(terra::ncell(outraster))+1L
 
     if(verbose) cat('reprojecting:  ', length(SoutRows), ' cycles:')
 
@@ -357,30 +366,34 @@ getTiles = function(
     for(Dcycle in seq(1,length(SoutRows)-1) ) {
       if(verbose) cat(Dcycle, ' ')
 
-      ScellOut = seq(SoutCells[Dcycle], SoutCells[Dcycle+1]-1)
+      ScellOut =  seq(SoutCells[Dcycle], SoutCells[Dcycle+1]-1) 
       thisRow = terra::project(
         vect(terra::xyFromCell(outraster, ScellOut), crs=crs(outraster)), 
         crsMerc, partial=TRUE)
       thisRowGeom = terra::geom(thisRow)[,c('x','y'), drop=FALSE]
 
-        theCell = terra::cellFromXY(rasterSphere, thisRowGeom)
+      theCell = terra::cellFromXY(rasterSphere, thisRowGeom)
 
-      SrowColHere = cbind(
-        indexOut = 1:length(ScellOut),
+      SrowColHere = data.frame(
+        indexOut = 1L:length(ScellOut),
         ScellOut = ScellOut,
         cell = theCell)
 
       SrowColHere = merge(SrowColHere, SrowColSub, all.x=TRUE, all.y=FALSE)
       SrowColHere = split(SrowColHere, SrowColHere$block)
       outValuesHere = lapply(SrowColHere, function(xx) {
+            cellsHere = terra::cellFromXY(
+              rastersMerged[[xx[1,'block']]], 
+              crds(thisRow[xx[, 'indexOut',drop=FALSE]]))
             cbind(
-              ScellOut = xx[,'ScellOut', drop=FALSE], 
-              terra::extract(
-                rastersMerged[[xx[1,'block']]], 
-                thisRow[xx[, 'indexOut',drop=FALSE]], cells=FALSE, xy=FALSE, ID=FALSE, raw=TRUE))
-#            result[is.nan(result[,2]),2] = NA
-#            result
+              ScellOut = xx[,'ScellOut', drop=FALSE],
+              values(rastersMerged[[xx[1,'block']]])[cellsHere, , drop=FALSE])             
+# doesn't preserve integers
+#              values=terra::extract(
+#                rastersMerged[[xx[1,'block']]], 
+#                thisRow[xx[, 'indexOut',drop=FALSE]], cells=FALSE, xy=FALSE, ID=FALSE, raw=TRUE))
       })
+
       for(D in names(outValuesHere)[-1])
         names(outValuesHere[[D]]) = names(outValuesHere[[1]])
       outValuesHere = as.matrix(do.call(rbind, outValuesHere))
@@ -396,7 +409,7 @@ getTiles = function(
 
   } # end reproject
 
-
+  
   terra::coltab(outraster) = colourtableFinal
 
 
