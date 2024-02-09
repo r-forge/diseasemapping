@@ -39,7 +39,7 @@ Patrick Brown
 
 
 	origMap = openmap(
-		c(-10, 10),
+	   c(-11, 9),
 	  path='cartodb-nolabels',   
 		buffer=2, verbose=TRUE
 	)
@@ -53,13 +53,7 @@ Patrick Brown
   map.new(transMap, bg='green')
 	plot(transMap, add=TRUE)
 
-	secondMap = openmap(
-		c(-10, 10),
-		buffer=2, verbose=TRUE
-	)
-	transMap2 = tonerToTrans(secondMap, mostCommon=2)
-  map.new(transMap2, bg='green')
-	plot(transMap2, add=TRUE)
+
 
 	par(oldpar)
 

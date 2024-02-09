@@ -192,5 +192,10 @@ print(12)
   map.new(transMap2, bg='green')
   plot(transMap2, add=TRUE)
 
+  transMap3 = rast(attributes(transMap2)$source)
+  map.new(transMap2, bg='green')
+  plot(transMap2, add=TRUE)
+  
+
   
   if(!interactive()) dev.off()
