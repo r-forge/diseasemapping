@@ -64,6 +64,16 @@ points(myPoints)
     x=extend(myraster,1),
     zoom=thezoom)
 
+  mytiles2 = rast(attributes(mytiles)$source)
+  has.RGB(mytiles2)
+  plot(mytiles2)
+
+  theFile = tempfile(fileext='.tif')
+  writeRaster(mytiles, theFile)
+  mytiles3 = rast(theFile)
+  has.RGB(mytiles3)
+  plot(mytiles3)
+
   myplot(myraster, myPoints)
 
 print(2)
