@@ -163,7 +163,7 @@ openmap = function(
   verbose = max(c(0, verbose))
   
 
-  NtestCols = sqrt(100)
+  NtestCols = 20
 
   
   if(!is.null(attributes(x)$ellipse) ) {
@@ -223,7 +223,7 @@ openmap = function(
   }
 
   testRast = rast(outExtent, res = (terra::xmax(outExtent) - terra::xmin(outExtent))/NtestCols, crs = crsOut)
-  testPoints = vect(terra::xyFromCell(testRast, 1:terra::ncell(testRast)), crs=terra::crs(testRast))
+  testPoints = terra::as.points(terra::as.lines(testRast))
   testPointsMerc = project(testPoints, crsMerc)
 
   if(missing(zoom)) {

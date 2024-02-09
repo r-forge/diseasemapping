@@ -10,7 +10,7 @@ Downloads map tiles from Openstreetmap.org and other servers.
 	openmap(x, zoom, 
 	  path="http://tile.openstreetmap.org/",
 	  maxTiles = 9, 
-	  crs=terra::crs(x),   
+	  crs=ifelse(is.numeric(x), mapmisc::crsLL, terra::crs(x)),   
 	  buffer=0, fact=1, 
 		verbose=getOption('mapmiscVerbose'),
 	  cachePath=getOption('mapmiscCachePath'),
