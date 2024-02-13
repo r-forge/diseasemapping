@@ -13,16 +13,16 @@ hook_plot_array  = function (x, options) {
     if (is.null(scap)) {
         scap = cap
     }
+
+    fig.num = options$fig.num
+    if (is.null(fig.num)) 
+        fig.num = 1
     if (length(options$out.width)) {
         options$out.width = rep_len(options$out.width, fig.num)
     }
     result = sprintf("![%s](%s%s) ", scap, base, x)
 
     fig.names= options$fig.names
-
-    fig.num = options$fig.num
-    if (is.null(fig.num)) 
-        fig.num = 1
         
     fig.array = options$fig.array
     if(is.null(fig.array)) fig.array = fig.num
