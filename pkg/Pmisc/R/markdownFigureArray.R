@@ -15,11 +15,6 @@ hook_plot_array  = function (x, options) {
     }
 
     fig.num = options$fig.num
-    if (is.null(fig.num)) 
-        fig.num = 1
-    if (length(options$out.width)) {
-        options$out.width = rep_len(options$out.width, fig.num)
-    }
     result = sprintf("![%s](%s%s) ", scap, base, x)
 
     fig.names= options$fig.names
@@ -29,6 +24,7 @@ hook_plot_array  = function (x, options) {
     Ntabset = length(fig.array)
 
     fig.cur = options$fig.cur
+    if (is.null(fig.cur)) fig.cur = 1
     fig.index = drop(arrayInd(fig.cur, rev(fig.array)))
 
     theOnes = fig.index == 1
@@ -46,7 +42,7 @@ hook_plot_array  = function (x, options) {
 
     if (length(options$out.width)) {
             result = paste0(gsub("[[:space:]]*$", "", result), 
-                "{width=", options$out.width[fig.cur], "}")
+                "{width=", options$out.width, "}")
     }
     
     if(fig.cur == 1) {
@@ -55,6 +51,5 @@ hook_plot_array  = function (x, options) {
         result
       )
     }
-    
     result
 }

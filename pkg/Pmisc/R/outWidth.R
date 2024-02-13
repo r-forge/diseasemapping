@@ -10,7 +10,7 @@
 out.width = function(x, ...) {
 
 	testPlotOutput = knitr::knit_hooks$get()$plot(
-		'xx', list(fig.align='default',fig.show=TRUE))
+		'xx', list(fig.num=1, fig.align='default',fig.show=TRUE))
 
 	if(grepl("includegraphics[{]xx[}]", testPlotOutput)[1]) {
 		result = paste0(x, '\\textwidth')
