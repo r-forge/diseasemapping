@@ -55,9 +55,15 @@ This vignette is a bunch of examples, its primary purpose is to test the glgm fu
 \section*{The data}
 
 <<packages>>=
+library("geostatsp")
+data('swissRain')
+swissRain = unwrap(swissRain)
+swissAltitude = unwrap(swissAltitude)
+swissBorder = unwrap(swissBorder)
+swissRain$lograin = log(swissRain$rain)
 
+swissAltitudeCrop = mask(swissAltitude,swissBorder)
 @
-
 
 
 
