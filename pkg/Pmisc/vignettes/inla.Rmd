@@ -3,21 +3,7 @@
 %\VignetteIndexEntry{INLA examples}
 -->
 
-```{r inlaWorkaround, include=FALSE}
-# use the static INLA on linux machines
-# to avoid possible 'libgomp not found' errors
-if(Sys.info()['sysname'] =='Linux' &
-  requireNamespace("INLA")) {   
-  INLA::inla.setOption(inla.call = 
-      system.file(paste(
-          "bin/linux/",          
-          ifelse(
-            .Machine$sizeof.pointer == 4, 
-            "32", "64"),
-          'bit/inla.static', sep=''),
-        package="INLA")) 
-}
-```
+
 
 
 # Weibull With Cure Fraction
@@ -43,17 +29,14 @@ library("INLA")
 mod = inla(
   inla.surv(years, event) ~ age * sex + 
     f(ID, model="iid", prior='pc.prec', param=c(0.5, 0.1)), 
-  family="weibullcure", 
+  family="weibullsurv", 
   control.family = list(hyper=list(
       'log alpha' = list(
-        prior='loggamma', param=c(1,1)),
-      'logit probability' = list(
-        prior='logitbeta', param=c(1,1))
-    )),
+        prior='loggamma', param=c(1,1)))
+    ),
   data=Kidney, 
   control.inla=list(h=0.001, int.strategy='grid'), 
   control.compute = list(config=TRUE),
-  control.mode = list(theta=c(0,-5,4), restart=TRUE),
   verbose=FALSE)
 ```
 
@@ -82,10 +65,7 @@ do.call(matplot, modSd$alpha$matplot)
 do.call(legend, modSd$legend)
 ```
 
-```{r probPlot, eval = requireNamespace("INLA"), purl= requireNamespace("INLA")}
-do.call(matplot, modSd$prob$matplot)
-do.call(legend, modSd$legend)
-```
+
 
 ```{r sampleDensHaz, eval = requireNamespace("INLA"), purl= requireNamespace("INLA")}
 xSeq = seq(0,1/12,len=1000)

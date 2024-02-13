@@ -1,4 +1,6 @@
- hook_plot_array  = function (x, options) {
+#' @rdname hook_plot_htmlsubfig
+#' @export
+hook_plot_array  = function (x, options) {
     # fig.tabset is a vector
     base = knitr::opts_knit$get("base.url")
     if (is.null(base)) 
@@ -18,7 +20,7 @@
 
     fig.names= options$fig.names
 
-        fig.num = options$fig.num
+    fig.num = options$fig.num
     if (is.null(fig.num)) 
         fig.num = 1
         

@@ -13,6 +13,7 @@ ranefPlot(
   maxNames = 40,
   col = "Dark2",
   xlab = "x",
+  level = 0.95,
   ...
 )
 }
