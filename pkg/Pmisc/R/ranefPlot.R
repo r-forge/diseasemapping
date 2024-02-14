@@ -36,8 +36,8 @@ if(length(level) == 1) {
 }
 
 
-x$lower = x$condval + qnorm(level[1])*x$condsd
-x$upper = x$condval + qnorm(level[2])*x$condsd
+x$lower = x$condval + stats::qnorm(level[1])*x$condsd
+x$upper = x$condval + stats::qnorm(level[2])*x$condsd
 x = x[x$condsd < cutSe, ]
 x = x[order(x$condval), ]
 
@@ -67,7 +67,7 @@ x$textloc = x$condval
 x$textCex = c(0.5, 0.9)[1+x$accurate]
 
 
-par(mar=c(4,0,0,0), bty='n')
+graphics::par(mar=c(4,0,0,0), bty='n')
 
 forPlot = list(x=x$condval, y=x$index, 
   yaxt='n', xlim = c(min(x[x$accurate, 'lower']), max(x[x$accurate, 'upper'])),
@@ -80,12 +80,17 @@ do.call(plot, c(forPlot, theDots))
 #plot(x$condval, x$index, yaxt='n', xlim = range(x$condval)*1.2,
  #  xlab=xlab, ylab='', pch=15, col=x$colTrans , cex=x$cex, ...)
 
-x[!x$accurate & x$condval > 0, 'textloc'] = par('usr')[1]
-x[!x$accurate & x$condval < 0, 'textloc'] = par('usr')[2]
+x[!x$accurate & x$condval > 0, 'textloc'] = 
+graphics::par('usr')[1]
+x[!x$accurate & x$condval < 0, 'textloc'] = 
+graphics::par('usr')[2]
 
-abline(v=0, col='grey')
-segments(x$lower, x$index, x$upper, x$index, pch=15, col=x$colLine)
-text(
+
+graphics::abline(v=0, col='grey')
+
+graphics::segments(x$lower, x$index, x$upper, x$index, pch=15, col=x$colLine)
+
+graphics::text(
   x$textloc, 
   x$index, x$grp,
   pos = x$textpos,

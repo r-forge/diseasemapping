@@ -31,6 +31,8 @@ ranefPlot(
 \item{col}{vector of colours or name of a colorBrewer pallet}
 
 \item{xlab}{x label}
+\item{term}{variable to plot}
+\item{level}{level of prediction interval}
 }
 \value{
 nothing

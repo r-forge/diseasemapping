@@ -12,7 +12,7 @@
 coefTable = function(x, maxChar = 6, approx=FALSE, ...) {
 #
 
-  link=family(x)$link
+  link=stats::family(x)$link
 
   if(approx) {
     theDots = list(...)
@@ -21,11 +21,11 @@ coefTable = function(x, maxChar = 6, approx=FALSE, ...) {
     if(length(level) == 1)
       level = c(0,1) + c(1,-1)*(1-level)/2
     result = x$coef + outer(summary(x)$coef[,'Std. Error'],
-      qnorm(level))
+      stats::qnorm(level))
     colnames(result) = paste(100*level, '%')
     result = list(confint = as.data.frame(result))
   } else { # not approximate
-    result = list(confint = confint(x, ...))    
+    result = list(confint = stats::confint(x, ...))    
   }
 
 result$tableRaw = summary(x)$coef
@@ -52,9 +52,9 @@ result$table = result$table[, c('Estimate',
   setdiff(colnames(result$confint), 'Estimate')), drop=FALSE]
 
 
-variables = attributes(terms(x))$term.labels
+variables = attributes(stats::terms(x))$term.labels
 variables = intersect(variables, colnames(model.frame(x)))
-variablesLevels = lapply(model.frame(x)[variables], 
+variablesLevels = lapply(stats::model.frame(x)[variables], 
   function(xx) if(is.logical(xx)){
       return(c(TRUE,FALSE))
     } else if (is.factor(xx)) {
@@ -157,7 +157,7 @@ if(all(class(x) == 'glmmTMB')) {
   result$table[ziRow,'level'] = gsub(
     "^zi[.]zi[~]", "", ziRow)
 
-if(any(family(x)$family == 'Gamma')) {
+if(any(stats::family(x)$family == 'Gamma')) {
   obsRow = grep("^sigma$", rownames(result$table))
   # dispersion parameter, 1/shape, 1/sqrt(shape) = Coef of Var
   result$table[obsRow,'level'] = "sd(Y)/E(Y)"
