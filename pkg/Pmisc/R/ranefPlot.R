@@ -1,18 +1,4 @@
-#' Dotplot of random effects from glmmTMB
-#' 
-#' @description Creates a nice dotplot with CI's
-#'
-#' @param x model output from glmmTMB
-#' @param component model component
-#' @param grpvar name of random effect
-#' @param cutSe only plot levels where conditional SE is above this threshold
-#' @param maxNames maximum number of labels on the plot
-#' @param col vector of colours or name of a colorBrewer pallet
-#' @param xlab x label
-#' @return nothing
 #' @export
-
-
 ranefPlot = function(x, 
   component=c('cond','zi'),
 grpvar = 1,
