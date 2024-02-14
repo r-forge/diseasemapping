@@ -9,7 +9,7 @@ make = function(x,
       suffix, sep='.')
   
   theString= paste(' -f', 
-    system.file('src','knitrMakefile', package='Pmisc'),
+    system.file('extsrc','knitrMakefile', package='Pmisc'),
     x)
   
   if(beamer)
@@ -97,7 +97,7 @@ Makefile = function(x, suffix,
   before = paste(before, '\n\nall: ', paste(x, collapse=' '), '\n\n')
 
   makefileTemplate = scan(
-    system.file('src','knitrMakefile', package='Pmisc'),
+    system.file('extsrc','knitrMakefile', package='Pmisc'),
     what='a', sep='\n', quiet=TRUE)
 
   makefileTemplate = makefileTemplate[

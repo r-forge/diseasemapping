@@ -22,12 +22,12 @@ Patrick Brown
 \examples{
 library("Pmisc")
 
-list.files(system.file("docs", package="Pmisc"), full.names=TRUE)
-file.show(system.file("docs/document.Rmd", package="Pmisc"))
+list.files(system.file("extdoc", package="Pmisc"), full.names=TRUE)
+file.show(system.file("extdoc/document.Rmd", package="Pmisc"))
 # copy the document.Rmd file to the temporary folder
 (mydir = tempdir())
 file.copy(
-	system.file("docs/document.Rmd", package='Pmisc'),
+	system.file("extdoc/document.Rmd", package='Pmisc'),
 	mydir, overwrite = TRUE)
 
 # create a Makefile for building document.Rmd into pdf, html and docx

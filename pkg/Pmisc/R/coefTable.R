@@ -53,7 +53,7 @@ result$table = result$table[, c('Estimate',
 
 
 variables = attributes(stats::terms(x))$term.labels
-variables = intersect(variables, colnames(model.frame(x)))
+variables = intersect(variables, colnames(stats::model.frame(x)))
 variablesLevels = lapply(stats::model.frame(x)[variables], 
   function(xx) if(is.logical(xx)){
       return(c(TRUE,FALSE))
