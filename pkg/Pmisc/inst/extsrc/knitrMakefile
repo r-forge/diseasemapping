@@ -90,8 +90,12 @@ clean:
 #
 # html from md
 #
+#%.html: %.md
+#	$(PANDOC) --self-contained --mathml $(PANDOCCROSSREF) $(CITEPROC) $(pandocArgs) --to=html5 --output=$@ $<
+#	$(PANDOC) --self-contained --mathml $(PANDOCCROSSREF) $(CITEPROC) 
 %.html: %.md
-	$(PANDOC) --self-contained --mathml $(PANDOCCROSSREF) $(CITEPROC) $(pandocArgs) --to=html5 --output=$@ $<
+	R -e "rmarkdown::render('$<', output_format='html_document')"
+
 
 # 
 # libreoffice document
