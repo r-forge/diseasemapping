@@ -58,11 +58,13 @@ desiredTiles = paste0("(",
 	").*.hdf$")
 
 if(requireNamespace("RCurl", quietly=TRUE) & requireNamespace("XML", quietly=TRUE)) {
-theFiles = 	grep(desiredTiles,
-	XML::getHTMLLinks(RCurl::getURL(
+allFiles = try(XML::getHTMLLinks(RCurl::getURL(
 	    modisUrl,ftp.use.epsv=FALSE,
-	    dirlistonly = TRUE)), value=TRUE)
-paste0(modisUrl, theFiles)
+	    dirlistonly = TRUE)), silent=TRUE)
+if(!identical(class(allFiles), 'try-error')) {
+	theFiles = 	grep(desiredTiles, allFiles, value=TRUE)
+	paste0(modisUrl, theFiles)
+}
 }
 
 }
