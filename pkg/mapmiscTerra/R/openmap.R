@@ -372,6 +372,21 @@ openmap = function(
       cachePath = cachePath),
     silent=!verbose)
 
+  if(any(class(result)=="try-error")){
+    message(paste(Durl, "not accessible"))
+    # create an empty raster
+    result = outraster
+    attributes(result)$openmap = list(
+      tiles=NA,
+      message=result,
+      path=path,
+      pathOrig=pathOrig,
+      zoom=zoom
+    )
+    return(result)
+  }
+
+
   # fill in poles
   # TO DO: doesn't work with omerc
   thePoles = as.matrix(expand.grid(seq(-170, 180, by=10), as.vector(outer(c(-1,1),c(84.5, 85.5)))))
@@ -395,19 +410,6 @@ openmap = function(
     result= terra::mask(result, theHull$south, updatevalue = unlist(toFill), inverse=TRUE)
   }
 
-  if(any(class(result)=="try-error")){
-    message(paste(Durl, "not accessible"))
-    # create an empty raster
-    result = outraster
-    attributes(result)$openmap = list(
-      tiles=NA,
-      message=result,
-      path=path,
-      pathOrig=pathOrig,
-      zoom=zoom
-    )
-    return(result)
-  }
 
 
   # if there's only one layer, and no colortable

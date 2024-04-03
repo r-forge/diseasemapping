@@ -8,7 +8,7 @@ Stamen-toner maps are 3-layer RGB rasters, which are converted
 to single-layer rasters with indexed colours with whites becoming transparent. 
 }
 \usage{
-tonerToTrans(x,  pattern="(red|green|blue)$", power = 0.5, 
+tonerToTrans(x,  pattern="(red|green|blue)$", power = 0.5,
 	col='black',  threshold=Inf,  mostCommon=1)
 }
 \arguments{
