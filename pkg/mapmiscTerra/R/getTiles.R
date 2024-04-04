@@ -182,6 +182,7 @@ getTiles = function(
       
     SrowCol$file = file.path(SrowCol$cache , SrowCol$tile )
     SrowCol$index = 1L:nrow(SrowCol)
+    SrowCol$bad = NA
   rasters = list()
 #  colourtableList = list()
   
@@ -233,7 +234,9 @@ getTiles = function(
           Dextent, nrows=256, ncols=256, crs=crsMerc
         )
         terra::values(thisimage) = NA
+        SrowCol[Drow, 'bad'] = TRUE
       } else {
+        SrowCol[Drow, 'bad'] = FALSE
         terra::crs(thisimage) = crsMerc
         terra::ext(thisimage) = Dextent
       }

@@ -372,10 +372,9 @@ openmap = function(
       cachePath = cachePath),
     silent=!verbose)
 
-  if(any(class(result)=="try-error")){
+  if(all(is.na(values(result)))){
     message(paste(Durl, "not accessible"))
     # create an empty raster
-    result = outraster
     attributes(result)$openmap = list(
       tiles=NA,
       message=result,

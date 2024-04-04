@@ -9,7 +9,7 @@ col="#FF000090", borderMap=NULL,
 		...) {
 
   
-  if(outer) {
+if(outer) {
 	oldxpd = par("xpd")
 	usr = par('usr')
 	graphics::clip(usr[1], usr[2], usr[3], usr[4])
@@ -184,9 +184,15 @@ if(terra::has.RGB(map)) {
 	) 
 	theIndex = matrix(1:length(theCol), ncol(map), nrow(map))[,nrow(map):1]
 } else {
-theCol = do.call(grDevices::rgb, 
-	c(as.list(terra::coltab(map)[[1]][,c('red','green','blue')]), list(maxColorValue=255)))	
-theIndex = 	matrix(terra::values(map), ncol(map), nrow(map) )[, nrow(map):1]
+	if(all(c('red','green','blue') %in% names(terra::coltab(map)[[1]]))) {
+		theCol = do.call(grDevices::rgb, 
+			c(as.list(terra::coltab(map)[[1]][,c('red','green','blue')]), list(maxColorValue=255)))	
+		theIndex = 	matrix(terra::values(map), ncol(map), nrow(map) )[, nrow(map):1]
+	} else {
+		theCol = NA
+		theIndex = matrix(0, ncol(map), nrow(map))
+	}
+
 }
 do.call(graphics::clip, as.list(par('usr')))
 graphics::image(

@@ -65,10 +65,12 @@ points(myPoints)
     zoom=thezoom)
   terra::is.int(mytiles)
 
-  mytiles2 = rast(attributes(mytiles)$source)
-  has.RGB(mytiles2)
-  plot(mytiles2)
-  terra::is.int(mytiles2)
+  if(!is.null(attributes(mytiles)$source)) {
+    mytiles2 = rast(attributes(mytiles)$source)
+    has.RGB(mytiles2)
+    plot(mytiles2)
+    terra::is.int(mytiles2)
+  }
 
   theFile = tempfile(fileext='.tif')
   writeRaster(mytiles, theFile)

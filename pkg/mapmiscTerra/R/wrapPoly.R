@@ -57,7 +57,7 @@ wrapPoly = function(x, crs, buffer.width = 100*1000) {
   toCrop = attributes(crs)$crop 
 #  plot(toCrop)
 
-  toCropX = project(x,crs(toCrop))
+  toCropX = suppressWarnings(project(x,crs(toCrop)))
 
   xCrop = terra::erase(toCropX, toCrop)
 
@@ -65,7 +65,7 @@ wrapPoly = function(x, crs, buffer.width = 100*1000) {
   # plot(xCrop)
 
 
-  project(xCrop, crs)
+  suppressWarnings(project(xCrop, crs))
 }
 
 llCropBox = function(crs, 

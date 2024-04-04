@@ -90,8 +90,9 @@ plot(myPoints,col = as.character(cut(
 scaleBar(myPoints, "bottomright",cex=1.25, seg.len=2)
 legendBreaks("topleft", legend=breaks, col=thecol)
 
-thedot = insetMap(crs=myPoints, pos="bottomleft",
-	 col='#00000000', lty=0, outer=FALSE, width=0.5)
+thedot = insetMap(crs=myPoints, 
+	pos="bottomleft",
+	 col='#00000000', lty=0, outer=FALSE, width=0.25)
 points(thedot)
 
 par(oldpar)

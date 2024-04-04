@@ -21,6 +21,7 @@ if(!exists('fact'))
   getOption('mapmiscCacheReadOnly')
 ```
 
+
 ```{r data}
 worldMap = unwrap(worldMap)
 x = vect(cbind(130,15), crs=crsLL)
@@ -72,6 +73,9 @@ myProj = tpers(x=vect(c(x,hk)), hKm = 2*1000, tilt =-15, axis='seu')
 
 
 
+
+
+
  
 ```{r mapLL}
 map.new(attributes(myProj)$regionLL, buffer=2)
@@ -108,6 +112,7 @@ map.new(myProj, lwd=3)
 plot(myMap, add=TRUE)
 plot(wrapPoly(worldMap, myProj), add=TRUE)
 ```
+
 
 
 
