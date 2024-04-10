@@ -55,7 +55,7 @@ getRasterNrcanDontNeed = function(zoom) {
     res=0.01
   )
   
-  worldNrcan = terra::project(worldLL, nrCrs, res=1000)
+  worldNrcan = suppressWarnings(terra::project(worldLL, nrCrs, res=1000))
   
   nrcanExtent = terra::ext(
     -4282638.06150141,
@@ -137,7 +137,7 @@ getTiles = function(
   
   samplePoints = rast(terra::ext(outraster), res= (terra::xmax(outraster)-terra::xmin(outraster))/NtestCols, crs=terra::crs(outraster))
   samplePoints = vect(terra::xyFromCell(samplePoints, 1:terra::ncell(samplePoints)), crs=terra::crs(outraster))
-  xMerc = terra::project(samplePoints, crsMerc)
+  xMerc = suppressWarnings(terra::project(samplePoints, crsMerc))
 
 
   SrowColFull = terra::cellFromXY(rasterSphere, terra::crds(xMerc))
