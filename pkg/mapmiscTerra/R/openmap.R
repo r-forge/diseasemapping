@@ -179,33 +179,23 @@ openmap = function(
 
 # get extent of output
 
-# get output raster
+outExtent = terra::extend(terra::ext(x), buffer)
+if(!identical(crsIn, crsOut)) {
 
-#  extentTestRast = terra::extend(terra::ext(x), buffer)
-#  if(any(diff(as.vector(extentTestRast))[-2] <= 1e-4)) {
-#      extentTestRast = terra::extend(extentTestRast, 1e-4)
-#  }
-#  testRast = rast(extentTestRast, res = (terra::xmax(extentTestRast) - terra::xmin(extentTestRast))/NtestCols, crs = crsIn)
-#  testPoints = vect(terra::xyFromCell(testRast, 1:terra::ncell(testRast)), crs=terra::crs(testRast))
-
-#  testPointsMerc = suppressWarnings(terra::project(testPoints, crsMerc))
-#  testPointsOut = suppressWarnings(terra::project(testPoints, crsOut))
-#  outExtent= terra::ext(testPointsOut)
-
-outExtent =  terra::ext(x) 
-
-# buffer
-  if(terra::is.lonlat(crsOut) & any(buffer > 90)) {
-          # assume buffer is in km
-          # transform to merc , buffer, transform back
-          outExtentMerc = terra::extend(terra::ext(testPointsMerc), buffer)
-          outPointsMerc = vect(matrix(as.vector(outExtentMerc), ncol=2), crs=crsMerc)
-          outPointsLL = suppressWarnings(terra::project(outPointsMerc, crsOut))
-          outExtent = terra::ext(outPointsLL)
-
-  } else {
-          outExtent = terra::extend(outExtent, buffer)
+  extentTestRast = outExtent
+  if(any(diff(as.vector(extentTestRast))[-2] <= 1e-4)) {
+      extentTestRast = terra::extend(extentTestRast, 1e-4)
   }
+  testRast = rast(extentTestRast, res = (terra::xmax(extentTestRast) - terra::xmin(extentTestRast))/NtestCols, crs = crsIn)
+  testPoints = vect(terra::xyFromCell(testRast, 1:terra::ncell(testRast)), crs=terra::crs(testRast))
+
+  testPointsOut = suppressWarnings(terra::project(testPoints, crsOut))
+  outExtent= terra::ext(testPointsOut)
+
+}
+
+
+
     
   if(terra::is.lonlat(crsOut)) {
       outExtent = terra::intersect(outExtent, terra::unwrap(bboxLL))

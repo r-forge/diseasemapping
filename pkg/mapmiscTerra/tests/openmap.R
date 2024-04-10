@@ -155,6 +155,7 @@ print(10)
   
   # specify different output crs
   mytiles = openmap(myPointsUTM, crs=crsLL)
+#  x = myPointsUTM;crs=crsLL;path='osm';maxTiles=9;buffer=0;fact=1;verbose=TRUE;cachePath=tempdir();suffix=NULL
 #	mycities = GNcities(myPoints,max=5)
   myplot(myPoints)
 
