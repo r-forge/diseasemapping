@@ -102,6 +102,11 @@ if(!interactive()) pdf("worldMap.pdf")
 	plot(xTcrop,add=TRUE, col='grey')
 	gridlinesWrap(crs=xTcrop, lty=2, col='red')
 	plot(xTcrop[DcountryT,], col='green', add=TRUE)
+
+
+	# check openmap
+	myMap = openmap(myCrsMoll)
+	plot(myMap)
 	
 	if(!interactive()) dev.off()
 	

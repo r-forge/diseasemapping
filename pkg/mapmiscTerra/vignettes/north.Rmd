@@ -88,6 +88,7 @@ scaleBar(x, 'left', seg.len=0, bty='n')
 
 
 
+
 ```{r mapquest}
   mapSat = openmap(x, path='opentopomap', maxTiles=4, buffer=c(30,3), fact=fact)
   map.new(mapSat)
@@ -97,6 +98,7 @@ scaleBar(x, 'left', seg.len=0, bty='n')
   scaleBar(x, 'bottom')
   scaleBar(x, 'left', seg.len=0, bty='n')
 ```
+
 
 
 

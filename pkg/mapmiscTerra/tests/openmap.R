@@ -180,7 +180,7 @@ print(12)
   map.new(mytiles)
   plot(mytiles, add=TRUE)
   points(cityHall, pch=3, col='blue',cex=4)
-  scaleBar(mytiles, 'topleft', bty='n', col='red')
+  scaleBar(mytiles, 'topright', bty='n', col='red')
 #'  
 
 # transparency
