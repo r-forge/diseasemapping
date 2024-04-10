@@ -397,16 +397,18 @@ getTiles = function(
 #                thisRow[xx[, 'indexOut',drop=FALSE]], cells=FALSE, xy=FALSE, ID=FALSE, raw=TRUE))
       })
 
-      for(D in names(outValuesHere)[-1])
-        names(outValuesHere[[D]]) = names(outValuesHere[[1]])
-      outValuesHere = as.matrix(do.call(rbind, outValuesHere))
-      outValuesHere = outValuesHere[order(outValuesHere[,1]), ]
-      if(terra::inMemory(outraster)) {
-        terra::values(outraster)[outValuesHere[,1],] = outValuesHere[,-1]
-      } else {
-        terra::writeValues(outraster, outValuesHere[,2], outValuesHere[1,1], 1)
-      } 
-
+      if(length(outValuesHere)) {
+        for(D in names(outValuesHere)[-1]) {
+          names(outValuesHere[[D]]) = names(outValuesHere[[1]])
+        }
+        outValuesHere = as.matrix(do.call(rbind, outValuesHere))
+        outValuesHere = outValuesHere[order(outValuesHere[,1]), ]
+        if(terra::inMemory(outraster)) {
+          terra::values(outraster)[outValuesHere[,1],] = outValuesHere[,-1]
+        } else {
+          terra::writeValues(outraster, outValuesHere[,2], outValuesHere[1,1], 1)
+        } 
+      }
     }
     if(verbose) cat(Dcycle, '\n')
 
