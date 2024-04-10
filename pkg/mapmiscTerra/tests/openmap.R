@@ -1,5 +1,5 @@
 #+ setup
-
+options(warn=1)
 library('mapmisc')
 
 #if(!exists('mapmiscCachePath'))

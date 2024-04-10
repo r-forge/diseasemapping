@@ -1,4 +1,5 @@
 #+ setup
+options(warn=1)
 
 library('mapmisc')
 
@@ -39,6 +40,7 @@ if(!interactive()) pdf("worldMap.pdf")
 
 
  myMap = openmap(myCrsO, zoom=1, fact=0.7)
+ 
  map.new(myMap)
  plot(myMap, add=TRUE)
  plot(attributes(myCrsO)$ellipse, add=TRUE, border='black')
