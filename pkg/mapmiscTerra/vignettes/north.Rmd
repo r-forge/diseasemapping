@@ -262,7 +262,7 @@ insetMap(crs=mapMerc,
 #scaleBar(crs=mapMerc,  seg.len=35, pos='center')
 sRes = scaleBar(mapMerc, 'bottomleft', cex=1.5, bty='n', outer=FALSE, inset=0.1)
 
-# scale bar appears off
+# check if scale bar appears off
 scaleCentre = vect(
   cbind(Re(sRes$out$textxy), Im(sRes$out$textxy)), 
   crs=crs(mapMerc))

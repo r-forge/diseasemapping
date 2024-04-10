@@ -370,9 +370,9 @@ getTiles = function(
       if(verbose) cat(Dcycle, ' ')
 
       ScellOut =  seq(SoutCells[Dcycle], SoutCells[Dcycle+1]-1) 
-      thisRow = terra::project(
+      thisRow = suppressWarnings(terra::project(
         vect(terra::xyFromCell(outraster, ScellOut), crs=crs(outraster)), 
-        crsMerc, partial=TRUE)
+        crsMerc, partial=TRUE))
       thisRowGeom = terra::geom(thisRow)[,c('x','y'), drop=FALSE]
 
       theCell = terra::cellFromXY(rasterSphere, thisRowGeom)
