@@ -180,7 +180,8 @@ openmap = function(
 # get extent of output
 
 outExtent = terra::extend(terra::ext(x), buffer)
-if(!identical(crsIn, crsOut)) {
+
+if(!identical(as.character(crsIn), as.character(crsOut))) {
 
   extentTestRast = outExtent
   if(any(diff(as.vector(extentTestRast))[-2] <= 1e-4)) {
@@ -267,7 +268,6 @@ if(!identical(crsIn, crsOut)) {
   } # end not merc
 
 # cache
-
 
   if(is.null(cachePath)) {
     cachePath = tempdir()
