@@ -16,8 +16,7 @@ library('mapmisc')
 #  mapmiscCacheReadOnly = mapmiscCacheReadOnly,
 #  mapmiscVerbose=TRUE)
 
-#getOption("mapmiscCachePath")
-#getOption("mapmiscCacheReadOnly")
+getOption("mapmiscCachePath")
 #'
 
 #+ themaps, fig.cap='some maps', fig.subcap = c('projectable region', 'projected, with bg','projected, with world countries','projectable madagascar','madagascar')
@@ -39,10 +38,9 @@ if(!interactive()) pdf("worldMap.pdf")
 
 #x = myCrsO;zoom=1;fact=0.7;path='osm';crs = crs(x);buffer=0;verbose=TRUE;cachePath = tempdir();suffix=NULL  
 
- myMap = openmap(myCrsO, zoom=1, fact=0.7)
+ myMap = openmap(myCrsO, zoom=1, fact=0.7, verbose=TRUE)
 
- map.new(myMap)
- plot(myMap, add=TRUE)
+ plot(myMap)
  plot(attributes(myCrsO)$ellipse, add=TRUE, border='black')
  gridlinesWrap(myCrsO, lty=2, col='orange')
 
@@ -107,6 +105,7 @@ if(!interactive()) pdf("worldMap.pdf")
 	# check openmap
 	myMap = openmap(myCrsMoll)
 	plot(myMap)
+	
 	
 	if(!interactive()) dev.off()
 	

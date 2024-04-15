@@ -431,6 +431,7 @@ getTiles = function(
     list(tiles = nrow(SrowCol), 
       zoom=zoom,
       path=path)
+
   
   return(outraster)	
   

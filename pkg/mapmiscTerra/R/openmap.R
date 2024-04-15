@@ -357,7 +357,13 @@ if(!identical(as.character(crsIn), as.character(crsOut))) {
       cachePath = cachePath),
     silent=!verbose)
 
-  if(all(is.na(values(result)))){
+  if(inherits(result, 'try-error')){
+    # create an empty raster
+    result = outraster
+    terra::values(outraster) = NA
+  }
+
+  if(all(is.na(terra::values(result)))){
     message(paste(Durl, "not accessible"))
     # create an empty raster
     attributes(result)$openmap = list(
