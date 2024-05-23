@@ -450,7 +450,7 @@ SEXP maternPoints(
     // nugget,
     SEXP type) {
 
-  SEXP halfLogDet= NEW_NUMERIC(1);
+  SEXP halfLogDet= PROTECT(NEW_NUMERIC(1));
   int N= Rf_nrows(points);
 
 
@@ -483,7 +483,7 @@ SEXP maternDistance(
     //c('variance','cholesky','precision','inverseCholesky')
 ) {
 
-  SEXP halfLogDet= NEW_NUMERIC(1);
+  SEXP halfLogDet= PROTECT(NEW_NUMERIC(1));
   const char
   *valid[] = {"dsyMatrix"};
   int typeInt=*type, D, D2, N;
