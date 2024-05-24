@@ -219,18 +219,18 @@ gm.dataRaster = function(
       
       # aggregate differently for model fitting
       if(toAggregateData > 1 ){
-        if(toAggregateData != toAggregatePredictions) {
-          offsetToLogAgg = aggregate(offsetToLogCrop, fact=toAggregateData, fun=sum)
-          offsetToLogAgg = project(offsetToLogAgg, covariatesStack)
-          offsetToLogAgg = classify(
-            offsetToLogAgg, 
-            t(c(-Inf,0,NA)) 
-          )
-        } 
+          if(toAggregateData != toAggregatePredictions) {
+            offsetToLogAgg = aggregate(offsetToLogCrop, fact=toAggregateData, fun=sum)
+          }
       } else {
         offsetToLogAgg = offsetToLogCrop
       }
-        
+      offsetToLogAgg = project(offsetToLogAgg, covData)
+      offsetToLogAgg = classify(
+        offsetToLogAgg, 
+        t(c(-Inf,0,NA)) 
+      )
+      
       offsetToLogLogged = log(offsetToLogAgg) + 
           sum(log(res(covariatesStack))) -
           sum(log(res(offsetToLogCrop)))
