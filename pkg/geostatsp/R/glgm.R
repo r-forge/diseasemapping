@@ -406,7 +406,6 @@ setMethod("glgm",
   if(!length(forInla$lincomb)) 
     forInla = forInla[setdiff(names(forInla), 'lincomb')] 
 
-
   if(requireNamespace("INLA", quietly=TRUE)) {
     if(identical(forInla$verbose, TRUE)) {
       tFile = tempfile('glgm', tempdir(), '.rds')
