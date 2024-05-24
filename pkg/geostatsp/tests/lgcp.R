@@ -91,11 +91,10 @@ myCov = list(
 
 formula = ~ inc*highDens + offset(pop, log=TRUE)
 
-if(all(havePackages)) {
 
 resL=lgcp(formula, data=murder, 
     grid=squareRaster(murder, 30),
-    covariates=myCov, 
+    covariates=myCov, verbose=TRUE,
     border=torontoBorder)
 
 resO = lgcp( ~ inc + pop, 
@@ -109,8 +108,6 @@ if(length(resL$parameters)) {
 	rbind(resL$param$summary, resO$param$summary)
 }
 
-
-}	
 
 
 # check spdfToBrock

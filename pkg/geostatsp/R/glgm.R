@@ -414,8 +414,7 @@ setMethod("glgm",
     }
     inlaResult = try(do.call(INLA::inla, forInla))
   } else {
-    inlaResult = 
-    list(logfile="INLA is not installed. \n see www.r-inla.org")
+    inlaResult = list(logfile="INLA is not installed. \n see www.r-inla.org")
   }
   if(identical(forInla$verbose, TRUE)) {
     message("inla done") 
@@ -830,7 +829,7 @@ getRid = c('random.ID', 'predict.ID', 'predict.space', 'predict.kld')
   resRaster = terra::writeRaster(
     resRaster,
     filename = tempfile(fileext='.tif'),
-    datatype = 'FLT4S'
+    datatype = 'FLT8S'
   )
   attributes(resRaster)$source = terra::sources(resRaster)
 
