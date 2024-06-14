@@ -1,5 +1,6 @@
 #' @export
 subcaptionCommands = c(
+  '\\expandafter\\def\\csname ver@subfig.sty\\endcsname{}',
   '\\usepackage{subcaption}',
   '\\makeatletter\\@ifundefined{subfloat}{\\newcommand{\\subfloat}[2][need a sub-caption]{\\subcaptionbox{#1}{#2}\\, }}{ \\renewcommand{\\subfloat}[2][need a sub-caption]{ \\subcaptionbox{#1}{#2}\\, }}\\makeatother'
 )
