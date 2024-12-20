@@ -1,5 +1,6 @@
 stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 
+
 # TO DO: fix with mc.cores > 1, currently pointer error.
 
 	if(any(class(x)=="SpatVector"))
@@ -31,9 +32,10 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 	}
  	
 	modefun = function(qq, na.rm=NULL) {
+			# use DescTools::Mode(res)
 		res = as.data.frame(table(qq))
 		if(nrow(res)) {
-			res = as.numeric(res[which.max(res[,2]),1])
+			res = as.numeric(as.character(res[which.max(res[,2]),1]))
 		} else {
 			res = NA
 		}
