@@ -27,6 +27,7 @@ stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
 			method = method[names(x)]
 	} else {
 		method = rep(method, Nlayers)
+		names(method) = names(x)
 	}
  	
 	modefun = function(qq, na.rm=NULL) {
