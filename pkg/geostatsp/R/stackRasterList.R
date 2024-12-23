@@ -1,5 +1,5 @@
 stackRasterList = function(x, template=x[[1]],method='near',mc.cores=NULL) {
-
+# method mean and mode?  optino for a function?  defalut to 'auto'
 
 # TO DO: fix with mc.cores > 1, currently pointer error.
 

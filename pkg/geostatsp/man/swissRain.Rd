@@ -21,7 +21,7 @@ of land cover types.
 }
 \source{
 \url{https://wiki.52north.org/AI_GEOSTATS/AI_GEOSTATSData} and  \url{https://srtm.csi.cgiar.org} and
-\url{https://lpdaac.usgs.gov/data/}
+\url{https://web.archive.org/web/20241129120557/https://lpdaac.usgs.gov/data/}
 }
 
 \examples{

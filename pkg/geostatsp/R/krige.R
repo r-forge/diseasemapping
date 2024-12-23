@@ -111,7 +111,7 @@ krigeOneRowPar = function(
 	cholVarDataInvCovDataPred = tcrossprod(cholVarDataInv, covDataPred)
 
 	x= cbind( # the conditional expectation
-		forExp=as.vector(Matrix::crossprod(cholVarDataInvCovDataPred, 
+		forExp=as.vector(crossprod(cholVarDataInvCovDataPred, 
 			cholVarDatInvData)),
 				  # part of the conditional variance
 		forVar=apply(cholVarDataInvCovDataPred^2, 2, sum)
