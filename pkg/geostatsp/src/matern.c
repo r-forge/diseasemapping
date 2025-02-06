@@ -482,7 +482,8 @@ SEXP maternDistance(
     //c('variance','cholesky','precision','inverseCholesky')
 ) {
 
-  SEXP halfLogDet= PROTECT(NEW_NUMERIC(1));
+//  SEXP halfLogDet= PROTECT(NEW_NUMERIC(1));
+  double halfLogDet;
   const char
   *valid[] = {"dsyMatrix"};
   int typeInt=*type, D, D2, N;
@@ -522,9 +523,10 @@ SEXP maternDistance(
       &REAL(param)[2],// variance,
       &REAL(param)[3],// nugget,
       &typeInt,
-      REAL(halfLogDet));
-  UNPROTECT(1);
-  return halfLogDet;
+      &halfLogDet //REAL(halfLogDet)
+      );
+//  UNPROTECT(1);
+  return Rf_ScalarReal(halfLogDet);
 }
 
 
