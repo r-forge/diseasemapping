@@ -11,11 +11,12 @@ mathCommands =c(
   '\\DeclareMathOperator{\\var}{var}',
   '\\DeclareMathOperator{\\E}{E}',
   '\\DeclareMathOperator{\\N}{N}',
+  '\\DeclareMathOperator{\\MVN}{MVN}',
   '\\newcommand{\\comment}[1]{}',
   '\\newcommand{\\simiid}{\\overset{\\text{ind}}{\\sim}}',
   '\\newcommand{\\yv}{\\mathbf{y}}', 
   '\\newcommand{\\Yv}{\\mathbf{Y}}', 
-  '\\newcommand{\\dens}{\\boldsymbol{\\pi}}',
+  '\\newcommand{\\dens}{\\symbf{\\pi}}',
   '\\newcommand{\\tp}{^\\text{T}}'
 ) 
 

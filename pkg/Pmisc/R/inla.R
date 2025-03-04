@@ -30,6 +30,7 @@ priorPostSd = function(
   paramIndex = param
   param = names(res$all.hyper[[group]][paramIndex])
 
+
   if(group == 'random') {
     paramLong = paste("Precision for", param)
   } else {
@@ -41,8 +42,10 @@ priorPostSd = function(
     if(ncol(Slabel)==3) Slabel = Slabel[,-2, drop=FALSE]
 
     Slabel[,2] = gsub("^t$", 'student-t', Slabel[,2])
+
+
     paramLong1 = paste0(Slabel[,1], ' (parameter )?for ', Slabel[,2])
-    paramLongRegexp = gsub("prec ", "[pP]rec(ision)? ", paramLong1)
+    paramLongRegexp = gsub("prec ", "[pP]rec(ision)?(-| )", paramLong1)
     paramLongRegexp = gsub("[?]for ", "?for( the)? ", paramLongRegexp)
     paramLong = unlist(mapply(
       grep, 
