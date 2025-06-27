@@ -225,7 +225,7 @@ getTiles = function(
         if(verbose) cat("tile ", Dfile, " cached\n")
       }
       
-      thisimage = try(suppressWarnings(terra::rast(Dfile)), silent=TRUE)
+      thisimage = try(suppressWarnings(terra::rast(Dfile, noflip=TRUE)), silent=TRUE)
       
       if(any(class(thisimage)=='try-error')) {
         if(verbose) warning("tile ", Dfile, " cannot be loaded")
