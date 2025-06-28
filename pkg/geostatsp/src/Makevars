@@ -1,25 +1,33 @@
-# Try to detect MKL installation path
-MKLROOT := $(shell echo $$MKLROOT)
-ifeq ($(MKLROOT),)
-# MKLROOT env var not set; try default install path
-MKLROOT := /opt/intel/oneapi/mkl/latest
-endif
+# Detect OS
+UNAME_S := $(shell uname -s)
 
-MKL_LIB := $(MKLROOT)/lib/intel64/libmkl_rt.so
-MKL_INC := $(MKLROOT)/include
+# macOS: force Accelerate, ignore MKL
+ifeq ($(UNAME_S),Darwin)
+    BLAS_LIBS = -framework Accelerate
+    LAPACK_LIBS =
+    FLIBS = -L/opt/homebrew/opt/gfortran/lib/gcc/current -lgfortran -lquadmath
+    PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
 
-# Check if MKL library exists
-ifneq ("$(wildcard $(MKL_LIB))","")
-  USE_MKL = 1
 else
-  USE_MKL = 0
-endif
+    # Linux: try MKL, fallback to system defaults
+    MKLROOT ?= /opt/intel/oneapi/mkl/latest
+    MKL_LIB := $(MKLROOT)/lib/intel64/libmkl_rt.so
+    MKL_INC := $(MKLROOT)/include
 
-ifeq ($(USE_MKL),1)
-  PKG_CPPFLAGS = -I$(MKL_INC)
-  PKG_LIBS = -L$(MKLROOT)/lib/intel64 -lmkl_rt -lpthread -lm -ldl
-else
-  PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
+    # Check for MKL
+    ifneq ("$(wildcard $(MKL_LIB))","")
+        USE_MKL := 1
+    else
+        USE_MKL := 0
+    endif
+
+    ifeq ($(USE_MKL),1)
+        PKG_CPPFLAGS = -I$(MKL_INC)
+        PKG_LIBS = -L$(MKLROOT)/lib/intel64 -lmkl_rt -lpthread -lm -ldl
+    else
+        # Default BLAS/LAPACK/Fortran on Linux
+        PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
+    endif
 endif
 
 all: $(SHLIB)
