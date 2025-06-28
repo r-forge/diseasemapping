@@ -177,8 +177,9 @@ setMethod("RFsimulate",
         nrow=nrow(theChol), ncol=n)
       theSim = theChol %*% theRandom
       if(!is.null(data)) {
-        theSim = theSim + xcov %*% 
-          (Linv %*% data.frame(data)[,1])
+        LinvData = Linv %*% data.frame(data)[,1]
+        LinvDataCov = xcov %*% LinvData
+        theSim = theSim + LinvDataCov
       }
       theSim = as.data.frame(as.matrix(theSim))
       names(theSim) = paste("sim", 1:n,sep="")
