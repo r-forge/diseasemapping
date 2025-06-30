@@ -178,8 +178,8 @@ setMethod("RFsimulate",
       theSim = theChol %*% theRandom
       if(!is.null(data)) {
         LinvData = Linv %*% data.frame(data)[,1]
-        LinvDataCov = xcov %*% LinvData
-        theSim = theSim + LinvDataCov
+        LinvDataCov0  = xcov %*% LinvData
+        theSim = theSim + LinvDataCov0
       }
       theSim = as.data.frame(as.matrix(theSim))
       names(theSim) = paste("sim", 1:n,sep="")
@@ -306,8 +306,8 @@ setMethod("RFsimulate",
       if(!is.null(data)) {
         # bug here?
         LinvData = Linv %*% data.frame(data)[,1]
-        LinvDataCov = xcov %*% LinvData
-        theSim = theSim + LinvDataCov
+        LinvDataCov1 = xcov %*% LinvData
+        theSim = theSim + matrix(LinvDataCov1, nrow(theSim), ncol(theSim))
 
       }
       theSim = as.data.frame(as.matrix(theSim))
