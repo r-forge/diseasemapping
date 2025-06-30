@@ -304,8 +304,11 @@ setMethod("RFsimulate",
       theSim = crossprod(theChol , theRandom)
       
       if(!is.null(data)) {
-        theSim = theSim + xcov %*% 
-          (Linv %*% as.matrix(data.frame(data)[,1]))	
+        # bug here?
+        LinvData = Linv %*% data.frame(data)[,1]
+        LinvDataCov = xcov %*% LinvData
+        theSim = theSim + LinvDataCov
+
       }
       theSim = as.data.frame(as.matrix(theSim))
       
