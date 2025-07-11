@@ -86,7 +86,7 @@ stbym = function(
       )
   }
 
-  graphFileST =tempfile()
+  graphFileST = normalizePath(tempfile(), winslash='/')
   regionST = diseasemapping::nbToInlaGraph(adjMat, graphFileST)
 
   data$regionST = regionST[as.character(data[[region.id['data']]])]
@@ -111,7 +111,9 @@ stbym = function(
       prior$spaceTime$ar$param[1],',', prior$spaceTime$ar$param[2],
       ')))) )')
   formulaOrig = formula
-  formulaUpdated = stats::update.formula(formula, stFormula)
+  formulaUpdated = try(stats::update.formula(formula, stFormula))
+  if(any(class(formulaUpdated) == 'try-error'))
+    print(stFormula)
 
   fromBym = bym(
     formula.fitted=formulaOrig,
