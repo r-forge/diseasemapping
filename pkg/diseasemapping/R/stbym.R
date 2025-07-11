@@ -132,7 +132,7 @@ stbym = function(
 stMedianMat = fromBym$inla$summary.random$regionST
 stMedian = array(unlist(stMedianMat), 
   c(
-  length(adjMat), 
+  length(attributes(adjMat)$region.id), 
   2, 
   nlevels(timeStFac),
   ncol(stMedianMat)) )
