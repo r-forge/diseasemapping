@@ -112,8 +112,7 @@ stbym = function(
       ')))) )')
   formulaOrig = formula
   formulaUpdated = try(stats::update.formula(formula, stFormula))
-  if(any(class(formulaUpdated) == 'try-error'))
-    print(stFormula)
+  if(any(class(formulaUpdated) == 'try-error')) print(stFormula)
 
   fromBym = bym(
     formula.fitted=formulaOrig,
