@@ -144,7 +144,8 @@ try(dimnames(stMedian) <- list(
   time = levels(timeStFac),
   quantile = colnames(stMedianMat)
   ))
-stMedian = stMedian[,'bym',,setdiff(dimnames(stMedian)[[4]], 'ID')]
+try(stMedian <- 
+  stMedian[,'bym',,setdiff(dimnames(stMedian)[[4]], 'ID')])
   
 fromBym$inla$summary.random$regionST = stMedian
 
