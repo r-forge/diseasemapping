@@ -136,12 +136,12 @@ stMedian = array(unlist(stMedianMat),
   nlevels(timeStFac),
   ncol(stMedianMat)) )
 
-dimnames(stMedian) = list(
+try(dimnames(stMedian) <- list(
   region = attributes(adjMat)$region.id,
   effect = c('bym','indep'),
   time = levels(timeStFac),
   quantile = colnames(stMedianMat)
-  )
+  ))
 stMedian = stMedian[,'bym',,setdiff(dimnames(stMedian)[[4]], 'ID')]
   
 fromBym$inla$summary.random$regionST = stMedian
