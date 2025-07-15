@@ -86,7 +86,12 @@ stbym = function(
       )
   }
 
-  graphFileST = normalizePath(tempfile(), winslash='/')
+
+  graphFileST = tempfile()
+  if (.Platform$OS.type == "windows") {
+    graphFileST = normalizePath(graphFileST, winslash = "/")
+  }
+  
   regionST = diseasemapping::nbToInlaGraph(adjMat, graphFileST)
 
   data$regionST = regionST[as.character(data[[region.id['data']]])]
