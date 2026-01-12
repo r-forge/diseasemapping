@@ -13,7 +13,7 @@ key = 'mapmisc',
   number = 1,
   year="2016",
 	pages = "64--91",
-  url = "https://journal.r-project.org/archive/2016-1/brown.pdf"
+  url = "https://journal.r-project.org/articles/RJ-2016-005/index.html"
 )
 
 

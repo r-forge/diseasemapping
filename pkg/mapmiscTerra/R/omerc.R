@@ -218,23 +218,19 @@ omerc = function(
     if(!is.numeric(x) & (length(rotatedCRS)>1) & is.null(preserve)){
       
       # assume the best 'tall' bounding box will be found
-      if(post=='tall')
+      if(post=='tall') {
         post = 'none'
+      }
       if(post=='wide'){
         post='none'
         inverseAngle = rep(90, length(angle))
       }
       
-      xTrans = mapply(
-          function(CRSobj) {
-            prod(abs(diff(terra::ext(
-                            project(x, CRSobj)           
-                        ))[-2]
-                ))
-          },
-          CRSobj=rotatedCRS
-      )
-      
+      xProj = mapply(terra::project, y=rotatedCRS, MoreArgs = list(x=x))
+      xExt = lapply(xProj, terra::ext)
+      xExt2 = do.call(rbind, lapply(xExt, as.vector))
+      xDiff = t(apply(xExt2, 1, diff))[,-2, drop=FALSE]
+      xTrans = apply(abs(xDiff), 1, prod)
 
       objectiveResult=list(
           x = angle,

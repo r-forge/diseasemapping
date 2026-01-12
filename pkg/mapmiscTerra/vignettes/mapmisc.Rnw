@@ -122,7 +122,7 @@ crs(nldTiles, proj=TRUE)
 crs(meuse, proj=TRUE)
 @
 Maps which can be downloaded are shown at
-\url{http://diseasemapping.r-forge.r-project.org/openmap/}
+\url{https://diseasemapping.r-forge.r-project.org/}
 
 
 

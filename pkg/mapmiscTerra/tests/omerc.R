@@ -52,6 +52,8 @@ if(!interactive()) pdf("omerc.pdf")
   
   
 
+stuff = omerc(x, angle = seq(-10, 10))
+str(stuff)
 
 par(mfrow=c(3,2))
   bob((-10):10)
