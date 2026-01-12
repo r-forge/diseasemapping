@@ -79,8 +79,8 @@ osmTiles = function(name, xyz, suffix) {
     'mobile-atlas'='https://b.tile.thunderforest.com/mobile-atlas/',
 #    wikimedia = 'https://maps.wikimedia.org/osm-intl/',
     'sputnik' = 'http://tiles.maps.sputnik.ru/',
-  ump = 'https://2.tiles.ump.waw.pl/ump_tiles/' ,
-  where = 'https://osm-demo-b.wheregroup.com/tiles/1.0.0/osm/webmercator/' )
+    ump = 'https://2.tiles.ump.waw.pl/ump_tiles/' ,
+    where = 'https://osm-demo-b.wheregroup.com/tiles/1.0.0/osm/webmercator/' )
 
   # toronto
   #https://gis.toronto.ca/arcgis/rest/services/basemap/cot_topo/MapServer/tile/9/186/142
@@ -166,46 +166,49 @@ openmap = function(
 
 
   if(identical(crs, "")) {
-      crs=crsIn=crsOut = crsLL
+    crs=crsIn=crsOut = crsLL
   } else {
     crsOut=crs
     crsIn = try(terra::crs(x), silent=TRUE)    
     if(identical(crsIn, "") | any(class(crsIn) == 'try-error')) crsIn = crs
-}
-  if(is.numeric(x)) x = vect(matrix(x, ncol=2), crs=crsIn)
+  }
+  if(is.numeric(x)) {
+    x = vect(matrix(x, ncol=2), crs=crsIn)
+  }
 
-  if(all(class(x) == 'SpatExtent')) x = rast(extent = x, crs = crsIn)
-  
+  if(all(class(x) == 'SpatExtent')) {
+    x = rast(extent = x, crs = crsIn)
+  }
 
 # get extent of output
 # this ignores negatives
   if(terra::is.lonlat(crsIn)) {
     outExtent = terra::extend(terra::ext(x), buffer)
   } else {
-extVect = as.vector(terra::ext(x))
-extVect= extVect + c(-1,1,-1,1) * rep_len(buffer, 4)
-outExtent = terra::ext(extVect)
-}
-
-if(!identical(as.character(crsIn), as.character(crsOut))) {
-
-  extentTestRast = outExtent
-  if(any(diff(as.vector(extentTestRast))[-2] <= 1e-4)) {
-      extentTestRast = terra::extend(extentTestRast, 1e-4)
+    extVect = as.vector(terra::ext(x))
+    extVect= extVect + c(-1,1,-1,1) * rep_len(buffer, 4)
+    outExtent = terra::ext(extVect)
   }
-  testRast = rast(extentTestRast, res = (terra::xmax(extentTestRast) - terra::xmin(extentTestRast))/NtestCols, crs = crsIn)
-  testPoints = vect(terra::xyFromCell(testRast, 1:terra::ncell(testRast)), crs=terra::crs(testRast))
 
-  testPointsOut = suppressWarnings(terra::project(testPoints, crsOut))
-  outExtent= terra::ext(testPointsOut)
+  if(!identical(as.character(crsIn), as.character(crsOut))) {
 
-}
+    extentTestRast = outExtent
+    if(any(diff(as.vector(extentTestRast))[-2] <= 1e-4)) {
+      extentTestRast = terra::extend(extentTestRast, 1e-4)
+    }
+    testRast = rast(extentTestRast, res = (terra::xmax(extentTestRast) - terra::xmin(extentTestRast))/NtestCols, crs = crsIn)
+    testPoints = vect(terra::xyFromCell(testRast, 1:terra::ncell(testRast)), crs=terra::crs(testRast))
+
+    testPointsOut = suppressWarnings(terra::project(testPoints, crsOut))
+    outExtent= terra::ext(testPointsOut)
+
+  }
 
 
 
-    
+
   if(terra::is.lonlat(crsOut)) {
-      outExtent = terra::intersect(outExtent, terra::unwrap(bboxLL))
+    outExtent = terra::intersect(outExtent, terra::unwrap(bboxLL))
   }
 
   testRast = rast(outExtent, 
@@ -233,159 +236,159 @@ if(!identical(as.character(crsIn), as.character(crsOut))) {
   # create out raster
   # find average area of pixels in downloaded tiles
 
-  mercHere = .getRasterMerc(zoom)
-   if(identical(crsOut, crsMerc)) {
+mercHere = .getRasterMerc(zoom)
+if(identical(crsOut, crsMerc)) {
         # output crs is mercator, return tiles as-is
-        outraster = terra::crop(mercHere, testRast, snap='out')
-        outraster = terra::disagg(outraster, 256)
+  outraster = terra::crop(mercHere, testRast, snap='out')
+  outraster = terra::disagg(outraster, 256)
 
-    } else {
-    theTable = as.data.frame(table(terra::cellFromXY(mercHere, terra::crds(testPointsMerc))))
-    theTable$cell = as.numeric(as.character(theTable[,1]))
- 
-    mercHere = terra::crop(mercHere, 
-      terra::ext(
-        rep(terra::xyFromCell(mercHere, theTable[which.max(theTable$Freq), 'cell']), each=2) + 
-        0.6*rep(terra::res(mercHere), each=2)*c(-1,1,-1,1)
-      )
+} else {
+  theTable = as.data.frame(table(terra::cellFromXY(mercHere, terra::crds(testPointsMerc))))
+  theTable$cell = as.numeric(as.character(theTable[,1]))
+
+  mercHere = terra::crop(mercHere, 
+    terra::ext(
+      rep(terra::xyFromCell(mercHere, theTable[which.max(theTable$Freq), 'cell']), each=2) + 
+      0.6*rep(terra::res(mercHere), each=2)*c(-1,1,-1,1)
     )
+  )
     # each tile is 256 x 256
-    mercHere = terra::disagg(mercHere, 256)
+  mercHere = terra::disagg(mercHere, 256)
 
     # width of the cell with the most test points in it
-    cellWidthMerc = quantile(terra::values(terra::cellSize(mercHere, unit='m')), 0.5, na.rm=TRUE)
+  cellWidthMerc = quantile(terra::values(terra::cellSize(mercHere, unit='m')), 0.5, na.rm=TRUE)
 
 
-    areaRast = suppressWarnings(terra::cellSize(testRast, unit='m'))
-    if(terra::ncell(areaRast) < 1e4) {
-      toQuantile = terra::values(areaRast)
-    } else {
-      toQuantile = unlist(terra::spatSample(areaRast,  size=min(c(terra::ncell(areaRast), 1e4))))
-    }
-    toQuantile = toQuantile[toQuantile > 0]
-    cellWidthRast = quantile(toQuantile, prob=0.5, na.rm=TRUE)
+  areaRast = suppressWarnings(terra::cellSize(testRast, unit='m'))
+  if(terra::ncell(areaRast) < 1e4) {
+    toQuantile = terra::values(areaRast)
+  } else {
+    toQuantile = unlist(terra::spatSample(areaRast,  size=min(c(terra::ncell(areaRast), 1e4))))
+  }
+  toQuantile = toQuantile[toQuantile > 0]
+  cellWidthRast = quantile(toQuantile, prob=0.5, na.rm=TRUE)
 
 
-    areaRatio = cellWidthRast/cellWidthMerc
+  areaRatio = cellWidthRast/cellWidthMerc
 
-    newNumberOfCells = fact*NtestCols*sqrt(areaRatio)
+  newNumberOfCells = fact*NtestCols*sqrt(areaRatio)
 
-    outraster = rast(outExtent, res = (terra::xmax(outExtent) - terra::xmin(outExtent))/newNumberOfCells, crs = crsOut)
-  } # end not merc
+  outraster = rast(outExtent, res = (terra::xmax(outExtent) - terra::xmin(outExtent))/newNumberOfCells, crs = crsOut)
+} # end not merc
 
 # cache
 
-  if(is.null(cachePath)) {
-    cachePath = tempdir()
-  }
-  if(!nchar(cachePath)) {
-    cachePath = '.'
-  }
-  
-  alltiles = osmTiles()
-  pathOrig = path
-  pathisname = gsub("-", ".", pathOrig) %in% 
-  gsub("-", ".", names(alltiles))
-  path[pathisname] = alltiles[path[pathisname]]
-  
-  if(length(grep("[[:punct:]]$", path, invert=TRUE)))
-    path[ grep("[[:punct:]]$", path, invert=TRUE)] =
-  paste(path[ grep("[[:punct:]]$", path, invert=TRUE)], 
-    "/", sep="")
-  
-  if(length(grep("^http[s]*://", path, invert=TRUE)))
-    path[ grep("^http[s]*://", path, invert=TRUE)] = 
-  paste("http://", 
-    path[ grep("^http[s]*://", path, invert=TRUE)], sep="")
-  names(path) = pathOrig
-  
-  
-  Dpath = names(path)[1]
-  Durl = path[1]
+if(is.null(cachePath)) {
+  cachePath = tempdir()
+}
+if(!nchar(cachePath)) {
+  cachePath = '.'
+}
 
-  suffixOrig = suffix
+alltiles = osmTiles()
+pathOrig = path
+pathisname = gsub("-", ".", pathOrig) %in% 
+gsub("-", ".", names(alltiles))
+path[pathisname] = alltiles[path[pathisname]]
 
-  if(verbose){
-    cat(Dpath, '\n')
-    cat(Durl, '\n')
-  }
+if(length(grep("[[:punct:]]$", path, invert=TRUE)))
+  path[ grep("[[:punct:]]$", path, invert=TRUE)] =
+paste(path[ grep("[[:punct:]]$", path, invert=TRUE)], 
+  "/", sep="")
 
-  if(length(grep(
-    'nrcan\\.gc\\.ca|gov\\.bc\\.ca', Durl))
+if(length(grep("^http[s]*://", path, invert=TRUE)))
+  path[ grep("^http[s]*://", path, invert=TRUE)] = 
+paste("http://", 
+  path[ grep("^http[s]*://", path, invert=TRUE)], sep="")
+names(path) = pathOrig
+
+
+Dpath = names(path)[1]
+Durl = path[1]
+
+suffixOrig = suffix
+
+if(verbose){
+  cat(Dpath, '\n')
+  cat(Durl, '\n')
+}
+
+if(length(grep(
+  'nrcan\\.gc\\.ca|gov\\.bc\\.ca', Durl))
 ){
-    suffix = ''
-    tileNames = 'zyx'
-  } else if(
-    length(grep(
-      '[.]arcgisonline[.]com|bbbike', Durl
-    ))) {
-    suffix='.jpg'
-    tileNames = 'zyx'
-  } else if(
-    length(grep(
-      'stamen.watercolor', Durl
-    ))) {
-    suffix='.jpg'
-    tileNames = 'zyx'
-  } else if(
-    length(grep(
-      'heidelberg.de/tiles/(hybrid|adminb|roadsg|roads)/?$', 
-      Durl)) |
-    length(grep(
-      '&$',Durl))
-  ){
-    tileNames = 'xyz='
-    suffix = ''
-  } else {
-    suffix = '.png'
-    tileNames = 'zxy'
-  }
+  suffix = ''
+  tileNames = 'zyx'
+} else if(
+  length(grep(
+    '[.]arcgisonline[.]com|bbbike', Durl
+  ))) {
+  suffix='.jpg'
+  tileNames = 'zyx'
+} else if(
+  length(grep(
+    'stamen.watercolor', Durl
+  ))) {
+  suffix='.jpg'
+  tileNames = 'zyx'
+} else if(
+  length(grep(
+    'heidelberg.de/tiles/(hybrid|adminb|roadsg|roads)/?$', 
+    Durl)) |
+  length(grep(
+    '&$',Durl))
+){
+  tileNames = 'xyz='
+  suffix = ''
+} else {
+  suffix = '.png'
+  tileNames = 'zxy'
+}
 
-  if(length(attributes(pathOrig)$tileNames))
-    tileNames = attributes(pathOrig)$tileNames
-  if(!is.null(suffixOrig))
-    suffix = suffixOrig
+if(length(attributes(pathOrig)$tileNames))
+  tileNames = attributes(pathOrig)$tileNames
+if(!is.null(suffixOrig))
+  suffix = suffixOrig
 
 
-  result = try(
-    getTiles(outraster, 
-      zoom=zoom,
-      path=Durl,
-      verbose=verbose,
-      suffix=suffix,
-      tileNames = tileNames,
-      cachePath = cachePath),
-    silent=!verbose)
+result = try(
+  getTiles(outraster, 
+    zoom=zoom,
+    path=Durl,
+    verbose=verbose,
+    suffix=suffix,
+    tileNames = tileNames,
+    cachePath = cachePath),
+  silent=!verbose)
 
-  if(inherits(result, 'try-error')){
+if(inherits(result, 'try-error')){
     # create an empty raster
-    result = outraster
-    terra::values(outraster) = NA
-  }
+  result = outraster
+  terra::values(outraster) = NA
+}
 
-  if(all(is.na(terra::values(result)))){
-    message(paste(Durl, "not accessible"))
+if(all(is.na(terra::values(result)))){
+  message(paste(Durl, "not accessible"))
     # create an empty raster
-    attributes(result)$openmap = list(
-      tiles=NA,
-      message=result,
-      path=path,
-      pathOrig=pathOrig,
-      zoom=zoom
-    )
-    return(result)
-  }
+  attributes(result)$openmap = list(
+    tiles=NA,
+    message=result,
+    path=path,
+    pathOrig=pathOrig,
+    zoom=zoom
+  )
+  return(result)
+}
 
 
   # fill in poles
-  thePoles = as.matrix(expand.grid(seq(-170, 180, len=100), 
-    as.vector(outer(c(-1,1),seq(83, 90, len=201)))))
-  thePoles = vect(thePoles, crs=crsLL, 
-    atts = data.frame(pole=c('south','north')[1+(thePoles[,2]>0)]))
-  thePolesTrans = suppressWarnings(terra::project(thePoles, crs(result)))
-  thePolesTrans$cell = terra::cellFromXY(result, terra::crds(thePolesTrans))
-  thePolesTrans = thePolesTrans[!is.na(thePolesTrans$cell)]
-  thePolesTrans = thePolesTrans[!duplicated(thePolesTrans$cell), ,drop=FALSE]
+thePoles = as.matrix(expand.grid(seq(-170, 180, len=100), 
+  as.vector(outer(c(-1,1),seq(83, 90, len=201)))))
+thePoles = vect(thePoles, crs=crsLL, 
+  atts = data.frame(pole=c('south','north')[1+(thePoles[,2]>0)]))
+thePolesTrans = suppressWarnings(terra::project(thePoles, crs(result)))
+thePolesTrans$cell = terra::cellFromXY(result, terra::crds(thePolesTrans))
+thePolesTrans = thePolesTrans[!is.na(thePolesTrans$cell)]
+thePolesTrans = thePolesTrans[!duplicated(thePolesTrans$cell), ,drop=FALSE]
 
 if(length(thePolesTrans)) {
   thePolesSplit = terra::split(thePolesTrans, thePolesTrans$pole)
@@ -401,7 +404,7 @@ if(length(thePolesTrans)) {
   # replace NA's near north pole with values nearby
   for(Ddirection in names(theBuffer)) {
     if(verbose) cat('poles: ', Ddirection, '\n')
-    extractHere = terra::extract(result, y=theBuffer[[Ddirection]])
+      extractHere = terra::extract(result, y=theBuffer[[Ddirection]])
     cellsToFill = theBuffer[[Ddirection]][is.na(extractHere[,1])]
     toFill = na.omit(extractHere[,1])
 
@@ -415,42 +418,42 @@ if(length(thePolesTrans)) {
 
   # if there's only one layer, and no colortable
   # convert to greyscale
-  if(all(terra::nlyr(result)== 1) & !any(terra::has.colors(result))){
-    theRange = unlist(terra::global(result, range))
-    if( all(ceiling(theRange) == floor(theRange), na.rm=TRUE) & all(theRange >= 0) & all(theRange < 256)) {
+if(all(terra::nlyr(result)== 1) & !any(terra::has.colors(result))){
+  theRange = unlist(terra::global(result, range))
+  if( all(ceiling(theRange) == floor(theRange), na.rm=TRUE) & all(theRange >= 0) & all(theRange < 256)) {
       # 264 grey scale
-      terra::coltab(result) = data.frame(value = seq(0,255), col = grDevices::grey(seq(0,1,len=256)) )
-    } 
-  }
+    terra::coltab(result) = data.frame(value = seq(0,255), col = grDevices::grey(seq(0,1,len=256)) )
+  } 
+}
 
   # if there's transparency convert to color table
-  if(all(c('red','green','blue','alpha') %in% names(result) & 
+if(all(c('red','green','blue','alpha') %in% names(result) & 
   terra::nlyr(result) == 4 & 
   !any(terra::has.colors(result)) )) {
-    theColTab = terra::unique(result)
-    theColTab = cbind(ID = 1:nrow(theColTab), theColTab)
+  theColTab = terra::unique(result)
+  theColTab = cbind(ID = 1:nrow(theColTab), theColTab)
 
-    valuesOrig = terra::values(result, dataframe=TRUE)
-    valuesOrig$idOrig = 1:nrow(valuesOrig)
+  valuesOrig = terra::values(result, dataframe=TRUE)
+  valuesOrig$idOrig = 1:nrow(valuesOrig)
 
-    newValues = merge(valuesOrig, theColTab)
-    newValues = newValues[order(newValues$idOrig), 'ID']
+  newValues = merge(valuesOrig, theColTab)
+  newValues = newValues[order(newValues$idOrig), 'ID']
 
-    result2 = rast(result, nlyrs=1)
-    terra::values(result2) = newValues
-    terra::coltab(result2) = theColTab
-    result = result2
-  }
+  result2 = rast(result, nlyrs=1)
+  terra::values(result2) = newValues
+  terra::coltab(result2) = theColTab
+  result = result2
+}
 
-  result = writeRasterMapTiles(result, 
-    filename = tempfile(tmpdir=cachePath, fileext='.tif'))
+result = writeRasterMapTiles(result, 
+  filename = tempfile(tmpdir=cachePath, fileext='.tif'))
 
-  attributes(result)$openmap = list(
-      path=path,
-      pathOrig=pathOrig,
-      zoom=zoom
-  )
+attributes(result)$openmap = list(
+  path=path,
+  pathOrig=pathOrig,
+  zoom=zoom
+)
 
-  result
+result
 }
 
