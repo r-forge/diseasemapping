@@ -10,8 +10,9 @@ x=nldCities
 xbox = as.polygons(ext(nldCities), crs = crs(nldCities))
 
 bob=function(angle, ...){
-  y = project(x, omerc(x, angle, ellipse=FALSE, ...))
-  nld2 = project(xbox, crs(y))
+  myCrs = omerc(x, angle, ellipse=FALSE, ...)
+  y = project(x, myCrs)
+  nld2 = project(xbox, myCrs)
   map.new(nld2)
   abline(v=0, col='grey')
   abline(h=0, col='grey')
