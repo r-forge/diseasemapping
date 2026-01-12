@@ -1,6 +1,6 @@
-crsLL = terra::crs("+init=epsg:4326")
-crsMerc = terra::crs("+init=epsg:3857")
-crsModis <- terra::crs("+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
+crsLL = terra::crs("epsg:4326")
+crsMerc = terra::crs("epsg:3857")
+crsModis <- terra::crs("+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs")
 
 crsCanada = terra::crs("+proj=omerc +lat_0=54.766 +lonc=-101.876 +alpha=-83.5 +k=0.998 +x_0=0 +y_0=0 +gamma=-83.498 +ellps=WGS84 +units=m")
 
