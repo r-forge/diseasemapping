@@ -101,10 +101,10 @@ xPoints = suppressWarnings(
   swissSim = RFsimulate(model=
       rbind(
         swissRes$param,
-        swissRes$param*0.99),
+        swissRes$param*0.9),
     data=swissRes$data[,'resid'],
     x=swissRes$predict,
-    err.model=c(1, 0.99)*swissRes$param["nugget"]+1,
+    err.model=c(1, 0.9)*swissRes$param["nugget"]+1,
     n=3
   )
 # plot the simulated random effect
