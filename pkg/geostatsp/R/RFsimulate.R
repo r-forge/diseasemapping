@@ -132,7 +132,7 @@ setMethod("RFsimulate",
   function(model, x,  data = NULL, 
     err.model=NULL, n = 1, ...)  {
     
-    if (useRandomFields()) { 
+    if (useRandomFields()) {
       model = modelRandomFields(model)
       if(!is.null(err.model))
         err.model = RandomFields::RMnugget(var=err.model)
