@@ -615,7 +615,7 @@ krigeLgm = function(
 
 
 	if( (mc.cores ==1) | !requireNamespace("parallel", quietly=TRUE)) {
-		sums=mapply(geostatsp:::
+		sums=mapply(#geostatsp:::
 			krigeOneRowPar, 
 			Drow = Srow, 
 			yFromRowDrow = yFromRow(locations,Srow),

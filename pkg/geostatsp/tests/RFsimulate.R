@@ -129,7 +129,6 @@ xPoints = suppressWarnings(
   
   
   
-  
 # create a small raster of elevation data
   swissAltSmall = aggregate(swissAltitude,fact=5)
   swissAltSmall = resample(swissAltSmall, swissSim)
