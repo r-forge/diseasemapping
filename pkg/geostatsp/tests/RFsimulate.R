@@ -89,7 +89,7 @@ xPoints = suppressWarnings(
     model=swissRes$param,
     data=swissRes$data[,'resid'],
     x=swissRes$predict,
-    err.model=swissRes$param["nugget"],
+    err.model=swissRes$param["nugget"]+1,
     n=3
   )
   
