@@ -219,14 +219,20 @@ if(crop.poles) {
     eps = 0.1
       leftSide = terra::ext(terra::crop(allPoints, terra::ext(-180,-180+eps,-90,90)))
       rightSide = terra::ext(terra::crop(allPoints, terra::ext(180-eps,180,-90,90)))
-      if(length(leftSide)) {
+
+      if(is.na(terra::ymin(leftSide))) {
+        leftSide = terra::densify(vect(cbind(-180, c(0, 0)), crs=crsLL, type='lines'), densify.interval)
+      } else {
         leftSide = terra::densify(vect(cbind(-180, c(terra::ymin(leftSide), terra::ymax(leftSide))), crs=crsLL, type='lines'), densify.interval)
-        edgeLL = terra::aggregate(terra::union(edgeLL, terra::buffer(leftSide, buffer.width)))
       }
-      if(length(rightSide)) {
+      edgeLL = terra::aggregate(terra::union(edgeLL, terra::buffer(leftSide, buffer.width)))
+
+      if(is.na(terra::ymin(rightSide))) {
+        rightSide = terra::densify(vect(cbind(180, c(0, 0)), crs=crsLL, type='lines'), densify.interval)
+      } else {
         rightSide = terra::densify(vect(cbind(180, c(terra::ymin(rightSide), terra::ymax(rightSide))), crs=crsLL, type='lines'), densify.interval)
-        edgeLL = terra::aggregate(terra::union(edgeLL, terra::buffer(rightSide, buffer.width)))
       }
+      edgeLL = terra::aggregate(terra::union(edgeLL, terra::buffer(rightSide, buffer.width)))
 
 
     edgeLL = terra::fillHoles(edgeLL)
@@ -249,4 +255,3 @@ return(list(
 ))
 
 }
-
