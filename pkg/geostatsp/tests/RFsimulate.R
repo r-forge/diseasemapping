@@ -1,5 +1,14 @@
 library("geostatsp")
 
+Sys.setenv(
+  OMP_NUM_THREADS = "2",
+  OPENBLAS_NUM_THREADS = "2",
+  MKL_NUM_THREADS = "2",
+  BLIS_NUM_THREADS = "2",
+  VECLIB_MAXIMUM_THREADS = "2",   # macOS Accelerate
+  NUMEXPR_NUM_THREADS = "2"
+)
+
 model <- c(var=5, range=20,shape=0.5)
 
 # any old crs
