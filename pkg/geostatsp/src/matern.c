@@ -483,6 +483,7 @@ SEXP maternPoints(
 
   SEXP halfLogDet= PROTECT(NEW_NUMERIC(1));
   int N= Rf_nrows(points);
+  int requestedType = INTEGER(type)[0];
 
   
   
@@ -501,7 +502,7 @@ SEXP maternPoints(
       INTEGER(type),
       REAL(halfLogDet)
   );
-  if(INTEGER(type)[0] != 0){
+  if(requestedType > 1 && INTEGER(type)[0] != 0){
       error("LAPACK factorization failed in maternPoints, info=%d", INTEGER(type)[0]);
   }
   UNPROTECT(1);
@@ -523,7 +524,7 @@ SEXP maternDistance(
   double halfLogDet;
   const char
   *valid[] = {"dsyMatrix"};
-  int typeInt=*type, D, D2, N;
+  int typeInt=*type, requestedType=*type, D, D2, N;
   double *P, *Presult;
 
 
@@ -562,7 +563,7 @@ SEXP maternDistance(
       &typeInt,
       &halfLogDet //REAL(halfLogDet)
       );
-  if(typeInt != 0){
+  if(requestedType > 1 && typeInt != 0){
       error("LAPACK factorization failed in maternDistance, info=%d", typeInt);
   }
 //  UNPROTECT(1);

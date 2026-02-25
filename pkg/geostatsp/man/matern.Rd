@@ -130,7 +130,7 @@ plot(myMatern, main="anisortopic matern")
 
 # correlation matrix for all cells with each other
 myraster = rast(nrows=4,ncols=6,extent = ext(-3, 3, -2, 2))
-myMatern = matern(myraster, param=c(range=2, shape=2))
+myMatern = matern(myraster, param=c(range=1, shape=2, variance=0.5^2))
 dim(myMatern)
 
 # plot the cell ID's
