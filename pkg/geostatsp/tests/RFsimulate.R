@@ -8,6 +8,7 @@ Sys.setenv(
   VECLIB_MAXIMUM_THREADS = "2",   # macOS Accelerate
   NUMEXPR_NUM_THREADS = "2"
 )
+options(mc.cores = 2)
 
 model <- c(var=5, range=20,shape=0.5)
 
