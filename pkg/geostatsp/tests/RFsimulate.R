@@ -104,7 +104,7 @@ xPoints = suppressWarnings(
         swissRes$param*0.99),
     data=swissRes$data[,'resid'],
     x=swissRes$predict,
-    err.model=c(1, 0.99)*swissRes$param["nugget"],
+    err.model=c(1, 0.99)*swissRes$param["nugget"]+1,
     n=3
   )
 # plot the simulated random effect
@@ -119,7 +119,7 @@ xPoints = suppressWarnings(
         0.99*swissRes$param,
         1.01*swissRes$param),
     data=swissRes$data[,rep('resid',3)],
-    err.model=c(1, 0.99, 1.01)*swissRes$param["nugget"],
+    err.model=c(1, 0.99, 1.01)*swissRes$param["nugget"]+1,
     x=swissRes$predict,
     n=3
   )
