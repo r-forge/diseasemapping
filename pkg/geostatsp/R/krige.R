@@ -180,7 +180,10 @@ krigeLgm = function(
 		terra::values(meanRaster) = meanFixedEffects	
 	}
 
-	if( is.data.frame(covariates) & any(class(formula)=="formula") & !noCovariates)  {
+	# if covariates is a df
+	if( 
+		is.data.frame(covariates) & any(class(formula)=="formula") & !noCovariates
+	)  {
 
 		    # put zeros for covariates not included in the data frame
 		notInCov = setdiff(all.vars(formula), names(covariates))
@@ -215,10 +218,14 @@ krigeLgm = function(
 
 	} # end covariates is DF
 
+# if data is spdf
 	if(any(class(data)=="SpatVector")&
 		any(class(formula)=="formula")) {
 
-		if(all(setdiff(names(covariates), 'space') %in% names(data))) {
+# if all covaraites in data
+		if(
+			all(setdiff(names(covariates), 'space') %in% names(data))
+		) {
 
 			modelMatrixForData = model.matrix(formula, values(data))
 
@@ -621,12 +628,10 @@ krigeLgm = function(
 			yFromRowDrow = yFromRow(locations,Srow),
 			MoreArgs=datForK,
 			SIMPLIFY=FALSE)
-
 	} else {
 		sums=parallel::mcmapply(krigeOneRowPar, Srow, 
 			yFromRow(locations,Srow),
 			MoreArgs=datForK,SIMPLIFY=FALSE,mc.cores=mc.cores)
-
 	}
 
 
@@ -690,20 +695,14 @@ krigeLgm = function(
 			terra::values(newraster) = bcpred
 			add(result) = newraster
 		}
-
-
-
 	} # end have box cox
 
 
 	if(expPred){
-
 		names(result)[names(result)=="predict"] = "predict.log"
 		newLayer = exp(result[["predict.log"]]+ 0.5*result[["krigeSd"]]^2 )
 		names(newLayer) = "predict"
 		add(result) = newLayer
-
-
 	} # end expPred
 
 	result

@@ -146,7 +146,8 @@ mypoints = vect(
 	cbind(runif(8), runif(8))
 	)
 # variance matrix from points
-m1=matern(mypoints, param=c(range=2,shape=1.4,variance=4,nugget=1))
+m1=matern(mypoints, 
+	param=c(range=2,shape=1.4,variance=4,nugget=1))
 # cholesky of variance from distances
 c2=matern(dist(crds(mypoints)), param=c(range=2,shape=1.4,variance=4,nugget=1),type='cholesky')
 

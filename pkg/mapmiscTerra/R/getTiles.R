@@ -392,23 +392,23 @@ if(identical(crs(rastersMerged[[1]]), crs(outraster)) & (length(rastersMerged)==
     SrowColHere = split(SrowColHere, SrowColHere$block)
     outValuesHere = lapply(SrowColHere, 
       function(xx) {
-      xxIndex = xx[, 'indexOut',drop=FALSE]
-      xxCoords = thisRowGeom[xxIndex$indexOut,]
-      notNa = which(!is.na(xxCoords[,1]))
+        xxIndex = xx[, 'indexOut',drop=FALSE]
+        xxCoords = thisRowGeom[xxIndex$indexOut,]
+        notNa = which(!is.na(xxCoords[,1]))
 
-      cellsHere = terra::cellFromXY(
-        rastersMerged[[xx[1,'block']]], 
-        xxCoords[notNa,]
-      )
-      cbind(
-        ScellOut = xx[notNa,'ScellOut', drop=FALSE],
-        terra::values(rastersMerged[[xx[1,'block']]])[cellsHere, , drop=FALSE]
-      )             
+        cellsHere = terra::cellFromXY(
+          rastersMerged[[xx[1,'block']]], 
+          xxCoords[notNa,]
+        )
+        cbind(
+          ScellOut = xx[notNa,'ScellOut', drop=FALSE],
+          terra::values(rastersMerged[[xx[1,'block']]])[cellsHere, , drop=FALSE]
+        )             
 # doesn't preserve integers
 #              values=terra::extract(
 #                rastersMerged[[xx[1,'block']]], 
 #                thisRow[xx[, 'indexOut',drop=FALSE]], cells=FALSE, xy=FALSE, ID=FALSE, raw=TRUE))
-    })
+      })
 
     if(length(outValuesHere)) {
       for(D in names(outValuesHere)[-1]) {

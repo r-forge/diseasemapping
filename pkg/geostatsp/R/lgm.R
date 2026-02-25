@@ -264,13 +264,14 @@ setMethod("lgm",
 		likRes = do.call(likfitLgm, dots)
 
 			# call krige	
-		krigeRes =  krigeLgm(
-			formula=formula,data=data,
-			grid=grid,
-			covariates=covariates, param=likRes$param, 
-			expPred=expPred,
-			nuggetInPrediction=nuggetInPrediction
-		)
+			krigeRes =  krigeLgm(
+				formula=formula,data=data,
+				grid=grid,
+				covariates=covariates, param=likRes$param, 
+				expPred=expPred,
+				nuggetInPrediction=nuggetInPrediction,
+				mc.cores=mc.cores
+			)
 
 		res = c(predict=krigeRes, likRes)
 
