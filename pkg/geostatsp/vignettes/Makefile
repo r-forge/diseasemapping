@@ -8,7 +8,7 @@ clean:
 	'$(R_HOME)/bin/Rscript' -e "knitr::knit('%<')" $(Rargs)
 
 %.pdf: %.tex
-	xelatex $<;
-	xelatex $<
+	pdflatex $<;
+	pdflatex $<
 
 
