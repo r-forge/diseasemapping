@@ -45,20 +45,58 @@ profLlgm = function(fit,mc.cores=1, ...) {
 	parList = apply(parValues,1,list)
 	parList = lapply(parList, function(qq) c(unlist(qq), baseParams))
 	
-	
-	resL = parallel::mcmapply(
-		likfitLgm, 
-		param=parList,
-		MoreArgs=list(
-			data=as.data.frame(fit$data), 
-			formula=fit$model$formula,
-			paramToEstimate=reEstimate,
-			reml=fit$model$reml,
-			coordinates=terra::crds(fit$data)
-		),
-		mc.cores=mc.cores,
-		SIMPLIFY=FALSE
-	)
+	if(any(grepl("^Spat", class(fit$data)))) {
+		dataArg = as.data.frame(fit$data)
+		coordinatesArg = terra::crds(fit$data)
+	} else {
+		dataArg = fit$data
+		coordinatesArg = fit$data
+	}
+	formulaArg = fit$model$formula
+	remlArg = fit$model$reml
+
+	if(mc.cores > 1) {
+		cl = parallel::makePSOCKcluster(mc.cores)
+		on.exit(parallel::stopCluster(cl), add=TRUE)
+		parallel::clusterEvalQ(cl, {
+			loadNamespace("geostatsp")
+			NULL
+		})
+		parallel::clusterExport(
+			cl,
+			varlist=c(
+				"parList", "dataArg", "coordinatesArg",
+				"formulaArg", "reEstimate", "remlArg"
+			),
+			envir=environment()
+		)
+		resL = parallel::parLapply(
+			cl, X=parList,
+			fun=function(paramHere) {
+				get("likfitLgm", envir=asNamespace("geostatsp"))(
+					param=paramHere,
+					data=dataArg,
+					formula=formulaArg,
+					paramToEstimate=reEstimate,
+					reml=remlArg,
+					coordinates=coordinatesArg
+				)
+			}
+		)
+	} else {
+		resL = mapply(
+			likfitLgm, 
+			param=parList,
+			MoreArgs=list(
+				data=dataArg, 
+				formula=formulaArg,
+				paramToEstimate=reEstimate,
+				reml=remlArg,
+				coordinates=coordinatesArg
+			),
+			SIMPLIFY=FALSE
+		)
+	}
 
 	resL2 = lapply(resL, function(qq) qq$optim$logL)
 	resL = simplify2array(resL2)
