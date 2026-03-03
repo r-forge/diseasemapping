@@ -13,13 +13,13 @@ Imports:
     methods,
     stats
 Suggests:
-    RandomFields,
     parallel,
     mapmisc,
-    ellipse,
     pracma,
     knitr
 Enhances: 
+    ellipse,
+    RandomFields,
 	INLA, 
 	diseasemapping, 
 	geoR, 
