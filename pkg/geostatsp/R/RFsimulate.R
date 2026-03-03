@@ -223,7 +223,7 @@ setMethod("RFsimulate",
     } else { #RandomFields not available
       modelFull = fillParam(model)
       res2 = rast(x)
-      if(ncell(res2) > 500) {
+      if(ncell(res2) > 5000) {
         message("install the RandomFields package for faster simulations")
       }
       if(n>1) {
