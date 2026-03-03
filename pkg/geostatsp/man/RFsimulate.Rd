@@ -96,6 +96,20 @@ An object of the same class as \code{x}.
 }
 
 \examples{
+# the following prevents some errors on the cran check
+Sys.unsetenv(c("OMP_THREAD_LIMIT", "KMP_DEVICE_THREAD_LIMIT", "KMP_TEAMS_THREAD_LIMIT"))
+Sys.setenv(
+  OMP_NUM_THREADS = "2",
+  OMP_DYNAMIC = "FALSE",
+  OPENBLAS_NUM_THREADS = "2",
+  MKL_NUM_THREADS = "2",
+  MKL_DYNAMIC = "FALSE",
+  BLIS_NUM_THREADS = "2",
+  VECLIB_MAXIMUM_THREADS = "2"
+)
+options(mc.cores = 2)
+
+
 library('geostatsp')
 
 # exclude this line to use the RandomFields package
