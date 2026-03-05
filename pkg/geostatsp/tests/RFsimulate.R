@@ -13,14 +13,14 @@ Sys.setenv(
 
 options(mc.cores = if (.Platform$OS.type == "windows") 1L else 2L)
 
+# don't test using the randomFields package, it's currently unavailable
+options(useRandomFields = FALSE)
 
 model <- c(var=5, range=20,shape=0.5)
 
 # any old crs
 theCrs = "+proj=utm +zone=17 +datum=NAD27 +units=m +no_defs"
 
-# don't test using the randomFields package, it's currently broken on some R builds
-options(useRandomFields = FALSE)
 
   myraster = rast(nrows=20,ncols=20,extent = ext(100,110,100,110), 
     crs=theCrs)
