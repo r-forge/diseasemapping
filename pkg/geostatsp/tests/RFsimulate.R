@@ -10,7 +10,8 @@ Sys.setenv(
   BLIS_NUM_THREADS = "2",
   VECLIB_MAXIMUM_THREADS = "2"
 )
-options(mc.cores = 2)
+
+options(mc.cores = if (.Platform$OS.type == "windows") 1L else 2L)
 
 
 model <- c(var=5, range=20,shape=0.5)

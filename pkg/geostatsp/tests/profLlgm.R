@@ -4,7 +4,8 @@ data('swissRain')
 swissRain = unwrap(swissRain)
 swissAltitude = unwrap(swissAltitude)
 
-Ncores = c(1,2)[1+(.Platform$OS.type=='unix')]
+options(mc.cores = if (.Platform$OS.type == "windows") 1L else 2L)
+
 
 
 
@@ -54,7 +55,7 @@ swissFit$optim$logL
 sf2$optim$logL
 
 date()
-x=profLlgm(swissFit, mc.cores=Ncores,
+x=profLlgm(swissFit, mc.cores=getOption("mc.cores"),
     range=seq(15000, 55000 , len=12)
 )
 date()
@@ -109,9 +110,8 @@ if(!interactive())
 
 
 if(interactive()  | Sys.info()['user'] =='patrick') {
-  Ncores = c(1,2)[1+(.Platform$OS.type=='unix')]
   date()
-  x2d=profLlgm(swissFit, mc.cores=Ncores,
+  x2d=profLlgm(swissFit, mc.cores=getOption("mc.cores"),
       anisoAngleRadians=seq(22, 60 , len=24)*(2*pi/360),
 		anisoRatio =exp(seq(log(1.5),log(20),len=36))
   )

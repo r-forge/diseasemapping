@@ -8,5 +8,6 @@
       KMP_DEVICE_THREAD_LIMIT = "2",
       KMP_TEAMS_THREAD_LIMIT = "2"
     )
+    options(mc.cores = if (.Platform$OS.type == "windows") 1L else 2L)
   }
 }

@@ -157,10 +157,11 @@ krigeLgm = function(
 	if(is.numeric(locations)){
 		locations = squareRaster(data, locations)
 	}
-	if(nrow(locations) * ncol(locations) > 10^7) warning("there are lots of cells in the prediction raster,\n this might take a very long time")
+	if(nrow(locations) * ncol(locations) > 10^7) {
+		warning("there are lots of cells in the prediction raster,\n this might take a very long time")
+	}
 
-
-		observations = meanRaster = NULL
+	observations = meanRaster = NULL
 
 	noCovariates = length(names(covariates)) == 0
 	if(is.data.frame(covariates)) {
@@ -266,9 +267,6 @@ krigeLgm = function(
 
 	  # old code, not called from lgm
 	if(!length(observations) | is.null(meanRaster)) {
-		warning("this is old code, unmaintained")
-
-
 		  # the above didn't create observations and meanRaster
 		  # use the old code, probably not being called from lgm
 
