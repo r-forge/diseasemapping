@@ -90,7 +90,8 @@ swissKrige = krigeLgm(
 	formula = myTrend,
 	covariates = swissAltitude,  
 	param=myParams,
-	grid = squareRaster(swissBorder, 40), expPred=TRUE)
+	grid = squareRaster(swissBorder, 40), expPred=TRUE,
+	mc.cores=1L)
 
 plot(swissKrige[["predict"]], main="predicted rain")
 plot(swissBorder, add=TRUE)
