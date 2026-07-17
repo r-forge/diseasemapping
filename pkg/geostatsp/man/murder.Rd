@@ -24,7 +24,7 @@ Murder locations
 \source{
 Murder data:\url{https://geo.scholarsportal.info/#r/details/_uri@=1882586248}, 
 
-Lights: \url{https://www.ngdc.noaa.gov/eog/viirs/download_ut_mos.html}
+Lights: \url{https://www.earthdata.nasa.gov/data/instruments/viirs/land-near-real-time-data}
 
 Boundary files: \url{https://www150.statcan.gc.ca/n1/en/catalogue/92-160-X}
 
