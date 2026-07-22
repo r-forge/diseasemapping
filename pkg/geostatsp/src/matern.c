@@ -28,16 +28,10 @@ void maternArasterBpoints(
   int Dindex,Ncell;
   double distCellRight[2], distCellDown[2], distTopLeft[2], distRowHead[2];
   double distTopLeftR[2], distHere[2];
-  double costheta, sintheta, anisoRatioSq;
-  double logxscale, xscale, varscale,  thisx, logthisx;
+  double costheta, sintheta, anisoRatioSq, distSq;
+  maternParams mp;
 
-  double *bk, alpha= *shape,truncate=0.00001;
-  
-  int nb = 1+ (int)floor(alpha);/* nb-1 <= |alpha| < nb */
-  bk = (double *) R_alloc(nb, sizeof(double));
-
-
-    
+  maternParamsSet(&mp, *range, *shape, *variance);
 
   AyN2 = *AyN;
   AxN2 = *AxN;
@@ -57,16 +51,6 @@ void maternArasterBpoints(
   distCellDown[0] =  sintheta * (*Ayres);
   distCellDown[1] =  - costheta * (*Ayres);
 
-  xscale = 2 * M_SQRT2 * sqrt( *shape ) / *range;
-  logxscale  =  1.5 * M_LN2 +   0.5 * log(*shape)  - log(*range);
-  varscale =  log(*variance)  - lgammafn(*shape ) -  (*shape -1)*M_LN2;
-
-  truncate = *variance*1e-06; // count a zero if var < truncate
-
-
-
-  //Nzeros=0;
-  //#pragma omp parallel for private(distTopLeft,distTopLeftR,distRowHead,DAy,distHere,thisx,Dindex)
   for(DB=0;DB<BN2;++DB){ // loop through points
       Dindex = DB*Ncell;
       distTopLeft[0]= (Bx[DB]-*Axmin); // distance from point DB to
@@ -84,44 +68,9 @@ void maternArasterBpoints(
           distHere[1] = distRowHead[1];
           for(DAx=0;DAx<AxN2;++DAx){ // loop through x of raster
 
-              //			thisx =  sqrt(distHere[0]*distHere[0] +
-              //	      			distHere[1]*distHere[1]/anisoRatioSq)*xscale;
-
-              thisx = distHere[0]*distHere[0] +
+              distSq = distHere[0]*distHere[0] +
                   distHere[1]*distHere[1]/anisoRatioSq;
-              logthisx = 0.5*log(thisx) + logxscale;
-              thisx =sqrt(thisx) * xscale;
-
-
-              // if thiex is nan assume it's infinity
-              if(isnan(thisx)) {
-                  if(isinf(xscale)) {
-                      // range is probably zero.
-                      // if distance is zero set result to variance
-                      if(distHere[0]*distHere[0] +
-                          distHere[1]*distHere[1] < truncate){
-                          result[Dindex]= *variance;
-                      }
-                  } else {
-                      // range is finite, distance must be zero
-                      result[Dindex] = 0;
-                  }
-              } else {
-                  result[Dindex] = exp(varscale + *shape * logthisx)*
-                      bessel_k_ex(thisx, alpha, 1.0, bk);
-              }
-
-              if(isnan(result[Dindex]))  {
-                  // assume distance is very small
-                  if(thisx < 1) {
-                      result[Dindex]= *variance;
-                  } else {
-                      result[Dindex]= 0;
-                  }
-              }
-
-
-              //    		if(result[Dindex]  <  truncate) ++Nzeros;
+              result[Dindex] = maternPoint(distSq, &mp);
 
               ++Dindex;
               distHere[0] -= distCellRight[0];
@@ -134,11 +83,6 @@ void maternArasterBpoints(
       }
 
   }
-  //*BN = Nzeros;
-  //*range = xscale;
-  //*shape=varscale;
-  //*anisoRatio = anisoRatioSq;
-  //free(bk);
 
 }
 
@@ -164,23 +108,14 @@ void maternAniso(
   int Drow, Dcol, Nm1, Dcolp1, N2;
   int Dindex;
 
-  double logxscale, varscale,  logthisx, thisx;
-  double anisoRatioSq, dist[2], distRotate[2], costheta, sintheta;
+  double anisoRatioSq, dist[2], distRotate[2], costheta, sintheta, distSq;
+  maternParams mp;
 
-  double *bk, alpha= *shape,truncate=0.00001;
-  int nb = 1+ (int)floor(alpha);/* nb-1 <= |alpha| < nb */
-  bk = (double *) R_alloc(nb, sizeof(double));
-  
+  maternParamsSet(&mp, *range, *shape, *variance);
 
   costheta = cos(*anisoAngleRadians);
   sintheta = sin(*anisoAngleRadians);
   anisoRatioSq = (*anisoRatio)*(*anisoRatio);
-
-  //	xscale = sqrt(8 * (*shape)) / *range;
-  //	logxscale  = 0.5*(log(8) + log(*shape) ) - log(*range);
-  logxscale  =  1.5 * M_LN2 +   0.5 * log(*shape)  - log(*range);
-  varscale =  log(*variance)  - lgammafn(*shape ) -  (*shape -1)*M_LN2;
-
 
   Nm1 = *N-1;
   N2 = *N;
@@ -201,39 +136,9 @@ void maternAniso(
           distRotate[0] = costheta *dist[0] - sintheta * dist[1];
           distRotate[1] = sintheta *dist[0] + costheta * dist[1];
 
-          //    		thisx =  sqrt(distRotate[0]*distRotate[0] +
-          //    			distRotate[1]*distRotate[1]/anisoRatioSq)*xscale;
-
-          thisx = distRotate[0]*distRotate[0] +
+          distSq = distRotate[0]*distRotate[0] +
               distRotate[1]*distRotate[1]/anisoRatioSq;
-          logthisx = 0.5*log(thisx) + logxscale;
-          thisx =exp(logthisx);
-
-          if(isnan(thisx)) {
-              if(isinf(logxscale)) {
-                  // range is probably zero.
-                  // if distance is zero set result to variance
-                  if(distRotate[0]*distRotate[0] +
-                      distRotate[1]*distRotate[1] < truncate){
-                      result[Dindex]= *variance;
-                  }
-              } else {
-                  // range is finite, distance must be zero
-                  result[Dindex] = 0;
-              }// end else from isinf logscale
-          } else { // thisx not nan
-              result[Dindex] = exp(varscale + *shape * logthisx )*
-                  bessel_k_ex(thisx, alpha, 1.0, bk);
-          }// end else thisx not nan
-
-          if(isnan(result[Dindex]))  {
-              // assume distance is very small
-              if(thisx < 1) {
-                  result[Dindex]= *variance;
-              } else {
-                  result[Dindex]= 0;
-              }
-          } // end if isnan
+          result[Dindex] = maternPoint(distSq, &mp);
       } // end for Drow
   }// end for Dcol
 
@@ -286,32 +191,14 @@ void matern(
     int *type,
     double *halfLogDet) {
   int D, Dcol, Ncol, Nrow, rowEnd, addToRowStart;
-  double varscale,  thisx, //xscale,
-  logthisx, logxscale;
+  double distAbs;
+  maternParams mp;
 
-  
-  double *bk, alpha = *shape;
-
-  // code stolen from R's src/nmath/bessel_k.c
-  int nb = 1+ (int)floor(alpha);/* nb-1 <= |alpha| < nb */
-  bk = (double *) R_alloc(nb, sizeof(double));
-
-  // evaluate the matern!
-  /*
-	thisx = abs(x)*(sqrt(8*param["shape"])/ param["range"])
-	result = ( param["variance"]/(gamma(param["shape"])* 2^(param["shape"]-1)  ) ) *
-			( thisx^param["shape"] *
-				besselK(thisx , param["shape"]) )
+  /* evaluate the matern:
+     thisx = abs(x)*(sqrt(8*shape)/range)
+     result = variance/(gamma(shape)*2^(shape-1)) * thisx^shape * K(thisx, shape)
    */
-  // xscale = sqrt(8*shape)/range
-  // thisx = xscale * abs(x)
-  // varscale = log[   param["variance"]/(gamma(param["shape"])* 2^(param["shape"]-1)  )   ]
-  // result = exp(varscale) * (thisx)^nu K(thisx, nu)
-  // result = exp(varscale + nu * log(thisx)) K(thisx, nu)
-  // result = exp(varscale + nu * logthisx) K(thisx, nu)
-  //	xscale = 2 * M_SQRT2 * sqrt( *shape ) / *range;
-  logxscale  =  1.5 * M_LN2 +   0.5 * log(*shape)  - log(*range);
-  varscale =  log(*variance)  - lgammafn(*shape ) -  (*shape -1)*M_LN2;
+  maternParamsSet(&mp, *range, *shape, *variance);
 
   Nrow = *N;
   if(*type){ // lower triangle
@@ -330,30 +217,8 @@ void matern(
   for(Dcol=0;Dcol<Ncol;++Dcol) {
       rowEnd = Nrow*Dcol+Nrow;
       for(D=Dcol*Nrow+Dcol+addToRowStart; D < rowEnd; D++) {
-          //		thisx = fabs(distance[D])*xscale;
-          logthisx = log(fabs(distance[D])) + logxscale;
-          thisx = exp(logthisx);
-
-          if(isnan(thisx) ) {
-              //			warning("%f %f", thisx, xscale);
-              if(isinf(logxscale)) {
-                  // range is probably zero.
-                  result[D] = 0;
-              } else {
-                  result[D] = *variance;
-              }
-          } else { // thisx not nan
-              result[D] = exp(varscale + *shape * logthisx )*
-                  bessel_k_ex(thisx, alpha, 1.0, bk);
-          }
-          if(isnan(result[D])) {
-              // assume distance is very small
-              if(thisx < 1) {
-                  result[D]= *variance;
-              } else {
-                  result[D]= 0;
-              }
-          }
+          distAbs = fabs(distance[D]);
+          result[D] = maternPoint(distAbs * distAbs, &mp);
       } //D
   } // Dcol
 
@@ -590,18 +455,10 @@ void maternRaster(
   int Dindex,Ncell;
   double distCellRight[2], distCellDown[2], distTopLeft[2], distRowHead[2];
   double distTopLeftR[2], distHere[2], Bx, By;
-  double costheta, sintheta, anisoRatioSq;
-  double logxscale, xscale, varscale,  thisx, logthisx;
-  int nb;
-  double *bk, alpha,truncate;
-  
-  alpha = *shape;
-  // code stolen from R's src/nmath/bessel_k.c
-  nb = 1+ (int)floor(alpha);/* nb-1 <= |alpha| < nb */
-  //bk = (double *) calloc(nb, sizeof(double));
-  bk = (double *) R_alloc(nb, sizeof(double));
-  
-  
+  double costheta, sintheta, anisoRatioSq, distSq;
+  maternParams mp;
+
+  maternParamsSet(&mp, *range, *shape, *variance);
 
   AyN2 = *AyN;
   AxN2 = *AxN;
@@ -619,13 +476,6 @@ void maternRaster(
 
   distCellDown[0] =  sintheta * (*Ayres);
   distCellDown[1] =  - costheta * (*Ayres);
-
-  xscale = 2 * M_SQRT2 * sqrt( *shape ) / *range;
-  logxscale  =  1.5 * M_LN2 +   0.5 * log(*shape)  - log(*range);
-  varscale =  log(*variance)  - lgammafn(*shape ) -  (*shape -1)*M_LN2;
-
-  truncate = *variance*1e-06; // count a zero if var < truncate
-
 
   DB = 0; // cell index
   for(DBy=0;DBy<AyN2;++DBy){ // loop through rows of raster B
@@ -650,44 +500,9 @@ void maternRaster(
               distHere[1] = distRowHead[1];
               for(DAx=0;DAx<AxN2;++DAx){ // loop through x of raster A
 
-                  //      thisx =  sqrt(distHere[0]*distHere[0] +
-                  //              distHere[1]*distHere[1]/anisoRatioSq)*xscale;
-
-                  thisx = distHere[0]*distHere[0] +
+                  distSq = distHere[0]*distHere[0] +
                       distHere[1]*distHere[1]/anisoRatioSq;
-                  logthisx = 0.5*log(thisx) + logxscale;
-                  thisx =sqrt(thisx) * xscale;
-
-
-                  // if thiex is nan assume it's infinity
-                  if(isnan(thisx)) {
-                      if(isinf(xscale)) {
-                          // range is probably zero.
-                          // if distance is zero set result to variance
-                          if(distHere[0]*distHere[0] +
-                              distHere[1]*distHere[1] < truncate){
-                              result[Dindex]= *variance;
-                          }
-                      } else {
-                          // range is finite, distance must be zero
-                          result[Dindex] = 0;
-                      }
-                  } else {
-                      result[Dindex] = exp(varscale + *shape * logthisx)*
-                          bessel_k_ex(thisx, alpha, 1.0, bk);
-                  }
-
-                  if(isnan(result[Dindex]))  {
-                      // assume distance is very small
-                      if(thisx < 1) {
-                          result[Dindex]= *variance;
-                      } else {
-                          result[Dindex]= 0;
-                      }
-                  }
-
-
-                  //        if(result[Dindex]  <  truncate) ++Nzeros;
+                  result[Dindex] = maternPoint(distSq, &mp);
 
                   ++Dindex;
                   distHere[0] -= distCellRight[0];
@@ -727,9 +542,6 @@ void maternRaster(
       }
       *type = 0;
   }
-
-//  free(bk);
-
 
 }
 

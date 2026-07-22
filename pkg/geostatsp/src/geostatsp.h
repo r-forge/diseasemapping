@@ -18,6 +18,30 @@
 #include <Rdefines.h>
 
 
+/* Precomputed Matérn constants for the Temme/Steed series evaluator */
+typedef struct maternParams_struct {
+  double range;
+  double shape;
+  double variance;
+  double varscale;
+  double logxscale;
+  double mu;
+  double muSq;
+  double mup1;
+  double sinrat;
+  double g1;
+  double g2;
+  double g_1pnu;
+  double g_1mnu;
+  int nuround;
+} maternParams;
+
+void maternParamsSet(maternParams *p,
+                     double range, double shape, double variance);
+
+/* Evaluate Matérn correlation at squared distance distSq */
+double maternPoint(double distSq, const maternParams *p);
+
 /* type = 0, distances is a vector
  type = 1, distances is a symmetric matrix,
  only lower triangle is used
