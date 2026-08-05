@@ -13,7 +13,7 @@ tonerToTrans(x,  pattern="(red|green|blue)$", power = 0.5,
 }
 \arguments{
   \item{x}{
-	A \code{RasterStack} with RGB colours, such as from \code{\link{openmap}} with \code{path='stamen-toner'}}
+	A \code{SpatRaster} with RGB colours, such as from \code{\link{openmap}} with \code{path='stamen-toner'}}
 	\item{pattern}{string passed to \code{\link[base]{grep}} to find RGB layers.}
   \item{power}{
 	Values below 1 increase opacity, above 1 increases transparency

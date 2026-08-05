@@ -11,7 +11,7 @@ tpers(x,  hKm = 100*1000, tilt = -10,   azi, offset=c(0,0), axis='enu')
 }
 
 \arguments{
-	\item{x}{A SpatialPoints* object of length 2 or a 
+	\item{x}{A SpatVector of points of length 2 or a 
 	matrix with two columns. }
 	\item{hKm}{Height veiwing the Earth from}
 	\item{tilt}{Viewing angle}

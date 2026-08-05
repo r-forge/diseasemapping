@@ -34,7 +34,7 @@ points(myPoints)
 #+ africaPlots 
   
   # utm zone 32
-  utmproj = crs("+init=epsg:3064") 
+  utmproj = crs("epsg:3064") 
   myrasterUTM = project(myraster, utmproj)
   myPointsUTM = project(myPoints, utmproj)
   plot(myrasterUTM)
@@ -173,8 +173,8 @@ print(12)
 #+ ams
   cityHall = vect(cbind(4.891111, 52.373056),
     crs=crsLL)
-#  cityHall = spTransform(cityHall,CRS("+init=epsg:28992"))
-  cityHall = project(cityHall,crs("+init=epsg:32631"))
+#  cityHall = project(cityHall,crs("epsg:28992"))
+  cityHall = project(cityHall,crs("epsg:32631"))
   mytiles = openmap(cityHall, buffer=50)
 
   map.new(mytiles)

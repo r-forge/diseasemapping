@@ -172,7 +172,7 @@ scaleBar(xMerc, 'bottomleft')
 
 
 ```{r arcticCRS}
-  crsA = crs("+init=epsg:3573")
+  crsA = crs("epsg:3573")
   theBox = llCropBox(crsA, buffer.width=100*1000,  crop.distance = 5e7, crop.poles = FALSE, crop.leftright=TRUE, remove.holes=TRUE, cycles=4)
   attributes(crsA)[names(theBox)] = theBox
 

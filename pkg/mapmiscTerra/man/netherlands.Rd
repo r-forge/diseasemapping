@@ -15,10 +15,10 @@ Elevation data and map tiles for the Netherlands
 }
 \usage{data("netherlands")}
 \format{
-\code{nldElev} is a raster of elevation
-\code{nltTiles} is a background map
-\code{meuse} classic Meuse river data set from the sp package 
-\code{nldCities} is a SpatialPointsDataFrame of city locations.
+\code{nldElev} is a SpatRaster of elevation
+\code{nldTiles} is a background map (SpatRaster)
+\code{meuse} classic Meuse river data set as a SpatVector
+\code{nldCities} is a SpatVector of city locations.
 }
 \details{
 The inclusion of these datasets is intended to allow the package to build 

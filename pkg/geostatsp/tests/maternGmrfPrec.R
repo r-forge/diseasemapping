@@ -59,7 +59,7 @@ if(Sys.info()['user'] =='patrick') {
 	values(tempA) = diag(precMatAdjInv)
 	
 	if(!interactive()){
-		pdf("maternGmrfMarginalVarRasters.pdf",height=10,width=5)
+		pdf(file.path(tempdir(), "maternGmrfMarginalVarRasters.pdf"),height=10,width=5)
 	}
 	par(mfrow=c(3,1))
 	plot(tempU)
@@ -89,7 +89,7 @@ if(Sys.info()['user'] =='patrick') {
 	
 	
 	if(!interactive()){
-		pdf("maternGmrfPredRasters.pdf",height=11,width=4)
+		pdf(file.path(tempdir(), "maternGmrfPredRasters.pdf"),height=11,width=4)
 	}
 	par(mfrow=c(7,2))
 	
@@ -198,7 +198,7 @@ if(Sys.info()['user'] =='patrick') {
 	thelwd = c(mid=3,midCor=1,midAdj=1,edge=3,edgeCor=1,edgeAdj=1)
 	
 	if(!interactive()){
-		pdf("maternGmrfPred.pdf",height=5,width=10)
+		pdf(file.path(tempdir(), "maternGmrfPred.pdf"),height=5,width=10)
 	}
 	par(mfrow=c(2,2),mar=c(3,2,0,0))
 # middle cell, full plot
@@ -330,7 +330,7 @@ if(Sys.info()['user'] =='patrick') {
 	thecol = terrain.colors(length(thebreaks)-1)
 	
 	if(!interactive()){
-		pdf("maternGmrfDiagRast.pdf",height=8,width=5)
+		pdf(file.path(tempdir(), "maternGmrfDiagRast.pdf"),height=8,width=5)
 	}
 	par(mfrow=c(3,1))
 	temp = attributes(precMat)$raster
@@ -351,7 +351,7 @@ if(Sys.info()['user'] =='patrick') {
 	}
 	
 	if(!interactive()){
-		pdf("maternGmrfHist.pdf",height=9,width=7)
+		pdf(file.path(tempdir(), "maternGmrfHist.pdf"),height=9,width=7)
 	}
 	par(mfrow=c(4,2),mar=c(4,4,0,0))	
 	

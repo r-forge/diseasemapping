@@ -21,3 +21,23 @@ inla.models=function(){
     return(NULL)
   }
 }
+
+# TRUE only when the INLA package loads and its binaries work.
+# requireNamespace alone is not enough: some installs have the R package
+# but a missing/broken inla program, and inla.setOption then errors.
+inlaAvailable = function() {
+  if(!isTRUE(requireNamespace("INLA", quietly = TRUE)))
+    return(FALSE)
+  ok = try(INLA::inla.getOption("num.threads"), silent = TRUE)
+  !inherits(ok, "try-error")
+}
+
+# Cap INLA threads when available; no-op (and no error) otherwise.
+inlaSetThreads = function(num.threads = 2L) {
+  if(!inlaAvailable())
+    return(invisible(FALSE))
+  try(INLA::inla.setOption(num.threads = num.threads), silent = TRUE)
+  # not all versions of INLA support blas.num.threads
+  try(INLA::inla.setOption(blas.num.threads = num.threads), silent = TRUE)
+  invisible(TRUE)
+}

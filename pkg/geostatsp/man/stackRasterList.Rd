@@ -3,7 +3,7 @@
 \alias{spdfToBrick}
 
 \title{
-Converts a list of rasters, possibly with different projections and resolutions, to a single raster stack.
+Converts a list of SpatRasters, possibly with different projections and resolutions, to a single multi-layer SpatRaster.
 }
 \description{
 This function is intended to be used prior to passing covariates to \link{krigeLgm} in order
@@ -36,7 +36,7 @@ which correspond to the names of \code{x}, the names will be used instead of the
 }
 
 \value{
-A raster brick, with one layer for each variable.
+A multi-layer SpatRaster, with one layer for each variable.
 }
 
 

@@ -17,7 +17,7 @@ map.new(x,legendRight=FALSE, buffer=0, mar=c(0,0,0,0), ...)
 A spatial object from which an extent can be extracted.
 }
 \item{legendRight}{Leave room to the right for 
-the legend produced by plotting a Raster object}
+the legend produced by plotting a SpatRaster object}
 \item{buffer}{passed to \code{\link[terra]{extend}} to increase the plotting area}
 \item{mar}{see \code{\link[graphics]{par}}}
 \item{\dots}{

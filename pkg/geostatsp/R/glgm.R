@@ -406,7 +406,7 @@ setMethod("glgm",
   if(!length(forInla$lincomb)) 
     forInla = forInla[setdiff(names(forInla), 'lincomb')] 
 
-  if(requireNamespace("INLA", quietly=TRUE)) {
+  if(inlaAvailable()) {
     if(identical(forInla$verbose, TRUE)) {
       tFile = tempfile('glgm', tempdir(), '.rds')
       message(paste('saving INLA objects as', tFile))
@@ -414,13 +414,22 @@ setMethod("glgm",
     }
     inlaResult = try(do.call(INLA::inla, forInla))
   } else {
-    inlaResult = list(logfile="INLA is not installed. \n see www.r-inla.org")
+    inlaResult = list(logfile="INLA is not installed or not working. \n see www.r-inla.org")
   }
   if(identical(forInla$verbose, TRUE)) {
     message("inla done") 
   }
-  if(all(names(inlaResult)=="logfile") | any(class(inlaResult) == 'try-error'))
-    return(c(forInla, list(inlares=inlaResult, prior = priorList)))
+  inlaFailed = inherits(inlaResult, 'try-error') ||
+    identical(names(inlaResult), "logfile") ||
+    (is.list(inlaResult) && isTRUE(nzchar(inlaResult$logfile)) &&
+      !length(inlaResult$summary.fixed))
+  if(inlaFailed)
+    return(list(
+      inlares = inlaResult,
+      prior = priorList,
+      parameters = NULL,
+      forInla = forInla
+    ))
 
 
   params = list(range=list(), scale=list())

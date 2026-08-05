@@ -11,7 +11,7 @@ corresponding to this raster.
 }
 \usage{data(swissRainR)}
 \format{
-\code{swissRainR} is a RasterBrick of Swiss elevation and 
+\code{swissRainR} is a \code{SpatRaster} (packed) of Swiss elevation and 
 precipitation, and \code{swissNN} is a matrix of nearest neighbours.
 }
 

@@ -33,10 +33,8 @@ swissAltitude = unwrap(swissAltitude)
 
 swissRain$lograin = log(swissRain$rain)
 
-if(requireNamespace('INLA', quietly=TRUE)) {
-  INLA::inla.setOption(num.threads=2)
-  # not all versions of INLA support blas.num.threads
-  try(INLA::inla.setOption(blas.num.threads=2), silent=TRUE)
+if(inlaAvailable()) {
+  inlaSetThreads(2)
 swissFit =  glgm(formula="lograin", data=swissRain, 
 	grid=20, 
 	covariates=swissAltitude/1000, family="gaussian", 

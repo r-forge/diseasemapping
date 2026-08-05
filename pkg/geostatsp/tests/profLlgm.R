@@ -66,7 +66,7 @@ swissInf = informationLgm(swissFit)
 
 
 if(!interactive()) 
-  pdf("profLswissAngle.pdf")
+  pdf(file.path(tempdir(), "profLswissAngle.pdf"))
 
 plot(x[[1]],x[[2]], xlab=names(x)[1],
 #		yaxt='n',
@@ -117,7 +117,7 @@ if(interactive()  | Sys.info()['user'] =='patrick') {
   )
   date()
 if(!interactive()) 
-  pdf("profLswiss2d.pdf")
+  pdf(file.path(tempdir(), "profLswiss2d.pdf"))
 image(x2d[[1]],x2d[[2]],x2d[[3]],
 		breaks=x2d$breaks,
 		col=x2d$col,log='y',
@@ -194,7 +194,7 @@ if(requireNamespace("mapmisc", quietly=TRUE)) {
 myCol = mapmisc::colourScale(lMatrix, breaks=8, dec=0)
 
 if(!interactive()) 
-  pdf("profLswissIso.pdf")
+  pdf(file.path(tempdir(), "profLswissIso.pdf"))
 image(
 	newParamList[[1]]/1000, newParamList[[2]], lMatrix,
 	col = myCol$col, breaks=myCol$breaks,

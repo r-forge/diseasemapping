@@ -8,7 +8,7 @@ Downloads map tiles from Openstreetmap.org and other servers.
 }
 \usage{
 	openmap(x, zoom, 
-	  path="http://tile.openstreetmap.org/",
+	  path="https://tile.openstreetmap.org/",
 	  maxTiles = 9, 
 	  crs=ifelse(is.numeric(x), mapmisc::crsLL, terra::crs(x)),   
 	  buffer=0, fact=1, 
@@ -68,7 +68,14 @@ by \eqn{2^n} tiles. Zoom levels go up to about 17 or 18 depending on the tile
 server.
 
 
-See \url{https://mc.bbbike.org/mc/} for a more possible map tiles (not all of which are compatible with openmap)
+See \url{https://mc.bbbike.org/mc/} for more possible map tiles (not all of which are compatible with openmap).
+
+Tiles from Stadia Maps (\code{stamen-toner}, \code{stamen-terrain}) and
+Thunderforest (\code{osm-cyclemap}, \code{spinal}, \code{neighbourhood},
+\code{pioneer}, \code{mobile-atlas}) may require an API key.  Append the
+provider's query string or path segment to the URL returned by
+\code{osmTiles()}, or pass a full URL with key to \code{openmap}'s
+\code{path} argument.
 
 Be sure to attribute any maps you publish, the \code{osmAttribution} function will assist.  If \code{type = 'auto'} then markdown format will be used unless a variable \code{mdToTex} is defined and equal to \code{TRUE}.
 

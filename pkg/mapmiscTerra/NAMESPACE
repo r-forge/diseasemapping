@@ -46,5 +46,4 @@ importFrom(utils, download.file)
 
 
  # brewer.pal from RColorBrewer referenced by ::
- # geocode from dismo referenced by ::
 

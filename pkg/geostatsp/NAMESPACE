@@ -59,7 +59,7 @@ importFrom(abind, abind)
 
 
 # only needed because INLA is requireNamespace instead of require
-export(inla.models)
+export(inla.models, inlaAvailable, inlaSetThreads)
 
 importFrom(utils, installed.packages)
 

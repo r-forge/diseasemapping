@@ -1,8 +1,8 @@
 Package: geostatsp
 Type: Package
 Title: Geostatistical Modelling with Likelihood and Bayes
-Version: 2.1.0
-Date: 2026-07-22
+Version: 2.1.1
+Date: 2026-08-05
 Depends:
     Matrix,
     terra,
@@ -20,10 +20,10 @@ Suggests:
 Enhances: 
     ellipse,
     RandomFields,
-	INLA, 
-	diseasemapping, 
-	geoR, 
- 	mvtnorm 
+    INLA, 
+    diseasemapping, 
+    geoR, 
+    mvtnorm 
 LinkingTo: Matrix (>= 1.6-2)
 Additional_repositories: https://inla.r-inla-download.org/R/testing
 Authors@R: person("Patrick", "Brown", 
@@ -32,6 +32,10 @@ Authors@R: person("Patrick", "Brown",
 Description: Geostatistical modelling facilities using 'SpatRaster' and 'SpatVector'
     objects are provided. Non-Gaussian models are fit using 'INLA', and Gaussian
     geostatistical models use Maximum Likelihood Estimation.  For details see Brown (2015) <doi:10.18637/jss.v063.i12>. The 'RandomFields' package is available at <https://web.archive.org/web/20250719184025/https://www.wim.uni-mannheim.de/schlather/publications/software> and <https://github.com/cran/RandomFields>.
-License: GPL
+License: GPL (>= 2)
+Encoding: UTF-8
+URL: https://diseasemapping.r-forge.r-project.org/,
+    https://r-forge.r-project.org/projects/diseasemapping/
+BugReports: https://r-forge.r-project.org/projects/diseasemapping/
 NeedsCompilation: yes
 VignetteBuilder: knitr

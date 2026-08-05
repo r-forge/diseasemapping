@@ -93,7 +93,7 @@ myres = likfitLgm(
 )
 
 
-pdf("ligfitLgm.pdf")
+pdf(file.path(tempdir(), "ligfitLgm.pdf"))
 par(mfrow=c(1,2))
 
 myraster = rast(nrows=30,ncols=30,xmin=0,xmax=1,ymin=0,ymax=1)

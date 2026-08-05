@@ -1,11 +1,5 @@
-
-if(requireNamespace("INLA", quietly=TRUE) ) {
-  INLA::inla.setOption(num.threads=2)
-  # not all versions of INLA support blas.num.threads
-  try(INLA::inla.setOption(blas.num.threads=2), silent=TRUE)
-} 
-
 library('geostatsp')
+inlaSetThreads(2)
 
 # exclude this line to use the RandomFields package
 options(useRandomFields = FALSE)
@@ -29,13 +23,14 @@ myLgcp=simLgcp(mymodel, myCovariate,
 	offset='offsetFooBar',
 	rasterTemplate=myraster)
 
-if(requireNamespace("INLA", quietly=TRUE)) {
+if(inlaAvailable()) {
 res = lgcp(data=myLgcp$events, 
 		formula = ~ a + b + offset(offsetFooBar),
 		grid=squareRaster(myoffset, 15), 
 		covariates=myCovariate,
 		prior=list(sd=0.2, range=0.4))
 
+if(length(res$parameters)) {
 res$parameters$summary[,c(1,3,5)]
 
 lgcpRoc =  spatialRoc(
@@ -52,11 +47,8 @@ plot(lgcpRoc[,'onemspec'] ,
 	xlim=c(0,1), ylim=c(0,1),
 	ylab='sensitivity', xlab='1-specificity'
 )
-
 }
-
-
-
+}
 
 
 	

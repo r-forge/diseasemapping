@@ -53,8 +53,8 @@ on the exponentiated scale, and half of krige.var is added prior to exponentiati
 \item{predict.log}{If exp.pred=TRUE, the prediction of the logged process.}
 \item{predict.boxcox}{If a box cox transformation was used, the prediction of the process on the transformed scale.}
 If the prediction locations are different for fixed and random effects (typically coarser for the random 
-effects), a list with two raster stacks is returned.
-\item{prediction}{A raster stack as above, though the random effect prediction is resampled to the 
+effects), a list with two multi-layer SpatRasters is returned.
+\item{prediction}{A SpatRaster as above, though the random effect prediction is resampled to the 
 same locations as the fixed effects.}
 \item{random}{the predictions and conditional variance of the random effects, on the same
 raster as \code{newdata}}

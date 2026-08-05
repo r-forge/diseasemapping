@@ -1,8 +1,8 @@
 \name{geocode}
 \alias{geocode}
-\title{Georeferencing with Google}
+\title{Georeferencing with OpenStreetMap Nominatim}
 \description{
-Uses the dismo package to geocode with Google
+Geocode place names using the OpenStreetMap Nominatim service.
   }
 \usage{
 	geocode(x, extent,
@@ -11,13 +11,13 @@ Uses the dismo package to geocode with Google
 
 \arguments{
 \item{x}{Vector of character strings to search for}
-\item{extent}{Currently unused.  an Extent object, or any object from which an Extent can be obtained.}
+\item{extent}{Currently unused.  An extent, or any object from which an extent can be obtained.}
 \item{lang}{Language for place names in result.}
 }
 
 
 
-\value{A \code{SpatialPointsDataFrame} with coordinates in the 
+\value{A \code{SpatVector} of points with coordinates in the 
 projection of \code{extent} if possible, or long-lat
 otherwise.}
 
@@ -26,7 +26,8 @@ otherwise.}
 to specify the folder to save downloaded 
 data. \code{getOption('mapmiscVerbose')} for printing progress.
 
-Data are retreived from Openstreetmap.org, see \url{https://wiki.openstreetmap.org/wiki/Nominatim}.
+Data are retrieved from OpenStreetMap.org; see \url{https://wiki.openstreetmap.org/wiki/Nominatim}.
+Please respect Nominatim's usage policy when making many requests.
 }
 
 \examples{

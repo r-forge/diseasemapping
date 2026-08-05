@@ -6,7 +6,7 @@ swissLandType = unwrap(swissLandType)
 
 bob = function(x) {
 	thepar = x$param
-	pdf(tempfile("lgm", tmpdir=".", fileext=".pdf"))
+	pdf(tempfile("lgm", fileext=".pdf"))
 	plot(x$predict[["predict"]], main=
 					paste(
 							paste(names(thepar), thepar, sep="="),

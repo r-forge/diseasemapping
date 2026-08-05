@@ -31,7 +31,7 @@ An object of class \code{ SpatVector} containing the data.
 \item{grid}{Either an integer giving the number of cells in the x direction, or a raster object which 
 will be used for the spatial random effect.  If the cells in the raster are not square, the resolution in the y direction 
 will be adjusted to make it so.}
-\item{covariates}{Either a single raster, a list of rasters or a raster stack containing covariate values used when 
+\item{covariates}{Either a single SpatRaster, a list of SpatRasters or a multi-layer SpatRaster containing covariate values used when 
 making spatial predictions.  Names of the raster layers or list elements correspond to names in the formula.  If
 a covariate is missing from the data object it will be extracted from the rasters.  Defaults to \code{NULL} for an 
 intercept-only model.
@@ -76,7 +76,7 @@ Elements of \code{prior} can be named \code{range}, \code{sd}, or \code{sdObs}. 
 
 \value{
 A list with two components named  \code{inla}, \code{raster}, and \code{parameters}.  \code{inla} contains the results of the call to the
-\code{inla} function.  \code{raster} is a raster stack with the following layers:
+\code{inla} function.  \code{raster} is a multi-layer SpatRaster with the following layers:
 \item{random.}{mean, sd, X0.0??quant: Posterior mean, standard deviation, and quantiles of the random effect}
 \item{predict.}{mean, sd, X0.0??quant: same for linear predictors, on the link scale}
 \item{predict.exp}{posterior mean of the exponential of the linear predictor}
@@ -98,10 +98,8 @@ A list with two components named  \code{inla}, \code{raster}, and \code{paramete
 \dontrun{
 # geostatistical model for the swiss rainfall data
 
-if(requireNamespace("INLA", quietly=TRUE) ) {
-  INLA::inla.setOption(num.threads=2)
-  # not all versions of INLA support blas.num.threads
-  try(INLA::inla.setOption(blas.num.threads=2), silent=TRUE)
+if(inlaAvailable() ) {
+  inlaSetThreads(2)
 } 
 
 require("geostatsp")
@@ -163,11 +161,7 @@ mycov = rast(matrix(rbinom(100, 1, 0.5), 10, 10), extent=ext(0, 1, 0, 1))
 names(mycov)="x1"
 
 
-if(requireNamespace("INLA", quietly=TRUE) ) {
-  INLA::inla.setOption(num.threads=2)
-  # not all versions of INLA support blas.num.threads
-  try(INLA::inla.setOption(blas.num.threads=2), silent=TRUE)
-}
+inlaSetThreads(2)
 
 res = lgcp(
 	formula=~factor(x1),

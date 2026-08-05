@@ -268,7 +268,7 @@ if(Sys.info()['user'] =='patrick' & FALSE) {
       oneminusar = seq(0.05, 0.2,len=4),
       shape=2)		
   
-  if(!interactive()) pdf("doesntwork.pdf")
+  if(!interactive()) pdf(file.path(tempdir(), "doesntwork.pdf"))
   plot(myResRopt$array[,,'oneminusar',], myResRopt$array[,,'propNugget',])
   
   if(!interactive()) dev.off()	

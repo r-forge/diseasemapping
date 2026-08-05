@@ -1,18 +1,13 @@
+library('geostatsp')
 
 havePackages = c(
-    'INLA' = requireNamespace('INLA', quietly=TRUE)
+    'INLA' = inlaAvailable()
 )
-
-if(requireNamespace("INLA", quietly=TRUE) ) {
-  INLA::inla.setOption(num.threads=2)
-  # not all versions of INLA support blas.num.threads
-  try(INLA::inla.setOption(blas.num.threads=2), silent=TRUE)
-}
+inlaSetThreads(2)
 
 print(havePackages)
 
 # as in example
-require('geostatsp')
 myPoints = vect(cbind(rbeta(100,2,2), rbeta(100,3,4)))
 
 mycov = rast(matrix(rbinom(100, 1, 0.5), 10, 10), extent=ext(0, 1, 0, 1))
@@ -144,5 +139,4 @@ if(requireNamespace('diseasemapping', quietly=TRUE)){
 			
 }
 	
-
 

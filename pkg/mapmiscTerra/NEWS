@@ -1,0 +1,14 @@
+CHANGES IN mapmisc VERSION 2.1.4
+
+    o Documentation updated for terra (SpatVector / SpatRaster); geocode()
+      docs now describe Nominatim rather than Google/dismo.
+    o Tile downloads send an identifying User-Agent; OSM and other tile
+      URLs audited (HTTPS preferred; dead providers pruned).
+    o Deprecated +init=epsg: CRS strings replaced with epsg: codes.
+    o persistentCache() avoids writing beside tempdir() under R CMD check.
+    o Packaging hygiene: .Rbuildignore, Encoding, versioned License,
+      URL/BugReports fields; dead geocodeOld / dismo stubs removed.
+
+CHANGES IN mapmisc VERSION 2.1.3
+
+    o Bug fixes and vignette rebuilds for the terra-based release line.

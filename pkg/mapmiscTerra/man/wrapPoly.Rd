@@ -4,7 +4,7 @@
 
 \title{Reproject polygons with wrapping}
 \description{
-Reprojects a SpatialPolygons object to a projection with longitude wrapping other than 180 degreess
+Reprojects a SpatVector of polygons to a projection with longitude wrapping other than 180 degrees
 }
 \usage{
 wrapPoly(x,crs, buffer.width = 100*1000)
@@ -15,7 +15,7 @@ llCropBox(crs,
 }
 
 \arguments{
-\item{x}{A Spatial object}
+\item{x}{A SpatVector or other spatial object}
 \item{crs}{Caracther string representing a  \code{\link[terra]{crs}}.}
 \item{buffer.width}{buffer to add to points on border when cropping poloygons, defaults to 100km}
 \item{densify.interval}{interval when densifying}
@@ -28,7 +28,7 @@ llCropBox(crs,
 }
 
 \value{
-A reprojected Spatial object.
+A reprojected SpatVector (or compatible spatial object).
 }
 
 \seealso{\code{\link[terra]{project}}, examples in \code{\link{tpeqd}}}

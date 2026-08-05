@@ -1,48 +1,16 @@
-# stamen https://maps.stamen.com/stadia-partnership/
-
-# Name  Bucket  Prefix  Extension
-#Terrain tile.stamen.com /terrain  png
-#Terrain Background  tile.stamen.com /terrain-background png
-#Terrain Labels  tile.stamen.com /terrain-labels png
-#Terrain Lines tile.stamen.com /terrain-lines  png
-#Toner long-term.cache.maps.stamen.com /toner  png
-#Toner Background  long-term.cache.maps.stamen.com /toner-background png
-#Toner Labels  long-term.cache.maps.stamen.com /toner-labels png
-#Toner Lines long-term.cache.maps.stamen.com /toner-lines  png
-#Toner Lite  long-term.cache.maps.stamen.com /toner-lite png
-#Watercolor  long-term.cache.maps.stamen.com /watercolor jpg
-#Each tile is accessible at an S3 URL with the following format:
-
-#s3://{bucket}{prefix}/{z}/{x}/{y}.{extension}
-#For example, to get the watercolor tile for zoom 2, x 3, and y 1 you would use:
-
-#s3://long-term.cache.maps.stamen.com/watercolor/2/3/1.jpg
-
-
-# TO DO michelin map
-# osm multilingual https://maps.wikimedia.org/osm-intl/7/65/42.png?lang=en
-# https://map3.viamichelin.com/map/mapdirect?map=viamichelin&z=8&x=71&y=93&format=png&version=201503191157&layer=background
-# https://map3.viamichelin.com/map/mapdirect?map=light&z=8&x=71&y=93&format=png&version=201503191157&layer=background
-# https://map3.viamichelin.com/map/mapdirect?map=hybrid&z=8&x=71&y=93&format=png&version=201503191157&layer=network
-
-# https://mc.bbbike.org/mc/?num=2&mt0=mapnik&mt1=maptiler_streets
+# Tile layer registry. Stadia (stamen-*) and Thunderforest layers may require
+# an API key; append ?apikey=... or /{apikey}/ as required by the provider.
+# See openmapAttribution() and the package NEWS.
 osmTiles = function(name, xyz, suffix) {
   result = c(
-    osm = "http://tile.openstreetmap.org",
-#    'osm-admin' = 'http://korona.geog.uni-heidelberg.de/tiles/adminb',
- #   'osm-roads-grey' = 'http://korona.geog.uni-heidelberg.de/tiles/roadsg/',
- #   'osm-roads' = 'http://korona.geog.uni-heidelberg.de/tiles/roads',
- #   'osm-semitransparent' = 'http://korona.geog.uni-heidelberg.de/tiles/hybrid/',
-#    "osm-no-labels"="http://c.tiles.wmflabs.org/osm-no-labels/",
-    'osm-fr' = 'http://a.tile.openstreetmap.fr/osmfr/',
-    "osm-de"="http://c.tile.openstreetmap.de/tiles/osmde/",
-#     "osm-ru" = "http://a.tiles.wmflabs.org/osm-multilingual/ru,_/",
-    "osm-transport"="http://tile.memomaps.de/tilegen/",
+    osm = "https://tile.openstreetmap.org",
+    'osm-fr' = 'https://a.tile.openstreetmap.fr/osmfr/',
+    "osm-de"="https://tile.openstreetmap.de/",
+    "osm-transport"="https://tile.memomaps.de/tilegen/",
     'osm-bw' = "https://tile.openstreetmap.de/tilesbw/osmde/",
     "stamen-toner" = "https://tiles.stadiamaps.com/tiles/stamen_toner/",
     "stamen-watercolor" = "https://watercolormaps.collection.cooperhewitt.org/tile/watercolor/",
     'stamen-terrain' = 'https://tiles.stadiamaps.com/tiles/stamen_terrain/',
-#    "bw-mapnik"="http://b.tiles.wmflabs.org/bw-mapnik2/",
     'bvg' = 'https://bvg-gis-c.hafas.de/hafas-tiles/inno2017/2/',
     'esri' = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/',
     'esri-satellite' = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/',
@@ -50,70 +18,30 @@ osmTiles = function(name, xyz, suffix) {
     'esri-overlay' = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/',
     'esri-topo' = 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/',
     kartogiraffe = 'https://tiles.kartogiraffe.de/tiles/map/1',
- #   'komoot' = 'https://a.tile.hosted.thunderforest.com/komoot-2/',
-#    soviet = 'https://y.tile.bbbike.org/cgi-bin/tapp/tilecache.py/1.0.0/topomapper_v2/',
     'osm-cyclemap' = 'https://c.tile.thunderforest.com/cycle/',
-    'osm-seamap' = 'http://tiles.openseamap.org/seamark/',
+    'osm-seamap' = 'https://tiles.openseamap.org/seamark/',
+    # Thunderforest landscape; https has a certificate hostname mismatch
     'landscape'="http://tile.opencyclemap.org/landscape/",
-    rail = 'https://map.allrailmap.com/rail/',
-#    'hydda' = 'http://c.tile.openstreetmap.se/hydda/full/',
-#    'hydda-base' = 'http://c.tile.openstreetmap.se/hydda/base/',
-#    'hydda-roads' = 'http://c.tile.openstreetmap.se/hydda/roads_and_labels/',
     "opentopomap" = "https://a.tile.opentopomap.org/",
-    "maptoolkit"="https://rtc-cdn.maptoolkit.net/rtc/toursprung-terrain/",
     waze="https://worldtiles3.waze.com/tiles/",
     'waze-us'='https://livemap-tiles1.waze.com/tiles/',
-    humanitarian="http://a.tile.openstreetmap.fr/hot/",
-    cartodb = 'https://cartodb-basemaps-b.global.ssl.fastly.net/light_all/',
-    'cartodb-nolabels' = 'https://cartodb-basemaps-a.global.ssl.fastly.net/light_nolabels/',
-    'cartodb-dark'='http://c.basemaps.cartocdn.com/dark_all/',
+    humanitarian="https://a.tile.openstreetmap.fr/hot/",
+    cartodb = 'https://basemaps.cartocdn.com/light_all/',
+    'cartodb-nolabels' = 'https://basemaps.cartocdn.com/light_nolabels/',
+    'cartodb-dark'='https://basemaps.cartocdn.com/dark_all/',
     'f4' = 'https://tile3.f4map.com/tiles/f4_2d/',
-    nrcan = 'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_CBCT_GEOM_3857/MapServer/tile/',
-    'nrcan-text' = 
-    'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_TXT_3857/MapServer/tile/',
-    'nrcan-text-fr' = 
-    'http://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBCT_TXT_3857/MapServer/tile/',
-    spinal = 'http://c.tile.thunderforest.com/spinal-map/',
+    nrcan = 'https://maps-cartes.services.geo.ca/server2_serveur2/rest/services/BaseMaps/CBMT_CBCT_GEOM_3857/MapServer/tile/',
+    'nrcan-text' =
+    'https://maps-cartes.services.geo.ca/server2_serveur2/rest/services/BaseMaps/CBMT_TXT_3857/MapServer/tile/',
+    'nrcan-text-fr' =
+    'https://maps-cartes.services.geo.ca/server2_serveur2/rest/services/BaseMaps/CBCT_TXT_3857/MapServer/tile/',
+    spinal = 'https://c.tile.thunderforest.com/spinal-map/',
     neighbourhood = 'https://a.tile.thunderforest.com/neighbourhood/',
     pioneer = 'https://b.tile.thunderforest.com/pioneer/',
     'mobile-atlas'='https://b.tile.thunderforest.com/mobile-atlas/',
-#    wikimedia = 'https://maps.wikimedia.org/osm-intl/',
-    'sputnik' = 'http://tiles.maps.sputnik.ru/',
-    ump = 'https://2.tiles.ump.waw.pl/ump_tiles/' ,
-    where = 'https://osm-demo-b.wheregroup.com/tiles/1.0.0/osm/webmercator/' )
+    ump = 'https://2.tiles.ump.waw.pl/ump_tiles/'
+  )
 
-  # toronto
-  #https://gis.toronto.ca/arcgis/rest/services/basemap/cot_topo/MapServer/tile/9/186/142
-# https://map.toronto.ca/maps/map.jsp?app=TorontoMaps_v2
-
-#	skobbler="http://tiles3.skobbler.net/osm_tiles2/",	
-#		"osm2world"="http://tiles.osm2world.org/osm/pngtiles/n/",
-#		bvg="http://mobil.bvg.de/tiles/",
-#	landshaded="http://tiles.openpistemap.org/landshaded/",
-#		"osm-retina"="http://tile.geofabrik.de/osm_retina/",
-#      'osm-rail' = 'http://a.tiles.openrailwaymap.org/standard/',
-# rail is 512 insstead of 256 tiles
-#			hill="http://www.toolserver.org/~cmarqu/hill/",
-#	eu="http://alpha.map1.eu/tiles/",
-# 'esri' = 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/',
-# 'esri-grey' = 'http://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/',
-# 'esri-transport'='http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/',
-# 'esri-topo' = 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/'
-  
-  
-# http://server.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer/tile/2/1/1.jpg
-  
-  # language labels don't appear to be working
-#  languages = c("en","fr","de", "it","es","ru")
-#  toadd =	paste("http://a.www.toolserver.org/tiles/osm-labels-", languages,"/", sep="")
-#  names(toadd) = paste("osm-labels-", languages, sep="")
-#	result = c(result, toadd)
-  
-  
-#  result = c(result, toadd)
-  
-  
-  
   if(!missing(name)) {
     if(all(name %in% names(result), na.rm=TRUE)) {
       result = result[name]
@@ -135,7 +63,7 @@ osmTiles = function(name, xyz, suffix) {
 openmap = function(
   x, 
   zoom, 
-  path="http://tile.openstreetmap.org/",
+  path="https://tile.openstreetmap.org/",
   maxTiles = 9,
   crs=ifelse(is.numeric(x), mapmisc::crsLL, terra::crs(x)),
   buffer=0, fact=1,
@@ -314,7 +242,7 @@ if(verbose){
 }
 
 if(length(grep(
-  'nrcan\\.gc\\.ca|gov\\.bc\\.ca', Durl))
+  'nrcan\\.gc\\.ca|gov\\.bc\\.ca|maps-cartes\\.services\\.geo\\.ca', Durl))
 ){
   suffix = ''
   tileNames = 'zyx'
@@ -326,10 +254,10 @@ if(length(grep(
   tileNames = 'zyx'
 } else if(
   length(grep(
-    'stamen.watercolor', Durl
+    'stamen.watercolor|watercolormaps[.]collection[.]cooperhewitt[.]org', Durl
   ))) {
   suffix='.jpg'
-  tileNames = 'zyx'
+  tileNames = 'zxy'
 } else if(
   length(grep(
     'heidelberg.de/tiles/(hybrid|adminb|roadsg|roads)/?$', 

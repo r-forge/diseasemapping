@@ -1,0 +1,18 @@
+CHANGES IN geostatsp VERSION 2.1.1
+
+    o Fixed remaining deprecated structure(.Dim=) usage for R-devel checks.
+    o Added inlaAvailable() / inlaSetThreads() so examples and tests skip
+      gracefully when INLA is installed but its binaries are missing/broken.
+    o glgm() returns a structured failure object with parameters=NULL when
+      INLA fails, so callers such as spatialRoc() are not reached with a
+      malformed fit.
+    o Test plot PDFs now write to tempdir(); packaged build artifacts cleaned.
+    o Packaging hygiene: .Rbuildignore, Encoding, versioned License,
+      URL/BugReports fields.
+
+CHANGES IN geostatsp VERSION 2.1.0
+
+    o Continued terra / SpatRaster / SpatVector support.
+    o profLlgm() uses a PSOCK cluster instead of forked mcmapply (avoids
+      macOS segfaults under R CMD check).
+    o OpenMP thread caps during R CMD check to avoid oversubscription hangs.

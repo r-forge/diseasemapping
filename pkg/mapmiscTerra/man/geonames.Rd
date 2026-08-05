@@ -14,8 +14,8 @@
 \arguments{
 	\item{north}{
 	A bounding box or  
-	SpatialPoints or SpatialPolygons or 
-	Extent or  Raster object, or a decimal degree of longitude.}
+	SpatVector or SpatRaster or
+	extent object, or a decimal degree of longitude.}
 	\item{east,south,west}{If \code{north} is numeric, decimal degree bounding box.}
 	\item{lang}{Language for internationalised returned text}
 	\item{maxRows}{Limit on returned rows}
@@ -27,7 +27,7 @@
 \seealso{\code{\link[geonames]{GNcities}}, \code{\link[geonames]{GNsearch}}}
 
 
-\value{A SpatialPointsDataFrame with the sampe projection  \code{north} if it exists, otherwise in 
+\value{A SpatVector of points with the same projection as \code{north} if it exists, otherwise in 
 long-lat.}
 
 

@@ -1,0 +1,6 @@
+^.*\.Rcheck$
+^Makefile$
+^\.DS_Store$
+^R/\.DS_Store$
+^src/.*\.(o|so|dll)$
+^[^/]*\.pdf$

@@ -16,7 +16,7 @@ Produces a scale of colours for plotting maps}
 	}
 
 \arguments{
-	\item{x}{A vector or single-layer Raster, numeric or factor,  for which a colour scale will be created}
+	\item{x}{A vector or single-layer SpatRaster, numeric or factor,  for which a colour scale will be created}
 	\item{breaks}{For \code{colourScale} either the number of or vector of breaks.
 	for \code{legendBreaks} usually the output of \code{colourScale}, or a vector of breaks}
 	\item{style}{Style for breaks, see Details}

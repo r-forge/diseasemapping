@@ -41,7 +41,7 @@ swissKrige3 = krigeLgm(
 		covariates = list(elevation = swissAltitude,land=swissLandType),
 		grid = swissRaster, expPred=TRUE)
 
-pdf("krige3.pdf")
+pdf(file.path(tempdir(), "krige3.pdf"))
 plot(swissKrige3[["predict"]])	
 plot(swissBorder, add=TRUE)
 dev.off()
@@ -67,7 +67,7 @@ swissKrige5 = krigeLgm(data=swissRain2[1:60,],
 		param=swissFit5$param, 
 		covariates = list(elevation = swissAltitude,landFac2=swissLandType),
 		grid = swissRaster,expPred=TRUE)
-pdf("krige5.pdf")
+pdf(file.path(tempdir(), "krige5.pdf"))
 plot(swissKrige5[["predict"]])	
 plot(swissBorder, add=TRUE)
 dev.off()

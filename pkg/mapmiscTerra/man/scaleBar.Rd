@@ -38,7 +38,7 @@ Scaling factor north arrow (can be zero).
 \item{seg.len}{approximate length (in character units) of the scale bar.  can be zero.}
 \item{title.cex}{scaling for the distance text}
 \item{outer}{If \code{TRUE}, put bar or map in the margin of the plot}
-\item{map}{Either a Raster for the inset map or a string 
+\item{map}{Either a SpatRaster for the inset map or a string 
 passed to \code{\link{openmap}}'s path argument}
 \item{zoom}{Zoom level if retrieving inset map from \code{\link{openmap}}}
 \item{width}{Width of the inset map, as a fraction of the plot window}

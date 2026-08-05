@@ -13,9 +13,25 @@ mapmiscCacheCheck = function() {
   }
 }
 
-downloadFileMapmisc = function(...) {
+downloadFileMapmisc = function(url, destfile, ...) {
   mapmiscCacheCheck()
-  utils::download.file(...)
+  dots = list(...)
+  # OSM tile usage policy requires an identifying User-Agent
+  ua = paste0(
+    "mapmisc/",
+    tryCatch(as.character(utils::packageVersion("mapmisc")),
+      error = function(e) "devel"),
+    " (https://diseasemapping.r-forge.r-project.org/; R package)"
+  )
+  headers = dots$headers
+  if(is.null(headers)) headers = character()
+  if(!length(grep("(?i)^user-agent$", names(headers)))) {
+    headers = c(headers, "User-Agent" = ua)
+  }
+  dots$headers = headers
+  dots$url = url
+  dots$destfile = destfile
+  do.call(utils::download.file, dots)
 }
 
 dirCreateMapmisc = function(path, ...) {
@@ -24,11 +40,6 @@ dirCreateMapmisc = function(path, ...) {
     dir.create(path, ...)
   }
 }
-
-#mapmiscGeocode = function(...) {
-#  mapmiscCacheCheck()
-#  dismo::geocode(...)
-#}
 
 mapmiscGNcities = function(...) {
   mapmiscCacheCheck()

@@ -68,9 +68,9 @@ options(mapmiscVerbose = TRUE)
 \maketitle 
 
 
-This document will be incomplete if {\tt rgdal} is unavailable or there is on
+This document will be incomplete if there is no
 internet connection when this document is compiled.  The full document is at
-\url{http://diseasemapping.r-forge.r-project.org/}.
+\url{https://diseasemapping.r-forge.r-project.org/}.
 
 \section{Introduction}
 

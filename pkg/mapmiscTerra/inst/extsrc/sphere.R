@@ -1,3 +1,7 @@
+# HISTORICAL SCRIPT — not used by the package at runtime.
+# Retained for data-prep reference; uses retired spatial packages (sp/raster/rgdal).
+# Prefer terra-based workflows in current package code.
+
 #Produced by polyH dronisme http://levskaya.github.com/polyhedronisme
 # group dccdkdkdkD
 

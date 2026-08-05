@@ -22,7 +22,7 @@ myMatern[1:3,1:3]
 
 bob = function(x) {
 thepar = attributes(x)$param
-pdf(tempfile("matern", tmpdir=".", fileext=".pdf"))
+pdf(tempfile("matern", fileext=".pdf"))
 plot(x, main=
 				paste(
 				paste(names(thepar), thepar, sep="="),

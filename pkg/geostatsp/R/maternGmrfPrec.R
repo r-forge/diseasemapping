@@ -29,7 +29,7 @@ if (FALSE) {
 }
 
 numbn <- structure(c(1L, 4L, 4L, 4L, 8L, 4L, 4L, 8L, 4L, 8L, 8L, 4L),
-    .Dim = 12L,
+    dim = 12L,
     dimnames = structure(list(
         matSub = c(
             "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",

@@ -1,0 +1,4 @@
+^.*\.Rcheck$
+^Makefile$
+^\.DS_Store$
+^R/\.DS_Store$
