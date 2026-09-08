@@ -1,3 +1,10 @@
+CHANGES IN geostatsp VERSION 2.2.0
+
+    o Exported geostatData(), an S3 generic that prepares observations and
+      covariates for glgm() and lgm().  Methods dispatch on SpatVector and
+      SpatRaster (replacing the unexported gm.dataSpatial / gm.dataRaster
+      helpers).
+
 CHANGES IN geostatsp VERSION 2.1.1
 
     o Fixed remaining deprecated structure(.Dim=) usage for R-devel checks.

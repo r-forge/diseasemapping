@@ -18,7 +18,7 @@ setMethod("lgm",
       covariates = list()
 
    
-    dataCov = gm.dataRaster(
+    dataCov = geostatData(
       formula, data,
       grid=rast(data, nlyrs=1),
       covariates=covariates,

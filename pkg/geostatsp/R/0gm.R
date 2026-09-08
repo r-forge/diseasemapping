@@ -35,7 +35,15 @@ allVarsP = function(formula) {
   alltermsPlain
 }
 
-gm.dataRaster = function(
+geostatData = function(formula, data, grid, covariates, buffer = 0) {
+  UseMethod("geostatData", data)
+}
+
+geostatData.default = function(formula, data, ...) {
+  stop("data must be a SpatVector or SpatRaster")
+}
+
+geostatData.SpatRaster = function(
     formula,
     data, grid=data,
     covariates=NULL,
@@ -308,10 +316,10 @@ gm.dataRaster = function(
 
 
 #############
-# data is a SpatialPointsDataFrame
+# data is a SpatVector of point observations
 #############
 
-gm.dataSpatial = function(
+geostatData.SpatVector = function(
     formula, data,  grid, 
     covariates, 
     buffer=0) {
@@ -350,11 +358,11 @@ gm.dataSpatial = function(
   
   if(!nchar(crs(data)) | !nchar(crs(grid)) ) {
     if(nchar(crs(data))) {
-      warning("assigning crs of grid to data")
+      warning("assigning crs of data to grid")
       crs(grid) = crs(data)
     } else if(nchar(crs(grid))) {
-      crs(grid) = crs(data)
-      warning("assigning crs of data to grid")
+      warning("assigning crs of grid to data")
+      crs(data) = crs(grid)
     } else if(length(covariates)) {
       if(nchar(crs(covariates[[1]]))) {
         warning("assigning crs of first covariate to data")

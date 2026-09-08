@@ -167,8 +167,7 @@ setMethod("lgm",
 		fixNugget = FALSE,
 		...) {
 
-		dataCov = #geostatsp:::
-		gm.dataSpatial(
+		dataCov = geostatData(
 			formula, data, 
 			grid, covariates, buffer)
 
@@ -193,7 +192,7 @@ setMethod("lgm",
 		fixNugget = FALSE,
 		...) {
 
-		dataCov = gm.dataSpatial(
+		dataCov = geostatData(
 			formula, data, 
 			grid, covariates, buffer)
 

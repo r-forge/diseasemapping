@@ -1,8 +1,8 @@
 Package: geostatsp
 Type: Package
 Title: Geostatistical Modelling with Likelihood and Bayes
-Version: 2.1.1
-Date: 2026-08-05
+Version: 2.2.0
+Date: 2026-09-08
 Depends:
     Matrix,
     terra,

@@ -90,7 +90,7 @@ setMethod("glgm",
       grid = squareRaster(data, grid)
 
 
-    dataCov = gm.dataRaster(
+    dataCov = geostatData(
       formula, data,
       grid,
       covariates,
@@ -129,7 +129,7 @@ setMethod("glgm",
     if(is.numeric(grid))
       grid = squareRaster(data, grid)
 
-    dataCov = gm.dataSpatial(
+    dataCov = geostatData(
       formula, data, 
       grid, covariates, buffer)
 

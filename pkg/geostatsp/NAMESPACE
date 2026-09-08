@@ -24,6 +24,11 @@ S3method(matern, dsyMatrix)
 S3method(matern, default)
 export(fillParam)
 
+export(geostatData)
+S3method(geostatData, SpatRaster)
+S3method(geostatData, SpatVector)
+S3method(geostatData, default)
+
 
 
 export(squareRaster)
