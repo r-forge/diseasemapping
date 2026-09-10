@@ -4,6 +4,10 @@ CHANGES IN geostatsp VERSION 2.2.0
       covariates for glgm() and lgm().  Methods dispatch on SpatVector and
       SpatRaster (replacing the unexported gm.dataSpatial / gm.dataRaster
       helpers).
+    o Formulas with namespaced INLA::f(...) are treated like f(...): allVarsP()
+      no longer splits "::" as an interaction, geostatData() skips missing
+      covariates instead of calling terra::crs() on NULL, and glgm() rewrites
+      INLA::f to f before calling INLA.
 
 CHANGES IN geostatsp VERSION 2.1.1
 

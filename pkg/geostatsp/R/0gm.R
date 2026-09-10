@@ -15,6 +15,10 @@ allVarsP = function(formula) {
   firstTerm = as.character(formula)
   firstTerm = trimws(firstTerm[-c(1, length(firstTerm))])
   allterms = setdiff(allterms, firstTerm)
+
+  # drop pkg:: so INLA::f(...) is treated like f(...)
+  # and so interaction splitting on ":" does not split namespaces
+  allterms = gsub("[[:alnum:].]+::", "", allterms)
   
   # look for values=1:stuff in inla formula and replace with seq
   
@@ -29,10 +33,33 @@ allVarsP = function(formula) {
     )
   }
   allterms = gsub("[[:space:]]", "", allterms)
+  allterms = allterms[nzchar(allterms)]
   # remove offset( or factor(
   alltermsPlain = gsub("^[[:alpha:]]+\\(|\\)$|[,].*", "", allterms)
   attributes(alltermsPlain)$orig = allterms
   alltermsPlain
+}
+
+# INLA only treats f() as special, not INLA::f(...).
+unnamespaceInlaF = function(formula) {
+  rewrite = function(expr) {
+    if (is.call(expr)) {
+      head = expr[[1]]
+      if (is.call(head) && identical(head[[1]], as.name("::")) &&
+          length(head) >= 3 && identical(head[[3]], as.name("f"))) {
+        expr[[1]] = as.name("f")
+      }
+      for (i in seq_along(expr)) {
+        expr[[i]] = rewrite(expr[[i]])
+      }
+    }
+    expr
+  }
+  out = rewrite(formula)
+  if (is.language(out)) {
+    environment(out) = environment(formula)
+  }
+  out
 }
 
 geostatData = function(formula, data, grid, covariates, buffer = 0) {
@@ -429,8 +456,10 @@ geostatData.SpatVector = function(
   
   # loop through covariates which aren't in data, extract it from `covariates`
   for(D in setdiff(alltermsPlain, names(data))){
-    if(is.null(covariates[[D]]))
+    if(is.null(covariates[[D]])) {
       warning("cant find covariate '", D, "' in covariates or data")
+      next
+    }
     
     if(any(class(covariates[[D]]) == 'SpatRaster')) {
       extractHere = terra::extract(covariates[[D]], 

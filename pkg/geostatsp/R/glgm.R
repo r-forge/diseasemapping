@@ -179,6 +179,7 @@ setMethod("glgm",
       names(grid) = 'space'
     }
 
+    formula = unnamespaceInlaF(formula)
     allVars = allVarsP(formula)
 
 

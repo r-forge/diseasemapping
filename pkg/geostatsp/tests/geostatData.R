@@ -18,6 +18,26 @@ stopifnot(inherits(pts$grid, "SpatRaster"))
 stopifnot(all(c("elev", "evi") %in% names(pts$data)))
 stopifnot(all(c("elev", "evi") %in% names(pts$covariates)))
 
+stopifnot(identical(
+    as.character(geostatsp:::allVarsP(
+        y ~ elev + INLA::f(villageID, prior = "pc.prec",
+            param = c(1, 0.5), model = "iid"))),
+    as.character(geostatsp:::allVarsP(
+        y ~ elev + f(villageID, prior = "pc.prec",
+            param = c(1, 0.5), model = "iid")))
+))
+
+ptsNs = geostatData(
+    y ~ elev + evi +
+        INLA::f(villageID, prior = "pc.prec", param = c(1, 0.5),
+            model = "iid"),
+    data = loaloa,
+    covariates = list(elev = elevationLoa, evi = eviLoa),
+    grid = squareRaster(loaloa, cells = 20, buffer = 1e4)
+)
+stopifnot(all(c("elev", "evi", "villageID") %in% names(ptsNs$data)))
+stopifnot(!("INLA" %in% names(ptsNs$data)))
+
 myCrs = crs("+proj=utm +zone=17 +ellps=GRS80 +units=m +no_defs")
 dataR = rast(matrix(1:100, 10, 10), extent = ext(0, 1000, 0, 1000), crs = myCrs)
 names(dataR) = "y"
